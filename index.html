@@ -308,7 +308,7 @@
             </div>
         </div>
     </div>
-   <script>
+  <script>
     async function loadContent(url, section) {
         const contentDiv = document.getElementById('content');
         contentDiv.innerHTML = '<p class="status-message">Статус загрузки: Все работает! Загружаем! <span class="loader"></span></p>';
@@ -390,20 +390,52 @@
             }
         }
         
-        // Функция sortTable
+        // Функция sortTable (добавьте ваш полный код sortTable здесь, если он не в гайде)
         function sortTable(table, col) {
-            // ... (весь код sortTable из вашего гайда, без изменений)
+            var rows = table.rows;
+            var switching = true;
+            var dir = "asc";
+            var switchcount = 0;
+            while (switching) {
+                switching = false;
+                for (var i = 1; i < (rows.length - 1); i++) {
+                    var shouldSwitch = false;
+                    var x = rows[i].getElementsByTagName("TD")[col];
+                    var y = rows[i + 1].getElementsByTagName("TD")[col];
+                    var xContent = parseFloat(x.innerHTML) || x.innerHTML.toLowerCase();
+                    var yContent = parseFloat(y.innerHTML) || y.innerHTML.toLowerCase();
+                    if (dir == "asc") {
+                        if (xContent > yContent) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (xContent < yContent) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
         }
         
-        // Добавляем openSection для нав-кнопок (скопируйте из гайда)
+        // Функция openSection
         function openSection(sectionId) {
-            // Close all panels first
             var panels = document.getElementsByClassName("panel");
             for (var i = 0; i < panels.length; i++) {
                 panels[i].style.display = "none";
                 panels[i].previousElementSibling.classList.remove("active");
             }
-            // Open the selected one
             var section = document.getElementById(sectionId);
             var accordion = section.querySelector(".accordion");
             if (accordion) {
@@ -411,16 +443,17 @@
                 var panel = accordion.nextElementSibling;
                 panel.style.display = "block";
             }
-            // Scroll to the section
             section.scrollIntoView({behavior: "smooth"});
         }
         
-        // Принудительно привязываем onclick к нав-кнопкам (на случай, если они не сработали)
+        // Listener для нав-кнопок (используйте data-section в HTML гайда)
         var navButtons = container.querySelectorAll('nav button');
         navButtons.forEach(button => {
             button.addEventListener('click', function() {
-                const sectionId = this.getAttribute('onclick').match(/'([^']+)'/)[1]; // Извлекаем sectionId из onclick
-                openSection(sectionId);
+                const sectionId = this.getAttribute('data-section');
+                if (sectionId) {
+                    openSection(sectionId);
+                }
             });
         });
     }
@@ -429,6 +462,7 @@
 </html>
 </body>
 </html>
+
 
 
 
