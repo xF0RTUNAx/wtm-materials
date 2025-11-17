@@ -112,7 +112,6 @@
     </style>
     <script>
         // Accordion functionality
-        window.onload = function() {
             var acc = document.getElementsByClassName("accordion");
             for (var i = 0; i < acc.length; i++) {
                 acc[i].addEventListener("click", function() {
@@ -135,8 +134,7 @@
                         sortTable(this.parentNode.parentNode.parentNode, this.cellIndex);
                     });
                 }
-            }
-        };
+            };
 
         function sortTable(table, col) {
             var rows = table.rows;
@@ -459,3 +457,4 @@
     </footer>
 </body>
 </html>
+
