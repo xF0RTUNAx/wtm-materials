@@ -6,109 +6,72 @@
     <title>Интерактивный гайд по ракетному флоту в WTM</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 0;
-            background-color: #e0f7fa !important;
-            color: white !important;
-        }
-        header {
-            background-color: #00796b !important;
-            color: white !important;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        h1, h2, h3 {
-            color: #ffffff;
-        }
-        nav {
-            background-color: #b2dfdb !important;
-            padding: 10px;
-            text-align: center;
-        }
-        nav button {
-            margin: 5px;
-            padding: 10px 15px;
-            background-color: #00796b !important;
-            color: white !important;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        nav button:hover {
-            background-color: #004d40 !important;
-        }
-        section {
-            margin: 20px;
-            padding: 20px;
-            background-color: white !important;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .accordion {
-            background-color: #006573 !important;
-            color: #ffd900 !important;
-            cursor: pointer;
-            padding: 15px;
-            width: 100%;
-            border: none;
-            text-align: left;
-            outline: none;
-            font-size: 18px;
-            transition: background-color 0.3s;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-        .accordion:hover {
-            background-color: #b2dfdb !important;
-        }
-        .panel {
-            padding: 0 18px;
-            display: none;
-            background-color: white;
-            overflow: hidden;
-            border-radius: 4px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        th, td {
-            border: 1px solid #b2dfdb;
-            padding: 12px;
-            text-align: left;
-        }
-        th {
-            background-color: #00796b !important;
-            color: white !important;
-            cursor: pointer;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-        }
-        th:hover {
-            background-color: #004d40 !important;
-        }
-        .rating-1 { background-color: #ff5252 !important; color: white !important; } /* Красный */
-        .rating-2 { background-color: #ffab40 !important; color: white !important; } /* Оранжевый */
-        .rating-3 { background-color: #fff176 !important; color: black !important; } /* Желтый */
-        .rating-4 { background-color: #aed581 !important; color: black !important; } /* Светло-зеленый */
-        .rating-5 { background-color: #4caf50 !important; color: white !important; } /* Зеленый */
-        footer {
-            background-color: #00796b !important;
-            color: white !important;
-            text-align: center;
-            padding: 10px;
-            margin-top: 40px;
-        }
-        .table-container {
-            overflow-x: auto;
-        }
+    background-color: #e0f7fa !important;
+    color: #004d40 !important;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+header {
+    background-color: #00796b !important;
+    color: white !important;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1) !important;
+}
+nav {
+    background-color: #b2dfdb !important;
+}
+nav button {
+    background-color: #00796b !important;
+    color: white !important;
+    border-radius: 5px !important;
+    transition: background-color 0.3s !important;
+}
+nav button:hover {
+    background-color: #004d40 !important;
+}
+section {
+    background-color: white !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+}
+.accordion {
+    background-color: #e0f7fa !important;
+    color: #004d40 !important;
+    border-radius: 4px !important;
+    transition: background-color 0.3s !important;
+}
+.accordion:hover {
+    background-color: #b2dfdb !important;
+}
+.panel {
+    background-color: white !important;
+}
+table {
+    border-collapse: collapse !important;
+}
+th, td {
+    border: 1px solid #b2dfdb !important;
+    padding: 12px !important;
+}
+th {
+    background-color: #00796b !important;
+    color: white !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1 !important;
+}
+th:hover {
+    background-color: #004d40 !important;
+}
+.rating-1 { background-color: #ff5252 !important; color: white !important; }
+.rating-2 { background-color: #ffab40 !important; color: white !important; }
+.rating-3 { background-color: #fff176 !important; color: black !important; }
+.rating-4 { background-color: #aed581 !important; color: black !important; }
+.rating-5 { background-color: #4caf50 !important; color: white !important; }
+footer {
+    background-color: #00796b !important;
+    color: white !important;
+}
+.table-container {
+    overflow-x: auto !important;
+}
     </style>
     <script>
         // Accordion functionality
@@ -199,14 +162,14 @@
         <h1>Интерактивный гайд по ракетному флоту в WTM</h1>
         <p>Исследуйте данные о кораблях и ракетах с сортировкой таблиц!</p>
     </header>
-    <nav>
-        <button onclick="openSection('section1')">1. Корабли и ракеты</button>
-        <button onclick="openSection('section2')">2. Корабли по чистому УВС</button>
-        <button onclick="openSection('section3')">3. Ракеты (урон с одной ракеты, увс)</button>
-        <button onclick="openSection('section4')">4. Общие выводы</button>
-        <button onclick="openSection('section5')">5. FortX Practice Engine Navy Test (FXPENT)</button>
-        <button onclick="openSection('section6')">6. Про некоторые ракеты (ПКР)</button>
-    </nav>
+   <nav>
+    <button data-section="section1">1. Корабли и ракеты</button>
+    <button data-section="section2">2. Корабли по чистому УВС</button>
+    <button data-section="section3">3. Ракеты (урон с одной ракеты, увс)</button>
+    <button data-section="section4">4. Общие выводы</button>
+    <button data-section="section5">5. FortX Practice Engine Navy Test (FXPENT)</button>
+    <button data-section="section6">6. Про некоторые ракеты (ПКР)</button>
+</nav>
     <section id="section1">
         <button class="accordion">1. Корабли и ракеты (Нажмите для просмотра)</button>
         <div class="panel">
@@ -457,6 +420,7 @@
     </footer>
 </body>
 </html>
+
 
 
 
