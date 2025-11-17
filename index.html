@@ -308,47 +308,121 @@
             </div>
         </div>
     </div>
-    <script>
-        async function loadContent(url, section) {
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '<p class="status-message">Статус загрузки: Все работает! Загружаем! <span class="loader"></span></p>';
+   async function loadContent(url, section) {
+    const contentDiv = document.getElementById('content');
+    contentDiv.innerHTML = '<p class="status-message">Статус загрузки: Все работает! Загружаем! <span class="loader"></span></p>';
+    
+    // Смена класса body для отвязки форматирования
+    document.body.classList.remove('page-home', 'page-aviation', 'page-rocket');
+    if (section === 'aviation') {
+        document.body.classList.add('page-aviation');
+    } else if (section === 'rocket') {
+        document.body.classList.add('page-rocket');
+    } else {
+        document.body.classList.add('page-home');
+    }
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error('Ошибка загрузки: файл не найден или недоступен. Проверьте имя файла и путь.');
+        }
+        const html = await response.text();
+        
+        setTimeout(() => {
+            // Парсим HTML, чтобы правильно вставить и обработать скрипты
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            contentDiv.innerHTML = doc.body.innerHTML;
             
-            // Смена класса body для отвязки форматирования
-            document.body.classList.remove('page-home', 'page-aviation', 'page-rocket');
-            if (section === 'aviation') {
-                document.body.classList.add('page-aviation');
-            } else if (section === 'rocket') {
-                document.body.classList.add('page-rocket');
-            } else {
-                document.body.classList.add('page-home');
-            }
-            
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error('Ошибка загрузки: файл не найден или недоступен. Проверьте имя файла и путь.');
+            // Извлекаем и выполняем все <script> из загруженного контента
+            const scripts = doc.querySelectorAll('script');
+            scripts.forEach((script) => {
+                const newScript = document.createElement('script');
+                if (script.src) {
+                    newScript.src = script.src; // Если внешний скрипт
+                } else {
+                    newScript.textContent = script.textContent; // Внутренний код
                 }
-                const html = await response.text();
-                
-                setTimeout(() => {
-                    contentDiv.innerHTML = html;
-                    // Применяем стили к кнопкам/ссылкам в загруженном контенте
-                    const links = contentDiv.querySelectorAll('a');
-                    links.forEach(link => {
-                        link.classList.add('button-like');
-                        // Добавляем hover-событие для свечения, если нужно
-                        link.addEventListener('mouseover', () => {
-                            link.style.boxShadow = '0 0 10px rgba(255, 204, 0, 0.5)';
-                        });
-                        link.addEventListener('mouseout', () => {
-                            link.style.boxShadow = 'none';
-                        });
-                    });
-                }, 3000);
-            } catch (err) {
-                contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '. Проверьте консоль браузера (F12) на ошибки.</p>';
+                document.body.appendChild(newScript);
+            });
+            
+            // Принудительно инициализируем аккордеоны и таблицы (на случай, если onload не сработал)
+            initAccordionsAndTables(contentDiv);
+        }, 3000);
+    } catch (err) {
+        contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '. Проверьте консоль браузера (F12) на ошибки.</p>';
+    }
+}
+
+// Новая функция для инициализации (скопируйте логику из вашего гайда)
+function initAccordionsAndTables(container) {
+    // Accordion functionality
+    var acc = container.getElementsByClassName("accordion");
+    for (var i = 0; i < acc.length; i++) {
+        acc[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var panel = this.nextElementSibling;
+            if (panel.style.display === "block") {
+                panel.style.display = "none";
+            } else {
+                panel.style.display = "block";
+            }
+        });
+    }
+    
+    // Sortable tables
+    var tables = container.getElementsByTagName("table");
+    for (var t = 0; t < tables.length; t++) {
+        var headers = tables[t].getElementsByTagName("th");
+        for (var h = 0; h < headers.length; h++) {
+            headers[h].addEventListener("click", function() {
+                sortTable(this.parentNode.parentNode.parentNode, this.cellIndex);
+            });
+        }
+    }
+    
+    // Функция sortTable (скопируйте из вашего гайда)
+    function sortTable(table, col) {
+        var rows = table.rows;
+        var switching = true;
+        var dir = "asc";
+        var switchcount = 0;
+        while (switching) {
+            switching = false;
+            for (var i = 1; i < (rows.length - 1); i++) {
+                var shouldSwitch = false;
+                var x = rows[i].getElementsByTagName("TD")[col];
+                var y = rows[i + 1].getElementsByTagName("TD")[col];
+                var xContent = parseFloat(x.innerHTML) || x.innerHTML.toLowerCase();
+                var yContent = parseFloat(y.innerHTML) || y.innerHTML.toLowerCase();
+                if (dir == "asc") {
+                    if (xContent > yContent) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                } else if (dir == "desc") {
+                    if (xContent < yContent) {
+                        shouldSwitch = true;
+                        break;
+                    }
+                }
+            }
+            if (shouldSwitch) {
+                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                switching = true;
+                switchcount++;
+            } else {
+                if (switchcount == 0 && dir == "asc") {
+                    dir = "desc";
+                    switching = true;
+                }
             }
         }
-    </script>
+    }
+    
+    // Если нужно, вызовите openSection для дефолтного открытия
+}
 </body>
 </html>
+
