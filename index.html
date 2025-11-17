@@ -5,461 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сборник материалов по War Thunder Mobile</title>
     <style>
-        /* Глобальные стили для всех режимов (интеграция: базовые элементы, анимации) */
         body {
-            font-family: 'Roboto', sans-serif;
-            color: #ffffff;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #e0f7fa, #b3e5fc);
+            color: #333;
             margin: 0;
-            padding: 60px 20px;
+            padding: 40px;
             text-align: center;
-            position: relative;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: -1;
         }
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
-            background: rgba(33, 33, 33, 0.8);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-            overflow: hidden;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         h1 {
-            font-family: 'Black Ops One', sans-serif;
-            color: #ffcc00;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-            word-wrap: break-word;
-            hyphens: auto;
-        }
-        p {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            word-wrap: break-word;
+            color: #0056b3;
         }
         .buttons {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 25px;
+            flex-direction: column;
+            gap: 20px;
             margin-top: 30px;
         }
-        button, a.button-like {
-            padding: 18px 45px;
-            color: #ffffff;
+        button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #0288d1, #7e57c2);
+            color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 10px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background-size 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1em;
-            animation: pulse 2s infinite;
-            position: relative;
-            overflow: hidden;
-            text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.8);
-            font-size: 1.2em;
-            text-decoration: none;
-            width: auto;
-            max-width: 100%;
-            white-space: normal;
-            word-break: break-word;
-            hyphens: auto;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
-        button:hover, a.button-like:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(255, 204, 0, 0.6);
-            animation: none;
-        }
-        #aviation-btn {
-            background:
-                linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)),
-                url('https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg')
-                no-repeat center / cover;
-        }
-        #aviation-btn:hover {
-            background:
-                linear-gradient(135deg, rgba(255,204,0,0.3), rgba(0,0,0,0.5)),
-                url('https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg')
-                no-repeat center / 115%;
-        }
-        #fleet-btn {
-            background:
-                linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)),
-                url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg')
-                no-repeat center / cover;
-        }
-        #fleet-btn:hover {
-            background:
-                linear-gradient(135deg, rgba(255,150,0,0.4), rgba(0,0,0,0.6)),
-                url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg')
-                no-repeat center / 115%;
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
         #content {
-            margin-top: 50px;
+            margin-top: 40px;
             text-align: left;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             overflow: auto;
-            animation: fadeIn 1s ease-in-out;
-            overflow-x: hidden;
-        }
-        #content h1, #content h2, #content h3 { color: #333; font-family: 'Black Ops One', sans-serif; }
-        #content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        #content th, #content td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        #content th { background-color: #f2f2f2; }
-        #content ul, #content ol { padding-left: 20px; }
-        #content a { color: #007bff; text-decoration: none; }
-        #content a:hover { text-decoration: underline; color: #ffcc00; box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); } /* Родное свечение для ссылок в контенте */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        .status-message {
-            color: #00cc66;
-            font-size: 1.2em;
-            font-weight: bold;
-            text-align: center;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            white-space: normal;
-            word-break: break-word;
-            hyphens: auto;
-            flex-wrap: wrap;
-        }
-        .error-message {
-            color: #ff0000;
-            font-size: 1.2em;
-            font-weight: bold;
-            text-align: center;
-            white-space: normal;
-            word-break: break-word;
-            hyphens: auto;
-        }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-            flex-shrink: 0;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        /* Медиа-запросы для мобильной версии */
-        @media (max-width: 768px) {
-            body {
-                padding: 40px 10px;
-            }
-            .container {
-                padding: 20px;
-                border-radius: 10px;
-            }
-            h1 {
-                font-size: 1.8em;
-            }
-            p {
-                font-size: 1em;
-            }
-            .buttons {
-                flex-direction: column;
-                gap: 15px;
-            }
-            button, a.button-like {
-                padding: 10px 5px;
-                font-size: 2em;
-                width: 100%;
-            }
-            #content {
-                padding: 20px;
-                margin-top: 30px;
-            }
-            .status-message {
-                font-size: 1em;
-                gap: 5px;
-            }
-            .loader {
-                width: 16px;
-                height: 16px;
-                border-width: 3px;
-            }
-        }
-        /* Уникальные анимации для мобильной версии */
-        @media (max-width: 768px) {
-            .container {
-                animation: slideInFromBottom 1s ease-out;
-            }
-            @keyframes slideInFromBottom {
-                from { transform: translateY(100%); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
-            }
-            button, a.button-like {
-                animation: bounceIn 1.5s ease-in-out infinite;
-            }
-            @keyframes bounceIn {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
-            }
-            #content {
-                animation: zoomIn 1s ease-in-out;
-            }
-            @keyframes zoomIn {
-                from { transform: scale(0.8); opacity: 0; }
-                to { transform: scale(1); opacity: 1; }
-            }
-        }
-
-        /* Специфические стили для главной страницы (page-home) */
-        body.page-home {
-            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_10_silverarrows/1080x2340_wtm_silver_arrows_adbe8cd5251de81d885f6ebff1cf5c46.jpg') no-repeat center center fixed;
-            background-size: cover;
-        }
-        body.page-home h1 {
-            color: #ffcc00; /* Оригинальный цвет для главной */
-        }
-
-        /* Оригинальные стили для Авиационной кампании (page-aviation) */
-        body.page-aviation {
-            background: url('https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg') no-repeat center center fixed;
-            background-size: cover;
-        }
-        body.page-aviation #content {
-            background: rgba(255, 255, 255, 0.85);
-            color: #000;
-        }
-        body.page-aviation h1 {
-            color: #007bff;
-        }
-
-        /* Оригинальные стили для Ракетного флота (page-rocket) */
-        body.page-rocket {
-            background: url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg') no-repeat center center fixed;
-            background-size: cover;
-        }
-        body.page-rocket #content {
-            background: rgba(240, 240, 240, 0.9);
-            color: #333;
-        }
-        body.page-rocket h1 {
-            color: #ff4500;
-        }
-        /* Усиленное свечение для ссылок в ракетном флоте */
-        body.page-rocket #content a:hover {
-            box-shadow: 0 0 15px rgba(255, 69, 0, 0.7);
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body class="page-home">
+<body>
     <div class="container">
-        <h1>Добро пожаловать на официальный сайт xFORTUNAx по War Thunder Mobile</h1>
-        <p>Погрузимся в наше сообщество! Выберите нужный раздел:</p>
+        <h1>Добро пожаловать на официальном сборнике материалов по War Thunder Mobile от xFORTUNAx</h1>
+        <p>Выберите интересующий вас пункт:</p>
         <div class="buttons">
-            <button id="aviation-btn" onclick="loadContent('Авиационная кампания I War Thunder Mobile.html', 'aviation')">Авиационная кампания</button>
-            <button id="fleet-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html', 'rocket')">Ракетный флот</button>
+            <button onclick="loadContent('Авиационная кампания I War Thunder Mobile.html')">Авиационная кампания</button>
+            <button onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">Ракетный флот</button>
         </div>
         <div id="content"></div>
-        <!-- Раздел с официальными соцсетями -->
-        <div style="text-align: center; margin-top: 50px;">
-            <h1 style="font-family: 'Black Ops One', sans-serif; color: rgba(0, 255, 30, 0.85); font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">Официальные социальные сети xFORTUNAx</h1>
-            <p style="font-size: 1.2em; margin-bottom: 30px;">Присоединяйтесь к нашему сообществу в официальных каналах для новостей, обсуждений и эксклюзивного контента по War Thunder Mobile!</p>
-            <div class="buttons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; margin-top: 30px;">
-                <a href="https://t.me/fortunawtm" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://img.utdstc.com/screen/3d2/4b0/3d24b0630ea30e4e65afab89867431ad0c2d182f295776c6fe3e4940f7441d68:800') no-repeat center / cover;">
-                    Официальный Telegram канал
-                </a>
-                <a href="https://t.me/warthundermobilefortuna" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)), url('https://zastavki.gas-kvas.com/uploads/posts/2024-09/zastavki-gas-kvas-com-w3fu-p-zastavki-iz-telegramma-1.jpg') no-repeat center / cover;">
-                    Официальный чат сообщества
-                </a>
-                <a href="https://youtube.com/@xf0rtunax?si=9rVEeUE5D6wFZgem" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://yt3.googleusercontent.com/xgdDJB9MKZzt0zS2LYdQ-4l7Nb4rNheEPAHV1cwIyrm4kCPsF65i6XgFqMUOp7wRRO3Rk948=w2276-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj') no-repeat center / cover;">
-                    Официальный YouTube канал
-                </a>
-                <a href="https://dalink.to/xf0rtunax" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://files.donationalerts.com/uploads/filemanager2/14074371/Sr47Orfeb9grCLd9HBhctDIfDSjKruPbqrkO8FHu.png') no-repeat center / cover;">
-                    Поддержать автора финансово!
-                </a>
-            </div>
-        </div>
     </div>
-  <script>
-    async function loadContent(url, section) {
-        const contentDiv = document.getElementById('content');
-        contentDiv.innerHTML = '<p class="status-message">Статус загрузки: Все работает! Загружаем! <span class="loader"></span></p>';
-        
-        // Смена класса body
-        document.body.classList.remove('page-home', 'page-aviation', 'page-rocket');
-        if (section === 'aviation') {
-            document.body.classList.add('page-aviation');
-        } else if (section === 'rocket') {
-            document.body.classList.add('page-rocket');
-        } else {
-            document.body.classList.add('page-home');
-        }
-        
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error('Ошибка загрузки: файл не найден или недоступен. Проверьте имя файла и путь.');
-            }
-            const html = await response.text();
-            
-            setTimeout(() => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                
-                // Вставляем стили из гайда в head главной страницы
-                const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
-                styles.forEach(style => {
-                    const clonedStyle = style.cloneNode(true);
-                    document.head.appendChild(clonedStyle);
-                });
-                
-                // Вставляем тело в #content
-                contentDiv.innerHTML = doc.body.innerHTML;
-                
-                // Выполняем скрипты из гайда
-                const scripts = doc.querySelectorAll('script');
-                scripts.forEach((script) => {
-                    const newScript = document.createElement('script');
-                    if (script.src) {
-                        newScript.src = script.src;
-                    } else {
-                        newScript.textContent = script.textContent;
-                    }
-                    document.body.appendChild(newScript);
-                });
-                
-                // Инициализируем всё
-                initAccordionsAndTables(contentDiv);
-            }, 1000);
-        } catch (err) {
-            contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '.</p>';
-        }
-    }
 
-    function initAccordionsAndTables(container) {
-        // Аккордеоны
-        var acc = container.getElementsByClassName("accordion");
-        for (var i = 0; i < acc.length; i++) {
-            acc[i].addEventListener("click", function() {
-                this.classList.toggle("active");
-                var panel = this.nextElementSibling;
-                if (panel.style.display === "block") {
-                    panel.style.display = "none";
-                } else {
-                    panel.style.display = "block";
+    <script>
+        async function loadContent(url) {
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Ошибка загрузки');
                 }
-            });
-        }
-        
-        // Сортировка таблиц
-        var tables = container.getElementsByTagName("table");
-        for (var t = 0; t < tables.length; t++) {
-            var headers = tables[t].getElementsByTagName("th");
-            for (var h = 0; h < headers.length; h++) {
-                headers[h].addEventListener("click", function() {
-                    sortTable(this.parentNode.parentNode.parentNode, this.cellIndex);
-                });
+                const html = await response.text();
+                document.getElementById('content').innerHTML = html;
+            } catch (err) {
+                document.getElementById('content').innerHTML = '<p>Ошибка: ' + err.message + '</p>';
             }
         }
-        
-        // Функция sortTable (добавьте ваш полный код sortTable здесь, если он не в гайде)
-        function sortTable(table, col) {
-            var rows = table.rows;
-            var switching = true;
-            var dir = "asc";
-            var switchcount = 0;
-            while (switching) {
-                switching = false;
-                for (var i = 1; i < (rows.length - 1); i++) {
-                    var shouldSwitch = false;
-                    var x = rows[i].getElementsByTagName("TD")[col];
-                    var y = rows[i + 1].getElementsByTagName("TD")[col];
-                    var xContent = parseFloat(x.innerHTML) || x.innerHTML.toLowerCase();
-                    var yContent = parseFloat(y.innerHTML) || y.innerHTML.toLowerCase();
-                    if (dir == "asc") {
-                        if (xContent > yContent) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    } else if (dir == "desc") {
-                        if (xContent < yContent) {
-                            shouldSwitch = true;
-                            break;
-                        }
-                    }
-                }
-                if (shouldSwitch) {
-                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                    switching = true;
-                    switchcount++;
-                } else {
-                    if (switchcount == 0 && dir == "asc") {
-                        dir = "desc";
-                        switching = true;
-                    }
-                }
-            }
-        }
-        
-        // Функция openSection
-        function openSection(sectionId) {
-            var panels = document.getElementsByClassName("panel");
-            for (var i = 0; i < panels.length; i++) {
-                panels[i].style.display = "none";
-                panels[i].previousElementSibling.classList.remove("active");
-            }
-            var section = document.getElementById(sectionId);
-            var accordion = section.querySelector(".accordion");
-            if (accordion) {
-                accordion.classList.add("active");
-                var panel = accordion.nextElementSibling;
-                panel.style.display = "block";
-            }
-            section.scrollIntoView({behavior: "smooth"});
-        }
-        
-        // Listener для нав-кнопок (используйте data-section в HTML гайда)
-        var navButtons = container.querySelectorAll('nav button');
-        navButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const sectionId = this.getAttribute('data-section');
-                if (sectionId) {
-                    openSection(sectionId);
-                }
-            });
-        });
-    }
-</script>
-</body>
-</html>
+    </script>
 </body>
 </html>
 
