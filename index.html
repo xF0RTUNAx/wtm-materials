@@ -331,26 +331,35 @@
             const html = await response.text();
             
             setTimeout(() => {
-                // Парсим HTML, чтобы правильно вставить и обработать скрипты
+                // Парсим HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
+                
+                // Вставляем стили из <head> гайда в <head> главной страницы
+                const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+                styles.forEach(style => {
+                    const clonedStyle = style.cloneNode(true);
+                    document.head.appendChild(clonedStyle);
+                });
+                
+                // Вставляем содержимое <body> в #content
                 contentDiv.innerHTML = doc.body.innerHTML;
                 
-                // Извлекаем и выполняем все <script> из загруженного контента
+                // Извлекаем и выполняем скрипты
                 const scripts = doc.querySelectorAll('script');
                 scripts.forEach((script) => {
                     const newScript = document.createElement('script');
                     if (script.src) {
-                        newScript.src = script.src; // Если внешний скрипт
+                        newScript.src = script.src;
                     } else {
-                        newScript.textContent = script.textContent; // Внутренний код
+                        newScript.textContent = script.textContent;
                     }
                     document.body.appendChild(newScript);
                 });
                 
                 // Принудительно инициализируем аккордеоны и таблицы
                 initAccordionsAndTables(contentDiv);
-            }, 1000); // Уменьшил таймаут для теста (было 3000)
+            }, 1000); // Таймаут для теста
         } catch (err) {
             contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '. Проверьте консоль браузера (F12) на ошибки.</p>';
         }
@@ -424,8 +433,8 @@
 </script>
 </body>
 </html>
-}
 </body>
 </html>
+
 
 
