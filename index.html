@@ -114,14 +114,17 @@
         #content {
             margin-top: 50px;
             text-align: left;
-            background: rgba(255, 255, 255, 0.9);
-            color: #333;
+            background: rgba(33, 33, 33, 0.8) !important; /* Фикс: тёмный фон, как в основном контейнере */
+            color: #ffffff !important; /* Белый текст для видимости */
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
             overflow: auto;
             animation: fadeIn 1s ease-in-out;
-            overflow-x: hidden; /* Предотвращаем горизонтальный оверфлоу в контенте */
+            overflow-x: hidden;
+        }
+        #content * { /* Наследование для вложенного контента */
+            color: inherit !important;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -190,7 +193,7 @@
             }
             button, a.button-like {
                 padding: 10px 5px; /* Уменьшаем padding кнопок */
-                font-size: 2em; /* Уменьшаем шрифт */
+                font-size: 1.2em; /* Уменьшено для фикса оверфлоу на мобилке */
                 width: 100%; /* Полная ширина для кнопок */
             }
             #content {
@@ -278,8 +281,13 @@
                 }
                 const html = await response.text();
               
+                // Минимальный фикс: парсим только содержимое <body>, чтобы избежать нестинга и конфликтов
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const bodyContent = doc.body ? doc.body.innerHTML : html; // Если нет body, вставляем как есть
+              
                 setTimeout(() => {
-                    contentDiv.innerHTML = html;
+                    contentDiv.innerHTML = bodyContent;
                 }, 3000);
             } catch (err) {
                 contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '</p>';
