@@ -122,13 +122,6 @@
             animation: fadeIn 1s ease-in-out;
             overflow-x: hidden;
         }
-        #content h1, #content h2, #content h3 { color: #333; font-family: 'Black Ops One', sans-serif; }
-        #content table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-        #content th, #content td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        #content th { background-color: #f2f2f2; }
-        #content ul, #content ol { padding-left: 20px; }
-        #content a { color: #007bff; text-decoration: none; }
-        #content a:hover { text-decoration: underline; color: #ffcc00; box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); } /* Родное свечение для ссылок в контенте */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -245,6 +238,7 @@
         body.page-home h1 {
             color: #ffcc00; /* Оригинальный цвет для главной */
         }
+        /* Другие специфические стили для главной, если нужно */
 
         /* Оригинальные стили для Авиационной кампании (page-aviation) */
         body.page-aviation {
@@ -252,12 +246,13 @@
             background-size: cover;
         }
         body.page-aviation #content {
-            background: rgba(255, 255, 255, 0.85);
-            color: #000;
+            background: rgba(255, 255, 255, 0.85); /* Легкая адаптация под тему */
+            color: #000; /* Контрастный текст */
         }
         body.page-aviation h1 {
-            color: #007bff;
+            color: #007bff; /* Синий для авиа-темы */
         }
+        /* Добавьте здесь другие оригинальные стили для авиа (шрифты, padding и т.д.), взятые из вашего файла */
 
         /* Оригинальные стили для Ракетного флота (page-rocket) */
         body.page-rocket {
@@ -265,21 +260,18 @@
             background-size: cover;
         }
         body.page-rocket #content {
-            background: rgba(240, 240, 240, 0.9);
+            background: rgba(240, 240, 240, 0.9); /* Адаптация под флот-тему */
             color: #333;
         }
         body.page-rocket h1 {
-            color: #ff4500;
+            color: #ff4500; /* Оранжевый для ракет/флота */
         }
-        /* Усиленное свечение для ссылок в ракетном флоте */
-        body.page-rocket #content a:hover {
-            box-shadow: 0 0 15px rgba(255, 69, 0, 0.7);
-        }
+        /* Добавьте здесь другие оригинальные стили для флота */
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body class="page-home">
+<body class="page-home"> <!-- Начальный класс для главной -->
     <div class="container">
         <h1>Добро пожаловать на официальный сайт xFORTUNAx по War Thunder Mobile</h1>
         <p>Погрузимся в наше сообщество! Выберите нужный раздел:</p>
@@ -288,7 +280,7 @@
             <button id="fleet-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html', 'rocket')">Ракетный флот</button>
         </div>
         <div id="content"></div>
-        <!-- Раздел с официальными соцсетями -->
+        <!-- Добавленный раздел с официальными соцсетями -->
         <div style="text-align: center; margin-top: 50px;">
             <h1 style="font-family: 'Black Ops One', sans-serif; color: rgba(0, 255, 30, 0.85); font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">Официальные социальные сети xFORTUNAx</h1>
             <p style="font-size: 1.2em; margin-bottom: 30px;">Присоединяйтесь к нашему сообществу в официальных каналах для новостей, обсуждений и эксклюзивного контента по War Thunder Mobile!</p>
@@ -309,44 +301,6 @@
         </div>
     </div>
     <script>
-        // Простой парсер Markdown в HTML для рендеринга контента
-        function parseMarkdown(md) {
-            let html = md
-                // Заголовки
-                .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-                .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-                .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-                // Ссылки [text](url)
-                .replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" target="_blank">$1</a>')
-                // Жирный **text**
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                // Курсив *text*
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                // Параграфы (двойные переносы)
-                .replace(/\n\n/g, '</p><p>')
-                .replace(/^/gm, '<p>') // Начало параграфов
-                .replace(/<\/p>$/g, '') // Убрать лишний </p> в конце
-                // Нумерованные списки
-                .replace(/^\d+\. (.*$)/gm, '<li>$1</li>')
-                .replace(/<p>(\d+\. .*?)<\/p>/g, '<ol><li>$1</li></ol>') // Обернуть в ol, если нужно доработать
-                // Маркированные списки
-                .replace(/^- (.*$)/gm, '<li>$1</li>')
-                .replace(/<p>(- .*?)<\/p>/g, '<ul><li>$1</li></ul>')
-                // Таблицы (простой парсер: строки с |)
-                .replace(/^\|(.*\|.*)$/gm, (match) => {
-                    const cells = match.split('|').map(c => c.trim()).filter(c => c);
-                    if (cells.length > 1) {
-                        return `<tr><td>${cells.slice(0, -1).join('</td><td>')}</td></tr>`; // Убрать последнюю |
-                    }
-                    return match;
-                })
-                .replace(/<p>\|.*?<\/p>/g, '<table>$&</table>') // Обернуть в table
-                // Переносы строк
-                .replace(/\n/g, '<br>');
-            
-            return `<div>${html}</div>`;
-        }
-
         async function loadContent(url, section) {
             const contentDiv = document.getElementById('content');
             contentDiv.innerHTML = '<p class="status-message">Статус загрузки: Все работает! Загружаем! <span class="loader"></span></p>';
@@ -364,16 +318,12 @@
             try {
                 const response = await fetch(url);
                 if (!response.ok) {
-                    throw new Error('Ошибка загрузки: файл не найден или недоступен');
+                    throw new Error('Ошибка загрузки');
                 }
-                const md = await response.text(); // Markdown как текст
+                const html = await response.text();
                 
                 setTimeout(() => {
-                    const parsedHtml = parseMarkdown(md);
-                    contentDiv.innerHTML = parsedHtml;
-                    // Применяем родное свечение к новым ссылкам/кнопкам в контенте
-                    const links = contentDiv.querySelectorAll('a');
-                    links.forEach(link => link.classList.add('button-like'));
+                    contentDiv.innerHTML = html;
                 }, 3000);
             } catch (err) {
                 contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '</p>';
