@@ -206,17 +206,18 @@
 
         ol {
     list-style-type: none;
-    counter-reset: list-item;
+    counter-reset: my-counter;
     padding-left: 0;
 }
 
        ol li {
     position: relative;
     padding-left: 35px;
+    counter-increment: my-counter;
 }
 
         li::before {
-            content: "•";
+            content: counter(my-counter) "•";
             position: absolute;
             left: 0;
             color: #0056b3;
@@ -515,6 +516,7 @@
     </div>
 </body>
 </html>
+
 
 
 
