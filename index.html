@@ -76,7 +76,7 @@
         }
         #tank-btn {
             background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)),
-                        url('https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg') center/cover no-repeat;
+                        url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg') center/cover no-repeat;
         }
         /* Стиль кнопки "Назад" — такая же, как основные кнопки */
         #back-btn {
@@ -92,9 +92,9 @@
             margin-top: 50px;
             background: rgba(255,255,255,0.95);
             color: #333;
-            padding: 30px;
+            padding: 10px;
             border-radius: 15px;
-            min-height: 400px;
+            min-height: 50px;
             text-align: left; /* Выравнивание текста по левому краю */
         }
         @keyframes pulse {
@@ -128,13 +128,13 @@
 
         <!-- Соцсети (оставил без изменений) -->
         <div style="text-align: center; margin-top: 50px;">
-            <h1 style="font-family: 'Black Ops One', sans-serif; color: rgba(0, 255, 30, 0.85); font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Официальные социальные сети xFORTUNAx</h1>
+            <h1 style="font-family: 'Black Ops One', sans-serif; color: #ffcc00; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Официальные социальные сети xFORTUNAx</h1>
             <p style="font-size: 1.2em; margin-bottom: 30px;">Присоединяйтесь к нашему сообществу!</p>
             <div class="buttons" style="gap: 25px;">
-                <a href="https://t.me/fortunawtm" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://img.utdstc.com/screen/3d2/4b0/3d24b0630ea30e4e65afab89867431ad0c2d182f295776c6fe3e4940f7441d68:800') center/cover no-repeat;">Telegram канал</a>
-                <a href="https://t.me/warthundermobilefortuna" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)), url('https://zastavki.gas-kvas.com/uploads/posts/2024-09/zastavki-gas-kvas-com-w3fu-p-zastavki-iz-telegramma-1.jpg') center/cover no-repeat;">Чат сообщества</a>
-                <a href="https://youtube.com/@xf0rtunax?si=9rVEeUE5D6wFZgem" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://yt3.googleusercontent.com/xgdDJB9MKZzt0zS2LYdQ-4l7Nb4rNheEPAHV1cwIyrm4kCPsF65i6XgFqMUOp7wRRO3Rk948=w2276-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj') center/cover no-repeat;">YouTube канал</a>
-                <a href="https://dalink.to/xf0rtunax" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://files.donationalerts.com/uploads/filemanager2/14074371/Sr47Orfeb9grCLd9HBhctDIfDSjKruPbqrkO8FHu.png') center/cover no-repeat;">Поддержать автора</a>
+                <a href="https://t.me/fortunawtm" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://img.utdstc.com/screen/3d2/4b0/3d24b0630ea30e4e65afab89867431ad0c2d182f295776c6fe3e4940f7441d68:800') center/cover no-repeat;">Официальный Telegram канал</a>
+                <a href="https://t.me/warthundermobilefortuna" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)), url('https://zastavki.gas-kvas.com/uploads/posts/2024-09/zastavki-gas-kvas-com-w3fu-p-zastavki-iz-telegramma-1.jpg') center/cover no-repeat;">Официальный чат сообщества</a>
+                <a href="https://youtube.com/@xf0rtunax?si=9rVEeUE5D6wFZgem" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://yt3.googleusercontent.com/xgdDJB9MKZzt0zS2LYdQ-4l7Nb4rNheEPAHV1cwIyrm4kCPsF65i6XgFqMUOp7wRRO3Rk948=w2276-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj') center/cover no-repeat;">Официальный YouTube канал</a>
+                <a href="https://dalink.to/xf0rtunax" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://files.donationalerts.com/uploads/filemanager2/14074371/Sr47Orfeb9grCLd9HBhctDIfDSjKruPbqrkO8FHu.png') center/cover no-repeat;">Поддержать автора финансово</a>
             </div>
         </div>
     </div>
@@ -148,7 +148,7 @@
 
             try {
                 const resp = await fetch(url);
-                if (!resp.ok) throw new Error('Файл не найден');
+                if (!resp.ok) throw new Error('что-то пошло не так...');
 
                 const html = await resp.text();
                 setTimeout(() => {
@@ -160,7 +160,7 @@
                     } else if (url.includes('Авиационная')) {
                         document.body.style.backgroundImage = 'url("https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg")';
                     } else if (url.includes('Танковая кампания')) {
-                        document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")';
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
                     }
 
                     // Показываем кнопку "Назад" и скрываем основные разделы
@@ -188,6 +188,10 @@
     </script>
 </body>
 </html>
+
+
+
+
 
 
 
