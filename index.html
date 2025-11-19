@@ -168,7 +168,6 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
         /* Медиа-запросы для мобильной версии */
         @media (max-width: 768px) {
             body {
@@ -207,7 +206,6 @@
                 border-width: 3px; /* Уменьшаем толщину бордера */
             }
         }
-
         /* Уникальные анимации для мобильной версии */
         @media (max-width: 768px) {
             .container {
@@ -245,7 +243,6 @@
             <button id="fleet-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">Ракетный флот</button>
         </div>
         <div id="content"></div>
-
         <!-- Добавленный раздел с официальными соцсетями -->
         <div style="text-align: center; margin-top: 50px;">
             <h1 style="font-family: 'Black Ops One', sans-serif; color: rgba(0, 255, 30, 0.85); font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">Официальные социальные сети xFORTUNAx</h1>
@@ -270,20 +267,19 @@
  async function loadContent(url) {
     const contentDiv = document.getElementById('content');
     contentDiv.innerHTML = '<p class="status-message">Статус загрузки: Все работает! Загружаем! <span class="loader"></span></p>';
-    
+   
     // Сохраняем исходный фон главной страницы для сброса
     const originalBackground = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_10_silverarrows/1080x2340_wtm_silver_arrows_adbe8cd5251de81d885f6ebff1cf5c46.jpg")';
-
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error('Ошибка загрузки: файл не найден или недоступен');  // Уточнил сообщение для ясности
+            throw new Error('Ошибка загрузки: файл не найден или недоступен'); // Уточнил сообщение для ясности
         }
         const html = await response.text();
-        
+       
         setTimeout(() => {
             contentDiv.innerHTML = html;
-            
+           
             // Меняем фон в зависимости от URL
             if (url === 'Ракетный флот I War Thunder Mobile.html') {
                 document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
@@ -292,7 +288,7 @@
                 document.body.style.backgroundImage = 'url("https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg")';
                 document.body.style.backgroundSize = 'cover';
             }
-            
+           
             // Добавляем кнопку "Назад"
             const backButton = document.createElement('button');
             backButton.innerText = 'Назад на главную';
@@ -303,15 +299,18 @@
             backButton.style.border = 'none';
             backButton.style.borderRadius = '5px';
             backButton.style.cursor = 'pointer';
+            backButton.style.display = 'block';
+            backButton.style.margin = '20px auto 0'; // Центрируем кнопку
             backButton.onclick = () => {
                 contentDiv.innerHTML = '';
                 document.body.style.backgroundImage = originalBackground;
             };
-            contentDiv.appendChild(backButton);
-            
+            // Вставляем кнопку "Назад" в начало contentDiv (под кнопками разделов)
+            contentDiv.insertBefore(backButton, contentDiv.firstChild);
+           
         }, 10);
     } catch (err) {
-        contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '</p>';  // Правильная конкатенация здесь!
+        contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '</p>'; // Правильная конкатенация здесь!
     }
 }
         </script>
