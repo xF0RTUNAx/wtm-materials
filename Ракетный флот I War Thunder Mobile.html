@@ -124,6 +124,59 @@
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
+        
+        /* Закрепляем первый столбец (ключевую информацию) при скролле */
+.table-container table th:first-child,
+.table-container table td:first-child {
+    position: sticky;
+    left: 0;
+    background: rgba(209, 241, 253, 0.95); /* белый фон, чтобы не просвечивало */
+    z-index: 3;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08); /* лёгкая тень справа, чтобы визуально отделялось */
+    min-width: 140px; /* чтобы название корабля не сжималось */
+}
+
+/* Для заголовка первого столбца — правильный градиент */
+.table-container table th:first-child {
+    background: linear-gradient(to bottom, #0056b3, #0077cc);
+    z-index: 4;
+}
+
+        /* Закрепляем шапку таблицы при скролле (работает на всех устройствах, включая мобильные) */
+.table-container {
+    position: relative; /* ← обязательно для корректной работы sticky внутри контейнера */
+    overflow-y: auto;
+    max-height: 650px;
+    scrollbar-width: thin;
+}
+
+.table-container thead,
+.table-container table {
+    border-radius: 15px; /* радиус остаётся */
+}
+
+.table-container thead th {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10;
+    background: linear-gradient(to bottom, #0056b3, #0077cc) !important;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* лёгкая тень снизу, чтобы было видно границу */
+}
+
+/* Дополнительно для Safari/iOS */
+.table-container thead th {
+    -webkit-sticky: sticky;
+}
+/* На мобильных делаем шире и чуть жирнее шрифт для читаемости */
+@media (max-width: 768px) {
+    .table-container table th:first-child,
+    .table-container table td:first-child {
+        min-width: 150px;
+        font-weight: 800;
+        font-size: 1.02em;
+    }
+}
 
         th, td {
             padding: 15px;
@@ -146,24 +199,21 @@
         }
 
         .rating-1 { background-color: #ff0000; color: white; }
-        .rating-2 { background-color: #ff9900; color: white; }
+        .rating-2 { background-color: #ff9900; color: black; }
         .rating-3 { background-color: #ffff00; color: black; }
         .rating-4 { background-color: #99ff00; color: black; }
         .rating-5 { background-color: #00ff00; color: black; }
 
-        ul, ol {
-            background: rgba(255, 255, 255, 0.6);
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        }
+        ol {
+    list-style-type: none;
+    counter-reset: list-item;
+    padding-left: 0;
+}
 
-        li {
-            margin-bottom: 15px;
-            position: relative;
-            padding-left: 20px;
-        }
+       ol li {
+    position: relative;
+    padding-left: 35px;
+}
 
         li::before {
             content: "•";
@@ -174,10 +224,12 @@
         }
 
         ol li::before {
-            content: counter(list-item) ".";
-            counter-increment: list-item;
-            color: #0056b3;
-        }
+    content: counter(list-item) ". ";
+    position: absolute;
+    left: 0;
+    color: #0056b3;
+    font-weight: bold;
+}
 
         footer {
             text-align: center;
@@ -347,8 +399,8 @@
                    <thead>
                 <tr>
                     <th>Ракета</th>
-                    <th>Урон одной</th>
-                    <th>УВС одной</th>
+                    <th>Тип</th>
+                    <th>УВС одной ракеты</th>
                     <th>Калибр</th>
                 </tr>
             </thead>
