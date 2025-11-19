@@ -7,19 +7,17 @@
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            babackground: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg') no-repeat center center fixed;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg') no-repeat center center fixed;
             color: #333;
             margin: 0;
             padding: 20px;
             line-height: 1.6;
             animation: fadeIn 1s ease-in-out;
         }
-
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -29,25 +27,22 @@
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.4);
+            text-align: justify; /* Выравнивание всего текста по левому краю */
         }
-
         section {
             transition: transform 0.3s ease;
             margin-bottom: 20px;
             padding: 10px;
             border-radius: 10px;
         }
-
         section:hover {
             transform: scale(1.02);
         }
-
         h1, h2, h3 {
             color: #0056b3;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             position: relative;
         }
-
         h1::before, h2::before, h3::before {
             content: "";
             position: absolute;
@@ -58,7 +53,6 @@
             background: linear-gradient(to right, #0056b3, #3388d1);
             border-radius: 2px;
         }
-
         nav {
             display: flex;
             flex-wrap: wrap;
@@ -66,7 +60,6 @@
             margin-bottom: 40px;
             gap: 12px;
         }
-
         nav a {
             display: block;
             padding: 14px 20px;
@@ -85,20 +78,17 @@
             min-width: 220px;
             max-width: 340px;
         }
-
         nav a:hover {
             transform: translateY(-5px);
             background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(200, 235, 255, 1));
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
         }
-
         @media (max-width: 768px) {
             nav {
                 flex-direction: column;
                 align-items: center;
                 gap: 12px;
             }
-
             nav a {
                 width: 92%;
                 max-width: none;
@@ -106,7 +96,6 @@
                 font-size: 1.05em;
             }
         }
-
         .table-container {
             overflow-x: auto;
             overflow-y: auto;
@@ -115,7 +104,6 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
@@ -124,7 +112,7 @@
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
-        
+       
         /* Закрепляем первый столбец (ключевую информацию) при скролле */
 .table-container table th:first-child,
 .table-container table td:first-child {
@@ -135,13 +123,11 @@
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08); /* лёгкая тень справа, чтобы визуально отделялось */
     min-width: 140px; /* чтобы название корабля не сжималось */
 }
-
 /* Для заголовка первого столбца — правильный градиент */
 .table-container table th:first-child {
     background: linear-gradient(to bottom, #0056b3, #0077cc);
     z-index: 4;
 }
-
         /* Закрепляем шапку таблицы при скролле (работает на всех устройствах, включая мобильные) */
 .table-container {
     position: relative; /* ← обязательно для корректной работы sticky внутри контейнера */
@@ -149,12 +135,10 @@
     max-height: 650px;
     scrollbar-width: thin;
 }
-
 .table-container thead,
 .table-container table {
     border-radius: 15px; /* радиус остаётся */
 }
-
 .table-container thead th {
     position: sticky !important;
     top: 0 !important;
@@ -163,7 +147,6 @@
     backdrop-filter: blur(8px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* лёгкая тень снизу, чтобы было видно границу */
 }
-
 /* Дополнительно для Safari/iOS */
 .table-container thead th {
     -webkit-sticky: sticky;
@@ -177,14 +160,12 @@
         font-size: 1.02em;
     }
 }
-
         th, td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid rgba(0,0,0,0.05);
             font-weight: bold;
         }
-
         thead th {
             background: linear-gradient(to bottom, #0056b3, #0077cc);
             color: white;
@@ -193,29 +174,24 @@
             z-index: 1;
             backdrop-filter: blur(8px);
         }
-
         tbody tr:nth-child(even) {
             background: rgba(240, 248, 255, 0.5);
         }
-
         .rating-1 { background-color: #ff0000; color: white; }
         .rating-2 { background-color: #ff9900; color: black; }
         .rating-3 { background-color: #ffff00; color: black; }
         .rating-4 { background-color: #99ff00; color: black; }
         .rating-5 { background-color: #00ff00; color: black; }
-
         ol {
     list-style-type: none;
     counter-reset: my-counter;
     padding-left: 0;
 }
-
        ol li {
     position: relative;
     padding-left: 35px;
     counter-increment: my-counter;
 }
-
         li::before {
             content: counter(my-counter) "•";
             position: absolute;
@@ -223,7 +199,6 @@
             color: #0056b3;
             font-weight: bold;
         }
-
         ol li::before {
     content: counter(list-item) ". ";
     position: absolute;
@@ -231,17 +206,15 @@
     color: #0056b3;
     font-weight: bold;
 }
-
         footer {
             text-align: center;
             font-size: 0.9em;
             color: #ff0000;
             margin-top: 50px;
             padding: 15px;
-            background: linear-gradient(to top, rgba(255, 255, 255, 0.7), transparent);
+            background: linear-gradient(to bottom,rgba(255, 255, 255, 0.7), transparent);
             border-radius: 15px;
         }
-
         @media (max-width: 768px) {
             section {
                 opacity: 0;
@@ -249,13 +222,11 @@
                 animation: slideUpFadeIn 0.8s ease-out forwards;
                 animation-delay: calc(0.2s * var(--section-index));
             }
-
             @keyframes slideUpFadeIn {
                 from { opacity: 0; transform: translateY(50px); }
                 to { opacity: 1; transform: translateY(0); }
             }
         }
-
         section:nth-child(1) { --section-index: 1; }
         section:nth-child(2) { --section-index: 2; }
         section:nth-child(3) { --section-index: 3; }
@@ -267,7 +238,6 @@
 <body>
     <div class="container">
         <h1>WTM: Ракетный Флот</h1>
-
         <nav>
             <a href="#section1">1. Корабли и ракеты</a>
             <a href="#section2">2. Корабли по чистому УВС</a>
@@ -276,7 +246,6 @@
             <a href="#section5">5. FXPENT (оценка кораблей)</a>
             <a href="#section6">6. Про некоторые ракеты (ПКР)</a>
         </nav>
-
         <section id="section1">
             <h2>1. Корабли и ракеты</h2>
             <div class="table-container">
@@ -352,7 +321,6 @@
                 </table>
             </div>
         </section>
-
         <section id="section2">
             <h2>2. Корабли по чистому УВС</h2>
             <div class="table-container">
@@ -392,7 +360,6 @@
                 </table>
             </div>
         </section>
-
         <section id="section3">
             <h2>3. Ракеты (по урону с одной ракеты, увс)</h2>
             <div class="table-container">
@@ -428,7 +395,6 @@
                 </table>
             </div>
         </section>
-
         <section id="section4">
             <h2>4. Общие выводы</h2>
             <ol>
@@ -438,7 +404,6 @@
             <li>Не забывайте важность траектории ракет. Как было сказано ранее, это влияет на практический урон. Несмотря на применение одних и тех же ракет, разные представители флота имеют собственную адаптацию за счет пусковых. Детальнее про траектории можно узнать из обзоров конкретного корабля.</li>
             </ol>
         </section>
-
         <section id="section5">
            <h2>5. FortX Practice Engine Navy Test (FXPENT)</h2>
          <p>Было принято решение изменить подход к рекомендациям касательно некоторых представителей флота. Вашему вниманию – тестовая технология, позволяющая из учета практики (пусть и субъективной) быстро ознакомиться и сравнить ключевые показатели флота с небольшими комментариями. Старый формат остается в предыдущей версии.</p>
@@ -496,7 +461,6 @@
             <li>Пр. 903 Лунь – 14</li>
             </ol>
         </section>
-
         <section id="section6">
             <h2>6. Про некоторые ракеты (ПКР)</h2>
             <ol>
@@ -509,13 +473,13 @@
             <li><strong>«Оникс»</strong><br>Достаточно быстрые и мощные ракеты. Оптимальная траектория при всех пусках, напоминая параболу. Примерно от 2-2.5 км. Рекомендуется применять ловушки с хорошей, но адекватной задержкой на средних и дальних дистанциях.</li>
             </ol>
         </section>
-
         <footer>
            <p>Версия 3.1. Последнее обновление 19.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
 </body>
 </html>
+
 
 
 
