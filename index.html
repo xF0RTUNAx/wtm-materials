@@ -74,6 +74,10 @@
             background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)),
                         url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg') center/cover no-repeat;
         }
+        #tank-btn {
+            background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)),
+                        url('https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg') center/cover no-repeat;
+        }
         /* Стиль кнопки "Назад" — такая же, как основные кнопки */
         #back-btn {
             background: linear-gradient(135deg, rgba(255,193,7,0.9), rgba(255,167,38,0.9));
@@ -113,6 +117,7 @@
         <div class="buttons" id="main-buttons">
             <button id="aviation-btn" onclick="loadContent('Авиационная кампания I War Thunder Mobile.html')">Авиационная кампания</button>
             <button id="fleet-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">Ракетный флот</button>
+            <button id="tank-btn" onclick="loadContent('Танковая кампания I War Thunder Mobile.html')">Танковая кампания</button>
             
             <!-- Кнопка "Назад" будет показываться только после загрузки контента -->
             <button id="back-btn" onclick="returnToMain()">Назад на главную</button>
@@ -153,11 +158,14 @@
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
                     } else if (url.includes('Авиационная')) {
                         document.body.style.backgroundImage = 'url("https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg")';
+                    } else if (url.includes('Танковая кампания')) {
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_09_newhorizon/1080x2340_wtm_new_order_0af6aec3d79242d1281d6a86a07c7330.jpg")';
                     }
 
                     // Показываем кнопку "Назад" и скрываем основные разделы
                     document.getElementById('aviation-btn').style.display = 'none';
                     document.getElementById('fleet-btn').style.display = 'none';
+                    document.getElementById('tank-btn').style.display = 'none';
                     document.getElementById('back-btn').style.display = 'block';
 
                 }, 100);
@@ -173,11 +181,13 @@
             // Возвращаем основные кнопки, скрываем "Назад"
             document.getElementById('aviation-btn').style.display = 'block';
             document.getElementById('fleet-btn').style.display = 'block';
+            document.getElementById('tank-btn').style.display = 'block';
             document.getElementById('back-btn').style.display = 'none';
         }
     </script>
 </body>
 </html>
+
 
 
 
