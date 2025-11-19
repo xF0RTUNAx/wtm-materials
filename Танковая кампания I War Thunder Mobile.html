@@ -14,6 +14,7 @@
             padding: 20px;
             line-height: 1.6;
             animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden; /* Предотвращаем горизонтальный оверфлоу */
         }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -28,11 +29,14 @@
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden; /* Предотвращаем выход контента за края */
         }
         h1, h2, h3 {
             color: #0056b3;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             position: relative;
+            word-wrap: break-word; /* Разрешаем перенос слов */
+            hyphens: auto; /* Автоматические переносы */
         }
         h1::before, h2::before, h3::before {
             content: "";
@@ -49,6 +53,8 @@
             font-size: 4em;
             color: #000000;
             margin-top: 50px;
+            word-wrap: break-word; /* Разрешаем перенос слов */
+            hyphens: auto; /* Автоматические переносы */
         }
         footer {
             text-align: center;
@@ -56,8 +62,34 @@
             color: #ff0000;
             margin-top: 50px;
             padding: 15px;
-            background: linear-gradient(to bottom,rgba(255, 255, 255, 0.7), transparent);
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent);
             border-radius: 15px;
+            word-wrap: break-word; /* Разрешаем перенос слов */
+            hyphens: auto; /* Автоматические переносы */
+        }
+        /* Оптимизация для мобильных устройств */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px; /* Уменьшаем отступы тела */
+            }
+            .container {
+                max-width: 100%; /* Растягиваем на всю ширину экрана */
+                padding: 15px; /* Уменьшаем внутренние отступы для большего места под текст */
+                background: transparent; /* Без фона, чтобы больше текста помещалось (фон от body) */
+                border-radius: 0; /* Убираем скругления для полной ширины */
+                box-shadow: none; /* Убираем тень */
+                border: none; /* Убираем границу */
+            }
+            h1 {
+                font-size: 1.8em; /* Уменьшаем заголовок для мобильных */
+            }
+            .development-message {
+                font-size: 2.5em; /* Уменьшаем для мобильных, чтобы не выходило */
+            }
+            footer {
+                font-size: 0.8em; /* Уменьшаем футер */
+                padding: 10px;
+            }
         }
     </style>
 </head>
@@ -71,3 +103,4 @@
     </div>
 </body>
 </html>
+
