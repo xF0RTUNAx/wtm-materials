@@ -266,7 +266,8 @@
             </div>
         </div>
     </div>
-   async function loadContent(url) {
+    <script>
+ async function loadContent(url) {
     const contentDiv = document.getElementById('content');
     contentDiv.innerHTML = '<p class="status-message">Статус загрузки: Все работает! Загружаем! <span class="loader"></span></p>';
     
@@ -276,7 +277,7 @@
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            throw new Error('Ошибка загрузки');
+            throw new Error('Ошибка загрузки: файл не найден или недоступен');  // Уточнил сообщение для ясности
         }
         const html = await response.text();
         
@@ -285,15 +286,14 @@
             
             // Меняем фон в зависимости от URL
             if (url === 'Ракетный флот I War Thunder Mobile.html') {
-                document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/24_08_lockandload/1080x2340_wtm_lock_and_load_108b6a1d211db5171b20d731ad17f59c.jpg")';
-                document.body.style.backgroundSize = 'cover'; // Поддерживаем cover для нового фона
+                document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
+                document.body.style.backgroundSize = 'cover';
             } else if (url === 'Авиационная кампания I War Thunder Mobile.html') {
-                // Опционально: Фон для авиации (из вашей кнопки)
-                document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg")';
+                document.body.style.backgroundImage = 'url("https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg")';
                 document.body.style.backgroundSize = 'cover';
             }
             
-            // Опционально: Добавляем кнопку "Назад" в контент для сброса
+            // Добавляем кнопку "Назад"
             const backButton = document.createElement('button');
             backButton.innerText = 'Назад на главную';
             backButton.style.marginTop = '20px';
@@ -304,18 +304,20 @@
             backButton.style.borderRadius = '5px';
             backButton.style.cursor = 'pointer';
             backButton.onclick = () => {
-                contentDiv.innerHTML = ''; // Очищаем контент
-                document.body.style.backgroundImage = originalBackground; // Сбрасываем фон
+                contentDiv.innerHTML = '';
+                document.body.style.backgroundImage = originalBackground;
             };
             contentDiv.appendChild(backButton);
             
         }, 10);
     } catch (err) {
-        contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '</p>';
+        contentDiv.innerHTML = '<p class="error-message">Статус загрузки: ' + err.message + '</p>';  // Правильная конкатенация здесь!
     }
 }
+        </script>
 </body>
 </html>
+
 
 
 
