@@ -103,8 +103,22 @@
             50% { transform: scale(1.02); }
         }
         @media (max-width: 768px) {
-            .buttons { flex-direction: column; gap: 20px; }
-            button, a.button-like { font-size: 1.8em; padding: 16px 10px; }
+            .container {
+                max-width: 100%;
+                padding: 20px;
+                border-radius: 0;
+            }
+            .buttons {
+                flex-direction: column;
+                gap: 20px;
+            }
+            button, a.button-like {
+                font-size: 1.8em;
+                padding: 16px 20px;
+                width: 100%;
+                box-sizing: border-box;
+                min-width: auto;
+            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
@@ -177,6 +191,7 @@
     </script>
 </body>
 </html>
+
 
 
 
