@@ -167,7 +167,7 @@
             </div>
         </div>
         <!-- Новый раздел спонсоров -->
-        <div class="sponsors" style="text-align: center; margin-top: 50px;">
+        <div id="sponsors-section" class="sponsors" style="text-align: center; margin-top: 50px;">
             <h1 style="font-family: 'Black Ops One', sans-serif; color: #ffcc00; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Спасибо спонсорам проекта!</h1>
             <ul>
                 <li>Kostiantyn</li>
@@ -200,6 +200,8 @@
                     document.getElementById('fleet-btn').style.display = 'none';
                     document.getElementById('tank-btn').style.display = 'none';
                     document.getElementById('back-btn').style.display = 'block';
+                    // Скрываем раздел спонсоров
+                    document.getElementById('sponsors-section').style.display = 'none';
                 }, 100);
             } catch (e) {
                 contentDiv.innerHTML = `<p style="color:#ff0000; font-weight:bold;">Ошибка: ${e.message}</p>`;
@@ -213,6 +215,8 @@
             document.getElementById('fleet-btn').style.display = 'block';
             document.getElementById('tank-btn').style.display = 'block';
             document.getElementById('back-btn').style.display = 'none';
+            // Показываем раздел спонсоров
+            document.getElementById('sponsors-section').style.display = 'block';
         }
     </script>
 </body>
