@@ -60,6 +60,8 @@
             text-decoration: none;
             min-width: 280px;
             animation: pulse 2s infinite;
+            hyphens: none; /* Отключение автоматической расстановки переносов */
+            word-break: normal; /* Нормальный разрыв только между словами */
         }
         button:hover, a.button-like:hover {
             transform: scale(1.05);
@@ -87,7 +89,6 @@
         #back-btn:hover {
             background: linear-gradient(135deg, rgba(255,215,0,1), rgba(255,193,7,1));
         }
-
         #content {
             margin-top: 50px;
             background: rgba(255,255,255,0.95);
@@ -113,19 +114,16 @@
     <div class="container">
         <h1>Добро пожаловать на официальный сайт xFORTUNAx по War Thunder Mobile</h1>
         <p>Погрузимся в наше сообщество! Выберите нужный раздел:</p>
-
         <!-- Основные кнопки + кнопка "Назад" (скрыта по умолчанию) -->
         <div class="buttons" id="main-buttons">
             <button id="aviation-btn" onclick="loadContent('Авиационная кампания I War Thunder Mobile.html')">Авиационная кампания</button>
             <button id="fleet-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">Ракетный флот</button>
             <button id="tank-btn" onclick="loadContent('Танковая кампания I War Thunder Mobile.html')">Танковая кампания</button>
-            
+           
             <!-- Кнопка "Назад" будет показываться только после загрузки контента -->
             <button id="back-btn" onclick="returnToMain()">Назад на главную</button>
         </div>
-
         <div id="content"></div>
-
         <!-- Соцсети (оставил без изменений) -->
         <div style="text-align: center; margin-top: 50px;">
             <h1 style="font-family: 'Black Ops One', sans-serif; color: #ffcc00; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Официальные социальные сети xFORTUNAx</h1>
@@ -138,22 +136,17 @@
             </div>
         </div>
     </div>
-
     <script>
         const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_10_silverarrows/1080x2340_wtm_silver_arrows_adbe8cd5251de81d885f6ebff1cf5c46.jpg")';
-
         async function loadContent(url) {
             const contentDiv = document.getElementById('content');
             contentDiv.innerHTML = '<p style="color:#00cc66; font-weight:bold;">Загружаем... <span style="display:inline-block; width:20px; height:20px; border:4px solid #f3f3f3; border-top:4px solid #3498db; border-radius:50%; animation:spin 1s linear infinite;"></span></p>';
-
             try {
                 const resp = await fetch(url);
                 if (!resp.ok) throw new Error('что-то пошло не так...');
-
                 const html = await resp.text();
                 setTimeout(() => {
                     contentDiv.innerHTML = html;
-
                     // Меняем фон
                     if (url.includes('Ракетный флот')) {
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_01_wildislands/1080x2340_wtm_wild_islands_6d2582193f55e68ea83a0c081d4c2145.jpg")';
@@ -162,23 +155,19 @@
                     } else if (url.includes('Танковая кампания')) {
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
                     }
-
                     // Показываем кнопку "Назад" и скрываем основные разделы
                     document.getElementById('aviation-btn').style.display = 'none';
                     document.getElementById('fleet-btn').style.display = 'none';
                     document.getElementById('tank-btn').style.display = 'none';
                     document.getElementById('back-btn').style.display = 'block';
-
                 }, 100);
             } catch (e) {
                 contentDiv.innerHTML = `<p style="color:#ff0000; font-weight:bold;">Ошибка: ${e.message}</p>`;
             }
         }
-
         function returnToMain() {
             document.getElementById('content').innerHTML = '';
             document.body.style.backgroundImage = originalBg;
-
             // Возвращаем основные кнопки, скрываем "Назад"
             document.getElementById('aviation-btn').style.display = 'block';
             document.getElementById('fleet-btn').style.display = 'block';
@@ -188,6 +177,7 @@
     </script>
 </body>
 </html>
+
 
 
 
