@@ -8,6 +8,7 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg') no-repeat center center fixed;
+            background-size: cover; /* Добавлено для распространения фона до границ экрана */
             color: #333;
             margin: 0;
             padding: 20px;
@@ -27,7 +28,7 @@
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.4);
-       
+      
         }
         section {
             transition: transform 0.3s ease;
@@ -99,7 +100,7 @@
             overflow: hidden;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
-      
+     
         /* Закрепляем первый столбец (ключевую информацию) при скролле */
 .table-container table th:first-child,
 .table-container table td:first-child {
@@ -343,80 +344,6 @@
                 </table>
             </div>
         </section>
-        <section id="section2">
-            <h2>2. Корабли по чистому УВС</h2>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Корабль</th><th>УВС</th></tr></thead>
-                    <tbody>
-                        <tr><td>Sachsen</td><td>4756</td></tr>
-                        <tr><td>USS Bainbridge</td><td>4634</td></tr>
-                    <tr><td>USS Knox</td><td>4500</td></tr>
-                    <tr><td>HMS Type 12I</td><td>3853</td></tr>
-                    <tr><td>HMS Type 45</td><td>3700</td></tr>
-                    <tr><td>JDS Hatsuyuki</td><td>3600</td></tr>
-                    <tr><td>Пр. 11352</td><td>3333</td></tr>
-                    <tr><td>Brandenburg</td><td>3296</td></tr>
-                    <tr><td>Baden-Wurttemberg</td><td>3167</td></tr>
-                    <tr><td>Пр. 61М</td><td>3133</td></tr>
-                    <tr><td>Пр. 903 Лунь</td><td>2880</td></tr>
-                    <tr><td>JDS Hatakaze</td><td>2851</td></tr>
-                    <tr><td>HMS Type 23</td><td>2833</td></tr>
-                    <tr><td>Пр. 956</td><td>2821</td></tr>
-                    <tr><td>Bremen / JDS Takatsuki</td><td>2700/2700</td></tr>
-                    <tr><td>USS Albany</td><td>2663</td></tr>
-                    <tr><td>USS Truxtun</td><td>2633</td></tr>
-                    <tr><td>ARA Type 42</td><td>2630</td></tr>
-                    <tr><td>Грозный</td><td>2570</td></tr>
-                    <tr><td>USS Virginia</td><td>2563</td></tr>
-                    <tr><td>USS Belknap / JDS Yushio</td><td>2533/2533</td></tr>
-                    <tr><td>Пр. 1155</td><td>2500</td></tr>
-                    <tr><td>Тип 212А</td><td>2400</td></tr>
-                    <tr><td>HMS Devonshire</td><td>2133</td></tr>
-                    <tr><td>Hamburg</td><td>1963</td></tr>
-                    <tr><td>Гневный / HMS Swiftsure</td><td>1900/1900</td></tr>
-                    <tr><td>HNLMS Тип Walrus</td><td>1727</td></tr>
-                    <tr><td>Пр. 885</td><td>1600</td></tr>
-                    <tr><td>HMS Valiant</td><td>1140</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-        <section id="section3">
-            <h2>3. Ракеты (по урону с одной ракеты, увс)</h2>
-            <div class="table-container">
-                <table>
-                   <thead>
-                <tr>
-                    <th>Ракета</th>
-                    <th>Тип</th>
-                    <th>УВС одной ракеты</th>
-                    <th>Калибр</th>
-                </tr>
-            </thead>
-                    <tbody>
-                    <tr><td>П-1 «Стрела»</td><td>ПКР</td><td>950</td><td>950-мм</td></tr>
-                    <tr><td>Harpoon</td><td>ПКР</td><td>380-792</td><td>340-мм</td></tr>
-                    <tr><td>MM38 Exocet</td><td>ПКР</td><td>491-613</td><td>350-мм</td></tr>
-                    <tr><td>IRIS-T / Seaslug / 85РУ</td><td>ПКР/ПКР/ПКР</td><td>600/600/600</td><td>127-мм/410-мм/580-мм</td></tr>
-                    <tr><td>«Москит»</td><td>ПКР</td><td>505-566</td><td>760-мм</td></tr>
-                    <tr><td>П-35</td><td>ПКР</td><td>555</td><td>760-мм</td></tr>
-                    <tr><td>«Термит»</td><td>ПКР</td><td>550</td><td>760-мм</td></tr>
-                    <tr><td>RIM-8 Talos</td><td>ПКР</td><td>470</td><td>710-мм</td></tr>
-                    <tr><td>Standart 2</td><td>ЗУР</td><td>458</td><td>340-мм</td></tr>
-                    <tr><td>Х-35</td><td>ПКР</td><td>450</td><td>580-мм</td></tr>
-                    <tr><td>9М38 / «Оникс»</td><td>ЗУР/ПКР</td><td>400/400</td><td>400-мм/670-мм</td></tr>
-                    <tr><td>RIM-24 Tartar</td><td>ЗУР</td><td>392</td><td>340-мм</td></tr>
-                    <tr><td>SM-2ER Block II (улучшенные Standard)</td><td>ЗУР</td><td>367</td><td>340-мм</td></tr>
-                    <tr><td>Sea Dart / RIM-7 Sea Sparrow</td><td>ЗУР/ЗУР</td><td>333/267-333</td><td>420-мм/200-мм</td></tr>
-                    <tr><td>Standard</td><td>ЗУР</td><td>317</td><td>340-мм</td></tr>
-                    <tr><td>Aster 15</td><td>ЗУР</td><td>292</td><td>180-мм</td></tr>
-                    <tr><td>Sea Ceptor / Seacat / Оса-М</td><td>ЗУР/ЗУР/ЗУР</td><td>233/233/233</td><td>160-мм/190-мм/206-мм</td></tr>
-                    <tr><td>«Кинжал» / «Волна»</td><td>ЗУР/ЗУР</td><td>175/175-233</td><td>235-мм/379-мм</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
         <section id="section4">
             <h2>4. Общие выводы</h2>
             <ol>
@@ -501,6 +428,7 @@
     </div>
 </body>
 </html>
+
 
 
 
