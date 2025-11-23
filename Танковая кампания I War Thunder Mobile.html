@@ -15,17 +15,6 @@
             line-height: 1.6;
             animation: fadeIn 1s ease-in-out;
             overflow-x: hidden; /* Предотвращаем горизонтальный оверфлоу */
-            position: relative; /* Для позиционирования псевдоэлемента */
-        }
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5); /* Темный оверлей */
-            z-index: -1;
         }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -35,14 +24,12 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 30px;
-            background: rgba(136, 136, 136, 0.7);
+            background: rgba(226, 226, 226, 0.7);
             border-radius: 25px;
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.4);
             overflow: hidden; /* Предотвращаем выход контента за края */
-            position: relative;
-            z-index: 1;
         }
         h1, h2, h3 {
             color: white;
@@ -74,7 +61,7 @@
         }
         .nation-button {
             padding: 14px 22px;
-            color: white;
+            color: #ffffff;
             border: none;
             border-radius: 10px;
             font-size: 1.1em;
@@ -102,11 +89,11 @@
         }
         footer {
             text-align: center;
-            font-size: 0.9em;
+            font-size: 1em;
             color: #ff0000;
             margin-top: 50px;
-            padding: 15px;
-            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent);
+            padding: 5px;
+          text-shadow: 1px 1px 3px #000000;
             border-radius: 15px;
             word-wrap: break-word; /* Разрешаем перенос слов */
             hyphens: auto; /* Автоматические переносы */
@@ -126,6 +113,11 @@
             }
             h1 {
                 font-size: 1.8em; /* Уменьшаем заголовок для мобильных */
+                 color: #000000;
+            }
+            h2 {
+                font-size: 1.5em; /* Уменьшаем заголовок для мобильных */
+                 color: #000000;
             }
             .nation-buttons {
                 flex-direction: column;
@@ -161,6 +153,7 @@
     </div>
 </body>
 </html>
+
 
 
 
