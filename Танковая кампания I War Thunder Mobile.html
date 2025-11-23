@@ -86,6 +86,7 @@
             text-align: center;
             box-sizing: border-box;
             text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            display: block; /* Для ссылок, чтобы они выглядели как кнопки */
         }
         .nation-button:hover {
             transform: scale(1.05);
@@ -187,7 +188,7 @@
             <h2>Выбор нации</h2>
             <p>Выберите интересующую нацию:</p>
             <div class="nation-buttons">
-                <button class="nation-button usa" onclick="loadContent('usa_tanks.html')">США</button>
+                <a href="выбор техники США.html" class="nation-button usa">США</a>
                 <button class="nation-button germany" onclick="loadContent('germany_tanks.html')">Германия</button>
                 <button class="nation-button ussr" onclick="loadContent('ussr_tanks.html')">СССР</button>
             </div>
