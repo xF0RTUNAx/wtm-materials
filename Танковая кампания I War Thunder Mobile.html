@@ -15,6 +15,17 @@
             line-height: 1.6;
             animation: fadeIn 1s ease-in-out;
             overflow-x: hidden; /* Предотвращаем горизонтальный оверфлоу */
+            position: relative; /* Для позиционирования псевдоэлемента */
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5); /* Темный оверлей */
+            z-index: -1;
         }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -24,12 +35,14 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 30px;
-            background: rgba(0, 124, 141, 0.7);
+            background: rgba(136, 136, 136, 0.7);
             border-radius: 25px;
             box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
             backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.4);
             overflow: hidden; /* Предотвращаем выход контента за края */
+            position: relative;
+            z-index: 1;
         }
         h1, h2, h3 {
             color: white;
@@ -61,7 +74,7 @@
         }
         .nation-button {
             padding: 14px 22px;
-            color: #ffffff;
+            color: white;
             border: none;
             border-radius: 10px;
             font-size: 1.1em;
@@ -89,13 +102,47 @@
         }
         footer {
             text-align: center;
-            font-size: 1em;
+            font-size: 0.9em;
             color: #ff0000;
             margin-top: 50px;
-            padding: 5px;
+            padding: 15px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent);
             border-radius: 15px;
             word-wrap: break-word; /* Разрешаем перенос слов */
             hyphens: auto; /* Автоматические переносы */
+        }
+        #back-btn {
+            background: linear-gradient(135deg, rgba(255,193,7,0.9), rgba(255,167,38,0.9));
+            display: none; /* скрыта на главной */
+            animation: none;
+            padding: 14px 22px;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            min-width: 150px;
+            text-align: center;
+            box-sizing: border-box;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+            margin-top: 20px;
+        }
+        #back-btn:hover {
+            background: linear-gradient(135deg, rgba(255,215,0,1), rgba(255,193,7,1));
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        #content {
+            margin-top: 50px;
+            background: rgba(255,255,255,0.95);
+            color: #333;
+            padding: 10px;
+            border-radius: 15px;
+            min-height: 50px;
+            text-align: left; /* Выравнивание текста по левому краю */
         }
         /* Оптимизация для мобильных устройств */
         @media (max-width: 768px) {
@@ -112,13 +159,6 @@
             }
             h1 {
                 font-size: 1.8em; /* Уменьшаем заголовок для мобильных */
-                 color: #000000;
-                 text-shadow: 0 2px 7px #ffffff;
-            }
-            h2 {
-                font-size: 1.5em; /* Уменьшаем заголовок для мобильных */
-                 color: #000000;
-                 text-shadow: 0 2px 5px #ffffff;
             }
             .nation-buttons {
                 flex-direction: column;
@@ -133,27 +173,75 @@
                 font-size: 0.8em; /* Уменьшаем футер */
                 padding: 10px;
             }
+            #content {
+                background: transparent;
+                color: white;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>WTM: Танковая кампания</h1>
-        <div class="nation-selection">
+        <div class="nation-selection" id="nation-selection">
             <h2>Выбор нации</h2>
             <p>Выберите интересующую нацию:</p>
             <div class="nation-buttons">
-                <button class="nation-button usa">США</button>
-                <button class="nation-button germany">Германия</button>
-                <button class="nation-button ussr">СССР</button>
+                <button class="nation-button usa" onclick="loadContent('usa_tanks.html')">США</button>
+                <button class="nation-button germany" onclick="loadContent('germany_tanks.html')">Германия</button>
+                <button class="nation-button ussr" onclick="loadContent('ussr_tanks.html')">СССР</button>
             </div>
+            <button id="back-btn" onclick="returnToNations()">Назад к выбору нации</button>
+        </div>
+        <div id="content">
+            <p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>
         </div>
         <footer>
             <p> Последнее обновление 19.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
+    <script>
+        const originalBg = document.body.style.backgroundImage;
+        async function loadContent(url) {
+            const contentDiv = document.getElementById('content');
+            contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка содержимого раздела</h3><p style="color:#00cc66; font-weight:bold;">Загружаем... <span style="display:inline-block; width:20px; height:20px; border:4px solid #f3f3f3; border-top:4px solid #3498db; border-radius:50%; animation:spin 1s linear infinite;"></span></p>';
+            try {
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error('что-то пошло не так...');
+                const html = await resp.text();
+                setTimeout(() => {
+                    contentDiv.innerHTML = html;
+                    // Меняем фон в зависимости от нации (можно кастомизировать)
+                    if (url.includes('usa')) {
+                        document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")'; // Заменить на USA-тематику если нужно
+                    } else if (url.includes('germany')) {
+                        document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")';
+                    } else if (url.includes('ussr')) {
+                        document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")';
+                    }
+                    // Скрываем выбор наций и показываем кнопку назад
+                    document.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
+                    document.getElementById('back-btn').style.display = 'block';
+                    document.getElementById('nation-selection').querySelector('h2').style.display = 'none';
+                    document.getElementById('nation-selection').querySelector('p').style.display = 'none';
+                }, 100);
+            } catch (e) {
+                contentDiv.innerHTML = `<p style="color:#ff0000; font-weight:bold;">Ошибка: ${e.message}</p>`;
+            }
+        }
+        function returnToNations() {
+            document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>';
+            document.body.style.backgroundImage = originalBg;
+            // Возвращаем выбор наций, скрываем назад
+            document.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'block');
+            document.getElementById('back-btn').style.display = 'none';
+            document.getElementById('nation-selection').querySelector('h2').style.display = 'block';
+            document.getElementById('nation-selection').querySelector('p').style.display = 'block';
+        }
+    </script>
 </body>
 </html>
+
 
 
 
