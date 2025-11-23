@@ -48,13 +48,42 @@
             background: linear-gradient(to right, #0056b3, #3388d1);
             border-radius: 2px;
         }
-        .development-message {
+        .nation-selection {
             text-align: center;
-            font-size: 4em;
-            color: #000000;
-            margin-top: 50px;
-            word-wrap: break-word; /* Разрешаем перенос слов */
-            hyphens: auto; /* Автоматические переносы */
+            margin-top: 30px;
+        }
+        .nation-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .nation-button {
+            padding: 15px 30px;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            min-width: 200px;
+            text-align: center;
+        }
+        .nation-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .usa {
+            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover no-repeat;
+        }
+        .germany {
+            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover no-repeat;
+        }
+        .ussr {
+            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover no-repeat;
         }
         footer {
             text-align: center;
@@ -83,8 +112,14 @@
             h1 {
                 font-size: 1.8em; /* Уменьшаем заголовок для мобильных */
             }
-            .development-message {
-                font-size: 2.5em; /* Уменьшаем для мобильных, чтобы не выходило */
+            .nation-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+            .nation-button {
+                font-size: 1.1em;
+                padding: 12px 20px;
+                min-width: auto;
             }
             footer {
                 font-size: 0.8em; /* Уменьшаем футер */
@@ -96,13 +131,22 @@
 <body>
     <div class="container">
         <h1>WTM: Танковая кампания</h1>
-        <div class="development-message">В разработке!</div>
+        <div class="nation-selection">
+            <h2>Выбор нации</h2>
+            <p>Выберите интересующую нацию:</p>
+            <div class="nation-buttons">
+                <button class="nation-button usa">США</button>
+                <button class="nation-button germany">Германия</button>
+                <button class="nation-button ussr">СССР</button>
+            </div>
+        </div>
         <footer>
             <p> Последнее обновление 19.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
 </body>
 </html>
+
 
 
 
