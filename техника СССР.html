@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Техника СССР</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            color: white;
+            text-shadow: 0 2px 4px black;
+        }
+        h1::before, h2::before, h3::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        .vehicle-selection {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .vehicle-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .vehicle-button {
+            padding: 14px 22px;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            min-width: 150px;
+            text-align: center;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg') center/cover no-repeat;
+        }
+        .vehicle-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.2em;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #000000;
+            text-shadow: 0 2px 10px #ffffff;
+            }
+              h2 {
+                font-size: 1.5em;
+                color: #000000;
+            text-shadow: 0 2px 10px #ffffff;
+            }
+            .vehicle-buttons {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .vehicle-button {
+                font-size: 1.8em;
+                padding: 36px 22px;
+                min-width: auto;
+            }
+            .back-button {
+                font-size: 1.5em;
+                padding: 20px 40px;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Техника СССР</h1>
+        <div class="vehicle-selection">
+            <h2>Выберите нужную технику:</h2>
+            <div class="vehicle-buttons">
+                <a href="#">13 ранг MBT-2000</a>
+                <a href="#">13 ранг Т-80УК</a>
+            </div>
+            <p>Добавление остальной техники в процессе!</p>
+        </div>
+        <footer>
+            <p>Последнее обновление 23.11.2025.Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+</body>
+</html>
