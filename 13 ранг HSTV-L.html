@@ -90,7 +90,7 @@
             text-decoration: none;
             font-weight: bold;
             font-size: 1.1em;
-            margin: 30px auto 20px; /* Уменьшаем нижний отступ */
+            margin: 30px auto 10px; 
             width: 100%;
             max-width: 300px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
@@ -103,20 +103,19 @@
             box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
         }
 
-        /* Кнопка Назад (Теперь это тоже BUTTON для SPA-логики) */
-        .back-button {
-            /* В отличие от ссылки, тут используем стили кнопки из прошлой версии */
-            display: flex; /* Используем flex для центрирования, как youtube-btn */
+        /* Общие стили для кнопок навигации */
+        .nav-button {
+            display: flex;
             align-items: center;
             justify-content: center;
-            margin-top: 10px; /* Отделяем от YouTube кнопки */
+            margin-top: 10px;
             font-size: 1.1em;
             font-weight: bold;
             color: white;
             background: #0056b3;
             padding: 15px 30px;
             border-radius: 10px;
-            border: none; /* Убираем стандартную рамку кнопки */
+            border: none;
             cursor: pointer;
             width: 100%;
             max-width: 300px;
@@ -125,11 +124,17 @@
             transition: background-color 0.3s ease, transform 0.3s ease;
             text-shadow: 1px 1px 2px black;
             box-sizing: border-box;
+             text-decoration: none; /* Для ссылки */
         }
-        .back-button:hover {
+        .nav-button:hover {
             background-color: #004494;
             transform: translateY(-3px);
         }
+        
+        /* Скрываем кнопки по умолчанию, пока не определим, какая нужна */
+        .spa-button, .direct-link {
+            display: none;
+        }
 
         footer {
             text-align: center;
@@ -151,7 +156,7 @@
             h1 { font-size: 1.8em; color: #000000; text-shadow: 0 2px 10px #ffffff; }
             h2 { font-size: 1.4em; color: #000000; text-shadow: 0 2px 10px #ffffff; margin-top: 30px; }
             .content-section { background: rgba(0, 0, 0, 0.6); padding: 15px; }
-            .youtube-btn, .back-button { /* Обе кнопки на всю ширину на мобильном */
+            .youtube-btn, .nav-button { 
                 width: 100%;
                 max-width: 100%;
                 font-size: 1em;
@@ -168,59 +173,67 @@
         <div class="content-section">
             <h2>Краткий обзор</h2> 
             <h3>Маневренность</h3> 
-            <p><strong>Плюсы:</strong> Отличные показатели во всех аспектах, можем всех обгонять и первыми занимать важные позиции. Скорость вращения и наведения как у зенитки.</p>
-            <p><strong>Минусы:</strong> Может заносить и осложняться контроль управления машины. Массивные препятствия могут останавливать, некоторые грунты и вода понижать практическую маневренность, столкновения и удары повреждать внутренние модули.</p>
+            <p><strong>Плюсы:</strong> Отличные показатели во всех аспектах, можем всех обгонять и первыми занимать важные позиции. [cite_start]Скорость вращения и наведения как у зенитки. [cite: 5]</p>
+            <p><strong>Минусы:</strong> Может заносить и осложняться контроль управления машины. [cite_start]Массивные препятствия могут останавливать, некоторые грунты и вода понижать практическую маневренность, столкновения и удары повреждать внутренние модули. [cite: 6]</p>
         </div>
 
         <div class="content-section">
             <h3>Броня и живучесть</h3> 
-            <p>Защита только от малокалиберных пулеметов. Иногда может не уничтожаться с 1 попадания в силу не малого пустого пространства внутри танка.</p>
-            <p><strong>Внимание:</strong> Смертельны кумулятивные и осколочно-фугасные боеприпасы. Башня может лучше переносить попадания.</p>
+            [cite_start]<p>Защита только от малокалиберных пулеметов. [cite: 8] [cite_start]Иногда может не уничтожаться с 1 попадания в силу не малого пустого пространства внутри танка. [cite: 8]</p>
+[cite_start]            <p><strong>Внимание:</strong> Смертельны кумулятивные и осколочно-фугасные боеприпасы. [cite: 9] [cite_start]Башня может лучше переносить попадания. [cite: 9]</p>
         </div>
 
         <div class="content-section">
             <h3>Вооружение</h3> 
-            <p>Интересны только ломы. Их мало (всего до 26). Автомат заряжания на весь боекомплект (перезарядка 1 секунда).</p>
-            <p>Возможно пробить НАТО танки в лобовую проекцию выцеливая уязвимые места, успешно уничтожать танки советской философии танкостроения в борта и ромбом (в карусель заряжания), легко уничтожать орудия и модули передвижения.</p>
-            <p>Урон не высокий (маленький калибр), не стабильный, но, в общем и целом, достаточно.</p>
+            <p>Интересны только ломы. [cite_start]Их мало (всего до 26). [cite: 11] [cite_start]Автомат заряжания на весь боекомплект (перезарядка 1 секунда). [cite: 11]</p>
+[cite_start]            <p>Возможно пробить НАТО танки в лобовую проекцию выцеливая уязвимые места, успешно уничтожать танки советской философии танкостроения в борта и ромбом (в карусель заряжания), легко уничтожать орудия и модули передвижения. [cite: 12]</p>
+[cite_start]            <p>Урон не высокий (маленький калибр), не стабильный, но, в общем и целом, достаточно. [cite: 13]</p>
             
             <img src="https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db5_s27_tank_hstv-l/db5_s27_hstv-l_shells_ru_337f068c9e2dd5c59c9b075b00a04df0.png" alt="Снаряды HSTV-L" class="tank-image" style="margin-top: 15px;"> 
         </div>
 
         <div class="content-section">
             <h3>Особенности</h3> 
-            <p>Отличные УВН и наличие дымовых гранат.</p>
+            [cite_start]<p>Отличные УВН и наличие дымовых гранат. [cite: 17]</p>
         </div>
 
         <div class="content-section" style="border-left: 5px solid #ffcc00;">
             <h3>Выводы и комментарии</h3> 
-            <p>Рекомендуется только опытным игрокам. Требует серьезной, внимательной и рациональной игры для раскрытия потенциала. Зависим от условий боя.</p>
+            <p>Рекомендуется только опытным игрокам. Требует серьезной, внимательной и рациональной игры для раскрытия потенциала. [cite_start]Зависим от условий боя. [cite: 19]</p>
         </div>
         
                 <a href="https://youtu.be/XNEBvT0ek74" target="_blank" class="youtube-btn">
             ▶ Смотреть полный обзор
         </a>
 
-                <button class="back-button" onclick="loadContent('выбор техники США')">
+                <button id="spa-back-btn" class="nav-button spa-button" onclick="loadContent('выьор техники США')">
             ← Назад к технике США
         </button>
-                <footer>
+        
+        <a id="direct-back-link" href="выбор техники США" class="nav-button direct-link">
+            ← Назад к технике США (САЙТ)
+        </a>
+        
+        <footer>
             <p>Последнее обновление 24.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
     
         <script>
-        // Эта функция-заглушка определит loadContent, если страница была открыта напрямую.
-        // Вместо ошибки, она просто перенаправит пользователя на указанный URL.
-        if (typeof loadContent === 'undefined') {
-            window.loadContent = function(url) {
-                // Добавляем .html, если его нет (чтобы избежать 404)
-                if (!url.endsWith('.html')) {
-                    url += '.html';
-                }
-                window.location.href = url;
-            };
-        }
+        document.addEventListener('DOMContentLoaded', function() {
+            const spaButton = document.getElementById('spa-back-btn');
+            const directLink = document.getElementById('direct-back-link');
+
+            // Проверяем, определена ли функция loadContent (т.е. страница загружена через Главную)
+            if (typeof loadContent !== 'undefined') {
+                // Если определена (мы внутри Главной страницы), используем кнопку SPA
+                spaButton.style.display = 'flex';
+            } else {
+                // Если не определена (страница открыта напрямую), используем обычную ссылку
+                directLink.style.display = 'flex';
+                // Примечание: Это позволяет избежать ошибки 'loadContent is not defined'
+            }
+        });
     </script>
 </body>
 </html>
