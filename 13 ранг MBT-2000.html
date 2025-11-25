@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: 13 ранг MBT-2000</title>
+    <style>
+        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db6_s26_tank_mbt2000/s26_db6_tank_3_962aca2d9fb6befbe6fb5181450dac35.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+       
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+       
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
+                padding: 15px;
+            }
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>13 ранг MBT-2000</h1>
+        <img src="https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db6_s26_tank_mbt2000/db6_s26_mbt2000_prem_stats_ru_f2983b185f1380f66cc18f1d3fddef41.jpg" alt="HSTV-L Tank" class="tank-image">
+         <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>MBT-2000/«Al-Khalid» (VT-1A) — совместно разработанный китайско-пакистанский основной боевой танк. Разработка MBT-2000 была инициирована Пакистаном в 1989 году. В то время пакистанская армия нуждалась в замене своих устаревших Т-55 и Type 69, которые уже не могли противостоять новым танкам, поступающим на вооружение других стран. В качестве основы для него компания Heavy Industries Taxila в сотрудничестве с китайской Norinco выбрали танк Type 90-IIM и серьёзно его модернизировали, заменив орудие, систему управления огнём, конструкцию охлаждения и фильтрации воздуха. Суровые условия климата Пакистана вынудили авторов проекта искать новую силовую установку, и после серии испытаний для будущей машины был выбран украинский дизельный двигатель 6ТД-2. Первый прототип MBT-2000 был представлен в 1991 году, но первые серийные танки под обозначением «Al-Khalid» поступили на вооружение пакистанской армии лишь в 2000 году. На сегодняшний день MBT-2000 является основным боевым танком Пакистана, при этом данный танк был экспортирован ещё в несколько стран.</p>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/51/Bangladesh_Army_MBT2000._%2839072813711%29.jpg" alt="Historical HSTV-L" class="tank-image">
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+            <p>Главный недостаток маневренности советских топов, представленный в виде низкого заднего хода, был устранен за счет установки нового мощного двигателя и ступенчатой коробки передач. Китаец обладает хорошими показателями удельной мощности, максимальной скорости и ее набора. Также техника отлично крутиться на месте, позволяя в общем и целом быть на равных с самыми подвижными одноклассниками. Можно одним из первых добираться до ключевых полиций, эффективно отступать и реализовать различные тактики за счет приятной манёвренности.</p>
+        </div>
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <p>Защищенность и живучесть основана на советской философии танкостроения. Китайский аналог динамической защиты имеет эквивалентные показатели в сравнении с контактом-5, но улучшенную плотность компоновки. В свою очередь, основная броня включает западные элементы.
+            В принципе, ключевые уязвимые зоны идентичны с советами, но за счет комбинации технологий, некоторые из них обладают дополнительными бронированными областями.
+            Борта по прежнему очень слабое место, доступное для эффективной атаки даже с автопушек. Броня стабильнее работает против более устаревших ломов, в то время как последние варианты уже свободнее пробивают почти во все зоны. Башня позволяет иногда ловить не пробития или незначительный урон.
+            Не редко удается переживать несколько попаданий и атаки противотанковых ракет. В конечном итоге, никогда не знаешь заберут тебя с одного попадания или отделаешься небольшими издержками.</p>
+            <p><strong>Дополнительно:</strong> зачастую броня реализуется именно в динамике и более долгим выцеливанием со стороны противника. </p>
+        </div>
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p>Топовые ломы порадуют оптимальным пробитием и хорошим уроном.</p>
+            <p>Единственным ключевым минусом является долгая перезарядка. С другой стороны, показатели и реализация не зависят от экипажа (советский автомат заряжания).</p>
+            <p>В отличии от советских аналогов, китаец обладает улучшенными скоростями поворота башни и наведения.</p>
+           <p>Углы вертикальной наводки все еще не порадуют, но этот недостаток не так заметен на наших небольших картах.</p>
+            <img src="https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db6_s26_tank_mbt2000/db6_s26_mbt2000_shells_ru_27915a4c3a57af80cb45b556b9e92f35.png" alt="Снаряды HSTV-L" class="tank-image" style="margin-top: 15px;">
+        </div>
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>Обратите внимание, что углы вертикальной наводки имеют разные значения в зависимости от положения корпуса в силу инженерных особенностей. </p>
+        </div>
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>Машина с советской философией игры, но с некоторыми заметно улучшенными показателями. Таким образом, в первую очередь данный танк рекомендуется любителям советских танков, ведь они получают дополнительный улучшенный топ для постоянной игры. Китайский танк также может подойти новичкам, позволяя иногда прощать ошибки и не обделяя возможностями маневренности. Безусловно техника не ультимативная, но приятно раскрывается среди ее ценителей.  </p>
+        </div>
+        <a href="https://youtu.be/7AFoAXzD-_0" target="_blank" class="youtube-btn">
+             Смотреть полный обзор
+        </a>
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+        <footer>
+            <p>Последнее обновление 25.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+         </div>
+</body>
+</html>
