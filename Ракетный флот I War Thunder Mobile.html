@@ -13,58 +13,50 @@
             margin: 0;
             padding: 0;
             font-family: 'Open Sans', sans-serif;
-            overflow: hidden; /* Убираем прокрутку */
+            color: #ffffff;
+            /* Устанавливаем фон и градиент непосредственно на body */
+            background-color: #0b111b; 
+            background-image: 
+                /* Темный градиент для читаемости поверх основного фона */
+                linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+                /* Фоновое изображение сухого дока */
+                url('https://i.imgur.com/your-dock-image.jpg'); /* ЗАМЕНИТЕ URL */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed; /* Фон не прокручивается */
+
+            /* Flexbox для центрирования содержимого */
             display: flex;
             justify-content: center;
             align-items: center;
-            color: #ffffff;
-            position: relative; /* Для позиционирования фона */
-            background-color: #0b111b; /* Запасной цвет фона */
         }
 
-        /* Фоновое изображение (Задача 3 и 4) */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://remont-gidronasosa.ru/assets/images/service/04/remont-korablej.jpg'); /* ЗАМЕНИТЕ НА ВАШЕ ИЗОБРАЖЕНИЕ СУХОГО ДОКА */
-            background-size: cover;
-            background-position: center;
-            filter: blur(5px); /* Размытие фона */
-            z-index: 0;
-        }
-
-        /* Темный градиент поверх фона для читаемости */
-        body::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7); /* Темный полупрозрачный слой */
-            z-index: 1;
-        }
-
+        /* --- Общий контейнер заглушки --- */
         .maintenance-container {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             position: relative;
-            z-index: 2; /* Контент выше фона и градиента */
-            background: rgba(11, 17, 27, 0.8); /* Более темная подложка для центрального контента */
+            z-index: 10; /* Убедимся, что контент поверх фона */
+            background: rgba(11, 17, 27, 0.85); /* Более темная подложка */
             border-radius: 10px;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-            max-width: 90%; /* Ограничение ширины для мобильных */
-            box-sizing: border-box;
+            
+            /* Ограничения, чтобы не перекрывать внешние элементы навигации */
+            max-width: 90%; 
+            max-height: 90vh; /* Ограничиваем высоту, чтобы не вылезти за экран */
+            overflow: auto; /* Добавляем прокрутку, если контент не помещается */
         }
+        
+        /* Убираем фоновую сетку, которая могла быть лишним слоем */
+        .grid-bg {
+             display: none;
+        }
+
 
         /* --- Графический элемент (Круг/Радар) --- */
         .graphic-circle {
-            width: 280px;
-            height: 280px;
+            width: 250px; /* Немного меньше для лучшей адаптации */
+            height: 250px;
             background: radial-gradient(circle, #1f2a38 0%, #0b111b 70%);
             border-radius: 50%;
             margin: 0 auto 30px auto;
@@ -74,10 +66,9 @@
             align-items: center;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
             border: 2px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden; /* Обрезаем все, что выходит за круг */
+            overflow: hidden; 
         }
 
-        /* Эффект радара */
         .graphic-circle::after {
             content: '';
             position: absolute;
@@ -87,7 +78,7 @@
             bottom: 0;
             border-radius: 50%;
             border: 2px solid transparent;
-            border-top-color: #00ff88; /* Зеленый радарный цвет */
+            border-top-color: #00ff88; 
             animation: spin 3s linear infinite;
             opacity: 0.3;
         }
@@ -95,54 +86,38 @@
         /* --- Иконки внутри круга --- */
         .icon-group {
             position: relative;
-            font-size: 8rem; /* Размер иконки */
-            color: #3a4b61; /* Цвет корпуса корабля */
-            display: inline-block; /* Для корректного позиционирования */
+            font-size: 7rem; 
+            color: #3a4b61; 
+            display: inline-block; 
             text-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
         
-        .ship-icon {
-            z-index: 1;
-            position: relative;
-            display: block; /* Убедимся, что занимает свою линию */
-        }
-
+        /* ... Стили и анимации иконок (без изменений) ... */
+        .ship-icon { z-index: 1; position: relative; display: block; }
         .gear-icon {
-            position: absolute;
-            font-size: 4rem;
-            top: -10px;
-            right: -20px;
-            color: #ffc107; /* Желтый цвет шестеренки */
-            animation: rotate-gear 4s linear infinite;
-            z-index: 2;
+            position: absolute; font-size: 3.5rem; top: -10px; right: -15px; color: #ffc107; 
+            animation: rotate-gear 4s linear infinite; z-index: 2;
         }
-
         .wrench-icon {
-            position: absolute;
-            font-size: 3rem;
-            bottom: 0px;
-            left: -20px;
-            color: #e0e0e0;
-            transform: rotate(-45deg);
-            animation: wrench-move 2s ease-in-out infinite alternate;
-            z-index: 2;
+            position: absolute; font-size: 2.5rem; bottom: 0px; left: -15px; color: #e0e0e0;
+            transform: rotate(-45deg); animation: wrench-move 2s ease-in-out infinite alternate; z-index: 2;
         }
 
-        /* --- Текстовая часть --- */
+        /* --- Текстовая часть (без изменений) --- */
         h1 {
-            font-family: 'Open Sans', sans-serif; /* Единый шрифт (Задача 1) */
-            font-weight: 800; /* Очень жирный для заголовка */
-            font-size: 3.5rem; /* Немного меньше для лучшей адаптации */
+            font-family: 'Open Sans', sans-serif; 
+            font-weight: 800; 
+            font-size: 3rem; 
             margin: 0;
             letter-spacing: 2px;
             text-transform: uppercase;
-            color: #ffffff; /* Просто белый цвет для читаемости */
+            color: #ffffff; 
             text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
         }
 
         p.subtitle {
             color: #ffc107;
-            font-size: 1rem; /* Чуть меньше для мобильных */
+            font-size: 1rem; 
             font-weight: 700;
             letter-spacing: 1px;
             margin-top: 15px;
@@ -152,88 +127,28 @@
             padding: 10px 20px;
             border-radius: 4px;
             border: 1px dashed #ffc107;
-            line-height: 1.4; /* Увеличиваем межстрочный интервал */
-            white-space: normal; /* Разрешаем перенос строк */
+            line-height: 1.4; 
+            white-space: normal;
         }
 
         /* --- Анимации --- */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes rotate-gear { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes wrench-move { 0% { transform: rotate(-45deg); } 100% { transform: rotate(-25deg); } }
 
-        @keyframes rotate-gear {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes wrench-move {
-            0% { transform: rotate(-45deg); }
-            100% { transform: rotate(-25deg); }
-        }
-
-        /* --- Фоновый шум (сетка) для стиля чертежа --- */
-        .grid-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: 1; /* Между фоном и контентом */
-            pointer-events: none;
-        }
-
-        /* Адаптивность для мобильных (Задача 2) */
+        /* Адаптивность для мобильных */
         @media (max-width: 768px) {
-            .graphic-circle { 
-                width: 180px; 
-                height: 180px; 
-                margin-bottom: 20px;
-            }
-            .icon-group { 
-                font-size: 5rem; 
-            }
-            .gear-icon { 
-                font-size: 2.5rem; 
-                top: -5px; 
-                right: -15px; 
-            }
-            .wrench-icon { 
-                font-size: 2rem; 
-                bottom: -5px; 
-                left: -15px; 
-            }
-            h1 { 
-                font-size: 2.2rem; /* Уменьшаем размер заголовка */
-                letter-spacing: 1px;
-            }
-            p.subtitle { 
-                font-size: 0.85rem; /* Уменьшаем размер подзаголовка */
-                padding: 8px 15px;
-            }
-
-            .maintenance-container {
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 { font-size: 1.8rem; }
-            p.subtitle { font-size: 0.8rem; }
-            .graphic-circle { width: 150px; height: 150px; }
-            .icon-group { font-size: 4rem; }
-            .gear-icon { font-size: 2rem; }
-            .wrench-icon { font-size: 1.8rem; }
+            .graphic-circle { width: 180px; height: 180px; margin-bottom: 20px;}
+            .icon-group { font-size: 5rem; }
+            .gear-icon { font-size: 2.5rem; top: -5px; right: -10px; }
+            .wrench-icon { font-size: 2rem; bottom: -5px; left: -10px; }
+            h1 { font-size: 2rem; letter-spacing: 1px;}
+            p.subtitle { font-size: 0.85rem; padding: 8px 15px;}
+            .maintenance-container { padding: 15px; max-width: 95%;}
         }
     </style>
 </head>
 <body>
-
-    <div class="grid-bg"></div>
 
     <div class="maintenance-container">
         <div class="graphic-circle">
