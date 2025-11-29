@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Сборник материалов по War Thunder Mobile</title>
+    <title>xFORTUNAx Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -13,171 +15,351 @@
             background-size: cover;
             color: #ffffff;
             margin: 0;
-            padding: 60px 20px;
-            text-align: center;
-            position: relative;
-            overflow-x: hidden;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
         body::before {
             content: '';
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, rgba(10, 20, 40, 0.85), rgba(0, 100, 200, 0.6));
             z-index: -1;
-            position: fixed;
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            background: rgba(33, 33, 33, 0.8);
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
-            position: relative;
-            z-index: 1;
-        }
-        h1 {
-            font-family: 'Black Ops One', sans-serif;
-            color: #ffcc00;
-            font-size: 2.5em;
-            margin-bottom: 20px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-        }
-        .buttons {
+
+        .dashboard-wrapper {
             display: flex;
-            flex-wrap: wrap;
+            width: 90%;
+            height: 90vh;
+            background: rgba(20, 30, 60, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            font-family: 'Black Ops One', sans-serif;
+            color: #ffffff;
+            font-size: 1.5em;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 15px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .nav-link i { margin-right: 15px; width: 20px; text-align: center;}
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            margin-top: auto;
+        }
+        
+        .user-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #ffcc00;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
             justify-content: center;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+        }
+
+        .header-greeting h1 {
+            font-size: 2em;
+            margin: 0;
+            font-weight: 700;
+        }
+        .header-greeting p {
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 25px;
             margin-top: 30px;
         }
-        button, a.button-like {
-            padding: 18px 45px;
-            color: #ffffff;
+
+        button.card-btn {
+            border: none;
+            border-radius: 20px;
+            height: 160px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: left;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        button.card-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            z-index: 1;
+        }
+
+        button.card-btn span {
+            position: relative;
+            z-index: 2;
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        button.card-btn i {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 2em;
+            color: rgba(255,255,255,0.8);
+            z-index: 2;
+            background: rgba(255,255,255,0.2);
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px;
+        }
+
+        button.card-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #aviation-btn {
+            background: url('https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg') center/cover;
+        }
+        #fleet-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg') center/cover;
+        }
+        #tank-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg') center/cover;
+        }
+        #minigame-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_03_stpatrick2025/1080x2340_wtm_saintpatricks_day25_640351f6fdaaca1296d868f957108bdd.jpg') center/cover;
+        }
+
+        #back-btn {
+            display: none;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
             border: none;
             border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            font-size: 1.2em;
-            text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
-            text-decoration: none;
-            min-width: 280px;
-            animation: pulse 2s infinite;
-            display: inline-block;
-            box-sizing: border-box;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(255, 200, 0, 0.4);
         }
-        button:hover, a.button-like:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(255, 204, 0, 0.6);
-            animation: none;
-        }
-        #aviation-btn {
-            background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)),
-                        url('https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg') center/cover no-repeat;
-             border: 2px solid #ffcc00;
-        }
-        #fleet-btn {
-            background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)),
-                        url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg') center/cover no-repeat;
-             border: 2px solid #ffcc00;
-        }
-        #tank-btn {
-            background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)),
-                        url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg') center/cover no-repeat;
-             border: 2px solid #ffcc00;
-        }
-        
-        /* === НОВЫЙ СТИЛЬ ДЛЯ КНОПКИ МИНИ-ИГРЫ === */
-        #minigame-btn {
-            background: linear-gradient(135deg, rgba(50,0,100,0.7), rgba(100,0,50,0.5)),
-                        url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_03_stpatrick2025/1080x2340_wtm_saintpatricks_day25_640351f6fdaaca1296d868f957108bdd.jpg') center/cover no-repeat;
-            border: 2px solid #ffcc00;
+        #back-btn:hover { transform: scale(1.05); }
+
+        #content {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 25px;
+            border-radius: 20px;
+            min-height: 100px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         }
 
-        #back-btn {
-            background: linear-gradient(135deg, rgba(255,193,7,0.9), rgba(255,167,38,0.9));
-            display: none;
-            animation: none;
+        .sponsors-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        #back-btn:hover {
-            background: linear-gradient(135deg, rgba(255,215,0,1), rgba(255,193,7,1));
-        }
-        #content {
-            margin-top: 50px;
-            background: rgba(255,255,255,0.95);
-            color: #333;
-            padding: 10px;
-            border-radius: 15px;
-            min-height: 50px;
-            text-align: left;
-        }
-        @keyframes pulse {
-            0%,100% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-        }
-        .sponsors { margin-top: 50px; }
-        .sponsors ul { list-style: none; padding: 0; font-size: 1.2em; }
-        .sponsors li { margin-bottom: 10px; }
-        
-        @media (max-width: 768px) {
-            .container { max-width: 100%; padding: 20px; border-radius: 0; }
-            .buttons { flex-direction: column; gap: 20px; }
-            button, a.button-like { width: 100%; font-size: 1.5em; padding: 16px 20px; }
-            h1 { font-size: 2em; }
+        .sponsors-card h3 { margin-top: 0; color: #ffcc00; }
+        .sponsors-list { list-style: none; padding: 0; display: flex; gap: 20px; flex-wrap: wrap; }
+        .sponsors-list li { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
+
+        @media (max-width: 900px) {
+            .dashboard-wrapper { flex-direction: column; height: 100vh; width: 100%; border-radius: 0; }
+            .sidebar { width: 100%; height: auto; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; overflow-x: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .nav-menu { display: flex; gap: 10px; margin: 0 20px; }
+            .nav-item { margin: 0; }
+            .nav-link span { display: none; }
+            .nav-link i { margin: 0; font-size: 1.2em; }
+            .logo { margin: 0; font-size: 1.2em; }
+            .user-profile { display: none; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .main-content { padding: 20px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Добро пожаловать на официальный сайт xFORTUNAx по War Thunder Mobile</h1>
-        <p>Погрузимся в наше сообщество! Выберите нужный раздел:</p>
-        
-        <div class="buttons" id="main-buttons">
-            <button id="aviation-btn" onclick="loadContent('Авиационная кампания I War Thunder Mobile.html')">Авиационная кампания</button>
-            <button id="fleet-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">Ракетный флот</button>
-            <button id="tank-btn" onclick="loadContent('Танковая кампания I War Thunder Mobile.html')">Танковая кампания</button>
-            
-            <button id="minigame-btn" onclick="window.location.href='minigame.html'">Мини-игры</button>
 
-            <button id="back-btn" onclick="returnToMain()">Назад на главную</button>
-        </div>
-
-        <div id="content">
-            <p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>
-        </div>
-        
-        <div style="text-align: center; margin-top: 50px;">
-            <h1 style="font-family: 'Black Ops One', sans-serif; color: #ffcc00; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Официальные социальные сети xFORTUNAx</h1>
-            <p style="font-size: 1.2em; margin-bottom: 30px;">Присоединяйтесь к нашему сообществу!</p>
-            <div class="buttons" style="gap: 25px;">
-                <a href="https://t.me/fortunawtm" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://img.utdstc.com/screen/3d2/4b0/3d24b0630ea30e4e65afab89867431ad0c2d182f295776c6fe3e4940f7441d68:800') center/cover no-repeat;">Официальный Telegram канал</a>
-                <a href="https://t.me/warthundermobilefortuna" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)), url('https://zastavki.gas-kvas.com/uploads/posts/2024-09/zastavki-gas-kvas-com-w3fu-p-zastavki-iz-telegramma-1.jpg') center/cover no-repeat;">Официальный чат сообщества</a>
-                <a href="https://youtube.com/@xf0rtunax?si=9rVEeUE5D6wFZgem" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://yt3.googleusercontent.com/xgdDJB9MKZzt0zS2LYdQ-4l7Nb4rNheEPAHV1cwIyrm4kCPsF65i6XgFqMUOp7wRRO3Rk948=w2276-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj') center/cover no-repeat;">Официальный YouTube канал</a>
-                <a href="https://dalink.to/xf0rtunax" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://files.donationalerts.com/uploads/filemanager2/14074371/Sr47Orfeb9grCLd9HBhctDIfDSjKruPbqrkO8FHu.png') center/cover no-repeat;">Поддержать автора финансово</a>
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-gamepad" style="color: #ffcc00;"></i> xFORTUNAx
             </div>
-        </div>
-        
-        <div id="sponsors-section" class="sponsors" style="text-align: center; margin-top: 50px;">
-            <h1 style="font-family: 'Black Ops One', sans-serif; color: #ffcc00; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Спасибо спонсорам проекта!</h1>
-            <ul>
-                <li>Kostiantyn</li>
-                <li>Максим Тагиров</li>
-                <li>Дэвид</li>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" onclick="returnToMain()">
+                        <i class="fas fa-home"></i> <span>Главная</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://t.me/fortunawtm" target="_blank" class="nav-link">
+                        <i class="fab fa-telegram-plane"></i> <span>Telegram Канал</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://t.me/warthundermobilefortuna" target="_blank" class="nav-link">
+                        <i class="fas fa-comments"></i> <span>Чат сообщества</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://youtube.com/@xf0rtunax" target="_blank" class="nav-link">
+                        <i class="fab fa-youtube"></i> <span>YouTube</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="https://dalink.to/xf0rtunax" target="_blank" class="nav-link">
+                        <i class="fas fa-heart"></i> <span>Поддержать</span>
+                    </a>
+                </li>
             </ul>
-        </div>
+
+            <div class="user-profile">
+                <div class="user-avatar">xFx</div>
+                <div>
+                    <div style="font-weight: bold; font-size: 0.9em;">Главное меню</div>
+                    <div style="font-size: 0.7em; opacity: 0.7;">Официальный сайт по WTM</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="header-greeting">
+                <h1>Добро пожаловать, Командир!</h1>
+                <p>Вы находитесь на главной странице. Выберите интересующий вас раздел: </p>
+            </div>
+
+            <button id="back-btn" onclick="returnToMain()">
+                <i class="fas fa-arrow-left"></i> Назад в меню
+            </button>
+
+            <div class="cards-grid" id="main-buttons">
+                <button id="aviation-btn" class="card-btn" onclick="loadContent('Авиационная кампания I War Thunder Mobile.html')">
+                    <i class="fas fa-plane"></i>
+                    <span>Авиационная кампания</span>
+                </button>
+                
+                <button id="fleet-btn" class="card-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">
+                    <i class="fas fa-ship"></i>
+                    <span>Ракетный флот</span>
+                </button>
+                
+                <button id="tank-btn" class="card-btn" onclick="loadContent('Танковая кампания I War Thunder Mobile.html')">
+                    <i class="fas fa-tank"></i>
+                    <span>Танковая кампания</span>
+                </button>
+                
+                <button id="minigame-btn" class="card-btn" onclick="window.location.href='minigame.html'">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Мини-игры</span>
+                </button>
+            </div>
+
+            <div id="content">
+                <p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-info-circle"></i> Выберите раздел выше, чтобы загрузить информацию.
+                </p>
+            </div>
+
+            <div id="sponsors-section" class="sponsors-card">
+                <h3><i class="fas fa-star"></i> Спонсоры проекта</h3>
+                <ul class="sponsors-list">
+                    <li>Kostiantyn</li>
+                    <li>Максим Тагиров</li>
+                    <li>Дэвид</li>
+                </ul>
+            </div>
+        </main>
     </div>
-    
+
     <script>
         const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
+        
         async function loadContent(url) {
             const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка содержимого раздела</h3><p style="color:#00cc66; font-weight:bold;">Загружаем... <span style="display:inline-block; width:20px; height:20px; border:4px solid #f3f3f3; border-top:4px solid #3498db; border-radius:50%; animation:spin 1s linear infinite;"></span></p>';
+            contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка данных...</h3><div style="width: 30px; height: 30px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
+            
             try {
                 const resp = await fetch(url);
                 if (!resp.ok) throw new Error('что-то пошло не так...');
                 const html = await resp.text();
+                
                 setTimeout(() => {
                     contentDiv.innerHTML = html;
+                    
                     if (url.includes('Ракетный флот')) {
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
                     } else if (url.includes('Авиационная')) {
@@ -185,26 +367,25 @@
                     } else if (url.includes('Танковая кампания')) {
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
                     }
-                    document.getElementById('aviation-btn').style.display = 'none';
-                    document.getElementById('fleet-btn').style.display = 'none';
-                    document.getElementById('tank-btn').style.display = 'none';
-                    document.getElementById('minigame-btn').style.display = 'none'; // Скрываем и новую кнопку
-                    document.getElementById('back-btn').style.display = 'block';
+
+                    document.getElementById('main-buttons').style.display = 'none';
+                    document.getElementById('back-btn').style.display = 'inline-block';
                     document.getElementById('sponsors-section').style.display = 'none';
+                    document.querySelector('.header-greeting').style.display = 'none';
                 }, 100);
             } catch (e) {
                 contentDiv.innerHTML = `<p style="color:#ff0000; font-weight:bold;">Ошибка: ${e.message}</p>`;
             }
         }
+
         function returnToMain() {
-            document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>';
+            document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;"><i class="fas fa-info-circle"></i> Выберите раздел выше, чтобы загрузить информацию.</p>';
             document.body.style.backgroundImage = originalBg;
-            document.getElementById('aviation-btn').style.display = 'inline-block';
-            document.getElementById('fleet-btn').style.display = 'inline-block';
-            document.getElementById('tank-btn').style.display = 'inline-block';
-            document.getElementById('minigame-btn').style.display = 'inline-block'; // Возвращаем новую кнопку
+            
+            document.getElementById('main-buttons').style.display = 'grid';
             document.getElementById('back-btn').style.display = 'none';
             document.getElementById('sponsors-section').style.display = 'block';
+            document.querySelector('.header-greeting').style.display = 'block';
         }
     </script>
 </body>
