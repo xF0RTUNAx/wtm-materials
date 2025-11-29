@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Гайды по War Thunder Mobile от xFORTUNAx</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* ---------------------------------------------------- */
+        /* --------- ГЛОБАЛЬНЫЕ СТИЛИ ВАШЕЙ ГЛАВНОЙ СТРАНИЦЫ --------- */
+        /* ---------------------------------------------------- */
         body {
             font-family: 'Roboto', sans-serif;
             background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg') no-repeat center center fixed;
@@ -235,7 +239,7 @@
         .sponsors-card h3 { margin-top: 0; color: #ffcc00; }
         .sponsors-list { list-style: none; padding: 0; display: flex; gap: 20px; flex-wrap: wrap; }
         .sponsors-list li { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
-
+        
         @media (max-width: 900px) {
             .dashboard-wrapper { flex-direction: column; height: 100vh; width: 100%; border-radius: 0; }
             .sidebar { width: 100%; height: auto; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; overflow-x: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -248,6 +252,31 @@
             .cards-grid { grid-template-columns: 1fr; }
             .main-content { padding: 20px; }
         }
+
+        /* ---------------------------------------------------- */
+        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ РАКЕТНОГО ФЛОТА --------- */
+        /* ---------------------------------------------------- */
+        
+        /* 1. Изменение контейнера контента при активном классе */
+        .main-content.is-fleet-active #content {
+            background: rgba(10, 20, 40, 0.95); /* Очень темный фон */
+            color: #00ff7f; /* Ярко-зеленый текст */
+            padding: 30px; /* Немного больше отступов */
+            border-radius: 10px;
+            border: 2px solid #00ff7f; /* Световая рамка */
+            box-shadow: 0 0 20px rgba(0, 255, 127, 0.5), inset 0 0 10px rgba(0, 255, 127, 0.2); /* Свечение */
+        }
+        
+        /* 2. Скрытие элементов главной страницы, которые не нужны во флоте */
+        .main-content.is-fleet-active .header-greeting {
+            display: none !important; 
+        }
+
+        /* 3. Переопределение цвета вложенных ссылок/текста, если они светлые */
+        .main-content.is-fleet-active #content a {
+            color: #ffcc00; /* Цвет ссылок в секции флота */
+        }
+        
     </style>
 </head>
 <body>
@@ -350,6 +379,9 @@
         
         async function loadContent(url) {
             const contentDiv = document.getElementById('content');
+            const mainContent = document.querySelector('.main-content'); // Получаем контейнер main-content
+            
+            // Загрузка
             contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка данных...</h3><div style="width: 30px; height: 30px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
             
             try {
@@ -360,17 +392,31 @@
                 setTimeout(() => {
                     contentDiv.innerHTML = html;
                     
-                    if (url.includes('Ракетный флот')) {
-                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
-                    } else if (url.includes('Авиационная')) {
-                        document.body.style.backgroundImage = 'url("https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg")';
-                    } else if (url.includes('Танковая кампания')) {
-                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
-                    }
+                    const isFleet = url.includes('Ракетный флот');
 
+                    // --- ЛОГИКА ИЗОЛЯЦИИ СТИЛЕЙ ---
+                    if (isFleet) {
+                        // Активируем класс для изоляции дизайна
+                        mainContent.classList.add('is-fleet-active');
+                        // Меняем фон тела
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
+                    } else {
+                        // Убеждаемся, что для других разделов класс удален
+                        mainContent.classList.remove('is-fleet-active');
+                        
+                        // (Ваша старая логика смены фона для других разделов)
+                        if (url.includes('Авиационная')) {
+                            document.body.style.backgroundImage = 'url("https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg")';
+                        } else if (url.includes('Танковая кампания')) {
+                            document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
+                        }
+                    }
+                    // -----------------------------
+                    
+                    // Общая логика скрытия/показа элементов меню
                     document.getElementById('main-buttons').style.display = 'none';
                     document.getElementById('back-btn').style.display = 'inline-block';
-                    document.getElementById('sponsors-section').style.display = 'none';
+                    document.getElementById('sponsors-section').style.display = isFleet ? 'none' : 'block'; 
                     document.querySelector('.header-greeting').style.display = 'none';
                 }, 100);
             } catch (e) {
@@ -379,6 +425,12 @@
         }
 
         function returnToMain() {
+            const mainContent = document.querySelector('.main-content');
+            
+            // --- ЛОГИКА ВОЗВРАТА: УДАЛЯЕМ КЛАСС ИЗОЛЯЦИИ ---
+            mainContent.classList.remove('is-fleet-active');
+            // ----------------------------------------------------
+            
             document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;"><i class="fas fa-info-circle"></i> Выберите раздел выше, чтобы загрузить информацию.</p>';
             document.body.style.backgroundImage = originalBg;
             
@@ -389,7 +441,7 @@
         }
     </script>
 </body>
-</html>
+
 
 
 
