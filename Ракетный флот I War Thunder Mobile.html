@@ -1,34 +1,37 @@
 <style>
     /* ---------------------------------------------------- */
-    /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ РАКЕТНОГО ФЛОТА (Dark, Neon Green) --- */
+    /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ РАКЕТНОГО ФЛОТА (Dark, GadgetHub-like) --- */
     /* ---------------------------------------------------- */
     .fleet-container {
-        font-family: 'Roboto', sans-serif;
-        color: #00ff7f; /* Неоново-зеленый текст */
+        font-family: 'Open Sans', sans-serif; /* Более современный шрифт */
+        color: #e0e0e0; /* Светло-серый текст */
         max-width: none;
         margin: 0;
         padding: 0;
-        line-height: 1.6;
+        line-height: 1.7;
+        background-color: #1a1a1a; /* Очень темный фон */
+        padding: 20px; /* Добавим небольшой отступ по краям */
+        box-sizing: border-box;
     }
     
     h1, h2, h3 {
-        color: #ffcc00; /* Яркий акцент для заголовков */
-        text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
-        border-bottom: 1px solid rgba(0, 255, 127, 0.3);
-        padding-bottom: 5px;
-        margin-top: 30px;
-        position: relative; /* Для работы псевдоэлемента ::before */
+        color: #ffffff; /* Белый для заголовков */
+        text-shadow: none; /* Убираем тень */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая белая линия */
+        padding-bottom: 10px;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        position: relative;
+        font-weight: 600; /* Полужирный */
     }
     
+    h1 { font-size: 2.5em; }
+    h2 { font-size: 2em; }
+    h3 { font-size: 1.6em; }
+
+    /* Убираем неоновую полосу под заголовками */
     h1::before, h2::before, h3::before {
-        content: "";
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        width: 50px;
-        height: 3px;
-        background: #00ff7f; /* Неоновая полоса */
-        border-radius: 2px;
+        content: none;
     }
 
     /* Навигационные ссылки (Якоря) */
@@ -36,27 +39,31 @@
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
-        margin-bottom: 40px;
-        gap: 12px;
+        margin-bottom: 50px;
+        gap: 15px;
+        padding-top: 20px;
     }
     .fleet-nav a {
         display: block;
-        padding: 10px 15px;
-        background: rgba(0, 255, 127, 0.1); /* Полупрозрачный фон */
-        border: 1px solid #00ff7f;
-        border-radius: 10px;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.05); /* Полупрозрачный фон */
+        border: 1px solid rgba(255, 255, 255, 0.2); /* Тонкая белая рамка */
+        border-radius: 5px; /* Менее округлые углы */
         text-decoration: none;
-        color: #00ff7f;
-        font-weight: bold;
-        box-shadow: 0 0 10px rgba(0, 255, 127, 0.4);
+        color: #ffffff; /* Белый текст */
+        font-weight: 500;
+        box-shadow: none; /* Убираем тень */
         transition: all 0.3s ease;
         text-align: center;
         min-width: 180px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.95em;
     }
     .fleet-nav a:hover {
-        transform: translateY(-3px);
-        background: rgba(0, 255, 127, 0.25);
-        box-shadow: 0 0 15px rgba(0, 255, 127, 0.7);
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: #ffffff; /* Полностью белая рамка при наведении */
     }
     
     /* Таблицы */
@@ -64,29 +71,32 @@
         overflow-x: auto;
         overflow-y: auto;
         max-height: 600px;
-        margin-bottom: 30px;
-        border: 1px solid rgba(0, 255, 127, 0.5);
-        border-radius: 10px;
-        box-shadow: 0 0 15px rgba(0, 255, 127, 0.3);
+        margin-bottom: 40px;
+        border: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая светлая рамка */
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); /* Легкая тень */
     }
     table {
         width: 100%;
         border-collapse: collapse;
-        background: rgba(0, 0, 0, 0.5); /* Темный фон таблицы */
-        border-radius: 10px;
+        background: #2a2a2a; /* Темный фон таблицы */
+        border-radius: 8px;
         overflow: hidden;
-        color: #ffffff;
+        color: #e0e0e0; /* Светло-серый текст */
     }
     
     thead th {
         position: sticky !important;
         top: 0 !important;
         z-index: 10;
-        background: linear-gradient(to bottom, #008844, #00ff7f) !important; /* Яркий градиент шапки */
-        color: #000000 !important; /* Черный текст на светлой шапке */
-        font-weight: bold;
+        background: #333333 !important; /* Тёмно-серый фон шапки */
+        color: #ffffff !important; /* Белый текст на шапке */
+        font-weight: 600;
         backdrop-filter: blur(8px);
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        text-transform: uppercase;
+        font-size: 0.9em;
     }
     
     /* Закрепление первого столбца */
@@ -94,111 +104,131 @@
     .table-container table td:first-child {
         position: sticky;
         left: 0;
-        background: rgba(0, 0, 0, 0.8) !important; /* Темный фон для закрепленного столбца */
-        color: #ffcc00 !important; /* Золотой/желтый текст для выделения */
-        font-weight: bold;
+        background: #222222 !important; /* Еще более темный фон для закрепленного столбца */
+        color: #ffffff !important; /* Белый текст для выделения */
+        font-weight: 600;
         z-index: 3;
         box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4);
         min-width: 140px;
     }
     .table-container table th:first-child {
-        background: #00ff7f !important;
-        color: #000000 !important;
+        background: #3a3a3a !important; /* Темнее, чем остальная шапка */
+        color: #ffffff !important;
         z-index: 4;
     }
     
     th, td {
-        padding: 12px;
-        border-bottom: 1px solid rgba(0, 255, 127, 0.1);
+        padding: 15px 12px; /* Увеличим отступы */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08); /* Очень тонкие светлые линии */
         text-align: left;
-        font-weight: normal; /* Сброс жирности */
+        font-weight: normal;
+    }
+
+    /* Выравнивание оценок по центру */
+    .table-container table td:nth-child(n+3) {
+        text-align: center;
     }
     
     tbody tr:nth-child(even) {
-        background: rgba(0, 255, 127, 0.05); /* Легкая зебра */
+        background: #2f2f2f; /* Чуть более светлый фон для четных строк */
     }
     
     /* Секция с выводами и порядковыми списками */
     section {
-        background: rgba(0, 0, 0, 0.3);
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 25px;
+        background: #222222; /* Темный фон секций */
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 35px;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    p {
+        margin-bottom: 15px;
     }
 
     ol {
         padding-left: 0;
         list-style-type: none;
-        counter-reset: list-item; /* Инициализация счетчика */
+        counter-reset: list-item;
     }
     ol li {
-        padding-left: 35px;
+        padding-left: 40px;
         position: relative;
-        margin-bottom: 10px;
-        color: #e0e0e0;
-        counter-increment: list-item; /* Увеличение счетчика */
+        margin-bottom: 12px;
+        color: #c0c0c0; /* Чуть светлее, чем основной текст */
     }
     ol li::before {
         content: counter(list-item) ".";
         position: absolute;
         left: 0;
-        color: #00ff7f; /* Неоново-зеленые номера */
+        color: #888888; /* Приглушенный серый для номеров */
         font-weight: bold;
-        font-size: 1.1em;
+        font-size: 1.2em;
+        line-height: 1.5; /* Выравнивание с текстом */
     }
     
     /* Цветовая оценка (Rating) */
     .rating-1, .rating-2, .rating-3, .rating-4, .rating-5 {
-        color: #000000;
+        color: #ffffff; /* Белый текст на цветных блоках */
         font-weight: bold;
         text-align: center;
         border-radius: 4px;
-        padding: 4px 8px;
+        padding: 6px 10px; /* Увеличим отступы */
         white-space: nowrap;
-        display: inline-block; /* Для корректного отображения фона */
+        display: inline-block;
+        min-width: 30px; /* Фиксированная минимальная ширина */
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Легкая тень для блоков */
     }
-    .rating-1 { background-color: #ff3333; } /* Красный */
-    .rating-2 { background-color: #ff9900; } /* Оранжевый */
-    .rating-3 { background-color: #ffff33; } /* Желтый */
-    .rating-4 { background-color: #99ff33; } /* Светло-зеленый */
-    .rating-5 { background-color: #00ff7f; } /* Неоново-зеленый */
+    .rating-1 { background-color: #dc3545; } /* Красный */
+    .rating-2 { background-color: #fd7e14; } /* Оранжевый */
+    .rating-3 { background-color: #ffc107; } /* Желтый */
+    .rating-4 { background-color: #28a745; } /* Зеленый */
+    .rating-5 { background-color: #007bff; } /* Синий - как акцентный цвет */
     
     footer {
         text-align: center;
         font-size: 0.9em;
-        color: #ffcc00;
-        margin-top: 50px;
-        padding: 15px;
-        background: rgba(255, 204, 0, 0.1);
-        border: 1px dashed #ffcc00;
-        border-radius: 10px;
+        color: #888888; /* Приглушенный серый */
+        margin-top: 60px;
+        padding: 20px;
+        background: #222222;
+        border: 1px dashed rgba(255, 255, 255, 0.1); /* Тонкая пунктирная линия */
+        border-radius: 8px;
+    }
+
+    footer p {
+        margin-bottom: 0;
     }
     
     /* Медиа-запросы для адаптивности */
     @media (max-width: 768px) {
-        .fleet-container { padding: 5px; }
-        .fleet-nav { flex-direction: column; gap: 8px; }
+        .fleet-container { padding: 10px; }
+        .fleet-nav { flex-direction: column; gap: 10px; }
         .fleet-nav a { min-width: 100%; }
-        th, td { padding: 8px; font-size: 0.85em; }
+        th, td { padding: 10px 8px; font-size: 0.85em; }
         
         .table-container table th:first-child,
         .table-container table td:first-child {
-            min-width: 120px;
+            min-width: 100px;
         }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.7em; }
+        h3 { font-size: 1.4em; }
+        section { padding: 20px; }
     }
 </style>
 
 <div class="fleet-container">
-    <h1><i class="fas fa-ship" style="margin-right: 10px;"></i> WTM: Ракетный Флот</h1>
+    <h1><i class="fas fa-ship" style="margin-right: 15px; color: #ffffff;"></i>WTM: Ракетный Флот</h1>
     
     <nav class="fleet-nav">
-        <a href="#section1">1. Корабли и ракеты</a>
-        <a href="#section2">2. Корабли по чистому УВС</a>
-        <a href="#section3">3. Ракеты (урон с одной ракеты, УВС)</a>
-        <a href="#section4">4. Общие выводы</a>
-        <a href="#section5">5. FXPENT (оценка кораблей)</a>
-        <a href="#section6">6. Про некоторые ракеты (ПКР)</a>
-        <a href="#section7">Последнее обновление</a>
+        <a href="#section1">Корабли и ракеты</a>
+        <a href="#section2">Корабли по УВС</a>
+        <a href="#section3">Ракеты (УВС)</a>
+        <a href="#section4">Общие выводы</a>
+        <a href="#section5">FXPENT (Оценка)</a>
+        <a href="#section6">О ракетах (ПКР)</a>
+        <a href="#section7">Обновление</a>
     </nav>
     
     <section id="section1">
@@ -440,19 +470,19 @@
         <h2>6. Про некоторые ракеты (ПКР)</h2>
         <ol>
             <li>
-                <strong style="color: #ffcc00;">П-1 «Стрела»</strong><br>
+                <strong style="color: #ffffff;">П-1 «Стрела»</strong><br>
                 Самые мощные ракеты. Медленно летят.
             </li>
             <li>
-                <strong style="color: #ffcc00;">RIM-8 Talos</strong><br>
+                <strong style="color: #ffffff;">RIM-8 Talos</strong><br>
                 Большой калибр, внушительный урон, долго перезаряжаются.
             </li>
             <li>
-                <strong style="color: #ffcc00;">«Москит»</strong><br>
+                <strong style="color: #ffffff;">«Москит»</strong><br>
                 Высокая скорость (очень быстро летят).
             </li>
             <li>
-                <strong style="color: #ffcc00;">IRIS-T</strong><br>
+                <strong style="color: #ffffff;">IRIS-T</strong><br>
                 Малый калибр. Отличаются повышенным уроном (относительно калибра) и быстрым наведением.
             </li>
         </ol>
@@ -460,7 +490,7 @@
 
     <section id="section7">
         <h2>Последнее обновление</h2>
-        <p style="color: #ffcc00; font-weight: bold;">[Дата обновления: 29.11.2025]</p>
+        <p style="color: #888888; font-weight: bold;">[Дата обновления: 29.11.2025]</p>
         <p>Информация актуальна на момент публикации и может быть изменена в последующих обновлениях игры War Thunder Mobile.</p>
     </section>
 
