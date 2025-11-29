@@ -50,15 +50,34 @@
         .old-price { text-decoration: line-through; color: #777; margin-right: 10px; }
         .new-price { color: #d32f2f; font-size: 1.3em; }
 
-        .input-group { text-align: left; margin-bottom: 20px; }
+        /* *** НОВЫЕ СТИЛИ ДЛЯ ПОЛЯ ПАРОЛЯ *** */
+        .password-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
         .input-group label { display: block; margin-bottom: 8px; font-weight: 600; color: #555; }
+        
         .input-field {
             width: 100%; padding: 12px; border: none; border-radius: 8px;
             background: rgba(255,255,255,0.9);
             box-shadow: inset 2px 2px 5px rgba(0,0,0,0.1);
             font-size: 1em; box-sizing: border-box;
+            padding-right: 40px; /* Отступ для иконки */
         }
         .input-field:focus { outline: none; box-shadow: inset 1px 1px 3px rgba(0,0,0,0.2); border: 1px solid #6a5acd; }
+
+        .toggle-password {
+            position: absolute;
+            right: 10px;
+            top: 50%; /* Сдвигаем на половину высоты родителя */
+            transform: translateY(calc(-50% + 4px)); /* Корректируем по центру относительно поля, +4px из-за label */
+            cursor: pointer;
+            color: #6a5acd; 
+            font-size: 1.2em;
+            user-select: none;
+            z-index: 10; 
+        }
 
         .login-btn {
             width: 100%; padding: 14px;
@@ -84,7 +103,7 @@
 
         /* === ИНТЕРФЕЙС DASHBOARD === */
         .dashboard-container {
-            display: none !important; /* *** ГЛАВНОЕ ИСПРАВЛЕНИЕ: Принудительное скрытие *** */
+            display: none !important; 
             height: 100vh;
             justify-content: center;
             align-items: center;
@@ -96,7 +115,7 @@
         }
         
         .dashboard-container.active-dashboard {
-            display: flex !important; /* Показываем только при успешном логине */
+            display: flex !important; 
         }
 
         .glass-panel {
@@ -154,7 +173,7 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* === МОБИЛЬНАЯ АДАПТАЦИЯ (Улучшенная) === */
+        /* === МОБИЛЬНАЯ АДАПТАЦИЯ === */
         @media (max-width: 768px) {
             .glass-panel { 
                 flex-direction: column; 
@@ -165,6 +184,11 @@
                 background: rgba(0,0,0,0.4);
             }
             
+            .toggle-password {
+                /* На мобильных устройствах отступ от верха контейнера без label */
+                transform: translateY(-50%); 
+            }
+
             /* Сайдбар превращается в нижнюю панель */
             .sidebar { 
                 width: 100%; 
@@ -172,7 +196,7 @@
                 padding: 10px; 
                 flex-direction: row; 
                 overflow-x: auto; 
-                background: rgba(20, 20, 20, 0.95); /* Непрозрачный фон для читаемости */
+                background: rgba(20, 20, 20, 0.95); 
                 border-top: 1px solid rgba(255,255,255,0.2);
                 border-right: none;
                 position: fixed;
@@ -185,7 +209,7 @@
             }
 
             .main-content { 
-                padding: 20px 20px 80px 20px; /* Отступ снизу для меню */
+                padding: 20px 20px 80px 20px; 
             }
 
             .sidebar-title { display: none; }
@@ -206,7 +230,7 @@
                 margin: 0;
             }
             .sidebar-menu button.active {
-                background: #6a5acd; /* Цвет активной кнопки */
+                background: #6a5acd;
             }
 
             .mobile-exit-btn {
@@ -238,9 +262,11 @@
             <p style="font-size: 0.85em; color: #555; margin-bottom: 20px;">
                 Ключ активен в течение сезона (~30 дней).
             <p>Купить ключ → донат на 1,5$ или эквивалент → получить ключ (личные сообщения канала) </p>
-            <div class="input-group">
+            
+            <div class="password-container">
                 <label for="game-key">Введите ключ доступа:</label>
                 <input type="password" id="game-key" class="input-field" placeholder="Введите ключ...">
+                <span class="toggle-password" onclick="togglePasswordVisibility()">👁️</span>
                 <div id="login-error" class="error-msg">Неверный ключ доступа!</div>
             </div>
 
@@ -313,7 +339,6 @@
                             <li>Ограничений по технике на текущий момент не предусмотрено.</li>
                             <li>Локации со штриховкой разрывают связь между остальными локациями, не подлежат захвату и выступают буфером для балансировки визуальных ошибок карты.</li>
                         </ul>
-                         
                     </div>
                 </div>
 
@@ -378,15 +403,26 @@
     </div>
 
     <script>
+        // *** НОВАЯ ФУНКЦИЯ ДЛЯ ПЕРЕКЛЮЧЕНИЯ ВИДИМОСТИ ПАРОЛЯ ***
+        function togglePasswordVisibility() {
+            const keyInput = document.getElementById('game-key');
+            const toggleIcon = document.querySelector('.toggle-password');
+            
+            if (keyInput.type === 'password') {
+                keyInput.type = 'text';
+                toggleIcon.textContent = '🔒'; // Иконка замка
+            } else {
+                keyInput.type = 'password';
+                toggleIcon.textContent = '👁️'; // Иконка глаза
+            }
+        }
+
         function checkKey() {
             const input = document.getElementById('game-key').value;
             const correctKey = "fortuna387"; 
             
             if (input === correctKey) {
-                // Скрываем окно входа
                 document.getElementById('login-view').style.display = 'none';
-                
-                // Показываем дашборд с помощью нового класса
                 document.getElementById('dashboard-view').classList.add('active-dashboard');
                 
             } else {
@@ -396,7 +432,7 @@
                 inputField.style.border = "2px solid red";
                 setTimeout(() => { 
                     inputField.style.border = "none";
-                    errorDiv.style.display = 'none'; // Скрываем ошибку через время
+                    errorDiv.style.display = 'none';
                 }, 1000);
             }
         }
@@ -415,3 +451,4 @@
     </script>
 </body>
 </html>
+
