@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сборник материалов по War Thunder Mobile</title>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Roboto', sans-serif;
@@ -22,6 +24,7 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.5);
             z-index: -1;
+            position: fixed;
         }
         .container {
             max-width: 900px;
@@ -54,14 +57,14 @@
             border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease, background-size 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             font-size: 1.2em;
             text-shadow: 2px 2px 6px rgba(0,0,0,0.8);
             text-decoration: none;
             min-width: 280px;
             animation: pulse 2s infinite;
-            hyphens: none; /* Отключение автоматической расстановки переносов */
-            word-break: normal; /* Нормальный разрыв только между словами */
+            display: inline-block;
+            box-sizing: border-box;
         }
         button:hover, a.button-like:hover {
             transform: scale(1.05);
@@ -80,10 +83,17 @@
             background: linear-gradient(135deg, rgba(0,0,0,0.7), rgba(100,50,0,0.5)),
                         url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg') center/cover no-repeat;
         }
-        /* Стиль кнопки "Назад" — такая же, как основные кнопки */
+        
+        /* === НОВЫЙ СТИЛЬ ДЛЯ КНОПКИ МИНИ-ИГРЫ === */
+        #minigame-btn {
+            background: linear-gradient(135deg, rgba(50,0,100,0.7), rgba(100,0,50,0.5)),
+                        url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_03_stpatrick2025/1080x2340_wtm_saintpatricks_day25_640351f6fdaaca1296d868f957108bdd.jpg') center/cover no-repeat;
+            border: 2px solid #ffcc00;
+        }
+
         #back-btn {
             background: linear-gradient(135deg, rgba(255,193,7,0.9), rgba(255,167,38,0.9));
-            display: none; /* скрыта на главной */
+            display: none;
             animation: none;
         }
         #back-btn:hover {
@@ -96,68 +106,43 @@
             padding: 10px;
             border-radius: 15px;
             min-height: 50px;
-            text-align: left; /* Выравнивание текста по левому краю */
+            text-align: left;
         }
         @keyframes pulse {
             0%,100% { transform: scale(1); }
             50% { transform: scale(1.02); }
         }
-        .sponsors {
-            margin-top: 50px;
-        }
-        .sponsors ul {
-            list-style: none;
-            padding: 0;
-            font-size: 1.2em;
-        }
-        .sponsors li {
-            margin-bottom: 10px;
-        }
+        .sponsors { margin-top: 50px; }
+        .sponsors ul { list-style: none; padding: 0; font-size: 1.2em; }
+        .sponsors li { margin-bottom: 10px; }
+        
         @media (max-width: 768px) {
-            .container {
-                max-width: 100%;
-                padding: 20px;
-                border-radius: 0;
-            }
-            .buttons {
-                flex-direction: column;
-                gap: 20px;
-            }
-            button, a.button-like {
-                font-size: 1.8em;
-                padding: 16px 20px;
-                width: 100%;
-                box-sizing: border-box;
-                min-width: auto;
-            }
-            h1 {
-                font-size: 2em;
-            }
-            .sponsors ul {
-                font-size: 1.1em;
-            }
+            .container { max-width: 100%; padding: 20px; border-radius: 0; }
+            .buttons { flex-direction: column; gap: 20px; }
+            button, a.button-like { width: 100%; font-size: 1.5em; padding: 16px 20px; }
+            h1 { font-size: 2em; }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <h1>Добро пожаловать на официальный сайт xFORTUNAx по War Thunder Mobile</h1>
         <p>Погрузимся в наше сообщество! Выберите нужный раздел:</p>
-        <!-- Основные кнопки + кнопка "Назад" (скрыта по умолчанию) -->
+        
         <div class="buttons" id="main-buttons">
             <button id="aviation-btn" onclick="loadContent('Авиационная кампания I War Thunder Mobile.html')">Авиационная кампания</button>
             <button id="fleet-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">Ракетный флот</button>
             <button id="tank-btn" onclick="loadContent('Танковая кампания I War Thunder Mobile.html')">Танковая кампания</button>
-          
-            <!-- Кнопка "Назад" будет показываться только после загрузки контента -->
+            
+            <button id="minigame-btn" onclick="window.location.href='minigame.html'">Мини-игры</button>
+
             <button id="back-btn" onclick="returnToMain()">Назад на главную</button>
         </div>
+
         <div id="content">
             <p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>
         </div>
-        <!-- Соцсети (оставил без изменений) -->
+        
         <div style="text-align: center; margin-top: 50px;">
             <h1 style="font-family: 'Black Ops One', sans-serif; color: #ffcc00; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Официальные социальные сети xFORTUNAx</h1>
             <p style="font-size: 1.2em; margin-bottom: 30px;">Присоединяйтесь к нашему сообществу!</p>
@@ -168,7 +153,7 @@
                 <a href="https://dalink.to/xf0rtunax" target="_blank" class="button-like" style="background: linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,50,100,0.4)), url('https://files.donationalerts.com/uploads/filemanager2/14074371/Sr47Orfeb9grCLd9HBhctDIfDSjKruPbqrkO8FHu.png') center/cover no-repeat;">Поддержать автора финансово</a>
             </div>
         </div>
-        <!-- Новый раздел спонсоров -->
+        
         <div id="sponsors-section" class="sponsors" style="text-align: center; margin-top: 50px;">
             <h1 style="font-family: 'Black Ops One', sans-serif; color: #ffcc00; font-size: 2.5em; margin-bottom: 20px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">Спасибо спонсорам проекта!</h1>
             <ul>
@@ -178,8 +163,9 @@
             </ul>
         </div>
     </div>
+    
     <script>
-        const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_09_newhorizon/1080x2340_wtm_new_order_0af6aec3d79242d1281d6a86a07c7330.jpg")';
+        const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
         async function loadContent(url) {
             const contentDiv = document.getElementById('content');
             contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка содержимого раздела</h3><p style="color:#00cc66; font-weight:bold;">Загружаем... <span style="display:inline-block; width:20px; height:20px; border:4px solid #f3f3f3; border-top:4px solid #3498db; border-radius:50%; animation:spin 1s linear infinite;"></span></p>';
@@ -189,7 +175,6 @@
                 const html = await resp.text();
                 setTimeout(() => {
                     contentDiv.innerHTML = html;
-                    // Меняем фон
                     if (url.includes('Ракетный флот')) {
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
                     } else if (url.includes('Авиационная')) {
@@ -197,12 +182,11 @@
                     } else if (url.includes('Танковая кампания')) {
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
                     }
-                    // Показываем кнопку "Назад" и скрываем основные разделы
                     document.getElementById('aviation-btn').style.display = 'none';
                     document.getElementById('fleet-btn').style.display = 'none';
                     document.getElementById('tank-btn').style.display = 'none';
+                    document.getElementById('minigame-btn').style.display = 'none'; // Скрываем и новую кнопку
                     document.getElementById('back-btn').style.display = 'block';
-                    // Скрываем раздел спонсоров
                     document.getElementById('sponsors-section').style.display = 'none';
                 }, 100);
             } catch (e) {
@@ -212,18 +196,16 @@
         function returnToMain() {
             document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>';
             document.body.style.backgroundImage = originalBg;
-            // Возвращаем основные кнопки, скрываем "Назад"
-            document.getElementById('aviation-btn').style.display = 'block';
-            document.getElementById('fleet-btn').style.display = 'block';
-            document.getElementById('tank-btn').style.display = 'block';
+            document.getElementById('aviation-btn').style.display = 'inline-block';
+            document.getElementById('fleet-btn').style.display = 'inline-block';
+            document.getElementById('tank-btn').style.display = 'inline-block';
+            document.getElementById('minigame-btn').style.display = 'inline-block'; // Возвращаем новую кнопку
             document.getElementById('back-btn').style.display = 'none';
-            // Показываем раздел спонсоров
             document.getElementById('sponsors-section').style.display = 'block';
         }
     </script>
 </body>
 </html>
-
 
 
 
