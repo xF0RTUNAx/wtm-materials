@@ -1,292 +1,223 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Вспомогательный материал по ракетному флоту в WTM</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg') no-repeat center center fixed;
-            background-size: cover; /* Добавлено для распространения фона до границ экрана */
-            color: #333;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-            animation: fadeIn 1s ease-in-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 30px;
-            background: rgba(255, 255, 255, 0.7);
-            border-radius: 25px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-      
-        }
-        section {
-            transition: transform 0.3s ease;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 10px;
-        }
-        section:hover {
-            transform: scale(1.02);
-        }
-        h1, h2, h3 {
-            color: #0056b3;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-        h1::before, h2::before, h3::before {
-            content: "";
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(to right, #0056b3, #3388d1);
-            border-radius: 2px;
-        }
-        nav {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 40px;
-            gap: 12px;
-        }
-        nav a {
-            display: block;
-            padding: 14px 20px;
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(230, 245, 255, 0.9));
-            border-radius: 20px;
-            text-decoration: none;
-            color: #0056b3;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            backdrop-filter: blur(8px);
-            transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
-            text-align: center;
-            white-space: normal;
-            word-wrap: break-word;
-            hyphens: auto;
-            min-width: 220px;
-            max-width: 340px;
-        }
-        nav a:hover {
-            transform: translateY(-5px);
-            background: linear-gradient(135deg, rgba(255, 255, 255, 1), rgba(200, 235, 255, 1));
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-        .table-container {
-            overflow-x: auto;
-            overflow-y: auto;
-            max-height: 650px;
-            margin-bottom: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: rgba(255, 255, 255, 0.8);
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-     
-        /* Закрепляем первый столбец (ключевую информацию) при скролле */
-.table-container table th:first-child,
-.table-container table td:first-child {
-    position: sticky;
-    left: 0;
-    background: rgba(209, 241, 253, 0.95); /* белый фон, чтобы не просвечивало */
-    z-index: 3;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08); /* лёгкая тень справа, чтобы визуально отделялось */
-    min-width: 140px; /* чтобы название корабля не сжималось */
-}
-/* Для заголовка первого столбца — правильный градиент */
-.table-container table th:first-child {
-    background: linear-gradient(to bottom, #0056b3, #0077cc);
-    z-index: 4;
-}
-        /* Закрепляем шапку таблицы при скролле (работает на всех устройствах, включая мобильные) */
-.table-container {
-    position: relative; /* ← обязательно для корректной работы sticky внутри контейнера */
-    overflow-y: auto;
-    max-height: 650px;
-    scrollbar-width: thin;
-}
-.table-container thead,
-.table-container table {
-    border-radius: 15px; /* радиус остаётся */
-}
-.table-container thead th {
-    position: sticky !important;
-    top: 0 !important;
-    z-index: 10;
-    background: linear-gradient(to bottom, #0056b3, #0077cc) !important;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* лёгкая тень снизу, чтобы было видно границу */
-}
-/* Дополнительно для Safari/iOS */
-.table-container thead th {
-    -webkit-sticky: sticky;
-}
-/* На мобильных делаем шире и чуть жирнее шрифт для читаемости */
-@media (max-width: 768px) {
+<style>
+    /* ---------------------------------------------------- */
+    /* --- ИЗОЛИРОВАННЫЕ СТИЛИ ДЛЯ РАКЕТНОГО ФЛОТА (Dark, Neon Green) --- */
+    /* ---------------------------------------------------- */
+    .fleet-container {
+        font-family: 'Roboto', sans-serif;
+        color: #00ff7f; /* Неоново-зеленый текст */
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        line-height: 1.6;
+    }
+    
+    h1, h2, h3 {
+        color: #ffcc00; /* Яркий акцент для заголовков */
+        text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        border-bottom: 1px solid rgba(0, 255, 127, 0.3);
+        padding-bottom: 5px;
+        margin-top: 30px;
+        position: relative; /* Для работы псевдоэлемента ::before */
+    }
+    
+    h1::before, h2::before, h3::before {
+        content: "";
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 50px;
+        height: 3px;
+        background: #00ff7f; /* Неоновая полоса */
+        border-radius: 2px;
+    }
+
+    /* Навигационные ссылки (Якоря) */
+    .fleet-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 40px;
+        gap: 12px;
+    }
+    .fleet-nav a {
+        display: block;
+        padding: 10px 15px;
+        background: rgba(0, 255, 127, 0.1); /* Полупрозрачный фон */
+        border: 1px solid #00ff7f;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #00ff7f;
+        font-weight: bold;
+        box-shadow: 0 0 10px rgba(0, 255, 127, 0.4);
+        transition: all 0.3s ease;
+        text-align: center;
+        min-width: 180px;
+    }
+    .fleet-nav a:hover {
+        transform: translateY(-3px);
+        background: rgba(0, 255, 127, 0.25);
+        box-shadow: 0 0 15px rgba(0, 255, 127, 0.7);
+    }
+    
+    /* Таблицы */
+    .table-container {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 600px;
+        margin-bottom: 30px;
+        border: 1px solid rgba(0, 255, 127, 0.5);
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0, 255, 127, 0.3);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: rgba(0, 0, 0, 0.5); /* Темный фон таблицы */
+        border-radius: 10px;
+        overflow: hidden;
+        color: #ffffff;
+    }
+    
+    thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10;
+        background: linear-gradient(to bottom, #008844, #00ff7f) !important; /* Яркий градиент шапки */
+        color: #000000 !important; /* Черный текст на светлой шапке */
+        font-weight: bold;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    /* Закрепление первого столбца */
     .table-container table th:first-child,
     .table-container table td:first-child {
-        min-width: 150px;
-        font-weight: 800;
-        font-size: 1.02em;
+        position: sticky;
+        left: 0;
+        background: rgba(0, 0, 0, 0.8) !important; /* Темный фон для закрепленного столбца */
+        color: #ffcc00 !important; /* Золотой/желтый текст для выделения */
+        font-weight: bold;
+        z-index: 3;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.4);
+        min-width: 140px;
     }
-}
-        th, td {
-            padding: 15px;
-            text-align: left;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-            font-weight: bold;
+    .table-container table th:first-child {
+        background: #00ff7f !important;
+        color: #000000 !important;
+        z-index: 4;
+    }
+    
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid rgba(0, 255, 127, 0.1);
+        text-align: left;
+        font-weight: normal; /* Сброс жирности */
+    }
+    
+    tbody tr:nth-child(even) {
+        background: rgba(0, 255, 127, 0.05); /* Легкая зебра */
+    }
+    
+    /* Секция с выводами и порядковыми списками */
+    section {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+    }
+
+    ol {
+        padding-left: 0;
+        list-style-type: none;
+        counter-reset: list-item; /* Инициализация счетчика */
+    }
+    ol li {
+        padding-left: 35px;
+        position: relative;
+        margin-bottom: 10px;
+        color: #e0e0e0;
+        counter-increment: list-item; /* Увеличение счетчика */
+    }
+    ol li::before {
+        content: counter(list-item) ".";
+        position: absolute;
+        left: 0;
+        color: #00ff7f; /* Неоново-зеленые номера */
+        font-weight: bold;
+        font-size: 1.1em;
+    }
+    
+    /* Цветовая оценка (Rating) */
+    .rating-1, .rating-2, .rating-3, .rating-4, .rating-5 {
+        color: #000000;
+        font-weight: bold;
+        text-align: center;
+        border-radius: 4px;
+        padding: 4px 8px;
+        white-space: nowrap;
+        display: inline-block; /* Для корректного отображения фона */
+    }
+    .rating-1 { background-color: #ff3333; } /* Красный */
+    .rating-2 { background-color: #ff9900; } /* Оранжевый */
+    .rating-3 { background-color: #ffff33; } /* Желтый */
+    .rating-4 { background-color: #99ff33; } /* Светло-зеленый */
+    .rating-5 { background-color: #00ff7f; } /* Неоново-зеленый */
+    
+    footer {
+        text-align: center;
+        font-size: 0.9em;
+        color: #ffcc00;
+        margin-top: 50px;
+        padding: 15px;
+        background: rgba(255, 204, 0, 0.1);
+        border: 1px dashed #ffcc00;
+        border-radius: 10px;
+    }
+    
+    /* Медиа-запросы для адаптивности */
+    @media (max-width: 768px) {
+        .fleet-container { padding: 5px; }
+        .fleet-nav { flex-direction: column; gap: 8px; }
+        .fleet-nav a { min-width: 100%; }
+        th, td { padding: 8px; font-size: 0.85em; }
+        
+        .table-container table th:first-child,
+        .table-container table td:first-child {
+            min-width: 120px;
         }
-        thead th {
-            background: linear-gradient(to bottom, #0056b3, #0077cc);
-            color: white;
-            position: sticky;
-            top: 0;
-            z-index: 1;
-            backdrop-filter: blur(8px);
-        }
-        tbody tr:nth-child(even) {
-            background: rgba(240, 248, 255, 0.5);
-        }
-        .rating-1 { background-color: #ff0000; color: white; }
-        .rating-2 { background-color: #ff9900; color: black; }
-        .rating-3 { background-color: #ffff00; color: black; }
-        .rating-4 { background-color: #99ff00; color: black; }
-        .rating-5 { background-color: #00ff00; color: black; }
-        ol {
-    list-style-type: none;
-    counter-reset: my-counter;
-    padding-left: 0;
-}
-       ol li {
-    position: relative;
-    padding-left: 35px;
-    counter-increment: my-counter;
-}
-        li::before {
-            content: counter(my-counter) "•";
-            position: absolute;
-            left: 0;
-            color: #0056b3;
-            font-weight: bold;
-        }
-        ol li::before {
-    content: counter(list-item) ". ";
-    position: absolute;
-    left: 0;
-    color: #0056b3;
-    font-weight: bold;
-}
-        footer {
-            text-align: center;
-            font-size: 0.9em;
-            color: #ff0000;
-            margin-top: 50px;
-            padding: 15px;
-            background: linear-gradient(to bottom,rgba(255, 255, 255, 0.7), transparent);
-            border-radius: 15px;
-        }
-        @media (max-width: 768px) {
-            body {
-                padding: 10px 5px;
-            }
-            .container {
-                max-width: 100%;
-                padding: 15px 10px;
-                border-radius: 15px;
-            }
-            nav {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 10px;
-            }
-            nav a {
-                width: 100%;
-                max-width: none;
-                min-width: 0;
-                padding: 12px 10px;
-                font-size: 1.0em;
-                box-sizing: border-box;
-            }
-            section {
-                opacity: 0;
-                transform: translateY(50px);
-                animation: slideUpFadeIn 0.8s ease-out forwards;
-                animation-delay: calc(0.2s * var(--section-index));
-            }
-            @keyframes slideUpFadeIn {
-                from { opacity: 0; transform: translateY(50px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            th, td {
-                padding: 10px;
-                font-size: 0.9em;
-            }
-            .table-container {
-                margin-bottom: 20px;
-            }
-            ol li {
-                padding-left: 25px;
-            }
-            footer {
-                font-size: 0.85em;
-                padding: 10px;
-            }
-        }
-        section:nth-child(1) { --section-index: 1; }
-        section:nth-child(2) { --section-index: 2; }
-        section:nth-child(3) { --section-index: 3; }
-        section:nth-child(4) { --section-index: 4; }
-        section:nth-child(5) { --section-index: 5; }
-        section:nth-child(6) { --section-index: 6; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>WTM: Ракетный Флот</h1>
-        <nav>
-            <a href="#section1">1. Корабли и ракеты</a>
-            <a href="#section2">2. Корабли по чистому УВС</a>
-            <a href="#section3">3. Ракеты (урон с одной ракеты, УВС)</a>
-            <a href="#section4">4. Общие выводы</a>
-            <a href="#section5">5. FXPENT (оценка кораблей)</a>
-            <a href="#section6">6. Про некоторые ракеты (ПКР)</a>
-            <a href="#section7">Последнее обновление</a>
-        </nav>
-        <section id="section1">
-            <h2>1. Корабли и ракеты</h2>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Корабль</th>
-                            <th>Название ракеты</th>
-                            <th>Тип ракеты</th>
-                            <th>Калибр</th>
-                            <th>Урон (за минуту)</th>
-                            <th>УВС</th>
-                            <th>Кол-во</th>
-                            <th>Перезарядка</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+    }
+</style>
+
+<div class="fleet-container">
+    <h1><i class="fas fa-ship" style="margin-right: 10px;"></i> WTM: Ракетный Флот</h1>
+    
+    <nav class="fleet-nav">
+        <a href="#section1">1. Корабли и ракеты</a>
+        <a href="#section2">2. Корабли по чистому УВС</a>
+        <a href="#section3">3. Ракеты (урон с одной ракеты, УВС)</a>
+        <a href="#section4">4. Общие выводы</a>
+        <a href="#section5">5. FXPENT (оценка кораблей)</a>
+        <a href="#section6">6. Про некоторые ракеты (ПКР)</a>
+        <a href="#section7">Последнее обновление</a>
+    </nav>
+    
+    <section id="section1">
+        <h2>1. Корабли и ракеты</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Корабль</th>
+                        <th>Название ракеты</th>
+                        <th>Тип ракеты</th>
+                        <th>Калибр</th>
+                        <th>Урон (за минуту)</th>
+                        <th>УВС</th>
+                        <th>Кол-во</th>
+                        <th>Перезарядка</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <tr><td>USS Belknap</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
                     <tr><td>USS Belknap</td><td>Standard</td><td>ЗУР</td><td>340-мм</td><td>4750</td><td>633</td><td>2</td><td>15</td></tr>
                     <tr><td>USS Truxtun</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
@@ -344,16 +275,19 @@
                     <tr><td>HMS Type 45</td><td>Aster 15</td><td>ЗУР</td><td>180-мм</td><td>3500</td><td>1167</td><td>4</td><td>12</td></tr>
                     <tr><td>HMS Type 12I</td><td>MM38 Exocet</td><td>ПКР</td><td>350-мм</td><td>7360</td><td>2453</td><td>4</td><td>12</td></tr>
                     <tr><td>HMS Type 12I</td><td>Sea Wolf</td><td>ЗУР</td><td>190-мм</td><td>3000</td><td>1400</td><td>6</td><td>15</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-        <section id="section2">
-            <h2>2. Корабли по чистому УВС</h2>
-            <div class="table-container">
-                <table>
-                    <thead><tr><th>Корабль</th><th>УВС</th></tr></thead>
-                    <tbody>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    ---
+
+    <section id="section2">
+        <h2>2. Корабли по чистому УВС</h2>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Корабль</th><th>УВС</th></tr></thead>
+                <tbody>
                     <tr><td>HNLMS Karel Doorman</td><td>4767</td></tr>
                     <tr><td>Sachsen</td><td>4756</td></tr>
                     <tr><td>USS Bainbridge</td><td>4634</td></tr>
@@ -384,23 +318,26 @@
                     <tr><td>HNLMS Тип Walrus</td><td>1727</td></tr>
                     <tr><td>Пр. 885</td><td>1600</td></tr>
                     <tr><td>HMS Valiant</td><td>1140</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-        <section id="section3">
-            <h2>3. Ракеты (по урону с одной ракеты, увс)</h2>
-            <div class="table-container">
-                <table>
-                   <thead>
-                <tr>
-                    <th>Ракета</th>
-                    <th>Тип</th>
-                    <th>УВС одной ракеты</th>
-                    <th>Калибр</th>
-                </tr>
-            </thead>
-                    <tbody>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    ---
+
+    <section id="section3">
+        <h2>3. Ракеты (по урону с одной ракеты, УВС)</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ракета</th>
+                        <th>Тип</th>
+                        <th>УВС одной ракеты</th>
+                        <th>Калибр</th>
+                    </tr>
+                </thead>
+                <tbody>
                     <tr><td>П-1 «Стрела»</td><td>ПКР</td><td>950</td><td>950-мм</td></tr>
                     <tr><td>Harpoon</td><td>ПКР</td><td>380-792</td><td>340-мм</td></tr>
                     <tr><td>MM38 Exocet</td><td>ПКР</td><td>491-613</td><td>350-мм</td></tr>
@@ -419,42 +356,48 @@
                     <tr><td>Aster 15</td><td>ЗУР</td><td>292</td><td>180-мм</td></tr>
                     <tr><td>Sea Ceptor / Seacat / Оса-М</td><td>ЗУР/ЗУР/ЗУР</td><td>233/233/233</td><td>160-мм/190-мм/206-мм</td></tr>
                     <tr><td>«Кинжал» / «Волна»</td><td>ЗУР/ЗУР</td><td>175/175-233</td><td>235-мм/379-мм</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-        <section id="section4">
-            <h2>4. Общие выводы</h2>
-            <ol>
-                 <li>Причина, по которой указывается калибр ракет, скорее всего связана с площадью поражения этих самых ракет. Таким образом, в зависимости от траектории ракеты и модулей атакуемого корабля, фактический урон, коррелированный калибром, имеет ключевое практическое значение в бою. (То есть условный «Москит» нанесет внушительный урон попадая по кораблям, которые имеют многочисленные незащищенные модули под его траекторию атаки, и наоборот – урон будет незначительным, если на пути «Москита» не окажется достаточно модулей подверженных урону). Представленная инфографика внутри игры несет ознакомительный характер на основе тенденций для сравнения и оценок.</li>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    ---
+
+    <section id="section4">
+        <h2>4. Общие выводы</h2>
+        <ol>
+            <li>Причина, по которой указывается калибр ракет, скорее всего связана с площадью поражения этих самых ракет. Таким образом, в зависимости от траектории ракеты и модулей атакуемого корабля, фактический урон, коррелированный калибром, имеет ключевое практическое значение в бою. (То есть условный «Москит» нанесет внушительный урон попадая по кораблям, которые имеют многочисленные незащищенные модули под его траекторию атаки, и наоборот – урон будет незначительным, если на пути «Москита» не окажется достаточно модулей подверженных урону). Представленная инфографика внутри игры несет ознакомительный характер на основе тенденций для сравнения и оценок.</li>
             <li>Устаревшие ракеты, особенно с небольшим калибром, балансируются на фоне более современных вариантов скоростью перезарядки. Таким образом, практический урон ракет и влияние на поражения модулей остается неизменным. Диапазон урона некоторых ракет основан на перезарядке (то есть потенциальном, а не фактическом эквиваленте урона за единицу времени для сравнения с аналогами).</li>
-            <li>Ультимативного подхода к выбору эффективного представителя флота за счет ракет – нет. В боях возможны различные сценарии, не говоря о том, что на общую эффективность влияют остальные ТТХ и особенности. Тенденция боев на момент публикации материала основана на динамичности боев с многочисленным использованием контрмер. Можно сделать вывод, что наибольшую универсальность несут ракеты с быстрой перезарядкой, уменьшенным временнем наведения, адаптивными пусковыми, и желательно с внушительным калибром. Если ЗУР малокалиберные, то применяются в качестве дополнительных мер или для вынуждения использования контрмер противником. В противном случае – применяются более серьезным образом, на равных с ПКР. Грамотное использование ПКР ключ к нанесению большого количества урона.</li>
+            <li>Ультимативного подхода к выбору эффективного представителя флота за счет ракет – нет. В боях возможны различные сценарии, не говоря о том, что на общую эффективность влияют остальные ТТХ и особенности. Тенденция боев на момент публикации материала основана на динамичности боев с многочисленным использованием контрмер. Можно сделать вывод, что наибольшую универсальность несут ракеты с быстрой перезарядкой, уменьшенным временнем наведения, адаптивными пусковыми, и желательно с внушительным калибром. Если ЗУР малокалиберные, то применяются в качестве дополнительных мер или для вынуждения использования контрмер противником. В противном случае – применяются более серьезным образом, на равных с ПКР. **Грамотное использование ПКР ключ к нанесению большого количества урона.**</li>
             <li>Не забывайте важность траектории ракет. Как было сказано ранее, это влияет на практический урон. Несмотря на применение одних и тех же ракет, разные представители флота имеют собственную адаптацию за счет пусковых. Детальнее про траектории можно узнать из обзоров конкретного корабля.</li>
-            </ol>
-        </section>
-        <section id="section5">
-           <h2>5. FortX Practice Engine Navy Test (FXPENT)</h2>
-         <p>Было принято решение изменить подход к рекомендациям касательно некоторых представителей флота. Вашему вниманию – тестовая технология, позволяющая из учета практики (пусть и субъективной) быстро ознакомиться и сравнить ключевые показатели флота с небольшими комментариями. Старый формат остается в предыдущей версии.</p>
+        </ol>
+    </section>
+
+    ---
+
+    <section id="section5">
+        <h2>5. FortX Practice Engine Navy Test (FXPENT)</h2>
+        <p>Было принято решение изменить подход к рекомендациям касательно некоторых представителей флота. Вашему вниманию – тестовая технология, позволяющая из учета практики (пусть и субъективной) быстро ознакомиться и сравнить ключевые показатели флота с небольшими комментариями. Старый формат остается в предыдущей версии.</p>
         <p>Оценивание основано на: 1 – плохо, 5 – отлично.</p>
         <p>Маневренность включает обобщенные впечатления касательно линейной скорости, ее набора, скорости поворота.</p>
         <p>Живучесть включает обобщенные впечатления касательно контрмер, непосредственной чистой живучести и прочих косвенных мер.</p>
         <p>Ракетное вооружение включает обобщенные впечатления касательно самих ракет, перезарядки, количества, траектории, скорости и прочих показателей.</p>
         <p>Вспомогательное вооружение включает обобщенные впечатления касательно торпед, мин, орудий и прочих косвенных мер.</p>
-            <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Название</th>
-                            <th>Рекомендация</th>
-                            <th>Манёвренность</th>
-                            <th>Живучесть</th>
-                            <th>Ракетное вооружение</th>
-                            <th>Вспомогательное вооружение</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>USS Albany</td><td>Не рекомендуется</td><td class="rating-1">1</td><td class="rating-5">5</td><td class="rating-3">3</td><td class="rating-2">2</td></tr>
-                        <tr><td>USS Knox</td><td>Рекомендуется для всех</td><td class="rating-3">3</td><td class="rating-5">5</td><td class="rating-5">5</td><td class="rating-1">1</td></tr>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Рекомендация</th>
+                        <th>Манёвренность</th>
+                        <th>Живучесть</th>
+                        <th>Ракетное вооружение</th>
+                        <th>Вспомогательное вооружение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>USS Albany</td><td>Не рекомендуется</td><td class="rating-1">1</td><td class="rating-5">5</td><td class="rating-3">3</td><td class="rating-2">2</td></tr>
+                    <tr><td>USS Knox</td><td>Рекомендуется для всех</td><td class="rating-3">3</td><td class="rating-5">5</td><td class="rating-5">5</td><td class="rating-1">1</td></tr>
                     <tr><td>USS Virginia</td><td>Рекомендуется при отсутствии более эффективных вариантов</td><td class="rating-3">3</td><td class="rating-4">4</td><td class="rating-3">3</td><td class="rating-2">2</td></tr>
                     <tr><td>USS Bainbridge</td><td>Рекомендуется для всех</td><td class="rating-4">4</td><td class="rating-5">5</td><td class="rating-5">5</td><td class="rating-2">2</td></tr>
                     <tr><td>Hamburg</td><td>Не рекомендуется</td><td class="rating-5">5</td><td class="rating-3">3</td><td class="rating-1">1</td><td class="rating-3">3</td></tr>
@@ -462,7 +405,7 @@
                     <tr><td>Sachsen</td><td>Рекомендуется скорее для более опытных игроков</td><td class="rating-3">3</td><td class="rating-2">2</td><td class="rating-5">5</td><td class="rating-2">2</td></tr>
                     <tr><td>Baden-Wurttemberg</td><td>Рекомендуется скорее для более опытных игроков</td><td class="rating-2">2</td><td class="rating-4">4</td><td class="rating-4">4</td><td class="rating-3">3</td></tr>
                     <tr><td>HNLMS Тип Walrus</td><td>Не рекомендуется</td><td class="rating-2">2</td><td class="rating-1">1</td><td class="rating-2">2</td><td class="rating-3">3</td></tr>
-                         <tr><td>HNLMS Karel Doorman</td><td>Рекомендуется при отсутствии более эффективных вариантов</td><td class="rating-3">3</td><td class="rating-3">3</td><td class="rating-4">4</td><td class="rating-2">2</td></tr>
+                    <tr><td>HNLMS Karel Doorman</td><td>Рекомендуется при отсутствии более эффективных вариантов</td><td class="rating-3">3</td><td class="rating-3">3</td><td class="rating-4">4</td><td class="rating-2">2</td></tr>
                     <tr><td>Гневный</td><td>Не рекомендуется</td><td class="rating-5">5</td><td class="rating-1">1</td><td class="rating-1">1</td><td class="rating-5">5</td></tr>
                     <tr><td>Пр. 1155</td><td>Рекомендуется при отсутствии более эффективных вариантов</td><td class="rating-3">3</td><td class="rating-5">5</td><td class="rating-3">3</td><td class="rating-5">5</td></tr>
                     <tr><td>Грозный</td><td>Не рекомендуется</td><td class="rating-2">2</td><td class="rating-2">2</td><td class="rating-3">3</td><td class="rating-5">5</td></tr>
@@ -476,50 +419,55 @@
                     <tr><td>HMS Type 45</td><td>Рекомендуется для всех</td><td class="rating-3">3</td><td class="rating-5">5</td><td class="rating-4">4</td><td class="rating-1">1</td></tr>
                     <tr><td>HMS Type 12I</td><td>Рекомендуется скорее для более опытных игроков</td><td class="rating-3">3</td><td class="rating-4">4</td><td class="rating-4">4</td><td class="rating-2">2</td></tr>
                     <tr><td>JDS Hatakaze</td><td>Не рекомендуется</td><td class="rating-3">3</td><td class="rating-3">3</td><td class="rating-3">3</td><td class="rating-2">2</td></tr>
-                    </tbody>
-                </table>
-            </div>
-            <h3>Топ-7 по рейтингу:</h3>
-            <ol>
-                <li>USS Bainbridge – 16</li>
-               <li>Пр. 1155 – 16</li>
+                </tbody>
+            </table>
+        </div>
+        <h3>Топ-7 по рейтингу:</h3>
+        <ol>
+            <li>USS Bainbridge – 16</li>
+            <li>Пр. 1155 – 16</li>
             <li>Пр. 956 – 16</li>
             <li>Пр. 11352 – 15</li>
             <li>USS Knox – 14</li>
             <li>Пр. 885 – 14</li>
             <li>Пр. 903 Лунь – 14</li>
-            </ol>
-        </section>
-        <section id="section6">
-            <h2>6. Про некоторые ракеты (ПКР)</h2>
-            <ol>
-            <li><strong>П-1 «Стрела»</strong><br>Самые мощные ракеты. Медленно летят. Контрмеры стоит предварительно применять с небольшим запасом. При идеальных условиях эффективны от примерно 1-1.5 км (траектория по прямой), от борта примерно 2-2.5 км.</li>
-            <li><strong>Harpoon</strong><br>Не высокий единичный урон – берут количеством и перезарядкой. Достаточно медленные с длинной траекторией (зачастую атакуют сверху, особенно на коротких дистанциях с подлодок). На новых представителях флота оптимизированы пусковые (улучшена траектория) и минимальное время перезарядки. Контрмеры можно использовать в любое время, кроме критичных значений таймеров (например, 5-6 сек или 1 сек). Зачастую эффективны от примерно 2.5-3 км.</li>
-            <li><strong>MM38 Exocet</strong><br>Ракеты с неплохим уроном. Летят медленно и по прямой. В силу пусковых, самостоятельно адаптируют траекторию относительно цели. В идеальных условиях от примерно 1.5-2 км, чаще от примерно 2-2.5 км. Контрмеры оптимально принимать с небольшой задержкой из-за скорости ракет.</li>
-            <li><strong>85РУ</strong><br>Быстрые ракеты с хорошим уроном. Пусковая адаптируется всегда по оптимальной траектории. Эффективная дистанция от примерно 2.5 км. Напоминает баллистическую траекторию, особенно на длинных дистанциях, тем самым позволяя преодолевать некоторые препятствия. Важно не проморгать применения контрмер, то есть не слишком поздно, зачастую не позднее 3 сек, в силу скорости и траектории.</li>
-            <li><strong>«Москит»</strong><br>Быстрые и мощные ракеты. Привередливы к пускам с бортов. Рекомендуются прямые атаки без отклонений в большинстве сценариев. На минимальных расстояниях рекомендуется запуск от кормы. Для Луня – от примерно 2.5 км, для Пр. 956 – от примерно 5 км. Рекомендуется самостоятельно понять философию применения контрмер против этих ракет из учета практических боев в связи с разнообразием траекторий и носителей, но чаще приходится применять с запасом по времени.</li>
-            <li><strong>«Термит»</strong><br>Медленные, но мощные ракеты. Очень долгая регулярная траектория. Нет ограничений при регулярных пусках, напоминает пуски с кормы с Луня или Пр. 956. Привередливы к запускам с бортов, расстояние не менее примерно 3 км. От кормы от примерно 2.5 км. Стоит применять контрмеры с небольшой задержкой.</li>
-            <li><strong>«Оникс»</strong><br>Достаточно быстрые и мощные ракеты. Оптимальная траектория при всех пусках, напоминая параболу. Примерно от 2-2.5 км. Рекомендуется применять ловушки с хорошей, но адекватной задержкой на средних и дальних дистанциях.</li>
-            </ol>
-        </section>
-         <section id="section7">
-            <h2>Последнее обновление раздела</h2>
-            <ol>
-            <li><strong>Добавлена ифнормация касательно:</strong><br>HNLMS Karel Doorman</li>
-             <li><strong>Добавлена ифнормация касательно:</strong><br>JDS Natsushio</li>
-                <li><strong>Добавлен новый пункт:</strong><br>Последние обновления раздела. Для улучшения опыта использования и поддержки.</li>
-            </ol>
-        </section>
-        <footer>
-           <p>Версия 3.2. Последнее обновление 28.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
-        </footer>
-    </div>
-</body>
-</html>
+        </ol>
+    </section>
 
-    </div>
-</body>
-</html>
+    ---
+
+    <section id="section6">
+        <h2>6. Про некоторые ракеты (ПКР)</h2>
+        <ol>
+            <li>
+                <strong style="color: #ffcc00;">П-1 «Стрела»</strong><br>
+                Самые мощные ракеты. Медленно летят.
+            </li>
+            <li>
+                <strong style="color: #ffcc00;">RIM-8 Talos</strong><br>
+                Большой калибр, внушительный урон, долго перезаряжаются.
+            </li>
+            <li>
+                <strong style="color: #ffcc00;">«Москит»</strong><br>
+                Высокая скорость (очень быстро летят).
+            </li>
+            <li>
+                <strong style="color: #ffcc00;">IRIS-T</strong><br>
+                Малый калибр. Отличаются повышенным уроном (относительно калибра) и быстрым наведением.
+            </li>
+        </ol>
+    </section>
+
+    <section id="section7">
+        <h2>Последнее обновление</h2>
+        <p style="color: #ffcc00; font-weight: bold;">[Дата обновления: 29.11.2025]</p>
+        <p>Информация актуальна на момент публикации и может быть изменена в последующих обновлениях игры War Thunder Mobile.</p>
+    </section>
+
+    <footer>
+        <p>Внимание: Представленный материал является вспомогательным и основан на анализе и тенденциях игры War Thunder Mobile. Фактическая эффективность может зависеть от индивидуального стиля игры и балансных правок разработчиков.</p>
+    </footer>
+</div>
 
 
 
