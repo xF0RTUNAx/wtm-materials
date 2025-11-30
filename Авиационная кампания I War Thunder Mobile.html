@@ -13,16 +13,15 @@
             margin: 0;
             padding: 0;
             font-family: 'Open Sans', sans-serif;
-            overflow: hidden; /* Убираем прокрутку */
+            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #ffffff;
-            position: relative; /* Для позиционирования фона */
-            background-color: #0b111b; /* Запасной цвет фона */
+            background-color: #0b111b;
         }
 
-        /* Фоновое изображение (Задача 3 и 4) */
+        /* Фоновое изображение */
         body::before {
             content: '';
             position: absolute;
@@ -30,51 +29,49 @@
             left: 0;
             width: 100%;
             height: 100%;
+            /* Картинка фона */
             background-image: url('https://cs8.pikabu.ru/post_img/big/2017/06/25/11/1498419534199014516.jpg'); 
             background-size: cover;
             background-position: center;
-            filter: blur(5px); /* Размытие фона */
-            z-index: 0;
+            filter: blur(2px); /* Уменьшил размытие, чтобы было красивее */
+            z-index: -1;
         }
 
-        /* Темный градиент поверх фона для читаемости */
-        body::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7); /* Темный полупрозрачный слой */
-            z-index: 1;
-        }
+        /* УБРАЛ body::after (Затемнение) */
 
         .maintenance-container {
             text-align: center;
-            padding: 20px;
+            padding: 30px;
             position: relative;
-            z-index: 2; /* Контент выше фона и градиента */
-            background: rgba(11, 17, 27, 0.8); /* Более темная подложка для центрального контента */
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-            max-width: 90%; /* Ограничение ширины для мобильных */
+            z-index: 2;
+            
+            /* НОВЫЙ СТИЛЬ ПОДЛОЖКИ (Стеклянный эффект) */
+            background: rgba(11, 17, 27, 0.4); /* Полупрозрачный темный */
+            backdrop-filter: blur(10px); /* Размытие фона под блоком */
+            -webkit-backdrop-filter: blur(10px); /* Для Safari */
+            border: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая рамка */
+            
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); /* Мягкая тень вместо жесткой */
+            max-width: 90%;
+            width: 500px; /* Фиксированная ширина для лучшей центровки */
             box-sizing: border-box;
         }
 
         /* --- Графический элемент (Круг/Радар) --- */
         .graphic-circle {
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, #1f2a38 0%, #0b111b 70%);
+            width: 220px; /* Чуть компактнее */
+            height: 220px;
+            background: radial-gradient(circle, #2c3e50 0%, #0b111b 70%);
             border-radius: 50%;
-            margin: 0 auto 30px auto;
+            margin: 0 auto 25px auto;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden; /* Обрезаем все, что выходит за круг */
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
         }
 
         /* Эффект радара */
@@ -87,42 +84,45 @@
             bottom: 0;
             border-radius: 50%;
             border: 2px solid transparent;
-            border-top-color: #00ff88; /* Зеленый радарный цвет */
+            border-top-color: #00ff88;
             animation: spin 3s linear infinite;
-            opacity: 0.3;
+            opacity: 0.4;
         }
 
         /* --- Иконки внутри круга --- */
         .icon-group {
             position: relative;
-            font-size: 8rem; /* Размер иконки */
-            color: #3a4b61; /* Цвет корпуса корабля */
-            display: inline-block; /* Для корректного позиционирования */
+            font-size: 7rem;
+            color: #ecf0f1; /* Светлый цвет самолета */
+            display: flex; /* Важно для центровки */
+            justify-content: center;
+            align-items: center;
             text-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
         
-        .ship-icon {
+        /* ИСПРАВЛЕНИЕ: Был класс .ship-icon, стал .plane-icon */
+        .plane-icon {
             z-index: 1;
             position: relative;
-            display: block; /* Убедимся, что занимает свою линию */
+            display: block;
         }
 
         .gear-icon {
             position: absolute;
-            font-size: 4rem;
+            font-size: 3.5rem;
             top: -10px;
-            right: -20px;
-            color: #ffc107; /* Желтый цвет шестеренки */
+            right: -25px;
+            color: #ffc107;
             animation: rotate-gear 4s linear infinite;
             z-index: 2;
         }
 
         .wrench-icon {
             position: absolute;
-            font-size: 3rem;
-            bottom: 0px;
-            left: -20px;
-            color: #e0e0e0;
+            font-size: 2.5rem;
+            bottom: -5px;
+            left: -25px;
+            color: #bdc3c7;
             transform: rotate(-45deg);
             animation: wrench-move 2s ease-in-out infinite alternate;
             z-index: 2;
@@ -130,30 +130,29 @@
 
         /* --- Текстовая часть --- */
         h1 {
-            font-family: 'Open Sans', sans-serif; /* Единый шрифт (Задача 1) */
-            font-weight: 800; /* Очень жирный для заголовка */
-            font-size: 3.5rem; /* Немного меньше для лучшей адаптации */
-            margin: 0;
+            font-weight: 800;
+            font-size: 2.5rem;
+            margin: 0 0 15px 0;
             letter-spacing: 2px;
             text-transform: uppercase;
-            color: #ffffff; /* Просто белый цвет для читаемости */
+            color: #ffffff;
             text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
+            line-height: 1.1;
         }
 
         p.subtitle {
             color: #ffc107;
-            font-size: 1rem; /* Чуть меньше для мобильных */
+            font-size: 0.95rem;
             font-weight: 700;
             letter-spacing: 1px;
-            margin-top: 15px;
+            margin: 0;
             text-transform: uppercase;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3); /* Легкая подложка только под текстом */
             display: inline-block;
-            padding: 10px 20px;
-            border-radius: 4px;
-            border: 1px dashed #ffc107;
-            line-height: 1.4; /* Увеличиваем межстрочный интервал */
-            white-space: normal; /* Разрешаем перенос строк */
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed rgba(255, 193, 7, 0.3);
+            line-height: 1.5;
         }
 
         /* --- Анимации --- */
@@ -172,7 +171,7 @@
             100% { transform: rotate(-25deg); }
         }
 
-        /* --- Фоновый шум (сетка) для стиля чертежа --- */
+        /* Сетка поверх фона (оставил, но сделал прозрачнее) */
         .grid-bg {
             position: absolute;
             top: 0;
@@ -180,54 +179,41 @@
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: 1; /* Между фоном и контентом */
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: -1; 
             pointer-events: none;
         }
 
-        /* Адаптивность для мобильных (Задача 2) */
+        /* Адаптивность */
         @media (max-width: 768px) {
+            .maintenance-container {
+                padding: 20px;
+                width: 90%;
+            }
             .graphic-circle { 
-                width: 180px; 
-                height: 180px; 
-                margin-bottom: 20px;
+                width: 160px; 
+                height: 160px; 
             }
             .icon-group { 
-                font-size: 5rem; 
+                font-size: 4.5rem; 
             }
             .gear-icon { 
-                font-size: 2.5rem; 
-                top: -5px; 
-                right: -15px; 
+                font-size: 2.2rem; 
+                right: -15px;
             }
             .wrench-icon { 
-                font-size: 2rem; 
-                bottom: -5px; 
-                left: -15px; 
+                font-size: 1.8rem; 
+                left: -15px;
             }
             h1 { 
-                font-size: 2.2rem; /* Уменьшаем размер заголовка */
-                letter-spacing: 1px;
+                font-size: 1.8rem; 
             }
             p.subtitle { 
-                font-size: 0.85rem; /* Уменьшаем размер подзаголовка */
-                padding: 8px 15px;
+                font-size: 0.8rem; 
+                padding: 10px;
             }
-
-            .maintenance-container {
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            h1 { font-size: 1.8rem; }
-            p.subtitle { font-size: 0.8rem; }
-            .graphic-circle { width: 150px; height: 150px; }
-            .icon-group { font-size: 4rem; }
-            .gear-icon { font-size: 2rem; }
-            .wrench-icon { font-size: 1.8rem; }
         }
     </style>
 </head>
@@ -248,7 +234,9 @@
         
         <p class="subtitle">
             <i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i>
-            МОДЕРНИЗИРУЕМ ЛТХ И ОБНОВЛЯЕМ ПРОГРАМНОЕ ОБЕСПЕЧЕНИЕ САМОЛЕТОВ. <br> ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ. <br> СПАСИБО ЗА ПОНИМАНИЕ!
+            МОДЕРНИЗИРУЕМ ЛТХ И ОБНОВЛЯЕМ ПРОГРАМНОЕ ОБЕСПЕЧЕНИЕ САМОЛЕТОВ. <br> 
+            ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ.
+<br> СПАСИБО ЗА ПОНИМАНИЕ!
         </p>
     </div>
 
