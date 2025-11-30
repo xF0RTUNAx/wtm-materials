@@ -194,24 +194,27 @@
 
     p { margin-bottom: 15px; color: #b0bec5; }
 
-    /* Исправление списков */
+   /* Исправление списков  */
     ol {
         padding-left: 0;
         list-style-type: none;
-        counter-reset: list-item;
+        /* Явно указываем начать отсчет с 0, чтобы первый элемент стал 1 */
+        counter-reset: fleet-counter 0; 
     }
     ol li {
         padding-left: 50px;
         position: relative;
         margin-bottom: 15px;
         color: #cfd8dc;
-        counter-increment: list-item;
-        background: rgba(0,0,0,0.1);
+        /* Увеличиваем наш именованный счетчик */
+        counter-increment: fleet-counter;
+        background: rgba(255, 255, 255, 0.05); /* Чуть светлее для контраста */
         padding: 15px 15px 15px 50px;
         border-radius: 4px;
     }
     ol li::before {
-        content: counter(list-item);
+        /* Выводим число */
+        content: counter(fleet-counter);
         position: absolute;
         left: 0;
         top: 0;
@@ -225,6 +228,7 @@
         font-weight: bold;
         font-size: 1.1em;
         border-radius: 4px 0 0 4px;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2); /* Тень для объема цифры */
     }
     
     /* Цветовая оценка (Rating) - чуть приглушил, чтобы не были кислотными */
@@ -256,42 +260,60 @@
         border-radius: 8px;
     }
 
-    /* ---------------------------------------------------- */
-    /* --- МОБИЛЬНАЯ АДАПТАЦИЯ --- */
+   /* ---------------------------------------------------- */
+    /* --- МОБИЛЬНАЯ АДАПТАЦИЯ  --- */
     /* ---------------------------------------------------- */
     @media (max-width: 768px) {
+        /* Убираем отступы контейнера, чтобы контент прилип к краям */
         .fleet-container {
-            padding: 10px;
+            padding: 0; 
             width: 100%;
+            max-width: 100vw;
+            margin: 0;
+            overflow-x: hidden; /* Защита от горизонтального скролла страницы */
         }
         
+        /* Секции делаем прямоугольными и без лишних границ по бокам */
         section {
-            padding: 15px;
-            border-top-width: 2px; /* Чуть тоньше на мобилках */
+            padding: 20px 15px; /* Внутренние отступы оставляем для читаемости текста */
+            border-radius: 0;   /* Убираем скругление */
+            border-left: none;  /* Убираем боковые границы для чистоты */
+            border-right: none;
+            border-top: 1px solid #4fc3f7; /* Оставляем только верхний акцент */
+            margin-bottom: 20px;
         }
 
+        /* Навигацию растягиваем */
         .fleet-nav {
             flex-direction: column;
             gap: 8px;
             width: 100%;
+            padding: 0 10px; /* Небольшой отступ только для кнопок */
         }
         .fleet-nav a {
             width: 100%;
-            border-left: 3px solid rgba(79, 195, 247, 0.5); /* Сохраняем акцент */
+            border-left: 3px solid rgba(79, 195, 247, 0.5);
         }
         
-        h1 { font-size: 1.8em; margin-top: 20px; }
-        h2 { font-size: 1.5em; }
-        h3 { font-size: 1.3em; }
+        /* Заголовки чуть меньше и с отступом слева */
+        h1 { 
+            font-size: 1.8em; 
+            margin-top: 20px; 
+            padding-left: 15px; /* Чтобы не прилипало к краю экрана */
+        }
+        h2 { font-size: 1.5em; padding-left: 5px; }
         
+        /* Таблицы */
         th, td {
             padding: 12px 8px;
-            font-size: 0.8em;
+            font-size: 0.85em; /* Чуть крупнее для мобильных, чтобы было видно */
         }
         
-        .table-container table th:first-child,
-        .table-container table td:first-child {
-            min-width: 100px;
+        /* Для контейнера таблицы убираем скругление */
+        .table-container {
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
         }
     }
 </style>
@@ -753,6 +775,7 @@
         Версия 4.0. Последнее обновление 30.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.
     </footer>
 </div>
+
 
 
 
