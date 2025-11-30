@@ -241,7 +241,15 @@
         .sponsors-list li { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
         
         @media (max-width: 900px) {
-            .dashboard-wrapper { flex-direction: column; height: 100vh; width: 100%; border-radius: 0; }
+            .dashboard-wrapper { flex-direction: column; height: 100vh; width: 100vw; /* Используем ширину всего окна */
+        border-radius: 0; 
+        border: none; /* Убираем жесткую рамку */
+        box-shadow: none;
+        background: transparent; /* Делаем его прозрачным, чтобы просвечивал фон Body */
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        /* Если у вас где-то есть margin: 0, убедитесь, что его нет в других местах */
+     }
             .sidebar { width: 100%; height: auto; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; overflow-x: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
             .nav-menu { display: flex; gap: 10px; margin: 0 20px; }
             .nav-item { margin: 0; }
@@ -250,7 +258,8 @@
             .logo { margin: 0; font-size: 1.2em; }
             .user-profile { display: none; }
             .cards-grid { grid-template-columns: 1fr; }
-            .main-content { padding: 20px; }
+            .main-content { padding: 20px 0; /* Оставляем только верхний/нижний отступ */
+        overflow-x: hidden; }
         }
 
         /* ---------------------------------------------------- */
@@ -276,6 +285,16 @@
         .main-content.is-fleet-active #content a {
             color: #ffcc00; /* Цвет ссылок в секции флота */
         }
+        /* Адаптация контейнера, куда загружается контент флота/авиации */
+    #content {
+        border-radius: 0;
+        /* Горизонтальный отступ делаем минимальным для читаемости */
+        padding: 15px 10px; 
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
         
     </style>
 </head>
@@ -441,6 +460,7 @@
         }
     </script>
 </body>
+
 
 
 
