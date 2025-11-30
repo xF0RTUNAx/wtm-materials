@@ -8,27 +8,34 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body, html {
+        /*
+        ОСНОВНОЕ ИСПРАВЛЕНИЕ: Гарантируем, что корневые элементы имеют черный фон и занимают весь экран
+        */
+        html {
+            height: 100%;
+            background-color: #0b111b; /* Предотвращаем белую подложку */
+        }
+        
+        body {
             height: 100%;
             margin: 0;
             padding: 0;
             font-family: 'Open Sans', sans-serif;
             overflow: hidden; 
-            /* ОСНОВНЫЕ ИЗМЕНЕНИЯ ЗДЕСЬ 
-               display: flex, justify-content, align-items гарантируют центрирование.
-               position: fixed и z-index гарантируют перекрытие.
-            */
-            display: flex;
-            justify-content: center; /* Центрирует по горизонтали */
-            align-items: center; /* Центрирует по вертикали */
             
-            position: fixed; 
+            /* Стили для полного перекрытия и центрирования */
+            position: fixed; /* Прикрепляем к окну просмотра */
             top: 0;
             left: 0;
             width: 100%;
-            background-color: #0b111b; 
-            z-index: 9999; 
-            color: #ffffff; /* Убедимся, что цвет текста наследуется */
+            background-color: #0b111b; /* Запасной цвет фона */
+            z-index: 99999; /* Очень высокий z-index для перекрытия всего */
+            color: #ffffff;
+            
+            /* Flexbox для идеального центрирования */
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         /* Фоновое изображение (Авиационная тематика) */
@@ -64,11 +71,12 @@
             text-align: center;
             padding: 30px;
             
-            /* ЭТО ВАЖНО для центрирования flexbox: */
-            flex-shrink: 0; /* Контейнер не должен сжиматься, если не хватает места */
-            margin: auto; /* Добавляем автоматические отступы на всякий случай */
+            /* Используем абсолютное позиционирование для дополнительной гарантии центрирования */
+            position: absolute; /* ВАЖНО: Вместо relative, чтобы быть уверенным в позиции */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             
-            position: relative;
             z-index: 10; 
             background: rgba(11, 17, 27, 0.85); 
             border-radius: 12px;
@@ -77,6 +85,9 @@
             box-sizing: border-box;
             border: 1px solid rgba(255, 255, 255, 0.05);
             pointer-events: auto; 
+            /* Дополнительные стили Flexbox можно оставить, но абсолютное позиционирование более надежно для центра */
+            flex-shrink: 0; 
+            margin: auto; 
         }
 
         /* --- Графический элемент (Радар) --- */
@@ -238,6 +249,7 @@
             .maintenance-container {
                 padding: 20px;
                 width: 85%;
+                /* Центрирование на мобильных устройствах остается надежным благодаря абсолюту */
             }
         }
 
