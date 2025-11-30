@@ -13,13 +13,22 @@
             margin: 0;
             padding: 0;
             font-family: 'Open Sans', sans-serif;
-            overflow: hidden; /* Убираем прокрутку */
+            overflow: hidden; 
+            /* ОСНОВНЫЕ ИЗМЕНЕНИЯ ЗДЕСЬ 
+               display: flex, justify-content, align-items гарантируют центрирование.
+               position: fixed и z-index гарантируют перекрытие.
+            */
             display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ffffff;
-            position: relative; /* Для позиционирования фона */
-            background-color: #0b111b; /* Запасной цвет фона */
+            justify-content: center; /* Центрирует по горизонтали */
+            align-items: center; /* Центрирует по вертикали */
+            
+            position: fixed; 
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #0b111b; 
+            z-index: 9999; 
+            color: #ffffff; /* Убедимся, что цвет текста наследуется */
         }
 
         /* Фоновое изображение (Авиационная тематика) */
@@ -30,12 +39,12 @@
             left: 0;
             width: 100%;
             height: 100%;
-            /* Изображение ангара или ВПП */
-            background-image: url('https://cs8.pikabu.ru/post_img/big/2017/06/25/11/1498419534199014516.jpg'); 
+            background-image: url('https://images.unsplash.com/photo-1559297434-fae8a1916a79?q=80&w=1920&auto=format&fit=crop'); 
             background-size: cover;
             background-position: center;
-            filter: blur(6px); /* Чуть сильнее размытие для глубины */
+            filter: blur(6px); 
             z-index: 0;
+            pointer-events: none; 
         }
 
         /* Темный градиент поверх фона для читаемости */
@@ -46,21 +55,28 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(11, 17, 30, 0.75); /* Темно-синий оттенок */
+            background: rgba(11, 17, 30, 0.75); 
             z-index: 1;
+            pointer-events: none; 
         }
 
         .maintenance-container {
             text-align: center;
             padding: 30px;
+            
+            /* ЭТО ВАЖНО для центрирования flexbox: */
+            flex-shrink: 0; /* Контейнер не должен сжиматься, если не хватает места */
+            margin: auto; /* Добавляем автоматические отступы на всякий случай */
+            
             position: relative;
-            z-index: 2; /* Контент выше фона и градиента */
-            background: rgba(11, 17, 27, 0.85); /* Более плотная подложка */
+            z-index: 10; 
+            background: rgba(11, 17, 27, 0.85); 
             border-radius: 12px;
             box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
             max-width: 90%; 
             box-sizing: border-box;
             border: 1px solid rgba(255, 255, 255, 0.05);
+            pointer-events: auto; 
         }
 
         /* --- Графический элемент (Радар) --- */
@@ -79,7 +95,7 @@
             overflow: hidden;
         }
 
-        /* Эффект радара (оставили зеленым, как на приборах, или можно сменить на голубой #00d2ff) */
+        /* Эффект радара */
         .graphic-circle::after {
             content: '';
             position: absolute;
@@ -98,8 +114,8 @@
         /* --- Иконки внутри круга --- */
         .icon-group {
             position: relative;
-            font-size: 7rem; /* Чуть меньше для самолета, чтобы влезли крылья */
-            color: #71879e; /* Цвет фюзеляжа (авиационный серый/голубой) */
+            font-size: 7rem; 
+            color: #71879e; 
             display: inline-block;
             text-shadow: 0 10px 20px rgba(0,0,0,0.6);
         }
@@ -108,7 +124,6 @@
             z-index: 1;
             position: relative;
             display: block;
-            /* Поворот, чтобы самолет летел вверх-вправо (оптимистично) или прямо */
             transform: rotate(-10deg); 
         }
 
@@ -187,8 +202,8 @@
             background-image: 
                 linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px; /* Чуть крупнее клетка для воздуха */
-            z-index: 1;
+            background-size: 60px 60px; 
+            z-index: 2; 
             pointer-events: none;
         }
 
@@ -251,7 +266,7 @@
         
         <p class="subtitle">
             <i class="fas fa-plane-circle-check" style="margin-right: 8px;"></i>
-            ПРОВОДИМ ОБСЛУЖИВАНИЕ СИСТЕМ.<br> ПОЛЕТЫ СКОРО ВОЗОБНОВЯТСЯ. ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ. СПАСИБО ЗА ПОНИМАНИЕ!
+            ПРОВОДИМ ОБСЛУЖИВАНИЕ СИСТЕМ.<br> ПОЛЕТЫ СКОРО ВОЗОБНОВЯТСЯ. <br> ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ! <br> СПАСИБО ЗА ПОНИМАНИЕ!
         </p>
     </div>
 
