@@ -276,7 +276,40 @@
         .main-content.is-fleet-active #content a {
             color: #ffcc00; /* Цвет ссылок в секции флота */
         }
-        
+        /* ---------------------------------------------------- */
+/* --- АДАПТАЦИЯ ТОЛЬКО ДЛЯ РАЗДЕЛА ФЛОТА (MOBILE) --- */
+/* ---------------------------------------------------- */
+@media (max-width: 900px) {
+    
+    /* 1. ГЛАВНЫЙ КОНТЕЙНЕР КОНТЕНТА: Убираем его ограничивающие отступы */
+    .main-content.is-fleet-active {
+        padding: 0; /* Устраняет 20px отступа, который оставался */
+    }
+
+    /* 2. ПОДЛОЖКА С ТЕКСТОМ: Растягиваем на всю ширину и убираем скругление/рамки */
+    .main-content.is-fleet-active #content {
+        /* Переопределяем стили, которые были для desktop-версии флота (padding: 30px;) */
+        padding: 10px 5px; /* Минимальный внутренний отступ для читаемости (5px по бокам) */
+        border-radius: 0;
+        border: none !important; /* Принудительно убираем рамку */
+        box-shadow: none;
+    }
+
+    /* 3. СТИЛИ ДЛЯ СПИСКОВ (чтобы текст не был слишком сжат) */
+    .main-content.is-fleet-active ol li {
+        padding: 12px 10px 12px 45px; /* Уменьшаем отступ справа */
+        margin: 5px 0; /* Убираем боковые внешние отступы */
+    }
+
+    /* 4. АДАПТАЦИЯ ТАБЛИЦЫ (если таблица ограничена) */
+    .main-content.is-fleet-active .table-container {
+        border-radius: 0;
+        margin: 0;
+        padding: 0;
+        border-left: none;
+        border-right: none;
+    }
+}
     </style>
 </head>
 <body>
@@ -441,6 +474,7 @@
         }
     </script>
 </body>
+
 
 
 
