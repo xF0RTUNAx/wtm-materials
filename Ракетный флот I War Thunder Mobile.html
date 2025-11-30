@@ -1,174 +1,758 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Технические работы | WTM Fleet</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    /* Глобальный сброс */
+    * {
+        box-sizing: border-box;
+    }
+
+    /* ---------------------------------------------------- */
+    /* --- ИЗОЛИРОВАННЫЕ СТИЛИ: TACTICAL NAVAL THEME --- */
+    /* ---------------------------------------------------- */
+    .fleet-container {
+        font-family: 'Open Sans', sans-serif;
+        color: #cfd8dc; /* Светло-серый с голубым оттенком */
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.7;
+        /* Глубокий темно-синий фон, как океан или ночное небо */
+        background-color: #0f1219; 
+        background-image: linear-gradient(to bottom, #0f1219, #131b26);
+    }
     
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: 'Open Sans', sans-serif;
-            color: #ffffff;
-            /* Устанавливаем фон и градиент непосредственно на body */
-            background-color: #0b111b; 
-            background-image: 
-                /* Темный градиент для читаемости поверх основного фона */
-                linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
-                /* Фоновое изображение сухого дока */
-                url('https://i.imgur.com/your-dock-image.jpg'); /* ЗАМЕНИТЕ URL */
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed; /* Фон не прокручивается */
+    h1, h2, h3 {
+        color: #4fc3f7; /* Яркий голубой (Radar Blue) */
+        text-shadow: 0 0 10px rgba(79, 195, 247, 0.3); /* Легкое свечение */
+        border-bottom: 2px solid rgba(79, 195, 247, 0.2);
+        padding-bottom: 10px;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        position: relative;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    h1 { font-size: 2.5em; border-bottom: none; } /* У H1 убираем линию, она будет декоративной */
+    h2 { font-size: 1.8em; }
+    h3 { font-size: 1.4em; color: #b3e5fc; border-bottom: 1px dashed rgba(79, 195, 247, 0.2); }
 
-            /* Flexbox для центрирования содержимого */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+    /* Декоративный элемент для H1 */
+    h1::after {
+        content: '';
+        display: block;
+        width: 60px;
+        height: 4px;
+        background: #00e5ff;
+        margin-top: 10px;
+        border-radius: 2px;
+        box-shadow: 0 0 10px #00e5ff;
+    }
 
-        /* --- Общий контейнер заглушки --- */
-        .maintenance-container {
-            text-align: center;
-            padding: 30px;
-            position: relative;
-            z-index: 10; /* Убедимся, что контент поверх фона */
-            background: rgba(11, 17, 27, 0.85); /* Более темная подложка */
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
-            
-            /* Ограничения, чтобы не перекрывать внешние элементы навигации */
-            max-width: 90%; 
-            max-height: 90vh; /* Ограничиваем высоту, чтобы не вылезти за экран */
-            overflow: auto; /* Добавляем прокрутку, если контент не помещается */
+    /* Навигационные ссылки - стиль кнопок приборной панели */
+    .fleet-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 50px;
+        gap: 12px;
+        padding-top: 20px;
+    }
+    .fleet-nav a {
+        display: block;
+        padding: 12px 20px;
+        background: rgba(30, 41, 59, 0.6); /* Полупрозрачный синий */
+        border: 1px solid rgba(79, 195, 247, 0.3);
+        border-left: 3px solid rgba(79, 195, 247, 0.5); /* Акцент слева */
+        border-radius: 2px;
+        text-decoration: none;
+        color: #e1f5fe;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-align: center;
+        min-width: 160px;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        font-size: 0.85em;
+    }
+    .fleet-nav a:hover {
+        transform: translateY(-3px);
+        background: rgba(3, 169, 244, 0.2);
+        border-color: #29b6f6;
+        box-shadow: 0 4px 15px rgba(3, 169, 244, 0.2);
+    }
+    
+    /* Таблицы - Главное изменение */
+    .table-container {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 600px;
+        margin-bottom: 40px;
+        border: 1px solid #37474f;
+        border-radius: 6px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        background: #18212d; /* Темная подложка */
+    }
+    
+    /* Скроллбар для таблицы (стилизация Webkit) */
+    .table-container::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+    .table-container::-webkit-scrollbar-track {
+        background: #0f1219;
+    }
+    .table-container::-webkit-scrollbar-thumb {
+        background: #455a64;
+        border-radius: 4px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: separate; /* Для border-spacing */
+        border-spacing: 0;
+        background: transparent;
+        color: #e0e0e0;
+    }
+    
+    /* Заголовки таблицы */
+    thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10;
+        background: #263238 !important; /* Темный грифельный цвет */
+        color: #4fc3f7 !important;
+        font-weight: 700;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        border-bottom: 2px solid #455a64;
+        text-transform: uppercase;
+        font-size: 0.85em;
+        text-align: center;
+        padding: 16px 12px;
+        letter-spacing: 1px;
+    }
+    
+    /* Закрепление первого столбца */
+    .table-container table th:first-child,
+    .table-container table td:first-child {
+        position: sticky;
+        left: 0;
+        background: #1c2530 !important; /* Чуть светлее фона */
+        color: #ffffff !important;
+        font-weight: 600;
+        z-index: 3;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+        border-right: 1px solid rgba(255,255,255,0.05);
+    }
+    .table-container table th:first-child {
+        background: #263238 !important; /* Совпадает с хедером */
+        z-index: 4;
+        color: #4fc3f7 !important;
+    }
+    
+    th, td {
+        padding: 14px 12px;
+        border-bottom: 1px solid #37474f; /* Разделители строк */
+        text-align: left;
+        vertical-align: middle;
+        font-size: 0.95em;
+    }
+
+    /* Выравнивание числовых данных */
+    .table-container table td:nth-child(n+2) {
+         text-align: center;
+         color: #b0bec5; /* Чуть приглушенный текст для цифр */
+    }
+    .table-container table td:first-child {
+        text-align: left;
+        color: #eceff1 !important; /* Ярко-белый для названий */
+    }
+    
+    /* Чередование строк и эффект наведения */
+    tbody tr:nth-child(even) {
+        background: rgba(255, 255, 255, 0.02);
+    }
+    
+    /* Hover эффект для строки - помогает глазу зацепиться */
+    tbody tr:hover td {
+        background-color: rgba(79, 195, 247, 0.1) !important;
+        color: #ffffff;
+        transition: background-color 0.2s ease;
+    }
+    
+    /* Секции */
+    section {
+        background: #1e2732; /* Светлее фона, выделяет блок */
+        padding: 30px;
+        border-radius: 6px;
+        margin-bottom: 35px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        border: 1px solid #263238;
+        border-top: 3px solid #4fc3f7; /* Цветная полоска сверху каждой секции */
+    }
+
+    p { margin-bottom: 15px; color: #b0bec5; }
+
+    /* Исправление списков */
+    ol {
+        padding-left: 0;
+        list-style-type: none;
+        counter-reset: list-item;
+    }
+    ol li {
+        padding-left: 50px;
+        position: relative;
+        margin-bottom: 15px;
+        color: #cfd8dc;
+        counter-increment: list-item;
+        background: rgba(0,0,0,0.1);
+        padding: 15px 15px 15px 50px;
+        border-radius: 4px;
+    }
+    ol li::before {
+        content: counter(list-item);
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #263238;
+        color: #4fc3f7;
+        font-weight: bold;
+        font-size: 1.1em;
+        border-radius: 4px 0 0 4px;
+    }
+    
+    /* Цветовая оценка (Rating) - чуть приглушил, чтобы не были кислотными */
+    .rating-badge {
+        color: #fff;
+        font-weight: bold;
+        text-align: center;
+        border-radius: 3px;
+        padding: 6px 0;
+        width: 40px;
+        display: inline-block;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-size: 0.9em;
+    }
+    .rating-1 { background-color: #c62828; } /* Темно-красный */
+    .rating-2 { background-color: #ef6c00; } /* Оранжевый */
+    .rating-3 { background-color: #f9a825; color: #000; } /* Желтый */
+    .rating-4 { background-color: #7cb342; color: #000; } /* Лайм */
+    .rating-5 { background-color: #2e7d32; } /* Зеленый */
+    
+    footer {
+        text-align: center;
+        font-size: 0.9em;
+        color: #546e7a;
+        margin-top: 60px;
+        padding: 20px;
+        background: #121820;
+        border-top: 1px solid #263238;
+        border-radius: 8px;
+    }
+
+    /* ---------------------------------------------------- */
+    /* --- МОБИЛЬНАЯ АДАПТАЦИЯ --- */
+    /* ---------------------------------------------------- */
+    @media (max-width: 768px) {
+        .fleet-container {
+            padding: 10px;
+            width: 100%;
         }
         
-        /* Убираем фоновую сетку, которая могла быть лишним слоем */
-        .grid-bg {
-             display: none;
+        section {
+            padding: 15px;
+            border-top-width: 2px; /* Чуть тоньше на мобилках */
         }
 
-
-        /* --- Графический элемент (Круг/Радар) --- */
-        .graphic-circle {
-            width: 250px; /* Немного меньше для лучшей адаптации */
-            height: 250px;
-            background: radial-gradient(circle, #1f2a38 0%, #0b111b 70%);
-            border-radius: 50%;
-            margin: 0 auto 30px auto;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.05);
-            overflow: hidden; 
+        .fleet-nav {
+            flex-direction: column;
+            gap: 8px;
+            width: 100%;
         }
-
-        .graphic-circle::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            border-top-color: #00ff88; 
-            animation: spin 3s linear infinite;
-            opacity: 0.3;
-        }
-
-        /* --- Иконки внутри круга --- */
-        .icon-group {
-            position: relative;
-            font-size: 7rem; 
-            color: #3a4b61; 
-            display: inline-block; 
-            text-shadow: 0 10px 20px rgba(0,0,0,0.5);
+        .fleet-nav a {
+            width: 100%;
+            border-left: 3px solid rgba(79, 195, 247, 0.5); /* Сохраняем акцент */
         }
         
-        /* ... Стили и анимации иконок (без изменений) ... */
-        .ship-icon { z-index: 1; position: relative; display: block; }
-        .gear-icon {
-            position: absolute; font-size: 3.5rem; top: -10px; right: -15px; color: #ffc107; 
-            animation: rotate-gear 4s linear infinite; z-index: 2;
+        h1 { font-size: 1.8em; margin-top: 20px; }
+        h2 { font-size: 1.5em; }
+        h3 { font-size: 1.3em; }
+        
+        th, td {
+            padding: 12px 8px;
+            font-size: 0.8em;
         }
-        .wrench-icon {
-            position: absolute; font-size: 2.5rem; bottom: 0px; left: -15px; color: #e0e0e0;
-            transform: rotate(-45deg); animation: wrench-move 2s ease-in-out infinite alternate; z-index: 2;
+        
+        .table-container table th:first-child,
+        .table-container table td:first-child {
+            min-width: 100px;
         }
+    }
+</style>
 
-        /* --- Текстовая часть (без изменений) --- */
-        h1 {
-            font-family: 'Open Sans', sans-serif; 
-            font-weight: 800; 
-            font-size: 3rem; 
-            margin: 0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #ffffff; 
-            text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
-        }
-
-        p.subtitle {
-            color: #ffc107;
-            font-size: 1rem; 
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-top: 15px;
-            text-transform: uppercase;
-            background: rgba(0, 0, 0, 0.4);
-            display: inline-block;
-            padding: 10px 20px;
-            border-radius: 4px;
-            border: 1px dashed #ffc107;
-            line-height: 1.4; 
-            white-space: normal;
-        }
-
-        /* --- Анимации --- */
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes rotate-gear { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes wrench-move { 0% { transform: rotate(-45deg); } 100% { transform: rotate(-25deg); } }
-
-        /* Адаптивность для мобильных */
-        @media (max-width: 768px) {
-            .graphic-circle { width: 180px; height: 180px; margin-bottom: 20px;}
-            .icon-group { font-size: 5rem; }
-            .gear-icon { font-size: 2.5rem; top: -5px; right: -10px; }
-            .wrench-icon { font-size: 2rem; bottom: -5px; left: -10px; }
-            h1 { font-size: 2rem; letter-spacing: 1px;}
-            p.subtitle { font-size: 0.85rem; padding: 8px 15px;}
-            .maintenance-container { padding: 15px; max-width: 95%;}
-        }
-    </style>
-</head>
-<body>
-
-    <div class="maintenance-container">
-        <div class="graphic-circle">
-            <div class="icon-group">
-                <i class="fas fa-ship ship-icon"></i>
-                <i class="fas fa-cog gear-icon"></i> 
-                <i class="fas fa-wrench wrench-icon"></i>
-            </div>
+<div class="fleet-container">
+    <h1><i class="fas fa-ship" style="margin-right: 15px; color: #4fc3f7;"></i>WTM: Ракетный Флот</h1>
+    
+    <nav class="fleet-nav">
+        <a href="#section1">Корабли и ракеты</a>
+        <a href="#section2">Корабли по УВС</a>
+        <a href="#section3">Ракеты (УВС)</a>
+        <a href="#section4">Общие выводы</a>
+        <a href="#section5">FXPENT (Система оценки флота)</a>
+        <a href="#section6">О некоторых ракетах (ПКР)</a>
+        <a href="#section7">Обновление раздела</a>
+    </nav>
+    
+    <section id="section1">
+        <h2>1. Корабли и ракеты</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Корабль</th>
+                        <th>Название ракеты</th>
+                        <th>Тип</th>
+                        <th>Калибр</th>
+                        <th>Урон (чистый, за минуту)</th>
+                        <th>Урон в секнду (для всех ракет)</th>
+                        <th>Кол-во</th>
+                        <th>Перезаярдка (сек)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>USS Belknap</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
+                    <tr><td>USS Belknap</td><td>Standard</td><td>ЗУР</td><td>340-мм</td><td>4750</td><td>633</td><td>2</td><td>15</td></tr>
+                    <tr><td>USS Truxtun</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
+                    <tr><td>USS Truxtun</td><td>Standard ER</td><td>ЗУР</td><td>340-мм</td><td>5500</td><td>733</td><td>2</td><td>15</td></tr>
+                    <tr><td>ARA Type 42</td><td>Sea Dart</td><td>ЗУР</td><td>420-мм</td><td>4000</td><td>667</td><td>2</td><td>12</td></tr>
+                    <tr><td>ARA Type 42</td><td>Exocet</td><td>ПКР</td><td>350-мм</td><td>7360</td><td>1963</td><td>4</td><td>15</td></tr>
+                    <tr><td>USS Albany</td><td>RIM-8 Talos</td><td>ПКР</td><td>710-мм</td><td>9400</td><td>1880</td><td>4</td><td>20</td></tr>
+                    <tr><td>USS Albany</td><td>Tartar</td><td>ЗУР</td><td>340-мм</td><td>4700</td><td>783</td><td>4</td><td>12</td></tr>
+                    <tr><td>USS Virginia</td><td>Standard</td><td>ЗУР</td><td>340-мм</td><td>4750</td><td>633</td><td>4</td><td>15</td></tr>
+                    <tr><td>USS Virginia</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
+                    <tr><td>USS Bainbridge</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>3167</td><td>4</td><td>12</td></tr>
+                    <tr><td>USS Bainbridge</td><td>Standard 2</td><td>ЗУР</td><td>340-мм</td><td>5500</td><td>1467</td><td>4</td><td>15</td></tr>
+                    <tr><td>USS Knox</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>3167</td><td>4</td><td>12</td></tr>
+                    <tr><td>USS Knox</td><td>Sea Sparrow</td><td>ЗУР</td><td>200-мм</td><td>4000</td><td>1333</td><td>4</td><td>12</td></tr>
+                    <tr><td>Hamburg</td><td>Exocet</td><td>ПКР</td><td>350-мм</td><td>7360</td><td>1963</td><td>4</td><td>15</td></tr>
+                    <tr><td>Brandenburg</td><td>Exocet</td><td>ПКР</td><td>350-мм</td><td>7360</td><td>1963</td><td>4</td><td>15</td></tr>
+                    <tr><td>Brandenburg</td><td>Sea Sparrow</td><td>ЗУР</td><td>200-мм</td><td>4000</td><td>1333</td><td>4</td><td>12</td></tr>
+                    <tr><td>Bremen</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
+                    <tr><td>Bremen</td><td>Sea Sparrow</td><td>ЗУР</td><td>200-мм</td><td>4000</td><td>800</td><td>4</td><td>20</td></tr>
+                    <tr><td>Тип 212А</td><td>IRIS-T</td><td>ПКР</td><td>127-мм</td><td>9000</td><td>2400</td><td>4</td><td>15</td></tr>
+                    <tr><td>Sachsen</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>2923</td><td>4</td><td>13</td></tr>
+                    <tr><td>Sachsen</td><td>Standard 2</td><td>ЗУР</td><td>340-мм</td><td>5500</td><td>1833</td><td>4</td><td>12</td></tr>
+                    <tr><td>Baden-Wurttemberg</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>3167</td><td>4</td><td>12</td></tr>
+                    <tr><td>HNLMS Walrus</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1727</td><td>2</td><td>11</td></tr>
+                    <tr><td>HNLMS Karel Doorman</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>3167</td><td>4</td><td>12</td></tr>
+                    <tr><td>HNLMS Karel Doorman</td><td>Sea Sparrow</td><td>ЗУР</td><td>200-мм</td><td>4000</td><td>1600</td><td>6</td><td>15</td></tr>
+                    <tr><td>Гневный</td><td>Стрела</td><td>ПКР</td><td>900-мм</td><td>19000</td><td>1900</td><td>2</td><td>20</td></tr>
+                    <tr><td>Пр. 1155</td><td>Х-35</td><td>ПКР</td><td>580-мм</td><td>9000</td><td>1800</td><td>4</td><td>20</td></tr>
+                    <tr><td>Пр. 1155</td><td>Кинжал</td><td>ЗУР</td><td>235-мм</td><td>3500</td><td>700</td><td>4</td><td>20</td></tr>
+                    <tr><td>Грозный</td><td>П-35</td><td>ПКР</td><td>760-мм</td><td>11100</td><td>2220</td><td>4</td><td>20</td></tr>
+                    <tr><td>Грозный</td><td>Волна</td><td>ЗКР</td><td>379-мм</td><td>3500</td><td>350</td><td>2</td><td>20</td></tr>
+                    <tr><td>Пр. 956</td><td>Москит</td><td>ПКР</td><td>760-мм</td><td>9600</td><td>2021</td><td>4</td><td>19</td></tr>
+                    <tr><td>Пр. 956</td><td>9М38</td><td>ЗУР</td><td>400-мм</td><td>6000</td><td>800</td><td>2</td><td>15</td></tr>
+                    <tr><td>Пр. 885</td><td>Оникс</td><td>ПКР</td><td>670-мм</td><td>10000</td><td>1600</td><td>4</td><td>25</td></tr>
+                    <tr><td>Пр. 903 Лунь</td><td>Москит</td><td>ПКР</td><td>760-мм</td><td>9600</td><td>2880</td><td>6</td><td>20</td></tr>
+                    <tr><td>Пр. 11352</td><td>85РУ</td><td>ПКР</td><td>580-мм</td><td>9000</td><td>2400</td><td>4</td><td>15</td></tr>
+                    <tr><td>Пр. 11352</td><td>Оса-М</td><td>ЗУР</td><td>206-мм</td><td>3500</td><td>933</td><td>4</td><td>15</td></tr>
+                    <tr><td>Пр. 61М</td><td>Термит</td><td>ПКР</td><td>760-мм</td><td>11000</td><td>2200</td><td>4</td><td>20</td></tr>
+                    <tr><td>Пр. 61М</td><td>Волна</td><td>ЗУР</td><td>379-мм</td><td>3500</td><td>934</td><td>4</td><td>15</td></tr>
+                    <tr><td>JDS Takatsuki</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
+                    <tr><td>JDS Takatsuki</td><td>Sea Sparrow</td><td>ЗУР</td><td>200-мм</td><td>4000</td><td>800</td><td>4</td><td>20</td></tr>
+                    <tr><td>JDS Hatakaze</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>2533</td><td>4</td><td>15</td></tr>
+                    <tr><td>JDS Hatakaze</td><td>Standard</td><td>ЗУР</td><td>340-мм</td><td>4750</td><td>318</td><td>1</td><td>14.9</td></tr>
+                    <tr><td>JDS Hatsuyuki</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>2533</td><td>4</td><td>15</td></tr>
+                    <tr><td>JDS Hatsuyuki</td><td>Sea Sparrow</td><td>ЗУР</td><td>200-мм</td><td>4000</td><td>1067</td><td>4</td><td>15</td></tr>
+                    <tr><td>JDS Yushio</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>2533</td><td>4</td><td>15</td></tr>
+                    <tr><td>JDS Natsushio</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>3167</td><td>4</td><td>12</td></tr>
+                    <tr><td>HMS Devonshire</td><td>Seaslug</td><td>ПКР</td><td>410-мм</td><td>9000</td><td>1200</td><td>2</td><td>15</td></tr>
+                    <tr><td>HMS Devonshire</td><td>Seacat</td><td>ЗУР</td><td>190-мм</td><td>3500</td><td>933</td><td>4</td><td>15</td></tr>
+                    <tr><td>HMS Valiant</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1140</td><td>3</td><td>25</td></tr>
+                    <tr><td>HMS Type 23</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
+                    <tr><td>HMS Type 23</td><td>Sea Ceptor</td><td>ЗУР</td><td>160-мм</td><td>3500</td><td>933</td><td>4</td><td>15</td></tr>
+                    <tr><td>HMS Swiftsure</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>1900</td><td>4</td><td>20</td></tr>
+                    <tr><td>HMS Type 45</td><td>Harpoon</td><td>ПКР</td><td>340-мм</td><td>9500</td><td>2533</td><td>4</td><td>15</td></tr>
+                    <tr><td>HMS Type 45</td><td>Aster 15</td><td>ЗУР</td><td>180-мм</td><td>3500</td><td>1167</td><td>4</td><td>12</td></tr>
+                    <tr><td>HMS Type 12I</td><td>Exocet</td><td>ПКР</td><td>350-мм</td><td>7360</td><td>2453</td><td>4</td><td>12</td></tr>
+                    <tr><td>HMS Type 12I</td><td>Sea Wolf</td><td>ЗУР</td><td>190-мм</td><td>3000</td><td>1400</td><td>6</td><td>15</td></tr>
+                </tbody>
+            </table>
         </div>
+    </section>
 
-        <h1>ТЕХНИЧЕСКИЕ РАБОТЫ</h1>
-        
-        <p class="subtitle">
-            <i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i>
-            ФЛОТ НА МОДЕРНИЗАЦИИ. ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ. <br> СПАСИБО ЗА ПОНИМАНИЕ!
-        </p>
-    </div>
+    <hr style="border-color: #37474f;">
 
-</body>
-</html>
+    <section id="section2">
+        <h2>2. Корабли по чистому УВС</h2>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Корабль</th><th>УВС</th></tr></thead>
+                <tbody>
+                    <tr><td>HNLMS Karel Doorman</td><td>4767</td></tr>
+                    <tr><td>Sachsen</td><td>4756</td></tr>
+                    <tr><td>USS Bainbridge</td><td>4634</td></tr>
+                    <tr><td>USS Knox</td><td>4500</td></tr>
+                    <tr><td>HMS Type 12I</td><td>3853</td></tr>
+                    <tr><td>HMS Type 45</td><td>3700</td></tr>
+                    <tr><td>JDS Hatsuyuki</td><td>3600</td></tr>
+                    <tr><td>Пр. 11352</td><td>3333</td></tr>
+                    <tr><td>Brandenburg</td><td>3296</td></tr>
+                    <tr><td>Baden-Wurttemberg / Natsushio</td><td>3167</td></tr>
+                    <tr><td>Пр. 61М</td><td>3133</td></tr>
+                    <tr><td>Пр. 903 Лунь</td><td>2880</td></tr>
+                    <tr><td>JDS Hatakaze</td><td>2851</td></tr>
+                    <tr><td>HMS Type 23</td><td>2833</td></tr>
+                    <tr><td>Пр. 956</td><td>2821</td></tr>
+                    <tr><td>Bremen / Takatsuki</td><td>2700</td></tr>
+                    <tr><td>USS Albany</td><td>2663</td></tr>
+                    <tr><td>USS Truxtun</td><td>2633</td></tr>
+                    <tr><td>ARA Type 42</td><td>2630</td></tr>
+                    <tr><td>Грозный</td><td>2570</td></tr>
+                    <tr><td>USS Virginia</td><td>2563</td></tr>
+                    <tr><td>USS Belknap / Yushio</td><td>2533</td></tr>
+                    <tr><td>Пр. 1155</td><td>2500</td></tr>
+                    <tr><td>Тип 212А</td><td>2400</td></tr>
+                    <tr><td>HMS Devonshire</td><td>2133</td></tr>
+                    <tr><td>Hamburg</td><td>1963</td></tr>
+                    <tr><td>Гневный / Swiftsure</td><td>1900</td></tr>
+                    <tr><td>HNLMS Walrus</td><td>1727</td></tr>
+                    <tr><td>Пр. 885</td><td>1600</td></tr>
+                    <tr><td>HMS Valiant</td><td>1140</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr style="border-color: #37474f;">
+
+    <section id="section3">
+        <h2>3. Ракеты (ТТХ)</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ракета</th>
+                        <th>Тип</th>
+                        <th>УВС</th>
+                        <th>Калибр</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>П-1 «Стрела»</td><td>ПКР</td><td>950</td><td>950-мм</td></tr>
+                    <tr><td>Harpoon</td><td>ПКР</td><td>380-792</td><td>340-мм</td></tr>
+                    <tr><td>MM38 Exocet</td><td>ПКР</td><td>491-613</td><td>350-мм</td></tr>
+                    <tr><td>IRIS-T / Seaslug / 85РУ</td><td>ПКР</td><td>600</td><td>127-мм/410-мм/580-мм</td></tr>
+                    <tr><td>«Москит»</td><td>ПКР</td><td>505-566</td><td>760-мм</td></tr>
+                    <tr><td>П-35</td><td>ПКР</td><td>555</td><td>760-мм</td></tr>
+                    <tr><td>«Термит»</td><td>ПКР</td><td>550</td><td>760-мм</td></tr>
+                    <tr><td>RIM-8 Talos</td><td>ПКР</td><td>470</td><td>710-мм</td></tr>
+                    <tr><td>Standart 2</td><td>ЗУР</td><td>458</td><td>340-мм</td></tr>
+                    <tr><td>Х-35</td><td>ПКР</td><td>450</td><td>580-мм</td></tr>
+                    <tr><td>9М38 / «Оникс»</td><td>Mix</td><td>400</td><td>400/670-мм</td></tr>
+                    <tr><td>RIM-24 Tartar</td><td>ЗУР</td><td>392</td><td>340-мм</td></tr>
+                    <tr><td>SM-2ER Block II</td><td>ЗУР</td><td>367</td><td>340-мм</td></tr>
+                    <tr><td>Sea Dart</td><td>ЗУР</td><td>333</td><td>420-мм</td></tr>
+                    <tr><td>Standard</td><td>ЗУР</td><td>317</td><td>340-мм</td></tr>
+                    <tr><td>Aster 15</td><td>ЗУР</td><td>292</td><td>180-мм</td></tr>
+                    <tr><td>Sea Ceptor / Seacat</td><td>ЗУР</td><td>233</td><td>160/190-мм</td></tr>
+                    <tr><td>«Кинжал» / «Волна»</td><td>ЗУР</td><td>175-233</td><td>235/379-мм</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <hr style="border-color: #37474f;">
+
+    <section id="section4">
+        <h2>4. Общие выводы</h2>
+        <ol>
+            <li>Причина, по которой указывается калибр ракет, скорее всего связана с площадью поражения этих самых ракет. Таким образом, в зависимости от траектории ракеты и модулей атакуемого корабля, фактический урон, коррелированный калибром, имеет ключевое практическое значение в бою. (То есть условный «Москит» нанесет внушительный урон попадая по кораблям, которые имеют многочисленные незащищенные модули под его траекторию атаки, и наоборот – урон будет незначительным, если на пути «Москита» не окажется достаточно модулей подверженных урону). Представленная инфографика внутри игры несет ознакомительный характер на основе тенденций для сравнения и оценок.</li>
+            <li>Устаревшие ракеты, особенно с небольшим калибром, балансируются на фоне более современных вариантов скоростью перезарядки. Таким образом, практический урон ракет и влияние на поражения модулей остается неизменным. Диапазон урона некоторых ракет основан на перезарядке (то есть потенциальном, а не фактическом эквиваленте урона за единицу времени для сравнения с аналогами).</li>
+            <li>Ультимативного подхода к выбору эффективного представителя флота за счет ракет – нет. В боях возможны различные сценарии, не говоря о том, что на общую эффективность влияют остальные ТТХ и особенности. Тенденция боев на момент публикации материала основана на динамичности боев с многочисленным использованием контрмер. Можно сделать вывод, что наибольшую универсальность несет быстрая перезарядка (желательно с ракетами больших калибров) и уменьшенным временем наведения с пусковыми, которые могут адаптироваться.</li>
+            <li>Не забывайте важность траектории ракет. Как было сказано ранее, это влияет на практический урон. Несмотря на применение одних и тех же ракет, разные представители флота имеют собственную адаптацию за счет пусковых. Детальнее про траектории можно узнать из обзоров конкретного корабля.</li>
+        </ol>
+    </section>
+
+    <hr style="border-color: #37474f;">
+
+    <section id="section5">
+        <h2>5. FXPENT (Оценка)</h2>
+        <p>Было принято решение изменить подход к рекомендациям касательно некоторых представителей флота. Вашему вниманию – тестовая технология, позволяющая из учета практики (пусть и субъективной) быстро ознакомиться и сравнить ключевые показатели флота с небольшими комментариями. Старый формат остается в телеграм группе. </p>
+        <p>Оценивание основано на: 1 – плохо, 5 – отлично.</p>
+        <p>Маневренность включает обобщенные впечатления касательно линейной скорости, ее набора, скорости поворота.</p>
+         <p>Живучесть включает обобщенные впечатления касательно контрмер, непосредственной чистой живучести и прочих косвенных мер.</p>
+       <p>Ракетное вооружение включает обобщенные впечатления касательно самих ракет, перезарядки, количества, траектории, скорости и прочих показателей.</p>
+         <p>Вспомогательное вооружение включает обобщенные впечатления касательно торпед, мин, орудий и прочих косвенных мер.</p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Рекомендация</th>
+                        <th>Манёвренность</th>
+                        <th>Живучесть</th>
+                        <th>Ракетное вооружение</th>
+                        <th>Вспомогательное вооружение</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>USS Albany</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                    </tr>
+                    <tr>
+                        <td>USS Knox</td>
+                        <td>Рекомендуется для всех</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                    </tr>
+                    <tr>
+                        <td>USS Virginia</td>
+                        <td>Рекомендуется при отсутствии более эффективных вариантов</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                    </tr>
+                    <tr>
+                        <td>USS Bainbridge</td>
+                        <td>Рекомендуется для всех</td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                    </tr>
+                    <tr>
+                        <td>Hamburg</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                    </tr>
+                    <tr>
+                        <td>Тип 212А</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                    </tr>
+                    <tr>
+                        <td>Sachsen</td>
+                        <td>Рекомендуется скорее для более опытных игроков</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                    </tr>
+                    <tr>
+                        <td>Baden-Wurttemberg</td>
+                        <td>Рекомендуется скорее для более опытных игроков</td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                    </tr>
+                    <tr>
+                        <td>HNLMS Walrus</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                    </tr>
+                    <tr>
+                        <td>HNLMS Karel Doorman</td>
+                        <td>Рекомендуется при отсутствии более эффективных вариантов</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                    </tr>
+                    <tr>
+                        <td>Гневный</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                    </tr>
+                    <tr>
+                        <td>Пр. 1155</td>
+                        <td>Рекомендуется при отсутствии более эффективных вариантов</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                    </tr>
+                    <tr>
+                        <td>Грозный</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                    </tr>
+                    <tr>
+                        <td>Пр. 956</td>
+                        <td>Рекомендуется скорее для более опытных игроков</td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                    </tr>
+                    <tr>
+                        <td>Пр. 885</td>
+                        <td>Для любителей подлодок</td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                    </tr>
+                    <tr>
+                        <td>Пр. 903 Лунь</td>
+                        <td>Уникальный и эффективный</td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                    </tr>
+                    <tr>
+                        <td>Пр. 11352</td>
+                        <td>Рекомендуется скорее для более опытных игроков</td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                    </tr>
+                    <tr>
+                        <td>Пр. 61М</td>
+                        <td>Рекомендуется скорее для более опытных игроков (в качестве разнообразия)</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                    </tr>
+                    <tr>
+                        <td>HMS Valiant</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                    </tr>
+                    <tr>
+                        <td>HMS Swiftsure</td>
+                        <td>Рекомендуется при отсутствии более эффективных вариантов (среди подлодок)</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                    </tr>
+                     <tr>
+                        <td>HMS Type 45</td>
+                        <td>Рекомендуется для всех</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-5">5</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-1">1</span></td>
+                    </tr>
+                    <tr>
+                        <td>HMS Type 12I</td>
+                        <td>Рекомендуется скорее для более опытных игроков</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-4">4</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                    </tr>
+                    <tr>
+                        <td>JDS Hatakaze</td>
+                        <td>Не рекомендуется</td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-3">3</span></td>
+                        <td><span class="rating-badge rating-2">2</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <h3>Топ-7 по рейтингу:</h3>
+        <ol>
+            <li>USS Bainbridge – 16</li>
+            <li>Пр. 1155 – 16</li>
+            <li>Пр. 956 – 16</li>
+            <li>Пр. 11352 – 15</li>
+            <li>USS Knox – 14</li>
+            <li>Пр. 885 – 14</li>
+            <li>Пр. 903 Лунь – 14</li>
+        </ol>
+    </section>
+    
+    <hr>
+
+    <section id="section6">
+        <h2>6. Про некоторые ракеты (ПКР)</h2>
+        <ol>
+            <li>
+                <strong style="color: #ffffff;">П-1 «Стрела»</strong><br>
+                Самые мощные ракеты. Медленно летят. Контрмеры стоит предварительно применять с небольшим запасом. При идеальных условиях эффективны от примерно 1-1.5 км (траектория по прямой), от борта примерно 2-2.5 км.
+            </li>
+            <li>
+                <strong style="color: #ffffff;">Harpoon</strong><br>
+                Не высокий единичный урон – берут количеством и перезарядкой. Достаточно медленные с длинной траекторией (зачастую атакуют сверху, особенно на коротких дистанциях с подлодок). На новых представителях флота оптимизированы пусковые (улучшена траектория) и минимальное время перезарядки. Контрмеры можно использовать в любое время, кроме критичных значений таймеров (например, 5-6 сек или 1 сек). Зачастую эффективны от примерно 2.5-3 км.
+            </li>
+            <li>
+                <strong style="color: #ffffff;">MM38 Exocet</strong><br>
+                Ракеты с неплохим уроном. Летят медленно и по прямой. В силу пусковых, самостоятельно адаптируют траекторию относительно цели. В идеальных условиях от примерно 1.5-2 км, чаще от примерно 2-2.5 км. Контрмеры оптимально принимать с небольшой задержкой из-за скорости ракет. 
+            </li>
+            <li>
+                <strong style="color: #ffffff;">85РУ</strong><br>
+               Быстрые ракеты с хорошим уроном. Пусковая адаптируется всегда по оптимальной траектории. Эффективная дистанция от примерно 2.5 км. Напоминает баллистическую траекторию, особенно на длинных дистанциях, тем самым позволяя преодолевать некоторые препятствия. Важно не проморгать применения контрмер, то есть не слишком поздно, зачастую не позднее 3 сек, в силу скорости и траектории.
+            </li>
+             <li>
+                <strong style="color: #ffffff;">«Москит»</strong><br>
+               Быстрые и мощные ракеты. Привередливы к пускам с бортов. Рекомендуются прямые атаки без отклонений в большинстве сценариев. На минимальных расстояниях рекомендуется запуск от кормы. Для Луня – от примерно 2.5 км, для Пр. 956 – от примерно 5 км. Рекомендуется самостоятельно понять философию применения контрмер против этих ракет из учета практических боев в связи с разнообразием траекторий и носителей, но чаще приходится применять с запасом по времени.
+            </li>
+            <li>
+                <strong style="color: #ffffff;">«Термит»</strong><br>
+               Медленные, но мощные ракеты. Очень долгая регулярная траектория. Нет ограничений при регулярных пусках, напоминает пуски с кормы с Луня или Пр. 956. Привередливы к запускам с бортов, расстояние не менее примерно 3 км. От кормы от примерно 2.5 км. Стоит применять контрмеры с небольшой задержкой. 
+            </li>
+             <li>
+                <strong style="color: #ffffff;">«Оникс»</strong><br>
+               Достаточно быстрые и мощные ракеты. Оптимальная траектория при всех пусках, напоминая параболу. Примерно от 2-2.5 км. Рекомендуется применять ловушки с хорошей, но адекватной задержкой на средних и дальних дистанциях.  
+            </li>
+        </ol>
+    </section>
+    
+    <section id="section7">
+        <h2>Последнее обновление раздела</h2>
+        <ol>
+            <li><strong>Редизайн:</strong><br>Значительное обновление интерфейса и пользовательского опыта</li>
+            <li><strong>Добавлена ифнормация касательно:</strong><br>HNLMS Karel Doorman</li>
+             <li><strong>Добавлена ифнормация касательно:</strong><br>JDS Natsushio</li>
+                <li><strong>Добавлен новый пункт:</strong><br>Последнее обновления раздела. Для улучшения опыта использования и поддержки</li>
+            </ol>
+    </section>
+
+    <footer>
+        Версия 4.0. Последнее обновление 30.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.
+    </footer>
+</div>
 
 
 
