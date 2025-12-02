@@ -25,6 +25,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: background 0.5s ease; /* Плавная смена фона */
         }
 
         body::before {
@@ -33,6 +34,7 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, rgba(10, 20, 40, 0.85), rgba(0, 100, 200, 0.6));
             z-index: -1;
+            /* Важно: этот градиент будет перекрываться при изоляции разделов */
         }
 
         .dashboard-wrapper {
@@ -227,6 +229,7 @@
             border-radius: 20px;
             min-height: 100px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
         }
 
         .sponsors-card {
@@ -257,59 +260,53 @@
         /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ РАКЕТНОГО ФЛОТА --------- */
         /* ---------------------------------------------------- */
         
-        /* 1. Изменение контейнера контента при активном классе */
         .main-content.is-fleet-active #content {
-            background: rgba(10, 20, 40, 0.95); /* Очень темный фон */
-            color: #00ff7f; /* Ярко-зеленый текст */
-            padding: 30px; /* Немного больше отступов */
+            background: rgba(10, 20, 40, 0.95);
+            color: #00ff7f;
+            padding: 30px;
             border-radius: 10px;
-            border: 2px solid #00ff7f; /* Световая рамка */
-            box-shadow: 0 0 20px rgba(0, 255, 127, 0.5), inset 0 0 10px rgba(0, 255, 127, 0.2); /* Свечение */
+            border: 2px solid #00ff7f;
+            box-shadow: 0 0 20px rgba(0, 255, 127, 0.5), inset 0 0 10px rgba(0, 255, 127, 0.2);
         }
         
-        /* 2. Скрытие элементов главной страницы, которые не нужны во флоте */
-        .main-content.is-fleet-active .header-greeting {
-            display: none !important; 
+        .main-content.is-fleet-active .header-greeting { display: none !important; }
+        
+        /* Цвета ссылок внутри флота */
+        .main-content.is-fleet-active #content a { color: #ffcc00; }
+
+        @media (max-width: 900px) {
+            .main-content.is-fleet-active { padding: 0; }
+            .main-content.is-fleet-active #content {
+                padding: 10px 5px;
+                border-radius: 0;
+                border: none !important;
+                box-shadow: none;
+            }
+            .main-content.is-fleet-active ol li { padding: 12px 10px 12px 45px; margin: 5px 0; }
+            .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
         }
 
-        /* 3. Переопределение цвета вложенных ссылок/текста, если они светлые */
-        .main-content.is-fleet-active #content a {
-            color: #ffcc00; /* Цвет ссылок в секции флота */
-        }
         /* ---------------------------------------------------- */
-/* --- АДАПТАЦИЯ ТОЛЬКО ДЛЯ РАЗДЕЛА ФЛОТА (MOBILE) --- */
-/* ---------------------------------------------------- */
-@media (max-width: 900px) {
-    
-    /* 1. ГЛАВНЫЙ КОНТЕЙНЕР КОНТЕНТА: Убираем его ограничивающие отступы */
-    .main-content.is-fleet-active {
-        padding: 0; /* Устраняет 20px отступа, который оставался */
-    }
+        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ АВИАЦИИ --------- */
+        /* ---------------------------------------------------- */
+        
+        /* Когда активна авиация, мы делаем контейнер "невидимым", 
+           чтобы дизайн из файла авиации (.container с glassmorphism) 
+           отображался как задумано */
+        .main-content.is-aviation-active #content {
+            background: transparent !important; /* Убираем белый фон */
+            box-shadow: none !important;        /* Убираем тень */
+            border: none !important;            /* Убираем границы */
+            padding: 0 !important;              /* Убираем отступы */
+        }
 
-    /* 2. ПОДЛОЖКА С ТЕКСТОМ: Растягиваем на всю ширину и убираем скругление/рамки */
-    .main-content.is-fleet-active #content {
-        /* Переопределяем стили, которые были для desktop-версии флота (padding: 30px;) */
-        padding: 10px 5px; /* Минимальный внутренний отступ для читаемости (5px по бокам) */
-        border-radius: 0;
-        border: none !important; /* Принудительно убираем рамку */
-        box-shadow: none;
-    }
+        .main-content.is-aviation-active .header-greeting { display: none !important; }
 
-    /* 3. СТИЛИ ДЛЯ СПИСКОВ (чтобы текст не был слишком сжат) */
-    .main-content.is-fleet-active ol li {
-        padding: 12px 10px 12px 45px; /* Уменьшаем отступ справа */
-        margin: 5px 0; /* Убираем боковые внешние отступы */
-    }
+        /* На мобильных убираем отступы главного блока, чтобы авиация была на весь экран */
+        @media (max-width: 900px) {
+            .main-content.is-aviation-active { padding: 0; }
+        }
 
-    /* 4. АДАПТАЦИЯ ТАБЛИЦЫ (если таблица ограничена) */
-    .main-content.is-fleet-active .table-container {
-        border-radius: 0;
-        margin: 0;
-        padding: 0;
-        border-left: none;
-        border-right: none;
-    }
-}
     </style>
 </head>
 <body>
@@ -412,7 +409,7 @@
         
         async function loadContent(url) {
             const contentDiv = document.getElementById('content');
-            const mainContent = document.querySelector('.main-content'); // Получаем контейнер main-content
+            const mainContent = document.querySelector('.main-content');
             
             // Загрузка
             contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка данных...</h3><div style="width: 30px; height: 30px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
@@ -426,22 +423,34 @@
                     contentDiv.innerHTML = html;
                     
                     const isFleet = url.includes('Ракетный флот');
+                    const isAviation = url.includes('Авиационная');
 
                     // --- ЛОГИКА ИЗОЛЯЦИИ СТИЛЕЙ ---
                     if (isFleet) {
-                        // Активируем класс для изоляции дизайна
+                        // 1. АКТИВАЦИЯ ФЛОТА
                         mainContent.classList.add('is-fleet-active');
-                        // Меняем фон тела
-                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
-                    } else {
-                        // Убеждаемся, что для других разделов класс удален
-                        mainContent.classList.remove('is-fleet-active');
+                        mainContent.classList.remove('is-aviation-active'); // На всякий случай
                         
-                        // (Ваша старая логика смены фона для других разделов)
-                        if (url.includes('Авиационная')) {
-                            document.body.style.backgroundImage = 'url("https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg")';
-                        } else if (url.includes('Танковая кампания')) {
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
+                    
+                    } else if (isAviation) {
+                        // 2. АКТИВАЦИЯ АВИАЦИИ
+                        mainContent.classList.add('is-aviation-active');
+                        mainContent.classList.remove('is-fleet-active'); // На всякий случай
+                        
+                        // Фон из файла авиации
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg")';
+                    
+                    } else {
+                        // 3. ДРУГИЕ РАЗДЕЛЫ (Танки и т.д.)
+                        // Снимаем спец. классы
+                        mainContent.classList.remove('is-fleet-active');
+                        mainContent.classList.remove('is-aviation-active');
+                        
+                        if (url.includes('Танковая кампания')) {
                             document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
+                        } else {
+                            document.body.style.backgroundImage = originalBg;
                         }
                     }
                     // -----------------------------
@@ -449,8 +458,15 @@
                     // Общая логика скрытия/показа элементов меню
                     document.getElementById('main-buttons').style.display = 'none';
                     document.getElementById('back-btn').style.display = 'inline-block';
-                    document.getElementById('sponsors-section').style.display = isFleet ? 'none' : 'block'; 
-                    document.querySelector('.header-greeting').style.display = 'none';
+                    
+                    // Скрываем спонсоров и приветствие, если это флот ИЛИ авиация
+                    if (isFleet || isAviation) {
+                         document.getElementById('sponsors-section').style.display = 'none';
+                         document.querySelector('.header-greeting').style.display = 'none';
+                    } else {
+                         document.getElementById('sponsors-section').style.display = 'block';
+                    }
+
                 }, 100);
             } catch (e) {
                 contentDiv.innerHTML = `<p style="color:#ff0000; font-weight:bold;">Ошибка: ${e.message}</p>`;
@@ -460,8 +476,9 @@
         function returnToMain() {
             const mainContent = document.querySelector('.main-content');
             
-            // --- ЛОГИКА ВОЗВРАТА: УДАЛЯЕМ КЛАСС ИЗОЛЯЦИИ ---
+            // --- ЛОГИКА ВОЗВРАТА: ОЧИСТКА ВСЕХ СПЕЦ. КЛАССОВ ---
             mainContent.classList.remove('is-fleet-active');
+            mainContent.classList.remove('is-aviation-active');
             // ----------------------------------------------------
             
             document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;"><i class="fas fa-info-circle"></i> Выберите раздел выше, чтобы загрузить информацию.</p>';
@@ -474,6 +491,7 @@
         }
     </script>
 </body>
+</html>
 
 
 
