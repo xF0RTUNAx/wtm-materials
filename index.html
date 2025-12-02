@@ -34,7 +34,6 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, rgba(10, 20, 40, 0.85), rgba(0, 100, 200, 0.6));
             z-index: -1;
-            /* Важно: этот градиент будет перекрываться при изоляции разделов */
         }
 
         .dashboard-wrapper {
@@ -290,9 +289,6 @@
         /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ АВИАЦИИ --------- */
         /* ---------------------------------------------------- */
         
-        /* Когда активна авиация, мы делаем контейнер "невидимым", 
-           чтобы дизайн из файла авиации (.container с glassmorphism) 
-           отображался как задумано */
         .main-content.is-aviation-active #content {
             background: transparent !important; /* Убираем белый фон */
             box-shadow: none !important;        /* Убираем тень */
@@ -302,9 +298,25 @@
 
         .main-content.is-aviation-active .header-greeting { display: none !important; }
 
-        /* На мобильных убираем отступы главного блока, чтобы авиация была на весь экран */
         @media (max-width: 900px) {
             .main-content.is-aviation-active { padding: 0; }
+        }
+
+        /* ---------------------------------------------------- */
+        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ ТАНКОВ (НОВОЕ) --- */
+        /* ---------------------------------------------------- */
+
+        .main-content.is-tank-active #content {
+            background: transparent !important; /* Убираем белый фон */
+            box-shadow: none !important;        /* Убираем тень */
+            border: none !important;            /* Убираем границы */
+            padding: 0 !important;              /* Убираем отступы */
+        }
+
+        .main-content.is-tank-active .header-greeting { display: none !important; }
+
+        @media (max-width: 900px) {
+            .main-content.is-tank-active { padding: 0; }
         }
 
     </style>
@@ -366,17 +378,17 @@
             </button>
 
             <div class="cards-grid" id="main-buttons">
-                <button id="aviation-btn" class="card-btn" onclick="loadContent('Авиационная кампания I War Thunder Mobile.html')">
+                <button id="aviation-btn" class="card-btn" onclick="navigateSection('Авиационная кампания I War Thunder Mobile.html')">
                     <i class="fas fa-plane"></i>
                     <span>Авиационная кампания</span>
                 </button>
                 
-                <button id="fleet-btn" class="card-btn" onclick="loadContent('Ракетный флот I War Thunder Mobile.html')">
+                <button id="fleet-btn" class="card-btn" onclick="navigateSection('Ракетный флот I War Thunder Mobile.html')">
                     <i class="fas fa-ship"></i>
                     <span>Ракетный флот</span>
                 </button>
                 
-                <button id="tank-btn" class="card-btn" onclick="loadContent('Танковая кампания I War Thunder Mobile.html')">
+                <button id="tank-btn" class="card-btn" onclick="navigateSection('Танковая кампания I War Thunder Mobile.html')">
                     <i class="fas fa-crosshairs"></i>
                     <span>Танковая кампания</span>
                 </button>
@@ -407,7 +419,8 @@
     <script>
         const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
         
-        async function loadContent(url) {
+        // Переименовали функцию в navigateSection, чтобы избежать конфликта с функцией loadContent внутри Танковой кампании
+        async function navigateSection(url) {
             const contentDiv = document.getElementById('content');
             const mainContent = document.querySelector('.main-content');
             
@@ -424,43 +437,49 @@
                     
                     const isFleet = url.includes('Ракетный флот');
                     const isAviation = url.includes('Авиационная');
+                    const isTank = url.includes('Танковая');
 
+                    // --- Сброс классов перед применением новых ---
+                    mainContent.classList.remove('is-fleet-active');
+                    mainContent.classList.remove('is-aviation-active');
+                    mainContent.classList.remove('is-tank-active');
+                    
                     // --- ЛОГИКА ИЗОЛЯЦИИ СТИЛЕЙ ---
                     if (isFleet) {
-                        // 1. АКТИВАЦИЯ ФЛОТА
                         mainContent.classList.add('is-fleet-active');
-                        mainContent.classList.remove('is-aviation-active'); // На всякий случай
-                        
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
                     
                     } else if (isAviation) {
-                        // 2. АКТИВАЦИЯ АВИАЦИИ
                         mainContent.classList.add('is-aviation-active');
-                        mainContent.classList.remove('is-fleet-active'); // На всякий случай
-                        
-                        // Фон из файла авиации
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg")';
                     
-                    } else {
-                        // 3. ДРУГИЕ РАЗДЕЛЫ (Танки и т.д.)
-                        // Снимаем спец. классы
-                        mainContent.classList.remove('is-fleet-active');
-                        mainContent.classList.remove('is-aviation-active');
+                    } else if (isTank) {
+                        // Активация танков
+                        mainContent.classList.add('is-tank-active');
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
                         
-                        if (url.includes('Танковая кампания')) {
-                            document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
-                        } else {
-                            document.body.style.backgroundImage = originalBg;
-                        }
+                        // !!! ВАЖНО ДЛЯ ТАНКОВ !!!
+                        // Находим все скрипты в загруженном HTML (там лежит логика кнопок "США/Германия")
+                        // и выполняем их вручную, иначе кнопки внутри танка работать не будут.
+                        const scripts = contentDiv.querySelectorAll('script');
+                        scripts.forEach(script => {
+                            const newScript = document.createElement('script');
+                            newScript.textContent = script.textContent;
+                            document.body.appendChild(newScript);
+                        });
+
+                    } else {
+                        // Другие разделы
+                        document.body.style.backgroundImage = originalBg;
                     }
                     // -----------------------------
                     
-                    // Общая логика скрытия/показа элементов меню
+                    // Общая логика интерфейса
                     document.getElementById('main-buttons').style.display = 'none';
                     document.getElementById('back-btn').style.display = 'inline-block';
                     
-                    // Скрываем спонсоров и приветствие, если это флот ИЛИ авиация
-                    if (isFleet || isAviation) {
+                    // Скрываем спонсоров и приветствие, если это спец. раздел
+                    if (isFleet || isAviation || isTank) {
                          document.getElementById('sponsors-section').style.display = 'none';
                          document.querySelector('.header-greeting').style.display = 'none';
                     } else {
@@ -476,9 +495,10 @@
         function returnToMain() {
             const mainContent = document.querySelector('.main-content');
             
-            // --- ЛОГИКА ВОЗВРАТА: ОЧИСТКА ВСЕХ СПЕЦ. КЛАССОВ ---
+            // --- СБРОС ВСЕХ КЛАССОВ ИЗОЛЯЦИИ ---
             mainContent.classList.remove('is-fleet-active');
             mainContent.classList.remove('is-aviation-active');
+            mainContent.classList.remove('is-tank-active');
             // ----------------------------------------------------
             
             document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;"><i class="fas fa-info-circle"></i> Выберите раздел выше, чтобы загрузить информацию.</p>';
@@ -492,6 +512,7 @@
     </script>
 </body>
 </html>
+
 
 
 
