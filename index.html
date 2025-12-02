@@ -25,7 +25,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.5s ease; /* Плавная смена фона */
+            transition: background 0.5s ease;
         }
 
         body::before {
@@ -42,7 +42,7 @@
             top: -50px;
             color: #fff;
             user-select: none;
-            pointer-events: none; /* Важно: снег пропускает клики */
+            pointer-events: none; /* Снег пропускает клики */
             z-index: 9999;
             cursor: default;
             animation-name: fall;
@@ -67,7 +67,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
             overflow: hidden;
-            z-index: 10; /* Поднимаем контент над фоном, но под снегом если нужно, или над снегом */
+            z-index: 10; 
         }
 
         .sidebar {
@@ -291,7 +291,6 @@
         
         .main-content.is-fleet-active .header-greeting { display: none !important; }
         
-        /* Цвета ссылок внутри флота */
         .main-content.is-fleet-active #content a { color: #ffcc00; }
 
         @media (max-width: 900px) {
@@ -311,10 +310,10 @@
         /* ---------------------------------------------------- */
         
         .main-content.is-aviation-active #content {
-            background: transparent !important; /* Убираем белый фон */
-            box-shadow: none !important;        /* Убираем тень */
-            border: none !important;            /* Убираем границы */
-            padding: 0 !important;              /* Убираем отступы */
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
         }
 
         .main-content.is-aviation-active .header-greeting { display: none !important; }
@@ -324,14 +323,14 @@
         }
 
         /* ---------------------------------------------------- */
-        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ ТАНКОВ (НОВОЕ) --- */
+        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ ТАНКОВ --- */
         /* ---------------------------------------------------- */
 
         .main-content.is-tank-active #content {
-            background: transparent !important; /* Убираем белый фон */
-            box-shadow: none !important;        /* Убираем тень */
-            border: none !important;            /* Убираем границы */
-            padding: 0 !important;              /* Убираем отступы */
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
         }
 
         .main-content.is-tank-active .header-greeting { display: none !important; }
@@ -440,22 +439,38 @@
     <script>
         const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
         
-        // --- СКРИПТ СОЗДАНИЯ СНЕГА (Начало) ---
+        // --- ОБНОВЛЕННЫЙ СКРИПТ СНЕГА (С адаптацией под мобильные) ---
         document.addEventListener("DOMContentLoaded", function() {
-            const snowCount = 50; // Количество снежинок (можно менять)
-            const snowSymbol = '❄'; // Символ снежинки
+            // Проверка: это мобильное устройство? (ширина экрана меньше 768px)
+            const isMobile = window.innerWidth < 768;
+
+            // Настройки для разных устройств
+            // Если мобилка: всего 20 снежинок, если ПК: 50
+            const snowCount = isMobile ? 20 : 50; 
+            const snowSymbol = '❄';
 
             for (let i = 0; i < snowCount; i++) {
                 const flake = document.createElement('div');
                 flake.innerHTML = snowSymbol;
                 flake.classList.add('snowflake');
                 
-                // Рандомизация параметров
-                const leftPos = Math.random() * 100; // Позиция по горизонтали 0-100vw
-                const animDuration = Math.random() * 5 + 5; // Скорость падения от 5 до 10 секунд
-                const animDelay = Math.random() * 5; // Задержка перед стартом
-                const size = Math.random() * 15 + 10; // Размер от 10px до 25px
-                const opacity = Math.random() * 0.6 + 0.1; // Прозрачность от 0.1 до 0.7
+                // Рандомизация
+                const leftPos = Math.random() * 100; 
+                const animDuration = Math.random() * 5 + 5; 
+                const animDelay = Math.random() * 5; 
+                
+                // АДАПТАЦИЯ РАЗМЕРА И ПРОЗРАЧНОСТИ
+                let size, opacity;
+                
+                if (isMobile) {
+                    // На телефоне снег меньше (от 8px до 15px) и прозрачнее (макс 0.4)
+                    size = Math.random() * 7 + 8; 
+                    opacity = Math.random() * 0.3 + 0.1;
+                } else {
+                    // На ПК снег крупнее (от 10px до 25px) и ярче
+                    size = Math.random() * 15 + 10;
+                    opacity = Math.random() * 0.6 + 0.1;
+                }
 
                 flake.style.left = leftPos + 'vw';
                 flake.style.animationDuration = animDuration + 's';
@@ -466,14 +481,12 @@
                 document.body.appendChild(flake);
             }
         });
-        // --- СКРИПТ СОЗДАНИЯ СНЕГА (Конец) ---
+        // -----------------------------------------------------------
 
-        // Переименовали функцию в navigateSection, чтобы избежать конфликта с функцией loadContent внутри Танковой кампании
         async function navigateSection(url) {
             const contentDiv = document.getElementById('content');
             const mainContent = document.querySelector('.main-content');
             
-            // Загрузка
             contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка данных...</h3><div style="width: 30px; height: 30px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
             
             try {
@@ -488,12 +501,10 @@
                     const isAviation = url.includes('Авиационная');
                     const isTank = url.includes('Танковая');
 
-                    // --- Сброс классов перед применением новых ---
                     mainContent.classList.remove('is-fleet-active');
                     mainContent.classList.remove('is-aviation-active');
                     mainContent.classList.remove('is-tank-active');
                     
-                    // --- ЛОГИКА ИЗОЛЯЦИИ СТИЛЕЙ ---
                     if (isFleet) {
                         mainContent.classList.add('is-fleet-active');
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
@@ -503,13 +514,9 @@
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg")';
                     
                     } else if (isTank) {
-                        // Активация танков
                         mainContent.classList.add('is-tank-active');
                         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
                         
-                        // !!! ВАЖНО ДЛЯ ТАНКОВ !!!
-                        // Находим все скрипты в загруженном HTML (там лежит логика кнопок "США/Германия")
-                        // и выполняем их вручную, иначе кнопки внутри танка работать не будут.
                         const scripts = contentDiv.querySelectorAll('script');
                         scripts.forEach(script => {
                             const newScript = document.createElement('script');
@@ -518,16 +525,12 @@
                         });
 
                     } else {
-                        // Другие разделы
                         document.body.style.backgroundImage = originalBg;
                     }
-                    // -----------------------------
                     
-                    // Общая логика интерфейса
                     document.getElementById('main-buttons').style.display = 'none';
                     document.getElementById('back-btn').style.display = 'inline-block';
                     
-                    // Скрываем спонсоров и приветствие, если это спец. раздел
                     if (isFleet || isAviation || isTank) {
                          document.getElementById('sponsors-section').style.display = 'none';
                          document.querySelector('.header-greeting').style.display = 'none';
@@ -544,11 +547,9 @@
         function returnToMain() {
             const mainContent = document.querySelector('.main-content');
             
-            // --- СБРОС ВСЕХ КЛАССОВ ИЗОЛЯЦИИ ---
             mainContent.classList.remove('is-fleet-active');
             mainContent.classList.remove('is-aviation-active');
             mainContent.classList.remove('is-tank-active');
-            // ----------------------------------------------------
             
             document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;"><i class="fas fa-info-circle"></i> Выберите раздел выше, чтобы загрузить информацию.</p>';
             document.body.style.backgroundImage = originalBg;
@@ -561,6 +562,7 @@
     </script>
 </body>
 </html>
+
 
 
 
