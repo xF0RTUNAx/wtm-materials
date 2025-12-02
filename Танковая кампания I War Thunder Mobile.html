@@ -1,4 +1,4 @@
- <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -36,7 +36,7 @@
         pointer-events: none;
     }
 
-    /* Шрифты: убрали cursive, добавили sans-serif для безопасности */
+    /* Шрифты */
     .tank-container h1, 
     .tank-container h2, 
     .tank-container h3 {
@@ -92,7 +92,6 @@
         border: 2px solid #556b2f;
         border-radius: 4px;
         font-size: 1.2em;
-        /* Убрали cursive */
         font-family: 'Black Ops One', 'Roboto', sans-serif !important;
         cursor: pointer;
         transition: all 0.3s ease;
@@ -161,7 +160,15 @@
         font-family: 'Black Ops One', 'Roboto', sans-serif !important;
     }
     #nation-content p, #nation-content li { color: #c0c0c0; }
-    #nation-content a { color: #daa520; text-decoration: none; border-bottom: 1px dashed #daa520; }
+    
+    /* СТИЛИЗАЦИЯ ССЫЛОК НА ТЕХНИКУ (ЧТОБЫ НЕ СЛИВАЛИСЬ) */
+    #nation-content a { 
+        color: #daa520; 
+        text-decoration: none; 
+        border-bottom: 1px dashed #daa520; 
+        /* По умолчанию на ПК они строчные, но добавим отступы */
+        margin: 0 5px;
+    }
     
     .tank-footer {
         text-align: center;
@@ -173,13 +180,48 @@
         font-family: 'Roboto', sans-serif;
     }
 
+    /* --- АДАПТАЦИЯ И ИСПРАВЛЕНИЯ ДЛЯ МОБИЛЬНЫХ --- */
     @media (max-width: 768px) {
-        .tank-container { padding: 15px; border-width: 2px; width: 100%; margin-top: 10px; }
+        /* Исправление горизонтального скролла */
+        .tank-container { 
+            padding: 15px; 
+            border-width: 2px; 
+            width: 100%; 
+            max-width: 100vw; /* Не даем выйти за ширину экрана */
+            margin-top: 10px;
+            margin-left: 0;
+            margin-right: 0;
+            overflow-x: hidden; /* Скрываем все, что вылезает вбок */
+            box-sizing: border-box;
+        }
+        
+        /* Убираем рамку, которая могла вылезать */
         .tank-container::after { display: none; }
+        
         .tank-container h1 { font-size: 1.8em; flex-direction: column; }
         .nation-buttons { flex-direction: column; gap: 15px; }
         .nation-button { width: 100%; font-size: 1.4em; padding: 25px; }
-        #nation-content { padding: 15px; }
+        
+        #nation-content { 
+            padding: 15px; 
+            overflow-wrap: break-word; /* Перенос длинных слов */
+        }
+
+        /* !!! ВАЖНО: Делаем ссылки на технику отдельными блоками на мобильных */
+        #nation-content a {
+            display: block;             /* Каждая ссылка на новой строке */
+            margin-bottom: 12px;        /* Отступ снизу */
+            padding: 12px;              /* Внутренний отступ для удобства нажатия */
+            background: rgba(255, 255, 255, 0.05); /* Легкий фон */
+            border: 1px solid #3e4a36;  /* Рамка */
+            border-radius: 8px;         /* Скругление */
+            text-align: center;         /* Текст по центру */
+            border-bottom: 1px solid #3e4a36; /* Убираем пунктир, делаем сплошную рамку */
+        }
+        
+        #nation-content a:active {
+            background: rgba(218, 165, 32, 0.2); /* Подсветка при нажатии */
+        }
     }
 </style>
 
@@ -243,11 +285,11 @@
 
             setTimeout(() => {
                 if (url.includes('usa') || url.includes('США')) {
-                    document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")'; 
+                    document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_07_freedomfighters/1080x2340_wtm_freedom_fighters_6caa665440c37540dbcfe17edf84d9fe.jpg")'; 
                 } else if (url.includes('germany') || url.includes('Германии')) {
-                    document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")';
+                    document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_08_ironeclipse/1080x2340_wtm_iron_eclipse_ab49c8f11e8d61405c7ca0ff1c15f287.jpg")';
                 } else if (url.includes('ussr') || url.includes('СССР')) {
-                    document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")';
+                    document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/24_12_frozenfront/1080x2340_wtm_frozen_front_b82827c44190754e4e7b97b2a6e98565.jpg")';
                 }
                 
                 document.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
@@ -273,6 +315,7 @@
         document.getElementById('nation-selection').querySelector('p').style.display = 'block';
     }
 </script>
+
 
 
 
