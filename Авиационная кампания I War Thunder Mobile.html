@@ -1,248 +1,451 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Технические работы | WTM Авиация</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+    /* Глобальный сброс для этого компонента */
+    * {
+        box-sizing: border-box;
+    }
+
+    /* ---------------------------------------------------- */
+    /* --- ИЗОЛИРОВАННЫЕ СТИЛИ: AVIATION TACTICAL THEME --- */
+    /* ---------------------------------------------------- */
+    .aviation-container {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #e2e8f0; /* Светлый серо-голубой текст */
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+        /* Фон: Темное небо / Грифельный оттенок */
+        background-color: #0f172a; 
+        background-image: linear-gradient(to bottom, #0f172a, #1e293b);
+    }
     
-    <style>
-        body, html {
-            height: 100%;
-            margin: 0;
+    /* Заголовки */
+    .aviation-container h1, 
+    .aviation-container h2, 
+    .aviation-container h3 {
+        color: #38bdf8; /* Небесно-голубой (Sky Blue) */
+        text-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+        padding-bottom: 10px;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        position: relative;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .aviation-container h1 { 
+        font-size: 2.2em; 
+        border-bottom: none; 
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    } 
+    
+    .aviation-container h2 { font-size: 1.6em; border-left: 5px solid #38bdf8; padding-left: 15px; }
+    .aviation-container h3 { font-size: 1.3em; color: #bae6fd; border-bottom: 1px dashed rgba(56, 189, 248, 0.3); }
+
+    /* Декоративная линия под H1 */
+    .aviation-container h1::after {
+        content: '';
+        display: block;
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, #38bdf8, transparent);
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+    }
+
+    /* Ссылки в тексте */
+    .aviation-container a {
+        color: #fbbf24; /* Янтарный цвет для ссылок (как индикаторы в кабине) */
+        text-decoration: none;
+        border-bottom: 1px dotted #fbbf24;
+        transition: all 0.3s;
+    }
+    .aviation-container a:hover {
+        color: #fff;
+        border-bottom: 1px solid #fff;
+        text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+    }
+
+    /* Навигация - Стиль приборной панели */
+    .aviation-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 50px;
+        gap: 10px;
+        padding-top: 20px;
+    }
+    .aviation-nav a {
+        display: block;
+        padding: 12px 18px;
+        background: rgba(51, 65, 85, 0.5); /* Slate 700 с прозрачностью */
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-top: 3px solid rgba(56, 189, 248, 0.5); /* Акцент сверху */
+        border-bottom: none; /* Убираем нижнее подчеркивание от общих стилей */
+        border-radius: 4px;
+        color: #e0f2fe;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-align: center;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        flex: 1 1 auto;
+        min-width: 140px;
+        text-decoration: none; /* Убираем подчеркивание */
+    }
+    .aviation-nav a:hover {
+        transform: translateY(-4px);
+        background: rgba(56, 189, 248, 0.15);
+        border-color: #38bdf8;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        color: #fff;
+    }
+
+    /* Секции контента */
+    .aviation-section {
+        background: #1e293b; /* Slate 800 */
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 35px;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+        border: 1px solid #334155;
+        position: relative;
+        overflow: hidden;
+    }
+    /* Декоративный уголок */
+    .aviation-section::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0;
+        width: 0; height: 0;
+        border-style: solid;
+        border-width: 0 30px 30px 0;
+        border-color: transparent #38bdf8 transparent transparent;
+        opacity: 0.5;
+    }
+
+    /* Таблицы - Тактический стиль */
+    .table-container {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 600px;
+        margin-bottom: 30px;
+        border: 1px solid #475569;
+        border-radius: 6px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        background: #0f172a;
+    }
+    
+    /* Скроллбар */
+    .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+    .table-container::-webkit-scrollbar-track { background: #0f172a; }
+    .table-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    .table-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #cbd5e1;
+    }
+    
+    /* Заголовки таблицы */
+    thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10;
+        background: #1e293b !important;
+        color: #38bdf8 !important;
+        font-weight: 700;
+        border-bottom: 2px solid #38bdf8;
+        text-transform: uppercase;
+        font-size: 0.85em;
+        text-align: center;
+        padding: 15px;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Стиль для вводного текста, чтобы создать отступ от краев */
+.aviation-container .intro-paragraph {
+    padding: 0 15px 15px 15px; /* 15px отступы слева, справа и снизу */
+    margin-bottom: 30px; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+    
+    /* Липкий первый столбец */
+    .table-container table th:first-child,
+    .table-container table td:first-child {
+        position: sticky;
+        left: 0;
+        background: #1a2333 !important; /* Чуть темнее фона строки */
+        color: #fff !important;
+        font-weight: 600;
+        z-index: 3;
+        border-right: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+    .table-container table th:first-child {
+        background: #1e293b !important;
+        z-index: 4;
+    }
+    
+    th, td {
+        padding: 14px 15px;
+        border-bottom: 1px solid #334155;
+        text-align: left;
+        font-size: 0.95em;
+    }
+    
+    /* Центрирование данных */
+    .table-container table td:nth-child(n+2) { text-align: center; }
+    
+    /* Чередование строк */
+    tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+    tbody tr:hover td { background-color: rgba(56, 189, 248, 0.1) !important; color: #fff; transition: 0.2s; }
+
+    /* Списки с кастомными маркерами */
+    .aviation-list {
+        padding-left: 0;
+        list-style: none;
+        counter-reset: aero-counter;
+    }
+    .aviation-list li {
+        position: relative;
+        padding: 15px 15px 15px 60px;
+        margin-bottom: 15px;
+        background: rgba(255, 255, 255, 0.03);
+        border-left: 3px solid rgba(56, 189, 248, 0.3);
+        border-radius: 0 4px 4px 0;
+    }
+    .aviation-list li::before {
+        counter-increment: aero-counter;
+        content: counter(aero-counter);
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 30px;
+        background: #334155;
+        color: #38bdf8;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+        border: 1px solid #38bdf8;
+    }
+    .manual-list p { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid #fbbf24; }
+    .manual-list strong { color: #f1f5f9; font-size: 1.05em; }
+
+    .noticeable {
+        background: rgba(251, 191, 36, 0.1); /* Amber background */
+        padding: 15px;
+        border-radius: 6px;
+        border-left: 4px solid #fbbf24;
+        color: #fce7f3;
+        margin-bottom: 20px;
+    }
+
+    footer {
+        text-align: center;
+        font-size: 0.9em;
+        color: #64748b;
+        margin-top: 60px;
+        padding: 20px;
+        background: #0f172a;
+        border-top: 1px solid #1e293b;
+        border-radius: 8px;
+    }
+
+    /* Мобильная адаптация */
+    @media (max-width: 768px) {
+        .aviation-container {
             padding: 0;
-            font-family: 'Open Sans', sans-serif;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ffffff;
-            background-color: #0b111b;
-        }
-
-        /* Фоновое изображение */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            /* Картинка фона */
-            background-image: url('https://cs8.pikabu.ru/post_img/big/2017/06/25/11/1498419534199014516.jpg'); 
-            background-size: cover;
-            background-position: center;
-            filter: blur(2px); /* Уменьшил размытие, чтобы было красивее */
-            z-index: -1;
-        }
-
-        /* УБРАЛ body::after (Затемнение) */
-
-        .maintenance-container {
-            text-align: center;
-            padding: 30px;
-            position: relative;
-            z-index: 2;
-            
-            /* НОВЫЙ СТИЛЬ ПОДЛОЖКИ (Стеклянный эффект) */
-            background: rgba(11, 17, 27, 0.4); /* Полупрозрачный темный */
-            backdrop-filter: blur(10px); /* Размытие фона под блоком */
-            -webkit-backdrop-filter: blur(10px); /* Для Safari */
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Тонкая рамка */
-            
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); /* Мягкая тень вместо жесткой */
-            max-width: 90%;
-            width: 500px; /* Фиксированная ширина для лучшей центровки */
-            box-sizing: border-box;
-        }
-
-        /* --- Графический элемент (Круг/Радар) --- */
-        .graphic-circle {
-            width: 220px; /* Чуть компактнее */
-            height: 220px;
-            background: radial-gradient(circle, #2c3e50 0%, #0b111b 70%);
-            border-radius: 50%;
-            margin: 0 auto 25px auto;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-        }
-
-        /* Эффект радара */
-        .graphic-circle::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 50%;
-            border: 2px solid transparent;
-            border-top-color: #00ff88;
-            animation: spin 3s linear infinite;
-            opacity: 0.4;
-        }
-
-        /* --- Иконки внутри круга --- */
-        .icon-group {
-            position: relative;
-            font-size: 7rem;
-            color: #ecf0f1; /* Светлый цвет самолета */
-            display: flex; /* Важно для центровки */
-            justify-content: center;
-            align-items: center;
-            text-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        
-        /* ИСПРАВЛЕНИЕ: Был класс .ship-icon, стал .plane-icon */
-        .plane-icon {
-            z-index: 1;
-            position: relative;
-            display: block;
-        }
-
-        .gear-icon {
-            position: absolute;
-            font-size: 3.5rem;
-            top: -10px;
-            right: -25px;
-            color: #ffc107;
-            animation: rotate-gear 4s linear infinite;
-            z-index: 2;
-        }
-
-        .wrench-icon {
-            position: absolute;
-            font-size: 2.5rem;
-            bottom: -5px;
-            left: -25px;
-            color: #bdc3c7;
-            transform: rotate(-45deg);
-            animation: wrench-move 2s ease-in-out infinite alternate;
-            z-index: 2;
-        }
-
-        /* --- Текстовая часть --- */
-        h1 {
-            font-weight: 800;
-            font-size: 2.5rem;
-            margin: 0 0 15px 0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #ffffff;
-            text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
-            line-height: 1.1;
-        }
-
-        p.subtitle {
-            color: #ffc107;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 1px;
+            max-width: 100vw;
             margin: 0;
-            text-transform: uppercase;
-            background: rgba(0, 0, 0, 0.3); /* Легкая подложка только под текстом */
-            display: inline-block;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px dashed rgba(255, 193, 7, 0.3);
-            line-height: 1.5;
+            overflow-x: hidden;
         }
-
-        /* --- Анимации --- */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .aviation-section {
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            padding: 20px 15px;
+            margin-bottom: 15px;
         }
-
-        @keyframes rotate-gear {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .aviation-nav {
+            flex-direction: column;
+            padding: 0 10px;
+            gap: 8px;
         }
-        
-        @keyframes wrench-move {
-            0% { transform: rotate(-45deg); }
-            100% { transform: rotate(-25deg); }
-        }
+        .aviation-nav a { width: 100%; border-radius: 6px; }
+        .aviation-container h1 { font-size: 1.6em; padding-left: 15px; }
+        .table-container { border-radius: 0; border-left: none; border-right: none; }
+        th, td { font-size: 0.85em; padding: 10px 8px; }
+    }
+</style>
 
-        /* Сетка поверх фона (оставил, но сделал прозрачнее) */
-        .grid-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
-            z-index: -1; 
-            pointer-events: none;
-        }
+<div class="aviation-container">
+    <h1><i class="fa-fighter-jet"></i> Авиация в WTM</h1>
+    
+    <p class="intro-paragraph">Материал призван помочь в освоении в авиационной кампании в игре War Thunder Mobile. Основу данного материала составляют топы (особенно все, что связано со штурмовкой).</p>
+    
+    <nav class="aviation-nav">
+        <a href="#section1">Основной гайд</a>
+        <a href="#section2">Базы и Аэродромы</a>
+        <a href="#section3">Штурмовое вооружение</a>
+        <a href="#section4">Наземные цели</a>
+        <a href="#section5">Лучшие штурмовики и бомбордировщики</a>
+        <a href="#section6">Истребительные задачи</a>
+        <a href="#section7">Последнее обновление раздела</a>
+    </nav>
 
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            .maintenance-container {
-                padding: 20px;
-                width: 90%;
-            }
-            .graphic-circle { 
-                width: 160px; 
-                height: 160px; 
-            }
-            .icon-group { 
-                font-size: 4.5rem; 
-            }
-            .gear-icon { 
-                font-size: 2.2rem; 
-                right: -15px;
-            }
-            .wrench-icon { 
-                font-size: 1.8rem; 
-                left: -15px;
-            }
-            h1 { 
-                font-size: 1.8rem; 
-            }
-            p.subtitle { 
-                font-size: 0.8rem; 
-                padding: 10px;
-            }
-        }
-    </style>
-</head>
-<body>
+    <section id="section1" class="aviation-section">
+        <h2>1. Основной гайд по авиационной кампании</h2>
+        <p><i class="fab fa-youtube" style="color: #ff0000; margin-right: 5px;"></i> <a href="https://youtu.be/xTJ81iEKoPI" target="_blank">Смотреть видео гайд (YouTube)</a></p>
+        <p>Также, в бою перед вылетом, можно выбрать ленту и загрузку основываясь на карте, планах на игру и противниках, не ограничиваясь выбором перед боем.</p>
+        <p>Дополнительный плейлист по обзорам конкретных представителей авиации: <a href="https://youtube.com/playlist?list=PLdiVtbbR-3vy3hAe_0lW9dJUYD58YBg8K&si=Qgkg4EPJNkRWyuJh" target="_blank">перейти к плейлисту</a></p>
+    </section>
 
-    <div class="grid-bg"></div>
-
-    <div class="maintenance-container">
-        <div class="graphic-circle">
-            <div class="icon-group">
-                <i class="fas fa-plane plane-icon"></i>
-                <i class="fas fa-cog gear-icon"></i> 
-                <i class="fas fa-wrench wrench-icon"></i>
-            </div>
+    <section id="section2" class="aviation-section">
+        <h2>2. Уничтожение базы и аэродрома</h2>
+        <div class="noticeable">
+            <i class="fas fa-exclamation-triangle"></i> Информация основана на практическом опыте. Могут содержаться ошибки и неточности.
         </div>
+        <ul class="aviation-list">
+            <li>
+                <strong>Уничтожение базы:</strong><br>
+                <strong>На 3 и 9 ранге</strong><br>Исходя из опыта, для уничтожения базы хватало бомб с A-1H 8 ранга: 4 бомбы MK84 2000-фн. Таким образом, для уничтожения базы с одного сброса достаточно <strong>не менее 2315 кг</strong> в тротиловом эквиваленте (оригинально Состав H6).
+           <p><strong>На 4-6 рангах</strong></p>
+               Ранее требовалось <strong>не менее 1524 кг</strong> в тротиловом эквиваленте (оригинально Торпекс). Теперь это значение должно быть ниже. 
+            <p><strong>Остальные ранги</strong></p>
+                Для уничтожения базы хватало бомб с F7F-3 8 ранга: 3 мины Mk 13 Mod 0. Таким образом, для уничтожения базы с одного сброса достаточно <strong>не менее 1524 кг</strong> в тротиловом эквиваленте (оригинально Торпекс). 
+            </li>
+            
+            <li>
+                <strong>Уничтожение аэродрома:</strong><br>
+                    <strong>На 3 и 9 ранге</strong><br>Исходя из опыта, для уничтожения аэродрома хватало бомб с Ju 288 C 7 ранга: 8 бомб SB2500. Таким образом, для уничтожения аэродрома достаточно <strong>не менее 21888 кг</strong> в тротиловом эквиваленте (оригинально Триален 105).
+           <p><strong>На 4-6 рангах</strong></p>
+               Ранее требовалось <strong>не менее 15099 кг</strong> в тротиловом эквиваленте (оригинально Тритонал). Теперь это значение должно быть ниже. 
+            <p><strong>Остальные ранги</strong></p>
+                Для уничтожения аэродрома хватало бомб с B-29A-BN 8 ранга: 4 бомбы AN-M56 4000-фн. Таким образом, для полного уничтожения аэродрома необходимо <strong>не менее 15099 кг</strong> в тротиловом эквиваленте (оригинально Тритонал). 
+            </li>
+        </ul>
+    </section>
 
-        <h1>ТЕХНИЧЕСКИЕ РАБОТЫ</h1>
+    <section id="section3" class="aviation-section">
+        <h2>3. Про некоторое штурмовое вооружение (Подвесы)</h2>
+        <div class="manual-list">
+            <p><strong>1. Ракета HVAR</strong><br>Отлично подходит для атаки ПВО и артиллерии. Не подходит для атаки ДОТов и танков. Допускается небольшое отклонение от цели при сохранении успешности атаки в силу достаточного тротилового эквивалента и типа боевой части. В идеале: 1 ракета – 1 цель.</p>
+            <p><strong>2. Ракета Zuni Mk32</strong><br>Подходит для атаки ПВО, артиллерии, танков и ДОТов. Не рекомендуется отклонение от цели в силу типа боевой части, но большой тротиловый эквивалент может спасти ситуацию. Важно быть готовым к применению нескольких и более ракет, особенно для танков и ДОТов, в силу трудного наведения на цель по ходу динамичного боя.</p>
+            <p><strong>3. Ракета FFAR Mighty Mouse</strong><br>Подходит для атаки ПВО, артиллерии, танков и ДОТов. Не допускается отклонение от цели в силу типа боевой части и маленького тротилового эквивалента. Важно быть готовым к применению большого количества ракет, особенно для танков и ДОТов, в силу трудного наведения на цель по ходу динамичного боя.</p>
+            <p><strong>4. M134 Minigun</strong><br>Подходит для атаки ПВО, артиллерии и танков. Не подходит для уничтожения ДОТов. Не допускается отклонение от цели. Отлично справляется, в том числе, с вражеской авиацией. Очень важно привыкнуть к баллистике и рекомендуются атаки на минимальных дистанциях (менее примерно 0,3-0,4 км). </p>
+            <p><strong>5. Tiny Tim</strong><br>Подходит для атаки ПВО, артиллерии, танков и ДОТов. Не рекомендуется отклонение от тяжелой (ДОТ, танк) цели. Запускаются по принципу неуправляемых авиационных ракет. Требуется брать больше упреждения за счет механики запуска. Важно не запускать слишком близко и низко к цели, поскольку урон может нанестись самолету.</p>
+            <p><strong>6. РБС-132</strong><br>Подходит для атаки ПВО, артиллерии, танков и ДОТов. Не рекомендуется отклонение от цели в силу типа боевой части, но большой тротиловый эквивалент может спасти ситуацию. Важно быть готовым к применению нескольких и более ракет, особенно для танков и ДОТов, в силу трудного наведения на цель по ходу динамичного боя.</p>
+        </div>
+    </section>
+
+    <section id="section4" class="aviation-section">
+        <h2>4. Поражение наземных целей</h2>
+        <p>Обратите внимание, что тип взрывчатого вещества влияет на эффективность поражения некоторых целей!</p>
+        <p>Для уничтожения ДОТа хватает 1 бомбы 500-фн AN-M64A1 (163 кг тротила, оригинально Состав В); либо 4 бомбы 250-фн AN-M57 (58.5 кг тротила).</p>
         
-        <p class="subtitle">
-            <i class="fas fa-triangle-exclamation" style="margin-right: 8px;"></i>
-            МОДЕРНИЗИРУЕМ ЛТХ И ОБНОВЛЯЕМ ПРОГРАМНОЕ ОБЕСПЕЧЕНИЕ САМОЛЕТОВ. <br> 
-            ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ.
-<br> СПАСИБО ЗА ПОНИМАНИЕ!
-        </p>
-    </div>
+        <h3>Условная классификация:</h3>
+        <ol class="aviation-list">
+            <li><strong>Малые (до 1 кг тротила):</strong> поражение при прямом попадании по открытой технике, зениток и артиллерии.</li>
+            <li><strong>Средние (1-5 кг тротила):</strong> поражение по открытой технике, зениток и артиллерии, в том числе с небольшим отклонением от цели. Более тяжелые цели требуют прямого попадания, причем по уязвимым местам, с использованием большого количества ракет (то есть не эффективно). </li>
+            <li><strong>Тяжелые (5-10 кг тротила):</strong> свободное поражение по открытой технике, зениток и артиллерии, в том числе с увеличенным отклонением от цели. По-прежнему требуют точного прицеливания в уязвимые места по более тяжелым целям, в том числе с использованием большого количества ракет.</li>
+            <li><strong>Сверхтяжелые (&gt; 10 кг тротила):</strong> можно считать их воздействие как от бомб, только с механикой ракеты. </li>
+        </ol>
+        
+        <p><strong>Кумулятивные:</strong> все требуют высокой точности в слабые места. Важно рассчитывать на применение большого количества ракет, особенно по тяжелым целям. В отличии от фугасных, применение по тяжелым целям эффективно, пусть и с некоторыми особенностями в отличии от бомб.</p>
+    </section>
 
-</body>
-</html>
+    <section id="section5" class="aviation-section">
+        <h2>5. Лучшие самолеты для штурмовки</h2>
+        <p>Для набора очков рейтинга (классическая штурмовка).</p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Самолет</th>
+                        <th>Ранг</th>
+                        <th>Страна</th>
+                        <th>Доп сведения</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A-1H</td><td>8</td><td>США</td><td>База с 2 загрузок + Много наземки</td></tr>
+                    <tr><td>F7F-3</td><td>8</td><td>США</td><td>База с 2 загрузок + Мало наземки</td></tr>
+                    <tr><td>AD-4</td><td>8</td><td>США</td><td>База с 2 загрузок + Неплохо наземки</td></tr>
+                    <tr><td>B-29A-BN</td><td>8</td><td>США</td><td> База</td></tr>
+                    <tr><td>AD-2</td><td>7</td><td>США</td><td>База с 2 загрузок + Неплохо наземки</td></tr>
+                    <tr><td>AM-1</td><td>7</td><td>США</td><td>База с 2 загрузок + Неплохо наземки</td></tr>
+                    <tr><td>Ju 288 C</td><td>7</td><td>Германия</td><td> База или 1/4 Аэродрома</td></tr>
+                    <tr><td>Ту-2С/-59</td><td>8</td><td>СССР</td><td>База с 2 загрузок</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
+    <section id="section6" class="aviation-section">
+        <h2>6. Истребительные задачи</h2>
+        <p>Рекомендация по выбору лент:</p>
+        <ul style="list-style: none; padding-left: 20px; border-left: 2px solid #38bdf8; margin-bottom: 20px;">
+            <li><strong>Калибр менее 20мм:</strong> Максимум БПТЗ</li>
+            <li><strong>Калибр более 20мм:</strong> Максимум ОФЗТ</li>
+            <li><br><strong>Против истребителей:</strong> можно попробовать отдать предпочтение осколочно-фугасным и фугасным снарядам, так как эти снаряды эффективны против целей с лёгким бронированием или вообще без брони. Осколки хорошо разрушают обшивку самолётов, а фугасы способны буквально надламывать крылья вражеских истребителям. Подлежат выбору ленты с наибольшим количеством осколочно-фугасных, фугасных, зажигательных и т.д. снарядов.</li>
+            <li><br><strong>Против бомбардировщиков:</strong> в ленте должны присутствовать как осколочно-фугасные, так и бронебойные снаряды. Бронебойные снаряды ломают силовые конструкции самолёта, пробивают бронеспинки и т.д., что для поражения бомбардировщиков - весьма актуально. Хорошим вариантом ленты для поражения бомбардировщика будет набор из двух осколочно-фугасных и одного бронебойного снарядов. Что же касается пулемётов, то здесь можно посоветовать ленты с максимальным количеством бронебойно-зажигательных и бронебойных пуль, так как они позволяют буквально "отпиливать" крылья врагов или поджигать баки.</li>
+        </ul>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Вооружение</th>
+                        <th>Рекомендуемая лента</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Browning M2</td><td>Универсальная</td></tr>
+                    <tr><td>MG17</td><td>Универсальная</td></tr>
+                    <tr><td>ШКАС</td><td>Скрытая</td></tr>
+                    <tr><td>Browning 7,7мм</td><td>Скрытая</td></tr>
+                    <tr><td>Тип 97</td><td>Скрытая</td></tr>
+                    <tr><td>MG FF</td><td>Воздушная</td></tr>
+                    <tr><td>MG 151</td><td>Воздушная</td></tr>
+                    <tr><td>ШВАК</td><td>Наземная</td></tr>
+                    <tr><td>Б-20</td><td>Наземная</td></tr>
+                    <tr><td>Hispano MK1/MK2</td><td>Скрытая</td></tr>
+                    <tr><td>Тип 99</td><td>Трассирующая</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p><em>Дополнительный совет:</em> с задачами ближнего боя отлично справляются Як-15/17 и японский A7M1 (NK9H).</p>
+    </section>
+
+     <section id="section7" class="aviation-section">
+        <h2>Последнее обновление раздела</h2>
+        <ol>
+            <li><strong>Редизайн:</strong><br>Значительное обновление интерфейса и пользовательского опыта</li>
+            <li><strong>Актуализация содержимого:</strong><br>Некоторая информация была обновлена согласно последнему ребалансу авиационной кампании.</li>
+                <li><strong>Добавлен новый пункт:</strong><br>Последнее обновления раздела. Для улучшения опыта использования и поддержки</li>
+            </ol>
+    </section>
+    
+    <footer>
+        <p>Версия 2.0. Последнее обновление 02.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+    </footer>
+</div>
 
 
 
