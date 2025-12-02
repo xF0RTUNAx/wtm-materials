@@ -21,7 +21,7 @@
             background-color: #0b111b;
         }
 
-        /* Фоновое изображение (Тематика Игр/Киберпанка) */
+        /* Фоновое изображение */
         body::before {
             content: '';
             position: absolute;
@@ -29,7 +29,6 @@
             left: 0;
             width: 100%;
             height: 100%;
-            /* Картинка фона: Неоновая игровая комната или абстракция */
             background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'); 
             background-size: cover;
             background-position: center;
@@ -39,12 +38,12 @@
 
         .maintenance-container {
             text-align: center;
-            padding: 30px;
+            padding: 40px 30px; /* Немного увеличил отступы */
             position: relative;
             z-index: 2;
             
             /* Стеклянный эффект */
-            background: rgba(11, 17, 27, 0.6); /* Чуть темнее для контраста с неоном */
+            background: rgba(11, 17, 27, 0.65); 
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -56,23 +55,22 @@
             box-sizing: border-box;
         }
 
-        /* --- Графический элемент (Круг/Загрузка) --- */
+        /* --- Графический элемент --- */
         .graphic-circle {
             width: 220px;
             height: 220px;
-            background: radial-gradient(circle, #2d1b4e 0%, #0b111b 70%); /* Фиолетовый оттенок */
+            background: radial-gradient(circle, #2d1b4e 0%, #0b111b 70%);
             border-radius: 50%;
             margin: 0 auto 25px auto;
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 40px rgba(138, 43, 226, 0.3); /* Фиолетовое свечение */
+            box-shadow: 0 0 40px rgba(138, 43, 226, 0.3);
             border: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
         }
 
-        /* Эффект радара / Загрузки */
         .graphic-circle::after {
             content: '';
             position: absolute;
@@ -82,13 +80,13 @@
             bottom: 0;
             border-radius: 50%;
             border: 3px solid transparent;
-            border-top-color: #00e5ff; /* Cyan цвет вместо зеленого */
-            animation: spin 2s linear infinite; /* Чуть быстрее для динамики игр */
+            border-top-color: #00e5ff;
+            animation: spin 2s linear infinite;
             opacity: 0.6;
             box-shadow: 0 0 15px #00e5ff;
         }
 
-        /* --- Иконки внутри круга --- */
+        /* --- Иконки --- */
         .icon-group {
             position: relative;
             font-size: 7rem;
@@ -103,7 +101,6 @@
             z-index: 1;
             position: relative;
             display: block;
-            /* Легкая левитация контроллера */
             animation: float-gamepad 3s ease-in-out infinite; 
         }
 
@@ -112,7 +109,7 @@
             font-size: 3rem;
             top: -10px;
             right: -25px;
-            color: #9b59b6; /* Фиолетовый */
+            color: #9b59b6;
             animation: rotate-gear 4s linear infinite;
             z-index: 2;
         }
@@ -122,13 +119,13 @@
             font-size: 2.5rem;
             bottom: 0px;
             left: -25px;
-            color: #e91e63; /* Розовый */
+            color: #e91e63;
             transform: rotate(-15deg);
             animation: puzzle-move 2s ease-in-out infinite alternate;
             z-index: 2;
         }
 
-        /* --- Текстовая часть --- */
+        /* --- Текст --- */
         h1 {
             font-weight: 800;
             font-size: 2.5rem;
@@ -141,11 +138,11 @@
         }
 
         p.subtitle {
-            color: #00e5ff; /* Cyan текст */
+            color: #00e5ff;
             font-size: 0.95rem;
             font-weight: 700;
             letter-spacing: 1px;
-            margin: 0;
+            margin: 0 0 25px 0; /* Добавил отступ снизу до кнопки */
             text-transform: uppercase;
             background: rgba(0, 0, 0, 0.4);
             display: inline-block;
@@ -153,6 +150,36 @@
             border-radius: 8px;
             border: 1px dashed rgba(0, 229, 255, 0.4);
             line-height: 1.5;
+        }
+
+        /* --- Кнопка "Назад" (НОВОЕ) --- */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 35px;
+            background: linear-gradient(45deg, #00e5ff, #00b8cc); /* Градиент для объема */
+            color: #0b111b; /* Темный текст для контраста */
+            text-decoration: none;
+            font-weight: 800;
+            text-transform: uppercase;
+            border-radius: 50px; /* Овальная форма */
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); /* Свечение */
+            font-size: 0.9rem;
+            border: 2px solid transparent;
+        }
+
+        .back-btn i {
+            margin-right: 10px;
+            font-size: 1.1rem;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-3px); /* Эффект нажатия/взлета */
+            box-shadow: 0 0 30px rgba(0, 229, 255, 0.7);
+            background: #ffffff; /* При наведении становится белой */
+            color: #00b8cc;
         }
 
         /* --- Анимации --- */
@@ -176,7 +203,6 @@
             50% { transform: translateY(-5px); }
         }
 
-        /* Сетка (оставил для кибер-стиля) */
         .grid-bg {
             position: absolute;
             top: 0;
@@ -194,7 +220,7 @@
         /* Адаптивность */
         @media (max-width: 768px) {
             .maintenance-container {
-                padding: 20px;
+                padding: 25px 20px;
                 width: 90%;
             }
             .graphic-circle { 
@@ -218,6 +244,11 @@
             p.subtitle { 
                 font-size: 0.8rem; 
                 padding: 10px;
+                margin-bottom: 20px;
+            }
+            .back-btn {
+                padding: 10px 25px;
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -235,14 +266,18 @@
             </div>
         </div>
 
-        <h1>В разработке!</h1>
+        <h1>В РАЗРАБОТКЕ!</h1>
         
         <p class="subtitle">
             <i class="fas fa-terminal" style="margin-right: 8px;"></i>
             КОМПИЛИРУЕМ КОД И ОТРИСОВЫВАЕМ ТЕКСТУРЫ НОВОГО РАЗДЕЛА. <br> 
             МИНИ-ИГРЫ СКОРО БУДУТ ДОСТУПНЫ.
-            <br> Пожалуйста, попробуйте позже.
+            <br> ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ!
         </p>
+
+        <a href="index.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> На главную
+        </a>
     </div>
 
 </body>
