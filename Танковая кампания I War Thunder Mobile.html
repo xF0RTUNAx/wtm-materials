@@ -4,250 +4,327 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Вспомогательный материал по танковой кампании в WTM</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <style>
+        /* Глобальный сброс */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: url('https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg') no-repeat center center fixed;
+            font-family: 'Roboto', sans-serif;
+            /* Фон: Поле битвы / Грязь и металл */
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg') no-repeat center center fixed;
             background-size: cover;
-            color: white;
+            color: #e0e0e0;
             margin: 0;
             padding: 20px;
             line-height: 1.6;
-            animation: fadeIn 1s ease-in-out;
-            overflow-x: hidden; /* Предотвращаем горизонтальный оверфлоу */
-            position: relative; /* Для позиционирования псевдоэлемента */
+            min-height: 100vh;
         }
+
+        /* Темный оверлей для фона */
         body::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5); /* Темный оверлей */
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(10, 15, 5, 0.85); /* Темно-зеленый оттенок */
             z-index: -1;
+            pointer-events: none;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .container {
-            max-width: 900px;
+
+        /* ---------------------------------------------------- */
+        /* --- TANK CAMPAIGN CONTAINER: HEAVY ARMOR THEME --- */
+        /* ---------------------------------------------------- */
+        .tank-container {
+            max-width: 1100px;
             margin: 0 auto;
             padding: 30px;
-            background: rgba(136, 136, 136, 0.7);
-            border-radius: 25px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            overflow: hidden; /* Предотвращаем выход контента за края */
+            /* Фон контейнера: Темная броня */
+            background: #1c2119;
+            background-image: repeating-linear-gradient(
+                45deg,
+                rgba(0,0,0,0.1),
+                rgba(0,0,0,0.1) 10px,
+                transparent 10px,
+                transparent 20px
+            );
+            border: 4px solid #3e4a36; /* Оливковая граница */
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.7), inset 0 0 50px rgba(0,0,0,0.5);
             position: relative;
-            z-index: 1;
         }
-        h1, h2, h3 {
-            color: white;
-            text-shadow: 0 2px 4px black;
-            position: relative;
-            word-wrap: break-word; /* Разрешаем перенос слов */
-            hyphens: auto; /* Автоматические переносы */
-        }
-        h1::before, h2::before, h3::before {
-            content: "";
+
+        /* Декоративные "Заклепки" по углам */
+        .tank-container::after {
+            content: '';
             position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(to right, #0056b3, #3388d1);
-            border-radius: 2px;
+            top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border: 1px dashed #556b2f;
+            pointer-events: none;
         }
+
+        h1, h2, h3 {
+            font-family: 'Black Ops One', cursive; /* Военный шрифт */
+            color: #8fbc8f; /* Dark Sea Green */
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 0;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            text-align: center;
+            border-bottom: 3px solid #556b2f;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        h2 {
+            font-size: 1.8em;
+            color: #d2b48c; /* Tan/Khaki */
+        }
+
         .nation-selection {
             text-align: center;
-            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #3e4a36;
         }
+        
+        .nation-selection p { color: #a9a9a9; }
+
+        /* Кнопки выбора нации */
         .nation-buttons {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+            gap: 20px;
+            margin-top: 25px;
         }
+
         .nation-button {
-            padding: 14px 22px;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
+            position: relative;
+            padding: 20px 40px;
+            color: #fff;
+            border: 2px solid #556b2f; /* Dark Olive Green */
+            border-radius: 4px;
+            font-size: 1.2em;
+            font-family: 'Black Ops One', cursive;
             cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: all 0.3s ease;
             text-decoration: none;
-            min-width: 150px;
+            min-width: 200px;
             text-align: center;
-            box-sizing: border-box;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-            display: block; /* Для ссылок, чтобы они выглядели как кнопки */
+            text-transform: uppercase;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            background-color: #2f3526;
         }
-        .nation-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
+
+        /* Фоновые изображения для кнопок с затемнением */
         .usa {
-            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover no-repeat;
+            background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover;
         }
         .germany {
-            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover no-repeat;
+            background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover;
         }
         .ussr {
-            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover no-repeat;
+            background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover;
         }
+
+        /* Эффект наведения */
+        .nation-button:hover {
+            transform: translateY(-3px);
+            border-color: #8fbc8f;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.6);
+            color: #ffd700; /* Золотой текст */
+            background-blend-mode: soft-light; /* Делает флаг ярче */
+        }
+        
+        /* Кнопка "Назад" */
+        .back-btn {
+            background: #8b4500; /* Ржавый/Тактический оранжевый */
+            background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 10px);
+            display: none; 
+            padding: 15px 30px;
+            color: white;
+            border: 2px solid #cd5c5c;
+            border-radius: 4px;
+            font-size: 1em;
+            font-weight: bold;
+            font-family: 'Roboto', sans-serif;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 30px auto 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
+        }
+
+        .back-btn:hover {
+            background: #a0522d;
+            transform: scale(1.02);
+            border-color: #ff6347;
+        }
+
+        /* Контейнер для загружаемого контента */
+        #nation-content {
+            margin-top: 30px;
+            background: rgba(30, 35, 30, 0.9);
+            color: #dcdcdc;
+            padding: 25px;
+            border-radius: 4px;
+            min-height: 100px;
+            text-align: left;
+            border: 1px solid #3e4a36;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        /* Стилизация контента внутри загружаемого блока (чтобы текст не был черным) */
+        #nation-content h1, #nation-content h2, #nation-content h3 {
+            color: #8fbc8f;
+        }
+        #nation-content p, #nation-content li {
+            color: #c0c0c0;
+        }
+        #nation-content a {
+            color: #daa520; /* Goldenrod */
+            text-decoration: none;
+            border-bottom: 1px dashed #daa520;
+        }
+        
+        /* Футер */
         footer {
             text-align: center;
-            font-size: 1em;
-            color: #ff0000;
+            font-size: 0.9em;
+            color: #6b8e23; /* Olive Drab */
             margin-top: 50px;
             padding: 15px;
-            border-radius: 15px;
-            word-wrap: break-word; /* Разрешаем перенос слов */
-            hyphens: auto; /* Автоматические переносы */
+            border-top: 1px solid #3e4a36;
         }
-        .back-btn {
-            background: linear-gradient(135deg, rgba(255,193,7,0.9), rgba(255,167,38,0.9));
-            display: none; /* скрыта на главной */
-            animation: none;
-            padding: 14px 22px;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-decoration: none;
-            min-width: 150px;
-            text-align: center;
-            box-sizing: border-box;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
-            margin-top: 20px;
-        }
-        .back-btn:hover {
-            background: linear-gradient(135deg, rgba(255,215,0,1), rgba(255,193,7,1));
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-        #nation-content {
-            margin-top: 50px;
-            background: rgba(255,255,255,0.95);
-            color: #333;
-            padding: 10px;
-            border-radius: 15px;
-            min-height: 50px;
-            text-align: left; /* Выравнивание текста по левому краю */
-        }
-        /* Оптимизация для мобильных устройств */
+
+        /* --- Адаптация для мобильных --- */
         @media (max-width: 768px) {
-            body {
-                padding: 10px; /* Уменьшаем отступы тела */
-            }
-            .container {
-                max-width: 100%; /* Растягиваем на всю ширину экрана */
-                padding: 15px; /* Уменьшаем внутренние отступы для большего места под текст */
-                background: transparent; /* Без фона, чтобы больше текста помещалось (фон от body) */
-                border-radius: 0; /* Убираем скругления для полной ширины */
-                box-shadow: none; /* Убираем тень */
-                border: none; /* Убираем границу */
-            }
-            h1 {
-                font-size: 1.8em; /* Уменьшаем заголовок для мобильных */
-                 color: #000000;
-   text-shadow: 0px 2px 5px rgba(255, 255, 255, 0.8);
-            }
-             h2 {
-                font-size: 1.em; /* Уменьшаем заголовок для мобильных */
-                 color: #000000;
-   text-shadow: 0px 2px 5px rgba(255, 255, 255, 0.8);
-            }
-            .nation-buttons {
-                flex-direction: column;
-                gap: 12px;
-            }
-            .nation-button {
-                font-size: 1.8em;
-                padding: 36px 22px;
-                min-width: auto;
-            }
-            footer {
-                font-size: 0.8em; /* Уменьшаем футер */
-                padding: 10px;
-            }
-            #nation-content {
-                background: transparent;
-                color: white;
-            }
+            body { padding: 10px; }
+            .tank-container { padding: 15px; border-width: 2px; }
+            .tank-container::after { display: none; } /* Убираем декоративную рамку на малых экранах */
+            
+            h1 { font-size: 1.8em; flex-direction: column; }
+            
+            .nation-buttons { flex-direction: column; gap: 15px; }
+            .nation-button { width: 100%; font-size: 1.4em; padding: 25px; }
+            
+            #nation-content { padding: 15px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>WTM: Танковая кампания</h1>
+    
+    <div class="tank-container">
+        <h1><i class="fas fa-shield-alt"></i> WTM: Танковая кампания</h1>
+        
         <div class="nation-selection" id="nation-selection">
-            <h2>Выбор нации</h2>
-            <p>Выберите интересующую нацию:</p>
+            <h2><i class="fas fa-map-marker-alt"></i> Выбор нации</h2>
+            <p>Выберите интересующую нацию для просмотра техники:</p>
+            
             <div class="nation-buttons">
-                <button class="nation-button usa" onclick="loadContent('выбор техники США')">США</button>
-                <button class="nation-button germany" onclick="loadContent('техника Германии.html')">Германия</button>
-                <button class="nation-button ussr" onclick="loadContent('техника СССР.html')">СССР</button>
+                <button class="nation-button usa" onclick="loadContent('выбор техники США')">
+                    <i class="fas fa-star" style="margin-right:10px; font-size:0.8em;"></i> США
+                </button>
+                <button class="nation-button germany" onclick="loadContent('техника Германии.html')">
+                    <i class="fas fa-cross" style="margin-right:10px; font-size:0.8em;"></i> Германия
+                </button>
+                <button class="nation-button ussr" onclick="loadContent('техника СССР.html')">
+                    <i class="fas fa-hammer" style="margin-right:10px; font-size:0.8em;"></i> СССР
+                </button>
             </div>
-            <button class="back-btn" onclick="returnToNations()">Назад к выбору нации</button>
+            
+            <button class="back-btn" onclick="returnToNations()">
+                <i class="fas fa-undo"></i> Назад к выбору нации
+            </button>
         </div>
+        
         <div id="nation-content">
-            <p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>
+            <p style="color:#6b8e23; font-style:italic; text-align: center;">
+                <i class="fas fa-arrow-up"></i> Выберите нацию выше, чтобы загрузить досье.
+            </p>
         </div>
+        
         <footer>
-            <p> Последнее обновление 19.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+            <p>Версия 2.0. Последнее обновление 02.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
+
     <script>
         const originalBg = document.body.style.backgroundImage;
+        
         async function loadContent(url) {
             const contentDiv = document.getElementById('nation-content');
-            contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Загрузка содержимого раздела</h3><p style="color:#00cc66; font-weight:bold;">Загружаем... <span style="display:inline-block; width:20px; height:20px; border:4px solid #f3f3f3; border-top:4px solid #3498db; border-radius:50%; animation:spin 1s linear infinite;"></span></p>';
+            
+            // Анимация загрузки в стиле "Радар/Военный интерфейс"
+            contentDiv.innerHTML = '<h3 style="color:#8fbc8f;">ПОЛУЧЕНИЕ ДАННЫХ...</h3><p style="color:#daa520;">СВЯЗЬ СО ШТАБОМ... <span style="display:inline-block; width:20px; height:20px; border:3px solid rgba(218, 165, 32, 0.2); border-top:3px solid #daa520; border-radius:50%; animation:spin 1s linear infinite;"></span></p><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
+            
             try {
                 const resp = await fetch(url);
                 if (!resp.ok) throw new Error('что-то пошло не так...');
                 const html = await resp.text();
+                
+                // Парсинг HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');
+                
                 contentDiv.innerHTML = doc.body.innerHTML;
+                
+                // Выполнение скриптов, если они есть в подгружаемом файле
                 const scripts = doc.querySelectorAll('script');
                 scripts.forEach(script => {
                     const newScript = document.createElement('script');
                     newScript.textContent = script.textContent;
                     document.body.appendChild(newScript);
                 });
+
                 setTimeout(() => {
-                    // Меняем фон в зависимости от нации (можно кастомизировать)
+                    // Логика смены фона под нацию (сохранена из вашего кода)
                     if (url.includes('usa')) {
-                        document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")'; // Заменить на USA-тематику если нужно
+                        document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")'; 
                     } else if (url.includes('germany')) {
                         document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")';
                     } else if (url.includes('ussr')) {
                         document.body.style.backgroundImage = 'url("https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg")';
                     }
-                    // Скрываем выбор наций и показываем кнопку назад
+                    
+                    // Переключение интерфейса (скрыть кнопки, показать "Назад")
                     document.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
                     document.querySelector('.back-btn').style.display = 'block';
                     document.getElementById('nation-selection').querySelector('h2').style.display = 'none';
                     document.getElementById('nation-selection').querySelector('p').style.display = 'none';
-                }, 100);
+                    
+                    // Прокрутка к контенту
+                    document.getElementById('nation-content').scrollIntoView({ behavior: 'smooth' });
+
+                }, 200);
             } catch (e) {
-                contentDiv.innerHTML = `<p style="color:#ff0000; font-weight:bold;">Ошибка: ${e.message}</p>`;
+                contentDiv.innerHTML = `<p style="color:#ff4444; font-weight:bold; border: 1px solid red; padding: 10px;">ОШИБКА: ${e.message}</p>`;
             }
         }
+
         function returnToNations() {
-            document.getElementById('nation-content').innerHTML = '<p style="color:#666; font-style:italic;">Здесь отображается статус загрузки раздела.</p>';
-            document.body.style.backgroundImage = originalBg;
-            // Возвращаем выбор наций, скрываем назад
+            document.getElementById('nation-content').innerHTML = '<p style="color:#6b8e23; font-style:italic; text-align: center;"><i class="fas fa-arrow-up"></i> Выберите нацию выше, чтобы загрузить досье.</p>';
+            
+            // Возврат фона (если менялся)
+            // document.body.style.backgroundImage = originalBg; 
+            
+            // Возврат интерфейса
             document.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'block');
             document.querySelector('.back-btn').style.display = 'none';
             document.getElementById('nation-selection').querySelector('h2').style.display = 'block';
@@ -256,6 +333,7 @@
     </script>
 </body>
 </html>
+
 
 
 
