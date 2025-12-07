@@ -1,13 +1,13 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-    /* Глобальный сброс */
-    * {
-        box-sizing: border-box;
-    }
-
     /* ---------------------------------------------------- */
     /* --- ИЗОЛИРОВАННЫЕ СТИЛИ: TACTICAL NAVAL THEME --- */
     /* ---------------------------------------------------- */
+    
+    /* ВАЖНО: Сброс применяется ТОЛЬКО внутри контейнера флота */
+    .fleet-container, .fleet-container * {
+        box-sizing: border-box;
+    }
+
     .fleet-container {
         font-family: 'Open Sans', sans-serif;
         color: #cfd8dc; /* Светло-серый с голубым оттенком */
@@ -20,7 +20,9 @@
         background-image: linear-gradient(to bottom, #0f1219, #131b26);
     }
     
-    h1, h2, h3 {
+    .fleet-container h1, 
+    .fleet-container h2, 
+    .fleet-container h3 {
         color: #4fc3f7; /* Яркий голубой (Radar Blue) */
         text-shadow: 0 0 10px rgba(79, 195, 247, 0.3); /* Легкое свечение */
         border-bottom: 2px solid rgba(79, 195, 247, 0.2);
@@ -33,12 +35,12 @@
         letter-spacing: 1px;
     }
     
-    h1 { font-size: 2.5em; border-bottom: none; } /* У H1 убираем линию, она будет декоративной */
-    h2 { font-size: 1.8em; }
-    h3 { font-size: 1.4em; color: #b3e5fc; border-bottom: 1px dashed rgba(79, 195, 247, 0.2); }
+    .fleet-container h1 { font-size: 2.5em; border-bottom: none; } /* У H1 убираем линию, она будет декоративной */
+    .fleet-container h2 { font-size: 1.8em; }
+    .fleet-container h3 { font-size: 1.4em; color: #b3e5fc; border-bottom: 1px dashed rgba(79, 195, 247, 0.2); }
 
     /* Декоративный элемент для H1 */
-    h1::after {
+    .fleet-container h1::after {
         content: '';
         display: block;
         width: 60px;
@@ -107,7 +109,7 @@
         border-radius: 4px;
     }
 
-    table {
+    .fleet-container table {
         width: 100%;
         border-collapse: separate; /* Для border-spacing */
         border-spacing: 0;
@@ -116,7 +118,7 @@
     }
     
     /* Заголовки таблицы */
-    thead th {
+    .fleet-container thead th {
         position: sticky !important;
         top: 0 !important;
         z-index: 10;
@@ -151,7 +153,7 @@
         color: #4fc3f7 !important;
     }
     
-    th, td {
+    .fleet-container th, .fleet-container td {
         padding: 14px 12px;
         border-bottom: 1px solid #37474f; /* Разделители строк */
         text-align: left;
@@ -170,19 +172,19 @@
     }
     
     /* Чередование строк и эффект наведения */
-    tbody tr:nth-child(even) {
+    .fleet-container tbody tr:nth-child(even) {
         background: rgba(255, 255, 255, 0.02);
     }
     
     /* Hover эффект для строки - помогает глазу зацепиться */
-    tbody tr:hover td {
+    .fleet-container tbody tr:hover td {
         background-color: rgba(79, 195, 247, 0.1) !important;
         color: #ffffff;
         transition: background-color 0.2s ease;
     }
     
     /* Секции */
-    section {
+    .fleet-container section {
         background: #1e2732; /* Светлее фона, выделяет блок */
         padding: 30px;
         border-radius: 6px;
@@ -192,16 +194,16 @@
         border-top: 3px solid #4fc3f7; /* Цветная полоска сверху каждой секции */
     }
 
-    p { margin-bottom: 15px; color: #b0bec5; }
+    .fleet-container p { margin-bottom: 15px; color: #b0bec5; }
 
    /* Исправление списков  */
-    ol {
+    .fleet-container ol {
         padding-left: 0;
         list-style-type: none;
         /* Явно указываем начать отсчет с 0, чтобы первый элемент стал 1 */
         counter-reset: fleet-counter 0; 
     }
-    ol li {
+    .fleet-container ol li {
         padding-left: 50px;
         position: relative;
         margin-bottom: 15px;
@@ -212,7 +214,7 @@
         padding: 15px 15px 15px 50px;
         border-radius: 4px;
     }
-    ol li::before {
+    .fleet-container ol li::before {
         /* Выводим число */
         content: counter(fleet-counter);
         position: absolute;
@@ -249,7 +251,7 @@
     .rating-4 { background-color: #7cb342; color: #000; } /* Лайм */
     .rating-5 { background-color: #2e7d32; } /* Зеленый */
     
-    footer {
+    .fleet-container footer {
         text-align: center;
         font-size: 0.9em;
         color: #546e7a;
@@ -263,26 +265,19 @@
    /* ---------------------------------------------------- */
     /* --- МОБИЛЬНАЯ АДАПТАЦИЯ  --- */
     /* ---------------------------------------------------- */
-    @media (max-width: 768px) 
-    /* ВСТАВИТЬ В ВАШ CSS (можно в общий блок или внутрь @media) */
-body, html {
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    overflow-x: hidden; /* Защита от горизонтальной прокрутки, вызванной элементами, выходящими за пределы */
-}
-    {
+    @media (max-width: 768px) {
+        
         /* Убираем отступы контейнера, чтобы контент прилип к краям */
         .fleet-container {
             padding: 0; 
             width: 100%;
             max-width: 100vw;
-            margin: 0; !important;
+            margin: 0 !important;
             overflow-x: hidden; /* Защита от горизонтального скролла страницы */
         }
         
         /* Секции делаем прямоугольными и без лишних границ по бокам */
-        section {
+        .fleet-container section {
             padding: 20px 10px; /* Внутренние отступы оставляем для читаемости текста */
             border-radius: 0;   /* Убираем скругление */
             border-left: none;  /* Убираем боковые границы для чистоты */
@@ -304,15 +299,15 @@ body, html {
         }
         
         /* Заголовки чуть меньше и с отступом слева */
-        h1 { 
+        .fleet-container h1 { 
             font-size: 1.8em; 
             margin-top: 20px; 
             padding-left: 15px; /* Чтобы не прилипало к краю экрана */
         }
-        h2 { font-size: 1.5em; padding-left: 5px; }
+        .fleet-container h2 { font-size: 1.5em; padding-left: 5px; }
         
         /* Таблицы */
-        th, td {
+        .fleet-container th, .fleet-container td {
             padding: 12px 8px;
             font-size: 0.85em; /* Чуть крупнее для мобильных, чтобы было видно */
         }
@@ -784,6 +779,7 @@ body, html {
         Версия 4.0. Последнее обновление 30.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.
     </footer>
 </div>
+
 
 
 
