@@ -253,9 +253,15 @@
             border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
-            margin-bottom: 20px;
+            
+            /* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Добавляем отступы --- */
+            /* Сверху 20px, Справа 0, Снизу 25px, Слева 15px */
+            margin: 20px 0 25px 15px; 
+            /* ------------------------------------------ */
+            
             font-size: 1.1em;
             box-shadow: 0 4px 15px rgba(255, 200, 0, 0.4);
+            z-index: 100; /* На всякий случай, чтобы была поверх всего */
         }
         #back-btn:hover { transform: scale(1.05); }
 
@@ -585,6 +591,7 @@
     </script>
 </body>
 </html>
+
 
 
 
