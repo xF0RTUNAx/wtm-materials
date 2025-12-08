@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>xFORTUNAx | Демо режим</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- GLOBAL SETTINGS --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f0f12;
+            background-image: 
+                linear-gradient(to bottom, rgba(15, 15, 18, 0.95), #0f0f12),
+                url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+        }
+
+        /* --- HEADER SECTION --- */
+        .header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        /* Группа слева: Кнопка назад + Бейдж */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .nav-back {
+            color: rgba(255,255,255,0.6);
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            padding-right: 10px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-back:hover { color: #fff; transform: translateX(-3px); }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        .user-badge i { color: #aaa; font-size: 1.1rem; }
+
+        /* Кнопка справа */
+        .btn-logout {
+            background: rgba(0, 229, 255, 0.1);
+            color: #00e5ff;
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-logout:hover { background: rgba(0, 229, 255, 0.2); color: white; box-shadow: 0 0 10px rgba(0,229,255,0.3); }
+
+        /* --- TITLES --- */
+        .page-title {
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #777;
+            font-size: 0.95rem;
+            margin-bottom: 35px;
+            font-weight: 400;
+            max-width: 600px;
+            line-height: 1.4;
+        }
+
+        /* --- GAMES GRID --- */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            padding-bottom: 20px;
+        }
+
+        /* --- GAME CARD --- */
+        .game-card {
+            background: rgba(30, 30, 35, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            min-height: 90px;
+        }
+
+        .game-card:hover, .game-card:active {
+            transform: translateY(-3px);
+            background: rgba(40, 40, 45, 0.6);
+            border-color: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Icons */
+        .game-icon-box {
+            width: 65px;
+            height: 65px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            align-self: flex-start;
+            margin-top: 5px;
+            filter: grayscale(0.3);
+        }
+
+        .icon-collision { background: linear-gradient(135deg, #ff9966, #ff5e62); }
+        .icon-strat { background: linear-gradient(135deg, #8e44ad, #9b59b6); }
+
+        /* Text */
+        .game-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+        .game-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 4px; color: white; line-height: 1.2; }
+        .game-desc { font-size: 0.8rem; color: #888; line-height: 1.4; display: block; }
+
+        /* Button */
+        .play-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: 0.3s;
+            flex-shrink: 0; 
+            align-self: center;
+        }
+
+        .game-card:hover .play-btn {
+            background: white;
+            color: black;
+        }
+
+        /* Badges */
+        .badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+        .badge-demo { background: #aaa; color: #0f0f12; }
+
+        /* Promo Footer */
+        .promo-footer {
+            margin-top: 40px;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            background: rgba(0, 229, 255, 0.05);
+            border: 1px dashed rgba(0, 229, 255, 0.3);
+            border-radius: 15px;
+        }
+        .promo-text { color: #00e5ff; margin-bottom: 15px; font-size: 0.9rem; }
+        .promo-btn {
+            background: #00e5ff; color: #000;
+            padding: 10px 25px; border-radius: 50px;
+            text-decoration: none; font-weight: bold;
+            display: inline-block; transition: 0.3s;
+        }
+        .promo-btn:hover { box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); transform: scale(1.05); }
+
+        /* Mobile */
+        @media (max-width: 600px) {
+            body { padding: 15px 10px; }
+            .header { padding: 10px 15px; margin-bottom: 25px; }
+            .user-badge { font-size: 0.85rem; }
+            .btn-logout span { display: none; }
+            @media (min-width: 360px) { .btn-logout span { display: inline; } }
+            .page-title { font-size: 1.7rem; }
+            .games-grid { grid-template-columns: 1fr; gap: 15px; }
+            .game-card { padding: 12px; }
+            .game-icon-box { width: 60px; height: 60px; font-size: 1.6rem; }
+            .play-btn { width: 38px; height: 38px; font-size: 1rem; }
+            
+            /* Скрываем текст "Демо режим" на очень маленьких экранах, оставляем иконку */
+            @media (max-width: 340px) {
+               .badge-text { display: none; }
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <a href="minigame.html" class="nav-back">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div class="user-badge">
+                <i class="fas fa-eye"></i> <span class="badge-text">Демо режим</span>
+            </div>
+        </div>
+
+        <a href="minigame.html" class="btn-logout">
+            <i class="fas fa-unlock"></i> <span>Полная версия</span>
+        </a>
+    </div>
+
+    <h1 class="page-title">Демонстрация</h1>
+    <p class="subtitle">Вы находитесь в ограниченном режиме. Призы и сохранения недоступны. Доступны только базовые механики.</p>
+
+    <div class="games-grid">
+        
+        <div class="game-card" onclick="window.location.href='demostrategist.html'">
+            <div class="game-icon-box icon-strat">
+                <i class="fas fa-chess-knight"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Стратег <span class="badge badge-demo">DEMO</span></div>
+                <div class="game-desc">Пошаговая тактика. Испытайте интересную механику боя с элементами удачи и прагматизма.</div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
+        <div class="game-card" onclick="window.location.href='democollision.html'">
+            <div class="game-icon-box icon-collision">
+                <i class="fas fa-flag"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Столкновение <span class="badge badge-demo">DEMO</span></div>
+                <div class="game-desc">Ознакомительная версия командного режима игры. </div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
+    </div>
+
+    <div class="promo-footer">
+        <div class="promo-text">Понравилось? Получите полный доступ к призам, всем играм и сохранениям.</div>
+        <a href="minigame.html" class="promo-btn">Купить подписку</a>
+    </div>
+
+</body>
+</html>
