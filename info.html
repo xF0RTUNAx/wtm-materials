@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xFORTUNAx | Информация</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Глобальные настройки */
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 20px 0;
+            background-color: #050505;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Контейнер */
+        .outer {
+            width: 90%;
+            max-width: 800px;
+            min-height: 500px; 
+            height: auto; 
+            border-radius: 10px;
+            padding: 1px;
+            background: radial-gradient(circle 230px at 0% 0%, #ffffff, #0c0d0d);
+            position: relative;
+            margin: 20px 0;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* Анимация точки */
+        .dot {
+            width: 5px;
+            aspect-ratio: 1;
+            position: absolute;
+            background-color: #fff;
+            box-shadow: 0 0 10px #ffffff;
+            border-radius: 100px;
+            z-index: 2;
+            right: 10%;
+            top: 10%;
+            animation: moveDot 6s linear infinite;
+        }
+
+        @keyframes moveDot {
+            0%, 100% { top: 10%; right: 10%; }
+            25% { top: 10%; right: calc(100% - 35px); }
+            50% { top: calc(100% - 30px); right: calc(100% - 35px); }
+            75% { top: calc(100% - 30px); right: 10%; }
+        }
+
+        /* Карточка */
+        .card {
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            border-radius: 9px;
+            border: solid 1px #202222;
+            background-size: 20px 20px;
+            background: radial-gradient(circle 280px at 0% 0%, #444444, #0c0d0d);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .ray {
+            width: 220px;
+            height: 45px;
+            border-radius: 100px;
+            position: absolute;
+            background-color: #c7c7c7;
+            opacity: 0.4;
+            box-shadow: 0 0 50px #fff;
+            filter: blur(10px);
+            transform-origin: 10%;
+            top: 0%;
+            left: 0;
+            transform: rotate(40deg);
+            pointer-events: none;
+        }
+
+        /* Линии */
+        .line {
+            position: absolute;
+            background-color: #2c2c2c;
+            pointer-events: none;
+            z-index: 3;
+        }
+        .topl { width: 100%; height: 1px; top: 10%; background: linear-gradient(90deg, #888888 30%, #1d1f1f 70%); }
+        .bottoml { width: 100%; height: 1px; bottom: 10%; }
+        .leftl { width: 1px; height: 100%; left: 10%; background: linear-gradient(180deg, #747474 30%, #222424 70%); }
+        .rightl { width: 1px; height: 100%; right: 10%; }
+
+        /* Текст */
+        .text-content {
+            padding: 80px 100px; 
+            width: 100%;
+            position: relative;
+            z-index: 5;
+        }
+
+        h1 {
+            font-weight: 700;
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, #ffffff, #a0a0a0);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: item;
+        }
+
+        .info-list li {
+            position: relative;
+            margin-bottom: 25px;
+            padding-left: 35px;
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #d1d1d1;
+            text-align: left;
+        }
+
+        .info-list li::before {
+            content: counter(item) ".";
+            counter-increment: item;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            color: #fff;
+            font-size: 1.1em;
+        }
+
+        /* Ссылки и кнопки */
+        a { color: #00e5ff; text-decoration: none; font-weight: 600; transition: 0.3s; }
+        a:hover { color: #fff; text-shadow: 0 0 10px #00e5ff; }
+
+        /* Кнопка тех. поддержки */
+        .support-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 280px;
+            margin: 25px auto 10px auto;
+            padding: 12px 20px;
+            background: linear-gradient(45deg, #00C6FF, #0072FF); 
+            color: white !important;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(0, 198, 255, 0.3);
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+            left: -17.5px; /* Центрирование */
+        }
+        .support-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 25px rgba(0, 198, 255, 0.6);
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+        }
+
+        /* НОВАЯ КНОПКА НАЗАД */
+        .back-home-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 40px auto 10px auto; /* Отступ сверху */
+            padding: 10px 25px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #aaa !important;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            width: fit-content;
+            transition: all 0.3s ease;
+        }
+        .back-home-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff !important;
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Обновленный Футер (без линии) */
+        .footer-note {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #666;
+            padding-top: 10px;
+        }
+
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            .outer { width: 95%; margin: 10px auto; }
+            .text-content { padding: 60px 20px; }
+            .info-list li { padding-left: 25px; }
+            
+            .support-btn {
+                font-size: 0.85rem;
+                margin-top: 20px;
+                left: -12.5px; 
+            }
+
+            .line.topl { top: 20px; }
+            .line.bottoml { bottom: 20px; }
+            .line.leftl { left: 10px; }
+            .line.rightl { right: 10px; }
+
+            @keyframes moveDot {
+                0%, 100% { top: 20px; right: 10px; }
+                25% { top: 20px; right: calc(100% - 15px); }
+                50% { top: calc(100% - 25px); right: calc(100% - 15px); }
+                75% { top: calc(100% - 25px); right: 10px; }
+            }
+            h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="outer">
+        <div class="dot"></div>
+        <div class="card">
+            <div class="ray"></div>
+            <div class="line topl"></div>
+            <div class="line leftl"></div>
+            <div class="line bottoml"></div>
+            <div class="line rightl"></div>
+
+            <div class="text-content">
+                <h1>Информационные сведения, инструкции и условия пользования</h1>
+
+                <ul class="info-list">
+                    <li>
+                        Поскольку проект существует на авторские средства, мини-игры и спонсорство выступают способом дополнительной поддержки, дальнейшим развитием, и с уникальным контентом для инвесторов.
+                    </li>
+                    <li>
+                        Донат осуществляется по указанной ссылке на выбранную сумму. В комментариях к донату желательно указать какую конкретно покупку вы осуществляете.
+                        <br><br>
+                        После вы можете забрать свой ключ обратившись в техподдержку с соответсвенным запросом. Также по всем вопросам можно обращаться туда же – вам обязательно помогут!
+                        
+                        <a href="https://t.me/fortunawtmhelp" target="_blank" class="support-btn">
+                            <i class="fab fa-telegram-plane"></i> Тех. поддержка
+                        </a>
+                    </li>
+                    <li>
+                        Потраченные средства возврату и обмену не подлежат.
+                    </li>
+                    <li>
+                        Запрещены неадекватные действия и комментарии по ходу участия в мини-играх. Администрация оставляет за собой право соответственно реагировать на это на свое усмотрение.
+                    </li>
+                    <li>
+                        Уведомления об изменениях могут приходить с опозданием. Пользователь обязуется самостоятельно ознакомляться с интересующей его информацией.
+                    </li>
+                    <li>
+                        За 30 дней можно забрать только 1 награду.
+                    </li>
+                    <li>
+                        Обращения в тех подержку за начислением приза не засчитываются при работе сайта в режиме инкогнито.
+                    </li>
+                </ul>
+
+                <a href="minigame.html" class="back-home-btn">
+                    <i class="fas fa-arrow-left"></i> Вернуться к играм
+                </a>
+
+                <div class="footer-note">
+                    Спасибо за поддержку и понимание!<br>
+                    Последнее обновление 08.12.2025.
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
