@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xFORTUNAx | Охотник за удачей</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- ОСНОВНЫЕ СТИЛИ --- */
+        * { box-sizing: border-box; user-select: none; }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f0f12;
+            background-image: 
+                linear-gradient(to bottom, rgba(15, 15, 18, 0.9), #0f0f12),
+                url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* --- КОНТЕЙНЕР ИГРЫ --- */
+        .game-wrapper {
+            width: 95%;
+            max-width: 1000px;
+            background: rgba(20, 20, 25, 0.8);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 0 50px rgba(0,0,0,0.7);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #ffd700;
+            text-transform: uppercase;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .description {
+            color: #aaa;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* --- ВВОД КЛЮЧА --- */
+        .key-input-area {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input.access-key {
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #444;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            text-align: center;
+            width: 250px;
+            transition: 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+        input.access-key:focus {
+            border-color: #ffd700;
+            outline: none;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .error-msg {
+            color: #ff4757;
+            font-size: 0.85rem;
+            display: none;
+            margin-top: -10px;
+        }
+
+        /* --- РУЛЕТКА (CS2 STYLE) --- */
+        .roulette-container {
+            width: 100%;
+            height: 200px;
+            background: #1a1a20;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0 40px 0;
+            border: 2px solid #333;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+            display: none; /* Скрыто до ввода ключа */
+        }
+
+        /* Центральная линия */
+        .center-line {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #ffd700;
+            z-index: 10;
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #ffd700;
+        }
+        .center-line::after {
+            content: '▼';
+            position: absolute;
+            top: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffd700;
+            font-size: 14px;
+        }
+
+        /* Лента с предметами */
+        .roulette-strip {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            transition: transform 6s cubic-bezier(0.15, 1, 0.3, 1); /* Физика вращения */
+            will-change: transform;
+        }
+
+        /* Карточка предмета */
+        .item-card {
+            min-width: 140px;
+            height: 160px;
+            margin: 0 5px;
+            background: linear-gradient(180deg, rgba(40,40,45,1) 0%, rgba(20,20,25,1) 100%);
+            border-bottom: 3px solid #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 6px;
+        }
+
+        .item-card img {
+            width: 90px;
+            height: 90px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.5));
+        }
+
+        .item-name {
+            font-size: 0.75rem;
+            text-align: center;
+            color: #ddd;
+            padding: 0 5px;
+            font-weight: 600;
+        }
+
+        /* Цвета редкости (полоска снизу) */
+        .rarity-common { border-bottom-color: #b0c3d9; } /* Обычный (Титулы) */
+        .rarity-rare { border-bottom-color: #8847ff; }   /* Редкий (Золото/Прем) */
+        .rarity-legendary { border-bottom-color: #ffd700; } /* Легендарный (Ключи) */
+
+        /* --- КНОПКИ --- */
+        .btn-action {
+            padding: 12px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+            background: #ffd700;
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+        .btn-action:hover {
+            transform: scale(1.05);
+            background: #ffea00;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.6);
+        }
+        .btn-action:disabled {
+            background: #555;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #888;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+        .back-btn:hover { color: white; }
+
+        /* --- МОДАЛЬНОЕ ОКНО (СТИЛЬ ИЗ ФОТО) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 15, 18, 0.9);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .modal-card {
+            width: 350px;
+            padding: 2px; /* Для рамки */
+            background: #fff3bf; /* Цвет рамки (золотой) */
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            transform: translateY(20px);
+            transition: transform 0.5s ease;
+        }
+
+        .modal-inner {
+            background: #1c1c24; /* Темный фон внутри */
+            border-radius: 10px;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            text-align: center;
+        }
+
+        .modal-title {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .prize-display {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            width: 100%;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .prize-img {
+            width: 100px;
+            height: 100px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 15px rgba(255,215,0,0.4));
+        }
+
+        .prize-name {
+            color: #ffd700;
+            font-size: 1.1rem;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .modal-text {
+            font-size: 0.85rem;
+            color: #aaa;
+            line-height: 1.4;
+        }
+
+        .btn-claim {
+            background: #fff3bf;
+            color: #0f0f12;
+            text-decoration: none;
+            padding: 12px 0;
+            width: 100%;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.2s;
+            display: block;
+        }
+        .btn-claim:hover {
+            background: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+        }
+
+        .btn-close-modal {
+            margin-top: 10px;
+            background: transparent;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-close-modal:hover { color: #fff; }
+
+    </style>
+</head>
+<body>
+
+    <a href="findagame.html" class="back-btn">
+        <i class="fas fa-arrow-left"></i> Назад
+    </a>
+
+    <div class="game-wrapper">
+        <h1>Охотник за удачей</h1>
+        <p class="description">
+            Испытай свою фортуну! Введи секретный ключ кейса, чтобы запустить рулетку. 
+            Здесь можно выиграть уникальные титулы в телеграме на 7 дней в тематической группе, внутриигровые ресурсы для WTM или даже ключи подписки на мини-игры!
+            <br><span style="color:#ffd700; font-size: 0.8rem;">*Доступен один прокрут раз в 7 дней.</span>
+        </p>
+
+        <div class="key-input-area" id="key-area">
+            <input type="text" id="case-key" class="access-key" placeholder="Введите ключ кейса" autocomplete="off">
+            <p class="error-msg" id="key-error">Неверный ключ</p>
+            <button class="btn-action" onclick="checkKey()">Открыть Кейс</button>
+        </div>
+
+        <div class="roulette-container" id="roulette-area">
+            <div class="center-line"></div>
+            <div class="roulette-strip" id="strip">
+                </div>
+        </div>
+        
+        <button id="spin-btn" class="btn-action" style="display:none;" onclick="startSpin()">КРУТИТЬ</button>
+    </div>
+
+    <div class="modal-overlay" id="result-modal">
+        <div class="modal-card">
+            <div class="modal-inner">
+                <h2 class="modal-title">Поздравляем!</h2>
+                
+                <div class="prize-display">
+                    <img src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" alt="Prize" id="modal-img" class="prize-img">
+                    <div id="modal-name" class="prize-name">NAME</div>
+                </div>
+
+                <p class="modal-text">
+                    Вы успешно выиграли приз! Чтобы его получить, отправьте скриншот этого окна в техническую поддержку.
+                </p>
+
+                <a href="https://t.me/fortunawtmhelp" target="_blank" class="btn-claim">
+                    Забрать приз
+                </a>
+                
+                <button class="btn-close-modal" onclick="closeModal()">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- ДАННЫЕ ПРЕДМЕТОВ ---
+        const items = [
+            // Редкие (Ключи)
+            { id: 's_key', name: 'Серебряный ключ', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/silverkey.JPG?raw=true', weight: 0.3, rarity: 'legendary' },
+            { id: 'g_key', name: 'Золотой ключ', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/goldkey.JPG?raw=true', weight: 0.2, rarity: 'legendary' },
+            { id: 'p_key', name: 'Платиновый ключ', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platinumkey.JPG?raw=true', weight: 0.1, rarity: 'legendary' },
+            
+            // Ресурсы и премиум
+            { id: 'gold', name: 'Золото', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gold.PNG?raw=true', weight: 0.1, rarity: 'rare' },
+            { id: '1day', name: '1 День Премиума', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/1day.PNG?raw=true', weight: 0.1, rarity: 'rare' },
+            { id: '7day', name: '7 Дней Премиума', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/7day.PNG?raw=true', weight: 0.1, rarity: 'rare' },
+            { id: 'plat', name: 'Платина', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platina.PNG?raw=true', weight: 0.1, rarity: 'rare' },
+            
+            // Титулы (Частые - 90% суммарно)
+            { id: 'invest', name: 'Титул Инвестор', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/investor.JPG?raw=true', weight: 30, rarity: 'common' },
+            { id: 'biz', name: 'Титул Бизнесмен', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/businessman.JPG?raw=true', weight: 30, rarity: 'common' },
+            { id: 'olig', name: 'Титул Олигарх', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/oligarh.JPG?raw=true', weight: 30, rarity: 'common' }
+        ];
+
+        // Ключ для активации
+        const SECRET_KEY = "fortxcase01";
+        const COOLDOWN_DAYS = 7;
+        const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
+        
+        const strip = document.getElementById('strip');
+        let hasSpun = false;
+
+        // --- ЛОГИКА ПРОВЕРКИ ВРЕМЕНИ ---
+        
+        window.addEventListener('load', () => {
+            checkCooldown();
+        });
+
+        function checkCooldown() {
+            const lastSpinTime = localStorage.getItem('fortune_hunter_last_spin');
+            
+            if (lastSpinTime) {
+                const now = Date.now();
+                const diff = now - parseInt(lastSpinTime);
+
+                // Если прошло меньше 7 дней
+                if (diff < COOLDOWN_MS) {
+                    const remainingMs = COOLDOWN_MS - diff;
+                    const unlockDate = new Date(now + remainingMs);
+                    blockGameTemporary(unlockDate);
+                    return false; // Блокировка активна
+                }
+            }
+            return true; // Можно играть
+        }
+
+        function checkKey() {
+            // Сначала проверяем таймер
+            if (!checkCooldown()) return;
+
+            const input = document.getElementById('case-key');
+            const error = document.getElementById('key-error');
+
+            if (input.value.trim() === SECRET_KEY && !hasSpun) {
+                document.getElementById('key-area').style.display = 'none';
+                document.getElementById('roulette-area').style.display = 'block';
+                document.getElementById('spin-btn').style.display = 'inline-block';
+                initRouletteVisuals();
+            } else {
+                error.style.display = 'block';
+                error.innerText = "Неверный ключ!";
+                input.style.borderColor = '#ff4757';
+            }
+        }
+
+        // Блокировка с датой
+        function blockGameTemporary(dateObj) {
+            const dateStr = dateObj.toLocaleDateString();
+            const timeStr = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            
+            const keyArea = document.getElementById('key-area');
+            keyArea.innerHTML = `
+                <div style="background: rgba(255, 71, 87, 0.15); padding: 25px; border-radius: 12px; border: 1px solid rgba(255, 71, 87, 0.4);">
+                    <h3 style="color: #ff4757; margin: 0 0 10px 0; font-size: 1.2rem;">
+                        <i class="fas fa-clock"></i> Доступ временно закрыт
+                    </h3>
+                    <p style="margin: 0; color: #ddd; font-size: 0.95rem; line-height: 1.5;">
+                        Вы уже испытали удачу.<br>
+                        Следующая попытка будет доступна:<br>
+                        <span style="color: #ffd700; font-weight: bold; font-size: 1.1rem; display: block; margin-top: 5px;">
+                            ${dateStr} в ${timeStr}
+                        </span>
+                    </p>
+                </div>
+            `;
+        }
+
+        function initRouletteVisuals() {
+            let html = '';
+            for(let i=0; i<60; i++) {
+                const randItem = items[Math.floor(Math.random() * items.length)];
+                html += createCardHTML(randItem);
+            }
+            strip.innerHTML = html;
+        }
+
+        function createCardHTML(item) {
+            return `
+                <div class="item-card rarity-${item.rarity}">
+                    <img src="${item.img}" alt="${item.name}">
+                    <div class="item-name">${item.name}</div>
+                </div>
+            `;
+        }
+
+        function pickWinner() {
+            const totalWeight = items.reduce((sum, item) => sum + item.weight, 0);
+            let random = Math.random() * totalWeight;
+            for (const item of items) {
+                if (random < item.weight) return item;
+                random -= item.weight;
+            }
+            return items[items.length - 1];
+        }
+
+        function startSpin() {
+            if (!checkCooldown()) return;
+            if (hasSpun) return;
+            
+            hasSpun = true;
+            
+            // >>> СОХРАНЯЕМ ТЕКУЩЕЕ ВРЕМЯ КАК ВРЕМЯ ПОСЛЕДНЕГО ПРОКРУТА <<<
+            localStorage.setItem('fortune_hunter_last_spin', Date.now());
+
+            document.getElementById('spin-btn').disabled = true;
+
+            const winner = pickWinner();
+            const winnerIndex = 45;
+            const totalCards = 60;
+            
+            let html = '';
+            for(let i=0; i<totalCards; i++) {
+                if (i === winnerIndex) {
+                    html += createCardHTML(winner);
+                } else {
+                    const randItem = items[Math.floor(Math.random() * items.length)];
+                    html += createCardHTML(randItem);
+                }
+            }
+            strip.innerHTML = html;
+
+            const containerWidth = document.getElementById('roulette-area').offsetWidth;
+            const cardFullWidth = 150; 
+            const randomOffset = Math.floor(Math.random() * 40) - 20;
+            const targetPosition = (winnerIndex * cardFullWidth) - (containerWidth / 2) + (cardFullWidth / 2) + randomOffset;
+
+            setTimeout(() => {
+                strip.style.transform = `translateX(-${targetPosition}px)`;
+            }, 50);
+
+            setTimeout(() => {
+                showResult(winner);
+            }, 6500);
+        }
+
+        function showResult(item) {
+            const modal = document.getElementById('result-modal');
+            const card = modal.querySelector('.modal-card');
+            
+            document.getElementById('modal-img').src = item.img;
+            document.getElementById('modal-name').innerText = item.name;
+            
+            const nameEl = document.getElementById('modal-name');
+            if(item.rarity === 'legendary') nameEl.style.color = '#ffd700';
+            else if(item.rarity === 'rare') nameEl.style.color = '#8847ff';
+            else nameEl.style.color = '#b0c3d9';
+
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function closeModal() {
+            window.location.href = "findagame.html";
+        }
+    </script>
+</body>
+</html>
