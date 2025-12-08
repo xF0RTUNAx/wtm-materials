@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>xFORTUNAx | Выбор игры</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- GLOBAL SETTINGS --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #0f0f12;
+            background-image: 
+                linear-gradient(to bottom, rgba(15, 15, 18, 0.9), #0f0f12),
+                url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px 15px;
+        }
+
+        /* --- HEADER SECTION --- */
+        .header {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.07);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #e0e0e0;
+        }
+        
+        .user-badge i { color: #ffd700; font-size: 1.1rem; }
+
+        .btn-logout {
+            background: rgba(255, 71, 87, 0.15);
+            color: #ff4757;
+            border: 1px solid rgba(255, 71, 87, 0.3);
+            padding: 8px 16px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-logout:hover { background: rgba(255, 71, 87, 0.3); color: white; }
+
+        /* --- TITLES --- */
+        .page-title {
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #fff, #00e5ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 229, 255, 0.2);
+        }
+
+        p.subtitle {
+            text-align: center;
+            color: #999;
+            font-size: 0.95rem;
+            margin-bottom: 35px;
+            font-weight: 400;
+        }
+
+        /* --- GAMES GRID --- */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+            padding-bottom: 40px;
+        }
+
+        /* --- GAME CARD --- */
+        .game-card {
+            background: rgba(30, 30, 35, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            min-height: 90px;
+        }
+
+        .game-card:hover, .game-card:active {
+            transform: translateY(-3px);
+            background: rgba(40, 40, 45, 0.8);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Game Icon */
+        .game-icon-box {
+            width: 65px;
+            height: 65px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            align-self: flex-start;
+            margin-top: 5px;
+        }
+
+        .icon-sea { background: linear-gradient(135deg, #00c6ff, #0072ff); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .icon-collision { background: linear-gradient(135deg, #ff9966, #ff5e62); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .icon-strat { background: linear-gradient(135deg, #8e44ad, #9b59b6); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .icon-ny { background: linear-gradient(135deg, #11998e, #38ef7d); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        
+        /* Иконка для Охотника за удачей (Золотая) */
+        .icon-fortune { background: linear-gradient(135deg, #f1c40f, #e67e22); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+
+        /* Game Info Text */
+        .game-info {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-width: 0; 
+        }
+
+        .game-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
+            color: white;
+            line-height: 1.2;
+            white-space: normal; 
+        }
+
+        .game-desc {
+            font-size: 0.8rem;
+            color: #aaa;
+            line-height: 1.4;
+            white-space: normal; 
+            display: block;
+        }
+
+        /* Play Button */
+        .play-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: white;
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: 0.3s;
+            flex-shrink: 0; 
+            align-self: center;
+        }
+
+        .game-card:hover .play-btn {
+            background: #00e5ff;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.6);
+        }
+
+        /* Tags */
+        .badge {
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-bottom: 2px;
+        }
+        
+        .badge-hot { background: #ff4757; color: white; box-shadow: 0 0 10px rgba(255, 71, 87, 0.4); }
+        .badge-new { background: #2ed573; color: #0f0f12; box-shadow: 0 0 10px rgba(46, 213, 115, 0.4); }
+        
+        /* Стиль для плашки "Временно" */
+        .badge-temp { 
+            background: #74b9ff; 
+            color: #0f0f12; 
+            box-shadow: 0 0 10px rgba(116, 185, 255, 0.4); 
+        }
+
+        /* --- MOBILE SPECIFIC ADAPTATION --- */
+        @media (max-width: 600px) {
+            body { padding: 15px 10px; }
+            .header { padding: 10px 15px; margin-bottom: 25px; }
+            .user-badge { font-size: 0.85rem; }
+            
+            .btn-logout span { display: none; }
+            @media (min-width: 360px) { .btn-logout span { display: inline; } }
+
+            .page-title { font-size: 1.7rem; }
+            
+            .games-grid {
+                grid-template-columns: 1fr; 
+                gap: 15px;
+            }
+
+            .game-card { padding: 12px; }
+            .game-icon-box { width: 60px; height: 60px; font-size: 1.6rem; }
+            .play-btn { width: 38px; height: 38px; font-size: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="user-badge">
+            <i class="fas fa-crown"></i> Премиум подписка
+        </div>
+        <a href="minigame.html" class="btn-logout">
+            <i class="fas fa-sign-out-alt"></i> <span>Выход</span>
+        </a>
+    </div>
+
+    <h1 class="page-title">Библиотека игр</h1>
+    <p class="subtitle">Выберите приключение. Доступ открыт!</p>
+
+    <div class="games-grid">
+        
+        <div class="game-card" onclick="window.location.href='seabattle_ai.html'">
+            <div class="game-icon-box icon-sea">
+                <i class="fas fa-ship"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Морской бой <span class="badge badge-new">Новинка</span></div>
+                <div class="game-desc">Тактический морской бой против ИИ с использованием сезонной техники и механик, и с возможность выиграть внутриигровые ресурсы.</div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
+        <div class="game-card" onclick="window.location.href='collision.html'">
+            <div class="game-icon-box icon-collision">
+                <i class="fas fa-flag"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Столкновение <span class="badge badge-new">Новинка</span></div>
+                <div class="game-desc">Командные сражения подписчиков. Захватывайте территории на карте, выполняя задания в WTM, и выигрывая призы всей командой.</div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
+        <div class="game-card" onclick="window.location.href='strategist.html'">
+            <div class="game-icon-box icon-strat">
+                <i class="fas fa-chess-knight"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Стратег <span class="badge badge-new">Новинка</span></div>
+                <div class="game-desc">Пошаговая тактика с элементами удачи. Формируйте армию и побеждайте врага с возможность выиграть внутриигровые ресурсы.</div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
+        <div class="game-card" onclick="window.location.href='fortune_hunter.html'">
+            <div class="game-icon-box icon-fortune">
+                <i class="fas fa-clover"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Охотник за удачей <span class="badge badge-new">Новинка</span></div>
+                <div class="game-desc">Испытайте удачу! Крутите рулетку с возможностью выигрывайть ценные призы для WTM и среды сообщества.</div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
+        
+    </div>
+
+</body>
+</html>
