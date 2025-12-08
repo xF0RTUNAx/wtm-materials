@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xFORTUNAx | Project LUN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0f0f12;
+            --grid-color: #1a1a20;
+            --border-color: #2c2c35;
+            --highlight: #00e5ff;
+            
+            --color-lun: #ff3838;
+            --color-battle: #7f8fa6;
+            --color-missile: #2ed573;
+            
+            --hit: #ff4757;
+            --miss: #dfe4ea;
+            --flare: #ffa502;
+            --radar: #9b59b6; 
+            --detected: #f1c40f; 
+
+            --msg-success-bg: #d1e7dd;
+            --msg-success-border: #a3cfbb;
+            --msg-success-text: #0f5132;
+            --msg-error-bg: #f8d7da;
+            --msg-error-border: #f1aeb5;
+            --msg-error-text: #842029;
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        /* НАВИГАЦИЯ */
+        .top-nav {
+            width: 100%; max-width: 1200px; display: flex; justify-content: flex-start; margin-bottom: 10px;
+        }
+        .btn-back-home {
+            background: rgba(255, 255, 255, 0.1); color: #ccc; text-decoration: none;
+            padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; display: flex; align-items: center;
+            gap: 8px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-back-home:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+
+        h1 { 
+            margin: 5px 0 15px 0; text-align: center; text-transform: uppercase; 
+            letter-spacing: 1px; font-size: 1.5rem; text-shadow: 0 0 15px rgba(0, 229, 255, 0.3); 
+        }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px;
+            width: 100%; max-width: 800px; text-align: center; margin-bottom: 15px;
+            font-size: 0.85rem; line-height: 1.4; color: #ccc; border-left: 3px solid var(--highlight);
+        }
+
+        .status-bar {
+            font-size: 1.1rem; font-weight: bold; color: var(--highlight);
+            margin-bottom: 10px; height: 25px; text-align: center;
+        }
+
+        .game-wrapper {
+            display: flex; flex-direction: column; align-items: center; gap: 20px;
+            width: 100%; max-width: 1000px;
+        }
+
+        .boards-container {
+            display: flex; flex-direction: row; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%;
+        }
+
+        .grid-section { display: flex; flex-direction: column; align-items: center; }
+        .grid-title { margin-bottom: 8px; font-weight: 600; color: #aaa; font-size: 0.9rem; }
+
+        .grid {
+            display: grid; grid-template-columns: repeat(10, 32px); grid-template-rows: repeat(10, 32px);
+            gap: 1px; background-color: var(--border-color); border: 3px solid var(--border-color);
+            border-radius: 4px; position: relative;
+        }
+
+        .cell {
+            width: 32px; height: 32px; background-color: var(--grid-color); cursor: crosshair;
+            position: relative; transition: background 0.2s;
+        }
+        .grid.radar-mode .cell { cursor: cell; } 
+
+        .cell:hover::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.1); pointer-events: none;
+        }
+        .cell.hover-valid { background-color: rgba(0, 229, 255, 0.3); }
+        .cell.hover-invalid { background-color: rgba(255, 68, 68, 0.3); }
+        
+        .cell.radar-preview {
+            background-color: rgba(155, 89, 182, 0.5) !important;
+            box-shadow: 0 0 5px var(--radar); z-index: 5;
+        }
+
+        .cell.identify-flash { animation: identifyAnim 0.8s infinite alternate; background-color: #fff !important; z-index: 10; }
+        @keyframes identifyAnim { 0% { opacity: 0.5; box-shadow: 0 0 0 white; } 100% { opacity: 1; box-shadow: 0 0 15px white; } }
+
+        .player-cell.occupied { border: 1px solid rgba(0,0,0,0.5); }
+        .player-cell.occupied::before {
+            content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px;
+            border-radius: 2px; z-index: 1;
+        }
+        .player-cell.occupied.lun { background-color: #fab1a0; }
+        .player-cell.occupied.lun::before { background-color: var(--color-lun); }
+        .player-cell.occupied.battleship { background-color: #b2bec3; }
+        .player-cell.occupied.battleship::before { background-color: var(--color-battle); }
+        .player-cell.occupied.missile { background-color: #55efc4; }
+        .player-cell.occupied.missile::before { background-color: var(--color-missile); }
+
+        .ship-grid-label {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 16px; color: #fff; text-shadow: 0 0 4px #000;
+            z-index: 2; pointer-events: none;
+        }
+
+        .cell.miss::after {
+            content: '•'; font-size: 20px; color: var(--miss); position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -55%); line-height: 0;
+        }
+        .cell.hit { background-color: rgba(255, 71, 87, 0.2); }
+        .cell.hit::after {
+            content: '✕'; font-size: 18px; color: var(--hit); position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); line-height: 0; font-weight: bold;
+        }
+        .player-cell.occupied.hit {
+            background-color: #2d0000 !important; border-color: #ff0000 !important;
+        }
+        .player-cell.occupied.hit::before { background-color: #5a0000 !important; }
+        .player-cell.occupied.hit::after {
+            content: '🔥'; font-size: 22px; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            line-height: 0; z-index: 5; filter: drop-shadow(0 0 5px orange);
+            animation: burn 1s infinite alternate;
+        }
+        @keyframes burn { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.2); } }
+
+        .cell.detected { background-color: rgba(241, 196, 15, 0.2); border: 1px solid var(--detected); }
+        .cell.detected::after {
+            content: '👁️'; font-size: 16px; position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%); line-height: 0;
+        }
+
+        .flare-active { animation: flareFlash 0.5s infinite alternate; background-color: var(--flare) !important; }
+        @keyframes flareFlash { 0% { box-shadow: 0 0 10px var(--flare); opacity: 1; } 100% { box-shadow: 0 0 30px var(--flare); opacity: 0.5; } }
+        .shield-badge {
+            position: absolute; top: -5px; right: -5px; color: var(--flare); 
+            background: #000; border-radius: 50%; padding: 3px; font-size: 12px; z-index: 10;
+            box-shadow: 0 0 5px var(--flare); border: 1px solid var(--flare);
+        }
+
+        .dock {
+            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px;
+            width: 100%; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .ship-container {
+            display: flex; align-items: center; gap: 8px; padding: 6px 12px;
+            background: rgba(0,0,0,0.3); border-radius: 8px; cursor: grab;
+            border: 2px solid transparent; transition: all 0.3s; position: relative;
+        }
+        .ship-container:active { cursor: grabbing; }
+        .ship-container.placed { opacity: 0.5; filter: grayscale(1); cursor: default; }
+        
+        .ship-container.can-flare {
+            cursor: pointer; animation: pulse-yellow 1.5s infinite;
+            border-color: var(--flare); opacity: 1 !important; filter: grayscale(0) !important;
+        }
+        @keyframes pulse-yellow { 0% { box-shadow: 0 0 0 rgba(255, 165, 2, 0); } 50% { box-shadow: 0 0 15px rgba(255, 165, 2, 0.6); } 100% { box-shadow: 0 0 0 rgba(255, 165, 2, 0); } }
+        
+        .ship-container.flare-equipped {
+            border-color: var(--flare); box-shadow: 0 0 15px rgba(255, 165, 2, 0.4);
+            opacity: 1 !important; filter: grayscale(0) !important;
+        }
+        .ship-container.selected { border-color: var(--highlight); background: rgba(0, 229, 255, 0.1); }
+
+        .ship-visual svg { height: 30px; width: auto; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.8)); }
+        .ship-info { display: flex; flex-direction: column; justify-content: center; }
+        .ship-name { font-weight: 700; font-size: 0.85rem; color: #eee; line-height: 1.2; }
+        .ship-size { font-size: 0.7rem; color: #aaa; margin-top: 2px; display: block; }
+
+        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap; width: 100%; }
+        .btn {
+            padding: 10px 20px; background: var(--highlight); color: #0f0f12; border: none; border-radius: 50px;
+            font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px;
+        }
+        .btn:hover { box-shadow: 0 0 15px var(--highlight); transform: translateY(-2px); }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
+        
+        .btn-flare { background: linear-gradient(45deg, #ff9f43, #ee5253); color: white; display: none; }
+        .btn-start { background: linear-gradient(45deg, #2ed573, #26de81); color: white; display: none; }
+        .btn-radar { background: linear-gradient(45deg, #8e44ad, #9b59b6); color: white; }
+        .btn-radar.active { box-shadow: 0 0 15px #9b59b6; border: 2px solid white; }
+
+        #enemy-area { display: none; }
+
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 5000;
+            display: none; align-items: center; justify-content: center; padding: 20px;
+        }
+
+        .result-card {
+            width: 100%; max-width: 450px; border-radius: 12px; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.4s ease-out;
+        }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .result-card.win { background-color: var(--msg-success-bg); border-left: 8px solid var(--msg-success-text); color: var(--msg-success-text); }
+        .result-card.lose { background-color: var(--msg-error-bg); border-left: 8px solid var(--msg-error-text); color: var(--msg-error-text); }
+
+        .result-header { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .result-body { font-size: 0.95rem; line-height: 1.5; }
+        .result-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .btn-restart {
+            padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer;
+            background: rgba(0,0,0,0.1); color: inherit; transition: 0.2s;
+        }
+        .btn-restart:hover { background: rgba(0,0,0,0.2); }
+        .reward-link { color: #0056b3; font-weight: bold; text-decoration: underline; }
+        
+        .relocate-msg { font-size: 1.2rem; color: var(--flare); margin-bottom: 20px; text-align: center; animation: pulse 1s infinite; }
+        #relocate-dock { padding: 20px; background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 1.2rem; }
+            .info-panel { font-size: 0.75rem; padding: 10px; }
+            .boards-container { gap: 15px; }
+            .grid { 
+                grid-template-columns: repeat(10, 8vw); grid-template-rows: repeat(10, 8vw); 
+                max-width: 350px; max-height: 350px;
+            }
+            .cell { width: 8vw; height: 8vw; max-width: 35px; max-height: 35px; }
+            .ship-visual svg { height: 25px; }
+            .dock { padding: 10px; }
+            .ship-container { padding: 5px 10px; }
+            .ship-name { font-size: 0.75rem; }
+            .ship-size { font-size: 0.65rem; }
+            .btn { font-size: 0.75rem; padding: 10px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <a href="findagame.html" class="btn-back-home">
+            <i class="fas fa-arrow-left"></i> Назад к выбору игры
+        </a>
+    </nav>
+
+    <h1>Морской бой</h1>
+    
+    <div class="info-panel">
+        <strong>Ключевые правила:</strong><br>
+        1. Расставьте флот. После нажмите "Назначить ЛТЦ".<br>
+        2. Наведите на корабль в ангаре — он замигает на карте. 
+        На поле отображаются номера катеров для удобства.<br>
+        3. Кликните на Лунь или Катер для защиты. Работает 1 раз за бой.
+        <br><strong>Сезонная способность:</strong>
+        <br><strong>Радар (Лунь):</strong> Открывает область 2x2. Используется 1 раз за бой.
+    </div>
+
+    <div class="status-bar" id="status-bar">Фаза: расстановка флота</div>
+
+    <div class="game-wrapper">
+        <div class="boards-container">
+            <div class="grid-section">
+                <div class="grid-title">ВАШ ФЛОТ</div>
+                <div class="grid" id="player-grid"></div>
+            </div>
+
+            <div class="grid-section" id="enemy-area">
+                <div class="grid-title">РАДАР ЦЕЛИ (ИИ)</div>
+                <div class="grid" id="enemy-grid"></div>
+            </div>
+        </div>
+
+        <div class="controls" id="setup-controls">
+            <button class="btn" onclick="rotateAxis()">Поворот: <span id="axis-display">Горизонт.</span></button>
+            <button class="btn btn-flare" id="btn-assign-flare" onclick="enableFlareMode()">Назначить ЛТЦ</button>
+            <button class="btn btn-start" id="btn-start-game" onclick="startGame()">В БОЙ</button>
+            <button class="btn" style="background:#ff4444; color:white" onclick="location.reload()">Сброс</button>
+        </div>
+
+        <div class="controls" id="battle-controls" style="display: none;">
+            <button class="btn btn-radar" id="btn-radar" onclick="toggleRadar()">
+                <i class="fas fa-satellite-dish"></i> Радар (Лунь)
+            </button>
+            <button class="btn" style="background:#ff4444; color:white" onclick="location.reload()">Сдаться</button>
+        </div>
+
+        <div class="dock" id="dock">
+            <div class="ship-container ship-lun" id="p-lun" draggable="true" data-size="1" data-type="lun">
+                <div class="ship-visual" style="width: 40px;">
+                    <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 28 L35 28 L32 35 L8 35 Z" fill="#7f8c8d" stroke="#2c3e50" stroke-width="0.5"/>
+                        <path d="M2 22 L38 22 L35 14 L5 14 Z" fill="#bdc3c7" stroke="#2c3e50" stroke-width="0.5"/>
+                        <path d="M30 14 L36 4 L38 4 L34 14" fill="#bdc3c7" stroke="#2c3e50" stroke-width="0.5"/>
+                        <rect x="28" y="2" width="12" height="2" fill="#bdc3c7" />
+                        <path d="M5 14 L15 10 L18 10 L18 14" fill="#95a5a6" />
+                        <rect x="7" y="8" width="2" height="3" fill="#e74c3c" /><rect x="7" y="12" width="2" height="3" fill="#e74c3c" />
+                        <rect x="10" y="7" width="2" height="3" fill="#e74c3c" /><rect x="10" y="13" width="2" height="3" fill="#e74c3c" />
+                        <rect x="13" y="6" width="2" height="3" fill="#e74c3c" /><rect x="13" y="14" width="2" height="3" fill="#e74c3c" />
+                        <rect x="16" y="6" width="2" height="3" fill="#e74c3c" /><rect x="16" y="14" width="2" height="3" fill="#e74c3c" />
+                        <rect x="12" y="10" width="4" height="2" fill="#3498db" />
+                    </svg>
+                </div>
+                <div class="ship-info">
+                    <span class="ship-name">Лунь</span>
+                    <span class="ship-size">Размер: 1</span>
+                </div>
+            </div>
+
+            <div class="ship-container ship-battleship" id="p-bs" draggable="true" data-size="4" data-type="battleship">
+                <div class="ship-visual" style="width: 140px;">
+                    <svg viewBox="0 0 140 35" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 15 L125 15 L140 20 L130 30 L10 30 L0 20 Z" fill="#7f8fa6" stroke="#2f3640"/>
+                        <path d="M60 15 L60 5 L85 5 L85 15" fill="#57606f" stroke="#2f3640"/>
+                        <rect x="65" y="8" width="15" height="3" fill="#1e272e" />
+                        <rect x="70" y="2" width="2" height="5" fill="#dcdde1" />
+                        <rect x="25" y="10" width="15" height="5" rx="2" fill="#57606f" /><rect x="15" y="12" width="12" height="1" fill="#2f3640" />
+                        <rect x="45" y="8" width="15" height="7" rx="2" fill="#57606f" /><rect x="35" y="11" width="12" height="1" fill="#2f3640" />
+                        <rect x="100" y="10" width="15" height="5" rx="2" fill="#57606f" /><rect x="113" y="12" width="12" height="1" fill="#2f3640" />
+                    </svg>
+                </div>
+                <div class="ship-info">
+                    <span class="ship-name">Линкор</span>
+                    <span class="ship-size">Размер: 4</span>
+                </div>
+            </div>
+
+            <div class="ship-container ship-missile" id="p-ms1" draggable="true" data-size="3" data-type="missile">
+                <div class="ship-visual" style="width: 105px;">
+                    <svg viewBox="0 0 105 35" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 20 L95 20 L105 25 L95 32 L5 32 Z" fill="#2ed573" stroke="#218c74"/>
+                        <path d="M25 20 L30 10 L50 10 L55 20" fill="#26de81" stroke="#218c74"/>
+                        <rect x="35" y="13" width="10" height="4" fill="#000" />
+                        <path d="M60 20 L55 8 L70 8 L75 20" fill="#218c74" /><path d="M80 20 L75 8 L90 8 L95 20" fill="#218c74" />
+                        <circle cx="40" cy="8" r="3" fill="#fff" /><line x1="40" y1="8" x2="40" y2="20" stroke="#fff"/>
+                        <rect x="10" y="18" width="10" height="2" fill="#218c74" />
+                    </svg>
+                </div>
+                <div class="ship-info">
+                    <span class="ship-name">Катер 1</span>
+                    <span class="ship-size">Размер: 3</span>
+                </div>
+            </div>
+
+            <div class="ship-container ship-missile" id="p-ms2" draggable="true" data-size="3" data-type="missile">
+                <div class="ship-visual" style="width: 105px;">
+                    <svg viewBox="0 0 105 35" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M0 20 L95 20 L105 25 L95 32 L5 32 Z" fill="#2ed573" stroke="#218c74"/>
+                        <path d="M25 20 L30 10 L50 10 L55 20" fill="#26de81" stroke="#218c74"/>
+                        <rect x="35" y="13" width="10" height="4" fill="#000" />
+                        <path d="M60 20 L55 8 L70 8 L75 20" fill="#218c74" /><path d="M80 20 L75 8 L90 8 L95 20" fill="#218c74" />
+                        <circle cx="40" cy="8" r="3" fill="#fff" /><line x1="40" y1="8" x2="40" y2="20" stroke="#fff"/>
+                        <rect x="10" y="18" width="10" height="2" fill="#218c74" />
+                    </svg>
+                </div>
+                <div class="ship-info">
+                    <span class="ship-name">Катер 2</span>
+                    <span class="ship-size">Размер: 3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay" id="result-overlay">
+        <div class="result-card" id="result-card-content"></div>
+    </div>
+
+    <div class="overlay" id="relocate-overlay">
+        <div style="display:flex; flex-direction:column; align-items:center;">
+            <div class="relocate-msg">
+                ⚠️ СРАБОТАЛИ ТЕПЛОВЫЕ ЛОВУШКИ! ⚠️<br>
+                Враг дезориентирован. Перепрячьте корабль в безопасное место.
+            </div>
+            <div id="relocate-dock"></div>
+        </div>
+    </div>
+
+    <script>
+        const gridSize = 10;
+        let isHorizontal = true;
+        let gameState = 0; 
+        
+        let playerBoard = Array(100).fill(null);
+        let enemyBoard = Array(100).fill(null);
+        let enemyBoardVis = Array(100).fill(null);
+
+        const pGrid = document.getElementById('player-grid');
+        const eGrid = document.getElementById('enemy-grid');
+        const statusEl = document.getElementById('status-bar');
+        const btnAssign = document.getElementById('btn-assign-flare');
+        const btnStart = document.getElementById('btn-start-game');
+        const btnRadar = document.getElementById('btn-radar');
+        
+        let draggedShip = null; 
+        let selectedShip = null;
+        let placedShipsCount = 0;
+        const totalShips = 4;
+
+        const fleet = {
+            'p-lun': { size: 1, type: 'lun', hits: 0, cells: [] },
+            'p-bs':  { size: 4, type: 'battleship', hits: 0, cells: [] },
+            'p-ms1': { size: 3, type: 'missile', hits: 0, cells: [] },
+            'p-ms2': { size: 3, type: 'missile', hits: 0, cells: [] }
+        };
+
+        let flareShipId = null;
+        let flaresUsed = false;
+        let aiStack = []; 
+        let radarUsed = false;
+        let isRadarMode = false;
+
+        function initGrids() {
+            createGrid(pGrid, 'player');
+            createGrid(eGrid, 'enemy');
+            setupDragAndClick();
+        }
+
+        function createGrid(gridEl, owner) {
+            gridEl.innerHTML = '';
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.classList.add('cell');
+                if (owner === 'player') cell.classList.add('player-cell');
+                cell.dataset.index = i;
+                
+                if (owner === 'player') {
+                    cell.addEventListener('dragover', dragOver);
+                    cell.addEventListener('dragleave', dragLeave);
+                    cell.addEventListener('drop', dropShip);
+                    cell.addEventListener('click', () => playerGridClick(i));
+                } else {
+                    cell.addEventListener('click', () => enemyGridClick(i));
+                    cell.addEventListener('mouseenter', () => handleRadarHover(i, true));
+                    cell.addEventListener('mouseleave', () => handleRadarHover(i, false));
+                }
+                gridEl.appendChild(cell);
+            }
+        }
+
+        function setupDragAndClick() {
+            document.querySelectorAll('.ship-container').forEach(ship => {
+                ship.addEventListener('dragstart', (e) => {
+                    if (gameState === 1) { e.preventDefault(); return; }
+                    if (ship.classList.contains('placed') && gameState !== 4) { e.preventDefault(); return; }
+                    draggedShip = ship;
+                });
+
+                ship.addEventListener('click', (e) => {
+                    if (gameState === 1) {
+                        assignFlareToShip(ship.id);
+                        return;
+                    }
+                    if (gameState === 0 && !ship.classList.contains('placed')) {
+                        if (selectedShip) selectedShip.classList.remove('selected');
+                        ship.classList.add('selected');
+                        selectedShip = ship;
+                    }
+                });
+
+                ship.addEventListener('mouseenter', () => {
+                    if (gameState === 1 && ship.classList.contains('placed')) {
+                        highlightPlacedShip(ship.id, true);
+                    }
+                });
+                ship.addEventListener('mouseleave', () => {
+                    if (gameState === 1) {
+                        highlightPlacedShip(ship.id, false);
+                    }
+                });
+            });
+        }
+
+        function highlightPlacedShip(id, on) {
+            if (!fleet[id] || !fleet[id].cells) return;
+            fleet[id].cells.forEach(idx => {
+                const cell = pGrid.children[idx];
+                if (on) cell.classList.add('identify-flash');
+                else cell.classList.remove('identify-flash');
+            });
+        }
+
+        // --- ЛОГИКА РАЗМЕЩЕНИЯ ---
+        function dragOver(e) {
+            e.preventDefault();
+            const ship = draggedShip || selectedShip;
+            if (!ship) return;
+            const size = parseInt(ship.dataset.size);
+            const index = parseInt(this.dataset.index);
+            highlight(index, size, true);
+        }
+
+        function dragLeave(e) {
+            const ship = draggedShip || selectedShip;
+            if (!ship) return;
+            const size = parseInt(ship.dataset.size);
+            const index = parseInt(this.dataset.index);
+            highlight(index, size, false);
+        }
+
+        function dropShip(e) {
+            e.preventDefault();
+            if (!draggedShip) return;
+            placeShipLogic(parseInt(this.dataset.index), draggedShip);
+            draggedShip = null;
+        }
+
+        function playerGridClick(index) {
+            if (gameState === 0 && selectedShip) {
+                placeShipLogic(index, selectedShip);
+                selectedShip.classList.remove('selected');
+                selectedShip = null;
+            } else if (gameState === 4 && selectedShip) {
+                placeShipLogic(index, selectedShip);
+                selectedShip = null;
+            }
+        }
+
+        function placeShipLogic(index, shipEl) {
+            const size = parseInt(shipEl.dataset.size);
+            const id = shipEl.id;
+            const type = shipEl.dataset.type;
+
+            const indices = getIndices(index, size);
+            if (!indices) return;
+
+            for (let idx of indices) {
+                if (playerBoard[idx] !== null) return; 
+            }
+
+            indices.forEach(idx => {
+                playerBoard[idx] = id;
+                const cell = pGrid.children[idx];
+                cell.classList.add('occupied', type);
+            });
+
+            const midIndex = Math.floor(indices.length / 2);
+            const centerCellIdx = indices[midIndex];
+            const centerCell = pGrid.children[centerCellIdx];
+
+            if (id === 'p-ms1') centerCell.innerHTML += '<span class="ship-grid-label">1</span>';
+            if (id === 'p-ms2') centerCell.innerHTML += '<span class="ship-grid-label">2</span>';
+
+            fleet[id].cells = indices;
+
+            if (gameState === 0) {
+                shipEl.classList.add('placed');
+                shipEl.draggable = false;
+                placedShipsCount++;
+                clearHighlights();
+                
+                if (placedShipsCount === totalShips) {
+                    statusEl.innerText = "Флот готов! Нажмите 'Назначить ЛТЦ'.";
+                    btnAssign.style.display = 'inline-block';
+                }
+            } else if (gameState === 4) {
+                endRelocation();
+            }
+        }
+
+        function getIndices(start, size) {
+            let idxs = [];
+            let x = start % 10;
+            let y = Math.floor(start / 10);
+            for (let i=0; i<size; i++) {
+                if (isHorizontal) {
+                    if (x + i >= 10) return null;
+                    idxs.push(start + i);
+                } else {
+                    if (y + i >= 10) return null;
+                    idxs.push(start + i * 10);
+                }
+            }
+            return idxs;
+        }
+
+        function highlight(index, size, on) {
+            const idxs = getIndices(index, size);
+            if (!idxs) return;
+            let valid = true;
+            for(let i of idxs) if(playerBoard[i] !== null) valid = false;
+            idxs.forEach(i => {
+                const c = pGrid.children[i];
+                if (on) c.classList.add(valid ? 'hover-valid' : 'hover-invalid');
+                else c.classList.remove('hover-valid', 'hover-invalid');
+            });
+        }
+        function clearHighlights() {
+            Array.from(pGrid.children).forEach(c => c.classList.remove('hover-valid', 'hover-invalid'));
+        }
+
+        function rotateAxis() {
+            isHorizontal = !isHorizontal;
+            document.getElementById('axis-display').innerText = isHorizontal ? "Горизонт." : "Вертик.";
+        }
+
+        // --- ЛОГИКА ЛТЦ ---
+        function enableFlareMode() {
+            gameState = 1; 
+            statusEl.innerText = "Наведите на корабль в ангаре (он мигнет на карте), затем кликните для защиты.";
+            btnAssign.style.display = 'none';
+            document.getElementById('p-lun').classList.add('can-flare');
+            document.getElementById('p-ms1').classList.add('can-flare');
+            document.getElementById('p-ms2').classList.add('can-flare');
+        }
+
+        function assignFlareToShip(id) {
+            const type = fleet[id].type;
+            if (type === 'battleship') {
+                alert("На Линкор нельзя ставить ловушки! Выберите Лунь или Катер.");
+                return;
+            }
+            document.querySelectorAll('.ship-container').forEach(s => s.classList.remove('can-flare'));
+            flareShipId = id;
+            const shipEl = document.getElementById(id);
+            shipEl.classList.add('flare-equipped');
+            const badge = document.createElement('div');
+            badge.className = 'shield-badge';
+            badge.innerHTML = '<i class="fas fa-shield-alt"></i>';
+            shipEl.appendChild(badge);
+            highlightPlacedShip(id, false);
+            statusEl.innerText = "ЛТЦ установлены! Жмите 'В БОЙ'.";
+            btnStart.style.display = 'inline-block';
+            gameState = 0;
+        }
+
+        // --- БОЕВОЙ ПРОЦЕСС ---
+        function startGame() {
+            setupAI();
+            document.getElementById('dock').style.display = 'none';
+            document.getElementById('setup-controls').style.display = 'none';
+            document.getElementById('battle-controls').style.display = 'flex'; // ПОКАЗЫВАЕМ КНОПКУ РАДАРА
+            document.getElementById('enemy-area').style.display = 'flex';
+            gameState = 2; // Ход игрока
+            statusEl.innerText = "БОЙ НАЧАЛСЯ! Стреляйте по радару.";
+        }
+
+        function setupAI() {
+            const aiShips = [5, 4, 3, 3]; 
+            aiShips.forEach(size => {
+                let placed = false;
+                while (!placed) {
+                    let rnd = Math.floor(Math.random() * 100);
+                    let orient = Math.random() > 0.5;
+                    let idxs = [];
+                    let x = rnd % 10;
+                    let y = Math.floor(rnd / 10);
+                    let possible = true;
+                    for(let k=0; k<size; k++) {
+                        let ii = orient ? rnd + k : rnd + k*10;
+                        if ((orient && x+k>=10) || (!orient && y+k>=10) || enemyBoard[ii]) {
+                            possible = false; break;
+                        }
+                        idxs.push(ii);
+                    }
+                    if (possible) {
+                        idxs.forEach(i => enemyBoard[i] = 'ship');
+                        placed = true;
+                    }
+                }
+            });
+        }
+
+        // --- ЛОГИКА РАДАРА ---
+        function toggleRadar() {
+            if (gameState !== 2 || radarUsed) return;
+            isRadarMode = !isRadarMode;
+            if (isRadarMode) {
+                btnRadar.classList.add('active');
+                eGrid.classList.add('radar-mode');
+                statusEl.innerText = "РЕЖИМ РАДАРА: Выберите зону 2x2.";
+            } else {
+                btnRadar.classList.remove('active');
+                eGrid.classList.remove('radar-mode');
+                statusEl.innerText = "Радар отменен. ВАШ ХОД.";
+                Array.from(eGrid.children).forEach(c => c.classList.remove('radar-preview'));
+            }
+        }
+
+        function handleRadarHover(index, on) {
+            if (!isRadarMode) return;
+            const idxs = getRadarIndices(index);
+            if (!idxs) return;
+            idxs.forEach(i => {
+                const cell = eGrid.children[i];
+                if (on) cell.classList.add('radar-preview');
+                else cell.classList.remove('radar-preview');
+            });
+        }
+
+        function getRadarIndices(start) {
+            const x = start % 10;
+            const y = Math.floor(start / 10);
+            if (x >= 9 || y >= 9) return null;
+            return [start, start + 1, start + 10, start + 11];
+        }
+
+        function performRadarScan(index) {
+            const idxs = getRadarIndices(index);
+            if (!idxs) return;
+
+            radarUsed = true;
+            isRadarMode = false;
+            btnRadar.classList.remove('active');
+            btnRadar.disabled = true;
+            btnRadar.innerText = "Радар (Использован)";
+            eGrid.classList.remove('radar-mode');
+            Array.from(eGrid.children).forEach(c => c.classList.remove('radar-preview'));
+
+            let found = false;
+            idxs.forEach(i => {
+                const cell = eGrid.children[i];
+                if (enemyBoardVis[i] === null) {
+                    if (enemyBoard[i] === 'ship') {
+                        enemyBoardVis[i] = 'detected';
+                        cell.classList.add('detected');
+                        found = true;
+                    } else {
+                        enemyBoardVis[i] = 'miss';
+                        cell.classList.add('miss');
+                    }
+                }
+            });
+
+            if (found) statusEl.innerText = "РАДАР: Цель обнаружена! ВАШ ХОД.";
+            else statusEl.innerText = "РАДАР: Чисто. ВАШ ХОД.";
+        }
+
+        function enemyGridClick(index) {
+            if (gameState !== 2) return;
+            if (isRadarMode) {
+                performRadarScan(index);
+                return;
+            }
+            if (enemyBoardVis[index] !== null && enemyBoardVis[index] !== 'detected') return;
+
+            const cell = eGrid.children[index];
+            
+            if (enemyBoard[index] === 'ship') {
+                enemyBoardVis[index] = 'hit';
+                cell.classList.remove('detected');
+                cell.classList.add('hit');
+                statusEl.innerText = "ПОПАДАНИЕ! Ваш ход.";
+                checkWin('player');
+            } else {
+                enemyBoardVis[index] = 'miss';
+                cell.classList.add('miss');
+                statusEl.innerText = "ПРОМАХ. Ход ИИ...";
+                gameState = 3;
+                setTimeout(aiTurn, 800);
+            }
+        }
+
+        function aiTurn() {
+            if (gameState !== 3) return;
+            let index;
+            
+            if (aiStack.length === 0) {
+                do { index = Math.floor(Math.random() * 100); } 
+                while (playerBoard[index] === 'miss' || playerBoard[index] === 'hit' || playerBoard[index] === 'flare');
+            } else {
+                index = aiStack.pop();
+                if (playerBoard[index] === 'miss' || playerBoard[index] === 'hit') {
+                    aiTurn(); return;
+                }
+            }
+
+            const cell = pGrid.children[index];
+            const targetId = playerBoard[index];
+
+            if (targetId && targetId !== 'miss' && targetId !== 'hit') {
+                if (targetId === flareShipId && !flaresUsed) {
+                    aiStack = []; 
+                    triggerFlares(targetId);
+                    return; 
+                }
+                playerBoard[index] = 'hit';
+                cell.classList.add('hit');
+                statusEl.innerText = "ПО НАС ПОПАЛИ! ИИ добивает.";
+                addNeighborsToStack(index);
+                checkWin('ai');
+                setTimeout(aiTurn, 1000);
+            } else {
+                playerBoard[index] = 'miss';
+                cell.classList.add('miss');
+                statusEl.innerText = "ИИ промахнулся. ВАШ ХОД.";
+                gameState = 2;
+            }
+        }
+
+        function addNeighborsToStack(idx) {
+            const x = idx % 10;
+            const y = Math.floor(idx / 10);
+            const candidates = [];
+            if (y > 0) candidates.push(idx - 10); 
+            if (y < 9) candidates.push(idx + 10); 
+            if (x > 0) candidates.push(idx - 1);  
+            if (x < 9) candidates.push(idx + 1);  
+            candidates.sort(() => Math.random() - 0.5);
+            candidates.forEach(c => {
+                if (playerBoard[c] !== 'miss' && playerBoard[c] !== 'hit') aiStack.push(c);
+            });
+        }
+
+        function triggerFlares(shipId) {
+            flaresUsed = true;
+            gameState = 4; 
+            fleet[shipId].cells.forEach(i => pGrid.children[i].classList.add('flare-active'));
+            statusEl.innerText = "ЛОВУШКИ СРАБОТАЛИ! Переместите корабль.";
+
+            setTimeout(() => {
+                document.getElementById('relocate-overlay').style.display = 'flex';
+                const dock = document.getElementById('relocate-dock');
+                const shipEl = document.getElementById(shipId);
+                
+                fleet[shipId].cells.forEach(i => {
+                    playerBoard[i] = null;
+                    const c = pGrid.children[i];
+                    c.className = 'cell player-cell'; 
+                    c.innerHTML = ''; 
+                });
+
+                shipEl.classList.remove('placed', 'flare-equipped'); 
+                shipEl.draggable = true;
+                dock.appendChild(shipEl);
+                shipEl.onclick = () => {
+                    selectedShip = shipEl;
+                    shipEl.classList.add('selected');
+                    document.getElementById('relocate-overlay').style.display = 'none';
+                    statusEl.innerText = "Выберите новое место для корабля.";
+                };
+            }, 1500);
+        }
+
+        function endRelocation() {
+            document.getElementById('relocate-overlay').style.display = 'none';
+            statusEl.innerText = "Маневр завершен! ВАШ ХОД.";
+            gameState = 2; 
+        }
+
+        function checkWin(who) {
+            if (who === 'player') {
+                let hits = enemyBoardVis.filter(x => x === 'hit').length;
+                if (hits >= 15) showResultModal(true);
+            } else {
+                let hasShips = playerBoard.some(x => x && x !== 'miss' && x !== 'hit');
+                if (!hasShips) showResultModal(false);
+            }
+        }
+
+        function showResultModal(isWin) {
+            const overlay = document.getElementById('result-overlay');
+            const content = document.getElementById('result-card-content');
+            overlay.style.display = 'flex';
+
+            if (isWin) {
+                const reward = determineReward();
+                content.className = 'result-card win';
+                content.innerHTML = `
+                    <div class="result-header">
+                        <i class="fas fa-check-circle"></i> Win - Победа!
+                    </div>
+                    <div class="result-body">
+                        Поздравляем, адмирал! Флот противника уничтожен.<br><br>
+                        ${reward}
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn-restart" onclick="location.reload()">Начать заново</button>
+                    </div>
+                `;
+            } else {
+                content.className = 'result-card lose';
+                content.innerHTML = `
+                    <div class="result-header">
+                        <i class="fas fa-times-circle"></i> Defeat - Поражение
+                    </div>
+                    <div class="result-body">
+                        Ваш флот был разбит. Награды в этот раз нет. Попробуйте еще раз!
+                    </div>
+                    <div class="result-actions">
+                        <button class="btn-restart" onclick="location.reload()">Начать заново</button>
+                    </div>
+                `;
+            }
+        }
+
+        function determineReward() {
+            const rand = Math.random() * 100; // 0..100
+            const now = new Date().toLocaleString();
+            const supportLink = `<a href="https://t.me/fortunawtmhelp" target="_blank" class="reward-link">тех. поддержку</a>`;
+
+            if (rand < 99.5) {
+                return "К сожалению, награда ушла под воду вместе с противником.";
+            } else if (rand < 99.7) { 
+                return `Нам удалось раздобыть ключ на <b>1 день премиум-аккаунта</b>. Обратитесь в ${supportLink} со скриншотом выигрыша с указанием точной даты и времени: ${now}.`;
+            } else if (rand < 99.8) { 
+                return `Нам удалось раздобыть ключ на <b>7 дней премиум-аккаунта</b>. Обратитесь в ${supportLink} со скриншотом выигрыша с указанием точной даты и времени: ${now}.`;
+            } else if (rand < 99.9) { 
+                return `Нам удалось раздобыть ключ на <b>270 золота</b>. Обратитесь в ${supportLink} со скриншотом выигрыша с указанием точной даты и времени: ${now}.`;
+            } else { 
+                return `Нам удалось раздобыть ключ на <b>500 платиновых орлов</b>. Обратитесь в ${supportLink} со скриншотом выигрыша с указанием точной даты и времени: ${now}.`;
+            }
+        }
+
+        initGrids();
+    </script>
+</body>
+</html>
