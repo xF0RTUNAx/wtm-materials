@@ -3,283 +3,330 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Разработка раздела | WTM Mini-Games by xFORTUNAx</title>
+    <title>xFORTUNAx | Мини-игры</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700;800&display=swap" rel="stylesheet">
     
     <style>
-        body, html {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            font-family: 'Open Sans', sans-serif;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #ffffff;
-            background-color: #0b111b;
-        }
-
-        /* Фоновое изображение */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'); 
-            background-size: cover;
-            background-position: center;
-            filter: blur(3px); 
-            z-index: -1;
-        }
-
-        .maintenance-container {
-            text-align: center;
-            padding: 40px 30px; /* Немного увеличил отступы */
-            position: relative;
-            z-index: 2;
-            
-            /* Стеклянный эффект */
-            background: rgba(11, 17, 27, 0.65); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            
-            border-radius: 20px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
-            max-width: 90%;
-            width: 500px;
-            box-sizing: border-box;
-        }
-
-        /* --- Графический элемент --- */
-        .graphic-circle {
-            width: 220px;
-            height: 220px;
-            background: radial-gradient(circle, #2d1b4e 0%, #0b111b 70%);
-            border-radius: 50%;
-            margin: 0 auto 25px auto;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 40px rgba(138, 43, 226, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-        }
-
-        .graphic-circle::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 50%;
-            border: 3px solid transparent;
-            border-top-color: #00e5ff;
-            animation: spin 2s linear infinite;
-            opacity: 0.6;
-            box-shadow: 0 0 15px #00e5ff;
-        }
-
-        /* --- Иконки --- */
-        .icon-group {
-            position: relative;
-            font-size: 7rem;
-            color: #ecf0f1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        
-        .game-icon {
-            z-index: 1;
-            position: relative;
-            display: block;
-            animation: float-gamepad 3s ease-in-out infinite; 
-        }
-
-        .gear-icon {
-            position: absolute;
-            font-size: 3rem;
-            top: -10px;
-            right: -25px;
-            color: #9b59b6;
-            animation: rotate-gear 4s linear infinite;
-            z-index: 2;
-        }
-
-        .puzzle-icon {
-            position: absolute;
-            font-size: 2.5rem;
-            bottom: 0px;
-            left: -25px;
-            color: #e91e63;
-            transform: rotate(-15deg);
-            animation: puzzle-move 2s ease-in-out infinite alternate;
-            z-index: 2;
-        }
-
-        /* --- Текст --- */
-        h1 {
-            font-weight: 800;
-            font-size: 2.5rem;
-            margin: 0 0 15px 0;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #ffffff;
-            text-shadow: 0px 4px 10px rgba(0,0,0,0.5);
-            line-height: 1.1;
-        }
-
-        p.subtitle {
-            color: #00e5ff;
-            font-size: 0.95rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin: 0 0 25px 0; /* Добавил отступ снизу до кнопки */
-            text-transform: uppercase;
-            background: rgba(0, 0, 0, 0.4);
-            display: inline-block;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px dashed rgba(0, 229, 255, 0.4);
-            line-height: 1.5;
-        }
-
-        /* --- Кнопка "Назад" (НОВОЕ) --- */
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px 35px;
-            background: linear-gradient(45deg, #00e5ff, #00b8cc); /* Градиент для объема */
-            color: #0b111b; /* Темный текст для контраста */
-            text-decoration: none;
-            font-weight: 800;
-            text-transform: uppercase;
-            border-radius: 50px; /* Овальная форма */
-            transition: all 0.3s ease;
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4); /* Свечение */
-            font-size: 0.9rem;
-            border: 2px solid transparent;
-        }
-
-        .back-btn i {
-            margin-right: 10px;
-            font-size: 1.1rem;
-        }
-
-        .back-btn:hover {
-            transform: translateY(-3px); /* Эффект нажатия/взлета */
-            box-shadow: 0 0 30px rgba(0, 229, 255, 0.7);
-            background: #ffffff; /* При наведении становится белой */
-            color: #00b8cc;
-        }
-
-        /* --- Анимации --- */
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        @keyframes rotate-gear {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        @keyframes puzzle-move {
-            0% { transform: translateY(0) rotate(-15deg); }
-            100% { transform: translateY(-10px) rotate(-5deg); }
-        }
-
-        @keyframes float-gamepad {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        .grid-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            z-index: -1; 
-            pointer-events: none;
-        }
-
-        /* Адаптивность */
-        @media (max-width: 768px) {
-            .maintenance-container {
-                padding: 25px 20px;
-                width: 90%;
-            }
-            .graphic-circle { 
-                width: 160px; 
-                height: 160px; 
-            }
-            .icon-group { 
-                font-size: 4rem; 
-            }
-            .gear-icon { 
-                font-size: 2rem; 
-                right: -15px;
-            }
-            .puzzle-icon { 
-                font-size: 1.8rem; 
-                left: -15px;
-            }
-            h1 { 
-                font-size: 1.8rem; 
-            }
-            p.subtitle { 
-                font-size: 0.8rem; 
-                padding: 10px;
-                margin-bottom: 20px;
-            }
-            .back-btn {
-                padding: 10px 25px;
-                font-size: 0.85rem;
-            }
-        }
+        /* Весь CSS оставлен без изменений */
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Poppins', sans-serif; background-color: #0f0f12; background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-y: auto; color: white; padding: 20px; }
+        body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(8px); z-index: -1; }
+        #loader-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center; z-index: 9999; transition: opacity 1s ease; }
+        .loader-wrapper { position: relative; display: flex; align-items: center; justify-content: center; height: 120px; width: auto; margin: 2rem; font-family: "Poppins", sans-serif; font-size: 1.6em; font-weight: 600; color: #fff; scale: 1.5; }
+        .loader { position: absolute; top: 0; left: 0; height: 100%; width: 100%; z-index: 1; background-color: transparent; mask: repeating-linear-gradient(90deg, transparent 0, transparent 6px, black 7px, black 8px); }
+        .loader::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: radial-gradient(circle at 50% 50%, #ff0 0%, transparent 50%), radial-gradient(circle at 45% 45%, #f00 0%, transparent 45%), radial-gradient(circle at 55% 55%, #0ff 0%, transparent 45%), radial-gradient(circle at 45% 55%, #0f0 0%, transparent 45%), radial-gradient(circle at 55% 45%, #00f 0%, transparent 45%); mask: radial-gradient(circle at 50% 50%, transparent 0%, transparent 10%, black 25%); animation: transform-animation 2s infinite alternate, opacity-animation 4s infinite; animation-timing-function: cubic-bezier(0.6, 0.8, 0.5, 1); }
+        @keyframes transform-animation { 0% { transform: translate(-55%); } 100% { transform: translate(55%); } }
+        @keyframes opacity-animation { 0%, 100% { opacity: 0; } 15% { opacity: 1; } 65% { opacity: 0; } }
+        .loader-letter { display: inline-block; opacity: 0; animation: loader-letter-anim 4s infinite linear; z-index: 2; }
+        .loader-letter:nth-child(n) { animation-delay: calc(0.1s * var(--i)); }
+        @keyframes loader-letter-anim { 0% { opacity: 0; } 5% { opacity: 1; text-shadow: 0 0 4px #fff; transform: scale(1.1) translateY(-2px); } 20% { opacity: 0.2; } 100% { opacity: 0; } }
+        #main-content { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 30px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5); padding: 40px; width: 90%; max-width: 900px; display: none; flex-direction: column; align-items: center; gap: 20px; }
+        .header-title { font-size: 2em; font-weight: 700; text-align: center; text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); color: #00e5ff; margin-bottom: 5px; }
+        .glass-radio-group { --bg: rgba(255, 255, 255, 0.06); --text: #e5e5e5; display: flex; position: relative; background: var(--bg); border-radius: 1rem; backdrop-filter: blur(12px); box-shadow: inset 1px 1px 4px rgba(255, 255, 255, 0.2), inset -1px -1px 6px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.15); overflow: hidden; width: fit-content; margin-bottom: 10px; min-width: 320px; z-index: 10; }
+        .glass-radio-group input { display: none; }
+        .glass-radio-group label { flex: 1; text-align: center; font-size: 14px; padding: 12px 10px; cursor: pointer; font-weight: 600; letter-spacing: 0.3px; color: var(--text); position: relative; z-index: 2; transition: color 0.3s ease-in-out; white-space: nowrap; }
+        .glass-radio-group label:hover { color: white; }
+        .glass-radio-group input:checked + label { color: #fff; }
+        .glass-glider { position: absolute; top: 0; bottom: 0; width: calc(100% / 3); border-radius: 1rem; z-index: 1; transition: transform 0.4s cubic-bezier(0.37, 1.95, 0.66, 0.56), background 0.4s ease-in-out, box-shadow 0.4s ease-in-out; }
+        #glass-silver:checked ~ .glass-glider { transform: translateX(0%); background: linear-gradient(135deg, #c0c0c055, #e0e0e0); box-shadow: 0 0 18px rgba(192, 192, 192, 0.5); }
+        #glass-gold:checked ~ .glass-glider { transform: translateX(100%); background: linear-gradient(135deg, #ffd70055, #ffcc00); box-shadow: 0 0 18px rgba(255, 215, 0, 0.5); }
+        #glass-platinum:checked ~ .glass-glider { transform: translateX(200%); background: linear-gradient(135deg, #d0e7ff55, #a0d8ff); box-shadow: 0 0 18px rgba(160, 216, 255, 0.5); }
+        .content-wrapper { display: flex; flex-wrap: wrap; justify-content: center; gap: 40px; width: 100%; margin-top: 10px; }
+        .container-card { display: flex; align-items: center; justify-content: center; }
+        .card_box { width: 300px; min-height: 380px; height: auto; border-radius: 20px; background: linear-gradient(170deg, rgba(58, 56, 56, 0.623) 0%, rgb(31, 31, 31) 100%); position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.55); transition: all .3s; display: flex; flex-direction: column; justify-content: flex-start; padding: 70px 20px 20px 20px; }
+        .card_box:hover { transform: scale(1.03); }
+        .card_box span.ribbon { position: absolute; overflow: hidden; width: 150px; height: 150px; top: -10px; left: -10px; pointer-events: none; }
+        .card_box span.ribbon::before { content: 'Premium'; position: absolute; width: 225px; height: 40px; background-image: linear-gradient(45deg, #ff6547 0%, #ffb144 51%, #ff7053 100%); transform: rotate(-45deg) translateY(-20px); top: 25px; left: -55px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; box-shadow: 0 5px 10px rgba(0,0,0,0.23); }
+        .price-tag { position: absolute; top: 25px; right: 25px; text-align: right; z-index: 5; line-height: 1.1; }
+        .price-tag .old-price { display: inline-block; text-decoration: line-through; color: rgba(255, 255, 255, 0.4); font-size: 1rem; margin-right: 5px; font-weight: 400; }
+        .price-tag .new-price { font-size: 1.6em; font-weight: 700; display: inline-block; }
+        .card-details { text-align: left; color: #ddd; opacity: 0.8; font-size: 0.9em; width: 100%; }
+        .card-details h3 { font-size: 1.6em; color: white; margin-bottom: 10px; font-weight: 700; text-align: right; margin-right: 5px; }
+        .card-details p { margin-bottom: 15px; font-style: italic; opacity: 0.7; }
+        .card-details ul { list-style: none; padding-left: 0; text-align: left; margin-bottom: 20px; }
+        .card-details li { margin-bottom: 8px; font-size: 0.85em; opacity: 0.9; line-height: 1.4; }
+        .card-details li::before { content: '• '; color: #00e5ff; font-weight: bold; display: inline-block; width: 1em; margin-left: -0.5em; }
+        .buy-btn { margin-top: auto; width: 100%; padding: 10px; border-radius: 50px; border: none; background: rgba(255,255,255,0.1); color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; border: 1px solid rgba(255,255,255,0.2); text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px; }
+        .buy-btn:hover { background: white; color: black; box-shadow: 0 0 15px rgba(255,255,255,0.5); }
+        .card_box.style-silver span.ribbon::before { background-image: linear-gradient(45deg, #7f7f7f 0%, #dcdcdc 51%, #7f7f7f 100%); }
+        .card_box.style-gold span.ribbon::before { background-image: linear-gradient(45deg, #d4af37 0%, #ffd700 51%, #d4af37 100%); }
+        .card_box.style-platinum span.ribbon::before { background-image: linear-gradient(45deg, #4b9cd3 0%, #00e5ff 51%, #4b9cd3 100%); }
+        .login-area { width: 100%; max-width: 400px; padding: 20px 0; display: flex; flex-direction: column; justify-content: center; }
+        .input-group { width: 100%; margin-bottom: 20px; text-align: center; }
+        .input-group label { display: block; font-size: 0.9em; margin-bottom: 8px; color: rgba(255,255,255,0.8); }
+        .input-group input { width: 100%; background: transparent; border: none; border-bottom: 2px solid rgba(255,255,255,0.3); padding: 12px 0; color: white; font-size: 1.2em; outline: none; transition: 0.3s; text-align: center; letter-spacing: 2px; }
+        .input-group input:focus { border-bottom-color: #00e5ff; }
+        .btn-main { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 700; font-size: 1em; cursor: pointer; transition: 0.3s; margin-top: 10px; background: #00e5ff; color: #0f0f12; }
+        .btn-main:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 229, 255, 0.5); }
+        .error-msg { color: #ff4444; font-size: 0.85em; margin-top: 15px; display: none; text-align: center; }
+        .bottom-actions { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; width: 100%; }
+        .action-btn { padding: 12px 25px; border-radius: 50px; border: none; cursor: pointer; font-weight: 600; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 0.9em; }
+        .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
+        .btn-back:hover { background: rgba(255,255,255,0.2); }
+        .btn-info { background: linear-gradient(45deg, #17ead9, #6078ea); color: white; }
+        .btn-info:hover { box-shadow: 0 0 15px rgba(23, 234, 217, 0.4); transform: translateY(-2px); }
+        .btn-demo { background: linear-gradient(45deg, #ff00cc, #333399); color: white; }
+        .btn-demo:hover { box-shadow: 0 0 15px rgba(255, 0, 204, 0.4); transform: translateY(-2px); }
+        .btn-sponsor { background: linear-gradient(45deg, #9b59b6, #e74c3c); color: white; }
+        .btn-sponsor:hover { box-shadow: 0 0 15px rgba(155, 89, 182, 0.4); transform: translateY(-2px); }
+        .terms-modal-overlay, .sponsor-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 3000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .terms-card { background-color: #fff; color: #1e1e1e; width: 100%; max-width: 400px; border-radius: 12px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 15px; position: relative; }
+        .terms-header { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.2rem; color: #1e1e1e; }
+        .terms-header i { color: #f39c12; font-size: 1.3rem; }
+        .terms-body p { font-size: 0.95rem; line-height: 1.5; color: #444; margin: 0; }
+        .terms-link { color: #3498db; text-decoration: underline; cursor: pointer; font-weight: 600; }
+        .terms-footer { display: flex; justify-content: flex-end; align-items: center; gap: 15px; margin-top: 10px; }
+        .accept-btn { background-color: #0f0f12; color: #fff; padding: 10px 20px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .accept-btn:hover { background-color: #2c2c30; }
+        .close-terms { position: absolute; top: 15px; right: 15px; font-size: 1.5rem; color: #aaa; cursor: pointer; line-height: 1; }
+        .close-terms:hover { color: #333; }
+        .sponsor-content { --white: hsl(0, 0%, 100%); --black: hsl(240, 15%, 9%); --paragraph: hsl(0, 0%, 83%); --line: hsl(240, 9%, 17%); --primary: hsl(266, 92%, 58%); position: relative; display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; width: 100%; max-width: 320px; background-color: hsla(240, 15%, 9%, 1); border-radius: 1rem; box-shadow: 0px -16px 24px 0px rgba(255, 255, 255, 0.25) inset; }
+        .sponsor-content .card_title { font-size: 1.2rem; color: var(--white); font-weight: bold; }
+        .sponsor-content .card_paragraph { margin-top: 0.5rem; width: 90%; font-size: 0.8rem; color: var(--paragraph); line-height: 1.4; }
+        .sponsor-content .line { width: 100%; height: 0.1rem; background-color: var(--line); border: none; }
+        .sponsor-content .card__list { display: flex; flex-direction: column; gap: 0.5rem; list-style: none; padding: 0;}
+        .sponsor-content .card__list_item { display: flex; align-items: center; gap: 0.5rem; }
+        .sponsor-content .check { display: flex; justify-content: center; align-items: center; width: 1rem; height: 1rem; background-color: var(--primary); border-radius: 50%; flex-shrink: 0; }
+        .sponsor-content .list_text { font-size: 0.8rem; color: var(--white); }
+        .sponsor-content .button { cursor: pointer; padding: 0.8rem; width: 100%; background-image: linear-gradient(0deg, rgba(94, 58, 238, 1) 0%, rgba(197, 107, 240, 1) 100%); font-size: 0.9rem; font-weight: bold; color: var(--white); border: 0; border-radius: 9999px; box-shadow: inset 0 -2px 25px -4px var(--white); transition: 0.3s; text-transform: uppercase; }
+        .sponsor-content .button:hover { transform: scale(1.02); }
+        .close-sponsor-btn { margin-top: 10px; background: transparent; border: 1px solid #555; color: #888; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
+        .close-sponsor-btn:hover { color: white; border-color: white; }
+        @media (max-width: 768px) { .loader-wrapper { scale: 1; } #main-content { padding: 25px 15px; width: 95%; } .header-title { font-size: 1.5em; } .glass-radio-group { width: 100%; min-width: unset; } .content-wrapper { flex-direction: column; align-items: center; gap: 20px; } .container-card { width: 100%; } .login-area { width: 100%; } .bottom-actions { flex-direction: column; gap: 12px; } .action-btn { width: 100%; justify-content: center; } .card_box { width: 100%; max-width: 320px; } }
     </style>
 </head>
 <body>
 
-    <div class="grid-bg"></div>
+    <div id="loader-screen">
+        <div class="loader-wrapper">
+            <span class="loader-letter" style="--i:1">x</span><span class="loader-letter" style="--i:2">F</span><span class="loader-letter" style="--i:3">O</span><span class="loader-letter" style="--i:4">R</span><span class="loader-letter" style="--i:5">T</span><span class="loader-letter" style="--i:6">U</span><span class="loader-letter" style="--i:7">N</span><span class="loader-letter" style="--i:8">A</span><span class="loader-letter" style="--i:9">x</span>
+            <span style="width: 10px;"></span>
+            <span class="loader-letter" style="--i:10">M</span><span class="loader-letter" style="--i:11">I</span><span class="loader-letter" style="--i:12">N</span><span class="loader-letter" style="--i:13">I</span><span class="loader-letter" style="--i:14">-</span><span class="loader-letter" style="--i:15">G</span><span class="loader-letter" style="--i:16">A</span><span class="loader-letter" style="--i:17">M</span><span class="loader-letter" style="--i:18">E</span><span class="loader-letter" style="--i:19">S</span>
+            <div class="loader"></div>
+        </div>
+    </div>
 
-    <div class="maintenance-container">
-        <div class="graphic-circle">
-            <div class="icon-group">
-                <i class="fas fa-gamepad game-icon"></i>
-                <i class="fas fa-cog gear-icon"></i> 
-                <i class="fas fa-puzzle-piece puzzle-icon"></i>
+    <div id="main-content">
+        <h1 class="header-title">xFORTUNAx МИНИ-ИГРЫ</h1>
+        <p style="opacity: 0.7; text-align: center; max-width: 600px; font-size: 0.9em;">Разблокируйте эксклюзивный контент и возможности. Выберите желаемый уровень подписки, чтобы увидеть преимущества, и введите свой ключ для доступа.</p>
+
+        <div class="glass-radio-group">
+            <input type="radio" name="plan" id="glass-silver" value="silver" checked onchange="updateCard()"><label for="glass-silver">Серебро</label>
+            <input type="radio" name="plan" id="glass-gold" value="gold" onchange="updateCard()"><label for="glass-gold">Золото</label>
+            <input type="radio" name="plan" id="glass-platinum" value="platinum" onchange="updateCard()"><label for="glass-platinum">Платина</label>
+            <div class="glass-glider"></div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="container-card">
+                <div class="card_box style-silver" id="sub-card">
+                    <span class="ribbon"></span>
+                    <div id="card-price-tag" class="price-tag"></div>
+                    <div class="card-details">
+                        <h3 id="card-title">Серебро</h3>
+                        <p id="card-desc">Отличный старт для ознакомления.</p>
+                        <ul id="card-desc-list">
+                            <li>Доступ ко всем играм.</li>
+                            <li>Ключ на 30 дней.</li>
+                            <li>Возможность выигрывать призы.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-area">
+                <div id="access-key-group">
+                    <div class="input-group">
+                        <label for="access-key">Введите ключ доступа</label>
+                        <input type="text" id="access-key" placeholder="Введите ключ" onkeydown="if(event.key === 'Enter') attemptLogin()">
+                    </div>
+                    <button class="btn-main" onclick="attemptLogin()">Открыть доступ</button>
+                    <p class="error-msg" id="login-error">Доступ запрещен. Неверный ключ. Пожалуйста, проверьте подписку.</p>
+                </div>
             </div>
         </div>
 
-        <h1>В РАЗРАБОТКЕ!</h1>
-        
-        <p class="subtitle">
-            <i class="fas fa-terminal" style="margin-right: 8px;"></i>
-            КОМПИЛИРУЕМ КОД И ОТРИСОВЫВАЕМ ТЕКСТУРЫ НОВОГО РАЗДЕЛА. <br> 
-            МИНИ-ИГРЫ СКОРО БУДУТ ДОСТУПНЫ.
-            <br> ПОЖАЛУЙСТА, ПОПРОБУЙТЕ ПОЗЖЕ!
-        </p>
-
-        <a href="index.html" class="back-btn">
-            <i class="fas fa-arrow-left"></i> На главную
-        </a>
+        <div class="bottom-actions">
+            <button class="action-btn btn-back" onclick="window.location.href='index.html'">
+                <i class="fas fa-arrow-left"></i> На главную
+            </button>
+            <button class="action-btn btn-info" onclick="window.location.href='info.html'">
+                <i class="fas fa-info-circle"></i> Важная инфо
+            </button>
+            <button class="action-btn btn-demo" onclick="clickDemo()">
+                <i class="fas fa-gamepad"></i> Демо версия
+            </button>
+            <button class="action-btn btn-sponsor" onclick="openSponsorModal()">
+                <i class="fas fa-hand-holding-heart"></i> Стать спонсором
+            </button>
+        </div>
     </div>
 
+    <div id="terms-modal-overlay" class="terms-modal-overlay">
+        <div class="terms-card">
+            <span class="close-terms" onclick="closeTermsModal()">&times;</span>
+            <div class="terms-header"><i class="fas fa-file-contract"></i> Важное уведомление</div>
+            <div class="terms-body"><p>Нажимая кнопку подтвердить, вы соглашаетесь с положениями и условиями, описанными в разделе <a href="info.html" class="terms-link">Важная информация</a>.</p></div>
+            <div class="terms-footer"><button class="accept-btn" onclick="acceptTerms()">Я ознакомился и согласен</button></div>
+        </div>
+    </div>
+
+    <div id="unique-sponsor-overlay" class="sponsor-overlay">
+        <div class="sponsor-content">
+            <div class="card_title__container"><span class="card_title">Спонсоры xFORTUNAx</span><p class="card_paragraph">Поддержите развитие проекта и получите эксклюзивные преимущества напрямую от создателя!</p></div>
+            <hr class="line" />
+            <ul class="card__list">
+              <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Ранний доступ к новым видео</span></li>
+              <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Упоминание в видео и на сайте</span></li>
+              <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Возможность запросить ключ на 30 дней 1 раз в 90 дней</span></li>
+              <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Преимущества в розыгрышах</span></li> 
+              <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Уникальный и личный чат для спонсоров с автором xFORTUNAx</span></li>
+                <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Приоритетное влияние на контент и участие в тестах</span></li>
+                 
+            </ul>
+            <button class="button" onclick="window.open('https://dalink.to/xf0rtunax', '_blank')">ПОДДЕРЖАТЬ ПРОЕКТ</button>
+            <button class="close-sponsor-btn" onclick="closeSponsorModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        let currentTermsAction = '';
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const loader = document.getElementById('loader-screen');
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    document.getElementById('main-content').style.display = 'flex';
+                }, 1000);
+            }, 2500); 
+        });
+
+        function attemptLogin() {
+            const keyInput = document.getElementById('access-key');
+            const errorMsg = document.getElementById('login-error');
+            const validKeys = ['fortuna378', 'fortx54', 'xfortunax0251'];
+
+            if (validKeys.includes(keyInput.value.trim())) {
+                errorMsg.style.display = 'none';
+                openTermsModal('login');
+            } else {
+                errorMsg.style.display = 'block';
+                keyInput.value = ''; 
+                keyInput.style.borderBottomColor = '#ff4444';
+                setTimeout(() => keyInput.style.borderBottomColor = 'rgba(255,255,255,0.3)', 500);
+            }
+        }
+
+        function clickDemo() {
+            openTermsModal('demo');
+        }
+
+        function openTermsModal(action) {
+            currentTermsAction = action;
+            document.getElementById('terms-modal-overlay').style.display = 'flex';
+        }
+
+        function closeTermsModal() {
+            document.getElementById('terms-modal-overlay').style.display = 'none';
+            currentTermsAction = '';
+        }
+
+       function acceptTerms() {
+            const action = currentTermsAction;
+            closeTermsModal();
+            if (action === 'login') {
+                window.location.href = 'findagame.html';
+            } else if (action === 'demo') {
+                window.location.href = 'findagamedemo.html';
+            }
+        }
+
+        function openSponsorModal() { document.getElementById('unique-sponsor-overlay').style.display = 'flex'; }
+        function closeSponsorModal() { document.getElementById('unique-sponsor-overlay').style.display = 'none'; }
+        document.getElementById('unique-sponsor-overlay').addEventListener('click', function(e) { if (e.target === this) closeSponsorModal(); });
+        document.getElementById('terms-modal-overlay').addEventListener('click', function(e) { if (e.target === this) closeTermsModal(); });
+
+        function updateCard() {
+            const card = document.getElementById('sub-card');
+            const title = document.getElementById('card-title');
+            const desc = document.getElementById('card-desc'); // Элемент описания
+            const descList = document.getElementById('card-desc-list');
+            const detailsDiv = document.querySelector('.card-details');
+            const priceTag = document.getElementById('card-price-tag');
+            const oldBtn = detailsDiv.querySelector('.buy-btn');
+            if(oldBtn) oldBtn.remove();
+
+            let tier = '';
+            if (document.getElementById('glass-silver').checked) { tier = 'silver'; } 
+            else if (document.getElementById('glass-gold').checked) { tier = 'gold'; } 
+            else if (document.getElementById('glass-platinum').checked) { tier = 'platinum'; }
+
+            card.classList.remove('style-silver', 'style-gold', 'style-platinum');
+            card.classList.add(`style-${tier}`);
+            
+            let tierNameRu = '', tierNameEng = '';
+            if (tier === 'silver') { tierNameRu = 'Серебро'; tierNameEng = 'Silver'; }
+            if (tier === 'gold') { tierNameRu = 'Золото'; tierNameEng = 'Gold'; }
+            if (tier === 'platinum') { tierNameRu = 'Платина'; tierNameEng = 'Platinum'; }
+
+            updateRibbonContent(tierNameEng); 
+
+            let priceHtml = '';
+            if (tier === 'silver') { priceHtml = '<span class="old-price">$4</span><span class="new-price" style="color: #e0e0e0; text-shadow: 0 0 10px rgba(224,224,224,0.4);">$2</span>'; } 
+            else if (tier === 'gold') { priceHtml = '<span class="old-price">$14</span><span class="new-price" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4);">$5</span>'; } 
+            else if (tier === 'platinum') { priceHtml = '<span class="new-price" style="color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,0.4);">$20</span>'; }
+            priceTag.innerHTML = priceHtml;
+
+            title.innerText = `${tierNameRu}`;
+            descList.innerHTML = ''; 
+
+            // ============================================
+            // ИЗМЕНЕНИЯ ЗДЕСЬ: Добавлена переменная descText
+            // ============================================
+            let perks = [];
+            let descText = ''; // Текст описания для карточки
+
+            if (tier === 'silver') { 
+                descText = 'Отличный старт для ознакомления.'; // Текст для Серебра
+                perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ на 30 дней.', 'Возможность выигрывать призы.']; 
+            } 
+            else if (tier === 'gold') { 
+                descText = 'Баланс цены и возможностей.'; // Текст для Золота (МОЖНО МЕНЯТЬ)
+                perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ на 90 дней.', 'Возможность выигрывать призы.', 'Приоритетная поддержка и запись на тесты/игры']; 
+            } 
+            else if (tier === 'platinum') { 
+                descText = 'Самый выгодный и максимальный вариант.'; // Текст для Платины (МОЖНО МЕНЯТЬ)
+                perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ НАВСЕГДА.', 'Возможность выигрывать призы.', 'Первоочередная поддержка и запись на тесты/игры', 'Автоматический статус Спонсора (детальнее в стать сносором)', 'Закрытый тест новых игр']; 
+            }
+
+            // Применяем текст к элементу
+            desc.innerText = descText;
+
+            perks.forEach(perk => {
+                const li = document.createElement('li');
+                li.textContent = perk;
+                descList.appendChild(li);
+            });
+
+            const buyBtn = document.createElement('button');
+            buyBtn.className = 'buy-btn';
+            buyBtn.innerText = 'Купить подписку';
+            buyBtn.onclick = function() { window.open('https://dalink.to/xf0rtunax', '_blank'); };
+            detailsDiv.appendChild(buyBtn);
+        }
+
+        function updateRibbonContent(text) {
+            let style = document.getElementById('ribbon-style');
+            if (!style) { style = document.createElement('style'); style.id = 'ribbon-style'; document.head.appendChild(style); }
+            style.innerHTML = `.card_box span.ribbon::before { content: '${text}' !important; }`;
+        }
+
+        updateRibbonContent('Silver');
+        updateCard(); 
+    </script>
 </body>
 </html>
 
