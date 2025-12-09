@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xFORTUNAx | Sea Battle</title>
+    <title>xFORTUNAx | Project LUN</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -128,9 +128,18 @@
             z-index: 2; pointer-events: none;
         }
 
+        /* ИСПРАВЛЕНИЕ: Рисуем точку через CSS (border-radius), а не шрифтом */
         .cell.miss::after {
-            content: '•'; font-size: 20px; color: var(--miss); position: absolute;
-            top: 50%; left: 50%; transform: translate(-50%, -55%); line-height: 0;
+            content: ''; 
+            position: absolute;
+            top: 50%; 
+            left: 50%; 
+            width: 8px; 
+            height: 8px;
+            background-color: var(--miss);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
         }
         
         /* Визуализация попадания */
@@ -1050,3 +1059,4 @@
     </script>
 </body>
 </html>
+
