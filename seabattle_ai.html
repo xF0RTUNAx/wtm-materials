@@ -2,8 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xFORTUNAx | Project LUN</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>xFORTUNAx | Sea Battle</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -21,7 +21,7 @@
             --hit: #ff4757;
             --miss: #dfe4ea;
             --radar: #9b59b6; 
-            --barrage: #ff9f43; /* Цвет залпа */
+            --barrage: #ff9f43;
             --detected: #f1c40f; 
 
             --msg-success-bg: #d1e7dd;
@@ -116,7 +116,6 @@
         }
 
         .player-cell.occupied { border: 1px solid rgba(0,0,0,0.5); }
-        /* Цвета кораблей на поле игрока */
         .player-cell.occupied.lun { background-color: #fab1a0; }
         .player-cell.occupied.battleship { background-color: #b2bec3; }
         .player-cell.occupied.missile { background-color: #55efc4; }
@@ -128,7 +127,7 @@
             z-index: 2; pointer-events: none;
         }
 
-        /* ИСПРАВЛЕНИЕ: Рисуем точку через CSS (border-radius), а не шрифтом */
+        /* ИСПРАВЛЕННАЯ ТОЧКА */
         .cell.miss::after {
             content: ''; 
             position: absolute;
@@ -142,7 +141,6 @@
             z-index: 2;
         }
         
-        /* Визуализация попадания */
         .cell.hit { background-color: rgba(255, 71, 87, 0.2); }
         .cell.hit::after {
             content: '✕'; font-size: 18px; color: var(--hit); position: absolute;
@@ -158,7 +156,6 @@
             animation: burn 1s infinite alternate;
         }
         
-        /* Визуализация уничтоженного корабля (Sunk) */
         .cell.sunk {
             background-color: #2f3542 !important;
             border: 2px solid #ff4757 !important;
@@ -209,10 +206,8 @@
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
         
         .btn-start { background: linear-gradient(45deg, #2ed573, #26de81); color: white; display: none; }
-        
         .btn-radar { background: linear-gradient(45deg, #8e44ad, #9b59b6); color: white; }
         .btn-radar.active { box-shadow: 0 0 15px #9b59b6; border: 2px solid white; }
-
         .btn-barrage { background: linear-gradient(45deg, #ff9f43, #ee5253); color: white; }
         .btn-barrage.active { box-shadow: 0 0 15px #ee5253; border: 2px solid white; }
 
@@ -243,10 +238,10 @@
         }
         .btn-restart:hover { background: rgba(0,0,0,0.2); }
         .reward-link { color: #0056b3; font-weight: bold; text-decoration: underline; }
-        
         .reward-img { width: 100%; max-width: 200px; border-radius: 8px; margin: 10px auto; display: block; border: 2px solid #0f5132; }
 
-        @media (max-width: 768px) {
+        /* --- СТИЛИ ДЛЯ МОБИЛЬНЫХ (ПОРТРЕТ) --- */
+        @media (max-width: 768px) and (orientation: portrait) {
             h1 { font-size: 1.2rem; }
             .info-panel { font-size: 0.75rem; padding: 10px; }
             .boards-container { gap: 15px; }
@@ -262,10 +257,48 @@
             .ship-size { font-size: 0.65rem; }
             .btn { font-size: 0.75rem; padding: 10px 15px; }
         }
+
+        /* --- НОВЫЕ СТИЛИ ДЛЯ МОБИЛЬНЫХ (ЛАНДШАФТ) --- */
+        /* Используем vh (высоту экрана) для расчета размера клеток, чтобы они влезали */
+        @media (max-height: 500px) and (orientation: landscape) {
+            body { padding: 5px; }
+            h1 { display: none; } /* Скрываем заголовок для экономии места */
+            .top-nav { display: none; } /* Скрываем навигацию */
+            .info-panel { display: none; } /* Скрываем правила */
+            .game-wrapper { margin-top: 0; gap: 5px; }
+            
+            .boards-container {
+                flex-direction: row; /* Принудительно в ряд */
+                flex-wrap: nowrap;
+                gap: 20px;
+                align-items: flex-start;
+            }
+
+            .grid {
+                /* 10 клеток по 7vh = 70% высоты экрана */
+                grid-template-columns: repeat(10, 7vh);
+                grid-template-rows: repeat(10, 7vh);
+                max-width: none;
+                max-height: none;
+            }
+            .cell {
+                width: 7vh;
+                height: 7vh;
+                max-width: none;
+                max-height: none;
+            }
+            
+            .dock {
+                width: 200px; /* Фиксированная ширина дока сбоку, если нужно */
+                max-height: 70vh;
+                overflow-y: auto;
+            }
+            .ship-visual img { max-height: 4vh; }
+            .btn { font-size: 0.7rem; padding: 5px 10px; }
+        }
     </style>
 </head>
 <body>
-
     <nav class="top-nav">
         <a href="findagame.html" class="btn-back-home">
             <i class="fas fa-arrow-left"></i> Назад к выбору игры
@@ -363,7 +396,7 @@
     <script>
         const gridSize = 10;
         let isHorizontal = true;
-        let gameState = 0; // 0=Setup, 2=PlayerTurn, 3=AiTurn
+        let gameState = 0; 
         
         let playerBoard = Array(100).fill(null);
         let enemyBoard = Array(100).fill(null);
@@ -1059,4 +1092,5 @@
     </script>
 </body>
 </html>
+
 
