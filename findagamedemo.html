@@ -168,6 +168,7 @@
 
         .icon-collision { background: linear-gradient(135deg, #ff9966, #ff5e62); }
         .icon-strat { background: linear-gradient(135deg, #8e44ad, #9b59b6); }
+        .icon-sea { background: linear-gradient(135deg, #00c6ff, #0072ff); } /* NEW ICON COLOR */
 
         /* Text */
         .game-info { flex: 1; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -244,7 +245,6 @@
             .game-icon-box { width: 60px; height: 60px; font-size: 1.6rem; }
             .play-btn { width: 38px; height: 38px; font-size: 1rem; }
             
-            /* Скрываем текст "Демо режим" на очень маленьких экранах, оставляем иконку */
             @media (max-width: 340px) {
                .badge-text { display: none; }
             }
@@ -273,6 +273,17 @@
 
     <div class="games-grid">
         
+        <div class="game-card" onclick="window.location.href='seabattle_aidemo.html'">
+            <div class="game-icon-box icon-sea">
+                <i class="fas fa-ship"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Морской бой <span class="badge badge-demo">DEMO</span></div>
+                <div class="game-desc">Модернизированный морской бой. Уничтожьте флот противника, используя тактику и способности кораблей.</div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
         <div class="game-card" onclick="window.location.href='demostrategist.html'">
             <div class="game-icon-box icon-strat">
                 <i class="fas fa-chess-knight"></i>
@@ -304,3 +315,4 @@
 
 </body>
 </html>
+
