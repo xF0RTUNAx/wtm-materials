@@ -14,6 +14,7 @@
             --msg-success-bg: #d1e7dd; --msg-success-text: #0f5132;
             --msg-error-bg: #f8d7da; --msg-error-text: #842029;
             --progress-bg: #2c3e50; --progress-fill: #27ae60;
+            --warning-border: #ff4757; --warning-bg: rgba(255, 71, 87, 0.1);
         }
 
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
@@ -48,6 +49,36 @@
             font-size: 0.8rem; line-height: 1.4; color: #ccc; border-left: 3px solid var(--highlight);
         }
         .info-panel strong { color: var(--highlight); }
+
+        /* БЛОК СОХРАНЕНИЯ ПРОГРЕССА */
+        .save-warning-box {
+            margin-top: 15px;
+            background-color: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: 8px;
+            padding: 12px;
+            color: #eee;
+            font-size: 0.8rem;
+        }
+        .save-header {
+            color: var(--warning-border);
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+        }
+        .save-text strong { color: #fff; font-weight: 700; }
+        .warning-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+            align-items: flex-start;
+            color: #ffcccc;
+        }
+        .warning-icon { color: #f1c40f; font-size: 1rem; margin-top: 1px; }
 
         /* ПРОГРЕСС БАР */
         .progress-section {
@@ -177,12 +208,21 @@
     
     <div class="info-panel">
         <div style="text-align:center; margin-bottom:10px;"><strong>Правила</strong></div>
-        1. Расставьте флот. 2. Жмите "В бой".<br>
+        1. Расставьте флот. <br>2. Жмите "В бой".<br>
         <strong>Способности (1 раз за бой):</strong><br>
-        • <i class="fas fa-satellite-dish" style="color:var(--radar)"></i> <strong>Радар (Лунь):</strong> Скан 2x2. (Недоступно при гибели Луня)<br>
+        • <i class="fas fa-satellite-dish" style="color:var(--radar)"></i> <strong>Радар (Лунь):</strong> Разведка 2x2. (Недоступно при гибели Луня)<br>
         • <i class="fas fa-bomb" style="color:var(--barrage)"></i> <strong>Залп (Линкор):</strong> Удар 2x2. (Недоступно при гибели Линкора)<br>
-        <em>Для получения наград присылайте скриншот в <strong>тех поддержку</strong>. ВНИМАНИЕ: прогресс сохраняется только в одном клиенте (или веб-приложение,
-        или напрямую через сайт на браузере). Использование режима инкогнито и очистка кеша обнуляют прогресс!</em>
+        
+        <div class="save-warning-box">
+            <div class="save-header"><i class="fas fa-save"></i> СОХРАНЕНИЕ ПРОГРЕССА</div>
+            <div class="save-text">
+                Чтобы накапливать победы для наград, всегда играйте через <strong>один и тот же браузер или веб-приложение</strong>.
+            </div>
+            <div class="warning-row">
+                <i class="fas fa-exclamation-triangle warning-icon"></i>
+                <span>Режим Инкогнито и очистка кэша <strong style="color:#ff6b6b">удалят</strong> ваш прогресс навсегда.</span>
+            </div>
+        </div>
     </div>
 
     <div class="progress-section">
@@ -325,8 +365,9 @@
             gridEl.innerHTML = '';
             for (let i = 0; i < 100; i++) {
                 const cell = document.createElement('div'); cell.classList.add('cell');
-                if (owner === 'player') cell.classList.add('player-cell'); cell.dataset.index = i;
+                cell.dataset.index = i;
                 if (owner === 'player') {
+                    cell.classList.add('player-cell');
                     cell.addEventListener('dragover', dragOver); cell.addEventListener('dragleave', dragLeave);
                     cell.addEventListener('drop', dropShip); cell.addEventListener('click', () => playerGridClick(i));
                     cell.addEventListener('touchstart', touchStartCell, {passive: false}); cell.addEventListener('touchmove', touchMoveCell, {passive: false});
@@ -452,4 +493,5 @@
     </script>
 </body>
 </html>
+
 
