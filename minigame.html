@@ -109,7 +109,7 @@
 
     <div id="main-content">
         <h1 class="header-title">xFORTUNAx МИНИ-ИГРЫ</h1>
-        <p style="opacity: 0.7; text-align: center; max-width: 600px; font-size: 0.9em;">Разблокируйте эксклюзивный контент и возможности. Выберите желаемый уровень подписки, чтобы увидеть преимущества, и введите свой ключ для доступа.</p>
+        <p style="opacity: 0.7; text-align: center; max-width: 600px; font-size: 0.9em;">Разблокируйте эксклюзивный контент и возможности. Выигрывайте ресурсы для WTM, предметы сообщества, ключи допуска и многое другое!</p>
 
         <div class="glass-radio-group">
             <input type="radio" name="plan" id="glass-silver" value="silver" checked onchange="updateCard()"><label for="glass-silver">Серебро</label>
@@ -174,7 +174,7 @@
 
     <div id="unique-sponsor-overlay" class="sponsor-overlay">
         <div class="sponsor-content">
-            <div class="card_title__container"><span class="card_title">Спонсоры xFORTUNAx</span><p class="card_paragraph">Поддержите развитие проекта и получите эксклюзивные преимущества напрямую от создателя!</p></div>
+            <div class="card_title__container"><span class="card_title">Спонсоры xFORTUNAx (от 10$)</span><p class="card_paragraph">Поддержите развитие проекта и получите эксклюзивные преимущества напрямую от создателя!</p></div>
             <hr class="line" />
             <ul class="card__list">
               <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Ранний доступ к новым видео</span></li>
@@ -276,8 +276,8 @@
 
             let priceHtml = '';
             if (tier === 'silver') { priceHtml = '<span class="old-price">$4</span><span class="new-price" style="color: #e0e0e0; text-shadow: 0 0 10px rgba(224,224,224,0.4);">$2</span>'; } 
-            else if (tier === 'gold') { priceHtml = '<span class="old-price">$14</span><span class="new-price" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4);">$5</span>'; } 
-            else if (tier === 'platinum') { priceHtml = '<span class="new-price" style="color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,0.4);">$20</span>'; }
+            else if (tier === 'gold') { priceHtml = '<span class="old-price">$12</span><span class="new-price" style="color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4);">$5</span>'; } 
+            else if (tier === 'platinum') { priceHtml = '<span class="old-price">$48</span><span class="new-price" style="color: #00e5ff; text-shadow: 0 0 10px rgba(0,229,255,0.4);">$20</span>'; }
             priceTag.innerHTML = priceHtml;
 
             title.innerText = `${tierNameRu}`;
@@ -299,7 +299,7 @@
             } 
             else if (tier === 'platinum') { 
                 descText = 'Самый выгодный и максимальный вариант.'; // Текст для Платины (МОЖНО МЕНЯТЬ)
-                perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ НАВСЕГДА.', 'Возможность выигрывать призы.', 'Первоочередная поддержка и запись на тесты/игры', 'Автоматический статус Спонсора (детальнее в стать сносором)', 'Закрытый тест новых игр']; 
+                perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ на ГОД.', 'Возможность выигрывать призы.', 'Первоочередная поддержка и запись на тесты/игры', 'Автоматический статус Спонсора (детальнее в стать сносором)', 'Закрытый тест новых игр']; 
             }
 
             // Применяем текст к элементу
