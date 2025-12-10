@@ -25,15 +25,47 @@
         .top-nav { width: 100%; max-width: 1000px; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
         .back-btn { color: #888; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
         .back-btn:hover { color: white; }
-        .game-title { font-size: 1.5rem; color: #aaa; font-weight: 700; text-transform: uppercase; }
+        .game-title { font-size: 1.5rem; color: #aaa; font-weight: 700; text-transform: uppercase; text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
 
         /* --- SCREENS --- */
         .screen { display: none; width: 95%; max-width: 1000px; flex-direction: column; align-items: center; animation: fadeIn 0.5s; }
         .screen.active { display: flex; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* --- BATTLE PASS DEMO SECTION --- */
+        .progress-section {
+            width: 100%; max-width: 800px; background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px; padding: 15px; border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px; position: relative;
+        }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
+        .progress-bar-bg {
+            width: 100%; height: 8px; background: #222; border-radius: 5px; overflow: hidden; position: relative; border: 1px solid #333;
+        }
+        .progress-bar-fill {
+            height: 100%; background: linear-gradient(90deg, #555, #888); width: 0%; transition: width 1s ease-out;
+        }
+        .milestones-row {
+            display: flex; justify-content: space-between; margin-top: 15px; position: relative;
+        }
+        .milestone-item {
+            display: flex; flex-direction: column; align-items: center; width: 50px; opacity: 0.5; filter: grayscale(1); transition: 0.3s; position: relative;
+        }
+        .milestone-item img { width: 40px; height: 40px; object-fit: contain; border-radius: 5px; border: 1px solid #444; background: #1a1a1a; }
+        .milestone-val { font-size: 0.6rem; color: #666; margin-top: 5px; }
+        
+        .lock-overlay {
+            position: absolute; top: -5px; right: -5px; background: #222; color: #aaa;
+            width: 18px; height: 18px; border-radius: 50%; font-size: 10px; display: flex;
+            align-items: center; justify-content: center; border: 1px solid #444; z-index: 2;
+        }
+        .upsell-tag {
+            background: rgba(0, 229, 255, 0.1); color: #00e5ff; font-size: 0.7rem; padding: 5px 10px; 
+            border-radius: 4px; border: 1px solid rgba(0, 229, 255, 0.2); margin-top: 10px; text-align: center;
+        }
+
         /* --- PHASE 1: SLOTS (ROULETTE) --- */
-        .slots-grid-wrapper { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 30px 0; max-width: 600px; }
+        .slots-grid-wrapper { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
         
         .slot-machine {
             width: 120px; height: 160px;
@@ -44,20 +76,15 @@
         
         .slot-machine::before {
             content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 2px;
-            background: rgba(255, 255, 255, 0.3); z-index: 10; transform: translateY(-50%);
+            background: rgba(255, 215, 0, 0.5); z-index: 10; transform: translateY(-50%); box-shadow: 0 0 5px #ffd700;
         }
         
-        .slot-strip { 
-            display: flex; flex-direction: column; align-items: center; 
-            transform: translateY(0); 
-            will-change: transform; 
-        }
+        .slot-strip { display: flex; flex-direction: column; align-items: center; transform: translateY(0); will-change: transform; }
         
         .slot-card {
             width: 100%; height: 160px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05); 
-            flex-shrink: 0; 
+            border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0; 
             background: linear-gradient(180deg, #2a2a30, #1a1a20);
         }
         
@@ -70,7 +97,7 @@
         .btn-main {
             padding: 12px 30px; font-size: 1rem; font-weight: bold; text-transform: uppercase;
             border: none; border-radius: 50px; cursor: pointer; transition: 0.3s;
-            background: #aaa; color: #000; box-shadow: 0 0 15px rgba(255, 255, 255, 0.1); margin-top: 20px;
+            background: #aaa; color: #000; box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); margin-top: 20px;
         }
         .btn-main:hover { transform: scale(1.05); background: white; }
 
@@ -83,7 +110,13 @@
         .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
         .rule-item { display: flex; flex-direction: column; gap: 5px; }
         .rule-header { color: #fff; font-size: 0.9rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-        .rule-desc { color: #888; font-size: 0.8rem; line-height: 1.4; }
+        .rule-desc { color: #aaa; font-size: 0.8rem; line-height: 1.4; }
+        
+        .warning-box {
+            grid-column: 1 / -1; background: rgba(255, 215, 0, 0.05); border: 1px solid #ffd700;
+            padding: 15px; border-radius: 10px; margin-bottom: 15px;
+        }
+        .warning-title { color: #ffd700; font-weight: bold; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; margin-bottom: 5px;}
 
         /* --- PHASE 2: BATTLE --- */
         .battle-container { display: flex; flex-direction: column; gap: 15px; width: 100%; align-items: center; }
@@ -107,65 +140,57 @@
             align-items: center; justify-content: center; border: 2px solid #fff; z-index: 5;
         }
         .enemy-card.selected .target-marker { display: flex; }
+        
+        .enemy-type-badge {
+            position: absolute; top: -5px; left: -5px; font-size: 0.6rem; 
+            padding: 2px 5px; border-radius: 4px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        .type-fighter { background: #4b7bec; color: white; }
+        .type-attacker { background: #eb3b5a; color: white; }
+        .type-bomber { background: #fed330; color: black; border: 1px solid #ffd700; }
 
         .log-box {
             width: 100%; height: 80px; background: rgba(0,0,0,0.6); border: 1px solid #333;
             border-radius: 8px; padding: 10px; overflow-y: auto; font-size: 0.75rem; color: #ccc; font-family: monospace;
         }
         .log-entry { margin-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .log-bad { color: #ff6b6b; } .log-good { color: #51cf66; } .log-info { color: #00d2d3; }
+        .log-bad { color: #ff6b6b; } .log-good { color: #51cf66; } .log-info { color: #00d2d3; } .log-warning { color: #ffd700; }
 
         .grid-container {
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 15px;
-            background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin: 0 auto;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin: 0 auto;
         }
         .cell {
-            width: 110px; height: 110px;
-            background: rgba(0,0,0,0.3); border: 2px dashed #444;
+            width: 90px; height: 90px; background: rgba(0,0,0,0.3); border: 2px dashed #444;
             border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative;
             transition: background 0.2s;
         }
-        .cell.row-2 { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.2); }
+        .cell.row-2 { background: rgba(0, 229, 255, 0.05); border-color: rgba(0, 229, 255, 0.2); }
         .cell.highlight { background: rgba(255, 215, 0, 0.1); border-color: #ffd700; }
-        .cell.valid-move { background: rgba(255, 255, 255, 0.2); border-color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .cell.valid-move { background: rgba(0, 229, 255, 0.2); border-color: #00e5ff; box-shadow: 0 0 10px rgba(0,229,255,0.2); }
 
-        /* --- UNIT & DOCK STYLES (FIXED) --- */
         .unit {
-            width: 95%; height: 95%; 
-            background: #222; border: 1px solid #666; border-radius: 6px;
-            display: flex; flex-direction: column; align-items: center; 
-            padding: 2px; 
-            cursor: grab; position: relative;
+            width: 95%; height: 95%; background: #222; border: 1px solid #666; border-radius: 6px;
+            display: flex; flex-direction: column; align-items: center; padding: 2px; cursor: grab; position: relative;
             transition: all 0.2s;
-            overflow: hidden;
         }
         .unit.selected-for-move {
-            border: 2px solid #fff; box-shadow: 0 0 15px rgba(255, 255, 255, 0.6); transform: scale(1.05);
+            border: 2px solid #00e5ff; box-shadow: 0 0 15px rgba(0, 229, 255, 0.6); transform: scale(1.05);
         }
-
-        .unit img { 
-            width: 100%; 
-            max-height: 50px; 
-            object-fit: contain; 
-            margin-top: 5px; 
+        .unit.crit-active {
+            box-shadow: 0 0 15px #ff4757; border-color: #ff4757; animation: pulseRed 1s infinite;
         }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 5px #ff4757; } 50% { box-shadow: 0 0 20px #ff4757; } 100% { box-shadow: 0 0 5px #ff4757; } }
 
-        .unit-role { font-size: 0.6rem; color: #aaa; margin-top: -2px; }
-        .unit-hp-bar { width: 90%; height: 4px; background: #444; margin-top: auto; border-radius: 2px; overflow: hidden; margin-bottom: 2px;}
+        .unit img { width: 60px; height: 40px; object-fit: contain; margin-top: 5px; }
+        .unit-role { font-size: 0.55rem; color: #aaa; margin-top: -2px; }
+        .unit-hp-bar { width: 90%; height: 4px; background: #444; margin-top: auto; border-radius: 2px; overflow: hidden; }
         .unit-hp-fill { height: 100%; background: #2ed573; width: 100%; }
         .unit.dead { filter: grayscale(1) brightness(0.5); cursor: not-allowed; }
-        .unit.smoked::after {
-            content: '\f0c2'; font-family: 'Font Awesome 6 Free'; font-weight: 900;
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.5); color: #333; font-size: 2rem;
-            display: flex; align-items: center; justify-content: center; border-radius: 6px;
-        }
         
-        .unit-stat-badge { position: absolute; font-size: 0.7rem; font-weight: bold; padding: 1px 3px; border-radius: 3px; background: rgba(0,0,0,0.7); z-index: 2;}
+        .unit-stat-badge { position: absolute; font-size: 0.6rem; font-weight: bold; padding: 1px 3px; border-radius: 3px; background: rgba(0,0,0,0.7); }
         .stat-dmg { top: 2px; left: 2px; color: #ff4757; }
-        .stat-hp-text { bottom: 6px; width: 100%; text-align: center; font-size: 0.7rem; color: #fff; text-shadow: 0 0 2px black; z-index: 3; position: absolute; }
+        .stat-hp-text { bottom: 6px; width: 100%; text-align: center; font-size: 0.6rem; color: #fff; text-shadow: 0 0 2px black; z-index: 2; position: absolute; }
         
         .dock-unit-stats { display: flex; width: 100%; justify-content: space-between; padding: 0 4px; font-size: 0.6rem; margin-top: 2px; }
         .stat-icon { margin-right: 1px; }
@@ -177,13 +202,18 @@
 
         .dock { display: flex; gap: 5px; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 10px; min-height: 100px; flex-wrap: wrap; justify-content: center; width: 100%; }
         
-        .controls-panel { display: flex; gap: 10px; justify-content: center; }
+        .controls-panel { display: flex; gap: 10px; justify-content: center; align-items: center; }
         .ability-btn {
             background: #333; color: white; border: 1px solid #555; padding: 8px 12px; border-radius: 8px;
             cursor: pointer; display: flex; flex-direction: column; align-items: center; min-width: 70px;
         }
         .ability-btn.active { border-color: #ffd700; background: rgba(255, 215, 0, 0.1); color: #ffd700; }
         .ability-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .turn-counter {
+            font-size: 1.2rem; font-weight: bold; color: #fff; margin: 0 10px;
+            background: #222; padding: 5px 15px; border-radius: 8px; border: 1px solid #444;
+        }
 
         .btn-surrender {
             background: transparent; border: 1px solid #ff4757; color: #ff4757; 
@@ -199,7 +229,7 @@
         }
         .result-card {
             background: #1c1c24; border: 2px solid #555; padding: 30px; border-radius: 15px;
-            text-align: center; max-width: 400px; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            text-align: center; max-width: 400px; box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
             position: relative;
         }
         .result-title.win { color: #2ed573; font-size: 1.5rem; } .result-title.loss { color: #ff4757; font-size: 1.5rem; }
@@ -207,15 +237,16 @@
         @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-30px); opacity: 0; } }
 
         @media (max-width: 600px) {
-            .grid-container { grid-template-columns: repeat(2, 1fr); padding: 10px; gap: 10px; }
-            .cell { width: 40vw; height: 40vw; max-width: 120px; max-height: 120px; }
+            .grid-container { grid-template-columns: repeat(3, 1fr); padding: 5px; gap: 5px; }
+            .cell { width: 28vw; height: 28vw; max-width: 90px; max-height: 90px; }
             .slot-machine { width: 100px; height: 120px; } 
             .slot-card { height: 120px; }
             .slot-card img { width: 70px; height: 50px; }
+            .progress-header { font-size: 0.7rem; }
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
 
     <div class="top-nav">
         <a href="findagamedemo.html" class="back-btn"><i class="fas fa-arrow-left"></i> Выход</a>
@@ -223,38 +254,64 @@
     </div>
 
     <div id="screen-roulette" class="screen active">
-        <div style="text-align: center; margin-top: 20px;">
-            <h2>Сбор Взвода (Демо)</h2>
-            <p style="color:#aaa; font-size: 0.9rem;">Соберите 4 единицы техники для боя.</p>
+        
+        <div class="progress-section">
+            <div class="progress-header">
+                <span>Прогресс (Предпросмотр)</span>
+                <span>Победы: <b id="win-count-display" style="color:#aaa">0</b></span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+            <div class="milestones-row" id="milestones-container"></div>
+            <div class="upsell-tag">
+                <i class="fas fa-lock"></i> Награды и сохранение доступны только в полной версии
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 10px;">
+            <h2>Сбор Взвода</h2>
+            <p style="color:#aaa; font-size: 0.9rem;">Соберите 6 единиц техники для боя.</p>
         </div>
         <div class="slots-grid-wrapper" id="slots-wrapper"></div>
-        
         <div style="text-align:center;">
             <p style="color:#888; font-size: 0.75rem; margin-bottom: 10px; opacity: 0.8;">
-                <i class="fas fa-info-circle"></i> В демо-версии доступен урезанный набор техники
+                <i class="fas fa-info-circle"></i> Демо-режим: ограниченный набор техники.
             </p>
-            <button class="btn-main" onclick="startMultiSpin()" id="spin-btn">Запустить Рулетку</button>
-            <button class="btn-main" id="to-placement-btn" style="display:none;" onclick="goToPlacement()">К Расстановке <i class="fas fa-arrow-right"></i></button>
+            <button class="btn-main" id="spin-btn">Запустить Рулетку</button>
+            <button class="btn-main" id="to-placement-btn" style="display:none;">К Расстановке <i class="fas fa-arrow-right"></i></button>
         </div>
 
         <div class="rules-container">
-            <div class="rules-title">Правила Демо-режима</div>
+            <div class="rules-title">Правила и Механики</div>
+            
+            <div class="warning-box">
+                <div class="warning-title"><i class="fas fa-exclamation-circle"></i> ДЕМОНСТРАЦИОННЫЙ РЕЖИМ</div>
+                <div class="rule-desc" style="color: #ffeaa7;">
+                     В этой версии отключены награды и сохранения.
+                     <br>Боевой пропуск показан для ознакомления.
+                </div>
+            </div>
+
             <div class="rules-grid">
                 <div class="rule-item">
-                    <div class="rule-header"><i class="fas fa-layer-group"></i> Ограниченный Парк</div>
-                    <div class="rule-desc">В демо используется малый набор техники. <b>В полной версии</b> вас ждет расширенный ангар и новые виды вооружения.</div>
-                </div>
-                <div class="rule-item">
-                    <div class="rule-header"><i class="fas fa-shield-alt"></i> Расстановка</div>
+                    <div class="rule-header"><i class="fas fa-bullseye"></i> Суть игры</div>
                     <div class="rule-desc">
-                        <b>1 Ряд:</b> Принимает основной удар.<br>
-                        <b>2 Ряд:</b> Получает на <b>2 ед. меньше урона</b>.
+                        Ваша задача — собрать отряд из случайной техники, грамотно расставить её на поле боя и уничтожить группу врага.
                     </div>
                 </div>
                 <div class="rule-item">
-                    <div class="rule-header"><i class="fas fa-skull"></i> Условия Боя</div>
+                    <div class="rule-header"><i class="fas fa-chess-board"></i> Пассивные способности</div>
                     <div class="rule-desc">
-                        У вас только по <b>1 заряду</b> Дыма и Ремкомплекта. Враги бьют больно, защищайте слабую технику!
+                        <b>Авангард (1 Ряд):</b> <span style="color:#ff4757">+2 к союзному урону</span>. <br>
+                        <b>Тыл (2 Ряд):</b> <span style="color:#00e5ff">-2 вражеского урона</span>. 
+                    </div>
+                </div>
+                <div class="rule-item">
+                    <div class="rule-header"><i class="fas fa-crosshairs"></i> Активные способности</div>
+                    <div class="rule-desc">
+                        <b>Точный удар (2 шт):</b> Выберите своего юнита, чтобы он нанес <b>двойной (x2) урон</b> в этом ходу.<br>
+                        <b>Ремкомплект (3 шт):</b> Восстанавливает +3 HP.
                     </div>
                 </div>
             </div>
@@ -267,29 +324,33 @@
             <div class="enemies-wrapper" id="enemies-container"></div>
 
             <div class="log-box" id="battle-log">
-                <div class="log-entry log-info">ВНИМАНИЕ: Демо-бой 2x2.</div>
-                <div class="log-entry log-info">Цель: уничтожить 2 самолета врага.</div>
+                <div class="log-entry log-info">ВНИМАНИЕ: Демо-бой.</div>
             </div>
 
             <div class="grid-container" id="grid"></div>
 
             <div class="controls-panel" id="battle-controls" style="display: none;">
-                <button class="ability-btn" id="btn-smoke" onclick="activateAbility('smoke')">
-                    <i class="fas fa-smog"></i> <span>Дым</span> <b id="charge-smoke" style="color:#fff">1</b>
+                <button class="ability-btn" id="btn-crit">
+                    <i class="fas fa-crosshairs"></i> <span>Удар</span> <b id="charge-crit" style="color:#ff4757">2</b>
                 </button>
-                <button class="btn-main" style="margin:0; background: #ff4757; color: white;" onclick="nextTurn()">
-                    ОГОНЬ <i class="fas fa-crosshairs"></i>
-                </button>
-                <button class="ability-btn" id="btn-repair" onclick="activateAbility('repair')">
-                    <i class="fas fa-wrench"></i> <span>Рем.</span> <b id="charge-repair" style="color:#fff">1</b>
+
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <div class="turn-counter">ХОД: <span id="turn-num">1</span></div>
+                    <button class="btn-main" style="margin:5px 0 0 0; background: #ff4757; color: white; padding: 8px 30px;" id="btn-fire">
+                        ОГОНЬ
+                    </button>
+                </div>
+
+                <button class="ability-btn" id="btn-repair">
+                    <i class="fas fa-wrench"></i> <span>Рем.</span> <b id="charge-repair" style="color:#2ed573">3</b>
                 </button>
             </div>
             
-            <button class="btn-main" id="start-battle-btn" onclick="startBattle()">НАЧАТЬ БОЙ</button>
+            <button class="btn-main" id="start-battle-btn">НАЧАТЬ БОЙ</button>
 
             <div class="dock" id="dock"></div>
 
-            <button id="btn-surrender" class="btn-surrender" style="display:none;" onclick="surrender()">
+            <button id="btn-surrender" class="btn-surrender" style="display:none;">
                 <i class="fas fa-flag"></i> СДАТЬСЯ
             </button>
         </div>
@@ -300,25 +361,31 @@
             <h2 class="result-title" id="res-title">ПОБЕДА!</h2>
             <div id="res-msg" style="color:#ccc; margin-bottom: 20px;"></div>
             
-            <div class="promo-box" style="background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-top:10px;">
-                <p style="font-size: 0.9rem; color:#aaa; margin-bottom:10px;">В полной версии:</p>
-                <ul style="text-align:left; font-size:0.8rem; color:#888; list-style:none; padding-left:10px;">
-                    <li><i class="fas fa-check" style="color:#00e5ff"></i> Поле 2x3 (6 юнитов)</li>
-                    <li><i class="fas fa-check" style="color:#00e5ff"></i> Расширенный ангар техники</li>
-                    <li><i class="fas fa-check" style="color:#00e5ff"></i> 3 заряда способностей</li>
-                    <li><i class="fas fa-check" style="color:#00e5ff"></i> Розыгрыш реальных призов</li>
-                </ul>
+            <div class="prize-box" id="promo-box" style="display:none; background:rgba(255,255,255,0.05); padding:15px; border-radius:10px; margin-bottom:15px;">
+                <div style="color: #ffd700; font-weight:bold; margin-bottom:5px;">БОЕВОЙ ПРОПУСК</div>
+                <div style="font-size: 0.8rem; color:#aaa; margin-bottom:10px;">
+                    Вы победили! В полной версии вы бы приблизились к награде:
+                    <br><b style="color:white;">Титул: Полководец. И многие другие награды, в том числе в WTM!</b>
+                </div>
+                <button class="btn-main" onclick="window.location.href='minigame.html'" style="font-size:0.8rem; padding:8px 20px; margin-top:5px;">Открыть полную версию</button>
             </div>
 
-            <button class="btn-main" onclick="window.location.href='minigame.html'">Купить полную версию</button>
-            <br>
-            <button style="background:transparent; border:none; color:#666; cursor:pointer; margin-top:10px; text-decoration:underline;" onclick="location.reload()">Переиграть демо</button>
+            <button style="background:transparent; border:1px solid #555; color:#aaa; padding:8px 20px; border-radius:20px; cursor:pointer;" onclick="location.reload()">Переиграть демо</button>
         </div>
     </div>
 
     <script>
-        // --- DATA & CONSTANTS (DEMO BALANCE - FINAL) ---
-        // Возвращен усиленный урон (5) для обычных юнитов
+    (function() {
+        // --- MILESTONES (LITE DEMO VISUALIZATION) ---
+        const MILESTONES = [
+            { wins: 10, img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/polkovodec.jpg?raw=true' },
+            { wins: 50, img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/flagman.jpg?raw=true' },
+            { wins: 100, img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gold.PNG?raw=true' },
+            { wins: 250, img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/7day.PNG?raw=true' },
+            { wins: 500, img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platina.PNG?raw=true' }
+        ];
+
+        // --- DATA & CONSTANTS (DEMO PARK) ---
         const UNIT_TYPES = [
             { id: 'm247', name: 'M247', role: 'ЗСУ', hp: 16, dmg: 9, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamem247.PNG?raw=true', chance: 5 },
             { id: 't90a', name: 'Т-90А', role: 'Танк', hp: 25, dmg: 3, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet90a.PNG?raw=true', chance: 5 },
@@ -326,44 +393,80 @@
             { id: 'gepard', name: 'Gepard', role: 'ЗСУ', hp: 15, dmg: 8, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamegepard.PNG?raw=true', chance: 11 },
             { id: 't80uk', name: 'Т-80УК', role: 'Танк', hp: 23, dmg: 3, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet80uk.PNG?raw=true', chance: 12 },
             { id: 'bradley', name: 'M3 Bradley', role: 'БМП', hp: 14, dmg: 6, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamebradley.PNG?raw=true', chance: 12 },
-            // Бафф обычных юнитов обратно до 5
             { id: 'puma', name: 'PUMA', role: 'Тяж. БМП', hp: 20, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamepuma.PNG?raw=true', chance: 16 },
             { id: 'strf', name: 'Strf 9040', role: 'БМП', hp: 16, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamestfr.PNG?raw=true', chance: 17 },
             { id: 'hstvl', name: 'HSTV-L', role: 'ЛТ', hp: 13, dmg: 4, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamehstvl.PNG?raw=true', chance: 17 }
         ];
 
-        // Враги: HP снижены, но DMG увеличен (5 и 8) как просили
+        // Фиксированные враги для Демо (Me, AD-4, Pe-8)
         const DEMO_ENEMIES = [
-            { name: 'Разведчик', hp: 60, maxHp: 60, dmg: 5, img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gameiak15.PNG?raw=true' }, // HP 60, DMG 5
-            { name: 'Штурмовик', hp: 100, maxHp: 100, dmg: 8, img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamead4.PNG?raw=true' }  // HP 100, DMG 8
+            { name: 'Me 262', hp: 80, maxHp: 80, dmg: 4, type: 'fighter', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Me%20261%20A-1a.PNG?raw=true' },
+            { name: 'AD-4', hp: 110, maxHp: 110, dmg: 10, type: 'attacker', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamead4.PNG?raw=true' },
+            { name: 'Пe-8 (Босс)', hp: 200, maxHp: 200, dmg: 45, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Pe-8.PNG?raw=true' }
         ];
 
-        // STATE
         let inventory = [];
-        let grid = [null, null, null, null];
+        let grid = [null, null, null, null, null, null];
         let enemies = [];
         let targetEnemyIdx = 0;
-        let abilities = { smoke: 1, repair: 1 };
+        let abilities = { repair: 3, crit: 2 };
         let activeAbility = null;
         let draggedUnitIdx = null; 
         let draggedFromGridIdx = null;
         let selectedSource = null;
+        let turnCounter = 1;
+        let isBattleActive = false; 
+        let demoWins = 0; // Visual only, resets on reload
 
-        // --- INIT SLOTS (4 Slots) ---
-        (function initSlotsUI() {
+        function initUI() {
+            renderProgress();
+            initSlotsUI();
+        }
+
+        function initSlotsUI() {
             const wrapper = document.getElementById('slots-wrapper');
             wrapper.innerHTML = '';
-            for(let i=0; i<4; i++) { 
+            for(let i=0; i<6; i++) {
                 wrapper.innerHTML += `<div class="slot-machine"><div class="slot-strip" id="slot-strip-${i}"><div class="slot-card"><div style="color:#555">?</div></div></div></div>`;
             }
-        })();
+        }
 
-        // --- ROULETTE ---
+        function renderProgress() {
+            document.getElementById('win-count-display').innerText = demoWins;
+            
+            // Visual fake progress (max 500)
+            const pct = Math.min(100, (demoWins / 500) * 100);
+            document.getElementById('progress-fill').style.width = pct + '%';
+
+            const container = document.getElementById('milestones-container');
+            container.innerHTML = '';
+            MILESTONES.forEach(m => {
+                container.innerHTML += `
+                    <div class="milestone-item">
+                        <div class="lock-overlay"><i class="fas fa-lock"></i></div>
+                        <img src="${m.img}">
+                        <div class="milestone-val">${m.wins}</div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- BUTTON HANDLERS ---
+        document.getElementById('spin-btn').addEventListener('click', startMultiSpin);
+        document.getElementById('to-placement-btn').addEventListener('click', goToPlacement);
+        document.getElementById('start-battle-btn').addEventListener('click', startBattle);
+        document.getElementById('btn-fire').addEventListener('click', nextTurn);
+        document.getElementById('btn-crit').addEventListener('click', () => activateAbility('crit'));
+        document.getElementById('btn-repair').addEventListener('click', () => activateAbility('repair'));
+        document.querySelector('.btn-surrender').addEventListener('click', surrender); 
+
+        initUI();
+
         function startMultiSpin() {
             document.getElementById('spin-btn').style.display = 'none';
             inventory = [];
-            for(let i=0; i<4; i++) inventory.push(getWeightedUnit());
-            for(let i=0; i<4; i++) animateSlot(i, inventory[i]);
+            for(let i=0; i<6; i++) inventory.push(getWeightedUnit());
+            for(let i=0; i<6; i++) animateSlot(i, inventory[i]);
         }
 
         function animateSlot(i, result) {
@@ -389,7 +492,7 @@
                 strip.style.transform = `translateY(-${targetPos}px)`;
             }, 50); 
             
-            if (i===3) setTimeout(() => document.getElementById('to-placement-btn').style.display = 'inline-block', duration + delay + 500); 
+            if (i===5) setTimeout(() => document.getElementById('to-placement-btn').style.display = 'inline-block', duration + delay + 500);
         }
 
         function createSlotCard(u) { return `<div class="slot-card ${u.rarity}"><img src="${u.img}"><div class="slot-name">${u.name}</div></div>`; }
@@ -407,24 +510,27 @@
             initBattleSetup();
         }
 
-        // --- BATTLE SETUP ---
         function initBattleSetup() {
-            enemies = DEMO_ENEMIES.map((e, i) => ({ ...e, id: i, maxHp: e.hp }));
+            // Загружаем фиксированных врагов
+            enemies = DEMO_ENEMIES.map((e, i) => ({ ...e, id: i }));
+            
+            targetEnemyIdx = 0; 
+            turnCounter = 1;
+            document.getElementById('turn-num').innerText = turnCounter;
+
             renderEnemies();
 
             const gridDiv = document.getElementById('grid');
             gridDiv.innerHTML = '';
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 6; i++) {
                 const cell = document.createElement('div');
-                cell.className = `cell ${i >= 2 ? 'row-2' : ''}`;
+                cell.className = `cell ${i >= 3 ? 'row-2' : ''}`;
                 cell.dataset.idx = i;
-                if(i===0) cell.innerHTML = '<div style="position:absolute; left:-15px; top:40%; font-size:10px; color:#666; writing-mode:vertical-rl; transform:rotate(180deg);">РЯД 1</div>';
-                if(i===2) cell.innerHTML = '<div style="position:absolute; left:-15px; top:40%; font-size:10px; color:#666; writing-mode:vertical-rl; transform:rotate(180deg);">РЯД 2</div>';
-                
+                if(i===0) cell.innerHTML = '<div style="position:absolute; left:-18px; top:35%; font-size:9px; color:#ff4757; writing-mode:vertical-rl; transform:rotate(180deg); font-weight:bold;">+2 ATK</div>';
+                if(i===3) cell.innerHTML = '<div style="position:absolute; left:-18px; top:35%; font-size:9px; color:#00e5ff; writing-mode:vertical-rl; transform:rotate(180deg); font-weight:bold;">-2 DMG</div>';
                 cell.ondragover = e => e.preventDefault();
                 cell.ondrop = handleDropOnGrid;
                 cell.onclick = () => handleGridInteraction(i);
-                
                 gridDiv.appendChild(cell);
             }
             renderDock();
@@ -433,7 +539,7 @@
         function renderEnemies() {
             const container = document.getElementById('enemies-container');
             container.innerHTML = '';
-            if (enemies[targetEnemyIdx] && enemies[targetEnemyIdx].hp <= 0) {
+            if (enemies[targetEnemyIdx].hp <= 0) {
                 const alive = enemies.findIndex(e => e.hp > 0);
                 if (alive !== -1) targetEnemyIdx = alive;
             }
@@ -442,9 +548,16 @@
                 el.className = `enemy-card ${idx === targetEnemyIdx ? 'selected' : ''} ${e.hp <= 0 ? 'dead' : ''}`;
                 el.onclick = () => { if (e.hp > 0) { targetEnemyIdx = idx; renderEnemies(); } };
                 const pct = Math.max(0, (e.hp / e.maxHp) * 100);
+                
+                let typeBadge = '';
+                if(e.type === 'fighter') typeBadge = '<div class="enemy-type-badge type-fighter">ИСТР</div>';
+                if(e.type === 'attacker') typeBadge = '<div class="enemy-type-badge type-attacker">ШТУРМ</div>';
+                if(e.type === 'bomber') typeBadge = '<div class="enemy-type-badge type-bomber">БОМБ</div>';
+
                 el.innerHTML = `
+                    ${typeBadge}
                     <div class="target-marker"><i class="fas fa-crosshairs"></i></div>
-                    <div style="font-size:0.7rem; color:#aaa;">${e.name}</div>
+                    <div style="font-size:0.7rem; color:#aaa; margin-top:5px;">${e.name}</div>
                     <img src="${e.img}">
                     <div class="enemy-hp-bar"><div class="enemy-hp-fill" style="width:${pct}%"></div></div>
                     <div style="font-size:0.6rem; margin-top:2px;">${e.hp} HP | ${e.dmg} ATK</div>
@@ -461,8 +574,6 @@
                 const el = document.createElement('div');
                 const isSelected = selectedSource && selectedSource.type === 'dock' && selectedSource.index === idx;
                 el.className = `unit ${isSelected ? 'selected-for-move' : ''}`;
-                
-                // --- FIX: Ensure icons don't overflow ---
                 el.style.width = '70px'; el.style.height = '80px'; el.draggable = true;
                 el.innerHTML = `
                     <div class="dock-unit-stats">
@@ -481,7 +592,7 @@
         function handleDockInteraction(idx) {
             if(document.getElementById('start-battle-btn').style.display === 'none') return;
             if (selectedSource && selectedSource.type === 'dock' && selectedSource.index === idx) {
-                selectedSource = null;
+                selectedSource = null; 
             } else {
                 selectedSource = { type: 'dock', index: idx };
             }
@@ -500,7 +611,9 @@
                 }
                 if (selectedSource && selectedSource.type === 'grid') {
                     const fromIdx = selectedSource.index;
-                    const temp = grid[idx]; grid[idx] = grid[fromIdx]; grid[fromIdx] = temp;
+                    const temp = grid[idx];
+                    grid[idx] = grid[fromIdx];
+                    grid[fromIdx] = temp;
                     selectedSource = null;
                     renderDock(); renderGrid(); return;
                 }
@@ -534,17 +647,25 @@
                 cell.innerHTML = ''; if(label) cell.appendChild(label);
                 
                 cell.classList.remove('valid-move');
-                if (selectedSource && grid[idx] === null) cell.classList.add('valid-move');
+                if (selectedSource && grid[idx] === null) {
+                    cell.classList.add('valid-move');
+                }
 
                 const u = grid[idx];
                 if (u) {
                     const el = document.createElement('div');
                     const isSelected = selectedSource && selectedSource.type === 'grid' && selectedSource.index === idx;
-                    el.className = `unit ${u.hp <= 0 ? 'dead' : ''} ${u.isSmoked ? 'smoked' : ''} ${isSelected ? 'selected-for-move' : ''}`;
+                    
+                    el.className = `unit ${u.hp <= 0 ? 'dead' : ''} ${isSelected ? 'selected-for-move' : ''} ${u.critEnabled ? 'crit-active' : ''}`;
                     el.draggable = u.hp > 0 && document.getElementById('start-battle-btn').style.display !== 'none';
                     const hpPct = (u.hp / u.maxHp) * 100;
+                    
+                    let dispDmg = u.dmg;
+                    if (idx < 3) dispDmg += 2; 
+                    if (u.critEnabled) dispDmg *= 2; 
+
                     el.innerHTML = `
-                        <div class="unit-stat-badge stat-dmg"><i class="fas fa-gavel"></i> ${u.dmg}</div>
+                        <div class="unit-stat-badge stat-dmg"><i class="fas fa-gavel"></i> ${dispDmg}</div>
                         <img src="${u.img}">
                         <div class="stat-hp-text">${u.hp}/${u.maxHp}</div>
                         <div class="unit-hp-bar"><div class="unit-hp-fill" style="width:${hpPct}%"></div></div>
@@ -557,23 +678,40 @@
 
         function startBattle() {
             if (grid.every(u => u === null)) { log("Нет юнитов!", "bad"); return; }
-            selectedSource = null;
+            selectedSource = null; 
             document.getElementById('start-battle-btn').style.display = 'none';
             document.getElementById('dock').style.display = 'none';
             document.getElementById('battle-controls').style.display = 'flex';
-            document.getElementById('btn-surrender').style.display = 'block'; 
-            log("Бой начался!", "info");
-            renderGrid();
+            document.querySelector('.btn-surrender').style.display = 'block'; 
+            log("Бой начался! Выберите цель кликом.", "info");
+            isBattleActive = true;
+            renderGrid(); 
         }
 
         function surrender() {
-            window.location.href = 'findagamedemo.html';
+            document.getElementById('screen-battle').classList.remove('active');
+            document.getElementById('screen-roulette').classList.add('active');
+            
+            document.getElementById('spin-btn').style.display = 'inline-block';
+            document.getElementById('to-placement-btn').style.display = 'none';
+            document.getElementById('battle-controls').style.display = 'none';
+            document.querySelector('.btn-surrender').style.display = 'none';
+            document.getElementById('start-battle-btn').style.display = 'inline-block';
+            document.getElementById('dock').style.display = 'flex';
+            
+            grid = [null, null, null, null, null, null];
+            inventory = [];
+            abilities = { repair: 3, crit: 2 };
+            selectedSource = null;
+            isBattleActive = false;
+            
+            initSlotsUI();
         }
 
         function activateAbility(type) {
             if (abilities[type] > 0) {
                 activeAbility = activeAbility === type ? null : type;
-                log(activeAbility ? `Выберите юнита.` : "Отмена.", "info");
+                log(activeAbility ? `Выберите своего юнита.` : "Отмена.", "info");
                 highlightUnits();
                 updateBtns();
             }
@@ -582,11 +720,19 @@
         function handleCellClickAbility(idx) {
             const u = grid[idx];
             if (!u || u.hp <= 0) return;
-            if (activeAbility === 'smoke') {
-                u.isSmoked = true; abilities.smoke--; showFloat(idx, "SMOKE", "#fff");
-            } else if (activeAbility === 'repair') {
-                u.hp = Math.min(u.hp + 2, u.maxHp); abilities.repair--; showFloat(idx, "+2 HP", "#2ed573");
-            } else return;
+            
+            if (activeAbility === 'repair') {
+                u.hp = Math.min(u.hp + 3, u.maxHp); 
+                abilities.repair--; showFloat(idx, "+3 HP", "#2ed573");
+            } 
+            else if (activeAbility === 'crit') {
+                if (u.critEnabled) return; 
+                u.critEnabled = true;
+                abilities.crit--; 
+                showFloat(idx, "ПРИЦЕЛ!", "#ff4757");
+            } 
+            else return;
+
             activeAbility = null; clearHighlights(); updateBtns(); renderGrid();
         }
 
@@ -600,24 +746,33 @@
         }
 
         function updateBtns() {
-            document.getElementById('charge-smoke').innerText = abilities.smoke;
             document.getElementById('charge-repair').innerText = abilities.repair;
-            document.getElementById('btn-smoke').className = `ability-btn ${activeAbility === 'smoke' ? 'active' : ''}`;
             document.getElementById('btn-repair').className = `ability-btn ${activeAbility === 'repair' ? 'active' : ''}`;
-            document.getElementById('btn-smoke').disabled = abilities.smoke === 0;
             document.getElementById('btn-repair').disabled = abilities.repair === 0;
+
+            document.getElementById('charge-crit').innerText = abilities.crit;
+            document.getElementById('btn-crit').className = `ability-btn ${activeAbility === 'crit' ? 'active' : ''}`;
+            document.getElementById('btn-crit').disabled = abilities.crit === 0;
         }
 
         function nextTurn() {
+            if(!isBattleActive) return;
             activeAbility = null; updateBtns(); clearHighlights();
 
             let totalDmg = 0;
-            grid.forEach(u => { if (u && u.hp > 0) totalDmg += u.dmg; });
+            grid.forEach((u, i) => { 
+                if (u && u.hp > 0) {
+                    let unitDmg = u.dmg;
+                    if (i < 3) unitDmg += 2; 
+                    if (u.critEnabled) { unitDmg *= 2; u.critEnabled = false; }
+                    totalDmg += unitDmg;
+                }
+            });
             
             const target = enemies[targetEnemyIdx];
             if (target && target.hp > 0) {
                 target.hp -= totalDmg;
-                log(`Урон по ${target.name}: -${totalDmg}`, "good");
+                log(`Залп по ${target.name}: -${totalDmg} HP`, "good");
             }
             renderEnemies();
 
@@ -629,16 +784,17 @@
 
                 enemies.forEach(e => {
                     if (e.hp > 0 && livingUnits.length > 0) {
+                        if (e.type === 'bomber') {
+                            if (turnCounter % 5 === 0) {
+                                log("БОМБАРДИРОВКА! БОСС АТАКУЕТ!", "bad");
+                            } else {
+                                return; // Босс атакует только раз в 5 ходов
+                            }
+                        }
                         const tIdx = livingUnits[Math.floor(Math.random() * livingUnits.length)];
                         const unit = grid[tIdx];
-                        
                         let dmg = e.dmg;
-                        if (unit.isSmoked) {
-                            dmg = 0; unit.isSmoked = false; log(`${unit.name}: Уворот в дыму!`, "good");
-                        } else if (tIdx >= 2) { // Row 2 in Demo
-                            dmg = Math.max(0, dmg - 2); 
-                        }
-
+                        if (tIdx >= 3) { dmg = Math.max(0, dmg - 2); }
                         if (dmg > 0) {
                             unit.hp -= dmg;
                             showFloat(tIdx, `-${dmg}`, "#ff4757");
@@ -646,26 +802,40 @@
                         }
                     }
                 });
+
+                turnCounter++;
+                document.getElementById('turn-num').innerText = turnCounter;
                 renderGrid();
+                
                 if (grid.every(u => !u || u.hp <= 0)) endGame(false);
             }, 600);
         }
 
         function endGame(win) {
+            isBattleActive = false;
+
+            if(win) {
+                demoWins++; // Increment visual counter only for this session
+                renderProgress();
+            }
+
             const modal = document.getElementById('result-modal');
             const title = document.getElementById('res-title');
             const msg = document.getElementById('res-msg');
+            const promo = document.getElementById('promo-box');
             
             modal.style.display = 'flex';
 
             if(win) {
                 title.innerText = "ПОБЕДА!"; 
                 title.className = "result-title win";
-                msg.innerText = "Демонстрация завершена успешно.";
+                msg.innerText = "Враг разбит! Отличная работа, стратег.";
+                promo.style.display = 'block'; 
             } else {
                 title.innerText = "ПОРАЖЕНИЕ"; 
                 title.className = "result-title loss";
-                msg.innerText = "Враг оказался слишком силен."; 
+                msg.innerText = "Ваши войска разбиты."; 
+                promo.style.display = 'none';
             }
         }
 
@@ -675,6 +845,7 @@
             document.querySelectorAll('.grid-container .cell')[i].appendChild(el);
             setTimeout(()=>el.remove(), 1000);
         }
+    })();
     </script>
 </body>
 </html>
