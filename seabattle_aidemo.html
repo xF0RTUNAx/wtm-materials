@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>xFORTUNAx | Морской бой (DEMO)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-color: #0f0f12; --grid-color: #1a1a20; --border-color: #2c2c35; --highlight: #00e5ff;
+            --hit: #ff4757; --miss: #dfe4ea; --radar: #9b59b6; --barrage: #ff9f43; --detected: #f1c40f;
+            --msg-success-bg: #d1e7dd; --msg-success-text: #0f5132;
+            --msg-error-bg: #f8d7da; --msg-error-text: #842029;
+            --progress-bg: #2c3e50; --progress-fill: #27ae60;
+        }
+
+        * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 10px;
+            overflow-x: hidden;
+        }
+
+        /* НАВИГАЦИЯ */
+        .top-nav { width: 100%; max-width: 1200px; display: flex; justify-content: flex-start; margin-bottom: 10px; }
+        .btn-back-home {
+            background: rgba(255, 255, 255, 0.1); color: #ccc; text-decoration: none;
+            padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; display: flex; align-items: center;
+            gap: 8px; transition: 0.3s; border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-back-home:hover { background: rgba(255, 255, 255, 0.2); color: white; }
+
+        h1 { margin: 5px 0 10px 0; text-align: center; text-transform: uppercase; letter-spacing: 1px; font-size: 1.5rem; text-shadow: 0 0 15px rgba(0, 229, 255, 0.3); }
+        
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px;
+            width: 100%; max-width: 800px; text-align: left; margin-bottom: 15px;
+            font-size: 0.8rem; line-height: 1.4; color: #ccc; border-left: 3px solid var(--highlight);
+        }
+        .info-panel strong { color: var(--highlight); }
+
+        /* ПРОГРЕСС БАР (DEMO STYLE) */
+        .progress-section {
+            width: 100%; max-width: 600px; margin-bottom: 20px;
+            background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color);
+        }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.8rem; color: #aaa; text-transform: uppercase; }
+        .win-counter { color: #aaa; font-weight: bold; }
+        .progress-track { width: 100%; height: 8px; background: #222; border-radius: 5px; overflow: hidden; position: relative; margin-bottom: 15px; border: 1px solid #333; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #555, #888); width: 0%; }
+        
+        .milestones { display: flex; justify-content: space-between; align-items: flex-start; position: relative; }
+        .milestone-item { display: flex; flex-direction: column; align-items: center; gap: 5px; width: 18%; position: relative; opacity: 0.5; filter: grayscale(1); }
+        .milestone-img {
+            width: 100%; max-width: 50px; height: 50px; object-fit: contain;
+            border: 2px solid #444; border-radius: 8px; padding: 2px; background: #1a1a1a;
+        }
+        .milestone-label { font-size: 0.65rem; text-align: center; color: #666; }
+        .lock-overlay {
+            position: absolute; top: -5px; right: -5px; background: #222; color: #aaa;
+            width: 18px; height: 18px; border-radius: 50%; font-size: 10px; display: flex;
+            align-items: center; justify-content: center; border: 1px solid #444; z-index: 2;
+        }
+
+        .upsell-tag {
+            background: rgba(0, 229, 255, 0.1); color: #00e5ff; font-size: 0.7rem; padding: 5px 10px; 
+            border-radius: 4px; border: 1px solid rgba(0, 229, 255, 0.2); margin-top: 10px; text-align: center;
+        }
+
+        /* ИГРОВОЕ ПОЛЕ (8x8 Anpassung) */
+        .status-bar { font-size: 1.1rem; font-weight: bold; color: var(--highlight); margin-bottom: 10px; height: 25px; text-align: center; }
+        .game-wrapper { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; max-width: 1000px; }
+        .boards-container { display: flex; flex-direction: row; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; }
+        .grid-section { display: flex; flex-direction: column; align-items: center; }
+        .grid-title { margin-bottom: 8px; font-weight: 600; color: #aaa; font-size: 0.9rem; }
+        
+        /* GRID 8x8 */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(8, 32px); /* 8 COLS */
+            grid-template-rows: repeat(8, 32px);    /* 8 ROWS */
+            gap: 1px; 
+            background-color: var(--border-color); 
+            border: 3px solid var(--border-color); 
+            border-radius: 4px; position: relative; 
+        }
+        
+        .cell { width: 32px; height: 32px; background-color: var(--grid-color); cursor: crosshair; position: relative; transition: background 0.2s; }
+        .grid.special-mode .cell { cursor: cell; } 
+        
+        .cell:hover::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.1); pointer-events: none; z-index: 1;
+        }
+        
+        .cell.hover-valid { background-color: rgba(0, 229, 255, 0.3); } 
+        .cell.hover-invalid { background-color: rgba(255, 68, 68, 0.3); }
+        .cell.radar-preview { background-color: rgba(155, 89, 182, 0.5) !important; box-shadow: 0 0 5px var(--radar); z-index: 5; }
+        .cell.barrage-preview { background-color: rgba(255, 159, 67, 0.5) !important; box-shadow: 0 0 5px var(--barrage); z-index: 5; }
+
+        .player-cell.occupied { border: 1px solid rgba(0,0,0,0.5); }
+        .player-cell.occupied.lun { background-color: #fab1a0; } .player-cell.occupied.battleship { background-color: #b2bec3; } .player-cell.occupied.missile { background-color: #55efc4; }
+        .ship-grid-label { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; color: #fff; text-shadow: 0 0 4px #000; z-index: 2; pointer-events: none; }
+
+        .cell::after { z-index: 5; pointer-events: none; }
+        .cell.miss::after {
+            content: ''; position: absolute; top: 50%; left: 50%; width: 8px; height: 8px;
+            background-color: var(--miss); border-radius: 50%; transform: translate(-50%, -50%);
+        }
+        
+        .cell.hit { background-color: rgba(255, 71, 87, 0.2); }
+        .cell.hit::after { content: '✕'; font-size: 18px; color: var(--hit); position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); line-height: 0; font-weight: bold; }
+        .player-cell.occupied.hit { background-color: #2d0000 !important; border-color: #ff0000 !important; }
+        .player-cell.occupied.hit::after { content: '🔥'; font-size: 22px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); line-height: 0; z-index: 5; filter: drop-shadow(0 0 5px orange); animation: burn 1s infinite alternate; }
+        
+        .cell.sunk { background-color: #2f3542 !important; border: 2px solid #ff4757 !important; opacity: 0.8; }
+        .cell.sunk::after { content: '💀'; font-size: 18px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); line-height: 0; z-index: 6; animation: none; }
+        @keyframes burn { from { transform: translate(-50%, -50%) scale(1); } to { transform: translate(-50%, -50%) scale(1.2); } }
+        .cell.detected { background-color: rgba(241, 196, 15, 0.2); border: 1px solid var(--detected); }
+        .cell.detected::after { content: '👁️'; font-size: 16px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); line-height: 0; }
+
+        .dock { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; width: 100%; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; border: 1px solid rgba(255,255,255,0.1); }
+        .ship-container { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 12px; background: rgba(0,0,0,0.3); border-radius: 8px; cursor: grab; border: 2px solid transparent; transition: all 0.3s; position: relative; }
+        .ship-container:active { cursor: grabbing; } .ship-container.placed { opacity: 0.5; filter: grayscale(1); cursor: default; } .ship-container.selected { border-color: var(--highlight); background: rgba(0, 229, 255, 0.1); }
+        .ship-visual { display: flex; align-items: center; justify-content: center; padding: 5px; } .ship-img { width: 100%; height: auto; max-height: 40px; object-fit: contain; filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.8)); }
+        .ship-info { display: flex; flex-direction: column; justify-content: center; text-align: center; } .ship-name { font-weight: 700; font-size: 0.85rem; color: #eee; line-height: 1.2; } .ship-size { font-size: 0.7rem; color: #aaa; margin-top: 2px; display: block; }
+
+        .controls { display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap; width: 100%; }
+        .btn { padding: 10px 20px; background: var(--highlight); color: #0f0f12; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+        .btn:hover { box-shadow: 0 0 15px var(--highlight); transform: translateY(-2px); } .btn:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; transform: none; }
+        .btn-start { background: linear-gradient(45deg, #2ed573, #26de81); color: white; display: none; }
+        .btn-radar { background: linear-gradient(45deg, #8e44ad, #9b59b6); color: white; } .btn-radar.active { box-shadow: 0 0 15px #9b59b6; border: 2px solid white; }
+        .btn-barrage { background: linear-gradient(45deg, #ff9f43, #ee5253); color: white; } .btn-barrage.active { box-shadow: 0 0 15px #ee5253; border: 2px solid white; }
+        #enemy-area { display: none; }
+
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 5000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .result-card { width: 100%; max-width: 450px; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideIn 0.4s ease-out; }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .result-card.win { background-color: var(--msg-success-bg); border-left: 8px solid var(--msg-success-text); color: var(--msg-success-text); }
+        .result-card.lose { background-color: var(--msg-error-bg); border-left: 8px solid var(--msg-error-text); color: var(--msg-error-text); }
+        .result-header { font-size: 1.3rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+        .result-body { font-size: 0.95rem; line-height: 1.5; }
+        .result-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .btn-restart { padding: 8px 16px; border-radius: 6px; border: none; font-weight: 600; cursor: pointer; background: rgba(0,0,0,0.1); color: inherit; transition: 0.2s; } .btn-restart:hover { background: rgba(0,0,0,0.2); }
+
+        .btn-buy-full {
+            display: inline-block; width: 100%; margin-top: 10px; padding: 12px;
+            background: #0088cc; color: white; text-decoration: none; border-radius: 50px;
+            font-weight: bold; font-size: 0.9rem; text-align: center; transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,136,204,0.4);
+        }
+        .btn-buy-full:hover { background: #0077b5; transform: scale(1.02); }
+
+        @media (max-width: 768px) and (orientation: portrait) {
+            h1 { font-size: 1.2rem; } .info-panel { font-size: 0.75rem; padding: 10px; } .boards-container { gap: 15px; }
+            /* Mobile Grid 8x8 adjustment */
+            .grid { grid-template-columns: repeat(8, 10vw); grid-template-rows: repeat(8, 10vw); max-width: 350px; max-height: 350px; }
+            .cell { width: 10vw; height: 10vw; max-width: 40px; max-height: 40px; }
+            .ship-visual img { max-height: 30px; } .dock { padding: 10px; } .ship-container { padding: 5px 10px; }
+            .ship-name { font-size: 0.75rem; } .ship-size { font-size: 0.65rem; } .btn { font-size: 0.75rem; padding: 10px 15px; }
+        }
+        @media (max-height: 500px) and (orientation: landscape) {
+            body { padding: 5px; } h1 { display: none; } .top-nav { display: none; } .info-panel { display: none; } .progress-section { display: none; }
+            .game-wrapper { margin-top: 0; gap: 5px; } .boards-container { flex-direction: row; flex-wrap: nowrap; gap: 20px; align-items: flex-start; }
+            .grid { grid-template-columns: repeat(8, 8vh); grid-template-rows: repeat(8, 8vh); max-width: none; max-height: none; }
+            .cell { width: 8vh; height: 8vh; max-width: none; max-height: none; }
+            .dock { width: 200px; max-height: 70vh; overflow-y: auto; } .ship-visual img { max-height: 4vh; } .btn { font-size: 0.7rem; padding: 5px 10px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <a href="findagamedemo.html" class="btn-back-home"><i class="fas fa-arrow-left"></i> Выход</a>
+    </nav>
+
+    <h1>Морской бой (DEMO)</h1>
+    
+    <div class="info-panel">
+        <div style="text-align:center; margin-bottom:10px;"><strong>Правила демо-версии</strong></div>
+        1. Поле уменьшено до 8x8. <br>
+        2. Доступно 3 корабля (без HMS Type 45).<br>
+        3. Расставьте флот и вступите в бой.<br>
+        <strong>Способности:</strong><br>
+        • <i class="fas fa-satellite-dish" style="color:var(--radar)"></i> <strong>Радар (Лунь):</strong> Скан 2x2.<br>
+        • <i class="fas fa-bomb" style="color:var(--barrage)"></i> <strong>Залп (Линкор):</strong> Удар 2x2.<br>
+        <em>Награды и сохранения отключены в демо.</em>
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-header"><span>Боевой пропуск (Preview)</span><span class="win-counter">Победы: <span id="total-wins">0</span></span></div>
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="milestones">
+            <div class="milestone-item"><div class="lock-overlay"><i class="fas fa-lock"></i></div><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/starttitle.jpg?raw=true" class="milestone-img"><span class="milestone-label">10</span></div>
+            <div class="milestone-item"><div class="lock-overlay"><i class="fas fa-lock"></i></div><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/exptitle.jpg?raw=true" class="milestone-img"><span class="milestone-label">50</span></div>
+            <div class="milestone-item"><div class="lock-overlay"><i class="fas fa-lock"></i></div><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gold.PNG?raw=true" class="milestone-img"><span class="milestone-label">100</span></div>
+            <div class="milestone-item"><div class="lock-overlay"><i class="fas fa-lock"></i></div><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/7day.PNG?raw=true" class="milestone-img"><span class="milestone-label">250</span></div>
+            <div class="milestone-item"><div class="lock-overlay"><i class="fas fa-lock"></i></div><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platina.PNG?raw=true" class="milestone-img"><span class="milestone-label">500</span></div>
+        </div>
+        <div class="upsell-tag"><i class="fas fa-info-circle"></i> Прогресс доступен в полной версии</div>
+    </div>
+
+    <div class="status-bar" id="status-bar">Фаза: расстановка флота</div>
+
+    <div class="game-wrapper">
+        <div class="boards-container">
+            <div class="grid-section"><div class="grid-title">ВАШ ФЛОТ</div><div class="grid" id="player-grid"></div></div>
+            <div class="grid-section" id="enemy-area"><div class="grid-title">РАДАР ЦЕЛИ (ИИ)</div><div class="grid" id="enemy-grid"></div></div>
+        </div>
+        <div class="controls" id="setup-controls">
+            <button class="btn" onclick="rotateAxis()">Поворот: <span id="axis-display">Горизонт.</span></button>
+            <button class="btn btn-start" id="btn-start-game" onclick="startGame()">В БОЙ</button>
+            <button class="btn" style="background:#ff4444; color:white" onclick="location.reload()">Сброс</button>
+        </div>
+        <div class="controls" id="battle-controls" style="display: none;">
+            <button class="btn btn-radar" id="btn-radar" onclick="toggleRadar()"><i class="fas fa-satellite-dish"></i> Радар</button>
+            <button class="btn btn-barrage" id="btn-barrage" onclick="toggleBarrage()"><i class="fas fa-bomb"></i> Залп</button>
+            <button class="btn" style="background:#ff4444; color:white" onclick="location.reload()">Сдаться</button>
+        </div>
+        <div class="dock" id="dock">
+            <div class="ship-container ship-lun" id="p-lun" draggable="true" data-size="1" data-type="lun"><div class="ship-visual" style="width: 50px;"><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/lun.PNG?raw=true" class="ship-img" alt="Lun"></div><div class="ship-info"><span class="ship-name">Лунь</span><span class="ship-size">Размер: 1</span></div></div>
+            <div class="ship-container ship-battleship" id="p-bs" draggable="true" data-size="4" data-type="battleship"><div class="ship-visual" style="width: 140px;"><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/USS%20Tennessee.PNG?raw=true" class="ship-img" alt="USS Tennessee"></div><div class="ship-info"><span class="ship-name">USS Tennessee</span><span class="ship-size">Размер: 4</span></div></div>
+            <div class="ship-container ship-missile" id="p-ms1" draggable="true" data-size="2" data-type="missile"><div class="ship-visual" style="width: 80px;"><img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Pr.%2011352.PNG?raw=true" class="ship-img" alt="Pr. 11352"></div><div class="ship-info"><span class="ship-name">Пр. 11352</span><span class="ship-size">Размер: 2</span></div></div>
+            </div>
+    </div>
+
+    <div class="overlay" id="result-overlay"><div class="result-card" id="result-card-content"></div></div>
+
+    <script>
+        // SETTINGS FOR DEMO (8x8)
+        const gridSize = 8; // CHANGED FROM 10
+        const totalCells = gridSize * gridSize;
+        let isHorizontal = true;
+        let gameState = 0; 
+        
+        let playerBoard = Array(totalCells).fill(null);
+        let enemyBoard = Array(totalCells).fill(null);
+        let enemyBoardVis = Array(totalCells).fill(null);
+
+        const pGrid = document.getElementById('player-grid');
+        const eGrid = document.getElementById('enemy-grid');
+        const statusEl = document.getElementById('status-bar');
+        const btnStart = document.getElementById('btn-start-game');
+        
+        const btnRadar = document.getElementById('btn-radar');
+        const btnBarrage = document.getElementById('btn-barrage');
+        
+        let draggedShip = null; let selectedShip = null;
+        let placedShipsCount = 0; 
+        const totalShips = 3; // CHANGED FROM 4
+
+        // REMOVED p-ms2 from fleet
+        const fleet = { 
+            'p-lun': { size: 1, type: 'lun', hits: 0, cells: [] }, 
+            'p-bs':  { size: 4, type: 'battleship', hits: 0, cells: [] }, 
+            'p-ms1': { size: 2, type: 'missile', hits: 0, cells: [] }
+        };
+        
+        let enemyFleet = []; let aiStack = []; 
+        let radarUsed = false; let isRadarMode = false;
+        let barrageUsed = false; let isBarrageMode = false;
+        let demoWins = 0;
+
+        function updateProgressUI() {
+            document.getElementById('total-wins').innerText = demoWins;
+            let percent = (demoWins / 500) * 100;
+            if (percent > 100) percent = 100;
+            document.getElementById('progress-fill').style.width = percent + '%';
+        }
+
+        function initGrids() {
+            updateProgressUI();
+            createGrid(pGrid, 'player'); createGrid(eGrid, 'enemy');
+            setupDragAndClick();
+        }
+
+        function createGrid(gridEl, owner) {
+            gridEl.innerHTML = '';
+            for (let i = 0; i < totalCells; i++) {
+                const cell = document.createElement('div'); cell.classList.add('cell');
+                if (owner === 'player') cell.classList.add('player-cell'); cell.dataset.index = i;
+                if (owner === 'player') {
+                    cell.addEventListener('dragover', dragOver); cell.addEventListener('dragleave', dragLeave);
+                    cell.addEventListener('drop', dropShip); cell.addEventListener('click', () => playerGridClick(i));
+                    cell.addEventListener('touchstart', touchStartCell, {passive: false}); cell.addEventListener('touchmove', touchMoveCell, {passive: false});
+                    cell.addEventListener('touchend', touchEndCell);
+                } else {
+                    cell.addEventListener('click', () => enemyGridClick(i));
+                    cell.addEventListener('mouseenter', () => handleAbilityHover(i, true));
+                    cell.addEventListener('mouseleave', () => handleAbilityHover(i, false));
+                }
+                gridEl.appendChild(cell);
+            }
+        }
+
+        function setupDragAndClick() {
+            document.querySelectorAll('.ship-container').forEach(ship => {
+                ship.addEventListener('dragstart', (e) => { if (ship.classList.contains('placed')) { e.preventDefault(); return; } draggedShip = ship; });
+                ship.addEventListener('click', (e) => { if (gameState === 0 && !ship.classList.contains('placed')) { if (selectedShip) selectedShip.classList.remove('selected'); ship.classList.add('selected'); selectedShip = ship; } });
+                ship.addEventListener('touchstart', (e) => { if (ship.classList.contains('placed')) { e.preventDefault(); return; } draggedShip = ship; ship.style.opacity = '0.7'; }, {passive: false});
+                ship.addEventListener('touchend', (e) => { ship.style.opacity = '1'; if (draggedShip) { if (gameState === 0 && !ship.classList.contains('placed')) { if (selectedShip) selectedShip.classList.remove('selected'); ship.classList.add('selected'); selectedShip = ship; } draggedShip = null; } });
+            });
+        }
+
+        let lastTouchedCell = null;
+        function touchStartCell(e) { e.preventDefault(); const touch = e.touches[0]; const cell = document.elementFromPoint(touch.clientX, touch.clientY); if (cell && cell.classList.contains('cell')) { lastTouchedCell = cell; const index = parseInt(cell.dataset.index); if (selectedShip && gameState === 0) playerGridClick(index); else if (draggedShip) highlight(index, parseInt(draggedShip.dataset.size), true); } }
+        function touchMoveCell(e) { e.preventDefault(); const touch = e.touches[0]; const cell = document.elementFromPoint(touch.clientX, touch.clientY); if (cell && cell.classList.contains('cell') && cell !== lastTouchedCell) { if (lastTouchedCell && draggedShip) highlight(parseInt(lastTouchedCell.dataset.index), parseInt(draggedShip.dataset.size), false); lastTouchedCell = cell; if (draggedShip) highlight(parseInt(cell.dataset.index), parseInt(draggedShip.dataset.size), true); } }
+        function touchEndCell(e) { e.preventDefault(); if (lastTouchedCell && draggedShip) { highlight(parseInt(lastTouchedCell.dataset.index), parseInt(draggedShip.dataset.size), false); placeShipLogic(parseInt(lastTouchedCell.dataset.index), draggedShip); } draggedShip = null; lastTouchedCell = null; }
+        function dragOver(e) { e.preventDefault(); const ship = draggedShip || selectedShip; if (!ship) return; highlight(parseInt(this.dataset.index), parseInt(ship.dataset.size), true); }
+        function dragLeave(e) { const ship = draggedShip || selectedShip; if (!ship) return; highlight(parseInt(this.dataset.index), parseInt(ship.dataset.size), false); }
+        function dropShip(e) { e.preventDefault(); if (!draggedShip) return; placeShipLogic(parseInt(this.dataset.index), draggedShip); draggedShip = null; }
+        function playerGridClick(index) { if (gameState === 0 && selectedShip) { if (placeShipLogic(index, selectedShip)) { selectedShip.classList.remove('selected'); selectedShip = null; } } }
+
+        function placeShipLogic(index, shipEl) {
+            const size = parseInt(shipEl.dataset.size); const id = shipEl.id; const type = shipEl.dataset.type; const indices = getIndices(index, size);
+            if (!indices || !checkPlacementValidity(playerBoard, indices)) return false; 
+            indices.forEach(idx => { playerBoard[idx] = id; pGrid.children[idx].classList.add('occupied', type); });
+            const midIndex = Math.floor(indices.length / 2); const centerCell = pGrid.children[indices[midIndex]];
+            if (id === 'p-ms1') centerCell.innerHTML += '<span class="ship-grid-label">1</span>'; 
+            fleet[id].cells = indices;
+            if (gameState === 0) { shipEl.classList.add('placed'); shipEl.draggable = false; placedShipsCount++; clearHighlights(); if (placedShipsCount === totalShips) { statusEl.innerText = "Флот готов! Нажмите 'В БОЙ'."; btnStart.style.display = 'inline-block'; } }
+            return true; 
+        }
+
+        function checkPlacementValidity(board, indices) { for (let idx of indices) { if (board[idx] !== null) return false; const neighbors = getNeighbors(idx); for (let nIdx of neighbors) { if (board[nIdx] !== null) return false; } } return true; }
+        
+        // NEIGHBOR LOGIC UPDATED FOR 8x8
+        function getNeighbors(idx) { 
+            const x = idx % gridSize; 
+            const y = Math.floor(idx / gridSize); 
+            let neighbors = []; 
+            for (let dy = -1; dy <= 1; dy++) { 
+                for (let dx = -1; dx <= 1; dx++) { 
+                    if (dx === 0 && dy === 0) continue; 
+                    const nx = x + dx; 
+                    const ny = y + dy; 
+                    if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) neighbors.push(ny * gridSize + nx); 
+                } 
+            } 
+            return neighbors; 
+        }
+        
+        // INDICES LOGIC UPDATED FOR 8x8
+        function getIndices(start, size) { 
+            let idxs = []; 
+            let x = start % gridSize; 
+            let y = Math.floor(start / gridSize); 
+            for (let i=0; i<size; i++) { 
+                if (isHorizontal) { 
+                    if (x + i >= gridSize) return null; 
+                    idxs.push(start + i); 
+                } else { 
+                    if (y + i >= gridSize) return null; 
+                    idxs.push(start + i * gridSize); 
+                } 
+            } 
+            return idxs; 
+        }
+        
+        function highlight(index, size, on) { const idxs = getIndices(index, size); if (!idxs) return; let valid = checkPlacementValidity(playerBoard, idxs); idxs.forEach(i => { const c = pGrid.children[i]; if (on) c.classList.add(valid ? 'hover-valid' : 'hover-invalid'); else c.classList.remove('hover-valid', 'hover-invalid'); }); }
+        function clearHighlights() { Array.from(pGrid.children).forEach(c => c.classList.remove('hover-valid', 'hover-invalid')); }
+        function rotateAxis() { isHorizontal = !isHorizontal; document.getElementById('axis-display').innerText = isHorizontal ? "Горизонт." : "Вертик."; }
+
+        function startGame() { setupAI(); document.getElementById('dock').style.display = 'none'; document.getElementById('setup-controls').style.display = 'none'; document.getElementById('battle-controls').style.display = 'flex'; document.getElementById('enemy-area').style.display = 'flex'; gameState = 2; statusEl.innerText = "БОЙ НАЧАЛСЯ! Выберите цель."; }
+        
+        // AI SETUP UPDATED FOR 3 SHIPS & 8x8
+        function setupAI() { 
+            enemyFleet = []; 
+            const aiShipsSizes = [4, 2, 1]; // REMOVED 3
+            aiShipsSizes.forEach(size => { 
+                let placed = false; 
+                while (!placed) { 
+                    let rnd = Math.floor(Math.random() * totalCells); 
+                    let orient = Math.random() > 0.5; 
+                    let idxs = []; 
+                    let x = rnd % gridSize; 
+                    let y = Math.floor(rnd / gridSize); 
+                    let possible = true; 
+                    for(let k=0; k<size; k++) { 
+                        let ii = orient ? rnd + k : rnd + k * gridSize; 
+                        if ((orient && x+k>=gridSize) || (!orient && y+k>=gridSize)) { possible = false; break; } 
+                        idxs.push(ii); 
+                    } 
+                    if (possible && checkPlacementValidity(enemyBoard, idxs)) { 
+                        idxs.forEach(i => enemyBoard[i] = 'ship'); 
+                        enemyFleet.push({ size: size, hits: 0, cells: idxs, sunk: false }); 
+                        placed = true; 
+                    } 
+                } 
+            }); 
+        }
+
+        // ABILITY LOGIC UPDATED FOR 8x8 (+10 becomes +gridSize)
+        function getAbilityIndices(start) { 
+            const x = start % gridSize; 
+            const y = Math.floor(start / gridSize); 
+            if (x >= gridSize - 1 || y >= gridSize - 1) return null; 
+            return [start, start + 1, start + gridSize, start + gridSize + 1]; 
+        }
+        
+        function handleAbilityHover(index, on) { if (!isRadarMode && !isBarrageMode) return; const idxs = getAbilityIndices(index); if (!idxs) return; if (isRadarMode) idxs.forEach(i => { const c = eGrid.children[i]; if(on) c.classList.add('radar-preview'); else c.classList.remove('radar-preview'); }); if (isBarrageMode) idxs.forEach(i => { const c = eGrid.children[i]; if(on) c.classList.add('barrage-preview'); else c.classList.remove('barrage-preview'); }); }
+        function clearAbilityModes() { isRadarMode = false; isBarrageMode = false; btnRadar.classList.remove('active'); btnBarrage.classList.remove('active'); eGrid.classList.remove('special-mode'); Array.from(eGrid.children).forEach(c => c.classList.remove('radar-preview', 'barrage-preview')); }
+        function toggleRadar() { if (gameState !== 2 || radarUsed || btnRadar.disabled) return; if (fleet['p-lun'].hits >= fleet['p-lun'].size) { alert("Лунь уничтожен! Радар недоступен."); btnRadar.disabled = true; return; } if (isRadarMode) { clearAbilityModes(); statusEl.innerText = "Радар отменен. ВАШ ХОД."; } else { clearAbilityModes(); isRadarMode = true; btnRadar.classList.add('active'); eGrid.classList.add('special-mode'); statusEl.innerText = "РАДАР: Выберите зону 2x2."; } }
+        function performRadarScan(index) { const idxs = getAbilityIndices(index); if (!idxs) return; radarUsed = true; btnRadar.innerText = "Радар (Исп.)"; btnRadar.disabled = true; clearAbilityModes(); let found = false; idxs.forEach(i => { const c = eGrid.children[i]; if (enemyBoardVis[i] === null) { if (enemyBoard[i] === 'ship') { enemyBoardVis[i] = 'detected'; c.classList.add('detected'); found = true; } else { enemyBoardVis[i] = 'miss'; c.classList.add('miss'); } } }); statusEl.innerText = found ? "РАДАР: Цель обнаружена! ВАШ ХОД." : "РАДАР: Чисто. ВАШ ХОД."; }
+        function toggleBarrage() { if (gameState !== 2 || barrageUsed || btnBarrage.disabled) return; if (fleet['p-bs'].hits >= fleet['p-bs'].size) { alert("Линкор уничтожен! Залп недоступен."); btnBarrage.disabled = true; return; } if (isBarrageMode) { clearAbilityModes(); statusEl.innerText = "Залп отменен. ВАШ ХОД."; } else { clearAbilityModes(); isBarrageMode = true; btnBarrage.classList.add('active'); eGrid.classList.add('special-mode'); statusEl.innerText = "ЗАЛП ЛИНКОРА: Выберите зону 2x2."; } }
+        function performBarrage(index) { const idxs = getAbilityIndices(index); if (!idxs) return; barrageUsed = true; btnBarrage.innerText = "Залп (Исп.)"; btnBarrage.disabled = true; clearAbilityModes(); statusEl.innerText = "ОГОНЬ! Массированный удар..."; let delay = 0; idxs.forEach(i => { setTimeout(() => { processShot(i); }, delay); delay += 200; }); setTimeout(() => { if (gameState === 2) { statusEl.innerText = "Перезарядка... Ход ИИ."; gameState = 3; setTimeout(aiTurn, 800); } }, delay + 500); }
+
+        function enemyGridClick(index) { if (gameState !== 2) return; if (isRadarMode) { performRadarScan(index); return; } if (isBarrageMode) { performBarrage(index); return; } if (enemyBoardVis[index] !== null && enemyBoardVis[index] !== 'detected') return; processShot(index); if (enemyBoard[index] !== 'ship') { statusEl.innerText = "ПРОМАХ. Ход ИИ..."; gameState = 3; setTimeout(aiTurn, 800); } }
+        function processShot(index) { if (enemyBoardVis[index] !== null && enemyBoardVis[index] !== 'detected') return; const cell = eGrid.children[index]; if (enemyBoard[index] === 'ship') { enemyBoardVis[index] = 'hit'; cell.classList.remove('detected'); cell.classList.add('hit'); let shipDestroyed = checkEnemyShipDestruction(index); statusEl.innerText = shipDestroyed ? "ВРАГ ПОТОПЛЕН! Ваш ход." : "ПОПАДАНИЕ! Ваш ход."; checkWin('player'); } else { enemyBoardVis[index] = 'miss'; cell.classList.add('miss'); } }
+        function checkEnemyShipDestruction(hitIndex) { let destroyed = false; enemyFleet.forEach(ship => { if (ship.sunk) return; if (ship.cells.includes(hitIndex)) { ship.hits++; if (ship.hits === ship.size) { ship.sunk = true; destroyed = true; ship.cells.forEach(i => eGrid.children[i].classList.add('sunk')); markNeighborsAsMiss(ship.cells, eGrid, enemyBoardVis); } } }); return destroyed; }
+        function markNeighborsAsMiss(shipCells, gridEl, visArray) { shipCells.forEach(cellIdx => { getNeighbors(cellIdx).forEach(nIdx => { if (visArray[nIdx] === null) { visArray[nIdx] = 'miss'; gridEl.children[nIdx].classList.add('miss'); } }); }); }
+
+        function aiTurn() { 
+            if (gameState !== 3) return; 
+            let index; 
+            if (aiStack.length === 0) { 
+                do { index = Math.floor(Math.random() * totalCells); } while (playerBoard[index] === 'miss' || playerBoard[index] === 'hit'); 
+            } else { 
+                index = aiStack.pop(); 
+                if (playerBoard[index] === 'miss' || playerBoard[index] === 'hit') { aiTurn(); return; } 
+            } 
+            const cell = pGrid.children[index]; 
+            const targetId = playerBoard[index]; 
+            if (targetId && targetId !== 'miss' && targetId !== 'hit') { 
+                playerBoard[index] = 'hit'; 
+                cell.classList.add('hit'); 
+                fleet[targetId].hits++; 
+                checkAbilitiesLoss(targetId); 
+                if (fleet[targetId].hits === fleet[targetId].size) { 
+                    statusEl.innerText = "НАШ КОРАБЛЬ УНИЧТОЖЕН!"; 
+                    fleet[targetId].cells.forEach(i => pGrid.children[i].classList.add('sunk')); 
+                    markNeighborsAsMissPlayer(fleet[targetId].cells); 
+                    aiStack = []; 
+                } else { 
+                    statusEl.innerText = "ПО НАС ПОПАЛИ! ИИ добивает."; 
+                    addNeighborsToStack(index); 
+                } 
+                checkWin('ai'); 
+                setTimeout(aiTurn, 1000); 
+            } else { 
+                playerBoard[index] = 'miss'; 
+                cell.classList.add('miss'); 
+                statusEl.innerText = "ИИ промахнулся. ВАШ ХОД."; 
+                gameState = 2; 
+            } 
+        }
+        
+        function checkAbilitiesLoss(shipId) { if (shipId === 'p-lun' && fleet['p-lun'].hits === fleet['p-lun'].size) { if (!radarUsed) { btnRadar.disabled = true; alert("Лунь уничтожен! Связь с радаром потеряна."); } } if (shipId === 'p-bs' && fleet['p-bs'].hits === fleet['p-bs'].size) { if (!barrageUsed) { btnBarrage.disabled = true; alert("Линкор уничтожен! Орудия молчат."); } } }
+        function markNeighborsAsMissPlayer(shipCells) { shipCells.forEach(cellIdx => { getNeighbors(cellIdx).forEach(nIdx => { if (playerBoard[nIdx] !== 'hit' && playerBoard[nIdx] !== 'miss') { playerBoard[nIdx] = 'miss'; pGrid.children[nIdx].classList.add('miss'); } }); }); }
+        
+        // AI STACK LOGIC UPDATED FOR 8x8
+        function addNeighborsToStack(idx) { 
+            const x = idx % gridSize; 
+            const y = Math.floor(idx / gridSize); 
+            const candidates = []; 
+            if (y > 0) candidates.push(idx - gridSize); 
+            if (y < gridSize - 1) candidates.push(idx + gridSize); 
+            if (x > 0) candidates.push(idx - 1);  
+            if (x < gridSize - 1) candidates.push(idx + 1); 
+            candidates.sort(() => Math.random() - 0.5); 
+            candidates.forEach(c => { if (playerBoard[c] !== 'miss' && playerBoard[c] !== 'hit') aiStack.push(c); }); 
+        }
+        
+        function checkWin(who) { if (who === 'player') { if (enemyFleet.every(s => s.sunk)) showResultModal(true); } else { if (Object.values(fleet).every(s => s.hits === s.size)) showResultModal(false); } }
+
+        function showResultModal(isWin) {
+            const overlay = document.getElementById('result-overlay');
+            const content = document.getElementById('result-card-content');
+            overlay.style.display = 'flex';
+
+            if (isWin) {
+                demoWins++;
+                updateProgressUI();
+                content.className = 'result-card win';
+                content.innerHTML = `
+                    <div class="result-header"><i class="fas fa-check-circle"></i> Win - Победа!</div>
+                    <div class="result-body">
+                        Враг повержен! Вы отличный командир.<br>
+                        В полной версии игры вас ждут награды, ранги и сохранения прогресса.
+                    </div>
+                    <a href="minigame.html" class="btn-buy-full">Купить полную версию</a>
+                    <div class="result-actions"><button class="btn-restart" onclick="location.reload()">Еще раз</button></div>
+                `;
+            } else {
+                content.className = 'result-card lose';
+                content.innerHTML = `
+                    <div class="result-header"><i class="fas fa-times-circle"></i> Defeat - Поражение</div>
+                    <div class="result-body">Ваш флот разбит. Попробуйте еще раз!</div>
+                    <div class="result-actions"><button class="btn-restart" onclick="location.reload()">Реванш</button></div>
+                `;
+            }
+        }
+
+        initGrids();
+    </script>
+</body>
+</html>
