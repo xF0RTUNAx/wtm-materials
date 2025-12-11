@@ -402,76 +402,76 @@
 
         // --- MILESTONES ---
         const MILESTONES = [
-            { wins: 10, id: 'MST_10', name: 'Титул: Полководец', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/polkovodec.jpg?raw=true' },
-            { wins: 50, id: 'MST_50', name: 'Титул: Флагман', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/flagman.jpg?raw=true' },
-            { wins: 100, id: 'MST_100', name: 'Золото (Бонус)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gold.PNG?raw=true' },
-            { wins: 250, id: 'MST_250', name: 'Премиум 7 дней', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/7day.PNG?raw=true' },
-            { wins: 500, id: 'MST_500', name: 'Платина (Бонус)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platina.PNG?raw=true' }
+            { wins: 10, id: 'MST_10', name: 'Титул: Полководец', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/polkovodec.jpg' },
+            { wins: 50, id: 'MST_50', name: 'Титул: Флагман', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/flagman.jpg' },
+            { wins: 100, id: 'MST_100', name: 'Золото (Бонус)', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gold.PNG' },
+            { wins: 250, id: 'MST_250', name: 'Премиум 7 дней', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/7day.PNG' },
+            { wins: 500, id: 'MST_500', name: 'Платина (Бонус)', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/platina.PNG' }
         ];
 
         // --- DATA & CONSTANTS (LINKS UNCHANGED) ---
         const UNIT_TYPES = [
             // --- ЭЛИТНЫЕ (ELITE) ---
-            { id: 't80uk', name: 'Т-80УК', role: 'ОБТ', hp: 30, dmg: 4, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet80uk.PNG?raw=true', chance: 3 },
-            { id: 't72m2', name: 'T-72M2 Moderna', role: 'ОБТ', hp: 31, dmg: 4, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/T-72M2%20Moderna.PNG?raw=true', chance: 3 },
-            { id: 'bmp2m', name: 'БМП-2М', role: 'БМП', hp: 16, dmg: 10, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamebmp2m.PNG?raw=true', chance: 3 },
-            { id: 'begleit', name: 'Begleitpanzer 57', role: 'БМП', hp: 14, dmg: 8, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Begleitpanzer%2057.JPG?raw=true', chance: 3 },
-            { id: 'itpsv', name: 'ItPsV 90', role: 'ЗСУ', hp: 12, dmg: 10, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/ItPsV%2090.PNG?raw=true', chance: 3 },
-            { id: 'm247', name: 'M247', role: 'ЗСУ', hp: 12, dmg: 11, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamem247.PNG?raw=true', chance: 3 },
+            { id: 't80uk', name: 'Т-80УК', role: 'ОБТ', hp: 30, dmg: 4, rarity: 'elite', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamet80uk.PNG', chance: 3 },
+            { id: 't72m2', name: 'T-72M2 Moderna', role: 'ОБТ', hp: 31, dmg: 4, rarity: 'elite', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/T-72M2%20Moderna.PNG', chance: 3 },
+            { id: 'bmp2m', name: 'БМП-2М', role: 'БМП', hp: 16, dmg: 10, rarity: 'elite', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamebmp2m.PNG', chance: 3 },
+            { id: 'begleit', name: 'Begleitpanzer 57', role: 'БМП', hp: 14, dmg: 8, rarity: 'elite', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Begleitpanzer%2057.JPG', chance: 3 },
+            { id: 'itpsv', name: 'ItPsV 90', role: 'ЗСУ', hp: 12, dmg: 10, rarity: 'elite', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/ItPsV%2090.PNG', chance: 3 },
+            { id: 'm247', name: 'M247', role: 'ЗСУ', hp: 12, dmg: 11, rarity: 'elite', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamem247.PNG', chance: 3 },
 
             // --- РЕДКИЕ (RARE) ---
-            { id: 't90a', name: 'Т-90А', role: 'ОБТ', hp: 31, dmg: 3, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet90a.PNG?raw=true', chance: 8 },
-            { id: 'bradley', name: 'M3 Bradley', role: 'БМП', hp: 15, dmg: 6, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamebradley.PNG?raw=true', chance: 8 },
-            { id: 'gepard', name: 'Gepard', role: 'ЗСУ', hp: 9, dmg: 10, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamegepard.PNG?raw=true', chance: 8 },
-            { id: 'za35', name: 'ZA-35', role: 'ЗСУ', hp: 11, dmg: 8, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/ZA-35.PNG?raw=true', chance: 8 },
-            { id: 'amx30', name: 'AMX-30', role: 'ЗСУ', hp: 10, dmg: 10, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/AMX-30%20S%20DCA.PNG?raw=true', chance: 8 },
-            { id: 'm1128', name: 'M1128', role: 'Колесник', hp: 18, dmg: 5, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/M1128.PNG?raw=true', chance: 8 },
+            { id: 't90a', name: 'Т-90А', role: 'ОБТ', hp: 31, dmg: 3, rarity: 'rare', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamet90a.PNG', chance: 8 },
+            { id: 'bradley', name: 'M3 Bradley', role: 'БМП', hp: 15, dmg: 6, rarity: 'rare', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamebradley.PNG', chance: 8 },
+            { id: 'gepard', name: 'Gepard', role: 'ЗСУ', hp: 9, dmg: 10, rarity: 'rare', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamegepard.PNG', chance: 8 },
+            { id: 'za35', name: 'ZA-35', role: 'ЗСУ', hp: 11, dmg: 8, rarity: 'rare', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/ZA-35.PNG', chance: 8 },
+            { id: 'amx30', name: 'AMX-30', role: 'ЗСУ', hp: 10, dmg: 10, rarity: 'rare', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/AMX-30%20S%20DCA.PNG', chance: 8 },
+            { id: 'm1128', name: 'M1128', role: 'Колесник', hp: 18, dmg: 5, rarity: 'rare', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/M1128.PNG', chance: 8 },
 
             // --- ОБЫЧНЫЕ (COMMON) ---
-            { id: 'leo2a4m', name: 'Leopard 2A4M', role: 'ОБТ', hp: 42, dmg: 1, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Leopard%202A4M.PNG?raw=true', chance: 6 },
-            { id: 'm1a1', name: 'M1A1 HC', role: 'ОБТ', hp: 40, dmg: 2, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/M1A1%20HC.PNG?raw=true', chance: 6 },
-            { id: 'hstvl', name: 'HSTV-L', role: 'ЛТ', hp: 12, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamehstvl.PNG?raw=true', chance: 6 },
-            { id: 'puma', name: 'PUMA', role: 'Тяж. БМП', hp: 20, dmg: 3, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamepuma.PNG?raw=true', chance: 6 },
-            { id: 'dwarrior', name: 'D. Warrior', role: 'БМП', hp: 15, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Desert%20Warrior.PNG?raw=true', chance: 6 },
-            { id: 'strf', name: 'Strf 9040', role: 'БМП', hp: 16, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamestfr.PNG?raw=true', chance: 6 }
+            { id: 'leo2a4m', name: 'Leopard 2A4M', role: 'ОБТ', hp: 42, dmg: 1, rarity: 'common', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Leopard%202A4M.PNG', chance: 6 },
+            { id: 'm1a1', name: 'M1A1 HC', role: 'ОБТ', hp: 40, dmg: 2, rarity: 'common', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/M1A1%20HC.PNG', chance: 6 },
+            { id: 'hstvl', name: 'HSTV-L', role: 'ЛТ', hp: 12, dmg: 5, rarity: 'common', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamehstvl.PNG', chance: 6 },
+            { id: 'puma', name: 'PUMA', role: 'Тяж. БМП', hp: 20, dmg: 3, rarity: 'common', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamepuma.PNG', chance: 6 },
+            { id: 'dwarrior', name: 'D. Warrior', role: 'БМП', hp: 15, dmg: 5, rarity: 'common', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Desert%20Warrior.PNG', chance: 6 },
+            { id: 'strf', name: 'Strf 9040', role: 'БМП', hp: 16, dmg: 5, rarity: 'common', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamestfr.PNG', chance: 6 }
         ];
 
         // --- BALANCED ENEMIES: Fighters 65-90, Attackers 130-160, Bombers 170-200 ---
         const ENEMY_POOL = {
             fighters: [
                 // Истребители: 65-90 HP
-                { name: 'Як-15', hp: 70, maxHp: 70, dmg: 3, type: 'fighter', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gameiak15.PNG?raw=true' },
-                { name: 'Me 262', hp: 80, maxHp: 80, dmg: 4, type: 'fighter', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Me%20261%20A-1a.PNG?raw=true' },
-                { name: 'F-84B', hp: 65, maxHp: 65, dmg: 6, type: 'fighter', img: 'https://raw.githubusercontent.com/xF0RTUNAx/wtm-materials/c8081dcde6f41130bfc59c459b9b74c1524b3144/F-84B-26.PNG' },
-                { name: 'Су-9', hp: 90, maxHp: 90, dmg: 5, type: 'fighter', img: 'https://raw.githubusercontent.com/xF0RTUNAx/wtm-materials/d1e945670758e1a14921a6faf6b278fe83432753/Su-9.PNG' }
+                { name: 'Як-15', hp: 70, maxHp: 70, dmg: 3, type: 'fighter', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameiak15.PNG' },
+                { name: 'Me 262', hp: 80, maxHp: 80, dmg: 4, type: 'fighter', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Me%20261%20A-1a.PNG' },
+                { name: 'F-84B', hp: 65, maxHp: 65, dmg: 6, type: 'fighter', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/F-84B-26.PNG' },
+                { name: 'Су-9', hp: 90, maxHp: 90, dmg: 5, type: 'fighter', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Su-9.PNG' }
             ],
             attackers: [
                 // Штурмовики: +10 HP (130-160)
-                { name: 'AD-4', hp: 130, maxHp: 130, dmg: 9, type: 'attacker', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamead4.PNG?raw=true' },
-                { name: 'A-1H', hp: 145, maxHp: 145, dmg: 10, type: 'attacker', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamea1h.PNG?raw=true' },
-                { name: 'F7F-3', hp: 140, maxHp: 140, dmg: 9, type: 'attacker', img: 'https://raw.githubusercontent.com/xF0RTUNAx/14a6acd4cf2aaa19aabd3565efc48ab92476b115/F7F-3.PNG' },
-                { name: 'AD-2', hp: 160, maxHp: 160, dmg: 9, type: 'attacker', img: 'https://raw.githubusercontent.com/xF0RTUNAx/337dc12684280658f9a40bd81db4ae4c3cccb43c/AD-2.PNG' }
+                { name: 'AD-4', hp: 130, maxHp: 130, dmg: 9, type: 'attacker', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamead4.PNG' },
+                { name: 'A-1H', hp: 145, maxHp: 145, dmg: 10, type: 'attacker', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gamea1h.PNG' },
+                { name: 'F7F-3', hp: 140, maxHp: 140, dmg: 9, type: 'attacker', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/F7F-3.PNG' },
+                { name: 'AD-2', hp: 160, maxHp: 160, dmg: 9, type: 'attacker', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/AD-2.PNG' }
             ],
             bombers: [
                 // Боссы: +5 HP (170-200)
-                { name: 'Пe-8 (Босс)', hp: 180, maxHp: 180, dmg: 20, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Pe-8.PNG?raw=true' },
-                { name: 'Ju 288 (Босс)', hp: 170, maxHp: 170, dmg: 20, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Ju%20288%20C.PNG?raw=true' },
-                { name: 'B-29A (Босс)', hp: 200, maxHp: 200, dmg: 24, type: 'bomber', img: 'https://raw.githubusercontent.com/xF0RTUNAx/852afc23f062a0f96a3e2689d1404e83e90d177f/B-29A-BN.PNG' },
-                { name: 'Ту-2С (Босс)', hp: 190, maxHp: 190, dmg: 22, type: 'bomber', img: 'https://raw.githubusercontent.com/xF0RTUNAx/8f48f45fac8d5c11e910ca5997f54e5ec82ee31d/Tu-2C-59.PNG' }
+                { name: 'Пe-8 (Босс)', hp: 180, maxHp: 180, dmg: 20, type: 'bomber', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Pe-8.PNG' },
+                { name: 'Ju 288 (Босс)', hp: 170, maxHp: 170, dmg: 20, type: 'bomber', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Ju%20288%20C.PNG' },
+                { name: 'B-29A (Босс)', hp: 200, maxHp: 200, dmg: 24, type: 'bomber', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/B-29A-BN.PNG' },
+                { name: 'Ту-2С (Босс)', hp: 190, maxHp: 190, dmg: 22, type: 'bomber', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/Tu-2C-59.PNG' }
             ]
         };
 
         const LOOT_TABLE = [
-            { id:'SILV', name: 'Ключ (Silver)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/silverkey.JPG?raw=true', chance: 0.3 },
-            { id:'GOLD', name: 'Ключ (Gold)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/goldkey.JPG?raw=true', chance: 0.2 },
-            { id:'PLAT', name: 'Ключ (Platinum)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platinumkey.JPG?raw=true', chance: 0.1 },
-            { id:'GLD', name: 'Золото (Валюта)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gold.PNG?raw=true', chance: 0.1 },
-            { id:'P1D', name: '1 День Премиума', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/1day.PNG?raw=true', chance: 0.1 },
-            { id:'P7D', name: '7 Дней Премиума', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/7day.PNG?raw=true', chance: 0.1 },
-            { id:'PLT', name: 'Платина (Валюта)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platina.PNG?raw=true', chance: 0.1 },
-            { id:'STR', name: 'Титул: Стратег', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/strateg.jpg?raw=true', chance: 15.0 },
-            { id:'MAR', name: 'Титул: Маршал', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/marshal.jpg?raw=true', chance: 15.0 },
-            { id:'ACE', name: 'Титул: Ас', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/as.jpg?raw=true', chance: 15.0 }
+            { id:'SILV', name: 'Ключ (Silver)', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/silverkey.JPG', chance: 0.3 },
+            { id:'GOLD', name: 'Ключ (Gold)', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/goldkey.JPG', chance: 0.2 },
+            { id:'PLAT', name: 'Ключ (Platinum)', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/platinumkey.JPG', chance: 0.1 },
+            { id:'GLD', name: 'Золото (Валюта)', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gold.PNG', chance: 0.1 },
+            { id:'P1D', name: '1 День Премиума', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/1day.PNG', chance: 0.1 },
+            { id:'P7D', name: '7 Дней Премиума', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/7day.PNG', chance: 0.1 },
+            { id:'PLT', name: 'Платина (Валюта)', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/platina.PNG', chance: 0.1 },
+            { id:'STR', name: 'Титул: Стратег', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/strateg.jpg', chance: 15.0 },
+            { id:'MAR', name: 'Титул: Маршал', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/marshal.jpg', chance: 15.0 },
+            { id:'ACE', name: 'Титул: Ас', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/as.jpg', chance: 15.0 }
         ];
 
         
@@ -1025,4 +1025,5 @@
     </script>
 </body>
 </html>
+
 
