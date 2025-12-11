@@ -1,0 +1,237 @@
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: 9 ранг Leopard A1A1</title>
+    <style>
+        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://24tv.ua/resources/photos/news/202302/2249207.jpg?v=1675440912000&w=1200&h=675') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+       
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+       
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
+                padding: 15px;
+            }
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>9 ранг Leopard A1A1</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/leoa1a1main.webp" alt="Leopard A1A1 Tank" class="tank-image">
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>Leopard A1A1 — модификация немецкого основного боевого танка Leopard I, созданная с целью улучшения боевых характеристик танков первых производственных серий. Несмотря на удачность Leopard I и его полное удовлетворение всех изначальных требований немецких военных, у танка оставались некоторые недочёты, особенно в его слабом бронировании. К тому же, эксплуатация первых серийных танков выявила некоторые проблемы в конструкции, которые необходимо было исправить. Для этого в 1970 году была инициирована программа модернизации Leopard I до стандарта Leopard A1: танки этой версии получили пассивные приборы ночного видения вместо активных, гусеницы новой конструкции с возможностью установки грунтозацепов, резинометаллические юбки по бортам корпуса, но, самое главное, был установлен двухплоскостной стабилизатор основного орудия. В период с 1975 по 1977 года все Leopard A1 были снова модернизированы уже до варианта Leopard A1A1, который выделялся от предыдущих машин разнесённым бронированием башни разработки Blohm & Voss, которое позволило увеличило стойкость башни к кумулятивным боеприпасам. С 1979 года все Leopard 1 немецкой армии начали медленно заменяться на более современные Leopard 2, и последние танки были сняты с вооружения Бундесвера в 2003 году. Несмотря на это и с учётом всех модификаций, 15 стран всё ещё продолжают использовать «Леопарды».</p>
+            <img src="https://cs8.pikabu.ru/post_img/big/2019/02/10/7/1549796805190977094.jpg" alt="Historical Leopard A1A1" class="tank-image">
+        </div>
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+             <p><strong>Плюсы:</strong> отличная подвижность — главная сила танка. Мощный двигатель (830 л.с.), высокая удельная мощность (~20 л.с./т) и хорошая передача. Быстрый задний ход (28 км/ч), высокая максимальная скорость (~72км/ч) и отличная маневренность на пересеченной местности. </p>
+            <p><strong>Минусы:</strong> заднее расположение трансмиссии делает танк более уязвимым с кормы. На очень высоких скоростях управление может быть резким.</p>
+            
+        </div>
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <p>Низкий силуэт и хорошие углы наклона брони корпуса могут давать неожиданные рикошеты.</p>
+<p>Броня по сути символическая. Корпус (70 мм в самом толстом месте) и башня пробиваются абсолютно всем, включая крупнокалиберные пулеметы (в борт и корму). Типичная компоновка с тремя членами экипажа в корпусе: при точном попадании в лоб есть высокий шанс вывести сразу всех. Взрывоопасность высокая.</p>
+            
+        </div>
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p>Основное: 105-мм нарезная пушка Royal Ordnance L7A3 (лицензионная) — легенда НАТО.</p>
+            <p><strong>Снаряды:</strong></p>
+            <p>DM23 (ОБПС): Отличное бронепробитие (~340 мм ), позволяет уверенно поражать любые цели на своём ранге.</p>
+            <p>DM12 (КС): Эффективен против легкобронированных целей, открытых ЗСУ и тд.</p>
+            <p>DM512 (БФС): Эффективен против средне бронированных целей, взрывается с большой силой.</p>
+            <p>DM13 (БПС): Эффективен против толстой брони, наносит урон вторичными осколками.</p>
+            <p>Дополнительно: 2 х 7.62-мм пулемета.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/leoa1a1weapon.webp" alt="Снаряды Leopard A1A1" class="tank-image" style="margin-top: 15px;">
+        </div>
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>Дымовые гранаты: 8 шт., очень полезны для отхода или постановки дымовой завесы. Стабилизатор в вертикальной плоскости. </p>
+            
+        </div>
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+         <p>Leopard A1A1 — классический «стеклянный, но мощный камикадзе». Это танк для тактики «первый выстрел — первое попадание — первый выход». Его главные козыри — это его скорость и низкий профиль. Этот танк для терпеливой, продуманной игры на удержание ключевых позиций и поддержки союзников с дальней дистанции.</p>
+        </div>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+        <footer>
+            <p>Материал предоставлен пользователем Krampus. Последнее обновление 11.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+</body>
+</html>
