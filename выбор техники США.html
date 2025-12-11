@@ -1,173 +1,119 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>WTM: Техника США</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: url('https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg') no-repeat center center fixed;
-            background-size: cover;
-            color: white;
-            margin: 0;
-            padding: 20px;
-            line-height: 1.6;
-            animation: fadeIn 1s ease-in-out;
-            overflow-x: hidden;
-            position: relative;
-        }
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: -1;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 30px;
-            background: rgba(136, 136, 136, 0.7);
-            border-radius: 25px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            overflow: hidden;
-        }
-        h1, h2, h3 {
-            color: white;
-            text-shadow: 0 2px 4px black;
-        }
-        h1::before, h2::before, h3::before {
-            content: "";
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(to right, #0056b3, #3388d1);
-            border-radius: 2px;
-        }
-        .vehicle-selection {
-            text-align: center;
-            margin-top: 30px;
-        }
-        .vehicle-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        .vehicle-button {
-            padding: 14px 22px;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-decoration: none;
-            min-width: 150px;
-            text-align: center;
-            box-sizing: border-box;
-            background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)), url('https://warthunder.com/upload/image/media/wallpapers/tank_1920.jpg') center/cover no-repeat;
-        }
-        .vehicle-button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        }
-        .back-button {
-            margin-top: 30px;
-            display: block;
-            text-align: center;
-            font-size: 1.2em;
-            color: white;
-            background: #0056b3;
-            padding: 15px 30px;
-            border-radius: 10px;
-            text-decoration: none;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-        }
-        .back-button:hover {
-            background-color: #004494;
-            transform: translateY(-3px);
-        }
-        footer {
-            text-align: center;
-            font-size: 1em;
-            color: #ff0000;
-            margin-top: 50px;
-            padding: 15px;
-            border-radius: 15px;
-        }
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                max-width: 100%;
-                padding: 15px;
-                background: transparent;
-                border-radius: 0;
-                box-shadow: none;
-                border: none;
-            }
-            h1 {
-                font-size: 1.8em;
-                color: #000000;
-            text-shadow: 0 2px 10px #ffffff;
-            }
-              h2 {
-                font-size: 1.5em;
-                color: #000000;
-            text-shadow: 0 2px 10px #ffffff;
-            }
-            .vehicle-buttons {
-                flex-direction: column;
-                gap: 12px;
-            }
-            .vehicle-button {
-                font-size: 1.8em;
-                padding: 36px 22px;
-                min-width: auto;
-            }
-            .back-button {
-                font-size: 1.5em;
-                padding: 20px 40px;
-            }
-            footer {
-                font-size: 0.8em;
-                padding: 10px;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Техника США</title>
+<style>
+    /* ВНУТРЕННИЕ СТИЛИ КАТЕГОРИЙ */
+    .tech-group {
+        margin-bottom: 30px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .group-header {
+        padding: 10px 20px;
+        font-family: 'Black Ops One', sans-serif;
+        text-transform: uppercase;
+        font-size: 1.2em;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 15px;
+        padding: 20px;
+    }
+
+    /* Стиль ссылок-кнопок */
+    .tank-btn {
+        display: block;
+        text-decoration: none;
+        padding: 15px;
+        border-radius: 6px;
+        font-weight: bold;
+        text-align: center;
+        transition: transform 0.2s, box-shadow 0.2s;
+        position: relative;
+        overflow: hidden;
+    }
+    .tank-btn:hover { transform: scale(1.03); z-index: 2; }
+
+    /* === ПРОКАЧИВАЕМЫЕ (Серый/Строгий) === */
+    .header-standard { background: linear-gradient(90deg, #444, #222); color: #ddd; border-left: 5px solid #888; }
+    .btn-standard {
+        background: linear-gradient(135deg, #3a3a3a, #1a1a1a);
+        color: #e0e0e0;
+        border: 1px solid #555;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .btn-standard:hover { border-color: #fff; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+
+    /* === ЧЕРТЕЖНЫЕ (Золотой) === */
+    .header-blueprint { background: linear-gradient(90deg, #b8860b, #5c4305); color: #fff; border-left: 5px solid #ffd700; text-shadow: 0 1px 2px black; }
+    .btn-blueprint {
+        background: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
+        color: #000;
+        border: 1px solid #ffe4b5;
+        text-shadow: 0 1px 0 rgba(255,255,255,0.4);
+        box-shadow: 0 4px 10px rgba(218, 165, 32, 0.3);
+    }
+    .btn-blueprint:hover { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); border-color: #fff; }
+
+    /* === КОЛЛЕКЦИОННЫЕ (Фиолетовый) === */
+    .header-collectible { background: linear-gradient(90deg, #4b0082, #1a0033); color: #e6e6fa; border-left: 5px solid #9370db; }
+    .btn-collectible {
+        background: linear-gradient(135deg, #8A2BE2, #4B0082);
+        color: #fff;
+        border: 1px solid #dda0dd;
+        box-shadow: 0 4px 10px rgba(138, 43, 226, 0.3);
+    }
+    .btn-collectible:hover { box-shadow: 0 0 20px rgba(147, 112, 219, 0.6); border-color: #fff; }
+
+    /* Мобильная адаптация */
+    @media (max-width: 600px) {
+        .grid-container { grid-template-columns: 1fr; }
+        .tank-btn { padding: 20px; font-size: 1.1em; }
+    }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>Техника США</h1>
-        <div class="vehicle-selection">
-            <h2>Выберите нужную технику:</h2>
-            <div class="vehicle-buttons">
-                <a href="13 ранг HSTV-L.html">13 ранг HSTV-L</a>
-                <a href="13 ранг Challenger 2 (2F).html">13 ранг Challenger 2 (2F)</a>
-                <a href="13 ранг Merkava Mk.3B.html">13 ранг Merkava Mk.3B</a>
+    <div style="animation: fadeIn 0.5s;">
+        <h1 style="text-align:center; margin-bottom:20px; color: white; text-shadow: 0 2px 4px black;">Техника США</h1>
 
+        <div class="tech-group">
+            <div class="group-header header-standard">
+                <i class="fas fa-wrench"></i> Прокачиваемые
             </div>
-            <p>Добавление остальной техники в процессе!</p>
+            <div class="grid-container">
+                <a href="13 ранг M1A1 HC.html" class="tank-btn btn-standard">13 ранг M1A1 HC</a>
+            </div>
         </div>
 
+        <div class="tech-group">
+            <div class="group-header header-blueprint">
+                <i class="fas fa-file-contract"></i> Чертежные
+            </div>
+            <div class="grid-container">
+                <a href="13 ранг HSTV-L.html" class="tank-btn btn-blueprint">13 ранг HSTV-L</a>
+                <a href="13 ранг Challenger 2 (2F).html" class="tank-btn btn-blueprint">13 ранг Challenger 2 (2F)</a>
+                <a href="13 ранг Merkava Mk.3B.html" class="tank-btn btn-blueprint">13 ранг Merkava Mk.3B</a>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <div class="group-header header-collectible">
+                <i class="fas fa-gem"></i> Коллекционные
+            </div>
+            <div class="grid-container">
+                <a href="6 ранг T-29.html" class="tank-btn btn-collectible">6 ранг T-29</a>
+            </div>
+        </div>
     </div>
 </body>
 </html>
-
 
