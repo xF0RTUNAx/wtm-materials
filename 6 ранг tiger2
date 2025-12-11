@@ -1,0 +1,262 @@
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: 6 ранг Tiger II</title>
+    <style>
+        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/5/59/Bovington_Tiger_II_grey_bg.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+       
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+       
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
+                padding: 15px;
+            }
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>6 ранг Tiger II</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/tiger2main.webp" alt="Tiger II Tank" class="tank-image">
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>Panzerkampfwagen Tiger II («Королевский тигр») создавался как развитие Tiger I. Немецкое командование стремилось получить тяжёлый танк с усиленной лобовой бронёй и более мощным орудием, способным противостоять новым советским машинам с рациональными углами бронирования.
+К концу 1943 года была утверждена финальная конструкция с 150-мм лобовым листом, наклонной бронёй и новой башней Henschel. Серийное производство продолжалось до марта 1945 года, всего выпущено около 489 танков.
+В War Thunder Mobile Tiger II сохранил свои ключевые особенности: крепкий лоб, мощная пушка и уязвимые борта, а также потребность в аккуратном и продуманном позиционировании.</p>
+            <img src="https://preview.redd.it/was-the-tiger-2-good-v0-1gth6pv56nwd1.jpeg?auto=webp&s=8b806db8de0c2a5f4eb2e63dc15ebdd074625baf" alt="Historical БМП-2М" class="tank-image">
+        </div>
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+             <p><strong>Плюсы:</strong> приличный разгон по прямой для тяжёлого танка.
+ Достаточная скорость для занятия ключевых позиций в начале боя.
+ Повороты на месте относительно комфортные — маневрировать корпусом проще, чем у большинства тяжей. </p>
+            <p><strong>Минусы:</strong> тяжёлый корпус — заметно теряет скорость на грунтах, уклонах и при поворотах.
+ Уходить от фланговых атак сложно.
+ При повреждении двигателя мобильность падает практически до нуля.
+ Крупные габариты усложняют укрытие корпуса.</p>
+            <p><strong>Дополнительно:</strong> мобильность достаточна для уверенной позиционной игры, но не подходит для агрессивного давления или фланговых манёвров.</p>
+        </div>
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <p>Лоб корпуса — один из лучших на своём уровне, особенно при небольшом ромбовании.
+ Башня также обладает хорошей защитой, если не подставлять маску орудия под прямыми углами.
+ Нередко отбивает каморные и слабые подкалиберные снаряды.  </p>
+<p>Борта — серьёзно уязвимы, пробиваются практически всеми танками.
+ Большой силуэт — лёгкая цель для артиллерии и авиаударов.
+ Пробитие маски орудия или НЛД часто приводит к критическим повреждениям: казённик, механик-водитель, БК.
+ Двойной бортовой слой не спасает — при попадании под правильным углом происходит пробитие с детонацией.</p>
+            <p><strong>Внимание:</strong> особенно опасны кумулятивы, удары с фланга, атаки сверху.</p>
+        </div>
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p>Основное орудие: 88 мм KwK 43 L/71.</p>
+            <p>Отличная пробиваемость среди тяжёлых танков ранга.
+ Высокий урон — часто уничтожает противника за 1–2 попадания.
+ Превосходная точность и стабильность стрельбы на средних и дальних дистанциях.
+ Легко выбивает ключевые модули: двигатель, трансмиссию, казённик, расчёт.</p>
+            <p>Перезарядка не самая быстрая — промахи критичны.
+ Против тяжёлой советской техники требуют прицеливания по уязвимым зонам.
+ В ближнем бою уступает более манёвренным машинам.</p>
+            <p><strong>Практический эффект в WTM:</strong> пушка Tiger II гарантирует стабильный урон и превосходство в дуэли при грамотном выборе позиции и первого выстрела.</p>
+            
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/tiger2weapon.webp" alt="Снаряды Tiger II" class="tank-image" style="margin-top: 15px;">
+        </div>
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>Наилучший результат достигается при правильном ромбовании корпуса.
+ Игра раскрывается на средних дистанциях — там сочетание брони и пушки максимально эффективно.
+ Требует постоянного контроля флангов.
+ В городе действует уверенно, если удаётся прикрывать борта.
+ Хорошая совместимость с командной игрой: поддержка и контроль направлений увеличивают его влияние на бой. </p>
+            
+        </div>
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+         <p>Tiger II — техника для игроков, которые предпочитают:
+ позиционную игру,
+ уверенное танкование лбом,
+ точные выстрелы на средних дистанциях,
+ спокойный, контролируемый бой.</p>
+<p>При правильной позиции и грамотном ромбе Tiger II способен доминировать над большинством одноклассников.
+Но попытки играть агрессивно или подставлять борта приводят к быстрому уничтожению — его слабые зоны легко пробиваются даже более лёгкими танками.</p>
+        </div>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+        <footer>
+            <p>Материал представлен пользователем Дэвид. Последнее обновление 11.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+</body>
+</html>
