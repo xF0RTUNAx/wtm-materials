@@ -294,7 +294,7 @@
             <div class="warning-box">
                 <div class="warning-title"><i class="fas fa-save"></i> СОХРАНЕНИЕ ПРОГРЕССА</div>
                 <div class="rule-desc" style="color: #ffadb4;">
-                     Чтобы накапливать победы для наград, всегда играйте через <b>один и тот же браузер или веб-приложение</b>.
+                      Чтобы накапливать победы для наград, всегда играйте через <b>один и тот же браузер или веб-приложение</b>.
                     <br>⚠️ Режим Инкогнито и очистка кэша <b>удалят</b> ваш прогресс навсегда.
                 </div>
             </div>
@@ -316,9 +316,9 @@
                 <div class="rule-item">
                     <div class="rule-header"><i class="fas fa-exclamation-triangle"></i> Вкратце про врагов </div>
                     <div class="rule-desc">
-                        <b>1. Штурмовик:</b> <span style="color:#ff4757">Высокий урон!</span> Не малое количество запаса здоровья.<br> 
-                        <b>2. Бомбардировщик:</b> Босс. Копит силы каждые 4 хода, на <b>каждый 5-й ход</b> наносит очень много урона.<br>
-                        <b>3. Истребитель:</b> Невысокий урон, немного очков здоровья.
+                        <b>1. Штурмовик:</b> Пытается пробить оборону. Иногда атакует тыл.<br> 
+                        <b>2. Бомбардировщик:</b> Босс. Каждые 5 ходов наносит <b>урон по всей площади (АОЕ)</b>. Прячьтесь!<br>
+                        <b>3. Истребитель:</b> Часто атакует танки в 1-м ряду.
                     </div>
                 </div>
                 <div class="rule-item">
@@ -345,7 +345,7 @@
             <div class="enemies-wrapper" id="enemies-container"></div>
 
             <div class="log-box" id="battle-log">
-                <div class="log-entry log-info">ВНИМАНИЕ: Обнаружена усиленная группа врага!</div>
+                <div class="log-entry log-info">ВНИМАНИЕ: Обнаружена усиленная авиагруппа!</div>
             </div>
 
             <div class="grid-container" id="grid"></div>
@@ -409,35 +409,55 @@
             { wins: 500, id: 'MST_500', name: 'Платина (Бонус)', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/platina.PNG?raw=true' }
         ];
 
-        // --- DATA & CONSTANTS ---
+        // --- DATA & CONSTANTS (LINKS UNCHANGED) ---
         const UNIT_TYPES = [
-            { id: 'm1a1', name: 'M1A1 HC', role: 'Танк', hp: 35, dmg: 4, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/M1A1%20HC.PNG?raw=true', chance: 4 },
-            { id: 't90a', name: 'Т-90А', role: 'Танк', hp: 34, dmg: 3, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet90a.PNG?raw=true', chance: 4 },
-            { id: 'm247', name: 'M247', role: 'ЗСУ', hp: 18, dmg: 8, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamem247.PNG?raw=true', chance: 4 },
-            { id: 'bmp2m', name: 'БМП-2М', role: 'БМП', hp: 15, dmg: 10, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamebmp2m.PNG?raw=true', chance: 4 },
-            { id: 't80uk', name: 'Т-80УК', role: 'Танк', hp: 30, dmg: 3, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet80uk.PNG?raw=true', chance: 11 },
-            { id: 'gepard', name: 'Gepard', role: 'ЗСУ', hp: 16, dmg: 7, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamegepard.PNG?raw=true', chance: 11 },
-            { id: 'bradley', name: 'M3 Bradley', role: 'БМП', hp: 16, dmg: 6, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamebradley.PNG?raw=true', chance: 11 },
-            { id: 'dwarrior', name: 'D. Warrior', role: 'БМП', hp: 14, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Desert%20Warrior.PNG?raw=true', chance: 12 },
-            { id: 'amx30', name: 'AMX-30', role: 'ЗСУ', hp: 14, dmg: 6, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/AMX-30%20S%20DCA.PNG?raw=true', chance: 12 },
-            { id: 'puma', name: 'PUMA', role: 'Тяж. БМП', hp: 20, dmg: 3, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamepuma.PNG?raw=true', chance: 9 },
-            { id: 'strf', name: 'Strf 9040', role: 'БМП', hp: 15, dmg: 4, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamestfr.PNG?raw=true', chance: 9 },
-            { id: 'hstvl', name: 'HSTV-L', role: 'ЛТ', hp: 14, dmg: 4, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamehstvl.PNG?raw=true', chance: 9 }
+            // --- ЭЛИТНЫЕ (ELITE) ---
+            { id: 't80uk', name: 'Т-80УК', role: 'ОБТ', hp: 30, dmg: 4, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet80uk.PNG?raw=true', chance: 3 },
+            { id: 't72m2', name: 'T-72M2 Moderna', role: 'ОБТ', hp: 31, dmg: 4, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/T-72M2%20Moderna.PNG?raw=true', chance: 3 },
+            { id: 'bmp2m', name: 'БМП-2М', role: 'БМП', hp: 16, dmg: 10, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamebmp2m.PNG?raw=true', chance: 3 },
+            { id: 'begleit', name: 'Begleitpanzer 57', role: 'БМП', hp: 14, dmg: 8, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Begleitpanzer%2057.JPG?raw=true', chance: 3 },
+            { id: 'itpsv', name: 'ItPsV 90', role: 'ЗСУ', hp: 12, dmg: 10, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/ItPsV%2090.PNG?raw=true', chance: 3 },
+            { id: 'm247', name: 'M247', role: 'ЗСУ', hp: 12, dmg: 11, rarity: 'elite', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamem247.PNG?raw=true', chance: 3 },
+
+            // --- РЕДКИЕ (RARE) ---
+            { id: 't90a', name: 'Т-90А', role: 'ОБТ', hp: 31, dmg: 3, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamet90a.PNG?raw=true', chance: 8 },
+            { id: 'bradley', name: 'M3 Bradley', role: 'БМП', hp: 15, dmg: 6, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamebradley.PNG?raw=true', chance: 8 },
+            { id: 'gepard', name: 'Gepard', role: 'ЗСУ', hp: 9, dmg: 10, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamegepard.PNG?raw=true', chance: 8 },
+            { id: 'za35', name: 'ZA-35', role: 'ЗСУ', hp: 11, dmg: 8, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/ZA-35.PNG?raw=true', chance: 8 },
+            { id: 'amx30', name: 'AMX-30', role: 'ЗСУ', hp: 10, dmg: 10, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/AMX-30%20S%20DCA.PNG?raw=true', chance: 8 },
+            { id: 'm1128', name: 'M1128', role: 'Колесник', hp: 18, dmg: 5, rarity: 'rare', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/M1128.PNG?raw=true', chance: 8 },
+
+            // --- ОБЫЧНЫЕ (COMMON) ---
+            { id: 'leo2a4m', name: 'Leopard 2A4M', role: 'ОБТ', hp: 42, dmg: 1, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Leopard%202A4M.PNG?raw=true', chance: 6 },
+            { id: 'm1a1', name: 'M1A1 HC', role: 'ОБТ', hp: 40, dmg: 2, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/M1A1%20HC.PNG?raw=true', chance: 6 },
+            { id: 'hstvl', name: 'HSTV-L', role: 'ЛТ', hp: 12, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamehstvl.PNG?raw=true', chance: 6 },
+            { id: 'puma', name: 'PUMA', role: 'Тяж. БМП', hp: 20, dmg: 3, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamepuma.PNG?raw=true', chance: 6 },
+            { id: 'dwarrior', name: 'D. Warrior', role: 'БМП', hp: 15, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Desert%20Warrior.PNG?raw=true', chance: 6 },
+            { id: 'strf', name: 'Strf 9040', role: 'БМП', hp: 16, dmg: 5, rarity: 'common', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamestfr.PNG?raw=true', chance: 6 }
         ];
 
+        // --- BALANCED ENEMIES: Fighters 65-90, Attackers 130-160, Bombers 170-200 ---
         const ENEMY_POOL = {
             fighters: [
-                { name: 'Як-15', hp: 70, maxHp: 70, dmg: 4, type: 'fighter', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gameiak15.PNG?raw=true' },
-                { name: 'Me 262', hp: 80, maxHp: 80, dmg: 4, type: 'fighter', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Me%20261%20A-1a.PNG?raw=true' }
+                // Истребители: 65-90 HP
+                { name: 'Як-15', hp: 70, maxHp: 70, dmg: 3, type: 'fighter', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gameiak15.PNG?raw=true' },
+                { name: 'Me 262', hp: 80, maxHp: 80, dmg: 4, type: 'fighter', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Me%20261%20A-1a.PNG?raw=true' },
+                { name: 'F-84B', hp: 65, maxHp: 65, dmg: 6, type: 'fighter', img: 'https://raw.githubusercontent.com/xF0RTUNAx/wtm-materials/c8081dcde6f41130bfc59c459b9b74c1524b3144/F-84B-26.PNG' },
+                { name: 'Су-9', hp: 90, maxHp: 90, dmg: 5, type: 'fighter', img: 'https://raw.githubusercontent.com/xF0RTUNAx/wtm-materials/d1e945670758e1a14921a6faf6b278fe83432753/Su-9.PNG' }
             ],
             attackers: [
-                { name: 'AD-4', hp: 110, maxHp: 110, dmg: 10, type: 'attacker', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamead4.PNG?raw=true' },
-                { name: 'A-1H', hp: 130, maxHp: 130, dmg: 10, type: 'attacker', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamea1h.PNG?raw=true' }
+                // Штурмовики: +10 HP (130-160)
+                { name: 'AD-4', hp: 130, maxHp: 130, dmg: 9, type: 'attacker', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamead4.PNG?raw=true' },
+                { name: 'A-1H', hp: 145, maxHp: 145, dmg: 10, type: 'attacker', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/gamea1h.PNG?raw=true' },
+                { name: 'F7F-3', hp: 140, maxHp: 140, dmg: 9, type: 'attacker', img: 'https://raw.githubusercontent.com/xF0RTUNAx/14a6acd4cf2aaa19aabd3565efc48ab92476b115/F7F-3.PNG' },
+                { name: 'AD-2', hp: 160, maxHp: 160, dmg: 9, type: 'attacker', img: 'https://raw.githubusercontent.com/xF0RTUNAx/337dc12684280658f9a40bd81db4ae4c3cccb43c/AD-2.PNG' }
             ],
             bombers: [
-                { name: 'Пe-8 (Босс)', hp: 200, maxHp: 200, dmg: 45, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Pe-8.PNG?raw=true' }, 
-                { name: 'Пе-8 (Босс)', hp: 200, maxHp: 200, dmg: 45, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Pe-8.PNG?raw=true' },
-                { name: 'Ju 288 (Босс)', hp: 180, maxHp: 180, dmg: 45, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Ju%20288%20C.PNG?raw=true' }
+                // Боссы: +5 HP (170-200)
+                { name: 'Пe-8 (Босс)', hp: 180, maxHp: 180, dmg: 20, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Pe-8.PNG?raw=true' },
+                { name: 'Ju 288 (Босс)', hp: 170, maxHp: 170, dmg: 20, type: 'bomber', img: 'https://github.com/xF0RTUNAx/wtm-materials/blob/pics/Ju%20288%20C.PNG?raw=true' },
+                { name: 'B-29A (Босс)', hp: 200, maxHp: 200, dmg: 24, type: 'bomber', img: 'https://raw.githubusercontent.com/xF0RTUNAx/852afc23f062a0f96a3e2689d1404e83e90d177f/B-29A-BN.PNG' },
+                { name: 'Ту-2С (Босс)', hp: 190, maxHp: 190, dmg: 22, type: 'bomber', img: 'https://raw.githubusercontent.com/xF0RTUNAx/8f48f45fac8d5c11e910ca5997f54e5ec82ee31d/Tu-2C-59.PNG' }
             ]
         };
 
@@ -468,7 +488,7 @@
         let isBattleActive = false; 
         let userTotalWins = parseInt(localStorage.getItem('strateg_wins') || '0');
 
-       
+        
         function initSlotsUI() {
             const wrapper = document.getElementById('slots-wrapper');
             wrapper.innerHTML = '';
@@ -836,29 +856,83 @@
             if (enemies.every(e => e.hp <= 0)) { endGame(true); return; }
 
             setTimeout(() => {
-                const livingUnits = grid.map((u, i) => (u && u.hp > 0) ? i : -1).filter(i => i !== -1);
-                if (livingUnits.length === 0) { endGame(false); return; }
+                // --- AI LOGIC START ---
+                const livingUnitsIndices = grid.map((u, i) => (u && u.hp > 0) ? i : -1).filter(i => i !== -1);
+                if (livingUnitsIndices.length === 0) { endGame(false); return; }
 
                 enemies.forEach(e => {
-                    if (e.hp > 0 && livingUnits.length > 0) {
+                    if (e.hp > 0 && livingUnitsIndices.length > 0) {
+                        
+                        // --- ЛОГИКА БОССА (АОЕ АТАКА) ---
                         if (e.type === 'bomber') {
                             if (turnCounter % 5 === 0) {
-                                log("БОМБАРДИРОВКА! БОСС АТАКУЕТ!", "bad");
-                            } else {
-                                return; 
+                                log(`БОМБАРДИРОВКА! Урон всем!`, "bad");
+                                // Босс бьет всех живых юнитов
+                                grid.forEach((u, idx) => {
+                                    if (u && u.hp > 0) {
+                                        // Урон босса делится на 2.5
+                                        let bossDmg = Math.floor(e.dmg / 2.5); 
+                                        
+                                        // Тыл все равно защищает от взрывной волны чуть-чуть
+                                        if (idx >= 3) bossDmg = Math.max(1, bossDmg - 2);
+
+                                        u.hp -= bossDmg;
+                                        showFloat(idx, `-${bossDmg}`, "#ff4757");
+                                    }
+                                });
                             }
+                            return; // Босс сходил (или копит силы), дальше код для него не идет
                         }
-                        const tIdx = livingUnits[Math.floor(Math.random() * livingUnits.length)];
-                        const unit = grid[tIdx];
-                        let dmg = e.dmg;
-                        if (tIdx >= 3) { dmg = Math.max(0, dmg - 2); }
-                        if (dmg > 0) {
-                            unit.hp -= dmg;
-                            showFloat(tIdx, `-${dmg}`, "#ff4757");
-                            if (unit.hp <= 0) livingUnits.splice(livingUnits.indexOf(tIdx), 1);
+
+                        // --- ЛОГИКА ОБЫЧНЫХ ВРАГОВ (Приоритет Авангарда) ---
+                        
+                        // 1. Делим живых на передних и задних
+                        const frontRowAlive = livingUnitsIndices.filter(i => i < 3);
+                        const backRowAlive = livingUnitsIndices.filter(i => i >= 3);
+                        
+                        let targetIdx = -1;
+
+                        // 2. Логика выбора цели
+                        // Если есть кто-то спереди, с шансом 75% бьем его.
+                        // Если сзади никого нет, бьем перед.
+                        const hitFront = Math.random() < 0.75;
+
+                        if (frontRowAlive.length > 0 && (hitFront || backRowAlive.length === 0)) {
+                             // Атака в авангард
+                             targetIdx = frontRowAlive[Math.floor(Math.random() * frontRowAlive.length)];
+                        } else if (backRowAlive.length > 0) {
+                             // Атака в тыл (прорыв!)
+                             targetIdx = backRowAlive[Math.floor(Math.random() * backRowAlive.length)];
+                        } else {
+                             // На всякий случай (если остались только передние, но рандом выпал на зад)
+                             targetIdx = livingUnitsIndices[Math.floor(Math.random() * livingUnitsIndices.length)];
+                        }
+
+                        // 3. Нанесение урона
+                        if (targetIdx !== -1) {
+                            const unit = grid[targetIdx];
+                            let dmg = e.dmg;
+                            
+                            // Проверка на ряд (Тыл получает меньше урона)
+                            if (targetIdx >= 3) { 
+                                dmg = Math.max(0, dmg - 2); 
+                                if(dmg > 0) log(`${e.name} прорвался в тыл!`, "warning");
+                            }
+
+                            if (dmg > 0) {
+                                unit.hp -= dmg;
+                                showFloat(targetIdx, `-${dmg}`, "#ff4757");
+                                // Если убили, обновляем список живых для следующего врага
+                                if (unit.hp <= 0) {
+                                    const deadPos = livingUnitsIndices.indexOf(targetIdx);
+                                    if (deadPos > -1) livingUnitsIndices.splice(deadPos, 1);
+                                }
+                            }
                         }
                     }
                 });
+                
+                // --- AI LOGIC END ---
 
                 turnCounter++;
                 document.getElementById('turn-num').innerText = turnCounter;
@@ -951,3 +1025,4 @@
     </script>
 </body>
 </html>
+
