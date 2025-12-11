@@ -3,16 +3,20 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-    /* Сброс стилей контейнера */
-    .tank-container * {
-        box-sizing: border-box;
-    }
+    /* ============================================== */
+    /* === ИЗОЛЯЦИЯ СТИЛЕЙ (CSS SCOPING) === */
+    /* Все стили начинаются с #tank-campaign-root, */
+    /* чтобы не ломать index.html */
+    /* ============================================== */
 
-    .tank-container {
+    /* Основной контейнер */
+    #tank-campaign-root {
+        box-sizing: border-box;
         max-width: 1100px;
-        margin: 20px auto 0 auto; 
+        margin: 20px auto 40px auto; 
         padding: 30px;
         background: #1c2119;
+        /* Текстура сетки на фоне плашки */
         background-image: repeating-linear-gradient(
             45deg,
             rgba(0,0,0,0.1),
@@ -25,10 +29,17 @@
         box-shadow: 0 0 30px rgba(0, 0, 0, 0.7), inset 0 0 50px rgba(0,0,0,0.5);
         position: relative;
         z-index: 5;
+        font-family: 'Roboto', sans-serif; /* Локальный шрифт */
+        color: #fff;
     }
 
-    /* Декоративные заклепки */
-    .tank-container::after {
+    /* Сброс box-sizing для всех элементов внутри */
+    #tank-campaign-root * {
+        box-sizing: border-box;
+    }
+
+    /* Декоративная рамка (заклепки) */
+    #tank-campaign-root::after {
         content: '';
         position: absolute;
         top: 10px; left: 10px; right: 10px; bottom: 10px;
@@ -36,36 +47,35 @@
         pointer-events: none;
     }
 
-    /* Шрифты */
-    .tank-container h1, 
-    .tank-container h2, 
-    .tank-container h3 {
+    /* Заголовки */
+    #tank-campaign-root h1, 
+    #tank-campaign-root h2, 
+    #tank-campaign-root h3 {
         font-family: 'Black Ops One', 'Roboto', sans-serif !important;
         color: #8fbc8f;
         text-shadow: 0 2px 5px rgba(0,0,0,0.8);
         text-transform: uppercase;
         letter-spacing: 2px;
         margin-top: 0;
+        text-align: center;
+        line-height: 1.2;
     }
 
-    .tank-container h1 {
+    #tank-campaign-root h1 {
         font-size: 2.5em;
-        text-align: center;
         border-bottom: 3px solid #556b2f;
         padding-bottom: 15px;
         margin-bottom: 30px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 15px;
     }
     
-    .tank-container h2 {
+    #tank-campaign-root h2 {
         font-size: 1.8em;
         color: #d2b48c;
+        margin-bottom: 15px;
     }
 
-    .nation-selection {
+    /* Блок выбора нации */
+    #tank-campaign-root .nation-selection {
         text-align: center;
         background: rgba(0, 0, 0, 0.3);
         padding: 20px;
@@ -75,9 +85,13 @@
         z-index: 10;
     }
     
-    .nation-selection p { color: #a9a9a9; font-family: 'Roboto', sans-serif; }
+    #tank-campaign-root .nation-selection p { 
+        color: #a9a9a9; 
+        margin-bottom: 20px;
+    }
 
-    .nation-buttons {
+    /* Кнопки наций */
+    #tank-campaign-root .nation-buttons {
         display: flex;
         flex-wrap: wrap;
         justify-content: center;
@@ -85,7 +99,7 @@
         margin-top: 25px;
     }
 
-    .nation-button {
+    #tank-campaign-root .nation-button {
         position: relative;
         padding: 20px 40px;
         color: #fff;
@@ -95,29 +109,29 @@
         font-family: 'Black Ops One', 'Roboto', sans-serif !important;
         cursor: pointer;
         transition: all 0.3s ease;
-        text-decoration: none;
         min-width: 200px;
         text-align: center;
         text-transform: uppercase;
-        overflow: hidden;
         box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         background-color: #2f3526;
         z-index: 10;
     }
 
-    .usa { background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover; }
-    .germany { background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover; }
-    .ussr { background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover; }
+    /* Флаги наций */
+    #tank-campaign-root .nation-button.usa { background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover; }
+    #tank-campaign-root .nation-button.germany { background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover; }
+    #tank-campaign-root .nation-button.ussr { background: linear-gradient(rgba(47, 53, 38, 0.8), rgba(47, 53, 38, 0.8)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover; }
 
-    .nation-button:hover {
+    #tank-campaign-root .nation-button:hover {
         transform: translateY(-3px);
-        border-color: #8fbc8f;
+        border-color: #ffd700;
         box-shadow: 0 10px 20px rgba(0,0,0,0.6);
         color: #ffd700;
         background-blend-mode: soft-light;
     }
     
-    .back-btn-tank {
+    /* Кнопка "Назад" внутри танка */
+    #tank-campaign-root .back-btn-tank {
         background: #8b4500;
         background-image: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(0,0,0,0.1) 5px, rgba(0,0,0,0.1) 10px);
         display: none; 
@@ -127,24 +141,23 @@
         border-radius: 4px;
         font-size: 1em;
         font-weight: bold;
-        font-family: 'Roboto', sans-serif;
         text-transform: uppercase;
         cursor: pointer;
         transition: all 0.3s;
         margin: 30px auto 0;
         box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        letter-spacing: 1px;
     }
 
-    .back-btn-tank:hover {
+    #tank-campaign-root .back-btn-tank:hover {
         background: #a0522d;
         transform: scale(1.02);
         border-color: #ff6347;
     }
 
-    #nation-content {
+    /* Контейнер для загружаемого контента (наций) */
+    #tank-campaign-root #nation-content {
         margin-top: 30px;
-        background: rgba(30, 35, 30, 0.9);
+        background: rgba(30, 35, 30, 0.95);
         color: #dcdcdc;
         padding: 25px;
         border-radius: 4px;
@@ -152,80 +165,37 @@
         text-align: left;
         border: 1px solid #3e4a36;
         box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-        font-family: 'Roboto', sans-serif;
     }
     
-    #nation-content h1, #nation-content h2, #nation-content h3 {
-        color: #8fbc8f;
-        font-family: 'Black Ops One', 'Roboto', sans-serif !important;
-    }
-    #nation-content p, #nation-content li { color: #c0c0c0; }
-    
-    /* СТИЛИЗАЦИЯ ССЫЛОК НА ТЕХНИКУ (ЧТОБЫ НЕ СЛИВАЛИСЬ) */
-    #nation-content a { 
-        color: #daa520; 
-        text-decoration: none; 
-        border-bottom: 1px dashed #daa520; 
-        /* По умолчанию на ПК они строчные, но добавим отступы */
-        margin: 0 5px;
-    }
-    
-    .tank-footer {
+    /* Подвал танка */
+    #tank-campaign-root .tank-footer {
         text-align: center;
         font-size: 0.9em;
         color: #6b8e23;
         margin-top: 50px;
         padding: 15px;
         border-top: 1px solid #3e4a36;
-        font-family: 'Roboto', sans-serif;
     }
 
-    /* --- АДАПТАЦИЯ И ИСПРАВЛЕНИЯ ДЛЯ МОБИЛЬНЫХ --- */
+    /* --- АДАПТАЦИЯ (MOBILE) --- */
     @media (max-width: 768px) {
-        /* Исправление горизонтального скролла */
-        .tank-container { 
+        #tank-campaign-root { 
             padding: 15px; 
-            border-width: 2px; 
             width: 100%; 
-            max-width: 100vw; /* Не даем выйти за ширину экрана */
             margin-top: 10px;
-            margin-left: 0;
-            margin-right: 0;
-            overflow-x: hidden; /* Скрываем все, что вылезает вбок */
-            box-sizing: border-box;
+            overflow-x: hidden; 
         }
         
-        /* Убираем рамку, которая могла вылезать */
-        .tank-container::after { display: none; }
+        #tank-campaign-root::after { display: none; }
         
-        .tank-container h1 { font-size: 1.8em; flex-direction: column; }
-        .nation-buttons { flex-direction: column; gap: 15px; }
-        .nation-button { width: 100%; font-size: 1.4em; padding: 25px; }
-        
-        #nation-content { 
-            padding: 15px; 
-            overflow-wrap: break-word; /* Перенос длинных слов */
-        }
-
-        /* !!! ВАЖНО: Делаем ссылки на технику отдельными блоками на мобильных */
-        #nation-content a {
-            display: block;             /* Каждая ссылка на новой строке */
-            margin-bottom: 12px;        /* Отступ снизу */
-            padding: 12px;              /* Внутренний отступ для удобства нажатия */
-            background: rgba(255, 255, 255, 0.05); /* Легкий фон */
-            border: 1px solid #3e4a36;  /* Рамка */
-            border-radius: 8px;         /* Скругление */
-            text-align: center;         /* Текст по центру */
-            border-bottom: 1px solid #3e4a36; /* Убираем пунктир, делаем сплошную рамку */
-        }
-        
-        #nation-content a:active {
-            background: rgba(218, 165, 32, 0.2); /* Подсветка при нажатии */
-        }
+        #tank-campaign-root h1 { font-size: 1.8em; }
+        #tank-campaign-root .nation-buttons { flex-direction: column; gap: 15px; }
+        #tank-campaign-root .nation-button { width: 100%; font-size: 1.4em; padding: 25px; }
+        #tank-campaign-root #nation-content { padding: 15px; }
     }
 </style>
 
-<div class="tank-container">
+<div id="tank-campaign-root">
     <h1><i class="fas fa-shield-alt"></i> WTM: Танковая кампания</h1>
     
     <div class="nation-selection" id="nation-selection">
@@ -233,7 +203,7 @@
         <p>Выберите интересующую нацию для просмотра техники:</p>
         
         <div class="nation-buttons">
-            <button class="nation-button usa" onclick="loadTankNation('выбор техники США')">
+            <button class="nation-button usa" onclick="loadTankNation('выбор техники США.html')">
                 ★ США
             </button>
             <button class="nation-button germany" onclick="loadTankNation('техника Германии.html')">
@@ -256,26 +226,30 @@
     </div>
     
     <footer class="tank-footer">
-        <p>Версия 2.0. Последнее обновление 02.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        <p>Версия 2.4. Последнее обновление 12.12.2025. Если найдете ошибки или имеются предложения - писать @fortunawtm.</p>
     </footer>
 </div>
 
 <script>
     async function loadTankNation(url) {
-        const contentDiv = document.getElementById('nation-content');
+        // Ищем элементы только внутри нашего root, чтобы не перепутать с другими разделами
+        const root = document.getElementById('tank-campaign-root');
+        const contentDiv = root.querySelector('#nation-content');
         
-        contentDiv.innerHTML = '<h3 style="color:#8fbc8f;">ПОЛУЧЕНИЕ ДАННЫХ...</h3><p style="color:#daa520;">СВЯЗЬ СО ШТАБОМ... <span style="display:inline-block; width:20px; height:20px; border:3px solid rgba(218, 165, 32, 0.2); border-top:3px solid #daa520; border-radius:50%; animation:spin 1s linear infinite;"></span></p><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
+        contentDiv.innerHTML = '<div style="text-align:center; padding:20px;"><h3 style="color:#8fbc8f;">ПОЛУЧЕНИЕ ДАННЫХ...</h3><div style="display:inline-block; width:30px; height:30px; border:3px solid rgba(218, 165, 32, 0.2); border-top:3px solid #daa520; border-radius:50%; animation:tankSpin 1s linear infinite;"></div></div><style>@keyframes tankSpin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
         
         try {
             const resp = await fetch(url);
-            if (!resp.ok) throw new Error('что-то пошло не так...');
+            if (!resp.ok) throw new Error('Файл не найден');
             const html = await resp.text();
             
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
+            // Вставляем контент
             contentDiv.innerHTML = doc.body.innerHTML;
             
+            // Если в подгружаемом файле есть скрипты (редко, но бывает)
             const scripts = doc.querySelectorAll('script');
             scripts.forEach(script => {
                 const newScript = document.createElement('script');
@@ -283,36 +257,40 @@
                 document.body.appendChild(newScript);
             });
 
+            // Смена фона (это глобальное действие, тут конфликтов стилей нет, так как это JS)
             setTimeout(() => {
-                if (url.includes('usa') || url.includes('США')) {
+                if (url.includes('США')) {
                     document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_07_freedomfighters/1080x2340_wtm_freedom_fighters_6caa665440c37540dbcfe17edf84d9fe.jpg")'; 
-                } else if (url.includes('germany') || url.includes('Германии')) {
+                } else if (url.includes('Германии')) {
                     document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_08_ironeclipse/1080x2340_wtm_iron_eclipse_ab49c8f11e8d61405c7ca0ff1c15f287.jpg")';
-                } else if (url.includes('ussr') || url.includes('СССР')) {
+                } else if (url.includes('СССР')) {
                     document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/24_12_frozenfront/1080x2340_wtm_frozen_front_b82827c44190754e4e7b97b2a6e98565.jpg")';
                 }
                 
-                document.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
-                document.querySelector('.back-btn-tank').style.display = 'block';
-                document.getElementById('nation-selection').querySelector('h2').style.display = 'none';
-                document.getElementById('nation-selection').querySelector('p').style.display = 'none';
+                // Скрываем кнопки выбора нации, показываем "Назад"
+                root.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
+                root.querySelector('.back-btn-tank').style.display = 'block';
+                root.querySelector('#nation-selection h2').style.display = 'none';
+                root.querySelector('#nation-selection p').style.display = 'none';
                 
-                document.getElementById('nation-content').scrollIntoView({ behavior: 'smooth' });
+                contentDiv.scrollIntoView({ behavior: 'smooth' });
 
             }, 200);
         } catch (e) {
-            contentDiv.innerHTML = `<p style="color:#ff4444; font-weight:bold; border: 1px solid red; padding: 10px;">ОШИБКА ЗАГРУЗКИ: ${e.message}. Проверьте имя файла.</p>`;
+            contentDiv.innerHTML = `<p style="color:#ff4444; border: 1px solid red; padding: 10px;">ОШИБКА ЗАГРУЗКИ: ${e.message}</p>`;
         }
     }
 
     function returnToTankMenu() {
-        document.getElementById('nation-content').innerHTML = '<p style="color:#6b8e23; font-style:italic; text-align: center;"><i class="fas fa-arrow-up"></i> Выберите нацию выше, чтобы загрузить досье.</p>';
+        const root = document.getElementById('tank-campaign-root');
+        
+        root.querySelector('#nation-content').innerHTML = '<p style="color:#6b8e23; font-style:italic; text-align: center;"><i class="fas fa-arrow-up"></i> Выберите нацию выше, чтобы загрузить досье.</p>';
         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
         
-        document.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'block');
-        document.querySelector('.back-btn-tank').style.display = 'none';
-        document.getElementById('nation-selection').querySelector('h2').style.display = 'block';
-        document.getElementById('nation-selection').querySelector('p').style.display = 'block';
+        root.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'block');
+        root.querySelector('.back-btn-tank').style.display = 'none';
+        root.querySelector('#nation-selection h2').style.display = 'block';
+        root.querySelector('#nation-selection p').style.display = 'block';
     }
 </script>
 
