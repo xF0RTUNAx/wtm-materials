@@ -1,0 +1,260 @@
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: 7 ранг Jagdtiger</title>
+    <style>
+        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://upload.wikimedia.org/wikipedia/commons/6/69/Jagdtiger%2C_Ordnance_Museum_at_Aberdeen_Proving_Ground.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+       
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+       
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
+                padding: 15px;
+            }
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>7 ранг Jagdtiger</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/jagdtigermain.webp" alt="Jagdtiger Tank" class="tank-image">
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>JagdTiger — немецкая тяжёлая ПТ-САУ, созданная на базе Tiger II и вооружённая мощнейшим 128-мм орудием Pak 44. В реальности машина отличалась выдающейся лобовой бронёй, но страдала от огромной массы и слабой подвижности.
+В War Thunder Mobile техника сохранила образ «подвижного бункера» с огромным урон-потенциалом, но крайне ограниченной мобильностью.</p>
+            <img src="https://www.toysshop.cz/imagegen.php?name=i578-32-6206/Wargames-WWII-military-6206-Sd-Kfz-186-Jagdtiger-Heavy-Tank-Destroyer-1-100-a67698186-10374.jpg-fm-0.jpg" alt="Historical Jagdtiger" class="tank-image">
+        </div>
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+             <p><strong>Плюсы:</strong> неплохая скорость заднего хода — позволяет откатываться после выстрела.
+ Уверенно держит прямую на твёрдом покрытии. </p>
+            <p><strong>Минусы:</strong> очень низкая динамика: медленный разгон, плохая скорость поворота.
+ Заметная потеря скорости на виражах, грунтах и уклонах.
+ Огромные габариты — сложно спрятать корпус.
+ Практически отсутствует возможность быстро сменить позицию.</p>
+            <p><strong>Дополнительно:</strong> манёвренность есть лишь для того, чтобы доехать до позиции; в бою она практически не чувствуется.</p>
+        </div>
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <p>Лоб корпуса и рубки — одни из самых крепких на уровне.
+ Уверенно держит большинство каморных снарядов при прямом попадании.
+ Часто «ест» урон, заставляя противника менять угол атаки или позицию.  </p>
+<p>Борта — слабые. Пробиваются даже лёгкими танками под небольшим углом.
+ Крупный силуэт делает машину лёгкой целью для артиллерии и авиации.
+ При пробитии противник почти всегда наносит критические повреждения: БК, экипаж, казённик.
+ Часто пробивается НЛД, из-за чего машина теряет подвижность.</p>
+            <p><strong>Внимание:</strong> особенно опасны кумулятивы, фугасы, удары сверху.</p>
+        </div>
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p>Основное орудие: 128 мм Pak 44</p>
+            <p>Один из самых сильных уронов за выстрел на ранге.
+ Легко выбивает любые модули.
+ Отличная пробиваемость — большинство танков можно пробить в лоб.
+ Высокая точность на дистанции.</p>
+            <p>Долгая перезарядка — любой промах критичен.
+ Сильная зависимость от позиции: на ближней дистанции сложно перестреливать быстрые танки.
+ Узкие углы горизонтального наведения — часто приходится разворачивать корпус.</p>
+            <p><strong>Практический эффект в WTM:</strong> при точном попадании Jagdtiger работает по принципу «один выстрел — один труп».</p>
+            
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/jagdtigerweapon.webp" alt="Снаряды Jagdtiger" class="tank-image" style="margin-top: 15px;">
+        </div>
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>Узкий сектор наведения — направление боя нужно контролировать заранее.
+ Оптимальная игра — с дальних дистанций.
+ Может эффективно танковать лобовой проекцией при правильном угле.
+ Зависит от заранее выбранной позиции — под плотным огнём сменить её почти невозможно.
+ Эффективность сильно растёт при поддержке команды. </p>
+            
+        </div>
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+         <p>Jagdtiger в War Thunder Mobile — техника для опытных игроков, которые предпочитают:
+ спокойный темп боя,
+ дальние дистанции,
+ позиционный контроль,
+ мощные выстрелы с гарантированным уроном.</p>
+<p>Если занять удачную позицию и контролировать направление, машина раскрывается на 100%.
+Попытки играть агрессивно или давить фланги приводят к быстрому уничтожению — танк слишком медленный и слишком уязвим сбоку.</p>
+        </div>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+        <footer>
+            <p>Материал предоставлен пользователем Максим Тагиров. Последнее обновление 11.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+</body>
+</html>
