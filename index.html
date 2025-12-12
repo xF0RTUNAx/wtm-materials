@@ -369,102 +369,110 @@
         }
         .main-content.is-tank-active .header-greeting { display: none !important; }
 
-        /* ---------------------------------------------------- */
-        /* --------- ВАЖНО! МОБИЛЬНАЯ АДАПТАЦИЯ (СИММЕТРИЧНЫЕ ИКОНКИ) --------- */
-        /* ---------------------------------------------------- */
-        @media (max-width: 900px) {
-            .dashboard-wrapper { 
-                flex-direction: column; 
-                height: 100vh; 
-                width: 100%; 
-                border-radius: 0; 
-            }
-            
-            /* Панель навигации (горизонтальная полоска) */
-            .sidebar { 
-                width: 100%; 
-                height: auto; 
-                padding: 10px 20px; /* Отступы по краям */
-                flex-direction: row; 
-                align-items: center; 
-                justify-content: space-between; /* Лого слева, меню справа */
-                border-right: none; 
-                border-bottom: 1px solid rgba(255,255,255,0.1); 
-                background: rgba(20, 30, 60, 0.95); 
-                z-index: 1000;
-                flex-shrink: 0;
-            }
-            
-            .logo { 
-                margin: 0; 
-                display: flex; 
-                align-items: center;
-            }
-            .logo img { 
-                height: 40px; /* Фикс высота лого */
-                width: auto; 
-                border-radius: 8px; 
-            }
+      /* ---------------------------------------------------- */
+/* --------- ВАЖНО! МОБИЛЬНАЯ АДАПТАЦИЯ (СИММЕТРИЧНЫЕ ИКОНКИ) --------- */
+/* ---------------------------------------------------- */
+@media (max-width: 900px) {
+    .dashboard-wrapper { 
+        flex-direction: column; 
+        height: 100vh; 
+        width: 100%; 
+        border-radius: 0; 
+    }
+    
+    /* Панель навигации (горизонтальная полоска) */
+    .sidebar { 
+        width: 100%; 
+        height: 70px; /* Фиксируем высоту, чтобы не скакало */
+        padding: 0 15px; /* Чуть меньше отступы по бокам */
+        flex-direction: row; 
+        align-items: center; 
+        justify-content: space-between; 
+        border-right: none; 
+        border-bottom: 1px solid rgba(255,255,255,0.1); 
+        background: rgba(20, 30, 60, 0.95); 
+        z-index: 1000;
+        flex-shrink: 0;
+        box-sizing: border-box; /* Важно для правильных отступов */
+    }
+    
+    .logo { 
+        margin: 0; 
+        display: flex; 
+        align-items: center;
+        flex-shrink: 0; /* Чтобы лого не сжималось */
+    }
+    .logo img { 
+        height: 40px; 
+        width: auto; 
+        border-radius: 8px; 
+    }
 
-            /* Контейнер для кнопок меню */
-            .nav-menu { 
-                display: flex; 
-                gap: 12px; /* Равномерный отступ */
-                margin: 0; 
-                padding: 0;
-            }
-            
-            .nav-item { margin: 0; }
-            
-            /* КВАДРАТНЫЕ КНОПКИ */
-            .nav-link {
-                width: 42px;  
-                height: 42px; 
-                padding: 0;   
-                display: flex;
-                align-items: center;
-                justify-content: center; /* Иконка по центру */
-                border-radius: 12px;
-                background: rgba(255, 255, 255, 0.05); /* Еле заметный фон */
-                transition: all 0.2s ease;
-            }
-            
-            .nav-link span { display: none; }
-            
-            .nav-link i { 
-                margin: 0; 
-                font-size: 1.2em; 
-                color: rgba(255, 255, 255, 0.6); 
-            }
-            
-            /* Активная кнопка и наведение */
-            .nav-link.active, .nav-link:hover {
-                background: rgba(255, 255, 255, 0.2); 
-                transform: translateY(-2px);
-            }
-            
-            .nav-link.active i, .nav-link:hover i {
-                color: #fff;
-            }
+    /* Контейнер для кнопок меню */
+    .nav-menu { 
+        display: flex; 
+        gap: 8px; /* Чуть уменьшил gap, чтобы влезало на узких экранах */
+        margin: 0; 
+        padding: 0;
+        flex-grow: 0; /* ОТМЕНА РАСТЯГИВАНИЯ: чтобы меню не занимало всю ширину */
+        margin-left: auto; /* Прижимает иконки ВПРАВО */
+    }
+    
+    .nav-item { margin: 0; }
+    
+    /* КВАДРАТНЫЕ КНОПКИ */
+    .nav-link {
+        width: 40px;  /* Чуть компактнее */
+        height: 40px; 
+        padding: 0;    
+        display: flex;
+        align-items: center;
+        justify-content: center; /* Строгое центрирование */
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05); 
+        transition: all 0.2s ease;
+    }
+    
+    .nav-link span { display: none; }
+    
+    /* ИСПРАВЛЕНИЕ СМЕЩЕНИЯ ИКОНКИ ВНУТРИ КНОПКИ */
+    .nav-link i { 
+        margin: 0 !important; /* !important убивает отступ справа от ПК версии */
+        width: auto !important; /* Убираем фиксированную ширину 20px */
+        font-size: 1.1em; 
+        color: rgba(255, 255, 255, 0.6); 
+        line-height: 1; /* Сброс высоты строки */
+    }
+    
+    /* Активная кнопка и наведение */
+    .nav-link.active, .nav-link:hover {
+        background: rgba(255, 255, 255, 0.2); 
+        transform: translateY(0); /* На мобилке лучше убрать сдвиг, чтобы не дергалось */
+    }
+    
+    .nav-link.active i, .nav-link:hover i {
+        color: #fff;
+    }
 
-            .user-profile { display: none; }
-            .cards-grid { grid-template-columns: 1fr; }
-            
-            .main-content { padding: 20px 15px; padding-bottom: 80px; } 
-            
-            .main-content.is-fleet-active { padding: 0; }
-            .main-content.is-fleet-active #content {
-                padding: 15px 10px;
-                border-radius: 0;
-                border: none !important;
-                box-shadow: none;
-            }
-            .main-content.is-fleet-active ol li { padding: 12px 10px 12px 45px; margin: 5px 0; }
-            .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
-            
-            .main-content.is-aviation-active { padding: 0; }
-            .main-content.is-tank-active { padding: 0; }
-        }
+    .user-profile { display: none; }
+    .cards-grid { grid-template-columns: 1fr; }
+    
+    .main-content { padding: 20px 15px; padding-bottom: 80px; } 
+    
+    /* Стили для контента (твои старые) */
+    .main-content.is-fleet-active { padding: 0; }
+    .main-content.is-fleet-active #content {
+        padding: 15px 10px;
+        border-radius: 0;
+        border: none !important;
+        box-shadow: none;
+    }
+    .main-content.is-fleet-active ol li { padding: 12px 10px 12px 45px; margin: 5px 0; }
+    .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
+    
+    .main-content.is-aviation-active { padding: 0; }
+    .main-content.is-tank-active { padding: 0; }
+}
 
     </style>
 </head>
@@ -713,6 +721,7 @@
     </script>
 </body>
 </html>
+
 
 
 
