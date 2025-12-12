@@ -69,7 +69,6 @@
             0% { transform: translateY(0) translateX(0) rotate(0deg); }
             100% { transform: translateY(110vh) translateX(20px) rotate(360deg); }
         }
-        /* ----------------------- */
 
         .dashboard-wrapper {
             display: flex;
@@ -168,7 +167,6 @@
             flex-grow: 1;
             padding: 40px;
             overflow-y: auto;
-            /* Плавная прокрутка */
             scroll-behavior: smooth;
         }
 
@@ -291,9 +289,9 @@
         .sponsors-list { list-style: none; padding: 0; display: flex; gap: 20px; flex-wrap: wrap; }
         .sponsors-list li { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
         
-       /* --- ОБНОВЛЕННЫЕ СТИЛИ ДЛЯ ФУТЕРА (SEO) --- */
+        /* --- СТИЛИ ДЛЯ ФУТЕРА (SEO) --- */
         .site-footer {
-            background: rgba(0, 0, 0, 0.6); /* Чуть темнее для читаемости текста */
+            background: rgba(0, 0, 0, 0.6); 
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border-radius: 20px;
@@ -307,8 +305,8 @@
 
         .site-footer nav {
             display: flex;
-            flex-direction: column; /* Ссылки друг под другом для длинных названий */
-            gap: 12px; /* Отступ между ссылками */
+            flex-direction: column;
+            gap: 12px; 
             align-items: center;
             margin-bottom: 20px;
         }
@@ -317,7 +315,7 @@
             color: #ffcc00;
             text-decoration: none;
             transition: all 0.3s;
-            border-bottom: 1px dashed rgba(255, 204, 0, 0.3); /* Подчеркивание пунктиром */
+            border-bottom: 1px dashed rgba(255, 204, 0, 0.3);
             padding-bottom: 2px;
         }
 
@@ -327,7 +325,6 @@
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
         }
 
-        /* На больших экранах можно попробовать в 2 колонки, если захотите */
         @media (min-width: 768px) {
             .site-footer nav {
                 flex-direction: row;
@@ -336,12 +333,13 @@
                 gap: 20px;
             }
         }
-      
+        /* ------------------------------- */
 
         /* ---------------------------------------------------- */
-        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ РАКЕТНОГО ФЛОТА --------- */
+        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ КОНТЕНТА --------- */
         /* ---------------------------------------------------- */
         
+        /* ФЛОТ */
         .main-content.is-fleet-active #content {
             background: rgba(10, 20, 40, 0.95);
             color: #00ff7f;
@@ -350,11 +348,93 @@
             border: 2px solid #00ff7f;
             box-shadow: 0 0 20px rgba(0, 255, 127, 0.5), inset 0 0 10px rgba(0, 255, 127, 0.2);
         }
-        
         .main-content.is-fleet-active .header-greeting { display: none !important; }
         .main-content.is-fleet-active #content a { color: #ffcc00; }
 
+        /* АВИАЦИЯ */
+        .main-content.is-aviation-active #content {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        .main-content.is-aviation-active .header-greeting { display: none !important; }
+
+        /* ТАНКИ */
+        .main-content.is-tank-active #content {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        .main-content.is-tank-active .header-greeting { display: none !important; }
+
+        /* ---------------------------------------------------- */
+        /* --------- ВАЖНО! МОБИЛЬНАЯ АДАПТАЦИЯ --------- */
+        /* (Должна идти в самом конце CSS) */
+        /* ---------------------------------------------------- */
         @media (max-width: 900px) {
+            .dashboard-wrapper { 
+                flex-direction: column; 
+                height: 100vh; 
+                width: 100%; 
+                border-radius: 0; 
+            }
+            
+            .sidebar { 
+                width: 100%; 
+                height: auto; 
+                padding: 10px 15px; 
+                flex-direction: row; 
+                align-items: center; 
+                justify-content: space-between; 
+                overflow-x: auto; /* Прокрутка если не влезает */
+                border-right: none; 
+                border-bottom: 1px solid rgba(255,255,255,0.1); 
+                background: rgba(20, 30, 60, 0.95); /* Чуть темнее фон для меню */
+            }
+            
+            .nav-menu { 
+                display: flex; 
+                gap: 15px; 
+                margin: 0 0 0 15px; 
+            }
+            
+            .nav-item { 
+                margin: 0; 
+                white-space: nowrap; /* Запрет переноса текста */
+            }
+            
+            .nav-link {
+                padding: 8px 10px;
+                font-size: 1em;
+            }
+            
+            .nav-link span { 
+                display: none; /* Скрываем текст меню на телефоне, оставляем иконки */
+            }
+            
+            .nav-link i { 
+                margin: 0; 
+                font-size: 1.4em; 
+            }
+            
+            .logo { 
+                margin: 0; 
+                display: block; 
+            }
+            
+            .logo img { 
+                max-height: 40px; 
+                width: auto; 
+                border-radius: 8px; 
+            }
+
+            .user-profile { display: none; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .main-content { padding: 15px; padding-bottom: 80px; } /* Отступ снизу для скролла */
+            
+            /* Фиксы для контента внутри */
             .main-content.is-fleet-active { padding: 0; }
             .main-content.is-fleet-active #content {
                 padding: 10px 5px;
@@ -364,39 +444,8 @@
             }
             .main-content.is-fleet-active ol li { padding: 12px 10px 12px 45px; margin: 5px 0; }
             .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
-        }
-
-        /* ---------------------------------------------------- */
-        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ АВИАЦИИ --------- */
-        /* ---------------------------------------------------- */
-        
-        .main-content.is-aviation-active #content {
-            background: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-        }
-
-        .main-content.is-aviation-active .header-greeting { display: none !important; }
-
-        @media (max-width: 900px) {
+            
             .main-content.is-aviation-active { padding: 0; }
-        }
-
-        /* ---------------------------------------------------- */
-        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ ДЛЯ ТАНКОВ --- */
-        /* ---------------------------------------------------- */
-
-        .main-content.is-tank-active #content {
-            background: transparent !important;
-            box-shadow: none !important;
-            border: none !important;
-            padding: 0 !important;
-        }
-
-        .main-content.is-tank-active .header-greeting { display: none !important; }
-
-        @media (max-width: 900px) {
             .main-content.is-tank-active { padding: 0; }
         }
 
@@ -495,8 +544,8 @@
                 </ul>
             </div>
 
-           <footer id="main-footer" class="site-footer">
-                <p style="margin-bottom: 20px; font-weight: bold; color: #fff;">Полезные материалы:</p>
+            <footer id="main-footer" class="site-footer">
+                <p style="margin-bottom: 20px; font-weight: bold; color: #fff;">Дополнительная навигация:</p>
                 <nav>
                     <a href="#" onclick="navigateSection('Танковая кампания I War Thunder Mobile.html'); return false;">
                         <i class="fas fa-crosshairs"></i> Гайд по танкам в War Thunder Mobile
@@ -511,14 +560,13 @@
                     </a>
                     
                     <a href="minigame.html">
-                        <i class="fas fa-gamepad"></i> Мини-игры и розыгрыши по War Thunder Mobile 
+                        <i class="fas fa-gamepad"></i> Мини-игры и розыгрыши в War Thunder Mobile
                     </a>
                 </nav>
                 <div style="margin-top: 25px; font-size: 0.8em; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                    &copy; 2025 xFORTUNAx 
+                    &copy; 2025 xFORTUNAx
                 </div>
             </footer>
-           
             </main>
     </div>
 
@@ -614,7 +662,7 @@
                     if (isFleet || isAviation || isTank) {
                          document.getElementById('sponsors-section').style.display = 'none';
                          document.querySelector('.header-greeting').style.display = 'none';
-                         // СКРЫВАЕМ ФУТЕР
+                         // СКРЫВАЕМ ФУТЕР ПРИ ЧТЕНИИ СТАТЬИ
                          document.getElementById('main-footer').style.display = 'none';
                     } else {
                          document.getElementById('sponsors-section').style.display = 'block';
@@ -648,6 +696,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 
