@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fortunawtm.com/sitemap.xml
