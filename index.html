@@ -8,12 +8,10 @@
     <link rel="shortcut icon" href="logo.jpg" type="image/jpeg">
     
     <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="manifest" href="manifest.json">
 
-<link rel="manifest" href="manifest.json">
-
-<meta name="description" content="Гайды по танкам, ракетному флоту и авиации в War Thunder Mobile от xFORTUNAx. Тематические мини-игры с призами для WTM.">
-    <meta name="keywords" content="WTM, War Thunder Mobile, гайды, танки, флот, ракетный флот, обзоры вар тандер мобаил, втм, вар тандер мобаил, обзор танка в вар тандер мобаил,
-        лучшие танки в вар тандер мобаил, xFORTUNAx">
+    <meta name="description" content="Гайды по танкам, ракетному флоту и авиации в War Thunder Mobile от xFORTUNAx. Тематические мини-игры с призами для WTM.">
+    <meta name="keywords" content="WTM, War Thunder Mobile, гайды, танки, флот, ракетный флот, обзоры вар тандер мобаил, втм, вар тандер мобаил, обзор танка в вар тандер мобаил, лучшие танки в вар тандер мобаил, xFORTUNAx">
 
     <meta property="og:title" content="Гайды по WTM и Мини-игры | xFORTUNAx">
     <meta property="og:description" content="Гайды по танкам, ракетному флоту и авиации в War Thunder Mobile.">
@@ -59,7 +57,7 @@
             top: -50px;
             color: #fff;
             user-select: none;
-            pointer-events: none; /* Снег пропускает клики */
+            pointer-events: none;
             z-index: 9999;
             cursor: default;
             animation-name: fall;
@@ -97,7 +95,6 @@
             flex-shrink: 0;
         }
 
-        /* --- ОБНОВЛЕННЫЕ СТИЛИ ЛОГОТИПА --- */
         .logo {
             margin-bottom: 30px;
             display: flex;
@@ -117,7 +114,6 @@
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
         }
-        /* ---------------------------------- */
 
         .nav-menu {
             list-style: none;
@@ -172,6 +168,8 @@
             flex-grow: 1;
             padding: 40px;
             overflow-y: auto;
+            /* Плавная прокрутка */
+            scroll-behavior: smooth;
         }
 
         .header-greeting h1 {
@@ -264,15 +262,10 @@
             border-radius: 12px;
             font-weight: bold;
             cursor: pointer;
-            
-            /* --- ИЗМЕНЕНИЕ ЗДЕСЬ: Добавляем отступы --- */
-            /* Сверху 20px, Справа 0, Снизу 25px, Слева 15px */
             margin: 20px 0 25px 15px; 
-            /* ------------------------------------------ */
-            
             font-size: 1.1em;
             box-shadow: 0 4px 15px rgba(255, 200, 0, 0.4);
-            z-index: 100; /* На всякий случай, чтобы была поверх всего */
+            z-index: 100;
         }
         #back-btn:hover { transform: scale(1.05); }
 
@@ -298,6 +291,34 @@
         .sponsors-list { list-style: none; padding: 0; display: flex; gap: 20px; flex-wrap: wrap; }
         .sponsors-list li { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
         
+        /* --- СТИЛИ ДЛЯ НОВОГО ФУТЕРА --- */
+        .site-footer {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9em;
+        }
+
+        .site-footer nav a {
+            color: #ffcc00;
+            text-decoration: none;
+            margin: 0 8px;
+            transition: color 0.3s;
+            display: inline-block;
+        }
+
+        .site-footer nav a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+        /* ------------------------------- */
+
         @media (max-width: 900px) {
             .dashboard-wrapper { flex-direction: column; height: 100vh; width: 100%; border-radius: 0; }
             .sidebar { width: 100%; height: auto; padding: 15px; flex-direction: row; align-items: center; justify-content: space-between; overflow-x: auto; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.1); }
@@ -306,10 +327,8 @@
             .nav-link span { display: none; }
             .nav-link i { margin: 0; font-size: 1.2em; }
             
-            /* --- ОБНОВЛЕННАЯ АДАПТАЦИЯ ЛОГО ДЛЯ МОБИЛЬНЫХ --- */
             .logo { margin: 0; margin-right: auto; display: block; }
             .logo img { max-height: 50px; width: auto; border-radius: 8px; }
-            /* ------------------------------------------------ */
 
             .user-profile { display: none; }
             .cards-grid { grid-template-columns: 1fr; }
@@ -330,7 +349,6 @@
         }
         
         .main-content.is-fleet-active .header-greeting { display: none !important; }
-        
         .main-content.is-fleet-active #content a { color: #ffcc00; }
 
         @media (max-width: 900px) {
@@ -473,29 +491,39 @@
                     <li>Дэвид</li>
                 </ul>
             </div>
-            <footer style="text-align: center; margin-top: 50px; padding-bottom: 20px; font-size: 12px; color: rgba(255,255,255,0.6);">
-                <p>Навигация для поиска:</p>
+
+            <footer id="main-footer" class="site-footer">
+                <p style="margin-bottom: 15px; font-weight: 500;">Дополнительная навигация:</p>
                 <nav>
-                    <a href="Танковая кампания I War Thunder Mobile.html" style="color: rgba(255,255,255,0.8); text-decoration: none;">Гайд по танкам в War Thunder Mobile</a> |
-                    <a href="Ракетный флот I War Thunder Mobile.html" style="color: rgba(255,255,255,0.8); text-decoration: none;">Гайд по ракетному флоту в War Thunder Mobile</a> |
-                    <a href="Авиационная кампания I War Thunder Mobile.html" style="color: rgba(255,255,255,0.8); text-decoration: none;">Гайд по авиации в War Thunder Mobile</a> |
-                    <a href="minigame.html" style="color: rgba(255,255,255,0.8); text-decoration: none;">Мини-игры по War Thunder Mobile</a>
+                    <a href="#" onclick="navigateSection('Танковая кампания I War Thunder Mobile.html'); return false;">
+                        <i class="fas fa-crosshairs"></i> Танки
+                    </a> |
+                    
+                    <a href="#" onclick="navigateSection('Ракетный флот I War Thunder Mobile.html'); return false;">
+                        <i class="fas fa-ship"></i> Ракетный флот
+                    </a> |
+                    
+                    <a href="#" onclick="navigateSection('Авиационная кампания I War Thunder Mobile.html'); return false;">
+                        <i class="fas fa-plane"></i> Авиация
+                    </a> |
+                    
+                    <a href="minigame.html">
+                        <i class="fas fa-gamepad"></i> Мини-игры
+                    </a>
                 </nav>
-                <p style="margin-top: 10px;">&copy; 2025 xFORTUNAx WTM</p>
+                <div style="margin-top: 20px; font-size: 0.8em; opacity: 0.5;">
+                    &copy; 2025 xFORTUNAx 
+                </div>
             </footer>
-        </main>
+            </main>
     </div>
 
     <script>
         const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
         
-        // --- ОБНОВЛЕННЫЙ СКРИПТ СНЕГА (С адаптацией под мобильные) ---
+        // --- ОБНОВЛЕННЫЙ СКРИПТ СНЕГА ---
         document.addEventListener("DOMContentLoaded", function() {
-            // Проверка: это мобильное устройство? (ширина экрана меньше 768px)
             const isMobile = window.innerWidth < 768;
-
-            // Настройки для разных устройств
-            // Если мобилка: всего 20 снежинок, если ПК: 50
             const snowCount = isMobile ? 20 : 50; 
             const snowSymbol = '❄';
 
@@ -504,20 +532,16 @@
                 flake.innerHTML = snowSymbol;
                 flake.classList.add('snowflake');
                 
-                // Рандомизация
                 const leftPos = Math.random() * 100; 
                 const animDuration = Math.random() * 5 + 5; 
                 const animDelay = Math.random() * 5; 
                 
-                // АДАПТАЦИЯ РАЗМЕРА И ПРОЗРАЧНОСТИ
                 let size, opacity;
                 
                 if (isMobile) {
-                    // На телефоне снег меньше (от 8px до 15px) и прозрачнее (макс 0.4)
                     size = Math.random() * 7 + 8; 
                     opacity = Math.random() * 0.3 + 0.1;
                 } else {
-                    // На ПК снег крупнее (от 10px до 25px) и ярче
                     size = Math.random() * 15 + 10;
                     opacity = Math.random() * 0.6 + 0.1;
                 }
@@ -531,7 +555,6 @@
                 document.body.appendChild(flake);
             }
         });
-        // -----------------------------------------------------------
 
         async function navigateSection(url) {
             const contentDiv = document.getElementById('content');
@@ -546,6 +569,9 @@
                 
                 setTimeout(() => {
                     contentDiv.innerHTML = html;
+                    
+                    // АВТО-ПРОКРУТКА НАВЕРХ ПРИ ЗАГРУЗКЕ
+                    mainContent.scrollTop = 0;
                     
                     const isFleet = url.includes('Ракетный флот');
                     const isAviation = url.includes('Авиационная');
@@ -584,8 +610,11 @@
                     if (isFleet || isAviation || isTank) {
                          document.getElementById('sponsors-section').style.display = 'none';
                          document.querySelector('.header-greeting').style.display = 'none';
+                         // СКРЫВАЕМ ФУТЕР
+                         document.getElementById('main-footer').style.display = 'none';
                     } else {
                          document.getElementById('sponsors-section').style.display = 'block';
+                         document.getElementById('main-footer').style.display = 'block';
                     }
 
                 }, 100);
@@ -608,11 +637,14 @@
             document.getElementById('back-btn').style.display = 'none';
             document.getElementById('sponsors-section').style.display = 'block';
             document.querySelector('.header-greeting').style.display = 'block';
+            
+            // ВОЗВРАЩАЕМ ФУТЕР
+            document.getElementById('main-footer').style.display = 'block';
         }
     </script>
-    
 </body>
 </html>
+
 
 
 
