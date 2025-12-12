@@ -370,8 +370,7 @@
         .main-content.is-tank-active .header-greeting { display: none !important; }
 
         /* ---------------------------------------------------- */
-        /* --------- ВАЖНО! МОБИЛЬНАЯ АДАПТАЦИЯ --------- */
-        /* (Должна идти в самом конце CSS) */
+        /* --------- ВАЖНО! МОБИЛЬНАЯ АДАПТАЦИЯ (СИММЕТРИЧНЫЕ ИКОНКИ) --------- */
         /* ---------------------------------------------------- */
         @media (max-width: 900px) {
             .dashboard-wrapper { 
@@ -381,63 +380,81 @@
                 border-radius: 0; 
             }
             
+            /* Панель навигации (горизонтальная полоска) */
             .sidebar { 
                 width: 100%; 
                 height: auto; 
-                padding: 10px 15px; 
+                padding: 10px 20px; /* Отступы по краям */
                 flex-direction: row; 
                 align-items: center; 
-                justify-content: space-between; 
-                overflow-x: auto; /* Прокрутка если не влезает */
+                justify-content: space-between; /* Лого слева, меню справа */
                 border-right: none; 
                 border-bottom: 1px solid rgba(255,255,255,0.1); 
-                background: rgba(20, 30, 60, 0.95); /* Чуть темнее фон для меню */
-            }
-            
-            .nav-menu { 
-                display: flex; 
-                gap: 15px; 
-                margin: 0 0 0 15px; 
-            }
-            
-            .nav-item { 
-                margin: 0; 
-                white-space: nowrap; /* Запрет переноса текста */
-            }
-            
-            .nav-link {
-                padding: 8px 10px;
-                font-size: 1em;
-            }
-            
-            .nav-link span { 
-                display: none; /* Скрываем текст меню на телефоне, оставляем иконки */
-            }
-            
-            .nav-link i { 
-                margin: 0; 
-                font-size: 1.4em; 
+                background: rgba(20, 30, 60, 0.95); 
+                z-index: 1000;
+                flex-shrink: 0;
             }
             
             .logo { 
                 margin: 0; 
-                display: block; 
+                display: flex; 
+                align-items: center;
             }
-            
             .logo img { 
-                max-height: 40px; 
+                height: 40px; /* Фикс высота лого */
                 width: auto; 
                 border-radius: 8px; 
             }
 
+            /* Контейнер для кнопок меню */
+            .nav-menu { 
+                display: flex; 
+                gap: 12px; /* Равномерный отступ */
+                margin: 0; 
+                padding: 0;
+            }
+            
+            .nav-item { margin: 0; }
+            
+            /* КВАДРАТНЫЕ КНОПКИ */
+            .nav-link {
+                width: 42px;  
+                height: 42px; 
+                padding: 0;   
+                display: flex;
+                align-items: center;
+                justify-content: center; /* Иконка по центру */
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.05); /* Еле заметный фон */
+                transition: all 0.2s ease;
+            }
+            
+            .nav-link span { display: none; }
+            
+            .nav-link i { 
+                margin: 0; 
+                font-size: 1.2em; 
+                color: rgba(255, 255, 255, 0.6); 
+            }
+            
+            /* Активная кнопка и наведение */
+            .nav-link.active, .nav-link:hover {
+                background: rgba(255, 255, 255, 0.2); 
+                transform: translateY(-2px);
+            }
+            
+            .nav-link.active i, .nav-link:hover i {
+                color: #fff;
+            }
+
             .user-profile { display: none; }
             .cards-grid { grid-template-columns: 1fr; }
-            .main-content { padding: 15px; padding-bottom: 80px; } /* Отступ снизу для скролла */
             
-            /* Фиксы для контента внутри */
+            .main-content { padding: 20px 15px; padding-bottom: 80px; } 
+            
             .main-content.is-fleet-active { padding: 0; }
             .main-content.is-fleet-active #content {
-                padding: 10px 5px;
+                padding: 15px 10px;
                 border-radius: 0;
                 border: none !important;
                 box-shadow: none;
@@ -548,7 +565,7 @@
                 <p style="margin-bottom: 20px; font-weight: bold; color: #fff;">Дополнительная навигация:</p>
                 <nav>
                     <a href="#" onclick="navigateSection('Танковая кампания I War Thunder Mobile.html'); return false;">
-                        <i class="fas fa-crosshairs"></i> Гайд по танкам в War Thunder Mobile
+                        <i class="fas fa-tank"></i> Гайд по танкам в War Thunder Mobile
                     </a>
                     
                     <a href="#" onclick="navigateSection('Ракетный флот I War Thunder Mobile.html'); return false;">
@@ -564,7 +581,7 @@
                     </a>
                 </nav>
                 <div style="margin-top: 25px; font-size: 0.8em; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-                    &copy; 2025 xFORTUNAx
+                    &copy; 2025 xFORTUNAx 
                 </div>
             </footer>
             </main>
@@ -696,6 +713,7 @@
     </script>
 </body>
 </html>
+
 
 
 
