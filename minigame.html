@@ -7,8 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+    
     <style>
-        /* Весь CSS оставлен без изменений */
+        /* CSS СТИЛИ (ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ) */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Poppins', sans-serif; background-color: #0f0f12; background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-y: auto; color: white; padding: 20px; }
         body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(8px); z-index: -1; }
@@ -52,6 +56,7 @@
         .card_box.style-silver span.ribbon::before { background-image: linear-gradient(45deg, #7f7f7f 0%, #dcdcdc 51%, #7f7f7f 100%); }
         .card_box.style-gold span.ribbon::before { background-image: linear-gradient(45deg, #d4af37 0%, #ffd700 51%, #d4af37 100%); }
         .card_box.style-platinum span.ribbon::before { background-image: linear-gradient(45deg, #4b9cd3 0%, #00e5ff 51%, #4b9cd3 100%); }
+        
         .login-area { width: 100%; max-width: 400px; padding: 20px 0; display: flex; flex-direction: column; justify-content: center; }
         .input-group { width: 100%; margin-bottom: 20px; text-align: center; }
         .input-group label { display: block; font-size: 0.9em; margin-bottom: 8px; color: rgba(255,255,255,0.8); }
@@ -60,6 +65,7 @@
         .btn-main { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 700; font-size: 1em; cursor: pointer; transition: 0.3s; margin-top: 10px; background: #00e5ff; color: #0f0f12; }
         .btn-main:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 229, 255, 0.5); }
         .error-msg { color: #ff4444; font-size: 0.85em; margin-top: 15px; display: none; text-align: center; }
+        
         .bottom-actions { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; width: 100%; }
         .action-btn { padding: 12px 25px; border-radius: 50px; border: none; cursor: pointer; font-weight: 600; transition: 0.3s; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 0.9em; }
         .btn-back { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); }
@@ -142,6 +148,19 @@
                         <input type="text" id="access-key" placeholder="Введите ключ" onkeydown="if(event.key === 'Enter') attemptLogin()">
                     </div>
                     <button class="btn-main" onclick="attemptLogin()">Открыть доступ</button>
+                    
+                    <div id="ad-block-wrapper" style="margin-top: 25px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
+                        <p style="font-size: 0.85em; color: #aaa; margin-bottom: 10px;">Нет ключа? Получите временный:</p>
+                        
+                        <button id="ad-btn" class="btn-main" onclick="showAdAndLogin()" style="background: linear-gradient(45deg, #f1c40f, #e67e22); color: black; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);">
+                            <i class="fas fa-video"></i> Доступ на 20 минут (Реклама)
+                        </button>
+
+                        <p id="tg-warning" style="display: none; font-size: 0.8em; color: #aaa; margin-top: 10px; border: 1px dashed #555; padding: 8px; border-radius: 8px;">
+                            ⚠️ <span style="color: #e67e22;">Внимание:</span> Бесплатный доступ работает эксклюзивно в Telegram приложении @fortunawtmbot.
+                        </p>
+                    </div>
+
                     <p class="error-msg" id="login-error">Доступ запрещен. Неверный ключ. Пожалуйста, проверьте подписку.</p>
                 </div>
             </div>
@@ -191,26 +210,79 @@
     </div>
 
     <script>
-        let currentTermsAction = '';
+        // --- ADSGRAM CONFIGURATION ---
+        const AdsgramBlockId = "19146"; // <--- ВСТАВЬТЕ СЮДА ВАШ ID ИЗ ADSGRAM
+        
+        // Переменная для хранения контроллера рекламы
+        let AdController;
+        // Переменная для проверки среды (Telegram или нет)
+        let isTelegramEnv = false;
 
         window.addEventListener('load', () => {
+            // 1. Анимация загрузки (Ваш оригинальный код)
             setTimeout(() => {
                 const loader = document.getElementById('loader-screen');
                 loader.style.opacity = '0';
                 setTimeout(() => {
                     loader.style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
+                    
+                    // 2. ПОСЛЕ ЗАГРУЗКИ: ПРОВЕРЯЕМ СРЕДУ
+                    checkEnvironment();
                 }, 1000);
             }, 2500); 
         });
 
+        // Функция проверки: Мы в Телеграме или нет?
+        function checkEnvironment() {
+            // Проверяем наличие initData. В браузере она обычно пустая. В Телеграме всегда есть данные.
+            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData.length > 0) {
+                isTelegramEnv = true;
+                
+                // Инициализируем рекламу ТОЛЬКО если мы в Телеграме
+                if (window.Adsgram) {
+                    AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
+                }
+            } else {
+                isTelegramEnv = false;
+                disableAdButton(); // Отключаем кнопку, если мы не в ТГ
+            }
+        }
+
+        // Если мы не в Телеграме, меняем вид кнопки
+        function disableAdButton() {
+            const btn = document.getElementById('ad-btn');
+            const warning = document.getElementById('tg-warning');
+            
+            btn.style.background = '#333'; // Серый цвет
+            btn.style.color = '#777';
+            btn.style.boxShadow = 'none';
+            btn.style.border = '1px solid #444';
+            btn.innerHTML = '<i class="fab fa-telegram"></i> Только в Telegram';
+            
+            // Меняем действие кнопки на "Перейти в бота" (опционально) или Alert
+            btn.onclick = function() {
+                alert("Эта функция доступна только внутри Telegram.\nНайдите бота @fortunawtmbot чтобы играть бесплатно.");
+            };
+
+            // Показываем поясняющий текст
+            warning.style.display = 'block';
+        }
+
+        // 1. Постоянный вход (Ключи)
         function attemptLogin() {
             const keyInput = document.getElementById('access-key');
             const errorMsg = document.getElementById('login-error');
             const validKeys = ['fortuna378', 'fortx54', 'xfortunax0251'];
+            const val = keyInput.value.trim();
 
-            if (validKeys.includes(keyInput.value.trim())) {
+            if (validKeys.includes(val)) {
                 errorMsg.style.display = 'none';
+                localStorage.setItem('wtm_session', JSON.stringify({
+                    type: 'permanent',
+                    key: val,
+                    expiry: null
+                }));
                 openTermsModal('login');
             } else {
                 errorMsg.style.display = 'block';
@@ -220,28 +292,56 @@
             }
         }
 
-        function clickDemo() {
-            openTermsModal('demo');
+        // 2. Рекламный вход (Только для TG)
+        function showAdAndLogin() {
+            if (!isTelegramEnv) {
+                alert("Пожалуйста, откройте это мини-приложение через Telegram.");
+                return;
+            }
+
+            if (!AdController) {
+                alert("Реклама не инициализирована. Попробуйте обновить страницу.");
+                return;
+            }
+
+            AdController.show().then((result) => {
+                if (result.done) {
+                    grantTemporaryAccess(); // Успех
+                }
+            }).catch((result) => {
+                console.log(result);
+                // Если пользователь закрыл рекламу или произошла ошибка
+            });
         }
 
-        function openTermsModal(action) {
-            currentTermsAction = action;
+        // 3. Выдача доступа на 20 минут
+        function grantTemporaryAccess() {
+            const duration = 20 * 60 * 1000; // 20 минут
+            const expiryTime = Date.now() + duration;
+            const tempKey = "TEMP-" + Math.random().toString(36).substr(2, 6).toUpperCase();
+
+            localStorage.setItem('wtm_session', JSON.stringify({
+                type: 'temporary',
+                key: tempKey,
+                expiry: expiryTime
+            }));
+
+            alert(`Доступ открыт на 20 минут!\nКлюч сессии: ${tempKey}`);
+            
+            currentTermsAction = 'login'; 
             document.getElementById('terms-modal-overlay').style.display = 'flex';
         }
 
-        function closeTermsModal() {
-            document.getElementById('terms-modal-overlay').style.display = 'none';
-            currentTermsAction = '';
-        }
-
-       function acceptTerms() {
+        // Остальная логика (демо, модалки, карточки)
+        let currentTermsAction = '';
+        function clickDemo() { openTermsModal('demo'); }
+        function openTermsModal(action) { currentTermsAction = action; document.getElementById('terms-modal-overlay').style.display = 'flex'; }
+        function closeTermsModal() { document.getElementById('terms-modal-overlay').style.display = 'none'; currentTermsAction = ''; }
+        function acceptTerms() {
             const action = currentTermsAction;
             closeTermsModal();
-            if (action === 'login') {
-                window.location.href = 'findagame.html';
-            } else if (action === 'demo') {
-                window.location.href = 'findagamedemo.html';
-            }
+            if (action === 'login') { window.location.href = 'findagame.html'; } 
+            else if (action === 'demo') { window.location.href = 'findagamedemo.html'; }
         }
 
         function openSponsorModal() { document.getElementById('unique-sponsor-overlay').style.display = 'flex'; }
@@ -252,7 +352,7 @@
         function updateCard() {
             const card = document.getElementById('sub-card');
             const title = document.getElementById('card-title');
-            const desc = document.getElementById('card-desc'); // Элемент описания
+            const desc = document.getElementById('card-desc'); 
             const descList = document.getElementById('card-desc-list');
             const detailsDiv = document.querySelector('.card-details');
             const priceTag = document.getElementById('card-price-tag');
@@ -283,26 +383,22 @@
             title.innerText = `${tierNameRu}`;
             descList.innerHTML = ''; 
 
-            // ============================================
-            // ИЗМЕНЕНИЯ ЗДЕСЬ: Добавлена переменная descText
-            // ============================================
             let perks = [];
-            let descText = ''; // Текст описания для карточки
+            let descText = '';
 
             if (tier === 'silver') { 
-                descText = 'Отличный старт для ознакомления.'; // Текст для Серебра
+                descText = 'Отличный старт для ознакомления.'; 
                 perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ на 30 дней.', 'Возможность выигрывать призы.']; 
             } 
             else if (tier === 'gold') { 
-                descText = 'Баланс цены и возможностей.'; // Текст для Золота (МОЖНО МЕНЯТЬ)
+                descText = 'Баланс цены и возможностей.'; 
                 perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ на 90 дней.', 'Возможность выигрывать призы.', 'Приоритетная поддержка и запись на тесты/игры']; 
             } 
             else if (tier === 'platinum') { 
-                descText = 'Самый выгодный и максимальный вариант.'; // Текст для Платины (МОЖНО МЕНЯТЬ)
+                descText = 'Самый выгодный и максимальный вариант.'; 
                 perks = ['Доступ ко всем играм и их полным версиям.', 'Ключ на ГОД.', 'Возможность выигрывать призы.', 'Первоочередная поддержка и запись на тесты/игры', 'Автоматический статус Спонсора (детальнее в стать сносором)', 'Закрытый тест новых игр']; 
             }
 
-            // Применяем текст к элементу
             desc.innerText = descText;
 
             perks.forEach(perk => {
@@ -329,3 +425,4 @@
     </script>
 </body>
 </html>
+
