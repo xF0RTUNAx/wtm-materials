@@ -12,7 +12,7 @@
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     
     <style>
-        /* CSS СТИЛИ (ОСТАЮТСЯ БЕЗ ИЗМЕНЕНИЙ) */
+        /* CSS СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Poppins', sans-serif; background-color: #0f0f12; background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-y: auto; color: white; padding: 20px; }
         body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(8px); z-index: -1; }
@@ -157,7 +157,7 @@
                         </button>
 
                         <p id="tg-warning" style="display: none; font-size: 0.8em; color: #aaa; margin-top: 10px; border: 1px dashed #555; padding: 8px; border-radius: 8px;">
-                            ⚠️ <span style="color: #e67e22;">Внимание:</span> Бесплатный доступ работает эксклюзивно в Telegram приложении @fortunawtmbot.
+                            ⚠️ <span style="color: #e67e22;">Внимание:</span> Бесплатный доступ через рекламу работает только в Telegram приложении.
                         </p>
                     </div>
 
@@ -211,15 +211,12 @@
 
     <script>
         // --- ADSGRAM CONFIGURATION ---
-        const AdsgramBlockId = "19146"; // <--- ВСТАВЬТЕ СЮДА ВАШ ID ИЗ ADSGRAM
+        const AdsgramBlockId = "19146"; // <--- ВСТАВЬТЕ СЮДА ВАШ ID ИЗ ADSGRAM (например "int-123456")
         
-        // Переменная для хранения контроллера рекламы
         let AdController;
-        // Переменная для проверки среды (Telegram или нет)
         let isTelegramEnv = false;
 
         window.addEventListener('load', () => {
-            // 1. Анимация загрузки (Ваш оригинальный код)
             setTimeout(() => {
                 const loader = document.getElementById('loader-screen');
                 loader.style.opacity = '0';
@@ -227,45 +224,45 @@
                     loader.style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                     
-                    // 2. ПОСЛЕ ЗАГРУЗКИ: ПРОВЕРЯЕМ СРЕДУ
+                    // Запуск проверки среды
                     checkEnvironment();
                 }, 1000);
             }, 2500); 
         });
 
-        // Функция проверки: Мы в Телеграме или нет?
+        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРОВЕРКИ
         function checkEnvironment() {
-            // Проверяем наличие initData. В браузере она обычно пустая. В Телеграме всегда есть данные.
-            if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData.length > 0) {
+            // Упрощенная проверка: Если объект Telegram существует - значит мы в Telegram
+            if (window.Telegram && window.Telegram.WebApp) {
                 isTelegramEnv = true;
                 
-                // Инициализируем рекламу ТОЛЬКО если мы в Телеграме
+                // Раскрываем приложение на весь экран (хорошая практика)
+                window.Telegram.WebApp.expand();
+
                 if (window.Adsgram) {
                     AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
                 }
             } else {
+                // Если нет объекта Telegram WebApp, значит мы в обычном браузере
                 isTelegramEnv = false;
-                disableAdButton(); // Отключаем кнопку, если мы не в ТГ
+                disableAdButton(); 
             }
         }
 
-        // Если мы не в Телеграме, меняем вид кнопки
         function disableAdButton() {
             const btn = document.getElementById('ad-btn');
             const warning = document.getElementById('tg-warning');
             
-            btn.style.background = '#333'; // Серый цвет
+            btn.style.background = '#333';
             btn.style.color = '#777';
             btn.style.boxShadow = 'none';
             btn.style.border = '1px solid #444';
             btn.innerHTML = '<i class="fab fa-telegram"></i> Только в Telegram';
             
-            // Меняем действие кнопки на "Перейти в бота" (опционально) или Alert
             btn.onclick = function() {
-                alert("Эта функция доступна только внутри Telegram.\nНайдите бота @fortunawtmbot чтобы играть бесплатно.");
+                alert("Эта функция доступна только внутри Telegram.\nЗапустите бота @fortunawtmbot чтобы играть бесплатно.");
             };
 
-            // Показываем поясняющий текст
             warning.style.display = 'block';
         }
 
@@ -300,8 +297,13 @@
             }
 
             if (!AdController) {
-                alert("Реклама не инициализирована. Попробуйте обновить страницу.");
-                return;
+                // Если контроллер не создался, пробуем пересоздать
+                if (window.Adsgram) {
+                    AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
+                } else {
+                    alert("Ошибка загрузки рекламы. Проверьте интернет или отключите AdBlock.");
+                    return;
+                }
             }
 
             AdController.show().then((result) => {
@@ -309,8 +311,8 @@
                     grantTemporaryAccess(); // Успех
                 }
             }).catch((result) => {
+                // Ошибки (например, нет рекламы сейчас)
                 console.log(result);
-                // Если пользователь закрыл рекламу или произошла ошибка
             });
         }
 
@@ -332,7 +334,6 @@
             document.getElementById('terms-modal-overlay').style.display = 'flex';
         }
 
-        // Остальная логика (демо, модалки, карточки)
         let currentTermsAction = '';
         function clickDemo() { openTermsModal('demo'); }
         function openTermsModal(action) { currentTermsAction = action; document.getElementById('terms-modal-overlay').style.display = 'flex'; }
@@ -425,4 +426,5 @@
     </script>
 </body>
 </html>
+
 
