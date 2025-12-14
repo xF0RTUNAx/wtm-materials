@@ -3,17 +3,23 @@ const tg = window.Telegram.WebApp;
 
 // Сообщаем телеграму, что приложение готово
 tg.ready();
-
-// Разворачиваем на весь экран
 tg.expand();
+tg.setHeaderColor('#1a1a1d'); 
 
-// Красим хедер в цвет приложения
-tg.setHeaderColor('#1a1a1d'); // Цвет вашего фона из style.css
+// --- НАСТРОЙКИ SUPABASE ---
+const SUPABASE_URL = 'https://zlxbjikgaacicodhippy.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpseGJqaWtnYWFjaWNvZGhpcHB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2NTQ4NjksImV4cCI6MjA4MTIzMDg2OX0.8aCLiaB8259uJBe86eqNG1sFR2jHkTcHJNvpPxppRGQ';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Получаем данные игрока
+const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+const userId = tgUser ? tgUser.id : 1001; 
+const userName = tgUser ? (tgUser.username || tgUser.first_name) : "Player";
 
 // --- КОНФИГУРАЦИЯ И ДАННЫЕ ---
 
-// Состояние игрока
-let gameState = {
+// Начальное состояние (вынесено отдельно для сброса)
+const defaultState = {
     fortx: 0,
     oil: 0,
     ore: 0,
@@ -21,18 +27,19 @@ let gameState = {
     space: 0,
     blueprints: 0,
     lastLogin: Date.now(),
-    factoryLevels: {}, // ID -> Level
+    factoryLevels: {}, 
     industryLevels: {}, 
-    skills: {}, // ID -> { level, startTime, endTime }
-    hangar: [], // Активные миссии
+    skills: {}, 
+    hangar: [], 
     unlocks: {
         secondHangarSlot: false,
         secondSkillSlot: false
     }
 };
 
-// [cite: 5-31] Конфигурация Завода (Factory)
-// baseCost: цена 1 уровня. multiplier: множитель цены. income: доход в сек.
+let gameState = JSON.parse(JSON.stringify(defaultState));
+
+// Конфигурация Завода
 const factoryConfig = [
     { id: 1, name: "Инфраструктура сотрудников", baseCost: 10, res: "fortx", income: 0.1, req: null },
     { id: 2, name: "Отдел разработки", baseCost: 100, res: "fortx", income: 0.5, req: 1 },
@@ -47,26 +54,25 @@ const factoryConfig = [
     { id: 11, name: "Производство кораблей", baseCost: 200000, res: "fortx", extraRes: "oil", extraCost: 500, income: 600, req: 10 },
     { id: 12, name: "Производство подлодок", baseCost: 500000, res: "fortx", extraRes: "oil", extraCost: 1000, income: 1000, req: 11 },
     { id: 13, name: "Отдел высоких технологий", baseCost: 1000000, res: "fortx", extraRes: "nuke", extraCost: 10, income: 2000, req: 12 },
-    // ... можно продолжить список до 24 пунктов согласно ТЗ, для краткости покажем основные механики
     { id: 24, name: "Проект xFORTUNAx", baseCost: 100000000, res: "fortx", extraRes: "space", extraCost: 1000, income: 50000, req: 13 }
 ];
 
-// [cite: 89] Конфигурация Промышленности (добыча ресурсов)
+// Конфигурация Промышленности
 const industryConfig = [
     { id: "oil_rig", name: "НПЗ (Нефть)", resOut: "oil", baseCost: 1000, bps: 100, reqFactory: 4 },
     { id: "ore_mine", name: "Шахты (Руда)", resOut: "ore", baseCost: 5000, bps: 250, reqFactory: 6 },
     { id: "nuke_lab", name: "Секретная добыча (Ядерное)", resOut: "nuke", baseCost: 20000, bps: 500, reqFactory: 12 },
-    { id: "space_lab", name: "Военная лаборатория (Космос)", resOut: "space", baseCost: 100000, bps: 1000, reqFactory: 17 } // Примерный ID
+    { id: "space_lab", name: "Военная лаборатория (Космос)", resOut: "space", baseCost: 100000, bps: 1000, reqFactory: 17 }
 ];
 
-// [cite: 36-58] Конфигурация Ангара (Миссии)
+// Конфигурация Ангара
 const hangarConfig = [
     { name: "Музей: КВ-1", type: "museum", time: 3600, reward: 1000, img: "https://static.wikia.nocookie.net/warrior/images/8/88/%D0%9A%D0%92-1.jpg/revision/latest?cb=20161026155026&path-prefix=ru" },
     { name: "Учения: M3 Bradley", type: "exercises", time: 14400, reward: 5000, img: "https://upload.wikimedia.org/wikipedia/commons/a/a2/Decisive_Action_Rotation_13-04_130218-A-ML570-001.jpg" },
     { name: "Патруль: Т-80У", type: "patrol", time: 43200, reward: 20000, img: "https://upload.wikimedia.org/wikipedia/commons/8/85/4thTankBrigade_-_T-80U_-09.jpg" }
 ];
 
-// [cite: 108] Магазин
+// Магазин
 const shopItems = [
     { id: 1, name: "Титул Оружейник (30 дн)", cost: 1000000, type: "title" },
     { id: 2, name: "Премиум WTM (7 дн)", cost: 5000000, type: "prem" },
@@ -75,8 +81,11 @@ const shopItems = [
 
 // --- ИНИЦИАЛИЗАЦИЯ И СОХРАНЕНИЕ ---
 
-function init() {
-    loadGame();
+async function init() {
+    // Сначала загружаем игру и ждем ответа от сервера
+    await loadGame();
+    
+    // Рендерим интерфейс
     renderFactory();
     renderIndustry();
     renderHangar();
@@ -84,36 +93,50 @@ function init() {
     renderShop();
     renderStocks();
     
-    // Запуск цикла игры (1 раз в секунду)
+    // Запускаем циклы ТОЛЬКО после загрузки
     setInterval(gameLoop, 1000);
-    // Автосохранение
-    setInterval(saveGame, 10000);
+    setInterval(saveGame, 10000); // Сохранение каждые 10 сек
 }
 
-function loadGame() {
-    const saved = localStorage.getItem('wtm_tycoon_save');
-    if (saved) {
-        // Объединяем с дефолтным на случай добавления новых полей
-        gameState = { ...gameState, ...JSON.parse(saved) };
+async function loadGame() {
+    const { data, error } = await supabase
+        .from('players')
+        .select('game_data')
+        .eq('id', userId)
+        .single();
+
+    if (data && data.game_data) {
+        console.log('Сохранение загружено.');
+        gameState = { ...gameState, ...data.game_data };
         
-        // [cite: 32] Проверка офлайн заработка (макс 12 часов)
+        // Офлайн доход
         const now = Date.now();
         const diffSeconds = (now - gameState.lastLogin) / 1000;
-        const maxOffline = 12 * 3600; // 12 часов
-        const actualSeconds = Math.min(diffSeconds, maxOffline);
-        
-        if (actualSeconds > 0) {
+        if (diffSeconds > 60) {
             const income = calculateTotalIncome();
-            const earned = income * actualSeconds;
+            const earned = income * diffSeconds;
             gameState.fortx += earned;
-            alert(`С возвращением! Пока вас не было, завод заработал: ${formatNumber(earned)} FortX`);
+            alert(`С возвращением! Завод заработал: ${formatNumber(earned)} FortX`);
         }
+    } else {
+        console.log('Новый игрок.');
     }
+    
+    updateUI(calculateTotalIncome());
 }
 
-function saveGame() {
+async function saveGame() {
     gameState.lastLogin = Date.now();
-    localStorage.setItem('wtm_tycoon_save', JSON.stringify(gameState));
+
+    const { error } = await supabase
+        .from('players')
+        .upsert({ 
+            id: userId, 
+            fortx: Math.floor(gameState.fortx),
+            game_data: gameState
+        });
+
+    if (error) console.error('Ошибка сохранения:', error);
 }
 
 // --- ЯДРО ИГРЫ ---
@@ -123,33 +146,27 @@ function calculateTotalIncome() {
     factoryConfig.forEach(item => {
         const level = gameState.factoryLevels[item.id] || 0;
         if (level > 0) {
-            total += item.income * level; // Линейный рост дохода для простоты
-            // Сюда можно добавить множители от Навыков
+            total += item.income * level;
         }
     });
-    // Применяем бонус навыков (пример)
-    const skillBonus = (gameState.skills[1]?.level || 0) * 0.01; // 1% за уровень
+    // Бонус навыков (Навык ID 1)
+    const skillBonus = (gameState.skills[1]?.level || 0) * 0.01;
     return total * (1 + skillBonus);
 }
 
 function gameLoop() {
-    // 1. Пассивный доход FortX
     const income = calculateTotalIncome();
     gameState.fortx += income;
 
-    // 2. Пассивная добыча ресурсов (Промышленность)
+    // Ресурсы
     industryConfig.forEach(ind => {
         const lvl = gameState.industryLevels[ind.id] || 0;
         if (lvl > 0 && gameState[ind.resOut] !== undefined) {
-            // Допустим, 1 уровень = 0.1 ресурса в сек
             gameState[ind.resOut] += lvl * 0.1;
         }
     });
 
-    // 3. Обновление UI
     updateUI(income);
-    
-    // 4. Проверка таймеров ангара и навыков
     checkTimers();
 }
 
@@ -162,15 +179,13 @@ function updateUI(income) {
     document.getElementById('res-blueprints').innerText = Math.floor(gameState.blueprints);
     document.getElementById('income-rate').innerText = formatNumber(income.toFixed(1));
     
-    // Обновление кнопок (доступность)
     updateFactoryButtons();
 }
 
-// Форматирование чисел (1k, 1M)
 function formatNumber(num) {
     if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
     if (num >= 1000) return (num / 1000).toFixed(1) + 'k';
-    return num;
+    return Math.floor(num);
 }
 
 // --- ЗАВОД ---
@@ -185,10 +200,10 @@ function renderFactory() {
         div.innerHTML = `
             <div class="item-header">
                 <span>${item.name}</span>
-                <span id="fac-lvl-${item.id}">Lvl: 0</span>
+                <span id="fac-lvl-${item.id}">Lvl: ${gameState.factoryLevels[item.id] || 0}</span>
             </div>
             <div class="item-cost">
-                Цена: <span id="fac-cost-${item.id}">${formatNumber(item.baseCost)}</span> FortX
+                Цена: <span id="fac-cost-${item.id}">${formatNumber(Math.floor(item.baseCost * Math.pow(1.15, gameState.factoryLevels[item.id] || 0)))}</span> FortX
                 ${item.extraRes ? ` + ${item.extraCost} ${item.extraRes}` : ''}
             </div>
             <button class="buy-btn" id="btn-fac-${item.id}" onclick="buyFactory(${item.id})">Улучшить</button>
@@ -196,24 +211,23 @@ function renderFactory() {
         list.appendChild(div);
     });
     
-    document.getElementById('tap-btn').addEventListener('click', () => {
-        gameState.fortx += 1; // Тап механика [cite: 6]
-        updateUI(calculateTotalIncome());
-    });
+    // Удаляем старый листенер во избежание дублирования, если есть
+    const tapBtn = document.getElementById('tap-btn');
+    if(tapBtn) {
+        tapBtn.onclick = () => {
+             gameState.fortx += 1;
+             updateUI(calculateTotalIncome());
+        };
+    }
 }
 
 function buyFactory(id) {
     const item = factoryConfig.find(i => i.id === id);
     const currentLvl = gameState.factoryLevels[id] || 0;
-    
-    // Формула цены: Base * 1.15^Level
     const costFortx = Math.floor(item.baseCost * Math.pow(1.15, currentLvl));
     
     let canBuy = gameState.fortx >= costFortx;
-    
-    // Проверка доп ресурсов
     if (item.extraRes && gameState[item.extraRes] < item.extraCost) canBuy = false;
-    // Проверка зависимости (открыт ли предыдущий цех)
     if (item.req && (gameState.factoryLevels[item.req] || 0) < 1) canBuy = false;
 
     if (canBuy) {
@@ -222,11 +236,7 @@ function buyFactory(id) {
         
         gameState.factoryLevels[id] = currentLvl + 1;
         
-        // Обновляем текст уровня и цены
-        document.getElementById(`fac-lvl-${id}`).innerText = `Lvl: ${currentLvl + 1}`;
-        const nextCost = Math.floor(item.baseCost * Math.pow(1.15, currentLvl + 1));
-        document.getElementById(`fac-cost-${id}`).innerText = nextCost;
-        
+        renderFactory(); // Перерисовываем для обновления цен
         saveGame();
     }
 }
@@ -236,17 +246,13 @@ function updateFactoryButtons() {
         const currentLvl = gameState.factoryLevels[item.id] || 0;
         const cost = Math.floor(item.baseCost * Math.pow(1.15, currentLvl));
         const btn = document.getElementById(`btn-fac-${item.id}`);
-        
-        // Простая логика доступности
-        if (gameState.fortx >= cost) {
-            btn.disabled = false;
-        } else {
-            btn.disabled = true;
+        if(btn) {
+            btn.disabled = gameState.fortx < cost;
         }
     });
 }
 
-// --- АНГАР И МИССИИ [cite: 34-59] ---
+// --- АНГАР И ТАЙМЕРЫ ---
 
 function renderHangar() {
     const list = document.getElementById('hangar-missions');
@@ -256,18 +262,17 @@ function renderHangar() {
         const div = document.createElement('div');
         div.className = 'item-card';
         div.innerHTML = `
-            <img src="${mission.img}" class="preview-img">
+            <img src="${mission.img}" class="preview-img" style="width:100%; height:100px; object-fit:cover; border-radius:5px;">
             <div class="item-header">${mission.name}</div>
             <div class="item-cost">Время: ${mission.time / 3600} ч. | Награда: ${mission.reward} FortX</div>
-            <button class="buy-btn" id="mission-btn-${index}" onclick="startMission(${index})">Начать</button>
-            <div id="mission-timer-${index}" style="color:orange"></div>
+            <button class="buy-btn" onclick="startMission(${index})">Начать</button>
+            <div id="mission-timer-${index}" style="color:orange; font-weight:bold;"></div>
         `;
         list.appendChild(div);
     });
 }
 
 function startMission(index) {
-    // Проверка слотов (бесплатно 1, платно 2)
     const activeMissions = gameState.hangar.length;
     const maxSlots = gameState.unlocks.secondHangarSlot ? 2 : 1;
     
@@ -282,33 +287,49 @@ function startMission(index) {
         endTime: Date.now() + (mission.time * 1000)
     });
     saveGame();
+    alert("Миссия началась!");
 }
 
 function checkTimers() {
-    // Проверка ангара
     const now = Date.now();
+    
+    // 1. Проверка Ангара
     gameState.hangar = gameState.hangar.filter(m => {
         if (now >= m.endTime) {
-            // Миссия завершена
             const missionConfig = hangarConfig[m.id];
             gameState.fortx += missionConfig.reward;
             alert(`Миссия ${missionConfig.name} завершена! Получено ${missionConfig.reward} FortX.`);
-            return false; // Удаляем из активных
+            return false; // Удаляем
         }
-        return true; // Оставляем
-    });
-    
-    // Обновление таймеров UI
-    gameState.hangar.forEach(m => {
+        
+        // Обновляем таймер UI
         const el = document.getElementById(`mission-timer-${m.id}`);
         if(el) {
-            const left = Math.floor((m.endTime - now) / 1000);
-            el.innerText = `Осталось: ${left} сек`;
+             const left = Math.floor((m.endTime - now) / 1000);
+             el.innerText = `Осталось: ${left} сек`;
         }
+        return true;
     });
+
+    // 2. Проверка Навыков (Добавлено исправление)
+    for (const [id, skill] of Object.entries(gameState.skills)) {
+        if (skill.upgrading) {
+            if (now >= skill.endTime) {
+                skill.upgrading = false;
+                skill.level += 1;
+                alert("Навык изучен!");
+                renderSkills(); // Обновляем UI
+            } else {
+                const el = document.getElementById(`skill-timer-${id}`);
+                if (el) {
+                    const left = Math.floor((skill.endTime - now) / 1000);
+                    el.innerText = `Изучение: ${left} сек`;
+                }
+            }
+        }
+    }
 }
 
-// [cite: 58] Код для разблокировки ангара
 function activateHangarCode() {
     const code = document.getElementById('hangar-code-input').value;
     if (code === 'fortxsecond020') {
@@ -320,15 +341,16 @@ function activateHangarCode() {
     }
 }
 
-// --- ПРОМЫШЛЕННОСТЬ [cite: 88-94] ---
+// --- ПРОМЫШЛЕННОСТЬ ---
 
 function renderIndustry() {
     const list = document.getElementById('industry-list');
     industryConfig.forEach(ind => {
+        const currentLvl = gameState.industryLevels[ind.id] || 0;
         const div = document.createElement('div');
         div.className = 'item-card';
         div.innerHTML = `
-            <div class="item-header">${ind.name}</div>
+            <div class="item-header">${ind.name} (Lvl ${currentLvl})</div>
             <div class="item-cost">Требует: ${ind.bps} Чертежей + ${formatNumber(ind.baseCost)} FortX</div>
             <button class="buy-btn" onclick="buyIndustry('${ind.id}')">Построить/Улучшить</button>
         `;
@@ -340,22 +362,23 @@ function buyIndustry(id) {
     const ind = industryConfig.find(i => i.id === id);
     const lvl = gameState.industryLevels[id] || 0;
     
-    // Проверка требований
     if (gameState.blueprints >= ind.bps && gameState.fortx >= ind.baseCost) {
         gameState.blueprints -= ind.bps;
         gameState.fortx -= ind.baseCost;
         gameState.industryLevels[id] = lvl + 1;
-        alert(`${ind.name} улучшен до уровня ${lvl + 1}`);
+        
+        renderIndustry();
         saveGame();
     } else {
-        alert("Недостаточно ресурсов (Чертежей или FortX)!");
+        alert("Недостаточно ресурсов!");
     }
 }
 
-// --- МАГАЗИН И "ВАЙП" [cite: 106-118] ---
+// --- МАГАЗИН И ВАЙП ---
 
 function renderShop() {
     const list = document.getElementById('shop-list');
+    list.innerHTML = ''; // Очистка перед рендером
     shopItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'item-card';
@@ -372,32 +395,49 @@ function buyShopItem(id) {
     const item = shopItems.find(i => i.id === id);
     if (gameState.fortx >= item.cost) {
         if(confirm("ВНИМАНИЕ! Покупка сбросит весь прогресс игры. Продолжить?")) {
-            // Генерация кода [cite: 118]
             const verificationCode = "FORT-" + Math.random().toString(36).substr(2, 9).toUpperCase();
             
-            // Показываем модалку
-            document.getElementById('verification-code').innerText = verificationCode;
-            document.getElementById('purchase-modal').classList.remove('hidden');
+            const codeEl = document.getElementById('verification-code');
+            const modal = document.getElementById('purchase-modal');
             
-            // Полный сброс (кроме подписок, по желанию, но ТЗ просит полный сброс)
-            // Здесь мы просто готовимся к сбросу при закрытии модалки
+            if (codeEl && modal) {
+                codeEl.innerText = verificationCode;
+                modal.classList.remove('hidden');
+            } else {
+                // Если модалки нет в HTML, просто делаем вайп
+                closeModal();
+            }
         }
     } else {
         alert("Недостаточно FortX!");
     }
 }
 
-function closeModal() {
-    document.getElementById('purchase-modal').classList.add('hidden');
-    // Сброс данных (Wipe)
-    localStorage.removeItem('wtm_tycoon_save');
+async function closeModal() {
+    const modal = document.getElementById('purchase-modal');
+    if(modal) modal.classList.add('hidden');
+    
+    // ПОЛНЫЙ СБРОС (ИСПРАВЛЕНО)
+    // 1. Сбрасываем локальный стейт
+    gameState = JSON.parse(JSON.stringify(defaultState));
+    gameState.lastLogin = Date.now();
+    
+    // 2. Отправляем пустой стейт в облако
+    await supabase
+        .from('players')
+        .upsert({ 
+            id: userId, 
+            fortx: 0,
+            game_data: gameState 
+        });
+        
     location.reload();
 }
 
-// --- ЧЕРНЫЙ РЫНОК И АКЦИИ [cite: 95] ---
+// --- ЧЕРНЫЙ РЫНОК ---
 
 function buyBlueprint(amount) {
-    const price = 1000 * amount; // Цена плавает, упрощенно 1000 за шт
+    const price = 1000 * amount;
     if (gameState.fortx >= price) {
         gameState.fortx -= price;
         gameState.blueprints += amount;
@@ -415,34 +455,41 @@ function renderStocks() {
     ];
     
     const list = document.getElementById('stocks-list');
+    if(!list) return;
     list.innerHTML = '';
     stocks.forEach(s => {
         const div = document.createElement('div');
         div.style.padding = "5px";
         div.style.borderBottom = "1px solid #444";
-        div.innerHTML = `${s.name}: <span style="color:var(--green-color)">${s.price} FortX</span>`;
+        div.innerHTML = `${s.name}: <span style="color:#00ff00">${s.price} FortX</span>`;
         list.appendChild(div);
     });
 }
 
-// --- НАВЫКИ [cite: 60-70] ---
+// --- НАВЫКИ ---
 function renderSkills() {
     const list = document.getElementById('skills-list');
-    // Пример одного навыка
+    list.innerHTML = '';
+    
+    // Навык 1: Экономика
+    const skillLvl = gameState.skills[1]?.level || 0;
+    const isUpgrading = gameState.skills[1]?.upgrading;
+    
     const div = document.createElement('div');
     div.className = 'item-card';
     div.innerHTML = `
-        <div class="item-header">Экономические курсы</div>
-        <div class="item-cost">Текущий бонус: ${(gameState.skills[1]?.level || 0)}%</div>
-        <button class="buy-btn" onclick="startSkillUpgrade(1)">Начать изучение (Бесплатно)</button>
-        <div id="skill-timer-1"></div>
+        <div class="item-header">Экономические курсы (Lvl ${skillLvl})</div>
+        <div class="item-cost">Бонус: +${skillLvl}% к доходу</div>
+        <button class="buy-btn" onclick="startSkillUpgrade(1)" ${isUpgrading ? 'disabled' : ''}>
+            ${isUpgrading ? 'Изучается...' : 'Учить (1 мин)'}
+        </button>
+        <div id="skill-timer-1" style="color:orange"></div>
     `;
     list.appendChild(div);
 }
 
 function startSkillUpgrade(id) {
-    // Тут нужна логика времени из [cite: 71-86]
-    // Упрощенно: всегда 1 минута для теста
+    // 60 секунд
     const endTime = Date.now() + 60000; 
     
     gameState.skills[id] = {
@@ -450,13 +497,14 @@ function startSkillUpgrade(id) {
         upgrading: true,
         endTime: endTime
     };
-    alert("Изучение начато! Ждите 1 минуту.");
+    
+    renderSkills();
     saveGame();
 }
 
 function activateSkillCode() {
     const code = document.getElementById('skill-code-input').value;
-    if (code === 'skillfortuna701') { // [cite: 69]
+    if (code === 'skillfortuna701') {
         gameState.unlocks.secondSkillSlot = true;
         alert("Второй слот навыков разблокирован!");
         saveGame();
@@ -465,23 +513,26 @@ function activateSkillCode() {
     }
 }
 
-function watchAd(type) {
-    // [cite: 87] Мокап рекламы
-    alert("Реклама просмотрена! Время сокращено на 10% (логика времени требует доработки).");
-}
-
-// --- ВКЛАДКИ ---
+// --- НАВИГАЦИЯ ---
 
 function switchTab(tabId) {
-    // Скрываем все
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    // Скрываем все содержимое
+    document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
     
-    // Показываем нужную
-    document.getElementById('tab-' + tabId).classList.add('active');
+    // Показываем нужное
+    const activeTab = document.getElementById('tab-' + tabId);
+    if(activeTab) activeTab.style.display = 'block';
     
-    // Подсветка кнопки (тут упрощенно, нужно искать кнопку по индексу или ID)
+    // Подсветка кнопок (нужно добавить ID к кнопкам в HTML, например id="btn-tab-factory")
+    const activeBtn = document.getElementById('btn-tab-' + tabId);
+    if(activeBtn) activeBtn.classList.add('active');
+    
+    if (tabId === 'top') {
+        // Если есть функция renderTop, вызываем её (в этом файле её не было, но она может быть в проекте)
+        if (typeof renderTop === "function") renderTop();
+    }
 }
 
-// Запуск
+// Запуск инициализации
 init();
