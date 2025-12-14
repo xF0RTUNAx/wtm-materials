@@ -396,6 +396,49 @@
     </div>
 
     <script>
+
+        // --- ЗАЩИТА ДОСТУПА (Вставить в самое начало скрипта) ---
+    (function checkSessionGuard() {
+        const sessionRaw = localStorage.getItem('wtm_session');
+        
+        // 1. Если ключа нет вообще -> выкидываем на вход
+        if (!sessionRaw) {
+            window.location.href = 'minigame.html';
+            return;
+        }
+
+        let session;
+        try {
+            session = JSON.parse(sessionRaw);
+        } catch (e) {
+            localStorage.removeItem('wtm_session');
+            window.location.href = 'minigame.html';
+            return;
+        }
+
+        // 2. Если ключ временный -> следим за таймером
+        if (session.type === 'temporary') {
+            const checkTime = () => {
+                const now = Date.now();
+                const timeLeft = session.expiry - now;
+
+                if (timeLeft <= 0) {
+                    // Время (20 минут) вышло!
+                    alert("⏳ Время действия рекламного доступа истекло.\nПожалуйста, посмотрите рекламу еще раз для продления.");
+                    localStorage.removeItem('wtm_session'); // Удаляем просроченный ключ
+                    window.location.href = 'minigame.html'; // Выкидываем на страницу входа
+                }
+            };
+
+            // Проверяем сразу при загрузке страницы
+            checkTime();
+            
+            // И проверяем каждую минуту (чтобы выкинуть игрока прямо во время игры, если время выйдет)
+            setInterval(checkTime, 60000); 
+        }
+    })();
+    // --- КОНЕЦ ЗАЩИТЫ ---
+        
     (function() {
         const SESSION_ID = '#' + Math.random().toString(36).substr(2, 4).toUpperCase();
         console.log("Session:", SESSION_ID);
@@ -1025,6 +1068,7 @@
     </script>
 </body>
 </html>
+
 
 
 
