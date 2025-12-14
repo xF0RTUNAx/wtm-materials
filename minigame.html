@@ -12,7 +12,7 @@
     <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
     
     <style>
-        /* CSS СТИЛИ (БЕЗ ИЗМЕНЕНИЙ) */
+        /* CSS СТИЛИ */
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { font-family: 'Poppins', sans-serif; background-color: #0f0f12; background-image: url('https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-y: auto; color: white; padding: 20px; }
         body::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(10, 10, 15, 0.7); backdrop-filter: blur(8px); z-index: -1; }
@@ -155,10 +155,6 @@
                         <button id="ad-btn" class="btn-main" onclick="showAdAndLogin()" style="background: linear-gradient(45deg, #f1c40f, #e67e22); color: black; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);">
                             <i class="fas fa-video"></i> Доступ на 20 минут (Реклама)
                         </button>
-
-                        <p id="tg-warning" style="display: none; font-size: 0.8em; color: #aaa; margin-top: 10px; border: 1px dashed #555; padding: 8px; border-radius: 8px;">
-                            ⚠️ <span style="color: #e67e22;">Внимание:</span> Бесплатный доступ через рекламу работает только в Telegram приложении.
-                        </p>
                     </div>
 
                     <p class="error-msg" id="login-error">Доступ запрещен. Неверный ключ. Пожалуйста, проверьте подписку.</p>
@@ -211,10 +207,9 @@
 
     <script>
         // --- ADSGRAM CONFIGURATION ---
-        const AdsgramBlockId = "19146"; // <--- ВСТАВЬТЕ СЮДА ВАШ ID ИЗ ADSGRAM (например "int-123456")
+        const AdsgramBlockId = "ВАШ_BLOCK_ID_СЮДА"; // <--- ВСТАВЬТЕ СЮДА ВАШ ID ИЗ ADSGRAM (например "int-123456")
         
         let AdController;
-        let isTelegramEnv = false;
 
         window.addEventListener('load', () => {
             setTimeout(() => {
@@ -224,47 +219,18 @@
                     loader.style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                     
-                    // Запуск проверки среды
-                    checkEnvironment();
+                    // Попытка расширить на весь экран (если в ТГ)
+                    if (window.Telegram && window.Telegram.WebApp) {
+                        try { window.Telegram.WebApp.expand(); } catch(e){}
+                    }
+
+                    // Инициализация рекламы при загрузке
+                    if (window.Adsgram) {
+                        AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
+                    }
                 }, 1000);
             }, 2500); 
         });
-
-        // ИСПРАВЛЕННАЯ ФУНКЦИЯ ПРОВЕРКИ
-        function checkEnvironment() {
-            // Упрощенная проверка: Если объект Telegram существует - значит мы в Telegram
-            if (window.Telegram && window.Telegram.WebApp) {
-                isTelegramEnv = true;
-                
-                // Раскрываем приложение на весь экран (хорошая практика)
-                window.Telegram.WebApp.expand();
-
-                if (window.Adsgram) {
-                    AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
-                }
-            } else {
-                // Если нет объекта Telegram WebApp, значит мы в обычном браузере
-                isTelegramEnv = false;
-                disableAdButton(); 
-            }
-        }
-
-        function disableAdButton() {
-            const btn = document.getElementById('ad-btn');
-            const warning = document.getElementById('tg-warning');
-            
-            btn.style.background = '#333';
-            btn.style.color = '#777';
-            btn.style.boxShadow = 'none';
-            btn.style.border = '1px solid #444';
-            btn.innerHTML = '<i class="fab fa-telegram"></i> Только в Telegram';
-            
-            btn.onclick = function() {
-                alert("Эта функция доступна только внутри Telegram.\nЗапустите бота @fortunawtmbot чтобы играть бесплатно.");
-            };
-
-            warning.style.display = 'block';
-        }
 
         // 1. Постоянный вход (Ключи)
         function attemptLogin() {
@@ -289,30 +255,51 @@
             }
         }
 
-        // 2. Рекламный вход (Только для TG)
+        // 2. Рекламный вход (С диагностикой)
         function showAdAndLogin() {
-            if (!isTelegramEnv) {
-                alert("Пожалуйста, откройте это мини-приложение через Telegram.");
+            // Проверка 1: Библиотека вообще загрузилась?
+            if (!window.Adsgram) {
+                alert("Ошибка: Библиотека рекламы не загрузилась. Проверьте интернет или отключите блокировщик рекламы.");
                 return;
             }
 
+            // Проверка 2: Мы вообще в Телеграме?
+            if (!window.Telegram || !window.Telegram.WebApp) {
+                 // Здесь мы просто предупреждаем, но пробуем запустить (на всякий случай)
+                 alert("Внимание: Кажется, вы открыли сайт не через бота Telegram. Реклама может не сработать.");
+            }
+
+            // Проверка 3: Контроллер создан?
             if (!AdController) {
-                // Если контроллер не создался, пробуем пересоздать
-                if (window.Adsgram) {
-                    AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
-                } else {
-                    alert("Ошибка загрузки рекламы. Проверьте интернет или отключите AdBlock.");
+                // Пробуем пересоздать
+                AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
+                if (!AdController) {
+                    alert("Ошибка: Не удалось инициализировать рекламу. Проверьте правильность Block ID в коде.");
                     return;
                 }
             }
 
+            // ЗАПУСК РЕКЛАМЫ
             AdController.show().then((result) => {
+                // Если успех
                 if (result.done) {
-                    grantTemporaryAccess(); // Успех
+                    grantTemporaryAccess();
+                } else {
+                    // Если реклама началась, но юзер её закрыл или что-то еще
+                    // console.log(result); // Можно не показывать алерт, если просто закрыл
                 }
-            }).catch((result) => {
-                // Ошибки (например, нет рекламы сейчас)
-                console.log(result);
+            }).catch((err) => {
+                // Если произошла ошибка при запуске (например, нет рекламы для этого юзера)
+                console.error(err);
+                
+                // Преобразуем ошибку в текст для Алерта
+                let errorText = "Неизвестная ошибка";
+                if (typeof err === 'string') errorText = err;
+                else if (err && err.description) errorText = err.description;
+                else if (err && err.message) errorText = err.message;
+                else errorText = JSON.stringify(err);
+
+                alert("Не удалось запустить рекламу.\nПричина: " + errorText + "\n\nПопробуйте зайти через бота @fortunawtmbot (кнопка Меню).");
             });
         }
 
@@ -425,6 +412,6 @@
         updateCard(); 
     </script>
 </body>
-</html>
+    </html>
 
 
