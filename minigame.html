@@ -204,32 +204,41 @@
         </div>
     </div>
 
-    <script>
+   <script>
         // --- ADSGRAM CONFIGURATION ---
-        // ВНИМАНИЕ: Замените цифры внутри кавычек на ваши 5 цифр!
         const AdsgramBlockId = "19146"; 
-        
         let AdController;
 
+        // Инициализация
         window.addEventListener('load', () => {
+            // Анимация загрузки
             setTimeout(() => {
                 const loader = document.getElementById('loader-screen');
                 loader.style.opacity = '0';
                 setTimeout(() => {
                     loader.style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
-                    
-                    if (window.Telegram && window.Telegram.WebApp) {
-                        try { window.Telegram.WebApp.expand(); } catch(e){}
-                    }
-
-                    if (window.Adsgram) {
-                        AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
-                    }
                 }, 1000);
-            }, 2500); 
+            }, 2500);
+
+            // Инициализация Telegram
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.expand();
+                
+                // --- ДИАГНОСТИКА (Удалите потом) ---
+                // Проверяем, передал ли Телеграм данные. 
+                // Если initData пустая — реклама 100% не сработает.
+                console.log("InitData:", window.Telegram.WebApp.initData);
+                // ----------------------------------
+
+                // Инициализация рекламы
+                if (window.Adsgram) {
+                    AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
+                }
+            }
         });
 
+        // Функция входа по ключу
         function attemptLogin() {
             const keyInput = document.getElementById('access-key');
             const errorMsg = document.getElementById('login-error');
@@ -252,39 +261,54 @@
             }
         }
 
-        function showAdAndLogin() {
-            if (!window.Adsgram) {
-                alert("Ошибка: Библиотека рекламы не загрузилась. Проверьте интернет или отключите блокировщик рекламы.");
+        // Функция показа рекламы
+        async function showAdAndLogin() {
+            // 1. Проверка: Запущен ли скрипт Telegram
+            if (!window.Telegram || !window.Telegram.WebApp) {
+                alert("Ошибка: Приложение не видит Telegram. Откройте его через бота.");
                 return;
             }
 
-            if (!window.Telegram || !window.Telegram.WebApp) {
-                 alert("Внимание: Кажется, вы открыли сайт не через бота Telegram. Реклама может не сработать.");
+            // 2. ГЛАВНАЯ ПРОВЕРКА: Есть ли данные пользователя
+            if (!window.Telegram.WebApp.initData) {
+                alert("⛔ ОШИБКА ЗАПУСКА\n\nВы открыли сайт как обычную ссылку. Реклама так не работает.\n\nПожалуйста, используйте прямую ссылку на приложение (t.me/...) или кнопку 'Меню' в боте.");
+                return;
             }
 
+            // 3. Проверка контроллера рекламы
             if (!AdController) {
-                AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
-                if (!AdController) {
-                    alert("Ошибка: Не удалось инициализировать рекламу. Проверьте Block ID.");
+                if (window.Adsgram) {
+                    AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
+                } else {
+                    alert("Ошибка: Скрипт рекламы не загрузился. Проверьте интернет.");
                     return;
                 }
             }
 
-            AdController.show().then((result) => {
+            // 4. Показ
+            try {
+                const result = await AdController.show();
                 if (result.done) {
                     grantTemporaryAccess();
+                } else {
+                    // Пользователь закрыл рекламу или скипнул
+                    alert("Реклама была пропущена или закрыта. Доступ не выдан.");
                 }
-            }).catch((err) => {
-                console.error(err);
+            } catch (err) {
+                // Ловим ту самую ошибку и выводим понятное сообщение
+                console.error("Ads Error:", err);
                 
-                let errorText = "Неизвестная ошибка";
-                if (typeof err === 'string') errorText = err;
-                else if (err && err.description) errorText = err.description;
-                else if (err && err.message) errorText = err.message;
-                else errorText = JSON.stringify(err);
+                let errorText = JSON.stringify(err);
+                if (err && err.message) errorText = err.message;
+                if (err && err.description) errorText = err.description;
 
-                alert("Не удалось запустить рекламу.\nПричина: " + errorText + "\n\nПопробуйте зайти через бота.");
-            });
+                // Если ошибка все еще 'Unable to retrieve...', значит проблема в способе запуска
+                if (errorText.includes("launch parameters")) {
+                     alert("Критическая ошибка: Adsgram не видит параметры запуска.\n\nРешение: Перезапустите бота и откройте приложение через кнопку Меню.");
+                } else {
+                     alert("Ошибка рекламы: " + errorText);
+                }
+            }
         }
 
         function grantTemporaryAccess() {
@@ -298,12 +322,13 @@
                 expiry: expiryTime
             }));
 
-            alert(`Доступ открыт на 20 минут!\nКлюч сессии: ${tempKey}`);
+            alert(`Доступ открыт на 20 минут!\nВаш временный ключ: ${tempKey}`);
             
             currentTermsAction = 'login'; 
             document.getElementById('terms-modal-overlay').style.display = 'flex';
         }
 
+        // Остальные функции (модалки, карточки) без изменений
         let currentTermsAction = '';
         function clickDemo() { openTermsModal('demo'); }
         function openTermsModal(action) { currentTermsAction = action; document.getElementById('terms-modal-overlay').style.display = 'flex'; }
@@ -396,6 +421,7 @@
     </script>
 </body>
 </html>
+
 
 
 
