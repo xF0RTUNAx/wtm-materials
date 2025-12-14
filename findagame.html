@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>xFORTUNAx | Выбор игры</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -59,6 +60,44 @@
         }
         
         .user-badge i { color: #ffd700; font-size: 1.1rem; }
+
+        /* --- СТИЛИ ДЛЯ ТАЙМЕРА (НОВОЕ) --- */
+        .timer-badge {
+            background: linear-gradient(135deg, #f1c40f, #e67e22);
+            color: #000;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            display: none; /* Скрыт по умолчанию, JS покажет если нужно */
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 15px rgba(241, 196, 15, 0.3);
+            animation: pulse-border 2s infinite;
+            white-space: nowrap;
+        }
+
+        .timer-badge i { font-size: 1rem; }
+
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0.6); }
+            70% { box-shadow: 0 0 0 8px rgba(241, 196, 15, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); }
+        }
+
+        /* Красный стиль таймера (< 2 мин) */
+        .timer-badge.urgent {
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            color: white;
+            box-shadow: 0 0 15px rgba(255, 71, 87, 0.6);
+            animation: pulse-fast 1s infinite;
+        }
+
+        @keyframes pulse-fast {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
 
         .btn-logout {
             background: rgba(255, 71, 87, 0.15);
@@ -149,8 +188,6 @@
         .icon-collision { background: linear-gradient(135deg, #ff9966, #ff5e62); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .icon-strat { background: linear-gradient(135deg, #8e44ad, #9b59b6); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .icon-ny { background: linear-gradient(135deg, #11998e, #38ef7d); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        
-        /* Иконка для Охотника за удачей (Золотая) */
         .icon-fortune { background: linear-gradient(135deg, #f1c40f, #e67e22); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
 
         /* Game Info Text */
@@ -219,13 +256,7 @@
         
         .badge-hot { background: #ff4757; color: white; box-shadow: 0 0 10px rgba(255, 71, 87, 0.4); }
         .badge-new { background: #2ed573; color: #0f0f12; box-shadow: 0 0 10px rgba(46, 213, 115, 0.4); }
-        
-        /* Стиль для плашки "Временно" */
-        .badge-temp { 
-            background: #74b9ff; 
-            color: #0f0f12; 
-            box-shadow: 0 0 10px rgba(116, 185, 255, 0.4); 
-        }
+        .badge-temp { background: #74b9ff; color: #0f0f12; box-shadow: 0 0 10px rgba(116, 185, 255, 0.4); }
 
         /* --- MOBILE SPECIFIC ADAPTATION --- */
         @media (max-width: 600px) {
@@ -235,6 +266,12 @@
             
             .btn-logout span { display: none; }
             @media (min-width: 360px) { .btn-logout span { display: inline; } }
+
+            /* Прячем текст "Премиум подписка" на совсем мелких экранах, оставляем корону */
+            @media (max-width: 350px) {
+                .user-badge { font-size: 0; }
+                .user-badge i { font-size: 1.2rem; margin-right: 0; }
+            }
 
             .page-title { font-size: 1.7rem; }
             
@@ -253,7 +290,11 @@
 
     <div class="header">
         <div class="user-badge">
-            <i class="fas fa-crown"></i> Премиум подписка
+            <i class="fas fa-crown"></i> <span>Премиум</span>
+        </div>
+
+        <div id="session-timer" class="timer-badge">
+            <i class="fas fa-stopwatch"></i> <span id="timer-text">00:00</span>
         </div>
         <a href="minigame.html" class="btn-logout">
             <i class="fas fa-sign-out-alt"></i> <span>Выход</span>
@@ -271,7 +312,7 @@
             </div>
             <div class="game-info">
                 <div class="game-title">Морской бой <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Тактический морской бой против ИИ с использованием сезонной техники и механик, и с возможность выиграть внутриигровые ресурсы.</div>
+                <div class="game-desc">Тактический морской бой против ИИ с использованием сезонной техники и механик.</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
@@ -282,7 +323,7 @@
             </div>
             <div class="game-info">
                 <div class="game-title">Столкновение <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Командные сражения подписчиков. Захватывайте территории на карте, выполняя задания в WTM, и выигрывая призы всей командой.</div>
+                <div class="game-desc">Командные сражения подписчиков. Захватывайте территории на карте.</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
@@ -293,7 +334,7 @@
             </div>
             <div class="game-info">
                 <div class="game-title">Стратег <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Пошаговая тактика с элементами удачи. Формируйте армию и побеждайте врага с возможность выиграть внутриигровые ресурсы.</div>
+                <div class="game-desc">Пошаговая тактика с элементами удачи. Формируйте армию и побеждайте врага.</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
@@ -304,7 +345,7 @@
             </div>
             <div class="game-info">
                 <div class="game-title">Охотник за удачей <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Испытайте удачу! Крутите рулетку с возможностью выигрывайть ценные призы для WTM и среды сообщества.</div>
+                <div class="game-desc">Испытайте удачу! Крутите рулетку и выигрывайте ценные призы.</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
@@ -313,8 +354,26 @@
     </div>
 
     <script>
+    // --- Инициализация Telegram WebApp и Полный Экран ---
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready(); // Сообщаем, что готовы
+        
+        // РАЗВОРАЧИВАЕМ НА ВЕСЬ ЭКРАН
+        try {
+            window.Telegram.WebApp.expand(); 
+        } catch (e) {
+            console.log("Expand failed or not available");
+        }
+        
+        // Красим шапку телеграма в цвет фона сайта
+        window.Telegram.WebApp.setHeaderColor('#0f0f12'); 
+    }
+
+    // --- Логика сессии и таймера ---
     (function checkSessionGuard() {
         const sessionRaw = localStorage.getItem('wtm_session');
+        const timerBadge = document.getElementById('session-timer');
+        const timerText = document.getElementById('timer-text');
         
         // 1. Если ключа нет вообще -> выкидываем на вход
         if (!sessionRaw) {
@@ -331,28 +390,48 @@
             return;
         }
 
-        // 2. Если ключ временный -> следим за таймером
+        // 2. Если ключ ВРЕМЕННЫЙ (после рекламы)
         if (session.type === 'temporary') {
-            const checkTime = () => {
+            // Показываем таймер
+            if(timerBadge) timerBadge.style.display = 'flex';
+
+            const updateTimer = () => {
                 const now = Date.now();
                 const timeLeft = session.expiry - now;
 
                 if (timeLeft <= 0) {
-                    // Время (20 минут) вышло!
-                    alert("⏳ Время действия рекламного доступа истекло.\nПожалуйста, посмотрите рекламу еще раз для продления.");
-                    localStorage.removeItem('wtm_session'); // Удаляем просроченный ключ
-                    window.location.href = 'minigame.html'; // Выкидываем на страницу входа
+                    // Время вышло
+                    alert("⏳ Время действия рекламного доступа истекло.\nДля продолжения посмотрите рекламу еще раз.");
+                    localStorage.removeItem('wtm_session'); 
+                    window.location.href = 'minigame.html'; 
+                    return;
+                }
+
+                // Форматирование времени ММ:СС
+                const minutes = Math.floor(timeLeft / 60000);
+                const seconds = Math.floor((timeLeft % 60000) / 1000);
+                const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                
+                if(timerText) timerText.innerText = formattedTime;
+
+                // Если осталось мало времени (меньше 2 минут), делаем красным и пульсирующим
+                if (timeLeft < 120000 && timerBadge) {
+                    timerBadge.classList.add('urgent');
                 }
             };
 
-            // Проверяем сразу при загрузке страницы
-            checkTime();
-            
-            // И проверяем каждую минуту
-            setInterval(checkTime, 60000); 
+            // Запускаем сразу и потом каждую секунду
+            updateTimer();
+            setInterval(updateTimer, 1000); 
+        } 
+        // 3. Если ключ ПОСТОЯННЫЙ (введен вручную или куплен)
+        else {
+            // Скрываем таймер, если он был
+            if(timerBadge) timerBadge.style.display = 'none';
         }
     })();
     </script>
 
 </body>
 </html>
+
