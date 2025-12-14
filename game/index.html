@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>WTM Tycoon | xFORTUNAx</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+
+    <header class="resource-header">
+        <div class="res-item">FortX: <span id="res-fortx">0</span></div>
+        <div class="res-row">
+            <span title="Нефть">🛢️ <span id="res-oil">0</span></span>
+            <span title="Руда">💎 <span id="res-ore">0</span></span>
+            <span title="Ядерное">☢️ <span id="res-nuke">0</span></span>
+            <span title="Космос">🚀 <span id="res-space">0</span></span>
+            <span title="Чертежи">📜 <span id="res-blueprints">0</span></span>
+        </div>
+    </header>
+
+    <main id="game-container">
+        
+        <section id="tab-factory" class="tab-content active">
+            <h2>🏭 Завод</h2>
+            <div class="factory-header">
+                <button id="tap-btn" class="big-btn">ТАП (+1 FortX)</button>
+                <div class="income-info">Доход: <span id="income-rate">0</span> / сек</div>
+            </div>
+            <div id="factory-list" class="upgrade-list">
+                </div>
+        </section>
+
+        <section id="tab-hangar" class="tab-content">
+            <h2>✈️ Ангар</h2>
+            <div class="subscription-block">
+                <p>Разблокировать 2-й слот:</p>
+                <button onclick="window.open('https://dalink.to/xf0rtunax')">Купить ($2 / 100 Stars)</button>
+                <button onclick="window.open('https://t.me/fortunawtmhelp')">Отправить скрин</button>
+                <div class="code-input">
+                    <input type="text" id="hangar-code-input" placeholder="Введите код">
+                    <button onclick="activateHangarCode()">OK</button>
+                </div>
+            </div>
+            <div id="hangar-missions" class="mission-list">
+                </div>
+        </section>
+
+        <section id="tab-skills" class="tab-content">
+            <h2>🧠 Навыки</h2>
+            <div class="subscription-block">
+                <p>Одновременное улучшение (2 слота):</p>
+                <button onclick="window.open('https://dalink.to/xf0rtunax')">Купить ($2)</button>
+                <div class="code-input">
+                    <input type="text" id="skill-code-input" placeholder="Введите код">
+                    <button onclick="activateSkillCode()">OK</button>
+                </div>
+            </div>
+            
+            <div class="ad-block">
+                <button onclick="watchAd('skills')">🎬 Смотреть рекламу (-10% времени)</button>
+            </div>
+
+            <div id="skills-list" class="upgrade-list">
+                </div>
+        </section>
+
+        <section id="tab-industry" class="tab-content">
+            <h2>⛏️ Промышленность</h2>
+            <p>Добыча редких ресурсов. Требуются чертежи.</p>
+            <div id="industry-list" class="upgrade-list"></div>
+        </section>
+
+        <section id="tab-blackmarket" class="tab-content">
+            <h2>🕵️ Черный Рынок</h2>
+            <div class="market-controls">
+                <button onclick="buyBlueprint(1)">Купить 1 📜</button>
+                <button onclick="buyBlueprint(10)">10 📜</button>
+                <button onclick="buyBlueprint(100)">100 📜</button>
+            </div>
+            <div class="stock-market">
+                <h3>Акции компаний</h3>
+                <div id="stocks-list"></div>
+            </div>
+        </section>
+
+        <section id="tab-market" class="tab-content">
+            <h2>⚖️ Маркет Игроков</h2>
+            <p>В разработке (Требуется онлайн сервер)</p>
+            <div class="mock-market">
+                <p>Здесь будут лоты других игроков.</p>
+            </div>
+        </section>
+
+        <section id="tab-shop" class="tab-content">
+            <h2>🛒 Магазин</h2>
+            <p class="warning">⚠️ Покупка предмета ОБНУЛЯЕТ прогресс!</p>
+            <div id="shop-list" class="shop-grid"></div>
+        </section>
+
+        <section id="tab-top" class="tab-content">
+            <h2>🏆 Топ Игроков</h2>
+            <ol>
+                <li>xFORTUNAx - 999M</li>
+                <li>Player_One - 500M</li>
+                <li>TankAce - 120M</li>
+                </ol>
+        </section>
+
+    </main>
+
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="switchTab('factory')">🏭</button>
+        <button class="nav-btn" onclick="switchTab('hangar')">✈️</button>
+        <button class="nav-btn" onclick="switchTab('skills')">🧠</button>
+        <button class="nav-btn" onclick="switchTab('industry')">⛏️</button>
+        <button class="nav-btn" onclick="switchTab('blackmarket')">🕵️</button>
+        <button class="nav-btn" onclick="switchTab('market')">⚖️</button>
+        <button class="nav-btn" onclick="switchTab('shop')">🛒</button>
+        <button class="nav-btn" onclick="switchTab('top')">🏆</button>
+    </nav>
+
+    <div id="purchase-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Покупка совершена!</h3>
+            <p>Ваш проверочный код:</p>
+            <strong id="verification-code" class="code-display">---</strong>
+            <p>Сделайте скриншот и отправьте в поддержку.</p>
+            <button onclick="closeModal()">Закрыть и сбросить игру</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
