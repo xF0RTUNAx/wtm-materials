@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>xFORTUNAx | Мини-игры</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -63,6 +63,18 @@
         .input-group input:focus { border-bottom-color: #00e5ff; }
         .btn-main { width: 100%; padding: 15px; border: none; border-radius: 12px; font-weight: 700; font-size: 1em; cursor: pointer; transition: 0.3s; margin-top: 10px; background: #00e5ff; color: #0f0f12; }
         .btn-main:hover { transform: scale(1.03); box-shadow: 0 0 15px rgba(0, 229, 255, 0.5); }
+        
+        /* СТИЛЬ ДЛЯ ЗАБЛОКИРОВАННОЙ КНОПКИ */
+        .btn-main.disabled {
+            background: #444 !important;
+            color: #888 !important;
+            box-shadow: none !important;
+            cursor: not-allowed;
+            pointer-events: none;
+            filter: grayscale(100%);
+            border: 1px solid #555;
+        }
+
         .error-msg { color: #ff4444; font-size: 0.85em; margin-top: 15px; display: none; text-align: center; }
         
         .bottom-actions { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; width: 100%; }
@@ -98,18 +110,6 @@
         .sponsor-content .button:hover { transform: scale(1.02); }
         .close-sponsor-btn { margin-top: 10px; background: transparent; border: 1px solid #555; color: #888; padding: 8px 15px; border-radius: 5px; cursor: pointer; transition: 0.3s; }
         .close-sponsor-btn:hover { color: white; border-color: white; }
-        
-        /* --- НОВЫЙ КЛАСС ДЛЯ ЗАБЛОКИРОВАННОЙ КНОПКИ --- */
-        .btn-disabled {
-            background: #444 !important; 
-            color: #888 !important; 
-            box-shadow: none !important; 
-            cursor: not-allowed !important;
-            filter: grayscale(100%) !important;
-            transform: none !important;
-            font-size: 0.8em !important; /* Чуть меньше шрифт, чтобы влез текст */
-        }
-
         @media (max-width: 768px) { .loader-wrapper { scale: 1; } #main-content { padding: 25px 15px; width: 95%; } .header-title { font-size: 1.5em; } .glass-radio-group { width: 100%; min-width: unset; } .content-wrapper { flex-direction: column; align-items: center; gap: 20px; } .container-card { width: 100%; } .login-area { width: 100%; } .bottom-actions { flex-direction: column; gap: 12px; } .action-btn { width: 100%; justify-content: center; } .card_box { width: 100%; max-width: 320px; } }
     </style>
 </head>
@@ -161,7 +161,7 @@
                     <button class="btn-main" onclick="attemptLogin()">Открыть доступ</button>
                     
                     <div id="ad-block-wrapper" style="margin-top: 25px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-                        <p style="font-size: 0.85em; color: #aaa; margin-bottom: 10px;">Нет ключа? Получите временный:</p>
+                        <p style="font-size: 0.85em; color: #aaa; margin-bottom: 10px;">Нет ключа? Получите бесплатно временный:</p>
                         
                         <button id="ad-btn" class="btn-main" onclick="showAdAndLogin()" style="background: linear-gradient(45deg, #f1c40f, #e67e22); color: black; box-shadow: 0 0 15px rgba(241, 196, 15, 0.4);">
                             <i class="fas fa-video"></i> Доступ на 20 минут (Реклама)
@@ -209,21 +209,17 @@
               <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Преимущества в розыгрышах</span></li> 
               <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Уникальный и личный чат для спонсоров с автором xFORTUNAx</span></li>
                 <li class="card__list_item"><span class="check"><i class="fas fa-check" style="font-size:0.7em; color:black;"></i></span><span class="list_text">Приоритетное влияние на контент и участие в тестах</span></li>
-                 
             </ul>
             <button class="button" onclick="window.open('https://dalink.to/xf0rtunax', '_blank')">ПОДДЕРЖАТЬ ПРОЕКТ</button>
             <button class="close-sponsor-btn" onclick="closeSponsorModal()">Закрыть</button>
         </div>
     </div>
 
-   <script>
-        // --- ADSGRAM CONFIGURATION ---
+    <script>
         const AdsgramBlockId = "19146"; 
         let AdController;
 
-        // Инициализация
         window.addEventListener('load', () => {
-            // Анимация загрузки
             setTimeout(() => {
                 const loader = document.getElementById('loader-screen');
                 loader.style.opacity = '0';
@@ -231,45 +227,35 @@
                     loader.style.display = 'none';
                     document.getElementById('main-content').style.display = 'flex';
                     
-                    // --- ПРОВЕРКА: Если мы НЕ в Телеграме, блокируем кнопку ---
+                    // --- ВАЖНАЯ ИЗМЕНЕННАЯ ЧАСТЬ ---
+                    // Проверяем окружение и блокируем кнопку при необходимости
                     checkEnvironment();
-                    // ---------------------------------------------------------
-                    
-                }, 1000);
-            }, 2500);
+                    // -------------------------------
 
-            // Инициализация Telegram
-            if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.expand();
-                
-                // Инициализация рекламы
-                if (window.Adsgram) {
-                    AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
-                }
-            }
+                    if (window.Telegram && window.Telegram.WebApp) {
+                        try { window.Telegram.WebApp.expand(); } catch(e){}
+                        
+                        // Инициализируем рекламу ТОЛЬКО если есть initData
+                        if (window.Telegram.WebApp.initData && window.Adsgram) {
+                            AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
+                        }
+                    }
+                }, 1000);
+            }, 2500); 
         });
-        
-        // --- ФУНКЦИЯ БЛОКИРОВКИ КНОПКИ ---
+
+        // --- НОВАЯ ФУНКЦИЯ БЛОКИРОВКИ ---
         function checkEnvironment() {
             const btn = document.getElementById('ad-btn');
-            
-            // Если initData пустая, значит сайт открыт НЕ в мини-приложении
             const isTelegramEnv = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData;
 
             if (!isTelegramEnv) {
-                // Добавляем класс, который делает кнопку серой и убирает клики
-                btn.classList.add('btn-disabled');
-                
-                // Меняем текст кнопки
-                btn.innerHTML = '<i class="fas fa-lock"></i> Откройте в телеграм боте @fortunawtmbot';
-                
-                // Убираем onclick
-                btn.onclick = null;
+                btn.classList.add('disabled');
+                btn.innerHTML = '<i class="fas fa-lock"></i> Откройте в боте @fortunawtmbot';
+                btn.onclick = null; // Отключаем клик
             }
         }
-        // ------------------------------------
 
-        // Функция входа по ключу
         function attemptLogin() {
             const keyInput = document.getElementById('access-key');
             const errorMsg = document.getElementById('login-error');
@@ -292,40 +278,40 @@
             }
         }
 
-        // Функция показа рекламы
         async function showAdAndLogin() {
-            // 1. Проверка окружения
+            // Двойная проверка на клик (если вдруг класс не сработал)
             if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initData) {
-                 alert("Для просмотра рекламы необходимо открыть сайт через бота @fortunawtmbot");
-                 return;
+                alert("Ошибка: Откройте приложение через бота @fortunawtmbot");
+                return;
             }
 
-            // 2. Проверка контроллера рекламы
             if (!AdController) {
+                // Если контроллер не создан, пробуем создать (на случай сбоя сети)
                 if (window.Adsgram) {
                     AdController = window.Adsgram.init({ blockId: AdsgramBlockId });
                 } else {
-                    alert("Ошибка: Скрипт рекламы не загрузился. Проверьте интернет или отключите AdBlock.");
+                    alert("Ошибка: Рекламный скрипт не загружен. Проверьте интернет.");
                     return;
                 }
             }
 
-            // 3. Показ
             try {
                 const result = await AdController.show();
                 if (result.done) {
                     grantTemporaryAccess();
                 } else {
-                    alert("Реклама была пропущена. Награда не выдана.");
+                    alert("Вы не досмотрели рекламу. Доступ не получен.");
                 }
             } catch (err) {
                 console.error("Ads Error:", err);
-                // Если ошибка initData/launch parameters
-                if (JSON.stringify(err).includes('launch parameters')) {
-                     alert("Критическая ошибка: Запустите бота заново через кнопку Меню.");
-                } else {
-                     alert("Не удалось запустить рекламу. Попробуйте позже.");
+                let errorMsg = "Ошибка загрузки рекламы.";
+                
+                // Проверяем на частые ошибки
+                if (JSON.stringify(err).includes("launch parameters")) {
+                    errorMsg = "Ошибка авторизации Telegram. Перезапустите бота.";
                 }
+                
+                alert(errorMsg + "\nПопробуйте позже.");
             }
         }
 
@@ -340,13 +326,12 @@
                 expiry: expiryTime
             }));
 
-            // alert(`Доступ открыт на 20 минут!`); // Можно убрать лишний алерт
+            // alert(`Доступ открыт на 20 минут!\nКлюч сессии: ${tempKey}`);
             
             currentTermsAction = 'login'; 
             document.getElementById('terms-modal-overlay').style.display = 'flex';
         }
 
-        // Остальные функции (модалки, карточки) без изменений
         let currentTermsAction = '';
         function clickDemo() { openTermsModal('demo'); }
         function openTermsModal(action) { currentTermsAction = action; document.getElementById('terms-modal-overlay').style.display = 'flex'; }
@@ -439,6 +424,7 @@
     </script>
 </body>
 </html>
+
 
 
 
