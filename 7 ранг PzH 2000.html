@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор 7 ранг PzH 2000</title>
+    <style>
+        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/02_february_25/db7_s17_bigtank_pzh/db7_s17_pzh_history_b9c721fe92d6f0c0f9061b8ff87562b7.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+       
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+       
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
+                padding: 15px;
+            }
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>7 ранг PzH 2000</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/pzhmain.webp" alt="PzH 2000 Tank" class="tank-image">
+         <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>После создания буксируемой гаубицы FH70 возникла идея её установки на гусеничное шасси, что позволило бы получить САУ с лучшими подвижностью и дальностью стрельбы, чем М109. Для решения этой задачи в 1973 году объединились ФРГ, Великобритания и Италия, однако работа затянулась более чем на десятилетие. После испытаний опытных образцов выяснилась низкая надёжность машины, в результате чего в 1986 году ФРГ вышла из программы и начала создание новой САУ с чистого листа. Конструирование PzH 2000 было поручено компаниям Rheinmetall и Krauss-Maffei Wegmann. От самоходной установки требовалось не только значительное повышение дальности стрельбы, но и высокая её автоматизация, скорострельность и наличие защиты от контрбатарейного огня. Машина получилась удачной, после заказа армией ФРГ в 1996 году 185 машин, PzH 2000 также поступила на вооружение ряда стран с общим объёмом заказа в 425 машин. PzH 2000 использовалась в войнах в Афганистане и Украине.</p>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/c/c0/PzH_2000_-_160315-A-DN311-010.jpg" alt="Historical PzH 2000" class="tank-image">
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+            <p><strong>Плюсы:</strong> очень хорошая для САУ подвижность. Мощный дизельный двигатель (1000 л.с.) и гусеничная база Leopard 1 позволяют развивать до 66 км/ч вперед и 66 км/ч назад (реверсивная коробка передач) по шоссе и быстро менять позиции. Отличная удельная мощность (~17 л.с./т).</p>
+            <p><strong>Минусы:</strong> большие габариты и масса делают её неповоротливой на мягких грунтах.</p>
+        </div>
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+          <p><strong>Плюсы:</strong> противоснарядное бронирование лба корпуса (до ~30 мм под углом) и маска орудия иногда могут защитить от огня авиационных пушек (20-23 мм) и осколков.</p>
+            <p><strong>Минусы:</strong> полное отсутствие защиты. Борта (10-20 мм), корма и крыша пробиваются даже крупнокалиберными пулеметами (12.7-14.5 мм). Любой попавший фугасный или кумулятивный снаряд гарантированно уничтожает машину. Экипаж из 5 человек размазан по большой рубке.</p>
+        </div>
+        <div class="content-section">
+            <h3>Вооружение</h3>
+           <p>Основное: 155-мм гаубица L/52. Главная фишка — скорострельность. Вторая САУ в игре по скорости перезарядки в 5 секунд.</p>
+            <p><strong>Снаряды:</strong> </p>
+            <p>М107 (ОФС): Основной снаряд. Мощный фугас (около 9.14 кг ВВ). Уничтожает легкую технику одним попаданием, с одного-двух попаданий выводит из строя даже тяжелые танки (критикуя модули и экипаж через крышу и маску орудия).</p>
+            <p> ОЕ F3 (ОФС): Эффективен против слабо бронированных целей. Взрывается с огромной силой.</p>
+            <p>М107 (PF) (ОФ-РВ): Эффективен против самолетов. </p>
+            <img src="https://static.wtmobile.com/upload/fileman/images/2025/02_february_25/db7_s17_bigtank_pzh/db7_s17_pzh_shells_ru_2be26bb8596d295b6cd8d9b5ee2408b1.png" alt="Снаряды PzH 2000" class="tank-image" style="margin-top: 15px;">
+        </div>
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p> Углы наведения: Горизонтальная наводка — только 11° влево-вправо. Это главный минус. Для стрельбы в другую сторону нужно разворачивать весь корпус, что очень медленно. </p>
+        </div>
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>PzH 2000 — узкоспециализированная машина поддержки и арт-каратель. Это не танк и даже не ПТ-САУ в классическом понимании. Её сила — в способности накрывать противника шквалом мощных фугасов с безопасной дистанции.</p>
+        </div>
+        <a href="https://youtu.be/QYBW_R6HTkU?si=xYp0isunfOZfW_2n" target="_blank" class="youtube-btn">
+             Смотреть полный обзор
+        </a>
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+        <footer>
+            <p>Материал предоставлен пользователем Krampus. Последнее обновление 16.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+         </div>
+</body>
+</html>
