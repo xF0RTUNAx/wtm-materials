@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор 10 ранг Begleitpanzer 57</title>
+    <style>
+        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2024/october_2024/14_09_db1_common_tank/s13_db1_common_tank_leo2k_1440x640_1634140079d5e1e5bbc2f59550f37742.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+       
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+       
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
+                padding: 15px;
+            }
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
+                margin-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>10 ранг Begleitpanzer 57</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/57pics/57main.webp" alt="Begleitpanzer 57 Tank" class="tank-image">
+         <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>Begleitpanzer 57 — вариант серийной БМП «Мардер» с усиленным вооружением в виде 57-мм автоматической пушки Bofors, которая позволяла уверенно поражать лёгкую бронетехнику на больших расстояниях. Разработан фирмой «Thyssen-Henschel» и «Bofors» в 1977 году. Для борьбы против тяжёлой техники был установлен ПТУР TOW с возможностью замены на I-TOW. По доступным данным, был построен один опытный образец, однако дальше испытаний дело не пошло.</p>
+            <img src="https://i.redd.it/begleitpanzer-57-mms-ingame-model-just-makes-me-sad-v0-gf8e5w7t17hf1.png?width=2329&format=png&auto=webp&s=d097eca5e60354ecbc69cc8d55d9ca1d54b83555" alt="Historical Begleitpanzer 57" class="tank-image">
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+            <p><strong>Плюсы:</strong> отличная подвижность на базе шасси Marder 1. Мощный дизельный двигатель (600 л.с.) обеспечивает хороший разгон и максимальную скорость около 83 км/ч по шоссе и заднюю скорость в районе 83 км/ч. Достойная удельная мощность (~21 л.с./т). Полноценная гусеничная платформа даёт хорошую проходимость.</p>
+            <p><strong>Минусы:</strong> разворот на месте достаточно медленный.</p>
+        </div>
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+          <p><strong>Плюсы:</strong> лоб корпуса и башни имеет противоснарядную стойкость против малокалиберных автоматических пушек (20-30 мм). Может выдержать обстрел с БМП, ЗСУ и авиации. Компоновка с 4 членами экипажа, разнесёнными по корпусу.</p>
+            <p><strong>Минусы:</strong> абсолютно беззащитна перед любыми танковыми снарядами (ОБПС, КС, ОФС) и ПТУРами. Борта и корма пробиваются даже крупнокалиберными пулеметами (12.7+ мм).</p>
+        </div>
+        <div class="content-section">
+            <h3>Вооружение</h3>
+           <p>Основное: 57-мм автоматическая пушка Bofors L/70 Mk.1. Уникальное и мощное орудие.
+   Высокая скорострельность: около 120 выстр./мин в полном автомате.</p>
+            <p><strong>Снаряды:</strong> </p>
+            <p>57х438 АР-Т (БС): Основной бронебойный каморный снаряд против различных видов техники. Эффективен при обстреле противника в борта, если встретится тяжелый ОБТ, также и против средних ОБТ.</p>
+            <p>57х438 НЕ-Т (ОФС): Осколочно фугасный снаряд. Эффективен против легкобронированной техники, таких как ЗСУ, БМП и тд.</p>
+            <p>57х438 SAP-T (ПБОЗ):  Осколочно фугасный снаряд. Эффективен против легкобронированной техники, таких как ЗСУ, БМП и тд.</p>
+          <p>57х438 НЕ-VT (ОФ-РВ): Осколочно фугасный с радиовзрывателем. Эффективен против самолетов.</p>
+            <p>I-TOW (ПТУР): 6 управляемых противотанковых ракет. Лучший ПТУР из представленных для Begleitpanzer 57, имеет пробитие в 630мм. Эффективен для любого вида техники.</p>
+            <p>7.62-мм пулемёт.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/57pics/57weapon.webp" alt="Снаряды Begleitpanzer 57" class="tank-image" style="margin-top: 15px;">
+        </div>
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>  Стабилизатор. Очень хорошие углы вертикальной наводки (-8/+45). Отличная скорость горизонтального наведения (67.3°).</p>
+        </div>
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>Begleitpanzer 57 — не БМП, а универсальная машина поддержки. Это одна из самых многофункциональных и тактически гибких машин в игре. Её роль — контроль воздушного пространства, борьба с лёгкой техникой и нанесение точных ударов по тяжёлым целям с дистанции.</p>
+        </div>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+        <footer>
+            <p>Материал предоставлен пользователем Krampus. Последнее обновление 16.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+         </div>
+</body>
+</html>
