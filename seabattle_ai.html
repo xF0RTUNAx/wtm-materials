@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>xFORTUNAx | Морской бой</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -19,9 +21,14 @@
 
         * { box-sizing: border-box; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
 
+        /* ИСПРАВЛЕНИЕ 2: Отключение резинки и фиксация фона */
+        html, body {
+            overscroll-behavior: none; /* Убирает эффект пружины и белые полосы при скролле */
+            background-color: var(--bg-color); /* Гарантирует черный фон даже за пределами контента */
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
             color: white;
             display: flex;
             flex-direction: column;
@@ -96,10 +103,9 @@
         .grid-section { display: flex; flex-direction: column; align-items: center; }
         .grid-title { margin-bottom: 5px; font-weight: 600; color: #aaa; font-size: 0.8rem; }
         
-        /* ГЛАВНОЕ ИЗМЕНЕНИЕ: СЕТКА */
+        /* СЕТКА */
         .grid {
             display: grid;
-            /* 10 колонок одинаковой ширины */
             grid-template-columns: repeat(10, 1fr);
             grid-template-rows: repeat(10, 1fr);
             gap: 1px; 
@@ -107,15 +113,9 @@
             border: 2px solid var(--border-color);
             border-radius: 4px;
             position: relative;
-            
-            /* Адаптивные размеры */
             width: 100%;
-            /* Максимальная ширина: либо 450px, либо 92% ширины экрана, выбираем меньшее */
             width: min(92vw, 450px);
-            /* Делаем высоту равной ширине (квадрат) */
             aspect-ratio: 1 / 1;
-            
-            /* Важно для мобильных: убираем прокрутку при драге */
             touch-action: none;
         }
 
@@ -130,7 +130,6 @@
         
         .grid.special-mode .cell { cursor: cell; } 
         
-        /* Стили ховеров и состояний */
         @media (hover: hover) {
             .cell:hover::before {
                 content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -145,7 +144,7 @@
 
         .player-cell.occupied { border: 1px solid rgba(0,0,0,0.5); }
         .player-cell.occupied.lun { background-color: #fab1a0; } .player-cell.occupied.battleship { background-color: #b2bec3; } .player-cell.occupied.missile { background-color: #55efc4; }
-        /* Шрифт внутри клетки масштабируется относительно экрана */
+        
         .ship-grid-label { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             display: flex; align-items: center; justify-content: center; 
@@ -183,7 +182,7 @@
             display: flex; flex-direction: column; align-items: center; gap: 2px; 
             padding: 4px 8px; background: rgba(0,0,0,0.3); border-radius: 6px; 
             cursor: grab; border: 2px solid transparent; transition: all 0.3s; position: relative; 
-            width: 22%; min-width: 60px; /* Адаптивная ширина в доке */
+            width: 22%; min-width: 60px;
         }
         .ship-container:active { cursor: grabbing; } .ship-container.placed { opacity: 0.5; filter: grayscale(1); cursor: default; } .ship-container.selected { border-color: var(--highlight); background: rgba(0, 229, 255, 0.1); }
         .ship-visual { display: flex; align-items: center; justify-content: center; padding: 2px; width: 100%; height: 30px; } 
@@ -297,6 +296,14 @@
     <div class="overlay" id="result-overlay"><div class="result-card" id="result-card-content"></div></div>
 
     <script>
+    // --- ИСПРАВЛЕНИЕ 3: Инициализация Telegram Web App ---
+    // Это заставит приложение развернуться на весь экран и уберет скачки
+    if (window.Telegram && window.Telegram.WebApp) {
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+        window.Telegram.WebApp.setHeaderColor('#0f0f12'); // Чтобы шапка была в цвет фона
+    }
+
     // --- ЗАЩИТА ДОСТУПА ---
     (function checkSessionGuard() {
         const sessionRaw = localStorage.getItem('wtm_session');
@@ -582,6 +589,7 @@
     </script>
 </body>
 </html>
+
 
 
 
