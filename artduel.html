@@ -1003,13 +1003,33 @@
             });
             startGame('online');
         }
+        
         if(d.type === 'init') { 
-            terrain = d.terrain; grassCache = d.grassCache; mountains = d.mountains; objects = d.objects; GAME.theme = THEMES[d.themeName]; p1.x=d.p1x; p2.x=d.p2x; currentWind=d.wind;
+            // Применяем настройки мира от Хоста
+            terrain = d.terrain; 
+            grassCache = d.grassCache; 
+            mountains = d.mountains; 
+            objects = d.objects; 
+            GAME.theme = THEMES[d.themeName]; // Устанавливаем тему (Зима/Осень/Лето)
+            p1.x = d.p1x; p2.x = d.p2x; 
+            currentWind = d.wind;
             GAME.p1Name = d.hostName;
+            
+            // --- ИСПРАВЛЕНИЕ: Генерируем осадки для Клиента ---
+            weatherSystem = [];
+            if(GAME.theme.weather !== 'none') {
+                for(let i=0; i<250; i++) weatherSystem.push({
+                    x: Math.random()*1920, y: Math.random()*840, 
+                    s: Math.random()*2+1, v: Math.random()*5+5
+                });
+            }
+            // --------------------------------------------------
+
             const myNick = document.getElementById('nickname').value || "Guest";
             GAME.p2Name = myNick;
             startGame('online'); 
         }
+        
         if(d.type === 'fire') { const t = d.p === 1 ? p1 : p2; t.angle = d.a; t.power = d.pw; performFire(t); }
         if(d.type === 'move') { 
             const t = d.p === 1 ? p1 : p2; 
