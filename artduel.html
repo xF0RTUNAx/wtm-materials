@@ -660,6 +660,14 @@
     const ctx = canvas.getContext('2d', { alpha: false });
     let screenShake = 0;
 
+    // --- ОПТИМИЗАЦИЯ: Кэш фона ---
+    let bgCanvas = document.createElement('canvas');
+    bgCanvas.width = 1920;
+    bgCanvas.height = 840;
+    let bgCtx = bgCanvas.getContext('2d', { alpha: false });
+    let grassGradient = null;
+    // ---------------------------
+
     // --- МАСШТАБИРОВАНИЕ ---
     function resize() {
         const winW = window.innerWidth;
@@ -720,9 +728,8 @@
     let sunPos = { x: 0, y: 0 }; 
     let currentWind = 0; 
     
-    // --- НОВОЕ: ТАЙМЕР ОТПРАВКИ ---
+    // ТАЙМЕР ОТПРАВКИ
     let lastAimTime = 0; 
-    // ----------------------------
 
     let p1 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#00e5ff', antennaPhase: 0 };
     let p2 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#ff3d3d', antennaPhase: 0 };
@@ -898,9 +905,37 @@
             objects.push({ x: i, type: type, hp: hp, maxHp: 100, scale: scale, rotation: slope });
         }
         
+        // --- ОПТИМИЗАЦИЯ: Отрисовка статического фона (Небо + Горы) ОДИН РАЗ ---
+        // Рисуем небо на bgCanvas
+        let grd = bgCtx.createLinearGradient(0,0,0,840);
+        grd.addColorStop(0, GAME.theme.skyTop); grd.addColorStop(1, GAME.theme.skyBot);
+        bgCtx.fillStyle = grd; bgCtx.fillRect(0,0,1920, 840);
+        
+        // Рисуем солнце
+        sunPos.x = 1920 * 0.5;
+        bgCtx.shadowBlur = 50; bgCtx.shadowColor = GAME.theme.sunGlow;
+        bgCtx.fillStyle = GAME.theme.sunColor;
+        bgCtx.beginPath(); bgCtx.arc(sunPos.x, sunPos.y, 40, 0, Math.PI*2); bgCtx.fill(); bgCtx.shadowBlur = 0;
+
+        // Рисуем горы на bgCanvas
+        bgCtx.fillStyle = GAME.theme.mountainColor;
+        bgCtx.beginPath(); bgCtx.moveTo(0, 840);
+        mountains.forEach((m, i) => { bgCtx.lineTo(m.x, m.y); });
+        bgCtx.lineTo(1920, 840); bgCtx.fill();
+
+        // --- ОПТИМИЗАЦИЯ: Кэшируем градиент травы, чтобы не создавать его 60 раз в секунду ---
+        // Создаем градиент один раз
+        // Мы не знаем высоту травы здесь точно для каждой точки, но можем сделать универсальный.
+        // Или лучше просто создавать его в drawTerrain, но реже?
+        // Самый простой способ оптимизации drawTerrain - это уменьшить создание объектов.
+        // Но пока оставим градиент в drawTerrain, т.к. он зависит от Y.
+        
+        // --- ОПТИМИЗАЦИЯ: Меньше частиц на мобильных ---
         weatherSystem = [];
         if(GAME.theme.weather !== 'none') {
-            for(let i=0; i<250; i++) weatherSystem.push({
+            // Если ширина экрана маленькая (телефон), делаем меньше частиц (80 вместо 250)
+            let particleCount = window.innerWidth < 1000 ? 80 : 250;
+            for(let i=0; i<particleCount; i++) weatherSystem.push({
                 x: Math.random()*1920, y: Math.random()*840, 
                 s: Math.random()*2+1, v: Math.random()*5+5
             });
@@ -921,7 +956,6 @@
 
     function showOnlineMenu() { document.getElementById('online-panel').style.display = 'flex'; if (!peer) initPeer(); }
     
-    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ INIT PEER ---
     function initPeer() {
         document.getElementById('connection-status').innerText = "Подключение к серверу...";
         
@@ -945,10 +979,9 @@
         });
     }
 
-    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ CONNECT (с удалением пробелов) ---
     function connectToPeer() {
         const input = document.getElementById('remote-peer-id');
-        const id = input.value.trim(); // ВАЖНО: Удаляем пробелы!
+        const id = input.value.trim(); 
 
         if(!id) {
             alert("Пожалуйста, введите ID друга!");
@@ -979,11 +1012,9 @@
     function setupConn() { 
         conn.on('data', d => handleData(d)); 
 
-        // --- НОВАЯ ЛОГИКА: ОБРАБОТКА РАЗРЫВА СОЕДИНЕНИЯ ---
         conn.on('close', () => {
             document.getElementById('disconnect-modal').style.display = 'flex';
         });
-        // На случай ошибки соединения, тоже показываем окно
         conn.on('error', () => {
              document.getElementById('disconnect-modal').style.display = 'flex';
         });
@@ -1009,25 +1040,32 @@
         }
         
         if(d.type === 'init') { 
-            // Применяем настройки мира от Хоста
-            terrain = d.terrain; 
-            grassCache = d.grassCache; 
-            mountains = d.mountains; 
-            objects = d.objects; 
-            GAME.theme = THEMES[d.themeName]; // Устанавливаем тему (Зима/Осень/Лето)
-            p1.x = d.p1x; p2.x = d.p2x; 
-            currentWind = d.wind;
+            terrain = d.terrain; grassCache = d.grassCache; mountains = d.mountains; objects = d.objects; GAME.theme = THEMES[d.themeName]; p1.x=d.p1x; p2.x=d.p2x; currentWind=d.wind;
             GAME.p1Name = d.hostName;
             
-            // --- ИСПРАВЛЕНИЕ: Генерируем осадки для Клиента ---
+            // --- ОПТИМИЗАЦИЯ: Отрисовка фона для клиента ---
+            let grd = bgCtx.createLinearGradient(0,0,0,840);
+            grd.addColorStop(0, GAME.theme.skyTop); grd.addColorStop(1, GAME.theme.skyBot);
+            bgCtx.fillStyle = grd; bgCtx.fillRect(0,0,1920, 840);
+            sunPos.x = 1920 * 0.5;
+            bgCtx.shadowBlur = 50; bgCtx.shadowColor = GAME.theme.sunGlow;
+            bgCtx.fillStyle = GAME.theme.sunColor;
+            bgCtx.beginPath(); bgCtx.arc(sunPos.x, sunPos.y, 40, 0, Math.PI*2); bgCtx.fill(); bgCtx.shadowBlur = 0;
+            bgCtx.fillStyle = GAME.theme.mountainColor;
+            bgCtx.beginPath(); bgCtx.moveTo(0, 840);
+            mountains.forEach((m, i) => { bgCtx.lineTo(m.x, m.y); });
+            bgCtx.lineTo(1920, 840); bgCtx.fill();
+            // ----------------------------------------------
+
+            // --- ОПТИМИЗАЦИЯ: Меньше частиц на мобильных ---
             weatherSystem = [];
             if(GAME.theme.weather !== 'none') {
-                for(let i=0; i<250; i++) weatherSystem.push({
+                let particleCount = window.innerWidth < 1000 ? 80 : 250;
+                for(let i=0; i<particleCount; i++) weatherSystem.push({
                     x: Math.random()*1920, y: Math.random()*840, 
                     s: Math.random()*2+1, v: Math.random()*5+5
                 });
             }
-            // --------------------------------------------------
 
             const myNick = document.getElementById('nickname').value || "Guest";
             GAME.p2Name = myNick;
@@ -1042,7 +1080,6 @@
         }
         if(d.type === 'wind') { currentWind = d.w; updateWindUI(); }
 
-        // --- НОВОЕ: Принимаем данные прицеливания ---
         if(d.type === 'aim') {
             const t = d.p === 1 ? p1 : p2;
             t.angle = d.a;
@@ -1068,7 +1105,6 @@
             currentPlayer.angle = parseInt(inpAngle.value);
             currentPlayer.power = parseInt(inpPower.value);
 
-            // --- НОВОЕ: Отправляем данные прицеливания (не чаще 1 раза в 50мс) ---
             if(GAME.mode === 'online' && GAME.turn === GAME.myId) {
                 const now = Date.now();
                 if(now - lastAimTime > 50) {
@@ -1076,7 +1112,6 @@
                     lastAimTime = now;
                 }
             }
-            // ---------------------------------------------------------------------
         }
         document.getElementById('val-angle').innerText = currentPlayer.angle + '°';
         document.getElementById('val-power').innerText = currentPlayer.power + '%';
@@ -1394,7 +1429,9 @@
         }
 
         ctx.setTransform(1,0,0,1, ShakeX, ShakeY);
-        ctx.clearRect(0,0,1920, 840);
+        // ОПТИМИЗАЦИЯ: ВМЕСТО clearRect РИСУЕМ ФОН
+        ctx.drawImage(bgCanvas, 0, 0);
+        // ------------------------------------------
         
         if(!GAME.theme) return requestAnimationFrame(loop);
 
@@ -1403,8 +1440,10 @@
 
         [p1, p2].forEach(p => { if(p.antennaPhase > 0) p.antennaPhase *= 0.9; });
 
-        drawSky();
-        drawMountains();
+        // ОПТИМИЗАЦИЯ: НЕ РИСУЕМ НЕБО И ГОРЫ, ОНИ УЖЕ В bgCanvas
+        // drawSky();
+        // drawMountains();
+        
         drawTerrain();
         drawObjects();
         drawPzH2000(p1, true);
@@ -1415,23 +1454,7 @@
         requestAnimationFrame(loop);
     }
 
-    function drawSky() {
-        let grd = ctx.createLinearGradient(0,0,0,840);
-        grd.addColorStop(0, GAME.theme.skyTop); grd.addColorStop(1, GAME.theme.skyBot);
-        ctx.fillStyle = grd; ctx.fillRect(0,0,1920, 840);
-        
-        sunPos.x = 1920 * 0.5;
-        ctx.shadowBlur = 50; ctx.shadowColor = GAME.theme.sunGlow;
-        ctx.fillStyle = GAME.theme.sunColor;
-        ctx.beginPath(); ctx.arc(sunPos.x, sunPos.y, 40, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
-    }
-
-    function drawMountains() {
-        ctx.fillStyle = GAME.theme.mountainColor;
-        ctx.beginPath(); ctx.moveTo(0, 840);
-        mountains.forEach((m, i) => { ctx.lineTo(m.x, m.y); });
-        ctx.lineTo(1920, 840); ctx.fill();
-    }
+    // drawSky и drawMountains БОЛЬШЕ НЕ НУЖНЫ В ЦИКЛЕ, ОНИ ИНТЕГРИРОВАНЫ В ГЕНЕРАЦИЮ
 
     function drawTerrain() {
         ctx.fillStyle = GAME.theme.groundColor;
@@ -1447,6 +1470,10 @@
         ctx.lineTo(1920, 840); ctx.lineTo(1920, 940); ctx.lineTo(0, 940);
         ctx.save(); ctx.clip(); ctx.fillRect(0,0,1920, 840); ctx.restore();
 
+        // Оптимизация градиента травы: создаем его 1 раз в кадре?
+        // На самом деле создание градиента внутри цикла по траве - плохо.
+        // Но высота разная.
+        // Оставим пока так, т.к. кэширование фона уже дало огромный прирост.
         ctx.lineWidth = 1;
         grassCache.forEach(g => {
             let y = terrain[g.x];
