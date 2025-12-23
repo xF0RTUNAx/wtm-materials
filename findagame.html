@@ -61,7 +61,7 @@
         
         .user-badge i { color: #ffd700; font-size: 1.1rem; }
 
-        /* --- СТИЛИ ДЛЯ ТАЙМЕРА (НОВОЕ) --- */
+        /* --- СТИЛИ ДЛЯ ТАЙМЕРА --- */
         .timer-badge {
             background: linear-gradient(135deg, #f1c40f, #e67e22);
             color: #000;
@@ -69,7 +69,7 @@
             border-radius: 20px;
             font-weight: bold;
             font-size: 0.9rem;
-            display: none; /* Скрыт по умолчанию, JS покажет если нужно */
+            display: none;
             align-items: center;
             gap: 8px;
             box-shadow: 0 0 15px rgba(241, 196, 15, 0.3);
@@ -85,7 +85,6 @@
             100% { box-shadow: 0 0 0 0 rgba(241, 196, 15, 0); }
         }
 
-        /* Красный стиль таймера (< 2 мин) */
         .timer-badge.urgent {
             background: linear-gradient(135deg, #ff4757, #ff6b81);
             color: white;
@@ -189,6 +188,8 @@
         .icon-strat { background: linear-gradient(135deg, #8e44ad, #9b59b6); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .icon-ny { background: linear-gradient(135deg, #11998e, #38ef7d); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .icon-fortune { background: linear-gradient(135deg, #f1c40f, #e67e22); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        /* Новая иконка для Артиллерии */
+        .icon-art { background: linear-gradient(135deg, #ff3d3d, #c0392b); text-shadow: 0 2px 10px rgba(0,0,0,0.2); }
 
         /* Game Info Text */
         .game-info {
@@ -257,6 +258,7 @@
         .badge-hot { background: #ff4757; color: white; box-shadow: 0 0 10px rgba(255, 71, 87, 0.4); }
         .badge-new { background: #2ed573; color: #0f0f12; box-shadow: 0 0 10px rgba(46, 213, 115, 0.4); }
         .badge-temp { background: #74b9ff; color: #0f0f12; box-shadow: 0 0 10px rgba(116, 185, 255, 0.4); }
+        .badge-unique { background: #a55eea; color: #fff; box-shadow: 0 0 10px rgba(165, 94, 234, 0.4); }
 
         /* --- MOBILE SPECIFIC ADAPTATION --- */
         @media (max-width: 600px) {
@@ -267,7 +269,6 @@
             .btn-logout span { display: none; }
             @media (min-width: 360px) { .btn-logout span { display: inline; } }
 
-            /* Прячем текст "Премиум подписка" на совсем мелких экранах, оставляем корону */
             @media (max-width: 350px) {
                 .user-badge { font-size: 0; }
                 .user-badge i { font-size: 1.2rem; margin-right: 0; }
@@ -306,13 +307,24 @@
 
     <div class="games-grid">
         
+        <div class="game-card" onclick="window.location.href='artduel'">
+            <div class="game-icon-box icon-art">
+                <i class="fas fa-bomb"></i>
+            </div>
+            <div class="game-info">
+                <div class="game-title">Артиллерийская Дуэль <span class="badge badge-new">Новинка</span></div>
+                <div class="game-desc">Соревнуйтесь против ИИ или реальных игроков в меткости и сообразительности. Выигрывайте призы в боевом пропуске!</div>
+            </div>
+            <button class="play-btn"><i class="fas fa-play"></i></button>
+        </div>
+
         <div class="game-card" onclick="window.location.href='seabattle_ai.html'">
             <div class="game-icon-box icon-sea">
                 <i class="fas fa-ship"></i>
             </div>
             <div class="game-info">
-                <div class="game-title">Морской бой <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Тактический морской бой против ИИ с использованием сезонной техники и механик.</div>
+                <div class="game-title">Морской бой <span class="badge badge-hot">Хит</span></div>
+                <div class="game-desc">Тактический морской бой с использованием сезонной техники и механик. Выигрывайте призы по ходу сражений и в боевом пропуске!</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
@@ -322,8 +334,8 @@
                 <i class="fas fa-flag"></i>
             </div>
             <div class="game-info">
-                <div class="game-title">Столкновение <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Командные сражения подписчиков. Захватывайте территории на карте.</div>
+                <div class="game-title">Столкновение</div>
+                <div class="game-desc">Командные сражения игроков. Захватывайте территории на карте выполняя задания в WTM и выиграйте внутриигровые призы.</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
@@ -333,8 +345,8 @@
                 <i class="fas fa-chess-knight"></i>
             </div>
             <div class="game-info">
-                <div class="game-title">Стратег <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Пошаговая тактика с элементами удачи. Формируйте армию и побеждайте врага.</div>
+                <div class="game-title">Стратег</div>
+                <div class="game-desc">Пошаговая стратегия с элементами удачи. Формируйте армию и побеждайте врага. Выигрывайте призы по ходу сражений и в боевом пропуске!</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
@@ -344,28 +356,25 @@
                 <i class="fas fa-clover"></i>
             </div>
             <div class="game-info">
-                <div class="game-title">Охотник за удачей <span class="badge badge-new">Новинка</span></div>
-                <div class="game-desc">Испытайте удачу! Крутите рулетку и выигрывайте ценные призы.</div>
+                <div class="game-title">Охотник за удачей <span class="badge badge-unique">Уникально</span></div>
+                <div class="game-desc">Испытайте удачу! Возможность случайным образом выиграть ценные призы.</div>
             </div>
             <button class="play-btn"><i class="fas fa-play"></i></button>
         </div>
-
         
     </div>
 
     <script>
     // --- Инициализация Telegram WebApp и Полный Экран ---
     if (window.Telegram && window.Telegram.WebApp) {
-        window.Telegram.WebApp.ready(); // Сообщаем, что готовы
+        window.Telegram.WebApp.ready(); 
         
-        // РАЗВОРАЧИВАЕМ НА ВЕСЬ ЭКРАН
         try {
             window.Telegram.WebApp.expand(); 
         } catch (e) {
             console.log("Expand failed or not available");
         }
         
-        // Красим шапку телеграма в цвет фона сайта
         window.Telegram.WebApp.setHeaderColor('#0f0f12'); 
     }
 
@@ -375,7 +384,6 @@
         const timerBadge = document.getElementById('session-timer');
         const timerText = document.getElementById('timer-text');
         
-        // 1. Если ключа нет вообще -> выкидываем на вход
         if (!sessionRaw) {
             window.location.href = 'minigame.html';
             return;
@@ -390,9 +398,7 @@
             return;
         }
 
-        // 2. Если ключ ВРЕМЕННЫЙ (после рекламы)
         if (session.type === 'temporary') {
-            // Показываем таймер
             if(timerBadge) timerBadge.style.display = 'flex';
 
             const updateTimer = () => {
@@ -400,33 +406,27 @@
                 const timeLeft = session.expiry - now;
 
                 if (timeLeft <= 0) {
-                    // Время вышло
                     alert("⏳ Время действия рекламного доступа истекло.\nДля продолжения посмотрите рекламу еще раз.");
                     localStorage.removeItem('wtm_session'); 
                     window.location.href = 'minigame.html'; 
                     return;
                 }
 
-                // Форматирование времени ММ:СС
                 const minutes = Math.floor(timeLeft / 60000);
                 const seconds = Math.floor((timeLeft % 60000) / 1000);
                 const formattedTime = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
                 
                 if(timerText) timerText.innerText = formattedTime;
 
-                // Если осталось мало времени (меньше 2 минут), делаем красным и пульсирующим
                 if (timeLeft < 120000 && timerBadge) {
                     timerBadge.classList.add('urgent');
                 }
             };
 
-            // Запускаем сразу и потом каждую секунду
             updateTimer();
             setInterval(updateTimer, 1000); 
         } 
-        // 3. Если ключ ПОСТОЯННЫЙ (введен вручную или куплен)
         else {
-            // Скрываем таймер, если он был
             if(timerBadge) timerBadge.style.display = 'none';
         }
     })();
