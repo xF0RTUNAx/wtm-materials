@@ -567,8 +567,8 @@
                         <div class="info-h">🌐 ОНЛАЙН</div>
                          <p class="info-p">1. Перед игрой, убедитесь, что вы не в режиме инкогнито и не на старой версии страницы.</p>
                         <p class="info-p">2. Нажми "ОНЛАЙН", скопируй ID, отправь другу.</p>
-                        <p class="info-p">2. Друг вводит ID и жмет "СОЕДИНИТЬ".</p>
-                         <p class="info-p">3. Немного ждем и приступаем к игре!</p>
+                        <p class="info-p">3. Друг вводит ID и жмет "СОЕДИНИТЬ".</p>
+                         <p class="info-p">4. Немного ждем и приступаем к игре!</p>
                     </div>
                 </div>
             </div>
@@ -719,6 +719,10 @@
     let time = 0; 
     let sunPos = { x: 0, y: 0 }; 
     let currentWind = 0; 
+    
+    // --- НОВОЕ: ТАЙМЕР ОТПРАВКИ ---
+    let lastAimTime = 0; 
+    // ----------------------------
 
     let p1 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#00e5ff', antennaPhase: 0 };
     let p2 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#ff3d3d', antennaPhase: 0 };
@@ -1037,6 +1041,13 @@
             updateUI(); 
         }
         if(d.type === 'wind') { currentWind = d.w; updateWindUI(); }
+
+        // --- НОВОЕ: Принимаем данные прицеливания ---
+        if(d.type === 'aim') {
+            const t = d.p === 1 ? p1 : p2;
+            t.angle = d.a;
+            t.power = d.pw;
+        }
     }
 
     const inpAngle = document.getElementById('inp-angle'), inpPower = document.getElementById('inp-power'), btnFire = document.getElementById('fire-btn');
@@ -1056,6 +1067,16 @@
         if (active) {
             currentPlayer.angle = parseInt(inpAngle.value);
             currentPlayer.power = parseInt(inpPower.value);
+
+            // --- НОВОЕ: Отправляем данные прицеливания (не чаще 1 раза в 50мс) ---
+            if(GAME.mode === 'online' && GAME.turn === GAME.myId) {
+                const now = Date.now();
+                if(now - lastAimTime > 50) {
+                    conn.send({type: 'aim', p: GAME.myId, a: currentPlayer.angle, pw: currentPlayer.power});
+                    lastAimTime = now;
+                }
+            }
+            // ---------------------------------------------------------------------
         }
         document.getElementById('val-angle').innerText = currentPlayer.angle + '°';
         document.getElementById('val-power').innerText = currentPlayer.power + '%';
