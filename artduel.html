@@ -463,6 +463,18 @@
         <div class="rotate-text">ПОЖАЛУЙСТА, ПОВЕРНИТЕ УСТРОЙСТВО ГОРИЗОНТАЛЬНО</div>
     </div>
 
+    <div id="disconnect-modal" class="modal" style="z-index: 9999;">
+        <div class="modal-container" style="height: auto; min-height: 300px; justify-content: center; align-items: center; padding: 40px;">
+             <div class="modal-title" style="margin-bottom: 20px; text-align: center;">ИГРОК ОТКЛЮЧИЛСЯ</div>
+             <p style="color: #ccc; font-size: 1.5rem; text-align: center; margin-bottom: 30px;">
+                 Ваш соперник покинул игру или соединение было разорвано.
+             </p>
+             <button class="menu-btn btn-local" onclick="location.reload()" style="justify-content: center; width: 100%;">
+                 ПОНЯТНО
+             </button>
+        </div>
+    </div>
+
     <div id="app-root">
         <div id="menu-screen">
             <button class="menu-exit-btn" onclick="window.location.href='findagame.html'" title="Вернуться к выбору игр">
@@ -549,12 +561,14 @@
                     <div class="info-section">
                         <div class="info-h">🌪 ВЕТЕР И ТОПЛИВО</div>
                         <p class="info-p"><b>ВЕТЕР:</b> Следите за индикатором! Он сносит снаряд. Попутный ветер добавляет мощности, а против - наоборот.</p>
-                        <p class="info-p"><b>ТОПЛИВО:</b> его достаточно мало. Используйте для необходимых маневров стрелочки.</p>
+                        <p class="info-p"><b>ТОПЛИВО:</b> его достаточно мало. Используйте для необходимых маневров стрелочками.</p>
                     </div>
                     <div class="info-section">
                         <div class="info-h">🌐 ОНЛАЙН</div>
-                        <p class="info-p">1. Нажми "ОНЛАЙН", скопируй ID, отправь другу.</p>
+                         <p class="info-p">1. Перед игрой, убедитесь, что вы не в режиме инкогнито и не на старой версии страницы.</p>
+                        <p class="info-p">2. Нажми "ОНЛАЙН", скопируй ID, отправь другу.</p>
                         <p class="info-p">2. Друг вводит ID и жмет "СОЕДИНИТЬ".</p>
+                         <p class="info-p">3. Немного ждем и приступаем к игре!</p>
                     </div>
                 </div>
             </div>
@@ -958,7 +972,18 @@
         });
     }
 
-    function setupConn() { conn.on('data', d => handleData(d)); }
+    function setupConn() { 
+        conn.on('data', d => handleData(d)); 
+
+        // --- НОВАЯ ЛОГИКА: ОБРАБОТКА РАЗРЫВА СОЕДИНЕНИЯ ---
+        conn.on('close', () => {
+            document.getElementById('disconnect-modal').style.display = 'flex';
+        });
+        // На случай ошибки соединения, тоже показываем окно
+        conn.on('error', () => {
+             document.getElementById('disconnect-modal').style.display = 'flex';
+        });
+    }
     
     function handleData(d) {
         if(d.type === 'hello') {
