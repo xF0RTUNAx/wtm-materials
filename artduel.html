@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Артиллерийская Дуэль WTM </title>
+    <title>Артиллерийская Дуэль WTM</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -23,10 +23,10 @@
             --btn-online: #9b59b6;
             --btn-bp: #f1c40f;
             --btn-info: #95a5a6;
-            --btn-support: #e91e63; /* Новый цвет для поддержки */
+            --btn-support: #e91e63;
         }
         
-        * { box-sizing: border-box; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; user-select: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
         
         body {
             background-color: #000;
@@ -58,7 +58,8 @@
         .rotate-text { font-size: 1.5rem; font-weight: bold; padding: 0 20px; }
         @keyframes rotatePhone { 0% { transform: rotate(0deg); } 25% { transform: rotate(90deg); } 75% { transform: rotate(90deg); } 100% { transform: rotate(0deg); } }
         
-        @media screen and (orientation: portrait) { 
+        /* Исправление зума: срабатывает только на узких экранах */
+        @media screen and (orientation: portrait) and (max-width: 1024px) { 
             #rotate-overlay { display: flex; } 
             #app-root { display: none !important; }
         }
@@ -75,7 +76,6 @@
             background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.9) 100%); z-index: -1;
         }
 
-        /* Кнопка ВЫХОДА В МЕНЮ */
         .menu-exit-btn {
             position: absolute; top: 30px; left: 30px; z-index: 200;
             background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);
@@ -125,7 +125,7 @@
         .btn-local { border-left-color: var(--btn-local); }
         .btn-online { border-left-color: var(--btn-online); }
         .btn-info { border-left-color: var(--btn-info); }
-        .btn-support { border-left-color: var(--btn-support); } /* Цвет поддержки */
+        .btn-support { border-left-color: var(--btn-support); }
         
         .btn-bp { 
             border-left-color: var(--btn-bp); background: linear-gradient(90deg, rgba(60, 50, 20, 0.9), rgba(80, 70, 30, 0.9));
@@ -181,7 +181,7 @@
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid #444;
             border-left: 5px solid #ff6b6b;
-            margin: 20px 40px 0 40px; /* Отступы по бокам */
+            margin: 20px 40px 0 40px;
             padding: 20px;
             border-radius: 8px;
             font-size: 1.1rem;
@@ -441,8 +441,8 @@
                 </div>
                 <div class="info-content">
                     <div class="info-section">
-                        <div class="info-h">🎯 УПРАВЛЕНИЕ</div>
-                        <p class="info-p">Уничтожьте вражескую САУ. Используйте ползунки <b>УГОЛ</b> и <b>МОЩНОСТЬ</b>соответствующим образом для настройки траектории.</p>
+                        <div class="info-h">🎯 МЕХАНИКА</div>
+                        <p class="info-p">Уничтожьте вражескую САУ. Используйте ползунки <b>УГОЛ</b> и <b>МОЩНОСТЬ</b> соответствующим образом для настройки траектории.</p>
                     </div>
                     <div class="info-section">
                         <div class="info-h">🌪 ВЕТЕР И ТОПЛИВО</div>
@@ -504,11 +504,10 @@
 
 <script>
 
- // --- ЗАЩИТА ДОСТУПА (Вставить в самое начало скрипта) ---
+ // --- ЗАЩИТА ДОСТУПА ---
     (function checkSessionGuard() {
         const sessionRaw = localStorage.getItem('wtm_session');
         
-        // 1. Если ключа нет вообще -> выкидываем на вход
         if (!sessionRaw) {
             window.location.href = 'minigame.html';
             return;
@@ -523,24 +522,18 @@
             return;
         }
 
-        // 2. Если ключ временный -> следим за таймером
         if (session.type === 'temporary') {
             const checkTime = () => {
                 const now = Date.now();
                 const timeLeft = session.expiry - now;
 
                 if (timeLeft <= 0) {
-                    // Время (20 минут) вышло!
                     alert("⏳ Время действия рекламного доступа истекло.\nПожалуйста, посмотрите рекламу еще раз для продления.");
-                    localStorage.removeItem('wtm_session'); // Удаляем просроченный ключ
-                    window.location.href = 'minigame.html'; // Выкидываем на страницу входа
+                    localStorage.removeItem('wtm_session'); 
+                    window.location.href = 'minigame.html';
                 }
             };
-
-            // Проверяем сразу при загрузке страницы
             checkTime();
-            
-            // И проверяем каждую минуту (чтобы выкинуть игрока прямо во время игры, если время выйдет)
             setInterval(checkTime, 60000); 
         }
     })();
@@ -551,16 +544,21 @@
     const ctx = canvas.getContext('2d', { alpha: false });
     let screenShake = 0;
 
-    // --- МАСШТАБИРОВАНИЕ ПОД ЛЮБОЙ ЭКРАН (1920x1080) ---
+    // --- МАСШТАБИРОВАНИЕ ---
     function resize() {
         const winW = window.innerWidth;
         const winH = window.innerHeight;
         const scale = Math.min(winW / 1920, winH / 1080);
         
         app.style.transform = `translate(-50%, -50%) scale(${scale})`;
-        // Центрирование уже задано в CSS (flex на body)
     }
     window.addEventListener('resize', resize);
+    
+    // ИСПРАВЛЕНИЕ #3: Масштаб при повороте
+    window.addEventListener('orientationchange', () => {
+        setTimeout(resize, 100);
+        setTimeout(resize, 500);
+    });
     resize();
 
     function requestFullScreen() {
@@ -586,7 +584,7 @@
         }
     };
     
-    // --- BATTLE PASS DATA (CDN LINKS) ---
+    // --- BATTLE PASS DATA ---
     const BP_REWARDS = [
         { wins: 10, name: "Титул: Артиллерист", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gameart.webp" },
         { wins: 50, name: "Титул: Снайпер", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gamesniper.webp" },
@@ -671,6 +669,19 @@
         console.log("Wins updated:", totalWins);
     }
 
+    // --- ФУНКЦИЯ ПОЛНОЙ ИНИЦИАЛИЗАЦИИ МИРА ---
+    function initGameWorld() {
+        const keys = Object.keys(THEMES);
+        GAME.theme = THEMES[keys[Math.floor(Math.random() * keys.length)]];
+        
+        p1.x = 288; p2.x = 1632; 
+        p1.hp=100; p2.hp=100; p1.fuel=CONSTANTS.maxFuel; p2.fuel=CONSTANTS.maxFuel; 
+        p1.angle=45; p2.angle=45;
+        
+        generateWorld();
+        randomizeWind();
+    }
+
     function startGame(mode) {
         requestFullScreen();
         GAME.mode = mode;
@@ -693,14 +704,9 @@
         resize();
         createGroundPattern();
 
-        if (mode !== 'online' || GAME.myId === 1) {
-            const keys = Object.keys(THEMES);
-            GAME.theme = THEMES[keys[Math.floor(Math.random() * keys.length)]];
-            p1.x = 288; p2.x = 1632; 
-            p1.hp=100; p2.hp=100; p1.fuel=CONSTANTS.maxFuel; p2.fuel=CONSTANTS.maxFuel; 
-            p1.angle=45; p2.angle=45; 
-            generateWorld();
-            randomizeWind();
+        // ИСПРАВЛЕНИЕ #2: Генерируем мир здесь ТОЛЬКО если это оффлайн режим.
+        if (mode === 'pve' || mode === 'local') {
+            initGameWorld();
         }
         
         sunPos = { x: 1920 * 0.5, y: 80 }; 
@@ -819,11 +825,17 @@
         });
     }
     function setupConn() { conn.on('data', d => handleData(d)); }
+    
     function handleData(d) {
         if(d.type === 'hello') {
             GAME.p2Name = d.name;
             const myNick = document.getElementById('nickname').value || "Host";
             GAME.p1Name = myNick;
+            
+            // ИСПРАВЛЕНИЕ #2: Генерируем мир ДО отправки init пакета!
+            GAME.myId = 1;
+            initGameWorld(); 
+
             conn.send({ 
                 type: 'init', 
                 terrain, mountains, objects, grassCache, 
@@ -927,6 +939,7 @@
         performFire(p); 
     };
 
+    // ИСПРАВЛЕНИЕ #4: Новый расчет координат дула (защита от проваливания)
     function getGunTip(tank, isLeft) {
         let x = tank.x;
         let y = terrain[Math.floor(x)] || 0;
@@ -935,11 +948,11 @@
         let yR = terrain[Math.min(1919, Math.floor(x)+15)] || y;
         let rot = Math.atan2(yR-yL, 30); 
 
-        // Центр башни (локально -8, -24)
+        // Центр башни (локально)
         let tx_local = -8; 
         let ty_local = -24;
         
-        // Pivot (локально от башни)
+        // Пивот орудия (локально от башни)
         let px_local = 15; 
         let py_local = -6;
 
@@ -948,19 +961,16 @@
             px_local *= -1;
         }
 
-        // Поворот векторов на наклон корпуса (Rotation Matrix)
         let cos = Math.cos(rot);
         let sin = Math.sin(rot);
 
-        // 1. Позиция башни в мире
         let turretX = x + (tx_local * cos - ty_local * sin);
         let turretY = y + (tx_local * sin + ty_local * cos);
 
-        // 2. Позиция пивота в мире
         let pivotX = turretX + (px_local * cos - py_local * sin);
         let pivotY = turretY + (px_local * sin + py_local * cos);
 
-        // 3. Кончик ствола
+        // Длина ствола
         let barrelLen = 90;
         let angleRad = tank.angle * Math.PI / 180;
         
@@ -968,14 +978,13 @@
         if(isLeft) {
              shotAngle = rot - angleRad;
         } else {
-             // Для P2 угол зеркальный
              shotAngle = rot + Math.PI + angleRad;
         }
 
         let muzzleX = pivotX + Math.cos(shotAngle) * barrelLen;
         let muzzleY = pivotY + Math.sin(shotAngle) * barrelLen;
         
-        // Anti-Ground Clip: если дуло ушло под землю (в яме), поднять точку выстрела
+        // Анти-клиппинг (чтобы дуло не стреляло из под земли)
         let groundY = terrain[Math.floor(muzzleX)] || 840;
         if(muzzleY > groundY - 5) {
             muzzleY = groundY - 10;
@@ -984,6 +993,7 @@
         return { x: muzzleX, y: muzzleY };
     }
 
+    // ИСПРАВЛЕНИЕ #4: Выстрел учитывает наклон танка
     function performFire(shooter) {
         GAME.locked = true; updateInputs();
         muzzleFlash.active = true; muzzleFlash.timer = 5;
@@ -995,39 +1005,35 @@
         let isLeft = (shooter === p1);
         let tip = getGunTip(shooter, isLeft);
 
-        let rad = shooter.angle * Math.PI / 180;
-        let dir = isLeft ? 1 : -1;
+        // Рассчитываем угол наклона корпуса
+        let xIdx = Math.max(0, Math.min(1919, Math.floor(shooter.x)));
+        let y = terrain[xIdx] || 0;
+        let yL = terrain[Math.max(0, xIdx - 15)] || y;
+        let yR = terrain[Math.min(1919, xIdx + 15)] || y;
+        let slopeAngle = Math.atan2(yR - yL, 30);
+
+        let sliderRad = shooter.angle * Math.PI / 180;
+        let finalRad;
+
+        if (isLeft) {
+            finalRad = slopeAngle - sliderRad; 
+        } else {
+            finalRad = slopeAngle + Math.PI + sliderRad;
+        }
+
         let force = shooter.power / 4;
 
-        projectile = { x: tip.x, y: tip.y, vx: Math.cos(rad)*force*dir + (currentWind*0.05), vy: -Math.sin(rad)*force };
+        projectile = { 
+            x: tip.x, 
+            y: tip.y, 
+            vx: Math.cos(finalRad) * force + (currentWind * 0.05), 
+            vy: Math.sin(finalRad) * force 
+        };
         
         for(let i=0; i<15; i++) particles.push({x:tip.x, y:tip.y, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:20, type:'smoke'});
     }
 
-    function simulateShot(startPt, angle, power, wind) {
-        let simX = startPt.x;
-        let simY = startPt.y;
-        let rad = angle * Math.PI / 180;
-        let force = power / 4;
-        let dir = -1; // AI is right (P2), shoots left
-        let vx = Math.cos(rad) * force * dir + (wind * 0.05);
-        let vy = -Math.sin(rad) * force;
-        
-        let steps = 0;
-        while(simY < 1000 && steps < 600) {
-            simX += vx;
-            simY += vy;
-            vy += CONSTANTS.gravity;
-            
-            let groundY = terrain[Math.floor(simX)] || 1000;
-            if(simY >= groundY) {
-                return simX;
-            }
-            steps++;
-        }
-        return simX;
-    }
-
+    // ИСПРАВЛЕНИЕ #5: Более "человечный" ИИ (мажет на дистанции)
     function aiThink() {
         const target = p1;
         const shooter = p2;
@@ -1049,23 +1055,38 @@
         }
 
         setTimeout(() => {
-            // 2. Smart Aiming Calculation
             let bestError = Infinity;
             let bestAngle = 45;
             let bestPower = 50;
             
-            // Critical Fix: AI must calculate from its actual muzzle tip!
             let tip = getGunTip(shooter, false);
 
-            // Optimization: Start search from reasonable power based on distance
-            let estDist = Math.abs(shooter.x - target.x);
-            let minP = Math.max(20, Math.floor(estDist / 20)); // Heuristic
+            let xIdx = Math.floor(shooter.x);
+            let yL = terrain[Math.max(0, xIdx - 15)] || 0;
+            let yR = terrain[Math.min(1919, xIdx + 15)] || 0;
+            let slopeAngle = Math.atan2(yR - yL, 30);
 
-            for(let a = 15; a <= 85; a += 5) {
-                for(let p = minP; p <= 100; p += 5) {
-                    let impactX = simulateShot(tip, a, p, currentWind);
-                    let error = Math.abs(impactX - target.x);
+            // ШАГ 1: Грубый поиск решения
+            for(let a = 10; a <= 80; a += 10) { 
+                for(let p = 20; p <= 100; p += 10) { 
                     
+                    let finalRad = slopeAngle + Math.PI + (a * Math.PI / 180);
+                    let force = p / 4;
+                    
+                    let simX = tip.x;
+                    let simY = tip.y;
+                    let simVx = Math.cos(finalRad) * force + (currentWind * 0.05);
+                    let simVy = Math.sin(finalRad) * force;
+                    
+                    let impactX = simX;
+                    for(let t=0; t<600; t++) {
+                        simX += simVx;
+                        simY += simVy;
+                        simVy += CONSTANTS.gravity;
+                        if(simY >= (terrain[Math.floor(simX)]||1000)) { impactX = simX; break; }
+                    }
+
+                    let error = Math.abs(impactX - target.x);
                     if(error < bestError) {
                         bestError = error;
                         bestAngle = a;
@@ -1074,9 +1095,15 @@
                 }
             }
 
-            let errorFactor = (Math.random() - 0.5) * 3; 
-            let finalAngle = Math.floor(bestAngle + (Math.random()-0.5)*2);
-            let finalPower = Math.floor(bestPower + errorFactor);
+            // ШАГ 2: Добавляем ошибку
+            let distance = Math.abs(shooter.x - target.x);
+            let errorMagnitude = 8 + (distance / 100); 
+            
+            let powerError = (Math.random() - 0.5) * errorMagnitude;
+            let angleError = (Math.random() - 0.5) * 4;
+
+            let finalAngle = Math.max(0, Math.min(90, Math.floor(bestAngle + angleError)));
+            let finalPower = Math.max(20, Math.min(100, Math.floor(bestPower + powerError)));
             
             let steps = 40; 
             let currentStep = 0;
