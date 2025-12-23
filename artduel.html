@@ -58,7 +58,6 @@
         .rotate-text { font-size: 1.5rem; font-weight: bold; padding: 0 20px; }
         @keyframes rotatePhone { 0% { transform: rotate(0deg); } 25% { transform: rotate(90deg); } 75% { transform: rotate(90deg); } 100% { transform: rotate(0deg); } }
         
-        /* Исправление зума: срабатывает только на узких экранах */
         @media screen and (orientation: portrait) and (max-width: 1024px) { 
             #rotate-overlay { display: flex; } 
             #app-root { display: none !important; }
@@ -553,8 +552,6 @@
         app.style.transform = `translate(-50%, -50%) scale(${scale})`;
     }
     window.addEventListener('resize', resize);
-    
-    // ИСПРАВЛЕНИЕ #3: Масштаб при повороте
     window.addEventListener('orientationchange', () => {
         setTimeout(resize, 100);
         setTimeout(resize, 500);
@@ -704,7 +701,6 @@
         resize();
         createGroundPattern();
 
-        // ИСПРАВЛЕНИЕ #2: Генерируем мир здесь ТОЛЬКО если это оффлайн режим.
         if (mode === 'pve' || mode === 'local') {
             initGameWorld();
         }
@@ -803,27 +799,62 @@
     }
 
     function showOnlineMenu() { document.getElementById('online-panel').style.display = 'flex'; if (!peer) initPeer(); }
+    
+    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ INIT PEER ---
     function initPeer() {
-        document.getElementById('connection-status').innerText = "Подключение...";
+        document.getElementById('connection-status').innerText = "Подключение к серверу...";
+        
         peer = new Peer(); 
-        peer.on('open', id => { document.getElementById('my-peer-id').innerText = id; document.getElementById('connection-status').innerText = "Ожидание..."; });
+        
+        peer.on('open', id => { 
+            document.getElementById('my-peer-id').innerText = id; 
+            document.getElementById('connection-status').innerText = "Готов к подключению"; 
+        });
+
+        peer.on('error', err => {
+            console.error(err);
+            document.getElementById('connection-status').innerText = "Ошибка P2P сервера";
+        });
+
         peer.on('connection', c => { 
             conn = c; 
             GAME.myId = 1; 
-            document.getElementById('connection-status').innerText = "Игрок найден!"; 
+            document.getElementById('connection-status').innerText = "Игрок найден! Соединяем..."; 
             setupConn(); 
         });
     }
+
+    // --- ИСПРАВЛЕННАЯ ФУНКЦИЯ CONNECT (с удалением пробелов) ---
     function connectToPeer() {
-        const id = document.getElementById('remote-peer-id').value; if(!id) return;
-        conn = peer.connect(id); GAME.myId = 2;
+        const input = document.getElementById('remote-peer-id');
+        const id = input.value.trim(); // ВАЖНО: Удаляем пробелы!
+
+        if(!id) {
+            alert("Пожалуйста, введите ID друга!");
+            return;
+        }
+
+        document.getElementById('connection-status').innerText = "Попытка соединения...";
+        document.getElementById('connection-status').style.color = "yellow";
+
+        conn = peer.connect(id);
+        GAME.myId = 2;
+        
+        conn.on('error', (err) => {
+             document.getElementById('connection-status').innerText = "Ошибка соединения!";
+             document.getElementById('connection-status').style.color = "red";
+        });
+
         conn.on('open', () => { 
             document.getElementById('connection-status').innerText = "Соединение установлено"; 
+            document.getElementById('connection-status').style.color = "#2ecc71";
+            
             setupConn();
             const myNick = document.getElementById('nickname').value || "Guest";
             conn.send({ type: 'hello', name: myNick });
         });
     }
+
     function setupConn() { conn.on('data', d => handleData(d)); }
     
     function handleData(d) {
@@ -832,7 +863,6 @@
             const myNick = document.getElementById('nickname').value || "Host";
             GAME.p1Name = myNick;
             
-            // ИСПРАВЛЕНИЕ #2: Генерируем мир ДО отправки init пакета!
             GAME.myId = 1;
             initGameWorld(); 
 
@@ -939,7 +969,6 @@
         performFire(p); 
     };
 
-    // ИСПРАВЛЕНИЕ #4: Новый расчет координат дула (защита от проваливания)
     function getGunTip(tank, isLeft) {
         let x = tank.x;
         let y = terrain[Math.floor(x)] || 0;
@@ -984,7 +1013,6 @@
         let muzzleX = pivotX + Math.cos(shotAngle) * barrelLen;
         let muzzleY = pivotY + Math.sin(shotAngle) * barrelLen;
         
-        // Анти-клиппинг (чтобы дуло не стреляло из под земли)
         let groundY = terrain[Math.floor(muzzleX)] || 840;
         if(muzzleY > groundY - 5) {
             muzzleY = groundY - 10;
@@ -993,7 +1021,6 @@
         return { x: muzzleX, y: muzzleY };
     }
 
-    // ИСПРАВЛЕНИЕ #4: Выстрел учитывает наклон танка
     function performFire(shooter) {
         GAME.locked = true; updateInputs();
         muzzleFlash.active = true; muzzleFlash.timer = 5;
@@ -1005,7 +1032,6 @@
         let isLeft = (shooter === p1);
         let tip = getGunTip(shooter, isLeft);
 
-        // Рассчитываем угол наклона корпуса
         let xIdx = Math.max(0, Math.min(1919, Math.floor(shooter.x)));
         let y = terrain[xIdx] || 0;
         let yL = terrain[Math.max(0, xIdx - 15)] || y;
@@ -1033,7 +1059,6 @@
         for(let i=0; i<15; i++) particles.push({x:tip.x, y:tip.y, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:20, type:'smoke'});
     }
 
-    // ИСПРАВЛЕНИЕ #5: Более "человечный" ИИ (мажет на дистанции)
     function aiThink() {
         const target = p1;
         const shooter = p2;
@@ -1066,7 +1091,6 @@
             let yR = terrain[Math.min(1919, xIdx + 15)] || 0;
             let slopeAngle = Math.atan2(yR - yL, 30);
 
-            // ШАГ 1: Грубый поиск решения
             for(let a = 10; a <= 80; a += 10) { 
                 for(let p = 20; p <= 100; p += 10) { 
                     
@@ -1095,7 +1119,6 @@
                 }
             }
 
-            // ШАГ 2: Добавляем ошибку
             let distance = Math.abs(shooter.x - target.x);
             let errorMagnitude = 8 + (distance / 100); 
             
