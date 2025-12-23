@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Артиллерийская Дуэль WTM </title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #08080a;
+            --ui-bg: rgba(16, 18, 22, 0.95);
+            --accent: #ffae00;
+            --p1-color: #00e5ff;
+            --p2-color: #ff3d3d;
+            
+            /* Цвета кнопок */
+            --btn-pve: #3498db;
+            --btn-local: #2ecc71;
+            --btn-online: #9b59b6;
+            --btn-bp: #f1c40f;
+            --btn-info: #95a5a6;
+            --btn-support: #e91e63; /* Новый цвет для поддержки */
+        }
+        
+        * { box-sizing: border-box; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            background-color: #000;
+            margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        /* --- ГЛАВНЫЙ КОНТЕЙНЕР (1920x1080) --- */
+        #app-root {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 1920px; height: 1080px;
+            background: var(--bg-color);
+            box-shadow: 0 0 200px rgba(0,0,0,0.8);
+            overflow: hidden;
+            transform-origin: center center;
+        }
+
+        /* --- ЗАГЛУШКА ОРИЕНТАЦИИ --- */
+        #rotate-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999; flex-direction: column; justify-content: center; align-items: center;
+            color: var(--accent); text-align: center;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_12_lightningstrike/1080x2340_wtm_lightning_strike_d998cb1b19d61930e8ea08059d56e42a.jpg') no-repeat center center;
+            background-size: cover;
+        }
+        #rotate-overlay::before { content: ''; position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: -1; }
+        .rotate-icon { font-size: 4rem; margin-bottom: 20px; animation: rotatePhone 2s infinite ease-in-out; }
+        .rotate-text { font-size: 1.5rem; font-weight: bold; padding: 0 20px; }
+        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 25% { transform: rotate(90deg); } 75% { transform: rotate(90deg); } 100% { transform: rotate(0deg); } }
+        
+        @media screen and (orientation: portrait) { 
+            #rotate-overlay { display: flex; } 
+            #app-root { display: none !important; }
+        }
+
+        /* --- МЕНЮ --- */
+        #menu-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_12_lightningstrike/1080x2340_wtm_lightning_strike_d998cb1b19d61930e8ea08059d56e42a.jpg') no-repeat center center;
+            background-size: cover; z-index: 100;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }
+        #menu-screen::before {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.9) 100%); z-index: -1;
+        }
+
+        /* Кнопка ВЫХОДА В МЕНЮ */
+        .menu-exit-btn {
+            position: absolute; top: 30px; left: 30px; z-index: 200;
+            background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);
+            width: 60px; height: 60px; border-radius: 50%; cursor: pointer; font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+            backdrop-filter: blur(5px);
+        }
+        .menu-exit-btn:hover { background: var(--p2-color); border-color: transparent; transform: scale(1.1); }
+
+        .menu-content { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 500px; padding: 30px; background: rgba(0,0,0,0.3); border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); }
+        .menu-title { 
+            font-size: 4rem; font-weight: 900; color: #fff; 
+            text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px; 
+            text-shadow: 0 0 30px rgba(255, 174, 0, 0.8); text-align: center; line-height: 1; font-style: italic;
+        }
+
+        .nick-container { width: 100%; margin-bottom: 15px; }
+        .nick-label { font-size: 1rem; color: var(--accent); font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; display: block; text-align:center;}
+        .nick-input {
+            width: 100%; padding: 15px; font-size: 1.5rem; text-align: center;
+            background: rgba(0,0,0,0.6); border: 2px solid #555;
+            color: white; border-radius: 8px; outline: none;
+            font-weight: bold; letter-spacing: 2px; transition: 0.3s;
+        }
+        .nick-input:focus { border-color: var(--accent); background: rgba(0,0,0,0.8); box-shadow: 0 0 20px rgba(255, 174, 0, 0.4); }
+
+        .menu-btn {
+            position: relative; width: 100%; padding: 20px 30px;
+            background: linear-gradient(90deg, rgba(30, 30, 35, 0.9), rgba(45, 50, 60, 0.9));
+            border: 1px solid rgba(255,255,255,0.1); border-left-width: 8px; 
+            color: #fff; font-size: 1.5rem; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 2px; cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: flex-start; gap: 20px;
+            overflow: hidden; text-align: left;
+        }
+        .menu-btn::after {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent); transition: 0.4s;
+        }
+        .menu-btn:hover::after { left: 100%; }
+        .menu-btn:hover { transform: translateX(15px); background: rgba(60, 60, 70, 0.95); }
+        .menu-btn:active { transform: scale(0.98); }
+        
+        .btn-pve { border-left-color: var(--btn-pve); }
+        .btn-local { border-left-color: var(--btn-local); }
+        .btn-online { border-left-color: var(--btn-online); }
+        .btn-info { border-left-color: var(--btn-info); }
+        .btn-support { border-left-color: var(--btn-support); } /* Цвет поддержки */
+        
+        .btn-bp { 
+            border-left-color: var(--btn-bp); background: linear-gradient(90deg, rgba(60, 50, 20, 0.9), rgba(80, 70, 30, 0.9));
+            animation: bpPulse 2s infinite;
+        }
+        @keyframes bpPulse { 0% { box-shadow: 0 5px 15px rgba(0,0,0,0.5); } 50% { box-shadow: 0 5px 30px rgba(241, 196, 15, 0.4); border-left-color: #fff; } 100% { box-shadow: 0 5px 15px rgba(0,0,0,0.5); } }
+        .menu-btn i { width: 40px; text-align: center; font-size: 1.6rem; opacity: 0.9; }
+
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        .modal {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 200; flex-direction: column; align-items: center; justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .modal-container {
+            width: 900px; height: 800px; display: flex; flex-direction: column;
+            background: #1e1e1e; border-radius: 12px; border: 2px solid #444; overflow: hidden;
+            box-shadow: 0 0 100px rgba(0,0,0,0.9);
+        }
+        .modal-header {
+            padding: 20px 40px; background: #2c2c2c; border-bottom: 2px solid #444;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .modal-title { font-size: 2rem; font-weight: bold; color: var(--accent); letter-spacing: 2px;}
+        .modal-close { background: none; border: none; color: #aaa; font-size: 3rem; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: #fff; }
+        
+        /* БП Стили */
+        .bp-stats { font-size: 1.5rem; color: #fff; font-weight: bold;}
+        .bp-list {
+            flex: 1; overflow-y: auto; padding: 30px;
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+        }
+        .bp-item {
+            background: #2b2b2b; border-radius: 8px; padding: 20px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            border: 2px solid #383838; transition: 0.2s; position: relative;
+        }
+        .bp-item.locked { opacity: 0.5; filter: grayscale(1); }
+        .bp-item.active { border-color: #2ecc71; background: linear-gradient(180deg, #2b2b2b, #203525); }
+        .bp-img { width: 100%; height: 150px; object-fit: contain; margin-bottom: 15px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));}
+        .bp-info { font-size: 1.2rem; margin-bottom: 10px; color: #fff; font-weight: 800; text-transform: uppercase;}
+        .bp-req { font-size: 1rem; color: var(--accent); margin-bottom: 20px; }
+        .claim-btn {
+            width: 100%; padding: 12px; border: none; border-radius: 6px;
+            font-weight: bold; cursor: pointer; font-size: 1rem; background: #444; color: #888; text-transform: uppercase;
+        }
+        .bp-item.active .claim-btn { background: var(--btn-local); color: #1e272e; box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4); }
+        .bp-item.active .claim-btn:hover { filter: brightness(1.1); transform: scale(1.05); }
+
+        /* WARNING BOX STYLE */
+        .save-warning-box {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid #444;
+            border-left: 5px solid #ff6b6b;
+            margin: 20px 40px 0 40px; /* Отступы по бокам */
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+        }
+        .save-header {
+            color: #fff; font-weight: bold; margin-bottom: 10px; font-size: 1.3rem;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .save-text { color: #ccc; margin-bottom: 15px; line-height: 1.5; }
+        .warning-row {
+            display: flex; align-items: center; gap: 15px;
+            color: #bdc3c7; background: rgba(255, 107, 107, 0.15);
+            padding: 10px 15px; border-radius: 6px;
+        }
+        .warning-icon { color: #ff6b6b; font-size: 1.5rem; }
+
+        /* ИНФО Стили */
+        .info-content { flex: 1; overflow-y: auto; padding: 50px; color: #ddd; font-size: 1.4rem; line-height: 1.6; }
+        .info-section { margin-bottom: 40px; }
+        .info-h { color: var(--p1-color); font-size: 2rem; font-weight: 900; margin-bottom: 20px; border-bottom: 2px solid #444; padding-bottom: 10px; text-transform: uppercase; }
+        .key-val { display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding: 10px 0; }
+        .key { color: #aaa; } .val { color: #fff; font-weight: bold; }
+
+        /* ОНЛАЙН ПАНЕЛЬ */
+        #online-panel {
+            display: none; flex-direction: column; gap: 20px;
+            background: #1e272e; padding: 40px; border-radius: 20px;
+            box-shadow: 0 50px 100px rgba(0,0,0,0.95); border: 2px solid #555;
+            width: 600px; position: absolute; z-index: 150;
+        }
+        .id-display {
+            font-family: monospace; font-size: 2rem; color: var(--accent);
+            background: #000; padding: 20px; border-radius: 8px; border: 2px dashed #555;
+            text-align: center; margin: 10px 0; user-select: text;
+        }
+        .input-id {
+            padding: 20px; border-radius: 8px; border: 2px solid #555;
+            background: #111; color: white; width: 100%; text-align: center; font-size: 1.5rem; outline: none;
+        }
+
+        /* --- ИГРОВОЕ ПОЛЕ --- */
+        #game-wrapper { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; }
+        
+        #game-view {
+            position: relative;
+            width: 1920px; height: 840px; 
+            background: #000; overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        #game-view::after {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.8); pointer-events: none;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScyMDAlJyBoZWlnaHQ9JzIwMCUnPjxmaWx0ZXIgaWQ9J24nPjxmZVR1cmJ1bGVuY2UgdHlwZT0nZnJhY3RhbE5vaXNlJyBiYXNlRnJlcXVlbmN5PScwLjgnIG51bU9jdGF2ZXM9JzEnIHN0aXRjaFRpbGVzPSdzdGl0Y2gnLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0nMTAwJScgaGVpZ2h0PScxMDAlJyBmaWx0ZXI9J3VybCgjbiknIG9wYWNpdHk9JzAuMDUnLz48L3N2Zz4=');
+            opacity: 0.3;
+        }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        /* ВЕТЕР UI */
+        #wind-display {
+            position: absolute; top: 120px; left: 40px; 
+            background: rgba(0,0,0,0.6); padding: 10px 25px; border-radius: 30px;
+            color: #bdc3c7; font-weight: bold; font-size: 1.5rem;
+            display: flex; gap: 15px; align-items: center; border: 2px solid rgba(255,255,255,0.1);
+            z-index: 50;
+        }
+        #wind-arrow { display: inline-block; font-size: 2rem; transition: 0.5s; }
+
+        /* ИНДИКАТОР ХОДА */
+        #turn-msg {
+            position: absolute; top: 120px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.85); color: white; padding: 15px 50px;
+            font-weight: 900; font-size: 2rem; letter-spacing: 2px;
+            clip-path: polygon(10% 0, 100% 0, 90% 100%, 0% 100%);
+            border-bottom: 4px solid var(--accent); z-index: 50;
+            text-shadow: 0 5px 10px rgba(0,0,0,0.5);
+        }
+
+        /* TOP UI */
+        #top-ui {
+            position: absolute; top: 30px; left: 0; width: 100%;
+            display: flex; justify-content: space-between; padding: 0 50px; pointer-events: none; z-index: 50;
+        }
+        .hp-bar { width: 35%; pointer-events: auto; }
+        .hp-label { 
+            font-size: 1.4rem; font-weight: 800; margin-bottom: 8px; display: flex; justify-content: space-between; 
+            text-shadow: 2px 2px 0px #000; color: #fff; letter-spacing: 1px;
+        }
+        .hp-track { 
+            height: 25px; background: rgba(0,0,0,0.8); border: 2px solid rgba(255,255,255,0.3); 
+            transform: skewX(-20deg); overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.6);
+        }
+        .hp-fill { height: 100%; transition: width 0.3s; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+        .fuel-track { height: 6px; background: #333; margin-top: 8px; border-radius: 3px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.5);}
+        .fuel-fill { height: 100%; width: 100%; background: #f39c12; transition: width 0.2s; }
+
+        /* ПАНЕЛЬ УПРАВЛЕНИЯ */
+        #controls-area {
+            width: 1920px; height: 240px; 
+            background: var(--ui-bg); border-top: 2px solid rgba(255,255,255,0.1);
+            padding: 20px 80px; display: flex; flex-direction: column; justify-content: center; gap: 25px; 
+            z-index: 20; position: relative;
+        }
+        .sliders-row { display: flex; gap: 60px; justify-content: space-between; align-items: center; }
+        .slider-group { flex: 1; }
+        .slider-header { display: flex; justify-content: space-between; color: #95a5a6; font-weight: 700; font-size: 1.4rem; margin-bottom: 10px; text-transform: uppercase; }
+        .slider-val { color: var(--accent); font-size: 1.8rem; font-family: monospace; }
+        
+        input[type=range] { width: 100%; cursor: pointer; height: 20px; background: #2c3e50; appearance: none; border-radius: 10px; }
+        input[type=range]::-webkit-slider-thumb { 
+            appearance: none; width: 40px; height: 40px; 
+            background: #ecf0f1; border-radius: 50%; border: 4px solid var(--accent); 
+            box-shadow: 0 0 15px rgba(0,0,0,0.5); transition: transform 0.1s;
+        }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.1); }
+
+        .controls-bottom { display: flex; justify-content: space-between; align-items: center; gap: 40px;}
+        .move-controls { display: flex; gap: 20px; align-items: center; }
+        .move-btn {
+            background: #2c3e50; border: 2px solid #7f8c8d; color: white;
+            width: 80px; height: 70px; border-radius: 10px; font-size: 2.5rem;
+            cursor: pointer; transition: 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        .move-btn:active:not(:disabled) { transform: translateY(4px); background: #34495e; }
+        .move-btn:disabled { opacity: 0.4; cursor: not-allowed;}
+
+        button#fire-btn {
+            flex: 1; padding: 25px; background: linear-gradient(135deg, #f1c40f, #d35400);
+            color: #fff; border: none; border-radius: 10px; font-size: 2.5rem; font-weight: 900;
+            text-transform: uppercase; letter-spacing: 5px; cursor: pointer;
+            box-shadow: 0 8px 0 #a04000, 0 20px 40px rgba(0,0,0,0.4); transition: 0.1s; 
+        }
+        button#fire-btn:active:not(:disabled) { transform: translateY(8px); box-shadow: 0 0 0 #a04000; }
+        button:disabled { background: #7f8c8d; filter: grayscale(1); opacity: 0.5; box-shadow: none; transform: none;}
+
+        .back-btn {
+            position: absolute; top: 20px; left: 20px; z-index: 200;
+            background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2);
+            width: 50px; height: 50px; cursor: pointer; font-size: 1.5rem;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s;
+        }
+        .back-btn:hover { background: var(--p2-color); border-color: transparent; }
+
+        /* --- АДАПТАЦИЯ (MOBILE LANDSCAPE) --- */
+        @media (max-height: 500px) and (orientation: landscape) {
+            #menu-screen { align-items: center; justify-content: center; }
+            .menu-content { 
+                display: grid; grid-template-columns: 1fr 1fr; gap: 10px; 
+                width: 90%; max-width: 600px; padding: 0;
+            }
+            .menu-title { grid-column: 1 / -1; font-size: 2.2rem; margin-bottom: 5px; text-shadow: 0 0 15px rgba(255, 174, 0, 0.8);}
+            .nick-container { grid-column: 1 / -1; max-width: 100%; }
+            
+            .menu-btn { 
+                width: 100%; max-width: none; padding: 12px; font-size: 0.9rem; margin: 0; 
+                justify-content: flex-start; gap: 8px;
+            }
+            .menu-btn:hover { transform: translateY(-2px); }
+            
+            #controls-area { height: 130px; padding: 8px 30px; }
+            .sliders-row { gap: 30px; }
+            input[type=range] { height: 10px; }
+            input[type=range]::-webkit-slider-thumb { width: 24px; height: 24px; }
+            
+            button#fire-btn { padding: 10px; font-size: 1.2rem; }
+            .move-btn { width: 50px; height: 40px; font-size: 1.2rem; }
+            
+            #wind-display { top: 40px; }
+            #turn-msg { top: 40px; font-size: 0.9rem; padding: 4px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="rotate-overlay">
+        <div class="rotate-icon"><i class="fas fa-mobile-alt"></i></div>
+        <div class="rotate-text">ПОЖАЛУЙСТА, ПОВЕРНИТЕ УСТРОЙСТВО ГОРИЗОНТАЛЬНО</div>
+    </div>
+
+    <div id="app-root">
+        <div id="menu-screen">
+            <button class="menu-exit-btn" onclick="window.location.href='findagame.html'" title="Вернуться к выбору игр">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+
+            <div class="menu-content">
+                <div class="menu-title">АРТИЛЛЕРИЙСКАЯ<br>ДУЭЛЬ</div>
+                
+                <div class="nick-container">
+                    <div class="nick-label"><i class="fas fa-user-tag"></i> Придумайте себе ник</div>
+                    <div class="nick-input-wrapper">
+                        <i class="fas fa-pen nick-icon"></i>
+                        <input type="text" id="nickname" class="nick-input" placeholder="ВАШ НИК" maxlength="15">
+                    </div>
+                </div>
+
+                <button class="menu-btn btn-pve" onclick="startGame('pve')">
+                    <i class="fas fa-microchip"></i> <span>ПРОТИВ ИИ</span>
+                </button>
+                <button class="menu-btn btn-local" onclick="startGame('local')">
+                    <i class="fas fa-gamepad"></i> <span>2 ИГРОКА</span>
+                </button>
+                <button class="menu-btn btn-online" onclick="showOnlineMenu()">
+                    <i class="fas fa-globe"></i> <span>ОНЛАЙН</span>
+                </button>
+                <button class="menu-btn btn-bp" onclick="openModal('bp-modal')">
+                    <i class="fas fa-star"></i> <span>БОЕВОЙ ПРОПУСК</span>
+                </button>
+                <button class="menu-btn btn-info" onclick="openModal('info-modal')" style="grid-column: 1 / -1;">
+                    <i class="fas fa-question-circle"></i> <span>ИНФО / ПОМОЩЬ</span>
+                </button>
+                
+                <button class="menu-btn btn-support" style="grid-column: 1 / -1;" onclick="window.open('https://t.me/fortunawtmhelp', '_blank')">
+                    <i class="fas fa-headset"></i> <span>ТЕХ. ПОДДЕРЖКА</span>
+                </button>
+            </div>
+
+            <div id="online-panel">
+                <div style="color:var(--accent); font-weight:bold; letter-spacing:1px; text-transform:uppercase; font-size:1.5rem;">ВАШ ID:</div>
+                <div class="id-display" id="my-peer-id">...</div>
+                <div style="margin:20px 0; color:#888; font-size:1.2rem;">ВВЕДИТЕ ID ДРУГА:</div>
+                <input type="text" class="input-id" id="remote-peer-id" placeholder="Вставьте ID друга">
+                <button class="menu-btn btn-online" style="width:100%; margin-top:20px; justify-content:center;" onclick="connectToPeer()">СОЕДИНИТЬ</button>
+                <div id="connection-status" style="margin-top:15px; color:var(--accent); font-weight:bold; font-size:1.2rem;"></div>
+                <button onclick="document.getElementById('online-panel').style.display='none'" style="margin-top:15px; background:transparent; border:none; color:#95a5a6; cursor:pointer; font-size:1.2rem;">ОТМЕНА</button>
+            </div>
+        </div>
+
+        <div id="bp-modal" class="modal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <div class="modal-title"><i class="fas fa-trophy"></i> BATTLE PASS</div>
+                    <div class="bp-stats">ПОБЕДЫ: <span id="total-wins" style="color:var(--accent)">0</span></div>
+                    <button class="modal-close" onclick="closeModal('bp-modal')">&times;</button>
+                </div>
+                
+                <div class="save-warning-box">
+                    <div class="save-header"><i class="fas fa-save"></i> СОХРАНЕНИЕ ПРОГРЕССА</div>
+                    <div class="save-text">
+                        Чтобы накапливать победы для наград, всегда играйте через <strong>один и тот же браузер или веб-приложение</strong>.
+                    </div>
+                    <div class="warning-row">
+                        <i class="fas fa-exclamation-triangle warning-icon"></i>
+                        <span>Режим Инкогнито и очистка кэша <strong style="color:#ff6b6b">удалят</strong> ваш прогресс навсегда.</span>
+                    </div>
+                </div>
+
+                <div class="bp-list" id="bp-list"></div>
+            </div>
+        </div>
+
+        <div id="info-modal" class="modal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <div class="modal-title"><i class="fas fa-info-circle"></i> КАК ИГРАТЬ</div>
+                    <button class="modal-close" onclick="closeModal('info-modal')">&times;</button>
+                </div>
+                <div class="info-content">
+                    <div class="info-section">
+                        <div class="info-h">🎯 УПРАВЛЕНИЕ</div>
+                        <p class="info-p">Уничтожьте вражескую САУ. Используйте ползунки <b>УГОЛ</b> и <b>МОЩНОСТЬ</b>соответствующим образом для настройки траектории.</p>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-h">🌪 ВЕТЕР И ТОПЛИВО</div>
+                        <p class="info-p"><b>ВЕТЕР:</b> Следите за индикатором! Он сносит снаряд. Попутный ветер добавляет мощности, а против - наоборот.</p>
+                        <p class="info-p"><b>ТОПЛИВО:</b> его достаточно мало. Используйте для необходимых маневров стрелочками.</p>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-h">🌐 ОНЛАЙН</div>
+                        <p class="info-p">1. Нажми "ОНЛАЙН", скопируй ID, отправь другу.</p>
+                        <p class="info-p">2. Друг вводит ID и жмет "СОЕДИНИТЬ".</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-wrapper" style="display:none;">
+            <button class="back-btn" onclick="location.reload()"><i class="fas fa-arrow-left"></i></button>
+            
+            <div id="game-view">
+                <canvas id="gameCanvas" width="1920" height="840"></canvas>
+                <div id="wind-display"><span id="wind-arrow">➤</span> <span id="wind-val">0 m/s</span></div>
+                <div id="turn-msg">Загрузка...</div>
+                <div id="top-ui">
+                    <div class="hp-bar">
+                        <div class="hp-label"><span style="color:var(--p1-color)" id="name-p1">ИГРОК 1</span> <span id="hp-txt-1">100</span></div>
+                        <div class="hp-track"><div id="hp-p1" class="hp-fill" style="background:var(--p1-color); width:100%"></div></div>
+                        <div class="fuel-track"><div id="fuel-p1" class="fuel-fill" style="width:100%"></div></div>
+                    </div>
+                    <div class="hp-bar" style="text-align:right">
+                        <div class="hp-label"><span style="color:var(--p2-color)" id="name-p2">ИГРОК 2</span> <span id="hp-txt-2">100</span></div>
+                        <div class="hp-track"><div id="hp-p2" class="hp-fill" style="background:var(--p2-color); width:100%; float:right;"></div></div>
+                        <div class="fuel-track"><div id="fuel-p2" class="fuel-fill" style="width:100%; float:right;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="controls-area">
+                <div class="sliders-row">
+                    <div class="slider-group">
+                        <div class="slider-header"><i class="fas fa-crosshairs"></i> Угол <span class="slider-val" id="val-angle">45°</span></div>
+                        <input type="range" id="inp-angle" min="0" max="90" value="45">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-header"><i class="fas fa-fire"></i> Мощность <span class="slider-val" id="val-power">70%</span></div>
+                        <input type="range" id="inp-power" min="20" max="100" value="70">
+                    </div>
+                </div>
+                
+                <div class="controls-bottom">
+                    <div class="move-controls">
+                        <button class="move-btn" id="btn-left" onmousedown="startMove(-1)" onmouseup="stopMove()" ontouchstart="startMove(-1)" ontouchend="stopMove()"><i class="fas fa-chevron-left"></i></button>
+                        <button class="move-btn" id="btn-right" onmousedown="startMove(1)" onmouseup="stopMove()" ontouchstart="startMove(1)" ontouchend="stopMove()"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <button id="fire-btn">ОГОНЬ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+
+ // --- ЗАЩИТА ДОСТУПА (Вставить в самое начало скрипта) ---
+    (function checkSessionGuard() {
+        const sessionRaw = localStorage.getItem('wtm_session');
+        
+        // 1. Если ключа нет вообще -> выкидываем на вход
+        if (!sessionRaw) {
+            window.location.href = 'minigame.html';
+            return;
+        }
+
+        let session;
+        try {
+            session = JSON.parse(sessionRaw);
+        } catch (e) {
+            localStorage.removeItem('wtm_session');
+            window.location.href = 'minigame.html';
+            return;
+        }
+
+        // 2. Если ключ временный -> следим за таймером
+        if (session.type === 'temporary') {
+            const checkTime = () => {
+                const now = Date.now();
+                const timeLeft = session.expiry - now;
+
+                if (timeLeft <= 0) {
+                    // Время (20 минут) вышло!
+                    alert("⏳ Время действия рекламного доступа истекло.\nПожалуйста, посмотрите рекламу еще раз для продления.");
+                    localStorage.removeItem('wtm_session'); // Удаляем просроченный ключ
+                    window.location.href = 'minigame.html'; // Выкидываем на страницу входа
+                }
+            };
+
+            // Проверяем сразу при загрузке страницы
+            checkTime();
+            
+            // И проверяем каждую минуту (чтобы выкинуть игрока прямо во время игры, если время выйдет)
+            setInterval(checkTime, 60000); 
+        }
+    })();
+    // --- КОНЕЦ ЗАЩИТЫ ---
+
+    const app = document.getElementById('app-root');
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    let screenShake = 0;
+
+    // --- МАСШТАБИРОВАНИЕ ПОД ЛЮБОЙ ЭКРАН (1920x1080) ---
+    function resize() {
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const scale = Math.min(winW / 1920, winH / 1080);
+        
+        app.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        // Центрирование уже задано в CSS (flex на body)
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    function requestFullScreen() {
+        var doc = window.document;
+        var docEl = doc.documentElement;
+        var requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+        if(requestFullScreen) requestFullScreen.call(docEl);
+    }
+
+    // --- НАСТРОЙКИ ---
+    const THEMES = {
+        SUMMER: {
+            skyTop: '#1e90ff', skyBot: '#87cefa', groundColor: '#5d4037', grassColor: '#2e7d32', grassLight: '#a5d6a7',
+            sunColor: '#ffd700', sunGlow: 'rgba(255, 215, 0, 0.4)', mountainColor: '#2f3640', weather: 'none'
+        },
+        AUTUMN: {
+            skyTop: '#34495e', skyBot: '#7f8c8d', groundColor: '#4e342e', grassColor: '#d35400', grassLight: '#f39c12',
+            sunColor: '#bdc3c7', sunGlow: 'rgba(255,255,255,0.1)', mountainColor: '#2c3e50', weather: 'rain'
+        },
+        WINTER: {
+            skyTop: '#000000', skyBot: '#2c3e50', groundColor: '#636e72', grassColor: '#95a5a6', grassLight: '#ecf0f1',
+            sunColor: '#f5f6fa', sunGlow: 'rgba(255,255,255,0.5)', mountainColor: '#1a1a1a', weather: 'snow'
+        }
+    };
+    
+    // --- BATTLE PASS DATA (CDN LINKS) ---
+    const BP_REWARDS = [
+        { wins: 10, name: "Титул: Артиллерист", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gameart.webp" },
+        { wins: 50, name: "Титул: Снайпер", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gamesniper.webp" },
+        { wins: 100, name: "Титул: Бог Войны", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gamegodofwar.webp" },
+        { wins: 250, name: "7 Дней Премиума", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/7day.PNG" },
+        { wins: 500, name: "Золото", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gold.PNG" },
+        { wins: 1000, name: "500 Платины", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/platina.PNG" }
+    ];
+
+    BP_REWARDS.forEach(r => { const i = new Image(); i.src = r.img; });
+
+    let totalWins = parseInt(localStorage.getItem('wtm_art_wins')) || 0;
+
+    let groundPattern = null;
+    const CONSTANTS = { gravity: 0.4, moveSpeed: 1.5, maxFuel: 20 };
+    let GAME = { mode: 'pve', turn: 1, locked: false, myId: 1, theme: null, p1Name: 'Player 1', p2Name: 'Player 2' };
+    let peer = null, conn = null;
+    let time = 0; 
+    let sunPos = { x: 0, y: 0 }; 
+    let currentWind = 0; 
+
+    let p1 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#00e5ff', antennaPhase: 0 };
+    let p2 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#ff3d3d', antennaPhase: 0 };
+    
+    let terrain = []; 
+    let grassCache = [];
+    let mountains = []; 
+    let objects = []; 
+    let particles = []; 
+    let projectile = null;
+    let weatherSystem = [];
+    let muzzleFlash = { active: false, timer: 0, owner: null };
+    let moveInterval = null;
+    let wind = 0;
+
+    const savedNick = localStorage.getItem('wtm_nickname');
+    if(savedNick) document.getElementById('nickname').value = savedNick;
+    
+    document.getElementById('nickname').addEventListener('input', (e) => {
+        localStorage.setItem('wtm_nickname', e.target.value);
+    });
+
+    // --- UI FUNCTIONS ---
+    function openModal(id) {
+        document.getElementById(id).style.display = 'flex';
+        if(id === 'bp-modal') renderBattlePass();
+    }
+    function closeModal(id) {
+        document.getElementById(id).style.display = 'none';
+    }
+    function renderBattlePass() {
+        const list = document.getElementById('bp-list');
+        document.getElementById('total-wins').innerText = totalWins;
+        list.innerHTML = '';
+        
+        BP_REWARDS.forEach(reward => {
+            const isUnlocked = totalWins >= reward.wins;
+            const div = document.createElement('div');
+            div.className = `bp-item ${isUnlocked ? 'active' : 'locked'}`;
+            
+            div.innerHTML = `
+                <img src="${reward.img}" class="bp-img" alt="Reward">
+                <div class="bp-info">${reward.name}</div>
+                <div class="bp-req">Нужно побед: ${reward.wins}</div>
+                <button class="claim-btn" ${!isUnlocked ? 'disabled' : ''} onclick="getVerificationCode('${reward.name}', ${reward.wins})">
+                    ${isUnlocked ? 'ПОЛУЧИТЬ КОД' : 'ЗАБЛОКИРОВАНО'}
+                </button>
+            `;
+            list.appendChild(div);
+        });
+    }
+    window.getVerificationCode = function(rewardName, wins) {
+        const nick = localStorage.getItem('wtm_nickname') || "Player";
+        const salt = "WTM-ART";
+        const code = `${salt}-${nick.toUpperCase().substr(0,4)}-${wins}-${Math.random().toString(36).substr(2,4).toUpperCase()}`;
+        prompt(`Сделайте скриншот, скопируйте этот код и отправьте материалы в тех поддержку для получения "${rewardName}":`, code);
+    }
+
+    function addWin() {
+        totalWins++;
+        localStorage.setItem('wtm_art_wins', totalWins);
+        console.log("Wins updated:", totalWins);
+    }
+
+    function startGame(mode) {
+        requestFullScreen();
+        GAME.mode = mode;
+        const myNick = document.getElementById('nickname').value || "Player";
+        localStorage.setItem('wtm_nickname', myNick);
+
+        if(mode === 'pve') {
+            GAME.p1Name = myNick;
+            GAME.p2Name = "AI Commander";
+        } else if (mode === 'local') {
+            GAME.p1Name = "Player 1";
+            GAME.p2Name = "Player 2";
+        } else {
+            if(GAME.myId === 1) GAME.p1Name = myNick; 
+            else GAME.p2Name = myNick;
+        }
+
+        document.getElementById('menu-screen').style.display = 'none';
+        document.getElementById('game-wrapper').style.display = 'flex';
+        resize();
+        createGroundPattern();
+
+        if (mode !== 'online' || GAME.myId === 1) {
+            const keys = Object.keys(THEMES);
+            GAME.theme = THEMES[keys[Math.floor(Math.random() * keys.length)]];
+            p1.x = 288; p2.x = 1632; 
+            p1.hp=100; p2.hp=100; p1.fuel=CONSTANTS.maxFuel; p2.fuel=CONSTANTS.maxFuel; 
+            p1.angle=45; p2.angle=45; 
+            generateWorld();
+            randomizeWind();
+        }
+        
+        sunPos = { x: 1920 * 0.5, y: 80 }; 
+        
+        document.getElementById('inp-angle').value = p1.angle;
+        document.getElementById('inp-power').value = p1.power;
+        updateUI();
+        requestAnimationFrame(loop);
+    }
+
+    function createGroundPattern() {
+        const pCanvas = document.createElement('canvas');
+        pCanvas.width = 64; pCanvas.height = 64;
+        const pCtx = pCanvas.getContext('2d');
+        pCtx.fillStyle = '#555'; pCtx.fillRect(0,0,64,64);
+        for(let i=0; i<500; i++) {
+            pCtx.fillStyle = Math.random()>0.5 ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.05)';
+            pCtx.fillRect(Math.random()*64, Math.random()*64, 2, 2);
+        }
+        groundPattern = ctx.createPattern(pCanvas, 'repeat');
+    }
+
+    function generateWorld() {
+        terrain = []; grassCache = [];
+        let baseH = 840 * 0.65; 
+        let s1 = Math.random()*100, s2 = Math.random()*100;
+        
+        for (let i = 0; i < 1920; i++) {
+            let h = baseH + Math.sin((i/250)+s1)*70 + Math.cos((i/60)+s2)*20 + Math.sin(i/15)*5;
+            if(Math.abs(i-p1.x)<60) h = baseH + Math.sin((p1.x/250)+s1)*70 + Math.cos((p1.x/60)+s2)*20;
+            if(Math.abs(i-p2.x)<60) h = baseH + Math.sin((p2.x/250)+s1)*70 + Math.cos((p2.x/60)+s2)*20;
+            terrain.push(h);
+
+            let slope = i>0 ? Math.abs(terrain[i] - terrain[i-1]) : 0;
+            if (i % 2 === 0 && Math.random() > 0.4 && slope < 2 && Math.abs(i-p1.x)>40 && Math.abs(i-p2.x)>40) {
+                grassCache.push({ x: i, h: 8 + Math.random()*12, curve: (Math.random()-0.5)*5 });
+            }
+        }
+
+        mountains = [];
+        let my = 840*0.5;
+        for(let i=0; i<=1920; i+=40) {
+            my += (Math.random()-0.5)*80; my = Math.max(100, Math.min(840*0.7, my));
+            mountains.push({x: i, y: my});
+        }
+
+        objects = [];
+        for(let i=50; i<1920-50; i+=Math.random()*60+60) {
+            if(Math.abs(i-p1.x) < 130 || Math.abs(i-p2.x) < 130) continue;
+            let r = Math.random();
+            let type;
+            if(r < 0.20) type = 'tree';
+            else if(r < 0.35) type = 'rock';
+            else if(r < 0.50) type = 'spruce';
+            else if(r < 0.60) type = 'ruins';
+            else if(r < 0.70) type = 'bunker';
+            else if(r < 0.80) type = 'crate';
+            else if(r < 0.90) type = 'hedgehog';
+            else type = 'dragonteeth';
+            
+            let yL = terrain[Math.max(0, Math.floor(i)-10)] || 0;
+            let yR = terrain[Math.min(1919, Math.floor(i)+10)] || 0;
+            let slope = Math.atan2(yR - yL, 20);
+            
+            let scale = 1.0;
+            if(type==='tree' || type==='spruce') scale = 2.2 + Math.random()*0.8;
+            else if(type==='bunker') scale = 1.3 + Math.random()*0.2;
+            else scale = 0.9 + Math.random()*0.3;
+
+            let hp = type==='bunker'?100:1;
+            
+            objects.push({ x: i, type: type, hp: hp, maxHp: 100, scale: scale, rotation: slope });
+        }
+        
+        weatherSystem = [];
+        if(GAME.theme.weather !== 'none') {
+            for(let i=0; i<250; i++) weatherSystem.push({
+                x: Math.random()*1920, y: Math.random()*840, 
+                s: Math.random()*2+1, v: Math.random()*5+5
+            });
+        }
+    }
+
+    function randomizeWind() {
+        currentWind = Math.floor((Math.random() - 0.5) * 20); 
+        updateWindUI();
+    }
+
+    function updateWindUI() {
+        const arrow = document.getElementById('wind-arrow');
+        const val = document.getElementById('wind-val');
+        arrow.style.transform = `rotate(${currentWind < 0 ? 180 : 0}deg)`;
+        val.innerText = Math.abs(currentWind) + " m/s";
+    }
+
+    function showOnlineMenu() { document.getElementById('online-panel').style.display = 'flex'; if (!peer) initPeer(); }
+    function initPeer() {
+        document.getElementById('connection-status').innerText = "Подключение...";
+        peer = new Peer(); 
+        peer.on('open', id => { document.getElementById('my-peer-id').innerText = id; document.getElementById('connection-status').innerText = "Ожидание..."; });
+        peer.on('connection', c => { 
+            conn = c; 
+            GAME.myId = 1; 
+            document.getElementById('connection-status').innerText = "Игрок найден!"; 
+            setupConn(); 
+        });
+    }
+    function connectToPeer() {
+        const id = document.getElementById('remote-peer-id').value; if(!id) return;
+        conn = peer.connect(id); GAME.myId = 2;
+        conn.on('open', () => { 
+            document.getElementById('connection-status').innerText = "Соединение установлено"; 
+            setupConn();
+            const myNick = document.getElementById('nickname').value || "Guest";
+            conn.send({ type: 'hello', name: myNick });
+        });
+    }
+    function setupConn() { conn.on('data', d => handleData(d)); }
+    function handleData(d) {
+        if(d.type === 'hello') {
+            GAME.p2Name = d.name;
+            const myNick = document.getElementById('nickname').value || "Host";
+            GAME.p1Name = myNick;
+            conn.send({ 
+                type: 'init', 
+                terrain, mountains, objects, grassCache, 
+                themeName: Object.keys(THEMES).find(k => THEMES[k] === GAME.theme), 
+                p1x: p1.x, p2x: p2.x, wind: currentWind,
+                hostName: myNick
+            });
+            startGame('online');
+        }
+        if(d.type === 'init') { 
+            terrain = d.terrain; grassCache = d.grassCache; mountains = d.mountains; objects = d.objects; GAME.theme = THEMES[d.themeName]; p1.x=d.p1x; p2.x=d.p2x; currentWind=d.wind;
+            GAME.p1Name = d.hostName;
+            const myNick = document.getElementById('nickname').value || "Guest";
+            GAME.p2Name = myNick;
+            startGame('online'); 
+        }
+        if(d.type === 'fire') { const t = d.p === 1 ? p1 : p2; t.angle = d.a; t.power = d.pw; performFire(t); }
+        if(d.type === 'move') { 
+            const t = d.p === 1 ? p1 : p2; 
+            t.x = d.x; t.fuel = d.fuel; 
+            updateUI(); 
+        }
+        if(d.type === 'wind') { currentWind = d.w; updateWindUI(); }
+    }
+
+    const inpAngle = document.getElementById('inp-angle'), inpPower = document.getElementById('inp-power'), btnFire = document.getElementById('fire-btn');
+    const btnLeft = document.getElementById('btn-left'), btnRight = document.getElementById('btn-right');
+
+    function updateInputs() {
+        const myTurn = (GAME.mode === 'local') || (GAME.mode === 'pve' && GAME.turn === 1) || (GAME.mode === 'online' && GAME.turn === GAME.myId);
+        const active = !GAME.locked && myTurn;
+        
+        inpAngle.disabled = !active; inpPower.disabled = !active; btnFire.disabled = !active;
+        
+        const currentPlayer = GAME.turn === 1 ? p1 : p2;
+        const canMove = active && currentPlayer.fuel > 0;
+        btnLeft.disabled = !canMove;
+        btnRight.disabled = !canMove;
+
+        if (active) {
+            currentPlayer.angle = parseInt(inpAngle.value);
+            currentPlayer.power = parseInt(inpPower.value);
+        }
+        document.getElementById('val-angle').innerText = currentPlayer.angle + '°';
+        document.getElementById('val-power').innerText = currentPlayer.power + '%';
+    }
+
+    function startMove(dir) {
+        if(GAME.locked) return;
+        const p = GAME.turn === 1 ? p1 : p2;
+        if(p.fuel <= 0) return;
+        
+        if(GAME.mode === 'online' && GAME.turn !== GAME.myId) return;
+        if(GAME.mode === 'pve' && GAME.turn === 2) return;
+
+        if(moveInterval) clearInterval(moveInterval);
+        moveInterval = setInterval(() => {
+            if(p.fuel <= 0) { stopMove(); return; }
+            
+            let newX = p.x + dir * CONSTANTS.moveSpeed;
+            if(newX < 30 || newX > 1920 - 30) return;
+            let other = GAME.turn === 1 ? p2 : p1;
+            if(Math.abs(newX - other.x) < 60) return;
+
+            p.x = newX;
+            p.fuel = Math.max(0, p.fuel - 0.5); 
+            
+            if(GAME.mode === 'online') conn.send({type:'move', p:GAME.myId, x:p.x, fuel:p.fuel});
+            
+            updateUI();
+        }, 16);
+    }
+
+    function stopMove() {
+        if(moveInterval) { clearInterval(moveInterval); moveInterval = null; }
+    }
+
+    function switchTurn() {
+        GAME.turn = GAME.turn === 1 ? 2 : 1; 
+        GAME.locked = false; 
+        const nextPlayer = GAME.turn === 1 ? p1 : p2;
+        inpAngle.value = nextPlayer.angle;
+        inpPower.value = nextPlayer.power;
+        
+        if(GAME.mode !== 'online' || GAME.myId === 1) {
+            randomizeWind();
+            if(GAME.mode === 'online') conn.send({type:'wind', w:currentWind});
+        }
+
+        updateUI();
+
+        if(GAME.mode==='pve' && GAME.turn===2) { 
+            GAME.locked = true; updateInputs(); aiThink(); 
+        }
+    }
+
+    inpAngle.oninput = updateInputs; inpPower.oninput = updateInputs;
+    btnFire.onclick = () => { 
+        const p = GAME.turn === 1 ? p1 : p2; 
+        if(GAME.mode==='online') conn.send({type:'fire', p:GAME.myId, a:p.angle, pw:p.power});
+        performFire(p); 
+    };
+
+    function getGunTip(tank, isLeft) {
+        let x = tank.x;
+        let y = terrain[Math.floor(x)] || 0;
+        
+        let yL = terrain[Math.max(0, Math.floor(x)-15)] || y;
+        let yR = terrain[Math.min(1919, Math.floor(x)+15)] || y;
+        let rot = Math.atan2(yR-yL, 30); 
+
+        // Центр башни (локально -8, -24)
+        let tx_local = -8; 
+        let ty_local = -24;
+        
+        // Pivot (локально от башни)
+        let px_local = 15; 
+        let py_local = -6;
+
+        if (!isLeft) {
+            tx_local *= -1;
+            px_local *= -1;
+        }
+
+        // Поворот векторов на наклон корпуса (Rotation Matrix)
+        let cos = Math.cos(rot);
+        let sin = Math.sin(rot);
+
+        // 1. Позиция башни в мире
+        let turretX = x + (tx_local * cos - ty_local * sin);
+        let turretY = y + (tx_local * sin + ty_local * cos);
+
+        // 2. Позиция пивота в мире
+        let pivotX = turretX + (px_local * cos - py_local * sin);
+        let pivotY = turretY + (px_local * sin + py_local * cos);
+
+        // 3. Кончик ствола
+        let barrelLen = 90;
+        let angleRad = tank.angle * Math.PI / 180;
+        
+        let shotAngle;
+        if(isLeft) {
+             shotAngle = rot - angleRad;
+        } else {
+             // Для P2 угол зеркальный
+             shotAngle = rot + Math.PI + angleRad;
+        }
+
+        let muzzleX = pivotX + Math.cos(shotAngle) * barrelLen;
+        let muzzleY = pivotY + Math.sin(shotAngle) * barrelLen;
+        
+        // Anti-Ground Clip: если дуло ушло под землю (в яме), поднять точку выстрела
+        let groundY = terrain[Math.floor(muzzleX)] || 840;
+        if(muzzleY > groundY - 5) {
+            muzzleY = groundY - 10;
+        }
+
+        return { x: muzzleX, y: muzzleY };
+    }
+
+    function performFire(shooter) {
+        GAME.locked = true; updateInputs();
+        muzzleFlash.active = true; muzzleFlash.timer = 5;
+        muzzleFlash.owner = shooter;
+
+        shooter.antennaPhase = 20;
+        screenShake = 6;
+
+        let isLeft = (shooter === p1);
+        let tip = getGunTip(shooter, isLeft);
+
+        let rad = shooter.angle * Math.PI / 180;
+        let dir = isLeft ? 1 : -1;
+        let force = shooter.power / 4;
+
+        projectile = { x: tip.x, y: tip.y, vx: Math.cos(rad)*force*dir + (currentWind*0.05), vy: -Math.sin(rad)*force };
+        
+        for(let i=0; i<15; i++) particles.push({x:tip.x, y:tip.y, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:20, type:'smoke'});
+    }
+
+    function simulateShot(startPt, angle, power, wind) {
+        let simX = startPt.x;
+        let simY = startPt.y;
+        let rad = angle * Math.PI / 180;
+        let force = power / 4;
+        let dir = -1; // AI is right (P2), shoots left
+        let vx = Math.cos(rad) * force * dir + (wind * 0.05);
+        let vy = -Math.sin(rad) * force;
+        
+        let steps = 0;
+        while(simY < 1000 && steps < 600) {
+            simX += vx;
+            simY += vy;
+            vy += CONSTANTS.gravity;
+            
+            let groundY = terrain[Math.floor(simX)] || 1000;
+            if(simY >= groundY) {
+                return simX;
+            }
+            steps++;
+        }
+        return simX;
+    }
+
+    function aiThink() {
+        const target = p1;
+        const shooter = p2;
+        
+        if(shooter.fuel > 5 && (shooter.x > 1800 || Math.abs(shooter.x - target.x) < 300)) {
+            let moveDir = -1; 
+            if(Math.abs(shooter.x - target.x) < 200) moveDir = 1; 
+            
+            let moveTime = 0;
+            let aiMove = setInterval(() => {
+                let newX = shooter.x + moveDir * CONSTANTS.moveSpeed;
+                if(newX > 30 && newX < 1920 - 30) {
+                    shooter.x = newX;
+                    shooter.fuel -= 0.5;
+                }
+                moveTime++;
+                if(moveTime > 20 || shooter.fuel <= 0) clearInterval(aiMove);
+            }, 16);
+        }
+
+        setTimeout(() => {
+            // 2. Smart Aiming Calculation
+            let bestError = Infinity;
+            let bestAngle = 45;
+            let bestPower = 50;
+            
+            // Critical Fix: AI must calculate from its actual muzzle tip!
+            let tip = getGunTip(shooter, false);
+
+            // Optimization: Start search from reasonable power based on distance
+            let estDist = Math.abs(shooter.x - target.x);
+            let minP = Math.max(20, Math.floor(estDist / 20)); // Heuristic
+
+            for(let a = 15; a <= 85; a += 5) {
+                for(let p = minP; p <= 100; p += 5) {
+                    let impactX = simulateShot(tip, a, p, currentWind);
+                    let error = Math.abs(impactX - target.x);
+                    
+                    if(error < bestError) {
+                        bestError = error;
+                        bestAngle = a;
+                        bestPower = p;
+                    }
+                }
+            }
+
+            let errorFactor = (Math.random() - 0.5) * 3; 
+            let finalAngle = Math.floor(bestAngle + (Math.random()-0.5)*2);
+            let finalPower = Math.floor(bestPower + errorFactor);
+            
+            let steps = 40; 
+            let currentStep = 0;
+            let startA = shooter.angle;
+            let startP = shooter.power;
+            
+            let aimInterval = setInterval(() => {
+                currentStep++;
+                let progress = currentStep / steps;
+                shooter.angle = Math.floor(startA + (finalAngle - startA) * progress);
+                shooter.power = Math.floor(startP + (finalPower - startP) * progress);
+                
+                inpAngle.value = shooter.angle;
+                inpPower.value = shooter.power;
+                document.getElementById('val-angle').innerText = shooter.angle + '°';
+                document.getElementById('val-power').innerText = shooter.power + '%';
+                
+                if(currentStep >= steps) {
+                    clearInterval(aimInterval);
+                    setTimeout(() => { performFire(shooter); }, 400);
+                }
+            }, 30); 
+        }, 1200);
+    }
+
+    function checkHit(x, y) {
+        screenShake = 15;
+        let hit = false;
+        
+        [p1, p2].forEach(p => {
+            let d = Math.sqrt((x-p.x)**2 + (y-terrain[Math.floor(p.x)])**2);
+            if(d < 60) {
+                let dmg = Math.floor((1 - d/60)*50);
+                p.hp = Math.max(0, p.hp - dmg);
+                hit = true;
+                for(let i=0; i<15; i++) particles.push({x:p.x, y:terrain[Math.floor(p.x)]-10, vx:Math.random()*10-5, vy:-Math.random()*10, life:40, type:'spark', color:'orange'});
+            }
+        });
+
+        objects.forEach(o => {
+            if(o.hp <= 0) return;
+            let oy = terrain[Math.floor(o.x)];
+            let d = Math.sqrt((x-o.x)**2 + (y-oy)**2);
+            if(d < 50) {
+                o.hp -= 50; 
+                if(o.hp <= 0) {
+                     for(let i=0; i<20; i++) particles.push({x:o.x, y:oy-10, vx:Math.random()*6-3, vy:-Math.random()*5, life:50, type:'debris', color:'#7f8c8d'});
+                }
+            }
+        });
+
+        grassCache = grassCache.filter(g => {
+            let d = Math.sqrt((g.x - x)**2 + (terrain[g.x] - y)**2);
+            return d > 35; 
+        });
+
+        updateUI();
+        if(p1.hp<=0 || p2.hp<=0) {
+            let winnerText = p1.hp>0 ? GAME.p1Name+" ПОБЕДИЛ!" : GAME.p2Name+" ПОБЕДИЛ!";
+            
+            // LOGIC TO ADD WIN
+            if(GAME.mode === 'pve') {
+                if(p1.hp > 0) addWin();
+            } else if (GAME.mode === 'online') {
+                if((GAME.myId === 1 && p1.hp > 0) || (GAME.myId === 2 && p2.hp > 0)) {
+                    addWin();
+                }
+            }
+
+            setTimeout(() => { alert(winnerText); location.reload(); }, 500);
+        }
+        else { switchTurn(); }
+    }
+    
+    function updateUI() {
+        document.getElementById('name-p1').innerText = GAME.p1Name;
+        document.getElementById('name-p2').innerText = GAME.p2Name;
+
+        document.getElementById('hp-p1').style.width = p1.hp + '%'; document.getElementById('hp-txt-1').innerText = p1.hp;
+        document.getElementById('hp-p2').style.width = p2.hp + '%'; document.getElementById('hp-txt-2').innerText = p2.hp;
+        
+        document.getElementById('fuel-p1').style.width = (p1.fuel / CONSTANTS.maxFuel * 100) + '%';
+        document.getElementById('fuel-p2').style.width = (p2.fuel / CONSTANTS.maxFuel * 100) + '%';
+
+        let msg = GAME.mode === 'local' ? `Ход: ${GAME.turn===1 ? GAME.p1Name : GAME.p2Name}` : (GAME.turn === GAME.myId ? "ВАШ ХОД" : "ХОД ВРАГА");
+        document.getElementById('turn-msg').innerText = msg;
+        document.getElementById('turn-msg').style.borderBottomColor = GAME.turn===1 ? '#00e5ff' : '#ff3d3d';
+        updateInputs();
+    }
+
+    function loop() {
+        let ShakeX = 0, ShakeY = 0;
+        if(screenShake > 0) {
+            ShakeX = (Math.random()-0.5)*screenShake; ShakeY = (Math.random()-0.5)*screenShake;
+            screenShake *= 0.9; if(screenShake < 0.5) screenShake = 0;
+        }
+
+        ctx.setTransform(1,0,0,1, ShakeX, ShakeY);
+        ctx.clearRect(0,0,1920, 840);
+        
+        if(!GAME.theme) return requestAnimationFrame(loop);
+
+        time += 0.05;
+        wind = Math.sin(time*0.5 + currentWind)*2; 
+
+        [p1, p2].forEach(p => { if(p.antennaPhase > 0) p.antennaPhase *= 0.9; });
+
+        drawSky();
+        drawMountains();
+        drawTerrain();
+        drawObjects();
+        drawPzH2000(p1, true);
+        drawPzH2000(p2, false);
+        drawFX();
+        drawProjectile();
+
+        requestAnimationFrame(loop);
+    }
+
+    function drawSky() {
+        let grd = ctx.createLinearGradient(0,0,0,840);
+        grd.addColorStop(0, GAME.theme.skyTop); grd.addColorStop(1, GAME.theme.skyBot);
+        ctx.fillStyle = grd; ctx.fillRect(0,0,1920, 840);
+        
+        sunPos.x = 1920 * 0.5;
+        ctx.shadowBlur = 50; ctx.shadowColor = GAME.theme.sunGlow;
+        ctx.fillStyle = GAME.theme.sunColor;
+        ctx.beginPath(); ctx.arc(sunPos.x, sunPos.y, 40, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+    }
+
+    function drawMountains() {
+        ctx.fillStyle = GAME.theme.mountainColor;
+        ctx.beginPath(); ctx.moveTo(0, 840);
+        mountains.forEach((m, i) => { ctx.lineTo(m.x, m.y); });
+        ctx.lineTo(1920, 840); ctx.fill();
+    }
+
+    function drawTerrain() {
+        ctx.fillStyle = GAME.theme.groundColor;
+        ctx.beginPath(); ctx.moveTo(0, 840);
+        terrain.forEach((y, x) => ctx.lineTo(x, y));
+        ctx.lineTo(1920, 840); ctx.fill();
+        
+        if(groundPattern) { ctx.fillStyle = groundPattern; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1.0; }
+
+        ctx.fillStyle = GAME.theme.grassColor;
+        ctx.beginPath(); ctx.moveTo(0, 840);
+        terrain.forEach((y, x) => ctx.lineTo(x, y));
+        ctx.lineTo(1920, 840); ctx.lineTo(1920, 940); ctx.lineTo(0, 940);
+        ctx.save(); ctx.clip(); ctx.fillRect(0,0,1920, 840); ctx.restore();
+
+        ctx.lineWidth = 1;
+        grassCache.forEach(g => {
+            let y = terrain[g.x];
+            if (!y) return;
+            
+            let grad = ctx.createLinearGradient(0, y, 0, y-g.h);
+            grad.addColorStop(0, GAME.theme.grassColor);
+            grad.addColorStop(1, GAME.theme.grassLight);
+            ctx.strokeStyle = grad;
+
+            ctx.beginPath();
+            ctx.moveTo(g.x, y);
+            ctx.quadraticCurveTo(g.x + g.curve + wind, y - g.h/2, g.x + g.curve*2 + wind, y - g.h);
+            ctx.stroke();
+        });
+    }
+
+    function drawObjects() {
+        objects.forEach(o => {
+            if(o.hp <= 0) return;
+            let x = Math.floor(o.x); if(x<0||x>=terrain.length) return;
+            let y = terrain[x];
+            
+            if(o.type !== 'tree' && o.type !== 'spruce') {
+                ctx.save(); 
+                let skew = (x - sunPos.x) / 300; 
+                ctx.translate(x, y+2); 
+                ctx.transform(1, 0, skew, 0.3, 0, 0); 
+                ctx.fillStyle = 'rgba(0,0,0,0.2)';
+                ctx.beginPath(); 
+                if(o.type==='crate') ctx.fillRect(-12, -24, 24, 24);
+                else if(o.type==='hedgehog') ctx.fillRect(-10, -15, 20, 15);
+                else if(o.type==='dragonteeth') ctx.fillRect(-12, -20, 24, 20);
+                else ctx.ellipse(0, -5, 15, 8, 0, 0, Math.PI*2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            ctx.save();
+            ctx.translate(x, y + 4); 
+            ctx.rotate(o.rotation); 
+            ctx.scale(o.scale, o.scale);
+
+            if(o.type === 'bunker') {
+                ctx.fillStyle = '#7f8c8d'; ctx.beginPath(); ctx.arc(0, 0, 30, Math.PI, 0); ctx.fill(); 
+                ctx.fillStyle = '#000'; ctx.fillRect(-12, -18, 24, 5); 
+            } 
+            else if (o.type === 'ruins') {
+                ctx.fillStyle = '#795548'; ctx.fillRect(-15, -30, 10, 30); ctx.fillRect(0, -20, 15, 20);
+                ctx.strokeStyle = '#3e2723'; ctx.beginPath(); ctx.moveTo(-10, -25); ctx.lineTo(-12, -15); ctx.stroke();
+            }
+            else if (o.type === 'crate') {
+                ctx.fillStyle = '#d35400'; ctx.fillRect(-12, -24, 24, 24);
+                ctx.strokeStyle = '#a04000'; ctx.lineWidth=2; ctx.strokeRect(-12,-24,24,24);
+                ctx.beginPath(); ctx.moveTo(-12,-24); ctx.lineTo(12,0); ctx.moveTo(12,-24); ctx.lineTo(-12,0); ctx.stroke();
+            }
+            else if (o.type === 'hedgehog') {
+                ctx.strokeStyle = '#2f3640'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(-10, -15); ctx.lineTo(10, 0); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(10, -15); ctx.lineTo(-10, 0); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 0); ctx.stroke();
+            }
+            else if (o.type === 'dragonteeth') {
+                ctx.fillStyle = '#95a5a6'; 
+                ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.lineTo(0, -25); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.2)'; 
+                ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(10, 0); ctx.lineTo(0,0); ctx.fill();
+            }
+            else if (o.type === 'tree') {
+                ctx.rotate(-o.rotation * 0.7);
+                ctx.fillStyle = '#3e2723'; ctx.fillRect(-4, -15, 8, 15);
+                ctx.fillStyle = GAME.theme.grassColor; 
+                ctx.beginPath(); ctx.arc(0, -25, 15, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(-10, -18, 12, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(10, -18, 12, 0, Math.PI*2); ctx.fill();
+            }
+            else if (o.type === 'spruce') {
+                ctx.rotate(-o.rotation * 0.8);
+                ctx.fillStyle = '#3e2723'; 
+                ctx.fillRect(-3, -10, 6, 10);
+                
+                if(GAME.theme.weather === 'snow') {
+                    ctx.fillStyle = '#dcdde1';
+                } else {
+                    ctx.fillStyle = '#1b5e20';
+                }
+                ctx.beginPath(); ctx.moveTo(0, -60); ctx.lineTo(15, -10); ctx.lineTo(-15, -10); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(0, -50); ctx.lineTo(12, -25); ctx.lineTo(-12, -25); ctx.fill();
+                ctx.beginPath(); ctx.moveTo(0, -40); ctx.lineTo(10, -40); ctx.lineTo(-10, -40); ctx.fill();
+            }
+            else if (o.type === 'rock') {
+                ctx.fillStyle = '#636e72'; 
+                ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-10,-15); ctx.lineTo(5,-20); ctx.lineTo(20,-5); ctx.lineTo(10,0); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.moveTo(-10,-15); ctx.lineTo(5,-20); ctx.lineTo(0,-10); ctx.fill();
+            }
+            ctx.restore();
+        });
+    }
+
+    function drawWheel(x, y, r) {
+        ctx.fillStyle = '#2d3436'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = '#636e72'; ctx.beginPath(); ctx.arc(x, y, r*0.6, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, y, r*0.2, 0, Math.PI*2); ctx.fill(); 
+    }
+
+    function drawPzH2000(t, isLeft) {
+        let x = t.x; 
+        let xIdx = Math.max(0, Math.min(1919, Math.floor(x)));
+        let y = terrain[xIdx] || 0;
+        let yL = terrain[Math.max(0,xIdx-15)]||y, yR = terrain[Math.min(1919,xIdx+15)]||y;
+        let rot = Math.atan2(yR-yL, 30);
+        
+        ctx.save(); ctx.translate(x, y); ctx.rotate(rot); if(!isLeft) ctx.scale(-1,1);
+        
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(0, -2, 35, 6, 0, 0, Math.PI*2); ctx.fill();
+
+        ctx.fillStyle = '#1e1e1e'; ctx.fillRect(-28, -14, 56, 14); 
+        ctx.fillStyle = '#2d3436'; for(let i=-28; i<28; i+=3) ctx.fillRect(i, -14, 2, 14);
+
+        ctx.fillStyle = '#636e72'; 
+        ctx.beginPath(); 
+        for(let i=0; i<8; i++) { let a=i/8*Math.PI*2; ctx.lineTo(-24+Math.cos(a)*6, -7+Math.sin(a)*6); } 
+        ctx.fill();
+
+        drawWheel(24, -7, 5);
+        for(let i=-16; i<=16; i+=8) drawWheel(i, -6, 4.5);
+
+        let grad = ctx.createLinearGradient(0,-30,0,-10); grad.addColorStop(0, t.color); grad.addColorStop(1, '#2c3e50');
+        ctx.save();
+        ctx.beginPath(); ctx.moveTo(-35, -14); ctx.lineTo(35, -14); ctx.lineTo(30, -26); ctx.lineTo(-35, -24); ctx.clip();
+        ctx.fillStyle = grad; ctx.fill();
+        ctx.fillStyle = 'rgba(0,0,0,0.4)'; for(let i=-30; i<-10; i+=4) ctx.fillRect(i, -24, 2, 8); 
+        ctx.restore();
+        
+        ctx.save(); ctx.translate(-8, -24);
+            
+            ctx.save(); 
+            ctx.translate(15, -6); 
+            ctx.rotate(-t.angle * Math.PI / 180);
+                
+                ctx.fillStyle = '#34495e'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill(); 
+                ctx.fillStyle = '#7f8c8d'; ctx.fillRect(0, -5, 30, 10); 
+                ctx.fillRect(30, -3.5, 45, 7); 
+                ctx.fillStyle = '#555'; ctx.fillRect(45, -4, 8, 8); 
+                ctx.fillStyle = '#2c3e50'; ctx.fillRect(75, -5, 12, 10); 
+                
+                if(muzzleFlash.active && muzzleFlash.owner === t) {
+                    let f = muzzleFlash.timer;
+                    ctx.fillStyle = `rgba(255, 200, 50, ${f/5})`;
+                    ctx.shadowBlur = 30; ctx.shadowColor = 'orange';
+                    ctx.beginPath(); ctx.arc(90, 0, 20+Math.random()*15, 0, Math.PI*2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                    muzzleFlash.timer--; if(muzzleFlash.timer<=0) muzzleFlash.active = false;
+                }
+            ctx.restore();
+
+            ctx.fillStyle = grad; 
+            ctx.beginPath(); ctx.moveTo(-28, 0); ctx.lineTo(22, 0); ctx.lineTo(18, -20); ctx.lineTo(-30, -18); ctx.fill();
+            
+            ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.moveTo(-30, -5); ctx.lineTo(-38, -5); ctx.lineTo(-38, -15); ctx.lineTo(-30, -15); ctx.stroke();
+
+            ctx.fillStyle = '#1e272e'; ctx.fillRect(10, -18, 6, 4); 
+            ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(-10, -18, 10, 2); 
+
+            ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth=1; 
+            let antSway = Math.sin(time*5 + (t.antennaPhase||0))* (t.antennaPhase||0);
+            ctx.beginPath(); ctx.moveTo(-25,-18); ctx.quadraticCurveTo(-25+antSway, -40, -25+antSway*2, -55); ctx.stroke();
+
+        ctx.restore();
+        ctx.restore();
+    }
+
+    function drawProjectile() {
+        if(!projectile) return;
+        ctx.fillStyle = '#fff'; ctx.shadowBlur=15; ctx.shadowColor='#f1c40f';
+        ctx.beginPath(); ctx.arc(projectile.x, projectile.y, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        projectile.x += projectile.vx; projectile.y += projectile.vy; projectile.vy += CONSTANTS.gravity;
+        if(Math.random()>0.5) particles.push({x:projectile.x, y:projectile.y, vx:0, vy:0, life:15, type:'smoke', color:'rgba(200,200,200,0.5)'});
+
+        let px = Math.floor(projectile.x);
+        if(px >= 0 && px < 1920) {
+             let groundY = terrain[px];
+             if(projectile.y >= groundY) {
+                 for(let i=0; i<25; i++) particles.push({x:projectile.x, y:projectile.y, vx:(Math.random()-0.5)*12, vy:(Math.random()-0.5)*12, life:35, type:'fire'});
+                 for(let i=px-30; i<px+30; i++) if(i>=0 && i<1920) { 
+                     let d=Math.abs(i-px); let dep=Math.sqrt(900-d*d)*0.9; 
+                     terrain[i]+=dep; 
+                 }
+                 checkHit(projectile.x, projectile.y); 
+                 projectile = null;
+             }
+        }
+        
+        if(projectile && (projectile.x < -100 || projectile.x > 2020 || projectile.y > 1200)) {
+            projectile = null; switchTurn();
+        }
+    }
+
+    function drawFX() {
+        if(weatherSystem.length > 0) {
+            ctx.fillStyle = GAME.theme.weather==='rain' ? 'rgba(174, 194, 224, 0.4)' : 'rgba(255,255,255,0.6)';
+            weatherSystem.forEach(p => {
+                ctx.beginPath();
+                if(GAME.theme.weather==='rain') ctx.fillRect(p.x, p.y, 1, p.v*1.5);
+                else ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
+                ctx.fill();
+                p.y += p.v; p.x -= 1; if(p.y > 840) { p.y = -10; p.x = Math.random()*1920; }
+            });
+        }
+        for(let i=particles.length-1; i>=0; i--) {
+            let p = particles[i]; ctx.save(); ctx.globalAlpha = p.life / 30;
+            if(p.type==='fire') { ctx.fillStyle = `rgb(255, ${Math.floor(p.life*8)}, 0)`; ctx.beginPath(); ctx.arc(p.x, p.y, p.life/2, 0, Math.PI*2); ctx.fill(); } 
+            else if (p.type==='debris') { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 4, 4); p.vy += 0.5; } 
+            else if (p.type==='spark') { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 2, 2); } 
+            else { ctx.fillStyle = p.color || '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 15-p.life/3, 0, Math.PI*2); ctx.fill(); }
+            ctx.restore(); p.x += p.vx; p.y += p.vy; p.life--; if(p.life <= 0) particles.splice(i, 1);
+        }
+    }
+
+</script>
+</body>
+</html>
