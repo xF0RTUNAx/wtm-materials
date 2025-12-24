@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -6,7 +8,7 @@
     <title>Артиллерийская Дуэль</title>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script> 
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
     <style>
@@ -685,7 +687,15 @@
 
 <script>
 
- 
+ // ==========================================
+    // НАСТРОЙКИ SUPABASE
+    // ==========================================
+    const SUPABASE_URL = 'https://lvxrmlpcxxarhyxuktsd.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx2eHJtbHBjeHhhcmh5eHVrdHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MDI4MTgsImV4cCI6MjA4MjE3ODgxOH0.QqkSrgYtdpXhq1twn8QBncbEuA3-FRQcIPlk15JGGV4';
+    // ==========================================
+
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let channel = null; // Канал связи
 
     const app = document.getElementById('app-root');
     const canvas = document.getElementById('gameCanvas');
@@ -812,7 +822,6 @@ const THEMES = {
   
     const CONSTANTS = { gravity: 0.4, moveSpeed: 1.5, maxFuel: 200 }; // ТОПЛИВО теперь 200
     let GAME = { mode: 'pve', turn: 1, locked: false, myId: 1, theme: null, p1Name: 'Player 1', p2Name: 'Player 2', turnCount: 0 };
-    let peer = null, conn = null;
     let time = 0; 
     let sunPos = { x: 0, y: 0 }; 
     let currentWind = 0; 
@@ -953,7 +962,7 @@ const THEMES = {
         
         // Отправка
         if (conn && conn.open) {
-            conn.send({ type: 'emote', val: symbol, p: GAME.myId });
+            sendData({ type: 'emote', val: symbol, p: GAME.myId });
         }
     }
 
@@ -1210,113 +1219,92 @@ const THEMES = {
         val.innerText = Math.abs(currentWind) + " m/s";
     }
 
-    function showOnlineMenu() { document.getElementById('online-panel').style.display = 'flex'; if (!peer) initPeer(); }
-    
-   function initPeer() {
-        document.getElementById('connection-status').innerText = "Настройка сети...";
+   
+    // --- НОВЫЕ ФУНКЦИИ ОНЛАЙНА (SUPABASE) ---
+
+    // 1. Показать меню и сразу создать комнату
+    function showOnlineMenu() {
+        document.getElementById('online-panel').style.display = 'flex';
+        // Генерируем случайный код (например, 4521)
+        const randomCode = Math.floor(1000 + Math.random() * 9000);
+        document.getElementById('my-peer-id').innerText = randomCode;
+        document.getElementById('connection-status').innerText = "Ожидание соперника...";
         
-        peer = new Peer(null, {
-            debug: 1, // Меньше мусора в консоли
-            config: {
-                iceServers: [
-                    { urls: 'stun:stun.l.google.com:19302' },
-                    { urls: 'stun:stun1.l.google.com:19302' },
-                    { urls: 'stun:stun2.l.google.com:19302' },
-                    { urls: 'stun:stun3.l.google.com:19302' },
-                    { urls: 'stun:stun4.l.google.com:19302' }
-                ],
-                iceCandidatePoolSize: 10, // Готовим 10 вариантов подключения заранее
-            }
-        });
-
-        peer.on('open', id => { 
-            document.getElementById('my-peer-id').innerText = id; 
-            document.getElementById('connection-status').innerText = "Готов (4G Mode)"; 
-            document.getElementById('connection-status').style.color = "#2ecc71";
-        });
-
-        peer.on('error', err => {
-            console.error("Peer Error:", err);
-            let msg = "Ошибка сети";
-            if (err.type === 'peer-unavailable') msg = "Игрок не найден";
-            if (err.type === 'disconnected') msg = "Разрыв связи";
-            
-            document.getElementById('connection-status').innerText = msg;
-            document.getElementById('connection-status').style.color = "red";
-            
-            // Авто-реконнект для мобилок
-            if(['network', 'disconnected', 'server-error', 'socket-error'].includes(err.type)) {
-                setTimeout(() => { if (!peer.destroyed) peer.reconnect(); }, 2000);
-            }
-        });
-
-        peer.on('connection', c => { 
-            // Принимаем входящее и сразу настраиваем
-            conn = c;
-            GAME.myId = 1; 
-            document.getElementById('connection-status').innerText = "Соединение..."; 
-            setupConn(); 
-        });
+        // Подписываемся на этот канал как Хост
+        joinChannel(randomCode, 1);
     }
 
-    function connectToPeer() {
+    // 2. Подключение к другу (ввод кода)
+    async function connectToPeer() {
         const input = document.getElementById('remote-peer-id');
-        const id = input.value.trim(); 
-        if(!id) { alert("Введите ID!"); return; }
+        const code = input.value.trim();
+        if(!code) { alert("Введите код!"); return; }
         
-        document.getElementById('connection-status').innerText = "Пробиваем NAT...";
-        document.getElementById('connection-status').style.color = "yellow";
+        document.getElementById('connection-status').innerText = "Подключение...";
         
-        // ВАЖНО: 'json' работает стабильнее на мобилках чем 'binary'
-        conn = peer.connect(id, {
-            reliable: true,
-            serialization: 'json' 
-        });
-
-        conn.on('error', (err) => {
-             document.getElementById('connection-status').innerText = "Сбой соединения";
-             document.getElementById('connection-status').style.color = "red";
-        });
-        
-        // Ждем пока канал реально откроется
-        conn.on('open', () => { 
-            document.getElementById('connection-status').innerText = "Успех!"; 
-            document.getElementById('connection-status').style.color = "#2ecc71";
-            setupConn();
-            
-            // НЕБОЛЬШАЯ ЗАДЕРЖКА перед отправкой данных (дает каналу стабилизироваться)
-            setTimeout(() => {
-                const myNick = document.getElementById('nickname').value || "Guest";
-                conn.send({ type: 'hello', name: myNick });
-            }, 500);
-        });
+        // Подписываемся на канал как Гость
+        joinChannel(code, 2);
     }
 
-   function setupConn() { 
-        // --- HEARTBEAT (Чтобы 4G не разрывал связь) ---
-        // Запускаем таймер, который каждые 2 секунды шлет пустой пакет
-        if(window.pingInterval) clearInterval(window.pingInterval);
-        window.pingInterval = setInterval(() => {
-            if(conn && conn.open) {
-                conn.send({ type: 'ping' });
-            }
-        }, 2000);
-        // ---------------------------------------------
+    // 3. Общая функция входа в канал (ОБНОВЛЕННАЯ)
+    function joinChannel(roomID, playerId) {
+        GAME.myId = playerId;
 
-        conn.on('data', d => {
-            // Игнорируем пинги
-            if(d.type === 'ping') return;
-            handleData(d);
+        // Если уже были подписаны — отписываемся, чтобы не плодить подключения
+        if (channel) supabase.removeChannel(channel);
+
+        // Создаем канал с настройкой Presence (чтобы видеть список людей)
+        channel = supabase.channel('room_' + roomID, {
+            config: {
+                presence: {
+                    key: playerId.toString(), // Наш ID в списке присутствующих
+                },
+            },
         });
-        
-        conn.on('close', () => { 
-            document.getElementById('disconnect-modal').style.display = 'flex'; 
-            if(window.pingInterval) clearInterval(window.pingInterval);
-        });
-        conn.on('error', () => { 
-            document.getElementById('disconnect-modal').style.display = 'flex';
-            if(window.pingInterval) clearInterval(window.pingInterval);
-        });
+
+        channel
+            // Слушаем игровые данные
+            .on('broadcast', { event: 'game-data' }, ({ payload }) => {
+                handleData(payload);
+            })
+            // Слушаем изменения списка людей (кто-то пришел или ушел)
+            .on('presence', { event: 'sync' }, () => {
+                const state = channel.presenceState();
+                const users = Object.keys(state);
+                
+                // ЛОГИКА ОТКЛЮЧЕНИЯ:
+                // Если мы уже знаем имя второго игрока (значит игра началась), 
+                // но в комнате осталось меньше 2 человек — значит, соперник вышел.
+                if (GAME.p2Name !== 'Player 2' && users.length < 2) {
+                     document.getElementById('disconnect-modal').style.display = 'flex';
+                }
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    // ВАЖНО: Сообщаем серверу, что "Я здесь"
+                    await channel.track({ online_at: new Date().toISOString() });
+
+                    if (playerId === 2) {
+                        document.getElementById('connection-status').innerText = "Успех!";
+                        // Гость отправляет приветствие с небольшой задержкой
+                        setTimeout(() => {
+                            const myNick = document.getElementById('nickname').value || "Guest";
+                            sendData({ type: 'hello', name: myNick });
+                        }, 500);
+                    }
+                }
+            });
+    }
+
+    // 4. Функция отправки (Вместо conn.send)
+    function sendData(data) {
+        if (channel) {
+            channel.send({
+                type: 'broadcast',
+                event: 'game-data',
+                payload: data
+            });
+        }
     }
     
     function handleData(d) {
@@ -1326,7 +1314,7 @@ const THEMES = {
             GAME.p1Name = myNick;
             GAME.myId = 1;
             initGameWorld(); 
-            conn.send({ 
+            sendData({ 
                 type: 'init', 
                 terrain, bgLayers, clouds, undergroundObjects, objects, grassCache, 
                 themeName: Object.keys(THEMES).find(k => THEMES[k] === GAME.theme), 
@@ -1413,7 +1401,7 @@ const THEMES = {
             if(GAME.mode === 'online' && GAME.turn === GAME.myId) {
                 const now = Date.now();
                 if(now - lastAimTime > 50) {
-                    conn.send({type: 'aim', p: GAME.myId, a: currentPlayer.angle, pw: currentPlayer.power});
+                    sendData({type: 'aim', p: GAME.myId, a: currentPlayer.angle, pw: currentPlayer.power});
                     lastAimTime = now;
                 }
             }
@@ -1457,12 +1445,12 @@ const THEMES = {
             crates.forEach((c, idx) => {
                 if(Math.abs(p.x - c.x) < 40) {
                     applyBonus(p, c.type);
-                    if(GAME.mode === 'online') conn.send({type:'collectCrate', idx: idx, p: GAME.myId});
+                    if(GAME.mode === 'online') sendData({type:'collectCrate', idx: idx, p: GAME.myId});
                     crates.splice(idx, 1);
                 }
             });
             
-            if(GAME.mode === 'online') conn.send({type:'move', p:GAME.myId, x:p.x, fuel:p.fuel});
+            if(GAME.mode === 'online') sendData({type:'move', p:GAME.myId, x:p.x, fuel:p.fuel});
             updateUI();
         }, 16);
     }
@@ -1487,13 +1475,13 @@ const THEMES = {
                  let pool = ['hp', 'fuel', 'doubleDamage', 'aps'];
                  let type = pool[Math.floor(Math.random() * pool.length)];
                  crates.push({ x: cx, y: terrain[cx], type: type, pY: -50 });
-                 if(GAME.mode === 'online') conn.send({type:'spawnCrate', x: cx, bonus: type});
+                 if(GAME.mode === 'online') sendData({type:'spawnCrate', x: cx, bonus: type});
              }
         }
         
         if(GAME.mode !== 'online' || GAME.myId === 1) {
             randomizeWind();
-            if(GAME.mode === 'online') conn.send({type:'wind', w:currentWind});
+            if(GAME.mode === 'online') sendData({type:'wind', w:currentWind});
         }
 
         updateUI();
@@ -1505,7 +1493,7 @@ const THEMES = {
     inpAngle.oninput = updateInputs; inpPower.oninput = updateInputs;
     btnFire.onclick = () => { 
         const p = GAME.turn === 1 ? p1 : p2; 
-        if(GAME.mode==='online') conn.send({type:'fire', p:GAME.myId, a:p.angle, pw:p.power});
+        if(GAME.mode==='online') sendData({type:'fire', p:GAME.myId, a:p.angle, pw:p.power});
         performFire(p); 
     };
 
@@ -2088,6 +2076,13 @@ function drawObjects() {
         window.Telegram.WebApp.ready();
         window.Telegram.WebApp.expand(); 
     }
+    
+    // === ОЧИСТКА ПРИ ЗАКРЫТИИ ВКЛАДКИ ===
+    window.addEventListener('beforeunload', () => {
+        if (channel) {
+            supabase.removeChannel(channel);
+        }
+    });
     
 </script>
 </body>
