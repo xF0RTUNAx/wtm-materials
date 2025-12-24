@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Артиллерийская Дуэль WTM</title>
+    <title>Артиллерийская Дуэль WTM: Polished Edition</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     
@@ -29,7 +29,6 @@
         /* Глобальный запрет жестов для игры */
         * { box-sizing: border-box; user-select: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
         
-        /* ВАЖНО: Разрешаем вертикальный скролл для контента внутри модальных окон и ВСЕХ их дочерних элементов */
         .bp-list, .bp-list *, 
         .info-content, .info-content * {
             touch-action: pan-y !important;
@@ -164,8 +163,6 @@
         .bp-list {
             flex: 1; overflow-y: auto; padding: 30px;
             display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-            
-            /* Скролл fix */
             -webkit-overflow-scrolling: touch;
         }
         .bp-item {
@@ -175,7 +172,8 @@
         }
         .bp-item.locked { opacity: 0.5; filter: grayscale(1); }
         .bp-item.active { border-color: #2ecc71; background: linear-gradient(180deg, #2b2b2b, #203525); }
-        .bp-img { width: 100%; height: 150px; object-fit: contain; margin-bottom: 15px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));}
+        .bp-img { width: 100%; height: 100px; object-fit: contain; margin-bottom: 10px; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.5));}
+        .bp-emoji-display { font-size: 4rem; margin-bottom: 10px; text-shadow: 0 0 20px rgba(255,255,255,0.5); }
         .bp-info { font-size: 1.2rem; margin-bottom: 10px; color: #fff; font-weight: 800; text-transform: uppercase;}
         .bp-req { font-size: 1rem; color: var(--accent); margin-bottom: 20px; }
         .claim-btn {
@@ -297,6 +295,25 @@
             padding: 20px 80px; display: flex; flex-direction: column; justify-content: center; gap: 25px; 
             z-index: 20; position: relative;
         }
+        
+        /* ПАНЕЛЬ ЭМОДЗИ (НОВОЕ) */
+        #emoji-bar {
+            position: absolute; bottom: 250px; left: 50%; transform: translateX(-50%);
+            display: none; gap: 10px; z-index: 60;
+            background: rgba(0,0,0,0.5); padding: 5px 15px; border-radius: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            overflow-x: auto; max-width: 90%; white-space: nowrap;
+            scrollbar-width: none; 
+        }
+        #emoji-bar::-webkit-scrollbar { display: none; }
+        
+        .emoji-btn {
+            background: none; border: none; font-size: 2rem; cursor: pointer;
+            transition: transform 0.1s; padding: 0 5px;
+        }
+        .emoji-btn:hover { transform: scale(1.2); }
+        .emoji-btn:active { transform: scale(0.9); }
+
         .sliders-row { display: flex; gap: 60px; justify-content: space-between; align-items: center; }
         .slider-group { flex: 1; }
         .slider-header { display: flex; justify-content: space-between; color: #95a5a6; font-weight: 700; font-size: 1.4rem; margin-bottom: 10px; text-transform: uppercase; }
@@ -369,6 +386,9 @@
                 font-size: 1rem;
             }
             #turn-msg { top: 40px; font-size: 0.9rem; padding: 4px 15px; }
+            
+            /* Панель эмодзи в ландшафте */
+            #emoji-bar { bottom: 140px; max-width: 60%; }
 
             /* ИСПРАВЛЕНИЕ: Делаем окно БП на весь экран мобильного */
             .modal-container {
@@ -561,7 +581,14 @@
                     <div class="info-section">
                         <div class="info-h">🌪 ВЕТЕР И ТОПЛИВО</div>
                         <p class="info-p"><b>ВЕТЕР:</b> Следите за индикатором! Он сносит снаряд. Попутный ветер добавляет мощности, а против - наоборот.</p>
-                        <p class="info-p"><b>ТОПЛИВО:</b> его достаточно мало. Используйте для необходимых маневров стрелочками.</p>
+                        <p class="info-p"><b>ТОПЛИВО:</b> Запас ограничен. Используйте для маневров с умом.</p>
+                    </div>
+                    <div class="info-section">
+                        <div class="info-h">📦 ВОЗДУШНЫЕ ПРИПАСЫ</div>
+                        <p class="info-p">Каждые 2 хода падают припасы:</p>
+                        <p class="info-p">❤️ <b>+30 HP</b> | ⛽ <b>Полный Бак</b></p>
+                        <p class="info-p">⚔️ <b>2x DAMAGE:</b> Следующий выстрел нанесет двойной урон!</p>
+                        <p class="info-p"><b>КАЗ:</b> Комплекс активной защиты. Отразит следующее прямое попадание.</p>
                     </div>
                     <div class="info-section">
                         <div class="info-h">🌐 ОНЛАЙН</div>
@@ -596,6 +623,8 @@
             </div>
 
             <div id="controls-area">
+                <div id="emoji-bar"></div>
+
                 <div class="sliders-row">
                     <div class="slider-group">
                         <div class="slider-header"><i class="fas fa-crosshairs"></i> Угол <span class="slider-val" id="val-angle">45°</span></div>
@@ -620,40 +649,7 @@
 
 <script>
 
- // --- ЗАЩИТА ДОСТУПА ---
-    (function checkSessionGuard() {
-        const sessionRaw = localStorage.getItem('wtm_session');
-        
-        if (!sessionRaw) {
-            window.location.href = 'minigame.html';
-            return;
-        }
-
-        let session;
-        try {
-            session = JSON.parse(sessionRaw);
-        } catch (e) {
-            localStorage.removeItem('wtm_session');
-            window.location.href = 'minigame.html';
-            return;
-        }
-
-        if (session.type === 'temporary') {
-            const checkTime = () => {
-                const now = Date.now();
-                const timeLeft = session.expiry - now;
-
-                if (timeLeft <= 0) {
-                    alert("⏳ Время действия рекламного доступа истекло.\nПожалуйста, посмотрите рекламу еще раз для продления.");
-                    localStorage.removeItem('wtm_session'); 
-                    window.location.href = 'minigame.html';
-                }
-            };
-            checkTime();
-            setInterval(checkTime, 60000); 
-        }
-    })();
-    // --- КОНЕЦ ЗАЩИТЫ ---
+ 
 
     const app = document.getElementById('app-root');
     const canvas = document.getElementById('gameCanvas');
@@ -690,39 +686,96 @@
         if(requestFullScreen) requestFullScreen.call(docEl);
     }
 
-    // --- НАСТРОЙКИ ---
-    const THEMES = {
+const THEMES = {
         SUMMER: {
-            skyTop: '#1e90ff', skyBot: '#87cefa', groundColor: '#5d4037', grassColor: '#2e7d32', grassLight: '#a5d6a7',
-            sunColor: '#ffd700', sunGlow: 'rgba(255, 215, 0, 0.4)', mountainColor: '#2f3640', weather: 'none'
+            skyTop: '#4fabff', skyBot: '#b8e3ff',
+            // --- НОВЫЕ ПАРАМЕТРЫ ЗЕМЛИ ---
+            groundTop: '#795548', groundBot: '#3e2723', // Градиент глубины
+            crustColor: '#5d4037', // Верхняя корка (дерн)
+            // -----------------------------
+            grassColor: '#43a047', grassLight: '#81c784',
+            sunColor: '#ffd700', sunGlow: 'rgba(255, 215, 0, 0.4)',
+            mtnFar: '#546e7a', mtnNear: '#37474f',
+            treeTrunk: '#5d4037', treeLeaf: '#2e7d32',
+            weather: 'none'
         },
         AUTUMN: {
-            skyTop: '#34495e', skyBot: '#7f8c8d', groundColor: '#4e342e', grassColor: '#d35400', grassLight: '#f39c12',
-            sunColor: '#bdc3c7', sunGlow: 'rgba(255,255,255,0.1)', mountainColor: '#2c3e50', weather: 'rain'
+            skyTop: '#37474f', skyBot: '#78909c',
+            groundTop: '#5d4037', groundBot: '#261815',
+            crustColor: '#4e342e',
+            grassColor: '#d84315', grassLight: '#ff7043',
+            sunColor: '#bdc3c7', sunGlow: 'rgba(255,255,255,0.1)',
+            mtnFar: '#263238', mtnNear: '#1c2327',
+            treeTrunk: '#3e2723', treeLeaf: '#bf360c',
+            weather: 'rain'
         },
         WINTER: {
-            skyTop: '#000000', skyBot: '#2c3e50', groundColor: '#636e72', grassColor: '#95a5a6', grassLight: '#ecf0f1',
-            sunColor: '#f5f6fa', sunGlow: 'rgba(255,255,255,0.5)', mountainColor: '#1a1a1a', weather: 'snow'
+            skyTop: '#0d47a1', skyBot: '#64b5f6',
+            groundTop: '#546e7a', groundBot: '#263238',
+            crustColor: '#eceff1', // Белая снежная шапка
+            grassColor: '#cfd8dc', grassLight: '#eceff1',
+            sunColor: '#f5f6fa', sunGlow: 'rgba(255,255,255,0.5)',
+            mtnFar: '#b0bec5', mtnNear: '#78909c',
+            treeTrunk: '#424242', treeLeaf: '#dfe6e9',
+            weather: 'snow'
         }
     };
+
+    // Генератор шума для земли (вызывается при старте игры)
+    function generateTerrainTexture(themeName) {
+        const tCanvas = document.createElement('canvas');
+        tCanvas.width = 256; tCanvas.height = 256;
+        const tCtx = tCanvas.getContext('2d');
+        
+        for(let i=0; i<4000; i++) {
+            let x = Math.random() * 256;
+            let y = Math.random() * 256;
+            let opacity = 0.05 + Math.random() * 0.1;
+            
+            if (themeName === 'WINTER') {
+                // Зимой: белые блестки и темные камни
+                tCtx.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${opacity*2})` : `rgba(0,0,0,${opacity})`;
+                if(Math.random() > 0.8) tCtx.fillRect(x, y, 2, 2);
+                else tCtx.fillRect(x, y, 1, 1);
+            } else {
+                // Летом: темные комья земли
+                tCtx.fillStyle = Math.random() > 0.5 ? `rgba(0,0,0,${opacity})` : `rgba(100,60,40,${opacity})`;
+                tCtx.fillRect(x, y, 2, 2);
+            }
+        }
+        return ctx.createPattern(tCanvas, 'repeat');
+    }
     
-    // --- BATTLE PASS DATA ---
+    // --- BATTLE PASS DATA (С ЭМОДЗИ) ---
     const BP_REWARDS = [
-        { wins: 10, name: "Титул: Артиллерист", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gameart.webp" },
-        { wins: 50, name: "Титул: Снайпер", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gamesniper.webp" },
+        { wins: 5,    name: "Эмодзи: Привет", type: 'emoji', value: '👋' },
+        { wins: 10,   name: "Титул: Артиллерист", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gameart.webp" },
+        { wins: 15,   name: "Эмодзи: Думаю", type: 'emoji', value: '🤔' },
+        { wins: 25,   name: "Эмодзи: Удача", type: 'emoji', value: '🤞' },
+        { wins: 35,   name: "Эмодзи: В яблочко", type: 'emoji', value: '🎯' },
+        { wins: 50,   name: "Титул: Снайпер", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gamesniper.webp" },
+        { wins: 60,   name: "Эмодзи: Страх", type: 'emoji', value: '😱' },
+        { wins: 75,   name: "Эмодзи: Злость", type: 'emoji', value: '😡' },
+        { wins: 90,   name: "Эмодзи: Крутой", type: 'emoji', value: '😎' },
         { wins: 100, name: "Титул: Бог Войны", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gameforart/gamegodofwar.webp" },
+        { wins: 125, name: "Эмодзи: Флаг", type: 'emoji', value: '🏳️' },
+        { wins: 150, name: "Эмодзи: Слежу", type: 'emoji', value: '👀' },
+        { wins: 175, name: "Эмодзи: Череп", type: 'emoji', value: '💀' },
+        { wins: 200, name: "Эмодзи: Клоун", type: 'emoji', value: '🤡' },
+        { wins: 225, name: "Эмодзи: Корона", type: 'emoji', value: '👑' },
         { wins: 250, name: "7 Дней Премиума", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/7day.PNG" },
         { wins: 500, name: "Золото", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/gold.PNG" },
         { wins: 1000, name: "500 Платины", img: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/platina.PNG" }
     ];
 
-    BP_REWARDS.forEach(r => { const i = new Image(); i.src = r.img; });
+    // Предзагрузка картинок
+    BP_REWARDS.forEach(r => { if(r.img) { const i = new Image(); i.src = r.img; } });
 
     let totalWins = parseInt(localStorage.getItem('wtm_art_wins')) || 0;
 
-    let groundPattern = null;
-    const CONSTANTS = { gravity: 0.4, moveSpeed: 1.5, maxFuel: 20 };
-    let GAME = { mode: 'pve', turn: 1, locked: false, myId: 1, theme: null, p1Name: 'Player 1', p2Name: 'Player 2' };
+  
+    const CONSTANTS = { gravity: 0.4, moveSpeed: 1.5, maxFuel: 200 }; // ТОПЛИВО теперь 200
+    let GAME = { mode: 'pve', turn: 1, locked: false, myId: 1, theme: null, p1Name: 'Player 1', p2Name: 'Player 2', turnCount: 0 };
     let peer = null, conn = null;
     let time = 0; 
     let sunPos = { x: 0, y: 0 }; 
@@ -730,13 +783,22 @@
     
     // ТАЙМЕР ОТПРАВКИ
     let lastAimTime = 0; 
+    
+    // ЭМОДЗИ
+    let activeEmojis = [];
+    
+    // ЯЩИКИ
+    let crates = [];
 
-    let p1 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#00e5ff', antennaPhase: 0 };
-    let p2 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#ff3d3d', antennaPhase: 0 };
+    // НОВЫЕ СТАТУСЫ: apsActive и doubleDamage
+    let p1 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#00e5ff', antennaPhase: 0, apsActive: false, doubleDamage: false };
+    let p2 = { x: 0, y: 0, hp: 100, fuel: CONSTANTS.maxFuel, angle: 45, power: 70, color: '#ff3d3d', antennaPhase: 0, apsActive: false, doubleDamage: false };
     
     let terrain = []; 
     let grassCache = [];
-    let mountains = []; 
+    let bgLayers = []; // Новые многослойные горы
+    let clouds = []; // Новые облака
+    let undergroundObjects = []; // Камни в земле
     let objects = []; 
     let particles = []; 
     let projectile = null;
@@ -770,17 +832,35 @@
             const div = document.createElement('div');
             div.className = `bp-item ${isUnlocked ? 'active' : 'locked'}`;
             
+            // Рендер в зависимости от типа (Картинка или Эмодзи)
+            let contentHTML = '';
+            if(reward.type === 'emoji') {
+                contentHTML = `<div class="bp-emoji-display">${reward.value}</div>`;
+            } else {
+                contentHTML = `<img src="${reward.img}" class="bp-img" alt="Reward">`;
+            }
+
+            let btnHTML = '';
+            if (reward.type === 'emoji') {
+                btnHTML = `<button class="claim-btn" disabled style="${isUnlocked ? 'background:#2ecc71;color:#fff' : ''}">
+                    ${isUnlocked ? 'РАЗБЛОКИРОВАНО' : 'ЗАБЛОКИРОВАНО'}
+                </button>`;
+            } else {
+                btnHTML = `<button class="claim-btn" ${!isUnlocked ? 'disabled' : ''} onclick="getVerificationCode('${reward.name}', ${reward.wins})">
+                    ${isUnlocked ? 'ПОЛУЧИТЬ КОД' : 'ЗАБЛОКИРОВАНО'}
+                </button>`;
+            }
+            
             div.innerHTML = `
-                <img src="${reward.img}" class="bp-img" alt="Reward">
+                ${contentHTML}
                 <div class="bp-info">${reward.name}</div>
                 <div class="bp-req">Нужно побед: ${reward.wins}</div>
-                <button class="claim-btn" ${!isUnlocked ? 'disabled' : ''} onclick="getVerificationCode('${reward.name}', ${reward.wins})">
-                    ${isUnlocked ? 'ПОЛУЧИТЬ КОД' : 'ЗАБЛОКИРОВАНО'}
-                </button>
+                ${btnHTML}
             `;
             list.appendChild(div);
         });
     }
+    
     window.getVerificationCode = function(rewardName, wins) {
         const nick = localStorage.getItem('wtm_nickname') || "Player";
         const salt = "WTM-ART";
@@ -802,9 +882,53 @@
         p1.x = 288; p2.x = 1632; 
         p1.hp=100; p2.hp=100; p1.fuel=CONSTANTS.maxFuel; p2.fuel=CONSTANTS.maxFuel; 
         p1.angle=45; p2.angle=45;
+        p1.apsActive = false; p1.doubleDamage = false;
+        p2.apsActive = false; p2.doubleDamage = false;
         
+        activeEmojis = []; // Очистка эмодзи при старте
+        crates = []; // Очистка ящиков
+        GAME.turnCount = 0; // Сброс счетчика ходов
         generateWorld();
         randomizeWind();
+    }
+
+    // --- ОБНОВЛЕНИЕ ПАНЕЛИ ЭМОДЗИ (ТОЛЬКО В ОНЛАЙНЕ) ---
+    function updateEmojiBar() {
+        const bar = document.getElementById('emoji-bar');
+        bar.innerHTML = '';
+        bar.style.display = (GAME.mode === 'online') ? 'flex' : 'none'; // Показываем только в онлайне
+
+        if (GAME.mode === 'online') {
+            BP_REWARDS.forEach(r => {
+                if(r.type === 'emoji' && totalWins >= r.wins) {
+                    const btn = document.createElement('button');
+                    btn.className = 'emoji-btn';
+                    btn.innerText = r.value;
+                    btn.onclick = () => sendEmoji(r.value);
+                    bar.appendChild(btn);
+                }
+            });
+        }
+    }
+
+    function sendEmoji(symbol) {
+        const myTank = (GAME.myId === 1) ? p1 : p2;
+        spawnFloatingEmoji(myTank, symbol);
+        
+        // Отправка
+        if (conn && conn.open) {
+            conn.send({ type: 'emote', val: symbol, p: GAME.myId });
+        }
+    }
+
+    function spawnFloatingEmoji(tank, text) {
+        activeEmojis.push({
+            x: tank.x,
+            y: terrain[Math.floor(tank.x)] - 60,
+            text: text,
+            life: 100,
+            alpha: 1.0
+        });
     }
 
     function startGame(mode) {
@@ -826,6 +950,10 @@
 
         document.getElementById('menu-screen').style.display = 'none';
         document.getElementById('game-wrapper').style.display = 'flex';
+        
+        // Обновляем панель эмодзи при старте
+        updateEmojiBar();
+
         resize();
         createGroundPattern();
 
@@ -843,17 +971,46 @@
 
     function createGroundPattern() {
         const pCanvas = document.createElement('canvas');
-        pCanvas.width = 64; pCanvas.height = 64;
+        pCanvas.width = 128; pCanvas.height = 128;
         const pCtx = pCanvas.getContext('2d');
-        pCtx.fillStyle = '#555'; pCtx.fillRect(0,0,64,64);
-        for(let i=0; i<500; i++) {
-            pCtx.fillStyle = Math.random()>0.5 ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.05)';
-            pCtx.fillRect(Math.random()*64, Math.random()*64, 2, 2);
+        // Более детальная текстура шума
+        for(let i=0; i<2000; i++) {
+            let val = Math.floor(Math.random() * 255);
+            pCtx.fillStyle = `rgba(${val},${val},${val},0.07)`; // Немного прозрачные точки
+            pCtx.fillRect(Math.random()*128, Math.random()*128, 2, 2);
         }
         groundPattern = ctx.createPattern(pCanvas, 'repeat');
     }
 
+    // Генератор формы облака (создает случайные "пушинки")
+    function generateCloudStructure() {
+        let puffs = [];
+        // Каждое облако состоит из 6-12 случайных кругов
+        let count = 6 + Math.floor(Math.random() * 7); 
+        
+        for(let i=0; i<count; i++) {
+            puffs.push({
+                // Разброс по ширине больше, чем по высоте (облака плоские)
+                dx: (Math.random() - 0.5) * 100, 
+                dy: (Math.random() - 0.5) * 40,
+                // Случайный радиус каждого круга
+                r: 25 + Math.random() * 25 
+            });
+        }
+        // Обязательно добавляем большой центральный круг, чтобы не было дырок
+        puffs.push({ dx: 0, dy: 0, r: 40 + Math.random() * 10 });
+        
+        return puffs;
+    }
+    
     function generateWorld() {
+        
+    // Находим имя текущей темы (например, 'SUMMER' или 'WINTER')
+    let currentThemeName = Object.keys(THEMES).find(k => THEMES[k] === GAME.theme);
+    // Генерируем новую текстуру земли специально для этой темы
+    groundPattern = generateTerrainTexture(currentThemeName);
+    // ----------------------------------------
+        
         terrain = []; grassCache = [];
         let baseH = 840 * 0.65; 
         let s1 = Math.random()*100, s2 = Math.random()*100;
@@ -865,16 +1022,69 @@
             terrain.push(h);
 
             let slope = i>0 ? Math.abs(terrain[i] - terrain[i-1]) : 0;
-            if (i % 2 === 0 && Math.random() > 0.4 && slope < 2 && Math.abs(i-p1.x)>40 && Math.abs(i-p2.x)>40) {
-                grassCache.push({ x: i, h: 8 + Math.random()*12, curve: (Math.random()-0.5)*5 });
+            // Генерация травы (два прохода для густоты)
+            if (i % 3 === 0 && Math.random() > 0.3 && slope < 2.5 && Math.abs(i-p1.x)>40 && Math.abs(i-p2.x)>40) {
+                grassCache.push({ x: i, h: 10 + Math.random()*15, curve: (Math.random()-0.5)*8 }); // Высокая трава
+            }
+            if (i % 2 === 0 && Math.random() > 0.2 && slope < 3) {
+                grassCache.push({ x: i, h: 5 + Math.random()*8, curve: (Math.random()-0.5)*5 }); // Низкая густая трава
             }
         }
+        
+        // --- ГЕНЕРАЦИЯ ОБЪЕКТОВ ПОД ЗЕМЛЕЙ (Больше и разнообразнее) ---
+        undergroundObjects = [];
+        // Мелкие камни
+        for(let i=0; i<300; i++) {
+             undergroundObjects.push({
+                 x: Math.random() * 1920,
+                 y: Math.random() * 400 + 450, 
+                 r: Math.random() * 6 + 2,
+                 color: 'rgba(0,0,0,0.3)'
+             });
+        }
+        // Крупные валуны
+        for(let i=0; i<30; i++) {
+             undergroundObjects.push({
+                 x: Math.random() * 1920,
+                 y: Math.random() * 300 + 500, 
+                 r: Math.random() * 20 + 10,
+                 color: 'rgba(0,0,0,0.2)'
+             });
+        }
 
-        mountains = [];
-        let my = 840*0.5;
-        for(let i=0; i<=1920; i+=40) {
-            my += (Math.random()-0.5)*80; my = Math.max(100, Math.min(840*0.7, my));
-            mountains.push({x: i, y: my});
+        // --- ГЕНЕРАЦИЯ ФОНОВЫХ ГОР (2 слоя) ---
+        bgLayers = [];
+        // Дальний слой (светлее)
+        let layer1 = [];
+        let my1 = 840 * 0.5;
+        for(let i=0; i<=1920; i+=20) {
+            my1 += (Math.random()-0.5)*40; 
+            my1 = Math.max(200, Math.min(600, my1));
+            layer1.push({x: i, y: my1});
+        }
+        bgLayers.push({ points: layer1, color: GAME.theme.mtnFar });
+
+        // Ближний слой (темнее)
+        let layer2 = [];
+        let my2 = 840 * 0.65;
+        for(let i=0; i<=1920; i+=30) {
+            my2 += (Math.random()-0.5)*60;
+            my2 = Math.max(300, Math.min(840*0.75, my2));
+            layer2.push({x: i, y: my2});
+        }
+        bgLayers.push({ points: layer2, color: GAME.theme.mtnNear });
+
+       // --- ОБЛАКА (С УНИКАЛЬНОЙ ФОРМОЙ) ---
+        clouds = [];
+        for(let i=0; i<12; i++) { // Сделаем их побольше (12 штук)
+            clouds.push({
+                x: Math.random() * 1920,
+                y: Math.random() * 350, // Разная высота
+                scale: 0.8 + Math.random() * 0.6, // Разный размер
+                speed: 0.2 + Math.random() * 0.4, // Разная скорость
+                // ГЕНЕРИРУЕМ УНИКАЛЬНУЮ ФОРМУ ДЛЯ ЭТОГО ОБЛАКА:
+                puffs: generateCloudStructure() 
+            });
         }
 
         objects = [];
@@ -882,58 +1092,68 @@
             if(Math.abs(i-p1.x) < 130 || Math.abs(i-p2.x) < 130) continue;
             let r = Math.random();
             let type;
-            if(r < 0.20) type = 'tree';
-            else if(r < 0.35) type = 'rock';
-            else if(r < 0.50) type = 'spruce';
-            else if(r < 0.60) type = 'ruins';
-            else if(r < 0.70) type = 'bunker';
+            if(r < 0.25) type = 'tree'; 
+            else if(r < 0.40) type = 'rock';
+            else if(r < 0.55) type = 'spruce';
+            else if(r < 0.65) type = 'bush'; 
+            else if(r < 0.70) type = 'fence'; 
             else if(r < 0.80) type = 'crate';
-            else if(r < 0.90) type = 'hedgehog';
-            else type = 'dragonteeth';
+            else if(r < 0.90) type = 'bunker';
+            else type = 'ruins';
             
             let yL = terrain[Math.max(0, Math.floor(i)-10)] || 0;
             let yR = terrain[Math.min(1919, Math.floor(i)+10)] || 0;
             let slope = Math.atan2(yR - yL, 20);
             
             let scale = 1.0;
-            if(type==='tree' || type==='spruce') scale = 2.2 + Math.random()*0.8;
+            if(type==='tree' || type==='spruce') scale = 3.0 + Math.random()*1.2; 
+            else if(type==='bush') scale = 1.5 + Math.random();
             else if(type==='bunker') scale = 1.3 + Math.random()*0.2;
             else scale = 0.9 + Math.random()*0.3;
 
             let hp = type==='bunker'?100:1;
             
-            objects.push({ x: i, type: type, hp: hp, maxHp: 100, scale: scale, rotation: slope });
+            // ... внутри цикла for в generateWorld ...
+            
+            let structure = {};
+            
+            if(type === 'tree') {
+                structure = {
+                    // Высота ствола: Делаем минимум 60, разброс +30 (было 40+40)
+                    // Итог: стволы от 60 до 90 пикселей
+                    trunkH: 60 + Math.random() * 30, 
+                    
+                    // Ширина кроны: Увеличиваем базу до 110 (было 60)
+                    // Т.к. при рисовании она умножится на 0.7, реально будет ~77-105
+                    canopyW: 110 + Math.random() * 40,
+                    
+                    // Высота кроны: Увеличиваем базу до 100 (было 50)
+                    // Т.к. при рисовании она умножится на 0.6, реально будет ~60-84
+                    canopyH: 100 + Math.random() * 40,
+                };
+                
+                // Общий масштаб:
+                // Было: 0.8 + 0.4 (0.8 ... 1.2) - мелковато
+                // Стало: 1.2 + 0.3 (1.2 ... 1.5) - гарантированно крупные деревья
+                scale = 1.2 + Math.random() * 0.3; 
+            }
+            
+            objects.push({ x: i, type: type, hp: hp, maxHp: 100, scale: scale, rotation: slope, structure: structure });
         }
         
-        // --- ОПТИМИЗАЦИЯ: Отрисовка статического фона (Небо + Горы) ОДИН РАЗ ---
-        // Рисуем небо на bgCanvas
+        // --- ОПТИМИЗАЦИЯ: Отрисовка статического фона ---
+        bgCtx.clearRect(0,0,1920,840);
         let grd = bgCtx.createLinearGradient(0,0,0,840);
         grd.addColorStop(0, GAME.theme.skyTop); grd.addColorStop(1, GAME.theme.skyBot);
         bgCtx.fillStyle = grd; bgCtx.fillRect(0,0,1920, 840);
         
-        // Рисуем солнце
         sunPos.x = 1920 * 0.5;
-        bgCtx.shadowBlur = 50; bgCtx.shadowColor = GAME.theme.sunGlow;
+        bgCtx.shadowBlur = 80; bgCtx.shadowColor = GAME.theme.sunGlow;
         bgCtx.fillStyle = GAME.theme.sunColor;
-        bgCtx.beginPath(); bgCtx.arc(sunPos.x, sunPos.y, 40, 0, Math.PI*2); bgCtx.fill(); bgCtx.shadowBlur = 0;
+        bgCtx.beginPath(); bgCtx.arc(sunPos.x, sunPos.y, 50, 0, Math.PI*2); bgCtx.fill(); bgCtx.shadowBlur = 0;
 
-        // Рисуем горы на bgCanvas
-        bgCtx.fillStyle = GAME.theme.mountainColor;
-        bgCtx.beginPath(); bgCtx.moveTo(0, 840);
-        mountains.forEach((m, i) => { bgCtx.lineTo(m.x, m.y); });
-        bgCtx.lineTo(1920, 840); bgCtx.fill();
-
-        // --- ОПТИМИЗАЦИЯ: Кэшируем градиент травы, чтобы не создавать его 60 раз в секунду ---
-        // Создаем градиент один раз
-        // Мы не знаем высоту травы здесь точно для каждой точки, но можем сделать универсальный.
-        // Или лучше просто создавать его в drawTerrain, но реже?
-        // Самый простой способ оптимизации drawTerrain - это уменьшить создание объектов.
-        // Но пока оставим градиент в drawTerrain, т.к. он зависит от Y.
-        
-        // --- ОПТИМИЗАЦИЯ: Меньше частиц на мобильных ---
         weatherSystem = [];
         if(GAME.theme.weather !== 'none') {
-            // Если ширина экрана маленькая (телефон), делаем меньше частиц (80 вместо 250)
             let particleCount = window.innerWidth < 1000 ? 80 : 250;
             for(let i=0; i<particleCount; i++) weatherSystem.push({
                 x: Math.random()*1920, y: Math.random()*840, 
@@ -958,19 +1178,15 @@
     
     function initPeer() {
         document.getElementById('connection-status').innerText = "Подключение к серверу...";
-        
         peer = new Peer(); 
-        
         peer.on('open', id => { 
             document.getElementById('my-peer-id').innerText = id; 
             document.getElementById('connection-status').innerText = "Готов к подключению"; 
         });
-
         peer.on('error', err => {
             console.error(err);
             document.getElementById('connection-status').innerText = "Ошибка P2P сервера";
         });
-
         peer.on('connection', c => { 
             conn = c; 
             GAME.myId = 1; 
@@ -982,27 +1198,18 @@
     function connectToPeer() {
         const input = document.getElementById('remote-peer-id');
         const id = input.value.trim(); 
-
-        if(!id) {
-            alert("Пожалуйста, введите ID друга!");
-            return;
-        }
-
+        if(!id) { alert("Пожалуйста, введите ID друга!"); return; }
         document.getElementById('connection-status').innerText = "Попытка соединения...";
         document.getElementById('connection-status').style.color = "yellow";
-
         conn = peer.connect(id);
         GAME.myId = 2;
-        
         conn.on('error', (err) => {
              document.getElementById('connection-status').innerText = "Ошибка соединения!";
              document.getElementById('connection-status').style.color = "red";
         });
-
         conn.on('open', () => { 
             document.getElementById('connection-status').innerText = "Соединение установлено"; 
             document.getElementById('connection-status').style.color = "#2ecc71";
-            
             setupConn();
             const myNick = document.getElementById('nickname').value || "Guest";
             conn.send({ type: 'hello', name: myNick });
@@ -1011,13 +1218,8 @@
 
     function setupConn() { 
         conn.on('data', d => handleData(d)); 
-
-        conn.on('close', () => {
-            document.getElementById('disconnect-modal').style.display = 'flex';
-        });
-        conn.on('error', () => {
-             document.getElementById('disconnect-modal').style.display = 'flex';
-        });
+        conn.on('close', () => { document.getElementById('disconnect-modal').style.display = 'flex'; });
+        conn.on('error', () => { document.getElementById('disconnect-modal').style.display = 'flex'; });
     }
     
     function handleData(d) {
@@ -1025,13 +1227,11 @@
             GAME.p2Name = d.name;
             const myNick = document.getElementById('nickname').value || "Host";
             GAME.p1Name = myNick;
-            
             GAME.myId = 1;
             initGameWorld(); 
-
             conn.send({ 
                 type: 'init', 
-                terrain, mountains, objects, grassCache, 
+                terrain, bgLayers, clouds, undergroundObjects, objects, grassCache, 
                 themeName: Object.keys(THEMES).find(k => THEMES[k] === GAME.theme), 
                 p1x: p1.x, p2x: p2.x, wind: currentWind,
                 hostName: myNick
@@ -1040,24 +1240,19 @@
         }
         
         if(d.type === 'init') { 
-            terrain = d.terrain; grassCache = d.grassCache; mountains = d.mountains; objects = d.objects; GAME.theme = THEMES[d.themeName]; p1.x=d.p1x; p2.x=d.p2x; currentWind=d.wind;
+            terrain = d.terrain; grassCache = d.grassCache; bgLayers = d.bgLayers; clouds = d.clouds; undergroundObjects = d.undergroundObjects; objects = d.objects; GAME.theme = THEMES[d.themeName]; p1.x=d.p1x; p2.x=d.p2x; currentWind=d.wind;
             GAME.p1Name = d.hostName;
             
-            // --- ОПТИМИЗАЦИЯ: Отрисовка фона для клиента ---
+            // Перерисовка фона для клиента
+            bgCtx.clearRect(0,0,1920,840);
             let grd = bgCtx.createLinearGradient(0,0,0,840);
             grd.addColorStop(0, GAME.theme.skyTop); grd.addColorStop(1, GAME.theme.skyBot);
             bgCtx.fillStyle = grd; bgCtx.fillRect(0,0,1920, 840);
             sunPos.x = 1920 * 0.5;
-            bgCtx.shadowBlur = 50; bgCtx.shadowColor = GAME.theme.sunGlow;
+            bgCtx.shadowBlur = 80; bgCtx.shadowColor = GAME.theme.sunGlow;
             bgCtx.fillStyle = GAME.theme.sunColor;
-            bgCtx.beginPath(); bgCtx.arc(sunPos.x, sunPos.y, 40, 0, Math.PI*2); bgCtx.fill(); bgCtx.shadowBlur = 0;
-            bgCtx.fillStyle = GAME.theme.mountainColor;
-            bgCtx.beginPath(); bgCtx.moveTo(0, 840);
-            mountains.forEach((m, i) => { bgCtx.lineTo(m.x, m.y); });
-            bgCtx.lineTo(1920, 840); bgCtx.fill();
-            // ----------------------------------------------
+            bgCtx.beginPath(); bgCtx.arc(sunPos.x, sunPos.y, 50, 0, Math.PI*2); bgCtx.fill(); bgCtx.shadowBlur = 0;
 
-            // --- ОПТИМИЗАЦИЯ: Меньше частиц на мобильных ---
             weatherSystem = [];
             if(GAME.theme.weather !== 'none') {
                 let particleCount = window.innerWidth < 1000 ? 80 : 250;
@@ -1079,11 +1274,24 @@
             updateUI(); 
         }
         if(d.type === 'wind') { currentWind = d.w; updateWindUI(); }
-
         if(d.type === 'aim') {
             const t = d.p === 1 ? p1 : p2;
-            t.angle = d.a;
-            t.power = d.pw;
+            t.angle = d.a; t.power = d.pw;
+        }
+        if(d.type === 'emote') {
+            const t = (d.p === 1) ? p1 : p2;
+            spawnFloatingEmoji(t, d.val);
+        }
+        if(d.type === 'spawnCrate') {
+            crates.push({ x: d.x, y: terrain[d.x], type: d.bonus, pY: -50 });
+        }
+        if(d.type === 'collectCrate') {
+            const collector = d.p === 1 ? p1 : p2;
+            const crate = crates[d.idx];
+            if(crate) {
+                applyBonus(collector, crate.type);
+                crates.splice(d.idx, 1);
+            }
         }
     }
 
@@ -1117,18 +1325,30 @@
         document.getElementById('val-power').innerText = currentPlayer.power + '%';
     }
 
+    function applyBonus(p, type) {
+        if(type === 'hp') p.hp = Math.min(100, p.hp + 30);
+        if(type === 'fuel') p.fuel = CONSTANTS.maxFuel;
+        if(type === 'doubleDamage') p.doubleDamage = true;
+        if(type === 'aps') p.apsActive = true;
+        
+        let label = "+Бонус";
+        if(type==='hp') label = "+30 HP";
+        if(type==='fuel') label = "ПОЛНЫЙ БАК";
+        if(type==='doubleDamage') label = "2x УРОН";
+        if(type==='aps') label = "КАЗ АКТИВЕН";
+        spawnFloatingEmoji(p, label);
+    }
+
     function startMove(dir) {
         if(GAME.locked) return;
         const p = GAME.turn === 1 ? p1 : p2;
         if(p.fuel <= 0) return;
-        
         if(GAME.mode === 'online' && GAME.turn !== GAME.myId) return;
         if(GAME.mode === 'pve' && GAME.turn === 2) return;
 
         if(moveInterval) clearInterval(moveInterval);
         moveInterval = setInterval(() => {
             if(p.fuel <= 0) { stopMove(); return; }
-            
             let newX = p.x + dir * CONSTANTS.moveSpeed;
             if(newX < 30 || newX > 1920 - 30) return;
             let other = GAME.turn === 1 ? p2 : p1;
@@ -1137,8 +1357,15 @@
             p.x = newX;
             p.fuel = Math.max(0, p.fuel - 0.5); 
             
-            if(GAME.mode === 'online') conn.send({type:'move', p:GAME.myId, x:p.x, fuel:p.fuel});
+            crates.forEach((c, idx) => {
+                if(Math.abs(p.x - c.x) < 40) {
+                    applyBonus(p, c.type);
+                    if(GAME.mode === 'online') conn.send({type:'collectCrate', idx: idx, p: GAME.myId});
+                    crates.splice(idx, 1);
+                }
+            });
             
+            if(GAME.mode === 'online') conn.send({type:'move', p:GAME.myId, x:p.x, fuel:p.fuel});
             updateUI();
         }, 16);
     }
@@ -1154,13 +1381,25 @@
         inpAngle.value = nextPlayer.angle;
         inpPower.value = nextPlayer.power;
         
+        if(GAME.turn === 1) GAME.turnCount++;
+        
+        if((GAME.mode === 'local' || (GAME.mode === 'online' && GAME.myId === 1) || GAME.mode === 'pve') && GAME.turn === 1) {
+             if(GAME.turnCount % 2 === 0) {
+                 let cx = 100 + Math.floor(Math.random() * 1720);
+                 // Пул бонусов: HP, Топливо, Урон, КАЗ
+                 let pool = ['hp', 'fuel', 'doubleDamage', 'aps'];
+                 let type = pool[Math.floor(Math.random() * pool.length)];
+                 crates.push({ x: cx, y: terrain[cx], type: type, pY: -50 });
+                 if(GAME.mode === 'online') conn.send({type:'spawnCrate', x: cx, bonus: type});
+             }
+        }
+        
         if(GAME.mode !== 'online' || GAME.myId === 1) {
             randomizeWind();
             if(GAME.mode === 'online') conn.send({type:'wind', w:currentWind});
         }
 
         updateUI();
-
         if(GAME.mode==='pve' && GAME.turn===2) { 
             GAME.locked = true; updateInputs(); aiThink(); 
         }
@@ -1176,52 +1415,25 @@
     function getGunTip(tank, isLeft) {
         let x = tank.x;
         let y = terrain[Math.floor(x)] || 0;
-        
         let yL = terrain[Math.max(0, Math.floor(x)-15)] || y;
         let yR = terrain[Math.min(1919, Math.floor(x)+15)] || y;
         let rot = Math.atan2(yR-yL, 30); 
-
-        // Центр башни (локально)
-        let tx_local = -8; 
+        let tx_local = isLeft ? -8 : 8; 
         let ty_local = -24;
-        
-        // Пивот орудия (локально от башни)
-        let px_local = 15; 
+        let px_local = isLeft ? 15 : -15; 
         let py_local = -6;
-
-        if (!isLeft) {
-            tx_local *= -1;
-            px_local *= -1;
-        }
-
-        let cos = Math.cos(rot);
-        let sin = Math.sin(rot);
-
+        let cos = Math.cos(rot), sin = Math.sin(rot);
         let turretX = x + (tx_local * cos - ty_local * sin);
         let turretY = y + (tx_local * sin + ty_local * cos);
-
         let pivotX = turretX + (px_local * cos - py_local * sin);
         let pivotY = turretY + (px_local * sin + py_local * cos);
-
-        // Длина ствола
         let barrelLen = 90;
         let angleRad = tank.angle * Math.PI / 180;
-        
-        let shotAngle;
-        if(isLeft) {
-             shotAngle = rot - angleRad;
-        } else {
-             shotAngle = rot + Math.PI + angleRad;
-        }
-
+        let shotAngle = isLeft ? rot - angleRad : rot + Math.PI + angleRad;
         let muzzleX = pivotX + Math.cos(shotAngle) * barrelLen;
         let muzzleY = pivotY + Math.sin(shotAngle) * barrelLen;
-        
         let groundY = terrain[Math.floor(muzzleX)] || 840;
-        if(muzzleY > groundY - 5) {
-            muzzleY = groundY - 10;
-        }
-
+        if(muzzleY > groundY - 5) muzzleY = groundY - 10;
         return { x: muzzleX, y: muzzleY };
     }
 
@@ -1229,157 +1441,130 @@
         GAME.locked = true; updateInputs();
         muzzleFlash.active = true; muzzleFlash.timer = 5;
         muzzleFlash.owner = shooter;
-
         shooter.antennaPhase = 20;
         screenShake = 6;
 
         let isLeft = (shooter === p1);
         let tip = getGunTip(shooter, isLeft);
-
         let xIdx = Math.max(0, Math.min(1919, Math.floor(shooter.x)));
         let y = terrain[xIdx] || 0;
         let yL = terrain[Math.max(0, xIdx - 15)] || y;
         let yR = terrain[Math.min(1919, xIdx + 15)] || y;
         let slopeAngle = Math.atan2(yR - yL, 30);
-
         let sliderRad = shooter.angle * Math.PI / 180;
-        let finalRad;
-
-        if (isLeft) {
-            finalRad = slopeAngle - sliderRad; 
-        } else {
-            finalRad = slopeAngle + Math.PI + sliderRad;
-        }
-
+        let finalRad = isLeft ? slopeAngle - sliderRad : slopeAngle + Math.PI + sliderRad;
         let force = shooter.power / 4;
 
         projectile = { 
-            x: tip.x, 
-            y: tip.y, 
+            x: tip.x, y: tip.y, 
             vx: Math.cos(finalRad) * force + (currentWind * 0.05), 
             vy: Math.sin(finalRad) * force 
         };
-        
         for(let i=0; i<15; i++) particles.push({x:tip.x, y:tip.y, vx:(Math.random()-0.5)*4, vy:(Math.random()-0.5)*4, life:20, type:'smoke'});
     }
 
     function aiThink() {
         const target = p1;
         const shooter = p2;
-        
-        if(shooter.fuel > 5 && (shooter.x > 1800 || Math.abs(shooter.x - target.x) < 300)) {
-            let moveDir = -1; 
-            if(Math.abs(shooter.x - target.x) < 200) moveDir = 1; 
-            
+        let nearestCrate = null;
+        let minDist = 300;
+        crates.forEach(c => {
+            let dist = Math.abs(c.x - shooter.x);
+            if(dist < minDist) { minDist = dist; nearestCrate = c; }
+        });
+
+        if(shooter.fuel > 5 && (nearestCrate || shooter.x > 1800 || Math.abs(shooter.x - target.x) < 300)) {
+            let moveDir = (nearestCrate) ? (nearestCrate.x > shooter.x ? 1 : -1) : (Math.abs(shooter.x - target.x) < 200 ? 1 : -1);
             let moveTime = 0;
             let aiMove = setInterval(() => {
                 let newX = shooter.x + moveDir * CONSTANTS.moveSpeed;
                 if(newX > 30 && newX < 1920 - 30) {
                     shooter.x = newX;
                     shooter.fuel -= 0.5;
+                    crates.forEach((c, idx) => {
+                        if(Math.abs(shooter.x - c.x) < 40) {
+                            applyBonus(shooter, c.type);
+                            crates.splice(idx, 1);
+                            updateUI();
+                        }
+                    });
                 }
                 moveTime++;
-                if(moveTime > 20 || shooter.fuel <= 0) clearInterval(aiMove);
+                if(moveTime > 40 || shooter.fuel <= 0) clearInterval(aiMove);
             }, 16);
         }
 
         setTimeout(() => {
-            let bestError = Infinity;
-            let bestAngle = 45;
-            let bestPower = 50;
-            
+            let bestError = Infinity, bestAngle = 45, bestPower = 50;
             let tip = getGunTip(shooter, false);
-
             let xIdx = Math.floor(shooter.x);
-            let yL = terrain[Math.max(0, xIdx - 15)] || 0;
-            let yR = terrain[Math.min(1919, xIdx + 15)] || 0;
+            let yL = terrain[Math.max(0, xIdx - 15)] || 0, yR = terrain[Math.min(1919, xIdx + 15)] || 0;
             let slopeAngle = Math.atan2(yR - yL, 30);
-
             for(let a = 10; a <= 80; a += 10) { 
                 for(let p = 20; p <= 100; p += 10) { 
-                    
                     let finalRad = slopeAngle + Math.PI + (a * Math.PI / 180);
                     let force = p / 4;
-                    
-                    let simX = tip.x;
-                    let simY = tip.y;
-                    let simVx = Math.cos(finalRad) * force + (currentWind * 0.05);
-                    let simVy = Math.sin(finalRad) * force;
-                    
+                    let simX = tip.x, simY = tip.y, simVx = Math.cos(finalRad) * force + (currentWind * 0.05), simVy = Math.sin(finalRad) * force;
                     let impactX = simX;
                     for(let t=0; t<600; t++) {
-                        simX += simVx;
-                        simY += simVy;
-                        simVy += CONSTANTS.gravity;
+                        simX += simVx; simY += simVy; simVy += CONSTANTS.gravity;
                         if(simY >= (terrain[Math.floor(simX)]||1000)) { impactX = simX; break; }
                     }
-
                     let error = Math.abs(impactX - target.x);
-                    if(error < bestError) {
-                        bestError = error;
-                        bestAngle = a;
-                        bestPower = p;
-                    }
+                    if(error < bestError) { bestError = error; bestAngle = a; bestPower = p; }
                 }
             }
-
             let distance = Math.abs(shooter.x - target.x);
             let errorMagnitude = 8 + (distance / 100); 
-            
-            let powerError = (Math.random() - 0.5) * errorMagnitude;
-            let angleError = (Math.random() - 0.5) * 4;
-
+            let powerError = (Math.random() - 0.5) * errorMagnitude, angleError = (Math.random() - 0.5) * 4;
             let finalAngle = Math.max(0, Math.min(90, Math.floor(bestAngle + angleError)));
             let finalPower = Math.max(20, Math.min(100, Math.floor(bestPower + powerError)));
-            
-            let steps = 40; 
-            let currentStep = 0;
-            let startA = shooter.angle;
-            let startP = shooter.power;
-            
+            let steps = 40, currentStep = 0, startA = shooter.angle, startP = shooter.power;
             let aimInterval = setInterval(() => {
                 currentStep++;
                 let progress = currentStep / steps;
                 shooter.angle = Math.floor(startA + (finalAngle - startA) * progress);
                 shooter.power = Math.floor(startP + (finalPower - startP) * progress);
-                
-                inpAngle.value = shooter.angle;
-                inpPower.value = shooter.power;
+                inpAngle.value = shooter.angle; inpPower.value = shooter.power;
                 document.getElementById('val-angle').innerText = shooter.angle + '°';
                 document.getElementById('val-power').innerText = shooter.power + '%';
-                
-                if(currentStep >= steps) {
-                    clearInterval(aimInterval);
-                    setTimeout(() => { performFire(shooter); }, 400);
-                }
+                if(currentStep >= steps) { clearInterval(aimInterval); setTimeout(() => { performFire(shooter); }, 400); }
             }, 30); 
         }, 1200);
     }
 
     function checkHit(x, y) {
         screenShake = 15;
-        let hit = false;
+        let shooter = GAME.turn === 1 ? p1 : p2;
         
         [p1, p2].forEach(p => {
             let d = Math.sqrt((x-p.x)**2 + (y-terrain[Math.floor(p.x)])**2);
             if(d < 60) {
                 let dmg = Math.floor((1 - d/60)*50);
+                
+                // Модификатор двойного урона
+                if(shooter.doubleDamage) dmg *= 2;
+                
+                // Проверка КАЗ
+                if(p.apsActive) {
+                    p.apsActive = false;
+                    dmg = 0;
+                    spawnFloatingEmoji(p, "КАЗ ОТРАЗИЛ!");
+                }
+                
                 p.hp = Math.max(0, p.hp - dmg);
-                hit = true;
                 for(let i=0; i<15; i++) particles.push({x:p.x, y:terrain[Math.floor(p.x)]-10, vx:Math.random()*10-5, vy:-Math.random()*10, life:40, type:'spark', color:'orange'});
             }
         });
+        
+        // Сброс бонуса урона после выстрела
+        shooter.doubleDamage = false;
 
         objects.forEach(o => {
             if(o.hp <= 0) return;
             let oy = terrain[Math.floor(o.x)];
             let d = Math.sqrt((x-o.x)**2 + (y-oy)**2);
-            if(d < 50) {
-                o.hp -= 50; 
-                if(o.hp <= 0) {
-                     for(let i=0; i<20; i++) particles.push({x:o.x, y:oy-10, vx:Math.random()*6-3, vy:-Math.random()*5, life:50, type:'debris', color:'#7f8c8d'});
-                }
-            }
+            if(d < 50) { o.hp -= 50; if(o.hp <= 0) { for(let i=0; i<20; i++) particles.push({x:o.x, y:oy-10, vx:Math.random()*6-3, vy:-Math.random()*5, life:50, type:'debris', color:'#7f8c8d'}); } }
         });
 
         grassCache = grassCache.filter(g => {
@@ -1390,299 +1575,399 @@
         updateUI();
         if(p1.hp<=0 || p2.hp<=0) {
             let winnerText = p1.hp>0 ? GAME.p1Name+" ПОБЕДИЛ!" : GAME.p2Name+" ПОБЕДИЛ!";
-            
-            // LOGIC TO ADD WIN
-            if(GAME.mode === 'pve') {
-                if(p1.hp > 0) addWin();
-            } else if (GAME.mode === 'online') {
-                if((GAME.myId === 1 && p1.hp > 0) || (GAME.myId === 2 && p2.hp > 0)) {
-                    addWin();
-                }
-            }
-
+            if(GAME.mode === 'pve' && p1.hp > 0) addWin();
+            else if (GAME.mode === 'online' && ((GAME.myId === 1 && p1.hp > 0) || (GAME.myId === 2 && p2.hp > 0))) addWin();
             setTimeout(() => { alert(winnerText); location.reload(); }, 500);
-        }
-        else { switchTurn(); }
+        } else { switchTurn(); }
     }
     
     function updateUI() {
         document.getElementById('name-p1').innerText = GAME.p1Name;
         document.getElementById('name-p2').innerText = GAME.p2Name;
-
         document.getElementById('hp-p1').style.width = p1.hp + '%'; document.getElementById('hp-txt-1').innerText = p1.hp;
         document.getElementById('hp-p2').style.width = p2.hp + '%'; document.getElementById('hp-txt-2').innerText = p2.hp;
-        
         document.getElementById('fuel-p1').style.width = (p1.fuel / CONSTANTS.maxFuel * 100) + '%';
         document.getElementById('fuel-p2').style.width = (p2.fuel / CONSTANTS.maxFuel * 100) + '%';
-
         let msg = GAME.mode === 'local' ? `Ход: ${GAME.turn===1 ? GAME.p1Name : GAME.p2Name}` : (GAME.turn === GAME.myId ? "ВАШ ХОД" : "ХОД ВРАГА");
         document.getElementById('turn-msg').innerText = msg;
         document.getElementById('turn-msg').style.borderBottomColor = GAME.turn===1 ? '#00e5ff' : '#ff3d3d';
         updateInputs();
     }
 
+     // Вспомогательная функция для рисования "пуха" облака (добавьте её перед loop или в конце скрипта)
+        function drawCloudPuff(ctx, x, y, r) {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI*2);
+            ctx.fill();
+        }
+    
     function loop() {
         let ShakeX = 0, ShakeY = 0;
-        if(screenShake > 0) {
-            ShakeX = (Math.random()-0.5)*screenShake; ShakeY = (Math.random()-0.5)*screenShake;
-            screenShake *= 0.9; if(screenShake < 0.5) screenShake = 0;
-        }
-
+        if(screenShake > 0) { ShakeX = (Math.random()-0.5)*screenShake; ShakeY = (Math.random()-0.5)*screenShake; screenShake *= 0.9; if(screenShake < 0.5) screenShake = 0; }
         ctx.setTransform(1,0,0,1, ShakeX, ShakeY);
-        // ОПТИМИЗАЦИЯ: ВМЕСТО clearRect РИСУЕМ ФОН
+        
+        // Рисуем фон (Небо)
         ctx.drawImage(bgCanvas, 0, 0);
-        // ------------------------------------------
         
         if(!GAME.theme) return requestAnimationFrame(loop);
-
         time += 0.05;
         wind = Math.sin(time*0.5 + currentWind)*2; 
-
         [p1, p2].forEach(p => { if(p.antennaPhase > 0) p.antennaPhase *= 0.9; });
+        
+        // Рисуем многослойные горы
+        bgLayers.forEach((layer, idx) => {
+            ctx.fillStyle = layer.color;
+            ctx.beginPath();
+            ctx.moveTo(0, 840);
+            layer.points.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.lineTo(1920, 840);
+            ctx.fill();
+        });
 
-        // ОПТИМИЗАЦИЯ: НЕ РИСУЕМ НЕБО И ГОРЫ, ОНИ УЖЕ В bgCanvas
-        // drawSky();
-        // drawMountains();
+      // --- РИСУЕМ ОБЛАКА (БЕСКОНЕЧНЫЕ + РЕСПАУН) ---
+        clouds.forEach(c => {
+             // Движение: Скорость облака + влияние ветра
+             // Увеличил влияние ветра (0.05), чтобы они живее реагировали
+             c.x += c.speed + (currentWind * 0.05);
+             
+             // --- ЛОГИКА ЗАЦИКЛИВАНИЯ (РЕСПАУН) ---
+             
+             // 1. Если улетело вправо -> Телепорт влево
+             if(c.x > 2200) {
+                 c.x = -400;
+                 c.y = Math.random() * 350;        // Новая высота
+                 c.puffs = generateCloudStructure(); // Новая форма!
+                 c.speed = 0.2 + Math.random() * 0.4; // Новая скорость
+             }
+             // 2. Если улетело влево (сильный ветер) -> Телепорт вправо
+             else if(c.x < -400) {
+                 c.x = 2200;
+                 c.y = Math.random() * 350;
+                 c.puffs = generateCloudStructure();
+                 c.speed = 0.2 + Math.random() * 0.4;
+             }
+             
+             // --- ОТРИСОВКА ---
+             ctx.save();
+             ctx.translate(c.x, c.y);
+             ctx.scale(c.scale, c.scale);
+             
+             // Градиент
+             let cloudGrad = ctx.createRadialGradient(0, -15, 10, 0, 0, 60);
+             cloudGrad.addColorStop(0, "rgba(255, 255, 255, 0.95)");
+             cloudGrad.addColorStop(1, "rgba(240, 245, 255, 0.6)");
+             ctx.fillStyle = cloudGrad;
+
+             ctx.beginPath();
+             c.puffs.forEach(p => {
+                 ctx.moveTo(p.dx + p.r, p.dy);
+                 ctx.arc(p.dx, p.dy, p.r, 0, Math.PI*2);
+             });
+             ctx.fill();
+             
+             ctx.restore();
+        });
+        
+       
+        
         
         drawTerrain();
         drawObjects();
+        
+        crates.forEach(c => {
+            if(c.pY < c.y) c.pY += 3; else c.pY = c.y;
+            ctx.save(); ctx.translate(c.x, c.pY);
+            if(c.pY < c.y) {
+                ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-10, -20); ctx.lineTo(-20, -60); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(10, -20); ctx.lineTo(20, -60); ctx.stroke();
+                ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, -60, 30, Math.PI, 0); ctx.fill();
+            }
+            // Цвет ящика в зависимости от типа
+            ctx.fillStyle = (c.type==='hp'?'#e67e22':(c.type==='fuel'?'#f1c40f':(c.type==='aps'?'#3498db':'#e74c3c')));
+            ctx.fillRect(-15, -30, 30, 30); ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.strokeRect(-15, -30, 30, 30);
+            ctx.fillStyle = '#fff'; ctx.font = "bold 20px FontAwesome"; ctx.textAlign = "center";
+            let icon = '❤';
+            if(c.type==='fuel') icon='⛽';
+            if(c.type==='doubleDamage') icon='⚔';
+            if(c.type==='aps') icon='🛡';
+            ctx.fillText(icon, 0, -8); ctx.restore();
+        });
+
         drawPzH2000(p1, true);
         drawPzH2000(p2, false);
         drawFX();
         drawProjectile();
-
         requestAnimationFrame(loop);
     }
 
-    // drawSky и drawMountains БОЛЬШЕ НЕ НУЖНЫ В ЦИКЛЕ, ОНИ ИНТЕГРИРОВАНЫ В ГЕНЕРАЦИЮ
+  function drawTerrain() {
+        // 1. ГЛУБИННАЯ ЗЕМЛЯ (ОСНОВА С ГРАДИЕНТОМ)
+        let groundGrad = ctx.createLinearGradient(0, 0, 0, 840);
+        groundGrad.addColorStop(0, GAME.theme.groundTop); 
+        groundGrad.addColorStop(1, GAME.theme.groundBot); 
+        ctx.fillStyle = groundGrad;
 
-    function drawTerrain() {
-        ctx.fillStyle = GAME.theme.groundColor;
-        ctx.beginPath(); ctx.moveTo(0, 840);
+        ctx.beginPath(); 
+        ctx.moveTo(0, 840);
         terrain.forEach((y, x) => ctx.lineTo(x, y));
-        ctx.lineTo(1920, 840); ctx.fill();
+        ctx.lineTo(1920, 840); 
+        ctx.fill();
+
+        // 2. НАЛОЖЕНИЕ ТЕКСТУРЫ (ШУМ)
+        if(groundPattern) { 
+            ctx.fillStyle = groundPattern; 
+            ctx.save();
+            ctx.globalCompositeOperation = 'overlay'; // Мягкое наложение
+            ctx.globalAlpha = 0.6; 
+            ctx.beginPath(); 
+            ctx.moveTo(0, 840);
+            terrain.forEach((y, x) => ctx.lineTo(x, y));
+            ctx.lineTo(1920, 840); 
+            ctx.fill(); 
+            ctx.restore();
+        }
+
+        // 3. ПОВЕРХНОСТНЫЙ СЛОЙ (КОРКА ИЛИ СНЕГ)
+        ctx.fillStyle = GAME.theme.crustColor;
+        ctx.beginPath();
         
-        if(groundPattern) { ctx.fillStyle = groundPattern; ctx.globalAlpha = 0.4; ctx.fill(); ctx.globalAlpha = 1.0; }
-
-        ctx.fillStyle = GAME.theme.grassColor;
-        ctx.beginPath(); ctx.moveTo(0, 840);
-        terrain.forEach((y, x) => ctx.lineTo(x, y));
-        ctx.lineTo(1920, 840); ctx.lineTo(1920, 940); ctx.lineTo(0, 940);
-        ctx.save(); ctx.clip(); ctx.fillRect(0,0,1920, 840); ctx.restore();
-
-        // Оптимизация градиента травы: создаем его 1 раз в кадре?
-        // На самом деле создание градиента внутри цикла по траве - плохо.
-        // Но высота разная.
-        // Оставим пока так, т.к. кэширование фона уже дало огромный прирост.
-        ctx.lineWidth = 1;
-        grassCache.forEach(g => {
-            let y = terrain[g.x];
-            if (!y) return;
-            
-            let grad = ctx.createLinearGradient(0, y, 0, y-g.h);
-            grad.addColorStop(0, GAME.theme.grassColor);
-            grad.addColorStop(1, GAME.theme.grassLight);
-            ctx.strokeStyle = grad;
-
-            ctx.beginPath();
-            ctx.moveTo(g.x, y);
-            ctx.quadraticCurveTo(g.x + g.curve + wind, y - g.h/2, g.x + g.curve*2 + wind, y - g.h);
-            ctx.stroke();
+        // Верхний край корки (по контуру земли)
+        terrain.forEach((y, x) => {
+            if(x===0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
         });
+        
+        // Нижний край корки (чуть ниже земли)
+        let crustDepth = (GAME.theme.weather === 'snow') ? 20 : 12; // Зимой слой толще
+        for(let x = 1919; x >= 0; x--) {
+            // Добавляем неровности (шум), чтобы корка не была идеальной линией
+            let noise = (x % 3 === 0) ? 2 : 0; 
+            ctx.lineTo(x, terrain[x] + crustDepth + noise);
+        }
+        ctx.fill();
+        
+        // Тень под коркой (для объема)
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        for(let x = 0; x < 1920; x+=4) { // Рисуем с шагом 4 для оптимизации
+             ctx.lineTo(x, terrain[x] + crustDepth);
+        }
+        ctx.stroke();
+  // 4. ПОДЗЕМНЫЕ КАМНИ
+        undergroundObjects.forEach(obj => {
+             let ty = terrain[Math.floor(obj.x)];
+             // Рисуем камни только если они глубже слоя корки
+             if(obj.y > ty + crustDepth + 10) { 
+                 ctx.fillStyle = obj.color;
+                 ctx.beginPath();
+                 // Рисуем неровный камень
+                 ctx.moveTo(obj.x + obj.r, obj.y);
+                 ctx.lineTo(obj.x, obj.y + obj.r);
+                 ctx.lineTo(obj.x - obj.r, obj.y);
+                 ctx.lineTo(obj.x, obj.y - obj.r * 0.8);
+                 ctx.fill();
+             }
+        });
+
+        // 5. ТРАВА (Если не зима)
+        // Рисуем траву поверх корки
+        if(GAME.theme.weather !== 'snow') {
+            ctx.lineWidth = 1;
+            grassCache.forEach(g => {
+                let y = terrain[g.x]; if (!y) return;
+                let grad = ctx.createLinearGradient(0, y, 0, y-g.h); 
+                grad.addColorStop(0, GAME.theme.grassColor); 
+                grad.addColorStop(1, GAME.theme.grassLight);
+                ctx.strokeStyle = grad; 
+                ctx.beginPath(); 
+                ctx.moveTo(g.x, y + 2); // Растет чуть из глубины корки
+                ctx.quadraticCurveTo(g.x + g.curve + wind, y - g.h/2, g.x + g.curve*2 + wind, y - g.h); 
+                ctx.stroke();
+            });
+        }
     }
 
-    function drawObjects() {
+  
+
+   
+function drawObjects() {
         objects.forEach(o => {
             if(o.hp <= 0) return;
             let x = Math.floor(o.x); if(x<0||x>=terrain.length) return;
             let y = terrain[x];
             
-            if(o.type !== 'tree' && o.type !== 'spruce') {
-                ctx.save(); 
-                let skew = (x - sunPos.x) / 300; 
-                ctx.translate(x, y+2); 
-                ctx.transform(1, 0, skew, 0.3, 0, 0); 
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.beginPath(); 
-                if(o.type==='crate') ctx.fillRect(-12, -24, 24, 24);
-                else if(o.type==='hedgehog') ctx.fillRect(-10, -15, 20, 15);
-                else if(o.type==='dragonteeth') ctx.fillRect(-12, -20, 24, 20);
-                else ctx.ellipse(0, -5, 15, 8, 0, 0, Math.PI*2);
-                ctx.fill();
-                ctx.restore();
-            }
-
-            ctx.save();
+            ctx.save(); 
             ctx.translate(x, y + 4); 
             ctx.rotate(o.rotation); 
             ctx.scale(o.scale, o.scale);
-
-            if(o.type === 'bunker') {
-                ctx.fillStyle = '#7f8c8d'; ctx.beginPath(); ctx.arc(0, 0, 30, Math.PI, 0); ctx.fill(); 
-                ctx.fillStyle = '#000'; ctx.fillRect(-12, -18, 24, 5); 
+            
+            // --- БУНКЕР ---
+            if(o.type === 'bunker') { 
+                ctx.fillStyle = '#37474f'; 
+                ctx.beginPath(); ctx.arc(0, 0, 30, Math.PI, 0); ctx.fill(); 
+                ctx.fillStyle = '#2c3e50'; ctx.fillRect(-12, -18, 24, 6);
             } 
-            else if (o.type === 'ruins') {
-                ctx.fillStyle = '#795548'; ctx.fillRect(-15, -30, 10, 30); ctx.fillRect(0, -20, 15, 20);
-                ctx.strokeStyle = '#3e2723'; ctx.beginPath(); ctx.moveTo(-10, -25); ctx.lineTo(-12, -15); ctx.stroke();
+            // --- ЯЩИК ---
+            else if (o.type === 'crate') { 
+                ctx.fillStyle = '#e67e22'; ctx.fillRect(-12, -24, 24, 24); 
+                ctx.beginPath(); ctx.strokeStyle = '#d35400'; ctx.lineWidth=2;
+                ctx.moveTo(-12,-24); ctx.lineTo(12,0); ctx.moveTo(12,-24); ctx.lineTo(-12,0);
+                ctx.strokeRect(-12,-24,24,24); ctx.stroke();
             }
-            else if (o.type === 'crate') {
-                ctx.fillStyle = '#d35400'; ctx.fillRect(-12, -24, 24, 24);
-                ctx.strokeStyle = '#a04000'; ctx.lineWidth=2; ctx.strokeRect(-12,-24,24,24);
-                ctx.beginPath(); ctx.moveTo(-12,-24); ctx.lineTo(12,0); ctx.moveTo(12,-24); ctx.lineTo(-12,0); ctx.stroke();
-            }
-            else if (o.type === 'hedgehog') {
-                ctx.strokeStyle = '#2f3640'; ctx.lineWidth = 3;
-                ctx.beginPath(); ctx.moveTo(-10, -15); ctx.lineTo(10, 0); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(10, -15); ctx.lineTo(-10, 0); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, -15); ctx.lineTo(0, 0); ctx.stroke();
-            }
-            else if (o.type === 'dragonteeth') {
-                ctx.fillStyle = '#95a5a6'; 
-                ctx.beginPath(); ctx.moveTo(-10, 0); ctx.lineTo(10, 0); ctx.lineTo(0, -25); ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.2)'; 
-                ctx.beginPath(); ctx.moveTo(0, -25); ctx.lineTo(10, 0); ctx.lineTo(0,0); ctx.fill();
-            }
-            else if (o.type === 'tree') {
+           // --- ЛИСТВЕННОЕ ДЕРЕВО (РАЗНАЯ ВЫСОТА И ФОРМА) ---
+            else if (o.type === 'tree') { 
                 ctx.rotate(-o.rotation * 0.7);
-                ctx.fillStyle = '#3e2723'; ctx.fillRect(-4, -15, 8, 15);
-                ctx.fillStyle = GAME.theme.grassColor; 
-                ctx.beginPath(); ctx.arc(0, -25, 15, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(-10, -18, 12, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.arc(10, -18, 12, 0, Math.PI*2); ctx.fill();
-            }
-            else if (o.type === 'spruce') {
-                ctx.rotate(-o.rotation * 0.8);
-                ctx.fillStyle = '#3e2723'; 
-                ctx.fillRect(-3, -10, 6, 10);
                 
-                if(GAME.theme.weather === 'snow') {
-                    ctx.fillStyle = '#dcdde1';
-                } else {
-                    ctx.fillStyle = '#1b5e20';
-                }
-                ctx.beginPath(); ctx.moveTo(0, -60); ctx.lineTo(15, -10); ctx.lineTo(-15, -10); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(0, -50); ctx.lineTo(12, -25); ctx.lineTo(-12, -25); ctx.fill();
-                ctx.beginPath(); ctx.moveTo(0, -40); ctx.lineTo(10, -40); ctx.lineTo(-10, -40); ctx.fill();
+                // Достаем параметры (или используем дефолтные, если это старое дерево)
+                let h = o.structure.trunkH || 50; 
+                let cw = (o.structure.canopyW || 70) * 0.7; 
+                let ch = (o.structure.canopyH || 60) * 0.6;
+                
+                // 1. Ствол (Динамическая высота)
+                ctx.fillStyle = GAME.theme.treeTrunk; 
+                ctx.beginPath();
+                ctx.moveTo(-5, 0);
+                // Изгибаем ствол к точке -h (высота)
+                ctx.quadraticCurveTo(-2, -h/2, -7, -h); 
+                ctx.lineTo(7, -h);
+                ctx.quadraticCurveTo(2, -h/2, 5, 0);
+                ctx.fill();
+                
+                // 2. Крона (Привязана к высоте ствола)
+                let topY = -h - ch; // Верхняя точка кроны
+
+                let grd = ctx.createLinearGradient(0, topY, 0, -h + 10);
+                grd.addColorStop(0, GAME.theme.grassLight); 
+                grd.addColorStop(1, GAME.theme.treeLeaf);   
+                ctx.fillStyle = grd;
+
+                ctx.beginPath();
+                // Начинаем от верхушки ствола (-h)
+                ctx.moveTo(-cw*0.3, -h); 
+                
+                // Рисуем форму кроны, опираясь на высоту ствола (h) и высоту кроны (ch)
+                ctx.bezierCurveTo(-cw, -h - 5, -cw*0.8, topY, 0, topY - 10); // Левая дуга
+                ctx.bezierCurveTo(cw*0.8, topY, cw, -h - 5, cw*0.3, -h);     // Правая дуга
+                
+                // Замыкаем низ кроны
+                ctx.quadraticCurveTo(0, -h + 10, -cw*0.3, -h); 
+                ctx.fill(); 
             }
-            else if (o.type === 'rock') {
-                ctx.fillStyle = '#636e72'; 
-                ctx.beginPath(); ctx.moveTo(-15,0); ctx.lineTo(-10,-15); ctx.lineTo(5,-20); ctx.lineTo(20,-5); ctx.lineTo(10,0); ctx.fill();
-                ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.moveTo(-10,-15); ctx.lineTo(5,-20); ctx.lineTo(0,-10); ctx.fill();
+            
+            // --- ЕЛЬ (ЕСТЕСТВЕННАЯ, С КРИВЫМИ ВЕТВЯМИ) ---
+            else if (o.type === 'spruce') { 
+                ctx.rotate(-o.rotation * 0.8); 
+                
+                // Пенек
+                ctx.fillStyle = GAME.theme.treeTrunk; ctx.fillRect(-3, -8, 6, 8); 
+                
+               let spruceColor = (GAME.theme.weather==='snow'?'#1a3c34':'#2d6a4f');
+                ctx.fillStyle = spruceColor;
+
+                // Рисуем ель кривыми линиями для естественности
+                ctx.beginPath();
+                // Левая сторона (снизу вверх)
+                ctx.moveTo(-25, -8); // Низ лево
+                ctx.quadraticCurveTo(-15, -20, -12, -28); // Прогиб ветки внутрь
+                ctx.lineTo(-20, -28); // Выступ следующего яруса наружу
+                ctx.quadraticCurveTo(-10, -40, -8, -48); // Прогиб внутрь
+                ctx.lineTo(-15, -48); // Выступ наружу
+                ctx.quadraticCurveTo(-5, -60, 0, -75); // Верхушка
+
+                // Правая сторона (сверху вниз, зеркально)
+                ctx.quadraticCurveTo(5, -60, 15, -48); // Выступ наружу
+                ctx.lineTo(8, -48); // Внутрь
+                ctx.quadraticCurveTo(10, -40, 20, -28); // Выступ наружу
+                ctx.lineTo(12, -28); // Внутрь
+                ctx.quadraticCurveTo(15, -20, 25, -8); // Низ право
+                
+                ctx.closePath();
+                ctx.fill();
             }
+            // --- КАМЕНЬ ---
+            else if (o.type === 'rock') { 
+                ctx.fillStyle = '#636e72'; ctx.beginPath(); 
+                ctx.moveTo(-15,0); ctx.lineTo(-12,-15); ctx.lineTo(0,-22); ctx.lineTo(18,-8); ctx.lineTo(10,0); ctx.fill(); 
+                ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.beginPath(); ctx.arc(-5, -12, 5, 0, Math.PI*2); ctx.fill();
+            }
+            // --- КУСТЫ ---
+            else if (o.type === 'bush') {
+                ctx.rotate(-o.rotation * 0.9);
+                let bushGrad = ctx.createRadialGradient(0, -8, 5, 0, -8, 20);
+                bushGrad.addColorStop(0, GAME.theme.grassLight); bushGrad.addColorStop(1, GAME.theme.grassColor);
+                ctx.fillStyle = bushGrad;
+                // Рисуем куст из отдельных "пузырей" для мягкости
+                drawCloudPuff(ctx, 0, -10, 14);      
+                drawCloudPuff(ctx, -12, -6, 10);     
+                drawCloudPuff(ctx, 12, -6, 10); 
+            }
+            else if (o.type === 'fence') {
+                ctx.fillStyle = '#5d4037'; ctx.fillRect(-2, -15, 4, 15); ctx.fillRect(-15, -10, 30, 4);
+            }
+            
             ctx.restore();
         });
     }
-
-    function drawWheel(x, y, r) {
-        ctx.fillStyle = '#2d3436'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle = '#636e72'; ctx.beginPath(); ctx.arc(x, y, r*0.6, 0, Math.PI*2); ctx.fill(); 
-        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(x, y, r*0.2, 0, Math.PI*2); ctx.fill(); 
-    }
+    function drawWheel(x, y, r) { ctx.fillStyle = '#2d3436'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#636e72'; ctx.beginPath(); ctx.arc(x, y, r*0.6, 0, Math.PI*2); ctx.fill(); }
 
     function drawPzH2000(t, isLeft) {
-        let x = t.x; 
-        let xIdx = Math.max(0, Math.min(1919, Math.floor(x)));
-        let y = terrain[xIdx] || 0;
-        let yL = terrain[Math.max(0,xIdx-15)]||y, yR = terrain[Math.min(1919,xIdx+15)]||y;
-        let rot = Math.atan2(yR-yL, 30);
-        
+        let x = t.x, xIdx = Math.max(0, Math.min(1919, Math.floor(x))), y = terrain[xIdx] || 0;
+        let yL = terrain[Math.max(0,xIdx-15)]||y, yR = terrain[Math.min(1919,xIdx+15)]||y, rot = Math.atan2(yR-yL, 30);
         ctx.save(); ctx.translate(x, y); ctx.rotate(rot); if(!isLeft) ctx.scale(-1,1);
         
-        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.beginPath(); ctx.ellipse(0, -2, 35, 6, 0, 0, Math.PI*2); ctx.fill();
+        // Эффект КАЗ
+        if(t.apsActive) {
+            ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]);
+            ctx.beginPath(); ctx.arc(0, -20, 60, 0, Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(0, 229, 255, 0.1)'; ctx.fill();
+        }
+        
+        // Эффект Двойного урона
+        if(t.doubleDamage) {
+            ctx.shadowBlur = 20; ctx.shadowColor = 'red';
+            ctx.strokeStyle = 'red'; ctx.lineWidth = 2; ctx.strokeRect(-35, -30, 70, 30);
+        }
 
         ctx.fillStyle = '#1e1e1e'; ctx.fillRect(-28, -14, 56, 14); 
-        ctx.fillStyle = '#2d3436'; for(let i=-28; i<28; i+=3) ctx.fillRect(i, -14, 2, 14);
-
-        ctx.fillStyle = '#636e72'; 
-        ctx.beginPath(); 
-        for(let i=0; i<8; i++) { let a=i/8*Math.PI*2; ctx.lineTo(-24+Math.cos(a)*6, -7+Math.sin(a)*6); } 
-        ctx.fill();
-
-        drawWheel(24, -7, 5);
-        for(let i=-16; i<=16; i+=8) drawWheel(i, -6, 4.5);
-
+        drawWheel(24, -7, 5); for(let i=-16; i<=16; i+=8) drawWheel(i, -6, 4.5);
         let grad = ctx.createLinearGradient(0,-30,0,-10); grad.addColorStop(0, t.color); grad.addColorStop(1, '#2c3e50');
-        ctx.save();
-        ctx.beginPath(); ctx.moveTo(-35, -14); ctx.lineTo(35, -14); ctx.lineTo(30, -26); ctx.lineTo(-35, -24); ctx.clip();
-        ctx.fillStyle = grad; ctx.fill();
-        ctx.fillStyle = 'rgba(0,0,0,0.4)'; for(let i=-30; i<-10; i+=4) ctx.fillRect(i, -24, 2, 8); 
-        ctx.restore();
+        ctx.save(); ctx.beginPath(); ctx.moveTo(-35, -14); ctx.lineTo(35, -14); ctx.lineTo(30, -26); ctx.lineTo(-35, -24); ctx.clip(); ctx.fillStyle = grad; ctx.fill(); ctx.restore();
         
         ctx.save(); ctx.translate(-8, -24);
-            
-            ctx.save(); 
-            ctx.translate(15, -6); 
-            ctx.rotate(-t.angle * Math.PI / 180);
-                
-                ctx.fillStyle = '#34495e'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill(); 
-                ctx.fillStyle = '#7f8c8d'; ctx.fillRect(0, -5, 30, 10); 
-                ctx.fillRect(30, -3.5, 45, 7); 
-                ctx.fillStyle = '#555'; ctx.fillRect(45, -4, 8, 8); 
-                ctx.fillStyle = '#2c3e50'; ctx.fillRect(75, -5, 12, 10); 
-                
-                if(muzzleFlash.active && muzzleFlash.owner === t) {
-                    let f = muzzleFlash.timer;
-                    ctx.fillStyle = `rgba(255, 200, 50, ${f/5})`;
-                    ctx.shadowBlur = 30; ctx.shadowColor = 'orange';
-                    ctx.beginPath(); ctx.arc(90, 0, 20+Math.random()*15, 0, Math.PI*2); ctx.fill();
-                    ctx.shadowBlur = 0;
-                    muzzleFlash.timer--; if(muzzleFlash.timer<=0) muzzleFlash.active = false;
-                }
-            ctx.restore();
-
-            ctx.fillStyle = grad; 
-            ctx.beginPath(); ctx.moveTo(-28, 0); ctx.lineTo(22, 0); ctx.lineTo(18, -20); ctx.lineTo(-30, -18); ctx.fill();
-            
-            ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 2;
-            ctx.beginPath(); ctx.moveTo(-30, -5); ctx.lineTo(-38, -5); ctx.lineTo(-38, -15); ctx.lineTo(-30, -15); ctx.stroke();
-
-            ctx.fillStyle = '#1e272e'; ctx.fillRect(10, -18, 6, 4); 
-            ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(-10, -18, 10, 2); 
-
-            ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth=1; 
-            let antSway = Math.sin(time*5 + (t.antennaPhase||0))* (t.antennaPhase||0);
-            ctx.beginPath(); ctx.moveTo(-25,-18); ctx.quadraticCurveTo(-25+antSway, -40, -25+antSway*2, -55); ctx.stroke();
-
+        ctx.save(); ctx.translate(15, -6); ctx.rotate(-t.angle * Math.PI / 180);
+        ctx.fillStyle = '#34495e'; ctx.beginPath(); ctx.arc(0, 0, 8, 0, Math.PI*2); ctx.fill(); 
+        ctx.fillStyle = '#7f8c8d'; ctx.fillRect(0, -5, 30, 10); ctx.fillRect(30, -3.5, 45, 7); 
+        if(muzzleFlash.active && muzzleFlash.owner === t) {
+            ctx.fillStyle = `rgba(255, 200, 50, ${muzzleFlash.timer/5})`; ctx.shadowBlur = 30; ctx.shadowColor = 'orange'; ctx.beginPath(); ctx.arc(90, 0, 20+Math.random()*15, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur = 0;
+            muzzleFlash.timer--; if(muzzleFlash.timer<=0) muzzleFlash.active = false;
+        }
         ctx.restore();
-        ctx.restore();
+        ctx.fillStyle = grad; ctx.beginPath(); ctx.moveTo(-28, 0); ctx.lineTo(22, 0); ctx.lineTo(18, -20); ctx.lineTo(-30, -18); ctx.fill();
+        ctx.strokeStyle = '#bdc3c7'; ctx.lineWidth=1; let antSway = Math.sin(time*5 + (t.antennaPhase||0))* (t.antennaPhase||0); ctx.beginPath(); ctx.moveTo(-25,-18); ctx.quadraticCurveTo(-25+antSway, -40, -25+antSway*2, -55); ctx.stroke();
+        ctx.restore(); ctx.restore();
     }
 
     function drawProjectile() {
         if(!projectile) return;
-        ctx.fillStyle = '#fff'; ctx.shadowBlur=15; ctx.shadowColor='#f1c40f';
-        ctx.beginPath(); ctx.arc(projectile.x, projectile.y, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+        ctx.fillStyle = '#fff'; ctx.shadowBlur=15; ctx.shadowColor='#f1c40f'; ctx.beginPath(); ctx.arc(projectile.x, projectile.y, 4, 0, Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
         projectile.x += projectile.vx; projectile.y += projectile.vy; projectile.vy += CONSTANTS.gravity;
         if(Math.random()>0.5) particles.push({x:projectile.x, y:projectile.y, vx:0, vy:0, life:15, type:'smoke', color:'rgba(200,200,200,0.5)'});
-
         let px = Math.floor(projectile.x);
         if(px >= 0 && px < 1920) {
-             let groundY = terrain[px];
-             if(projectile.y >= groundY) {
+             if(projectile.y >= terrain[px]) {
                  for(let i=0; i<25; i++) particles.push({x:projectile.x, y:projectile.y, vx:(Math.random()-0.5)*12, vy:(Math.random()-0.5)*12, life:35, type:'fire'});
-                 for(let i=px-30; i<px+30; i++) if(i>=0 && i<1920) { 
-                     let d=Math.abs(i-px); let dep=Math.sqrt(900-d*d)*0.9; 
-                     terrain[i]+=dep; 
-                 }
-                 checkHit(projectile.x, projectile.y); 
-                 projectile = null;
+                 for(let i=px-30; i<px+30; i++) if(i>=0 && i<1920) { let d=Math.abs(i-px); let dep=Math.sqrt(900-d*d)*0.9; terrain[i]+=dep; }
+                 checkHit(projectile.x, projectile.y); projectile = null;
              }
         }
-        
-        if(projectile && (projectile.x < -100 || projectile.x > 2020 || projectile.y > 1200)) {
-            projectile = null; switchTurn();
-        }
+        if(projectile && (projectile.x < -100 || projectile.x > 2020 || projectile.y > 1200)) { projectile = null; switchTurn(); }
     }
 
     function drawFX() {
         if(weatherSystem.length > 0) {
             ctx.fillStyle = GAME.theme.weather==='rain' ? 'rgba(174, 194, 224, 0.4)' : 'rgba(255,255,255,0.6)';
-            weatherSystem.forEach(p => {
-                ctx.beginPath();
-                if(GAME.theme.weather==='rain') ctx.fillRect(p.x, p.y, 1, p.v*1.5);
-                else ctx.arc(p.x, p.y, p.s, 0, Math.PI*2);
-                ctx.fill();
-                p.y += p.v; p.x -= 1; if(p.y > 840) { p.y = -10; p.x = Math.random()*1920; }
-            });
+            weatherSystem.forEach(p => { ctx.beginPath(); if(GAME.theme.weather==='rain') ctx.fillRect(p.x, p.y, 1, p.v*1.5); else ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); p.y += p.v; p.x -= 1; if(p.y > 840) { p.y = -10; p.x = Math.random()*1920; } });
         }
         for(let i=particles.length-1; i>=0; i--) {
             let p = particles[i]; ctx.save(); ctx.globalAlpha = p.life / 30;
@@ -1691,6 +1976,10 @@
             else if (p.type==='spark') { ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, 2, 2); } 
             else { ctx.fillStyle = p.color || '#fff'; ctx.beginPath(); ctx.arc(p.x, p.y, 15-p.life/3, 0, Math.PI*2); ctx.fill(); }
             ctx.restore(); p.x += p.vx; p.y += p.vy; p.life--; if(p.life <= 0) particles.splice(i, 1);
+        }
+        for(let i=activeEmojis.length-1; i>=0; i--) {
+            let e = activeEmojis[i]; ctx.save(); ctx.font = "bold 40px Arial"; ctx.fillStyle = `rgba(255, 255, 255, ${e.alpha})`; ctx.textAlign = "center"; ctx.shadowColor = "black"; ctx.shadowBlur = 5; ctx.fillText(e.text, e.x, e.y); ctx.restore();
+            e.y -= 1; e.life--; if(e.life < 20) e.alpha -= 0.05; if(e.life <= 0) activeEmojis.splice(i, 1);
         }
     }
 
