@@ -474,6 +474,41 @@
                 padding: 10px !important;
             }
         }
+
+/* === СПЕЦИАЛЬНЫЕ СТИЛИ ДЛЯ TELEGRAM === */
+        
+        /* 1. Сдвигаем кнопку "Выход" в меню */
+        body.telegram-mode .menu-exit-btn {
+            top: 120px !important; /* Было 30px, сдвигаем ниже шапки TG */
+            left: 30px !important;
+        }
+
+        /* 2. Сдвигаем кнопку "Назад" в игре */
+        body.telegram-mode .back-btn {
+            top: 120px !important;
+            left: 30px !important;
+        }
+
+        /* 3. Сдвигаем полоски здоровья и имена */
+        body.telegram-mode #top-ui {
+            top: 100px !important; /* Опускаем весь верхний интерфейс */
+            /* Чуть сужаем ширину, чтобы края не уходили под закругления */
+            width: 90% !important; 
+            left: 5% !important;
+        }
+
+        /* 4. Исправляем Модальные окна (Инфо / БП) */
+        /* Делаем огромный отступ сверху внутри окна, чтобы заголовок не перекрывался */
+        body.telegram-mode .modal-header {
+            padding-top: 80px !important; 
+            height: auto !important;
+        }
+        
+        /* Дополнительно: Если окно БП слишком прижато к краям в Телеграме */
+        body.telegram-mode .modal-container {
+            border: 2px solid #555 !important; /* Делаем границу заметнее */
+        }
+        
     </style>
 </head>
 <body>
@@ -1983,6 +2018,15 @@ function drawObjects() {
         }
     }
 
+// --- ДЕТЕКТОР TELEGRAM ---
+    // Если игра запущена внутри Телеграма, добавляем класс к body
+    if (window.Telegram && window.Telegram.WebApp) {
+        document.body.classList.add('telegram-mode');
+        // Сообщаем телеграму, что приложение готово и его надо развернуть
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand(); 
+    }
+    
 </script>
 </body>
 </html>
