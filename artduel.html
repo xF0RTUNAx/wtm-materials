@@ -1212,63 +1212,49 @@ const THEMES = {
 
     function showOnlineMenu() { document.getElementById('online-panel').style.display = 'flex'; if (!peer) initPeer(); }
     
-    function initPeer() {
-        document.getElementById('connection-status').innerText = "Подключение к серверу...";
+   function initPeer() {
+        document.getElementById('connection-status').innerText = "Настройка сети...";
         
-        // МЫ ДОБАВЛЯЕМ КОНФИГУРАЦИЮ ДЛЯ УЛУЧШЕНИЯ СВЯЗИ
         peer = new Peer(null, {
-            debug: 2, // Показывает ошибки в консоли, если есть
+            debug: 1, // Меньше мусора в консоли
             config: {
-                // Список STUN-серверов (Google и другие бесплатные)
-                // Они помогают пробить NAT на мобильных телефонах
                 iceServers: [
                     { urls: 'stun:stun.l.google.com:19302' },
                     { urls: 'stun:stun1.l.google.com:19302' },
                     { urls: 'stun:stun2.l.google.com:19302' },
                     { urls: 'stun:stun3.l.google.com:19302' },
                     { urls: 'stun:stun4.l.google.com:19302' }
-                ]
+                ],
+                iceCandidatePoolSize: 10, // Готовим 10 вариантов подключения заранее
             }
         });
 
         peer.on('open', id => { 
             document.getElementById('my-peer-id').innerText = id; 
-            document.getElementById('connection-status').innerText = "Готов к подключению"; 
+            document.getElementById('connection-status').innerText = "Готов (4G Mode)"; 
             document.getElementById('connection-status').style.color = "#2ecc71";
         });
 
-        // УЛУЧШЕННАЯ ОБРАБОТКА ОШИБОК
         peer.on('error', err => {
-            console.error("PeerJS Error:", err);
+            console.error("Peer Error:", err);
+            let msg = "Ошибка сети";
+            if (err.type === 'peer-unavailable') msg = "Игрок не найден";
+            if (err.type === 'disconnected') msg = "Разрыв связи";
             
-            let errorText = "Ошибка P2P сервера";
-            
-            // Расшифровка популярных ошибок для игрока
-            if (err.type === 'peer-unavailable') {
-                errorText = "Игрок с таким ID не найден (или он оффлайн)";
-            } else if (err.type === 'network') {
-                errorText = "Проблема с интернетом";
-            } else if (err.type === 'browser-incompatible') {
-                errorText = "Браузер не поддерживает WebRTC";
-            } else if (err.type === 'disconnected') {
-                errorText = "Отключено от сервера";
-            }
-
-            document.getElementById('connection-status').innerText = errorText;
+            document.getElementById('connection-status').innerText = msg;
             document.getElementById('connection-status').style.color = "red";
             
-            // Если сервер упал, пробуем переподключиться через 5 секунд
-            if (err.type === 'network' || err.type === 'disconnected') {
-                setTimeout(() => {
-                    if (!peer.destroyed) peer.reconnect();
-                }, 5000);
+            // Авто-реконнект для мобилок
+            if(['network', 'disconnected', 'server-error', 'socket-error'].includes(err.type)) {
+                setTimeout(() => { if (!peer.destroyed) peer.reconnect(); }, 2000);
             }
         });
 
         peer.on('connection', c => { 
-            conn = c; 
+            // Принимаем входящее и сразу настраиваем
+            conn = c;
             GAME.myId = 1; 
-            document.getElementById('connection-status').innerText = "Игрок найден! Соединяем..."; 
+            document.getElementById('connection-status').innerText = "Соединение..."; 
             setupConn(); 
         });
     }
@@ -1276,28 +1262,61 @@ const THEMES = {
     function connectToPeer() {
         const input = document.getElementById('remote-peer-id');
         const id = input.value.trim(); 
-        if(!id) { alert("Пожалуйста, введите ID друга!"); return; }
-        document.getElementById('connection-status').innerText = "Попытка соединения...";
+        if(!id) { alert("Введите ID!"); return; }
+        
+        document.getElementById('connection-status').innerText = "Пробиваем NAT...";
         document.getElementById('connection-status').style.color = "yellow";
-        conn = peer.connect(id);
-        GAME.myId = 2;
+        
+        // ВАЖНО: 'json' работает стабильнее на мобилках чем 'binary'
+        conn = peer.connect(id, {
+            reliable: true,
+            serialization: 'json' 
+        });
+
         conn.on('error', (err) => {
-             document.getElementById('connection-status').innerText = "Ошибка соединения!";
+             document.getElementById('connection-status').innerText = "Сбой соединения";
              document.getElementById('connection-status').style.color = "red";
         });
+        
+        // Ждем пока канал реально откроется
         conn.on('open', () => { 
-            document.getElementById('connection-status').innerText = "Соединение установлено"; 
+            document.getElementById('connection-status').innerText = "Успех!"; 
             document.getElementById('connection-status').style.color = "#2ecc71";
             setupConn();
-            const myNick = document.getElementById('nickname').value || "Guest";
-            conn.send({ type: 'hello', name: myNick });
+            
+            // НЕБОЛЬШАЯ ЗАДЕРЖКА перед отправкой данных (дает каналу стабилизироваться)
+            setTimeout(() => {
+                const myNick = document.getElementById('nickname').value || "Guest";
+                conn.send({ type: 'hello', name: myNick });
+            }, 500);
         });
     }
 
-    function setupConn() { 
-        conn.on('data', d => handleData(d)); 
-        conn.on('close', () => { document.getElementById('disconnect-modal').style.display = 'flex'; });
-        conn.on('error', () => { document.getElementById('disconnect-modal').style.display = 'flex'; });
+   function setupConn() { 
+        // --- HEARTBEAT (Чтобы 4G не разрывал связь) ---
+        // Запускаем таймер, который каждые 2 секунды шлет пустой пакет
+        if(window.pingInterval) clearInterval(window.pingInterval);
+        window.pingInterval = setInterval(() => {
+            if(conn && conn.open) {
+                conn.send({ type: 'ping' });
+            }
+        }, 2000);
+        // ---------------------------------------------
+
+        conn.on('data', d => {
+            // Игнорируем пинги
+            if(d.type === 'ping') return;
+            handleData(d);
+        });
+        
+        conn.on('close', () => { 
+            document.getElementById('disconnect-modal').style.display = 'flex'; 
+            if(window.pingInterval) clearInterval(window.pingInterval);
+        });
+        conn.on('error', () => { 
+            document.getElementById('disconnect-modal').style.display = 'flex';
+            if(window.pingInterval) clearInterval(window.pingInterval);
+        });
     }
     
     function handleData(d) {
