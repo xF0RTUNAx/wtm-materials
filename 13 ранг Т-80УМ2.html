@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор 13 ранг Т-80УМ2</title> <style>
+        /* БАЗОВЫЕ СТИЛИ */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/12_december_25/db6_s28_tank_t80um2/db6_s28_t80um2_4_aade33d3917b02f6c11857431e23e98c.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1 { color: #ffc000; }
+        h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* СТИЛИ КОНТЕНТА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+        
+        /* Стили кнопок */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 20px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        /* Кнопка перехода на статью (Зеленая) */
+        .article-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 20px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .article-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 { font-size: 1.8em; }
+            h2 { font-size: 1.4em; margin-top: 10px; }
+            .content-section { background: rgba(0, 0, 0, 0.6); padding: 15px; }
+            .youtube-btn, .article-btn { width: 100%; box-sizing: border-box; font-size: 1em; }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8);
+                margin-top: 20px;
+            }
+        }
+    </style>
+
+<script async src="https://pl28316846.effectivegatecpm.com/fe/00/35/fe003566d7023017b13956fb25bbfacf.js"></script>
+ 
+</head>
+<body>
+    <div class="container">
+        <h1>13 ранг Т-80УМ2</h1>
+        
+        <img src="https://static.wtmobile.com/upload/fileman/images/2025/12_december_25/db6_s28_tank_t80um2/db6_s28_t80um2_prem_stat_ru_aab30e08b75516cba0adfcc2ca0948f7.jpg" alt="Tank Image Т-80УМ2" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>
+                Т-80УМ2 — один из вариантов дальнейшего развития танков Т-80У, которые выпускались Омским заводом транспортного машиностроения. В рамках программы модернизации Т-80УМ один из опытных образцов был оснащён комплексом активной защиты «Дрозд». После демонстрации в 1997 году единственного построенного Т-80УМ-2 в дальнейшую серию машина не пошла.
+            </p>
+            <img src="https://i.redd.it/gk2mveu9h9sa1.jpg" alt="Historical Photo Т-80УМ2" class="tank-image">
+        </div>
+
+        <div class="content-section">
+            <h2>Комплекс активной защиты</h2>
+            <p>Поскольку «Дрозд» — самый ранний комплекс, он обеспечивает защиту только от противотанковых управляемых ракет и медленных, мощных кумулятивных снарядов.</p>
+            <p>Пусковые установки расположены на башне в неподвижном состоянии и работают только в направлении башни. Положительной характеристикой является наличие достаточно большего количества боеприпасов, а именно 8 штук.</p>
+            <p>Тем не менее, учтите, что каждая пара отвечает только за свой сектор. То есть после срабатывания могут образоваться уязвимые участки, и тогда повторное попадание приведет к урону.</p>
+        </div>
+
+        <div class="content-section" style="text-align: center; border-left: 5px solid #28a745;">
+            <h3>Информация об игровых характеристиках</h3>
+            <p>Основным отличием от базовой версии (Т-80У) является наличие комплекса активной защиты «Дрозд». Поэтому предлагаем ознакомиться с готовой статьей про Т-80У, ведь в остальном на практике отличий не будет.</p>
+            
+            <a href="13 ранг Т-80У.html" class="article-btn">
+                Читать обзор Т-80У
+            </a>
+        </div>
+
+        <a href="https://youtu.be/9223FcfYIbQ" target="_blank" class="youtube-btn">
+             Смотреть полный обзор
+        </a>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+
+        <footer>
+            <p>Последнее обновление 02.01.2026. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+</body>
+</html>
