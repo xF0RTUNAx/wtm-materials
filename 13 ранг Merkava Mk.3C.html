@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор 13 ранг Merkava Mk.3C</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/12_december_25/db3_s28_tank_merkava_mk3c/db3_s28_merkava_mk3c_4_41f5b00a21c0500840fac6e031dca873.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+        
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 20px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+
+        /* НОВЫЙ СТИЛЬ: Кнопка перехода на статью (Зеленая для отличия) */
+        .article-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 20px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .article-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6);
+                padding: 15px;
+            }
+            .youtube-btn, .article-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8);
+                margin-top: 20px;
+            }
+        }
+    </style>
+
+<script async src="https://pl28316846.effectivegatecpm.com/fe/00/35/fe003566d7023017b13956fb25bbfacf.js"></script>
+ 
+</head>
+<body>
+    <div class="container">
+        <h1>13 ранг Merkava Mk.3C</h1>
+        
+        <img src="https://static.wtmobile.com/upload/fileman/images/2025/12_december_25/db3_s28_tank_merkava_mk3c/db3_s28_merkava_mk3c_prem_stat_ru_39efa2f45ab2b32288097bc42145c715.jpg" alt="New Tank Image" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            
+            <p>
+                Merkava Mk.3 — модификация израильского основного боевого танка Merkava Mk.2, была разработана в конце 1980-х годов. Машина получила новую систему подвески, двигатель мощностью 1200 л. с. вместе с новой трансмиссией, и новое 120-мм орудие, разработанное компанией «Israel Military Industries» на базе немецкой L44. В 1990 году было начато серийное производство танка.
+
+Параллельно с серийным выпуском, конструкция танка постоянно совершенствовалась. Так, сначала было улучшено бронирование крыши башни танка, а в 1995 году машину оснастили новой системой управления огнём Barak Zoher (сокр. Baz), модификация с которой получила обозначение Merkava Mk.3B Baz или Merkava Mk.3C. Благодаря новой СУО танк получил обновлённую оптику, электронику и панорамный прицел командира. Всего до окончания производства в 2002 году было произведено около 700 танков Merkava Mk.3 в различных версиях, которые до сих пор продолжают стоять на вооружении ЦАХАЛа.
+            </p>
+            
+            <img src="https://forum-en-cdn.warthunder.com/original/2X/c/c0adf0d15794d7602332a3fc5646c2d13b9a8e64.jpeg" alt="Historical Photo" class="tank-image">
+        </div>
+
+        <div class="content-section" style="text-align: center; border-left: 5px solid #28a745;">
+            <h3>Информация об игровых характеристиках</h3>
+            <p>Поскольку на практике данный танк не имеет существенных геймплейных отличий от <strong>Merkava Mk.3B</strong>, предлагаем ознакомиться с подробным разбором характеристик и тактики в уже готовой статье.</p>
+            
+            <a href="13 ранг Merkava Mk.3B.html" class="article-btn">
+                Читать обзор Merkava Mk.3B
+            </a>
+        </div>
+
+        <a href="https://youtu.be/GWbdJRGiXxE" target="_blank" class="youtube-btn">
+             Смотреть полный обзор
+        </a>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+
+        <footer>
+            <p>Последнее обновление 02.01.2026. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+</body>
+</html>
