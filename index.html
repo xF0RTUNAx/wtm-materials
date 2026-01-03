@@ -21,10 +21,10 @@
     <meta property="og:locale" content="ru_RU">
     
     <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-
     <style>
         /* ---------------------------------------------------- */
         /* --------- ГЛОБАЛЬНЫЕ СТИЛИ ВАШЕЙ ГЛАВНОЙ СТРАНИЦЫ --------- */
@@ -108,6 +108,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             border: 2px solid rgba(255, 255, 255, 0.1);
             transition: transform 0.3s ease;
+            cursor: pointer; 
         }
         
         .logo img:hover {
@@ -279,6 +280,79 @@
             transition: all 0.3s ease;
         }
 
+        /* --- НОВЫЙ СТИЛЬ: БАННЕР ПОДДЕРЖКИ --- */
+        .support-banner {
+            background: linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 100, 0, 0.15));
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .support-banner:hover {
+            border-color: rgba(255, 204, 0, 0.6);
+            box-shadow: 0 5px 20px rgba(255, 204, 0, 0.15);
+        }
+
+        .support-content h3 {
+            margin: 0 0 8px 0;
+            color: #ffcc00;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .support-content p {
+            margin: 0;
+            font-size: 0.95em;
+            opacity: 0.9;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+
+        .support-btn {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .support-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(255, 204, 0, 0.5);
+            color: #000;
+        }
+
+        @media (max-width: 600px) {
+            .support-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+            .support-content h3 {
+                justify-content: center;
+            }
+            .support-btn {
+                width: 100%;
+                justify-content: center;
+                box-sizing: border-box;
+            }
+        }
+
         .sponsors-card {
             background: rgba(0,0,0,0.3);
             border-radius: 20px;
@@ -334,13 +408,8 @@
                 gap: 20px;
             }
         }
-        /* ------------------------------- */
-
-        /* ---------------------------------------------------- */
-        /* --------- СТИЛИЗАЦИЯ ИЗОЛЯЦИИ КОНТЕНТА --------- */
-        /* ---------------------------------------------------- */
         
-        /* ФЛОТ */
+        /* Стили изоляции контента */
         .main-content.is-fleet-active #content {
             background: rgba(10, 20, 40, 0.95);
             color: #00ff7f;
@@ -352,7 +421,6 @@
         .main-content.is-fleet-active .header-greeting { display: none !important; }
         .main-content.is-fleet-active #content a { color: #ffcc00; }
 
-        /* АВИАЦИЯ */
         .main-content.is-aviation-active #content {
             background: transparent !important;
             box-shadow: none !important;
@@ -361,7 +429,6 @@
         }
         .main-content.is-aviation-active .header-greeting { display: none !important; }
 
-        /* ТАНКИ */
         .main-content.is-tank-active #content {
             background: transparent !important;
             box-shadow: none !important;
@@ -370,117 +437,195 @@
         }
         .main-content.is-tank-active .header-greeting { display: none !important; }
 
-      /* ---------------------------------------------------- */
-/* --------- ВАЖНО! МОБИЛЬНАЯ АДАПТАЦИЯ (СИММЕТРИЧНЫЕ ИКОНКИ) --------- */
-/* ---------------------------------------------------- */
-@media (max-width: 900px) {
-    .dashboard-wrapper { 
-        flex-direction: column; 
-        height: 100vh; 
-        width: 100%; 
-        border-radius: 0; 
-    }
-    
-    /* Панель навигации (горизонтальная полоска) */
-    .sidebar { 
-        width: 100%; 
-        height: 70px; /* Фиксируем высоту, чтобы не скакало */
-        padding: 0 15px; /* Чуть меньше отступы по бокам */
-        flex-direction: row; 
-        align-items: center; 
-        justify-content: space-between; 
-        border-right: none; 
-        border-bottom: 1px solid rgba(255,255,255,0.1); 
-        background: rgba(20, 30, 60, 0.95); 
-        z-index: 1000;
-        flex-shrink: 0;
-        box-sizing: border-box; /* Важно для правильных отступов */
-    }
-    
-    .logo { 
-        margin: 0; 
-        display: flex; 
-        align-items: center;
-        flex-shrink: 0; /* Чтобы лого не сжималось */
-    }
-    .logo img { 
-        height: 40px; 
-        width: auto; 
-        border-radius: 8px; 
-    }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ (МЕНЮ) */
+        @media (max-width: 900px) {
+            .dashboard-wrapper { 
+                flex-direction: column; 
+                height: 100vh; 
+                width: 100%; 
+                border-radius: 0; 
+            }
+            .sidebar { 
+                width: 100%; 
+                height: 70px; 
+                padding: 0 15px; 
+                flex-direction: row; 
+                align-items: center; 
+                justify-content: space-between; 
+                border-right: none; 
+                border-bottom: 1px solid rgba(255,255,255,0.1); 
+                background: rgba(20, 30, 60, 0.95); 
+                z-index: 1000;
+                flex-shrink: 0;
+                box-sizing: border-box; 
+            }
+            .logo { margin: 0; display: flex; align-items: center; flex-shrink: 0; }
+            .logo img { height: 40px; width: auto; border-radius: 8px; }
+            .nav-menu { 
+                display: flex; 
+                flex-grow: 1; 
+                justify-content: space-between; 
+                margin-left: 20px; 
+                gap: 0; padding: 0; margin-right: 0;
+            }
+            .nav-item { margin: 0; }
+            .nav-link {
+                width: 40px; height: 40px; 
+                padding: 0; display: flex;
+                align-items: center; justify-content: center; 
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.05); 
+                transition: all 0.2s ease;
+            }
+            .nav-link span { display: none; }
+            .nav-link i { 
+                margin: 0 !important; width: auto !important; 
+                font-size: 1.1em; color: rgba(255, 255, 255, 0.6); line-height: 1; 
+            }
+            .nav-link.active, .nav-link:hover {
+                background: rgba(255, 255, 255, 0.2); 
+                transform: translateY(0); 
+            }
+            .nav-link.active i, .nav-link:hover i { color: #fff; }
+            .user-profile { display: none; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .main-content { padding: 20px 15px; padding-bottom: 80px; } 
+            
+            .main-content.is-fleet-active { padding: 0; }
+            .main-content.is-fleet-active #content {
+                padding: 15px 10px; border-radius: 0; border: none !important; box-shadow: none;
+            }
+            .main-content.is-fleet-active ol li { padding: 12px 10px 12px 45px; margin: 5px 0; }
+            .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
+            .main-content.is-aviation-active { padding: 0; }
+            .main-content.is-tank-active { padding: 0; }
+        }
 
-   
-    /* Контейнер для кнопок меню */
-    .nav-menu { 
-        display: flex; 
+        /* ----------------------------------------------------------- */
+        /* --- СТИЛИ ДЛЯ "РЕАЛЬНОГО" ДНЕВНИКА (РУКОПИСНЫЙ СТИЛЬ) --- */
+        /* ----------------------------------------------------------- */
+        #secret-diary {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            /* Задний фон - затемнение с текстурой */
+            background: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.9) 100%);
+            backdrop-filter: blur(5px);
+            z-index: 99999;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            /* Подключаем рукописный шрифт */
+            font-family: 'Caveat', cursive; 
+        }
+
+        .diary-container {
+            max-width: 600px;
+            margin: 40px auto;
+            /* Текстура старой бумаги в линейку (CSS-градиент) */
+            background-color: #f4e4bc;
+            background-image: linear-gradient(transparent 95%, #c0b390 95%);
+            background-size: 100% 1.5rem; /* Высота строки */
+            
+            border-radius: 5px;
+            /* Добавляем "корешок" блокнота слева */
+            border-left: 15px solid #5e4c3e; 
+            
+            padding: 30px 40px;
+            /* Цвет чернил */
+            color: #4a3b2b; 
+            box-shadow: 15px 15px 40px rgba(0,0,0,0.6);
+            position: relative;
+            /* Небольшой наклон для реализма */
+            transform: rotate(-1deg);
+        }
         
-        /* ГЛАВНЫЕ ИЗМЕНЕНИЯ ЗДЕСЬ: */
-        flex-grow: 1; /* Меню растягивается на всю доступную ширину */
-        justify-content: space-between; /* Кнопки разлетаются по краям равномерно */
-        margin-left: 20px; /* Добавляем отступ от логотипа, чтобы они не слипались */
+        /* Эффект потрепанных краев сверху и снизу */
+        .diary-container::before, .diary-container::after {
+            content: ''; position: absolute; left: 0; width: 100%; height: 5px;
+            background: #f4e4bc; opacity: 0.6;
+        }
+        .diary-container::before { top: -5px; border-radius: 50% 50% 0 0 / 5px 5px 0 0; }
+        .diary-container::after { bottom: -5px; border-radius: 0 0 50% 50% / 0 0 5px 5px; }
+
+        /* Кнопка закрытия (выглядит как нарисованный крестик) */
+        .close-diary-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: transparent;
+            border: none;
+            color: #8b0000; /* Цвет красной ручки */
+            cursor: pointer;
+            font-size: 2.2em;
+            font-family: 'Caveat', cursive;
+            font-weight: bold;
+            transform: rotate(5deg);
+            transition: transform 0.2s;
+        }
         
-        /* Сбрасываем лишнее */
-        gap: 0; 
-        padding: 0;
-        margin-right: 0;
-    }
-    
-    .nav-item { margin: 0; }
-    
-    /* КВАДРАТНЫЕ КНОПКИ */
-    .nav-link {
-        width: 40px;  /* Чуть компактнее */
-        height: 40px; 
-        padding: 0;    
-        display: flex;
-        align-items: center;
-        justify-content: center; /* Строгое центрирование */
-        border-radius: 10px;
-        background: rgba(255, 255, 255, 0.05); 
-        transition: all 0.2s ease;
-    }
-    
-    .nav-link span { display: none; }
-    
-    /* ИСПРАВЛЕНИЕ СМЕЩЕНИЯ ИКОНКИ ВНУТРИ КНОПКИ */
-    .nav-link i { 
-        margin: 0 !important; /* !important убивает отступ справа от ПК версии */
-        width: auto !important; /* Убираем фиксированную ширину 20px */
-        font-size: 1.1em; 
-        color: rgba(255, 255, 255, 0.6); 
-        line-height: 1; /* Сброс высоты строки */
-    }
-    
-    /* Активная кнопка и наведение */
-    .nav-link.active, .nav-link:hover {
-        background: rgba(255, 255, 255, 0.2); 
-        transform: translateY(0); /* На мобилке лучше убрать сдвиг, чтобы не дергалось */
-    }
-    
-    .nav-link.active i, .nav-link:hover i {
-        color: #fff;
-    }
+        .close-diary-btn:hover {
+            transform: rotate(15deg) scale(1.1);
+        }
 
-    .user-profile { display: none; }
-    .cards-grid { grid-template-columns: 1fr; }
-    
-    .main-content { padding: 20px 15px; padding-bottom: 80px; } 
-    
-    /* Стили для контента (твои старые) */
-    .main-content.is-fleet-active { padding: 0; }
-    .main-content.is-fleet-active #content {
-        padding: 15px 10px;
-        border-radius: 0;
-        border: none !important;
-        box-shadow: none;
-    }
-    .main-content.is-fleet-active ol li { padding: 12px 10px 12px 45px; margin: 5px 0; }
-    .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
-    
-    .main-content.is-aviation-active { padding: 0; }
-    .main-content.is-tank-active { padding: 0; }
-}
+        .diary-content {
+            margin-top: 20px;
+        }
 
+        .diary-intro-icon {
+            font-size: 3em;
+            color: #4a3b2b;
+            margin-bottom: 20px;
+            opacity: 0.6;
+            text-align: center;
+            display: block;
+            transform: rotate(-5deg);
+            /* Эффект штампа */
+            text-shadow: 2px 2px 0px rgba(74, 59, 43, 0.2); 
+        }
+
+        .diary-entry {
+            margin-bottom: 40px;
+        }
+
+        .diary-date {
+            font-size: 1.2em;
+            color: #8b0000; /* Красные чернила для даты */
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-decoration: underline;
+            text-decoration-style: wavy; /* Волнистое подчеркивание */
+        }
+
+        .diary-text {
+            font-size: 1.5em; /* Крупный рукописный текст */
+            line-height: 1.5rem; /* Совпадает с линиями фона */
+        }
+        
+        /* Цитата/Выделение (эффект маркера) */
+        .diary-highlight {
+            background: rgba(255, 255, 0, 0.3); /* Желтый маркер */
+            padding: 5px 10px;
+            margin: 20px 0;
+            font-weight: bold;
+            border-radius: 5px;
+            display: inline-block;
+            transform: rotate(-1deg);
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        /* Адаптация дневника под мобильные */
+        @media (max-width: 600px) {
+            #secret-diary { padding: 10px; }
+            .diary-container { 
+                margin: 20px auto; 
+                padding: 20px 25px;
+                transform: rotate(0deg); /* Убираем наклон на маленьких экранах */
+                border-left-width: 10px;
+            }
+            .diary-text { font-size: 1.3em; }
+            .close-diary-btn { top: 10px; right: 15px; }
+        }
     </style>
 </head>
 <body>
@@ -488,7 +633,7 @@
     <div class="dashboard-wrapper">
         <aside class="sidebar">
             <div class="logo">
-                <img src="logo.jpg" alt="xFORTUNAx Logo">
+                <img src="logo.jpg" alt="xFORTUNAx Logo" id="logo-img">
             </div>
             
             <ul class="nav-menu">
@@ -531,11 +676,10 @@
         <main class="main-content">
             
             <div class="header-greeting">
-    <h1>Гайды по War Thunder Mobile</h1> 
-    
-    <p class="subtitle">Добро пожаловать, Командир!</p>
-    <p>Вы находитесь на главной странице. Выберите интересующий раздел:</p>
-</div>
+                <h1>Гайды по War Thunder Mobile</h1> 
+                <p class="subtitle">Добро пожаловать, Командир!</p>
+                <p>Вы находитесь на главной странице. Выберите интересующий раздел:</p>
+            </div>
 
             <button id="back-btn" onclick="returnToMain()">
                 <i class="fas fa-arrow-left"></i> Назад в меню
@@ -568,6 +712,18 @@
                     <i class="fas fa-info-circle"></i> Выберите раздел выше, чтобы загрузить информацию.
                 </p>
             </div>
+            
+            <div class="support-banner">
+                <div class="support-content">
+                    <h3><i class="fas fa-heart"></i> Поддержать автора</h3>
+                    <p>Привет! Вместо тысячи слов, скажу что был бы рад вашей поддержке :) 
+                        <br>Это поможет 
+                    поддерживать проект и его качество, и также вы сможете стать значимой и заметной частью сообщества!</p>
+                </div>
+                <a href="https://dalink.to/xf0rtunax" target="_blank" class="support-btn">
+                    Помочь <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
 
             <div id="sponsors-section" class="sponsors-card">
                 <h3><i class="fas fa-star"></i> Спонсоры проекта</h3>
@@ -585,32 +741,54 @@
                     <a href="#" onclick="navigateSection('Танковая кампания I War Thunder Mobile.html'); return false;">
                         <i class="fas fa-crosshairs"></i> Гайд по танкам в War Thunder Mobile
                     </a>
-                    
                     <a href="#" onclick="navigateSection('Ракетный флот I War Thunder Mobile.html'); return false;">
                         <i class="fas fa-ship"></i> Гайд по ракетному флоту в War Thunder Mobile
                     </a>
-                    
                     <a href="#" onclick="navigateSection('Авиационная кампания I War Thunder Mobile.html'); return false;">
                         <i class="fas fa-plane"></i> Гайд по авиации в War Thunder Mobile
                     </a>
-                    
                     <a href="minigame.html">
                         <i class="fas fa-gamepad"></i> Мини-игры и розыгрыши в War Thunder Mobile
                     </a>
-
-                    
                 </nav>
                 <div style="margin-top: 25px; font-size: 0.8em; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
                     &copy; 2025 xFORTUNAx 
                 </div>
             </footer>
-            </main>
+        </main>
+
+        <div id="secret-diary">
+            <div class="diary-container">
+                <button class="close-diary-btn" onclick="toggleDiary()">x</button>
+
+                <div class="diary-content">
+                    <i class="fas fa-clover diary-intro-icon"></i>
+                    
+                    <div class="diary-entry">
+                        <div class="diary-date">4 января 2026 г.</div>
+                        <div class="diary-text">
+                            <p>Интересно, сколько людей найдет эту пасхалку :)</p>
+                            
+                            <div class="diary-highlight">
+                                Дневники это хорошее дополнение в играх, фильмах и даже по жизни для еще одного раскрытия повествования.
+                            </div>
+                            
+                            <p>Пытался сделать еще одну мини-игру, но не получилось. Возможно придумаю что-то еще. И еще поработаю над новыми пунктами в раздех. Вроде как полезных</p>
+                            <p>И да, я не буду убирать этот прямоугольник 😁</p>
+                            <p style="text-align: right; margin-top: 30px;">~ xFORTUNAx</p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
         const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
         
-        // --- ОБНОВЛЕННЫЙ СКРИПТ СНЕГА ---
+        // --- СКРИПТ СНЕГА ---
         document.addEventListener("DOMContentLoaded", function() {
             const isMobile = window.innerWidth < 768;
             const snowCount = isMobile ? 20 : 50; 
@@ -659,7 +837,6 @@
                 setTimeout(() => {
                     contentDiv.innerHTML = html;
                     
-                    // АВТО-ПРОКРУТКА НАВЕРХ ПРИ ЗАГРУЗКЕ
                     mainContent.scrollTop = 0;
                     
                     const isFleet = url.includes('Ракетный флот');
@@ -699,7 +876,6 @@
                     if (isFleet || isAviation || isTank) {
                          document.getElementById('sponsors-section').style.display = 'none';
                          document.querySelector('.header-greeting').style.display = 'none';
-                         // СКРЫВАЕМ ФУТЕР ПРИ ЧТЕНИИ СТАТЬИ
                          document.getElementById('main-footer').style.display = 'none';
                     } else {
                          document.getElementById('sponsors-section').style.display = 'block';
@@ -726,13 +902,36 @@
             document.getElementById('back-btn').style.display = 'none';
             document.getElementById('sponsors-section').style.display = 'block';
             document.querySelector('.header-greeting').style.display = 'block';
-            
-            // ВОЗВРАЩАЕМ ФУТЕР
             document.getElementById('main-footer').style.display = 'block';
+        }
+        
+        /* --- СКРИПТ ОТКРЫТИЯ ЗАМЕТОК (1 КЛИК ПО ЛОГО) --- */
+        const logoImg = document.getElementById('logo-img');
+        const diary = document.getElementById('secret-diary');
+
+        if (logoImg) {
+            logoImg.addEventListener('click', function() {
+                this.style.transform = 'scale(0.9)';
+                setTimeout(() => { this.style.transform = 'scale(1)'; }, 100);
+                toggleDiary();
+            });
+        }
+
+        function toggleDiary() {
+            if (!diary) return;
+
+            if (diary.style.display === 'block') {
+                diary.style.display = 'none';
+                document.body.style.overflow = 'auto'; 
+            } else {
+                diary.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            }
         }
     </script>
 </body>
 </html>
+
 
 
 
