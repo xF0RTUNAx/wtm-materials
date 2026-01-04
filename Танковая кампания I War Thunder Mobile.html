@@ -48,38 +48,38 @@
     }
     #tank-campaign-root .nation-button:hover { transform: translateY(-3px); border-color: #ffd700; color: #ffd700; }
 
-    /* Фоны кнопок */
+    /* Фоны кнопок наций */
     #tank-campaign-root .usa { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover; }
     #tank-campaign-root .germany { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover; }
     #tank-campaign-root .ussr { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover; }
 
-    /* --- НОВЫЙ ДИЗАЙН КНОПКИ ДОП ИНФО --- */
+    /* --- ОБНОВЛЕННЫЙ ДИЗАЙН КНОПКИ ДОП ИНФО (С КАРТИНКОЙ) --- */
     #tank-campaign-root .misc-info {
-        background: #1a1a1a; /* Глубокий темный фон */
-        /* Техническая сетка на фоне (еле заметная) */
-        background-image: 
-            linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255, 215, 0, 0.05) 1px, transparent 1px);
-        background-size: 20px 20px;
-        
-        border: 2px solid #ffd700; /* Яркая золотая рамка */
+        /* Используем предложенную картинку с сильным затемнением для контраста */
+        background: linear-gradient(rgba(20, 20, 20, 0.8), rgba(20, 20, 20, 0.8)), url('https://static.wtmobile.com/upload/fileman/images/regular_pics/updates/italy_ground_1440x640_784b1384f7843d87677e324d0cef912a.jpg') center/cover;
+            
+        border: 2px solid #ffd700; /* Золотая рамка */
         color: #ffd700; /* Золотой текст */
         position: relative;
         overflow: hidden;
-        box-shadow: inset 0 0 15px rgba(0,0,0,0.8); /* Внутренняя тень */
+        box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.3);
+        text-shadow: 0 2px 4px rgba(0,0,0,1); /* Сильная тень для текста, чтобы читался на фоне танков */
+        transition: all 0.3s ease;
     }
     
-    /* Иконка */
-    #tank-campaign-root .misc-info i {
-        margin-right: 8px;
+    /* Иконка рядом с текстом */
+    #tank-campaign-root .misc-info i.fa-info-circle {
+        margin-right: 10px;
     }
 
+    /* Эффекты при наведении */
     #tank-campaign-root .misc-info:hover {
-        background: #ffd700; /* При наведении становится золотой */
-        color: #121212; /* Текст становится черным */
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); /* Свечение */
-        border-color: #ffd700;
+        /* При наведении немного осветляем фон золотым фильтром, картинка проявляется ярче */
+        background: linear-gradient(rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.2)), url('https://static.wtmobile.com/upload/fileman/images/regular_pics/updates/italy_ground_1440x640_784b1384f7843d87677e324d0cef912a.jpg') center/cover;
+        color: #fff; /* Текст становится белым */
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(0,0,0,0.5); /* Золотое свечение */
         transform: translateY(-3px);
+        text-shadow: 0 0 10px rgba(255,215,0,0.5);
     }
     /* ------------------------------------ */
 
@@ -115,8 +115,9 @@
             <button class="nation-button ussr" onclick="loadTankNation('техника СССР.html')">☭ СССР</button>
             
             <button class="nation-button misc-info" onclick="window.location.href='miscinfo.html'">
-    <i class="fas fa-info-circle"></i> Доп. Инфо
-</button>
+                <i class="fas fa-info-circle"></i> Доп. Инфо
+            </button>
+        </div>
         
         <button class="back-btn-tank" onclick="returnToTankMenu()">
             <i class="fas fa-undo"></i> Назад к нациям
@@ -130,7 +131,7 @@
     </div>
     
     <footer style="text-align: center; color: #6b8e23; margin-top: 30px; font-size: 0.8em; border-top: 1px solid #3e4a36; padding-top: 10px;">
-        Версия 3.0. Последнее обновление 04.01.2026. Если найдете ошибки или имеются предложения - писать @fortunawtm.
+        Версия 2.6. Последнее обновление 16.12.2025. Если найдете ошибки или имеются предложения - писать @fortunawtm.
     </footer>
 </div>
 
@@ -149,7 +150,6 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            // --- СБОР СТИЛЕЙ И КОНТЕНТА ---
             const styles = doc.head.querySelectorAll('style');
             let contentHTML = doc.body.innerHTML;
             
@@ -158,15 +158,12 @@
             });
             
             contentDiv.innerHTML = contentHTML;
-            // ---------------------------
 
-            // Смена фона
+            // Смена фона (miscinfo удален из проверки, так как это отдельная страница)
             setTimeout(() => {
                 if (url.includes('США')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_07_freedomfighters/1080x2340_wtm_freedom_fighters_6caa665440c37540dbcfe17edf84d9fe.jpg")'; 
                 else if (url.includes('Германии')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_08_ironeclipse/1080x2340_wtm_iron_eclipse_ab49c8f11e8d61405c7ca0ff1c15f287.jpg")';
                 else if (url.includes('СССР')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/24_12_frozenfront/1080x2340_wtm_frozen_front_b82827c44190754e4e7b97b2a6e98565.jpg")';
-                // ФОН ДЛЯ ДОП ИНФО (Ангар/Валкирии)
-                else if (url.includes('miscinfo')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_02_valkyries/1080x2340_wtm_valkyries_37648342796792aa29094301be482069.jpg")';
 
                 root.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
                 root.querySelector('#nation-selection h2').style.display = 'none';
