@@ -39,6 +39,7 @@
     
     /* Меню выбора наций */
     #tank-campaign-root .nation-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 25px; }
+    
     #tank-campaign-root .nation-button {
         padding: 20px 40px; color: #fff; border: 2px solid #556b2f; border-radius: 4px;
         font-size: 1.2em; font-family: 'Black Ops One', sans-serif !important;
@@ -51,6 +52,36 @@
     #tank-campaign-root .usa { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover; }
     #tank-campaign-root .germany { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover; }
     #tank-campaign-root .ussr { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover; }
+
+    /* --- НОВЫЙ ДИЗАЙН КНОПКИ ДОП ИНФО --- */
+    #tank-campaign-root .misc-info {
+        background: #1a1a1a; /* Глубокий темный фон */
+        /* Техническая сетка на фоне (еле заметная) */
+        background-image: 
+            linear-gradient(rgba(255, 215, 0, 0.05) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 215, 0, 0.05) 1px, transparent 1px);
+        background-size: 20px 20px;
+        
+        border: 2px solid #ffd700; /* Яркая золотая рамка */
+        color: #ffd700; /* Золотой текст */
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 0 15px rgba(0,0,0,0.8); /* Внутренняя тень */
+    }
+    
+    /* Иконка */
+    #tank-campaign-root .misc-info i {
+        margin-right: 8px;
+    }
+
+    #tank-campaign-root .misc-info:hover {
+        background: #ffd700; /* При наведении становится золотой */
+        color: #121212; /* Текст становится черным */
+        box-shadow: 0 0 20px rgba(255, 215, 0, 0.4); /* Свечение */
+        border-color: #ffd700;
+        transform: translateY(-3px);
+    }
+    /* ------------------------------------ */
 
     /* Кнопка Назад */
     #tank-campaign-root .back-btn-tank {
@@ -82,6 +113,10 @@
             <button class="nation-button usa" onclick="loadTankNation('выбор техники США.html')">★ США</button>
             <button class="nation-button germany" onclick="loadTankNation('техника Германии.html')">✙ Германия</button>
             <button class="nation-button ussr" onclick="loadTankNation('техника СССР.html')">☭ СССР</button>
+            
+            <button class="nation-button misc-info" onclick="loadTankNation('miscinfo.html')">
+                <i class="fas fa-info-circle"></i> Доп. Инфо
+            </button>
         </div>
         
         <button class="back-btn-tank" onclick="returnToTankMenu()">
@@ -96,7 +131,7 @@
     </div>
     
     <footer style="text-align: center; color: #6b8e23; margin-top: 30px; font-size: 0.8em; border-top: 1px solid #3e4a36; padding-top: 10px;">
-        Версия 2.5. Последнее обновление 16.12.2025. Если найдете ошибки или имеются предложения - писать @fortunawtm.
+        Версия 3.0. Последнее обновление 04.01.2026. Если найдете ошибки или имеются предложения - писать @fortunawtm.
     </footer>
 </div>
 
@@ -115,12 +150,10 @@
             const parser = new DOMParser();
             const doc = parser.parseFromString(html, 'text/html');
             
-            // --- ВАЖНОЕ ИСПРАВЛЕНИЕ ---
-            // Собираем стили из head и контент из body
+            // --- СБОР СТИЛЕЙ И КОНТЕНТА ---
             const styles = doc.head.querySelectorAll('style');
             let contentHTML = doc.body.innerHTML;
             
-            // Добавляем стили прямо в контент
             styles.forEach(styleTag => {
                 contentHTML = styleTag.outerHTML + contentHTML;
             });
@@ -133,6 +166,8 @@
                 if (url.includes('США')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_07_freedomfighters/1080x2340_wtm_freedom_fighters_6caa665440c37540dbcfe17edf84d9fe.jpg")'; 
                 else if (url.includes('Германии')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_08_ironeclipse/1080x2340_wtm_iron_eclipse_ab49c8f11e8d61405c7ca0ff1c15f287.jpg")';
                 else if (url.includes('СССР')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/24_12_frozenfront/1080x2340_wtm_frozen_front_b82827c44190754e4e7b97b2a6e98565.jpg")';
+                // ФОН ДЛЯ ДОП ИНФО (Ангар/Валкирии)
+                else if (url.includes('miscinfo')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_02_valkyries/1080x2340_wtm_valkyries_37648342796792aa29094301be482069.jpg")';
 
                 root.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
                 root.querySelector('#nation-selection h2').style.display = 'none';
@@ -149,7 +184,10 @@
 
     function returnToTankMenu() {
         const root = document.getElementById('tank-campaign-root');
-        root.querySelector('#nation-content').innerHTML = '<p style="color:#6b8e23; text-align: center;"><i class="fas fa-arrow-up"></i> Выберите нацию выше.</p>';
+        const contentDiv = root.querySelector('#nation-content');
+        
+        contentDiv.innerHTML = '<p style="color:#6b8e23; text-align: center;"><i class="fas fa-arrow-up"></i> Выберите нацию выше.</p>';
+        
         document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
         
         root.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'block');
@@ -158,52 +196,3 @@
         root.querySelector('.back-btn-tank').style.display = 'none';
     }
 </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
