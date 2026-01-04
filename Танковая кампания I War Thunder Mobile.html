@@ -114,10 +114,9 @@
             <button class="nation-button germany" onclick="loadTankNation('техника Германии.html')">✙ Германия</button>
             <button class="nation-button ussr" onclick="loadTankNation('техника СССР.html')">☭ СССР</button>
             
-            <button class="nation-button misc-info" onclick="loadTankNation('miscinfo.html')">
-                <i class="fas fa-info-circle"></i> Доп. Инфо
-            </button>
-        </div>
+            <button class="nation-button misc-info" onclick="window.location.href='miscinfo.html'">
+    <i class="fas fa-info-circle"></i> Доп. Инфо
+</button>
         
         <button class="back-btn-tank" onclick="returnToTankMenu()">
             <i class="fas fa-undo"></i> Назад к нациям
@@ -196,3 +195,4 @@
         root.querySelector('.back-btn-tank').style.display = 'none';
     }
 </script>
+
