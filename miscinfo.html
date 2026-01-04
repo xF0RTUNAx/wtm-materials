@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лайфхаки и советы в War Thunder Mobile</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* Базовые настройки страницы */
+        body {
+            background-color: #121212;
+            margin: 0;
+            padding: 20px;
+            padding-top: 80px; /* Отступ под фиксированную кнопку */
+        }
+
+        /* КОРНЕВОЙ КЛАСС РАЗДЕЛА */
+        .secret-dossier-root {
+            font-family: 'Roboto', sans-serif;
+            color: #e0e0e0;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* КНОПКА НАЗАД */
+        .back-button-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(18, 18, 18, 0.95);
+            border-bottom: 1px solid #3e4a36;
+            padding: 15px 20px;
+            z-index: 1000;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-back {
+            text-decoration: none;
+            color: #8fbc8f;
+            font-family: 'Black Ops One', sans-serif;
+            font-size: 1.1em;
+            text-transform: uppercase;
+            border: 1px solid #8fbc8f;
+            padding: 8px 20px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-back:hover {
+            background: #8fbc8f;
+            color: #121212;
+            box-shadow: 0 0 10px #8fbc8f;
+        }
+
+        /* ЗАГОЛОВКИ РАЗДЕЛОВ */
+        .dossier-header {
+            border-bottom: 2px dashed #8fbc8f;
+            padding-bottom: 10px;
+            margin: 40px 0 25px 0;
+            color: #ffd700;
+            font-family: 'Black Ops One', sans-serif;
+            font-size: 1.8em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .dossier-header:first-of-type { margin-top: 10px; }
+
+        /* СЕТКА МАТЕРИАЛОВ */
+        .materials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        /* КАРТОЧКА МАТЕРИАЛА */
+        .material-card {
+            background: rgba(30, 35, 30, 0.7);
+            backdrop-filter: blur(5px);
+            border: 1px solid #3e4a36;
+            border-left: 5px solid #556b2f;
+            padding: 20px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .material-card:hover {
+            transform: translateY(-5px);
+            background: rgba(45, 55, 45, 0.9);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.5);
+            border-color: #8fbc8f;
+        }
+
+        /* ЗАГОЛОВОК ВНУТРИ КАРТОЧКИ */
+        .material-title {
+            color: #8fbc8f;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-transform: uppercase;
+        }
+        
+        .material-title i {
+            background: rgba(0,0,0,0.3);
+            padding: 8px;
+            border-radius: 4px;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        /* ОПИСАНИЕ */
+        .card-desc {
+            font-size: 0.95em;
+            color: #ccc;
+            flex-grow: 1;
+        }
+
+        /* ЧИСЛОВЫЕ ЗНАЧЕНИЯ */
+        .material-val {
+            color: #ffd700;
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-family: 'Black Ops One', sans-serif;
+            font-size: 1.1em;
+            letter-spacing: 0.5px;
+        }
+
+        /* МОДИФИКАТОРЫ КАРТОЧЕК */
+        /* Опасные (слабые) */
+        .card-danger { 
+            border-left-color: #cd5c5c; 
+            background: rgba(60, 20, 20, 0.4);
+        }
+        .card-danger .material-title { color: #cd5c5c; }
+        .card-danger .material-title i { color: #fff; background: #cd5c5c; }
+
+        /* Усиленные (Броня высокой твердости) */
+        .card-strong {
+            border-left-color: #00bfff;
+            background: rgba(20, 40, 60, 0.4);
+        }
+        .card-strong .material-title { color: #00bfff; }
+        .card-strong .material-title i { color: #fff; background: #00bfff; }
+
+        /* Эпические (Ствол) */
+        .card-epic { 
+            border-left-color: #ffd700; 
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            background: linear-gradient(135deg, rgba(30,35,30,0.8) 0%, rgba(60,50,20,0.5) 100%);
+        }
+        .card-epic .material-title { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.4); }
+        .card-epic .material-title i { color: #000; background: #ffd700; }
+
+        /* СЕКЦИЯ ТАКТИК */
+        .tactics-section {
+            background: rgba(20, 25, 20, 0.8);
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #3e4a36;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        
+        .tactics-section::before {
+            content: "TOP SECRET";
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-family: 'Black Ops One', sans-serif;
+            font-size: 3em;
+            color: rgba(255,255,255,0.03);
+            pointer-events: none;
+            transform: rotate(-10deg);
+        }
+
+        .tactic-block {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid rgba(143, 188, 143, 0.2);
+        }
+        .tactic-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+        .tactic-title {
+            color: #ffd700;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .warning-text {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 8px 12px;
+            border-left: 3px solid #ff6b6b;
+            font-style: italic;
+            font-size: 0.95em;
+            margin-top: 10px;
+            display: inline-block;
+        }
+
+        /* ФУТЕР */
+        .site-footer {
+            margin-top: auto;
+            padding-top: 40px;
+            padding-bottom: 20px;
+            text-align: center;
+            border-top: 1px solid #3e4a36;
+            color: #556b2f;
+            font-size: 0.9em;
+        }
+        .site-footer span {
+            display: block;
+            margin-bottom: 5px;
+            font-family: 'Black Ops One', sans-serif;
+            opacity: 0.5;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="back-button-container">
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-chevron-left"></i> В главное меню
+        </a>
+    </div>
+
+    <div class="secret-dossier-root">
+        
+        <div class="dossier-header">
+            <i class="fas fa-layer-group"></i> Коэффициенты стойкости брони
+        </div>
+
+        <div class="materials-grid">
+            
+            <div class="material-card">
+                <div class="material-title"><i class="fas fa-cog"></i> Гусеничные траки</div>
+                <div class="card-desc">Равны катанной броне (1 к 1).</div>
+                <span class="material-val">20мм траков = 20мм брони</span>
+            </div>
+
+            <div class="material-card card-danger">
+                <div class="material-title"><i class="fas fa-exclamation-triangle"></i> Алюминий США (сплав 5083)</div>
+                <div class="card-desc">
+                    В 3 раза слабее катанной 30мм алюминия. <br>
+                    <em>Например:</em> снаряд с чувствительностью взрывателя 19мм не взорвется о слой 30мм алюминия.
+                </div>
+                <span class="material-val">30мм Al 5038 = 10мм Al катанного</span>
+            </div>
+
+            <div class="material-card">
+                <div class="material-title"><i class="fas fa-shield-alt"></i> Алюминий СССР</div>
+                <div class="card-desc">Сплав АБТ-101/102. Коэффициент стойкости ~0.4 (сильнее американского).</div>
+                <span class="material-val">30мм Al АБТ-101/102 = 12мм Al катанного</span>
+            </div>
+
+            <div class="material-card card-strong">
+                <div class="material-title"><i class="fas fa-gem"></i> Катанная броня высокой твердости</div>
+                <div class="card-desc">Обладает на 30% лучшей стойкостью к пробитию, чем обычная катанная броня.</div>
+                <span class="material-val">10мм тв. брони = 13мм обычной</span>
+            </div>
+
+            <div class="material-card card-danger">
+                <div class="material-title"><i class="fas fa-window-close"></i> Конструкционная сталь</div>
+                <div class="card-desc">В 5 раз слабее катанной брони!</div>
+                <span class="material-val">10мм стали = 2мм катанной брони</span>
+            </div>
+
+            <div class="material-card">
+                <div class="material-title"><i class="fas fa-car-crash"></i> Конструкционная сталь ходовой части</div>
+                <div class="card-desc">В 2 раза слабее катанной брони.</div>
+                <span class="material-val">20мм ходовой = 10мм катанной брони</span>
+            </div>
+
+            <div class="material-card card-danger">
+                <div class="material-title"><i class="fas fa-tree"></i> Дерево</div>
+                <div class="card-desc">На 20% слабее катанной гомогенной. Часто встречается на старой технике.</div>
+                <span class="material-val">15мм дерева = 12мм гомогенной брони</span>
+            </div>
+
+            <div class="material-card card-epic">
+                <div class="material-title"><i class="fas fa-skull"></i> Орудийная сталь</div>
+                <div class="card-desc">Экстремальная прочность. Точно неизвестно, но минимум в 7 раз прочнее катанной гомогенной.</div>
+                <span class="material-val">20мм орудийной стали ≈ 150мм катанной гомогенной брони</span>
+            </div>
+
+            <div class="material-card">
+                <div class="material-title"><i class="fas fa-cube"></i> NERA </div>
+                <div class="card-desc" style="font-size: 0.9em;">
+                    <strong>Против ОБПС:</strong> В 6 раз слабее катанной гомогенной (300мм = 50мм).<br>
+                    <strong>Против Кумулятивов:</strong> более эффективно (300мм = 140мм).
+                </div>
+            </div>
+            
+            <div class="material-card">
+                <div class="material-title"><i class="fas fa-square"></i> Металлополимер</div>
+                <div class="card-desc">
+                    Почти бесполезен против ломов (120мм = 8мм), но хорошо держит кумулятивы (120мм = 100мм).
+                </div>
+            </div>
+        </div>
+
+        <div class="dossier-header">
+            <i class="fas fa-book-dead"></i> Неочевидные лайфхаки и лазейки
+        </div>
+
+        <div class="tactics-section">
+            
+            <div class="tactic-block">
+                <div class="tactic-title"><i class="fas fa-ghost"></i> Прострел текстур</div>
+                <p><strong>Заборы (на карте американская пустыня, но в принципе, этот тип заборов для любой карты):</strong> не останавливают кумулятивы, фугасы и ПТУРы. Сквозь них можно смело и эффективно вести огонь.</p>
+                <p><strong>Контейнеры:</strong> первый выстрел ломом проходит насквозь.</p>
+            </div>
+
+            <div class="tactic-block">
+                <div class="tactic-title"><i class="fas fa-rocket"></i> Перехват ПТУРов</div>
+                <p>ПТУР можно сбить пулеметом, снарядом орудия или встречным ПТУРом.</p>
+                
+                <p style="color: #ffd700; margin-top: 15px; border-bottom: 1px dashed #ffd700; display:inline-block;"><strong>Защита от Крышебойных:</strong></p>
+                <p>Крышебойный боеприпас взрывается, реагируя на ПТУР <em>строго под собой</em>.</p>
+                <p>Если в вас летит такая ракета — <strong>пустите свой ПТУР ниже траектории вражеского</strong>. Вражеская ракета "увидит" вашу ракету под собой и взорвется в воздухе, а ваш снаряд полетит дальше во врага.</p>
+                
+                <div class="warning-text">
+                    <i class="fas fa-exclamation-circle"></i> Важно! Сбить крышебойку "пролетом снизу" можно <strong>только ПТУРом</strong>. Пули и обычные снаряды слишком быстрые и маленькие для срабатывания датчика.
+                </div>
+            </div>
+
+            <div class="tactic-block">
+                <div class="tactic-title"><i class="fas fa-rss"></i> Обман Радиовзрывателя (ЗРК)</div>
+                <p>Зенитные ракеты (ЗУР) часто имеют радиовзрыватель. Если такая летит вам в лоб — выпустите навстречу залп НАР (неуправляемых ракет). Пролетая рядом, они заставят ракету взорваться раньше времени.</p>
+                <p style="color: #8fbc8f; font-size: 0.9em; margin-top: 5px;"><em>Идеально работает на A-10 Warthog благодаря большому запасу ракет Hydra.</em></p>
+            </div>
+        </div>
+
+        <footer class="site-footer">
+            Материал предоставлен пользователем Femida. Версия 1.0. Последнее обновление 04.01.2026. Если найдете ошибки или имеются предложения - писать @fortunawtm.
+        </footer>
+
+    </div>
+</body>
+</html>
