@@ -614,7 +614,7 @@
             box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
         }
         
-        /* --- НОВЫЙ СТИЛЬ: ФОТО В ДНЕВНИКЕ (POLAROID) --- */
+        /* --- СТИЛЬ: ФОТО В ДНЕВНИКЕ (POLAROID) --- */
         .diary-photo {
             display: block;
             max-width: 100%;
@@ -733,7 +733,7 @@
                 </p>
             </div>
             
-            <div class="support-banner">
+            <div id="support-banner" class="support-banner">
                 <div class="support-content">
                     <h3><i class="fas fa-heart"></i> Поддержать автора</h3>
                     <p>Привет! Вместо тысячи слов, скажу что был бы рад вашей поддержке :) 
@@ -899,9 +899,13 @@
                          document.getElementById('sponsors-section').style.display = 'none';
                          document.querySelector('.header-greeting').style.display = 'none';
                          document.getElementById('main-footer').style.display = 'none';
+                         // СКРЫВАЕМ БАННЕР ПОДДЕРЖКИ
+                         document.getElementById('support-banner').style.display = 'none';
                     } else {
                          document.getElementById('sponsors-section').style.display = 'block';
                          document.getElementById('main-footer').style.display = 'block';
+                         // ПОКАЗЫВАЕМ БАННЕР ПОДДЕРЖКИ
+                         document.getElementById('support-banner').style.display = 'flex';
                     }
 
                 }, 100);
@@ -925,6 +929,9 @@
             document.getElementById('sponsors-section').style.display = 'block';
             document.querySelector('.header-greeting').style.display = 'block';
             document.getElementById('main-footer').style.display = 'block';
+            
+            // ВОЗВРАЩАЕМ БАННЕР ПОДДЕРЖКИ
+            document.getElementById('support-banner').style.display = 'flex';
         }
         
         /* --- СКРИПТ ОТКРЫТИЯ ЗАМЕТОК (1 КЛИК ПО ЛОГО) --- */
@@ -953,4 +960,5 @@
     </script>
 </body>
 </html>
+
 
