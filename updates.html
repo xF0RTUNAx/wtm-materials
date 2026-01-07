@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>История обновлений | xFORTUNAx WTM</title>
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <link rel="shortcut icon" href="logo.jpg" type="image/jpeg">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;600;700&family=Russo+One&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "4141cb59-095e-44fe-94fc-bdf5c121c84f",
+        });
+      });
+    </script>
+
+    <style>
+        /* --- ПЕРЕМЕННЫЕ И БАЗА --- */
+        :root {
+            --primary: #ffcc00;
+            --primary-glow: rgba(255, 204, 0, 0.4);
+            --bg-glass: rgba(16, 24, 45, 0.7);
+            --card-glass: rgba(255, 255, 255, 0.03);
+            --border-light: rgba(255, 255, 255, 0.1);
+            --text-main: #e0e0e0;
+            --text-muted: #9aa0b0; /* Чуть светлее для читаемости на RU */
+            --success: #00ff88;
+            --danger: #ff4d4d;
+            
+            /* Шрифты */
+            --font-header: 'Russo One', sans-serif;
+            --font-ui: 'Exo 2', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            background: #0a0a0a url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_blackfriday/1080x2340_wtm_black_friday_25_a9f60e1de15067444a14b926b53ea117.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            margin: 0; padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: -1;
+        }
+
+        /* --- ГЛАВНЫЙ КОНТЕЙНЕР --- */
+        .dashboard-wrapper {
+            display: flex;
+            width: 95%;
+            max-width: 1400px;
+            height: 92vh;
+            background: var(--bg-glass);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* --- САЙДБАР --- */
+        .sidebar {
+            width: 80px; 
+            background: rgba(0, 0, 0, 0.2);
+            border-right: 1px solid var(--border-light);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 10px;
+            align-items: center;
+            gap: 20px;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Более плавная анимация */
+            z-index: 10;
+            overflow: hidden;
+            box-sizing: border-box;
+            flex-shrink: 0;
+        }
+
+        .sidebar:hover {
+            width: 250px; /* Чуть шире для русских слов */
+            background: rgba(0,0,0,0.85);
+            align-items: flex-start;
+            padding-left: 20px;
+        }
+
+        /* Логотип */
+        .brand-area {
+            font-family: var(--font-header);
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            width: 100%;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .sidebar:hover .brand-area { opacity: 1; text-align: left; }
+
+        /* Кнопки навигации */
+        .nav-btn {
+            text-decoration: none;
+            color: var(--text-muted);
+            width: 100%;
+            padding: 12px 10px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.2s;
+            white-space: nowrap;
+            box-sizing: border-box;
+        }
+
+        .nav-btn i {
+            font-size: 1.2rem;
+            min-width: 40px; 
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: color 0.3s;
+        }
+
+        .nav-btn span {
+            opacity: 0;
+            transform: translateX(-10px);
+            transition: all 0.3s;
+            font-weight: 500; /* Жирность для читаемости */
+            font-size: 0.95rem;
+        }
+
+        .sidebar:hover .nav-btn span {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+        .nav-btn:hover i { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+
+        .nav-btn.special {
+            margin-top: auto;
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            color: var(--primary);
+        }
+        .nav-btn.special:hover {
+            background: var(--primary);
+            color: #000;
+        }
+        .nav-btn.special:hover i { color: #000; text-shadow: none; }
+
+        /* --- ОСНОВНОЙ КОНТЕНТ --- */
+        .main-content {
+            flex-grow: 1;
+            padding: 0;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            position: relative;
+        }
+
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-track { background: transparent; }
+        .main-content::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+
+        .page-header {
+            padding: 40px 50px 20px;
+            position: sticky;
+            top: 0;
+            background: linear-gradient(to bottom, rgba(16, 24, 45, 0.98), rgba(16, 24, 45, 0.8) 80%, transparent);
+            z-index: 5;
+            backdrop-filter: blur(5px);
+        }
+        
+        .page-header h1 {
+            font-family: var(--font-header);
+            margin: 0;
+            font-size: 2.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #fff, #bbb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- TIMELINE --- */
+        .timeline-container {
+            padding: 20px 50px 80px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .update-block {
+            display: flex;
+            gap: 30px;
+            position: relative;
+            margin-bottom: 60px;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 24px;
+            top: 50px;
+            bottom: -70px;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--primary) 0%, rgba(255,255,255,0.1) 80%, transparent 100%);
+            z-index: 0;
+        }
+        .update-block:last-child .timeline-line { display: none; }
+
+        .version-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 50px;
+            z-index: 1;
+        }
+
+        .marker-dot {
+            width: 20px; height: 20px;
+            background: #000;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--primary-glow);
+            margin-top: 15px;
+            position: relative;
+        }
+
+        .latest .marker-dot::after {
+            content: '';
+            position: absolute;
+            top: -3px; left: -3px; right: -3px; bottom: -3px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2.5); opacity: 0; }
+        }
+
+        .update-card {
+            flex-grow: 1;
+            background: var(--card-glass);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+        }
+        
+        .update-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .card-header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .version-tag {
+            font-family: var(--font-header);
+            font-size: 1.4em;
+            color: var(--primary);
+            letter-spacing: 1px;
+        }
+
+        .date-tag {
+            font-family: var(--font-ui);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 1em;
+            opacity: 0.8;
+        }
+        .latest .date-tag { color: #fff; opacity: 1; }
+
+        .card-body { padding: 25px; }
+
+        .update-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            margin: 0 0 25px 0;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: var(--font-ui);
+        }
+
+        .change-group { margin-bottom: 20px; }
+
+        .change-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 12px;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.9);
+            font-size: 0.95em;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-family: var(--font-ui);
+            min-width: 70px; /* Чуть шире для русских слов */
+            text-align: center;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .badge.new { background: rgba(0, 255, 136, 0.15); color: var(--success); border: 1px solid rgba(0, 255, 136, 0.3); }
+        .badge.fix { background: rgba(255, 77, 77, 0.15); color: var(--danger); border: 1px solid rgba(255, 77, 77, 0.3); }
+        .badge.info { background: rgba(255, 204, 0, 0.15); color: var(--primary); border: 1px solid rgba(255, 204, 0, 0.3); }
+
+        .vehicles-wrapper {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 15px;
+            margin-top: 12px;
+            border: 1px dashed rgba(255,255,255,0.15);
+        }
+        .vehicles-title {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            display: block;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .vehicles-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .vehicle-chip {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #2f3542, #1e2129);
+            padding: 8px 14px;
+            border-radius: 8px;
+            color: #fff;
+            font-family: var(--font-ui);
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+            font-size: 0.9em;
+        }
+
+        .vehicle-chip::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 3px; height: 100%;
+            background: var(--primary);
+        }
+
+        .vehicle-chip .rank {
+            font-size: 0.75em;
+            color: var(--primary);
+            margin-right: 10px;
+            opacity: 0.9;
+            background: rgba(0,0,0,0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .vehicle-chip:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        /* --- МОБИЛЬНАЯ АДАПТАЦИЯ --- */
+        @media (max-width: 900px) {
+            .dashboard-wrapper {
+                width: 100%; height: 100vh;
+                border-radius: 0;
+                flex-direction: column;
+                border: none;
+                overflow-y: auto; 
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                justify-content: space-around;
+                padding: 10px;
+                background: rgba(16, 24, 45, 0.98);
+                border-right: none;
+                border-bottom: 1px solid var(--border-light);
+                align-items: center; 
+                overflow: visible; 
+            }
+            .sidebar:hover { width: 100%; padding-left: 10px; } 
+            .sidebar .brand-area { display: none; } 
+            
+            .nav-btn {
+                flex-direction: column;
+                gap: 6px;
+                padding: 8px 12px;
+                width: auto;
+                font-size: 0.8em;
+            }
+            .nav-btn span { opacity: 1; transform: none; display: block; font-size: 0.7em;}
+            .nav-btn i { font-size: 1.3em; min-width: auto; }
+            .nav-btn.special { margin-top: 0; }
+
+            .page-header { padding: 25px 20px; text-align: center; }
+            .page-header h1 { font-size: 2em; }
+
+            .timeline-container { padding: 10px 15px 80px; }
+            .update-block { gap: 15px; }
+            .timeline-line { left: 14px; }
+            .version-marker { min-width: 30px; }
+            .marker-dot { width: 12px; height: 12px; margin-top: 18px; border-width: 2px;}
+
+            .card-header { padding: 12px 15px; }
+            .card-body { padding: 15px; }
+            .version-tag { font-size: 1.2em; }
+            .date-tag { font-size: 0.9em; }
+            
+            .badge { min-width: 50px; font-size: 0.65em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="brand-area">xFORTUNAx</div>
+
+            <a href="index.html" class="nav-btn">
+                <i class="fas fa-home"></i>
+                <span>Главная</span> </a>
+            
+            <a href="https://wtmobile.com/news" target="_blank" class="nav-btn">
+                <i class="fas fa-newspaper"></i>
+                <span>Новости игры</span> </a>
+
+            <a href="https://t.me/fortunawtmhelp" target="_blank" class="nav-btn special">
+                <i class="far fa-lightbulb"></i>
+                <span>Предложить идею</span>
+            </a>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1>Журнал обновлений</h1>
+            </div>
+
+            <div class="timeline-container">
+                
+                <div class="update-block latest">
+                    <div class="version-marker">
+                        <div class="marker-dot"></div>
+                        <div class="timeline-line"></div>
+                    </div>
+                    
+                    <div class="update-card">
+                        <div class="card-header">
+                            <span class="version-tag">v3.0.0</span>
+                            <span class="date-tag">07.01.2026</span>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="update-title">⚡ Глобальное обновление сайта</h3>
+                            
+                            <div class="change-group">
+                                <div class="change-item">
+                                    <span class="badge new">Новое</span>
+                                    <span>Интеграция Push-уведомлений.</span>
+                                </div>
+                                <div class="change-item">
+                                    <span class="badge new">Новое</span>
+                                    <span>Добавлен раздел "Журнал обновлений".</span>
+                                </div>
+                                <div class="change-item">
+                                    <span class="badge new">Новое</span>
+                                    <span>Добавлен раздел "Доп. инфо" в танковой кампании.</span>
+                                </div>
+                                <div class="change-item">
+                                    <span class="badge info">Прочее</span>
+                                    <span>Добавлена пасхалка...</span>
+                                </div>
+                            </div>
+
+                            <div class="change-group">
+                                <div class="change-item" style="display: block;">
+                                    <span class="badge info" style="margin-bottom: 8px; display:inline-block;">Контент</span>
+                                    <span>Добавлена новая техника в кампании:</span>
+                                    
+                                    <div class="vehicles-wrapper">
+                                        <span class="vehicles-title">Танковая</span>
+                                        <div class="vehicles-grid">
+                                             <a href="12 ранг M1 Abrams.html" class="vehicle-chip">
+                                                <span class="rank">XII</span> M1 Abrams
+                                            </a>
+                                            <a href="11 ранг M3A3 Bradley.html" class="vehicle-chip">
+                                                <span class="rank">XI</span> M3A3 Bradley
+                                            </a>
+                                            <a href="9 ранг M60A3 TTS.html" class="vehicle-chip">
+                                                <span class="rank">IX</span> M60A3 TTS
+                                            </a>
+                                            <a href="6 ранг 2C3М.html" class="vehicle-chip">
+                                                <span class="rank">VI</span> 2С3М Акация
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="change-group">
+                                <div class="change-item">
+                                    <span class="badge fix">Другое</span> <span>Исправление ошибок и оптимизация.</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>
