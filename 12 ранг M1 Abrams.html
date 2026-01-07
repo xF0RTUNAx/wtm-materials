@@ -1,0 +1,241 @@
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор 12 ранг M1 Abrams</title>
+    <style>
+        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/07_july_25/db7_s22_comtank_m1a1hc/s22_db7_tank_history_8e8c6382d0f6480ceace0e75b34265cf.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(136, 136, 136, 0.7);
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            overflow: hidden;
+        }
+        h1 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h2 {
+            color: #ffc000;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+         h3 {
+            color: #ffffff;
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+       
+        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p {
+            margin-bottom: 10px;
+        }
+       
+        /* Стили для кнопки YouTube */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .youtube-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
+        }
+        /* Кнопка Назад */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            text-shadow: 1px 1px 2px black;
+        }
+        .back-button:hover {
+            background-color: #004494;
+            transform: translateY(-3px);
+        }
+        footer {
+            text-align: center;
+            font-size: 1em;
+            color: #ff0000;
+            margin-top: 50px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                max-width: 100%;
+                padding: 15px;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+            h1 {
+                font-size: 1.8em;
+                color: #ffc000;
+            }
+            h2 {
+                font-size: 1.4em;
+                color:  #ffc000;
+                margin-top: 10px;
+            }
+            .content-section {
+                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
+                padding: 15px;
+            }
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+                font-size: 1em;
+            }
+            footer {
+                font-size: 0.8em;
+                padding: 10px;
+                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
+                margin-top: 20px;
+            }
+        }
+    </style>
+
+
+ 
+</head>
+<body>
+    <div class="container">
+        <h1>12 ранг M1 Abrams</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/abrams/abramsmain.webp" alt="M1 Abrams Tank" class="tank-image">
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>M1 Abrams (Tank, Combat, Full-Tracked: 105-mm Gun, M1) — основной боевой танк США, разработанный в 1970-ых годах, как замена устаревшим M60 Patton. После того как конгресс США отменил проекты МBT-70 и XM803 в конце 1971 года, армия возобновила свою программу преемника M60, и уже в январе 1973 года Пентагон представил требования к танку. Требования Пентагона предусматривали танковую пушку калибром от 105 до 120 мм и пушку «Бушмастер» калибром от 20 до 30 мм. В планах предусматривался танк массой около 54 тонн. В июне армия заключила конкурентные трёхлетние контракты с корпорациями Chrysler и General Motors на производство прототипов. В феврале 1976 года два прототипа были испытаны на Абердинском полигоне. Chrysler выбрал двигатель с рекуперативной турбиной производства Avco Lycoming, а General Motors выбрал дизельный двигатель Teledyne Continental. При этом оба танка были вооружены лицензионной версией 105-мм орудия Royal Ordnance L7. В июле армия рекомендовала выбрать предложение General Motors, но Пентагон проигнорировал эту рекомендацию, попросив конкурентов изменить свои предложения, и в ноябре армия уже сделала выбор дизайна компании Chrysler. Это предложение было более привлекательным, поскольку компания заявила, что может включить 120-мм пушку Rheinmetall без увеличения затрат, веса или сроков производства. В период с 1979 по 1985 г. было произведено 3273 шт. танков M1 Abrams, в том числе и в модификации IPM1. На вооружение армии США танк приняли спустя год после начала производства в 1980 году. За свой срок службы танк подвергался множеству изменений и модернизаций, что позволяет ему служить и сейчас во многих уголках планеты.</p>
+            <img src="https://suprotyv.com/wp-content/uploads/2023/01/amerykanskyj-Tank-M1A1-Abrams.jpg" alt="Historical M1 Abrams" class="tank-image">
+        </div>
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+             <p><strong>Плюсы:</strong> отличная подвижность, визитная карточка танка. Газотурбинный двигатель AGT-1500 (1500 л.с.) даёт чудовищный разгон и высокую максимальную скорость (~79 км/ч) и заднюю скорость (~42 км/ч). Удельная мощность (~27 л.с./т) позволяет быстро занимать позиции и менять фланги.</p>
+            <p><strong>Минусы:</strong> высокая масса (~56 т) приводит к значительной инерционности на поворотах и проседанию на мягких грунтах. Управление на максимальной скорости требует аккуратности.</p>
+        </div>
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <p><strong>Плюсы:</strong> первый американский танк с серьёзной комбинированной бронёй.</p>
+            <p><strong>Башня:</strong> лобовая броня башни (особенно её центральная часть) на своей дистанции (1-1.5 км) очень крепка. Стойко держит снаряды ранних 105-мм пушек.</p>
+            <p><strong>Живучесть:</strong> просторное боевое отделение с разнесением экипажа (4 человека), изолированные топливные баки и боеукладка в кормовой нише башни (за бронедверью) дают высокий шанс пережить первое попадание.</p>
+<p><strong>Минусы:</strong> верхняя лобовая деталь (ВЛД) корпуса — главная слабость. Пробивается большинством ОБПС своего ранга. Борта и корма — абсолютно уязвимы. Маска орудия («щеки») — ещё одно слабое место.</p>
+        </div>
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p>105-мм нарезная пушка M68A1. Стабилизатор в двух плоскостях. Высокая точность и скорострельность (5 сек с прокачанной скорострельностью).</p>
+            <p><strong>Снаряды:</strong></p>
+            <p>M774 (ОБПС): Основной боевой снаряд. Позволяет эффективно бороться с лобовой бронёй своих одноклассников при точной стрельбе по слабым зонам.</p>
+            <p>M735 (ОБПС): Базовый, слабый для своего ранга. Использовать только при прокачке вооружения танка.</p>
+            <p>М393А2 (БФС): Эффективен против легкобронированной техники.</p>
+            <p>М456А2 (КС): Эффективен против средней и легкобронированной техники.</p>
+            <p>Дополнительно: 2 х 7.62-мм и 1 х 12.7-мм пулемёт.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/abrams/abramsweapon.webp" alt="Снаряды M1 Abrams" class="tank-image" style="margin-top: 15px;">
+        </div>
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>Хорошие углы вертикальной наводки (-10°/+20°). Система быстрого тушения пожара. Наличие дымовых гранат (12 шт).</p>
+        </div>
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>M1 Abrams — эталонный танк поддержки и тактического манёвра. Он сочетает хорошую защиту башни, феноменальную подвижность и точное орудие, но требует от игрока максимального использования местности и тактической смекалки, так как не является непробиваемым.</p>
+        </div>
+        <a href="https://youtu.be/-PjBZ6XmbEo" target="_blank" class="youtube-btn">
+             Смотреть полный обзор
+        </a>
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+        <footer>
+            <p>Материал предоставлен пользователем Krampus. Последнее обновление 07.01.2026. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+</body>
+</html>
