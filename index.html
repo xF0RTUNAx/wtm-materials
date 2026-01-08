@@ -263,9 +263,12 @@
             background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_03_stpatrick2025/1080x2340_wtm_saintpatricks_day25_640351f6fdaaca1296d868f957108bdd.jpg') center/cover;
         }
         #updates-btn {
-        background: url('https://static.wtmobile.com/upload/fileman/images/2025/03_march_25/event_pokryshkin_060225/web_1440x640_map_event_5046c13a13568bf0a1487cd98d036226.webp') center/cover;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/03_march_25/event_pokryshkin_060225/web_1440x640_map_event_5046c13a13568bf0a1487cd98d036226.webp') center/cover;
         }
-        
+        /* Новый стиль для кнопки симулятора */
+        #trophy-sim-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/regular_pics/1440x640_wtm_premium_gold_kv220_f385b24bac8daad3117fb2ad6f9515f4.jpg') center/cover;
+        }
         
         #back-btn {
             display: none;
@@ -739,10 +742,15 @@
                     <i class="fas fa-gamepad"></i>
                     <span>Мини-игры</span>
                 </button>
+
+                <button id="trophy-sim-btn" class="card-btn" onclick="window.location.href='trophy-sim.html'">
+                    <i class="fas fa-box-open"></i>
+                    <span>Симулятор трофеев</span>
+                </button>
                 
                 <button id="updates-btn" class="card-btn" onclick="window.location.href='updates.html'">
-    <i class="fas fa-bullhorn"></i>
-    <span>Журнал обновлений</span>
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Журнал обновлений</span>
                 </button>
                     
             </div>
@@ -984,12 +992,3 @@
     
 </body>
 </html>
-
-
-
-
-
-
-
-
-
