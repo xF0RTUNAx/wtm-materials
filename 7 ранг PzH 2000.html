@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>WTM: обзор 7 ранг PzH 2000</title>
     <style>
-        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+    
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Уникальный фон для PzH 2000 */
             background: url('https://static.wtmobile.com/upload/fileman/images/2025/02_february_25/db7_s17_bigtank_pzh/db7_s17_pzh_history_b9c721fe92d6f0c0f9061b8ff87562b7.jpg') no-repeat center center fixed;
             background-size: cover;
             color: white;
@@ -25,7 +26,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: -1;
         }
         @keyframes fadeIn {
@@ -36,28 +37,20 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 30px;
-            background: rgba(136, 136, 136, 0.7);
+            background: rgba(20, 20, 20, 0.85); 
             border-radius: 25px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
         }
-        h1 {
-            color: #ffc000;
+        h1, h2, h3 {
             text-shadow: 0 2px 4px black;
             position: relative;
         }
-        h2 {
-            color: #ffc000;
-            text-shadow: 0 2px 4px black;
-            position: relative;
-        }
-         h3 {
-            color: #ffffff;
-            text-shadow: 0 2px 4px black;
-            position: relative;
-        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
         h1::before, h2::before {
             content: "";
             position: absolute;
@@ -68,8 +61,8 @@
             background: linear-gradient(to right, #0056b3, #3388d1);
             border-radius: 2px;
         }
-       
-        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
         .tank-image {
             width: 100%;
             height: auto;
@@ -79,16 +72,14 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
         .content-section {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05); 
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 20px;
         }
-        .content-section p {
-            margin-bottom: 10px;
-        }
-       
-        /* Стили для кнопки YouTube */
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
         .youtube-btn {
             display: flex;
             align-items: center;
@@ -103,14 +94,10 @@
             margin: 30px auto;
             width: fit-content;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-shadow: 1px 1px 2px black;
+            transition: transform 0.3s ease;
         }
-        .youtube-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
-        }
-        /* Кнопка Назад */
+        .youtube-btn:hover { transform: scale(1.05); }
+
         .back-button {
             margin-top: 30px;
             display: block;
@@ -128,110 +115,243 @@
             max-width: 300px;
             margin-left: auto;
             margin-right: auto;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            text-shadow: 1px 1px 2px black;
+            transition: background-color 0.3s ease;
         }
-        .back-button:hover {
-            background-color: #004494;
-            transform: translateY(-3px);
-        }
-        footer {
-            text-align: center;
-            font-size: 1em;
-            color: #ff0000;
-            margin-top: 50px;
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                max-width: 100%;
-                padding: 15px;
-                background: transparent;
-                border-radius: 0;
-                box-shadow: none;
-                border: none;
-            }
-            h1 {
-                font-size: 1.8em;
-                color: #ffc000;
-            }
-            h2 {
-                font-size: 1.4em;
-                color:  #ffc000;
-                margin-top: 10px;
-            }
-            .content-section {
-                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
-                padding: 15px;
-            }
-            .youtube-btn {
-                width: 100%;
-                box-sizing: border-box;
-                font-size: 1em;
-            }
-            footer {
-                font-size: 0.8em;
-                padding: 10px;
-                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
-                margin-top: 20px;
-            }
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
         }
     </style>
-
-
-    
 </head>
 <body>
     <div class="container">
         <h1>7 ранг PzH 2000</h1>
         <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/pzhmain.webp" alt="PzH 2000 Tank" class="tank-image">
-         <div class="content-section">
+        
+        <div class="content-section">
             <h2>Историческая справка</h2>
             <p>После создания буксируемой гаубицы FH70 возникла идея её установки на гусеничное шасси, что позволило бы получить САУ с лучшими подвижностью и дальностью стрельбы, чем М109. Для решения этой задачи в 1973 году объединились ФРГ, Великобритания и Италия, однако работа затянулась более чем на десятилетие. После испытаний опытных образцов выяснилась низкая надёжность машины, в результате чего в 1986 году ФРГ вышла из программы и начала создание новой САУ с чистого листа. Конструирование PzH 2000 было поручено компаниям Rheinmetall и Krauss-Maffei Wegmann. От самоходной установки требовалось не только значительное повышение дальности стрельбы, но и высокая её автоматизация, скорострельность и наличие защиты от контрбатарейного огня. Машина получилась удачной, после заказа армией ФРГ в 1996 году 185 машин, PzH 2000 также поступила на вооружение ряда стран с общим объёмом заказа в 425 машин. PzH 2000 использовалась в войнах в Афганистане и Украине.</p>
             <img src="https://upload.wikimedia.org/wikipedia/commons/c/c0/PzH_2000_-_160315-A-DN311-010.jpg" alt="Historical PzH 2000" class="tank-image">
+        </div>
+
         <div class="content-section">
             <h2>Краткий обзор</h2>
             <h3>Маневренность</h3>
-            <p><strong>Плюсы:</strong> очень хорошая для САУ подвижность. Мощный дизельный двигатель (1000 л.с.) и гусеничная база Leopard 1 позволяют развивать до 66 км/ч вперед и 66 км/ч назад (реверсивная коробка передач) по шоссе и быстро менять позиции. Отличная удельная мощность (~17 л.с./т).</p>
+             <p><strong>Плюсы:</strong> очень хорошая для САУ подвижность. Мощный дизельный двигатель (1000 л.с.) и гусеничная база Leopard 1 позволяют развивать до 66 км/ч вперед и 66 км/ч назад (реверсивная коробка передач) по шоссе и быстро менять позиции. Отличная удельная мощность (~17 л.с./т).</p>
             <p><strong>Минусы:</strong> большие габариты и масса делают её неповоротливой на мягких грунтах.</p>
         </div>
+
         <div class="content-section">
             <h3>Броня и живучесть</h3>
-          <p><strong>Плюсы:</strong> противоснарядное бронирование лба корпуса (до ~30 мм под углом) и маска орудия иногда могут защитить от огня авиационных пушек (20-23 мм) и осколков.</p>
+            <p><strong>Плюсы:</strong> противоснарядное бронирование лба корпуса (до ~30 мм под углом) и маска орудия иногда могут защитить от огня авиационных пушек (20-23 мм) и осколков.</p>
             <p><strong>Минусы:</strong> полное отсутствие защиты. Борта (10-20 мм), корма и крыша пробиваются даже крупнокалиберными пулеметами (12.7-14.5 мм). Любой попавший фугасный или кумулятивный снаряд гарантированно уничтожает машину. Экипаж из 5 человек размазан по большой рубке.</p>
         </div>
+
         <div class="content-section">
             <h3>Вооружение</h3>
-           <p>Основное: 155-мм гаубица L/52. Главная фишка — скорострельность. Вторая САУ в игре по скорости перезарядки в 5 секунд.</p>
+            <p>Основное: 155-мм гаубица L/52. Главная фишка — скорострельность. Вторая САУ в игре по скорости перезарядки в 5 секунд.</p>
             <p><strong>Снаряды:</strong> </p>
             <p>М107 (ОФС): Основной снаряд. Мощный фугас (около 9.14 кг ВВ). Уничтожает легкую технику одним попаданием, с одного-двух попаданий выводит из строя даже тяжелые танки (критикуя модули и экипаж через крышу и маску орудия).</p>
             <p> ОЕ F3 (ОФС): Эффективен против слабо бронированных целей. Взрывается с огромной силой.</p>
             <p>М107 (PF) (ОФ-РВ): Эффективен против самолетов. </p>
             <img src="https://static.wtmobile.com/upload/fileman/images/2025/02_february_25/db7_s17_bigtank_pzh/db7_s17_pzh_shells_ru_2be26bb8596d295b6cd8d9b5ee2408b1.png" alt="Снаряды PzH 2000" class="tank-image" style="margin-top: 15px;">
         </div>
+
         <div class="content-section">
             <h3>Особенности</h3>
             <p> Углы наведения: Горизонтальная наводка — только 11° влево-вправо. Это главный минус. Для стрельбы в другую сторону нужно разворачивать весь корпус, что очень медленно. </p>
         </div>
+
         <div class="content-section" style="border-left: 5px solid #ffcc00;">
             <h3>Выводы и комментарии</h3>
             <p>PzH 2000 — узкоспециализированная машина поддержки и арт-каратель. Это не танк и даже не ПТ-САУ в классическом понимании. Её сила — в способности накрывать противника шквалом мощных фугасов с безопасной дистанции.</p>
-        </div>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Народный рейтинг: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Голосов: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Нажми, чтобы оценить</div>
+            </div>
+            </div>
+
         <a href="https://youtu.be/QYBW_R6HTkU?si=xYp0isunfOZfW_2n" target="_blank" class="youtube-btn">
              Смотреть полный обзор
         </a>
+        
         <button class="back-button" onclick="window.location.href = 'index.html'">
             ← Назад к главной странице
         </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=ru" 
+                data-telegram-discussion="fortunawtm_comments/21" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
         <footer>
             <p>Материал предоставлен пользователем Krampus. Последнее обновление 16.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
-         </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+      
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 'pzh_2000'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "Вы уже голосовали! Спасибо.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Отправка...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Голос принят! Спасибо.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Ошибка доступа.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Ошибка базы.";
+            msg.style.color = "red";
+        });
+    </script>
 </body>
 </html>
