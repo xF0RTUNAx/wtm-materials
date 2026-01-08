@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>WTM: 13 ранг HSTV-L</title>
+    <title>WTM: обзор 13 ранг HSTV-L</title>
     <style>
-        /* БАЗОВЫЕ СТИЛИ (из вашего шаблона) */
+        /* --- БАЗОВЫЕ СТИЛИ --- */
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Уникальный фон для HSTV-L */
             background: url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db5_s27_tank_hstv-l/db5_s27_hstv-l_4_c8460e10d55c62f414a1f0e484b36473.jpg') no-repeat center center fixed;
             background-size: cover;
             color: white;
@@ -25,7 +26,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: -1;
         }
         @keyframes fadeIn {
@@ -36,28 +37,20 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 30px;
-            background: rgba(136, 136, 136, 0.7);
+            background: rgba(20, 20, 20, 0.85); 
             border-radius: 25px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
         }
-        h1 {
-            color: #ffc000;
+        h1, h2, h3 {
             text-shadow: 0 2px 4px black;
             position: relative;
         }
-        h2 {
-            color: #ffc000;
-            text-shadow: 0 2px 4px black;
-            position: relative;
-        }
-         h3 {
-            color: #ffffff;
-            text-shadow: 0 2px 4px black;
-            position: relative;
-        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
         h1::before, h2::before {
             content: "";
             position: absolute;
@@ -68,8 +61,8 @@
             background: linear-gradient(to right, #0056b3, #3388d1);
             border-radius: 2px;
         }
-       
-        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
         .tank-image {
             width: 100%;
             height: auto;
@@ -79,16 +72,14 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
         .content-section {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05); 
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 20px;
         }
-        .content-section p {
-            margin-bottom: 10px;
-        }
-       
-        /* Стили для кнопки YouTube */
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
         .youtube-btn {
             display: flex;
             align-items: center;
@@ -103,14 +94,10 @@
             margin: 30px auto;
             width: fit-content;
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-shadow: 1px 1px 2px black;
+            transition: transform 0.3s ease;
         }
-        .youtube-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
-        }
-        /* Кнопка Назад */
+        .youtube-btn:hover { transform: scale(1.05); }
+
         .back-button {
             margin-top: 30px;
             display: block;
@@ -128,147 +115,241 @@
             max-width: 300px;
             margin-left: auto;
             margin-right: auto;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            text-shadow: 1px 1px 2px black;
+            transition: background-color 0.3s ease;
         }
-        .back-button:hover {
-            background-color: #004494;
-            transform: translateY(-3px);
-        }
-        footer {
-            text-align: center;
-            font-size: 1em;
-            color: #ff0000;
-            margin-top: 50px;
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                max-width: 100%;
-                padding: 15px;
-                background: transparent;
-                border-radius: 0;
-                box-shadow: none;
-                border: none;
-            }
-            h1 {
-                font-size: 1.8em;
-                color: #ffc000;
-            }
-            h2 {
-                font-size: 1.4em;
-                color:  #ffc000;
-                margin-top: 10px;
-            }
-            .content-section {
-                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
-                padding: 15px;
-            }
-            .youtube-btn {
-                width: 100%;
-                box-sizing: border-box;
-                font-size: 1em;
-            }
-            footer {
-                font-size: 0.8em;
-                padding: 10px;
-                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
-                margin-top: 20px;
-            }
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
         }
     </style>
-
-
-    
 </head>
 <body>
     <div class="container">
         <h1>13 ранг HSTV-L</h1>
         <img src="https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db5_s27_tank_hstv-l/db5_s27_hstv-l_prem_stats_ru_60a23f84b66e0c5b9f5e99e17f02bbef.jpg" alt="HSTV-L Tank" class="tank-image">
+        
         <div class="content-section">
             <h2>Историческая справка</h2>
             <p>HSTV-L (High Survivability Test Vehicle Lightweight — «экспериментальная машина с высокой живучестью и малой массой») — американский опытный лёгкий танк. В середине 1970-х вооружённые силы США начали ряд исследований по разработке проектов новых танков с внушительной огневой мощью и живучестью. Причём последнее предполагалось обеспечить за счёт уменьшения размера, а не наращивания брони. В то время и армии, и КМП США требовалась замена танкам M551 Sheridan и M50 Ontos. Поэтому была открыта совместная исследовательская программа, обозначенная как ARMVAL (Advanced Antiarmor Vehicle Evaluation). Предполагалось, что разработанные в рамках этой программы прототипы помогут испытать различные концепции и идеи, что в конечном счёте приведёт к созданию принципиально новых танков. Одним из результатов этой инициативы стал HSTV-L — проект компактного, лёгкого и манёвренного танка, оснащённого 75-мм гладкоствольным орудием с механизмом автоматического заряжания. HSTV-L был собран в 1979 году и вплоть до 1981 проходил испытания. В начале 1980-х армейское командование посчитало 75-мм орудие слишком слабым для уничтожения современных советских ОБТ. А Корпус морской пехоты США усомнился в эффективности применения нового танка в морских десантных операциях. Поэтому в 1981 году программа была прервана. Однако машина сохранилась по сегодняшний день и находиться в коллекции бронетехники и кавалерии армии США в Форт-Муре.</p>
             <img src="https://wiki-ru.warthunder.com/images/b395f5ce52680b56bb8091f29134bacb.jpg" alt="Historical HSTV-L" class="tank-image">
         </div>
+        
         <div class="content-section">
             <h2>Краткий обзор</h2>
             <h3>Маневренность</h3>
             <p><strong>Плюсы:</strong> Отличные показатели во всех аспектах, можем всех обгонять и первыми занимать важные позиции. Скорость вращения и наведения как у зенитки.</p>
             <p><strong>Минусы:</strong> Может заносить и осложняться контроль управления машины. Массивные препятствия могут останавливать, некоторые грунты и вода понижать практическую маневренность, столкновения и удары повреждать внутренние модули.</p>
         </div>
+
         <div class="content-section">
             <h3>Броня и живучесть</h3>
             <p>Защита только от малокалиберных пулеметов. Иногда может не уничтожаться с 1 попадания в силу не малого пустого пространства внутри танка.</p>
             <p><strong>Внимание:</strong> Смертельны кумулятивные и осколочно-фугасные боеприпасы. Башня может лучше переносить попадания. </p>
         </div>
+
         <div class="content-section">
             <h3>Вооружение</h3>
             <p>Интересны только ломы. Их мало (всего до 26). Автомат заряжания на весь боекомплект (перезарядка 1 секунда).</p>
             <p>Возможно пробить НАТО танки в лобовую проекцию выцеливая уязвимые места, успешно уничтожать танки советской философии танкостроения в борта и ромбом (в карусель заряжания), легко уничтожать орудия и модули передвижения.</p>
             <p>Урон не высокий (маленький калибр), не стабильный, но, в общем и целом, достаточно.</p>
-           
             <img src="https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db5_s27_tank_hstv-l/db5_s27_hstv-l_shells_ru_337f068c9e2dd5c59c9b075b00a04df0.png" alt="Снаряды HSTV-L" class="tank-image" style="margin-top: 15px;">
         </div>
+
         <div class="content-section">
             <h3>Особенности</h3>
             <p>Отличные УВН и наличие дымовых гранат. </p>
         </div>
+
         <div class="content-section" style="border-left: 5px solid #ffcc00;">
             <h3>Выводы и комментарии</h3>
             <p>Рекомендуется только опытным игрокам. Требует серьезной, внимательной и рациональной игры для раскрытия потенциала. Зависим от условий боя.</p>
-        </div>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Народный рейтинг: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Голосов: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Нажми, чтобы оценить</div>
+            </div>
+            </div>
+        
         <a href="https://youtu.be/XNEBvT0ek74" target="_blank" class="youtube-btn">
              Смотреть полный обзор
         </a>
+
         <button class="back-button" onclick="window.location.href = 'index.html'">
             ← Назад к главной странице
         </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=ru" 
+                data-telegram-discussion="fortunawtm_comments/6" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
         <footer>
             <p>Последнее обновление 25.11.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 'hstv_l'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "Вы уже голосовали! Спасибо.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Отправка...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Голос принят! Спасибо.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Ошибка доступа.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Ошибка базы.";
+            msg.style.color = "red";
+        });
+    </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
