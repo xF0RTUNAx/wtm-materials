@@ -25,7 +25,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: -1;
         }
         @keyframes fadeIn {
@@ -36,11 +36,11 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 30px;
-            background: rgba(136, 136, 136, 0.7);
+            background: rgba(20, 20, 20, 0.85); 
             border-radius: 25px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
         }
         h1, h2, h3 {
@@ -71,7 +71,7 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
         .content-section {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05); 
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 20px;
@@ -118,23 +118,22 @@
         }
         .back-button:hover { background-color: #004494; }
 
-        /* --- БЛОК КОММЕНТАРИЕВ (ИСПРАВЛЕНО) --- */
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
         .comments-wrapper {
-            margin-top: 40px; /* Чуть больше отступ от кнопки назад */
+            margin-top: 40px; 
             margin-bottom: 20px;
             background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 15px;
-            /* Фиксы для мобильных: */
             max-width: 100%;
-            box-sizing: border-box; /* Чтобы padding не расширял блок */
-            overflow-x: hidden; /* Обрезаем все, что вылезает по ширине */
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
 
         footer {
             text-align: center;
             font-size: 0.9em;
-            color: #ff1b1b;
+            color: #ccc;
             margin-top: 30px;
             padding: 15px;
         }
@@ -154,6 +153,7 @@
             display: inline-block;
             margin-top: 10px;
             user-select: none;
+            white-space: nowrap; /* ВАЖНО: Запрещаем перенос звезд на новую строку */
         }
         .star {
             color: gray;
@@ -166,12 +166,26 @@
         }
         .star:active { transform: scale(0.9); }
 
-        /* Адаптивность */
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
         @media (max-width: 768px) {
-            .container { padding: 15px; }
-            .content-section { background: rgba(0, 0, 0, 0.6); }
-            /* Немного уменьшим отступы в комментах на мобилках */
-            .comments-wrapper { padding: 10px; } 
+            .container { 
+                padding: 15px; /* Меньше отступы контейнера */
+            }
+            .content-section { 
+                background: rgba(255, 255, 255, 0.08); 
+            }
+            /* ИСПРАВЛЕНИЕ ЗВЕЗД НА МОБИЛЬНОМ */
+            .interactive-stars {
+                font-size: 1.8em; /* Уменьшаем размер звезд, чтобы влезали */
+            }
+            /* ИСПРАВЛЕНИЕ ВИДЖЕТА TELEGRAM */
+            .comments-wrapper { 
+                padding: 5px; /* Минимальный отступ, чтобы дать место виджету */
+            } 
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
         }
     </style>
 </head>
@@ -259,7 +273,7 @@
         </div>
 
         <footer>
-            <p>Материал предоставлен пользователем Krampus. Последнее обновление 11.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+            <p>Материал предоставлен пользователем Krampus. Обновлено 11.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
 
@@ -267,21 +281,20 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
         import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 
+        // !!! ВСТАВЬ СЮДА СВОИ КЛЮЧИ !!!
         const firebaseConfig = {
-            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
-            authDomain: "wtm-fortuna.firebaseapp.com",
-            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app", 
-            projectId: "wtm-fortuna",
-            storageBucket: "wtm-fortuna.firebasestorage.app",
-            messagingSenderId: "438964530574",
-            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+            apiKey: "ВСТАВЬ_API_KEY",
+            authDomain: "ТВОЙ_ПРОЕКТ.firebaseapp.com",
+            databaseURL: "https://ТВОЙ_ПРОЕКТ-default-rtdb.firebaseio.com", 
+            projectId: "ТВОЙ_ПРОЕКТ_ID",
+            storageBucket: "...",
+            messagingSenderId: "...",
+            appId: "..."
         };
+        // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-       
         const TANK_ID = 'm1a1_hc'; 
-      
 
-        // Инициализация
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const dbRef = ref(db, 'ratings/' + TANK_ID);
@@ -292,7 +305,6 @@
         const countDisplay = document.getElementById('vote-count');
         const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
 
-        // Визуальные эффекты (наведение)
         stars.forEach((star, index) => {
             star.addEventListener('mouseover', () => highlightStars(index + 1));
             star.addEventListener('mouseleave', () => resetStars());
@@ -310,7 +322,6 @@
             stars.forEach(s => s.classList.remove('hovered'));
         }
 
-        // Отправка голоса
         function submitVote(rating) {
             if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
                 msg.textContent = "Вы уже голосовали! Спасибо.";
