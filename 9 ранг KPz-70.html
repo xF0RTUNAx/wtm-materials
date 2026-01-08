@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>WTM: обзор 9 ранг KPz-70</title>
     <style>
+       
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Уникальный фон для KPz-70 */
             background: url('https://static.wtmobile.com/upload/fileman/images/2024/october_2024/14_09_db1_common_tank/s13_db1_common_tank_leo2k_support_cf13b99481dcc2280382d152f79a3734.jpg') no-repeat center center fixed;
             background-size: cover;
             color: white;
@@ -24,7 +26,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.6);
             z-index: -1;
         }
         @keyframes fadeIn {
@@ -35,28 +37,20 @@
             max-width: 900px;
             margin: 0 auto;
             padding: 30px;
-            background: rgba(136, 136, 136, 0.7);
+            background: rgba(20, 20, 20, 0.85); 
             border-radius: 25px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
         }
-        h1 {
-            color: #ffc000;
+        h1, h2, h3 {
             text-shadow: 0 2px 4px black;
             position: relative;
         }
-        h2 {
-            color: #ffc000;
-            text-shadow: 0 2px 4px black;
-            position: relative;
-        }
-         h3 {
-            color: #ffffff;
-            text-shadow: 0 2px 4px black;
-            position: relative;
-        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
         h1::before, h2::before {
             content: "";
             position: absolute;
@@ -67,8 +61,8 @@
             background: linear-gradient(to right, #0056b3, #3388d1);
             border-radius: 2px;
         }
-       
-        /* СТИЛИ ДЛЯ КОНТЕНТА ОБЗОРА */
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
         .tank-image {
             width: 100%;
             height: auto;
@@ -78,38 +72,14 @@
             border: 1px solid rgba(255,255,255,0.2);
         }
         .content-section {
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.05); 
             padding: 20px;
             border-radius: 15px;
             margin-bottom: 20px;
         }
-        .content-section p {
-            margin-bottom: 10px;
-        }
-       
-        /* Стили для кнопки YouTube */
-        .youtube-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #cc0000, #ff0000);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: bold;
-            font-size: 1.1em;
-            margin: 30px auto;
-            width: fit-content;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            text-shadow: 1px 1px 2px black;
-        }
-        .youtube-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 6px 20px rgba(255, 0, 0, 0.4);
-        }
-        /* Кнопка Назад */
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
         .back-button {
             margin-top: 30px;
             display: block;
@@ -127,113 +97,239 @@
             max-width: 300px;
             margin-left: auto;
             margin-right: auto;
-            transition: background-color 0.3s ease, transform 0.3s ease;
-            text-shadow: 1px 1px 2px black;
+            transition: background-color 0.3s ease;
         }
-        .back-button:hover {
-            background-color: #004494;
-            transform: translateY(-3px);
-        }
-        footer {
-            text-align: center;
-            font-size: 1em;
-            color: #ff0000;
-            margin-top: 50px;
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
             padding: 15px;
             border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ */
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                max-width: 100%;
-                padding: 15px;
-                background: transparent;
-                border-radius: 0;
-                box-shadow: none;
-                border: none;
-            }
-            h1 {
-                font-size: 1.8em;
-                color: #ffc000;
-            }
-            h2 {
-                font-size: 1.4em;
-                color:  #ffc000;
-                margin-top: 10px;
-            }
-            .content-section {
-                background: rgba(0, 0, 0, 0.6); /* Темнее на мобильном для читаемости */
-                padding: 15px;
-            }
-            .youtube-btn {
-                width: 100%;
-                box-sizing: border-box;
-                font-size: 1em;
-            }
-            footer {
-                font-size: 0.8em;
-                padding: 10px;
-                background: rgba(255,255,255,0.8); /* Фон для футера на мобильном */
-                margin-top: 20px;
-            }
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
         }
     </style>
-
-
-    
 </head>
 <body>
     <div class="container">
         <h1>9 ранг KPz-70</h1>
         <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/kpzpics/kpzmain.webp" alt="KPz-70 Tank" class="tank-image">
-         <div class="content-section">
+        
+        <div class="content-section">
             <h2>Историческая справка</h2>
-            <p>KPz-70 — совместный американо-германский проект основного боевого танка. Целью проекта было создание единой машины, которая смогла бы заменить устаревшие M60 и Leopard I, и в то же время отвечала бы современным требованиям. Работы по проекту начались в 1963 году, продолжаясь в течение всех 1960-х годов. Первый прототип KPz-70 был представлен в октябре 1967 года. В отличие от американских MBT-70, машины немецкой постройки отличалась двигателем Daimler-Benz MB 873 КА-500, спаренным пулемётом MG3, а также другими небольшими изменениями. Для своего времени это были весьма амбициозные и перспективные машины, которые включали множество инновационных решений и технологий, таких как регулируемая подвеска, композитное бронирование, многоцелевая основная пушка, современная электроника (СУО, приборы наведения, навигация).
-Испытания KPz-70 начались в первой половине 1968 года, в ходе которых выделились превосходные ходовые качества танка, отличная огневая мощь и современные цифровые системы управления. Однако проект столкнулся со множеством проблем. Мешало разное понимание концепции и постоянные трудности в координации работы американских и немецких специалистов. Кроме того, стоимость проекта к 1969 году уже в 5 раз превысила изначально прогнозируемую, при этом машина всё ещё требовала большого количества доработок. В итоге в 1970 году Германия решила отказаться от участия в проекте, занявшись разработкой собственного танка, ставшего впоследствии Leopard 2. В общей сложности же было изготовлено 14 опытных машин MBT-70/KPz-70, по 7 каждой стороной проекта.</p>
+            <p>KPz-70 — совместный американо-германский проект основного боевого танка. Целью проекта было создание единой машины, которая смогла бы заменить устаревшие M60 и Leopard I, и в то же время отвечала бы современным требованиям. Работы по проекту начались в 1963 году, продолжаясь в течение всех 1960-х годов. Первый прототип KPz-70 был представлен в октябре 1967 года. В отличие от американских MBT-70, машины немецкой постройки отличалась двигателем Daimler-Benz MB 873 КА-500, спаренным пулемётом MG3, а также другими небольшими изменениями. Для своего времени это были весьма амбициозные и перспективные машины, которые включали множество инновационных решений и технологий, таких как регулируемая подвеска, композитное бронирование, многоцелевая основная пушка, современная электроника (СУО, приборы наведения, навигация). Испытания KPz-70 начались в первой половине 1968 года, в ходе которых выделились превосходные ходовые качества танка, отличная огневая мощь и современные цифровые системы управления. Однако проект столкнулся со множеством проблем. Мешало разное понимание концепции и постоянные трудности в координации работы американских и немецких специалистов. Кроме того, стоимость проекта к 1969 году уже в 5 раз превысила изначально прогнозируемую, при этом машина всё ещё требовала большого количества доработок. В итоге в 1970 году Германия решила отказаться от участия в проекте, занявшись разработкой собственного танка, ставшего впоследствии Leopard 2. В общей сложности же было изготовлено 14 опытных машин MBT-70/KPz-70, по 7 каждой стороной проекта.</p>
             <img src="https://preview.redd.it/9t6c177ppcsz.jpg?width=1080&crop=smart&auto=webp&s=d9eeec466ab7fd3e1c4bce5b5eeb108fa7d6f357" alt="Historical KPz-70" class="tank-image">
+        </div>
+
         <div class="content-section">
             <h2>Краткий обзор</h2>
             <h3>Маневренность</h3>
-            <p><strong>Плюсы:</strong> выдающаяся, особенно для 50-тонного танка. Газотурбинный двигатель (1500 л.с.) и гидропневматическая подвеска дают удельную мощность (~29 л.с./т.) Отличный разгон, максимальная скорость ~70 км/ч как вперёд, так и назад.</p>
+             <p><strong>Плюсы:</strong> выдающаяся, особенно для 50-тонного танка. Газотурбинный двигатель (1500 л.с.) и гидропневматическая подвеска дают удельную мощность (~29 л.с./т.) Отличный разгон, максимальная скорость ~70 км/ч как вперёд, так и назад.</p>
             <p><strong>Минусы:</strong> высокая инерционность из-за массы, на поворотах сбрасывает скорость.</p>
         </div>
+
         <div class="content-section">
             <h3>Броня и живучесть</h3>
-          <p><strong>Плюсы:</strong> очень мощное комбинированное бронирование лба башни и верхней лобовой детали (ВЛД) корпуса. Низкая, обтекаемая башня-капсула.</p>
+            <p><strong>Плюсы:</strong> очень мощное комбинированное бронирование лба башни и верхней лобовой детали (ВЛД) корпуса. Низкая, обтекаемая башня-капсула.</p>
             <p><strong>Минусы:</strong> гигантская слабость — нижняя лобовая деталь (НЛД). Тонкая, практически не защищённая, и её невозможно скрыть из-за уникальной формы корпуса. Борта и корма — бумажные. Экипаж всего 3 человека (механик-водитель в корпусе, командир и наводчик в башне), что критично при пробитии.</p>
         </div>
+
         <div class="content-section">
             <h3>Вооружение</h3>
-           <p>Основное: 152-мм орудие-пусковая установка XM150E5. Может стрелять как снарядами, так и ПТУР.</p>
+            <p>Основное: 152-мм орудие-пусковая установка XM150E5. Может стрелять как снарядами, так и ПТУР.</p>
             <p><strong>Снаряды:</strong> </p>
             <p>Снаряд XM578E1 (ОБПС): второстепенный снаряд, стоит использовать после окончания ПТУРов. Хорошее пробитие, но низкая скорость полёта и заметный спад на дистанции.</p>
-            <p> Снаряд MGM-51C (ПТУР): Управляемая ракета (ручное наведение по проводу). Хорошее пробитие (~430 мм), позволяет поражать любые цели.</p>
+            <p>Снаряд MGM-51C (ПТУР): Управляемая ракета (ручное наведение по проводу). Хорошее пробитие (~430 мм), позволяет поражать любые цели.</p>
             <p>Снаряд  М409А1 (КС): Эффективен против как легкой техники, так и тяжелой и средней, для уничтожения модулей ОБТ или некоторых членов экипажа.</p>
             <p>Дополнительно: 20-мм автоматическая пушка Rh202 в отдельной дистанционно управляемой установке на башне. Может использоваться против лёгких целей и авиации независимо от основного орудия.</p>
             <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/kpzpics/kpzweapon.webp" alt="Снаряды KPz-70" class="tank-image" style="margin-top: 15px;">
         </div>
+
         <div class="content-section">
             <h3>Особенности</h3>
-            <p>Автомат заряжания: Скорострельность 6 сек, не зависит от экипажа.
-   Отличные углы вертикальной наводки: -10°/+20°.
-  Имеет дымовые гранаты.
-Ограниченное количество ПТУРов (всего 6 шт).</p>
+            <p>Автомат заряжания: Скорострельность 6 сек, не зависит от экипажа. Отличные углы вертикальной наводки: -10°/+20°. Имеет дымовые гранаты. Ограниченное количество ПТУРов (всего 6 шт).</p>
         </div>
+
         <div class="content-section" style="border-left: 5px solid #ffcc00;">
             <h3>Выводы и комментарии</h3>
             <p>KPz-70 — технологический демонстратор и танк для опытных дуэлянтов. Это машина с выдающимися характеристиками (броня, подвижность, вооружение), но с фатальными  уязвимостями (НЛД, 3 члена экипажа). Она требует идеального знания карт и позиционирования.</p>
-        </div>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Народный рейтинг: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Голосов: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Нажми, чтобы оценить</div>
+            </div>
+            </div>
         
         <button class="back-button" onclick="window.location.href = 'index.html'">
             ← Назад к главной странице
         </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=ru" 
+                data-telegram-discussion="fortunawtm_comments/18" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
         <footer>
             <p>Материал предоставлен пользователем Krampus. Последнее обновление 16.12.2025. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
         </footer>
     </div>
-         </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 'kpz_70'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "Вы уже голосовали! Спасибо.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Отправка...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Голос принят! Спасибо.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Ошибка доступа.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Ошибка базы.";
+            msg.style.color = "red";
+        });
+    </script>
 </body>
 </html>
