@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTM: Симулятор Трофеев</title>
+    <style>
+        /* --- ОБЩИЕ СТИЛИ --- */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/regular_pics/1440x640_wtm_premium_gold_kv220_f385b24bac8daad3117fb2ad6f9515f4.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(10,14,24,0.6) 0%, rgba(0,0,0,0.95) 100%);
+            z-index: -1;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            text-align: center;
+            box-sizing: border-box;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            justify-content: center;
+        }
+
+        h1, h2, h3 {
+            text-transform: uppercase;
+            color: #fff;
+            text-shadow: 0 3px 15px rgba(0,0,0,0.9);
+            margin: 0 0 15px 0;
+            letter-spacing: 1.5px;
+            font-weight: 800;
+        }
+        h1 { font-size: 2.4em; color: #ffcc00; }
+
+        .description {
+            font-size: 1.05em;
+            color: #ccc;
+            margin-bottom: 35px;
+            background: linear-gradient(to right, rgba(0,0,0,0.4), rgba(20,25,35,0.7), rgba(0,0,0,0.4));
+            padding: 25px;
+            border-radius: 12px;
+            line-height: 1.6;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* --- НОВЫЙ ПРЕМИАЛЬНЫЙ ДИЗАЙН КНОПОК --- */
+        .btn {
+            display: inline-block;
+            padding: 18px 36px;
+            font-size: 1.1em;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 4px; /* Более острые углы для военного стиля */
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            margin: 12px;
+            user-select: none;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.5);
+            text-shadow: 0 2px 2px rgba(0,0,0,0.7);
+            box-shadow: 
+                inset 0 1px 0 rgba(255,255,255,0.2), /* Верхний блик */
+                0 4px 8px rgba(0,0,0,0.5), /* Основная тень */
+                0 0 0 2px rgba(255,255,255,0.05); /* Внешняя обводка */
+            letter-spacing: 0.5px;
+        }
+
+        /* Эффект блика при наведении */
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: -50%; left: -60%;
+            width: 20%; height: 200%;
+            background: rgba(255,255,255,0.3);
+            transform: rotate(25deg);
+            transition: none;
+            opacity: 0;
+        }
+        .btn:hover::after {
+            left: 120%;
+            transition: all 0.5s ease-in-out;
+            opacity: 1;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                inset 0 1px 0 rgba(255,255,255,0.3),
+                0 6px 12px rgba(0,0,0,0.6),
+                0 0 0 2px rgba(255,255,255,0.1);
+            filter: brightness(1.1);
+        }
+        .btn:active {
+            transform: translateY(1px);
+            box-shadow: 
+                inset 0 3px 5px rgba(0,0,0,0.3), /* Вдавленный эффект */
+                0 1px 2px rgba(0,0,0,0.4);
+            filter: brightness(0.9);
+        }
+
+        /* Цветовые схемы кнопок с глубокими градиентами */
+        .btn-blue {
+            background-color: #1a4e8a;
+            background-image: linear-gradient(to bottom, #2b65a8, #123663);
+        }
+
+        .btn-gold {
+            background-color: #b8860b;
+            background-image: linear-gradient(to bottom, #e6c35c, #9e7307);
+            color: #3e2a00; /* Темный текст для контраста с золотом */
+            text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+        }
+
+        .btn-green {
+            background-color: #2e5d24;
+            background-image: linear-gradient(to bottom, #438534, #1f4018);
+        }
+
+        .btn-orange {
+            background-color: #d65f0a;
+            background-image: linear-gradient(to bottom, #f78f3f, #b34b02);
+        }
+
+        .btn-red {
+            background-color: #a71d2a;
+            background-image: linear-gradient(to bottom, #d93847, #8a141f);
+        }
+        
+        .btn-back {
+            background-color: #3b4752;
+            background-image: linear-gradient(to bottom, #54677a, #2a333b);
+            font-size: 0.95em; padding: 14px 28px;
+            color: #ccc;
+        }
+        .btn-back:hover { color: #fff; }
+        
+        .btn-calc {
+            background-color: #117a8b;
+            background-image: linear-gradient(to bottom, #1db0ca, #0c5966);
+            padding: 12px 24px;
+            font-size: 1em;
+            margin-bottom: 25px;
+            border-radius: 30px; /* Калькулятор сделаем более округлым */
+        }
+
+
+        /* --- НАСТРОЙКИ --- */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+            text-align: left;
+        }
+
+        .input-group {
+            background: linear-gradient(to bottom, rgba(60, 70, 90, 0.4), rgba(30, 35, 45, 0.6));
+            padding: 12px 18px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .input-group img {
+            width: 48px; height: 48px;
+            object-fit: contain; margin-right: 15px;
+            filter: drop-shadow(0 3px 3px rgba(0,0,0,0.5));
+        }
+
+        .input-group label { flex-grow: 1; font-weight: 600; font-size: 1.05em;}
+
+        .input-group input {
+            width: 85px; padding: 10px;
+            background: rgba(10, 14, 20, 0.8);
+            border: 2px solid #556;
+            color: #ffcc00;
+            font-weight: bold;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 1.1em;
+        }
+        .input-group input:focus { outline: none; border-color: #007bff; }
+
+        .warning {
+            color: #ffcc00;
+            font-weight: 500;
+            font-size: 1em;
+            margin-bottom: 15px;
+            background: rgba(255, 204, 0, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffcc00;
+        }
+        
+        .total-chance-display {
+            font-size: 1.4em;
+            font-weight: 800;
+            margin: 20px 0;
+            padding: 15px 25px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.5);
+            display: inline-block;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* --- КАЛЬКУЛЯТОР --- */
+        .calculator-modal {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(28, 28, 30, 0.98);
+            padding: 20px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+            z-index: 200;
+            width: 300px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .calc-display {
+            width: 100%; height: 70px;
+            background: transparent; color: #fff;
+            text-align: right; font-size: 2.5em;
+            border: none; padding: 10px;
+            box-sizing: border-box; margin-bottom: 15px;
+            font-weight: 300;
+        }
+
+        .calc-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
+        }
+
+        .calc-btn {
+            width: 60px; height: 60px;
+            border-radius: 50%; font-size: 1.4em;
+            border: none; cursor: pointer;
+            transition: filter 0.2s, transform 0.1s;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 500;
+        }
+        .calc-btn:active { transform: scale(0.95); }
+
+        .calc-num { background: #333333; color: white; }
+        .calc-op { background: #ff9f0a; color: white; font-weight: 600; }
+        .calc-action { background: #a5a5a5; color: black; }
+        .calc-equal { background: #ff9f0a; color: white; border-radius: 30px; grid-column: span 1; }
+        .calc-zero { grid-column: span 2; width: 100%; border-radius: 30px; justify-content: flex-start; padding-left: 25px; }
+
+        .calc-close {
+            position: absolute; top: -15px; right: -15px;
+            background: #ff3b30; color: white;
+            border: 2px solid #fff; border-radius: 50%;
+            width: 32px; height: 32px;
+            cursor: pointer; font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        /* --- РУЛЕТКА --- */
+        .roulette-wrapper {
+            position: relative;
+            width: 100%; height: 180px;
+            background: linear-gradient(to bottom, rgba(10,14,24,0.8), rgba(0,0,0,0.9), rgba(10,14,24,0.8));
+            border-top: 4px solid #0056b3;
+            border-bottom: 4px solid #0056b3;
+            margin: 30px 0;
+            overflow: hidden;
+            display: flex; align-items: center;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.9), 0 5px 15px rgba(0,0,0,0.5);
+        }
+
+        .roulette-track {
+            display: flex; height: 150px; align-items: center;
+            will-change: transform; width: max-content;
+        }
+
+        .item-card {
+            width: 130px; height: 130px;
+            background: radial-gradient(circle at center, #3a4b65 0%, #161a25 90%);
+            margin: 0 5px;
+            border: 2px solid #4a5b75;
+            border-radius: 6px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            flex-shrink: 0; position: relative;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .marker {
+            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 100%;
+            background: linear-gradient(to bottom, #ffd700, #fff, #ffd700);
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 1);
+        }
+        .marker::before, .marker::after {
+            content: '▼'; position: absolute; left: 50%; transform: translateX(-50%);
+            color: #ffd700; font-size: 28px; text-shadow: 0 2px 5px rgba(0,0,0,1);
+        }
+        .marker::before { top: -28px; }
+        .marker::after { bottom: -28px; transform: translateX(-50%) rotate(180deg); }
+
+        #live-drop-container {
+            margin-top: 20px; min-height: 100px;
+            background: rgba(20, 25, 35, 0.6);
+            border-radius: 12px; padding: 20px;
+            display: flex; justify-content: center; flex-wrap: wrap; gap: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+        
+        .live-item {
+            width: 75px; height: 75px;
+            background: radial-gradient(circle, #3a4b65 0%, #161a25 100%);
+            border: 2px solid #556; border-radius: 8px;
+            display: flex; align-items: center; justify-content: center;
+            animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
+        .live-item img { width: 85%; height: 85%; object-fit: contain; }
+
+        #skip-container { margin-top: 25px; }
+
+        /* --- МОДАЛЬНЫЕ ОКНА --- */
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92); z-index: 100;
+            align-items: center; justify-content: center; flex-direction: column;
+            animation: fadeIn 0.3s ease-out; backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: linear-gradient(145deg, #2a3242, #151a22);
+            padding: 40px; border-radius: 16px;
+            border: 4px solid #ffd700;
+            text-align: center; max-width: 650px; width: 90%;
+            box-shadow: 0 0 60px rgba(255, 215, 0, 0.3), inset 0 0 30px rgba(0,0,0,0.5);
+            transform: scale(0.9);
+            animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            max-height: 90vh; overflow-y: auto;
+        }
+        .modal-content h2 { font-size: 2em; margin-bottom: 25px; }
+
+        .multi-result-grid {
+            display: grid; grid-template-columns: repeat(5, 1fr);
+            gap: 15px; margin: 25px 0;
+        }
+        .multi-result-item {
+            background: rgba(255,255,255,0.07);
+            border-radius: 10px; padding: 12px;
+            border: 2px solid rgba(255,204,0, 0.3);
+            display: flex; flex-direction: column; align-items: center;
+            transition: transform 0.2s;
+        }
+        .multi-result-item:hover { transform: translateY(-3px); border-color: rgba(255,204,0, 0.8); }
+        .multi-result-item img { width: 60px; height: 60px; object-fit: contain; margin-bottom: 8px; }
+        .multi-result-item span { font-size: 0.85em; color: #e0e0e0; font-weight: 500; }
+
+        .item-card img { width: 85%; height: 85%; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8)); }
+        .single-result img { width: 180px; margin: 25px 0; filter: drop-shadow(0 0 25px rgba(255,215,0,0.5)); }
+        .single-result h3 { font-size: 1.8em; color: #ffd700; }
+
+        .control-btns { display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
+        .hidden { display: none !important; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        @media (max-width: 768px) {
+            .multi-result-grid { grid-template-columns: repeat(4, 1fr); }
+            .item-card { width: 100px; height: 100px; }
+            .roulette-wrapper { height: 140px; }
+            .roulette-track { height: 110px; }
+        }
+        @media (max-width: 480px) {
+            .multi-result-grid { grid-template-columns: repeat(2, 1fr); }
+            .btn { width: 100%; margin: 8px 0; }
+            h1 { font-size: 1.8em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div id="menu-section">
+            <h1>Симулятор Открытия Трофеев</h1>
+            <h2>War Thunder Mobile</h2>
+            <div class="description">
+                <p>Добро пожаловать в реалистичный симулятор! Настройте шансы выпадения предметов и проанализируйте тенденцию выпадения предметов.</p>
+            </div>
+            
+            <button class="btn btn-blue" onclick="setupTrophy('medium')">Средний Трофей</button>
+            <button class="btn btn-gold" onclick="setupTrophy('big')">Большой Трофей</button>
+            <br>
+            <a href="index.html" class="btn btn-back" style="margin-top:30px;">← На главную</a>
+        </div>
+
+        <div id="settings-section" class="hidden">
+            <h2 id="trophy-title">Настройка</h2>
+            <p class="warning">⚠️ <b>Внимание:</b> Суммируйте вероятности для одинаковых предметов. Система несет демонстративный и тестовый характер для оценки тенденций выпадения.</p>
+            
+            <button class="btn btn-calc" onclick="toggleCalc()">🧮 Калькулятор</button>
+
+            <div id="items-container" class="settings-grid"></div>
+            
+            <div class="total-chance-display" id="total-chance">Сумма: 0.00%</div>
+            <div id="total-diff" style="font-size: 0.9em; color: #aaa; margin-top: -10px; display:none;">Осталось распределить: 100%</div>
+
+            <div class="control-btns">
+                <button class="btn btn-back" onclick="goBackToMenu()">Назад в меню</button>
+                <button class="btn btn-green" onclick="startOpening(1)">Открыть x1</button>
+                <button class="btn btn-orange" onclick="startOpening(10)">Открыть x10</button>
+            </div>
+        </div>
+
+        <div id="simulation-section" class="hidden">
+            <h2 id="spin-status">Открытие...</h2>
+            
+            <div class="roulette-wrapper">
+                <div class="marker"></div>
+                <div class="roulette-track" id="track"></div>
+            </div>
+
+            <div id="live-drop-wrapper" class="hidden">
+                <h3 style="font-size: 1em; color:#ccc; margin-top:15px; text-transform: uppercase;">Полученные предметы:</h3>
+                <div id="live-drop-container"></div>
+            </div>
+            
+            <div id="skip-container" class="hidden">
+                <button class="btn btn-red" onclick="skipAnimation()">⏩ ПРОПУСТИТЬ АНИМАЦИЮ</button>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="result-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="color:#ffcc00">Поздравляем! Вы получили:</h2>
+            <div id="single-result-container" class="single-result hidden">
+                <img id="result-img" src="" alt="Reward">
+                <h3 id="result-name">Item Name</h3>
+            </div>
+            <div id="multi-result-container" class="multi-result-grid hidden"></div>
+            <div class="control-btns">
+                <button class="btn btn-blue" id="btn-open-again">Открыть еще раз</button>
+                <button class="btn btn-back" onclick="goBackToSettings()">К настройкам</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="calc-modal" class="calculator-modal">
+        <button class="calc-close" onclick="toggleCalc()">×</button>
+        <input type="text" class="calc-display" id="calc-screen" readonly value="">
+        <div class="calc-grid">
+            <button class="calc-btn calc-action" onclick="calcClear()">AC</button>
+            <button class="calc-btn calc-action" onclick="calcBackspace()">⌫</button>
+            <button class="calc-btn calc-action" onclick="calcAppend('%')">%</button>
+            <button class="calc-btn calc-op" onclick="calcAppend('/')">÷</button>
+            
+            <button class="calc-btn calc-num" onclick="calcAppend('7')">7</button>
+            <button class="calc-btn calc-num" onclick="calcAppend('8')">8</button>
+            <button class="calc-btn calc-num" onclick="calcAppend('9')">9</button>
+            <button class="calc-btn calc-op" onclick="calcAppend('*')">×</button>
+            
+            <button class="calc-btn calc-num" onclick="calcAppend('4')">4</button>
+            <button class="calc-btn calc-num" onclick="calcAppend('5')">5</button>
+            <button class="calc-btn calc-num" onclick="calcAppend('6')">6</button>
+            <button class="calc-btn calc-op" onclick="calcAppend('-')">−</button>
+            
+            <button class="calc-btn calc-num" onclick="calcAppend('1')">1</button>
+            <button class="calc-btn calc-num" onclick="calcAppend('2')">2</button>
+            <button class="calc-btn calc-num" onclick="calcAppend('3')">3</button>
+            <button class="calc-btn calc-op" onclick="calcAppend('+')">+</button>
+            
+            <button class="calc-btn calc-num calc-zero" onclick="calcAppend('0')">0</button>
+            <button class="calc-btn calc-num" onclick="calcAppend('.')">.</button>
+            <button class="calc-btn calc-op" onclick="calcResult()">=</button>
+        </div>
+    </div>
+
+    <script>
+        // --- ДАННЫЕ ---
+        const UNIQUE_IDS = ['title', 'camo', 'avatar', 'tank', 'prem_tank', 'jackpot', 'decorator'];
+
+        const trophies = {
+            medium: {
+                id: 'medium', title: "Средний Трофей",
+                items: [
+                    { id: 'booster', name: 'Бустеры', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/10.PNG' },
+                    { id: 'gold', name: 'Золото', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/11.PNG' },
+                    { id: 'bonds', name: 'Облигации', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/12.PNG' },
+                    { id: 'silver', name: 'Серебро', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/13.PNG' },
+                    { id: 'keys', name: 'Ключи', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/14.PNG' },
+                    { id: 'camo', name: 'Камуфляж', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/15.PNG' },
+                    { id: 'tank', name: 'Танк взвода', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/16.PNG' },
+                    { id: 'title', name: 'Титул', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/1.PNG' },
+                    { id: 'avatar', name: 'Аватар', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/2.PNG' },
+                    { id: 'blueprint', name: 'Чертежи', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/5.PNG' },
+                    { id: 'jackpot', name: 'ДЖЕКПОТ', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/mainitem.PNG' },
+                    { id: 'decorator', name: 'Декоратор', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/decor.PNG' }
+                ]
+            },
+            big: {
+                id: 'big', title: "Большой Трофей",
+                items: [
+                    { id: 'avatar', name: 'Аватар', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/2.PNG' },
+                    { id: 'title', name: 'Титул', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/1.PNG' },
+                    { id: 'keys', name: 'Ключи', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/3.PNG' },
+                    { id: 'blueprint', name: 'Чертежи', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/5.PNG' },
+                    { id: 'prem_tank', name: 'Прем. танк', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/6.PNG' },
+                    { id: 'gold', name: 'Золото', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/4.PNG' },
+                    { id: 'jackpot', name: 'ДЖЕКПОТ', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/mainitem.PNG' },
+                    { id: 'decorator', name: 'Декоратор', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/decor.PNG' }
+                ]
+            }
+        };
+
+        let currentMode = null;
+        let isSkipping = false;
+        let spinTimeout = null; 
+        let currentSingleWinner = null;
+
+        // --- ЛОГИКА КАЛЬКУЛЯТОРА ---
+        function toggleCalc() {
+            const modal = document.getElementById('calc-modal');
+            modal.style.display = (modal.style.display === 'block') ? 'none' : 'block';
+        }
+        function calcAppend(val) {
+            document.getElementById('calc-screen').value += val;
+        }
+        function calcClear() {
+            document.getElementById('calc-screen').value = '';
+        }
+        function calcBackspace() {
+            let val = document.getElementById('calc-screen').value;
+            document.getElementById('calc-screen').value = val.slice(0, -1);
+        }
+        function calcResult() {
+            try {
+                let expression = document.getElementById('calc-screen').value;
+                if(expression.includes('%')) {
+                    expression = expression.replace(/(\d+)%/g, '($1/100)');
+                }
+                const res = Function('"use strict";return (' + expression + ')')();
+                document.getElementById('calc-screen').value = parseFloat(res.toFixed(4));
+            } catch (e) {
+                document.getElementById('calc-screen').value = 'Ошибка';
+            }
+        }
+
+        // --- ЛОГИКА ПРИЛОЖЕНИЯ ---
+        function setupTrophy(mode) {
+            currentMode = mode;
+            document.getElementById('menu-section').classList.add('hidden');
+            document.getElementById('settings-section').classList.remove('hidden');
+            document.getElementById('trophy-title').innerText = trophies[mode].title;
+            
+            const container = document.getElementById('items-container');
+            container.innerHTML = '';
+
+            trophies[mode].items.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'input-group';
+                div.innerHTML = `
+                    <img src="${item.img}" alt="${item.name}">
+                    <label>${item.name}</label>
+                    <input type="number" data-item-id="${item.id}" step="0.01" min="0" max="100" placeholder="0.00">
+                `;
+                container.appendChild(div);
+            });
+
+            container.addEventListener('input', handleInputChange);
+            loadProbabilities(mode);
+        }
+
+        function handleInputChange(e) {
+            if (e.target.tagName === 'INPUT') {
+                updateTotal();
+                saveProbabilities(currentMode);
+            }
+        }
+
+        function updateTotal() {
+            let total = 0;
+            document.querySelectorAll('#items-container input').forEach(inp => total += parseFloat(inp.value) || 0);
+            
+            const totalEl = document.getElementById('total-chance');
+            const diffEl = document.getElementById('total-diff');
+            
+            totalEl.innerText = `Сумма: ${total.toFixed(2)}%`;
+            
+            const diff = 100 - total;
+            
+            if (total >= 98 && total <= 102) {
+                totalEl.style.color = '#28a745';
+                totalEl.style.borderColor = '#28a745';
+                diffEl.style.display = 'none';
+                return true;
+            } else {
+                totalEl.style.color = '#ff5555';
+                totalEl.style.borderColor = '#ff5555';
+                diffEl.style.display = 'block';
+                if(diff > 0) diffEl.innerText = `Осталось распределить: ${diff.toFixed(2)}%`;
+                else diffEl.innerText = `Перебор на: ${Math.abs(diff).toFixed(2)}%`;
+                return false;
+            }
+        }
+
+        function saveProbabilities(mode) {
+            const data = {};
+            document.querySelectorAll('#items-container input').forEach(inp => data[inp.dataset.itemId] = inp.value);
+            localStorage.setItem('wtm-sim-' + mode, JSON.stringify(data));
+        }
+
+        function loadProbabilities(mode) {
+            const savedData = localStorage.getItem('wtm-sim-' + mode);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                document.querySelectorAll('#items-container input').forEach(inp => {
+                    if (data[inp.dataset.itemId]) inp.value = data[inp.dataset.itemId];
+                });
+            }
+            updateTotal();
+        }
+
+        function goBackToMenu() {
+            document.getElementById('settings-section').classList.add('hidden');
+            document.getElementById('menu-section').classList.remove('hidden');
+        }
+
+        function goBackToSettings() {
+            document.getElementById('result-modal').style.display = 'none';
+            document.getElementById('simulation-section').classList.add('hidden');
+            document.getElementById('settings-section').classList.remove('hidden');
+            isSkipping = false;
+        }
+
+        function determineWinner(excludedSet = new Set()) {
+            const inputs = document.querySelectorAll('#items-container input');
+            let currentTotal = 0;
+            let ranges = [];
+            
+            inputs.forEach((inp, index) => {
+                const item = trophies[currentMode].items[index];
+                let val = parseFloat(inp.value) || 0;
+
+                if (UNIQUE_IDS.includes(item.id) && excludedSet.has(item.id)) {
+                    val = 0;
+                }
+
+                if (val > 0) {
+                    ranges.push({
+                        item: item,
+                        min: currentTotal,
+                        max: currentTotal + val
+                    });
+                    currentTotal += val;
+                }
+            });
+
+            if (currentTotal === 0 && ranges.length > 0) return null;
+
+            const rand = Math.random() * currentTotal;
+            const winner = ranges.find(r => rand >= r.min && rand < r.max);
+            
+            return winner ? winner.item : (ranges.length > 0 ? ranges[ranges.length-1].item : null);
+        }
+
+        function startOpening(count) {
+            if (!updateTotal()) {
+                if (!confirm("Сумма вероятностей выходит за пределы 98-102%. Продолжить?")) return;
+            }
+            
+            if(!determineWinner()) {
+                 alert("Ошибка: Не удалось определить предметы.");
+                 return;
+            }
+
+            isSkipping = false;
+            document.getElementById('btn-open-again').onclick = () => startOpening(count);
+            document.getElementById('settings-section').classList.add('hidden');
+            document.getElementById('result-modal').style.display = 'none';
+            document.getElementById('simulation-section').classList.remove('hidden');
+            document.getElementById('live-drop-container').innerHTML = ''; 
+            
+            document.getElementById('skip-container').classList.remove('hidden');
+
+            if (count === 1) {
+                document.getElementById('live-drop-wrapper').classList.add('hidden');
+                document.getElementById('spin-status').innerText = "Открытие...";
+                
+                const winner = determineWinner();
+                currentSingleWinner = winner; 
+                
+                runSpinAnimation(winner, false);
+            } else {
+                document.getElementById('live-drop-wrapper').classList.remove('hidden');
+                const winners = [];
+                const sessionExclusions = new Set();
+
+                for(let i=0; i<count; i++) {
+                    const win = determineWinner(sessionExclusions);
+                    if(win) {
+                        winners.push(win);
+                        if (UNIQUE_IDS.includes(win.id)) sessionExclusions.add(win.id);
+                    }
+                }
+                
+                runSequence(winners);
+            }
+        }
+
+        async function runSequence(winners) {
+            for (let i = 0; i < winners.length; i++) {
+                if (isSkipping) break; 
+                document.getElementById('spin-status').innerText = `Открытие ${i+1} из ${winners.length}`;
+                
+                await new Promise(resolve => {
+                    runSpinAnimation(winners[i], true, resolve); 
+                });
+                
+                addLiveDropItem(winners[i]);
+                if (!isSkipping) await new Promise(r => setTimeout(r, 500));
+            }
+            
+            if (isSkipping) {
+                const currentCount = document.getElementById('live-drop-container').children.length;
+                for(let j = currentCount; j < winners.length; j++) {
+                    addLiveDropItem(winners[j]);
+                }
+            }
+            
+            showResultMultiple(winners);
+        }
+
+        function addLiveDropItem(item) {
+            const container = document.getElementById('live-drop-container');
+            const div = document.createElement('div');
+            div.className = 'live-item';
+            if(item.id === 'jackpot') div.style.boxShadow = '0 0 15px gold, inset 0 0 10px gold';
+            else if(UNIQUE_IDS.includes(item.id) && item.id !== 'booster' && item.id !== 'silver') div.style.boxShadow = '0 0 10px rgba(255,255,255,0.5)';
+            div.innerHTML = `<img src="${item.img}">`;
+            container.appendChild(div);
+        }
+
+        function skipAnimation() {
+            isSkipping = true;
+            if (document.getElementById('live-drop-wrapper').classList.contains('hidden')) {
+                if (spinTimeout) clearTimeout(spinTimeout);
+                const track = document.getElementById('track');
+                track.style.transition = 'none';
+                showResultSingle(currentSingleWinner);
+            }
+        }
+
+        function runSpinAnimation(winnerItem, isFastMode, callback) {
+            const track = document.getElementById('track');
+            track.innerHTML = '';
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0px)';
+            track.offsetHeight; 
+
+            const winnerPositionIndex = 60; 
+            const totalCards = 90; 
+            
+            const getRandomItem = () => {
+                const list = trophies[currentMode].items;
+                return list[Math.floor(Math.random() * list.length)];
+            };
+
+            for (let i = 0; i < totalCards; i++) {
+                let item = (i === winnerPositionIndex) ? winnerItem : getRandomItem();
+                const card = document.createElement('div');
+                card.className = 'item-card';
+                if (i === winnerPositionIndex) card.id = 'winner-card';
+                if(item.id === 'jackpot') card.style.boxShadow = 'inset 0 0 25px rgba(255, 215, 0, 0.8), 0 0 15px gold';
+                card.innerHTML = `<img src="${item.img}">`;
+                track.appendChild(card);
+            }
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    if (isSkipping && isFastMode && callback) {
+                        callback(); return;
+                    }
+
+                    const wrapperWidth = document.querySelector('.roulette-wrapper').offsetWidth;
+                    const winnerCard = document.getElementById('winner-card');
+                    const cardWidth = winnerCard.offsetWidth; 
+                    const winnerCenterPos = winnerCard.offsetLeft + (cardWidth / 2); 
+                    let slideAmount = winnerCenterPos - (wrapperWidth / 2);
+                    const jitter = (Math.random() - 0.5) * (cardWidth * 0.5);
+                    slideAmount += jitter;
+
+                    const duration = isFastMode ? 2.5 : 6.5; 
+
+                    track.style.transition = `transform ${duration}s cubic-bezier(0.12, 0.8, 0.3, 1)`;
+                    track.style.transform = `translateX(-${slideAmount}px)`;
+
+                    spinTimeout = setTimeout(() => {
+                        if (isFastMode) {
+                            if (callback) callback();
+                        } else {
+                            showResultSingle(winnerItem);
+                        }
+                    }, duration * 1000 + 150);
+                });
+            });
+        }
+
+        function showResultSingle(item) {
+            const modal = document.getElementById('result-modal');
+            document.getElementById('single-result-container').classList.remove('hidden');
+            document.getElementById('multi-result-container').classList.add('hidden');
+            document.getElementById('result-img').src = item.img;
+            document.getElementById('result-name').innerText = item.name;
+            modal.style.display = 'flex';
+        }
+
+        function showResultMultiple(items) {
+            document.getElementById('simulation-section').classList.add('hidden');
+            const modal = document.getElementById('result-modal');
+            document.getElementById('single-result-container').classList.add('hidden');
+            const multiContainer = document.getElementById('multi-result-container');
+            multiContainer.classList.remove('hidden');
+            multiContainer.innerHTML = '';
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'multi-result-item';
+                if(item.id === 'jackpot') div.style.boxShadow = 'inset 0 0 15px gold, 0 0 10px gold';
+                else if(UNIQUE_IDS.includes(item.id) && item.id !== 'booster' && item.id !== 'silver') div.style.boxShadow = 'inset 0 0 10px rgba(255,255,255,0.3)';
+                div.innerHTML = `<img src="${item.img}" alt="${item.name}"><span>${item.name}</span>`;
+                multiContainer.appendChild(div);
+            });
+            
+            modal.style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
