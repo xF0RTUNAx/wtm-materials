@@ -64,7 +64,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        /* --- НОВЫЙ ПРЕМИАЛЬНЫЙ ДИЗАЙН КНОПОК --- */
+        /* --- ДИЗАЙН КНОПОК --- */
         .btn {
             display: inline-block;
             padding: 18px 36px;
@@ -87,12 +87,10 @@
                 0 4px 8px rgba(0,0,0,0.5), 
                 0 0 0 2px rgba(255,255,255,0.05); 
             letter-spacing: 0.5px;
-            /* ИСПРАВЛЕНИЕ ВЫПИРАНИЯ: */
             box-sizing: border-box; 
             max-width: 100%;
         }
 
-        /* Эффект блика при наведении */
         .btn::after {
             content: '';
             position: absolute;
@@ -125,33 +123,11 @@
             filter: brightness(0.9);
         }
 
-        /* Цветовые схемы кнопок */
-        .btn-blue {
-            background-color: #1a4e8a;
-            background-image: linear-gradient(to bottom, #2b65a8, #123663);
-        }
-
-        .btn-gold {
-            background-color: #b8860b;
-            background-image: linear-gradient(to bottom, #e6c35c, #9e7307);
-            color: #3e2a00; 
-            text-shadow: 0 1px 0 rgba(255,255,255,0.3);
-        }
-
-        .btn-green {
-            background-color: #2e5d24;
-            background-image: linear-gradient(to bottom, #438534, #1f4018);
-        }
-
-        .btn-orange {
-            background-color: #d65f0a;
-            background-image: linear-gradient(to bottom, #f78f3f, #b34b02);
-        }
-
-        .btn-red {
-            background-color: #a71d2a;
-            background-image: linear-gradient(to bottom, #d93847, #8a141f);
-        }
+        .btn-blue { background-color: #1a4e8a; background-image: linear-gradient(to bottom, #2b65a8, #123663); }
+        .btn-gold { background-color: #b8860b; background-image: linear-gradient(to bottom, #e6c35c, #9e7307); color: #3e2a00; text-shadow: 0 1px 0 rgba(255,255,255,0.3); }
+        .btn-green { background-color: #2e5d24; background-image: linear-gradient(to bottom, #438534, #1f4018); }
+        .btn-orange { background-color: #d65f0a; background-image: linear-gradient(to bottom, #f78f3f, #b34b02); }
+        .btn-red { background-color: #a71d2a; background-image: linear-gradient(to bottom, #d93847, #8a141f); }
         
         .btn-back {
             background-color: #3b4752;
@@ -163,15 +139,31 @@
         }
         .btn-back:hover { color: #fff; }
         
+        /* Кнопки инструментов (Калькулятор, Очистить) */
+        .tools-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .btn-tool {
+            padding: 12px 24px;
+            font-size: 1em;
+            margin: 0;
+            border-radius: 30px;
+            flex: 1;
+            max-width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
         .btn-calc {
             background-color: #117a8b;
             background-image: linear-gradient(to bottom, #1db0ca, #0c5966);
-            padding: 12px 24px;
-            font-size: 1em;
-            margin-bottom: 25px;
-            border-radius: 30px; 
         }
-
 
         /* --- НАСТРОЙКИ --- */
         .settings-grid {
@@ -259,7 +251,15 @@
             border: none; padding: 10px;
             box-sizing: border-box; margin-bottom: 15px;
             font-weight: 300;
+            /* Возможность скроллить длинные числа */
+            overflow-x: auto;
+            white-space: nowrap;
         }
+        
+        /* Стили скроллбара для дисплея калькулятора */
+        .calc-display::-webkit-scrollbar { height: 6px; }
+        .calc-display::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
+        .calc-display::-webkit-scrollbar-track { background: transparent; }
 
         .calc-grid {
             display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;
@@ -406,15 +406,9 @@
             .roulette-wrapper { height: 140px; }
             .roulette-track { height: 110px; }
         }
-        /* --- ИСПРАВЛЕНИЕ ВЫПИРАНИЯ КНОПКИ --- */
         @media (max-width: 480px) {
             .multi-result-grid { grid-template-columns: repeat(2, 1fr); }
-            /* Сбрасываем margin и делаем кнопку блочной, чтобы она уважала padding родителя */
-            .btn { 
-                width: 100%; 
-                margin: 8px 0; 
-                display: block; 
-            }
+            .btn { width: 100%; margin: 8px 0; }
             h1 { font-size: 1.8em; }
         }
     </style>
@@ -424,10 +418,10 @@
     <div class="app-container">
         
         <div id="menu-section">
-            <h1>Симулятор Открытия Трофеев</h1>
+            <h1>Симулятор Открытия Кейсов</h1>
             <h2>War Thunder Mobile</h2>
             <div class="description">
-                <p>Добро пожаловать в реалистичный симулятор! Настройте шансы выпадения предметов согласно игровым данным и проанализируйте тенденцию выпадения предметов.</p>
+                <p>Добро пожаловать в реалистичный симулятор! Настройте шансы выпадения предметов и проанализируйте тенденцию выпадений.</p>
             </div>
             
             <button class="btn btn-blue" onclick="setupTrophy('medium')">Средний Трофей</button>
@@ -438,9 +432,13 @@
 
         <div id="settings-section" class="hidden">
             <h2 id="trophy-title">Настройка</h2>
-            <p class="warning">⚠️ <b>Внимание:</b> суммируйте вероятности для одинаковых предметов. Система несет демонстрационный и тестовый характер.</p>
+            <p class="warning">⚠️ <b>Внимание:</b> суммируйте вероятности для одинаковых предметов. Кнопка очистить предназначена, чтобы сразу обнулить
+            введенные данные. В калькуляторе возможен скрол при введении большого количества символов.</p>
             
-            <button class="btn btn-calc" onclick="toggleCalc()">🧮 Калькулятор</button>
+            <div class="tools-container">
+                <button class="btn btn-tool btn-calc" onclick="toggleCalc()">🧮 Калькулятор</button>
+                <button class="btn btn-tool btn-red" onclick="clearProbabilities()">🗑 Очистить</button>
+            </div>
 
             <div id="items-container" class="settings-grid"></div>
             
@@ -533,11 +531,11 @@
                     { id: 'silver', name: 'Серебро', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/13.PNG' },
                     { id: 'keys', name: 'Ключи', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/14.PNG' },
                     { id: 'camo', name: 'Камуфляж', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/15.PNG' },
-                    { id: 'tank', name: 'Танк взвода', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/16.PNG' },
+                    { id: 'tank', name: 'Танк', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/midtrophy/16.PNG' },
                     { id: 'title', name: 'Титул', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/1.PNG' },
                     { id: 'avatar', name: 'Аватар', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/2.PNG' },
                     { id: 'blueprint', name: 'Чертежи', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/5.PNG' },
-                    { id: 'jackpot', name: 'ДЖЕКПОТ', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/mainitem.PNG' },
+                    { id: 'jackpot', name: 'Джекпот', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/mainitem.PNG' },
                     { id: 'decorator', name: 'Декоратор', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/decor.PNG' }
                 ]
             },
@@ -550,7 +548,7 @@
                     { id: 'blueprint', name: 'Чертежи', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/5.PNG' },
                     { id: 'prem_tank', name: 'Прем. танк', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/6.PNG' },
                     { id: 'gold', name: 'Золото', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/4.PNG' },
-                    { id: 'jackpot', name: 'ДЖЕКПОТ', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/mainitem.PNG' },
+                    { id: 'jackpot', name: 'Джекпот', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/mainitem.PNG' },
                     { id: 'decorator', name: 'Декоратор', img: 'https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bigtrophy/decor.PNG' }
                 ]
             }
@@ -621,6 +619,17 @@
             }
         }
 
+        function clearProbabilities() {
+            if(!confirm("Вы уверены, что хотите очистить все введенные шансы?")) return;
+            
+            const inputs = document.querySelectorAll('#items-container input');
+            inputs.forEach(inp => inp.value = '');
+            
+            localStorage.removeItem('wtm-sim-' + currentMode);
+            updateTotal();
+        }
+
+        // ОБНОВЛЕНО: Допуск 96% - 104%
         function updateTotal() {
             let total = 0;
             document.querySelectorAll('#items-container input').forEach(inp => total += parseFloat(inp.value) || 0);
@@ -632,7 +641,7 @@
             
             const diff = 100 - total;
             
-            if (total >= 98 && total <= 102) {
+            if (total >= 96 && total <= 104) {
                 totalEl.style.color = '#28a745';
                 totalEl.style.borderColor = '#28a745';
                 diffEl.style.display = 'none';
@@ -709,7 +718,7 @@
 
         function startOpening(count) {
             if (!updateTotal()) {
-                if (!confirm("Сумма вероятностей выходит за пределы 98-102%. Продолжить?")) return;
+                if (!confirm("Сумма вероятностей выходит за пределы 96-104%. Результаты могут быть неточными. Продолжить?")) return;
             }
             
             if(!determineWinner()) {
