@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор 9 ранг T-55 АМД-1</title>
+    <style>
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/24_07_newgeneration/1080x2340_wtm_new_generation_c80ea2d16ea5fed5cb0e6036a3677b87.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; /* ВАЖНО: Запрещаем перенос звезд на новую строку */
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { 
+                padding: 15px; /* Меньше отступы контейнера */
+            }
+            .content-section { 
+                background: rgba(255, 255, 255, 0.08); 
+            }
+            /* ИСПРАВЛЕНИЕ ЗВЕЗД НА МОБИЛЬНОМ */
+            .interactive-stars {
+                font-size: 1.8em; /* Уменьшаем размер звезд, чтобы влезали */
+            }
+            /* ИСПРАВЛЕНИЕ ВИДЖЕТА TELEGRAM */
+            .comments-wrapper { 
+                padding: 5px; /* Минимальный отступ, чтобы дать место виджету */
+            } 
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>9 ранг T-55 АМД-1</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/55amd/amdmain.webp" alt="T-55 AMD-1 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>
+T-54/T-55 — серия советских средних танков, разработанная в конце 1940-х — начале 1950-х годов на заводе №183 (Нижний Тагил). Первый прототип T-54 был готов к концу 1945 года; массовое производство и экспорт T-55 начались в 1958 году. Серия отличалась простотой, большой унификацией и массовостью: суммарно произведено порядка 96–100 тысяч единиц. T-55 прошёл множество модернизаций и экспортных вариантов; модификация AMD-1 одна из поздних модернизаций с активной защитой и улучшенной электроникой/вооружением, предназначенная для продления боевой эффективности базовой конструкции.
+
+</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/55amd/amdhistoric.webp" alt="Historical T-55 AMD-1" class="tank-image">
+        </div>
+        
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+           
+             <p><strong>Плюсы:</strong> двигатель/мощность: модернизированный дизель (~520–620 л.с. в разных апгрейдах) при массе ~36–38 т даёт удельную мощность порядка 13–17 л.с./т, обеспечивает уверенное ускорение на поле боя.
+ Максимальная скорость: ~50–55 км/ч по шоссе в зависимости от состояния двигателя и трансмиссии.
+ Хорошая подвижность в умеренном бездорожье, быстрая смена позиций на ближних дистанциях.
+
+ </p>
+            <p><strong>Минусы:</strong> управляемость и динамика хуже, чем у современных обсчитываемых танков; инерция и роллинг при резких манёврах.
+ Проходимость на очень мягких грунтах ограничена из‑за ширины гусениц и массы.
+</p>
+
+        </div>
+
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <p><strong>Плюсы:</strong> улучшенная лобовая защита: верхний лоб корпуса и башня с оригинальной закалённой бронёй; в игре лоб способен выдерживать многие стандартные снаряды ранга при стрельбе в центральную зону.
+ AMD-1  получила систему активной защиты Дрозд (80° сектор) — отражает/перехватывает некоторые ПТУРы и реактивные снаряды в переднем секторе.
+ Простая и надёжная компоновка даёт хорошую ремонтопригодность и живучесть при повреждениях.
+
+</p>
+            <p><strong>Минусы:</strong> борта и корма уязвимы: боковые проекции пробиваются большинством современных снарядов ранга.
+ Верхняя броня и крыша — слабые места против НУРСов/фугасов и стрельбы сверху.
+
+
+
+</p>
+            
+        </div>
+
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p>Основное орудие: 100-мм нарезная пушка Д-10Т2С  стабилизация 1–2 плоскостей, высокоэффективна на средних дистанциях, хорошая скорострельность (~6–8 выстрелов/мин в боевых условиях).</p>
+            <p><strong>Снаряды:</strong></p>
+            <p><strong>3BM25 (ОБПС — бронебойный подкалиберный снаряд)</strong></p>
+            <p>Бронепробитие: 330мм со 100 метров; 310мм с 500 метров.</p>
+            <p><strong>9M117 (управляемая ракета / ПТУР, пуск из ствола)</strong></p>
+            <p>Масса тротилового эквивалентна: 4.7кг. Бронепробитие: 600мм со 100 метров; 600мм с 500 метров. Чувствительность вызрывателя: 0.1мм.</p>
+            <p><strong>BR-412D (APCBC — подкалиберно‑панцирный снаряд с баллистическим колпаком)</strong></p>
+            <p>Масса тротилового эквивалента: 93г. Бронепробитие: 240мм со 100 метров; 220мм с 500 метров. Чувствительность взрывателя: 19мм.</p>
+            <p><strong>OF-412 (ОФ-412 — осколочно‑фугасный)</strong></p>
+            <p>Масса тротилового эквивалентна: 1.46кг. Бронепробитие: 19мм со 100 метров; 19мм с 500 метров. Чувствительность взрывателя: 0.1мм.</p>
+            <p><strong>3BK17M (кумулятивный/КС — кумулятивный снаряд)</strong></p>
+            <p>Масса тротилового эквивалента: 1.17кг. Бронепробитие: 390мм со 100 метров; 390мм с 500 метров. Чувствительность взрывателя: 0.1мм.</p>
+            <p><strong>Дополнительное вооружение:</strong></p>
+            <p>1 х 12.7-мм ДШК (крыша) — ~600–850 выстр./мин, эффективен против авиации и лёгкой техники. 1 х 7.62-мм ПКТ (коаксиальный).</p>
+
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/55amd/amdweapon.webp" alt="Снаряды T-55 AMD-1" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>КАЗ Дрозд — защита переднего сектора 80°, может перехватывать ограниченный набор ПТУР/РПС. Наличие дымовых гранат/пусковой установки.</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>T-55 AMD-1  — гибрид классики и модерна: классическая подвижная база T-55 с улучшенной передней защитой и активной защитой Drozd. 
+                Сильна при тактических ближних и средних встречах: используй бронебойные подкалиберные и управляемую 9M117 для поражения тяжёлых целей на средней/дальней дистанции. 
+                Основные слабости — бока/корма и крышка башни; избегай огня сверху и фланговых обстрелов. Активная защита даёт преимущество против ПТУРов, но не абсолютна — учитывай её перезаряд/работоспособность.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Народный рейтинг: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Голосов: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Нажми, чтобы оценить</div>
+            </div>
+            </div>
+
+       
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=ru" 
+                data-telegram-discussion="fortunawtm_comments/38" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Материал предоставлен пользователем Flyeskiy. Обновлено 15.01.2026. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+     
+        const firebaseConfig = {
+           apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+  authDomain: "wtm-fortuna.firebaseapp.com",
+  databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "wtm-fortuna",
+  storageBucket: "wtm-fortuna.firebasestorage.app",
+  messagingSenderId: "438964530574",
+  appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+      
+
+        const TANK_ID = 'amd55'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "Вы уже голосовали! Спасибо.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Отправка...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Голос принят! Спасибо.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Ошибка доступа.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        });
+    </script>
+</body>
+</html>
