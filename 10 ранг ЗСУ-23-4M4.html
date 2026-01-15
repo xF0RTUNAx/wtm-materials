@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор 10 ранг ЗСУ-23-4M4</title>
+    <style>
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_12_lightningstrike/1080x2340_wtm_lightning_strike_d998cb1b19d61930e8ea08059d56e42a.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; /* ВАЖНО: Запрещаем перенос звезд на новую строку */
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { 
+                padding: 15px; /* Меньше отступы контейнера */
+            }
+            .content-section { 
+                background: rgba(255, 255, 255, 0.08); 
+            }
+            /* ИСПРАВЛЕНИЕ ЗВЕЗД НА МОБИЛЬНОМ */
+            .interactive-stars {
+                font-size: 1.8em; /* Уменьшаем размер звезд, чтобы влезали */
+            }
+            /* ИСПРАВЛЕНИЕ ВИДЖЕТА TELEGRAM */
+            .comments-wrapper { 
+                padding: 5px; /* Минимальный отступ, чтобы дать место виджету */
+            } 
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>10 ранг ЗСУ-23-4M4</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/zsum4/zsum4main.webp" alt="ЗСУ-23-4M4 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>
+ЗСУ-23-4M4 «Шилка» — советская самоходная зенитная установка на базе грузового шасси ЗИЛ/ГАЗ, разработанная в 1960-х для ПВО войсковых соединений. Модель M4 — модернизированная версия с улучшенной электроникой и модернизированным боекомплектом;  представлена как лёгкая мобильная ЗСУ ближнего перехвата с высокими темпами стрельбы и ПВО-ракетной поддержкой.
+
+</p>
+            <img src="https://www.vestnik-rm.ru/userfiles/cimg0189.jpg" alt="Historical ЗСУ-23-4M4" class="tank-image">
+        </div>
+        
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+           
+             <p><strong>Плюсы:</strong> хорошая мобильность для ЗСУ. 
+                 Масса ~22 т и максимальная скорость ~55 км/ч позволяют быстро занимать позиции и сменять сектор обслуживания. 
+                 Низкий силуэт облегчает маскировку. </p>
+            <p><strong>Минусы:</strong> ограничённая проходимость на сильно пересечённой местности; 
+                слабая защита делает быструю смену позиций обязательной при обнаружении противника.</p>
+
+        </div>
+
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <p><strong>Плюсы:</strong> небольшой силуэт и относительно тонкая броня дают шанс избежать обнаружения и прямых попаданий в первые секунды боя.</p>
+            <p><strong>Минусы:</strong> очень тонкая броня: корпус ~9/9/7 мм, башня ~8/8/8 мм (в игровых показателях). Практически уязвима для любого бронебойного огня орудий своего ранга и выше; 
+                нет отделённой боевой укладки — попадание часто фатально.</p>
+            
+        </div>
+
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p>Основное: 4 × 23 мм автоматические пушки АЗП-23 (4×). Поясные характеристики: лента/магазин 500 снарядов, суммарный боезапас  ~2000 (500 в ленте). Темп стрельбы около 850 выстр./мин на ствол (совокупно высокая плотность огня). Стабилизация: двухплоскостная, УВН: −4.5° / +85°.</p>
+            <p><strong>Снаряды:</strong></p>
+            <p>Осколочно-фугасные 23 мм (эффективны против лёгкой техники и воздушных целей на малой/средней высоте).</p>
+            <p>БЗТ (Бронебойно-зажигательные) 45мм (эффективны против легкой тезники/самолетов).</p>
+            <p>БПС отсутствуют в классическом понимании — основная роль поражение НУРС/техники фрагментирующим огнём.</p>
+            <p><strong>Дополнительно:</strong></p>
+            <p>Зенитные ракеты 9S846 «Стрелец» (4 ракеты, 120 выстр./мин перезарядки пусковой) дают возможность поражать пикирующие/высотные цели на больших дистанциях и дополняют пушечный огонь при атаке самолётов. Эффективная дальность около 1-4 км. Пулемётов нет.</p>
+
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/zsum4/zsum4weapon.webp" alt="Снаряды ЗСУ-23-4M4" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Особенности</h3>
+            <p>Феноменальная плотность огня по воздушным целям на ближних дистанциях; отличная вертикальная наводка и высокая скорострельность делают Шилку очень опасной для самолётов. Требует прикрытия от наземных танков и ПТ средств.</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>ЗСУ-23-4M4 — хорошая ЗСУ ближнего действия. Имеет невероятную плотность огня и внушительную эффективность против авиации и лёгкой техники, но крайне уязвима в лобовом бою с бронетехникой. Играй мобильнее: занимай короткие огневые позиции, прикрывайся рельефом и используй ракеты для добивания воздушных целей. По сути, годится только для защиты неба.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Народный рейтинг: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Голосов: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Нажми, чтобы оценить</div>
+            </div>
+            </div>
+
+       
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=ru" 
+                data-telegram-discussion="fortunawtm_comments/40" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Материал предоставлен пользователем Flyeskiy. Обновлено 15.01.2026. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+     
+        const firebaseConfig = {
+           apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+  authDomain: "wtm-fortuna.firebaseapp.com",
+  databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "wtm-fortuna",
+  storageBucket: "wtm-fortuna.firebasestorage.app",
+  messagingSenderId: "438964530574",
+  appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+      
+
+        const TANK_ID = 'zsum4'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "Вы уже голосовали! Спасибо.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Отправка...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Голос принят! Спасибо.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Ошибка доступа.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        });
+    </script>
+</body>
+</html>
