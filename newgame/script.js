@@ -1,15 +1,15 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// - НАСТРОЙКИ -
+// --- НАСТРОЙКИ ---
 const SPEED = 2.5;
 const ROTATION_SPEED = 3.5;
 const GRAVITY = 15.0; 
 const SMOOTH_Y_FACTOR = 0.2; 
 
 // НАСТРОЙКИ КАМЕРЫ
-const CAMERA_DIST = 2.2; // Дистанция от игрока
-const CAMERA_HEIGHT = 1.4; // Высота прицела
+const CAMERA_DIST = 2.5; 
+const CAMERA_HEIGHT = 1.4;
 
 // Глобальные переменные
 let camera, scene, renderer, clock;
@@ -21,9 +21,9 @@ let isGameActive = false;
 let allMeshes = []; 
 
 // ПЕРЕМЕННЫЕ ДЛЯ СВОБОДНОЙ КАМЕРЫ
-let cameraAngle = Math.PI; // Угол поворота вокруг игрока (начинаем сзади)
-let cameraVerticalAngle = 0.2; // Угол наклона (немного сверху)
-let mouseLook = { active: false, x: 0, y: 0 }; // Для мыши на ПК
+let cameraAngle = Math.PI; 
+let cameraVerticalAngle = 0.2; 
+let mouseLook = { active: false, x: 0, y: 0 }; 
 
 // Физика
 let verticalVelocity = 0; 
@@ -33,10 +33,11 @@ let targetY = 0;
 // Управление
 let keys = { w: false, a: false, s: false, d: false };
 let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-let joyManager = { active: false, x: 0, y: 0 };
-let touchLook = { active: false, lastX: 0, lastY: 0 }; // Для тача
 
-// Звуки
+// МУЛЬТИТАЧ (Добавил touchId для правильной работы двух пальцев)
+let joyManager = { active: false, x: 0, y: 0, touchId: null };
+let touchLook = { active: false, lastX: 0, lastY: 0, touchId: null };
+
 let soundAmbience, soundStepsGrass, soundStepsStone, soundBark;
 let playerListener;
 
@@ -84,11 +85,9 @@ function init() {
     const loaderBar = document.getElementById('loader-bar-fill');
     const loadingScreen = document.getElementById('loading-screen');
 
-    // ЗАГРУЗКА
     loader.load('./world.glb', 
     function (gltf) {
-        console.log("Оригинальный мир загружен!");
-        
+        console.log("Мир загружен!");
         loadingScreen.style.opacity = '0';
         setTimeout(() => {
             loadingScreen.style.display = 'none';
@@ -98,14 +97,12 @@ function init() {
         scene.add(gltf.scene);
         const allClips = gltf.animations;
 
-        // ИГРОК
+        // Игрок
         playerObject = gltf.scene.getObjectByName('Player') || gltf.scene.getObjectByName('Soldier');
         
         if (playerObject) {
             playerObject.position.set(0, 5, 0); 
             targetY = 5;
-
-            // Установим начальный угол камеры по повороту игрока
             cameraAngle = playerObject.rotation.y + Math.PI;
 
             const pMixer = new THREE.AnimationMixer(playerObject);
@@ -122,7 +119,7 @@ function init() {
             }
         }
 
-        // МИР
+        // Мир
         gltf.scene.traverse(function (object) {
             if (object.isMesh) {
                 object.castShadow = true;
@@ -142,7 +139,7 @@ function init() {
             }
         });
 
-        // NPC
+        // NPC и Животные
         const npcNames = ['Farmer', 'Worker', 'Suit', 'Adventurer', 'Animated_Woman'];
         const humanIdle = allClips.find(c => c.name.includes('Idle') && c.name.includes('Character') && !c.name.includes('Neutral'));
         npcNames.forEach(name => {
@@ -154,7 +151,6 @@ function init() {
             }
         });
 
-        // Animals
         const dog = gltf.scene.getObjectByName('Dog');
         if(dog) {
             const m = new THREE.AnimationMixer(dog);
@@ -218,14 +214,21 @@ function canMove(position, direction, distance) {
     return true;
 }
 
+// ------------------------------------------------------------------
+// ОБНОВЛЕННАЯ ФИЗИКА (БЕГ ОТНОСИТЕЛЬНО КАМЕРЫ)
+// ------------------------------------------------------------------
 function updatePhysics(delta) {
     if (!playerObject) return;
+
+    // 1. Гравитация
     verticalVelocity -= GRAVITY * delta; 
     let nextY = playerObject.position.y + verticalVelocity * delta;
+
     const raycaster = new THREE.Raycaster();
     const rayOrigin = playerObject.position.clone().add(new THREE.Vector3(0, 1.5, 0));
     raycaster.set(rayOrigin, new THREE.Vector3(0, -1, 0));
     const intersects = raycaster.intersectObjects(allMeshes, true);
+    
     isGrounded = false;
     if (intersects.length > 0) {
         const hitDist = intersects[0].distance; 
@@ -233,27 +236,63 @@ function updatePhysics(delta) {
         if (hitDist <= 1.6) { targetY = groundHeight; verticalVelocity = 0; isGrounded = true; } 
         else { targetY = nextY; }
     } else { targetY = nextY; }
-    if (isGrounded) { playerObject.position.y = THREE.MathUtils.lerp(playerObject.position.y, targetY, SMOOTH_Y_FACTOR); } 
-    else { playerObject.position.y = nextY; }
+
+    if (isGrounded) { 
+        playerObject.position.y = THREE.MathUtils.lerp(playerObject.position.y, targetY, SMOOTH_Y_FACTOR); 
+    } else { 
+        playerObject.position.y = nextY; 
+    }
     if (playerObject.position.y < -20) { playerObject.position.set(0, 10, 0); verticalVelocity = 0; }
     
-    let moveDist = SPEED * delta;
-    let rotDist = ROTATION_SPEED * delta;
+    // 2. СЧИТЫВАЕМ ВВОД
+    let inputX = 0;
+    let inputY = 0;
+
+    if (keys.w) inputY -= 1; 
+    if (keys.s) inputY += 1; 
+    if (keys.a) inputX -= 1; 
+    if (keys.d) inputX += 1; 
+
+    if (isMobile && joyManager.active) {
+        inputX = joyManager.x;
+        inputY = joyManager.y;
+    }
+
+    // 3. ДВИЖЕНИЕ
     let isMoving = false;
-    if (keys.a) playerObject.rotation.y += rotDist;
-    if (keys.d) playerObject.rotation.y -= rotDist;
-    if (isMobile && joyManager.active) playerObject.rotation.y -= joyManager.x * rotDist;
     
-    let moveDir = new THREE.Vector3();
-    let attemptMove = false;
-    if (keys.w || (isMobile && joyManager.active && joyManager.y < -0.2)) { playerObject.getWorldDirection(moveDir); attemptMove = true; }
-    if (keys.s || (isMobile && joyManager.active && joyManager.y > 0.2)) { playerObject.getWorldDirection(moveDir); moveDir.negate(); attemptMove = true; }
-    
-    if (attemptMove) { if (canMove(playerObject.position, moveDir.clone(), moveDist)) { playerObject.position.add(moveDir.multiplyScalar(moveDist)); isMoving = true; } }
+    // Если есть ввод (джойстик или кнопки)
+    if (Math.abs(inputX) > 0.1 || Math.abs(inputY) > 0.1) {
+        isMoving = true;
+
+        // Вычисляем угол джойстика
+        // (Инвертируем Y для правильной математики)
+        const joystickAngle = Math.atan2(inputX, -inputY); 
+        
+        // Финальный угол = Угол камеры + Угол джойстика
+        const targetRotation = cameraAngle + joystickAngle;
+
+        // Плавный поворот персонажа (slerp)
+        const q = new THREE.Quaternion();
+        q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetRotation);
+        playerObject.quaternion.slerp(q, 0.15); 
+
+        // Движение вперед (куда смотрит лицо)
+        const moveDist = SPEED * delta;
+        const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), targetRotation);
+        
+        if (canMove(playerObject.position, forward, moveDist)) {
+            playerObject.position.add(forward.multiplyScalar(moveDist));
+        }
+    }
     
     if (playerActions['Run'] && playerActions['Idle']) {
         const targetAction = isMoving ? playerActions['Run'] : playerActions['Idle'];
-        if (activeAction !== targetAction) { activeAction.fadeOut(0.2); targetAction.reset().fadeIn(0.2).play(); activeAction = targetAction; }
+        if (activeAction !== targetAction) { 
+            activeAction.fadeOut(0.2); 
+            targetAction.reset().fadeIn(0.2).play(); 
+            activeAction = targetAction; 
+        }
     }
     handleFootsteps(isMoving);
 }
@@ -277,24 +316,15 @@ function handleFootsteps(isMoving) {
     } else { if(soundStepsGrass.isPlaying) soundStepsGrass.stop(); if(soundStepsStone.isPlaying) soundStepsStone.stop(); }
 }
 
-// --- НОВАЯ ФУНКЦИЯ КАМЕРЫ (СВОБОДНЫЙ ОБЗОР) ---
 function updateCamera() {
     if (!playerObject) return;
-
-    // Центр, на который смотрит камера (плечи игрока)
     const center = playerObject.position.clone().add(new THREE.Vector3(0, CAMERA_HEIGHT, 0));
-
-    // Вычисляем позицию камеры на сфере вокруг игрока
-    // cameraAngle = горизонтальный угол (меняется мышкой/тачем)
-    // cameraVerticalAngle = вертикальный угол (меняется мышкой/тачем)
     const offsetX = CAMERA_DIST * Math.sin(cameraAngle) * Math.cos(cameraVerticalAngle);
     const offsetZ = CAMERA_DIST * Math.cos(cameraAngle) * Math.cos(cameraVerticalAngle);
     const offsetY = CAMERA_DIST * Math.sin(cameraVerticalAngle);
-
     camera.position.x = center.x + offsetX;
     camera.position.z = center.z + offsetZ;
     camera.position.y = center.y + offsetY;
-
     camera.lookAt(center);
 }
 
@@ -311,7 +341,6 @@ function setupAudio() {
 }
 
 function setupControls() {
-    // Клавиатура
     document.addEventListener('keydown', (e) => {
         if(e.code==='KeyW'||e.code==='ArrowUp') keys.w=true;
         if(e.code==='KeyS'||e.code==='ArrowDown') keys.s=true;
@@ -325,15 +354,12 @@ function setupControls() {
         if(e.code==='KeyD'||e.code==='ArrowRight') keys.d=false;
     });
 
-    // МЫШЬ (ДЛЯ ПК) - Вращение камеры при зажатой кнопке
     document.addEventListener('mousedown', () => { if(isGameActive) mouseLook.active = true; });
     document.addEventListener('mouseup', () => { mouseLook.active = false; });
     document.addEventListener('mousemove', (e) => {
         if (mouseLook.active) {
-            // Чувствительность мыши
             cameraAngle -= e.movementX * 0.005;
             cameraVerticalAngle += e.movementY * 0.005;
-            // Ограничение по вертикали (чтобы не перекрутить)
             cameraVerticalAngle = Math.max(-1.0, Math.min(1.0, cameraVerticalAngle));
         }
     });
@@ -360,15 +386,8 @@ function setupMenuSystem() {
         if (isMobile) setupMobileControls();
     });
     
-    // ВЫХОД НА ГЛАВНУЮ СТРАНИЦУ
-    document.getElementById('exit-game-btn').addEventListener('click', () => {
-        // Поднимаемся на уровень вверх (из папки newgame в корень сайта)
-        window.location.href = '../index.html'; 
-    });
-
-    document.getElementById('btn-menu-exit').addEventListener('click', () => {
-         window.location.href = '../index.html';
-    });
+    document.getElementById('exit-game-btn').addEventListener('click', () => { window.location.href = '../index.html'; });
+    document.getElementById('btn-menu-exit').addEventListener('click', () => { window.location.href = '../index.html'; });
 
     document.getElementById('btn-credits').addEventListener('click', () => {
         document.getElementById('main-menu').style.display = 'none';
@@ -386,7 +405,7 @@ function animate() {
     mixers.forEach(m => m.update(delta));
     if (isGameActive && playerObject) {
         updatePhysics(delta);
-        updateCamera(); // Камера теперь рассчитывается по углам
+        updateCamera();
         if (soundBark.buffer && Math.random() < 0.01) {
              scene.traverse(obj => {
                 if (obj.userData.sound && !obj.userData.sound.isPlaying && obj.name.toLowerCase().includes('dog')) {
@@ -402,51 +421,104 @@ function animate() {
     renderer.render(scene, camera);
 }
 
+// ------------------------------------------------------------------
+// МОБИЛЬНОЕ УПРАВЛЕНИЕ С МУЛЬТИТАЧ (ЧТОБЫ РАБОТАЛО СРАЗУ 2 ПАЛЬЦА)
+// ------------------------------------------------------------------
 function setupMobileControls() {
     const jZone = document.getElementById('joystick-zone');
     const jKnob = document.getElementById('joystick-knob');
     const lZone = document.getElementById('look-zone');
     
-    // ДЖОЙСТИК (ХОДЬБА)
+    // 1. ДЖОЙСТИК (ЛЕВАЯ РУКА)
     if (jZone) {
         jZone.style.display = 'block';
-        let startX=0, startY=0;
-        jZone.addEventListener('touchstart', e=>{ joyManager.active=true; startX=e.touches[0].clientX; startY=e.touches[0].clientY; });
-        jZone.addEventListener('touchmove', e=>{
-            if(!joyManager.active)return;
-            let dx=e.touches[0].clientX-startX; let dy=e.touches[0].clientY-startY;
-            const dist=Math.sqrt(dx*dx+dy*dy); const max=35;
-            if(dist>max){ dx=(dx/dist)*max; dy=(dy/dist)*max; }
-            jKnob.style.transform=`translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
-            joyManager.x = dx/max; joyManager.y = dy/max;
-        });
-        jZone.addEventListener('touchend', ()=>{ joyManager.active=false; joyManager.x=0; joyManager.y=0; jKnob.style.transform=`translate(-50%, -50%)`; });
+        
+        jZone.addEventListener('touchstart', e => {
+            e.preventDefault(); 
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (joyManager.touchId === null) {
+                    joyManager.touchId = e.changedTouches[i].identifier;
+                    joyManager.active = true;
+                    joyManager.startX = e.changedTouches[i].clientX;
+                    joyManager.startY = e.changedTouches[i].clientY;
+                }
+            }
+        }, { passive: false });
+
+        jZone.addEventListener('touchmove', e => {
+            e.preventDefault(); 
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joyManager.touchId) {
+                    let dx = e.changedTouches[i].clientX - joyManager.startX;
+                    let dy = e.changedTouches[i].clientY - joyManager.startY;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    const max = 35;
+                    if (dist > max) { dx = (dx/dist)*max; dy = (dy/dist)*max; }
+                    jKnob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+                    joyManager.x = dx / max;
+                    joyManager.y = dy / max;
+                }
+            }
+        }, { passive: false });
+
+        const endJoy = (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === joyManager.touchId) {
+                    joyManager.active = false;
+                    joyManager.touchId = null;
+                    joyManager.x = 0;
+                    joyManager.y = 0;
+                    jKnob.style.transform = `translate(-50%, -50%)`;
+                }
+            }
+        };
+        jZone.addEventListener('touchend', endJoy);
+        jZone.addEventListener('touchcancel', endJoy);
     }
     
-    // СЕНСОР (ВРАЩЕНИЕ КАМЕРЫ)
+    // 2. ОБЗОР (ПРАВАЯ РУКА)
     if (lZone) {
         lZone.style.display = 'block';
-        lZone.addEventListener('touchstart', e=>{ 
-            touchLook.active=true; 
-            touchLook.lastX=e.touches[0].clientX; 
-            touchLook.lastY=e.touches[0].clientY;
-        });
-        lZone.addEventListener('touchmove', e=>{ 
-            if(!touchLook.active || !playerObject) return;
-            const deltaX = e.touches[0].clientX - touchLook.lastX;
-            const deltaY = e.touches[0].clientY - touchLook.lastY;
-            
-            // Вращаем камеру
-            cameraAngle -= deltaX * 0.01; 
-            cameraVerticalAngle += deltaY * 0.01;
-            
-            // Ограничение по вертикали
-            cameraVerticalAngle = Math.max(-1.0, Math.min(1.0, cameraVerticalAngle));
 
-            touchLook.lastX = e.touches[0].clientX;
-            touchLook.lastY = e.touches[0].clientY;
-        });
-        lZone.addEventListener('touchend', ()=> touchLook.active=false);
+        lZone.addEventListener('touchstart', e => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (touchLook.touchId === null) {
+                    touchLook.touchId = e.changedTouches[i].identifier;
+                    touchLook.active = true;
+                    touchLook.lastX = e.changedTouches[i].clientX;
+                    touchLook.lastY = e.changedTouches[i].clientY;
+                }
+            }
+        }, { passive: false });
+
+        lZone.addEventListener('touchmove', e => {
+            e.preventDefault();
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === touchLook.touchId) {
+                    const deltaX = e.changedTouches[i].clientX - touchLook.lastX;
+                    const deltaY = e.changedTouches[i].clientY - touchLook.lastY;
+                    
+                    cameraAngle -= deltaX * 0.008; 
+                    cameraVerticalAngle += deltaY * 0.008;
+                    cameraVerticalAngle = Math.max(-1.0, Math.min(1.0, cameraVerticalAngle));
+
+                    touchLook.lastX = e.changedTouches[i].clientX;
+                    touchLook.lastY = e.changedTouches[i].clientY;
+                }
+            }
+        }, { passive: false });
+
+        const endLook = (e) => {
+            for (let i = 0; i < e.changedTouches.length; i++) {
+                if (e.changedTouches[i].identifier === touchLook.touchId) {
+                    touchLook.active = false;
+                    touchLook.touchId = null;
+                }
+            }
+        };
+        lZone.addEventListener('touchend', endLook);
+        lZone.addEventListener('touchcancel', endLook);
     }
 }
 function onWindowResize() {
