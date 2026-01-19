@@ -4,13 +4,12 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 // --- НАСТРОЙКИ ---
 const SPEED = 2.5;
 const ROTATION_SPEED = 3.5;
-
-// КАМЕРА (ЭКШЕН СТИЛЬ: НИЗКО И БЛИЗКО)
-// Y=1.4 (Уровень плеча), Z=-1.8 (Очень близко)
-const CAMERA_OFFSET = new THREE.Vector3(0, 1, -2); 
-
 const GRAVITY = 15.0; 
 const SMOOTH_Y_FACTOR = 0.2; 
+
+// НАСТРОЙКИ КАМЕРЫ
+const CAMERA_DIST = 2.2; // Дистанция от игрока
+const CAMERA_HEIGHT = 1.4; // Высота прицела
 
 // Глобальные переменные
 let camera, scene, renderer, clock;
@@ -21,6 +20,11 @@ let activeAction = null;
 let isGameActive = false;
 let allMeshes = []; 
 
+// ПЕРЕМЕННЫЕ ДЛЯ СВОБОДНОЙ КАМЕРЫ
+let cameraAngle = Math.PI; // Угол поворота вокруг игрока (начинаем сзади)
+let cameraVerticalAngle = 0.2; // Угол наклона (немного сверху)
+let mouseLook = { active: false, x: 0, y: 0 }; // Для мыши на ПК
+
 // Физика
 let verticalVelocity = 0; 
 let isGrounded = false;
@@ -30,7 +34,7 @@ let targetY = 0;
 let keys = { w: false, a: false, s: false, d: false };
 let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 let joyManager = { active: false, x: 0, y: 0 };
-let touchLook = { active: false, x: 0 };
+let touchLook = { active: false, lastX: 0, lastY: 0 }; // Для тача
 
 // Звуки
 let soundAmbience, soundStepsGrass, soundStepsStone, soundBark;
@@ -41,17 +45,14 @@ animate();
 
 function init() {
     scene = new THREE.Scene();
-    // 1. ЧИСТЫЙ ЦВЕТ НЕБА
     scene.background = new THREE.Color(0x87CEEB);
     scene.fog = new THREE.Fog(0x87CEEB, 10, 60);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 5, 5);
     
     playerListener = new THREE.AudioListener();
     camera.add(playerListener);
 
-    // 2. ПРОСТОЕ И СОЧНОЕ ОСВЕЩЕНИЕ
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1.1);
     hemiLight.position.set(0, 20, 0);
     scene.add(hemiLight);
@@ -62,10 +63,8 @@ function init() {
     dirLight.shadow.mapSize.width = 2048;
     dirLight.shadow.mapSize.height = 2048;
     const d = 50;
-    dirLight.shadow.camera.left = -d;
-    dirLight.shadow.camera.right = d;
-    dirLight.shadow.camera.top = d;
-    dirLight.shadow.camera.bottom = -d;
+    dirLight.shadow.camera.left = -d; dirLight.shadow.camera.right = d;
+    dirLight.shadow.camera.top = d; dirLight.shadow.camera.bottom = -d;
     scene.add(dirLight);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -81,17 +80,15 @@ function init() {
     setupMenuSystem();
 
     const loader = new GLTFLoader();
-    
-    // ЭЛЕМЕНТЫ ЗАГРУЗКИ
     const loaderText = document.getElementById('loader-text');
     const loaderBar = document.getElementById('loader-bar-fill');
     const loadingScreen = document.getElementById('loading-screen');
 
-    // 1. ЗАГРУЗКА
+    // ЗАГРУЗКА
     loader.load('./world.glb', 
     function (gltf) {
-        // --- УСПЕХ ---
-        console.log("Загружено!");
+        console.log("Оригинальный мир загружен!");
+        
         loadingScreen.style.opacity = '0';
         setTimeout(() => {
             loadingScreen.style.display = 'none';
@@ -99,7 +96,6 @@ function init() {
         }, 500);
 
         scene.add(gltf.scene);
-
         const allClips = gltf.animations;
 
         // ИГРОК
@@ -108,6 +104,9 @@ function init() {
         if (playerObject) {
             playerObject.position.set(0, 5, 0); 
             targetY = 5;
+
+            // Установим начальный угол камеры по повороту игрока
+            cameraAngle = playerObject.rotation.y + Math.PI;
 
             const pMixer = new THREE.AnimationMixer(playerObject);
             mixers.push(pMixer);
@@ -128,7 +127,6 @@ function init() {
             if (object.isMesh) {
                 object.castShadow = true;
                 object.receiveShadow = true;
-                
                 const n = object.name.toLowerCase();
                 let isPlayerPart = false;
                 if (playerObject) {
@@ -138,14 +136,13 @@ function init() {
                         parent = parent.parent;
                     }
                 }
-
                 if (!isPlayerPart && !n.includes('sky') && !n.includes('cloud')) {
                     allMeshes.push(object);
                 }
             }
         });
 
-        // NPC И ЖИВОТНЫЕ
+        // NPC
         const npcNames = ['Farmer', 'Worker', 'Suit', 'Adventurer', 'Animated_Woman'];
         const humanIdle = allClips.find(c => c.name.includes('Idle') && c.name.includes('Character') && !c.name.includes('Neutral'));
         npcNames.forEach(name => {
@@ -157,6 +154,7 @@ function init() {
             }
         });
 
+        // Animals
         const dog = gltf.scene.getObjectByName('Dog');
         if(dog) {
             const m = new THREE.AnimationMixer(dog);
@@ -180,24 +178,16 @@ function init() {
         }
 
     }, 
-    // --- 2. ПРОГРЕСС (В МЕГАБАЙТАХ) ---
     function (xhr) {
         if (xhr.lengthComputable) {
             const percent = (xhr.loaded / xhr.total) * 100;
-            const loadedMB = (xhr.loaded / 1048576).toFixed(2); // Перевод в МБ
+            const loadedMB = (xhr.loaded / 1048576).toFixed(2);
             const totalMB = (xhr.total / 1048576).toFixed(2);
-            
-            // ОБНОВЛЯЕМ ТЕКСТ: "ЗАГРУЗКА... 45% (5.4 MB / 12.0 MB)"
             loaderText.innerText = `ЗАГРУЗКА... ${Math.round(percent)}% (${loadedMB} MB / ${totalMB} MB)`;
             loaderBar.style.width = percent + '%';
         }
     },
-    // --- 3. ОШИБКА ---
-    function (error) {
-        console.error(error);
-        loaderText.innerText = "ОШИБКА ЗАГРУЗКИ";
-        loaderText.style.color = "red";
-    });
+    function (error) { console.error(error); });
 
     setupControls();
     window.addEventListener('resize', onWindowResize);
@@ -207,9 +197,7 @@ function checkIsWalkable(obj) {
     let current = obj;
     while(current) {
         const n = current.name.toLowerCase();
-        if (n.includes('road') || n.includes('path') || n.includes('grass') || n.includes('ground') || n.includes('floor')) {
-            return true;
-        }
+        if (n.includes('road') || n.includes('path') || n.includes('grass') || n.includes('ground') || n.includes('floor')) return true;
         current = current.parent;
     }
     return false;
@@ -219,9 +207,7 @@ function canMove(position, direction, distance) {
     const raycaster = new THREE.Raycaster();
     const rayOrigin = position.clone().add(new THREE.Vector3(0, 0.5, 0)); 
     raycaster.set(rayOrigin, direction.normalize());
-
     const intersects = raycaster.intersectObjects(allMeshes, true);
-
     if (intersects.length > 0) {
         if (intersects[0].distance < distance + 0.7) { 
             const hitObj = intersects[0].object;
@@ -234,132 +220,82 @@ function canMove(position, direction, distance) {
 
 function updatePhysics(delta) {
     if (!playerObject) return;
-
     verticalVelocity -= GRAVITY * delta; 
     let nextY = playerObject.position.y + verticalVelocity * delta;
-
     const raycaster = new THREE.Raycaster();
     const rayOrigin = playerObject.position.clone().add(new THREE.Vector3(0, 1.5, 0));
     raycaster.set(rayOrigin, new THREE.Vector3(0, -1, 0));
-
     const intersects = raycaster.intersectObjects(allMeshes, true);
-
     isGrounded = false;
-
     if (intersects.length > 0) {
         const hitDist = intersects[0].distance; 
         const groundHeight = intersects[0].point.y;
-        
-        if (hitDist <= 1.6) { 
-            targetY = groundHeight;
-            verticalVelocity = 0;
-            isGrounded = true;
-        } else {
-            targetY = nextY; 
-        }
-    } else {
-        targetY = nextY; 
-    }
-
-    if (isGrounded) {
-        playerObject.position.y = THREE.MathUtils.lerp(playerObject.position.y, targetY, SMOOTH_Y_FACTOR);
-    } else {
-        playerObject.position.y = nextY; 
-    }
-
-    if (playerObject.position.y < -20) {
-        playerObject.position.set(0, 10, 0); 
-        verticalVelocity = 0;
-    }
-
-    // ДВИЖЕНИЕ
+        if (hitDist <= 1.6) { targetY = groundHeight; verticalVelocity = 0; isGrounded = true; } 
+        else { targetY = nextY; }
+    } else { targetY = nextY; }
+    if (isGrounded) { playerObject.position.y = THREE.MathUtils.lerp(playerObject.position.y, targetY, SMOOTH_Y_FACTOR); } 
+    else { playerObject.position.y = nextY; }
+    if (playerObject.position.y < -20) { playerObject.position.set(0, 10, 0); verticalVelocity = 0; }
+    
     let moveDist = SPEED * delta;
     let rotDist = ROTATION_SPEED * delta;
     let isMoving = false;
-
     if (keys.a) playerObject.rotation.y += rotDist;
     if (keys.d) playerObject.rotation.y -= rotDist;
     if (isMobile && joyManager.active) playerObject.rotation.y -= joyManager.x * rotDist;
-
+    
     let moveDir = new THREE.Vector3();
     let attemptMove = false;
-
-    if (keys.w || (isMobile && joyManager.active && joyManager.y < -0.2)) {
-        playerObject.getWorldDirection(moveDir);
-        attemptMove = true;
-    }
-    if (keys.s || (isMobile && joyManager.active && joyManager.y > 0.2)) {
-        playerObject.getWorldDirection(moveDir);
-        moveDir.negate();
-        attemptMove = true;
-    }
-
-    if (attemptMove) {
-        if (canMove(playerObject.position, moveDir.clone(), moveDist)) {
-            playerObject.position.add(moveDir.multiplyScalar(moveDist));
-            isMoving = true;
-        }
-    }
-
-    // Анимация
+    if (keys.w || (isMobile && joyManager.active && joyManager.y < -0.2)) { playerObject.getWorldDirection(moveDir); attemptMove = true; }
+    if (keys.s || (isMobile && joyManager.active && joyManager.y > 0.2)) { playerObject.getWorldDirection(moveDir); moveDir.negate(); attemptMove = true; }
+    
+    if (attemptMove) { if (canMove(playerObject.position, moveDir.clone(), moveDist)) { playerObject.position.add(moveDir.multiplyScalar(moveDist)); isMoving = true; } }
+    
     if (playerActions['Run'] && playerActions['Idle']) {
         const targetAction = isMoving ? playerActions['Run'] : playerActions['Idle'];
-        if (activeAction !== targetAction) {
-            activeAction.fadeOut(0.2);
-            targetAction.reset().fadeIn(0.2).play();
-            activeAction = targetAction;
-        }
+        if (activeAction !== targetAction) { activeAction.fadeOut(0.2); targetAction.reset().fadeIn(0.2).play(); activeAction = targetAction; }
     }
-
     handleFootsteps(isMoving);
 }
 
 function handleFootsteps(isMoving) {
     if (isMoving && isGrounded) {
-        if (!soundStepsGrass.isPlaying && !soundStepsStone.isPlaying) {
-             soundStepsGrass.play(); soundStepsStone.play();
-        }
-        
+        if (!soundStepsGrass.isPlaying && !soundStepsStone.isPlaying) { soundStepsGrass.play(); soundStepsStone.play(); }
         const raycaster = new THREE.Raycaster(playerObject.position.clone().add(new THREE.Vector3(0,0.5,0)), new THREE.Vector3(0,-1,0));
         const intersects = raycaster.intersectObjects(allMeshes, true);
-        
         let onStone = false;
         if (intersects.length > 0) {
             const hitObj = intersects[0].object;
             let current = hitObj;
             while(current) {
                 const n = current.name.toLowerCase();
-                if (n.includes('road') || n.includes('path') || n.includes('stone')) {
-                    onStone = true;
-                    break;
-                }
+                if (n.includes('road') || n.includes('path') || n.includes('stone')) { onStone = true; break; }
                 current = current.parent;
             }
         }
-
-        if (onStone) {
-            soundStepsStone.setVolume(1.0); soundStepsGrass.setVolume(0);
-        } else {
-            soundStepsStone.setVolume(0); soundStepsGrass.setVolume(1.0);
-        }
-    } else {
-        if(soundStepsGrass.isPlaying) soundStepsGrass.stop();
-        if(soundStepsStone.isPlaying) soundStepsStone.stop();
-    }
+        if (onStone) { soundStepsStone.setVolume(1.0); soundStepsGrass.setVolume(0); } else { soundStepsStone.setVolume(0); soundStepsGrass.setVolume(1.0); }
+    } else { if(soundStepsGrass.isPlaying) soundStepsGrass.stop(); if(soundStepsStone.isPlaying) soundStepsStone.stop(); }
 }
 
+// --- НОВАЯ ФУНКЦИЯ КАМЕРЫ (СВОБОДНЫЙ ОБЗОР) ---
 function updateCamera() {
     if (!playerObject) return;
-    const relativeOffset = CAMERA_OFFSET.clone();
-    
-    relativeOffset.applyAxisAngle(new THREE.Vector3(0,1,0), playerObject.rotation.y);
-    
-    const targetPos = playerObject.position.clone().add(relativeOffset);
-    camera.position.lerp(targetPos, 0.1);
-    
-    // СМОТРИМ НА ПОЯСНИЦУ/ГРУДЬ (Y=1.3)
-    const lookTarget = playerObject.position.clone().add(new THREE.Vector3(0, 1.3, 0)); 
-    camera.lookAt(lookTarget);
+
+    // Центр, на который смотрит камера (плечи игрока)
+    const center = playerObject.position.clone().add(new THREE.Vector3(0, CAMERA_HEIGHT, 0));
+
+    // Вычисляем позицию камеры на сфере вокруг игрока
+    // cameraAngle = горизонтальный угол (меняется мышкой/тачем)
+    // cameraVerticalAngle = вертикальный угол (меняется мышкой/тачем)
+    const offsetX = CAMERA_DIST * Math.sin(cameraAngle) * Math.cos(cameraVerticalAngle);
+    const offsetZ = CAMERA_DIST * Math.cos(cameraAngle) * Math.cos(cameraVerticalAngle);
+    const offsetY = CAMERA_DIST * Math.sin(cameraVerticalAngle);
+
+    camera.position.x = center.x + offsetX;
+    camera.position.z = center.z + offsetZ;
+    camera.position.y = center.y + offsetY;
+
+    camera.lookAt(center);
 }
 
 function setupAudio() {
@@ -375,6 +311,7 @@ function setupAudio() {
 }
 
 function setupControls() {
+    // Клавиатура
     document.addEventListener('keydown', (e) => {
         if(e.code==='KeyW'||e.code==='ArrowUp') keys.w=true;
         if(e.code==='KeyS'||e.code==='ArrowDown') keys.s=true;
@@ -387,6 +324,19 @@ function setupControls() {
         if(e.code==='KeyA'||e.code==='ArrowLeft') keys.a=false;
         if(e.code==='KeyD'||e.code==='ArrowRight') keys.d=false;
     });
+
+    // МЫШЬ (ДЛЯ ПК) - Вращение камеры при зажатой кнопке
+    document.addEventListener('mousedown', () => { if(isGameActive) mouseLook.active = true; });
+    document.addEventListener('mouseup', () => { mouseLook.active = false; });
+    document.addEventListener('mousemove', (e) => {
+        if (mouseLook.active) {
+            // Чувствительность мыши
+            cameraAngle -= e.movementX * 0.005;
+            cameraVerticalAngle += e.movementY * 0.005;
+            // Ограничение по вертикали (чтобы не перекрутить)
+            cameraVerticalAngle = Math.max(-1.0, Math.min(1.0, cameraVerticalAngle));
+        }
+    });
 }
 
 function stopGame() {
@@ -395,7 +345,6 @@ function stopGame() {
     document.getElementById('main-menu').style.display = 'flex';
     document.getElementById('joystick-zone').style.display = 'none';
     document.getElementById('look-zone').style.display = 'none';
-    
     if(soundAmbience.isPlaying) soundAmbience.stop();
     if(soundStepsGrass.isPlaying) soundStepsGrass.stop();
     if(soundStepsStone.isPlaying) soundStepsStone.stop();
@@ -411,8 +360,15 @@ function setupMenuSystem() {
         if (isMobile) setupMobileControls();
     });
     
-    document.getElementById('exit-game-btn').addEventListener('click', stopGame);
-    document.getElementById('btn-menu-exit').addEventListener('click', () => window.location.reload());
+    // ВЫХОД НА ГЛАВНУЮ СТРАНИЦУ
+    document.getElementById('exit-game-btn').addEventListener('click', () => {
+        // Поднимаемся на уровень вверх (из папки newgame в корень сайта)
+        window.location.href = '../index.html'; 
+    });
+
+    document.getElementById('btn-menu-exit').addEventListener('click', () => {
+         window.location.href = '../index.html';
+    });
 
     document.getElementById('btn-credits').addEventListener('click', () => {
         document.getElementById('main-menu').style.display = 'none';
@@ -427,13 +383,10 @@ function setupMenuSystem() {
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
-
     mixers.forEach(m => m.update(delta));
-
     if (isGameActive && playerObject) {
         updatePhysics(delta);
-        updateCamera();
-        
+        updateCamera(); // Камера теперь рассчитывается по углам
         if (soundBark.buffer && Math.random() < 0.01) {
              scene.traverse(obj => {
                 if (obj.userData.sound && !obj.userData.sound.isPlaying && obj.name.toLowerCase().includes('dog')) {
@@ -453,6 +406,8 @@ function setupMobileControls() {
     const jZone = document.getElementById('joystick-zone');
     const jKnob = document.getElementById('joystick-knob');
     const lZone = document.getElementById('look-zone');
+    
+    // ДЖОЙСТИК (ХОДЬБА)
     if (jZone) {
         jZone.style.display = 'block';
         let startX=0, startY=0;
@@ -467,15 +422,29 @@ function setupMobileControls() {
         });
         jZone.addEventListener('touchend', ()=>{ joyManager.active=false; joyManager.x=0; joyManager.y=0; jKnob.style.transform=`translate(-50%, -50%)`; });
     }
+    
+    // СЕНСОР (ВРАЩЕНИЕ КАМЕРЫ)
     if (lZone) {
         lZone.style.display = 'block';
-        let lookStart=0;
-        lZone.addEventListener('touchstart', e=>{ touchLook.active=true; lookStart=e.touches[0].clientX; });
+        lZone.addEventListener('touchstart', e=>{ 
+            touchLook.active=true; 
+            touchLook.lastX=e.touches[0].clientX; 
+            touchLook.lastY=e.touches[0].clientY;
+        });
         lZone.addEventListener('touchmove', e=>{ 
             if(!touchLook.active || !playerObject) return;
-            const delta = e.touches[0].clientX - lookStart;
-            playerObject.rotation.y -= delta * 0.01;
-            lookStart = e.touches[0].clientX;
+            const deltaX = e.touches[0].clientX - touchLook.lastX;
+            const deltaY = e.touches[0].clientY - touchLook.lastY;
+            
+            // Вращаем камеру
+            cameraAngle -= deltaX * 0.01; 
+            cameraVerticalAngle += deltaY * 0.01;
+            
+            // Ограничение по вертикали
+            cameraVerticalAngle = Math.max(-1.0, Math.min(1.0, cameraVerticalAngle));
+
+            touchLook.lastX = e.touches[0].clientX;
+            touchLook.lastY = e.touches[0].clientY;
         });
         lZone.addEventListener('touchend', ()=> touchLook.active=false);
     }

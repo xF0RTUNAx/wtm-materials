@@ -15,7 +15,13 @@
             z-index: 20; backdrop-filter: blur(5px);
         }
         
-        h1 { color: white; font-size: 48px; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 40px; text-shadow: 0 0 10px #00ffcc; text-align: center; }
+        /* Адаптивный заголовок */
+        h1 { 
+            color: white; font-size: 48px; text-transform: uppercase; 
+            letter-spacing: 5px; margin-bottom: 40px; 
+            text-shadow: 0 0 10px #00ffcc; text-align: center;
+            max-width: 90%; 
+        }
 
         .menu-btn {
             width: 250px; padding: 15px; margin: 10px;
@@ -25,7 +31,7 @@
         }
         .menu-btn:hover { background: white; color: black; transform: scale(1.05); }
 
-        /* ЭКРАН ЗАГРУЗКИ (REAL-TIME DATA) */
+        /* ЭКРАН ЗАГРУЗКИ */
         #loading-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #111; color: #00ffcc;
@@ -34,11 +40,13 @@
         }
         #loader-text { 
             margin-bottom: 15px; font-size: 18px; font-weight: bold; 
-            letter-spacing: 1px; font-family: monospace; 
+            letter-spacing: 1px; font-family: monospace; text-align: center;
+            padding: 0 10px;
         }
         #loader-bar-container {
             width: 300px; height: 10px; background: #333;
             border-radius: 5px; overflow: hidden; border: 1px solid #555;
+            max-width: 80%;
         }
         #loader-bar-fill {
             width: 0%; height: 100%; background: #00ffcc;
@@ -46,7 +54,7 @@
             box-shadow: 0 0 10px #00ffcc;
         }
 
-        /* КРЕДИТЫ */
+        /* КРЕДИТЫ (ИСПРАВЛЕН ТЕКСТ) */
         #credits-screen {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 25;
@@ -55,10 +63,16 @@
         }
         #credits-list {
             height: 70%; overflow-y: auto; width: 100%; max-width: 800px;
-            text-align: left; margin-bottom: 20px; line-height: 1.6; font-size: 13px;
+            text-align: left; margin-bottom: 20px; line-height: 1.6; font-size: 14px;
             background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;
+            
+            /* ВАЖНО ДЛЯ МОБИЛЬНЫХ: Перенос слов */
+            box-sizing: border-box;
+            word-wrap: break-word; 
+            overflow-wrap: break-word;
+            width: 90%;
         }
-        #credits-list a { color: #00ffcc; text-decoration: none; }
+        #credits-list a { color: #00ffcc; text-decoration: none; word-break: break-all; }
         #credits-list p { margin: 5px 0; border-bottom: 1px solid #444; padding-bottom: 5px; }
 
         /* ИГРОВОЙ ИНТЕРФЕЙС */
@@ -86,21 +100,31 @@
             transform: translate(-50%, -50%); pointer-events: none;
         }
         
+        /* Зона для вращения камеры (правая половина) */
         #look-zone { position: absolute; top: 0; right: 0; width: 50%; height: 100%; z-index: 4; display: none; }
 
         #rotate-device {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #222; color: white; z-index: 999;
-            flex-direction: column; justify-content: center; align-items: center;
+            flex-direction: column; justify-content: center; align-items: center; text-align: center;
         }
-        @media screen and (orientation: portrait) { #rotate-device { display: flex; } }
+        
+        /* Медиа-запрос для смартфонов */
+        @media screen and (orientation: portrait) { 
+            #rotate-device { display: flex; } 
+        }
+        @media screen and (max-width: 600px) {
+            h1 { font-size: 32px; letter-spacing: 2px; }
+            .menu-btn { width: 80%; }
+            #credits-list { font-size: 12px; }
+        }
     </style>
     <script type="importmap">
         { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
     </script>
 </head>
 <body>
-    <div id="rotate-device"><h1>Поверните устройство горизонтально</h1></div>
+    <div id="rotate-device"><h1>Пожалуйста, поверните устройство горизонтально</h1></div>
     
     <div id="loading-screen">
         <div id="loader-text">ПОДКЛЮЧЕНИЕ...</div>
@@ -116,41 +140,39 @@
         <button class="menu-btn" id="btn-menu-exit">ВЫХОД</button>
     </div>
 
-    <div id="credits-screen">
-        <h2>АВТОРЫ (CREDITS)</h2>
-        <div id="credits-list">
-            <p>xFORTUNAx (main dev)</p>
-            <p>Adventurer by Quaternius (<a href="https://poly.pizza/m/5EGWBMpuXq" target="_blank">poly.pizza/m/5EGWBMpuXq</a>)</p>
-            <p>Farmer by Quaternius (<a href="https://poly.pizza/m/7pn3R6hPvE" target="_blank">poly.pizza/m/7pn3R6hPvE</a>)</p>
-            <p>Worker by Quaternius (<a href="https://poly.pizza/m/Yg2bQZO6Hj" target="_blank">poly.pizza/m/Yg2bQZO6Hj</a>)</p>
-            <p>Suit by Quaternius [CC-BY] (<a href="https://poly.pizza/m/sOUciDsoVV" target="_blank">poly.pizza/m/sOUciDsoVV</a>)</p>
-            <p>Animated Woman by Quaternius (<a href="https://poly.pizza/m/qJ2gsTUBHL" target="_blank">poly.pizza/m/qJ2gsTUBHL</a>)</p>
-            <p>Soldier by Quaternius [CC-BY] (<a href="https://poly.pizza/m/oAArCNHjFB" target="_blank">poly.pizza/m/oAArCNHjFB</a>)</p>
-            <p>Horse by Quaternius (<a href="https://poly.pizza/m/qvTrSG9pZF" target="_blank">poly.pizza/m/qvTrSG9pZF</a>)</p>
-            <p>Bench by Quaternius (<a href="https://poly.pizza/m/jLxjFxFRpw" target="_blank">poly.pizza/m/jLxjFxFRpw</a>)</p>
-            <p>Shiba Inu by Quaternius (<a href="https://poly.pizza/m/y4wdQpg767" target="_blank">poly.pizza/m/y4wdQpg767</a>)</p>
-            <p>Street Light by Quaternius (<a href="https://poly.pizza/m/nFwrlcLvM5" target="_blank">poly.pizza/m/nFwrlcLvM5</a>)</p>
-            <p>Shipping Container Structure by Quaternius (<a href="https://poly.pizza/m/ebmepOXDRd" target="_blank">poly.pizza/m/ebmepOXDRd</a>)</p>
-            <p>Structure by Quaternius (<a href="https://poly.pizza/m/ilWoURnbZW" target="_blank">poly.pizza/m/ilWoURnbZW</a>)</p>
-            <p>Dumpster by Jarlan Perez [CC-BY] (<a href="https://poly.pizza/m/8s2mfCSvF6t" target="_blank">poly.pizza/m/8s2mfCSvF6t</a>)</p>
-            <p>Range Rover by IvOfficial [CC-BY] (<a href="https://poly.pizza/m/8zk4o6nALW" target="_blank">poly.pizza/m/8zk4o6nALW</a>)</p>
-            <p>Pickup Truck by Quaternius (<a href="https://poly.pizza/m/qn4grQgHm8" target="_blank">poly.pizza/m/qn4grQgHm8</a>)</p>
-            <p>Plant Big by Quaternius (<a href="https://poly.pizza/m/MbhbP7JrTI" target="_blank">poly.pizza/m/MbhbP7JrTI</a>)</p>
-            <p>Fern by Quaternius (<a href="https://poly.pizza/m/jqcanvH7D6" target="_blank">poly.pizza/m/jqcanvH7D6</a>)</p>
-            <p>Bush with Flowers by Quaternius (<a href="https://poly.pizza/m/U1ymDy8tbY" target="_blank">poly.pizza/m/U1ymDy8tbY</a>)</p>
-            <p>Path Straight by Quaternius (<a href="https://poly.pizza/m/ZuRHRsKWoz" target="_blank">poly.pizza/m/ZuRHRsKWoz</a>)</p>
-            <p>Farm house by Poly by Google [CC-BY] (<a href="https://poly.pizza/m/bHyQe5jzdiQ" target="_blank">poly.pizza/m/bHyQe5jzdiQ</a>)</p>
-            <p>House by Poly by Google [CC-BY] (<a href="https://poly.pizza/m/75V_MLvKMqM" target="_blank">poly.pizza/m/75V_MLvKMqM</a>)</p>
-            <p>Large Building by Kenney (<a href="https://poly.pizza/m/1bt4yYKmuK" target="_blank">poly.pizza/m/1bt4yYKmuK</a>)</p>
-            <p>House by Quaternius (<a href="https://poly.pizza/m/oJJIRwv6Bo" target="_blank">poly.pizza/m/oJJIRwv6Bo</a>)</p>
-            <p>Tree by Quaternius (<a href="https://poly.pizza/m/QVOop92WmG" target="_blank">poly.pizza/m/QVOop92WmG</a>)</p>
-            <p>Pine by Quaternius (<a href="https://poly.pizza/m/79gmlLnweB" target="_blank">poly.pizza/m/79gmlLnweB</a>)</p>
-            <p>Grass by Quaternius (<a href="https://poly.pizza/m/UGTOzcO3P2" target="_blank">poly.pizza/m/UGTOzcO3P2</a>)</p>
-            <p>Tree by Zsky [CC-BY] (<a href="https://poly.pizza/m/uxSb2WTPU4" target="_blank">poly.pizza/m/uxSb2WTPU4</a>)</p>
-            <p>Sounds by <a href="https://mixkit.co/" target="_blank">Mixkit</a> & <a href="https://freesound.org/" target="_blank">Freesound</a></p>
+    <div id="credits-list">
+            <h3 style="color: #ff0055; margin-top: 0;">🏆 РАЗРАБОТКА (DEV)</h3>
+            <p><strong>xFORTUNAx</strong> — Main Dev</p>
+            <br>
+
+            <h3 style="color: #00ffcc;">🎨 3D МОДЕЛИ (ASSETS)</h3>
+            
+            <p><strong>Quaternius</strong> (<a href="https://quaternius.com/" target="_blank">quaternius.com</a>):</p>
+            <ul style="padding-left: 20px; margin: 5px 0; color: #ccc;">
+                <li>Персонажи (Adventurer, Farmer, Worker, Soldier, Woman)</li>
+                <li>Животные (Shiba Inu, Horse)</li>
+                <li>Окружение (Trees, Grass, Bushes, Ferns)</li>
+                <li>Транспорт (Pickup Truck)</li>
+                <li>Декорации (Bench, Street Light, Containers)</li>
+            </ul>
+
+            <p><strong>Poly by Google</strong> [CC-BY] (<a href="https://poly.pizza/u/Google" target="_blank">poly.pizza</a>):</p>
+            <p>• Farm House, Residential House</p>
+
+            <p><strong>Kenney</strong> (<a href="https://kenney.nl/" target="_blank">kenney.nl</a>):</p>
+            <p>• Large Building, City Assets</p>
+
+            <p><strong>Jarlan Perez</strong> [CC-BY]: <a href="https://poly.pizza/m/8s2mfCSvF6t" target="_blank">Dumpster</a></p>
+            <p><strong>IvOfficial</strong> [CC-BY]: <a href="https://poly.pizza/m/8zk4o6nALW" target="_blank">Range Rover</a></p>
+            <p><strong>Zsky</strong> [CC-BY]: <a href="https://poly.pizza/m/uxSb2WTPU4" target="_blank">Tree Variant</a></p>
+            <br>
+
+            <h3 style="color: #00ffcc;">🎵 ЗВУКИ (AUDIO)</h3>
+            <p><strong>Mixkit</strong> (<a href="https://mixkit.co/" target="_blank">mixkit.co</a>) — Sound design</p> 
+
+            <h3 style="color: #888;">⚙️ ТЕХНОЛОГИИ (GAME ENGINE)</h3>
+            <p>Powered by <strong>Three.js</strong> WebGL Library</p>
         </div>
-        <button class="menu-btn" id="btn-credits-back">НАЗАД В МЕНЮ</button>
-    </div>
 
     <div id="game-ui">
         <div id="exit-game-btn">✕</div>
