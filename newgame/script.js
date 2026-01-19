@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-// --- НАСТРОЙКИ ---
+// - НАСТРОЙКИ -
 const SPEED = 2.5;
 const ROTATION_SPEED = 3.5;
 const GRAVITY = 15.0; 
