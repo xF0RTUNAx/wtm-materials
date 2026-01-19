@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>3D World</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; font-family: 'Segoe UI', sans-serif; }
+        
+        /* ГЛАВНОЕ МЕНЮ */
+        #main-menu {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 20; backdrop-filter: blur(5px);
+        }
+        
+        h1 { color: white; font-size: 48px; text-transform: uppercase; letter-spacing: 5px; margin-bottom: 40px; text-shadow: 0 0 10px #00ffcc; text-align: center; }
+
+        .menu-btn {
+            width: 250px; padding: 15px; margin: 10px;
+            font-size: 20px; font-weight: bold; color: white;
+            background: transparent; border: 2px solid white; cursor: pointer;
+            transition: 0.3s; text-transform: uppercase;
+        }
+        .menu-btn:hover { background: white; color: black; transform: scale(1.05); }
+
+        /* ЭКРАН ЗАГРУЗКИ (REAL-TIME DATA) */
+        #loading-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #111; color: #00ffcc;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 30; transition: opacity 0.5s;
+        }
+        #loader-text { 
+            margin-bottom: 15px; font-size: 18px; font-weight: bold; 
+            letter-spacing: 1px; font-family: monospace; 
+        }
+        #loader-bar-container {
+            width: 300px; height: 10px; background: #333;
+            border-radius: 5px; overflow: hidden; border: 1px solid #555;
+        }
+        #loader-bar-fill {
+            width: 0%; height: 100%; background: #00ffcc;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+
+        /* КРЕДИТЫ */
+        #credits-screen {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 25;
+            flex-direction: column; align-items: center; justify-content: center;
+            color: white; padding: 20px; box-sizing: border-box;
+        }
+        #credits-list {
+            height: 70%; overflow-y: auto; width: 100%; max-width: 800px;
+            text-align: left; margin-bottom: 20px; line-height: 1.6; font-size: 13px;
+            background: rgba(255,255,255,0.1); padding: 20px; border-radius: 10px;
+        }
+        #credits-list a { color: #00ffcc; text-decoration: none; }
+        #credits-list p { margin: 5px 0; border-bottom: 1px solid #444; padding-bottom: 5px; }
+
+        /* ИГРОВОЙ ИНТЕРФЕЙС */
+        #game-ui { display: none; }
+        
+        #exit-game-btn {
+            position: absolute; top: 20px; right: 20px;
+            width: 50px; height: 50px;
+            background: rgba(255, 0, 0, 0.7); color: white;
+            font-size: 24px; border: 2px solid white; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; z-index: 10; pointer-events: auto; user-select: none;
+        }
+
+        #joystick-zone {
+            position: absolute; bottom: 50px; left: 50px;
+            width: 120px; height: 120px;
+            background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%; display: none; z-index: 5;
+        }
+        #joystick-knob {
+            position: absolute; top: 50%; left: 50%;
+            width: 50px; height: 50px;
+            background: rgba(255, 255, 255, 0.5); border-radius: 50%;
+            transform: translate(-50%, -50%); pointer-events: none;
+        }
+        
+        #look-zone { position: absolute; top: 0; right: 0; width: 50%; height: 100%; z-index: 4; display: none; }
+
+        #rotate-device {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #222; color: white; z-index: 999;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        @media screen and (orientation: portrait) { #rotate-device { display: flex; } }
+    </style>
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+    </script>
+</head>
+<body>
+    <div id="rotate-device"><h1>Поверните устройство горизонтально</h1></div>
+    
+    <div id="loading-screen">
+        <div id="loader-text">ПОДКЛЮЧЕНИЕ...</div>
+        <div id="loader-bar-container">
+            <div id="loader-bar-fill"></div>
+        </div>
+    </div>
+
+    <div id="main-menu" style="display: none;">
+        <h1>DEMO WORLD</h1>
+        <button class="menu-btn" id="btn-start">ИГРАТЬ</button>
+        <button class="menu-btn" id="btn-credits">АВТОРЫ</button>
+        <button class="menu-btn" id="btn-menu-exit">ВЫХОД</button>
+    </div>
+
+    <div id="credits-screen">
+        <h2>АВТОРЫ (CREDITS)</h2>
+        <div id="credits-list">
+            <p>xFORTUNAx (main dev)</p>
+            <p>Adventurer by Quaternius (<a href="https://poly.pizza/m/5EGWBMpuXq" target="_blank">poly.pizza/m/5EGWBMpuXq</a>)</p>
+            <p>Farmer by Quaternius (<a href="https://poly.pizza/m/7pn3R6hPvE" target="_blank">poly.pizza/m/7pn3R6hPvE</a>)</p>
+            <p>Worker by Quaternius (<a href="https://poly.pizza/m/Yg2bQZO6Hj" target="_blank">poly.pizza/m/Yg2bQZO6Hj</a>)</p>
+            <p>Suit by Quaternius [CC-BY] (<a href="https://poly.pizza/m/sOUciDsoVV" target="_blank">poly.pizza/m/sOUciDsoVV</a>)</p>
+            <p>Animated Woman by Quaternius (<a href="https://poly.pizza/m/qJ2gsTUBHL" target="_blank">poly.pizza/m/qJ2gsTUBHL</a>)</p>
+            <p>Soldier by Quaternius [CC-BY] (<a href="https://poly.pizza/m/oAArCNHjFB" target="_blank">poly.pizza/m/oAArCNHjFB</a>)</p>
+            <p>Horse by Quaternius (<a href="https://poly.pizza/m/qvTrSG9pZF" target="_blank">poly.pizza/m/qvTrSG9pZF</a>)</p>
+            <p>Bench by Quaternius (<a href="https://poly.pizza/m/jLxjFxFRpw" target="_blank">poly.pizza/m/jLxjFxFRpw</a>)</p>
+            <p>Shiba Inu by Quaternius (<a href="https://poly.pizza/m/y4wdQpg767" target="_blank">poly.pizza/m/y4wdQpg767</a>)</p>
+            <p>Street Light by Quaternius (<a href="https://poly.pizza/m/nFwrlcLvM5" target="_blank">poly.pizza/m/nFwrlcLvM5</a>)</p>
+            <p>Shipping Container Structure by Quaternius (<a href="https://poly.pizza/m/ebmepOXDRd" target="_blank">poly.pizza/m/ebmepOXDRd</a>)</p>
+            <p>Structure by Quaternius (<a href="https://poly.pizza/m/ilWoURnbZW" target="_blank">poly.pizza/m/ilWoURnbZW</a>)</p>
+            <p>Dumpster by Jarlan Perez [CC-BY] (<a href="https://poly.pizza/m/8s2mfCSvF6t" target="_blank">poly.pizza/m/8s2mfCSvF6t</a>)</p>
+            <p>Range Rover by IvOfficial [CC-BY] (<a href="https://poly.pizza/m/8zk4o6nALW" target="_blank">poly.pizza/m/8zk4o6nALW</a>)</p>
+            <p>Pickup Truck by Quaternius (<a href="https://poly.pizza/m/qn4grQgHm8" target="_blank">poly.pizza/m/qn4grQgHm8</a>)</p>
+            <p>Plant Big by Quaternius (<a href="https://poly.pizza/m/MbhbP7JrTI" target="_blank">poly.pizza/m/MbhbP7JrTI</a>)</p>
+            <p>Fern by Quaternius (<a href="https://poly.pizza/m/jqcanvH7D6" target="_blank">poly.pizza/m/jqcanvH7D6</a>)</p>
+            <p>Bush with Flowers by Quaternius (<a href="https://poly.pizza/m/U1ymDy8tbY" target="_blank">poly.pizza/m/U1ymDy8tbY</a>)</p>
+            <p>Path Straight by Quaternius (<a href="https://poly.pizza/m/ZuRHRsKWoz" target="_blank">poly.pizza/m/ZuRHRsKWoz</a>)</p>
+            <p>Farm house by Poly by Google [CC-BY] (<a href="https://poly.pizza/m/bHyQe5jzdiQ" target="_blank">poly.pizza/m/bHyQe5jzdiQ</a>)</p>
+            <p>House by Poly by Google [CC-BY] (<a href="https://poly.pizza/m/75V_MLvKMqM" target="_blank">poly.pizza/m/75V_MLvKMqM</a>)</p>
+            <p>Large Building by Kenney (<a href="https://poly.pizza/m/1bt4yYKmuK" target="_blank">poly.pizza/m/1bt4yYKmuK</a>)</p>
+            <p>House by Quaternius (<a href="https://poly.pizza/m/oJJIRwv6Bo" target="_blank">poly.pizza/m/oJJIRwv6Bo</a>)</p>
+            <p>Tree by Quaternius (<a href="https://poly.pizza/m/QVOop92WmG" target="_blank">poly.pizza/m/QVOop92WmG</a>)</p>
+            <p>Pine by Quaternius (<a href="https://poly.pizza/m/79gmlLnweB" target="_blank">poly.pizza/m/79gmlLnweB</a>)</p>
+            <p>Grass by Quaternius (<a href="https://poly.pizza/m/UGTOzcO3P2" target="_blank">poly.pizza/m/UGTOzcO3P2</a>)</p>
+            <p>Tree by Zsky [CC-BY] (<a href="https://poly.pizza/m/uxSb2WTPU4" target="_blank">poly.pizza/m/uxSb2WTPU4</a>)</p>
+            <p>Sounds by <a href="https://mixkit.co/" target="_blank">Mixkit</a> & <a href="https://freesound.org/" target="_blank">Freesound</a></p>
+        </div>
+        <button class="menu-btn" id="btn-credits-back">НАЗАД В МЕНЮ</button>
+    </div>
+
+    <div id="game-ui">
+        <div id="exit-game-btn">✕</div>
+        <div id="joystick-zone"><div id="joystick-knob"></div></div>
+        <div id="look-zone"></div>
+    </div>
+
+    <script type="module" src="./script.js"></script>
+</body>
+</html>
