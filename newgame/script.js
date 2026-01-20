@@ -20,7 +20,7 @@ let activeAction = null;
 let isGameActive = false;
 let allMeshes = []; 
 
-// СВОБОДНАЯ КАМЕРА
+// КАМЕРА (СВОБОДНАЯ)
 let cameraAngle = Math.PI; 
 let cameraVerticalAngle = 0.2; 
 let mouseLook = { active: false, x: 0, y: 0 }; 
@@ -32,7 +32,10 @@ let targetY = 0;
 
 // Управление
 let keys = { w: false, a: false, s: false, d: false };
-let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+// --- ИСПРАВЛЕНИЕ 1: ПРАВИЛЬНОЕ ОПРЕДЕЛЕНИЕ ПЛАНШЕТОВ (IPAD) ---
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                 (navigator.userAgent.includes("Macintosh") && navigator.maxTouchPoints > 0);
 
 // Мультитач
 let joyManager = { active: false, x: 0, y: 0, touchId: null };
@@ -47,7 +50,7 @@ animate();
 function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
-    scene.fog = new THREE.Fog(0x87CEEB, 10, 60); // Туман скрывает края карты
+    scene.fog = new THREE.Fog(0x87CEEB, 10, 60);
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     
@@ -80,14 +83,12 @@ function init() {
     setupAudio();
     setupMenuSystem();
 
-    // ==========================================
-    // НОВЫЙ БЛОК: РЕАЛИСТИЧНЫЙ ПОЛ
-    // ==========================================
+    // --- ТЕКСТУРА ТРАВЫ ---
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load('./grass.jpg', function(texture) {
         texture.wrapS = THREE.RepeatWrapping;
         texture.wrapT = THREE.RepeatWrapping;
-        texture.repeat.set(100, 100); // Повторяем текстуру 100 раз
+        texture.repeat.set(100, 100); 
         
         const groundGeo = new THREE.PlaneGeometry(2000, 2000);
         const groundMat = new THREE.MeshStandardMaterial({ 
@@ -97,14 +98,16 @@ function init() {
         });
         const ground = new THREE.Mesh(groundGeo, groundMat);
         ground.rotation.x = -Math.PI / 2;
-        ground.position.y = -0.05; // Чуть ниже дорог
+        
+        // --- ИСПРАВЛЕНИЕ 2: ЧУТЬ ПРИПОДНЯТЬ ТРАВУ ---
+        // Чтобы она была выше зеленого пола из world.glb
+        ground.position.y = 0.02; 
+        
         ground.receiveShadow = true;
         scene.add(ground);
         
-        // Добавляем пол в список объектов для коллизии (чтобы не проваливаться, если уйдешь с дороги)
         allMeshes.push(ground); 
     });
-    // ==========================================
 
     const loader = new GLTFLoader();
     const loaderText = document.getElementById('loader-text');
@@ -145,12 +148,21 @@ function init() {
             }
         }
 
-        // Мир
+        // МИР
         gltf.scene.traverse(function (object) {
             if (object.isMesh) {
                 object.castShadow = true;
                 object.receiveShadow = true;
                 const n = object.name.toLowerCase();
+                
+                // --- ИСПРАВЛЕНИЕ 3: СКРЫВАЕМ ЗЕЛЕНЫЙ ПОЛ ИЗ МОДЕЛИ ---
+                // Если объект называется "Plane" (как в редакторе), скрываем его,
+                // чтобы видна была наша текстура травы
+                if (n === 'plane') {
+                    object.visible = false;
+                    return; // Не добавляем его в allMeshes
+                }
+
                 let isPlayerPart = false;
                 if (playerObject) {
                     let parent = object;
@@ -159,14 +171,14 @@ function init() {
                         parent = parent.parent;
                     }
                 }
-                // Не добавляем небо в коллизии
+                
                 if (!isPlayerPart && !n.includes('sky') && !n.includes('cloud')) {
                     allMeshes.push(object);
                 }
             }
         });
 
-        // NPC и Животные (остальной код тот же...)
+        // NPC и Животные
         const npcNames = ['Farmer', 'Worker', 'Suit', 'Adventurer', 'Animated_Woman'];
         const humanIdle = allClips.find(c => c.name.includes('Idle') && c.name.includes('Character') && !c.name.includes('Neutral'));
         npcNames.forEach(name => {
@@ -216,7 +228,6 @@ function init() {
     window.addEventListener('resize', onWindowResize);
 }
 
-// ... (остальные функции checkIsWalkable, canMove, updatePhysics и т.д. остаются без изменений) ...
 function checkIsWalkable(obj) {
     let current = obj;
     while(current) {
@@ -226,6 +237,7 @@ function checkIsWalkable(obj) {
     }
     return false;
 }
+
 function canMove(position, direction, distance) {
     const raycaster = new THREE.Raycaster();
     const rayOrigin = position.clone().add(new THREE.Vector3(0, 0.5, 0)); 
@@ -240,6 +252,7 @@ function canMove(position, direction, distance) {
     }
     return true;
 }
+
 function updatePhysics(delta) {
     if (!playerObject) return;
     verticalVelocity -= GRAVITY * delta; 
@@ -265,6 +278,8 @@ function updatePhysics(delta) {
     if (keys.s) inputY += 1; 
     if (keys.a) inputX -= 1; 
     if (keys.d) inputX += 1; 
+    
+    // ВАЖНО: Джойстик работает, если isMobile = true
     if (isMobile && joyManager.active) {
         inputX = joyManager.x;
         inputY = joyManager.y;
@@ -294,6 +309,7 @@ function updatePhysics(delta) {
     }
     handleFootsteps(isMoving);
 }
+
 function handleFootsteps(isMoving) {
     if (isMoving && isGrounded) {
         if (!soundStepsGrass.isPlaying && !soundStepsStone.isPlaying) { soundStepsGrass.play(); soundStepsStone.play(); }
@@ -312,6 +328,7 @@ function handleFootsteps(isMoving) {
         if (onStone) { soundStepsStone.setVolume(1.0); soundStepsGrass.setVolume(0); } else { soundStepsStone.setVolume(0); soundStepsGrass.setVolume(1.0); }
     } else { if(soundStepsGrass.isPlaying) soundStepsGrass.stop(); if(soundStepsStone.isPlaying) soundStepsStone.stop(); }
 }
+
 function updateCamera() {
     if (!playerObject) return;
     const center = playerObject.position.clone().add(new THREE.Vector3(0, CAMERA_HEIGHT, 0));
@@ -323,6 +340,7 @@ function updateCamera() {
     camera.position.y = center.y + offsetY;
     camera.lookAt(center);
 }
+
 function setupAudio() {
     const loader = new THREE.AudioLoader();
     soundAmbience = new THREE.Audio(playerListener);
@@ -334,6 +352,7 @@ function setupAudio() {
     soundBark = { buffer: null };
     loader.load('./dogbark.wav', b => { soundBark.buffer = b; });
 }
+
 function setupControls() {
     document.addEventListener('keydown', (e) => {
         if(e.code==='KeyW'||e.code==='ArrowUp') keys.w=true;
@@ -347,6 +366,7 @@ function setupControls() {
         if(e.code==='KeyA'||e.code==='ArrowLeft') keys.a=false;
         if(e.code==='KeyD'||e.code==='ArrowRight') keys.d=false;
     });
+
     document.addEventListener('mousedown', () => { if(isGameActive) mouseLook.active = true; });
     document.addEventListener('mouseup', () => { mouseLook.active = false; });
     document.addEventListener('mousemove', (e) => {
@@ -357,6 +377,7 @@ function setupControls() {
         }
     });
 }
+
 function stopGame() {
     isGameActive = false;
     document.getElementById('game-ui').style.display = 'none';
@@ -367,6 +388,7 @@ function stopGame() {
     if(soundStepsGrass.isPlaying) soundStepsGrass.stop();
     if(soundStepsStone.isPlaying) soundStepsStone.stop();
 }
+
 function setupMenuSystem() {
     document.getElementById('btn-start').addEventListener('click', () => {
         document.getElementById('main-menu').style.display = 'none';
@@ -387,6 +409,7 @@ function setupMenuSystem() {
         document.getElementById('main-menu').style.display = 'flex';
     });
 }
+
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
@@ -408,6 +431,7 @@ function animate() {
     }
     renderer.render(scene, camera);
 }
+
 function setupMobileControls() {
     const jZone = document.getElementById('joystick-zone');
     const jKnob = document.getElementById('joystick-knob');
