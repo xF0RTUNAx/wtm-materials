@@ -7,7 +7,7 @@ const ROTATION_SPEED = 3.5;
 const GRAVITY = 15.0; 
 const SMOOTH_Y_FACTOR = 0.2; 
 
-// НАСТРОЙКИ КАМЕРЫ
+// КАМЕРА
 const CAMERA_DIST = 2.5; 
 const CAMERA_HEIGHT = 1.4;
 
@@ -20,7 +20,7 @@ let activeAction = null;
 let isGameActive = false;
 let allMeshes = []; 
 
-// ПЕРЕМЕННЫЕ ДЛЯ СВОБОДНОЙ КАМЕРЫ
+// СВОБОДНАЯ КАМЕРА
 let cameraAngle = Math.PI; 
 let cameraVerticalAngle = 0.2; 
 let mouseLook = { active: false, x: 0, y: 0 }; 
@@ -34,7 +34,7 @@ let targetY = 0;
 let keys = { w: false, a: false, s: false, d: false };
 let isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-// МУЛЬТИТАЧ (Добавил touchId для правильной работы двух пальцев)
+// Мультитач
 let joyManager = { active: false, x: 0, y: 0, touchId: null };
 let touchLook = { active: false, lastX: 0, lastY: 0, touchId: null };
 
@@ -47,7 +47,7 @@ animate();
 function init() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x87CEEB);
-    scene.fog = new THREE.Fog(0x87CEEB, 10, 60);
+    scene.fog = new THREE.Fog(0x87CEEB, 10, 60); // Туман скрывает края карты
 
     camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
     
@@ -79,6 +79,32 @@ function init() {
 
     setupAudio();
     setupMenuSystem();
+
+    // ==========================================
+    // НОВЫЙ БЛОК: РЕАЛИСТИЧНЫЙ ПОЛ
+    // ==========================================
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load('./grass.jpg', function(texture) {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(100, 100); // Повторяем текстуру 100 раз
+        
+        const groundGeo = new THREE.PlaneGeometry(2000, 2000);
+        const groundMat = new THREE.MeshStandardMaterial({ 
+            map: texture,
+            roughness: 1,
+            color: 0x888888 
+        });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.05; // Чуть ниже дорог
+        ground.receiveShadow = true;
+        scene.add(ground);
+        
+        // Добавляем пол в список объектов для коллизии (чтобы не проваливаться, если уйдешь с дороги)
+        allMeshes.push(ground); 
+    });
+    // ==========================================
 
     const loader = new GLTFLoader();
     const loaderText = document.getElementById('loader-text');
@@ -133,13 +159,14 @@ function init() {
                         parent = parent.parent;
                     }
                 }
+                // Не добавляем небо в коллизии
                 if (!isPlayerPart && !n.includes('sky') && !n.includes('cloud')) {
                     allMeshes.push(object);
                 }
             }
         });
 
-        // NPC и Животные
+        // NPC и Животные (остальной код тот же...)
         const npcNames = ['Farmer', 'Worker', 'Suit', 'Adventurer', 'Animated_Woman'];
         const humanIdle = allClips.find(c => c.name.includes('Idle') && c.name.includes('Character') && !c.name.includes('Neutral'));
         npcNames.forEach(name => {
@@ -189,6 +216,7 @@ function init() {
     window.addEventListener('resize', onWindowResize);
 }
 
+// ... (остальные функции checkIsWalkable, canMove, updatePhysics и т.д. остаются без изменений) ...
 function checkIsWalkable(obj) {
     let current = obj;
     while(current) {
@@ -198,7 +226,6 @@ function checkIsWalkable(obj) {
     }
     return false;
 }
-
 function canMove(position, direction, distance) {
     const raycaster = new THREE.Raycaster();
     const rayOrigin = position.clone().add(new THREE.Vector3(0, 0.5, 0)); 
@@ -213,22 +240,14 @@ function canMove(position, direction, distance) {
     }
     return true;
 }
-
-// ------------------------------------------------------------------
-// ОБНОВЛЕННАЯ ФИЗИКА (БЕГ ОТНОСИТЕЛЬНО КАМЕРЫ)
-// ------------------------------------------------------------------
 function updatePhysics(delta) {
     if (!playerObject) return;
-
-    // 1. Гравитация
     verticalVelocity -= GRAVITY * delta; 
     let nextY = playerObject.position.y + verticalVelocity * delta;
-
     const raycaster = new THREE.Raycaster();
     const rayOrigin = playerObject.position.clone().add(new THREE.Vector3(0, 1.5, 0));
     raycaster.set(rayOrigin, new THREE.Vector3(0, -1, 0));
     const intersects = raycaster.intersectObjects(allMeshes, true);
-    
     isGrounded = false;
     if (intersects.length > 0) {
         const hitDist = intersects[0].distance; 
@@ -236,56 +255,35 @@ function updatePhysics(delta) {
         if (hitDist <= 1.6) { targetY = groundHeight; verticalVelocity = 0; isGrounded = true; } 
         else { targetY = nextY; }
     } else { targetY = nextY; }
-
-    if (isGrounded) { 
-        playerObject.position.y = THREE.MathUtils.lerp(playerObject.position.y, targetY, SMOOTH_Y_FACTOR); 
-    } else { 
-        playerObject.position.y = nextY; 
-    }
+    if (isGrounded) { playerObject.position.y = THREE.MathUtils.lerp(playerObject.position.y, targetY, SMOOTH_Y_FACTOR); } 
+    else { playerObject.position.y = nextY; }
     if (playerObject.position.y < -20) { playerObject.position.set(0, 10, 0); verticalVelocity = 0; }
     
-    // 2. СЧИТЫВАЕМ ВВОД
     let inputX = 0;
     let inputY = 0;
-
     if (keys.w) inputY -= 1; 
     if (keys.s) inputY += 1; 
     if (keys.a) inputX -= 1; 
     if (keys.d) inputX += 1; 
-
     if (isMobile && joyManager.active) {
         inputX = joyManager.x;
         inputY = joyManager.y;
     }
 
-    // 3. ДВИЖЕНИЕ
     let isMoving = false;
-    
-    // Если есть ввод (джойстик или кнопки)
     if (Math.abs(inputX) > 0.1 || Math.abs(inputY) > 0.1) {
         isMoving = true;
-
-        // Вычисляем угол джойстика
-        // (Инвертируем Y для правильной математики)
         const joystickAngle = Math.atan2(inputX, -inputY); 
-        
-        // Финальный угол = Угол камеры + Угол джойстика
         const targetRotation = cameraAngle + joystickAngle;
-
-        // Плавный поворот персонажа (slerp)
         const q = new THREE.Quaternion();
         q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), targetRotation);
         playerObject.quaternion.slerp(q, 0.15); 
-
-        // Движение вперед (куда смотрит лицо)
         const moveDist = SPEED * delta;
         const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(new THREE.Vector3(0, 1, 0), targetRotation);
-        
         if (canMove(playerObject.position, forward, moveDist)) {
             playerObject.position.add(forward.multiplyScalar(moveDist));
         }
     }
-    
     if (playerActions['Run'] && playerActions['Idle']) {
         const targetAction = isMoving ? playerActions['Run'] : playerActions['Idle'];
         if (activeAction !== targetAction) { 
@@ -296,7 +294,6 @@ function updatePhysics(delta) {
     }
     handleFootsteps(isMoving);
 }
-
 function handleFootsteps(isMoving) {
     if (isMoving && isGrounded) {
         if (!soundStepsGrass.isPlaying && !soundStepsStone.isPlaying) { soundStepsGrass.play(); soundStepsStone.play(); }
@@ -315,7 +312,6 @@ function handleFootsteps(isMoving) {
         if (onStone) { soundStepsStone.setVolume(1.0); soundStepsGrass.setVolume(0); } else { soundStepsStone.setVolume(0); soundStepsGrass.setVolume(1.0); }
     } else { if(soundStepsGrass.isPlaying) soundStepsGrass.stop(); if(soundStepsStone.isPlaying) soundStepsStone.stop(); }
 }
-
 function updateCamera() {
     if (!playerObject) return;
     const center = playerObject.position.clone().add(new THREE.Vector3(0, CAMERA_HEIGHT, 0));
@@ -327,7 +323,6 @@ function updateCamera() {
     camera.position.y = center.y + offsetY;
     camera.lookAt(center);
 }
-
 function setupAudio() {
     const loader = new THREE.AudioLoader();
     soundAmbience = new THREE.Audio(playerListener);
@@ -339,7 +334,6 @@ function setupAudio() {
     soundBark = { buffer: null };
     loader.load('./dogbark.wav', b => { soundBark.buffer = b; });
 }
-
 function setupControls() {
     document.addEventListener('keydown', (e) => {
         if(e.code==='KeyW'||e.code==='ArrowUp') keys.w=true;
@@ -353,7 +347,6 @@ function setupControls() {
         if(e.code==='KeyA'||e.code==='ArrowLeft') keys.a=false;
         if(e.code==='KeyD'||e.code==='ArrowRight') keys.d=false;
     });
-
     document.addEventListener('mousedown', () => { if(isGameActive) mouseLook.active = true; });
     document.addEventListener('mouseup', () => { mouseLook.active = false; });
     document.addEventListener('mousemove', (e) => {
@@ -364,7 +357,6 @@ function setupControls() {
         }
     });
 }
-
 function stopGame() {
     isGameActive = false;
     document.getElementById('game-ui').style.display = 'none';
@@ -375,7 +367,6 @@ function stopGame() {
     if(soundStepsGrass.isPlaying) soundStepsGrass.stop();
     if(soundStepsStone.isPlaying) soundStepsStone.stop();
 }
-
 function setupMenuSystem() {
     document.getElementById('btn-start').addEventListener('click', () => {
         document.getElementById('main-menu').style.display = 'none';
@@ -385,10 +376,8 @@ function setupMenuSystem() {
         isGameActive = true;
         if (isMobile) setupMobileControls();
     });
-    
     document.getElementById('exit-game-btn').addEventListener('click', () => { window.location.href = '../index.html'; });
     document.getElementById('btn-menu-exit').addEventListener('click', () => { window.location.href = '../index.html'; });
-
     document.getElementById('btn-credits').addEventListener('click', () => {
         document.getElementById('main-menu').style.display = 'none';
         document.getElementById('credits-screen').style.display = 'flex';
@@ -398,7 +387,6 @@ function setupMenuSystem() {
         document.getElementById('main-menu').style.display = 'flex';
     });
 }
-
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
@@ -420,19 +408,12 @@ function animate() {
     }
     renderer.render(scene, camera);
 }
-
-// ------------------------------------------------------------------
-// МОБИЛЬНОЕ УПРАВЛЕНИЕ С МУЛЬТИТАЧ (ЧТОБЫ РАБОТАЛО СРАЗУ 2 ПАЛЬЦА)
-// ------------------------------------------------------------------
 function setupMobileControls() {
     const jZone = document.getElementById('joystick-zone');
     const jKnob = document.getElementById('joystick-knob');
     const lZone = document.getElementById('look-zone');
-    
-    // 1. ДЖОЙСТИК (ЛЕВАЯ РУКА)
     if (jZone) {
         jZone.style.display = 'block';
-        
         jZone.addEventListener('touchstart', e => {
             e.preventDefault(); 
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -444,7 +425,6 @@ function setupMobileControls() {
                 }
             }
         }, { passive: false });
-
         jZone.addEventListener('touchmove', e => {
             e.preventDefault(); 
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -460,7 +440,6 @@ function setupMobileControls() {
                 }
             }
         }, { passive: false });
-
         const endJoy = (e) => {
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === joyManager.touchId) {
@@ -475,11 +454,8 @@ function setupMobileControls() {
         jZone.addEventListener('touchend', endJoy);
         jZone.addEventListener('touchcancel', endJoy);
     }
-    
-    // 2. ОБЗОР (ПРАВАЯ РУКА)
     if (lZone) {
         lZone.style.display = 'block';
-
         lZone.addEventListener('touchstart', e => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
@@ -491,24 +467,20 @@ function setupMobileControls() {
                 }
             }
         }, { passive: false });
-
         lZone.addEventListener('touchmove', e => {
             e.preventDefault();
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === touchLook.touchId) {
                     const deltaX = e.changedTouches[i].clientX - touchLook.lastX;
                     const deltaY = e.changedTouches[i].clientY - touchLook.lastY;
-                    
                     cameraAngle -= deltaX * 0.008; 
                     cameraVerticalAngle += deltaY * 0.008;
                     cameraVerticalAngle = Math.max(-1.0, Math.min(1.0, cameraVerticalAngle));
-
                     touchLook.lastX = e.changedTouches[i].clientX;
                     touchLook.lastY = e.changedTouches[i].clientY;
                 }
             }
         }, { passive: false });
-
         const endLook = (e) => {
             for (let i = 0; i < e.changedTouches.length; i++) {
                 if (e.changedTouches[i].identifier === touchLook.touchId) {
