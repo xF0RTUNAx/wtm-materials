@@ -36,9 +36,7 @@
 </script>
     
     <style>
-        /* ---------------------------------------------------- */
-        /* --------- ГЛОБАЛЬНЫЕ СТИЛИ ВАШЕЙ ГЛАВНОЙ СТРАНИЦЫ --------- */
-        /* ---------------------------------------------------- */
+        
         body {
             font-family: 'Roboto', sans-serif;
             background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg') no-repeat center center fixed;
@@ -62,7 +60,7 @@
             z-index: -1;
         }
 
-        /* --- СТИЛИ ДЛЯ СНЕГА --- */
+      
         .snowflake {
             position: fixed;
             top: -50px;
@@ -118,7 +116,7 @@
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             border: 2px solid rgba(255, 255, 255, 0.1);
             transition: transform 0.3s ease;
-            cursor: pointer; 
+            cursor: default; /* Изменено с pointer на default, так как клик больше ничего не делает */
         }
         
         .logo img:hover {
@@ -297,7 +295,7 @@
             transition: all 0.3s ease;
         }
 
-        /* --- СТИЛЬ: БАННЕР ПОДДЕРЖКИ --- */
+        
         .support-banner {
             background: linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 100, 0, 0.15));
             border: 1px solid rgba(255, 204, 0, 0.3);
@@ -381,7 +379,7 @@
         .sponsors-list { list-style: none; padding: 0; display: flex; gap: 20px; flex-wrap: wrap; }
         .sponsors-list li { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
         
-        /* --- СТИЛИ ДЛЯ ФУТЕРА (SEO) --- */
+       
         .site-footer {
             background: rgba(0, 0, 0, 0.6); 
             backdrop-filter: blur(10px);
@@ -426,7 +424,7 @@
             }
         }
         
-        /* Стили изоляции контента */
+        
         .main-content.is-fleet-active #content {
             background: rgba(10, 20, 40, 0.95);
             color: #00ff7f;
@@ -454,7 +452,7 @@
         }
         .main-content.is-tank-active .header-greeting { display: none !important; }
 
-        /* МОБИЛЬНАЯ АДАПТАЦИЯ (МЕНЮ) */
+    
         @media (max-width: 900px) {
             .dashboard-wrapper { 
                 flex-direction: column; 
@@ -516,152 +514,6 @@
             .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
             .main-content.is-aviation-active { padding: 0; }
             .main-content.is-tank-active { padding: 0; }
-        }
-
-        /* ----------------------------------------------------------- */
-        /* --- СТИЛИ ДЛЯ "РЕАЛЬНОГО" ДНЕВНИКА (РУКОПИСНЫЙ СТИЛЬ) --- */
-        /* ----------------------------------------------------------- */
-        #secret-diary {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            /* Задний фон - затемнение с текстурой */
-            background: radial-gradient(circle, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.9) 100%);
-            backdrop-filter: blur(5px);
-            z-index: 99999;
-            padding: 20px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            /* Подключаем рукописный шрифт */
-            font-family: 'Caveat', cursive; 
-        }
-
-        .diary-container {
-            max-width: 600px;
-            margin: 40px auto;
-            /* Текстура старой бумаги в линейку (CSS-градиент) */
-            background-color: #f4e4bc;
-            background-image: linear-gradient(transparent 95%, #c0b390 95%);
-            background-size: 100% 1.5rem; /* Высота строки */
-            
-            border-radius: 5px;
-            /* Добавляем "корешок" блокнота слева */
-            border-left: 15px solid #5e4c3e; 
-            
-            padding: 30px 40px;
-            /* Цвет чернил */
-            color: #4a3b2b; 
-            box-shadow: 15px 15px 40px rgba(0,0,0,0.6);
-            position: relative;
-            /* Небольшой наклон для реализма */
-            transform: rotate(-1deg);
-        }
-        
-        /* Эффект потрепанных краев сверху и снизу */
-        .diary-container::before, .diary-container::after {
-            content: ''; position: absolute; left: 0; width: 100%; height: 5px;
-            background: #f4e4bc; opacity: 0.6;
-        }
-        .diary-container::before { top: -5px; border-radius: 50% 50% 0 0 / 5px 5px 0 0; }
-        .diary-container::after { bottom: -5px; border-radius: 0 0 50% 50% / 0 0 5px 5px; }
-
-        /* Кнопка закрытия (выглядит как нарисованный крестик) */
-        .close-diary-btn {
-            position: absolute;
-            top: 15px;
-            right: 20px;
-            background: transparent;
-            border: none;
-            color: #8b0000; /* Цвет красной ручки */
-            cursor: pointer;
-            font-size: 2.2em;
-            font-family: 'Caveat', cursive;
-            font-weight: bold;
-            transform: rotate(5deg);
-            transition: transform 0.2s;
-        }
-        
-        .close-diary-btn:hover {
-            transform: rotate(15deg) scale(1.1);
-        }
-
-        .diary-content {
-            margin-top: 20px;
-        }
-
-        .diary-intro-icon {
-            font-size: 3em;
-            color: #4a3b2b;
-            margin-bottom: 20px;
-            opacity: 0.6;
-            text-align: center;
-            display: block;
-            transform: rotate(-5deg);
-            /* Эффект штампа */
-            text-shadow: 2px 2px 0px rgba(74, 59, 43, 0.2); 
-        }
-
-        .diary-entry {
-            margin-bottom: 40px;
-        }
-
-        .diary-date {
-            font-size: 1.2em;
-            color: #8b0000; /* Красные чернила для даты */
-            margin-bottom: 15px;
-            font-weight: bold;
-            text-decoration: underline;
-            text-decoration-style: wavy; /* Волнистое подчеркивание */
-        }
-
-        .diary-text {
-            font-size: 1.5em; /* Крупный рукописный текст */
-            line-height: 1.5rem; /* Совпадает с линиями фона */
-        }
-        
-        /* Цитата/Выделение (эффект маркера) */
-        .diary-highlight {
-            background: rgba(255, 255, 0, 0.3); /* Желтый маркер */
-            padding: 5px 10px;
-            margin: 20px 0;
-            font-weight: bold;
-            border-radius: 5px;
-            display: inline-block;
-            transform: rotate(-1deg);
-            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        /* --- СТИЛЬ: ФОТО В ДНЕВНИКЕ (POLAROID) --- */
-        .diary-photo {
-            display: block;
-            max-width: 100%;
-            width: 80%; /* Занимает 80% ширины дневника */
-            margin: 20px auto;
-            border: 10px solid #fff; /* Белая рамка */
-            border-bottom-width: 30px; /* Снизу рамка шире, как у Polaroid */
-            box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
-            transform: rotate(-2deg); /* Эффект небрежности */
-            transition: transform 0.3s;
-        }
-        
-        .diary-photo:hover {
-            transform: rotate(0deg) scale(1.02); /* Интерактив */
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
-
-        /* Адаптация дневника под мобильные */
-        @media (max-width: 600px) {
-            #secret-diary { padding: 10px; }
-            .diary-container { 
-                margin: 20px auto; 
-                padding: 20px 25px;
-                transform: rotate(0deg); /* Убираем наклон на маленьких экранах */
-                border-left-width: 10px;
-            }
-            .diary-text { font-size: 1.3em; }
-            .close-diary-btn { top: 10px; right: 15px; }
-            .diary-photo { width: 95%; } /* На мобилке фото пошире */
         }
     </style>
 </head>
@@ -802,9 +654,6 @@
                     <a href="minigame.html">
                         <i class="fas fa-gamepad"></i> Мини-игры и розыгрыши в War Thunder Mobile
                     </a>
-                    <a href="newgame/index.html">
-                       Test
-                    </a>
                 </nav>
                 <div style="margin-top: 25px; font-size: 0.8em; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
                     &copy; 2026 xFORTUNAx 
@@ -812,40 +661,12 @@
             </footer>
         </main>
 
-        <div id="secret-diary">
-            <div class="diary-container">
-                <button class="close-diary-btn" onclick="toggleDiary()">x</button>
-
-                <div class="diary-content">
-                    <i class="fas fa-clover diary-intro-icon"></i>
-                    
-                    <div class="diary-entry">
-                        <div class="diary-date">4 января 2026 г.</div>
-                        <div class="diary-text">
-                            <p>Интересно, сколько людей найдет эту пасхалку :)</p>
-                            
-                            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/%D0%BC%D0%B5%D0%BC.jpg" alt="мем" class="diary-photo">
-                            
-                            <div class="diary-highlight">
-                                Дневники это хорошее дополнение в играх, фильмах и даже по жизни для еще одного раскрытия.
-                            </div>
-                            
-                            <p>Может и я буду вести, а может и нет...</p>
-                            <p>xfortunax0251</p>
-                            <p style="text-align: right; margin-top: 30px;">~ xFORTUNAx</p>
-                        </div>
-                    </div>
-                    
-                </div>
-            </div>
         </div>
-
-    </div>
 
     <script>
         const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
         
-        // --- СКРИПТ СНЕГА ---
+     
         document.addEventListener("DOMContentLoaded", function() {
             const isMobile = window.innerWidth < 768;
             const snowCount = isMobile ? 20 : 50; 
@@ -934,12 +755,12 @@
                          document.getElementById('sponsors-section').style.display = 'none';
                          document.querySelector('.header-greeting').style.display = 'none';
                          document.getElementById('main-footer').style.display = 'none';
-                         // СКРЫВАЕМ БАННЕР ПОДДЕРЖКИ
+                        
                          document.getElementById('support-banner').style.display = 'none';
                     } else {
                          document.getElementById('sponsors-section').style.display = 'block';
                          document.getElementById('main-footer').style.display = 'block';
-                         // ПОКАЗЫВАЕМ БАННЕР ПОДДЕРЖКИ
+                         
                          document.getElementById('support-banner').style.display = 'flex';
                     }
 
@@ -965,39 +786,12 @@
             document.querySelector('.header-greeting').style.display = 'block';
             document.getElementById('main-footer').style.display = 'block';
             
-            // ВОЗВРАЩАЕМ БАННЕР ПОДДЕРЖКИ
+           
             document.getElementById('support-banner').style.display = 'flex';
         }
         
-        /* --- СКРИПТ ОТКРЫТИЯ ЗАМЕТОК (1 КЛИК ПО ЛОГО) --- */
-        const logoImg = document.getElementById('logo-img');
-        const diary = document.getElementById('secret-diary');
 
-        if (logoImg) {
-            logoImg.addEventListener('click', function() {
-                this.style.transform = 'scale(0.9)';
-                setTimeout(() => { this.style.transform = 'scale(1)'; }, 100);
-                toggleDiary();
-            });
-        }
-
-        function toggleDiary() {
-            if (!diary) return;
-
-            if (diary.style.display === 'block') {
-                diary.style.display = 'none';
-                document.body.style.overflow = 'auto'; 
-            } else {
-                diary.style.display = 'block';
-                document.body.style.overflow = 'hidden';
-            }
-        }
     </script>
-    
-
     
 </body>
 </html>
-
-
-
