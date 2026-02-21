@@ -102,6 +102,16 @@
         .endgame-text { font-size: 40px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 20px rgba(255,193,7,0.5); text-transform: uppercase;}
         
         .msg { font-size: 13px; font-weight: bold; min-height: 18px; margin-top: 8px; text-align: center;}
+
+        /* === АДАПТИВНАЯ ШАПКА === */
+        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
+        .commander-title { margin: 0; text-shadow: 0 2px 5px rgba(0,0,0,1); font-size: 24px; text-align: center; flex-grow: 1; }
+        .btn-info { background: transparent; border: 1px solid var(--rare); color: var(--rare); width: auto; padding: 6px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        
+        @media (max-width: 600px) {
+            .game-header { flex-wrap: wrap; justify-content: space-between; }
+            .commander-title { order: -1; width: 100%; margin-bottom: 10px; font-size: 22px; }
+        }
     </style>
 </head>
 <body class="login-bg" id="bodyBg">
@@ -138,10 +148,7 @@
     </div>
 
     <div class="container" id="loginScreen">
-        <div style="position: absolute; top: 15px; left: 15px;">
-            <button class="btn-home" onclick="window.location.href='index.html'">🏠 На главную</button>
-        </div>
-        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 20px;">Розыгрыш</h2>
+        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">Розыгрыш</h2>
         <p style="color: #c9d1d9; margin-bottom: 25px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px;">Вход в мини-игру. Заполните необходимые поля.</p>
         
         <input type="text" id="nicknameInput" placeholder="Ник (обязательно, от 3 символов)...">
@@ -152,7 +159,11 @@
         <input type="text" id="wtmIdInput" placeholder="Игровой ID WTM (обязательно для новых игроков)...">
 
         <button class="btn-gold" onclick="loginOrRegister()" style="padding: 15px; font-size: 16px;">АВТОРИЗАЦИЯ</button>
+        
         <button onclick="openRules()" style="background: transparent; border: 1px solid var(--rare); color: var(--rare); margin-top: 15px;">📜 Правила и Поддержка</button>
+        
+        <button class="btn-home" onclick="window.location.href='index.html'" style="width: 100%; margin-top: 15px; padding: 12px 15px;">🏠 На главную</button>
+        
         <p id="errorMsg" class="msg" style="color: #ff4444; display: none;"></p>
     </div>
 
@@ -171,10 +182,10 @@
             <button onclick="logout()" style="margin-top: 30px; background: #333; color: white; width: 200px;">Выйти из аккаунта</button>
         </div>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <div class="game-header">
             <button class="btn-home" onclick="window.location.href='index.html'">🏠 На главную</button>
-            <h2 style="margin: 0; text-shadow: 0 2px 5px rgba(0,0,0,1);">Командир: <span id="playerNameDisplay" style="color: var(--accent-gold);"></span></h2>
-            <button onclick="openRules()" style="width: auto; padding: 6px 15px; background: transparent; border: 1px solid var(--rare); color: var(--rare);">📜 Инфо</button>
+            <h2 class="commander-title">Командир: <span id="playerNameDisplay" style="color: var(--accent-gold);"></span></h2>
+            <button class="btn-info" onclick="openRules()">📜 Инфо</button>
         </div>
         
         <div class="inventory">
@@ -513,7 +524,7 @@
                 timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)";
             } else {
                 document.getElementById('btnDailyCase').disabled = true; 
-                timerDaily.innerText = "Охлаждение: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e";
+                timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e";
             }
 
             if (player.hangar_unlocked) {
