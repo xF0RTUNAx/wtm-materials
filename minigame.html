@@ -163,21 +163,22 @@
 
     <div class="modal-overlay" id="rulesModal">
         <div class="modal-box rules-text" id="rulesBox">
-            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px; font-size: 22px; text-transform: uppercase;">📜 Инфо</h3>
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px; font-size: 22px; text-transform: uppercase;">📜 Детализированная сводка операции</h3>
             
-            <p><b>🏆 ГЛАВНАЯ ЦЕЛЬ:</b> Розыгрыш длится 2 недели. Победители в топе определяются исключительно по параметру <b>МОЩЬ</b>. Мощь накапливается за покупку улучшений базы во вкладке "Инфраструктура". Розыгрыш может окончиться досрочно после того, как кто-то улучшит всю инфраструктуру.</p>
+            <p><b>🏆 ГЛАВНАЯ ЦЕЛЬ:</b> Розыгрыш длится 2 недели. Победители в топе определяются исключительно по параметру <b>МОЩЬ</b>. Мощь накапливается за покупку улучшений базы во вкладке "Инфраструктура". Досрочно розыгрыш может окончится после того, как кто-то улучшит всю инфраструктуру.</p>
             
             <hr style="border-color: #333; margin: 15px 0;">
 
-            <p><b>🏭 ЗАВОД И РЕСУРСЫ:</b> Завод основной способ добычи деталей. Он имеет 10 уровней прокачки. Собирать детали можно в любой момент. <b>ВНИМАНИЕ:</b> Лимит склада — всего 1 партия! Как только он заполнится на 100%, производство встанет.</p>
+            <p><b>🏭 ЗАВОД И РЕСУРСЫ:</b> Завод основной источник деталей. Он имеет 10 уровней прокачки. Собирать детали можно в любой момент. <b>ВНИМАНИЕ:</b> Лимит склада — всего 1 партия! Как только он заполнится на 100%, производство встанет.</p>
             <ul>
-                <li><b>Перегрузка Завода:</b> Рискованная кнопка. Моментально выдает 1 партию деталей (игнорируя таймеры), но <b>с вероятностью 50%</b> завод выйдет из строя на 2 часа и ничего не будет производить.</li>
+                <li><b>Перегрузка Завода:</b> Рискованная опция. Моментально выдает 1 партию деталей (игнорируя таймеры), но <b>с вероятностью 50%</b> завод выйдет из строя на 2 часа и ничего не будет производить.</li>
             </ul>
 
-            <p><b>🛠️ СИНТЕЗ (КРАФТ):</b> Обмен ресурсов на более ценные.</p>
+            <p><b>🛠️ СИНТЕЗ (КРАФТ) И РАЗБОР:</b> Обмен ресурсов на более ценные и наоборот.</p>
             <ul>
                 <li><b>Безопасный:</b> Строго 5 Обычных ➔ 1 Редкий, или 5 Редких ➔ 1 Эпический.</li>
-                <li><b>Рискованный (Казино):</b> Тратите 25 ресурсов. Шансы: 65% — уйти в минус (выпадет крохи), 25% — выйти в ноль, 10% — сорвать джекпот (удвоить вложение).</li>
+                <li><b>Разбор:</b> 1 Эпический ➔ 3 Редких, или 1 Редкий ➔ 3 Обычных.</li>
+                <li><b>Рискованный:</b> Тратите 25 ресурсов. Шансы: 65% — уйти в минус (выпадет крохи), 25% — выйти в ноль, 10% — сорвать джекпот (удвоить вложение).</li>
             </ul>
 
             <p><b>📦 ПОСТАВКИ И КЕЙСЫ:</b></p>
@@ -202,7 +203,7 @@
             <p style="text-align: center; font-size: 15px;"><b>🎁 ПРИЗОВОЙ ФОНД:</b><br>🥇 1 Место — 1000 Платины<br>🥈 2 Место — 500 Платины<br>🥉 3 Место — 500 Платины</p>
             
             <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 15px;">🎧 Техническая поддержка (Telegram)</a>
-            <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">АТАКУЮ ТОЧКУ D!</button>
+            <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">АТАКУЙТЕ ТОЧКУ D!</button>
         </div>
     </div>
 
@@ -232,7 +233,7 @@
             <button class="btn-gold" id="btnAuthAction" onclick="loginOrRegister()" style="padding: 15px; font-size: 16px;">ВОЙТИ В БАЗУ</button>
         </div>
         
-        <button onclick="openRules()" style="background: transparent; border: 1px solid var(--rare); color: var(--rare); margin-top: 15px;">📜 Инфо</button>
+        <button onclick="openRules()" style="background: transparent; border: 0px solid var(--rare); color: var(--rare); margin-top: 15px;">📜 Правила и Поддержка</button>
         <button class="btn-home" onclick="window.location.href='index.html'" style="width: 100%; margin-top: 15px; padding: 12px 15px;">🏠 На главную</button>
         <p id="errorMsg" class="msg" style="color: #ff4444; display: none;"></p>
     </div>
@@ -375,6 +376,12 @@
                 <div style="height: 10px;"></div>
                 <button class="btn-craft-epic" onclick="craftItem('epic')">Надежно: 5 Редких ➔ 1 Эпический</button>
                 <button class="btn-risk" onclick="riskyCraft('epic')" style="border-left-color: var(--epic);">Риск: 25 Редких ➔ 1/5/10 Эпиков</button>
+                
+                <hr style="border-color: #333; margin: 15px 0;">
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Разбор деталей (1 к 3)</p>
+                <button class="btn-craft" onclick="disassembleItem('rare')" style="border-left-color: var(--common);">Разбор: 1 Редкая ➔ 3 Обычных</button>
+                <button class="btn-craft-epic" onclick="disassembleItem('epic')" style="border-left-color: var(--rare);">Разбор: 1 Эпическая ➔ 3 Редких</button>
+                
                 <div id="craftMsg" class="msg" style="color: #ff4444;"></div>
             </div>
 
@@ -450,7 +457,7 @@
         };
 
         const HANGAR_CFG = {
-            1: { 1: {t: 24, c: null, cur: null, text: '24 часа'}, 2: {t: 12, c: 50, cur: 'common_parts', text: '12 часов'}, 3: {t: 6, c: 100, cur: 'common_parts', text: '6 часов'} },
+            1: { 1: {t: 20, c: null, cur: null, text: '20 часов'}, 2: {t: 10, c: 50, cur: 'common_parts', text: '10 часов'}, 3: {t: 5, c: 100, cur: 'common_parts', text: '5 часов'} },
             2: { 1: {ch: 0.25, c: null, cur: null, text: '25% Шанс'}, 2: {ch: 0.50, c: 10, cur: 'rare_parts', text: '50% Шанс'}, 3: {ch: 0.75, c: 20, cur: 'rare_parts', text: '75% Шанс'} },
             3: { 1: {c: null, cur: null, text: '1 Случайный'}, 2: {c: 2, cur: 'epic_parts', text: '2 Случайных'}, 3: {c: 3, cur: 'epic_parts', text: '3 Бустера (Все виды)'} }
         };
@@ -733,7 +740,7 @@
             if (elapsedDaily >= dailyCooldown) {
                 document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)";
             } else {
-                document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Охлаждение: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e";
+                document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e";
             }
 
             // АНГАР
@@ -945,6 +952,19 @@
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
         }
 
+        async function disassembleItem(type) {
+            if(gameEnded) return;
+            let cost = 1, cur = '', rew = '', rewardAmount = 3;
+            if(type === 'rare') { cur = 'rare_parts'; rew = 'common_parts'; } 
+            else if(type === 'epic') { cur = 'epic_parts'; rew = 'rare_parts'; }
+            
+            if (player[cur] < cost) { showMsg('craftMsg', 'Недостаточно деталей для разбора!', '#ff4444'); return; }
+
+            const updates = {}; updates[cur] = player[cur] - cost; updates[rew] = player[rew] + rewardAmount;
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; showMsg('craftMsg', 'Разбор успешен!', type==='rare'?'var(--common)':'var(--rare)'); refreshAll(); }
+        }
+
         function showRewardAnimation(title, itemsHtml, colorClass) {
             const overlay = document.getElementById('rewardModal'); const box = document.getElementById('rewardBox');
             document.getElementById('rewardLoading').style.display = 'block'; document.getElementById('rewardResult').style.display = 'none';
@@ -1006,6 +1026,32 @@
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
         }
 
+        async function claimQuests() {
+            if(gameEnded || player.quests_completed) return;
+            if ((player.quest_factory_collects||0) < 3 || (player.quest_risky_crafts||0) < 1 || (player.quest_hangar_missions||0) < 1) return;
+
+            const rnd = Math.random();
+            let addSk = 0, addSp = 0, addAu = 0;
+            if(rnd < 0.33) addSk = 1; else if(rnd < 0.66) addSp = 1; else addAu = 1;
+
+            const { data } = await db.from('players').update({
+                quests_completed: true, epic_parts: player.epic_parts + 1, 
+                booster_skip: (player.booster_skip || 0) + addSk,
+                booster_speed: (player.booster_speed || 0) + addSp,
+                booster_auto: (player.booster_auto || 0) + addAu
+            }).eq('id', player.id).select().single();
+
+            if (data) {
+                player = data; refreshAll();
+                let boostHtml = '';
+                if(addSk) boostHtml = '<div class="boost">⚡ +1 Пропуск</div>';
+                if(addSp) boostHtml = '<div class="boost">⚡ +1 Ускорение</div>';
+                if(addAu) boostHtml = '<div class="boost" style="color:#00e676;">🤖 +1 Автосбор</div>';
+
+                showRewardAnimation('ДИРЕКТИВЫ ВЫПОЛНЕНЫ!', `<div class="epic">+1 ЭПИЧЕСКАЯ</div>${boostHtml}`, 'epic');
+            }
+        }
+
         async function activatePromo() {
             if(gameEnded) return;
             const code = document.getElementById('promoInput').value.trim().toUpperCase();
@@ -1018,6 +1064,11 @@
         }
 
         // === 9. ЛИДЕРБОРД И ПРОВЕРКА ПОБЕДЫ ===
+        function triggerEndgame(titleText) {
+            document.getElementById('endgameOverlay').style.display = 'flex'; document.getElementById('endgameTitle').innerText = titleText;
+            document.querySelectorAll('button').forEach(btn => { if(btn.id !== 'btnLogout' && !btn.classList.contains('btn-home')) btn.disabled = true; });
+        }
+
         async function loadLeaderboard() {
             const { data } = await db.from('players').select('nickname, power').order('power', { ascending: false }).limit(50);
             if (data) {
@@ -1060,4 +1111,3 @@
     </script>
 </body>
 </html>
-
