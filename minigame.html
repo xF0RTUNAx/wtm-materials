@@ -44,20 +44,21 @@
         @media (max-width: 700px) { .grid-panel { grid-template-columns: 1fr; } }
         .full-width { grid-column: 1 / -1; }
 
-        /* ИНВЕНТАРЬ */
-        .inventory { display: flex; justify-content: space-around; margin-top: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); align-items: center;}
-        .part { text-align: center; width: 25%; }
-        .part span { font-size: 28px; font-weight: 900; display: block; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
-        .common { color: var(--common); } .rare { color: var(--rare); } .epic { color: var(--epic); } .power { color: var(--power); }
+        /* ИНВЕНТАРЬ (Оптимизировано через Grid) */
+        .inventory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); align-items: center;}
+        .part { text-align: center; font-size: 14px; }
+        .part span { font-size: 26px; font-weight: 900; display: block; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); word-break: break-word;}
+        .common { color: var(--common); } .rare { color: var(--rare); } .epic { color: var(--epic); } 
+        .part.power { color: var(--power); border-left: 1px solid #444; }
 
         /* ИНФРАСТРУКТУРА */
         .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         @media (max-width: 600px) { .infra-grid { grid-template-columns: 1fr; } }
         .infra-box { background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 15px; border-radius: 8px;}
-        .infra-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;}
+        .infra-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 5px; margin-bottom: 5px;}
         .infra-title { font-weight: bold; color: #fff; font-size: 15px;}
         .infra-power { color: var(--power); font-weight: bold; font-size: 14px; text-shadow: 0 0 5px rgba(255,23,68,0.5);}
-        .infra-cost { font-size: 11px; color: #8b949e; margin-bottom: 10px; min-height: 15px;}
+        .infra-cost { font-size: 11px; color: #8b949e; margin-bottom: 10px; min-height: 15px; line-height: 1.3;}
         
         .garland { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: wrap;}
         .garland-dot { width: 100%; height: 6px; background: #222; border-radius: 2px; flex-grow: 1; max-width: 20px;}
@@ -67,7 +68,7 @@
         .progress-bg { background: #21262d; width: 100%; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; border: 1px solid #30363d;}
         .progress-fill { background: var(--accent-gold); height: 100%; width: 0%; transition: width 1s linear; box-shadow: 0 0 10px var(--accent-gold);}
         .timer-box { background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 15px; border: 1px solid #30363d;}
-        .timer-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .timer-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; flex-wrap: wrap; gap: 5px;}
         .timer-val { font-family: monospace; font-size: 14px; font-weight: bold; color: #fff;}
         .active-boost { color: var(--booster); font-weight: bold; font-size: 12px; text-align: center; animation: pulse 1.5s infinite; margin-bottom: 10px; background: rgba(255,87,34,0.1); padding: 5px; border-radius: 5px; border: 1px solid rgba(255,87,34,0.3);}
         .auto-boost { color: #00e676; border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.1); }
@@ -127,7 +128,7 @@
         
         .msg { font-size: 13px; font-weight: bold; min-height: 18px; margin-top: 8px; text-align: center;}
 
-        /* АДАПТИВНАЯ ШАПКА */
+        /* АДАПТИВНАЯ ШАПКА И ИНВЕНТАРЬ (Mobile Optimization) */
         .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; }
         .commander-title { margin: 0; text-shadow: 0 2px 5px rgba(0,0,0,1); font-size: 24px; text-align: center; flex-grow: 1; }
         .btn-info { background: transparent; border: 1px solid var(--rare); color: var(--rare); width: auto; padding: 6px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s;}
@@ -135,6 +136,12 @@
         @media (max-width: 600px) {
             .game-header { flex-wrap: wrap; justify-content: space-between; }
             .commander-title { order: -1; width: 100%; margin-bottom: 10px; font-size: 22px; }
+            
+            /* Превращаем инвентарь в сетку 2x2 на телефонах */
+            .inventory { grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px;}
+            .part.power { border-left: none; } /* Убираем полоску у Мощи, так как она будет на новой строке */
+            .part span { font-size: 24px; }
+            .part { font-size: 12px; }
         }
     </style>
 </head>
@@ -158,11 +165,11 @@
         <div class="modal-box rules-text" id="rulesBox">
             <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px; font-size: 22px; text-transform: uppercase;">📜 Инфо</h3>
             
-            <p><b>🏆 ГЛАВНАЯ ЦЕЛЬ:</b> Розыгрыш длится 2 недели. Победители в топе определяются исключительно по параметру <b>МОЩЬ</b>. Мощь накапливается за покупку улучшений базы во вкладке "Инфраструктура". Розыгрыш может окончится досрочно, если кто откроет и улучшит всю инфраструктуру.</p>
+            <p><b>🏆 ГЛАВНАЯ ЦЕЛЬ:</b> Розыгрыш длится 2 недели. Победители в топе определяются исключительно по параметру <b>МОЩЬ</b>. Мощь накапливается за покупку улучшений базы во вкладке "Инфраструктура". Розыгрыш может окончиться досрочно после того, как кто-то улучшит всю инфраструктуру.</p>
             
             <hr style="border-color: #333; margin: 15px 0;">
 
-            <p><b>🏭 ЗАВОД И РЕСУРСЫ:</b> Завод может генерировать различные детали в зависимости от уровня. Он имеет 10 уровней прокачки. Собирать детали можно в любой момент. <b>ВНИМАНИЕ:</b> Лимит склада — всего 1 партия! Как только он заполнится на 100%, производство встанет.</p>
+            <p><b>🏭 ЗАВОД И РЕСУРСЫ:</b> Завод основной способ добычи деталей. Он имеет 10 уровней прокачки. Собирать детали можно в любой момент. <b>ВНИМАНИЕ:</b> Лимит склада — всего 1 партия! Как только он заполнится на 100%, производство встанет.</p>
             <ul>
                 <li><b>Перегрузка Завода:</b> Рискованная кнопка. Моментально выдает 1 партию деталей (игнорируя таймеры), но <b>с вероятностью 50%</b> завод выйдет из строя на 2 часа и ничего не будет производить.</li>
             </ul>
@@ -170,7 +177,7 @@
             <p><b>🛠️ СИНТЕЗ (КРАФТ):</b> Обмен ресурсов на более ценные.</p>
             <ul>
                 <li><b>Безопасный:</b> Строго 5 Обычных ➔ 1 Редкий, или 5 Редких ➔ 1 Эпический.</li>
-                <li><b>Рискованный:</b> Тратите 25 ресурсов. Шансы: 65% — уйти в минус (выпадет крохи), 25% — выйти в ноль, 10% — сорвать джекпот (удвоить вложение).</li>
+                <li><b>Рискованный (Казино):</b> Тратите 25 ресурсов. Шансы: 65% — уйти в минус (выпадет крохи), 25% — выйти в ноль, 10% — сорвать джекпот (удвоить вложение).</li>
             </ul>
 
             <p><b>📦 ПОСТАВКИ И КЕЙСЫ:</b></p>
@@ -225,7 +232,7 @@
             <button class="btn-gold" id="btnAuthAction" onclick="loginOrRegister()" style="padding: 15px; font-size: 16px;">ВОЙТИ В БАЗУ</button>
         </div>
         
-        <button onclick="openRules()" style="background: transparent; border: 1px solid var(--rare); color: var(--rare); margin-top: 15px;">📜 Правила и Поддержка</button>
+        <button onclick="openRules()" style="background: transparent; border: 1px solid var(--rare); color: var(--rare); margin-top: 15px;">📜 Инфо</button>
         <button class="btn-home" onclick="window.location.href='index.html'" style="width: 100%; margin-top: 15px; padding: 12px 15px;">🏠 На главную</button>
         <p id="errorMsg" class="msg" style="color: #ff4444; display: none;"></p>
     </div>
@@ -252,14 +259,14 @@
         </div>
         
         <div style="background: rgba(255, 23, 68, 0.1); border: 1px solid var(--power); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
-            ⏳ До конца розыгрыша: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">Вычисление...</span>
+            ⏳ До конца операции: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">Вычисление...</span>
         </div>
 
         <div class="inventory">
             <div class="part common">Обычные<span id="countCommon">0</span></div>
             <div class="part rare">Редкие<span id="countRare">0</span></div>
             <div class="part epic">Эпические<span id="countEpic">0</span></div>
-            <div class="part power" style="border-left: 1px solid #444;">МОЩЬ<span id="countPower">0</span></div>
+            <div class="part power">МОЩЬ<span id="countPower">0</span></div>
         </div>
 
         <div class="grid-panel">
@@ -320,7 +327,7 @@
                 </div>
 
                 <div id="hangarUnlockedUI" style="display: none;">
-                    <div class="hangar-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                    <div class="hangar-grid">
                         <div class="h-upgrade-box">
                             <div style="color: var(--common); font-weight: bold;">Современная техника</div>
                             <div class="h-desc">Ускоряет миссию.</div>
@@ -393,7 +400,7 @@
 
         <div class="panel leaderboard" style="background: rgba(0,0,0,0.8);">
             <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                🏆 Таблица лидеров
+                🏆 Таблица рейтинга
                 <button onclick="loadLeaderboard()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
             </h3>
             <div id="leaderboardList">
@@ -434,7 +441,7 @@
         };
 
         const INFRA_CFG = {
-            infantry: { id: 'inf_infantry', title: '🪖 Пехота', max: 15, pwr: 10, c: [50, 100, 150, 200, 300, 400, 500, 600, 750, 900, 1100, 1300, 1500, 1800, 2200], r: [0,0,0,0,0,0,0,0,10,15,20,25,30,40,50], e: [] },
+            infantry: { id: 'inf_infantry', title: '🧍 Пехота', max: 15, pwr: 10, c: [50, 100, 150, 200, 300, 400, 500, 600, 750, 900, 1100, 1300, 1500, 1800, 2200], r: [0,0,0,0,0,0,0,0,10,15,20,25,30,40,50], e: [] },
             tanks: { id: 'inf_tanks', title: '🛡️ Танковые Дивизии', max: 10, pwr: 25, c: [200, 400, 600, 800, 1200, 1600, 2000, 2500, 3000, 4000], r: [0,0,10,20,30,50,70,90,120,150], e: [0,0,0,0,0,0,1,2,4,8] },
             arty: { id: 'inf_arty', title: '🎯 Артиллерия и Ракеты', max: 8, pwr: 40, c: [500, 800, 1200, 1800, 2500, 3500, 5000, 7000], r: [20,30,50,70,100,140,180,250], e: [0,0,0,1,3,5,8,12] },
             aa: { id: 'inf_aa', title: '📡 Системы ПВО', max: 7, pwr: 60, c: [800, 1500, 2500, 4000, 6000, 8000, 12000], r: [40,70,110,160,220,300,400], e: [1,2,4,7,12,18,25] },
@@ -1053,9 +1060,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
