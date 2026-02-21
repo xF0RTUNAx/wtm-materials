@@ -3,164 +3,911 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Технические работы</title>
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <title>xFORTUNAx Giveaway</title>
     <style>
+       
         :root {
-            /* Спокойная синяя гамма */
-            --bg-overlay: rgba(15, 23, 42, 0.9); /* Темно-синий фон */
-            --accent: #38bdf8; /* Небесно-голубой */
-            --glass: rgba(30, 41, 59, 0.6); /* Полупрозрачная плашка */
-            --text-main: #f1f5f9;
-            --text-muted: #94a3b8;
+            --bg-color: #0d1117; --panel-bg: rgba(15, 20, 25, 0.85); --border-color: #30363d;
+            --accent-gold: #ffc107; --accent-green: #238636;
+            --common: #a0a0a0; --rare: #58a6ff; --epic: #bc8cff; --booster: #ff5722;
         }
 
-        body {
-            margin: 0;
-            height: 100vh;
-            background-color: #0f172a;
-            /* Фон: Нейтральный арт с техникой */
-            background: linear-gradient(var(--bg-overlay), var(--bg-overlay)),
-                        url('https://static.wtmobile.com/upload/fileman/images/regular_pics/1440x640_developers_answers_36dc4fea9dc36b53c95b1742839292b2.jpg') no-repeat center center fixed;
-            background-size: cover;
-            font-family: 'Rajdhani', sans-serif;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-main);
-            overflow: hidden;
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #c9d1d9; text-align: center; margin: 0; min-height: 100vh; padding: 20px 10px;
+            background-color: var(--bg-color); background-size: cover; background-position: center; background-attachment: fixed; transition: background-image 0.5s ease-in-out;
         }
+        
+        body.login-bg { background-image: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_01_frostedge/1080x2340_wtm_frost_edge_404187f3ce51f44804ecd7fa5c109ff8.jpg'); }
+        body.game-bg { background-image: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_02_steeldragons/1080x2340_wtm_steel_dragons_cb0efeeae6fda7edaec9abd9fd71a8a9.jpg'); }
 
-        /* --- КАРТОЧКА --- */
-        .tech-card {
-            width: 90%;
-            max-width: 480px;
-            padding: 40px;
-            background: var(--glass);
-            border-radius: 24px; /* Сильные скругления для дружелюбности */
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(12px);
-            text-align: center;
-            position: relative;
-        }
+        .container { max-width: 800px; margin: 0 auto; background: var(--panel-bg); padding: 25px; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 8px 30px rgba(0,0,0,0.8); backdrop-filter: blur(15px); position: relative;}
+        h2, h3, h4 { margin-top: 0; color: #fff; letter-spacing: 0.5px; }
+        
+        input { padding: 12px; width: 100%; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(1,4,9,0.8); color: white; box-sizing: border-box; font-size: 15px; }
+        input:focus { outline: none; border-color: var(--accent-gold); }
+        
+        button { padding: 12px 15px; background-color: var(--border-color); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; font-size: 14px; width: 100%;}
+        button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); filter: brightness(1.2); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .pin-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
+        .pin-wrapper input { margin-bottom: 0; padding-right: 45px; letter-spacing: 2px; font-family: monospace; font-size: 18px;}
+        .pin-wrapper button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 35px; height: 35px; padding: 0; background: transparent; border: none; font-size: 18px; box-shadow: none;}
+        
+        #gameInterface { display: none; } 
+        
+        .grid-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px; text-align: left;}
+        .panel { background: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); position: relative;}
+        @media (max-width: 700px) { .grid-panel { grid-template-columns: 1fr; } }
 
-        /* Декоративная линия сверху */
-        .tech-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 50%;
-            transform: translateX(-50%);
-            width: 40%;
-            height: 4px;
-            background: var(--accent);
-            border-radius: 0 0 10px 10px;
-            box-shadow: 0 0 15px var(--accent);
-        }
+        /* ИНВЕНТАРЬ */
+        .inventory { display: flex; justify-content: space-around; margin-top: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color);}
+        .part { text-align: center; width: 30%; }
+        .part span { font-size: 32px; font-weight: 900; display: block; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8);}
+        .common { color: var(--common); } .rare { color: var(--rare); } .epic { color: var(--epic); } .boost { color: var(--booster); }
 
-        /* --- ИКОНКА --- */
-        .icon-wrapper {
-            font-size: 3.5em;
-            margin-bottom: 20px;
-            display: inline-block;
-            animation: float 3s ease-in-out infinite;
-        }
+        /* АНГАР (Full Width) */
+        .hangar-panel { grid-column: 1 / -1; background: rgba(10, 15, 20, 0.9); border: 1px solid var(--accent-gold); box-shadow: inset 0 0 20px rgba(255, 193, 7, 0.1);}
+        .hangar-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px; }
+        @media (max-width: 600px) { .hangar-grid { grid-template-columns: 1fr; } }
+        .h-upgrade-box { background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 15px; border-radius: 8px; text-align: center; display: flex; flex-direction: column; justify-content: space-between;}
+        .h-level { font-weight: bold; color: var(--accent-gold); font-size: 16px; margin-bottom: 5px;}
+        .h-desc { font-size: 12px; color: #8b949e; margin-bottom: 10px; min-height: 35px;}
+        .mission-control { background: #161b22; padding: 15px; border-radius: 8px; border: 1px solid #30363d; margin-top: 15px; text-align: center;}
 
-        /* --- ТЕКСТ --- */
-        h1 {
-            font-size: 2em;
-            margin: 0 0 10px 0;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
+        /* ЗАВОД И ЭЛЕМЕНТЫ */
+        .progress-bg { background: #21262d; width: 100%; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; border: 1px solid #30363d;}
+        .progress-fill { background: var(--accent-gold); height: 100%; width: 0%; transition: width 1s linear; box-shadow: 0 0 10px var(--accent-gold);}
+        .timer-box { background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 15px; border: 1px solid #30363d;}
+        .timer-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .timer-val { font-family: monospace; font-size: 14px; font-weight: bold; color: #fff;}
+        .active-boost { color: var(--booster); font-weight: bold; font-size: 13px; text-align: center; animation: pulse 1.5s infinite; margin-bottom: 10px; background: rgba(255,87,34,0.1); padding: 5px; border-radius: 5px; border: 1px solid rgba(255,87,34,0.3);}
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-        .status-pill {
-            display: inline-block;
-            padding: 6px 16px;
-            border-radius: 50px;
-            background: rgba(56, 189, 248, 0.1);
-            color: var(--accent);
-            font-size: 0.85em;
-            font-weight: 600;
-            margin-bottom: 25px;
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        /* КНОПКИ */
+        .btn-case { background: var(--accent-green); color: white; margin-bottom: 5px;}
+        .btn-paid { background: #da3633; color: white; margin-top: 10px; margin-bottom: 5px;}
+        .btn-craft { background: var(--border-color); margin-bottom: 5px; border-left: 4px solid var(--rare);}
+        .btn-craft-epic { background: var(--border-color); margin-bottom: 5px; border-left: 4px solid var(--epic);}
+        .btn-risk { background: #442222; border-left: 4px solid #da3633; margin-bottom: 5px;}
+        .btn-gold { background: var(--accent-gold); color: #000;}
+        .btn-boost { background: var(--booster); color: #fff; margin-bottom: 5px;}
+        .btn-home { background: transparent; border: 1px solid #8b949e; color: #8b949e; width: auto; padding: 6px 15px; }
 
-        p {
-            color: var(--text-muted);
-            font-size: 1.1em;
-            line-height: 1.6;
-            margin-bottom: 35px;
-            font-weight: 500;
-        }
+        .drop-chances { font-size: 10px; color: #8b949e; text-align: center; line-height: 1.3;}
 
-        /* --- КНОПКА --- */
-        .btn-home {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            padding: 16px;
-            box-sizing: border-box;
-            background: var(--accent);
-            color: #0f172a; /* Темный текст на светлой кнопке для контраста */
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.05em;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        /* МОДАЛКИ */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-box { background: var(--panel-bg); border: 2px solid var(--accent-gold); padding: 30px; border-radius: 12px; text-align: center; width: 90%; max-width: 450px; transform: scale(0.8); opacity: 0; transition: 0.3s; max-height: 85vh; overflow-y: auto;}
+        .modal-box.show { transform: scale(1); opacity: 1; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .reward-title { font-size: 24px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;}
+        .reward-items { font-size: 20px; font-weight: bold; margin-bottom: 25px; line-height: 1.5;}
+        
+        .rules-text p { font-size: 13px; margin-bottom: 8px; color: #c9d1d9; line-height: 1.4;}
+        .rules-text b { color: #fff; }
 
-        .btn-home:hover {
-            background: #7dd3fc;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(56, 189, 248, 0.4);
-        }
+        /* ЛИДЕРБОРД */
+        .leaderboard { margin-top: 25px; }
+        .lb-item { display: flex; align-items: center; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin-bottom: 10px; text-align: left;}
+        .lb-rank { font-size: 20px; font-weight: 900; color: var(--accent-gold); width: 40px; text-align: center;}
+        .lb-info { flex-grow: 1; padding-left: 10px; border-left: 1px solid #30363d;}
+        .lb-name { font-size: 16px; font-weight: bold; color: #fff; display: flex; justify-content: space-between;}
+        .lb-score { color: var(--accent-gold); font-size: 14px;}
+        .lb-prize { font-size: 12px; font-weight: bold; color: #00e676; margin-top: 2px;}
 
-        /* --- АНИМАЦИЯ --- */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
-            100% { transform: translateY(0px); }
-        }
-
-        @media (max-width: 600px) {
-            .tech-card { padding: 30px 20px; }
-            h1 { font-size: 1.8em; }
-        }
+        /* ENDGAME OVERLAY */
+        #endgameOverlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; backdrop-filter: blur(10px);}
+        .endgame-text { font-size: 40px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 20px rgba(255,193,7,0.5); text-transform: uppercase;}
+        
+        .msg { font-size: 13px; font-weight: bold; min-height: 18px; margin-top: 8px; text-align: center;}
     </style>
 </head>
-<body>
+<body class="login-bg" id="bodyBg">
 
-    <div class="tech-card">
-        <div class="icon-wrapper">🛠️</div>
-        
-        <br>
-        <div class="status-pill">Мини-игры</div>
-        
-        <h1>Раздел приостановлен</h1>
-        
-        <p>
-            Работа раздела приостановлена на неопределенный срок по техническим причинам. 
-            <br><br>
-            Приносим свои извинения и просим попробовать позже.
-        </p>
-        
-        <a href="index.html" class="btn-home">
-            На главную
-        </a>
+    <div class="modal-overlay" id="rewardModal">
+        <div class="modal-box" id="rewardBox">
+            <div id="rewardLoading">
+                <div class="spinner"></div>
+                <div style="color: var(--accent-gold); font-weight: bold; font-size: 18px;">Обработка данных...</div>
+            </div>
+            <div id="rewardResult" style="display: none;">
+                <div class="reward-title" id="rewardTitle">Награда!</div>
+                <div class="reward-items" id="rewardItems"></div>
+                <button class="btn-gold" onclick="closeRewardModal()">ПРИНЯТЬ</button>
+            </div>
+        </div>
     </div>
 
+    <div class="modal-overlay" id="rulesModal">
+        <div class="modal-box rules-text" id="rulesBox" style="text-align: left;">
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px;">📜 Правила и Механика</h3>
+            
+            <p><b>🏆 Цель:</b> Розыгрыш завершается мгновенно, когда кто-то собирает <b>50 Эпических деталей</b>.</p>
+            <p><b>🏭 Завод:</b> Каждые 4ч дает обычные детали (вмещает 2 партии). Имеется возможность забирать готовые детали заранее - таймер обновляется соответственно. По сути, пасивный и основной доход.</p>
+            <p><b>🚀 Ангар (Экспедиции):</b> Открывается за 50 Обычных, 5 Редких, 1 Эпический. Позволяет отправлять технику на задания ради дополнительных наград. Имеет 3 ветки прокачки по 3 уровня: скорость миссии, шанс успеха, качество лута.</p>
+            <p><b>📦 Поставки:</b><br>- <b>Ежедневный:</b> Бесплатно раз в 24ч.<br>- <b>Особый:</b> Стоит 25 Обычных. Шансы: 30% в минус, 50% окупаемость, 15% в плюс, 5% джекпот.</p>
+            <p><b>🛠️ Синтез:</b><br>- <b>Безопасный:</b> Обмен строго 5 к 1.<br>- <b>Рискованный:</b> Шанс сорвать куш (65% в минус, 25% окупаемость, 10% в плюс).</p>
+            <p><b>⚡ Бустеры:</b> Пропуск мгновенно дает 1 партию. Ускорение x4 ускоряет Завод в 4 раза на 12ч.</p>
+            <p><b>🎁 Призовой фонд:</b> 🥇 1000 Платины | 🥈 500 Платины | 🥉 500 Платины</p>
+            
+            <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 15px;">🎧 Техническая поддержка (Telegram)</a>
+            <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">ТАК ТОЧНО!</button>
+        </div>
+    </div>
+
+    <div class="container" id="loginScreen">
+        <div style="position: absolute; top: 15px; left: 15px;">
+            <button class="btn-home" onclick="window.location.href='index.html'">🏠 На главную</button>
+        </div>
+        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 20px;">Розыгрыш</h2>
+        <p style="color: #c9d1d9; margin-bottom: 25px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 5px;">Вход в мини-игру. Заполните необходимые поля.</p>
+        
+        <input type="text" id="nicknameInput" placeholder="Ник (обязательно, от 3 символов)...">
+        <div class="pin-wrapper">
+            <input type="password" id="pinInput" placeholder="Придумайте PIN-код (РОВНО 6 ЦИФР)..." maxlength="6" inputmode="numeric">
+            <button onclick="togglePin()" id="eyeBtn">👁️</button>
+        </div>
+        <input type="text" id="wtmIdInput" placeholder="Игровой ID WTM (обязательно для новых игроков)...">
+
+        <button class="btn-gold" onclick="loginOrRegister()" style="padding: 15px; font-size: 16px;">АВТОРИЗАЦИЯ</button>
+        <button onclick="openRules()" style="background: transparent; border: 1px solid var(--rare); color: var(--rare); margin-top: 15px;">📜 Правила и Поддержка</button>
+        <p id="errorMsg" class="msg" style="color: #ff4444; display: none;"></p>
+    </div>
+
+    <div class="container" id="gameInterface">
+        <div id="endgameOverlay">
+            <div style="position: absolute; top: 15px; left: 15px;">
+                <button class="btn-home" onclick="window.location.href='index.html'">🏠 На главную</button>
+            </div>
+            <div class="endgame-text">РОЗЫГРЫШ ЗАВЕРШЕН!</div>
+            <div style="font-size: 20px; color: white; margin-top: 10px; margin-bottom: 25px;">Победитель: <span id="endgameWinner" style="color: var(--epic); font-weight: bold; font-size: 26px;"></span></div>
+            
+            <div style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 1px solid var(--accent-gold); width: 90%; max-width: 450px; text-align: left;">
+                <h3 style="text-align: center; color: var(--accent-gold); margin-bottom: 15px; margin-top: 0;">🏆 ТОП-5 КОМАНДИРОВ</h3>
+                <div id="endgameLeaderboardList"></div>
+            </div>
+            <button onclick="logout()" style="margin-top: 30px; background: #333; color: white; width: 200px;">Выйти из аккаунта</button>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+            <button class="btn-home" onclick="window.location.href='index.html'">🏠 На главную</button>
+            <h2 style="margin: 0; text-shadow: 0 2px 5px rgba(0,0,0,1);">Командир: <span id="playerNameDisplay" style="color: var(--accent-gold);"></span></h2>
+            <button onclick="openRules()" style="width: auto; padding: 6px 15px; background: transparent; border: 1px solid var(--rare); color: var(--rare);">📜 Инфо</button>
+        </div>
+        
+        <div class="inventory">
+            <div class="part common">Обычные<span id="countCommon">0</span></div>
+            <div class="part rare">Редкие<span id="countRare">0</span></div>
+            <div class="part epic">Эпические<span id="countEpic">0</span></div>
+        </div>
+
+        <div class="grid-panel">
+
+            <div class="panel hangar-panel">
+                <h3 style="color: var(--accent-gold); display: flex; align-items: center; justify-content: center; gap: 10px;">
+                    🚀 Секретный Ангар
+                </h3>
+                
+                <div id="hangarLockedUI" style="text-align: center; padding: 20px 0;">
+                    <p style="color: #8b949e; margin-bottom: 15px;">Требуется ремонт базы для разблокировки экспедиций за дополнительными ресурсами.</p>
+                    <button class="btn-gold" onclick="unlockHangar()" style="width: 80%; max-width: 300px;">Открыть (50 обычных | 5 редких | 1 эпический)</button>
+                    <div id="hangarUnlockMsg" class="msg" style="color: #ff4444;"></div>
+                </div>
+
+                <div id="hangarUnlockedUI" style="display: none;">
+                    <div class="hangar-grid">
+                        <div class="h-upgrade-box">
+                            <div style="color: var(--common); font-weight: bold;">Современная техника</div>
+                            <div class="h-desc">Ускоряет время миссии.</div>
+                            <div class="h-level" id="hPos1Lvl">Ур. 1 (24 часа)</div>
+                            <button id="btnUpgH1" onclick="upgradeHangar(1)" style="font-size: 11px;">Улучшить (50 Обычных)</button>
+                        </div>
+                        <div class="h-upgrade-box">
+                            <div style="color: var(--rare); font-weight: bold;">Опытный экипаж</div>
+                            <div class="h-desc">Шанс успеха миссии.</div>
+                            <div class="h-level" id="hPos2Lvl">Ур. 1 (25% Шанс)</div>
+                            <button id="btnUpgH2" onclick="upgradeHangar(2)" style="font-size: 11px;">Улучшить (10 Редких)</button>
+                        </div>
+                        <div class="h-upgrade-box">
+                            <div style="color: var(--epic); font-weight: bold;">Топ-Инженеры</div>
+                            <div class="h-desc">Качество наград (Бустеры).</div>
+                            <div class="h-level" id="hPos3Lvl">Ур. 1 (1 Бустер)</div>
+                            <button id="btnUpgH3" onclick="upgradeHangar(3)" style="font-size: 11px;">Улучшить (2 эпических)</button>
+                        </div>
+                    </div>
+
+                    <div class="mission-control">
+                        <div id="missionStatusText" style="font-weight: bold; margin-bottom: 10px; color: #fff;">Техника ожидает приказа</div>
+                        <div id="missionTimer" style="font-family: monospace; font-size: 20px; color: var(--accent-gold); margin-bottom: 10px; display: none;">00:00:00</div>
+                        <button id="btnMissionAction" class="btn-gold" onclick="handleMissionAction()">Отправить на задание</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: var(--common);">🏭 Завод (Ур. <span id="factoryLevelUI">1</span>)</h3>
+                <div style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Вмещает до 2 партий.</div>
+                
+                <div id="boostIndicator" class="active-boost" style="display: none;">⚡ АКТИВИРОВАНО УСКОРЕНИЕ x4 ⚡</div>
+
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                    <span>Склад:</span>
+                    <span style="font-weight: bold; color: #fff;"><span id="factoryAccumulated">0</span> / <span id="factoryMax">30</span></span>
+                </div>
+                
+                <div class="progress-bg"><div class="progress-fill" id="factoryProgress"></div></div>
+
+                <div class="timer-box">
+                    <div class="timer-row"><span>До следующей:</span> <span class="timer-val" id="timerNextPart">--:--</span></div>
+                    <div class="timer-row"><span>До партии:</span> <span class="timer-val" id="timerNextBatch" style="color: var(--accent-gold);">--:--</span></div>
+                </div>
+
+                <button class="btn-gold" onclick="collectFactory()" style="margin-bottom: 10px;">Собрать ресурсы</button>
+                <button id="btnUpgrade" onclick="upgradeFactory()" style="font-size: 12px; background: #333;">Улучшить завод</button>
+                <div id="factoryMsg" class="msg" style="color: #ff4444;"></div>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: var(--rare);">📦 Поставки</h3>
+
+                <span style="font-family: monospace; font-size: 14px; display: block; margin-bottom: 5px;" id="dailyCaseTimer">Вычисление...</span>
+                <button id="btnDailyCase" class="btn-case" onclick="openDailyCase()">Ежедневный контейнер</button>
+                <div class="drop-chances">Шанс на бустеры: 5% Пропуск | 5% Скорость</div>
+                
+                <hr style="border-color: #444; margin: 15px 0;">
+                
+                <button class="btn-paid" onclick="openPaidCase()">Особый контейнер (25 Обычных)</button>
+                <div class="drop-chances">30% в минус | 50% окупаемость | 15% в плюс | 5% ДЖЕКПОТ</div>
+                <div class="drop-chances">Также 5% шанс на каждый из бустеров!</div>
+                <div id="caseMsg" class="msg" style="color: #ff4444;"></div>
+
+                <hr style="border-color: #444; margin: 15px 0;">
+                
+                <h3 style="color: var(--booster); margin-bottom: 10px;">⚡ Бустеры</h3>
+                <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 12ч (<span id="countSpeed">0</span>)</button>
+                <div id="boosterMsg" class="msg" style="color: #ff4444;"></div>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: var(--epic);">🛠️ Синтез</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Безопасный (5 к 1) | Риск (шансы: в минус/окупаемость/в плюс - 65/25/10)</p>
+                
+                <button class="btn-craft" onclick="craftItem('rare')">Надежно: 5 Обычных ➔ 1 Редкий</button>
+                <button class="btn-risk" onclick="riskyCraft('rare')">Риск: 25 Обычных ➔ 2/5/10 Редких</button>
+                
+                <div style="height: 10px;"></div>
+
+                <button class="btn-craft-epic" onclick="craftItem('epic')">Надежно: 5 Редких ➔ 1 Эпический</button>
+                <button class="btn-risk" onclick="riskyCraft('epic')" style="border-left-color: var(--epic);">Риск: 25 Редких ➔ 1/5/10 Эпиков</button>
+                <div id="craftMsg" class="msg" style="color: #ff4444;"></div>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: #fff;">🔑 Терминал кодов</h3>
+                <div style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Поддерживает спонсорские промокоды</div>
+                <input type="text" id="promoInput" placeholder="Введите шифр-код..." style="margin-bottom: 10px;">
+                <button class="btn-gold" onclick="activatePromo()">Активировать</button>
+                <div id="promoMsg" class="msg"></div>
+            </div>
+        </div>
+
+        <div class="panel leaderboard" style="background: rgba(0,0,0,0.8);">
+            <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                🏆 Таблица лидеров (Цель: 50 Эпических)
+                <button onclick="loadLeaderboard()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
+            </h3>
+            <div id="leaderboardList">
+                <div style="text-align: center; color: #8b949e; padding: 20px;">Загрузка данных со спутника...</div>
+            </div>
+        </div>
+        
+        <button id="btnLogout" onclick="logout()" style="margin-top: 30px; background: transparent; color: #ff4444; border-color: #ff4444;">[ Отключиться от базы ]</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        // === 1. КЛЮЧИ И БАЗА ===
+        const SUPABASE_URL = 'https://rkqfanrrbvrzixxlnbto.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWZhbnJyYnZyeml4eGxuYnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTcwODMsImV4cCI6MjA4NzIzMzA4M30.8j42D5U-iOLeEtSgiFWJ3pDTyN6e6JjiQKvn0MDEwJY';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const CYCLE_MS = 4 * 60 * 60 * 1000; 
+        const FACTORY_STATS = {
+            1: { partsPerCycle: 15, max: 30, nextCost: 5, nextCur: 'rare_parts', nextName: 'Ур. 2 (5 Редких)' },
+            2: { partsPerCycle: 25, max: 50, nextCost: 3, nextCur: 'epic_parts', nextName: 'Ур. 3 (3 Эпических)' },
+            3: { partsPerCycle: 40, max: 80, nextCost: null } 
+        };
+
+        // Конфиг Ангара
+        const HANGAR_CFG = {
+            1: { 1: {t: 24, c: null, cur: null, text: '24 часа'}, 2: {t: 12, c: 50, cur: 'common_parts', text: '12 часов'}, 3: {t: 6, c: 100, cur: 'common_parts', text: '6 часов'} },
+            2: { 1: {ch: 0.25, c: null, cur: null, text: '25% Шанс'}, 2: {ch: 0.50, c: 10, cur: 'rare_parts', text: '50% Шанс'}, 3: {ch: 0.75, c: 20, cur: 'rare_parts', text: '75% Шанс'} },
+            3: { 1: {rw: 1, c: null, cur: null, text: '1 Бустер'}, 2: {rw: 2, c: 2, cur: 'epic_parts', text: '2 Бустера (по 1 каждого)'}, 3: {rw: 4, c: 3, cur: 'epic_parts', text: '4 Бустера (по 2 каждого)'} }
+        };
+
+        let player = null;
+        let globalTimer = null;
+        let gameEnded = false;
+
+        function formatTime(ms) {
+            if (ms < 0) return "00:00";
+            const totalSec = Math.floor(ms / 1000);
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            if (h > 0) return `${h}ч ${m.toString().padStart(2, '0')}м ${s.toString().padStart(2, '0')}с`;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function togglePin() {
+            const input = document.getElementById('pinInput');
+            if (input.type === "password") { input.type = "text"; document.getElementById('eyeBtn').innerText = "🙈"; } 
+            else { input.type = "password"; document.getElementById('eyeBtn').innerText = "👁️"; }
+        }
+
+        function openRules() {
+            const overlay = document.getElementById('rulesModal');
+            const box = document.getElementById('rulesBox');
+            overlay.style.display = 'flex';
+            setTimeout(() => box.classList.add('show'), 10);
+        }
+        function closeRules() {
+            document.getElementById('rulesBox').classList.remove('show');
+            setTimeout(() => document.getElementById('rulesModal').style.display = 'none', 300);
+        }
+
+        // === 2. ВХОД ===
+        async function loginOrRegister() {
+            const nick = document.getElementById('nicknameInput').value.trim();
+            const pin = document.getElementById('pinInput').value.trim();
+            const wtmId = document.getElementById('wtmIdInput').value.trim();
+
+            if (nick.length < 3) { showMsg('errorMsg', "Ник от 3 букв!", '#ff4444'); return; }
+            if (!/^\d{6}$/.test(pin)) { showMsg('errorMsg', "PIN должен состоять РОВНО из 6 ЦИФР!", '#ff4444'); return; }
+            
+            const { data: existing } = await db.from('players').select('*').eq('nickname', nick).single();
+
+            if (existing) {
+                if (existing.pin_code === pin) loginSuccess(existing);
+                else showMsg('errorMsg', "Ник занят или неверный PIN!", '#ff4444');
+            } else {
+                if (wtmId.length < 3) { showMsg('errorMsg', "Для регистрации введите ваш WTM ID!", '#ff4444'); return; }
+                const { data: newPlayer, error } = await db.from('players').insert([{ 
+                    nickname: nick, pin_code: pin, wtm_id: wtmId, factory_level: 1, 
+                    factory_last_collected: new Date().toISOString(),
+                    daily_case_last_opened: '2000-01-01T00:00:00Z',
+                    speed_boost_end: '2000-01-01T00:00:00Z'
+                }]).select(); 
+                if (error) showMsg('errorMsg', "Ошибка базы!", '#ff4444'); else loginSuccess(newPlayer[0]);
+            }
+        }
+
+        function loginSuccess(pData) {
+            localStorage.setItem('minigame_player_id', pData.id);
+            document.getElementById('bodyBg').className = 'game-bg';
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('gameInterface').style.display = 'block';
+            refreshAll();
+        }
+
+        function logout() { localStorage.removeItem('minigame_player_id'); location.reload(); }
+
+        // === 3. ИГРОВОЙ ЦИКЛ ===
+        async function refreshAll() {
+            const pid = localStorage.getItem('minigame_player_id');
+            if (!pid) return;
+            const { data } = await db.from('players').select('*').eq('id', pid).single();
+            if (data) {
+                player = data;
+                updateUI();
+                await loadLeaderboard(); 
+                if(globalTimer) clearInterval(globalTimer);
+                if(!gameEnded) {
+                    globalTimer = setInterval(tickTimers, 1000);
+                    tickTimers();
+                }
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('playerNameDisplay').innerText = player.nickname; 
+            document.getElementById('countCommon').innerText = player.common_parts;
+            document.getElementById('countRare').innerText = player.rare_parts;
+            document.getElementById('countEpic').innerText = player.epic_parts;
+            document.getElementById('countSkip').innerText = player.booster_skip || 0;
+            document.getElementById('countSpeed').innerText = player.booster_speed || 0;
+            document.getElementById('factoryLevelUI').innerText = player.factory_level;
+
+            const btnUpg = document.getElementById('btnUpgrade');
+            const stats = FACTORY_STATS[player.factory_level];
+            if (stats.nextCost) { btnUpg.innerText = `Апгрейд: ${stats.nextName}`; btnUpg.style.display = 'block'; } 
+            else { btnUpg.style.display = 'none'; }
+
+            // ОБНОВЛЕНИЕ АНГАРА
+            if (player.hangar_unlocked) {
+                document.getElementById('hangarLockedUI').style.display = 'none';
+                document.getElementById('hangarUnlockedUI').style.display = 'block';
+                
+                for(let i=1; i<=3; i++) {
+                    const lvl = player['h_pos'+i] || 1;
+                    document.getElementById(`hPos${i}Lvl`).innerText = `Ур. ${lvl} (${HANGAR_CFG[i][lvl].text})`;
+                    const btn = document.getElementById(`btnUpgH${i}`);
+                    if (lvl >= 3) { btn.style.display = 'none'; }
+                    else {
+                        const next = HANGAR_CFG[i][lvl+1];
+                        let curName = next.cur === 'common_parts' ? 'Обычных' : (next.cur === 'rare_parts' ? 'Редких' : 'Эпиков');
+                        btn.innerText = `Апгрейд (${next.c} ${curName})`;
+                        btn.style.display = 'block';
+                    }
+                }
+            } else {
+                document.getElementById('hangarLockedUI').style.display = 'block';
+                document.getElementById('hangarUnlockedUI').style.display = 'none';
+            }
+        }
+
+        function getEffectiveElapsed(lastStr, boostEndStr) {
+            const now = new Date().getTime();
+            const last = new Date(lastStr).getTime();
+            const end = new Date(boostEndStr).getTime();
+
+            if (last >= end) return now - last; 
+            if (now <= end) return (now - last) * 4; 
+            
+            const boostedTime = end - last;
+            const normalTime = now - end;
+            return (boostedTime * 4) + normalTime;
+        }
+
+        function tickTimers() {
+            if(!player || gameEnded) return;
+            const now = new Date().getTime();
+            
+            const isBoosted = now < new Date(player.speed_boost_end).getTime();
+            if (isBoosted) {
+                const msLeftBoost = new Date(player.speed_boost_end).getTime() - now;
+                document.getElementById('boostIndicator').innerText = `⚡ АКТИВИРОВАНО УСКОРЕНИЕ x4 (${formatTime(msLeftBoost)}) ⚡`;
+                document.getElementById('boostIndicator').style.display = 'block';
+            } else {
+                document.getElementById('boostIndicator').style.display = 'none';
+            }
+
+            const stats = FACTORY_STATS[player.factory_level];
+            const effElapsed = getEffectiveElapsed(player.factory_last_collected, player.speed_boost_end);
+            const msPerPart = CYCLE_MS / stats.partsPerCycle;
+            
+            let earned = Math.floor(effElapsed / msPerPart);
+            let isMaxed = false;
+
+            if (earned >= stats.max) { earned = stats.max; isMaxed = true; }
+
+            document.getElementById('factoryAccumulated').innerText = earned;
+            document.getElementById('factoryMax').innerText = stats.max;
+            document.getElementById('factoryProgress').style.width = `${(earned / stats.max) * 100}%`;
+
+            if (isMaxed) {
+                document.getElementById('timerNextPart').innerText = "ЗАПОЛНЕНО";
+                document.getElementById('timerNextPart').style.color = "#ff4444";
+                document.getElementById('timerNextBatch').innerText = "ЖДЕТ СБОРА";
+            } else {
+                const effMsToNextPart = msPerPart - (effElapsed % msPerPart);
+                const effMsToNextBatch = CYCLE_MS - (effElapsed % CYCLE_MS);
+                const realSpeedDivider = isBoosted ? 4 : 1;
+                
+                document.getElementById('timerNextPart').innerText = formatTime(effMsToNextPart / realSpeedDivider);
+                document.getElementById('timerNextPart').style.color = "#fff";
+                document.getElementById('timerNextBatch').innerText = formatTime(effMsToNextBatch / realSpeedDivider);
+            }
+
+            const lastOpened = new Date(player.daily_case_last_opened).getTime();
+            const elapsedDaily = now - lastOpened;
+            const dailyCooldown = 24 * 60 * 60 * 1000;
+            const timerDaily = document.getElementById('dailyCaseTimer');
+
+            if (elapsedDaily >= dailyCooldown) {
+                document.getElementById('btnDailyCase').disabled = false; 
+                timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)";
+            } else {
+                document.getElementById('btnDailyCase').disabled = true; 
+                timerDaily.innerText = "Охлаждение: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e";
+            }
+
+            if (player.hangar_unlocked) {
+                const mStatus = player.mission_status || 0;
+                const mBtn = document.getElementById('btnMissionAction');
+                const mTimer = document.getElementById('missionTimer');
+                const mText = document.getElementById('missionStatusText');
+
+                if (mStatus === 0) {
+                    mText.innerText = "Техника ожидает приказа";
+                    mText.style.color = "#fff";
+                    mTimer.style.display = 'none';
+                    mBtn.innerText = "Отправить на задание";
+                    mBtn.style.background = "var(--accent-gold)";
+                    mBtn.disabled = false;
+                } else if (mStatus === 1) {
+                    const endMission = new Date(player.mission_end).getTime();
+                    if (now >= endMission) {
+                        mText.innerText = "Техника вернулась!";
+                        mText.style.color = "var(--accent-green)";
+                        mTimer.style.display = 'none';
+                        mBtn.innerText = "ЗАБРАТЬ ОТЧЕТ";
+                        mBtn.style.background = "var(--accent-green)";
+                        mBtn.disabled = false;
+                    } else {
+                        mText.innerText = "Экспедиция в процессе...";
+                        mText.style.color = "var(--rare)";
+                        mTimer.innerText = formatTime(endMission - now);
+                        mTimer.style.display = 'block';
+                        mBtn.innerText = "Ожидание...";
+                        mBtn.style.background = "#555";
+                        mBtn.disabled = true;
+                    }
+                }
+            }
+        }
+
+        // === 4. ЛОГИКА ЗАВОДА И БУСТЕРОВ ===
+        async function collectFactory() {
+            if(gameEnded) return;
+            const stats = FACTORY_STATS[player.factory_level];
+            const effElapsed = getEffectiveElapsed(player.factory_last_collected, player.speed_boost_end);
+            const msPerPart = CYCLE_MS / stats.partsPerCycle;
+            
+            let earned = Math.floor(effElapsed / msPerPart);
+            if (earned > stats.max) earned = stats.max;
+            if (earned <= 0) return;
+
+            const effRemainder = effElapsed % msPerPart;
+            const isBoosted = new Date().getTime() < new Date(player.speed_boost_end).getTime();
+            const realRemainder = isBoosted ? (effRemainder / 4) : effRemainder;
+            
+            const newLastCol = new Date(new Date().getTime() - realRemainder).toISOString();
+
+            const { data } = await db.from('players').update({
+                common_parts: player.common_parts + earned, factory_last_collected: newLastCol
+            }).eq('id', player.id).select().single();
+
+            if (data) { player = data; showMsg('factoryMsg', `Собрано: ${earned} Обычных!`, 'var(--accent-gold)'); refreshAll(); }
+        }
+
+        async function upgradeFactory() {
+            if(gameEnded) return;
+            const stats = FACTORY_STATS[player.factory_level];
+            if (!stats.nextCost) return;
+            if (player[stats.nextCur] < stats.nextCost) { showMsg('factoryMsg', `Нужно ${stats.nextCost} ${stats.nextCur==='rare_parts'?'Редких':'Эпических'}!`, '#ff4444'); return; }
+
+            const updates = { factory_level: player.factory_level + 1 };
+            updates[stats.nextCur] = player[stats.nextCur] - stats.nextCost;
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; showMsg('factoryMsg', 'Завод модернизирован!', 'var(--epic)'); refreshAll(); }
+        }
+
+        async function useBooster(type) {
+            if(gameEnded) return;
+            const updates = {};
+            
+            if (type === 'skip') {
+                if ((player.booster_skip || 0) <= 0) { showMsg('boosterMsg', 'У вас нет бустеров пропуска!', '#ff4444'); return; }
+                const earned = FACTORY_STATS[player.factory_level].partsPerCycle; 
+                updates.booster_skip = player.booster_skip - 1;
+                updates.common_parts = player.common_parts + earned;
+                
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('boosterMsg', `Пропуск применен! +${earned} Обычных!`, 'var(--booster)'); refreshAll(); }
+            } 
+            else if (type === 'speed') {
+                if ((player.booster_speed || 0) <= 0) { showMsg('boosterMsg', 'У вас нет бустеров скорости!', '#ff4444'); return; }
+                
+                const now = new Date().getTime();
+                const oldEnd = new Date(player.speed_boost_end || 0).getTime();
+                const newStart = Math.max(now, oldEnd);
+                const newEndStr = new Date(newStart + (12 * 60 * 60 * 1000)).toISOString();
+                
+                updates.booster_speed = player.booster_speed - 1;
+                updates.speed_boost_end = newEndStr;
+
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 12ч!`, 'var(--booster)'); refreshAll(); }
+            }
+        }
+
+        // === 5. ЛОГИКА АНГАРА ===
+        async function unlockHangar() {
+            if(gameEnded) return;
+            if (player.common_parts < 50 || player.rare_parts < 5 || player.epic_parts < 1) {
+                showMsg('hangarUnlockMsg', 'Недостаточно ресурсов (нужно 50 Об, 5 Ред, 1 Эп)!', '#ff4444'); return;
+            }
+            const { data } = await db.from('players').update({
+                common_parts: player.common_parts - 50, rare_parts: player.rare_parts - 5, epic_parts: player.epic_parts - 1,
+                hangar_unlocked: true, h_pos1: 1, h_pos2: 1, h_pos3: 1, mission_status: 0
+            }).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); }
+        }
+
+        async function upgradeHangar(pos) {
+            if(gameEnded) return;
+            const lvl = player['h_pos'+pos];
+            if (lvl >= 3) return;
+            const cfg = HANGAR_CFG[pos][lvl+1];
+            
+            if (player[cfg.cur] < cfg.c) {
+                let name = cfg.cur === 'common_parts' ? 'Обычных' : (cfg.cur === 'rare_parts' ? 'Редких' : 'Эпических');
+                showMsg('hangarUnlockMsg', `Нужно ${cfg.c} ${name} для апгрейда!`, '#ff4444'); return;
+            }
+
+            const updates = {};
+            updates[cfg.cur] = player[cfg.cur] - cfg.c;
+            updates['h_pos'+pos] = lvl + 1;
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); }
+        }
+
+        async function handleMissionAction() {
+            if(gameEnded || !player.hangar_unlocked) return;
+            const now = new Date().getTime();
+            
+            if ((player.mission_status || 0) === 0) {
+                // ОТПРАВИТЬ
+                const hrs = HANGAR_CFG[1][player.h_pos1].t;
+                const end = new Date(now + (hrs * 60 * 60 * 1000)).toISOString();
+                const { data } = await db.from('players').update({mission_status: 1, mission_end: end}).eq('id', player.id).select().single();
+                if (data) { player = data; refreshAll(); }
+            } 
+            else if (player.mission_status === 1 && now >= new Date(player.mission_end).getTime()) {
+                // СОБРАТЬ
+                const chance = HANGAR_CFG[2][player.h_pos2].ch;
+                const isSuccess = Math.random() < chance;
+                
+                let skipAdd = 0, speedAdd = 0;
+                let title = '', html = '', color = '';
+
+                if (isSuccess) {
+                    const rLvl = player.h_pos3;
+                    if (rLvl === 1) { if(Math.random()<0.5) skipAdd=1; else speedAdd=1; }
+                    else if (rLvl === 2) { skipAdd=1; speedAdd=1; }
+                    else if (rLvl === 3) { skipAdd=2; speedAdd=2; }
+                    
+                    title = "УСПЕШНАЯ ЭКСПЕДИЦИЯ!"; color = "epic";
+                    if(skipAdd) html += `<div class="boost">⚡ +${skipAdd} Пропуск партии</div>`;
+                    if(speedAdd) html += `<div class="boost">⚡ +${speedAdd} Ускорение x4</div>`;
+                } else {
+                    title = "ПРОВАЛ МИССИИ..."; color = "common";
+                    html = `<div class="common">Техника вернулась сильно поврежденной. Наград нет.</div>`;
+                }
+
+                const { data } = await db.from('players').update({
+                    mission_status: 0,
+                    booster_skip: (player.booster_skip||0) + skipAdd,
+                    booster_speed: (player.booster_speed||0) + speedAdd
+                }).eq('id', player.id).select().single();
+
+                if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+            }
+        }
+
+        // === 6. КРАФТ И КАЗИНО ===
+        async function craftItem(type) {
+            if(gameEnded) return;
+            let cost = 5, cur = '', rew = '';
+            if(type === 'rare') { cur = 'common_parts'; rew = 'rare_parts'; }
+            else if(type === 'epic') { cur = 'rare_parts'; rew = 'epic_parts'; }
+
+            if (player[cur] < cost) { showMsg('craftMsg', 'Недостаточно ресурсов для надежного синтеза!', '#ff4444'); return; }
+
+            const updates = {}; updates[cur] = player[cur] - cost; updates[rew] = player[rew] + 1;
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; showMsg('craftMsg', 'Синтез успешен!', type==='rare'?'var(--rare)':'var(--epic)'); refreshAll(); }
+        }
+
+        async function riskyCraft(type) {
+            if(gameEnded) return;
+            if(type === 'rare' && player.common_parts < 25) { showMsg('craftMsg', 'Нужно 25 Обычных для риска!', '#ff4444'); return; }
+            if(type === 'epic' && player.rare_parts < 25) { showMsg('craftMsg', 'Нужно 25 Редких для риска!', '#ff4444'); return; }
+
+            const r = Math.random();
+            let reward = 0, title = '', html = '', color = '';
+            const updates = {};
+
+            if (type === 'rare') {
+                updates.common_parts = player.common_parts - 25;
+                reward = r < 0.65 ? 2 : (r < 0.90 ? 5 : 10);
+                updates.rare_parts = player.rare_parts + reward;
+                color = "rare"; title = "Синтез чертежей";
+                html = `<div class="rare">+${reward} Редких</div>`;
+            } else {
+                updates.rare_parts = player.rare_parts - 25;
+                reward = r < 0.65 ? 1 : (r < 0.90 ? 5 : 10);
+                updates.epic_parts = player.epic_parts + reward;
+                color = "epic"; title = "Синтез секретов";
+                html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
+            }
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        // === 7. КЕЙСЫ ===
+        function showRewardAnimation(title, itemsHtml, colorClass) {
+            const overlay = document.getElementById('rewardModal');
+            const box = document.getElementById('rewardBox');
+            document.getElementById('rewardLoading').style.display = 'block';
+            document.getElementById('rewardResult').style.display = 'none';
+            overlay.style.display = 'flex';
+            setTimeout(() => box.classList.add('show'), 10);
+
+            setTimeout(() => {
+                document.getElementById('rewardLoading').style.display = 'none';
+                document.getElementById('rewardTitle').innerText = title;
+                document.getElementById('rewardTitle').className = `reward-title ${colorClass}`;
+                document.getElementById('rewardItems').innerHTML = itemsHtml;
+                document.getElementById('rewardResult').style.display = 'block';
+            }, 2000);
+        }
+        function closeRewardModal() {
+            document.getElementById('rewardBox').classList.remove('show');
+            setTimeout(() => document.getElementById('rewardModal').style.display = 'none', 300);
+        }
+
+        async function openDailyCase() {
+            if(gameEnded) return;
+            const gotCommon = (Math.floor(Math.random() * 7) * 5) + 40; 
+            const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; 
+            const gotEpic = Math.random() < 0.05 ? 1 : 0; 
+            
+            const gotBoostSkip = Math.random() < 0.05 ? 1 : 0;
+            const gotBoostSpeed = Math.random() < 0.05 ? 1 : 0;
+
+            const updates = {
+                common_parts: player.common_parts + gotCommon, rare_parts: player.rare_parts + gotRare, epic_parts: player.epic_parts + gotEpic,
+                booster_skip: (player.booster_skip||0) + gotBoostSkip, booster_speed: (player.booster_speed||0) + gotBoostSpeed,
+                daily_case_last_opened: new Date().toISOString()
+            };
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) {
+                player = data; refreshAll();
+                let title = gotEpic ? "ЭПИЧЕСКИЙ ДРОП!" : (gotRare ? "ЦЕННЫЕ ДАННЫЕ!" : "Контейнер открыт!");
+                let color = gotEpic ? "epic" : (gotRare ? "rare" : "common");
+                
+                let html = `<div class="common">+${gotCommon} Обычных</div>`;
+                if(gotRare) html += `<div class="rare">+${gotRare} Редких</div>`;
+                if(gotEpic) html += `<div class="epic">+${gotEpic} ЭПИЧЕСКИХ!</div>`;
+                if(gotBoostSkip) html += `<div class="boost">⚡ +1 Пропуск партии</div>`;
+                if(gotBoostSpeed) html += `<div class="boost">⚡ +1 Ускорение x4</div>`;
+
+                showRewardAnimation(title, html, color);
+            }
+        }
+
+        async function openPaidCase() {
+            if(gameEnded) return;
+            if (player.common_parts < 25) { showMsg('caseMsg', 'Нужно 25 Обычных деталей!', '#ff4444'); return; }
+
+            const rand = Math.random();
+            let c=0, r=0, e=0, title='', html='', color='';
+            
+            if (rand < 0.30) { 
+                c = (Math.floor(Math.random() * 2) * 5) + 10; title = "Ржавый хлам..."; color = "common";
+                html = `<div class="common">Возврат: ${c} Обычных</div>`;
+            } else if (rand < 0.80) { 
+                r = 5; title = "Окупаемость!"; color = "rare";
+                html = `<div class="rare">+5 Редких</div>`;
+            } else if (rand < 0.95) { 
+                e = 1; r = 2; title = "КРУПНАЯ УДАЧА!"; color = "epic";
+                html = `<div class="epic">+1 Эпик</div><div class="rare">+2 Редких</div>`;
+            } else { 
+                e = 2; title = "ДЖЕКПОТ!!!"; color = "accent-gold";
+                html = `<div class="epic" style="font-size: 40px;">+2 ЭПИКА!!!</div>`;
+            }
+
+            const gotBoostSkip = Math.random() < 0.05 ? 1 : 0;
+            const gotBoostSpeed = Math.random() < 0.05 ? 1 : 0;
+            if(gotBoostSkip) html += `<div class="boost" style="margin-top:10px;">⚡ +1 Пропуск партии</div>`;
+            if(gotBoostSpeed) html += `<div class="boost">⚡ +1 Ускорение x4</div>`;
+
+            const updates = {
+                common_parts: player.common_parts - 25 + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e,
+                booster_skip: (player.booster_skip||0) + gotBoostSkip, booster_speed: (player.booster_speed||0) + gotBoostSpeed
+            };
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        // === 8. ПРОМОКОДЫ (Секретная проверка на сервере) ===
+        async function activatePromo() {
+            if(gameEnded) return;
+            const code = document.getElementById('promoInput').value.trim().toUpperCase();
+            if (code.length < 3) { showMsg('promoMsg', "Введите код!", '#ff4444'); return; }
+
+            // Показываем загрузку, чтобы игрок не кликал дважды
+            showMsg('promoMsg', "Проверка зашифрованного канала...", '#a0a0a0');
+
+            // Отправляем только ID игрока и введенное слово на сервер
+            const { data, error } = await db.rpc('activate_promo_code', { 
+                player_uuid: player.id, 
+                promo: code 
+            });
+
+            if (error) {
+                showMsg('promoMsg', "Ошибка связи с сервером!", '#ff4444');
+            } else if (data.status === 'error') {
+                showMsg('promoMsg', data.msg, '#ff4444'); // Код не найден или уже введен
+            } else {
+                showMsg('promoMsg', data.msg, 'var(--accent-green)'); // Успех!
+                refreshAll(); // Обновляем интерфейс (детали и бустеры)
+            }
+        }
+
+        // === 9. ЛИДЕРБОРД И ПРОВЕРКА ПОБЕДЫ ===
+        async function loadLeaderboard() {
+            const { data } = await db.from('players').select('nickname, epic_parts, rare_parts, common_parts').limit(50);
+            if (data) {
+                data.forEach(p => p.score = p.common_parts + (p.rare_parts * 5) + (p.epic_parts * 25));
+                data.sort((a, b) => b.score - a.score);
+
+                const prizes = ['🥇 1000 Платины', '🥈 500 Платины', '🥉 500 Платины'];
+
+                // ПРОВЕРКА НА КОНЕЦ ИГРЫ
+                if (data[0] && data[0].epic_parts >= 50 && !gameEnded) {
+                    gameEnded = true;
+                    document.getElementById('endgameOverlay').style.display = 'flex';
+                    document.getElementById('endgameWinner').innerText = data[0].nickname;
+                    
+                    let endLbHtml = '';
+                    data.slice(0, 5).forEach((p, idx) => {
+                        const prizeText = idx < 3 ? `<div style="color:#00e676; font-size:12px; font-weight:bold; margin-top:3px;">${prizes[idx]}</div>` : '';
+                        endLbHtml += `<div style="padding: 10px 0; border-bottom: 1px solid #333; font-size: 15px;">
+                            <b style="color: var(--accent-gold);">#${idx+1}</b> <span style="color: white; font-weight:bold;">${p.nickname}</span>
+                            <div style="color: #8b949e; font-size: 12px; margin-top:3px;">Эпик: <span style="color:var(--epic);">${p.epic_parts}</span> | Редк: <span style="color:var(--rare);">${p.rare_parts}</span> | Обычн: <span style="color:var(--common);">${p.common_parts}</span></div>
+                            ${prizeText}
+                        </div>`;
+                    });
+                    document.getElementById('endgameLeaderboardList').innerHTML = endLbHtml;
+
+                    document.querySelectorAll('button').forEach(btn => { if(btn.id !== 'btnLogout' && !btn.classList.contains('btn-home')) btn.disabled = true; });
+                }
+
+                // Стандартный лидерборд
+                const list = document.getElementById('leaderboardList');
+                list.innerHTML = '';
+                
+                data.slice(0, 5).forEach((p, idx) => {
+                    const prizeHtml = idx < 3 ? `<div class="lb-prize">${prizes[idx]}</div>` : '';
+                    list.innerHTML += `
+                    <div class="lb-item">
+                        <div class="lb-rank">#${idx+1}</div>
+                        <div class="lb-info">
+                            <div class="lb-name">${p.nickname} <span class="lb-score">Очки: ${p.score}</span></div>
+                            <div class="lb-stats">Эпик: ${p.epic_parts} | Редкие: ${p.rare_parts} | Обычные: ${p.common_parts}</div>
+                            ${prizeHtml}
+                        </div>
+                    </div>`;
+                });
+            }
+        }
+
+        function showMsg(id, text, color) {
+            const el = document.getElementById(id); el.innerText = text; el.style.color = color; el.style.display = 'block';
+            setTimeout(() => { if(el.innerText === text) el.innerText = ''; }, 4000);
+        }
+
+        window.onload = () => { 
+            if (localStorage.getItem('minigame_player_id')) { 
+                document.getElementById('bodyBg').className = 'game-bg';
+                document.getElementById('loginScreen').style.display = 'none'; 
+                document.getElementById('gameInterface').style.display = 'block'; 
+                refreshAll(); 
+            } 
+        };
+    </script>
 </body>
 </html>
-
-
-
 
 
 
