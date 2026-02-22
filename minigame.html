@@ -208,7 +208,7 @@
             
             <hr style="border-color: #333; margin: 15px 0;">
 
-            <p><b>🏭 ЗАВОД И РЕСУРСЫ:</b> Завод основной источник деталей. Он имеет 10 уровней прокачки. Собирать детали можно в любой момент. <b>ВНИМАНИЕ:</b> Лимит склада — всего 1 партия! Как только он заполнится на 100%, производство встанет.</p>
+            <p><b>🏭 ЗАВОД И РЕСУРСЫ:</b> Завод основной источник деталей. Он имеет 10 уровней прокачки. Собирать детали можно в любой момент. Партия на любом уровне всегда производится ровно <b>4 часа</b>, но с уровнем растет ее размер. <b>ВНИМАНИЕ:</b> Лимит склада — всего 1 партия! Как только он заполнится на 100%, производство встанет.</p>
             <ul>
                 <li><b>Случайные находки:</b> При каждом ручном сборе Завода есть шанс 5% найти тайник (5 Редких или 1 Эпик).</li>
                 <li><b>Перегрузка Завода:</b> Рискованная опция. Моментально выдает 1 партию деталей (игнорируя таймеры), но <b>с вероятностью 50%</b> завод выйдет из строя на 2 часа и ничего не будет производить.</li>
@@ -218,13 +218,13 @@
             <ul>
                 <li><b>Безопасный:</b> Строго 5 Обычных ➔ 1 Редкий, или 5 Редких ➔ 1 Эпический.</li>
                 <li><b>Разбор:</b> 1 Эпический ➔ 3 Редких, или 1 Редкий ➔ 3 Обычных.</li>
-                <li><b>Рискованный:</b> Тратите 25 ресурсов. Шансы: 65% — уйти в минус (выпадет крохи), 25% — выйти в ноль, 10% — сорвать джекпот (удвоить вложение).</li>
+                <li><b>Рискованный:</b> Тратите 25 ресурсов. Шансы: 65% — уйти в минус (выпадет мало), 25% — выйти в ноль, 10% — сорвать джекпот (удвоить вложение).</li>
             </ul>
 
             <p><b>📦 ПОСТАВКИ И КЕЙСЫ:</b></p>
             <ul>
                 <li><b>Ежедневный (Бесплатно раз в 24ч):</b> 100% дает Обычные детали (от 40 до 70). Шанс вытащить Редкие — 50%. Шанс на Эпик — 5%. Каждое открытие имеет шанс 5% выдать любой из Бустеров.</li>
-                <li><b>Особый (За 25 Обычных):</b> Платная рулетка. 30% — хлам (вы в минусе). 50% — окупаемость. 15% — удачный лут. 5% — джекпот (сразу 2 Эпика). Также имеет 5% шанс на выпадение Бустеров.</li>
+                <li><b>Особый (За 25 Обычных):</b> рискованная опция. 30% — хлам (вы в минусе). 50% — окупаемость. 15% — удачный лут. 5% — джекпот (сразу 2 Эпика). Также имеет 5% шанс на выпадение Бустеров.</li>
             </ul>
 
             <p><b>🚀 АНГАР И ЭКСПЕДИЦИИ:</b> Секретный объект, открываемый за ресурсы. Позволяет отправлять технику на миссии ради добычи <b>Бустеров</b>. Имеет 3 ветки прокачки (до 3 ур.): Скорость миссии, Шанс на успех, Количество привозимых бустеров.</p>
@@ -305,7 +305,10 @@
 
         <div class="panel full-width">
             <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">📅 Ежедневные Поставки</h3>
-            <div style="font-size: 11px; color: #8b949e; margin-bottom: 10px; text-align: center;">При пропуске дня цикл начнется заново.</div>
+            <div style="font-size: 11px; color: #8b949e; margin-bottom: 10px; text-align: center;">
+                Обновление через: <span id="timerLoginReset" style="color: #fff; font-family: monospace;">--:--</span><br>
+                При пропуске дня цикл начнется заново.
+            </div>
             <div class="streak-panel" id="streakPanelUI">
                 </div>
         </div>
@@ -419,8 +422,8 @@
                 <h3 style="color: var(--epic);">🛠️ Терминал: Синтез / Разбор</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Массовая конвертация деталей.</p>
                 
-                <button class="btn-craft" onclick="openCraftModal('СИНТЕЗ ЧЕРТЕЖЕЙ', 'Обычные', 'Редкие', 5, 1, 'common_parts', 'rare_parts')">Надежно: 5 Обычных ➔ 1 Редкий</button>
-                <button class="btn-craft-epic" onclick="openCraftModal('СИНТЕЗ СЕКРЕТОВ', 'Редкие', 'Эпические', 5, 1, 'rare_parts', 'epic_parts')">Надежно: 5 Редких ➔ 1 Эпический</button>
+                <button class="btn-craft" onclick="openCraftModal('СИНТЕЗ РЕДКИХ', 'Обычные', 'Редкие', 5, 1, 'common_parts', 'rare_parts')">Надежно: 5 Обычных ➔ 1 Редкий</button>
+                <button class="btn-craft-epic" onclick="openCraftModal('СИНТЕЗ ЭПИЧЕСКИХ', 'Редкие', 'Эпические', 5, 1, 'rare_parts', 'epic_parts')">Надежно: 5 Редких ➔ 1 Эпический</button>
                 <div style="height: 10px;"></div>
                 <button class="btn-craft" onclick="openCraftModal('РАЗБОР РЕДКОЙ', 'Редкие', 'Обычные', 1, 3, 'rare_parts', 'common_parts')" style="border-left-color: var(--common);">Разбор: 1 Редкая ➔ 3 Обычных</button>
                 <button class="btn-craft-epic" onclick="openCraftModal('РАЗБОР ЭПИЧЕСКОЙ', 'Эпические', 'Редкие', 1, 3, 'epic_parts', 'rare_parts')" style="border-left-color: var(--rare);">Разбор: 1 Эпическая ➔ 3 Редких</button>
@@ -435,7 +438,7 @@
 
             <div class="panel">
                 <h3 style="color: var(--accent-gold);">🎯 Ежедневные Директивы</h3>
-                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Сброс раз в 24 часа. Награда: 1 Эпик + 1 Случайный Бустер</p>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Сброс через: <span id="timerQuestsReset" style="color: #fff; font-family: monospace;">--:--</span><br>Награда: 1 Эпик + 1 Случайный Бустер</p>
                 <div class="quest-item">Собрать Завод <span><span id="qFact">0</span>/3</span></div>
                 <div class="quest-item">Рискованный синтез <span><span id="qRisk">0</span>/1</span></div>
                 <div class="quest-item">Миссия в Ангаре <span><span id="qHang">0</span>/1</span></div>
@@ -464,6 +467,7 @@
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
+            <button onclick="window.location.reload()" style="background: #333; color: white; width: 250px; margin-bottom: 10px;">🔄 Обновить страницу</button><br>
             <button id="btnLogout" onclick="logout()" style="background: transparent; color: #ff4444; border-color: #ff4444; width: 250px;">Выйти из аккаунта</button>
             <div style="font-size: 11px; color: #8b949e; margin-top: 5px;">(Безопасный выход без потери прогресса)</div>
         </div>
@@ -481,18 +485,18 @@
         const EVENT_END_DATE = new Date('2026-03-08T00:00:00Z').getTime(); 
         const MAX_POWER_POSSIBLE = 2090;
 
-        // === КОНФИГИ ЭКОНОМИКИ ===
+        // === КОНФИГИ ЭКОНОМИКИ (4 часа на партию для всех) ===
         const FACTORY_STATS = {
-            1: { ms: 14400000, y: 20,  c: 0,    r: 0,   e: 0 },   
-            2: { ms: 12600000, y: 30,  c: 100,  r: 0,   e: 0 },   
-            3: { ms: 10800000, y: 45,  c: 250,  r: 0,   e: 0 },   
-            4: { ms: 9000000,  y: 65,  c: 500,  r: 10,  e: 0 },   
-            5: { ms: 7200000,  y: 90,  c: 800,  r: 25,  e: 0 },   
-            6: { ms: 5400000,  y: 120, c: 1200, r: 50,  e: 0 },   
-            7: { ms: 3600000,  y: 150, c: 1800, r: 80,  e: 2 },   
-            8: { ms: 2700000,  y: 200, c: 2500, r: 120, e: 5 },   
-            9: { ms: 1800000,  y: 250, c: 4000, r: 200, e: 10 },  
-            10:{ ms: 1200000,  y: 300, c: 6000, r: 300, e: 20 }   
+            1: { ms: 14400000, y: 20,   c: 0,    r: 0,   e: 0 },   
+            2: { ms: 14400000, y: 35,   c: 100,  r: 0,   e: 0 },   
+            3: { ms: 14400000, y: 60,   c: 250,  r: 0,   e: 0 },   
+            4: { ms: 14400000, y: 100,  c: 500,  r: 10,  e: 0 },   
+            5: { ms: 14400000, y: 180,  c: 800,  r: 25,  e: 0 },   
+            6: { ms: 14400000, y: 320,  c: 1200, r: 50,  e: 0 },   
+            7: { ms: 14400000, y: 600,  c: 1800, r: 80,  e: 2 },   
+            8: { ms: 14400000, y: 1000, c: 2500, r: 120, e: 5 },   
+            9: { ms: 14400000, y: 2000, c: 4000, r: 200, e: 10 },  
+            10:{ ms: 14400000, y: 3600, c: 6000, r: 300, e: 20 }   
         };
 
         const INFRA_CFG = {
@@ -691,7 +695,7 @@
             const canClaimToday = currentDayUTC > lastDayUTC;
             
             let visualStreak = player.login_streak || 0;
-            if (canClaimToday && lastDayUTC !== 0 && currentDayUTC - lastDayUTC > 1) { visualStreak = 0; } // Сброс при пропуске
+            if (canClaimToday && lastDayUTC !== 0 && currentDayUTC - lastDayUTC > 1) { visualStreak = 0; } 
 
             let streakHtml = '';
             const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="power">2 Мощи</span>', '<span class="power">3 Мощи</span>'];
@@ -785,12 +789,22 @@
             const resetTime = new Date(player.daily_quests_reset || 0).getTime();
             if (now - resetTime >= 24 * 3600000) { refreshAll(); return; }
             
+            // ТАЙМЕРЫ СБРОСА (Директивы и Вход)
+            const questResetMs = (24 * 3600000) - (now - resetTime);
+            document.getElementById('timerQuestsReset').innerText = questResetMs > 0 ? formatTime(questResetMs) : "00:00";
+
+            const nextMidnightUTC = new Date(now);
+            nextMidnightUTC.setUTCHours(24, 0, 0, 0);
+            document.getElementById('timerLoginReset').innerText = formatTime(nextMidnightUTC.getTime() - now);
+            
+            // ТАЙМЕР ИВЕНТА
             const timeToEventEnd = EVENT_END_DATE - now;
             if (timeToEventEnd <= 0) { gameEnded = true; triggerEndgame("ВРЕМЯ ВЫШЛО!"); return; }
             const d = Math.floor(timeToEventEnd / (1000*60*60*24)); const evtH = Math.floor((timeToEventEnd / (1000*60*60)) % 24);
             const evtM = Math.floor((timeToEventEnd / 1000/60) % 60); const evtS = Math.floor((timeToEventEnd / 1000) % 60);
             document.getElementById('globalEventTimer').innerText = `${d}д ${evtH.toString().padStart(2,'0')}ч ${evtM.toString().padStart(2,'0')}м ${evtS.toString().padStart(2,'0')}с`;
 
+            // БУСТЕРЫ
             const isSpeed = now < new Date(player.speed_boost_end).getTime(); const isAuto = now < new Date(player.auto_boost_end).getTime();
             const bInd = document.getElementById('boostIndicator');
             if (isSpeed || isAuto) {
@@ -800,6 +814,7 @@
                 bInd.innerHTML = txt.join('<br>');
             } else { bInd.style.display = 'none'; }
 
+            // ПОЛОМКА ЗАВОДА
             const brokenUntil = new Date(player.factory_broken_until || 0).getTime();
             const isBroken = now < brokenUntil;
             const stats = FACTORY_STATS[player.factory_level];
