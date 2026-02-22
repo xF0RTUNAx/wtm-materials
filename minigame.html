@@ -44,12 +44,19 @@
         @media (max-width: 700px) { .grid-panel { grid-template-columns: 1fr; } }
         .full-width { grid-column: 1 / -1; }
 
-        /* ИНВЕНТАРЬ (Оптимизировано через Grid) */
+        /* ИНВЕНТАРЬ */
         .inventory { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 20px; background: rgba(0,0,0,0.7); padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); align-items: center;}
         .part { text-align: center; font-size: 14px; }
         .part span { font-size: 26px; font-weight: 900; display: block; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); word-break: break-word;}
         .common { color: var(--common); } .rare { color: var(--rare); } .epic { color: var(--epic); } 
         .part.power { color: var(--power); border-left: 1px solid #444; }
+        .boost { color: var(--booster); } .power { color: var(--power); }
+
+        /* ЕЖЕДНЕВНЫЙ ВХОД (ПАНЕЛЬ) */
+        .streak-panel { display: flex; justify-content: space-between; text-align: center; gap: 10px; margin-top: 15px;}
+        .streak-day { color: #8b949e; padding: 10px; border-radius: 8px; flex: 1; background: rgba(0,0,0,0.4); border: 1px solid #333; font-size: 12px; transition: 0.3s;}
+        .streak-day.claimed { border-color: var(--accent-green); background: rgba(0, 230, 118, 0.1); }
+        .streak-day.next { color: #fff; border-color: var(--accent-gold); background: rgba(255, 193, 7, 0.15); box-shadow: 0 0 10px rgba(255,193,7,0.2);}
 
         /* ИНФРАСТРУКТУРА */
         .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
@@ -99,7 +106,7 @@
 
         .drop-chances { font-size: 10px; color: #8b949e; text-align: center; line-height: 1.3;}
 
-        /* МОДАЛКИ */
+        /* МОДАЛКИ И УВЕДОМЛЕНИЯ */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
         .modal-box { background: var(--panel-bg); border: 2px solid var(--accent-gold); padding: 30px; border-radius: 12px; text-align: center; width: 90%; max-width: 500px; transform: scale(0.8); opacity: 0; transition: 0.3s; max-height: 85vh; overflow-y: auto;}
         .modal-box.show { transform: scale(1); opacity: 1; }
@@ -136,10 +143,8 @@
         @media (max-width: 600px) {
             .game-header { flex-wrap: wrap; justify-content: space-between; }
             .commander-title { order: -1; width: 100%; margin-bottom: 10px; font-size: 22px; }
-            
-            /* Превращаем инвентарь в сетку 2x2 на телефонах */
             .inventory { grid-template-columns: 1fr 1fr; gap: 15px; padding: 10px;}
-            .part.power { border-left: none; } /* Убираем полоску у Мощи, так как она будет на новой строке */
+            .part.power { border-left: none; } 
             .part span { font-size: 24px; }
             .part { font-size: 12px; }
         }
@@ -161,6 +166,40 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box" id="confirmBox">
+            <h3 style="color: var(--accent-gold); margin-bottom: 15px;" id="confirmTitle">Подтверждение</h3>
+            <p id="confirmDesc" style="margin-bottom: 20px;">Вы уверены?</p>
+            <div style="display: flex; gap: 10px;">
+                <button style="background: #444;" onclick="closeConfirmModal()">ОТМЕНА</button>
+                <button class="btn-gold" id="btnConfirmAction">ПОДТВЕРДИТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="craftModal">
+        <div class="modal-box" id="craftBox">
+            <h3 style="color: var(--accent-gold); margin-bottom: 15px;" id="cmTitle">ТЕРМИНАЛ СИНТЕЗА</h3>
+            <div style="font-size: 13px; color: #8b949e; margin-bottom: 15px;">Доступно для конвертации: <span id="cmAvail" style="color: white; font-weight: bold;">0</span></div>
+            
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                <input type="number" id="cmInput" min="1" value="1" oninput="updateCraftModalPreview()" style="width: 80px; text-align: center; margin: 0; font-size: 18px; padding: 8px;">
+                <button style="width: auto; background: #333; padding: 8px 12px;" onclick="setCraftMax()">MAX</button>
+            </div>
+            
+            <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #333;">
+                <div style="margin-bottom: 5px;">Будет потрачено: <span id="cmCostPreview" style="color: #ff4444; font-weight: bold;">0</span> <span id="cmCostName"></span></div>
+                <div>Вы получите: <span id="cmRewPreview" style="color: var(--accent-green); font-weight: bold;">0</span> <span id="cmRewName"></span></div>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button style="background: #444;" onclick="closeCraftModal()">ОТМЕНА</button>
+                <button class="btn-gold" onclick="executeCraft()">ПОДТВЕРДИТЬ</button>
+            </div>
+            <div id="cmMsg" class="msg" style="color: #ff4444;"></div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="rulesModal">
         <div class="modal-box rules-text" id="rulesBox">
             <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px; font-size: 22px; text-transform: uppercase;">📜 Детализированная сводка операции</h3>
@@ -171,10 +210,11 @@
 
             <p><b>🏭 ЗАВОД И РЕСУРСЫ:</b> Завод основной источник деталей. Он имеет 10 уровней прокачки. Собирать детали можно в любой момент. <b>ВНИМАНИЕ:</b> Лимит склада — всего 1 партия! Как только он заполнится на 100%, производство встанет.</p>
             <ul>
+                <li><b>Случайные находки:</b> При каждом ручном сборе Завода есть шанс 5% найти тайник (5 Редких или 1 Эпик).</li>
                 <li><b>Перегрузка Завода:</b> Рискованная опция. Моментально выдает 1 партию деталей (игнорируя таймеры), но <b>с вероятностью 50%</b> завод выйдет из строя на 2 часа и ничего не будет производить.</li>
             </ul>
 
-            <p><b>🛠️ СИНТЕЗ (КРАФТ) И РАЗБОР:</b> Обмен ресурсов на более ценные и наоборот.</p>
+            <p><b>🛠️ СИНТЕЗ И РАЗБОР:</b> Обмен ресурсов на более ценные и наоборот (через терминал).</p>
             <ul>
                 <li><b>Безопасный:</b> Строго 5 Обычных ➔ 1 Редкий, или 5 Редких ➔ 1 Эпический.</li>
                 <li><b>Разбор:</b> 1 Эпический ➔ 3 Редких, или 1 Редкий ➔ 3 Обычных.</li>
@@ -192,11 +232,11 @@
             <p><b>⚡ ТИПЫ БУСТЕРОВ:</b></p>
             <ul>
                 <li><b>Пропуск:</b> Мгновенно зачисляет на склад ресурсы за 1 партию.</li>
-                <li><b>Ускорение:</b> В 4 раза ускоряет работу Завода на следующие 12 часов.</li>
-                <li><b>Автосбор:</b> Завод перестает простаивать! Детали бесконечно копятся без лимита в течение 12 часов, даже если вы спите.</li>
+                <li><b>Ускорение:</b> В 4 раза ускоряет работу Завода на следующие 6 часов.</li>
+                <li><b>Автосбор:</b> Завод перестает простаивать! Детали бесконечно копятся без лимита в течение 6 часов, даже если вы спите.</li>
             </ul>
 
-            <p><b>🎯 ДИРЕКТИВЫ:</b> Три простых задания каждый день. Выполните их, чтобы гарантированно получить 1 Эпик и 1 случайный Бустер.</p>
+            <p><b>🎯 НАГРАДА ЗА ВХОД И ДИРЕКТИВЫ:</b> Заходите в игру каждый день, чтобы забирать награды (Бустер за 1 день, 2 Мощи за 2 день, 3 Мощи за 3 день). При пропуске цикл сбрасывается. Также выполняйте 3 ежедневные директивы ради Бустеров и Эпиков.</p>
 
             <hr style="border-color: #333; margin: 15px 0;">
 
@@ -260,7 +300,14 @@
         </div>
         
         <div style="background: rgba(255, 23, 68, 0.1); border: 1px solid var(--power); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
-            ⏳ До конца розыгрыша: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">Вычисление...</span>
+            ⏳ До конца операции: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">Вычисление...</span>
+        </div>
+
+        <div class="panel full-width">
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">📅 Ежедневные Поставки</h3>
+            <div style="font-size: 11px; color: #8b949e; margin-bottom: 10px; text-align: center;">При пропуске дня цикл начнется заново.</div>
+            <div class="streak-panel" id="streakPanelUI">
+                </div>
         </div>
 
         <div class="inventory">
@@ -312,8 +359,8 @@
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Ангаре и Поставках.</p>
                 
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 12ч (<span id="countSpeed">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('auto')" style="background: #238636;">🤖 Автосбор на 12ч (<span id="countAuto">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 6ч (<span id="countSpeed">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('auto')" style="background: #238636;">🤖 Автосбор на 6ч (<span id="countAuto">0</span>)</button>
                 <div id="boosterMsg" class="msg" style="color: #ff4444;"></div>
             </div>
 
@@ -369,19 +416,20 @@
             </div>
 
             <div class="panel">
-                <h3 style="color: var(--epic);">🛠️ Синтез</h3>
-                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Безопасный (5 к 1) | Риск (65% минус, 25% окуп, 10% джекпот)</p>
-                <button class="btn-craft" onclick="craftItem('rare')">Надежно: 5 Обычных ➔ 1 Редкий</button>
-                <button class="btn-risk" onclick="riskyCraft('rare')">Риск: 25 Обычных ➔ 2/5/10 Редких</button>
+                <h3 style="color: var(--epic);">🛠️ Терминал: Синтез / Разбор</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Массовая конвертация деталей.</p>
+                
+                <button class="btn-craft" onclick="openCraftModal('СИНТЕЗ ЧЕРТЕЖЕЙ', 'Обычные', 'Редкие', 5, 1, 'common_parts', 'rare_parts')">Надежно: 5 Обычных ➔ 1 Редкий</button>
+                <button class="btn-craft-epic" onclick="openCraftModal('СИНТЕЗ СЕКРЕТОВ', 'Редкие', 'Эпические', 5, 1, 'rare_parts', 'epic_parts')">Надежно: 5 Редких ➔ 1 Эпический</button>
                 <div style="height: 10px;"></div>
-                <button class="btn-craft-epic" onclick="craftItem('epic')">Надежно: 5 Редких ➔ 1 Эпический</button>
-                <button class="btn-risk" onclick="riskyCraft('epic')" style="border-left-color: var(--epic);">Риск: 25 Редких ➔ 1/5/10 Эпиков</button>
-                
+                <button class="btn-craft" onclick="openCraftModal('РАЗБОР РЕДКОЙ', 'Редкие', 'Обычные', 1, 3, 'rare_parts', 'common_parts')" style="border-left-color: var(--common);">Разбор: 1 Редкая ➔ 3 Обычных</button>
+                <button class="btn-craft-epic" onclick="openCraftModal('РАЗБОР ЭПИЧЕСКОЙ', 'Эпические', 'Редкие', 1, 3, 'epic_parts', 'rare_parts')" style="border-left-color: var(--rare);">Разбор: 1 Эпическая ➔ 3 Редких</button>
+
                 <hr style="border-color: #333; margin: 15px 0;">
-                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Разбор деталей (1 к 3)</p>
-                <button class="btn-craft" onclick="disassembleItem('rare')" style="border-left-color: var(--common);">Разбор: 1 Редкая ➔ 3 Обычных</button>
-                <button class="btn-craft-epic" onclick="disassembleItem('epic')" style="border-left-color: var(--rare);">Разбор: 1 Эпическая ➔ 3 Редких</button>
-                
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Риск (65% минус, 25% окуп, 10% джекпот)</p>
+                <button class="btn-risk" onclick="riskyCraft('rare')">Риск: 25 Обычных ➔ 2/5/10 Редких</button>
+                <button class="btn-risk" onclick="riskyCraft('epic')" style="border-left-color: var(--epic);">Риск: 25 Редких ➔ 1/5/10 Эпиков</button>
+
                 <div id="craftMsg" class="msg" style="color: #ff4444;"></div>
             </div>
 
@@ -430,7 +478,7 @@
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         // === НАСТРОЙКА ТАЙМЕРА ИВЕНТА ===
-        const EVENT_END_DATE = new Date('2026-03-08T00:00:00Z').getTime(); // Укажи точную дату окончания (Год-Мес-День)
+        const EVENT_END_DATE = new Date('2026-03-08T00:00:00Z').getTime(); 
         const MAX_POWER_POSSIBLE = 2090;
 
         // === КОНФИГИ ЭКОНОМИКИ ===
@@ -463,6 +511,7 @@
         };
 
         let player = null; let globalTimer = null; let gameEnded = false; let authMode = 'login';
+        let craftSetup = {}; let confirmAction = null;
 
         function formatTime(ms) {
             if (ms < 0) return "00:00";
@@ -471,7 +520,7 @@
             return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
         }
 
-        // === UI ===
+        // === UI УПРАВЛЕНИЕ ===
         function togglePin(inputId, btnId) {
             const input = document.getElementById(inputId);
             if (input.type === "password") { input.type = "text"; document.getElementById(btnId).innerText = "🙈"; } 
@@ -488,6 +537,17 @@
 
         function openRules() { document.getElementById('rulesModal').style.display = 'flex'; setTimeout(() => document.getElementById('rulesBox').classList.add('show'), 10); }
         function closeRules() { document.getElementById('rulesBox').classList.remove('show'); setTimeout(() => document.getElementById('rulesModal').style.display = 'none', 300); }
+
+        function openConfirmModal(desc, callback) {
+            document.getElementById('confirmDesc').innerText = desc;
+            confirmAction = callback;
+            document.getElementById('confirmModal').style.display = 'flex'; setTimeout(() => document.getElementById('confirmBox').classList.add('show'), 10);
+        }
+        function closeConfirmModal() {
+            document.getElementById('confirmBox').classList.remove('show'); setTimeout(() => document.getElementById('confirmModal').style.display = 'none', 300);
+            confirmAction = null;
+        }
+        document.getElementById('btnConfirmAction').addEventListener('click', () => { if(confirmAction) confirmAction(); closeConfirmModal(); });
 
         // === АВТОРИЗАЦИЯ ===
         async function loginOrRegister() {
@@ -517,9 +577,47 @@
 
         function loginSuccess(pData) {
             localStorage.setItem('minigame_player_id', pData.id); document.getElementById('bodyBg').className = 'game-bg';
-            document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; refreshAll();
+            document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
+            refreshAll().then(checkDailyLogin);
         }
         function logout() { localStorage.removeItem('minigame_player_id'); location.reload(); }
+
+        // === ЕЖЕДНЕВНЫЙ ВХОД (СТРИК) ===
+        async function checkDailyLogin() {
+            if(gameEnded || !player) return;
+            const currentDayUTC = Math.floor(Date.now() / 86400000);
+            const lastDayUTC = player.last_login_day || 0;
+            
+            if (currentDayUTC > lastDayUTC) {
+                let newStreak = player.login_streak || 0;
+                if (currentDayUTC - lastDayUTC === 1) { newStreak++; } else { newStreak = 1; }
+                if (newStreak > 3) newStreak = 1;
+
+                let addSk = 0, addSp = 0, addAu = 0, addPwr = 0;
+                let title = "ЕЖЕДНЕВНЫЙ ВХОД", html = `День ${newStreak}/3<br>`;
+                let colorClass = 'power';
+
+                if (newStreak === 1) { 
+                    const rnd = Math.random();
+                    if(rnd < 0.33) { addSk = 1; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
+                    else if(rnd < 0.66) { addSp = 1; html += `<div class="boost">⚡ +1 Ускорение</div>`; }
+                    else { addAu = 1; html += `<div class="boost" style="color:#00e676;">🤖 +1 Автосбор</div>`; }
+                    colorClass = 'boost';
+                }
+                else if (newStreak === 2) { addPwr = 2; html += `<div class="power">⚡ +2 МОЩИ</div>`; }
+                else if (newStreak === 3) { addPwr = 3; html += `<div class="power">⚡ +3 МОЩИ</div>`; title="ЦИКЛ ВЫПОЛНЕН!"; }
+
+                const { data } = await db.from('players').update({
+                    last_login_day: currentDayUTC, login_streak: newStreak,
+                    power: (player.power || 0) + addPwr,
+                    booster_skip: (player.booster_skip || 0) + addSk,
+                    booster_speed: (player.booster_speed || 0) + addSp,
+                    booster_auto: (player.booster_auto || 0) + addAu
+                }).eq('id', player.id).select().single();
+
+                if (data) { player = data; refreshAll(); showRewardAnimation(title, html, colorClass); }
+            }
+        }
 
         // === ИНФРАСТРУКТУРА ===
         function renderGarland(curr, max) {
@@ -553,7 +651,6 @@
             if (data) {
                 player = data;
                 
-                // Проверка обнуления квестов (раз в 24ч)
                 const now = new Date().getTime(); const resetTime = new Date(player.daily_quests_reset || 0).getTime();
                 if (now - resetTime >= 24 * 3600000) {
                     const { data: updated } = await db.from('players').update({
@@ -588,6 +685,35 @@
 
             buildInfraUI();
 
+            // СТРИК ПАНЕЛЬ
+            const currentDayUTC = Math.floor(Date.now() / 86400000);
+            const lastDayUTC = player.last_login_day || 0;
+            const canClaimToday = currentDayUTC > lastDayUTC;
+            
+            let visualStreak = player.login_streak || 0;
+            if (canClaimToday && lastDayUTC !== 0 && currentDayUTC - lastDayUTC > 1) { visualStreak = 0; } // Сброс при пропуске
+
+            let streakHtml = '';
+            const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="power">2 Мощи</span>', '<span class="power">3 Мощи</span>'];
+            for(let i=1; i<=3; i++) {
+                let sClass = ''; let sText = '';
+                if (!canClaimToday) {
+                    if (i <= visualStreak) { sClass = 'claimed'; sText = '✓ Забрано'; }
+                } else {
+                    let nextDayToClaim = (visualStreak % 3) + 1;
+                    if (i < nextDayToClaim) { sClass = 'claimed'; sText = '✓ Забрано'; }
+                    else if (i === nextDayToClaim) { sClass = 'next'; sText = 'Награда доступна!'; }
+                }
+                
+                streakHtml += `
+                <div class="streak-day ${sClass}">
+                    <div style="font-weight: bold; margin-bottom: 5px; color: #fff;">День ${i}</div>
+                    <div style="margin-bottom: 5px; font-size: 14px; font-weight: bold;">${sRewards[i-1]}</div>
+                    <div>${sText}</div>
+                </div>`;
+            }
+            document.getElementById('streakPanelUI').innerHTML = streakHtml;
+
             // КВЕСТЫ
             document.getElementById('qFact').innerText = Math.min(player.quest_factory_collects || 0, 3);
             document.getElementById('qRisk').innerText = Math.min(player.quest_risky_crafts || 0, 1);
@@ -613,17 +739,14 @@
             } else { document.getElementById('hangarLockedUI').style.display = 'block'; document.getElementById('hangarUnlockedUI').style.display = 'none'; }
         }
 
-        // АЛГОРИТМ ЗАВОДА: ТЕПЕРЬ СЧИТАЕТ ПО ОДНОЙ ДЕТАЛИ
+        // АЛГОРИТМ ЗАВОДА
         function getEffectiveLoot(lastStr, speedStr, autoStr, msPerBatch, yieldPerBatch) {
             const now = new Date().getTime(); const last = new Date(lastStr).getTime();
             const msPerDet = msPerBatch / yieldPerBatch;
             const speedEnd = new Date(speedStr).getTime(); const autoEnd = new Date(autoStr).getTime();
             const isCurrSpeed = now < speedEnd; const isCurrAuto = now < autoEnd;
             
-            if (last >= now) {
-                // Предотвращение визуального бага 00:00
-                return { d: 0, rem: 0, stalled: false, msToNextReal: msPerDet / (isCurrSpeed ? 4 : 1), msToNextBatchReal: isCurrAuto ? 0 : msPerBatch / (isCurrSpeed ? 4 : 1) };
-            }
+            if (last >= now) { return { d: 0, rem: 0, stalled: false, msToNextReal: msPerDet / (isCurrSpeed ? 4 : 1), msToNextBatchReal: isCurrAuto ? 0 : msPerBatch / (isCurrSpeed ? 4 : 1) }; }
 
             let milestones = [last, speedEnd, autoEnd, now].filter(t => t >= last && t <= now).sort((a, b) => a - b);
             if (milestones[milestones.length-1] !== now) milestones.push(now);
@@ -635,24 +758,15 @@
                 const effDuration = isSpeed ? duration * 4 : duration;
 
                 if (isAuto) {
-                    currentMsBuffer += effDuration;
-                    let details = Math.floor(currentMsBuffer / msPerDet);
-                    totalDetails += details;
-                    currentMsBuffer -= details * msPerDet;
+                    currentMsBuffer += effDuration; let details = Math.floor(currentMsBuffer / msPerDet);
+                    totalDetails += details; currentMsBuffer -= details * msPerDet;
                 } else {
-                    if (totalDetails >= yieldPerBatch) {
-                        currentMsBuffer = 0; // Stalled
-                    } else {
-                        currentMsBuffer += effDuration;
-                        let details = Math.floor(currentMsBuffer / msPerDet);
+                    if (totalDetails >= yieldPerBatch) { currentMsBuffer = 0; } 
+                    else {
+                        currentMsBuffer += effDuration; let details = Math.floor(currentMsBuffer / msPerDet);
                         if (totalDetails + details >= yieldPerBatch) {
-                            details = yieldPerBatch - totalDetails;
-                            totalDetails = yieldPerBatch;
-                            currentMsBuffer = 0; // Hit limit
-                        } else {
-                            totalDetails += details;
-                            currentMsBuffer -= details * msPerDet;
-                        }
+                            details = yieldPerBatch - totalDetails; totalDetails = yieldPerBatch; currentMsBuffer = 0;
+                        } else { totalDetails += details; currentMsBuffer -= details * msPerDet; }
                     }
                 }
             }
@@ -661,13 +775,7 @@
             const detailsLeft = yieldPerBatch - (isCurrAuto ? (totalDetails % yieldPerBatch) : totalDetails);
             const msToNextBatchReal = isCurrAuto ? 0 : ((detailsLeft * msPerDet - currentMsBuffer) / (isCurrSpeed ? 4 : 1));
 
-            return { 
-                d: totalDetails, 
-                rem: currentMsBuffer, 
-                stalled: (!isCurrAuto && totalDetails >= yieldPerBatch),
-                msToNextReal: msToNextReal,
-                msToNextBatchReal: msToNextBatchReal
-            };
+            return { d: totalDetails, rem: currentMsBuffer, stalled: (!isCurrAuto && totalDetails >= yieldPerBatch), msToNextReal: msToNextReal, msToNextBatchReal: msToNextBatchReal };
         }
 
         function tickTimers() {
@@ -677,14 +785,12 @@
             const resetTime = new Date(player.daily_quests_reset || 0).getTime();
             if (now - resetTime >= 24 * 3600000) { refreshAll(); return; }
             
-            // ТАЙМЕР ИВЕНТА
             const timeToEventEnd = EVENT_END_DATE - now;
             if (timeToEventEnd <= 0) { gameEnded = true; triggerEndgame("ВРЕМЯ ВЫШЛО!"); return; }
             const d = Math.floor(timeToEventEnd / (1000*60*60*24)); const evtH = Math.floor((timeToEventEnd / (1000*60*60)) % 24);
             const evtM = Math.floor((timeToEventEnd / 1000/60) % 60); const evtS = Math.floor((timeToEventEnd / 1000) % 60);
             document.getElementById('globalEventTimer').innerText = `${d}д ${evtH.toString().padStart(2,'0')}ч ${evtM.toString().padStart(2,'0')}м ${evtS.toString().padStart(2,'0')}с`;
 
-            // БУСТЕРЫ
             const isSpeed = now < new Date(player.speed_boost_end).getTime(); const isAuto = now < new Date(player.auto_boost_end).getTime();
             const bInd = document.getElementById('boostIndicator');
             if (isSpeed || isAuto) {
@@ -694,31 +800,20 @@
                 bInd.innerHTML = txt.join('<br>');
             } else { bInd.style.display = 'none'; }
 
-            // ПОЛОМКА ЗАВОДА
             const brokenUntil = new Date(player.factory_broken_until || 0).getTime();
             const isBroken = now < brokenUntil;
-
             const stats = FACTORY_STATS[player.factory_level];
 
             if (isBroken) {
-                document.getElementById('factoryAccumulated').innerText = "0";
-                document.getElementById('factoryMax').innerText = "-";
-                document.getElementById('factoryProgress').style.width = `0%`;
-                document.getElementById('timerNextPart').innerText = "РЕМОНТ";
-                document.getElementById('timerNextPart').style.color = "#ff4444";
-                document.getElementById('timerNextBatch').innerText = formatTime(brokenUntil - now);
-                document.getElementById('timerNextBatch').style.color = "#ff4444";
-                document.getElementById('btnCollectFact').disabled = true;
-                document.getElementById('btnOverload').disabled = true;
+                document.getElementById('factoryAccumulated').innerText = "0"; document.getElementById('factoryMax').innerText = "-"; document.getElementById('factoryProgress').style.width = `0%`;
+                document.getElementById('timerNextPart').innerText = "РЕМОНТ"; document.getElementById('timerNextPart').style.color = "#ff4444";
+                document.getElementById('timerNextBatch').innerText = formatTime(brokenUntil - now); document.getElementById('timerNextBatch').style.color = "#ff4444";
+                document.getElementById('btnCollectFact').disabled = true; document.getElementById('btnOverload').disabled = true;
             } else {
-                document.getElementById('btnCollectFact').disabled = false;
-                document.getElementById('btnOverload').disabled = false;
-                
-                // ЗАВОД РАБОЧИЙ
+                document.getElementById('btnCollectFact').disabled = false; document.getElementById('btnOverload').disabled = false;
                 const loot = getEffectiveLoot(player.factory_last_collected, player.speed_boost_end, player.auto_boost_end, stats.ms, stats.y);
                 
-                document.getElementById('factoryAccumulated').innerText = loot.d;
-                document.getElementById('factoryMax').innerText = isAuto ? "∞" : stats.y;
+                document.getElementById('factoryAccumulated').innerText = loot.d; document.getElementById('factoryMax').innerText = isAuto ? "∞" : stats.y;
                 document.getElementById('factoryProgress').style.width = isAuto ? '100%' : `${(loot.d / stats.y) * 100}%`;
 
                 if (loot.stalled) {
@@ -726,24 +821,16 @@
                     document.getElementById('timerNextBatch').innerText = "ПРОСТАИВАЕТ"; document.getElementById('timerNextBatch').style.color = "#ff4444";
                 } else {
                     document.getElementById('timerNextPart').innerText = formatTime(loot.msToNextReal); document.getElementById('timerNextPart').style.color = "#fff";
-                    if (isAuto) {
-                        document.getElementById('timerNextBatch').innerText = "АВТОСБОР"; document.getElementById('timerNextBatch').style.color = "#00e676";
-                    } else {
-                        document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)";
-                    }
+                    if (isAuto) { document.getElementById('timerNextBatch').innerText = "АВТОСБОР"; document.getElementById('timerNextBatch').style.color = "#00e676"; } 
+                    else { document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)"; }
                 }
             }
 
-            // КЕЙС
             const elapsedDaily = now - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000;
             const timerDaily = document.getElementById('dailyCaseTimer');
-            if (elapsedDaily >= dailyCooldown) {
-                document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)";
-            } else {
-                document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e";
-            }
+            if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
+            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Охлаждение: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
 
-            // АНГАР
             if (player.hangar_unlocked) {
                 const mStatus = player.mission_status || 0; const mBtn = document.getElementById('btnMissionAction'); const mTimer = document.getElementById('missionTimer'); const mText = document.getElementById('missionStatusText');
                 if (mStatus === 0) {
@@ -776,35 +863,40 @@
             const isBoosted = new Date().getTime() < new Date(player.speed_boost_end).getTime();
             const realRemainder = isBoosted ? (loot.rem / 4) : loot.rem;
             const newLastCol = new Date(new Date().getTime() - realRemainder).toISOString();
+            
+            let extraR = 0, extraE = 0, extraHtml = '';
+            if (Math.random() < 0.05) {
+                if (Math.random() < 0.7) { extraR = 5; extraHtml = "<div class='rare'>🎁 НАЙДЕН ТАЙНИК: +5 Редких!</div>"; } 
+                else { extraE = 1; extraHtml = "<div class='epic'>🎁 НАЙДЕН ТАЙНИК: +1 ЭПИК!</div>"; }
+            }
 
             const { data } = await db.from('players').update({
-                common_parts: player.common_parts + loot.d, factory_last_collected: newLastCol,
+                common_parts: player.common_parts + loot.d, 
+                rare_parts: player.rare_parts + extraR,
+                epic_parts: player.epic_parts + extraE,
+                factory_last_collected: newLastCol,
                 quest_factory_collects: (player.quest_factory_collects || 0) + 1
             }).eq('id', player.id).select().single();
 
-            if (data) { player = data; showMsg('factoryMsg', `Собрано: ${loot.d} Обычных!`, 'var(--accent-gold)'); refreshAll(); }
+            if (data) { 
+                player = data; refreshAll(); 
+                if (extraHtml) showRewardAnimation('СЮРПРИЗ НА ЗАВОДЕ!', `<div class="common">Собрано: ${loot.d} Об.</div>` + extraHtml, 'accent-gold');
+                else showMsg('factoryMsg', `Собрано: ${loot.d} Обычных!`, 'var(--accent-gold)'); 
+            }
         }
 
-        // ПЕРЕГРУЗКА ЗАВОДА
         async function overloadFactory() {
             if(gameEnded) return;
             const now = new Date().getTime();
             if(now < new Date(player.factory_broken_until || 0).getTime()) return;
 
-            const r = Math.random();
-            if (r < 0.50) {
-                // Авария: 2 часа ремонта
+            if (Math.random() < 0.50) {
                 const brokenEnd = new Date(now + 2 * 3600000).toISOString();
-                const { data } = await db.from('players').update({
-                    factory_broken_until: brokenEnd,
-                    factory_last_collected: brokenEnd
-                }).eq('id', player.id).select().single();
+                const { data } = await db.from('players').update({ factory_broken_until: brokenEnd, factory_last_collected: brokenEnd }).eq('id', player.id).select().single();
                 if (data) { player = data; showMsg('factoryMsg', 'АВАРИЯ! Завод сломан на 2ч!', '#ff4444'); refreshAll(); }
             } else {
                 const stats = FACTORY_STATS[player.factory_level];
-                const { data } = await db.from('players').update({
-                    common_parts: player.common_parts + stats.y
-                }).eq('id', player.id).select().single();
+                const { data } = await db.from('players').update({ common_parts: player.common_parts + stats.y }).eq('id', player.id).select().single();
                 if (data) { player = data; showMsg('factoryMsg', `УСПЕХ! +${stats.y} Обычных!`, 'var(--accent-gold)'); refreshAll(); }
             }
         }
@@ -846,16 +938,16 @@
             else if (type === 'speed') {
                 if ((player.booster_speed || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров скорости!', '#ff4444'); return; }
                 const oldEnd = new Date(player.speed_boost_end || 0).getTime();
-                updates.booster_speed = player.booster_speed - 1; updates.speed_boost_end = new Date(Math.max(now, oldEnd) + (12 * 3600000)).toISOString();
+                updates.booster_speed = player.booster_speed - 1; updates.speed_boost_end = new Date(Math.max(now, oldEnd) + (6 * 3600000)).toISOString();
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 12ч!`, 'var(--booster)'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 6ч!`, 'var(--booster)'); refreshAll(); }
             }
             else if (type === 'auto') {
                 if ((player.booster_auto || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров автосбора!', '#ff4444'); return; }
                 const oldEnd = new Date(player.auto_boost_end || 0).getTime();
-                updates.booster_auto = player.booster_auto - 1; updates.auto_boost_end = new Date(Math.max(now, oldEnd) + (12 * 3600000)).toISOString();
+                updates.booster_auto = player.booster_auto - 1; updates.auto_boost_end = new Date(Math.max(now, oldEnd) + (6 * 3600000)).toISOString();
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Автосбор активирован на 12ч!`, '#00e676'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Автосбор активирован на 6ч!`, '#00e676'); refreshAll(); }
             }
         }
 
@@ -920,16 +1012,55 @@
             }
         }
 
-        // === КРАФТ И КЕЙСЫ ===
-        async function craftItem(type) {
+        // === МАССОВЫЙ КРАФТ / МОДАЛКА ===
+        function openCraftModal(title, costName, rewName, costAmt, rewAmt, costKey, rewKey) {
             if(gameEnded) return;
-            let cost = 5, cur = '', rew = '';
-            if(type === 'rare') { cur = 'common_parts'; rew = 'rare_parts'; } else if(type === 'epic') { cur = 'rare_parts'; rew = 'epic_parts'; }
-            if (player[cur] < cost) { showMsg('craftMsg', 'Недостаточно ресурсов!', '#ff4444'); return; }
+            craftSetup = { title, costName, rewName, costAmt, rewAmt, costKey, rewKey };
+            
+            document.getElementById('cmTitle').innerText = title;
+            document.getElementById('cmAvail').innerText = player[costKey];
+            document.getElementById('cmCostName').innerText = costName;
+            document.getElementById('cmRewName').innerText = rewName;
+            
+            document.getElementById('cmInput').value = 1;
+            updateCraftModalPreview();
+            
+            document.getElementById('craftModal').style.display = 'flex'; setTimeout(() => document.getElementById('craftBox').classList.add('show'), 10);
+        }
 
-            const updates = {}; updates[cur] = player[cur] - cost; updates[rew] = player[rew] + 1;
+        function closeCraftModal() { document.getElementById('craftBox').classList.remove('show'); setTimeout(() => document.getElementById('craftModal').style.display = 'none', 300); }
+
+        function setCraftMax() {
+            const max = Math.floor(player[craftSetup.costKey] / craftSetup.costAmt);
+            document.getElementById('cmInput').value = max > 0 ? max : 1;
+            updateCraftModalPreview();
+        }
+
+        function updateCraftModalPreview() {
+            let val = parseInt(document.getElementById('cmInput').value) || 0;
+            if (val < 1) val = 1;
+            document.getElementById('cmCostPreview').innerText = val * craftSetup.costAmt;
+            document.getElementById('cmRewPreview').innerText = val * craftSetup.rewAmt;
+        }
+
+        async function executeCraft() {
+            if(gameEnded) return;
+            let val = parseInt(document.getElementById('cmInput').value) || 0;
+            if (val < 1) return;
+            const costTotal = val * craftSetup.costAmt;
+            const rewTotal = val * craftSetup.rewAmt;
+
+            if (player[craftSetup.costKey] < costTotal) { showMsg('cmMsg', 'Недостаточно деталей для операции!', '#ff4444'); return; }
+
+            const updates = {};
+            updates[craftSetup.costKey] = player[craftSetup.costKey] - costTotal;
+            updates[craftSetup.rewKey] = player[craftSetup.rewKey] + rewTotal;
+
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-            if (data) { player = data; showMsg('craftMsg', 'Синтез успешен!', type==='rare'?'var(--rare)':'var(--epic)'); refreshAll(); }
+            if (data) { 
+                player = data; refreshAll(); closeCraftModal();
+                showRewardAnimation('ОПЕРАЦИЯ УСПЕШНА!', `<div class="rare">+${rewTotal} ${craftSetup.rewName}</div>`, 'rare');
+            }
         }
 
         async function riskyCraft(type) {
@@ -950,19 +1081,6 @@
 
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
-        }
-
-        async function disassembleItem(type) {
-            if(gameEnded) return;
-            let cost = 1, cur = '', rew = '', rewardAmount = 3;
-            if(type === 'rare') { cur = 'rare_parts'; rew = 'common_parts'; } 
-            else if(type === 'epic') { cur = 'epic_parts'; rew = 'rare_parts'; }
-            
-            if (player[cur] < cost) { showMsg('craftMsg', 'Недостаточно деталей для разбора!', '#ff4444'); return; }
-
-            const updates = {}; updates[cur] = player[cur] - cost; updates[rew] = player[rew] + rewardAmount;
-            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-            if (data) { player = data; showMsg('craftMsg', 'Разбор успешен!', type==='rare'?'var(--common)':'var(--rare)'); refreshAll(); }
         }
 
         function showRewardAnimation(title, itemsHtml, colorClass) {
@@ -995,7 +1113,7 @@
                 let html = `<div class="common">+${gotCommon} Обычных</div>`;
                 if(gotRare) html += `<div class="rare">+${gotRare} Редких</div>`; if(gotEpic) html += `<div class="epic">+${gotEpic} ЭПИЧЕСКИХ!</div>`;
                 if(gotSk) html += `<div class="boost">⚡ +1 Пропуск партии</div>`;
-                if(gotSp) html += `<div class="boost">⚡ +1 Ускорение x4</div>`;
+                if(gotSp) html += `<div class="boost">⚡ +1 Ускорение</div>`;
                 if(gotAu) html += `<div class="boost" style="color:#00e676;">🤖 +1 Автосбор</div>`;
 
                 showRewardAnimation(title, html, color);
@@ -1014,7 +1132,7 @@
 
             const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0;
             if(gotSk) html += `<div class="boost" style="margin-top:10px;">⚡ +1 Пропуск партии</div>`;
-            if(gotSp) html += `<div class="boost">⚡ +1 Ускорение x4</div>`;
+            if(gotSp) html += `<div class="boost">⚡ +1 Ускорение</div>`;
             if(gotAu) html += `<div class="boost" style="color:#00e676;">🤖 +1 Автосбор</div>`;
 
             const updates = {
@@ -1105,7 +1223,7 @@
                 document.getElementById('bodyBg').className = 'game-bg';
                 document.getElementById('loginScreen').style.display = 'none'; 
                 document.getElementById('gameInterface').style.display = 'block'; 
-                refreshAll(); 
+                refreshAll().then(checkDailyLogin);
             } 
         };
     </script>
