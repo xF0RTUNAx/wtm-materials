@@ -180,7 +180,7 @@
         
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-        .rules-text p { font-size: 13px; margin-bottom: 8px; color: #c9d1d9; line-height: 1.5; text-align: left;}
+        .rules-text div { font-size: 13px; color: #c9d1d9; line-height: 1.5; text-align: left; }
         .rules-text b { color: var(--accent-gold); }
         .rules-text ul { text-align: left; font-size: 13px; color: #c9d1d9; margin-top: 5px; padding-left: 20px;}
 
@@ -204,8 +204,8 @@
         .lb-prize { font-size: 12px; font-weight: bold; color: #00e676; margin-top: 2px;}
         #pvpLogsList { max-height: 400px; overflow-y: auto; padding-right: 5px; }
 
-        /* ENDGAME OVERLAY */
-        #endgameOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; backdrop-filter: blur(10px);}
+        /* ENDGAME OVERLAY ОБНОВЛЕНО */
+        #endgameOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; backdrop-filter: blur(10px);}
         .endgame-text { font-size: 40px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 20px rgba(255,193,7,0.5); text-transform: uppercase; text-align: center;}
 
         /* ШАПКА */
@@ -223,16 +223,15 @@
             .hangar-grid { grid-template-columns: 1fr; }
             
             .inventory { 
-                display: flex; 
-                flex-wrap: wrap; 
-                justify-content: center; 
+                display: grid; 
+                grid-template-columns: 1fr 1fr 1fr; 
                 gap: 8px; 
                 padding: 10px;
             }
-            .part { width: 30%; font-size: 11px; }
-            .part span { font-size: 18px; }
-            .part.power, .part.kits { width: 45%; border-left: none; }
-            .part.power { border-left: 1px solid #444; }
+            .part { width: 100%; font-size: 11px; }
+            .part span { font-size: 16px; margin-top: 5px;}
+            .part.kits { grid-column: 1 / 3; border-top: 1px solid #444; padding-top: 8px; border-left: none; }
+            .part.power { grid-column: 3 / 4; border-left: 1px solid #444; border-top: 1px solid #444; padding-top: 8px; }
 
             .streak-day { padding: 5px; font-size: 10px; }
             .streak-day div:nth-child(2) { font-size: 11px !important; }
@@ -288,7 +287,7 @@
 
     <div class="modal-overlay" id="pvpMapModal">
         <div class="modal-box" id="pvpMapBox" style="max-width: 600px;">
-            <h3 style="color: var(--accent-gold); margin-bottom: 5px;">Поле сражений</h3>
+            <h3 style="color: var(--accent-gold); margin-bottom: 5px;">Поле боя</h3>
             <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Атака доступна 1 раз в день.<br>Обновление атак через: <span id="timerPvpReset" style="color: #fff; font-family: monospace;">--:--</span></p>
             
             <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid var(--accent-gold); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
@@ -344,34 +343,34 @@
 
     <div class="modal-overlay" id="defenseSetupModal">
         <div class="modal-box rules-text" id="defenseSetupBox">
-            <h3 style="color: #00e676; text-align: center; margin-bottom: 15px;">🛡️ СИСТЕМА PVP ОТКРЫТА!</h3>
-            <p>У вас есть войска во всех трех эшелонах (Авангард, Поддержка, Спецотдел). Теперь вы участвуете в глобальном боевом противостоянии.</p>
+            <h3 style="color: #00e676; text-align: center; margin-bottom: 15px;">🛡️ СИСТЕМА СРАЖЕНИЙ!</h3>
+            <div style="margin-bottom: 10px;">У вас есть войска во всех трех эшелонах (Авангард, Поддержка, Спецотдел). Теперь вы участвуете в глобальном боевом противостоянии.</div>
             <ul>
                 <li><b>Защита:</b> Установлена автоматически. Вы можете менять гарнизон вручную через кнопку в Инфраструктуре. Вашу базу могут атаковать не более 2 раз в день.</li>
-                <li><b>Атака:</b> Вы можете 1 раз в день атаковать на Радаре.</li>
+                <li><b>Атака:</b> Вы можете 1 раз в день атаковать выбранную цель.</li>
                 <li><b>Живучесть (HP):</b> В боях войска получают урон (снижается их Мощь). Победа: -25% HP. Поражение: -75% HP.</li>
                 <li><b>Ремонт:</b> Покупайте ремкомплекты в магазине или добывайте в Ангаре, чтобы чинить войска.</li>
             </ul>
-            <p style="text-align: center; color: var(--accent-gold);">Ваш гарнизон защиты готов к бою!</p>
-            <button class="btn-gold" onclick="closeDefenseSetup()">ПРИНЯТО</button>
+            <div style="text-align: center; color: var(--accent-gold); margin-top: 10px; font-weight: bold;">Ваш гарнизон защиты готов к бою!</div>
+            <button class="btn-gold" onclick="closeDefenseSetup()" style="margin-top: 15px;">ПРИНЯТО</button>
         </div>
     </div>
 
-   <div class="modal-overlay" id="rulesModal">
+    <div class="modal-overlay" id="rulesModal">
         <div class="modal-box rules-text" id="rulesBox">
-            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px; font-size: 22px; text-transform: uppercase;">📜 Руководство по игре</h3>
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px; font-size: 22px; text-transform: uppercase;">📜 Инфо</h3>
             
-            <p><b>🏆 ГЛАВНАЯ ЦЕЛЬ И ПОБЕДА:</b><br>
-            Розыгрыш длится ровно <b>1 месяц</b>. Победители определяются исключительно по параметру <b>МОЩЬ (⚡)</b>, которая отображается в Таблице рейтинга. Мощь генерируется за покупку войск во вкладке "Военная Инфраструктура". Ивент может закончиться досрочно, если кто-то из игроков скупит все доступные улучшения и достигнет лимита Мощи.</p>
+            <div style="margin-bottom: 10px;"><b>🏆 ЦЕЛЬ И ПОБЕДА:</b><br>
+            Розыгрыш длится около <b>1 месяц</b>. Победители определяются по параметру <b>МОЩЬ (⚡)</b>, которая отображается в Таблице рейтинга. Мощь генерируется за покупку войск во вкладке "Военная Инфраструктура". Призы рассылаются на зарегистрированные WTM ID. <span style="color: #ff4444;">Использование твинков (мультоводство) и фейковых ID строго запрещено. Нарушители исключаются из финальных списков без выдачи призов.</span></div>
 
-            <p style="text-align: center; font-size: 14px; background: rgba(255,193,7,0.1); padding: 5px; border-radius: 5px; border: 1px solid var(--accent-gold);">
+            <div style="text-align: center; font-size: 14px; background: rgba(255,193,7,0.1); padding: 5px; border-radius: 5px; border: 1px solid var(--accent-gold); margin-bottom: 15px;">
             <b>🎁 ПРИЗОВОЙ ФОНД:</b><br>🥇 1 Место — 1000 Платины | 🥈 2 Место — 500 Платины | 🥉 3 Место — 500 Платины
-            </p>
+            </div>
 
             <hr style="border-color: #333; margin: 15px 0;">
 
-            <p><b>🏭 ЗАВОД И ЭКОНОМИКА:</b><br>
-            Завод — ваш главный источник "Обычных" деталей. Он имеет 10 уровней.</p>
+            <div style="margin-bottom: 10px;"><b>🏭 ЗАВОД И ЭКОНОМИКА:</b><br>
+            Завод — ваш главный источник "Обычных" деталей. Он имеет 10 уровней.</div>
             <ul>
                 <li><b>Цикл производства:</b> На любом уровне завод производит партию деталей ровно за <b>4 часа</b>. С ростом уровня увеличивается размер партии.</li>
                 <li><b>Простой:</b> Лимит склада — 1 партия! Если вы не соберете детали, завод остановится.</li>
@@ -379,14 +378,14 @@
                 <li><b>Перегрузка:</b> Рискованная кнопка. Дает 1 партию моментально, но с шансом <b>50%</b> завод сломается и встанет на ремонт на 2 часа.</li>
             </ul>
 
-            <p><b>⚡ БУСТЕРЫ И ЛОГИСТИКА:</b></p>
+            <div style="margin-bottom: 10px;"><b>⚡ БУСТЕРЫ И ЛОГИСТИКА:</b></div>
             <ul>
                 <li><b>Пропуск:</b> Мгновенно зачисляет на склад ресурсы за 1 партию.</li>
                 <li><b>Ускорение:</b> В 4 раза ускоряет работу Завода на следующие 6 часов (партия копится за 1 час).</li>
                 <li><b>Арендованные склады:</b> Завод перестает простаивать! Детали бесконечно копятся без лимитов в течение 6 часов. Идеально на ночь.</li>
             </ul>
 
-            <p><b>🛠️ ТЕРМИНАЛ СИНТЕЗА (КРАФТ И РАЗБОР):</b></p>
+            <div style="margin-bottom: 10px;"><b>🛠️ ТЕРМИНАЛ СИНТЕЗА (КРАФТ И РАЗБОР):</b></div>
             <ul>
                 <li><b>Надежный обмен:</b> 5 Обычных ➔ 1 Редкий | 5 Редких ➔ 1 Эпик.</li>
                 <li><b>Разбор:</b> 1 Эпик ➔ 3 Редких | 1 Редкий ➔ 3 Обычных.</li>
@@ -395,47 +394,47 @@
 
             <hr style="border-color: #333; margin: 15px 0;">
 
-            <p><b>⚔️ БОЕВАЯ СИСТЕМА (PvP И PvE):</b><br>
-            В игре есть 3 эшелона войск: <i>Авангард (Пехота/Танки), Поддержка (Арта/ПВО) и Спецотдел (Разведка/Лаба)</i>. Как только вы купите хотя бы по 1 отряду из каждого эшелона, вам откроется Радар PvP.</p>
+            <div style="margin-bottom: 10px;"><b>⚔️ БОЕВАЯ СИСТЕМА (PvP И PvE):</b><br>
+            В игре есть 3 эшелона войск: <i>Авангард (Пехота/Танки), Поддержка (Арта/ПВО) и Спецотдел (Разведка/Лаба)</i>. Как только вы купите хотя бы по 1 отряду из каждого эшелона, вам откроются сражения с другими игроками.</div>
             <ul>
-                <li><b>Лимиты:</b> В сутки вы можете провести 1 атаку. Вас могут атаковать <b>не более 2 раз в день</b> (после чего вешается непробиваемый щит).</li>
+                <li><b>Лимиты:</b> В сутки вы можете провести 1 атаку. Вас могут атаковать <b>не более 2 раз в день</b>.</li>
                 <li><b>Настройка обороны:</b> В меню "Инфраструктура" можно вручную выбрать, какие из ваших войск будут защищать базу.</li>
                 <li><b>Математика боя:</b> Шанс победы = (Ваша Мощь) / (Ваша Мощь + Мощь Врага).</li>
                 <li><b>Награда за PvP:</b> В случае успеха вы крадете эквивалент <b>300%</b> деталей от вместимости вашего текущего завода.</li>
                 <li><b>Тренировочный Бот:</b> Шанс победы всегда 50/50. Награда: 200% завода.</li>
             </ul>
 
-            <p><b>⚖️ БАЛАНС И ЗАЩИТА НОВИЧКОВ:</b></p>
+            <div style="margin-bottom: 10px;"><b>⚖️ БАЛАНС И ЗАЩИТА НОВИЧКОВ:</b></div>
             <ul>
                 <li><b>Бонус Ветеранов:</b> Если вы напали на сильного игрока и проиграли, при следующей атаке на него вам автоматически добавят <b>+15%</b> к шансу на победу.</li>
                 <li><b>Штраф за фарм:</b> Если топ-игрок постоянно атакует слабого, его награда урезается в 4 раза, а урон по войскам слабого снижается до 5%.</li>
             </ul>
 
-            <p><b>🔧 ЖИВУЧЕСТЬ ВОЙСК И РЕМОНТ:</b><br>
-            Каждый отряд имеет 100% Живучести (HP). Мощь отряда напрямую зависит от его HP (если HP упадет до 50%, отряд будет давать лишь половину Мощи в рейтинг).</p>
+            <div style="margin-bottom: 10px;"><b>🔧 ЖИВУЧЕСТЬ ВОЙСК И РЕМОНТ:</b><br>
+            Каждый отряд имеет 100% Живучести (HP). Мощь отряда напрямую зависит от его HP (если HP упадет до 50%, отряд будет давать лишь половину Мощи в рейтинг).</div>
             <ul>
                 <li><b>Потери:</b> При победе в атаке/защите отряды теряют <b>25% HP</b>. При поражении — теряют <b>75% HP</b>. (Урон Бота: 25% при победе, 50% при поражении).</li>
                 <li><b>Восстановление:</b> 1 Ремкомплект восстанавливает 25% HP. Одному отряду требуется <b>1 час</b> на ремонт, прежде чем его можно будет чинить снова. Отряды с 0% HP не могут участвовать в боях.</li>
-                <li><b>Где взять ремкомплекты:</b> Купить за 100 Обычных (макс. 3 в день), выбить в Ангаре, найти в Контейнерах или получить за Ежедневный вход (4 и 5 день).</li>
+                <li><b>Где взять ремкомплекты:</b> Купить за 100 Обычных (макс. 3 в день), выбить в Ангаре, найти в Контейнерах или получить за Ежедневный вход.</li>
             </ul>
 
             <hr style="border-color: #333; margin: 15px 0;">
 
-            <p><b>🎯 ЕЖЕДНЕВНЫЕ НАГРАДЫ:</b><br>
+            <div style="margin-bottom: 10px;"><b>🎯 ЕЖЕДНЕВНЫЕ НАГРАДЫ:</b><br>
             В игре действует 5-дневный цикл наград за вход:<br>
             <i>День 1: Бустер | День 2: +2 Мощи | День 3: +3 Мощи | День 4: 1 Ремк. | День 5: 3 Ремк.</i><br>
-            <b>Внимание:</b> При пропуске хотя бы одного дня стрик сбрасывается на 1-й день!</p>
+            <b>Внимание:</b> При пропуске хотя бы одного дня стрик сбрасывается на 1-й день!</div>
 
-            <p><b>📦 ПОСТАВКИ И АНГАР:</b><br>
-            Выполняйте миссии в Секретном Ангаре для добычи Ремкомплектов (до 3 шт. за вылет). Открывайте Ежедневный контейнер раз в 24 часа бесплатно, или рискуйте в Инженерном контейнере, чтобы сорвать джекпот на 9 ремкомплектов.</p>
+            <div style="margin-bottom: 10px;"><b>📦 ПОСТАВКИ И АНГАР:</b><br>
+            Выполняйте миссии в Секретном Ангаре для добычи Ремкомплектов (до 3 шт. за вылет). Открывайте Ежедневный контейнер раз в 24 часа бесплатно, или рискуйте в Инженерном контейнере, чтобы сорвать джекпот на 9 ремкомплектов.</div>
 
-            <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 25px;">🎧 Техническая поддержка</a>
-            <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">АТАКУЮ ТОЧКУ D!</button>
+            <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 25px;">🎧 Связь с командованием (Поддержка)</a>
+            <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">В БОЙ!</button>
         </div>
     </div>
 
     <div class="container" id="loginScreen">
-        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">РОЗЫГРЫШ</h2>
+        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">РОЗЫГРЫШ МИНИ-ИГРА</h2>
         <div class="auth-tabs">
             <div class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">ВХОД</div>
             <div class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">РЕГИСТРАЦИЯ</div>
@@ -463,14 +462,17 @@
     <div class="container" id="gameInterface">
         
         <div id="endgameOverlay">
-            <div style="position: absolute; top: 15px; left: 15px;">
-                <button class="btn-home" onclick="window.location.href='index.html'">🏠 На главную</button>
-            </div>
             <div class="endgame-text" id="endgameTitle">РОЗЫГРЫШ ЗАВЕРШЕН!</div>
-            <div style="font-size: 16px; color: #8b949e; margin-top: 10px; margin-bottom: 20px;">Время вышло! Результаты зафиксированы.</div>
-            <div style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 1px solid var(--accent-gold); width: 90%; max-width: 450px; text-align: left;">
-                <h3 style="text-align: center; color: var(--accent-gold); margin-bottom: 15px; margin-top: 0;">🏆 ТОП КОМАНДИРОВ</h3>
+            <div style="font-size: 16px; color: #8b949e; margin-top: 10px; margin-bottom: 20px;" id="endgameSubtitle">Время вышло! Результаты зафиксированы.</div>
+            
+            <div style="background: rgba(0,0,0,0.8); padding: 20px; border-radius: 10px; border: 1px solid var(--accent-gold); width: 90%; max-width: 450px; text-align: left; margin-bottom: 20px;">
+                <h3 style="text-align: center; color: var(--accent-gold); margin-bottom: 15px; margin-top: 0;">🏆 ПРЕТЕНДЕНТЫ НА ПРИЗЫ</h3>
                 <div id="endgameLeaderboardList"></div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                <button class="btn-home" onclick="window.location.href='index.html'" style="background: #333; color: white; width: 150px; padding: 12px; margin: 0;">🏠 На главную</button>
+                <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: inline-block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; font-weight: bold; width: 150px; font-size: 14px;">🎧 Поддержка</a>
             </div>
         </div>
 
@@ -481,10 +483,10 @@
         </div>
         
         <div style="background: rgba(255, 23, 68, 0.1); border: 1px solid var(--power); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
-            ⏳ Конец розыгрыша: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
+            ⏳ Конец операции: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
         </div>
 
-        <button class="btn-pvp" id="btnPvpRadar" onclick="openPvpMap()" style="display: none; width: 100%;">⚔️ ПОЛЕ БОЯ</button>
+        <button class="btn-pvp" id="btnPvpRadar" onclick="openPvpMap()" style="display: none; width: 100%;">⚔️ ПОЛЕ СРАЖЕНИЙ</button>
 
         <div class="panel full-width">
             <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">📅 Ежедневные Поставки</h3>
@@ -680,7 +682,7 @@
         const HANGAR_CFG = {
             1: { 1: {t: 20, c: null, cur: null, text: '20 часов'}, 2: {t: 10, c: 50, cur: 'common_parts', text: '10 часов'}, 3: {t: 5, c: 100, cur: 'common_parts', text: '5 часов'} },
             2: { 1: {ch: 0.25, c: null, cur: null, text: '25% Шанс'}, 2: {ch: 0.50, c: 10, cur: 'rare_parts', text: '50% Шанс'}, 3: {ch: 0.75, c: 20, cur: 'rare_parts', text: '75% Шанс'} },
-            3: { 1: {c: null, cur: null, text: '1 Ремкомплект'}, 2: {c: 2, cur: 'epic_parts', text: '2 Ремкомплекта'}, 3: {c: 3, cur: 'epic_parts', text: '3 Ремкомплекта'} }
+            3: { 1: {kits: 3, b: 0, c: null, cur: null, text: '3 Ремк.'}, 2: {kits: 3, b: 1, c: 2, cur: 'epic_parts', text: '3 Ремк. + 1 Бустер'}, 3: {kits: 3, b: 2, c: 3, cur: 'epic_parts', text: '3 Ремк. + 2 Бустера'} }
         };
 
         let player = null; let globalTimer = null; let gameEnded = false; let authMode = 'login';
@@ -1112,7 +1114,7 @@
 
             const elapsedDaily = now - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000; const timerDaily = document.getElementById('dailyCaseTimer');
             if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
-            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
+            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Охлаждение: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
 
             if (player.hangar_unlocked) {
                 const mStatus = player.mission_status || 0; const mBtn = document.getElementById('btnMissionAction'); const mTimer = document.getElementById('missionTimer'); const mText = document.getElementById('missionStatusText');
@@ -1467,18 +1469,38 @@
                 let addKits = 0; let title = '', html = '', color = '';
 
                 if (isSuccess) {
-                    addKits = HANGAR_CFG[3][player.h_pos3].c;
+                    const rLvl = player.h_pos3 || 1;
+                    addKits = HANGAR_CFG[3][rLvl].kits;
+                    const bCount = HANGAR_CFG[3][rLvl].b;
+
                     title = "УСПЕШНАЯ ЭКСПЕДИЦИЯ!"; color = "epic";
                     html = `<div class="kits">🔧 +${addKits} Ремкомплектов</div>`;
+
+                    let addSk = 0, addSp = 0, addAu = 0;
+                    for(let i=0; i<bCount; i++) {
+                        let r = Math.random();
+                        if(r < 0.33) { addSk++; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
+                        else if(r < 0.66) { addSp++; html += `<div class="boost">⚡ +1 Ускорение</div>`; }
+                        else { addAu++; html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`; }
+                    }
+
+                    const { data } = await db.from('players').update({
+                        mission_status: 0, 
+                        repair_kits: (player.repair_kits||0) + addKits,
+                        booster_skip: (player.booster_skip||0) + addSk,
+                        booster_speed: (player.booster_speed||0) + addSp,
+                        booster_auto: (player.booster_auto||0) + addAu,
+                        quest_hangar_missions: (player.quest_hangar_missions || 0) + 1
+                    }).eq('id', player.id).select().single();
+                    if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+
                 } else {
                     title = "ПРОВАЛ МИССИИ..."; color = "common"; html = `<div class="common">Техника вернулась поврежденной. Наград нет.</div>`;
+                    const { data } = await db.from('players').update({
+                        mission_status: 0, quest_hangar_missions: (player.quest_hangar_missions || 0) + 1
+                    }).eq('id', player.id).select().single();
+                    if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
                 }
-
-                const { data } = await db.from('players').update({
-                    mission_status: 0, repair_kits: (player.repair_kits||0) + addKits,
-                    quest_hangar_missions: (player.quest_hangar_missions || 0) + 1
-                }).eq('id', player.id).select().single();
-                if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
             }
         }
 
@@ -1510,10 +1532,10 @@
             const r = Math.random(); let reward = 0, title = '', html = '', color = ''; const updates = {};
             if (type === 'rare') {
                 updates.common_parts = player.common_parts - 25; reward = r < 0.65 ? 2 : (r < 0.90 ? 5 : 10); updates.rare_parts = player.rare_parts + reward;
-                color = "rare"; title = "Синтез редких"; html = `<div class="rare">+${reward} Редких</div>`;
+                color = "rare"; title = "Синтез чертежей"; html = `<div class="rare">+${reward} Редких</div>`;
             } else {
                 updates.rare_parts = player.rare_parts - 25; reward = r < 0.65 ? 1 : (r < 0.90 ? 5 : 10); updates.epic_parts = player.epic_parts + reward;
-                color = "epic"; title = "Синтез эпических"; html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
+                color = "epic"; title = "Синтез секретов"; html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
             }
             updates.quest_risky_crafts = (player.quest_risky_crafts || 0) + 1;
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
@@ -1605,16 +1627,20 @@
             if (error) { showMsg('promoMsg', "Ошибка связи!", '#ff4444'); } else if (data.status === 'error') { showMsg('promoMsg', data.msg, '#ff4444'); } else { showMsg('promoMsg', data.msg, 'var(--accent-green)'); refreshAll(); }
         }
 
-        // === ЛИДЕРБОРД И ПРОВЕРКА ПОБЕДЫ ===
-        function triggerEndgame(titleText) {
-            document.getElementById('endgameOverlay').style.display = 'flex'; document.getElementById('endgameTitle').innerText = titleText;
+        function triggerEndgame(titleText, subText) {
+            document.getElementById('endgameOverlay').style.display = 'flex'; 
+            document.getElementById('endgameTitle').innerText = titleText;
+            if (subText) document.getElementById('endgameSubtitle').innerText = subText;
             document.querySelectorAll('button').forEach(btn => { if(btn.id !== 'btnLogout' && !btn.classList.contains('btn-home')) btn.disabled = true; });
         }
 
         async function loadLeaderboard() {
             const { data } = await db.from('players').select('nickname, power').order('power', { ascending: false }).limit(50);
             if (data) {
-                if (data[0] && data[0].power >= MAX_POWER_POSSIBLE && !gameEnded) { gameEnded = true; triggerEndgame("БАЗА ОТСТРОЕНА!"); }
+                if (data[0] && data[0].power >= MAX_POWER_POSSIBLE && !gameEnded) { 
+                    gameEnded = true; 
+                    triggerEndgame("БАЗА ОТСТРОЕНА!", "Игрок достиг максимума мощи!"); 
+                }
                 const prizes = ['🥇 1000 Платины', '🥈 500 Платины', '🥉 500 Платины']; let lbHtml = '';
                 data.slice(0, 5).forEach((p, idx) => {
                     const prizeText = idx < 3 ? `<div class="lb-prize">${prizes[idx]}</div>` : '';
@@ -1636,4 +1662,3 @@
     </script>
 </body>
 </html>
-
