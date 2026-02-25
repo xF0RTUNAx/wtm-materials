@@ -118,8 +118,8 @@
         .power { color: var(--power); }
 
         /* ЕЖЕДНЕВНЫЙ ВХОД */
-        .streak-panel { display: flex; justify-content: space-between; text-align: center; gap: 5px; margin-top: 15px;}
-        .streak-day { color: #8b949e; padding: 10px; border-radius: 8px; flex: 1; background: rgba(0,0,0,0.4); border: 1px solid #333; font-size: 12px; transition: 0.3s;}
+        .streak-panel { display: flex; flex-wrap: wrap; justify-content: center; text-align: center; gap: 5px; margin-top: 15px;}
+        .streak-day { color: #8b949e; padding: 10px; border-radius: 8px; flex: 1 1 20%; min-width: 70px; background: rgba(0,0,0,0.4); border: 1px solid #333; font-size: 12px; transition: 0.3s;}
         .streak-day.claimed { border-color: var(--accent-green); background: rgba(0, 230, 118, 0.1); }
         .streak-day.next { color: #fff; border-color: var(--accent-gold); background: rgba(255, 193, 7, 0.15); box-shadow: 0 0 10px rgba(255,193,7,0.2);}
 
@@ -288,7 +288,7 @@
     <div class="modal-overlay" id="pvpMapModal">
         <div class="modal-box" id="pvpMapBox" style="max-width: 600px;">
             <h3 style="color: var(--accent-gold); margin-bottom: 5px;">Поле боя</h3>
-            <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Атака доступна 1 раз в день.<br>Обновление атак через: <span id="timerPvpReset" style="color: #fff; font-family: monospace;">--:--</span></p>
+            <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Атака доступна 1 раз в день на игрока или 1 на бота.<br>Обновление атак через: <span id="timerPvpReset" style="color: #fff; font-family: monospace;">--:--</span></p>
             
             <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid var(--accent-gold); border-radius: 8px; padding: 15px; margin-bottom: 15px;">
                 <div style="font-weight: bold; color: var(--accent-gold); margin-bottom: 5px;">🤖 Тренировочный Бот (PvE)</div>
@@ -378,7 +378,7 @@
                 <li><b>Перегрузка:</b> Рискованная кнопка. Дает 1 партию моментально, но с шансом <b>50%</b> завод сломается и встанет на ремонт на 2 часа.</li>
             </ul>
 
-            <div style="margin-bottom: 10px;"><b>⚡ БУСТЕРЫ И ЛОГИСТИКА:</b></div>
+            <div style="margin-bottom: 10px;"><b>⚡ БУСТЕРЫ:</b></div>
             <ul>
                 <li><b>Пропуск:</b> Мгновенно зачисляет на склад ресурсы за 1 партию.</li>
                 <li><b>Ускорение:</b> В 4 раза ускоряет работу Завода на следующие 6 часов (партия копится за 1 час).</li>
@@ -421,20 +421,20 @@
             <hr style="border-color: #333; margin: 15px 0;">
 
             <div style="margin-bottom: 10px;"><b>🎯 ЕЖЕДНЕВНЫЕ НАГРАДЫ:</b><br>
-            В игре действует 5-дневный цикл наград за вход:<br>
-            <i>День 1: Бустер | День 2: +2 Мощи | День 3: +3 Мощи | День 4: 1 Ремк. | День 5: 3 Ремк.</i><br>
+            В игре действует 7-дневный цикл наград за вход:<br>
+            <i>День 1: Бустер | День 2: +2 Мощи | День 3: +3 Мощи | День 4: 3 Ремк. | День 5: 1000 Об. | День 6: 2 Случ. Бустера | День 7: Все виды бустеров</i><br>
             <b>Внимание:</b> При пропуске хотя бы одного дня стрик сбрасывается на 1-й день!</div>
 
             <div style="margin-bottom: 10px;"><b>📦 ПОСТАВКИ И АНГАР:</b><br>
             Выполняйте миссии в Секретном Ангаре для добычи Ремкомплектов (до 3 шт. за вылет). Открывайте Ежедневный контейнер раз в 24 часа бесплатно, или рискуйте в Инженерном контейнере, чтобы сорвать джекпот на 9 ремкомплектов.</div>
 
-            <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 25px;">🎧 ТЕХНИЧЕСКАЯ ПОДДЕРЖКА</a>
+            <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 25px;">🎧 Тех. поддержка</a>
             <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">АТАКУЮ ТОЧКУ D!</button>
         </div>
     </div>
 
     <div class="container" id="loginScreen">
-        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">РОЗЫГРЫШ МИНИ-ИГРА</h2>
+        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">Розыгрыш мини-игра</h2>
         <div class="auth-tabs">
             <div class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">ВХОД</div>
             <div class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">РЕГИСТРАЦИЯ</div>
@@ -472,7 +472,7 @@
             
             <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
                 <button class="btn-home" onclick="window.location.href='index.html'" style="background: #333; color: white; width: 150px; padding: 12px; margin: 0;">🏠 На главную</button>
-                <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: inline-block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; font-weight: bold; width: 150px; font-size: 14px;">🎧 Поддержка</a>
+                <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: inline-block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; font-weight: bold; width: 150px; font-size: 14px;">🎧 Тех. поддержка</a>
             </div>
         </div>
 
@@ -483,7 +483,7 @@
         </div>
         
         <div style="background: rgba(255, 23, 68, 0.1); border: 1px solid var(--power); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
-            ⏳ Конец операции: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
+            ⏳ Конец розыгрыша: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
         </div>
 
         <button class="btn-pvp" id="btnPvpRadar" onclick="openPvpMap()" style="display: none; width: 100%;">⚔️ ПОЛЕ СРАЖЕНИЙ</button>
@@ -537,7 +537,7 @@
             </div>
 
             <div class="panel">
-                <h3 style="color: var(--booster);">⚡ Бустеры и Логистика</h3>
+                <h3 style="color: var(--booster);">⚡ Бустеры</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Поставках.</p>
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 6ч (<span id="countSpeed">0</span>)</button>
@@ -581,7 +581,7 @@
                 <h3 style="color: var(--rare);">📦 Поставки</h3>
                 <span style="font-family: monospace; font-size: 14px; display: block; margin-bottom: 5px;" id="dailyCaseTimer">Вычисление...</span>
                 <button id="btnDailyCase" class="btn-case" onclick="openDailyCase()">Ежедневный контейнер</button>
-                <div class="drop-chances">Шансы: 40-70 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 1% Ремкомплект.</div>
+                <div class="drop-chances">Шансы: 100-150 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 1% Ремкомплект.</div>
                 <hr style="border-color: #444; margin: 15px 0;">
                 <button class="btn-paid" onclick="openPaidCase()">Особый контейнер (25 Обычных)</button>
                 <div class="drop-chances">30% минус, 50% окуп, 15% плюс, 5% Джекпот. Шанс 5% на Бустер, 1% Ремкомплект.</div>
@@ -616,7 +616,7 @@
 
             <div class="panel">
                 <h3 style="color: #fff;">🔑 Терминал кодов</h3>
-                <input type="text" id="promoInput" placeholder="Введите код..." style="margin-bottom: 10px;">
+                <input type="text" id="promoInput" placeholder="Введите промокод..." style="margin-bottom: 10px;">
                 <button class="btn-gold" onclick="activatePromo()">Активировать</button>
                 <div id="promoMsg" class="msg"></div>
             </div>
@@ -627,12 +627,12 @@
                 🏆 Таблица рейтинга
                 <button onclick="loadLeaderboard()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
             </h3>
-            <div id="leaderboardList"><div style="text-align: center; color: #8b949e; padding: 20px;">Связь со спутником...</div></div>
+            <div id="leaderboardList"><div style="text-align: center; color: #8b949e; padding: 20px;">Спутник ищет цели...</div></div>
         </div>
         
         <div class="panel leaderboard" style="background: rgba(0,0,0,0.8); margin-top: 15px;">
             <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                ⚔️ Боевые сводки (Лог)
+                ⚔️ Боевые сводки 
                 <button onclick="loadPvpLogs()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
             </h3>
             <div id="pvpLogsList">
@@ -681,7 +681,7 @@
 
         const HANGAR_CFG = {
             1: { 1: {t: 20, c: null, cur: null, text: '20 часов'}, 2: {t: 10, c: 50, cur: 'common_parts', text: '10 часов'}, 3: {t: 5, c: 100, cur: 'common_parts', text: '5 часов'} },
-            2: { 1: {ch: 0.25, c: null, cur: null, text: '25% Шанс'}, 2: {ch: 0.50, c: 10, cur: 'rare_parts', text: '50% Шанс'}, 3: {ch: 0.75, c: 20, cur: 'rare_parts', text: '75% Шанс'} },
+            2: { 1: {ch: 0.50, c: null, cur: null, text: '50% Шанс'}, 2: {ch: 0.75, c: 10, cur: 'rare_parts', text: '75% Шанс'}, 3: {ch: 0.90, c: 20, cur: 'rare_parts', text: '90% Шанс'} },
             3: { 1: {kits: 3, b: 0, c: null, cur: null, text: '3 Ремк.'}, 2: {kits: 3, b: 1, c: 2, cur: 'epic_parts', text: '3 Ремк. + 1 Бустер'}, 3: {kits: 3, b: 2, c: 3, cur: 'epic_parts', text: '3 Ремк. + 2 Бустера'} }
         };
 
@@ -769,10 +769,10 @@
             if (currentDayUTC > lastDayUTC) {
                 let newStreak = player.login_streak || 0;
                 if (currentDayUTC - lastDayUTC === 1) { newStreak++; } else { newStreak = 1; }
-                if (newStreak > 5) newStreak = 1;
+                if (newStreak > 7) newStreak = 1;
 
                 let addSk = 0, addSp = 0, addAu = 0, addPwr = 0, addKits = 0;
-                let title = "ЕЖЕДНЕВНЫЙ ВХОД", html = `День ${newStreak}/5<br>`, colorClass = 'power';
+                let title = "ЕЖЕДНЕВНЫЙ ВХОД", html = `День ${newStreak}/7<br>`, colorClass = 'power';
 
                 let updates = { last_login_day: currentDayUTC, login_streak: newStreak };
 
@@ -785,8 +785,28 @@
                 }
                 else if (newStreak === 2) { html += `<div class="power">⚡ +2 МОЩИ</div>`; player.power = (player.power || 0) + 2; updates.power = player.power; }
                 else if (newStreak === 3) { html += `<div class="power">⚡ +3 МОЩИ</div>`; player.power = (player.power || 0) + 3; updates.power = player.power; }
-                else if (newStreak === 4) { html += `<div class="kits">🔧 +1 Ремкомплект</div>`; updates.repair_kits = (player.repair_kits||0) + 1; colorClass = 'kits'; }
-                else if (newStreak === 5) { html += `<div class="kits">🔧 +3 Ремкомплекта</div>`; updates.repair_kits = (player.repair_kits||0) + 3; colorClass = 'kits'; title="ЦИКЛ ВЫПОЛНЕН!";}
+                else if (newStreak === 4) { html += `<div class="kits">🔧 +3 Ремкомплекта</div>`; updates.repair_kits = (player.repair_kits||0) + 3; colorClass = 'kits'; }
+                else if (newStreak === 5) { html += `<div class="common">+1000 Обычных</div>`; updates.common_parts = player.common_parts + 1000; colorClass = 'common'; }
+                else if (newStreak === 6) { 
+                    for(let i=0; i<2; i++) {
+                        let r = Math.random();
+                        if(r < 0.33) { addSk++; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
+                        else if(r < 0.66) { addSp++; html += `<div class="boost">⚡ +1 Ускорение</div>`; }
+                        else { addAu++; html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`; }
+                    }
+                    updates.booster_skip = (player.booster_skip||0) + addSk;
+                    updates.booster_speed = (player.booster_speed||0) + addSp;
+                    updates.booster_auto = (player.booster_auto||0) + addAu;
+                    colorClass = 'boost';
+                }
+                else if (newStreak === 7) { 
+                    html += `<div class="boost">⚡ +1 Пропуск</div><div class="boost">⚡ +1 Ускорение</div><div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`; 
+                    updates.booster_skip = (player.booster_skip||0) + 1;
+                    updates.booster_speed = (player.booster_speed||0) + 1;
+                    updates.booster_auto = (player.booster_auto||0) + 1;
+                    colorClass = 'boost'; 
+                    title="ЦИКЛ ВЫПОЛНЕН!";
+                }
 
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
                 if (data) { player = data; refreshAll(); showRewardAnimation(title, html, colorClass); }
@@ -985,12 +1005,12 @@
             const currentDayUTC = Math.floor(Date.now() / 86400000); const lastDayUTC = player.last_login_day || 0; const canClaimToday = currentDayUTC > lastDayUTC;
             let visualStreak = player.login_streak || 0;
             if (canClaimToday && lastDayUTC !== 0 && currentDayUTC - lastDayUTC > 1) { visualStreak = 0; } 
-            let streakHtml = ''; const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="power">2 Мощи</span>', '<span class="power">3 Мощи</span>', '<span class="kits">1 Ремк.</span>', '<span class="kits">3 Ремк.</span>'];
-            for(let i=1; i<=5; i++) {
+            let streakHtml = ''; const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="power">2 Мощи</span>', '<span class="power">3 Мощи</span>', '<span class="kits">3 Ремк.</span>', '<span class="common">1000 Об.</span>', '<span class="boost">2 Бустера</span>', '<span class="boost">Все Буст.</span>'];
+            for(let i=1; i<=7; i++) {
                 let sClass = ''; let sText = '';
                 if (!canClaimToday) { if (i <= visualStreak) { sClass = 'claimed'; sText = '✓ Забрано'; } } 
                 else {
-                    let nextDayToClaim = (visualStreak % 5) + 1;
+                    let nextDayToClaim = (visualStreak % 7) + 1;
                     if (i < nextDayToClaim) { sClass = 'claimed'; sText = '✓ Забрано'; } else if (i === nextDayToClaim) { sClass = 'next'; sText = 'Доступно!'; }
                 }
                 streakHtml += `<div class="streak-day ${sClass}"><div style="font-weight: bold; margin-bottom: 5px; color: #fff;">День ${i}</div><div style="margin-bottom: 5px; font-size: 14px; font-weight: bold;">${sRewards[i-1]}</div><div>${sText}</div></div>`;
@@ -1114,7 +1134,7 @@
 
             const elapsedDaily = now - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000; const timerDaily = document.getElementById('dailyCaseTimer');
             if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
-            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Охлаждение: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
+            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
 
             if (player.hangar_unlocked) {
                 const mStatus = player.mission_status || 0; const mBtn = document.getElementById('btnMissionAction'); const mTimer = document.getElementById('missionTimer'); const mText = document.getElementById('missionStatusText');
@@ -1367,7 +1387,7 @@
 
             if (data) { 
                 player = data; refreshAll(); 
-                if (extraHtml) showRewardAnimation('СЮРПРИЗ НА ЗАВОДЕ!', `<div class="common">Собрано: ${loot.d} Об.</div>` + extraHtml, 'accent-gold');
+                if (extraHtml) showRewardAnimation('ДОП. УСПЕХ!', `<div class="common">Собрано: ${loot.d} Об.</div>` + extraHtml, 'accent-gold');
                 else showMsg('factoryMsg', `Собрано: ${loot.d} Обычных!`, 'var(--accent-gold)'); 
             }
         }
@@ -1532,10 +1552,10 @@
             const r = Math.random(); let reward = 0, title = '', html = '', color = ''; const updates = {};
             if (type === 'rare') {
                 updates.common_parts = player.common_parts - 25; reward = r < 0.65 ? 2 : (r < 0.90 ? 5 : 10); updates.rare_parts = player.rare_parts + reward;
-                color = "rare"; title = "Синтез чертежей"; html = `<div class="rare">+${reward} Редких</div>`;
+                color = "rare"; title = "Синтез редких"; html = `<div class="rare">+${reward} Редких</div>`;
             } else {
                 updates.rare_parts = player.rare_parts - 25; reward = r < 0.65 ? 1 : (r < 0.90 ? 5 : 10); updates.epic_parts = player.epic_parts + reward;
-                color = "epic"; title = "Синтез секретов"; html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
+                color = "epic"; title = "Синтез эпических"; html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
             }
             updates.quest_risky_crafts = (player.quest_risky_crafts || 0) + 1;
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
@@ -1556,7 +1576,7 @@
 
         async function openDailyCase() {
             if(gameEnded) return;
-            const gotCommon = (Math.floor(Math.random() * 7) * 5) + 40; const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; const gotEpic = Math.random() < 0.05 ? 1 : 0; 
+            const gotCommon = Math.floor(Math.random() * 51) + 100; const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; const gotEpic = Math.random() < 0.05 ? 1 : 0; 
             const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.01 ? 1 : 0;
 
             const updates = { common_parts: player.common_parts + gotCommon, rare_parts: player.rare_parts + gotRare, epic_parts: player.epic_parts + gotEpic, booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, repair_kits: (player.repair_kits||0) + gotKit, daily_case_last_opened: new Date().toISOString() };
@@ -1662,5 +1682,3 @@
     </script>
 </body>
 </html>
-
-
