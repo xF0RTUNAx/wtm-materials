@@ -1130,7 +1130,7 @@
                     document.getElementById('timerNextBatch').innerText = "ПРОСТАИВАЕТ"; document.getElementById('timerNextBatch').style.color = "#ff4444";
                 } else {
                     document.getElementById('timerNextPart').innerText = formatTime(loot.msToNextReal); document.getElementById('timerNextPart').style.color = "#fff";
-                    if (isAuto) { document.getElementById('timerNextBatch').innerText = "АВТОСБОР"; document.getElementById('timerNextBatch').style.color = "#00e676"; } 
+                    if (isAuto) { document.getElementById('timerNextBatch').innerText = "ВРЕМЕННЫЕ ДОП. СКЛАДЫ"; document.getElementById('timerNextBatch').style.color = "#00e676"; } 
                     else { document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)"; }
                 }
             }
@@ -1723,4 +1723,5 @@
     </script>
 </body>
 </html>
+
 
