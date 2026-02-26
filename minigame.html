@@ -204,7 +204,7 @@
         .lb-prize { font-size: 12px; font-weight: bold; color: #00e676; margin-top: 2px;}
         #pvpLogsList { max-height: 400px; overflow-y: auto; padding-right: 5px; }
 
-        /* ENDGAME OVERLAY ОБНОВЛЕНО */
+        /* ENDGAME OVERLAY */
         #endgameOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 50; display: none; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; backdrop-filter: blur(10px);}
         .endgame-text { font-size: 40px; font-weight: 900; color: var(--accent-gold); text-shadow: 0 0 20px rgba(255,193,7,0.5); text-transform: uppercase; text-align: center;}
 
@@ -389,7 +389,7 @@
             <ul>
                 <li><b>Надежный обмен:</b> 5 Обычных ➔ 1 Редкий | 5 Редких ➔ 1 Эпик.</li>
                 <li><b>Разбор:</b> 1 Эпик ➔ 3 Редких | 1 Редкий ➔ 3 Обычных.</li>
-                <li><b>Риск:</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
+                <li><b>Риск (Казино):</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
                 <li><b>Обмен Ремкомплектов:</b> 1 Ремкомплект ➔ 10 Об. (33%) / 3 Ред. (33%) / 1 Эпик (33%) / Случ. Бустер (1%).</li>
             </ul>
 
@@ -427,7 +427,7 @@
             <b>Внимание:</b> При пропуске хотя бы одного дня стрик сбрасывается на 1-й день!</div>
 
             <div style="margin-bottom: 10px;"><b>📦 ПОСТАВКИ И АНГАР:</b><br>
-            Выполняйте миссии в Секретном Ангаре для добычи Ремкомплектов (до 3 шт. за вылет). Открывайте Ежедневный контейнер раз в 24 часа бесплатно, или рискуйте в Инженерном контейнере, чтобы сорвать джекпот на 9 ремкомплектов.</div>
+            Выполняйте миссии в Секретном Ангаре для добычи дополнительных ресурсов. Открывайте Ежедневный контейнер раз в 24 часа бесплатно, или рискуйте в Инженерном контейнере, чтобы сорвать джекпот на 9 ремкомплектов.</div>
 
             <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 25px;">🎧 ТЕХНИЧЕСКАЯ ПОДДЕРЖКА</a>
             <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">АТАКУЮ ТОЧКУ D!</button>
@@ -484,7 +484,7 @@
         </div>
         
         <div style="background: rgba(255, 23, 68, 0.1); border: 1px solid var(--power); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
-            ⏳ Конец розыгрыша: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
+            ⏳ Конец операции: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
         </div>
 
         <button class="btn-pvp" id="btnPvpRadar" onclick="openPvpMap()" style="display: none; width: 100%;">⚔️ ПОЛЕ СРАЖЕНИЙ</button>
@@ -538,7 +538,7 @@
             </div>
 
             <div class="panel">
-                <h3 style="color: var(--booster);">⚡ Бустеры</h3>
+                <h3 style="color: var(--booster);">⚡ Бустеры и Логистика</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Поставках.</p>
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 6ч (<span id="countSpeed">0</span>)</button>
@@ -619,7 +619,7 @@
 
             <div class="panel">
                 <h3 style="color: #fff;">🔑 Терминал кодов</h3>
-                <input type="text" id="promoInput" placeholder="Введите промокод..." style="margin-bottom: 10px;">
+                <input type="text" id="promoInput" placeholder="Введите код..." style="margin-bottom: 10px;">
                 <button class="btn-gold" onclick="activatePromo()">Активировать</button>
                 <div id="promoMsg" class="msg"></div>
             </div>
@@ -635,7 +635,7 @@
         
         <div class="panel leaderboard" style="background: rgba(0,0,0,0.8); margin-top: 15px;">
             <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                ⚔️ Боевые сводки 
+                ⚔️ Боевые сводки (Лог)
                 <button onclick="loadPvpLogs()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
             </h3>
             <div id="pvpLogsList">
@@ -657,7 +657,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWZhbnJyYnZyeml4eGxuYnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTcwODMsImV4cCI6MjA4NzIzMzA4M30.8j42D5U-iOLeEtSgiFWJ3pDTyN6e6JjiQKvn0MDEwJY'; 
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const EVENT_END_DATE = new Date('2026-03-25T00:00:00Z').getTime(); // Увеличен на 1 месяц
+        const EVENT_END_DATE = new Date('2026-03-25T00:00:00Z').getTime(); 
         const MAX_POWER_POSSIBLE = 2090;
 
         const FACTORY_STATS = {
@@ -928,7 +928,7 @@
                 }
 
                 let truePower = calcTruePower(player);
-                if (Math.abs(truePower - (player.power||0)) > 5) { updatesNeeded.power = truePower; }
+                if (truePower !== (player.power||0)) { updatesNeeded.power = truePower; }
 
                 if (Object.keys(updatesNeeded).length > 0) {
                     const { data: updated } = await db.from('players').update(updatesNeeded).eq('id', player.id).select().single();
@@ -1010,7 +1010,7 @@
             const btnUpg = document.getElementById('btnUpgrade');
             if (player.factory_level < 10) { 
                 const ns = FACTORY_STATS[player.factory_level + 1]; let cStr = `${ns.c} Об.`; if(ns.r) cStr+=` + ${ns.r} Ред.`; if(ns.e) cStr+=` + ${ns.e} Эп.`;
-                btnUpg.innerText = `Апгрейд (${cStr})`; btnUpg.style.display = 'block'; 
+                btnUpg.innerText = `Улучшить (${cStr})`; btnUpg.style.display = 'block'; 
             } else { btnUpg.style.display = 'none'; }
 
             buildInfraUI();
@@ -1222,7 +1222,7 @@
                     if (isProtected) {
                         btnHtml = `<button disabled style="background:#555; width:auto; font-size:11px;">Под щитом</button>`;
                     } else if (player.pvp_attack_used) {
-                        btnHtml = `<button disabled style="background:#555; width:auto; font-size:11px;">Перезарядка</button>`;
+                        btnHtml = `<button disabled style="background:#555; width:auto; font-size:11px;">Кулдаун</button>`;
                     } else {
                         btnHtml = `<button class="btn-risk" style="width:auto; font-size:11px; margin:0;" onclick="openAttackSetup('${p.id}', '${p.nickname}', ${p.power})">Атаковать</button>`;
                     }
@@ -1485,7 +1485,7 @@
             if(gameEnded) return;
             const lvl = player['h_pos'+pos]; if (lvl >= 3) return;
             const cfg = HANGAR_CFG[pos][lvl+1];
-            if (player[cfg.cur] < cfg.c) { showMsg('hangarUnlockMsg', `Нужно ресурсы для апгрейда!`, '#ff4444'); return; }
+            if (player[cfg.cur] < cfg.c) { showMsg('hangarUnlockMsg', `Нужно ресурсы для улучшения!`, '#ff4444'); return; }
 
             const updates = {}; updates[cfg.cur] = player[cfg.cur] - cfg.c; updates['h_pos'+pos] = lvl + 1;
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
