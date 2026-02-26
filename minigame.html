@@ -389,7 +389,7 @@
             <ul>
                 <li><b>Надежный обмен:</b> 5 Обычных ➔ 1 Редкий | 5 Редких ➔ 1 Эпик.</li>
                 <li><b>Разбор:</b> 1 Эпик ➔ 3 Редких | 1 Редкий ➔ 3 Обычных.</li>
-                <li><b>Риск (Казино):</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
+                <li><b>Риск:</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
                 <li><b>Обмен Ремкомплектов:</b> 1 Ремкомплект ➔ 10 Об. (33%) / 3 Ред. (33%) / 1 Эпик (33%) / Случ. Бустер (1%).</li>
             </ul>
 
@@ -427,7 +427,7 @@
             <b>Внимание:</b> При пропуске хотя бы одного дня стрик сбрасывается на 1-й день!</div>
 
             <div style="margin-bottom: 10px;"><b>📦 ПОСТАВКИ И АНГАР:</b><br>
-            Выполняйте миссии в Секретном Ангаре для добычи дополнительных наград. Открывайте Ежедневный контейнер раз в 24 часа бесплатно, или рискуйте в Инженерном контейнере, чтобы сорвать джекпот на 9 ремкомплектов.</div>
+            Выполняйте миссии в Секретном Ангаре для добычи Ремкомплектов (до 3 шт. за вылет). Открывайте Ежедневный контейнер раз в 24 часа бесплатно, или рискуйте в Инженерном контейнере, чтобы сорвать джекпот на 9 ремкомплектов.</div>
 
             <a href="https://t.me/fortunawtmhelp" target="_blank" style="display: block; background: #0088cc; color: white; padding: 12px; text-decoration: none; border-radius: 6px; text-align: center; font-weight: bold; margin-top: 25px;">🎧 ТЕХНИЧЕСКАЯ ПОДДЕРЖКА</a>
             <button class="btn-gold" onclick="closeRules()" style="margin-top: 10px;">АТАКУЮ ТОЧКУ D!</button>
@@ -484,7 +484,7 @@
         </div>
         
         <div style="background: rgba(255, 23, 68, 0.1); border: 1px solid var(--power); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
-            ⏳ Конец операции: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
+            ⏳ Конец розыгрыша: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
         </div>
 
         <button class="btn-pvp" id="btnPvpRadar" onclick="openPvpMap()" style="display: none; width: 100%;">⚔️ ПОЛЕ СРАЖЕНИЙ</button>
@@ -538,7 +538,7 @@
             </div>
 
             <div class="panel">
-                <h3 style="color: var(--booster);">⚡ Бустеры и Логистика</h3>
+                <h3 style="color: var(--booster);">⚡ Бустеры</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Поставках.</p>
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 6ч (<span id="countSpeed">0</span>)</button>
@@ -630,7 +630,7 @@
                 🏆 Таблица рейтинга
                 <button onclick="loadLeaderboard()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
             </h3>
-            <div id="leaderboardList"><div style="text-align: center; color: #8b949e; padding: 20px;">Связь со спутником...</div></div>
+            <div id="leaderboardList"><div style="text-align: center; color: #8b949e; padding: 20px;">Спутник ищет цели...</div></div>
         </div>
         
         <div class="panel leaderboard" style="background: rgba(0,0,0,0.8); margin-top: 15px;">
@@ -755,7 +755,7 @@
 
         // --- РАСЧЕТ МОЩИ ---
         function calcTruePower(pData) {
-            let total = 0;
+            let total = pData.bonus_power || 0;
             for (let key in INFRA_CFG) {
                 const lvl = pData[INFRA_CFG[key].id] || 0;
                 const hp = pData[INFRA_CFG[key].db_hp] ?? 100;
@@ -786,8 +786,22 @@
                     else { addAu = 1; html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`; updates.booster_auto = (player.booster_auto||0)+1;}
                     colorClass = 'boost';
                 }
-                else if (newStreak === 2) { html += `<div class="power">⚡ +10 МОЩИ</div>`; player.power = (player.power || 0) + 10; updates.power = player.power; }
-                else if (newStreak === 3) { html += `<div class="power">⚡ +15 МОЩИ</div>`; player.power = (player.power || 0) + 15; updates.power = player.power; }
+                else if (newStreak === 2) { 
+                    html += `<div class="power">⚡ +10 МОЩИ</div>`; 
+                    updates.bonus_power = (player.bonus_power || 0) + 10; 
+                    player.bonus_power = updates.bonus_power;
+                    updates.power = calcTruePower(player);
+                    player.power = updates.power;
+                    colorClass = 'power'; 
+                }
+                else if (newStreak === 3) { 
+                    html += `<div class="power">⚡ +15 МОЩИ</div>`; 
+                    updates.bonus_power = (player.bonus_power || 0) + 15; 
+                    player.bonus_power = updates.bonus_power;
+                    updates.power = calcTruePower(player);
+                    player.power = updates.power;
+                    colorClass = 'power'; 
+                }
                 else if (newStreak === 4) { html += `<div class="kits">🔧 +3 Ремкомплекта</div>`; updates.repair_kits = (player.repair_kits||0) + 3; colorClass = 'kits'; }
                 else if (newStreak === 5) { html += `<div class="common">+1000 Обычных</div>`; updates.common_parts = player.common_parts + 1000; colorClass = 'common'; }
                 else if (newStreak === 6) { 
@@ -996,7 +1010,7 @@
             const btnUpg = document.getElementById('btnUpgrade');
             if (player.factory_level < 10) { 
                 const ns = FACTORY_STATS[player.factory_level + 1]; let cStr = `${ns.c} Об.`; if(ns.r) cStr+=` + ${ns.r} Ред.`; if(ns.e) cStr+=` + ${ns.e} Эп.`;
-                btnUpg.innerText = `Улучшить (${cStr})`; btnUpg.style.display = 'block'; 
+                btnUpg.innerText = `Апгрейд (${cStr})`; btnUpg.style.display = 'block'; 
             } else { btnUpg.style.display = 'none'; }
 
             buildInfraUI();
@@ -1130,7 +1144,7 @@
                     document.getElementById('timerNextBatch').innerText = "ПРОСТАИВАЕТ"; document.getElementById('timerNextBatch').style.color = "#ff4444";
                 } else {
                     document.getElementById('timerNextPart').innerText = formatTime(loot.msToNextReal); document.getElementById('timerNextPart').style.color = "#fff";
-                    if (isAuto) { document.getElementById('timerNextBatch').innerText = "ВРЕМЕННЫЕ ДОП. СКЛАДЫ"; document.getElementById('timerNextBatch').style.color = "#00e676"; } 
+                    if (isAuto) { document.getElementById('timerNextBatch').innerText = "ДОП СКЛАДЫ"; document.getElementById('timerNextBatch').style.color = "#00e676"; } 
                     else { document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)"; }
                 }
             }
@@ -1390,7 +1404,7 @@
 
             if (data) { 
                 player = data; refreshAll(); 
-                if (extraHtml) showRewardAnimation('ДОП. УСПЕХ!', `<div class="common">Собрано: ${loot.d} Об.</div>` + extraHtml, 'accent-gold');
+                if (extraHtml) showRewardAnimation('СЮРПРИЗ НА ЗАВОДЕ!', `<div class="common">Собрано: ${loot.d} Об.</div>` + extraHtml, 'accent-gold');
                 else showMsg('factoryMsg', `Собрано: ${loot.d} Обычных!`, 'var(--accent-gold)'); 
             }
         }
@@ -1723,5 +1737,3 @@
     </script>
 </body>
 </html>
-
-
