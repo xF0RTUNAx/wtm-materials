@@ -389,7 +389,7 @@
             <ul>
                 <li><b>Надежный обмен:</b> 5 Обычных ➔ 1 Редкий | 5 Редких ➔ 1 Эпик.</li>
                 <li><b>Разбор:</b> 1 Эпик ➔ 3 Редких | 1 Редкий ➔ 3 Обычных.</li>
-                <li><b>Риск (Казино):</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
+                <li><b>Риск:</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
                 <li><b>Обмен Ремкомплектов:</b> 1 Ремкомплект ➔ 10 Об. (33%) / 3 Ред. (33%) / 1 Эпик (33%) / Случ. Бустер (1%).</li>
             </ul>
 
@@ -484,7 +484,7 @@
         </div>
         
         <div style="background: rgba(255, 23, 68, 0.1); border: 1px solid var(--power); padding: 10px; border-radius: 8px; margin-bottom: 15px; font-weight: bold;">
-            ⏳ Конец операции: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
+            ⏳ Конец розыгрыша: <span id="globalEventTimer" style="color: var(--power); font-family: monospace; font-size: 16px;">--:--</span>
         </div>
 
         <button class="btn-pvp" id="btnPvpRadar" onclick="openPvpMap()" style="display: none; width: 100%;">⚔️ ПОЛЕ СРАЖЕНИЙ</button>
@@ -538,7 +538,7 @@
             </div>
 
             <div class="panel">
-                <h3 style="color: var(--booster);">⚡ Бустеры и Логистика</h3>
+                <h3 style="color: var(--booster);">⚡ Бустеры</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Поставках.</p>
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 6ч (<span id="countSpeed">0</span>)</button>
@@ -595,8 +595,8 @@
             <div class="panel">
                 <h3 style="color: var(--epic);">🛠️ Терминал Синтеза</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Массовая конвертация деталей.</p>
-                <button class="btn-craft" onclick="openCraftModal('СИНТЕЗ ЧЕРТЕЖЕЙ', 'Обычные', 'Редкие', 5, 1, 'common_parts', 'rare_parts')">Надежно: 5 Об. ➔ 1 Ред.</button>
-                <button class="btn-craft-epic" onclick="openCraftModal('СИНТЕЗ СЕКРЕТОВ', 'Редкие', 'Эпические', 5, 1, 'rare_parts', 'epic_parts')">Надежно: 5 Ред. ➔ 1 Эпик</button>
+                <button class="btn-craft" onclick="openCraftModal('СИНТЕЗ РЕДКИХ', 'Обычные', 'Редкие', 5, 1, 'common_parts', 'rare_parts')">Надежно: 5 Об. ➔ 1 Ред.</button>
+                <button class="btn-craft-epic" onclick="openCraftModal('СИНТЕЗ ЭПИКОВ', 'Редкие', 'Эпические', 5, 1, 'rare_parts', 'epic_parts')">Надежно: 5 Ред. ➔ 1 Эпик</button>
                 <div style="height: 10px;"></div>
                 <button class="btn-craft" onclick="openCraftModal('РАЗБОР РЕДКОЙ', 'Редкие', 'Обычные', 1, 3, 'rare_parts', 'common_parts')" style="border-left-color: var(--common);">Разбор: 1 Ред. ➔ 3 Об.</button>
                 <button class="btn-craft-epic" onclick="openCraftModal('РАЗБОР ЭПИЧЕСКОЙ', 'Эпические', 'Редкие', 1, 3, 'epic_parts', 'rare_parts')" style="border-left-color: var(--rare);">Разбор: 1 Эпик ➔ 3 Ред.</button>
@@ -619,7 +619,7 @@
 
             <div class="panel">
                 <h3 style="color: #fff;">🔑 Терминал кодов</h3>
-                <input type="text" id="promoInput" placeholder="Введите код..." style="margin-bottom: 10px;">
+                <input type="text" id="promoInput" placeholder="Введите промокод..." style="margin-bottom: 10px;">
                 <button class="btn-gold" onclick="activatePromo()">Активировать</button>
                 <div id="promoMsg" class="msg"></div>
             </div>
@@ -635,7 +635,7 @@
         
         <div class="panel leaderboard" style="background: rgba(0,0,0,0.8); margin-top: 15px;">
             <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                ⚔️ Боевые сводки (Лог)
+                ⚔️ Боевые сводки 
                 <button onclick="loadPvpLogs()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
             </h3>
             <div id="pvpLogsList">
@@ -1404,7 +1404,7 @@
 
             if (data) { 
                 player = data; refreshAll(); 
-                if (extraHtml) showRewardAnimation('СЮРПРИЗ НА ЗАВОДЕ!', `<div class="common">Собрано: ${loot.d} Об.</div>` + extraHtml, 'accent-gold');
+                if (extraHtml) showRewardAnimation('ДОП УСПЕХ!', `<div class="common">Собрано: ${loot.d} Об.</div>` + extraHtml, 'accent-gold');
                 else showMsg('factoryMsg', `Собрано: ${loot.d} Обычных!`, 'var(--accent-gold)'); 
             }
         }
@@ -1697,7 +1697,7 @@
             if(gameEnded) return;
             const code = document.getElementById('promoInput').value.trim().toUpperCase();
             if (code.length < 3) { showMsg('promoMsg', "Введите код!", '#ff4444'); return; }
-            showMsg('promoMsg', "Проверка канала...", '#a0a0a0');
+            showMsg('promoMsg', "Проверка...", '#a0a0a0');
             const { data, error } = await db.rpc('activate_promo_code', { player_uuid: player.id, promo: code });
             if (error) { showMsg('promoMsg', "Ошибка связи!", '#ff4444'); } else if (data.status === 'error') { showMsg('promoMsg', data.msg, '#ff4444'); } else { showMsg('promoMsg', data.msg, 'var(--accent-green)'); refreshAll(); }
         }
