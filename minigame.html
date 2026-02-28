@@ -378,7 +378,7 @@
                 <li><b>Перегрузка:</b> Рискованная кнопка. Дает 1 партию моментально, но с шансом <b>50%</b> завод сломается и встанет на ремонт на 2 часа.</li>
             </ul>
 
-            <div style="margin-bottom: 10px;"><b>⚡ БУСТЕРЫ И ЛОГИСТИКА:</b></div>
+            <div style="margin-bottom: 10px;"><b>⚡ БУСТЕРЫ:</b></div>
             <ul>
                 <li><b>Пропуск:</b> Мгновенно зачисляет на склад ресурсы за 1 партию.</li>
                 <li><b>Ускорение:</b> В 4 раза ускоряет работу Завода на следующие 6 часов (партия копится за 1 час).</li>
@@ -389,8 +389,13 @@
             <ul>
                 <li><b>Надежный обмен:</b> 5 Обычных ➔ 1 Редкий | 5 Редких ➔ 1 Эпик.</li>
                 <li><b>Разбор:</b> 1 Эпик ➔ 3 Редких | 1 Редкий ➔ 3 Обычных.</li>
-                <li><b>Риск:</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
+                <li><b>Риск (Казино):</b> Тратите 25 деталей. Шансы: 65% — уйти в минус, 25% — выйти в ноль/небольшой плюс, 10% — сорвать джекпот (х2 и более).</li>
                 <li><b>Обмен Ремкомплектов:</b> 1 Ремкомплект ➔ 10 Об. (33%) / 3 Ред. (33%) / 1 Эпик (33%) / Случ. Бустер (1%).</li>
+            </ul>
+
+            <div style="margin-bottom: 10px;"><b>🏴‍☠️ ЧЕРНЫЙ РЫНОК:</b></div>
+            <ul>
+                <li>Один раз в сутки доступна уникальная случайная сделка, где можно выгодно обменять ресурсы на ремкомплекты или бустеры (в том числе на уникальный Бустер Экспедиции).</li>
             </ul>
 
             <hr style="border-color: #333; margin: 15px 0;">
@@ -435,7 +440,7 @@
     </div>
 
     <div class="container" id="loginScreen">
-        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">Розыгрыш мини-игра</h2>
+        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">РОЗЫГРЫШ МИНИ-ИГРА</h2>
         <div class="auth-tabs">
             <div class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">ВХОД</div>
             <div class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">РЕГИСТРАЦИЯ</div>
@@ -543,6 +548,7 @@
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 6ч (<span id="countSpeed">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('auto')" style="background: #238636;">📦 Арендованные склады на 6ч (<span id="countAuto">0</span>)</button>
+                <div style="font-size: 11px; color: #bc8cff; font-weight: bold; margin-bottom: 5px; margin-top: 10px; border: 1px solid #bc8cff; padding: 5px; border-radius: 5px; background: rgba(188, 140, 255, 0.1);">🚀 Бустер Экспедиции x2: <span id="countHangar">0</span> шт.<br><span style="font-size: 9px; color: #8b949e;">(Применяется автоматически при отправке)</span></div>
                 <div id="boosterMsg" class="msg" style="color: #ff4444;"></div>
             </div>
 
@@ -566,7 +572,7 @@
                         </div>
                         <div class="h-upgrade-box">
                             <div style="color: var(--accent-green); font-weight: bold;">Инженеры</div>
-                            <div class="h-desc">Кол-во наград</div><div class="h-level" id="hPos3Lvl">Ур. 1</div>
+                            <div class="h-desc">Кол-во Ремкомплектов.</div><div class="h-level" id="hPos3Lvl">Ур. 1</div>
                             <button id="btnUpgH3" onclick="upgradeHangar(3)" style="font-size: 11px;">Улучшить</button>
                         </div>
                     </div>
@@ -585,10 +591,10 @@
                 <div class="drop-chances">Шансы: 200-250 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 1% Ремкомплект.</div>
                 <hr style="border-color: #444; margin: 15px 0;">
                 <button class="btn-paid" onclick="openPaidCase()">Особый контейнер (25 Обычных)</button>
-                <div class="drop-chances">30% минус, 50% окуп, 15% плюс, 5% Джекпот. Шанс 5% на Бустер, 1% Ремкомплект.</div>
+                <div class="drop-chances">Шансы: 60% минус, 25% окуп, 10% плюс, 5% Джекпот. Шанс 2% на Бустер, 3% Ремкомплект.</div>
                 <hr style="border-color: #444; margin: 15px 0;">
                 <button class="btn-paid" style="background: var(--accent-green);" onclick="openRepairCase()">Инженерный контейнер (250 Обычных)</button>
-                <div class="drop-chances">Шансы: 70% (1 Ремк.), 25% (3 Ремк.), 5% (9 Ремк.). Шанс 1% на любой Бустер.</div>
+                <div class="drop-chances">Шансы: 70% (1 Ремк.), 25% (3 Ремк.), 5% (9 Ремк.). Шанс 3% на любой Бустер.</div>
                 <div id="caseMsg" class="msg" style="color: #ff4444;"></div>
             </div>
 
@@ -609,6 +615,13 @@
             </div>
 
             <div class="panel">
+                <h3 style="color: var(--accent-red);">🏴‍☠️ Черный Рынок</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Случайная сделка (1 раз в день).</p>
+                <div id="bmContent"></div>
+                <div id="bmMsg" class="msg"></div>
+            </div>
+
+            <div class="panel">
                 <h3 style="color: var(--accent-gold);">🎯 Ежедневные Директивы</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Сброс через: <span id="timerQuestsReset" style="color: #fff; font-family: monospace;">--:--</span></p>
                 <div class="quest-item">Собрать детали Завода <span><span id="qFact">0</span>/500</span></div>
@@ -619,7 +632,7 @@
 
             <div class="panel">
                 <h3 style="color: #fff;">🔑 Терминал кодов</h3>
-                <input type="text" id="promoInput" placeholder="Введите промокод..." style="margin-bottom: 10px;">
+                <input type="text" id="promoInput" placeholder="Введите код..." style="margin-bottom: 10px;">
                 <button class="btn-gold" onclick="activatePromo()">Активировать</button>
                 <div id="promoMsg" class="msg"></div>
             </div>
@@ -630,7 +643,7 @@
                 🏆 Таблица рейтинга
                 <button onclick="loadLeaderboard()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
             </h3>
-            <div id="leaderboardList"><div style="text-align: center; color: #8b949e; padding: 20px;">Спутник ищет цели...</div></div>
+            <div id="leaderboardList"><div style="text-align: center; color: #8b949e; padding: 20px;">Связь со спутником...</div></div>
         </div>
         
         <div class="panel leaderboard" style="background: rgba(0,0,0,0.8); margin-top: 15px;">
@@ -912,7 +925,7 @@
                 
                 let updatesNeeded = {};
                 if (now - resetTime >= 24 * 3600000) {
-                    updatesNeeded = { quest_factory_collects: 0, quest_risky_crafts: 0, quest_hangar_missions: 0, quests_completed: false, daily_quests_reset: new Date().toISOString(), pvp_attack_used: false, bot_attack_used: false, kits_bought_today: 0, times_attacked_today: 0 };
+                    updatesNeeded = { quest_factory_collects: 0, quest_risky_crafts: 0, quest_hangar_missions: 0, quests_completed: false, daily_quests_reset: new Date().toISOString(), pvp_attack_used: false, bot_attack_used: false, kits_bought_today: 0, times_attacked_today: 0, bm_purchased: false };
                 }
 
                 if (!player.pvp_unlocked) {
@@ -989,6 +1002,16 @@
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; closeManualDefense(); showMsg('infraMsg', 'Гарнизон защиты обновлен!', 'var(--accent-green)'); }
         }
+        
+        function getDailyDealType(playerId, dayUTC) {
+            let str = playerId + dayUTC.toString();
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0; 
+            }
+            return Math.abs(hash) % 3;
+        }
 
         function updateUI() {
             document.getElementById('playerNameDisplay').innerText = player.nickname; 
@@ -1010,7 +1033,7 @@
             const btnUpg = document.getElementById('btnUpgrade');
             if (player.factory_level < 10) { 
                 const ns = FACTORY_STATS[player.factory_level + 1]; let cStr = `${ns.c} Об.`; if(ns.r) cStr+=` + ${ns.r} Ред.`; if(ns.e) cStr+=` + ${ns.e} Эп.`;
-                btnUpg.innerText = `Улучшить (${cStr})`; btnUpg.style.display = 'block'; 
+                btnUpg.innerText = `Апгрейд (${cStr})`; btnUpg.style.display = 'block'; 
             } else { btnUpg.style.display = 'none'; }
 
             buildInfraUI();
@@ -1033,6 +1056,24 @@
                 streakHtml += `<div class="streak-day ${sClass}"><div style="font-weight: bold; margin-bottom: 5px; color: #fff;">День ${i}</div><div style="margin-bottom: 5px; font-size: 14px; font-weight: bold;">${sRewards[i-1]}</div><div>${sText}</div></div>`;
             }
             document.getElementById('streakPanelUI').innerHTML = streakHtml;
+            
+            // ЧЕРНЫЙ РЫНОК
+            const dealType = getDailyDealType(player.id, currentDayUTC);
+            let dealHtml = '';
+            if (player.bm_purchased) {
+                dealHtml = `<div style="color: var(--accent-green); font-weight: bold; padding: 10px; border: 1px solid var(--accent-green); background: rgba(0, 230, 118, 0.1); border-radius: 6px;">Сделка на сегодня закрыта!</div>`;
+            } else {
+                if (dealType === 0) {
+                    dealHtml = `<button class="btn-risk" onclick="buyBlackMarket(0)" style="border-left-color: var(--common);">За 25 Обычных ➔ 1 Ремкомплект</button>`;
+                } else if (dealType === 1) {
+                    dealHtml = `<button class="btn-risk" onclick="buyBlackMarket(1)" style="border-left-color: var(--rare);">За 10 Редких ➔ Бустер Экспедиции (x2)</button>`;
+                } else {
+                    dealHtml = `<button class="btn-risk" onclick="buyBlackMarket(2)" style="border-left-color: var(--epic);">За 5 Эпиков ➔ 1 Случайный Бустер</button>`;
+                }
+            }
+            document.getElementById('bmContent').innerHTML = dealHtml;
+            const cHang = document.getElementById('countHangar');
+            if(cHang) cHang.innerText = player.booster_hangar || 0;
 
             // КВЕСТЫ
             document.getElementById('qFact').innerText = Math.min(player.quest_factory_collects || 0, 500); document.getElementById('qRisk').innerText = Math.min(player.quest_risky_crafts || 0, 1); document.getElementById('qHang').innerText = Math.min(player.quest_hangar_missions || 0, 1);
@@ -1485,7 +1526,7 @@
             if(gameEnded) return;
             const lvl = player['h_pos'+pos]; if (lvl >= 3) return;
             const cfg = HANGAR_CFG[pos][lvl+1];
-            if (player[cfg.cur] < cfg.c) { showMsg('hangarUnlockMsg', `Нужно ресурсы для улучшения!`, '#ff4444'); return; }
+            if (player[cfg.cur] < cfg.c) { showMsg('hangarUnlockMsg', `Нужно ресурсы для апгрейда!`, '#ff4444'); return; }
 
             const updates = {}; updates[cfg.cur] = player[cfg.cur] - cfg.c; updates['h_pos'+pos] = lvl + 1;
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
@@ -1497,8 +1538,16 @@
             const now = new Date().getTime();
             
             if ((player.mission_status || 0) === 0) {
-                const hrs = HANGAR_CFG[1][player.h_pos1].t;
-                const { data } = await db.from('players').update({mission_status: 1, mission_end: new Date(now + (hrs * 3600000)).toISOString()}).eq('id', player.id).select().single();
+                let hrs = HANGAR_CFG[1][player.h_pos1].t;
+                let updates = { mission_status: 1 };
+                
+                if ((player.booster_hangar || 0) > 0) {
+                    hrs = hrs / 2;
+                    updates.booster_hangar = player.booster_hangar - 1;
+                }
+                updates.mission_end = new Date(now + (hrs * 3600000)).toISOString();
+                
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
                 if (data) { player = data; refreshAll(); }
             } 
             else if (player.mission_status === 1 && now >= new Date(player.mission_end).getTime()) {
@@ -1617,6 +1666,36 @@
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
         }
 
+        // === ЧЕРНЫЙ РЫНОК ЛОГИКА ===
+        async function buyBlackMarket(dealType) {
+            if(gameEnded || player.bm_purchased) return;
+            let updates = { bm_purchased: true };
+            let title = "ЧЕРНЫЙ РЫНОК"; let html = ''; let color = '';
+            
+            if (dealType === 0) {
+                if (player.common_parts < 25) { showMsg('bmMsg', 'Нужно 25 Обычных!', '#ff4444'); return; }
+                updates.common_parts = player.common_parts - 25;
+                updates.repair_kits = (player.repair_kits || 0) + 1;
+                html = `<div class="kits">🔧 +1 Ремкомплект</div>`; color = "kits";
+            } else if (dealType === 1) {
+                if (player.rare_parts < 10) { showMsg('bmMsg', 'Нужно 10 Редких!', '#ff4444'); return; }
+                updates.rare_parts = player.rare_parts - 10;
+                updates.booster_hangar = (player.booster_hangar || 0) + 1;
+                html = `<div style="color: #9c27b0; font-weight: bold; font-size: 18px;">🚀 +1 Бустер Экспедиции</div>`; color = "epic";
+            } else if (dealType === 2) {
+                if (player.epic_parts < 5) { showMsg('bmMsg', 'Нужно 5 Эпических!', '#ff4444'); return; }
+                updates.epic_parts = player.epic_parts - 5;
+                const bRand = Math.random();
+                if(bRand < 0.33) { updates.booster_skip = (player.booster_skip || 0) + 1; html = `<div class="boost">⚡ +1 Пропуск партии</div>`; }
+                else if(bRand < 0.66) { updates.booster_speed = (player.booster_speed || 0) + 1; html = `<div class="boost">⚡ +1 Ускорение</div>`; }
+                else { updates.booster_auto = (player.booster_auto || 0) + 1; html = `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`; }
+                color = "booster";
+            }
+            
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
         function showRewardAnimation(title, itemsHtml, colorClass) {
             const overlay = document.getElementById('rewardModal'); const box = document.getElementById('rewardBox');
             document.getElementById('rewardLoading').style.display = 'block'; document.getElementById('rewardResult').style.display = 'none';
@@ -1648,14 +1727,22 @@
         async function openPaidCase() {
             if(gameEnded) return; if (player.common_parts < 25) { showMsg('caseMsg', 'Нужно 25 Обычных деталей!', '#ff4444'); return; }
             const rand = Math.random(); let c=0, r=0, e=0, title='', html='', color='';
-            if (rand < 0.30) { c = (Math.floor(Math.random() * 2) * 5) + 10; title = "Ржавый хлам..."; color = "common"; html = `<div class="common">Возврат: ${c} Обычных</div>`; } 
-            else if (rand < 0.80) { r = 5; title = "Окупаемость!"; color = "rare"; html = `<div class="rare">+5 Редких</div>`; } 
-            else if (rand < 0.95) { e = 1; r = 2; title = "КРУПНАЯ УДАЧА!"; color = "epic"; html = `<div class="epic">+1 Эпик</div><div class="rare">+2 Редких</div>`; } 
+            if (rand < 0.60) { c = (Math.floor(Math.random() * 2) * 5) + 10; title = "Ржавый хлам..."; color = "common"; html = `<div class="common">Возврат: ${c} Обычных</div>`; } 
+            else if (rand < 0.85) { r = 5; title = "Окупаемость!"; color = "rare"; html = `<div class="rare">+5 Редких</div>`; } 
+            else if (rand < 0.95) { e = 1; r = 2; title = "ПРИБЫЛЬ!"; color = "epic"; html = `<div class="epic">+1 Эпик</div><div class="rare">+2 Редких</div>`; } 
             else { e = 2; title = "ДЖЕКПОТ!!!"; color = "accent-gold"; html = `<div class="epic" style="font-size: 40px;">+2 ЭПИКА!!!</div>`; }
 
-            const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.01 ? 1 : 0;
-            if(gotSk) html += `<div class="boost" style="margin-top:10px;">⚡ +1 Пропуск партии</div>`; if(gotSp) html += `<div class="boost">⚡ +1 Ускорение</div>`; if(gotAu) html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`;
-            if(gotKit) html += `<div class="kits" style="margin-top:10px;">🔧 +1 Ремкомплект</div>`;
+            let gotSk = 0, gotSp = 0, gotAu = 0, gotKit = 0;
+            if (Math.random() < 0.02) {
+                const bRand = Math.random();
+                if(bRand < 0.33) { gotSk = 1; html += `<div class="boost" style="margin-top:10px;">⚡ +1 Пропуск партии</div>`; }
+                else if(bRand < 0.66) { gotSp = 1; html += `<div class="boost" style="margin-top:10px;">⚡ +1 Ускорение</div>`; }
+                else { gotAu = 1; html += `<div class="boost" style="color:#00e676; margin-top:10px;">📦 +1 Арендованные склады</div>`; }
+            }
+            if (Math.random() < 0.03) {
+                gotKit = 1; html += `<div class="kits" style="margin-top:10px;">🔧 +1 Ремкомплект</div>`;
+            }
+
             const updates = { common_parts: player.common_parts - 25 + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e, booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, repair_kits: (player.repair_kits||0) + gotKit };
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
@@ -1669,7 +1756,7 @@
             else { k = 9; title = "ГЕНЕРАЛЬНЫЙ ЗАПАС!!!"; color = "accent-gold"; html = `<div class="kits" style="font-size: 40px;">+9 РЕМКОМПЛЕКТОВ!!!</div>`; }
 
             let gotSk = 0, gotSp = 0, gotAu = 0;
-            if(Math.random() < 0.01) {
+            if(Math.random() < 0.03) {
                 const bRand = Math.random();
                 if(bRand < 0.33) { gotSk = 1; html += `<div class="boost" style="margin-top:10px;">⚡ +1 Пропуск партии</div>`; }
                 else if(bRand < 0.66) { gotSp = 1; html += `<div class="boost" style="margin-top:10px;">⚡ +1 Ускорение</div>`; }
@@ -1697,7 +1784,7 @@
             if(gameEnded) return;
             const code = document.getElementById('promoInput').value.trim().toUpperCase();
             if (code.length < 3) { showMsg('promoMsg', "Введите код!", '#ff4444'); return; }
-            showMsg('promoMsg', "Проверка...", '#a0a0a0');
+            showMsg('promoMsg', "Проверка канала...", '#a0a0a0');
             const { data, error } = await db.rpc('activate_promo_code', { player_uuid: player.id, promo: code });
             if (error) { showMsg('promoMsg', "Ошибка связи!", '#ff4444'); } else if (data.status === 'error') { showMsg('promoMsg', data.msg, '#ff4444'); } else { showMsg('promoMsg', data.msg, 'var(--accent-green)'); refreshAll(); }
         }
