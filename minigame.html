@@ -361,7 +361,7 @@
             <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 15px; font-size: 22px; text-transform: uppercase;">📜 Правила и механики</h3>
             
             <div style="margin-bottom: 10px;"><b>🏆 ЦЕЛЬ И ПОБЕДА:</b><br>
-            Розыгрыш длится до <b>1 месяца</b>. Победители определяются по параметру <b>МОЩЬ (⚡)</b>, которая отображается в Таблице рейтинга. Мощь генерируется за покупку войск во вкладке "Военная Инфраструктура" и других активностях. Окончание розыгрыша происходит или по набору 2090 мощи одним из игроков, или по окончанию таймера. Призы рассылаются на зарегистрированные WTM ID. <span style="color: #ff4444;">Соблюдайте адекватное и спортивное поведение! Нарушители исключаются из финальных списков без выдачи призов.</span></div>
+            Розыгрыш длится <b>2 недели</b>. Победители определяются по параметру <b>МОЩЬ (⚡)</b>, которая отображается в Таблице рейтинга. Мощь генерируется за покупку войск во вкладке "Военная Инфраструктура" и других активностях. Окончание розыгрыша происходит или по набору 2090 мощи одним из игроков, или по окончанию таймера. Призы рассылаются на зарегистрированные WTM ID. <span style="color: #ff4444;">Соблюдайте адекватное и спортивное поведение! Нарушители исключаются из финальных списков без выдачи призов.</span></div>
 
             <div style="text-align: center; font-size: 14px; background: rgba(255,193,7,0.1); padding: 5px; border-radius: 5px; border: 1px solid var(--accent-gold); margin-bottom: 15px;">
             <b>🎁 ПРИЗОВОЙ ФОНД:</b><br>🥇 1 Место — 1000 Платины | 🥈 2 Место — 500 Платины | 🥉 3 Место — 500 Платины
@@ -547,7 +547,7 @@
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Поставках.</p>
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 на 6ч (<span id="countSpeed">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('auto')" style="background: #238636;">📦 Арендованные склады на 6ч (<span id="countAuto">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('auto')">📦 Арендованные склады на 6ч (<span id="countAuto">0</span>)</button>
                 <div style="font-size: 11px; color: #bc8cff; font-weight: bold; margin-bottom: 5px; margin-top: 10px; border: 1px solid #bc8cff; padding: 5px; border-radius: 5px; background: rgba(188, 140, 255, 0.1);">🚀 Бустер Экспедиции x2: <span id="countHangar">0</span> шт.<br><span style="font-size: 9px; color: #8b949e;">(Применяется автоматически при отправке)</span></div>
                 <div id="boosterMsg" class="msg" style="color: #ff4444;"></div>
             </div>
@@ -572,7 +572,7 @@
                         </div>
                         <div class="h-upgrade-box">
                             <div style="color: var(--accent-green); font-weight: bold;">Инженеры</div>
-                            <div class="h-desc">Кол-во наград.</div><div class="h-level" id="hPos3Lvl">Ур. 1</div>
+                            <div class="h-desc">Кол-во наград</div><div class="h-level" id="hPos3Lvl">Ур. 1</div>
                             <button id="btnUpgH3" onclick="upgradeHangar(3)" style="font-size: 11px;">Улучшить</button>
                         </div>
                     </div>
@@ -670,7 +670,7 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWZhbnJyYnZyeml4eGxuYnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTcwODMsImV4cCI6MjA4NzIzMzA4M30.8j42D5U-iOLeEtSgiFWJ3pDTyN6e6JjiQKvn0MDEwJY'; 
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const EVENT_END_DATE = new Date('2026-03-25T00:00:00Z').getTime(); 
+        const EVENT_END_DATE = new Date('2026-03-18T00:00:00Z').getTime(); 
         const MAX_POWER_POSSIBLE = 2090;
 
         const FACTORY_STATS = {
@@ -696,7 +696,7 @@
         };
 
         const HANGAR_CFG = {
-            1: { 1: {t: 20, c: null, cur: null, text: '20 часов'}, 2: {t: 10, c: 50, cur: 'common_parts', text: '10 часов'}, 3: {t: 5, c: 100, cur: 'common_parts', text: '5 часов'} },
+            1: { 1: {t: 20, c: null, cur: null, text: '20 часов'}, 2: {t: 12, c: 50, cur: 'common_parts', text: '12 часов'}, 3: {t: 8, c: 100, cur: 'common_parts', text: '8 часов'} },
             2: { 1: {ch: 0.50, c: null, cur: null, text: '50% Шанс'}, 2: {ch: 0.75, c: 10, cur: 'rare_parts', text: '75% Шанс'}, 3: {ch: 0.90, c: 20, cur: 'rare_parts', text: '90% Шанс'} },
             3: { 1: {kits: 3, b: 0, c: null, cur: null, text: '3 Ремк.'}, 2: {kits: 3, b: 1, c: 2, cur: 'epic_parts', text: '3 Ремк. + 1 Бустер'}, 3: {kits: 3, b: 2, c: 3, cur: 'epic_parts', text: '3 Ремк. + 2 Бустера'} }
         };
@@ -1263,7 +1263,7 @@
                     if (isProtected) {
                         btnHtml = `<button disabled style="background:#555; width:auto; font-size:11px;">Под щитом</button>`;
                     } else if (player.pvp_attack_used) {
-                        btnHtml = `<button disabled style="background:#555; width:auto; font-size:11px;">Кулдаун</button>`;
+                        btnHtml = `<button disabled style="background:#555; width:auto; font-size:11px;">Перезарядка</button>`;
                     } else {
                         btnHtml = `<button class="btn-risk" style="width:auto; font-size:11px; margin:0;" onclick="openAttackSetup('${p.id}', '${p.nickname}', ${p.power})">Атаковать</button>`;
                     }
@@ -1618,10 +1618,10 @@
             const r = Math.random(); let reward = 0, title = '', html = '', color = ''; const updates = {};
             if (type === 'rare') {
                 updates.common_parts = player.common_parts - 25; reward = r < 0.65 ? 2 : (r < 0.90 ? 5 : 10); updates.rare_parts = player.rare_parts + reward;
-                color = "rare"; title = "Синтез чертежей"; html = `<div class="rare">+${reward} Редких</div>`;
+                color = "rare"; title = "Синтез редких"; html = `<div class="rare">+${reward} Редких</div>`;
             } else {
                 updates.rare_parts = player.rare_parts - 25; reward = r < 0.65 ? 1 : (r < 0.90 ? 5 : 10); updates.epic_parts = player.epic_parts + reward;
-                color = "epic"; title = "Синтез секретов"; html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
+                color = "epic"; title = "Синтез эпических"; html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
             }
             updates.quest_risky_crafts = (player.quest_risky_crafts || 0) + 1;
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
@@ -1824,4 +1824,3 @@
     </script>
 </body>
 </html>
-
