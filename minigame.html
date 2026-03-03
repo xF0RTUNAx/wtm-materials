@@ -916,7 +916,7 @@ if (authMode === 'login') {
             }
         }
 
-        async function refreshAll() {
+     async function refreshAll() {
             const pid = localStorage.getItem('minigame_player_id'); if (!pid) return;
             const { data } = await db.from('players').select('*').eq('id', pid).single();
             if (data) {
@@ -951,6 +951,10 @@ if (authMode === 'login') {
                 updateUI(); await loadLeaderboard(); await loadPvpLogs();
                 if(globalTimer) clearInterval(globalTimer);
                 if(!gameEnded) { globalTimer = setInterval(tickTimers, 1000); tickTimers(); }
+            } else {
+               
+                localStorage.removeItem('minigame_player_id'); 
+                location.reload();
             }
         }
 
