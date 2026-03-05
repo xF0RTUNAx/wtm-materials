@@ -415,6 +415,59 @@
 </head>
 <body>
 
+    <div id="floating-lang-widget" style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 30px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
+        <span class="lang-label ru" style="color:rgba(255,255,255,0.5); font-weight:bold; font-size:0.8em;">RU</span>
+        <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
+            <input type="checkbox" id="lang-toggle-float" style="opacity: 0; width: 0; height: 0;">
+            <span class="slider-float" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 20px;"></span>
+            <style>
+                .slider-float:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+                #lang-toggle-float:checked + .slider-float { background-color: #ffcc00; }
+                #lang-toggle-float:checked + .slider-float:before { transform: translateX(20px); background-color: black; }
+                .lang-label.active { color: #ffcc00 !important; }
+            </style>
+        </label>
+        <span class="lang-label en" style="color:rgba(255,255,255,0.5); font-weight:bold; font-size:0.8em;">EN</span>
+    </div>
+
+    <script>
+    // ПРОВЕРКА ПАМЯТИ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+    const savedLang = localStorage.getItem('wtm_lang');
+    const isEnglish = window.location.pathname.indexOf('/en/') !== -1;
+    let currentFile = window.location.pathname.split('/').pop() || "index.html";
+
+    if (savedLang === 'en' && !isEnglish) {
+        window.location.replace('en/' + currentFile);
+    } else if (savedLang === 'ru' && isEnglish) {
+        window.location.replace('../' + currentFile);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggle = document.getElementById('lang-toggle-float');
+        const labelRu = document.querySelector('#floating-lang-widget .lang-label.ru');
+        const labelEn = document.querySelector('#floating-lang-widget .lang-label.en');
+        
+        // Настраиваем визуал виджета
+        if (isEnglish) {
+            toggle.checked = true;
+            if (labelEn) labelEn.classList.add('active');
+        } else {
+            toggle.checked = false;
+            if (labelRu) labelRu.classList.add('active');
+        }
+
+        // Обработчик клика
+        toggle.addEventListener('change', function() {
+            if (this.checked && !isEnglish) {
+                localStorage.setItem('wtm_lang', 'en'); // ЗАПОМИНАЕМ
+                window.location.href = 'en/' + currentFile;
+            } else if (!this.checked && isEnglish) {
+                localStorage.setItem('wtm_lang', 'ru'); // ЗАПОМИНАЕМ
+                window.location.href = '../' + currentFile;
+            }
+        });
+    });
+    </script>
     <div class="app-container">
         
         <div id="menu-section">
