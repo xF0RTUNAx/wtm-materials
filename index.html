@@ -295,6 +295,7 @@
         #minigame-btn {
             background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_03_stpatrick2025/1080x2340_wtm_saintpatricks_day25_640351f6fdaaca1296d868f957108bdd.jpg') center/cover;
         }
+        /* Новый стиль для кнопки симулятора */
         #trophy-sim-btn {
             background: url('https://static.wtmobile.com/upload/fileman/images/regular_pics/1440x640_wtm_premium_gold_kv220_f385b24bac8daad3117fb2ad6f9515f4.jpg') center/cover;
         }
@@ -566,10 +567,10 @@
             }
             .social-wrapper.active { display: flex; animation: fadeIn 0.2s ease; }
             
-            /* Ссылки внутри выпадающего окна */
-            .social-wrapper .nav-item { margin: 0; }
+            /* Ссылки внутри выпадающего окна (Исправление вылезающего фона!) */
+            .social-wrapper .nav-item { margin: 0; width: 100%; box-sizing: border-box; }
             .social-wrapper .nav-link {
-                width: 100%; height: auto; padding: 12px 15px; justify-content: flex-start;
+                width: 100%; height: auto; padding: 12px 15px; justify-content: flex-start; box-sizing: border-box;
             }
             .social-wrapper .nav-link span { display: inline-block; margin-left: 15px; font-size: 1em; color: #e0e0e0; }
             .social-wrapper .nav-link i { margin: 0 !important; width: 25px !important; text-align: center; }
