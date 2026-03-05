@@ -105,6 +105,55 @@
             box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
         }
 
+        /* --- Стили для переключателя языка --- */
+        .language-switcher-sidebar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .lang-label {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.5);
+            transition: color 0.3s;
+        }
+        .lang-label.active { color: #ffcc00; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #ffcc00; }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            background-color: #000;
+        }
+        /* ------------------------------------- */
+
         .nav-menu {
             list-style: none;
             padding: 0;
@@ -454,6 +503,9 @@
             }
             .logo { margin: 0; display: flex; align-items: center; flex-shrink: 0; }
             .logo img { height: 40px; width: auto; border-radius: 8px; }
+            
+            .language-switcher-sidebar { margin-bottom: 0; margin-left: 10px; }
+            
             .nav-menu { 
                 display: flex; 
                 flex-grow: 1; 
@@ -501,6 +553,15 @@
         <aside class="sidebar">
             <div class="logo">
                 <img src="logo.jpg" alt="xFORTUNAx Logo" id="logo-img">
+            </div>
+            
+            <div class="language-switcher-sidebar">
+                <span class="lang-label ru">RU</span>
+                <label class="switch">
+                    <input type="checkbox" id="lang-toggle-main">
+                    <span class="slider"></span>
+                </label>
+                <span class="lang-label en">EN</span>
             </div>
             
             <ul class="nav-menu">
@@ -728,9 +789,31 @@
             document.getElementById('support-banner').style.display = 'flex';
         }
         
+        // --- ЛОГИКА ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКА С ПАМЯТЬЮ ---
+        // Если сохранен EN, перекидываем в папку en
+        if (localStorage.getItem('wtm_lang') === 'en') {
+            window.location.replace('en/index.html');
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggle = document.getElementById('lang-toggle-main');
+            const labelRu = document.querySelector('.lang-label.ru');
+            
+            if(toggle && labelRu) {
+                // Ставим состояние "Выключено" (русский)
+                toggle.checked = false;
+                labelRu.classList.add('active');
+
+                toggle.addEventListener('change', function() {
+                    if (this.checked) {
+                        localStorage.setItem('wtm_lang', 'en'); // ЗАПОМИНАЕМ
+                        window.location.href = 'en/index.html';
+                    }
+                });
+            }
+        });
 
     </script>
     
 </body>
 </html>
-
