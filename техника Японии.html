@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Обзор Техники Японии War Thunder Mobile</title>
+</head>
+<body>
+    <style>
+        .tech-group { margin-bottom: 25px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .group-header { padding: 12px 20px; font-family: 'Black Ops One', sans-serif; font-size: 1.1em; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; padding: 15px; }
+        
+        .header-standard { background: #2c3e50; color: #ecf0f1; border-left: 5px solid #bdc3c7; }
+        .header-blueprint { background: #7f5a00; color: #fff; border-left: 5px solid #ffd700; }
+        .header-collectible { background: #4a235a; color: #fff; border-left: 5px solid #af7ac5; }
+
+        .expected-future { color: #ff8c00; text-align: center; font-weight: bold; font-style: italic; padding: 20px; width: 100%; grid-column: 1 / -1; }
+
+        @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
+    </style>
+
+    <div>
+        <h2 style="text-align:center; margin-bottom:20px; color: #fff; text-shadow: 0 2px 4px #000;">Техника Японии</h2>
+
+        <div class="tech-group">
+            <div class="group-header header-standard"><i class="fas fa-wrench"></i> Прокачиваемые</div>
+            <div class="grid-container">
+                <div class="expected-future">Ожидается в будущем</div>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <div class="group-header header-blueprint"><i class="fas fa-file-contract"></i> Чертежные</div>
+            <div class="grid-container">
+                <div class="expected-future">Ожидается в будущем</div>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <div class="group-header header-collectible"><i class="fas fa-gem"></i> Коллекционные</div>
+            <div class="grid-container">
+                <div class="expected-future">Ожидается в будущем</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
