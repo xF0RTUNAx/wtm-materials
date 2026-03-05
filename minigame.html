@@ -816,7 +816,7 @@ if (authMode === 'login') {
                     colorClass = 'power'; 
                 }
                 else if (newStreak === 4) { html += `<div class="kits">🔧 +3 Ремкомплекта</div>`; updates.repair_kits = (player.repair_kits||0) + 3; colorClass = 'kits'; }
-                else if (newStreak === 5) { html += `<div class="common">+1000 Обычных</div>`; updates.common_parts = player.common_parts + 1000; colorClass = 'common'; }
+                else if (newStreak === 5) { html += `<div class="common">+500 Обычных</div>`; updates.common_parts = player.common_parts + 500; colorClass = 'common'; }
                 else if (newStreak === 6) { 
                     for(let i=0; i<2; i++) {
                         let r = Math.random();
@@ -1049,7 +1049,7 @@ if (authMode === 'login') {
             const currentDayUTC = Math.floor(Date.now() / 86400000); const lastDayUTC = player.last_login_day || 0; const canClaimToday = currentDayUTC > lastDayUTC;
             let visualStreak = player.login_streak || 0;
             if (canClaimToday && lastDayUTC !== 0 && currentDayUTC - lastDayUTC > 1) { visualStreak = 0; } 
-            let streakHtml = ''; const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="power">10 Мощи</span>', '<span class="power">15 Мощи</span>', '<span class="kits">3 Ремк.</span>', '<span class="common">1000 Об.</span>', '<span class="boost">2 Бустера</span>', '<span class="boost">Все Буст.</span>'];
+            let streakHtml = ''; const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="power">10 Мощи</span>', '<span class="power">15 Мощи</span>', '<span class="kits">3 Ремк.</span>', '<span class="common">500 Об.</span>', '<span class="boost">2 Бустера</span>', '<span class="boost">Все Буст.</span>'];
             for(let i=1; i<=7; i++) {
                 let sClass = ''; let sText = '';
                 if (!canClaimToday) { if (i <= visualStreak) { sClass = 'claimed'; sText = '✓ Забрано'; } } 
@@ -1828,4 +1828,3 @@ if (authMode === 'login') {
     </script>
 </body>
 </html>
-
