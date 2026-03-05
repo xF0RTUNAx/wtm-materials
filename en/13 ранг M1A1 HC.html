@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 13 M1A1 HC Review</title>
+    <style>
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/07_july_25/db7_s22_comtank_m1a1hc/s22_db7_tank_history_8e8c6382d0f6480ceace0e75b34265cf.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 13 M1A1 HC</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/m1a1hcmain.webp" alt="M1A1 HC Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The M1A1 HC (Heavy Common) is a modification of the American M1A1 Abrams main battle tank, developed for the United States Marine Corps. While the US Army was already actively using the M1A1 HA modification and deploying it during combat operations in Iraq, the Marine Corps was still forced to use the outdated M60A1 RISE. Therefore, on the initiative of Marine Corps General Paul Kelley, in 1992 the US Congress approved a request to create a version of the Abrams that met the needs of the Marines. The M1A1 HA modification was taken as the basis for further improvements, undergoing the following main modernizations: enhanced armor using second-generation depleted uranium, equipping it with a soft-kill active protection system, improved digital engine control, increased ammunition capacity for the main gun, as well as other, less significant changes. This modification received the designation M1A1 HC and was actively used by the US armed forces in various military conflicts, including operations in Iraq and Afghanistan. A total of 880 tanks were produced in this version, some of which are still in service with the US Marine Corps.</p>
+            <img src="https://preview.redd.it/jetfv348qul61.png?width=1024&format=png&auto=webp&s=de6573013810979c072c28568cec7d4fbf8dc7e0" alt="Historical M1A1 HC" class="tank-image">
+        </div>
+        
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+             <p><strong>Pros:</strong> Excellent mobility for its weight. The powerful gas turbine engine (1500 hp) provides fast acceleration (0-32 km/h in ~5 sec) and a high top speed (~67 km/h).</p>
+            <p><strong>Cons:</strong> Slightly inferior in power-to-weight ratio compared to other NATO and Soviet competitors. The large mass (over 65 t) leads to high inertia in turns and reduced mobility in urban terrain.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p><strong>Pros:</strong> Legendary frontal turret armor with depleted uranium (DU) inserts. At its combat range (~1.5+ km), it is practically invulnerable from the front to most shells. The spacious fighting compartment and good spacing of modules often save it from the first hit.</p>
+            <p><strong>Cons:</strong> The hull and sides are the main Achilles' heel. The lower glacis plate and the turret "cheeks" (gun mantlet) are vulnerable zones even at a distance. The sides are very thin. It has a crew of 4, and an accurate hit under the gun mantlet renders the MBT helpless, unable to return fire. Hits to the horizontal turret drive also result in the incapacitation of the M1A1 HC.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>Main gun: 120-mm M256 smoothbore gun. Excellent ballistics, high rate of fire (~5.2 sec with crew reload skill from 25.2%).</p>
+            <p><strong>Shells:</strong></p>
+            <p>M829A2 / M829 (APFSDS): Excellent armor penetration (especially the A2), high flight speed. The best choice.</p>
+            <p>M830A1 (HEAT-MP): Effective against IFVs, SPAAGs, and for shooting down aircraft (due to its proximity fuse).</p>
+            <p>M830 (HEAT-FS): Effective against thick armor. Damages with a cumulative jet.</p>
+            <p>M908 (HE-OR-T): Effective against slat armor and screens (designed for obstacle reduction).</p>
+            <p>Additionally: 2 x 7.62-mm and 1 x 12.7-mm machine guns.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/m1a1hcweapon.webp" alt="M1A1 HC Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p>Excellent sights and visibility, good gun elevation/depression angles (-10/+20). Fast fire extinguishing system. Blowout panels. Dual fire control system.</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The M1A1 HC is a strong but demanding tank that embodies the American doctrine: powerful frontal turret armor, an excellent gun, and good mobility to take key positions.</p>
+            <p><strong>How to play:</strong></p>
+            <p>1. Play hull-down: Use the terrain, exposing only the invulnerable frontal part of the turret. Forget that you have hull armor.</p>
+            <p>2. Distance is your friend: At long ranges, your armor works perfectly, and the accurate gun allows you to effectively hit enemies' weak spots.</p>
+            <p>3. Do not expose your side: Even the slightest exposure of your flank is often fatal.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+
+        <a href="https://youtu.be/ZoKQrIA3zS4" target="_blank" class="youtube-btn">
+             Watch full review
+        </a>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/2" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Material provided by user Krampus. Last updated 12/11/2025. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+     
+        const firebaseConfig = {
+           apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+           authDomain: "wtm-fortuna.firebaseapp.com",
+           databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+           projectId: "wtm-fortuna",
+           storageBucket: "wtm-fortuna.firebasestorage.app",
+           messagingSenderId: "438964530574",
+           appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+      
+
+        const TANK_ID = 'm1a1_hc'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        });
+    </script>
+</body>
+</html>

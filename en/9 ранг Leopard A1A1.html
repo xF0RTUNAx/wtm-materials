@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 9 Leopard A1A1 Review</title>
+    <style>
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Unique background for Leopard A1A1 */
+            background: url('https://24tv.ua/resources/photos/news/202302/2249207.jpg?v=1675440912000&w=1200&h=675') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- CONTENT STYLES --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- BUTTONS --- */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- COMMENTS WRAPPER --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- FIREBASE RATING STYLES --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- ADAPTIVITY (MOBILE) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 9 Leopard A1A1</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/leoa1a1main.webp" alt="Leopard A1A1 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The Leopard A1A1 is a modification of the German Leopard I main battle tank, designed to improve the combat performance of the first production series. While the Leopard I was successful and met initial requirements, it had shortcomings, particularly its weak armor. Feedback from early service led to the 1970 modernization program to the Leopard A1 standard: these tanks received passive night vision, a new track design, side skirts, and most importantly, a two-plane stabilizer for the main gun. Between 1975 and 1977, all Leopard A1s were further upgraded to the A1A1 variant, featuring Blohm & Voss spaced turret armor to increase resistance against HEAT munitions. From 1979, the Bundeswehr began replacing Leopard 1s with the Leopard 2, with the last units retired in 2003. Despite this, over 15 countries continue to operate various modifications of the Leopard today.</p>
+            <img src="https://cs8.pikabu.ru/post_img/big/2019/02/10/7/1549796805190977094.jpg" alt="Historical Leopard A1A1" class="tank-image">
+        </div>
+
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Mobility</h3>
+             <p><strong>Pros:</strong> Excellent mobility — the tank's primary strength. A powerful 830 hp engine, high power-to-weight ratio (~20 hp/t), and good transmission. Fast reverse speed (28 km/h), high top speed (~72 km/h), and excellent maneuverability on rough terrain.</p>
+            <p><strong>Cons:</strong> The rear placement of the transmission makes the tank more vulnerable from the back. At high speeds, handling can feel somewhat twitchy.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p>The low silhouette and good hull armor slope angles can result in unexpected ricochets.</p>
+            <p>Armor is essentially symbolic. The hull (70 mm at its thickest point) and turret can be penetrated by anything, including heavy machine guns (from the side and rear). Typical three-man hull layout: a precise frontal hit has a high chance of knocking them all out. High explosive risk.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>Primary: 105mm Royal Ordnance L7A3 rifled gun — a NATO legend.</p>
+            <p><strong>Ammunition:</strong></p>
+            <p>DM23 (APFSDS): Excellent armor penetration (~340 mm), allows for reliably engaging any target at its rank.</p>
+            <p>DM12 (HEAT-FS): Effective against lightly armored targets, open-top SPAAGs, etc.</p>
+            <p>DM512 (HESH): Effective against medium-armored targets, explodes with great force.</p>
+            <p>DM13 (APDS): Effective against thick armor, dealing damage via secondary spalling.</p>
+            <p>Additionally: 2 x 7.62mm machine guns.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/leoa1a1weapon.webp" alt="Leopard A1A1 Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p>Smoke Grenades: 8 launchers, very useful for retreating or deploying smoke screens. Vertical plane stabilizer.</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The Leopard A1A1 is a classic "glass cannon." It is a tank for the "first shot — first hit — first out" tactic. Its main assets are its speed and low profile. This vehicle is intended for patient, calculated gameplay, holding key positions, and supporting allies from a distance.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/17" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Material provided by user Krampus. Last updated 12/11/2025. If you find errors or have suggestions — message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        const TANK_ID = 'leopard_a1a1'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>

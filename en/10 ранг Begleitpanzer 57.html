@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 10 Begleitpanzer 57 Review</title>
+    <style>
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Фон из исходного кода */
+            background: url('https://static.wtmobile.com/upload/fileman/images/2024/october_2024/14_09_db1_common_tank/s13_db1_common_tank_leo2k_1440x640_1634140079d5e1e5bbc2f59550f37742.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 10 Begleitpanzer 57</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/57pics/57main.webp" alt="Begleitpanzer 57 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The Begleitpanzer 57 is a variant of the production Marder IFV, featuring enhanced armament in the form of a 57-mm Bofors automatic cannon, which allowed it to confidently destroy light armored vehicles at long distances. It was developed by Thyssen-Henschel and Bofors in 1977. To combat heavy armor, it was equipped with a TOW ATGM launcher, with the possibility of upgrading to the I-TOW. According to available data, only one prototype was built, and the project did not proceed beyond the testing phase.</p>
+            <img src="https://i.redd.it/begleitpanzer-57-mms-ingame-model-just-makes-me-sad-v0-gf8e5w7t17hf1.png?width=2329&format=png&auto=webp&s=d097eca5e60354ecbc69cc8d55d9ca1d54b83555" alt="Historical Begleitpanzer 57" class="tank-image">
+        </div>
+
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+             <p><strong>Pros:</strong> Excellent mobility based on the Marder 1 chassis. The powerful diesel engine (600 hp) provides good acceleration, a top speed of about 83 km/h on paved roads, and a reverse speed of around 83 km/h. Decent power-to-weight ratio (~21 hp/t). A fully tracked platform ensures good cross-country performance.</p>
+            <p><strong>Cons:</strong> Neutral steering (turning on the spot) is quite slow.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p><strong>Pros:</strong> The front of the hull and turret have anti-projectile resistance against small-caliber automatic cannons (20-30 mm). It can withstand fire from IFVs, SPAAGs, and aircraft. Layout features 4 crew members spaced throughout the hull.</p>
+            <p><strong>Cons:</strong> Absolutely defenseless against any tank shells (APFSDS, HEAT, HE) and ATGMs. The sides and rear can be penetrated even by heavy machine guns (12.7+ mm).</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>Main gun: 57-mm Bofors L/70 Mk.1 automatic cannon. A unique and powerful weapon. High rate of fire: about 120 rounds/min in full automatic mode.</p>
+            <p><strong>Shells:</strong> </p>
+            <p>57x438 AP-T: The main armor-piercing shell with explosive filler against various types of vehicles. Effective when shooting enemies in the side, especially heavy MBTs, as well as against medium MBTs.</p>
+            <p>57x438 HE-T: High-explosive fragmentation shell. Effective against lightly armored vehicles such as SPAAGs, IFVs, etc.</p>
+            <p>57x438 SAP-T: Semi-armor-piercing high-explosive shell. Also effective against lightly armored vehicles like SPAAGs, IFVs, etc.</p>
+            <p>57x438 HE-VT: High-explosive shell with a proximity fuze. Highly effective against aircraft.</p>
+            <p>I-TOW (ATGM): 6 guided anti-tank missiles. The best ATGM available for the Begleitpanzer 57, boasting 630mm of penetration. Effective against any type of vehicle.</p>
+            <p>7.62-mm machine gun.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/57pics/57weapon.webp" alt="Begleitpanzer 57 Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p> Equipped with a stabilizer. Very good gun depression/elevation angles (-8/+45). Excellent horizontal targeting speed (67.3°).</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The Begleitpanzer 57 is not just an IFV, but a universal support vehicle. It is one of the most multifunctional and tactically flexible vehicles in the game. Its role is to control the airspace, fight light vehicles, and deliver precise strikes against heavy targets from a distance.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/16" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Material provided by user Krampus. Last updated 12/16/2025. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+      
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 'begleitpanzer_57'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>

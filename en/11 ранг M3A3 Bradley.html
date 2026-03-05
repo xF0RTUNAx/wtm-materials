@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 11 M3A3 Bradley Review</title>
+    <style>
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Уникальный фон для этой страницы */
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_trophies/1080x2340_wtm_season_18_413ea321f4eeaa9d9a43088f126c1e3f.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 11 M3A3 Bradley</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bradley/bradleymain.webp" alt="M3A3 Bradley Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The M3A3 "Bradley" is a late modification of the American Bradley Cavalry Fighting Vehicle. Taking into account the experience of the Gulf War in the early 1990s, American engineers created a new modification of the widespread M3 Bradley combat vehicle. The electronic equipment was improved: a new fire control system was introduced, compatible with the inter-vehicle communication system of the M1A2 Abrams tank and the AH-64D Apache Longbow helicopter. The commander received an independent thermal imaging sight, which allows for automatic gun adjustment, automatic target tracking, and tracking multiple targets simultaneously. The M3A3 Bradley modifications began entering US Army units in 1998, and the first vehicles were officially adopted in 2000. By the end of 2010, over 3,300 Bradleys had been upgraded to the A3 version. The vehicles are still in service with the US Army and its allies.</p>
+            <img src="https://wikiwarriors.org/images/8/8b/M3A3_Bradley.jpg" alt="Historical M3A3 Bradley" class="tank-image">
+        </div>
+        
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+             <p><strong>Pros:</strong> Very good mobility for its weight (≈30 t). The Cummins VTA-903T diesel engine (600 hp) provides a power-to-weight ratio of ~20 hp/t, excellent acceleration, a top speed of about 67 km/h, and reverse speed (~15 km/h). The tracked platform provides good cross-country performance.</p>
+            <p><strong>Cons:</strong> Not as nimble as wheeled reconnaissance vehicles or light tanks. Reverse speed is slow. Neutral steering is reasonably fast, but overall maneuverability is worse than the M3 Bradley due to the increased weight.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p><strong>Pros:</strong> Bulletproof armor with ceramic add-on plates. The front of the hull and turret can withstand fire from 12.7-14.5 mm machine guns and shrapnel.</p>
+            <p><strong>Cons:</strong> Absolutely defenseless against any tank armament, aircraft cannons (23-30+ mm), and ATGMs. The hull is long and tall, making it easy to hit. Although the 3-man crew is spaced out, one lucky HE or APFSDS hit often takes out the entire vehicle.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p><strong>Main:</strong></p>
+            <p>25-mm M242 Bushmaster automatic cannon: Dual-feed system. Choice between:</p>
+            <p>M919 (APFSDS): ~100 mm of penetration. Used for fighting light armor and the sides of tanks.</p>
+            <p>M791 (APDS): Effective against lightly armored vehicles and for shooting at the weak spots of enemy MBTs.</p>
+            <p><strong>ATGMs:</strong></p>
+            <p>TOW-2A/B ATGM launcher: The main striking force. 12 guided missiles (2 in the launcher + 10 in reserve). TOW-2A is a tandem ATGM, effective against heavy, medium, and light armored vehicles. </p>
+            <p>TOW-2B — a unique and the most dangerous version. It attacks from above, flying over the target and detonating its tandem warhead downward into the roof. It does not require aiming directly at the turret or hull, and ignores ERA and most active protection systems.</p>
+            <p>Additionally: 7.62-mm coaxial machine gun.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/bradley/bradleyweapon.webp" alt="M3A3 Bradley Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p>Stabilizer (works on the move). Smoke grenades (8 pcs). Large vertical guidance angles for the gun (-9°/+59°).</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The M3A3 Bradley is not a scout, but a high-tech tank destroyer and hunter. It is one of the most effective vehicles for fighting heavily armored targets at its own and any higher rank thanks to the unique TOW-2A/B ATGMs.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+
+        <a href="https://youtu.be/ZoKQrIA3zS4" target="_blank" class="youtube-btn">
+             Watch full review
+        </a>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/4" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Material provided by user Krampus. Last updated 01/07/2026. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        // КЛЮЧИ (Рабочие, Европейские)
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 'm3a3_bradley'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 10 T-72AV (TURMS-T) Review</title>
+    <style>
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/05_may_25/26_offer_s20/offer_s20_turms_game_13ae14e3fe57f841604990028ce14893.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 10 T-72AV (TURMS-T)</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/turmsmain.webp" alt="T-72AV (TURMS-T) Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The T-72AV (TURMS-T) (Tank Universal Reconfigurable Modular System) is a modernized Soviet T-72AV tank (a variant of the T-72A with Kontakt-1 explosive reactive armor) adapted for the needs of the Syrian army. The tank received a new fire control system (FCS) developed by the Italian company Officine Galileo, which was previously installed on C1 Ariete tanks. Thanks to this, the gunner gained the ability to detect targets at a range of 5 km during the day and 4 km at night. A certain number of modernized T-72s also received a commander's panoramic sight, which significantly increased the capabilities for searching enemy objects, target designation, or duplicating the gunner's actions. As a result, the updated tanks significantly surpassed the base variants in terms of FCS parameters, as the older ones were equipped with outdated sights developed in the early 1970s. In total, 122 tanks underwent the "Italian" upgrade up to 2006. Previously, it was believed that all these tanks went into service with the Republican Guard division, but based on observations during the war, it can be assumed that some of these tanks were distributed among other divisions as well. Perhaps it was assumed that adding a small number of tanks with TURMS-T would increase the overall combat effectiveness of armored units.</p>
+            <img src="https://cs14.pikabu.ru/post_img/big/2024/02/12/9/170774762913173239.png" alt="Historical T-72AV (TURMS-T)" class="tank-image">
+        </div>
+        
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+             <p><strong>Pros:</strong> Maximum speed is achieved when driving on practically any type of terrain. The Turms also possesses decent turning capabilities. Overall, despite modest figures, they are sufficient for an effective game.</p>
+            <p><strong>Cons:</strong> The key drawback is its reverse speed, which won't let you easily escape from threats. You will have to adapt to positions in advance, relying on driving forward or turning the hull to retreat.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p>The physical equivalent of the composite armor is identical to its tech-tree counterpart (the T-72A). Additionally, the tank is covered with Kontakt-1 ERA. It doesn't save you from kinetic munitions but actually works against HEAT and occasionally tandem warheads. Sometimes the tank can surprise with its survivability, but it is also not uncommon to be destroyed by a single hit.</p>
+            <p>The upper glacis plate armor allows it to withstand early APFSDS rounds but struggles heavily against more modern versions. In some situations, you might get lucky, and the fuel tank along with the driver will absorb the main damage. Other weak spots are similar to other Soviet vehicles. Don't forget about the fatal impact of HEAT and HE shells near or right above the turret ring.</p>
+            <p>The limit of the side armor is providing temporary protection against IFV autocannons. Serious munitions leave no chances. Thus, effective sidescraping (diamond angling) is completely ruled out.</p>
+            <p>In turn, the turret armor shows stable and impressive values. Playing around it is the ideal tactical scenario. The breech, being quite large, often absorbs damage, leaving other modules without apparent harm.</p>
+            <p>The overall survivability of the tank depends both on the enemy's skill and pure luck. The Turms can survive multiple hits for a long time or crumble from one well-placed shot. The dense layout of the internal modules and the autoloader lead to such consequences. On the other hand, the autoloader allows for a stable rate of fire regardless of losing crew members, maintaining the same combat effectiveness throughout the battle. The same applies to the ability to reload while putting out a fire.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>The main shell is the "Mango" (APFSDS, boasting a high initial flight speed of 1700 m/s), which is sufficient for effective play even at top tiers. Unfortunately, this shell retains its drawback of inconsistent post-penetration damage across all ranks.</p>
+            <p>Thanks to the installed autoloader, the gun has a stable reload time of 7.1 seconds, independent of the crew's upgrade level. However, this is still longer than the reload time on Western tanks, which should be considered during a shootout, as you might not get the chance for a follow-up shot.</p>
+            <p>The turret traverse, along with horizontal and vertical targeting speeds (as well as gun depression), are weak for this rank, and it is very noticeable. Pre-aiming at the enemy helps mitigate this issue.</p>
+            <p>Machine guns are useful for clearing obstacles and damaging vulnerable enemy modules (tracks, open cabins). </p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/turmsweapon.webp" alt="T-72AV (TURMS-T) Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Gameplay Tactics</h3>
+            <p>When you are top tier in a battle, an aggressive playstyle, smart positional play, and controlling the flanks with the help of allies are recommended. Most opponents at these ranks do not have deep knowledge and significant experience. Also, their vehicles struggle to find countermeasures against a rational Turms player.</p>
+            <p>When we are at the bottom of the list (bottom tier), we become more dependent on our own team and other circumstances. Now our advantages are leveled out by modern machinery, but this does not mean the Turms becomes unplayable. Our key tasks will be supporting allies and playing from defensive positions with appropriate tactical maneuvers.</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>This legendary modification of the Soviet tank is the ideal option to learn how to play at top ranks. Its limited mobility forces you to pay closer attention to the minimap and take more deliberate actions. The armor will sometimes forgive mistakes and let you continue the fight without technical losses. A high-penetrating gun with slow aiming and reloading will teach you to find and exploit the weak spots of various vehicles.</p>
+            <p>The Turms is the embodiment of the phrase "slow and steady wins the race". A systematic and pragmatic approach to battles allows you to realize the vehicle's potential while minimizing the impact of its drawbacks. It is a good pre-top vehicle for training and transitioning into the highest tiers. Also, fans of Soviet tanks and a similar gameplay philosophy should definitely give this machine a try.</p>
+            <p>It is important to remember that the tank is not an ultimate weapon, and your gaming experience heavily depends on your personal preferences, skills, map knowledge, and battlefield circumstances.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+        
+        <a href="https://youtu.be/24FQqZvBh9A" target="_blank" class="youtube-btn">
+             Watch full review
+        </a>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/30" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Last updated 12/11/2025. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 't72av_turms'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>

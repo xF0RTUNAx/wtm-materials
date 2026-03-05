@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 9 XM1 (Chrysler) Review</title>
+    <style>
+        /* --- BASE STYLES --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Unique background for XM1 */
+            background: url('https://static.wtmobile.com/upload/fileman/images/2024/november_2024/db6_tank_bigbox/db6_s15_bigbox_tank_2_9e9a0bfa4ea8b45e51061ab00ccf02c7.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- CONTENT STYLES --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- BUTTONS --- */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- COMMENTS BLOCK --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- FIREBASE RATING STYLES --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- ADAPTIVITY (MOBILE) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 9 XM1 (Chrysler)</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/xm1pics/xm1main.webp" alt="XM1 (Chrysler) Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The XM1 (Chrysler) was a development project for the American main battle tank that became the foundation for the famous M1 Abrams. Development began immediately after the cancellation of the excessively expensive XM803 program in late 1971. A key goal was ensuring high protection—the armor was designed to withstand 115mm shells from the Soviet U-5TS gun at 800m. Two corporations, General Motors and Chrysler, worked on the project in parallel. Chrysler chose the M60A1 as their base, redesigning it with the most advanced tank-building ideas. In February 1976, both companies presented their prototypes. Despite GM's initial lead, Chrysler won the competition, primarily due to their risky move of replacing the diesel engine with the AGT-1500 gas turbine. At the time, turbines were considered unproven for serial tanks, but Chrysler's gamble paid off. GM's attempt to switch to a turbine late in the process only increased their project's projected cost, sealing the contract for Chrysler. By 1978, Chrysler built 11 pre-production XM1s for testing. Experts supported the turbine as a progressive solution, and in 1980, the tank was adopted as the M1 Abrams, named after General Creighton Abrams.</p>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/XM1_Chrysler_prototype.png/1200px-XM1_Chrysler_prototype.png" alt="Historical XM1 (Chrysler)" class="tank-image">
+        </div>
+
+        <div class="content-section">
+            <h2>Quick Review</h2>
+            <h3>Mobility</h3>
+             <p><strong>Pros:</strong> The AGT-1500 gas turbine engine (1521 hp) and relatively light weight (≈53 t) provide a power-to-weight ratio exceeding 29 hp/t. Top speed is 83 km/h forward and 46 km/h backward. It's essentially a race car.</p>
+            <p><strong>Cons:</strong> Due to the high speed, it's easy to lose control on rough terrain.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p><strong>Pros:</strong> The turret front has decent resistance for its rank and can occasionally "catch" incoming rounds. The layout with an isolated ammo rack in the turret bustle (behind an armored bulkhead) often prevents catastrophic detonation.</p>
+            <p><strong>Cons:</strong> Overall armor is weak. The hull can be penetrated even by IFV autocannons. The turret is vulnerable to most APFSDS and HEAT rounds of its own and higher ranks. The 4-man crew is compactly placed, increasing the risk of multiple knockouts from a single shot. Armor is not your shield here.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>Primary: 105mm M68 rifled gun (L7 variant). Excellent rate of fire, two-plane stabilizer. Accurate and reliable.</p>
+            <p><strong>Shells:</strong> </p>
+            <p>M735 (APFSDS): Excellent "dart." Sufficient to penetrate most targets at this rank when hitting weak zones (sides, LFP, gun mantlet).</p>
+            <p>M728 (APDS): Effective against thick armor, dealing damage via secondary spalling.</p>
+            <p>M456 (HEAT-FS): Useful against lightly armored targets.</p>
+            <p>M393A2 (HESH): Effective against medium-armored targets, exploding with high force.</p>
+            <p>Secondary: 7.62mm and 12.7mm machine guns.</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/xm1pics/xm1weapon.webp" alt="XM1 (Chrysler) Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p>Excellent vertical guidance angles (-10°/+20°). No smoke grenades. Cannot fire directly to the rear due to the high engine deck. </p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The XM1 (Chrysler) is not just a tank, but a strategic tool. It is the fastest way to reach key points on the map and create a local advantage. It is not designed for head-on duels—it is designed to tactically outplay the opponent using its speed and agility.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+
+        <a href="https://youtu.be/33dD3yXEy88?si=i7PkpzSkU-nofBEX" target="_blank" class="youtube-btn">
+             Watch full review
+        </a>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/10" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Material provided by user Krampus. Last updated 12/16/2025. If you find errors or have suggestions—message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // UNIQUE ID FOR THIS TANK
+        const TANK_ID = 'xm1_chrysler'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>

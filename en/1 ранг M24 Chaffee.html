@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 1 M24 Chaffee Review</title>
+    <style>
+        /* --- БАЗОВЫЕ СТИЛИ --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/24_01_decisivestrike/1080x2340_wtm_decisive_strike_d721f67849ae4f4df978a2542b41dc1f.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { 
+                padding: 15px; 
+            }
+            .content-section { 
+                background: rgba(255, 255, 255, 0.08); 
+            }
+            .interactive-stars {
+                font-size: 1.8em; 
+            }
+            .comments-wrapper { 
+                padding: 5px; 
+            } 
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 1 M24 Chaffee</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/M24%20Chaffee/m24main.webp" alt="M24 Chaffee Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>
+The M24 Chaffee light tank was developed in the USA near the end of World War II as a replacement for the outdated M5A1 Stuart. The main goal for designers was to create a light vehicle with a full-fledged 75mm gun, comparable in firepower to medium tanks. Production began in 1944, and the M24 quickly established itself as a better-armed and more comfortable light tank. It saw combat in the final stages of the war, was actively used in Korea, and was supplied to US allies.
+
+In War Thunder Mobile, the M24 retains its historical concept: a fast and maneuverable scout with minimal armor, but good armament for its rank.
+            The M24 is a light tank for dynamic gameplay. It combines excellent mobility, a comfortable gun, and wide opportunities for flanking attacks. However, the vehicle has practically no armor — any mistake in positioning can lead to instant destruction.
+</p>
+            <img src="https://upload.wikimedia.org/wikipedia/commons/7/7f/M24_Chaffee_tankfest_2023.JPG" alt="Historical M24 Chaffee" class="tank-image">
+        </div>
+        
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+            <p>One of the best maneuverabilities at its rank — the vehicle is built for speed, flanking, and aggressive play.</p>
+             <p><strong>Pros:</strong> High top speed in a straight line.
+ Fast acceleration — allows you to take key positions before enemies do.
+ Good traverse speed and responsive controls.
+ Excellent mobility on soft terrain — speed loss is insignificant.
+ Acceptable reverse speed, allowing for a timely retreat after firing.
+ </p>
+            <p><strong>Cons:</strong> Handling at high speeds requires precision.
+ Light mass — the tank quickly loses momentum during collisions and after taking damage.</p>
+
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p><strong>Pros:</strong> Low mass and relatively compact silhouette can help avoid hits in some situations.
+ Bounces are possible at extreme angles thanks to the turret shape.</p>
+            <p><strong>Cons:</strong> Practically no armor — can be penetrated by all tanks at its rank and above.
+ The crew and modules are densely packed, which amplifies the damage effect upon penetration.
+ The large profile of the turret is easily hit even at medium distances.
+</p>
+            <p><strong>When penetrated:</strong> Fatal hits to the ammo rack are common, leading to instant destruction.
+ The enemy often takes out most of the crew, rendering the tank completely combat-ineffective.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>Main gun: 75 mm M6</p>
+            <p><strong>Pros:</strong> Pleasant ballistics — easy to work with at medium distances.
+ Good rate of fire for its rank.
+ Sufficient armor penetration for shooting at sides and weak spots.
+ Fast targeting — convenient for firing on the move.
+ The presence of a single-plane stabilizer improves firing comfort while moving.
+</p>
+<p><strong>Cons:</strong> Penetration is often insufficient against the front of heavy and well-armored vehicles.
+ Damage is inconsistent — precise aiming is required.
+ Effectiveness drops significantly at long distances.</p>
+            <p><strong>Practical effect in WTM:</strong> The gun is perfectly suited for flanking and finishing off targets. The M24 is especially dangerous if it shoots first and remains unnoticed.
+</p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/M24%20Chaffee/m24weapon.webp" alt="M24 Chaffee Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p>Ideal for scouting, flanking maneuvers, and fast breakthroughs.
+ Excellent for capturing and intercepting points.
+ Requires constant movement — a stationary target doesn't live long.
+ It is critically important to play based on speed and the element of surprise.
+</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The M24 in War Thunder Mobile is a tank for players who prefer dynamics, mobility, and an aggressive style. It fully reveals its potential if you:
+
+ flank enemies,
+ use the terrain,
+ act unexpectedly,
+ shoot first.
+
+At the same time, the vehicle is absolutely unsuitable for frontal shootouts — there is no armor, and any mistake becomes fatal.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+
+       
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/33" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Material provided by user Maksim Tagirov. Updated 01/15/2026. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+     
+        const firebaseConfig = {
+           apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+  authDomain: "wtm-fortuna.firebaseapp.com",
+  databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "wtm-fortuna",
+  storageBucket: "wtm-fortuna.firebasestorage.app",
+  messagingSenderId: "438964530574",
+  appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+      
+
+        const TANK_ID = 'm24'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        });
+    </script>
+</body>
+</html>

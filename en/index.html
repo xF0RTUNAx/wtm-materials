@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>War Thunder Mobile Guides</title>
+    <link rel="icon" href="../logo.jpg" type="image/jpeg">
+    <link rel="shortcut icon" href="../logo.jpg" type="image/jpeg">
+    
+    <link rel="apple-touch-icon" href="../logo.jpg">
+    <link rel="manifest" href="../manifest.json">
+
+    <meta name="description" content="Guides for tanks, missile fleet, and aviation in War Thunder Mobile by xFORTUNAx. Thematic mini-games with prizes for WTM.">
+    <meta name="keywords" content="WTM, War Thunder Mobile, guides, tanks, fleet, missile fleet, war thunder mobile reviews, wtm, tank review in war thunder mobile, best tanks in war thunder mobile, xFORTUNAx">
+
+    <meta property="og:title" content="WTM Guides and Mini-games | xFORTUNAx">
+    <meta property="og:description" content="Guides for tanks, missile fleet, and aviation in War Thunder Mobile.">
+    <meta property="og:image" content="https://fortunawtm.com/logo.jpg">
+    <meta property="og:url" content="https://fortunawtm.com/en/">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="en_US">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "4141cb59-095e-44fe-94fc-bdf5c121c84f",
+    });
+  });
+</script>
+    
+    <style>
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.5s ease;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(10, 20, 40, 0.85), rgba(0, 100, 200, 0.6));
+            z-index: -1;
+        }
+
+        .dashboard-wrapper {
+            display: flex;
+            width: 90%;
+            height: 90vh;
+            background: rgba(20, 30, 60, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            overflow: hidden;
+            z-index: 10; 
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .logo img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+            cursor: default; 
+        }
+        
+        .logo img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+        }
+
+        /* --- Стили для переключателя языка --- */
+        .language-switcher-sidebar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        .lang-label {
+            font-size: 0.9em;
+            font-weight: bold;
+            color: rgba(255, 255, 255, 0.5);
+            transition: color 0.3s;
+        }
+        .lang-label.active { color: #ffcc00; }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: #ffcc00; }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+            background-color: #000;
+        }
+        /* ------------------------------------- */
+
+        .nav-menu {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+
+        .nav-item {
+            margin-bottom: 15px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: rgba(255,255,255,0.7);
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            border-radius: 12px;
+            transition: 0.3s;
+        }
+
+        .nav-link i { margin-right: 15px; width: 20px; text-align: center;}
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+
+        /* --- Стили обертки дропдауна (Для ПК они просто прозрачные контейнеры) --- */
+        .mobile-only-toggle { display: none; } 
+        .social-wrapper { display: contents; } 
+        /* ------------------------------------------------------------------------- */
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 15px;
+            margin-top: auto;
+        }
+        
+        .user-avatar {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: #ffcc00;
+            margin-right: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .header-greeting h1 {
+            font-size: 2em;
+            margin: 0;
+            font-weight: 700;
+        }
+        .header-greeting p {
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        button.card-btn {
+            border: none;
+            border-radius: 20px;
+            height: 160px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+            text-align: left;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        button.card-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            z-index: 1;
+        }
+
+        button.card-btn span {
+            position: relative;
+            z-index: 2;
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        button.card-btn i {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 2em;
+            color: rgba(255,255,255,0.8);
+            z-index: 2;
+            background: rgba(255,255,255,0.2);
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px;
+        }
+
+        button.card-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        #aviation-btn {
+            background: url('https://staticfiles-ru.warthunder.com/upload/image/!2023/12/upd/art_int/art_int/news_air_superiority_c5e1646a924386e0d83739248532814d.jpg') center/cover;
+        }
+        #fleet-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg') center/cover;
+        }
+        #tank-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg') center/cover;
+        }
+        #minigame-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/25_03_stpatrick2025/1080x2340_wtm_saintpatricks_day25_640351f6fdaaca1296d868f957108bdd.jpg') center/cover;
+        }
+        #trophy-sim-btn {
+            background: url('https://static.wtmobile.com/upload/fileman/images/regular_pics/1440x640_wtm_premium_gold_kv220_f385b24bac8daad3117fb2ad6f9515f4.jpg') center/cover;
+        }
+        
+        #back-btn {
+            display: none;
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+            border: none;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 20px 0 25px 15px; 
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(255, 200, 0, 0.4);
+            z-index: 100;
+        }
+        #back-btn:hover { transform: scale(1.05); }
+
+        #content {
+            margin-top: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            color: #333;
+            padding: 25px;
+            border-radius: 20px;
+            min-height: 100px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+
+        
+        .support-banner {
+            background: linear-gradient(135deg, rgba(255, 204, 0, 0.1), rgba(255, 100, 0, 0.15));
+            border: 1px solid rgba(255, 204, 0, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+        
+        .support-banner:hover {
+            border-color: rgba(255, 204, 0, 0.6);
+            box-shadow: 0 5px 20px rgba(255, 204, 0, 0.15);
+        }
+
+        .support-content h3 {
+            margin: 0 0 8px 0;
+            color: #ffcc00;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .support-content p {
+            margin: 0;
+            font-size: 0.95em;
+            opacity: 0.9;
+            color: #e0e0e0;
+            line-height: 1.5;
+        }
+
+        .support-btn {
+            background: linear-gradient(135deg, #ffcc00, #ff9900);
+            color: #000;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .support-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(255, 204, 0, 0.5);
+            color: #000;
+        }
+
+        @media (max-width: 600px) {
+            .support-banner {
+                flex-direction: column;
+                text-align: center;
+            }
+            .support-content h3 {
+                justify-content: center;
+            }
+            .support-btn {
+                width: 100%;
+                justify-content: center;
+                box-sizing: border-box;
+            }
+        }
+
+        .sponsors-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .sponsors-card h3 { margin-top: 0; color: #ffcc00; }
+        .sponsors-list { list-style: none; padding: 0; display: flex; gap: 20px; flex-wrap: wrap; }
+        .sponsors-list li { background: rgba(255,255,255,0.1); padding: 8px 15px; border-radius: 20px; }
+        
+        
+        .site-footer {
+            background: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px 20px;
+            margin-top: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+        }
+
+        .site-footer nav {
+            display: flex;
+            flex-direction: column;
+            gap: 12px; 
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .site-footer nav a {
+            color: #ffcc00;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-bottom: 1px dashed rgba(255, 204, 0, 0.3);
+            padding-bottom: 2px;
+        }
+
+        .site-footer nav a:hover {
+            color: #fff;
+            border-bottom-color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        @media (min-width: 768px) {
+            .site-footer nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 20px;
+            }
+        }
+        
+        
+        .main-content.is-fleet-active #content {
+            background: rgba(10, 20, 40, 0.95);
+            color: #00ff7f;
+            padding: 30px;
+            border-radius: 10px;
+            border: 2px solid #00ff7f;
+            box-shadow: 0 0 20px rgba(0, 255, 127, 0.5), inset 0 0 10px rgba(0, 255, 127, 0.2);
+        }
+        .main-content.is-fleet-active .header-greeting { display: none !important; }
+        .main-content.is-fleet-active #content a { color: #ffcc00; }
+
+        .main-content.is-aviation-active #content {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        .main-content.is-aviation-active .header-greeting { display: none !important; }
+
+        .main-content.is-tank-active #content {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+        }
+        .main-content.is-tank-active .header-greeting { display: none !important; }
+
+    
+        @media (max-width: 900px) {
+            .dashboard-wrapper { 
+                flex-direction: column; 
+                height: 100vh; 
+                width: 100%; 
+                border-radius: 0; 
+            }
+            .sidebar { 
+                width: 100%; 
+                height: 70px; 
+                padding: 0 15px; 
+                flex-direction: row; 
+                align-items: center; 
+                justify-content: space-between; 
+                border-right: none; 
+                border-bottom: 1px solid rgba(255,255,255,0.1); 
+                background: rgba(20, 30, 60, 0.95); 
+                z-index: 1000;
+                flex-shrink: 0;
+                box-sizing: border-box; 
+            }
+            .logo { margin: 0; display: flex; align-items: center; flex-shrink: 0; }
+            .logo img { height: 40px; width: auto; border-radius: 8px; }
+            
+            .language-switcher-sidebar { margin-bottom: 0; margin-left: 10px; }
+            
+            /* --- НОВАЯ СТРУКТУРА НАВИГАЦИИ ДЛЯ МОБИЛЬНЫХ --- */
+            .nav-menu { 
+                display: flex; 
+                flex-grow: 1; 
+                justify-content: flex-end; 
+                margin-left: 15px; 
+                gap: 8px; 
+                padding: 0; margin-right: 0;
+            }
+            
+            .nav-item { margin: 0; }
+            
+            /* Базовая кнопка-квадрат для Домика */
+            .nav-link {
+                width: 40px; height: 40px; 
+                padding: 0; display: flex;
+                align-items: center; justify-content: center; 
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.05); 
+                transition: all 0.2s ease;
+            }
+            .nav-link span { display: none; }
+            .nav-link i { 
+                margin: 0 !important; width: auto !important; 
+                font-size: 1.1em; color: rgba(255, 255, 255, 0.6); line-height: 1; 
+            }
+            .nav-link.active, .nav-link:hover {
+                background: rgba(255, 255, 255, 0.2); 
+                transform: translateY(0); 
+            }
+            .nav-link.active i, .nav-link:hover i { color: #fff; }
+            
+            /* Кнопка-переключатель "Socials" */
+            .mobile-only-toggle { display: block; cursor: pointer; }
+            .mobile-only-toggle .nav-link { width: auto; padding: 0 15px; background: rgba(255,204,0,0.1); border: 1px solid rgba(255,204,0,0.3); }
+            .mobile-only-toggle .nav-link i { color: #ffcc00; }
+            .mobile-only-toggle .mobile-text { display: inline-block !important; margin-left: 8px; font-weight: bold; font-size: 0.9em; color: #fff; }
+            
+            /* Выпадающее окно */
+            .social-wrapper {
+                display: none; /* Скрыто изначально */
+                position: absolute;
+                top: 75px; 
+                right: 15px;
+                background: rgba(20, 30, 60, 0.98);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 12px;
+                padding: 10px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+                z-index: 1001;
+                flex-direction: column;
+                gap: 5px;
+                min-width: 220px;
+            }
+            .social-wrapper.active { display: flex; animation: fadeIn 0.2s ease; }
+            
+            /* Ссылки внутри выпадающего окна (Исправление вылезающего фона!) */
+            .social-wrapper .nav-item { margin: 0; width: 100%; box-sizing: border-box; }
+            .social-wrapper .nav-link {
+                width: 100%; height: auto; padding: 12px 15px; justify-content: flex-start; box-sizing: border-box;
+            }
+            .social-wrapper .nav-link span { display: inline-block; margin-left: 15px; font-size: 1em; color: #e0e0e0; }
+            .social-wrapper .nav-link i { margin: 0 !important; width: 25px !important; text-align: center; }
+            /* ----------------------------------------------- */
+            
+            .user-profile { display: none; }
+            .cards-grid { grid-template-columns: 1fr; }
+            .main-content { padding: 20px 15px; padding-bottom: 80px; } 
+            
+            .main-content.is-fleet-active { padding: 0; }
+            .main-content.is-fleet-active #content {
+                padding: 15px 10px; border-radius: 0; border: none !important; box-shadow: none;
+            }
+            .main-content.is-fleet-active ol li { padding: 12px 10px 12px 45px; margin: 5px 0; }
+            .main-content.is-fleet-active .table-container { border-radius: 0; margin: 0; padding: 0; border-left: none; border-right: none; }
+            .main-content.is-aviation-active { padding: 0; }
+            .main-content.is-tank-active { padding: 0; }
+        }
+        
+        @keyframes fadeIn { from {opacity: 0; transform: translateY(-10px);} to {opacity: 1; transform: translateY(0);} }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-wrapper">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="../logo.jpg" alt="xFORTUNAx Logo" id="logo-img">
+            </div>
+            
+            <div class="language-switcher-sidebar">
+                <span class="lang-label ru">RU</span>
+                <label class="switch">
+                    <input type="checkbox" id="lang-toggle-main">
+                    <span class="slider"></span>
+                </label>
+                <span class="lang-label en">EN</span>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" onclick="returnToMain()">
+                        <i class="fas fa-home"></i> <span>Home</span>
+                    </a>
+                </li>
+                
+                <li class="nav-item mobile-only-toggle" onclick="toggleSocials(event)">
+                    <div class="nav-link">
+                        <i class="fas fa-users"></i> 
+                        <span class="mobile-text">Socials <i class="fas fa-chevron-down" id="social-arrow" style="font-size:0.8em; margin-left:5px !important;"></i></span>
+                    </div>
+                </li>
+
+                <div id="social-dropdown" class="social-wrapper">
+                    <li class="nav-item">
+                        <a href="https://t.me/fortunawtm" target="_blank" class="nav-link">
+                            <i class="fab fa-telegram-plane"></i> <span>Telegram Channel</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="https://t.me/warthundermobilefortuna" target="_blank" class="nav-link">
+                            <i class="fas fa-comments"></i> <span>Community Chat</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="https://youtube.com/@xf0rtunax" target="_blank" class="nav-link">
+                            <i class="fab fa-youtube"></i> <span>YouTube</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="https://dalink.to/xf0rtunax" target="_blank" class="nav-link">
+                            <i class="fas fa-heart"></i> <span>Support</span>
+                        </a>
+                    </li>
+                </div>
+            </ul>
+
+            <div class="user-profile">
+                 <div class="user-avatar"><i class="fas fa-clover" style="color: #000000;"></i></div>
+                <div>
+                    <div style="font-weight: bold; font-size: 0.9em;">Join us!</div>
+                    <div style="font-size: 0.7em; opacity: 0.7;">Official WTM website by xFORTUNAx</div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            
+            <div class="header-greeting">
+                <h1>War Thunder Mobile Guides</h1> 
+                <p class="subtitle">This resource is not an official representative of Gaijin Entertainment and War Thunder Mobile. A fan project created by the xFORTUNAx community.</p>
+                <p>Welcome! You are on the main page. Select a section of interest:</p>
+            </div>
+
+            <button id="back-btn" onclick="returnToMain()">
+                <i class="fas fa-arrow-left"></i> Back to menu
+            </button>
+
+            <div class="cards-grid" id="main-buttons">
+                <button id="aviation-btn" class="card-btn" onclick="navigateSection('Авиационная кампания I War Thunder Mobile.html')">
+                    <i class="fas fa-plane"></i>
+                    <span>Aviation Campaign</span>
+                </button>
+                
+                <button id="fleet-btn" class="card-btn" onclick="navigateSection('Ракетный флот I War Thunder Mobile.html')">
+                    <i class="fas fa-ship"></i>
+                    <span>Missile Fleet</span>
+                </button>
+                
+                <button id="tank-btn" class="card-btn" onclick="navigateSection('Танковая кампания I War Thunder Mobile.html')">
+                    <i class="fas fa-crosshairs"></i>
+                    <span>Tank Campaign</span>
+                </button>
+                
+                <button id="minigame-btn" class="card-btn" onclick="window.location.href='minigame.html'">
+                    <i class="fas fa-gamepad"></i>
+                    <span>Mini-games</span>
+                </button>
+
+                <button id="trophy-sim-btn" class="card-btn" onclick="window.location.href='trophy-sim.html'">
+                    <i class="fas fa-box-open"></i>
+                    <span>Trophy Simulator</span>
+                </button>
+                    
+            </div>
+
+            
+            <div id="content">
+                <p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-info-circle"></i> Select a section above to load information.
+                </p>
+            </div>
+            
+            <div id="support-banner" class="support-banner">
+                <div class="support-content">
+                    <h3><i class="fas fa-heart"></i> Support the Author</h3>
+                    <p>Hello! Instead of a thousand words, I'll just say that I would appreciate your support :) 
+                        <br>This helps to 
+                    maintain the project and its quality, and you can also become a significant and visible part of the community!</p>
+                </div>
+                <a href="https://dalink.to/xf0rtunax" target="_blank" class="support-btn">
+                    Support <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+
+            <div id="sponsors-section" class="sponsors-card">
+                <h3><i class="fas fa-star"></i> Project Sponsors</h3>
+                <ul class="sponsors-list">
+                    <li>Kostiantyn</li>
+                    <li>Maksim Tagirov</li>
+                    <li>Krampus</li>
+                    <li>Fantom</li>
+                    <li>David</li>
+                    <li>Flyeskiy</li>
+                    <li>Nikita</li>
+                    <li>Sachok</li>
+                </ul>
+            </div>
+
+            <footer id="main-footer" class="site-footer">
+                <p style="margin-bottom: 20px; font-weight: bold; color: #fff;">Additional navigation:</p>
+                <nav>
+                    <a href="#" onclick="navigateSection('Танковая кампания I War Thunder Mobile.html'); return false;">
+                        <i class="fas fa-crosshairs"></i> Tank guide for War Thunder Mobile
+                    </a>
+                    <a href="#" onclick="navigateSection('Ракетный флот I War Thunder Mobile.html'); return false;">
+                        <i class="fas fa-ship"></i> Missile fleet guide for War Thunder Mobile
+                    </a>
+                    <a href="#" onclick="navigateSection('Авиационная кампания I War Thunder Mobile.html'); return false;">
+                        <i class="fas fa-plane"></i> Aviation guide for War Thunder Mobile
+                    </a>
+                    <a href="minigame.html">
+                        <i class="fas fa-gamepad"></i> Mini-games and giveaways in War Thunder Mobile
+                    </a>
+                </nav>
+                <div style="margin-top: 25px; font-size: 0.8em; opacity: 0.5; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+                    &copy; 2026 xFORTUNAx 
+                </div>
+            </footer>
+        </main>
+
+        </div>
+
+    <script>
+        const originalBg = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_11_southwind/1080x2340_wtm_south_wind_6c9e3e7ccb2f692fb9e2acd228fff8c4.jpg")';
+        
+        async function navigateSection(url) {
+            const contentDiv = document.getElementById('content');
+            const mainContent = document.querySelector('.main-content');
+            
+            contentDiv.innerHTML = '<h3 style="color:#333; font-weight:bold;">Loading data...</h3><div style="width: 30px; height: 30px; border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite;"></div><style>@keyframes spin {0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); }}</style>';
+            
+            try {
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error('something went wrong...');
+                const html = await resp.text();
+                
+                setTimeout(() => {
+                    contentDiv.innerHTML = html;
+                    
+                    mainContent.scrollTop = 0;
+                    
+                    const isFleet = url.includes('Ракетный флот');
+                    const isAviation = url.includes('Авиационная');
+                    const isTank = url.includes('Танковая');
+
+                    mainContent.classList.remove('is-fleet-active');
+                    mainContent.classList.remove('is-aviation-active');
+                    mainContent.classList.remove('is-tank-active');
+                    
+                    if (isFleet) {
+                        mainContent.classList.add('is-fleet-active');
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/11_november_25/db4_s26_ship_knox/db4_s26_knox_sunset_89938bdfb6057e847a659cf27e79faa2.jpg")';
+                    
+                    } else if (isAviation) {
+                        mainContent.classList.add('is-aviation-active');
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_japan_air/1080x2340_wtm_a6m3_japanese_aircrafts_1c9d899d448079c5ba982a176deda800.jpg")';
+                    
+                    } else if (isTank) {
+                        mainContent.classList.add('is-tank-active');
+                        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
+                        
+                        const scripts = contentDiv.querySelectorAll('script');
+                        scripts.forEach(script => {
+                            const newScript = document.createElement('script');
+                            newScript.textContent = script.textContent;
+                            document.body.appendChild(newScript);
+                        });
+
+                    } else {
+                        document.body.style.backgroundImage = originalBg;
+                    }
+                    
+                    document.getElementById('main-buttons').style.display = 'none';
+                    document.getElementById('back-btn').style.display = 'inline-block';
+                    
+                    if (isFleet || isAviation || isTank) {
+                         document.getElementById('sponsors-section').style.display = 'none';
+                         document.querySelector('.header-greeting').style.display = 'none';
+                         document.getElementById('main-footer').style.display = 'none';
+                        
+                         document.getElementById('support-banner').style.display = 'none';
+                    } else {
+                         document.getElementById('sponsors-section').style.display = 'block';
+                         document.getElementById('main-footer').style.display = 'block';
+                         
+                         document.getElementById('support-banner').style.display = 'flex';
+                    }
+
+                }, 100);
+            } catch (e) {
+                contentDiv.innerHTML = `<p style="color:#ff0000; font-weight:bold;">Error: ${e.message}</p>`;
+            }
+        }
+
+        function returnToMain() {
+            const mainContent = document.querySelector('.main-content');
+            
+            mainContent.classList.remove('is-fleet-active');
+            mainContent.classList.remove('is-aviation-active');
+            mainContent.classList.remove('is-tank-active');
+            
+            document.getElementById('content').innerHTML = '<p style="color:#666; font-style:italic; display: flex; align-items: center; gap: 10px;"><i class="fas fa-info-circle"></i> Select a section above to load information.</p>';
+            document.body.style.backgroundImage = originalBg;
+            
+            document.getElementById('main-buttons').style.display = 'grid';
+            document.getElementById('back-btn').style.display = 'none';
+            document.getElementById('sponsors-section').style.display = 'block';
+            document.querySelector('.header-greeting').style.display = 'block';
+            document.getElementById('main-footer').style.display = 'block';
+            
+            document.getElementById('support-banner').style.display = 'flex';
+        }
+        
+        // --- ЛОГИКА ДРОПДАУНА СОЦСЕТЕЙ (Мобильная версия) ---
+        function toggleSocials(event) {
+            event.stopPropagation(); // Остановка всплытия клика
+            const dropdown = document.getElementById('social-dropdown');
+            const arrow = document.getElementById('social-arrow');
+            
+            dropdown.classList.toggle('active');
+            
+            if (dropdown.classList.contains('active')) {
+                arrow.classList.remove('fa-chevron-down');
+                arrow.classList.add('fa-chevron-up');
+            } else {
+                arrow.classList.remove('fa-chevron-up');
+                arrow.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Закрытие меню при клике в пустое место
+        document.addEventListener('click', function(event) {
+            const dropdown = document.getElementById('social-dropdown');
+            const toggleBtn = document.querySelector('.mobile-only-toggle');
+            
+            if (dropdown && dropdown.classList.contains('active')) {
+                if (!toggleBtn.contains(event.target) && !dropdown.contains(event.target)) {
+                    dropdown.classList.remove('active');
+                    const arrow = document.getElementById('social-arrow');
+                    if(arrow) {
+                        arrow.classList.remove('fa-chevron-up');
+                        arrow.classList.add('fa-chevron-down');
+                    }
+                }
+            }
+        });
+        
+        // --- ЛОГИКА ПЕРЕКЛЮЧАТЕЛЯ ЯЗЫКА С ПАМЯТЬЮ ---
+        // Если сохранен RU, перекидываем в корень
+        if (localStorage.getItem('wtm_lang') === 'ru') {
+            window.location.replace('../index.html');
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggle = document.getElementById('lang-toggle-main');
+            const labelEn = document.querySelector('.lang-label.en');
+            
+            if(toggle && labelEn) {
+                // Ставим состояние "Включено" (английский)
+                toggle.checked = true;
+                labelEn.classList.add('active');
+
+                toggle.addEventListener('change', function() {
+                    if (!this.checked) {
+                        localStorage.setItem('wtm_lang', 'ru'); // ЗАПОМИНАЕМ
+                        window.location.href = '../index.html';
+                    }
+                });
+            }
+        });
+
+    </script>
+    
+</body>
+</html>

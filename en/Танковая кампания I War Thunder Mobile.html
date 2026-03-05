@@ -1,0 +1,196 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    /* ИЗОЛЯЦИЯ: Все стили действуют только внутри #tank-campaign-root */
+    #tank-campaign-root {
+        box-sizing: border-box;
+        max-width: 1100px;
+        margin: 20px auto 40px auto; 
+        padding: 30px;
+        background: #1c2119;
+        /* Текстура */
+        background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.1), rgba(0,0,0,0.1) 10px, transparent 10px, transparent 20px);
+        border: 4px solid #3e4a36; 
+        border-radius: 8px;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.7);
+        position: relative;
+        z-index: 5;
+        font-family: 'Roboto', sans-serif;
+        color: #fff;
+    }
+
+    #tank-campaign-root * { box-sizing: border-box; }
+
+    /* Исправление "синих ссылок" по умолчанию */
+    #tank-campaign-root a { color: #ffd700; text-decoration: none; }
+
+    /* Заголовки */
+    #tank-campaign-root h1, #tank-campaign-root h2 {
+        font-family: 'Black Ops One', sans-serif !important;
+        color: #8fbc8f;
+        text-align: center;
+        text-transform: uppercase;
+        margin-top: 0;
+        text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+    }
+    #tank-campaign-root h1 { border-bottom: 3px solid #556b2f; padding-bottom: 15px; font-size: 2.2em; }
+    
+    /* Меню выбора наций */
+    #tank-campaign-root .nation-buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 25px; }
+    
+    #tank-campaign-root .nation-button {
+        padding: 20px 40px; color: #fff; border: 2px solid #556b2f; border-radius: 4px;
+        font-size: 1.2em; font-family: 'Black Ops One', sans-serif !important;
+        cursor: pointer; background-color: #2f3526; transition: 0.3s; min-width: 200px;
+        text-transform: uppercase;
+    }
+    #tank-campaign-root .nation-button:hover { transform: translateY(-3px); border-color: #ffd700; color: #ffd700; }
+
+    /* Фоны кнопок наций */
+    #tank-campaign-root .usa { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/a/a4/Flag_of_the_United_States.svg') center/cover; }
+    #tank-campaign-root .germany { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/b/ba/Flag_of_Germany.svg') center/cover; }
+    #tank-campaign-root .ussr { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/commons/a/a9/Flag_of_the_Soviet_Union.svg') center/cover; }
+    #tank-campaign-root .britain { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg') center/cover; }
+    #tank-campaign-root .china { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/commons/f/fa/Flag_of_the_People%27s_Republic_of_China.svg') center/cover; }
+    #tank-campaign-root .japan { background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://upload.wikimedia.org/wikipedia/en/9/9e/Flag_of_Japan.svg') center/cover; }
+
+    /* ОБНОВЛЕННЫЙ ДИЗАЙН КНОПКИ ДОП ИНФО (С КАРТИНКОЙ) */
+    #tank-campaign-root .misc-info {
+        background: linear-gradient(rgba(20, 20, 20, 0.8), rgba(20, 20, 20, 0.8)), url('https://static.wtmobile.com/upload/fileman/images/regular_pics/updates/italy_ground_1440x640_784b1384f7843d87677e324d0cef912a.jpg') center/cover;
+            
+        border: 2px solid #ffd700;
+        color: #ffd700;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 0 25px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.3);
+        text-shadow: 0 2px 4px rgba(0,0,0,1);
+        transition: all 0.3s ease;
+    }
+    
+    #tank-campaign-root .misc-info i.fa-info-circle { margin-right: 10px; }
+
+    #tank-campaign-root .misc-info:hover {
+        background: linear-gradient(rgba(255, 215, 0, 0.2), rgba(255, 215, 0, 0.2)), url('https://static.wtmobile.com/upload/fileman/images/regular_pics/updates/italy_ground_1440x640_784b1384f7843d87677e324d0cef912a.jpg') center/cover;
+        color: #fff;
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.6), inset 0 0 10px rgba(0,0,0,0.5);
+        transform: translateY(-3px);
+        text-shadow: 0 0 10px rgba(255,215,0,0.5);
+    }
+
+    /* Кнопка Назад */
+    #tank-campaign-root .back-btn-tank {
+        background: #8b4500; display: none; padding: 15px 30px; color: white;
+        border: 2px solid #cd5c5c; border-radius: 4px; font-weight: bold;
+        cursor: pointer; margin: 30px auto 0; text-transform: uppercase;
+    }
+
+    /* Контейнер контента */
+    #tank-campaign-root #nation-content {
+        margin-top: 30px; background: rgba(20, 20, 20, 0.85); padding: 20px;
+        border-radius: 8px; border: 1px solid #3e4a36; min-height: 100px;
+    }
+
+    @media (max-width: 768px) {
+        #tank-campaign-root { padding: 15px; width: 100%; margin-top: 10px; }
+        #tank-campaign-root .nation-button { width: 100%; padding: 25px; }
+    }
+</style>
+
+<div id="tank-campaign-root">
+    <h1><i class="fas fa-shield-alt"></i> Tank Campaign</h1>
+    
+    <div id="nation-selection" style="text-align:center;">
+        <h2 style="color:#d2b48c;">Nation Selection</h2>
+        <p style="color:#a9a9a9;">Select a nation to view:</p>
+        
+        <div class="nation-buttons">
+            <button class="nation-button usa" onclick="loadTankNation('выбор техники США.html')">★ USA</button>
+            <button class="nation-button germany" onclick="loadTankNation('техника Германии.html')">✙ Germany</button>
+            <button class="nation-button ussr" onclick="loadTankNation('техника СССР.html')">☭ USSR</button>
+            <button class="nation-button britain" onclick="loadTankNation('техника Великобритании.html')">🇬🇧 Britain</button>
+            <button class="nation-button china" onclick="loadTankNation('техника Китая.html')">中国 China</button>
+            <button class="nation-button japan" onclick="loadTankNation('техника Японии.html')">🔴 Japan</button>
+            
+            <button class="nation-button misc-info" onclick="window.location.href='miscinfo.html'">
+                <i class="fas fa-info-circle"></i> Misc Info
+            </button>
+        </div>
+        
+        <button class="back-btn-tank" onclick="returnToTankMenu()">
+            <i class="fas fa-undo"></i> Back to nations
+        </button>
+    </div>
+    
+    <div id="nation-content">
+        <p style="color:#6b8e23; text-align: center; font-style: italic;">
+            <i class="fas fa-arrow-up"></i> Select a nation above.
+        </p>
+    </div>
+    
+    <footer style="text-align: center; color: #6b8e23; margin-top: 30px; font-size: 0.8em; border-top: 1px solid #3e4a36; padding-top: 10px;">
+        Version 3.1. Last updated 03/05/2026. If you find errors or have suggestions - message @fortunawtm.
+    </footer>
+</div>
+
+<script>
+    async function loadTankNation(url) {
+        const root = document.getElementById('tank-campaign-root');
+        const contentDiv = root.querySelector('#nation-content');
+        
+        contentDiv.innerHTML = '<div style="text-align:center; padding:20px; color:#daa520;"><i class="fas fa-cog fa-spin fa-2x"></i><br>Loading data...</div>';
+        
+        try {
+            const resp = await fetch(url);
+            if (!resp.ok) throw new Error('File not found');
+            const html = await resp.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            const styles = doc.head.querySelectorAll('style');
+            let contentHTML = doc.body.innerHTML;
+            
+            styles.forEach(styleTag => {
+                contentHTML = styleTag.outerHTML + contentHTML;
+            });
+            
+            contentDiv.innerHTML = contentHTML;
+
+            // Смена фона (оставляем русские слова, так как файлы все еще имеют русские названия)
+            setTimeout(() => {
+                if (url.includes('США')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_07_freedomfighters/1080x2340_wtm_freedom_fighters_6caa665440c37540dbcfe17edf84d9fe.jpg")'; 
+                else if (url.includes('Германии')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_08_ironeclipse/1080x2340_wtm_iron_eclipse_ab49c8f11e8d61405c7ca0ff1c15f287.jpg")';
+                else if (url.includes('СССР')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/24_12_frozenfront/1080x2340_wtm_frozen_front_b82827c44190754e4e7b97b2a6e98565.jpg")';
+                else if (url.includes('Китая')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/26_02_chinesetanks/1080x2340_wtm_chinese_armor_6e942bb822bb83f56174ea3f1effbd29.jpg")';
+                else if (url.includes('Японии')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/07_july_25/31_major_totems_of%20war/2880x1280_wtm_totems_of_war_351c8d6cd8770dcbc409f9af09f8c4a8.jpg")';
+                else if (url.includes('Великобритании')) document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/2025/06_june_25/db7_s21_challenger2tes/db7_s21_challenger2tes_1440x640_7286b731c48c8e46d80afe708c030b1c.jpg")';
+
+                root.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'none');
+                root.querySelector('#nation-selection h2').style.display = 'none';
+                root.querySelector('#nation-selection p').style.display = 'none';
+                root.querySelector('.back-btn-tank').style.display = 'block';
+                
+                contentDiv.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+
+        } catch (e) {
+            contentDiv.innerHTML = `<p style="color:red; text-align:center;">Error: ${e.message}</p>`;
+        }
+    }
+
+    function returnToTankMenu() {
+        const root = document.getElementById('tank-campaign-root');
+        const contentDiv = root.querySelector('#nation-content');
+        
+        contentDiv.innerHTML = '<p style="color:#6b8e23; text-align: center;"><i class="fas fa-arrow-up"></i> Select a nation above.</p>';
+        
+        document.body.style.backgroundImage = 'url("https://static.wtmobile.com/upload/fileman/images/wallpapers/25_05_ounitedfront/1080x1920_wtm_united_front_96f0a2c762f88a30ce1c45f1d02a4093.jpg")';
+        
+        root.querySelectorAll('.nation-button').forEach(btn => btn.style.display = 'block');
+        root.querySelector('#nation-selection h2').style.display = 'block';
+        root.querySelector('#nation-selection p').style.display = 'block';
+        root.querySelector('.back-btn-tank').style.display = 'none';
+    }
+</script>

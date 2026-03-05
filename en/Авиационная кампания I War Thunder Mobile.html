@@ -1,0 +1,516 @@
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+   /* Сброс только для контейнера авиации и всего внутри него */
+.aviation-container, .aviation-container * {
+    box-sizing: border-box;
+}
+
+    /* ---------------------------------------------------- */
+    /* --- ИЗОЛИРОВАННЫЕ СТИЛИ: AVIATION TACTICAL THEME --- */
+    /* ---------------------------------------------------- */
+    .aviation-container {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #e2e8f0; /* Светлый серо-голубой текст */
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+        /* Фон: Темное небо / Грифельный оттенок */
+        background-color: #0f172a; 
+        background-image: linear-gradient(to bottom, #0f172a, #1e293b);
+    }
+    
+    /* Заголовки */
+    .aviation-container h1, 
+    .aviation-container h2, 
+    .aviation-container h3 {
+        color: #fbbf24; /* Небесно-голубой (Sky Blue) */
+        text-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+        border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+        padding-bottom: 10px;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        position: relative;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .aviation-container h1 { 
+        font-size: 2.2em; 
+        border-bottom: none; 
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    } 
+    
+    .aviation-container h2 { font-size: 1.6em; border-left: 5px solid #38bdf8; padding-left: 15px; }
+    .aviation-container h3 { font-size: 1.3em; color: #bae6fd; border-bottom: 1px dashed rgba(56, 189, 248, 0.3); }
+
+    /* Декоративная линия под H1 */
+    .aviation-container h1::after {
+        content: '';
+        display: block;
+        width: 100px;
+        height: 4px;
+        background: linear-gradient(90deg, #38bdf8, transparent);
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+    }
+
+    /* Ссылки в тексте */
+    .aviation-container a {
+        color: #fce7f3; /* Янтарный цвет для ссылок (как индикаторы в кабине) */
+        text-decoration: none;
+        border-bottom: 1px dotted #fce7f3;
+        transition: all 0.3s;
+    }
+    .aviation-container a:hover {
+        color: #fff;
+        border-bottom: 1px solid #fff;
+        text-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
+    }
+
+    /* Навигация - Стиль приборной панели */
+    .aviation-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-bottom: 50px;
+        gap: 10px;
+        padding-top: 20px;
+    }
+    .aviation-nav a {
+        display: block;
+        padding: 12px 18px;
+        background: rgba(51, 65, 85, 0.5); /* Slate 700 с прозрачностью */
+        border: 1px solid rgba(56, 189, 248, 0.3);
+        border-top: 3px solid rgba(56, 189, 248, 0.5); /* Акцент сверху */
+        border-bottom: none; /* Убираем нижнее подчеркивание от общих стилей */
+        border-radius: 4px;
+        color: #fbbf24;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-align: center;
+        font-size: 0.9em;
+        text-transform: uppercase;
+        flex: 1 1 auto;
+        min-width: 140px;
+        text-decoration: none; /* Убираем подчеркивание */
+    }
+    .aviation-nav a:hover {
+        transform: translateY(-4px);
+        background: rgba(56, 189, 248, 0.15);
+        border-color: #38bdf8;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        color: #fff;
+    }
+
+    /* Секции контента */
+    .aviation-section {
+        background: #1e293b; /* Slate 800 */
+        padding: 30px;
+        border-radius: 8px;
+        margin-bottom: 35px;
+        box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3);
+        border: 1px solid #334155;
+        position: relative;
+        overflow: hidden;
+    }
+    /* Декоративный уголок */
+    .aviation-section::before {
+        content: '';
+        position: absolute;
+        top: 0; right: 0;
+        width: 0; height: 0;
+        border-style: solid;
+        border-width: 0 30px 30px 0;
+        border-color: transparent #38bdf8 transparent transparent;
+        opacity: 0.5;
+    }
+
+    /* Таблицы - Тактический стиль */
+    .table-container {
+        overflow-x: auto;
+        overflow-y: auto;
+        max-height: 600px;
+        margin-bottom: 30px;
+        border: 1px solid #475569;
+        border-radius: 6px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        background: #0f172a;
+    }
+    
+    /* Скроллбар */
+    .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
+    .table-container::-webkit-scrollbar-track { background: #0f172a; }
+    .table-container::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    .table-container::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #cbd5e1;
+    }
+    
+    /* Заголовки таблицы */
+    thead th {
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10;
+        background: #1e293b !important;
+        color: #fbbf24 !important;
+        font-weight: 700;
+        border-bottom: 2px solid #38bdf8;
+        text-transform: uppercase;
+        font-size: 0.85em;
+        text-align: center;
+        padding: 15px;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Стиль для вводного текста, чтобы создать отступ от краев */
+.aviation-container .intro-paragraph {
+    padding: 0 15px 15px 15px; /* 15px отступы слева, справа и снизу */
+    margin-bottom: 30px; 
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+    
+    /* Липкий первый столбец */
+    .table-container table th:first-child,
+    .table-container table td:first-child {
+        position: sticky;
+        left: 0;
+        background: #1a2333 !important; /* Чуть темнее фона строки */
+        color: #fff !important;
+        font-weight: 600;
+        z-index: 3;
+        border-right: 1px solid rgba(255,255,255,0.1);
+        box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+    }
+    .table-container table th:first-child {
+        background: #1e293b !important;
+        z-index: 4;
+    }
+    
+    th, td {
+        padding: 14px 15px;
+        border-bottom: 1px solid #334155;
+        text-align: left;
+        font-size: 0.95em;
+    }
+    
+    /* Центрирование данных */
+    .table-container table td:nth-child(n+2) { text-align: center; }
+    
+    /* Чередование строк */
+    tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.03); }
+    tbody tr:hover td { background-color: rgba(56, 189, 248, 0.1) !important; color: #fff; transition: 0.2s; }
+
+    /* Списки с кастомными маркерами */
+    .aviation-list {
+        padding-left: 0;
+        list-style: none;
+        counter-reset: aero-counter;
+    }
+    .aviation-list li {
+        position: relative;
+        padding: 15px 15px 15px 60px;
+        margin-bottom: 15px;
+        background: rgba(255, 255, 255, 0.03);
+        border-left: 3px solid rgba(56, 189, 248, 0.3);
+        border-radius: 0 4px 4px 0;
+    }
+    .aviation-list li::before {
+        counter-increment: aero-counter;
+        content: counter(aero-counter);
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 30px;
+        height: 30px;
+        background: #334155;
+        color: #38bdf8;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 0.9em;
+        border: 1px solid #38bdf8;
+    }
+    .manual-list p { margin-bottom: 10px; padding-left: 15px; border-left: 2px solid #fbbf24; }
+    .manual-list strong { color: #f1f5f9; font-size: 1.05em; }
+
+    .noticeable {
+        background: rgba(251, 191, 36, 0.1); /* Amber background */
+        padding: 15px;
+        border-radius: 6px;
+        border-left: 4px solid #fbbf24;
+        color: #fce7f3;
+        margin-bottom: 20px;
+    }
+
+    footer {
+        text-align: center;
+        font-size: 0.9em;
+        color: #64748b;
+        margin-top: 60px;
+        padding: 20px;
+        background: #0f172a;
+        border-top: 1px solid #1e293b;
+        border-radius: 8px;
+    }
+
+    /* Мобильная адаптация */
+    @media (max-width: 768px) {
+        .aviation-container {
+            padding: 0;
+            width: 100%;
+            max-width: 100vw;
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .aviation-section {
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            padding: 20px 15px;
+            margin-bottom: 15px;
+        }
+        .aviation-nav {
+            flex-direction: column;
+            padding: 0 10px;
+            gap: 8px;
+        }
+        .aviation-nav a { width: 100%; border-radius: 6px; }
+        .aviation-container h1 { font-size: 1.6em; padding-left: 15px; }
+        .table-container { border-radius: 0; border-left: none; border-right: none; }
+        th, td { font-size: 0.85em; padding: 10px 8px; }
+    }
+</style>
+
+<div class="aviation-container">
+   <h1><i class="fas fa-plane"></i> Aviation in WTM</h1>
+   
+    <p class="intro-paragraph">This material is designed to help you master the aviation campaign in War Thunder Mobile. It is primarily based on top-tier gameplay (especially everything related to ground attack/close air support).</p>
+   
+    <nav class="aviation-nav">
+        <a href="#section1">Main Guide</a>
+        <a href="#section2">Bases and Airfields</a>
+        <a href="#section3">Ground Attack Weapons</a>
+        <a href="#section4">Ground Targets</a>
+        <a href="#section5">Best Attackers and Bombers</a>
+        <a href="#section6">Fighter Roles</a>
+        <a href="#section7">Effective Aircraft</a>
+        <a href="#section8">Latest Section Update</a>
+    </nav>
+
+    <section id="section1" class="aviation-section">
+        <h2>1. Main Aviation Campaign Guide</h2>
+        <p><i class="fab fa-youtube" style="color: #ff0000; margin-right: 5px;"></i> <a href="https://youtu.be/xTJ81iEKoPI" target="_blank">Watch video guide (YouTube)</a></p>
+        <p>Also, in battle before takeoff, you can select your ammunition belt and loadout based on the map, your game plan, and the enemies, without being limited to your pre-battle selection.</p>
+        <p>Additional playlist with reviews of specific aircraft: <a href="https://youtube.com/playlist?list=PLdiVtbbR-3vy3hAe_0lW9dJUYD58YBg8K&si=Qgkg4EPJNkRWyuJh" target="_blank">go to playlist</a></p>
+    </section>
+
+    <section id="section2" class="aviation-section">
+        <h2>2. Destroying Bases and Airfields</h2>
+        <div class="noticeable">
+            <i class="fas fa-exclamation-triangle"></i> Information is based on practical experience. There may be errors or inaccuracies.
+        </div>
+        <ul class="aviation-list">
+            <li>
+                <strong>Base Destruction:</strong><br>
+                <strong>At ranks 3 and 9</strong><br>Based on experience, 4 MK84 2000-lb bombs from the rank 8 A-1H were enough to destroy a base. Thus, to destroy a base in one drop, you need <strong>at least 2315 kg</strong> of TNT equivalent (originally Composition H6).
+           <p><strong>At ranks 4-6</strong></p>
+                Previously, it required <strong>at least 1524 kg</strong> of TNT equivalent (originally Torpex). Now this value should be lower. 
+            <p><strong>Other ranks</strong></p>
+                3 Mk 13 Mod 0 mines from the rank 8 F7F-3 were enough to destroy a base. Thus, to destroy a base in one drop, you need <strong>at least 1524 kg</strong> of TNT equivalent (originally Torpex). 
+            </li>
+            
+            <li>
+                <strong>Airfield Destruction:</strong><br>
+                    <strong>At ranks 3 and 9</strong><br>Based on experience, 8 SB2500 bombs from the rank 7 Ju 288 C were enough to destroy an airfield. Thus, to destroy an airfield, you need <strong>at least 21888 kg</strong> of TNT equivalent (originally Trialen 105).
+           <p><strong>At ranks 4-6</strong></p>
+                Previously, it required <strong>at least 15099 kg</strong> of TNT equivalent (originally Tritonal). Now this value should be lower. 
+            <p><strong>Other ranks</strong></p>
+                4 AN-M56 4000-lb bombs from the rank 8 B-29A-BN were enough to destroy an airfield. Thus, to completely destroy an airfield, you need <strong>at least 15099 kg</strong> of TNT equivalent (originally Tritonal). 
+            </li>
+        </ul>
+    </section>
+
+    <section id="section3" class="aviation-section">
+        <h2>3. About Certain Ground Attack Weapons (Suspended Armament)</h2>
+        <div class="manual-list">
+            <p><strong>1. HVAR Rocket</strong><br>Great for attacking SPAA and artillery. Not suitable for attacking pillboxes and tanks. A slight deviation from the target is acceptable while maintaining attack success due to sufficient TNT equivalent and warhead type. Ideally: 1 rocket – 1 target.</p>
+            <p><strong>2. Zuni Mk32 Rocket</strong><br>Suitable for attacking SPAA, artillery, tanks, and pillboxes. Deviation from the target is not recommended due to the warhead type, but the large TNT equivalent can save the situation. It's important to be prepared to use multiple rockets, especially against tanks and pillboxes, due to the difficulty of aiming during dynamic combat.</p>
+            <p><strong>3. FFAR Mighty Mouse Rocket</strong><br>Suitable for attacking SPAA, artillery, tanks, and pillboxes. Deviation from the target is not acceptable due to the warhead type and small TNT equivalent. It's important to be prepared to use a large number of rockets, especially against tanks and pillboxes, due to the difficulty of aiming during dynamic combat.</p>
+            <p><strong>4. M134 Minigun</strong><br>Suitable for attacking SPAA, artillery, and tanks. Not suitable for destroying pillboxes. Deviation from the target is not acceptable. Works excellent against enemy aviation as well. It is very important to get used to the ballistics, and attacks at minimum distances (less than approximately 0.3-0.4 km) are recommended. </p>
+            <p><strong>5. Tiny Tim</strong><br>Suitable for attacking SPAA, artillery, tanks, and pillboxes. Deviation from heavy targets (pillboxes, tanks) is not recommended. Launched similarly to unguided rockets. Requires more lead due to the launch mechanics. It's important not to launch too close and low to the target, as the splash damage can damage your own aircraft.</p>
+            <p><strong>6. RBS-132</strong><br>Suitable for attacking SPAA, artillery, tanks, and pillboxes. Deviation from the target is not recommended due to the warhead type, but the large TNT equivalent can save the situation. It's important to be prepared to use multiple rockets, especially against tanks and pillboxes, due to the difficulty of aiming during dynamic combat.</p>
+        </div>
+    </section>
+
+    <section id="section4" class="aviation-section">
+        <h2>4. Engaging Ground Targets</h2>
+        <p>Note that the type of explosive affects the effectiveness of engaging certain targets!</p>
+        <p>To destroy a pillbox, 1 x 500-lb AN-M64A1 bomb (163 kg TNT, originally Composition B) is enough; or 4 x 250-lb AN-M57 bombs (58.5 kg TNT).</p>
+        
+        <h3>Conditional Classification:</h3>
+        <ol class="aviation-list">
+            <li><strong>Small (up to 1 kg TNT):</strong> destroyed by a direct hit on open-topped vehicles, SPAA, and artillery.</li>
+            <li><strong>Medium (1-5 kg TNT):</strong> destroyed on open-topped vehicles, SPAA, and artillery, even with a slight deviation from the target. Heavier targets require a direct hit, specifically in vulnerable spots, using a large number of rockets (i.e., not very effective). </li>
+            <li><strong>Heavy (5-10 kg TNT):</strong> freely destroys open-topped vehicles, SPAA, and artillery, even with increased deviation from the target. Still requires precise aiming at vulnerable spots on heavier targets, including the use of a large number of rockets.</li>
+            <li><strong>Superheavy (&gt; 10 kg TNT):</strong> their impact can be considered similar to bombs, but with rocket mechanics. </li>
+        </ol>
+        
+        <p><strong>HEAT:</strong> all require high precision hitting weak spots. It is important to expect to use a large number of rockets, especially against heavy targets. Unlike HE, using them against heavy targets is effective, albeit with some peculiarities compared to bombs.</p>
+    </section>
+
+    <section id="section5" class="aviation-section">
+        <h2>5. Best Aircraft for Ground Attack</h2>
+        <p>For earning rating points (classic ground attack). The data is provided for a single loadout ground attack at rank 9, meaning in the most difficult conditions. At their native ranks, the gameplay experience is noticeably better.</p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aircraft</th>
+                        <th>Rank</th>
+                        <th>Country</th>
+                        <th>Additional Info</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A-1H</td><td>8</td><td>USA</td><td>Base from 2 loadouts + Many ground targets</td></tr>
+                    <tr><td>F7F-3</td><td>8</td><td>USA</td><td>Base from 2 loadouts + Few ground targets</td></tr>
+                    <tr><td>AD-4</td><td>8</td><td>USA</td><td>Base from 2 loadouts + Decent ground targets</td></tr>
+                    <tr><td>B-29A-BN</td><td>8</td><td>USA</td><td>2 bases</td></tr>
+                    <tr><td>AD-2</td><td>7</td><td>USA</td><td>Base from 2 loadouts + Decent ground targets</td></tr>
+                    <tr><td>AM-1</td><td>7</td><td>USA</td><td>Base from 2 loadouts + Decent ground targets</td></tr>
+                    <tr><td>Ju 288 C</td><td>7</td><td>Germany</td><td>Base or 1/4 of Airfield</td></tr>
+                    <tr><td>Tu-2S-59</td><td>8</td><td>USSR</td><td>Base from 2 loadouts</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin-top: 40px;">Data for Native Rank</h3>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aircraft</th>
+                        <th>Rank</th>
+                        <th>Country</th>
+                        <th>Additional Info</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>A-1H</td><td>8</td><td>USA</td><td>From 1 loadout: base destruction and numerous ground target destructions</td></tr>
+                    <tr><td>F7F-3</td><td>8</td><td>USA</td><td>From 1 loadout: base destruction and few ground target destructions</td></tr>
+                    <tr><td>AD-4</td><td>8</td><td>USA</td><td>From 1 loadout: base destruction and decent ground target destructions</td></tr>
+                    <tr><td>B-29A-BN</td><td>8</td><td>USA</td><td>From 1 loadout: destruction of 2 bases or half an airfield</td></tr>
+                    <tr><td>AD-2</td><td>7</td><td>USA</td><td>From 1 loadout: base destruction and decent ground target destructions</td></tr>
+                    <tr><td>AM-1</td><td>7</td><td>USA</td><td>From 1 loadout: base destruction and decent ground target destructions</td></tr>
+                    <tr><td>Ju 288 C</td><td>7</td><td>Germany</td><td>From 1 loadout: destruction of 2 bases and a third of an airfield</td></tr>
+                    <tr><td>Tu-2S-59</td><td>8</td><td>USSR</td><td>From 1 loadout: base destruction</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="section6" class="aviation-section">
+        <h2>6. Fighter Roles</h2>
+        <p>Ammunition belt recommendations:</p>
+        <ul style="list-style: none; padding-left: 20px; border-left: 2px solid #38bdf8; margin-bottom: 20px;">
+            <li><strong>Caliber under 20mm:</strong> Maximum AP-I/API-T</li>
+            <li><strong>Caliber over 20mm:</strong> Maximum FI-T/HEF-I</li>
+            <li><br><strong>Against fighters:</strong> you can prioritize fragmentation-high-explosive (HEF) and high-explosive (HE) shells, as these are effective against lightly armored or unarmored targets. Shrapnel easily destroys aircraft skin, and HE shells can literally snap the wings off enemy fighters. Choose belts with the highest number of HEF, HE, incendiary, etc., shells.</li>
+            <li><br><strong>Against bombers:</strong> the belt should include both HEF and armor-piercing (AP) shells. AP shells break the aircraft's structural framework, penetrate armor plates, etc., which is highly relevant for taking down bombers. A good belt option for bombers would be a mix of two HEF and one AP shell. As for machine guns, belts with a maximum amount of API and AP bullets are recommended, as they literally allow you to "saw off" enemy wings or set fuel tanks on fire.</li>
+        </ul>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Weapon</th>
+                        <th>Recommended Belt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Browning M2</td><td>Universal</td></tr>
+                    <tr><td>MG17</td><td>Universal</td></tr>
+                    <tr><td>ShKAS</td><td>Stealth</td></tr>
+                    <tr><td>Browning 7.7mm</td><td>Stealth</td></tr>
+                    <tr><td>Type 97</td><td>Stealth</td></tr>
+                    <tr><td>MG FF</td><td>Air targets</td></tr>
+                    <tr><td>MG 151</td><td>Air targets</td></tr>
+                    <tr><td>ShVAK</td><td>Ground targets</td></tr>
+                    <tr><td>B-20</td><td>Ground targets</td></tr>
+                    <tr><td>Hispano MK1/MK2</td><td>Stealth</td></tr>
+                    <tr><td>Type 99</td><td>Tracers</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+     <section id="section7" class="aviation-section">
+        <h2>7. Effective Aircraft</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Aircraft</th>
+                        <th>Comments</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>IX BI</td>
+                        <td>Unique and partly ultimate flight characteristics (FM) with difficult implementation and limited armament. Premium, recommended mostly for experienced pilots.</td>
+                    </tr>
+                    <tr>
+                        <td>IX Me 163B</td>
+                        <td>Unique and ultimate aircraft for most types of battles with challenging but extremely powerful armament. Recommended for all players.</td>
+                    </tr>
+                    <tr>
+                        <td>IX F-80C-10</td>
+                        <td>Decent flight characteristics, with a decent set of suspended armament and weak forward-firing armament. Recommended as a high-tier attacker.</td>
+                    </tr>
+                    <tr>
+                        <td>VIII Tu-2S-59</td>
+                        <td>Best attacker for the USSR. Has defensive armament covering multiple angles, allowing reaction to enemies. Recommended for both high and low altitude ground attack.</td>
+                    </tr>
+                    <tr>
+                        <td>VIII A-1H</td>
+                        <td>Best attacker in the game. The massive payload allows for versatile playstyles. It's crucial to avoid dogfights. Became harder to play after the introduction of jets.</td>
+                    </tr>
+                    <tr>
+                        <td>VIII AD-4</td>
+                        <td>Budget version of the A-1H. Essentially the same excellent attacker, but with fewer capabilities. Also going through tough times after the introduction of jets.</td>
+                    </tr>
+                    <tr>
+                        <td>VII A7M1 (NK9H)</td>
+                        <td>Ultimate fighter for close and maneuverable dogfights. Has some combat limitations. Generally recommended for everyone during sales.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <p><em>* This section contains only a few vehicles and will be expanded over time.</em></p>
+    </section>
+
+     <section id="section8" class="aviation-section">
+        <h2>Latest Section Update</h2>
+        <ol>
+           <li><strong>New section:</strong><br>Effective Aircraft.</li>
+            <li><strong>Bug fixes and optimization.</strong></li>
+            </ol>
+    </section>
+    
+    <footer>
+        <p>Version 2.2. Last updated 02/24/2026. If you find errors or have suggestions, message @fortunawtm.</p>
+    </footer>
+</div>

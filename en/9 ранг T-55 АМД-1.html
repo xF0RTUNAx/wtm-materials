@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 9 T-55 AMD-1 Review</title>
+    <style>
+        /* --- BASE STYLES --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/24_07_newgeneration/1080x2340_wtm_new_generation_c80ea2d16ea5fed5cb0e6036a3677b87.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- CONTENT STYLES --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- BUTTONS --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- COMMENTS WRAPPER --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- FIREBASE RATING STYLES --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap;
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- MOBILE ADAPTIVITY --- */
+        @media (max-width: 768px) {
+            .container { 
+                padding: 15px; 
+            }
+            .content-section { 
+                background: rgba(255, 255, 255, 0.08); 
+            }
+            .interactive-stars {
+                font-size: 1.8em;
+            }
+            .comments-wrapper { 
+                padding: 5px; 
+            } 
+            .youtube-btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 9 T-55 AMD-1</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/55amd/amdmain.webp" alt="T-55 AMD-1 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>
+            The T-54/T-55 is a series of Soviet medium tanks developed in the late 1940s and early 1950s at Plant No. 183 (Nizhny Tagil). The first prototype, T-54, was ready by the end of 1945; mass production and export of the T-55 began in 1958. The series was characterized by its simplicity, extensive standardization, and massive scale: a total of approximately 96,000–100,000 units were produced. The T-55 underwent numerous modernizations and export variations; the AMD-1 modification is one of the later upgrades, featuring active protection and improved electronics/armament intended to extend the combat effectiveness of the base design.
+            </p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/55amd/amdhistoric.webp" alt="Historical T-55 AMD-1" class="tank-image">
+        </div>
+        
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+            
+             <p><strong>Pros:</strong> Engine/Power: A modernized diesel (~520–620 hp depending on upgrades) at a weight of ~36–38 t provides a power-to-weight ratio of 13–17 hp/t, ensuring steady acceleration on the battlefield. 
+             Top Speed: ~50–55 km/h on roads depending on the engine and transmission state. 
+             Good mobility in moderate off-road conditions and quick repositioning at close ranges.
+             </p>
+            <p><strong>Cons:</strong> Handling and dynamics are inferior to more modern main battle tanks; noticeable inertia and body roll during sharp maneuvers. 
+            Cross-country capability on very soft ground is limited due to track width and weight.
+            </p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p><strong>Pros:</strong> Improved frontal protection: Upper hull front and turret with original hardened armor; in-game, the front is capable of withstanding many standard rounds of its rank when hit in the central zone. 
+            The AMD-1 is equipped with the "Drozd" active protection system (80° sector)—it reflects/intercepts certain ATGMs and rockets in the forward arc. 
+            Simple and reliable layout provides good repairability and survivability under damage.
+            </p>
+            <p><strong>Cons:</strong> Sides and rear are vulnerable: Side projections are easily penetrated by most modern shells of its rank. 
+            Top armor and the turret roof are weak points against unguided rockets/HE shells and overhead fire.
+            </p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>Main Gun: 100mm D-10T2S rifled gun with 1–2 plane stabilization. Highly effective at medium ranges with a good rate of fire (~6–8 rounds/min under combat conditions).</p>
+            <p><strong>Shells:</strong></p>
+            <p><strong>3BM25 (APFSDS)</strong></p>
+            <p>Armor penetration: 330mm at 100 meters; 310mm at 500 meters.</p>
+            <p><strong>9M117 (ATGM - barrel launched)</strong></p>
+            <p>TNT equivalent: 4.7kg. Armor penetration: 600mm at 100 meters; 600mm at 500 meters. Fuse sensitivity: 0.1mm.</p>
+            <p><strong>BR-412D (APCBC)</strong></p>
+            <p>TNT equivalent: 93g. Armor penetration: 240mm at 100 meters; 220mm at 500 meters. Fuse sensitivity: 19mm.</p>
+            <p><strong>OF-412 (HE)</strong></p>
+            <p>TNT equivalent: 1.46kg. Armor penetration: 19mm at 100 meters; 19mm at 500 meters. Fuse sensitivity: 0.1mm.</p>
+            <p><strong>3BK17M (HEAT-FS)</strong></p>
+            <p>TNT equivalent: 1.17kg. Armor penetration: 390mm at 100 meters; 390mm at 500 meters. Fuse sensitivity: 0.1mm.</p>
+            <p><strong>Secondary Armament:</strong></p>
+            <p>1 x 12.7mm DShK (roof) — ~600–850 rounds/min, effective against aircraft and light vehicles. 1 x 7.62mm PKT (coaxial).</p>
+
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/55amd/amdweapon.webp" alt="T-55 AMD-1 Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p>"Drozd" APS — Forward 80° protection, can intercept a limited set of ATGMs and rockets. Presence of smoke grenades/launchers.</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The T-55 AMD-1 is a hybrid of classic and modern: the classic mobile T-55 platform with improved frontal protection and the Drozd APS. 
+            It is strong in tactical close-to-mid range encounters: use APFSDS and the guided 9M117 to defeat heavy targets at medium/long ranges. 
+            The main weaknesses are the sides/rear and the turret roof; avoid overhead fire and flank attacks. Active protection provides an advantage against ATGMs, but it isn't absolute—be mindful of its reload and operational status.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to Main Page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/38" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Material provided by user Flyeskiy. Updated 01/15/2026. If you find errors or have suggestions – message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+
+        const TANK_ID = 'amd55'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        });
+    </script>
+</body>
+</html>

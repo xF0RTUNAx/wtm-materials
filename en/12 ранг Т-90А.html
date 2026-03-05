@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: Rank 12 T-90A Review</title>
+    <style>
+    
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* Уникальный фон для Т-90А */
+            background: url('https://static.wtmobile.com/upload/fileman/images/2025/05_may_25/db2_s20_comtank_t80u/db2_s20_t80y_support1_1fe50c9067388b625c16989c2f684a06.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        
+        /* --- КНОПКИ --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rank 12 T-90A</h1>
+        <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/%D0%A2-90%D0%90main.PNG" alt="T-90A Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The T-90A is a Russian third-generation main battle tank. It is a deep modernization of the T-72B tank series, aimed at significantly improving all the combat characteristics of the vehicle. After the death of the tank's chief designer, Vladimir Ivanovich Potkin, by decision of the Government of the Russian Federation, the T-90 tank was given the verbal name "Vladimir". The production modification of the T-90 under the index "A" was produced from 2004 to 2011. It was equipped with a 1000 hp V-92S2 engine, an improved welded turret with increased resistance instead of a cast one, and a 2A46M-5 gun. The tank is equipped with the "Shtora-1" electro-optical active protection system to counter guided weapons. The armor of the upper glacis plate of the hull was strengthened, the thermal imaging equipment was improved, and a new fire extinguishing system was installed. The autoloader was modified to accommodate the "Svinets-1" and "Svinets-2" armor-piercing fin-stabilized discarding sabot shells. The tank was adopted into service in 2005.</p>
+            <img src="https://www.zr.ru/d/story/c5/947653/000.jpg" alt="Historical T-90A" class="tank-image">
+        </div>
+
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+             <p><strong>Pros:</strong> The T-90A has decent overall dynamics; the tank gains its maximum speed quite quickly across all types of terrain. </p>
+            <p><strong>Cons:</strong> The T-90A is poorly suited for urban combat, and its reverse speed is entirely insufficient for retreating after a shot.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p>The armor layout of the T-90A is similar to other MBTs of the Soviet tank-building school. The main area of the frontal armor is almost invulnerable to many shells. However, the M829A2 APFSDS, found on the M1A1 and its subsequent modifications, can penetrate the upper glacis plate (UFP) of the tank. In addition, the T-90A has three typical vulnerable zones for USSR MBTs – the lower glacis plate (LFP), the driver's viewport area, and the gun mantlet. In these areas, the armor thickness is insufficient to protect even against HEAT shells and early APFSDS.</p>
+            <p>The side and rear armor of the T-90A can withstand 20 mm armor-piercing shells, but nothing more. That is, autocannons pose a serious threat to the sides. The explosive reactive armor (Kontakt-5) in the front part of the sides can save it from more powerful shells when hit at a high angle, but its coverage area is extremely small. </p>
+            <p>The dense layout, traditional for the Soviet school of tank building, significantly increases the chance of losing the vehicle after the very first penetration by the enemy. Regardless of the location and angle of the hit, the shell is highly likely to pass through two crew members, fuel tanks, or the ammo rack. In the best-case scenario, the T-90A will be left with a severely damaged autoloader and engine, which means you won't be able to "fight back" or drive away.</p>
+            <p><strong>Additionally:</strong> The armor is often realized in dynamic movement and by forcing the enemy to spend more time aiming.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>The gun targeting speed is significantly inferior to most other tanks (especially NATO ones). There are additional problems with vertical guidance angles (gun depression), which make shooting on rough terrain difficult. </p>
+            <p>Although the autoloader provides a constant reload speed that does not depend on the crew's skill level and their state in battle, it is slower than the human loaders on other MBTs.</p>
+            <p>3BM60 – an armor-piercing fin-stabilized discarding sabot shell. It has a high initial flight speed of 1660 m/s, armor penetration of up to 580 mm, and good post-penetration damage. Recommended as the main shell for engaging MBTs. </p>
+            <p>The tank is equipped with two machine guns: one rifle caliber (coaxial with the main gun) and one heavy anti-aircraft machine gun. The anti-aircraft machine gun is suitable for fighting lightly armored vehicles and tracks/wheels, while the coaxial one can be used to destroy vegetation and some obstacles. </p>
+            <img src="https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@pics/%D0%A2-90%D0%90weapon.PNG" alt="T-90A Shells" class="tank-image" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section">
+            <h3>Features</h3>
+            <p>The presence of the "Shtora-1" electro-optical active protection system, which disrupts the guidance of laser-guided ATGMs (this system will not protect the T-90A from missiles with infrared seekers and ATGMs with jam-resistant guidance like the Swedish RB 56 BILL II found on the Strf 9040 BILL or the TOW-2 used by the Wiesel 1A2). </p>
+            <p>Dual fire control system.</p>
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>During active gameplay, the main emphasis is on the notable protection of the frontal armor and shells with good armor penetration metrics. To work effectively in this mode, you need to have good reaction times and think your actions through in advance, as the slow reverse speed and long reload time leave no room for error. Furthermore, when encountering more modern vehicles, this tactic becomes less effective, especially against an experienced opponent. Ideally, it is suited for fans of the Soviet MBT gameplay philosophy and beginners to master, due to the lack of special potential for realization through experience, but with the presence of permanent advantages.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+            </div>
+
+        <a href="https://youtu.be/Cv6GfLt1aJU" target="_blank" class="youtube-btn">
+             Watch full review
+        </a>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?22&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/23" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Last updated 11/30/2025. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+       
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 't90_a'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Germany Vehicles Overview War Thunder Mobile</title>
+</head>
+<body>
+    <style>
+        .tech-group { margin-bottom: 25px; background: rgba(0, 0, 0, 0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .group-header { padding: 12px 20px; font-family: 'Black Ops One', sans-serif; font-size: 1.1em; display: flex; align-items: center; gap: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; padding: 15px; }
+        .tank-btn { display: flex !important; align-items: center; justify-content: center; padding: 15px; text-decoration: none !important; border-radius: 6px; font-weight: bold; text-align: center; transition: all 0.2s; min-height: 60px; font-family: 'Roboto', sans-serif; position: relative; top: 0; }
+        .tank-btn:hover { transform: translateY(-3px); z-index: 2; filter: brightness(1.2); }
+        
+        .header-standard { background: #2c3e50; color: #ecf0f1; border-left: 5px solid #bdc3c7; }
+        .btn-standard { background: #34495e; color: #fff !important; border: 1px solid #5d6d7e; box-shadow: 0 4px 0 #212f3d; }
+        
+        .header-blueprint { background: #7f5a00; color: #fff; border-left: 5px solid #ffd700; }
+         .btn-blueprint { background: linear-gradient(135deg, #d4ac0d, #b7950b); color: #000 !important; border: 1px solid #f1c40f; text-shadow: 0 1px 0 rgba(255,255,255,0.4); box-shadow: 0 4px 0 #7d6608; }
+        
+        .header-collectible { background: #4a235a; color: #fff; border-left: 5px solid #af7ac5; }
+        
+        .empty-msg { grid-column: 1 / -1; text-align: center; color: rgba(255,255,255,0.5); font-style: italic; padding: 10px; }
+        @media (max-width: 600px) { .grid-container { grid-template-columns: 1fr; } }
+    </style>
+
+    <div>
+        <h2 style="text-align:center; margin-bottom:20px; color: #fff; text-shadow: 0 2px 4px #000;">Germany Vehicles</h2>
+
+        <div class="tech-group">
+            <div class="group-header header-standard"><i class="fas fa-wrench"></i> Tech Tree</div>
+            <div class="grid-container">
+                <a href="13 ранг Leopard 2A4M.html" class="tank-btn btn-standard">Rank 13 Leopard 2A4M CAN</a>
+                <a href="13 ранг Leopard 2 PL.html" class="tank-btn btn-standard">Rank 13 Leopard 2 PL</a>
+                <a href="11 ранг PUMA.html" class="tank-btn btn-standard">Rank 11 PUMA</a>
+                <a href="11 ранг Leopard 2K.html" class="tank-btn btn-standard">Rank 11 Leopard 2K</a>
+                <a href="10 ранг Gepard 1A2.html" class="tank-btn btn-standard">Rank 10 Gepard 1A2</a>
+                <a href="10 ранг Begleitpanzer 57.html" class="tank-btn btn-standard">Rank 10 Begleitpanzer 57</a>
+                <a href="9 ранг Leopard A1A1.html" class="tank-btn btn-standard">Rank 9 Leopard A1A1</a>
+                 <a href="9 ранг KPz-70.html" class="tank-btn btn-standard">Rank 9 KPz-70</a>
+                <a href="7 ранг Jagdtiger.html" class="tank-btn btn-standard">Rank 7 Jagdtiger</a>
+                <a href="6 ранг tiger2.html" class="tank-btn btn-standard">Rank 6 Tiger II</a>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <div class="group-header header-blueprint"><i class="fas fa-file-contract"></i> Blueprint</div>
+            <div class="grid-container">
+                <a href="7 ранг PzH 2000.html" class="tank-btn btn-blueprint">Rank 7 PzH 2000</a>
+            </div>
+        </div>
+
+        <div class="tech-group">
+            <div class="group-header header-collectible"><i class="fas fa-gem"></i> Collectible</div>
+            <div class="grid-container">
+                <div class="empty-msg">Vehicles are being added!</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
