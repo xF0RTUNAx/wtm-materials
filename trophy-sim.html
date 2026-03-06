@@ -627,35 +627,19 @@
     let winVolume = parseFloat(localStorage.getItem('wtm_win_vol'));
     if (isNaN(winVolume)) winVolume = 0.15;
 
-    const winSound = new Audio('win_sound.mp3');
+    const winSound = new Audio('https://raw.githubusercontent.com/xFORTUNAx/wtm-materials/main/trophy_sim_sound/win_sound.mp3');
     winSound.volume = winVolume;
     winSound.preload = 'auto';
 
-    // Создаем пул звуков для рулетки (iOS не любит создание новых Audio на лету)
-    const spinSoundPool = [];
-    for (let i = 0; i < 5; i++) {
-        let snd = new Audio('spin_sound.mp3');
-        snd.preload = 'auto';
-        spinSoundPool.push(snd);
-    }
-    let spinSoundIndex = 0;
+    // Пул для рулетки (обход ограничений Safari)
+    const spinAudio1 = new Audio('https://raw.githubusercontent.com/xFORTUNAx/wtm-materials/main/trophy_sim_sound/spin_sound.mp3');
+    spinAudio1.preload = 'auto';
+    const spinAudio2 = new Audio('https://raw.githubusercontent.com/xFORTUNAx/wtm-materials/main/trophy_sim_sound/spin_sound.mp3');
+    spinAudio2.preload = 'auto';
+
+    let useFirstSpin = true;
     let currentSpinAudio = null;
     let audioUnlocked = false;
-
-    // "Хак" для разблокировки звука на iOS при первом касании экрана
-    function unlockAudio() {
-        if (audioUnlocked) return;
-        winSound.play().then(() => { winSound.pause(); winSound.currentTime = 0; }).catch(() => {});
-        spinSoundPool.forEach(snd => {
-            snd.play().then(() => { snd.pause(); snd.currentTime = 0; }).catch(() => {});
-        });
-        audioUnlocked = true;
-        document.removeEventListener('touchstart', unlockAudio);
-        document.removeEventListener('click', unlockAudio);
-    }
-    document.addEventListener('touchstart', unlockAudio, { once: true });
-    document.addEventListener('click', unlockAudio, { once: true });
-
 
     document.addEventListener("DOMContentLoaded", function() {
         const spinSlider = document.getElementById('spin-vol-slider');
@@ -712,10 +696,11 @@
         });
     });
 
+    // Плавное затухание
     function fadeAudio(audioEl, durationMs = 400) {
         if (!audioEl) return;
         let fadeVol = audioEl.volume;
-        let steps = durationMs / 40;
+        let steps = Math.floor(durationMs / 40);
         let stepAmount = fadeVol / steps;
         
         let fadeInterval = setInterval(() => {
@@ -731,13 +716,13 @@
     }
 
     function playSpinSound(isFastMode) {
-        if (currentSpinAudio && !currentSpinAudio.paused) {
-            fadeAudio(currentSpinAudio, 300);
-        }
+        let newAudio = useFirstSpin ? spinAudio1 : spinAudio2;
+        let oldAudio = useFirstSpin ? spinAudio2 : spinAudio1;
+        useFirstSpin = !useFirstSpin;
 
-        // Используем пул звуков для надежности в Safari
-        const newAudio = spinSoundPool[spinSoundIndex];
-        spinSoundIndex = (spinSoundIndex + 1) % spinSoundPool.length;
+        if (!oldAudio.paused) {
+            fadeAudio(oldAudio, 300);
+        }
 
         newAudio.playbackRate = 1.0; 
         newAudio.volume = spinVolume; 
@@ -752,10 +737,9 @@
     }
 
     function stopSpinFast() {
-        if (currentSpinAudio) {
-            currentSpinAudio.pause();
-            currentSpinAudio = null;
-        }
+        if (spinAudio1) { spinAudio1.pause(); spinAudio1.currentTime = 0; }
+        if (spinAudio2) { spinAudio2.pause(); spinAudio2.currentTime = 0; }
+        currentSpinAudio = null;
     }
     </script>
     
@@ -1063,7 +1047,19 @@
                  return;
             }
 
-            unlockAudio(); // Вызов разблокировки при клике на кнопку открытия
+            // Инициируем разблокировку при явном клике на "Открыть" 
+            if (!audioUnlocked) {
+                winSound.muted = true;
+                winSound.play().then(() => {
+                    winSound.pause();
+                    winSound.currentTime = 0;
+                    winSound.muted = false;
+                }).catch(() => {});
+                
+                spinAudio1.load();
+                spinAudio2.load();
+                audioUnlocked = true;
+            }
 
             isSkipping = false;
             document.getElementById('btn-open-again').onclick = () => startOpening(count);
@@ -1190,7 +1186,7 @@
                     track.style.transition = `transform ${duration}s cubic-bezier(0.12, 0.8, 0.3, 1)`;
                     track.style.transform = `translateX(-${slideAmount}px)`;
 
-                    // Затухание для быстрой прокрутки (х10)
+                    // Для x10 плавно затухаем звук перед самым концом прокрута
                     if (isFastMode) {
                         setTimeout(() => {
                             if (!isSkipping) fadeAudio(currentSpinAudio, 400);
@@ -1199,7 +1195,7 @@
 
                     spinTimeout = setTimeout(() => {
                         if (!isFastMode && currentSpinAudio) {
-                            fadeAudio(currentSpinAudio, 500); 
+                            fadeAudio(currentSpinAudio, 500); // Затухание для х1
                         }
 
                         if (isFastMode) {
