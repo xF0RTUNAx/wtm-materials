@@ -620,21 +620,22 @@
         }
     }
 
-    // --- ЛОГИКА ГРОМКОСТИ И РАЗБЛОКИРОВКИ IOS ---
+   // --- ЛОГИКА ГРОМКОСТИ И РАЗБЛОКИРОВКИ IOS ---
     let spinVolume = parseFloat(localStorage.getItem('wtm_spin_vol'));
     if (isNaN(spinVolume)) spinVolume = 0.4;
 
     let winVolume = parseFloat(localStorage.getItem('wtm_win_vol'));
     if (isNaN(winVolume)) winVolume = 0.15;
 
-    const winSound = new Audio('https://raw.githubusercontent.com/xFORTUNAx/wtm-materials/main/trophy_sim_sound/win_sound.mp3');
+    // ПРАВИЛЬНЫЕ ССЫЛКИ ЧЕРЕЗ CDN JSDELIVR
+    const winSound = new Audio('https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/trophy_sim_sound/win_sound.mp3');
     winSound.volume = winVolume;
     winSound.preload = 'auto';
 
     // Пул для рулетки (обход ограничений Safari)
-    const spinAudio1 = new Audio('https://raw.githubusercontent.com/xFORTUNAx/wtm-materials/main/trophy_sim_sound/spin_sound.mp3');
+    const spinAudio1 = new Audio('https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/trophy_sim_sound/spin_sound.mp3');
     spinAudio1.preload = 'auto';
-    const spinAudio2 = new Audio('https://raw.githubusercontent.com/xFORTUNAx/wtm-materials/main/trophy_sim_sound/spin_sound.mp3');
+    const spinAudio2 = new Audio('https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/trophy_sim_sound/spin_sound.mp3');
     spinAudio2.preload = 'auto';
 
     let useFirstSpin = true;
