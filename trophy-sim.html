@@ -139,7 +139,7 @@
         }
         .btn-back:hover { color: #fff; }
         
-        /* Кнопки инструментов (Калькулятор, Очистить) */
+        /* Кнопки инструментов */
         .tools-container {
             display: flex;
             justify-content: center;
@@ -251,12 +251,10 @@
             border: none; padding: 10px;
             box-sizing: border-box; margin-bottom: 15px;
             font-weight: 300;
-            /* Возможность скроллить длинные числа */
             overflow-x: auto;
             white-space: nowrap;
         }
         
-        /* Стили скроллбара для дисплея калькулятора */
         .calc-display::-webkit-scrollbar { height: 6px; }
         .calc-display::-webkit-scrollbar-thumb { background: #555; border-radius: 3px; }
         .calc-display::-webkit-scrollbar-track { background: transparent; }
@@ -397,6 +395,149 @@
         .control-btns { display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap; }
         .hidden { display: none !important; }
 
+        /* --- ВЕРХНИЙ ПЛАВАЮЩИЙ ВИДЖЕТ --- */
+        #floating-widget {
+            position: fixed; 
+            top: 15px; 
+            right: 15px; 
+            z-index: 9999; 
+            background: rgba(0,0,0,0.65); 
+            border-radius: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: flex-end; 
+            backdrop-filter: blur(8px); 
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+        }
+        
+        /* Свернутое состояние */
+        #floating-widget.collapsed {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            padding: 0;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+        #floating-widget:not(.collapsed) {
+            padding: 12px 18px;
+            width: 240px;
+        }
+
+        .widget-toggle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1em;
+            transition: color 0.3s;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            cursor: pointer;
+        }
+        #floating-widget.collapsed .widget-toggle {
+            width: 100%;
+            height: 100%;
+            font-size: 1.3em;
+        }
+        #floating-widget:not(.collapsed) .widget-toggle {
+            margin-bottom: 12px;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 5px;
+        }
+        .widget-toggle:hover { color: #ffcc00; }
+
+        .widget-inner {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 12px;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        #floating-widget.collapsed .widget-inner {
+            display: none;
+            opacity: 0;
+        }
+
+        .lang-row {
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .lang-label {
+            color:rgba(255,255,255,0.5); 
+            font-weight:bold; 
+            font-size:0.85em;
+        }
+        .lang-label.active { color: #ffcc00 !important; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-float { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 20px; }
+        .slider-float:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider-float { background-color: #ffcc00; }
+        input:checked + .slider-float:before { transform: translateX(20px); background-color: black; }
+        
+        /* Ползунки громкости */
+        .vol-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            font-size: 0.85em;
+            color: #ddd;
+        }
+        .vol-control input[type=range] {
+            width: 60%;
+            cursor: pointer;
+            accent-color: #ffcc00;
+        }
+
+        /* Аккордеон авторов */
+        .credits-toggle {
+            cursor: pointer;
+            font-size: 0.8em;
+            color: rgba(255, 204, 0, 0.8);
+            font-weight: bold;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 5px;
+            user-select: none;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .credits-toggle:hover { color: rgba(255, 204, 0, 1); }
+        .credits-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.4s ease, margin 0.4s ease;
+            opacity: 0;
+            margin-top: 0;
+            font-size: 0.75em;
+            color: rgba(255, 255, 255, 0.6);
+            text-align: center;
+            line-height: 1.4;
+        }
+        .credits-content.expanded {
+            max-height: 120px;
+            opacity: 1;
+            margin-top: 5px;
+        }
+        .credits-content a { color: #ffcc00; text-decoration: none; }
+        .credits-content a:hover { text-decoration: underline; }
+
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
         
@@ -415,39 +556,114 @@
 </head>
 <body>
 
-    <div id="floating-lang-widget" style="position: fixed; top: 20px; right: 20px; z-index: 9999; background: rgba(0,0,0,0.6); padding: 8px 15px; border-radius: 30px; display: flex; align-items: center; gap: 10px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2);">
-        <span class="lang-label ru" style="color:rgba(255,255,255,0.5); font-weight:bold; font-size:0.8em;">RU</span>
-        <label class="switch" style="position: relative; display: inline-block; width: 40px; height: 20px;">
-            <input type="checkbox" id="lang-toggle-float" style="opacity: 0; width: 0; height: 0;">
-            <span class="slider-float" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: .4s; border-radius: 20px;"></span>
-            <style>
-                .slider-float:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-                #lang-toggle-float:checked + .slider-float { background-color: #ffcc00; }
-                #lang-toggle-float:checked + .slider-float:before { transform: translateX(20px); background-color: black; }
-                .lang-label.active { color: #ffcc00 !important; }
-            </style>
-        </label>
-        <span class="lang-label en" style="color:rgba(255,255,255,0.5); font-weight:bold; font-size:0.8em;">EN</span>
+    <div id="floating-widget">
+        <div class="widget-toggle" id="widget-toggle-icon" onclick="toggleWidget()" title="Развернуть/Свернуть панель">▲ Скрыть панель</div>
+        
+        <div class="widget-inner">
+            <div class="lang-row">
+                <span class="lang-label ru">RU</span>
+                <label class="switch">
+                    <input type="checkbox" id="lang-toggle-float">
+                    <span class="slider-float"></span>
+                </label>
+                <span class="lang-label en">EN</span>
+            </div>
+
+            <div class="vol-control">
+                <label>Рулетка</label>
+                <input type="range" id="spin-vol-slider" min="0" max="1" step="0.05" value="0.4">
+            </div>
+            <div class="vol-control">
+                <label>Награды</label>
+                <input type="range" id="win-vol-slider" min="0" max="1" step="0.05" value="0.15">
+            </div>
+
+            <div class="credits-toggle" onclick="toggleCredits()">
+                <span>Авторы звуков</span> 
+                <span id="credits-arrow" style="display:inline-block; transition: transform 0.3s;">▼</span>
+            </div>
+            <div id="credits-content" class="credits-content">
+                Звуковые эффекты от <br><a href="https://pixabay.com/users/floraphonic-38928062/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=183975" target="_blank">floraphonic</a> 
+                и <a href="https://pixabay.com/users/victorabdo-24752366/?utm_source=link-attribution&utm_medium=referral&utm_campaign=music&utm_content=232536" target="_blank">victor abdo</a> 
+                с Pixabay
+            </div>
+        </div>
     </div>
 
     <script>
-    // ПРОВЕРКА ПАМЯТИ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
-    const savedLang = localStorage.getItem('wtm_lang');
-    const isEnglish = window.location.pathname.indexOf('/en/') !== -1;
-    let currentFile = window.location.pathname.split('/').pop() || "index.html";
-
-    if (savedLang === 'en' && !isEnglish) {
-        window.location.replace('en/' + currentFile);
-    } else if (savedLang === 'ru' && isEnglish) {
-        window.location.replace('../' + currentFile);
+    // --- ЛОГИКА ВИДЖЕТА ---
+    function toggleWidget() {
+        const widget = document.getElementById('floating-widget');
+        const icon = document.getElementById('widget-toggle-icon');
+        if (widget.classList.contains('collapsed')) {
+            widget.classList.remove('collapsed');
+            icon.innerHTML = '▲ Скрыть панель';
+        } else {
+            widget.classList.add('collapsed');
+            icon.innerHTML = '▼'; 
+            document.getElementById('credits-content').classList.remove('expanded');
+            document.getElementById('credits-arrow').style.transform = 'rotate(0deg)';
+        }
     }
 
+    function toggleCredits() {
+        const content = document.getElementById('credits-content');
+        const arrow = document.getElementById('credits-arrow');
+        if (content.classList.contains('expanded')) {
+            content.classList.remove('expanded');
+            arrow.style.transform = 'rotate(0deg)';
+        } else {
+            content.classList.add('expanded');
+            arrow.style.transform = 'rotate(180deg)';
+        }
+    }
+
+    // --- ЛОГИКА ГРОМКОСТИ ---
+    let spinVolume = parseFloat(localStorage.getItem('wtm_spin_vol'));
+    if (isNaN(spinVolume)) spinVolume = 0.4;
+
+    let winVolume = parseFloat(localStorage.getItem('wtm_win_vol'));
+    if (isNaN(winVolume)) winVolume = 0.15;
+
+    const winSound = new Audio('win_sound.mp3');
+    winSound.volume = winVolume;
+
     document.addEventListener("DOMContentLoaded", function() {
-        const toggle = document.getElementById('lang-toggle-float');
-        const labelRu = document.querySelector('#floating-lang-widget .lang-label.ru');
-        const labelEn = document.querySelector('#floating-lang-widget .lang-label.en');
+        const spinSlider = document.getElementById('spin-vol-slider');
+        const winSlider = document.getElementById('win-vol-slider');
         
-        // Настраиваем визуал виджета
+        spinSlider.value = spinVolume;
+        winSlider.value = winVolume;
+
+        spinSlider.addEventListener('input', (e) => {
+            spinVolume = parseFloat(e.target.value);
+            localStorage.setItem('wtm_spin_vol', spinVolume);
+            if (currentSpinAudio) {
+                currentSpinAudio.volume = spinVolume;
+            }
+        });
+
+        winSlider.addEventListener('input', (e) => {
+            winVolume = parseFloat(e.target.value);
+            winSound.volume = winVolume;
+            localStorage.setItem('wtm_win_vol', winVolume);
+        });
+
+        // Язык
+        const savedLang = localStorage.getItem('wtm_lang');
+        const isEnglish = window.location.pathname.indexOf('/en/') !== -1;
+        let currentFile = window.location.pathname.split('/').pop() || "index.html";
+
+        if (savedLang === 'en' && !isEnglish) {
+            window.location.replace('en/' + currentFile);
+        } else if (savedLang === 'ru' && isEnglish) {
+            window.location.replace('../' + currentFile);
+        }
+
+        const toggle = document.getElementById('lang-toggle-float');
+        const labelRu = document.querySelector('.lang-label.ru');
+        const labelEn = document.querySelector('.lang-label.en');
+        
         if (isEnglish) {
             toggle.checked = true;
             if (labelEn) labelEn.classList.add('active');
@@ -456,18 +672,58 @@
             if (labelRu) labelRu.classList.add('active');
         }
 
-        // Обработчик клика
         toggle.addEventListener('change', function() {
             if (this.checked && !isEnglish) {
-                localStorage.setItem('wtm_lang', 'en'); // ЗАПОМИНАЕМ
+                localStorage.setItem('wtm_lang', 'en'); 
                 window.location.href = 'en/' + currentFile;
             } else if (!this.checked && isEnglish) {
-                localStorage.setItem('wtm_lang', 'ru'); // ЗАПОМИНАЕМ
+                localStorage.setItem('wtm_lang', 'ru'); 
                 window.location.href = '../' + currentFile;
             }
         });
     });
+
+    // --- АУДИО ЛОГИКА ---
+    let currentSpinAudio = null;
+
+    function fadeAudio(audioEl, durationMs = 400) {
+        if (!audioEl) return;
+        let fadeVol = audioEl.volume;
+        let steps = durationMs / 40;
+        let stepAmount = fadeVol / steps;
+        
+        let fadeInterval = setInterval(() => {
+            fadeVol -= stepAmount;
+            if (fadeVol <= 0.05) {
+                audioEl.pause();
+                audioEl.currentTime = 0;
+                clearInterval(fadeInterval);
+            } else {
+                audioEl.volume = fadeVol;
+            }
+        }, 40);
+    }
+
+    function playSpinSound(isFastMode) {
+        if (currentSpinAudio && !currentSpinAudio.paused) {
+            fadeAudio(currentSpinAudio, 300);
+        }
+
+        const newAudio = new Audio('spin_sound.mp3');
+        newAudio.playbackRate = 1.0; 
+        newAudio.volume = spinVolume; 
+        newAudio.play().catch(e => console.log("Audio play blocked by browser:", e));
+        currentSpinAudio = newAudio;
+    }
+
+    function stopSpinFast() {
+        if (currentSpinAudio) {
+            currentSpinAudio.pause();
+            currentSpinAudio = null;
+        }
+    }
     </script>
+    
     <div class="app-container">
         
         <div id="menu-section">
@@ -485,8 +741,7 @@
 
         <div id="settings-section" class="hidden">
             <h2 id="trophy-title">Настройка</h2>
-            <p class="warning">⚠️ <b>Внимание:</b> суммируйте вероятности для одинаковых предметов. Кнопка очистить предназначена, чтобы сразу обнулить
-            введенные данные. В калькуляторе возможен скрол при введении большого количества символов.</p>
+            <p class="warning">⚠️ <b>Внимание:</b> суммируйте вероятности для одинаковых предметов. Кнопка очистить предназначена, чтобы сразу обнулить введенные данные. В калькуляторе возможен скрол при введении большого количества символов.</p>
             
             <div class="tools-container">
                 <button class="btn btn-tool btn-calc" onclick="toggleCalc()">🧮 Калькулятор</button>
@@ -571,7 +826,7 @@
     </div>
 
     <script>
-        // --- ДАННЫЕ ---
+        // --- ДАННЫЕ СИМУЛЯТОРА ---
         const UNIQUE_IDS = ['title', 'camo', 'avatar', 'tank', 'prem_tank', 'jackpot', 'decorator'];
 
         const trophies = {
@@ -682,7 +937,6 @@
             updateTotal();
         }
 
-        // ОБНОВЛЕНО: Допуск 96% - 104%
         function updateTotal() {
             let total = 0;
             document.querySelectorAll('#items-container input').forEach(inp => total += parseFloat(inp.value) || 0);
@@ -848,6 +1102,7 @@
 
         function skipAnimation() {
             isSkipping = true;
+            fadeAudio(currentSpinAudio, 300); 
             if (document.getElementById('live-drop-wrapper').classList.contains('hidden')) {
                 if (spinTimeout) clearTimeout(spinTimeout);
                 const track = document.getElementById('track');
@@ -862,6 +1117,8 @@
             track.style.transition = 'none';
             track.style.transform = 'translateX(0px)';
             track.offsetHeight; 
+            
+            playSpinSound(isFastMode);
 
             const winnerPositionIndex = 60; 
             const totalCards = 90; 
@@ -884,6 +1141,7 @@
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
                     if (isSkipping && isFastMode && callback) {
+                        fadeAudio(currentSpinAudio, 200);
                         callback(); return;
                     }
 
@@ -900,7 +1158,18 @@
                     track.style.transition = `transform ${duration}s cubic-bezier(0.12, 0.8, 0.3, 1)`;
                     track.style.transform = `translateX(-${slideAmount}px)`;
 
+                    // Для x10 плавно затухаем звук перед самым концом прокрута
+                    if (isFastMode) {
+                        setTimeout(() => {
+                            if (!isSkipping) fadeAudio(currentSpinAudio, 400);
+                        }, duration * 1000 - 200);
+                    }
+
                     spinTimeout = setTimeout(() => {
+                        if (!isFastMode && currentSpinAudio) {
+                            fadeAudio(currentSpinAudio, 500); // Затухание для х1
+                        }
+
                         if (isFastMode) {
                             if (callback) callback();
                         } else {
@@ -912,6 +1181,11 @@
         }
 
         function showResultSingle(item) {
+            fadeAudio(currentSpinAudio, 200); 
+            
+            winSound.currentTime = 0;
+            winSound.play().catch(e => console.log("Audio play blocked by browser:", e));
+            
             const modal = document.getElementById('result-modal');
             document.getElementById('single-result-container').classList.remove('hidden');
             document.getElementById('multi-result-container').classList.add('hidden');
@@ -921,6 +1195,11 @@
         }
 
         function showResultMultiple(items) {
+            fadeAudio(currentSpinAudio, 200); 
+            
+            winSound.currentTime = 0;
+            winSound.play().catch(e => console.log("Audio play blocked by browser:", e));
+            
             document.getElementById('simulation-section').classList.add('hidden');
             const modal = document.getElementById('result-modal');
             document.getElementById('single-result-container').classList.add('hidden');
