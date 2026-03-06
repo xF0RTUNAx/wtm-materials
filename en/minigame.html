@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WTM: Mini-Games</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Roboto', sans-serif;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Фоновое изображение с кораблями */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: url('https://static.wtmobile.com/upload/fileman/images/regular_pics/updates/any_ship_1920x853_b345b93e8164230f4be0c9db746e0a12.jpg') no-repeat center center;
+            background-size: cover;
+            z-index: -2;
+        }
+
+        /* Темное затемнение для читаемости текста */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(15, 20, 25, 0.6) 0%, rgba(5, 8, 12, 0.9) 100%);
+            z-index: -1;
+        }
+
+        /* Центральная карточка */
+        .content-card {
+            background: rgba(30, 35, 45, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 50px 40px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #ffcc00;
+            text-align: center;
+            max-width: 550px;
+            width: 90%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 255, 255, 0.05);
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        .icon-container {
+            font-size: 3.5em;
+            color: #ffcc00;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255, 204, 0, 0.4);
+        }
+
+        h1 {
+            font-family: 'Black Ops One', sans-serif;
+            font-size: 2.2em;
+            margin: 0 0 15px 0;
+            letter-spacing: 1.5px;
+            color: #ffffff;
+            text-transform: uppercase;
+        }
+
+        p {
+            font-size: 1.1em;
+            line-height: 1.6;
+            color: #bbbbbb;
+            margin-bottom: 35px;
+        }
+
+        /* Кнопка возврата (в стиле главного меню) */
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background-color: #3b4752;
+            background-image: linear-gradient(to bottom, #54677a, #2a333b);
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
+            font-size: 1.05em;
+            text-transform: uppercase;
+            text-decoration: none;
+            padding: 14px 32px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.5);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 4px 8px rgba(0,0,0,0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-back:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), 0 6px 12px rgba(0,0,0,0.5);
+        }
+
+        .btn-back:active {
+            transform: translateY(1px);
+            filter: brightness(0.9);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 480px) {
+            .content-card { padding: 35px 20px; }
+            h1 { font-size: 1.8em; }
+            p { font-size: 1em; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="content-card">
+        <div class="icon-container">
+            <i class="fas fa-tools"></i>
+        </div>
+        
+        <h1>Coming Soon</h1>
+        
+        <p>The English version of the Mini-Games section is currently under development. <br><br>Please check back later!</p>
+        
+        <a href="index.html" class="btn-back">
+            <i class="fas fa-chevron-left"></i> Back to Main Menu
+        </a>
+    </div>
+
+</body>
+</html>
