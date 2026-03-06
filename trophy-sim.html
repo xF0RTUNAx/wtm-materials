@@ -620,29 +620,39 @@
         }
     }
 
-   // --- ЛОГИКА ГРОМКОСТИ И РАЗБЛОКИРОВКИ IOS ---
+    // --- ЛОГИКА ГРОМКОСТИ И РАЗБЛОКИРОВКИ IOS ---
     let spinVolume = parseFloat(localStorage.getItem('wtm_spin_vol'));
     if (isNaN(spinVolume)) spinVolume = 0.4;
 
     let winVolume = parseFloat(localStorage.getItem('wtm_win_vol'));
     if (isNaN(winVolume)) winVolume = 0.15;
 
-    // ЛОКАЛЬНЫЙ ПУТЬ
+    // ИСПОЛЬЗУЕМ ЛОКАЛЬНЫЙ ПУТЬ К ЗВУКАМ ДЛЯ КОРНЕВОГО INDEX.HTML
     const winSound = new Audio('trophy_sim_sound/win_sound.mp3');
     winSound.volume = winVolume;
     winSound.preload = 'auto';
 
-    const spinSoundPool = [];
-    for (let i = 0; i < 5; i++) {
-        // ЛОКАЛЬНЫЙ ПУТЬ
-        let snd = new Audio('trophy_sim_sound/spin_sound.mp3');
-        snd.preload = 'auto';
-        spinSoundPool.push(snd);
-    }
+    const spinAudio1 = new Audio('trophy_sim_sound/spin_sound.mp3');
+    spinAudio1.preload = 'auto';
+    const spinAudio2 = new Audio('trophy_sim_sound/spin_sound.mp3');
+    spinAudio2.preload = 'auto';
 
     let useFirstSpin = true;
     let currentSpinAudio = null;
     let audioUnlocked = false;
+
+    // "Хак" для разблокировки звука на iOS при первом касании экрана
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        winSound.play().then(() => { winSound.pause(); winSound.currentTime = 0; }).catch(() => {});
+        spinAudio1.play().then(() => { spinAudio1.pause(); spinAudio1.currentTime = 0; }).catch(() => {});
+        spinAudio2.play().then(() => { spinAudio2.pause(); spinAudio2.currentTime = 0; }).catch(() => {});
+        audioUnlocked = true;
+        ['touchstart', 'click'].forEach(evt => document.removeEventListener(evt, unlockAudio));
+    }
+    
+    // Вешаем слушатели на первое взаимодействие пользователя со страницей
+    ['touchstart', 'click'].forEach(evt => document.addEventListener(evt, unlockAudio, { once: true }));
 
     document.addEventListener("DOMContentLoaded", function() {
         const spinSlider = document.getElementById('spin-vol-slider');
@@ -733,7 +743,7 @@
         
         let playPromise = newAudio.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log("Audio blocked by iOS:", e));
+            playPromise.catch(e => console.log("Audio blocked by browser:", e));
         }
         
         currentSpinAudio = newAudio;
@@ -1050,19 +1060,8 @@
                  return;
             }
 
-            // Инициируем разблокировку при явном клике на "Открыть" 
-            if (!audioUnlocked) {
-                winSound.muted = true;
-                winSound.play().then(() => {
-                    winSound.pause();
-                    winSound.currentTime = 0;
-                    winSound.muted = false;
-                }).catch(() => {});
-                
-                spinAudio1.load();
-                spinAudio2.load();
-                audioUnlocked = true;
-            }
+            // Инициируем разблокировку при клике на "Открыть"
+            if (!audioUnlocked) unlockAudio();
 
             isSkipping = false;
             document.getElementById('btn-open-again').onclick = () => startOpening(count);
@@ -1189,7 +1188,7 @@
                     track.style.transition = `transform ${duration}s cubic-bezier(0.12, 0.8, 0.3, 1)`;
                     track.style.transform = `translateX(-${slideAmount}px)`;
 
-                    // Для x10 плавно затухаем звук перед самым концом прокрута
+                    // Затухание для быстрой прокрутки (х10)
                     if (isFastMode) {
                         setTimeout(() => {
                             if (!isSkipping) fadeAudio(currentSpinAudio, 400);
@@ -1198,7 +1197,7 @@
 
                     spinTimeout = setTimeout(() => {
                         if (!isFastMode && currentSpinAudio) {
-                            fadeAudio(currentSpinAudio, 500); // Затухание для х1
+                            fadeAudio(currentSpinAudio, 500); 
                         }
 
                         if (isFastMode) {
