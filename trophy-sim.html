@@ -627,16 +627,18 @@
     let winVolume = parseFloat(localStorage.getItem('wtm_win_vol'));
     if (isNaN(winVolume)) winVolume = 0.15;
 
-    // ПРАВИЛЬНЫЕ ССЫЛКИ ЧЕРЕЗ CDN JSDELIVR
-    const winSound = new Audio('https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/trophy_sim_sound/win_sound.mp3');
+    // ЛОКАЛЬНЫЙ ПУТЬ
+    const winSound = new Audio('trophy_sim_sound/win_sound.mp3');
     winSound.volume = winVolume;
     winSound.preload = 'auto';
 
-    // Пул для рулетки (обход ограничений Safari)
-    const spinAudio1 = new Audio('https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/trophy_sim_sound/spin_sound.mp3');
-    spinAudio1.preload = 'auto';
-    const spinAudio2 = new Audio('https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/trophy_sim_sound/spin_sound.mp3');
-    spinAudio2.preload = 'auto';
+    const spinSoundPool = [];
+    for (let i = 0; i < 5; i++) {
+        // ЛОКАЛЬНЫЙ ПУТЬ
+        let snd = new Audio('trophy_sim_sound/spin_sound.mp3');
+        snd.preload = 'auto';
+        spinSoundPool.push(snd);
+    }
 
     let useFirstSpin = true;
     let currentSpinAudio = null;
