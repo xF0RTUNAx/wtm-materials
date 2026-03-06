@@ -627,33 +627,46 @@
     let winVolume = parseFloat(localStorage.getItem('wtm_win_vol'));
     if (isNaN(winVolume)) winVolume = 0.15;
 
-    const winSound = new Audio('win_sound.mp3');
+    // ПУТИ С ВЫХОДОМ В КОРЕНЬ (ДЛЯ ПАПКИ EN)
+    const winSound = new Audio('../trophy_sim_sound/win_sound.mp3');
     winSound.volume = winVolume;
     winSound.preload = 'auto';
 
-    const spinSoundPool = [];
-    for (let i = 0; i < 5; i++) {
-        let snd = new Audio('spin_sound.mp3');
-        snd.preload = 'auto';
-        spinSoundPool.push(snd);
-    }
-    let spinSoundIndex = 0;
+    const spinAudio1 = new Audio('../trophy_sim_sound/spin_sound.mp3');
+    spinAudio1.preload = 'auto';
+    const spinAudio2 = new Audio('../trophy_sim_sound/spin_sound.mp3');
+    spinAudio2.preload = 'auto';
+
+    let useFirstSpin = true;
     let currentSpinAudio = null;
     let audioUnlocked = false;
+    let currentSpinResolve = null;
 
+    // "Хак" для разблокировки звука на iOS при первом касании экрана
     function unlockAudio() {
         if (audioUnlocked) return;
-        winSound.play().then(() => { winSound.pause(); winSound.currentTime = 0; }).catch(() => {});
-        spinSoundPool.forEach(snd => {
-            snd.play().then(() => { snd.pause(); snd.currentTime = 0; }).catch(() => {});
-        });
-        audioUnlocked = true;
-        document.removeEventListener('touchstart', unlockAudio);
-        document.removeEventListener('click', unlockAudio);
-    }
-    document.addEventListener('touchstart', unlockAudio, { once: true });
-    document.addEventListener('click', unlockAudio, { once: true });
+        
+        const unlock = (audio) => {
+            audio.muted = true;
+            let p = audio.play();
+            if (p !== undefined) {
+                p.then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.muted = false;
+                }).catch(() => {});
+            }
+        };
 
+        unlock(winSound);
+        unlock(spinAudio1);
+        unlock(spinAudio2);
+        
+        audioUnlocked = true;
+    }
+    
+    // Вешаем слушатели на первое взаимодействие пользователя со страницей
+    ['touchstart', 'click'].forEach(evt => document.addEventListener(evt, unlockAudio, { once: true }));
 
     document.addEventListener("DOMContentLoaded", function() {
         const spinSlider = document.getElementById('spin-vol-slider');
@@ -710,10 +723,11 @@
         });
     });
 
+    // Плавное затухание
     function fadeAudio(audioEl, durationMs = 400) {
         if (!audioEl) return;
         let fadeVol = audioEl.volume;
-        let steps = durationMs / 40;
+        let steps = Math.floor(durationMs / 40) || 1;
         let stepAmount = fadeVol / steps;
         
         let fadeInterval = setInterval(() => {
@@ -729,12 +743,13 @@
     }
 
     function playSpinSound(isFastMode) {
-        if (currentSpinAudio && !currentSpinAudio.paused) {
-            fadeAudio(currentSpinAudio, 300);
-        }
+        let newAudio = useFirstSpin ? spinAudio1 : spinAudio2;
+        let oldAudio = useFirstSpin ? spinAudio2 : spinAudio1;
+        useFirstSpin = !useFirstSpin;
 
-        const newAudio = spinSoundPool[spinSoundIndex];
-        spinSoundIndex = (spinSoundIndex + 1) % spinSoundPool.length;
+        if (!oldAudio.paused) {
+            fadeAudio(oldAudio, 300);
+        }
 
         newAudio.playbackRate = 1.0; 
         newAudio.volume = spinVolume; 
@@ -742,17 +757,16 @@
         
         let playPromise = newAudio.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => console.log("Audio blocked by iOS:", e));
+            playPromise.catch(e => console.log("Audio blocked by browser:", e));
         }
         
         currentSpinAudio = newAudio;
     }
 
     function stopSpinFast() {
-        if (currentSpinAudio) {
-            currentSpinAudio.pause();
-            currentSpinAudio = null;
-        }
+        if (spinAudio1) { spinAudio1.pause(); spinAudio1.currentTime = 0; }
+        if (spinAudio2) { spinAudio2.pause(); spinAudio2.currentTime = 0; }
+        currentSpinAudio = null;
     }
     </script>
     
@@ -893,11 +907,6 @@
                 ]
             }
         };
-
-        let currentMode = null;
-        let isSkipping = false;
-        let spinTimeout = null; 
-        let currentSingleWinner = null;
 
         // --- ЛОГИКА КАЛЬКУЛЯТОРА ---
         function toggleCalc() {
@@ -1110,8 +1119,10 @@
                     runSpinAnimation(winners[i], true, resolve); 
                 });
                 
-                addLiveDropItem(winners[i]);
-                if (!isSkipping) await new Promise(r => setTimeout(r, 500));
+                if (!isSkipping) {
+                    addLiveDropItem(winners[i]);
+                    await new Promise(r => setTimeout(r, 500));
+                }
             }
             
             if (isSkipping) {
@@ -1137,11 +1148,18 @@
         function skipAnimation() {
             isSkipping = true;
             fadeAudio(currentSpinAudio, 300); 
+            
+            if (spinTimeout) clearTimeout(spinTimeout);
+            const track = document.getElementById('track');
+            if (track) track.style.transition = 'none';
+
             if (document.getElementById('live-drop-wrapper').classList.contains('hidden')) {
-                if (spinTimeout) clearTimeout(spinTimeout);
-                const track = document.getElementById('track');
-                track.style.transition = 'none';
                 showResultSingle(currentSingleWinner);
+            } else {
+                if (currentSpinResolve) {
+                    currentSpinResolve();
+                    currentSpinResolve = null;
+                }
             }
         }
 
@@ -1151,6 +1169,8 @@
             track.style.transition = 'none';
             track.style.transform = 'translateX(0px)';
             track.offsetHeight; 
+            
+            currentSpinResolve = callback;
             
             playSpinSound(isFastMode);
 
@@ -1192,7 +1212,6 @@
                     track.style.transition = `transform ${duration}s cubic-bezier(0.12, 0.8, 0.3, 1)`;
                     track.style.transform = `translateX(-${slideAmount}px)`;
 
-                    // Для x10 плавно затухаем звук перед самым концом прокрута
                     if (isFastMode) {
                         setTimeout(() => {
                             if (!isSkipping) fadeAudio(currentSpinAudio, 400);
@@ -1201,7 +1220,7 @@
 
                     spinTimeout = setTimeout(() => {
                         if (!isFastMode && currentSpinAudio) {
-                            fadeAudio(currentSpinAudio, 500); // Затухание для х1
+                            fadeAudio(currentSpinAudio, 500); 
                         }
 
                         if (isFastMode) {
@@ -1217,6 +1236,7 @@
         function showResultSingle(item) {
             fadeAudio(currentSpinAudio, 200); 
             
+            winSound.volume = winVolume;
             winSound.currentTime = 0;
             let playPromise = winSound.play();
             if (playPromise !== undefined) {
@@ -1234,6 +1254,7 @@
         function showResultMultiple(items) {
             fadeAudio(currentSpinAudio, 200); 
             
+            winSound.volume = winVolume;
             winSound.currentTime = 0;
             let playPromise = winSound.play();
             if (playPromise !== undefined) {
