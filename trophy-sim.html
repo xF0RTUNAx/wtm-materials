@@ -620,14 +620,13 @@
         }
     }
 
-    // --- ЛОГИКА ГРОМКОСТИ И РАЗБЛОКИРОВКИ IOS ---
+    // --- ЛОГИКА ГРОМКОСТИ ---
     let spinVolume = parseFloat(localStorage.getItem('wtm_spin_vol'));
     if (isNaN(spinVolume)) spinVolume = 0.4;
 
     let winVolume = parseFloat(localStorage.getItem('wtm_win_vol'));
     if (isNaN(winVolume)) winVolume = 0.15;
 
-    // ИСПОЛЬЗУЕМ ЛОКАЛЬНЫЙ ПУТЬ К ЗВУКАМ ДЛЯ КОРНЕВОГО INDEX.HTML
     const winSound = new Audio('trophy_sim_sound/win_sound.mp3');
     winSound.volume = winVolume;
     winSound.preload = 'auto';
@@ -641,18 +640,15 @@
     let currentSpinAudio = null;
     let audioUnlocked = false;
 
-    // "Хак" для разблокировки звука на iOS при первом касании экрана
+    // Безопасная инициализация звука при первом клике (Без Promises!)
     function unlockAudio() {
-        if (audioUnlocked) return;
-        winSound.play().then(() => { winSound.pause(); winSound.currentTime = 0; }).catch(() => {});
-        spinAudio1.play().then(() => { spinAudio1.pause(); spinAudio1.currentTime = 0; }).catch(() => {});
-        spinAudio2.play().then(() => { spinAudio2.pause(); spinAudio2.currentTime = 0; }).catch(() => {});
-        audioUnlocked = true;
-        ['touchstart', 'click'].forEach(evt => document.removeEventListener(evt, unlockAudio));
+        if (!audioUnlocked) {
+            winSound.load();
+            spinAudio1.load();
+            spinAudio2.load();
+            audioUnlocked = true;
+        }
     }
-    
-    // Вешаем слушатели на первое взаимодействие пользователя со страницей
-    ['touchstart', 'click'].forEach(evt => document.addEventListener(evt, unlockAudio, { once: true }));
 
     document.addEventListener("DOMContentLoaded", function() {
         const spinSlider = document.getElementById('spin-vol-slider');
@@ -1060,8 +1056,7 @@
                  return;
             }
 
-            // Инициируем разблокировку при клике на "Открыть"
-            if (!audioUnlocked) unlockAudio();
+            unlockAudio(); // Безопасная инициализация звука
 
             isSkipping = false;
             document.getElementById('btn-open-again').onclick = () => startOpening(count);
@@ -1188,7 +1183,6 @@
                     track.style.transition = `transform ${duration}s cubic-bezier(0.12, 0.8, 0.3, 1)`;
                     track.style.transform = `translateX(-${slideAmount}px)`;
 
-                    // Затухание для быстрой прокрутки (х10)
                     if (isFastMode) {
                         setTimeout(() => {
                             if (!isSkipping) fadeAudio(currentSpinAudio, 400);
