@@ -334,7 +334,7 @@
                 <h3 style="color: var(--rare); text-align: center; margin-bottom: 5px;">🔬 Секретная Лаборатория (Ур. <span id="labLevelUI">1</span>)</h3>
                 <div id="labGarlandContainer" style="margin-bottom: 10px;"></div>
                 <div style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 15px;">Открывает доступ к новым типам войск.</div>
-                <div id="labNextUnlock" style="text-align: center; font-weight: bold; color: var(--accent-gold); margin-bottom: 10px;">Следующий анлок: БМП</div>
+                <div id="labNextUnlock" style="text-align: center; font-weight: bold; color: var(--accent-gold); margin-bottom: 10px;">Следующее улучшение: БМП</div>
                 <button id="btnUpgradeLab" onclick="upgradeLab()" style="background: #333; border: 1px solid var(--rare);">Улучшить Лабораторию</button>
                 <div id="labMsg" class="msg" style="color: #ff4444;"></div>
             </div>
@@ -345,6 +345,7 @@
                 <div style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 15px;">Автоматически восстанавливает 25% ХП за 4 часа.</div>
                 <div id="hospSlotsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
                 </div>
+                <div id="hospUpgradeStatus"></div>
                 <button id="btnUpgradeHosp" onclick="upgradeHospital()" style="background: #333; border: 1px solid #00e676;">Улучшить Госпиталь</button>
                 <div id="hospMsg" class="msg" style="color: #ff4444;"></div>
             </div>
@@ -352,7 +353,7 @@
             <div class="panel full-width">
                 <h3 style="color: var(--power); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">🎖️ Армия (Слияние и Обучение)</h3>
                 <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px;">
-                    <div style="font-size: 12px; color: #8b949e;">Статус обучения (1 час на апгрейд):</div>
+                    <div style="font-size: 12px; color: #8b949e;">Статус обучения (1 час на улучшение):</div>
                     <div id="troopUpgradeStatus" style="font-weight: bold; color: var(--accent-gold); font-size: 14px; margin-top: 5px;">Свободно</div>
                     <button id="btnFinishTroop" class="btn-gold" style="display:none; margin-top: 5px; padding: 5px;" onclick="finishTroopUpgrade()">Завершить!</button>
                 </div>
@@ -432,13 +433,13 @@
             </div>
 
             <div class="panel">
-                <h3 style="color: var(--booster);">⚡ Бустеры (Время: 4ч)</h3>
+                <h3 style="color: var(--booster);">⚡ Бустеры</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Контейнерах.</p>
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 (<span id="countSpeed">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('auto')">📦 Арендованные склады (<span id="countAuto">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('contractor')">👷 Подрядчики (+50% к добыче) (<span id="countContractor">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('doubler')">🔄 Дублер (х2 при ручном сборе) (<span id="countDoubler">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('contractor')">👷 Подрядчики (<span id="countContractor">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('doubler')">🔄 Дублер (<span id="countDoubler">0</span>)</button>
                 <div id="boosterMsg" class="msg" style="color: #ff4444;"></div>
             </div>
 
@@ -524,14 +525,13 @@
             avia: { id: 'avia', title: '✈️ Авиация', max: 5, desc: '+25% урон по всем.' }
         };
 
-        // Включаем время улучшения (в часах)
         const LAB_REQ = {
             2: { unlocks: 'bmp', c: 500, r: 0, e: 0, f_key: null, f_amt: 0, time: 1 },
             3: { unlocks: 'tank', c: 1500, r: 50, e: 0, f_key: null, f_amt: 0, time: 2 },
-            4: { unlocks: 'arty', c: 3000, r: 150, e: 10, f_key: 'frag1_arty', f_amt: 3, f_name: 'Фрагмент 1⭐ Арты', time: 4 },
-            5: { unlocks: 'aa', c: 5000, r: 300, e: 25, f_key: 'frag2_aa', f_amt: 3, f_name: 'Фрагмент 2⭐ ПВО', time: 8 },
-            6: { unlocks: 'msl', c: 8000, r: 500, e: 50, f_key: 'frag3_msl', f_amt: 3, f_name: 'Фрагмент 3⭐ Ракет', time: 16 },
-            7: { unlocks: 'avia', c: 12000, r: 1000, e: 100, f_key: 'frag4_avia', f_amt: 3, f_name: 'Фрагмент 4⭐ Авиации', time: 32 }
+            4: { unlocks: 'arty', c: 3000, r: 150, e: 10, f_key: 'frag1_inf', f_amt: 3, f_name: 'Фрагмент 1⭐ Пехоты', time: 4 },
+            5: { unlocks: 'aa', c: 5000, r: 300, e: 25, f_key: 'frag1_bmp', f_amt: 3, f_name: 'Фрагмент 1⭐ БМП', time: 8 },
+            6: { unlocks: 'msl', c: 8000, r: 500, e: 50, f_key: 'frag1_tank', f_amt: 3, f_name: 'Фрагмент 1⭐ Танков', time: 16 },
+            7: { unlocks: 'avia', c: 12000, r: 1000, e: 100, f_key: 'frag1_arty', f_amt: 3, f_name: 'Фрагмент 1⭐ Арты', time: 32 }
         };
 
         let player = null; let globalTimer = null; let authMode = 'login';
@@ -818,7 +818,6 @@
 
                 let hpColor = vit > 50 ? '#00e676' : (vit > 0 ? '#ffc107' : '#ff4444');
 
-                // Ручной ремонт
                 let repHtml = '';
                 if (player[`rep_end_${key}`]) {
                     const endR = new Date(player[`rep_end_${key}`]).getTime();
@@ -829,7 +828,6 @@
                     repHtml = `<button style="background:transparent; border:1px solid var(--accent-green); color:var(--accent-green); font-size:10px; padding:2px 5px; width:auto; border-radius:4px; cursor:pointer;" onclick="manualRepair('${key}')">🔧 +5% (1 Ремк. / 1ч)</button>`;
                 }
 
-                // ОГНЕННАЯ РАМКА ДЛЯ ВОЙСК
                 const isMaxTroop = (star === 5 && hpLvl === cfg.max && dmgLvl === cfg.max && cntLvl === cfg.max && cfg.max > 0);
                 const fireClass = isMaxTroop ? 'fire-frame' : '';
 
@@ -986,14 +984,18 @@
         }
 
         async function upgradeHospital() {
+            if (player.hosp_upgrade_end) { showMsg('hospMsg', 'Улучшение уже в процессе!', '#ff4444'); return; }
             const lvl = player.lvl_hospital || 1;
             if (lvl >= 3) return;
             const cost = lvl === 1 ? 1000 : 2500;
+            const timeHours = lvl === 1 ? 8 : 12;
+            
             if (player.common_parts < cost) { showMsg('hospMsg', `Нужно ${cost} Обычных!`, '#ff4444'); return; }
             
-            const updates = { lvl_hospital: lvl + 1, common_parts: player.common_parts - cost };
+            const endTime = new Date(new Date().getTime() + (timeHours * 3600000)).toISOString();
+            const updates = { hosp_upgrade_end: endTime, common_parts: player.common_parts - cost };
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-            if (data) { player = data; showMsg('hospMsg', 'Госпиталь расширен!', '#00e676'); refreshAll(); }
+            if (data) { player = data; showMsg('hospMsg', 'Начато расширение Госпиталя!', '#00e676'); refreshAll(); }
         }
 
         function buildHospitalUI() {
@@ -1004,12 +1006,22 @@
             
             const btnUpg = document.getElementById('btnUpgradeHosp');
             const hospPanel = document.getElementById('hospPanel');
+            const statusDiv = document.getElementById('hospUpgradeStatus');
+            
             if(lvl >= 3) {
                 btnUpg.style.display = 'none';
+                statusDiv.innerHTML = '';
                 hospPanel.classList.add('fire-frame');
             } else {
-                btnUpg.style.display = 'block'; btnUpg.innerText = `Улучшить Госпиталь (${lvl===1 ? 1000 : 2500} Об.)`;
                 hospPanel.classList.remove('fire-frame');
+                if (player.hosp_upgrade_end) {
+                    btnUpg.style.display = 'none';
+                    statusDiv.innerHTML = `<div style="text-align: center; margin-bottom: 10px;">Расширение... <br><span id="hospTimerUI_build" style="color:var(--accent-gold); font-family:monospace; font-size:16px;">--:--</span></div>`;
+                } else {
+                    btnUpg.style.display = 'block'; 
+                    btnUpg.innerText = `Улучшить Госпиталь (${lvl===1 ? 1000 : 2500} Об. / ${lvl===1 ? 8 : 12}ч)`;
+                    statusDiv.innerHTML = '';
+                }
             }
 
             let unlockedTroops = getUnlockedTroopKeys();
@@ -1290,7 +1302,7 @@
                     let reqText = `Цена: ${req.c} Об., ${req.r} Ред., ${req.e} Эп.`;
                     if(req.f_key) reqText += `<br><span style="color:#ff1744">Требуется: ${req.f_amt}x ${req.f_name}</span>`;
                     reqText += `<br>Время: ${req.time}ч`;
-                    document.getElementById('labNextUnlock').innerHTML = `Следующий анлок: ${TROOP_CFG[req.unlocks].title}<br><span style="font-size:10px; font-weight:normal; color:#8b949e;">${reqText}</span>`;
+                    document.getElementById('labNextUnlock').innerHTML = `Следующее улучшение: ${TROOP_CFG[req.unlocks].title}<br><span style="font-size:10px; font-weight:normal; color:#8b949e;">${reqText}</span>`;
                     btnUpgLab.style.display = 'block';
                 }
             }
@@ -1403,6 +1415,19 @@
                 } else {
                     const uiEl = document.getElementById('labTimerUI');
                     if (uiEl) uiEl.innerText = formatTime(labEndMs - now);
+                }
+            }
+            
+            // Госпиталь улучшение
+            if (player.hosp_upgrade_end) {
+                const hospEndMs = new Date(player.hosp_upgrade_end).getTime();
+                if (now >= hospEndMs) {
+                    const nextLvl = (player.lvl_hospital || 1) + 1;
+                    player.hosp_upgrade_end = null; 
+                    db.from('players').update({ lvl_hospital: nextLvl, hosp_upgrade_end: null }).eq('id', player.id).then(() => refreshAll());
+                } else {
+                    const uiEl = document.getElementById('hospTimerUI_build');
+                    if (uiEl) uiEl.innerText = formatTime(hospEndMs - now);
                 }
             }
 
@@ -1576,7 +1601,7 @@
 
         async function useBooster(type) {
             const updates = {}; const now = new Date().getTime();
-            const boostTime = 4 * 3600000; 
+            const boostTime = 3 * 3600000; 
             
             if (type === 'skip') {
                 if ((player.booster_skip || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
@@ -1590,28 +1615,28 @@
                 const oldEnd = new Date(player.speed_boost_end || 0).getTime(); updates.booster_speed = player.booster_speed - 1; updates.speed_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 4ч!`, 'var(--booster)'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 3ч!`, 'var(--booster)'); refreshAll(); }
             }
             else if (type === 'auto') {
                 if ((player.booster_auto || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
-                const oldEnd = new Date(player.auto_boost_end || 0).getTime(); updates.booster_auto = player.booster_auto - 1; updates.auto_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                const oldEnd = new Date(player.auto_boost_end || 0).getTime(); updates.booster_auto = player.booster_auto - 1; updates.auto_boost_end = new Date(Math.max(now, oldEnd) + (6 * 3600000)).toISOString();
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Склады активны на 4ч!`, '#00e676'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Склады активны на 6ч!`, '#00e676'); refreshAll(); }
             }
             else if (type === 'contractor') {
                 if ((player.booster_contractor || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
                 const oldEnd = new Date(player.contractor_boost_end || 0).getTime(); updates.booster_contractor = player.booster_contractor - 1; updates.contractor_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Подрядчики активны на 4ч!`, '#03a9f4'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Подрядчики активны на 3ч!`, '#03a9f4'); refreshAll(); }
             }
             else if (type === 'doubler') {
                 if ((player.booster_doubler || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
                 const oldEnd = new Date(player.doubler_boost_end || 0).getTime(); updates.booster_doubler = player.booster_doubler - 1; updates.doubler_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Дублер активен на 4ч!`, '#e91e63'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Дублер активен на 3ч!`, '#e91e63'); refreshAll(); }
             }
         }
 
@@ -1785,4 +1810,3 @@
     </script>
 </body>
 </html>
-
