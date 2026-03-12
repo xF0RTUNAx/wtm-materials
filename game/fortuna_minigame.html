@@ -1,0 +1,1782 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>xFORTUNAx War Thunder Mobile Giveaway</title>
+    <style>
+        * { box-sizing: border-box; } 
+        
+        :root {
+            --bg-color: #0d1117; 
+            --panel-bg: rgba(15, 20, 25, 0.85); 
+            --border-color: #30363d;
+            --accent-gold: #ffc107; 
+            --accent-green: #238636; 
+            --accent-red: #da3633;
+            --common: #a0a0a0; 
+            --rare: #58a6ff; 
+            --epic: #bc8cff; 
+            --booster: #ff5722; 
+            --power: #ff1744;
+            --star-1: #ffffff;
+            --star-2: #ffc107;
+            --star-3: #bc8cff;
+            --star-4: #ff1744;
+        }
+
+        html, body { overflow-x: hidden; } 
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            color: #c9d1d9; text-align: center; margin: 0; min-height: 100vh; padding: 20px 10px; 
+            background-color: var(--bg-color); background-size: cover; background-position: center; background-attachment: fixed; 
+            transition: background-image 0.5s ease-in-out;
+        }
+        
+        body.login-bg { background-image: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_01_frostedge/1080x2340_wtm_frost_edge_404187f3ce51f44804ecd7fa5c109ff8.jpg'); }
+        body.game-bg { background-image: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_02_steeldragons/1080x2340_wtm_steel_dragons_cb0efeeae6fda7edaec9abd9fd71a8a9.jpg'); }
+
+        .container { 
+            max-width: 900px; margin: 0 auto; background: var(--panel-bg); padding: 25px; 
+            border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 8px 30px rgba(0,0,0,0.8); backdrop-filter: blur(15px); position: relative;
+        }
+        
+        h2, h3, h4 { margin-top: 0; color: #fff; letter-spacing: 0.5px; }
+        
+        input, select { padding: 12px; width: 100%; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(1,4,9,0.8); color: white; font-size: 15px; }
+        input:focus, select:focus { outline: none; border-color: var(--accent-gold); }
+        
+        button { padding: 12px 15px; background-color: var(--border-color); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; font-size: 14px; width: 100%; }
+        button:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.5); filter: brightness(1.2); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+        
+        .pin-wrapper { position: relative; width: 100%; margin-bottom: 15px; }
+        .pin-wrapper input { margin-bottom: 0; padding-right: 45px; letter-spacing: 2px; font-family: monospace; font-size: 18px;}
+        .pin-wrapper button { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 35px; height: 35px; padding: 0; background: transparent; border: none; font-size: 18px; box-shadow: none;}
+        
+        .auth-tabs { display: flex; margin-bottom: 20px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color);}
+        .auth-tab { flex: 1; padding: 12px; background: rgba(0,0,0,0.6); color: #8b949e; cursor: pointer; font-weight: bold; transition: 0.3s;}
+        .auth-tab.active { background: var(--accent-gold); color: #000; }
+        
+        #gameInterface { display: none; } 
+        
+        .grid-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 25px; text-align: left;}
+        .panel { background: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); position: relative;}
+        
+        .full-width { grid-column: 1 / -1; }
+
+        /* ИНВЕНТАРЬ */
+        .inventory { 
+            display: flex; justify-content: space-around; margin-top: 20px; background: rgba(0,0,0,0.7); 
+            padding: 15px; border-radius: 10px; border: 1px solid var(--border-color); align-items: center;
+        }
+        .part { text-align: center; font-size: 13px; width: 20%; }
+        .part span { font-size: 24px; font-weight: 900; display: block; margin-top: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); word-break: break-word;}
+        .common { color: var(--common); } 
+        .rare { color: var(--rare); } 
+        .epic { color: var(--epic); } 
+        .kits { color: var(--accent-green); }
+        .power { color: var(--power); }
+        
+        .c-1-t { color: var(--star-1); }
+        .c-2-t { color: var(--star-2); }
+        .c-3-t { color: var(--star-3); }
+        .c-4-t { color: var(--star-4); }
+
+        /* ЕЖЕДНЕВНЫЙ ВХОД */
+        .streak-panel { display: flex; flex-wrap: wrap; justify-content: center; text-align: center; gap: 5px; margin-top: 15px;}
+        .streak-day { color: #8b949e; padding: 10px; border-radius: 8px; flex: 1 1 20%; min-width: 70px; background: rgba(0,0,0,0.4); border: 1px solid #333; font-size: 12px; transition: 0.3s;}
+        .streak-day.claimed { border-color: var(--accent-green); background: rgba(0, 230, 118, 0.1); }
+        .streak-day.next { color: #fff; border-color: var(--accent-gold); background: rgba(255, 193, 7, 0.15); box-shadow: 0 0 10px rgba(255,193,7,0.2);}
+
+        /* СИСТЕМА ЗВЕЗД И ВОЙСК 3.0 */
+        .troop-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .troop-card { background: rgba(0,0,0,0.5); border: 1px solid #333; padding: 15px; border-radius: 8px; position: relative; transition: 0.3s; }
+        .troop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .troop-title { font-weight: bold; font-size: 16px; color: #fff; }
+        
+        .stars-container { display: flex; gap: 5px; font-size: 18px; }
+        .star-empty { color: #333; }
+        .star-1 { color: var(--star-1); text-shadow: 0 0 5px rgba(255,255,255,0.5); }
+        .star-2 { color: var(--star-2); text-shadow: 0 0 5px rgba(255,193,7,0.5); }
+        .star-3 { color: var(--star-3); text-shadow: 0 0 5px rgba(188,140,255,0.5); }
+        .star-4 { color: var(--star-4); text-shadow: 0 0 5px rgba(255,23,68,0.5); }
+        .star-5 { 
+            background: linear-gradient(90deg, #ff0000, #ffc107, #00e676, #58a6ff, #bc8cff, #ff0000);
+            background-size: 400%; -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: gradientStars 5s linear infinite; text-shadow: 0 0 10px rgba(255,255,255,0.3);
+        }
+        @keyframes gradientStars { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+
+        .hp-bar-bg { background: #222; height: 6px; width: 100%; border-radius: 3px; margin-bottom: 10px; overflow: hidden; border: 1px solid #444;}
+
+        .upgrade-row { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); padding: 8px; border-radius: 6px; margin-bottom: 5px; flex-wrap: wrap;}
+        .upg-info { flex-grow: 1; text-align: left; margin-left: 10px; width: 100%;}
+        .upg-name { font-size: 12px; color: #8b949e; }
+        .upg-val { font-weight: bold; color: #fff; font-size: 14px; margin-bottom: 5px;}
+        .btn-upg-troop { width: auto; padding: 5px 10px; font-size: 11px; background: #222; margin-top: 5px;}
+
+        .merge-panel { background: rgba(0,0,0,0.3); border: 1px dashed #444; padding: 10px; border-radius: 6px; margin-top: 10px; text-align: center; }
+        .frag-count { font-size: 12px; font-weight: bold; margin-bottom: 5px; }
+
+        /* ЗАВОД И БУСТЕРЫ */
+        .progress-bg { background: #21262d; width: 100%; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; border: 1px solid #30363d;}
+        .progress-fill { background: var(--accent-gold); height: 100%; width: 0%; transition: width 1s linear; box-shadow: 0 0 10px var(--accent-gold);}
+        .timer-box { background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; font-size: 12px; margin-bottom: 15px; border: 1px solid #30363d;}
+        .timer-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 5px; flex-wrap: wrap; gap: 5px;}
+        .timer-val { font-family: monospace; font-size: 14px; font-weight: bold; color: #fff;}
+        .active-boost { color: var(--booster); font-weight: bold; font-size: 12px; text-align: center; animation: pulse 1.5s infinite; margin-bottom: 10px; background: rgba(255,87,34,0.1); padding: 5px; border-radius: 5px; border: 1px solid rgba(255,87,34,0.3);}
+        .auto-boost { color: #00e676; border-color: rgba(0,230,118,0.3); background: rgba(0,230,118,0.1); }
+        .contractor-boost { color: #03a9f4; border-color: rgba(3,169,244,0.3); background: rgba(3,169,244,0.1); }
+        .doubler-boost { color: #e91e63; border-color: rgba(233,30,99,0.3); background: rgba(233,30,99,0.1); }
+        
+        .garland { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: wrap; width: 100%;}
+        .garland-dot { width: 100%; height: 6px; background: #222; border-radius: 2px; flex-grow: 1; max-width: 20px;}
+        .garland-dot.active { background: var(--accent-gold); box-shadow: 0 0 5px var(--accent-gold);}
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        /* ОГНЕННАЯ РАМКА АБСОЛЮТА */
+        @keyframes fireFramePulse {
+            0% { box-shadow: 0 0 10px #ff5722, inset 0 0 10px #ff5722; border-color: #ff5722; }
+            50% { box-shadow: 0 0 25px #ffeb3b, inset 0 0 20px #ffeb3b; border-color: #ffeb3b; }
+            100% { box-shadow: 0 0 10px #ff5722, inset 0 0 10px #ff5722; border-color: #ff5722; }
+        }
+        .fire-frame {
+            animation: fireFramePulse 2s infinite alternate !important;
+            border: 2px solid #ff5722 !important;
+            background: rgba(255, 87, 34, 0.1) !important;
+        }
+
+        /* КНОПКИ И ГАЧА */
+        .gacha-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        .btn-case { background: var(--border-color); color: white;}
+        .btn-paid { background: var(--accent-red); color: white;}
+        .c-1 { border-left: 4px solid var(--star-1); }
+        .c-2 { border-left: 4px solid var(--star-2); }
+        .c-3 { border-left: 4px solid var(--star-3); }
+        .c-4 { border-left: 4px solid var(--star-4); }
+
+        .btn-craft { background: var(--border-color); margin-bottom: 5px; border-left: 4px solid var(--rare);}
+        .btn-craft-epic { background: var(--border-color); margin-bottom: 5px; border-left: 4px solid var(--epic);}
+        .btn-risk { background: #442222; border-left: 4px solid var(--accent-red); margin-bottom: 5px;}
+        .btn-gold { background: var(--accent-gold); color: #000;}
+        .btn-boost { background: var(--booster); color: #fff; margin-bottom: 5px; font-size: 12px;}
+        .btn-pvp { background: #0088cc; color: white; border: 2px solid #00e676; font-size: 18px; padding: 15px; margin-bottom: 15px; animation: pulse 2s infinite;}
+        .btn-home { background: transparent; border: 1px solid #8b949e; color: #8b949e; width: auto; padding: 6px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
+        
+        .quest-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 5px;}
+        .quest-item span { color: var(--accent-gold); font-weight: bold; }
+        .drop-chances { font-size: 10px; color: #8b949e; text-align: center; line-height: 1.3;}
+
+        /* МОДАЛКИ И УВЕДОМЛЕНИЯ */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
+        .modal-box { background: var(--panel-bg); border: 2px solid var(--accent-gold); padding: 25px; border-radius: 12px; text-align: center; width: 90%; max-width: 500px; transform: scale(0.8); opacity: 0; transition: 0.3s; max-height: 85vh; overflow-y: auto;}
+        .modal-box.show { transform: scale(1); opacity: 1; }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;}
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .msg { font-size: 13px; font-weight: bold; min-height: 18px; margin-top: 8px; text-align: center;}
+        
+        /* ЛИДЕРБОРД */
+        .leaderboard { margin-top: 25px; }
+        .lb-item { display: flex; flex-direction: row; align-items: center; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin-bottom: 10px; text-align: left;}
+        .lb-rank { font-size: 20px; font-weight: 900; color: var(--accent-gold); width: 40px; text-align: center;}
+        .lb-info { flex-grow: 1; padding-left: 10px; border-left: 1px solid #30363d;}
+        .lb-name { font-size: 16px; font-weight: bold; color: #fff; display: flex; justify-content: space-between;}
+        .lb-score { color: var(--power); font-size: 14px; text-shadow: 0 0 5px rgba(255,23,68,0.5);}
+
+        /* ШАПКА */
+        .game-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; gap: 10px; flex-wrap: wrap;}
+        .commander-title { margin: 0; text-shadow: 0 2px 5px rgba(0,0,0,1); font-size: 24px; text-align: center; flex-grow: 1; width: 100%;}
+        
+        @media (max-width: 600px) {
+            body { padding: 5px; } 
+            .container { padding: 15px 10px; border-radius: 8px; }
+            .game-header { flex-wrap: wrap; justify-content: space-between; }
+            .grid-panel { grid-template-columns: 1fr; gap: 15px; }
+            
+            .inventory { 
+                display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px;
+            }
+            .part { width: 100%; font-size: 11px; }
+            .part span { font-size: 16px; margin-top: 5px;}
+            .part.kits { grid-column: 1 / 3; border-top: 1px solid #444; padding-top: 8px; border-left: none; }
+            .part.power { grid-column: 3 / 4; border-left: 1px solid #444; border-top: 1px solid #444; padding-top: 8px; }
+
+            .streak-day { padding: 5px; font-size: 10px; }
+            .streak-day div:nth-child(2) { font-size: 11px !important; }
+        }
+    </style>
+</head>
+<body class="login-bg" id="bodyBg">
+
+    <div class="modal-overlay" id="rewardModal">
+        <div class="modal-box" id="rewardBox">
+            <div id="rewardLoading">
+                <div class="spinner"></div>
+                <div style="color: var(--accent-gold); font-weight: bold; font-size: 18px;">Обработка...</div>
+            </div>
+            <div id="rewardResult" style="display: none;">
+                <div style="font-size: 24px; font-weight: 900; margin-bottom: 15px; text-transform: uppercase;" id="rewardTitle">Награда!</div>
+                <div style="font-size: 16px; margin-bottom: 25px; line-height: 1.5; font-weight: bold;" id="rewardItems"></div>
+                <button class="btn-gold" onclick="closeRewardModal()">ПРИНЯТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="fragDetailsModal">
+        <div class="modal-box" id="fragDetailsBox">
+            <h3 style="color: var(--accent-gold); margin-bottom: 15px; font-size: 22px;" id="fdTitle">Фрагменты</h3>
+            <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Здесь показаны фрагменты только для доступных вам (открытых) войск.</p>
+            <div id="fdContent" style="text-align: left; font-size: 15px; margin-bottom: 20px; line-height: 1.8;"></div>
+            <button style="background: #444;" onclick="closeFragModal()">ЗАКРЫТЬ</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box" id="confirmBox">
+            <h3 style="color: var(--accent-gold); margin-bottom: 15px;" id="confirmTitle">Подтверждение</h3>
+            <p id="confirmDesc" style="margin-bottom: 20px;">Вы уверены?</p>
+            <div style="display: flex; gap: 10px;">
+                <button style="background: #444;" onclick="closeConfirmModal()">ОТМЕНА</button>
+                <button class="btn-gold" id="btnConfirmAction">ПОДТВЕРДИТЬ</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="craftModal">
+        <div class="modal-box" id="craftBox">
+            <h3 style="color: var(--accent-gold); margin-bottom: 15px;" id="cmTitle">ТЕРМИНАЛ СИНТЕЗА</h3>
+            <div style="font-size: 13px; color: #8b949e; margin-bottom: 15px;">Доступно: <span id="cmAvail" style="color: white; font-weight: bold;">0</span></div>
+            <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 20px;">
+                <input type="number" id="cmInput" min="1" value="1" oninput="updateCraftModalPreview()" style="width: 80px; text-align: center; margin: 0; font-size: 18px; padding: 8px;">
+                <button style="width: auto; background: #333; padding: 8px 12px;" onclick="setCraftMax()">MAX</button>
+            </div>
+            <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid #333;">
+                <div style="margin-bottom: 5px;">Потрачено: <span id="cmCostPreview" style="color: #ff4444; font-weight: bold;">0</span> <span id="cmCostName"></span></div>
+                <div>Получите: <span id="cmRewPreview" style="color: var(--accent-green); font-weight: bold;">0</span> <span id="cmRewName"></span></div>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button style="background: #444;" onclick="closeCraftModal()">ОТМЕНА</button>
+                <button class="btn-gold" onclick="executeCraft()">ПОДТВЕРДИТЬ</button>
+            </div>
+            <div id="cmMsg" class="msg" style="color: #ff4444;"></div>
+        </div>
+    </div>
+
+    <div class="container" id="loginScreen">
+        <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">РОЗЫГРЫШ МИНИ-ИГРА</h2>
+        <div class="auth-tabs">
+            <div class="auth-tab active" id="tabLogin" onclick="switchAuthTab('login')">ВХОД</div>
+            <div class="auth-tab" id="tabRegister" onclick="switchAuthTab('register')">РЕГИСТРАЦИЯ</div>
+        </div>
+        <div id="authForm">
+            <input type="text" id="nicknameInput" placeholder="Ник (обязательно)...">
+            <div class="pin-wrapper">
+                <input type="password" id="pinInput" placeholder="Пароль от 12 символов...">
+                <button onclick="togglePin('pinInput', 'eyeBtn1')" id="eyeBtn1">👁️</button>
+            </div>
+            <div id="registerFields" style="display: none;">
+                <div class="pin-wrapper">
+                    <input type="password" id="pinInput2" placeholder="Повторите пароль...">
+                    <button onclick="togglePin('pinInput2', 'eyeBtn2')" id="eyeBtn2">👁️</button>
+                </div>
+                <input type="text" id="wtmIdInput" placeholder="Игровой ID WTM (Обязательно)...">
+            </div>
+            <button class="btn-gold" id="btnAuthAction" onclick="loginOrRegister()" style="padding: 15px; font-size: 16px;">ВОЙТИ В БАЗУ</button>
+        </div>
+        <button onclick="window.location.href='rules.html'" style="background: transparent; border: 0px; color: var(--rare); margin-top: 15px;">📜 Правила и механики</button>
+        <p id="errorMsg" class="msg" style="color: #ff4444; display: none;"></p>
+    </div>
+
+    <div class="container" id="gameInterface">
+        <div class="game-header">
+            <button class="btn-home" style="width: auto; padding: 6px 15px; font-size: 12px;" onclick="window.location.href='index.html'">🏠 На главную</button>
+            <button class="btn-info" style="width: auto; padding: 6px 15px; font-size: 12px; background: transparent; border: 1px solid var(--rare); color: var(--rare);" onclick="window.location.href='rules.html'">📜 Правила и механики</button>
+            <h2 class="commander-title">Командир: <span id="playerNameDisplay" style="color: var(--accent-gold);"></span></h2>
+        </div>
+
+        <button class="btn-pvp" onclick="window.location.href='collision.html'" style="width: 100%;">🌍 ГЛОБАЛЬНАЯ КАРТА</button>
+
+        <div class="panel full-width">
+            <h3 style="color: var(--accent-gold); text-align: center; margin-bottom: 5px;">📅 Ежедневные Поставки</h3>
+            <div style="font-size: 11px; color: #8b949e; margin-bottom: 10px; text-align: center;">Обновление через: <span id="timerLoginReset" style="color: #fff; font-family: monospace;">--:--</span></div>
+            <div class="streak-panel" id="streakPanelUI"></div>
+        </div>
+
+        <div class="inventory">
+            <div class="part common">Обыч.<span id="countCommon">0</span></div>
+            <div class="part rare">Редк.<span id="countRare">0</span></div>
+            <div class="part epic">Эпик.<span id="countEpic">0</span></div>
+            <div class="part kits">Ремк.<span id="countKits">0</span></div>
+            <div class="part power" style="border-left: 1px solid #444;">Мощь<span id="countPower">0</span></div>
+        </div>
+
+        <div class="inventory" style="margin-top: 10px; padding: 10px;">
+            <div class="part c-1-t" onclick="openFragModal(1)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-1)'">1⭐ Фраг. <span id="sumFrag1" style="font-size: 16px;">0</span></div>
+            <div class="part c-2-t" onclick="openFragModal(2)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-2)'">2⭐ Фраг. <span id="sumFrag2" style="font-size: 16px;">0</span></div>
+            <div class="part c-3-t" onclick="openFragModal(3)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-3)'">3⭐ Фраг. <span id="sumFrag3" style="font-size: 16px;">0</span></div>
+            <div class="part c-4-t" onclick="openFragModal(4)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-4)'">4⭐ Фраг. <span id="sumFrag4" style="font-size: 16px;">0</span></div>
+        </div>
+
+        <div class="grid-panel">
+            
+            <div class="panel full-width" id="labPanel">
+                <h3 style="color: var(--rare); text-align: center; margin-bottom: 5px;">🔬 Секретная Лаборатория (Ур. <span id="labLevelUI">1</span>)</h3>
+                <div id="labGarlandContainer" style="margin-bottom: 10px;"></div>
+                <div style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 15px;">Открывает доступ к новым типам войск.</div>
+                <div id="labNextUnlock" style="text-align: center; font-weight: bold; color: var(--accent-gold); margin-bottom: 10px;">Следующий анлок: БМП</div>
+                <button id="btnUpgradeLab" onclick="upgradeLab()" style="background: #333; border: 1px solid var(--rare);">Улучшить Лабораторию</button>
+                <div id="labMsg" class="msg" style="color: #ff4444;"></div>
+            </div>
+
+            <div class="panel full-width" id="hospPanel">
+                <h3 style="color: #00e676; text-align: center; margin-bottom: 5px;">🏥 Военный Госпиталь (Ур. <span id="hospitalLevelUI">1</span>)</h3>
+                <div id="hospGarlandContainer" style="margin-bottom: 10px;"></div>
+                <div style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 15px;">Автоматически восстанавливает 25% ХП за 4 часа.</div>
+                <div id="hospSlotsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
+                </div>
+                <button id="btnUpgradeHosp" onclick="upgradeHospital()" style="background: #333; border: 1px solid #00e676;">Улучшить Госпиталь</button>
+                <div id="hospMsg" class="msg" style="color: #ff4444;"></div>
+            </div>
+
+            <div class="panel full-width">
+                <h3 style="color: var(--power); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">🎖️ Армия (Слияние и Обучение)</h3>
+                <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px;">
+                    <div style="font-size: 12px; color: #8b949e;">Статус обучения (1 час на апгрейд):</div>
+                    <div id="troopUpgradeStatus" style="font-weight: bold; color: var(--accent-gold); font-size: 14px; margin-top: 5px;">Свободно</div>
+                    <button id="btnFinishTroop" class="btn-gold" style="display:none; margin-top: 5px; padding: 5px;" onclick="finishTroopUpgrade()">Завершить!</button>
+                </div>
+                <div class="troop-grid" id="troopGridContainer"></div>
+            </div>
+
+            <div class="panel full-width">
+                <h3 style="color: var(--rare);">📦 Разведданные и Снабжение</h3>
+                
+                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed #444;">
+                    <div style="font-weight: bold; color: var(--accent-gold); margin-bottom: 10px;">Поиск Фрагментов Слияния:</div>
+                    
+                    <div class="gacha-row">
+                        <button class="btn-case c-1" style="flex:1;" onclick="openGacha(1, 1)">⭐ Базовый (x1) - 50 Об.</button>
+                        <button class="btn-case c-1" style="flex:1;" onclick="openGacha(1, 10)">⭐ Базовый (x10) - 500 Об.</button>
+                    </div>
+                    <div class="drop-chances" style="margin-bottom:10px;">50% 10 Об | 25% 10 Ред | 15% 3 Эп | 5% Ремк | 3% Фрагмент 1 | 2% Бустер</div>
+                    
+                    <div class="gacha-row">
+                        <button class="btn-case c-2" style="flex:1;" onclick="openGacha(2, 1)">⭐⭐ Продв. (x1) - 100 Об.</button>
+                        <button class="btn-case c-2" style="flex:1;" onclick="openGacha(2, 10)">⭐⭐ Продв. (x10) - 1000 Об.</button>
+                    </div>
+                    <div class="drop-chances" style="margin-bottom:10px;">50% 25 Об | 25% 20 Ред | 15% 6 Эп | 5% Ремк | 3% Фрагмент 2 | 2% Бустер</div>
+                    
+                    <div class="gacha-row">
+                        <button class="btn-case c-3" style="flex:1;" onclick="openGacha(3, 1)">⭐⭐⭐ Элитный (x1) - 200 Об.</button>
+                        <button class="btn-case c-3" style="flex:1;" onclick="openGacha(3, 10)">⭐⭐⭐ Элитный (x10) - 2000 Об.</button>
+                    </div>
+                    <div class="drop-chances" style="margin-bottom:10px;">50% 50 Об | 25% 40 Ред | 15% 12 Эп | 5% Ремк | 3% Фрагмент 3 | 2% Бустер</div>
+                    
+                    <div class="gacha-row">
+                        <button class="btn-case c-4" style="flex:1;" onclick="openGacha(4, 1)">⭐⭐⭐⭐ Секретный (x1) - 400 Об.</button>
+                        <button class="btn-case c-4" style="flex:1;" onclick="openGacha(4, 10)">⭐⭐⭐⭐ Секретный (x10) - 4000 Об.</button>
+                    </div>
+                    <div class="drop-chances">50% 100 Об | 25% 80 Ред | 15% 24 Эп | 5% Ремк | 3% Фрагмент 4 | 2% Бустер</div>
+                </div>
+
+                <div>
+                    <div style="font-weight: bold; color: var(--common); margin-bottom: 10px;">Классические Контейнеры:</div>
+                    <span style="font-family: monospace; font-size: 14px; display: block; margin-bottom: 5px;" id="dailyCaseTimer">Вычисление...</span>
+                    <button id="btnDailyCase" class="btn-case" style="background: var(--epic);" onclick="openDailyCase()">Ежедневный контейнер (Бесплатно)</button>
+                    <div class="drop-chances" style="margin-bottom:15px;">Шансы: 100-150 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 1% Ремкомплект.</div>
+                    
+                    <div class="gacha-row">
+                        <button class="btn-paid" style="flex:1; margin:0;" onclick="openPaidCase(1)">Особый (x1) - 25 Об.</button>
+                        <button class="btn-paid" style="flex:1; margin:0;" onclick="openPaidCase(10)">Особый (x10) - 250 Об.</button>
+                    </div>
+                    <div class="drop-chances" style="margin-bottom:15px; margin-top:5px;">Шансы: 60% минус, 25% окуп, 10% плюс, 5% Джекпот. Шанс 2% на Бустер, 3% Ремкомплект.</div>
+                    
+                    <div class="gacha-row">
+                        <button class="btn-paid" style="background: var(--accent-green); flex:1; margin:0;" onclick="openRepairCase(1)">Инженерный (x1) - 250 Об.</button>
+                        <button class="btn-paid" style="background: var(--accent-green); flex:1; margin:0;" onclick="openRepairCase(10)">Инженерный (x10) - 2500 Об.</button>
+                    </div>
+                    <div class="drop-chances" style="margin-top:5px;">Шансы: 70% (1 Ремк.), 25% (3 Ремк.), 5% (9 Ремк.). Шанс 3% на любой Бустер.</div>
+                </div>
+                
+                <div id="caseMsg" class="msg"></div>
+            </div>
+
+            <div class="panel" id="factPanel">
+                <h3 style="color: var(--common); margin-bottom: 5px;">🏭 Завод (Ур. <span id="factoryLevelUI">1</span>)</h3>
+                <div id="factoryGarlandContainer" style="margin-bottom: 10px;"></div>
+                <div id="boostIndicator" class="active-boost" style="display: none;"></div>
+                <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 5px;">
+                    <span>Накоплено деталей:</span><span style="font-weight: bold; color: #fff;"><span id="factoryAccumulated">0</span> / <span id="factoryMax">1</span></span>
+                </div>
+                <div class="progress-bg"><div class="progress-fill" id="factoryProgress"></div></div>
+                <div class="timer-box">
+                    <div class="timer-row"><span>До след. детали:</span> <span class="timer-val" id="timerNextPart">--:--</span></div>
+                    <div class="timer-row"><span>До полной партии:</span> <span class="timer-val" id="timerNextBatch" style="color: var(--accent-gold);">--:--</span></div>
+                    <div style="font-size: 10px; color: #8b949e; margin-top: 5px;" id="factoryYieldText">Приносит: 0 Обычных</div>
+                </div>
+                <button class="btn-gold" id="btnCollectFact" onclick="collectFactory()" style="margin-bottom: 5px;">Собрать ресурсы</button>
+                <button class="btn-risk" id="btnOverload" onclick="overloadFactory()" style="font-size: 12px; margin-bottom: 10px; border-color: #ff4444;">⚠️ Перегрузка (Риск 50%)</button>
+                <button id="btnUpgrade" onclick="upgradeFactory()" style="font-size: 12px; background: #333;">Улучшить завод</button>
+                <div id="factoryMsg" class="msg" style="color: #ff4444;"></div>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: var(--booster);">⚡ Бустеры (Время: 4ч)</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Контейнерах.</p>
+                <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 (<span id="countSpeed">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('auto')">📦 Арендованные склады (<span id="countAuto">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('contractor')">👷 Подрядчики (+50% к добыче) (<span id="countContractor">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('doubler')">🔄 Дублер (х2 при ручном сборе) (<span id="countDoubler">0</span>)</button>
+                <div id="boosterMsg" class="msg" style="color: #ff4444;"></div>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: var(--epic);">🛠️ Терминал Синтеза</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Массовая конвертация деталей.</p>
+                <button class="btn-craft" onclick="openCraftModal('СИНТЕЗ РЕДКИХ', 'Обычные', 'Редкие', 5, 1, 'common_parts', 'rare_parts')">Надежно: 5 Об. ➔ 1 Ред.</button>
+                <button class="btn-craft-epic" onclick="openCraftModal('СИНТЕЗ ЭПИКОВ', 'Редкие', 'Эпические', 5, 1, 'rare_parts', 'epic_parts')">Надежно: 5 Ред. ➔ 1 Эпик</button>
+                <div style="height: 10px;"></div>
+                <button class="btn-craft" onclick="openCraftModal('РАЗБОР РЕДКОЙ', 'Редкие', 'Обычные', 1, 3, 'rare_parts', 'common_parts')" style="border-left-color: var(--common);">Разбор: 1 Ред. ➔ 3 Об.</button>
+                <button class="btn-craft-epic" onclick="openCraftModal('РАЗБОР ЭПИЧЕСКОЙ', 'Эпические', 'Редкие', 1, 3, 'epic_parts', 'rare_parts')" style="border-left-color: var(--rare);">Разбор: 1 Эпик ➔ 3 Ред.</button>
+                <hr style="border-color: #333; margin: 15px 0;">
+                <button class="btn-risk" onclick="riskyCraft('rare')">Риск: 25 Обычных ➔ 2/5/10 Редких</button>
+                <button class="btn-risk" onclick="riskyCraft('epic')" style="border-left-color: var(--epic);">Риск: 25 Редких ➔ 1/5/10 Эпиков</button>
+                <hr style="border-color: #333; margin: 15px 0;">
+                <button class="btn-risk" onclick="exchangeKit()" style="border-left-color: var(--accent-green);">Обмен: 1 Ремк. ➔ 10 об./3 ред./1 эп. / Бустер</button>
+                <div id="craftMsg" class="msg"></div>
+            </div>
+
+            <div class="panel">
+                <h3 style="color: var(--accent-red);">🏴‍☠️ Черный Рынок</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Случайная сделка (1 раз в день).</p>
+                <div id="bmContent"></div>
+                <div id="bmMsg" class="msg"></div>
+                
+                <hr style="border-color: #333; margin: 15px 0;">
+                
+                <h3 style="color: var(--accent-gold);">🎯 Ежедневные Директивы</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Сброс через: <span id="timerQuestsReset" style="color: #fff; font-family: monospace;">--:--</span></p>
+                <div class="quest-item">Собрать детали Завода <span><span id="qFact">0</span>/500</span></div>
+                <div class="quest-item">Рискованный синтез <span><span id="qRisk">0</span>/1</span></div>
+                <div class="quest-item">Использовать бустер <span><span id="qBoost">0</span>/1</span></div>
+                <button id="btnClaimQuests" onclick="claimQuests()" style="margin-top: 10px; width: 100%; font-size: 12px; background: #555;">В ПРОЦЕССЕ...</button>
+            </div>
+        </div>
+
+        <div class="panel leaderboard" style="background: rgba(0,0,0,0.8);">
+            <h3 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                🏆 Рейтинг Сервера
+                <button onclick="loadLeaderboard()" style="width: auto; padding: 6px 12px; font-size: 12px; background: #333;">Обновить</button>
+            </h3>
+            <div class="auth-tabs" style="margin-bottom: 15px;">
+                <div class="auth-tab active" id="tabLbPlayers" onclick="switchLbTab('players')">ИГРОКИ (МОЩЬ)</div>
+                <div class="auth-tab" id="tabLbClans" onclick="switchLbTab('clans')">КЛАНЫ (ВЛИЯНИЕ)</div>
+            </div>
+            <div id="leaderboardListPlayers"><div style="text-align: center; color: #8b949e; padding: 20px;">Связь со спутником...</div></div>
+            <div id="leaderboardListClans" style="display: none;"><div style="text-align: center; color: #8b949e; padding: 20px;">Связь со спутником...</div></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button onclick="window.location.reload()" style="background: #333; color: white; width: 250px; margin-bottom: 10px;">🔄 Обновить страницу</button><br>
+            <button onclick="logout()" style="background: transparent; color: #ff4444; border-color: #ff4444; width: 250px;">Выйти из аккаунта</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script>
+        // === ПОДКЛЮЧЕНИЕ К БАЗЕ SUPABASE ===
+        const SUPABASE_URL = 'https://rkqfanrrbvrzixxlnbto.supabase.co'; 
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWZhbnJyYnZyeml4eGxuYnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTcwODMsImV4cCI6MjA4NzIzMzA4M30.8j42D5U-iOLeEtSgiFWJ3pDTyN6e6JjiQKvn0MDEwJY'; 
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const FACTORY_STATS = {
+            1: { ms: 14400000, y: 20,   c: 0,    r: 0,   e: 0 },   
+            2: { ms: 14400000, y: 35,   c: 100,  r: 0,   e: 0 },   
+            3: { ms: 14400000, y: 60,   c: 250,  r: 0,   e: 0 },   
+            4: { ms: 14400000, y: 100,  c: 500,  r: 10,  e: 0 },   
+            5: { ms: 14400000, y: 180,  c: 800,  r: 25,  e: 0 },   
+            6: { ms: 14400000, y: 320,  c: 1200, r: 50,  e: 0 },   
+            7: { ms: 14400000, y: 600,  c: 1800, r: 80,  e: 2 },   
+            8: { ms: 14400000, y: 1000, c: 2500, r: 120, e: 5 },   
+            9: { ms: 14400000, y: 2000, c: 4000, r: 200, e: 10 },  
+            10:{ ms: 14400000, y: 3600, c: 6000, r: 300, e: 20 }   
+        };
+
+        const TROOP_CFG = {
+            inf: { id: 'inf', title: '🧍 Пехота', max: 25, desc: 'Основа наземных сил.' },
+            bmp: { id: 'bmp', title: '🚙 БМП', max: 20, desc: '-10% урон от наземных.' },
+            tank: { id: 'tank', title: '🛡️ Танки', max: 18, desc: '-25% от наз., -10% арта, -5% воздух.' },
+            arty: { id: 'arty', title: '🎯 Артиллерия', max: 15, desc: '+25% урон по наз.' },
+            aa: { id: 'aa', title: '📡 ПВО', max: 12, desc: 'х2 урон по воздуху.' },
+            msl: { id: 'msl', title: '🚀 Ракеты', max: 8, desc: 'Воздушное поражение.' },
+            avia: { id: 'avia', title: '✈️ Авиация', max: 5, desc: '+25% урон по всем.' }
+        };
+
+        // Включаем время улучшения (в часах)
+        const LAB_REQ = {
+            2: { unlocks: 'bmp', c: 500, r: 0, e: 0, f_key: null, f_amt: 0, time: 1 },
+            3: { unlocks: 'tank', c: 1500, r: 50, e: 0, f_key: null, f_amt: 0, time: 2 },
+            4: { unlocks: 'arty', c: 3000, r: 150, e: 10, f_key: 'frag1_arty', f_amt: 3, f_name: 'Фрагмент 1⭐ Арты', time: 4 },
+            5: { unlocks: 'aa', c: 5000, r: 300, e: 25, f_key: 'frag2_aa', f_amt: 3, f_name: 'Фрагмент 2⭐ ПВО', time: 8 },
+            6: { unlocks: 'msl', c: 8000, r: 500, e: 50, f_key: 'frag3_msl', f_amt: 3, f_name: 'Фрагмент 3⭐ Ракет', time: 16 },
+            7: { unlocks: 'avia', c: 12000, r: 1000, e: 100, f_key: 'frag4_avia', f_amt: 3, f_name: 'Фрагмент 4⭐ Авиации', time: 32 }
+        };
+
+        let player = null; let globalTimer = null; let authMode = 'login';
+        let craftSetup = {}; let confirmAction = null;
+
+        function getUnlockedTroopKeys() {
+            let unlocked = [];
+            if(!player) return unlocked;
+            const labLvl = player.lvl_lab || 1;
+            if (labLvl >= 1) unlocked.push('inf');
+            if (labLvl >= 2) unlocked.push('bmp');
+            if (labLvl >= 3) unlocked.push('tank');
+            if (labLvl >= 4) unlocked.push('arty');
+            if (labLvl >= 5) unlocked.push('aa');
+            if (labLvl >= 6) unlocked.push('msl');
+            if (labLvl >= 7) unlocked.push('avia');
+            return unlocked;
+        }
+
+        function formatTime(ms) {
+            if (ms < 0) return "00:00";
+            const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const s = Math.floor((ms % 60000) / 1000);
+            if (h > 0) return `${h}ч ${m.toString().padStart(2, '0')}м ${s.toString().padStart(2, '0')}с`;
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function togglePin(inputId, btnId) {
+            const input = document.getElementById(inputId);
+            if (input.type === "password") { input.type = "text"; document.getElementById(btnId).innerText = "🙈"; } else { input.type = "password"; document.getElementById(btnId).innerText = "👁️"; }
+        }
+
+        function switchAuthTab(mode) {
+            authMode = mode;
+            document.getElementById('tabLogin').classList.toggle('active', mode === 'login'); document.getElementById('tabRegister').classList.toggle('active', mode === 'register');
+            document.getElementById('registerFields').style.display = mode === 'register' ? 'block' : 'none';
+            document.getElementById('btnAuthAction').innerText = mode === 'register' ? 'СОЗДАТЬ БАЗУ' : 'ВОЙТИ В БАЗУ';
+            document.getElementById('errorMsg').style.display = 'none';
+        }
+        
+        function switchLbTab(mode) {
+            document.getElementById('tabLbPlayers').classList.toggle('active', mode === 'players');
+            document.getElementById('tabLbClans').classList.toggle('active', mode === 'clans');
+            document.getElementById('leaderboardListPlayers').style.display = mode === 'players' ? 'block' : 'none';
+            document.getElementById('leaderboardListClans').style.display = mode === 'clans' ? 'block' : 'none';
+        }
+
+        function openFragModal(tier) {
+            document.getElementById('fdTitle').innerText = `Фрагменты ${tier}⭐`;
+            let html = '';
+            const unlocked = getUnlockedTroopKeys();
+            if(unlocked.length === 0) {
+                html = '<div style="color:#8b949e">Нет открытых войск.</div>';
+            } else {
+                unlocked.forEach(k => {
+                    const count = player[`frag${tier}_${k}`] || 0;
+                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; border-bottom:1px solid #333; padding-bottom:5px;"><span>${TROOP_CFG[k].title}:</span> <span style="font-weight:bold; color:var(--star-${tier})">${count}</span></div>`;
+                });
+            }
+            document.getElementById('fdContent').innerHTML = html;
+            document.getElementById('fragDetailsModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('fragDetailsBox').classList.add('show'), 10);
+        }
+        function closeFragModal() {
+            document.getElementById('fragDetailsBox').classList.remove('show'); 
+            setTimeout(() => document.getElementById('fragDetailsModal').style.display = 'none', 300);
+        }
+
+        function openConfirmModal(desc, callback) {
+            document.getElementById('confirmDesc').innerText = desc; confirmAction = callback;
+            document.getElementById('confirmModal').style.display = 'flex'; setTimeout(() => document.getElementById('confirmBox').classList.add('show'), 10);
+        }
+        function closeConfirmModal() { document.getElementById('confirmBox').classList.remove('show'); setTimeout(() => document.getElementById('confirmModal').style.display = 'none', 300); confirmAction = null; }
+        document.getElementById('btnConfirmAction').addEventListener('click', () => { if(confirmAction) confirmAction(); closeConfirmModal(); });
+
+        async function loginOrRegister() {
+            const nick = document.getElementById('nicknameInput').value.trim(); const pin = document.getElementById('pinInput').value.trim();
+            if (nick.length < 3) { showMsg('errorMsg', "Ник от 3 букв!", '#ff4444'); return; }
+            if (pin.length < 12) { showMsg('errorMsg', "Пароль должен состоять минимум из 12 символов!", '#ff4444'); return; }
+
+            if (authMode === 'login') {
+                const { data: existing } = await db.from('players').select('*').eq('nickname', nick).single();
+                if (existing && existing.pin_code === pin) loginSuccess(existing); else showMsg('errorMsg', "Неверный Ник или Пароль!", '#ff4444');
+            } else {
+                const pin2 = document.getElementById('pinInput2').value.trim(); const wtmId = document.getElementById('wtmIdInput').value.trim();
+                if (pin !== pin2) { showMsg('errorMsg', "Пароли не совпадают!", '#ff4444'); return; }
+                if (wtmId.length < 3) { showMsg('errorMsg', "Введите ваш WTM ID!", '#ff4444'); return; }
+                const { data: existing } = await db.from('players').select('id').eq('nickname', nick).single();
+                if (existing) { showMsg('errorMsg', "Этот ник уже занят!", '#ff4444'); return; }
+
+                const { data: newPlayer, error } = await db.from('players').insert([{ 
+                    nickname: nick, pin_code: pin, wtm_id: wtmId, factory_level: 1, lvl_lab: 1, lvl_hospital: 1,
+                    factory_last_collected: new Date().toISOString(), daily_case_last_opened: '2000-01-01T00:00:00Z',
+                    speed_boost_end: '2000-01-01T00:00:00Z', auto_boost_end: '2000-01-01T00:00:00Z',
+                    contractor_boost_end: '2000-01-01T00:00:00Z', doubler_boost_end: '2000-01-01T00:00:00Z',
+                    daily_quests_reset: new Date().toISOString(), factory_broken_until: '2000-01-01T00:00:00Z'
+                }]).select(); 
+                if (error) showMsg('errorMsg', "Ошибка базы данных!", '#ff4444'); else loginSuccess(newPlayer[0]);
+            }
+        }
+
+        function loginSuccess(pData) {
+            localStorage.setItem('minigame_player_id', pData.id); document.getElementById('bodyBg').className = 'game-bg';
+            document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
+            refreshAll().then(checkDailyLogin);
+        }
+        function logout() { localStorage.removeItem('minigame_player_id'); location.reload(); }
+
+        function calcTruePower(pData) {
+            let total = pData.bonus_power || 0;
+            for (let key in TROOP_CFG) {
+                const hp = pData[`lvl_hp_${key}`] || 0;
+                const dmg = pData[`lvl_dmg_${key}`] || 0;
+                const cnt = pData[`lvl_cnt_${key}`] || 0;
+                const star = pData[`star_${key}`] || 0;
+                const vit = pData[`vit_${key}`] ?? 100; 
+                
+                if (star > 0) {
+                    const multiplier = star === 5 ? 3 : (1 + (star * 0.2));
+                    total += Math.floor(((hp + dmg) * (cnt + 1) * multiplier) * (vit / 100));
+                }
+            }
+            return total;
+        }
+
+        async function checkDailyLogin() {
+            if(!player) return;
+            const currentDayUTC = Math.floor(Date.now() / 86400000);
+            const lastDayUTC = player.last_login_day || 0;
+            
+            if (currentDayUTC > lastDayUTC) {
+                let newStreak = player.login_streak || 0;
+                if (currentDayUTC - lastDayUTC === 1) { newStreak++; } else { newStreak = 1; }
+                if (newStreak > 7) newStreak = 1;
+
+                let addSk=0, addSp=0, addAu=0, addCon=0, addDb=0;
+                let title = "ЕЖЕДНЕВНЫЙ ВХОД", html = `День ${newStreak}/7<br>`, colorClass = 'power';
+                let updates = { last_login_day: currentDayUTC, login_streak: newStreak };
+
+                const unlockedKeys = getUnlockedTroopKeys();
+
+                if (newStreak === 1) { 
+                    const rnd = Math.random();
+                    if(rnd < 0.2) { addSk = 1; html += `<div class="boost">⚡ +1 Пропуск</div>`; updates.booster_skip = (player.booster_skip||0)+1;}
+                    else if(rnd < 0.4) { addSp = 1; html += `<div class="boost">⚡ +1 Ускорение</div>`; updates.booster_speed = (player.booster_speed||0)+1;}
+                    else if(rnd < 0.6) { addAu = 1; html += `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`; updates.booster_auto = (player.booster_auto||0)+1;}
+                    else if(rnd < 0.8) { addCon = 1; html += `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; updates.booster_contractor = (player.booster_contractor||0)+1;}
+                    else { addDb = 1; html += `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; updates.booster_doubler = (player.booster_doubler||0)+1;}
+                    colorClass = 'boost';
+                }
+                else if (newStreak === 2) { 
+                    const ru = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                    html += `<div class="star-1">🧩 +1 Фрагмент 1⭐ (${TROOP_CFG[ru].title})</div>`; 
+                    updates[`frag1_${ru}`] = (player[`frag1_${ru}`] || 0) + 1; 
+                    colorClass = 'common'; 
+                }
+                else if (newStreak === 3) { 
+                    const ru1 = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                    const ru2 = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                    html += `<div class="star-1">🧩 +2 Фрагмента 1⭐</div>`; 
+                    updates[`frag1_${ru1}`] = (player[`frag1_${ru1}`] || 0) + 1; 
+                    updates[`frag1_${ru2}`] = (updates[`frag1_${ru2}`] || player[`frag1_${ru2}`] || 0) + 1; 
+                    colorClass = 'common'; 
+                }
+                else if (newStreak === 4) { html += `<div class="kits">🔧 +3 Ремкомплекта</div>`; updates.repair_kits = (player.repair_kits||0) + 3; colorClass = 'kits'; }
+                else if (newStreak === 5) { html += `<div class="common">+500 Обычных</div>`; updates.common_parts = player.common_parts + 500; colorClass = 'common'; }
+                else if (newStreak === 6) { 
+                    for(let i=0; i<2; i++) {
+                        let r = Math.random();
+                        if(r < 0.2) { addSk++; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
+                        else if(r < 0.4) { addSp++; html += `<div class="boost">⚡ +1 Ускорение</div>`; }
+                        else if(r < 0.6) { addAu++; html += `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`; }
+                        else if(r < 0.8) { addCon++; html += `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; }
+                        else { addDb++; html += `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; }
+                    }
+                    updates.booster_skip = (player.booster_skip||0) + addSk; updates.booster_speed = (player.booster_speed||0) + addSp; updates.booster_auto = (player.booster_auto||0) + addAu;
+                    updates.booster_contractor = (player.booster_contractor||0) + addCon; updates.booster_doubler = (player.booster_doubler||0) + addDb;
+                    colorClass = 'boost';
+                }
+                else if (newStreak === 7) { 
+                    for(let i=0; i<3; i++) {
+                        let r = Math.random();
+                        if(r < 0.2) { addSk++; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
+                        else if(r < 0.4) { addSp++; html += `<div class="boost">⚡ +1 Ускорение</div>`; }
+                        else if(r < 0.6) { addAu++; html += `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`; }
+                        else if(r < 0.8) { addCon++; html += `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; }
+                        else { addDb++; html += `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; }
+                    }
+                    updates.booster_skip = (player.booster_skip||0) + addSk; updates.booster_speed = (player.booster_speed||0) + addSp; updates.booster_auto = (player.booster_auto||0) + addAu;
+                    updates.booster_contractor = (player.booster_contractor||0) + addCon; updates.booster_doubler = (player.booster_doubler||0) + addDb;
+                    colorClass = 'boost'; title="ЦИКЛ ВЫПОЛНЕН!";
+                }
+
+                updates.power = calcTruePower({...player, ...updates});
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; refreshAll(); showRewardAnimation(title, html, colorClass); }
+            }
+        }
+
+        function renderGarland(curr, max) {
+            let html = '<div class="garland">'; for(let i=1; i<=max; i++) { html += `<div class="garland-dot ${i<=curr ? 'active':''}"></div>`; } return html + '</div>';
+        }
+
+        function getStarMaxLevel(star, maxCap) {
+            if (star === 0) return 0;
+            if (star === 5) return maxCap;
+            return Math.floor(maxCap * (star * 0.2)); 
+        }
+
+        function getStarHtml(star) {
+            let html = '<div class="stars-container">';
+            for(let i=1; i<=5; i++) {
+                if (i <= star) {
+                    if (star === 5) html += `<span class="star-5">★</span>`;
+                    else html += `<span class="star-${star}">★</span>`;
+                } else {
+                    html += `<span class="star-empty">☆</span>`;
+                }
+            }
+            return html + '</div>';
+        }
+
+        function getTroopUpgCost(lvl) {
+            return { c: (lvl+1)*100, r: Math.floor(lvl/5)*10, e: Math.floor(lvl/10)*2 };
+        }
+
+        function buildTroopUI() {
+            const container = document.getElementById('troopGridContainer'); container.innerHTML = '';
+            const unlockedTroops = getUnlockedTroopKeys();
+            const now = new Date().getTime();
+
+            for (let key in TROOP_CFG) {
+                const cfg = TROOP_CFG[key];
+                const star = player[`star_${key}`] || 0;
+                const hpLvl = player[`lvl_hp_${key}`] || 0;
+                const dmgLvl = player[`lvl_dmg_${key}`] || 0;
+                const cntLvl = player[`lvl_cnt_${key}`] || 0;
+                const vit = player[`vit_${key}`] ?? 100;
+                
+                const f1 = player[`frag1_${key}`] || 0;
+                const f2 = player[`frag2_${key}`] || 0;
+                const f3 = player[`frag3_${key}`] || 0;
+                const f4 = player[`frag4_${key}`] || 0;
+
+                const maxLvl = getStarMaxLevel(star, cfg.max);
+
+                if (!unlockedTroops.includes(key)) {
+                    let reqLvl = 1;
+                    if(key==='bmp') reqLvl=2; else if(key==='tank') reqLvl=3; else if(key==='arty') reqLvl=4; 
+                    else if(key==='aa') reqLvl=5; else if(key==='msl') reqLvl=6; else if(key==='avia') reqLvl=7;
+                    container.innerHTML += `
+                    <div class="troop-card" style="opacity: 0.5;">
+                        <div class="troop-header"><span class="troop-title">${cfg.title}</span></div>
+                        <div style="text-align:center; padding: 20px; color:#ff4444; font-weight:bold;">🔒 Требуется Лаборатория Ур. ${reqLvl}</div>
+                    </div>`;
+                    continue;
+                }
+
+                let mergeHtml = '';
+                if (star === 0) {
+                    mergeHtml = `<button class="btn-gold" onclick="mergeStar('${key}', 1)">Синтез 1⭐ (Бесплатно)</button>`;
+                } else if (star === 1) {
+                    mergeHtml = `<div class="frag-count" style="color:var(--star-2)">Надо: 10 Фраг. 1 ур. (Есть: ${f1})</div>
+                                 <button class="btn-gold" ${f1<10?'disabled':''} onclick="mergeStar('${key}', 2)">Синтез 2⭐</button>`;
+                } else if (star === 2) {
+                    mergeHtml = `<div class="frag-count" style="color:var(--star-3)">Надо: 10 Фраг. 2 ур. (Есть: ${f2})</div>
+                                 <button class="btn-gold" ${f2<10?'disabled':''} onclick="mergeStar('${key}', 3)">Синтез 3⭐</button>`;
+                } else if (star === 3) {
+                    mergeHtml = `<div class="frag-count" style="color:var(--star-4)">Надо: 10 Фраг. 3 ур. (Есть: ${f3})</div>
+                                 <button class="btn-gold" ${f3<10?'disabled':''} onclick="mergeStar('${key}', 4)">Синтез 4⭐</button>`;
+                } else if (star === 4) {
+                    const canM5 = f1>=10 && f2>=10 && f3>=10 && f4>=10;
+                    mergeHtml = `<div class="frag-count star-5">Надо по 10 Фраг. всех ур.</div>
+                                 <div style="font-size:10px; color:#8b949e; margin-bottom:5px;">У вас: 1(${f1}) 2(${f2}) 3(${f3}) 4(${f4})</div>
+                                 <button class="btn-gold" ${!canM5?'disabled':''} onclick="mergeStar('${key}', 5)">АБСОЛЮТ 5⭐</button>`;
+                } else {
+                    mergeHtml = `<div style="color:#00e676; font-weight:bold; padding: 10px 0;">АБСОЛЮТ ДОСТИГНУТ</div>`;
+                }
+
+                const costHp = getTroopUpgCost(hpLvl); const costDmg = getTroopUpgCost(dmgLvl); const costCnt = getTroopUpgCost(cntLvl);
+                
+                const btnHp = `<button class="btn-upg-troop" ${hpLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'hp', ${costHp.c}, ${costHp.r}, ${costHp.e})">Улучшить (1ч)<br><span style="font-size:9px; color:#a0a0a0;">${costHp.c}О ${costHp.r}Р ${costHp.e}Э</span></button>`;
+                const btnDmg = `<button class="btn-upg-troop" ${dmgLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'dmg', ${costDmg.c}, ${costDmg.r}, ${costDmg.e})">Улучшить (1ч)<br><span style="font-size:9px; color:#a0a0a0;">${costDmg.c}О ${costDmg.r}Р ${costDmg.e}Э</span></button>`;
+                const btnCnt = `<button class="btn-upg-troop" ${cntLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'cnt', ${costCnt.c}, ${costCnt.r}, ${costCnt.e})">Улучшить (1ч)<br><span style="font-size:9px; color:#a0a0a0;">${costCnt.c}О ${costCnt.r}Р ${costCnt.e}Э</span></button>`;
+
+                let hpColor = vit > 50 ? '#00e676' : (vit > 0 ? '#ffc107' : '#ff4444');
+
+                // Ручной ремонт
+                let repHtml = '';
+                if (player[`rep_end_${key}`]) {
+                    const endR = new Date(player[`rep_end_${key}`]).getTime();
+                    if (endR > now) {
+                        repHtml = `<div style="font-size:10px; color:var(--accent-gold);">🔧 Ремонт: <span id="manRepTimer_${key}">--:--</span></div>`;
+                    }
+                } else if (vit < 100) {
+                    repHtml = `<button style="background:transparent; border:1px solid var(--accent-green); color:var(--accent-green); font-size:10px; padding:2px 5px; width:auto; border-radius:4px; cursor:pointer;" onclick="manualRepair('${key}')">🔧 +5% (1 Ремк. / 1ч)</button>`;
+                }
+
+                // ОГНЕННАЯ РАМКА ДЛЯ ВОЙСК
+                const isMaxTroop = (star === 5 && hpLvl === cfg.max && dmgLvl === cfg.max && cntLvl === cfg.max && cfg.max > 0);
+                const fireClass = isMaxTroop ? 'fire-frame' : '';
+
+                container.innerHTML += `
+                <div class="troop-card ${fireClass}">
+                    <div class="troop-header">
+                        <span class="troop-title">${cfg.title}</span>
+                        ${getStarHtml(star)}
+                    </div>
+                    <div style="font-size:11px; color:#8b949e; margin-bottom:5px; text-align:left;">${cfg.desc}</div>
+                    
+                    <div class="hp-bar-bg">
+                        <div style="background: ${hpColor}; width: ${vit}%; height: 100%; border-radius: 2px;"></div>
+                    </div>
+                    <div style="font-size: 10px; margin-bottom:10px; text-align:left; color:${hpColor}; display:flex; justify-content:space-between; align-items:center;">
+                        <span>Живучесть: ${vit}%</span>
+                        ${repHtml}
+                    </div>
+                    
+                    <div class="upgrade-row">
+                        <div class="upg-info">
+                            <div class="upg-name">Здоровье</div>
+                            <div class="upg-val">${hpLvl} / ${maxLvl}</div>
+                            ${renderGarland(hpLvl, maxLvl)}
+                        </div>
+                        ${star > 0 ? btnHp : ''}
+                    </div>
+                    <div class="upgrade-row">
+                        <div class="upg-info">
+                            <div class="upg-name">Урон</div>
+                            <div class="upg-val">${dmgLvl} / ${maxLvl}</div>
+                            ${renderGarland(dmgLvl, maxLvl)}
+                        </div>
+                        ${star > 0 ? btnDmg : ''}
+                    </div>
+                    <div class="upgrade-row">
+                        <div class="upg-info">
+                            <div class="upg-name">Численность</div>
+                            <div class="upg-val">${cntLvl} / ${maxLvl}</div>
+                            ${renderGarland(cntLvl, maxLvl)}
+                        </div>
+                        ${star > 0 ? btnCnt : ''}
+                    </div>
+                    
+                    <div class="merge-panel">
+                        ${mergeHtml}
+                    </div>
+                </div>`;
+            }
+        }
+
+        async function manualRepair(key) {
+            if ((player.repair_kits || 0) < 1) { showMsg('hospMsg', 'Нет ремкомплектов!', '#ff4444'); return; }
+            if ((player[`vit_${key}`] ?? 100) >= 100) { showMsg('hospMsg', 'Отряд полностью здоров!', '#ff4444'); return; }
+            if (player[`rep_end_${key}`] && new Date().getTime() < new Date(player[`rep_end_${key}`]).getTime()) {
+                showMsg('hospMsg', 'Отряд уже в процессе ручного ремонта!', '#ff4444'); return;
+            }
+
+            const endTime = new Date(new Date().getTime() + 3600000).toISOString();
+            const updates = { repair_kits: player.repair_kits - 1 };
+            updates[`rep_end_${key}`] = endTime;
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); }
+        }
+
+        async function mergeStar(key, targetStar) {
+            const updates = {};
+            updates[`star_${key}`] = targetStar;
+            
+            if (targetStar === 2) updates[`frag1_${key}`] = player[`frag1_${key}`] - 10;
+            if (targetStar === 3) updates[`frag2_${key}`] = player[`frag2_${key}`] - 10;
+            if (targetStar === 4) updates[`frag3_${key}`] = player[`frag3_${key}`] - 10;
+            if (targetStar === 5) {
+                updates[`frag1_${key}`] = player[`frag1_${key}`] - 10;
+                updates[`frag2_${key}`] = player[`frag2_${key}`] - 10;
+                updates[`frag3_${key}`] = player[`frag3_${key}`] - 10;
+                updates[`frag4_${key}`] = player[`frag4_${key}`] - 10;
+            }
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { 
+                player = data; 
+                player.power = calcTruePower(player); db.from('players').update({power: player.power}).eq('id', player.id).then();
+                showRewardAnimation("СЛИЯНИЕ УСПЕШНО!", `<div class="power">${TROOP_CFG[key].title} ➔ ${targetStar}⭐</div>`, "power");
+                refreshAll(); 
+            }
+        }
+
+        async function startTroopUpgrade(key, stat, c, r, e) {
+            if (player.troop_upgrade_target) { alert("Инженеры уже заняты обучением другого отряда!"); return; }
+            if (player.common_parts < c || player.rare_parts < r || player.epic_parts < e) { alert("Недостаточно ресурсов для улучшения!"); return; }
+            
+            const star = player[`star_${key}`] || 0;
+            const maxLvl = getStarMaxLevel(star, TROOP_CFG[key].max);
+            const curLvl = player[`lvl_${stat}_${key}`] || 0;
+            if (curLvl >= maxLvl) return;
+
+            const endTime = new Date(new Date().getTime() + 3600000).toISOString(); 
+            const updates = { 
+                troop_upgrade_target: `${key}_${stat}`,
+                troop_upgrade_end: endTime,
+                common_parts: player.common_parts - c,
+                rare_parts: player.rare_parts - r,
+                epic_parts: player.epic_parts - e
+            };
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); }
+        }
+
+        async function finishTroopUpgrade() {
+            if (!player.troop_upgrade_target) return;
+            const parts = player.troop_upgrade_target.split('_');
+            const key = parts[0]; const stat = parts[1];
+            
+            const dbCol = `lvl_${stat}_${key}`;
+            const curLvl = player[dbCol] || 0;
+
+            const updates = { troop_upgrade_target: null, troop_upgrade_end: null };
+            updates[dbCol] = curLvl + 1;
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { 
+                player = data; player.power = calcTruePower(player); db.from('players').update({power: player.power}).eq('id', player.id).then();
+                refreshAll(); 
+            }
+        }
+
+        async function upgradeLab() {
+            if (player.lab_upgrade_end) { showMsg('labMsg', 'Улучшение уже в процессе!', '#ff4444'); return; }
+            const lvl = player.lvl_lab || 1;
+            if (lvl >= 7) return;
+            const req = LAB_REQ[lvl + 1];
+            
+            if (player.common_parts < req.c || player.rare_parts < req.r || player.epic_parts < req.e) {
+                showMsg('labMsg', 'Недостаточно деталей для улучшения!', '#ff4444'); return;
+            }
+            if (req.f_key && (player[req.f_key] || 0) < req.f_amt) {
+                showMsg('labMsg', `Недостаточно: ${req.f_name} (${player[req.f_key]||0}/${req.f_amt})`, '#ff4444'); return;
+            }
+
+            const endTime = new Date(new Date().getTime() + (req.time * 3600000)).toISOString();
+
+            const updates = {
+                lab_upgrade_end: endTime,
+                common_parts: player.common_parts - req.c,
+                rare_parts: player.rare_parts - req.r,
+                epic_parts: player.epic_parts - req.e
+            };
+            if(req.f_key) updates[req.f_key] = player[req.f_key] - req.f_amt;
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; showMsg('labMsg', 'Начата модернизация Лаборатории!', '#00e676'); refreshAll(); }
+        }
+
+        async function upgradeHospital() {
+            const lvl = player.lvl_hospital || 1;
+            if (lvl >= 3) return;
+            const cost = lvl === 1 ? 1000 : 2500;
+            if (player.common_parts < cost) { showMsg('hospMsg', `Нужно ${cost} Обычных!`, '#ff4444'); return; }
+            
+            const updates = { lvl_hospital: lvl + 1, common_parts: player.common_parts - cost };
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; showMsg('hospMsg', 'Госпиталь расширен!', '#00e676'); refreshAll(); }
+        }
+
+        function buildHospitalUI() {
+            const container = document.getElementById('hospSlotsContainer'); container.innerHTML = '';
+            const lvl = player.lvl_hospital || 1;
+            document.getElementById('hospitalLevelUI').innerText = lvl;
+            document.getElementById('hospGarlandContainer').innerHTML = renderGarland(lvl, 3);
+            
+            const btnUpg = document.getElementById('btnUpgradeHosp');
+            const hospPanel = document.getElementById('hospPanel');
+            if(lvl >= 3) {
+                btnUpg.style.display = 'none';
+                hospPanel.classList.add('fire-frame');
+            } else {
+                btnUpg.style.display = 'block'; btnUpg.innerText = `Улучшить Госпиталь (${lvl===1 ? 1000 : 2500} Об.)`;
+                hospPanel.classList.remove('fire-frame');
+            }
+
+            let unlockedTroops = getUnlockedTroopKeys();
+            let optionsHtml = '<option value="">Выберите отряд...</option>';
+            unlockedTroops.forEach(k => {
+                if ((player[`vit_${k}`] ?? 100) < 100) {
+                    optionsHtml += `<option value="${k}">${TROOP_CFG[k].title} (ХП: ${player[`vit_${k}`]??100}%)</option>`;
+                }
+            });
+
+            for(let i=1; i<=3; i++) {
+                if (i > lvl) {
+                    container.innerHTML += `<div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid #333; color: #ff4444; font-size: 12px;">🔒 Слот закрыт (Нужен Ур. ${i})</div>`;
+                } else {
+                    const target = player[`hosp_${i}_target`];
+                    const end = new Date(player[`hosp_${i}_end`] || 0).getTime();
+                    
+                    if (target) {
+                        container.innerHTML += `<div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid var(--accent-gold);">
+                            <div style="font-size: 12px; color: #8b949e;">Лечение:</div>
+                            <div style="font-weight: bold; color: #fff;">${TROOP_CFG[target].title}</div>
+                            <div id="hospTimerUI_${i}" style="font-family: monospace; color: var(--accent-gold); margin-top: 5px;">--:--</div>
+                        </div>`;
+                    } else {
+                        container.innerHTML += `<div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid #333;">
+                            <select id="hospSelect_${i}" style="padding: 5px; font-size: 12px; margin-bottom: 5px;">${optionsHtml}</select>
+                            <button style="background: #00e676; border:none; padding: 5px;" onclick="startHealing(${i})">Начать (4ч)</button>
+                        </div>`;
+                    }
+                }
+            }
+        }
+
+        async function startHealing(slot) {
+            const sel = document.getElementById(`hospSelect_${slot}`);
+            if(!sel || !sel.value) return;
+            const key = sel.value;
+            
+            if (player.hosp_1_target === key || player.hosp_2_target === key || player.hosp_3_target === key) {
+                showMsg('hospMsg', 'Этот отряд уже находится в госпитале!', '#ff4444'); return;
+            }
+
+            const updates = {};
+            updates[`hosp_${slot}_target`] = key;
+            updates[`hosp_${slot}_end`] = new Date(Date.now() + 4 * 3600000).toISOString(); 
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); }
+        }
+
+        // === ГАЧА КОНТЕЙНЕРОВ 3.0 (ФРАГМЕНТЫ) ===
+        async function openGacha(starTier, amount) {
+            let cost = 0; let baseC = 0, baseR = 0, baseE = 0;
+            if (starTier === 1) { cost = 50; baseC = 10; baseR = 10; baseE = 3; }
+            if (starTier === 2) { cost = 100; baseC = 25; baseR = 20; baseE = 6; }
+            if (starTier === 3) { cost = 200; baseC = 50; baseR = 40; baseE = 12; }
+            if (starTier === 4) { cost = 400; baseC = 100; baseR = 80; baseE = 24; }
+
+            const totalCost = cost * amount;
+            if (player.common_parts < totalCost) { showMsg('caseMsg', `Нужно ${totalCost} Обычных!`, '#ff4444'); return; }
+
+            let getC=0, getR=0, getE=0, getK=0, getBoost=0;
+            const unlockedKeys = getUnlockedTroopKeys();
+            let fragCounts = {};
+
+            for(let i=0; i<amount; i++) {
+                const r = Math.random();
+                if (r < 0.50) { getC += baseC; }
+                else if (r < 0.75) { getR += baseR; }
+                else if (r < 0.90) { getE += baseE; }
+                else if (r < 0.95) { getK += 1; }
+                else if (r < 0.98) { 
+                    const randomUnit = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                    fragCounts[randomUnit] = (fragCounts[randomUnit] || 0) + 1;
+                }
+                else { getBoost += 1; }
+            }
+
+            let title = `ОТКРЫТО КОНТЕЙНЕРОВ: ${amount}`; let color = "common"; let html = '';
+            
+            if(getC > 0) html += `<div class="common">+${getC} Об.</div>`; 
+            if(getR > 0) { html += `<div class="rare">+${getR} Ред.</div>`; color="rare"; }
+            if(getE > 0) { html += `<div class="epic">+${getE} Эпик.</div>`; color="epic"; }
+            if(getK > 0) { html += `<div class="kits">+${getK} Ремкомплект</div>`; color="kits"; }
+
+            const updates = { common_parts: player.common_parts - totalCost + getC, rare_parts: player.rare_parts + getR, epic_parts: player.epic_parts + getE, repair_kits: (player.repair_kits||0) + getK };
+
+            for(let i=0; i<getBoost; i++) {
+                const bRnd = Math.random();
+                if(bRnd < 0.2) updates.booster_skip = (updates.booster_skip || player.booster_skip || 0) + 1;
+                else if(bRnd < 0.4) updates.booster_speed = (updates.booster_speed || player.booster_speed || 0) + 1;
+                else if(bRnd < 0.6) updates.booster_auto = (updates.booster_auto || player.booster_auto || 0) + 1;
+                else if(bRnd < 0.8) updates.booster_contractor = (updates.booster_contractor || player.booster_contractor || 0) + 1;
+                else updates.booster_doubler = (updates.booster_doubler || player.booster_doubler || 0) + 1;
+            }
+            if (getBoost > 0) { html += `<div class="boost">Найдено бустеров: ${getBoost} шт!</div>`; color = "booster"; }
+
+            let fragTotal = 0;
+            for(let u in fragCounts) {
+                const fragCol = `frag${starTier}_${u}`;
+                updates[fragCol] = (player[fragCol] || 0) + fragCounts[u];
+                html += `<div style="color:var(--star-${starTier}); font-weight:bold;">🧩 Фрагмент ${starTier}⭐ ${TROOP_CFG[u].title} (x${fragCounts[u]})</div>`;
+                fragTotal += fragCounts[u];
+            }
+            if (fragTotal > 0) { color = `star-${starTier}`; }
+
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        // === СТАРЫЕ КОНТЕЙНЕРЫ ===
+        async function openDailyCase() {
+            const gotCommon = Math.floor(Math.random() * 51) + 100; const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; const gotEpic = Math.random() < 0.05 ? 1 : 0; 
+            const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.01 ? 1 : 0;
+
+            const updates = { common_parts: player.common_parts + gotCommon, rare_parts: player.rare_parts + gotRare, epic_parts: player.epic_parts + gotEpic, booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, repair_kits: (player.repair_kits||0) + gotKit, daily_case_last_opened: new Date().toISOString() };
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) {
+                player = data; refreshAll(); let title = gotEpic ? "ЭПИЧЕСКИЙ ДРОП!" : (gotRare ? "ЦЕННЫЕ ДАННЫЕ!" : "Контейнер открыт!"); let color = gotEpic ? "epic" : (gotRare ? "rare" : "common");
+                let html = `<div class="common">+${gotCommon} Обычных</div>`; if(gotRare) html += `<div class="rare">+${gotRare} Редких</div>`; if(gotEpic) html += `<div class="epic">+${gotEpic} ЭПИЧЕСКИХ!</div>`;
+                if(gotSk) html += `<div class="boost">⚡ +1 Пропуск партии</div>`; if(gotSp) html += `<div class="boost">⚡ +1 Ускорение</div>`; if(gotAu) html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`;
+                if(gotKit) html += `<div class="kits" style="margin-top:10px;">🔧 +1 Ремкомплект</div>`;
+                showRewardAnimation(title, html, color);
+            }
+        }
+
+        async function openPaidCase(amount) {
+            const totalCost = 25 * amount;
+            if (player.common_parts < totalCost) { showMsg('caseMsg', `Нужно ${totalCost} Обычных деталей!`, '#ff4444'); return; }
+            
+            let c=0, r=0, e=0, gotSk=0, gotSp=0, gotAu=0, gotCon=0, gotDb=0, gotKit=0;
+            for(let i=0; i<amount; i++) {
+                const rand = Math.random();
+                if (rand < 0.60) { c += (Math.floor(Math.random() * 2) * 5) + 10; } 
+                else if (rand < 0.85) { r += 5; } 
+                else if (rand < 0.95) { e += 1; r += 2; } 
+                else { e += 2; }
+
+                if (Math.random() < 0.02) {
+                    const bRand = Math.random();
+                    if(bRand < 0.2) gotSk++; else if(bRand < 0.4) gotSp++; else if(bRand < 0.6) gotAu++; else if(bRand < 0.8) gotCon++; else gotDb++;
+                }
+                if (Math.random() < 0.03) { gotKit++; }
+            }
+
+            let title = `ОТКРЫТО: ${amount} ШТ.`; let color = "rare"; let html = '';
+            if(c > 0) html += `<div class="common">Возврат: ${c} Об.</div>`;
+            if(r > 0) html += `<div class="rare">+${r} Редких</div>`;
+            if(e > 0) { html += `<div class="epic" style="font-size: 20px;">+${e} ЭПИКОВ!</div>`; color = "epic"; }
+            if(gotKit > 0) html += `<div class="kits">🔧 +${gotKit} Ремкомплект</div>`;
+            const totalB = gotSk+gotSp+gotAu+gotCon+gotDb;
+            if(totalB > 0) html += `<div class="boost">Найдено бустеров: ${totalB} шт!</div>`;
+
+            const updates = { 
+                common_parts: player.common_parts - totalCost + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e, 
+                booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, 
+                booster_contractor: (player.booster_contractor||0) + gotCon, booster_doubler: (player.booster_doubler||0) + gotDb, repair_kits: (player.repair_kits||0) + gotKit 
+            };
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        async function openRepairCase(amount) {
+            const totalCost = 250 * amount;
+            if (player.common_parts < totalCost) { showMsg('caseMsg', `Нужно ${totalCost} Обычных деталей!`, '#ff4444'); return; }
+            
+            let k=0, gotSk=0, gotSp=0, gotAu=0, gotCon=0, gotDb=0;
+            for(let i=0; i<amount; i++) {
+                const rand = Math.random();
+                if (rand < 0.70) { k += 1; } else if (rand < 0.95) { k += 3; } else { k += 9; }
+                if(Math.random() < 0.03) {
+                    const bRand = Math.random();
+                    if(bRand < 0.2) gotSk++; else if(bRand < 0.4) gotSp++; else if(bRand < 0.6) gotAu++; else if(bRand < 0.8) gotCon++; else gotDb++;
+                }
+            }
+
+            let title = `ОТКРЫТО: ${amount} ШТ.`; let color = "kits"; let html = `<div class="kits">+${k} Ремкомплектов!</div>`;
+            const totalB = gotSk+gotSp+gotAu+gotCon+gotDb;
+            if(totalB > 0) html += `<div class="boost">Найдено бустеров: ${totalB} шт!</div>`;
+
+            const updates = { 
+                common_parts: player.common_parts - totalCost, repair_kits: (player.repair_kits||0) + k, 
+                booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu,
+                booster_contractor: (player.booster_contractor||0) + gotCon, booster_doubler: (player.booster_doubler||0) + gotDb
+            };
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        async function refreshAll() {
+            const pid = localStorage.getItem('minigame_player_id'); if (!pid) return;
+            const { data } = await db.from('players').select('*').eq('id', pid).single();
+            if (data) {
+                player = data;
+                const now = new Date().getTime(); const resetTime = new Date(player.daily_quests_reset || 0).getTime();
+                
+                let updatesNeeded = {};
+                if (now - resetTime >= 24 * 3600000) {
+                    updatesNeeded = { quest_factory_collects: 0, quest_risky_crafts: 0, quest_boosters_used: 0, quests_completed: false, daily_quests_reset: new Date().toISOString(), kits_bought_today: 0, bm_purchased: false };
+                }
+
+                let truePower = calcTruePower(player);
+                if (truePower !== (player.power||0)) { updatesNeeded.power = truePower; }
+
+                if (Object.keys(updatesNeeded).length > 0) {
+                    const { data: updated } = await db.from('players').update(updatesNeeded).eq('id', player.id).select().single();
+                    if (updated) player = updated;
+                }
+
+                updateUI(); await loadLeaderboard();
+                if(globalTimer) clearInterval(globalTimer);
+                globalTimer = setInterval(tickTimers, 1000); tickTimers();
+            } else {
+                localStorage.removeItem('minigame_player_id'); 
+                location.reload();
+            }
+        }
+
+        function getDailyDealType(playerId, dayUTC) {
+            let str = playerId + dayUTC.toString(); let hash = 0;
+            for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; }
+            return Math.abs(hash) % 4; 
+        }
+
+        function updateUI() {
+            document.getElementById('playerNameDisplay').innerText = player.nickname; 
+            document.getElementById('countCommon').innerText = player.common_parts; 
+            document.getElementById('countRare').innerText = player.rare_parts;
+            document.getElementById('countEpic').innerText = player.epic_parts; 
+            document.getElementById('countPower').innerText = player.power || 0;
+            document.getElementById('countKits').innerText = player.repair_kits || 0;
+            
+            document.getElementById('countSkip').innerText = player.booster_skip || 0; 
+            document.getElementById('countSpeed').innerText = player.booster_speed || 0; 
+            document.getElementById('countAuto').innerText = player.booster_auto || 0;
+            document.getElementById('countContractor').innerText = player.booster_contractor || 0;
+            document.getElementById('countDoubler').innerText = player.booster_doubler || 0;
+
+            let f1Total = 0, f2Total = 0, f3Total = 0, f4Total = 0;
+            for (let key in TROOP_CFG) {
+                f1Total += player[`frag1_${key}`] || 0; f2Total += player[`frag2_${key}`] || 0;
+                f3Total += player[`frag3_${key}`] || 0; f4Total += player[`frag4_${key}`] || 0;
+            }
+            document.getElementById('sumFrag1').innerText = f1Total; document.getElementById('sumFrag2').innerText = f2Total;
+            document.getElementById('sumFrag3').innerText = f3Total; document.getElementById('sumFrag4').innerText = f4Total;
+            
+            document.getElementById('factoryLevelUI').innerText = player.factory_level;
+            document.getElementById('factoryGarlandContainer').innerHTML = renderGarland(player.factory_level, 10);
+            document.getElementById('factoryYieldText').innerText = `Приносит: ${FACTORY_STATS[player.factory_level].y} Обычных за партию`;
+
+            const btnUpg = document.getElementById('btnUpgrade');
+            const factPanel = document.getElementById('factPanel');
+            if (player.factory_level < 10) { 
+                const ns = FACTORY_STATS[player.factory_level + 1]; let cStr = `${ns.c} Об.`; if(ns.r) cStr+=` + ${ns.r} Ред.`; if(ns.e) cStr+=` + ${ns.e} Эп.`;
+                btnUpg.innerText = `Улучшить (${cStr})`; btnUpg.style.display = 'block'; 
+                factPanel.classList.remove('fire-frame');
+            } else { 
+                btnUpg.style.display = 'none'; 
+                factPanel.classList.add('fire-frame');
+            }
+
+            const labLvl = player.lvl_lab || 1;
+            document.getElementById('labLevelUI').innerText = labLvl;
+            document.getElementById('labGarlandContainer').innerHTML = renderGarland(labLvl, 7);
+            const btnUpgLab = document.getElementById('btnUpgradeLab');
+            const labPanel = document.getElementById('labPanel');
+            
+            if (labLvl >= 7) {
+                document.getElementById('labNextUnlock').innerText = "Все исследования завершены!";
+                btnUpgLab.style.display = 'none';
+                labPanel.classList.add('fire-frame');
+            } else {
+                labPanel.classList.remove('fire-frame');
+                if (player.lab_upgrade_end) {
+                    document.getElementById('labNextUnlock').innerHTML = `Модернизация... <br><span id="labTimerUI" style="color:var(--accent-gold); font-family:monospace; font-size:16px;">--:--</span>`;
+                    btnUpgLab.style.display = 'none';
+                } else {
+                    const req = LAB_REQ[labLvl + 1];
+                    let reqText = `Цена: ${req.c} Об., ${req.r} Ред., ${req.e} Эп.`;
+                    if(req.f_key) reqText += `<br><span style="color:#ff1744">Требуется: ${req.f_amt}x ${req.f_name}</span>`;
+                    reqText += `<br>Время: ${req.time}ч`;
+                    document.getElementById('labNextUnlock').innerHTML = `Следующий анлок: ${TROOP_CFG[req.unlocks].title}<br><span style="font-size:10px; font-weight:normal; color:#8b949e;">${reqText}</span>`;
+                    btnUpgLab.style.display = 'block';
+                }
+            }
+
+            buildTroopUI();
+            buildHospitalUI();
+
+            const currentDayUTC = Math.floor(Date.now() / 86400000); const lastDayUTC = player.last_login_day || 0; const canClaimToday = currentDayUTC > lastDayUTC;
+            let visualStreak = player.login_streak || 0;
+            if (canClaimToday && lastDayUTC !== 0 && currentDayUTC - lastDayUTC > 1) { visualStreak = 0; } 
+            let streakHtml = ''; const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="star-1">1 Фраг. 1⭐</span>', '<span class="star-1">2 Фраг. 1⭐</span>', '<span class="kits">3 Ремк.</span>', '<span class="common">500 Об.</span>', '<span class="boost">2 Бустера</span>', '<span class="boost">3 Случ. Бустера</span>'];
+            for(let i=1; i<=7; i++) {
+                let sClass = ''; let sText = '';
+                if (!canClaimToday) { if (i <= visualStreak) { sClass = 'claimed'; sText = '✓ Забрано'; } } 
+                else {
+                    let nextDayToClaim = (visualStreak % 7) + 1;
+                    if (i < nextDayToClaim) { sClass = 'claimed'; sText = '✓ Забрано'; } else if (i === nextDayToClaim) { sClass = 'next'; sText = 'Доступно!'; }
+                }
+                streakHtml += `<div class="streak-day ${sClass}"><div style="font-weight: bold; margin-bottom: 5px; color: #fff;">День ${i}</div><div style="margin-bottom: 5px; font-size: 14px; font-weight: bold;">${sRewards[i-1]}</div><div>${sText}</div></div>`;
+            }
+            document.getElementById('streakPanelUI').innerHTML = streakHtml;
+            
+            const dealType = getDailyDealType(player.id, currentDayUTC);
+            let dealHtml = '';
+            if (player.bm_purchased) {
+                dealHtml = `<div style="color: var(--accent-green); font-weight: bold; padding: 10px; border: 1px solid var(--accent-green); background: rgba(0, 230, 118, 0.1); border-radius: 6px;">Сделка закрыта!</div>`;
+            } else {
+                if (dealType === 0) dealHtml = `<button class="btn-risk" onclick="buyBlackMarket(0)" style="border-left-color: var(--common);">За 25 Обычных ➔ 1 Ремкомплект</button>`;
+                else if (dealType === 1) dealHtml = `<button class="btn-risk" onclick="buyBlackMarket(1)" style="border-left-color: var(--rare);">За 10 Редких ➔ Бустер Пропуска</button>`;
+                else if (dealType === 2) dealHtml = `<button class="btn-risk" onclick="buyBlackMarket(2)" style="border-left-color: var(--epic);">За 5 Эпиков ➔ 1 Случайный Бустер</button>`;
+                else dealHtml = `<button class="btn-risk" onclick="buyBlackMarket(3)" style="border-left-color: var(--star-1);">Отдать 1 Случ. Бустер ➔ Случайный Фрагмент 1⭐</button>`;
+            }
+            document.getElementById('bmContent').innerHTML = dealHtml;
+
+            document.getElementById('qFact').innerText = Math.min(player.quest_factory_collects || 0, 500); 
+            document.getElementById('qRisk').innerText = Math.min(player.quest_risky_crafts || 0, 1); 
+            document.getElementById('qBoost').innerText = Math.min(player.quest_boosters_used || 0, 1); 
+            
+            const qBtn = document.getElementById('btnClaimQuests');
+            if (player.quests_completed) { qBtn.innerText = "ВЫПОЛНЕНО"; qBtn.disabled = true; qBtn.style.background = "#555"; } 
+            else if ((player.quest_factory_collects || 0) >= 500 && (player.quest_risky_crafts || 0) >= 1 && (player.quest_boosters_used || 0) >= 1) { qBtn.innerText = "ЗАБРАТЬ НАГРАДУ"; qBtn.disabled = false; qBtn.style.background = "var(--accent-gold)"; } 
+            else { qBtn.innerText = "В ПРОЦЕССЕ..."; qBtn.disabled = true; qBtn.style.background = "#555"; }
+
+            const elapsedDaily = new Date().getTime() - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000; const timerDaily = document.getElementById('dailyCaseTimer');
+            if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
+            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
+        }
+
+        function getEffectiveLoot(lastStr, speedStr, autoStr, conStr, msPerBatch, yieldPerBatch) {
+            const now = new Date().getTime(); const last = new Date(lastStr).getTime();
+            const msPerDet = msPerBatch / yieldPerBatch;
+            const speedEnd = new Date(speedStr).getTime(); const autoEnd = new Date(autoStr).getTime(); const conEnd = new Date(conStr).getTime();
+            const isCurrSpeed = now < speedEnd; const isCurrAuto = now < autoEnd; const isCurrCon = now < conEnd;
+            
+            if (last >= now) { return { d: 0, rem: 0, stalled: false, msToNextReal: msPerDet / (isCurrSpeed ? 4 : 1), msToNextBatchReal: isCurrAuto ? 0 : msPerBatch / (isCurrSpeed ? 4 : 1) }; }
+
+            let milestones = [last, speedEnd, autoEnd, conEnd, now].filter(t => t >= last && t <= now).sort((a, b) => a - b);
+            if (milestones[milestones.length-1] !== now) milestones.push(now);
+
+            let totalDetails = 0; let currentMsBuffer = 0;
+            for (let i = 0; i < milestones.length - 1; i++) {
+                const duration = milestones[i+1] - milestones[i]; if (duration <= 0) continue;
+                const isSpeed = milestones[i] < speedEnd; const isAuto = milestones[i] < autoEnd; const isCon = milestones[i] < conEnd;
+                const effDuration = isSpeed ? duration * 4 : duration;
+                
+                const conMultiplier = isCon ? 1.5 : 1; 
+
+                if (isAuto) {
+                    currentMsBuffer += (effDuration * conMultiplier); let details = Math.floor(currentMsBuffer / msPerDet);
+                    totalDetails += details; currentMsBuffer -= details * msPerDet;
+                } else {
+                    if (totalDetails >= yieldPerBatch) { currentMsBuffer = 0; } 
+                    else {
+                        currentMsBuffer += (effDuration * conMultiplier); let details = Math.floor(currentMsBuffer / msPerDet);
+                        if (totalDetails + details >= yieldPerBatch) {
+                            details = yieldPerBatch - totalDetails; totalDetails = yieldPerBatch; currentMsBuffer = 0;
+                        } else { totalDetails += details; currentMsBuffer -= details * msPerDet; }
+                    }
+                }
+            }
+            
+            const curConMult = isCurrCon ? 1.5 : 1;
+            const msToNextReal = (msPerDet - currentMsBuffer) / (isCurrSpeed ? 4 : 1) / curConMult;
+            const detailsLeft = yieldPerBatch - (isCurrAuto ? (totalDetails % yieldPerBatch) : totalDetails);
+            const msToNextBatchReal = isCurrAuto ? 0 : ((detailsLeft * msPerDet - currentMsBuffer) / (isCurrSpeed ? 4 : 1) / curConMult);
+
+            return { d: totalDetails, rem: currentMsBuffer, stalled: (!isCurrAuto && totalDetails >= yieldPerBatch), msToNextReal: msToNextReal, msToNextBatchReal: msToNextBatchReal };
+        }
+
+        function tickTimers() {
+            if(!player) return;
+            const now = new Date().getTime();
+            
+            const resetTime = new Date(player.daily_quests_reset || 0).getTime();
+            if (now - resetTime >= 24 * 3600000) { refreshAll(); return; }
+            
+            const questResetMs = (24 * 3600000) - (now - resetTime); 
+            document.getElementById('timerQuestsReset').innerText = questResetMs > 0 ? formatTime(questResetMs) : "00:00";
+            
+            const nextMidnightUTC = new Date(now); nextMidnightUTC.setUTCHours(24, 0, 0, 0); 
+            document.getElementById('timerLoginReset').innerText = formatTime(nextMidnightUTC.getTime() - now);
+
+            // Лаборатория
+            if (player.lab_upgrade_end) {
+                const labEndMs = new Date(player.lab_upgrade_end).getTime();
+                if (now >= labEndMs) {
+                    const nextLvl = (player.lvl_lab || 1) + 1;
+                    player.lab_upgrade_end = null; 
+                    db.from('players').update({ lvl_lab: nextLvl, lab_upgrade_end: null }).eq('id', player.id).then(() => refreshAll());
+                } else {
+                    const uiEl = document.getElementById('labTimerUI');
+                    if (uiEl) uiEl.innerText = formatTime(labEndMs - now);
+                }
+            }
+
+            const upgTarget = player.troop_upgrade_target;
+            const upgEnd = new Date(player.troop_upgrade_end || 0).getTime();
+            if (upgTarget) {
+                if (now >= upgEnd) {
+                    document.getElementById('troopUpgradeStatus').innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО!";
+                    document.getElementById('troopUpgradeStatus').style.color = "#00e676";
+                    document.getElementById('btnFinishTroop').style.display = "inline-block";
+                } else {
+                    document.getElementById('troopUpgradeStatus').innerText = "Обучение: " + formatTime(upgEnd - now);
+                    document.getElementById('troopUpgradeStatus').style.color = "var(--accent-gold)";
+                    document.getElementById('btnFinishTroop').style.display = "none";
+                }
+            } else {
+                document.getElementById('troopUpgradeStatus').innerText = "Свободно";
+                document.getElementById('troopUpgradeStatus').style.color = "#8b949e";
+                document.getElementById('btnFinishTroop').style.display = "none";
+            }
+
+            let needsHealthUpdate = false;
+            let healthUpdates = {};
+            
+            // Госпиталь
+            for(let i=1; i<=3; i++) {
+                const tName = player[`hosp_${i}_target`];
+                const tEndStr = player[`hosp_${i}_end`];
+                if (tName && tEndStr) {
+                    const tEnd = new Date(tEndStr).getTime();
+                    const uiEl = document.getElementById(`hospTimerUI_${i}`);
+                    if (now >= tEnd) {
+                        const curVit = healthUpdates[`vit_${tName}`] !== undefined ? healthUpdates[`vit_${tName}`] : (player[`vit_${tName}`] ?? 100);
+                        healthUpdates[`vit_${tName}`] = Math.min(100, curVit + 25);
+                        healthUpdates[`hosp_${i}_target`] = null;
+                        healthUpdates[`hosp_${i}_end`] = null;
+                        needsHealthUpdate = true;
+                    } else if (uiEl) {
+                        uiEl.innerText = formatTime(tEnd - now);
+                    }
+                }
+            }
+
+            // Ручной ремонт
+            for (let key in TROOP_CFG) {
+                const repEndStr = player[`rep_end_${key}`];
+                if (repEndStr) {
+                    const repEnd = new Date(repEndStr).getTime();
+                    const uiEl = document.getElementById(`manRepTimer_${key}`);
+                    if (now >= repEnd) {
+                        const curVit = healthUpdates[`vit_${key}`] !== undefined ? healthUpdates[`vit_${key}`] : (player[`vit_${key}`] ?? 100);
+                        healthUpdates[`vit_${key}`] = Math.min(100, curVit + 5);
+                        healthUpdates[`rep_end_${key}`] = null;
+                        needsHealthUpdate = true;
+                    } else if (uiEl) {
+                        uiEl.innerText = formatTime(repEnd - now);
+                    }
+                }
+            }
+
+            if (needsHealthUpdate) {
+                db.from('players').update(healthUpdates).eq('id', player.id).then(() => {
+                    // Пересчитываем локально для мощи
+                    Object.assign(player, healthUpdates);
+                    player.power = calcTruePower(player);
+                    db.from('players').update({power: player.power}).eq('id', player.id).then(() => refreshAll());
+                });
+            }
+
+            const isSpeed = now < new Date(player.speed_boost_end).getTime(); const isAuto = now < new Date(player.auto_boost_end).getTime();
+            const isCon = now < new Date(player.contractor_boost_end).getTime(); const isDb = now < new Date(player.doubler_boost_end).getTime();
+            
+            const bInd = document.getElementById('boostIndicator');
+            if (isSpeed || isAuto || isCon || isDb) {
+                bInd.style.display = 'block'; 
+                let txt = []; 
+                if(isSpeed) txt.push(`⚡ Ускорение (${formatTime(new Date(player.speed_boost_end).getTime() - now)})`);
+                if(isAuto) txt.push(`<span style="color:#00e676">📦 Склады (${formatTime(new Date(player.auto_boost_end).getTime() - now)})</span>`); 
+                if(isCon) txt.push(`<span style="color:#03a9f4">👷 Подрядчики (${formatTime(new Date(player.contractor_boost_end).getTime() - now)})</span>`);
+                if(isDb) txt.push(`<span style="color:#e91e63">🔄 Дублер (${formatTime(new Date(player.doubler_boost_end).getTime() - now)})</span>`);
+                bInd.innerHTML = txt.join('<br>');
+            } else { bInd.style.display = 'none'; }
+
+            const brokenUntil = new Date(player.factory_broken_until || 0).getTime(); const isBroken = now < brokenUntil; const stats = FACTORY_STATS[player.factory_level];
+
+            if (isBroken) {
+                document.getElementById('factoryAccumulated').innerText = "0"; document.getElementById('factoryMax').innerText = "-"; document.getElementById('factoryProgress').style.width = `0%`;
+                document.getElementById('timerNextPart').innerText = "РЕМОНТ"; document.getElementById('timerNextPart').style.color = "#ff4444";
+                document.getElementById('timerNextBatch').innerText = formatTime(brokenUntil - now); document.getElementById('timerNextBatch').style.color = "#ff4444";
+                document.getElementById('btnCollectFact').disabled = true; document.getElementById('btnOverload').disabled = true;
+            } else {
+                document.getElementById('btnCollectFact').disabled = false; document.getElementById('btnOverload').disabled = false;
+                const loot = getEffectiveLoot(player.factory_last_collected, player.speed_boost_end, player.auto_boost_end, player.contractor_boost_end, stats.ms, stats.y);
+                
+                document.getElementById('factoryAccumulated').innerText = loot.d; document.getElementById('factoryMax').innerText = isAuto ? "∞" : stats.y;
+                document.getElementById('factoryProgress').style.width = isAuto ? '100%' : `${(loot.d / stats.y) * 100}%`;
+
+                if (loot.stalled) {
+                    document.getElementById('timerNextPart').innerText = "МАКСИМУМ"; document.getElementById('timerNextPart').style.color = "#ff4444";
+                    document.getElementById('timerNextBatch').innerText = "ПРОСТАИВАЕТ"; document.getElementById('timerNextBatch').style.color = "#ff4444";
+                } else {
+                    document.getElementById('timerNextPart').innerText = formatTime(loot.msToNextReal); document.getElementById('timerNextPart').style.color = "#fff";
+                    if (isAuto) { document.getElementById('timerNextBatch').innerText = "ДОП СКЛАДЫ"; document.getElementById('timerNextBatch').style.color = "#00e676"; } 
+                    else { document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)"; }
+                }
+            }
+
+            const elapsedDaily = now - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000; const timerDaily = document.getElementById('dailyCaseTimer');
+            if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
+            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
+        }
+
+        async function collectFactory() {
+            const brokenUntil = new Date(player.factory_broken_until || 0).getTime();
+            if(new Date().getTime() < brokenUntil) return;
+            const stats = FACTORY_STATS[player.factory_level];
+            const loot = getEffectiveLoot(player.factory_last_collected, player.speed_boost_end, player.auto_boost_end, player.contractor_boost_end, stats.ms, stats.y);
+            if (loot.d <= 0) return;
+
+            let collectedAmount = loot.d;
+            const isDoubler = new Date().getTime() < new Date(player.doubler_boost_end).getTime();
+            if (isDoubler) collectedAmount *= 2;
+
+            const isBoosted = new Date().getTime() < new Date(player.speed_boost_end).getTime();
+            const isCon = new Date().getTime() < new Date(player.contractor_boost_end).getTime();
+            
+            let realRemainder = loot.rem;
+            if(isBoosted) realRemainder /= 4;
+            if(isCon) realRemainder /= 1.5;
+
+            const newLastCol = new Date(new Date().getTime() - realRemainder).toISOString();
+            
+            let extraR = 0, extraE = 0, extraHtml = '';
+            if (Math.random() < 0.05) {
+                if (Math.random() < 0.7) { extraR = 5; extraHtml = "<div class='rare'>🎁 НАЙДЕН ТАЙНИК: +5 Редких!</div>"; } 
+                else { extraE = 1; extraHtml = "<div class='epic'>🎁 НАЙДЕН ТАЙНИК: +1 ЭПИК!</div>"; }
+            }
+            if (isDoubler) { extraHtml += "<div class='epic' style='color:#e91e63'>🔄 ДУБЛЕР УДВОИЛ ДОБЫЧУ!</div>"; }
+
+            const { data } = await db.from('players').update({
+                common_parts: player.common_parts + collectedAmount, rare_parts: player.rare_parts + extraR, epic_parts: player.epic_parts + extraE,
+                factory_last_collected: newLastCol, quest_factory_collects: (player.quest_factory_collects || 0) + collectedAmount
+            }).eq('id', player.id).select().single();
+
+            if (data) { 
+                player = data; refreshAll(); 
+                if (extraHtml) showRewardAnimation('ДОП УСПЕХ!', `<div class="common">Собрано: ${collectedAmount} Об.</div>` + extraHtml, 'accent-gold');
+                else showMsg('factoryMsg', `Собрано: ${collectedAmount} Обычных!`, 'var(--accent-gold)'); 
+            }
+        }
+
+        async function overloadFactory() {
+            const now = new Date().getTime(); if(now < new Date(player.factory_broken_until || 0).getTime()) return;
+            if (Math.random() < 0.50) {
+                const brokenEnd = new Date(now + 2 * 3600000).toISOString();
+                const { data } = await db.from('players').update({ factory_broken_until: brokenEnd, factory_last_collected: brokenEnd }).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('factoryMsg', 'АВАРИЯ! Завод сломан на 2ч!', '#ff4444'); refreshAll(); }
+            } else {
+                const stats = FACTORY_STATS[player.factory_level];
+                const { data } = await db.from('players').update({ common_parts: player.common_parts + stats.y }).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('factoryMsg', `УСПЕХ! +${stats.y} Обычных!`, 'var(--accent-gold)'); refreshAll(); }
+            }
+        }
+
+        async function upgradeFactory() {
+            if(player.factory_level >= 10) return;
+            const ns = FACTORY_STATS[player.factory_level + 1];
+            if (player.common_parts < ns.c || player.rare_parts < (ns.r||0) || player.epic_parts < (ns.e||0)) { showMsg('factoryMsg', `Недостаточно ресурсов!`, '#ff4444'); return; }
+            const { data } = await db.from('players').update({ factory_level: player.factory_level + 1, common_parts: player.common_parts - ns.c, rare_parts: player.rare_parts - (ns.r||0), epic_parts: player.epic_parts - (ns.e||0) }).eq('id', player.id).select().single();
+            if (data) { player = data; showMsg('factoryMsg', 'Завод модернизирован!', 'var(--epic)'); refreshAll(); }
+        }
+
+        async function useBooster(type) {
+            const updates = {}; const now = new Date().getTime();
+            const boostTime = 4 * 3600000; 
+            
+            if (type === 'skip') {
+                if ((player.booster_skip || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
+                const earned = FACTORY_STATS[player.factory_level].y; updates.booster_skip = player.booster_skip - 1; updates.common_parts = player.common_parts + earned;
+                updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('boosterMsg', `Пропуск применен! +${earned} Об.!`, 'var(--booster)'); refreshAll(); }
+            } 
+            else if (type === 'speed') {
+                if ((player.booster_speed || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
+                const oldEnd = new Date(player.speed_boost_end || 0).getTime(); updates.booster_speed = player.booster_speed - 1; updates.speed_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 4ч!`, 'var(--booster)'); refreshAll(); }
+            }
+            else if (type === 'auto') {
+                if ((player.booster_auto || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
+                const oldEnd = new Date(player.auto_boost_end || 0).getTime(); updates.booster_auto = player.booster_auto - 1; updates.auto_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('boosterMsg', `Склады активны на 4ч!`, '#00e676'); refreshAll(); }
+            }
+            else if (type === 'contractor') {
+                if ((player.booster_contractor || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
+                const oldEnd = new Date(player.contractor_boost_end || 0).getTime(); updates.booster_contractor = player.booster_contractor - 1; updates.contractor_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('boosterMsg', `Подрядчики активны на 4ч!`, '#03a9f4'); refreshAll(); }
+            }
+            else if (type === 'doubler') {
+                if ((player.booster_doubler || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
+                const oldEnd = new Date(player.doubler_boost_end || 0).getTime(); updates.booster_doubler = player.booster_doubler - 1; updates.doubler_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
+                const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (data) { player = data; showMsg('boosterMsg', `Дублер активен на 4ч!`, '#e91e63'); refreshAll(); }
+            }
+        }
+
+        // === МАССОВЫЙ КРАФТ / МОДАЛКА ===
+        function openCraftModal(title, costName, rewName, costAmt, rewAmt, costKey, rewKey) {
+            craftSetup = { title, costName, rewName, costAmt, rewAmt, costKey, rewKey };
+            document.getElementById('cmTitle').innerText = title; document.getElementById('cmAvail').innerText = player[costKey]; document.getElementById('cmCostName').innerText = costName; document.getElementById('cmRewName').innerText = rewName;
+            document.getElementById('cmInput').value = 1; updateCraftModalPreview();
+            document.getElementById('craftModal').style.display = 'flex'; setTimeout(() => document.getElementById('craftBox').classList.add('show'), 10);
+        }
+        function closeCraftModal() { document.getElementById('craftBox').classList.remove('show'); setTimeout(() => document.getElementById('craftModal').style.display = 'none', 300); }
+        function setCraftMax() { const max = Math.floor(player[craftSetup.costKey] / craftSetup.costAmt); document.getElementById('cmInput').value = max > 0 ? max : 1; updateCraftModalPreview(); }
+        function updateCraftModalPreview() { let val = parseInt(document.getElementById('cmInput').value) || 0; if (val < 1) val = 1; document.getElementById('cmCostPreview').innerText = val * craftSetup.costAmt; document.getElementById('cmRewPreview').innerText = val * craftSetup.rewAmt; }
+
+        async function executeCraft() {
+            let val = parseInt(document.getElementById('cmInput').value) || 0; if (val < 1) return;
+            const costTotal = val * craftSetup.costAmt; const rewTotal = val * craftSetup.rewAmt;
+            if (player[craftSetup.costKey] < costTotal) { showMsg('cmMsg', 'Недостаточно деталей!', '#ff4444'); return; }
+            const updates = {}; updates[craftSetup.costKey] = player[craftSetup.costKey] - costTotal; updates[craftSetup.rewKey] = player[craftSetup.rewKey] + rewTotal;
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); closeCraftModal(); showRewardAnimation('ОПЕРАЦИЯ УСПЕШНА!', `<div class="rare">+${rewTotal} ${craftSetup.rewName}</div>`, 'rare'); }
+        }
+
+        async function riskyCraft(type) {
+            if(type === 'rare' && player.common_parts < 25) { showMsg('craftMsg', 'Нужно 25 Обычных для риска!', '#ff4444'); return; }
+            if(type === 'epic' && player.rare_parts < 25) { showMsg('craftMsg', 'Нужно 25 Редких для риска!', '#ff4444'); return; }
+
+            const r = Math.random(); let reward = 0, title = '', html = '', color = ''; const updates = {};
+            if (type === 'rare') {
+                updates.common_parts = player.common_parts - 25; reward = r < 0.65 ? 2 : (r < 0.90 ? 5 : 10); updates.rare_parts = player.rare_parts + reward;
+                color = "rare"; title = "Синтез редких"; html = `<div class="rare">+${reward} Редких</div>`;
+            } else {
+                updates.rare_parts = player.rare_parts - 25; reward = r < 0.65 ? 1 : (r < 0.90 ? 5 : 10); updates.epic_parts = player.epic_parts + reward;
+                color = "epic"; title = "Синтез эпических"; html = `<div class="epic">+${reward} ЭПИКОВ</div>`;
+            }
+            updates.quest_risky_crafts = (player.quest_risky_crafts || 0) + 1;
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        async function exchangeKit() {
+            if((player.repair_kits || 0) < 1) { showMsg('craftMsg', 'Нужен 1 Ремкомплект!', '#ff4444'); return; }
+            const r = Math.random(); let addC = 0, addR = 0, addE = 0, addSk = 0, addSp = 0, addAu = 0, addCon=0, addDb=0;
+            let title = "ОБМЕН РЕМКОМПЛЕКТА"; let html = ''; let color = '';
+
+            if (r < 0.33) { addC = 10; html = `<div class="common">+10 Обычных</div>`; color = "common"; } 
+            else if (r < 0.66) { addR = 3; html = `<div class="rare">+3 Редких</div>`; color = "rare"; } 
+            else if (r < 0.99) { addE = 1; html = `<div class="epic">+1 ЭПИЧЕСКАЯ</div>`; color = "epic"; } 
+            else {
+                const bRnd = Math.random();
+                if(bRnd < 0.2) { addSk = 1; html = `<div class="boost">⚡ +1 Пропуск партии</div>`; }
+                else if(bRnd < 0.4) { addSp = 1; html = `<div class="boost">⚡ +1 Ускорение</div>`; }
+                else if(bRnd < 0.6) { addAu = 1; html = `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`; }
+                else if(bRnd < 0.8) { addCon = 1; html = `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; }
+                else { addDb = 1; html = `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; }
+                color = "booster"; title = "СЕКРЕТНЫЙ БУСТЕР!";
+            }
+
+            const updates = { 
+                repair_kits: player.repair_kits - 1, common_parts: player.common_parts + addC, rare_parts: player.rare_parts + addR, epic_parts: player.epic_parts + addE, 
+                booster_skip: (player.booster_skip || 0) + addSk, booster_speed: (player.booster_speed || 0) + addSp, booster_auto: (player.booster_auto || 0) + addAu,
+                booster_contractor: (player.booster_contractor || 0) + addCon, booster_doubler: (player.booster_doubler || 0) + addDb
+            };
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        // === ЧЕРНЫЙ РЫНОК ЛОГИКА ===
+        async function buyBlackMarket(dealType) {
+            if(player.bm_purchased) return;
+            let updates = { bm_purchased: true };
+            let title = "ЧЕРНЫЙ РЫНОК"; let html = ''; let color = '';
+            
+            if (dealType === 0) {
+                if (player.common_parts < 25) { showMsg('bmMsg', 'Нужно 25 Обычных!', '#ff4444'); return; }
+                updates.common_parts = player.common_parts - 25; updates.repair_kits = (player.repair_kits || 0) + 1;
+                html = `<div class="kits">🔧 +1 Ремкомплект</div>`; color = "kits";
+            } else if (dealType === 1) {
+                if (player.rare_parts < 10) { showMsg('bmMsg', 'Нужно 10 Редких!', '#ff4444'); return; }
+                updates.rare_parts = player.rare_parts - 10; updates.booster_skip = (player.booster_skip || 0) + 1;
+                html = `<div style="color: #ff5722; font-weight: bold; font-size: 18px;">⚡ +1 Пропуск партии</div>`; color = "booster";
+            } else if (dealType === 2) {
+                if (player.epic_parts < 5) { showMsg('bmMsg', 'Нужно 5 Эпических!', '#ff4444'); return; }
+                updates.epic_parts = player.epic_parts - 5;
+                const bRand = Math.random();
+                if(bRand < 0.2) { updates.booster_skip = (player.booster_skip || 0) + 1; html = `<div class="boost">⚡ +1 Пропуск партии</div>`; }
+                else if(bRand < 0.4) { updates.booster_speed = (player.booster_speed || 0) + 1; html = `<div class="boost">⚡ +1 Ускорение</div>`; }
+                else if(bRand < 0.6) { updates.booster_auto = (player.booster_auto || 0) + 1; html = `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`; }
+                else if(bRand < 0.8) { updates.booster_contractor = (player.booster_contractor || 0) + 1; html = `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; }
+                else { updates.booster_doubler = (player.booster_doubler || 0) + 1; html = `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; }
+                color = "booster";
+            } else if (dealType === 3) {
+                const boosters = [];
+                if ((player.booster_skip||0) > 0) boosters.push('booster_skip');
+                if ((player.booster_speed||0) > 0) boosters.push('booster_speed');
+                if ((player.booster_auto||0) > 0) boosters.push('booster_auto');
+                if ((player.booster_contractor||0) > 0) boosters.push('booster_contractor');
+                if ((player.booster_doubler||0) > 0) boosters.push('booster_doubler');
+
+                if (boosters.length === 0) { showMsg('bmMsg', 'У вас нет бустеров для обмена!', '#ff4444'); return; }
+                
+                const lostBooster = boosters[Math.floor(Math.random() * boosters.length)];
+                updates[lostBooster] = player[lostBooster] - 1;
+
+                const unlockedKeys = getUnlockedTroopKeys();
+                const ru = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                updates[`frag1_${ru}`] = (player[`frag1_${ru}`] || 0) + 1;
+                
+                html = `<div style="color:var(--star-1); font-weight:bold; font-size:18px;">🧩 +1 Фрагмент 1⭐ (${TROOP_CFG[ru].title})</div>`; 
+                color = "star-1";
+            }
+            
+            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
+        }
+
+        function showRewardAnimation(title, itemsHtml, colorClass) {
+            const overlay = document.getElementById('rewardModal'); const box = document.getElementById('rewardBox');
+            document.getElementById('rewardLoading').style.display = 'block'; document.getElementById('rewardResult').style.display = 'none';
+            overlay.style.display = 'flex'; setTimeout(() => box.classList.add('show'), 10);
+            setTimeout(() => {
+                document.getElementById('rewardLoading').style.display = 'none'; document.getElementById('rewardTitle').innerText = title;
+                document.getElementById('rewardTitle').className = `reward-title ${colorClass}`; document.getElementById('rewardItems').innerHTML = itemsHtml;
+                document.getElementById('rewardResult').style.display = 'block';
+            }, 1000);
+        }
+        function closeRewardModal() { document.getElementById('rewardBox').classList.remove('show'); setTimeout(() => document.getElementById('rewardModal').style.display = 'none', 300); }
+
+        async function claimQuests() {
+            if(player.quests_completed) return;
+            if ((player.quest_factory_collects||0) < 500 || (player.quest_risky_crafts||0) < 1 || (player.quest_boosters_used||0) < 1) return;
+            const rnd = Math.random(); let addSk=0, addSp=0, addAu=0, addCon=0, addDb=0; 
+            if(rnd < 0.2) addSk=1; else if(rnd < 0.4) addSp=1; else if(rnd < 0.6) addAu=1; else if(rnd < 0.8) addCon=1; else addDb=1;
+            const { data } = await db.from('players').update({ quests_completed: true, epic_parts: player.epic_parts + 1, booster_skip: (player.booster_skip || 0) + addSk, booster_speed: (player.booster_speed || 0) + addSp, booster_auto: (player.booster_auto || 0) + addAu, booster_contractor: (player.booster_contractor || 0) + addCon, booster_doubler: (player.booster_doubler || 0) + addDb }).eq('id', player.id).select().single();
+            if (data) {
+                player = data; refreshAll(); let boostHtml = '';
+                if(addSk) boostHtml = '<div class="boost">⚡ +1 Пропуск</div>'; if(addSp) boostHtml = '<div class="boost">⚡ +1 Ускорение</div>'; if(addAu) boostHtml = '<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>';
+                if(addCon) boostHtml = '<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>'; if(addDb) boostHtml = '<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>';
+                showRewardAnimation('ДИРЕКТИВЫ ВЫПОЛНЕНЫ!', `<div class="epic">+1 ЭПИЧЕСКАЯ</div>${boostHtml}`, 'epic');
+            }
+        }
+
+        async function loadLeaderboard() {
+            const { data: pData } = await db.from('players').select('nickname, power').order('power', { ascending: false }).limit(100);
+            if (pData) {
+                let lbHtml = '';
+                pData.forEach((p, idx) => {
+                    lbHtml += `<div class="lb-item"><div class="lb-rank">#${idx+1}</div><div class="lb-info"><div class="lb-name">${p.nickname}</div><div class="lb-score">Мощь: ⚡${p.power || 0}</div></div></div>`;
+                });
+                document.getElementById('leaderboardListPlayers').innerHTML = lbHtml;
+            }
+
+            const { data: cData } = await db.from('clans').select('name, tag, influence').order('influence', { ascending: false }).limit(100);
+            if (cData) {
+                let cHtml = '';
+                cData.forEach((c, idx) => {
+                    cHtml += `<div class="lb-item"><div class="lb-rank" style="color:var(--t3);">#${idx+1}</div><div class="lb-info"><div class="lb-name">[${c.tag}] ${c.name}</div><div class="lb-score" style="color:var(--gold); text-shadow:none;">Влияние: ${c.influence || 0}</div></div></div>`;
+                });
+                document.getElementById('leaderboardListClans').innerHTML = cHtml || '<div style="text-align: center; color: #8b949e; padding: 20px;">Пока нет кланов...</div>';
+            }
+        }
+
+        function showMsg(id, text, color) { const el = document.getElementById(id); el.innerText = text; el.style.color = color; el.style.display = 'block'; setTimeout(() => { if(el.innerText === text) el.innerText = ''; }, 4000); }
+
+        window.onload = () => { 
+            if (localStorage.getItem('minigame_player_id')) { 
+                document.getElementById('bodyBg').className = 'game-bg'; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
+                refreshAll().then(checkDailyLogin);
+            } 
+        };
+    </script>
+</body>
+</html>
