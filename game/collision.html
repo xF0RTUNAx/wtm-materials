@@ -21,8 +21,8 @@
         .container { max-width: 900px; width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 0 30px rgba(3, 169, 244, 0.1); }
         h2, h3 { margin-top: 0; color: #fff; }
         
-        input { padding: 12px; width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; border-radius: 6px; }
-        input:focus { outline: none; border-color: var(--blue); }
+        input, select { padding: 12px; width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; border-radius: 6px; }
+        input:focus, select:focus { outline: none; border-color: var(--blue); }
         
         button { padding: 12px 15px; background: var(--border); border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; width: 100%; margin-bottom: 10px;}
         button:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-2px); }
@@ -76,6 +76,11 @@
         .cli-power { color: var(--gold); font-family: monospace; }
         .cli-online { font-size: 11px; color: #8b949e; }
 
+        /* СТИЛИ ВКЛАДОК ЧАТА */
+        .auth-tabs { display: flex; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color);}
+        .auth-tab { flex: 1; padding: 10px; background: rgba(0,0,0,0.6); color: #8b949e; cursor: pointer; font-weight: bold; transition: 0.3s; font-size: 12px;}
+        .auth-tab.active { background: var(--accent-gold); color: #000; }
+
         /* АНИМАЦИИ */
         @keyframes pulseAlert { 0% { text-shadow: 0 0 5px rgba(255, 193, 7, 0); transform: scale(1); } 50% { text-shadow: 0 0 15px rgba(255, 193, 7, 1); transform: scale(1.2); } 100% { text-shadow: 0 0 5px rgba(255, 193, 7, 0); transform: scale(1); } }
         .alert-red { color: var(--red); font-weight: bold; padding: 10px; border: 1px solid var(--red); background: rgba(255,23,68,0.1); margin-top: 15px; border-radius: 6px;}
@@ -83,6 +88,20 @@
         /* ЭНДГЕЙМ ОВЕРЛЕЙ */
         #endgameOver { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); z-index: 500; display: none; flex-direction: column; justify-content: center; align-items: center; }
         .end-title { font-size: 40px; color: var(--gold); text-transform: uppercase; font-weight: 900; text-shadow: 0 0 30px var(--gold); margin-bottom: 20px; text-align: center;}
+
+        /* КНОПКА ЧАТА И БЕЙДЖ */
+        .chat-floating-btn {
+            position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; 
+            background: var(--blue); color: #000; font-size: 24px; border: none; box-shadow: 0 0 20px rgba(3, 169, 244, 0.5); 
+            z-index: 50; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.3s;
+        }
+        .chat-floating-btn:hover { transform: scale(1.1); box-shadow: 0 0 30px rgba(3, 169, 244, 0.8); }
+        .chat-badge {
+            position: absolute; top: -2px; right: -2px; width: 20px; height: 20px; 
+            background: var(--red); color: white; border-radius: 50%; font-size: 12px; 
+            font-weight: bold; border: 2px solid var(--bg); display: none; 
+            justify-content: center; align-items: center; line-height: 1;
+        }
 
         @media (max-width: 600px) {
             .map-container { gap: 4px; padding: 5px;}
@@ -94,6 +113,11 @@
     </style>
 </head>
 <body>
+
+    <button class="chat-floating-btn" onclick="openChat()">
+        💬
+        <div id="chatBadge" class="chat-badge">!</div>
+    </button>
 
     <div class="container" id="setupScreen" style="display: none;">
         <button onclick="window.location.href='fortuna_minigame.html'" style="background: transparent; color: var(--blue); border: 1px solid var(--blue); width: auto; padding: 8px 20px; margin-bottom: 20px;">⬅ Назад на Базу</button>
@@ -108,6 +132,12 @@
         <div id="setupForms">
             <p style="font-size: 13px; color: #8b949e; text-align: center; margin-bottom: 20px; line-height: 1.5;">Для выхода на арену территориальных войн необходимо состоять в Клане. Вы можете создать свой собственный Клан (соло или с напарником) или присоединиться к существующему.</p>
             
+            <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
+                <h3 style="color: var(--blue);">Найти Синдикат</h3>
+                <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Поиск кланов с открытым набором (1/2).</p>
+                <button class="btn-blue" onclick="openAllClans()">📡 ОТКРЫТЬ РАДАР КЛАНОВ</button>
+            </div>
+
             <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
                 <h3 style="color: var(--gold);">Создать Клан</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Стоимость регистрации: 1000 Обычных деталей.</p>
@@ -188,6 +218,11 @@
                 </div>
             </div>
 
+            <div id="cmRequestsContainer" style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; text-align: left; display: none;">
+                <div style="font-size: 11px; color: var(--gold); margin-bottom: 10px;">Заявки на вступление:</div>
+                <div id="cmRequestsList"></div>
+            </div>
+
             <div id="cmLeaderActions" style="display: none;">
                 <button class="btn-red" onclick="disbandClan()">РАСПУСТИТЬ КЛАН</button>
                 <div style="font-size: 10px; color: #8b949e; margin-top: 5px;">Все территории будут потеряны (станут ботами). Вы получите штраф 24 часа.</div>
@@ -205,13 +240,39 @@
     <div class="modal-overlay" id="allClansModal">
         <div class="modal-box" style="max-width: 600px;">
             <h2 style="color: var(--gold); margin-bottom: 5px;">Радар Сервера</h2>
-            <p style="font-size: 11px; color: #8b949e; margin-bottom: 20px;">Список всех Синдикатов на данном фронте.</p>
+            <p style="font-size: 11px; color: #8b949e; margin-bottom: 20px;">Список активных Синдикатов. Здесь вы можете подать заявку на вступление.</p>
             
             <div id="allClansList" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
                 <div class="spinner"></div>
             </div>
 
             <button style="background: transparent; border: 1px solid #555; color: #8b949e; margin-top: 20px;" onclick="closeAllClans()">ЗАКРЫТЬ РАДАР</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="chatModal">
+        <div class="modal-box" style="display:flex; flex-direction:column; height: 85vh; max-width: 600px; padding: 15px;">
+            <div class="auth-tabs" style="margin-bottom: 10px;">
+                <div class="auth-tab active" onclick="switchChat('global')" id="tabChatGlobal">Глобальный</div>
+                <div class="auth-tab" onclick="switchChat('clan')" id="tabChatClan">Клан</div>
+                <div class="auth-tab" onclick="switchChat('private')" id="tabChatPrivate">Личные</div>
+            </div>
+            
+            <div id="privateChatTarget" style="display:none; margin-bottom: 10px;">
+                <select id="pmTargetInput" style="margin-bottom:0; padding: 8px;">
+                    <option value="">Загрузка игроков...</option>
+                </select>
+            </div>
+            
+            <div id="chatMessages" style="flex-grow: 1; background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 8px; overflow-y: auto; padding: 10px; text-align: left; font-size: 13px; margin-bottom: 10px; display:flex; flex-direction: column; gap: 5px;">
+                </div>
+            
+            <div style="display:flex; gap: 5px;">
+                <input type="text" id="chatInput" placeholder="Сообщение..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') sendMessage()">
+                <button class="btn-gold" style="width: auto; padding: 0 20px;" onclick="sendMessage()">➤</button>
+            </div>
+            
+            <button style="background: transparent; border: 1px solid #555; color: #8b949e; margin-top: 10px; margin-bottom: 0;" onclick="closeChat()">ЗАКРЫТЬ ЧАТ</button>
         </div>
     </div>
 
@@ -266,8 +327,7 @@
                 В бой можно взять <b>РОВНО 3 ТИПА ВОЙСК</b>.<br>Урон Живучести получат только выбранные отряды.<br>Учитывайте синергию: ПВО бьет Авиацию, Арта бьет Танки и т.д.
             </p>
             
-            <div id="squadGrid" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;">
-                </div>
+            <div id="squadGrid" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px; padding-right: 5px;"></div>
 
             <button class="btn-gold" id="btnConfirmSquad" disabled onclick="executeSquadAction()">ПОДТВЕРДИТЬ ВЫБОР</button>
             <button style="background: #333; margin-top: 10px;" onclick="closeSquadModal()">НАЗАД</button>
@@ -296,6 +356,8 @@
 
         let player = null; let myClan = null; let currentFront = null; let territories = []; let selectedSector = null;
         let pendingAction = null; let selectedSquadKeys = []; let cooldownTimerInt = null;
+        
+        let chatType = 'global'; let chatTimer = null;
 
         function generateCode() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
@@ -325,7 +387,6 @@
             const pid = localStorage.getItem('minigame_player_id');
             if (!pid) { window.location.href = 'fortuna_minigame.html'; return; }
 
-            // Обновляем онлайн при заходе
             await db.from('players').update({last_online: new Date().toISOString()}).eq('id', pid);
             const { data: p } = await db.from('players').select('*').eq('id', pid).single();
             if (!p) { window.location.href = 'fortuna_minigame.html'; return; }
@@ -368,6 +429,143 @@
                 
                 setInterval(loadMap, 30000); setInterval(loadLogs, 30000);
             }
+            
+            // Проверка новых сообщений каждые 10 сек
+            setInterval(checkNewMessages, 10000);
+            checkNewMessages();
+        }
+
+        // === ЧАТ СИСТЕМА ===
+        async function loadPlayersForChat() {
+            const { data } = await db.from('players').select('nickname').order('nickname');
+            if (data) {
+                const sel = document.getElementById('pmTargetInput');
+                const currentVal = sel.value;
+                sel.innerHTML = '<option value="">Выберите игрока...</option>';
+                data.forEach(p => {
+                    if (p.nickname !== player.nickname) {
+                        sel.innerHTML += `<option value="${p.nickname}">${p.nickname}</option>`;
+                    }
+                });
+                if(currentVal) sel.value = currentVal;
+            }
+        }
+
+        async function checkNewMessages() {
+            if (!player) return;
+            const lastSeen = localStorage.getItem('lastSeenChatTime') || '2000-01-01T00:00:00Z';
+            let hasNew = false;
+            
+            const { data: d1 } = await db.from('chat_messages').select('id').eq('type', 'global').gt('created_at', lastSeen).limit(1);
+            if (d1 && d1.length > 0) hasNew = true;
+            
+            if (!hasNew && player.clan_id) {
+                const { data: d2 } = await db.from('chat_messages').select('id').eq('type', 'clan').eq('target_id', player.clan_id).gt('created_at', lastSeen).limit(1);
+                if (d2 && d2.length > 0) hasNew = true;
+            }
+            
+            if (!hasNew) {
+                const { data: d3 } = await db.from('chat_messages').select('id').eq('type', 'private').eq('target_name', player.nickname).gt('created_at', lastSeen).limit(1);
+                if (d3 && d3.length > 0) hasNew = true;
+            }
+            
+            if (hasNew) {
+                document.getElementById('chatBadge').style.display = 'flex';
+            }
+        }
+
+        function openChat() {
+            document.getElementById('chatModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('chatModal').querySelector('.modal-box').classList.add('show'), 10);
+            
+            loadPlayersForChat();
+            loadChatMessages();
+            if(chatTimer) clearInterval(chatTimer);
+            chatTimer = setInterval(loadChatMessages, 3000);
+        }
+
+        function closeChat() {
+            document.getElementById('chatModal').querySelector('.modal-box').classList.remove('show');
+            setTimeout(() => document.getElementById('chatModal').style.display = 'none', 300);
+            if(chatTimer) clearInterval(chatTimer);
+        }
+
+        function switchChat(type) {
+            chatType = type;
+            document.getElementById('tabChatGlobal').classList.toggle('active', type === 'global');
+            document.getElementById('tabChatClan').classList.toggle('active', type === 'clan');
+            document.getElementById('tabChatPrivate').classList.toggle('active', type === 'private');
+            document.getElementById('privateChatTarget').style.display = type === 'private' ? 'block' : 'none';
+            document.getElementById('chatMessages').innerHTML = '<div class="spinner" style="margin:auto;"></div>';
+            loadChatMessages();
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if(!msg) return;
+            if(chatType === 'clan' && !player.clan_id) { alert("Вы не состоите в клане!"); return; }
+
+            let targetName = null; let targetId = null;
+
+            if (chatType === 'private') {
+                targetName = document.getElementById('pmTargetInput').value.trim();
+                if(!targetName) { alert("Выберите получателя!"); return; }
+            } else if (chatType === 'clan') {
+                targetId = player.clan_id;
+            }
+
+            input.value = '';
+            await db.from('chat_messages').insert({
+                type: chatType, sender_id: player.id, sender_name: player.nickname,
+                target_id: targetId, target_name: targetName, message: msg
+            });
+            loadChatMessages();
+        }
+
+        async function loadChatMessages() {
+            let query = db.from('chat_messages').select('*').eq('type', chatType).order('created_at', { ascending: false }).limit(30);
+
+            if (chatType === 'clan') {
+                if(!player.clan_id) { document.getElementById('chatMessages').innerHTML = 'Вы не в клане'; return; }
+                query = query.eq('target_id', player.clan_id);
+            } else if (chatType === 'private') {
+                const targetName = document.getElementById('pmTargetInput').value.trim();
+                query = query.or(`sender_id.eq.${player.id},target_name.eq.${player.nickname}`);
+            }
+
+            const { data } = await query;
+            if(!data) return;
+            let html = '';
+            data.reverse().forEach(m => {
+                const dDate = new Date(m.created_at);
+                const timeStr = dDate.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit'}) + ' ' + dDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                
+                let color = m.sender_id === player.id ? 'var(--gold)' : 'var(--blue)';
+                let prefix = '';
+                if(chatType === 'private') {
+                    if(m.sender_id === player.id) prefix = `[Кому: ${m.target_name}] `;
+                    else prefix = `[От: ${m.sender_name}] `;
+                }
+                html += `<div style="margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                    <span style="color:#555">[${timeStr}]</span> <b style="color:${color}; cursor:pointer;" onclick="replyTo('${m.sender_name}')">${prefix}${m.sender_name}:</b> <span style="color:#c9d1d9">${m.message}</span>
+                </div>`;
+            });
+            document.getElementById('chatMessages').innerHTML = html || '<div style="color:#8b949e; text-align:center;">Сообщений нет</div>';
+            
+            localStorage.setItem('lastSeenChatTime', new Date().toISOString());
+            document.getElementById('chatBadge').style.display = 'none';
+        }
+
+        function replyTo(name) {
+            if(name === player.nickname) return;
+            switchChat('private');
+            const sel = document.getElementById('pmTargetInput');
+            let exists = Array.from(sel.options).some(opt => opt.value === name);
+            if(!exists) {
+                sel.innerHTML += `<option value="${name}">${name}</option>`;
+            }
+            sel.value = name;
         }
 
         // === СИСТЕМА КУЛДАУНОВ ===
@@ -441,21 +639,43 @@
 
             await db.from('clans').update({ member_id: player.id }).eq('id', targetClan.id);
             await db.from('players').update({ clan_id: targetClan.id }).eq('id', player.id);
+            await db.from('clan_requests').delete().eq('player_id', player.id);
             location.reload();
+        }
+
+        // === ЗАЯВКИ В КЛАН ===
+        async function sendClanRequest(clanId) {
+            if (player.clan_id) return;
+            await db.from('clan_requests').insert({ clan_id: clanId, player_id: player.id, player_name: player.nickname });
+            alert("Заявка успешно отправлена лидеру Синдиката!");
+            closeAllClans();
+        }
+
+        async function acceptRequest(reqId, applicantId) {
+            const { data: c } = await db.from('clans').select('member_id').eq('id', myClan.id).single();
+            if(c.member_id) { alert("Ваш клан уже укомплектован (2/2)!"); return; }
+
+            await db.from('clans').update({ member_id: applicantId }).eq('id', myClan.id);
+            await db.from('players').update({ clan_id: myClan.id }).eq('id', applicantId);
+            await db.from('clan_requests').delete().eq('clan_id', myClan.id); 
+            location.reload();
+        }
+
+        async function rejectRequest(reqId) {
+            await db.from('clan_requests').delete().eq('id', reqId);
+            openClanManager(); 
         }
 
         // === УПРАВЛЕНИЕ КЛАНОМ ===
         async function openClanManager() {
             document.getElementById('clanManagerModal').style.display = 'flex';
             
-            // Грузим Лидера
             const { data: lData } = await db.from('players').select('nickname, power, last_online').eq('id', myClan.leader_id).single();
             if(lData) {
                 document.getElementById('cmLeaderName').innerText = `${lData.nickname} (Онлайн: ${formatTimeDate(lData.last_online)})`;
                 document.getElementById('cmLeaderPower').innerText = `⚡${lData.power || 0}`;
             }
 
-            // Грузим Напарника
             if (myClan.member_id) {
                 const { data: mData } = await db.from('players').select('nickname, power, last_online').eq('id', myClan.member_id).single();
                 if(mData) {
@@ -470,9 +690,33 @@
             if (player.id === myClan.leader_id) {
                 document.getElementById('cmLeaderActions').style.display = 'block';
                 document.getElementById('cmMemberActions').style.display = 'none';
+
+                if (!myClan.member_id) {
+                    document.getElementById('cmRequestsContainer').style.display = 'block';
+                    const {data: reqs} = await db.from('clan_requests').select('*').eq('clan_id', myClan.id);
+                    let rHtml = '';
+                    if(reqs && reqs.length > 0) {
+                        reqs.forEach(r => {
+                            rHtml += `<div style="display:flex; justify-content:space-between; align-items:center; background:#000; padding:8px; border-radius:4px; margin-bottom:5px;">
+                                <span>${r.player_name}</span>
+                                <div>
+                                    <button class="btn-green" style="padding:4px 8px; font-size:10px; width:auto; margin:0;" onclick="acceptRequest('${r.id}', '${r.player_id}')">Принять</button>
+                                    <button class="btn-red" style="padding:4px 8px; font-size:10px; width:auto; margin:0;" onclick="rejectRequest('${r.id}')">X</button>
+                                </div>
+                            </div>`;
+                        });
+                    } else {
+                        rHtml = '<div style="color:#8b949e; font-size:11px;">Нет входящих заявок</div>';
+                    }
+                    document.getElementById('cmRequestsList').innerHTML = rHtml;
+                } else {
+                    document.getElementById('cmRequestsContainer').style.display = 'none';
+                }
+
             } else {
                 document.getElementById('cmLeaderActions').style.display = 'none';
                 document.getElementById('cmMemberActions').style.display = 'block';
+                document.getElementById('cmRequestsContainer').style.display = 'none';
             }
         }
         function closeClanManager() { document.getElementById('clanManagerModal').style.display = 'none'; }
@@ -491,20 +735,16 @@
             closeClanManager();
             const cooldown = new Date(Date.now() + 24 * 3600000).toISOString();
             
-            // Сбрасываем территории
             await db.from('territories').update({
                 is_bot: true, owner_clan_id: null, defender_id: null, defender_squad: null, bot_power: 15000, 
                 assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null, owner_since: new Date().toISOString()
             }).eq('owner_clan_id', myClan.id);
 
-            // Отменяем коопы где клан просто атаковал
             await db.from('territories').update({ assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null }).eq('assault_clan_id', myClan.id);
 
-            // Освобождаем игроков
             await db.from('players').update({ clan_id: null, clan_cooldown: cooldown }).eq('id', myClan.leader_id);
             if (myClan.member_id) await db.from('players').update({ clan_id: null, clan_cooldown: cooldown }).eq('id', myClan.member_id);
 
-            // Удаляем клан
             await db.from('clans').delete().eq('id', myClan.id);
             location.reload();
         }
@@ -515,11 +755,13 @@
             const container = document.getElementById('allClansList');
             container.innerHTML = '<div class="spinner"></div>';
 
-            // Грузим все кланы на текущем фронте
-            const { data: clans } = await db.from('clans').select('*').eq('front_id', currentFront.id).order('influence', { ascending: false });
+            let query = db.from('clans').select('*').order('influence', { ascending: false });
+            if (currentFront) query = query.eq('front_id', currentFront.id);
+            else query = query.limit(30); 
+
+            const { data: clans } = await query;
             if(!clans || clans.length === 0) { container.innerHTML = 'Пусто'; return; }
 
-            // Грузим игроков
             const clanIds = clans.map(c => c.id);
             const { data: playersInClans } = await db.from('players').select('id, nickname, power, last_online, clan_id').in('clan_id', clanIds);
 
@@ -528,9 +770,14 @@
                 const ldr = playersInClans.find(p => p.id === c.leader_id);
                 const mbr = playersInClans.find(p => p.id === c.member_id);
                 
-                let ldrHtml = ldr ? `<div class="cli-player"><span>👑 ${ldr.nickname} <span class="cli-online">(${formatTimeDate(ldr.last_online)})</span></span> <span class="cli-power">⚡${ldr.power||0}</span></div>` : '';
-                let mbrHtml = mbr ? `<div class="cli-player"><span>👤 ${mbr.nickname} <span class="cli-online">(${formatTimeDate(mbr.last_online)})</span></span> <span class="cli-power">⚡${mbr.power||0}</span></div>` : '<div class="cli-player" style="color:#555;">Пустой слот</div>';
+                let ldrHtml = ldr ? `<div class="cli-player"><span style="cursor:pointer" onclick="replyTo('${ldr.nickname}')">👑 ${ldr.nickname} <span class="cli-online">(${formatTimeDate(ldr.last_online)})</span></span> <span class="cli-power">⚡${ldr.power||0}</span></div>` : '';
+                let mbrHtml = mbr ? `<div class="cli-player"><span style="cursor:pointer" onclick="replyTo('${mbr.nickname}')">👤 ${mbr.nickname} <span class="cli-online">(${formatTimeDate(mbr.last_online)})</span></span> <span class="cli-power">⚡${mbr.power||0}</span></div>` : '<div class="cli-player" style="color:#555;">Пустой слот (1/2)</div>';
                 let totalPwr = (ldr ? (ldr.power||0) : 0) + (mbr ? (mbr.power||0) : 0);
+
+                let joinBtn = '';
+                if (!player.clan_id && !mbr) {
+                    joinBtn = `<button class="btn-green" style="padding:5px; font-size:10px; margin-top:5px;" onclick="sendClanRequest('${c.id}')">Подать заявку на вступление</button>`;
+                }
 
                 html += `
                 <div class="clan-list-item">
@@ -541,6 +788,7 @@
                     <div style="margin-bottom: 8px; font-size: 11px; color: #8b949e;">Общая Мощь Синдиката: ⚡${totalPwr}</div>
                     ${ldrHtml}
                     ${mbrHtml}
+                    ${joinBtn}
                 </div>`;
             });
             container.innerHTML = html;
