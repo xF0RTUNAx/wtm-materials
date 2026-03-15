@@ -414,35 +414,35 @@
                         <button class="btn-case c-1" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(1, 10)">⭐ (x10) - 500</button>
                         <button class="btn-case c-1" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(1, 100)">⭐ (x100) - 5к</button>
                     </div>
-                    <div class="drop-chances" style="margin-bottom:10px;">50% 10 Об | 25% 10 Ред | 15% 3 Эп | 5% Ремк | 3% Фрагмент 1 | 2% Бустер</div>
+                    <div class="drop-chances" style="margin-bottom:10px;">50% 10 Об | 25% 10 Ред | 15% 3 Эп | 6% Ремк | 3% Фрагмент 1 | 1% Бустер</div>
                     
                     <div class="gacha-row">
                         <button class="btn-case c-2" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(2, 1)">⭐⭐ (x1) - 100</button>
                         <button class="btn-case c-2" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(2, 10)">⭐⭐ (x10) - 1к</button>
                         <button class="btn-case c-2" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(2, 100)">⭐⭐ (x100) - 10к</button>
                     </div>
-                    <div class="drop-chances" style="margin-bottom:10px;">50% 25 Об | 25% 20 Ред | 15% 6 Эп | 5% Ремк | 3% Фрагмент 2 | 2% Бустер</div>
+                    <div class="drop-chances" style="margin-bottom:10px;">50% 25 Об | 25% 20 Ред | 15% 6 Эп | 6% Ремк | 3% Фрагмент 2 | 1% Бустер</div>
                     
                     <div class="gacha-row">
                         <button class="btn-case c-3" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(3, 1)">⭐⭐⭐ (x1) - 200</button>
                         <button class="btn-case c-3" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(3, 10)">⭐⭐⭐ (x10) - 2к</button>
                         <button class="btn-case c-3" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(3, 100)">⭐⭐⭐ (x100) - 20к</button>
                     </div>
-                    <div class="drop-chances" style="margin-bottom:10px;">50% 50 Об | 25% 40 Ред | 15% 12 Эп | 5% Ремк | 3% Фрагмент 3 | 2% Бустер</div>
+                    <div class="drop-chances" style="margin-bottom:10px;">50% 50 Об | 25% 40 Ред | 15% 12 Эп | 6% Ремк | 3% Фрагмент 3 | 1% Бустер</div>
                     
                     <div class="gacha-row">
                         <button class="btn-case c-4" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(4, 1)">⭐⭐⭐⭐ (x1) - 400</button>
                         <button class="btn-case c-4" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(4, 10)">⭐⭐⭐⭐ (x10) - 4к</button>
                         <button class="btn-case c-4" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openGacha(4, 100)">⭐⭐⭐⭐ (x100) - 40к</button>
                     </div>
-                    <div class="drop-chances">50% 100 Об | 25% 80 Ред | 15% 24 Эп | 5% Ремк | 3% Фрагмент 4 | 2% Бустер</div>
+                    <div class="drop-chances">50% 100 Об | 25% 80 Ред | 15% 24 Эп | 6% Ремк | 3% Фрагмент 4 | 1% Бустер</div>
                 </div>
 
                 <div>
                     <div style="font-weight: bold; color: var(--common); margin-bottom: 10px;">Классические Контейнеры:</div>
                     <span style="font-family: monospace; font-size: 14px; display: block; margin-bottom: 5px;" id="dailyCaseTimer">Вычисление...</span>
                     <button id="btnDailyCase" class="btn-case" style="background: var(--epic);" onclick="openDailyCase()">Ежедневный контейнер (Бесплатно)</button>
-                    <div class="drop-chances" style="margin-bottom:15px;">Шансы: 100-150 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 1% Ремкомплект.</div>
+                    <div class="drop-chances" style="margin-bottom:15px;">Шансы: 100-150 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 1% Ремкомплект, 5% на Фрагмент.</div>
                     
                     <div class="gacha-row">
                         <button class="btn-paid" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openPaidCase(1)">Особый (x1) - 25 Об.</button>
@@ -485,10 +485,10 @@
                 <h3 style="color: var(--booster);">⚡ Бустеры</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Добываются в Контейнерах.</p>
                 <button class="btn-boost" onclick="useBooster('skip')">⏩ Пропуск партии (<span id="countSkip">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 (3ч) (<span id="countSpeed">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('speed')">⚡ Скорость x4 (2ч) (<span id="countSpeed">0</span>)</button>
                 <button class="btn-boost" onclick="useBooster('auto')">📦 Арендованные склады (6ч) (<span id="countAuto">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('contractor')">👷 Подрядчики (3ч) (<span id="countContractor">0</span>)</button>
-                <button class="btn-boost" onclick="useBooster('doubler')">🔄 Дублер (3ч) (<span id="countDoubler">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('contractor')">👷 Подрядчики (2ч) (<span id="countContractor">0</span>)</button>
+                <button class="btn-boost" onclick="useBooster('doubler')">🔄 Дублер (1ч) (<span id="countDoubler">0</span>)</button>
                 <div id="boosterMsg" class="msg" style="color: #ff4444;"></div>
             </div>
 
@@ -805,9 +805,14 @@
         }
 
         function getTroopUpgCost(key, lvl) {
-            const mults = { inf: 1, bmp: 2, tank: 4, arty: 8, aa: 15, msl: 30, avia: 60 };
+            const mults = { inf: 1, bmp: 3, tank: 12, arty: 50, aa: 200, msl: 1000, avia: 5000 };
             const m = mults[key] || 1;
-            return { c: (lvl+1)*100*m, r: Math.floor(lvl/5)*10*m, e: Math.floor(lvl/10)*2*m };
+            const lvlFactor = 1 + Math.pow(lvl, 1.5) * 0.1;
+            return { 
+                c: Math.floor((lvl+1) * 100 * m * lvlFactor), 
+                r: Math.floor((lvl/3) * 10 * m * lvlFactor), 
+                e: Math.floor((lvl/5) * 2 * m * lvlFactor) 
+            };
         }
 
         function buildTroopUI() {
@@ -1144,8 +1149,8 @@
                 if (r < 0.50) { getC += baseC; }
                 else if (r < 0.75) { getR += baseR; }
                 else if (r < 0.90) { getE += baseE; }
-                else if (r < 0.95) { getK += 1; }
-                else if (r < 0.98) { 
+                else if (r < 0.96) { getK += 1; }
+                else if (r < 0.99) { 
                     const randomUnit = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
                     fragCounts[randomUnit] = (fragCounts[randomUnit] || 0) + 1;
                 }
@@ -1188,14 +1193,44 @@
         async function openDailyCase() {
             const gotCommon = Math.floor(Math.random() * 51) + 100; const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; const gotEpic = Math.random() < 0.05 ? 1 : 0; 
             const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.01 ? 1 : 0;
+            const gotFrag = Math.random() < 0.05 ? 1 : 0;
+            
+            let fragTier = 0; let fragUnit = '';
+            
+            const updates = { 
+                common_parts: player.common_parts + gotCommon, rare_parts: player.rare_parts + gotRare, epic_parts: player.epic_parts + gotEpic, 
+                booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, 
+                repair_kits: (player.repair_kits||0) + gotKit, daily_case_last_opened: new Date().toISOString() 
+            };
 
-            const updates = { common_parts: player.common_parts + gotCommon, rare_parts: player.rare_parts + gotRare, epic_parts: player.epic_parts + gotEpic, booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, repair_kits: (player.repair_kits||0) + gotKit, daily_case_last_opened: new Date().toISOString() };
+            if (gotFrag) {
+                fragTier = Math.floor(Math.random() * 4) + 1;
+                const unlockedKeys = getUnlockedTroopKeys();
+                fragUnit = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                const fragCol = `frag${fragTier}_${fragUnit}`;
+                updates[fragCol] = (player[fragCol] || 0) + 1;
+            }
+
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) {
-                player = data; refreshAll(); let title = gotEpic ? "ЭПИЧЕСКИЙ ДРОП!" : (gotRare ? "ЦЕННЫЕ ДАННЫЕ!" : "Контейнер открыт!"); let color = gotEpic ? "epic" : (gotRare ? "rare" : "common");
-                let html = `<div class="common">+${gotCommon} Обычных</div>`; if(gotRare) html += `<div class="rare">+${gotRare} Редких</div>`; if(gotEpic) html += `<div class="epic">+${gotEpic} ЭПИЧЕСКИХ!</div>`;
-                if(gotSk) html += `<div class="boost">⚡ +1 Пропуск партии</div>`; if(gotSp) html += `<div class="boost">⚡ +1 Ускорение</div>`; if(gotAu) html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`;
+                player = data; refreshAll(); 
+                let title = gotEpic ? "ЭПИЧЕСКИЙ ДРОП!" : (gotRare ? "ЦЕННЫЕ ДАННЫЕ!" : "Контейнер открыт!"); 
+                let color = gotEpic ? "epic" : (gotRare ? "rare" : "common");
+                
+                let html = `<div class="common">+${gotCommon} Обычных</div>`; 
+                if(gotRare) html += `<div class="rare">+${gotRare} Редких</div>`; 
+                if(gotEpic) html += `<div class="epic">+${gotEpic} ЭПИЧЕСКИХ!</div>`;
+                if(gotSk) html += `<div class="boost">⚡ +1 Пропуск партии</div>`; 
+                if(gotSp) html += `<div class="boost">⚡ +1 Ускорение</div>`; 
+                if(gotAu) html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`;
                 if(gotKit) html += `<div class="kits" style="margin-top:10px;">🔧 +1 Ремкомплект</div>`;
+                
+                if (gotFrag) {
+                    html += `<div style="color:var(--star-${fragTier}); font-weight:bold; margin-top:10px;">🧩 +1 Фрагмент ${fragTier}⭐ (${TROOP_CFG[fragUnit].title})</div>`;
+                    color = `star-${fragTier}`;
+                    title = "НАЙДЕН ФРАГМЕНТ СЛИЯНИЯ!";
+                }
+
                 showRewardAnimation(title, html, color);
             }
         }
@@ -1657,7 +1692,6 @@
 
         async function useBooster(type) {
             const updates = {}; const now = new Date().getTime();
-            const boostTime = 3 * 3600000; 
             
             if (type === 'skip') {
                 if ((player.booster_skip || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
@@ -1668,10 +1702,10 @@
             } 
             else if (type === 'speed') {
                 if ((player.booster_speed || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
-                const oldEnd = new Date(player.speed_boost_end || 0).getTime(); updates.booster_speed = player.booster_speed - 1; updates.speed_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                const oldEnd = new Date(player.speed_boost_end || 0).getTime(); updates.booster_speed = player.booster_speed - 1; updates.speed_boost_end = new Date(Math.max(now, oldEnd) + (2 * 3600000)).toISOString();
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 3ч!`, 'var(--booster)'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Ускорение x4 активно на 2ч!`, 'var(--booster)'); refreshAll(); }
             }
             else if (type === 'auto') {
                 if ((player.booster_auto || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
@@ -1682,17 +1716,17 @@
             }
             else if (type === 'contractor') {
                 if ((player.booster_contractor || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
-                const oldEnd = new Date(player.contractor_boost_end || 0).getTime(); updates.booster_contractor = player.booster_contractor - 1; updates.contractor_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                const oldEnd = new Date(player.contractor_boost_end || 0).getTime(); updates.booster_contractor = player.booster_contractor - 1; updates.contractor_boost_end = new Date(Math.max(now, oldEnd) + (2 * 3600000)).toISOString();
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Подрядчики активны на 3ч!`, '#03a9f4'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Подрядчики активны на 2ч!`, '#03a9f4'); refreshAll(); }
             }
             else if (type === 'doubler') {
                 if ((player.booster_doubler || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
-                const oldEnd = new Date(player.doubler_boost_end || 0).getTime(); updates.booster_doubler = player.booster_doubler - 1; updates.doubler_boost_end = new Date(Math.max(now, oldEnd) + boostTime).toISOString();
+                const oldEnd = new Date(player.doubler_boost_end || 0).getTime(); updates.booster_doubler = player.booster_doubler - 1; updates.doubler_boost_end = new Date(Math.max(now, oldEnd) + (1 * 3600000)).toISOString();
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-                if (data) { player = data; showMsg('boosterMsg', `Дублер активен на 3ч!`, '#e91e63'); refreshAll(); }
+                if (data) { player = data; showMsg('boosterMsg', `Дублер активен на 1ч!`, '#e91e63'); refreshAll(); }
             }
         }
 
