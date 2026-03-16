@@ -8,7 +8,7 @@
         * { box-sizing: border-box; }
         :root {
             --bg: #050b14; --panel: rgba(10, 15, 25, 0.9); --border: #1f2937;
-            --gold: #ffc107; --red: #ff1744; --green: #00e676; --blue: #03a9f4;
+            --gold: #ffc107; --red: #ff1744; --green: #00e676; --blue: #03a9f4; --epic: #bc8cff;
             --t1: #a0a0a0; --t2: #58a6ff; --t3: #bc8cff;
         }
         body {
@@ -35,28 +35,27 @@
         .stat-box { background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 6px; border: 1px solid #333; text-align: center; min-width: 80px; }
         .stat-box span { font-weight: bold; color: var(--gold); display: block; margin-top: 5px; font-size: 16px;}
 
-        /* ТАКТИЧЕСКАЯ КАРТА */
-        .map-container { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 20px; perspective: 800px; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid #222;}
+        /* ТАКТИЧЕСКАЯ КАРТА (Теперь 7х7) */
+        .map-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 20px; perspective: 800px; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid #222;}
         .sector { 
-            background: rgba(20, 25, 35, 0.9); border: 2px solid #333; border-radius: 8px; aspect-ratio: 1/1; 
+            background: rgba(20, 25, 35, 0.9); border: 2px solid #333; border-radius: 6px; aspect-ratio: 1/1; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
             transition: 0.3s; position: relative; overflow: hidden;
         }
-        .sector:hover { border-color: var(--blue); box-shadow: 0 0 15px rgba(3, 169, 244, 0.4); transform: translateZ(10px); z-index: 2;}
-        .sector.locked { filter: grayscale(100%); opacity: 0.6; cursor: not-allowed; }
-        .sector.locked:hover { border-color: #333; box-shadow: none; transform: none; }
+        .sector:hover { border-color: var(--blue) !important; box-shadow: 0 0 15px rgba(3, 169, 244, 0.6) !important; transform: translateZ(10px); z-index: 2;}
+        .sector.locked { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; }
+        .sector.locked:hover { border-color: #333 !important; box-shadow: none !important; transform: none; }
         
         .sector.bot { border-color: #444; background: rgba(30, 30, 30, 0.6); }
-        .sector.ally { border-color: var(--green); background: rgba(0, 230, 118, 0.15); box-shadow: inset 0 0 20px rgba(0, 230, 118, 0.2); }
-        .sector.enemy { border-color: var(--red); background: rgba(255, 23, 68, 0.15); box-shadow: inset 0 0 20px rgba(255, 23, 68, 0.2); }
+        /* Союзные и вражеские цвета теперь задаются через inline-стили JS */
         
-        .s-tier { position: absolute; top: 4px; left: 6px; font-size: 10px; font-weight: bold; font-family: monospace; padding: 2px 4px; border-radius: 4px; background: rgba(0,0,0,0.7); border: 1px solid transparent; }
+        .s-tier { position: absolute; top: 2px; left: 4px; font-size: 9px; font-weight: bold; font-family: monospace; padding: 1px 3px; border-radius: 3px; background: rgba(0,0,0,0.7); border: 1px solid transparent; }
         .tier-1 { color: var(--t1); border-color: var(--t1); } .tier-2 { color: var(--t2); border-color: var(--t2); } .tier-3 { color: var(--t3); border-color: var(--t3); box-shadow: 0 0 5px var(--t3); }
-        .s-owner { font-size: 12px; font-weight: bold; margin-bottom: 5px; text-align: center; word-break: break-word; padding: 0 2px; text-transform: uppercase; letter-spacing: 1px;}
-        .s-power { font-size: 11px; color: var(--gold); font-family: monospace; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;}
+        .s-owner { font-size: 10px; font-weight: bold; margin-bottom: 3px; text-align: center; word-break: break-word; padding: 0 2px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .s-power { font-size: 9px; color: var(--gold); font-family: monospace; background: rgba(0,0,0,0.6); padding: 1px 4px; border-radius: 3px;}
         
-        .s-lock-icon { position: absolute; font-size: 24px; opacity: 0.5; }
-        .s-coop-icon { position: absolute; top: 5px; right: 5px; font-size: 18px; color: var(--gold); animation: pulseAlert 1.5s infinite; }
+        .s-lock-icon { position: absolute; font-size: 18px; opacity: 0.5; }
+        .s-coop-icon { position: absolute; top: 2px; right: 2px; font-size: 14px; color: var(--gold); animation: pulseAlert 1.5s infinite; }
 
         /* МОДАЛКИ */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
@@ -103,11 +102,14 @@
             justify-content: center; align-items: center; line-height: 1;
         }
 
+        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;}
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
         @media (max-width: 600px) {
-            .map-container { gap: 4px; padding: 5px;}
-            .s-tier { font-size: 8px; top: 2px; left: 2px; padding: 1px 2px;}
-            .s-owner { font-size: 9px; }
-            .s-power { font-size: 9px; padding: 1px 3px;}
+            .map-container { gap: 2px; padding: 5px;}
+            .s-tier { font-size: 7px; top: 1px; left: 1px; padding: 1px 2px;}
+            .s-owner { font-size: 7px; }
+            .s-power { font-size: 7px; padding: 1px 2px;}
             .modal-box { padding: 15px; }
         }
     </style>
@@ -143,6 +145,18 @@
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Стоимость регистрации: 1000 Обычных деталей.</p>
                 <input type="text" id="clanNameInput" placeholder="Название Клана (напр: ЧВК Ворон)..." maxlength="20">
                 <input type="text" id="clanTagInput" placeholder="Тэг (3-4 буквы, напр: VRN)..." maxlength="4">
+                <select id="clanColorInput" style="padding: 12px; width: 100%; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(1,4,9,0.8); color: white;">
+                    <option value="#ff1744" style="color:#ff1744; font-weight:bold;">Красный</option>
+                    <option value="#00e676" style="color:#00e676; font-weight:bold;">Зеленый</option>
+                    <option value="#03a9f4" style="color:#03a9f4; font-weight:bold;">Синий</option>
+                    <option value="#ffc107" style="color:#ffc107; font-weight:bold;">Желтый</option>
+                    <option value="#bc8cff" style="color:#bc8cff; font-weight:bold;">Фиолетовый</option>
+                    <option value="#ff9800" style="color:#ff9800; font-weight:bold;">Оранжевый</option>
+                    <option value="#00bcd4" style="color:#00bcd4; font-weight:bold;">Голубой</option>
+                    <option value="#e91e63" style="color:#e91e63; font-weight:bold;">Розовый</option>
+                    <option value="#009688" style="color:#009688; font-weight:bold;">Бирюзовый</option>
+                    <option value="#ffffff" style="color:#ffffff; font-weight:bold;">Белый</option>
+                </select>
                 <button class="btn-gold" onclick="createClan()">Основать Клан (1000 Об.)</button>
             </div>
 
@@ -338,7 +352,15 @@
         <div class="modal-box" style="border-width: 2px;">
             <h2 id="resTitle" style="text-transform: uppercase; font-size: 28px; margin-bottom: 10px;"></h2>
             <div id="resText" style="font-size: 14px; line-height: 1.6; margin-bottom: 20px; color: #c9d1d9;"></div>
-            <button class="btn-gold" onclick="closeResultModal()" style="font-size: 16px; padding: 15px;">ВЕРНУТЬСЯ В ШТАБ (ЛЕЧИТЬ ВОЙСКА)</button>
+            <button class="btn-gold" onclick="closeResultModal()" style="font-size: 16px; padding: 15px;">ВЕРНУТЬСЯ В ШТАБ</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="clanContainerModal">
+        <div class="modal-box" style="border-width: 2px; border-color: var(--epic); box-shadow: 0 0 50px rgba(188,140,255,0.3);">
+            <h2 id="ccTitle" style="text-transform: uppercase; font-size: 28px; margin-bottom: 10px; color: var(--epic); text-shadow: 0 0 10px var(--epic);">ЭЛИТНЫЙ КОНТЕЙНЕР!</h2>
+            <div id="ccText" style="font-size: 14px; line-height: 1.6; margin-bottom: 20px; color: #c9d1d9;"></div>
+            <button class="btn-gold" onclick="closeClanContainerModal()" style="font-size: 16px; padding: 15px; background: var(--epic); color: #000;">ЗАБРАТЬ НАГРАДУ</button>
         </div>
     </div>
 
@@ -352,7 +374,8 @@
             inf: { title: 'Пехота' }, bmp: { title: 'БМП' }, tank: { title: 'Танки' }, 
             arty: { title: 'Артиллерия' }, aa: { title: 'ПВО' }, msl: { title: 'Ракеты' }, avia: { title: 'Авиация' } 
         };
-        const T1_SECTORS = [0,1,2,3,4,5,9,10,14,15,19,20,21,22,23,24];
+        // Обновленные края для карты 7х7 (49 секторов)
+        const T1_SECTORS = [0,1,2,3,4,5,6, 7,13, 14,20, 21,27, 28,34, 35,41, 42,43,44,45,46,47,48];
 
         let player = null; let myClan = null; let currentFront = null; let territories = []; let selectedSector = null;
         let pendingAction = null; let selectedSquadKeys = []; let cooldownTimerInt = null;
@@ -361,12 +384,13 @@
 
         function generateCode() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
+        // Соседи для сетки 7х7
         function getAdjacent(index) {
             let adj = [];
-            if (index % 5 !== 0) adj.push(index - 1); 
-            if ((index + 1) % 5 !== 0) adj.push(index + 1); 
-            if (index >= 5) adj.push(index - 5); 
-            if (index < 20) adj.push(index + 5); 
+            if (index % 7 !== 0) adj.push(index - 1); 
+            if ((index + 1) % 7 !== 0) adj.push(index + 1); 
+            if (index >= 7) adj.push(index - 7); 
+            if (index < 42) adj.push(index + 7); 
             return adj;
         }
 
@@ -430,9 +454,90 @@
                 setInterval(loadMap, 30000); setInterval(loadLogs, 30000);
             }
             
-            // Проверка новых сообщений каждые 10 сек
             setInterval(checkNewMessages, 10000);
             checkNewMessages();
+        }
+
+        async function getUnlockedTroopKeys() {
+            let unlocked = [];
+            const labLvl = player.lvl_lab || 1;
+            if (labLvl >= 1) unlocked.push('inf');
+            if (labLvl >= 2) unlocked.push('bmp');
+            if (labLvl >= 3) unlocked.push('tank');
+            if (labLvl >= 4) unlocked.push('arty');
+            if (labLvl >= 5) unlocked.push('aa');
+            if (labLvl >= 6) unlocked.push('msl');
+            if (labLvl >= 7) unlocked.push('avia');
+            return unlocked;
+        }
+
+        async function checkClanMilestones() {
+            if (!player || !myClan) return;
+            const earnedMilestones = Math.floor((myClan.influence || 0) / 5000);
+            const claimed = player.clan_milestones_claimed || 0;
+            
+            if (earnedMilestones > claimed) {
+                const boxesToOpen = earnedMilestones - claimed;
+                let c=0, r=0, e=0, f1Total=0, boostTotal=0;
+                let fragUpdates = {};
+                let bUpdates = {
+                    booster_skip: player.booster_skip||0,
+                    booster_speed: player.booster_speed||0,
+                    booster_auto: player.booster_auto||0,
+                    booster_contractor: player.booster_contractor||0,
+                    booster_doubler: player.booster_doubler||0
+                };
+
+                const unlockedKeys = await getUnlockedTroopKeys();
+
+                for (let i=0; i<boxesToOpen; i++) {
+                    let rnd = Math.random();
+                    if (rnd < 0.33) {
+                        c += 50000;
+                    } else if (rnd < 0.66) {
+                        const ru = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                        fragUpdates[`frag1_${ru}`] = (fragUpdates[`frag1_${ru}`] || player[`frag1_${ru}`] || 0) + 1;
+                        fragUpdates[`frag2_${ru}`] = (fragUpdates[`frag2_${ru}`] || player[`frag2_${ru}`] || 0) + 1;
+                        fragUpdates[`frag3_${ru}`] = (fragUpdates[`frag3_${ru}`] || player[`frag3_${ru}`] || 0) + 1;
+                        fragUpdates[`frag4_${ru}`] = (fragUpdates[`frag4_${ru}`] || player[`frag4_${ru}`] || 0) + 1;
+                        f1Total++;
+                    } else {
+                        for(let b=0; b<15; b++) {
+                            let bRnd = Math.random();
+                            if(bRnd < 0.2) bUpdates.booster_skip++;
+                            else if(bRnd < 0.4) bUpdates.booster_speed++;
+                            else if(bRnd < 0.6) bUpdates.booster_auto++;
+                            else if(bRnd < 0.8) bUpdates.booster_contractor++;
+                            else bUpdates.booster_doubler++;
+                        }
+                        boostTotal += 15;
+                    }
+                }
+                
+                let updates = { 
+                    clan_milestones_claimed: earnedMilestones,
+                    common_parts: player.common_parts + c,
+                    ...fragUpdates,
+                    ...bUpdates
+                };
+                
+                await db.from('players').update(updates).eq('id', player.id);
+                Object.assign(player, updates);
+                
+                let html = `<div style="font-size: 14px; margin-bottom: 15px;">Синдикат достиг ${earnedMilestones * 5000} Влияния! Выдан Элитный Контейнер (x${boxesToOpen}):</div>`;
+                if(c>0) html += `<div class="common" style="margin-bottom:5px;">+${c} Обычных деталей</div>`;
+                if(f1Total>0) html += `<div class="epic" style="margin-bottom:5px;">+${f1Total} Набор(а) Фрагментов (1-4⭐)</div>`;
+                if(boostTotal>0) html += `<div class="boost" style="margin-bottom:5px;">+${boostTotal} Случайных Бустеров</div>`;
+                
+                document.getElementById('ccText').innerHTML = html;
+                document.getElementById('clanContainerModal').style.display = 'flex';
+                setTimeout(() => document.getElementById('clanContainerModal').querySelector('.modal-box').classList.add('show'), 10);
+            }
+        }
+
+        function closeClanContainerModal() {
+            document.getElementById('clanContainerModal').querySelector('.modal-box').classList.remove('show');
+            setTimeout(() => document.getElementById('clanContainerModal').style.display = 'none', 300);
         }
 
         // === ЧАТ СИСТЕМА ===
@@ -596,6 +701,8 @@
         async function createClan() {
             const name = document.getElementById('clanNameInput').value.trim();
             const tag = document.getElementById('clanTagInput').value.trim().toUpperCase();
+            const clanColor = document.getElementById('clanColorInput').value;
+            
             if (name.length < 3 || tag.length < 2) { showMsg('setupMsg', 'Имя от 3 букв, Тэг от 2 букв!', 'var(--red)'); return; }
             if (player.common_parts < 1000) { showMsg('setupMsg', 'Недостаточно деталей (Нужно 1000 Об.)!', 'var(--red)'); return; }
 
@@ -614,17 +721,17 @@
                 frontId = newF.id;
                 
                 let terrs = [];
-                for(let i=0; i<25; i++) {
+                for(let i=0; i<49; i++) {
                     let tier = 1; let pwr = Math.floor(Math.random()*600)+200; 
-                    if(i===12) { tier = 3; pwr = 30000; } 
-                    else if([6,7,8,11,13,16,17,18].includes(i)) { tier = 2; pwr = 5000; } 
+                    if(i===24) { tier = 3; pwr = 30000; } 
+                    else if([16,17,18,23,25,30,31,32].includes(i)) { tier = 2; pwr = 5000; } 
                     terrs.push({ front_id: frontId, sector_index: i, tier: tier, is_bot: true, bot_power: pwr, owner_since: new Date().toISOString() });
                 }
                 await db.from('territories').insert(terrs);
             }
 
             const inviteCode = generateCode();
-            const { data: newClan } = await db.from('clans').insert({ name: name, tag: tag, leader_id: player.id, front_id: frontId, invite_code: inviteCode }).select().single();
+            const { data: newClan } = await db.from('clans').insert({ name: name, tag: tag, color: clanColor, leader_id: player.id, front_id: frontId, invite_code: inviteCode }).select().single();
             await db.from('players').update({ common_parts: player.common_parts - 1000, clan_id: newClan.id }).eq('id', player.id);
             location.reload();
         }
@@ -780,7 +887,7 @@
                 }
 
                 html += `
-                <div class="clan-list-item">
+                <div class="clan-list-item" style="border-left: 4px solid ${c.color || '#ff1744'}">
                     <div class="cli-header">
                         <span style="color:var(--blue)">[${c.tag}] ${c.name}</span>
                         <span style="color:var(--gold); font-size:12px;">Влияние: ${c.influence||0}</span>
@@ -811,7 +918,7 @@
                 return;
             }
             const lastInv = new Date(currentFront.last_bot_invasion).getTime();
-            if (Date.now() - lastInv > 48 * 3600000) { 
+            if (Date.now() - lastInv > 24 * 3600000) { 
                 const botSectors = territories.filter(t => t.is_bot).map(t => t.sector_index);
                 const vulnerable = territories.filter(t => !t.is_bot && getAdjacent(t.sector_index).some(adj => botSectors.includes(adj)));
                 
@@ -835,7 +942,7 @@
         }
 
         async function checkEndGameDomination() {
-            const center = territories.find(t => t.sector_index === 12);
+            const center = territories.find(t => t.sector_index === 24);
             if (center && !center.is_bot && center.owner_clan_id) {
                 const ownerSince = new Date(center.owner_since || 0).getTime();
                 if (Date.now() - ownerSince > 72 * 3600000) { 
@@ -851,6 +958,7 @@
             territories = t;
 
             await checkEndGameDomination(); 
+            const { data: frontClans } = await db.from('clans').select('id, tag, color').eq('front_id', currentFront.id);
 
             const grid = document.getElementById('mapGrid');
             grid.innerHTML = '';
@@ -859,6 +967,7 @@
                 const sec = territories[i];
                 let sClass = 'bot'; let sOwner = 'МЯТЕЖНИКИ'; let sPwr = sec.bot_power;
                 let iconsHtml = '';
+                let inlineStyle = '';
 
                 const canAtk = isAttackable(sec.sector_index);
                 if (!canAtk && sec.owner_clan_id !== myClan.id) {
@@ -867,13 +976,16 @@
                 }
 
                 if (!sec.is_bot && sec.owner_clan_id) {
+                    const clanInfo = frontClans.find(c => c.id === sec.owner_clan_id);
+                    let cColor = clanInfo && clanInfo.color ? clanInfo.color : '#ff1744';
+                    
                     if (sec.owner_clan_id === myClan.id) { 
                         sClass = 'ally'; sOwner = `[${myClan.tag}]`; 
                     } else { 
-                        sClass = canAtk ? 'enemy' : 'enemy locked'; sOwner = "ВРАГ"; 
-                        const {data: ec} = await db.from('clans').select('tag').eq('id', sec.owner_clan_id).single();
-                        if(ec) sOwner = `[${ec.tag}]`;
+                        sClass = canAtk ? 'enemy' : 'enemy locked'; 
+                        sOwner = clanInfo ? `[${clanInfo.tag}]` : 'ВРАГ'; 
                     }
+                    inlineStyle = `border-color: ${cColor} !important; background: ${cColor}33; box-shadow: inset 0 0 15px ${cColor}33;`;
                     sPwr = 'ИГРОК'; 
                 }
 
@@ -887,7 +999,7 @@
                 if(sec.tier === 3) { tColor = 'tier-3'; tText = 'T-III'; }
 
                 grid.innerHTML += `
-                <div class="sector ${sClass}" onclick="openSector(${sec.sector_index})">
+                <div class="sector ${sClass}" style="${inlineStyle}" onclick="openSector(${sec.sector_index})">
                     ${iconsHtml}
                     <div class="s-tier ${tColor}">${tText}</div>
                     <div class="s-owner">${sOwner}</div>
@@ -1115,78 +1227,95 @@
             if(!selectedSector) return;
             if((player.attack_tokens || 0) <= 0) { alert("У вас нет Токенов Атаки!"); return; }
             
-            let defSquadKeys = selectedSector.defender_squad ? selectedSector.defender_squad.split(',') : null;
-            
-            let myPower = calculateSquadPower(player, selectedSquadKeys, defSquadKeys);
-            let attackerNames = player.nickname;
+            try {
+                let defSquadKeys = selectedSector.defender_squad ? selectedSector.defender_squad.split(',') : null;
+                
+                let myPower = calculateSquadPower(player, selectedSquadKeys, defSquadKeys);
+                let attackerNames = player.nickname;
 
-            if (isCoop && selectedSector.assault_p1_id && selectedSector.assault_p1_squad) {
-                const { data: p1 } = await db.from('players').select('*').eq('id', selectedSector.assault_p1_id).single();
-                if (p1) { 
-                    const p1SquadKeys = selectedSector.assault_p1_squad.split(',');
-                    myPower += calculateSquadPower(p1, p1SquadKeys, defSquadKeys); 
-                    attackerNames = `${p1.nickname} и ${player.nickname}`; 
+                if (isCoop && selectedSector.assault_p1_id && selectedSector.assault_p1_squad) {
+                    const { data: p1 } = await db.from('players').select('*').eq('id', selectedSector.assault_p1_id).single();
+                    if (p1) { 
+                        const p1SquadKeys = selectedSector.assault_p1_squad.split(',');
+                        myPower += calculateSquadPower(p1, p1SquadKeys, defSquadKeys); 
+                        attackerNames = `${p1.nickname} и ${player.nickname}`; 
+                    }
                 }
-            }
 
-            let defPower = 10;
-            if (selectedSector.is_bot) {
-                defPower = selectedSector._calcDefPowerBase; 
-            } else if (selectedSector.defender_id && defSquadKeys) {
-                const { data: defP } = await db.from('players').select('*').eq('id', selectedSector.defender_id).single();
-                if (defP) {
-                    let allAtkKeys = [...selectedSquadKeys];
-                    if (isCoop && selectedSector.assault_p1_squad) allAtkKeys = allAtkKeys.concat(selectedSector.assault_p1_squad.split(','));
-                    
-                    let baseDefPower = calculateSquadPower(defP, defSquadKeys, allAtkKeys);
-                    const tierBonus = 1 + (((selectedSector.tier || 1) - 1) * 0.15);
-                    defPower = Math.floor(baseDefPower * tierBonus);
+                let defPower = 10;
+                if (selectedSector.is_bot) {
+                    defPower = selectedSector._calcDefPowerBase; 
+                } else if (selectedSector.defender_id && defSquadKeys) {
+                    const { data: defP } = await db.from('players').select('*').eq('id', selectedSector.defender_id).single();
+                    if (defP) {
+                        let allAtkKeys = [...selectedSquadKeys];
+                        if (isCoop && selectedSector.assault_p1_squad) allAtkKeys = allAtkKeys.concat(selectedSector.assault_p1_squad.split(','));
+                        
+                        let baseDefPower = calculateSquadPower(defP, defSquadKeys, allAtkKeys);
+                        const tierBonus = 1 + (((selectedSector.tier || 1) - 1) * 0.15);
+                        defPower = Math.floor(baseDefPower * tierBonus);
+                    }
                 }
+
+                const winChance = myPower / (myPower + defPower);
+                const isWin = Math.random() < winChance;
+
+                const myPenalty = isWin ? 25 : 75;
+                const defPenalty = isWin ? 75 : 25;
+
+                await applyHpPenaltySpecific(player.id, myPenalty, selectedSquadKeys);
+                if (isCoop && selectedSector.assault_p1_id && selectedSector.assault_p1_squad) {
+                    await applyHpPenaltySpecific(selectedSector.assault_p1_id, myPenalty, selectedSector.assault_p1_squad.split(','));
+                }
+                if (!selectedSector.is_bot && selectedSector.defender_id && defSquadKeys) {
+                    await applyHpPenaltySpecific(selectedSector.defender_id, defPenalty, defSquadKeys);
+                }
+
+                await db.from('players').update({ attack_tokens: player.attack_tokens - 1 }).eq('id', player.id);
+                player.attack_tokens -= 1;
+
+                if (isWin) {
+                    await db.from('territories').update({ 
+                        is_bot: false, owner_clan_id: myClan.id, defender_id: player.id, defender_squad: selectedSquadKeys.join(','),
+                        owner_since: new Date().toISOString(), assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null 
+                    }).eq('id', selectedSector.id);
+                } else {
+                    if(isCoop) await db.from('territories').update({ assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null }).eq('id', selectedSector.id);
+                }
+
+                await db.from('map_logs').insert({
+                    front_id: currentFront.id, sector_index: selectedSector.sector_index,
+                    attacker_name: attackerNames, defender_name: selectedSector._defNameStr, is_win: isWin
+                });
+
+                closeModal();
+
+                let title = isWin ? "<span style='color:var(--green)'>СЕКТОР ЗАХВАЧЕН!</span>" : "<span style='color:var(--red)'>АТАКА ОТБИТА...</span>";
+                let text = isWin ? 
+                    `Ваш штурмовой отряд прорвал оборону! Вы назначены защитником.<br><div class="alert-red">Ваша ударная группа потеряла ${myPenalty}% Живучести! Срочно отправьте их в Госпиталь!</div>` : 
+                    `Ваш отряд попал в засаду и отступает.<br><div class="alert-red">Ударная группа разбита (-${myPenalty}% Живучести). Требуется ремонт!</div>`;
+                
+                // Кешбек за поражение
+                if (!isWin) {
+                    const scrapC = Math.floor(myPower * 0.5);
+                    const scrapR = Math.floor(myPower * 0.05);
+                    await db.from('players').update({ 
+                        common_parts: player.common_parts + scrapC, 
+                        rare_parts: player.rare_parts + scrapR 
+                    }).eq('id', player.id);
+                    text += `<br><span style="color:var(--common)">Собрано лома с поля боя: +${scrapC} Об., +${scrapR} Ред.</span>`;
+                }
+                
+                document.getElementById('resTitle').innerHTML = title;
+                document.getElementById('resText').innerHTML = text;
+                document.getElementById('resultModal').style.display = 'flex';
+
+                updateUI(); loadMap(); loadLogs();
+            } catch(e) {
+                console.error(e);
+                alert("Ошибка расчета боя: " + e.message);
+                closeModal();
             }
-
-            const winChance = myPower / (myPower + defPower);
-            const isWin = Math.random() < winChance;
-
-            const myPenalty = isWin ? 25 : 75;
-            const defPenalty = isWin ? 75 : 25;
-
-            await applyHpPenaltySpecific(player.id, myPenalty, selectedSquadKeys);
-            if (isCoop && selectedSector.assault_p1_id && selectedSector.assault_p1_squad) {
-                await applyHpPenaltySpecific(selectedSector.assault_p1_id, myPenalty, selectedSector.assault_p1_squad.split(','));
-            }
-            if (!selectedSector.is_bot && selectedSector.defender_id && defSquadKeys) {
-                await applyHpPenaltySpecific(selectedSector.defender_id, defPenalty, defSquadKeys);
-            }
-
-            await db.from('players').update({ attack_tokens: player.attack_tokens - 1 }).eq('id', player.id);
-            player.attack_tokens -= 1;
-
-            if (isWin) {
-                await db.from('territories').update({ 
-                    is_bot: false, owner_clan_id: myClan.id, defender_id: player.id, defender_squad: selectedSquadKeys.join(','),
-                    owner_since: new Date().toISOString(), assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null 
-                }).eq('id', selectedSector.id);
-            } else {
-                if(isCoop) await db.from('territories').update({ assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null }).eq('id', selectedSector.id);
-            }
-
-            await db.from('map_logs').insert({
-                front_id: currentFront.id, sector_index: selectedSector.sector_index,
-                attacker_name: attackerNames, defender_name: selectedSector._defNameStr, is_win: isWin
-            });
-
-            closeModal();
-
-            let title = isWin ? "<span style='color:var(--green)'>СЕКТОР ЗАХВАЧЕН!</span>" : "<span style='color:var(--red)'>АТАКА ОТБИТА...</span>";
-            let text = isWin ? 
-                `Ваш штурмовой отряд прорвал оборону! Вы назначены защитником.<br><div class="alert-red">Ваша ударная группа потеряла ${myPenalty}% Живучести! Срочно отправьте их в Госпиталь!</div>` : 
-                `Ваш отряд попал в засаду и отступает.<br><div class="alert-red">Ударная группа разбита (-${myPenalty}% Живучести). Требуется ремонт!</div>`;
-            
-            document.getElementById('resTitle').innerHTML = title;
-            document.getElementById('resText').innerHTML = text;
-            document.getElementById('resultModal').style.display = 'flex';
-
-            updateUI(); loadMap(); loadLogs();
         }
 
         function closeResultModal() { window.location.href = 'fortuna_minigame.html'; }
@@ -1225,9 +1354,9 @@
 
             let c=0, r=0, e=0, infl=0;
             myTerrs.forEach(t => {
-                if(t.tier === 1) { c += 500; infl += 100; }
-                else if(t.tier === 2) { c += 1000; r += 50; infl += 300; }
-                else if(t.tier === 3) { c += 3000; r += 150; e += 10; infl += 1000; }
+                if(t.tier === 1) { c += 1500; infl += 100; }
+                else if(t.tier === 2) { c += 3000; r += 150; infl += 250; }
+                else if(t.tier === 3) { c += 10000; r += 500; e += 30; infl += 1000; }
             });
 
             await db.from('players').update({ common_parts: player.common_parts + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e }).eq('id', player.id);
@@ -1236,6 +1365,8 @@
 
             myClan.influence += infl; myClan.last_tax_claim = newClaimTime; updateUI();
             alert(`💰 НАЛОГИ СОБРАНЫ!\n\nПолучено:\nОбычных: +${c}\nРедких: +${r}\nЭпиков: +${e}\n\nКлан получил Влияние: +${infl} 🏆`);
+            
+            await checkClanMilestones();
         }
 
         function formatTime(ms) { const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); return `${h}ч ${m.toString().padStart(2, '0')}м`; }
