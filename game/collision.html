@@ -26,7 +26,7 @@
         
         button { padding: 12px 15px; background: var(--border); border: none; color: white; font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.2s; width: 100%; margin-bottom: 10px;}
         button:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-2px); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
         .btn-blue { background: var(--blue); color: #000; } .btn-red { background: var(--red); color: #fff; } .btn-gold { background: var(--gold); color: #000; } .btn-green { background: var(--green); color: #000; }
 
         /* ИНТЕРФЕЙС КЛАНА */
@@ -38,12 +38,12 @@
         /* ТАКТИЧЕСКАЯ КАРТА */
         .map-container { display: grid; gap: 6px; margin-top: 20px; perspective: 800px; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid #222;}
         .sector { 
-            background: rgba(20, 25, 35, 0.9); border: 2px solid #333; border-radius: 8px; aspect-ratio: 1/1; 
+            background: rgba(20, 25, 35, 0.9); border: 2px solid #333; border-radius: 6px; aspect-ratio: 1/1; 
             display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
             transition: 0.3s; position: relative; overflow: hidden;
         }
         .sector:hover { border-color: var(--blue) !important; box-shadow: 0 0 15px rgba(3, 169, 244, 0.6) !important; transform: translateZ(10px); z-index: 2;}
-        .sector.locked { filter: grayscale(100%); opacity: 0.6; cursor: not-allowed; }
+        .sector.locked { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; }
         .sector.locked:hover { border-color: #333 !important; box-shadow: none !important; transform: none; }
         
         .sector.bot { border-color: #444; background: rgba(30, 30, 30, 0.6); }
@@ -55,6 +55,10 @@
         
         .s-lock-icon { position: absolute; font-size: 24px; opacity: 0.5; }
         .s-coop-icon { position: absolute; top: 5px; right: 5px; font-size: 18px; color: var(--gold); animation: pulseAlert 1.5s infinite; }
+
+        /* ПРОГРЕСС БАРЫ */
+        .progress-bg { background: #21262d; width: 100%; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; border: 1px solid #30363d;}
+        .progress-fill { height: 100%; width: 0%; transition: width 1s linear;}
 
         /* МОДАЛКИ */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(5px); }
@@ -81,6 +85,7 @@
 
         /* АНИМАЦИИ */
         @keyframes pulseAlert { 0% { text-shadow: 0 0 5px rgba(255, 193, 7, 0); transform: scale(1); } 50% { text-shadow: 0 0 15px rgba(255, 193, 7, 1); transform: scale(1.2); } 100% { text-shadow: 0 0 5px rgba(255, 193, 7, 0); transform: scale(1); } }
+        @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 10px var(--epic); } 50% { transform: scale(1.02); box-shadow: 0 0 20px var(--epic); } 100% { transform: scale(1); box-shadow: 0 0 10px var(--epic); } }
         .alert-red { color: var(--red); font-weight: bold; padding: 10px; border: 1px solid var(--red); background: rgba(255,23,68,0.1); margin-top: 15px; border-radius: 6px;}
 
         /* ЭНДГЕЙМ ОВЕРЛЕЙ */
@@ -105,10 +110,10 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 600px) {
-            .map-container { gap: 4px; padding: 5px;}
-            .s-tier { font-size: 8px; top: 2px; left: 2px; padding: 1px 2px;}
-            .s-owner { font-size: 9px; }
-            .s-power { font-size: 9px; padding: 1px 3px;}
+            .map-container { gap: 2px; padding: 5px;}
+            .s-tier { font-size: 7px; top: 1px; left: 1px; padding: 1px 2px;}
+            .s-owner { font-size: 7px; }
+            .s-power { font-size: 7px; padding: 1px 2px;}
             .modal-box { padding: 15px; }
         }
     </style>
@@ -127,14 +132,14 @@
         <div id="cooldownWarning" style="display: none; background: rgba(255,23,68,0.1); border: 1px solid var(--red); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
             <div style="color: var(--red); font-weight: bold; margin-bottom: 5px;">ШТРАФ ДЕЗЕРТИРА</div>
             <div style="font-size: 13px; color: #c9d1d9;">Вы недавно покинули или распустили Клан. Создание и вступление заблокировано.</div>
-            <div style="color: var(--gold); font-family: monospace; font-size: 16px; margin-top: 10px;" id="cooldownTimerUI">--:--</div>
+            <div style="color: var(--gold); font-family: monospace; font-size: 16px; margin-top: 10px;" id="cooldownTimerUI">--:--:--</div>
         </div>
 
         <div id="setupForms">
             <p style="font-size: 13px; color: #8b949e; text-align: center; margin-bottom: 20px; line-height: 1.5;">Для выхода на арену территориальных войн необходимо состоять в Клане. Вы можете создать свой собственный Клан (соло или с напарником) или присоединиться к существующему.</p>
             
             <div style="background: rgba(0,0,0,0.5); padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
-                <h3 style="color: var(--blue);">Найти Синдикат</h3>
+                <h3 style="color: var(--blue);">Найти Клан</h3>
                 <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Поиск кланов с открытым набором (1/2).</p>
                 <button class="btn-blue" onclick="openAllClans()">📡 ОТКРЫТЬ РАДАР КЛАНОВ</button>
             </div>
@@ -186,7 +191,10 @@
             </div>
             <div class="clan-stats">
                 <div class="stat-box">Влияние<span id="uiInfluence">0</span></div>
-                <div class="stat-box">Токены<span id="uiTokens">0/2</span></div>
+                <div class="stat-box">
+                    Токены<span id="uiTokens">0/2</span>
+                    <div style="font-size: 10px; color: #8b949e; font-weight: normal; margin-top: 3px; font-family: monospace;" id="uiTokenTimer">--:--:--</div>
+                </div>
             </div>
         </div>
 
@@ -194,11 +202,24 @@
             <button onclick="window.location.href='fortuna_minigame.html'" style="background: #222; border: 1px solid #444; width: calc(33% - 6px); font-size: 11px;">🏠 На Базу</button>
             <button class="btn-blue" onclick="openClanManager()" style="width: calc(33% - 6px); font-size: 11px; background: transparent; border: 1px solid var(--blue); color: var(--blue);">⚙️ Ваш Клан</button>
             <button class="btn-gold" onclick="openAllClans()" style="width: calc(33% - 6px); font-size: 11px; background: transparent; border: 1px solid var(--gold); color: var(--gold);">📡 Сканер</button>
-            <button class="btn-gold" onclick="claimTaxes()" style="width: 100%; font-size: 14px; margin-top: 5px;">💰 СБОР НАЛОГОВ С ЗЕМЕЛЬ</button>
         </div>
-        <div id="taxMsg" class="msg" style="color: var(--gold); margin-bottom: 10px;"></div>
+        
+        <div style="background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid var(--epic); margin-bottom: 15px; text-align: center; box-shadow: inset 0 0 20px rgba(188,140,255,0.1);">
+            <h3 style="color: var(--epic); margin-bottom: 5px; font-size: 16px;">🎁 Элитный Контейнер Клана</h3>
+            <div style="font-size: 11px; color: #8b949e; margin-bottom: 10px;">Выдается за каждые 5000 Влияния Клана. Очки не тратятся.</div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px;">
+                <span>Прогресс:</span><span style="font-weight: bold; color: var(--epic);"><span id="ccProgressText">0 / 5000</span></span>
+            </div>
+            <div class="progress-bg" style="border-color: var(--epic);"><div class="progress-fill" id="ccProgressBar" style="background: var(--epic); box-shadow: 0 0 10px var(--epic);"></div></div>
+            <button class="btn-gold" id="btnClaimClanBox" onclick="claimClanBoxes()" style="background: var(--epic); color: #000; margin-bottom: 0;" disabled>ОТКРЫТЬ КОНТЕЙНЕР (0)</button>
+        </div>
 
-        <div style="font-size: 12px; color: #8b949e; text-align: center;">Атаковать можно только сектора, граничащие с вашими.<br>Если секторов нет, высадка доступна на любых окраинах (Тир 1).</div>
+        <div style="text-align: center; margin-top: 10px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333;">
+            <div style="font-size: 12px; color: var(--gold); margin-bottom: 5px;">Сбор налогов через: <span id="taxTimerUI" style="font-family: monospace; font-size: 14px;">--:--:--</span></div>
+            <button class="btn-gold" id="btnClaimTaxes" onclick="claimTaxes()" style="width: 100%; font-size: 14px; margin-top: 5px;" disabled>💰 СБОР НАЛОГОВ С ЗЕМЕЛЬ</button>
+        </div>
+
+        <div style="font-size: 12px; color: #8b949e; text-align: center; margin-top: 15px;">Атаковать можно только сектора, граничащие с вашими.<br>Если секторов нет, высадка доступна на любых окраинах (Тир 1).</div>
 
         <div class="map-container" id="mapGrid"></div>
 
@@ -253,7 +274,7 @@
     <div class="modal-overlay" id="allClansModal">
         <div class="modal-box" style="max-width: 600px;">
             <h2 style="color: var(--gold); margin-bottom: 5px;">Радар Сервера</h2>
-            <p style="font-size: 11px; color: #8b949e; margin-bottom: 20px;">Список активных Синдикатов. Здесь вы можете подать заявку на вступление.</p>
+            <p style="font-size: 11px; color: #8b949e; margin-bottom: 20px;">Список активных Кланов. Здесь вы можете подать заявку на вступление.</p>
             
             <div id="allClansList" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
                 <div class="spinner"></div>
@@ -278,7 +299,7 @@
             </div>
             
             <div id="chatMessages" style="flex-grow: 1; background: rgba(0,0,0,0.5); border: 1px solid #333; border-radius: 8px; overflow-y: auto; padding: 10px; text-align: left; font-size: 13px; margin-bottom: 10px; display:flex; flex-direction: column; gap: 5px;">
-            </div>
+                </div>
             
             <div style="display:flex; gap: 5px;">
                 <input type="text" id="chatInput" placeholder="Сообщение..." style="margin-bottom:0;" onkeypress="if(event.key==='Enter') sendMessage()">
@@ -357,7 +378,7 @@
 
     <div class="modal-overlay" id="clanContainerModal">
         <div class="modal-box" style="border-width: 2px; border-color: var(--epic); box-shadow: 0 0 50px rgba(188,140,255,0.3);">
-            <h2 id="ccTitle" style="text-transform: uppercase; font-size: 28px; margin-bottom: 10px; color: var(--epic); text-shadow: 0 0 10px var(--epic);">ЭЛИТНЫЙ КОНТЕЙНЕР!</h2>
+            <h2 id="ccTitle" style="text-transform: uppercase; font-size: 28px; margin-bottom: 10px; color: var(--epic); text-shadow: 0 0 10px var(--epic);">ЭЛИТНЫЙ КОНТЕЙНЕР КЛАНА!</h2>
             <div id="ccText" style="font-size: 14px; line-height: 1.6; margin-bottom: 20px; color: #c9d1d9;"></div>
             <button class="btn-gold" onclick="closeClanContainerModal()" style="font-size: 16px; padding: 15px; background: var(--epic); color: #000;">ЗАБРАТЬ НАГРАДУ</button>
         </div>
@@ -378,7 +399,7 @@
         const T1_SECTORS = [0,1,2,3,4,5,6, 7,13, 14,20, 21,27, 28,34, 35,41, 42,43,44,45,46,47,48];
 
         let player = null; let myClan = null; let currentFront = null; let territories = []; let selectedSector = null;
-        let pendingAction = null; let selectedSquadKeys = []; let cooldownTimerInt = null;
+        let pendingAction = null; let selectedSquadKeys = []; let cooldownTimerInt = null; let timerInterval = null;
         
         let chatType = 'global'; let chatTimer = null;
 
@@ -400,7 +421,6 @@
         function isAttackable(index) {
             const mySectors = territories.filter(t => t.owner_clan_id === myClan.id);
             if (mySectors.length === 0) {
-                // Если карта 5x5, T1 сектора другие
                 if(territories.length === 25) {
                     const oldT1 = [0,1,2,3,4,5,9,10,14,15,19,20,21,22,23,24];
                     return oldT1.includes(index);
@@ -415,6 +435,14 @@
             if(!isoString) return "Неизвестно";
             const d = new Date(isoString);
             return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+        }
+
+        function formatTimeDetailed(ms) {
+            if (ms < 0) return "00:00:00";
+            const h = Math.floor(ms / 3600000); 
+            const m = Math.floor((ms % 3600000) / 60000); 
+            const s = Math.floor((ms % 60000) / 1000);
+            return `${h}ч ${m.toString().padStart(2, '0')}м ${s.toString().padStart(2, '0')}с`;
         }
 
         async function init() {
@@ -462,10 +490,49 @@
                 await checkBotInvasion(); 
                 
                 setInterval(loadMap, 30000); setInterval(loadLogs, 30000);
+                
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(tickTimers, 1000);
+                tickTimers();
             }
             
             setInterval(checkNewMessages, 10000);
             checkNewMessages();
+        }
+
+        function tickTimers() {
+            if (!myClan) return;
+            const now = new Date().getTime();
+            const lastClaim = new Date(myClan.last_tax_claim || 0).getTime();
+            const taxMsLeft = (12 * 3600000) - (now - lastClaim);
+            
+            const taxBtn = document.getElementById('btnClaimTaxes');
+            const taxTimerUI = document.getElementById('taxTimerUI');
+            
+            if (taxMsLeft > 0) {
+                taxTimerUI.innerText = formatTimeDetailed(taxMsLeft);
+                taxTimerUI.style.color = "var(--red)";
+                taxBtn.disabled = true;
+                taxBtn.style.background = "#555";
+                taxBtn.style.color = "#8b949e";
+            } else {
+                taxTimerUI.innerText = "ДОСТУПНО!";
+                taxTimerUI.style.color = "var(--green)";
+                taxBtn.disabled = false;
+                taxBtn.style.background = "var(--gold)";
+                taxBtn.style.color = "#000";
+            }
+
+            const resetTime = new Date(player.daily_quests_reset || 0).getTime();
+            const tokenMsLeft = (24 * 3600000) - (now - resetTime);
+            const tokenTimerEl = document.getElementById('uiTokenTimer');
+            if(tokenTimerEl) {
+                if (tokenMsLeft > 0) {
+                    tokenTimerEl.innerText = formatTimeDetailed(tokenMsLeft);
+                } else {
+                    tokenTimerEl.innerText = "00:00:00";
+                }
+            }
         }
 
         async function getUnlockedTroopKeys() {
@@ -481,68 +548,93 @@
             return unlocked;
         }
 
-        async function checkClanMilestones() {
+        function updateClanBoxUI() {
             if (!player || !myClan) return;
-            const earnedMilestones = Math.floor((myClan.influence || 0) / 5000);
+            const influence = myClan.influence || 0;
+            const earnedMilestones = Math.floor(influence / 5000);
             const claimed = player.clan_milestones_claimed || 0;
+            const availableBoxes = earnedMilestones - claimed;
             
-            if (earnedMilestones > claimed) {
-                const boxesToOpen = earnedMilestones - claimed;
-                let c=0, f1Total=0, boostTotal=0;
-                let fragUpdates = {};
-                let bUpdates = {
-                    booster_skip: player.booster_skip||0,
-                    booster_speed: player.booster_speed||0,
-                    booster_auto: player.booster_auto||0,
-                    booster_contractor: player.booster_contractor||0,
-                    booster_doubler: player.booster_doubler||0
-                };
-
-                const unlockedKeys = await getUnlockedTroopKeys();
-
-                for (let i=0; i<boxesToOpen; i++) {
-                    let rnd = Math.random();
-                    if (rnd < 0.33) {
-                        c += 50000;
-                    } else if (rnd < 0.66) {
-                        const ru = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
-                        fragUpdates[`frag1_${ru}`] = (fragUpdates[`frag1_${ru}`] || player[`frag1_${ru}`] || 0) + 1;
-                        fragUpdates[`frag2_${ru}`] = (fragUpdates[`frag2_${ru}`] || player[`frag2_${ru}`] || 0) + 1;
-                        fragUpdates[`frag3_${ru}`] = (fragUpdates[`frag3_${ru}`] || player[`frag3_${ru}`] || 0) + 1;
-                        fragUpdates[`frag4_${ru}`] = (fragUpdates[`frag4_${ru}`] || player[`frag4_${ru}`] || 0) + 1;
-                        f1Total++;
-                    } else {
-                        for(let b=0; b<15; b++) {
-                            let bRnd = Math.random();
-                            if(bRnd < 0.2) bUpdates.booster_skip++;
-                            else if(bRnd < 0.4) bUpdates.booster_speed++;
-                            else if(bRnd < 0.6) bUpdates.booster_auto++;
-                            else if(bRnd < 0.8) bUpdates.booster_contractor++;
-                            else bUpdates.booster_doubler++;
-                        }
-                        boostTotal += 15;
-                    }
-                }
-                
-                let updates = { 
-                    clan_milestones_claimed: earnedMilestones,
-                    common_parts: player.common_parts + c,
-                    ...fragUpdates,
-                    ...bUpdates
-                };
-                
-                await db.from('players').update(updates).eq('id', player.id);
-                Object.assign(player, updates);
-                
-                let html = `<div style="font-size: 14px; margin-bottom: 15px;">Синдикат достиг ${earnedMilestones * 5000} Влияния! Выдан Элитный Контейнер (x${boxesToOpen}):</div>`;
-                if(c>0) html += `<div class="common" style="margin-bottom:5px;">+${c} Обычных деталей</div>`;
-                if(f1Total>0) html += `<div class="epic" style="margin-bottom:5px;">+${f1Total} Набор(а) Фрагментов (1-4⭐)</div>`;
-                if(boostTotal>0) html += `<div class="boost" style="margin-bottom:5px;">+${boostTotal} Случайных Бустеров</div>`;
-                
-                document.getElementById('ccText').innerHTML = html;
-                document.getElementById('clanContainerModal').style.display = 'flex';
-                setTimeout(() => document.getElementById('clanContainerModal').querySelector('.modal-box').classList.add('show'), 10);
+            const remainder = influence % 5000;
+            document.getElementById('ccProgressText').innerText = `${remainder} / 5000`;
+            document.getElementById('ccProgressBar').style.width = `${(remainder / 5000) * 100}%`;
+            
+            const btn = document.getElementById('btnClaimClanBox');
+            if (availableBoxes > 0) {
+                btn.disabled = false;
+                btn.innerText = `ОТКРЫТЬ КОНТЕЙНЕР (${availableBoxes})`;
+                btn.style.animation = "pulse 1.5s infinite";
+            } else {
+                btn.disabled = true;
+                btn.innerText = `НЕТ ДОСТУПНЫХ`;
+                btn.style.animation = "none";
             }
+        }
+
+        async function claimClanBoxes() {
+            if (!player || !myClan) return;
+            const influence = myClan.influence || 0;
+            const earnedMilestones = Math.floor(influence / 5000);
+            const claimed = player.clan_milestones_claimed || 0;
+            const availableBoxes = earnedMilestones - claimed;
+            
+            if (availableBoxes <= 0) return;
+
+            let c=0, f1Total=0, boostTotal=0;
+            let fragUpdates = {};
+            let bUpdates = {
+                booster_skip: player.booster_skip||0,
+                booster_speed: player.booster_speed||0,
+                booster_auto: player.booster_auto||0,
+                booster_contractor: player.booster_contractor||0,
+                booster_doubler: player.booster_doubler||0
+            };
+
+            const unlockedKeys = await getUnlockedTroopKeys();
+
+            for (let i=0; i<availableBoxes; i++) {
+                let rnd = Math.random();
+                if (rnd < 0.33) {
+                    c += 50000;
+                } else if (rnd < 0.66) {
+                    const ru = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                    fragUpdates[`frag1_${ru}`] = (fragUpdates[`frag1_${ru}`] || player[`frag1_${ru}`] || 0) + 1;
+                    fragUpdates[`frag2_${ru}`] = (fragUpdates[`frag2_${ru}`] || player[`frag2_${ru}`] || 0) + 1;
+                    fragUpdates[`frag3_${ru}`] = (fragUpdates[`frag3_${ru}`] || player[`frag3_${ru}`] || 0) + 1;
+                    fragUpdates[`frag4_${ru}`] = (fragUpdates[`frag4_${ru}`] || player[`frag4_${ru}`] || 0) + 1;
+                    f1Total++;
+                } else {
+                    for(let b=0; b<15; b++) {
+                        let bRnd = Math.random();
+                        if(bRnd < 0.2) bUpdates.booster_skip++;
+                        else if(bRnd < 0.4) bUpdates.booster_speed++;
+                        else if(bRnd < 0.6) bUpdates.booster_auto++;
+                        else if(bRnd < 0.8) bUpdates.booster_contractor++;
+                        else bUpdates.booster_doubler++;
+                    }
+                    boostTotal += 15;
+                }
+            }
+            
+            let updates = { 
+                clan_milestones_claimed: earnedMilestones,
+                common_parts: player.common_parts + c,
+                ...fragUpdates,
+                ...bUpdates
+            };
+            
+            await db.from('players').update(updates).eq('id', player.id);
+            Object.assign(player, updates);
+            updateClanBoxUI();
+            
+            let html = `<div style="font-size: 14px; margin-bottom: 15px;">Клан достиг ${earnedMilestones * 5000} Влияния! Выдан Элитный Контейнер (x${boxesToOpen}):</div>`;
+            if(c>0) html += `<div class="common" style="margin-bottom:5px;">+${c} Обычных деталей</div>`;
+            if(f1Total>0) html += `<div class="epic" style="margin-bottom:5px;">+${f1Total} Набор(а) Фрагментов (1-4⭐)</div>`;
+            if(boostTotal>0) html += `<div class="boost" style="margin-bottom:5px;">+${boostTotal} Случайных Бустеров</div>`;
+            
+            document.getElementById('ccText').innerHTML = html;
+            document.getElementById('clanContainerModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('clanContainerModal').querySelector('.modal-box').classList.add('show'), 10);
         }
 
         function closeClanContainerModal() {
@@ -764,7 +856,7 @@
         async function sendClanRequest(clanId) {
             if (player.clan_id) return;
             await db.from('clan_requests').insert({ clan_id: clanId, player_id: player.id, player_name: player.nickname });
-            alert("Заявка успешно отправлена лидеру Синдиката!");
+            alert("Заявка успешно отправлена лидеру Клана!");
             closeAllClans();
         }
 
@@ -839,7 +931,7 @@
         function closeClanManager() { document.getElementById('clanManagerModal').style.display = 'none'; }
 
         async function leaveClan() {
-            if(!confirm("Вы уверены, что хотите покинуть Синдикат? Вы получите штраф 24 часа на вступление.")) return;
+            if(!confirm("Вы уверены, что хотите покинуть Клан? Вы получите штраф 24 часа на вступление.")) return;
             closeClanManager();
             const cooldown = new Date(Date.now() + 24 * 3600000).toISOString();
             await db.from('clans').update({ member_id: null }).eq('id', myClan.id);
@@ -902,7 +994,7 @@
                         <span style="color:var(--blue)">[${c.tag}] ${c.name}</span>
                         <span style="color:var(--gold); font-size:12px;">Влияние: ${c.influence||0}</span>
                     </div>
-                    <div style="margin-bottom: 8px; font-size: 11px; color: #8b949e;">Общая Мощь Синдиката: ⚡${totalPwr}</div>
+                    <div style="margin-bottom: 8px; font-size: 11px; color: #8b949e;">Общая Мощь Клана: ⚡${totalPwr}</div>
                     ${ldrHtml}
                     ${mbrHtml}
                     ${joinBtn}
@@ -920,6 +1012,7 @@
             document.getElementById('uiInviteCode').innerText = myClan.invite_code;
             document.getElementById('uiInfluence').innerText = myClan.influence;
             document.getElementById('uiTokens').innerText = `${player.attack_tokens || 0}/2`;
+            updateClanBoxUI();
         }
 
         async function checkBotInvasion() {
@@ -1162,8 +1255,6 @@
         function closeSquadModal() {
             document.getElementById('squadModalBox').classList.remove('show');
             setTimeout(() => document.getElementById('squadModal').style.display = 'none', 300);
-            pendingAction = null; 
-            // Мы больше не очищаем selectedSquadKeys здесь, чтобы скрипт атаки мог их прочитать!
         }
 
         function limitSquadSelection() {
@@ -1180,34 +1271,34 @@
             if (checks.length !== 3) return;
             
             selectedSquadKeys = Array.from(checks).map(c => c.value);
-            closeSquadModal(); // Закрываем окно, но выбранные отряды уже сохранены!
+            const currentAction = pendingAction;
+            closeSquadModal();
 
-            if (pendingAction === 'defend') assignDefenderFinal();
-            else if (pendingAction === 'attackSolo') attackSectorFinal(false);
-            else if (pendingAction === 'attackCoopStart') startCoopAssaultFinal();
-            else if (pendingAction === 'attackCoopJoin') attackSectorFinal(true);
+            if (currentAction === 'defend') assignDefenderFinal();
+            else if (currentAction === 'attackSolo') attackSectorFinal(false);
+            else if (currentAction === 'attackCoopStart') startCoopAssaultFinal();
+            else if (currentAction === 'attackCoopJoin') attackSectorFinal(true);
         }
 
         async function assignDefenderFinal() {
             const sqStr = selectedSquadKeys.join(',');
             const { data } = await db.from('territories').update({ defender_id: player.id, defender_squad: sqStr }).eq('id', selectedSector.id).select().single();
-            if(data) { closeModal(); loadMap(); alert('Вы успешно встали в защиту с выбранным отрядом!'); }
+            if(data) { alert('Вы успешно встали в защиту с выбранным отрядом!'); loadMap(); closeModal(); }
         }
 
         async function startCoopAssaultFinal() {
-            if(player.attack_tokens <= 0) { alert("Нет Токенов Атаки!"); return; }
-            closeModal();
+            if((player.attack_tokens || 0) <= 0) { alert("Нет Токенов Атаки!"); return; }
             const sqStr = selectedSquadKeys.join(',');
-            await db.from('players').update({ attack_tokens: player.attack_tokens - 1 }).eq('id', player.id);
+            const newTokens = Math.max(0, (player.attack_tokens || 0) - 1);
+            await db.from('players').update({ attack_tokens: newTokens }).eq('id', player.id);
             await db.from('territories').update({ assault_clan_id: myClan.id, assault_p1_id: player.id, assault_p1_squad: sqStr }).eq('id', selectedSector.id);
-            player.attack_tokens -= 1; updateUI(); loadMap();
+            player.attack_tokens = newTokens; updateUI(); loadMap(); closeModal();
         }
 
         async function cancelCoopAssault() {
-            closeModal();
-            await db.from('players').update({ attack_tokens: player.attack_tokens + 1 }).eq('id', player.id);
+            await db.from('players').update({ attack_tokens: (player.attack_tokens || 0) + 1 }).eq('id', player.id);
             await db.from('territories').update({ assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null }).eq('id', selectedSector.id);
-            player.attack_tokens += 1; updateUI(); loadMap();
+            player.attack_tokens += 1; updateUI(); loadMap(); closeModal();
         }
 
         function calculateSquadPower(pData, mySquadKeys, enemySquadKeys) {
@@ -1290,8 +1381,9 @@
                     await applyHpPenaltySpecific(selectedSector.defender_id, defPenalty, defSquadKeys);
                 }
 
-                await db.from('players').update({ attack_tokens: player.attack_tokens - 1 }).eq('id', player.id);
-                player.attack_tokens -= 1;
+                const newTokens = Math.max(0, (player.attack_tokens || 0) - 1);
+                await db.from('players').update({ attack_tokens: newTokens }).eq('id', player.id);
+                player.attack_tokens = newTokens;
 
                 if (isWin) {
                     await db.from('territories').update({ 
@@ -1306,8 +1398,6 @@
                     front_id: currentFront.id, sector_index: selectedSector.sector_index,
                     attacker_name: attackerNames, defender_name: selectedSector._defNameStr, is_win: isWin
                 });
-
-                closeModal();
 
                 let title = isWin ? "<span style='color:var(--green)'>СЕКТОР ЗАХВАЧЕН!</span>" : "<span style='color:var(--red)'>АТАКА ОТБИТА...</span>";
                 let text = isWin ? 
@@ -1329,7 +1419,7 @@
                 document.getElementById('resText').innerHTML = text;
                 document.getElementById('resultModal').style.display = 'flex';
 
-                updateUI(); loadMap(); loadLogs();
+                updateUI(); loadMap(); loadLogs(); closeModal();
             } catch(e) {
                 console.error(e);
                 alert("Ошибка расчета боя: " + e.message);
@@ -1365,11 +1455,11 @@
             const now = new Date().getTime();
             const lastClaim = new Date(myClan.last_tax_claim || 0).getTime();
             if (now - lastClaim < 12 * 3600000) { 
-                showMsg('taxMsg', `Сбор недоступен. Ждите ${formatTime((12 * 3600000) - (now - lastClaim))}`, 'var(--red)'); return;
+                return;
             }
 
             const myTerrs = territories.filter(t => t.owner_clan_id === myClan.id);
-            if(myTerrs.length === 0) { showMsg('taxMsg', 'Ваш Клан не контролирует ни одного сектора!', 'var(--red)'); return; }
+            if(myTerrs.length === 0) { alert('Ваш Клан не контролирует ни одного сектора!'); return; }
 
             let c=0, r=0, e=0, infl=0;
             myTerrs.forEach(t => {
@@ -1382,14 +1472,11 @@
             const newClaimTime = new Date().toISOString();
             await db.from('clans').update({ influence: myClan.influence + infl, last_tax_claim: newClaimTime }).eq('id', myClan.id);
 
-            myClan.influence += infl; myClan.last_tax_claim = newClaimTime; updateUI();
+            myClan.influence += infl; myClan.last_tax_claim = newClaimTime; updateUI(); tickTimers();
             alert(`💰 НАЛОГИ СОБРАНЫ!\n\nПолучено:\nОбычных: +${c}\nРедких: +${r}\nЭпиков: +${e}\n\nКлан получил Влияние: +${infl} 🏆`);
             
             await checkClanMilestones();
         }
-
-        function formatTime(ms) { const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); return `${h}ч ${m.toString().padStart(2, '0')}м`; }
-        function showMsg(id, text, color) { const el = document.getElementById(id); el.innerText = text; el.style.color = color; setTimeout(() => { if(el.innerText === text) el.innerText = ''; }, 4000); }
 
         window.onload = init;
     </script>
