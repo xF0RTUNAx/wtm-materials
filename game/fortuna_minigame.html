@@ -545,54 +545,58 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
-      // === ONESIGNAL PUSH NOTIFICATIONS ===
+        // === ONESIGNAL PUSH NOTIFICATIONS ===
         window.OneSignalDeferred = window.OneSignalDeferred || [];
         OneSignalDeferred.push(async function(OneSignal) {
             await OneSignal.init({
                 appId: "4141cb59-095e-44fe-94fc-bdf5c121c84f",
-                safari_web_id: "web.onesignal.auto.1130386e-b2d6-4e58-9273-0761615e45a2", // Для Mac/iOS
-                notifyButton: { enable: false }
+                safari_web_id: "web.onesignal.auto.1130386e-b2d6-4e58-9273-0761615e45a2",
             });
-            
-            // Срабатывает только при ПЕРВОМ разрешении уведомлений
+
+            // 1. Если уже подписан при загрузке - синхронизируем
+            if (OneSignal.User.PushSubscription.optedIn) {
+                syncOsToken(OneSignal.User.PushSubscription.id);
+            }
+
+            // 2. Слушаем изменение статуса (когда игрок нажмет "Разрешить")
             OneSignal.User.PushSubscription.addEventListener("change", async (event) => {
                 if (OneSignal.User.PushSubscription.optedIn) {
-                    const osId = OneSignal.User.PushSubscription.id;
-                    const pid = localStorage.getItem('minigame_player_id');
-                    if (osId && pid) {
-                        await db.from('players').update({onesignal_id: osId}).eq('id', pid);
-                        if (player) player.onesignal_id = osId;
-                        alert("Связь со спутником установлена! Токен успешно сохранен.");
-                    }
+                    syncOsToken(OneSignal.User.PushSubscription.id);
+                    alert("Связь со спутником установлена!");
                 }
             });
         });
 
-        function enableNotifications() {
-            OneSignalDeferred.push(async function(OneSignal) {
-                const isOptedIn = OneSignal.User.PushSubscription.optedIn;
-                const osId = OneSignal.User.PushSubscription.id;
-                const pid = localStorage.getItem('minigame_player_id');
-
-                if (isOptedIn && osId && pid) {
-                    // Если игрок уже разрешил пуши ранее — принудительно синхронизируем токен
-                    const { error } = await db.from('players').update({onesignal_id: osId}).eq('id', pid);
-                    if (!error) {
-                        if (player) player.onesignal_id = osId;
-                        alert("Уведомления уже активны! Ваш токен успешно синхронизирован с базой.");
-                    } else {
-                        alert("Ошибка сохранения в базу: " + error.message);
-                    }
-                } else if (isOptedIn && !osId) {
-                    // Защита от медленного интернета (токен еще не успел сгенерироваться)
-                    alert("OneSignal получает данные... Нажмите кнопку еще раз через 3 секунды.");
-                } else {
-                    // Если еще не разрешал — вызываем системный запрос браузера
-                    await OneSignal.Notifications.requestPermission();
-                }
-            });
+        async function syncOsToken(osId) {
+            const pid = localStorage.getItem('minigame_player_id');
+            if (osId && pid) {
+                await db.from('players').update({onesignal_id: osId}).eq('id', pid);
+                if (player) player.onesignal_id = osId;
+            }
         }
-        
+
+        async function enableNotifications() {
+            try {
+                if (!window.OneSignal) {
+                    alert("Радар еще загружается, подождите пару секунд...");
+                    return;
+                }
+
+                const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
+                const osId = window.OneSignal.User.PushSubscription.id;
+
+                if (isOptedIn && osId) {
+                    await syncOsToken(osId);
+                    alert("Уведомления УЖЕ активны! Токен: " + osId.substring(0,8) + "... успешно синхронизирован.");
+                } else {
+                    // Прямой вызов без оберток (критично для Safari/iOS)
+                    await window.OneSignal.Notifications.requestPermission();
+                }
+            } catch (e) {
+                alert("Ошибка радара: " + e.message);
+            }
+        }
+
         // === ПОДКЛЮЧЕНИЕ К БАЗЕ SUPABASE ===
         const SUPABASE_URL = 'https://rkqfanrrbvrzixxlnbto.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWZhbnJyYnZyeml4eGxuYnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTcwODMsImV4cCI6MjA4NzIzMzA4M30.8j42D5U-iOLeEtSgiFWJ3pDTyN6e6JjiQKvn0MDEwJY'; 
@@ -766,15 +770,12 @@
             localStorage.setItem('minigame_player_id', pData.id); document.getElementById('bodyBg').className = 'game-bg';
             document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
             
-            OneSignalDeferred.push(async function(OneSignal) {
-                if (OneSignal.User.PushSubscription.optedIn) {
-                    const osId = OneSignal.User.PushSubscription.id;
-                    if (osId && pData.onesignal_id !== osId) {
-                        await db.from('players').update({onesignal_id: osId}).eq('id', pData.id);
-                        pData.onesignal_id = osId;
-                    }
+            // Проверка подписки при логине
+            if (window.OneSignal && window.OneSignal.User && window.OneSignal.User.PushSubscription) {
+                if (window.OneSignal.User.PushSubscription.optedIn) {
+                    syncOsToken(window.OneSignal.User.PushSubscription.id);
                 }
-            });
+            }
 
             refreshAll().then(checkDailyLogin);
         }
