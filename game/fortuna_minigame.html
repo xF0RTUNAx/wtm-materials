@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xFORTUNAx War Thunder Mobile Giveaway</title>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <style>
         * { box-sizing: border-box; } 
         
@@ -136,9 +137,7 @@
         .garland-dot.active { background: var(--accent-gold); box-shadow: 0 0 5px var(--accent-gold);}
 
         /* Выравнивание гирлянд для Лабы и Госпиталя */
-        #labGarlandContainer .garland, #hospGarlandContainer .garland {
-            justify-content: center;
-        }
+        #labGarlandContainer .garland, #hospGarlandContainer .garland { justify-content: center; }
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
@@ -203,9 +202,7 @@
             .game-header { flex-wrap: wrap; justify-content: space-between; }
             .grid-panel { grid-template-columns: 1fr; gap: 15px; }
             
-            .inventory { 
-                display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px;
-            }
+            .inventory { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 10px; }
             .part { width: 100%; font-size: 11px; }
             .part span { font-size: 16px; margin-top: 5px;}
             .part.kits { grid-column: 1 / 3; border-top: 1px solid #444; padding-top: 8px; border-left: none; }
@@ -234,8 +231,8 @@
 
     <div class="modal-overlay" id="fragDetailsModal">
         <div class="modal-box" id="fragDetailsBox">
-            <h3 style="color: var(--accent-gold); margin-bottom: 15px; font-size: 22px;" id="fdTitle">Фрагменты</h3>
-            <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Здесь показаны фрагменты только для доступных вам (открытых) войск.</p>
+            <h3 style="color: var(--accent-gold); margin-bottom: 15px; font-size: 22px;" id="fdTitle">Сводка Фрагментов</h3>
+            <p style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Наглядный прогресс слияния для всех открытых войск.</p>
             <div id="fdContent" style="text-align: left; font-size: 15px; margin-bottom: 20px; line-height: 1.8;"></div>
             <button style="background: #444;" onclick="closeFragModal()">ЗАКРЫТЬ</button>
         </div>
@@ -274,8 +271,7 @@
             <h3 style="color: var(--accent-gold); margin-bottom: 15px;">СИНТЕЗ ФРАГМЕНТОВ</h3>
             <div style="font-size: 11px; color: #8b949e; margin-bottom: 15px;">Обмен 10 фрагментов младшей звезды на 1 фрагмент следующей звезды выбранного типа войск.</div>
             
-            <select id="feTroopSelect" onchange="updateFragExchangePreview()">
-                </select>
+            <select id="feTroopSelect" onchange="updateFragExchangePreview()"></select>
             <select id="feTierSelect" onchange="updateFragExchangePreview()">
                 <option value="1">1⭐ ➔ 2⭐</option>
                 <option value="2">2⭐ ➔ 3⭐</option>
@@ -365,10 +361,10 @@
 
         <div class="inventory" style="margin-top: 10px; padding: 10px; flex-wrap: wrap;">
             <div style="width: 100%; text-align: center; font-size: 11px; color: #8b949e; margin-bottom: 5px; grid-column: 1 / -1;">Нажми чтобы посмотреть подробнее</div>
-            <div class="part c-1-t" onclick="openFragModal(1)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-1)'">1⭐ Фраг. <span id="sumFrag1" style="font-size: 16px;">0</span></div>
-            <div class="part c-2-t" onclick="openFragModal(2)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-2)'">2⭐ Фраг. <span id="sumFrag2" style="font-size: 16px;">0</span></div>
-            <div class="part c-3-t" onclick="openFragModal(3)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-3)'">3⭐ Фраг. <span id="sumFrag3" style="font-size: 16px;">0</span></div>
-            <div class="part c-4-t" onclick="openFragModal(4)" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-4)'">4⭐ Фраг. <span id="sumFrag4" style="font-size: 16px;">0</span></div>
+            <div class="part c-1-t" onclick="openFragModal()" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-1)'">1⭐ Фраг. <span id="sumFrag1" style="font-size: 16px;">0</span></div>
+            <div class="part c-2-t" onclick="openFragModal()" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-2)'">2⭐ Фраг. <span id="sumFrag2" style="font-size: 16px;">0</span></div>
+            <div class="part c-3-t" onclick="openFragModal()" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-3)'">3⭐ Фраг. <span id="sumFrag3" style="font-size: 16px;">0</span></div>
+            <div class="part c-4-t" onclick="openFragModal()" style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--star-4)'">4⭐ Фраг. <span id="sumFrag4" style="font-size: 16px;">0</span></div>
         </div>
 
         <div class="grid-panel">
@@ -541,6 +537,7 @@
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
+            <button id="btnEnableNotif" onclick="enableNotifications()" style="background: rgba(255, 193, 7, 0.1); color: var(--accent-gold); border: 1px solid var(--accent-gold); width: 250px; margin-bottom: 10px;">🔔 Включить уведомления</button><br>
             <button onclick="window.location.reload()" style="background: #333; color: white; width: 250px; margin-bottom: 10px;">🔄 Обновить страницу</button><br>
             <button onclick="logout()" style="background: transparent; color: #ff4444; border-color: #ff4444; width: 250px;">Выйти из аккаунта</button>
         </div>
@@ -548,6 +545,28 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
+        // === ONESIGNAL PUSH NOTIFICATIONS ===
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+                appId: "4141cb59-095e-44fe-94fc-bdf5c121c84f",
+            });
+            
+            OneSignal.User.PushSubscription.addEventListener("change", async (subscription) => {
+                if (subscription.current.optedIn && player) {
+                    const osId = subscription.current.id;
+                    await db.from('players').update({onesignal_id: osId}).eq('id', player.id);
+                    player.onesignal_id = osId;
+                }
+            });
+        });
+
+        function enableNotifications() {
+            OneSignalDeferred.push(async function(OneSignal) {
+                await OneSignal.Slidedown.promptPush();
+            });
+        }
+
         // === ПОДКЛЮЧЕНИЕ К БАЗЕ SUPABASE ===
         const SUPABASE_URL = 'https://rkqfanrrbvrzixxlnbto.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWZhbnJyYnZyeml4eGxuYnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTcwODMsImV4cCI6MjA4NzIzMzA4M30.8j42D5U-iOLeEtSgiFWJ3pDTyN6e6JjiQKvn0MDEwJY'; 
@@ -629,16 +648,50 @@
             document.getElementById('leaderboardListClans').style.display = mode === 'clans' ? 'block' : 'none';
         }
 
-        function openFragModal(tier) {
-            document.getElementById('fdTitle').innerText = `Фрагменты ${tier}⭐`;
+        function openFragModal() {
+            document.getElementById('fdTitle').innerText = `Сводка Фрагментов`;
             let html = '';
             const unlocked = getUnlockedTroopKeys();
             if(unlocked.length === 0) {
-                html = '<div style="color:#8b949e">Нет открытых войск.</div>';
+                html = '<div style="color:#8b949e; text-align:center;">Нет открытых войск.</div>';
             } else {
                 unlocked.forEach(k => {
-                    const count = player[`frag${tier}_${k}`] || 0;
-                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:5px; border-bottom:1px solid #333; padding-bottom:5px;"><span>${TROOP_CFG[k].title}:</span> <span style="font-weight:bold; color:var(--star-${tier})">${count}</span></div>`;
+                    const star = player[`star_${k}`] || 0;
+                    const f1 = player[`frag1_${k}`] || 0;
+                    const f2 = player[`frag2_${k}`] || 0;
+                    const f3 = player[`frag3_${k}`] || 0;
+                    const f4 = player[`frag4_${k}`] || 0;
+                    
+                    let progHtml = '';
+                    if (star === 0) {
+                        progHtml = `<div style="font-size:11px; color:#8b949e;">Требуется развертывание</div>`;
+                    } else if (star === 1) {
+                        progHtml = `<div style="font-size:10px; color:var(--star-2); margin-bottom:2px;">Сбор на 2⭐ (${f1}/10)</div>${renderGarland(f1, 10)}`;
+                    } else if (star === 2) {
+                        progHtml = `<div style="font-size:10px; color:var(--star-3); margin-bottom:2px;">Сбор на 3⭐ (${f2}/10)</div>${renderGarland(f2, 10)}`;
+                    } else if (star === 3) {
+                        progHtml = `<div style="font-size:10px; color:var(--star-4); margin-bottom:2px;">Сбор на 4⭐ (${f3}/10)</div>${renderGarland(f3, 10)}`;
+                    } else if (star === 4) {
+                        progHtml = `<div style="font-size:10px; font-weight:bold; color:var(--accent-red); margin-bottom:5px;">СБОР НА АБСОЛЮТ (5⭐)</div>
+                                    <div style="display:flex; gap:10px; margin-bottom:5px;">
+                                        <div style="flex:1; font-size:9px;">1⭐ (${f1}/10) ${renderGarland(f1, 10)}</div>
+                                        <div style="flex:1; font-size:9px;">2⭐ (${f2}/10) ${renderGarland(f2, 10)}</div>
+                                    </div>
+                                    <div style="display:flex; gap:10px;">
+                                        <div style="flex:1; font-size:9px;">3⭐ (${f3}/10) ${renderGarland(f3, 10)}</div>
+                                        <div style="flex:1; font-size:9px;">4⭐ (${f4}/10) ${renderGarland(f4, 10)}</div>
+                                    </div>`;
+                    } else {
+                        progHtml = `<div style="font-size:11px; color:#00e676; font-weight:bold;">АБСОЛЮТ ДОСТИГНУТ</div>`;
+                    }
+
+                    html += `<div style="margin-bottom:15px; background:rgba(0,0,0,0.3); padding:10px; border-radius:6px; border:1px solid #333;">
+                                <div style="display:flex; justify-content:space-between; margin-bottom:8px; border-bottom:1px solid #444; padding-bottom:5px;">
+                                    <span style="font-weight:bold; color:#fff;">${TROOP_CFG[k].title}</span> 
+                                    <span style="color:var(--star-${star > 0 ? star : 1})">${star > 0 ? star+'⭐' : '0⭐'}</span>
+                                </div>
+                                ${progHtml}
+                            </div>`;
                 });
             }
             document.getElementById('fdContent').innerHTML = html;
@@ -686,6 +739,17 @@
         function loginSuccess(pData) {
             localStorage.setItem('minigame_player_id', pData.id); document.getElementById('bodyBg').className = 'game-bg';
             document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
+            
+            OneSignalDeferred.push(async function(OneSignal) {
+                if (OneSignal.User.PushSubscription.optedIn) {
+                    const osId = OneSignal.User.PushSubscription.id;
+                    if (osId && pData.onesignal_id !== osId) {
+                        await db.from('players').update({onesignal_id: osId}).eq('id', pData.id);
+                        pData.onesignal_id = osId;
+                    }
+                }
+            });
+
             refreshAll().then(checkDailyLogin);
         }
         function logout() { localStorage.removeItem('minigame_player_id'); location.reload(); }
@@ -719,7 +783,7 @@
 
                 let addSk=0, addSp=0, addAu=0, addCon=0, addDb=0;
                 let title = "ЕЖЕДНЕВНЫЙ ВХОД", html = `День ${newStreak}/7<br>`, colorClass = 'power';
-                let updates = { last_login_day: currentDayUTC, login_streak: newStreak };
+                let updates = { last_login_day: currentDayUTC, login_streak: newStreak, notif_daily_sent: false };
 
                 const unlockedKeys = getUnlockedTroopKeys();
 
@@ -990,7 +1054,8 @@
                 troop_upgrade_end: endTime,
                 common_parts: player.common_parts - c,
                 rare_parts: player.rare_parts - r,
-                epic_parts: player.epic_parts - e
+                epic_parts: player.epic_parts - e,
+                notif_troop_sent: false
             };
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); }
@@ -1033,7 +1098,8 @@
                 lab_upgrade_end: endTime,
                 common_parts: player.common_parts - req.c,
                 rare_parts: player.rare_parts - req.r,
-                epic_parts: player.epic_parts - req.e
+                epic_parts: player.epic_parts - req.e,
+                notif_lab_sent: false
             };
             if(req.f_key) updates[req.f_key] = player[req.f_key] - req.f_amt;
 
@@ -1051,9 +1117,16 @@
             if (player.common_parts < cost) { showMsg('hospMsg', `Нужно ${cost} Обычных!`, '#ff4444'); return; }
             
             const endTime = new Date(new Date().getTime() + (timeHours * 3600000)).toISOString();
-            const updates = { hosp_upgrade_end: endTime, common_parts: player.common_parts - cost };
-            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
-            if (data) { player = data; showMsg('hospMsg', 'Начато расширение Госпиталя!', '#00e676'); refreshAll(); }
+            const updates = { hosp_upgrade_end: endTime, common_parts: player.common_parts - cost, notif_hosp_sent: false };
+            
+            try {
+                const { data, error } = await db.from('players').update(updates).eq('id', player.id).select().single();
+                if (error) throw error;
+                if (data) { player = data; showMsg('hospMsg', 'Начато расширение Госпиталя!', '#00e676'); refreshAll(); }
+            } catch (e) {
+                console.error(e);
+                showMsg('hospMsg', 'Ошибка базы данных (Добавьте колонку hosp_upgrade_end)!', '#ff4444');
+            }
         }
 
         function buildHospitalUI() {
@@ -1502,7 +1575,7 @@
                 if (now >= labEndMs) {
                     const nextLvl = (player.lvl_lab || 1) + 1;
                     player.lab_upgrade_end = null; 
-                    db.from('players').update({ lvl_lab: nextLvl, lab_upgrade_end: null }).eq('id', player.id).then(() => refreshAll());
+                    db.from('players').update({ lvl_lab: nextLvl, lab_upgrade_end: null, notif_lab_sent: false }).eq('id', player.id).then(() => refreshAll());
                 } else {
                     const uiEl = document.getElementById('labTimerUI');
                     if (uiEl) uiEl.innerText = formatTime(labEndMs - now);
@@ -1515,7 +1588,7 @@
                 if (now >= hospEndMs) {
                     const nextLvl = (player.lvl_hospital || 1) + 1;
                     player.hosp_upgrade_end = null; 
-                    db.from('players').update({ lvl_hospital: nextLvl, hosp_upgrade_end: null }).eq('id', player.id).then(() => refreshAll());
+                    db.from('players').update({ lvl_hospital: nextLvl, hosp_upgrade_end: null, notif_hosp_sent: false }).eq('id', player.id).then(() => refreshAll());
                 } else {
                     const uiEl = document.getElementById('hospTimerUI_build');
                     if (uiEl) uiEl.innerText = formatTime(hospEndMs - now);
@@ -1659,7 +1732,8 @@
 
             const { data } = await db.from('players').update({
                 common_parts: player.common_parts + collectedAmount, rare_parts: player.rare_parts + extraR, epic_parts: player.epic_parts + extraE,
-                factory_last_collected: newLastCol, quest_factory_collects: (player.quest_factory_collects || 0) + collectedAmount
+                factory_last_collected: newLastCol, quest_factory_collects: (player.quest_factory_collects || 0) + collectedAmount,
+                notif_factory_sent: false
             }).eq('id', player.id).select().single();
 
             if (data) { 
@@ -1673,7 +1747,7 @@
             const now = new Date().getTime(); if(now < new Date(player.factory_broken_until || 0).getTime()) return;
             if (Math.random() < 0.50) {
                 const brokenEnd = new Date(now + 2 * 3600000).toISOString();
-                const { data } = await db.from('players').update({ factory_broken_until: brokenEnd, factory_last_collected: brokenEnd }).eq('id', player.id).select().single();
+                const { data } = await db.from('players').update({ factory_broken_until: brokenEnd, factory_last_collected: brokenEnd, notif_factory_sent: false }).eq('id', player.id).select().single();
                 if (data) { player = data; showMsg('factoryMsg', 'АВАРИЯ! Завод сломан на 2ч!', '#ff4444'); refreshAll(); }
             } else {
                 const stats = FACTORY_STATS[player.factory_level];
@@ -1988,6 +2062,17 @@
         window.onload = () => { 
             if (localStorage.getItem('minigame_player_id')) { 
                 document.getElementById('bodyBg').className = 'game-bg'; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
+                
+                OneSignalDeferred.push(async function(OneSignal) {
+                    if (OneSignal.User.PushSubscription.optedIn) {
+                        const osId = OneSignal.User.PushSubscription.id;
+                        if (osId) {
+                            const pid = localStorage.getItem('minigame_player_id');
+                            await db.from('players').update({onesignal_id: osId}).eq('id', pid);
+                        }
+                    }
+                });
+
                 refreshAll().then(checkDailyLogin);
             } 
         };
