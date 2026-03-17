@@ -1225,6 +1225,8 @@
             const updates = {};
             updates[`hosp_${slot}_target`] = key;
             updates[`hosp_${slot}_end`] = new Date(Date.now() + 4 * 3600000).toISOString(); 
+            updates[`notif_heal_${slot}_sent`] = false; // Сбрасываем предохранитель для уведомления
+            
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); }
         }
