@@ -1039,7 +1039,12 @@
             const updates = { repair_kits: player.repair_kits - 1 };
             updates[`rep_end_${key}`] = endTime;
 
-            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            const { data, error } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (error) {
+                console.error(error);
+                alert("Ошибка БД! Не хватает колонок для ремонта. Выполните SQL-запрос.");
+                return;
+            }
             if (data) { player = data; refreshAll(); }
         }
 
@@ -1227,7 +1232,12 @@
             updates[`hosp_${slot}_end`] = new Date(Date.now() + 4 * 3600000).toISOString(); 
             updates[`notif_heal_${slot}_sent`] = false; // Сбрасываем предохранитель для уведомления
             
-            const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            const { data, error } = await db.from('players').update(updates).eq('id', player.id).select().single();
+            if (error) {
+                console.error(error);
+                showMsg('hospMsg', 'Ошибка БД! Выполните SQL-запрос.', '#ff4444');
+                return;
+            }
             if (data) { player = data; refreshAll(); }
         }
 
