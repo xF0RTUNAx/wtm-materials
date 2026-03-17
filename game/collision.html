@@ -36,14 +36,22 @@
         .stat-box { background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 6px; border: 1px solid #333; text-align: center; min-width: 80px; }
         .stat-box span { font-weight: bold; color: var(--gold); display: block; margin-top: 5px; font-size: 16px;}
 
-        /* НОВЫЙ ДИЗАЙН КАРТЫ: ОКЕАН, РАДАР, СКАНЛАЙНЫ */
+        /* НОВЫЙ ДИЗАЙН КАРТЫ: ОКЕАН, ОСТРОВА И ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ */
         .map-wrapper {
-            position: relative; margin-top: 20px; border-radius: 12px; overflow: hidden;
+            margin-top: 20px; border-radius: 12px; overflow-x: auto; overflow-y: hidden;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(3, 169, 244, 0.1); 
-            border: 2px solid #1f2937;
-            width: 100%; aspect-ratio: 4/3;
+            border: 2px solid #1f2937; width: 100%; 
             background: radial-gradient(ellipse at center, #06304a 0%, #01060a 100%);
+            -webkit-overflow-scrolling: touch;
         }
+        .map-wrapper::-webkit-scrollbar { height: 6px; }
+        .map-wrapper::-webkit-scrollbar-thumb { background: rgba(3, 169, 244, 0.5); border-radius: 3px; }
+        .map-wrapper::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+
+        .map-inner {
+            position: relative; width: 100%; min-width: 800px; aspect-ratio: 4/3; overflow: hidden;
+        }
+        
         #mapGrid { 
             width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 2;
         }
@@ -64,14 +72,13 @@
 
         @keyframes wave-drift { 0% { transform: translate(0, 0); } 100% { transform: translate(-100px, -50px); } }
 
-        /* ИСПРАВЛЕННЫЙ HOVER: БЕЗ ДЕРГАНИЯ */
+        /* HOVER: БЕЗ ДЕРГАНИЯ */
         .sector-g { cursor: pointer; transition: all 0.3s ease; transform-origin: center; }
         .sector-g:hover .s-shape { 
             stroke: var(--gold) !important; 
             stroke-width: 3px !important; 
             filter: drop-shadow(0 0 12px var(--gold)) brightness(1.4); 
         }
-        /* ВАЖНО: Мы убрали translateY, теперь элемент стоит на месте и не теряет фокус мыши */
         
         .sector-locked { filter: grayscale(80%) brightness(0.6); opacity: 0.7; cursor: not-allowed; }
         .sector-locked:hover .s-shape { stroke: #333 !important; stroke-width: 2px !important; filter: none; }
@@ -129,8 +136,8 @@
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;}
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        @media (max-width: 600px) {
-            .map-wrapper { aspect-ratio: 1/1.2; }
+        @media (max-width: 800px) {
+            .mobile-hint { display: inline-block !important; margin-top: 5px; }
             .modal-box { padding: 15px; }
         }
     </style>
@@ -236,13 +243,12 @@
             <button class="btn-gold" id="btnClaimTaxes" onclick="claimTaxes()" style="width: 100%; font-size: 14px; margin-top: 5px;" disabled>💰 СБОР НАЛОГОВ С ЗЕМЕЛЬ</button>
         </div>
 
-        <div style="font-size: 12px; color: #8b949e; text-align: center; margin-top: 15px;">Атаковать можно только сектора, соединенные морскими путями.<br>Высадка всегда доступна на окраинных островах (Тир 1).</div>
-
-        <div class="map-wrapper" id="mapWrapper">
-            <div id="mapGrid"></div>
-            <div class="ocean-waves"></div>
-            <div class="scanlines"></div>
+        <div style="font-size: 12px; color: #8b949e; text-align: center; margin-top: 15px;">
+            Атаковать можно только сектора, соединенные морскими путями.<br>Высадка всегда доступна на окраинных островах (Тир 1).<br>
+            <span class="mobile-hint" style="color: var(--gold); display: none;">↔️ Свайпайте карту влево-вправо</span>
         </div>
+
+        <div id="mapContainerAnchor"></div>
 
         <div style="margin-top: 25px; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid #333;">
             <h3 style="color: #fff; font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; display: flex; justify-content: space-between;">
@@ -1138,16 +1144,29 @@
             await checkEndGameDomination(); 
             const { data: frontClans } = await db.from('clans').select('id, tag, color').eq('front_id', currentFront.id);
 
-            // Оборачиваем карту в контейнер для волн и радара
+            // Оборачиваем карту в контейнер для волн и скролла
             let wrapper = document.getElementById('mapWrapper');
             if (!wrapper) {
-                const grid = document.getElementById('mapGrid');
+                const grid = document.getElementById('mapContainerAnchor');
+                
+                // Внешняя скроллируемая обертка
                 wrapper = document.createElement('div');
                 wrapper.className = 'map-wrapper';
                 wrapper.id = 'mapWrapper';
+                
+                // Внутренняя обертка с фиксированной минимальной шириной
+                const inner = document.createElement('div');
+                inner.className = 'map-inner';
+                
+                // Сам слой с картой
+                const mapGrid = document.createElement('div');
+                mapGrid.id = 'mapGrid';
+
                 grid.parentNode.insertBefore(wrapper, grid);
-                wrapper.appendChild(grid);
-                wrapper.innerHTML += '<div class="ocean-waves"></div><div class="scanlines"></div>'; 
+                wrapper.appendChild(inner);
+                inner.appendChild(mapGrid);
+                inner.innerHTML += '<div class="ocean-waves"></div>'; 
+                grid.remove(); // Удаляем старый якорь
             }
 
             const grid = document.getElementById('mapGrid');
@@ -1190,9 +1209,6 @@
                 <path d="M 200 100 Q 300 50 400 100 T 600 100" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="30" stroke-linecap="round"/>
                 <path d="M 150 500 Q 400 550 650 500" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="40" stroke-linecap="round"/>
                 <path d="M 400 150 C 550 150 550 450 400 450 C 250 450 250 150 400 150 Z" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2" stroke-dasharray="10 5"/>
-
-                <line x1="400" y1="0" x2="400" y2="600" stroke="rgba(3, 169, 244, 0.1)" stroke-width="1" opacity="0.5"/>
-                <line x1="0" y1="300" x2="800" y2="300" stroke="rgba(3, 169, 244, 0.1)" stroke-width="1" opacity="0.5"/>
             `;
 
             // Рисуем пунктирные морские конвои
@@ -1232,6 +1248,9 @@
                     
                     if (clanInfo && clanInfo.tag) {
                         textToDisplay = `[${clanInfo.tag}]`;
+                        textType = 'tag';
+                    } else {
+                        textToDisplay = 'ИГРОК';
                         textType = 'tag';
                     }
                 }
