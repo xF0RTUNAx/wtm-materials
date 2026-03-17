@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Глобальная Карта | Столкновение</title>
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <style>
         * { box-sizing: border-box; }
         :root {
@@ -35,26 +36,45 @@
         .stat-box { background: rgba(0,0,0,0.6); padding: 8px 12px; border-radius: 6px; border: 1px solid #333; text-align: center; min-width: 80px; }
         .stat-box span { font-weight: bold; color: var(--gold); display: block; margin-top: 5px; font-size: 16px;}
 
-        /* ТАКТИЧЕСКАЯ КАРТА */
-        .map-container { display: grid; gap: 6px; margin-top: 20px; perspective: 800px; padding: 10px; background: rgba(0,0,0,0.5); border-radius: 12px; border: 1px solid #222;}
-        .sector { 
-            background: rgba(20, 25, 35, 0.9); border: 2px solid #333; border-radius: 6px; aspect-ratio: 1/1; 
-            display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer;
-            transition: 0.3s; position: relative; overflow: hidden;
+        /* НОВЫЙ ДИЗАЙН КАРТЫ: ОКЕАН, РАДАР, СКАНЛАЙНЫ */
+        .map-wrapper {
+            position: relative; margin-top: 20px; border-radius: 12px; overflow: hidden;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(3, 169, 244, 0.1); 
+            border: 2px solid #1f2937;
+            width: 100%; aspect-ratio: 4/3;
+            background: radial-gradient(ellipse at center, #06304a 0%, #01060a 100%);
         }
-        .sector:hover { border-color: var(--blue) !important; box-shadow: 0 0 15px rgba(3, 169, 244, 0.6) !important; transform: translateZ(10px); z-index: 2;}
-        .sector.locked { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; }
-        .sector.locked:hover { border-color: #333 !important; box-shadow: none !important; transform: none; }
+        #mapGrid { 
+            width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 2;
+        }
         
-        .sector.bot { border-color: #444; background: rgba(30, 30, 30, 0.6); }
+        /* Анимация морских волн */
+        .ocean-waves {
+            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50"><path d="M0 25 Q 25 15, 50 25 T 100 25" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="2"/></svg>');
+            animation: wave-drift 40s linear infinite; pointer-events: none; z-index: 1;
+        }
         
-        .s-tier { position: absolute; top: 4px; left: 6px; font-size: 10px; font-weight: bold; font-family: monospace; padding: 2px 4px; border-radius: 4px; background: rgba(0,0,0,0.7); border: 1px solid transparent; }
-        .tier-1 { color: var(--t1); border-color: var(--t1); } .tier-2 { color: var(--t2); border-color: var(--t2); } .tier-3 { color: var(--t3); border-color: var(--t3); box-shadow: 0 0 5px var(--t3); }
-        .s-owner { font-size: 12px; font-weight: bold; margin-bottom: 5px; text-align: center; word-break: break-word; padding: 0 2px; text-transform: uppercase; letter-spacing: 1px;}
-        .s-power { font-size: 11px; color: var(--gold); font-family: monospace; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;}
+        /* CRT Сканлайны (эффект старого монитора) */
+        .scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
+            background-size: 100% 4px; pointer-events: none; z-index: 4;
+        }
+
+        @keyframes wave-drift { 0% { transform: translate(0, 0); } 100% { transform: translate(-100px, -50px); } }
+
+        /* ИСПРАВЛЕННЫЙ HOVER: БЕЗ ДЕРГАНИЯ */
+        .sector-g { cursor: pointer; transition: all 0.3s ease; transform-origin: center; }
+        .sector-g:hover .s-shape { 
+            stroke: var(--gold) !important; 
+            stroke-width: 3px !important; 
+            filter: drop-shadow(0 0 12px var(--gold)) brightness(1.4); 
+        }
+        /* ВАЖНО: Мы убрали translateY, теперь элемент стоит на месте и не теряет фокус мыши */
         
-        .s-lock-icon { position: absolute; font-size: 24px; opacity: 0.5; }
-        .s-coop-icon { position: absolute; top: 5px; right: 5px; font-size: 18px; color: var(--gold); animation: pulseAlert 1.5s infinite; }
+        .sector-locked { filter: grayscale(80%) brightness(0.6); opacity: 0.7; cursor: not-allowed; }
+        .sector-locked:hover .s-shape { stroke: #333 !important; stroke-width: 2px !important; filter: none; }
 
         /* ПРОГРЕСС БАРЫ */
         .progress-bg { background: #21262d; width: 100%; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 15px; border: 1px solid #30363d;}
@@ -110,10 +130,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 600px) {
-            .map-container { gap: 2px; padding: 5px;}
-            .s-tier { font-size: 7px; top: 1px; left: 1px; padding: 1px 2px;}
-            .s-owner { font-size: 7px; }
-            .s-power { font-size: 7px; padding: 1px 2px;}
+            .map-wrapper { aspect-ratio: 1/1.2; }
             .modal-box { padding: 15px; }
         }
     </style>
@@ -219,9 +236,13 @@
             <button class="btn-gold" id="btnClaimTaxes" onclick="claimTaxes()" style="width: 100%; font-size: 14px; margin-top: 5px;" disabled>💰 СБОР НАЛОГОВ С ЗЕМЕЛЬ</button>
         </div>
 
-        <div style="font-size: 12px; color: #8b949e; text-align: center; margin-top: 15px;">Атаковать можно только сектора, граничащие с вашими.<br>Если секторов нет, высадка доступна на любых окраинах (Тир 1).</div>
+        <div style="font-size: 12px; color: #8b949e; text-align: center; margin-top: 15px;">Атаковать можно только сектора, соединенные морскими путями.<br>Высадка всегда доступна на окраинных островах (Тир 1).</div>
 
-        <div class="map-container" id="mapGrid"></div>
+        <div class="map-wrapper" id="mapWrapper">
+            <div id="mapGrid"></div>
+            <div class="ocean-waves"></div>
+            <div class="scanlines"></div>
+        </div>
 
         <div style="margin-top: 25px; background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px; border: 1px solid #333;">
             <h3 style="color: #fff; font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px; display: flex; justify-content: space-between;">
@@ -312,7 +333,7 @@
 
     <div class="modal-overlay" id="sectorModal">
         <div class="modal-box">
-            <h2 id="secTitle" style="color: var(--blue); margin-bottom: 5px;">СЕКТОР #<span id="secId"></span></h2>
+            <h2 id="secTitle" style="color: var(--blue); margin-bottom: 5px;">ОСТРОВ #<span id="secId"></span></h2>
             <div id="secTier" style="font-size: 13px; margin-bottom: 15px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 5px; border-radius: 4px;"></div>
             
             <div style="background: #000; padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px;">
@@ -386,6 +407,59 @@
 
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script>
+        // === ONESIGNAL PUSH NOTIFICATIONS ===
+        window.OneSignalDeferred = window.OneSignalDeferred || [];
+        OneSignalDeferred.push(async function(OneSignal) {
+            await OneSignal.init({
+                appId: "4141cb59-095e-44fe-94fc-bdf5c121c84f",
+                safari_web_id: "web.onesignal.auto.1130386e-b2d6-4e58-9273-0761615e45a2",
+            });
+
+            // 1. Если уже подписан при загрузке - синхронизируем
+            if (OneSignal.User.PushSubscription.optedIn) {
+                syncOsToken(OneSignal.User.PushSubscription.id);
+            }
+
+            // 2. Слушаем изменение статуса (когда игрок нажмет "Разрешить")
+            OneSignal.User.PushSubscription.addEventListener("change", async (event) => {
+                if (OneSignal.User.PushSubscription.optedIn) {
+                    syncOsToken(OneSignal.User.PushSubscription.id);
+                    alert("Связь со спутником установлена!");
+                }
+            });
+        });
+
+        async function syncOsToken(osId) {
+            const pid = localStorage.getItem('minigame_player_id');
+            if (osId && pid) {
+                await db.from('players').update({onesignal_id: osId}).eq('id', pid);
+                if (player) player.onesignal_id = osId;
+            }
+        }
+
+        async function enableNotifications() {
+            try {
+                if (!window.OneSignal) {
+                    alert("Радар еще загружается, подождите пару секунд...");
+                    return;
+                }
+
+                const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
+                const osId = window.OneSignal.User.PushSubscription.id;
+
+                if (isOptedIn && osId) {
+                    await syncOsToken(osId);
+                    alert("Уведомления УЖЕ активны! Токен: " + osId.substring(0,8) + "... успешно синхронизирован.");
+                } else {
+                    // Прямой вызов без оберток (критично для Safari/iOS)
+                    await window.OneSignal.Notifications.requestPermission();
+                }
+            } catch (e) {
+                alert("Ошибка радара: " + e.message);
+            }
+        }
+
+        // === ПОДКЛЮЧЕНИЕ К БАЗЕ SUPABASE ===
         const SUPABASE_URL = 'https://rkqfanrrbvrzixxlnbto.supabase.co'; 
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJrcWZhbnJyYnZyeml4eGxuYnRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2NTcwODMsImV4cCI6MjA4NzIzMzA4M30.8j42D5U-iOLeEtSgiFWJ3pDTyN6e6JjiQKvn0MDEwJY'; 
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -405,7 +479,7 @@
 
         function generateCode() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
-        // Соседи для сетки 7х7 (ширина 7) или 5х5 (ширина 5)
+        // Вычисляет морские пути (соседей) по старой сетке
         function getAdjacent(index) {
             let adj = [];
             const cols = territories.length === 25 ? 5 : 7;
@@ -627,7 +701,7 @@
             Object.assign(player, updates);
             updateClanBoxUI();
             
-            let html = `<div style="font-size: 14px; margin-bottom: 15px;">Клан достиг ${earnedMilestones * 5000} Влияния! Выдан Элитный Контейнер (x${boxesToOpen}):</div>`;
+            let html = `<div style="font-size: 14px; margin-bottom: 15px;">Клан достиг ${earnedMilestones * 5000} Влияния! Выдан Элитный Контейнер (x${availableBoxes}):</div>`;
             if(c>0) html += `<div class="common" style="margin-bottom:5px;">+${c} Обычных деталей</div>`;
             if(f1Total>0) html += `<div class="epic" style="margin-bottom:5px;">+${f1Total} Набор(а) Фрагментов (1-4⭐)</div>`;
             if(boostTotal>0) html += `<div class="boost" style="margin-bottom:5px;">+${boostTotal} Случайных Бустеров</div>`;
@@ -1064,59 +1138,168 @@
             await checkEndGameDomination(); 
             const { data: frontClans } = await db.from('clans').select('id, tag, color').eq('front_id', currentFront.id);
 
-            const grid = document.getElementById('mapGrid');
-            grid.innerHTML = '';
-            
-            // Адаптация под старую карту (5х5)
-            if (territories.length === 25) {
-                grid.style.gridTemplateColumns = 'repeat(5, 1fr)';
-            } else {
-                grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+            // Оборачиваем карту в контейнер для волн и радара
+            let wrapper = document.getElementById('mapWrapper');
+            if (!wrapper) {
+                const grid = document.getElementById('mapGrid');
+                wrapper = document.createElement('div');
+                wrapper.className = 'map-wrapper';
+                wrapper.id = 'mapWrapper';
+                grid.parentNode.insertBefore(wrapper, grid);
+                wrapper.appendChild(grid);
+                wrapper.innerHTML += '<div class="ocean-waves"></div><div class="scanlines"></div>'; 
             }
+
+            const grid = document.getElementById('mapGrid');
             
+            // Карта координат архипелага
+            const JITTER = [
+                [-5,-10], [12,5], [-8,15], [10,-5], [-15,-8], [5,12], [-10,5],
+                [8,-12], [-5,10], [15,-5], [-12,8], [5,-15], [-8,10], [12,-8],
+                [-10,5], [8,15], [-15,-10], [10,12], [-5,-8], [15,5], [-12,-15],
+                [5,8], [-10,-12], [12,10], [0,0], [-12,-5], [8,-15], [-5,12], 
+                [10,8], [-15,5], [5,-10], [-8,12], [15,-8], [-5,15], [12,-12],
+                [-10,-5], [8,10], [-15,-15], [5,12], [-12,8], [10,-10], [-8,-5],
+                [15,12], [-5,-15], [12,5], [-10,8], [8,-12], [-15,10], [5,-8]
+            ];
+
+            const cols = territories.length === 25 ? 5 : 7;
+            const centerCol = Math.floor(cols / 2);
+            
+            const positions = [];
+            for(let i=0; i<territories.length; i++) {
+                const col = i % cols; 
+                const row = Math.floor(i / cols);
+                const rowShift = (row % 2 === 0) ? 0 : 30; 
+                const jx = JITTER[i] ? JITTER[i][0] : 0;
+                const jy = JITTER[i] ? JITTER[i][1] : 0;
+                
+                positions.push({ 
+                    x: 400 + (col - centerCol) * 110 + rowShift + jx, 
+                    y: 300 + (row - centerCol) * 80 + jy 
+                });
+            }
+
+            let svg = `<svg viewBox="0 0 800 600" width="100%" height="100%" style="z-index: 2; position: relative;">
+                <defs>
+                    <filter id="dropShadow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feDropShadow dx="2" dy="5" stdDeviation="3" flood-color="#000" flood-opacity="0.9"/>
+                    </filter>
+                </defs>
+
+                <path d="M 200 100 Q 300 50 400 100 T 600 100" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="30" stroke-linecap="round"/>
+                <path d="M 150 500 Q 400 550 650 500" fill="none" stroke="rgba(255,255,255,0.02)" stroke-width="40" stroke-linecap="round"/>
+                <path d="M 400 150 C 550 150 550 450 400 450 C 250 450 250 150 400 150 Z" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2" stroke-dasharray="10 5"/>
+
+                <line x1="400" y1="0" x2="400" y2="600" stroke="rgba(3, 169, 244, 0.1)" stroke-width="1" opacity="0.5"/>
+                <line x1="0" y1="300" x2="800" y2="300" stroke="rgba(3, 169, 244, 0.1)" stroke-width="1" opacity="0.5"/>
+            `;
+
+            // Рисуем пунктирные морские конвои
+            for(let i=0; i<territories.length; i++) {
+                const adjs = getAdjacent(i);
+                adjs.forEach(adj => {
+                    if (adj > i) {
+                        svg += `<line x1="${positions[i].x}" y1="${positions[i].y}" x2="${positions[adj].x}" y2="${positions[adj].y}" stroke="rgba(88, 166, 255, 0.2)" stroke-width="2" stroke-dasharray="4 6"/>`;
+                    }
+                });
+            }
+
+            // Рисуем Острова
             for(let i=0; i<territories.length; i++) {
                 const sec = territories[i];
-                let sClass = 'bot'; let sOwner = 'МЯТЕЖНИКИ'; let sPwr = sec.bot_power;
-                let iconsHtml = '';
-                let inlineStyle = '';
+                const pos = positions[sec.sector_index];
+                
+                // Цвета ландшафта (земли)
+                let landColor = sec.tier === 3 ? '#2d2d2d' : (sec.tier === 2 ? '#24362a' : '#3a3424'); 
+                let strokeColor = '#222';
+                
+                // Изменения для текста под иконкой
+                let textToDisplay = sec.bot_power;
+                let textType = 'power';
+                let gClass = 'sector-g';
+                let alertHtml = '';
 
                 const canAtk = isAttackable(sec.sector_index);
                 if (!canAtk && sec.owner_clan_id !== myClan.id) {
-                    sClass += ' locked';
-                    iconsHtml += '<div class="s-lock-icon">🔒</div>';
+                    gClass += ' sector-locked';
+                    alertHtml += `<rect x="-10" y="15" width="20" height="14" rx="3" fill="#000"/><text x="0" y="26" font-size="12" text-anchor="middle" fill="#fff">🔒</text>`;
                 }
 
                 if (!sec.is_bot && sec.owner_clan_id) {
                     const clanInfo = frontClans.find(c => c.id === sec.owner_clan_id);
-                    let cColor = clanInfo && clanInfo.color ? clanInfo.color : '#ff1744';
+                    strokeColor = clanInfo && clanInfo.color ? clanInfo.color : '#ff1744';
                     
-                    if (sec.owner_clan_id === myClan.id) { 
-                        sClass = 'ally'; sOwner = `[${myClan.tag}]`; 
-                    } else { 
-                        sClass = canAtk ? 'enemy' : 'enemy locked'; 
-                        sOwner = clanInfo ? `[${clanInfo.tag}]` : 'ВРАГ'; 
+                    if (clanInfo && clanInfo.tag) {
+                        textToDisplay = `[${clanInfo.tag}]`;
+                        textType = 'tag';
                     }
-                    inlineStyle = `border-color: ${cColor} !important; background: ${cColor}33; box-shadow: inset 0 0 15px ${cColor}33;`;
-                    sPwr = 'ИГРОК'; 
                 }
 
+                // Эффект штурма
                 if (sec.assault_clan_id) {
-                    if (sec.assault_clan_id === myClan.id) iconsHtml += '<div class="s-coop-icon">🎯</div>';
-                    else iconsHtml += '<div class="s-coop-icon" style="color:var(--red)">⚠️</div>';
+                    let pulseColor = (sec.assault_clan_id === myClan.id) ? 'var(--gold)' : 'var(--red)';
+                    alertHtml += `<circle cx="0" cy="0" r="32" fill="none" stroke="${pulseColor}" stroke-width="2" stroke-dasharray="5 5">
+                        <animate attributeName="r" values="25;40;25" dur="1.5s" repeatCount="indefinite"/>
+                        <animate attributeName="opacity" values="1;0;1" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>`;
                 }
 
-                let tColor = 'tier-1'; let tText = 'T-I';
-                if(sec.tier === 2) { tColor = 'tier-2'; tText = 'T-II'; }
-                if(sec.tier === 3) { tColor = 'tier-3'; tText = 'T-III'; }
+                let tColor = sec.tier === 3 ? 'var(--t3)' : (sec.tier === 2 ? 'var(--t2)' : 'var(--t1)');
+                
+                let shapeHtml = '';
+                let baseIcon = '';
+                const centerIdx = territories.length === 25 ? 12 : 24;
+                
+                if (sec.sector_index === centerIdx) {
+                    // Цитадель (Тир 3)
+                    shapeHtml = `
+                        <polygon class="s-shape" points="0,-32 30,-10 20,25 -20,25 -30,-10" fill="${landColor}" stroke="${strokeColor}" stroke-width="3" stroke-linejoin="round" filter="url(#dropShadow)"/>
+                        <polygon points="0,-18 15,-2 10,12 -10,12 -15,-2" fill="rgba(0,0,0,0.3)"/>`;
+                    baseIcon = `<polygon points="0,-12 10,2 -10,2" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="0" cy="-2" r="2" fill="#fff"/>`;
+                } else if (sec.tier === 2) {
+                    // Средние базы (Тир 2)
+                    shapeHtml = `
+                        <rect class="s-shape" x="-24" y="-20" width="48" height="40" rx="8" fill="${landColor}" stroke="${strokeColor}" stroke-width="2.5" filter="url(#dropShadow)" />
+                        <circle cx="-6" cy="-4" r="8" fill="rgba(0,0,0,0.2)"/>
+                        <circle cx="8" cy="4" r="6" fill="rgba(0,0,0,0.2)"/>`;
+                    baseIcon = `<rect x="-8" y="-6" width="16" height="12" rx="2" fill="none" stroke="#fff" stroke-width="1.5"/><line x1="0" y1="-6" x2="0" y2="-12" stroke="#fff" stroke-width="1.5"/>`;
+                } else {
+                    // Окраины (Тир 1)
+                    shapeHtml = `
+                        <circle class="s-shape" cx="0" cy="0" r="22" fill="${landColor}" stroke="${strokeColor}" stroke-width="2" filter="url(#dropShadow)" />
+                        <circle cx="-4" cy="-4" r="14" fill="rgba(0,0,0,0.15)"/>`;
+                    baseIcon = `<path d="M-8,0 Q0,-10 8,0 M0,0 L0,-6" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="0" cy="-7" r="1.5" fill="#fff"/>`;
+                }
 
-                grid.innerHTML += `
-                <div class="sector ${sClass}" style="${inlineStyle}" onclick="openSector(${sec.sector_index})">
-                    ${iconsHtml}
-                    <div class="s-tier ${tColor}">${tText}</div>
-                    <div class="s-owner">${sOwner}</div>
-                    <div class="s-power">${sec.is_bot ? '⚡'+sPwr : '🔒'+sPwr}</div>
-                </div>`;
+                // Индикатор мощи и уровня
+                let infoHtml = `
+                    <circle cx="-16" cy="-16" r="7" fill="#000" stroke="${tColor}" stroke-width="1"/>
+                    <text x="-16" y="-13" font-size="8" fill="${tColor}" font-weight="bold" text-anchor="middle" font-family="sans-serif">${sec.tier}</text>
+                `;
+                
+                if (!alertHtml.includes('🔒')) {
+                    if (textType === 'power') {
+                        infoHtml += `
+                        <rect x="-18" y="10" width="36" height="12" rx="3" fill="rgba(0,0,0,0.8)" stroke="${strokeColor}" stroke-width="0.5"/>
+                        <text x="0" y="19" font-size="9" fill="var(--gold)" font-weight="bold" text-anchor="middle" font-family="monospace">${textToDisplay}</text>`;
+                    } else {
+                        infoHtml += `
+                        <text x="0" y="20" font-size="10" fill="white" font-weight="900" text-anchor="middle" font-family="sans-serif">${textToDisplay}</text>`;
+                    }
+                }
+
+                svg += `
+                <g class="${gClass}" transform="translate(${pos.x}, ${pos.y})" onclick="openSector(${sec.sector_index})">
+                    ${alertHtml}
+                    ${shapeHtml}
+                    ${baseIcon}
+                    ${infoHtml}
+                </g>`;
             }
+            
+            svg += `</svg>`;
+            grid.innerHTML = svg;
         }
 
         async function loadLogs() {
@@ -1150,7 +1333,9 @@
             let tierColor = selectedSector.tier === 3 ? 'var(--t3)' : (selectedSector.tier === 2 ? 'var(--t2)' : 'var(--t1)');
             document.getElementById('secTier').innerHTML = `<span style="color:${tierColor}">Ценность: Тир ${selectedSector.tier}</span> <span style="color:#8b949e">(Бонус обороны: +${tierBonus}%)</span>`;
 
-            let ownerName = 'Мятежники (NPC)'; let defName = 'Случайный гарнизон'; let pwr = selectedSector.bot_power;
+            let ownerTag = 'Мятежники (NPC)'; 
+            let defName = 'Случайный гарнизон'; 
+            let pwr = selectedSector.bot_power;
             let defSquadStr = 'Сбалансированный';
             
             document.getElementById('actionSolo').style.display = 'none';
@@ -1164,11 +1349,11 @@
 
             if (!selectedSector.is_bot && selectedSector.owner_clan_id) {
                 if (selectedSector.owner_clan_id === myClan.id) {
-                    ownerName = `<span style="color:var(--green)">${myClan.name} (Союзный)</span>`;
+                    ownerTag = `<span style="color:var(--green)">[${myClan.tag}] (Союзный)</span>`;
                     document.getElementById('actionAlly').style.display = 'block';
                 } else {
-                    const { data: eClan } = await db.from('clans').select('name').eq('id', selectedSector.owner_clan_id).single();
-                    ownerName = `<span style="color:var(--red)">${eClan ? eClan.name : 'Неизвестный Клан'}</span>`;
+                    const { data: eClan } = await db.from('clans').select('tag').eq('id', selectedSector.owner_clan_id).single();
+                    ownerTag = `<span style="color:var(--red)">[${eClan ? eClan.tag : '???'}]</span>`;
                 }
 
                 if (selectedSector.defender_id) {
@@ -1185,7 +1370,7 @@
                 } else { defName = "<span style=\"color:var(--red)\">ОТСУТСТВУЕТ (Пустой)</span>"; defSquadStr = '-'; pwr = 10; }
             }
 
-            document.getElementById('secOwner').innerHTML = ownerName;
+            document.getElementById('secOwner').innerHTML = ownerTag;
             document.getElementById('secDefender').innerHTML = defName;
             document.getElementById('secDefSquad').innerText = defSquadStr;
             document.getElementById('secPower').innerText = selectedSector.is_bot ? pwr.toLocaleString() : 'Скрыто';
@@ -1195,7 +1380,7 @@
 
             if (selectedSector.owner_clan_id !== myClan.id) {
                 if (!canAtk) {
-                    document.getElementById('secDefender').innerHTML = "<span style='color:var(--red)'>СЕКТОР НЕДОСЯГАЕМ (Линия фронта)</span>";
+                    document.getElementById('secDefender').innerHTML = "<span style='color:var(--red)'>ОСТРОВ НЕДОСЯГАЕМ (Линия фронта)</span>";
                 } else {
                     if (selectedSector.assault_clan_id === myClan.id) {
                         if (selectedSector.assault_p1_id === player.id) document.getElementById('actionCoopWait').style.display = 'block';
@@ -1399,10 +1584,10 @@
                     attacker_name: attackerNames, defender_name: selectedSector._defNameStr, is_win: isWin
                 });
 
-                let title = isWin ? "<span style='color:var(--green)'>СЕКТОР ЗАХВАЧЕН!</span>" : "<span style='color:var(--red)'>АТАКА ОТБИТА...</span>";
+                let title = isWin ? "<span style='color:var(--green)'>ОСТРОВ ЗАХВАЧЕН!</span>" : "<span style='color:var(--red)'>ВЫСАДКА ОТБИТА...</span>";
                 let text = isWin ? 
-                    `Ваш штурмовой отряд прорвал оборону! Вы назначены защитником.<br><div class="alert-red">Ваша ударная группа потеряла ${myPenalty}% Живучести! Срочно отправьте их в Госпиталь!</div>` : 
-                    `Ваш отряд попал в засаду и отступает.<br><div class="alert-red">Ударная группа разбита (-${myPenalty}% Живучести). Требуется ремонт!</div>`;
+                    `Ваш десант прорвал оборону! Вы назначены защитником.<br><div class="alert-red">Ваша ударная группа потеряла ${myPenalty}% Живучести! Срочно отправьте их в Госпиталь!</div>` : 
+                    `Ваш флот попал в засаду и отступает.<br><div class="alert-red">Ударная группа разбита (-${myPenalty}% Живучести). Требуется ремонт!</div>`;
                 
                 // Кешбек за поражение
                 if (!isWin) {
