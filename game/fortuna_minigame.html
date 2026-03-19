@@ -849,7 +849,9 @@
 
                 let addSk=0, addSp=0, addAu=0, addCon=0, addDb=0;
                 let title = "ЕЖЕДНЕВНЫЙ ВХОД", html = `День ${newStreak}/7<br>`, colorClass = 'power';
-                let updates = { last_login_day: currentDayUTC, login_streak: newStreak, notif_daily_sent: false };
+                let updates = { last_login_day: currentDayUTC, login_streak: newStreak, notif_daily_sent: false,
+                stat_max_login_streak: (player.stat_max_login_streak || 0) + 1 /* ТУТ: Считаем уникальные дни онлайна */
+                };
 
                 const unlockedKeys = getUnlockedTroopKeys();
 
@@ -1168,6 +1170,7 @@
             updates[targetCol] = null;
             updates[endCol] = null;
             updates[dbCol] = curLvl + 1;
+            updates.stat_troop_upgrades = (player.stat_troop_upgrades || 0) + 1; /* ТУТ: Счетчик Мистера Робота */
 
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { 
@@ -1194,13 +1197,15 @@
             const timeMult = perks.perk_quantum ? 0.9 : 1;
             const endTime = new Date(new Date().getTime() + (req.time * 3600000 * timeMult)).toISOString();
 
-            const updates = {
+           const updates = {
                 lab_upgrade_end: endTime,
                 common_parts: player.common_parts - req.c,
                 rare_parts: player.rare_parts - req.r,
                 epic_parts: player.epic_parts - req.e,
-                notif_lab_sent: false
+                notif_lab_sent: false,
+                stat_lab_upgrades: (player.stat_lab_upgrades || 0) + 1 /* ТУТ: Счетчик Хайзенберга */
             };
+            
             if(req.f_key) updates[req.f_key] = player[req.f_key] - req.f_amt;
 
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
@@ -1351,7 +1356,7 @@
             if(getE > 0) { html += `<div class="epic">+${getE} Эпик.</div>`; color="epic"; }
             if(getK > 0) { html += `<div class="kits">+${getK} Ремкомплект</div>`; color="kits"; }
 
-            const updates = { common_parts: player.common_parts - totalCost + getC, rare_parts: player.rare_parts + getR, epic_parts: player.epic_parts + getE, repair_kits: (player.repair_kits||0) + getK };
+            const updates = { common_parts: player.common_parts - totalCost + getC, rare_parts: player.rare_parts + getR, epic_parts: player.epic_parts + getE, repair_kits: (player.repair_kits||0) + getK, stat_cases_opened: (player.stat_cases_opened || 0) + amount /* ТУТ: Нейтан Дрейк */};
 
             for(let i=0; i<getBoost; i++) {
                 const bRnd = Math.random();
@@ -1370,7 +1375,9 @@
                 html += `<div style="color:var(--star-${starTier}); font-weight:bold;">🧩 Фрагмент ${starTier}⭐ ${TROOP_CFG[u].title} (x${fragCounts[u]})</div>`;
                 fragTotal += fragCounts[u];
             }
-            if (fragTotal > 0) { color = `star-${starTier}`; }
+            if (fragTotal > 0) { color = `star-${starTier}`;
+            updates.stat_total_fragments = (player.stat_total_fragments || 0) + fragTotal; /* ТУТ: Сбор фрагментов */
+            }
 
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
@@ -1387,7 +1394,8 @@
             const updates = { 
                 common_parts: player.common_parts + gotCommon, rare_parts: player.rare_parts + gotRare, epic_parts: player.epic_parts + gotEpic, 
                 booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, 
-                repair_kits: (player.repair_kits||0) + gotKit, daily_case_last_opened: new Date().toISOString() 
+                repair_kits: (player.repair_kits||0) + gotKit, daily_case_last_opened: new Date().toISOString(),
+                stat_cases_opened: (player.stat_cases_opened || 0) + 1 /* ТУТ: Нейтан Дрейк (+1 кейс) */
             };
 
             if (gotFrag) {
@@ -1453,7 +1461,8 @@
             const updates = { 
                 common_parts: player.common_parts - totalCost + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e, 
                 booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, 
-                booster_contractor: (player.booster_contractor||0) + gotCon, booster_doubler: (player.booster_doubler||0) + gotDb, repair_kits: (player.repair_kits||0) + gotKit 
+                booster_contractor: (player.booster_contractor||0) + gotCon, booster_doubler: (player.booster_doubler||0) + gotDb, repair_kits: (player.repair_kits||0) + gotKit,
+                stat_cases_opened: (player.stat_cases_opened || 0) + amount /* ТУТ: Нейтан Дрейк */
             };
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
@@ -1481,7 +1490,8 @@
             const updates = { 
                 common_parts: player.common_parts - totalCost, repair_kits: (player.repair_kits||0) + k, 
                 booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu,
-                booster_contractor: (player.booster_contractor||0) + gotCon, booster_doubler: (player.booster_doubler||0) + gotDb
+                booster_contractor: (player.booster_contractor||0) + gotCon, booster_doubler: (player.booster_doubler||0) + gotDb,
+                stat_cases_opened: (player.stat_cases_opened || 0) + amount /* ТУТ: Нейтан Дрейк */
             };
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
@@ -1955,10 +1965,11 @@
             if (isDoubler) { extraHtml += "<div class='epic' style='color:#e91e63'>🔄 ДУБЛЕР УДВОИЛ ДОБЫЧУ!</div>"; }
 
             const { data } = await db.from('players').update({
-                common_parts: player.common_parts + collectedAmount, rare_parts: player.rare_parts + extraR, epic_parts: player.epic_parts + extraE,
-                factory_last_collected: newLastCol, quest_factory_collects: (player.quest_factory_collects || 0) + collectedAmount,
-                notif_factory_sent: false
-            }).eq('id', player.id).select().single();
+            common_parts: player.common_parts + collectedAmount, rare_parts: player.rare_parts + extraR, epic_parts: player.epic_parts + extraE,
+            factory_last_collected: newLastCol, quest_factory_collects: (player.quest_factory_collects || 0) + collectedAmount,
+            notif_factory_sent: false,
+            stat_total_common: (player.stat_total_common || 0) + collectedAmount /* ТУТ: Счетчик для "Волка с Уолл-стрит" */
+        }).eq('id', player.id).select().single();
 
             if (data) { 
                 player = data; refreshAll(); 
@@ -1972,7 +1983,10 @@
             const now = new Date().getTime(); if(now < new Date(player.factory_broken_until || 0).getTime()) return;
             if (Math.random() < 0.50) {
                 const brokenEnd = new Date(now + 2 * 3600000).toISOString();
-                const { data } = await db.from('players').update({ factory_broken_until: brokenEnd, factory_last_collected: brokenEnd, notif_factory_sent: false }).eq('id', player.id).select().single();
+                const { data } = await db.from('players').update({ 
+    factory_broken_until: brokenEnd, factory_last_collected: brokenEnd, notif_factory_sent: false,
+    stat_factory_breaks: (player.stat_factory_breaks || 0) + 1 
+    }).eq('id', player.id).select().single();
                 if (data) { player = data; showMsg('factoryMsg', 'АВАРИЯ! Завод сломан на 2ч!', '#ff4444'); refreshAll(); }
             } else {
                 const stats = FACTORY_STATS[player.factory_level];
@@ -2178,7 +2192,7 @@
         async function buyBlackMarket(dealType) {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(player.bm_purchased) return;
-            let updates = { bm_purchased: true };
+            let updates = { bm_purchased: true, stat_bm_deals: (player.stat_bm_deals || 0) + 1 /* ТУТ: Счетчик Сола */ };
             let title = "ЧЕРНЫЙ РЫНОК"; let html = ''; let color = '';
             
             if (dealType === 0) {
@@ -2340,8 +2354,11 @@ const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
             } else if (isL) {
                 mBox.classList.add('legend-modal');
             }
-
+            
             document.getElementById('profName').innerText = isL ? `🔥 ${p.nickname} 🔥` : p.nickname;
+            
+            // Вывод надетого титула
+            document.getElementById('profActiveTitle').innerText = p.active_title ? `«${p.active_title}»` : '';
             
             // Статус активности
             const now = new Date().getTime();
@@ -2426,8 +2443,9 @@ const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
             </div>
 
-            <div style="position: relative; z-index: 5;">
+                <div style="position: relative; z-index: 5;">
                 <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
+                <div id="profActiveTitle" style="color: var(--meteor); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;"></div>
                 
                 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 11px;">
                     <span id="profStatus">🟢 В сети</span>
