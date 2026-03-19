@@ -1685,8 +1685,18 @@
                 }
 
                 const newTokens = Math.max(0, (player.attack_tokens || 0) - 1);
-                await db.from('players').update({ attack_tokens: newTokens }).eq('id', player.id);
+                
+                // Подготавливаем данные для отправки в базу
+                let atkUpdates = { attack_tokens: newTokens };
+                if (isWin) {
+                    atkUpdates.stat_map_captures = (player.stat_map_captures || 0) + 1; /* ТУТ: Счетчик Хоумлендера */
+                }
+                
+                await db.from('players').update(atkUpdates).eq('id', player.id);
+                
+                // Обновляем данные в браузере игрока
                 player.attack_tokens = newTokens;
+                if (isWin) player.stat_map_captures = (player.stat_map_captures || 0) + 1;
 
                 if (isWin) {
                     await db.from('territories').update({ 
