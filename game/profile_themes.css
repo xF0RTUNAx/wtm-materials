@@ -168,40 +168,42 @@
 .lb-item.theme-mint { overflow: visible !important; }
 
 /* ========================================= */
-/* ТЕМА 4: ТЕСТЕР (Монохромный градиент)     */
+/* ТЕМА 4: ТЕСТЕР (Оптимизация под мобильные)*/
 /* ========================================= */
 
 .theme-tester {
     position: relative;
-    /* Глубокий темный фон самой карточки */
     background-color: #141414 !important; 
     border: none !important;
-    /* Отключаем обрезку, чтобы свечение (blur) выходило за края */
     overflow: visible !important; 
     z-index: 1;
 }
 
-/* Создаем анимированную подложку (рамку) и её копию для свечения */
-.theme-tester::before, 
-.theme-tester::after {
+/* Четкая анимированная рамка */
+.theme-tester::before {
     content: '';
     position: absolute;
-    left: -3px;
-    top: -3px;
-    border-radius: 14px; /* Чуть больше радиуса модалки */
-    background: linear-gradient(45deg, 
-        #141414, #1b1b1b, #2e2e2e, #ffffff, #2e2e2e, 
-        #1b1b1b, #141414, #141414);
+    inset: -3px; /* Идеально облегает контейнер со всех сторон */
+    border-radius: inherit; /* Наследует точное скругление (8px или 12px) */
+    background: linear-gradient(45deg, #141414, #1b1b1b, #2e2e2e, #ffffff, #2e2e2e, #1b1b1b, #141414, #141414);
     background-size: 400%;
-    width: calc(100% + 6px);
-    height: calc(100% + 6px);
-    z-index: -1; /* Прячем под основной фон модалки */
+    z-index: -1;
     animation: tester-steam 12s linear infinite;
 }
 
-/* Вторую подложку размываем, чтобы получить эффект свечения (glow) */
+/* Размытое свечение (glow) */
 .theme-tester::after {
-    filter: blur(20px);
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: inherit;
+    background: linear-gradient(45deg, #141414, #1b1b1b, #2e2e2e, #ffffff, #2e2e2e, #1b1b1b, #141414, #141414);
+    background-size: 400%;
+    z-index: -2;
+    filter: blur(15px); /* Размытие свечения */
+    -webkit-filter: blur(15px); /* Для старых iOS */
+    transform: translateZ(0); /* ПРИНУДИТЕЛЬНОЕ 3D-УСКОРЕНИЕ (лечит баг с углами) */
+    animation: tester-steam 12s linear infinite;
 }
 
 @keyframes tester-steam {
@@ -210,9 +212,6 @@
     100% { background-position: 0 0; }
 }
 
-/* Белоснежный цвет текста для контраста */
 .theme-tester #profName { color: #ffffff !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
-
-/* Подсветка ника и стили для таблицы рейтинга */
 .theme-tester .lb-name { color: #ffffff !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
 .lb-item.theme-tester { background-color: #141414 !important; border: none !important; overflow: visible !important; }
