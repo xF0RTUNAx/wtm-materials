@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Зал Славы | xFORTUNAx</title>
+    <link rel="stylesheet" href="profile_themes.css">
     <style>
         * { box-sizing: border-box; }
         :root {
@@ -77,6 +78,9 @@
         .badge { background: rgba(0,0,0,0.8); border: 1px solid var(--gold); padding: 10px; border-radius: 8px; text-align: center; min-width: 80px; max-width: 110px; word-wrap: break-word; }
         .badge-icon { font-size: 24px; margin-bottom: 5px; }
         .badge-name { font-size: 9px; color: var(--gold); font-weight: bold; text-transform: uppercase; }
+
+        /* ДЕКОРАЦИИ ТЕМ */
+        .theme-fold, .theme-points-wrapper { display: none; }
 
         .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; }
         
@@ -239,31 +243,47 @@
 
     <div class="modal-overlay" id="profileModal" onclick="if(event.target===this) closeProfile()">
         <div class="modal-box" id="profileModalBox">
-            <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
             
-            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 11px;">
-                <span id="profStatus">🟢 В сети</span>
-                <span id="profCreated" style="color: #8b949e;">В игре с: --.--.----</span>
+            <div class="theme-fold"></div>
+            <div class="theme-points-wrapper">
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
             </div>
 
-            <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; text-align: left;">
-                <div style="margin-bottom: 5px; font-size: 13px;">Клан: <span id="profClan" style="color: var(--blue); font-weight: bold;">Одиночка</span></div>
-                <div style="margin-bottom: 5px; font-size: 13px;">Текущая мощь: <span id="profCurPwr" style="color: var(--power); font-weight: bold; font-family: monospace;">⚡0</span></div>
-                <div style="font-size: 13px;">Исторический максимум: <span id="profMaxPwr" style="color: var(--gold); font-weight: bold; font-family: monospace;">⚡0</span></div>
-            </div>
-
-            <div id="profPerksContainer" style="display: none; margin-bottom: 15px;">
-                <div style="text-align: left; font-size: 12px; color: #8b949e; margin-bottom: 5px;">Элитные Улучшения:</div>
-                <div id="profPerksList" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+            <div style="position: relative; z-index: 5;">
+                <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
+                
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 11px;">
+                    <span id="profStatus">🟢 В сети</span>
+                    <span id="profCreated" style="color: #8b949e;">В игре с: --.--.----</span>
                 </div>
-            </div>
 
-            <div style="text-align: left; font-size: 13px; color: #c9d1d9; margin-bottom: 10px;">Награды и Достижения:</div>
-            <div id="profBadges" class="badge-grid">
+                <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; text-align: left;">
+                    <div style="margin-bottom: 5px; font-size: 13px;">Клан: <span id="profClan" style="color: var(--blue); font-weight: bold;">Одиночка</span></div>
+                    <div style="margin-bottom: 5px; font-size: 13px;">Текущая мощь: <span id="profCurPwr" style="color: var(--power); font-weight: bold; font-family: monospace;">⚡0</span></div>
+                    <div style="font-size: 13px;">Исторический максимум: <span id="profMaxPwr" style="color: var(--gold); font-weight: bold; font-family: monospace;">⚡0</span></div>
                 </div>
-            <div id="profNoBadges" style="font-size: 11px; color: #555; display: none; padding: 20px 0;">Достижений пока нет</div>
 
-            <button style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #8b949e; margin-top: 15px; margin-bottom: 0;" onclick="closeProfile()">ЗАКРЫТЬ ДОСЬЕ</button>
+                <div id="profPerksContainer" style="display: none; margin-bottom: 15px;">
+                    <div style="text-align: left; font-size: 12px; color: #8b949e; margin-bottom: 5px;">Элитные Улучшения:</div>
+                    <div id="profPerksList" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                    </div>
+                </div>
+
+                <div style="text-align: left; font-size: 13px; color: #c9d1d9; margin-bottom: 10px;">Награды и Достижения:</div>
+                <div id="profBadges" class="badge-grid">
+                    </div>
+                <div id="profNoBadges" style="font-size: 11px; color: #555; display: none; padding: 20px 0;">Достижений пока нет</div>
+
+                <div id="profWardrobe" style="display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px dashed var(--meteor); margin-top: 15px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--meteor); margin-bottom: 10px; text-transform: uppercase;">Гардероб (Смена стиля)</div>
+                    <select id="themeSelector" onchange="changeProfileTheme(this.value)" style="background: rgba(0,0,0,0.8); border: 1px solid var(--meteor); color: #fff; padding: 8px; border-radius: 4px; width: 100%; font-size: 13px;">
+                        <option value="">Стандартный профиль</option>
+                    </select>
+                </div>
+
+                <button style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #8b949e; margin-top: 15px; margin-bottom: 0;" onclick="closeProfile()">ЗАКРЫТЬ ДОСЬЕ</button>
+            </div>
         </div>
     </div>
 
@@ -336,7 +356,7 @@
             if (cData) allClans = cData;
 
             const { data } = await db.from('players')
-                .select('id, nickname, max_historical_power, meteorite_shards, elite_perks, season_badges, power, last_online, created_at, clan_id')
+                .select('id, nickname, max_historical_power, meteorite_shards, elite_perks, season_badges, power, last_online, created_at, clan_id, active_bg_url')
                 .order('max_historical_power', { ascending: false })
                 .limit(100);
 
@@ -353,7 +373,15 @@
                     const shards = p.meteorite_shards || 0;
                     
                     const isLegend = p.elite_perks && p.elite_perks.perk_legend;
-                    const styleClass = isLegend ? 'legend-style' : '';
+                    
+                    // НОВАЯ ЛОГИКА ТЕМ ДЛЯ ЗАЛА СЛАВЫ
+                    let styleClass = '';
+                    if (p.active_bg_url && p.active_bg_url.trim() !== "") {
+                        styleClass = p.active_bg_url.trim(); 
+                    } else if (isLegend) {
+                        styleClass = 'legend-style';
+                    }
+                    
                     const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
 
                     html += `
@@ -372,6 +400,13 @@
             }
         }
 
+        async function changeProfileTheme(themeClass) {
+            await db.from('players').update({ active_bg_url: themeClass }).eq('id', player.id);
+            player.active_bg_url = themeClass;
+            openProfile(player.id);
+            alert("Стиль профиля успешно обновлен!");
+        }
+
         function openLegendPreview() {
             document.getElementById('legendPreviewModal').style.display = 'flex';
         }
@@ -386,8 +421,12 @@
             const isLegend = p.elite_perks && p.elite_perks.perk_legend;
             
             const modalBox = document.getElementById('profileModalBox');
-            if(isLegend) modalBox.classList.add('legend-modal');
-            else modalBox.classList.remove('legend-modal');
+            modalBox.className = 'modal-box'; 
+            if (p.active_bg_url && p.active_bg_url.trim() !== "") {
+                modalBox.classList.add(p.active_bg_url.trim());
+            } else if (isLegend) {
+                modalBox.classList.add('legend-modal');
+            }
 
             document.getElementById('profName').innerText = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
             
@@ -455,6 +494,21 @@
                 });
             } else {
                 document.getElementById('profNoBadges').style.display = 'block';
+            }
+
+            // ГАРДЕРОБ (ТОЛЬКО ДЛЯ СЕБЯ)
+            const ward = document.getElementById('profWardrobe');
+            const sel = document.getElementById('themeSelector');
+            if (p.id === player.id) {
+                ward.style.display = 'block';
+                sel.innerHTML = '<option value="">Стандартный профиль</option>';
+                if (perks.perk_theme_amethyst) sel.innerHTML += '<option value="theme-amethyst">Аметист</option>';
+                if (perks.perk_theme_cyberpunk) sel.innerHTML += '<option value="theme-cyberpunk">Неон</option>';
+                if (pks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
+                if (pks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
+                sel.value = p.active_bg_url || "";
+            } else { 
+                ward.style.display = 'none'; 
             }
 
             document.getElementById('profileModal').style.display = 'flex';
