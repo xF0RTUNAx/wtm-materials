@@ -11,6 +11,7 @@
             --bg: #050b14; --panel: rgba(10, 15, 25, 0.9); --border: #1f2937;
             --gold: #ffc107; --red: #ff1744; --green: #00e676; --blue: #03a9f4; --epic: #bc8cff;
             --t1: #a0a0a0; --t2: #58a6ff; --t3: #bc8cff;
+            --meteor: #00e5ff;
         }
         body {
             margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -222,6 +223,11 @@
             </div>
         </div>
 
+        <div id="seasonBannerBox" style="width: 100%; display: block; margin: 0 auto 20px auto; background: rgba(255, 193, 7, 0.05); border: 1px solid var(--accent-gold); padding: 15px; border-radius: 8px; text-align: center; transition: 0.5s;">
+            <div id="seasonTitle" style="color: var(--accent-gold); font-weight: 900; font-size: 18px; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,193,7,0.5);">🔥 АКТИВНЫЙ СЕЗОН 🔥</div>
+            <div id="seasonTimerDisplay" style="font-family: monospace; color: #fff; font-size: 15px;">Вычисление орбитальных данных...</div>
+        </div>
+
         <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
             <button onclick="window.location.href='fortuna_minigame.html'" style="background: #222; border: 1px solid #444; width: calc(33% - 6px); font-size: 11px;">🏠 На Базу</button>
             <button class="btn-blue" onclick="openClanManager()" style="width: calc(33% - 6px); font-size: 11px; background: transparent; border: 1px solid var(--blue); color: var(--blue);">⚙️ Ваш Клан</button>
@@ -421,12 +427,10 @@
                 safari_web_id: "web.onesignal.auto.1130386e-b2d6-4e58-9273-0761615e45a2",
             });
 
-            // 1. Если уже подписан при загрузке - синхронизируем
             if (OneSignal.User.PushSubscription.optedIn) {
                 syncOsToken(OneSignal.User.PushSubscription.id);
             }
 
-            // 2. Слушаем изменение статуса (когда игрок нажмет "Разрешить")
             OneSignal.User.PushSubscription.addEventListener("change", async (event) => {
                 if (OneSignal.User.PushSubscription.optedIn) {
                     syncOsToken(OneSignal.User.PushSubscription.id);
@@ -449,7 +453,6 @@
                     alert("Радар еще загружается, подождите пару секунд...");
                     return;
                 }
-
                 const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
                 const osId = window.OneSignal.User.PushSubscription.id;
 
@@ -457,7 +460,6 @@
                     await syncOsToken(osId);
                     alert("Уведомления УЖЕ активны! Токен: " + osId.substring(0,8) + "... успешно синхронизирован.");
                 } else {
-                    // Прямой вызов без оберток (критично для Safari/iOS)
                     await window.OneSignal.Notifications.requestPermission();
                 }
             } catch (e) {
@@ -475,17 +477,16 @@
             arty: { title: 'Артиллерия' }, aa: { title: 'ПВО' }, msl: { title: 'Ракеты' }, avia: { title: 'Авиация' } 
         };
         
-        // Внешнее кольцо для сетки 7x7 (индексы от 0 до 48)
         const T1_SECTORS = [0,1,2,3,4,5,6, 7,13, 14,20, 21,27, 28,34, 35,41, 42,43,44,45,46,47,48];
 
         let player = null; let myClan = null; let currentFront = null; let territories = []; let selectedSector = null;
         let pendingAction = null; let selectedSquadKeys = []; let cooldownTimerInt = null; let timerInterval = null;
+        let serverConfig = { is_offseason: false }; let allChatPlayers = [];
         
         let chatType = 'global'; let chatTimer = null;
 
         function generateCode() { return Math.random().toString(36).substring(2, 8).toUpperCase(); }
 
-        // Вычисляет морские пути (соседей) по старой сетке
         function getAdjacent(index) {
             let adj = [];
             const cols = territories.length === 25 ? 5 : 7;
@@ -529,18 +530,32 @@
             const pid = localStorage.getItem('minigame_player_id');
             if (!pid) { window.location.href = 'fortuna_minigame.html'; return; }
 
+            // Конфиг сезона
+            try {
+                const { data: conf } = await db.from('server_config').select('*').limit(1).maybeSingle();
+                if (conf) {
+                    serverConfig = conf;
+                    if (conf.season_end_date && new Date().getTime() > new Date(conf.season_end_date).getTime() && new Date().getTime() < new Date(conf.next_season_start_date).getTime()) {
+                        serverConfig.is_offseason = true;
+                    }
+                }
+            } catch(e) {}
+
             await db.from('players').update({last_online: new Date().toISOString()}).eq('id', pid);
             const { data: p } = await db.from('players').select('*').eq('id', pid).single();
             if (!p) { window.location.href = 'fortuna_minigame.html'; return; }
             player = p;
 
-            const now = new Date().getTime();
-            const resetTime = new Date(player.daily_quests_reset || 0).getTime();
-            if (now - resetTime >= 24 * 3600000) {
-                if((player.attack_tokens || 0) < 2) {
-                    await db.from('players').update({attack_tokens: 2}).eq('id', player.id);
-                    player.attack_tokens = 2;
-                }
+            // Проверка восстановления токенов по UTC
+            const currentDayUTC = Math.floor(Date.now() / 86400000);
+            let perks = player.elite_perks || {};
+            const maxTokens = perks.perk_general ? 3 : 2;
+            
+            if ((perks.token_reset_day || 0) < currentDayUTC) {
+                perks.token_reset_day = currentDayUTC;
+                await db.from('players').update({ attack_tokens: maxTokens, elite_perks: perks }).eq('id', player.id);
+                player.attack_tokens = maxTokens;
+                player.elite_perks = perks;
             }
 
             if (!player.clan_id) {
@@ -583,6 +598,54 @@
         function tickTimers() {
             if (!myClan) return;
             const now = new Date().getTime();
+
+            // === ГЛОБАЛЬНЫЙ ТАЙМЕР СЕЗОНОВ ===
+            if (serverConfig.season_end_date && serverConfig.next_season_start_date) {
+                const endMs = new Date(serverConfig.season_end_date).getTime();
+                const startNextMs = new Date(serverConfig.next_season_start_date).getTime();
+                const bannerBox = document.getElementById('seasonBannerBox');
+                const bannerTitle = document.getElementById('seasonTitle');
+                const bannerTimer = document.getElementById('seasonTimerDisplay');
+
+                const formatDays = (ms) => {
+                    const d = Math.floor(ms / 86400000);
+                    const h = Math.floor((ms % 86400000) / 3600000);
+                    const m = Math.floor((ms % 3600000) / 60000);
+                    const s = Math.floor((ms % 60000) / 1000);
+                    return `${d}д ${h}ч ${m}м ${s}с`;
+                };
+
+                if (now < endMs) {
+                    serverConfig.is_offseason = false;
+                    if (bannerBox) {
+                        bannerBox.style.borderColor = "var(--accent-gold)";
+                        bannerBox.style.background = "rgba(255, 193, 7, 0.05)";
+                        bannerTitle.innerText = "🔥 АКТИВНЫЙ СЕЗОН 🔥";
+                        bannerTitle.style.color = "var(--accent-gold)";
+                        bannerTitle.style.textShadow = "0 0 10px rgba(255,193,7,0.5)";
+                        bannerTimer.innerText = "До окончания: " + formatDays(endMs - now);
+                    }
+                } else if (now >= endMs && now < startNextMs) {
+                    serverConfig.is_offseason = true;
+                    if (bannerBox) {
+                        bannerBox.style.borderColor = "var(--meteor)";
+                        bannerBox.style.background = "rgba(0, 229, 255, 0.05)";
+                        bannerTitle.innerText = "❄️ МЕЖСЕЗОНЬЕ (ПЕРЕМИРИЕ) ❄️";
+                        bannerTitle.style.color = "var(--meteor)";
+                        bannerTitle.style.textShadow = "0 0 10px rgba(0,229,255,0.5)";
+                        bannerTimer.innerText = "Старт нового сезона через: " + formatDays(startNextMs - now);
+                    }
+                    
+                    const lockBtns = ['btnClaimTaxes', 'btnClaimClanBox'];
+                    lockBtns.forEach(id => { 
+                        const b = document.getElementById(id); 
+                        if(b) { b.disabled = true; b.innerText = "МЕЖСЕЗОНЬЕ"; b.style.background = "#333"; b.style.color = "#8b949e"; } 
+                    });
+                } else {
+                    if (bannerTimer) bannerTimer.innerText = "Ожидание запуска нового сезона сервером...";
+                }
+            }
+
             const lastClaim = new Date(myClan.last_tax_claim || 0).getTime();
             const taxMsLeft = (12 * 3600000) - (now - lastClaim);
             
@@ -592,26 +655,52 @@
             if (taxMsLeft > 0) {
                 taxTimerUI.innerText = formatTimeDetailed(taxMsLeft);
                 taxTimerUI.style.color = "var(--red)";
-                taxBtn.disabled = true;
-                taxBtn.style.background = "#555";
-                taxBtn.style.color = "#8b949e";
+                if(!serverConfig.is_offseason) {
+                    taxBtn.disabled = true;
+                    taxBtn.style.background = "#555";
+                    taxBtn.style.color = "#8b949e";
+                }
             } else {
                 taxTimerUI.innerText = "ДОСТУПНО!";
                 taxTimerUI.style.color = "var(--green)";
-                taxBtn.disabled = false;
-                taxBtn.style.background = "var(--gold)";
-                taxBtn.style.color = "#000";
+                if(!serverConfig.is_offseason) {
+                    taxBtn.disabled = false;
+                    taxBtn.style.background = "var(--gold)";
+                    taxBtn.style.color = "#000";
+                }
             }
 
-            const resetTime = new Date(player.daily_quests_reset || 0).getTime();
-            const tokenMsLeft = (24 * 3600000) - (now - resetTime);
+            const nextMidnightUTC = new Date(now); nextMidnightUTC.setUTCHours(24, 0, 0, 0); 
             const tokenTimerEl = document.getElementById('uiTokenTimer');
             if(tokenTimerEl) {
-                if (tokenMsLeft > 0) {
-                    tokenTimerEl.innerText = formatTimeDetailed(tokenMsLeft);
+                if (serverConfig.is_offseason) {
+                    tokenTimerEl.innerText = "МЕЖСЕЗОНЬЕ";
                 } else {
-                    tokenTimerEl.innerText = "00:00:00";
+                    tokenTimerEl.innerText = formatTimeDetailed(nextMidnightUTC.getTime() - now);
                 }
+            }
+        }
+
+        function updateClanBoxUI() {
+            if (!player || !myClan) return;
+            const influence = myClan.influence || 0;
+            const earnedMilestones = Math.floor(influence / 5000);
+            const claimed = player.clan_milestones_claimed || 0;
+            const availableBoxes = earnedMilestones - claimed;
+            
+            const remainder = influence % 5000;
+            document.getElementById('ccProgressText').innerText = `${remainder} / 5000`;
+            document.getElementById('ccProgressBar').style.width = `${(remainder / 5000) * 100}%`;
+            
+            const btn = document.getElementById('btnClaimClanBox');
+            if (availableBoxes > 0 && !serverConfig.is_offseason) {
+                btn.disabled = false;
+                btn.innerText = `ОТКРЫТЬ КОНТЕЙНЕР (${availableBoxes})`;
+                btn.style.animation = "pulse 1.5s infinite";
+            } else if (!serverConfig.is_offseason) {
+                btn.disabled = true;
+                btn.innerText = `НЕТ ДОСТУПНЫХ`;
+                btn.style.animation = "none";
             }
         }
 
@@ -628,30 +717,8 @@
             return unlocked;
         }
 
-        function updateClanBoxUI() {
-            if (!player || !myClan) return;
-            const influence = myClan.influence || 0;
-            const earnedMilestones = Math.floor(influence / 5000);
-            const claimed = player.clan_milestones_claimed || 0;
-            const availableBoxes = earnedMilestones - claimed;
-            
-            const remainder = influence % 5000;
-            document.getElementById('ccProgressText').innerText = `${remainder} / 5000`;
-            document.getElementById('ccProgressBar').style.width = `${(remainder / 5000) * 100}%`;
-            
-            const btn = document.getElementById('btnClaimClanBox');
-            if (availableBoxes > 0) {
-                btn.disabled = false;
-                btn.innerText = `ОТКРЫТЬ КОНТЕЙНЕР (${availableBoxes})`;
-                btn.style.animation = "pulse 1.5s infinite";
-            } else {
-                btn.disabled = true;
-                btn.innerText = `НЕТ ДОСТУПНЫХ`;
-                btn.style.animation = "none";
-            }
-        }
-
         async function claimClanBoxes() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if (!player || !myClan) return;
             const influence = myClan.influence || 0;
             const earnedMilestones = Math.floor(influence / 5000);
@@ -724,8 +791,9 @@
 
         // === ЧАТ СИСТЕМА ===
         async function loadPlayersForChat() {
-            const { data } = await db.from('players').select('nickname').order('nickname');
+            const { data } = await db.from('players').select('nickname, elite_perks').order('nickname');
             if (data) {
+                allChatPlayers = data;
                 const sel = document.getElementById('pmTargetInput');
                 const currentVal = sel.value;
                 sel.innerHTML = '<option value="">Выберите игрока...</option>';
@@ -828,14 +896,24 @@
                 const dDate = new Date(m.created_at);
                 const timeStr = dDate.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit'}) + ' ' + dDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
                 
+                const senderP = allChatPlayers.find(p => p.nickname === m.sender_name);
+                const isLegend = senderP && senderP.elite_perks && senderP.elite_perks.perk_legend;
+                const dispName = isLegend ? `🔥 ${m.sender_name} 🔥` : m.sender_name;
+
                 let color = m.sender_id === player.id ? 'var(--gold)' : 'var(--blue)';
+                let nameStyle = `color:${color}; cursor:pointer;`;
+                if (isLegend) {
+                    nameStyle = `color:var(--gold); text-shadow:0 0 5px rgba(255,193,7,0.5); cursor:pointer;`;
+                }
+
                 let prefix = '';
                 if(chatType === 'private') {
                     if(m.sender_id === player.id) prefix = `[Кому: ${m.target_name}] `;
                     else prefix = `[От: ${m.sender_name}] `;
                 }
+                
                 html += `<div style="margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
-                    <span style="color:#555">[${timeStr}]</span> <b style="color:${color}; cursor:pointer;" onclick="replyTo('${m.sender_name}')">${prefix}${m.sender_name}:</b> <span style="color:#c9d1d9">${m.message}</span>
+                    <span style="color:#555">[${timeStr}]</span> <b style="${nameStyle}" onclick="replyTo('${m.sender_name}')">${prefix}${dispName}:</b> <span style="color:#c9d1d9">${m.message}</span>
                 </div>`;
             });
             document.getElementById('chatMessages').innerHTML = html || '<div style="color:#8b949e; text-align:center;">Сообщений нет</div>';
@@ -881,6 +959,7 @@
 
         // === СОЗДАНИЕ И ВСТУПЛЕНИЕ ===
         async function createClan() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const name = document.getElementById('clanNameInput').value.trim();
             const tag = document.getElementById('clanTagInput').value.trim().toUpperCase();
             const clanColor = document.getElementById('clanColorInput').value;
@@ -904,9 +983,9 @@
                 
                 let terrs = [];
                 for(let i=0; i<49; i++) {
-                    let tier = 2; let pwr = 5000; 
-                    if(i===24) { tier = 3; pwr = 30000; } 
-                    else if(T1_SECTORS.includes(i)) { tier = 1; pwr = Math.floor(Math.random()*600)+200; } 
+                    let tier = 2; let pwr = 15000; 
+                    if(i===24) { tier = 3; pwr = 120000; } 
+                    else if(T1_SECTORS.includes(i)) { tier = 1; pwr = Math.floor(Math.random()*2500)+500; } 
                     terrs.push({ front_id: frontId, sector_index: i, tier: tier, is_bot: true, bot_power: pwr, owner_since: new Date().toISOString() });
                 }
                 await db.from('territories').insert(terrs);
@@ -919,6 +998,7 @@
         }
 
         async function joinClan() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const code = document.getElementById('clanCodeInput').value.trim().toUpperCase();
             if (!code) return;
             document.getElementById('setupMsg').innerText = 'Проверка спутникового кода...';
@@ -1011,6 +1091,7 @@
         function closeClanManager() { document.getElementById('clanManagerModal').style.display = 'none'; }
 
         async function leaveClan() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(!confirm("Вы уверены, что хотите покинуть Клан? Вы получите штраф 24 часа на вступление.")) return;
             closeClanManager();
             const cooldown = new Date(Date.now() + 24 * 3600000).toISOString();
@@ -1020,6 +1101,7 @@
         }
 
         async function disbandClan() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(!confirm("РАСПУСТИТЬ КЛАН?\nВсе территории будут потеряны. Вы и ваш напарник получите штраф 24 часа. Это действие необратимо!")) return;
             closeClanManager();
             const cooldown = new Date(Date.now() + 24 * 3600000).toISOString();
@@ -1052,15 +1134,24 @@
             if(!clans || clans.length === 0) { container.innerHTML = 'Пусто'; return; }
 
             const clanIds = clans.map(c => c.id);
-            const { data: playersInClans } = await db.from('players').select('id, nickname, power, last_online, clan_id').in('clan_id', clanIds);
+            const { data: playersInClans } = await db.from('players').select('id, nickname, power, last_online, clan_id, elite_perks').in('clan_id', clanIds);
 
             let html = '';
             clans.forEach(c => {
                 const ldr = playersInClans.find(p => p.id === c.leader_id);
                 const mbr = playersInClans.find(p => p.id === c.member_id);
                 
-                let ldrHtml = ldr ? `<div class="cli-player"><span style="cursor:pointer" onclick="replyTo('${ldr.nickname}')">👑 ${ldr.nickname} <span class="cli-online">(${formatTimeDate(ldr.last_online)})</span></span> <span class="cli-power">⚡${ldr.power||0}</span></div>` : '';
-                let mbrHtml = mbr ? `<div class="cli-player"><span style="cursor:pointer" onclick="replyTo('${mbr.nickname}')">👤 ${mbr.nickname} <span class="cli-online">(${formatTimeDate(mbr.last_online)})</span></span> <span class="cli-power">⚡${mbr.power||0}</span></div>` : '<div class="cli-player" style="color:#555;">Пустой слот (1/2)</div>';
+                const ldrIsLegend = ldr && ldr.elite_perks && ldr.elite_perks.perk_legend;
+                const mbrIsLegend = mbr && mbr.elite_perks && mbr.elite_perks.perk_legend;
+                
+                const ldrNameDisp = ldrIsLegend ? `🔥 ${ldr.nickname} 🔥` : (ldr ? ldr.nickname : '');
+                const mbrNameDisp = mbrIsLegend ? `🔥 ${mbr.nickname} 🔥` : (mbr ? mbr.nickname : '');
+                
+                const ldrStyle = ldrIsLegend ? 'color:var(--gold); text-shadow:0 0 5px var(--gold);' : '';
+                const mbrStyle = mbrIsLegend ? 'color:var(--gold); text-shadow:0 0 5px var(--gold);' : '';
+
+                let ldrHtml = ldr ? `<div class="cli-player"><span style="cursor:pointer; ${ldrStyle}" onclick="replyTo('${ldr.nickname}')">👑 ${ldrNameDisp} <span class="cli-online" style="color:#8b949e; text-shadow:none;">(${formatTimeDate(ldr.last_online)})</span></span> <span class="cli-power">⚡${ldr.power||0}</span></div>` : '';
+                let mbrHtml = mbr ? `<div class="cli-player"><span style="cursor:pointer; ${mbrStyle}" onclick="replyTo('${mbr.nickname}')">👤 ${mbrNameDisp} <span class="cli-online" style="color:#8b949e; text-shadow:none;">(${formatTimeDate(mbr.last_online)})</span></span> <span class="cli-power">⚡${mbr.power||0}</span></div>` : '<div class="cli-player" style="color:#555;">Пустой слот (1/2)</div>';
                 let totalPwr = (ldr ? (ldr.power||0) : 0) + (mbr ? (mbr.power||0) : 0);
 
                 let joinBtn = '';
@@ -1091,7 +1182,10 @@
             document.getElementById('uiFrontName').innerText = currentFront.name;
             document.getElementById('uiInviteCode').innerText = myClan.invite_code;
             document.getElementById('uiInfluence').innerText = myClan.influence;
-            document.getElementById('uiTokens').innerText = `${player.attack_tokens || 0}/2`;
+            
+            const maxTokens = (player.elite_perks && player.elite_perks.perk_general) ? 3 : 2;
+            document.getElementById('uiTokens').innerText = `${player.attack_tokens || 0}/${maxTokens}`;
+            
             updateClanBoxUI();
         }
 
@@ -1107,7 +1201,7 @@
                 
                 if (vulnerable.length > 0) {
                     const victim = vulnerable[Math.floor(Math.random() * vulnerable.length)];
-                    let pwr = victim.tier === 3 ? 30000 : (victim.tier === 2 ? 5000 : 800);
+                    let pwr = victim.tier === 3 ? 120000 : (victim.tier === 2 ? 15000 : (Math.floor(Math.random()*2500)+500));
                     
                     await db.from('territories').update({
                         is_bot: true, owner_clan_id: null, defender_id: null, defender_squad: null, bot_power: pwr, 
@@ -1144,34 +1238,29 @@
             await checkEndGameDomination(); 
             const { data: frontClans } = await db.from('clans').select('id, tag, color').eq('front_id', currentFront.id);
 
-            // Оборачиваем карту в контейнер для волн и скролла
             let wrapper = document.getElementById('mapWrapper');
             if (!wrapper) {
                 const grid = document.getElementById('mapContainerAnchor');
                 
-                // Внешняя скроллируемая обертка
                 wrapper = document.createElement('div');
                 wrapper.className = 'map-wrapper';
                 wrapper.id = 'mapWrapper';
                 
-                // Внутренняя обертка с фиксированной минимальной шириной
                 const inner = document.createElement('div');
                 inner.className = 'map-inner';
                 
-                // Сам слой с картой
                 const mapGrid = document.createElement('div');
                 mapGrid.id = 'mapGrid';
 
                 grid.parentNode.insertBefore(wrapper, grid);
                 wrapper.appendChild(inner);
                 inner.appendChild(mapGrid);
-                inner.innerHTML += '<div class="ocean-waves"></div>'; 
-                grid.remove(); // Удаляем старый якорь
+                inner.innerHTML += '<div class="ocean-waves"></div><div class="scanlines"></div>'; 
+                grid.remove(); 
             }
 
             const grid = document.getElementById('mapGrid');
             
-            // Карта координат архипелага
             const JITTER = [
                 [-5,-10], [12,5], [-8,15], [10,-5], [-15,-8], [5,12], [-10,5],
                 [8,-12], [-5,10], [15,-5], [-12,8], [5,-15], [-8,10], [12,-8],
@@ -1211,7 +1300,6 @@
                 <path d="M 400 150 C 550 150 550 450 400 450 C 250 450 250 150 400 150 Z" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="2" stroke-dasharray="10 5"/>
             `;
 
-            // Рисуем пунктирные морские конвои
             for(let i=0; i<territories.length; i++) {
                 const adjs = getAdjacent(i);
                 adjs.forEach(adj => {
@@ -1221,16 +1309,13 @@
                 });
             }
 
-            // Рисуем Острова
             for(let i=0; i<territories.length; i++) {
                 const sec = territories[i];
                 const pos = positions[sec.sector_index];
                 
-                // Цвета ландшафта (земли)
                 let landColor = sec.tier === 3 ? '#2d2d2d' : (sec.tier === 2 ? '#24362a' : '#3a3424'); 
                 let strokeColor = '#222';
                 
-                // Изменения для текста под иконкой
                 let textToDisplay = sec.bot_power;
                 let textType = 'power';
                 let gClass = 'sector-g';
@@ -1255,7 +1340,6 @@
                     }
                 }
 
-                // Эффект штурма
                 if (sec.assault_clan_id) {
                     let pulseColor = (sec.assault_clan_id === myClan.id) ? 'var(--gold)' : 'var(--red)';
                     alertHtml += `<circle cx="0" cy="0" r="32" fill="none" stroke="${pulseColor}" stroke-width="2" stroke-dasharray="5 5">
@@ -1271,27 +1355,23 @@
                 const centerIdx = territories.length === 25 ? 12 : 24;
                 
                 if (sec.sector_index === centerIdx) {
-                    // Цитадель (Тир 3)
                     shapeHtml = `
                         <polygon class="s-shape" points="0,-32 30,-10 20,25 -20,25 -30,-10" fill="${landColor}" stroke="${strokeColor}" stroke-width="3" stroke-linejoin="round" filter="url(#dropShadow)"/>
                         <polygon points="0,-18 15,-2 10,12 -10,12 -15,-2" fill="rgba(0,0,0,0.3)"/>`;
                     baseIcon = `<polygon points="0,-12 10,2 -10,2" fill="none" stroke="#fff" stroke-width="1.5"/><circle cx="0" cy="-2" r="2" fill="#fff"/>`;
                 } else if (sec.tier === 2) {
-                    // Средние базы (Тир 2)
                     shapeHtml = `
                         <rect class="s-shape" x="-24" y="-20" width="48" height="40" rx="8" fill="${landColor}" stroke="${strokeColor}" stroke-width="2.5" filter="url(#dropShadow)" />
                         <circle cx="-6" cy="-4" r="8" fill="rgba(0,0,0,0.2)"/>
                         <circle cx="8" cy="4" r="6" fill="rgba(0,0,0,0.2)"/>`;
                     baseIcon = `<rect x="-8" y="-6" width="16" height="12" rx="2" fill="none" stroke="#fff" stroke-width="1.5"/><line x1="0" y1="-6" x2="0" y2="-12" stroke="#fff" stroke-width="1.5"/>`;
                 } else {
-                    // Окраины (Тир 1)
                     shapeHtml = `
                         <circle class="s-shape" cx="0" cy="0" r="22" fill="${landColor}" stroke="${strokeColor}" stroke-width="2" filter="url(#dropShadow)" />
                         <circle cx="-4" cy="-4" r="14" fill="rgba(0,0,0,0.15)"/>`;
                     baseIcon = `<path d="M-8,0 Q0,-10 8,0 M0,0 L0,-6" stroke="#fff" stroke-width="1.5" fill="none"/><circle cx="0" cy="-7" r="1.5" fill="#fff"/>`;
                 }
 
-                // Индикатор мощи и уровня
                 let infoHtml = `
                     <circle cx="-16" cy="-16" r="7" fill="#000" stroke="${tColor}" stroke-width="1"/>
                     <text x="-16" y="-13" font-size="8" fill="${tColor}" font-weight="bold" text-anchor="middle" font-family="sans-serif">${sec.tier}</text>
@@ -1390,29 +1470,37 @@
             }
 
             document.getElementById('secOwner').innerHTML = ownerTag;
-            document.getElementById('secDefender').innerHTML = defName;
+            
+            if (serverConfig.is_offseason) {
+                document.getElementById('secDefender').innerHTML = defName + "<br><span style='color:var(--meteor); font-size:11px;'>[МЕЖСЕЗОНЬЕ - АТАКИ ЗАПРЕЩЕНЫ]</span>";
+            } else {
+                document.getElementById('secDefender').innerHTML = defName;
+            }
+            
             document.getElementById('secDefSquad').innerText = defSquadStr;
             document.getElementById('secPower').innerText = selectedSector.is_bot ? pwr.toLocaleString() : 'Скрыто';
 
             selectedSector._calcDefPowerBase = pwr; 
             selectedSector._defNameStr = (selectedSector.is_bot) ? 'Боты' : defName;
 
-            if (selectedSector.owner_clan_id !== myClan.id) {
-                if (!canAtk) {
-                    document.getElementById('secDefender').innerHTML = "<span style='color:var(--red)'>ОСТРОВ НЕДОСЯГАЕМ (Линия фронта)</span>";
-                } else {
-                    if (selectedSector.assault_clan_id === myClan.id) {
-                        if (selectedSector.assault_p1_id === player.id) document.getElementById('actionCoopWait').style.display = 'block';
-                        else {
-                            if (selectedSector.assault_p1_squad) {
-                                const p1Arr = selectedSector.assault_p1_squad.split(',');
-                                document.getElementById('coopP1SquadText').innerText = p1Arr.map(k => TROOP_CFG[k].title).join(', ');
-                            }
-                            document.getElementById('actionCoopJoin').style.display = 'block';
-                        }
+            if (!serverConfig.is_offseason) {
+                if (selectedSector.owner_clan_id !== myClan.id) {
+                    if (!canAtk) {
+                        document.getElementById('secDefender').innerHTML = "<span style='color:var(--red)'>ОСТРОВ НЕДОСЯГАЕМ (Линия фронта)</span>";
                     } else {
-                        document.getElementById('actionSolo').style.display = 'block';
-                        if (hasPartner) document.getElementById('actionCoopStart').style.display = 'block';
+                        if (selectedSector.assault_clan_id === myClan.id) {
+                            if (selectedSector.assault_p1_id === player.id) document.getElementById('actionCoopWait').style.display = 'block';
+                            else {
+                                if (selectedSector.assault_p1_squad) {
+                                    const p1Arr = selectedSector.assault_p1_squad.split(',');
+                                    document.getElementById('coopP1SquadText').innerText = p1Arr.map(k => TROOP_CFG[k].title).join(', ');
+                                }
+                                document.getElementById('actionCoopJoin').style.display = 'block';
+                            }
+                        } else {
+                            document.getElementById('actionSolo').style.display = 'block';
+                            if (hasPartner) document.getElementById('actionCoopStart').style.display = 'block';
+                        }
                     }
                 }
             }
@@ -1428,6 +1516,8 @@
             container.innerHTML = '';
             let count = 0;
             
+            const classWeights = { inf: 1, bmp: 2.5, tank: 5, arty: 10, aa: 20, msl: 60, avia: 200 };
+
             for (let key in TROOP_CFG) {
                 const star = player[`star_${key}`] || 0;
                 const vit = player[`vit_${key}`] ?? 100;
@@ -1435,7 +1525,8 @@
                     const hp = player[`lvl_hp_${key}`] || 0;
                     const dmg = player[`lvl_dmg_${key}`] || 0;
                     const cnt = player[`lvl_cnt_${key}`] || 0;
-                    const rawPwr = Math.floor((hp + dmg) * (cnt + 1) * (star === 5 ? 3 : (1 + star * 0.2)) * (vit / 100));
+                    const weight = classWeights[key] || 1;
+                    const rawPwr = Math.floor((hp + dmg) * (cnt + 1) * (star === 5 ? 3 : (1 + star * 0.2)) * weight * (vit / 100));
 
                     container.innerHTML += `
                     <label class="squad-label">
@@ -1471,6 +1562,7 @@
         }
 
         function executeSquadAction() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const checks = document.querySelectorAll('#squadGrid input[type="checkbox"]:checked');
             if (checks.length !== 3) return;
             
@@ -1485,12 +1577,14 @@
         }
 
         async function assignDefenderFinal() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const sqStr = selectedSquadKeys.join(',');
             const { data } = await db.from('territories').update({ defender_id: player.id, defender_squad: sqStr }).eq('id', selectedSector.id).select().single();
             if(data) { alert('Вы успешно встали в защиту с выбранным отрядом!'); loadMap(); closeModal(); }
         }
 
         async function startCoopAssaultFinal() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if((player.attack_tokens || 0) <= 0) { alert("Нет Токенов Атаки!"); return; }
             const sqStr = selectedSquadKeys.join(',');
             const newTokens = Math.max(0, (player.attack_tokens || 0) - 1);
@@ -1500,6 +1594,7 @@
         }
 
         async function cancelCoopAssault() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             await db.from('players').update({ attack_tokens: (player.attack_tokens || 0) + 1 }).eq('id', player.id);
             await db.from('territories').update({ assault_clan_id: null, assault_p1_id: null, assault_p1_squad: null }).eq('id', selectedSector.id);
             player.attack_tokens += 1; updateUI(); loadMap(); closeModal();
@@ -1511,6 +1606,8 @@
             let enemyHasAir = enemySquadKeys ? enemySquadKeys.some(k => ['msl','avia'].includes(k)) : true;
             let enemyHasArty = enemySquadKeys ? enemySquadKeys.includes('arty') : true;
 
+            const classWeights = { inf: 1, bmp: 2.5, tank: 5, arty: 10, aa: 20, msl: 60, avia: 200 };
+
             mySquadKeys.forEach(key => {
                 const hp = pData[`lvl_hp_${key}`] || 0;
                 const dmg = pData[`lvl_dmg_${key}`] || 0;
@@ -1519,7 +1616,8 @@
                 const vit = pData[`vit_${key}`] ?? 100;
                 
                 if (star > 0 && vit > 0) {
-                    let base = (hp + dmg) * (cnt + 1) * (star === 5 ? 3 : (1 + star * 0.2)) * (vit / 100);
+                    const weight = classWeights[key] || 1;
+                    let base = (hp + dmg) * (cnt + 1) * (star === 5 ? 3 : (1 + star * 0.2)) * weight * (vit / 100);
                     let mult = 1.0;
                     
                     if (key === 'avia') mult += 0.25;
@@ -1538,6 +1636,7 @@
         }
 
         async function attackSectorFinal(isCoop = false) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(!selectedSector) return;
             if((player.attack_tokens || 0) <= 0) { alert("У вас нет Токенов Атаки!"); return; }
             
@@ -1641,14 +1740,17 @@
             squadKeysArray.forEach(k => { updates[`vit_${k}`] = Math.max(0, (p[`vit_${k}`] ?? 100) - penalty); });
             
             let totalPower = p.bonus_power || 0;
+            const classWeights = { inf: 1, bmp: 2.5, tank: 5, arty: 10, aa: 20, msl: 60, avia: 200 };
             const allKeys = ['inf', 'bmp', 'tank', 'arty', 'aa', 'msl', 'avia'];
+            
             allKeys.forEach(k => {
                 const hp = p[`lvl_hp_${k}`] || 0; const dmg = p[`lvl_dmg_${k}`] || 0; const cnt = p[`lvl_cnt_${k}`] || 0;
                 const star = p[`star_${k}`] || 0; 
                 const vit = updates[`vit_${k}`] !== undefined ? updates[`vit_${k}`] : (p[`vit_${k}`] ?? 100); 
                 if (star > 0) {
                     const multiplier = star === 5 ? 3 : (1 + (star * 0.2));
-                    totalPower += Math.floor(((hp + dmg) * (cnt + 1) * multiplier) * (vit / 100));
+                    const weight = classWeights[k] || 1;
+                    totalPower += Math.floor(((hp + dmg) * (cnt + 1) * multiplier * weight) * (vit / 100));
                 }
             });
             updates.power = totalPower;
@@ -1656,6 +1758,7 @@
         }
 
         async function claimTaxes() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const now = new Date().getTime();
             const lastClaim = new Date(myClan.last_tax_claim || 0).getTime();
             if (now - lastClaim < 12 * 3600000) { 
