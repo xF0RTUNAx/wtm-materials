@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>xFORTUNAx War Thunder Mobile Giveaway</title>
+    <title>xFORTUNAx Mini-games</title>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <style>
         * { box-sizing: border-box; } 
@@ -24,6 +24,7 @@
             --star-2: #ffc107;
             --star-3: #bc8cff;
             --star-4: #ff1744;
+            --meteor: #00e5ff;
         }
 
         html, body { overflow-x: hidden; } 
@@ -136,7 +137,6 @@
         .garland-dot { width: 100%; height: 6px; background: #222; border-radius: 2px; flex-grow: 1; max-width: 20px;}
         .garland-dot.active { background: var(--accent-gold); box-shadow: 0 0 5px var(--accent-gold);}
 
-        /* Выравнивание гирлянд для Лабы и Госпиталя */
         #labGarlandContainer .garland, #hospGarlandContainer .garland { justify-content: center; }
 
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
@@ -170,9 +170,14 @@
         .btn-pvp { background: #0088cc; color: white; border: 2px solid #00e676; font-size: 18px; padding: 15px; margin-bottom: 15px; animation: pulse 2s infinite;}
         .btn-home { background: transparent; border: 1px solid #8b949e; color: #8b949e; width: auto; padding: 6px 15px; border-radius: 6px; cursor: pointer; transition: 0.2s;}
         
+        .btn-hall { background: rgba(0, 229, 255, 0.1); border: 1px solid var(--meteor); color: var(--meteor); padding: 15px; border-radius: 6px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; margin-bottom: 15px; width: 100%; text-align: center; font-size: 18px; text-transform: uppercase; text-shadow: 0 0 10px rgba(0, 229, 255, 0.5);}
+        .btn-hall:hover { background: rgba(0, 229, 255, 0.2); }
+
         .quest-item { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 5px;}
         .quest-item span { color: var(--accent-gold); font-weight: bold; }
         .drop-chances { font-size: 10px; color: #8b949e; text-align: center; line-height: 1.3;}
+
+        .offseason-banner { background: rgba(255, 23, 68, 0.1); border: 1px solid var(--red); color: var(--red); padding: 15px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 20px; display: none; }
 
         /* МОДАЛКИ И УВЕДОМЛЕНИЯ */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
@@ -180,15 +185,15 @@
         .modal-box.show { transform: scale(1); opacity: 1; }
         .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;}
         
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
         .msg { font-size: 13px; font-weight: bold; min-height: 18px; margin-top: 8px; text-align: center;}
         
         /* ЛИДЕРБОРД */
         .leaderboard { margin-top: 25px; }
         .lb-item { display: flex; flex-direction: row; align-items: center; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; margin-bottom: 10px; text-align: left;}
+        .lb-item.legend-style { background: linear-gradient(90deg, rgba(255, 193, 7, 0.15) 0%, rgba(88, 166, 255, 0.25) 100%); border: 1px solid var(--gold); box-shadow: 0 0 10px rgba(255, 193, 7, 0.1); }
         .lb-rank { font-size: 20px; font-weight: 900; color: var(--accent-gold); width: 40px; text-align: center;}
         .lb-info { flex-grow: 1; padding-left: 10px; border-left: 1px solid #30363d;}
+        .lb-item.legend-style .lb-info { border-left-color: rgba(255, 255, 255, 0.2); }
         .lb-name { font-size: 16px; font-weight: bold; color: #fff; display: flex; justify-content: space-between;}
         .lb-score { color: var(--power); font-size: 14px; text-shadow: 0 0 5px rgba(255,23,68,0.5);}
 
@@ -337,11 +342,18 @@
     </div>
 
     <div class="container" id="gameInterface">
+        <div id="offseasonBanner" class="offseason-banner">МЕЖСЕЗОНЬЕ. Фронт закрыт. Ожидание старта следующего сезона...</div>
+        
         <div class="game-header">
             <button class="btn-home" style="width: auto; padding: 6px 15px; font-size: 12px;" onclick="window.location.href='../index.html'">🏠 На главную</button>
             <button class="btn-info" style="width: auto; padding: 6px 15px; font-size: 12px; background: transparent; border: 1px solid var(--rare); color: var(--rare);" onclick="window.location.href='rules.html'">📜 Правила и механики</button>
             <h2 class="commander-title">Командир: <span id="playerNameDisplay" style="color: var(--accent-gold);"></span></h2>
+        </div> <div id="seasonBannerBox" style="width: 100%; display: block; margin: 0 auto 20px auto; background: rgba(255, 193, 7, 0.05); border: 1px solid var(--accent-gold); padding: 15px; border-radius: 8px; text-align: center; transition: 0.5s;">
+            <div id="seasonTitle" style="color: var(--accent-gold); font-weight: 900; font-size: 18px; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,193,7,0.5);">🔥 АКТИВНЫЙ СЕЗОН 🔥</div>
+            <div id="seasonTimerDisplay" style="font-family: monospace; color: #fff; font-size: 15px;">Вычисление орбитальных данных...</div>
         </div>
+
+        <a href="hall_of_fame.html" class="btn-hall">🏆 АБСОЛЮТНЫЙ РЕЙТИНГ И МАГАЗИН ☄️</a>
 
         <button class="btn-pvp" onclick="window.location.href='collision.html'" style="width: 100%;">🌍 ГЛОБАЛЬНАЯ КАРТА</button>
 
@@ -381,7 +393,7 @@
             <div class="panel full-width" id="hospPanel">
                 <h3 style="color: #00e676; text-align: center; margin-bottom: 5px;">🏥 Военный Госпиталь (Ур. <span id="hospitalLevelUI">1</span>)</h3>
                 <div id="hospGarlandContainer" style="margin-bottom: 10px;"></div>
-                <div style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 15px;">Автоматически восстанавливает 25% ХП за 4 часа.</div>
+                <div style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 15px;">Автоматически восстанавливает 25% ХП за цикл.</div>
                 <div id="hospSlotsContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 15px;">
                 </div>
                 <div id="hospUpgradeStatus"></div>
@@ -391,11 +403,19 @@
 
             <div class="panel full-width">
                 <h3 style="color: var(--power); text-align: center; border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px;">🎖️ Армия (Слияние и Обучение)</h3>
+                
                 <div style="background: rgba(255, 193, 7, 0.1); border: 1px solid var(--accent-gold); padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px;">
-                    <div style="font-size: 12px; color: #8b949e;">Статус обучения (1 час на улучшение):</div>
+                    <div style="font-size: 12px; color: #8b949e;">Статус обучения (1):</div>
                     <div id="troopUpgradeStatus" style="font-weight: bold; color: var(--accent-gold); font-size: 14px; margin-top: 5px;">Свободно</div>
-                    <button id="btnFinishTroop" class="btn-gold" style="display:none; margin-top: 5px; padding: 5px;" onclick="finishTroopUpgrade()">Завершить!</button>
+                    <button id="btnFinishTroop" class="btn-gold" style="display:none; margin-top: 5px; padding: 5px;" onclick="finishTroopUpgrade(1)">Завершить!</button>
+                    
+                    <div id="slot2Container" style="display:none; margin-top: 10px; border-top: 1px dashed #444; padding-top: 10px;">
+                        <div style="font-size: 12px; color: #8b949e;">Статус обучения (2 - Элита):</div>
+                        <div id="troopUpgradeStatus2" style="font-weight: bold; color: var(--accent-gold); font-size: 14px; margin-top: 5px;">Свободно</div>
+                        <button id="btnFinishTroop2" class="btn-gold" style="display:none; margin-top: 5px; padding: 5px;" onclick="finishTroopUpgrade(2)">Завершить!</button>
+                    </div>
                 </div>
+                
                 <div class="troop-grid" id="troopGridContainer"></div>
             </div>
 
@@ -553,12 +573,10 @@
                 safari_web_id: "web.onesignal.auto.1130386e-b2d6-4e58-9273-0761615e45a2",
             });
 
-            // 1. Если уже подписан при загрузке - синхронизируем
             if (OneSignal.User.PushSubscription.optedIn) {
                 syncOsToken(OneSignal.User.PushSubscription.id);
             }
 
-            // 2. Слушаем изменение статуса (когда игрок нажмет "Разрешить")
             OneSignal.User.PushSubscription.addEventListener("change", async (event) => {
                 if (OneSignal.User.PushSubscription.optedIn) {
                     syncOsToken(OneSignal.User.PushSubscription.id);
@@ -581,15 +599,12 @@
                     alert("Радар еще загружается, подождите пару секунд...");
                     return;
                 }
-
                 const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
                 const osId = window.OneSignal.User.PushSubscription.id;
-
                 if (isOptedIn && osId) {
                     await syncOsToken(osId);
                     alert("Уведомления УЖЕ активны! Токен: " + osId.substring(0,8) + "... успешно синхронизирован.");
                 } else {
-                    // Прямой вызов без оберток (критично для Safari/iOS)
                     await window.OneSignal.Notifications.requestPermission();
                 }
             } catch (e) {
@@ -636,6 +651,7 @@
 
         let player = null; let globalTimer = null; let authMode = 'login';
         let craftSetup = {}; let confirmAction = null;
+        let serverConfig = { is_offseason: false };
 
         function getUnlockedTroopKeys() {
             let unlocked = [];
@@ -753,7 +769,7 @@
                 if (pin !== pin2) { showMsg('errorMsg', "Пароли не совпадают!", '#ff4444'); return; }
                 if (wtmId.length < 3) { showMsg('errorMsg', "Введите ваш WTM ID!", '#ff4444'); return; }
                 const { data: existing } = await db.from('players').select('id').eq('nickname', nick).single();
-                if (existing) { showMsg('errorMsg', "Этот ник уже занят!", '#ff4444'); return; }
+                if (existing) { showMsg('errorMsg', "Этот ник already занят!", '#ff4444'); return; }
 
                 const { data: newPlayer, error } = await db.from('players').insert([{ 
                     nickname: nick, pin_code: pin, wtm_id: wtmId, factory_level: 1, lvl_lab: 1, lvl_hospital: 1,
@@ -770,19 +786,19 @@
             localStorage.setItem('minigame_player_id', pData.id); document.getElementById('bodyBg').className = 'game-bg';
             document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
             
-            // Проверка подписки при логине
             if (window.OneSignal && window.OneSignal.User && window.OneSignal.User.PushSubscription) {
                 if (window.OneSignal.User.PushSubscription.optedIn) {
                     syncOsToken(window.OneSignal.User.PushSubscription.id);
                 }
             }
-
             refreshAll().then(checkDailyLogin);
         }
         function logout() { localStorage.removeItem('minigame_player_id'); location.reload(); }
 
         function calcTruePower(pData) {
             let total = pData.bonus_power || 0;
+            const classWeights = { inf: 1, bmp: 2.5, tank: 5, arty: 10, aa: 20, msl: 60, avia: 200 };
+            
             for (let key in TROOP_CFG) {
                 const hp = pData[`lvl_hp_${key}`] || 0;
                 const dmg = pData[`lvl_dmg_${key}`] || 0;
@@ -792,7 +808,8 @@
                 
                 if (star > 0) {
                     const multiplier = star === 5 ? 3 : (1 + (star * 0.2));
-                    total += Math.floor(((hp + dmg) * (cnt + 1) * multiplier) * (vit / 100));
+                    const weight = classWeights[key] || 1;
+                    total += Math.floor(((hp + dmg) * (cnt + 1) * multiplier * weight) * (vit / 100));
                 }
             }
             return total;
@@ -961,9 +978,9 @@
 
                 const costHp = getTroopUpgCost(key, hpLvl); const costDmg = getTroopUpgCost(key, dmgLvl); const costCnt = getTroopUpgCost(key, cntLvl);
                 
-                const btnHp = `<button class="btn-upg-troop" ${hpLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'hp', ${costHp.c}, ${costHp.r}, ${costHp.e})">Улучшить (1ч)<br><span style="font-size:9px; color:#a0a0a0;">${costHp.c}О ${costHp.r}Р ${costHp.e}Э</span></button>`;
-                const btnDmg = `<button class="btn-upg-troop" ${dmgLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'dmg', ${costDmg.c}, ${costDmg.r}, ${costDmg.e})">Улучшить (1ч)<br><span style="font-size:9px; color:#a0a0a0;">${costDmg.c}О ${costDmg.r}Р ${costDmg.e}Э</span></button>`;
-                const btnCnt = `<button class="btn-upg-troop" ${cntLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'cnt', ${costCnt.c}, ${costCnt.r}, ${costCnt.e})">Улучшить (1ч)<br><span style="font-size:9px; color:#a0a0a0;">${costCnt.c}О ${costCnt.r}Р ${costCnt.e}Э</span></button>`;
+                const btnHp = `<button class="btn-upg-troop" ${hpLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'hp', ${costHp.c}, ${costHp.r}, ${costHp.e})">Улучшить<br><span style="font-size:9px; color:#a0a0a0;">${costHp.c}О ${costHp.r}Р ${costHp.e}Э</span></button>`;
+                const btnDmg = `<button class="btn-upg-troop" ${dmgLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'dmg', ${costDmg.c}, ${costDmg.r}, ${costDmg.e})">Улучшить<br><span style="font-size:9px; color:#a0a0a0;">${costDmg.c}О ${costDmg.r}Р ${costDmg.e}Э</span></button>`;
+                const btnCnt = `<button class="btn-upg-troop" ${cntLvl>=maxLvl ? 'disabled' : ''} onclick="startTroopUpgrade('${key}', 'cnt', ${costCnt.c}, ${costCnt.r}, ${costCnt.e})">Улучшить<br><span style="font-size:9px; color:#a0a0a0;">${costCnt.c}О ${costCnt.r}Р ${costCnt.e}Э</span></button>`;
 
                 let hpColor = vit > 50 ? '#00e676' : (vit > 0 ? '#ffc107' : '#ff4444');
 
@@ -974,7 +991,7 @@
                         repHtml = `<div style="font-size:10px; color:var(--accent-gold);">🔧 Ремонт: <span id="manRepTimer_${key}">--:--</span></div>`;
                     }
                 } else if (vit < 100) {
-                    repHtml = `<button style="background:transparent; border:1px solid var(--accent-green); color:var(--accent-green); font-size:10px; padding:2px 5px; width:auto; border-radius:4px; cursor:pointer;" onclick="manualRepair('${key}')">🔧 +5% (1 Ремк. / 1ч)</button>`;
+                    repHtml = `<button style="background:transparent; border:1px solid var(--accent-green); color:var(--accent-green); font-size:10px; padding:2px 5px; width:auto; border-radius:4px; cursor:pointer;" onclick="manualRepair('${key}')">🔧 +5% (1 Ремк.)</button>`;
                 }
 
                 const isMaxTroop = (star === 5 && hpLvl === cfg.max && dmgLvl === cfg.max && cntLvl === cfg.max && cfg.max > 0);
@@ -1029,6 +1046,7 @@
         }
 
         async function manualRepair(key) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if ((player.repair_kits || 0) < 1) { showMsg('hospMsg', 'Нет ремкомплектов!', '#ff4444'); return; }
             if ((player[`vit_${key}`] ?? 100) >= 100) { showMsg('hospMsg', 'Отряд полностью здоров!', '#ff4444'); return; }
             if (player[`rep_end_${key}`] && new Date().getTime() < new Date(player[`rep_end_${key}`]).getTime()) {
@@ -1042,13 +1060,14 @@
             const { data, error } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (error) {
                 console.error(error);
-                alert("Ошибка БД! Не хватает колонок для ремонта. Выполните SQL-запрос.");
+                alert("Ошибка БД! Не хватает колонок для ремонта.");
                 return;
             }
             if (data) { player = data; refreshAll(); }
         }
 
         async function mergeStar(key, targetStar) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const updates = {};
             updates[`star_${key}`] = targetStar;
             
@@ -1072,36 +1091,60 @@
         }
 
         async function startTroopUpgrade(key, stat, c, r, e) {
-            if (player.troop_upgrade_target) { alert("Инженеры уже заняты обучением другого отряда!"); return; }
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if (player.common_parts < c || player.rare_parts < r || player.epic_parts < e) { alert("Недостаточно ресурсов для улучшения!"); return; }
+            
+            const perks = player.elite_perks || {};
+            let slot = 1;
+
+            if (player.troop_upgrade_target) {
+                if (perks.perk_engineer && !player.troop_upgrade_target_2) {
+                    slot = 2;
+                } else {
+                    alert("Инженеры уже заняты!"); return; 
+                }
+            }
             
             const star = player[`star_${key}`] || 0;
             const maxLvl = getStarMaxLevel(star, TROOP_CFG[key].max);
             const curLvl = player[`lvl_${stat}_${key}`] || 0;
             if (curLvl >= maxLvl) return;
 
-            const endTime = new Date(new Date().getTime() + 3600000).toISOString(); 
+            const trainTime = perks.perk_training ? 2880000 : 3600000;
+            const endTime = new Date(new Date().getTime() + trainTime).toISOString(); 
             const updates = { 
-                troop_upgrade_target: `${key}_${stat}`,
-                troop_upgrade_end: endTime,
                 common_parts: player.common_parts - c,
                 rare_parts: player.rare_parts - r,
-                epic_parts: player.epic_parts - e,
-                notif_troop_sent: false
+                epic_parts: player.epic_parts - e
             };
+
+            if (slot === 1) {
+                updates.troop_upgrade_target = `${key}_${stat}`;
+                updates.troop_upgrade_end = endTime;
+                updates.notif_troop_sent = false;
+            } else {
+                updates.troop_upgrade_target_2 = `${key}_${stat}`;
+                updates.troop_upgrade_end_2 = endTime;
+            }
+
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { player = data; refreshAll(); }
         }
 
-        async function finishTroopUpgrade() {
-            if (!player.troop_upgrade_target) return;
-            const parts = player.troop_upgrade_target.split('_');
+        async function finishTroopUpgrade(slot = 1) {
+            const targetCol = slot === 1 ? 'troop_upgrade_target' : 'troop_upgrade_target_2';
+            const endCol = slot === 1 ? 'troop_upgrade_end' : 'troop_upgrade_end_2';
+            
+            if (!player[targetCol]) return;
+            const parts = player[targetCol].split('_');
             const key = parts[0]; const stat = parts[1];
             
             const dbCol = `lvl_${stat}_${key}`;
             const curLvl = player[dbCol] || 0;
 
-            const updates = { troop_upgrade_target: null, troop_upgrade_end: null };
+            const updates = {};
+            updates[targetCol] = null;
+            updates[endCol] = null;
             updates[dbCol] = curLvl + 1;
 
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
@@ -1112,6 +1155,7 @@
         }
 
         async function upgradeLab() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if (player.lab_upgrade_end) { showMsg('labMsg', 'Улучшение уже в процессе!', '#ff4444'); return; }
             const lvl = player.lvl_lab || 1;
             if (lvl >= 7) return;
@@ -1124,7 +1168,9 @@
                 showMsg('labMsg', `Недостаточно: ${req.f_name} (${player[req.f_key]||0}/${req.f_amt})`, '#ff4444'); return;
             }
 
-            const endTime = new Date(new Date().getTime() + (req.time * 3600000)).toISOString();
+            const perks = player.elite_perks || {};
+            const timeMult = perks.perk_quantum ? 0.9 : 1;
+            const endTime = new Date(new Date().getTime() + (req.time * 3600000 * timeMult)).toISOString();
 
             const updates = {
                 lab_upgrade_end: endTime,
@@ -1140,6 +1186,7 @@
         }
 
         async function upgradeHospital() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if (player.hosp_upgrade_end) { showMsg('hospMsg', 'Улучшение уже в процессе!', '#ff4444'); return; }
             const lvl = player.lvl_hospital || 1;
             if (lvl >= 3) return;
@@ -1211,7 +1258,7 @@
                     } else {
                         container.innerHTML += `<div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 6px; border: 1px solid #333;">
                             <select id="hospSelect_${i}" style="padding: 5px; font-size: 12px; margin-bottom: 5px;">${optionsHtml}</select>
-                            <button style="background: #00e676; border:none; padding: 5px;" onclick="startHealing(${i})">Начать (4ч)</button>
+                            <button style="background: #00e676; border:none; padding: 5px;" onclick="startHealing(${i})">Начать</button>
                         </div>`;
                     }
                 }
@@ -1219,6 +1266,7 @@
         }
 
         async function startHealing(slot) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const sel = document.getElementById(`hospSelect_${slot}`);
             if(!sel || !sel.value) return;
             const key = sel.value;
@@ -1229,20 +1277,25 @@
 
             const updates = {};
             updates[`hosp_${slot}_target`] = key;
-            updates[`hosp_${slot}_end`] = new Date(Date.now() + 4 * 3600000).toISOString(); 
-            updates[`notif_heal_${slot}_sent`] = false; // Сбрасываем предохранитель для уведомления
+            
+            const perks = player.elite_perks || {};
+            const healTime = perks.perk_surgeon ? 12960000 : 14400000;
+            
+            updates[`hosp_${slot}_end`] = new Date(Date.now() + healTime).toISOString(); 
+            updates[`notif_heal_${slot}_sent`] = false; 
             
             const { data, error } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (error) {
                 console.error(error);
-                showMsg('hospMsg', 'Ошибка БД! Выполните SQL-запрос.', '#ff4444');
+                showMsg('hospMsg', 'Ошибка БД!', '#ff4444');
                 return;
             }
             if (data) { player = data; refreshAll(); }
         }
 
-        // === ГАЧА КОНТЕЙНЕРОВ 3.0 (ФРАГМЕНТЫ) ===
+        // === ГАЧА КОНТЕЙНЕРОВ ===
         async function openGacha(starTier, amount) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             let cost = 0; let baseC = 0, baseR = 0, baseE = 0;
             if (starTier === 1) { cost = 50; baseC = 10; baseR = 10; baseE = 3; }
             if (starTier === 2) { cost = 100; baseC = 25; baseR = 20; baseE = 6; }
@@ -1301,8 +1354,8 @@
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
         }
 
-        // === СТАРЫЕ КОНТЕЙНЕРЫ ===
         async function openDailyCase() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const gotCommon = Math.floor(Math.random() * 51) + 100; const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; const gotEpic = Math.random() < 0.05 ? 1 : 0; 
             const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.01 ? 1 : 0;
             const gotFrag = Math.random() < 0.05 ? 1 : 0;
@@ -1348,6 +1401,7 @@
         }
 
         async function openPaidCase(amount) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const totalCost = 25 * amount;
             if (player.common_parts < totalCost) { showMsg('caseMsg', `Нужно ${totalCost} Обычных деталей!`, '#ff4444'); return; }
             
@@ -1384,6 +1438,7 @@
         }
 
         async function openRepairCase(amount) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const totalCost = 250 * amount;
             if (player.common_parts < totalCost) { showMsg('caseMsg', `Нужно ${totalCost} Обычных деталей!`, '#ff4444'); return; }
             
@@ -1412,6 +1467,18 @@
 
         async function refreshAll() {
             const pid = localStorage.getItem('minigame_player_id'); if (!pid) return;
+            
+            // Проверка межсезонья
+            try {
+                const { data: conf } = await db.from('server_config').select('*').limit(1).maybeSingle();
+                if (conf) {
+                    serverConfig = conf;
+                    if (conf.season_end_date && new Date().getTime() > new Date(conf.season_end_date).getTime()) {
+                        serverConfig.is_offseason = true;
+                    }
+                }
+            } catch(e) {}
+
             const { data } = await db.from('players').select('*').eq('id', pid).single();
             if (data) {
                 player = data;
@@ -1446,7 +1513,10 @@
         }
 
         function updateUI() {
-            document.getElementById('playerNameDisplay').innerText = player.nickname; 
+            let pName = player.nickname;
+            if (player.elite_perks && player.elite_perks.perk_legend) pName = `🔥 ${pName} 🔥`;
+            document.getElementById('playerNameDisplay').innerText = pName; 
+            
             document.getElementById('countCommon').innerText = player.common_parts; 
             document.getElementById('countRare').innerText = player.rare_parts;
             document.getElementById('countEpic').innerText = player.epic_parts; 
@@ -1469,7 +1539,9 @@
             
             document.getElementById('factoryLevelUI').innerText = player.factory_level;
             document.getElementById('factoryGarlandContainer').innerHTML = renderGarland(player.factory_level, 10);
-            document.getElementById('factoryYieldText').innerText = `Приносит: ${FACTORY_STATS[player.factory_level].y} Обычных за партию`;
+            
+            let spyBonusUI = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+            document.getElementById('factoryYieldText').innerText = `Приносит: ${Math.floor(FACTORY_STATS[player.factory_level].y * spyBonusUI)} Обычных за партию`;
 
             const btnUpg = document.getElementById('btnUpgrade');
             const factPanel = document.getElementById('factPanel');
@@ -1501,7 +1573,10 @@
                     const req = LAB_REQ[labLvl + 1];
                     let reqText = `Цена: ${req.c} Об., ${req.r} Ред., ${req.e} Эп.`;
                     if(req.f_key) reqText += `<br><span style="color:#ff1744">Требуется: ${req.f_amt}x ${req.f_name}</span>`;
-                    reqText += `<br>Время: ${req.time}ч`;
+                    
+                    const timeMult = (player.elite_perks && player.elite_perks.perk_quantum) ? 0.9 : 1;
+                    reqText += `<br>Время: ${req.time * timeMult}ч`;
+                    
                     document.getElementById('labNextUnlock').innerHTML = `Следующее улучшение: ${TROOP_CFG[req.unlocks].title}<br><span style="font-size:10px; font-weight:normal; color:#8b949e;">${reqText}</span>`;
                     btnUpgLab.style.display = 'block';
                 }
@@ -1509,6 +1584,10 @@
 
             buildTroopUI();
             buildHospitalUI();
+            
+            if (player.elite_perks && player.elite_perks.perk_engineer) {
+                document.getElementById('slot2Container').style.display = 'block';
+            }
 
             const currentDayUTC = Math.floor(Date.now() / 86400000); const lastDayUTC = player.last_login_day || 0; const canClaimToday = currentDayUTC > lastDayUTC;
             let visualStreak = player.login_streak || 0;
@@ -1552,6 +1631,13 @@
             const elapsedDaily = new Date().getTime() - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000; const timerDaily = document.getElementById('dailyCaseTimer');
             if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
             else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
+            
+            if (serverConfig.is_offseason) {
+                document.getElementById('offseasonBanner').style.display = 'block';
+                document.getElementById('timerLoginReset').innerText = "МЕЖСЕЗОНЬЕ";
+                document.getElementById('timerQuestsReset').innerText = "МЕЖСЕЗОНЬЕ";
+                timerDaily.innerText = "МЕЖСЕЗОНЬЕ";
+            }
         }
 
         function getEffectiveLoot(lastStr, speedStr, autoStr, conStr, msPerBatch, yieldPerBatch) {
@@ -1598,15 +1684,65 @@
         function tickTimers() {
             if(!player) return;
             const now = new Date().getTime();
+            // === ГЛОБАЛЬНЫЙ ТАЙМЕР СЕЗОНОВ ===
+            if (serverConfig.season_end_date && serverConfig.next_season_start_date) {
+                const endMs = new Date(serverConfig.season_end_date).getTime();
+                const startNextMs = new Date(serverConfig.next_season_start_date).getTime();
+                const bannerBox = document.getElementById('seasonBannerBox');
+                const bannerTitle = document.getElementById('seasonTitle');
+                const bannerTimer = document.getElementById('seasonTimerDisplay');
+
+                // Вспомогательная функция для дней
+                const formatDays = (ms) => {
+                    const d = Math.floor(ms / 86400000);
+                    const h = Math.floor((ms % 86400000) / 3600000);
+                    const m = Math.floor((ms % 3600000) / 60000);
+                    const s = Math.floor((ms % 60000) / 1000);
+                    return `${d}д ${h}ч ${m}м ${s}с`;
+                };
+
+                if (now < endMs) {
+                    serverConfig.is_offseason = false;
+                    if (bannerBox) {
+                        bannerBox.style.borderColor = "var(--accent-gold)";
+                        bannerBox.style.background = "rgba(255, 193, 7, 0.05)";
+                        bannerTitle.innerText = "🔥 АКТИВНЫЙ СЕЗОН 1 🔥";
+                        bannerTitle.style.color = "var(--accent-gold)";
+                        bannerTitle.style.textShadow = "0 0 10px rgba(255,193,7,0.5)";
+                        bannerTimer.innerText = "До окончания: " + formatDays(endMs - now);
+                    }
+                } else if (now >= endMs && now < startNextMs) {
+                    serverConfig.is_offseason = true;
+                    if (bannerBox) {
+                        bannerBox.style.borderColor = "var(--meteor)";
+                        bannerBox.style.background = "rgba(0, 229, 255, 0.05)";
+                        bannerTitle.innerText = "❄️ МЕЖСЕЗОНЬЕ (ПЕРЕМИРИЕ) ❄️";
+                        bannerTitle.style.color = "var(--meteor)";
+                        bannerTitle.style.textShadow = "0 0 10px rgba(0,229,255,0.5)";
+                        bannerTimer.innerText = "Старт нового сезона через: " + formatDays(startNextMs - now);
+                    }
+                    
+                    // Блокировка кнопок (визуальная)
+                    const lockBtns = ['btnCollectFact', 'btnOverload', 'btnUpgrade', 'btnUpgradeLab', 'btnUpgradeHosp'];
+                    lockBtns.forEach(id => { 
+                        const b = document.getElementById(id); 
+                        if(b) { b.disabled = true; b.innerText = "МЕЖСЕЗОНЬЕ"; b.style.background = "#333"; } 
+                    });
+                } else {
+                    if (bannerTimer) bannerTimer.innerText = "Ожидание запуска нового сезона сервером...";
+                }
+            }
             
-            const resetTime = new Date(player.daily_quests_reset || 0).getTime();
-            if (now - resetTime >= 24 * 3600000) { refreshAll(); return; }
-            
-            const questResetMs = (24 * 3600000) - (now - resetTime); 
-            document.getElementById('timerQuestsReset').innerText = questResetMs > 0 ? formatTime(questResetMs) : "00:00";
-            
-            const nextMidnightUTC = new Date(now); nextMidnightUTC.setUTCHours(24, 0, 0, 0); 
-            document.getElementById('timerLoginReset').innerText = formatTime(nextMidnightUTC.getTime() - now);
+            if (!serverConfig.is_offseason) {
+                const resetTime = new Date(player.daily_quests_reset || 0).getTime();
+                if (now - resetTime >= 24 * 3600000) { refreshAll(); return; }
+                
+                const questResetMs = (24 * 3600000) - (now - resetTime); 
+                document.getElementById('timerQuestsReset').innerText = questResetMs > 0 ? formatTime(questResetMs) : "00:00";
+                
+                const nextMidnightUTC = new Date(now); nextMidnightUTC.setUTCHours(24, 0, 0, 0); 
+                document.getElementById('timerLoginReset').innerText = formatTime(nextMidnightUTC.getTime() - now);
+            }
 
             // Лаборатория
             if (player.lab_upgrade_end) {
@@ -1634,6 +1770,7 @@
                 }
             }
 
+            // Обучение Слот 1
             const upgTarget = player.troop_upgrade_target;
             const upgEnd = new Date(player.troop_upgrade_end || 0).getTime();
             if (upgTarget) {
@@ -1650,6 +1787,27 @@
                 document.getElementById('troopUpgradeStatus').innerText = "Свободно";
                 document.getElementById('troopUpgradeStatus').style.color = "#8b949e";
                 document.getElementById('btnFinishTroop').style.display = "none";
+            }
+
+            // Обучение Слот 2
+            if (player.elite_perks && player.elite_perks.perk_engineer) {
+                const upgTarget2 = player.troop_upgrade_target_2;
+                const upgEnd2 = new Date(player.troop_upgrade_end_2 || 0).getTime();
+                if (upgTarget2) {
+                    if (now >= upgEnd2) {
+                        document.getElementById('troopUpgradeStatus2').innerText = "ОБУЧЕНИЕ ЗАВЕРШЕНО!";
+                        document.getElementById('troopUpgradeStatus2').style.color = "#00e676";
+                        document.getElementById('btnFinishTroop2').style.display = "inline-block";
+                    } else {
+                        document.getElementById('troopUpgradeStatus2').innerText = "Обучение: " + formatTime(upgEnd2 - now);
+                        document.getElementById('troopUpgradeStatus2').style.color = "var(--accent-gold)";
+                        document.getElementById('btnFinishTroop2').style.display = "none";
+                    }
+                } else {
+                    document.getElementById('troopUpgradeStatus2').innerText = "Свободно";
+                    document.getElementById('troopUpgradeStatus2').style.color = "#8b949e";
+                    document.getElementById('btnFinishTroop2').style.display = "none";
+                }
             }
 
             let needsHealthUpdate = false;
@@ -1724,7 +1882,11 @@
                 document.getElementById('btnCollectFact').disabled = false; document.getElementById('btnOverload').disabled = false;
                 const loot = getEffectiveLoot(player.factory_last_collected, player.speed_boost_end, player.auto_boost_end, player.contractor_boost_end, stats.ms, stats.y);
                 
-                document.getElementById('factoryAccumulated').innerText = loot.d; document.getElementById('factoryMax').innerText = isAuto ? "∞" : stats.y;
+                let spyBonus = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+                let actualYield = Math.floor(stats.y * spyBonus);
+                
+                document.getElementById('factoryAccumulated').innerText = Math.floor(loot.d * spyBonus); 
+                document.getElementById('factoryMax').innerText = isAuto ? "∞" : actualYield;
                 document.getElementById('factoryProgress').style.width = isAuto ? '100%' : `${(loot.d / stats.y) * 100}%`;
 
                 if (loot.stalled) {
@@ -1736,20 +1898,19 @@
                     else { document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)"; }
                 }
             }
-
-            const elapsedDaily = now - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000; const timerDaily = document.getElementById('dailyCaseTimer');
-            if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
-            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
         }
 
         async function collectFactory() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const brokenUntil = new Date(player.factory_broken_until || 0).getTime();
             if(new Date().getTime() < brokenUntil) return;
             const stats = FACTORY_STATS[player.factory_level];
             const loot = getEffectiveLoot(player.factory_last_collected, player.speed_boost_end, player.auto_boost_end, player.contractor_boost_end, stats.ms, stats.y);
             if (loot.d <= 0) return;
 
-            let collectedAmount = loot.d;
+            let spyBonus = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+            let collectedAmount = Math.floor(loot.d * spyBonus);
+            
             const isDoubler = new Date().getTime() < new Date(player.doubler_boost_end).getTime();
             if (isDoubler) collectedAmount *= 2;
 
@@ -1783,6 +1944,7 @@
         }
 
         async function overloadFactory() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const now = new Date().getTime(); if(now < new Date(player.factory_broken_until || 0).getTime()) return;
             if (Math.random() < 0.50) {
                 const brokenEnd = new Date(now + 2 * 3600000).toISOString();
@@ -1796,6 +1958,7 @@
         }
 
         async function upgradeFactory() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(player.factory_level >= 10) return;
             const ns = FACTORY_STATS[player.factory_level + 1];
             if (player.common_parts < ns.c || player.rare_parts < (ns.r||0) || player.epic_parts < (ns.e||0)) { showMsg('factoryMsg', `Недостаточно ресурсов!`, '#ff4444'); return; }
@@ -1804,11 +1967,14 @@
         }
 
         async function useBooster(type) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const updates = {}; const now = new Date().getTime();
             
             if (type === 'skip') {
                 if ((player.booster_skip || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
-                const earned = FACTORY_STATS[player.factory_level].y; updates.booster_skip = player.booster_skip - 1; updates.common_parts = player.common_parts + earned;
+                let spyBonus = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+                const earned = Math.floor(FACTORY_STATS[player.factory_level].y * spyBonus);
+                updates.booster_skip = player.booster_skip - 1; updates.common_parts = player.common_parts + earned;
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
                 const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
                 if (data) { player = data; showMsg('boosterMsg', `Пропуск применен! +${earned} Об.!`, 'var(--booster)'); refreshAll(); }
@@ -1855,6 +2021,7 @@
         function updateCraftModalPreview() { let val = parseInt(document.getElementById('cmInput').value) || 0; if (val < 1) val = 1; document.getElementById('cmCostPreview').innerText = val * craftSetup.costAmt; document.getElementById('cmRewPreview').innerText = val * craftSetup.rewAmt; }
 
         async function executeCraft() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             let val = parseInt(document.getElementById('cmInput').value) || 0; if (val < 1) return;
             const costTotal = val * craftSetup.costAmt; const rewTotal = val * craftSetup.rewAmt;
             if (player[craftSetup.costKey] < costTotal) { showMsg('cmMsg', 'Недостаточно деталей!', '#ff4444'); return; }
@@ -1864,6 +2031,7 @@
         }
 
         async function riskyCraft(type) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(type === 'rare' && player.common_parts < 25) { showMsg('craftMsg', 'Нужно 25 Обычных для риска!', '#ff4444'); return; }
             if(type === 'epic' && player.rare_parts < 25) { showMsg('craftMsg', 'Нужно 25 Редких для риска!', '#ff4444'); return; }
 
@@ -1896,6 +2064,7 @@
             document.getElementById('keInput').value = max > 0 ? max : 1;
         }
         async function executeKitExchange() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             let amount = parseInt(document.getElementById('keInput').value) || 0;
             if (amount < 1) return;
             if ((player.repair_kits || 0) < amount) { showMsg('keMsg', 'Недостаточно ремкомплектов!', '#ff4444'); return; }
@@ -1960,6 +2129,7 @@
             document.getElementById('btnExecFragExch').disabled = avail < 10;
         }
         async function executeFragExchange() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const troop = document.getElementById('feTroopSelect').value;
             const tier = parseInt(document.getElementById('feTierSelect').value);
             if (!troop) return;
@@ -1982,6 +2152,7 @@
 
         // === ЧЕРНЫЙ РЫНОК ЛОГИКА ===
         async function buyBlackMarket(dealType) {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(player.bm_purchased) return;
             let updates = { bm_purchased: true };
             let title = "ЧЕРНЫЙ РЫНОК"; let html = ''; let color = '';
@@ -2063,6 +2234,7 @@
         function closeRewardModal() { document.getElementById('rewardBox').classList.remove('show'); setTimeout(() => document.getElementById('rewardModal').style.display = 'none', 300); }
 
         async function claimQuests() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(player.quests_completed) return;
             if ((player.quest_factory_collects||0) < 500 || (player.quest_risky_crafts||0) < 1 || (player.quest_boosters_used||0) < 1) return;
             const rnd = Math.random(); let addSk=0, addSp=0, addAu=0, addCon=0, addDb=0; 
@@ -2077,11 +2249,15 @@
         }
 
         async function loadLeaderboard() {
-            const { data: pData } = await db.from('players').select('nickname, power').order('power', { ascending: false }).limit(100);
+            const { data: pData } = await db.from('players').select('nickname, power, elite_perks').order('power', { ascending: false }).limit(100);
             if (pData) {
                 let lbHtml = '';
                 pData.forEach((p, idx) => {
-                    lbHtml += `<div class="lb-item"><div class="lb-rank">#${idx+1}</div><div class="lb-info"><div class="lb-name">${p.nickname}</div><div class="lb-score">Мощь: ⚡${p.power || 0}</div></div></div>`;
+                    const isLegend = p.elite_perks && p.elite_perks.perk_legend;
+                    const styleClass = isLegend ? 'legend-style' : '';
+                    const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
+                    
+                    lbHtml += `<div class="lb-item ${styleClass}"><div class="lb-rank">#${idx+1}</div><div class="lb-info"><div class="lb-name">${dispName}</div><div class="lb-score">Мощь: ⚡${p.power || 0}</div></div></div>`;
                 });
                 document.getElementById('leaderboardListPlayers').innerHTML = lbHtml;
             }
