@@ -1,0 +1,218 @@
+/* ========================================= */
+/* БАЗОВЫЕ СТИЛИ ДЛЯ ВСЕХ ТЕМ                */
+/* ========================================= */
+/* По умолчанию декорации выключены, чтобы не грузить обычные профили */
+.theme-fold, .theme-points-wrapper {
+    display: none;
+}
+
+/* ========================================= */
+/* ТЕМА 1: АМЕТИСТОВЫЙ КРЕДИТ                */
+/* ========================================= */
+
+.theme-amethyst {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(65.28% 65.28% at 50% 100%, rgba(223, 113, 255, 0.4) 0%, rgba(223, 113, 255, 0) 100%), linear-gradient(0deg, #1a103c, #1a103c) !important;
+    border: 1px solid #7a5af8 !important;
+    box-shadow: 0 0 40px rgba(122, 90, 248, 0.3) !important;
+}
+
+/* Включаем декорации только когда активна тема Аметист */
+.theme-amethyst .theme-fold,
+.theme-amethyst .theme-points-wrapper {
+    display: block;
+}
+
+/* Загнутый уголок сверху справа */
+.theme-amethyst .theme-fold {
+    z-index: 3;
+    position: absolute;
+    top: 0; right: 0;
+    height: 30px; width: 30px;
+    background: radial-gradient(100% 75% at 55%, rgba(223, 113, 255, 0.8) 0%, rgba(223, 113, 255, 0) 100%);
+    box-shadow: -2px 2px 5px rgba(0,0,0,0.5);
+    border-bottom-left-radius: 12px;
+}
+.theme-amethyst .theme-fold::after {
+    content: ""; position: absolute; top: 0; right: 0;
+    width: 150%; height: 150%;
+    transform: rotate(45deg) translateX(0%) translateY(-22px);
+    /* Цвет фона под модалкой, чтобы казалось что уголок вырезан */
+    background-color: rgba(10, 15, 25, 0.95); 
+}
+
+/* Контейнер для летающих искр */
+.theme-amethyst .theme-points-wrapper {
+    overflow: hidden; width: 100%; height: 100%;
+    pointer-events: none; position: absolute; top: 0; left: 0; z-index: 1;
+}
+
+/* Анимация искр */
+.theme-amethyst .theme-point {
+    bottom: -10px; position: absolute;
+    animation: floating-points infinite ease-in-out;
+    width: 3px; height: 3px; background-color: #df71ff; border-radius: 50%;
+    box-shadow: 0 0 5px #df71ff;
+}
+
+@keyframes floating-points {
+  0% { transform: translateY(0); opacity: 0; }
+  20% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(-400px); opacity: 0; }
+}
+
+/* Настройки задержек для искр (раскидываем их по ширине модалки) */
+.theme-amethyst .theme-point:nth-child(1) { left: 10%; animation-duration: 4.35s; animation-delay: 0.2s; }
+.theme-amethyst .theme-point:nth-child(2) { left: 30%; animation-duration: 4.5s; animation-delay: 0.5s; }
+.theme-amethyst .theme-point:nth-child(3) { left: 25%; animation-duration: 4.2s; animation-delay: 0.1s; }
+.theme-amethyst .theme-point:nth-child(4) { left: 44%; animation-duration: 4.05s; }
+.theme-amethyst .theme-point:nth-child(5) { left: 50%; animation-duration: 3.9s; }
+.theme-amethyst .theme-point:nth-child(6) { left: 75%; animation-duration: 3.5s; animation-delay: 1.5s; }
+.theme-amethyst .theme-point:nth-child(7) { left: 88%; animation-duration: 4.2s; animation-delay: 0.2s; }
+.theme-amethyst .theme-point:nth-child(8) { left: 58%; animation-duration: 4.25s; animation-delay: 0.2s; }
+.theme-amethyst .theme-point:nth-child(9) { left: 98%; animation-duration: 4.6s; animation-delay: 0.1s; }
+.theme-amethyst .theme-point:nth-child(10) { left: 65%; animation-duration: 4.5s; animation-delay: 0.2s; }
+
+/* Адаптация цвета ника под тему */
+.theme-amethyst #profName { color: #df71ff !important; text-shadow: 0 0 15px rgba(223, 113, 255, 0.8); }
+
+/* Имя командира в цвет профиля (внутри Досье) */
+        .theme-amethyst #profName { color: #df71ff !important; text-shadow: 0 0 15px rgba(223, 113, 255, 0.8); }
+
+        /* ВСТАВИТЬ СЮДА: Подсветка ника в таблице рейтинга */
+        .theme-amethyst .lb-name { color: #df71ff !important; text-shadow: 0 0 10px rgba(223, 113, 255, 0.5); }
+
+/* ========================================= */
+/* ТЕМА 2: НЕОНОВЫЙ МЕГАПОЛИС (Киберпанк)    */
+/* ========================================= */
+.theme-cyberpunk {
+    background: linear-gradient(135deg, rgba(0, 30, 40, 0.95) 0%, rgba(0, 10, 15, 0.95) 100%) !important;
+    border: 2px solid #00e5ff !important;
+    box-shadow: 0 0 40px rgba(0, 229, 255, 0.2), inset 0 0 20px rgba(0, 229, 255, 0.1) !important;
+}
+.theme-cyberpunk #profName { color: #00e5ff !important; text-shadow: 0 0 15px rgba(0, 229, 255, 0.8); }
+
+/* Подсветка ника в таблице рейтинга для Киберпанка */
+.theme-cyberpunk .lb-name { color: #00e5ff !important; text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
+
+/* ========================================= */
+/* ТЕМА 3: МЯТНОЕ ЛЕТО (МНОГОСЛОЙНЫЕ ВОЛНЫ) */
+/* ========================================= */
+
+.theme-mint {
+    position: relative;
+    overflow: hidden;
+    /* Глубокий темно-мятный градиент для фона */
+    background: linear-gradient(135deg, rgba(13, 36, 31, 0.98) 0%, rgba(4, 13, 11, 0.98) 100%) !important;
+    border: 2px solid #40B3A2 !important;
+    box-shadow: 0 0 50px rgba(64, 179, 162, 0.3), inset 0 0 25px rgba(64, 179, 162, 0.1) !important;
+}
+
+/* Включаем контейнер для анимации */
+.theme-mint .theme-points-wrapper {
+    display: block;
+}
+
+/* Настраиваем два элемента (theme-point) как источники волн (в углах) */
+.theme-mint .theme-point {
+    display: none; /* Скрываем все 10 по умолчанию */
+    position: absolute;
+    width: 20px; height: 20px; /* Делаем источники чуть больше */
+    background: transparent; /* Сами источники невидимы */
+    border-radius: 100%;
+    /* Применяем сложную анимацию (2 секунды, медленнее для большого окна) */
+    animation: mint-ripple-complex 2s ease-out infinite;
+}
+
+/* Активируем только два источника и расставляем по углам */
+.theme-mint .theme-point:nth-child(1),
+.theme-mint .theme-point:nth-child(2) {
+    display: block;
+}
+/* Источник 1: Сверху-слева */
+.theme-mint .theme-point:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+/* Источник 2: Снизу-справа */
+.theme-mint .theme-point:nth-child(2) { bottom: 10%; right: 10%; animation-delay: 1s; }
+
+/* === УНИКАЛЬНАЯ СЛОЖНАЯ АНИМАЦИЯ === */
+/* Ключ: многослойная тень (concentric box-shadows) */
+/* Мы масштабировали отступы из референса, чтобы они покрывали окно досье */
+@keyframes mint-ripple-complex {
+  0% {
+    /* 5 концентрических кругов, стартующих из одной точки */
+    box-shadow: 0 0 0 0 rgba(64, 179, 162, 0.2), 
+                0 0 0 40px rgba(64, 179, 162, 0.2), 
+                0 0 0 80px rgba(64, 179, 162, 0.15), 
+                0 0 0 120px rgba(64, 179, 162, 0.1),
+                0 0 0 160px rgba(64, 179, 162, 0.05);
+  }
+  100% {
+    /* Эти круги расширяются и последний затухает */
+    box-shadow: 0 0 0 40px rgba(64, 179, 162, 0.2), 
+                0 0 0 80px rgba(64, 179, 162, 0.15), 
+                0 0 0 120px rgba(64, 179, 162, 0.1), 
+                0 0 0 160px rgba(64, 179, 162, 0.05),
+                0 0 0 200px rgba(64, 179, 162, 0);
+  }
+}
+
+/* Адаптация цветов текста внутри досье */
+.theme-mint #profName { color: #40B3A2 !important; text-shadow: 0 0 15px rgba(64, 179, 162, 0.6); }
+
+/* Подсветка ника в таблице рейтинга */
+.theme-mint .lb-name { color: #40B3A2 !important; text-shadow: 0 0 10px rgba(64, 179, 162, 0.5); }
+
+/* Отключаем обрезку для рейтинга, чтобы волны могли чуть выходить за края */
+.lb-item.theme-mint { overflow: visible !important; }
+
+/* ========================================= */
+/* ТЕМА 4: ТЕСТЕР (Монохромный градиент)     */
+/* ========================================= */
+
+.theme-tester {
+    position: relative;
+    /* Глубокий темный фон самой карточки */
+    background-color: #141414 !important; 
+    border: none !important;
+    /* Отключаем обрезку, чтобы свечение (blur) выходило за края */
+    overflow: visible !important; 
+    z-index: 1;
+}
+
+/* Создаем анимированную подложку (рамку) и её копию для свечения */
+.theme-tester::before, 
+.theme-tester::after {
+    content: '';
+    position: absolute;
+    left: -3px;
+    top: -3px;
+    border-radius: 14px; /* Чуть больше радиуса модалки */
+    background: linear-gradient(45deg, 
+        #141414, #1b1b1b, #2e2e2e, #ffffff, #2e2e2e, 
+        #1b1b1b, #141414, #141414);
+    background-size: 400%;
+    width: calc(100% + 6px);
+    height: calc(100% + 6px);
+    z-index: -1; /* Прячем под основной фон модалки */
+    animation: tester-steam 12s linear infinite;
+}
+
+/* Вторую подложку размываем, чтобы получить эффект свечения (glow) */
+.theme-tester::after {
+    filter: blur(20px);
+}
+
+@keyframes tester-steam {
+    0% { background-position: 0 0; }
+    50% { background-position: 400% 0; }
+    100% { background-position: 0 0; }
+}
+
+/* Белоснежный цвет текста для контраста */
+.theme-tester #profName { color: #ffffff !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+
+/* Подсветка ника и стили для таблицы рейтинга */
+.theme-tester .lb-name { color: #ffffff !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+.lb-item.theme-tester { background-color: #141414 !important; border: none !important; overflow: visible !important; }
