@@ -1468,6 +1468,8 @@
         async function refreshAll() {
             const pid = localStorage.getItem('minigame_player_id'); if (!pid) return;
             
+            await db.from('players').update({last_online: new Date().toISOString()}).eq('id', pid);
+            
             // Проверка межсезонья
             try {
                 const { data: conf } = await db.from('server_config').select('*').limit(1).maybeSingle();
