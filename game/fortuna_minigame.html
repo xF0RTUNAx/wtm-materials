@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xFORTUNAx Mini-games</title>
+    <link rel="stylesheet" href="profile_themes.css">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <style>
         * { box-sizing: border-box; } 
@@ -217,6 +218,19 @@
             .streak-day { padding: 5px; font-size: 10px; }
             .streak-day div:nth-child(2) { font-size: 11px !important; }
         }
+        
+        /* СТИЛИ ПРОФИЛЯ И ТЕМ */
+        .modal-box.legend-modal {
+            background: linear-gradient(135deg, rgba(20, 25, 35, 0.95) 0%, rgba(10, 30, 50, 0.95) 100%);
+            border: 2px solid var(--gold);
+            box-shadow: 0 0 50px rgba(255, 193, 7, 0.15), inset 0 0 20px rgba(88, 166, 255, 0.1);
+        }
+        .badge-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px; }
+        .badge { background: rgba(0,0,0,0.8); border: 1px solid var(--gold); padding: 10px; border-radius: 8px; text-align: center; min-width: 80px; max-width: 110px; word-wrap: break-word; }
+        .badge-icon { font-size: 24px; margin-bottom: 5px; }
+        .badge-name { font-size: 9px; color: var(--gold); font-weight: bold; text-transform: uppercase; }
+        .theme-fold, .theme-points-wrapper { display: none; }
+        
     </style>
 </head>
 <body class="login-bg" id="bodyBg">
@@ -349,6 +363,10 @@
             <button class="btn-home" style="width: auto; padding: 6px 15px; font-size: 12px;" onclick="window.location.href='../index.html'">🏠 На главную</button>
             <button class="btn-info" style="width: auto; padding: 6px 15px; font-size: 12px; background: transparent; border: 1px solid var(--rare); color: var(--rare);" onclick="window.location.href='rules.html'">📜 Правила и механики</button>
             <h2 class="commander-title">Командир: <span id="playerNameDisplay" style="color: var(--accent-gold);"></span></h2>
+           <div style="display: flex; justify-content: space-between; width: 100%; margin-top: 5px;">
+          <button class="btn-home" style="width: auto; padding: 6px 15px; font-size: 12px; background: rgba(0, 229, 255, 0.1); border: 1px solid var(--meteor); color: var(--meteor);" onclick="openProfile(player.id)">👤 Мой профиль</button>
+            <button class="btn-home" style="width: auto; padding: 6px 15px; font-size: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid #555; color: #c9d1d9;" onclick="window.open('https://t.me/fortunawtmhelp', '_blank')">🎧 Тех. поддержка</button>
+        </div>
         </div> <div id="seasonBannerBox" style="width: 100%; display: block; margin: 0 auto 20px auto; background: rgba(255, 193, 7, 0.05); border: 1px solid var(--accent-gold); padding: 15px; border-radius: 8px; text-align: center; transition: 0.5s;">
             <div id="seasonTitle" style="color: var(--accent-gold); font-weight: 900; font-size: 18px; letter-spacing: 1px; margin-bottom: 5px; text-transform: uppercase; text-shadow: 0 0 10px rgba(255,193,7,0.5);">🔥 АКТИВНЫЙ СЕЗОН 🔥</div>
             <div id="seasonTimerDisplay" style="font-family: monospace; color: #fff; font-size: 15px;">Вычисление орбитальных данных...</div>
@@ -553,6 +571,9 @@
                 <div class="auth-tab active" id="tabLbPlayers" onclick="switchLbTab('players')">ИГРОКИ (МОЩЬ)</div>
                 <div class="auth-tab" id="tabLbClans" onclick="switchLbTab('clans')">КЛАНЫ (ВЛИЯНИЕ)</div>
             </div>
+            
+            <div style="display: block; width: 100%; font-size: 11px; color: #8b949e; text-align: center; margin-bottom: 15px;">💡 Нажмите на игрока, чтобы посмотреть его профиль.</div>
+            
             <div id="leaderboardListPlayers"><div style="text-align: center; color: #8b949e; padding: 20px;">Связь со спутником...</div></div>
             <div id="leaderboardListClans" style="display: none;"><div style="text-align: center; color: #8b949e; padding: 20px;">Связь со спутником...</div></div>
         </div>
@@ -2252,15 +2273,20 @@
         }
 
         async function loadLeaderboard() {
-            const { data: pData } = await db.from('players').select('nickname, power, elite_perks').order('power', { ascending: false }).limit(100);
+           const { data: pData } = await db.from('players').select('id, nickname, power, elite_perks, active_bg_url').order('power', { ascending: false }).limit(100);
             if (pData) {
                 let lbHtml = '';
                 pData.forEach((p, idx) => {
-                    const isLegend = p.elite_perks && p.elite_perks.perk_legend;
-                    const styleClass = isLegend ? 'legend-style' : '';
-                    const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
+                  const isLegend = p.elite_perks && p.elite_perks.perk_legend;
+let styleClass = '';
+if (p.active_bg_url && p.active_bg_url.trim() !== "") {
+    styleClass = p.active_bg_url.trim(); // Применяем тему (например, 'theme-amethyst')
+} else if (isLegend) {
+    styleClass = 'legend-style'; // Если темы нет, но есть статус Легенды
+}
+const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
                     
-                    lbHtml += `<div class="lb-item ${styleClass}"><div class="lb-rank">#${idx+1}</div><div class="lb-info"><div class="lb-name">${dispName}</div><div class="lb-score">Мощь: ⚡${p.power || 0}</div></div></div>`;
+                    lbHtml += `<div class="lb-item ${styleClass}" onclick="openProfile('${p.id}')" style="cursor: pointer;"><div class="lb-rank">#${idx+1}</div><div class="lb-info"><div class="lb-name">${dispName}</div><div class="lb-score">Мощь: ⚡${p.power || 0}</div></div></div>`;
                 });
                 document.getElementById('leaderboardListPlayers').innerHTML = lbHtml;
             }
@@ -2277,6 +2303,102 @@
 
         function showMsg(id, text, color) { const el = document.getElementById(id); el.innerText = text; el.style.color = color; el.style.display = 'block'; setTimeout(() => { if(el.innerText === text) el.innerText = ''; }, 4000); }
 
+        
+        // === СИСТЕМА ПРОФИЛЕЙ И ТЕМ ===
+        function formatDateOnly(isoString) {
+            if(!isoString) return "Неизвестно";
+            const d = new Date(isoString);
+            return d.toLocaleDateString('ru-RU');
+        }
+
+        async function changeProfileTheme(themeClass) {
+            await db.from('players').update({ active_bg_url: themeClass }).eq('id', player.id);
+            player.active_bg_url = themeClass;
+            openProfile(player.id);
+            alert("Стиль профиля успешно обновлен!");
+        }
+
+        async function openProfile(targetId) {
+            // Загружаем данные игрока из базы
+            const { data: p } = await db.from('players').select('*').eq('id', targetId).single();
+            if(!p) return;
+            
+            // Загружаем название клана, если он есть
+            let clan = null;
+            if(p.clan_id) {
+                const { data: c } = await db.from('clans').select('name, tag').eq('id', p.clan_id).single();
+                clan = c;
+            }
+
+            const mBox = document.getElementById('profileModalBox');
+            const isL = p.elite_perks && p.elite_perks.perk_legend;
+            
+            // Очищаем классы и ставим темы
+            mBox.className = 'modal-box'; 
+            if (p.active_bg_url && p.active_bg_url.trim() !== "") {
+                mBox.classList.add(p.active_bg_url.trim());
+            } else if (isL) {
+                mBox.classList.add('legend-modal');
+            }
+
+            document.getElementById('profName').innerText = isL ? `🔥 ${p.nickname} 🔥` : p.nickname;
+            
+            // Статус активности
+            const now = new Date().getTime();
+            const lastO = new Date(p.last_online || 0).getTime();
+            if (now - lastO <= 10 * 60 * 1000) {
+                document.getElementById('profStatus').innerHTML = '<span style="color:#00e676;">🟢 В сети</span>';
+            } else {
+                const d = new Date(p.last_online);
+                const timeStr = d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('profStatus').innerHTML = `<span style="color:#8b949e;">Был в сети: ${timeStr}</span>`;
+            }
+
+            document.getElementById('profCreated').innerText = `В игре с: ${formatDateOnly(p.created_at)}`;
+            document.getElementById('profClan').innerText = clan ? `[${clan.tag}] ${clan.name}` : 'Одиночка';
+
+            document.getElementById('profCurPwr').innerText = `⚡${(p.power || 0).toLocaleString()}`;
+            document.getElementById('profMaxPwr').innerText = `⚡${(p.max_historical_power || 0).toLocaleString()}`;
+            
+            // Витрина Перков
+            const pks = p.elite_perks || {};
+            const icons = { perk_shadow:'📦', perk_boosters:'⚡', perk_factory2:'🏭', perk_factory3:'🏗️', perk_spy:'🕵️', perk_surgeon:'🏥', perk_quantum:'🔬', perk_training:'⏱️', perk_legend:'👑', perk_general:'🎖️', perk_engineer:'⚙️' };
+            let pksH = '';
+            for (let k in icons) { if (pks[k]) pksH += `<div style="background:rgba(0,0,0,0.6); border:1px solid #444; padding:6px 8px; border-radius:6px; font-size:18px;">${icons[k]}</div>`; }
+            document.getElementById('profPerksList').innerHTML = pksH;
+            document.getElementById('profPerksContainer').style.display = pksH ? 'block' : 'none';
+
+            // Медали
+            const bCont = document.getElementById('profBadges'); bCont.innerHTML = '';
+            let bgs = p.season_badges || [];
+            if (typeof bgs === 'string') try { bgs = JSON.parse(bgs); } catch(e) { bgs = []; }
+            if (bgs.length > 0) {
+                document.getElementById('profNoBadges').style.display = 'none';
+                bgs.forEach(b => { bCont.innerHTML += `<div class="badge"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`; });
+            } else { document.getElementById('profNoBadges').style.display = 'block'; }
+
+            // Логика Гардероба (Показываем только себе)
+            const ward = document.getElementById('profWardrobe');
+            const sel = document.getElementById('themeSelector');
+            if (p.id === player.id) {
+                ward.style.display = 'block';
+                sel.innerHTML = '<option value="">Стандартный профиль</option>';
+                if (pks.perk_theme_amethyst) sel.innerHTML += '<option value="theme-amethyst">Аметист</option>';
+                if (pks.perk_theme_cyberpunk) sel.innerHTML += '<option value="theme-cyberpunk">Неон</option>';
+                if (pks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
+                if (pks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
+                sel.value = p.active_bg_url || "";
+            } else { ward.style.display = 'none'; }
+
+           document.getElementById('profileModal').style.display = 'flex';
+    setTimeout(() => document.getElementById('profileModalBox').classList.add('show'), 10);
+}
+
+       function closeProfile() { 
+    document.getElementById('profileModalBox').classList.remove('show'); 
+    setTimeout(() => document.getElementById('profileModal').style.display = 'none', 300); 
+}
+        
         window.onload = () => { 
             if (localStorage.getItem('minigame_player_id')) { 
                 document.getElementById('bodyBg').className = 'game-bg'; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
@@ -2295,5 +2417,49 @@
             } 
         };
     </script>
+    
+    <div class="modal-overlay" id="profileModal" onclick="if(event.target===this) closeProfile()">
+        <div class="modal-box" id="profileModalBox" style="position: relative; overflow: hidden; text-align: center; border-color: var(--meteor);">
+            <div class="theme-fold"></div>
+            <div class="theme-points-wrapper">
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+            </div>
+
+            <div style="position: relative; z-index: 5;">
+                <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
+                
+                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 11px;">
+                    <span id="profStatus">🟢 В сети</span>
+                    <span id="profCreated" style="color: #8b949e;">В игре с: --.--.----</span>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; text-align: left;">
+                    <div style="margin-bottom: 5px; font-size: 13px;">Клан: <span id="profClan" style="color: var(--blue); font-weight: bold;">Одиночка</span></div>
+                    <div style="margin-bottom: 5px; font-size: 13px;">Текущая мощь: <span id="profCurPwr" style="color: #ff1744; font-weight: bold; font-family: monospace;">⚡0</span></div>
+                    <div style="font-size: 13px;">Исторический максимум: <span id="profMaxPwr" style="color: var(--gold); font-weight: bold; font-family: monospace;">⚡0</span></div>
+                </div>
+
+                <div id="profPerksContainer" style="display: none; margin-bottom: 15px;">
+                    <div style="text-align: left; font-size: 12px; color: #8b949e; margin-bottom: 5px;">Элитные Улучшения:</div>
+                    <div id="profPerksList" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;"></div>
+                </div>
+
+                <div style="text-align: left; font-size: 13px; color: #c9d1d9; margin-bottom: 10px;">Награды и Достижения:</div>
+                <div id="profBadges" class="badge-grid"></div>
+                <div id="profNoBadges" style="font-size: 11px; color: #555; display: none; padding: 20px 0;">Достижений пока нет</div>
+
+                <div id="profWardrobe" style="display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px dashed #00e5ff; margin-top: 15px; text-align: center;">
+                    <div style="font-size: 11px; color: #00e5ff; margin-bottom: 10px; text-transform: uppercase;">Гардероб (Смена стиля)</div>
+                    <select id="themeSelector" onchange="changeProfileTheme(this.value)" style="background: rgba(0,0,0,0.8); border: 1px solid #00e5ff; color: #fff; padding: 8px; border-radius: 4px; width: 100%; font-size: 13px;">
+                        <option value="">Стандартный профиль</option>
+                    </select>
+                </div>
+
+                <button style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #8b949e; margin-top: 15px; margin-bottom: 0;" onclick="closeProfile()">ЗАКРЫТЬ ДОСЬЕ</button>
+            </div>
+        </div>
+    </div>
+    
 </body>
 </html>
