@@ -108,6 +108,7 @@
         <div class="auth-tabs">
             <div class="auth-tab active" id="tabRating" onclick="switchTab('rating')">АБСОЛЮТНЫЙ РЕЙТИНГ</div>
             <div class="auth-tab" id="tabShop" onclick="switchTab('shop')">ОРБИТАЛЬНЫЙ МАГАЗИН</div>
+            <div class="auth-tab" id="tabAchieve" onclick="switchTab('achievements')">ДОСТИЖЕНИЯ</div>
         </div>
 
         <div id="contentRating">
@@ -214,6 +215,13 @@
             
             <div style="height: 30px;"></div>
         </div>
+
+        <div id="contentAchievements" style="display: none;">
+            <p style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 20px;">Выполняйте условия, чтобы разблокировать уникальные титулы для вашего Досье.</p>
+            <div class="shop-grid" id="achievementsList"></div>
+            <div style="height: 30px;"></div>
+        </div>
+
     </div>
 
     <div class="modal-overlay" id="legendPreviewModal" onclick="if(event.target===this) closeLegendPreview()">
@@ -252,6 +260,7 @@
 
             <div style="position: relative; z-index: 5;">
                 <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
+                <div id="profActiveTitle" style="color: var(--meteor); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;"></div>
                 
                 <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 11px;">
                     <span id="profStatus">🟢 В сети</span>
@@ -325,14 +334,17 @@
             updateUI();
             await loadHallOfFame();
             checkPerkButtons();
+            buildAchievementsUI();
         }
 
         function switchTab(tabId) {
             document.getElementById('tabRating').classList.remove('active');
             document.getElementById('tabShop').classList.remove('active');
+            document.getElementById('tabAchieve').classList.remove('active');
             
             document.getElementById('contentRating').style.display = 'none';
             document.getElementById('contentShop').style.display = 'none';
+            document.getElementById('contentAchievements').style.display = 'none';
 
             if (tabId === 'rating') {
                 document.getElementById('tabRating').classList.add('active');
@@ -340,6 +352,9 @@
             } else if (tabId === 'shop') {
                 document.getElementById('tabShop').classList.add('active');
                 document.getElementById('contentShop').style.display = 'block';
+            } else if (tabId === 'achievements') {
+                document.getElementById('tabAchieve').classList.add('active');
+                document.getElementById('contentAchievements').style.display = 'block';
             }
         }
 
@@ -356,7 +371,7 @@
             if (cData) allClans = cData;
 
             const { data } = await db.from('players')
-                .select('id, nickname, max_historical_power, meteorite_shards, elite_perks, season_badges, power, last_online, created_at, clan_id, active_bg_url')
+                .select('id, nickname, max_historical_power, meteorite_shards, elite_perks, season_badges, power, last_online, created_at, clan_id, active_bg_url, active_title')
                 .order('max_historical_power', { ascending: false })
                 .limit(100);
 
@@ -429,6 +444,7 @@
             }
 
             document.getElementById('profName').innerText = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
+            document.getElementById('profActiveTitle').innerText = p.active_title ? `«${p.active_title}»` : '';
             
             // Статус онлайна (если был активен < 10 минут назад)
             const now = new Date().getTime();
@@ -504,8 +520,8 @@
                 sel.innerHTML = '<option value="">Стандартный профиль</option>';
                 if (perks.perk_theme_amethyst) sel.innerHTML += '<option value="theme-amethyst">Аметист</option>';
                 if (perks.perk_theme_cyberpunk) sel.innerHTML += '<option value="theme-cyberpunk">Неон</option>';
-                if (pks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
-                if (pks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
+                if (perks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
+                if (perks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
                 sel.value = p.active_bg_url || "";
             } else { 
                 ward.style.display = 'none'; 
@@ -571,6 +587,91 @@
                 alert("Улучшение успешно приобретено и привязано к аккаунту навсегда!");
                 if(perkId === 'perk_legend') loadHallOfFame(); 
             }
+        }
+
+        // === СИСТЕМА ДОСТИЖЕНИЙ И ТИТУЛОВ ===
+        function countAbsolutes(p) {
+            let count = 0;
+            ['inf', 'bmp', 'tank', 'arty', 'aa', 'msl', 'avia'].forEach(k => { if(p['star_'+k] === 5) count++; });
+            return count;
+        }
+
+        function countThemes(p) {
+            let count = 1; // Базовая тема
+            for(let k in (p.elite_perks || {})) { if(k.startsWith('perk_theme_')) count++; }
+            return count;
+        }
+
+        const ACHIEVEMENTS = [
+            { id: 'heisenberg', name: 'Хайзенберг', desc: 'Улучшить Секретную лабораторию 20 раз', stat: 'stat_lab_upgrades', req: 20 },
+            { id: 'mr_robot', name: 'Мистер Робот', desc: 'Улучшить параметры войск 200 раз', stat: 'stat_troop_upgrades', req: 200 },
+            { id: 'universal', name: 'Универсальный боец', desc: 'Достигнуть первого абсолюта (5⭐)', isCustom: true, prog: p => countAbsolutes(p), req: 1 },
+            { id: 'homelander', name: 'Хоумлендер', desc: '100 успешных захватов территорий', stat: 'stat_map_captures', req: 100 },
+            { id: 'wolf', name: 'Волк с Уолл-стрит', desc: 'Собрать 2,500,000 обычных деталей', stat: 'stat_total_common', req: 2500000 },
+            { id: 'madmax', name: 'Безумный Макс', desc: 'Сломать завод 50 раз', stat: 'stat_factory_breaks', req: 50 },
+            { id: 'terminator', name: 'Терминатор', desc: 'Достигнуть абсолюта 7 раз (5⭐)', isCustom: true, prog: p => countAbsolutes(p), req: 7 },
+            { id: 'nathan', name: 'Нейтан Дрейк', desc: 'Открыть контейнеры 5000 раз', stat: 'stat_cases_opened', req: 5000 },
+            { id: 'alpha_omega', name: 'Альфа и Омега', desc: 'Быть участником клана, занявшего топ-1 сезона 1 раз', stat: 'stat_clan_top1', req: 1 },
+            { id: 'kratos', name: 'Кратос', desc: 'Занять топ-1 сезона по мощи 1 раз', stat: 'stat_player_top1', req: 1 },
+            { id: 'saul', name: 'Лучше звоните Солу', desc: 'Совершить 50 сделок на Черном рынке', stat: 'stat_bm_deals', req: 50 },
+            { id: 'collector', name: 'Коллекционер', desc: 'Собрать 25 оформлений профиля', isCustom: true, prog: p => countThemes(p), req: 25 },
+            { id: 'nemesis', name: 'Немезис', desc: 'Заходить в игру суммарно 90 дней', stat: 'stat_max_login_streak', req: 90 },
+            { id: 'for_reason', name: 'Это все неспроста', desc: 'Собрать суммарно 1000 фрагментов', stat: 'stat_total_fragments', req: 1000 },
+            { id: 'arthur', name: 'Артур Морган', desc: 'Принять участие в 3-х сезонах', stat: 'stat_consecutive_seasons', req: 3 }
+        ];
+
+        function buildAchievementsUI() {
+            const container = document.getElementById('achievementsList');
+            container.innerHTML = '';
+            
+            let unlocked = [];
+            try { 
+                unlocked = typeof player.unlocked_titles === 'string' ? JSON.parse(player.unlocked_titles) : (player.unlocked_titles || []);
+            } catch(e) {}
+
+            ACHIEVEMENTS.forEach(ach => {
+                let current = ach.isCustom ? ach.prog(player) : (player[ach.stat] || 0);
+                if (current > ach.req) current = ach.req;
+                
+                const isUnlocked = unlocked.includes(ach.id);
+                const canUnlock = current >= ach.req && !isUnlocked;
+                const isActive = player.active_title === ach.name;
+
+                let btnHtml = '';
+                if (isActive) {
+                    btnHtml = `<button disabled style="background:var(--accent-green); color:#000; margin-bottom:0;">НАДЕТО</button>`;
+                } else if (isUnlocked) {
+                    btnHtml = `<button class="btn-meteor" style="margin-bottom:0;" onclick="equipTitle('${ach.name}')">НАДЕТЬ ТИТУЛ</button>`;
+                } else if (canUnlock) {
+                    btnHtml = `<button style="background:var(--gold); color:#000; margin-bottom:0;" onclick="unlockTitle('${ach.id}', '${ach.name}')">ПОЛУЧИТЬ</button>`;
+                } else {
+                    btnHtml = `<button disabled style="background:#333; color:#8b949e; margin-bottom:0;">${current.toLocaleString()} / ${ach.req.toLocaleString()}</button>`;
+                }
+
+                container.innerHTML += `
+                <div class="shop-card" style="border-color: ${isUnlocked ? 'var(--gold)' : '#333'};">
+                    <div class="shop-title" style="color: ${isUnlocked ? 'var(--gold)' : '#fff'};">«${ach.name}»</div>
+                    <div class="shop-desc" style="margin-bottom: 10px;">${ach.desc}</div>
+                    <div style="background:#222; border-radius:4px; height:6px; margin-bottom:15px; width:100%; overflow:hidden;">
+                        <div style="background:var(--gold); height:100%; width:${(current/ach.req)*100}%;"></div>
+                    </div>
+                    ${btnHtml}
+                </div>`;
+            });
+        }
+
+        async function unlockTitle(id, name) {
+            let unlocked = [];
+            try { unlocked = typeof player.unlocked_titles === 'string' ? JSON.parse(player.unlocked_titles) : (player.unlocked_titles || []); } catch(e) {}
+            unlocked.push(id);
+            
+            const { data } = await db.from('players').update({ unlocked_titles: JSON.stringify(unlocked) }).eq('id', player.id).select().single();
+            if (data) { player = data; buildAchievementsUI(); alert(`Титул «${name}» разблокирован!`); }
+        }
+
+        async function equipTitle(name) {
+            const { data } = await db.from('players').update({ active_title: name }).eq('id', player.id).select().single();
+            if (data) { player = data; buildAchievementsUI(); updateUI(); alert(`Титул «${name}» установлен! Вы можете увидеть его в своем профиле.`); }
         }
 
         window.onload = init;
