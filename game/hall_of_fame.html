@@ -9,7 +9,7 @@
         :root {
             --bg: #050b14; --panel: rgba(10, 15, 25, 0.9); --border: #1f2937;
             --gold: #ffc107; --red: #ff1744; --green: #00e676; --blue: #03a9f4; --epic: #bc8cff;
-            --meteor: #00e5ff; 
+            --meteor: #00e5ff; --power: #ff1744;
         }
         body {
             margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -74,7 +74,7 @@
         }
 
         .badge-grid { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 15px; }
-        .badge { background: rgba(0,0,0,0.8); border: 1px solid var(--gold); padding: 10px; border-radius: 8px; text-align: center; width: 80px; }
+        .badge { background: rgba(0,0,0,0.8); border: 1px solid var(--gold); padding: 10px; border-radius: 8px; text-align: center; min-width: 80px; max-width: 110px; word-wrap: break-word; }
         .badge-icon { font-size: 24px; margin-bottom: 5px; }
         .badge-name { font-size: 9px; color: var(--gold); font-weight: bold; text-transform: uppercase; }
 
@@ -240,14 +240,30 @@
     <div class="modal-overlay" id="profileModal" onclick="if(event.target===this) closeProfile()">
         <div class="modal-box" id="profileModalBox">
             <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
-            <div style="font-size: 12px; color: #8b949e; margin-bottom: 20px;">Исторический максимум: <span id="profMaxPwr" style="color: var(--gold); font-weight: bold; font-family: monospace;">⚡0</span></div>
             
+            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 11px;">
+                <span id="profStatus">🟢 В сети</span>
+                <span id="profCreated" style="color: #8b949e;">В игре с: --.--.----</span>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; text-align: left;">
+                <div style="margin-bottom: 5px; font-size: 13px;">Клан: <span id="profClan" style="color: var(--blue); font-weight: bold;">Одиночка</span></div>
+                <div style="margin-bottom: 5px; font-size: 13px;">Текущая мощь: <span id="profCurPwr" style="color: var(--power); font-weight: bold; font-family: monospace;">⚡0</span></div>
+                <div style="font-size: 13px;">Исторический максимум: <span id="profMaxPwr" style="color: var(--gold); font-weight: bold; font-family: monospace;">⚡0</span></div>
+            </div>
+
+            <div id="profPerksContainer" style="display: none; margin-bottom: 15px;">
+                <div style="text-align: left; font-size: 12px; color: #8b949e; margin-bottom: 5px;">Элитные Улучшения:</div>
+                <div id="profPerksList" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                </div>
+            </div>
+
             <div style="text-align: left; font-size: 13px; color: #c9d1d9; margin-bottom: 10px;">Награды и Достижения:</div>
             <div id="profBadges" class="badge-grid">
                 </div>
             <div id="profNoBadges" style="font-size: 11px; color: #555; display: none; padding: 20px 0;">Достижений пока нет</div>
 
-            <button style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #8b949e; margin-top: 25px; margin-bottom: 0;" onclick="closeProfile()">ЗАКРЫТЬ ДОСЬЕ</button>
+            <button style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #8b949e; margin-top: 15px; margin-bottom: 0;" onclick="closeProfile()">ЗАКРЫТЬ ДОСЬЕ</button>
         </div>
     </div>
 
@@ -259,6 +275,19 @@
 
         let player = null;
         let allPlayers = [];
+        let allClans = [];
+
+        function formatTimeDate(isoString) {
+            if(!isoString) return "Неизвестно";
+            const d = new Date(isoString);
+            return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+        }
+        
+        function formatDateOnly(isoString) {
+            if(!isoString) return "Неизвестно";
+            const d = new Date(isoString);
+            return d.toLocaleDateString('ru-RU');
+        }
 
         async function init() {
             const pid = localStorage.getItem('minigame_player_id');
@@ -268,14 +297,13 @@
             if (!p) { window.location.href = 'fortuna_minigame.html'; return; }
             player = p;
 
-            // Защита дефолтных значений
             player.meteorite_shards = player.meteorite_shards || 0;
             player.max_historical_power = player.max_historical_power || 0;
             player.elite_perks = player.elite_perks || {};
             player.season_badges = player.season_badges || [];
 
             updateUI();
-            loadHallOfFame();
+            await loadHallOfFame();
             checkPerkButtons();
         }
 
@@ -303,8 +331,12 @@
         }
 
         async function loadHallOfFame() {
+            // Загружаем кланы для отображения в профилях
+            const { data: cData } = await db.from('clans').select('id, name, tag');
+            if (cData) allClans = cData;
+
             const { data } = await db.from('players')
-                .select('id, nickname, max_historical_power, meteorite_shards, elite_perks, season_badges')
+                .select('id, nickname, max_historical_power, meteorite_shards, elite_perks, season_badges, power, last_online, created_at, clan_id')
                 .order('max_historical_power', { ascending: false })
                 .limit(100);
 
@@ -358,8 +390,52 @@
             else modalBox.classList.remove('legend-modal');
 
             document.getElementById('profName').innerText = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
+            
+            // Статус онлайна (если был активен < 10 минут назад)
+            const now = new Date().getTime();
+            const lastOnline = new Date(p.last_online || 0).getTime();
+            if (now - lastOnline <= 10 * 60 * 1000) {
+                document.getElementById('profStatus').innerHTML = '<span style="color:#00e676;">🟢 В сети</span>';
+            } else {
+                document.getElementById('profStatus').innerHTML = `<span style="color:#8b949e;">Был в сети: ${formatTimeDate(p.last_online)}</span>`;
+            }
+
+            // Дата создания
+            document.getElementById('profCreated').innerText = `В игре с: ${formatDateOnly(p.created_at)}`;
+
+            // Клан
+            if (p.clan_id) {
+                const clan = allClans.find(c => c.id === p.clan_id);
+                document.getElementById('profClan').innerHTML = clan ? `[${clan.tag}] ${clan.name}` : 'Одиночка';
+            } else {
+                document.getElementById('profClan').innerHTML = '<span style="color:#8b949e;">Одиночка</span>';
+            }
+
+            // Мощь
+            document.getElementById('profCurPwr').innerText = `⚡${(p.power || 0).toLocaleString()}`;
             document.getElementById('profMaxPwr').innerText = `⚡${(p.max_historical_power || 0).toLocaleString()}`;
             
+            // Витрина Перков
+            const perks = p.elite_perks || {};
+            const perkIcons = {
+                perk_shadow: '📦', perk_boosters: '⚡', perk_factory2: '🏭', perk_factory3: '🏗️',
+                perk_spy: '🕵️', perk_surgeon: '🏥', perk_quantum: '🔬', perk_training: '⏱️',
+                perk_legend: '👑', perk_general: '🎖️', perk_engineer: '⚙️'
+            };
+            let perksHtml = '';
+            for (let pk in perkIcons) {
+                if (perks[pk]) {
+                    perksHtml += `<div style="background:rgba(0,0,0,0.6); border:1px solid #444; padding:6px 8px; border-radius:6px; font-size:18px;">${perkIcons[pk]}</div>`;
+                }
+            }
+            if (perksHtml !== '') {
+                document.getElementById('profPerksList').innerHTML = perksHtml;
+                document.getElementById('profPerksContainer').style.display = 'block';
+            } else {
+                document.getElementById('profPerksContainer').style.display = 'none';
+            }
+
+            // Медали
             const badgesContainer = document.getElementById('profBadges');
             badgesContainer.innerHTML = '';
             
