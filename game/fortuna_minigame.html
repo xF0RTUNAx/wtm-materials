@@ -183,7 +183,8 @@
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 100; display: none; justify-content: center; align-items: center; backdrop-filter: blur(8px); }
         .modal-box { background: var(--panel-bg); border: 2px solid var(--accent-gold); padding: 25px; border-radius: 12px; text-align: center; width: 90%; max-width: 500px; transform: scale(0.8); opacity: 0; transition: 0.3s; max-height: 85vh; overflow-y: auto;}
         .modal-box.show { transform: scale(1); opacity: 1; }
-        .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;}
+       .spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--accent-gold); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
         .msg { font-size: 13px; font-weight: bold; min-height: 18px; margin-top: 8px; text-align: center;}
         
