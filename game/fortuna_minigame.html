@@ -878,22 +878,20 @@
                     updates[`frag1_${ru2}`] = (updates[`frag1_${ru2}`] || player[`frag1_${ru2}`] || 0) + 1; 
                     colorClass = 'common'; 
                 }
-                else if (newStreak === 4) { html += `<div class="kits">🔧 +3 Ремкомплекта</div>`; updates.repair_kits = (player.repair_kits||0) + 3; colorClass = 'kits'; }
-                else if (newStreak === 5) { html += `<div class="common">+500 Обычных</div>`; updates.common_parts = player.common_parts + 500; colorClass = 'common'; }
-                else if (newStreak === 6) { 
-                    for(let i=0; i<2; i++) {
-                        let r = Math.random();
-                        if(r < 0.2) { addSk++; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
-                        else if(r < 0.4) { addSp++; html += `<div class="boost">⚡ +1 Ускорение</div>`; }
-                        else if(r < 0.6) { addAu++; html += `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`; }
-                        else if(r < 0.8) { addCon++; html += `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; }
-                        else { addDb++; html += `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; }
-                    }
-                    updates.booster_skip = (player.booster_skip||0) + addSk; updates.booster_speed = (player.booster_speed||0) + addSp; updates.booster_auto = (player.booster_auto||0) + addAu;
-                    updates.booster_contractor = (player.booster_contractor||0) + addCon; updates.booster_doubler = (player.booster_doubler||0) + addDb;
-                    colorClass = 'boost';
+               else if (newStreak === 4) { 
+                    const ru = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                    html += `<div class="star-2">🧩 +1 Фрагмент 2⭐ (${TROOP_CFG[ru].title})</div>`; 
+                    updates[`frag2_${ru}`] = (player[`frag2_${ru}`] || 0) + 1; 
+                    colorClass = 'star-2'; 
                 }
-                else if (newStreak === 7) { 
+                else if (newStreak === 5) { 
+                    const ru = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
+                    html += `<div class="star-3">🧩 +1 Фрагмент 3⭐ (${TROOP_CFG[ru].title})</div>`; 
+                    updates[`frag3_${ru}`] = (player[`frag3_${ru}`] || 0) + 1; 
+                    colorClass = 'star-3'; 
+                }
+                else if (newStreak === 6) { 
+                    // Выдаем 3 случайных бустера
                     for(let i=0; i<3; i++) {
                         let r = Math.random();
                         if(r < 0.2) { addSk++; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
@@ -902,8 +900,29 @@
                         else if(r < 0.8) { addCon++; html += `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; }
                         else { addDb++; html += `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; }
                     }
-                    updates.booster_skip = (player.booster_skip||0) + addSk; updates.booster_speed = (player.booster_speed||0) + addSp; updates.booster_auto = (player.booster_auto||0) + addAu;
-                    updates.booster_contractor = (player.booster_contractor||0) + addCon; updates.booster_doubler = (player.booster_doubler||0) + addDb;
+                    updates.booster_skip = (player.booster_skip||0) + addSk; 
+                    updates.booster_speed = (player.booster_speed||0) + addSp; 
+                    updates.booster_auto = (player.booster_auto||0) + addAu;
+                    updates.booster_contractor = (player.booster_contractor||0) + addCon; 
+                    updates.booster_doubler = (player.booster_doubler||0) + addDb;
+                    colorClass = 'boost';
+                }
+                else if (newStreak === 7) { 
+                    // Выдаем гарантированно по 1 бустеру каждого типа (всего 5)
+                    addSk = 1; addSp = 1; addAu = 1; addCon = 1; addDb = 1;
+                    
+                    html += `<div class="boost">⚡ +1 Пропуск</div>`;
+                    html += `<div class="boost">⚡ +1 Ускорение</div>`;
+                    html += `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`;
+                    html += `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`;
+                    html += `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`;
+                    
+                    updates.booster_skip = (player.booster_skip||0) + 1; 
+                    updates.booster_speed = (player.booster_speed||0) + 1; 
+                    updates.booster_auto = (player.booster_auto||0) + 1;
+                    updates.booster_contractor = (player.booster_contractor||0) + 1; 
+                    updates.booster_doubler = (player.booster_doubler||0) + 1;
+                    
                     colorClass = 'boost'; title="ЦИКЛ ВЫПОЛНЕН!";
                 }
 
@@ -1626,7 +1645,7 @@
             const currentDayUTC = Math.floor(Date.now() / 86400000); const lastDayUTC = player.last_login_day || 0; const canClaimToday = currentDayUTC > lastDayUTC;
             let visualStreak = player.login_streak || 0;
             if (canClaimToday && lastDayUTC !== 0 && currentDayUTC - lastDayUTC > 1) { visualStreak = 0; } 
-            let streakHtml = ''; const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="star-1">1 Фраг. 1⭐</span>', '<span class="star-1">2 Фраг. 1⭐</span>', '<span class="kits">3 Ремк.</span>', '<span class="common">500 Об.</span>', '<span class="boost">2 Бустера</span>', '<span class="boost">3 Случ. Бустера</span>'];
+            let streakHtml = ''; const sRewards = ['<span class="boost">Случ. Бустер</span>', '<span class="star-1">1 Фраг. 1⭐</span>', '<span class="star-1">2 Фраг. 1⭐</span>', '<span class="star-2">1 Фраг. 2⭐</span>', '<span class="star-3">1 Фраг. 3⭐</span>', '<span class="boost">3 Случ. Бустера</span>', '<span class="boost">Все 5 Бустеров!</span>'];
             for(let i=1; i<=7; i++) {
                 let sClass = ''; let sText = '';
                 if (!canClaimToday) { if (i <= visualStreak) { sClass = 'claimed'; sText = '✓ Забрано'; } } 
