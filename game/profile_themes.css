@@ -739,23 +739,21 @@
         linear-gradient(65deg, #083836 0%, #083836 40%, #66d37e calc(40% + 1px), #66d37e 60%, #c6e872 calc(60% + 1px), #c6e872 100%) !important;
     background-blend-mode: overlay, screen, overlay, hard-light, overlay, normal !important;
     background-size: 200% 200% !important;
+    background-position: 50% 50% !important; /* Фиксируем позицию - делаем СТАТИЧНЫМ */
     
     /* Жесткая комиксная рамка и тень */
     border: 4px solid #000000 !important;
     box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.8) !important;
     border-radius: 12px !important;
     z-index: 1;
-    animation: harlequin-shift 10s ease-in-out infinite alternate;
+
+    /* Аппаратное ускорение (броня от графических артефактов на iOS) */
+    -webkit-transform: translate3d(0, 0, 0);
+    transform: translateZ(0);
 }
 
 /* Скрываем слой анимаций (здесь они не нужны) */
 .theme-harlequin .theme-points-wrapper { display: none !important; }
-
-/* Легкое движение градиента для "живого" эффекта */
-@keyframes harlequin-shift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
-}
 
 /* Адаптация внутренних блоков под Pop-Art стиль */
 .theme-harlequin > div[style*="background: rgba"],
@@ -790,6 +788,7 @@
     transform: translate(-3px, -3px);
     box-shadow: 8px 8px 0px #000 !important;
 }
+
 /* Исправляем читаемость текста "Мощь" в рейтинге */
 .theme-harlequin .lb-score {
     color: #ffffff !important; /* Делаем текст белым вместо красного */
