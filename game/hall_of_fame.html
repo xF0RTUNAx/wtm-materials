@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Зал Славы | xFORTUNAx</title>
-    <link rel="stylesheet" href="profile_themes.css?v=100">
+    <link rel="stylesheet" href="profile_themes.css">
     <style>
         * { box-sizing: border-box; }
         :root {
@@ -247,6 +247,26 @@
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
             </div>
+            
+            <div class="wheel-and-hamster theme-hamster-html" style="display: none;">
+    <div class="wheel"></div>
+    <div class="hamster">
+        <div class="hamster__body">
+            <div class="hamster__head">
+                <div class="hamster__ear"></div>
+                <div class="hamster__eye"></div>
+                <div class="hamster__nose"></div>
+            </div>
+            <div class="hamster__limb hamster__limb--fr"></div>
+            <div class="hamster__limb hamster__limb--fl"></div>
+            <div class="hamster__limb hamster__limb--br"></div>
+            <div class="hamster__limb hamster__limb--bl"></div>
+            <div class="hamster__tail"></div>
+        </div>
+    </div>
+    <div class="spoke"></div>
+</div>
+            
             <div style="position: relative; z-index: 5;">
                 <h3 id="tpModalTitle" style="text-align: center; margin-bottom: 20px; color: #fff;" class="lb-name">Предпросмотр</h3>
                 
@@ -256,6 +276,7 @@
                         <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
                         <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
                     </div>
+                    
                     <div class="lb-rank" style="position: relative; z-index: 2;">#1</div>
                     <div class="lb-info" style="position: relative; z-index: 2;">
                         <div class="lb-name" id="tpLbName">xFORTUNAx</div>
@@ -305,6 +326,25 @@
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
             </div>
 
+            <div class="wheel-and-hamster theme-hamster-html" style="display: none;">
+    <div class="wheel"></div>
+    <div class="hamster">
+        <div class="hamster__body">
+            <div class="hamster__head">
+                <div class="hamster__ear"></div>
+                <div class="hamster__eye"></div>
+                <div class="hamster__nose"></div>
+            </div>
+            <div class="hamster__limb hamster__limb--fr"></div>
+            <div class="hamster__limb hamster__limb--fl"></div>
+            <div class="hamster__limb hamster__limb--br"></div>
+            <div class="hamster__limb hamster__limb--bl"></div>
+            <div class="hamster__tail"></div>
+        </div>
+    </div>
+    <div class="spoke"></div>
+</div>
+            
             <div style="position: relative; z-index: 5;">
                 <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
                 <div id="profActiveTitle" style="color: var(--meteor); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;"></div>
@@ -611,6 +651,14 @@
                 if (perks.perk_theme_moonlight) sel.innerHTML += '<option value="theme-moonlight">Лунная ночь</option>';
                 if (perks.perk_theme_404) sel.innerHTML += '<option value="theme-404">404</option>';
                 if (perks.perk_theme_earth) sel.innerHTML += '<option value="theme-earth">Космос</option>';
+                if (perks.perk_theme_dragonscale) sel.innerHTML += '<option value="theme-dragonscale">Ассорти</option>';
+                if (perks.perk_theme_billcipher) sel.innerHTML += '<option value="theme-billcipher">Билл Сайфер</option>';
+                if (perks.perk_theme_mac) sel.innerHTML += '<option value="theme-mac">М значит яблоко</option>';
+                if (perks.perk_theme_retro_os) sel.innerHTML += '<option value="theme-retro-os">Где-то я уже это видел...</option>';
+                if (perks.perk_theme_discharge) sel.innerHTML += '<option value="theme-discharge">Разряд</option>';
+                if (perks.perk_theme_watchultra) sel.innerHTML += '<option value="theme-watchultra">Яблок много не бывает</option>';
+                if (perks.perk_theme_hamster) sel.innerHTML += '<option value="theme-hamster">Верный друг</option>';
+                if (perks.perk_theme_pyramid) sel.innerHTML += '<option value="theme-pyramid">Магическая пирамида</option>';
                 sel.value = p.active_bg_url || "";
             } else { 
                 ward.style.display = 'none'; 
@@ -780,7 +828,15 @@
             { id: 'theme-synergy', name: 'Синергия' },
             { id: 'theme-moonlight', name: 'Лунная ночь' },
             { id: 'theme-404', name: '404' },
-            { id: 'theme-earth', name: 'Космос' }
+            { id: 'theme-earth', name: 'Космос' },
+            { id: 'theme-dragonscale', name: 'Ассорти' },
+            { id: 'theme-billcipher', name: 'Билл Сайфер' },
+            { id: 'theme-mac', name: 'М значит яблоко' },
+            { id: 'theme-retro-os', name: 'Где-то я уже это видел...' },
+            { id: 'theme-discharge', name: 'Разряд' },
+            { id: 'theme-watchultra', name: 'Яблок много не бывает' },
+            { id: 'theme-hamster', name: 'Верный друг' },
+            { id: 'theme-pyramid', name: 'Магическая пирамида' }
         ];
 
         function buildThemesUI() {
