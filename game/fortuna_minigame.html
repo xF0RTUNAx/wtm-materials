@@ -2311,15 +2311,30 @@
                 let lbHtml = '';
                 pData.forEach((p, idx) => {
                   const isLegend = p.elite_perks && p.elite_perks.perk_legend;
-let styleClass = '';
-if (p.active_bg_url && p.active_bg_url.trim() !== "") {
-    styleClass = p.active_bg_url.trim(); // Применяем тему (например, 'theme-amethyst')
-} else if (isLegend) {
-    styleClass = 'legend-style'; // Если темы нет, но есть статус Легенды
-}
-const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
+       let styleClass = '';
+                    if (p.active_bg_url && p.active_bg_url.trim() !== "") {
+                        styleClass = p.active_bg_url.trim(); 
+                    } else if (isLegend) {
+                        styleClass = 'legend-style';
+                    }
+                    const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
                     
-                    lbHtml += `<div class="lb-item ${styleClass}" onclick="openProfile('${p.id}')" style="cursor: pointer;"><div class="lb-rank">#${idx+1}</div><div class="lb-info"><div class="lb-name">${dispName}</div><div class="lb-score">Мощь: ⚡${p.power || 0}</div></div></div>`;
+                    // ДОБАВЛЕНО: Скелет для анимированных тем
+                    let bgWrapper = '';
+                    if (styleClass.startsWith('theme-')) {
+                        bgWrapper = `<div class="theme-points-wrapper"><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i></div>`;
+                    }
+                    
+                    // ДОБАВЛЕНО: z-index, чтобы текст всегда был поверх анимаций
+                    lbHtml += `
+                    <div class="lb-item ${styleClass}" onclick="openProfile('${p.id}')" style="cursor: pointer; position: relative; overflow: hidden; z-index: 1;">
+                        ${bgWrapper}
+                        <div class="lb-rank" style="position: relative; z-index: 2;">#${idx+1}</div>
+                        <div class="lb-info" style="position: relative; z-index: 2;">
+                            <div class="lb-name">${dispName}</div>
+                            <div class="lb-score">Мощь: ⚡${p.power || 0}</div>
+                        </div>
+                    </div>`;
                 });
                 document.getElementById('leaderboardListPlayers').innerHTML = lbHtml;
             }
@@ -2423,6 +2438,18 @@ const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
                 if (pks.perk_theme_cyberpunk) sel.innerHTML += '<option value="theme-cyberpunk">Неон</option>';
                 if (pks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
                 if (pks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
+                if (pks.perk_theme_starry) sel.innerHTML += '<option value="theme-starry">Звездная тишина</option>';
+                if (pks.perk_theme_matrix) sel.innerHTML += '<option value="theme-matrix">Матрица</option>';
+                if (pks.perk_theme_nostalgia) sel.innerHTML += '<option value="theme-nostalgia">Ностальгия</option>';
+                if (pks.perk_theme_mojito) sel.innerHTML += '<option value="theme-mojito">Мохито</option>';
+                if (pks.perk_theme_aquarelle) sel.innerHTML += '<option value="theme-aquarelle">Акварель</option>';
+                if (pks.perk_theme_spring) sel.innerHTML += '<option value="theme-spring">Весна</option>';
+                if (pks.perk_theme_harlequin) sel.innerHTML += '<option value="theme-harlequin">Арлекин</option>';
+                if (pks.perk_theme_serenity) sel.innerHTML += '<option value="theme-serenity">Безмятежность</option>';
+                if (pks.perk_theme_synergy) sel.innerHTML += '<option value="theme-synergy">Синергия</option>';
+                if (pks.perk_theme_moonlight) sel.innerHTML += '<option value="theme-moonlight">Лунная ночь</option>';
+                if (pks.perk_theme_404) sel.innerHTML += '<option value="theme-404">404</option>';
+                if (pks.perk_theme_earth) sel.innerHTML += '<option value="theme-earth">Космос</option>';
                 sel.value = p.active_bg_url || "";
             } else { ward.style.display = 'none'; }
 
