@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>xFORTUNAx Mini-games</title>
-    <link rel="stylesheet" href="profile_themes.css?v=100">
+    <link rel="stylesheet" href="profile_themes.css">
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
     <style>
         * { box-sizing: border-box; } 
@@ -477,21 +477,21 @@
                     <div style="font-weight: bold; color: var(--common); margin-bottom: 10px;">Классические Контейнеры:</div>
                     <span style="font-family: monospace; font-size: 14px; display: block; margin-bottom: 5px;" id="dailyCaseTimer">Вычисление...</span>
                     <button id="btnDailyCase" class="btn-case" style="background: var(--epic);" onclick="openDailyCase()">Ежедневный контейнер (Бесплатно)</button>
-                    <div class="drop-chances" style="margin-bottom:15px;">Шансы: 100-150 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 1% Ремкомплект, 5% на Фрагмент.</div>
+                    <div class="drop-chances" style="margin-bottom:15px;">Шансы: 100-150 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 10% Ремкомплект, 5% на Фрагмент.</div>
                     
                     <div class="gacha-row">
                         <button class="btn-paid" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openPaidCase(1)">Особый (x1) - 25 Об.</button>
                         <button class="btn-paid" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openPaidCase(10)">Особый (x10) - 250 Об.</button>
                         <button class="btn-paid" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openPaidCase(100)">Особый (x100) - 2.5к</button>
                     </div>
-                    <div class="drop-chances" style="margin-bottom:15px; margin-top:5px;">Шансы: 60% минус, 25% окуп, 10% плюс, 5% Джекпот. Шанс 2% на Бустер, 3% Ремкомплект.</div>
+                    <div class="drop-chances" style="margin-bottom:15px; margin-top:5px;">Шансы: 60% минус, 25% окуп, 10% плюс, 5% Джекпот. Шанс 0.5% на Бустер, 3% Ремкомплект.</div>
                     
                     <div class="gacha-row">
                         <button class="btn-paid" style="background: var(--accent-green); flex:1; font-size: 11px; padding: 10px 2px;" onclick="openRepairCase(1)">Инж. (x1) - 250</button>
                         <button class="btn-paid" style="background: var(--accent-green); flex:1; font-size: 11px; padding: 10px 2px;" onclick="openRepairCase(10)">Инж. (x10) - 2.5к</button>
                         <button class="btn-paid" style="background: var(--accent-green); flex:1; font-size: 11px; padding: 10px 2px;" onclick="openRepairCase(100)">Инж. (x100) - 25к</button>
                     </div>
-                    <div class="drop-chances" style="margin-top:5px;">Шансы: 70% (1 Ремк.), 25% (3 Ремк.), 5% (9 Ремк.). Шанс 3% на любой Бустер.</div>
+                    <div class="drop-chances" style="margin-top:5px;">Шансы: 70% (1 Ремк.), 25% (3 Ремк.), 5% (9 Ремк.). Шанс 2.5% на любой Бустер.</div>
                 </div>
                 
                 <div id="caseMsg" class="msg"></div>
@@ -1405,7 +1405,7 @@
         async function openDailyCase() {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const gotCommon = Math.floor(Math.random() * 51) + 100; const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; const gotEpic = Math.random() < 0.05 ? 1 : 0; 
-            const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.01 ? 1 : 0;
+            const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.1 ? 1 : 0;
             const gotFrag = Math.random() < 0.05 ? 1 : 0;
             
             let fragTier = 0; let fragUnit = '';
@@ -1462,11 +1462,11 @@
                 else if (rand < 0.95) { e += 1; r += 2; } 
                 else { e += 2; }
 
-                if (Math.random() < 0.02) {
+                if (Math.random() < 0.005) {
                     const bRand = Math.random();
                     if(bRand < 0.2) gotSk++; else if(bRand < 0.4) gotSp++; else if(bRand < 0.6) gotAu++; else if(bRand < 0.8) gotCon++; else gotDb++;
                 }
-                if (Math.random() < 0.03) { gotKit++; }
+                if (Math.random() < 0.025) { gotKit++; }
             }
 
             let title = `ОТКРЫТО: ${amount} ШТ.`; let color = "rare"; let html = '';
@@ -2450,6 +2450,14 @@
                 if (pks.perk_theme_moonlight) sel.innerHTML += '<option value="theme-moonlight">Лунная ночь</option>';
                 if (pks.perk_theme_404) sel.innerHTML += '<option value="theme-404">404</option>';
                 if (pks.perk_theme_earth) sel.innerHTML += '<option value="theme-earth">Космос</option>';
+                if (pks.perk_theme_dragonscale) sel.innerHTML += '<option value="theme-dragonscale">Ассорти</option>';
+                if (pks.perk_theme_billcipher) sel.innerHTML += '<option value="theme-billcipher">Билл Сайфер</option>';
+                if (pks.perk_theme_mac) sel.innerHTML += '<option value="theme-mac">М значит яблоко</option>';
+                if (pks.perk_theme_retro_os) sel.innerHTML += '<option value="theme-retro-os">Где-то я уже это видел...</option>';
+                if (pks.perk_theme_discharge) sel.innerHTML += '<option value="theme-discharge">Разряд</option>';
+                if (pks.perk_theme_watchultra) sel.innerHTML += '<option value="theme-watchultra">Яблок много не бывает</option>';
+                if (pks.perk_theme_hamster) sel.innerHTML += '<option value="theme-hamster">Верный друг</option>';
+                if (pks.perk_theme_pyramid) sel.innerHTML += '<option value="theme-pyramid">Магическая пирамида</option>';
                 sel.value = p.active_bg_url || "";
             } else { ward.style.display = 'none'; }
 
@@ -2488,6 +2496,25 @@
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
             </div>
+            
+            <div class="wheel-and-hamster theme-hamster-html" style="display: none;">
+    <div class="wheel"></div>
+    <div class="hamster">
+        <div class="hamster__body">
+            <div class="hamster__head">
+                <div class="hamster__ear"></div>
+                <div class="hamster__eye"></div>
+                <div class="hamster__nose"></div>
+            </div>
+            <div class="hamster__limb hamster__limb--fr"></div>
+            <div class="hamster__limb hamster__limb--fl"></div>
+            <div class="hamster__limb hamster__limb--br"></div>
+            <div class="hamster__limb hamster__limb--bl"></div>
+            <div class="hamster__tail"></div>
+        </div>
+    </div>
+    <div class="spoke"></div>
+</div>
 
                 <div style="position: relative; z-index: 5;">
                 <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
