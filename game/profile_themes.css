@@ -1340,3 +1340,1161 @@
     border: 1px solid rgba(195, 244, 255, 0.2) !important;
     backdrop-filter: blur(4px);
 }
+
+/* ========================================= */
+/* ТЕМА 17: ЧЕШУЯ ДРАКОНА (DRAGON SCALES)    */
+/* ========================================= */
+
+.theme-dragonscale {
+    position: relative;
+    /* Очень темный фон с легким мистическим отливом */
+    background: #0f0c1b !important; 
+    border: 2px solid #ff4444 !important;
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.2), inset 0 0 30px rgba(0, 0, 0, 0.8) !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Оверлей для идеальной читаемости текста */
+.theme-dragonscale::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.theme-dragonscale .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* Базовый стиль для чешуек */
+.theme-dragonscale .theme-point {
+    display: block;
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    /* Цвет тени будет наследоваться от конкретной чешуйки (свойство color) */
+    filter: drop-shadow(0 0 8px currentColor);
+    will-change: transform;
+}
+
+/* Подключаем SVG-чешуйки из референса, закодированные для CSS */
+
+/* 1. Синяя чешуя (Space) */
+.theme-dragonscale .theme-point:nth-child(1),
+.theme-dragonscale .theme-point:nth-child(7) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient r='50%25' cy='50%25' cx='50%25' id='g1'%3E%3Cstop style='stop-color:%2382adf8' offset='0%25'/%3E%3Cstop style='stop-color:%234488ff' offset='20%25'/%3E%3Cstop style='stop-color:%231144aa' offset='100%25'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill='url(%23g1)' d='M30,20 L70,10 L90,40 L80,80 L40,90 L10,60 Z' stroke='%234488ff'/%3E%3C/svg%3E");
+    color: #4488ff;
+}
+
+/* 2. Желтая чешуя (Mind) */
+.theme-dragonscale .theme-point:nth-child(2),
+.theme-dragonscale .theme-point:nth-child(8) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient r='50%25' cy='50%25' cx='50%25' id='g2'%3E%3Cstop style='stop-color:%23f9e89b' offset='0%25'/%3E%3Cstop style='stop-color:%23ffdd44' offset='20%25'/%3E%3Cstop style='stop-color:%23aa8800' offset='100%25'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill='url(%23g2)' d='M20,30 L60,10 L90,50 L70,90 L30,80 L10,40 Z' stroke='%23ffdd44'/%3E%3C/svg%3E");
+    color: #ffdd44;
+}
+
+/* 3. Красная чешуя (Reality) */
+.theme-dragonscale .theme-point:nth-child(3),
+.theme-dragonscale .theme-point:nth-child(9) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient r='50%25' cy='50%25' cx='50%25' id='g3'%3E%3Cstop style='stop-color:%23fc7070' offset='0%25'/%3E%3Cstop style='stop-color:%23ff4444' offset='20%25'/%3E%3Cstop style='stop-color:%23aa1111' offset='100%25'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill='url(%23g3)' d='M40,10 L80,30 L90,70 L60,90 L20,80 L10,40 Z' stroke='%23ff4444'/%3E%3C/svg%3E");
+    color: #ff4444;
+}
+
+/* 4. Фиолетовая чешуя (Power) */
+.theme-dragonscale .theme-point:nth-child(4),
+.theme-dragonscale .theme-point:nth-child(10) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient r='50%25' cy='50%25' cx='50%25' id='g4'%3E%3Cstop style='stop-color:%23bd76f7' offset='0%25'/%3E%3Cstop style='stop-color:%23aa44ff' offset='20%25'/%3E%3Cstop style='stop-color:%236611aa' offset='100%25'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill='url(%23g4)' d='M30,20 L70,10 L90,50 L70,90 L30,80 L10,30 Z' stroke='%23aa44ff'/%3E%3C/svg%3E");
+    color: #aa44ff;
+}
+
+/* 5. Зеленая чешуя (Time) */
+.theme-dragonscale .theme-point:nth-child(5) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient r='50%25' cy='50%25' cx='50%25' id='g5'%3E%3Cstop style='stop-color:%239df89d' offset='0%25'/%3E%3Cstop style='stop-color:%2344ff44' offset='20%25'/%3E%3Cstop style='stop-color:%2311aa11' offset='100%25'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill='url(%23g5)' d='M20,20 L60,10 L90,40 L80,80 L40,90 L10,50 Z' stroke='%2344ff44'/%3E%3C/svg%3E");
+    color: #44ff44;
+}
+
+/* 6. Оранжевая чешуя (Soul) */
+.theme-dragonscale .theme-point:nth-child(6) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3CradialGradient r='50%25' cy='50%25' cx='50%25' id='g6'%3E%3Cstop style='stop-color:%23f5c58a' offset='0%25'/%3E%3Cstop style='stop-color:%23ffaa44' offset='20%25'/%3E%3Cstop style='stop-color:%23aa6611' offset='100%25'/%3E%3C/radialGradient%3E%3C/defs%3E%3Cpath fill='url(%23g6)' d='M30,10 L70,20 L90,50 L70,80 L30,90 L10,40 Z' stroke='%23ddaa44'/%3E%3C/svg%3E");
+    color: #ddaa44;
+}
+
+/* Раскидываем 10 элементов по краям, задаем разные размеры и скорости анимации */
+.theme-dragonscale .theme-point:nth-child(1) { top: 5%; left: 5%; width: 35px; height: 35px; animation: ds-float 4s ease-in-out infinite; }
+.theme-dragonscale .theme-point:nth-child(2) { top: 10%; right: 10%; width: 40px; height: 40px; animation: ds-float 5s ease-in-out infinite 0.5s; transform: rotate(15deg); }
+.theme-dragonscale .theme-point:nth-child(3) { bottom: 10%; left: 5%; width: 45px; height: 45px; animation: ds-float 4.5s ease-in-out infinite 1s; transform: rotate(-20deg); }
+.theme-dragonscale .theme-point:nth-child(4) { bottom: 5%; right: 5%; width: 30px; height: 30px; animation: ds-float 3.5s ease-in-out infinite 1.5s; transform: rotate(45deg); }
+.theme-dragonscale .theme-point:nth-child(5) { top: 40%; left: 2%; width: 25px; height: 25px; animation: ds-float 4.2s ease-in-out infinite 2s; transform: rotate(60deg); }
+.theme-dragonscale .theme-point:nth-child(6) { top: 50%; right: 2%; width: 38px; height: 38px; animation: ds-float 5.5s ease-in-out infinite 0.2s; transform: rotate(-40deg); }
+.theme-dragonscale .theme-point:nth-child(7) { top: 5%; left: 45%; width: 28px; height: 28px; animation: ds-float 3.8s ease-in-out infinite 2.5s; transform: rotate(10deg); }
+.theme-dragonscale .theme-point:nth-child(8) { bottom: 5%; left: 45%; width: 32px; height: 32px; animation: ds-float 4.8s ease-in-out infinite 0.8s; transform: rotate(-15deg); }
+.theme-dragonscale .theme-point:nth-child(9) { top: 25%; right: 25%; width: 22px; height: 22px; animation: ds-float 3.2s ease-in-out infinite 1.2s; transform: rotate(80deg); }
+.theme-dragonscale .theme-point:nth-child(10){ bottom: 25%; left: 25%; width: 20px; height: 20px; animation: ds-float 4.1s ease-in-out infinite 0.3s; transform: rotate(-70deg); }
+
+/* Плавная левитация чешуек вокруг профиля */
+@keyframes ds-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+/* Оформление текста */
+.theme-dragonscale #profName, .theme-dragonscale .lb-name {
+    color: #ffffff !important;
+    text-shadow: 0 0 10px rgba(255, 68, 68, 0.8), 0 0 20px rgba(0, 0, 0, 1) !important;
+    letter-spacing: 1px;
+}
+
+/* ========================================= */
+/* ТЕМА 18: БИЛЛ САЙФЕР (BILL CIPHER)        */
+/* ========================================= */
+
+.theme-billcipher {
+    position: relative;
+    background-color: #111 !important;
+    /* Винтажная золотая рамка и жесткая тень */
+    border: 3px solid #a19c74 !important;
+    box-shadow: inset 0 0 50px #000, 5px 5px 0px #000 !important;
+    overflow: hidden !important;
+    z-index: 1;
+    border-radius: 0 !important; /* Убираем скругления для ретро-стиля */
+}
+
+/* Эффект старого телевизора (ТВ-шум) */
+.theme-billcipher::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.05),
+        rgba(255, 255, 255, 0.05) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: 50; /* Шум поверх всего */
+    animation: bc-static 0.2s infinite linear alternate;
+}
+
+@keyframes bc-static {
+    0% { opacity: 0.3; }
+    100% { opacity: 0.1; }
+}
+
+.theme-billcipher .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1; 
+    pointer-events: none;
+}
+
+/* Жуткий текст внизу экрана */
+.theme-billcipher .theme-points-wrapper::after {
+    content: 'OBEY. TRUST. CONSUME.';
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.2);
+    font-size: 10px;
+    letter-spacing: 6px;
+    font-family: monospace;
+    text-shadow: 1px 1px 0 #000;
+}
+
+.theme-billcipher .theme-point {
+    display: block;
+    position: absolute;
+}
+
+/* Точка 1: Пирамида (Тело Билла) - ПОДНЯТО ВЫШЕ (top: 35%) */
+.theme-billcipher .theme-point:nth-child(1) {
+    width: 220px;
+    height: 190px;
+    background-color: #eebb22; /* Желтый цвет Билла */
+    /* Текстура кирпичей */
+    background-image: linear-gradient(rgba(0,0,0,0.5) 2px, transparent 2px);
+    background-size: 100% 20px;
+    clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+    top: 35%; left: 50%;
+    margin-top: -95px; margin-left: -110px;
+    filter: drop-shadow(0 0 15px rgba(238, 187, 34, 0.3));
+    animation: bc-float 4s ease-in-out infinite;
+}
+
+/* Точка 2: Цилиндр (Шляпа) - ПОДНЯТО ВЫШЕ (top: 35%) */
+.theme-billcipher .theme-point:nth-child(2) {
+    width: 24px; height: 60px;
+    background: #000;
+    top: 35%; left: 50%;
+    margin-top: -155px; margin-left: -12px;
+    animation: bc-float 4s ease-in-out infinite;
+}
+/* Поля шляпы */
+.theme-billcipher .theme-point:nth-child(2)::after {
+    content: ''; position: absolute;
+    bottom: 0; left: -18px;
+    width: 60px; height: 6px;
+    background: #000;
+}
+
+/* Точка 3: Галстук-бабочка - ПОДНЯТО ВЫШЕ (top: 35%) */
+.theme-billcipher .theme-point:nth-child(3) {
+    width: 0; height: 0;
+    border-left: 20px solid #000; border-right: 20px solid #000;
+    border-top: 10px solid transparent; border-bottom: 10px solid transparent;
+    top: 35%; left: 50%;
+    margin-top: 85px; margin-left: -20px;
+    animation: bc-float 4s ease-in-out infinite;
+}
+
+/* Точка 4: Глаз (Белок + Анимация Моргания) - ПОДНЯТО ВЫШЕ (top: 35%) */
+.theme-billcipher .theme-point:nth-child(4) {
+    width: 90px; height: 50px;
+    background: radial-gradient(circle at 30% 30%, #fff, #b3b3b3);
+    border-radius: 50%;
+    top: 35%; left: 50%;
+    margin-top: -15px; margin-left: -45px;
+    box-shadow: 0 0 0 6px #000, inset -5px -5px 10px rgba(0, 0, 0, 0.4);
+    animation: bc-float 4s ease-in-out infinite, bc-blink 6s infinite cubic-bezier(0.76, 0, 0.24, 1);
+    overflow: hidden;
+}
+
+/* Зрачок внутри глаза (Щелевидный, с красным свечением и анимацией слежения) */
+.theme-billcipher .theme-point:nth-child(4)::after {
+    content: ''; position: absolute;
+    width: 14px; height: 35px;
+    background: #000; border-radius: 50%;
+    top: 7px; left: 38px;
+    box-shadow: 0 0 15px 4px #f00; /* Демоническое красное свечение */
+    animation: bc-look 6s infinite ease-in-out;
+}
+
+/* Анимации Билла */
+@keyframes bc-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@keyframes bc-blink {
+    0%, 90%, 100% { height: 50px; margin-top: -15px; }
+    92%, 98% { height: 0px; margin-top: 10px; border-width: 0; box-shadow: none; }
+}
+
+@keyframes bc-look {
+    0%, 100% { transform: translate(0, 0); }
+    25% { transform: translate(-20px, 5px); }
+    50% { transform: translate(0, 10px); }
+    75% { transform: translate(20px, 5px); }
+}
+
+/* Точка 5: Полоса сканера (как на старых мониторах) */
+.theme-billcipher .theme-point:nth-child(5) {
+    width: 100%; height: 6px;
+    background: rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px rgba(0,0,0,0.8);
+    top: 0; left: 0;
+    z-index: 55;
+    animation: bc-scan 3s linear infinite;
+}
+
+@keyframes bc-scan {
+    0% { top: -10px; }
+    100% { top: 100%; }
+}
+
+/* Прячем остальные точки */
+.theme-billcipher .theme-point:nth-child(n+6) { display: none; }
+
+/* Эффект глитча для Никнейма */
+@keyframes bc-text-glitch {
+    0%, 94% { text-shadow: 2px 2px 0 #000; transform: translate(0); }
+    95% { text-shadow: -2px 0 #f00, 2px 0 #0ff; transform: translate(-2px, 1px); }
+    97% { text-shadow: 2px 0 #f00, -2px 0 #0ff; transform: translate(2px, -1px); }
+    99% { text-shadow: -2px 0 #f00, 2px 0 #0ff; transform: translate(0, 0); }
+}
+
+.theme-billcipher #profName, .theme-billcipher .lb-name {
+    color: #eebb22 !important;
+    font-weight: 900 !important;
+    letter-spacing: 2px;
+    animation: bc-text-glitch 5s infinite; /* Редкие "подергивания" текста */
+}
+
+/* Стилизация панелей внутри профиля: острые углы и ретро-вид */
+.theme-billcipher .panel, .theme-billcipher .badge, .theme-billcipher > div[style*="background: rgba"] {
+    background: rgba(10, 10, 10, 0.85) !important;
+    border: 1px solid #a19c74 !important;
+    border-radius: 0 !important; 
+    box-shadow: 3px 3px 0px #000 !important;
+    backdrop-filter: blur(2px);
+}
+
+/* ========================================= */
+/* ТЕМА 19: М ЗНАЧИТ ЯБЛОКО (MACBOOK)        */
+/* ========================================= */
+
+.theme-mac {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    perspective: 2000px; /* 3D пространство для эффекта ноутбука */
+    padding: 0 !important; /* Убираем стандартные отступы, экраном станет внутренний блок */
+    margin-top: 15px;
+}
+
+/* Экран (Сам контент профиля) */
+.theme-mac > div[style*="z-index: 5"] {
+    background-image: linear-gradient(15deg, #3f51b1 0%, #5a55ae 13%, #7b5fac 25%, #8f6aae 38%, #a86aa4 50%, #cc6b8e 62%, #f18271 75%, #f3a469 87%, #f7c978 100%);
+    border-radius: 16px;
+    /* Серебряная кромка макбука + Черная рамка экрана */
+    box-shadow: inset 0 0 0 2px #c8cacb, inset 0 0 0 16px #000, 0 15px 40px rgba(0,0,0,0.6);
+    padding: 40px 25px 35px 25px; /* Отступы с учетом черной рамки */
+    position: relative;
+    
+    /* 3D Анимация открытия крышки */
+    transform-origin: bottom center;
+    transform-style: preserve-3d;
+    animation: mac-open-screen 1.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    z-index: 5;
+}
+
+/* Анимация: крышка ноутбука поднимается со стола */
+@keyframes mac-open-screen {
+    0% { transform: rotateX(-85deg); opacity: 0; }
+    100% { transform: rotateX(0deg); opacity: 1; }
+}
+
+/* Камера (Челка / Notch) */
+.theme-mac > div[style*="z-index: 5"]::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 14px;
+    background: #000;
+    border-radius: 0 0 8px 8px;
+    z-index: 10;
+}
+
+/* Нижняя рамка экрана (с надписью) */
+.theme-mac > div[style*="z-index: 5"]::after {
+    content: "Pad";
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    width: calc(100% - 4px);
+    height: 24px;
+    background: linear-gradient(to bottom, #272727, #0d0d0d);
+    border-radius: 0 0 14px 14px;
+    color: #a9abac;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    letter-spacing: 2px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    text-transform: uppercase;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* База ноутбука (Алюминиевый корпус с клавиатурой) */
+.theme-mac::after {
+    content: '';
+    display: block;
+    background: radial-gradient(circle at center, #e2e3e4 85%, #a9abac 100%);
+    border: solid #a0a3a7;
+    border-radius: 2px 2px 14px 14px;
+    border-width: 1px 2px 0 2px;
+    box-shadow: inset 0 -2px 8px 0 #6c7074, 0 20px 40px rgba(0,0,0,0.8);
+    height: 24px;
+    width: calc(100% + 40px); /* Выступает за края экрана */
+    position: absolute;
+    bottom: -24px; /* Прикреплен ровно к шарниру экрана */
+    left: -20px;
+    z-index: 4;
+}
+
+/* Используем точки для мелких деталей корпуса */
+.theme-mac .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+}
+
+/* Скрываем лишние точки */
+.theme-mac .theme-point:nth-child(n+3) { display: none !important; }
+
+/* Выемка для открытия крышки (на базе) */
+.theme-mac .theme-point:nth-child(1) {
+    display: block;
+    background: #e2e3e4;
+    border-radius: 0 0 10px 10px;
+    box-shadow: inset 0 0 4px 2px #babdbf;
+    height: 10px;
+    width: 80px;
+    position: absolute;
+    bottom: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+}
+
+/* Резиновые ножки в тени */
+.theme-mac .theme-point:nth-child(2) {
+    display: block;
+    background: transparent;
+    border-radius: 0 0 3px 3px;
+    bottom: -26px;
+    box-shadow: -120px 0 #111, 120px 0 #111;
+    height: 3px;
+    width: 30px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+}
+
+/* Оформление текста под macOS (Apple стиль) */
+.theme-mac #profName, .theme-mac .lb-name {
+    color: #fff !important;
+    text-shadow: 0 0 10px rgba(255,255,255,0.5) !important;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.5px;
+}
+
+/* Стекло (Glassmorphism) для внутренних панелей, как окна в macOS */
+.theme-mac .panel, .theme-mac .badge, .theme-mac > div[style*="background: rgba"] {
+    background: rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.5) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.5) !important;
+    backdrop-filter: blur(15px);
+    border-radius: 12px !important;
+    color: #fff !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+}
+
+/* Кнопки */
+.theme-mac button {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.4) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(5px);
+}
+
+/* Плашка в таблице лидеров (в виде закрытого макбука с градиентом экрана) */
+.lb-item.theme-mac {
+    background-image: linear-gradient(15deg, #3f51b1 0%, #a86aa4 50%, #f7c978 100%) !important;
+    border: 4px solid #000 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 0 0 2px #c8cacb !important;
+}
+
+/* ========================================= */
+/* ТЕМА 20: ГДЕ-ТО Я УЖЕ ЭТО ВИДЕЛ (RETRO OS)*/
+/* ========================================= */
+
+.theme-retro-os {
+    position: relative;
+    background: #28282B !important; /* Глубокий графитовый фон */
+    border: 4px solid #F5F5DC !important; /* Классическая бежевая рамка */
+    border-radius: 8px !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Затемняющий слой, чтобы большой логотип не мешал читать текст */
+.theme-retro-os::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(40, 40, 43, 0.5);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.theme-retro-os .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    pointer-events: none;
+}
+
+/* Анимация глянцевого блика (Glider) */
+.theme-retro-os .theme-points-wrapper::before,
+.theme-retro-os .theme-points-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    background-color: rgba(255, 255, 255, 0.15);
+    transform: skewX(-45deg) translateX(-500px);
+    animation: retro-glider 2.5s infinite linear;
+    z-index: 10;
+}
+.theme-retro-os .theme-points-wrapper::before { width: 30px; }
+.theme-retro-os .theme-points-wrapper::after { width: 12px; animation-delay: 0.15s; background-color: rgba(255, 255, 255, 0.1); }
+
+@keyframes retro-glider {
+    0% { transform: skewX(-45deg) translateX(-300px); }
+    100% { transform: skewX(-45deg) translateX(900px); }
+}
+
+/* Базовый стиль для "Окон" (Логотипов) */
+.theme-retro-os .theme-point {
+    display: block;
+    position: absolute;
+    border-radius: 50%;
+    transform: skew(-25deg);
+    border: 4px solid white;
+    /* Рисуем 4 цветных квадрата с помощью конического градиента */
+    background: conic-gradient(from 0deg, #1F51FF 0 90deg, #50C878 90deg 180deg, #FFEA00 180deg 270deg, #FF2400 270deg 360deg);
+    overflow: hidden;
+}
+
+/* Белый крест внутри логотипов (создаем рамки между цветами) */
+.theme-retro-os .theme-point::before {
+    content: ''; position: absolute;
+    top: 50%; left: 0; width: 100%; height: 4px;
+    background: white; transform: translateY(-50%);
+}
+.theme-retro-os .theme-point::after {
+    content: ''; position: absolute;
+    left: 50%; top: 0; height: 100%; width: 4px;
+    background: white; transform: translateX(-50%);
+}
+
+/* Точка 1: Большой логотип по центру (на заднем фоне) */
+.theme-retro-os .theme-point:nth-child(1) {
+    width: 180px; height: 280px;
+    top: 50%; left: 50%;
+    margin-top: -140px; margin-left: -90px;
+    opacity: 0.8;
+}
+
+/* Точка 2: Маленький логотип слева сверху */
+.theme-retro-os .theme-point:nth-child(2) {
+    width: 25px; height: 45px;
+    top: 15px; left: 15px;
+    border-width: 2px;
+}
+.theme-retro-os .theme-point:nth-child(2)::before { height: 2px; }
+.theme-retro-os .theme-point:nth-child(2)::after { width: 2px; }
+
+/* Точка 3: Маленький логотип справа снизу */
+.theme-retro-os .theme-point:nth-child(3) {
+    width: 25px; height: 45px;
+    bottom: 15px; right: 15px;
+    border-width: 2px;
+}
+.theme-retro-os .theme-point:nth-child(3)::before { height: 2px; }
+.theme-retro-os .theme-point:nth-child(3)::after { width: 2px; }
+
+/* Прячем остальные точки */
+.theme-retro-os .theme-point:nth-child(n+4) { display: none !important; }
+
+/* Оформление текста в стиле ретро-кода */
+.theme-retro-os #profName, .theme-retro-os .lb-name {
+    color: #F5F5DC !important; /* Бежевый цвет в тон рамке */
+    text-shadow: 2px 2px 0px #000 !important;
+    font-family: "Courier New", Courier, monospace !important; 
+    letter-spacing: 1px;
+}
+
+/* Стилизация панелей внутри профиля */
+.theme-retro-os .panel, .theme-retro-os .badge, .theme-retro-os > div[style*="background: rgba"] {
+    background: rgba(0, 0, 0, 0.7) !important;
+    border: 2px solid #F5F5DC !important;
+    border-radius: 4px !important; /* Угловатые, олдскульные рамки */
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.8) !important;
+}
+
+/* Плашка в таблице лидеров */
+.lb-item.theme-retro-os {
+    border-radius: 4px !important;
+    border: 2px solid #F5F5DC !important;
+}
+
+/* ========================================= */
+/* ТЕМА 21: РАЗРЯД (DISCHARGE)               */
+/* ========================================= */
+
+.theme-discharge {
+    position: relative;
+    /* Темный графитовый фон из референса */
+    background: linear-gradient(to bottom, #1c1c24, #121212) !important;
+    border-radius: 24px !important;
+    /* Базовая внешняя рамка */
+    border: 2px solid rgba(72, 87, 221, 0.5) !important;
+    z-index: 1;
+    overflow: visible !important; /* Позволяем свечению выходить за края */
+}
+
+/* Контейнер для слоев свечения и турбулентности */
+.theme-discharge .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 24px;
+    pointer-events: none;
+}
+
+.theme-discharge .theme-point {
+    display: block;
+    position: absolute;
+    border-radius: 24px;
+    pointer-events: none;
+}
+
+/* Точка 1: Главная искаженная рамка (Тот самый SVG Фильтр) */
+.theme-discharge .theme-point:nth-child(1) {
+    inset: -4px; /* Выходит за пределы базовой рамки */
+    border: 2px solid #6348dd;
+    /* Встраиваем SVG-фильтр напрямую через Data URI */
+    filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='turbulent-displace' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise1' seed='1'/%3E%3CfeOffset in='noise1' dx='0' dy='0' result='offsetNoise1'/%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise2' seed='1'/%3E%3CfeOffset in='noise2' dx='0' dy='0' result='offsetNoise2'/%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise1' seed='2'/%3E%3CfeOffset in='noise1' dx='0' dy='0' result='offsetNoise3'/%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise2' seed='2'/%3E%3CfeOffset in='noise2' dx='0' dy='0' result='offsetNoise4'/%3E%3CfeComposite in='offsetNoise1' in2='offsetNoise2' result='part1'/%3E%3CfeComposite in='offsetNoise3' in2='offsetNoise4' result='part2'/%3E%3CfeBlend in='part1' in2='part2' mode='color-dodge' result='combinedNoise'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='combinedNoise' scale='30' xChannelSelector='R' yChannelSelector='B'/%3E%3C/filter%3E%3C/svg%3E#turbulent-displace");
+}
+
+/* Точка 2: Оранжевое свечение (Layer 1) */
+.theme-discharge .theme-point:nth-child(2) {
+    inset: -2px;
+    border: 2px solid rgba(221, 132, 72, 0.8);
+    filter: blur(2px);
+    animation: discharge-pulse 2s infinite alternate;
+}
+
+/* Точка 3: Фиолетовое свечение (Layer 2) */
+.theme-discharge .theme-point:nth-child(3) {
+    inset: -2px;
+    border: 2px solid #a366ff;
+    filter: blur(6px);
+}
+
+/* Анимация пульсации энергии */
+@keyframes discharge-pulse {
+    0% { opacity: 0.5; transform: scale(0.99); }
+    100% { opacity: 1; transform: scale(1.01); }
+}
+
+/* Точка 4: Фоновое глубокое свечение */
+.theme-discharge .theme-point:nth-child(4) {
+    inset: 0;
+    filter: blur(32px);
+    opacity: 0.35;
+    background: linear-gradient(-30deg, #a366ff, transparent, #6348dd);
+    z-index: -2;
+}
+
+/* Точка 5: Внутренние стеклянные блики (Overlays) */
+.theme-discharge .theme-point:nth-child(5) {
+    inset: 0;
+    mix-blend-mode: overlay;
+    filter: blur(16px);
+    background: linear-gradient(-30deg, #ffffff, transparent 30%, transparent 70%, #ffffff);
+    opacity: 0.6;
+}
+
+/* Прячем остальные точки */
+.theme-discharge .theme-point:nth-child(n+6) { display: none !important; }
+
+/* Оформление текста */
+.theme-discharge #profName, .theme-discharge .lb-name {
+    color: #ffffff !important;
+    font-weight: 500 !important;
+    text-shadow: 0 0 10px rgba(99, 72, 221, 0.8) !important;
+    letter-spacing: 1px;
+}
+
+.theme-discharge #profActiveTitle {
+    color: rgba(221, 132, 72, 1) !important; /* Оранжевый акцент */
+    text-shadow: 0 0 8px rgba(221, 132, 72, 0.5) !important;
+}
+
+/* Стеклянные панели (Glassmorphism из референса) */
+.theme-discharge .panel, .theme-discharge .badge, .theme-discharge > div[style*="background: rgba"] {
+    background: radial-gradient(47.2% 50% at 50.39% 88.37%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%), rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* Плашка в таблице лидеров */
+.lb-item.theme-discharge {
+    background: linear-gradient(-30deg, #2a1a4a, transparent, #1a1a2a), #121212 !important;
+    border: 2px solid rgba(72, 87, 221, 0.5) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 0 15px rgba(99, 72, 221, 0.3) !important;
+}
+
+/* ========================================= */
+/* ТЕМА 22: ЯБЛОК МНОГО НЕ БЫВАЕТ (ULTRA)   */
+/* ========================================= */
+
+/* Базовые цвета для Apple Watch Ultra */
+:root {
+    --ultra-titanium: #d1d5db;
+    --ultra-titanium-light: #f9fafb;
+    --ultra-titanium-dark: #9ca3af;
+    --ultra-orange: #eab308; /* Action Button */
+    --ultra-orange-dim: rgba(234, 179, 8, 0.1);
+    --ultra-screen-bg: #fffef2; /* Светлый фон экрана */
+    --ultra-text: #1c1c1e;
+    --ultra-text-dim: #8e8e93;
+}
+
+.theme-watchultra {
+    position: relative;
+    /* Корпус часов (Titanium Case) из референса */
+    background: linear-gradient(145deg, var(--ultra-titanium-light), var(--ultra-titanium), var(--ultra-titanium-dark)) !important;
+    border-radius: 68px !important; /* Сильное закругление корпуса */
+    z-index: 1;
+    /* Внешние тени для объема корпуса */
+    box-shadow: 
+        0 40px 80px rgba(0, 0, 0, 0.2), 
+        inset 0 1px 1px rgba(255, 255, 255, 0.9), 
+        inset 0 -3px 10px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid #c2c6cc !important;
+    /* Отступы, чтобы контент был внутри "экрана" */
+    padding: 15px !important;
+    margin-top: 50px; /* Место для верхнего ремешка */
+    margin-bottom: 50px; /* Место для нижнего ремешка */
+    overflow: visible !important; /* Позволяем ремешкам выходить за края */
+}
+
+/* --- РЕМЕШКИ (STRAPS) --- */
+.theme-watchultra::before,
+.theme-watchultra::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%; /* Ширина ремешка относительно корпуса */
+    height: 120px;
+    background: #e2e4e9; /* Базовый цвет Alpine Loop */
+    border-radius: 18px;
+    z-index: -1;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Верхний ремешок */
+.theme-watchultra::before {
+    top: -100px;
+    background: linear-gradient(to top, #e2e4e9, #f3f4f6);
+}
+
+/* Нижний ремешок */
+.theme-watchultra::after {
+    bottom: -100px;
+    background: linear-gradient(to bottom, #e2e4e9, #f3f4f6);
+}
+
+/* --- ВНУТРЕННИЙ ЭКРАН (DISPLAY UNIT) --- */
+/* Target the main inner content container of the profile */
+.theme-watchultra > div[style*="z-index: 5"] {
+    background: var(--ultra-screen-bg) !important;
+    color: var(--ultra-text) !important;
+    border-radius: 54px; /* Чуть меньше закругление, чем у корпуса */
+    border: 5px solid #000; /* Черная рамка дисплея */
+    padding: 20px !important;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+    position: relative;
+    /* Добавляем perspective для эффекта стекла на hover, как в референсе */
+    transform-style: preserve-3d;
+    transition: transform 0.8s cubic-bezier(0.2, 1, 0.2, 1);
+}
+
+/* Глянцевый блик поверх экрана на ховер корпуса */
+.theme-watchultra:hover > div[style*="z-index: 5"]::after {
+    content: "";
+    position: absolute;
+    top: -40%; left: -40%; width: 150%; height: 150%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.3) 0%, transparent 40%);
+    z-index: 100; pointer-events: none;
+    transition: 0.8s;
+    transform: translate(20px, 20px);
+}
+
+/* --- КНОПКИ И КОРОНА (HARDWARE) ЧЕРЕЗ ТОЧКИ --- */
+.theme-watchultra .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    pointer-events: none;
+}
+.theme-watchultra .theme-point {
+    display: block;
+    position: absolute;
+}
+
+/* Точка 1: Digital Crown (Цифровая Корона) */
+.theme-watchultra .theme-point:nth-child(1) {
+    right: -10px; top: 20%; width: 18px; height: 60px;
+    background: linear-gradient(to right, #d1d5db, #f3f4f6, #9ca3af);
+    border-radius: 6px; z-index: 20;
+    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.15);
+}
+/* Текстура насечек на короне (как в референсе) */
+.theme-watchultra .theme-point:nth-child(1):after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.08) 0, rgba(0, 0, 0, 0.08) 1px, transparent 1px, transparent 3px);
+    border-radius: 6px;
+}
+/* Оранжевое кольцо внутри короны */
+.theme-watchultra .theme-point:nth-child(1):before {
+    content: ""; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); width: 8px; height: 8px;
+    background: radial-gradient(circle, #f3f4f6 30%, #9ca3af 100%);
+    border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Точка 2: Выступ корпуса под корону (Crown Well) */
+.theme-watchultra .theme-point:nth-child(2) {
+    right: -2px; top: 15%; width: 10px; height: 110px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px; z-index: 8;
+    box-shadow: inset 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Точка 3: Боковая кнопка (Side Button) */
+.theme-watchultra .theme-point:nth-child(3) {
+    right: -5px; top: 180px; width: 8px; height: 60px;
+    background: linear-gradient(to right, #9ca3af, #d1d5db);
+    border-radius: 4px; z-index: 15;
+    border: 1px solid #8e939c;
+    box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+}
+
+/* Точка 4: Оранжевая кнопка Action Button (слева) */
+.theme-watchultra .theme-point:nth-child(4) {
+    left: -5px; top: 35%; width: 8px; height: 100px;
+    background: linear-gradient(to left, var(--ultra-orange), #facc15);
+    border-radius: 4px; z-index: 15;
+    border: 1px solid #ca8a04;
+    box-shadow: -1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Прячем неиспользуемые точки */
+.theme-watchultra .theme-point:nth-child(n+5) { display: none !important; }
+
+
+/* --- ОФОРМЛЕНИЕ КОНТЕНТА (НА ЭКРАНЕ) --- */
+
+/* Навигационные точки watchOS внизу дисплея (вместо наших точек) */
+.theme-watchultra .theme-points-wrapper::after {
+    content: '● ○ ●';
+    position: absolute;
+    bottom: 25px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    color: var(--ultra-text);
+    font-size: 8px;
+    letter-spacing: 5px;
+    opacity: 0.2;
+}
+
+/* Никнейм: шрифт watchOS, жирный, темный */
+.theme-watchultra #profName, .theme-watchultra .lb-name {
+    color: var(--ultra-text) !important;
+    text-shadow: none !important;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.5px;
+}
+
+/* Текущий титул (как Complication) */
+.theme-watchultra #profActiveTitle {
+    color: var(--ultra-orange) !important;
+    background: rgba(0,0,0,0.05) !important;
+    border: 1px solid rgba(0,0,0,0.05) !important;
+    border-radius: 12px;
+    font-weight: 800;
+}
+
+/* Панели (Stats, Inventory, Badges): стиль complications */
+.theme-watchultra .panel, .theme-watchultra .badge, .theme-watchultra > div[style*="background: rgba"] {
+    background: rgba(0, 0, 0, 0.04) !important;
+    border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    border-radius: 16px !important;
+    color: var(--ultra-text) !important;
+    box-shadow: none !important;
+    backdrop-filter: blur(5px);
+}
+
+/* Золотые элементы (Опыт) - меняем на Action Orange */
+.theme-watchultra #profXpBarInner {
+    background: var(--ultra-orange) !important;
+}
+.theme-watchultra #profLvl {
+    color: var(--ultra-orange) !important;
+}
+
+/* Окрашиваем текст в таблице рейтинга */
+.theme-watchultra .lb-score {
+    color: var(--ultra-text) !important;
+}
+
+/* ========================================= */
+/* ИСПРАВЛЕНИЕ ДЛЯ ПЛАШКИ В РЕЙТИНГЕ         */
+/* ========================================= */
+.lb-item.theme-watchultra {
+    background: linear-gradient(145deg, #f9fafb, var(--ultra-titanium)) !important;
+    border: 2px solid #c2c6cc !important;
+    border-radius: 12px !important; /* Аккуратное закругление, как у всех плашек */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1) !important;
+    
+    /* Сбрасываем гигантские отступы от часов */
+    margin-top: 0 !important;
+    margin-bottom: 10px !important;
+    padding: 12px !important;
+    overflow: hidden !important;
+}
+
+/* Прячем ремешки и кнопки, чтобы они не ломали рейтинг */
+.lb-item.theme-watchultra::before,
+.lb-item.theme-watchultra::after,
+.lb-item.theme-watchultra .theme-points-wrapper {
+    display: none !important;
+}
+
+/* ========================================= */
+/* ТЕМА 23: ВЕРНЫЙ ДРУГ (HAMSTER) - FINAL    */
+/* ========================================= */
+
+.theme-hamster {
+    position: relative;
+    background: linear-gradient(135deg, #2d2318, #1a1510) !important; /* Уютный древесный фон */
+    border: 2px solid hsl(30, 90%, 55%) !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Оформление текста под стиль клетки/сена */
+.theme-hamster #profName, .theme-hamster .lb-name {
+    color: hsl(30, 90%, 80%) !important;
+    text-shadow: 2px 2px 0px #000 !important;
+}
+.theme-hamster #profActiveTitle { color: hsl(30, 90%, 55%) !important; }
+
+/* Панели (Stats, Inventory, Badges): УМЕНЬШЕНО ЗАТЕМНЕНИЕ */
+.theme-hamster .panel, .theme-hamster .badge, .theme-hamster > div[style*="background: rgba"] {
+    /* Затемнение уменьшено с 0.6 до 0.3, чтобы хомяка было лучше видно */
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 165, 0, 0.2) !important;
+    backdrop-filter: blur(4px);
+}
+
+/* Включаем HTML хомяка, отключаем точки */
+.theme-hamster .theme-hamster-html { display: block !important; }
+.theme-hamster .theme-points-wrapper { display: none !important; }
+
+/* Хомяк как гигантский водяной знак на фоне (для развернутого профиля) */
+.theme-hamster .wheel-and-hamster {
+    --dur: 1s;
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(1.6); /* Увеличиваем на весь фон */
+    opacity: 0.15; /* Полупрозрачность, чтобы читался текст */
+    z-index: -1;
+    pointer-events: none;
+    width: 12em; height: 12em;
+    font-size: 14px;
+}
+
+/* ========================================= */
+/* ИСПРАВЛЕНИЕ ДЛЯ ПЛАШКИ В РЕЙТИНГЕ         */
+/* ========================================= */
+.lb-item.theme-hamster {
+    /* Сбрасываем overflow: visible от развернутого профиля */
+    overflow: hidden !important; 
+    z-index: 1;
+}
+
+/* Уменьшенная версия хомяка на фоне плашки рейтинга */
+.lb-item.theme-hamster .wheel-and-hamster {
+    display: block !important; /* Принудительно включаем HTML хомяка */
+    top: 50% !important; left: 50% !important;
+    /* Уменьшаем в 0.35 раза и центрируем (перекрываем !important от развернутого профиля) */
+    transform: translate(-50%, -50%) scale(0.35) !important;
+    opacity: 0.3 !important; /* Чуть ярче, чем на фоне, так как плашка маленькая */
+    z-index: -1; /* Точно за текстом */
+}
+
+
+/* --- ОРИГИНАЛЬНЫЕ СТИЛИ ХОМЯКА И АНИМАЦИИ (НЕ ТРОГАТЬ) --- */
+.theme-hamster .wheel, .theme-hamster .hamster, .theme-hamster .hamster div, .theme-hamster .spoke { position: absolute; }
+.theme-hamster .wheel, .theme-hamster .spoke { border-radius: 50%; top: 0; left: 0; width: 100%; height: 100%; }
+.theme-hamster .wheel { background: radial-gradient(100% 100% at center, hsla(0,0%,60%,0) 47.8%, hsl(0,0%,60%) 48%); z-index: 2; }
+.theme-hamster .hamster { animation: hamster var(--dur) ease-in-out infinite; top: 50%; left: calc(50% - 3.5em); width: 7em; height: 3.75em; transform: rotate(4deg) translate(-0.8em,1.85em); transform-origin: 50% 0; z-index: 1; }
+.theme-hamster .hamster__head { animation: hamsterHead var(--dur) ease-in-out infinite; background: hsl(30,90%,55%); border-radius: 70% 30% 0 100% / 40% 25% 25% 60%; box-shadow: 0 -0.25em 0 hsl(30,90%,80%) inset, 0.75em -1.55em 0 hsl(30,90%,90%) inset; top: 0; left: -2em; width: 2.75em; height: 2.5em; transform-origin: 100% 50%; }
+.theme-hamster .hamster__ear { animation: hamsterEar var(--dur) ease-in-out infinite; background: hsl(0,90%,85%); border-radius: 50%; box-shadow: -0.25em 0 hsl(30,90%,55%) inset; top: -0.25em; right: -0.25em; width: 0.75em; height: 0.75em; transform-origin: 50% 75%; }
+.theme-hamster .hamster__eye { animation: hamsterEye var(--dur) linear infinite; background-color: hsl(0,0%,0%); border-radius: 50%; top: 0.375em; left: 1.25em; width: 0.5em; height: 0.5em; }
+.theme-hamster .hamster__nose { background: hsl(0,90%,75%); border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%; top: 0.75em; left: 0; width: 0.2em; height: 0.25em; }
+.theme-hamster .hamster__body { animation: hamsterBody var(--dur) ease-in-out infinite; background: hsl(30,90%,90%); border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%; box-shadow: 0.1em 0.75em 0 hsl(30,90%,55%) inset, 0.15em -0.5em 0 hsl(30,90%,80%) inset; top: 0.25em; left: 2em; width: 4.5em; height: 3em; transform-origin: 17% 50%; transform-style: preserve-3d; }
+.theme-hamster .hamster__limb--fr, .theme-hamster .hamster__limb--fl { clip-path: polygon(0 0,100% 0,70% 80%,60% 100%,0% 100%,40% 80%); top: 2em; left: 0.5em; width: 1em; height: 1.5em; transform-origin: 50% 0; }
+.theme-hamster .hamster__limb--fr { animation: hamsterFRLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,80%) 80%,hsl(0,90%,75%) 80%); transform: rotate(15deg) translateZ(-1px); }
+.theme-hamster .hamster__limb--fl { animation: hamsterFLLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,90%) 80%,hsl(0,90%,85%) 80%); transform: rotate(15deg); }
+.theme-hamster .hamster__limb--br, .theme-hamster .hamster__limb--bl { border-radius: 0.75em 0.75em 0 0; clip-path: polygon(0 0,100% 0,100% 30%,70% 90%,70% 100%,30% 100%,40% 90%,0% 30%); top: 1em; left: 2.8em; width: 1.5em; height: 2.5em; transform-origin: 50% 30%; }
+.theme-hamster .hamster__limb--br { animation: hamsterBRLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,80%) 90%,hsl(0,90%,75%) 90%); transform: rotate(-25deg) translateZ(-1px); }
+.theme-hamster .hamster__limb--bl { animation: hamsterBLLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,90%) 90%,hsl(0,90%,85%) 90%); transform: rotate(-25deg); }
+.theme-hamster .hamster__tail { animation: hamsterTail var(--dur) linear infinite; background: hsl(0,90%,85%); border-radius: 0.25em 50% 50% 0.25em; box-shadow: 0 -0.2em 0 hsl(0,90%,75%) inset; top: 1.5em; right: -0.5em; width: 1em; height: 0.5em; transform: rotate(30deg) translateZ(-1px); transform-origin: 0.25em 0.25em; }
+.theme-hamster .spoke { animation: spoke var(--dur) linear infinite; background: radial-gradient(100% 100% at center,hsl(0,0%,60%) 4.8%,hsla(0,0%,60%,0) 5%), linear-gradient(hsla(0,0%,55%,0) 46.9%,hsl(0,0%,65%) 47% 52.9%,hsla(0,0%,65%,0) 53%) 50% 50% / 99% 99% no-repeat; }
+
+@keyframes hamster { from, to { transform: rotate(4deg) translate(-0.8em,1.85em); } 50% { transform: rotate(0) translate(-0.8em,1.85em); } }
+@keyframes hamsterHead { from, 25%, 50%, 75%, to { transform: rotate(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(8deg); } }
+@keyframes hamsterEye { from, 90%, to { transform: scaleY(1); } 95% { transform: scaleY(0); } }
+@keyframes hamsterEar { from, 25%, 50%, 75%, to { transform: rotate(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(12deg); } }
+@keyframes hamsterBody { from, 25%, 50%, 75%, to { transform: rotate(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(-2deg); } }
+@keyframes hamsterFRLimb { from, 25%, 50%, 75%, to { transform: rotate(50deg) translateZ(-1px); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(-30deg) translateZ(-1px); } }
+@keyframes hamsterFLLimb { from, 25%, 50%, 75%, to { transform: rotate(-30deg); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(50deg); } }
+@keyframes hamsterBRLimb { from, 25%, 50%, 75%, to { transform: rotate(-60deg) translateZ(-1px); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(20deg) translateZ(-1px); } }
+@keyframes hamsterBLLimb { from, 25%, 50%, 75%, to { transform: rotate(20deg); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(-60deg); } }
+@keyframes hamsterTail { from, 25%, 50%, 75%, to { transform: rotate(30deg) translateZ(-1px); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(10deg) translateZ(-1px); } }
+@keyframes spoke { from { transform: rotate(0); } to { transform: rotate(-1turn); } }
+
+/* ========================================= */
+/* ТЕМА 24: МАГИЧЕСКАЯ ПИРАМИДА (TRUE 3D)    */
+/* ========================================= */
+
+.theme-pyramid {
+    position: relative;
+    /* Глубокий космический фон */
+    background: linear-gradient(to right, #1a1a2e, #16213e, #0f3443) !important;
+    border: 2px solid #2BDEAC !important;
+    box-shadow: 0 0 20px rgba(43, 222, 172, 0.3), inset 0 0 30px rgba(0,0,0,0.8) !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Настраиваем контейнер точек как 3D-пространство */
+.theme-pyramid .theme-points-wrapper {
+    display: block !important;
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 300px; height: 300px;
+    margin-top: -150px; margin-left: -150px;
+    transform-style: preserve-3d;
+    z-index: -1;
+    /* Наклон камеры вниз (-20deg), чтобы было видно объем сверху */
+    animation: pyr-spin 8s linear infinite;
+    opacity: 0.4; /* Сделали чуть ярче, так как теперь это цельный 3D объект */
+    pointer-events: none;
+}
+
+@keyframes pyr-spin {
+    0%   { transform: rotateX(-20deg) scale(1.6) rotateY(0deg); }
+    100% { transform: rotateX(-20deg) scale(1.6) rotateY(360deg); }
+}
+
+/* Базовый стиль для граней пирамиды */
+.theme-pyramid .theme-point {
+    display: block;
+    position: absolute;
+    width: 140px; height: 140px;
+    top: 0; left: 0; right: 0; bottom: 0;
+    margin: auto;
+    /* ОЧЕНЬ ВАЖНО: Точка вращения снизу, чтобы собрать грани как коробку */
+    transform-origin: 50% 100%;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+/* --- СОБИРАЕМ НАСТОЯЩИЙ 3D-ОБЪЕМ --- */
+
+/* Точка 1: Передняя грань */
+.theme-pyramid .theme-point:nth-child(1) {
+    transform: rotateY(0deg) translateZ(70px) rotateX(30deg);
+    background: conic-gradient(#2BDEAC, #F028FD, #D8CCE6, #2F2585);
+}
+
+/* Точка 2: Правая грань */
+.theme-pyramid .theme-point:nth-child(2) {
+    transform: rotateY(90deg) translateZ(70px) rotateX(30deg);
+    background: conic-gradient(#2F2585, #D8CCE6, #F028FD, #2BDEAC);
+}
+
+/* Точка 3: Задняя грань */
+.theme-pyramid .theme-point:nth-child(3) {
+    transform: rotateY(180deg) translateZ(70px) rotateX(30deg);
+    background: conic-gradient(#2BDEAC, #F028FD, #D8CCE6, #2F2585);
+}
+
+/* Точка 4: Левая грань */
+.theme-pyramid .theme-point:nth-child(4) {
+    transform: rotateY(270deg) translateZ(70px) rotateX(30deg);
+    background: conic-gradient(#2F2585, #D8CCE6, #F028FD, #2BDEAC);
+}
+
+/* Точка 5: Основание (Магическая тень на полу) */
+.theme-pyramid .theme-point:nth-child(5) {
+    width: 140px; height: 140px;
+    background: #8B5AD5;
+    /* Опускаем пол ровно под низ граней (на 70px) и кладем горизонтально */
+    transform: translateY(70px) rotateX(90deg); 
+    filter: blur(24px);
+    clip-path: none; 
+}
+
+/* Прячем остальные 5 точек */
+.theme-pyramid .theme-point:nth-child(n+6) { display: none !important; }
+
+/* --- ОФОРМЛЕНИЕ ТЕКСТА И ПАНЕЛЕЙ (СИНТВЕЙВ СТИЛЬ) --- */
+.theme-pyramid #profName, .theme-pyramid .lb-name {
+    color: #fff !important;
+    text-shadow: 0 0 10px #F028FD, 0 0 20px #2BDEAC !important;
+    font-weight: 900 !important;
+    letter-spacing: 1px;
+}
+.theme-pyramid #profActiveTitle {
+    color: #2BDEAC !important;
+    text-shadow: 0 0 8px #2BDEAC !important;
+}
+.theme-pyramid .panel, .theme-pyramid .badge, .theme-pyramid > div[style*="background: rgba"] {
+    background: rgba(15, 12, 41, 0.6) !important;
+    border: 1px solid rgba(43, 222, 172, 0.3) !important;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+}
+.theme-pyramid .lb-score { color: #F028FD !important; }
+
+/* ========================================= */
+/* ЛОГИКА ДЛЯ ПИРАМИДЫ В РЕЙТИНГЕ            */
+/* ========================================= */
+.lb-item.theme-pyramid {
+    overflow: hidden !important;
+    border: 1px solid #2BDEAC !important;
+}
+/* Делаем пирамиду маленькой и сдвигаем в правую часть плашки */
+.lb-item.theme-pyramid .theme-points-wrapper {
+    animation: pyr-spin-small 6s linear infinite;
+    left: 85%; /* Сдвиг вправо */
+    opacity: 0.8; /* Делаем ярче в маленькой плашке */
+}
+@keyframes pyr-spin-small {
+    0%   { transform: rotateX(-20deg) scale(0.4) rotateY(0deg); }
+    100% { transform: rotateX(-20deg) scale(0.4) rotateY(360deg); }
+}
