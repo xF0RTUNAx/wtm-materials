@@ -119,6 +119,7 @@
             <div class="auth-tab active" id="tabRating" onclick="switchTab('rating')">АБСОЛЮТНЫЙ РЕЙТИНГ</div>
             <div class="auth-tab" id="tabShop" onclick="switchTab('shop')">ОРБИТАЛЬНЫЙ МАГАЗИН</div>
             <div class="auth-tab" id="tabAchieve" onclick="switchTab('achievements')">ДОСТИЖЕНИЯ</div>
+            <div class="auth-tab" id="tabThemes" onclick="switchTab('themes')">ТЕМЫ ПРОФИЛЯ</div>
         </div>
 
         <div id="contentRating">
@@ -232,6 +233,42 @@
             <div style="height: 30px;"></div>
         </div>
 
+        <div id="contentThemes" style="display: none;">
+            <p style="font-size: 12px; color: #8b949e; text-align: center; margin-bottom: 20px;">Уникальные темы профиля можно получить в игре за особые достижения и участие во временных событиях.</p>
+            <div class="shop-grid" id="themesList"></div>
+            <div style="height: 30px;"></div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="themePreviewModal" onclick="if(event.target===this) closeThemePreview()">
+        <div class="modal-box" id="themePreviewBox" style="position: relative; overflow: hidden; text-align: left; z-index: 1;">
+            <div class="theme-points-wrapper">
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+            </div>
+            <div style="position: relative; z-index: 5;">
+                <h3 id="tpModalTitle" style="text-align: center; margin-bottom: 20px; color: #fff;" class="lb-name">Предпросмотр</h3>
+                
+                <div style="font-size: 11px; color: #8b949e; margin-bottom: 5px;">Вид в рейтинге:</div>
+                <div class="lb-item" id="tpLbItem" style="margin-bottom: 20px; position: relative; overflow: hidden; z-index: 1;">
+                    <div class="theme-points-wrapper">
+                        <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+                        <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+                    </div>
+                    <div class="lb-rank" style="position: relative; z-index: 2;">#1</div>
+                    <div class="lb-info" style="position: relative; z-index: 2;">
+                        <div class="lb-name" id="tpLbName">xFORTUNAx</div>
+                        <div style="text-align: right;">
+                            <span class="lb-score">⚡99,999</span>
+                            <span class="lb-shards">☄️ 150 Осколков</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #8b949e; margin-bottom: 0; width: 100%;" onclick="closeThemePreview()">ЗАКРЫТЬ</button>
+            </div>
+        </div>
     </div>
 
     <div class="modal-overlay" id="legendPreviewModal" onclick="if(event.target===this) closeLegendPreview()">
@@ -345,16 +382,19 @@
             await loadHallOfFame();
             checkPerkButtons();
             buildAchievementsUI();
+            buildThemesUI();
         }
 
         function switchTab(tabId) {
             document.getElementById('tabRating').classList.remove('active');
             document.getElementById('tabShop').classList.remove('active');
             document.getElementById('tabAchieve').classList.remove('active');
+            document.getElementById('tabThemes').classList.remove('active');
             
             document.getElementById('contentRating').style.display = 'none';
             document.getElementById('contentShop').style.display = 'none';
             document.getElementById('contentAchievements').style.display = 'none';
+            document.getElementById('contentThemes').style.display = 'none';
 
             if (tabId === 'rating') {
                 document.getElementById('tabRating').classList.add('active');
@@ -365,6 +405,9 @@
             } else if (tabId === 'achievements') {
                 document.getElementById('tabAchieve').classList.add('active');
                 document.getElementById('contentAchievements').style.display = 'block';
+            } else if (tabId === 'themes') {
+                document.getElementById('tabThemes').classList.add('active');
+                document.getElementById('contentThemes').style.display = 'block';
             }
         }
 
@@ -399,7 +442,6 @@
                     
                     const isLegend = p.elite_perks && p.elite_perks.perk_legend;
                     
-                    // НОВАЯ ЛОГИКА ТЕМ ДЛЯ ЗАЛА СЛАВЫ
                     let styleClass = '';
                     if (p.active_bg_url && p.active_bg_url.trim() !== "") {
                         styleClass = p.active_bg_url.trim(); 
@@ -409,10 +451,18 @@
                     
                     const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
 
+                    // ДОБАВЛЕНО: Скелет для анимированных тем
+                    let bgWrapper = '';
+                    if (styleClass.startsWith('theme-')) {
+                        bgWrapper = `<div class="theme-points-wrapper"><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i></div>`;
+                    }
+
+                    // ДОБАВЛЕНО: z-index
                     html += `
-                    <div class="lb-item ${styleClass}" onclick="openProfile('${p.id}')">
-                        <div class="lb-rank ${rankClass}">#${idx + 1}</div>
-                        <div class="lb-info">
+                    <div class="lb-item ${styleClass}" onclick="openProfile('${p.id}')" style="cursor: pointer; position: relative; overflow: hidden; z-index: 1;">
+                        ${bgWrapper}
+                        <div class="lb-rank ${rankClass}" style="position: relative; z-index: 2;">#${idx + 1}</div>
+                        <div class="lb-info" style="position: relative; z-index: 2;">
                             <div class="lb-name">${dispName}</div>
                             <div style="text-align: right;">
                                 <span class="lb-score">⚡${maxPwr.toLocaleString()}</span>
@@ -428,6 +478,7 @@
         async function changeProfileTheme(themeClass) {
             await db.from('players').update({ active_bg_url: themeClass }).eq('id', player.id);
             player.active_bg_url = themeClass;
+            buildThemesUI();
             openProfile(player.id);
             alert("Стиль профиля успешно обновлен!");
         }
@@ -437,6 +488,22 @@
         }
         function closeLegendPreview() {
             document.getElementById('legendPreviewModal').style.display = 'none';
+        }
+
+        function openThemePreview(themeClass, themeName) {
+            const box = document.getElementById('themePreviewBox');
+            const lbItem = document.getElementById('tpLbItem');
+            
+            box.className = 'modal-box ' + themeClass;
+            lbItem.className = 'lb-item ' + themeClass;
+            
+            document.getElementById('tpModalTitle').innerText = 'Тема: ' + themeName;
+            
+            document.getElementById('themePreviewModal').style.display = 'flex';
+        }
+
+        function closeThemePreview() {
+            document.getElementById('themePreviewModal').style.display = 'none';
         }
 
         function openProfile(playerId) {
@@ -532,6 +599,18 @@
                 if (perks.perk_theme_cyberpunk) sel.innerHTML += '<option value="theme-cyberpunk">Неон</option>';
                 if (perks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
                 if (perks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
+                if (perks.perk_theme_starry) sel.innerHTML += '<option value="theme-starry">Звездная тишина</option>';
+                if (perks.perk_theme_matrix) sel.innerHTML += '<option value="theme-matrix">Матрица</option>';
+                if (perks.perk_theme_nostalgia) sel.innerHTML += '<option value="theme-nostalgia">Ностальгия</option>';
+                if (perks.perk_theme_mojito) sel.innerHTML += '<option value="theme-mojito">Мохито</option>';
+                if (perks.perk_theme_aquarelle) sel.innerHTML += '<option value="theme-aquarelle">Акварель</option>';
+                if (perks.perk_theme_spring) sel.innerHTML += '<option value="theme-spring">Весна</option>';
+                if (perks.perk_theme_harlequin) sel.innerHTML += '<option value="theme-harlequin">Арлекин</option>';
+                if (perks.perk_theme_serenity) sel.innerHTML += '<option value="theme-serenity">Безмятежность</option>';
+                if (perks.perk_theme_synergy) sel.innerHTML += '<option value="theme-synergy">Синергия</option>';
+                if (perks.perk_theme_moonlight) sel.innerHTML += '<option value="theme-moonlight">Лунная ночь</option>';
+                if (perks.perk_theme_404) sel.innerHTML += '<option value="theme-404">404</option>';
+                if (perks.perk_theme_earth) sel.innerHTML += '<option value="theme-earth">Космос</option>';
                 sel.value = p.active_bg_url || "";
             } else { 
                 ward.style.display = 'none'; 
@@ -682,6 +761,58 @@
         async function equipTitle(name) {
             const { data } = await db.from('players').update({ active_title: name }).eq('id', player.id).select().single();
             if (data) { player = data; buildAchievementsUI(); updateUI(); alert(`Титул «${name}» установлен! Вы можете увидеть его в своем профиле.`); }
+        }
+
+        // === СИСТЕМА ТЕМ ПРОФИЛЯ ===
+        const THEMES = [
+            { id: 'theme-amethyst', name: 'Аметист' },
+            { id: 'theme-cyberpunk', name: 'Неон' },
+            { id: 'theme-mint', name: 'Мята' },
+            { id: 'theme-tester', name: 'Тестер' },
+            { id: 'theme-starry', name: 'Звездная тишина' },
+            { id: 'theme-matrix', name: 'Матрица' },
+            { id: 'theme-nostalgia', name: 'Ностальгия' },
+            { id: 'theme-mojito', name: 'Мохито' },
+            { id: 'theme-aquarelle', name: 'Акварель' },
+            { id: 'theme-spring', name: 'Весна' },
+            { id: 'theme-harlequin', name: 'Арлекин' },
+            { id: 'theme-serenity', name: 'Безмятежность' },
+            { id: 'theme-synergy', name: 'Синергия' },
+            { id: 'theme-moonlight', name: 'Лунная ночь' },
+            { id: 'theme-404', name: '404' },
+            { id: 'theme-earth', name: 'Космос' }
+        ];
+
+        function buildThemesUI() {
+            const container = document.getElementById('themesList');
+            container.innerHTML = '';
+            
+            const perks = player.elite_perks || {};
+
+            THEMES.forEach(theme => {
+                const perkKey = 'perk_' + theme.id.replace('-', '_');
+                const isUnlocked = perks[perkKey];
+                const isActive = player.active_bg_url === theme.id;
+
+                let btnHtml = '';
+                if (isActive) {
+                    btnHtml = `<button disabled style="background:var(--accent-green); color:#000; margin-bottom:0;">УСТАНОВЛЕНО</button>`;
+                } else if (isUnlocked) {
+                    btnHtml = `<button class="btn-meteor" style="margin-bottom:0;" onclick="changeProfileTheme('${theme.id}')">ПРИМЕНИТЬ</button>`;
+                } else {
+                    btnHtml = `<button disabled style="background:#333; color:#8b949e; margin-bottom:0;">НЕДОСТУПНО</button>`;
+                }
+
+                container.innerHTML += `
+                <div class="shop-card" style="border-color: ${isUnlocked ? 'var(--meteor)' : '#333'};">
+                    <div class="shop-title" style="color: ${isUnlocked ? '#fff' : '#8b949e'};">${theme.name}</div>
+                    <div class="shop-desc" style="margin-bottom: 15px;">Уникальное оформление досье и плашки в рейтинге.</div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="btn-meteor" style="background: transparent; border: 1px solid #555; color: #8b949e; width: 50px; padding: 10px 0; margin-bottom: 0;" onclick="openThemePreview('${theme.id}', '${theme.name}')">👁️</button>
+                        <div style="flex-grow: 1;">${btnHtml}</div>
+                    </div>
+                </div>`;
+            });
         }
 
         window.onload = init;
