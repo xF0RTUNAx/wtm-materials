@@ -98,74 +98,102 @@
 .theme-cyberpunk .lb-name { color: #00e5ff !important; text-shadow: 0 0 10px rgba(0, 229, 255, 0.5); }
 
 /* ========================================= */
-/* ТЕМА 3: МЯТНОЕ ЛЕТО (МНОГОСЛОЙНЫЕ ВОЛНЫ) */
+/* ТЕМА 3: МЯТНОЕ ЛЕТО (ПЛАВНАЯ АВРОРА)      */
 /* ========================================= */
 
 .theme-mint {
     position: relative;
-    overflow: hidden;
-    /* Глубокий темно-мятный градиент для фона */
-    background: linear-gradient(135deg, rgba(13, 36, 31, 0.98) 0%, rgba(4, 13, 11, 0.98) 100%) !important;
+    background: #061412 !important; /* Глубокий темно-мятный фон */
     border: 2px solid #40B3A2 !important;
-    box-shadow: 0 0 50px rgba(64, 179, 162, 0.3), inset 0 0 25px rgba(64, 179, 162, 0.1) !important;
+    box-shadow: 0 0 20px rgba(64, 179, 162, 0.2), inset 0 0 20px rgba(64, 179, 162, 0.2) !important;
+    overflow: hidden !important; /* ЖЕСТКО ОБРЕЗАЕМ КРАЯ, ЧТОБЫ НИЧЕГО НЕ ВЫЛЕЗАЛО */
+    z-index: 1;
 }
 
-/* Включаем контейнер для анимации */
+/* Полупрозрачный темный слой поверх пятен, чтобы текст читался идеально */
+.theme-mint::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 20, 18, 0.4);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Контейнер для пятен */
 .theme-mint .theme-points-wrapper {
     display: block;
-}
-
-/* Настраиваем два элемента (theme-point) как источники волн (в углах) */
-.theme-mint .theme-point {
-    display: none; /* Скрываем все 10 по умолчанию */
     position: absolute;
-    width: 20px; height: 20px; /* Делаем источники чуть больше */
-    background: transparent; /* Сами источники невидимы */
-    border-radius: 100%;
-    /* Применяем сложную анимацию (2 секунды, медленнее для большого окна) */
-    animation: mint-ripple-complex 2s ease-out infinite;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -2; /* Прячем под оверлей */
 }
 
-/* Активируем только два источника и расставляем по углам */
-.theme-mint .theme-point:nth-child(1),
-.theme-mint .theme-point:nth-child(2) {
+/* Превращаем точки в мягкие плавающие сферы */
+.theme-mint .theme-point {
     display: block;
-}
-/* Источник 1: Сверху-слева */
-.theme-mint .theme-point:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
-/* Источник 2: Снизу-справа */
-.theme-mint .theme-point:nth-child(2) { bottom: 10%; right: 10%; animation-delay: 1s; }
-
-/* === УНИКАЛЬНАЯ СЛОЖНАЯ АНИМАЦИЯ === */
-/* Ключ: многослойная тень (concentric box-shadows) */
-/* Мы масштабировали отступы из референса, чтобы они покрывали окно досье */
-@keyframes mint-ripple-complex {
-  0% {
-    /* 5 концентрических кругов, стартующих из одной точки */
-    box-shadow: 0 0 0 0 rgba(64, 179, 162, 0.2), 
-                0 0 0 40px rgba(64, 179, 162, 0.2), 
-                0 0 0 80px rgba(64, 179, 162, 0.15), 
-                0 0 0 120px rgba(64, 179, 162, 0.1),
-                0 0 0 160px rgba(64, 179, 162, 0.05);
-  }
-  100% {
-    /* Эти круги расширяются и последний затухает */
-    box-shadow: 0 0 0 40px rgba(64, 179, 162, 0.2), 
-                0 0 0 80px rgba(64, 179, 162, 0.15), 
-                0 0 0 120px rgba(64, 179, 162, 0.1), 
-                0 0 0 160px rgba(64, 179, 162, 0.05),
-                0 0 0 200px rgba(64, 179, 162, 0);
-  }
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(25px); /* Мягкое размытие */
+    opacity: 0.7;
+    will-change: transform;
 }
 
-/* Адаптация цветов текста внутри досье */
-.theme-mint #profName { color: #40B3A2 !important; text-shadow: 0 0 15px rgba(64, 179, 162, 0.6); }
+/* Сфера 1: Основная мятная */
+.theme-mint .theme-point:nth-child(1) {
+    width: 140px; height: 140px;
+    background: #40B3A2;
+    top: -30px; left: -20px;
+    animation: mint-float1 7s ease-in-out infinite alternate;
+}
+/* Сфера 2: Свежий лайм */
+.theme-mint .theme-point:nth-child(2) {
+    width: 160px; height: 160px;
+    background: #00e676;
+    bottom: -50px; right: -30px;
+    animation: mint-float2 9s ease-in-out infinite alternate;
+}
+/* Сфера 3: Прохладный циан */
+.theme-mint .theme-point:nth-child(3) {
+    width: 110px; height: 110px;
+    background: #00e5ff;
+    top: 30%; left: 40%;
+    animation: mint-float3 6s ease-in-out infinite alternate;
+}
+/* Сфера 4: Глубокий изумруд */
+.theme-mint .theme-point:nth-child(4) {
+    width: 100px; height: 100px;
+    background: #238636;
+    top: 10px; right: 20%;
+    animation: mint-float4 8s ease-in-out infinite alternate;
+}
+/* Отключаем остальные точки */
+.theme-mint .theme-point:nth-child(n+5) { display: none; }
 
-/* Подсветка ника в таблице рейтинга */
-.theme-mint .lb-name { color: #40B3A2 !important; text-shadow: 0 0 10px rgba(64, 179, 162, 0.5); }
+/* Плавные траектории движения и дыхания (масштаба) */
+@keyframes mint-float1 { 
+    0% { transform: translate(0, 0) scale(1); } 
+    100% { transform: translate(40px, 30px) scale(1.15); } 
+}
+@keyframes mint-float2 { 
+    0% { transform: translate(0, 0) scale(1); } 
+    100% { transform: translate(-40px, -20px) scale(1.2); } 
+}
+@keyframes mint-float3 { 
+    0% { transform: translate(0, 0) scale(1); } 
+    100% { transform: translate(-30px, 40px) scale(1.3); } 
+}
+@keyframes mint-float4 { 
+    0% { transform: translate(0, 0) scale(1.2); } 
+    100% { transform: translate(30px, -10px) scale(0.9); } 
+}
 
-/* Отключаем обрезку для рейтинга, чтобы волны могли чуть выходить за края */
-.lb-item.theme-mint { overflow: visible !important; }
+/* Оформление текста: белый с мятно-голубым неоновым свечением */
+.theme-mint #profName, .theme-mint .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 10px #40B3A2, 0 0 20px #00e5ff !important; 
+    letter-spacing: 1px;
+}
 
 /* ========================================= */
 /* ТЕМА 4: ТЕСТЕР (Оптимизация под мобильные)*/
@@ -215,3 +243,1101 @@
 .theme-tester #profName { color: #ffffff !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
 .theme-tester .lb-name { color: #ffffff !important; text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
 .lb-item.theme-tester { background-color: #141414 !important; border: none !important; overflow: visible !important; }
+
+/* ========================================= */
+/* ТЕМА 5: ЗВЕЗДНАЯ ТИШИНА                   */
+/* ========================================= */
+
+.theme-starry {
+    position: relative;
+    /* Двойной фон: глубокий космос внутри + переливающаяся звездная рамка снаружи */
+    background-image: linear-gradient(#050b14, #050b14), linear-gradient(137.48deg, #ffffff 10%, #4b5a77 45%, #ffc107 67%, #4b5a77 87%) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    border: 2px solid transparent !important;
+    background-size: 300% 300% !important;
+    animation: starry-gradient 8s ease infinite !important;
+    overflow: hidden !important;
+    z-index: 1;
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.05), inset 0 0 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+@keyframes starry-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Включаем контейнер для звезд */
+.theme-starry .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Скрываем старые 10 точек, здесь мы используем псевдоэлементы */
+.theme-starry .theme-point { display: none; }
+
+/* Слой 1: Прямолинейно летящие звезды */
+.theme-starry .theme-points-wrapper::before {
+    content: "";
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background-image: radial-gradient(#ffffff 1px, transparent 1%);
+    background-size: 50px 50px;
+    opacity: 0.5;
+    animation: animStarFall 50s linear infinite;
+    will-change: transform;
+}
+
+/* Слой 2: Медленно вращающаяся галактика (как в референсе) */
+.theme-starry .theme-points-wrapper::after {
+    content: "";
+    position: absolute;
+    top: -100%; left: -100%;
+    width: 300%; height: 300%;
+    background-image: radial-gradient(#ffffff 1px, transparent 1%);
+    background-size: 70px 70px;
+    opacity: 0.3;
+    animation: animStarRotate 150s linear infinite;
+    will-change: transform;
+}
+
+@keyframes animStarFall {
+    from { transform: translateY(0); }
+    to { transform: translateY(-250px); } /* Кратно 50px для идеальной бесшовности */
+}
+
+@keyframes animStarRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Стилизация текста для читаемости на звездном фоне */
+.theme-starry #profName { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px rgba(255, 255, 255, 0.4) !important; 
+    letter-spacing: 2px;
+}
+.theme-starry .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5) !important; 
+}
+
+/* ========================================= */
+/* ТЕМА 6: МАТРИЦА (MATRIX)                  */
+/* ========================================= */
+
+.theme-matrix {
+    position: relative;
+    background-color: #020204 !important;
+    border: 2px solid #238636 !important;
+    box-shadow: 0 0 20px rgba(67, 255, 133, 0.2), inset 0 0 20px rgba(67, 255, 133, 0.1) !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Включаем контейнер для кода, делаем его полупрозрачным, чтобы текст Досье читался */
+.theme-matrix .theme-points-wrapper {
+    display: block;
+    opacity: 0.4; 
+}
+
+/* Превращаем 10 пустышек в колонки для кода */
+.theme-matrix .theme-point {
+    display: block;
+    position: absolute;
+    color: #43ff85;
+    font-family: monospace;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.4;
+    white-space: pre; /* Разрешаем перенос строк по символу \A */
+    animation: matrix-fall linear infinite;
+    text-shadow: 0 0 8px #43ff85;
+}
+
+/* Наполняем колонки символами, раскидываем по ширине и задаем разную скорость */
+.theme-matrix .theme-point:nth-child(1) { left: 5%; animation-duration: 4s; animation-delay: 0.1s; }
+.theme-matrix .theme-point:nth-child(1)::after { content: "z\A 6\A 0\A z\A 1\A x\A p"; }
+
+.theme-matrix .theme-point:nth-child(2) { left: 15%; animation-duration: 6s; animation-delay: 1s; font-size: 18px; }
+/* Эффект яркой "головы" кода как в фильмах */
+.theme-matrix .theme-point:nth-child(2)::after { content: "0\A 1\A 1\A 0\A g\A 3\A 1\A 7"; color: #fff; } 
+
+.theme-matrix .theme-point:nth-child(3) { left: 25%; animation-duration: 5s; animation-delay: 0.5s; }
+.theme-matrix .theme-point:nth-child(3)::after { content: "u\A 3\A g\A 9\A b\A c\A x"; }
+
+.theme-matrix .theme-point:nth-child(4) { left: 35%; animation-duration: 7s; animation-delay: 0.2s; font-size: 12px; }
+.theme-matrix .theme-point:nth-child(4)::after { content: "a\A t\A 7\A 2\A g\A h\A 0\A k\A 1"; }
+
+.theme-matrix .theme-point:nth-child(5) { left: 45%; animation-duration: 4.5s; animation-delay: 2s; }
+.theme-matrix .theme-point:nth-child(5)::after { content: "6\A 3\A 0\A x\A 5\A h"; }
+
+.theme-matrix .theme-point:nth-child(6) { left: 55%; animation-duration: 5.5s; animation-delay: 0.8s; font-size: 16px; }
+.theme-matrix .theme-point:nth-child(6)::after { content: "7\A s\A b\A q\A z\A 0"; }
+
+.theme-matrix .theme-point:nth-child(7) { left: 65%; animation-duration: 6.5s; animation-delay: 0s; }
+.theme-matrix .theme-point:nth-child(7)::after { content: "m\A 2\A 5\A 4\A l\A 1\A a\A b"; color: #fff; }
+
+.theme-matrix .theme-point:nth-child(8) { left: 75%; animation-duration: 4.2s; animation-delay: 1.5s; font-size: 12px; }
+.theme-matrix .theme-point:nth-child(8)::after { content: "9\A 1\A s\A 2\A t\A 7\A 4\A h\A 0"; }
+
+.theme-matrix .theme-point:nth-child(9) { left: 85%; animation-duration: 5.8s; animation-delay: 0.3s; }
+.theme-matrix .theme-point:nth-child(9)::after { content: "k\A l\A m\A n\A 1\A 0"; }
+
+.theme-matrix .theme-point:nth-child(10) { left: 95%; animation-duration: 7.5s; animation-delay: 1.2s; font-size: 18px; }
+.theme-matrix .theme-point:nth-child(10)::after { content: "j\A f\A 0\A x\A 6\A 0\A v\A w"; }
+
+/* Анимация падения кода сверху вниз */
+@keyframes matrix-fall {
+    0% { top: -50%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 120%; opacity: 0; }
+}
+
+/* Стилизуем Никнейм в цвет Матрицы */
+.theme-matrix #profName { color: #43ff85 !important; text-shadow: 0 0 10px rgba(67, 255, 133, 0.8); }
+.theme-matrix .lb-name { color: #43ff85 !important; text-shadow: 0 0 10px rgba(67, 255, 133, 0.5); }
+
+/* ========================================= */
+/* ТЕМА 7: НОСТАЛЬГИЯ (SYNTHWAVE)            */
+/* ========================================= */
+
+.theme-nostalgia {
+    position: relative;
+    /* Двойной фон для неоновой рамки */
+    background-image: linear-gradient(#11091a, #11091a), linear-gradient(0deg, #ffdb3b 0%, #fe53bb 25%, #8f51ea 87%) !important;
+    background-origin: border-box !important;
+    background-clip: padding-box, border-box !important;
+    border: 2px solid transparent !important;
+    overflow: hidden !important;
+    z-index: 1;
+    box-shadow: 0 0 30px rgba(254, 83, 187, 0.2) !important;
+}
+
+/* Включаем контейнер для сетки и горизонта */
+.theme-nostalgia .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    perspective: 400px; /* Задаем 3D-пространство */
+}
+
+/* Прячем дефолтные точки */
+.theme-nostalgia .theme-point { display: none; }
+
+/* Слой 1: Уходящая вдаль неоновая 3D-сетка */
+.theme-nostalgia .theme-points-wrapper::before {
+    content: "";
+    position: absolute;
+    bottom: -50%; left: -50%;
+    width: 200%; height: 150%;
+    /* Рисуем клетку */
+    background-image: 
+        linear-gradient(rgba(255, 31, 184, 0.6) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(255, 31, 184, 0.6) 2px, transparent 2px);
+    background-size: 50px 50px;
+    /* Наклоняем сетку от нас */
+    transform: rotateX(65deg);
+    transform-origin: top center;
+    /* Иллюзия бесконечного полета вперед */
+    animation: synthwave-fly 3s linear infinite;
+    box-shadow: inset 0 0 50px #ff1fb8;
+}
+
+/* Слой 2: Горизонт (закат и свечение) */
+.theme-nostalgia .theme-points-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 60%;
+    background-image: linear-gradient(
+        to bottom,
+        rgba(43, 1, 54, 0.9) 0%,
+        rgba(143, 81, 234, 0.5) 40%,
+        rgba(254, 83, 187, 0.8) 80%,
+        transparent 100%
+    );
+    z-index: 1;
+}
+
+@keyframes synthwave-fly {
+    0% { background-position: 0 0; }
+    100% { background-position: 0 50px; } /* Сдвиг ровно на 1 клетку создает бесконечный цикл */
+}
+
+/* Стилизуем Никнейм под Хромированный ретро-текст */
+.theme-nostalgia #profName, .theme-nostalgia .lb-name { 
+    background-image: linear-gradient(
+        0deg,
+        rgba(255, 142, 224, 1) 0%,
+        rgba(255, 29, 193, 1) 5%,
+        rgba(198, 72, 255, 1) 30%,
+        rgba(0, 0, 0, 1) 49%,
+        rgba(255, 255, 255, 1) 52%,
+        rgba(70, 148, 255, 1) 60%,
+        rgba(21, 59, 112, 1) 69%
+    ) !important;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    color: transparent !important;
+    filter: drop-shadow(0 0 8px rgba(255, 19, 114, 0.8)); /* Свечение текста */
+    font-weight: 900 !important;
+    letter-spacing: 3px;
+}
+
+/* ========================================= */
+/* ТЕМА 8: МОХИТО (LASER SYNTHWAVE)          */
+/* ========================================= */
+
+.theme-mojito {
+    position: relative;
+    background-color: #101020 !important; /* Темно-синяя база из референса */
+    border: 1px solid #00ffe0 !important;
+    box-shadow: inset 0 0 15px #00ffe0, 0 0 30px rgba(0, 255, 224, 0.3) !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Включаем контейнер для лазеров */
+.theme-mojito .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Скрываем дефолтные точки */
+.theme-mojito .theme-point { display: none; }
+
+/* Лазер 1: Бирюзовый (Cyan) */
+.theme-mojito .theme-points-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 255, 224, 0.6), transparent);
+    filter: blur(5px);
+    transform: translateX(-100%);
+    animation: mojito-laser 2.5s infinite linear;
+}
+
+/* Лазер 2: Розовый (Magenta) */
+.theme-mojito .theme-points-wrapper::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 0, 144, 0.6), transparent);
+    filter: blur(5px);
+    transform: translateX(-100%);
+    animation: mojito-laser 2.5s infinite linear;
+    animation-delay: 1.25s; /* Запускаем с отставанием на половину цикла */
+}
+
+@keyframes mojito-laser {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Кислотно-неоновое свечение Никнейма (сохранен оригинальный регистр) */
+.theme-mojito #profName, .theme-mojito .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 5px #00ffe0, 0 0 15px #00ffe0, 0 0 25px #00ffe0 !important; 
+    letter-spacing: 2px;
+}
+
+/* ========================================= */
+/* ТЕМА 9: АКВАРЕЛЬ                          */
+/* ========================================= */
+
+.theme-aquarelle {
+    position: relative;
+    background-color: #050b14 !important; /* Глубокий темный фон */
+    border: 2px solid transparent !important;
+    overflow: hidden !important;
+    z-index: 1;
+    /* Накладываем поверх пятен темное полупрозрачное стекло, чтобы текст был читаемым */
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* Оверлей для читаемости (затемняем пятна) */
+.theme-aquarelle::before {
+    content: "";
+    position: absolute;
+    inset: 2px; /* Чуть меньше размера рамки */
+    background: rgba(0, 0, 0, 0.4); 
+    border-radius: inherit;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Включаем контейнер для пятен */
+.theme-aquarelle .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -2; /* Прячем под оверлей */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+/* Превращаем точки в размытые круги-пятна (Акварель) */
+.theme-aquarelle .theme-point {
+    display: block;
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    filter: blur(20px); /* Сильное размытие для эффекта акварели */
+    will-change: transform;
+}
+
+/* Настраиваем 7 пятен как в референсе */
+.theme-aquarelle .theme-point:nth-child(1) { background: #ff007f; top: -20%; left: -10%; animation: aq-upRight 6s ease-in-out infinite; }
+.theme-aquarelle .theme-point:nth-child(2) { background: #ff6a00; top: 0%; left: 10%; animation: aq-downLeft 5s ease-in-out infinite; animation-delay: 1s; }
+.theme-aquarelle .theme-point:nth-child(3) { background: #ffcc00; top: 20%; left: 50%; animation: aq-right 4s ease-in-out infinite; animation-delay: 2s; }
+.theme-aquarelle .theme-point:nth-child(4) { background: #00fff0; top: -20%; left: 70%; animation: aq-upLeft 7s ease-in-out infinite; animation-delay: 3s; }
+.theme-aquarelle .theme-point:nth-child(5) { background: #9d00ff; top: 30%; left: -10%; animation: aq-downRight 3s ease-in-out infinite; animation-delay: 4s; }
+.theme-aquarelle .theme-point:nth-child(6) { background: #ff007f; top: -10%; left: 30%; animation: aq-left 8s ease-in-out infinite; animation-delay: 0.5s; }
+.theme-aquarelle .theme-point:nth-child(7) { background: #ff6a00; top: 40%; left: 60%; animation: aq-up 6s ease-in-out infinite; animation-delay: 1.5s; }
+/* Прячем лишние точки */
+.theme-aquarelle .theme-point:nth-child(n+8) { display: none; }
+
+/* Траектории движения (из референса) */
+@keyframes aq-upRight { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(100%, -100%); } 50% { transform: translate(-50%, 50%); } 75% { transform: translate(50%, -50%); } }
+@keyframes aq-downLeft { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-100%, 100%); } 50% { transform: translate(50%, -50%); } 75% { transform: translate(-50%, 50%); } }
+@keyframes aq-right { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(100%, 0); } 50% { transform: translate(-100%, 50%); } 75% { transform: translate(50%, -50%); } }
+@keyframes aq-upLeft { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-100%, -100%); } 50% { transform: translate(50%, 50%); } 75% { transform: translate(-50%, -50%); } }
+@keyframes aq-downRight { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(100%, 100%); } 50% { transform: translate(-50%, -50%); } 75% { transform: translate(50%, 50%); } }
+@keyframes aq-left { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(-100%, 0); } 50% { transform: translate(100%, -50%); } 75% { transform: translate(-50%, 50%); } }
+@keyframes aq-up { 0%, 100% { transform: translate(0, 0); } 25% { transform: translate(0, -100%); } 50% { transform: translate(50%, 50%); } 75% { transform: translate(-50%, -50%); } }
+
+/* Стилизуем Никнейм (белый цвет с мягким разноцветным свечением) */
+.theme-aquarelle #profName, .theme-aquarelle .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px #ff007f, 0 0 30px #00fff0 !important; 
+    letter-spacing: 2px;
+}
+
+/* ========================================= */
+/* ТЕМА 10: ВЕСНА 2.0 (БЕЛАЯ ПОЛЯНА - FIX)  */
+/* ========================================= */
+
+.theme-spring {
+    position: relative;
+    background: #ffffff !important; /* ЧИСТЫЙ БЕЛЫЙ ФОН */
+    border: 2px solid #ff99cc !important;
+    box-shadow: 0 0 20px rgba(255, 153, 204, 0.2), inset 0 0 10px rgba(0, 0, 0, 0.05) !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* ДОБАВЛЯЕМ ЛЕГКОЕ ЗАТЕМНЕНИЕ ПОВЕРХ ЦВЕТОВ */
+.theme-spring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.05); /* Легкая тень, чтобы белый текст читался */
+    z-index: 0; /* Размещаем ПЕРЕД цветами */
+    pointer-events: none;
+    display: block !important;
+}
+
+.theme-spring .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Базовый стиль для детализированных цветов (SVG) */
+.theme-spring .theme-point {
+    display: block;
+    position: absolute;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 1 !important; /* ПОЛНАЯ НЕПРОЗРАЧНОСТЬ */
+    filter: drop-shadow(0 0 5px rgba(255, 153, 204, 0.4)) !important; /* Легкое свечение */
+    will-change: transform;
+}
+
+/* Дизайн 1: Розовая Сакура (Векторный SVG) */
+.theme-spring .theme-point:nth-child(3n+1) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%23ffb3d9' stroke='%23ff66a3' stroke-width='2'%3E%3Cellipse cx='50' cy='25' rx='15' ry='25' /%3E%3Cellipse cx='50' cy='25' rx='15' ry='25' transform='rotate(72 50 50)'/%3E%3Cellipse cx='50' cy='25' rx='15' ry='25' transform='rotate(144 50 50)'/%3E%3Cellipse cx='50' cy='25' rx='15' ry='25' transform='rotate(216 50 50)'/%3E%3Cellipse cx='50' cy='25' rx='15' ry='25' transform='rotate(288 50 50)'/%3E%3C/g%3E%3Ccircle cx='50' cy='50' r='12' fill='%23ff3385'/%3E%3Ccircle cx='50' cy='50' r='6' fill='%23ffffff'/%3E%3C/svg%3E");
+}
+
+/* Дизайн 2: Голубая Незабудка (Векторный SVG) */
+.theme-spring .theme-point:nth-child(3n+2) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%2380d4ff' stroke='%230088cc' stroke-width='2'%3E%3Ccircle cx='50' cy='22' r='20' /%3E%3Ccircle cx='50' cy='22' r='20' transform='rotate(72 50 50)'/%3E%3Ccircle cx='50' cy='22' r='20' transform='rotate(144 50 50)'/%3E%3Ccircle cx='50' cy='22' r='20' transform='rotate(216 50 50)'/%3E%3Ccircle cx='50' cy='22' r='20' transform='rotate(288 50 50)'/%3E%3C/g%3E%3Ccircle cx='50' cy='50' r='14' fill='%23ffffff'/%3E%3Ccircle cx='50' cy='50' r='7' fill='%23ffcc00'/%3E%3C/svg%3E");
+}
+
+/* Дизайн 3: Желтая Ромашка (Векторный SVG) */
+.theme-spring .theme-point:nth-child(3n+3) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%23ffffff' stroke='%23cccccc' stroke-width='2'%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' /%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' transform='rotate(45 50 50)'/%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' transform='rotate(90 50 50)'/%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' transform='rotate(135 50 50)'/%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' transform='rotate(180 50 50)'/%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' transform='rotate(225 50 50)'/%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' transform='rotate(270 50 50)'/%3E%3Cellipse cx='50' cy='20' rx='10' ry='24' transform='rotate(315 50 50)'/%3E%3C/g%3E%3Ccircle cx='50' cy='50' r='16' fill='%23ffcc00' stroke='%23e6b800' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='10' fill='%23ffaa00'/%3E%3C/svg%3E");
+}
+
+/* Расставляем 10 цветов ПО ПЕРИМЕТРУ, чтобы не мешать тексту */
+.theme-spring .theme-point:nth-child(1)  { top: 5%;  left: 5%;   width: 40px; height: 40px; animation: spring-drift 10s ease-in-out infinite; }
+.theme-spring .theme-point:nth-child(2)  { top: 5%;  right: 5%;  width: 45px; height: 45px; animation: spring-rotate-cw 15s linear infinite; }
+.theme-spring .theme-point:nth-child(3)  { bottom: 5%; left: 5%;   width: 42px; height: 42px; animation: spring-rotate-ccw 12s linear infinite; }
+.theme-spring .theme-point:nth-child(4)  { bottom: 5%; right: 5%;  width: 38px; height: 38px; animation: spring-drift 11s ease-in-out infinite; }
+.theme-spring .theme-point:nth-child(5)  { top: 40%; left: 2%;   width: 25px; height: 25px; animation: spring-rotate-cw 18s linear infinite; }
+.theme-spring .theme-point:nth-child(6)  { top: 50%; right: 2%;  width: 30px; height: 30px; animation: spring-drift 14s ease-in-out infinite; }
+.theme-spring .theme-point:nth-child(7)  { top: 2%;  left: 45%;  width: 35px; height: 35px; animation: spring-rotate-ccw 16s linear infinite; }
+.theme-spring .theme-point:nth-child(8)  { bottom: 2%; left: 50%;  width: 33px; height: 33px; animation: spring-drift 13s ease-in-out infinite; }
+.theme-spring .theme-point:nth-child(9)  { top: 25%; left: 15%;  width: 20px; height: 20px; animation: spring-rotate-cw 20s linear infinite; }
+.theme-spring .theme-point:nth-child(10) { bottom: 25%; right: 15%; width: 22px; height: 22px; animation: spring-drift 19s ease-in-out infinite; }
+
+/* Три вида постоянной анимации */
+@keyframes spring-rotate-cw { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes spring-rotate-ccw { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
+@keyframes spring-drift { 
+    0%, 100% { transform: translate(0,0) rotate(0deg); } 
+    50% { transform: translate(5px, 5px) rotate(10deg); } 
+}
+
+/* Адаптация текста профиля ПОД БЕЛЫЙ ФОН */
+.theme-spring #profName, .theme-spring .lb-name { 
+    color: #ffffff !important; /* БЕЛЫЙ ЦВЕТ, ПОТОМУ ЧТО ЕСТЬ ТЕНЬ */
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.4) !important; 
+    letter-spacing: 1px;
+}
+.theme-spring #profActiveTitle { color: #ff6699 !important; }
+.theme-spring #profStatus, .theme-spring #profCreated, .theme-spring #profClan { color: #57606a !important; }
+.theme-spring .panel { background: rgba(255, 255, 255, 0.9) !important; border-color: #d0d7de !important; color: #57606a !important; }
+.theme-spring h2, .theme-spring h3, .theme-spring h4 { color: #21262d !important; }
+
+/* ========================================= */
+/* ТЕМА 11: АРЛЕКИН (POP-ART / COMIC STYLE)  */
+/* ========================================= */
+
+.theme-harlequin {
+    position: relative;
+    /* Тот самый безумный многослойный градиент из референса */
+    background: 
+        linear-gradient(245deg, #000000 0%, #fdff96 100%),
+        linear-gradient(245deg, #0038ff 0%, #000000 100%),
+        radial-gradient(100% 225% at 100% 0%, #4200ff 0%, #001169 100%),
+        linear-gradient(245deg, #000000 0%, #ffb800 100%),
+        radial-gradient(115% 107% at 40% 100%, #eaf5ff 0%, #eaf5ff 40%, #a9c6de calc(40% + 1px), #a9c6de 70%, #247e6c calc(70% + 2px), #247e6c 85%, #e4c666 calc(85% + 2px), #e4c666 100%),
+        linear-gradient(65deg, #083836 0%, #083836 40%, #66d37e calc(40% + 1px), #66d37e 60%, #c6e872 calc(60% + 1px), #c6e872 100%) !important;
+    background-blend-mode: overlay, screen, overlay, hard-light, overlay, normal !important;
+    background-size: 200% 200% !important;
+    
+    /* Жесткая комиксная рамка и тень */
+    border: 4px solid #000000 !important;
+    box-shadow: 10px 10px 0px rgba(0, 0, 0, 0.8) !important;
+    border-radius: 12px !important;
+    z-index: 1;
+    animation: harlequin-shift 10s ease-in-out infinite alternate;
+}
+
+/* Скрываем слой анимаций (здесь они не нужны) */
+.theme-harlequin .theme-points-wrapper { display: none !important; }
+
+/* Легкое движение градиента для "живого" эффекта */
+@keyframes harlequin-shift {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 100% 50%; }
+}
+
+/* Адаптация внутренних блоков под Pop-Art стиль */
+.theme-harlequin > div[style*="background: rgba"],
+.theme-harlequin .badge {
+    background: rgba(0, 0, 0, 0.75) !important; /* Затемняем, чтобы текст читался на ярком фоне */
+    border: 2px solid #000000 !important;
+    box-shadow: 4px 4px 0px #000000 !important;
+    border-radius: 8px !important;
+}
+
+/* Оформление Никнейма: белый цвет с жесткой черной обводкой (тенью) */
+.theme-harlequin #profName, .theme-harlequin .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 
+        2px 2px 0 #000, 
+        -2px -2px 0 #000, 
+        2px -2px 0 #000, 
+        -2px 2px 0 #000,
+        4px 4px 0 rgba(0,0,0,0.5) !important;
+    letter-spacing: 2px;
+    font-weight: 900 !important;
+}
+
+/* Рейтинг сервера: плашки игроков */
+.lb-item.theme-harlequin {
+    border: 3px solid #000 !important;
+    box-shadow: 5px 5px 0px #000 !important;
+    margin-bottom: 15px !important;
+    transition: 0.2s ease;
+}
+.lb-item.theme-harlequin:hover {
+    transform: translate(-3px, -3px);
+    box-shadow: 8px 8px 0px #000 !important;
+}
+/* Исправляем читаемость текста "Мощь" в рейтинге */
+.theme-harlequin .lb-score {
+    color: #ffffff !important; /* Делаем текст белым вместо красного */
+    text-shadow: 
+        1.5px 1.5px 0 #000, 
+        -1.5px -1.5px 0 #000, 
+        1.5px -1.5px 0 #000, 
+        -1.5px 1.5px 0 #000,
+        3px 3px 0px rgba(0, 0, 0, 1) !important; /* Жесткая черная тень в стиле комиксов */
+    font-weight: bold;
+}
+
+/* Добавляем такую же комиксную обводку для цифры места в рейтинге (#1) */
+.theme-harlequin .lb-rank {
+    text-shadow: 
+        2px 2px 0 #000, 
+        -2px -2px 0 #000, 
+        2px -2px 0 #000, 
+        -2px 2px 0 #000 !important;
+}
+
+/* ========================================= */
+/* ТЕМА 12: БЕЗМЯТЕЖНОСТЬ (SERENITY)         */
+/* ========================================= */
+
+.theme-serenity {
+    position: relative;
+    background: linear-gradient(180deg, #ff0b00 13%, #ff9e00 100%) !important;
+    border: 2px solid #ff9e00 !important;
+    box-shadow: 0 0 20px rgba(255, 158, 0, 0.4) !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Оверлей для идеальной читаемости белого текста */
+.theme-serenity::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25); /* Легкая вечерняя дымка */
+    z-index: 0; 
+    pointer-events: none;
+}
+
+.theme-serenity .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Базовый стиль для всех элементов */
+.theme-serenity .theme-point {
+    display: block;
+    position: absolute;
+    will-change: transform;
+}
+
+/* === СОЛНЦЕ И ОРЕОЛЫ (Точки 1-5) === */
+/* Центрируем все круги в правом верхнем углу */
+.theme-serenity .theme-point:nth-child(-n+5) {
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.1);
+    top: 0; right: 20%;
+    /* Сдвигаем центр кругов в одну точку */
+    transform: translate(50%, -50%);
+}
+
+.theme-serenity .theme-point:nth-child(1) { width: 500px; height: 500px; animation: ser-pulse 6s ease-in-out infinite; }
+.theme-serenity .theme-point:nth-child(2) { width: 380px; height: 380px; animation: ser-pulse 6s ease-in-out infinite 0.5s; }
+.theme-serenity .theme-point:nth-child(3) { width: 260px; height: 260px; animation: ser-pulse 6s ease-in-out infinite 1s; }
+.theme-serenity .theme-point:nth-child(4) { width: 140px; height: 140px; animation: ser-pulse 6s ease-in-out infinite 1.5s; }
+.theme-serenity .theme-point:nth-child(5) { 
+    width: 80px; height: 80px; 
+    background-color: #ffffff; 
+    box-shadow: 0 0 30px rgba(255, 255, 255, 0.8);
+    animation: none; 
+}
+
+/* Плавное дыхание солнечных кругов */
+@keyframes ser-pulse {
+    0%, 100% { transform: translate(50%, -50%) scale(1); }
+    50% { transform: translate(50%, -50%) scale(1.03); }
+}
+
+/* === ГОРЫ (Точки 6-8) === */
+/* Превращаем их в повернутые квадраты */
+.theme-serenity .theme-point:nth-child(n+6):nth-child(-n+8) {
+    background-color: #3a3a3a;
+    border-radius: 12px; /* Чуть сглаживаем острые пики */
+}
+
+/* Гора 1: Слева (на переднем плане) */
+.theme-serenity .theme-point:nth-child(6) {
+    width: 400px; height: 400px;
+    bottom: -300px; left: -150px;
+    z-index: 1;
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.8);
+    animation: ser-drift1 12s ease-in-out infinite alternate;
+}
+/* Гора 2: По центру (на заднем плане) */
+.theme-serenity .theme-point:nth-child(7) {
+    width: 300px; height: 300px;
+    bottom: -230px; left: 15%;
+    z-index: 0;
+    background-color: #2b2b2b; /* Задняя гора чуть темнее */
+    animation: ser-drift2 15s ease-in-out infinite alternate;
+}
+/* Гора 3: Справа (самая большая, передний план) */
+.theme-serenity .theme-point:nth-child(8) {
+    width: 450px; height: 450px;
+    bottom: -320px; right: -100px;
+    z-index: 2;
+    box-shadow: 0px 0px 30px rgba(0, 0, 0, 0.8);
+    background-color: #454545; /* Ближняя гора чуть светлее */
+    animation: ser-drift3 10s ease-in-out infinite alternate;
+}
+
+/* Микро-параллакс гор (иллюзия объема) */
+@keyframes ser-drift1 { 0% { transform: rotate(45deg) translate(0, 0); } 100% { transform: rotate(45deg) translate(6px, 6px); } }
+@keyframes ser-drift2 { 0% { transform: rotate(45deg) translate(0, 0); } 100% { transform: rotate(45deg) translate(-4px, -4px); } }
+@keyframes ser-drift3 { 0% { transform: rotate(45deg) translate(0, 0); } 100% { transform: rotate(45deg) translate(-8px, 8px); } }
+
+/* Скрываем точки 9 и 10 */
+.theme-serenity .theme-point:nth-child(n+9) { display: none; }
+
+/* Оформление текста */
+.theme-serenity #profName, .theme-serenity .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8), 2px 2px 4px rgba(0,0,0,0.8) !important; 
+    letter-spacing: 1px;
+}
+.theme-serenity .lb-score {
+    color: #ff9e00 !important;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* ========================================= */
+/* ТЕМА 13: СИНЕРГИЯ (3D CAROUSEL)           */
+/* ========================================= */
+
+.theme-synergy {
+    position: relative;
+    background: #0d1117 !important; /* Глубокий темный фон */
+    border: 2px solid #8ef9fc !important;
+    box-shadow: 0 0 20px rgba(142, 249, 252, 0.3) !important;
+    overflow: hidden !important;
+    z-index: 1;
+    perspective: 1000px; /* Включаем 3D-пространство */
+}
+
+/* Затемняющий слой, чтобы текст всегда легко читался на фоне светящихся карт */
+.theme-synergy::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* Контейнер вращения */
+.theme-synergy .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    /* Центрируем карусель точно посередине профиля */
+    top: 50%; left: 50%;
+    width: 100px; height: 150px;
+    margin-top: -75px; margin-left: -50px;
+    z-index: -2;
+    transform-style: preserve-3d;
+    animation: synergy-rotate 20s linear infinite;
+    pointer-events: none;
+}
+
+/* Анимация полного оборота по оси Y с небольшим наклоном по оси X (как в референсе) */
+@keyframes synergy-rotate {
+    from { transform: rotateX(-15deg) rotateY(0turn); }
+    to { transform: rotateX(-15deg) rotateY(1turn); }
+}
+
+/* Общий стиль для всех 10 карт */
+.theme-synergy .theme-point {
+    display: block;
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    border-radius: 12px;
+    will-change: transform;
+    /* Расставляем карты по кругу с шагом в 36 градусов (360/10) и отдаляем от центра */
+    transform: rotateY(calc(36deg * var(--i))) translateZ(250px);
+}
+
+/* Настраиваем индексы и цвета RGB для каждой из 10 карт */
+.theme-synergy .theme-point:nth-child(1) { --i: 0; --c: 142, 249, 252; }
+.theme-synergy .theme-point:nth-child(2) { --i: 1; --c: 142, 252, 204; }
+.theme-synergy .theme-point:nth-child(3) { --i: 2; --c: 142, 252, 157; }
+.theme-synergy .theme-point:nth-child(4) { --i: 3; --c: 215, 252, 142; }
+.theme-synergy .theme-point:nth-child(5) { --i: 4; --c: 252, 252, 142; }
+.theme-synergy .theme-point:nth-child(6) { --i: 5; --c: 252, 208, 142; }
+.theme-synergy .theme-point:nth-child(7) { --i: 6; --c: 252, 142, 142; }
+.theme-synergy .theme-point:nth-child(8) { --i: 7; --c: 252, 142, 239; }
+.theme-synergy .theme-point:nth-child(9) { --i: 8; --c: 204, 142, 252; }
+.theme-synergy .theme-point:nth-child(10){ --i: 9; --c: 142, 202, 252; }
+
+/* Внутреннее оформление карт: рамка и радиальный градиент из референса */
+.theme-synergy .theme-point::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    border: 2px solid rgba(var(--c), 1);
+    background: radial-gradient(circle, rgba(var(--c), 0.2) 0%, rgba(var(--c), 0.6) 80%, rgba(var(--c), 0.9) 100%);
+    box-shadow: 0 0 15px rgba(var(--c), 0.4);
+}
+
+/* Красивое свечение для Никнейма (переход от бирюзового к фиолетовому) */
+.theme-synergy #profName, .theme-synergy .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 8px rgba(142, 249, 252, 0.8), 0 0 15px rgba(204, 142, 252, 0.6) !important; 
+    letter-spacing: 2px;
+}
+
+/* ========================================= */
+/* ТЕМА 14: ЛУННАЯ НОЧЬ (MOONLIGHT NIGHT)    */
+/* ========================================= */
+
+.theme-moonlight {
+    position: relative;
+    background: linear-gradient(45deg, #000000, #0a0a2e) !important;
+    border: 2px solid #6495ed !important;
+    box-shadow: 0 0 20px rgba(0, 0, 255, 0.15) !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Легкое затемнение для идеальной читаемости текста */
+.theme-moonlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: -1;
+    pointer-events: none;
+}
+
+.theme-moonlight .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -2;
+    pointer-events: none;
+}
+
+.theme-moonlight .theme-point {
+    display: block;
+    position: absolute;
+    will-change: transform;
+}
+
+/* === ЛУНА (Точка 1) === */
+.theme-moonlight .theme-point:nth-child(1) {
+    width: 100px;
+    height: 100px;
+    background: linear-gradient(145deg, #f0f0f0, #ffffff);
+    border-radius: 50%;
+    top: 15px; right: 25px; /* Размещаем в правом верхнем углу */
+    box-shadow: 0 0 40px rgba(235, 235, 235, 0.5), inset -5px -5px 15px rgba(0, 0, 0, 0.2);
+    animation: moon-glow 4s ease-in-out infinite alternate;
+}
+
+/* Пульсация лунного света */
+@keyframes moon-glow {
+    0% { box-shadow: 0 0 40px rgba(235, 235, 235, 0.4), inset -5px -5px 15px rgba(0, 0, 0, 0.2); }
+    100% { box-shadow: 0 0 60px rgba(173, 216, 230, 0.7), inset -8px -8px 20px rgba(0, 0, 0, 0.3); }
+}
+
+/* Кратеры на Луне (используем ::before и ::after) */
+.theme-moonlight .theme-point:nth-child(1)::before,
+.theme-moonlight .theme-point:nth-child(1)::after {
+    content: '';
+    position: absolute;
+    background: rgba(200, 200, 200, 0.3);
+    border-radius: 50%;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Первый кратер */
+.theme-moonlight .theme-point:nth-child(1)::before {
+    width: 18px; height: 18px;
+    top: 25px; left: 20px;
+}
+
+/* Второй кратер */
+.theme-moonlight .theme-point:nth-child(1)::after {
+    width: 25px; height: 25px;
+    top: 55px; left: 50px;
+}
+
+/* === ПАДАЮЩИЕ ЗВЕЗДЫ / СВЕТЛЯЧКИ (Точки 2-10) === */
+.theme-moonlight .theme-point:nth-child(n+2) {
+    background: linear-gradient(90deg, #ffffff 0%, #add8e6 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.8), 0 0 20px rgba(173, 216, 230, 0.6);
+    transform: rotate(25deg);
+    opacity: 0;
+    animation: moon-stars linear infinite;
+}
+
+/* Индивидуальные настройки для каждой звезды (размер, позиция по X, время и задержка) */
+.theme-moonlight .theme-point:nth-child(2) { width: 3px; height: 9px; left: 10%; animation-duration: 4s; animation-delay: 0s; filter: blur(1px); }
+.theme-moonlight .theme-point:nth-child(3) { width: 2px; height: 6px; left: 25%; animation-duration: 5s; animation-delay: 2s; filter: blur(0.5px); }
+.theme-moonlight .theme-point:nth-child(4) { width: 4px; height: 12px; left: 40%; animation-duration: 3.5s; animation-delay: 1s; filter: blur(1.5px); }
+.theme-moonlight .theme-point:nth-child(5) { width: 2px; height: 5px; left: 55%; animation-duration: 6s; animation-delay: 3s; filter: blur(0.5px); }
+.theme-moonlight .theme-point:nth-child(6) { width: 3px; height: 8px; left: 70%; animation-duration: 4.5s; animation-delay: 0.5s; filter: blur(1px); }
+.theme-moonlight .theme-point:nth-child(7) { width: 1px; height: 4px; left: 85%; animation-duration: 7s; animation-delay: 1.5s; filter: blur(0.5px); }
+.theme-moonlight .theme-point:nth-child(8) { width: 3px; height: 10px; left: 15%; animation-duration: 4.2s; animation-delay: 2.5s; filter: blur(1px); }
+.theme-moonlight .theme-point:nth-child(9) { width: 2px; height: 7px; left: 50%; animation-duration: 5.2s; animation-delay: 0.8s; filter: blur(0.5px); }
+.theme-moonlight .theme-point:nth-child(10){ width: 4px; height: 11px; left: 80%; animation-duration: 3.8s; animation-delay: 1.2s; filter: blur(1.5px); }
+
+/* Анимация: звезды плавно летят снизу вверх */
+@keyframes moon-stars {
+    0% { transform: translateY(250px) scale(0.5) rotate(25deg); opacity: 0; }
+    15% { opacity: 0.8; }
+    85% { opacity: 0.8; }
+    100% { transform: translateY(-50px) scale(1.2) rotate(25deg); opacity: 0; }
+}
+
+/* Оформление текста (сохранен оригинальный регистр, добавлено лунное свечение) */
+.theme-moonlight #profName, .theme-moonlight .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 10px rgba(173, 216, 230, 0.8) !important; 
+    letter-spacing: 2px;
+}
+
+/* ========================================= */
+/* ТЕМА 15: 404 (RETRO TV & GLITCH)          */
+/* ========================================= */
+
+.theme-404 {
+    position: relative;
+    background-color: #252525 !important;
+    /* Корпус телевизора (оранжевый ретро-цвет из референса) */
+    border: 6px solid #d36604 !important; 
+    border-radius: 15px !important;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.9), 0 0 20px rgba(211, 102, 4, 0.3) !important;
+    overflow: hidden !important;
+    z-index: 1;
+}
+
+/* Экран телевизора: Анимация белого шума (Static Noise) */
+.theme-404 .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -2;
+    pointer-events: none;
+    /* Та самая магия градиентов из референса */
+    background:
+        repeating-radial-gradient(#000 0 0.0001%, #ffffff 0 0.0002%) 50% 0/2500px 2500px,
+        repeating-conic-gradient(#000 0 0.0001%, #ffffff 0 0.0002%) 60% 60%/2500px 2500px;
+    background-blend-mode: difference;
+    animation: static-noise 0.2s infinite alternate;
+    opacity: 0.15; /* Снижаем прозрачность шума, чтобы текст Досье легко читался */
+}
+
+@keyframes static-noise {
+    100% { background-position: 50% 0, 60% 50%; }
+}
+
+/* Затемняющий слой поверх шума для контраста */
+.theme-404::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: -1;
+    pointer-events: none;
+}
+
+/* CRT Сканлайны (полосы старого монитора) поверх всего профиля */
+.theme-404::after {
+    content: " ";
+    display: block;
+    position: absolute;
+    top: 0; left: 0; bottom: 0; right: 0;
+    background: linear-gradient(to bottom, rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    z-index: 50; /* Поверх всего */
+    pointer-events: none; /* Чтобы не мешало кликать по кнопкам */
+}
+
+/* Прячем лишние точки */
+.theme-404 .theme-point { display: none; }
+
+/* Используем первую точку для черной плашки "ERROR 404 :(" на заднем фоне */
+.theme-404 .theme-point:nth-child(1) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 25%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: black;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    font-size: 18px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    z-index: -1;
+    opacity: 0.4; /* Полупрозрачно, как фоновый элемент */
+}
+.theme-404 .theme-point:nth-child(1)::after {
+    content: "ERROR 404 :(";
+}
+
+/* Оформление текста: Глитч-эффект (раздвоение каналов) для Никнейма */
+.theme-404 #profName, .theme-404 .lb-name { 
+    color: #ffffff !important; 
+    font-family: monospace !important; /* Хакерский шрифт */
+    letter-spacing: 2px;
+    animation: text-glitch 2s infinite linear alternate-reverse;
+}
+
+/* Анимация глитча (Красный и Циан каналы разъезжаются) */
+@keyframes text-glitch {
+    0% { text-shadow: 2px 0 0 rgba(255,0,0,0.8), -2px 0 0 rgba(0,255,255,0.8); }
+    20% { text-shadow: -2px 0 0 rgba(255,0,0,0.8), 2px 0 0 rgba(0,255,255,0.8); }
+    40% { text-shadow: 2px 0 0 rgba(255,0,0,0.8), -2px 0 0 rgba(0,255,255,0.8); transform: translate(1px, 1px); }
+    60% { text-shadow: -2px 0 0 rgba(255,0,0,0.8), 2px 0 0 rgba(0,255,255,0.8); transform: translate(-1px, -1px); }
+    80% { text-shadow: 2px 0 0 rgba(255,0,0,0.8), -2px 0 0 rgba(0,255,255,0.8); }
+    100% { text-shadow: -2px 0 0 rgba(255,0,0,0.8), 2px 0 0 rgba(0,255,255,0.8); }
+}
+
+/* Подгоняем панели под ретро-стиль */
+.theme-404 .panel, .theme-404 .badge, .theme-404 > div[style*="background: rgba"] {
+    background: rgba(0, 0, 0, 0.6) !important;
+    border: 1px dashed #555 !important;
+    border-radius: 0 !important; /* Убираем скругления, делаем грубее */
+}
+
+/* ========================================= */
+/* ТЕМА 16: ЗЕМЛЯ (EARTH ORBIT)              */
+/* ========================================= */
+
+.theme-earth {
+    position: relative;
+    /* Используем base64 карту Земли. Я использовал твой код. */
+    background: url("data:image/jpeg;base64,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");
+    background-size: cover;
+    background-position: left;
+    
+    /* Анимация вращения карты планеты */
+    animation: earthRotate 30s linear 0s infinite;
+    
+    /* Тени, создающие объем сферы: день справа, ночь слева */
+    box-shadow: 
+        inset -5px 0px 8px #c3f4ff,
+        inset 15px 2px 25px #000, 
+        inset -24px -2px 34px rgba(195, 244, 255, 0.6),
+        inset 250px 0px 44px rgba(0, 0, 0, 0.4), 
+        inset 150px 0px 38px rgba(0, 0, 0, 0.6),
+        0 0 20px rgba(195, 244, 255, 0.2) !important;
+        
+    border-radius: 12px !important; /* Сохраняем скругления профиля */
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    z-index: 1;
+}
+
+/* Анимация движения текстуры (вращение планеты) */
+@keyframes earthRotate {
+    0% { background-position: 0 0; }
+    100% { background-position: 400px 0; }
+}
+
+/* Активируем слой звезд */
+.theme-earth .theme-points-wrapper {
+    display: block;
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+/* Общий стиль для звезд */
+.theme-earth .theme-point {
+    display: flex;
+    position: absolute;
+    width: 2px;
+    height: 2px;
+}
+
+/* Рисуем лучи звезды с помощью псевдоэлементов (крестик) */
+.theme-earth .theme-point::before,
+.theme-earth .theme-point::after {
+    content: "";
+    display: block;
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 0 4px white;
+}
+.theme-earth .theme-point::before {
+    width: 6px; height: 2px;
+    top: 0; left: -2px;
+}
+.theme-earth .theme-point::after {
+    width: 2px; height: 6px;
+    top: -2px; left: 0;
+}
+
+/* Расставляем 10 звезд по профилю и задаем мерцание */
+.theme-earth .theme-point:nth-child(1) { top: 10%; left: 5%; animation: twinkling 3s infinite; }
+.theme-earth .theme-point:nth-child(2) { top: 25%; left: 15%; animation: twinkling 2s infinite 0.5s; transform: scale(0.8); }
+.theme-earth .theme-point:nth-child(3) { top: 15%; right: 20%; animation: twinkling 4s infinite 1s; transform: scale(1.2); }
+.theme-earth .theme-point:nth-child(4) { bottom: 20%; right: 10%; animation: twinkling 3s infinite 0.2s; }
+.theme-earth .theme-point:nth-child(5) { bottom: 10%; left: 20%; animation: twinkling 1.5s infinite 0.7s; transform: scale(0.9); }
+.theme-earth .theme-point:nth-child(6) { top: 40%; right: 5%; animation: twinkling 4s infinite 1.2s; }
+.theme-earth .theme-point:nth-child(7) { top: 50%; left: 2%; animation: twinkling 2.5s infinite 0.3s; transform: scale(1.1); }
+.theme-earth .theme-point:nth-child(8) { bottom: 35%; right: 25%; animation: twinkling 3.5s infinite 0.8s; transform: scale(0.7); }
+.theme-earth .theme-point:nth-child(9) { top: 5%; right: 40%; animation: twinkling 2.8s infinite 1.5s; }
+.theme-earth .theme-point:nth-child(10){ bottom: 5%; left: 45%; animation: twinkling 2.2s infinite 0.1s; transform: scale(1.3); }
+
+@keyframes twinkling {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 1; }
+}
+
+/* Чтобы текст читался на фоне планеты */
+.theme-earth #profName, .theme-earth .lb-name { 
+    color: #ffffff !important; 
+    text-shadow: 0 0 10px rgba(195, 244, 255, 0.8), 0 0 20px rgba(0, 0, 0, 0.8) !important; 
+    letter-spacing: 2px;
+}
+
+/* Стилизуем внутренние панели под космический интерфейс */
+.theme-earth .panel, .theme-earth .badge, .theme-earth > div[style*="background: rgba"] {
+    background: rgba(0, 0, 0, 0.5) !important;
+    border: 1px solid rgba(195, 244, 255, 0.2) !important;
+    backdrop-filter: blur(4px);
+}
