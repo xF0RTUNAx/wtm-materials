@@ -2504,3 +2504,149 @@
     0%   { transform: rotateX(-20deg) scale(0.4) rotateY(0deg); }
     100% { transform: rotateX(-20deg) scale(0.4) rotateY(360deg); }
 }
+
+/* ========================================= */
+/* ТЕМА 26: ПЕПЕ (PEPE)                      */
+/* ========================================= */
+
+.theme-pepe {
+    position: relative;
+    background-image: url('pics/pepe.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border: 2px solid #8b5a2b !important; /* Уютный древесный цвет */
+    border-radius: 12px !important;
+    z-index: 1;
+}
+
+/* Затемнение фона для читаемости */
+.theme-pepe::before {
+    content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: -1; border-radius: 10px;
+}
+
+/* Отключаем точки, чтобы не мешали лягушке */
+.theme-pepe .theme-points-wrapper { display: none !important; }
+
+/* Цвета текста в стиле заката */
+.theme-pepe #profName, .theme-pepe .lb-name {
+    color: #ffdeb3 !important; /* Кремовый */
+    text-shadow: 2px 2px 4px #000 !important;
+}
+.theme-pepe #profActiveTitle { color: #ffad60 !important; /* Оранжевый */ }
+
+/* Панели внутри в теплых тонах */
+.theme-pepe .panel, .theme-pepe .badge, .theme-pepe > div[style*="background: rgba"] {
+    background: rgba(40, 25, 15, 0.6) !important;
+    border: 1px solid rgba(212, 163, 115, 0.3) !important;
+    backdrop-filter: blur(4px);
+}
+
+/* Плашка в рейтинге */
+.lb-item.theme-pepe {
+    background-image: url('pics/pepe.png') !important;
+    background-size: cover !important;
+    background-position: center 30% !important;
+    border: 1px solid #8b5a2b !important;
+    position: relative; z-index: 1;
+}
+.lb-item.theme-pepe::before {
+    content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: -1;
+}
+
+/* ========================================= */
+/* ТЕМА 27: ЛЕТНИЙ ЗАКАТ (SUMMER SUNSET)      */
+/* ========================================= */
+
+.theme-sunset {
+    position: relative;
+    background-image: url('pics/sunset.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border: 2px solid #b97cff !important; /* Ярко-красная рамка под цвет неба */
+    border-radius: 12px !important;
+    z-index: 1;
+}
+
+/* Сильное затемнение, так как картинка яркая */
+.theme-sunset::before {
+    content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.3); z-index: -1; border-radius: 10px;
+}
+
+/* Точки делаем розовыми, под цвет заката */
+.theme-sunset .theme-point { background: #ff80ab !important; box-shadow: 0 0 5px #ff80ab !important; }
+
+/* Цвета текста */
+.theme-sunset #profName, .theme-sunset .lb-name {
+    color: #fff !important;
+    text-shadow: 0 0 10px #ff1744 !important; /* Красное свечение */
+}
+.theme-sunset #profActiveTitle { color: #ff80ab !important; }
+
+/* Панели внутри в неоново-розовых тонах */
+.theme-sunset .panel, .theme-sunset .badge, .theme-sunset > div[style*="background: rgba"] {
+    background: rgba(30, 0, 10, 0.7) !important;
+    border: 1px solid rgba(255, 23, 68, 0.5) !important;
+    backdrop-filter: blur(5px);
+}
+
+/* Плашка в рейтинге */
+.lb-item.theme-sunset {
+    background-image: url('pics/sunset.png') !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    border: 1px solid #b97cff !important;
+    position: relative; z-index: 1;
+}
+.lb-item.theme-sunset::before {
+    content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); z-index: -1;
+}
+
+/* ========================================= */
+/* ТЕМА 28: САНТА-БАРБАРА (SANTA BARBARA)   */
+/* ========================================= */
+
+.theme-sb {
+    position: relative;
+    background-image: url('pics/sb.png') !important;
+    background-size: cover !important;
+    background-position: center !important;
+    border: 2px solid #fff !important; /* Белая элитная рамка */
+    border-radius: 12px !important;
+    z-index: 1;
+    box-shadow: 0 0 20px rgba(255,255,255,0.2) !important;
+}
+
+/* Затемнение */
+.theme-sb::before {
+    content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: -1; border-radius: 10px;
+}
+
+/* Точки делаем бирюзовыми, под цвет бассейна */
+.theme-sb .theme-point { background: #00e5ff !important; box-shadow: 0 0 5px #00e5ff !important; }
+
+/* Цвета текста в стиле "дорого-богато" */
+.theme-sb #profName, .theme-sb .lb-name {
+    color: #fff !important;
+    text-shadow: 0 2px 4px #000 !important;
+}
+.theme-sb #profActiveTitle { color: #00e5ff !important; /* Бирюзовый */ }
+.theme-sb .lb-score { color: #ffc107 !important; text-shadow: 0 0 5px #ffc107 !important; /* Золотой счет */}
+
+/* Стеклянные панели внутри */
+.theme-sb .panel, .theme-sb .badge, .theme-sb > div[style*="background: rgba"] {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    backdrop-filter: blur(10px);
+}
+
+/* Плашка в рейтинге */
+.lb-item.theme-sb {
+    background-image: url('pics/sb.png') !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    border: 1px solid #fff !important;
+    position: relative; z-index: 1;
+}
+.lb-item.theme-sb::before {
+    content: ''; position: absolute; inset: 0; background: rgba(0, 0, 0, 0.6); z-index: -1;
+}
