@@ -1969,10 +1969,10 @@
 
 /* Точка 1: Главная искаженная рамка (Тот самый SVG Фильтр) */
 .theme-discharge .theme-point:nth-child(1) {
-    inset: -4px; /* Выходит за пределы базовой рамки */
+    inset: -4px;
     border: 2px solid #6348dd;
-    /* Встраиваем SVG-фильтр напрямую через Data URI */
-    filter: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='turbulent-displace' x='-20%25' y='-20%25' width='140%25' height='140%25'%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise1' seed='1'/%3E%3CfeOffset in='noise1' dx='0' dy='0' result='offsetNoise1'/%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise2' seed='1'/%3E%3CfeOffset in='noise2' dx='0' dy='0' result='offsetNoise2'/%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise1' seed='2'/%3E%3CfeOffset in='noise1' dx='0' dy='0' result='offsetNoise3'/%3E%3CfeTurbulence type='turbulence' baseFrequency='0.02' numOctaves='10' result='noise2' seed='2'/%3E%3CfeOffset in='noise2' dx='0' dy='0' result='offsetNoise4'/%3E%3CfeComposite in='offsetNoise1' in2='offsetNoise2' result='part1'/%3E%3CfeComposite in='offsetNoise3' in2='offsetNoise4' result='part2'/%3E%3CfeBlend in='part1' in2='part2' mode='color-dodge' result='combinedNoise'/%3E%3CfeDisplacementMap in='SourceGraphic' in2='combinedNoise' scale='30' xChannelSelector='R' yChannelSelector='B'/%3E%3C/filter%3E%3C/svg%3E#turbulent-displace");
+    -webkit-filter: url(#turbulent-displace);
+    filter: url(#turbulent-displace);
 }
 
 /* Точка 2: Оранжевое свечение (Layer 1) */
@@ -1996,13 +1996,19 @@
     100% { opacity: 1; transform: scale(1.01); }
 }
 
-/* Точка 4: Фоновое глубокое свечение */
-.theme-discharge .theme-point:nth-child(4) {
-    inset: 0;
-    filter: blur(32px);
-    opacity: 0.35;
-    background: linear-gradient(-30deg, #a366ff, transparent, #6348dd);
-    z-index: -2;
+/* Точка 4: Глаз (Белок + Анимация Моргания) - ПОДНЯТО ВЫШЕ (top: 35%) */
+.theme-billcipher .theme-point:nth-child(4) {
+    width: 90px; height: 50px;
+    background: radial-gradient(circle at 30% 30%, #fff, #b3b3b3);
+    border-radius: 50%;
+    top: 35%; left: 50%;
+    margin-top: -15px; margin-left: -45px;
+    box-shadow: 0 0 0 6px #000, inset -5px -5px 10px rgba(0, 0, 0, 0.4);
+    animation: bc-float 4s ease-in-out infinite, bc-blink 6s infinite cubic-bezier(0.76, 0, 0.24, 1);
+    overflow: hidden;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 /* Точка 5: Внутренние стеклянные блики (Overlays) */
