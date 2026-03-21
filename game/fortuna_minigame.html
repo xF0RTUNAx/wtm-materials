@@ -2516,6 +2516,25 @@
     <div class="spoke"></div>
 </div>
 
+            <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="turbulent-displace" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1"/>
+      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1"/>
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1"/>
+      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2"/>
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="2"/>
+      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise3"/>
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="2"/>
+      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise4"/>
+      <feComposite in="offsetNoise1" in2="offsetNoise2" result="part1"/>
+      <feComposite in="offsetNoise3" in2="offsetNoise4" result="part2"/>
+      <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="30" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+  </defs>
+</svg>
+            
                 <div style="position: relative; z-index: 5;">
                 <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
                 <div id="profActiveTitle" style="color: var(--meteor); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;"></div>
