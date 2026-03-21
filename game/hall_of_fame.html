@@ -102,6 +102,25 @@
 </head>
 <body>
 
+    <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="turbulent-displace" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1"/>
+      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1"/>
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1"/>
+      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2"/>
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="2"/>
+      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise3"/>
+      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="2"/>
+      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise4"/>
+      <feComposite in="offsetNoise1" in2="offsetNoise2" result="part1"/>
+      <feComposite in="offsetNoise3" in2="offsetNoise4" result="part2"/>
+      <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="30" xChannelSelector="R" yChannelSelector="B"/>
+    </filter>
+  </defs>
+</svg>
+    
     <div class="container">
         <button onclick="window.location.href='fortuna_minigame.html'" style="background: transparent; color: #8b949e; border: 1px solid #333; width: auto; padding: 8px 20px; margin-bottom: 20px;">⬅ В Штаб</button>
         
