@@ -241,6 +241,13 @@
                     <div class="shop-price">☄️ 800</div>
                     <button class="btn-meteor" style="background: rgba(188,140,255,0.1); color: var(--epic); border-color: var(--epic); margin-bottom: 0;" id="btnPerk_engineer" onclick="buyPerk('perk_engineer', 800)">ПРИОБРЕСТИ</button>
                 </div>
+                <div class="shop-card" style="border-color: var(--meteor);">
+                    <div class="shop-icon">🎨</div>
+                    <div class="shop-title" style="color: var(--meteor);">КОНТЕЙНЕР ДИЗАЙНЕРА</div>
+                    <div class="shop-desc">Случайное оформление профиля.<br><span style="font-size:10px; color:var(--red);">*Кроме уникальной темы «Тестер»</span></div>
+                    <div class="shop-price">☄️ 200</div>
+                    <button class="btn-meteor" style="margin-bottom: 0;" id="btnThemeContainer" onclick="buyThemeContainer(200)">ИСПЫТАТЬ УДАЧУ</button>
+                </div>
             </div>
             
             <div style="height: 30px;"></div>
@@ -411,6 +418,37 @@
         let player = null;
         let allPlayers = [];
         let allClans = [];
+
+        // === СИСТЕМА ТЕМ ПРОФИЛЯ ===
+        const THEMES = [
+            { id: 'theme-amethyst', name: 'Аметист' },
+            { id: 'theme-cyberpunk', name: 'Неон' },
+            { id: 'theme-mint', name: 'Мята' },
+            { id: 'theme-tester', name: 'Тестер' },
+            { id: 'theme-starry', name: 'Звездная тишина' },
+            { id: 'theme-matrix', name: 'Матрица' },
+            { id: 'theme-nostalgia', name: 'Ностальгия' },
+            { id: 'theme-mojito', name: 'Мохито' },
+            { id: 'theme-aquarelle', name: 'Акварель' },
+            { id: 'theme-spring', name: 'Весна' },
+            { id: 'theme-harlequin', name: 'Арлекин' },
+            { id: 'theme-serenity', name: 'Безмятежность' },
+            { id: 'theme-synergy', name: 'Синергия' },
+            { id: 'theme-moonlight', name: 'Лунная ночь' },
+            { id: 'theme-404', name: '404' },
+            { id: 'theme-earth', name: 'Космос' },
+            { id: 'theme-dragonscale', name: 'Ассорти' },
+            { id: 'theme-billcipher', name: 'Билл Сайфер' },
+            { id: 'theme-mac', name: 'М значит яблоко' },
+            { id: 'theme-retro-os', name: 'Где-то я уже это видел...' },
+            { id: 'theme-discharge', name: 'Разряд' },
+            { id: 'theme-watchultra', name: 'Яблок много не бывает' },
+            { id: 'theme-hamster', name: 'Верный друг' },
+            { id: 'theme-pyramid', name: 'Магическая пирамида' },
+            { id: 'theme-pepe', name: 'Пепе' },
+            { id: 'theme-sunset', name: 'Летний закат' },
+            { id: 'theme-sb', name: 'Санта-Барбара' }
+        ];
 
         function formatTimeDate(isoString) {
             if(!isoString) return "Неизвестно";
@@ -714,6 +752,19 @@
                     btn.style.boxShadow = "none";
                 }
             });
+
+            const btnTheme = document.getElementById('btnThemeContainer');
+            if (btnTheme) {
+                let unownedThemes = THEMES.filter(t => t.id !== 'theme-tester' && !perks['perk_' + t.id.replace('-', '_')]);
+                if (unownedThemes.length === 0) {
+                    btnTheme.innerText = "ВСЕ ТЕМЫ СОБРАНЫ";
+                    btnTheme.disabled = true;
+                    btnTheme.style.background = "transparent";
+                    btnTheme.style.borderColor = "#333";
+                    btnTheme.style.color = "#8b949e";
+                    btnTheme.style.boxShadow = "none";
+                }
+            }
         }
 
         async function buyPerk(perkId, cost) {
@@ -745,6 +796,49 @@
                 checkPerkButtons();
                 alert("Улучшение успешно приобретено и привязано к аккаунту навсегда!");
                 if(perkId === 'perk_legend') loadHallOfFame(); 
+            }
+        }
+
+        async function buyThemeContainer(cost) {
+            if ((player.meteorite_shards || 0) < cost) {
+                alert("Недостаточно Метеоритных Осколков!");
+                return;
+            }
+
+            let currentPerks = player.elite_perks || {};
+            
+            let unownedThemes = THEMES.filter(t => t.id !== 'theme-tester' && !currentPerks['perk_' + t.id.replace('-', '_')]);
+            
+            if (unownedThemes.length === 0) {
+                alert("У вас уже есть все доступные темы из этого контейнера!");
+                return;
+            }
+
+            if(!confirm(`Открыть контейнер с темами за ${cost} Осколков?`)) return;
+
+            const randomTheme = unownedThemes[Math.floor(Math.random() * unownedThemes.length)];
+            const perkKey = 'perk_' + randomTheme.id.replace('-', '_');
+            
+            currentPerks[perkKey] = true;
+            const newBalance = player.meteorite_shards - cost;
+
+            const { data, error } = await db.from('players').update({
+                meteorite_shards: newBalance,
+                elite_perks: currentPerks
+            }).eq('id', player.id).select().single();
+
+            if (error) {
+                alert("Ошибка БД! Связь прервана.");
+                console.error(error);
+                return;
+            }
+
+            if (data) {
+                player = data;
+                updateUI();
+                checkPerkButtons();
+                buildThemesUI();
+                alert(`🎉 ПОЗДРАВЛЯЕМ! Вы получили новую тему профиля: «${randomTheme.name}»!`);
             }
         }
 
@@ -832,37 +926,6 @@
             const { data } = await db.from('players').update({ active_title: name }).eq('id', player.id).select().single();
             if (data) { player = data; buildAchievementsUI(); updateUI(); alert(`Титул «${name}» установлен! Вы можете увидеть его в своем профиле.`); }
         }
-
-        // === СИСТЕМА ТЕМ ПРОФИЛЯ ===
-        const THEMES = [
-            { id: 'theme-amethyst', name: 'Аметист' },
-            { id: 'theme-cyberpunk', name: 'Неон' },
-            { id: 'theme-mint', name: 'Мята' },
-            { id: 'theme-tester', name: 'Тестер' },
-            { id: 'theme-starry', name: 'Звездная тишина' },
-            { id: 'theme-matrix', name: 'Матрица' },
-            { id: 'theme-nostalgia', name: 'Ностальгия' },
-            { id: 'theme-mojito', name: 'Мохито' },
-            { id: 'theme-aquarelle', name: 'Акварель' },
-            { id: 'theme-spring', name: 'Весна' },
-            { id: 'theme-harlequin', name: 'Арлекин' },
-            { id: 'theme-serenity', name: 'Безмятежность' },
-            { id: 'theme-synergy', name: 'Синергия' },
-            { id: 'theme-moonlight', name: 'Лунная ночь' },
-            { id: 'theme-404', name: '404' },
-            { id: 'theme-earth', name: 'Космос' },
-            { id: 'theme-dragonscale', name: 'Ассорти' },
-            { id: 'theme-billcipher', name: 'Билл Сайфер' },
-            { id: 'theme-mac', name: 'М значит яблоко' },
-            { id: 'theme-retro-os', name: 'Где-то я уже это видел...' },
-            { id: 'theme-discharge', name: 'Разряд' },
-            { id: 'theme-watchultra', name: 'Яблок много не бывает' },
-            { id: 'theme-hamster', name: 'Верный друг' },
-            { id: 'theme-pyramid', name: 'Магическая пирамида' },
-            { id: 'theme-pepe', name: 'Пепе' },
-            { id: 'theme-sunset', name: 'Летний закат' },
-            { id: 'theme-sb', name: 'Санта-Барбара' }
-        ];
 
         function buildThemesUI() {
             const container = document.getElementById('themesList');
