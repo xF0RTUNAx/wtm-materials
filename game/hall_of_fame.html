@@ -88,7 +88,6 @@
             .container { padding: 10px; border-radius: 0; border: none; }
             .shop-grid { grid-template-columns: 1fr; }
             
-            /* ФИКС ДЛЯ ВКЛАДОК НА МОБИЛЬНЫХ ЭКРАНАХ */
             .auth-tab { 
                 font-size: 9px; 
                 padding: 10px 2px; 
@@ -103,23 +102,23 @@
 <body>
 
     <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
-  <defs>
-    <filter id="turbulent-displace" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1"/>
-      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1"/>
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1"/>
-      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2"/>
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="2"/>
-      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise3"/>
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="2"/>
-      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise4"/>
-      <feComposite in="offsetNoise1" in2="offsetNoise2" result="part1"/>
-      <feComposite in="offsetNoise3" in2="offsetNoise4" result="part2"/>
-      <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise"/>
-      <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="30" xChannelSelector="R" yChannelSelector="B"/>
-    </filter>
-  </defs>
-</svg>
+      <defs>
+        <filter id="turbulent-displace" x="-20%" y="-20%" width="140%" height="140%">
+          <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1"/>
+          <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1"/>
+          <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1"/>
+          <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2"/>
+          <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="2"/>
+          <feOffset in="noise1" dx="0" dy="0" result="offsetNoise3"/>
+          <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="2"/>
+          <feOffset in="noise2" dx="0" dy="0" result="offsetNoise4"/>
+          <feComposite in="offsetNoise1" in2="offsetNoise2" result="part1"/>
+          <feComposite in="offsetNoise3" in2="offsetNoise4" result="part2"/>
+          <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise"/>
+          <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="30" xChannelSelector="R" yChannelSelector="B"/>
+        </filter>
+      </defs>
+    </svg>
     
     <div class="container">
         <button onclick="window.location.href='fortuna_minigame.html'" style="background: transparent; color: #8b949e; border: 1px solid #333; width: auto; padding: 8px 20px; margin-bottom: 20px;">⬅ В Штаб</button>
@@ -275,23 +274,23 @@
             </div>
             
             <div class="wheel-and-hamster theme-hamster-html" style="display: none;">
-    <div class="wheel"></div>
-    <div class="hamster">
-        <div class="hamster__body">
-            <div class="hamster__head">
-                <div class="hamster__ear"></div>
-                <div class="hamster__eye"></div>
-                <div class="hamster__nose"></div>
+                <div class="wheel"></div>
+                <div class="hamster">
+                    <div class="hamster__body">
+                        <div class="hamster__head">
+                            <div class="hamster__ear"></div>
+                            <div class="hamster__eye"></div>
+                            <div class="hamster__nose"></div>
+                        </div>
+                        <div class="hamster__limb hamster__limb--fr"></div>
+                        <div class="hamster__limb hamster__limb--fl"></div>
+                        <div class="hamster__limb hamster__limb--br"></div>
+                        <div class="hamster__limb hamster__limb--bl"></div>
+                        <div class="hamster__tail"></div>
+                    </div>
+                </div>
+                <div class="spoke"></div>
             </div>
-            <div class="hamster__limb hamster__limb--fr"></div>
-            <div class="hamster__limb hamster__limb--fl"></div>
-            <div class="hamster__limb hamster__limb--br"></div>
-            <div class="hamster__limb hamster__limb--bl"></div>
-            <div class="hamster__tail"></div>
-        </div>
-    </div>
-    <div class="spoke"></div>
-</div>
             
             <div style="position: relative; z-index: 5;">
                 <h3 id="tpModalTitle" style="text-align: center; margin-bottom: 20px; color: #fff;" class="lb-name">Предпросмотр</h3>
@@ -344,32 +343,31 @@
     </div>
 
     <div class="modal-overlay" id="profileModal" onclick="if(event.target===this) closeProfile()">
-        <div class="modal-box" id="profileModalBox">
-            
+        <div class="modal-box" id="profileModalBox" style="position: relative; overflow: hidden; text-align: center;">
             <div class="theme-fold"></div>
             <div class="theme-points-wrapper">
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
                 <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
             </div>
-
+            
             <div class="wheel-and-hamster theme-hamster-html" style="display: none;">
-    <div class="wheel"></div>
-    <div class="hamster">
-        <div class="hamster__body">
-            <div class="hamster__head">
-                <div class="hamster__ear"></div>
-                <div class="hamster__eye"></div>
-                <div class="hamster__nose"></div>
+                <div class="wheel"></div>
+                <div class="hamster">
+                    <div class="hamster__body">
+                        <div class="hamster__head">
+                            <div class="hamster__ear"></div>
+                            <div class="hamster__eye"></div>
+                            <div class="hamster__nose"></div>
+                        </div>
+                        <div class="hamster__limb hamster__limb--fr"></div>
+                        <div class="hamster__limb hamster__limb--fl"></div>
+                        <div class="hamster__limb hamster__limb--br"></div>
+                        <div class="hamster__limb hamster__limb--bl"></div>
+                        <div class="hamster__tail"></div>
+                    </div>
+                </div>
+                <div class="spoke"></div>
             </div>
-            <div class="hamster__limb hamster__limb--fr"></div>
-            <div class="hamster__limb hamster__limb--fl"></div>
-            <div class="hamster__limb hamster__limb--br"></div>
-            <div class="hamster__limb hamster__limb--bl"></div>
-            <div class="hamster__tail"></div>
-        </div>
-    </div>
-    <div class="spoke"></div>
-</div>
             
             <div style="position: relative; z-index: 5;">
                 <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
@@ -450,6 +448,17 @@
             { id: 'theme-sb', name: 'Санта-Барбара' }
         ];
 
+        // Бронебойная функция для расшифровки перков из базы
+        function getPerks(p) {
+            if (!p || !p.elite_perks) return {};
+            let perks = p.elite_perks;
+            if (typeof perks === 'string') {
+                if (perks === '[object Object]') return {};
+                try { return JSON.parse(perks); } catch(e) { return {}; }
+            }
+            return perks;
+        }
+
         function formatTimeDate(isoString) {
             if(!isoString) return "Неизвестно";
             const d = new Date(isoString);
@@ -472,7 +481,6 @@
 
             player.meteorite_shards = player.meteorite_shards || 0;
             player.max_historical_power = player.max_historical_power || 0;
-            player.elite_perks = player.elite_perks || {};
             player.season_badges = player.season_badges || [];
 
             updateUI();
@@ -510,7 +518,8 @@
 
         function updateUI() {
             let pName = player.nickname;
-            if (player.elite_perks && player.elite_perks.perk_legend) pName = `🔥 ${pName} 🔥`;
+            const perks = getPerks(player);
+            if (perks.perk_legend) pName = `🔥 ${pName} 🔥`;
             document.getElementById('uiPlayerName').innerText = pName;
             document.getElementById('uiShards').innerText = player.meteorite_shards;
         }
@@ -537,7 +546,8 @@
                     const maxPwr = p.max_historical_power || 0;
                     const shards = p.meteorite_shards || 0;
                     
-                    const isLegend = p.elite_perks && p.elite_perks.perk_legend;
+                    const pPerks = getPerks(p);
+                    const isLegend = pPerks.perk_legend;
                     
                     let styleClass = '';
                     if (p.active_bg_url && p.active_bg_url.trim() !== "") {
@@ -548,13 +558,11 @@
                     
                     const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
 
-                    // ДОБАВЛЕНО: Скелет для анимированных тем
                     let bgWrapper = '';
                     if (styleClass.startsWith('theme-')) {
                         bgWrapper = `<div class="theme-points-wrapper"><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i></div>`;
                     }
 
-                    // ДОБАВЛЕНО: z-index
                     html += `
                     <div class="lb-item ${styleClass}" onclick="openProfile('${p.id}')" style="cursor: pointer; position: relative; overflow: hidden; z-index: 1;">
                         ${bgWrapper}
@@ -595,7 +603,6 @@
             lbItem.className = 'lb-item ' + themeClass;
             
             document.getElementById('tpModalTitle').innerText = 'Тема: ' + themeName;
-            
             document.getElementById('themePreviewModal').style.display = 'flex';
         }
 
@@ -603,137 +610,108 @@
             document.getElementById('themePreviewModal').style.display = 'none';
         }
 
-        function openProfile(playerId) {
-            const p = allPlayers.find(x => x.id === playerId);
+        async function openProfile(playerId) {
+            const { data: p } = await db.from('players').select('*').eq('id', playerId).single();
             if(!p) return;
-
-            const isLegend = p.elite_perks && p.elite_perks.perk_legend;
             
-            const modalBox = document.getElementById('profileModalBox');
-            modalBox.className = 'modal-box'; 
-            if (p.active_bg_url && p.active_bg_url.trim() !== "") {
-                modalBox.classList.add(p.active_bg_url.trim());
-            } else if (isLegend) {
-                modalBox.classList.add('legend-modal');
+            let clan = null;
+            if(p.clan_id) {
+                const { data: c } = await db.from('clans').select('name, tag').eq('id', p.clan_id).single();
+                clan = c;
             }
 
-            document.getElementById('profName').innerText = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
+            const pks = getPerks(p);
+            const isL = pks.perk_legend;
+            const mBox = document.getElementById('profileModalBox');
+            
+            mBox.className = 'modal-box'; 
+            if (p.active_bg_url && p.active_bg_url.trim() !== "") {
+                mBox.classList.add(p.active_bg_url.trim());
+            } else if (isL) {
+                mBox.classList.add('legend-modal');
+            }
+            
+            document.getElementById('profName').innerText = isL ? `🔥 ${p.nickname} 🔥` : p.nickname;
             document.getElementById('profActiveTitle').innerText = p.active_title ? `«${p.active_title}»` : '';
             
-            // Статус онлайна (если был активен < 10 минут назад)
             const now = new Date().getTime();
-            const lastOnline = new Date(p.last_online || 0).getTime();
-            if (now - lastOnline <= 10 * 60 * 1000) {
+            const lastO = new Date(p.last_online || 0).getTime();
+            if (now - lastO <= 10 * 60 * 1000) {
                 document.getElementById('profStatus').innerHTML = '<span style="color:#00e676;">🟢 В сети</span>';
             } else {
-                document.getElementById('profStatus').innerHTML = `<span style="color:#8b949e;">Был в сети: ${formatTimeDate(p.last_online)}</span>`;
+                const d = new Date(p.last_online);
+                const timeStr = d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                document.getElementById('profStatus').innerHTML = `<span style="color:#8b949e;">Был в сети: ${timeStr}</span>`;
             }
 
-            // Дата создания
             document.getElementById('profCreated').innerText = `В игре с: ${formatDateOnly(p.created_at)}`;
-
-            // Клан
-            if (p.clan_id) {
-                const clan = allClans.find(c => c.id === p.clan_id);
-                document.getElementById('profClan').innerHTML = clan ? `[${clan.tag}] ${clan.name}` : 'Одиночка';
-            } else {
-                document.getElementById('profClan').innerHTML = '<span style="color:#8b949e;">Одиночка</span>';
-            }
-
-            // Мощь
+            document.getElementById('profClan').innerText = clan ? `[${clan.tag}] ${clan.name}` : 'Одиночка';
             document.getElementById('profCurPwr').innerText = `⚡${(p.power || 0).toLocaleString()}`;
             document.getElementById('profMaxPwr').innerText = `⚡${(p.max_historical_power || 0).toLocaleString()}`;
             
-            // Витрина Перков
-            const perks = p.elite_perks || {};
-            const perkIcons = {
-                perk_shadow: '📦', perk_boosters: '⚡', perk_factory2: '🏭', perk_factory3: '🏗️',
-                perk_spy: '🕵️', perk_surgeon: '🏥', perk_quantum: '🔬', perk_training: '⏱️',
-                perk_legend: '👑', perk_general: '🎖️', perk_engineer: '⚙️'
-            };
-            let perksHtml = '';
-            for (let pk in perkIcons) {
-                if (perks[pk]) {
-                    perksHtml += `<div style="background:rgba(0,0,0,0.6); border:1px solid #444; padding:6px 8px; border-radius:6px; font-size:18px;">${perkIcons[pk]}</div>`;
-                }
-            }
-            if (perksHtml !== '') {
-                document.getElementById('profPerksList').innerHTML = perksHtml;
-                document.getElementById('profPerksContainer').style.display = 'block';
-            } else {
-                document.getElementById('profPerksContainer').style.display = 'none';
-            }
+            const icons = { perk_shadow:'📦', perk_boosters:'⚡', perk_factory2:'🏭', perk_factory3:'🏗️', perk_spy:'🕵️', perk_surgeon:'🏥', perk_quantum:'🔬', perk_training:'⏱️', perk_legend:'👑', perk_general:'🎖️', perk_engineer:'⚙️' };
+            let pksH = '';
+            for (let k in icons) { if (pks[k]) pksH += `<div style="background:rgba(0,0,0,0.6); border:1px solid #444; padding:6px 8px; border-radius:6px; font-size:18px;">${icons[k]}</div>`; }
+            document.getElementById('profPerksList').innerHTML = pksH;
+            document.getElementById('profPerksContainer').style.display = pksH ? 'block' : 'none';
 
-            // Медали
-            const badgesContainer = document.getElementById('profBadges');
-            badgesContainer.innerHTML = '';
-            
-            let badges = p.season_badges || [];
-            if (typeof badges === 'string') {
-                try { badges = JSON.parse(badges); } catch(e) { badges = []; }
-            }
-
-            if (badges.length > 0) {
+            const bCont = document.getElementById('profBadges'); bCont.innerHTML = '';
+            let bgs = p.season_badges || [];
+            if (typeof bgs === 'string') try { bgs = JSON.parse(bgs); } catch(e) { bgs = []; }
+            if (bgs.length > 0) {
                 document.getElementById('profNoBadges').style.display = 'none';
-                badges.forEach(b => {
-                    badgesContainer.innerHTML += `
-                    <div class="badge">
-                        <div class="badge-icon">${b.icon}</div>
-                        <div class="badge-name">${b.name}</div>
-                    </div>`;
-                });
-            } else {
-                document.getElementById('profNoBadges').style.display = 'block';
-            }
+                bgs.forEach(b => { bCont.innerHTML += `<div class="badge"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`; });
+            } else { document.getElementById('profNoBadges').style.display = 'block'; }
 
-            // ГАРДЕРОБ (ТОЛЬКО ДЛЯ СЕБЯ)
             const ward = document.getElementById('profWardrobe');
             const sel = document.getElementById('themeSelector');
             if (p.id === player.id) {
                 ward.style.display = 'block';
                 sel.innerHTML = '<option value="">Стандартный профиль</option>';
-                if (perks.perk_theme_amethyst) sel.innerHTML += '<option value="theme-amethyst">Аметист</option>';
-                if (perks.perk_theme_cyberpunk) sel.innerHTML += '<option value="theme-cyberpunk">Неон</option>';
-                if (perks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
-                if (perks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
-                if (perks.perk_theme_starry) sel.innerHTML += '<option value="theme-starry">Звездная тишина</option>';
-                if (perks.perk_theme_matrix) sel.innerHTML += '<option value="theme-matrix">Матрица</option>';
-                if (perks.perk_theme_nostalgia) sel.innerHTML += '<option value="theme-nostalgia">Ностальгия</option>';
-                if (perks.perk_theme_mojito) sel.innerHTML += '<option value="theme-mojito">Мохито</option>';
-                if (perks.perk_theme_aquarelle) sel.innerHTML += '<option value="theme-aquarelle">Акварель</option>';
-                if (perks.perk_theme_spring) sel.innerHTML += '<option value="theme-spring">Весна</option>';
-                if (perks.perk_theme_harlequin) sel.innerHTML += '<option value="theme-harlequin">Арлекин</option>';
-                if (perks.perk_theme_serenity) sel.innerHTML += '<option value="theme-serenity">Безмятежность</option>';
-                if (perks.perk_theme_synergy) sel.innerHTML += '<option value="theme-synergy">Синергия</option>';
-                if (perks.perk_theme_moonlight) sel.innerHTML += '<option value="theme-moonlight">Лунная ночь</option>';
-                if (perks.perk_theme_404) sel.innerHTML += '<option value="theme-404">404</option>';
-                if (perks.perk_theme_earth) sel.innerHTML += '<option value="theme-earth">Космос</option>';
-                if (perks.perk_theme_dragonscale) sel.innerHTML += '<option value="theme-dragonscale">Ассорти</option>';
-                if (perks.perk_theme_billcipher) sel.innerHTML += '<option value="theme-billcipher">Билл Сайфер</option>';
-                if (perks.perk_theme_mac) sel.innerHTML += '<option value="theme-mac">М значит яблоко</option>';
-                if (perks.perk_theme_retro_os) sel.innerHTML += '<option value="theme-retro-os">Где-то я уже это видел...</option>';
-                if (perks.perk_theme_discharge) sel.innerHTML += '<option value="theme-discharge">Разряд</option>';
-                if (perks.perk_theme_watchultra) sel.innerHTML += '<option value="theme-watchultra">Яблок много не бывает</option>';
-                if (perks.perk_theme_hamster) sel.innerHTML += '<option value="theme-hamster">Верный друг</option>';
-                if (perks.perk_theme_pyramid) sel.innerHTML += '<option value="theme-pyramid">Магическая пирамида</option>';
-                if (perks.perk_theme_pepe) sel.innerHTML += '<option value="theme-pepe">Пепе</option>';
-                if (perks.perk_theme_sunset) sel.innerHTML += '<option value="theme-sunset">Летний закат</option>';
-                if (perks.perk_theme_sb) sel.innerHTML += '<option value="theme-sb">Санта-Барбара</option>';
+                if (pks.perk_theme_amethyst) sel.innerHTML += '<option value="theme-amethyst">Аметист</option>';
+                if (pks.perk_theme_cyberpunk) sel.innerHTML += '<option value="theme-cyberpunk">Неон</option>';
+                if (pks.perk_theme_mint) sel.innerHTML += '<option value="theme-mint">Мята</option>';
+                if (pks.perk_theme_tester) sel.innerHTML += '<option value="theme-tester">Тестер</option>';
+                if (pks.perk_theme_starry) sel.innerHTML += '<option value="theme-starry">Звездная тишина</option>';
+                if (pks.perk_theme_matrix) sel.innerHTML += '<option value="theme-matrix">Матрица</option>';
+                if (pks.perk_theme_nostalgia) sel.innerHTML += '<option value="theme-nostalgia">Ностальгия</option>';
+                if (pks.perk_theme_mojito) sel.innerHTML += '<option value="theme-mojito">Мохито</option>';
+                if (pks.perk_theme_aquarelle) sel.innerHTML += '<option value="theme-aquarelle">Акварель</option>';
+                if (pks.perk_theme_spring) sel.innerHTML += '<option value="theme-spring">Весна</option>';
+                if (pks.perk_theme_harlequin) sel.innerHTML += '<option value="theme-harlequin">Арлекин</option>';
+                if (pks.perk_theme_serenity) sel.innerHTML += '<option value="theme-serenity">Безмятежность</option>';
+                if (pks.perk_theme_synergy) sel.innerHTML += '<option value="theme-synergy">Синергия</option>';
+                if (pks.perk_theme_moonlight) sel.innerHTML += '<option value="theme-moonlight">Лунная ночь</option>';
+                if (pks.perk_theme_404) sel.innerHTML += '<option value="theme-404">404</option>';
+                if (pks.perk_theme_earth) sel.innerHTML += '<option value="theme-earth">Космос</option>';
+                if (pks.perk_theme_dragonscale) sel.innerHTML += '<option value="theme-dragonscale">Ассорти</option>';
+                if (pks.perk_theme_billcipher) sel.innerHTML += '<option value="theme-billcipher">Билл Сайфер</option>';
+                if (pks.perk_theme_mac) sel.innerHTML += '<option value="theme-mac">М значит яблоко</option>';
+                if (pks.perk_theme_retro_os) sel.innerHTML += '<option value="theme-retro-os">Где-то я уже это видел...</option>';
+                if (pks.perk_theme_discharge) sel.innerHTML += '<option value="theme-discharge">Разряд</option>';
+                if (pks.perk_theme_watchultra) sel.innerHTML += '<option value="theme-watchultra">Яблок много не бывает</option>';
+                if (pks.perk_theme_hamster) sel.innerHTML += '<option value="theme-hamster">Верный друг</option>';
+                if (pks.perk_theme_pyramid) sel.innerHTML += '<option value="theme-pyramid">Магическая пирамида</option>';
+                if (pks.perk_theme_pepe) sel.innerHTML += '<option value="theme-pepe">Пепе</option>';
+                if (pks.perk_theme_sunset) sel.innerHTML += '<option value="theme-sunset">Летний закат</option>';
+                if (pks.perk_theme_sb) sel.innerHTML += '<option value="theme-sb">Санта-Барбара</option>';
                 sel.value = p.active_bg_url || "";
             } else { 
                 ward.style.display = 'none'; 
             }
 
             document.getElementById('profileModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('profileModalBox').classList.add('show'), 10);
         }
 
-        function closeProfile() {
-            document.getElementById('profileModal').style.display = 'none';
+        function closeProfile() { 
+            document.getElementById('profileModalBox').classList.remove('show'); 
+            setTimeout(() => document.getElementById('profileModal').style.display = 'none', 300); 
         }
 
         // === СИСТЕМА МАГАЗИНА ПЕРКОВ ===
         function checkPerkButtons() {
-            const perks = player.elite_perks || {};
+            const perks = getPerks(player);
             
             const perkList = [
                 'perk_shadow', 'perk_boosters', 'perk_factory2', 'perk_factory3', 
@@ -742,7 +720,10 @@
             ];
 
             perkList.forEach(pk => {
-                const btn = document.getElementById(`btnPerk_${pk}`);
+                // ИСПРАВЛЕННАЯ СТРОКА: Теперь код точно находит правильную кнопку
+                const btnId = pk.replace('perk_', 'btnPerk_'); 
+                const btn = document.getElementById(btnId);
+                
                 if (btn && perks[pk]) {
                     btn.innerText = "ПРИОБРЕТЕНО";
                     btn.disabled = true;
@@ -775,13 +756,13 @@
             
             if(!confirm(`Приобрести это улучшение навсегда за ${cost} Осколков?`)) return;
 
-            let currentPerks = player.elite_perks || {};
+            let currentPerks = getPerks(player);
             currentPerks[perkId] = true;
             const newBalance = player.meteorite_shards - cost;
 
             const { data, error } = await db.from('players').update({
                 meteorite_shards: newBalance,
-                elite_perks: currentPerks
+                elite_perks: JSON.stringify(currentPerks) // <--- ВОТ ЗДЕСЬ БЫЛА ОШИБКА
             }).eq('id', player.id).select().single();
 
             if (error) {
@@ -805,8 +786,7 @@
                 return;
             }
 
-            let currentPerks = player.elite_perks || {};
-            
+            let currentPerks = getPerks(player);
             let unownedThemes = THEMES.filter(t => t.id !== 'theme-tester' && !currentPerks['perk_' + t.id.replace('-', '_')]);
             
             if (unownedThemes.length === 0) {
@@ -824,7 +804,7 @@
 
             const { data, error } = await db.from('players').update({
                 meteorite_shards: newBalance,
-                elite_perks: currentPerks
+                elite_perks: JSON.stringify(currentPerks)
             }).eq('id', player.id).select().single();
 
             if (error) {
@@ -850,8 +830,9 @@
         }
 
         function countThemes(p) {
-            let count = 1; // Базовая тема
-            for(let k in (p.elite_perks || {})) { if(k.startsWith('perk_theme_')) count++; }
+            let count = 1; 
+            const perks = getPerks(p);
+            for(let k in perks) { if(k.startsWith('perk_theme_')) count++; }
             return count;
         }
 
@@ -931,7 +912,7 @@
             const container = document.getElementById('themesList');
             container.innerHTML = '';
             
-            const perks = player.elite_perks || {};
+            const perks = getPerks(player);
 
             THEMES.forEach(theme => {
                 const perkKey = 'perk_' + theme.id.replace('-', '_');
