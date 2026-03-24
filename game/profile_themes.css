@@ -439,17 +439,16 @@
 .theme-nostalgia .theme-points-wrapper::before {
     content: "";
     position: absolute;
-    bottom: -50%; left: -50%;
-    width: 200%; height: 150%;
-    /* Рисуем клетку */
+    top: 30%; /* Начинаем чуть выше горизонта */
+    left: -50%;
+    width: 200%; 
+    height: 800%; /* 🔧 ФИКС: Огромная высота, чтобы сетка не обрывалась в плашках рейтинга из-за 3D-наклона */
     background-image: 
         linear-gradient(rgba(255, 31, 184, 0.6) 2px, transparent 2px),
         linear-gradient(90deg, rgba(255, 31, 184, 0.6) 2px, transparent 2px);
     background-size: 50px 50px;
-    /* Наклоняем сетку от нас */
     transform: rotateX(65deg);
     transform-origin: top center;
-    /* Иллюзия бесконечного полета вперед */
     animation: synthwave-fly 3s linear infinite;
     box-shadow: inset 0 0 50px #ff1fb8;
 }
@@ -475,24 +474,28 @@
     100% { background-position: 0 50px; } /* Сдвиг ровно на 1 клетку создает бесконечный цикл */
 }
 
-/* Стилизуем Никнейм под Хромированный ретро-текст */
-.theme-nostalgia #profName, .theme-nostalgia .lb-name { 
+/* Обновленный стиль ника для темы Ностальгия - Яркий и читаемый неон */
+.theme-nostalgia #profName, .theme-nostalgia .lb-name {
+    /* Градиент изменен на более яркий, убраны темные полосы для читаемости */
     background-image: linear-gradient(
         0deg,
-        rgba(255, 142, 224, 1) 0%,
-        rgba(255, 29, 193, 1) 5%,
-        rgba(198, 72, 255, 1) 30%,
-        rgba(0, 0, 0, 1) 49%,
-        rgba(255, 255, 255, 1) 52%,
-        rgba(70, 148, 255, 1) 60%,
-        rgba(21, 59, 112, 1) 69%
+        rgba(254, 83, 187, 1) 0%,   /* Ярко-розовый низ */
+        rgba(255, 255, 255, 1) 45%, /* Белая яркая середина для контраста */
+        rgba(0, 229, 255, 1) 100%    /* Неоново-бирюзовый верх */
     ) !important;
     background-clip: text !important;
     -webkit-background-clip: text !important;
-    color: transparent !important;
-    filter: drop-shadow(0 0 8px rgba(255, 19, 114, 0.8)); /* Свечение текста */
+    color: transparent !important; /* Делаем текст прозрачным, чтобы был виден градиент */
+    
+    /* Добавляем многослойную неоновую тень-свечение для объема и контраста */
+    text-shadow: 
+        0 0 2px rgba(255, 255, 255, 0.8),
+        0 0 8px rgba(0, 229, 255, 0.9),  /* Бирюзовое свечение */
+        0 0 15px rgba(254, 83, 187, 0.7) !important; /* Розовое свечение */
+        
     font-weight: 900 !important;
-    letter-spacing: 3px;
+    letter-spacing: 2px; /* Чуть уменьшим расстояние для плотности */
+    filter: none !important; /* Убираем старый drop-shadow, он мешает */
 }
 
 /* ========================================= */
