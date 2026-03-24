@@ -330,6 +330,84 @@
             <div id="cmMsg" class="msg" style="color: #ff4444;"></div>
         </div>
     </div>
+    
+  <div class="modal-overlay" id="profileModal" onclick="if(event.target===this) closeProfile()">
+        <div class="modal-box" id="profileModalBox" style="position: relative; overflow: hidden; text-align: center;">
+            
+            <div class="theme-fold"></div>
+            
+            <div class="theme-points-wrapper">
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
+            </div>
+            
+            <div class="wheel-and-hamster theme-hamster-html" style="display: none;">
+                <div class="wheel"></div>
+                <div class="hamster">
+                    <div class="hamster__body">
+                        <div class="hamster__head">
+                            <div class="hamster__ear"></div>
+                            <div class="hamster__eye"></div>
+                            <div class="hamster__nose"></div>
+                        </div>
+                        <div class="hamster__limb hamster__limb--fr"></div>
+                        <div class="hamster__limb hamster__limb--fl"></div>
+                        <div class="hamster__limb hamster__limb--br"></div>
+                        <div class="hamster__limb hamster__limb--bl"></div>
+                        <div class="hamster__tail"></div>
+                    </div>
+                </div>
+                <div class="spoke"></div>
+            </div>
+            
+            <div style="position: relative; z-index: 5;">
+                
+                <h2 id="profName" style="color: #fff; margin-bottom: 5px; font-weight: 800; letter-spacing: 1px; word-wrap: break-word;">PlayerName</h2>
+                
+                <div id="profActiveTitle" style="color: var(--meteor, #00e5ff); font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; min-height: 15px;"></div>
+                
+                <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 15px; font-size: 12px;">
+                    <span id="profStatus">🟢 В сети</span>
+                    <span id="profCreated" style="color: #8b949e;">В игре с: --.--.----</span>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.55); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; text-align: left; backdrop-filter: blur(5px); box-shadow: inset 0 0 10px rgba(0,0,0,0.3);">
+                    <div style="margin-bottom: 8px; font-size: 14px; color: #c9d1d9;">
+                        Клан: <span id="profClan" style="color: #00e5ff; font-weight: 900; letter-spacing: 0.5px;">Одиночка</span>
+                    </div>
+                    <div style="margin-bottom: 8px; font-size: 14px; color: #c9d1d9;">
+                        Текущая мощь: <span id="profCurPwr" style="color: var(--power, #ff1744); font-weight: 900; font-family: monospace; font-size: 15px; letter-spacing: 1px;">⚡0</span>
+                    </div>
+                    <div style="font-size: 14px; color: #c9d1d9;">
+                        Исторический максимум: <span id="profMaxPwr" style="color: var(--accent-gold, #ffc107); font-weight: 900; font-family: monospace; font-size: 15px; letter-spacing: 1px;">⚡0</span>
+                    </div>
+                </div>
+
+                <div id="profPerksContainer" style="display: none; margin-bottom: 20px;">
+                    <div style="text-align: center; font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Элитные Улучшения:</div>
+                    <div id="profPerksList" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                        </div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div style="text-align: center; font-size: 11px; color: #8b949e; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;">Награды и Достижения:</div>
+                    <div id="profBadges" class="badge-grid" style="display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                        </div>
+                    <div id="profNoBadges" style="font-size: 12px; color: #555; display: none; padding: 10px 0; font-style: italic;">Достижений пока нет</div>
+                </div>
+
+                <div id="profWardrobe" style="display: none; background: rgba(0,229,255,0.05); padding: 15px; border-radius: 10px; border: 1px dashed var(--meteor, #00e5ff); margin-top: 15px; text-align: center;">
+                    <div style="font-size: 12px; color: var(--meteor, #00e5ff); margin-bottom: 10px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">Гардероб (Смена стиля)</div>
+                    <select id="themeSelector" onchange="changeProfileTheme(this.value)" style="background: rgba(0,0,0,0.8); border: 1px solid var(--meteor, #00e5ff); color: #fff; padding: 10px; border-radius: 6px; width: 100%; font-size: 14px; outline: none; cursor: pointer;">
+                        <option value="">Стандартный профиль</option>
+                    </select>
+                </div>
+
+                <button style="background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.2); color: #c9d1d9; font-weight: bold; margin-top: 20px; margin-bottom: 0; padding: 12px; width: 100%; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(0,0,0,0.7)'" onclick="closeProfile()">ЗАКРЫТЬ ДОСЬЕ</button>
+            </div>
+            
+        </div>
+    </div>
 
     <div class="container" id="loginScreen">
         <h2 style="color: var(--accent-gold); font-size: 32px; text-transform: uppercase; margin-top: 10px;">РОЗЫГРЫШ МИНИ-ИГРА</h2>
@@ -623,6 +701,7 @@
                 }
                 const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
                 const osId = window.OneSignal.User.PushSubscription.id;
+
                 if (isOptedIn && osId) {
                     await syncOsToken(osId);
                     alert("Уведомления УЖЕ активны! Токен: " + osId.substring(0,8) + "... успешно синхронизирован.");
@@ -675,6 +754,17 @@
         let craftSetup = {}; let confirmAction = null;
         let serverConfig = { is_offseason: false };
 
+        // Бронебойная функция для расшифровки перков из базы
+        function getPerks(p) {
+            if (!p || !p.elite_perks) return {};
+            let perks = p.elite_perks;
+            if (typeof perks === 'string') {
+                if (perks === '[object Object]') return {};
+                try { return JSON.parse(perks); } catch(e) { return {}; }
+            }
+            return perks;
+        }
+
         function getUnlockedTroopKeys() {
             let unlocked = [];
             if(!player) return unlocked;
@@ -687,6 +777,18 @@
             if (labLvl >= 6) unlocked.push('msl');
             if (labLvl >= 7) unlocked.push('avia');
             return unlocked;
+        }
+
+        function formatTimeDate(isoString) {
+            if(!isoString) return "Неизвестно";
+            const d = new Date(isoString);
+            return d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+        }
+        
+        function formatDateOnly(isoString) {
+            if(!isoString) return "Неизвестно";
+            const d = new Date(isoString);
+            return d.toLocaleDateString('ru-RU');
         }
 
         function formatTime(ms) {
@@ -808,10 +910,16 @@
             localStorage.setItem('minigame_player_id', pData.id); document.getElementById('bodyBg').className = 'game-bg';
             document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
             
-            if (window.OneSignal && window.OneSignal.User && window.OneSignal.User.PushSubscription) {
-                if (window.OneSignal.User.PushSubscription.optedIn) {
-                    syncOsToken(window.OneSignal.User.PushSubscription.id);
-                }
+            if (window.OneSignalDeferred) {
+                OneSignalDeferred.push(async function(OneSignal) {
+                    if (OneSignal.User.PushSubscription.optedIn) {
+                        const osId = OneSignal.User.PushSubscription.id;
+                        if (osId) {
+                            const pid = localStorage.getItem('minigame_player_id');
+                            await db.from('players').update({onesignal_id: osId}).eq('id', pid);
+                        }
+                    }
+                });
             }
             refreshAll().then(checkDailyLogin);
         }
@@ -850,7 +958,7 @@
                 let addSk=0, addSp=0, addAu=0, addCon=0, addDb=0;
                 let title = "ЕЖЕДНЕВНЫЙ ВХОД", html = `День ${newStreak}/7<br>`, colorClass = 'power';
                 let updates = { last_login_day: currentDayUTC, login_streak: newStreak, notif_daily_sent: false,
-                stat_max_login_streak: (player.stat_max_login_streak || 0) + 1 /* ТУТ: Считаем уникальные дни онлайна */
+                stat_max_login_streak: (player.stat_max_login_streak || 0) + 1 
                 };
 
                 const unlockedKeys = getUnlockedTroopKeys();
@@ -891,7 +999,6 @@
                     colorClass = 'star-3'; 
                 }
                 else if (newStreak === 6) { 
-                    // Выдаем 3 случайных бустера
                     for(let i=0; i<3; i++) {
                         let r = Math.random();
                         if(r < 0.2) { addSk++; html += `<div class="boost">⚡ +1 Пропуск</div>`; }
@@ -908,7 +1015,6 @@
                     colorClass = 'boost';
                 }
                 else if (newStreak === 7) { 
-                    // Выдаем гарантированно по 1 бустеру каждого типа (всего 5)
                     addSk = 1; addSp = 1; addAu = 1; addCon = 1; addDb = 1;
                     
                     html += `<div class="boost">⚡ +1 Пропуск</div>`;
@@ -1137,7 +1243,7 @@
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if (player.common_parts < c || player.rare_parts < r || player.epic_parts < e) { alert("Недостаточно ресурсов для улучшения!"); return; }
             
-            const perks = player.elite_perks || {};
+            const perks = getPerks(player);
             let slot = 1;
 
             if (player.troop_upgrade_target) {
@@ -1189,7 +1295,7 @@
             updates[targetCol] = null;
             updates[endCol] = null;
             updates[dbCol] = curLvl + 1;
-            updates.stat_troop_upgrades = (player.stat_troop_upgrades || 0) + 1; /* ТУТ: Счетчик Мистера Робота */
+            updates.stat_troop_upgrades = (player.stat_troop_upgrades || 0) + 1;
 
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) { 
@@ -1212,7 +1318,7 @@
                 showMsg('labMsg', `Недостаточно: ${req.f_name} (${player[req.f_key]||0}/${req.f_amt})`, '#ff4444'); return;
             }
 
-            const perks = player.elite_perks || {};
+            const perks = getPerks(player);
             const timeMult = perks.perk_quantum ? 0.9 : 1;
             const endTime = new Date(new Date().getTime() + (req.time * 3600000 * timeMult)).toISOString();
 
@@ -1222,7 +1328,7 @@
                 rare_parts: player.rare_parts - req.r,
                 epic_parts: player.epic_parts - req.e,
                 notif_lab_sent: false,
-                stat_lab_upgrades: (player.stat_lab_upgrades || 0) + 1 /* ТУТ: Счетчик Хайзенберга */
+                stat_lab_upgrades: (player.stat_lab_upgrades || 0) + 1 
             };
             
             if(req.f_key) updates[req.f_key] = player[req.f_key] - req.f_amt;
@@ -1324,7 +1430,7 @@
             const updates = {};
             updates[`hosp_${slot}_target`] = key;
             
-            const perks = player.elite_perks || {};
+            const perks = getPerks(player);
             const healTime = perks.perk_surgeon ? 12960000 : 14400000;
             
             updates[`hosp_${slot}_end`] = new Date(Date.now() + healTime).toISOString(); 
@@ -1558,11 +1664,29 @@
             const { data } = await db.from('players').select('*').eq('id', pid).single();
             if (data) {
                 player = data;
-                const now = new Date().getTime(); const resetTime = new Date(player.daily_quests_reset || 0).getTime();
+                player.elite_perks = getPerks(player);
                 
                 let updatesNeeded = {};
+                
+                // Проверка токенов по UTC
+                const currentDayUTC = Math.floor(Date.now() / 86400000);
+                const maxTokens = player.elite_perks.perk_general ? 3 : 2;
+                if ((player.elite_perks.token_reset_day || 0) < currentDayUTC) {
+                    player.elite_perks.token_reset_day = currentDayUTC;
+                    updatesNeeded.attack_tokens = maxTokens;
+                    updatesNeeded.elite_perks = JSON.stringify(player.elite_perks);
+                    player.attack_tokens = maxTokens;
+                }
+
+                const now = new Date().getTime(); const resetTime = new Date(player.daily_quests_reset || 0).getTime();
                 if (now - resetTime >= 24 * 3600000) {
-                    updatesNeeded = { quest_factory_collects: 0, quest_risky_crafts: 0, quest_boosters_used: 0, quests_completed: false, daily_quests_reset: new Date().toISOString(), kits_bought_today: 0, bm_purchased: false };
+                    updatesNeeded.quest_factory_collects = 0;
+                    updatesNeeded.quest_risky_crafts = 0;
+                    updatesNeeded.quest_boosters_used = 0;
+                    updatesNeeded.quests_completed = false;
+                    updatesNeeded.daily_quests_reset = new Date().toISOString();
+                    updatesNeeded.kits_bought_today = 0;
+                    updatesNeeded.bm_purchased = false;
                 }
 
                 let truePower = calcTruePower(player);
@@ -1570,7 +1694,10 @@
 
                 if (Object.keys(updatesNeeded).length > 0) {
                     const { data: updated } = await db.from('players').update(updatesNeeded).eq('id', player.id).select().single();
-                    if (updated) player = updated;
+                    if (updated) {
+                        player = updated;
+                        player.elite_perks = getPerks(player);
+                    }
                 }
 
                 updateUI(); await loadLeaderboard();
@@ -1590,7 +1717,8 @@
 
         function updateUI() {
             let pName = player.nickname;
-            if (player.elite_perks && player.elite_perks.perk_legend) pName = `🔥 ${pName} 🔥`;
+            const perks = getPerks(player);
+            if (perks.perk_legend) pName = `🔥 ${pName} 🔥`;
             document.getElementById('playerNameDisplay').innerText = pName; 
             
             document.getElementById('countCommon').innerText = player.common_parts; 
@@ -1616,7 +1744,7 @@
             document.getElementById('factoryLevelUI').innerText = player.factory_level;
             document.getElementById('factoryGarlandContainer').innerHTML = renderGarland(player.factory_level, 10);
             
-            let spyBonusUI = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+            let spyBonusUI = (perks.perk_spy) ? 1.05 : 1;
             document.getElementById('factoryYieldText').innerText = `Приносит: ${Math.floor(FACTORY_STATS[player.factory_level].y * spyBonusUI)} Обычных за партию`;
 
             const btnUpg = document.getElementById('btnUpgrade');
@@ -1650,7 +1778,7 @@
                     let reqText = `Цена: ${req.c} Об., ${req.r} Ред., ${req.e} Эп.`;
                     if(req.f_key) reqText += `<br><span style="color:#ff1744">Требуется: ${req.f_amt}x ${req.f_name}</span>`;
                     
-                    const timeMult = (player.elite_perks && player.elite_perks.perk_quantum) ? 0.9 : 1;
+                    const timeMult = (perks.perk_quantum) ? 0.9 : 1;
                     reqText += `<br>Время: ${req.time * timeMult}ч`;
                     
                     document.getElementById('labNextUnlock').innerHTML = `Следующее улучшение: ${TROOP_CFG[req.unlocks].title}<br><span style="font-size:10px; font-weight:normal; color:#8b949e;">${reqText}</span>`;
@@ -1661,7 +1789,7 @@
             buildTroopUI();
             buildHospitalUI();
             
-            if (player.elite_perks && player.elite_perks.perk_engineer) {
+            if (perks.perk_engineer) {
                 document.getElementById('slot2Container').style.display = 'block';
             }
 
@@ -1709,7 +1837,8 @@
                 document.getElementById('offseasonBanner').style.display = 'block';
                 document.getElementById('timerLoginReset').innerText = "МЕЖСЕЗОНЬЕ";
                 document.getElementById('timerQuestsReset').innerText = "МЕЖСЕЗОНЬЕ";
-                timerDaily.innerText = "МЕЖСЕЗОНЬЕ";
+                const timerDaily = document.getElementById('dailyCaseTimer');
+                if(timerDaily) timerDaily.innerText = "МЕЖСЕЗОНЬЕ";
             }
         }
 
@@ -1757,7 +1886,7 @@
         function tickTimers() {
             if(!player) return;
             const now = new Date().getTime();
-            // === ГЛОБАЛЬНЫЙ ТАЙМЕР СЕЗОНОВ ===
+            
             if (serverConfig.season_end_date && serverConfig.next_season_start_date) {
                 const endMs = new Date(serverConfig.season_end_date).getTime();
                 const startNextMs = new Date(serverConfig.next_season_start_date).getTime();
@@ -1765,7 +1894,6 @@
                 const bannerTitle = document.getElementById('seasonTitle');
                 const bannerTimer = document.getElementById('seasonTimerDisplay');
 
-                // Вспомогательная функция для дней
                 const formatDays = (ms) => {
                     const d = Math.floor(ms / 86400000);
                     const h = Math.floor((ms % 86400000) / 3600000);
@@ -1795,7 +1923,6 @@
                         bannerTimer.innerText = "Старт нового сезона через: " + formatDays(startNextMs - now);
                     }
                     
-                    // Блокировка кнопок (визуальная)
                     const lockBtns = ['btnCollectFact', 'btnOverload', 'btnUpgrade', 'btnUpgradeLab', 'btnUpgradeHosp'];
                     lockBtns.forEach(id => { 
                         const b = document.getElementById(id); 
@@ -1817,7 +1944,6 @@
                 document.getElementById('timerLoginReset').innerText = formatTime(nextMidnightUTC.getTime() - now);
             }
 
-            // Лаборатория
             if (player.lab_upgrade_end) {
                 const labEndMs = new Date(player.lab_upgrade_end).getTime();
                 if (now >= labEndMs) {
@@ -1830,7 +1956,6 @@
                 }
             }
             
-            // Госпиталь улучшение
             if (player.hosp_upgrade_end) {
                 const hospEndMs = new Date(player.hosp_upgrade_end).getTime();
                 if (now >= hospEndMs) {
@@ -1843,7 +1968,6 @@
                 }
             }
 
-            // Обучение Слот 1
             const upgTarget = player.troop_upgrade_target;
             const upgEnd = new Date(player.troop_upgrade_end || 0).getTime();
             if (upgTarget) {
@@ -1862,8 +1986,8 @@
                 document.getElementById('btnFinishTroop').style.display = "none";
             }
 
-            // Обучение Слот 2
-            if (player.elite_perks && player.elite_perks.perk_engineer) {
+            const perks = getPerks(player);
+            if (perks.perk_engineer) {
                 const upgTarget2 = player.troop_upgrade_target_2;
                 const upgEnd2 = new Date(player.troop_upgrade_end_2 || 0).getTime();
                 if (upgTarget2) {
@@ -1886,7 +2010,6 @@
             let needsHealthUpdate = false;
             let healthUpdates = {};
             
-            // Госпиталь
             for(let i=1; i<=3; i++) {
                 const tName = player[`hosp_${i}_target`];
                 const tEndStr = player[`hosp_${i}_end`];
@@ -1905,7 +2028,6 @@
                 }
             }
 
-            // Ручной ремонт
             for (let key in TROOP_CFG) {
                 const repEndStr = player[`rep_end_${key}`];
                 if (repEndStr) {
@@ -1955,7 +2077,7 @@
                 document.getElementById('btnCollectFact').disabled = false; document.getElementById('btnOverload').disabled = false;
                 const loot = getEffectiveLoot(player.factory_last_collected, player.speed_boost_end, player.auto_boost_end, player.contractor_boost_end, stats.ms, stats.y);
                 
-                let spyBonus = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+                let spyBonus = (perks.perk_spy) ? 1.05 : 1;
                 let actualYield = Math.floor(stats.y * spyBonus);
                 
                 document.getElementById('factoryAccumulated').innerText = Math.floor(loot.d * spyBonus); 
@@ -1971,7 +2093,7 @@
                     else { document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)"; }
                 }
             }
-            // --- НАЧАЛО ВСТАВКИ: Живой таймер Ежедневного Контейнера ---
+
             const timerDaily = document.getElementById('dailyCaseTimer');
             if (timerDaily) {
                 if (serverConfig.is_offseason) {
@@ -1991,7 +2113,6 @@
                     }
                 }
             }
-            // --- КОНЕЦ ВСТАВКИ ---
         }
 
         async function collectFactory() {
@@ -2002,7 +2123,8 @@
             const loot = getEffectiveLoot(player.factory_last_collected, player.speed_boost_end, player.auto_boost_end, player.contractor_boost_end, stats.ms, stats.y);
             if (loot.d <= 0) return;
 
-            let spyBonus = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+            const perks = getPerks(player);
+            let spyBonus = (perks.perk_spy) ? 1.05 : 1;
             let collectedAmount = Math.floor(loot.d * spyBonus);
             
             const isDoubler = new Date().getTime() < new Date(player.doubler_boost_end).getTime();
@@ -2028,7 +2150,7 @@
             common_parts: player.common_parts + collectedAmount, rare_parts: player.rare_parts + extraR, epic_parts: player.epic_parts + extraE,
             factory_last_collected: newLastCol, quest_factory_collects: (player.quest_factory_collects || 0) + collectedAmount,
             notif_factory_sent: false,
-            stat_total_common: (player.stat_total_common || 0) + collectedAmount /* ТУТ: Счетчик для "Волка с Уолл-стрит" */
+            stat_total_common: (player.stat_total_common || 0) + collectedAmount 
         }).eq('id', player.id).select().single();
 
             if (data) { 
@@ -2044,9 +2166,9 @@
             if (Math.random() < 0.50) {
                 const brokenEnd = new Date(now + 2 * 3600000).toISOString();
                 const { data } = await db.from('players').update({ 
-    factory_broken_until: brokenEnd, factory_last_collected: brokenEnd, notif_factory_sent: false,
-    stat_factory_breaks: (player.stat_factory_breaks || 0) + 1 
-    }).eq('id', player.id).select().single();
+                    factory_broken_until: brokenEnd, factory_last_collected: brokenEnd, notif_factory_sent: false,
+                    stat_factory_breaks: (player.stat_factory_breaks || 0) + 1 
+                }).eq('id', player.id).select().single();
                 if (data) { player = data; showMsg('factoryMsg', 'АВАРИЯ! Завод сломан на 2ч!', '#ff4444'); refreshAll(); }
             } else {
                 const stats = FACTORY_STATS[player.factory_level];
@@ -2067,10 +2189,11 @@
         async function useBooster(type) {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const updates = {}; const now = new Date().getTime();
+            const perks = getPerks(player);
             
             if (type === 'skip') {
                 if ((player.booster_skip || 0) <= 0) { showMsg('boosterMsg', 'Нет бустеров!', '#ff4444'); return; }
-                let spyBonus = (player.elite_perks && player.elite_perks.perk_spy) ? 1.05 : 1;
+                let spyBonus = (perks.perk_spy) ? 1.05 : 1;
                 const earned = Math.floor(FACTORY_STATS[player.factory_level].y * spyBonus);
                 updates.booster_skip = player.booster_skip - 1; updates.common_parts = player.common_parts + earned;
                 updates.quest_boosters_used = (player.quest_boosters_used || 0) + 1;
@@ -2252,7 +2375,7 @@
         async function buyBlackMarket(dealType) {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             if(player.bm_purchased) return;
-            let updates = { bm_purchased: true, stat_bm_deals: (player.stat_bm_deals || 0) + 1 /* ТУТ: Счетчик Сола */ };
+            let updates = { bm_purchased: true, stat_bm_deals: (player.stat_bm_deals || 0) + 1 };
             let title = "ЧЕРНЫЙ РЫНОК"; let html = ''; let color = '';
             
             if (dealType === 0) {
@@ -2351,8 +2474,9 @@
             if (pData) {
                 let lbHtml = '';
                 pData.forEach((p, idx) => {
-                  const isLegend = p.elite_perks && p.elite_perks.perk_legend;
-       let styleClass = '';
+                  const pks = getPerks(p);
+                  const isLegend = pks.perk_legend;
+                  let styleClass = '';
                     if (p.active_bg_url && p.active_bg_url.trim() !== "") {
                         styleClass = p.active_bg_url.trim(); 
                     } else if (isLegend) {
@@ -2360,13 +2484,11 @@
                     }
                     const dispName = isLegend ? `🔥 ${p.nickname} 🔥` : p.nickname;
                     
-                    // ДОБАВЛЕНО: Скелет для анимированных тем
                     let bgWrapper = '';
                     if (styleClass.startsWith('theme-')) {
                         bgWrapper = `<div class="theme-points-wrapper"><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i></div>`;
                     }
                     
-                    // ДОБАВЛЕНО: z-index, чтобы текст всегда был поверх анимаций
                     lbHtml += `
                     <div class="lb-item ${styleClass}" onclick="openProfile('${p.id}')" style="cursor: pointer; position: relative; overflow: hidden; z-index: 1;">
                         ${bgWrapper}
@@ -2392,14 +2514,6 @@
 
         function showMsg(id, text, color) { const el = document.getElementById(id); el.innerText = text; el.style.color = color; el.style.display = 'block'; setTimeout(() => { if(el.innerText === text) el.innerText = ''; }, 4000); }
 
-        
-        // === СИСТЕМА ПРОФИЛЕЙ И ТЕМ ===
-        function formatDateOnly(isoString) {
-            if(!isoString) return "Неизвестно";
-            const d = new Date(isoString);
-            return d.toLocaleDateString('ru-RU');
-        }
-
         async function changeProfileTheme(themeClass) {
             await db.from('players').update({ active_bg_url: themeClass }).eq('id', player.id);
             player.active_bg_url = themeClass;
@@ -2408,21 +2522,24 @@
         }
 
         async function openProfile(targetId) {
-            // Загружаем данные игрока из базы
             const { data: p } = await db.from('players').select('*').eq('id', targetId).single();
             if(!p) return;
             
-            // Загружаем название клана, если он есть
             let clan = null;
             if(p.clan_id) {
                 const { data: c } = await db.from('clans').select('name, tag').eq('id', p.clan_id).single();
                 clan = c;
             }
 
+            // БРОНЕБОЙНАЯ РАСШИФРОВКА
+            let pks = p.elite_perks || {};
+            if (typeof pks === 'string') {
+                try { pks = pks === '[object Object]' ? {} : JSON.parse(pks); } catch(e) { pks = {}; }
+            }
+
+            const isL = pks.perk_legend;
             const mBox = document.getElementById('profileModalBox');
-            const isL = p.elite_perks && p.elite_perks.perk_legend;
             
-            // Очищаем классы и ставим темы
             mBox.className = 'modal-box'; 
             if (p.active_bg_url && p.active_bg_url.trim() !== "") {
                 mBox.classList.add(p.active_bg_url.trim());
@@ -2431,11 +2548,8 @@
             }
             
             document.getElementById('profName').innerText = isL ? `🔥 ${p.nickname} 🔥` : p.nickname;
-            
-            // Вывод надетого титула
             document.getElementById('profActiveTitle').innerText = p.active_title ? `«${p.active_title}»` : '';
             
-            // Статус активности
             const now = new Date().getTime();
             const lastO = new Date(p.last_online || 0).getTime();
             if (now - lastO <= 10 * 60 * 1000) {
@@ -2453,7 +2567,6 @@
             document.getElementById('profMaxPwr').innerText = `⚡${(p.max_historical_power || 0).toLocaleString()}`;
             
             // Витрина Перков
-            const pks = p.elite_perks || {};
             const icons = { perk_shadow:'📦', perk_boosters:'⚡', perk_factory2:'🏭', perk_factory3:'🏗️', perk_spy:'🕵️', perk_surgeon:'🏥', perk_quantum:'🔬', perk_training:'⏱️', perk_legend:'👑', perk_general:'🎖️', perk_engineer:'⚙️' };
             let pksH = '';
             for (let k in icons) { if (pks[k]) pksH += `<div style="background:rgba(0,0,0,0.6); border:1px solid #444; padding:6px 8px; border-radius:6px; font-size:18px;">${icons[k]}</div>`; }
@@ -2469,7 +2582,7 @@
                 bgs.forEach(b => { bCont.innerHTML += `<div class="badge"><div class="badge-icon">${b.icon}</div><div class="badge-name">${b.name}</div></div>`; });
             } else { document.getElementById('profNoBadges').style.display = 'block'; }
 
-            // Логика Гардероба (Показываем только себе)
+            // Логика Гардероба
             const ward = document.getElementById('profWardrobe');
             const sel = document.getElementById('themeSelector');
             if (p.id === player.id) {
@@ -2503,117 +2616,39 @@
                 if (pks.perk_theme_sunset) sel.innerHTML += '<option value="theme-sunset">Летний закат</option>';
                 if (pks.perk_theme_sb) sel.innerHTML += '<option value="theme-sb">Санта-Барбара</option>';
                 sel.value = p.active_bg_url || "";
-            } else { ward.style.display = 'none'; }
+            } else { 
+                ward.style.display = 'none'; 
+            }
 
-           document.getElementById('profileModal').style.display = 'flex';
-    setTimeout(() => document.getElementById('profileModalBox').classList.add('show'), 10);
-}
+            document.getElementById('profileModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('profileModalBox').classList.add('show'), 10);
+        }
 
-       function closeProfile() { 
-    document.getElementById('profileModalBox').classList.remove('show'); 
-    setTimeout(() => document.getElementById('profileModal').style.display = 'none', 300); 
-}
-        
+        function closeProfile() { 
+            document.getElementById('profileModalBox').classList.remove('show'); 
+            setTimeout(() => document.getElementById('profileModal').style.display = 'none', 300); 
+        }
+
         window.onload = () => { 
             if (localStorage.getItem('minigame_player_id')) { 
-                document.getElementById('bodyBg').className = 'game-bg'; document.getElementById('loginScreen').style.display = 'none'; document.getElementById('gameInterface').style.display = 'block'; 
+                document.getElementById('bodyBg').className = 'game-bg'; 
+                document.getElementById('loginScreen').style.display = 'none'; 
+                document.getElementById('gameInterface').style.display = 'block'; 
                 
-                OneSignalDeferred.push(async function(OneSignal) {
-                    if (OneSignal.User.PushSubscription.optedIn) {
-                        const osId = OneSignal.User.PushSubscription.id;
-                        if (osId) {
-                            const pid = localStorage.getItem('minigame_player_id');
-                            await db.from('players').update({onesignal_id: osId}).eq('id', pid);
+                if (window.OneSignalDeferred) {
+                    OneSignalDeferred.push(async function(OneSignal) {
+                        if (OneSignal.User.PushSubscription.optedIn) {
+                            const osId = OneSignal.User.PushSubscription.id;
+                            if (osId) {
+                                const pid = localStorage.getItem('minigame_player_id');
+                                await db.from('players').update({onesignal_id: osId}).eq('id', pid);
+                            }
                         }
-                    }
-                });
-
+                    });
+                }
                 refreshAll().then(checkDailyLogin);
             } 
         };
     </script>
-    
-    <div class="modal-overlay" id="profileModal" onclick="if(event.target===this) closeProfile()">
-        <div class="modal-box" id="profileModalBox" style="position: relative; overflow: hidden; text-align: center; border-color: var(--meteor);">
-            <div class="theme-fold"></div>
-            <div class="theme-points-wrapper">
-                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
-                <i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i><i class="theme-point"></i>
-            </div>
-            
-            <div class="wheel-and-hamster theme-hamster-html" style="display: none;">
-    <div class="wheel"></div>
-    <div class="hamster">
-        <div class="hamster__body">
-            <div class="hamster__head">
-                <div class="hamster__ear"></div>
-                <div class="hamster__eye"></div>
-                <div class="hamster__nose"></div>
-            </div>
-            <div class="hamster__limb hamster__limb--fr"></div>
-            <div class="hamster__limb hamster__limb--fl"></div>
-            <div class="hamster__limb hamster__limb--br"></div>
-            <div class="hamster__limb hamster__limb--bl"></div>
-            <div class="hamster__tail"></div>
-        </div>
-    </div>
-    <div class="spoke"></div>
-</div>
-
-            <svg style="width:0;height:0;position:absolute;" aria-hidden="true" focusable="false">
-  <defs>
-    <filter id="turbulent-displace" x="-20%" y="-20%" width="140%" height="140%">
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="1"/>
-      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise1"/>
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="1"/>
-      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise2"/>
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise1" seed="2"/>
-      <feOffset in="noise1" dx="0" dy="0" result="offsetNoise3"/>
-      <feTurbulence type="turbulence" baseFrequency="0.02" numOctaves="10" result="noise2" seed="2"/>
-      <feOffset in="noise2" dx="0" dy="0" result="offsetNoise4"/>
-      <feComposite in="offsetNoise1" in2="offsetNoise2" result="part1"/>
-      <feComposite in="offsetNoise3" in2="offsetNoise4" result="part2"/>
-      <feBlend in="part1" in2="part2" mode="color-dodge" result="combinedNoise"/>
-      <feDisplacementMap in="SourceGraphic" in2="combinedNoise" scale="30" xChannelSelector="R" yChannelSelector="B"/>
-    </filter>
-  </defs>
-</svg>
-            
-                <div style="position: relative; z-index: 5;">
-                <h2 id="profName" style="color: #fff; margin-bottom: 5px;">PlayerName</h2>
-                <div id="profActiveTitle" style="color: var(--meteor); font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px;"></div>
-                
-                <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; font-size: 11px;">
-                    <span id="profStatus">🟢 В сети</span>
-                    <span id="profCreated" style="color: #8b949e;">В игре с: --.--.----</span>
-                </div>
-
-                <div style="background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-bottom: 15px; text-align: left;">
-                    <div style="margin-bottom: 5px; font-size: 13px;">Клан: <span id="profClan" style="color: var(--blue); font-weight: bold;">Одиночка</span></div>
-                    <div style="margin-bottom: 5px; font-size: 13px;">Текущая мощь: <span id="profCurPwr" style="color: #ff1744; font-weight: bold; font-family: monospace;">⚡0</span></div>
-                    <div style="font-size: 13px;">Исторический максимум: <span id="profMaxPwr" style="color: var(--gold); font-weight: bold; font-family: monospace;">⚡0</span></div>
-                </div>
-
-                <div id="profPerksContainer" style="display: none; margin-bottom: 15px;">
-                    <div style="text-align: left; font-size: 12px; color: #8b949e; margin-bottom: 5px;">Элитные Улучшения:</div>
-                    <div id="profPerksList" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;"></div>
-                </div>
-
-                <div style="text-align: left; font-size: 13px; color: #c9d1d9; margin-bottom: 10px;">Награды и Достижения:</div>
-                <div id="profBadges" class="badge-grid"></div>
-                <div id="profNoBadges" style="font-size: 11px; color: #555; display: none; padding: 20px 0;">Достижений пока нет</div>
-
-                <div id="profWardrobe" style="display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px dashed #00e5ff; margin-top: 15px; text-align: center;">
-                    <div style="font-size: 11px; color: #00e5ff; margin-bottom: 10px; text-transform: uppercase;">Гардероб (Смена стиля)</div>
-                    <select id="themeSelector" onchange="changeProfileTheme(this.value)" style="background: rgba(0,0,0,0.8); border: 1px solid #00e5ff; color: #fff; padding: 8px; border-radius: 4px; width: 100%; font-size: 13px;">
-                        <option value="">Стандартный профиль</option>
-                    </select>
-                </div>
-
-                <button style="background: rgba(0,0,0,0.5); border: 1px solid #555; color: #8b949e; margin-top: 15px; margin-bottom: 0;" onclick="closeProfile()">ЗАКРЫТЬ ДОСЬЕ</button>
-            </div>
-        </div>
-    </div>
-    
 </body>
 </html>
