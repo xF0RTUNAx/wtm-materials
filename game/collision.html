@@ -1121,7 +1121,14 @@
 
             if (newName.length < 3 || newTag.length < 2) { alert('Имя от 3 букв, Тэг от 2 букв!'); return; }
 
-            const { data } = await db.from('clans').update({ name: newName, tag: newTag, last_renamed_at: new Date().toISOString() }).eq('id', myClan.id).select().single();
+            const { data, error } = await db.from('clans').update({ name: newName, tag: newTag, last_renamed_at: new Date().toISOString() }).eq('id', myClan.id).select().single();
+            
+            if (error) {
+                alert("Ошибка БД! Необходимо добавить колонку last_renamed_at в таблицу clans.");
+                console.error(error);
+                return;
+            }
+            
             if (data) {
                 myClan = data;
                 updateUI();
@@ -1829,14 +1836,22 @@
             });
 
             const newClaimTime = new Date().toISOString();
-            await db.from('players').update({ common_parts: player.common_parts + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e, last_tax_claim: newClaimTime }).eq('id', player.id);
+            
+            const { error: pErr } = await db.from('players').update({ common_parts: player.common_parts + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e, last_tax_claim: newClaimTime }).eq('id', player.id);
+            
+            if (pErr) {
+                alert("Ошибка БД! Необходимо добавить колонку last_tax_claim в таблицу players.");
+                console.error(pErr);
+                return;
+            }
+
             await db.from('clans').update({ influence: myClan.influence + infl }).eq('id', myClan.id);
 
             player.last_tax_claim = newClaimTime;
             myClan.influence += infl; updateUI(); tickTimers();
             alert(`💰 НАЛОГИ СОБРАНЫ!\n\nПолучено:\nОбычных: +${c}\nРедких: +${r}\nЭпиков: +${e}\n\nКлан получил Влияние: +${infl} 🏆`);
             
-            await checkClanMilestones();
+            updateClanBoxUI();
         }
 
         window.onload = init;
