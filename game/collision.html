@@ -561,7 +561,7 @@
             
             if ((perks.token_reset_day || 0) < currentDayUTC) {
                 perks.token_reset_day = currentDayUTC;
-                await db.from('players').update({ attack_tokens: maxTokens, elite_perks: perks }).eq('id', player.id);
+                await db.from('players').update({ attack_tokens: maxTokens, elite_perks: JSON.stringify(perks) }).eq('id', player.id);
                 player.attack_tokens = maxTokens;
                 player.elite_perks = perks;
             }
