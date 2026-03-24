@@ -520,6 +520,17 @@
             return mySectors.some(t => adj.includes(t.sector_index));
         }
 
+        // Бронебойная функция для расшифровки перков из базы
+        function getPerks(p) {
+            if (!p || !p.elite_perks) return {};
+            let perks = p.elite_perks;
+            if (typeof perks === 'string') {
+                if (perks === '[object Object]') return {};
+                try { return JSON.parse(perks); } catch(e) { return {}; }
+            }
+            return perks;
+        }
+        
         function formatTimeDate(isoString) {
             if(!isoString) return "Неизвестно";
             const d = new Date(isoString);
@@ -554,9 +565,11 @@
             if (!p) { window.location.href = 'fortuna_minigame.html'; return; }
             player = p;
 
+           player.elite_perks = getPerks(player); // <--- Расшифровываем перед проверками
+
             // Проверка восстановления токенов по UTC
             const currentDayUTC = Math.floor(Date.now() / 86400000);
-            let perks = player.elite_perks || {};
+            let perks = player.elite_perks; // <--- Берем готовый объект
             const maxTokens = perks.perk_general ? 3 : 2;
             
             if ((perks.token_reset_day || 0) < currentDayUTC) {
