@@ -294,6 +294,14 @@
                 <button class="btn-red" onclick="disbandClan()">РАСПУСТИТЬ КЛАН</button>
                 <div style="font-size: 10px; color: #8b949e; margin-top: 5px;">Все территории будут потеряны (станут ботами). Вы получите штраф 24 часа.</div>
             </div>
+            
+            <div id="cmRenameClan" style="display: none; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 8px; border: 1px solid #333; margin-top: 15px; margin-bottom: 15px; text-align: left;">
+                <div style="font-size: 11px; color: var(--gold); margin-bottom: 10px;">Смена названия и тега (раз в 30 дней):</div>
+                <input type="text" id="cmNewName" placeholder="Новое название..." maxlength="20" style="padding: 8px; font-size: 12px; margin-bottom: 5px;">
+                <input type="text" id="cmNewTag" placeholder="Новый Тэг..." maxlength="4" style="padding: 8px; font-size: 12px; margin-bottom: 10px;">
+                <button class="btn-blue" onclick="renameClan()" style="font-size: 12px; padding: 8px;">ПЕРЕИМЕНОВАТЬ</button>
+                <div id="cmRenameCooldown" style="font-size: 10px; color: var(--red); margin-top: 5px;"></div>
+            </div>
 
             <div id="cmMemberActions" style="display: none;">
                 <button class="btn-red" onclick="leaveClan()" style="background: transparent; border: 1px solid var(--red); color: var(--red);">ПОКИНУТЬ КЛАН</button>
@@ -646,7 +654,7 @@
                 }
             }
 
-            const lastClaim = new Date(myClan.last_tax_claim || 0).getTime();
+            const lastClaim = new Date(player.last_tax_claim || 0).getTime();
             const taxMsLeft = (12 * 3600000) - (now - lastClaim);
             
             const taxBtn = document.getElementById('btnClaimTaxes');
@@ -1058,7 +1066,19 @@
 
             if (player.id === myClan.leader_id) {
                 document.getElementById('cmLeaderActions').style.display = 'block';
+                document.getElementById('cmRenameClan').style.display = 'block';
                 document.getElementById('cmMemberActions').style.display = 'none';
+
+                const lastRenamed = new Date(myClan.last_renamed_at || 0).getTime();
+                const daysLeft = 30 - Math.floor((Date.now() - lastRenamed) / (24 * 3600000));
+                
+                if (daysLeft > 0) {
+                    document.getElementById('cmRenameCooldown').innerText = `Доступно через ${daysLeft} дн.`;
+                    document.getElementById('cmRenameClan').querySelector('button').disabled = true;
+                } else {
+                    document.getElementById('cmRenameCooldown').innerText = "";
+                    document.getElementById('cmRenameClan').querySelector('button').disabled = false;
+                }
 
                 if (!myClan.member_id) {
                     document.getElementById('cmRequestsContainer').style.display = 'block';
@@ -1084,11 +1104,31 @@
 
             } else {
                 document.getElementById('cmLeaderActions').style.display = 'none';
+                document.getElementById('cmRenameClan').style.display = 'none';
                 document.getElementById('cmMemberActions').style.display = 'block';
                 document.getElementById('cmRequestsContainer').style.display = 'none';
             }
         }
         function closeClanManager() { document.getElementById('clanManagerModal').style.display = 'none'; }
+
+        async function renameClan() {
+            if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
+            const lastRenamed = new Date(myClan.last_renamed_at || 0).getTime();
+            if (Date.now() - lastRenamed < 30 * 24 * 3600000) return alert('Переименование доступно только раз в 30 дней!');
+
+            const newName = document.getElementById('cmNewName').value.trim();
+            const newTag = document.getElementById('cmNewTag').value.trim().toUpperCase();
+
+            if (newName.length < 3 || newTag.length < 2) { alert('Имя от 3 букв, Тэг от 2 букв!'); return; }
+
+            const { data } = await db.from('clans').update({ name: newName, tag: newTag, last_renamed_at: new Date().toISOString() }).eq('id', myClan.id).select().single();
+            if (data) {
+                myClan = data;
+                updateUI();
+                openClanManager();
+                alert('Клан успешно переименован!');
+            }
+        }
 
         async function leaveClan() {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
@@ -1375,6 +1415,8 @@
                 let infoHtml = `
                     <circle cx="-16" cy="-16" r="7" fill="#000" stroke="${tColor}" stroke-width="1"/>
                     <text x="-16" y="-13" font-size="8" fill="${tColor}" font-weight="bold" text-anchor="middle" font-family="sans-serif">${sec.tier}</text>
+                    <rect x="8" y="-20" width="18" height="10" rx="2" fill="rgba(0,0,0,0.8)" stroke="#444" stroke-width="1"/>
+                    <text x="17" y="-12" font-size="7" fill="#fff" font-weight="bold" text-anchor="middle" font-family="monospace">#${sec.sector_index}</text>
                 `;
                 
                 if (!alertHtml.includes('🔒')) {
@@ -1408,7 +1450,8 @@
             
             let html = '';
             logs.forEach(l => {
-                const time = new Date(l.created_at).toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
+                const dDate = new Date(l.created_at);
+                const time = dDate.toLocaleDateString('ru-RU', {day:'2-digit', month:'2-digit'}) + ' ' + dDate.toLocaleTimeString('ru-RU', {hour: '2-digit', minute:'2-digit'});
                 if(l.is_win) {
                     html += `<div style="margin-bottom:8px; border-bottom: 1px solid #333; padding-bottom: 4px;">
                         <span style="color:#555">[${time}]</span> <b style="color:var(--gold)">${l.attacker_name}</b> <span style="color:var(--green)">ЗАХВАТИЛ</span> Сектор #${l.sector_index} у [${l.defender_name}]
@@ -1770,7 +1813,7 @@
         async function claimTaxes() {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
             const now = new Date().getTime();
-            const lastClaim = new Date(myClan.last_tax_claim || 0).getTime();
+            const lastClaim = new Date(player.last_tax_claim || 0).getTime();
             if (now - lastClaim < 12 * 3600000) { 
                 return;
             }
@@ -1780,16 +1823,17 @@
 
             let c=0, r=0, e=0, infl=0;
             myTerrs.forEach(t => {
-                if(t.tier === 1) { c += 1500; infl += 100; }
-                else if(t.tier === 2) { c += 3000; r += 150; infl += 250; }
-                else if(t.tier === 3) { c += 10000; r += 500; e += 30; infl += 1000; }
+                if(t.tier === 1) { c += 4500; infl += 100; }
+                else if(t.tier === 2) { c += 9000; r += 450; infl += 250; }
+                else if(t.tier === 3) { c += 30000; r += 1500; e += 90; infl += 1000; }
             });
 
-            await db.from('players').update({ common_parts: player.common_parts + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e }).eq('id', player.id);
             const newClaimTime = new Date().toISOString();
-            await db.from('clans').update({ influence: myClan.influence + infl, last_tax_claim: newClaimTime }).eq('id', myClan.id);
+            await db.from('players').update({ common_parts: player.common_parts + c, rare_parts: player.rare_parts + r, epic_parts: player.epic_parts + e, last_tax_claim: newClaimTime }).eq('id', player.id);
+            await db.from('clans').update({ influence: myClan.influence + infl }).eq('id', myClan.id);
 
-            myClan.influence += infl; myClan.last_tax_claim = newClaimTime; updateUI(); tickTimers();
+            player.last_tax_claim = newClaimTime;
+            myClan.influence += infl; updateUI(); tickTimers();
             alert(`💰 НАЛОГИ СОБРАНЫ!\n\nПолучено:\nОбычных: +${c}\nРедких: +${r}\nЭпиков: +${e}\n\nКлан получил Влияние: +${infl} 🏆`);
             
             await checkClanMilestones();
