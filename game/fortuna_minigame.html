@@ -477,7 +477,7 @@
                     <div style="font-weight: bold; color: var(--common); margin-bottom: 10px;">Классические Контейнеры:</div>
                     <span style="font-family: monospace; font-size: 14px; display: block; margin-bottom: 5px;" id="dailyCaseTimer">Вычисление...</span>
                     <button id="btnDailyCase" class="btn-case" style="background: var(--epic);" onclick="openDailyCase()">Ежедневный контейнер (Бесплатно)</button>
-                    <div class="drop-chances" style="margin-bottom:15px;">Шансы: 100-150 Об (100%), Редкие (50%), Эпик (5%). Шанс 5% на Бустер, 10% Ремкомплект, 5% на Фрагмент.</div>
+                    <div class="drop-chances" style="margin-bottom:15px;">Шансы: 100-150 Об (100%), Ред. (50%), Эп. (5%). Шанс 25% на Бустер, 50% Ремкомплект, 20% Фрагмент, 15% Осколок.</div>
                     
                     <div class="gacha-row">
                         <button class="btn-paid" style="flex:1; font-size: 12px; padding: 10px 5px;" onclick="openPaidCase(1)">Особый (x1) - 25 Об.</button>
@@ -1402,23 +1402,43 @@
             if (data) { player = data; refreshAll(); showRewardAnimation(title, html, color); }
         }
 
-        async function openDailyCase() {
+           async function openDailyCase() {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
-            const gotCommon = Math.floor(Math.random() * 51) + 100; const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; const gotEpic = Math.random() < 0.05 ? 1 : 0; 
-            const gotSk = Math.random() < 0.05 ? 1 : 0; const gotSp = Math.random() < 0.05 ? 1 : 0; const gotAu = Math.random() < 0.05 ? 1 : 0; const gotKit = Math.random() < 0.1 ? 1 : 0;
-            const gotFrag = Math.random() < 0.05 ? 1 : 0;
+            
+            const gotCommon = Math.floor(Math.random() * 51) + 100; 
+            const gotRare = Math.random() < 0.5 ? (Math.random() < 0.5 ? 1 : 2) : 0; 
+            const gotEpic = Math.random() < 0.05 ? 1 : 0; 
+            
+            // Новые шансы
+            const gotBoost = Math.random() < 0.25 ? 1 : 0; 
+            const gotKit = Math.random() < 0.50 ? 1 : 0;
+            const gotFrag = Math.random() < 0.20 ? 1 : 0;
+            const gotShard = Math.random() < 0.15 ? 1 : 0;
             
             let fragTier = 0; let fragUnit = '';
             
             const updates = { 
-                common_parts: player.common_parts + gotCommon, rare_parts: player.rare_parts + gotRare, epic_parts: player.epic_parts + gotEpic, 
-                booster_skip: (player.booster_skip||0) + gotSk, booster_speed: (player.booster_speed||0) + gotSp, booster_auto: (player.booster_auto||0) + gotAu, 
-                repair_kits: (player.repair_kits||0) + gotKit, daily_case_last_opened: new Date().toISOString(),
-                stat_cases_opened: (player.stat_cases_opened || 0) + 1 /* ТУТ: Нейтан Дрейк (+1 кейс) */
+                common_parts: player.common_parts + gotCommon, 
+                rare_parts: player.rare_parts + gotRare, 
+                epic_parts: player.epic_parts + gotEpic, 
+                repair_kits: (player.repair_kits||0) + gotKit, 
+                meteorite_shards: (player.meteorite_shards||0) + gotShard,
+                daily_case_last_opened: new Date().toISOString(),
+                stat_cases_opened: (player.stat_cases_opened || 0) + 1
             };
 
+            let boostHtml = '';
+            if (gotBoost) {
+                const bRnd = Math.random();
+                if(bRnd < 0.2) { updates.booster_skip = (player.booster_skip||0) + 1; boostHtml = `<div class="boost">⚡ +1 Пропуск</div>`; }
+                else if(bRnd < 0.4) { updates.booster_speed = (player.booster_speed||0) + 1; boostHtml = `<div class="boost">⚡ +1 Ускорение</div>`; }
+                else if(bRnd < 0.6) { updates.booster_auto = (player.booster_auto||0) + 1; boostHtml = `<div class="boost" style="color:#00e676;">📦 +1 Ар. склады</div>`; }
+                else if(bRnd < 0.8) { updates.booster_contractor = (player.booster_contractor||0) + 1; boostHtml = `<div class="boost" style="color:#03a9f4;">👷 +1 Подрядчики</div>`; }
+                else { updates.booster_doubler = (player.booster_doubler||0) + 1; boostHtml = `<div class="boost" style="color:#e91e63;">🔄 +1 Дублер</div>`; }
+            }
+
             if (gotFrag) {
-                fragTier = Math.floor(Math.random() * 4) + 1;
+                fragTier = Math.floor(Math.random() * 4) + 1; // Любая звезда от 1 до 4
                 const unlockedKeys = getUnlockedTroopKeys();
                 fragUnit = unlockedKeys.length > 0 ? unlockedKeys[Math.floor(Math.random() * unlockedKeys.length)] : 'inf';
                 const fragCol = `frag${fragTier}_${fragUnit}`;
@@ -1428,26 +1448,29 @@
             const { data } = await db.from('players').update(updates).eq('id', player.id).select().single();
             if (data) {
                 player = data; refreshAll(); 
+                
                 let title = gotEpic ? "ЭПИЧЕСКИЙ ДРОП!" : (gotRare ? "ЦЕННЫЕ ДАННЫЕ!" : "Контейнер открыт!"); 
                 let color = gotEpic ? "epic" : (gotRare ? "rare" : "common");
                 
                 let html = `<div class="common">+${gotCommon} Обычных</div>`; 
                 if(gotRare) html += `<div class="rare">+${gotRare} Редких</div>`; 
                 if(gotEpic) html += `<div class="epic">+${gotEpic} ЭПИЧЕСКИХ!</div>`;
-                if(gotSk) html += `<div class="boost">⚡ +1 Пропуск партии</div>`; 
-                if(gotSp) html += `<div class="boost">⚡ +1 Ускорение</div>`; 
-                if(gotAu) html += `<div class="boost" style="color:#00e676;">📦 +1 Арендованные склады</div>`;
+                if(gotBoost) html += boostHtml; 
                 if(gotKit) html += `<div class="kits" style="margin-top:10px;">🔧 +1 Ремкомплект</div>`;
+                if(gotShard) {
+                    html += `<div style="color:var(--meteor); margin-top:10px; font-weight:bold; text-shadow:0 0 5px var(--meteor);">☄️ +1 Метеоритный Осколок</div>`;
+                    if(!gotEpic) { title = "ОРБИТАЛЬНЫЙ ДРОП!"; color = "meteor"; }
+                }
                 
                 if (gotFrag) {
                     html += `<div style="color:var(--star-${fragTier}); font-weight:bold; margin-top:10px;">🧩 +1 Фрагмент ${fragTier}⭐ (${TROOP_CFG[fragUnit].title})</div>`;
-                    color = `star-${fragTier}`;
-                    title = "НАЙДЕН ФРАГМЕНТ СЛИЯНИЯ!";
+                    if(!gotEpic && !gotShard) { color = `star-${fragTier}`; title = "НАЙДЕН ФРАГМЕНТ!"; }
                 }
 
                 showRewardAnimation(title, html, color);
             }
         }
+        
 
         async function openPaidCase(amount) {
             if (serverConfig.is_offseason) return alert('Межсезонье! Действие недоступно.');
@@ -1681,9 +1704,6 @@
             else if ((player.quest_factory_collects || 0) >= 500 && (player.quest_risky_crafts || 0) >= 1 && (player.quest_boosters_used || 0) >= 1) { qBtn.innerText = "ЗАБРАТЬ НАГРАДУ"; qBtn.disabled = false; qBtn.style.background = "var(--accent-gold)"; } 
             else { qBtn.innerText = "В ПРОЦЕССЕ..."; qBtn.disabled = true; qBtn.style.background = "#555"; }
 
-            const elapsedDaily = new Date().getTime() - new Date(player.daily_case_last_opened).getTime(); const dailyCooldown = 24 * 3600000; const timerDaily = document.getElementById('dailyCaseTimer');
-            if (elapsedDaily >= dailyCooldown) { document.getElementById('btnDailyCase').disabled = false; timerDaily.innerText = "[ Доступно ]"; timerDaily.style.color = "var(--accent-green)"; } 
-            else { document.getElementById('btnDailyCase').disabled = true; timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); timerDaily.style.color = "#8b949e"; }
             
             if (serverConfig.is_offseason) {
                 document.getElementById('offseasonBanner').style.display = 'block';
@@ -1951,6 +1971,27 @@
                     else { document.getElementById('timerNextBatch').innerText = formatTime(loot.msToNextBatchReal); document.getElementById('timerNextBatch').style.color = "var(--accent-gold)"; }
                 }
             }
+            // --- НАЧАЛО ВСТАВКИ: Живой таймер Ежедневного Контейнера ---
+            const timerDaily = document.getElementById('dailyCaseTimer');
+            if (timerDaily) {
+                if (serverConfig.is_offseason) {
+                    timerDaily.innerText = "МЕЖСЕЗОНЬЕ";
+                    document.getElementById('btnDailyCase').disabled = true;
+                } else {
+                    const elapsedDaily = now - new Date(player.daily_case_last_opened).getTime(); 
+                    const dailyCooldown = 24 * 3600000; 
+                    if (elapsedDaily >= dailyCooldown) { 
+                        document.getElementById('btnDailyCase').disabled = false; 
+                        timerDaily.innerText = "[ Доступно ]"; 
+                        timerDaily.style.color = "var(--accent-green)"; 
+                    } else { 
+                        document.getElementById('btnDailyCase').disabled = true; 
+                        timerDaily.innerText = "Обновление: " + formatTime(dailyCooldown - elapsedDaily); 
+                        timerDaily.style.color = "#8b949e"; 
+                    }
+                }
+            }
+            // --- КОНЕЦ ВСТАВКИ ---
         }
 
         async function collectFactory() {
