@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: T-72B Review</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_03_tropicraid/1080x2340_wtm_tropic_raid_4c76c6385da2dfd1be8c9eb1a7e4ff52.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- CONTENT STYLES --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        .content-section ul { margin-top: 5px; margin-bottom: 15px; padding-left: 20px; }
+        .content-section li { margin-bottom: 8px; }
+        
+        /* --- BUTTONS --- */
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #cc0000, #ff0000);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 30px auto;
+            width: fit-content;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: transform 0.3s ease;
+        }
+        .youtube-btn:hover { transform: scale(1.05); }
+
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- COMMENTS SECTION --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- FIREBASE RATING STYLES --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- RESPONSIVENESS (MOBILE) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+            .youtube-btn { width: 100%; box-sizing: border-box; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>11 rank T-72B</h1>
+        <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t72b/t72b_main.webp?raw=true" alt="T-72B Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The T-72B (Object 184) is a deep modernization of the T-72A tank. By the mid-1980s, there was a clear need to upgrade the Soviet Union's main battle tank, the T-72, to modern combat standards. The fact was that the vehicle severely lacked firepower and a modern fire control system, while its protection, which was decent at the time of its creation, began to become outdated due to the emergence of new ammunition.</p>
+            <p>The extensive tank modernization program involved a comprehensive improvement of the T-72 across all key characteristics. As part of this, the tank received an upgraded 125-mm 2A46M gun, an improved fire control system, and a guided weapon system. The frontal armor of the T-72 was also reinforced, supplemented by "Kontakt-1" explosive reactive armor (ERA) blocks. To maintain the previous mobility and dynamic performance, a more powerful engine was installed.</p>
+            <p>In December 1984, this tank, designated as the T-72B, was officially adopted into service by the USSR. It was this modification of the T-72 that became the basis for a large number of diverse versions and upgrades of the tank that are currently in service in many countries around the world. Between 1974 and 1990, Uralvagonzavod alone produced 20,544 T-72 tanks of various modifications, with about 10,000 more vehicles built in Warsaw Pact countries.</p>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t72b/t72b_historic.jpg?raw=true" alt="Historical T-72B" class="tank-image" loading="lazy">
+        </div>
+
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+             <p>The T-72B tank possesses good cross-country mobility for its class and an acceptable maximum speed (about 60 km/h), ensuring confident task execution thanks to its high engine power-to-weight ratio. The main disadvantages are an extremely slow reverse speed (up to 4-5 km/h), limited maneuverability when turning on the spot, and poor ergonomics that complicate the crew's work.</p>
+            
+            <p><strong>Pros:</strong></p>
+            <ul>
+                <li><strong>Good cross-country ability:</strong> The tank feels confident off-road, overcoming obstacles thanks to its wide tracks.</li>
+                <li><strong>Dynamics:</strong> Acceptable acceleration and cross-country capability allow it to quickly take up positions.</li>
+                <li><strong>Forward speed:</strong> The maximum highway speed is about 60 km/h.</li>
+                <li><strong>Power-to-weight ratio:</strong> The tank maneuvers quite briskly, despite its solid weight.</li>
+            </ul>
+
+            <p><strong>Cons:</strong></p>
+            <ul>
+                <li><strong>"Terrible" reverse speed:</strong> The main problem is the very low reverse speed (estimated by some at only 4-5 km/h), which makes a quick retreat from under fire difficult.</li>
+                <li><strong>Turning on the spot:</strong> The lack of a proper turn-on-the-spot capability (neutral steering) makes the tank less agile in tight spaces or urban environments.</li>
+                <li><strong>Ergonomics and visibility:</strong> The cramped fighting compartment and limited visibility can affect the crew's decision-making speed.</li>
+                <li><strong>Transmission:</strong> The outdated transmission does not provide high maneuverability during sharp maneuvers.</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <p>The T-72B (model 1985/1989) is a Soviet MBT with reinforced armor and high frontal survivability due to composite armor (NERA) and "Kontakt-5" explosive reactive armor (ERA). The front of the turret and hull are protected from most kinetic and shaped-charge threats of its time (up to 800-900 mm against HEAT). However, its survivability is low due to the dense layout and frequent ammo rack detonations.</p>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <p>The armament of the T-72B tank (model 1984/1985) includes a 125-mm 2A46M smoothbore gun/launcher, a coaxial 7.62-mm PKT machine gun, and a 12.7-mm NSVT anti-aircraft machine gun. The main feature is the 9K120 "Svir" guided weapon system (GLATGM) with laser beam riding missiles, as well as a fire control system (FCS) with a 1K13-49 sight.</p>
+            <p><strong>Main armament elements:</strong></p>
+            <ul>
+                <li><strong>Gun:</strong> 125-mm 2A46M-1 (or 2A46M) smoothbore gun, 48 calibers long, equipped with a 2E42-2 stabilizer.</li>
+                <li><strong>Guided weapons:</strong> "Svir" system (9M119 missile), allowing ATGM fire at a distance of up to 4-5 km with a high probability of hitting the target, including helicopters.</li>
+                <li><strong>Ammunition:</strong> 45 rounds of separate-loading ammunition (22 in the autoloader). Includes armor-piercing fin-stabilized discarding sabot (APFSDS), high-explosive anti-tank (HEAT), and high-explosive fragmentation (HEF) shells.</li>
+            </ul>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t72b/t72b_weapon.webp?raw=true" alt="T-72B Armament" class="tank-image" loading="lazy" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The T-72B requires gameplay based on frontal armor and defense, as mobility and targeting speed are limited. The main tactic is using the "aquarium" ("Kontakt-5" ERA) to withstand hits, positional play at medium/long distances, and firing with a 7-second reload. Avoid close combat and flanking maneuvers.</p>
+            <p>The tank feels best in positional warfare. Look for positions where the hull is hidden and play "hull-down" (from the turret). This is a "tanking" tank, not a fast assault vehicle. Support your allies, keep your distance, and use the terrain.</p>
+            <p>The tank has a slow gun targeting speed and poor mobility, making maneuvering combat difficult. Avoid close distances where you can be easily flanked and shot in the side/rear.</p>
+            <p>The autoloader provides a stable reload of 7 seconds. This is faster than many opponents, but slower than the T-80 (6 seconds). Use this advantage to suppress the enemy.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+        </div>
+
+        <a href="https://youtu.be/XxkGLqfgJ9o" target="_blank" class="youtube-btn">
+             Watch full review
+        </a>
+        
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?23&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/47" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Made by Nikita. Last updated 04/16/2026. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+      
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 't72_b'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>
