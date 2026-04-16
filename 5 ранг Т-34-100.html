@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор Т-34-100</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_03_tropicraid/1080x2340_wtm_tropic_raid_4c76c6385da2dfd1be8c9eb1a7e4ff52.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        .content-section ul { margin-top: 5px; margin-bottom: 15px; padding-left: 20px; }
+        .content-section li { margin-bottom: 8px; }
+        
+        /* --- КНОПКИ --- */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>5 ранг Т-34-100</h1>
+        <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t34100/t34100_main.webp?raw=true" alt="Т-34-100 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>Т-34-100 — опытный советский средний танк, является одной из последних модификаций знаменитого Т-34. Данный танк отличается от предыдущей версии новой 100 миллиметровой пушкой ЛБ-1, башней танка Т-44В и изменённой внутренней компоновкой.</p>
+            <p>Идея создания данной машины появилась в связи с тем, что советские Т-34 уже не были способны пробивать новейшие немецкие танки. Разработка Т-34-100 началась в июле 1944 года, и к первой половине 1945 машина была окончательно изготовлена, однако в серийное производство танк так и не поступил — более совершенный Т-44 был уже на последних этапах разработки.</p>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t34100/t34100.JPG?raw=true" alt="Historical Т-34-100" class="tank-image" loading="lazy">
+        </div>
+
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+            
+            <p><strong>Плюсы:</strong></p>
+            <ul>
+                <li><strong>Хорошая скорость:</strong> Танк быстро достигает скорости 55 км/ч по шоссе, что позволяет занимать ключевые позиции.</li>
+                <li><strong>Проходимость:</strong> Благодаря классической ходовой части от Т-34, машина отлично чувствует себя на пересеченной местности (средняя скорость до 35 км/ч).</li>
+                <li><strong>Динамика разгона:</strong> Достаточная для среднего танка мощность двигателя обеспечивает неплохую маневренность в ближнем бою.</li>
+            </ul>
+
+            <p><strong>Минусы:</strong></p>
+            <ul>
+                <li><strong>Посредственный задний ход:</strong> Скорость заднего хода ограничена примерно 8,4 км/ч, что затрудняет быстрое отступление из-под обстрела.</li>
+                <li><strong>Утяжеление башни:</strong> Установка 100-мм орудия привела к увеличению массы, что незначительно, но ощутимо снизило отзывчивость управления по сравнению с Т-34-85.</li>
+                <li><strong>Медленное вращение башни:</strong> В сочетании с маневренностью корпуса, медленный поворот башни иногда мешает оперативно реагировать на угрозы с флангов.</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <ul>
+                <li><strong>Корпус:</strong> 45 мм (ВЛД), угол 60°. Защита недостаточна против танков IV ранга.</li>
+                <li><strong>Башня:</strong> Увеличенная, толщиной 90-52 мм. Округлая форма дает шанс на рикошеты, но крыша (20 мм) уязвима для пушек и авиации.</li>
+                <li><strong>Компоновка:</strong> Плотная, 4 члена экипажа.</li>
+                <li><strong>Уязвимости:</strong> Топливные баки в боевом отделении, боеукладка в корпусе и башне — танк часто взрывается с первого попадания.</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <ul>
+                <li><strong>Орудие:</strong> 100-мм нарезная пушка. Опытные образцы оснащались пушками ЛБ-1 (с дульным тормозом) или ЗИС-100.</li>
+                <li><strong>Бронепробиваемость:</strong> Пушка ЛБ-1 позволяла эффективно бороться с тяжелыми немецкими танками, превосходя по характеристикам 85-мм пушку ЗИС-С-53.</li>
+                <li><strong>Боекомплект:</strong> 100 выстрелов.</li>
+                <li><strong>Пулеметное вооружение:</strong> Один 7,62-мм пулемет ДТ, спаренный с орудием (боекомплект — 1500 патронов).</li>
+                <li><strong>Особенности:</strong> Из-за установки мощного орудия отсутствовал курсовой пулемет (в советской версии), а башня была увеличена (использовалась основа башни Т-44В).</li>
+                <li><strong>Скорострельность:</strong> Во время испытаний ЛБ-1 показывала скорострельность 5,2–5,8 выстрелов в минуту.</li>
+            </ul>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t34100/t34100_weapon.webp?raw=true" alt="Вооружение Т-34-100" class="tank-image" loading="lazy" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>Основные особенности игры на данной машине заключаются в том, что танк полагается исключительно на свою скорость и мощь орудия, а не на броню. Слабое бронирование корпуса и плотная компоновка не прощают ошибок под огнем противника.</p>
+            <p>Игровой процесс на Т-34-100 требует аккуратных действий: использования тактики ударов из засады, фланговых обходов и поддержки союзников со второй линии. Мощное 100-мм орудие гарантирует надежное поражение большинства противников при грамотном выборе позиции.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Народный рейтинг: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Голосов: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Нажми, чтобы оценить</div>
+            </div>
+        </div>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?23" 
+                data-telegram-discussion="fortunawtm_comments/51" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Материал предоставлен пользователем Никита. Последнее обновление 16.04.2026. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 't34_100'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "Вы уже голосовали! Спасибо.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Отправка...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Голос принят! Спасибо.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Ошибка доступа.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Ошибка базы.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>
