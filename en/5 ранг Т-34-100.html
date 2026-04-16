@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: T-34-100 Review</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_03_tropicraid/1080x2340_wtm_tropic_raid_4c76c6385da2dfd1be8c9eb1a7e4ff52.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- CONTENT STYLES --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        .content-section ul { margin-top: 5px; margin-bottom: 15px; padding-left: 20px; }
+        .content-section li { margin-bottom: 8px; }
+        
+        /* --- BUTTONS --- */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- COMMENTS SECTION --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- FIREBASE RATING STYLES --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- RESPONSIVENESS (MOBILE) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>5 rank T-34-100</h1>
+        <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t34100/t34100_main.webp?raw=true" alt="T-34-100 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Historical Background</h2>
+            <p>The T-34-100 is an experimental Soviet medium tank, representing one of the last modifications of the famous T-34. This tank differs from previous versions by featuring a new 100 mm LB-1 gun, a T-44V tank turret, and a modified internal layout.</p>
+            <p>The idea of creating this vehicle arose because Soviet T-34s were no longer able to penetrate the newest German tanks. The development of the T-34-100 began in July 1944, and by the first half of 1945, the vehicle was completely manufactured. However, the tank never entered mass production — the more advanced T-44 was already in its final stages of development.</p>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t34100/t34100.JPG?raw=true" alt="Historical T-34-100" class="tank-image" loading="lazy">
+        </div>
+
+        <div class="content-section">
+            <h2>Brief Overview</h2>
+            <h3>Maneuverability</h3>
+            
+            <p><strong>Pros:</strong></p>
+            <ul>
+                <li><strong>Good speed:</strong> The tank quickly reaches a speed of 55 km/h on the highway, which allows it to take key positions early.</li>
+                <li><strong>Cross-country ability:</strong> Thanks to the classic T-34 chassis, the vehicle performs perfectly on rough terrain (average speed up to 35 km/h).</li>
+                <li><strong>Acceleration dynamics:</strong> The engine power, sufficient for a medium tank, provides decent maneuverability in close combat.</li>
+            </ul>
+
+            <p><strong>Cons:</strong></p>
+            <ul>
+                <li><strong>Mediocre reverse speed:</strong> The reverse speed is limited to about 8.4 km/h, making it difficult to quickly retreat from under enemy fire.</li>
+                <li><strong>Heavier turret:</strong> The installation of the 100-mm gun led to an increase in weight, which slightly but noticeably reduced handling responsiveness compared to the T-34-85.</li>
+                <li><strong>Slow turret rotation:</strong> Combined with the hull's maneuverability, the slow turret traverse sometimes makes it hard to quickly react to flanking threats.</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h3>Armor and Survivability</h3>
+            <ul>
+                <li><strong>Hull:</strong> 45 mm (UFP), 60° angle. Protection is insufficient against Rank IV tanks.</li>
+                <li><strong>Turret:</strong> Enlarged, 90-52 mm thick. The rounded shape gives a chance for ricochets, but the roof (20 mm) is vulnerable to cannons and aircraft.</li>
+                <li><strong>Layout:</strong> Dense, 4 crew members.</li>
+                <li><strong>Vulnerabilities:</strong> Fuel tanks in the fighting compartment, ammo racks in the hull and turret — the tank often explodes from the very first hit.</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h3>Armament</h3>
+            <ul>
+                <li><strong>Gun:</strong> 100-mm rifled gun. Prototypes were equipped with LB-1 (with a muzzle brake) or ZIS-100 guns.</li>
+                <li><strong>Armor penetration:</strong> The LB-1 gun made it possible to effectively fight heavy German tanks, surpassing the characteristics of the 85-mm ZIS-S-53 gun.</li>
+                <li><strong>Ammunition:</strong> 100 rounds.</li>
+                <li><strong>Machine gun armament:</strong> One 7.62-mm DT machine gun coaxial with the main gun (ammunition — 1500 rounds).</li>
+                <li><strong>Features:</strong> Due to the installation of a powerful gun, there was no hull machine gun (in the Soviet version), and the turret was enlarged (the base of the T-44V turret was used).</li>
+                <li><strong>Rate of fire:</strong> During trials, the LB-1 showed a rate of fire of 5.2–5.8 rounds per minute.</li>
+            </ul>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t34100/t34100_weapon.webp?raw=true" alt="T-34-100 Armament" class="tank-image" loading="lazy" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Conclusions and Comments</h3>
+            <p>The main gameplay features of this vehicle revolve around the fact that the tank relies exclusively on its speed and gun power, not on its armor. The weak hull armor and dense internal layout do not forgive mistakes under enemy fire.</p>
+            <p>Playing the T-34-100 requires careful actions: utilizing ambush tactics, flanking maneuvers, and supporting allies from the second line. The powerful 100-mm gun guarantees reliable destruction of most opponents given proper positioning.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Community Rating: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Votes: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Tap to rate</div>
+            </div>
+        </div>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Back to main page
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?23&lang=en" 
+                data-telegram-discussion="fortunawtm_comments/51" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Made by Nikita. Last updated 04/16/2026. If you find errors or have suggestions - message @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // UNIQUE ID FOR THIS TANK
+        const TANK_ID = 't34_100'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "You have already voted! Thank you.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Submitting...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Vote accepted! Thank you.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Access error.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Database error.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>
