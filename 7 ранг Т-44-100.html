@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>WTM: обзор Т-44-100</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: url('https://static.wtmobile.com/upload/fileman/images/wallpapers/26_03_tropicraid/1080x2340_wtm_tropic_raid_4c76c6385da2dfd1be8c9eb1a7e4ff52.jpg') no-repeat center center fixed;
+            background-size: cover;
+            color: white;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            animation: fadeIn 1s ease-in-out;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: -1;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(20, 20, 20, 0.85); 
+            border-radius: 25px;
+            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+        h1, h2, h3 {
+            text-shadow: 0 2px 4px black;
+            position: relative;
+        }
+        h1, h2 { color: #ffc000; }
+        h3 { color: #ffffff; }
+        
+        h1::before, h2::before {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, #0056b3, #3388d1);
+            border-radius: 2px;
+        }
+        
+        /* --- СТИЛИ КОНТЕНТА --- */
+        .tank-image {
+            width: 100%;
+            height: auto;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .content-section {
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .content-section p { margin-bottom: 10px; }
+        .content-section ul { margin-top: 5px; margin-bottom: 15px; padding-left: 20px; }
+        .content-section li { margin-bottom: 8px; }
+        
+        /* --- КНОПКИ --- */
+        .back-button {
+            margin-top: 30px;
+            display: block;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: white;
+            background: #0056b3;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            max-width: 300px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: background-color 0.3s ease;
+        }
+        .back-button:hover { background-color: #004494; }
+
+        /* --- БЛОК КОММЕНТАРИЕВ --- */
+        .comments-wrapper {
+            margin-top: 40px; 
+            margin-bottom: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            max-width: 100%;
+            box-sizing: border-box;
+            overflow-x: hidden;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.9em;
+            color: #ccc;
+            margin-top: 30px;
+            padding: 15px;
+        }
+
+        /* --- СТИЛИ ДЛЯ FIREBASE РЕЙТИНГА --- */
+        .firebase-rating-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .interactive-stars {
+            font-size: 2.5em;
+            cursor: pointer;
+            display: inline-block;
+            margin-top: 10px;
+            user-select: none;
+            white-space: nowrap; 
+        }
+        .star {
+            color: gray;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        .star.active, .star.hovered {
+            color: #ffcc00;
+            text-shadow: 0 0 10px rgba(255, 204, 0, 0.6);
+        }
+        .star:active { transform: scale(0.9); }
+
+        /* --- АДАПТИВНОСТЬ (МОБИЛЬНЫЕ) --- */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .content-section { background: rgba(255, 255, 255, 0.08); }
+            .interactive-stars { font-size: 1.8em; }
+            .comments-wrapper { padding: 5px; } 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>7 ранг Т-44-100</h1>
+        <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t44100/t44100_main.webp?raw=true" alt="Т-44-100 Tank" class="tank-image">
+        
+        <div class="content-section">
+            <h2>Историческая справка</h2>
+            <p>Т-44-100 — модификация советского среднего танка Т-44. Отличается от базовой версии установленным 100-мм орудием Д-10Т, 12,7-мм зенитным пулемётом ДШК, утолщённой на 10 мм броней по бокам башни и наличием 6-мм экранов по бортам.</p>
+            <p>Разработка данной версии Т-44 велась в 1943-1944 годах по причине появления у Германии более новых тяжёлых танков, которые превосходили дальностью и огневой мощью базовую версию. Опытный образец Т-44-100 появился в 1945 году, но полностью военных он не устроил, а позже проект был вовсе прекращён в связи с началом серийного производства более современных Т-54.</p>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t44100/t44100_history.JPG?raw=true" alt="Historical Т-44-100" class="tank-image" loading="lazy">
+        </div>
+
+        <div class="content-section">
+            <h2>Краткий обзор</h2>
+            <h3>Маневренность</h3>
+            
+            <p><strong>Плюсы:</strong></p>
+            <ul>
+                <li><strong>Отличная динамика:</strong> Быстрый разгон и высокая максимальная скорость позволяют занимать ключевые позиции.</li>
+                <li><strong>Высокая маневренность:</strong> Танк отлично управляется, уверенно «крутит» тяжелые танки и ПТ-САУ.</li>
+                <li><strong>Хорошая проходимость по грунтам:</strong> Высокое сопротивление грунтам (около 0,4) обеспечивает отличную скорость даже на мягких поверхностях.</li>
+                <li><strong>Постоянное движение:</strong> Маневренность позволяет использовать тактику «выстрелил-спрятался», выживая за счет скорости.</li>
+            </ul>
+
+            <p><strong>Минусы:</strong></p>
+            <ul>
+                <li><strong>Бронирование:</strong> Несмотря на скорость, танк слабо бронирован, поэтому ошибка при маневре приводит к быстрой аннигиляции.</li>
+                <li><strong>Специфика управления:</strong> Хотя динамика отличная, некоторые игроки отмечают, что разгон мог бы быть чуть быстрее, хотя это скорее придирки.</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h3>Броня и живучесть</h3>
+            <ul>
+                <li><strong>Лоб корпуса (ВЛД/НЛД):</strong> 90 мм под большими углами (62°), что дает высокую приведенную броню, однако НЛД уязвим.</li>
+                <li><strong>Лоб башни:</strong> Усилен до 100-120 мм.</li>
+                <li><strong>Борта:</strong> 75 мм (корпус) + 6-мм экраны.</li>
+                <li><strong>Уязвимости:</strong> Плотная компоновка — мехвод и боеукладка часто поражаются при пробитии в лоб или борт.</li>
+            </ul>
+        </div>
+
+        <div class="content-section">
+            <h3>Вооружение</h3>
+            <p><strong>Основное вооружение:</strong></p>
+            <ul>
+                <li><strong>Орудие:</strong> 100-мм ЛБ-1 (или Д-10Т).</li>
+                <li><strong>Боекомплект:</strong> Бронебойные снаряды с пробитием около 190-205 мм и подкалиберные (до 247-258 мм).</li>
+                <li><strong>Скорострельность:</strong> Около 8 выстрелов в минуту.</li>
+                <li><strong>Особенности:</strong> Наличие дульного тормоза на ЛБ-1.</li>
+            </ul>
+            
+            <p><strong>Дополнительное вооружение:</strong></p>
+            <ul>
+                <li><strong>Пулемёты:</strong> Спаренный 7,62-мм ДТ (1890 патронов) и зенитный 12,7-мм ДШК (250 патронов).</li>
+            </ul>
+            <img src="https://github.com/xF0RTUNAx/wtm-materials/blob/pics/t44100/t44100_weapon.webp?raw=true" alt="Вооружение Т-44-100" class="tank-image" loading="lazy" style="margin-top: 15px;">
+        </div>
+
+        <div class="content-section" style="border-left: 5px solid #ffcc00;">
+            <h3>Выводы и комментарии</h3>
+            <p>В бою Т-44-100 требует грамотного использования рельефа, чтобы скрывать уязвимую нижнюю лобовую деталь (НЛД). Бортовые 6-мм экраны отлично помогают при игре «от борта» (ромбом), спасая от кумулятивных снарядов.</p>
+            <p>Пользуйтесь превосходной маневренностью для обхода неповоротливых противников с флангов и всегда держитесь в движении, так как плотная компоновка внутри танка не прощает прямых попаданий.</p>
+
+            <div class="firebase-rating-box" id="rating-container">
+                <div class="rating-header">
+                    Народный рейтинг: <span id="avg-score" style="color: #ffcc00; font-weight: bold; font-size: 1.2em;">--</span> 
+                    <span style="font-size: 0.8em; opacity: 0.7; margin-left: 5px;">(Голосов: <span id="vote-count">0</span>)</span>
+                </div>
+                
+                <div class="interactive-stars" id="star-wrapper">
+                    <span class="star" data-value="1">★</span>
+                    <span class="star" data-value="2">★</span>
+                    <span class="star" data-value="3">★</span>
+                    <span class="star" data-value="4">★</span>
+                    <span class="star" data-value="5">★</span>
+                </div>
+                <div id="user-message" style="margin-top: 10px; font-size: 0.9em; min-height: 24px;">Нажми, чтобы оценить</div>
+            </div>
+        </div>
+
+        <button class="back-button" onclick="window.location.href = 'index.html'">
+            ← Назад к главной странице
+        </button>
+
+        <div class="comments-wrapper">
+             <script async src="https://telegram.org/js/telegram-widget.js?23" 
+                data-telegram-discussion="fortunawtm_comments/53" 
+                data-comments-limit="5" 
+                data-colorful="1" 
+                data-dark="1">
+            </script>
+        </div>
+
+        <footer>
+            <p>Материал предоставлен пользователем Никита. Последнее обновление 17.04.2026. Если найдете ошибки или имеются предложения – писать @fortunawtm.</p>
+        </footer>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getDatabase, ref, runTransaction, onValue } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBKH58hpUmUb0fJ1PCos8ZO9sJ1deMpJ8U",
+            authDomain: "wtm-fortuna.firebaseapp.com",
+            databaseURL: "https://wtm-fortuna-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "wtm-fortuna",
+            storageBucket: "wtm-fortuna.firebasestorage.app",
+            messagingSenderId: "438964530574",
+            appId: "1:438964530574:web:42211e640b89c7d928c8df"
+        };
+        
+        // УНИКАЛЬНЫЙ ID ДЛЯ ЭТОГО ТАНКА
+        const TANK_ID = 't44_100'; 
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app, firebaseConfig.databaseURL);
+        const dbRef = ref(db, 'ratings/' + TANK_ID);
+
+        const stars = document.querySelectorAll('.star');
+        const msg = document.getElementById('user-message');
+        const avgDisplay = document.getElementById('avg-score');
+        const countDisplay = document.getElementById('vote-count');
+        const LOCAL_STORAGE_KEY = 'voted_' + TANK_ID;
+
+        stars.forEach((star, index) => {
+            star.addEventListener('mouseover', () => highlightStars(index + 1));
+            star.addEventListener('mouseleave', () => resetStars());
+            star.addEventListener('click', () => submitVote(index + 1));
+        });
+
+        function highlightStars(count) {
+            stars.forEach((s, i) => {
+                if (i < count) s.classList.add('hovered');
+                else s.classList.remove('hovered');
+            });
+        }
+
+        function resetStars() {
+            stars.forEach(s => s.classList.remove('hovered'));
+        }
+
+        function submitVote(rating) {
+            if (localStorage.getItem(LOCAL_STORAGE_KEY)) {
+                msg.textContent = "Вы уже голосовали! Спасибо.";
+                msg.style.color = "#ff5555";
+                return;
+            }
+
+            msg.textContent = "Отправка...";
+            
+            runTransaction(dbRef, (currentData) => {
+                if (currentData === null) {
+                    return { sum: rating, count: 1 };
+                } else {
+                    return {
+                        sum: (currentData.sum || 0) + rating,
+                        count: (currentData.count || 0) + 1
+                    };
+                }
+            }).then(() => {
+                msg.textContent = "Голос принят! Спасибо.";
+                msg.style.color = "#55ff55";
+                localStorage.setItem(LOCAL_STORAGE_KEY, 'true');
+                stars.forEach((s, i) => {
+                    if (i < rating) s.classList.add('active');
+                });
+            }).catch((err) => {
+                console.error("Firebase Error:", err);
+                msg.textContent = "Ошибка доступа.";
+                msg.style.color = "red";
+            });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data && data.count > 0) {
+                const average = (data.sum / data.count).toFixed(1);
+                avgDisplay.textContent = average;
+                countDisplay.textContent = data.count;
+            } else {
+                avgDisplay.textContent = "0.0";
+                countDisplay.textContent = "0";
+            }
+        }, (error) => {
+            console.error("Firebase Read Error:", error);
+            avgDisplay.textContent = "ERR"; 
+            msg.textContent = "Ошибка базы.";
+            msg.style.color = "red";
+        });
+    </script>
+</body>
+</html>
