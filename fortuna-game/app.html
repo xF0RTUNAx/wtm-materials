@@ -90,6 +90,15 @@
   }
   .field input:focus { border-color: var(--accent); }
   .field input::placeholder { color: var(--text-soft); }
+  .field-pass { position: relative; }
+  .field-pass input { padding-right: 44px; }
+  .eye-btn {
+    position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; cursor: pointer; padding: 8px; line-height: 0;
+    color: var(--text-soft); border-radius: 8px;
+  }
+  .eye-btn:hover { color: var(--text); }
+  .eye-btn svg { width: 20px; height: 20px; display: block; }
 
   .btn-primary {
     width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); cursor: pointer;
@@ -304,8 +313,8 @@
         <div class="auth-card">
           <div class="auth-notice">
             <span class="tag">Важно</span>Поддержка сайта с гайдами приостановлена.
-            Поддержать проекты: <a href="https://dalink.to/xf0rtunax" target="_blank" rel="noopener">dalink.to/xf0rtunax</a> ·
-            <a href="https://fortunawtm.com" target="_blank" rel="noopener">fortunawtm.com</a>
+            Поддержать проекты: <a href="https://dalink.to/xf0rtunax" target="_blank" rel="noopener">dalink.to/xf0rtunax</a>.
+            Сайт по-прежнему доступен по ссылке: <a href="https://fortunawtm.com" target="_blank" rel="noopener">fortunawtm.com</a>
           </div>
           <div class="auth-inner">
             <div class="tabs">
@@ -313,7 +322,15 @@
               <button class="tab ${authMode==='register'?'active':''}" onclick="setMode('register')">Регистрация</button>
             </div>
             <div class="field"><input id="f-login" type="text" placeholder="Логин" autocomplete="username" maxlength="20"></div>
-            <div class="field"><input id="f-pass" type="password" placeholder="Пароль" autocomplete="${authMode==='register'?'new-password':'current-password'}"></div>
+            <div class="field field-pass">
+              <input id="f-pass" type="password" placeholder="Пароль" autocomplete="${authMode==='register'?'new-password':'current-password'}">
+              <button type="button" class="eye-btn" onclick="togglePass('f-pass', this)" aria-label="Показать пароль">${eyeIcon()}</button>
+            </div>
+            ${authMode==='register' ? `
+            <div class="field field-pass">
+              <input id="f-pass2" type="password" placeholder="Повторите пароль" autocomplete="new-password">
+              <button type="button" class="eye-btn" onclick="togglePass('f-pass2', this)" aria-label="Показать пароль">${eyeIcon()}</button>
+            </div>` : ``}
             <div class="remember-row">
               <input type="checkbox" id="f-remember" checked>
               <label for="f-remember">Запомнить меня</label>
@@ -330,10 +347,19 @@
         </div>`;
 
       // Enter отправляет форму
-      ["f-login","f-pass"].forEach(id=>{
+      ["f-login","f-pass","f-pass2"].forEach(id=>{
         const el = document.getElementById(id);
         if (el) el.addEventListener("keydown", e=>{ if(e.key==="Enter") doAuth(); });
       });
+    }
+
+    function eyeIcon() {
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+    }
+    function togglePass(id, btn) {
+      const inp = document.getElementById(id);
+      if (!inp) return;
+      inp.type = inp.type === "password" ? "text" : "password";
     }
 
     function setMode(mode) { authMode = mode; renderLogin(); }
@@ -345,6 +371,17 @@
       const msg = document.getElementById("auth-msg");
       const btn = document.getElementById("auth-submit");
       msg.textContent = "";
+
+      // При регистрации — проверяем совпадение паролей
+      if (authMode === "register") {
+        const pass2El = document.getElementById("f-pass2");
+        const pass2 = pass2El ? pass2El.value : "";
+        if (pass !== pass2) {
+          msg.textContent = "Пароли не совпадают";
+          return;
+        }
+      }
+
       btn.disabled = true;
       btn.textContent = authMode==='register' ? "Создаём…" : "Входим…";
       try {
