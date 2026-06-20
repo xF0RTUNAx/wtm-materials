@@ -371,18 +371,21 @@
 
     function renderNav(active) {
       const tabs = [
-        { id: "profile",  icon: profileNavIco(active === "profile"), label: "Профиль",  locked: false },
-        { id: "factory",  icon: "🏭",  label: "Завод",   locked: false },
-        { id: "lab",      icon: "🔬",  label: "Лаб.",    locked: true  },
-        { id: "ai",       icon: "🤖",  label: "AI",      locked: true  },
-        { id: "battles",  icon: "⚔️",  label: "Битвы",   locked: true  },
+        { id: "profile", icon: profileNavIco(active === "profile"), label: "Профиль", locked: false },
+        { id: "factory", icon: "&#127981;", label: "Завод",  locked: false },
+        { id: "lab",     icon: "&#128300;", label: "Лаб.",   locked: true  },
+        { id: "ai",      icon: "&#129302;", label: "AI",     locked: true  },
+        { id: "battles", icon: "&#9876;",   label: "Битвы",  locked: true  },
       ];
-      return `<nav class="game-nav">` + tabs.map(t => `
-        <button class="nav-tab ${active === t.id ? "active" : ""}"
-          onclick="${t.locked ? "showLockedMsg()" : `switchTab('${t.id}')`}">
-          <div class="nav-icon">${t.icon}</div>
-          <div class="nav-label">${t.label}${t.locked ? " 🔒" : ""}</div>
-        </button>`).join("") + `</nav>`;
+      return "<nav class=\"game-nav\">" + tabs.map(function(t) {
+        var cls   = "nav-tab" + (active === t.id ? " active" : "");
+        var click = t.locked ? "showLockedMsg()" : "switchTab('" + t.id + "')";
+        var lbl   = t.label + (t.locked ? " &#128274;" : "");
+        return "<button class=\"" + cls + "\" onclick=\"" + click + "\">"
+          + "<div class=\"nav-icon\">" + t.icon + "</div>"
+          + "<div class=\"nav-label\">" + lbl + "</div>"
+          + "</button>";
+      }).join("") + "</nav>";
     }
 
     function switchTab(tab) {
