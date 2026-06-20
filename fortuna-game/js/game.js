@@ -251,6 +251,7 @@ function showFactoryMsg(text, type) {
 // ─── Рендер экрана завода ──────────────────────────────────
 
 async function renderFactory() {
+  if (typeof setActiveTab === "function") setActiveTab("factory");
   const app = document.getElementById("app-content");
   if (!app) return;
 
