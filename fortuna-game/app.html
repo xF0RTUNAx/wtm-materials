@@ -49,15 +49,36 @@
   #cloud { opacity: 1; } #toggle:checked + svg #cloud { opacity: 0; }
   #stars { opacity: 0; } #toggle:checked + svg #stars { opacity: 1; }
 
-  /* Hero */
-  .hero { text-align: center; padding: 26px 10px 22px; }
-  .hero h1 {
-    font-size: 34px; line-height: 1.1; font-weight: 720; letter-spacing: -.03em;
-    color: var(--text); margin-bottom: 12px;
+  /* ── Навигация (только когда залогинен) ── */
+  .game-nav {
+    display: flex; background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    margin-bottom: 14px; overflow: hidden;
   }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 9px 2px 7px; border: none; background: none;
+    cursor: pointer; font-family: inherit; border-bottom: 2px solid transparent;
+    transition: all .15s;
+  }
+  .nav-tab .nav-icon { font-size: 18px; line-height: 1; height: 22px; display: flex; align-items: center; justify-content: center; }
+  .nav-tab .nav-label { font-size: 9px; font-weight: 600; color: var(--text-soft); white-space: nowrap; }
+  .nav-tab.active { border-bottom: 2px solid var(--accent); }
+  .nav-tab.active .nav-label { color: var(--accent); }
+  /* Иконка профиля — кружок с человечком */
+  .profile-nav-ico {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--surface-2); transition: background .15s;
+  }
+  .nav-tab.active .profile-nav-ico { background: var(--accent); }
+
+  /* ── Hero (экран входа) ── */
+  .hero { text-align: center; padding: 26px 10px 22px; }
+  .hero h1 { font-size: 34px; line-height: 1.1; font-weight: 720; letter-spacing: -.03em; color: var(--text); margin-bottom: 12px; }
   .hero p { font-size: 15px; color: var(--text-soft); max-width: 380px; margin: 0 auto; }
 
-  /* Карточка входа */
+  /* ── Карточка входа ── */
   .auth-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); box-shadow: var(--shadow);
@@ -73,7 +94,6 @@
     font-size: 10.5px; padding: 1px 7px; border-radius: 6px; margin-right: 6px; vertical-align: 1px;
   }
   .auth-inner { padding: 22px 20px 20px; }
-
   .tabs { display: flex; gap: 6px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 18px; }
   .tab {
     flex: 1; text-align: center; padding: 8px; border: none; background: none; cursor: pointer;
@@ -81,7 +101,6 @@
     border-radius: 7px; transition: all .18s;
   }
   .tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.06); }
-
   .field { margin-bottom: 12px; }
   .field input {
     width: 100%; padding: 13px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -99,7 +118,6 @@
   }
   .eye-btn:hover { color: var(--text); }
   .eye-btn svg { width: 20px; height: 20px; display: block; }
-
   .btn-primary {
     width: 100%; padding: 14px; border: none; border-radius: var(--radius-sm); cursor: pointer;
     background: var(--btn); color: var(--btn-text); font-size: 15px; font-weight: 650; font-family: inherit;
@@ -107,7 +125,6 @@
   }
   .btn-primary:hover { opacity: .9; }
   .btn-primary:disabled { opacity: .5; cursor: default; }
-
   .remember-row { display: flex; align-items: center; gap: 8px; margin: 4px 2px 2px; }
   .remember-row input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
   .remember-row label { font-size: 13px; color: var(--text-soft); cursor: pointer; user-select: none; }
@@ -117,7 +134,6 @@
     background: none; border: none; cursor: pointer; color: var(--link);
     text-decoration: underline; text-underline-offset: 2px; font-family: inherit; font-size: 12px;
   }
-
   .install-row { text-align: center; margin-top: 18px; }
   .install-btn {
     display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px;
@@ -126,7 +142,7 @@
   }
   .install-btn:hover { background: var(--surface-2); }
 
-  /* Профиль */
+  /* ── Профиль ── */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
   .profile-head { display: flex; align-items: center; gap: 14px; }
   .avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: var(--surface-2); flex-shrink: 0; }
@@ -147,9 +163,53 @@
   .logout-link { background: none; border: none; cursor: pointer; color: var(--text-soft); font-size: 13px; text-decoration: underline; text-underline-offset: 2px; font-family: inherit; }
   .logout-link:hover { color: var(--accent); }
 
+  /* ── Завод ── */
+  .factory-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+  .f-title { font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
+  .f-sub { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+  .level-badge { margin-left: auto; background: var(--accent); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 12px; border-radius: 20px; flex-shrink: 0; }
+  .progress-label-row { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-soft); margin-bottom: 7px; }
+  .progress-track { background: var(--surface-2); border-radius: 99px; height: 10px; overflow: hidden; }
+  .progress-fill { background: var(--accent); height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .stats-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .stat { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); }
+  .stat-value { font-size: 20px; font-weight: 680; letter-spacing: -.02em; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+  .stat-value small { font-size: 12px; color: var(--text-soft); font-weight: 500; }
+  .gear { font-size: 14px; }
+  .divider { height: 1px; background: var(--border); margin: 16px 0; }
+  .collect-block { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .collect-main { font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .collect-sub { font-size: 12px; color: var(--text-soft); margin-top: 3px; }
+  .btn-collect {
+    background: var(--accent); color: #fff; border: none; border-radius: var(--radius-sm);
+    padding: 12px 18px; font-size: 14px; font-weight: 650; font-family: inherit;
+    cursor: pointer; white-space: nowrap; transition: opacity .15s;
+  }
+  .btn-collect:hover { opacity: .9; }
+  .btn-collect:disabled { opacity: .5; cursor: default; }
+  .factory-msg { min-height: 18px; font-size: 13px; text-align: center; margin-top: 10px; }
+  .upgrade-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px; margin-bottom: 12px; }
+  .upgrade-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-soft); margin-bottom: 14px; }
+  .upgrade-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .upgrade-levels { font-size: 16px; font-weight: 650; color: var(--text); }
+  .upgrade-levels span { color: var(--accent); }
+  .cost-label { font-size: 11px; color: var(--text-soft); text-align: right; }
+  .cost-value { font-size: 18px; font-weight: 680; color: var(--text); text-align: right; }
+  .btn-upgrade {
+    width: 100%; padding: 13px; border: none; border-radius: var(--radius-sm); cursor: pointer;
+    background: var(--btn); color: var(--btn-text); font-size: 14px; font-weight: 650;
+    font-family: inherit; transition: opacity .15s;
+  }
+  .btn-upgrade:hover:not(:disabled) { opacity: .9; }
+  .btn-upgrade:disabled { background: var(--surface-2); color: var(--text-soft); cursor: default; }
+  .timer-hint { text-align: center; font-size: 12px; color: var(--text-soft); margin-top: 4px; }
+
+  /* ── Футер ── */
   .footer { text-align: center; font-size: 12.5px; color: var(--text-soft); margin-top: 26px; }
   .footer .terms-link { background: none; border: none; cursor: pointer; color: var(--link); font-size: 12.5px; text-decoration: underline; text-underline-offset: 2px; font-family: inherit; margin-top: 6px; display: inline-block; }
 
+  /* ── Модалки ── */
   .modal-overlay { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 100; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 40px rgba(0,0,0,.25); max-width: 480px; width: 100%; max-height: 82vh; overflow-y: auto; padding: 22px 22px 20px; }
@@ -163,7 +223,7 @@
   .modal-body li { margin-bottom: 5px; }
   .modal-body strong { color: var(--text); font-weight: 600; }
 
-  @media (max-width: 380px) { .resources { grid-template-columns: 1fr; } .soon-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } }
+  @media (max-width: 380px) { .resources { grid-template-columns: 1fr; } .soon-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } .stats-row { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -220,6 +280,7 @@
     </div>
   </div>
 
+  <!-- Модалка: соглашение -->
   <div class="modal-overlay" id="modal-terms" onclick="if(event.target===this)closeModal('terms')">
     <div class="modal">
       <div class="modal-head">
@@ -235,45 +296,25 @@
            однако некоторые дополнения могут включать платную основу.</p>
         <h4>2. Регистрация и доступ</h4>
         <ul>
-          <li>Для входа используются логин и пароль. Игра не запрашивает почту, телефон
-              или иные личные данные.</li>
-          <li>Вы сами отвечаете за сохранность своего логина и пароля. Восстановление
-              пароля возможно только по обращению к разработчику и не гарантируется.</li>
+          <li>Для входа используются логин и пароль. Игра не запрашивает почту, телефон или иные личные данные.</li>
+          <li>Вы сами отвечаете за сохранность своего логина и пароля. Восстановление пароля возможно только по обращению к разработчику и не гарантируется.</li>
           <li>Передача доступа к аккаунту третьим лицам осуществляется на ваш риск.</li>
         </ul>
         <h4>3. Внутриигровые ценности</h4>
         <ul>
-          <li>Все валюты, ресурсы, войска, уровни и прочие игровые объекты существуют
-              только внутри Игры, могут иметь денежный эквивалент и не подлежат обмену на реальные деньги.</li>
-          <li>Внутриигровые ценности могут быть изменены, обнулены или удалены при
-              нарушениях, в ходе развития, балансировки или технического обслуживания Игры.</li>
+          <li>Все валюты, ресурсы, войска, уровни и прочие игровые объекты существуют только внутри Игры, могут иметь денежный эквивалент и не подлежат обмену на реальные деньги.</li>
+          <li>Внутриигровые ценности могут быть изменены, обнулены или удалены при нарушениях, в ходе развития, балансировки или технического обслуживания Игры.</li>
           <li>Игра может предполагать покупки за реальные деньги.</li>
         </ul>
         <h4>4. Ответственность пользователя</h4>
-        <p>Вы используете Игру на свой собственный риск. Разработчик <strong>не несёт
-           ответственности</strong> за любые последствия ваших необдуманных, ошибочных
-           или намеренных действий, включая, но не ограничиваясь:</p>
-        <ul>
-          <li>потерю внутриигрового прогресса или ресурсов вследствие ваших решений;</li>
-          <li>утрату доступа из-за забытого логина или пароля;</li>
-          <li>действия по невнимательности или недопониманию правил;</li>
-          <li>передачу доступа к аккаунту третьим лицам;</li>
-          <li>любой ущерб из-за использования Игры не по назначению.</li>
-        </ul>
+        <p>Вы используете Игру на свой собственный риск. Разработчик <strong>не несёт ответственности</strong> за любые последствия ваших необдуманных, ошибочных или намеренных действий.</p>
         <h4>5. Корректное поведение</h4>
-        <p>Запрещается совершать неадекватные и вредоносные действия по отношению к
-           проектам xFORTUNAx. При нарушении разработчик вправе ограничить или прекратить
-           ваш доступ к Игре без предупреждения и объяснения причин.</p>
+        <p>Запрещается совершать неадекватные и вредоносные действия по отношению к проектам xFORTUNAx. При нарушении разработчик вправе ограничить или прекратить ваш доступ к Игре.</p>
         <h4>6. Доступность сервиса</h4>
-        <p>Игра предоставляется «как есть». Разработчик не гарантирует бесперебойную
-           работу и вправе в любой момент приостановить, изменить или закрыть Игру,
-           полностью или частично, без обязательства сохранять прогресс.</p>
+        <p>Игра предоставляется «как есть». Разработчик не гарантирует бесперебойную работу и вправе в любой момент приостановить, изменить или закрыть Игру.</p>
         <h4>7. Изменения соглашения</h4>
-        <p>Условия могут обновляться. Продолжая пользоваться Игрой после изменений, вы
-           принимаете обновлённую версию соглашения.</p>
-        <p style="margin-top:12px; font-size:12.5px;">Дата последнего обновления: июнь 2026.
-           Настоящий текст является пользовательским соглашением, и участие в Игре
-           автоматически даёт согласие с ним.</p>
+        <p>Условия могут обновляться. Продолжая пользоваться Игрой после изменений, вы принимаете обновлённую версию соглашения.</p>
+        <p style="margin-top:12px; font-size:12.5px;">Дата последнего обновления: июнь 2026.</p>
       </div>
     </div>
   </div>
@@ -281,16 +322,21 @@
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
+  <script src="js/game.js"></script>
   <script>
+    // ── Тема ──────────────────────────────────────────────────
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      const toggle = document.getElementById("toggle");
-      if (toggle) toggle.checked = (theme === "dark");
+      const t = document.getElementById("toggle");
+      if (t) t.checked = (theme === "dark");
     }
     function onThemeToggle(checked) { applyTheme(checked ? "dark" : "light"); }
+
+    // ── Модалки ───────────────────────────────────────────────
     function openModal(name) { const m = document.getElementById("modal-" + name); if (m) m.classList.add("open"); }
     function closeModal(name) { const m = document.getElementById("modal-" + name); if (m) m.classList.remove("open"); }
 
+    // ── Утилиты ───────────────────────────────────────────────
     function initials(name) {
       if (!name) return "?";
       return name.trim().split(/\s+/).slice(0, 2).map(s => s[0]).join("").toUpperCase();
@@ -300,10 +346,64 @@
         ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
     }
 
-    let authMode = "login"; // login | register
+    // ── PWA ───────────────────────────────────────────────────
     let deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; });
+    if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }
+
+    function installApp() {
+      if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
+      else alert("Чтобы установить приложение:\n\n• iPhone (Safari): нажми «Поделиться» → «На экран „Домой"».\n• Android/компьютер (Chrome): меню браузера → «Установить приложение».");
+    }
+
+    // ── Навигация ─────────────────────────────────────────────
+    let currentTab = "profile"; // profile | factory
+
+    function profileNavIco(active) {
+      const bg = active ? "var(--accent)" : "var(--surface-2)";
+      return `<div class="profile-nav-ico" style="background:${bg}">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
+          <circle cx="10" cy="7" r="3.5" stroke="#fff" stroke-width="2"/>
+          <path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>`;
+    }
+
+    function renderNav(active) {
+      const tabs = [
+        { id: "profile",  icon: profileNavIco(active === "profile"), label: "Профиль",  locked: false },
+        { id: "factory",  icon: "🏭",  label: "Завод",   locked: false },
+        { id: "lab",      icon: "🔬",  label: "Лаб.",    locked: true  },
+        { id: "ai",       icon: "🤖",  label: "AI",      locked: true  },
+        { id: "battles",  icon: "⚔️",  label: "Битвы",   locked: true  },
+      ];
+      return `<nav class="game-nav">` + tabs.map(t => `
+        <button class="nav-tab ${active === t.id ? "active" : ""}"
+          onclick="${t.locked ? "showLockedMsg()" : `switchTab('${t.id}')`}">
+          <div class="nav-icon">${t.icon}</div>
+          <div class="nav-label">${t.label}${t.locked ? " 🔒" : ""}</div>
+        </button>`).join("") + `</nav>`;
+    }
+
+    function switchTab(tab) {
+      if (currentTab === tab) return;
+      currentTab = tab;
+      stopFactoryTimer(); // останавливаем таймер если уходим с завода
+      const player = getCurrentPlayer();
+      if (!player) return;
+      if (tab === "profile") renderProfile(player);
+      if (tab === "factory") renderFactory();
+    }
+
+    function showLockedMsg() {
+      // Тихо игнорируем — вкладка просто недоступна
+    }
+
+    // ── Экран входа ───────────────────────────────────────────
+    let authMode = "login";
 
     function renderLogin() {
+      currentTab = "profile";
       const app = document.getElementById("app");
       app.innerHTML = `
         <div class="hero">
@@ -314,28 +414,28 @@
           <div class="auth-notice">
             <span class="tag">Важно</span>Поддержка сайта с гайдами приостановлена.
             Поддержать проекты: <a href="https://dalink.to/xf0rtunax" target="_blank" rel="noopener">dalink.to/xf0rtunax</a>.
-            Сайт по-прежнему доступен по ссылке: <a href="https://fortunawtm.com" target="_blank" rel="noopener">fortunawtm.com</a>
+            Сайт по-прежнему доступен: <a href="https://fortunawtm.com" target="_blank" rel="noopener">fortunawtm.com</a>
           </div>
           <div class="auth-inner">
             <div class="tabs">
-              <button class="tab ${authMode==='login'?'active':''}" onclick="setMode('login')">Вход</button>
-              <button class="tab ${authMode==='register'?'active':''}" onclick="setMode('register')">Регистрация</button>
+              <button class="tab ${authMode==="login"?"active":""}" onclick="setMode('login')">Вход</button>
+              <button class="tab ${authMode==="register"?"active":""}" onclick="setMode('register')">Регистрация</button>
             </div>
             <div class="field"><input id="f-login" type="text" placeholder="Логин" autocomplete="username" maxlength="20"></div>
             <div class="field field-pass">
-              <input id="f-pass" type="password" placeholder="Пароль" autocomplete="${authMode==='register'?'new-password':'current-password'}">
-              <button type="button" class="eye-btn" onclick="togglePass('f-pass', this)" aria-label="Показать пароль">${eyeIcon()}</button>
+              <input id="f-pass" type="password" placeholder="Пароль" autocomplete="${authMode==="register"?"new-password":"current-password"}">
+              <button type="button" class="eye-btn" onclick="togglePass('f-pass')" aria-label="Показать пароль">${eyeIcon()}</button>
             </div>
-            ${authMode==='register' ? `
+            ${authMode==="register" ? `
             <div class="field field-pass">
               <input id="f-pass2" type="password" placeholder="Повторите пароль" autocomplete="new-password">
-              <button type="button" class="eye-btn" onclick="togglePass('f-pass2', this)" aria-label="Показать пароль">${eyeIcon()}</button>
-            </div>` : ``}
+              <button type="button" class="eye-btn" onclick="togglePass('f-pass2')" aria-label="Показать пароль">${eyeIcon()}</button>
+            </div>` : ""}
             <div class="remember-row">
               <input type="checkbox" id="f-remember" checked>
               <label for="f-remember">Запомнить меня</label>
             </div>
-            <button class="btn-primary" id="auth-submit" onclick="doAuth()">${authMode==='register'?'Создать аккаунт':'Войти'}</button>
+            <button class="btn-primary" id="auth-submit" onclick="doAuth()">${authMode==="register"?"Создать аккаунт":"Войти"}</button>
             <div class="auth-msg" id="auth-msg"></div>
             <div class="auth-terms">Продолжая, вы принимаете
               <button onclick="openModal('terms')">пользовательское соглашение</button>
@@ -343,133 +443,113 @@
           </div>
         </div>
         <div class="install-row">
-          <button class="install-btn" id="install-btn" onclick="installApp()">⤓ Установить на рабочий стол</button>
+          <button class="install-btn" onclick="installApp()">⤓ Установить на рабочий стол</button>
         </div>`;
 
-      // Enter отправляет форму
-      ["f-login","f-pass","f-pass2"].forEach(id=>{
+      ["f-login","f-pass","f-pass2"].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener("keydown", e=>{ if(e.key==="Enter") doAuth(); });
+        if (el) el.addEventListener("keydown", e => { if (e.key === "Enter") doAuth(); });
       });
     }
 
     function eyeIcon() {
       return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
     }
-    function togglePass(id, btn) {
+    function togglePass(id) {
       const inp = document.getElementById(id);
-      if (!inp) return;
-      inp.type = inp.type === "password" ? "text" : "password";
+      if (inp) inp.type = inp.type === "password" ? "text" : "password";
     }
-
     function setMode(mode) { authMode = mode; renderLogin(); }
 
     async function doAuth() {
       const login = document.getElementById("f-login").value.trim();
-      const pass = document.getElementById("f-pass").value;
+      const pass  = document.getElementById("f-pass").value;
       const remember = document.getElementById("f-remember").checked;
       const msg = document.getElementById("auth-msg");
       const btn = document.getElementById("auth-submit");
       msg.textContent = "";
 
-      // При регистрации — проверяем совпадение паролей
       if (authMode === "register") {
         const pass2El = document.getElementById("f-pass2");
-        const pass2 = pass2El ? pass2El.value : "";
-        if (pass !== pass2) {
-          msg.textContent = "Пароли не совпадают";
-          return;
-        }
+        if (pass2El && pass !== pass2El.value) { msg.textContent = "Пароли не совпадают"; return; }
       }
 
       btn.disabled = true;
-      btn.textContent = authMode==='register' ? "Создаём…" : "Входим…";
+      btn.textContent = authMode === "register" ? "Создаём…" : "Входим…";
       try {
         await submitAuth(authMode, login, pass, remember);
       } catch (e) {
         msg.textContent = e.message;
         btn.disabled = false;
-        btn.textContent = authMode==='register' ? "Создать аккаунт" : "Войти";
+        btn.textContent = authMode === "register" ? "Создать аккаунт" : "Войти";
       }
     }
 
-    function installApp() {
-      const msg = document.getElementById("install-btn");
-      if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt = null;
-      } else {
-        // iOS / уже установлено / неподдерживаемый браузер
-        alert("Чтобы установить приложение:\n\n• iPhone (Safari): нажми «Поделиться» → «На экран „Домой“».\n• Android/компьютер (Chrome): меню браузера → «Установить приложение».");
-      }
-    }
-
+    // ── Экран профиля ─────────────────────────────────────────
     async function renderProfile(player) {
+      currentTab = "profile";
       const app = document.getElementById("app");
-      let shownName = player.full_name || player.login || "Игрок";
-      let shownAvatar = null;
+      const shownName = player.full_name || player.login || "Игрок";
+
       function avatarHtml(name, url) {
-        return url ? `<img class="avatar" src="${escapeHtml(url)}" alt="">`
-                   : `<div class="avatar avatar-fallback">${initials(name)}</div>`;
+        return url
+          ? `<img class="avatar" src="${escapeHtml(url)}" alt="">`
+          : `<div class="avatar avatar-fallback">${initials(name)}</div>`;
       }
-      app.innerHTML = `
-        <div class="card">
-          <div class="profile-head" id="profile-head">
-            ${avatarHtml(shownName, shownAvatar)}
-            <div>
-              <div class="profile-name" id="p-name">${escapeHtml(shownName)}</div>
-              <div class="profile-sub">@${escapeHtml(player.login || "")}</div>
+
+      app.innerHTML = renderNav("profile") + `
+        <div id="app-content">
+          <div class="card">
+            <div class="profile-head" id="profile-head">
+              ${avatarHtml(shownName, null)}
+              <div>
+                <div class="profile-name" id="p-name">${escapeHtml(shownName)}</div>
+                <div class="profile-sub">@${escapeHtml(player.login || "")}</div>
+              </div>
+            </div>
+            <div class="resources">
+              <div class="res"><div class="res-label">⚙️ Детали</div><div class="res-value" id="r-parts">…</div></div>
+              <div class="res"><div class="res-label">Опыт</div><div class="res-value" id="r-xp">…</div></div>
+              <div class="res"><div class="res-label">Пропуск</div><div class="res-value" id="r-bp">…</div></div>
             </div>
           </div>
-          <div class="resources">
-            <div class="res"><div class="res-label">Детали</div><div class="res-value" id="r-parts">…</div></div>
-            <div class="res"><div class="res-label">Опыт</div><div class="res-value" id="r-xp">…</div></div>
-            <div class="res"><div class="res-label">Боевой пропуск</div><div class="res-value" id="r-bp">…</div></div>
+          <div class="card">
+            <div class="section-title">Скоро откроется</div>
+            <div class="soon-grid">
+              <div class="soon"><b>Лаборатория</b><small>войска и улучшения</small></div>
+              <div class="soon"><b>Нейросети AI</b><small>idle-фарм</small></div>
+              <div class="soon"><b>Битвы</b><small>PvP-сражения</small></div>
+              <div class="soon"><b>Кланы</b><small>скоро</small></div>
+            </div>
+            <div class="logout-row"><button class="logout-link" onclick="logout()">Выйти</button></div>
           </div>
-        </div>
-        <div class="card">
-          <div class="section-title">Скоро откроется</div>
-          <div class="soon-grid">
-            <div class="soon"><b>Завод</b><small>производство деталей</small></div>
-            <div class="soon"><b>Лаборатория</b><small>войска и улучшения</small></div>
-            <div class="soon"><b>Нейросети</b><small>idle-фарм</small></div>
-            <div class="soon"><b>Битвы</b><small>PvP-сражения</small></div>
-          </div>
-          <div class="logout-row"><button class="logout-link" onclick="logout()">Выйти</button></div>
         </div>`;
+
       try {
         const profile = await fetchPlayerProfileById(player.id);
         if (profile) {
-          document.getElementById("r-xp").textContent = profile.xp ?? 0;
-          document.getElementById("r-bp").innerHTML = (profile.battle_pass_level ?? 1) + ' <small>ур.</small>';
-          const dName = profile.display_name || shownName;
-          const dAvatar = profile.display_avatar_url || shownAvatar;
+          const dName   = profile.display_name || shownName;
+          const dAvatar = profile.display_avatar_url || null;
           document.getElementById("p-name").textContent = dName;
-          document.getElementById("profile-head").querySelector(".avatar").outerHTML = avatarHtml(dName, dAvatar);
+          const head = document.getElementById("profile-head");
+          if (head) head.querySelector(".avatar, .avatar-fallback").outerHTML = avatarHtml(dName, dAvatar);
+          document.getElementById("r-xp").textContent = profile.xp ?? 0;
+          document.getElementById("r-bp").innerHTML   = (profile.battle_pass_level ?? 1) + " <small>ур.</small>";
           const base = await fetchPlayerBase(profile.id);
           document.getElementById("r-parts").textContent = base ? (base.parts ?? 0) : 0;
         }
-      } catch (e) {
-        document.getElementById("r-xp").textContent = "—";
-        document.getElementById("r-parts").textContent = "—";
-        document.getElementById("r-bp").textContent = "—";
+      } catch (_) {
+        ["r-xp","r-parts","r-bp"].forEach(id => {
+          const el = document.getElementById(id); if (el) el.textContent = "—";
+        });
       }
     }
 
+    // ── Точка входа ───────────────────────────────────────────
     function renderApp() {
       const player = getCurrentPlayer();
       if (player) renderProfile(player);
       else renderLogin();
-    }
-
-    // PWA: ловим возможность установки
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-    });
-    // Регистрируем service worker (нужно для установки)
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("sw.js").catch(()=>{});
     }
 
     applyTheme("light");
