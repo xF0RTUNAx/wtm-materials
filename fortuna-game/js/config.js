@@ -1,7 +1,3 @@
-// ============================================================
-//  config.js — публичные настройки игры.
-//  Секреты сюда НЕ кладём (они в Supabase Secrets / на сервере).
-// ============================================================
 
 const CONFIG = {
   SUPABASE_URL: "https://rdxoaalzlwbyjxebxtyo.supabase.co",
@@ -10,4 +6,10 @@ const CONFIG = {
   // Edge Function входа по логину/паролю:
   AUTH_PASSWORD_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/auth-password",
+
+  // Edge Functions завода (Этап 1):
+  COLLECT_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/collect-resources",
+  UPGRADE_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/upgrade-factory",
 };
