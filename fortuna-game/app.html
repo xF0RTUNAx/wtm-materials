@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fortuna — База</title>
+<style>
+  /* ===== Палитра в духе веб-Клода ===== */
+  :root {
+    --bg: #f5f2ec;            /* тёплый бежевый фон */
+    --surface: #fbf9f5;       /* карточки */
+    --surface-2: #f0ece3;     /* вложенные плашки */
+    --border: #e4ddd0;
+    --text: #2a2722;          /* основной текст */
+    --text-soft: #6b655c;     /* приглушённый */
+    --accent: #c8643c;        /* терракотовый акцент Клода */
+    --accent-soft: #f3e3da;
+    --link: #b5532f;          /* ссылки в плашке */
+    --notice-bg: #f7ede4;
+    --notice-border: #e8d3c2;
+    --shadow: 0 1px 3px rgba(60,50,35,.06), 0 6px 20px rgba(60,50,35,.05);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  [data-theme="dark"] {
+    --bg: #1f1d1a;
+    --surface: #2a2723;
+    --surface-2: #333029;
+    --border: #3d3933;
+    --text: #ece7df;
+    --text-soft: #a39c8f;
+    --accent: #e08252;
+    --accent-soft: #3a2c23;
+    --link: #f0a079;
+    --notice-bg: #322620;
+    --notice-border: #4a3729;
+    --shadow: 0 1px 3px rgba(0,0,0,.25), 0 6px 20px rgba(0,0,0,.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    transition: background .25s ease, color .25s ease;
+  }
+
+  .wrap {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 18px 16px 48px;
+  }
+
+  /* ===== Шапка ===== */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .brand {
+    font-size: 18px;
+    font-weight: 650;
+    letter-spacing: -.01em;
+  }
+  .brand span { color: var(--accent); }
+  .theme-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-soft);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background .2s, color .2s;
+  }
+  .theme-btn:hover { color: var(--text); }
+
+  /* ===== Плашка-объявление ===== */
+  .notice {
+    background: var(--notice-bg);
+    border: 1px solid var(--notice-border);
+    border-radius: var(--radius-sm);
+    padding: 13px 15px;
+    font-size: 13.5px;
+    color: var(--text-soft);
+    margin-bottom: 20px;
+  }
+  .notice a {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 600;
+    word-break: break-all;
+  }
+  .notice a:hover { opacity: .8; }
+  .notice p + p { margin-top: 6px; }
+
+  /* ===== Карточки ===== */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  /* ===== Экран входа ===== */
+  .login {
+    text-align: center;
+    padding: 36px 22px;
+  }
+  .login h1 {
+    font-size: 22px;
+    font-weight: 680;
+    letter-spacing: -.02em;
+    margin-bottom: 8px;
+  }
+  .login p {
+    color: var(--text-soft);
+    font-size: 14.5px;
+    margin-bottom: 22px;
+  }
+  #tg-login-button { display: inline-block; min-height: 46px; }
+  #auth-status {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-soft);
+    min-height: 18px;
+  }
+
+  /* ===== Профиль ===== */
+  .profile-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .avatar {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--border);
+    background: var(--surface-2);
+    flex-shrink: 0;
+  }
+  .avatar-fallback {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 600; color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .profile-name { font-size: 18px; font-weight: 650; letter-spacing: -.01em; }
+  .profile-sub { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
+
+  /* ===== Ресурсы ===== */
+  .resources {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .res {
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+  }
+  .res-label {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-soft);
+  }
+  .res-value {
+    font-size: 22px;
+    font-weight: 680;
+    letter-spacing: -.02em;
+    margin-top: 3px;
+  }
+  .res-value small { font-size: 13px; color: var(--text-soft); font-weight: 500; }
+
+  /* ===== Будущие разделы ===== */
+  .section-title {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .05em;
+    color: var(--text-soft); margin: 4px 2px 10px;
+  }
+  .soon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .soon {
+    background: var(--surface-2);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px 14px;
+    text-align: center;
+    color: var(--text-soft);
+  }
+  .soon b { display: block; color: var(--text); font-size: 14px; font-weight: 600; }
+  .soon small { font-size: 11.5px; }
+
+  .logout-row { text-align: center; margin-top: 8px; }
+  .logout-link {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-soft); font-size: 13px; text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .logout-link:hover { color: var(--accent); }
+
+  .footer {
+    text-align: center; font-size: 12px; color: var(--text-soft);
+    margin-top: 26px;
+  }
+
+  @media (max-width: 380px) {
+    .resources, .soon-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="brand">x<span>FORTUNA</span>x · База</div>
+      <button class="theme-btn" id="theme-btn" onclick="toggleTheme()">Тёмная тема</button>
+    </div>
+
+    <!-- Плашка-объявление -->
+    <div class="notice">
+      <p>Поддержка сайта с гайдами приостановлена по причине нехватки ресурсов.
+         Поддержать проекты xFORTUNAx:
+         <a href="https://dalink.to/xf0rtunax" target="_blank" rel="noopener">https://dalink.to/xf0rtunax</a></p>
+      <p>Сайт по-прежнему доступен по ссылке:
+         <a href="https://fortunawtm.com" target="_blank" rel="noopener">fortunawtm.com</a></p>
+    </div>
+
+    <!-- Сюда рендерится либо вход, либо профиль -->
+    <div id="app"></div>
+
+    <div class="footer">Fortuna · idle-база сообщества</div>
+  </div>
+
+  <!-- Скрипты игры -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/api.js"></script>
+  <script>
+    // ===== Переключатель темы =====
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      const btn = document.getElementById("theme-btn");
+      if (btn) btn.textContent = theme === "dark" ? "Светлая тема" : "Тёмная тема";
+    }
+    function toggleTheme() {
+      const cur = document.documentElement.getAttribute("data-theme");
+      applyTheme(cur === "dark" ? "light" : "dark");
+    }
+
+    // ===== Инициалы для аватара-заглушки =====
+    function initials(name) {
+      if (!name) return "?";
+      return name.trim().split(/\s+/).slice(0, 2).map(s => s[0]).join("").toUpperCase();
+    }
+
+    function escapeHtml(s) {
+      return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+
+    // ===== Экран входа =====
+    function renderLogin() {
+      const app = document.getElementById("app");
+      app.innerHTML = `
+        <div class="card login">
+          <h1>Вход в Fortuna</h1>
+          <p>Войди через Telegram, чтобы открыть свою базу.</p>
+          <div id="tg-login-button"></div>
+          <div id="auth-status"></div>
+        </div>`;
+
+      // Вставляем официальный Telegram Login Widget
+      const s = document.createElement("script");
+      s.async = true;
+      s.src = "https://telegram.org/js/telegram-widget.js?22";
+      s.setAttribute("data-telegram-login", CONFIG.TELEGRAM_BOT_USERNAME);
+      s.setAttribute("data-size", "large");
+      s.setAttribute("data-radius", "10");
+      s.setAttribute("data-onauth", "onTelegramAuth(user)");
+      s.setAttribute("data-request-access", "write");
+      document.getElementById("tg-login-button").appendChild(s);
+    }
+
+    // ===== Экран профиля =====
+    async function renderProfile(player) {
+      const app = document.getElementById("app");
+
+      // Каркас сразу, данные подгрузим следом
+      const ava = player.avatar_url
+        ? `<img class="avatar" src="${escapeHtml(player.avatar_url)}" alt="">`
+        : `<div class="avatar avatar-fallback">${initials(player.full_name || player.username)}</div>`;
+
+      app.innerHTML = `
+        <div class="card">
+          <div class="profile-head">
+            ${ava}
+            <div>
+              <div class="profile-name">${escapeHtml(player.full_name || player.username || "Игрок")}</div>
+              <div class="profile-sub">${player.username ? "@" + escapeHtml(player.username) : "ID " + escapeHtml(player.telegram_id)}</div>
+            </div>
+          </div>
+
+          <div class="resources">
+            <div class="res">
+              <div class="res-label">Очки Фортуны</div>
+              <div class="res-value" id="r-loot">…</div>
+            </div>
+            <div class="res">
+              <div class="res-label">Детали</div>
+              <div class="res-value" id="r-parts">…</div>
+            </div>
+            <div class="res">
+              <div class="res-label">Опыт</div>
+              <div class="res-value" id="r-xp">…</div>
+            </div>
+            <div class="res">
+              <div class="res-label">Боевой пропуск</div>
+              <div class="res-value" id="r-bp">…</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="section-title">Скоро откроется</div>
+          <div class="soon-grid">
+            <div class="soon"><b>Завод</b><small>производство деталей</small></div>
+            <div class="soon"><b>Лаборатория</b><small>войска и улучшения</small></div>
+            <div class="soon"><b>Нейросети</b><small>idle-фарм</small></div>
+            <div class="soon"><b>Битвы</b><small>PvP-сражения</small></div>
+          </div>
+          <div class="logout-row">
+            <button class="logout-link" onclick="logout()">Выйти</button>
+          </div>
+        </div>`;
+
+      // Подгружаем реальные данные
+      try {
+        const profile = await fetchPlayerProfile(player.telegram_id);
+        if (profile) {
+          document.getElementById("r-xp").textContent = profile.xp ?? 0;
+          document.getElementById("r-bp").innerHTML =
+            (profile.battle_pass_level ?? 1) + ' <small>ур.</small>';
+          const base = await fetchPlayerBase(profile.id);
+          document.getElementById("r-parts").textContent = base ? (base.parts ?? 0) : 0;
+        }
+      } catch (e) {
+        document.getElementById("r-xp").textContent = "—";
+        document.getElementById("r-parts").textContent = "—";
+        document.getElementById("r-bp").textContent = "—";
+      }
+
+      // Очки Фортуны — из моста
+      const loot = await fetchLootPoints(player.telegram_id);
+      document.getElementById("r-loot").textContent = (loot == null) ? "—" : loot;
+    }
+
+    // ===== Главный роутер экрана =====
+    function renderApp() {
+      const player = getCurrentPlayer();
+      if (player) renderProfile(player);
+      else renderLogin();
+    }
+
+    // Старт
+    renderApp();
+  </script>
+</body>
+</html>
