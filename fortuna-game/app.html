@@ -72,6 +72,7 @@
     background: var(--surface-2); transition: background .15s;
   }
   .nav-tab.active .profile-nav-ico { background: var(--accent); }
+  .nav-tab:not(.active) .profile-nav-ico { background: var(--surface-2); }
 
   /* ── Hero (экран входа) ── */
   .hero { text-align: center; padding: 26px 10px 22px; }
@@ -359,19 +360,17 @@
     // ── Навигация ─────────────────────────────────────────────
     let currentTab = "profile"; // profile | factory
 
-    function profileNavIco(active) {
-      const bg = active ? "var(--accent)" : "var(--surface-2)";
-      return `<div class="profile-nav-ico" style="background:${bg}">
-        <svg width="13" height="13" viewBox="0 0 20 20" fill="none">
-          <circle cx="10" cy="7" r="3.5" stroke="#fff" stroke-width="2"/>
-          <path d="M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>`;
+    function profileNavIco() {
+      return "<div class=\"profile-nav-ico\">"
+        + "<svg width=\"13\" height=\"13\" viewBox=\"0 0 20 20\" fill=\"none\">"
+        + "<circle cx=\"10\" cy=\"7\" r=\"3.5\" stroke=\"#fff\" stroke-width=\"2\"/>"
+        + "<path d=\"M3 19c0-3.866 3.134-7 7-7s7 3.134 7 7\" stroke=\"#fff\" stroke-width=\"2\" stroke-linecap=\"round\"/>"
+        + "</svg></div>";
     }
 
     function renderNav(active) {
       const tabs = [
-        { id: "profile", icon: profileNavIco(active === "profile"), label: "Профиль", locked: false },
+        { id: "profile", icon: profileNavIco(), label: "Профиль", locked: false },
         { id: "factory", icon: "&#127981;", label: "Завод",  locked: false },
         { id: "lab",     icon: "&#128300;", label: "Лаб.",   locked: true  },
         { id: "ai",      icon: "&#129302;", label: "AI",     locked: true  },
