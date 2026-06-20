@@ -271,6 +271,7 @@
       </label>
     </div>
 
+    <div id="game-nav-container"></div>
     <div id="app"></div>
 
     <div class="footer">
@@ -368,29 +369,42 @@
         + "</svg></div>";
     }
 
-    function renderNav(active) {
+    // Рисуем навигацию один раз — при первом входе в игру
+    function renderNav() {
+      const container = document.getElementById("game-nav-container");
+      if (!container || container.innerHTML) return; // уже нарисована
       const tabs = [
-        { id: "profile", icon: profileNavIco(), label: "Профиль", locked: false },
-        { id: "factory", icon: "&#127981;", label: "Завод",  locked: false },
-        { id: "lab",     icon: "&#128300;", label: "Лаб.",   locked: true  },
-        { id: "ai",      icon: "&#129302;", label: "AI",     locked: true  },
-        { id: "battles", icon: "&#9876;",   label: "Битвы",  locked: true  },
+        { id: "profile", icon: profileNavIco(),  label: "Профиль", locked: false },
+        { id: "factory", icon: "&#127981;",       label: "Завод",   locked: false },
+        { id: "lab",     icon: "&#128300;",       label: "Лаб.",    locked: true  },
+        { id: "ai",      icon: "&#129302;",       label: "AI",      locked: true  },
+        { id: "battles", icon: "&#9876;",         label: "Битвы",   locked: true  },
       ];
-      return "<nav class=\"game-nav\">" + tabs.map(function(t) {
-        var cls   = "nav-tab" + (active === t.id ? " active" : "");
+      container.innerHTML = "<nav class=\"game-nav\">" + tabs.map(function(t) {
         var click = t.locked ? "showLockedMsg()" : "switchTab('" + t.id + "')";
         var lbl   = t.label + (t.locked ? " &#128274;" : "");
-        return "<button class=\"" + cls + "\" onclick=\"" + click + "\">"
+        return "<button id=\"nav-" + t.id + "\" class=\"nav-tab\" onclick=\"" + click + "\">"
           + "<div class=\"nav-icon\">" + t.icon + "</div>"
           + "<div class=\"nav-label\">" + lbl + "</div>"
           + "</button>";
       }).join("") + "</nav>";
     }
 
+    // Только меняем активный класс — не перерисовываем навигацию
+    function setActiveTab(tab) {
+      currentTab = tab;
+      ["profile","factory","lab","ai","battles"].forEach(function(id) {
+        var btn = document.getElementById("nav-" + id);
+        if (!btn) return;
+        if (id === tab) btn.classList.add("active");
+        else btn.classList.remove("active");
+      });
+    }
+
     function switchTab(tab) {
       if (currentTab === tab) return;
-      currentTab = tab;
-      stopFactoryTimer(); // останавливаем таймер если уходим с завода
+      stopFactoryTimer();
+      setActiveTab(tab);
       const player = getCurrentPlayer();
       if (!player) return;
       if (tab === "profile") renderProfile(player);
@@ -398,7 +412,7 @@
     }
 
     function showLockedMsg() {
-      // Тихо игнорируем — вкладка просто недоступна
+      // Вкладка недоступна — молча игнорируем
     }
 
     // ── Экран входа ───────────────────────────────────────────
@@ -406,6 +420,9 @@
 
     function renderLogin() {
       currentTab = "profile";
+      // Сбрасываем навигацию — она нарисуется заново после входа
+      const nav = document.getElementById("game-nav-container");
+      if (nav) nav.innerHTML = "";
       const app = document.getElementById("app");
       app.innerHTML = `
         <div class="hero">
@@ -489,7 +506,8 @@
 
     // ── Экран профиля ─────────────────────────────────────────
     async function renderProfile(player) {
-      currentTab = "profile";
+      renderNav(); // рисует навигацию только если её ещё нет
+      setActiveTab("profile");
       const app = document.getElementById("app");
       const shownName = player.full_name || player.login || "Игрок";
 
@@ -499,7 +517,7 @@
           : `<div class="avatar avatar-fallback">${initials(name)}</div>`;
       }
 
-      app.innerHTML = renderNav("profile") + `
+      app.innerHTML = `
         <div id="app-content">
           <div class="card">
             <div class="profile-head" id="profile-head">
