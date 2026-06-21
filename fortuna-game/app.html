@@ -49,7 +49,6 @@
   #cloud { opacity: 1; } #toggle:checked + svg #cloud { opacity: 0; }
   #stars { opacity: 0; } #toggle:checked + svg #stars { opacity: 1; }
 
-  /* ── Навигация (только когда залогинен) ── */
   .game-nav {
     display: flex; background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); box-shadow: var(--shadow);
@@ -65,7 +64,6 @@
   .nav-tab .nav-label { font-size: 9px; font-weight: 600; color: var(--text-soft); white-space: nowrap; }
   .nav-tab.active { border-bottom: 2px solid var(--accent); }
   .nav-tab.active .nav-label { color: var(--accent); }
-  /* Иконка профиля — кружок с человечком */
   .profile-nav-ico {
     width: 22px; height: 22px; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
@@ -74,12 +72,10 @@
   .nav-tab.active .profile-nav-ico { background: var(--accent); }
   .nav-tab:not(.active) .profile-nav-ico { background: var(--surface-2); }
 
-  /* ── Hero (экран входа) ── */
   .hero { text-align: center; padding: 26px 10px 22px; }
   .hero h1 { font-size: 34px; line-height: 1.1; font-weight: 720; letter-spacing: -.03em; color: var(--text); margin-bottom: 12px; }
   .hero p { font-size: 15px; color: var(--text-soft); max-width: 380px; margin: 0 auto; }
 
-  /* ── Карточка входа ── */
   .auth-card {
     background: var(--surface); border: 1px solid var(--border);
     border-radius: var(--radius); box-shadow: var(--shadow);
@@ -143,16 +139,15 @@
   }
   .install-btn:hover { background: var(--surface-2); }
 
-  /* ── Профиль ── */
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
   .profile-head { display: flex; align-items: center; gap: 14px; }
   .avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: var(--surface-2); flex-shrink: 0; }
   .avatar-fallback { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; color: var(--accent); background: var(--accent-soft); }
   .profile-name { font-size: 18px; font-weight: 650; letter-spacing: -.01em; }
   .profile-sub { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
-  .resources { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 18px; }
+  .resources { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
   .res { background: var(--surface-2); border-radius: var(--radius-sm); padding: 13px 14px; }
-  .res-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); }
+  .res-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); display: flex; align-items: center; gap: 4px; }
   .res-value { font-size: 22px; font-weight: 680; letter-spacing: -.02em; margin-top: 3px; }
   .res-value small { font-size: 13px; color: var(--text-soft); font-weight: 500; }
   .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-soft); margin: 4px 2px 10px; }
@@ -164,7 +159,6 @@
   .logout-link { background: none; border: none; cursor: pointer; color: var(--text-soft); font-size: 13px; text-decoration: underline; text-underline-offset: 2px; font-family: inherit; }
   .logout-link:hover { color: var(--accent); }
 
-  /* ── Завод ── */
   .factory-header { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
   .f-title { font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
   .f-sub { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
@@ -206,11 +200,9 @@
   .btn-upgrade:disabled { background: var(--surface-2); color: var(--text-soft); cursor: default; }
   .timer-hint { text-align: center; font-size: 12px; color: var(--text-soft); margin-top: 4px; }
 
-  /* ── Футер ── */
   .footer { text-align: center; font-size: 12.5px; color: var(--text-soft); margin-top: 26px; }
   .footer .terms-link { background: none; border: none; cursor: pointer; color: var(--link); font-size: 12.5px; text-decoration: underline; text-underline-offset: 2px; font-family: inherit; margin-top: 6px; display: inline-block; }
 
-  /* ── Модалки ── */
   .modal-overlay { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; padding: 18px; z-index: 100; }
   .modal-overlay.open { display: flex; }
   .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: 0 10px 40px rgba(0,0,0,.25); max-width: 480px; width: 100%; max-height: 82vh; overflow-y: auto; padding: 22px 22px 20px; }
@@ -235,7 +227,7 @@
       <label id="theme-toggle-button">
         <input type="checkbox" id="toggle" onchange="onThemeToggle(this.checked)">
         <svg viewBox="0 0 69.667 44" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(3.5 3.5)" data-name="Component 15 – 1" id="Component_15_1">
+          <g transform="translate(3.5 3.5)" data-name="Component 15 - 1" id="Component_15_1">
             <g transform="matrix(1, 0, 0, 1, -3.5, -3.5)"><rect fill="#83cbd8" transform="translate(3.5 3.5)" rx="17.5" height="35" width="60.667" data-name="container" id="container"></rect></g>
             <g transform="translate(2.333 2.333)" id="button">
               <g data-name="sun" id="sun">
@@ -275,19 +267,18 @@
     <div id="app"></div>
 
     <div class="footer">
-      <div>© 2026 xFORTUNAx · Мини-игры сообщества xFORTUNAx</div>
+      <div>&#169; 2026 xFORTUNAx &#183; Мини-игры сообщества xFORTUNAx</div>
       <a class="terms-link" href="https://t.me/fortunawtmhelp" target="_blank" rel="noopener">Техническая поддержка</a>
       <br>
       <button class="terms-link" onclick="openModal('terms')">Пользовательское соглашение</button>
     </div>
   </div>
 
-  <!-- Модалка: соглашение -->
   <div class="modal-overlay" id="modal-terms" onclick="if(event.target===this)closeModal('terms')">
     <div class="modal">
       <div class="modal-head">
         <div class="modal-title">Пользовательское соглашение</div>
-        <button class="modal-close" onclick="closeModal('terms')">×</button>
+        <button class="modal-close" onclick="closeModal('terms')">&#215;</button>
       </div>
       <div class="modal-body">
         <p>Используя игру xFORTUNAx Games (далее — «Игра»), вы подтверждаете, что
@@ -298,8 +289,8 @@
            однако некоторые дополнения могут включать платную основу.</p>
         <h4>2. Регистрация и доступ</h4>
         <ul>
-          <li>Для входа используются логин и пароль. Игра не запрашивает почту, телефон или иные личные данные.</li>
-          <li>Вы сами отвечаете за сохранность своего логина и пароля. Восстановление пароля возможно только по обращению к разработчику и не гарантируется.</li>
+          <li>Для входа используются ник и пароль. Игра не запрашивает почту, телефон или иные личные данные.</li>
+          <li>Вы сами отвечаете за сохранность своего ника и пароля. Восстановление пароля возможно только по обращению к разработчику и не гарантируется.</li>
           <li>Передача доступа к аккаунту третьим лицам осуществляется на ваш риск.</li>
         </ul>
         <h4>3. Внутриигровые ценности</h4>
@@ -325,33 +316,36 @@
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
   <script src="js/game.js"></script>
+  <script src="js/troops.js"></script>
   <script>
     // ── Тема ──────────────────────────────────────────────────
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
-      const t = document.getElementById("toggle");
+      var t = document.getElementById("toggle");
       if (t) t.checked = (theme === "dark");
+      try { localStorage.setItem("fortuna_theme", theme); } catch(_) {}
     }
     function onThemeToggle(checked) { applyTheme(checked ? "dark" : "light"); }
 
     // ── Модалки ───────────────────────────────────────────────
-    function openModal(name) { const m = document.getElementById("modal-" + name); if (m) m.classList.add("open"); }
-    function closeModal(name) { const m = document.getElementById("modal-" + name); if (m) m.classList.remove("open"); }
+    function openModal(name) { var m = document.getElementById("modal-" + name); if (m) m.classList.add("open"); }
+    function closeModal(name) { var m = document.getElementById("modal-" + name); if (m) m.classList.remove("open"); }
 
     // ── Утилиты ───────────────────────────────────────────────
     function initials(name) {
       if (!name) return "?";
-      return name.trim().split(/\s+/).slice(0, 2).map(s => s[0]).join("").toUpperCase();
+      return name.trim().split(/\s+/).slice(0, 2).map(function(s) { return s[0]; }).join("").toUpperCase();
     }
     function escapeHtml(s) {
-      return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
-        ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+      return String(s == null ? "" : s).replace(/[&<>"']/g, function(c) {
+        return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
+      });
     }
 
     // ── PWA ───────────────────────────────────────────────────
-    let deferredPrompt = null;
-    window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferredPrompt = e; });
-    if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(() => {}); }
+    var deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", function(e) { e.preventDefault(); deferredPrompt = e; });
+    if ("serviceWorker" in navigator) { navigator.serviceWorker.register("sw.js").catch(function() {}); }
 
     function installApp() {
       if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt = null; }
@@ -359,7 +353,7 @@
     }
 
     // ── Навигация ─────────────────────────────────────────────
-    let currentTab = "profile"; // profile | factory
+    var currentTab = "profile";
 
     function profileNavIco() {
       return "<div class=\"profile-nav-ico\">"
@@ -369,16 +363,15 @@
         + "</svg></div>";
     }
 
-    // Рисуем навигацию один раз — при первом входе в игру
     function renderNav() {
-      const container = document.getElementById("game-nav-container");
-      if (!container || container.innerHTML) return; // уже нарисована
-      const tabs = [
-        { id: "profile", icon: profileNavIco(),  label: "Профиль", locked: false },
-        { id: "factory", icon: "&#127981;",       label: "Завод",   locked: false },
-        { id: "lab",     icon: "&#128300;",       label: "Лаб.",    locked: true  },
-        { id: "ai",      icon: "&#129302;",       label: "AI",      locked: true  },
-        { id: "battles", icon: "&#9876;",         label: "Битвы",   locked: true  },
+      var container = document.getElementById("game-nav-container");
+      if (!container || container.innerHTML) return;
+      var tabs = [
+        { id: "profile", icon: profileNavIco(), label: "Профиль", locked: false },
+        { id: "factory", icon: "&#127981;",      label: "Завод",   locked: false },
+        { id: "lab",     icon: "&#128300;",      label: "&#1051;&#1072;&#1073;.",    locked: false },
+        { id: "ai",      icon: "&#129302;",      label: "AI",      locked: true  },
+        { id: "battles", icon: "&#9876;",        label: "&#1041;&#1080;&#1090;&#1074;&#1099;",   locked: true  },
       ];
       container.innerHTML = "<nav class=\"game-nav\">" + tabs.map(function(t) {
         var click = t.locked ? "showLockedMsg()" : "switchTab('" + t.id + "')";
@@ -390,7 +383,6 @@
       }).join("") + "</nav>";
     }
 
-    // Только меняем активный класс — не перерисовываем навигацию
     function setActiveTab(tab) {
       currentTab = tab;
       ["profile","factory","lab","ai","battles"].forEach(function(id) {
@@ -405,174 +397,170 @@
       if (currentTab === tab) return;
       stopFactoryTimer();
       setActiveTab(tab);
-      const player = getCurrentPlayer();
+      var player = getCurrentPlayer();
       if (!player) return;
       if (tab === "profile") renderProfile(player);
       if (tab === "factory") renderFactory();
+      if (tab === "lab")     renderLab();
     }
 
-    function showLockedMsg() {
-      // Вкладка недоступна — молча игнорируем
-    }
+    function showLockedMsg() {}
 
     // ── Экран входа ───────────────────────────────────────────
-    let authMode = "login";
+    var authMode = "login";
 
     function renderLogin() {
       currentTab = "profile";
-      // Сбрасываем навигацию — она нарисуется заново после входа
-      const nav = document.getElementById("game-nav-container");
+      var nav = document.getElementById("game-nav-container");
       if (nav) nav.innerHTML = "";
-      const app = document.getElementById("app");
-      app.innerHTML = `
-        <div class="hero">
-          <h1>Построй свою самую мощную базу!</h1>
-          <p>Развивай завод, открывай войска и сражайся с другими игроками.</p>
-        </div>
-        <div class="auth-card">
-          <div class="auth-notice">
-            <span class="tag">Важно</span>Поддержка сайта с гайдами приостановлена.
-            Поддержать проекты: <a href="https://dalink.to/xf0rtunax" target="_blank" rel="noopener">dalink.to/xf0rtunax</a>.
-            Сайт по-прежнему доступен: <a href="https://fortunawtm.com" target="_blank" rel="noopener">fortunawtm.com</a>
-          </div>
-          <div class="auth-inner">
-            <div class="tabs">
-              <button class="tab ${authMode==="login"?"active":""}" onclick="setMode('login')">Вход</button>
-              <button class="tab ${authMode==="register"?"active":""}" onclick="setMode('register')">Регистрация</button>
-            </div>
-            <div class="field"><input id="f-login" type="text" placeholder="Логин" autocomplete="username" maxlength="20"></div>
-            <div class="field field-pass">
-              <input id="f-pass" type="password" placeholder="Пароль" autocomplete="${authMode==="register"?"new-password":"current-password"}">
-              <button type="button" class="eye-btn" onclick="togglePass('f-pass')" aria-label="Показать пароль">${eyeIcon()}</button>
-            </div>
-            ${authMode==="register" ? `
-            <div class="field field-pass">
-              <input id="f-pass2" type="password" placeholder="Повторите пароль" autocomplete="new-password">
-              <button type="button" class="eye-btn" onclick="togglePass('f-pass2')" aria-label="Показать пароль">${eyeIcon()}</button>
-            </div>` : ""}
-            <div class="remember-row">
-              <input type="checkbox" id="f-remember" checked>
-              <label for="f-remember">Запомнить меня</label>
-            </div>
-            <button class="btn-primary" id="auth-submit" onclick="doAuth()">${authMode==="register"?"Создать аккаунт":"Войти"}</button>
-            <div class="auth-msg" id="auth-msg"></div>
-            <div class="auth-terms">Продолжая, вы принимаете
-              <button onclick="openModal('terms')">пользовательское соглашение</button>
-            </div>
-          </div>
-        </div>
-        <div class="install-row">
-          <button class="install-btn" onclick="installApp()">⤓ Установить на рабочий стол</button>
-        </div>`;
+      var app = document.getElementById("app");
+      var nickPlaceholder = authMode === "register" ? "Придумайте ник" : "Ник";
+      app.innerHTML = "<div class=\"hero\">"
+        + "<h1>&#1055;&#1086;&#1089;&#1090;&#1088;&#1086;&#1081; &#1089;&#1074;&#1086;&#1102; &#1089;&#1072;&#1084;&#1091;&#1102; &#1084;&#1086;&#1097;&#1085;&#1091;&#1102; &#1073;&#1072;&#1079;&#1091;!</h1>"
+        + "<p>&#1056;&#1072;&#1079;&#1074;&#1080;&#1074;&#1072;&#1081; &#1079;&#1072;&#1074;&#1086;&#1076;, &#1086;&#1090;&#1082;&#1088;&#1099;&#1074;&#1072;&#1081; &#1074;&#1086;&#1081;&#1089;&#1082;&#1072; &#1080; &#1089;&#1088;&#1072;&#1078;&#1072;&#1081;&#1089;&#1103; &#1089; &#1076;&#1088;&#1091;&#1075;&#1080;&#1084;&#1080; &#1080;&#1075;&#1088;&#1086;&#1082;&#1072;&#1084;&#1080;.</p>"
+        + "</div>"
+        + "<div class=\"auth-card\">"
+        + "<div class=\"auth-notice\"><span class=\"tag\">&#1042;&#1072;&#1078;&#1085;&#1086;</span>&#1055;&#1086;&#1076;&#1076;&#1077;&#1088;&#1078;&#1082;&#1072; &#1089;&#1072;&#1081;&#1090;&#1072; &#1089; &#1075;&#1072;&#1081;&#1076;&#1072;&#1084;&#1080; &#1087;&#1088;&#1080;&#1086;&#1089;&#1090;&#1072;&#1085;&#1086;&#1074;&#1083;&#1077;&#1085;&#1072;. &#1055;&#1086;&#1076;&#1076;&#1077;&#1088;&#1078;&#1072;&#1090;&#1100; &#1087;&#1088;&#1086;&#1077;&#1082;&#1090;&#1099;: <a href=\"https://dalink.to/xf0rtunax\" target=\"_blank\" rel=\"noopener\">dalink.to/xf0rtunax</a>. &#1057;&#1072;&#1081;&#1090; &#1087;&#1086;-&#1087;&#1088;&#1077;&#1078;&#1085;&#1077;&#1084;&#1091; &#1076;&#1086;&#1089;&#1090;&#1091;&#1087;&#1077;&#1085;: <a href=\"https://fortunawtm.com\" target=\"_blank\" rel=\"noopener\">fortunawtm.com</a></div>"
+        + "<div class=\"auth-inner\">"
+        + "<div class=\"tabs\">"
+        + "<button class=\"tab " + (authMode === "login" ? "active" : "") + "\" onclick=\"setMode('login')\">&#1042;&#1093;&#1086;&#1076;</button>"
+        + "<button class=\"tab " + (authMode === "register" ? "active" : "") + "\" onclick=\"setMode('register')\">&#1056;&#1077;&#1075;&#1080;&#1089;&#1090;&#1088;&#1072;&#1094;&#1080;&#1103;</button>"
+        + "</div>"
+        + "<div class=\"field\"><input id=\"f-login\" type=\"text\" placeholder=\"" + nickPlaceholder + "\" autocomplete=\"username\" maxlength=\"20\"></div>"
+        + "<div class=\"field field-pass\"><input id=\"f-pass\" type=\"password\" placeholder=\"&#1055;&#1072;&#1088;&#1086;&#1083;&#1100;\" autocomplete=\"" + (authMode === "register" ? "new-password" : "current-password") + "\">"
+        + "<button type=\"button\" class=\"eye-btn\" onclick=\"togglePass('f-pass')\" aria-label=\"&#1055;&#1086;&#1082;&#1072;&#1079;&#1072;&#1090;&#1100; &#1087;&#1072;&#1088;&#1086;&#1083;&#1100;\">" + eyeIcon() + "</button></div>"
+        + (authMode === "register"
+          ? "<div class=\"field field-pass\"><input id=\"f-pass2\" type=\"password\" placeholder=\"&#1055;&#1086;&#1074;&#1090;&#1086;&#1088;&#1080;&#1090;&#1077; &#1087;&#1072;&#1088;&#1086;&#1083;&#1100;\" autocomplete=\"new-password\">"
+            + "<button type=\"button\" class=\"eye-btn\" onclick=\"togglePass('f-pass2')\" aria-label=\"&#1055;&#1086;&#1082;&#1072;&#1079;&#1072;&#1090;&#1100; &#1087;&#1072;&#1088;&#1086;&#1083;&#1100;\">" + eyeIcon() + "</button></div>"
+          : "")
+        + "<div class=\"remember-row\"><input type=\"checkbox\" id=\"f-remember\" checked>"
+        + "<label for=\"f-remember\">&#1047;&#1072;&#1087;&#1086;&#1084;&#1085;&#1080;&#1090;&#1100; &#1084;&#1077;&#1085;&#1103;</label></div>"
+        + "<button class=\"btn-primary\" id=\"auth-submit\" onclick=\"doAuth()\">"
+        + (authMode === "register" ? "&#1057;&#1086;&#1079;&#1076;&#1072;&#1090;&#1100; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;" : "&#1042;&#1086;&#1081;&#1090;&#1080;")
+        + "</button>"
+        + "<div class=\"auth-msg\" id=\"auth-msg\"></div>"
+        + "<div class=\"auth-terms\">&#1055;&#1088;&#1086;&#1076;&#1086;&#1083;&#1078;&#1072;&#1103;, &#1074;&#1099; &#1087;&#1088;&#1080;&#1085;&#1080;&#1084;&#1072;&#1077;&#1090;&#1077; <button onclick=\"openModal('terms')\">&#1087;&#1086;&#1083;&#1100;&#1079;&#1086;&#1074;&#1072;&#1090;&#1077;&#1083;&#1100;&#1089;&#1082;&#1086;&#1077; &#1089;&#1086;&#1075;&#1083;&#1072;&#1096;&#1077;&#1085;&#1080;&#1077;</button></div>"
+        + "</div></div>"
+        + "<div class=\"install-row\"><button class=\"install-btn\" onclick=\"installApp()\">&#8615; &#1059;&#1089;&#1090;&#1072;&#1085;&#1086;&#1074;&#1080;&#1090;&#1100; &#1085;&#1072; &#1088;&#1072;&#1073;&#1086;&#1095;&#1080;&#1081; &#1089;&#1090;&#1086;&#1083;</button></div>";
 
-      ["f-login","f-pass","f-pass2"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.addEventListener("keydown", e => { if (e.key === "Enter") doAuth(); });
+      ["f-login","f-pass","f-pass2"].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener("keydown", function(e) { if (e.key === "Enter") doAuth(); });
       });
     }
 
     function eyeIcon() {
-      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+      return "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>";
     }
     function togglePass(id) {
-      const inp = document.getElementById(id);
+      var inp = document.getElementById(id);
       if (inp) inp.type = inp.type === "password" ? "text" : "password";
     }
     function setMode(mode) { authMode = mode; renderLogin(); }
 
     async function doAuth() {
-      const login = document.getElementById("f-login").value.trim();
-      const pass  = document.getElementById("f-pass").value;
-      const remember = document.getElementById("f-remember").checked;
-      const msg = document.getElementById("auth-msg");
-      const btn = document.getElementById("auth-submit");
+      var login    = document.getElementById("f-login").value.trim();
+      var pass     = document.getElementById("f-pass").value;
+      var remember = document.getElementById("f-remember").checked;
+      var msg      = document.getElementById("auth-msg");
+      var btn      = document.getElementById("auth-submit");
       msg.textContent = "";
 
       if (authMode === "register") {
-        const pass2El = document.getElementById("f-pass2");
+        var pass2El = document.getElementById("f-pass2");
         if (pass2El && pass !== pass2El.value) { msg.textContent = "Пароли не совпадают"; return; }
       }
 
-      btn.disabled = true;
-      btn.textContent = authMode === "register" ? "Создаём…" : "Входим…";
+      btn.disabled    = true;
+      btn.textContent = authMode === "register" ? "Создаём..." : "Входим...";
       try {
         await submitAuth(authMode, login, pass, remember);
       } catch (e) {
         msg.textContent = e.message;
-        btn.disabled = false;
+        btn.disabled    = false;
         btn.textContent = authMode === "register" ? "Создать аккаунт" : "Войти";
       }
     }
 
+    // ── Иконка Редких материалов (колба) ─────────────────────
+    function rareIcon(size) {
+      size = size || 11;
+      return "<svg width=\"" + size + "\" height=\"" + Math.round(size * 1.18) + "\" viewBox=\"0 0 54 54\" fill=\"none\" style=\"flex-shrink:0;vertical-align:-1px\">"
+        + "<path d=\"M22,8 L22,22 L12,40 Q12,46 27,46 Q42,46 42,40 L32,22 L32,8 Z\" fill=\"var(--text-soft)\"/>"
+        + "<path d=\"M13,37 L12,40 Q12,46 27,46 Q42,46 42,40 L41,37 Z\" fill=\"var(--accent)\"/>"
+        + "<rect x=\"20\" y=\"6\" width=\"14\" height=\"4\" rx=\"2\" fill=\"var(--text)\"/>"
+        + "</svg>";
+    }
+
     // ── Экран профиля ─────────────────────────────────────────
     async function renderProfile(player) {
-      renderNav(); // рисует навигацию только если её ещё нет
+      renderNav();
       setActiveTab("profile");
-      const app = document.getElementById("app");
-      const shownName = player.full_name || player.login || "Игрок";
+      var app       = document.getElementById("app");
+      var shownName = player.full_name || player.login || "Игрок";
 
       function avatarHtml(name, url) {
         return url
-          ? `<img class="avatar" src="${escapeHtml(url)}" alt="">`
-          : `<div class="avatar avatar-fallback">${initials(name)}</div>`;
+          ? "<img class=\"avatar\" src=\"" + escapeHtml(url) + "\" alt=\"\">"
+          : "<div class=\"avatar avatar-fallback\">" + initials(name) + "</div>";
       }
 
-      app.innerHTML = `
-        <div id="app-content">
-          <div class="card">
-            <div class="profile-head" id="profile-head">
-              ${avatarHtml(shownName, null)}
-              <div>
-                <div class="profile-name" id="p-name">${escapeHtml(shownName)}</div>
-                <div class="profile-sub">@${escapeHtml(player.login || "")}</div>
-              </div>
-            </div>
-            <div class="resources">
-              <div class="res"><div class="res-label">⚙️ Детали</div><div class="res-value" id="r-parts">…</div></div>
-              <div class="res"><div class="res-label">Опыт</div><div class="res-value" id="r-xp">…</div></div>
-              <div class="res"><div class="res-label">Пропуск</div><div class="res-value" id="r-bp">…</div></div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="section-title">Скоро откроется</div>
-            <div class="soon-grid">
-              <div class="soon"><b>Лаборатория</b><small>войска и улучшения</small></div>
-              <div class="soon"><b>Нейросети AI</b><small>idle-фарм</small></div>
-              <div class="soon"><b>Битвы</b><small>PvP-сражения</small></div>
-              <div class="soon"><b>Кланы</b><small>скоро</small></div>
-            </div>
-            <div class="logout-row"><button class="logout-link" onclick="logout()">Выйти</button></div>
-          </div>
-        </div>`;
+      app.innerHTML = "<div id=\"app-content\">"
+        + "<div class=\"card\">"
+        + "<div class=\"profile-head\" id=\"profile-head\">"
+        + avatarHtml(shownName, null)
+        + "<div><div class=\"profile-name\" id=\"p-name\">" + escapeHtml(shownName) + "</div>"
+        + "<div class=\"profile-sub\">@" + escapeHtml(player.login || "") + "</div></div>"
+        + "</div>"
+        + "<div class=\"resources\">"
+        + "<div class=\"res\"><div class=\"res-label\">&#9881; &#1044;&#1077;&#1090;&#1072;&#1083;&#1080;</div><div class=\"res-value\" id=\"r-parts\">…</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">" + rareIcon(11) + " &#1056;&#1077;&#1076;&#1082;&#1080;&#1077;</div><div class=\"res-value\" id=\"r-rare\">…</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">&#1054;&#1087;&#1099;&#1090;</div><div class=\"res-value\" id=\"r-xp\">…</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">&#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">…</div></div>"
+        + "</div></div>"
+        + "<div class=\"card\">"
+        + "<div class=\"section-title\">&#1057;&#1082;&#1086;&#1088;&#1086; &#1086;&#1090;&#1082;&#1088;&#1086;&#1077;&#1090;&#1089;&#1103;</div>"
+        + "<div class=\"soon-grid\">"
+        + "<div class=\"soon\"><b>&#1053;&#1077;&#1081;&#1088;&#1086;&#1089;&#1077;&#1090;&#1080; AI</b><small>idle-&#1092;&#1072;&#1088;&#1084;</small></div>"
+        + "<div class=\"soon\"><b>&#1041;&#1080;&#1090;&#1074;&#1099;</b><small>PvP-&#1089;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1103;</small></div>"
+        + "<div class=\"soon\"><b>&#1050;&#1083;&#1072;&#1085;&#1099;</b><small>&#1089;&#1082;&#1086;&#1088;&#1086;</small></div>"
+        + "<div class=\"soon\"><b>&#1043;&#1086;&#1089;&#1087;&#1080;&#1090;&#1072;&#1083;&#1100;</b><small>&#1088;&#1077;&#1084;&#1086;&#1085;&#1090; &#1074;&#1086;&#1081;&#1089;&#1082;</small></div>"
+        + "</div>"
+        + "<div class=\"logout-row\"><button class=\"logout-link\" onclick=\"logout()\">&#1042;&#1099;&#1081;&#1090;&#1080;</button></div>"
+        + "</div></div>";
 
       try {
-        const profile = await fetchPlayerProfileById(player.id);
+        var profile = await fetchPlayerProfileById(player.id);
         if (profile) {
-          const dName   = profile.display_name || shownName;
-          const dAvatar = profile.display_avatar_url || null;
+          var dName   = profile.display_name || shownName;
+          var dAvatar = profile.display_avatar_url || null;
           document.getElementById("p-name").textContent = dName;
-          const head = document.getElementById("profile-head");
-          if (head) head.querySelector(".avatar, .avatar-fallback").outerHTML = avatarHtml(dName, dAvatar);
-          document.getElementById("r-xp").textContent = profile.xp ?? 0;
-          document.getElementById("r-bp").innerHTML   = (profile.battle_pass_level ?? 1) + " <small>ур.</small>";
-          const base = await fetchPlayerBase(profile.id);
-          document.getElementById("r-parts").textContent = base ? (base.parts ?? 0) : 0;
+          document.getElementById("r-xp").textContent   = profile.xp ?? 0;
+          document.getElementById("r-bp").innerHTML     = (profile.battle_pass_level ?? 1) + " <small>ур.</small>";
+          var base = await fetchPlayerBase(profile.id);
+          document.getElementById("r-parts").textContent = base ? (base.parts          ?? 0) : 0;
+          document.getElementById("r-rare").textContent  = base ? (base.rare_materials ?? 0) : 0;
         }
       } catch (_) {
-        ["r-xp","r-parts","r-bp"].forEach(id => {
-          const el = document.getElementById(id); if (el) el.textContent = "—";
+        ["r-xp","r-parts","r-rare","r-bp"].forEach(function(id) {
+          var el = document.getElementById(id); if (el) el.textContent = "-";
         });
       }
     }
 
     // ── Точка входа ───────────────────────────────────────────
     function renderApp() {
-      const player = getCurrentPlayer();
+      var player = getCurrentPlayer();
       if (player) renderProfile(player);
       else renderLogin();
     }
 
-    applyTheme("light");
+    // Загружаем сохранённую тему, затем рисуем приложение
+    (function() {
+      var saved;
+      try { saved = localStorage.getItem("fortuna_theme"); } catch(_) {}
+      applyTheme(saved === "dark" ? "dark" : "light");
+    })();
     renderApp();
   </script>
 </body>
