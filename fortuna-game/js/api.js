@@ -40,6 +40,14 @@ async function fetchPlayerTroops(playerUuid) {
   return rows || [];
 }
 
+// Нейросети игрока — массив строк из neural_networks
+async function fetchPlayerNeural(playerUuid) {
+  const rows = await supabaseSelect(
+    `neural_networks?player_id=eq.${playerUuid}&select=*`
+  );
+  return rows || [];
+}
+
 // ── Вызов Edge Functions (POST) ─────────────────────────────
 
 async function callEdgeFunction(url, body) {
@@ -78,5 +86,27 @@ async function upgradeTroop(playerId, troopType) {
   return callEdgeFunction(CONFIG.TROOP_UPGRADE_URL, {
     player_id:  playerId,
     troop_type: troopType,
+  });
+}
+
+// Этап 3 — нейросети
+async function startNeural(playerId, lineType) {
+  return callEdgeFunction(CONFIG.NEURAL_START_URL, {
+    player_id: playerId,
+    line_type: lineType,
+  });
+}
+
+async function collectNeural(playerId, lineType) {
+  return callEdgeFunction(CONFIG.NEURAL_COLLECT_URL, {
+    player_id: playerId,
+    line_type: lineType,
+  });
+}
+
+async function upgradeNeural(playerId, lineType) {
+  return callEdgeFunction(CONFIG.NEURAL_UPGRADE_URL, {
+    player_id: playerId,
+    line_type: lineType,
   });
 }
