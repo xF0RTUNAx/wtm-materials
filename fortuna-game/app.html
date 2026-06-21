@@ -317,6 +317,7 @@
   <script src="js/api.js"></script>
   <script src="js/game.js"></script>
   <script src="js/troops.js"></script>
+  <script src="js/neural.js"></script>
   <script>
     // ── Тема ──────────────────────────────────────────────────
     function applyTheme(theme) {
@@ -367,11 +368,11 @@
       var container = document.getElementById("game-nav-container");
       if (!container || container.innerHTML) return;
       var tabs = [
-        { id: "profile", icon: profileNavIco(), label: "Профиль", locked: false },
-        { id: "factory", icon: "&#127981;",      label: "Завод",   locked: false },
-        { id: "lab",     icon: "&#128300;",      label: "&#1051;&#1072;&#1073;.",    locked: false },
-        { id: "ai",      icon: "&#129302;",      label: "AI",      locked: true  },
-        { id: "battles", icon: "&#9876;",        label: "&#1041;&#1080;&#1090;&#1074;&#1099;",   locked: true  },
+        { id: "profile", icon: profileNavIco(), label: "&#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;", locked: false },
+        { id: "factory", icon: "&#127981;",      label: "&#1047;&#1072;&#1074;&#1086;&#1076;",             locked: false },
+        { id: "lab",     icon: "&#128300;",      label: "&#1051;&#1072;&#1073;.",                          locked: false },
+        { id: "ai",      icon: "&#129302;",      label: "AI",                                             locked: false },
+        { id: "battles", icon: "&#9876;",        label: "&#1041;&#1080;&#1090;&#1074;&#1099;",            locked: true  },
       ];
       container.innerHTML = "<nav class=\"game-nav\">" + tabs.map(function(t) {
         var click = t.locked ? "showLockedMsg()" : "switchTab('" + t.id + "')";
@@ -396,12 +397,14 @@
     function switchTab(tab) {
       if (currentTab === tab) return;
       stopFactoryTimer();
+      stopNeuralTimer();
       setActiveTab(tab);
       var player = getCurrentPlayer();
       if (!player) return;
       if (tab === "profile") renderProfile(player);
       if (tab === "factory") renderFactory();
       if (tab === "lab")     renderLab();
+      if (tab === "ai")      renderNeural();
     }
 
     function showLockedMsg() {}
@@ -414,7 +417,7 @@
       var nav = document.getElementById("game-nav-container");
       if (nav) nav.innerHTML = "";
       var app = document.getElementById("app");
-      var nickPlaceholder = authMode === "register" ? "Придумайте ник" : "Ник";
+      var nickPlaceholder = authMode === "register" ? "&#1055;&#1088;&#1080;&#1076;&#1091;&#1084;&#1072;&#1081;&#1090;&#1077; &#1085;&#1080;&#1082;" : "&#1053;&#1080;&#1082;";
       app.innerHTML = "<div class=\"hero\">"
         + "<h1>&#1055;&#1086;&#1089;&#1090;&#1088;&#1086;&#1081; &#1089;&#1074;&#1086;&#1102; &#1089;&#1072;&#1084;&#1091;&#1102; &#1084;&#1086;&#1097;&#1085;&#1091;&#1102; &#1073;&#1072;&#1079;&#1091;!</h1>"
         + "<p>&#1056;&#1072;&#1079;&#1074;&#1080;&#1074;&#1072;&#1081; &#1079;&#1072;&#1074;&#1086;&#1076;, &#1086;&#1090;&#1082;&#1088;&#1099;&#1074;&#1072;&#1081; &#1074;&#1086;&#1081;&#1089;&#1082;&#1072; &#1080; &#1089;&#1088;&#1072;&#1078;&#1072;&#1081;&#1089;&#1103; &#1089; &#1076;&#1088;&#1091;&#1075;&#1080;&#1084;&#1080; &#1080;&#1075;&#1088;&#1086;&#1082;&#1072;&#1084;&#1080;.</p>"
@@ -468,17 +471,17 @@
 
       if (authMode === "register") {
         var pass2El = document.getElementById("f-pass2");
-        if (pass2El && pass !== pass2El.value) { msg.textContent = "Пароли не совпадают"; return; }
+        if (pass2El && pass !== pass2El.value) { msg.textContent = "&#1055;&#1072;&#1088;&#1086;&#1083;&#1080; &#1085;&#1077; &#1089;&#1086;&#1074;&#1087;&#1072;&#1076;&#1072;&#1102;&#1090;"; return; }
       }
 
       btn.disabled    = true;
-      btn.textContent = authMode === "register" ? "Создаём..." : "Входим...";
+      btn.textContent = authMode === "register" ? "&#1057;&#1086;&#1079;&#1076;&#1072;&#1�;&#1084;..." : "&#1042;&#1093;&#1086;&#1076;&#1080;&#1084;...";
       try {
         await submitAuth(authMode, login, pass, remember);
       } catch (e) {
         msg.textContent = e.message;
         btn.disabled    = false;
-        btn.textContent = authMode === "register" ? "Создать аккаунт" : "Войти";
+        btn.textContent = authMode === "register" ? "&#1057;&#1086;&#1079;&#1076;&#1072;&#1090;&#1100; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;" : "&#1042;&#1086;&#1081;&#1090;&#1080;";
       }
     }
 
@@ -497,7 +500,7 @@
       renderNav();
       setActiveTab("profile");
       var app       = document.getElementById("app");
-      var shownName = player.full_name || player.login || "Игрок";
+      var shownName = player.full_name || player.login || "&#1048;&#1075;&#1088;&#1086;&#1082;";
 
       function avatarHtml(name, url) {
         return url
@@ -513,15 +516,14 @@
         + "<div class=\"profile-sub\">@" + escapeHtml(player.login || "") + "</div></div>"
         + "</div>"
         + "<div class=\"resources\">"
-        + "<div class=\"res\"><div class=\"res-label\">&#9881; &#1044;&#1077;&#1090;&#1072;&#1083;&#1080;</div><div class=\"res-value\" id=\"r-parts\">…</div></div>"
-        + "<div class=\"res\"><div class=\"res-label\">" + rareIcon(11) + " &#1056;&#1077;&#1076;&#1082;&#1080;&#1077;</div><div class=\"res-value\" id=\"r-rare\">…</div></div>"
-        + "<div class=\"res\"><div class=\"res-label\">&#1054;&#1087;&#1099;&#1090;</div><div class=\"res-value\" id=\"r-xp\">…</div></div>"
-        + "<div class=\"res\"><div class=\"res-label\">&#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">…</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">&#9881; &#1044;&#1077;&#1090;&#1072;&#1083;&#1080;</div><div class=\"res-value\" id=\"r-parts\">&#8230;</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">" + rareIcon(11) + " &#1056;&#1077;&#1076;&#1082;&#1080;&#1077;</div><div class=\"res-value\" id=\"r-rare\">&#8230;</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">&#1054;&#1087;&#1099;&#1090;</div><div class=\"res-value\" id=\"r-xp\">&#8230;</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">&#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">&#8230;</div></div>"
         + "</div></div>"
         + "<div class=\"card\">"
         + "<div class=\"section-title\">&#1057;&#1082;&#1086;&#1088;&#1086; &#1086;&#1090;&#1082;&#1088;&#1086;&#1077;&#1090;&#1089;&#1103;</div>"
         + "<div class=\"soon-grid\">"
-        + "<div class=\"soon\"><b>&#1053;&#1077;&#1081;&#1088;&#1086;&#1089;&#1077;&#1090;&#1080; AI</b><small>idle-&#1092;&#1072;&#1088;&#1084;</small></div>"
         + "<div class=\"soon\"><b>&#1041;&#1080;&#1090;&#1074;&#1099;</b><small>PvP-&#1089;&#1088;&#1072;&#1078;&#1077;&#1085;&#1080;&#1103;</small></div>"
         + "<div class=\"soon\"><b>&#1050;&#1083;&#1072;&#1085;&#1099;</b><small>&#1089;&#1082;&#1086;&#1088;&#1086;</small></div>"
         + "<div class=\"soon\"><b>&#1043;&#1086;&#1089;&#1087;&#1080;&#1090;&#1072;&#1083;&#1100;</b><small>&#1088;&#1077;&#1084;&#1086;&#1085;&#1090; &#1074;&#1086;&#1081;&#1089;&#1082;</small></div>"
@@ -533,10 +535,9 @@
         var profile = await fetchPlayerProfileById(player.id);
         if (profile) {
           var dName   = profile.display_name || shownName;
-          var dAvatar = profile.display_avatar_url || null;
           document.getElementById("p-name").textContent = dName;
           document.getElementById("r-xp").textContent   = profile.xp ?? 0;
-          document.getElementById("r-bp").innerHTML     = (profile.battle_pass_level ?? 1) + " <small>ур.</small>";
+          document.getElementById("r-bp").innerHTML     = (profile.battle_pass_level ?? 1) + " <small>&#1091;&#1088;.</small>";
           var base = await fetchPlayerBase(profile.id);
           document.getElementById("r-parts").textContent = base ? (base.parts          ?? 0) : 0;
           document.getElementById("r-rare").textContent  = base ? (base.rare_materials ?? 0) : 0;
