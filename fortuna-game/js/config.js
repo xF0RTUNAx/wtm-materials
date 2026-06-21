@@ -17,4 +17,12 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/upgrade-lab",
   TROOP_UPGRADE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/upgrade-troop",
+
+  // Этап 3 — нейросети
+  NEURAL_START_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/start-neural",
+  NEURAL_COLLECT_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/collect-neural",
+  NEURAL_UPGRADE_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/upgrade-neural",
 };
