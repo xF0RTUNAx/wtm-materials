@@ -25,4 +25,18 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/collect-neural",
   NEURAL_UPGRADE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/upgrade-neural",
+
+  // Этап 4 — битвы и госпиталь
+  SAVE_LINEUP_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/save-lineup",
+  SEND_HOSPITAL_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-to-hospital",
+  COLLECT_HOSPITAL_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/collect-hospital",
+  UPGRADE_HOSPITAL_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/upgrade-hospital",
+  RESOLVE_BATTLE_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/resolve-battle",
+  MARK_NOTIF_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/mark-notifications-read",
 };
