@@ -39,4 +39,21 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/resolve-battle",
   MARK_NOTIF_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/mark-notifications-read",
+  // Этап 5 — кланы и чат
+  CREATE_CLAN_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/create-clan",
+  APPLY_CLAN_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/apply-clan",
+  RESPOND_APPLICATION_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/respond-application",
+  LEAVE_CLAN_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/leave-clan",
+  KICK_MEMBER_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/kick-member",
+  SET_CLAN_ROLE_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/set-clan-role",
+  CLAIM_CLAN_REWARD_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/claim-clan-reward",
+  SEND_MESSAGE_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-message",
 };
