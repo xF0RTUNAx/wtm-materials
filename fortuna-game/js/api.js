@@ -136,3 +136,98 @@ async function resolveBattle(attackerId, defenderId) {
 async function markNotificationsRead(playerId) {
   return callEdgeFunction(CONFIG.MARK_NOTIF_URL, { player_id: playerId });
 }
+// Этап 5 — кланы
+async function createClan(playerId, name, tag, description) {
+  return callEdgeFunction(CONFIG.CREATE_CLAN_URL, {
+    player_id: playerId, name, tag, description,
+  });
+}
+
+async function applyClan(playerId, clanId) {
+  return callEdgeFunction(CONFIG.APPLY_CLAN_URL, {
+    player_id: playerId, clan_id: clanId,
+  });
+}
+
+async function respondApplication(playerId, applicationId, decision) {
+  return callEdgeFunction(CONFIG.RESPOND_APPLICATION_URL, {
+    player_id: playerId, application_id: applicationId, decision,
+  });
+}
+
+async function leaveClan(playerId) {
+  return callEdgeFunction(CONFIG.LEAVE_CLAN_URL, { player_id: playerId });
+}
+
+async function kickMember(playerId, targetPlayerId) {
+  return callEdgeFunction(CONFIG.KICK_MEMBER_URL, {
+    player_id: playerId, target_player_id: targetPlayerId,
+  });
+}
+
+async function setClanRole(playerId, targetPlayerId, newRole) {
+  return callEdgeFunction(CONFIG.SET_CLAN_ROLE_URL, {
+    player_id: playerId, target_player_id: targetPlayerId, new_role: newRole,
+  });
+}
+
+async function claimClanReward(playerId) {
+  return callEdgeFunction(CONFIG.CLAIM_CLAN_REWARD_URL, { player_id: playerId });
+}
+
+async function sendMessage(playerId, channel, content) {
+  return callEdgeFunction(CONFIG.SEND_MESSAGE_URL, {
+    player_id: playerId, channel, content,
+  });
+}
+
+// Чтение данных кланов из Supabase (GET)
+async function fetchAllClans() {
+  const rows = await supabaseSelect(
+    "clans?select=*&order=member_count.desc"
+  );
+  return rows || [];
+}
+
+async function fetchClanById(clanId) {
+  const rows = await supabaseSelect(
+    `clans?id=eq.${clanId}&select=*`
+  );
+  return rows[0] || null;
+}
+
+async function fetchClanMembers(clanId) {
+  const rows = await supabaseSelect(
+    `clan_members?clan_id=eq.${clanId}&select=player_id,role,joined_at&order=joined_at.asc`
+  );
+  return rows || [];
+}
+
+async function fetchClanApplications(clanId) {
+  const rows = await supabaseSelect(
+    `clan_applications?clan_id=eq.${clanId}&status=eq.pending&select=*&order=created_at.asc`
+  );
+  return rows || [];
+}
+
+async function fetchPlayerApplication(playerId) {
+  const rows = await supabaseSelect(
+    `clan_applications?player_id=eq.${playerId}&status=eq.pending&select=*&order=created_at.desc&limit=1`
+  );
+  return rows[0] || null;
+}
+
+async function fetchClanRewardClaimed(clanId, playerId, weekStart) {
+  const rows = await supabaseSelect(
+    `clan_rewards?clan_id=eq.${clanId}&player_id=eq.${playerId}&week_start=eq.${weekStart}&select=id`
+  );
+  return rows.length > 0;
+}
+
+async function fetchMessages(channel, limit) {
+  limit = limit || 50;
+  const rows = await supabaseSelect(
+    `messages?channel=eq.${channel}&order=created_at.desc&limit=${limit}&select=*`
+  );
+  return (rows || []).reverse();
+}
