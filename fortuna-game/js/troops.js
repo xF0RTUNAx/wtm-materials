@@ -87,18 +87,16 @@ function lockedRowHtml(type) {
 function labSvg() {
   return `<svg width="54" height="54" viewBox="0 0 54 54" fill="none">
     <rect width="54" height="54" rx="13" fill="var(--accent-soft)"/>
-    <path d="M11,16 L11,37 Q11,46 27,46 Q43,46 43,37 L43,16 Z" fill="var(--surface)"/>
-    <path d="M11,29 L11,37 Q11,46 27,46 Q43,46 43,37 L43,29 Z" fill="var(--accent)" opacity="0.6"/>
-    <path d="M11,16 L11,37 Q11,46 27,46 Q43,46 43,37 L43,16" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round"/>
-    <line x1="8" y1="15" x2="46" y2="15" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
-    <line x1="39" y1="23" x2="43" y2="23" stroke="var(--accent)" stroke-width="1" opacity="0.45"/>
-    <line x1="39" y1="29" x2="43" y2="29" stroke="var(--accent)" stroke-width="1" opacity="0.45"/>
-    <circle cx="21" cy="37" r="2" fill="var(--surface)" opacity="0.75"/>
-    <circle cx="33" cy="34" r="1.5" fill="var(--surface)" opacity="0.6"/>
-    <circle cx="27" cy="41" r="1" fill="var(--surface)" opacity="0.5"/>
-    <circle cx="20" cy="9" r="1.5" fill="var(--accent)" opacity="0.5"/>
-    <circle cx="27" cy="6" r="2" fill="var(--accent)" opacity="0.7"/>
-    <circle cx="34" cy="9" r="1.5" fill="var(--accent)" opacity="0.5"/>
+    <path d="M22,8 L22,22 L12,40 Q12,46 27,46 Q42,46 42,40 L32,22 L32,8 Z" fill="var(--surface)"/>
+    <path d="M15.3,34 L12,40 Q12,46 27,46 Q42,46 42,40 L38.7,34 Z" fill="var(--accent)"/>
+    <path d="M22,8 L22,22 L12,40 Q12,46 27,46 Q42,46 42,40 L32,22 L32,8" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <line x1="15.3" y1="34" x2="38.7" y2="34" stroke="var(--accent)" stroke-width="0.7" stroke-dasharray="2,1.5" opacity="0.5"/>
+    <rect x="20" y="6" width="14" height="4" rx="2" fill="var(--text)"/>
+    <rect x="22" y="7" width="6" height="1.5" rx="0.75" fill="white" opacity="0.22"/>
+    <line x1="26" y1="11" x2="18" y2="43" stroke="white" stroke-width="1.5" opacity="0.2" stroke-linecap="round"/>
+    <circle cx="30" cy="40" r="2" fill="white" opacity="0.45"/>
+    <circle cx="22" cy="38" r="1.5" fill="white" opacity="0.35"/>
+    <circle cx="34" cy="37" r="1" fill="white" opacity="0.3"/>
   </svg>`;
 }
 
