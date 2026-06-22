@@ -57,3 +57,11 @@ const CONFIG = {
   SEND_MESSAGE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-message",
 };
+
+// ── Иконки ресурсов (HTML-img, inline 18px) ─────────────────
+// Используются во всех JS-файлах игры
+var ICON_PARTS = '<img src="res/parts.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+var ICON_RARE  = '<img src="kit/rare.png"  style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+var ICON_ORE   = '<img src="res/ore.png"   style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+var ICON_XP    = '<img src="pass/exp.png"  style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+var ICON_PASS  = '<img src="pass/pass_profile.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin:-2px 1px 0" alt="" />';
