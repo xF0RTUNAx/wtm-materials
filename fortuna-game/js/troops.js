@@ -26,6 +26,14 @@ const TROOP_IMG = {
   avia: "army/aviation_r.png",
 };
 
+
+// Цепочка прокачки лаборатории
+var LAB_CHAIN_ITEMS = [
+  {label:'Пехота', cost:null},     {label:'БМП',     cost:'500'},
+  {label:'Танки',  cost:'1\u202f500'}, {label:'Арты',  cost:'3\u202f000'},
+  {label:'ПВО',    cost:'5\u202f000'}, {label:'Ракеты',cost:'8\u202f000'},
+  {label:'Авиа',   cost:'12\u202f000'},
+];
 const LAB_COSTS = [null, 500, 1500, 3000, 5000, 8000, 12000];
 const MAX_TROOP_LEVEL = 25;
 
@@ -53,7 +61,7 @@ function troopBadge(type) {
   const src = TROOP_IMG[type] || "";
   return `<div style="width:38px;height:38px;border-radius:10px;background:var(--surface-2);`
     + `display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">`
-    + `<img src="${src}" alt="${cfg.name}" style="width:32px;height:32px;object-fit:contain;" />`
+    + `<img src="${src}" alt="${cfg.name}" style="width:38px;height:38px;object-fit:contain;" />`
     + `</div>`;
 }
 
@@ -66,9 +74,9 @@ function troopRowHtml(type, level, parts) {
 
   const subText = isMax
     ? "Макс. уровень &#183; Мощь: " + power
-    : "Ур. " + level + " &#183; Мощь: " + power + " &#183; Следующий: " + cost + " &#9881;";
+    : "Ур. " + level + " &#183; Мощь: " + power + " &#183; Следующий: " + cost + " " + ICON_PARTS;
 
-  const btnText = isMax ? "Максимум" : canUp ? "Улучшить" : "Нужно " + cost + " &#9881;";
+  const btnText = isMax ? "Максимум" : canUp ? "Улучшить" : "Нужно " + cost + " " + ICON_PARTS;
 
   return `<div id="troop-row-${type}" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:var(--radius-sm);">
     ${troopBadge(type)}
@@ -166,8 +174,8 @@ function renderLabContent() {
   const labBtnText = isLabMax
     ? "Все войска исследованы"
     : canUpLab
-      ? "Улучшить лабораторию (" + labCost + " &#9881;)"
-      : "Недостаточно &#9881; (" + parts + " / " + labCost + ")";
+      ? "Улучшить лабораторию (" + labCost + " " + ICON_PARTS + ")"
+      : "Недостаточно " + ICON_PARTS + " (" + parts + " / " + labCost + ")";
 
   app.innerHTML = `
     <div class="card">
@@ -187,13 +195,14 @@ function renderLabContent() {
         </div>
         <div class="stat">
           <div class="stat-label">Детали</div>
-          <div class="stat-value" id="lab-parts">${parts}<span class="gear"> &#9881;</span></div>
+          <div class="stat-value" id="lab-parts">${parts}<span class="gear">" + ICON_PARTS + "</span></div>
         </div>
       </div>
 
       <div class="divider"></div>
 
-      <div class="upgrade-title">Улучшение лаборатории</div>
+      <div class="upgrade-title">Прокачка лаборатории</div>
+      ${buildChain(LAB_CHAIN_ITEMS, labLevel - 1, 'lab-chain-tip', 'parts')}
       ${isLabMax
         ? `<div style="color:var(--text-soft);font-size:13px;text-align:center;padding:8px 0 14px;">Все войска исследованы</div>`
         : `<div class="upgrade-row">
@@ -274,7 +283,7 @@ async function doTroopUpgrade(type) {
     if (powerEl) powerEl.innerHTML = armyPower(currentLabData.troops) + `<small style="font-size:12px;color:var(--text-soft);font-weight:500;"> ед.</small>`;
 
     const labPartsEl = document.getElementById("lab-parts");
-    if (labPartsEl) labPartsEl.innerHTML = result.parts + `<span class="gear"> &#9881;</span>`;
+    if (labPartsEl) labPartsEl.innerHTML = result.parts + `<span class="gear">" + ICON_PARTS + "</span>`;
 
     refreshLabUpgradeBtn(result.parts);
 
@@ -305,8 +314,8 @@ function refreshLabUpgradeBtn(newParts) {
   btn.style.background = canUpLab ? "var(--btn)" : "var(--surface-2)";
   btn.style.color      = canUpLab ? "var(--btn-text)" : "var(--text-soft)";
   btn.innerHTML = canUpLab
-    ? "Улучшить лабораторию (" + labCost + " &#9881;)"
-    : "Недостаточно &#9881; (" + newParts + " / " + labCost + ")";
+    ? "Улучшить лабораторию (" + labCost + " " + ICON_PARTS + ")"
+    : "Недостаточно " + ICON_PARTS + " (" + newParts + " / " + labCost + ")";
   btn.onclick = canUpLab ? doLabUpgrade : null;
 }
 
