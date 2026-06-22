@@ -86,7 +86,7 @@ function troopBadgeBattle(type, size) {
   return "<div style=\"width:" + size + "px;height:" + size + "px;border-radius:7px;"
     + "background:var(--surface-2);display:flex;align-items:center;justify-content:center;"
     + "flex-shrink:0;overflow:hidden;\">"
-    + "<img src=\"" + src + "\" alt=\"\" style=\"width:" + imgSize + "px;height:" + imgSize + "px;object-fit:contain;\" />"
+    + "<img src=\"" + src + "\" alt=\"\" style=\"width:" + imgSize + "px;height:" + imgSize + "px;object-fit:contain;transform:scale(" + ((typeof TROOP_IMG_SCALE !== 'undefined' && TROOP_IMG_SCALE[type]) || 1) + ");\" />"
     + "</div>";
 }
 
@@ -129,7 +129,7 @@ function buildTroopGrid(which) {
       + "display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;"
       + "border:2px solid " + (checked ? cfg.color : "transparent") + ";\"><img src=\""
       + (TROOP_IMG && TROOP_IMG[type] ? TROOP_IMG[type] : '')
-      + "\" style=\"width:22px;height:22px;object-fit:contain;\" /></div>"
+      + "\" style=\"width:22px;height:22px;object-fit:contain;transform:scale(" + ((typeof TROOP_IMG_SCALE !== 'undefined' && TROOP_IMG_SCALE[type]) || 1) + ");\" /></div>"
       + "<div style=\"flex:1;\"><div style=\"font-size:13px;font-weight:600;color:" + (checked ? "#fff" : "var(--text)") + ";\">" + escapeHtml(cfg.name) + "</div>"
       + (inHosp ? "<div style=\"font-size:11px;color:" + (checked ? "rgba(255,255,255,.7)" : "var(--accent)") + ";\">\u0432 \u0433\u043e\u0441\u043f\u0438\u0442\u0430\u043b\u0435</div>" : "")
       + "</div>"
