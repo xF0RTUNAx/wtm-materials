@@ -655,7 +655,7 @@ function initChatWidget(playerClanId) {
 
   var root = document.createElement('div');
   root.id = 'chat-widget-root';
-  root.style.cssText = 'position:fixed;bottom:66px;right:21px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end';
+  root.style.cssText = 'position:fixed;bottom:66px;right:14px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end';
 
   var hasClan    = !!playerClanId;
   var clanTabOp  = hasClan ? '' : 'opacity:.4;pointer-events:none';
