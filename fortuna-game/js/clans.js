@@ -1,7 +1,7 @@
 // ============================================================
 //  clans.js — Этап 5: Кланы, задания, рейтинг и чат
 //  Дизайн: комбинация вариантов 1+2+3 (баннер + ранг + акцент-бордер)
-//  Иконка Интела: &#128203; (📋 чертёж)
+//  Иконка Руды: " + ICON_ORE + " (📋 чертёж)
 // ============================================================
 
 // ─── Константы ───────────────────────────────────────────────
@@ -273,7 +273,7 @@ async function renderNoClanScreen(player) {
     'margin-bottom:10px;box-sizing:border-box;outline:none" />' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' +
     '<span style="font-size:12px;color:var(--text-soft)">Стоимость создания</span>' +
-    '<span style="font-size:13px;font-weight:700;color:var(--accent)">10 &#128300; редких</span>' +
+    '<span style="font-size:13px;font-weight:700;color:var(--accent)">' + '10 ' + ICON_RARE + ' редких' + '</span>' +
     '</div>' +
     clanBtn('Создать клан', 'primary', 'doCreateClan()') +
     '<div id="clan-create-msg" style="text-align:center;font-size:12px;margin-top:8px;min-height:16px"></div>' +
@@ -315,7 +315,7 @@ async function renderInClanScreen(player, clanId) {
     try { pendingApps = await fetchPendingApps(clanId); } catch(e) {}
   }
 
-  // Интел и задание
+  // Руда и задание
   var weekStart    = currentWeekStartUtc();
   var intelReset   = clan.task_week_start < weekStart;
   var intel        = intelReset ? 0 : (clan.intel || 0);
@@ -406,9 +406,9 @@ async function renderInClanScreen(player, clanId) {
   if (myClaimed) {
     rewardBtn = clanBtn('Награда уже получена &#10003;', 'disabled', '');
   } else if (intelDone) {
-    rewardBtn = clanBtn('Забрать ' + CLAN_REWARD_XP + ' XP &#127881;', 'primary', 'doClaimClanReward()');
+    rewardBtn = clanBtn('Забрать ' + CLAN_REWARD_XP + ' ' + ICON_XP + ' &#127881;', 'primary', 'doClaimClanReward()');
   } else {
-    rewardBtn = clanBtn('Ещё ' + (CLAN_INTEL_GOAL - intel) + ' &#128203; до награды', 'disabled', '');
+    rewardBtn = clanBtn('Ещё ' + (CLAN_INTEL_GOAL - intel) + ' " + ICON_ORE + " до награды', 'disabled', '');
   }
 
   // ── Итоговый HTML ────────────────────────────────────────────
@@ -445,7 +445,7 @@ async function renderInClanScreen(player, clanId) {
     '</div>' +
     '<div class="card" style="padding:10px;text-align:center">' +
     '<div style="font-size:15px;font-weight:700;color:' + (intelDone ? 'var(--accent)' : 'var(--text)') + '">' + intel + '</div>' +
-    '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">&#128203; интел</div>' +
+    '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">" + ICON_ORE + " руда</div>' +
     '</div>' +
     '</div>' +
 
@@ -463,12 +463,12 @@ async function renderInClanScreen(player, clanId) {
     '<div class="card" style="margin-bottom:10px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
     '<div>' +
-    '<div style="font-size:13px;font-weight:700">&#128203; Задание недели</div>' +
+    '<div style="font-size:13px;font-weight:700">" + ICON_ORE + " Задание недели</div>' +
     '<div style="font-size:11px;color:var(--text-soft)">сброс через ' + fmtCountdown(timerLeft) + '</div>' +
     '</div>' +
     '<div style="text-align:right">' +
     '<div style="font-size:22px;font-weight:900;color:' + (intelDone ? 'var(--accent)' : 'var(--text)') + '">' + intel + '</div>' +
-    '<div style="font-size:10px;color:var(--text-soft)">/ ' + CLAN_INTEL_GOAL + ' &#128203;</div>' +
+    '<div style="font-size:10px;color:var(--text-soft)">/ ' + CLAN_INTEL_GOAL + ' " + ICON_ORE + "</div>' +
     '</div>' +
     '</div>' +
     '<div style="background:var(--surface-2);border-radius:6px;height:10px;overflow:hidden;margin-bottom:4px">' +
@@ -476,7 +476,7 @@ async function renderInClanScreen(player, clanId) {
     '</div>' +
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-soft);margin-bottom:10px">' +
     '<span>0</span>' +
-    '<span style="color:var(--accent);font-weight:700">' + intel + ' &#128203;</span>' +
+    '<span style="color:var(--accent);font-weight:700">' + intel + ' " + ICON_ORE + "</span>' +
     '<span>' + CLAN_INTEL_GOAL + '</span>' +
     '</div>' +
     rewardBtn +
@@ -623,7 +623,7 @@ async function doClaimClanReward() {
 
   try {
     var result = await claimClanReward(player.id);
-    showClanMsg('clan-reward-msg', '+' + CLAN_REWARD_XP + ' XP! Итого: ' + result.xp + ' XP', true);
+    showClanMsg('clan-reward-msg', '+' + CLAN_REWARD_XP + ' ' + ICON_XP + '! Итого: ' + result.xp + ' ' + ICON_XP, true);
     if (btn) {
       btn.disabled = true;
       btn.textContent = '\u041d\u0430\u0433\u0440\u0430\u0434\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0430 \u2713';
