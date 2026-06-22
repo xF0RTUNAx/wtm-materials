@@ -68,4 +68,4 @@ var ICON_PASS  = '<img src="pass/pass_profile.png" style="width:22px;height:22px
 var ICON_CHAT       = '<img src="clans_and_chat/chat.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle" alt="" />';
 var ICON_GLOBAL_CHAT = '<img src="clans_and_chat/global_chat.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px -2px" alt="" />';
 var ICON_CLAN_CHAT  = '<img src="clans_and_chat/clan_chat.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px -2px" alt="" />';
-var ICON_CLAN       = '<img src="clans_and_chat/clan.png" style="width:104px;height:104px;object-fit:contain;vertical-align:middle;margin:0 4px -2px" alt="" />';
+var ICON_CLAN       = '<img src="clans_and_chat/clan.png" style="width:76px;height:76px;object-fit:contain;vertical-align:middle;margin:0 4px -2px" alt="" />';
