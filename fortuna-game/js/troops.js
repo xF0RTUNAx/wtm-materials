@@ -26,6 +26,12 @@ const TROOP_IMG = {
   avia: "army/aviation_r.png",
 };
 
+// Масштаб PNG внутри бейджа (компенсирует разные поля прозрачности в файлах)
+const TROOP_IMG_SCALE = {
+  inf: 1, bmp: 1.35, tank: 1, arty: 1, aa: 1, msl: 1, avia: 1,
+};
+
+
 
 // Цепочка прокачки лаборатории
 var LAB_CHAIN_ITEMS = [
@@ -58,10 +64,11 @@ function armyPower(troops) {
 function troopBadge(type) {
   const cfg = TROOP_CFG[type];
   if (!cfg) return "";
-  const src = TROOP_IMG[type] || "";
+  const src   = TROOP_IMG[type] || "";
+  const scale = TROOP_IMG_SCALE[type] || 1;
   return `<div style="width:38px;height:38px;border-radius:10px;background:var(--surface-2);`
     + `display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">`
-    + `<img src="${src}" alt="${cfg.name}" style="width:38px;height:38px;object-fit:contain;" />`
+    + `<img src="${src}" alt="${cfg.name}" style="width:38px;height:38px;object-fit:contain;transform:scale(${scale});" />`
     + `</div>`;
 }
 
@@ -99,7 +106,7 @@ function lockedRowHtml(type) {
   const src = TROOP_IMG[type] || "";
   return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:var(--radius-sm);opacity:0.4;">
     <div style="width:38px;height:38px;border-radius:10px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
-      <img src="${src}" alt="${cfg.name}" style="width:32px;height:32px;object-fit:contain;filter:grayscale(1);" />
+      <img src="${src}" alt="${cfg.name}" style="width:38px;height:38px;object-fit:contain;filter:grayscale(1);transform:scale(${TROOP_IMG_SCALE[type] || 1});" />
     </div>
     <div>
       <div style="font-size:14px;font-weight:650;color:var(--text-soft);">${cfg.name}</div>
