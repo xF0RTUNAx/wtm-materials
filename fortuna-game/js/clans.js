@@ -701,10 +701,10 @@ function initChatWidget(playerClanId) {
 
     // Кнопка-пузырь
     '<div id="chat-toggle-btn" onclick="toggleChatWidget()" ' +
-    'style="width:58px;height:58px;cursor:pointer;position:relative;' +
+    'style="width:512px;height:512px;cursor:pointer;position:relative;' +
     'display:flex;align-items:center;justify-content:center">' +
     '<img src="clans_and_chat/chat.png" style="width:58px;height:58px;object-fit:contain" alt="Чат" />' +
-    '<div id="chat-badge" style="display:none;position:absolute;top:-3px;right:-3px;' +
+    '<div id="chat-badge" style="display:none;position:absolute;top:-1px;right:-1px;' +
     'min-width:18px;height:18px;background:#e05252;border-radius:9px;font-size:10px;' +
     'font-weight:700;color:#fff;align-items:center;justify-content:center;' +
     'border:2px solid var(--bg);padding:0 4px"></div>' +
