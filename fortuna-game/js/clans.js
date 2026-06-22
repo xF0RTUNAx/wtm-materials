@@ -655,7 +655,7 @@ function initChatWidget(playerClanId) {
 
   var root = document.createElement('div');
   root.id = 'chat-widget-root';
-  root.style.cssText = 'position:fixed;bottom:66px;right:28px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end';
+  root.style.cssText = 'position:fixed;bottom:66px;right:21px;z-index:9999;display:flex;flex-direction:column;align-items:flex-end';
 
   var hasClan    = !!playerClanId;
   var clanTabOp  = hasClan ? '' : 'opacity:.4;pointer-events:none';
@@ -701,9 +701,9 @@ function initChatWidget(playerClanId) {
 
     // Кнопка-пузырь
     '<div id="chat-toggle-btn" onclick="toggleChatWidget()" ' +
-    'style="width:128px;height:128px;cursor:pointer;position:relative;' +
+    'style="width:192px;height:192px;cursor:pointer;position:relative;' +
     'display:flex;align-items:center;justify-content:center">' +
-    '<img src="clans_and_chat/chat.png" style="width:128px;height:128px;object-fit:contain" alt="Чат" />' +
+    '<img src="clans_and_chat/chat.png" style="width:192px;height:192px;object-fit:contain" alt="Чат" />' +
     '<div id="chat-badge" style="display:none;position:absolute;top:-1px;right:-1px;' +
     'min-width:18px;height:18px;background:#e05252;border-radius:9px;font-size:10px;' +
     'font-weight:700;color:#fff;align-items:center;justify-content:center;' +
