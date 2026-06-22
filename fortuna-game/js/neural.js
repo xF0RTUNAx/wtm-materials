@@ -30,6 +30,16 @@ const NEURAL_CFG = {
   },
 };
 
+// ── GLB-модели нейросетей ────────────────────────────────────
+// Общий заголовок: computer-wide.glb
+// Per-line: superchat=computer-system, twink=computer, fortuna_ai=computer-screen
+const NEURAL_MODELS = {
+  header:     'ai/Models/GLB%20format/computer-wide.glb',
+  superchat:  'ai/Models/GLB%20format/computer-system.glb',
+  twink:      'ai/Models/GLB%20format/computer.glb',
+  fortuna_ai: 'ai/Models/GLB%20format/computer-screen.glb',
+};
+
 let currentNeuralData   = null;
 let neuralTimerInterval = null;
 
@@ -70,37 +80,34 @@ function getNeuralState(nn) {
   return                         { state: 'idle',  missionsToday: mt };
 }
 
-// ── SVG-иконки ───────────────────────────────────────────────
+// ── GLB-иконки ───────────────────────────────────────────────
 
-function neuralIconSvg(color, size) {
-  const c = color || 'var(--accent)';
-  const s = size  || 22;
-  return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 24 24" fill="none">'
-    + '<circle cx="4"  cy="7"  r="2.5" fill="' + c + '"/>'
-    + '<circle cx="4"  cy="17" r="2.5" fill="' + c + '"/>'
-    + '<circle cx="12" cy="12" r="2.5" fill="' + c + '"/>'
-    + '<circle cx="20" cy="7"  r="2.5" fill="' + c + '"/>'
-    + '<circle cx="20" cy="17" r="2.5" fill="' + c + '"/>'
-    + '<line x1="6.5"  y1="7"  x2="9.5"  y2="12" stroke="' + c + '" stroke-width="1.3" opacity="0.5"/>'
-    + '<line x1="6.5"  y1="17" x2="9.5"  y2="12" stroke="' + c + '" stroke-width="1.3" opacity="0.5"/>'
-    + '<line x1="14.5" y1="12" x2="17.5" y2="7"  stroke="' + c + '" stroke-width="1.3" opacity="0.5"/>'
-    + '<line x1="14.5" y1="12" x2="17.5" y2="17" stroke="' + c + '" stroke-width="1.3" opacity="0.5"/>'
-    + '</svg>';
+// Общий заголовок экрана нейросетей (80×80)
+function neuralHeaderSvg() {
+  return '<model-viewer'
+    + ' src="' + NEURAL_MODELS.header + '"'
+    + ' camera-orbit="0deg 70deg 105%"'
+    + ' auto-rotate'
+    + ' auto-rotate-delay="800"'
+    + ' rotation-per-second="18deg"'
+    + ' camera-controls'
+    + ' style="width:80px;height:80px;border-radius:13px;background:var(--accent-soft);flex-shrink:0;"'
+    + '></model-viewer>';
 }
 
-function neuralHeaderSvg() {
-  return '<svg width="54" height="54" viewBox="0 0 54 54" fill="none">'
-    + '<rect width="54" height="54" rx="13" fill="var(--accent-soft)"/>'
-    + '<circle cx="14" cy="18" r="5" fill="var(--accent)"/>'
-    + '<circle cx="14" cy="36" r="5" fill="var(--accent)"/>'
-    + '<circle cx="27" cy="27" r="6" fill="var(--accent)"/>'
-    + '<circle cx="40" cy="18" r="5" fill="var(--accent)"/>'
-    + '<circle cx="40" cy="36" r="5" fill="var(--accent)"/>'
-    + '<line x1="19" y1="18" x2="21" y2="27" stroke="var(--accent)" stroke-width="1.5" opacity="0.35"/>'
-    + '<line x1="19" y1="36" x2="21" y2="27" stroke="var(--accent)" stroke-width="1.5" opacity="0.35"/>'
-    + '<line x1="33" y1="27" x2="35" y2="18" stroke="var(--accent)" stroke-width="1.5" opacity="0.35"/>'
-    + '<line x1="33" y1="27" x2="35" y2="36" stroke="var(--accent)" stroke-width="1.5" opacity="0.35"/>'
-    + '</svg>';
+// Per-line иконка (50×50)
+function neuralLineModel(lineType, isLocked) {
+  var src    = NEURAL_MODELS[lineType] || NEURAL_MODELS.header;
+  var filter = isLocked ? 'filter:grayscale(1);opacity:0.45;' : '';
+  return '<model-viewer'
+    + ' src="' + src + '"'
+    + ' camera-orbit="0deg 70deg 105%"'
+    + ' auto-rotate'
+    + ' auto-rotate-delay="500"'
+    + ' rotation-per-second="25deg"'
+    + ' camera-controls'
+    + ' style="width:50px;height:50px;border-radius:11px;background:var(--accent-soft);flex-shrink:0;' + filter + '"'
+    + '></model-viewer>';
 }
 
 // ── HTML карточки линейки ────────────────────────────────────
@@ -112,17 +119,15 @@ function neuralCardHtml(lineType, nn, rare) {
   const isLocked = st.state === 'locked';
 
   const opacity    = isLocked ? (lineType === 'fortuna_ai' ? '0.28' : '0.55') : '1';
-  const iconColor  = isLocked ? 'var(--text-soft)' : 'var(--accent)';
-  const iconBg     = isLocked ? 'var(--surface-2)' : 'var(--accent-soft)';
   const titleStyle = isLocked ? 'color:var(--text-soft);' : '';
 
   const vBadge = isLocked
     ? '<div style="background:var(--border);color:var(--text-soft);font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;flex-shrink:0;">&#128274;</div>'
     : '<div style="background:var(--accent);color:#fff;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;flex-shrink:0;">' + cfg.versions[version - 1] + '</div>';
 
+  // GLB-иконка вместо SVG
   const header = '<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">'
-    + '<div style="width:42px;height:42px;border-radius:11px;background:' + iconBg + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;">'
-    + neuralIconSvg(iconColor, 22) + '</div>'
+    + neuralLineModel(lineType, isLocked)
     + '<div style="flex:1;">'
     + '<div style="font-size:15px;font-weight:650;' + titleStyle + '">' + cfg.name + '</div>'
     + '<div style="font-size:11px;color:var(--text-soft);margin-top:1px;">Фарм опыта и редких материалов</div>'
