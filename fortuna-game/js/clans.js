@@ -1,7 +1,7 @@
 // ============================================================
 //  clans.js — Этап 5: Кланы, задания, рейтинг и чат
 //  Дизайн: комбинация вариантов 1+2+3 (баннер + ранг + акцент-бордер)
-//  Иконка Руды: " + ICON_ORE + " (📋 чертёж)
+//  Иконка Руды: ' + ICON_ORE + ' (📋 чертёж)
 // ============================================================
 
 // ─── Константы ───────────────────────────────────────────────
@@ -408,7 +408,7 @@ async function renderInClanScreen(player, clanId) {
   } else if (intelDone) {
     rewardBtn = clanBtn('Забрать ' + CLAN_REWARD_XP + ' ' + ICON_XP + ' &#127881;', 'primary', 'doClaimClanReward()');
   } else {
-    rewardBtn = clanBtn('Ещё ' + (CLAN_INTEL_GOAL - intel) + ' " + ICON_ORE + " до награды', 'disabled', '');
+    rewardBtn = clanBtn('Ещё ' + (CLAN_INTEL_GOAL - intel) + ' ' + ICON_ORE + ' до награды', 'disabled', '');
   }
 
   // ── Итоговый HTML ────────────────────────────────────────────
@@ -445,7 +445,7 @@ async function renderInClanScreen(player, clanId) {
     '</div>' +
     '<div class="card" style="padding:10px;text-align:center">' +
     '<div style="font-size:15px;font-weight:700;color:' + (intelDone ? 'var(--accent)' : 'var(--text)') + '">' + intel + '</div>' +
-    '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">" + ICON_ORE + " руда</div>' +
+    '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">' + ICON_ORE + ' руда</div>' +
     '</div>' +
     '</div>' +
 
@@ -463,12 +463,12 @@ async function renderInClanScreen(player, clanId) {
     '<div class="card" style="margin-bottom:10px">' +
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">' +
     '<div>' +
-    '<div style="font-size:13px;font-weight:700">" + ICON_ORE + " Задание недели</div>' +
+    '<div style="font-size:13px;font-weight:700">' + ICON_ORE + ' Задание недели</div>' +
     '<div style="font-size:11px;color:var(--text-soft)">сброс через ' + fmtCountdown(timerLeft) + '</div>' +
     '</div>' +
     '<div style="text-align:right">' +
     '<div style="font-size:22px;font-weight:900;color:' + (intelDone ? 'var(--accent)' : 'var(--text)') + '">' + intel + '</div>' +
-    '<div style="font-size:10px;color:var(--text-soft)">/ ' + CLAN_INTEL_GOAL + ' " + ICON_ORE + "</div>' +
+    '<div style="font-size:10px;color:var(--text-soft)">/ ' + CLAN_INTEL_GOAL + ' ' + ICON_ORE + '</div>' +
     '</div>' +
     '</div>' +
     '<div style="background:var(--surface-2);border-radius:6px;height:10px;overflow:hidden;margin-bottom:4px">' +
@@ -476,7 +476,7 @@ async function renderInClanScreen(player, clanId) {
     '</div>' +
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-soft);margin-bottom:10px">' +
     '<span>0</span>' +
-    '<span style="color:var(--accent);font-weight:700">' + intel + ' " + ICON_ORE + "</span>' +
+    '<span style="color:var(--accent);font-weight:700">' + intel + ' ' + ICON_ORE + '</span>' +
     '<span>' + CLAN_INTEL_GOAL + '</span>' +
     '</div>' +
     rewardBtn +
@@ -701,9 +701,9 @@ function initChatWidget(playerClanId) {
 
     // Кнопка-пузырь
     '<div id="chat-toggle-btn" onclick="toggleChatWidget()" ' +
-    'style="width:50px;height:50px;background:var(--accent);border-radius:50%;' +
-    'display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative">' +
-    ICON_CHAT +
+    'style="width:58px;height:58px;cursor:pointer;position:relative;' +
+    'display:flex;align-items:center;justify-content:center">' +
+    '<img src="clans_and_chat/chat.png" style="width:58px;height:58px;object-fit:contain" alt="Чат" />' +
     '<div id="chat-badge" style="display:none;position:absolute;top:-3px;right:-3px;' +
     'min-width:18px;height:18px;background:#e05252;border-radius:9px;font-size:10px;' +
     'font-weight:700;color:#fff;align-items:center;justify-content:center;' +
