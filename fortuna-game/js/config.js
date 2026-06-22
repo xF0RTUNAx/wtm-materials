@@ -65,7 +65,7 @@ var ICON_RARE  = '<img src="kit/rare.png"  style="width:18px;height:18px;object-
 var ICON_ORE   = '<img src="res/ore.png"   style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
 var ICON_XP    = '<img src="pass/exp.png"  style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
 var ICON_PASS  = '<img src="pass/pass_profile.png" style="width:22px;height:22px;object-fit:contain;vertical-align:middle;margin:-2px 1px 0" alt="" />';
-var ICON_CHAT       = '<img src="clans_and_chat/chat.png" style="width:24px;height:24px;object-fit:contain;vertical-align:middle" alt="" />';
+var ICON_CHAT       = '<img src="clans_and_chat/chat.png" style="width:28px;height:28px;object-fit:contain;vertical-align:middle" alt="" />';
 var ICON_GLOBAL_CHAT = '<img src="clans_and_chat/global_chat.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px -2px" alt="" />';
 var ICON_CLAN_CHAT  = '<img src="clans_and_chat/clan_chat.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px -2px" alt="" />';
-var ICON_CLAN       = '<img src="clans_and_chat/clan.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 2px -2px" alt="" />';
+var ICON_CLAN       = '<img src="clans_and_chat/clan.png" style="width:26px;height:26px;object-fit:contain;vertical-align:middle;margin:0 4px -6px" alt="" />';
