@@ -659,7 +659,7 @@ function initChatWidget(playerClanId) {
 
   var hasClan    = !!playerClanId;
   var clanTabOp  = hasClan ? '' : 'opacity:.4;pointer-events:none';
-  var clanTabLbl = hasClan ? '&#128737; Клан' : '&#128274; Клан';
+  var clanTabLbl = hasClan ? ICON_CLAN_CHAT + ' Клан' : ICON_CLAN_CHAT + ' Клан';
 
   root.innerHTML =
     // Панель чата
@@ -672,7 +672,7 @@ function initChatWidget(playerClanId) {
     '<button id="chat-tab-gen" onclick="switchChatTab(\'general\')" ' +
     'style="flex:1;padding:10px 0;background:var(--accent);color:#fff;border:none;' +
     'font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">' +
-    '&#127758; Общий</button>' +
+    '' + ICON_GLOBAL_CHAT + ' Общий</button>' +
     '<button id="chat-tab-clan" onclick="switchChatTab(\'clan\')" ' +
     'style="flex:1;padding:10px 0;background:transparent;color:var(--text-soft);border:none;' +
     'font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;' + clanTabOp + '">' +
@@ -703,9 +703,7 @@ function initChatWidget(playerClanId) {
     '<div id="chat-toggle-btn" onclick="toggleChatWidget()" ' +
     'style="width:50px;height:50px;background:var(--accent);border-radius:50%;' +
     'display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative">' +
-    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" ' +
-    'stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' +
+    ICON_CHAT +
     '<div id="chat-badge" style="display:none;position:absolute;top:-3px;right:-3px;' +
     'min-width:18px;height:18px;background:#e05252;border-radius:9px;font-size:10px;' +
     'font-weight:700;color:#fff;align-items:center;justify-content:center;' +
@@ -776,11 +774,11 @@ function setChatClanContext(clanId) {
   if (clanId) {
     tabClan.style.opacity       = '1';
     tabClan.style.pointerEvents = 'auto';
-    tabClan.innerHTML = '&#128737; Клан';
+    tabClan.innerHTML = ICON_CLAN_CHAT + ' Клан';
   } else {
     tabClan.style.opacity       = '0.4';
     tabClan.style.pointerEvents = 'none';
-    tabClan.innerHTML = '&#128274; Клан';
+    tabClan.innerHTML = ICON_CLAN_CHAT + ' Клан';
     if (chatActiveCh !== 'general') switchChatTab('general');
   }
 }
