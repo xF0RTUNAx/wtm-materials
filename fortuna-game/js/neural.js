@@ -160,6 +160,12 @@ function neuralCardHtml(lineType, nn, rare) {
   const mt         = st.missionsToday;
   const mPct       = Math.round((mt / MAX_MISSIONS) * 100);
 
+  // Цепочка прокачки
+  var chainItems  = NEURAL_CHAIN_CFG[lineType] || [];
+  var chainCurIdx = isLocked ? -1 : (version - 1);
+  var chainHtml   = (typeof buildChain !== 'undefined' && chainItems.length)
+    ? buildChain(chainItems, chainCurIdx, 'nn-chain-' + lineType, 'rare') : '';
+
   let statusBox = '';
   if (st.state === 'running') {
     const progPct = Math.round(((MISSION_MS - st.remainingMs) / MISSION_MS) * 100);
