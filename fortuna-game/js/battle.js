@@ -264,7 +264,7 @@ function renderBattleDashboard() {
       + "<div style=\"flex:1;min-width:0;\">"
       + "<div style=\"font-size:12px;font-weight:600;color:var(--text);\">"
       + (won ? "\u041f\u043e\u0431\u0435\u0434\u0430" : "\u041f\u043e\u0440\u0430\u0436\u0435\u043d\u0438\u0435") + "</div>"
-      + "<div style=\"font-size:11px;color:var(--text-soft);\">+" + b.xp_gained + " XP &middot; " + partTxt + " &#9881;</div>"
+      + "<div style=\"font-size:11px;color:var(--text-soft);\">+" + b.xp_gained + " XP &middot; " + partTxt + "" + ICON_PARTS + "</div>"
       + "</div>"
       + "<span style=\"font-size:10px;color:var(--text-soft);flex-shrink:0;\">" + time + "</span>"
       + "</div>";
@@ -280,7 +280,7 @@ function renderBattleDashboard() {
       + "<div style=\"font-size:16px;font-weight:650;color:" + tc + ";margin-bottom:3px;\">"
       + (r.won ? "\u{1F3C6} \u041f\u043e\u0431\u0435\u0434\u0430!" : "\u2716 \u041f\u043e\u0440\u0430\u0436\u0435\u043d\u0438\u0435") + "</div>"
       + "<div style=\"font-size:13px;color:" + tc + ";\">+" + r.xp + " XP &nbsp; "
-      + (r.won ? "+" : "") + r.parts + " &#9881;</div>"
+      + (r.won ? "+" : "") + r.parts + "" + ICON_PARTS + "</div>"
       + "</div>";
     lastBattleResult = null;
   }
@@ -483,7 +483,7 @@ function renderHospitalFull() {
         + "<div class=\"cost-value\">+" + HOSP_VIT_PER_LEVEL[hospLevel + 1] + "% \u0432\u0438\u0442/4\u0447</div></div>"
         + "</div>"
         + "<button id=\"hosp-upg-btn\" onclick=\"doUpgradeHospital()\" class=\"btn-upgrade\">"
-        + "\u0423\u043b\u0443\u0447\u0448\u0438\u0442\u044c (" + upgCost + " &#9881;)</button>"
+        + "\u0423\u043b\u0443\u0447\u0448\u0438\u0442\u044c (" + upgCost + "" + ICON_PARTS + ")</button>"
         + "<div id=\"hosp-upg-msg\" class=\"factory-msg\"></div>"
         + "</div>"
       : "<div style=\"text-align:center;padding:12px;color:var(--text-soft);font-size:13px;\">"
