@@ -703,7 +703,7 @@ function initChatWidget(playerClanId) {
     '<div id="chat-toggle-btn" onclick="toggleChatWidget()" ' +
     'style="width:58px;height:58px;cursor:pointer;position:relative;' +
     'display:flex;align-items:center;justify-content:center">' +
-    '<img src="clans_and_chat/chat.png" style="width:512px;height:512px;object-fit:contain" alt="Чат" />' +
+    '<img src="clans_and_chat/chat.png" style="width:256px;height:256px;object-fit:contain" alt="Чат" />' +
     '<div id="chat-badge" style="display:none;position:absolute;top:-1px;right:-1px;' +
     'min-width:18px;height:18px;background:#e05252;border-radius:9px;font-size:10px;' +
     'font-weight:700;color:#fff;align-items:center;justify-content:center;' +
