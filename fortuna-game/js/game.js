@@ -20,6 +20,13 @@ const FACTORY_STATS = [
 const CYCLE_MS = 4 * 60 * 60 * 1000;
 const MIN_COLLECT = 10;
 
+var FACTORY_CHAIN_ITEMS = [
+  {label:'1', cost:null},    {label:'2', cost:'100'},
+  {label:'3', cost:'250'},   {label:'4', cost:'500'},
+  {label:'5', cost:'800'},   {label:'6', cost:'1 200'},
+  {label:'7', cost:'1 800'}, {label:'8', cost:'2 500'},
+  {label:'9', cost:'4 000'}, {label:'10',cost:'6 000'},
+];
 let factoryTimerInterval = null;
 let currentBase = null;
 
@@ -70,7 +77,7 @@ function updateFactoryUI() {
   if (barPct) barPct.textContent = pct + "%";
 
   const speedEl = document.getElementById("factory-speed");
-  if (speedEl) speedEl.innerHTML = `${cap} <span class="gear">&#9881;</span><small>/4ч</small>`;
+  if (speedEl) speedEl.innerHTML = "" + cap + " " + ICON_PARTS + "<small>/4ч</small>";
 
   const timerEl = document.getElementById("factory-timer");
   if (timerEl) {
@@ -88,7 +95,7 @@ function updateFactoryUI() {
 
   const collectMain = document.getElementById("collect-main");
   if (collectMain) {
-    collectMain.innerHTML = `Готово: ${accumulated} <span class="gear">&#9881;</span>`;
+    collectMain.innerHTML = "Готово: " + accumulated + " " + ICON_PARTS;
   }
 
   const collectBtn = document.getElementById("btn-collect");
@@ -99,7 +106,7 @@ function updateFactoryUI() {
       collectBtn.style.opacity = "1";
     } else {
       collectBtn.disabled = true;
-      collectBtn.textContent = `Ещё ${MIN_COLLECT - accumulated} ⚙️`;
+      collectBtn.innerHTML = 'Ещё ' + (MIN_COLLECT - accumulated) + ' ' + ICON_PARTS;
       collectBtn.style.opacity = "0.5";
     }
   }
@@ -124,13 +131,13 @@ function updateFactoryUI() {
       const cost = FACTORY_STATS[level].upgradeCost;
       if (parts >= cost) {
         upgradeBtn.disabled = false;
-        upgradeBtn.innerHTML = `Улучшить завод (${cost} &#9881;)`;
+        upgradeBtn.innerHTML = `Улучшить завод (' + cost + ' ' + ICON_PARTS + ')`;
         upgradeBtn.style.opacity = "1";
         upgradeBtn.style.background = "var(--btn)";
         upgradeBtn.style.color = "var(--btn-text)";
       } else {
         upgradeBtn.disabled = true;
-        upgradeBtn.innerHTML = `Недостаточно &#9881; (${parts} / ${cost})`;
+        upgradeBtn.innerHTML = 'Недостаточно ' + ICON_PARTS + ' (' + parts + ' / ' + cost + ')';
         upgradeBtn.style.opacity = "0.5";
         upgradeBtn.style.background = "";
         upgradeBtn.style.color = "";
@@ -149,7 +156,7 @@ function updateFactoryUI() {
         <div class="upgrade-levels">ур. ${level} <span>&#8594;</span> ур. ${level + 1}</div>
         <div>
           <div class="cost-label">Стоимость</div>
-          <div class="cost-value">${cost} &#9881;</div>
+          <div class="cost-value">' + cost + ' ' + ICON_PARTS + '</div>
         </div>`;
     }
   }
@@ -182,7 +189,7 @@ async function doCollect() {
     const partsEl = document.getElementById("r-parts");
     if (partsEl) partsEl.textContent = result.parts;
     updateFactoryUI();
-    showFactoryMsg(`+${result.collected} &#9881; собрано!`, "ok");
+    showFactoryMsg('+' + result.collected + ' ' + ICON_PARTS + ' собрано!', 'ok');
   } catch (e) {
     showFactoryMsg(e.message, "err");
     if (btn) { btn.disabled = false; btn.textContent = "Собрать"; }
@@ -252,7 +259,7 @@ async function renderFactory() {
 
   // ── GLB-модель завода (model-viewer) ─────────────────────
   const factoryModel = `<model-viewer
-    src="factory_and_lab/Models/GLB%20format/building-i.glb"
+    src="factory_and_lab/Models/GLB%20format/building-m.glb"
     camera-orbit="0deg 70deg 105%"
     auto-rotate
     auto-rotate-delay="800"
@@ -283,7 +290,7 @@ async function renderFactory() {
       <div class="stats-row">
         <div class="stat">
           <div class="stat-label">Скорость</div>
-          <div class="stat-value" id="factory-speed">… <span class="gear">&#9881;</span><small>/4ч</small></div>
+          <div class="stat-value" id="factory-speed">…</div>\n
         </div>
         <div class="stat">
           <div class="stat-label">До партии</div>
@@ -295,8 +302,8 @@ async function renderFactory() {
 
       <div class="collect-block">
         <div class="collect-info">
-          <div class="collect-main" id="collect-main">Готово: … <span class="gear">&#9881;</span></div>
-          <div class="collect-sub">Минимум для сбора — ${MIN_COLLECT} &#9881;</div>
+          <div class="collect-main" id="collect-main">Готово: …</div>\n
+          <div class="collect-sub">Минимум для сбора — ' + MIN_COLLECT + ' ' + ICON_PARTS + '</div>
         </div>
         <button class="btn-collect" id="btn-collect" onclick="doCollect()" disabled>…</button>
       </div>
@@ -304,12 +311,12 @@ async function renderFactory() {
     </div>
 
     <div class="upgrade-card">
-      <div class="upgrade-title">Улучшение завода</div>
-      <div class="upgrade-row" id="upgrade-info">
+      <div class="upgrade-title">Прокачка завода</div>\n
+      ` + buildChain(FACTORY_CHAIN_ITEMS, Math.min(level,10)-1, 'factory-chain-tip', 'parts') + `\n      <div class="upgrade-row" id="upgrade-info">
         <div class="upgrade-levels">ур. ${level} <span>&#8594;</span> ур. ${level + 1}</div>
         <div>
           <div class="cost-label">Стоимость</div>
-          <div class="cost-value">${nextCost ?? "—"} &#9881;</div>
+          <div class="cost-value">' + (nextCost ?? '—') + ' ' + ICON_PARTS + '</div>
         </div>
       </div>
       <button class="btn-upgrade-dis btn-upgrade" id="btn-upgrade" onclick="doUpgrade()">…</button>
