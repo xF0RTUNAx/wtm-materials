@@ -195,7 +195,7 @@ function renderLabContent() {
         </div>
         <div class="stat">
           <div class="stat-label">Детали</div>
-          <div class="stat-value" id="lab-parts">${parts}<span class="gear">" + ICON_PARTS + "</span></div>
+          <div class="stat-value" id="lab-parts">${parts} ${ICON_PARTS}</div>
         </div>
       </div>
 
@@ -283,7 +283,7 @@ async function doTroopUpgrade(type) {
     if (powerEl) powerEl.innerHTML = armyPower(currentLabData.troops) + `<small style="font-size:12px;color:var(--text-soft);font-weight:500;"> ед.</small>`;
 
     const labPartsEl = document.getElementById("lab-parts");
-    if (labPartsEl) labPartsEl.innerHTML = result.parts + `<span class="gear">" + ICON_PARTS + "</span>`;
+    if (labPartsEl) labPartsEl.innerHTML = result.parts + " " + ICON_PARTS;
 
     refreshLabUpgradeBtn(result.parts);
 
