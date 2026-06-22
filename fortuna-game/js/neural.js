@@ -1,3 +1,9 @@
+// Цепочки версий нейросетей
+var NEURAL_CHAIN_CFG = {
+  superchat:  [{label:'1.0', cost:null}, {label:'2.0', cost:'100'},    {label:'3.0', cost:'250'}],
+  twink:      [{label:'Fast',cost:null}, {label:'Flash',cost:'2 000'},{label:'Pro', cost:'5 000'}],
+  fortuna_ai: [{label:'Low', cost:null}, {label:'Med.', cost:'40 000'},{label:'High',cost:'90 000'}],
+};
 // ============================================================
 //  neural.js — Нейросети (Этап 3).
 //  Три линейки (Super Chat, Twink, Fortuna AI), каждая с 3 версиями.
@@ -141,7 +147,7 @@ function neuralCardHtml(lineType, nn, rare) {
       + header
       + '<div id="neural-btns-' + lineType + '">'
       + '<button ' + (canOpen ? 'onclick="doNeuralUpgrade(\'' + lineType + '\')"' : '') + ' style="width:100%;padding:10px;border:none;border-radius:9px;font-size:12px;font-weight:650;font-family:inherit;cursor:' + (canOpen ? 'pointer' : 'default') + ';background:' + (canOpen ? 'var(--btn)' : 'var(--surface-2)') + ';color:' + (canOpen ? 'var(--btn-text)' : 'var(--text-soft)') + ';">'
-      + 'Открыть за ' + formatNum(cost) + '\u00a0Редких</button>'
+      + 'Открыть за ' + formatNum(cost) + '\u00a0' + ICON_RARE + '</button>'
       + '</div>'
       + '<div class="factory-msg" id="neural-msg-' + lineType + '"></div>'
       + '</div>';
@@ -166,7 +172,7 @@ function neuralCardHtml(lineType, nn, rare) {
   } else if (st.state === 'ready') {
     statusBox = '<div style="background:var(--accent-soft);border-radius:9px;padding:10px 12px;margin-bottom:10px;">'
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);margin-bottom:2px;">&#10003; Задание выполнено!</div>'
-      + '<div style="font-size:12px;color:var(--text-soft);margin-top:2px;">+' + xpReward + '\u00a0Опыт\u00a0\u00b7\u00a0+' + rareReward + '\u00a0Редких</div>'
+      + '<div style="font-size:12px;color:var(--text-soft);margin-top:2px;">+' + xpReward + '\u00a0' + ICON_XP + '\u00a0\u00b7\u00a0+' + rareReward + '\u00a0' + ICON_RARE + '</div>'
       + '</div>';
   } else if (st.state === 'limit') {
     statusBox = '<div style="background:var(--surface-2);border-radius:9px;padding:10px 12px;margin-bottom:10px;">'
@@ -176,7 +182,7 @@ function neuralCardHtml(lineType, nn, rare) {
   } else {
     statusBox = '<div style="background:var(--surface-2);border-radius:9px;padding:10px 12px;margin-bottom:10px;">'
       + '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-soft);">&#9726; Свободна</div>'
-      + '<div style="font-size:12px;color:var(--text-soft);margin-top:2px;">Награда: +' + xpReward + '\u00a0Опыт\u00a0\u00b7\u00a0+' + rareReward + '\u00a0Редких</div>'
+      + '<div style="font-size:12px;color:var(--text-soft);margin-top:2px;">Награда: +' + xpReward + '\u00a0' + ICON_XP + '\u00a0\u00b7\u00a0+' + rareReward + '\u00a0' + ICON_RARE + '</div>'
       + '</div>';
   }
 
@@ -200,11 +206,11 @@ function neuralCardHtml(lineType, nn, rare) {
     const upgCost    = cfg.upgradeCosts[version];
     const canUpgrade = rare >= upgCost;
     upgradeBtn = '<button ' + (canUpgrade ? 'onclick="doNeuralUpgrade(\'' + lineType + '\')"' : '') + ' style="padding:10px 12px;border:none;border-radius:9px;background:var(--surface-2);color:' + (canUpgrade ? 'var(--text)' : 'var(--text-soft)') + ';font-size:11px;font-weight:650;cursor:' + (canUpgrade ? 'pointer' : 'default') + ';font-family:inherit;white-space:nowrap;flex-shrink:0;">'
-      + cfg.versions[version] + '\u00a0\u00b7\u00a0' + formatNum(upgCost) + '\u00a0ред.</button>';
+      + cfg.versions[version] + '\u00a0\u00b7\u00a0' + formatNum(upgCost) + '\u00a0' + ICON_RARE + '</button>';
   }
 
   return '<div id="neural-card-' + lineType + '" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px;margin-bottom:16px;">'
-    + header + statusBox + progressBar
+    + header + chainHtml + statusBox + progressBar
     + '<div style="display:flex;gap:7px;" id="neural-btns-' + lineType + '">'
     + actionBtn + upgradeBtn + '</div>'
     + '<div class="factory-msg" id="neural-msg-' + lineType + '"></div>'
@@ -341,7 +347,7 @@ async function doNeuralCollect(lineType) {
 
     renderNeuralContent();
     startNeuralTimer();
-    showNeuralMsg(lineType, '+' + result.xp_gained + ' Опыт \u00b7 +' + result.rare_gained + ' Редких!', 'ok');
+    showNeuralMsg(lineType, '+' + result.xp_gained + ' ' + ICON_XP + ' \u00b7 +' + result.rare_gained + ' ' + ICON_RARE + '!', 'ok');
   } catch (e) {
     renderNeuralContent();
     showNeuralMsg(lineType, e.message, 'err');
