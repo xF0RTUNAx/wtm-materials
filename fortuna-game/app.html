@@ -267,6 +267,10 @@
 
   @media (max-width: 380px) { .resources { grid-template-columns: 1fr; } .soon-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } .stats-row { grid-template-columns: 1fr; } }
 </style>
+  <!-- Этап 5: model-viewer для 3D-моделей GLB -->
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3/dist/model-viewer.min.js"></script>
+  <!-- Этап 5: Supabase JS для Realtime чата -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
   <div class="wrap">
@@ -387,6 +391,7 @@
   <script src="js/troops.js"></script>
   <script src="js/neural.js"></script>
   <script src="js/battle.js"></script>
+  <script src="js/clans.js"></script>
   <script>
     // ── Тема ──────────────────────────────────────────────────
     function applyTheme(theme) {
@@ -626,6 +631,8 @@
 
     // ── Экран профиля ─────────────────────────────────────────
     async function renderProfile(player) {
+      if (!player) player = getCurrentPlayer();
+      if (!player) { renderLogin(); return; }
       renderNav();
       setActiveTab("profile");
       var app       = document.getElementById("app");
@@ -651,10 +658,14 @@
         + "<div class=\"res\"><div class=\"res-label\">&#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">&#8230;</div></div>"
         + "</div></div>"
         + "<div class=\"card\">"
-        + "<div class=\"section-title\">&#1057;&#1082;&#1086;&#1088;&#1086; &#1086;&#1090;&#1082;&#1088;&#1086;&#1077;&#1090;&#1089;&#1103;</div>"
+        + "<div id=\"clan-entry\" style=\"margin-bottom:12px;\">"
+        + "<button onclick=\"renderClans()\" style=\"width:100%;padding:12px;background:var(--surface-2);color:var(--text);"
+        + "border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:650;"
+        + "font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;\">"
+        + "&#128737; &#1050;&#1083;&#1072;&#1085;&#1099; &#8594;</button>"
+        + "</div>"
         + "<div class=\"soon-grid\">"
-        + "<div class=\"soon\"><b>&#1050;&#1083;&#1072;&#1085;&#1099;</b><small>&#1089;&#1082;&#1086;&#1088;&#1086;</small></div>"
-        + "<div class=\"soon\"><b>&#1050;&#1072;&#1088;&#1090;&#1072; &#1074;&#1086;&#1081;&#1085;&#1099;</b><small>&#1090;&#1077;&#1088;&#1088;&#1080;&#1090;&#1086;&#1088;&#1080;&#1080;</small></div>"
+        + "<div class=\"soon\"><b>&#1050;&#1072;&#1088;&#1090;&#1072; &#1074;&#1086;&#1081;&#1085;&#1099;</b><small>&#1089;&#1082;&#1086;&#1088;&#1086;</small></div>"
         + "</div>"
         + "<div class=\"logout-row\"><button class=\"logout-link\" onclick=\"logout()\">&#1042;&#1099;&#1081;&#1090;&#1080;</button></div>"
         + "</div></div>";
@@ -669,6 +680,31 @@
           var base = await fetchPlayerBase(profile.id);
           document.getElementById("r-parts").textContent = base ? (base.parts          ?? 0) : 0;
           document.getElementById("r-rare").textContent  = base ? (base.rare_materials ?? 0) : 0;
+
+          // Обновляем кнопку Кланов с актуальным статусом
+          var clanEntry = document.getElementById("clan-entry");
+          if (clanEntry) {
+            if (profile.clan_id) {
+              clanEntry.innerHTML = "<button onclick=\"renderClans()\" style=\"width:100%;padding:12px;"
+                + "background:var(--accent-soft);color:var(--accent);"
+                + "border:1px solid var(--accent);border-radius:var(--radius-sm);"
+                + "font-size:14px;font-weight:650;font-family:inherit;cursor:pointer;"
+                + "display:flex;align-items:center;justify-content:center;gap:8px;\">"
+                + "&#128737; &#1052;&#1086;&#1081; &#1082;&#1083;&#1072;&#1085; &#8594;</button>";
+            } else {
+              clanEntry.innerHTML = "<button onclick=\"renderClans()\" style=\"width:100%;padding:12px;"
+                + "background:var(--surface-2);color:var(--text);"
+                + "border:1px solid var(--border);border-radius:var(--radius-sm);"
+                + "font-size:14px;font-weight:650;font-family:inherit;cursor:pointer;"
+                + "display:flex;align-items:center;justify-content:center;gap:8px;\">"
+                + "&#128737; &#1050;&#1083;&#1072;&#1085;&#1099; &#8594;</button>";
+            }
+          }
+
+          // Инициализируем чат-виджет (один раз при первом заходе в профиль)
+          if (typeof initChatWidget === "function") {
+            initChatWidget(profile.clan_id || null);
+          }
         }
       } catch (_) {
         ["r-xp","r-parts","r-rare","r-bp"].forEach(function(id) {
