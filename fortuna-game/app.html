@@ -530,7 +530,7 @@
             : "<span style=\"color:#a32d2d;font-weight:700;\">&#9876; &#1059;&#1076;&#1072;&#1088;</span>";
           var txt  = won
             ? "&#1048;&#1075;&#1088;&#1086;&#1082; <b>" + escapeHtml(d.attacker_login || "?") + "</b> &#1072;&#1090;&#1072;&#1082;&#1086;&#1074;&#1072;&#1083; &#1074;&#1072;&#1089; &mdash; &#1074;&#1099; &#1086;&#1090;&#1073;&#1080;&#1083;&#1080;&#1089;&#1100;! +" + (d.xp_gained || 25) + " XP"
-            : "&#1048;&#1075;&#1088;&#1086;&#1082; <b>" + escapeHtml(d.attacker_login || "?") + "</b> &#1072;&#1090;&#1072;&#1082;&#1086;&#1074;&#1072;&#1083; &#1074;&#1072;&#1089; &mdash; &#1091;&#1089;&#1087;&#1077;&#1096;&#1085;&#1086;" + (d.parts_change ? " (" + d.parts_change + " &#9881;)" : "");
+            : "&#1048;&#1075;&#1088;&#1086;&#1082; <b>" + escapeHtml(d.attacker_login || "?") + "</b> &#1072;&#1090;&#1072;&#1082;&#1086;&#1074;&#1072;&#1083; &#1074;&#1072;&#1089; &mdash; &#1091;&#1089;&#1087;&#1077;&#1096;&#1085;&#1086;" + (d.parts_change ? " (" + d.parts_change + " " + ICON_PARTS + ")" : "");
           return "<div style=\"padding:10px 0;border-bottom:1px solid var(--border);"
             + (!n.is_read ? "background:var(--accent-soft);margin:0 -4px;padding:10px 4px;border-radius:8px;" : "opacity:.75;")
             + "\">"
@@ -652,10 +652,10 @@
         + "<div class=\"profile-sub\">@" + escapeHtml(player.login || "") + "</div></div>"
         + "</div>"
         + "<div class=\"resources\">"
-        + "<div class=\"res\"><div class=\"res-label\">&#9881; &#1044;&#1077;&#1090;&#1072;&#1083;&#1080;</div><div class=\"res-value\" id=\"r-parts\">&#8230;</div></div>"
-        + "<div class=\"res\"><div class=\"res-label\">" + rareIcon(11) + " &#1056;&#1077;&#1076;&#1082;&#1080;&#1077;</div><div class=\"res-value\" id=\"r-rare\">&#8230;</div></div>"
-        + "<div class=\"res\"><div class=\"res-label\">&#1054;&#1087;&#1099;&#1090;</div><div class=\"res-value\" id=\"r-xp\">&#8230;</div></div>"
-        + "<div class=\"res\"><div class=\"res-label\">&#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">&#8230;</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">" + ICON_PARTS + " &#1044;&#1077;&#1090;&#1072;&#1083;&#1080;</div><div class=\"res-value\" id=\"r-parts\">&#8230;</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">" + ICON_RARE + " &#1056;&#1077;&#1076;&#1082;&#1080;&#1077;</div><div class=\"res-value\" id=\"r-rare\">&#8230;</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">" + ICON_XP + " &#1054;&#1087;&#1099;&#1090;</div><div class=\"res-value\" id=\"r-xp\">&#8230;</div></div>"
+        + "<div class=\"res\"><div class=\"res-label\">" + ICON_PASS + " &#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">&#8230;</div></div>"
         + "</div></div>"
         + "<div class=\"card\">"
         + "<div id=\"clan-entry\" style=\"margin-bottom:12px;\">"
@@ -729,6 +729,51 @@
       try { saved = localStorage.getItem("fortuna_theme"); } catch(_) {}
       applyTheme(saved === "dark" ? "dark" : "light");
     })();
+
+    // ── Цепочка прокачки (вариант «Узлы», Этап 5) ─────────────
+    function buildChain(items, currentIdx, tipId, resourceType) {
+      var h = '<div style="overflow-x:auto;padding:6px 0 2px;scrollbar-width:none;-webkit-overflow-scrolling:touch">'
+        + '<div style="display:flex;align-items:flex-start;min-width:max-content">';
+      items.forEach(function(item, i) {
+        var done    = i < currentIdx;
+        var current = i === currentIdx;
+        var bg   = (done || current) ? 'var(--accent)' : 'var(--surface-2)';
+        var fg   = (done || current) ? '#fff' : 'var(--text-soft)';
+        var ring = current ? ';box-shadow:0 0 0 3px rgba(200,100,60,.25)' : '';
+        var icon = done ? '&#10003;' : (current ? '&#9658;' : (i + 1));
+        var ca   = (item.cost === null || item.cost === undefined)
+          ? 'null' : "'" + item.cost + "'";
+        h += '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;flex-shrink:0;padding:0 4px"'
+          + ' onclick="showChainTip(\'' + tipId + '\',' + ca + ',\'' + resourceType + '\')">'
+          + '<div style="width:22px;height:22px;border-radius:50%;background:' + bg
+          + ';color:' + fg + ';display:flex;align-items:center;justify-content:center;'
+          + 'font-size:9px;font-weight:700;flex-shrink:0' + ring + '">' + icon + '</div>'
+          + '<div style="font-size:9px;color:var(--text-soft);text-align:center;line-height:1.2;max-width:30px">'
+          + item.label + '</div></div>';
+        if (i < items.length - 1) {
+          h += '<div style="min-width:10px;height:2px;background:' + (done ? 'var(--accent)' : 'var(--border)')
+            + ';margin-top:10px;flex-shrink:0"></div>';
+        }
+      });
+      h += '</div></div>';
+      h += '<div id="' + tipId + '" style="font-size:11px;color:var(--accent);font-weight:600;'
+        + 'text-align:center;min-height:16px;margin-top:2px;opacity:0;transition:opacity .2s"></div>';
+      return h;
+    }
+
+    function showChainTip(tipId, cost, resourceType) {
+      var el = document.getElementById(tipId);
+      if (!el) return;
+      var icons = {parts: ICON_PARTS, rare: ICON_RARE, ore: ICON_ORE};
+      var icon  = icons[resourceType] || '';
+      el.innerHTML = (cost === null || cost === undefined)
+        ? '&#9733; Стартовый уровень'
+        : 'Стоимость: ' + cost + ' ' + icon;
+      el.style.opacity = '1';
+      clearTimeout(el._t);
+      el._t = setTimeout(function() { if (el) el.style.opacity = '0'; }, 3000);
+    }
+
     renderApp();
   </script>
 </body>
