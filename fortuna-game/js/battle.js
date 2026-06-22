@@ -81,9 +81,13 @@ function troopBadgeBattle(type, size) {
   size = size || 30;
   var cfg = TROOP_CFG[type];
   if (!cfg) return "";
-  return "<div style=\"width:" + size + "px;height:" + size + "px;border-radius:7px;background:" + cfg.color
-    + ";display:flex;align-items:center;justify-content:center;font-size:" + Math.round(size * 0.43)
-    + "px;font-weight:700;color:#fff;flex-shrink:0;\">" + cfg.letter + "</div>";
+  var src = (typeof TROOP_IMG !== "undefined" && TROOP_IMG[type]) ? TROOP_IMG[type] : "";
+  var imgSize = Math.round(size * 0.82);
+  return "<div style=\"width:" + size + "px;height:" + size + "px;border-radius:7px;"
+    + "background:var(--surface-2);display:flex;align-items:center;justify-content:center;"
+    + "flex-shrink:0;overflow:hidden;\">"
+    + "<img src=\"" + src + "\" alt=\"\" style=\"width:" + imgSize + "px;height:" + imgSize + "px;object-fit:contain;\" />"
+    + "</div>";
 }
 
 function pickOpponents(allPlayers, myId, myXp, count) {
@@ -121,9 +125,11 @@ function buildTroopGrid(which) {
     return "<div onclick=\"" + (disabled ? "" : "toggleLineupSlot('" + which + "','" + type + "')") + "\" "
       + "style=\"display:flex;align-items:center;gap:8px;padding:10px 12px;background:" + bkg + ";"
       + "border:1px solid " + brd + ";border-radius:var(--radius-sm);cursor:" + (disabled ? "default" : "pointer") + ";opacity:" + (disabled ? ".4" : "1") + ";transition:background .15s;\">"
-      + "<div style=\"width:28px;height:28px;border-radius:7px;background:"
-      + (checked ? "rgba(255,255,255,.2)" : cfg.color)
-      + ";display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;\">" + cfg.letter + "</div>"
+      + "<div style=\"width:28px;height:28px;border-radius:7px;background:var(--surface-2);"
+      + "display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;"
+      + "border:2px solid " + (checked ? cfg.color : "transparent") + ";\"><img src=\""
+      + (TROOP_IMG && TROOP_IMG[type] ? TROOP_IMG[type] : '')
+      + "\" style=\"width:22px;height:22px;object-fit:contain;\" /></div>"
       + "<div style=\"flex:1;\"><div style=\"font-size:13px;font-weight:600;color:" + (checked ? "#fff" : "var(--text)") + ";\">" + escapeHtml(cfg.name) + "</div>"
       + (inHosp ? "<div style=\"font-size:11px;color:" + (checked ? "rgba(255,255,255,.7)" : "var(--accent)") + ";\">\u0432 \u0433\u043e\u0441\u043f\u0438\u0442\u0430\u043b\u0435</div>" : "")
       + "</div>"
