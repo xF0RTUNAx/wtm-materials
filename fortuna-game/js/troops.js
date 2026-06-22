@@ -28,7 +28,7 @@ const TROOP_IMG = {
 
 // Масштаб PNG внутри бейджа (компенсирует разные поля прозрачности в файлах)
 const TROOP_IMG_SCALE = {
-  inf: 1, bmp: 1.35, tank: 1, arty: 1, aa: 1, msl: 1, avia: 1,
+  inf: 1, bmp: 1.6, tank: 1, arty: 1, aa: 1, msl: 1, avia: 1,
 };
 
 
