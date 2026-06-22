@@ -1,27 +1,35 @@
 // ============================================================
 //  troops.js — Лаборатория и войска (Этап 2).
 //  Открытие войск через лабораторию, прокачка за Детали.
-//  Звёзды, фрагменты, живучесть — Этап 3.
 // ============================================================
 
 const TROOP_ORDER = ["inf", "bmp", "tank", "arty", "aa", "msl", "avia"];
 
 const TROOP_CFG = {
-  inf:  { name: "Пехота",     letter: "П",  letterSize: 17, color: "#5a7a3e", weight: 1,    baseCost: 50,    labLevel: 1 },
-  bmp:  { name: "БМП",        letter: "Б",  letterSize: 17, color: "#4a7eb5", weight: 2.5,  baseCost: 150,   labLevel: 2 },
-  tank: { name: "Танки",      letter: "Т",  letterSize: 17, color: "#8a6d2a", weight: 5,    baseCost: 500,   labLevel: 3 },
-  arty: { name: "Артиллерия", letter: "А",  letterSize: 17, color: "#b54a2a", weight: 10,   baseCost: 1200,  labLevel: 4 },
-  aa:   { name: "ПВО",        letter: "AA", letterSize: 11, color: "#3e7a5e", weight: 20,   baseCost: 3000,  labLevel: 5 },
-  msl:  { name: "Ракеты",     letter: "Р",  letterSize: 17, color: "#7a4db5", weight: 60,   baseCost: 7000,  labLevel: 6 },
-  avia: { name: "Авиация",    letter: "В",  letterSize: 17, color: "#1a5fa0", weight: 200,  baseCost: 15000, labLevel: 7 },
+  inf:  { name: "Пехота",     color: "#5a7a3e", weight: 1,    baseCost: 50,    labLevel: 1 },
+  bmp:  { name: "БМП",        color: "#4a7eb5", weight: 2.5,  baseCost: 150,   labLevel: 2 },
+  tank: { name: "Танки",      color: "#8a6d2a", weight: 5,    baseCost: 500,   labLevel: 3 },
+  arty: { name: "Артиллерия", color: "#b54a2a", weight: 10,   baseCost: 1200,  labLevel: 4 },
+  aa:   { name: "ПВО",        color: "#3e7a5e", weight: 20,   baseCost: 3000,  labLevel: 5 },
+  msl:  { name: "Ракеты",     color: "#7a4db5", weight: 60,   baseCost: 7000,  labLevel: 6 },
+  avia: { name: "Авиация",    color: "#1a5fa0", weight: 200,  baseCost: 15000, labLevel: 7 },
 };
 
-// LAB_COSTS[currentLevel] — детали для перехода на следующий уровень
-const LAB_COSTS = [null, 500, 1500, 3000, 5000, 8000, 12000];
+// ── PNG-пути для каждого типа войска ─────────────────────────
+const TROOP_IMG = {
+  inf:  "army/soldier_r.png",
+  bmp:  "army/bmp_r.png",
+  tank: "army/tank_r.png",
+  arty: "army/artillery_r.png",
+  aa:   "army/aa_r.png",
+  msl:  "army/missile_r.png",
+  avia: "army/aviation_r.png",
+};
 
+const LAB_COSTS = [null, 500, 1500, 3000, 5000, 8000, 12000];
 const MAX_TROOP_LEVEL = 25;
 
-let currentLabData = null; // { base, troops }
+let currentLabData = null;
 
 // ── Расчёты ─────────────────────────────────────────────────
 
@@ -38,10 +46,15 @@ function armyPower(troops) {
 
 // ── HTML-фрагменты ───────────────────────────────────────────
 
+// PNG-бейдж войска (38×38, вместо буквы)
 function troopBadge(type) {
   const cfg = TROOP_CFG[type];
   if (!cfg) return "";
-  return `<div style="width:38px;height:38px;border-radius:10px;background:${cfg.color};display:flex;align-items:center;justify-content:center;font-size:${cfg.letterSize}px;font-weight:700;color:#fff;flex-shrink:0;">${cfg.letter}</div>`;
+  const src = TROOP_IMG[type] || "";
+  return `<div style="width:38px;height:38px;border-radius:10px;background:var(--surface-2);`
+    + `display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">`
+    + `<img src="${src}" alt="${cfg.name}" style="width:32px;height:32px;object-fit:contain;" />`
+    + `</div>`;
 }
 
 function troopRowHtml(type, level, parts) {
@@ -75,8 +88,11 @@ function troopRowHtml(type, level, parts) {
 
 function lockedRowHtml(type) {
   const cfg = TROOP_CFG[type];
+  const src = TROOP_IMG[type] || "";
   return `<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface-2);border-radius:var(--radius-sm);opacity:0.4;">
-    <div style="width:38px;height:38px;border-radius:10px;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">&#128274;</div>
+    <div style="width:38px;height:38px;border-radius:10px;background:var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+      <img src="${src}" alt="${cfg.name}" style="width:32px;height:32px;object-fit:contain;filter:grayscale(1);" />
+    </div>
     <div>
       <div style="font-size:14px;font-weight:650;color:var(--text-soft);">${cfg.name}</div>
       <div style="font-size:12px;color:var(--text-soft);margin-top:2px;">Открывается на Лаб. ур. ${cfg.labLevel}</div>
@@ -84,20 +100,17 @@ function lockedRowHtml(type) {
   </div>`;
 }
 
+// GLB-модель лаборатории (вместо SVG)
 function labSvg() {
-  return `<svg width="54" height="54" viewBox="0 0 54 54" fill="none">
-    <rect width="54" height="54" rx="13" fill="var(--accent-soft)"/>
-    <path d="M22,8 L22,22 L12,40 Q12,46 27,46 Q42,46 42,40 L32,22 L32,8 Z" fill="var(--surface)"/>
-    <path d="M15.3,34 L12,40 Q12,46 27,46 Q42,46 42,40 L38.7,34 Z" fill="var(--accent)"/>
-    <path d="M22,8 L22,22 L12,40 Q12,46 27,46 Q42,46 42,40 L32,22 L32,8" fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    <line x1="15.3" y1="34" x2="38.7" y2="34" stroke="var(--accent)" stroke-width="0.7" stroke-dasharray="2,1.5" opacity="0.5"/>
-    <rect x="20" y="6" width="14" height="4" rx="2" fill="var(--text)"/>
-    <rect x="22" y="7" width="6" height="1.5" rx="0.75" fill="white" opacity="0.22"/>
-    <line x1="26" y1="11" x2="18" y2="43" stroke="white" stroke-width="1.5" opacity="0.2" stroke-linecap="round"/>
-    <circle cx="30" cy="40" r="2" fill="white" opacity="0.45"/>
-    <circle cx="22" cy="38" r="1.5" fill="white" opacity="0.35"/>
-    <circle cx="34" cy="37" r="1" fill="white" opacity="0.3"/>
-  </svg>`;
+  return '<model-viewer'
+    + ' src="factory_and_lab/Models/GLB%20format/building-q.glb"'
+    + ' camera-orbit="0deg 70deg 105%"'
+    + ' auto-rotate'
+    + ' auto-rotate-delay="800"'
+    + ' rotation-per-second="18deg"'
+    + ' camera-controls'
+    + ' style="width:80px;height:80px;border-radius:13px;background:var(--accent-soft);flex-shrink:0;"'
+    + '></model-viewer>';
 }
 
 // ── Рендер ───────────────────────────────────────────────────
