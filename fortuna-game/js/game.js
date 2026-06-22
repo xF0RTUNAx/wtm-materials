@@ -131,7 +131,7 @@ function updateFactoryUI() {
       const cost = FACTORY_STATS[level].upgradeCost;
       if (parts >= cost) {
         upgradeBtn.disabled = false;
-        upgradeBtn.innerHTML = `Улучшить завод (' + cost + ' ' + ICON_PARTS + ')`;
+        upgradeBtn.innerHTML = `Улучшить завод (${cost} ${ICON_PARTS})`;
         upgradeBtn.style.opacity = "1";
         upgradeBtn.style.background = "var(--btn)";
         upgradeBtn.style.color = "var(--btn-text)";
@@ -156,7 +156,7 @@ function updateFactoryUI() {
         <div class="upgrade-levels">ур. ${level} <span>&#8594;</span> ур. ${level + 1}</div>
         <div>
           <div class="cost-label">Стоимость</div>
-          <div class="cost-value">' + cost + ' ' + ICON_PARTS + '</div>
+          <div class="cost-value">${cost} ${ICON_PARTS}</div>
         </div>`;
     }
   }
@@ -290,7 +290,7 @@ async function renderFactory() {
       <div class="stats-row">
         <div class="stat">
           <div class="stat-label">Скорость</div>
-          <div class="stat-value" id="factory-speed">…</div>\n
+          <div class="stat-value" id="factory-speed">…</div>
         </div>
         <div class="stat">
           <div class="stat-label">До партии</div>
@@ -302,8 +302,8 @@ async function renderFactory() {
 
       <div class="collect-block">
         <div class="collect-info">
-          <div class="collect-main" id="collect-main">Готово: …</div>\n
-          <div class="collect-sub">Минимум для сбора — ' + MIN_COLLECT + ' ' + ICON_PARTS + '</div>
+          <div class="collect-main" id="collect-main">Готово: …</div>
+          <div class="collect-sub">Минимум для сбора — ${MIN_COLLECT} ${ICON_PARTS}</div>
         </div>
         <button class="btn-collect" id="btn-collect" onclick="doCollect()" disabled>…</button>
       </div>
@@ -311,12 +311,12 @@ async function renderFactory() {
     </div>
 
     <div class="upgrade-card">
-      <div class="upgrade-title">Прокачка завода</div>\n
+      <div class="upgrade-title">Прокачка завода</div>
       ` + buildChain(FACTORY_CHAIN_ITEMS, Math.min(level,10)-1, 'factory-chain-tip', 'parts') + `\n      <div class="upgrade-row" id="upgrade-info">
         <div class="upgrade-levels">ур. ${level} <span>&#8594;</span> ур. ${level + 1}</div>
         <div>
           <div class="cost-label">Стоимость</div>
-          <div class="cost-value">' + (nextCost ?? '—') + ' ' + ICON_PARTS + '</div>
+          <div class="cost-value">${nextCost ?? '—'} ${ICON_PARTS}</div>
         </div>
       </div>
       <button class="btn-upgrade-dis btn-upgrade" id="btn-upgrade" onclick="doUpgrade()">…</button>
