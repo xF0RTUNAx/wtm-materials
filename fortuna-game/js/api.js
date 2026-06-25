@@ -231,3 +231,23 @@ async function fetchMessages(channel, limit) {
   );
   return (rows || []).reverse();
 }
+
+// Этап 6 — карта войны
+async function fetchActiveFront() {
+  var rows = await supabaseSelect("fronts?is_active=eq.true&order=created_at.desc&limit=1&select=*");
+  return rows[0] || null;
+}
+
+async function fetchTerritories(frontId) {
+  var rows = await supabaseSelect(
+    "territories?front_id=eq." + frontId + "&select=*&order=row_idx.asc,col_idx.asc"
+  );
+  return rows || [];
+}
+
+async function fetchClansByIds(clanIds) {
+  if (!clanIds || !clanIds.length) return [];
+  var filter = clanIds.map(function(id) { return "id.eq." + id; }).join(",");
+  var rows = await supabaseSelect("clans?or=(" + filter + ")&select=id,name,tag");
+  return rows || [];
+}
