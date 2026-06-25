@@ -403,8 +403,8 @@ function setBtnLoading(lineType) {
 function showNeuralMsg(lineType, text, type) {
   const el = document.getElementById('neural-msg-' + lineType);
   if (!el) return;
-  el.textContent = text;
+  el.innerHTML = text;
   el.style.color = type === 'ok' ? 'var(--accent)' : '#e05252';
   clearTimeout(el._timeout);
-  el._timeout = setTimeout(function() { el.textContent = ''; }, 3500);
+  el._timeout = setTimeout(function() { el.innerHTML = ''; }, 3500);
 }
