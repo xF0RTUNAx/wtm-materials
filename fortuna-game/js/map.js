@@ -354,7 +354,7 @@ function mapSelectSector(r, c) {
   var clanColor = ownerId ? mapClanColor(ownerId) : null;
   var playerClanId = _mapPlayer ? _mapPlayer.clan_id : null;
   var tokensLeft   = _mapBase ? (_mapBase.attack_tokens != null ? _mapBase.attack_tokens : 2) : 0;
-  var glbUrl = MAP_TIER_GLB_FALLBACK[tier];
+  var glbUrl = MAP_GLB_CDN + ti.glb;  // реальные модели (текстуры загружены)
 
   // ── Логика кнопки захвата ──────────────────────────────────
   var coord = mapCoord(r, c);
