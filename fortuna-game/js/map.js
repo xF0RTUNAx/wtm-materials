@@ -65,6 +65,12 @@ function mapRgba(hex, a) {
   return "rgba(" + r + "," + g + "," + b + "," + a + ")";
 }
 
+// Координата сектора: строка→число (1–14), столбец→буква (A–N)
+// Пример: [0,0] = "A1", [6,6] = "G7", [13,13] = "N14"
+function mapCoord(r, c) {
+  return String.fromCharCode(65 + c) + (r + 1);
+}
+
 // ── CSS (инжектируется один раз) ─────────────────────────────
 
 function mapInjectCSS() {
@@ -236,11 +242,26 @@ async function renderMapScreen() {
 }
 
 function _renderMapUI(app, front) {
-  // Строим 196 ячеек
-  var cells = [];
+  // Строим сетку с осями: первый столбец — номера строк, первая строка — буквы столбцов
+  // Сетка: 15 × 15 = (1 угол + 14 заголовков) + (14 строк × (1 номер + 14 ячеек))
+  var LABEL_W = 20; // ширина столбца с номерами строк
+  var elements = [];
+
+  // ── Первая строка: пустой угол + буквы A–N ──
+  elements.push("<div style=\"width:" + LABEL_W + "px;height:18px;\"></div>");
+  for (var ci = 0; ci < MAP_GRID; ci++) {
+    elements.push("<div style=\"width:" + MAP_CELL + "px;height:18px;display:flex;align-items:center;"
+      + "justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.55);\">"
+      + String.fromCharCode(65 + ci) + "</div>");
+  }
+
+  // ── Строки данных: номер строки + 14 ячеек ──
   for (var r = 0; r < MAP_GRID; r++) {
+    elements.push("<div style=\"width:" + LABEL_W + "px;height:" + MAP_CELL + "px;display:flex;align-items:center;"
+      + "justify-content:center;font-size:9px;font-weight:700;color:rgba(255,255,255,.55);\">"
+      + (r + 1) + "</div>");
     for (var c = 0; c < MAP_GRID; c++) {
-      cells.push(mapBuildCell(r, c));
+      elements.push(mapBuildCell(r, c));
     }
   }
 
@@ -262,6 +283,9 @@ function _renderMapUI(app, front) {
   });
   var total = MAP_GRID * MAP_GRID;
 
+  // Размер сетки: 1 столбец меток + 14 столбцов ячеек
+  var gridCols = LABEL_W + "px repeat(" + MAP_GRID + "," + MAP_CELL + "px)";
+
   app.innerHTML = ""
 
     // ── Шапка ──
@@ -279,16 +303,16 @@ function _renderMapUI(app, front) {
     + tierLegend
     + mapBuildClanLegend()
 
-    // ── Карта ──
+    // ── Карта с осями ──
     + "<div style=\"overflow-x:auto;-webkit-overflow-scrolling:touch;"
     + "border-radius:var(--radius-sm);margin-bottom:8px;\">"
-    + "<div style=\"display:grid;grid-template-columns:repeat(" + MAP_GRID + "," + MAP_CELL + "px);"
+    + "<div style=\"display:grid;grid-template-columns:" + gridCols + ";"
     + "gap:" + MAP_GAP + "px;padding:10px;width:fit-content;"
     + "background-image:repeating-linear-gradient(-50deg,rgba(255,255,255,.035) 0,"
     + "rgba(255,255,255,.035) 1px,transparent 1px,transparent 18px);"
     + "background-color:#0b5899;"
     + "animation:mapWave 8s linear infinite;\">"
-    + cells.join("")
+    + elements.join("")
     + "</div></div>"
 
     // ── Статистика ──
@@ -334,18 +358,25 @@ function mapSelectSector(r, c) {
     ? "<span style=\"color:" + clanColor + ";\">[" + escapeHtml(clanData.tag) + "] " + escapeHtml(clanData.name) + "</span>"
     : "\u041d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u044b\u0439";
 
+  var coord = mapCoord(r, c);
+
   var html = "<div class=\"card\" style=\"padding:14px;\">"
 
-    // Заголовок
+    // Заголовок: координата крупно + тир
     + "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;\">"
-    + "<span style=\"font-size:14px;font-weight:650;color:" + MAP_TIER_RING[tier] + ";\">"
+    + "<div>"
+    + "<span style=\"font-size:20px;font-weight:700;color:var(--text);font-family:monospace;\">" + coord + "</span>"
+    + "<span style=\"font-size:12px;color:" + MAP_TIER_RING[tier] + ";font-weight:600;margin-left:8px;\">"
     + "\u0422\u0438\u0440 " + tier + " \u2014 " + ti.label + "</span>"
-    + "<span style=\"font-size:12px;color:var(--text-soft);\">[" + r + ", " + c + "]</span>"
+    + "</div>"
     + "</div>"
 
-    // GLB-модель (из Battle_Base_Clan_Wars)
-    + "<model-viewer src=\"" + glbUrl + "\" auto-rotate camera-controls loading=\"lazy\""
-    + " style=\"width:100%;height:180px;background:transparent;"
+    // GLB-модель: environment-image="neutral" чтобы не было белых моделей
+    + "<model-viewer src=\"" + glbUrl + "\""
+    + " auto-rotate auto-rotate-delay=\"500\" rotation-per-second=\"15deg\""
+    + " camera-controls loading=\"lazy\""
+    + " environment-image=\"neutral\""
+    + " style=\"width:100%;height:180px;background:#0d1e30;"
     + "border-radius:var(--radius-sm);display:block;margin-bottom:12px;\"></model-viewer>"
 
     // Информация
