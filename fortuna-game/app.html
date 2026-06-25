@@ -622,21 +622,21 @@
       var remember = document.getElementById("f-remember").checked;
       var msg      = document.getElementById("auth-msg");
       var btn      = document.getElementById("auth-submit");
-      msg.textContent = "";
+      msg.innerHTML = "";
 
       if (authMode === "register") {
         var pass2El = document.getElementById("f-pass2");
-        if (pass2El && pass !== pass2El.value) { msg.textContent = "&#1055;&#1072;&#1088;&#1086;&#1083;&#1080; &#1085;&#1077; &#1089;&#1086;&#1074;&#1087;&#1072;&#1076;&#1072;&#1102;&#1090;"; return; }
+        if (pass2El && pass !== pass2El.value) { msg.innerHTML = "&#1055;&#1072;&#1088;&#1086;&#1083;&#1080; &#1085;&#1077; &#1089;&#1086;&#1074;&#1087;&#1072;&#1076;&#1072;&#1102;&#1090;"; return; }
       }
 
-      btn.disabled    = true;
-      btn.textContent = authMode === "register" ? "&#1057;&#1086;&#1079;&#1076;&#1072;&#1077;&#1084;&#8230;" : "&#1042;&#1093;&#1086;&#1076;&#1080;&#1084;&#8230;";
+      btn.disabled   = true;
+      btn.innerHTML  = authMode === "register" ? "&#1057;&#1086;&#1079;&#1076;&#1072;&#1077;&#1084;&#8230;" : "&#1042;&#1093;&#1086;&#1076;&#1080;&#1084;&#8230;";
       try {
         await submitAuth(authMode, login, pass, remember);
       } catch (e) {
-        msg.textContent = e.message;
-        btn.disabled    = false;
-        btn.textContent = authMode === "register" ? "&#1057;&#1086;&#1079;&#1076;&#1072;&#1090;&#1100; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;" : "&#1042;&#1086;&#1081;&#1090;&#1080;";
+        msg.innerHTML  = escapeHtml(e.message);
+        btn.disabled   = false;
+        btn.innerHTML  = authMode === "register" ? "&#1057;&#1086;&#1079;&#1076;&#1072;&#1090;&#1100; &#1072;&#1082;&#1082;&#1072;&#1091;&#1085;&#1090;" : "&#1042;&#1086;&#1081;&#1090;&#1080;";
       }
     }
 
