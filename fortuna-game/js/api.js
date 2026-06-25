@@ -251,3 +251,10 @@ async function fetchClansByIds(clanIds) {
   var rows = await supabaseSelect("clans?or=(" + filter + ")&select=id,name,tag");
   return rows || [];
 }
+
+// Этап 6 — захват территории
+async function captureTerritory(playerId, rowIdx, colIdx) {
+  return callEdgeFunction(CONFIG.CAPTURE_TERRITORY_URL, {
+    player_id: playerId, row_idx: rowIdx, col_idx: colIdx,
+  });
+}
