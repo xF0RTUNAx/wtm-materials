@@ -16,6 +16,14 @@ var MAP_TIER = {
   3: { label: "\u0426\u0435\u043d\u0442\u0440",                garrison: 400, tax: 1200, glb: "building-walls.glb"     },
 };
 
+// Запасные GLB (заводские, с embedded-текстурами) — используются пока не загружены
+// текстуры в Battle_Base_Clan_Wars/Textures/. Убрать когда текстуры будут на месте.
+var MAP_TIER_GLB_FALLBACK = {
+  1: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/fortuna-game/factory_and_lab/Models/GLB%20format/building-m.glb",
+  2: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/fortuna-game/factory_and_lab/Models/GLB%20format/building-q.glb",
+  3: "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/fortuna-game/factory_and_lab/Models/GLB%20format/building-q.glb",
+};
+
 var MAP_TIER_RING = {
   1: "rgba(255,255,255,.22)",
   2: "#e8c030",
@@ -34,6 +42,7 @@ var _mapFront     = null;
 var _mapSectorMap = {};
 var _mapClanMap   = {};
 var _mapPlayer    = null;
+var _mapBase      = null;   // base данные игрока (токены)
 var _mapCSSOk     = false;
 
 // ── Утилиты ──────────────────────────────────────────────────
@@ -203,9 +212,11 @@ async function renderMapScreen() {
     var loaded = await Promise.all([
       fetchPlayerProfileById(player.id),
       fetchActiveFront(),
+      fetchPlayerBase(player.id),
     ]);
     _mapPlayer = loaded[0];
     var front  = loaded[1];
+    _mapBase   = loaded[2];
 
     if (!front) {
       app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;\">"
@@ -286,18 +297,25 @@ function _renderMapUI(app, front) {
   // Размер сетки: 1 столбец меток + 14 столбцов ячеек
   var gridCols = LABEL_W + "px repeat(" + MAP_GRID + "," + MAP_CELL + "px)";
 
+  // Токены в шапке
+  var tokensLeft = _mapBase ? (_mapBase.attack_tokens != null ? _mapBase.attack_tokens : 2) : "?";
+  var tokensHtml = "<span style=\"font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;"
+    + (tokensLeft > 0 ? "background:var(--accent-soft);color:var(--accent);" : "background:var(--surface-2);color:var(--text-soft);") + "\">"
+    + ICON_TOKEN + " " + tokensLeft + " / 2</span>";
+
   app.innerHTML = ""
 
     // ── Шапка ──
-    + "<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:12px;\">"
+    + "<div style=\"display:flex;align-items:center;gap:8px;margin-bottom:12px;\">"
     + "<button onclick=\"renderBattle()\" style=\"background:var(--surface-2);border:1px solid var(--border);"
     + "border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;cursor:pointer;"
     + "color:var(--text);font-family:inherit;\">&#8592; \u041d\u0430\u0437\u0430\u0434</button>"
     + "<div style=\"font-size:16px;font-weight:650;\">\u041a\u0430\u0440\u0442\u0430 \u0432\u043e\u0439\u043d\u044b</div>"
-    + "<span style=\"margin-left:auto;background:var(--accent-soft);color:var(--accent);"
-    + "font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;\">"
+    + "<div style=\"margin-left:auto;display:flex;gap:6px;align-items:center;\">"
+    + "<span style=\"background:var(--accent-soft);color:var(--accent);font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;\">"
     + escapeHtml(front.name) + "</span>"
-    + "</div>"
+    + tokensHtml
+    + "</div></div>"
 
     // ── Легенды ──
     + tierLegend
@@ -321,7 +339,6 @@ function _renderMapUI(app, front) {
     + " &nbsp;&middot;&nbsp; \u0417\u0430\u0445\u0432\u0430\u0447\u0435\u043d\u043e: " + owned + " / " + total
     + "</div>"
 
-    // ── Панель детали (скрыта до первого клика) ──
     + "<div id=\"map-detail\"></div>";
 }
 
@@ -336,66 +353,174 @@ function mapSelectSector(r, c) {
   var ti        = MAP_TIER[tier];
   var clanColor = ownerId ? mapClanColor(ownerId) : null;
   var playerClanId = _mapPlayer ? _mapPlayer.clan_id : null;
-  var glbUrl    = MAP_GLB_CDN + ti.glb;
+  var tokensLeft   = _mapBase ? (_mapBase.attack_tokens != null ? _mapBase.attack_tokens : 2) : 0;
+  var glbUrl = MAP_TIER_GLB_FALLBACK[tier];
 
-  // Кнопка действия (в Куске 1 всегда disabled)
-  var btnLabel, btnStyle;
+  // ── Логика кнопки захвата ──────────────────────────────────
+  var coord = mapCoord(r, c);
+  var clanSectorCount = Object.keys(_mapSectorMap).filter(function(k) {
+    return _mapSectorMap[k].owner_clan_id === playerClanId;
+  }).length;
+  var isFirstTerritory = playerClanId && clanSectorCount === 0;
+  var isEdge = Math.min(r, MAP_GRID - 1 - r, c, MAP_GRID - 1 - c) === 0;
+  var isFreeFirstLanding = isFirstTerritory && isEdge && !ownerId;
+
+  var neighbors4 = [{r:r-1,c:c},{r:r+1,c:c},{r:r,c:c-1},{r:r,c:c+1}];
+  var hasAdjacent = neighbors4.some(function(n) {
+    return n.r >= 0 && n.r < MAP_GRID && n.c >= 0 && n.c < MAP_GRID
+      && _mapSectorMap[n.r+"-"+n.c] && _mapSectorMap[n.r+"-"+n.c].owner_clan_id === playerClanId;
+  });
+
+  var canCapture = false;
+  var btnLabel, btnStyle, btnHint = "";
+
   if (!playerClanId) {
-    btnLabel = "\u041d\u0443\u0436\u0435\u043d \u043a\u043b\u0430\u043d \u0434\u043b\u044f \u0443\u0447\u0430\u0441\u0442\u0438\u044f";
-    btnStyle = "background:var(--surface-2);color:var(--text-soft);";
-  } else if (ownerId && ownerId === playerClanId) {
+    btnLabel = "\u041d\u0443\u0436\u0435\u043d \u043a\u043b\u0430\u043d";
+    btnStyle = "background:var(--surface-2);color:var(--text-soft);cursor:default;";
+  } else if (ownerId === playerClanId) {
     btnLabel = "\u0412\u0430\u0448 \u0441\u0435\u043a\u0442\u043e\u0440";
-    btnStyle = "background:var(--surface-2);color:var(--text-soft);";
-  } else if (ownerId) {
-    btnLabel = "&#9876; \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c";
-    btnStyle = "background:#b84030;color:#fff;";
+    btnStyle = "background:var(--surface-2);color:var(--text-soft);cursor:default;";
+  } else if (isFreeFirstLanding) {
+    canCapture = true;
+    btnLabel = "\u0417\u0430\u0445\u0432\u0430\u0442\u0438\u0442\u044c (\u0431\u0435\u0441\u043f\u043b\u0430\u0442\u043d\u043e!)";
+    btnStyle = "background:#287838;color:#fff;cursor:pointer;";
+    btnHint = "\u041f\u0435\u0440\u0432\u0430\u044f \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u044f \u2014 \u043f\u043e\u0434\u0430\u0440\u043e\u043a!";
+  } else if (!hasAdjacent) {
+    btnLabel = "\u041d\u0435\u0442 \u0441\u043c\u0435\u0436\u043d\u043e\u0433\u043e \u0441\u0435\u043a\u0442\u043e\u0440\u0430";
+    btnStyle = "background:var(--surface-2);color:var(--text-soft);cursor:default;";
+    btnHint = "\u0417\u0430\u0445\u0432\u0430\u0442\u0438\u0442\u0435 \u0441\u043e\u0441\u0435\u0434\u043d\u0438\u0439 \u0441\u0435\u043a\u0442\u043e\u0440 \u0441\u043d\u0430\u0447\u0430\u043b\u0430";
+  } else if (tokensLeft <= 0) {
+    btnLabel = "\u041d\u0435\u0442 \u0442\u043e\u043a\u0435\u043d\u043e\u0432";
+    btnStyle = "background:var(--surface-2);color:var(--text-soft);cursor:default;";
+    btnHint = "\u0421\u0431\u0440\u043e\u0441 \u0432 \u043f\u043e\u043b\u043d\u043e\u0447\u044c UTC";
   } else {
-    btnLabel = "\u0417\u0430\u0445\u0432\u0430\u0442\u0438\u0442\u044c";
-    btnStyle = "background:#287838;color:#fff;";
+    canCapture = true;
+    if (ownerId) {
+      btnLabel = "&#9876; \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c (\u2212" + ICON_TOKEN + "1)";
+      btnStyle = "background:#b84030;color:#fff;cursor:pointer;";
+    } else {
+      btnLabel = "\u0417\u0430\u0445\u0432\u0430\u0442\u0438\u0442\u044c (\u2212" + ICON_TOKEN + "1)";
+      btnStyle = "background:#287838;color:#fff;cursor:pointer;";
+    }
   }
 
   var ownerHtml = clanData
     ? "<span style=\"color:" + clanColor + ";\">[" + escapeHtml(clanData.tag) + "] " + escapeHtml(clanData.name) + "</span>"
     : "\u041d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u044b\u0439";
 
-  var coord = mapCoord(r, c);
+  var btnTag = canCapture
+    ? "<button id=\"map-capture-btn\" onclick=\"doCapture(" + r + "," + c + ")\" style=\"width:100%;padding:11px;"
+      + "border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:650;font-family:inherit;" + btnStyle + "\">"
+      + btnLabel + "</button>"
+    : "<button disabled style=\"width:100%;padding:11px;border:none;border-radius:var(--radius-sm);"
+      + "font-size:13px;font-weight:650;font-family:inherit;" + btnStyle + "\">"
+      + btnLabel + "</button>";
 
   var html = "<div class=\"card\" style=\"padding:14px;\">"
 
-    // Заголовок: координата крупно + тир
     + "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;\">"
-    + "<div>"
-    + "<span style=\"font-size:20px;font-weight:700;color:var(--text);font-family:monospace;\">" + coord + "</span>"
+    + "<div><span style=\"font-size:20px;font-weight:700;color:var(--text);font-family:monospace;\">"
+    + coord + "</span>"
     + "<span style=\"font-size:12px;color:" + MAP_TIER_RING[tier] + ";font-weight:600;margin-left:8px;\">"
-    + "\u0422\u0438\u0440 " + tier + " \u2014 " + ti.label + "</span>"
-    + "</div>"
+    + "\u0422\u0438\u0440 " + tier + " \u2014 " + ti.label + "</span></div>"
     + "</div>"
 
-    // GLB-модель: environment-image="neutral" чтобы не было белых моделей
     + "<model-viewer src=\"" + glbUrl + "\""
     + " auto-rotate auto-rotate-delay=\"500\" rotation-per-second=\"15deg\""
-    + " camera-controls loading=\"lazy\""
-    + " environment-image=\"neutral\""
+    + " camera-controls loading=\"lazy\" environment-image=\"neutral\""
     + " style=\"width:100%;height:180px;background:#0d1e30;"
     + "border-radius:var(--radius-sm);display:block;margin-bottom:12px;\"></model-viewer>"
 
-    // Информация
     + "<div style=\"margin-bottom:14px;\">"
     + _mapInfoRow("\u0413\u0430\u0440\u043d\u0438\u0437\u043e\u043d", ti.garrison + " \u0435\u0434.", "var(--text)")
     + _mapInfoRow("\u041d\u0430\u043b\u043e\u0433", ti.tax + " " + ICON_PARTS + "/12\u0447", "var(--text)")
     + _mapInfoRow("\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446", ownerHtml, clanColor || "var(--text-soft)")
     + "</div>"
 
-    // Кнопка (disabled в Куске 1)
-    + "<button disabled style=\"width:100%;padding:11px;border:none;border-radius:var(--radius-sm);"
-    + "font-size:13px;font-weight:650;font-family:inherit;cursor:default;" + btnStyle + "\">"
-    + btnLabel + "</button>"
-    + "<div style=\"text-align:center;font-size:10px;color:var(--text-soft);margin-top:5px;\">"
-    + "\u0411\u043e\u0435\u0432\u0430\u044f \u043c\u0435\u0445\u0430\u043d\u0438\u043a\u0430 \u2014 \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0435\u0435 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435</div>"
+    + btnTag
+    + (btnHint ? "<div style=\"text-align:center;font-size:10px;color:var(--text-soft);margin-top:4px;\">" + btnHint + "</div>" : "")
+    + "<div id=\"map-capture-err\" style=\"min-height:14px;font-size:12px;color:#e05252;text-align:center;margin-top:6px;\"></div>"
     + "</div>";
 
   var det = document.getElementById("map-detail");
   if (!det) return;
   det.innerHTML = html;
   det.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+  // Запускаем GLB-анимацию если она есть (building-watermill анимированная)
+  var mv = det.querySelector("model-viewer");
+  if (mv) {
+    mv.addEventListener("load", function() {
+      if (mv.availableAnimations && mv.availableAnimations.length > 0) {
+        mv.play({ repetitions: Infinity });
+      }
+    });
+  }
+}
+
+// ── Захват территории ────────────────────────────────────────
+
+async function doCapture(r, c) {
+  var player = getCurrentPlayer();
+  if (!player) return;
+  var btn = document.getElementById("map-capture-btn");
+  var errEl = document.getElementById("map-capture-err");
+  if (btn) { btn.disabled = true; btn.textContent = "\u0410\u0442\u0430\u043a\u0443\u0435\u043c\u2026"; }
+  if (errEl) errEl.textContent = "";
+  try {
+    var result = await captureTerritory(player.id, r, c);
+    // Обновляем локальные данные
+    if (_mapBase) _mapBase.attack_tokens = result.tokens_remaining;
+    if (result.won) {
+      var profile = _mapPlayer;
+      if (profile && profile.clan_id && _mapSectorMap[r + "-" + c]) {
+        _mapSectorMap[r + "-" + c].owner_clan_id = profile.clan_id;
+        _mapSectorMap[r + "-" + c].captured_at = new Date().toISOString();
+        // Добавим клан в _mapClanMap если его ещё нет
+        if (!_mapClanMap[profile.clan_id]) {
+          try {
+            var myClan = await fetchClanById(profile.clan_id);
+            if (myClan) _mapClanMap[myClan.id] = myClan;
+          } catch (_) {}
+        }
+      }
+    }
+    mapShowCaptureResult(result, r, c);
+  } catch (e) {
+    // Восстанавливаем панель с сообщением об ошибке
+    mapSelectSector(r, c);
+    var errEl2 = document.getElementById("map-capture-err");
+    if (errEl2) errEl2.textContent = e.message;
+  }
+}
+
+// ── Экран результата захвата ──────────────────────────────────
+
+function mapShowCaptureResult(result, r, c) {
+  var app = document.getElementById("app-content");
+  if (!app) return;
+  var coord2 = result.coord || mapCoord(r, c);
+  var won = result.won;
+  var bg  = won ? "var(--accent-soft)" : "var(--surface-2)";
+  var tc  = won ? "var(--accent)" : "var(--text-soft)";
+
+  app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:28px;\">"
+    + "<div style=\"font-size:40px;margin-bottom:8px;\">" + (won ? "&#9876;" : "&#10006;") + "</div>"
+    + "<div style=\"font-size:22px;font-weight:700;color:" + (won ? "#3a8a2a" : "#a32d2d") + ";margin-bottom:6px;\">"
+    + (won
+        ? (result.is_free_landing ? "\u041f\u0435\u0440\u0432\u0430\u044f \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u044f \u2014 " + coord2 + "!" : "\u0421\u0435\u043a\u0442\u043e\u0440 " + coord2 + " \u0437\u0430\u0445\u0432\u0430\u0447\u0435\u043d!")
+        : "\u0410\u0442\u0430\u043a\u0430 \u043d\u0430 " + coord2 + " \u043e\u0442\u0431\u0438\u0442\u0430")
+    + "</div>"
+    + (result.is_free_landing
+        ? "<div style=\"font-size:13px;color:var(--text-soft);margin-bottom:18px;\">\u041f\u043e\u0434\u0430\u0440\u043e\u043a \u043d\u043e\u0432\u043e\u043c\u0443 \u043a\u043b\u0430\u043d\u0443 \u2014 \u0431\u0435\u0437 \u0442\u043e\u043a\u0435\u043d\u0430!</div>"
+        : "<div style=\"font-size:13px;color:var(--text-soft);margin-bottom:18px;\">"
+          + "\u041c\u043e\u0449\u044c: " + result.attacker_power + " vs " + result.defender_power + "</div>")
+    + "<div style=\"font-size:12px;color:var(--text-soft);margin-bottom:24px;\">"
+    + ICON_TOKEN + " \u041e\u0441\u0442\u0430\u043b\u043e\u0441\u044c \u0442\u043e\u043a\u0435\u043d\u043e\u0432: <b>" + result.tokens_remaining + " / 2</b>"
+    + "</div>"
+    + "<button onclick=\"renderMapScreen()\" style=\"background:var(--btn);color:var(--btn-text);"
+    + "border:none;border-radius:var(--radius-sm);padding:12px 28px;"
+    + "font-size:14px;font-weight:650;cursor:pointer;font-family:inherit;\">"
+    + "\u041a \u043a\u0430\u0440\u0442\u0435</button>"
+    + "</div>";
 }
