@@ -39,6 +39,7 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/resolve-battle",
   MARK_NOTIF_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/mark-notifications-read",
+
   // Этап 5 — кланы и чат
   CREATE_CLAN_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/create-clan",
@@ -58,8 +59,8 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-message",
 };
 
-// ── Иконки ресурсов (HTML-img, inline 18px) ─────────────────
-// Используются во всех JS-файлах игры
+// ── Иконки ресурсов (HTML-img, inline) ──────────────────────
+// Используются во всех JS-файлах игры через ${ICON_*} в backtick-строках
 var ICON_PARTS = '<img src="res/parts.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
 var ICON_RARE  = '<img src="kit/rare.png"  style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
 var ICON_ORE   = '<img src="res/ore.png"   style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
@@ -69,3 +70,7 @@ var ICON_CHAT       = '<img src="clans_and_chat/chat.png" style="width:28px;heig
 var ICON_GLOBAL_CHAT = '<img src="clans_and_chat/global_chat.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px -2px" alt="" />';
 var ICON_CLAN_CHAT  = '<img src="clans_and_chat/clan_chat.png" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;margin:0 2px -2px" alt="" />';
 var ICON_CLAN       = '<img src="clans_and_chat/clan.png" style="width:108px;height:108px;object-fit:contain;vertical-align:middle;margin:-24px -12px -24px 0px" alt="" />';
+
+// Этап 6 — карта войны
+var ICON_TOKEN = '<img src="clans_and_chat/token.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+var ICON_TAX   = '<img src="clans_and_chat/tax.png"   style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
