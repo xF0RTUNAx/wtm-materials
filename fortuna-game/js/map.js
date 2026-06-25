@@ -196,6 +196,103 @@ function _mapInfoRow(label, value, valColor) {
     + "</div>";
 }
 
+// ── Налоги: вспомогательные функции ─────────────────────────
+
+// Форматирует оставшееся время в мс → "3ч 24м"
+function mapFmtCountdown(ms) {
+  var h = Math.floor(ms / 3600000);
+  var m = Math.floor((ms % 3600000) / 60000);
+  return h + "\u0447 " + m + "\u043c";
+}
+
+// Считает готовые секторы и сумму деталей для кнопки «Собрать»
+function mapCountReadyTax() {
+  var playerClanId = _mapPlayer ? _mapPlayer.clan_id : null;
+  if (!playerClanId) return { ready: 0, total: 0, parts: 0 };
+  var now = Date.now();
+  var ready = 0, total = 0, parts = 0;
+  Object.keys(_mapSectorMap).forEach(function(k) {
+    var s = _mapSectorMap[k];
+    if (s.owner_clan_id !== playerClanId) return;
+    total++;
+    var last = s.last_tax_collected ? new Date(s.last_tax_collected).getTime() : 0;
+    if (!s.last_tax_collected || (now - last) >= 12 * 3600 * 1000) {
+      ready++;
+      parts += MAP_TIER[s.tier] ? MAP_TIER[s.tier].tax : 0;
+    }
+  });
+  return { ready: ready, total: total, parts: parts };
+}
+
+// Ближайший момент следующего сбора (строка "Хч Xм")
+function mapNextTaxIn() {
+  var playerClanId = _mapPlayer ? _mapPlayer.clan_id : null;
+  if (!playerClanId) return "";
+  var now = Date.now();
+  var soonest = Infinity;
+  Object.keys(_mapSectorMap).forEach(function(k) {
+    var s = _mapSectorMap[k];
+    if (s.owner_clan_id !== playerClanId || !s.last_tax_collected) return;
+    var next = new Date(s.last_tax_collected).getTime() + 12 * 3600 * 1000;
+    if (next > now && next < soonest) soonest = next;
+  });
+  return soonest === Infinity ? "" : mapFmtCountdown(soonest - now);
+}
+
+// Строит HTML секции налогов (с id="map-tax-section" для точечного обновления)
+function mapBuildTaxSection() {
+  var playerClanId = _mapPlayer ? _mapPlayer.clan_id : null;
+  if (!playerClanId) return "";
+
+  var tx = mapCountReadyTax();
+  var html = "<div class=\"card\" id=\"map-tax-section\" style=\"padding:12px 14px;margin-bottom:12px;\">";
+
+  if (tx.total === 0) {
+    html += "<div style=\"display:flex;align-items:center;gap:8px;color:var(--text-soft);font-size:13px;\">"
+      + ICON_TAX + " \u041d\u0435\u0442 \u0437\u0430\u0445\u0432\u0430\u0447\u0435\u043d\u043d\u044b\u0445 \u0441\u0435\u043a\u0442\u043e\u0440\u043e\u0432</div>";
+  } else if (tx.ready === 0) {
+    var nextIn = mapNextTaxIn();
+    html += "<div style=\"display:flex;align-items:center;justify-content:space-between;\">"
+      + "<div style=\"display:flex;align-items:center;gap:8px;\">"
+      + ICON_TAX
+      + "<div><div style=\"font-size:13px;font-weight:600;\">\u041d\u0430\u043b\u043e\u0433\u0438</div>"
+      + "<div style=\"font-size:11px;color:var(--text-soft);\">"
+      + tx.total + " \u0441\u0435\u043a\u0442. \u2014 \u0432\u0441\u0435 \u0441\u043e\u0431\u0440\u0430\u043d\u044b</div>"
+      + "</div></div>"
+      + (nextIn ? "<span style=\"font-size:11px;color:var(--text-soft);\">" + "\u0427\u0435\u0440\u0435\u0437 " + nextIn + "</span>" : "")
+      + "</div>";
+  } else {
+    html += "<div style=\"display:flex;align-items:center;justify-content:space-between;gap:8px;\">"
+      + "<div style=\"display:flex;align-items:center;gap:8px;\">"
+      + ICON_TAX
+      + "<div><div style=\"font-size:13px;font-weight:600;\">\u041d\u0430\u043b\u043e\u0433\u0438</div>"
+      + "<div style=\"font-size:11px;color:var(--text-soft);\">"
+      + tx.ready + " / " + tx.total + " \u0441\u0435\u043a\u0442\u043e\u0440\u043e\u0432 \u0433\u043e\u0442\u043e\u0432\u043e</div>"
+      + "</div></div>"
+      + "<button id=\"map-tax-btn\" onclick=\"doCollectTax()\""
+      + " style=\"background:var(--btn);color:var(--btn-text);border:none;"
+      + "border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;"
+      + "font-weight:650;cursor:pointer;font-family:inherit;white-space:nowrap;\">"
+      + "+" + tx.parts + " " + ICON_PARTS
+      + "</button>"
+      + "</div>";
+  }
+
+  html += "<div id=\"map-tax-msg\" style=\"min-height:14px;font-size:12px;"
+    + "color:var(--accent);text-align:center;margin-top:4px;\"></div>";
+  html += "</div>";
+  return html;
+}
+
+// Перерисовывает только секцию налогов (без перезагрузки всей карты)
+function mapRefreshTaxSection() {
+  var old = document.getElementById("map-tax-section");
+  if (!old) return;
+  var tmp = document.createElement("div");
+  tmp.innerHTML = mapBuildTaxSection();
+  if (tmp.firstChild) old.parentNode.replaceChild(tmp.firstChild, old);
+}
+
 // ── Главный рендер ───────────────────────────────────────────
 
 async function renderMapScreen() {
@@ -339,7 +436,8 @@ function _renderMapUI(app, front) {
     + " &nbsp;&middot;&nbsp; \u0417\u0430\u0445\u0432\u0430\u0447\u0435\u043d\u043e: " + owned + " / " + total
     + "</div>"
 
-    + "<div id=\"map-detail\"></div>";
+    + "<div id=\"map-detail\"></div>"
+    + mapBuildTaxSection();
 }
 
 // ── Детальный просмотр сектора ───────────────────────────────
@@ -408,6 +506,29 @@ function mapSelectSector(r, c) {
     ? "<span style=\"color:" + clanColor + ";\">[" + escapeHtml(clanData.tag) + "] " + escapeHtml(clanData.name) + "</span>"
     : "\u041d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u044b\u0439";
 
+  // Статус налога (только для своих секторов)
+  var taxRow = "";
+  if (ownerId === playerClanId && territory) {
+    var now2 = Date.now();
+    var lastTax = territory.last_tax_collected ? new Date(territory.last_tax_collected).getTime() : 0;
+    var taxReady = !territory.last_tax_collected || (now2 - lastTax) >= 12 * 3600 * 1000;
+    if (taxReady) {
+      taxRow = _mapInfoRow(
+        ICON_TAX + " \u041d\u0430\u043b\u043e\u0433",
+        "<span style=\"color:#3a8a2a;font-weight:600;\">"
+          + ti.tax + " " + ICON_PARTS + " \u2014 \u0413\u043e\u0442\u043e\u0432!</span>",
+        "#3a8a2a"
+      );
+    } else {
+      var remaining2 = (lastTax + 12 * 3600 * 1000) - now2;
+      taxRow = _mapInfoRow(
+        ICON_TAX + " \u041d\u0430\u043b\u043e\u0433",
+        ti.tax + " " + ICON_PARTS + " \u2014 \u0447\u0435\u0440\u0435\u0437 " + mapFmtCountdown(remaining2),
+        "var(--text-soft)"
+      );
+    }
+  }
+
   var btnTag = canCapture
     ? "<button id=\"map-capture-btn\" onclick=\"doCapture(" + r + "," + c + ")\" style=\"width:100%;padding:11px;"
       + "border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:650;font-family:inherit;" + btnStyle + "\">"
@@ -435,6 +556,7 @@ function mapSelectSector(r, c) {
     + _mapInfoRow("\u0413\u0430\u0440\u043d\u0438\u0437\u043e\u043d", ti.garrison + " \u0435\u0434.", "var(--text)")
     + _mapInfoRow("\u041d\u0430\u043b\u043e\u0433", ti.tax + " " + ICON_PARTS + "/12\u0447", "var(--text)")
     + _mapInfoRow("\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446", ownerHtml, clanColor || "var(--text-soft)")
+    + taxRow
     + "</div>"
 
     + btnTag
@@ -523,4 +645,52 @@ function mapShowCaptureResult(result, r, c) {
     + "font-size:14px;font-weight:650;cursor:pointer;font-family:inherit;\">"
     + "\u041a \u043a\u0430\u0440\u0442\u0435</button>"
     + "</div>";
+}
+
+// ── Сбор всех налогов ─────────────────────────────────────────
+
+async function doCollectTax() {
+  var player = getCurrentPlayer();
+  if (!player) return;
+
+  var btn   = document.getElementById("map-tax-btn");
+  var msgEl = document.getElementById("map-tax-msg");
+  if (btn) { btn.disabled = true; btn.textContent = "\u0421\u043e\u0431\u0438\u0440\u0430\u0435\u043c\u2026"; }
+  if (msgEl) msgEl.innerHTML = "";
+
+  try {
+    var result = await collectTax(player.id);
+
+    // Обновляем локальное состояние секторов
+    (result.sectors_collected || []).forEach(function(s) {
+      var key = s.row_idx + "-" + s.col_idx;
+      if (_mapSectorMap[key]) {
+        _mapSectorMap[key].last_tax_collected = new Date().toISOString();
+      }
+    });
+
+    // Перерисовываем секцию налогов
+    mapRefreshTaxSection();
+
+    // Показываем сообщение об успехе
+    var msg2 = document.getElementById("map-tax-msg");
+    if (msg2) {
+      msg2.innerHTML = "+" + result.parts_gained + " " + ICON_PARTS
+        + " \u0441 " + result.sectors_count + " \u0441\u0435\u043a\u0442\u043e\u0440\u043e\u0432!";
+      clearTimeout(msg2._t);
+      msg2._t = setTimeout(function() { msg2.innerHTML = ""; }, 3500);
+    }
+
+    // Обновляем счётчик деталей в профиле (если он виден)
+    var rPartsEl = document.getElementById("r-parts");
+    if (rPartsEl && result.new_parts != null) rPartsEl.textContent = result.new_parts;
+
+  } catch (e) {
+    mapRefreshTaxSection();
+    var msg3 = document.getElementById("map-tax-msg");
+    if (msg3) {
+      msg3.innerHTML = escapeHtml(e.message);
+      msg3.style.color = "#e05252";
+    }
+  }
 }
