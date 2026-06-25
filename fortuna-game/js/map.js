@@ -316,8 +316,28 @@ async function renderMapScreen() {
     _mapBase   = loaded[2];
 
     if (!front) {
-      app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;\">"
-        + "\u0421\u0435\u0437\u043e\u043d \u0435\u0449\u0451 \u043d\u0435 \u043d\u0430\u0447\u0430\u043b\u0441\u044f</div>";
+      app.innerHTML = ""
+        // Шапка с кнопкой назад
+        + "<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:16px;\">"
+        + "<button onclick=\"renderBattle()\" style=\"background:var(--surface-2);border:1px solid var(--border);"
+        + "border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;cursor:pointer;"
+        + "color:var(--text);font-family:inherit;\">&#8592; \u041d\u0430\u0437\u0430\u0434</button>"
+        + "<div style=\"font-size:16px;font-weight:650;\">\u041a\u0430\u0440\u0442\u0430 \u0432\u043e\u0439\u043d\u044b</div>"
+        + "</div>"
+        // Карточка межсезонья
+        + "<div class=\"card\" style=\"text-align:center;padding:32px 24px;\">"
+        + "<div style=\"font-size:44px;margin-bottom:14px;\">&#9873;</div>"
+        + "<div style=\"font-size:20px;font-weight:700;margin-bottom:8px;\">"
+        + "\u041c\u0435\u0436\u0441\u0435\u0437\u043e\u043d\u044c\u0435</div>"
+        + "<div style=\"font-size:14px;color:var(--text-soft);line-height:1.6;margin-bottom:20px;\">"
+        + "\u0421\u0435\u0437\u043e\u043d \u0437\u0430\u0432\u0435\u0440\u0448\u0451\u043d.<br>"
+        + "\u0422\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0438 \u0431\u0443\u0434\u0443\u0442 \u043e\u0431\u043d\u0443\u043b\u0435\u043d\u044b \u043f\u0435\u0440\u0435\u0434 \u043d\u043e\u0432\u044b\u043c \u0441\u0435\u0437\u043e\u043d\u043e\u043c.<br>"
+        + "\u0421\u043b\u0435\u0434\u0438\u0442\u0435 \u0437\u0430 \u0430\u043d\u043e\u043d\u0441\u043e\u043c \u0432 \u0447\u0430\u0442\u0435.</div>"
+        + "<div style=\"background:var(--surface-2);border-radius:var(--radius-sm);"
+        + "padding:12px 16px;font-size:12px;color:var(--text-soft);line-height:1.5;\">"
+        + "&#9876; PvP-\u0431\u0438\u0442\u0432\u044b \u0440\u0430\u0431\u043e\u0442\u0430\u044e\u0442 \u0432 \u043e\u0431\u044b\u0447\u043d\u043e\u043c \u0440\u0435\u0436\u0438\u043c\u0435"
+        + "</div>"
+        + "</div>";
       return;
     }
     _mapFront = front;
