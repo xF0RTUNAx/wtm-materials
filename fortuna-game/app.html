@@ -523,9 +523,29 @@
         }
         if (body) body.innerHTML = notifs.map(function(n) {
           var d    = n.data_json || {};
-          var won  = n.type === "attacked_won";
           var dt   = new Date(n.created_at);
           var time = dt.toLocaleString("ru", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+
+          // ── Клановые войны ──
+          if (n.type === "territory_lost") {
+            var icon = "<span style=\"color:#a32d2d;font-weight:700;\">&#9876; &#1057;&#1077;&#1082;&#1090;&#1086;&#1088; &#1089;&#1076;&#1072;&#1085;</span>";
+            var txt  = "&#1050;&#1083;&#1072;&#1085; <b>[" + escapeHtml(d.attacker_clan_tag||"?") + "] " + escapeHtml(d.attacker_clan||"?") + "</b> &#1079;&#1072;&#1093;&#1074;&#1072;&#1090;&#1080;&#1083; &#1089;&#1077;&#1082;&#1090;&#1086;&#1088; <b>" + escapeHtml(d.sector_coord||"?") + "</b>";
+            return "<div style=\"padding:10px 0;border-bottom:1px solid var(--border);"
+              + (!n.is_read ? "background:var(--accent-soft);margin:0 -4px;padding:10px 4px;border-radius:8px;" : "opacity:.75;")
+              + "\"><div style=\"font-size:13px;\">" + icon + " " + txt + "</div>"
+              + "<div style=\"font-size:11px;color:var(--text-soft);margin-top:4px;\">" + time + "</div></div>";
+          }
+          if (n.type === "territory_defended") {
+            var icon2 = "<span style=\"color:#3a6b2a;font-weight:700;\">&#9876; &#1054;&#1073;&#1086;&#1088;&#1086;&#1085;&#1072;</span>";
+            var txt2  = "&#1040;&#1090;&#1072;&#1082;&#1072; &#1082;&#1083;&#1072;&#1085;&#1072; <b>[" + escapeHtml(d.attacker_clan_tag||"?") + "]</b> &#1085;&#1072; &#1089;&#1077;&#1082;&#1090;&#1086;&#1088; <b>" + escapeHtml(d.sector_coord||"?") + "</b> &#1086;&#1090;&#1073;&#1080;&#1090;&#1072;!";
+            return "<div style=\"padding:10px 0;border-bottom:1px solid var(--border);"
+              + (!n.is_read ? "background:var(--accent-soft);margin:0 -4px;padding:10px 4px;border-radius:8px;" : "opacity:.75;")
+              + "\"><div style=\"font-size:13px;\">" + icon2 + " " + txt2 + "</div>"
+              + "<div style=\"font-size:11px;color:var(--text-soft);margin-top:4px;\">" + time + "</div></div>";
+          }
+
+          // ── PvP-битвы (как раньше) ──
+          var won  = n.type === "attacked_won";
           var icon = won
             ? "<span style=\"color:#3a6b2a;font-weight:700;\">&#9876; &#1054;&#1090;&#1073;&#1080;&#1090;&#1086;</span>"
             : "<span style=\"color:#a32d2d;font-weight:700;\">&#9876; &#1059;&#1076;&#1072;&#1088;</span>";
