@@ -258,3 +258,8 @@ async function captureTerritory(playerId, rowIdx, colIdx) {
     player_id: playerId, row_idx: rowIdx, col_idx: colIdx,
   });
 }
+
+// Этап 6 — сбор налогов
+async function collectTax(playerId) {
+  return callEdgeFunction(CONFIG.COLLECT_TAX_URL, { player_id: playerId });
+}
