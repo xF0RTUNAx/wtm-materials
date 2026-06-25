@@ -58,6 +58,8 @@ const CONFIG = {
   // Этап 6 — карта войны
   CAPTURE_TERRITORY_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/capture-territory",
+  COLLECT_TAX_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/collect-tax",
 
   SEND_MESSAGE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-message",
