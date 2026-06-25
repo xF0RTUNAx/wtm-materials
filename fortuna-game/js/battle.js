@@ -287,6 +287,16 @@ function renderBattleDashboard() {
 
   app.innerHTML = resultBanner
 
+    // ── КЛАНОВЫЕ ВОЙНЫ ──
+    + "<div style=\"margin-bottom:14px;\">"
+    + "<button onclick=\"renderMapScreen()\" style=\"width:100%;padding:14px;background:var(--btn);color:var(--btn-text);"
+    + "border:none;border-radius:var(--radius);font-size:15px;font-weight:650;cursor:pointer;font-family:inherit;"
+    + "display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:.01em;\">"
+    + "&#9876; \u041a\u043b\u0430\u043d\u043e\u0432\u044b\u0435 \u0432\u043e\u0439\u043d\u044b &rarr;</button>"
+    + "<div style=\"text-align:center;font-size:11px;color:var(--text-soft);margin-top:5px;\">"
+    + "\u0417\u0430\u0445\u0432\u0430\u0442\u044b\u0432\u0430\u0439 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0438 \u0432\u043c\u0435\u0441\u0442\u0435 \u0441 \u043a\u043b\u0430\u043d\u043e\u043c</div>"
+    + "</div>"
+
     // ── HERO CARD (атака) ──
     + "<div class=\"battle-hero\">"
     + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;\">"
