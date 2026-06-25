@@ -1,0 +1,370 @@
+// ============================================================
+//  map.js — Карта войны (Этап 6, Кусок 1)
+//  Только чтение: показывает карту 14×14, детали сектора, GLB.
+//  Боевая механика — в Куске 2.
+// ============================================================
+
+// ── Константы ────────────────────────────────────────────────
+
+var MAP_GRID = 14;
+var MAP_CELL = 34;
+var MAP_GAP  = 2;
+
+var MAP_TIER = {
+  1: { label: "\u041e\u043a\u0440\u0430\u0438\u043d\u0430",    garrison: 30,  tax: 180,  glb: "building-watermill.glb" },
+  2: { label: "\u041f\u0440\u0435\u0434\u043c\u0435\u0441\u0442\u044c\u0435", garrison: 150, tax: 360,  glb: "building-archery.glb"   },
+  3: { label: "\u0426\u0435\u043d\u0442\u0440",                garrison: 400, tax: 1200, glb: "building-walls.glb"     },
+};
+
+var MAP_TIER_RING = {
+  1: "rgba(255,255,255,.22)",
+  2: "#e8c030",
+  3: "#e04010",
+};
+
+// CDN для GLB-моделей из папки Battle_Base_Clan_Wars/
+var MAP_GLB_CDN = "https://cdn.jsdelivr.net/gh/xF0RTUNAx/wtm-materials@main/fortuna-game/Battle_Base_Clan_Wars/";
+
+// Палитра цветов для кланов (8 цветов)
+var MAP_CLAN_PALETTE = ["#e05050","#5090e0","#40c060","#e0a030","#c050e0","#40c0b0","#e06030","#a0c040"];
+
+// ── Состояние ────────────────────────────────────────────────
+
+var _mapFront     = null;
+var _mapSectorMap = {};
+var _mapClanMap   = {};
+var _mapPlayer    = null;
+var _mapCSSOk     = false;
+
+// ── Утилиты ──────────────────────────────────────────────────
+
+function mapGetTier(r, c) {
+  var d = Math.min(r, MAP_GRID - 1 - r, c, MAP_GRID - 1 - c);
+  return d <= 1 ? 1 : d <= 4 ? 2 : 3;
+}
+
+// Детерминированное псевдослучайное число [0,1) по позиции и смещению
+function mapRng(r, c, off) {
+  var x = Math.sin((r + 1) * 3.141 + (c + 1) * 2.718 + ((off || 0) + 1) * 1.618) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+// Цвет клана по его UUID (стабильный хэш → палитра)
+function mapClanColor(clanId) {
+  if (!clanId) return null;
+  var n = 0;
+  for (var i = 0; i < clanId.length; i++) n += clanId.charCodeAt(i);
+  return MAP_CLAN_PALETTE[n % MAP_CLAN_PALETTE.length];
+}
+
+// HEX → rgba(r,g,b,a)
+function mapRgba(hex, a) {
+  var r = parseInt(hex.slice(1, 3), 16);
+  var g = parseInt(hex.slice(3, 5), 16);
+  var b = parseInt(hex.slice(5, 7), 16);
+  return "rgba(" + r + "," + g + "," + b + "," + a + ")";
+}
+
+// ── CSS (инжектируется один раз) ─────────────────────────────
+
+function mapInjectCSS() {
+  if (_mapCSSOk) return;
+  var s = document.createElement("style");
+  s.textContent = "@keyframes mapWave{from{background-position:0 0}to{background-position:36px 36px}}"
+    + ".map-cell{width:" + MAP_CELL + "px;height:" + MAP_CELL + "px;border-radius:5px;"
+    + "cursor:pointer;position:relative;z-index:1;transition:transform .12s;box-sizing:border-box;}"
+    + ".map-cell:hover{transform:scale(1.15);z-index:20;}";
+  document.head.appendChild(s);
+  _mapCSSOk = true;
+}
+
+// ── SVG-острова (стиль «Острова») ────────────────────────────
+
+function mapCellSVG(r, c) {
+  var tier = mapGetTier(r, c);
+  var cx = MAP_CELL / 2;
+  var cy = MAP_CELL / 2;
+  var a  = mapRng(r, c, 0);
+  var b  = mapRng(r, c, 1);
+  var v  = a < 0.33 ? 0 : a < 0.66 ? 1 : 2;
+  var rx, ry;
+
+  if (tier === 1) {
+    rx = 8 + a * 3; ry = 4 + b * 2;
+    if (v === 0) {
+      return "<ellipse cx=\"" + cx + "\" cy=\"" + (cy+3) + "\" rx=\"" + rx + "\" ry=\"" + ry + "\" fill=\"#c8a870\"/>"
+           + "<ellipse cx=\"" + (cx-1) + "\" cy=\"" + cy + "\" rx=\"" + (rx-2) + "\" ry=\"" + (ry-1) + "\" fill=\"#5a9a2a\"/>";
+    }
+    if (v === 1) {
+      return "<ellipse cx=\"" + cx + "\" cy=\"" + (cy+4) + "\" rx=\"" + rx + "\" ry=\"" + ry + "\" fill=\"#9a8870\"/>"
+           + "<ellipse cx=\"" + (cx-2) + "\" cy=\"" + (cy+2) + "\" rx=\"" + (rx*0.5) + "\" ry=\"" + (ry+1) + "\" fill=\"#7a6858\"/>"
+           + "<ellipse cx=\"" + (cx+3) + "\" cy=\"" + (cy+2) + "\" rx=\"" + (rx*0.5) + "\" ry=\"" + ry + "\" fill=\"#8a7868\"/>";
+    }
+    // v === 2: пальма
+    return "<ellipse cx=\"" + cx + "\" cy=\"" + (cy+3) + "\" rx=\"" + rx + "\" ry=\"" + ry + "\" fill=\"#d0b070\"/>"
+         + "<ellipse cx=\"" + (cx+1) + "\" cy=\"" + (cy+1) + "\" rx=\"" + (rx-3) + "\" ry=\"" + (ry-1) + "\" fill=\"#5a9a2a\"/>"
+         + "<line x1=\"" + (cx+2) + "\" y1=\"" + (cy-4) + "\" x2=\"" + cx + "\" y2=\"" + (cy+2) + "\" stroke=\"#7a4820\" stroke-width=\"1.5\"/>"
+         + "<ellipse cx=\"" + cx + "\" cy=\"" + (cy-6) + "\" rx=\"4\" ry=\"2.5\" fill=\"#2a7010\" transform=\"rotate(-15," + cx + "," + (cy-6) + ")\"/>";
+  }
+
+  if (tier === 2) {
+    return "<ellipse cx=\"" + cx + "\" cy=\"" + (cy+5) + "\" rx=\"13\" ry=\"7\" fill=\"#b89050\"/>"
+         + "<ellipse cx=\"" + (cx-3) + "\" cy=\"" + cy + "\" rx=\"9\" ry=\"7\" fill=\"#4a8820\"/>"
+         + "<ellipse cx=\"" + (cx+4) + "\" cy=\"" + (cy+1) + "\" rx=\"7\" ry=\"6\" fill=\"#3d7818\"/>"
+         + "<ellipse cx=\"" + cx + "\" cy=\"" + (cy-4) + "\" rx=\"4\" ry=\"5\" fill=\"#306010\"/>"
+         + "<rect x=\"" + (cx-3) + "\" y=\"" + (cy-10) + "\" width=\"6\" height=\"8\" rx=\"1\" fill=\"#8a6848\"/>"
+         + "<rect x=\"" + (cx-4) + "\" y=\"" + (cy-12) + "\" width=\"2\" height=\"4\" fill=\"#7a5838\"/>"
+         + "<rect x=\"" + cx + "\" y=\"" + (cy-12) + "\" width=\"2\" height=\"4\" fill=\"#7a5838\"/>";
+  }
+
+  // tier 3: крепость
+  return "<ellipse cx=\"" + cx + "\" cy=\"" + (cy+6) + "\" rx=\"14\" ry=\"6\" fill=\"#a07840\"/>"
+       + "<ellipse cx=\"" + cx + "\" cy=\"" + (cy+1) + "\" rx=\"12\" ry=\"8\" fill=\"#3a6818\"/>"
+       + "<rect x=\"" + (cx-8) + "\" y=\"" + (cy-9) + "\" width=\"16\" height=\"13\" rx=\"1\" fill=\"#6a5040\"/>"
+       + "<rect x=\"" + (cx-9) + "\" y=\"" + (cy-11) + "\" width=\"5\" height=\"6\" fill=\"#6a5040\"/>"
+       + "<rect x=\"" + (cx-3) + "\" y=\"" + (cy-11) + "\" width=\"5\" height=\"6\" fill=\"#6a5040\"/>"
+       + "<rect x=\"" + (cx+3) + "\" y=\"" + (cy-11) + "\" width=\"5\" height=\"6\" fill=\"#6a5040\"/>"
+       + "<rect x=\"" + (cx-9) + "\" y=\"" + (cy-13) + "\" width=\"2\" height=\"3\" fill=\"#7a6050\"/>"
+       + "<rect x=\"" + (cx-7) + "\" y=\"" + (cy-13) + "\" width=\"2\" height=\"3\" fill=\"#7a6050\"/>"
+       + "<rect x=\"" + (cx-3) + "\" y=\"" + (cy-13) + "\" width=\"2\" height=\"3\" fill=\"#7a6050\"/>"
+       + "<rect x=\"" + (cx-1) + "\" y=\"" + (cy-13) + "\" width=\"2\" height=\"3\" fill=\"#7a6050\"/>"
+       + "<rect x=\"" + (cx+3) + "\" y=\"" + (cy-13) + "\" width=\"2\" height=\"3\" fill=\"#7a6050\"/>"
+       + "<rect x=\"" + (cx+5) + "\" y=\"" + (cy-13) + "\" width=\"2\" height=\"3\" fill=\"#7a6050\"/>";
+}
+
+// ── Построение одной ячейки сетки ────────────────────────────
+
+function mapBuildCell(r, c) {
+  var key      = r + "-" + c;
+  var t        = _mapSectorMap[key];
+  var ownerId  = t ? t.owner_clan_id : null;
+  var tier     = mapGetTier(r, c);
+  var clrColor = ownerId ? mapClanColor(ownerId) : null;
+  var border   = clrColor
+    ? ("2px solid " + clrColor)
+    : ("1.5px solid " + MAP_TIER_RING[tier]);
+  var bg       = clrColor ? mapRgba(clrColor, 0.14) : "transparent";
+
+  return "<div class=\"map-cell\" onclick=\"mapSelectSector(" + r + "," + c + ")\""
+    + " style=\"border:" + border + ";background:" + bg + ";\">"
+    + "<svg width=\"" + MAP_CELL + "\" height=\"" + MAP_CELL + "\""
+    + " viewBox=\"0 0 " + MAP_CELL + " " + MAP_CELL + "\" xmlns=\"http://www.w3.org/2000/svg\">"
+    + mapCellSVG(r, c)
+    + "</svg></div>";
+}
+
+// ── Легенда кланов ───────────────────────────────────────────
+
+function mapBuildClanLegend() {
+  var keys = Object.keys(_mapClanMap);
+  if (!keys.length) return "";
+  var html = "<div style=\"display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;\">";
+  keys.forEach(function(cid) {
+    var cl    = _mapClanMap[cid];
+    var color = mapClanColor(cid);
+    html += "<span style=\"display:flex;align-items:center;gap:4px;font-size:11px;\">"
+          + "<span style=\"display:inline-block;width:10px;height:10px;border-radius:2px;"
+          + "background:" + mapRgba(color, 0.2) + ";border:1.5px solid " + color + ";\"></span>"
+          + "<span style=\"color:" + color + ";font-weight:600;\">[" + escapeHtml(cl.tag) + "] " + escapeHtml(cl.name) + "</span>"
+          + "</span>";
+  });
+  return html + "</div>";
+}
+
+// ── Строка информации в детали сектора ───────────────────────
+
+function _mapInfoRow(label, value, valColor) {
+  return "<div style=\"display:flex;justify-content:space-between;font-size:12px;padding:5px 0;"
+    + "border-bottom:1px solid var(--border);\">"
+    + "<span style=\"color:var(--text-soft);\">" + label + "</span>"
+    + "<span style=\"color:" + valColor + ";font-weight:600;\">" + value + "</span>"
+    + "</div>";
+}
+
+// ── Главный рендер ───────────────────────────────────────────
+
+async function renderMapScreen() {
+  if (typeof setActiveTab === "function") setActiveTab("battles");
+  var app = document.getElementById("app-content");
+  if (!app) return;
+  var player = getCurrentPlayer();
+  if (!player) return;
+
+  app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--text-soft)\">"
+    + "\u0417\u0430\u0433\u0440\u0443\u0436\u0430\u0435\u043c \u043a\u0430\u0440\u0442\u0443\u2026</div>";
+
+  try {
+    var loaded = await Promise.all([
+      fetchPlayerProfileById(player.id),
+      fetchActiveFront(),
+    ]);
+    _mapPlayer = loaded[0];
+    var front  = loaded[1];
+
+    if (!front) {
+      app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;\">"
+        + "\u0421\u0435\u0437\u043e\u043d \u0435\u0449\u0451 \u043d\u0435 \u043d\u0430\u0447\u0430\u043b\u0441\u044f</div>";
+      return;
+    }
+    _mapFront = front;
+
+    var territories = await fetchTerritories(front.id);
+
+    // Собираем уникальные clan_id
+    var clanIds = [];
+    territories.forEach(function(t) {
+      if (t.owner_clan_id && clanIds.indexOf(t.owner_clan_id) < 0) {
+        clanIds.push(t.owner_clan_id);
+      }
+    });
+
+    var clans = await fetchClansByIds(clanIds);
+    _mapClanMap = {};
+    clans.forEach(function(cl) { _mapClanMap[cl.id] = cl; });
+
+    _mapSectorMap = {};
+    territories.forEach(function(t) {
+      _mapSectorMap[t.row_idx + "-" + t.col_idx] = t;
+    });
+
+    mapInjectCSS();
+    _renderMapUI(app, front);
+  } catch (e) {
+    app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--accent)\">"
+      + "\u041e\u0448\u0438\u0431\u043a\u0430: " + escapeHtml(e.message) + "</div>";
+  }
+}
+
+function _renderMapUI(app, front) {
+  // Строим 196 ячеек
+  var cells = [];
+  for (var r = 0; r < MAP_GRID; r++) {
+    for (var c = 0; c < MAP_GRID; c++) {
+      cells.push(mapBuildCell(r, c));
+    }
+  }
+
+  // Легенда тиров
+  var tierLegend = "<div style=\"display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;\">"
+    + [1, 2, 3].map(function(t) {
+        return "<span style=\"display:flex;align-items:center;gap:3px;font-size:10px;color:"
+          + MAP_TIER_RING[t] + ";\">"
+          + "<span style=\"display:inline-block;width:9px;height:9px;border-radius:2px;"
+          + "border:1.5px solid " + MAP_TIER_RING[t] + ";\"></span>"
+          + "\u0422\u0438\u0440 " + t + " \u2014 " + MAP_TIER[t].label + "</span>";
+      }).join("")
+    + "</div>";
+
+  // Подсчёт захваченных
+  var owned = 0;
+  Object.keys(_mapSectorMap).forEach(function(k) {
+    if (_mapSectorMap[k].owner_clan_id) owned++;
+  });
+  var total = MAP_GRID * MAP_GRID;
+
+  app.innerHTML = ""
+
+    // ── Шапка ──
+    + "<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:12px;\">"
+    + "<button onclick=\"renderBattle()\" style=\"background:var(--surface-2);border:1px solid var(--border);"
+    + "border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;cursor:pointer;"
+    + "color:var(--text);font-family:inherit;\">&#8592; \u041d\u0430\u0437\u0430\u0434</button>"
+    + "<div style=\"font-size:16px;font-weight:650;\">\u041a\u0430\u0440\u0442\u0430 \u0432\u043e\u0439\u043d\u044b</div>"
+    + "<span style=\"margin-left:auto;background:var(--accent-soft);color:var(--accent);"
+    + "font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;\">"
+    + escapeHtml(front.name) + "</span>"
+    + "</div>"
+
+    // ── Легенды ──
+    + tierLegend
+    + mapBuildClanLegend()
+
+    // ── Карта ──
+    + "<div style=\"overflow-x:auto;-webkit-overflow-scrolling:touch;"
+    + "border-radius:var(--radius-sm);margin-bottom:8px;\">"
+    + "<div style=\"display:grid;grid-template-columns:repeat(" + MAP_GRID + "," + MAP_CELL + "px);"
+    + "gap:" + MAP_GAP + "px;padding:10px;width:fit-content;"
+    + "background-image:repeating-linear-gradient(-50deg,rgba(255,255,255,.035) 0,"
+    + "rgba(255,255,255,.035) 1px,transparent 1px,transparent 18px);"
+    + "background-color:#0b5899;"
+    + "animation:mapWave 8s linear infinite;\">"
+    + cells.join("")
+    + "</div></div>"
+
+    // ── Статистика ──
+    + "<div style=\"font-size:10px;color:var(--text-soft);text-align:center;margin-bottom:12px;\">"
+    + "\u0422\u0438\u0440 1: 96 &nbsp;&middot;&nbsp; \u0422\u0438\u0440 2: 84 &nbsp;&middot;&nbsp; \u0422\u0438\u0440 3: 16 \u0441\u0435\u043a\u0442\u043e\u0440\u043e\u0432"
+    + " &nbsp;&middot;&nbsp; \u0417\u0430\u0445\u0432\u0430\u0447\u0435\u043d\u043e: " + owned + " / " + total
+    + "</div>"
+
+    // ── Панель детали (скрыта до первого клика) ──
+    + "<div id=\"map-detail\"></div>";
+}
+
+// ── Детальный просмотр сектора ───────────────────────────────
+
+function mapSelectSector(r, c) {
+  var key       = r + "-" + c;
+  var territory = _mapSectorMap[key] || null;
+  var ownerId   = territory ? territory.owner_clan_id : null;
+  var clanData  = ownerId ? _mapClanMap[ownerId] : null;
+  var tier      = mapGetTier(r, c);
+  var ti        = MAP_TIER[tier];
+  var clanColor = ownerId ? mapClanColor(ownerId) : null;
+  var playerClanId = _mapPlayer ? _mapPlayer.clan_id : null;
+  var glbUrl    = MAP_GLB_CDN + ti.glb;
+
+  // Кнопка действия (в Куске 1 всегда disabled)
+  var btnLabel, btnStyle;
+  if (!playerClanId) {
+    btnLabel = "\u041d\u0443\u0436\u0435\u043d \u043a\u043b\u0430\u043d \u0434\u043b\u044f \u0443\u0447\u0430\u0441\u0442\u0438\u044f";
+    btnStyle = "background:var(--surface-2);color:var(--text-soft);";
+  } else if (ownerId && ownerId === playerClanId) {
+    btnLabel = "\u0412\u0430\u0448 \u0441\u0435\u043a\u0442\u043e\u0440";
+    btnStyle = "background:var(--surface-2);color:var(--text-soft);";
+  } else if (ownerId) {
+    btnLabel = "&#9876; \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c";
+    btnStyle = "background:#b84030;color:#fff;";
+  } else {
+    btnLabel = "\u0417\u0430\u0445\u0432\u0430\u0442\u0438\u0442\u044c";
+    btnStyle = "background:#287838;color:#fff;";
+  }
+
+  var ownerHtml = clanData
+    ? "<span style=\"color:" + clanColor + ";\">[" + escapeHtml(clanData.tag) + "] " + escapeHtml(clanData.name) + "</span>"
+    : "\u041d\u0435\u0439\u0442\u0440\u0430\u043b\u044c\u043d\u044b\u0439";
+
+  var html = "<div class=\"card\" style=\"padding:14px;\">"
+
+    // Заголовок
+    + "<div style=\"display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;\">"
+    + "<span style=\"font-size:14px;font-weight:650;color:" + MAP_TIER_RING[tier] + ";\">"
+    + "\u0422\u0438\u0440 " + tier + " \u2014 " + ti.label + "</span>"
+    + "<span style=\"font-size:12px;color:var(--text-soft);\">[" + r + ", " + c + "]</span>"
+    + "</div>"
+
+    // GLB-модель (из Battle_Base_Clan_Wars)
+    + "<model-viewer src=\"" + glbUrl + "\" auto-rotate camera-controls loading=\"lazy\""
+    + " style=\"width:100%;height:180px;background:transparent;"
+    + "border-radius:var(--radius-sm);display:block;margin-bottom:12px;\"></model-viewer>"
+
+    // Информация
+    + "<div style=\"margin-bottom:14px;\">"
+    + _mapInfoRow("\u0413\u0430\u0440\u043d\u0438\u0437\u043e\u043d", ti.garrison + " \u0435\u0434.", "var(--text)")
+    + _mapInfoRow("\u041d\u0430\u043b\u043e\u0433", ti.tax + " " + ICON_PARTS + "/12\u0447", "var(--text)")
+    + _mapInfoRow("\u0412\u043b\u0430\u0434\u0435\u043b\u0435\u0446", ownerHtml, clanColor || "var(--text-soft)")
+    + "</div>"
+
+    // Кнопка (disabled в Куске 1)
+    + "<button disabled style=\"width:100%;padding:11px;border:none;border-radius:var(--radius-sm);"
+    + "font-size:13px;font-weight:650;font-family:inherit;cursor:default;" + btnStyle + "\">"
+    + btnLabel + "</button>"
+    + "<div style=\"text-align:center;font-size:10px;color:var(--text-soft);margin-top:5px;\">"
+    + "\u0411\u043e\u0435\u0432\u0430\u044f \u043c\u0435\u0445\u0430\u043d\u0438\u043a\u0430 \u2014 \u0441\u043b\u0435\u0434\u0443\u044e\u0449\u0435\u0435 \u043e\u0431\u043d\u043e\u0432\u043b\u0435\u043d\u0438\u0435</div>"
+    + "</div>";
+
+  var det = document.getElementById("map-detail");
+  if (!det) return;
+  det.innerHTML = html;
+  det.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
