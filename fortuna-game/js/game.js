@@ -222,10 +222,10 @@ async function doUpgrade() {
 function showFactoryMsg(text, type) {
   const el = document.getElementById("factory-msg");
   if (!el) return;
-  el.textContent = text;
+  el.innerHTML = text;
   el.style.color = type === "ok" ? "var(--accent)" : "#e05252";
   clearTimeout(el._timeout);
-  el._timeout = setTimeout(() => { el.textContent = ""; }, 3500);
+  el._timeout = setTimeout(() => { el.innerHTML = ""; }, 3500);
 }
 
 async function renderFactory() {
