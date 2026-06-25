@@ -55,6 +55,10 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/set-clan-role",
   CLAIM_CLAN_REWARD_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/claim-clan-reward",
+  // Этап 6 — карта войны
+  CAPTURE_TERRITORY_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/capture-territory",
+
   SEND_MESSAGE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-message",
 };
