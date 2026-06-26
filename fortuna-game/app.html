@@ -141,7 +141,7 @@
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; margin-bottom: 16px; }
   .profile-head { display: flex; align-items: center; gap: 14px; }
-  .avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border); background: var(--surface-2); flex-shrink: 0; }
+  .avatar { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; border: 2px solid var(--border); background: var(--surface-2); flex-shrink: 0; }
   .avatar-fallback { display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 600; color: var(--accent); background: var(--accent-soft); }
   .profile-name { font-size: 18px; font-weight: 650; letter-spacing: -.01em; }
   .profile-sub { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
@@ -150,6 +150,8 @@
   .res-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); display: flex; align-items: center; gap: 4px; }
   .res-value { font-size: 22px; font-weight: 680; letter-spacing: -.02em; margin-top: 3px; }
   .res-value small { font-size: 13px; color: var(--text-soft); font-weight: 500; }
+  .res-clickable { cursor: pointer; transition: background .15s, border-color .15s; border: 1px solid transparent; }
+  .res-clickable:hover { background: var(--accent-soft); border-color: var(--accent); }
   .section-title { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-soft); margin: 4px 2px 10px; }
   .soon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .soon { background: var(--surface-2); border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 16px 14px; text-align: center; color: var(--text-soft); }
@@ -393,6 +395,7 @@
   <script src="js/battle.js"></script>
   <script src="js/clans.js"></script>
   <script src="js/map.js"></script>
+  <script src="js/pass.js"></script>
   <script>
     // ── Тема ──────────────────────────────────────────────────
     function applyTheme(theme) {
@@ -704,7 +707,7 @@
         + "<div class=\"res\"><div class=\"res-label\">" + ICON_PARTS + " &#1044;&#1077;&#1090;&#1072;&#1083;&#1080;</div><div class=\"res-value\" id=\"r-parts\">&#8230;</div></div>"
         + "<div class=\"res\"><div class=\"res-label\">" + ICON_RARE + " &#1056;&#1077;&#1076;&#1082;&#1080;&#1077;</div><div class=\"res-value\" id=\"r-rare\">&#8230;</div></div>"
         + "<div class=\"res\"><div class=\"res-label\">" + ICON_XP + " &#1054;&#1087;&#1099;&#1090;</div><div class=\"res-value\" id=\"r-xp\">&#8230;</div></div>"
-        + "<div class=\"res\"><div class=\"res-label\">" + ICON_PASS + " &#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">&#8230;</div></div>"
+        + "<div class=\"res res-clickable\" onclick=\"renderPass()\" title=\"&#1054;&#1090;&#1082;&#1088;&#1099;&#1090;&#1100; &#1087;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;\"><div class=\"res-label\">" + ICON_PASS + " &#1055;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div><div class=\"res-value\" id=\"r-bp\">&#8230;</div></div>"
         + "</div></div>"
         + "<div class=\"card\">"
         + "<div id=\"clan-entry\" style=\"margin-bottom:12px;\">"
@@ -722,7 +725,16 @@
           var dName   = profile.display_name || shownName;
           document.getElementById("p-name").textContent = dName;
           document.getElementById("r-xp").textContent   = profile.xp ?? 0;
-          document.getElementById("r-bp").innerHTML     = (profile.battle_pass_level ?? 1) + " <small>&#1091;&#1088;.</small>";
+          document.getElementById("r-bp").innerHTML     = (profile.xp ?? 0) + "\u00a0<small>XP &#8594;</small>";
+
+          // Обновляем аватарку если задана
+          var profileHead = document.getElementById("profile-head");
+          if (profileHead && profile.avatar_url) {
+            profileHead.innerHTML = avatarHtml(dName, profile.avatar_url)
+              + "<div><div class=\"profile-name\" id=\"p-name\">" + escapeHtml(dName) + "</div>"
+              + "<div class=\"profile-sub\">@" + escapeHtml(player.login || "") + "</div></div>";
+          }
+
           var base = await fetchPlayerBase(profile.id);
           document.getElementById("r-parts").textContent = base ? (base.parts          ?? 0) : 0;
           document.getElementById("r-rare").textContent  = base ? (base.rare_materials ?? 0) : 0;
