@@ -263,3 +263,23 @@ async function captureTerritory(playerId, rowIdx, colIdx) {
 async function collectTax(playerId) {
   return callEdgeFunction(CONFIG.COLLECT_TAX_URL, { player_id: playerId });
 }
+
+// Этап 6 — кооп-атаки
+async function fetchCoopRequests(frontId, clanId) {
+  var rows = await supabaseSelect(
+    "coop_requests?front_id=eq." + frontId
+    + "&clan_id=eq." + clanId
+    + "&status=eq.pending&select=*"
+  );
+  return rows || [];
+}
+async function initiateCoop(playerId, rowIdx, colIdx) {
+  return callEdgeFunction(CONFIG.INITIATE_COOP_URL, {
+    player_id: playerId, row_idx: rowIdx, col_idx: colIdx,
+  });
+}
+async function joinCoop(playerId, rowIdx, colIdx, action) {
+  return callEdgeFunction(CONFIG.JOIN_COOP_URL, {
+    player_id: playerId, row_idx: rowIdx, col_idx: colIdx, action: action,
+  });
+}
