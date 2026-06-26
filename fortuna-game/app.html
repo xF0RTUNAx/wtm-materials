@@ -268,6 +268,12 @@
   [data-theme="dark"] .battle-cooldown-badge { background: rgba(0,0,0,.1); }
 
   @media (max-width: 380px) { .resources { grid-template-columns: 1fr; } .soon-grid { grid-template-columns: 1fr; } .hero h1 { font-size: 28px; } .stats-row { grid-template-columns: 1fr; } }
+  .avatar-picker-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 4px 0; }
+  .avatar-picker-item { border-radius: 10px; cursor: pointer; border: 2px solid var(--border); overflow: hidden; aspect-ratio: 1 / 1; transition: border-color .15s; }
+  .avatar-picker-item.equipped { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .avatar-picker-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .avatar-clickable { cursor: pointer; transition: opacity .15s; }
+  .avatar-clickable:hover { opacity: .85; }
 </style>
   <!-- Этап 5: model-viewer для 3D-моделей GLB -->
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3/dist/model-viewer.min.js"></script>
@@ -370,6 +376,18 @@
         <h4>7. &#1048;&#1079;&#1084;&#1077;&#1085;&#1077;&#1085;&#1080;&#1103; &#1089;&#1086;&#1075;&#1083;&#1072;&#1096;&#1077;&#1085;&#1080;&#1103;</h4>
         <p>&#1059;&#1089;&#1083;&#1086;&#1074;&#1080;&#1103; &#1084;&#1086;&#1075;&#1091;&#1090; &#1086;&#1073;&#1085;&#1086;&#1074;&#1083;&#1103;&#1090;&#1100;&#1089;&#1103;. &#1055;&#1088;&#1086;&#1076;&#1086;&#1083;&#1078;&#1072;&#1103; &#1087;&#1086;&#1083;&#1100;&#1079;&#1086;&#1074;&#1072;&#1090;&#1100;&#1089;&#1103; &#1048;&#1075;&#1088;&#1086;&#1081; &#1087;&#1086;&#1089;&#1083;&#1077; &#1080;&#1079;&#1084;&#1077;&#1085;&#1077;&#1085;&#1080;&#1081;, &#1074;&#1099; &#1087;&#1088;&#1080;&#1085;&#1080;&#1084;&#1072;&#1077;&#1090;&#1077; &#1086;&#1073;&#1085;&#1086;&#1074;&#1083;&#1105;&#1085;&#1085;&#1091;&#1102; &#1074;&#1077;&#1088;&#1089;&#1080;&#1102; &#1089;&#1086;&#1075;&#1083;&#1072;&#1096;&#1077;&#1085;&#1080;&#1103;.</p>
         <p style="margin-top:12px; font-size:12.5px;">&#1044;&#1072;&#1090;&#1072; &#1087;&#1086;&#1089;&#1083;&#1077;&#1076;&#1085;&#1077;&#1075;&#1086; &#1086;&#1073;&#1085;&#1086;&#1074;&#1083;&#1077;&#1085;&#1080;&#1103;: &#1080;&#1102;&#1085;&#1100; 2026.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modal-avatar" onclick="if(event.target===this)closeModal('avatar')">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">&#1040;&#1074;&#1072;&#1090;&#1072;&#1088;</div>
+        <button class="modal-close" onclick="closeModal('avatar')">&#215;</button>
+      </div>
+      <div class="modal-body" id="avatar-modal-body">
+        <div style="text-align:center;padding:24px;color:var(--text-soft)">&#1047;&#1072;&#1075;&#1088;&#1091;&#1078;&#1072;&#1077;&#1084;&#8230;</div>
       </div>
     </div>
   </div>
@@ -691,9 +709,10 @@
       var shownName = player.full_name || player.login || "&#1048;&#1075;&#1088;&#1086;&#1082;";
 
       function avatarHtml(name, url) {
+        var cls = "avatar avatar-clickable";
         return url
-          ? "<img class=\"avatar\" src=\"" + escapeHtml(url) + "\" alt=\"\">"
-          : "<div class=\"avatar avatar-fallback\">" + initials(name) + "</div>";
+          ? "<img class=\"" + cls + "\" src=\"" + escapeHtml(url) + "\" alt=\"\" onclick=\"openAvatarPicker()\">"
+          : "<div class=\"avatar avatar-fallback avatar-clickable\" onclick=\"openAvatarPicker()\">" + initials(name) + "</div>";
       }
 
       app.innerHTML = "<div id=\"app-content\">"
@@ -768,6 +787,72 @@
         ["r-xp","r-parts","r-rare","r-bp"].forEach(function(id) {
           var el = document.getElementById(id); if (el) el.textContent = "-";
         });
+      }
+    }
+
+    // ── Смена аватара ─────────────────────────────────────────
+    var _avatarPickerKeys = [];
+
+    async function openAvatarPicker() {
+      var player = getCurrentPlayer();
+      if (!player) return;
+      openModal("avatar");
+      var body = document.getElementById("avatar-modal-body");
+      if (body) body.innerHTML = "<div style=\"text-align:center;padding:24px;color:var(--text-soft)\">&#1047;&#1072;&#1075;&#1088;&#1091;&#1078;&#1072;&#1077;&#1084;&#8230;</div>";
+      try {
+        var profile = await fetchPlayerProfileById(player.id);
+        var unlocked = profile.avatar_unlocked || [];
+        var current  = profile.avatar_url || "";
+        _avatarPickerKeys = unlocked;
+        if (!unlocked.length) {
+          if (body) body.innerHTML = "<div style=\"text-align:center;padding:28px 16px;color:var(--text-soft);line-height:1.6;\">"
+            + "&#1041;&#1077;&#1079; &#1072;&#1074;&#1072;&#1090;&#1072;&#1088;&#1086;&#1082;.<br>"
+            + "<span style=\"font-size:12px;\">&#1054;&#1090;&#1082;&#1088;&#1099;&#1074;&#1072;&#1081; &#1080;&#1093; &#1074; &#1041;&#1086;&#1077;&#1074;&#1086;&#1084; &#1087;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;&#1077; &#8594; &#1085;&#1072;&#1078;&#1084;&#1080; &#171;&#1047;&#1072;&#1073;&#1088;&#1072;&#1090;&#1100;&#187; &#1085;&#1072; &#1085;&#1091;&#1078;&#1085;&#1086;&#1084; &#1091;&#1088;&#1086;&#1074;&#1085;&#1077;.</span>"
+            + "</div>";
+          return;
+        }
+        var grid = "<div class=\"avatar-picker-grid\">"
+          + unlocked.map(function(key, idx) {
+              var isActive = (key === current);
+              return "<div class=\"avatar-picker-item" + (isActive ? " equipped" : "") + "\""
+                + " onclick=\"doEquipAvatar(_avatarPickerKeys[" + idx + "])\" title=\"&#1053;&#1072;&#1076;&#1077;&#1090;&#1100;\">"
+                + "<img src=\"" + escapeHtml(key) + "\" alt=\"\""
+                + " onerror=\"this.parentNode.style.background='var(--surface-2)';this.remove();\">"
+                + (isActive ? "<div style=\"text-align:center;font-size:9px;color:var(--accent);font-weight:700;padding:2px 0;\">&#10003; &#1085;&#1072;&#1076;&#1077;&#1090;&#1072;</div>" : "")
+                + "</div>";
+            }).join("")
+          + "</div>"
+          + "<div style=\"text-align:center;font-size:12px;color:var(--text-soft);margin-top:12px;\">"
+          + "&#1053;&#1072;&#1078;&#1084;&#1080; &#1085;&#1072; &#1072;&#1074;&#1072;&#1090;&#1072;&#1088;&#1082;&#1091; &#1095;&#1090;&#1086;&#1073;&#1099; &#1085;&#1072;&#1076;&#1077;&#1090;&#1100;</div>";
+        if (body) body.innerHTML = grid;
+      } catch(e) {
+        if (body) body.innerHTML = "<div style=\"text-align:center;padding:24px;color:var(--accent);\">&#1054;&#1096;&#1080;&#1073;&#1082;&#1072;</div>";
+      }
+    }
+
+    async function doEquipAvatar(avatarKey) {
+      var player = getCurrentPlayer();
+      if (!player || !avatarKey) return;
+      try {
+        await equipAvatar(player.id, avatarKey);
+        // Обновляем аватар в шапке профиля без перезагрузки страницы
+        var profileHead = document.getElementById("profile-head");
+        if (profileHead) {
+          var oldAva = profileHead.querySelector(".avatar, .avatar-fallback");
+          if (oldAva) {
+            var img = document.createElement("img");
+            img.className = "avatar avatar-clickable";
+            img.src = avatarKey;
+            img.alt = "";
+            img.onclick = openAvatarPicker;
+            img.onerror = function() {};
+            profileHead.replaceChild(img, oldAva);
+          }
+        }
+        closeModal("avatar");
+        setTimeout(openAvatarPicker, 200); // переоткрываем для обновления состояния
+      } catch(e) {
+        alert("&#1054;&#1096;&#1080;&#1073;&#1082;&#1072;: " + escapeHtml(e.message));
       }
     }
 
