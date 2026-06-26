@@ -106,6 +106,29 @@ function avatarCircle(login, size) {
     'font-size:' + Math.round(size * 0.33) + 'px;font-weight:700;color:#fff;flex-shrink:0">' + ini + '</div>';
 }
 
+// Аватар участника: показывает PNG если есть, иначе — цветной кружок с инициалами.
+// Паттерн: PNG лежит поверх инициалов; если не загрузится — видны инициалы под ним.
+function memberAvatarHtml(login, avatarUrl, size) {
+  size = size || 36;
+  var bg  = clanAvatarColor(login);
+  var ini = clanInitials(login);
+  var txtSz = Math.round(size * 0.33);
+  if (avatarUrl) {
+    return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:8px;' +
+      'background:' + bg + ';display:flex;align-items:center;justify-content:center;' +
+      'font-size:' + txtSz + 'px;font-weight:700;color:#fff;flex-shrink:0;' +
+      'overflow:hidden;position:relative;">' +
+      '<span>' + ini + '</span>' +
+      '<img src="' + clanEsc(avatarUrl) + '" alt=""' +
+      ' style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;"' +
+      ' onerror="this.style.display=\'none\';">' +
+      '</div>';
+  }
+  return '<div style="width:' + size + 'px;height:' + size + 'px;border-radius:8px;' +
+    'background:' + bg + ';display:flex;align-items:center;justify-content:center;' +
+    'font-size:' + txtSz + 'px;font-weight:700;color:#fff;flex-shrink:0;">' + ini + '</div>';
+}
+
 function roleTag(role) {
   if (role === 'leader') {
     return '<span style="background:var(--accent-soft);color:var(--accent);border-radius:6px;' +
@@ -155,7 +178,7 @@ function showClanMsg(elId, text, isOk) {
 async function fetchClanMembersRich(clanId) {
   var rows = await supabaseSelect(
     'clan_members?clan_id=eq.' + clanId +
-    '&select=player_id,role,joined_at,players(login,xp)&order=joined_at.asc'
+    '&select=player_id,role,joined_at,players(login,xp,avatar_url)&order=joined_at.asc'
   );
   return rows || [];
 }
@@ -163,7 +186,7 @@ async function fetchClanMembersRich(clanId) {
 async function fetchPendingApps(clanId) {
   var rows = await supabaseSelect(
     'clan_applications?clan_id=eq.' + clanId +
-    '&status=eq.pending&select=id,player_id,created_at,players(login)&order=created_at.asc'
+    '&status=eq.pending&select=id,player_id,created_at,players(login,avatar_url)&order=created_at.asc'
   );
   return rows || [];
 }
@@ -367,7 +390,7 @@ async function renderInClanScreen(player, clanId) {
 
     return '<div style="padding:10px 0;border-bottom:1px solid var(--surface-2)">' +
       '<div style="display:flex;align-items:center;gap:10px">' +
-      avatarCircle(pLogin, 36) +
+      memberAvatarHtml(pLogin, m.players && m.players.avatar_url, 36) +
       '<div style="flex:1;min-width:0">' +
       '<div style="font-size:13px;font-weight:700">' + clanEsc(pLogin) +
       (isMe ? ' <span style="font-size:10px;color:var(--accent)">(я)</span>' : '') +
@@ -384,7 +407,7 @@ async function renderInClanScreen(player, clanId) {
     var appRows = pendingApps.map(function(a) {
       var aLogin = (a.players && a.players.login) ? a.players.login : '—';
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--surface-2)">' +
-        avatarCircle(aLogin, 32) +
+        memberAvatarHtml(aLogin, a.players && a.players.avatar_url, 32) +
         '<div style="flex:1;font-size:13px;font-weight:600">' + clanEsc(aLogin) + '</div>' +
         '<div style="display:flex;gap:6px">' +
         '<button onclick="doRespondApp(\'' + a.id + '\',\'approve\')" ' +
