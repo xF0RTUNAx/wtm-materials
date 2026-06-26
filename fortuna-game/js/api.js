@@ -22,13 +22,13 @@ async function fetchPlayerProfileById(playerId) {
   return rows[0] || null;
 }
 
-// База игрока (завод, детали, лаборатория, госпиталь, составы)
+// База игрока (завод, детали, лаборатория, госпиталь, составы, бусты)
 async function fetchPlayerBase(playerUuid) {
   const rows = await supabaseSelect(`bases?player_id=eq.${playerUuid}&select=*`);
   return rows[0] || null;
 }
 
-// Войска игрока — теперь включает vit и in_hospital_since
+// Войска игрока
 async function fetchPlayerTroops(playerUuid) {
   const rows = await supabaseSelect(
     `troops?player_id=eq.${playerUuid}&select=troop_type,level,vit,in_hospital_since&order=created_at.asc`
@@ -136,45 +136,39 @@ async function resolveBattle(attackerId, defenderId) {
 async function markNotificationsRead(playerId) {
   return callEdgeFunction(CONFIG.MARK_NOTIF_URL, { player_id: playerId });
 }
+
 // Этап 5 — кланы
 async function createClan(playerId, name, tag, description) {
   return callEdgeFunction(CONFIG.CREATE_CLAN_URL, {
     player_id: playerId, name, tag, description,
   });
 }
-
 async function applyClan(playerId, clanId) {
   return callEdgeFunction(CONFIG.APPLY_CLAN_URL, {
     player_id: playerId, clan_id: clanId,
   });
 }
-
 async function respondApplication(playerId, applicationId, decision) {
   return callEdgeFunction(CONFIG.RESPOND_APPLICATION_URL, {
     player_id: playerId, application_id: applicationId, decision,
   });
 }
-
 async function leaveClan(playerId) {
   return callEdgeFunction(CONFIG.LEAVE_CLAN_URL, { player_id: playerId });
 }
-
 async function kickMember(playerId, targetPlayerId) {
   return callEdgeFunction(CONFIG.KICK_MEMBER_URL, {
     player_id: playerId, target_player_id: targetPlayerId,
   });
 }
-
 async function setClanRole(playerId, targetPlayerId, newRole) {
   return callEdgeFunction(CONFIG.SET_CLAN_ROLE_URL, {
     player_id: playerId, target_player_id: targetPlayerId, new_role: newRole,
   });
 }
-
 async function claimClanReward(playerId) {
   return callEdgeFunction(CONFIG.CLAIM_CLAN_REWARD_URL, { player_id: playerId });
 }
-
 async function sendMessage(playerId, channel, content) {
   return callEdgeFunction(CONFIG.SEND_MESSAGE_URL, {
     player_id: playerId, channel, content,
@@ -183,47 +177,37 @@ async function sendMessage(playerId, channel, content) {
 
 // Чтение данных кланов из Supabase (GET)
 async function fetchAllClans() {
-  const rows = await supabaseSelect(
-    "clans?select=*&order=member_count.desc"
-  );
+  const rows = await supabaseSelect("clans?select=*&order=member_count.desc");
   return rows || [];
 }
-
 async function fetchClanById(clanId) {
-  const rows = await supabaseSelect(
-    `clans?id=eq.${clanId}&select=*`
-  );
+  const rows = await supabaseSelect(`clans?id=eq.${clanId}&select=*`);
   return rows[0] || null;
 }
-
 async function fetchClanMembers(clanId) {
   const rows = await supabaseSelect(
     `clan_members?clan_id=eq.${clanId}&select=player_id,role,joined_at&order=joined_at.asc`
   );
   return rows || [];
 }
-
 async function fetchClanApplications(clanId) {
   const rows = await supabaseSelect(
     `clan_applications?clan_id=eq.${clanId}&status=eq.pending&select=*&order=created_at.asc`
   );
   return rows || [];
 }
-
 async function fetchPlayerApplication(playerId) {
   const rows = await supabaseSelect(
     `clan_applications?player_id=eq.${playerId}&status=eq.pending&select=*&order=created_at.desc&limit=1`
   );
   return rows[0] || null;
 }
-
 async function fetchClanRewardClaimed(clanId, playerId, weekStart) {
   const rows = await supabaseSelect(
     `clan_rewards?clan_id=eq.${clanId}&player_id=eq.${playerId}&week_start=eq.${weekStart}&select=id`
   );
   return rows.length > 0;
 }
-
 async function fetchMessages(channel, limit) {
   limit = limit || 50;
   const rows = await supabaseSelect(
@@ -237,34 +221,26 @@ async function fetchActiveFront() {
   var rows = await supabaseSelect("fronts?is_active=eq.true&order=created_at.desc&limit=1&select=*");
   return rows[0] || null;
 }
-
 async function fetchTerritories(frontId) {
   var rows = await supabaseSelect(
     "territories?front_id=eq." + frontId + "&select=*&order=row_idx.asc,col_idx.asc"
   );
   return rows || [];
 }
-
 async function fetchClansByIds(clanIds) {
   if (!clanIds || !clanIds.length) return [];
   var filter = clanIds.map(function(id) { return "id.eq." + id; }).join(",");
   var rows = await supabaseSelect("clans?or=(" + filter + ")&select=id,name,tag");
   return rows || [];
 }
-
-// Этап 6 — захват территории
 async function captureTerritory(playerId, rowIdx, colIdx) {
   return callEdgeFunction(CONFIG.CAPTURE_TERRITORY_URL, {
     player_id: playerId, row_idx: rowIdx, col_idx: colIdx,
   });
 }
-
-// Этап 6 — сбор налогов
 async function collectTax(playerId) {
   return callEdgeFunction(CONFIG.COLLECT_TAX_URL, { player_id: playerId });
 }
-
-// Этап 6 — кооп-атаки
 async function fetchCoopRequests(frontId, clanId) {
   var rows = await supabaseSelect(
     "coop_requests?front_id=eq." + frontId
@@ -282,4 +258,49 @@ async function joinCoop(playerId, rowIdx, colIdx, action) {
   return callEdgeFunction(CONFIG.JOIN_COOP_URL, {
     player_id: playerId, row_idx: rowIdx, col_idx: colIdx, action: action,
   });
+}
+
+// ── Боевой пропуск ───────────────────────────────────────────
+
+// Инициализация пропуска (создаёт snapshot XP при первом входе в сезон)
+async function initBp(playerId) {
+  return callEdgeFunction(CONFIG.INIT_BP_URL, { player_id: playerId });
+}
+
+// Забрать награду за уровень
+async function claimBpReward(playerId, seasonId, level) {
+  return callEdgeFunction(CONFIG.CLAIM_BP_REWARD_URL, {
+    player_id: playerId, season_id: seasonId, level,
+  });
+}
+
+// Надеть аватарку
+async function equipAvatar(playerId, avatarKey) {
+  return callEdgeFunction(CONFIG.EQUIP_AVATAR_URL, {
+    player_id: playerId, avatar_key: avatarKey,
+  });
+}
+
+// Чтение данных пропуска из Supabase (GET)
+async function fetchActiveBpSeason() {
+  var rows = await supabaseSelect(
+    "bp_seasons?is_active=eq.true&order=created_at.desc&limit=1&select=*"
+  );
+  return rows[0] || null;
+}
+
+async function fetchPlayerBp(playerId, seasonId) {
+  var rows = await supabaseSelect(
+    "player_battle_pass?player_id=eq." + playerId
+    + "&season_id=eq." + seasonId
+    + "&select=*"
+  );
+  return rows[0] || null;
+}
+
+async function fetchBpRewards(seasonId) {
+  var rows = await supabaseSelect(
+    "bp_rewards?season_id=eq." + seasonId + "&order=level.asc&select=*"
+  );
+  return rows || [];
 }
