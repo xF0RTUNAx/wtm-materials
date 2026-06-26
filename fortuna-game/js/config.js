@@ -55,6 +55,7 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/set-clan-role",
   CLAIM_CLAN_REWARD_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/claim-clan-reward",
+
   // Этап 6 — карта войны
   CAPTURE_TERRITORY_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/capture-territory",
@@ -67,6 +68,14 @@ const CONFIG = {
 
   SEND_MESSAGE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-message",
+
+  // Боевой пропуск
+  INIT_BP_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/init-bp",
+  CLAIM_BP_REWARD_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/claim-bp-reward",
+  EQUIP_AVATAR_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/equip-avatar",
 };
 
 // ── Иконки ресурсов (HTML-img, inline) ──────────────────────
@@ -84,3 +93,8 @@ var ICON_CLAN       = '<img src="clans_and_chat/clan.png" style="width:108px;hei
 // Этап 6 — карта войны
 var ICON_TOKEN = '<img src="clans_and_chat/token.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
 var ICON_TAX   = '<img src="clans_and_chat/tax.png"   style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+
+// Боевой пропуск — бусты нейросетей
+var ICON_BOOST_SPEED = '<img src="pass/season_1/1_hour_boost.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+var ICON_BOOST_EXTRA = '<img src="pass/season_1/extra_task.png"   style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
+var ICON_BOOST_XP    = '<img src="pass/season_1/double_exp.png"   style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin:0 1px -2px" alt="" />';
