@@ -61,7 +61,7 @@ async function fetchPlayerNotifications(playerUuid) {
 // Поиск соперников — другие игроки кроме себя
 async function fetchOpponents(playerUuid) {
   const rows = await supabaseSelect(
-    `players?id=neq.${playerUuid}&order=xp.desc&limit=50&select=id,login,xp`
+    `players?id=neq.${playerUuid}&order=xp.desc&limit=50&select=id,login,xp,avatar_url`
   );
   return rows || [];
 }
