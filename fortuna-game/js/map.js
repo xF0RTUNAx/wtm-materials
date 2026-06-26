@@ -41,8 +41,9 @@ var MAP_CLAN_PALETTE = ["#e05050","#5090e0","#40c060","#e0a030","#c050e0","#40c0
 var _mapFront     = null;
 var _mapSectorMap = {};
 var _mapClanMap   = {};
+var _mapCoopMap   = {};   // key "row-col" → coop_request (активные запросы клана)
 var _mapPlayer    = null;
-var _mapBase      = null;   // base данные игрока (токены)
+var _mapBase      = null;
 var _mapCSSOk     = false;
 
 // ── Утилиты ──────────────────────────────────────────────────
@@ -88,7 +89,9 @@ function mapInjectCSS() {
   s.textContent = "@keyframes mapWave{from{background-position:0 0}to{background-position:36px 36px}}"
     + ".map-cell{width:" + MAP_CELL + "px;height:" + MAP_CELL + "px;border-radius:5px;"
     + "cursor:pointer;position:relative;z-index:1;transition:transform .12s;box-sizing:border-box;}"
-    + ".map-cell:hover{transform:scale(1.15);z-index:20;}";
+    + ".map-cell:hover{transform:scale(1.15);z-index:20;}"
+    + "@keyframes coopPulse{0%,100%{box-shadow:0 0 0 0 rgba(240,192,64,.5)}50%{box-shadow:0 0 0 3px rgba(240,192,64,.2)}}"
+    + ".map-coop{animation:coopPulse 1.5s ease-in-out infinite;}";
   document.head.appendChild(s);
   _mapCSSOk = true;
 }
@@ -160,7 +163,13 @@ function mapBuildCell(r, c) {
     : ("1.5px solid " + MAP_TIER_RING[tier]);
   var bg       = clrColor ? mapRgba(clrColor, 0.14) : "transparent";
 
-  return "<div class=\"map-cell\" onclick=\"mapSelectSector(" + r + "," + c + ")\""
+  var coopReq = _mapCoopMap[key];
+  if (coopReq) {
+    border = "2.5px solid #f0c040";
+    bg = mapRgba("#f0c040", 0.08);
+  }
+
+  return "<div class=\"map-cell" + (coopReq ? " map-coop" : "") + "\" onclick=\"mapSelectSector(" + r + "," + c + ")\""
     + " style=\"border:" + border + ";background:" + bg + ";\">"
     + "<svg width=\"" + MAP_CELL + "\" height=\"" + MAP_CELL + "\""
     + " viewBox=\"0 0 " + MAP_CELL + " " + MAP_CELL + "\" xmlns=\"http://www.w3.org/2000/svg\">"
@@ -352,9 +361,18 @@ async function renderMapScreen() {
       }
     });
 
-    var clans = await fetchClansByIds(clanIds);
+    var [clans, coopReqs] = await Promise.all([
+      fetchClansByIds(clanIds),
+      (_mapPlayer && _mapPlayer.clan_id)
+        ? fetchCoopRequests(front.id, _mapPlayer.clan_id)
+        : Promise.resolve([]),
+    ]);
     _mapClanMap = {};
     clans.forEach(function(cl) { _mapClanMap[cl.id] = cl; });
+    _mapCoopMap = {};
+    coopReqs.forEach(function(req) {
+      _mapCoopMap[req.row_idx + "-" + req.col_idx] = req;
+    });
 
     _mapSectorMap = {};
     territories.forEach(function(t) {
@@ -549,6 +567,12 @@ function mapSelectSector(r, c) {
     }
   }
 
+  // ── Кооп: текущее состояние для этого сектора ────────────────
+  var coopReq      = _mapCoopMap[key] || null;
+  var coopExpired  = coopReq && (Date.now() - new Date(coopReq.created_at).getTime() > 24 * 3600 * 1000);
+  var isInitiator  = coopReq && coopReq.initiator_id === (_mapPlayer ? _mapPlayer.id : null);
+  var isJoiner     = coopReq && !isInitiator && playerClanId === coopReq.clan_id;
+
   var btnTag = canCapture
     ? "<button id=\"map-capture-btn\" onclick=\"doCapture(" + r + "," + c + ")\" style=\"width:100%;padding:11px;"
       + "border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:650;font-family:inherit;" + btnStyle + "\">"
@@ -556,6 +580,40 @@ function mapSelectSector(r, c) {
     : "<button disabled style=\"width:100%;padding:11px;border:none;border-radius:var(--radius-sm);"
       + "font-size:13px;font-weight:650;font-family:inherit;" + btnStyle + "\">"
       + btnLabel + "</button>";
+
+  // Кооп-блок (показывается ниже основной кнопки)
+  var coopBlock = "";
+  if (coopReq && !coopExpired) {
+    if (isInitiator) {
+      coopBlock = "<div style=\"margin-top:8px;padding:10px;background:rgba(240,192,64,.1);"
+        + "border:1px solid rgba(240,192,64,.35);border-radius:var(--radius-sm);text-align:center;\">"
+        + "<div style=\"font-size:12px;color:#c8a030;margin-bottom:6px;\">"
+        + "&#8987; \u041e\u0436\u0438\u0434\u0430\u0435\u043c \u0441\u043e\u044e\u0437\u043d\u0438\u043a\u0430\u2026</div>"
+        + "<button onclick=\"doCancelCoop(" + r + "," + c + ")\" style=\"background:var(--surface-2);"
+        + "border:1px solid var(--border);border-radius:var(--radius-sm);padding:5px 14px;"
+        + "font-size:12px;cursor:pointer;font-family:inherit;color:var(--text-soft);\">"
+        + "\u041e\u0442\u043c\u0435\u043d\u0438\u0442\u044c \u043a\u043e\u043e\u043f</button>"
+        + "</div>";
+    } else if (isJoiner) {
+      coopBlock = "<div style=\"margin-top:8px;\">"
+        + "<button id=\"map-coop-join-btn\" onclick=\"doJoinCoop(" + r + "," + c + ")\" "
+        + "style=\"width:100%;padding:10px;border:none;border-radius:var(--radius-sm);"
+        + "background:#c8a030;color:#fff;font-size:13px;font-weight:650;cursor:pointer;font-family:inherit;"
+        + "display:flex;align-items:center;justify-content:center;gap:6px;\">"
+        + "&#9876; \u041f\u0440\u0438\u0441\u043e\u0435\u0434\u0438\u043d\u0438\u0442\u044c\u0441\u044f (\u2212" + ICON_TOKEN + "1)</button>"
+        + "<div style=\"text-align:center;font-size:10px;color:var(--text-soft);margin-top:3px;\">"
+        + "\u041a\u043e\u043e\u043f: \u043c\u043e\u0449\u044c \u043e\u0431\u043e\u0438\u0445 \u0438\u0433\u0440\u043e\u043a\u043e\u0432 \u0441\u043b\u043e\u0436\u0438\u0442\u0441\u044f</div>"
+        + "</div>";
+    }
+  } else if (canCapture && !isFreeFirstLanding && playerClanId) {
+    // Предложение начать кооп (только если секторов нет — иначе кооп не нужен на первый захват)
+    coopBlock = "<div style=\"margin-top:8px;\">"
+      + "<button onclick=\"doInitiateCoop(" + r + "," + c + ")\" "
+      + "style=\"width:100%;padding:9px;border:1px solid rgba(240,192,64,.4);border-radius:var(--radius-sm);"
+      + "background:transparent;color:#c8a030;font-size:12px;cursor:pointer;font-family:inherit;\">"
+      + "&#9872; \u0421\u043e\u0432\u043c\u0435\u0441\u0442\u043d\u0430\u044f \u0430\u0442\u0430\u043a\u0430</button>"
+      + "</div>";
+  }
 
   var html = "<div class=\"card\" style=\"padding:14px;\">"
 
@@ -580,6 +638,7 @@ function mapSelectSector(r, c) {
     + "</div>"
 
     + btnTag
+    + coopBlock
     + (btnHint ? "<div style=\"text-align:center;font-size:10px;color:var(--text-soft);margin-top:4px;\">" + btnHint + "</div>" : "")
     + "<div id=\"map-capture-err\" style=\"min-height:14px;font-size:12px;color:#e05252;text-align:center;margin-top:6px;\"></div>"
     + "</div>";
@@ -712,5 +771,86 @@ async function doCollectTax() {
       msg3.innerHTML = escapeHtml(e.message);
       msg3.style.color = "#e05252";
     }
+  }
+}
+
+// ── Кооп-атаки ───────────────────────────────────────────────
+
+async function doInitiateCoop(r, c) {
+  var player = getCurrentPlayer();
+  if (!player) return;
+  var errEl = document.getElementById("map-capture-err");
+  if (errEl) errEl.innerHTML = "";
+  try {
+    var result = await initiateCoop(player.id, r, c);
+    // Добавляем в локальный _mapCoopMap чтобы UI обновился
+    _mapCoopMap[r + "-" + c] = {
+      row_idx: r, col_idx: c,
+      initiator_id: player.id,
+      clan_id: _mapPlayer ? _mapPlayer.clan_id : null,
+      created_at: new Date().toISOString(),
+      status: "pending",
+    };
+    // Перерисовываем панель сектора
+    mapSelectSector(r, c);
+    var errEl2 = document.getElementById("map-capture-err");
+    if (errEl2) {
+      errEl2.innerHTML = result.message || "\u0417\u0430\u043f\u0440\u043e\u0441 \u043e\u0442\u043f\u0440\u0430\u0432\u043b\u0435\u043d!";
+      errEl2.style.color = "var(--accent)";
+    }
+  } catch (e) {
+    if (errEl) { errEl.innerHTML = escapeHtml(e.message); errEl.style.color = "#e05252"; }
+  }
+}
+
+async function doJoinCoop(r, c) {
+  var player = getCurrentPlayer();
+  if (!player) return;
+  var btn = document.getElementById("map-coop-join-btn");
+  var errEl = document.getElementById("map-capture-err");
+  if (btn) { btn.disabled = true; btn.textContent = "\u0410\u0442\u0430\u043a\u0443\u0435\u043c\u2026"; }
+  if (errEl) errEl.innerHTML = "";
+  try {
+    var result = await joinCoop(player.id, r, c, "join");
+    // Обновляем локальные данные
+    if (_mapBase) _mapBase.attack_tokens = result.tokens_remaining;
+    delete _mapCoopMap[r + "-" + c];
+    if (result.won && _mapPlayer && _mapPlayer.clan_id) {
+      var key = r + "-" + c;
+      if (_mapSectorMap[key]) {
+        _mapSectorMap[key].owner_clan_id = _mapPlayer.clan_id;
+        _mapSectorMap[key].captured_at = new Date().toISOString();
+      }
+      if (!_mapClanMap[_mapPlayer.clan_id]) {
+        try {
+          var myClan = await fetchClanById(_mapPlayer.clan_id);
+          if (myClan) _mapClanMap[myClan.id] = myClan;
+        } catch (_) {}
+      }
+    }
+    mapShowCaptureResult(result, r, c);
+  } catch (e) {
+    mapSelectSector(r, c);
+    var errEl2 = document.getElementById("map-capture-err");
+    if (errEl2) { errEl2.innerHTML = escapeHtml(e.message); errEl2.style.color = "#e05252"; }
+  }
+}
+
+async function doCancelCoop(r, c) {
+  var player = getCurrentPlayer();
+  if (!player) return;
+  var errEl = document.getElementById("map-capture-err");
+  if (errEl) errEl.innerHTML = "";
+  try {
+    await joinCoop(player.id, r, c, "cancel");
+    delete _mapCoopMap[r + "-" + c];
+    mapSelectSector(r, c);
+    var errEl2 = document.getElementById("map-capture-err");
+    if (errEl2) {
+      errEl2.innerHTML = "\u041a\u043e\u043e\u043f \u043e\u0442\u043c\u0435\u043d\u0451\u043d";
+      errEl2.style.color = "var(--accent)";
+    }
+  } catch (e) {
+    if (errEl) { errEl.innerHTML = escapeHtml(e.message); errEl.style.color = "#e05252"; }
   }
 }
