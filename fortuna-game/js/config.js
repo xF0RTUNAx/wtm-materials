@@ -60,6 +60,10 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/capture-territory",
   COLLECT_TAX_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/collect-tax",
+  INITIATE_COOP_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/initiate-coop",
+  JOIN_COOP_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/join-coop",
 
   SEND_MESSAGE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/send-message",
