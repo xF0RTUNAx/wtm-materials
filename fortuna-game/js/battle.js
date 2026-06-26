@@ -102,6 +102,24 @@ function initials2(s) {
   return s.trim().slice(0, 2).toUpperCase();
 }
 
+// Аватар соперника: PNG поверх инициалов, квадратный (8px radius).
+function oppAvatarHtml(login, avatarUrl, size) {
+  size = size || 32;
+  var ini = initials2(login);
+  var baseStyle = "width:" + size + "px;height:" + size + "px;border-radius:8px;"
+    + "background:var(--accent-soft);display:flex;align-items:center;justify-content:center;"
+    + "font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;";
+  if (avatarUrl) {
+    return "<div style=\"" + baseStyle + "overflow:hidden;position:relative;\">"
+      + "<span>" + escapeHtml(ini) + "</span>"
+      + "<img src=\"" + escapeHtml(avatarUrl) + "\" alt=\"\""
+      + " style=\"position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;\""
+      + " onerror=\"this.style.display='none';\">"
+      + "</div>";
+  }
+  return "<div style=\"" + baseStyle + "\">" + escapeHtml(ini) + "</div>";
+}
+
 // ── Сетка составов (переиспользуется) ───────────────────────
 
 function buildTroopGrid(which) {
@@ -200,10 +218,8 @@ function renderBattleDashboard() {
 
   var oppHtml = opponents.length > 0
     ? opponents.map(function(opp, idx) {
-        var ava = initials2(opp.login);
         return "<div class=\"battle-hero-row\" style=\"margin-bottom:6px;\">"
-          + "<div style=\"width:32px;height:32px;border-radius:50%;background:var(--accent-soft);display:flex;align-items:center;"
-          + "justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;\">" + escapeHtml(ava) + "</div>"
+          + oppAvatarHtml(opp.login, opp.avatar_url, 32)
           + "<div style=\"flex:1;min-width:0;\">"
           + "<div class=\"battle-hero-name\">" + escapeHtml(opp.login || "?") + "</div>"
           + "<div class=\"battle-hero-meta\">" + (opp.xp || 0) + " XP</div>"
