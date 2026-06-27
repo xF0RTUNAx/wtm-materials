@@ -76,6 +76,10 @@ const CONFIG = {
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/claim-bp-reward",
   EQUIP_AVATAR_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/equip-avatar",
+
+  // Этап 7 — мини-игры / Аркада
+  CLAIM_MG_REWARD_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/claim-minigame-reward",
 };
 
 // ── Иконки ресурсов (HTML-img, inline) ──────────────────────
