@@ -16,9 +16,11 @@ async function supabaseSelect(path) {
   return res.json();
 }
 
-// Профиль игрока по его id
+// Профиль игрока по его id (без password_hash — он скрыт на уровне БД)
 async function fetchPlayerProfileById(playerId) {
-  const rows = await supabaseSelect(`players?id=eq.${playerId}&select=*`);
+  const rows = await supabaseSelect(
+    `players?id=eq.${playerId}&select=id,telegram_id,username,full_name,avatar_url,xp,clan_id,battle_pass_level,last_online,created_at,display_name,display_avatar_url,login,avatar_unlocked`
+  );
   return rows[0] || null;
 }
 
@@ -303,4 +305,14 @@ async function fetchBpRewards(seasonId) {
     "bp_rewards?season_id=eq." + seasonId + "&order=level.asc&select=*"
   );
   return rows || [];
+}
+
+// ── Этап 7 — Аркада (мини-игры) ─────────────────────────────
+
+// Начислить награду за победу в мини-игре (1 раз в сутки UTC per game)
+async function claimMinigameReward(playerId, gameId) {
+  return callEdgeFunction(CONFIG.CLAIM_MG_REWARD_URL, {
+    player_id: playerId,
+    game_id: gameId,
+  });
 }
