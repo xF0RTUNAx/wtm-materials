@@ -77,7 +77,7 @@ function arcadeCardHtml(base) {
     + "</div>"
     + "<div style=\"font-size:12px;color:var(--text-soft);margin-bottom:10px;\">"
     + "Ежедневные мини-игры &mdash; за победу: <b>+50\u00a0" + ICON_PARTS
-    + " &#183; +50\u00a0XP &#183; +5\u00a0" + ICON_RARE + "</b>"
+    + " &#183; +50\u00a0" + ICON_XP + " &#183; +5\u00a0" + ICON_RARE + "</b>"
     + "</div>"
     + "<div style=\"display:flex;gap:6px;margin-bottom:12px;\">" + dots + "</div>"
     + "<button onclick=\"openArcadeModal()\" style=\"width:100%;padding:12px;"
@@ -113,7 +113,7 @@ function openArcadeModal() {
       + "<div style=\"font-size:11px;color:var(--text-soft);margin-bottom:9px;\">" + g.desc + "</div>"
       + "<div style=\"display:flex;align-items:center;justify-content:space-between;\">"
       + "<span style=\"font-size:11px;color:var(--text-soft);\">+50 " + ICON_PARTS
-      + " &#183; +50 XP &#183; +5 " + ICON_RARE + "</span>"
+      + " &#183; +50 " + ICON_XP + " &#183; +5 " + ICON_RARE + "</span>"
       + "<button " + btnClick
       + " style=\"background:" + btnBg + ";color:" + btnTc + ";border:none;"
       + "border-radius:8px;padding:6px 14px;font-size:12px;font-weight:650;"
@@ -256,7 +256,7 @@ function showMgRewardBanner(gameId) {
   banner.innerHTML = "<div style=\"font-size:15px;font-weight:650;color:#3a6b2a;margin-bottom:4px;\">"
     + "&#127942; " + label + " &mdash; Победа!</div>"
     + "<div style=\"font-size:13px;color:#3a6b2a;\">"
-    + "+50\u00a0" + ICON_PARTS + " &nbsp; +50\u00a0XP &nbsp; +5\u00a0" + ICON_RARE
+    + "+50\u00a0" + ICON_PARTS + " &nbsp; +50\u00a0" + ICON_XP + " &nbsp; +5\u00a0" + ICON_RARE
     + "</div>";
   document.body.appendChild(banner);
   setTimeout(function() {
