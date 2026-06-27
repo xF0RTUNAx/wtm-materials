@@ -92,6 +92,10 @@ function openArcadeModal() {
   if (document.getElementById("mg-modal")) return;
   var base = currentBattleData ? currentBattleData.base : {};
 
+  // Скрываем кнопку чата чтобы не перекрывала модал
+  var chatRoot = document.getElementById("chat-widget-root");
+  if (chatRoot) chatRoot.style.display = "none";
+
   var gameCards = MG_GAMES.map(function(g) {
     var done     = mgPlayed(base, g.dateField);
     var btnBg    = done ? "var(--surface-2)" : g.color;
@@ -144,16 +148,30 @@ function openArcadeModal() {
     + "Обновление ежедневно в 00:00 UTC</div>"
     + "</div>";
   document.body.appendChild(modal);
+
+  // Запускаем анимацию GLB-модели после загрузки
+  var mv = modal.querySelector("model-viewer");
+  if (mv) {
+    mv.addEventListener("load", function() {
+      try { mv.play({ repetitions: Infinity }); } catch (_) {}
+    });
+  }
 }
 
 function closeMgModal() {
   var el = document.getElementById("mg-modal");
   if (el) el.remove();
+  // Возвращаем кнопку чата
+  var chatRoot = document.getElementById("chat-widget-root");
+  if (chatRoot) chatRoot.style.display = "";
 }
 
 // Запустить мини-игру в fullscreen iframe
 function launchMiniGame(gameId) {
-  closeMgModal();
+  // Убираем модал напрямую (без восстановления чата — он вернётся при закрытии игры)
+  var mgModal = document.getElementById("mg-modal");
+  if (mgModal) mgModal.remove();
+
   var game = MG_GAMES.find(function(g) { return g.id === gameId; });
   if (!game) return;
 
@@ -176,6 +194,9 @@ function launchMiniGame(gameId) {
 function closeMgOverlay() {
   var el = document.getElementById("mg-overlay");
   if (el) el.remove();
+  // Возвращаем кнопку чата после выхода из игры
+  var chatRoot = document.getElementById("chat-widget-root");
+  if (chatRoot) chatRoot.style.display = "";
 }
 
 // postMessage-листенер для сигналов из iframe мини-игр
