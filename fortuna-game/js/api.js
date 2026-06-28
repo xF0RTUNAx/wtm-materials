@@ -316,3 +316,10 @@ async function claimMinigameReward(playerId, gameId) {
     game_id: gameId,
   });
 }
+
+// ── Онлайн-статус ────────────────────────────────────────────
+
+// Обновляет last_online игрока (вызывается при входе и каждые 3 мин)
+async function touchOnline(playerId) {
+  return callEdgeFunction(CONFIG.TOUCH_ONLINE_URL, { player_id: playerId });
+}
