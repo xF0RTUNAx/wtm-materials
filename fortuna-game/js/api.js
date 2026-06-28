@@ -179,7 +179,7 @@ async function sendMessage(playerId, channel, content) {
 
 // Чтение данных кланов из Supabase (GET)
 async function fetchAllClans() {
-  const rows = await supabaseSelect("clans?select=*&order=member_count.desc");
+  const rows = await supabaseSelect("clans?select=*&order=rating.desc,member_count.desc");
   return rows || [];
 }
 async function fetchClanById(clanId) {
@@ -346,4 +346,9 @@ async function fetchAllTroopsForRating() {
     "troops?in_hospital_since=is.null&select=player_id,troop_type,level,vit"
   );
   return rows || [];
+}
+
+// Пересчёт рейтинга клана (вызывается фоном при открытии экрана клана)
+async function recalcClanRating(clanId) {
+  return callEdgeFunction(CONFIG.RECALC_CLAN_RATING_URL, { clan_id: clanId });
 }
