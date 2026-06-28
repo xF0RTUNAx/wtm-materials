@@ -41,6 +41,39 @@ var MG_GAMES = [
   },
 ];
 
+
+// ── Синергии войск ───────────────────────────────────────────
+// Отображение на фронтенде (расчёт — на сервере в resolve-battle/capture-territory)
+
+var SYNERGY_CFG = [
+  { types: ["tank", "inf"],  atkBonus: 0,    defBonus: 0.10, name: "Бронепехота" },
+  { types: ["avia", "aa"],   atkBonus: 0.10, defBonus: 0,    name: "Возд. превосходство" },
+  { types: ["arty", "inf"],  atkBonus: 0.10, defBonus: 0,    name: "Огн. поддержка" },
+  { types: ["bmp",  "tank"], atkBonus: 0,    defBonus: 0.08, name: "Мех. кулак" },
+  { types: ["msl",  "avia"], atkBonus: 0.12, defBonus: 0,    name: "Ударный кулак" },
+  { types: ["arty", "msl"],  atkBonus: 0.08, defBonus: 0,    name: "Огн. шквал" },
+];
+
+// Возвращает HTML-бейджи активных синергий (или "" если нет)
+function synergyBadgesHtml(lineup, isAtk) {
+  var active = SYNERGY_CFG.filter(function(s) {
+    return s.types.every(function(t) { return lineup.includes(t); })
+      && (isAtk ? s.atkBonus > 0 : s.defBonus > 0);
+  });
+  if (!active.length) return "";
+  return "<div style=\"display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;\">"
+    + active.map(function(s) {
+        var pct   = isAtk ? Math.round(s.atkBonus * 100) : Math.round(s.defBonus * 100);
+        var label = isAtk
+          ? "+" + pct + "% \u0430\u0442\u0430\u043a\u0430"
+          : "+" + pct + "% \u0437\u0430\u0449\u0438\u0442\u0430";
+        return "<div style=\"background:var(--accent-soft);color:var(--accent);"
+          + "border-radius:8px;padding:2px 8px;font-size:10px;font-weight:700;\">"
+          + "&#9889; " + s.name + " " + label + "</div>";
+      }).join("")
+    + "</div>";
+}
+
 // Проверка: игра уже сыграна сегодня (UTC)
 function mgPlayed(base, dateField) {
   if (!base || !base[dateField]) return false;
@@ -521,6 +554,8 @@ function renderBattleDashboard() {
 
   var atkLineup = base.attack_lineup  || [];
   var defLineup = base.defense_lineup || [];
+  var atkSynHtml = synergyBadgesHtml(atkLineup, true);
+  var defSynHtml = synergyBadgesHtml(defLineup, false);
 
   var hospRows = TROOP_ORDER.map(function(type) {
     var t = troops.find(function(tr) { return tr.troop_type === type; });
@@ -609,9 +644,11 @@ function renderBattleDashboard() {
     + "<div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
     + "color:var(--text-soft);margin-bottom:10px;\">\u0421\u043e\u0441\u0442\u0430\u0432\u044b</div>"
     + "<div style=\"font-size:10px;color:var(--text-soft);font-weight:600;margin-bottom:5px;\">\u0410\u0442\u0430\u043a\u0430</div>"
-    + "<div style=\"display:flex;gap:4px;margin-bottom:9px;\">" + lineupSlots(atkLineup) + "</div>"
-    + "<div style=\"font-size:10px;color:var(--text-soft);font-weight:600;margin-bottom:5px;\">\u0417\u0430\u0449\u0438\u0442\u0430</div>"
-    + "<div style=\"display:flex;gap:4px;margin-bottom:10px;\">" + lineupSlots(defLineup) + "</div>"
+    + "<div style=\"display:flex;gap:4px;margin-bottom:4px;\">" + lineupSlots(atkLineup) + "</div>"
+    + atkSynHtml
+    + "<div style=\"font-size:10px;color:var(--text-soft);font-weight:600;margin-bottom:5px;margin-top:" + (atkSynHtml ? "2" : "5") + "px;\">\u0417\u0430\u0449\u0438\u0442\u0430</div>"
+    + "<div style=\"display:flex;gap:4px;margin-bottom:4px;\">" + lineupSlots(defLineup) + "</div>"
+    + defSynHtml
     + "<button onclick=\"renderLineupEditor()\" style=\"width:100%;background:var(--surface-2);"
     + "border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px;font-size:11px;"
     + "font-weight:600;color:var(--text);cursor:pointer;font-family:inherit;\">\u0418\u0437\u043c\u0435\u043d\u0438\u0442\u044c</button>"
