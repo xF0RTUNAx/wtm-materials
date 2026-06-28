@@ -357,15 +357,15 @@
         let isBattleActive = false;
 
         // ── Выход и награда ───────────────────────────────────
-        function exitGame() {
+        window.exitGame = function() {
             if (window.parent !== window) window.parent.closeMgOverlay();
-        }
+        };
 
-        function claimAndClose() {
+        window.claimAndClose = function() {
             if (window.parent !== window) {
                 window.parent.postMessage({ type: 'mg_win', game: 'strat' }, '*');
             }
-        }
+        };
 
         // ── Инициализация слотов ──────────────────────────────
         function initSlotsUI() {
