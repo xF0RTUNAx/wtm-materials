@@ -896,11 +896,22 @@
     }
 
     // ── Точка входа ───────────────────────────────────────────
+    var _touchInterval = null;
+
     function renderApp() {
       var player = getCurrentPlayer();
       if (player) {
         renderProfile(player);
         loadNotifBadge();
+        // Онлайн-статус: сразу при входе, затем каждые 3 мин
+        if (typeof touchOnline === "function") {
+          touchOnline(player.id).catch(function() {});
+          if (_touchInterval) clearInterval(_touchInterval);
+          _touchInterval = setInterval(function() {
+            var p = getCurrentPlayer();
+            if (p) touchOnline(p.id).catch(function() {});
+          }, 180000);
+        }
       } else {
         renderLogin();
       }
