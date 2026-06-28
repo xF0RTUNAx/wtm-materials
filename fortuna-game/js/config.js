@@ -80,6 +80,10 @@ const CONFIG = {
   // Этап 7 — мини-игры / Аркада
   CLAIM_MG_REWARD_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/claim-minigame-reward",
+
+  // Онлайн-статус
+  TOUCH_ONLINE_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/touch-online",
 };
 
 // ── Иконки ресурсов (HTML-img, inline) ──────────────────────
