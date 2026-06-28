@@ -462,6 +462,22 @@
         return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c];
       });
     }
+    function fmtSmartTime(isoStr) {
+      var d     = new Date(isoStr);
+      var now   = new Date();
+      var hh    = String(d.getHours()).padStart(2, '0');
+      var mm    = String(d.getMinutes()).padStart(2, '0');
+      var hm    = hh + ':' + mm;
+      var dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      var diff  = today.getTime() - dDate.getTime();
+      if (diff < 86400000)  return hm;
+      if (diff < 172800000) return '\u0432\u0447\u0435\u0440\u0430 ' + hm;
+      var dd = String(d.getDate()).padStart(2, '0');
+      var mo = String(d.getMonth() + 1).padStart(2, '0');
+      return dd + '.' + mo + ' ' + hm;
+    }
+
 
     // ── PWA ───────────────────────────────────────────────────
     var deferredPrompt = null;
@@ -568,8 +584,7 @@
         }
         if (body) body.innerHTML = notifs.map(function(n) {
           var d    = n.data_json || {};
-          var dt   = new Date(n.created_at);
-          var time = dt.toLocaleString("ru", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+          var time = fmtSmartTime(n.created_at);
 
           // ── Клановые войны ──
           if (n.type === "territory_lost") {
