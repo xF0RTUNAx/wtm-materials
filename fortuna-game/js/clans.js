@@ -399,7 +399,7 @@ async function renderInClanScreen(player, clanId) {
     }
 
     return '<div style="padding:10px 0;border-bottom:1px solid var(--surface-2)">' +
-      '<div style="display:flex;align-items:center;gap:10px">' +
+      '<div style="display:flex;align-items:center;gap:10px;cursor:pointer" onclick="openPlayerProfile(\'' + m.player_id + '\')">' +
       memberAvatarHtml(pLogin, m.players && m.players.avatar_url, 36) +
       '<div style="flex:1;min-width:0">' +
       '<div style="font-size:13px;font-weight:700">' + clanEsc(pLogin) +
@@ -418,7 +418,7 @@ async function renderInClanScreen(player, clanId) {
       var aLogin = (a.players && a.players.login) ? a.players.login : '—';
       return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--surface-2)">' +
         memberAvatarHtml(aLogin, a.players && a.players.avatar_url, 32) +
-        '<div style="flex:1;font-size:13px;font-weight:600">' + clanEsc(aLogin) + '</div>' +
+        '<div style="flex:1;font-size:13px;font-weight:600;cursor:pointer" onclick="openPlayerProfile(\'' + a.player_id + '\')">' + clanEsc(aLogin) + '</div>' +
         '<div style="display:flex;gap:6px">' +
         '<button onclick="doRespondApp(\'' + a.id + '\',\'approve\')" ' +
         'style="padding:7px 14px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">&#10003;</button>' +
@@ -857,7 +857,7 @@ function renderChatMsgs(msgs) {
         clanEsc(m.content) + '</div></div>';
     }
     return '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:2px">' +
-      '<div style="display:flex;align-items:center;gap:5px">' +
+      '<div style="display:flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerProfile(\'' + m.player_id + '\')">' +
       '<div style="width:18px;height:18px;border-radius:50%;background:' + bg + ';' +
       'display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0">' + ini + '</div>' +
       '<div style="font-size:10px;color:var(--text-soft)">' + clanEsc(m.login || '?') + ' · ' + t + '</div>' +
@@ -905,7 +905,7 @@ function appendChatMsg(msg) {
       clanEsc(msg.content) + '</div>';
   } else {
     div.innerHTML =
-      '<div style="display:flex;align-items:center;gap:5px">' +
+      '<div style="display:flex;align-items:center;gap:5px;cursor:pointer" onclick="openPlayerProfile(\'' + msg.player_id + '\')">' +
       '<div style="width:18px;height:18px;border-radius:50%;background:' + bg + ';' +
       'display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#fff;flex-shrink:0">' + ini + '</div>' +
       '<div style="font-size:10px;color:var(--text-soft)">' + clanEsc(msg.login || '?') + ' · ' + t + '</div>' +
