@@ -65,10 +65,20 @@ function fmtCountdown(ms) {
 }
 
 function fmtTime(isoStr) {
-  var d = new Date(isoStr);
-  var h = String(d.getHours()).padStart(2, '0');
-  var m = String(d.getMinutes()).padStart(2, '0');
-  return h + ':' + m;
+  var d     = new Date(isoStr);
+  var now   = new Date();
+  var hh    = String(d.getHours()).padStart(2, '0');
+  var mm    = String(d.getMinutes()).padStart(2, '0');
+  var hm    = hh + ':' + mm;
+  // Сравниваем только даты (по полуночи локального времени)
+  var dDate = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var diff  = today.getTime() - dDate.getTime();
+  if (diff < 86400000)  return hm;                 // сегодня — только время
+  if (diff < 172800000) return '\u0432\u0447\u0435\u0440\u0430 ' + hm; // вчера
+  var dd = String(d.getDate()).padStart(2, '0');
+  var mo = String(d.getMonth() + 1).padStart(2, '0');
+  return dd + '.' + mo + ' ' + hm;
 }
 
 function clanInitials(login) {
