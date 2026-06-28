@@ -179,15 +179,24 @@ function launchMiniGame(gameId) {
   overlay.id = "mg-overlay";
   overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;"
     + "z-index:500;background:#000;display:flex;flex-direction:column;";
-  overlay.innerHTML = "<div style=\"display:flex;align-items:center;gap:12px;"
-    + "padding:8px 12px;background:rgba(0,0,0,0.85);flex-shrink:0;\">"
-    + "<button onclick=\"closeMgOverlay()\" style=\"background:rgba(255,255,255,0.12);"
-    + "color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;"
-    + "padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;\">"
-    + "&#10005; Выйти</button>"
-    + "<span style=\"color:#ccc;font-size:12px;font-family:inherit;\">" + game.name + "</span>"
-    + "</div>"
-    + "<iframe src=\"" + game.src + "\" style=\"flex:1;border:none;width:100%;\" allow=\"autoplay\"></iframe>";
+
+  // Артдуэль — iframe на весь экран, без шапки.
+  // Выход через кнопку «Выйти» внутри самой игры (exitGame).
+  if (gameId === "arty") {
+    overlay.innerHTML = "<iframe src=\"" + game.src + "\""
+      + " style=\"flex:1;border:none;width:100%;height:100%;\""
+      + " allow=\"autoplay\"></iframe>";
+  } else {
+    overlay.innerHTML = "<div style=\"display:flex;align-items:center;gap:12px;"
+      + "padding:8px 12px;background:rgba(0,0,0,0.85);flex-shrink:0;\">"
+      + "<button onclick=\"closeMgOverlay()\" style=\"background:rgba(255,255,255,0.12);"
+      + "color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;"
+      + "padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;\">"
+      + "&#10005; Выйти</button>"
+      + "<span style=\"color:#ccc;font-size:12px;font-family:inherit;\">" + game.name + "</span>"
+      + "</div>"
+      + "<iframe src=\"" + game.src + "\" style=\"flex:1;border:none;width:100%;\" allow=\"autoplay\"></iframe>";
+  }
   document.body.appendChild(overlay);
 }
 
