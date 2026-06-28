@@ -331,3 +331,19 @@ async function fetchPlayerBattleCount(playerUuid) {
 async function touchOnline(playerId) {
   return callEdgeFunction(CONFIG.TOUCH_ONLINE_URL, { player_id: playerId });
 }
+
+// ── Рейтинг игроков ──────────────────────────────────────────
+
+async function fetchAllPlayersForRating() {
+  const rows = await supabaseSelect(
+    "players?select=id,login,xp,avatar_url,clan_id&order=xp.desc&limit=200"
+  );
+  return rows || [];
+}
+
+async function fetchAllTroopsForRating() {
+  const rows = await supabaseSelect(
+    "troops?in_hospital_since=is.null&select=player_id,troop_type,level,vit"
+  );
+  return rows || [];
+}
