@@ -1,7 +1,7 @@
 {
   "name": "xFORTUNAx Games",
   "short_name": "xFORTUNAx",
-  "description": "Построй свою самую мощную базу!",
+  "description": "Приведи свой клан к победе!",
   "start_url": "app.html",
   "scope": "./",
   "display": "standalone",
@@ -9,15 +9,15 @@
   "theme_color": "#c8643c",
   "icons": [
     {
-      "src": "https://raw.githubusercontent.com/xF0RTUNAx/wtm-materials/main/logo.jpg",
+      "src": "game_logo.PNG",
       "sizes": "512x512",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "https://raw.githubusercontent.com/xF0RTUNAx/wtm-materials/main/logo.jpg",
+      "src": "game_logo.PNG",
       "sizes": "192x192",
-      "type": "image/jpeg",
+      "type": "image/png",
       "purpose": "any"
     }
   ]
