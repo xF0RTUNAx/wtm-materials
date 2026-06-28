@@ -428,6 +428,18 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="modal-player" onclick="if(event.target===this)closeModal('player')">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">&#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;</div>
+        <button class="modal-close" onclick="closeModal('player')">&#215;</button>
+      </div>
+      <div class="modal-body" id="player-modal-body">
+        <div style="text-align:center;padding:32px;color:var(--text-soft)">&#1047;&#1072;&#1075;&#1088;&#1091;&#1078;&#1072;&#1077;&#1084;&#8230;</div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
@@ -456,6 +468,25 @@
     function initials(name) {
       if (!name) return "?";
       return name.trim().split(/\s+/).slice(0, 2).map(function(s) { return s[0]; }).join("").toUpperCase();
+    }
+
+    // Русское склонение: N день/дня/дней
+    function ruPlural(n, one, few, many) {
+      var m10 = n % 10, m100 = n % 100;
+      if (m100 >= 11 && m100 <= 19) return many;
+      if (m10 === 1) return one;
+      if (m10 >= 2 && m10 <= 4) return few;
+      return many;
+    }
+    // Человекочитаемое «X назад» для профиля игрока
+    function timeAgoRu(ms) {
+      var min  = Math.floor(ms / 60000);
+      var hour = Math.floor(min  / 60);
+      var day  = Math.floor(hour / 24);
+      if (day  >= 1) return day  + '\u00a0' + ruPlural(day,  '\u0434\u0435\u043d\u044c', '\u0434\u043d\u044f', '\u0434\u043d\u0435\u0439');
+      if (hour >= 1) return hour + '\u00a0' + ruPlural(hour, '\u0447\u0430\u0441',       '\u0447\u0430\u0441\u0430',  '\u0447\u0430\u0441\u043e\u0432');
+      if (min  >= 1) return min  + '\u00a0' + ruPlural(min,  '\u043c\u0438\u043d\u0443\u0442\u0443', '\u043c\u0438\u043d\u0443\u0442\u044b', '\u043c\u0438\u043d\u0443\u0442');
+      return '\u0442\u043e\u043b\u044c\u043a\u043e \u0447\u0442\u043e';
     }
     function escapeHtml(s) {
       return String(s == null ? "" : s).replace(/[&<>"']/g, function(c) {
@@ -895,6 +926,98 @@
       }
     }
 
+
+    // ── Профиль любого игрока (модалка) ──────────────────────────
+    async function openPlayerProfile(playerId) {
+      openModal("player");
+      var body = document.getElementById("player-modal-body");
+      if (body) body.innerHTML = "<div style=\"text-align:center;padding:32px;color:var(--text-soft)\">&#1047;&#1072;&#1075;&#1088;&#1091;&#1078;&#1072;&#1077;&#1084;&#8230;</div>";
+      try {
+        var res     = await Promise.all([
+          fetchPlayerProfileById(playerId),
+          fetchPlayerBattleCount(playerId),
+          fetchPlayerBase(playerId),
+        ]);
+        var profile = res[0];
+        var battles = res[1];
+        var base    = res[2];
+        if (!profile) throw new Error("\u0418\u0433\u0440\u043e\u043a \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d");
+
+        // Клан
+        var clanText = "\u0411\u0435\u0437 \u043a\u043b\u0430\u043d\u0430";
+        if (profile.clan_id) {
+          try {
+            var clan = await fetchClanById(profile.clan_id);
+            if (clan) clanText = "[" + escapeHtml(clan.tag) + "] " + escapeHtml(clan.name);
+          } catch(_) {}
+        }
+
+        // Онлайн-статус
+        var onlineHtml = "";
+        if (profile.last_online) {
+          var diffMs = Date.now() - new Date(profile.last_online).getTime();
+          if (diffMs < 300000) {
+            onlineHtml = "<span style=\"color:#3a8a2a;font-weight:600;\">&#9679; \u041e\u043d\u043b\u0430\u0439\u043d</span>";
+          } else {
+            onlineHtml = "\u0411\u044b\u043b " + timeAgoRu(diffMs) + " \u043d\u0430\u0437\u0430\u0434";
+          }
+        }
+
+        // Статистика боёв
+        var wins   = battles.filter(function(b) {
+          return (b.attacker_id === playerId && b.result === "attacker_win") ||
+                 (b.attacker_id !== playerId && b.result === "defender_win");
+        }).length;
+        var total  = battles.length;
+        var losses = total - wins;
+        var wr     = total > 0 ? Math.round(wins / total * 100) : 0;
+
+        // Победы в Аркаде
+        var arcadeWins = base ? (base.mg_total_wins || 0) : 0;
+
+        // Дата регистрации
+        var regDate = "—";
+        if (profile.created_at) {
+          var rd = new Date(profile.created_at);
+          regDate = String(rd.getDate()).padStart(2,"0") + "."
+                  + String(rd.getMonth()+1).padStart(2,"0") + "."
+                  + rd.getFullYear();
+        }
+
+        // Аватар
+        var aName = profile.login || "?";
+        var avaHtml = profile.avatar_url
+          ? "<img src=\"" + escapeHtml(profile.avatar_url) + "\" style=\"width:52px;height:52px;border-radius:10px;object-fit:cover;flex-shrink:0\" onerror=\"this.style.display='none';\">"
+          : "<div style=\"width:52px;height:52px;border-radius:10px;background:var(--accent-soft);"
+            + "display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--accent);flex-shrink:0\">"
+            + initials(aName) + "</div>";
+
+        if (body) body.innerHTML =
+          "<div style=\"display:flex;align-items:center;gap:12px;margin-bottom:16px\">"
+          + avaHtml
+          + "<div style=\"min-width:0\">"
+          + "<div style=\"font-size:16px;font-weight:700;margin-bottom:2px\">" + escapeHtml(aName) + "</div>"
+          + "<div style=\"font-size:12px;color:var(--text-soft);margin-bottom:2px\">" + clanText + "</div>"
+          + "<div style=\"font-size:12px\">" + onlineHtml + "</div>"
+          + "</div></div>"
+          + "<div style=\"border-top:1px solid var(--border);padding-top:14px;display:flex;flex-direction:column;gap:10px\">"
+          + "<div style=\"display:flex;justify-content:space-between;font-size:13px\">"
+          + "<span style=\"color:var(--text-soft)\">\u0412 \u0438\u0433\u0440\u0435 \u0441</span>"
+          + "<span style=\"font-weight:600\">" + regDate + "</span>"
+          + "</div>"
+          + "<div style=\"display:flex;justify-content:space-between;font-size:13px\">"
+          + "<span style=\"color:var(--text-soft)\">\u0412\u0438\u043d\u0440\u0435\u0439\u0442</span>"
+          + "<span style=\"font-weight:600\">" + wins + "W / " + losses + "L &mdash; " + wr + "%</span>"
+          + "</div>"
+          + "<div style=\"display:flex;justify-content:space-between;font-size:13px\">"
+          + "<span style=\"color:var(--text-soft)\">\u041f\u043e\u0431\u0435\u0434 \u0432 \u0410\u0440\u043a\u0430\u0434\u0435</span>"
+          + "<span style=\"font-weight:600\">" + arcadeWins + "</span>"
+          + "</div>"
+          + "</div>";
+      } catch(e) {
+        if (body) body.innerHTML = "<div style=\"text-align:center;padding:24px;color:var(--accent)\">" + escapeHtml(e.message) + "</div>";
+      }
+    }
     // ── Точка входа ───────────────────────────────────────────
     var _touchInterval = null;
 
