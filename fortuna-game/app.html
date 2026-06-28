@@ -805,7 +805,8 @@
         + "font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;\">"
         + "" + ICON_CLAN + " &#1050;&#1083;&#1072;&#1085;&#1099; &#8594;</button>"
         + "</div>"
-        + "<div class=\"logout-row\"><button class=\"logout-link\" onclick=\"logout()\">&#1042;&#1099;&#1081;&#1090;&#1080;</button></div>"
+        + "<button onclick=\"renderRating()\" style=\"width:100%;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:650;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;\">&#127942; &#1056;&#1077;&#1081;&#1090;&#1080;&#1085;&#1075; &#8594;</button>"
+        + "<div class=\"logout-row\"><button class=\"logout-link\" onclick=\"logout()\">&#1042;&#1099;&#1081;&#1090;&#1078;&#1080;</button></div>"
         + "</div></div>";
 
       try {
@@ -1018,6 +1019,130 @@
         if (body) body.innerHTML = "<div style=\"text-align:center;padding:24px;color:var(--accent)\">" + escapeHtml(e.message) + "</div>";
       }
     }
+
+    // ── Рейтинг игроков ──────────────────────────────────────────
+
+    async function renderRating() {
+      if (typeof setActiveTab === "function") setActiveTab("profile");
+      var app = document.getElementById("app-content");
+      if (!app) return;
+      var player = getCurrentPlayer();
+      if (!player) return;
+
+      app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--text-soft)\">&#1047;&#1072;&#1075;&#1088;&#1091;&#1078;&#1072;&#1077;&#1084;&#8230;</div>";
+
+      try {
+        var res = await Promise.all([
+          fetchAllPlayersForRating(),
+          fetchAllTroopsForRating(),
+        ]);
+        var allPlayers = res[0];
+        var allTroops  = res[1];
+
+        // Мощь армии по игроку (только не в госпитале)
+        var powerMap = {};
+        allTroops.forEach(function(t) {
+          if (!powerMap[t.player_id]) powerMap[t.player_id] = 0;
+          var cfg = (typeof TROOP_CFG !== "undefined") && TROOP_CFG[t.troop_type];
+          var w   = cfg ? (cfg.weight || 0) : 0;
+          var vit = t.vit == null ? 100 : t.vit;
+          powerMap[t.player_id] += w * (t.level || 1) * (vit / 100);
+        });
+
+        // Итоговые очки (формула скрыта от игроков)
+        allPlayers.forEach(function(p) {
+          p._score = (p.xp || 0) + Math.floor((powerMap[p.id] || 0) * 10);
+        });
+        allPlayers.sort(function(a, b) { return b._score - a._score; });
+        allPlayers.forEach(function(p, i) { p._rank = i + 1; });
+
+        window._ratingPlayers = allPlayers;
+        window._ratingMyId    = player.id;
+
+        renderRatingContent(allPlayers.slice(0, 30), null);
+      } catch(e) {
+        if (app) app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--accent)\">&#1054;&#1096;&#1080;&#1073;&#1082;&#1072;: "
+          + escapeHtml(e.message) + "</div>";
+      }
+    }
+
+    function renderRatingContent(displayList, searchQuery) {
+      var app  = document.getElementById("app-content");
+      if (!app) return;
+      var myId = window._ratingMyId || "";
+
+      var rowsHtml = displayList.length > 0
+        ? displayList.map(function(p) {
+            var isMe   = p.id === myId;
+            var rank   = p._rank;
+            var score  = (p._score || 0).toLocaleString("ru");
+            var rankBg = rank === 1 ? "#FFD700" : rank === 2 ? "#C0C0C0" : rank === 3 ? "#CD7F32" : "var(--surface-2)";
+            var rankFg = rank <= 3 ? "#fff" : "var(--text)";
+
+            var avaHtml = p.avatar_url
+              ? "<img src=\"" + escapeHtml(p.avatar_url) + "\" style=\"width:32px;height:32px;border-radius:7px;object-fit:cover;flex-shrink:0\">"
+              : "<div style=\"width:32px;height:32px;border-radius:7px;background:var(--accent-soft);"
+                + "display:flex;align-items:center;justify-content:center;"
+                + "font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0\">"
+                + initials(p.login || "?") + "</div>";
+
+            return "<div onclick=\"openPlayerProfile('" + p.id + "')\" style=\"display:flex;align-items:center;gap:10px;"
+              + "padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;"
+              + "background:" + (isMe ? "var(--accent-soft)" : "var(--surface-2)") + ";"
+              + "border:1px solid " + (isMe ? "var(--accent)" : "transparent") + "\">"
+              + "<div style=\"width:24px;height:24px;border-radius:6px;background:" + rankBg + ";flex-shrink:0;"
+              + "display:flex;align-items:center;justify-content:center;"
+              + "font-size:10px;font-weight:700;color:" + rankFg + "\">" + rank + "</div>"
+              + avaHtml
+              + "<div style=\"flex:1;min-width:0\">"
+              + "<div style=\"font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis\">"
+              + escapeHtml(p.login || "?")
+              + (isMe ? " <span style=\"font-size:10px;color:var(--accent)\">(&#1103;)</span>" : "")
+              + "</div>"
+              + "<div style=\"font-size:10px;color:var(--text-soft)\">&#1054;&#1095;&#1082;&#1080;: " + score + "</div>"
+              + "</div>"
+              + "</div>";
+          }).join("")
+        : "<div style=\"text-align:center;padding:24px;color:var(--text-soft)\">&#1053;&#1080;&#1095;&#1077;&#1075;&#1086; &#1085;&#1077; &#1085;&#1072;&#1081;&#1076;&#1077;&#1085;&#1086;</div>";
+
+      var headerText = searchQuery
+        ? "&#1056;&#1077;&#1079;&#1091;&#1083;&#1100;&#1090;&#1072;&#1090;&#1099;: " + displayList.length + "\u00a0&#1080;&#1075;&#1088;&#1086;&#1082;&#1086;&#1074;"
+        : "&#1058;&#1086;&#1087; 30 &#1080;&#1075;&#1088;&#1086;&#1082;&#1086;&#1074;";
+
+      app.innerHTML =
+        "<div class=\"card\">"
+        + "<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:12px\">"
+        + "<button onclick=\"renderProfile && renderProfile()\" style=\"background:var(--surface-2);color:var(--text);"
+        + "border:none;border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;"
+        + "cursor:pointer;font-family:inherit\">&#8592; &#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;</button>"
+        + "<div style=\"font-size:15px;font-weight:700\">&#127942; &#1056;&#1077;&#1081;&#1090;&#1080;&#1085;&#1075;</div>"
+        + "</div>"
+        + "<input id=\"rating-search\" type=\"text\""
+        + " placeholder=\"&#1055;&#1086;&#1080;&#1089;&#1082; &#1087;&#1086; &#1085;&#1080;&#1082;&#1091;&#8230;\""
+        + " value=\"" + escapeHtml(searchQuery || "") + "\""
+        + " oninput=\"doRatingSearch(this.value)\""
+        + " style=\"width:100%;padding:10px 12px;background:var(--surface-2);"
+        + "border:1px solid var(--border);border-radius:var(--radius-sm);"
+        + "color:var(--text);font-size:14px;font-family:inherit;outline:none;"
+        + "box-sizing:border-box;margin-bottom:10px\">"
+        + "<div style=\"font-size:11px;color:var(--text-soft);margin-bottom:10px\">" + headerText + "</div>"
+        + "<div style=\"display:flex;flex-direction:column;gap:6px\">" + rowsHtml + "</div>"
+        + "</div>";
+    }
+
+    function doRatingSearch(query) {
+      var all = window._ratingPlayers || [];
+      var q   = (query || "").trim().toLowerCase();
+      if (!q) {
+        renderRatingContent(all.slice(0, 30), null);
+        return;
+      }
+      var found = all.filter(function(p) {
+        return (p.login || "").toLowerCase().indexOf(q) >= 0;
+      });
+      renderRatingContent(found, query);
+    }
+
     // ── Точка входа ───────────────────────────────────────────
     var _touchInterval = null;
 
