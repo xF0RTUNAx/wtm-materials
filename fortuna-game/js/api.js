@@ -317,6 +317,14 @@ async function claimMinigameReward(playerId, gameId) {
   });
 }
 
+// Все бои игрока (для расчёта винрейта в профиле)
+async function fetchPlayerBattleCount(playerUuid) {
+  const rows = await supabaseSelect(
+    `battles?or=(attacker_id.eq.${playerUuid},defender_id.eq.${playerUuid})&select=id,attacker_id,result`
+  );
+  return rows || [];
+}
+
 // ── Онлайн-статус ────────────────────────────────────────────
 
 // Обновляет last_online игрока (вызывается при входе и каждые 3 мин)
