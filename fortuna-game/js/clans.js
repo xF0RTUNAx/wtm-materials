@@ -275,7 +275,8 @@ async function renderNoClanScreen(player) {
           '<span style="background:var(--accent);color:#fff;border-radius:8px;padding:3px 10px;font-size:12px;font-weight:700;letter-spacing:.5px">' + clanEsc(c.tag) + '</span>' +
           '<div style="flex:1;min-width:0">' +
           '<div style="font-size:14px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + clanEsc(c.name) + '</div>' +
-          '<div style="font-size:11px;color:var(--text-soft)">' + c.member_count + '/' + CLAN_MAX_MEMBERS + ' участников</div>' +
+          '<div style="font-size:11px;color:var(--text-soft)">' + c.member_count + '/' + CLAN_MAX_MEMBERS + ' уч.'
+          + (c.rating > 0 ? ' \u00b7 Очки:\u00a0' + Number(c.rating).toLocaleString('ru') : '') + '</div>' +
           '</div>' +
           '</div>' + btnHtml + '</div>';
       }).join('');
@@ -336,6 +337,11 @@ async function renderInClanScreen(player, clanId) {
   if (!clan) {
     app.innerHTML = '<div class="card" style="text-align:center;padding:32px;color:var(--text-soft)">Клан не найден</div>';
     return;
+  }
+
+  // Фоновый пересчёт рейтинга (при каждом открытии экрана клана)
+  if (typeof recalcClanRating === 'function') {
+    recalcClanRating(clanId).catch(function() {});
   }
 
   var myMember  = members.find(function(m) { return m.player_id === player.id; });
@@ -469,8 +475,8 @@ async function renderInClanScreen(player, clanId) {
     // Три стата (V3: компактная сетка)
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">' +
     '<div class="card" style="padding:10px;text-align:center">' +
-    '<div style="font-size:15px;font-weight:700;color:var(--accent)">' + xpDisplay + '</div>' +
-    '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">XP клана</div>' +
+    '<div style="font-size:15px;font-weight:700;color:var(--accent)">' + (clan.rating > 0 ? Number(clan.rating).toLocaleString('ru') : '\u2014') + '</div>' +
+    '<div style="font-size:10px;color:var(--text-soft);margin-top:2px">Рейтинг клана</div>' +
     '</div>' +
     '<div class="card" style="padding:10px;text-align:center">' +
     '<div style="font-size:15px;font-weight:700;color:var(--text)">' + members.length + '/' + CLAN_MAX_MEMBERS + '</div>' +
