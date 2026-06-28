@@ -492,11 +492,12 @@ function renderBattleDashboard() {
   var oppHtml = opponents.length > 0
     ? opponents.map(function(opp, idx) {
         return "<div class=\"battle-hero-row\" style=\"margin-bottom:6px;\">"
+          + "<div style=\"flex:1;display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer\" onclick=\"openPlayerProfile('" + opp.id + "')\">"
           + oppAvatarHtml(opp.login, opp.avatar_url, 32)
-          + "<div style=\"flex:1;min-width:0;\">"
+          + "<div style=\"min-width:0\">"
           + "<div class=\"battle-hero-name\">" + escapeHtml(opp.login || "?") + "</div>"
           + "<div class=\"battle-hero-meta\">" + (opp.xp || 0) + " XP</div>"
-          + "</div>"
+          + "</div></div>"
           + "<button class=\"battle-hero-atk-btn atk-btn\" onclick=\"doAttack(" + idx + ")\" "
           + (canAtk ? "" : "disabled") + ">\u2694 \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c</button>"
           + "</div>";
@@ -542,8 +543,7 @@ function renderBattleDashboard() {
   var histHtml = battles.slice(0, 5).map(function(b) {
     var iAmAtk = b.attacker_id === player.id;
     var won    = (iAmAtk && b.result === "attacker_win") || (!iAmAtk && b.result === "defender_win");
-    var dt     = new Date(b.created_at);
-    var time   = dt.toLocaleString("ru", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    var time = typeof fmtSmartTime === "function" ? fmtSmartTime(b.created_at) : b.created_at.slice(0,10);
     var partTxt = won ? "+" + b.parts_gained : "-" + b.parts_gained;
     return "<div style=\"display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);\">"
       + "<div style=\"width:26px;height:26px;border-radius:50%;background:" + (won ? "var(--accent-soft)" : "var(--surface-2)") + ";"
