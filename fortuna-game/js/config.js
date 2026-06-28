@@ -84,6 +84,10 @@ const CONFIG = {
   // Онлайн-статус
   TOUCH_ONLINE_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/touch-online",
+
+  // Рейтинг кланов
+  RECALC_CLAN_RATING_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/recalc-clan-rating",
 };
 
 // ── Иконки ресурсов (HTML-img, inline) ──────────────────────
