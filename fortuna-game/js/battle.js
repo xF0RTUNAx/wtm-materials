@@ -1,6 +1,7 @@
 // ============================================================
 //  battle.js — PvP-битвы, составы, госпиталь (Этап 4).
 //  Этап 7: раздел «Аркада», фикс составов < 3 войск.
+//  Этап 9: тренировочный режим, SVG-иконки, улучшенный handleMgWin.
 // ============================================================
 
 var battleTimerInterval  = null;
@@ -103,10 +104,10 @@ function arcadeCardHtml(base) {
   return "<div style=\"background:var(--surface-2);border:1px solid var(--border);"
     + "border-left:3px solid var(--accent);border-radius:var(--radius);padding:14px;margin-bottom:14px;\">"
     + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;\">"
-    + "<div style=\"font-size:14px;font-weight:650;color:var(--text);\">&#127918; Аркада</div>"
+    + "<div style=\"font-size:14px;font-weight:650;color:var(--text);\">" + ICON_PUZZLE + " Аркада</div>"
     + "<span style=\"background:" + badgeBg + ";color:" + badgeTc + ";"
     + "font-size:11px;font-weight:650;padding:3px 9px;border-radius:20px;\">"
-    + avail + " / 3 сегодня</span>"
+    + avail + " / " + MG_GAMES.length + " сегодня</span>"
     + "</div>"
     + "<div style=\"font-size:12px;color:var(--text-soft);margin-bottom:10px;\">"
     + "Ежедневные мини-игры &mdash; за победу: <b>+50\u00a0" + ICON_PARTS
@@ -130,28 +131,36 @@ function openArcadeModal() {
   if (chatRoot) chatRoot.style.display = "none";
 
   var gameCards = MG_GAMES.map(function(g) {
-    var done     = mgPlayed(base, g.dateField);
-    var btnBg    = done ? "var(--surface-2)" : g.color;
-    var btnTc    = done ? "var(--text-soft)" : "#fff";
-    var btnTxt   = done ? "&#10003; До завтра" : "Играть";
-    var btnClick = done ? "" : "onclick=\"launchMiniGame('" + g.id + "')\"";
+    var done = mgPlayed(base, g.dateField);
+
+    // Кнопка «Играть» (за награду, 1/день)
+    var playBtn = done
+      ? "<button disabled style=\"background:var(--surface-2);color:var(--text-soft);"
+        + "border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:650;"
+        + "cursor:default;font-family:inherit;\">&#10003; Забрано</button>"
+      : "<button onclick=\"launchMiniGame('" + g.id + "')\" style=\"background:" + g.color
+        + ";color:#fff;border:none;border-radius:8px;padding:6px 14px;font-size:12px;"
+        + "font-weight:650;cursor:pointer;font-family:inherit;\">Играть</button>";
+
+    // Кнопка «Тренировка» (без награды, всегда доступна)
+    var trainBtn = "<button onclick=\"launchMiniGame('" + g.id + "', true)\" "
+      + "style=\"background:var(--surface-2);color:var(--text-soft);"
+      + "border:1px solid var(--border);border-radius:8px;padding:6px 10px;"
+      + "font-size:11px;font-weight:650;cursor:pointer;font-family:inherit;\">&#127891; Тренировка</button>";
+
     return "<div style=\"background:var(--surface-2);border:1px solid var(--border);"
       + "border-left:3px solid " + g.color + ";border-radius:var(--radius-sm);"
-      + "padding:12px;margin-bottom:8px;" + (done ? "opacity:.65;" : "") + "\">"
+      + "padding:12px;margin-bottom:8px;\">"
       + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;\">"
       + "<div style=\"font-size:13px;font-weight:650;color:var(--text);\">" + g.name + "</div>"
       + "<span style=\"font-size:11px;font-weight:650;color:" + (done ? "var(--text-soft)" : "#4a8a3e") + ";\">"
       + (done ? "&#10003; Сыграно" : "&#9679; Доступно") + "</span>"
       + "</div>"
       + "<div style=\"font-size:11px;color:var(--text-soft);margin-bottom:9px;\">" + g.desc + "</div>"
-      + "<div style=\"display:flex;align-items:center;justify-content:space-between;\">"
-      + "<span style=\"font-size:11px;color:var(--text-soft);\">+50 " + ICON_PARTS
-      + " &#183; +50 " + ICON_XP + " &#183; +5 " + ICON_RARE + "</span>"
-      + "<button " + btnClick
-      + " style=\"background:" + btnBg + ";color:" + btnTc + ";border:none;"
-      + "border-radius:8px;padding:6px 14px;font-size:12px;font-weight:650;"
-      + "cursor:" + (done ? "default" : "pointer") + ";font-family:inherit;\">"
-      + btnTxt + "</button>"
+      + "<div style=\"display:flex;align-items:center;justify-content:space-between;gap:8px;\">"
+      + "<span style=\"font-size:11px;color:var(--text-soft);opacity:" + (done ? ".5" : "1") + ";\">"
+      + "+50 " + ICON_PARTS + " &#183; +50 " + ICON_XP + " &#183; +5 " + ICON_RARE + "</span>"
+      + "<div style=\"display:flex;gap:5px;flex-shrink:0;\">" + trainBtn + playBtn + "</div>"
       + "</div></div>";
   }).join("");
 
@@ -162,7 +171,7 @@ function openArcadeModal() {
   modal.innerHTML = "<div style=\"background:var(--bg);width:100%;max-width:600px;"
     + "border-radius:16px 16px 0 0;padding:20px 16px;max-height:92vh;overflow-y:auto;\">"
     + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;\">"
-    + "<div style=\"font-size:16px;font-weight:650;\">&#127918; Аркада</div>"
+    + "<div style=\"font-size:16px;font-weight:650;\">" + ICON_PUZZLE + " Аркада</div>"
     + "<button onclick=\"closeMgModal()\" style=\"background:var(--surface-2);"
     + "border:1px solid var(--border);border-radius:8px;padding:6px 12px;"
     + "font-size:13px;cursor:pointer;font-family:inherit;\">&#10005;</button>"
@@ -200,7 +209,10 @@ function closeMgModal() {
 }
 
 // Запустить мини-игру в fullscreen iframe
-function launchMiniGame(gameId) {
+// isTraining = true → тренировка (без начисления награды и статистики)
+function launchMiniGame(gameId, isTraining) {
+  window._mgIsTraining = !!isTraining;
+
   // Убираем модал напрямую (без восстановления чата — он вернётся при закрытии игры)
   var mgModal = document.getElementById("mg-modal");
   if (mgModal) mgModal.remove();
@@ -220,13 +232,14 @@ function launchMiniGame(gameId) {
       + " style=\"flex:1;border:none;width:100%;height:100%;\""
       + " allow=\"autoplay\"></iframe>";
   } else {
+    var trainingLabel = isTraining ? " &nbsp;<span style=\"font-size:10px;opacity:.7;\">\u2014 \u0422\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043a\u0430</span>" : "";
     overlay.innerHTML = "<div style=\"display:flex;align-items:center;gap:12px;"
       + "padding:8px 12px;background:rgba(0,0,0,0.85);flex-shrink:0;\">"
       + "<button onclick=\"closeMgOverlay()\" style=\"background:rgba(255,255,255,0.12);"
       + "color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:8px;"
       + "padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit;\">"
       + "&#10005; Выйти</button>"
-      + "<span style=\"color:#ccc;font-size:12px;font-family:inherit;\">" + game.name + "</span>"
+      + "<span style=\"color:#ccc;font-size:12px;font-family:inherit;\">" + game.name + trainingLabel + "</span>"
       + "</div>"
       + "<iframe src=\"" + game.src + "\" style=\"flex:1;border:none;width:100%;\" allow=\"autoplay\"></iframe>";
   }
@@ -234,6 +247,7 @@ function launchMiniGame(gameId) {
 }
 
 function closeMgOverlay() {
+  window._mgIsTraining = false; // сбрасываем флаг при любом закрытии игры
   var el = document.getElementById("mg-overlay");
   if (el) el.remove();
   // Возвращаем кнопку чата после выхода из игры
@@ -246,9 +260,14 @@ if (!window._mgListenerAdded) {
   window._mgListenerAdded = true;
   window.addEventListener("message", function(e) {
     if (!e.data || e.data.type !== "mg_win") return;
-    var gameId = e.data.game;
-    closeMgOverlay();
-    handleMgWin(gameId);
+    var gameId     = e.data.game;
+    var isTraining = !!window._mgIsTraining;
+    closeMgOverlay(); // сбрасывает _mgIsTraining
+    if (isTraining) {
+      showMgTrainingBanner(gameId);
+    } else {
+      handleMgWin(gameId);
+    }
   });
 }
 
@@ -257,12 +276,13 @@ async function handleMgWin(gameId) {
   if (!player) return;
   try {
     var result = await claimMinigameReward(player.id, gameId);
+
     // Обновляем локальный кэш базы
+    // EF теперь возвращает parts и rare_materials (новые итоговые значения)
     if (result && currentBattleData && currentBattleData.base) {
       var game = MG_GAMES.find(function(x) { return x.id === gameId; });
       if (game) {
-        var todayUtc = new Date().toISOString().slice(0, 10);
-        currentBattleData.base[game.dateField] = todayUtc;
+        currentBattleData.base[game.dateField] = new Date().toISOString().slice(0, 10);
       }
       if (result.parts !== undefined) {
         currentBattleData.base.parts = result.parts;
@@ -277,10 +297,10 @@ async function handleMgWin(gameId) {
     // Перерисовываем дашборд чтобы обновились статусы
     renderBattleDashboard();
   } catch (e) {
-    // Если уже получено — тихо игнорируем
-    if (e.message && e.message !== "already_claimed") {
-      console.warn("MG reward:", e.message);
-    }
+    if (e.message === "already_claimed") return; // тихо, лимит уже исчерпан
+    // Показываем ошибку пользователю
+    showMgErrorBanner(e.message || "Ошибка начисления награды");
+    console.warn("MG reward error:", e.message);
   }
 }
 
@@ -308,6 +328,52 @@ function showMgRewardBanner(gameId) {
   setTimeout(function() { if (banner.parentNode) banner.remove(); }, 3600);
 }
 
+// Баннер для тренировочной победы (без начисления ресурсов)
+function showMgTrainingBanner(gameId) {
+  var old = document.getElementById("mg-reward-banner");
+  if (old) old.remove();
+  var game  = MG_GAMES.find(function(x) { return x.id === gameId; });
+  var label = game ? game.name : "Мини-игра";
+  var banner = document.createElement("div");
+  banner.id = "mg-reward-banner";
+  banner.style.cssText = "position:fixed;top:60px;left:50%;transform:translateX(-50%);"
+    + "z-index:600;background:var(--surface-2);border:1px solid var(--border);"
+    + "border-radius:12px;padding:14px 20px;"
+    + "text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.18);"
+    + "max-width:320px;width:90%;pointer-events:none;";
+  banner.innerHTML = "<div style=\"font-size:15px;font-weight:650;color:var(--text);margin-bottom:4px;\">"
+    + "&#127891; " + label + " \u2014 \u0425\u043e\u0440\u043e\u0448\u0430\u044f \u0438\u0433\u0440\u0430!</div>"
+    + "<div style=\"font-size:12px;color:var(--text-soft);"
+    + "\">\u0420\u0435\u0436\u0438\u043c \u0442\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043a\u0438 \u2014 \u043d\u0430\u0433\u0440\u0430\u0434\u0430 \u043d\u0435 \u043d\u0430\u0447\u0438\u0441\u043b\u044f\u0435\u0442\u0441\u044f</div>";
+  document.body.appendChild(banner);
+  setTimeout(function() {
+    banner.style.transition = "opacity .5s";
+    banner.style.opacity = "0";
+  }, 3000);
+  setTimeout(function() { if (banner.parentNode) banner.remove(); }, 3600);
+}
+
+// Баннер ошибки начисления награды (помогает диагностировать сбои)
+function showMgErrorBanner(msg) {
+  var old = document.getElementById("mg-reward-banner");
+  if (old) old.remove();
+  var banner = document.createElement("div");
+  banner.id = "mg-reward-banner";
+  banner.style.cssText = "position:fixed;top:60px;left:50%;transform:translateX(-50%);"
+    + "z-index:600;background:#fde8e8;border-radius:12px;padding:14px 20px;"
+    + "text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.18);"
+    + "max-width:320px;width:90%;pointer-events:none;";
+  banner.innerHTML = "<div style=\"font-size:14px;font-weight:650;color:#a32d2d;margin-bottom:4px;\">"
+    + "&#9888; \u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043d\u0430\u0447\u0438\u0441\u043b\u0438\u0442\u044c \u043d\u0430\u0433\u0440\u0430\u0434\u0443</div>"
+    + "<div style=\"font-size:11px;color:#a32d2d;\">" + escapeHtml(msg) + "</div>";
+  document.body.appendChild(banner);
+  setTimeout(function() {
+    banner.style.transition = "opacity .5s";
+    banner.style.opacity = "0";
+  }, 4000);
+  setTimeout(function() { if (banner.parentNode) banner.remove(); }, 4600);
+}
+
 // ── Таймер ──────────────────────────────────────────────────
 
 function stopBattleTimer() {
@@ -325,13 +391,14 @@ function updateBattleTimers() {
   if (cdEl) {
     var msLeft = attackCooldownLeft(currentBattleData.base);
     if (msLeft > 0) {
-      cdEl.className   = "battle-cooldown-badge";
-      cdEl.textContent = "\u2694 \u041a\u0443\u043b\u0434\u0430\u0443\u043d: " + formatBattleMs(msLeft);
+      cdEl.className = "battle-cooldown-badge";
+      cdEl.innerHTML = ICON_SWORD + " \u041a\u0443\u043b\u0434\u0430\u0443\u043d: " + formatBattleMs(msLeft);
     } else {
       cdEl.className   = "battle-ready-badge";
       cdEl.textContent = "\u2713 \u0413\u043e\u0442\u043e\u0432 \u043a \u0430\u0442\u0430\u043a\u0435";
       document.querySelectorAll(".atk-btn").forEach(function(b) {
-        b.disabled = false; b.textContent = "\u2694 \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c";
+        b.disabled = false;
+        b.innerHTML = ICON_SWORD + " \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c";
       });
     }
   }
@@ -520,7 +587,7 @@ function renderBattleDashboard() {
 
   var badgeHtml = canAtk
     ? "<span class=\"battle-ready-badge\" id=\"battle-cd-badge\">\u2713 \u0413\u043e\u0442\u043e\u0432 \u043a \u0430\u0442\u0430\u043a\u0435</span>"
-    : "<span class=\"battle-cooldown-badge\" id=\"battle-cd-badge\">\u2694 \u041a\u0443\u043b\u0434\u0430\u0443\u043d: " + formatBattleMs(cdLeft) + "</span>";
+    : "<span class=\"battle-cooldown-badge\" id=\"battle-cd-badge\">" + ICON_SWORD + " \u041a\u0443\u043b\u0434\u0430\u0443\u043d: " + formatBattleMs(cdLeft) + "</span>";
 
   var oppHtml = opponents.length > 0
     ? opponents.map(function(opp, idx) {
@@ -532,7 +599,7 @@ function renderBattleDashboard() {
           + "<div class=\"battle-hero-meta\">" + (opp.xp || 0) + " XP</div>"
           + "</div></div>"
           + "<button class=\"battle-hero-atk-btn atk-btn\" onclick=\"doAttack(" + idx + ")\" "
-          + (canAtk ? "" : "disabled") + ">\u2694 \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c</button>"
+          + (canAtk ? "" : "disabled") + ">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c</button>"
           + "</div>";
       }).join("")
     : "<div style=\"text-align:center;padding:16px;color:var(--btn-text);opacity:.5;"
@@ -617,7 +684,7 @@ function renderBattleDashboard() {
     + "color:var(--btn-text);border:none;border-radius:var(--radius);font-size:15px;font-weight:650;"
     + "cursor:pointer;font-family:inherit;display:flex;align-items:center;"
     + "justify-content:center;gap:8px;letter-spacing:.01em;\">"
-    + "&#9876; \u041a\u043b\u0430\u043d\u043e\u0432\u044b\u0435 \u0432\u043e\u0439\u043d\u044b &rarr;</button>"
+    + ICON_SWORD + " \u041a\u043b\u0430\u043d\u043e\u0432\u044b\u0435 \u0432\u043e\u0439\u043d\u044b &rarr;</button>"
     + "<div style=\"text-align:center;font-size:11px;color:var(--text-soft);margin-top:5px;\">"
     + "\u0417\u0430\u0445\u0432\u0430\u0442\u044b\u0432\u0430\u0439 \u0442\u0435\u0440\u0440\u0438\u0442\u043e\u0440\u0438\u0438 \u0432\u043c\u0435\u0441\u0442\u0435 \u0441 \u043a\u043b\u0430\u043d\u043e\u043c</div>"
     + "</div>"
@@ -628,7 +695,7 @@ function renderBattleDashboard() {
     // ── HERO CARD (атака) ──
     + "<div class=\"battle-hero\">"
     + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;\">"
-    + "<div><div class=\"battle-hero-title\">\u2694 \u0410\u0442\u0430\u043a\u0430</div>"
+    + "<div><div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430</div>"
     + "<div class=\"battle-hero-sub\">\u041c\u043e\u0449\u044c \u0430\u0440\u043c\u0438\u0438: " + myPower + " \u0435\u0434.</div></div>"
     + badgeHtml + "</div>"
     + "<div style=\"display:flex;flex-direction:column;gap:6px;margin-bottom:10px;\">" + oppHtml + "</div>"
@@ -697,7 +764,7 @@ function renderLineupEditor() {
       + "<div style=\"font-size:16px;font-weight:650;\">\u0421\u043e\u0441\u0442\u0430\u0432\u044b</div>"
       + "</div>"
       + "<div style=\"text-align:center;padding:16px 8px 24px;\">"
-      + "<div style=\"font-size:36px;margin-bottom:12px;\">&#128302;</div>"
+      + "<div style=\"margin-bottom:12px;\">" + mkSvgIcon('sword', 36, 36, '0') + "</div>"
       + "<div style=\"font-size:15px;font-weight:650;color:var(--text);margin-bottom:8px;\">"
       + "\u041d\u0443\u0436\u043d\u043e \u0431\u043e\u043b\u044c\u0448\u0435 \u0432\u043e\u0439\u0441\u043a</div>"
       + "<div style=\"font-size:13px;color:var(--text-soft);margin-bottom:20px;line-height:1.5;\">"
@@ -726,7 +793,7 @@ function renderLineupEditor() {
     + "</div>"
     + "<div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
     + "color:var(--text-soft);margin-bottom:8px;\">"
-    + "\u2694 \u0410\u0442\u0430\u043a\u0443\u044e\u0449\u0438\u0439 \u0441\u043e\u0441\u0442\u0430\u0432 &mdash; \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 3</div>"
+    + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0443\u044e\u0449\u0438\u0439 \u0441\u043e\u0441\u0442\u0430\u0432 &mdash; \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 3</div>"
     + "<div id=\"atk-grid\" style=\"display:flex;flex-direction:column;gap:7px;margin-bottom:16px;\">"
     + buildTroopGrid("attack") + "</div>"
     + "<div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
@@ -908,7 +975,7 @@ async function doAttack(idx) {
   if (!opp) return;
 
   var btns = document.querySelectorAll(".atk-btn");
-  btns.forEach(function(b) { b.disabled = true; b.textContent = "\u2694\u2026"; });
+  btns.forEach(function(b) { b.disabled = true; b.innerHTML = ICON_SWORD + "\u2026"; });
 
   try {
     var result = await resolveBattle(player.id, opp.id);
@@ -936,7 +1003,7 @@ async function doAttack(idx) {
   } catch (e) {
     btns.forEach(function(b) {
       b.disabled = false;
-      b.textContent = "\u2694 \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c";
+      b.innerHTML = ICON_SWORD + " \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c";
     });
     var cdEl = document.getElementById("battle-cd-badge");
     if (cdEl) cdEl.insertAdjacentHTML("afterend",
