@@ -142,7 +142,7 @@ function memberAvatarHtml(login, avatarUrl, size) {
 function roleTag(role) {
   if (role === 'leader') {
     return '<span style="background:var(--accent-soft);color:var(--accent);border-radius:6px;' +
-      'padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">&#128081; лидер</span>';
+      'padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">' + ICON_CROWN + ' лидер</span>';
   }
   if (role === 'officer') {
     return '<span style="background:var(--surface-2);color:#4a9fd4;border-radius:6px;' +
