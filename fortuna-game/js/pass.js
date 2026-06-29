@@ -68,7 +68,13 @@ async function renderPass() {
     const initResult = await initBp(player.id);
 
     if (initResult.off_season) {
-      app.innerHTML = '<div class="card" style="text-align:center;padding:40px;">'
+      app.innerHTML =
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'
+        + '<button onclick="renderProfile()" style="background:var(--surface-2);color:var(--text);'
+        + 'border:none;border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;'
+        + 'cursor:pointer;font-family:inherit;">&#8592; &#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;</button>'
+        + '</div>'
+        + '<div class="card" style="text-align:center;padding:40px;">'
         + '<div style="font-size:36px;margin-bottom:12px;">&#127988;</div>'
         + '<div style="font-size:16px;font-weight:650;margin-bottom:8px;">&#1052;&#1077;&#1078;&#1089;&#1077;&#1079;&#1086;&#1085;&#1100;&#1077;</div>'
         + '<div style="font-size:13px;color:var(--text-soft);">&#1053;&#1086;&#1074;&#1099;&#1081; &#1089;&#1077;&#1079;&#1086;&#1085; &#1073;&#1086;&#1077;&#1074;&#1086;&#1075;&#1086; &#1087;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;&#1072; &#1089;&#1082;&#1086;&#1088;&#1086; &#1085;&#1072;&#1095;&#1085;&#1105;&#1090;&#1089;&#1103;.</div>'
@@ -151,17 +157,23 @@ function renderPassContent() {
 
   const claimBadge = claimableCount > 0
     ? '<div style="background:var(--accent-soft);border:1px solid var(--accent);border-radius:8px;padding:7px 12px;margin-top:8px;display:flex;align-items:center;gap:8px;">'
-      + '<span style="font-size:16px;">&#127873;</span>'
+      + ICON_CAMPFIRE
       + '<span style="font-size:12px;color:var(--accent);font-weight:650;">&#1044;&#1086;&#1089;&#1090;&#1091;&#1087;&#1085;&#1086; &#1085;&#1072;&#1075;&#1088;&#1072;&#1076;: ' + claimableCount + ' — &#1087;&#1088;&#1086;&#1082;&#1088;&#1091;&#1090;&#1080; &#1074;&#1087;&#1088;&#1072;&#1074;&#1086;</span>'
       + '</div>'
     : '';
 
   const landscapeHint = '<div style="background:var(--surface-2);border-radius:8px;padding:7px 12px;margin-top:8px;display:flex;align-items:center;gap:8px;">'
-    + '<span style="font-size:15px;">&#128260;</span>'
+    + ICON_ARROW_ROTATE
     + '<span style="font-size:11px;color:var(--text-soft);">&#1044;&#1083;&#1103; &#1091;&#1076;&#1086;&#1073;&#1085;&#1086;&#1075;&#1086; &#1087;&#1088;&#1086;&#1089;&#1084;&#1086;&#1090;&#1088;&#1072; &#1094;&#1077;&#1087;&#1086;&#1095;&#1082;&#1080; — &#1087;&#1077;&#1088;&#1077;&#1074;&#1077;&#1088;&#1085;&#1080; &#1091;&#1089;&#1090;&#1088;&#1086;&#1081;&#1089;&#1090;&#1074;&#1086;</span>'
     + '</div>';
 
   const headerHtml = '<div class="card">'
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'
+    + '<button onclick="renderProfile()" style="background:var(--surface-2);color:var(--text);'
+    + 'border:none;border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;'
+    + 'cursor:pointer;font-family:inherit;">&#8592; &#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;</button>'
+    + '<div style="font-size:16px;font-weight:650;">&#1041;&#1086;&#1077;&#1074;&#1086;&#1081; &#1087;&#1088;&#1086;&#1087;&#1091;&#1089;&#1082;</div>'
+    + '</div>'
     + '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">'
     + '<div>'
     + '<div style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-soft);margin-bottom:2px;">'
