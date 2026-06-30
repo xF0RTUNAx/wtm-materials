@@ -60,10 +60,11 @@ async function fetchPlayerNotifications(playerUuid) {
   return rows || [];
 }
 
-// Поиск соперников — другие игроки кроме себя
+// Поиск соперников — другие игроки кроме себя и кроме бота
+// (бот добавляется отдельно как виртуальная карточка на клиенте — battle.js)
 async function fetchOpponents(playerUuid) {
   const rows = await supabaseSelect(
-    `players?id=neq.${playerUuid}&order=xp.desc&limit=50&select=id,login,xp,avatar_url`
+    `players?id=not.in.(${playerUuid},${BOT_PLAYER_ID})&order=xp.desc&limit=50&select=id,login,xp,avatar_url`
   );
   return rows || [];
 }
@@ -134,6 +135,10 @@ async function resolveBattle(attackerId, defenderId) {
   return callEdgeFunction(CONFIG.RESOLVE_BATTLE_URL, {
     attacker_id: attackerId, defender_id: defenderId,
   });
+}
+// Бой с тренировочным ботом (всегда доступен, общий кулдаун с обычным PvP)
+async function resolveBotBattle(playerId) {
+  return callEdgeFunction(CONFIG.RESOLVE_BOT_BATTLE_URL, { player_id: playerId });
 }
 async function markNotificationsRead(playerId) {
   return callEdgeFunction(CONFIG.MARK_NOTIF_URL, { player_id: playerId });
@@ -336,7 +341,7 @@ async function touchOnline(playerId) {
 
 async function fetchAllPlayersForRating() {
   const rows = await supabaseSelect(
-    "players?select=id,login,xp,avatar_url,clan_id&order=xp.desc&limit=200"
+    `players?id=neq.${BOT_PLAYER_ID}&select=id,login,xp,avatar_url,clan_id&order=xp.desc&limit=200`
   );
   return rows || [];
 }
