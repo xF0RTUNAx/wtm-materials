@@ -579,9 +579,20 @@ function renderBattleDashboard() {
   var player    = getCurrentPlayer();
   var cdLeft    = attackCooldownLeft(base);
   var canAtk    = cdLeft <= 0;
-  var opponents = pickOpponents(currentBattleData.allPlayers, player.id, currentBattleData.playerXp, 3);
+  var atkLineup0 = base.attack_lineup || [];
+  // Атака требует ровно 3 войска в составе (как минимум 3 типа открыто и сохранено)
+  var lineupReady = atkLineup0.length === 3;
 
-  window._battleOpponents = opponents;
+  var realOpponents = lineupReady
+    ? pickOpponents(currentBattleData.allPlayers, player.id, currentBattleData.playerXp, 3)
+    : [];
+  // Бот — всегда доступная цель, добавляется отдельной виртуальной карточкой.
+  // Гарантирует что атаковать есть кого, даже если других игроков пока нет.
+  var oppList = lineupReady
+    ? realOpponents.concat([{ id: BOT_PLAYER_ID, isBot: true, login: "\u0422\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043e\u0447\u043d\u044b\u0439 \u0431\u043e\u0442" }])
+    : [];
+
+  window._battleOpponents = oppList;
 
   var myPower = armyPower(troops.filter(function(t) { return !t.in_hospital_since; }));
 
@@ -589,21 +600,31 @@ function renderBattleDashboard() {
     ? "<span class=\"battle-ready-badge\" id=\"battle-cd-badge\">\u2713 \u0413\u043e\u0442\u043e\u0432 \u043a \u0430\u0442\u0430\u043a\u0435</span>"
     : "<span class=\"battle-cooldown-badge\" id=\"battle-cd-badge\">" + ICON_SWORD + " \u041a\u0443\u043b\u0434\u0430\u0443\u043d: " + formatBattleMs(cdLeft) + "</span>";
 
-  var oppHtml = opponents.length > 0
-    ? opponents.map(function(opp, idx) {
-        return "<div class=\"battle-hero-row\" style=\"margin-bottom:6px;\">"
-          + "<div style=\"flex:1;display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer\" onclick=\"openPlayerProfile('" + opp.id + "')\">"
-          + oppAvatarHtml(opp.login, opp.avatar_url, 32)
-          + "<div style=\"min-width:0\">"
-          + "<div class=\"battle-hero-name\">" + escapeHtml(opp.login || "?") + "</div>"
-          + "<div class=\"battle-hero-meta\">" + (opp.xp || 0) + " XP</div>"
-          + "</div></div>"
-          + "<button class=\"battle-hero-atk-btn atk-btn\" onclick=\"doAttack(" + idx + ")\" "
-          + (canAtk ? "" : "disabled") + ">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c</button>"
-          + "</div>";
-      }).join("")
-    : "<div style=\"text-align:center;padding:16px;color:var(--btn-text);opacity:.5;"
-      + "font-size:13px;\">\u0414\u0440\u0443\u0433\u0438\u0445 \u0438\u0433\u0440\u043e\u043a\u043e\u0432 \u043f\u043e\u043a\u0430 \u043d\u0435\u0442</div>";
+  var oppHtml = oppList.map(function(opp, idx) {
+    if (opp.isBot) {
+      return "<div class=\"battle-hero-row\" style=\"margin-bottom:6px;border:1px dashed var(--border);border-radius:var(--radius-sm);padding:6px;\">"
+        + "<div style=\"flex:1;display:flex;align-items:center;gap:8px;min-width:0;\">"
+        + "<div style=\"width:32px;height:32px;border-radius:8px;background:var(--surface-2);"
+        + "display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;\">&#129302;</div>"
+        + "<div style=\"min-width:0\">"
+        + "<div class=\"battle-hero-name\">" + escapeHtml(opp.login) + "</div>"
+        + "<div class=\"battle-hero-meta\">\u0428\u0430\u043d\u0441 \u043f\u043e\u0431\u0435\u0434\u044b: 50%</div>"
+        + "</div></div>"
+        + "<button class=\"battle-hero-atk-btn atk-btn\" onclick=\"doAttack(" + idx + ")\" "
+        + (canAtk ? "" : "disabled") + ">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c</button>"
+        + "</div>";
+    }
+    return "<div class=\"battle-hero-row\" style=\"margin-bottom:6px;\">"
+      + "<div style=\"flex:1;display:flex;align-items:center;gap:8px;min-width:0;cursor:pointer\" onclick=\"openPlayerProfile('" + opp.id + "')\">"
+      + oppAvatarHtml(opp.login, opp.avatar_url, 32)
+      + "<div style=\"min-width:0\">"
+      + "<div class=\"battle-hero-name\">" + escapeHtml(opp.login || "?") + "</div>"
+      + "<div class=\"battle-hero-meta\">" + (opp.xp || 0) + " XP</div>"
+      + "</div></div>"
+      + "<button class=\"battle-hero-atk-btn atk-btn\" onclick=\"doAttack(" + idx + ")\" "
+      + (canAtk ? "" : "disabled") + ">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u043e\u0432\u0430\u0442\u044c</button>"
+      + "</div>";
+  }).join("");
 
   function lineupSlots(lineup) {
     var html = "";
@@ -693,16 +714,30 @@ function renderBattleDashboard() {
     + arcadeCardHtml(base)
 
     // ── HERO CARD (атака) ──
-    + "<div class=\"battle-hero\">"
-    + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;\">"
-    + "<div><div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430</div>"
-    + "<div class=\"battle-hero-sub\">\u041c\u043e\u0449\u044c \u0430\u0440\u043c\u0438\u0438: " + myPower + " \u0435\u0434.</div></div>"
-    + badgeHtml + "</div>"
-    + "<div style=\"display:flex;flex-direction:column;gap:6px;margin-bottom:10px;\">" + oppHtml + "</div>"
-    + "<div style=\"text-align:center;\"><button onclick=\"refreshOpponents()\" style=\"background:none;border:none;"
-    + "cursor:pointer;color:var(--btn-text);opacity:.5;font-size:12px;font-family:inherit;\">"
-    + "\u21bb \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u0441\u043f\u0438\u0441\u043e\u043a</button></div>"
-    + "</div>"
+    + (lineupReady
+      ? "<div class=\"battle-hero\">"
+        + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;\">"
+        + "<div><div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430</div>"
+        + "<div class=\"battle-hero-sub\">\u041c\u043e\u0449\u044c \u0430\u0440\u043c\u0438\u0438: " + myPower + " \u0435\u0434.</div></div>"
+        + badgeHtml + "</div>"
+        + "<div style=\"display:flex;flex-direction:column;gap:6px;margin-bottom:10px;\">" + oppHtml + "</div>"
+        + "<div style=\"text-align:center;\"><button onclick=\"refreshOpponents()\" style=\"background:none;border:none;"
+        + "cursor:pointer;color:var(--btn-text);opacity:.5;font-size:12px;font-family:inherit;\">"
+        + "\u21bb \u041e\u0431\u043d\u043e\u0432\u0438\u0442\u044c \u0441\u043f\u0438\u0441\u043e\u043a</button></div>"
+        + "</div>"
+      : "<div class=\"battle-hero\">"
+        + "<div style=\"display:flex;align-items:center;gap:6px;margin-bottom:10px;\">"
+        + "<div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430</div>"
+        + "</div>"
+        + "<div style=\"text-align:center;padding:10px 8px 6px;\">"
+        + "<div style=\"font-size:13px;color:var(--btn-text);font-weight:650;margin-bottom:6px;\">"
+        + "\u0421\u043d\u0430\u0447\u0430\u043b\u0430 \u0441\u043e\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u043e\u0441\u0442\u0430\u0432 \u0438\u0437 3 \u0432\u043e\u0439\u0441\u043a</div>"
+        + "<div style=\"font-size:12px;color:var(--btn-text);opacity:.75;margin-bottom:14px;line-height:1.5;\">"
+        + "\u0414\u043b\u044f \u0430\u0442\u0430\u043a\u0438 \u043d\u0443\u0436\u043d\u043e \u0432\u044b\u0431\u0440\u0430\u0442\u044c \u0440\u043e\u0432\u043d\u043e 3 \u0442\u0438\u043f\u0430 \u0432\u043e\u0439\u0441\u043a \u0438 \u0441\u043e\u0445\u0440\u0430\u043d\u0438\u0442\u044c \u0441\u043e\u0441\u0442\u0430\u0432.</div>"
+        + "<button onclick=\"renderLineupEditor()\" style=\"background:#fff;color:var(--accent);"
+        + "border:none;border-radius:var(--radius-sm);padding:11px 22px;font-size:13px;font-weight:650;"
+        + "cursor:pointer;font-family:inherit;\">\u041d\u0430\u0441\u0442\u0440\u043e\u0438\u0442\u044c \u0441\u043e\u0441\u0442\u0430\u0432</button>"
+        + "</div></div>")
 
     // ── ДВА СТОЛБЦА: Составы + Госпиталь ──
     + "<div style=\"display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px;\">"
@@ -974,11 +1009,20 @@ async function doAttack(idx) {
   var opp = (window._battleOpponents || [])[idx];
   if (!opp) return;
 
+  // Защита: атака требует ровно 3 войска в составе (UI уже это гарантирует,
+  // но проверяем ещё раз на случай рассинхрона состояния)
+  if ((currentBattleData.base.attack_lineup || []).length !== 3) {
+    renderBattleDashboard();
+    return;
+  }
+
   var btns = document.querySelectorAll(".atk-btn");
   btns.forEach(function(b) { b.disabled = true; b.innerHTML = ICON_SWORD + "\u2026"; });
 
   try {
-    var result = await resolveBattle(player.id, opp.id);
+    var result = opp.isBot
+      ? await resolveBotBattle(player.id)
+      : await resolveBattle(player.id, opp.id);
     var won    = result.result === "attacker_win";
 
     currentBattleData.base.last_attack_at  = new Date().toISOString();
