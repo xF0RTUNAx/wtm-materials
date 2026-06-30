@@ -240,6 +240,15 @@ async function fetchClansByIds(clanIds) {
   var rows = await supabaseSelect("clans?or=(" + filter + ")&select=id,name,tag");
   return rows || [];
 }
+
+// Логины игроков по списку id — нужно для отображения имени соперника
+// в истории боёв (battles хранит только attacker_id/defender_id).
+async function fetchPlayersByIds(playerIds) {
+  if (!playerIds || !playerIds.length) return [];
+  var filter = playerIds.map(function(id) { return "id.eq." + id; }).join(",");
+  var rows = await supabaseSelect("players?or=(" + filter + ")&select=id,login");
+  return rows || [];
+}
 async function captureTerritory(playerId, rowIdx, colIdx) {
   return callEdgeFunction(CONFIG.CAPTURE_TERRITORY_URL, {
     player_id: playerId, row_idx: rowIdx, col_idx: colIdx,
