@@ -473,6 +473,22 @@
     </div>
   </div>
 
+  <!-- Подсказка Битв: полный справочник синергий, контр и механики боя.
+       Содержимое (#battle-help-modal-body) заполняется динамически из
+       battle.js (buildBattleHelpHtml), чтобы не дублировать данные
+       SYNERGY_CFG/COUNTER_CFG в двух местах и не расходиться при калибровке. -->
+  <div class="modal-overlay" id="modal-battle-help" onclick="if(event.target===this)closeModal('battle-help')">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">&#1057;&#1080;&#1085;&#1077;&#1088;&#1075;&#1080;&#1080; &#1080; &#1084;&#1077;&#1093;&#1072;&#1085;&#1080;&#1082;&#1072; &#1073;&#1086;&#1103;</div>
+        <button class="modal-close" onclick="closeModal('battle-help')">&#215;</button>
+      </div>
+      <div class="modal-body" id="battle-help-modal-body">
+        <div style="text-align:center;padding:24px;color:var(--text-soft)">&#1047;&#1072;&#1075;&#1088;&#1091;&#1079;&#1082;&#1072;&#8230;</div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/api.js"></script>
