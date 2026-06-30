@@ -655,12 +655,15 @@ async function renderBattle() {
       fetchPlayerProfileById(player.id),
     ]);
     if (!results[0]) throw new Error("\u0411\u0430\u0437\u0430 \u043d\u0435 \u043d\u0430\u0439\u0434\u0435\u043d\u0430");
+    var battlesLoaded = results[2] || [];
+    var oppNameMap = await fetchBattleOpponentNames(battlesLoaded, player.id);
     currentBattleData = {
       base:       results[0],
       troops:     results[1] || [],
-      battles:    results[2] || [],
+      battles:    battlesLoaded,
       allPlayers: results[3] || [],
       playerXp:   results[4] ? (results[4].xp || 0) : 0,
+      oppNameMap: oppNameMap,
     };
     renderBattleDashboard();
     startBattleTimer();
@@ -668,6 +671,24 @@ async function renderBattle() {
     app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--accent)\">"
       + "\u041e\u0448\u0438\u0431\u043a\u0430: " + escapeHtml(e.message) + "</div>";
   }
+}
+
+// Логин соперника по battles.attacker_id/defender_id — записи battles не хранят
+// логины, только id, поэтому собираем уникальных оппонентов из истории и
+// одним запросом подтягиваем их ники. Бот узнаётся по BOT_PLAYER_ID без
+// запроса к серверу.
+async function fetchBattleOpponentNames(battles, myId) {
+  var idSet = {};
+  (battles || []).forEach(function(b) {
+    var oppId = b.attacker_id === myId ? b.defender_id : b.attacker_id;
+    if (oppId && oppId !== BOT_PLAYER_ID) idSet[oppId] = true;
+  });
+  var ids = Object.keys(idSet);
+  if (!ids.length) return {};
+  var rows = await fetchPlayersByIds(ids);
+  var map = {};
+  rows.forEach(function(p) { map[p.id] = p.login; });
+  return map;
 }
 
 // ── Дашборд ─────────────────────────────────────────────────
@@ -766,18 +787,24 @@ function renderBattleDashboard() {
       + "</div></div>";
   }).filter(Boolean).join("");
 
+  var oppNameMap = currentBattleData.oppNameMap || {};
   var histHtml = battles.slice(0, 5).map(function(b) {
     var iAmAtk = b.attacker_id === player.id;
     var won    = (iAmAtk && b.result === "attacker_win") || (!iAmAtk && b.result === "defender_win");
     var time = typeof fmtSmartTime === "function" ? fmtSmartTime(b.created_at) : b.created_at.slice(0,10);
     var partTxt = won ? "+" + b.parts_gained : "-" + b.parts_gained;
+    var oppId   = iAmAtk ? b.defender_id : b.attacker_id;
+    var oppName = oppId === BOT_PLAYER_ID
+      ? "\u0422\u0440\u0435\u043d\u0438\u0440\u043e\u0432\u043e\u0447\u043d\u044b\u0439 \u0431\u043e\u0442"
+      : (oppNameMap[oppId] || "\u0418\u0433\u0440\u043e\u043a");
     return "<div style=\"display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);\">"
       + "<div style=\"width:26px;height:26px;border-radius:50%;background:" + (won ? "var(--accent-soft)" : "var(--surface-2)") + ";"
       + "display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;\">"
       + (won ? "\u{1F3C6}" : "\u2716") + "</div>"
       + "<div style=\"flex:1;min-width:0;\">"
-      + "<div style=\"font-size:12px;font-weight:600;color:var(--text);\">"
-      + (won ? "\u041f\u043e\u0431\u0435\u0434\u0430" : "\u041f\u043e\u0440\u0430\u0436\u0435\u043d\u0438\u0435") + "</div>"
+      + "<div style=\"font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;\">"
+      + (won ? "\u041f\u043e\u0431\u0435\u0434\u0430" : "\u041f\u043e\u0440\u0430\u0436\u0435\u043d\u0438\u0435")
+      + " <span style=\"color:var(--text-soft);font-weight:500;\">&middot; " + escapeHtml(oppName) + "</span></div>"
       + "<div style=\"font-size:11px;color:var(--text-soft);\">+" + b.xp_gained + " XP &middot; " + partTxt + "" + ICON_PARTS + "</div>"
       + "</div>"
       + "<span style=\"font-size:10px;color:var(--text-soft);flex-shrink:0;\">" + time + "</span>"
@@ -1145,7 +1172,10 @@ async function doAttack(idx) {
     };
 
     var newBattles = await fetchPlayerBattles(player.id);
-    if (currentBattleData) currentBattleData.battles = newBattles || [];
+    if (currentBattleData) {
+      currentBattleData.battles = newBattles || [];
+      currentBattleData.oppNameMap = await fetchBattleOpponentNames(newBattles || [], player.id);
+    }
     renderBattleDashboard();
   } catch (e) {
     btns.forEach(function(b) {
