@@ -1,46 +1,68 @@
 // ============================================================
-//  troops.js — Лаборатория и войска (Этап 2).
+//  troops.js — Лаборатория и войска (Этап 2, расширено в Этапе 10).
 //  Открытие войск через лабораторию, прокачка за Детали.
+//  Этап 10: добавлено 5 новых типов войск (12 всего), лаборатория
+//  расширена до 12 уровней, «Танки» переименованы в «ОБТ» (id не менялся).
 // ============================================================
 
-const TROOP_ORDER = ["inf", "bmp", "tank", "arty", "aa", "msl", "avia"];
+const TROOP_ORDER = ["inf", "spec", "bmp", "ltank", "tank", "taa", "arty", "heli", "aa", "msl", "rfleet", "avia"];
 
 const TROOP_CFG = {
-  inf:  { name: "Пехота",     color: "#5a7a3e", weight: 1,    baseCost: 50,    labLevel: 1 },
-  bmp:  { name: "БМП",        color: "#4a7eb5", weight: 2.5,  baseCost: 150,   labLevel: 2 },
-  tank: { name: "Танки",      color: "#8a6d2a", weight: 5,    baseCost: 500,   labLevel: 3 },
-  arty: { name: "Артиллерия", color: "#b54a2a", weight: 10,   baseCost: 1200,  labLevel: 4 },
-  aa:   { name: "ПВО",        color: "#3e7a5e", weight: 20,   baseCost: 3000,  labLevel: 5 },
-  msl:  { name: "Ракеты",     color: "#7a4db5", weight: 60,   baseCost: 7000,  labLevel: 6 },
-  avia: { name: "Авиация",    color: "#1a5fa0", weight: 200,  baseCost: 15000, labLevel: 7 },
+  inf:    { name: "Пехота",        color: "#5a7a3e", weight: 1,    baseCost: 60,    labLevel: 1  },
+  spec:   { name: "Спецназ",       color: "#6b3f8a", weight: 1.6,  baseCost: 125,   labLevel: 2  },
+  bmp:    { name: "БМП",           color: "#4a7eb5", weight: 2.2,  baseCost: 250,   labLevel: 3  },
+  ltank:  { name: "Лёгкие танки",  color: "#9a8a3e", weight: 3,    baseCost: 450,   labLevel: 4  },
+  tank:   { name: "ОБТ",           color: "#8a6d2a", weight: 4,    baseCost: 800,   labLevel: 5  },
+  taa:    { name: "Такт. ПВО",     color: "#1f9e9e", weight: 5,    baseCost: 1400,  labLevel: 6  },
+  arty:   { name: "Артиллерия",    color: "#b54a2a", weight: 6,    baseCost: 2000,  labLevel: 7  },
+  heli:   { name: "Вертолёты",     color: "#2a6db5", weight: 8,    baseCost: 3250,  labLevel: 8  },
+  aa:     { name: "ПВО",           color: "#3e7a5e", weight: 10,   baseCost: 5250,  labLevel: 9  },
+  msl:    { name: "Ракеты",        color: "#7a4db5", weight: 12,   baseCost: 12000, labLevel: 10 },
+  rfleet: { name: "Ракетный флот", color: "#0f3d66", weight: 14,   baseCost: 17500, labLevel: 11 },
+  avia:   { name: "Авиация",       color: "#1a5fa0", weight: 16,   baseCost: 26000, labLevel: 12 },
 };
 
 // ── PNG-пути для каждого типа войска ─────────────────────────
 const TROOP_IMG = {
-  inf:  "army/soldier_r.png",
-  bmp:  "army/bmp_r.png",
-  tank: "army/tank_r.png",
-  arty: "army/artillery_r.png",
-  aa:   "army/aa_r.png",
-  msl:  "army/missile_r.png",
-  avia: "army/aviation_r.png",
+  inf:    "army/soldier_r.png",
+  spec:   "army/special_force_r.png",
+  bmp:    "army/bmp_r.png",
+  ltank:  "army/light_tank_r.png",
+  tank:   "army/tank_r.png",
+  taa:    "army/tactic_aa_r.png",
+  arty:   "army/artillery_r.png",
+  heli:   "army/heli_r.png",
+  aa:     "army/aa_r.png",
+  msl:    "army/missile_r.png",
+  rfleet: "army/rocket_fleet_r.png",
+  avia:   "army/aviation_r.png",
 };
 
 // Масштаб PNG внутри бейджа (компенсирует разные поля прозрачности в файлах)
 const TROOP_IMG_SCALE = {
-  inf: 1, bmp: 1.6, tank: 1, arty: 1, aa: 1, msl: 1, avia: 1,
+  inf: 1, spec: 1, bmp: 1.6, ltank: 1, tank: 1, taa: 1,
+  arty: 1, heli: 1, aa: 1, msl: 1, rfleet: 1, avia: 1,
 };
 
 
 
-// Цепочка прокачки лаборатории
+// Цепочка прокачки лаборатории (12 уровней)
 var LAB_CHAIN_ITEMS = [
-  {label:'Пехота', cost:null},     {label:'БМП',     cost:'500'},
-  {label:'Танки',  cost:'1\u202f500'}, {label:'Арты',  cost:'3\u202f000'},
-  {label:'ПВО',    cost:'5\u202f000'}, {label:'Ракеты',cost:'8\u202f000'},
-  {label:'Авиа',   cost:'12\u202f000'},
+  {label:'Пехота',      cost:null},
+  {label:'Спецназ',     cost:'600'},
+  {label:'БМП',         cost:'1\u202f500'},
+  {label:'Лёгк. танки', cost:'3\u202f000'},
+  {label:'ОБТ',         cost:'5\u202f000'},
+  {label:'Такт. ПВО',   cost:'7\u202f500'},
+  {label:'Артиллерия',  cost:'10\u202f000'},
+  {label:'Вертолёты',   cost:'15\u202f000'},
+  {label:'ПВО',         cost:'20\u202f000'},
+  {label:'Ракеты',      cost:'26\u202f000'},
+  {label:'Рак. флот',   cost:'35\u202f000'},
+  {label:'Авиация',     cost:'45\u202f000'},
 ];
-const LAB_COSTS = [null, 500, 1500, 3000, 5000, 8000, 12000];
+const LAB_COSTS = [null, 600, 1500, 3000, 5000, 7500, 10000, 15000, 20000, 26000, 35000, 45000];
+const LAB_MAX_LEVEL = 12;
 const MAX_TROOP_LEVEL = 25;
 
 let currentLabData = null;
@@ -128,6 +150,16 @@ function labSvg() {
     + '></model-viewer>';
 }
 
+// Кнопка-подсказка «?» рядом с заголовком Лаборатории.
+// Открывает модалку #modal-lab-help (статичная разметка в app.html).
+function labHelpBtn() {
+  return '<button onclick="openModal(\'lab-help\')" title="Что такое мощь и синергии?"'
+    + ' style="margin-left:6px;background:var(--surface-2);border:1px solid var(--border);'
+    + 'border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;'
+    + 'justify-content:center;font-size:11px;font-weight:700;color:var(--text-soft);'
+    + 'cursor:pointer;flex-shrink:0;vertical-align:middle;font-family:inherit;">?</button>';
+}
+
 // ── Рендер ───────────────────────────────────────────────────
 
 async function renderLab() {
@@ -162,7 +194,7 @@ function renderLabContent() {
   const labLevel = base.lab_level;
   const parts    = base.parts;
   const power    = armyPower(troops);
-  const isLabMax = labLevel >= 7;
+  const isLabMax = labLevel >= LAB_MAX_LEVEL;
 
   const openedMap = {};
   troops.forEach(function(t) { openedMap[t.troop_type] = t.level; });
@@ -189,7 +221,7 @@ function renderLabContent() {
       <div class="factory-header">
         ${labSvg()}
         <div>
-          <div class="f-title">Лаборатория</div>
+          <div class="f-title">Лаборатория ${labHelpBtn()}</div>
           <div class="f-sub">исследование войск</div>
         </div>
         <div class="level-badge" id="lab-level-badge">ур. ${labLevel}</div>
@@ -250,16 +282,18 @@ async function doLabUpgrade() {
     currentLabData.base.lab_level = result.lab_level;
     currentLabData.base.parts     = result.parts;
 
-    const already = currentLabData.troops.some(function(t) { return t.troop_type === result.new_troop; });
-    if (!already) {
-      currentLabData.troops.push({ troop_type: result.new_troop, level: 1 });
-    }
+    const newTroops = result.new_troops || (result.new_troop ? [result.new_troop] : []);
+    newTroops.forEach(function(nt) {
+      const already = currentLabData.troops.some(function(t) { return t.troop_type === nt; });
+      if (!already) currentLabData.troops.push({ troop_type: nt, level: 1 });
+    });
 
     const rPartsEl = document.getElementById("r-parts");
     if (rPartsEl) rPartsEl.textContent = result.parts;
 
     renderLabContent();
-    showLabMsg("Открыто: " + (TROOP_CFG[result.new_troop]?.name ?? result.new_troop) + "!", "ok");
+    const openedNames = newTroops.map(function(nt) { return TROOP_CFG[nt]?.name ?? nt; }).join(", ");
+    showLabMsg("Открыто: " + (openedNames || "—") + "!", "ok");
   } catch (e) {
     showLabMsg(e.message, "err");
     renderLabContent();
@@ -309,7 +343,7 @@ async function doTroopUpgrade(type) {
 function refreshLabUpgradeBtn(newParts) {
   if (!currentLabData) return;
   const labLevel = currentLabData.base.lab_level;
-  if (labLevel >= 7) return;
+  if (labLevel >= LAB_MAX_LEVEL) return;
 
   const labCost  = LAB_COSTS[labLevel];
   const canUpLab = newParts >= labCost;
