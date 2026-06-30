@@ -88,6 +88,10 @@ const CONFIG = {
   // Рейтинг кланов
   RECALC_CLAN_RATING_URL:
     "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/recalc-clan-rating",
+
+  // Тренировочный бот (всегда доступная цель для атаки)
+  RESOLVE_BOT_BATTLE_URL:
+    "https://rdxoaalzlwbyjxebxtyo.supabase.co/functions/v1/resolve-bot-battle",
 };
 
 // ── Иконки ресурсов (HTML-img, inline) ──────────────────────
@@ -156,3 +160,9 @@ var ICON_CROWN        = mkSvgIcon('crown',       12, 12, '0 2px -1px');
 var ICON_CAMPFIRE     = mkSvgIcon('campfire');
 var ICON_ARROW_ROTATE = mkSvgIcon('arrowRotate');
 var ICON_PUZZLE       = mkSvgIcon('puzzle');
+
+// ── Тренировочный бот ────────────────────────────────────────
+// Постоянный id записи-заглушки в players (см. SQL-миграцию бота).
+// Используется чтобы исключить бота из рейтингов/поиска соперников
+// и чтобы пометить виртуальную карточку бота в списке атаки.
+var BOT_PLAYER_ID = "11111111-1111-1111-1111-111111111111";
