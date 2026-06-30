@@ -2,6 +2,8 @@
 //  battle.js — PvP-битвы, составы, госпиталь (Этап 4).
 //  Этап 7: раздел «Аркада», фикс составов < 3 войск.
 //  Этап 9: тренировочный режим, SVG-иконки, улучшенный handleMgWin.
+//  Этап 10: 16 синергий + 12 контр (12 типов войск), подсказки (?)
+//  в Лаборатории и Битвах, «вит» → «ХП» в подписях интерфейса.
 // ============================================================
 
 var battleTimerInterval  = null;
@@ -45,15 +47,47 @@ var MG_GAMES = [
 
 // ── Синергии войск ───────────────────────────────────────────
 // Отображение на фронтенде (расчёт — на сервере в resolve-battle/capture-territory)
+// Этап 10: 16 пар (зеркало SYNERGY_PAIRS из resolve-battle.ts/capture-territory.ts).
 
 var SYNERGY_CFG = [
-  { types: ["tank", "inf"],  atkBonus: 0,    defBonus: 0.10, name: "Бронепехота" },
-  { types: ["avia", "aa"],   atkBonus: 0.10, defBonus: 0,    name: "Возд. превосходство" },
-  { types: ["arty", "inf"],  atkBonus: 0.10, defBonus: 0,    name: "Огн. поддержка" },
-  { types: ["bmp",  "tank"], atkBonus: 0,    defBonus: 0.08, name: "Мех. кулак" },
-  { types: ["msl",  "avia"], atkBonus: 0.12, defBonus: 0,    name: "Ударный кулак" },
-  { types: ["arty", "msl"],  atkBonus: 0.08, defBonus: 0,    name: "Огн. шквал" },
+  { types: ["inf",  "spec"],   atkBonus: 0.12, defBonus: 0,    name: "Штурмовая группа" },
+  { types: ["inf",  "tank"],   atkBonus: 0,    defBonus: 0.10, name: "Бронепехота" },
+  { types: ["inf",  "arty"],   atkBonus: 0.12, defBonus: 0,    name: "Огневая поддержка" },
+  { types: ["spec", "ltank"],  atkBonus: 0.12, defBonus: 0,    name: "Рейдовый отряд" },
+  { types: ["spec", "heli"],   atkBonus: 0.15, defBonus: 0,    name: "Воздушный десант" },
+  { types: ["bmp",  "ltank"],  atkBonus: 0,    defBonus: 0.12, name: "Мотопехота" },
+  { types: ["bmp",  "tank"],   atkBonus: 0,    defBonus: 0.10, name: "Мех. кулак" },
+  { types: ["ltank","tank"],   atkBonus: 0,    defBonus: 0.10, name: "Танковый клин" },
+  { types: ["taa",  "tank"],   atkBonus: 0,    defBonus: 0.10, name: "Войсковое ПВО" },
+  { types: ["taa",  "aa"],     atkBonus: 0,    defBonus: 0.12, name: "Эшелон ПВО" },
+  { types: ["arty", "heli"],   atkBonus: 0.12, defBonus: 0,    name: "Корректировка" },
+  { types: ["arty", "msl"],    atkBonus: 0.10, defBonus: 0,    name: "Огневой шквал" },
+  { types: ["msl",  "rfleet"], atkBonus: 0.12, defBonus: 0,    name: "Залп флота" },
+  { types: ["rfleet","avia"],  atkBonus: 0.10, defBonus: 0,    name: "Морская авиация" },
+  { types: ["avia", "aa"],     atkBonus: 0.10, defBonus: 0,    name: "Возд. превосходство" },
+  { types: ["msl",  "avia"],   atkBonus: 0.12, defBonus: 0,    name: "Ударный кулак" },
 ];
+
+// ── Контры войск ─────────────────────────────────────────────
+// Клиентская копия COUNTER_REDUCTIONS из resolve-battle.ts/capture-territory.ts.
+// Используется ТОЛЬКО для подсказки (#modal-battle-help) — реальный расчёт
+// контр всегда выполняется на сервере. Не показывается в редакторе составов
+// (намеренно, см. SYNERGY_GUIDE.md), но доступна тем, кто хочет разобраться
+// в механике подробно через кнопку «?» на экране Битв.
+var COUNTER_CFG = {
+  inf:    { bmp: 0.15 },
+  spec:   { arty: 0.25, msl: 0.20 },
+  bmp:    { inf: 0.15, spec: 0.15 },
+  ltank:  { inf: 0.20, spec: 0.20 },
+  tank:   { bmp: 0.20, ltank: 0.20, inf: 0.10 },
+  taa:    { heli: 0.30, avia: 0.15 },
+  arty:   { tank: 0.20, bmp: 0.15, inf: 0.10 },
+  heli:   { tank: 0.25, ltank: 0.25, bmp: 0.20 },
+  aa:     { avia: 0.25, heli: 0.20 },
+  msl:    { aa: 0.30, taa: 0.25 },
+  rfleet: { arty: 0.25, aa: 0.15 },
+  avia:   { arty: 0.20, inf: 0.20, rfleet: 0.20 },
+};
 
 // Возвращает HTML-бейджи активных синергий (или "" если нет)
 function synergyBadgesHtml(lineup, isAtk) {
@@ -73,6 +107,75 @@ function synergyBadgesHtml(lineup, isAtk) {
           + "&#9889; " + s.name + " " + label + "</div>";
       }).join("")
     + "</div>";
+}
+
+// Кнопка-подсказка «?» рядом с заголовком «Атака».
+// Открывает модалку #modal-battle-help с полным справочником по
+// синергиям, контрам и механике боя (генерируется динамически из
+// SYNERGY_CFG / COUNTER_CFG, чтобы никогда не разойтись с реальным
+// балансом при будущей калибровке).
+function battleHelpBtn() {
+  return '<button onclick="openBattleHelpModal()" title="Синергии, контры и механика боя"'
+    + ' style="margin-left:6px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);'
+    + 'border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;'
+    + 'justify-content:center;font-size:11px;font-weight:700;color:var(--btn-text);'
+    + 'cursor:pointer;flex-shrink:0;vertical-align:middle;font-family:inherit;">?</button>';
+}
+
+function openBattleHelpModal() {
+  var body = document.getElementById("battle-help-modal-body");
+  if (body) body.innerHTML = buildBattleHelpHtml();
+  if (typeof openModal === "function") openModal("battle-help");
+}
+
+function buildBattleHelpHtml() {
+  var troopName = function(t) { return (TROOP_CFG[t] && TROOP_CFG[t].name) || t; };
+
+  var synergyRows = SYNERGY_CFG.map(function(s) {
+    var isAtk = s.atkBonus > 0;
+    var pct   = isAtk ? s.atkBonus : s.defBonus;
+    var label = isAtk ? "+" + Math.round(pct * 100) + "% \u0430\u0442\u0430\u043a\u0430"
+                       : "+" + Math.round(pct * 100) + "% \u0437\u0430\u0449\u0438\u0442\u0430";
+    return "<div style=\"display:flex;align-items:center;justify-content:space-between;gap:8px;"
+      + "padding:7px 0;border-bottom:1px solid var(--border);\">"
+      + "<div style=\"font-size:12.5px;color:var(--text);\">"
+      + "<strong>" + escapeHtml(s.name) + "</strong><br>"
+      + "<span style=\"color:var(--text-soft);font-size:11.5px;\">"
+      + escapeHtml(troopName(s.types[0])) + " + " + escapeHtml(troopName(s.types[1])) + "</span></div>"
+      + "<span style=\"flex-shrink:0;background:var(--accent-soft);color:var(--accent);"
+      + "border-radius:8px;padding:3px 9px;font-size:11px;font-weight:700;white-space:nowrap;\">"
+      + label + "</span></div>";
+  }).join("");
+
+  var counterRows = TROOP_ORDER.map(function(myType) {
+    var targets = COUNTER_CFG[myType];
+    if (!targets) return "";
+    var targetsHtml = Object.keys(targets).map(function(enemyType) {
+      return escapeHtml(troopName(enemyType)) + " &minus;" + Math.round(targets[enemyType] * 100) + "%";
+    }).join(", ");
+    return "<div style=\"display:flex;align-items:flex-start;justify-content:space-between;gap:8px;"
+      + "padding:7px 0;border-bottom:1px solid var(--border);\">"
+      + "<span style=\"font-size:12.5px;font-weight:600;color:var(--text);flex-shrink:0;\">"
+      + escapeHtml(troopName(myType)) + "</span>"
+      + "<span style=\"font-size:11.5px;color:var(--text-soft);text-align:right;\">" + targetsHtml + "</span>"
+      + "</div>";
+  }).join("");
+
+  return "<h4>&#9881; \u041a\u0430\u043a \u0441\u0447\u0438\u0442\u0430\u0435\u0442\u0441\u044f \u0431\u043e\u0439</h4>"
+    + "<ul>"
+    + "<li><strong>\u041c\u043e\u0449\u044c</strong> \u043a\u0430\u0436\u0434\u043e\u0433\u043e \u0442\u0438\u043f\u0430 = \u0432\u0435\u0441 &times; \u0443\u0440\u043e\u0432\u0435\u043d\u044c &times; (\u0425\u041f/100), \u0441\u0443\u043c\u043c\u0438\u0440\u0443\u0435\u0442\u0441\u044f \u043f\u043e 3 \u0442\u0438\u043f\u0430\u043c \u0441\u043e\u0441\u0442\u0430\u0432\u0430.</li>"
+    + "<li><strong>\u041a\u043e\u043d\u0442\u0440\u044b</strong> \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u044e\u0442\u0441\u044f \u043f\u0435\u0440\u0432\u044b\u043c\u0438: \u0435\u0441\u043b\u0438 \u0443 \u0432\u0440\u0430\u0433\u0430 \u0435\u0441\u0442\u044c \u0442\u0438\u043f-\u00ab\u043a\u043e\u043d\u0442\u0440\u0430\u0433\u0435\u043d\u0442\u00bb \u043a \u043e\u0434\u043d\u043e\u043c\u0443 \u0438\u0437 \u0432\u0430\u0448\u0438\u0445 \u0442\u0438\u043f\u043e\u0432, \u043c\u043e\u0449\u044c \u044d\u0442\u043e\u0433\u043e \u0442\u0438\u043f\u0430 \u0441\u043d\u0438\u0436\u0430\u0435\u0442\u0441\u044f.</li>"
+    + "<li><strong>\u0421\u0438\u043d\u0435\u0440\u0433\u0438\u0438</strong> \u043f\u0440\u0438\u043c\u0435\u043d\u044f\u044e\u0442\u0441\u044f \u0432\u0442\u043e\u0440\u044b\u043c\u0438: \u0438\u0442\u043e\u0433\u043e\u0432\u0430\u044f \u0441\u0443\u043c\u043c\u0430 \u043c\u043e\u0449\u0438 \u0443\u043c\u043d\u043e\u0436\u0430\u0435\u0442\u0441\u044f \u043d\u0430 \u0431\u043e\u043d\u0443\u0441 \u0437\u0430 \u043a\u0430\u0436\u0434\u0443\u044e \u0430\u043a\u0442\u0438\u0432\u043d\u0443\u044e \u043f\u0430\u0440\u0443 \u0438\u0437 \u0441\u043f\u0438\u0441\u043a\u0430 \u043d\u0438\u0436\u0435 (\u0431\u043e\u043d\u0443\u0441\u044b \u0441\u0442\u0435\u043a\u0430\u044e\u0442\u0441\u044f).</li>"
+    + "<li>\u0418\u0442\u043e\u0433\u043e\u0432\u0430\u044f \u043c\u043e\u0449\u044c \u0430\u0442\u0430\u043a\u0438 \u043f\u043e\u043b\u0443\u0447\u0430\u0435\u0442 \u0441\u043b\u0443\u0447\u0430\u0439\u043d\u044b\u0439 \u0440\u0430\u0437\u0431\u0440\u043e\u0441 &plusmn;15% \u0438 \u0441\u0440\u0430\u0432\u043d\u0438\u0432\u0430\u0435\u0442\u0441\u044f \u0441 \u043c\u043e\u0449\u044c\u044e \u0437\u0430\u0449\u0438\u0442\u044b.</li>"
+    + "<li>\u041f\u043e\u0431\u0435\u0434\u0438\u0442\u0435\u043b\u044c \u043f\u043e\u043b\u0443\u0447\u0430\u0435\u0442 XP \u0438 \u0447\u0430\u0441\u0442\u044c \u0414\u0435\u0442\u0430\u043b\u0435\u0439 \u043f\u0440\u043e\u0438\u0433\u0440\u0430\u0432\u0448\u0435\u0433\u043e; \u0432\u043e\u0439\u0441\u043a\u0430 \u043e\u0431\u0435\u0438\u0445 \u0441\u0442\u043e\u0440\u043e\u043d \u0442\u0435\u0440\u044f\u044e\u0442 \u0425\u041f (\u0431\u043e\u043b\u044c\u0448\u0435 \u2014 \u0443 \u043f\u0440\u043e\u0438\u0433\u0440\u0430\u0432\u0448\u0435\u0433\u043e).</li>"
+    + "</ul>"
+    + "<h4>&#9889; \u0421\u0438\u043d\u0435\u0440\u0433\u0438\u0438 (" + SYNERGY_CFG.length + ")</h4>"
+    + "<p style=\"margin-bottom:6px;\">\u0410\u043a\u0442\u0438\u0432\u0438\u0440\u0443\u044e\u0442\u0441\u044f, \u0435\u0441\u043b\u0438 \u043e\u0431\u0430 \u0442\u0438\u043f\u0430 \u043f\u0440\u0438\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u044e\u0442 \u0432 \u043e\u0434\u043d\u043e\u043c \u0441\u043e\u0441\u0442\u0430\u0432\u0435. \u0411\u043e\u043d\u0443\u0441\u044b \u0441\u0443\u043c\u043c\u0438\u0440\u0443\u044e\u0442\u0441\u044f.</p>"
+    + synergyRows
+    + "<h4 style=\"margin-top:18px;\">&#9876; \u041a\u043e\u043d\u0442\u0440\u044b</h4>"
+    + "<p style=\"margin-bottom:6px;\">\u0415\u0441\u043b\u0438 \u0443 \u0432\u0430\u0441 \u0432 \u0441\u043e\u0441\u0442\u0430\u0432\u0435 \u0435\u0441\u0442\u044c \u0442\u0438\u043f \u0438\u0437 \u043b\u0435\u0432\u043e\u0439 \u043a\u043e\u043b\u043e\u043d\u043a\u0438, \u043e\u043d \u0441\u043d\u0438\u0436\u0430\u0435\u0442 \u043c\u043e\u0449\u044c \u0443\u043a\u0430\u0437\u0430\u043d\u043d\u044b\u0445 \u0441\u043f\u0440\u0430\u0432\u0430 \u0442\u0438\u043f\u043e\u0432 \u0443 \u043f\u0440\u043e\u0442\u0438\u0432\u043d\u0438\u043a\u0430 (\u0435\u0441\u043b\u0438 \u043e\u043d\u0438 \u0440\u0435\u0430\u043b\u044c\u043d\u043e \u0435\u0441\u0442\u044c \u0432 \u0435\u0433\u043e \u0441\u043e\u0441\u0442\u0430\u0432\u0435).</p>"
+    + counterRows
+    + "<p style=\"margin-top:10px;margin-bottom:0;font-size:11.5px;\">\u041a\u043e\u043d\u0442\u0440\u044b \u043d\u0435 \u043f\u043e\u043a\u0430\u0437\u044b\u0432\u0430\u044e\u0442\u0441\u044f \u043f\u0440\u044f\u043c\u043e \u0432 \u0440\u0435\u0434\u0430\u043a\u0442\u043e\u0440\u0435 \u0441\u043e\u0441\u0442\u0430\u0432\u043e\u0432 \u2014 \u044d\u0442\u043e \u0441\u0434\u0435\u043b\u0430\u043d\u043e \u043d\u0430\u043c\u0435\u0440\u0435\u043d\u043d\u043e, \u0447\u0442\u043e\u0431\u044b \u043e\u043f\u0442\u0438\u043c\u0430\u043b\u044c\u043d\u044b\u0435 \u0441\u0432\u044f\u0437\u043a\u0438 \u043d\u0430\u0445\u043e\u0434\u0438\u043b\u0438\u0441\u044c \u0447\u0435\u0440\u0435\u0437 \u0431\u043e\u0438, \u0430 \u043d\u0435 \u0447\u0438\u0442\u0430\u043b\u0438\u0441\u044c \u0432 \u0438\u043d\u0442\u0435\u0440\u0444\u0435\u0439\u0441\u0435.</p>";
 }
 
 // Проверка: игра уже сыграна сегодня (UTC)
@@ -717,7 +820,7 @@ function renderBattleDashboard() {
     + (lineupReady
       ? "<div class=\"battle-hero\">"
         + "<div style=\"display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;\">"
-        + "<div><div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430</div>"
+        + "<div><div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430 " + battleHelpBtn() + "</div>"
         + "<div class=\"battle-hero-sub\">\u041c\u043e\u0449\u044c \u0430\u0440\u043c\u0438\u0438: " + myPower + " \u0435\u0434.</div></div>"
         + badgeHtml + "</div>"
         + "<div style=\"display:flex;flex-direction:column;gap:6px;margin-bottom:10px;\">" + oppHtml + "</div>"
@@ -727,7 +830,7 @@ function renderBattleDashboard() {
         + "</div>"
       : "<div class=\"battle-hero\">"
         + "<div style=\"display:flex;align-items:center;gap:6px;margin-bottom:10px;\">"
-        + "<div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430</div>"
+        + "<div class=\"battle-hero-title\">" + ICON_SWORD + " \u0410\u0442\u0430\u043a\u0430 " + battleHelpBtn() + "</div>"
         + "</div>"
         + "<div style=\"text-align:center;padding:10px 8px 6px;\">"
         + "<div style=\"font-size:13px;color:var(--btn-text);font-weight:650;margin-bottom:6px;\">"
@@ -965,7 +1068,7 @@ function renderHospitalFull() {
     + "<div style=\"background:var(--surface-2);border-radius:var(--radius-sm);padding:10px 14px;"
     + "margin-bottom:12px;font-size:12px;color:var(--text-soft);\">"
     + "\u0423\u0440. " + hospLevel + " \u2014 \u0432\u043e\u0441\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u0442 +" + vitGain
-    + "% \u0437\u0434\u043e\u0440\u043e\u0432\u044c\u044f \u0437\u0430 4 \u0447."
+    + "% \u0425\u041f \u0437\u0430 4 \u0447."
     + "</div>"
     + "<div class=\"card\" style=\"padding:14px;\">"
     + "<div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
@@ -981,7 +1084,7 @@ function renderHospitalFull() {
         + "<div class=\"upgrade-row\">"
         + "<div class=\"upgrade-levels\">\u0443\u0440. " + hospLevel + " <span>\u2192</span> \u0443\u0440. " + (hospLevel + 1) + "</div>"
         + "<div><div class=\"cost-label\">\u0412\u043e\u0441\u0441\u0442\u0430\u043d\u0430\u0432\u043b\u0438\u0432\u0430\u0435\u0442</div>"
-        + "<div class=\"cost-value\">+" + HOSP_VIT_PER_LEVEL[hospLevel + 1] + "% \u0432\u0438\u0442/4\u0447</div></div>"
+        + "<div class=\"cost-value\">+" + HOSP_VIT_PER_LEVEL[hospLevel + 1] + "% \u0425\u041f/4\u0447</div></div>"
         + "</div>"
         + "<button id=\"hosp-upg-btn\" onclick=\"doUpgradeHospital()\" class=\"btn-upgrade\">"
         + "\u0423\u043b\u0443\u0447\u0448\u0438\u0442\u044c (" + upgCost + "" + ICON_PARTS + ")</button>"
@@ -1087,7 +1190,7 @@ async function doCollectHospital(type) {
     var result = await collectHospital(player.id, type);
     var t = currentBattleData.troops.find(function(tr) { return tr.troop_type === type; });
     if (t) { t.vit = result.vit; t.in_hospital_since = null; }
-    showHospMsg("\u0412\u043e\u0439\u0441\u043a\u043e \u0432\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u043e: +" + result.vit_gained + "% \u0437\u0434\u043e\u0440\u043e\u0432\u044c\u044f", "ok");
+    showHospMsg("\u0412\u043e\u0439\u0441\u043a\u043e \u0432\u043e\u0441\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u0435\u043d\u043e: +" + result.vit_gained + "% \u0425\u041f", "ok");
     setTimeout(function() { renderHospitalFull(); }, 700);
   } catch (e) {
     showHospMsg(e.message, "err");
