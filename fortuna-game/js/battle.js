@@ -936,7 +936,7 @@ function renderLineupEditor() {
     + buildTroopGrid("attack") + "</div>"
     + "<div style=\"font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;"
     + "color:var(--text-soft);margin-bottom:8px;\">"
-    + "\u{1F6E1} \u0417\u0430\u0449\u0438\u0442\u043d\u044b\u0439 \u0441\u043e\u0441\u0442\u0430\u0432 &mdash; \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 3</div>"
+    + ICON_SHIELD + " \u0417\u0430\u0449\u0438\u0442\u043d\u044b\u0439 \u0441\u043e\u0441\u0442\u0430\u0432 &mdash; \u0432\u044b\u0431\u0435\u0440\u0438\u0442\u0435 3</div>"
     + "<div id=\"def-grid\" style=\"display:flex;flex-direction:column;gap:7px;margin-bottom:16px;\">"
     + buildTroopGrid("defense") + "</div>"
     + "<button id=\"save-lineup-btn\" onclick=\"doSaveLineup()\" style=\"width:100%;"
