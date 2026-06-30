@@ -654,9 +654,23 @@
       try {
         var notifs = await fetchPlayerNotifications(player.id);
         if (notifs.some(function(n) { return !n.is_read; })) {
-          markNotificationsRead(player.id).catch(function() {});
-          var badge = document.getElementById("notif-badge");
-          if (badge) badge.style.display = "none";
+          try {
+            // ВАЖНО: дожидаемся подтверждения сервера, прежде чем считать
+            // уведомления прочитанными. Раньше вызов был "выстрелил и забыл"
+            // (.catch без await) — если сервер по какой-то причине не успевал
+            // обработать запрос (например, отвалился CORS-preflight), бейдж
+            // и локальное состояние всё равно обнулялись, и при обновлении
+            // страницы те же уведомления "возвращались" как непрочитанные.
+            await markNotificationsRead(player.id);
+            notifs.forEach(function(n) { n.is_read = true; });
+            var badge = document.getElementById("notif-badge");
+            if (badge) badge.style.display = "none";
+          } catch (markErr) {
+            // Сервер не подтвердил — НЕ прячем бейдж и НЕ помечаем локально
+            // прочитанным. Честнее показать актуальное непрочитанное состояние,
+            // чем создать иллюзию "прочитано", которая развеется при обновлении.
+            console.warn("markNotificationsRead failed:", markErr && markErr.message);
+          }
         }
         if (!notifs.length) {
           if (body) body.innerHTML = "<div style=\"text-align:center;padding:24px;color:var(--text-soft)\">&#1059;&#1074;&#1077;&#1076;&#1086;&#1084;&#1083;&#1077;&#1085;&#1080;&#1081; &#1085;&#1077;&#1090;</div>";
