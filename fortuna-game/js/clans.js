@@ -146,7 +146,7 @@ function roleTag(role) {
   }
   if (role === 'officer') {
     return '<span style="background:var(--surface-2);color:#4a9fd4;border-radius:6px;' +
-      'padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">&#11088; офицер</span>';
+      'padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">' + ICON_WALL + ' офицер</span>';
   }
   return '<span style="background:var(--surface-2);color:var(--text-soft);border-radius:6px;' +
     'padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap">участник</span>';
