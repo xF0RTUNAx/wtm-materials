@@ -88,6 +88,21 @@
         }
         .nick-input:focus { border-color: var(--accent); background: rgba(0,0,0,0.8); box-shadow: 0 0 20px rgba(255,174,0,0.4); }
 
+        /* ГРАФИКА (Этап 10) — переключатель оригинальная/низкая, тот же визуальный язык, что и ник */
+        .gfx-container { width: 100%; margin-bottom: 15px; }
+        .gfx-toggle { display: flex; background: rgba(0,0,0,0.6); border: 2px solid #555; border-radius: 8px; overflow: hidden; }
+        .gfx-opt {
+            flex: 1; padding: 13px 8px; background: transparent; border: none;
+            color: #aaa; font-weight: 800; font-size: 0.95rem; cursor: pointer;
+            font-family: inherit; transition: 0.2s; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .gfx-opt.active { background: var(--accent); color: #1a1a1a; }
+        .gfx-opt:not(.active):hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+        /* Низкая графика — отключаем самые дорогие CSS-эффекты для слабых устройств */
+        .low-gfx .modal, .low-gfx .menu-content, .low-gfx #rotate-overlay::before { backdrop-filter: none !important; }
+        .low-gfx #game-view::after { display: none; }
+
         .menu-btn {
             position: relative; width: 100%; padding: 20px 30px;
             background: linear-gradient(90deg, rgba(30,30,35,0.9), rgba(45,50,60,0.9));
@@ -222,6 +237,7 @@
             .menu-content { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 90%; max-width: 600px; padding: 0; }
             .menu-title { grid-column: 1 / -1; font-size: 2.2rem; margin-bottom: 5px; }
             .nick-container { grid-column: 1 / -1; }
+            .gfx-container { grid-column: 1 / -1; }
             .menu-btn { width: 100%; padding: 12px; font-size: 0.9rem; margin: 0; justify-content: flex-start; gap: 8px; }
             .menu-btn:hover { transform: translateY(-2px); }
             #controls-area { height: 130px; padding: 8px 30px; }
@@ -267,8 +283,16 @@
                 <input type="text" id="nickname" class="nick-input" placeholder="ВАШ НИК" maxlength="15">
             </div>
 
+            <div class="gfx-container">
+                <div class="nick-label"><i class="fas fa-sliders-h"></i> Графика</div>
+                <div class="gfx-toggle">
+                    <button class="gfx-opt" id="gfx-opt-high" onclick="setGraphicsQuality('high')">Оригинальная</button>
+                    <button class="gfx-opt" id="gfx-opt-low" onclick="setGraphicsQuality('low')">Низкая</button>
+                </div>
+            </div>
+
             <button class="menu-btn btn-pve" onclick="startGame('pve')">
-                <i class="fas fa-microchip"></i> <span>ПРОТИВ ИИ</span>
+                <i class="fas fa-microchip"></i> <span>ИГРАТЬ</span>
             </button>
             <button class="menu-btn btn-info" onclick="openModal('info-modal')">
                 <i class="fas fa-question-circle"></i> <span>КАК ИГРАТЬ</span>
@@ -407,6 +431,91 @@
     if (savedNick) document.getElementById('nickname').value = savedNick;
     document.getElementById('nickname').addEventListener('input', e => localStorage.setItem('wtm_nickname', e.target.value));
 
+    // ── Графика: оригинальная / низкая (Этап 10) ───────────────
+    // Один раз на устройстве — короткий бенчмарк канваса (рисуем партию фигур
+    // с градиентами и shadowBlur, замеряем время — это и есть самые дорогие
+    // операции в самой игре: трава, вспышки, снаряд, солнце). По результату +
+    // числу ядер (navigator.hardwareConcurrency) предлагаем подходящий режим.
+    // Дальше выбор (свой или предложенный) хранится в localStorage и решение
+    // больше никогда не пересчитывается автоматически — только вручную через
+    // переключатель в меню.
+    const GFX_KEY = 'wtm_arty_gfx';
+    let GFX_QUALITY = 'high';
+    let LOW_GFX = false;
+
+    function benchmarkDevice() {
+        const c = document.createElement('canvas');
+        c.width = 300; c.height = 300;
+        const bctx = c.getContext('2d');
+        const t0 = performance.now();
+        for (let i = 0; i < 4000; i++) {
+            bctx.save();
+            bctx.shadowBlur = 8;
+            bctx.shadowColor = 'rgba(255,150,0,0.6)';
+            const grad = bctx.createRadialGradient(150, 150, 5, 150, 150, 40);
+            grad.addColorStop(0, '#fff'); grad.addColorStop(1, '#f80');
+            bctx.fillStyle = grad;
+            bctx.beginPath();
+            bctx.arc(Math.random() * 300, Math.random() * 300, 6 + Math.random() * 10, 0, Math.PI * 2);
+            bctx.fill();
+            bctx.restore();
+        }
+        return performance.now() - t0;
+    }
+
+    // Эвристика, не точная наука: порог 60мс на 4000 фигур и ≤2 ядра — условные
+    // значения, при необходимости легко откалибровать по фидбеку тестеров.
+    function detectOptimalGraphics() {
+        const ms    = benchmarkDevice();
+        const cores = navigator.hardwareConcurrency || 4;
+        return (ms > 60 || cores <= 2) ? 'low' : 'high';
+    }
+
+    function updateGfxToggleUI() {
+        const hi = document.getElementById('gfx-opt-high');
+        const lo = document.getElementById('gfx-opt-low');
+        if (hi) hi.classList.toggle('active', GFX_QUALITY === 'high');
+        if (lo) lo.classList.toggle('active', GFX_QUALITY === 'low');
+    }
+
+    function applyGraphics(quality) {
+        GFX_QUALITY = quality;
+        LOW_GFX = (quality === 'low');
+        localStorage.setItem(GFX_KEY, quality);
+        document.body.classList.toggle('low-gfx', LOW_GFX);
+        updateGfxToggleUI();
+    }
+
+    // Вызывается кликом по переключателю — выбор игрока, тост не нужен.
+    function setGraphicsQuality(q) { applyGraphics(q); }
+
+    function showGfxToast(quality) {
+        const text = quality === 'low'
+            ? 'Для вашего устройства рекомендуются низкие настройки графики. Изменить значения можно всегда в настройках Графика.'
+            : 'Для вашего устройства рекомендуются оригинальные настройки графики. Изменить значения можно всегда в настройках Графика.';
+        const toast = document.createElement('div');
+        toast.style.cssText = 'position:absolute;top:40px;left:50%;transform:translateX(-50%);'
+            + 'background:rgba(20,20,24,0.95);color:#fff;border:1px solid var(--accent);border-radius:12px;'
+            + 'padding:16px 26px;max-width:560px;width:90%;text-align:center;font-size:1.1rem;line-height:1.5;'
+            + 'z-index:300;box-shadow:0 10px 40px rgba(0,0,0,0.6);opacity:0;transition:opacity .4s;pointer-events:none;';
+        toast.textContent = text;
+        app.appendChild(toast);
+        requestAnimationFrame(() => { toast.style.opacity = '1'; });
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => toast.remove(), 500);
+        }, 6000);
+    }
+
+    const savedGfx = localStorage.getItem(GFX_KEY);
+    if (savedGfx === 'high' || savedGfx === 'low') {
+        applyGraphics(savedGfx);
+    } else {
+        const detected = detectOptimalGraphics();
+        applyGraphics(detected);
+        showGfxToast(detected);
+    }
+
     // ── Экран результата (внутри app-root, корректно масштабируется) ──
     function showGameResult(player1Won) {
         GAME.locked = true;
@@ -509,12 +618,14 @@
             if(Math.abs(i-p2.x)<60) h=baseH+Math.sin((p2.x/250)+s1)*70+Math.cos((p2.x/60)+s2)*20;
             terrain.push(h);
             let slope=i>0?Math.abs(terrain[i]-terrain[i-1]):0;
-            if(i%3===0&&Math.random()>0.3&&slope<2.5&&Math.abs(i-p1.x)>40&&Math.abs(i-p2.x)>40) grassCache.push({x:i,h:10+Math.random()*15,curve:(Math.random()-0.5)*8});
-            if(i%2===0&&Math.random()>0.2&&slope<3) grassCache.push({x:i,h:5+Math.random()*8,curve:(Math.random()-0.5)*5});
+            if(!LOW_GFX&&i%3===0&&Math.random()>0.3&&slope<2.5&&Math.abs(i-p1.x)>40&&Math.abs(i-p2.x)>40) grassCache.push({x:i,h:10+Math.random()*15,curve:(Math.random()-0.5)*8});
+            if(!LOW_GFX&&i%2===0&&Math.random()>0.2&&slope<3) grassCache.push({x:i,h:5+Math.random()*8,curve:(Math.random()-0.5)*5});
         }
         undergroundObjects=[];
-        for(let i=0;i<300;i++) undergroundObjects.push({x:Math.random()*1920,y:Math.random()*400+450,r:Math.random()*6+2,color:'rgba(0,0,0,0.3)'});
-        for(let i=0;i<30;i++) undergroundObjects.push({x:Math.random()*1920,y:Math.random()*300+500,r:Math.random()*20+10,color:'rgba(0,0,0,0.2)'});
+        if(!LOW_GFX){
+            for(let i=0;i<300;i++) undergroundObjects.push({x:Math.random()*1920,y:Math.random()*400+450,r:Math.random()*6+2,color:'rgba(0,0,0,0.3)'});
+            for(let i=0;i<30;i++) undergroundObjects.push({x:Math.random()*1920,y:Math.random()*300+500,r:Math.random()*20+10,color:'rgba(0,0,0,0.2)'});
+        }
         bgLayers=[];
         let layer1=[]; let my1=840*0.5;
         for(let i=0;i<=1920;i+=20){my1+=(Math.random()-0.5)*40;my1=Math.max(200,Math.min(600,my1));layer1.push({x:i,y:my1});}
@@ -523,7 +634,7 @@
         for(let i=0;i<=1920;i+=30){my2+=(Math.random()-0.5)*60;my2=Math.max(300,Math.min(840*0.75,my2));layer2.push({x:i,y:my2});}
         bgLayers.push({points:layer2,color:GAME.theme.mtnNear});
         clouds=[];
-        for(let i=0;i<12;i++) clouds.push({x:Math.random()*1920,y:Math.random()*350,scale:0.8+Math.random()*0.6,speed:0.2+Math.random()*0.4,puffs:generateCloudStructure()});
+        if(!LOW_GFX) for(let i=0;i<12;i++) clouds.push({x:Math.random()*1920,y:Math.random()*350,scale:0.8+Math.random()*0.6,speed:0.2+Math.random()*0.4,puffs:generateCloudStructure()});
         objects=[];
         for(let i=50;i<1920-50;i+=Math.random()*60+60){
             if(Math.abs(i-p1.x)<130||Math.abs(i-p2.x)<130) continue;
@@ -542,12 +653,12 @@
         grd.addColorStop(0,GAME.theme.skyTop); grd.addColorStop(1,GAME.theme.skyBot);
         bgCtx.fillStyle=grd; bgCtx.fillRect(0,0,1920,840);
         let sunPosX=1920*0.5;
-        bgCtx.shadowBlur=80; bgCtx.shadowColor=GAME.theme.sunGlow;
+        if(!LOW_GFX){bgCtx.shadowBlur=80; bgCtx.shadowColor=GAME.theme.sunGlow;}
         bgCtx.fillStyle=GAME.theme.sunColor;
         bgCtx.beginPath(); bgCtx.arc(sunPosX,80,50,0,Math.PI*2); bgCtx.fill(); bgCtx.shadowBlur=0;
         weatherSystem=[];
         if(GAME.theme.weather!=='none'){
-            let pc=window.innerWidth<1000?80:250;
+            let pc=LOW_GFX?30:(window.innerWidth<1000?80:250);
             for(let i=0;i<pc;i++) weatherSystem.push({x:Math.random()*1920,y:Math.random()*840,s:Math.random()*2+1,v:Math.random()*5+5});
         }
     }
@@ -648,7 +759,7 @@
         let finalRad=isLeft?slopeAngle-sliderRad:slopeAngle+Math.PI+sliderRad;
         let force=shooter.power/4;
         projectile={x:tip.x,y:tip.y,vx:Math.cos(finalRad)*force+(currentWind*0.05),vy:Math.sin(finalRad)*force};
-        for(let i=0;i<15;i++)particles.push({x:tip.x,y:tip.y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:20,type:'smoke'});
+        for(let i=0;i<(LOW_GFX?6:15);i++)particles.push({x:tip.x,y:tip.y,vx:(Math.random()-0.5)*4,vy:(Math.random()-0.5)*4,life:20,type:'smoke'});
     }
 
     function aiThink(){
@@ -704,14 +815,14 @@
                 if(shooter.doubleDamage)dmg*=2;
                 if(p.apsActive){p.apsActive=false;dmg=0;spawnFloatingEmoji(p,'КАЗ ОТРАЗИЛ!');}
                 p.hp=Math.max(0,p.hp-dmg);
-                for(let i=0;i<15;i++)particles.push({x:p.x,y:terrain[Math.floor(p.x)]-10,vx:Math.random()*10-5,vy:-Math.random()*10,life:40,type:'spark',color:'orange'});
+                for(let i=0;i<(LOW_GFX?6:15);i++)particles.push({x:p.x,y:terrain[Math.floor(p.x)]-10,vx:Math.random()*10-5,vy:-Math.random()*10,life:40,type:'spark',color:'orange'});
             }
         });
         shooter.doubleDamage=false;
         objects.forEach(o=>{
             if(o.hp<=0)return;let oy=terrain[Math.floor(o.x)];
             let d=Math.sqrt((x-o.x)**2+(y-oy)**2);
-            if(d<50){o.hp-=50;if(o.hp<=0)for(let i=0;i<20;i++)particles.push({x:o.x,y:oy-10,vx:Math.random()*6-3,vy:-Math.random()*5,life:50,type:'debris',color:'#7f8c8d'});}
+            if(d<50){o.hp-=50;if(o.hp<=0)for(let i=0;i<(LOW_GFX?8:20);i++)particles.push({x:o.x,y:oy-10,vx:Math.random()*6-3,vy:-Math.random()*5,life:50,type:'debris',color:'#7f8c8d'});}
         });
         grassCache=grassCache.filter(g=>{let d=Math.sqrt((g.x-x)**2+(terrain[g.x]-y)**2);return d>35;});
         updateUI();
@@ -774,7 +885,7 @@
         let yL=terrain[Math.max(0,xIdx-15)]||y,yR=terrain[Math.min(1919,xIdx+15)]||y,rot=Math.atan2(yR-yL,30);
         ctx.save();ctx.translate(x,y);ctx.rotate(rot);if(!isLeft)ctx.scale(-1,1);
         if(t.apsActive){ctx.strokeStyle='#00e5ff';ctx.lineWidth=3;ctx.setLineDash([5,5]);ctx.beginPath();ctx.arc(0,-20,60,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='rgba(0,229,255,0.1)';ctx.fill();}
-        if(t.doubleDamage){ctx.shadowBlur=20;ctx.shadowColor='red';ctx.strokeStyle='red';ctx.lineWidth=2;ctx.strokeRect(-35,-30,70,30);}
+        if(t.doubleDamage){if(!LOW_GFX){ctx.shadowBlur=20;ctx.shadowColor='red';}ctx.strokeStyle='red';ctx.lineWidth=2;ctx.strokeRect(-35,-30,70,30);}
         ctx.fillStyle='#1e1e1e';ctx.fillRect(-28,-14,56,14);
         drawWheel(24,-7,5);for(let i=-16;i<=16;i+=8)drawWheel(i,-6,4.5);
         let grad=ctx.createLinearGradient(0,-30,0,-10);grad.addColorStop(0,t.color);grad.addColorStop(1,'#2c3e50');
@@ -783,7 +894,7 @@
         ctx.save();ctx.translate(15,-6);ctx.rotate(-t.angle*Math.PI/180);
         ctx.fillStyle='#34495e';ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();
         ctx.fillStyle='#7f8c8d';ctx.fillRect(0,-5,30,10);ctx.fillRect(30,-3.5,45,7);
-        if(muzzleFlash.active&&muzzleFlash.owner===t){ctx.fillStyle=`rgba(255,200,50,${muzzleFlash.timer/5})`;ctx.shadowBlur=30;ctx.shadowColor='orange';ctx.beginPath();ctx.arc(90,0,20+Math.random()*15,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;muzzleFlash.timer--;if(muzzleFlash.timer<=0)muzzleFlash.active=false;}
+        if(muzzleFlash.active&&muzzleFlash.owner===t){ctx.fillStyle=`rgba(255,200,50,${muzzleFlash.timer/5})`;if(!LOW_GFX){ctx.shadowBlur=30;ctx.shadowColor='orange';}ctx.beginPath();ctx.arc(90,0,20+Math.random()*15,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;muzzleFlash.timer--;if(muzzleFlash.timer<=0)muzzleFlash.active=false;}
         ctx.restore();
         ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(-28,0);ctx.lineTo(22,0);ctx.lineTo(18,-20);ctx.lineTo(-30,-18);ctx.fill();
         ctx.strokeStyle='#bdc3c7';ctx.lineWidth=1;let antSway=Math.sin(time*5+(t.antennaPhase||0))*(t.antennaPhase||0);ctx.beginPath();ctx.moveTo(-25,-18);ctx.quadraticCurveTo(-25+antSway,-40,-25+antSway*2,-55);ctx.stroke();
@@ -792,18 +903,18 @@
 
     function drawProjectile(){
         if(!projectile)return;
-        ctx.fillStyle='#fff';ctx.shadowBlur=15;ctx.shadowColor='#f1c40f';ctx.beginPath();ctx.arc(projectile.x,projectile.y,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+        ctx.fillStyle='#fff';if(!LOW_GFX){ctx.shadowBlur=15;ctx.shadowColor='#f1c40f';}ctx.beginPath();ctx.arc(projectile.x,projectile.y,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
         projectile.x+=projectile.vx;projectile.y+=projectile.vy;projectile.vy+=CONSTANTS.gravity;
         if(Math.random()>0.5)particles.push({x:projectile.x,y:projectile.y,vx:0,vy:0,life:15,type:'smoke',color:'rgba(200,200,200,0.5)'});
         let px=Math.floor(projectile.x);
-        if(px>=0&&px<1920){if(projectile.y>=terrain[px]){for(let i=0;i<25;i++)particles.push({x:projectile.x,y:projectile.y,vx:(Math.random()-0.5)*12,vy:(Math.random()-0.5)*12,life:35,type:'fire'});for(let i=px-30;i<px+30;i++)if(i>=0&&i<1920){let d=Math.abs(i-px);let dep=Math.sqrt(900-d*d)*0.9;terrain[i]+=dep;}checkHit(projectile.x,projectile.y);projectile=null;}}
+        if(px>=0&&px<1920){if(projectile.y>=terrain[px]){for(let i=0;i<(LOW_GFX?10:25);i++)particles.push({x:projectile.x,y:projectile.y,vx:(Math.random()-0.5)*12,vy:(Math.random()-0.5)*12,life:35,type:'fire'});for(let i=px-30;i<px+30;i++)if(i>=0&&i<1920){let d=Math.abs(i-px);let dep=Math.sqrt(900-d*d)*0.9;terrain[i]+=dep;}checkHit(projectile.x,projectile.y);projectile=null;}}
         if(projectile&&(projectile.x<-100||projectile.x>2020||projectile.y>1200)){projectile=null;switchTurn();}
     }
 
     function drawFX(){
         if(weatherSystem.length>0){ctx.fillStyle=GAME.theme.weather==='rain'?'rgba(174,194,224,0.4)':'rgba(255,255,255,0.6)';weatherSystem.forEach(p=>{ctx.beginPath();if(GAME.theme.weather==='rain')ctx.fillRect(p.x,p.y,1,p.v*1.5);else ctx.arc(p.x,p.y,p.s,0,Math.PI*2);ctx.fill();p.y+=p.v;p.x-=1;if(p.y>840){p.y=-10;p.x=Math.random()*1920;}});}
         for(let i=particles.length-1;i>=0;i--){let p=particles[i];ctx.save();ctx.globalAlpha=p.life/30;if(p.type==='fire'){ctx.fillStyle=`rgb(255,${Math.floor(p.life*8)},0)`;ctx.beginPath();ctx.arc(p.x,p.y,p.life/2,0,Math.PI*2);ctx.fill();}else if(p.type==='debris'){ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,4,4);p.vy+=0.5;}else if(p.type==='spark'){ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,2,2);}else{ctx.fillStyle=p.color||'#fff';ctx.beginPath();ctx.arc(p.x,p.y,15-p.life/3,0,Math.PI*2);ctx.fill();}ctx.restore();p.x+=p.vx;p.y+=p.vy;p.life--;if(p.life<=0)particles.splice(i,1);}
-        for(let i=activeEmojis.length-1;i>=0;i--){let e=activeEmojis[i];ctx.save();ctx.font='bold 40px Arial';ctx.fillStyle=`rgba(255,255,255,${e.alpha})`;ctx.textAlign='center';ctx.shadowColor='black';ctx.shadowBlur=5;ctx.fillText(e.text,e.x,e.y);ctx.restore();e.y-=1;e.life--;if(e.life<20)e.alpha-=0.05;if(e.life<=0)activeEmojis.splice(i,1);}
+        for(let i=activeEmojis.length-1;i>=0;i--){let e=activeEmojis[i];ctx.save();ctx.font='bold 40px Arial';ctx.fillStyle=`rgba(255,255,255,${e.alpha})`;ctx.textAlign='center';if(!LOW_GFX){ctx.shadowColor='black';ctx.shadowBlur=5;}ctx.fillText(e.text,e.x,e.y);ctx.restore();e.y-=1;e.life--;if(e.life<20)e.alpha-=0.05;if(e.life<=0)activeEmojis.splice(i,1);}
     }
 
     function loop(){
