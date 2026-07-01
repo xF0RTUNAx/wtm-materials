@@ -6,7 +6,7 @@
 
 // ─── Константы ───────────────────────────────────────────────
 
-const CLAN_INTEL_GOAL  = 120;
+const CLAN_INTEL_GOAL  = 200;
 const CLAN_MAX_MEMBERS = 4;
 const CLAN_REWARD_XP   = 500;
 
@@ -174,13 +174,23 @@ function clanBtn(label, type, onclick) {
   return '';
 }
 
-function showClanMsg(elId, text, isOk) {
+// showClanMsg(elId, text, isOk, allowHtml)
+// allowHtml=false (по умолчанию) — текст экранируется через textContent (безопасно для
+// сообщений об ошибках, e.message). allowHtml=true — вставляется через innerHTML, нужно
+// для сообщений с иконками-тегами (например ICON_XP), иначе теги показываются как текст.
+function showClanMsg(elId, text, isOk, allowHtml) {
   var el = document.getElementById(elId);
   if (!el) return;
-  el.textContent = text;
+  if (allowHtml) {
+    el.innerHTML = text;
+  } else {
+    el.textContent = text;
+  }
   el.style.color = isOk ? 'var(--accent)' : '#e05252';
   clearTimeout(el._t);
-  el._t = setTimeout(function() { el.textContent = ''; }, 4000);
+  el._t = setTimeout(function() {
+    if (allowHtml) { el.innerHTML = ''; } else { el.textContent = ''; }
+  }, 4000);
 }
 
 // ─── Доп. fetchers (с join на players) ───────────────────────
@@ -662,7 +672,7 @@ async function doClaimClanReward() {
 
   try {
     var result = await claimClanReward(player.id);
-    showClanMsg('clan-reward-msg', '+' + CLAN_REWARD_XP + ' ' + ICON_XP + '! Итого: ' + result.xp + ' ' + ICON_XP, true);
+    showClanMsg('clan-reward-msg', '+' + CLAN_REWARD_XP + ' ' + ICON_XP + '! Итого: ' + result.xp + ' ' + ICON_XP, true, true);
     if (btn) {
       btn.disabled = true;
       btn.textContent = '\u041d\u0430\u0433\u0440\u0430\u0434\u0430 \u043f\u043e\u043b\u0443\u0447\u0435\u043d\u0430 \u2713';
