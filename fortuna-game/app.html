@@ -275,45 +275,59 @@
   .avatar-clickable { cursor: pointer; transition: opacity .15s; }
   .avatar-clickable:hover { opacity: .85; }
 
-  /* ── Раздел "События": hero-баннер входа (холодная сине-серебристая
-     палитра — намеренный контраст к тёплой теме игры, чтобы баннер
-     физически выделялся среди остальных элементов профиля) ── */
+  /* ── Раздел "События" и промо кооп-игр: hero-баннеры входа
+     (холодная сине-серебристая палитра — намеренный контраст к тёплой
+     теме игры, чтобы баннеры физически выделялись в профиле).
+     Раскладка: крупная картинка занимает левую колонку фиксированной
+     ширины, весь текст и кнопка/чип — в правой колонке, без переносов. ── */
   @keyframes events-sparkle { 0%, 100% { opacity: .15; transform: scale(.7); } 50% { opacity: 1; transform: scale(1); } }
-  @keyframes events-ring-spin { to { transform: rotate(360deg); } }
   @keyframes events-dot-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
 
-  .events-banner {
-    background: #0f1e29; border-radius: var(--radius-sm); padding: 14px;
-    position: relative; overflow: hidden; cursor: pointer; border: none;
+  .events-banner, .events-promo-banner {
+    background: #0f1e29; border-radius: var(--radius-sm); padding: 0;
+    position: relative; overflow: hidden; border: none;
     width: 100%; text-align: left; font-family: inherit; display: block;
     margin-bottom: 12px;
   }
+  .events-banner { cursor: pointer; }
+  .events-promo-banner { cursor: default; }
   .events-banner-particle {
     position: absolute; border-radius: 50%; background: #dce6ea;
     animation: events-sparkle 2.1s infinite;
   }
-  .events-banner-row { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; margin-bottom: 10px; }
-  .events-banner-badge { width: 50px; height: 50px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; position: relative; }
-  .events-banner-badge-ring {
-    position: absolute; inset: 0; border-radius: 50%; border: 2px dashed #4a90b8;
-    animation: events-ring-spin 6s linear infinite;
+  .events-banner-inner {
+    display: grid; grid-template-columns: 96px 1fr; align-items: center;
+    gap: 12px; padding: 12px 14px 12px 12px; position: relative; z-index: 1;
   }
-  .events-banner-badge img { width: 34px; height: 34px; object-fit: contain; position: relative; }
-  .events-banner-title { font-size: 15px; font-weight: 650; color: #fff; }
+  .events-banner-img-wrap { display: flex; align-items: center; justify-content: center; }
+  .events-banner-img-wrap img { width: 100%; height: auto; display: block; }
+  .events-banner-content { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .events-banner-title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .events-banner-title {
+    font-size: 15px; font-weight: 650; color: #fff;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
   .events-banner-dot {
     width: 6px; height: 6px; border-radius: 50%; background: #6bc4e8;
-    display: inline-block; margin-left: 6px; animation: events-dot-blink 1.4s infinite;
+    flex-shrink: 0; animation: events-dot-blink 1.4s infinite;
   }
-  .events-banner-sub { font-size: 11px; color: #8fb3c7; margin-top: 2px; }
+  .events-banner-sub { font-size: 11px; color: #8fb3c7; line-height: 1.35; }
   .events-banner-cta {
-    background: #1c3a52; border-radius: 9px; padding: 9px; text-align: center;
-    font-size: 13px; font-weight: 650; color: #dce6ea; position: relative; z-index: 1;
+    background: #1c3a52; border-radius: 8px; padding: 8px 10px; text-align: center;
+    font-size: 12.5px; font-weight: 650; color: #dce6ea;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .events-promo-chip {
+    display: inline-flex; align-items: center; background: #24384a;
+    border-radius: 8px; padding: 7px 10px; font-size: 11px; font-weight: 650;
+    color: #9fb4c4; width: fit-content;
   }
 </style>
   <!-- Этап 5: model-viewer для 3D-моделей GLB -->
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3/dist/model-viewer.min.js"></script>
   <!-- Этап 5: Supabase JS для Realtime чата -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 </head>
 <body>
   <div class="wrap">
@@ -904,19 +918,29 @@
         + "</div>"
         + "<button onclick=\"renderRating()\" style=\"width:100%;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:650;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;\">" + ICON_AWARD + " &#1056;&#1077;&#1081;&#1090;&#1080;&#1085;&#1075; &#8594;</button>"
         + "<button class=\"events-banner\" onclick=\"renderEvents()\">"
-        + "<div class=\"events-banner-particle\" style=\"top:6px;left:66px;width:3px;height:3px;animation-delay:0s;\"></div>"
-        + "<div class=\"events-banner-particle\" style=\"top:34px;left:206px;width:3px;height:3px;animation-delay:.5s;\"></div>"
-        + "<div class=\"events-banner-particle\" style=\"top:60px;left:126px;width:2px;height:2px;animation-delay:.9s;\"></div>"
-        + "<div class=\"events-banner-particle\" style=\"top:16px;left:266px;width:2px;height:2px;animation-delay:1.3s;\"></div>"
-        + "<div class=\"events-banner-row\">"
-        + "<div class=\"events-banner-badge\"><div class=\"events-banner-badge-ring\"></div><img src=\"res/platina_event.png\" alt=\"\" /></div>"
-        + "<div style=\"flex:1;min-width:0;\">"
-        + "<div style=\"display:flex;align-items:center;\"><span class=\"events-banner-title\">&#1057;&#1086;&#1073;&#1099;&#1090;&#1080;&#1103;</span><span class=\"events-banner-dot\"></span></div>"
+        + "<div class=\"events-banner-particle\" style=\"top:6px;left:106px;width:3px;height:3px;animation-delay:0s;\"></div>"
+        + "<div class=\"events-banner-particle\" style=\"top:34px;left:236px;width:3px;height:3px;animation-delay:.5s;\"></div>"
+        + "<div class=\"events-banner-particle\" style=\"top:64px;left:150px;width:2px;height:2px;animation-delay:.9s;\"></div>"
+        + "<div class=\"events-banner-particle\" style=\"top:16px;left:296px;width:2px;height:2px;animation-delay:1.3s;\"></div>"
+        + "<div class=\"events-banner-inner\">"
+        + "<div class=\"events-banner-img-wrap\"><img src=\"res/platina_event.png\" alt=\"\" /></div>"
+        + "<div class=\"events-banner-content\">"
+        + "<div class=\"events-banner-title-row\"><span class=\"events-banner-title\">&#1057;&#1086;&#1073;&#1099;&#1090;&#1080;&#1103;</span><span class=\"events-banner-dot\"></span></div>"
         + "<div class=\"events-banner-sub\">&#1055;&#1088;&#1080;&#1079; 1-&#1075;&#1086; &#1084;&#1077;&#1089;&#1090;&#1072;: 500 &#1087;&#1083;&#1072;&#1090;&#1080;&#1085;&#1099;</div>"
-        + "</div>"
-        + "</div>"
         + "<div class=\"events-banner-cta\">&#1047;&#1072;&#1073;&#1077;&#1088;&#1080; &#1089;&#1074;&#1086;&#1080; 500 &#1087;&#1083;&#1072;&#1090;&#1080;&#1085;&#1099;!</div>"
+        + "</div>"
+        + "</div>"
         + "</button>"
+        + "<div class=\"events-promo-banner\">"
+        + "<div class=\"events-banner-inner\">"
+        + "<div class=\"events-banner-img-wrap\"><img src=\"res/bomb_defuse_logo.webp\" alt=\"\" /></div>"
+        + "<div class=\"events-banner-content\">"
+        + "<div class=\"events-banner-title-row\"><span class=\"events-banner-title\">&#1057;&#1086;&#1074;&#1084;&#1077;&#1089;&#1090;&#1085;&#1099;&#1077; &#1080;&#1075;&#1088;&#1099;</span></div>"
+        + "<div class=\"events-banner-sub\">&#171;1,5 &#1089;&#1072;&#1087;&#1105;&#1088;&#1072;&#187; &#1080; &#1076;&#1088;&#1091;&#1075;&#1080;&#1077; &#1082;&#1086;&#1086;&#1087;-&#1088;&#1077;&#1078;&#1080;&#1084;&#1099;</div>"
+        + "<div class=\"events-promo-chip\">&#1042; &#1088;&#1072;&#1079;&#1088;&#1072;&#1073;&#1086;&#1090;&#1082;&#1077;</div>"
+        + "</div>"
+        + "</div>"
+        + "</div>"
         + "<div class=\"logout-row\"><button class=\"logout-link\" onclick=\"logout()\">&#1042;&#1099;&#1081;&#1090;&#1080;</button></div>"
         + "</div></div>";
 
@@ -1339,8 +1363,8 @@
         + "</div>"
 
         + "<div style=\"font-size:11px;color:var(--text-soft);margin-bottom:12px\">"
-        + "&#1058;&#1091;&#1088;&#1085;&#1080;&#1088; &#1089;&#1077;&#1079;&#1086;&#1085;&#1072; &#8212; &#1073;&#1077;&#1079; &#1092;&#1080;&#1082;&#1089;&#1080;&#1088;&#1086;&#1074;&#1072;&#1085;&#1085;&#1086;&#1081; &#1076;&#1072;&#1090;&#1099; &#1086;&#1082;&#1086;&#1085;&#1095;&#1072;&#1085;&#1080;&#1103;. "
-        + "&#1055;&#1088;&#1080;&#1079;&#1099; &#1074;&#1099;&#1076;&#1072;&#1102;&#1090;&#1089;&#1103; &#1074; &#1095;&#1072;&#1090;&#1077; xFORTUNAx &#1087;&#1086;&#1089;&#1083;&#1077; &#1079;&#1072;&#1074;&#1077;&#1088;&#1096;&#1077;&#1085;&#1080;&#1103;."
+        + "&#1044;&#1083;&#1080;&#1090;&#1089;&#1103; 3 &#1085;&#1077;&#1076;&#1077;&#1083;&#1080; &#1087;&#1086;&#1089;&#1083;&#1077; &#1085;&#1072;&#1095;&#1072;&#1083;&#1072; &#1080;&#1074;&#1077;&#1085;&#1090;&#1072;. "
+        + "&#1055;&#1088;&#1080;&#1079;&#1099; &#1073;&#1091;&#1076;&#1091;&#1090; &#1074;&#1099;&#1076;&#1072;&#1085;&#1099; &#1087;&#1086;&#1073;&#1077;&#1076;&#1080;&#1090;&#1077;&#1083;&#1103;&#1084; &#1074; Telegram-&#1095;&#1072;&#1090;&#1077; xFORTUNAx &#1087;&#1086;&#1089;&#1083;&#1077; &#1079;&#1072;&#1074;&#1077;&#1088;&#1096;&#1077;&#1085;&#1080;&#1103;. &#1057;&#1083;&#1077;&#1076;&#1080;&#1090;&#1077; &#1079;&#1072; #&#1085;&#1086;&#1074;&#1086;&#1089;&#1090;&#1080;."
         + "</div>"
 
         + "<div style=\"display:flex;align-items:flex-end;gap:6px;margin-bottom:14px\">"
