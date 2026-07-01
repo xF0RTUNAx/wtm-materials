@@ -274,6 +274,41 @@
   .avatar-picker-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .avatar-clickable { cursor: pointer; transition: opacity .15s; }
   .avatar-clickable:hover { opacity: .85; }
+
+  /* ── Раздел "События": hero-баннер входа (холодная сине-серебристая
+     палитра — намеренный контраст к тёплой теме игры, чтобы баннер
+     физически выделялся среди остальных элементов профиля) ── */
+  @keyframes events-sparkle { 0%, 100% { opacity: .15; transform: scale(.7); } 50% { opacity: 1; transform: scale(1); } }
+  @keyframes events-ring-spin { to { transform: rotate(360deg); } }
+  @keyframes events-dot-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+  .events-banner {
+    background: #0f1e29; border-radius: var(--radius-sm); padding: 14px;
+    position: relative; overflow: hidden; cursor: pointer; border: none;
+    width: 100%; text-align: left; font-family: inherit; display: block;
+    margin-bottom: 12px;
+  }
+  .events-banner-particle {
+    position: absolute; border-radius: 50%; background: #dce6ea;
+    animation: events-sparkle 2.1s infinite;
+  }
+  .events-banner-row { display: flex; align-items: center; gap: 12px; position: relative; z-index: 1; margin-bottom: 10px; }
+  .events-banner-badge { width: 50px; height: 50px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; position: relative; }
+  .events-banner-badge-ring {
+    position: absolute; inset: 0; border-radius: 50%; border: 2px dashed #4a90b8;
+    animation: events-ring-spin 6s linear infinite;
+  }
+  .events-banner-badge img { width: 34px; height: 34px; object-fit: contain; position: relative; }
+  .events-banner-title { font-size: 15px; font-weight: 650; color: #fff; }
+  .events-banner-dot {
+    width: 6px; height: 6px; border-radius: 50%; background: #6bc4e8;
+    display: inline-block; margin-left: 6px; animation: events-dot-blink 1.4s infinite;
+  }
+  .events-banner-sub { font-size: 11px; color: #8fb3c7; margin-top: 2px; }
+  .events-banner-cta {
+    background: #1c3a52; border-radius: 9px; padding: 9px; text-align: center;
+    font-size: 13px; font-weight: 650; color: #dce6ea; position: relative; z-index: 1;
+  }
 </style>
   <!-- Этап 5: model-viewer для 3D-моделей GLB -->
   <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3/dist/model-viewer.min.js"></script>
@@ -868,6 +903,20 @@
         + "" + ICON_CLAN + " &#1050;&#1083;&#1072;&#1085;&#1099; &#8594;</button>"
         + "</div>"
         + "<button onclick=\"renderRating()\" style=\"width:100%;padding:12px;background:var(--surface-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:14px;font-weight:650;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;\">" + ICON_AWARD + " &#1056;&#1077;&#1081;&#1090;&#1080;&#1085;&#1075; &#8594;</button>"
+        + "<button class=\"events-banner\" onclick=\"renderEvents()\">"
+        + "<div class=\"events-banner-particle\" style=\"top:6px;left:66px;width:3px;height:3px;animation-delay:0s;\"></div>"
+        + "<div class=\"events-banner-particle\" style=\"top:34px;left:206px;width:3px;height:3px;animation-delay:.5s;\"></div>"
+        + "<div class=\"events-banner-particle\" style=\"top:60px;left:126px;width:2px;height:2px;animation-delay:.9s;\"></div>"
+        + "<div class=\"events-banner-particle\" style=\"top:16px;left:266px;width:2px;height:2px;animation-delay:1.3s;\"></div>"
+        + "<div class=\"events-banner-row\">"
+        + "<div class=\"events-banner-badge\"><div class=\"events-banner-badge-ring\"></div><img src=\"res/platina_event.png\" alt=\"\" /></div>"
+        + "<div style=\"flex:1;min-width:0;\">"
+        + "<div style=\"display:flex;align-items:center;\"><span class=\"events-banner-title\">&#1057;&#1086;&#1073;&#1099;&#1090;&#1080;&#1103;</span><span class=\"events-banner-dot\"></span></div>"
+        + "<div class=\"events-banner-sub\">&#1055;&#1088;&#1080;&#1079; 1-&#1075;&#1086; &#1084;&#1077;&#1089;&#1090;&#1072;: 500 &#1087;&#1083;&#1072;&#1090;&#1080;&#1085;&#1099;</div>"
+        + "</div>"
+        + "</div>"
+        + "<div class=\"events-banner-cta\">&#1047;&#1072;&#1073;&#1077;&#1088;&#1080; &#1089;&#1074;&#1086;&#1080; 500 &#1087;&#1083;&#1072;&#1090;&#1080;&#1085;&#1099;!</div>"
+        + "</button>"
         + "<div class=\"logout-row\"><button class=\"logout-link\" onclick=\"logout()\">&#1042;&#1099;&#1081;&#1090;&#1080;</button></div>"
         + "</div></div>";
 
@@ -1083,6 +1132,39 @@
 
     // ── Рейтинг игроков ──────────────────────────────────────────
 
+    // Общая формула живого рейтинга (XP + мощь армии). Используется и
+    // экраном "Рейтинг", и подиумом "Событий" — единая точка правды,
+    // чтобы порядок игроков нигде не разошёлся.
+    async function computeLiveRatingList(myId) {
+      var res = await Promise.all([
+        fetchAllPlayersForRating(),
+        fetchAllTroopsForRating(),
+      ]);
+      var allPlayers = res[0];
+      var allTroops  = res[1];
+
+      // Мощь армии по игроку (только не в госпитале)
+      var powerMap = {};
+      allTroops.forEach(function(t) {
+        if (!powerMap[t.player_id]) powerMap[t.player_id] = 0;
+        var cfg = (typeof TROOP_CFG !== "undefined") && TROOP_CFG[t.troop_type];
+        var w   = cfg ? (cfg.weight || 0) : 0;
+        var vit = t.vit == null ? 100 : t.vit;
+        powerMap[t.player_id] += w * (t.level || 1) * (vit / 100);
+      });
+
+      // Итоговые очки (формула скрыта от игроков)
+      allPlayers.forEach(function(p) {
+        p._score = (p.xp || 0) + Math.floor((powerMap[p.id] || 0) * 10);
+      });
+      allPlayers.sort(function(a, b) { return b._score - a._score; });
+      allPlayers.forEach(function(p, i) { p._rank = i + 1; });
+
+      window._ratingPlayers = allPlayers;
+      window._ratingMyId    = myId;
+      return allPlayers;
+    }
+
     async function renderRating() {
       if (typeof setActiveTab === "function") setActiveTab("profile");
       var app = document.getElementById("app-content");
@@ -1093,38 +1175,46 @@
       app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--text-soft)\">&#1047;&#1072;&#1075;&#1088;&#1091;&#1078;&#1072;&#1077;&#1084;&#8230;</div>";
 
       try {
-        var res = await Promise.all([
-          fetchAllPlayersForRating(),
-          fetchAllTroopsForRating(),
-        ]);
-        var allPlayers = res[0];
-        var allTroops  = res[1];
-
-        // Мощь армии по игроку (только не в госпитале)
-        var powerMap = {};
-        allTroops.forEach(function(t) {
-          if (!powerMap[t.player_id]) powerMap[t.player_id] = 0;
-          var cfg = (typeof TROOP_CFG !== "undefined") && TROOP_CFG[t.troop_type];
-          var w   = cfg ? (cfg.weight || 0) : 0;
-          var vit = t.vit == null ? 100 : t.vit;
-          powerMap[t.player_id] += w * (t.level || 1) * (vit / 100);
-        });
-
-        // Итоговые очки (формула скрыта от игроков)
-        allPlayers.forEach(function(p) {
-          p._score = (p.xp || 0) + Math.floor((powerMap[p.id] || 0) * 10);
-        });
-        allPlayers.sort(function(a, b) { return b._score - a._score; });
-        allPlayers.forEach(function(p, i) { p._rank = i + 1; });
-
-        window._ratingPlayers = allPlayers;
-        window._ratingMyId    = player.id;
-
+        var allPlayers = await computeLiveRatingList(player.id);
         renderRatingContent(allPlayers.slice(0, 30), null);
       } catch(e) {
         if (app) app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--accent)\">&#1054;&#1096;&#1080;&#1073;&#1082;&#1072;: "
           + escapeHtml(e.message) + "</div>";
       }
+    }
+
+    // Отрисовка одной строки списка рейтинга — переиспользуется и
+    // обычным экраном "Рейтинг", и списком "Топ 30" на экране "Событий".
+    function ratingRowHtml(p, myId) {
+      var isMe   = p.id === myId;
+      var rank   = p._rank;
+      var score  = (p._score || 0).toLocaleString("ru");
+      var rankBg = rank === 1 ? "#FFD700" : rank === 2 ? "#C0C0C0" : rank === 3 ? "#CD7F32" : "var(--surface-2)";
+      var rankFg = rank <= 3 ? "#fff" : "var(--text)";
+
+      var avaHtml = p.avatar_url
+        ? "<img src=\"" + escapeHtml(p.avatar_url) + "\" style=\"width:32px;height:32px;border-radius:7px;object-fit:cover;flex-shrink:0\">"
+        : "<div style=\"width:32px;height:32px;border-radius:7px;background:var(--accent-soft);"
+          + "display:flex;align-items:center;justify-content:center;"
+          + "font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0\">"
+          + initials(p.login || "?") + "</div>";
+
+      return "<div onclick=\"openPlayerProfile('" + p.id + "')\" style=\"display:flex;align-items:center;gap:10px;"
+        + "padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;"
+        + "background:" + (isMe ? "var(--accent-soft)" : "var(--surface-2)") + ";"
+        + "border:1px solid " + (isMe ? "var(--accent)" : "transparent") + "\">"
+        + "<div style=\"width:24px;height:24px;border-radius:6px;background:" + rankBg + ";flex-shrink:0;"
+        + "display:flex;align-items:center;justify-content:center;"
+        + "font-size:10px;font-weight:700;color:" + rankFg + "\">" + rank + "</div>"
+        + avaHtml
+        + "<div style=\"flex:1;min-width:0\">"
+        + "<div style=\"font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis\">"
+        + escapeHtml(p.login || "?")
+        + (isMe ? " <span style=\"font-size:10px;color:var(--accent)\">(&#1103;)</span>" : "")
+        + "</div>"
+        + "<div style=\"font-size:10px;color:var(--text-soft)\">&#1054;&#1095;&#1082;&#1080;: " + score + "</div>"
+        + "</div>"
+        + "</div>";
     }
 
     function renderRatingContent(displayList, searchQuery) {
@@ -1133,37 +1223,7 @@
       var myId = window._ratingMyId || "";
 
       var rowsHtml = displayList.length > 0
-        ? displayList.map(function(p) {
-            var isMe   = p.id === myId;
-            var rank   = p._rank;
-            var score  = (p._score || 0).toLocaleString("ru");
-            var rankBg = rank === 1 ? "#FFD700" : rank === 2 ? "#C0C0C0" : rank === 3 ? "#CD7F32" : "var(--surface-2)";
-            var rankFg = rank <= 3 ? "#fff" : "var(--text)";
-
-            var avaHtml = p.avatar_url
-              ? "<img src=\"" + escapeHtml(p.avatar_url) + "\" style=\"width:32px;height:32px;border-radius:7px;object-fit:cover;flex-shrink:0\">"
-              : "<div style=\"width:32px;height:32px;border-radius:7px;background:var(--accent-soft);"
-                + "display:flex;align-items:center;justify-content:center;"
-                + "font-size:11px;font-weight:700;color:var(--accent);flex-shrink:0\">"
-                + initials(p.login || "?") + "</div>";
-
-            return "<div onclick=\"openPlayerProfile('" + p.id + "')\" style=\"display:flex;align-items:center;gap:10px;"
-              + "padding:10px 12px;border-radius:var(--radius-sm);cursor:pointer;"
-              + "background:" + (isMe ? "var(--accent-soft)" : "var(--surface-2)") + ";"
-              + "border:1px solid " + (isMe ? "var(--accent)" : "transparent") + "\">"
-              + "<div style=\"width:24px;height:24px;border-radius:6px;background:" + rankBg + ";flex-shrink:0;"
-              + "display:flex;align-items:center;justify-content:center;"
-              + "font-size:10px;font-weight:700;color:" + rankFg + "\">" + rank + "</div>"
-              + avaHtml
-              + "<div style=\"flex:1;min-width:0\">"
-              + "<div style=\"font-size:13px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis\">"
-              + escapeHtml(p.login || "?")
-              + (isMe ? " <span style=\"font-size:10px;color:var(--accent)\">(&#1103;)</span>" : "")
-              + "</div>"
-              + "<div style=\"font-size:10px;color:var(--text-soft)\">&#1054;&#1095;&#1082;&#1080;: " + score + "</div>"
-              + "</div>"
-              + "</div>";
-          }).join("")
+        ? displayList.map(function(p) { return ratingRowHtml(p, myId); }).join("")
         : "<div style=\"text-align:center;padding:24px;color:var(--text-soft)\">&#1053;&#1080;&#1095;&#1077;&#1075;&#1086; &#1085;&#1077; &#1085;&#1072;&#1081;&#1076;&#1077;&#1085;&#1086;</div>";
 
       var headerText = searchQuery
@@ -1202,6 +1262,114 @@
         return (p.login || "").toLowerCase().indexOf(q) >= 0;
       });
       renderRatingContent(found, query);
+    }
+
+    // ── События: сезонный турнир рейтинга (внешние призы, выдаются
+    //    вручную в Telegram-сообществе — здесь только витрина) ────
+
+    // Одна колонка подиума. place: 1 | 2 | 3 — задаёт высоту столбика
+    // и цвет медали независимо от фактического значения p._rank.
+    function podiumColumnHtml(p, place) {
+      var barH   = place === 1 ? 64 : place === 2 ? 44 : 32;
+      var ringC  = place === 1 ? "#FFD700" : place === 2 ? "#C0C0C0" : "#CD7F32";
+      var avaSz  = place === 1 ? 38 : 32;
+      var score  = p ? (p._score || 0).toLocaleString("ru") : "&#8212;";
+      var name   = p ? escapeHtml(p.login || "?") : "&#8212;";
+      var ini    = p ? initials(p.login || "?") : "?";
+
+      var avaHtml = p && p.avatar_url
+        ? "<img src=\"" + escapeHtml(p.avatar_url) + "\" style=\"width:" + avaSz + "px;height:" + avaSz + "px;border-radius:50%;object-fit:cover;border:2px solid " + ringC + "\">"
+        : "<div style=\"width:" + avaSz + "px;height:" + avaSz + "px;border-radius:50%;background:var(--surface-2);"
+          + "border:2px solid " + ringC + ";display:flex;align-items:center;justify-content:center;"
+          + "font-size:11px;font-weight:700;color:var(--text)\">" + ini + "</div>";
+
+      return "<div style=\"flex:1;text-align:center;min-width:0\">"
+        + "<div style=\"margin-bottom:4px;display:flex;justify-content:center\">" + avaHtml + "</div>"
+        + "<div style=\"font-size:10px;color:var(--text-soft);margin-bottom:4px\">" + score + "</div>"
+        + "<div style=\"background:var(--surface-2);border-radius:6px 6px 0 0;height:" + barH + "px;"
+        + "display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:" + ringC + "\">" + place + "</div>"
+        + "<div style=\"font-size:9px;color:var(--text-soft);margin-top:3px;overflow:hidden;"
+        + "text-overflow:ellipsis;white-space:nowrap;padding:0 2px\">" + name + "</div>"
+        + "</div>";
+    }
+
+    async function renderEvents() {
+      if (typeof setActiveTab === "function") setActiveTab("profile");
+      var app = document.getElementById("app-content");
+      if (!app) return;
+      var player = getCurrentPlayer();
+      if (!player) return;
+
+      app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--text-soft)\">&#1047;&#1072;&#1075;&#1088;&#1091;&#1078;&#1072;&#1077;&#1084;&#8230;</div>";
+
+      try {
+        var allPlayers = await computeLiveRatingList(player.id);
+        renderEventsContent(allPlayers);
+      } catch(e) {
+        if (app) app.innerHTML = "<div class=\"card\" style=\"text-align:center;padding:32px;color:var(--accent)\">&#1054;&#1096;&#1080;&#1073;&#1082;&#1072;: "
+          + escapeHtml(e.message) + "</div>";
+      }
+    }
+
+    function renderEventsContent(allPlayers) {
+      var app  = document.getElementById("app-content");
+      if (!app) return;
+      var myId = window._ratingMyId || "";
+
+      var p1   = allPlayers[0] || null;
+      var p2   = allPlayers[1] || null;
+      var p3   = allPlayers[2] || null;
+      var rest = allPlayers.slice(3, 30);
+
+      var restHtml = rest.length > 0
+        ? rest.map(function(p) { return ratingRowHtml(p, myId); }).join("")
+        : "<div style=\"text-align:center;padding:16px;color:var(--text-soft);font-size:12px\">&#1055;&#1086;&#1082;&#1072; &#1085;&#1077;&#1090; &#1076;&#1088;&#1091;&#1075;&#1080;&#1093; &#1091;&#1095;&#1072;&#1089;&#1090;&#1085;&#1080;&#1082;&#1086;&#1074;</div>";
+
+      app.innerHTML =
+        "<div class=\"card\">"
+        + "<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:14px\">"
+        + "<button onclick=\"renderProfile && renderProfile()\" style=\"background:var(--surface-2);color:var(--text);"
+        + "border:none;border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;"
+        + "cursor:pointer;font-family:inherit\">&#8592; &#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;</button>"
+        + "<div style=\"font-size:15px;font-weight:700\">&#1057;&#1086;&#1073;&#1099;&#1090;&#1080;&#1103;</div>"
+        + "<div style=\"display:flex;align-items:center;gap:4px;background:#1c3a52;border-radius:6px;padding:2px 7px;margin-left:auto\">"
+        + "<span style=\"width:5px;height:5px;border-radius:50%;background:#6bc4e8;display:inline-block;animation:events-dot-blink 1.4s infinite\"></span>"
+        + "<span style=\"font-size:10px;font-weight:650;color:#8fb3c7\">&#1080;&#1076;&#1105;&#1090;</span>"
+        + "</div>"
+        + "</div>"
+
+        + "<div style=\"font-size:11px;color:var(--text-soft);margin-bottom:12px\">"
+        + "&#1058;&#1091;&#1088;&#1085;&#1080;&#1088; &#1089;&#1077;&#1079;&#1086;&#1085;&#1072; &#8212; &#1073;&#1077;&#1079; &#1092;&#1080;&#1082;&#1089;&#1080;&#1088;&#1086;&#1074;&#1072;&#1085;&#1085;&#1086;&#1081; &#1076;&#1072;&#1090;&#1099; &#1086;&#1082;&#1086;&#1085;&#1095;&#1072;&#1085;&#1080;&#1103;. "
+        + "&#1055;&#1088;&#1080;&#1079;&#1099; &#1074;&#1099;&#1076;&#1072;&#1102;&#1090;&#1089;&#1103; &#1074; &#1095;&#1072;&#1090;&#1077; xFORTUNAx &#1087;&#1086;&#1089;&#1083;&#1077; &#1079;&#1072;&#1074;&#1077;&#1088;&#1096;&#1077;&#1085;&#1080;&#1103;."
+        + "</div>"
+
+        + "<div style=\"display:flex;align-items:flex-end;gap:6px;margin-bottom:14px\">"
+        + podiumColumnHtml(p2, 2)
+        + podiumColumnHtml(p1, 1)
+        + podiumColumnHtml(p3, 3)
+        + "</div>"
+
+        + "<div style=\"display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:16px\">"
+        + "<div style=\"background:var(--surface-2);border:1px solid #FFD700;border-radius:8px;padding:8px 6px;text-align:center\">"
+        + "<div style=\"font-size:9px;color:var(--text-soft)\">1 &#1084;&#1077;&#1089;&#1090;&#1086;</div>"
+        + "<div style=\"font-size:10px;font-weight:700\">500 &#1087;&#1083;&#1072;&#1090;.</div>"
+        + "<div style=\"font-size:9px;color:var(--text-soft)\">1M &#1086;&#1095;&#1082;&#1086;&#1074;</div>"
+        + "</div>"
+        + "<div style=\"background:var(--surface-2);border:1px solid #C0C0C0;border-radius:8px;padding:8px 6px;text-align:center\">"
+        + "<div style=\"font-size:9px;color:var(--text-soft)\">2 &#1084;&#1077;&#1089;&#1090;&#1086;</div>"
+        + "<div style=\"font-size:10px;font-weight:700\">500 &#1087;&#1083;&#1072;&#1090;.</div>"
+        + "<div style=\"font-size:9px;color:var(--text-soft)\">500&#1050; &#1086;&#1095;&#1082;&#1086;&#1074;</div>"
+        + "</div>"
+        + "<div style=\"background:var(--surface-2);border:1px solid #CD7F32;border-radius:8px;padding:8px 6px;text-align:center\">"
+        + "<div style=\"font-size:9px;color:var(--text-soft)\">3 &#1084;&#1077;&#1089;&#1090;&#1086;</div>"
+        + "<div style=\"font-size:10px;font-weight:700\">&#8212;</div>"
+        + "<div style=\"font-size:9px;color:var(--text-soft)\">250&#1050; &#1086;&#1095;&#1082;&#1086;&#1074;</div>"
+        + "</div>"
+        + "</div>"
+
+        + "<div style=\"font-size:11px;color:var(--text-soft);font-weight:600;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px\">&#1058;&#1086;&#1087; 30</div>"
+        + "<div style=\"display:flex;flex-direction:column;gap:6px\">" + restHtml + "</div>"
+        + "</div>";
     }
 
     // ── Точка входа ───────────────────────────────────────────
