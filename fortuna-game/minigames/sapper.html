@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>1,5 Сапёра — Fortuna</title>
+<style>
+  :root {
+    --bg:      #0c1310;
+    --card:    #16221b;
+    --card2:   #1c2b22;
+    --line:    #27392e;
+    --text:    #e9f1eb;
+    --soft:    #90a698;
+    --acc:     #63c46f;
+    --acc-dim: #2c4a34;
+    --danger:  #e05252;
+    --gold:    #d8b04a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; overflow:hidden; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    user-select: none; -webkit-user-select: none;
+  }
+
+  /* ── Требование горизонтальной ориентации ── */
+  #rotate-overlay {
+    display:none; position:fixed; inset:0; z-index:1000;
+    background:var(--bg); color:var(--text);
+    flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:14px; padding:24px;
+  }
+  #rotate-overlay .ric { font-size:52px; animation: rot 2s ease-in-out infinite; }
+  @keyframes rot { 0%,100% { transform:rotate(0deg);} 50% { transform:rotate(90deg);} }
+  @media (orientation: portrait) { #rotate-overlay { display:flex; } }
+
+  /* ── Общие элементы ── */
+  .screen { display:none; position:fixed; inset:0; overflow-y:auto; padding:16px 20px 26px; }
+  .screen.on { display:block; }
+  .wrap { max-width:760px; margin:0 auto; }
+
+  .top-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+  .btn-back {
+    background:var(--card); border:1px solid var(--line); color:var(--soft);
+    border-radius:10px; padding:8px 14px; font-size:14px; cursor:pointer;
+  }
+  .title { font-size:20px; font-weight:800; letter-spacing:.4px; }
+  .title small { display:block; font-size:12px; font-weight:400; color:var(--soft); margin-top:2px; }
+
+  .card {
+    background:var(--card); border:1px solid var(--line);
+    border-radius:16px; padding:16px; margin-bottom:12px;
+  }
+  .card h3 { font-size:15px; margin-bottom:8px; }
+  .muted { color:var(--soft); font-size:13px; line-height:1.5; }
+
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--acc); color:#0c1310; border:none; border-radius:12px;
+    padding:13px 20px; font-size:15px; font-weight:700; cursor:pointer;
+    transition: opacity .15s, transform .1s;
+  }
+  .btn:active { transform:scale(.97); }
+  .btn:disabled { opacity:.4; cursor:default; }
+  .btn.ghost {
+    background:var(--card2); color:var(--text); border:1px solid var(--line); font-weight:600;
+  }
+  .btn.full { width:100%; }
+  .btn.sm { padding:9px 14px; font-size:13px; border-radius:10px; }
+
+  .msg { min-height:20px; font-size:13px; margin-top:8px; }
+  .msg.err { color:var(--danger); }
+  .msg.ok  { color:var(--acc); }
+
+  /* ── Список сессий ── */
+  .sess-row {
+    display:flex; align-items:center; gap:12px;
+    background:var(--card2); border:1px solid var(--line);
+    border-radius:12px; padding:12px 14px; margin-bottom:8px;
+  }
+  .sess-ava {
+    width:38px; height:38px; border-radius:10px; background:var(--acc-dim);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:800; color:var(--acc); font-size:16px; flex-shrink:0;
+  }
+  .sess-info { flex:1; min-width:0; }
+  .sess-name { font-size:14px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sess-sub  { font-size:12px; color:var(--soft); margin-top:2px; }
+  .list-empty { text-align:center; color:var(--soft); font-size:13px; padding:22px 10px; }
+
+  /* ── Зал ожидания ── */
+  .slots { display:flex; gap:10px; margin:14px 0; }
+  .slot {
+    flex:1; background:var(--card2); border:1px dashed var(--line);
+    border-radius:14px; padding:16px 8px; text-align:center; min-height:92px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  }
+  .slot.filled { border-style:solid; border-color:var(--acc-dim); }
+  .slot .sava {
+    width:40px; height:40px; border-radius:50%;
+    background:var(--acc-dim); color:var(--acc);
+    display:flex; align-items:center; justify-content:center; font-weight:800;
+  }
+  .slot .sname { font-size:13px; font-weight:700; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .slot .swait { color:var(--soft); font-size:12px; }
+  .dots::after { content:''; animation: dots 1.4s steps(4) infinite; }
+  @keyframes dots { 0% {content:'';} 25% {content:'.';} 50% {content:'..';} 75% {content:'...';} }
+
+  /* ── Экран роли ── */
+  .role-card {
+    border-radius:18px; padding:22px 18px; text-align:center;
+    border:1px solid var(--line); margin-bottom:12px;
+  }
+  .role-card .ricon { font-size:46px; margin-bottom:8px; }
+  .role-card .rname { font-size:24px; font-weight:900; letter-spacing:1px; margin-bottom:10px; }
+  .role-card .rdesc { font-size:14px; line-height:1.55; color:var(--text); opacity:.92; }
+  .role-mute  { background:linear-gradient(160deg,#20301f,#141d13); }
+  .role-deaf  { background:linear-gradient(160deg,#1e2a38,#131a22); }
+  .role-blind { background:linear-gradient(160deg,#2e2e2e,#181818); }
+  .others { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+  .other-chip {
+    background:var(--card2); border:1px solid var(--line); border-radius:20px;
+    padding:6px 12px; font-size:12px; color:var(--soft);
+  }
+  .other-chip b { color:var(--text); }
+
+  /* ── Демо-таймер (заглушка до Чанка 2) ── */
+  .big-timer {
+    font-size:56px; font-weight:900; text-align:center; letter-spacing:2px;
+    font-variant-numeric: tabular-nums; margin:16px 0 4px;
+  }
+  .big-timer.warn { color:var(--danger); }
+</style>
+</head>
+<body>
+
+<div id="rotate-overlay">
+  <div class="ric">&#128241;</div>
+  <div style="font-size:17px;font-weight:700">Поверни телефон горизонтально</div>
+  <div class="muted">«1,5 Сапёра» работает только в альбомной ориентации</div>
+</div>
+
+<!-- ═══════════ ЭКРАН 1: ЛОББИ ═══════════ -->
+<div class="screen" id="scr-home">
+  <div class="wrap">
+    <div class="top-row">
+      <button class="btn-back" id="btn-exit-home">&#10005; Выйти</button>
+      <div class="title">1,5 Сапёра <small>асимметричный кооп на троих &middot; обезвредьте бомбу</small></div>
+    </div>
+
+    <div class="card">
+      <h3>&#128163; Как играть</h3>
+      <div class="muted">
+        Трое игроков за одним столом. Роли выдаются случайно:
+        <b style="color:var(--text)">Немой</b> видит инструкции, но не может говорить —
+        только показывать. <b style="color:var(--text)">Глухой</b> видит его жесты и
+        говорит голосом, но ничего не слышит. <b style="color:var(--text)">Слепой</b>
+        видит лишь провода и кнопки — и именно он обезвреживает бомбу.
+        5 минут. 5 ошибок. Микрофон обязателен.
+      </div>
+    </div>
+
+    <button class="btn full" id="btn-create">+ Создать комнату</button>
+    <div class="msg" id="home-msg"></div>
+
+    <div class="card" style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <h3 style="margin:0">Открытые комнаты</h3>
+        <button class="btn ghost sm" id="btn-refresh">&#8635; Обновить</button>
+      </div>
+      <div id="sess-list"><div class="list-empty">Загрузка…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ЭКРАН 2: ЗАЛ ОЖИДАНИЯ ═══════════ -->
+<div class="screen" id="scr-wait">
+  <div class="wrap">
+    <div class="top-row">
+      <button class="btn-back" id="btn-leave">&#8592; Покинуть</button>
+      <div class="title">Зал ожидания <small id="wait-sub">Комната создана</small></div>
+    </div>
+    <div class="card">
+      <div class="muted" style="text-align:center">
+        Игра начнётся автоматически, когда соберутся трое.<br/>
+        Позови друзей из клана или чата!
+      </div>
+      <div class="slots" id="wait-slots"></div>
+      <div class="muted" style="text-align:center" id="wait-status"><span class="dots">Ожидание игроков</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ ЭКРАН 3: ТВОЯ РОЛЬ ═══════════ -->
+<div class="screen" id="scr-role">
+  <div class="wrap">
+    <div class="top-row">
+      <div class="title">Роли розданы <small id="role-countdown-hint">Игра начнётся через …</small></div>
+    </div>
+    <div id="role-card-holder"></div>
+    <div class="others" id="role-others"></div>
+    <button class="btn full" id="btn-ready">Я готов!</button>
+  </div>
+</div>
+
+<!-- ═══════════ ЭКРАН 4: ЗАГЛУШКА ИГРЫ (Чанк 2 заменит) ═══════════ -->
+<div class="screen" id="scr-stub">
+  <div class="wrap" style="text-align:center">
+    <div class="title" style="margin-bottom:6px">Бомба активна</div>
+    <div class="muted" id="stub-role"></div>
+    <div class="big-timer" id="stub-timer">5:00</div>
+    <div class="muted">Таймер синхронизирован у всех трёх игроков.<br/>
+      3D-стол и модули появятся в следующем чанке разработки.</div>
+    <div style="margin-top:18px">
+      <button class="btn ghost" id="btn-stub-exit">Выйти</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  1,5 Сапёра — Чанк 1: лобби, зал ожидания, роли, демо-таймер.
+// ============================================================
+
+var SUPABASE_URL = "https://rdxoaalzlwbyjxebxtyo.supabase.co";
+var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkeG9hYWx6bHdieWp4ZWJ4dHlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDA1MzksImV4cCI6MjA5NzQ3NjUzOX0.tRaxzqPoXIvouqoCnT5DTCbSA17mrglU4fuL-bTCRrY";
+var CREATE_SESSION_URL = SUPABASE_URL + "/functions/v1/create-sapper-session";
+var JOIN_SESSION_URL   = SUPABASE_URL + "/functions/v1/join-sapper-session";
+
+// ── Игрок (same-origin iframe видит хранилище app.html) ─────
+function getPlayer() {
+  try {
+    var raw = localStorage.getItem("fortuna_player") || sessionStorage.getItem("fortuna_player");
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) { return null; }
+}
+var PLAYER = getPlayer();
+
+// ── Состояние ────────────────────────────────────────────────
+var state = {
+  session: null,     // текущая строка coop_sessions
+  pollTimer: null,   // поллинг зала ожидания
+  tickTimer: null,   // тик демо-таймера
+  ready: false,
+};
+
+// ── Утилиты ──────────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
+
+function show(id) {
+  var scr = document.querySelectorAll(".screen");
+  for (var i = 0; i < scr.length; i++) scr[i].classList.remove("on");
+  $(id).classList.add("on");
+}
+
+function setMsg(id, text, cls) {
+  var el = $(id);
+  if (!el) return;
+  el.textContent = text || "";
+  el.className = "msg" + (cls ? " " + cls : "");
+}
+
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function initial(name) {
+  return (name || "?").trim().charAt(0).toUpperCase() || "?";
+}
+
+// ── Supabase REST (только чтение) ────────────────────────────
+async function sbSelect(path) {
+  var res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
+    headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY },
+  });
+  if (!res.ok) throw new Error("Ошибка чтения (" + res.status + ")");
+  return res.json();
+}
+
+// ── Edge Functions (запись) ──────────────────────────────────
+async function callEF(url, body) {
+  var res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + ANON_KEY,
+      apikey: ANON_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+  var data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || "Ошибка сервера");
+  return data;
+}
+
+// ── Выход из мини-игры ───────────────────────────────────────
+function exitGame() {
+  stopPolling();
+  stopTick();
+  try {
+    if (window.parent && window.parent !== window &&
+        typeof window.parent.closeMgOverlay === "function") {
+      window.parent.closeMgOverlay();
+      return;
+    }
+  } catch (e) {}
+  location.href = "../app.html";
+}
+
+// ════════════════ ЭКРАН 1: ЛОББИ ════════════════
+
+async function loadSessions() {
+  var listEl = $("sess-list");
+  listEl.innerHTML = '<div class="list-empty">Загрузка…</div>';
+  try {
+    var since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    var rows = await sbSelect(
+      "coop_sessions?status=eq.waiting&created_at=gte." + encodeURIComponent(since) +
+      "&order=created_at.desc&limit=10&select=id,creator_name,player_count,created_at"
+    );
+    if (!rows.length) {
+      listEl.innerHTML = '<div class="list-empty">Открытых комнат нет.<br/>Создай свою — и позови друзей!</div>';
+      return;
+    }
+    var html = "";
+    for (var i = 0; i < rows.length; i++) {
+      var s = rows[i];
+      var full = s.player_count >= 3;
+      html +=
+        '<div class="sess-row">' +
+          '<div class="sess-ava">' + esc(initial(s.creator_name)) + '</div>' +
+          '<div class="sess-info">' +
+            '<div class="sess-name">Комната ' + esc(s.creator_name) + '</div>' +
+            '<div class="sess-sub">Игроков: ' + s.player_count + ' / 3</div>' +
+          '</div>' +
+          '<button class="btn sm' + (full ? '" disabled' : '"') +
+            ' data-join="' + esc(s.id) + '">' +
+            (full ? 'Заполнена' : 'Войти') + '</button>' +
+        '</div>';
+    }
+    listEl.innerHTML = html;
+    var btns = listEl.querySelectorAll("[data-join]");
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener("click", function () {
+        joinRoom(this.getAttribute("data-join"));
+      });
+    }
+  } catch (e) {
+    listEl.innerHTML = '<div class="list-empty">Не удалось загрузить список: ' + esc(e.message) + '</div>';
+  }
+}
+
+async function createRoom() {
+  var btn = $("btn-create");
+  btn.disabled = true;
+  setMsg("home-msg", "Создаём комнату…");
+  try {
+    var data = await callEF(CREATE_SESSION_URL, { player_id: PLAYER.id });
+    state.session = data.session;
+    enterWaiting();
+  } catch (e) {
+    setMsg("home-msg", e.message, "err");
+  }
+  btn.disabled = false;
+}
+
+async function joinRoom(sessionId) {
+  setMsg("home-msg", "Входим в комнату…");
+  try {
+    var data = await callEF(JOIN_SESSION_URL, {
+      player_id: PLAYER.id, session_id: sessionId, action: "join",
+    });
+    state.session = data.session;
+    setMsg("home-msg", "");
+    if (state.session.status === "active") {
+      showRole(); // мы стали третьим — игра стартовала
+    } else {
+      enterWaiting();
+    }
+  } catch (e) {
+    setMsg("home-msg", e.message, "err");
+    loadSessions();
+  }
+}
+
+// ════════════════ ЭКРАН 2: ЗАЛ ОЖИДАНИЯ ════════════════
+
+function enterWaiting() {
+  show("scr-wait");
+  renderSlots();
+  startPolling();
+}
+
+function renderSlots() {
+  var s = state.session;
+  if (!s) return;
+  var players = s.players || [];
+  var html = "";
+  for (var i = 0; i < 3; i++) {
+    var p = players[i];
+    if (p) {
+      html +=
+        '<div class="slot filled">' +
+          '<div class="sava">' + esc(initial(p.name)) + '</div>' +
+          '<div class="sname">' + esc(p.name) + (p.id === PLAYER.id ? " (ты)" : "") + '</div>' +
+        '</div>';
+    } else {
+      html +=
+        '<div class="slot">' +
+          '<div class="sava" style="opacity:.35">?</div>' +
+          '<div class="swait">Свободно</div>' +
+        '</div>';
+    }
+  }
+  $("wait-slots").innerHTML = html;
+  $("wait-sub").textContent = "Комната " + (s.creator_name || "");
+  $("wait-status").innerHTML = players.length >= 3
+    ? "Все в сборе!"
+    : '<span class="dots">Ожидание игроков (' + players.length + ' / 3)</span>';
+}
+
+function startPolling() {
+  stopPolling();
+  state.pollTimer = setInterval(pollSession, 2500);
+}
+
+function stopPolling() {
+  if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
+}
+
+async function pollSession() {
+  if (!state.session) return;
+  try {
+    var rows = await sbSelect("coop_sessions?id=eq." + state.session.id + "&select=*");
+    if (!rows.length) {
+      // Сессию распустили / протухла
+      stopPolling();
+      state.session = null;
+      show("scr-home");
+      setMsg("home-msg", "Комната была распущена", "err");
+      loadSessions();
+      return;
+    }
+    state.session = rows[0];
+    if (state.session.status === "active") {
+      stopPolling();
+      showRole();
+      return;
+    }
+    renderSlots();
+  } catch (e) { /* тихо повторим на следующем тике */ }
+}
+
+async function leaveRoom() {
+  var btn = $("btn-leave");
+  btn.disabled = true;
+  stopPolling();
+  try {
+    if (state.session) {
+      await callEF(JOIN_SESSION_URL, {
+        player_id: PLAYER.id, session_id: state.session.id, action: "leave",
+      });
+    }
+  } catch (e) { /* даже при ошибке возвращаемся в лобби */ }
+  state.session = null;
+  btn.disabled = false;
+  show("scr-home");
+  loadSessions();
+}
+
+// ════════════════ ЭКРАН 3: РОЛЬ ════════════════
+
+var ROLE_META = {
+  mute: {
+    name: "НЕМОЙ",
+    icon: "&#129296;", // 🤐
+    cls: "role-mute",
+    desc: "Ты видишь <b>все инструкции</b> по обезвреживанию — но говорить не можешь. " +
+          "Ты слышишь остальных, а отвечать придётся <b>жестами и визуальными сигналами</b>. " +
+          "Модули бомбы тебе не видны.",
+  },
+  deaf: {
+    name: "ГЛУХОЙ",
+    icon: "&#129467;", // 🧏
+    cls: "role-deaf",
+    desc: "Ты видишь <b>весь стол в цвете</b> и всё, что делает Слепой, видишь жесты Немого — " +
+          "но <b>ничего не слышишь</b>. Твой голос — единственный мост: " +
+          "переводи жесты Немого словами для Слепого.",
+  },
+  blind: {
+    name: "СЛЕПОЙ",
+    icon: "&#128374;", // 🕶
+    cls: "role-blind",
+    desc: "Ты видишь мир <b>чёрно-белым</b> — только провода, кнопки и таймер. " +
+          "Инструкций у тебя нет. Зато <b>все действия с бомбой выполняешь ты</b>. " +
+          "Слушай Глухого — и режь.",
+  },
+};
+
+function myRole() {
+  var s = state.session;
+  if (!s || !s.roles) return null;
+  return s.roles[PLAYER.id] || null;
+}
+
+function gameStartAt() {
+  var s = state.session;
+  if (!s || !s.started_at) return 0;
+  var intro = (s.game_config && s.game_config.introSec) || 20;
+  return new Date(s.started_at).getTime() + intro * 1000;
+}
+
+function showRole() {
+  var role = myRole();
+  if (!role) { // на всякий случай — данные ещё не доехали
+    setTimeout(pollOnceThenRole, 800);
+    return;
+  }
+  var meta = ROLE_META[role];
+  $("role-card-holder").innerHTML =
+    '<div class="role-card ' + meta.cls + '">' +
+      '<div class="ricon">' + meta.icon + '</div>' +
+      '<div class="rname">' + meta.name + '</div>' +
+      '<div class="rdesc">' + meta.desc + '</div>' +
+    '</div>';
+
+  // Кто есть кто (остальные двое)
+  var s = state.session;
+  var chips = "";
+  var players = s.players || [];
+  for (var i = 0; i < players.length; i++) {
+    var p = players[i];
+    if (p.id === PLAYER.id) continue;
+    var r = s.roles[p.id];
+    chips += '<div class="other-chip"><b>' + esc(p.name) + '</b> — ' +
+      (ROLE_META[r] ? ROLE_META[r].name : "?") + '</div>';
+  }
+  $("role-others").innerHTML = chips;
+
+  state.ready = false;
+  $("btn-ready").disabled = false;
+  show("scr-role");
+  startTick();
+}
+
+async function pollOnceThenRole() {
+  try {
+    var rows = await sbSelect("coop_sessions?id=eq." + state.session.id + "&select=*");
+    if (rows.length) state.session = rows[0];
+  } catch (e) {}
+  if (myRole()) showRole();
+  else { show("scr-home"); setMsg("home-msg", "Не удалось получить роль — попробуй ещё раз", "err"); }
+}
+
+// ════════════════ ЭКРАН 4: ДЕМО-ТАЙМЕР (заглушка) ════════════════
+
+function fmtSec(total) {
+  if (total < 0) total = 0;
+  var m = Math.floor(total / 60);
+  var sec = total % 60;
+  return m + ":" + (sec < 10 ? "0" : "") + sec;
+}
+
+function startTick() {
+  stopTick();
+  state.tickTimer = setInterval(tick, 250);
+  tick();
+}
+
+function stopTick() {
+  if (state.tickTimer) { clearInterval(state.tickTimer); state.tickTimer = null; }
+}
+
+function tick() {
+  var s = state.session;
+  if (!s || s.status !== "active") return;
+  var startAt = gameStartAt();
+  var now = Date.now();
+
+  // Фаза 1: обратный отсчёт до старта (экран роли)
+  if (now < startAt) {
+    var left = Math.ceil((startAt - now) / 1000);
+    $("role-countdown-hint").textContent = "Игра начнётся через " + left + " сек";
+    return;
+  }
+
+  // Фаза 2: игра идёт — переключаемся на заглушку стола
+  if (!$("scr-stub").classList.contains("on")) {
+    var meta = ROLE_META[myRole()] || { name: "?" };
+    $("stub-role").textContent = "Твоя роль: " + meta.name;
+    show("scr-stub");
+  }
+  var timerSec = (s.game_config && s.game_config.timerSec) || 300;
+  var remain = Math.floor((startAt + timerSec * 1000 - now) / 1000);
+  var el = $("stub-timer");
+  el.textContent = fmtSec(remain);
+  el.className = "big-timer" + (remain <= 60 ? " warn" : "");
+  if (remain <= 0) stopTick();
+}
+
+// ════════════════ РЕКОННЕКТ ПРИ ЗАГРУЗКЕ ════════════════
+
+async function tryResume() {
+  try {
+    var since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    var contains = encodeURIComponent('[{"id":"' + PLAYER.id + '"}]');
+    var rows = await sbSelect(
+      "coop_sessions?status=in.(waiting,active)&players=cs." + contains +
+      "&created_at=gte." + encodeURIComponent(since) +
+      "&order=created_at.desc&limit=1&select=*"
+    );
+    if (!rows.length) return false;
+    state.session = rows[0];
+    if (state.session.status === "active") showRole();
+    else enterWaiting();
+    return true;
+  } catch (e) { return false; }
+}
+
+// ════════════════ ИНИЦИАЛИЗАЦИЯ ════════════════
+
+function init() {
+  if (!PLAYER || !PLAYER.id) {
+    document.body.innerHTML =
+      '<div style="display:flex;height:100%;align-items:center;justify-content:center;' +
+      'flex-direction:column;gap:14px;padding:24px;text-align:center">' +
+      '<div style="font-size:17px;font-weight:700">Нужен вход в игру</div>' +
+      '<div style="color:#90a698;font-size:14px">Открой «1,5 Сапёра» из приложения Fortuna</div>' +
+      '</div>';
+    return;
+  }
+
+  $("btn-exit-home").addEventListener("click", exitGame);
+  $("btn-stub-exit").addEventListener("click", exitGame);
+  $("btn-create").addEventListener("click", createRoom);
+  $("btn-refresh").addEventListener("click", loadSessions);
+  $("btn-leave").addEventListener("click", leaveRoom);
+  $("btn-ready").addEventListener("click", function () {
+    state.ready = true;
+    this.disabled = true;
+    this.textContent = "Ждём остальных…";
+  });
+
+  tryResume().then(function (resumed) {
+    if (!resumed) {
+      show("scr-home");
+      loadSessions();
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
