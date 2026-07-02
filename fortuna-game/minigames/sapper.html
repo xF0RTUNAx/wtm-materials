@@ -24,9 +24,9 @@
     color: var(--text);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     user-select: none; -webkit-user-select: none;
+    touch-action: manipulation;
   }
 
-  /* ── Требование горизонтальной ориентации ── */
   #rotate-overlay {
     display:none; position:fixed; inset:0; z-index:1000;
     background:var(--bg); color:var(--text);
@@ -37,7 +37,6 @@
   @keyframes rot { 0%,100% { transform:rotate(0deg);} 50% { transform:rotate(90deg);} }
   @media (orientation: portrait) { #rotate-overlay { display:flex; } }
 
-  /* ── Общие элементы ── */
   .screen { display:none; position:fixed; inset:0; overflow-y:auto; padding:16px 20px 26px; }
   .screen.on { display:block; }
   .wrap { max-width:760px; margin:0 auto; }
@@ -45,7 +44,7 @@
   .top-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
   .btn-back {
     background:var(--card); border:1px solid var(--line); color:var(--soft);
-    border-radius:10px; padding:8px 14px; font-size:14px; cursor:pointer;
+    border-radius:10px; padding:8px 14px; font-size:14px; cursor:pointer; font-family:inherit;
   }
   .title { font-size:20px; font-weight:800; letter-spacing:.4px; }
   .title small { display:block; font-size:12px; font-weight:400; color:var(--soft); margin-top:2px; }
@@ -61,21 +60,19 @@
     display:inline-flex; align-items:center; justify-content:center; gap:8px;
     background:var(--acc); color:#0c1310; border:none; border-radius:12px;
     padding:13px 20px; font-size:15px; font-weight:700; cursor:pointer;
-    transition: opacity .15s, transform .1s;
+    transition: opacity .15s, transform .1s; font-family:inherit;
   }
   .btn:active { transform:scale(.97); }
   .btn:disabled { opacity:.4; cursor:default; }
-  .btn.ghost {
-    background:var(--card2); color:var(--text); border:1px solid var(--line); font-weight:600;
-  }
+  .btn.ghost { background:var(--card2); color:var(--text); border:1px solid var(--line); font-weight:600; }
   .btn.full { width:100%; }
   .btn.sm { padding:9px 14px; font-size:13px; border-radius:10px; }
+  .btn.danger { background:var(--danger); color:#fff; }
 
   .msg { min-height:20px; font-size:13px; margin-top:8px; }
   .msg.err { color:var(--danger); }
   .msg.ok  { color:var(--acc); }
 
-  /* ── Список сессий ── */
   .sess-row {
     display:flex; align-items:center; gap:12px;
     background:var(--card2); border:1px solid var(--line);
@@ -91,7 +88,6 @@
   .sess-sub  { font-size:12px; color:var(--soft); margin-top:2px; }
   .list-empty { text-align:center; color:var(--soft); font-size:13px; padding:22px 10px; }
 
-  /* ── Зал ожидания ── */
   .slots { display:flex; gap:10px; margin:14px 0; }
   .slot {
     flex:1; background:var(--card2); border:1px dashed var(--line);
@@ -109,30 +105,224 @@
   .dots::after { content:''; animation: dots 1.4s steps(4) infinite; }
   @keyframes dots { 0% {content:'';} 25% {content:'.';} 50% {content:'..';} 75% {content:'...';} }
 
-  /* ── Экран роли ── */
-  .role-card {
-    border-radius:18px; padding:22px 18px; text-align:center;
-    border:1px solid var(--line); margin-bottom:12px;
-  }
-  .role-card .ricon { font-size:46px; margin-bottom:8px; }
-  .role-card .rname { font-size:24px; font-weight:900; letter-spacing:1px; margin-bottom:10px; }
-  .role-card .rdesc { font-size:14px; line-height:1.55; color:var(--text); opacity:.92; }
+  .role-card { border-radius:18px; padding:20px 18px; text-align:center; border:1px solid var(--line); margin-bottom:12px; }
+  .role-card .ricon { font-size:44px; margin-bottom:8px; }
+  .role-card .rname { font-size:23px; font-weight:900; letter-spacing:1px; margin-bottom:10px; }
+  .role-card .rdesc { font-size:14px; line-height:1.55; opacity:.92; }
   .role-mute  { background:linear-gradient(160deg,#20301f,#141d13); }
   .role-deaf  { background:linear-gradient(160deg,#1e2a38,#131a22); }
   .role-blind { background:linear-gradient(160deg,#2e2e2e,#181818); }
   .others { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
-  .other-chip {
-    background:var(--card2); border:1px solid var(--line); border-radius:20px;
-    padding:6px 12px; font-size:12px; color:var(--soft);
-  }
+  .other-chip { background:var(--card2); border:1px solid var(--line); border-radius:20px; padding:6px 12px; font-size:12px; color:var(--soft); }
   .other-chip b { color:var(--text); }
 
-  /* ── Демо-таймер (заглушка до Чанка 2) ── */
-  .big-timer {
-    font-size:56px; font-weight:900; text-align:center; letter-spacing:2px;
-    font-variant-numeric: tabular-nums; margin:16px 0 4px;
+  #scr-game { padding:0; overflow:hidden; }
+  #stage3d { position:absolute; inset:0; }
+  #stage3d canvas { display:block; }
+  #stage3d.blindfx { filter: grayscale(1) contrast(1.06) brightness(1.02); }
+
+  #hud {
+    position:absolute; top:0; left:0; right:0; z-index:20;
+    display:flex; align-items:center; gap:10px;
+    padding:8px 12px; background:linear-gradient(180deg, rgba(5,10,7,.88), rgba(5,10,7,0));
+    pointer-events:none;
   }
-  .big-timer.warn { color:var(--danger); }
+  #hud > * { pointer-events:auto; }
+  .hud-timer {
+    font-size:26px; font-weight:900; letter-spacing:1px;
+    font-variant-numeric:tabular-nums; color:#ff5b5b;
+    background:rgba(0,0,0,.55); border:1px solid #402020;
+    border-radius:10px; padding:2px 12px;
+  }
+  .hud-strikes { display:flex; gap:4px; align-items:center; }
+  .strike { width:16px; height:16px; border-radius:4px; background:#2a1616; border:1px solid #4a2020;
+    display:flex;align-items:center;justify-content:center;font-size:11px;color:#ff6b6b;font-weight:900; }
+  .hud-mods { display:flex; gap:6px; margin-left:auto; }
+  .mod-dot {
+    min-width:38px; height:30px; border-radius:8px; border:1px solid var(--line);
+    background:rgba(10,18,13,.8); color:var(--soft); font-size:11px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-family:inherit;
+    padding:0 7px;
+  }
+  .mod-dot.solved { background:#123d1e; color:var(--acc); border-color:var(--acc-dim); }
+  .mod-dot.open { border-color:var(--gold); color:var(--gold); }
+  .hud-exit {
+    background:rgba(0,0,0,.5); border:1px solid var(--line); color:var(--soft);
+    border-radius:8px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit;
+  }
+
+  #mod-panel {
+    position:absolute; top:52px; right:0; bottom:0; width:min(430px, 56%);
+    z-index:15; background:rgba(12,19,16,.96); border-left:1px solid var(--line);
+    display:none; flex-direction:column; padding:12px 14px;
+    overflow-y:auto;
+  }
+  #mod-panel.on { display:flex; }
+  .mp-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .mp-title { font-size:16px; font-weight:800; }
+  .mp-close { background:none; border:none; color:var(--soft); font-size:20px; cursor:pointer; padding:4px 8px; font-family:inherit; }
+  .mp-solved { text-align:center; color:var(--acc); font-weight:800; padding:20px 0; font-size:16px; }
+
+  .wire-row { display:flex; align-items:center; gap:10px; margin:9px 0; cursor:pointer; }
+  .wire-num {
+    width:26px; height:26px; border-radius:50%; background:var(--card2);
+    border:1px solid var(--line); color:var(--text); font-size:13px; font-weight:800;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .wire-line { flex:1; height:12px; border-radius:6px; position:relative; box-shadow:0 1px 3px rgba(0,0,0,.5); }
+  .wire-line.cut { opacity:.45; }
+  .wire-line.cut::after {
+    content:''; position:absolute; left:44%; top:-6px; width:12%; height:24px;
+    background:rgba(12,19,16,.97);
+  }
+  .wire-row.disabled { cursor:default; }
+
+  .seq-grid { display:flex; gap:10px; margin:12px 0; }
+  .seq-btn {
+    flex:1; height:62px; border-radius:12px; border:2px solid rgba(0,0,0,.4);
+    font-size:17px; font-weight:900; cursor:pointer; color:#fff; font-family:inherit;
+    text-shadow:0 1px 2px rgba(0,0,0,.6); box-shadow:0 3px 0 rgba(0,0,0,.4);
+  }
+  .seq-btn:active { transform:translateY(2px); box-shadow:none; }
+  .seq-prog { display:flex; gap:8px; justify-content:center; margin:8px 0; }
+  .seq-dot { width:14px; height:14px; border-radius:50%; background:var(--card2); border:1px solid var(--line); }
+  .seq-dot.done { background:var(--acc); border-color:var(--acc); }
+
+  .code-display {
+    font-size:32px; font-weight:900; letter-spacing:12px; text-align:center;
+    background:#0a120d; border:1px solid var(--line); border-radius:10px;
+    padding:10px 4px 10px 16px; margin:10px 0; min-height:58px; color:#7ee08a;
+    font-variant-numeric:tabular-nums;
+  }
+  .keypad { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .key {
+    height:46px; border-radius:10px; background:var(--card2); border:1px solid var(--line);
+    color:var(--text); font-size:18px; font-weight:800; cursor:pointer; font-family:inherit;
+  }
+  .key:active { background:var(--acc-dim); }
+
+  .dials-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0; }
+  .dial {
+    background:var(--card2); border:1px solid var(--line); border-radius:12px;
+    padding:8px; display:flex; flex-direction:column; align-items:center; gap:5px;
+  }
+  .dial-face {
+    width:56px; height:56px; border-radius:50%; background:#0a120d;
+    border:2px solid var(--line); display:flex; align-items:center; justify-content:center;
+  }
+  .dial-name { font-size:11px; color:var(--soft); font-weight:700; min-height:14px; }
+  .dial-ctr { display:flex; gap:8px; }
+  .dial-ctr button {
+    width:38px; height:30px; border-radius:8px; background:var(--card);
+    border:1px solid var(--line); color:var(--text); font-size:15px; cursor:pointer; font-family:inherit;
+  }
+
+  #confirm-box {
+    position:absolute; inset:0; z-index:60; display:none;
+    background:rgba(0,0,0,.6); align-items:center; justify-content:center;
+  }
+  #confirm-box.on { display:flex; }
+  .confirm-card {
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:18px; max-width:320px; width:88%; text-align:center;
+  }
+  .confirm-card .ct { font-size:15px; font-weight:700; margin-bottom:14px; line-height:1.4; }
+  .confirm-card .cb { display:flex; gap:10px; }
+  .confirm-card .cb .btn { flex:1; }
+
+  #gest-win {
+    position:absolute; left:10px; bottom:10px; z-index:18;
+    width:min(310px, 44%); background:rgba(12,19,16,.95);
+    border:1px solid var(--gold); border-radius:14px; padding:10px 12px;
+  }
+  .gw-head { font-size:11px; color:var(--gold); font-weight:800; letter-spacing:.5px; margin-bottom:6px; }
+  .gw-body { min-height:60px; }
+
+  #qflash {
+    position:absolute; left:24px; top:40%; z-index:40; display:none;
+    font-size:64px; filter:drop-shadow(0 2px 8px rgba(0,0,0,.7));
+    animation:qpop .3s ease;
+  }
+  @keyframes qpop { 0% { transform:scale(.4); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+
+  #errflash { position:absolute; inset:0; z-index:35; pointer-events:none; background:radial-gradient(ellipse at center, transparent 55%, rgba(220,50,50,.5)); opacity:0; transition:opacity .5s; }
+  #errflash.on { opacity:1; transition:opacity .05s; }
+
+  #voice-bar {
+    position:absolute; right:10px; bottom:10px; z-index:18;
+    display:flex; flex-direction:column; gap:6px; align-items:flex-end;
+  }
+  .vchip {
+    display:flex; align-items:center; gap:7px;
+    background:rgba(12,19,16,.92); border:1px solid var(--line);
+    border-radius:20px; padding:5px 11px; font-size:12px; font-weight:700;
+  }
+  .vchip .vrole { color:var(--soft); font-weight:600; font-size:11px; }
+  .vchip.me { border-color:var(--acc-dim); cursor:pointer; }
+  .vchip .vmic { font-size:14px; }
+  .vchip.offline { opacity:.45; }
+
+  #mute-ui { position:absolute; inset:0; z-index:10; display:none; padding:50px 10px 10px; }
+  #mute-ui.on { display:flex; gap:10px; }
+  .mtabs { display:flex; flex-direction:column; gap:7px; width:120px; flex-shrink:0; }
+  .mtab {
+    flex:1; background:var(--card); border:1px solid var(--line); border-radius:12px;
+    color:var(--soft); font-size:12px; font-weight:800; cursor:pointer; font-family:inherit;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; padding:6px 4px;
+  }
+  .mtab.act { border-color:var(--gold); color:var(--text); }
+  .mtab.solved { border-color:var(--acc-dim); color:var(--acc); }
+  .mtab .mnum { font-size:16px; }
+  #mute-main { flex:1; display:flex; flex-direction:column; gap:8px; min-width:0; overflow-y:auto; }
+  .instr-card { background:var(--card); border:1px solid var(--gold); border-radius:14px; padding:11px 13px; }
+  .instr-title { font-size:11px; color:var(--gold); font-weight:800; letter-spacing:.6px; margin-bottom:5px; }
+  .instr-body { font-size:13.5px; line-height:1.5; }
+  .tool-card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:11px 13px; flex:1; }
+  .tool-title { font-size:11px; color:var(--soft); font-weight:800; letter-spacing:.6px; margin-bottom:8px; }
+
+  .chip {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:34px; height:34px; border-radius:9px; border:2px solid rgba(0,0,0,.35);
+    font-size:12px; font-weight:800; color:#fff; cursor:pointer;
+    text-shadow:0 1px 2px rgba(0,0,0,.7); position:relative; padding:0 8px;
+    font-family:inherit;
+  }
+  .chip.sel { outline:3px solid #fff; outline-offset:1px; }
+  .chip.crossed::after {
+    content:'\2715'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:24px; color:#111; font-weight:900; background:rgba(255,255,255,.35); border-radius:7px;
+  }
+  .chips-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .gslot {
+    width:40px; height:40px; border-radius:10px; border:2px dashed var(--line);
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .gslot.fill { border-style:solid; }
+
+  .qbar { display:flex; gap:8px; }
+  .qbtn {
+    flex:1; height:46px; border-radius:12px; background:var(--card); border:1px solid var(--line);
+    font-size:22px; cursor:pointer; font-family:inherit;
+  }
+  .qbtn:active { background:var(--acc-dim); }
+
+  .ink-wrap { position:relative; }
+  .ink-canvas { width:100%; border-radius:10px; background:#f2ecdc; touch-action:none; display:block; }
+  .ink-bar-track { height:8px; border-radius:4px; background:var(--card2); margin-top:6px; overflow:hidden; }
+  .ink-bar-fill { height:100%; background:var(--gold); border-radius:4px; transition:width .15s; }
+  .ink-row { display:flex; align-items:center; gap:8px; margin-top:6px; }
+
+  #dc-overlay {
+    position:absolute; inset:0; z-index:80; display:none;
+    background:rgba(5,8,6,.85); align-items:center; justify-content:center;
+    flex-direction:column; gap:12px; text-align:center; padding:20px;
+  }
+  #dc-overlay.on { display:flex; }
+
+  .end-icon { font-size:60px; text-align:center; margin-bottom:8px; }
+  .end-title { font-size:26px; font-weight:900; text-align:center; margin-bottom:6px; }
+  .end-sub { text-align:center; color:var(--soft); font-size:14px; margin-bottom:16px; }
+  .reward-line { text-align:center; font-size:16px; font-weight:800; color:var(--gold); margin-bottom:14px; min-height:22px; }
 </style>
 </head>
 <body>
@@ -140,17 +330,16 @@
 <div id="rotate-overlay">
   <div class="ric">&#128241;</div>
   <div style="font-size:17px;font-weight:700">Поверни телефон горизонтально</div>
-  <div class="muted">«1,5 Сапёра» работает только в альбомной ориентации</div>
+  <div class="muted">&#171;1,5 Сапёра&#187; работает только в альбомной ориентации</div>
 </div>
 
-<!-- ═══════════ ЭКРАН 1: ЛОББИ ═══════════ -->
+<!-- ЭКРАН 1: ЛОББИ -->
 <div class="screen" id="scr-home">
   <div class="wrap">
     <div class="top-row">
       <button class="btn-back" id="btn-exit-home">&#10005; Выйти</button>
       <div class="title">1,5 Сапёра <small>асимметричный кооп на троих &middot; обезвредьте бомбу</small></div>
     </div>
-
     <div class="card">
       <h3>&#128163; Как играть</h3>
       <div class="muted">
@@ -162,10 +351,8 @@
         5 минут. 5 ошибок. Микрофон обязателен.
       </div>
     </div>
-
     <button class="btn full" id="btn-create">+ Создать комнату</button>
     <div class="msg" id="home-msg"></div>
-
     <div class="card" style="margin-top:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <h3 style="margin:0">Открытые комнаты</h3>
@@ -176,7 +363,7 @@
   </div>
 </div>
 
-<!-- ═══════════ ЭКРАН 2: ЗАЛ ОЖИДАНИЯ ═══════════ -->
+<!-- ЭКРАН 2: ЗАЛ ОЖИДАНИЯ -->
 <div class="screen" id="scr-wait">
   <div class="wrap">
     <div class="top-row">
@@ -194,7 +381,7 @@
   </div>
 </div>
 
-<!-- ═══════════ ЭКРАН 3: ТВОЯ РОЛЬ ═══════════ -->
+<!-- ЭКРАН 3: ТВОЯ РОЛЬ -->
 <div class="screen" id="scr-role">
   <div class="wrap">
     <div class="top-row">
@@ -203,34 +390,82 @@
     <div id="role-card-holder"></div>
     <div class="others" id="role-others"></div>
     <button class="btn full" id="btn-ready">Я готов!</button>
+    <div class="msg" id="role-msg"></div>
   </div>
 </div>
 
-<!-- ═══════════ ЭКРАН 4: ЗАГЛУШКА ИГРЫ (Чанк 2 заменит) ═══════════ -->
-<div class="screen" id="scr-stub">
-  <div class="wrap" style="text-align:center">
-    <div class="title" style="margin-bottom:6px">Бомба активна</div>
-    <div class="muted" id="stub-role"></div>
-    <div class="big-timer" id="stub-timer">5:00</div>
-    <div class="muted">Таймер синхронизирован у всех трёх игроков.<br/>
-      3D-стол и модули появятся в следующем чанке разработки.</div>
-    <div style="margin-top:18px">
-      <button class="btn ghost" id="btn-stub-exit">Выйти</button>
+<!-- ЭКРАН 4: ИГРА -->
+<div class="screen" id="scr-game">
+  <div id="stage3d"></div>
+
+  <div id="hud">
+    <div class="hud-timer" id="hud-timer">5:00</div>
+    <div class="hud-strikes" id="hud-strikes"></div>
+    <div class="hud-mods" id="hud-mods"></div>
+    <button class="hud-exit" id="btn-game-exit">&#10005;</button>
+  </div>
+
+  <div id="mod-panel"></div>
+  <div id="gest-win" style="display:none">
+    <div class="gw-head">НЕМОЙ ПОКАЗЫВАЕТ:</div>
+    <div class="gw-body" id="gw-body"><span class="muted">пока ничего…</span></div>
+  </div>
+
+  <div id="mute-ui">
+    <div class="mtabs" id="mtabs"></div>
+    <div id="mute-main"></div>
+  </div>
+
+  <div id="voice-bar"></div>
+  <div id="qflash"></div>
+  <div id="errflash"></div>
+
+  <div id="confirm-box">
+    <div class="confirm-card">
+      <div class="ct" id="confirm-text"></div>
+      <div class="cb">
+        <button class="btn ghost" id="confirm-no">Отмена</button>
+        <button class="btn danger" id="confirm-yes">Да</button>
+      </div>
     </div>
   </div>
+
+  <div id="dc-overlay">
+    <div style="font-size:40px">&#9888;&#65039;</div>
+    <div style="font-size:17px;font-weight:800" id="dc-title">Игрок отключился</div>
+    <div class="muted" id="dc-sub">Ждём возвращения: 30 сек</div>
+  </div>
 </div>
 
+<!-- ЭКРАН 5: ФИНАЛ -->
+<div class="screen" id="scr-end">
+  <div class="wrap" style="max-width:460px;padding-top:4vh">
+    <div class="end-icon" id="end-icon"></div>
+    <div class="end-title" id="end-title"></div>
+    <div class="end-sub" id="end-sub"></div>
+    <div class="reward-line" id="end-reward"></div>
+    <button class="btn full" id="btn-claim" style="display:none">Получить награду</button>
+    <div style="height:10px"></div>
+    <button class="btn ghost full" id="btn-end-lobby">В лобби</button>
+    <div class="msg" id="end-msg"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 // ============================================================
-//  1,5 Сапёра — Чанк 1: лобби, зал ожидания, роли, демо-таймер.
+//  1,5 Сапёра — полная игра.
+//  Лобби, роли, 3D-стол (Three.js), 4 модуля, жесты Немого,
+//  синхронизация (Supabase Realtime), голос (WebRTC), награды.
 // ============================================================
 
 var SUPABASE_URL = "https://rdxoaalzlwbyjxebxtyo.supabase.co";
 var ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJkeG9hYWx6bHdieWp4ZWJ4dHlvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE5MDA1MzksImV4cCI6MjA5NzQ3NjUzOX0.tRaxzqPoXIvouqoCnT5DTCbSA17mrglU4fuL-bTCRrY";
 var CREATE_SESSION_URL = SUPABASE_URL + "/functions/v1/create-sapper-session";
 var JOIN_SESSION_URL   = SUPABASE_URL + "/functions/v1/join-sapper-session";
+var CLAIM_REWARD_URL   = SUPABASE_URL + "/functions/v1/claim-sapper-reward";
 
-// ── Игрок (same-origin iframe видит хранилище app.html) ─────
 function getPlayer() {
   try {
     var raw = localStorage.getItem("fortuna_player") || sessionStorage.getItem("fortuna_player");
@@ -239,41 +474,107 @@ function getPlayer() {
 }
 var PLAYER = getPlayer();
 
-// ── Состояние ────────────────────────────────────────────────
-var state = {
-  session: null,     // текущая строка coop_sessions
-  pollTimer: null,   // поллинг зала ожидания
-  tickTimer: null,   // тик демо-таймера
-  ready: false,
+// ── Справочники ──────────────────────────────────────────────
+var COLOR_META = {
+  red:    { name: "Красный",    hex: "#e05252" },
+  blue:   { name: "Синий",      hex: "#4a7de0" },
+  yellow: { name: "Жёлтый",     hex: "#e8d24a" },
+  green:  { name: "Зелёный",    hex: "#5ec26a" },
+  orange: { name: "Оранжевый",  hex: "#e0954a" },
+  purple: { name: "Фиолетовый", hex: "#9a5fd0" },
+  white:  { name: "Белый",      hex: "#e8e8e8" },
+  cyan:   { name: "Голубой",    hex: "#4ac8d8" },
 };
+var SEQ_COLORS = ["red", "blue", "green", "yellow"];
+var MODULES = ["wires", "sequence", "code", "dials"];
+var MODULE_META = {
+  wires:    { name: "Провода", num: 1 },
+  sequence: { name: "Кнопки",  num: 2 },
+  code:     { name: "Код",     num: 3 },
+  dials:    { name: "Диски",   num: 4 },
+};
+var SYMBOL_NAMES = {
+  star: "Звезда", cross: "Крест", anchor: "Якорь",
+  skull: "Череп", bolt: "Молния", shield: "Щит",
+};
+function symSvg(key, size, color) {
+  size = size || 30; color = color || "currentColor";
+  var inner = "";
+  if (key === "star") inner = '<polygon points="12,1.5 15,9 22.5,9 16.5,13.7 18.7,21.5 12,16.6 5.3,21.5 7.5,13.7 1.5,9 9,9" fill="' + color + '"/>';
+  else if (key === "cross") inner = '<path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7z" fill="' + color + '"/>';
+  else if (key === "anchor") inner = '<g stroke="' + color + '" stroke-width="2.2" fill="none"><circle cx="12" cy="4.6" r="2.4"/><path d="M12 7v14M5 13.5c0 4.5 3.2 7.5 7 7.5s7-3 7-7.5"/><path d="M8 10.5h8"/></g>';
+  else if (key === "skull") inner = '<g fill="' + color + '"><circle cx="12" cy="9.6" r="7.2"/><rect x="8.6" y="14.5" width="6.8" height="6" rx="1.4"/></g><circle cx="9.4" cy="9" r="1.9" fill="#101010"/><circle cx="14.6" cy="9" r="1.9" fill="#101010"/><rect x="11.1" y="12.2" width="1.8" height="2.6" fill="#101010"/>';
+  else if (key === "bolt") inner = '<polygon points="13.5,1.5 4,14 10.8,14 9,22.5 20,9.2 12.7,9.2" fill="' + color + '"/>';
+  else if (key === "shield") inner = '<path d="M12 1.8l8.3 3.1v6.3c0 5.2-3.6 9.3-8.3 11.4C7.3 20.5 3.7 16.4 3.7 11.2V4.9z" fill="' + color + '"/>';
+  return '<svg viewBox="0 0 24 24" style="width:' + size + 'px;height:' + size + 'px;display:block">' + inner + '</svg>';
+}
+function shapeSvg(key, size, color) {
+  size = size || 26; color = color || "#e9f1eb";
+  var inner = "";
+  if (key === "circle") inner = '<circle cx="12" cy="12" r="9" fill="' + color + '"/>';
+  else if (key === "square") inner = '<rect x="3.5" y="3.5" width="17" height="17" rx="2" fill="' + color + '"/>';
+  else if (key === "triangle") inner = '<polygon points="12,3 21.5,20.5 2.5,20.5" fill="' + color + '"/>';
+  else if (key === "star") inner = '<polygon points="12,1.5 15,9 22.5,9 16.5,13.7 18.7,21.5 12,16.6 5.3,21.5 7.5,13.7 1.5,9 9,9" fill="' + color + '"/>';
+  return '<svg viewBox="0 0 24 24" style="width:' + size + 'px;height:' + size + 'px;display:block">' + inner + '</svg>';
+}
+var SHAPE_NAMES = { circle: "Круг", square: "Квадрат", triangle: "Треугольник", star: "Звезда" };
+
+// ── Состояние ────────────────────────────────────────────────
+var state = { session: null, pollTimer: null, tickTimer: null, inGame: false, ended: false };
+
+var G = null;
+function freshG() {
+  return {
+    step: 0, errors: 0,
+    solved: { wires: false, sequence: false, code: false, dials: false },
+    cutWires: [false, false, false, false, false],
+    seqProgress: 0,
+    codeEntered: "",
+    dialPos: [0, 0, 0, 0],
+    openModule: null,
+    finished: null,
+    finReason: "",
+  };
+}
+
+var GST = null;
+function freshGST() {
+  return {
+    gstep: 0, tab: "wires",
+    wires: { sel: [], marker: null, crossed: [] },
+    sequence: { step: -1, row: [null, null, null, null], shapes: [null, null, null, null] },
+    strokes: { code: [], dials: [] },
+  };
+}
+var INK_MAX = 100, INK_BASE = 3, INK_PER_UNIT = 30;
+var INK = { code: INK_MAX, dials: INK_MAX };
+// Толстая кисть (доля ширины холста): мелкие цифры физически нечитаемы —
+// это и есть защита от обхода лимита чернил мелким письмом.
+var BRUSH_FRAC = 0.045;
 
 // ── Утилиты ──────────────────────────────────────────────────
 function $(id) { return document.getElementById(id); }
-
 function show(id) {
   var scr = document.querySelectorAll(".screen");
   for (var i = 0; i < scr.length; i++) scr[i].classList.remove("on");
   $(id).classList.add("on");
 }
-
 function setMsg(id, text, cls) {
-  var el = $(id);
-  if (!el) return;
+  var el = $(id); if (!el) return;
   el.textContent = text || "";
   el.className = "msg" + (cls ? " " + cls : "");
 }
-
 function esc(s) {
   return String(s == null ? "" : s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function initial(name) { return (name || "?").trim().charAt(0).toUpperCase() || "?"; }
+function fmtSec(total) {
+  if (total < 0) total = 0;
+  var m = Math.floor(total / 60), s = total % 60;
+  return m + ":" + (s < 10 ? "0" : "") + s;
 }
 
-function initial(name) {
-  return (name || "?").trim().charAt(0).toUpperCase() || "?";
-}
-
-// ── Supabase REST (только чтение) ────────────────────────────
 async function sbSelect(path) {
   var res = await fetch(SUPABASE_URL + "/rest/v1/" + path, {
     headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY },
@@ -281,16 +582,10 @@ async function sbSelect(path) {
   if (!res.ok) throw new Error("Ошибка чтения (" + res.status + ")");
   return res.json();
 }
-
-// ── Edge Functions (запись) ──────────────────────────────────
 async function callEF(url, body) {
   var res = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + ANON_KEY,
-      apikey: ANON_KEY,
-    },
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + ANON_KEY, apikey: ANON_KEY },
     body: JSON.stringify(body),
   });
   var data = await res.json();
@@ -298,21 +593,18 @@ async function callEF(url, body) {
   return data;
 }
 
-// ── Выход из мини-игры ───────────────────────────────────────
 function exitGame() {
-  stopPolling();
-  stopTick();
+  stopPolling(); stopTick(); teardownGame();
   try {
     if (window.parent && window.parent !== window &&
         typeof window.parent.closeMgOverlay === "function") {
-      window.parent.closeMgOverlay();
-      return;
+      window.parent.closeMgOverlay(); return;
     }
   } catch (e) {}
   location.href = "../app.html";
 }
 
-// ════════════════ ЭКРАН 1: ЛОББИ ════════════════
+// ════════════════ ЛОББИ ════════════════
 
 async function loadSessions() {
   var listEl = $("sess-list");
@@ -321,34 +613,25 @@ async function loadSessions() {
     var since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     var rows = await sbSelect(
       "coop_sessions?status=eq.waiting&created_at=gte." + encodeURIComponent(since) +
-      "&order=created_at.desc&limit=10&select=id,creator_name,player_count,created_at"
-    );
+      "&order=created_at.desc&limit=10&select=id,creator_name,player_count,created_at");
     if (!rows.length) {
       listEl.innerHTML = '<div class="list-empty">Открытых комнат нет.<br/>Создай свою — и позови друзей!</div>';
       return;
     }
     var html = "";
     for (var i = 0; i < rows.length; i++) {
-      var s = rows[i];
-      var full = s.player_count >= 3;
-      html +=
-        '<div class="sess-row">' +
-          '<div class="sess-ava">' + esc(initial(s.creator_name)) + '</div>' +
-          '<div class="sess-info">' +
-            '<div class="sess-name">Комната ' + esc(s.creator_name) + '</div>' +
-            '<div class="sess-sub">Игроков: ' + s.player_count + ' / 3</div>' +
-          '</div>' +
-          '<button class="btn sm' + (full ? '" disabled' : '"') +
-            ' data-join="' + esc(s.id) + '">' +
-            (full ? 'Заполнена' : 'Войти') + '</button>' +
-        '</div>';
+      var s = rows[i], full = s.player_count >= 3;
+      html += '<div class="sess-row">' +
+        '<div class="sess-ava">' + esc(initial(s.creator_name)) + '</div>' +
+        '<div class="sess-info"><div class="sess-name">Комната ' + esc(s.creator_name) + '</div>' +
+        '<div class="sess-sub">Игроков: ' + s.player_count + ' / 3</div></div>' +
+        '<button class="btn sm' + (full ? '" disabled' : '"') + ' data-join="' + esc(s.id) + '">' +
+        (full ? 'Заполнена' : 'Войти') + '</button></div>';
     }
     listEl.innerHTML = html;
     var btns = listEl.querySelectorAll("[data-join]");
     for (var b = 0; b < btns.length; b++) {
-      btns[b].addEventListener("click", function () {
-        joinRoom(this.getAttribute("data-join"));
-      });
+      btns[b].addEventListener("click", function () { joinRoom(this.getAttribute("data-join")); });
     }
   } catch (e) {
     listEl.innerHTML = '<div class="list-empty">Не удалось загрузить список: ' + esc(e.message) + '</div>';
@@ -356,195 +639,144 @@ async function loadSessions() {
 }
 
 async function createRoom() {
-  var btn = $("btn-create");
-  btn.disabled = true;
+  var btn = $("btn-create"); btn.disabled = true;
   setMsg("home-msg", "Создаём комнату…");
   try {
     var data = await callEF(CREATE_SESSION_URL, { player_id: PLAYER.id });
     state.session = data.session;
+    setMsg("home-msg", "");
     enterWaiting();
-  } catch (e) {
-    setMsg("home-msg", e.message, "err");
-  }
+  } catch (e) { setMsg("home-msg", e.message, "err"); }
   btn.disabled = false;
 }
 
 async function joinRoom(sessionId) {
   setMsg("home-msg", "Входим в комнату…");
   try {
-    var data = await callEF(JOIN_SESSION_URL, {
-      player_id: PLAYER.id, session_id: sessionId, action: "join",
-    });
+    var data = await callEF(JOIN_SESSION_URL, { player_id: PLAYER.id, session_id: sessionId, action: "join" });
     state.session = data.session;
     setMsg("home-msg", "");
-    if (state.session.status === "active") {
-      showRole(); // мы стали третьим — игра стартовала
-    } else {
-      enterWaiting();
-    }
+    if (state.session.status === "active") showRole();
+    else enterWaiting();
   } catch (e) {
     setMsg("home-msg", e.message, "err");
     loadSessions();
   }
 }
 
-// ════════════════ ЭКРАН 2: ЗАЛ ОЖИДАНИЯ ════════════════
+// ════════════════ ЗАЛ ОЖИДАНИЯ ════════════════
 
-function enterWaiting() {
-  show("scr-wait");
-  renderSlots();
-  startPolling();
-}
+function enterWaiting() { show("scr-wait"); renderSlots(); startPolling(); }
 
 function renderSlots() {
-  var s = state.session;
-  if (!s) return;
-  var players = s.players || [];
-  var html = "";
+  var s = state.session; if (!s) return;
+  var players = s.players || [], html = "";
   for (var i = 0; i < 3; i++) {
     var p = players[i];
     if (p) {
-      html +=
-        '<div class="slot filled">' +
-          '<div class="sava">' + esc(initial(p.name)) + '</div>' +
-          '<div class="sname">' + esc(p.name) + (p.id === PLAYER.id ? " (ты)" : "") + '</div>' +
-        '</div>';
+      html += '<div class="slot filled"><div class="sava">' + esc(initial(p.name)) + '</div>' +
+        '<div class="sname">' + esc(p.name) + (p.id === PLAYER.id ? " (ты)" : "") + '</div></div>';
     } else {
-      html +=
-        '<div class="slot">' +
-          '<div class="sava" style="opacity:.35">?</div>' +
-          '<div class="swait">Свободно</div>' +
-        '</div>';
+      html += '<div class="slot"><div class="sava" style="opacity:.35">?</div><div class="swait">Свободно</div></div>';
     }
   }
   $("wait-slots").innerHTML = html;
   $("wait-sub").textContent = "Комната " + (s.creator_name || "");
-  $("wait-status").innerHTML = players.length >= 3
-    ? "Все в сборе!"
+  $("wait-status").innerHTML = players.length >= 3 ? "Все в сборе!"
     : '<span class="dots">Ожидание игроков (' + players.length + ' / 3)</span>';
 }
 
-function startPolling() {
-  stopPolling();
-  state.pollTimer = setInterval(pollSession, 2500);
-}
-
-function stopPolling() {
-  if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; }
-}
+function startPolling() { stopPolling(); state.pollTimer = setInterval(pollSession, 2500); }
+function stopPolling() { if (state.pollTimer) { clearInterval(state.pollTimer); state.pollTimer = null; } }
 
 async function pollSession() {
   if (!state.session) return;
   try {
     var rows = await sbSelect("coop_sessions?id=eq." + state.session.id + "&select=*");
     if (!rows.length) {
-      // Сессию распустили / протухла
-      stopPolling();
-      state.session = null;
-      show("scr-home");
-      setMsg("home-msg", "Комната была распущена", "err");
-      loadSessions();
+      stopPolling(); state.session = null;
+      show("scr-home"); setMsg("home-msg", "Комната была распущена", "err"); loadSessions();
       return;
     }
     state.session = rows[0];
-    if (state.session.status === "active") {
-      stopPolling();
-      showRole();
-      return;
-    }
+    if (state.session.status === "active") { stopPolling(); showRole(); return; }
     renderSlots();
-  } catch (e) { /* тихо повторим на следующем тике */ }
+  } catch (e) {}
 }
 
 async function leaveRoom() {
-  var btn = $("btn-leave");
-  btn.disabled = true;
-  stopPolling();
+  var btn = $("btn-leave"); btn.disabled = true; stopPolling();
   try {
     if (state.session) {
-      await callEF(JOIN_SESSION_URL, {
-        player_id: PLAYER.id, session_id: state.session.id, action: "leave",
-      });
+      await callEF(JOIN_SESSION_URL, { player_id: PLAYER.id, session_id: state.session.id, action: "leave" });
     }
-  } catch (e) { /* даже при ошибке возвращаемся в лобби */ }
-  state.session = null;
-  btn.disabled = false;
-  show("scr-home");
-  loadSessions();
+  } catch (e) {}
+  state.session = null; btn.disabled = false;
+  show("scr-home"); loadSessions();
 }
 
-// ════════════════ ЭКРАН 3: РОЛЬ ════════════════
+// ════════════════ РОЛИ ════════════════
 
 var ROLE_META = {
   mute: {
-    name: "НЕМОЙ",
-    icon: "&#129296;", // 🤐
-    cls: "role-mute",
+    name: "НЕМОЙ", icon: "&#129296;", cls: "role-mute",
     desc: "Ты видишь <b>все инструкции</b> по обезвреживанию — но говорить не можешь. " +
-          "Ты слышишь остальных, а отвечать придётся <b>жестами и визуальными сигналами</b>. " +
-          "Модули бомбы тебе не видны.",
+      "Ты слышишь остальных, а отвечать придётся <b>жестами и визуальными сигналами</b>. " +
+      "Модули бомбы тебе не видны.",
   },
   deaf: {
-    name: "ГЛУХОЙ",
-    icon: "&#129467;", // 🧏
-    cls: "role-deaf",
+    name: "ГЛУХОЙ", icon: "&#129467;", cls: "role-deaf",
     desc: "Ты видишь <b>весь стол в цвете</b> и всё, что делает Слепой, видишь жесты Немого — " +
-          "но <b>ничего не слышишь</b>. Твой голос — единственный мост: " +
-          "переводи жесты Немого словами для Слепого.",
+      "но <b>ничего не слышишь</b>. Твой голос — единственный мост: " +
+      "переводи жесты Немого словами для Слепого.",
   },
   blind: {
-    name: "СЛЕПОЙ",
-    icon: "&#128374;", // 🕶
-    cls: "role-blind",
+    name: "СЛЕПОЙ", icon: "&#128374;", cls: "role-blind",
     desc: "Ты видишь мир <b>чёрно-белым</b> — только провода, кнопки и таймер. " +
-          "Инструкций у тебя нет. Зато <b>все действия с бомбой выполняешь ты</b>. " +
-          "Слушай Глухого — и режь.",
+      "Инструкций у тебя нет. Зато <b>все действия с бомбой выполняешь ты</b>. " +
+      "Слушай Глухого — и режь.",
   },
 };
 
 function myRole() {
   var s = state.session;
-  if (!s || !s.roles) return null;
-  return s.roles[PLAYER.id] || null;
+  return (s && s.roles && s.roles[PLAYER.id]) || null;
 }
-
+function roleOf(pid) {
+  var s = state.session;
+  return (s && s.roles && s.roles[pid]) || null;
+}
+function CFG() { return (state.session && state.session.game_config) || null; }
 function gameStartAt() {
   var s = state.session;
   if (!s || !s.started_at) return 0;
-  var intro = (s.game_config && s.game_config.introSec) || 20;
+  var intro = (CFG() && CFG().introSec) || 20;
   return new Date(s.started_at).getTime() + intro * 1000;
 }
 
 function showRole() {
   var role = myRole();
-  if (!role) { // на всякий случай — данные ещё не доехали
-    setTimeout(pollOnceThenRole, 800);
-    return;
-  }
+  if (!role) { setTimeout(pollOnceThenRole, 800); return; }
   var meta = ROLE_META[role];
   $("role-card-holder").innerHTML =
-    '<div class="role-card ' + meta.cls + '">' +
-      '<div class="ricon">' + meta.icon + '</div>' +
-      '<div class="rname">' + meta.name + '</div>' +
-      '<div class="rdesc">' + meta.desc + '</div>' +
-    '</div>';
-
-  // Кто есть кто (остальные двое)
-  var s = state.session;
-  var chips = "";
-  var players = s.players || [];
+    '<div class="role-card ' + meta.cls + '"><div class="ricon">' + meta.icon + '</div>' +
+    '<div class="rname">' + meta.name + '</div><div class="rdesc">' + meta.desc + '</div></div>';
+  var s = state.session, chips = "", players = s.players || [];
   for (var i = 0; i < players.length; i++) {
     var p = players[i];
     if (p.id === PLAYER.id) continue;
     var r = s.roles[p.id];
-    chips += '<div class="other-chip"><b>' + esc(p.name) + '</b> — ' +
-      (ROLE_META[r] ? ROLE_META[r].name : "?") + '</div>';
+    chips += '<div class="other-chip"><b>' + esc(p.name) + '</b> — ' + (ROLE_META[r] ? ROLE_META[r].name : "?") + '</div>';
   }
   $("role-others").innerHTML = chips;
-
-  state.ready = false;
-  $("btn-ready").disabled = false;
+  var rb = $("btn-ready");
+  rb.disabled = false;
+  rb.textContent = canSpeak() ? "Я готов! (включить микрофон)" : "Я готов!";
   show("scr-role");
+
+  if (!G) G = freshG();
+  if (!GST) GST = freshGST();
+  initChannel();
   startTick();
 }
 
@@ -557,53 +789,1418 @@ async function pollOnceThenRole() {
   else { show("scr-home"); setMsg("home-msg", "Не удалось получить роль — попробуй ещё раз", "err"); }
 }
 
-// ════════════════ ЭКРАН 4: ДЕМО-ТАЙМЕР (заглушка) ════════════════
+// ════════════════ ТАЙМЕР / ФАЗЫ ════════════════
 
-function fmtSec(total) {
-  if (total < 0) total = 0;
-  var m = Math.floor(total / 60);
-  var sec = total % 60;
-  return m + ":" + (sec < 10 ? "0" : "") + sec;
-}
-
-function startTick() {
-  stopTick();
-  state.tickTimer = setInterval(tick, 250);
-  tick();
-}
-
-function stopTick() {
-  if (state.tickTimer) { clearInterval(state.tickTimer); state.tickTimer = null; }
-}
+function startTick() { stopTick(); state.tickTimer = setInterval(tick, 250); tick(); }
+function stopTick() { if (state.tickTimer) { clearInterval(state.tickTimer); state.tickTimer = null; } }
 
 function tick() {
   var s = state.session;
-  if (!s || s.status !== "active") return;
-  var startAt = gameStartAt();
-  var now = Date.now();
+  if (!s || s.status === "waiting" || state.ended) return;
+  var startAt = gameStartAt(), now = Date.now();
 
-  // Фаза 1: обратный отсчёт до старта (экран роли)
   if (now < startAt) {
     var left = Math.ceil((startAt - now) / 1000);
-    $("role-countdown-hint").textContent = "Игра начнётся через " + left + " сек";
+    var hint = $("role-countdown-hint");
+    if (hint) hint.textContent = "Игра начнётся через " + left + " сек";
+    return;
+  }
+  if (!state.inGame) enterGameScreen();
+
+  var timerSec = (CFG() && CFG().timerSec) || 300;
+  var remain = Math.floor((startAt + timerSec * 1000 - now) / 1000);
+  var el = $("hud-timer");
+  if (el) {
+    el.textContent = fmtSec(remain);
+    el.style.color = remain <= 60 ? "#ff5b5b" : "#ffb0b0";
+  }
+  updateTimerTexture(remain);
+  if (remain <= 0 && G && !G.finished) finishGame("lost", "time");
+}
+
+// ════════════════ ИГРОВОЙ ЭКРАН ════════════════
+
+function enterGameScreen() {
+  state.inGame = true;
+  show("scr-game");
+  var role = myRole();
+
+  if (role === "mute") {
+    $("mute-ui").classList.add("on");
+    $("stage3d").style.display = "none";
+    renderMuteUI();
+  } else {
+    build3D(role);
+    if (role === "blind") $("stage3d").classList.add("blindfx");
+    if (role === "deaf") { $("gest-win").style.display = "block"; renderGestureWin(); }
+  }
+  renderHud();
+  renderVoiceBar();
+  initVoice();
+  rtSend({ t: "sync_req" });
+}
+
+function teardownGame() {
+  state.inGame = false;
+  destroy3D();
+  leaveChannel();
+  stopVoice();
+  clearDc();
+  $("mute-ui").classList.remove("on");
+  $("gest-win").style.display = "none";
+  $("mod-panel").classList.remove("on");
+  $("stage3d").style.display = "";
+  $("stage3d").classList.remove("blindfx");
+}
+
+function renderHud() {
+  if (!G) return;
+  var maxErr = (CFG() && CFG().maxErrors) || 5;
+  var sh = "";
+  for (var i = 0; i < maxErr; i++) {
+    sh += '<div class="strike">' + (i < G.errors ? "&#10005;" : "") + '</div>';
+  }
+  $("hud-strikes").innerHTML = sh;
+
+  var mh = "";
+  for (var m = 0; m < MODULES.length; m++) {
+    var id = MODULES[m], meta = MODULE_META[id];
+    var cls = "mod-dot" + (G.solved[id] ? " solved" : "") + (G.openModule === id ? " open" : "");
+    mh += '<button class="' + cls + '" data-mod="' + id + '">' + meta.num + '&middot;' + meta.name + '</button>';
+  }
+  $("hud-mods").innerHTML = mh;
+  var role = myRole();
+  var dots = document.querySelectorAll("#hud-mods [data-mod]");
+  for (var d = 0; d < dots.length; d++) {
+    dots[d].addEventListener("click", function () {
+      if (role === "blind") openModule(this.getAttribute("data-mod"));
+    });
+  }
+}
+
+function flashError() {
+  var el = $("errflash");
+  el.classList.add("on");
+  setTimeout(function () { el.classList.remove("on"); }, 120);
+}
+
+var _confirmCb = null;
+function askConfirm(text, cb) {
+  $("confirm-text").innerHTML = text;
+  _confirmCb = cb;
+  $("confirm-box").classList.add("on");
+}
+function closeConfirm(yes) {
+  $("confirm-box").classList.remove("on");
+  var cb = _confirmCb; _confirmCb = null;
+  if (yes && cb) cb();
+}
+
+// ════════════════ МОДУЛИ ════════════════
+
+function openModule(id) {
+  if (!G || G.finished) return;
+  G.openModule = (G.openModule === id ? null : id);
+  bumpState();
+  renderModulePanel();
+  renderHud();
+  update3DHighlight();
+}
+
+function renderModulePanel() {
+  var panel = $("mod-panel");
+  var role = myRole();
+  if (role === "mute") return;
+  var id = G && G.openModule;
+  if (!id) { panel.classList.remove("on"); return; }
+  panel.classList.add("on");
+
+  var meta = MODULE_META[id];
+  var html = '<div class="mp-head"><div class="mp-title">' + meta.num + ". " + meta.name + '</div>';
+  if (role === "blind") html += '<button class="mp-close" id="mp-close">&#10005;</button>';
+  html += '</div>';
+
+  if (G.solved[id]) {
+    html += '<div class="mp-solved">&#10004; Модуль обезврежен</div>';
+    panel.innerHTML = html;
+    bindPanelClose();
     return;
   }
 
-  // Фаза 2: игра идёт — переключаемся на заглушку стола
-  if (!$("scr-stub").classList.contains("on")) {
-    var meta = ROLE_META[myRole()] || { name: "?" };
-    $("stub-role").textContent = "Твоя роль: " + meta.name;
-    show("scr-stub");
-  }
-  var timerSec = (s.game_config && s.game_config.timerSec) || 300;
-  var remain = Math.floor((startAt + timerSec * 1000 - now) / 1000);
-  var el = $("stub-timer");
-  el.textContent = fmtSec(remain);
-  el.className = "big-timer" + (remain <= 60 ? " warn" : "");
-  if (remain <= 0) stopTick();
+  if (id === "wires") html += wiresHtml(role);
+  else if (id === "sequence") html += sequenceHtml(role);
+  else if (id === "code") html += codeHtml(role);
+  else if (id === "dials") html += dialsHtml(role);
+
+  panel.innerHTML = html;
+  bindPanelClose();
+  bindModuleHandlers(id, role);
 }
 
-// ════════════════ РЕКОННЕКТ ПРИ ЗАГРУЗКЕ ════════════════
+function bindPanelClose() {
+  var c = $("mp-close");
+  if (c) c.addEventListener("click", function () { openModule(G.openModule); });
+}
+
+function wiresHtml(role) {
+  var cfg = CFG().modules.wires, html = '<div class="muted" style="margin-bottom:4px">' +
+    (role === "blind" ? "Выбери провод и перережь. Цвета тебе не видны." : "Слепой видит провода серыми.") + '</div>';
+  for (var i = 0; i < 5; i++) {
+    var col = role === "deaf" ? COLOR_META[cfg.colors[i]].hex : "#9a9a9a";
+    var cut = G.cutWires[i];
+    html += '<div class="wire-row' + (cut || role !== "blind" ? " disabled" : "") + '" data-wire="' + i + '">' +
+      '<div class="wire-num">' + (i + 1) + '</div>' +
+      '<div class="wire-line' + (cut ? " cut" : "") + '" style="background:' + col + '"></div></div>';
+  }
+  return html;
+}
+
+function sequenceHtml(role) {
+  var html = '<div class="muted" style="margin-bottom:4px">Нажми 4 кнопки в верном порядке. Ошибка сбрасывает прогресс.</div>';
+  html += '<div class="seq-grid">';
+  for (var i = 0; i < 4; i++) {
+    var col = role === "deaf" ? COLOR_META[SEQ_COLORS[i]].hex : "#8a8a8a";
+    html += '<button class="seq-btn" data-seq="' + i + '" style="background:' + col + '">' + (i + 1) + '</button>';
+  }
+  html += '</div><div class="seq-prog">';
+  for (var d = 0; d < 4; d++) {
+    html += '<div class="seq-dot' + (d < G.seqProgress ? " done" : "") + '"></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function codeHtml(role) {
+  var shown = G.codeEntered;
+  var disp = "";
+  for (var i = 0; i < 4; i++) disp += i < shown.length ? shown[i] : "&#8226;";
+  var html = '<div class="muted" style="margin-bottom:4px">Введи 4-значный код и подтверди.</div>' +
+    '<div class="code-display">' + disp + '</div>';
+  if (role === "blind") {
+    html += '<div class="keypad">';
+    var keys = [1,2,3,4,5,6,7,8,9,"del",0,"ok"];
+    for (var k = 0; k < keys.length; k++) {
+      var v = keys[k];
+      var label = v === "del" ? "&#9003;" : (v === "ok" ? "&#10004;" : v);
+      html += '<button class="key" data-key="' + v + '">' + label + '</button>';
+    }
+    html += '</div>';
+  }
+  return html;
+}
+
+function dialsHtml(role) {
+  var cfg = CFG().modules.dials;
+  var html = '<div class="muted" style="margin-bottom:4px">Выставь на всех дисках нужные символы и подтверди.</div>' +
+    '<div class="dials-grid">';
+  for (var i = 0; i < 4; i++) {
+    var sym = cfg.symbols[G.dialPos[i]];
+    html += '<div class="dial"><div style="font-size:10px;color:var(--soft);font-weight:800">ДИСК ' + (i + 1) + '</div>' +
+      '<div class="dial-face">' + symSvg(sym, 34, "#dfe8e2") + '</div>' +
+      '<div class="dial-name">' + SYMBOL_NAMES[sym] + '</div>';
+    if (role === "blind") {
+      html += '<div class="dial-ctr"><button data-rot="' + i + ':-1">&#8249;</button><button data-rot="' + i + ':1">&#8250;</button></div>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+  if (role === "blind") html += '<button class="btn full" id="dials-ok" style="margin-top:6px">Подтвердить</button>';
+  return html;
+}
+
+function bindModuleHandlers(id, role) {
+  if (role !== "blind" || G.finished) return;
+
+  if (id === "wires") {
+    var rows = document.querySelectorAll("#mod-panel [data-wire]");
+    for (var i = 0; i < rows.length; i++) {
+      rows[i].addEventListener("click", function () {
+        var w = parseInt(this.getAttribute("data-wire"), 10);
+        if (G.cutWires[w] || G.solved.wires) return;
+        askConfirm("Перерезать провод &#8470;" + (w + 1) + "?", function () { doCutWire(w); });
+      });
+    }
+  }
+
+  if (id === "sequence") {
+    var btns = document.querySelectorAll("#mod-panel [data-seq]");
+    for (var b = 0; b < btns.length; b++) {
+      btns[b].addEventListener("click", function () {
+        var k = parseInt(this.getAttribute("data-seq"), 10);
+        askConfirm("Нажать кнопку &#8470;" + (k + 1) + "?", function () { doSeqPress(k); });
+      });
+    }
+  }
+
+  if (id === "code") {
+    var keys = document.querySelectorAll("#mod-panel [data-key]");
+    for (var kk = 0; kk < keys.length; kk++) {
+      keys[kk].addEventListener("click", function () {
+        var v = this.getAttribute("data-key");
+        if (v === "del") { G.codeEntered = G.codeEntered.slice(0, -1); bumpState(); renderModulePanel(); }
+        else if (v === "ok") {
+          if (G.codeEntered.length < 4) return;
+          askConfirm("Ввести код <b>" + esc(G.codeEntered) + "</b>?", doCodeSubmit);
+        } else if (G.codeEntered.length < 4) {
+          G.codeEntered += v; bumpState(); renderModulePanel();
+        }
+      });
+    }
+  }
+
+  if (id === "dials") {
+    var rots = document.querySelectorAll("#mod-panel [data-rot]");
+    for (var r = 0; r < rots.length; r++) {
+      rots[r].addEventListener("click", function () {
+        var pair = this.getAttribute("data-rot").split(":");
+        var di = parseInt(pair[0], 10), dir = parseInt(pair[1], 10);
+        G.dialPos[di] = (G.dialPos[di] + dir + 6) % 6;
+        bumpState(); renderModulePanel();
+      });
+    }
+    var ok = $("dials-ok");
+    if (ok) ok.addEventListener("click", function () {
+      askConfirm("Подтвердить положение всех дисков?", doDialsSubmit);
+    });
+  }
+}
+
+function registerError() {
+  G.errors++;
+  flashError();
+  var maxErr = (CFG() && CFG().maxErrors) || 5;
+  if (G.errors >= maxErr) { bumpState(); finishGame("lost", "errors"); return true; }
+  return false;
+}
+function checkAllSolved() {
+  if (G.solved.wires && G.solved.sequence && G.solved.code && G.solved.dials) {
+    finishGame("won", "");
+    return true;
+  }
+  return false;
+}
+
+function doCutWire(w) {
+  var cfg = CFG().modules.wires;
+  G.cutWires[w] = true;
+  if (w === cfg.targetIndex) { G.solved.wires = true; }
+  else if (registerError()) return;
+  bumpState(); renderModulePanel(); renderHud(); update3DLeds();
+  checkAllSolved();
+}
+
+function doSeqPress(k) {
+  var cfg = CFG().modules.sequence;
+  if (cfg.order[G.seqProgress] === k) {
+    G.seqProgress++;
+    if (G.seqProgress >= 4) G.solved.sequence = true;
+  } else {
+    G.seqProgress = 0;
+    if (registerError()) return;
+  }
+  bumpState(); renderModulePanel(); renderHud(); update3DLeds();
+  checkAllSolved();
+}
+
+function doCodeSubmit() {
+  var cfg = CFG().modules.code;
+  if (G.codeEntered === cfg.digits.join("")) { G.solved.code = true; }
+  else { G.codeEntered = ""; if (registerError()) return; }
+  bumpState(); renderModulePanel(); renderHud(); update3DLeds();
+  checkAllSolved();
+}
+
+function doDialsSubmit() {
+  var cfg = CFG().modules.dials, ok = true;
+  for (var i = 0; i < 4; i++) if (G.dialPos[i] !== cfg.targets[i]) ok = false;
+  if (ok) { G.solved.dials = true; }
+  else if (registerError()) return;
+  bumpState(); renderModulePanel(); renderHud(); update3DLeds();
+  checkAllSolved();
+}
+
+// ════════════════ СИНХРОНИЗАЦИЯ (Supabase Realtime) ════════════════
+
+var RT = { client: null, channel: null, online: {}, joined: false };
+
+function initChannel() {
+  if (RT.channel || !state.session) return;
+  if (!window.supabase) { console.warn("supabase-js не загрузился"); return; }
+  RT.client = window.supabase.createClient(SUPABASE_URL, ANON_KEY);
+  RT.channel = RT.client.channel("sapper:" + state.session.id, {
+    config: { broadcast: { self: false }, presence: { key: PLAYER.id } },
+  });
+  RT.channel
+    .on("broadcast", { event: "m" }, function (e) { onMsg(e.payload); })
+    .on("presence", { event: "sync" }, onPresenceSync)
+    .subscribe(function (status) {
+      if (status === "SUBSCRIBED") {
+        RT.joined = true;
+        RT.channel.track({ id: PLAYER.id, name: PLAYER.login, role: myRole() });
+      }
+    });
+}
+
+function leaveChannel() {
+  try { if (RT.channel) { RT.channel.unsubscribe(); } } catch (e) {}
+  RT.channel = null; RT.joined = false; RT.online = {};
+}
+
+function rtSend(payload) {
+  try {
+    if (RT.channel && RT.joined) {
+      RT.channel.send({ type: "broadcast", event: "m", payload: payload });
+    }
+  } catch (e) {}
+}
+
+function bumpState() {
+  if (!G) return;
+  G.step++;
+  rtSend({ t: "st", g: G });
+}
+function bumpGesture() {
+  if (!GST) return;
+  GST.gstep++;
+  var lite = { gstep: GST.gstep, tab: GST.tab, wires: GST.wires, sequence: GST.sequence };
+  rtSend({ t: "g", g: lite });
+}
+
+function onMsg(p) {
+  if (!p || !p.t) return;
+  switch (p.t) {
+    case "st":
+      if (p.g && (!G || p.g.step >= G.step)) {
+        var wasFinished = G && G.finished;
+        G = p.g;
+        if (state.inGame) { renderModulePanel(); renderHud(); update3DLeds(); update3DHighlight(); renderMuteStatus(); }
+        if (G.finished && !wasFinished && !state.ended) showEnd(G.finished, G.finReason);
+      }
+      break;
+    case "g":
+      if (p.g && GST && p.g.gstep >= GST.gstep) {
+        GST.gstep = p.g.gstep; GST.tab = p.g.tab;
+        GST.wires = p.g.wires; GST.sequence = p.g.sequence;
+        renderGestureWin();
+      }
+      break;
+    case "stk":
+      if (GST && GST.strokes[p.m]) {
+        GST.strokes[p.m].push(p.s);
+        drawGestureCanvas(p.m);
+      }
+      break;
+    case "clr":
+      if (GST && GST.strokes[p.m]) { GST.strokes[p.m] = []; drawGestureCanvas(p.m); }
+      break;
+    case "q": quickFlash(p.k); break;
+    case "fin":
+      if (G && !G.finished) {
+        G.finished = p.r; G.finReason = p.reason || "";
+        if (!state.ended) showEnd(p.r, p.reason || "");
+      }
+      break;
+    case "sync_req":
+      rtSend({ t: "sync", g: G, gst: GST });
+      break;
+    case "sync":
+      if (p.g && (!G || p.g.step > G.step)) {
+        G = p.g;
+        if (state.inGame) { renderModulePanel(); renderHud(); update3DLeds(); renderMuteStatus(); }
+        if (G.finished && !state.ended) showEnd(G.finished, G.finReason);
+      }
+      if (p.gst && GST && p.gst.gstep > GST.gstep) {
+        GST = p.gst;
+        renderGestureWin();
+        if (myRole() === "mute" && state.inGame) renderMuteUI();
+      }
+      break;
+    case "mic": setPeerMuted(p.id, p.muted); break;
+    case "rtc": onRtcSignal(p); break;
+  }
+}
+
+// ── Presence / дисконнекты ──────────────────────────────────
+var DC = { timer: null, deadline: 0, who: "" };
+
+function onPresenceSync() {
+  if (!RT.channel) return;
+  var ps = RT.channel.presenceState();
+  RT.online = {};
+  for (var key in ps) RT.online[key] = true;
+  renderVoiceBar();
+
+  if (!state.inGame || !G || G.finished || state.ended) { clearDc(); return; }
+  var players = (state.session && state.session.players) || [];
+  var missing = [];
+  for (var i = 0; i < players.length; i++) {
+    if (!RT.online[players[i].id] && players[i].id !== PLAYER.id) missing.push(players[i].name);
+  }
+  if (missing.length) startDc(missing.join(", "));
+  else clearDc();
+
+  syncPeers();
+}
+
+function startDc(names) {
+  if (DC.timer) { DC.who = names; return; }
+  DC.who = names;
+  DC.deadline = Date.now() + 30000;
+  $("dc-overlay").classList.add("on");
+  DC.timer = setInterval(function () {
+    var left = Math.ceil((DC.deadline - Date.now()) / 1000);
+    $("dc-title").textContent = "Отключился: " + DC.who;
+    $("dc-sub").textContent = "Ждём возвращения: " + Math.max(0, left) + " сек";
+    if (left <= 0) {
+      clearDc();
+      if (G && !G.finished) finishGame("aborted", "dc");
+    }
+  }, 500);
+}
+function clearDc() {
+  if (DC.timer) { clearInterval(DC.timer); DC.timer = null; }
+  var el = $("dc-overlay");
+  if (el) el.classList.remove("on");
+}
+
+// ════════════════ ФИНАЛ ════════════════
+
+function finishGame(result, reason) {
+  if (!G || G.finished) return;
+  G.finished = result; G.finReason = reason;
+  G.step++;
+  rtSend({ t: "fin", r: result, reason: reason });
+  rtSend({ t: "st", g: G });
+  if (result !== "won" && myRole() === "blind") {
+    callEF(JOIN_SESSION_URL, {
+      player_id: PLAYER.id, session_id: state.session.id,
+      action: "finish", result: result,
+    }).catch(function () {});
+  }
+  showEnd(result, reason);
+}
+
+function showEnd(result, reason) {
+  if (state.ended) return;
+  state.ended = true;
+  stopTick(); clearDc(); stopVoice();
+  show("scr-end");
+
+  var icon = $("end-icon"), title = $("end-title"), sub = $("end-sub");
+  $("end-reward").textContent = "";
+  $("btn-claim").style.display = "none";
+
+  if (result === "won") {
+    icon.innerHTML = "&#127881;";
+    title.textContent = "Бомба обезврежена!";
+    sub.textContent = "Отличная командная работа. Каждый может забрать свою награду.";
+    var bc = $("btn-claim");
+    bc.style.display = ""; bc.disabled = false; bc.textContent = "Получить награду";
+  } else if (result === "aborted") {
+    icon.innerHTML = "&#128268;";
+    title.textContent = "Игра распущена";
+    sub.textContent = "Игрок не вернулся за 30 секунд. Награды нет.";
+  } else {
+    icon.innerHTML = "&#128165;";
+    title.textContent = "БУМ! Бомба взорвалась";
+    sub.textContent = reason === "time" ? "Время вышло." : "Слишком много ошибок (5 из 5).";
+  }
+}
+
+async function claimReward() {
+  var btn = $("btn-claim");
+  btn.disabled = true; btn.textContent = "Начисляем…";
+  try {
+    var r = await callEF(CLAIM_REWARD_URL, { player_id: PLAYER.id, session_id: state.session.id });
+    if (r.parts_gained > 0 || r.xp_gained > 0 || r.rare_gained > 0) {
+      $("end-reward").textContent = "+" + r.parts_gained + " деталей · +" + r.xp_gained +
+        " XP" + (r.rare_gained > 0 ? " · +" + r.rare_gained + " редких" : "") +
+        " (победа №" + r.wins_today + " за сегодня)";
+    } else {
+      $("end-reward").textContent = "Дневные награды сапёра исчерпаны — завтра снова по полной!";
+    }
+    btn.textContent = "Награда получена";
+  } catch (e) {
+    setMsg("end-msg", e.message, "err");
+    btn.disabled = false; btn.textContent = "Получить награду";
+  }
+}
+
+function backToLobby() {
+  state.ended = false; state.inGame = false;
+  teardownGame();
+  G = null; GST = null; INK = { code: INK_MAX, dials: INK_MAX };
+  state.session = null;
+  stopTick();
+  show("scr-home");
+  loadSessions();
+}
+
+// ════════════════ 3D-СТОЛ (Three.js) ════════════════
+
+var T3 = { renderer: null, scene: null, camera: null, raf: null,
+  plates: {}, leds: {}, timerTex: null, timerCanvas: null, clock: 0 };
+
+function build3D(role) {
+  if (!window.THREE) { $("stage3d").style.background = "#0a0f0c"; return; }
+  var holder = $("stage3d");
+  var W = holder.clientWidth || window.innerWidth;
+  var H = holder.clientHeight || window.innerHeight;
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.setSize(W, H);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  holder.appendChild(renderer.domElement);
+
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x090d0a);
+  scene.fog = new THREE.Fog(0x090d0a, 8, 18);
+
+  var camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 60);
+  if (role === "blind") { camera.position.set(0, 4.4, 3.1); }
+  else { camera.position.set(2.6, 3.6, 3.8); }
+  camera.lookAt(0, 1.25, 0);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+  var spot = new THREE.SpotLight(0xfff2d8, 1.1, 22, Math.PI / 4.5, 0.5, 1.2);
+  spot.position.set(0.5, 7, 1.5);
+  spot.castShadow = true;
+  spot.shadow.mapSize.set(1024, 1024);
+  scene.add(spot);
+  var warm = new THREE.PointLight(0xffb060, 0.35, 10);
+  warm.position.set(-2.4, 2.2, -1.2);
+  scene.add(warm);
+
+  var floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(30, 30),
+    new THREE.MeshStandardMaterial({ color: 0x11150f, roughness: 1 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  var wood = new THREE.MeshStandardMaterial({ color: 0x6b4a2f, roughness: 0.85 });
+  var top = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.24, 3.4), wood);
+  top.position.y = 1.0; top.receiveShadow = true; top.castShadow = true;
+  scene.add(top);
+  var legGeo = new THREE.BoxGeometry(0.22, 1.0, 0.22);
+  var legPos = [[-2.8, 0.5, 1.4], [2.8, 0.5, 1.4], [-2.8, 0.5, -1.4], [2.8, 0.5, -1.4]];
+  for (var l = 0; l < 4; l++) {
+    var leg = new THREE.Mesh(legGeo, wood);
+    leg.position.set(legPos[l][0], legPos[l][1], legPos[l][2]);
+    leg.castShadow = true;
+    scene.add(leg);
+  }
+
+  var metal = new THREE.MeshStandardMaterial({ color: 0x3a4046, metalness: 0.65, roughness: 0.35 });
+  var bomb = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.5, 1.9), metal);
+  bomb.position.set(0, 1.38, 0);
+  bomb.castShadow = true; bomb.receiveShadow = true;
+  scene.add(bomb);
+
+  var platePos = [[-0.72, 0.46], [0.72, 0.46], [-0.72, -0.46], [0.72, -0.46]];
+  for (var m = 0; m < MODULES.length; m++) {
+    var id = MODULES[m];
+    var plate = new THREE.Mesh(
+      new THREE.BoxGeometry(1.15, 0.07, 0.72),
+      new THREE.MeshStandardMaterial({ color: 0x232a30, metalness: 0.4, roughness: 0.5 })
+    );
+    plate.position.set(platePos[m][0], 1.665, platePos[m][1]);
+    plate.userData.moduleId = id;
+    scene.add(plate);
+    T3.plates[id] = plate;
+
+    var led = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.05, 0.12),
+      new THREE.MeshStandardMaterial({ color: 0x551515, emissive: 0x992222, emissiveIntensity: 0.9 })
+    );
+    led.position.set(platePos[m][0] + 0.44, 1.71, platePos[m][1] - 0.24);
+    scene.add(led);
+    T3.leds[id] = led;
+
+    var label = makeLabelSprite(MODULE_META[id].num + " " + MODULE_META[id].name);
+    label.position.set(platePos[m][0], 1.95, platePos[m][1]);
+    scene.add(label);
+  }
+
+  T3.timerCanvas = document.createElement("canvas");
+  T3.timerCanvas.width = 256; T3.timerCanvas.height = 96;
+  T3.timerTex = new THREE.CanvasTexture(T3.timerCanvas);
+  var timerPanel = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.15, 0.42),
+    new THREE.MeshBasicMaterial({ map: T3.timerTex })
+  );
+  timerPanel.position.set(0, 1.38, 0.955);
+  scene.add(timerPanel);
+  updateTimerTexture(300);
+
+  var wireCols = [0xe05252, 0x4a7de0, 0xe8d24a, 0x5ec26a, 0x9a5fd0];
+  for (var w = 0; w < 5; w++) {
+    var wm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.028, 0.028, 1.7, 8),
+      new THREE.MeshStandardMaterial({ color: wireCols[w], roughness: 0.6 })
+    );
+    wm.rotation.x = Math.PI / 2;
+    wm.position.set(-1.32 + 0.05 * w, 1.67, 0);
+    scene.add(wm);
+  }
+
+  if (role === "deaf") {
+    var mug = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.16, 0.14, 0.3, 14),
+      new THREE.MeshStandardMaterial({ color: 0xb44c3a, roughness: 0.7 })
+    );
+    mug.position.set(2.35, 1.27, 0.95); mug.castShadow = true;
+    scene.add(mug);
+
+    var papers = new THREE.Mesh(
+      new THREE.BoxGeometry(0.85, 0.03, 0.6),
+      new THREE.MeshStandardMaterial({ color: 0xd8d2c0, roughness: 0.95 })
+    );
+    papers.position.set(-2.3, 1.14, -0.9);
+    papers.rotation.y = 0.35;
+    scene.add(papers);
+
+    var lampBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.1, 0.16, 0.5, 10),
+      new THREE.MeshStandardMaterial({ color: 0x2a2f33, metalness: 0.6 })
+    );
+    lampBase.position.set(2.55, 1.37, -1.15);
+    scene.add(lampBase);
+    var bulb = new THREE.Mesh(
+      new THREE.SphereGeometry(0.09, 10, 10),
+      new THREE.MeshStandardMaterial({ color: 0xffd890, emissive: 0xffb050, emissiveIntensity: 1.4 })
+    );
+    bulb.position.set(2.55, 1.68, -1.15);
+    scene.add(bulb);
+
+    var driver = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 0.55, 6),
+      new THREE.MeshStandardMaterial({ color: 0xcc8833 })
+    );
+    driver.rotation.z = Math.PI / 2.3;
+    driver.position.set(1.0, 1.15, 1.25);
+    scene.add(driver);
+  }
+
+  T3.renderer = renderer; T3.scene = scene; T3.camera = camera;
+
+  var ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
+  renderer.domElement.addEventListener("pointerdown", function (ev) {
+    if (myRole() !== "blind" || !G || G.finished) return;
+    var rect = renderer.domElement.getBoundingClientRect();
+    v2.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
+    v2.y = -((ev.clientY - rect.top) / rect.height) * 2 + 1;
+    ray.setFromCamera(v2, camera);
+    var meshes = [];
+    for (var id in T3.plates) meshes.push(T3.plates[id]);
+    var hits = ray.intersectObjects(meshes);
+    if (hits.length) openModule(hits[0].object.userData.moduleId);
+  });
+
+  window.addEventListener("resize", on3DResize);
+  animate3D();
+  update3DLeds();
+}
+
+function makeLabelSprite(text) {
+  var c = document.createElement("canvas");
+  c.width = 256; c.height = 64;
+  var ctx = c.getContext("2d");
+  ctx.fillStyle = "rgba(8,12,9,0.72)";
+  ctx.fillRect(0, 0, 256, 64);
+  ctx.fillStyle = "#e9f1eb";
+  ctx.font = "bold 30px sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(text, 128, 34);
+  var tex = new THREE.CanvasTexture(c);
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+  sp.scale.set(0.95, 0.24, 1);
+  return sp;
+}
+
+function updateTimerTexture(remain) {
+  if (!T3.timerCanvas) return;
+  if (updateTimerTexture._last === remain) return;
+  updateTimerTexture._last = remain;
+  var ctx = T3.timerCanvas.getContext("2d");
+  ctx.fillStyle = "#100a0a";
+  ctx.fillRect(0, 0, 256, 96);
+  ctx.fillStyle = remain <= 60 ? "#ff3838" : "#ff6b5b";
+  ctx.font = "bold 62px monospace";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(fmtSec(Math.max(0, remain)), 128, 52);
+  T3.timerTex.needsUpdate = true;
+}
+
+function update3DLeds() {
+  if (!T3.scene || !G) return;
+  for (var id in T3.leds) {
+    var led = T3.leds[id];
+    if (G.solved[id]) {
+      led.material.color.setHex(0x155525);
+      led.material.emissive.setHex(0x22cc44);
+    } else {
+      led.material.color.setHex(0x551515);
+      led.material.emissive.setHex(0x992222);
+    }
+  }
+}
+
+function update3DHighlight() {
+  if (!T3.scene || !G) return;
+  for (var id in T3.plates) {
+    T3.plates[id].material.color.setHex(G.openModule === id ? 0x3a4a38 : 0x232a30);
+  }
+}
+
+function animate3D() {
+  if (!T3.renderer) return;
+  T3.raf = requestAnimationFrame(animate3D);
+  T3.clock += 0.008;
+  if (T3.camera) {
+    T3.camera.position.x += Math.sin(T3.clock) * 0.0009;
+    T3.camera.lookAt(0, 1.25, 0);
+  }
+  T3.renderer.render(T3.scene, T3.camera);
+}
+
+function on3DResize() {
+  if (!T3.renderer) return;
+  var holder = $("stage3d");
+  var W = holder.clientWidth || window.innerWidth;
+  var H = holder.clientHeight || window.innerHeight;
+  T3.renderer.setSize(W, H);
+  T3.camera.aspect = W / H;
+  T3.camera.updateProjectionMatrix();
+}
+
+function destroy3D() {
+  if (T3.raf) cancelAnimationFrame(T3.raf);
+  window.removeEventListener("resize", on3DResize);
+  if (T3.renderer) {
+    try {
+      T3.renderer.dispose();
+      if (T3.renderer.domElement && T3.renderer.domElement.parentNode) {
+        T3.renderer.domElement.parentNode.removeChild(T3.renderer.domElement);
+      }
+    } catch (e) {}
+  }
+  T3 = { renderer: null, scene: null, camera: null, raf: null, plates: {}, leds: {}, timerTex: null, timerCanvas: null, clock: 0 };
+}
+
+// ════════════════ UI НЕМОГО ════════════════
+
+function renderMuteUI() {
+  if (myRole() !== "mute" || !CFG()) return;
+  renderMuteTabs();
+  renderMuteMain();
+}
+
+function renderMuteTabs() {
+  var html = "";
+  for (var m = 0; m < MODULES.length; m++) {
+    var id = MODULES[m], meta = MODULE_META[id];
+    var cls = "mtab" + (GST.tab === id ? " act" : "") + (G && G.solved[id] ? " solved" : "");
+    html += '<button class="' + cls + '" data-mtab="' + id + '">' +
+      '<span class="mnum">' + (G && G.solved[id] ? "&#10004;" : meta.num) + '</span>' + meta.name + '</button>';
+  }
+  $("mtabs").innerHTML = html;
+  var tabs = document.querySelectorAll("#mtabs [data-mtab]");
+  for (var t = 0; t < tabs.length; t++) {
+    tabs[t].addEventListener("click", function () {
+      GST.tab = this.getAttribute("data-mtab");
+      bumpGesture();
+      renderMuteUI();
+    });
+  }
+}
+
+function renderMuteStatus() {
+  if (myRole() === "mute" && state.inGame) renderMuteTabs();
+}
+
+function renderMuteMain() {
+  var id = GST.tab, cfg = CFG().modules[id];
+  var html = "";
+
+  html += '<div class="instr-card"><div class="instr-title">СЕКРЕТНАЯ ИНСТРУКЦИЯ — МОДУЛЬ ' +
+    MODULE_META[id].num + ' &#171;' + MODULE_META[id].name.toUpperCase() + '&#187;</div><div class="instr-body">';
+
+  if (id === "wires") {
+    var tc = COLOR_META[cfg.colors[cfg.targetIndex]];
+    if (cfg.gesture === "mix") {
+      html += 'Перерезать провод цвета: <b style="color:' + tc.hex + '">' + tc.name + '</b>.<br/>' +
+        'Покажи <b>два базовых цвета</b>, которые при смешении дают нужный.';
+    } else if (cfg.gesture === "position") {
+      html += 'Перерезать провод <b>&#8470;' + (cfg.targetIndex + 1) + '</b> (слева направо).<br/>' +
+        'Поставь маркер на нужную позицию.';
+    } else {
+      html += 'Цвета проводов на бомбе (слева направо):<div class="chips-row" style="margin:6px 0">';
+      for (var i = 0; i < 5; i++) {
+        var c = COLOR_META[cfg.colors[i]];
+        html += '<span class="chip" style="background:' + c.hex + ';cursor:default">' + (i + 1) + '</span>';
+      }
+      html += '</div>Нужный: <b style="color:' + tc.hex + '">' + tc.name + '</b>. Зачеркни четыре <b>НЕ</b>нужных цвета.';
+    }
+  } else if (id === "sequence") {
+    html += 'Порядок нажатий:<div class="chips-row" style="margin:6px 0">';
+    for (var s = 0; s < 4; s++) {
+      var cm = COLOR_META[SEQ_COLORS[cfg.order[s]]];
+      html += '<span class="chip" style="background:' + cm.hex + ';cursor:default">' + (s + 1) + '</span>';
+    }
+    html += '</div>';
+    if (cfg.gesture === "stepwise") html += 'Показывай цвета <b>по одному</b>, по мере нажатий.';
+    else if (cfg.gesture === "row") html += 'Выложи <b>весь ряд</b> из четырёх цветов по порядку.';
+    else html += 'У вас с Глухим общий <b>шифр форм</b> (он видит легенду). Показывай ФОРМЫ по порядку.';
+  } else if (id === "code") {
+    html += 'Код: <b style="font-size:20px;letter-spacing:6px">' + cfg.digits.join(" ") + '</b><br/>' +
+      'Чернил хватит примерно на <b>2 цифры</b> — рисуй фрагменты, намёки и ассоциации!';
+  } else if (id === "dials") {
+    html += 'Целевые символы дисков:<div class="chips-row" style="margin:6px 0">';
+    for (var d = 0; d < 4; d++) {
+      var sym = cfg.symbols[cfg.targets[d]];
+      html += '<div style="text-align:center"><div class="gslot fill" style="cursor:default;border-color:var(--gold)">' +
+        symSvg(sym, 26, "#e9f1eb") + '</div><div style="font-size:9px;color:var(--soft);margin-top:2px">' +
+        (d + 1) + ': ' + SYMBOL_NAMES[sym] + '</div></div>';
+    }
+    html += '</div>Рисуй символы маркером — Глухой их назовёт. Чернила ограничены!';
+  }
+  html += '</div></div>';
+
+  html += '<div class="tool-card"><div class="tool-title">ТВОИ ЖЕСТЫ (видит Глухой)</div><div id="tool-area">' +
+    muteToolHtml(id, cfg) + '</div></div>';
+
+  html += '<div class="qbar">' +
+    '<button class="qbtn" data-q="yes" title="Да / верно">&#128077;</button>' +
+    '<button class="qbtn" data-q="no" title="Нет / не то">&#128078;</button>' +
+    '<button class="qbtn" data-q="stop" title="Стоп / подожди">&#9995;</button>' +
+    '<button class="qbtn" data-q="next" title="Дальше / следующий">&#128073;</button>' +
+    '</div>';
+
+  $("mute-main").innerHTML = html;
+  bindMuteTools(id, cfg);
+
+  var qs = document.querySelectorAll("#mute-main [data-q]");
+  for (var q = 0; q < qs.length; q++) {
+    qs[q].addEventListener("click", function () {
+      var k = this.getAttribute("data-q");
+      rtSend({ t: "q", k: k });
+      quickFlash(k);
+    });
+  }
+}
+
+function muteToolHtml(id, cfg) {
+  if (id === "wires") {
+    if (cfg.gesture === "mix") {
+      var base = ["red", "blue", "yellow"], h = '<div class="muted" style="margin-bottom:6px">Выбери 2 базовых цвета:</div><div class="chips-row">';
+      for (var i = 0; i < 3; i++) {
+        var c = COLOR_META[base[i]];
+        h += '<span class="chip' + (GST.wires.sel.indexOf(base[i]) >= 0 ? " sel" : "") +
+          '" data-mix="' + base[i] + '" style="background:' + c.hex + ';width:52px;height:44px"></span>';
+      }
+      return h + '</div>';
+    }
+    if (cfg.gesture === "position") {
+      var h2 = '<div class="muted" style="margin-bottom:6px">Поставь маркер на позицию провода:</div><div class="chips-row">';
+      for (var p = 0; p < 5; p++) {
+        h2 += '<span class="chip" data-pos="' + p + '" style="background:' +
+          (GST.wires.marker === p ? "var(--gold)" : "var(--card2)") + ';border-color:var(--line);color:' +
+          (GST.wires.marker === p ? "#111" : "var(--text)") + ';width:44px;height:44px">' + (p + 1) + '</span>';
+      }
+      return h2 + '</div>';
+    }
+    var h3 = '<div class="muted" style="margin-bottom:6px">Зачеркни 4 неправильных цвета:</div><div class="chips-row">';
+    for (var e = 0; e < 5; e++) {
+      var cc = COLOR_META[cfg.colors[e]];
+      h3 += '<span class="chip' + (GST.wires.crossed.indexOf(cfg.colors[e]) >= 0 ? " crossed" : "") +
+        '" data-cross="' + cfg.colors[e] + '" style="background:' + cc.hex + ';width:48px;height:44px"></span>';
+    }
+    return h3 + '</div>';
+  }
+
+  if (id === "sequence") {
+    if (cfg.gesture === "stepwise") {
+      var st = GST.sequence.step;
+      var big = st >= 0
+        ? '<div class="chip" style="background:' + COLOR_META[SEQ_COLORS[cfg.order[st]]].hex +
+          ';width:76px;height:64px;font-size:20px;cursor:default">' + (st + 1) + '</div>'
+        : '<div class="muted">— скрыто —</div>';
+      return '<div style="display:flex;align-items:center;gap:12px;justify-content:center">' +
+        '<button class="btn ghost sm" data-step="-1">&#8249; Пред.</button>' + big +
+        '<button class="btn ghost sm" data-step="1">След. &#8250;</button></div>' +
+        '<div style="text-align:center;margin-top:8px"><button class="btn ghost sm" data-step="hide">Скрыть</button></div>';
+    }
+    if (cfg.gesture === "row") {
+      var h4 = '<div class="muted" style="margin-bottom:6px">Тапни цвет — он встанет в ряд:</div><div class="chips-row" style="margin-bottom:10px">';
+      for (var rc = 0; rc < 4; rc++) {
+        var col = COLOR_META[SEQ_COLORS[rc]];
+        h4 += '<span class="chip" data-rowcol="' + rc + '" style="background:' + col.hex + ';width:46px;height:40px"></span>';
+      }
+      h4 += '</div><div class="chips-row">';
+      for (var rs = 0; rs < 4; rs++) {
+        var v = GST.sequence.row[rs];
+        h4 += '<div class="gslot' + (v !== null ? " fill" : "") + '" style="' +
+          (v !== null ? "background:" + COLOR_META[SEQ_COLORS[v]].hex + ";border-color:transparent" : "") + '"></div>';
+      }
+      return h4 + '<button class="btn ghost sm" data-rowclear="1" style="margin-left:6px">Сброс</button></div>';
+    }
+    var shapes = Object.keys(cfg.shapeMap);
+    var h5 = '<div class="muted" style="margin-bottom:6px">Шифр форм (Глухой видит легенду). Тапни форму — встанет в ряд:</div><div class="chips-row" style="margin-bottom:10px">';
+    for (var sh = 0; sh < shapes.length; sh++) {
+      h5 += '<span class="chip" data-shape="' + shapes[sh] + '" style="background:var(--card2);border-color:var(--line);width:46px;height:42px">' +
+        shapeSvg(shapes[sh], 24) + '</span>';
+    }
+    h5 += '</div><div class="chips-row">';
+    for (var ss = 0; ss < 4; ss++) {
+      var sv = GST.sequence.shapes[ss];
+      h5 += '<div class="gslot' + (sv ? " fill" : "") + '" style="border-color:var(--line)">' +
+        (sv ? shapeSvg(sv, 22) : "") + '</div>';
+    }
+    return h5 + '<button class="btn ghost sm" data-shapeclear="1" style="margin-left:6px">Сброс</button></div>';
+  }
+
+  var ink = INK[id];
+  return '<div class="ink-wrap"><canvas class="ink-canvas" id="ink-canvas" width="560" height="300"></canvas>' +
+    '<div class="ink-bar-track"><div class="ink-bar-fill" id="ink-fill" style="width:' + ink + '%"></div></div>' +
+    '<div class="ink-row"><span class="muted" style="flex:1">Чернила: <span id="ink-num">' + Math.round(ink) + '</span>%</span>' +
+    '<button class="btn ghost sm" id="ink-clear">Стереть (без возврата чернил)</button></div></div>';
+}
+
+function bindMuteTools(id, cfg) {
+  var mixes = document.querySelectorAll("#tool-area [data-mix]");
+  for (var i = 0; i < mixes.length; i++) {
+    mixes[i].addEventListener("click", function () {
+      var c = this.getAttribute("data-mix");
+      var ix = GST.wires.sel.indexOf(c);
+      if (ix >= 0) GST.wires.sel.splice(ix, 1);
+      else { GST.wires.sel.push(c); if (GST.wires.sel.length > 2) GST.wires.sel.shift(); }
+      bumpGesture(); renderMuteMain();
+    });
+  }
+  var poss = document.querySelectorAll("#tool-area [data-pos]");
+  for (var p = 0; p < poss.length; p++) {
+    poss[p].addEventListener("click", function () {
+      var v = parseInt(this.getAttribute("data-pos"), 10);
+      GST.wires.marker = (GST.wires.marker === v ? null : v);
+      bumpGesture(); renderMuteMain();
+    });
+  }
+  var crosses = document.querySelectorAll("#tool-area [data-cross]");
+  for (var x = 0; x < crosses.length; x++) {
+    crosses[x].addEventListener("click", function () {
+      var c = this.getAttribute("data-cross");
+      var ix = GST.wires.crossed.indexOf(c);
+      if (ix >= 0) GST.wires.crossed.splice(ix, 1);
+      else GST.wires.crossed.push(c);
+      bumpGesture(); renderMuteMain();
+    });
+  }
+
+  var steps = document.querySelectorAll("#tool-area [data-step]");
+  for (var s = 0; s < steps.length; s++) {
+    steps[s].addEventListener("click", function () {
+      var v = this.getAttribute("data-step");
+      if (v === "hide") GST.sequence.step = -1;
+      else {
+        var d = parseInt(v, 10);
+        var ns = GST.sequence.step + d;
+        if (GST.sequence.step === -1 && d > 0) ns = 0;
+        if (ns < -1) ns = -1;
+        if (ns > 3) ns = 3;
+        GST.sequence.step = ns;
+      }
+      bumpGesture(); renderMuteMain();
+    });
+  }
+  var rowcols = document.querySelectorAll("#tool-area [data-rowcol]");
+  for (var rc = 0; rc < rowcols.length; rc++) {
+    rowcols[rc].addEventListener("click", function () {
+      var v = parseInt(this.getAttribute("data-rowcol"), 10);
+      for (var k = 0; k < 4; k++) {
+        if (GST.sequence.row[k] === null) { GST.sequence.row[k] = v; break; }
+      }
+      bumpGesture(); renderMuteMain();
+    });
+  }
+  var rclear = document.querySelector("#tool-area [data-rowclear]");
+  if (rclear) rclear.addEventListener("click", function () {
+    GST.sequence.row = [null, null, null, null];
+    bumpGesture(); renderMuteMain();
+  });
+  var shapes = document.querySelectorAll("#tool-area [data-shape]");
+  for (var sp = 0; sp < shapes.length; sp++) {
+    shapes[sp].addEventListener("click", function () {
+      var v = this.getAttribute("data-shape");
+      for (var k = 0; k < 4; k++) {
+        if (!GST.sequence.shapes[k]) { GST.sequence.shapes[k] = v; break; }
+      }
+      bumpGesture(); renderMuteMain();
+    });
+  }
+  var sclear = document.querySelector("#tool-area [data-shapeclear]");
+  if (sclear) sclear.addEventListener("click", function () {
+    GST.sequence.shapes = [null, null, null, null];
+    bumpGesture(); renderMuteMain();
+  });
+
+  var canvas = $("ink-canvas");
+  if (canvas) initInkCanvas(canvas, id);
+  var ic = $("ink-clear");
+  if (ic) ic.addEventListener("click", function () {
+    GST.strokes[GST.tab] = [];
+    rtSend({ t: "clr", m: GST.tab });
+    redrawInk($("ink-canvas"), GST.tab);
+  });
+}
+
+// ── Чернильный холст ─────────────────────────────────────────
+function initInkCanvas(canvas, moduleId) {
+  redrawInk(canvas, moduleId);
+  var drawing = false, cur = null, buf = [];
+  var flushTimer = null;
+
+  function norm(ev) {
+    var r = canvas.getBoundingClientRect();
+    return [
+      Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width)),
+      Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height)),
+    ];
+  }
+  function flush() {
+    if (buf.length > 1) {
+      rtSend({ t: "stk", m: moduleId, s: buf.slice() });
+      GST.strokes[moduleId].push(buf.slice());
+      buf = [buf[buf.length - 1]];
+    }
+  }
+  canvas.addEventListener("pointerdown", function (ev) {
+    if (INK[moduleId] <= 0) return;
+    ev.preventDefault();
+    try { canvas.setPointerCapture(ev.pointerId); } catch (e) {}
+    drawing = true;
+    INK[moduleId] = Math.max(0, INK[moduleId] - INK_BASE);
+    cur = [norm(ev)];
+    buf = [cur[0]];
+    flushTimer = setInterval(flush, 90);
+    updateInkBar(moduleId);
+  });
+  canvas.addEventListener("pointermove", function (ev) {
+    if (!drawing || INK[moduleId] <= 0) return;
+    ev.preventDefault();
+    var pt = norm(ev), last = cur[cur.length - 1];
+    var dx = pt[0] - last[0], dy = pt[1] - last[1];
+    var dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < 0.008) return;
+    INK[moduleId] = Math.max(0, INK[moduleId] - dist * INK_PER_UNIT);
+    cur.push(pt); buf.push(pt);
+    drawSeg(canvas, last, pt);
+    updateInkBar(moduleId);
+    if (INK[moduleId] <= 0) endStroke();
+  });
+  function endStroke() {
+    if (!drawing) return;
+    drawing = false;
+    clearInterval(flushTimer);
+    flush();
+    cur = null; buf = [];
+  }
+  canvas.addEventListener("pointerup", endStroke);
+  canvas.addEventListener("pointercancel", endStroke);
+}
+
+function updateInkBar(moduleId) {
+  var f = $("ink-fill"), n = $("ink-num");
+  if (f) f.style.width = INK[moduleId] + "%";
+  if (n) n.textContent = Math.round(INK[moduleId]);
+}
+
+function drawSeg(canvas, a, b) {
+  var ctx = canvas.getContext("2d");
+  var w = canvas.width;
+  ctx.strokeStyle = "#1a1a24";
+  ctx.lineWidth = w * BRUSH_FRAC;
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(a[0] * w, a[1] * canvas.height);
+  ctx.lineTo(b[0] * w, b[1] * canvas.height);
+  ctx.stroke();
+}
+
+function redrawInk(canvas, moduleId) {
+  if (!canvas) return;
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#f2ecdc";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  var strokes = (GST && GST.strokes[moduleId]) || [];
+  for (var s = 0; s < strokes.length; s++) {
+    var st = strokes[s];
+    for (var i = 1; i < st.length; i++) drawSeg(canvas, st[i - 1], st[i]);
+  }
+}
+
+// ════════════════ ОКНО ЖЕСТОВ (у Глухого) ════════════════
+
+function renderGestureWin() {
+  if (myRole() !== "deaf" || !state.inGame || !CFG()) return;
+  var id = GST.tab, cfg = CFG().modules[id];
+  var h = '<div class="muted" style="font-size:11px;margin-bottom:5px">Модуль: <b style="color:var(--text)">' +
+    MODULE_META[id].num + ". " + MODULE_META[id].name + '</b></div>';
+
+  if (id === "wires") {
+    if (cfg.gesture === "mix") {
+      if (GST.wires.sel.length) {
+        h += '<div class="chips-row">';
+        for (var i = 0; i < GST.wires.sel.length; i++) {
+          if (i > 0) h += '<span style="font-size:20px;font-weight:900">+</span>';
+          h += '<span class="chip" style="background:' + COLOR_META[GST.wires.sel[i]].hex + ';width:50px;height:44px;cursor:default"></span>';
+        }
+        h += '<span style="font-size:20px;font-weight:900">= ?</span></div>' +
+          '<div class="muted" style="font-size:11px;margin-top:5px">Смешай в голове и скажи Слепому НОМЕР провода этого цвета</div>';
+      } else h += '<span class="muted">выбирает цвета…</span>';
+    } else if (cfg.gesture === "position") {
+      h += '<div class="chips-row">';
+      for (var p = 0; p < 5; p++) {
+        h += '<span class="chip" style="background:' + (GST.wires.marker === p ? "var(--gold)" : "var(--card2)") +
+          ';border-color:var(--line);color:' + (GST.wires.marker === p ? "#111" : "var(--soft)") + ';cursor:default;width:38px;height:36px">' + (p + 1) + '</span>';
+      }
+      h += '</div>';
+    } else {
+      h += '<div class="chips-row">';
+      for (var e = 0; e < 5; e++) {
+        var col = cfg.colors[e];
+        h += '<span class="chip' + (GST.wires.crossed.indexOf(col) >= 0 ? " crossed" : "") +
+          '" style="background:' + COLOR_META[col].hex + ';cursor:default;width:40px;height:38px"></span>';
+      }
+      h += '</div><div class="muted" style="font-size:11px;margin-top:5px">Незачёркнутый цвет — нужный. Найди его номер на бомбе.</div>';
+    }
+  } else if (id === "sequence") {
+    if (cfg.gesture === "stepwise") {
+      var st = GST.sequence.step;
+      h += st >= 0
+        ? '<div style="display:flex;align-items:center;gap:10px"><span class="muted">Шаг ' + (st + 1) + ':</span>' +
+          '<span class="chip" style="background:' + COLOR_META[SEQ_COLORS[cfg.order[st]]].hex + ';width:60px;height:50px;cursor:default"></span></div>'
+        : '<span class="muted">пока скрыто…</span>';
+    } else if (cfg.gesture === "row") {
+      h += '<div class="chips-row">';
+      for (var r = 0; r < 4; r++) {
+        var v = GST.sequence.row[r];
+        h += '<div class="gslot' + (v !== null ? " fill" : "") + '" style="cursor:default;' +
+          (v !== null ? "background:" + COLOR_META[SEQ_COLORS[v]].hex + ";border-color:transparent" : "") + '"></div>';
+      }
+      h += '</div>';
+    } else {
+      h += '<div class="muted" style="font-size:10px;margin-bottom:4px">ЛЕГЕНДА ШИФРА:</div><div class="chips-row" style="margin-bottom:6px">';
+      for (var key in cfg.shapeMap) {
+        h += '<div style="display:flex;align-items:center;gap:3px;background:var(--card2);border-radius:8px;padding:3px 6px">' +
+          shapeSvg(key, 16) + '<span style="font-size:14px">&#8594;</span>' +
+          '<span style="width:16px;height:16px;border-radius:4px;background:' + COLOR_META[cfg.shapeMap[key]].hex + ';display:inline-block"></span></div>';
+      }
+      h += '</div><div class="chips-row">';
+      for (var sq = 0; sq < 4; sq++) {
+        var sv = GST.sequence.shapes[sq];
+        h += '<div class="gslot' + (sv ? " fill" : "") + '" style="cursor:default;border-color:var(--line)">' + (sv ? shapeSvg(sv, 20) : "") + '</div>';
+      }
+      h += '</div>';
+    }
+  } else {
+    h += '<canvas class="ink-canvas" id="gw-canvas" width="280" height="150" style="background:#f2ecdc"></canvas>';
+    if (id === "dials") {
+      h += '<div class="muted" style="font-size:10px;margin:5px 0 3px">СПРАВОЧНИК СИМВОЛОВ:</div><div class="chips-row">';
+      var syms = CFG().modules.dials.symbols;
+      for (var y = 0; y < syms.length; y++) {
+        h += '<div style="text-align:center">' + symSvg(syms[y], 18, "#c9d4cc") +
+          '<div style="font-size:8px;color:var(--soft)">' + SYMBOL_NAMES[syms[y]] + '</div></div>';
+      }
+      h += '</div>';
+    }
+  }
+  $("gw-body").innerHTML = h;
+  drawGestureCanvas(id);
+}
+
+function drawGestureCanvas(moduleId) {
+  if (myRole() !== "deaf") return;
+  if (!GST || GST.tab !== moduleId) return;
+  var c = $("gw-canvas");
+  if (c) redrawInk(c, moduleId);
+}
+
+function quickFlash(k) {
+  var icons = { yes: "&#128077;", no: "&#128078;", stop: "&#9995;", next: "&#128073;" };
+  var el = $("qflash");
+  el.innerHTML = icons[k] || "&#10067;";
+  el.style.display = "block";
+  clearTimeout(el._t);
+  el._t = setTimeout(function () { el.style.display = "none"; }, 1600);
+}
+
+// ════════════════ ГОЛОС (WebRTC) ════════════════
+
+var AUDIO = { stream: null, muted: false, peers: {}, els: {}, peerMuted: {}, inited: false };
+
+function canSpeak() { var r = myRole(); return r === "deaf" || r === "blind"; }
+function canHear()  { var r = myRole(); return r === "mute" || r === "blind"; }
+
+async function requestMic() {
+  if (!canSpeak() || AUDIO.stream) return true;
+  try {
+    AUDIO.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    return true;
+  } catch (e) {
+    setMsg("role-msg", "Микрофон не разрешён — остальные тебя не услышат!", "err");
+    return false;
+  }
+}
+
+function initVoice() {
+  if (AUDIO.inited) return;
+  AUDIO.inited = true;
+  requestMic().then(function () { syncPeers(); renderVoiceBar(); });
+  document.addEventListener("pointerdown", unlockAudio, { once: true });
+}
+
+function unlockAudio() {
+  for (var id in AUDIO.els) {
+    try { AUDIO.els[id].play().catch(function () {}); } catch (e) {}
+  }
+}
+
+function peerIds() {
+  var players = (state.session && state.session.players) || [];
+  var out = [];
+  for (var i = 0; i < players.length; i++) {
+    if (players[i].id !== PLAYER.id) out.push(players[i].id);
+  }
+  return out;
+}
+
+function syncPeers() {
+  var ids = peerIds();
+  for (var i = 0; i < ids.length; i++) {
+    var pid = ids[i];
+    if (!RT.online[pid]) continue;
+    if (!AUDIO.peers[pid] && PLAYER.id < pid) createPeer(pid, true);
+  }
+}
+
+function createPeer(pid, initiator) {
+  var pc = new RTCPeerConnection({
+    iceServers: [{ urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] }],
+  });
+  AUDIO.peers[pid] = pc;
+  if (AUDIO.stream && canSpeak()) {
+    AUDIO.stream.getTracks().forEach(function (tr) {
+      tr.enabled = !AUDIO.muted;
+      pc.addTrack(tr, AUDIO.stream);
+    });
+  }
+  pc.onicecandidate = function (e) {
+    if (e.candidate) rtSend({ t: "rtc", to: pid, from: PLAYER.id, kind: "ice", cand: e.candidate });
+  };
+  pc.ontrack = function (e) {
+    if (!canHear()) return;
+    var el = AUDIO.els[pid];
+    if (!el) {
+      el = document.createElement("audio");
+      el.autoplay = true;
+      el.setAttribute("playsinline", "");
+      document.body.appendChild(el);
+      AUDIO.els[pid] = el;
+    }
+    el.srcObject = e.streams[0];
+    el.play().catch(function () {});
+  };
+  pc.onconnectionstatechange = function () {
+    if (pc.connectionState === "failed" || pc.connectionState === "closed") {
+      try { pc.close(); } catch (e) {}
+      if (AUDIO.peers[pid] === pc) delete AUDIO.peers[pid];
+    }
+  };
+  if (initiator) {
+    pc.createOffer().then(function (offer) {
+      return pc.setLocalDescription(offer);
+    }).then(function () {
+      rtSend({ t: "rtc", to: pid, from: PLAYER.id, kind: "offer", sdp: pc.localDescription });
+    }).catch(function () {});
+  }
+  return pc;
+}
+
+function onRtcSignal(p) {
+  if (p.to !== PLAYER.id) return;
+  var pid = p.from;
+  var pc = AUDIO.peers[pid];
+  if (p.kind === "offer") {
+    if (pc) { try { pc.close(); } catch (e) {} delete AUDIO.peers[pid]; }
+    pc = createPeer(pid, false);
+    pc.setRemoteDescription(new RTCSessionDescription(p.sdp)).then(function () {
+      return pc.createAnswer();
+    }).then(function (ans) {
+      return pc.setLocalDescription(ans);
+    }).then(function () {
+      rtSend({ t: "rtc", to: pid, from: PLAYER.id, kind: "answer", sdp: pc.localDescription });
+    }).catch(function () {});
+  } else if (p.kind === "answer") {
+    if (pc) pc.setRemoteDescription(new RTCSessionDescription(p.sdp)).catch(function () {});
+  } else if (p.kind === "ice") {
+    if (pc) pc.addIceCandidate(new RTCIceCandidate(p.cand)).catch(function () {});
+  }
+}
+
+function toggleMic() {
+  if (!canSpeak() || !AUDIO.stream) return;
+  AUDIO.muted = !AUDIO.muted;
+  AUDIO.stream.getTracks().forEach(function (t) { t.enabled = !AUDIO.muted; });
+  rtSend({ t: "mic", id: PLAYER.id, muted: AUDIO.muted });
+  renderVoiceBar();
+}
+
+function setPeerMuted(pid, muted) {
+  AUDIO.peerMuted[pid] = muted;
+  renderVoiceBar();
+}
+
+function renderVoiceBar() {
+  if (!state.inGame) return;
+  var players = (state.session && state.session.players) || [];
+  var html = "";
+  for (var i = 0; i < players.length; i++) {
+    var p = players[i];
+    var r = roleOf(p.id);
+    var me = p.id === PLAYER.id;
+    var online = me || RT.online[p.id];
+    var mic;
+    if (r === "mute") mic = "&#129296;";
+    else {
+      var muted = me ? AUDIO.muted : AUDIO.peerMuted[p.id];
+      mic = muted ? "&#128263;" : "&#127908;";
+    }
+    html += '<div class="vchip' + (me ? " me" : "") + (online ? "" : " offline") + '"' +
+      (me && canSpeak() ? ' id="vc-me" title="Тап — мут/анмут"' : "") + '>' +
+      '<span class="vmic">' + mic + '</span><span>' + esc(p.name) + (me ? " (ты)" : "") + '</span>' +
+      '<span class="vrole">' + (ROLE_META[r] ? ROLE_META[r].name : "") + '</span></div>';
+  }
+  $("voice-bar").innerHTML = html;
+  var mv = $("vc-me");
+  if (mv) mv.addEventListener("click", toggleMic);
+}
+
+function stopVoice() {
+  for (var pid in AUDIO.peers) { try { AUDIO.peers[pid].close(); } catch (e) {} }
+  for (var id in AUDIO.els) {
+    try { AUDIO.els[id].srcObject = null; AUDIO.els[id].remove(); } catch (e) {}
+  }
+  if (AUDIO.stream) {
+    try { AUDIO.stream.getTracks().forEach(function (t) { t.stop(); }); } catch (e) {}
+  }
+  AUDIO = { stream: null, muted: false, peers: {}, els: {}, peerMuted: {}, inited: false };
+}
+
+// ════════════════ РЕКОННЕКТ И ИНИЦИАЛИЗАЦИЯ ════════════════
 
 async function tryResume() {
   try {
@@ -612,17 +2209,23 @@ async function tryResume() {
     var rows = await sbSelect(
       "coop_sessions?status=in.(waiting,active)&players=cs." + contains +
       "&created_at=gte." + encodeURIComponent(since) +
-      "&order=created_at.desc&limit=1&select=*"
-    );
+      "&order=created_at.desc&limit=1&select=*");
     if (!rows.length) return false;
-    state.session = rows[0];
-    if (state.session.status === "active") showRole();
-    else enterWaiting();
+    var s = rows[0];
+    if (s.status === "active") {
+      var intro = (s.game_config && s.game_config.introSec) || 20;
+      var timerSec = (s.game_config && s.game_config.timerSec) || 300;
+      var endAt = new Date(s.started_at).getTime() + (intro + timerSec) * 1000;
+      if (Date.now() > endAt) return false; // игра уже закончилась
+      state.session = s;
+      showRole();
+    } else {
+      state.session = s;
+      enterWaiting();
+    }
     return true;
   } catch (e) { return false; }
 }
-
-// ════════════════ ИНИЦИАЛИЗАЦИЯ ════════════════
 
 function init() {
   if (!PLAYER || !PLAYER.id) {
@@ -630,21 +2233,31 @@ function init() {
       '<div style="display:flex;height:100%;align-items:center;justify-content:center;' +
       'flex-direction:column;gap:14px;padding:24px;text-align:center">' +
       '<div style="font-size:17px;font-weight:700">Нужен вход в игру</div>' +
-      '<div style="color:#90a698;font-size:14px">Открой «1,5 Сапёра» из приложения Fortuna</div>' +
+      '<div style="color:#90a698;font-size:14px">Открой &#171;1,5 Сапёра&#187; из приложения Fortuna</div>' +
       '</div>';
     return;
   }
 
   $("btn-exit-home").addEventListener("click", exitGame);
-  $("btn-stub-exit").addEventListener("click", exitGame);
   $("btn-create").addEventListener("click", createRoom);
   $("btn-refresh").addEventListener("click", loadSessions);
   $("btn-leave").addEventListener("click", leaveRoom);
+
   $("btn-ready").addEventListener("click", function () {
-    state.ready = true;
-    this.disabled = true;
-    this.textContent = "Ждём остальных…";
+    var b = this;
+    b.disabled = true;
+    b.textContent = "Готов! Ждём старта…";
+    requestMic();
   });
+
+  $("btn-game-exit").addEventListener("click", function () {
+    askConfirm("Выйти из игры? Команда останется без тебя.", exitGame);
+  });
+  $("confirm-no").addEventListener("click", function () { closeConfirm(false); });
+  $("confirm-yes").addEventListener("click", function () { closeConfirm(true); });
+
+  $("btn-claim").addEventListener("click", claimReward);
+  $("btn-end-lobby").addEventListener("click", backToLobby);
 
   tryResume().then(function (resumed) {
     if (!resumed) {
