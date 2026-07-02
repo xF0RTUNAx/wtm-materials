@@ -290,7 +290,7 @@
     margin-bottom: 12px;
   }
   .events-banner { cursor: pointer; }
-  .events-promo-banner { cursor: default; background: #0f2918; }
+  .events-promo-banner { cursor: pointer; background: #0f2918; }
   .events-banner-particle {
     position: absolute; border-radius: 50%; background: #dce6ea;
     animation: events-sparkle 2.1s infinite;
@@ -320,7 +320,7 @@
   .events-promo-chip {
     display: inline-flex; align-items: center; background: #112d1e;
     border-radius: 8px; padding: 7px 10px; font-size: 11px; font-weight: 650;
-    color: #9fb4c4; width: fit-content;
+    color: #8fe0a3; width: fit-content;
   }
 </style>
   <!-- Этап 5: model-viewer для 3D-моделей GLB -->
@@ -931,16 +931,16 @@
         + "</div>"
         + "</div>"
         + "</button>"
-        + "<div class=\"events-promo-banner\">"
+        + "<button class=\"events-promo-banner\" onclick=\"renderCoopGames()\">"
         + "<div class=\"events-banner-inner\">"
         + "<div class=\"events-banner-img-wrap\"><img src=\"res/bomb_defuse_logo.webp\" alt=\"\" /></div>"
         + "<div class=\"events-banner-content\">"
         + "<div class=\"events-banner-title-row\"><span class=\"events-banner-title\">&#1057;&#1086;&#1074;&#1084;&#1077;&#1089;&#1090;&#1085;&#1099;&#1077; &#1080;&#1075;&#1088;&#1099;</span></div>"
         + "<div class=\"events-banner-sub\">&#171;1,5 &#1089;&#1072;&#1087;&#1105;&#1088;&#1072;&#187; &#1080; &#1076;&#1088;&#1091;&#1075;&#1080;&#1077; &#1082;&#1086;&#1086;&#1087;-&#1088;&#1077;&#1078;&#1080;&#1084;&#1099;</div>"
-        + "<div class=\"events-promo-chip\">&#1042; &#1088;&#1072;&#1079;&#1088;&#1072;&#1073;&#1086;&#1090;&#1082;&#1077;</div>"
+        + "<div class=\"events-promo-chip\">&#1048;&#1075;&#1088;&#1072;&#1090;&#1100; &#8594;</div>"
         + "</div>"
         + "</div>"
-        + "</div>"
+        + "</button>"
         + "<div class=\"logout-row\"><button class=\"logout-link\" onclick=\"logout()\">&#1042;&#1099;&#1081;&#1090;&#1080;</button></div>"
         + "</div></div>";
 
@@ -1578,6 +1578,60 @@
     }
 
     renderApp();
+  </script>
+
+  <!-- Этап 12: Совместные игры (1,5 Сапёра) -->
+  <script>
+    // Экран выбора совместных игр (открывается с промо-баннера профиля)
+    function renderCoopGames() {
+      if (typeof setActiveTab === "function") setActiveTab("profile");
+      var app = document.getElementById("app-content");
+      if (!app) return;
+
+      app.innerHTML =
+        "<div class=\"card\">"
+        + "<div style=\"display:flex;align-items:center;gap:10px;margin-bottom:14px\">"
+        + "<button onclick=\"renderProfile && renderProfile()\" style=\"background:var(--surface-2);color:var(--text);"
+        + "border:none;border-radius:var(--radius-sm);padding:8px 12px;font-size:13px;"
+        + "cursor:pointer;font-family:inherit\">&#8592; &#1055;&#1088;&#1086;&#1092;&#1080;&#1083;&#1100;</button>"
+        + "<div style=\"font-size:15px;font-weight:700\">&#1057;&#1086;&#1074;&#1084;&#1077;&#1089;&#1090;&#1085;&#1099;&#1077; &#1080;&#1075;&#1088;&#1099;</div>"
+        + "</div>"
+        + "<div style=\"font-size:12px;color:var(--text-soft);margin-bottom:12px;line-height:1.5\">"
+        + "&#1050;&#1086;&#1086;&#1087;&#1077;&#1088;&#1072;&#1090;&#1080;&#1074;&#1085;&#1099;&#1077; &#1088;&#1077;&#1078;&#1080;&#1084;&#1099; &#1076;&#1083;&#1103; &#1080;&#1075;&#1088;&#1099; &#1089; &#1076;&#1088;&#1091;&#1079;&#1100;&#1103;&#1084;&#1080; &#1080; &#1089;&#1086;&#1082;&#1083;&#1072;&#1085;&#1086;&#1074;&#1094;&#1072;&#1084;&#1080;.</div>"
+        // Карточка «1,5 Сапёра»
+        + "<div style=\"background:#0f2918;border-radius:var(--radius-sm);overflow:hidden;margin-bottom:8px\">"
+        + "<div style=\"display:grid;grid-template-columns:96px 1fr;align-items:center;gap:12px;padding:12px 14px 12px 12px\">"
+        + "<img src=\"res/bomb_defuse_logo.webp\" alt=\"\" style=\"width:100%;height:auto;display:block\" />"
+        + "<div style=\"display:flex;flex-direction:column;gap:6px;min-width:0\">"
+        + "<div style=\"font-size:15px;font-weight:650;color:#fff\">&#171;1,5 &#1089;&#1072;&#1087;&#1105;&#1088;&#1072;&#187;</div>"
+        + "<div style=\"font-size:11px;color:#9fc7ab;line-height:1.4\">3 &#1080;&#1075;&#1088;&#1086;&#1082;&#1072; &middot; &#1088;&#1086;&#1083;&#1080; &#1053;&#1077;&#1084;&#1086;&#1081;/&#1043;&#1083;&#1091;&#1093;&#1086;&#1081;/&#1057;&#1083;&#1077;&#1087;&#1086;&#1081; &middot; 5 &#1084;&#1080;&#1085;&#1091;&#1090; &middot; &#1085;&#1091;&#1078;&#1077;&#1085; &#1084;&#1080;&#1082;&#1088;&#1086;&#1092;&#1086;&#1085;</div>"
+        + "<button onclick=\"launchCoopGame('sapper')\" style=\"background:#14381f;color:#8fe0a3;border:1px solid #2c4a34;"
+        + "border-radius:8px;padding:8px 10px;font-size:12.5px;font-weight:650;cursor:pointer;font-family:inherit;width:fit-content\">"
+        + "&#1048;&#1075;&#1088;&#1072;&#1090;&#1100; &#8594;</button>"
+        + "</div></div></div>"
+        + "<div style=\"font-size:11px;color:var(--text-soft);text-align:center;margin-top:10px\">"
+        + "&#1053;&#1086;&#1074;&#1099;&#1077; &#1082;&#1086;&#1086;&#1087;-&#1088;&#1077;&#1078;&#1080;&#1084;&#1099; &#1087;&#1086;&#1103;&#1074;&#1103;&#1090;&#1089;&#1103; &#1079;&#1076;&#1077;&#1089;&#1100; &#1087;&#1086;&#1079;&#1078;&#1077;</div>"
+        + "</div>";
+    }
+
+    // Запуск кооп-игры в полноэкранном iframe.
+    // ВАЖНО: allow="microphone" — иначе WebRTC-голос внутри iframe не заработает.
+    function launchCoopGame(gameId) {
+      var chatRoot = document.getElementById("chat-widget-root");
+      if (chatRoot) chatRoot.style.display = "none";
+
+      var src = gameId === "sapper" ? "minigames/sapper.html" : "";
+      if (!src) return;
+
+      var overlay = document.createElement("div");
+      overlay.id = "mg-overlay"; // тот же id — closeMgOverlay() из battle.js закроет
+      overlay.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;"
+        + "z-index:500;background:#000;";
+      overlay.innerHTML = "<iframe src=\"" + src + "\""
+        + " style=\"border:none;width:100%;height:100%;display:block;\""
+        + " allow=\"microphone; autoplay\"></iframe>";
+      document.body.appendChild(overlay);
+    }
   </script>
 </body>
 </html>
