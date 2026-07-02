@@ -176,6 +176,7 @@
     background:rgba(12,19,16,.97);
   }
   .wire-row.disabled { cursor:default; }
+  .wire-line.unplug { opacity:.35; }
 
   .seq-grid { display:flex; gap:10px; margin:12px 0; }
   .seq-btn {
@@ -245,6 +246,21 @@
   }
   @keyframes qpop { 0% { transform:scale(.4); opacity:0; } 100% { transform:scale(1); opacity:1; } }
 
+  @keyframes bodyshake {
+    0%,100% { transform:translate(0,0); }
+    20% { transform:translate(-6px,3px); }
+    40% { transform:translate(5px,-4px); }
+    60% { transform:translate(-4px,-3px); }
+    80% { transform:translate(4px,3px); }
+  }
+  body.shaken { animation: bodyshake .4s; }
+
+  .confp {
+    position:fixed; top:-36px; z-index:900; pointer-events:none;
+    animation: confall linear forwards;
+  }
+  @keyframes confall { to { transform: translateY(112vh) rotate(720deg); } }
+
   #errflash { position:absolute; inset:0; z-index:35; pointer-events:none; background:radial-gradient(ellipse at center, transparent 55%, rgba(220,50,50,.5)); opacity:0; transition:opacity .5s; }
   #errflash.on { opacity:1; transition:opacity .05s; }
 
@@ -261,6 +277,23 @@
   .vchip.me { border-color:var(--acc-dim); cursor:pointer; }
   .vchip .vmic { font-size:14px; }
   .vchip.offline { opacity:.45; }
+  #avatar-ctl {
+    position:absolute; left:50%; bottom:10px; transform:translateX(-50%);
+    z-index:18; display:flex; align-items:center; gap:8px;
+    background:rgba(12,19,16,.92); border:1px solid var(--line);
+    border-radius:20px; padding:6px 12px;
+  }
+  #avatar-ctl input[type=range] { width:104px; accent-color:var(--acc); }
+  .ac-btn {
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    font-size:16px; padding:5px 10px; cursor:pointer; font-family:inherit;
+  }
+  .ac-btn:active { background:var(--acc-dim); }
+  .vtoggle {
+    background:rgba(12,19,16,.92); border:1px solid var(--line);
+    border-radius:20px; padding:5px 12px; font-size:12px; font-weight:700;
+    cursor:pointer; font-family:inherit; color:var(--soft);
+  }
 
   #mute-ui { position:absolute; inset:0; z-index:10; display:none; padding:50px 10px 10px; }
   #mute-ui.on { display:flex; gap:10px; }
@@ -402,6 +435,7 @@
     <div class="hud-timer" id="hud-timer">5:00</div>
     <div class="hud-strikes" id="hud-strikes"></div>
     <div class="hud-mods" id="hud-mods"></div>
+    <button class="hud-exit" id="btn-thump" title="Стукнуть по столу">&#128074;</button>
     <button class="hud-exit" id="btn-game-exit">&#10005;</button>
   </div>
 
@@ -417,6 +451,12 @@
   </div>
 
   <div id="voice-bar"></div>
+  <div id="avatar-ctl">
+    <span style="font-size:10px;color:var(--soft);font-weight:800;letter-spacing:.4px">ГОЛОВА</span>
+    <input type="range" id="head-yaw" min="-60" max="60" value="0" />
+    <button class="ac-btn" id="btn-nod" title="Кивнуть — да">&#128077;</button>
+    <button class="ac-btn" id="btn-shake" title="Помотать — нет">&#128078;</button>
+  </div>
   <div id="qflash"></div>
   <div id="errflash"></div>
 
@@ -496,6 +536,8 @@ var MODULE_META = {
 var SYMBOL_NAMES = {
   star: "Звезда", cross: "Крест", anchor: "Якорь",
   skull: "Череп", bolt: "Молния", shield: "Щит",
+  moon: "Луна", eye: "Глаз", key: "Ключ",
+  heart: "Сердце", gear: "Шестерня", diamond: "Ромб",
 };
 function symSvg(key, size, color) {
   size = size || 30; color = color || "currentColor";
@@ -506,6 +548,12 @@ function symSvg(key, size, color) {
   else if (key === "skull") inner = '<g fill="' + color + '"><circle cx="12" cy="9.6" r="7.2"/><rect x="8.6" y="14.5" width="6.8" height="6" rx="1.4"/></g><circle cx="9.4" cy="9" r="1.9" fill="#101010"/><circle cx="14.6" cy="9" r="1.9" fill="#101010"/><rect x="11.1" y="12.2" width="1.8" height="2.6" fill="#101010"/>';
   else if (key === "bolt") inner = '<polygon points="13.5,1.5 4,14 10.8,14 9,22.5 20,9.2 12.7,9.2" fill="' + color + '"/>';
   else if (key === "shield") inner = '<path d="M12 1.8l8.3 3.1v6.3c0 5.2-3.6 9.3-8.3 11.4C7.3 20.5 3.7 16.4 3.7 11.2V4.9z" fill="' + color + '"/>';
+  else if (key === "moon") inner = '<path d="M14.6 2.2a9.8 9.8 0 1 0 7.2 13.6 8 8 0 0 1-7.2-13.6z" fill="' + color + '"/>';
+  else if (key === "eye") inner = '<path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12z" fill="none" stroke="' + color + '" stroke-width="2"/><circle cx="12" cy="12" r="3.2" fill="' + color + '"/>';
+  else if (key === "key") inner = '<g stroke="' + color + '" stroke-width="2.6" fill="none"><circle cx="8" cy="8" r="4.2"/><path d="M11.2 11.2l9.3 9.3M20.5 20.5l-2.8-2.8M17.2 17.2l-2.4 2.4"/></g>';
+  else if (key === "heart") inner = '<path d="M12 21S3.5 15.6 3.5 10A4.8 4.8 0 0 1 12 6.6 4.8 4.8 0 0 1 20.5 10C20.5 15.6 12 21 12 21z" fill="' + color + '"/>';
+  else if (key === "gear") inner = '<g stroke="' + color + '" stroke-width="3" stroke-linecap="round"><path d="M12 3.2v17.6M3.2 12h17.6M5.8 5.8l12.4 12.4M18.2 5.8L5.8 18.2"/></g><circle cx="12" cy="12" r="5.6" fill="' + color + '"/><circle cx="12" cy="12" r="2.3" fill="#101010"/>';
+  else if (key === "diamond") inner = '<polygon points="12,2 21,12 12,22 3,12" fill="' + color + '"/>';
   return '<svg viewBox="0 0 24 24" style="width:' + size + 'px;height:' + size + 'px;display:block">' + inner + '</svg>';
 }
 function shapeSvg(key, size, color) {
@@ -528,6 +576,8 @@ function freshG() {
     step: 0, errors: 0,
     solved: { wires: false, sequence: false, code: false, dials: false },
     cutWires: [false, false, false, false, false],
+    wireConnected: [false, false, false, false, false],
+    wireConnProgress: 0,
     seqProgress: 0,
     codeEntered: "",
     dialPos: [0, 0, 0, 0],
@@ -541,12 +591,12 @@ var GST = null;
 function freshGST() {
   return {
     gstep: 0, tab: "wires",
-    wires: { sel: [], marker: null, crossed: [] },
+    wires: { sel: [], marker: null, crossed: [], connStep: -1 },
     sequence: { step: -1, row: [null, null, null, null], shapes: [null, null, null, null] },
     strokes: { code: [], dials: [] },
   };
 }
-var INK_MAX = 100, INK_BASE = 3, INK_PER_UNIT = 30;
+var INK_MAX = 100, INK_BASE = 9, INK_PER_UNIT = 90;  // расход x3: хватает примерно на 2/3 цифры
 var INK = { code: INK_MAX, dials: INK_MAX };
 // Толстая кисть (доля ширины холста): мелкие цифры физически нечитаемы —
 // это и есть защита от обхода лимита чернил мелким письмом.
@@ -747,6 +797,11 @@ function roleOf(pid) {
   return (s && s.roles && s.roles[pid]) || null;
 }
 function CFG() { return (state.session && state.session.game_config) || null; }
+function wiresConnectDone() {
+  var cfg = CFG() && CFG().modules && CFG().modules.wires;
+  if (!cfg || !cfg.connectOrder) return true; // старые сессии без фазы подключения
+  return !!(G && G.wireConnProgress >= 5);
+}
 function gameStartAt() {
   var s = state.session;
   if (!s || !s.started_at) return 0;
@@ -826,8 +881,8 @@ function enterGameScreen() {
   var role = myRole();
 
   if (role === "mute") {
+    build3D(role); // Немой тоже видит стол и аватары — инструкции сворачиваются
     $("mute-ui").classList.add("on");
-    $("stage3d").style.display = "none";
     renderMuteUI();
   } else {
     build3D(role);
@@ -943,14 +998,34 @@ function bindPanelClose() {
 }
 
 function wiresHtml(role) {
-  var cfg = CFG().modules.wires, html = '<div class="muted" style="margin-bottom:4px">' +
-    (role === "blind" ? "Выбери провод и перережь. Цвета тебе не видны." : "Слепой видит провода серыми.") + '</div>';
-  for (var i = 0; i < 5; i++) {
-    var col = role === "deaf" ? COLOR_META[cfg.colors[i]].hex : "#9a9a9a";
-    var cut = G.cutWires[i];
-    html += '<div class="wire-row' + (cut || role !== "blind" ? " disabled" : "") + '" data-wire="' + i + '">' +
-      '<div class="wire-num">' + (i + 1) + '</div>' +
-      '<div class="wire-line' + (cut ? " cut" : "") + '" style="background:' + col + '"></div></div>';
+  var cfg = CFG().modules.wires, html;
+
+  // ФАЗА 1: подключение проводов в верном порядке
+  if (cfg.connectOrder && !wiresConnectDone()) {
+    html = '<div class="muted" style="margin-bottom:4px">' +
+      (role === "blind"
+        ? "Сначала подключи все провода в верном порядке (" + G.wireConnProgress + " / 5). Не тот провод = страйк."
+        : "Фаза подключения: " + G.wireConnProgress + " / 5. Слепой видит провода серыми.") + '</div>';
+    for (var i = 0; i < 5; i++) {
+      var col = role === "deaf" ? COLOR_META[cfg.colors[i]].hex : "#9a9a9a";
+      var conn = G.wireConnected[i];
+      html += '<div class="wire-row' + (conn || role !== "blind" ? " disabled" : "") + '" data-wconn="' + i + '">' +
+        '<div class="wire-num">' + (i + 1) + '</div>' +
+        '<div class="wire-line' + (conn ? "" : " unplug") + '" style="background:' + col + '"></div>' +
+        '<div style="width:24px;text-align:center;font-size:15px">' + (conn ? "&#128268;" : "&#9898;") + '</div></div>';
+    }
+    return html;
+  }
+
+  // ФАЗА 2: резка
+  html = '<div class="muted" style="margin-bottom:4px">' +
+    (role === "blind" ? "Все провода подключены. Выбери один и перережь. Цвета тебе не видны." : "Слепой видит провода серыми.") + '</div>';
+  for (var w = 0; w < 5; w++) {
+    var col2 = role === "deaf" ? COLOR_META[cfg.colors[w]].hex : "#9a9a9a";
+    var cut = G.cutWires[w];
+    html += '<div class="wire-row' + (cut || role !== "blind" ? " disabled" : "") + '" data-wire="' + w + '">' +
+      '<div class="wire-num">' + (w + 1) + '</div>' +
+      '<div class="wire-line' + (cut ? " cut" : "") + '" style="background:' + col2 + '"></div></div>';
   }
   return html;
 }
@@ -1012,6 +1087,14 @@ function bindModuleHandlers(id, role) {
   if (role !== "blind" || G.finished) return;
 
   if (id === "wires") {
+    var conns = document.querySelectorAll("#mod-panel [data-wconn]");
+    for (var ci = 0; ci < conns.length; ci++) {
+      conns[ci].addEventListener("click", function () {
+        var w = parseInt(this.getAttribute("data-wconn"), 10);
+        if (G.wireConnected[w] || G.solved.wires) return;
+        askConfirm("Подключить провод &#8470;" + (w + 1) + "?", function () { doConnectWire(w); });
+      });
+    }
     var rows = document.querySelectorAll("#mod-panel [data-wire]");
     for (var i = 0; i < rows.length; i++) {
       rows[i].addEventListener("click", function () {
@@ -1078,6 +1161,16 @@ function checkAllSolved() {
     return true;
   }
   return false;
+}
+
+function doConnectWire(w) {
+  var cfg = CFG().modules.wires;
+  if (!cfg.connectOrder) return;
+  if (cfg.connectOrder[G.wireConnProgress] === w) {
+    G.wireConnected[w] = true;
+    G.wireConnProgress++;
+  } else if (registerError()) return;
+  bumpState(); renderModulePanel(); renderHud();
 }
 
 function doCutWire(w) {
@@ -1194,6 +1287,17 @@ function onMsg(p) {
       if (GST && GST.strokes[p.m]) { GST.strokes[p.m] = []; drawGestureCanvas(p.m); }
       break;
     case "q": quickFlash(p.k); break;
+    case "thump": shakeTable(); break;
+    case "head": {
+      var avh = T3.avatars[p.id];
+      if (avh) avh.yawTarget = (p.yaw || 0) * Math.PI / 180;
+      break;
+    }
+    case "anim": {
+      var ava = T3.avatars[p.id];
+      if (ava) ava.anim = { type: p.kind === "nod" ? "nod" : "shake", t: 0 };
+      break;
+    }
     case "fin":
       if (G && !G.finished) {
         G.finished = p.r; G.finReason = p.reason || "";
@@ -1238,6 +1342,11 @@ function onPresenceSync() {
   }
   if (missing.length) startDc(missing.join(", "));
   else clearDc();
+
+  // Аватар отключившегося пропадает со стула
+  for (var apid in T3.avatars) {
+    T3.avatars[apid].group.visible = !!RT.online[apid];
+  }
 
   syncPeers();
 }
@@ -1291,6 +1400,7 @@ function showEnd(result, reason) {
   $("btn-claim").style.display = "none";
 
   if (result === "won") {
+    spawnConfetti();
     icon.innerHTML = "&#127881;";
     title.textContent = "Бомба обезврежена!";
     sub.textContent = "Отличная командная работа. Каждый может забрать свою награду.";
@@ -1336,13 +1446,148 @@ function backToLobby() {
   loadSessions();
 }
 
-// ════════════════ 3D-СТОЛ (Three.js) ════════════════
+// ════════════════ 3D-СЦЕНА (Three.js) ════════════════
+// Слепой видит только критичное (стол, бомба, таймер) в ч/б.
+// Немой и Глухой видят комнату целиком и АВАТАРЫ остальных игроков:
+// головы поворачиваются, кивают и мотают «нет» в реальном времени.
 
 var T3 = { renderer: null, scene: null, camera: null, raf: null,
-  plates: {}, leds: {}, timerTex: null, timerCanvas: null, clock: 0 };
+  plates: {}, leds: {}, timerTex: null, timerCanvas: null, clock: 0,
+  masterLed: null, remain: 300, shake: 0,
+  avatars: {}, dust: null, lampBulb: null, spot: null, flick: 0 };
+
+var SEATS = { blind: [0, 2.5], deaf: [2.95, 0.25], mute: [-2.95, 0.25] };
+var CAMS  = { blind: [0, 4.4, 3.1], deaf: [3.7, 2.75, 2.05], mute: [-3.7, 2.75, 2.05] };
+var ROLE_AVA_COLOR = { mute: 0x5f9e4c, deaf: 0x4a7de0, blind: 0x8d939c };
+
+function makeCanvasTexture(w, h, draw) {
+  var c = document.createElement("canvas");
+  c.width = w; c.height = h;
+  draw(c.getContext("2d"), w, h);
+  return new THREE.CanvasTexture(c);
+}
+
+function makeFloorTexture() {
+  return makeCanvasTexture(512, 512, function (ctx, w, h) {
+    ctx.fillStyle = "#1c2125"; ctx.fillRect(0, 0, w, h);
+    var n = 4, s = w / n;
+    for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) {
+      var sh = 30 + Math.floor(Math.random() * 13);
+      ctx.fillStyle = "rgb(" + sh + "," + (sh + 4) + "," + (sh + 7) + ")";
+      ctx.fillRect(i * s + 2, j * s + 2, s - 4, s - 4);
+      ctx.strokeStyle = "rgba(0,0,0,0.28)";
+      for (var k = 0; k < 3; k++) {
+        ctx.beginPath();
+        ctx.moveTo(i * s + Math.random() * s, j * s + Math.random() * s);
+        ctx.lineTo(i * s + Math.random() * s, j * s + Math.random() * s);
+        ctx.stroke();
+      }
+    }
+  });
+}
+
+function makeWoodTexture() {
+  return makeCanvasTexture(256, 256, function (ctx, w, h) {
+    ctx.fillStyle = "#6b4a2f"; ctx.fillRect(0, 0, w, h);
+    for (var i = 0; i < 26; i++) {
+      ctx.strokeStyle = "rgba(40,22,10," + (0.22 + Math.random() * 0.3) + ")";
+      ctx.lineWidth = 1 + Math.random() * 2.4;
+      ctx.beginPath();
+      var y = Math.random() * h;
+      ctx.moveTo(0, y);
+      for (var x = 0; x <= w; x += 32) {
+        ctx.lineTo(x, y + Math.sin(x * 0.05 + i) * 4 + (Math.random() - 0.5) * 3);
+      }
+      ctx.stroke();
+    }
+    for (var kn = 0; kn < 4; kn++) {
+      ctx.fillStyle = "rgba(35,18,8,0.55)";
+      ctx.beginPath();
+      ctx.ellipse(Math.random() * w, Math.random() * h,
+        4 + Math.random() * 5, 2.4 + Math.random() * 3, Math.random() * 3, 0, 6.283);
+      ctx.fill();
+    }
+  });
+}
+
+function makePosterTexture() {
+  return makeCanvasTexture(256, 340, function (ctx, w, h) {
+    ctx.fillStyle = "#c9a13c"; ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = "#151210"; ctx.lineWidth = 10;
+    ctx.strokeRect(9, 9, w - 18, h - 18);
+    ctx.fillStyle = "#151210"; ctx.textAlign = "center";
+    ctx.font = "900 54px sans-serif";
+    ctx.fillText("\u041E\u041F\u0410\u0421\u041D\u041E", w / 2, 82);
+    ctx.font = "900 118px sans-serif";
+    ctx.fillText("\u26A0", w / 2, 212);
+    ctx.font = "700 24px sans-serif";
+    ctx.fillText("\u0421\u0410\u041F\u0401\u0420 \u041E\u0428\u0418\u0411\u0410\u0415\u0422\u0421\u042F", w / 2, 270);
+    ctx.fillText("\u041E\u0414\u0418\u041D \u0420\u0410\u0417\u2026 \u0418\u041B\u0418 \u041F\u042F\u0422\u042C", w / 2, 304);
+  });
+}
+
+function createAvatar(pid, name, roleKey, seat) {
+  var g = new THREE.Group();
+  var col = ROLE_AVA_COLOR[roleKey] || 0x888888;
+  var cloth = new THREE.MeshStandardMaterial({ color: col, roughness: 0.85 });
+  var skin  = new THREE.MeshStandardMaterial({ color: 0xd9b08c, roughness: 0.7 });
+  var dark  = new THREE.MeshStandardMaterial({ color: 0x1c1f24, roughness: 0.6 });
+  var wood2 = new THREE.MeshStandardMaterial({ color: 0x4a3423, roughness: 0.9 });
+
+  // Стул
+  var seatB = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.07, 0.6), wood2);
+  seatB.position.y = 0.62; seatB.castShadow = true; g.add(seatB);
+  var back = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.72, 0.07), wood2);
+  back.position.set(0, 1.0, 0.3); back.castShadow = true; g.add(back);
+  for (var l = 0; l < 4; l++) {
+    var leg = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.6, 0.06), wood2);
+    leg.position.set(l % 2 ? 0.26 : -0.26, 0.31, l < 2 ? 0.25 : -0.25);
+    g.add(leg);
+  }
+
+  // Тело и руки, лежащие в сторону стола
+  var torso = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.37, 0.78, 12), cloth);
+  torso.position.y = 1.06; torso.castShadow = true; g.add(torso);
+  for (var a = 0; a < 2; a++) {
+    var arm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.62, 8), cloth);
+    arm.position.set(a ? 0.3 : -0.3, 1.12, -0.22);
+    arm.rotation.x = Math.PI / 2.4;
+    arm.rotation.z = a ? -0.25 : 0.25;
+    g.add(arm);
+    var hand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 8, 8), skin);
+    hand.position.set(a ? 0.38 : -0.38, 0.97, -0.5);
+    g.add(hand);
+  }
+
+  // Голова — отдельная группа: поворачивается, кивает, мотает «нет»
+  var headG = new THREE.Group();
+  headG.position.y = 1.66;
+  var head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 14, 12), skin);
+  head.castShadow = true; headG.add(head);
+  for (var e = 0; e < 2; e++) {
+    var eye = new THREE.Mesh(new THREE.SphereGeometry(0.033, 6, 6), dark);
+    eye.position.set(e ? 0.09 : -0.09, 0.04, -0.2);
+    headG.add(eye);
+  }
+  var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.245, 0.255, 0.1, 12), cloth);
+  cap.position.y = 0.19; headG.add(cap);
+  g.add(headG);
+
+  var label = makeLabelSprite(name);
+  label.position.y = 2.2;
+  g.add(label);
+
+  g.position.set(seat[0], 0, seat[1]);
+  g.lookAt(new THREE.Vector3(0, 0, 0));
+  g.rotateY(Math.PI); // лицом к столу (глаза на -Z)
+
+  T3.scene.add(g);
+  T3.avatars[pid] = { group: g, head: headG, yaw: 0, yawTarget: 0, anim: null };
+}
 
 function build3D(role) {
   if (!window.THREE) { $("stage3d").style.background = "#0a0f0c"; return; }
+  var rich = role !== "blind"; // Слепой видит только критичное
   var holder = $("stage3d");
   var W = holder.clientWidth || window.innerWidth;
   var H = holder.clientHeight || window.innerHeight;
@@ -1355,36 +1600,166 @@ function build3D(role) {
   holder.appendChild(renderer.domElement);
 
   var scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x090d0a);
-  scene.fog = new THREE.Fog(0x090d0a, 8, 18);
+  scene.background = new THREE.Color(rich ? 0x0b0f13 : 0x090d0a);
+  scene.fog = new THREE.Fog(rich ? 0x0b0f13 : 0x090d0a, 9, rich ? 24 : 18);
 
+  var cp = CAMS[role] || CAMS.deaf;
   var camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 60);
-  if (role === "blind") { camera.position.set(0, 4.4, 3.1); }
-  else { camera.position.set(2.6, 3.6, 3.8); }
-  camera.lookAt(0, 1.25, 0);
+  camera.position.set(cp[0], cp[1], cp[2]);
+  camera.lookAt(0, role === "blind" ? 1.25 : 1.15, 0);
 
-  scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-  var spot = new THREE.SpotLight(0xfff2d8, 1.1, 22, Math.PI / 4.5, 0.5, 1.2);
-  spot.position.set(0.5, 7, 1.5);
+  T3.renderer = renderer; T3.scene = scene; T3.camera = camera;
+
+  // ── Свет ──
+  scene.add(new THREE.AmbientLight(0xffffff, rich ? 0.32 : 0.45));
+  var spot = new THREE.SpotLight(0xffe9c4, 1.25, 24, Math.PI / 4.2, 0.55, 1.15);
+  spot.position.set(0, rich ? 2.95 : 7, rich ? 0.15 : 1.5);
   spot.castShadow = true;
   spot.shadow.mapSize.set(1024, 1024);
   scene.add(spot);
-  var warm = new THREE.PointLight(0xffb060, 0.35, 10);
+  scene.add(spot.target);
+  T3.spot = spot;
+  var warm = new THREE.PointLight(0xffb060, 0.3, 10);
   warm.position.set(-2.4, 2.2, -1.2);
   scene.add(warm);
 
-  var floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(30, 30),
-    new THREE.MeshStandardMaterial({ color: 0x11150f, roughness: 1 })
-  );
+  // ── Пол ──
+  var floorMat;
+  if (rich) {
+    var ftex = makeFloorTexture();
+    ftex.wrapS = ftex.wrapT = THREE.RepeatWrapping;
+    ftex.repeat.set(5, 4);
+    floorMat = new THREE.MeshStandardMaterial({ map: ftex, roughness: 0.95 });
+  } else {
+    floorMat = new THREE.MeshStandardMaterial({ color: 0x11150f, roughness: 1 });
+  }
+  var floor = new THREE.Mesh(new THREE.PlaneGeometry(15, 11), floorMat);
   floor.rotation.x = -Math.PI / 2;
   floor.receiveShadow = true;
   scene.add(floor);
 
-  var wood = new THREE.MeshStandardMaterial({ color: 0x6b4a2f, roughness: 0.85 });
+  // ── Комната (только для Немого и Глухого) ──
+  if (rich) {
+    var wallMat  = new THREE.MeshStandardMaterial({ color: 0x232a30, roughness: 0.95 });
+    var wallMat2 = new THREE.MeshStandardMaterial({ color: 0x1d2329, roughness: 0.95 });
+    function wall(wd, x, z, ry, mat) {
+      var m = new THREE.Mesh(new THREE.BoxGeometry(wd, 4.6, 0.2), mat);
+      m.position.set(x, 2.3, z); m.rotation.y = ry;
+      m.receiveShadow = true;
+      scene.add(m);
+    }
+    wall(15, 0, -5.4, 0, wallMat);
+    wall(15, 0, 5.4, 0, wallMat2);
+    wall(11, -7.4, 0, Math.PI / 2, wallMat2);
+    wall(11, 7.4, 0, Math.PI / 2, wallMat2);
+    var ceil = new THREE.Mesh(new THREE.PlaneGeometry(15, 11),
+      new THREE.MeshStandardMaterial({ color: 0x14181c, roughness: 1 }));
+    ceil.rotation.x = Math.PI / 2; ceil.position.y = 4.6;
+    scene.add(ceil);
+
+    // Ковёр под столом
+    var rug = new THREE.Mesh(new THREE.CircleGeometry(3.1, 28),
+      new THREE.MeshStandardMaterial({ color: 0x39232d, roughness: 1 }));
+    rug.rotation.x = -Math.PI / 2; rug.position.y = 0.012;
+    rug.receiveShadow = true;
+    scene.add(rug);
+
+    // Подвесная лампа над столом
+    var metalD = new THREE.MeshStandardMaterial({ color: 0x2a2f34, metalness: 0.6, roughness: 0.45 });
+    var cord = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 1.5, 6), metalD);
+    cord.position.set(0, 3.85, 0); scene.add(cord);
+    var shade = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.09, 0.5, 0.42, 16, 1, true),
+      new THREE.MeshStandardMaterial({ color: 0x2f5136, metalness: 0.4, roughness: 0.5, side: THREE.DoubleSide }));
+    shade.position.set(0, 3.02, 0); scene.add(shade);
+    var bulb = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10),
+      new THREE.MeshStandardMaterial({ color: 0xffe6a8, emissive: 0xffc060, emissiveIntensity: 1.3 }));
+    bulb.position.set(0, 2.9, 0); scene.add(bulb);
+    T3.lampBulb = bulb;
+
+    // Окно с лунным светом (задняя стена)
+    var winGlow = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.1),
+      new THREE.MeshBasicMaterial({ color: 0x8fb0e0 }));
+    winGlow.position.set(3.2, 2.75, -5.28); scene.add(winGlow);
+    var frameMat = new THREE.MeshStandardMaterial({ color: 0x14181c, roughness: 0.8 });
+    var fbarH = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.07, 0.06), frameMat);
+    fbarH.position.set(3.2, 2.75, -5.26); scene.add(fbarH);
+    var fbarV = new THREE.Mesh(new THREE.BoxGeometry(0.07, 1.16, 0.06), frameMat);
+    fbarV.position.set(3.2, 2.75, -5.26); scene.add(fbarV);
+    var moon = new THREE.DirectionalLight(0x7d97c8, 0.3);
+    moon.position.set(3.2, 4.5, -2);
+    scene.add(moon);
+
+    // Плакат «ОПАСНО»
+    var poster = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.33),
+      new THREE.MeshStandardMaterial({ map: makePosterTexture(), roughness: 0.9 }));
+    poster.position.set(-3.4, 2.6, -5.28);
+    poster.rotation.z = 0.035;
+    scene.add(poster);
+
+    // Дверь с ручкой (левая стена)
+    var door = new THREE.Mesh(new THREE.BoxGeometry(1.15, 2.4, 0.09),
+      new THREE.MeshStandardMaterial({ color: 0x3a2c1c, roughness: 0.85 }));
+    door.position.set(-7.27, 1.2, -2.4);
+    door.rotation.y = Math.PI / 2;
+    scene.add(door);
+    var knob = new THREE.Mesh(new THREE.SphereGeometry(0.05, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xb0a060, metalness: 0.8, roughness: 0.3 }));
+    knob.position.set(-7.18, 1.15, -1.98);
+    scene.add(knob);
+
+    // Трубы под потолком + вентиль
+    var pipeMat = new THREE.MeshStandardMaterial({ color: 0x50565c, metalness: 0.7, roughness: 0.4 });
+    var pipe1 = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 14.6, 10), pipeMat);
+    pipe1.rotation.z = Math.PI / 2;
+    pipe1.position.set(0, 4.2, -5.15);
+    scene.add(pipe1);
+    var pipe2 = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.055, 14.6, 8), pipeMat);
+    pipe2.rotation.z = Math.PI / 2;
+    pipe2.position.set(0, 3.95, -5.22);
+    scene.add(pipe2);
+    var valve = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.028, 8, 14),
+      new THREE.MeshStandardMaterial({ color: 0x9e3030, metalness: 0.5, roughness: 0.4 }));
+    valve.position.set(-2.6, 4.2, -5.02);
+    scene.add(valve);
+
+    // Ящики в углу
+    var crateTex = makeWoodTexture();
+    var crateMat = new THREE.MeshStandardMaterial({ map: crateTex, roughness: 0.9 });
+    var cratePos = [[5.7, 0.45, -4.2, 0.2], [5.65, 1.35, -4.15, -0.15], [4.6, 0.45, -4.5, 0.5]];
+    for (var cr = 0; cr < 3; cr++) {
+      var crate = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.9, 0.9), crateMat);
+      crate.position.set(cratePos[cr][0], cratePos[cr][1], cratePos[cr][2]);
+      crate.rotation.y = cratePos[cr][3];
+      crate.castShadow = true; crate.receiveShadow = true;
+      scene.add(crate);
+    }
+
+    // Пыль в луче света
+    var dg = new THREE.BufferGeometry();
+    var pts = [];
+    for (var dp = 0; dp < 110; dp++) {
+      pts.push((Math.random() - 0.5) * 5, 1.2 + Math.random() * 2.4, (Math.random() - 0.5) * 3.4);
+    }
+    dg.setAttribute("position", new THREE.Float32BufferAttribute(pts, 3));
+    var dust = new THREE.Points(dg, new THREE.PointsMaterial({
+      color: 0xffe9c0, size: 0.022, transparent: true, opacity: 0.45 }));
+    scene.add(dust);
+    T3.dust = dust;
+  }
+
+  // ── Стол ──
+  var woodTex = makeWoodTexture();
+  woodTex.wrapS = woodTex.wrapT = THREE.RepeatWrapping;
+  woodTex.repeat.set(2, 1);
+  var wood = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.85 });
   var top = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.24, 3.4), wood);
   top.position.y = 1.0; top.receiveShadow = true; top.castShadow = true;
   scene.add(top);
+  // Царга (рама под столешницей)
+  var skirtF = new THREE.Mesh(new THREE.BoxGeometry(5.9, 0.16, 0.08), wood);
+  skirtF.position.set(0, 0.82, 1.58); scene.add(skirtF);
+  var skirtB = skirtF.clone(); skirtB.position.z = -1.58; scene.add(skirtB);
   var legGeo = new THREE.BoxGeometry(0.22, 1.0, 0.22);
   var legPos = [[-2.8, 0.5, 1.4], [2.8, 0.5, 1.4], [-2.8, 0.5, -1.4], [2.8, 0.5, -1.4]];
   for (var l = 0; l < 4; l++) {
@@ -1394,12 +1769,51 @@ function build3D(role) {
     scene.add(leg);
   }
 
+  // ── Бомба ──
   var metal = new THREE.MeshStandardMaterial({ color: 0x3a4046, metalness: 0.65, roughness: 0.35 });
+  var metal2 = new THREE.MeshStandardMaterial({ color: 0x22262b, metalness: 0.7, roughness: 0.3 });
   var bomb = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.5, 1.9), metal);
   bomb.position.set(0, 1.38, 0);
   bomb.castShadow = true; bomb.receiveShadow = true;
   scene.add(bomb);
+  // Заклёпки по углам крышки
+  var rivetMat = new THREE.MeshStandardMaterial({ color: 0x565e66, metalness: 0.85, roughness: 0.25 });
+  var rvPos = [[-1.32, 0.87], [1.32, 0.87], [-1.32, -0.87], [1.32, -0.87], [0, 0.87], [0, -0.87]];
+  for (var rv = 0; rv < rvPos.length; rv++) {
+    var rivet = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), rivetMat);
+    rivet.position.set(rvPos[rv][0], 1.635, rvPos[rv][1]);
+    scene.add(rivet);
+  }
+  // Вентиляционные щели на переднем торце
+  for (var vt = 0; vt < 3; vt++) {
+    var vent = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.045, 0.03), metal2);
+    vent.position.set(-0.95, 1.30 + vt * 0.075, 0.955);
+    scene.add(vent);
+  }
+  // Ручка для переноски
+  var handle = new THREE.Mesh(new THREE.TorusGeometry(0.17, 0.028, 8, 16, Math.PI), metal2);
+  handle.position.set(-1.15, 1.63, -0.55);
+  handle.rotation.x = 0;
+  scene.add(handle);
+  // Антенна с красным наконечником
+  var ant = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.62, 6), metal2);
+  ant.position.set(1.28, 1.93, -0.78);
+  scene.add(ant);
+  var antTip = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8),
+    new THREE.MeshStandardMaterial({ color: 0x8a2020, emissive: 0x661111, emissiveIntensity: 0.6 }));
+  antTip.position.set(1.28, 2.25, -0.78);
+  scene.add(antTip);
 
+  // Главный «сердечный» светодиод бомбы — мигает быстрее к концу таймера
+  var masterLed = new THREE.Mesh(
+    new THREE.SphereGeometry(0.07, 10, 10),
+    new THREE.MeshStandardMaterial({ color: 0x661111, emissive: 0xff2222, emissiveIntensity: 1.2 })
+  );
+  masterLed.position.set(1.22, 1.67, 0.78);
+  scene.add(masterLed);
+  T3.masterLed = masterLed;
+
+  // ── Панели модулей + светодиоды + подписи ──
   var platePos = [[-0.72, 0.46], [0.72, 0.46], [-0.72, -0.46], [0.72, -0.46]];
   for (var m = 0; m < MODULES.length; m++) {
     var id = MODULES[m];
@@ -1425,6 +1839,7 @@ function build3D(role) {
     scene.add(label);
   }
 
+  // ── Табло таймера ──
   T3.timerCanvas = document.createElement("canvas");
   T3.timerCanvas.width = 256; T3.timerCanvas.height = 96;
   T3.timerTex = new THREE.CanvasTexture(T3.timerCanvas);
@@ -1436,6 +1851,7 @@ function build3D(role) {
   scene.add(timerPanel);
   updateTimerTexture(300);
 
+  // ── Пучок проводов сбоку ──
   var wireCols = [0xe05252, 0x4a7de0, 0xe8d24a, 0x5ec26a, 0x9a5fd0];
   for (var w = 0; w < 5; w++) {
     var wm = new THREE.Mesh(
@@ -1447,14 +1863,14 @@ function build3D(role) {
     scene.add(wm);
   }
 
-  if (role === "deaf") {
+  // ── Предметы на столе (для зрячих ролей) ──
+  if (rich) {
     var mug = new THREE.Mesh(
       new THREE.CylinderGeometry(0.16, 0.14, 0.3, 14),
       new THREE.MeshStandardMaterial({ color: 0xb44c3a, roughness: 0.7 })
     );
     mug.position.set(2.35, 1.27, 0.95); mug.castShadow = true;
     scene.add(mug);
-
     var papers = new THREE.Mesh(
       new THREE.BoxGeometry(0.85, 0.03, 0.6),
       new THREE.MeshStandardMaterial({ color: 0xd8d2c0, roughness: 0.95 })
@@ -1462,20 +1878,6 @@ function build3D(role) {
     papers.position.set(-2.3, 1.14, -0.9);
     papers.rotation.y = 0.35;
     scene.add(papers);
-
-    var lampBase = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.1, 0.16, 0.5, 10),
-      new THREE.MeshStandardMaterial({ color: 0x2a2f33, metalness: 0.6 })
-    );
-    lampBase.position.set(2.55, 1.37, -1.15);
-    scene.add(lampBase);
-    var bulb = new THREE.Mesh(
-      new THREE.SphereGeometry(0.09, 10, 10),
-      new THREE.MeshStandardMaterial({ color: 0xffd890, emissive: 0xffb050, emissiveIntensity: 1.4 })
-    );
-    bulb.position.set(2.55, 1.68, -1.15);
-    scene.add(bulb);
-
     var driver = new THREE.Mesh(
       new THREE.CylinderGeometry(0.02, 0.02, 0.55, 6),
       new THREE.MeshStandardMaterial({ color: 0xcc8833 })
@@ -1483,10 +1885,27 @@ function build3D(role) {
     driver.rotation.z = Math.PI / 2.3;
     driver.position.set(1.0, 1.15, 1.25);
     scene.add(driver);
+    var cutters = new THREE.Mesh(
+      new THREE.BoxGeometry(0.34, 0.04, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0xa03838, roughness: 0.5 })
+    );
+    cutters.position.set(2.1, 1.15, -1.05);
+    cutters.rotation.y = -0.6;
+    scene.add(cutters);
   }
 
-  T3.renderer = renderer; T3.scene = scene; T3.camera = camera;
+  // ── Аватары остальных игроков (видят Немой и Глухой) ──
+  if (rich) {
+    var players = (state.session && state.session.players) || [];
+    for (var pi = 0; pi < players.length; pi++) {
+      var pl = players[pi];
+      if (pl.id === PLAYER.id) continue;
+      var rk = roleOf(pl.id);
+      if (rk && SEATS[rk]) createAvatar(pl.id, pl.name, rk, SEATS[rk]);
+    }
+  }
 
+  // ── Клик по панелям (только Слепой) ──
   var ray = new THREE.Raycaster(), v2 = new THREE.Vector2();
   renderer.domElement.addEventListener("pointerdown", function (ev) {
     if (myRole() !== "blind" || !G || G.finished) return;
@@ -1522,6 +1941,7 @@ function makeLabelSprite(text) {
 }
 
 function updateTimerTexture(remain) {
+  T3.remain = remain;
   if (!T3.timerCanvas) return;
   if (updateTimerTexture._last === remain) return;
   updateTimerTexture._last = remain;
@@ -1560,10 +1980,57 @@ function animate3D() {
   if (!T3.renderer) return;
   T3.raf = requestAnimationFrame(animate3D);
   T3.clock += 0.008;
+
   if (T3.camera) {
     T3.camera.position.x += Math.sin(T3.clock) * 0.0009;
-    T3.camera.lookAt(0, 1.25, 0);
+    if (T3.shake > 0) {
+      T3.shake--;
+      var sh = T3.shake * 0.004;
+      T3.camera.position.x += (Math.random() - 0.5) * sh;
+      T3.camera.position.y += (Math.random() - 0.5) * sh;
+    }
+    T3.camera.lookAt(0, 1.2, 0);
   }
+
+  // Мигание «сердца» бомбы — быстрее к концу
+  if (T3.masterLed) {
+    var rr = typeof T3.remain === "number" ? T3.remain : 300;
+    var period = rr <= 15 ? 0.18 : (rr <= 60 ? 0.45 : 1.0);
+    var on = (performance.now() / 1000) % period < period / 2;
+    T3.masterLed.material.emissiveIntensity = on ? 1.7 : 0.12;
+  }
+
+  // Живые головы аватаров: поворот + кивок/«нет-нет»
+  for (var pid in T3.avatars) {
+    var av = T3.avatars[pid];
+    av.yaw += (av.yawTarget - av.yaw) * 0.12;
+    var pitch = 0, extraYaw = 0;
+    if (av.anim) {
+      av.anim.t += 0.016;
+      var tt = av.anim.t;
+      var decay = Math.max(0, 1 - tt / 1.1);
+      if (av.anim.type === "nod") pitch = Math.sin(tt * 11) * 0.42 * decay;
+      else extraYaw = Math.sin(tt * 11) * 0.5 * decay;
+      if (tt > 1.1) av.anim = null;
+    }
+    av.head.rotation.y = av.yaw + extraYaw;
+    av.head.rotation.x = pitch;
+  }
+
+  // Пыль медленно кружит, лампа изредка мигает
+  if (T3.dust) T3.dust.rotation.y += 0.00045;
+  if (T3.lampBulb) {
+    if (T3.flick > 0) {
+      T3.flick--;
+      T3.lampBulb.material.emissiveIntensity = 0.4 + Math.random() * 0.5;
+      if (T3.spot) T3.spot.intensity = 0.7 + Math.random() * 0.3;
+    } else {
+      T3.lampBulb.material.emissiveIntensity = 1.3;
+      if (T3.spot) T3.spot.intensity = 1.25;
+      if (Math.random() < 0.004) T3.flick = 6;
+    }
+  }
+
   T3.renderer.render(T3.scene, T3.camera);
 }
 
@@ -1588,7 +2055,10 @@ function destroy3D() {
       }
     } catch (e) {}
   }
-  T3 = { renderer: null, scene: null, camera: null, raf: null, plates: {}, leds: {}, timerTex: null, timerCanvas: null, clock: 0 };
+  T3 = { renderer: null, scene: null, camera: null, raf: null,
+    plates: {}, leds: {}, timerTex: null, timerCanvas: null, clock: 0,
+    masterLed: null, remain: 300, shake: 0,
+    avatars: {}, dust: null, lampBulb: null, spot: null, flick: 0 };
 }
 
 // ════════════════ UI НЕМОГО ════════════════
@@ -1599,6 +2069,13 @@ function renderMuteUI() {
   renderMuteMain();
 }
 
+var MUTE_VIEW = { hide: false };
+
+function applyMuteView() {
+  var mm = $("mute-main");
+  if (mm) mm.style.display = MUTE_VIEW.hide ? "none" : "";
+}
+
 function renderMuteTabs() {
   var html = "";
   for (var m = 0; m < MODULES.length; m++) {
@@ -1607,7 +2084,16 @@ function renderMuteTabs() {
     html += '<button class="' + cls + '" data-mtab="' + id + '">' +
       '<span class="mnum">' + (G && G.solved[id] ? "&#10004;" : meta.num) + '</span>' + meta.name + '</button>';
   }
+  html += '<button class="mtab" id="mute-collapse" style="flex:0 0 auto;min-height:44px;border-color:var(--acc-dim)">' +
+    (MUTE_VIEW.hide ? "&#128203; Инструкции" : "&#128065; Стол") + '</button>';
   $("mtabs").innerHTML = html;
+  var mc = $("mute-collapse");
+  if (mc) mc.addEventListener("click", function () {
+    MUTE_VIEW.hide = !MUTE_VIEW.hide;
+    applyMuteView();
+    renderMuteTabs();
+  });
+  applyMuteView();
   var tabs = document.querySelectorAll("#mtabs [data-mtab]");
   for (var t = 0; t < tabs.length; t++) {
     tabs[t].addEventListener("click", function () {
@@ -1619,7 +2105,11 @@ function renderMuteTabs() {
 }
 
 function renderMuteStatus() {
-  if (myRole() === "mute" && state.inGame) renderMuteTabs();
+  if (myRole() !== "mute" || !state.inGame) return;
+  renderMuteTabs();
+  // Вкладка проводов зависит от прогресса подключения — освежаем.
+  // (холста там нет, активное рисование не прервётся)
+  if (GST && GST.tab === "wires") renderMuteMain();
 }
 
 function renderMuteMain() {
@@ -1631,6 +2121,14 @@ function renderMuteMain() {
 
   if (id === "wires") {
     var tc = COLOR_META[cfg.colors[cfg.targetIndex]];
+    if (cfg.connectOrder) {
+      html += '<b>Фаза 1.</b> Подключить провода в порядке:<div class="chips-row" style="margin:6px 0">';
+      for (var co = 0; co < 5; co++) {
+        var wi = cfg.connectOrder[co];
+        html += '<span class="chip" style="background:' + COLOR_META[cfg.colors[wi]].hex + ';cursor:default">&#8470;' + (wi + 1) + '</span>';
+      }
+      html += '</div><b>Фаза 2.</b> ';
+    }
     if (cfg.gesture === "mix") {
       html += 'Перерезать провод цвета: <b style="color:' + tc.hex + '">' + tc.name + '</b>.<br/>' +
         'Покажи <b>два базовых цвета</b>, которые при смешении дают нужный.';
@@ -1673,12 +2171,14 @@ function renderMuteMain() {
   html += '<div class="tool-card"><div class="tool-title">ТВОИ ЖЕСТЫ (видит Глухой)</div><div id="tool-area">' +
     muteToolHtml(id, cfg) + '</div></div>';
 
-  html += '<div class="qbar">' +
-    '<button class="qbtn" data-q="yes" title="Да / верно">&#128077;</button>' +
-    '<button class="qbtn" data-q="no" title="Нет / не то">&#128078;</button>' +
-    '<button class="qbtn" data-q="stop" title="Стоп / подожди">&#9995;</button>' +
-    '<button class="qbtn" data-q="next" title="Дальше / следующий">&#128073;</button>' +
-    '</div>';
+  // «Да/нет» теперь показывает твой персонаж: кивай и мотай головой
+  // (пульт «ГОЛОВА» внизу экрана). Быстрые цифры мигают у всех —
+  // удобно для номеров проводов и кнопок.
+  html += '<div class="qbar">';
+  for (var nn = 1; nn <= 5; nn++) {
+    html += '<button class="qbtn" data-q="n' + nn + '" style="font-size:18px;font-weight:900">' + nn + '</button>';
+  }
+  html += '</div>';
 
   $("mute-main").innerHTML = html;
   bindMuteTools(id, cfg);
@@ -1695,6 +2195,17 @@ function renderMuteMain() {
 
 function muteToolHtml(id, cfg) {
   if (id === "wires") {
+    if (cfg.connectOrder && !wiresConnectDone()) {
+      var cst = GST.wires.connStep;
+      var big = cst >= 0
+        ? '<div class="chip" style="background:var(--gold);color:#111;width:76px;height:64px;font-size:24px;cursor:default">&#8470;' + (cfg.connectOrder[cst] + 1) + '</div>'
+        : '<div class="muted">&#8212; скрыто &#8212;</div>';
+      return '<div class="muted" style="margin-bottom:6px">Фаза подключения (' + (G ? G.wireConnProgress : 0) + ' / 5). Показывай номер провода:</div>' +
+        '<div style="display:flex;align-items:center;gap:12px;justify-content:center">' +
+        '<button class="btn ghost sm" data-wstep="-1">&#8249; Пред.</button>' + big +
+        '<button class="btn ghost sm" data-wstep="1">След. &#8250;</button></div>' +
+        '<div style="text-align:center;margin-top:8px"><button class="btn ghost sm" data-wstep="hide">Скрыть</button></div>';
+    }
     if (cfg.gesture === "mix") {
       var base = ["red", "blue", "yellow"], h = '<div class="muted" style="margin-bottom:6px">Выбери 2 базовых цвета:</div><div class="chips-row">';
       for (var i = 0; i < 3; i++) {
@@ -1796,6 +2307,23 @@ function bindMuteTools(id, cfg) {
       var ix = GST.wires.crossed.indexOf(c);
       if (ix >= 0) GST.wires.crossed.splice(ix, 1);
       else GST.wires.crossed.push(c);
+      bumpGesture(); renderMuteMain();
+    });
+  }
+
+  var wsteps = document.querySelectorAll("#tool-area [data-wstep]");
+  for (var wq = 0; wq < wsteps.length; wq++) {
+    wsteps[wq].addEventListener("click", function () {
+      var v = this.getAttribute("data-wstep");
+      if (v === "hide") GST.wires.connStep = -1;
+      else {
+        var d = parseInt(v, 10);
+        var ns = GST.wires.connStep + d;
+        if (GST.wires.connStep === -1 && d > 0) ns = 0;
+        if (ns < -1) ns = -1;
+        if (ns > 4) ns = 4;
+        GST.wires.connStep = ns;
+      }
       bumpGesture(); renderMuteMain();
     });
   }
@@ -1951,7 +2479,14 @@ function renderGestureWin() {
     MODULE_META[id].num + ". " + MODULE_META[id].name + '</b></div>';
 
   if (id === "wires") {
-    if (cfg.gesture === "mix") {
+    if (cfg.connectOrder && !wiresConnectDone()) {
+      var wcst = GST.wires.connStep;
+      h += wcst >= 0
+        ? '<div style="display:flex;align-items:center;gap:10px"><span class="muted">Подключить:</span>' +
+          '<span class="chip" style="background:var(--gold);color:#111;width:64px;height:52px;font-size:22px;cursor:default">&#8470;' + (cfg.connectOrder[wcst] + 1) + '</span></div>' +
+          '<div class="muted" style="font-size:11px;margin-top:5px">Скажи Слепому номер провода. Подключено: ' + (G ? G.wireConnProgress : 0) + ' / 5</div>'
+        : '<span class="muted">выбирает шаг подключения&#8230;</span>';
+    } else if (cfg.gesture === "mix") {
       if (GST.wires.sel.length) {
         h += '<div class="chips-row">';
         for (var i = 0; i < GST.wires.sel.length; i++) {
@@ -2029,10 +2564,66 @@ function drawGestureCanvas(moduleId) {
   if (c) redrawInk(c, moduleId);
 }
 
+var HEAD = { yaw: 0, _t: null, _last: 0 };
+
+function sendHeadYaw(deg) {
+  HEAD.yaw = deg;
+  var fire = function () {
+    HEAD._last = Date.now();
+    rtSend({ t: "head", id: PLAYER.id, yaw: HEAD.yaw });
+  };
+  if (Date.now() - HEAD._last > 140) fire();
+  else { clearTimeout(HEAD._t); HEAD._t = setTimeout(fire, 150); }
+}
+
+function doNod()   { rtSend({ t: "anim", id: PLAYER.id, kind: "nod" });   flashBtn("btn-nod"); }
+function doShake() { rtSend({ t: "anim", id: PLAYER.id, kind: "shake" }); flashBtn("btn-shake"); }
+function flashBtn(id) {
+  var b = $(id); if (!b) return;
+  b.style.background = "var(--acc-dim)";
+  setTimeout(function () { b.style.background = ""; }, 220);
+}
+
+function doThump() {
+  rtSend({ t: "thump" });
+  shakeTable();
+}
+function shakeTable() {
+  try { if (navigator.vibrate) navigator.vibrate(90); } catch (e) {}
+  if (T3.renderer) { T3.shake = 14; }
+  else {
+    document.body.classList.remove("shaken");
+    void document.body.offsetWidth; // рестарт анимации
+    document.body.classList.add("shaken");
+    setTimeout(function () { document.body.classList.remove("shaken"); }, 450);
+  }
+}
+
+function spawnConfetti() {
+  var glyphs = ["&#127881;", "&#10024;", "&#11088;", "&#127882;", "&#127942;", "&#129395;"];
+  for (var i = 0; i < 36; i++) {
+    var d = document.createElement("div");
+    d.className = "confp";
+    d.innerHTML = glyphs[Math.floor(Math.random() * glyphs.length)];
+    d.style.left = (Math.random() * 100) + "vw";
+    d.style.fontSize = (14 + Math.random() * 22) + "px";
+    d.style.animationDuration = (2.2 + Math.random() * 2.2) + "s";
+    d.style.animationDelay = (Math.random() * 0.8) + "s";
+    document.body.appendChild(d);
+    (function (el) { setTimeout(function () { el.remove(); }, 6000); })(d);
+  }
+}
+
 function quickFlash(k) {
   var icons = { yes: "&#128077;", no: "&#128078;", stop: "&#9995;", next: "&#128073;" };
   var el = $("qflash");
-  el.innerHTML = icons[k] || "&#10067;";
+  if (k && k.charAt(0) === "n" && k.length === 2) {
+    el.innerHTML = '<span style="display:inline-flex;width:84px;height:84px;border-radius:18px;' +
+      'background:var(--gold);color:#111;font-size:50px;font-weight:900;' +
+      'align-items:center;justify-content:center">' + esc(k.slice(1)) + '</span>';
+  } else {
+    el.innerHTML = icons[k] || "&#10067;";
+  }
   el.style.display = "block";
   clearTimeout(el._t);
   el._t = setTimeout(function () { el.style.display = "none"; }, 1600);
@@ -2164,10 +2755,27 @@ function setPeerMuted(pid, muted) {
   renderVoiceBar();
 }
 
+var VBAR = { collapsed: false };
+
 function renderVoiceBar() {
   if (!state.inGame) return;
   var players = (state.session && state.session.players) || [];
-  var html = "";
+
+  // Свёрнутый вид: одна маленькая кнопка со счётчиком онлайна
+  if (VBAR.collapsed) {
+    var onl = 0;
+    for (var c = 0; c < players.length; c++) {
+      if (players[c].id === PLAYER.id || RT.online[players[c].id]) onl++;
+    }
+    $("voice-bar").innerHTML =
+      '<button class="vtoggle" id="vbar-toggle">&#128101; ' + onl + '/' + players.length + '</button>';
+    $("vbar-toggle").addEventListener("click", function () {
+      VBAR.collapsed = false; renderVoiceBar();
+    });
+    return;
+  }
+
+  var html = '<button class="vtoggle" id="vbar-toggle">Свернуть &#9662;</button>';
   for (var i = 0; i < players.length; i++) {
     var p = players[i];
     var r = roleOf(p.id);
@@ -2185,6 +2793,9 @@ function renderVoiceBar() {
       '<span class="vrole">' + (ROLE_META[r] ? ROLE_META[r].name : "") + '</span></div>';
   }
   $("voice-bar").innerHTML = html;
+  $("vbar-toggle").addEventListener("click", function () {
+    VBAR.collapsed = true; renderVoiceBar();
+  });
   var mv = $("vc-me");
   if (mv) mv.addEventListener("click", toggleMic);
 }
@@ -2250,6 +2861,12 @@ function init() {
     requestMic();
   });
 
+  $("btn-thump").addEventListener("click", doThump);
+  $("head-yaw").addEventListener("input", function () {
+    sendHeadYaw(parseInt(this.value, 10) || 0);
+  });
+  $("btn-nod").addEventListener("click", doNod);
+  $("btn-shake").addEventListener("click", doShake);
   $("btn-game-exit").addEventListener("click", function () {
     askConfirm("Выйти из игры? Команда останется без тебя.", exitGame);
   });
