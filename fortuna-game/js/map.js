@@ -81,6 +81,20 @@ function mapCoord(r, c) {
   return String.fromCharCode(65 + c) + (r + 1);
 }
 
+// Эффективное число токенов атаки с учётом ежедневного сброса.
+// ЗЕРКАЛО СЕРВЕРА: capture-territory / join-coop сбрасывают attack_tokens
+// до 2, если tokens_reset_date != сегодня (UTC). Но сброс происходит только
+// в момент атаки. Если читать сохранённое attack_tokens напрямую, то после
+// исчерпания токенов на следующий день клиент видит 0, кнопка блокируется —
+// и игрок не может вызвать сервер, чтобы тот сбросил токены (вечный дедлок).
+// Поэтому применяем то же правило на клиенте: новый день по UTC → снова 2.
+function mapEffectiveTokens(base) {
+  if (!base) return 2;
+  var todayUTC = new Date().toISOString().slice(0, 10);
+  if (base.tokens_reset_date !== todayUTC) return 2;
+  return base.attack_tokens != null ? base.attack_tokens : 2;
+}
+
 // ── CSS (инжектируется один раз) ─────────────────────────────
 
 function mapInjectCSS() {
@@ -433,7 +447,7 @@ function _renderMapUI(app, front) {
   var gridCols = LABEL_W + "px repeat(" + MAP_GRID + "," + MAP_CELL + "px)";
 
   // Токены в шапке
-  var tokensLeft = _mapBase ? (_mapBase.attack_tokens != null ? _mapBase.attack_tokens : 2) : "?";
+  var tokensLeft = _mapBase ? mapEffectiveTokens(_mapBase) : "?";
   var tokensHtml = "<span style=\"font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;"
     + (tokensLeft > 0 ? "background:var(--accent-soft);color:var(--accent);" : "background:var(--surface-2);color:var(--text-soft);") + "\">"
     + ICON_TOKEN + " " + tokensLeft + " / 2</span>";
@@ -489,7 +503,7 @@ function mapSelectSector(r, c) {
   var ti        = MAP_TIER[tier];
   var clanColor = ownerId ? mapClanColor(ownerId) : null;
   var playerClanId = _mapPlayer ? _mapPlayer.clan_id : null;
-  var tokensLeft   = _mapBase ? (_mapBase.attack_tokens != null ? _mapBase.attack_tokens : 2) : 0;
+  var tokensLeft   = mapEffectiveTokens(_mapBase);
   var glbUrl = MAP_GLB_CDN + ti.glb;  // реальные модели (текстуры загружены)
 
   // ── Логика кнопки захвата ──────────────────────────────────
@@ -670,8 +684,12 @@ async function doCapture(r, c) {
   if (errEl) errEl.textContent = "";
   try {
     var result = await captureTerritory(player.id, r, c);
-    // Обновляем локальные данные
-    if (_mapBase) _mapBase.attack_tokens = result.tokens_remaining;
+    // Обновляем локальные данные (в т.ч. дату сброса — сервер выставил её на
+    // сегодня, иначе mapEffectiveTokens решит, что настал новый день, и вернёт 2)
+    if (_mapBase) {
+      _mapBase.attack_tokens = result.tokens_remaining;
+      _mapBase.tokens_reset_date = new Date().toISOString().slice(0, 10);
+    }
     if (result.won) {
       var profile = _mapPlayer;
       if (profile && profile.clan_id && _mapSectorMap[r + "-" + c]) {
@@ -812,8 +830,11 @@ async function doJoinCoop(r, c) {
   if (errEl) errEl.innerHTML = "";
   try {
     var result = await joinCoop(player.id, r, c, "join");
-    // Обновляем локальные данные
-    if (_mapBase) _mapBase.attack_tokens = result.tokens_remaining;
+    // Обновляем локальные данные (в т.ч. дату сброса — см. пояснение в doCapture)
+    if (_mapBase) {
+      _mapBase.attack_tokens = result.tokens_remaining;
+      _mapBase.tokens_reset_date = new Date().toISOString().slice(0, 10);
+    }
     delete _mapCoopMap[r + "-" + c];
     if (result.won && _mapPlayer && _mapPlayer.clan_id) {
       var key = r + "-" + c;
