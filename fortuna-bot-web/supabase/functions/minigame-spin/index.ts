@@ -94,6 +94,12 @@ Deno.serve(async (req) => {
       big_win: spin.bigWin,
       item_drop: itemDrop,
       horseshoe_bonus: horseshoeHit,
+      breakdown: spin.breakdown,
+      joker_replacements: spin.jokerReplacements,
+      clover_multiplier: spin.cloverMultiplier,
+      attempt_multiplier: spin.attemptMultiplier,
+      jackpot: spin.jackpot,
+      anti_jackpot: spin.antiJackpot,
     });
   } catch (e) {
     console.error(e);

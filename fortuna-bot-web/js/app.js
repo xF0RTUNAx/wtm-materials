@@ -194,7 +194,26 @@ const SYMBOL_EMOJI = {
   skull: "💀", coin1: "🪙", coin2: "💰", coin3: "💵", coin4: "💎", coin5: "🏆", seven: "7️⃣",
   key: "🔑", fireball: "🔥", radiofugas: "💥", tu4: "✈️", clover: "🍀", joker: "🃏",
 };
+const SYMBOL_NAME = {
+  skull: "Череп", coin1: "Монетка", coin2: "Мешок монет", coin3: "Пачка денег",
+  coin4: "Бриллиант", coin5: "Кубок", seven: "Семёрка",
+  key: "Ключ", fireball: "Фаербол", radiofugas: "Радиофугас", tu4: "Ту-4",
+  clover: "Клевер", joker: "Джокер",
+};
+const SYMBOL_VALUE = {
+  skull: "ничего", coin1: "400 монет", coin2: "900 монет", coin3: "1 500 монет",
+  coin4: "2 600 монет", coin5: "4 400 монет", seven: "7 777 монет (3+ — джекпот)",
+  key: "+1 ключ за копию", fireball: "10–20 фаербола за копию", radiofugas: "3–8 радиофугаса за копию",
+  tu4: "150–350 Ту-4 за копию", clover: "×1.5 к монетам спина за копию",
+  joker: "превращается в самый ценный из выпавших символов",
+};
+const SYMBOL_WEIGHT = {
+  skull: 20, coin1: 14, coin2: 12, coin3: 10, coin4: 8, coin5: 5, seven: 2,
+  key: 6, fireball: 6, radiofugas: 6, tu4: 6, clover: 4, joker: 1,
+};
 const MINIGAME_COSTS = { 1: 7777, 2: 17777, 3: 27777 };
+const JACKPOT_777_DISPLAY = 77777;
+const ANTI_JACKPOT_DISPLAY = 66666;
 
 function renderMinigameTab(mount, flash) {
   const today = new Date().toISOString().slice(0, 10);
@@ -210,10 +229,15 @@ function renderMinigameTab(mount, flash) {
     <div class="container-card">
       <div class="container-card-name">${icon("puzzle")} Попытка ${Math.min(nextAttempt, 3)} из 3</div>
       <div class="container-card-price">${canSpin ? `Цена: ${icon("coin", 14)} ${fmtNum(cost)}` : "Попытки на сегодня закончились"}</div>
-      ${canSpin ? `<button id="spin-btn" class="btn-secondary btn-sm">Крутить</button>` : ""}
+      <div class="container-buy-row">
+        ${canSpin ? `<button id="spin-btn" class="btn-secondary btn-sm">Крутить</button>` : ""}
+        <button id="paytable-btn" class="btn-ghost btn-sm">Таблица наград</button>
+      </div>
     </div>
   `;
   if (flash) showResult("minigame-result", flash.ok, flash.text);
+
+  document.getElementById("paytable-btn").addEventListener("click", openPaytableModal);
 
   const btn = document.getElementById("spin-btn");
   if (btn) btn.addEventListener("click", async () => {
@@ -229,8 +253,40 @@ function renderMinigameTab(mount, flash) {
   });
 }
 
+function describeComboEntry(e) {
+  const emoji = SYMBOL_EMOJI[e.key];
+  const name = SYMBOL_NAME[e.key];
+  const head = `${emoji} ${name} ×${e.count}`;
+  if (e.key === "seven" && e.count >= 3) return `${head} → отправляется в джекпот ниже`;
+  if (e.key === "skull" && e.count === 5) return `${head} → отправляется в анти-джекпот ниже`;
+  if (e.coins) return `${head}: ${fmtNum(e.coins / e.count / e.comboMultiplier)} × ${e.count} × комбо ×${e.comboMultiplier} = +${fmtNum(e.coins)} монет`;
+  if (e.keys) return `${head} → +${e.keys} ${icon("carKey", 13)}`;
+  if (e.resourceAmount || e.detailsFromThis) {
+    const resIcon = { fireball_kills: "jetFighter", radiofugas_kills: "fragmentedMeteor", tu4_points: "commercialAirplane" }[e.resourceField];
+    const bits = [];
+    if (e.resourceAmount) bits.push(`+${fmtNum(e.resourceAmount)} ${icon(resIcon, 13)}`);
+    if (e.detailsFromThis) bits.push(`+${e.detailsFromThis} ${icon("detail", 13)} (конвертация из части копий)`);
+    return `${head} → ${bits.join(", ")}`;
+  }
+  if (e.key === "clover" && e.comboMultiplier) return `${head} → монеты спина ×${Number(e.comboMultiplier.toFixed(2))}`;
+  return `${head} → ничего`;
+}
+
 function describeSpinResult(res) {
   const symbols = res.rolled.map((k) => SYMBOL_EMOJI[k]).join(" ");
+  const lines = [symbols, ""];
+
+  (res.joker_replacements || []).forEach((j) => {
+    lines.push(`🃏 Джокер → стал ${SYMBOL_EMOJI[j.to]} ${SYMBOL_NAME[j.to]} (самый ценный из остальных выпавших)`);
+  });
+
+  res.breakdown.forEach((e) => lines.push(describeComboEntry(e)));
+
+  if (res.jackpot) lines.push(`🎰 Джекпот (7️⃣×3+) → +${fmtNum(JACKPOT_777_DISPLAY)} монет`);
+  if (res.anti_jackpot) lines.push(`💀 Анти-джекпот (💀×5) → +${fmtNum(ANTI_JACKPOT_DISPLAY)} монет`);
+  if (res.attempt_multiplier > 1) lines.push(`Попытка №${res.attempt_number} → монеты спина ×${res.attempt_multiplier}`);
+
+  lines.push("");
   const parts = [];
   if (res.coins_gained) parts.push(`${icon("coin", 14)} ${res.coins_gained > 0 ? "+" : ""}${fmtNum(res.coins_gained)}`);
   if (res.keys_gained) parts.push(`${icon("carKey", 14)} +${res.keys_gained}`);
@@ -238,10 +294,13 @@ function describeSpinResult(res) {
   if (res.resources_gained.fireball_kills) parts.push(`${icon("jetFighter", 14)} +${res.resources_gained.fireball_kills}`);
   if (res.resources_gained.radiofugas_kills) parts.push(`${icon("fragmentedMeteor", 14)} +${res.resources_gained.radiofugas_kills}`);
   if (res.resources_gained.tu4_points) parts.push(`${icon("commercialAirplane", 14)} +${res.resources_gained.tu4_points}`);
-  let text = `${symbols}\n${parts.join(", ") || "Пусто"}`;
-  if (res.big_win) text = "🎉 БОЛЬШОЙ ВЫИГРЫШ! " + text;
-  if (res.item_drop === "new") text += `\n${icon("award", 14)} Выпал Набор Фортуны!`;
-  if (res.item_drop === "duplicate") text += `\n${icon("award", 14)} Дубликат Набора Фортуны — +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет`;
+  lines.push(`Итого: ${parts.join(", ") || "ничего"}`);
+
+  if (res.item_drop === "new") lines.push(`${icon("award", 14)} Выпал Набор Фортуны!`);
+  if (res.item_drop === "duplicate") lines.push(`${icon("award", 14)} Дубликат Набора Фортуны — +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет`);
+
+  let text = lines.join("\n");
+  if (res.big_win) text = "🎉 БОЛЬШОЙ ВЫИГРЫШ!\n" + text;
   return text;
 }
 const ITEM_DUP_COMP_DISPLAY = 50000;
@@ -733,6 +792,70 @@ document.getElementById("info-modal").addEventListener("click", (e) => {
   if (e.target.id === "info-modal") closeInfoModal();
 });
 
+// ── Таблица наград мини-игры ──
+function openPaytableModal() {
+  const body = document.getElementById("paytable-modal-body");
+  if (!body.dataset.filled) {
+    const symbolRows = Object.keys(SYMBOL_EMOJI)
+      .map(
+        (k) =>
+          `<div class="profile-row"><div class="profile-row-label">${SYMBOL_EMOJI[k]}<span>${SYMBOL_NAME[k]} (${SYMBOL_WEIGHT[k]}%)</span></div><div class="profile-row-value" style="font-weight:500;text-align:right;max-width:55%">${SYMBOL_VALUE[k]}</div></div>`,
+      )
+      .join("");
+
+    body.innerHTML = `
+      <div class="profile-section-title">Символы (5 роллов за попытку)</div>
+      ${symbolRows}
+
+      <div class="profile-section-title">Комбо — монеты (🪙💰💵💎🏆7️⃣)</div>
+      <div class="profile-cd-list">
+        <div class="profile-cd-row"><span>2 копии</span><span>номинал × 2</span></div>
+        <div class="profile-cd-row"><span>3 копии</span><span>номинал × 5</span></div>
+        <div class="profile-cd-row"><span>4 копии</span><span>номинал × 12</span></div>
+        <div class="profile-cd-row"><span>5 копий</span><span>номинал × 30 (большой выигрыш)</span></div>
+      </div>
+
+      <div class="profile-section-title">Комбо — ключи и ресурсы (🔑🔥💥✈️)</div>
+      <div class="profile-cd-list">
+        <div class="profile-cd-row"><span>2 копии</span><span>сумма × 2</span></div>
+        <div class="profile-cd-row"><span>3 копии</span><span>сумма × 3</span></div>
+        <div class="profile-cd-row"><span>4 копии</span><span>сумма × 4</span></div>
+        <div class="profile-cd-row"><span>5 копий</span><span>сумма × 5 (большой выигрыш)</span></div>
+      </div>
+
+      <div class="profile-section-title">Джекпоты и бонусы</div>
+      <div class="profile-cd-list">
+        <div class="profile-cd-row"><span>7️⃣ × 3 и более</span><span>+${fmtNum(JACKPOT_777_DISPLAY)} монет</span></div>
+        <div class="profile-cd-row"><span>💀 × 5</span><span>+${fmtNum(ANTI_JACKPOT_DISPLAY)} монет</span></div>
+        <div class="profile-cd-row"><span>🍀 клевер</span><span>×1.5 к монетам спина за каждую копию (если есть монеты)</span></div>
+        <div class="profile-cd-row"><span>Номер попытки за день</span><span>монеты спина × 1 / × 2 / × 3</span></div>
+        <div class="profile-cd-row"><span>🔥/💥/✈️ — каждая копия</span><span>45% шанс уйти в детали вместо ресурса (✈️ → 2, 🔥/💥 → 1)</span></div>
+        <div class="profile-cd-row"><span>🃏 джокер</span><span>${SYMBOL_VALUE.joker}</span></div>
+        <div class="profile-cd-row"><span>После каждой попытки</span><span>0.5% шанс на Набор Фортуны (дубликат = +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет)</span></div>
+      </div>
+
+      <div class="profile-section-title">Стоимость попыток</div>
+      <div class="profile-cd-list">
+        <div class="profile-cd-row"><span>Попытка 1</span><span>${fmtNum(MINIGAME_COSTS[1])} монет</span></div>
+        <div class="profile-cd-row"><span>Попытка 2</span><span>${fmtNum(MINIGAME_COSTS[2])} монет</span></div>
+        <div class="profile-cd-row"><span>Попытка 3</span><span>${fmtNum(MINIGAME_COSTS[3])} монет</span></div>
+      </div>
+      <div class="profile-empty">Набор Фортуны из магазина даёт −10% на все три попытки.</div>
+    `;
+    body.dataset.filled = "1";
+  }
+  document.getElementById("paytable-modal").hidden = false;
+}
+
+function closePaytableModal() {
+  document.getElementById("paytable-modal").hidden = true;
+}
+
+document.getElementById("paytable-modal-close").addEventListener("click", closePaytableModal);
+document.getElementById("paytable-modal").addEventListener("click", (e) => {
+  if (e.target.id === "paytable-modal") closePaytableModal();
+});
+
 // ── Профиль участника (клик по нику в ленте "Онлайн") ──
 const AVATAR_OVERRIDES = { xFORTUNAx: "fortuna.webp" };
 
@@ -876,6 +999,7 @@ document.getElementById("media-modal").addEventListener("click", (e) => {
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   closeInfoModal();
+  closePaytableModal();
   closePlayerProfile();
   closeMediaModal();
 });

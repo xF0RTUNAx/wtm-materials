@@ -67,6 +67,25 @@ export interface SpinResult {
   resources: { fireball_kills: number; radiofugas_kills: number; tu4_points: number };
   bigWin: boolean;
   itemDrop: "new" | "duplicate" | null;
+  breakdown: ComboBreakdownEntry[];
+  jokerReplacements: { to: SymbolKey }[];
+  cloverMultiplier: number;
+  attemptMultiplier: number;
+  jackpot: boolean;
+  antiJackpot: boolean;
+}
+
+// Раскладка "почему именно такая сумма" — по одной записи на выпавший (не-джокерный
+// после конверсии) символ, чтобы клиент мог объяснить каждый элемент отдельно.
+export interface ComboBreakdownEntry {
+  key: SymbolKey;
+  count: number;
+  coins?: number;
+  keys?: number;
+  detailsFromThis?: number;
+  resourceField?: "fireball_kills" | "radiofugas_kills" | "tu4_points";
+  resourceAmount?: number;
+  comboMultiplier?: number;
 }
 
 export function rollMinigame(attemptNumber: number): SpinResult {
@@ -80,6 +99,9 @@ export function rollMinigame(attemptNumber: number): SpinResult {
     const target = JOKER_PRIORITY.find((cand) => (nonJokerCounts[cand] ?? 0) > 0);
     return target ?? "joker";
   });
+  const jokerReplacements = raw
+    .map((k, i) => (k === "joker" ? { to: rolled[i] } : null))
+    .filter((r): r is { to: SymbolKey } => r !== null);
 
   const counts: Partial<Record<SymbolKey, number>> = {};
   for (const k of rolled) counts[k] = (counts[k] ?? 0) + 1;
@@ -91,21 +113,27 @@ export function rollMinigame(attemptNumber: number): SpinResult {
   let bigWin = false;
   let jackpot = false;
   let antiJackpot = false;
+  const breakdown: ComboBreakdownEntry[] = [];
 
   for (const [key, count] of Object.entries(counts) as [SymbolKey, number][]) {
     if (count === 5) bigWin = true;
     const def = BY_KEY[key];
+    const entry: ComboBreakdownEntry = { key, count };
 
     if (def.kind === "coin") {
       if (key === "seven" && count >= 3) {
-        jackpot = true;
-        continue; // 7х3+ уходит в джекпот, не считается обычным комбо
+        jackpot = true; // 7х3+ уходит в джекпот, не считается обычным комбо
+      } else {
+        entry.comboMultiplier = COMBO_COINS[count] ?? 1;
+        entry.coins = def.nominal! * count * entry.comboMultiplier;
+        coins += entry.coins;
       }
-      coins += def.nominal! * count * (COMBO_COINS[count] ?? 1);
     } else if (key === "skull" && count === 5) {
       antiJackpot = true;
     } else if (def.kind === "key") {
-      keys += count * (COMBO_RES[count] ?? 1);
+      entry.comboMultiplier = COMBO_RES[count] ?? 1;
+      entry.keys = count * entry.comboMultiplier;
+      keys += entry.keys;
     } else if (def.kind === "resource") {
       let convertedDetails = 0;
       let keptCopies = 0;
@@ -116,14 +144,24 @@ export function rollMinigame(attemptNumber: number): SpinResult {
       details += convertedDetails;
       let resSum = 0;
       for (let i = 0; i < keptCopies; i++) resSum += randInt(def.min!, def.max!);
-      resources[def.resField!] += resSum * (COMBO_RES[count] ?? 1);
+      entry.comboMultiplier = COMBO_RES[count] ?? 1;
+      entry.resourceField = def.resField;
+      entry.resourceAmount = resSum * entry.comboMultiplier;
+      entry.detailsFromThis = convertedDetails;
+      resources[def.resField!] += entry.resourceAmount;
     }
-    // clover обрабатывается отдельно ниже, skull(<5) и inert joker ничего не дают
+    // clover обрабатывается отдельно ниже (множитель известен только после всего цикла),
+    // skull(<5) и inert джокер (без валидной цели) остаются "нулевыми" записями как есть
+    breakdown.push(entry);
   }
 
   const cloverCount = counts.clover ?? 0;
+  let cloverMultiplier = 1;
   if (cloverCount > 0 && coins > 0) {
-    coins = Math.floor(coins * Math.pow(1.5, cloverCount));
+    cloverMultiplier = Math.pow(1.5, cloverCount);
+    coins = Math.floor(coins * cloverMultiplier);
+    const cloverEntry = breakdown.find((e) => e.key === "clover");
+    if (cloverEntry) cloverEntry.comboMultiplier = cloverMultiplier;
   }
 
   coins = Math.floor(coins * attemptNumber);
@@ -131,5 +169,8 @@ export function rollMinigame(attemptNumber: number): SpinResult {
   if (jackpot) { coins += JACKPOT_777; bigWin = true; }
   if (antiJackpot) { coins += ANTI_JACKPOT; bigWin = true; }
 
-  return { rolled, coins, keys, details, resources, bigWin, itemDrop: null };
+  return {
+    rolled, coins, keys, details, resources, bigWin, itemDrop: null,
+    breakdown, jokerReplacements, cloverMultiplier, attemptMultiplier: attemptNumber, jackpot, antiJackpot,
+  };
 }
