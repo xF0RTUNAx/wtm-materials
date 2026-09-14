@@ -41,4 +41,9 @@ const CONFIG = {
 
   LEADERBOARDS_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/get-leaderboards",
+
+  ADMIN_RESET_COOLDOWNS_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/admin-reset-cooldowns",
+  ADMIN_SET_PROFILE_THEME_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/admin-set-profile-theme",
 };

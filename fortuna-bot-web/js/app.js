@@ -1081,6 +1081,7 @@ const PROFILE_THEME_NAMES = {
   "theme-nostalgia": "Ностальгия",
   "theme-hamster": "Верный друг",
   "theme-starry": "Звёздная тишина",
+  "theme-billcipher": "Билл Сайфер",
 };
 const THEME_POINTS_HTML = `<div class="theme-points-wrapper">${"<i class=\"theme-point\"></i>".repeat(10)}</div>`;
 const THEME_HAMSTER_HTML = `
@@ -1207,6 +1208,40 @@ function renderPlayerProfileHTML(p) {
 
     <div class="profile-section-title">${icon("openChest", 13)} Уникальные предметы</div>
     ${regularHTML}
+
+    ${renderAdminPanelHTML(p)}
+  `;
+}
+
+function renderAdminPanelHTML(p) {
+  const me = getCurrentPlayer();
+  if (!me || me.login !== p.login || !currentState?.is_admin) return "";
+
+  const themeOptions = Object.entries(PROFILE_THEME_NAMES)
+    .map(([slug, name]) => `<option value="${slug}" ${p.profile_theme === slug ? "selected" : ""}>${name}</option>`)
+    .join("");
+
+  return `
+    <div class="profile-section-title">${icon("award", 13)} Панель администратора</div>
+    <div class="admin-panel">
+      <div class="admin-panel-label">Сбросить кулдауны фарма:</div>
+      <div class="admin-cd-checks">
+        <label><input type="checkbox" data-admin-cd="loot" checked /> Лут</label>
+        <label><input type="checkbox" data-admin-cd="fireball" checked /> Фаербол</label>
+        <label><input type="checkbox" data-admin-cd="radiofugas" checked /> Радиофугас</label>
+        <label><input type="checkbox" data-admin-cd="meladze" checked /> Меладзе</label>
+      </div>
+      <button id="admin-reset-cd-btn" class="btn-secondary btn-sm">Сбросить выбранные</button>
+
+      <div class="admin-panel-label" style="margin-top:14px">Дизайн профиля (любой, без ограничений):</div>
+      <select id="admin-theme-select" class="admin-theme-select">
+        <option value="">— без дизайна —</option>
+        ${themeOptions}
+      </select>
+      <button id="admin-set-theme-btn" class="btn-secondary btn-sm">Применить дизайн</button>
+
+      <div id="admin-panel-result" class="result-box" hidden></div>
+    </div>
   `;
 }
 
@@ -1217,8 +1252,38 @@ async function openPlayerProfile(login) {
   try {
     const data = await getPlayerProfile(login);
     body.innerHTML = renderPlayerProfileHTML(data);
+    wireAdminPanel(body, login);
   } catch (err) {
     body.innerHTML = `<div class="error-text">${err.message}</div>`;
+  }
+}
+
+function wireAdminPanel(body, login) {
+  const resetBtn = body.querySelector("#admin-reset-cd-btn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", async () => {
+      const fields = [...body.querySelectorAll("[data-admin-cd]:checked")].map((el) => el.dataset.adminCd);
+      if (!fields.length) return;
+      try {
+        await adminResetCooldowns(getCurrentPlayer().id, fields);
+        await openPlayerProfile(login);
+      } catch (err) {
+        showResult("admin-panel-result", false, err.message);
+      }
+    });
+  }
+
+  const themeBtn = body.querySelector("#admin-set-theme-btn");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", async () => {
+      const select = body.querySelector("#admin-theme-select");
+      try {
+        await adminSetProfileTheme(getCurrentPlayer().id, select.value || null);
+        await openPlayerProfile(login);
+      } catch (err) {
+        showResult("admin-panel-result", false, err.message);
+      }
+    });
   }
 }
 

@@ -78,6 +78,14 @@ function getLeaderboards() {
   return callEdgeFunction(CONFIG.LEADERBOARDS_URL, {});
 }
 
+function adminResetCooldowns(playerId, fields) {
+  return callEdgeFunction(CONFIG.ADMIN_RESET_COOLDOWNS_URL, { player_id: playerId, fields });
+}
+
+function adminSetProfileTheme(playerId, theme) {
+  return callEdgeFunction(CONFIG.ADMIN_SET_PROFILE_THEME_URL, { player_id: playerId, theme });
+}
+
 function claimMigrationCode(playerId, code) {
   return callEdgeFunction(CONFIG.CLAIM_CODE_URL, { player_id: playerId, code });
 }
