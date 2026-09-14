@@ -38,4 +38,7 @@ const CONFIG = {
 
   PLAYER_PROFILE_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/get-player-profile",
+
+  LEADERBOARDS_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/get-leaderboards",
 };

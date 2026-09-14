@@ -651,7 +651,7 @@ function renderContainersTab(mount, flash) {
     .map(
       ([tier, info]) => `
       <div class="container-card">
-        <div class="container-card-name">${icon("chest")} ${info.name}</div>
+        <div class="container-card-name">${icon("chest512")} ${info.name}</div>
         <div class="container-card-price">${icon("carKey", 13)} ${info.price} / шт</div>
         <div class="container-buy-row">
           <button class="btn-secondary btn-sm" data-tier="${tier}" data-count="1">×1</button>
@@ -763,12 +763,14 @@ function describeFeedItem(row) {
 
 async function renderFeedTab(mount) {
   mount.innerHTML = `
-    <div class="container-buy-row" style="margin-bottom:12px">
+    <div class="container-buy-row" style="margin-bottom:12px; justify-content:space-between">
       <button id="event-timers-btn" class="btn-ghost btn-sm">${icon("hazardSign", 15)} Таймеры до ивентов</button>
+      <button id="top-btn" class="btn-ghost btn-sm">${icon("laurelCrown", 15)} Топ</button>
     </div>
     <div id="feed-list-mount"><div class="loading">Загрузка...</div></div>
   `;
   document.getElementById("event-timers-btn").addEventListener("click", openEventTimersModal);
+  document.getElementById("top-btn").addEventListener("click", openTopModal);
 
   const listMount = document.getElementById("feed-list-mount");
   try {
@@ -833,6 +835,58 @@ function closeEventTimersModal() {
 document.getElementById("event-timers-modal-close").addEventListener("click", closeEventTimersModal);
 document.getElementById("event-timers-modal").addEventListener("click", (e) => {
   if (e.target.id === "event-timers-modal") closeEventTimersModal();
+});
+
+// ── Топ игроков (фаербол / Ту-4 / радиофугасы / монеты Фортуны) ──
+const TOP_BOARDS = [
+  { key: "fireball", label: "Фаербол", icon: "jetFighter" },
+  { key: "tu4", label: "Очки на Ту-4", icon: "commercialAirplane" },
+  { key: "radiofugas", label: "Радиофугасы", icon: "fragmentedMeteor" },
+  { key: "coins", label: "Монеты Фортуны", icon: "coin" },
+];
+
+function medal(i) {
+  return i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}.`;
+}
+
+function renderTopBoard(label, iconName, rows) {
+  return `
+    <div class="profile-section-title">${icon(iconName, 16)} ${label}</div>
+    ${
+      rows.length
+        ? rows
+            .map(
+              (r, i) => `
+      <div class="profile-row">
+        <div class="profile-row-label"><span>${medal(i)}</span><span>${r.login}</span></div>
+        <div class="profile-row-value">${r.value}</div>
+      </div>`,
+            )
+            .join("")
+        : `<div class="profile-empty">Пока никого нет</div>`
+    }
+  `;
+}
+
+async function openTopModal() {
+  const body = document.getElementById("top-modal-body");
+  body.innerHTML = `<div class="loading">Загрузка...</div>`;
+  document.getElementById("top-modal").hidden = false;
+  try {
+    const data = await getLeaderboards();
+    body.innerHTML = TOP_BOARDS.map((b) => renderTopBoard(b.label, b.icon, data[b.key] ?? [])).join("");
+  } catch (err) {
+    body.innerHTML = `<div class="error-text">${err.message}</div>`;
+  }
+}
+
+function closeTopModal() {
+  document.getElementById("top-modal").hidden = true;
+}
+
+document.getElementById("top-modal-close").addEventListener("click", closeTopModal);
+document.getElementById("top-modal").addEventListener("click", (e) => {
+  if (e.target.id === "top-modal") closeTopModal();
 });
 
 // ── Краткое руководство (модалка по кнопке-инфо в шапке) ──
@@ -1077,6 +1131,7 @@ document.addEventListener("keydown", (e) => {
   closePlayerProfile();
   closeMediaModal();
   closeEventTimersModal();
+  closeTopModal();
 });
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());

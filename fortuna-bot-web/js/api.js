@@ -74,6 +74,10 @@ function getPlayerProfile(login) {
   return callEdgeFunction(CONFIG.PLAYER_PROFILE_URL, { login });
 }
 
+function getLeaderboards() {
+  return callEdgeFunction(CONFIG.LEADERBOARDS_URL, {});
+}
+
 function claimMigrationCode(playerId, code) {
   return callEdgeFunction(CONFIG.CLAIM_CODE_URL, { player_id: playerId, code });
 }
