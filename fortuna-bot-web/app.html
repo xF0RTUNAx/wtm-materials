@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fortuna — экономика</title>
+<style>
+  :root {
+    --bg: #f5f2ec; --surface: #fbf9f5; --surface-2: #f0ece3; --border: #e4ddd0;
+    --text: #2a2722; --text-soft: #6b655c; --accent: #c8643c; --accent-soft: #f3e3da;
+    --ok: #4a7c4e; --ok-bg: #e6f0e6; --err: #b5432f; --err-bg: #fbe8e4;
+    --btn: #2a2722; --btn-text: #fbf9f5;
+    --shadow: 0 1px 3px rgba(60,50,35,.06), 0 6px 20px rgba(60,50,35,.05);
+    --radius: 16px; --radius-sm: 10px;
+  }
+  [data-theme="dark"] {
+    --bg: #1f1d1a; --surface: #2a2723; --surface-2: #333029; --border: #3d3933;
+    --text: #ece7df; --text-soft: #a39c8f; --accent: #e08252; --accent-soft: #3a2c23;
+    --ok: #7fc283; --ok-bg: #253a26; --err: #e08a7a; --err-bg: #3a2621;
+    --btn: #ece7df; --btn-text: #1f1d1a;
+    --shadow: 0 1px 3px rgba(0,0,0,.25), 0 6px 20px rgba(0,0,0,.3);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1f1d1a; --surface: #2a2723; --surface-2: #333029; --border: #3d3933;
+      --text: #ece7df; --text-soft: #a39c8f; --accent: #e08252; --accent-soft: #3a2c23;
+      --ok: #7fc283; --ok-bg: #253a26; --err: #e08a7a; --err-bg: #3a2621;
+      --btn: #ece7df; --btn-text: #1f1d1a;
+      --shadow: 0 1px 3px rgba(0,0,0,.25), 0 6px 20px rgba(0,0,0,.3);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 90px; }
+  h1.hero { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 18px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
+
+  .auth-card, .stats-grid, .actions-grid, .migrate-box, .result-box, .loading {
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .auth-card { padding: 20px; }
+  .tabs { display: flex; gap: 6px; background: var(--surface-2); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 16px; }
+  .tab { flex: 1; padding: 8px; border: none; background: none; cursor: pointer; font-family: inherit;
+    font-size: 14px; font-weight: 600; color: var(--text-soft); border-radius: 7px; }
+  .tab.active { background: var(--surface); color: var(--text); }
+  .auth-form { display: flex; flex-direction: column; gap: 10px; }
+  input {
+    font-family: inherit; font-size: 15px; padding: 11px 13px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+  }
+  .btn-primary, .btn-secondary {
+    font-family: inherit; font-size: 15px; font-weight: 650; padding: 11px; border: none;
+    border-radius: var(--radius-sm); cursor: pointer;
+  }
+  .btn-primary { background: var(--btn); color: var(--btn-text); }
+  .btn-secondary { background: var(--accent); color: #fff; }
+  .btn-ghost {
+    font-family: inherit; background: none; border: 1px solid var(--border); color: var(--text-soft);
+    padding: 6px 12px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px;
+  }
+  .error-text { color: var(--err); font-size: 13px; min-height: 16px; }
+
+  .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border);
+    background: var(--surface-2); color: var(--text-soft); cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .icon-btn img, .icon-btn svg { width: 18px; height: 18px; }
+
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 9px; margin-bottom: 14px; }
+  .stat { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 10px; }
+  .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); margin-bottom: 4px; }
+  .stat-value { font-size: 16px; font-weight: 680; letter-spacing: -.01em; display: flex; align-items: center; gap: 5px; }
+  .stat-value svg { color: var(--accent); }
+
+  .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 9px; margin-bottom: 14px; }
+  .action-card {
+    background: var(--surface-2); border-radius: var(--radius-sm);
+    padding: 16px 14px; cursor: pointer; text-align: left;
+    font-family: inherit; transition: transform .15s, filter .15s;
+  }
+  .action-card:hover { filter: brightness(0.97); transform: translateY(-1px); }
+  .action-title { font-size: 14.5px; font-weight: 650; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+  .action-title svg { color: var(--accent); }
+  .action-sub { font-size: 11.5px; color: var(--text-soft); }
+
+  /* ── Нижняя навигация, по образцу fortuna-game/app.html .game-nav ── */
+  .game-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; background: var(--surface); border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 12px rgba(0,0,0,.06); padding: 4px 2px calc(4px + env(safe-area-inset-bottom));
+    max-width: 480px; margin: 0 auto;
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 7px 2px 6px; border: none; background: none; cursor: pointer; font-family: inherit;
+    border-bottom: 2px solid transparent; color: var(--text-soft); transition: color .15s;
+  }
+  .nav-tab svg { width: 19px; height: 19px; }
+  .nav-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+  .nav-label { font-size: 8px; font-weight: 650; line-height: 1.15; text-align: center; }
+  .btn-sm { padding: 7px 14px; font-size: 13px; white-space: nowrap; }
+
+  .shop-list, .containers-grid { display: flex; flex-direction: column; gap: 1px; background: var(--border); margin-bottom: 4px; overflow: hidden; border-radius: var(--radius); }
+  .shop-row {
+    background: var(--surface); padding: 12px 14px; display: flex; align-items: center;
+    justify-content: space-between; gap: 12px;
+  }
+  .shop-row-main { min-width: 0; }
+  .shop-row-name { font-size: 14px; font-weight: 650; margin-bottom: 2px; }
+  .shop-row-desc { font-size: 12px; color: var(--text-soft); }
+  .shop-row-side { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+  .shop-row-price { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .shop-row-price s { color: var(--text-soft); font-weight: 400; margin-left: 4px; }
+  .badge-owned {
+    font-size: 11px; font-weight: 650; color: var(--ok); background: var(--ok-bg);
+    padding: 3px 9px; border-radius: 20px;
+  }
+  .section-label { font-size: 13px; font-weight: 650; color: var(--text-soft); margin: 16px 0 8px; }
+
+  .container-card { background: var(--surface); padding: 14px; }
+  .container-card-name { font-size: 15px; font-weight: 650; margin-bottom: 2px; display: flex; align-items: center; gap: 7px; }
+  .container-card-name svg { color: var(--accent); }
+  .container-card-price { font-size: 12px; color: var(--text-soft); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
+  .container-buy-row { display: flex; gap: 8px; }
+
+  /* ── Активный рейд — тёмная инвертированная карточка, по образцу
+     fortuna-game/app.html .battle-hero (сама инвертируется с темой) ── */
+  .raid-hero { background: var(--btn); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; }
+  .raid-hero-title { font-size: 16px; font-weight: 650; color: var(--btn-text); display: flex; align-items: center; gap: 8px; }
+  .raid-hero-title svg { color: var(--accent); }
+  .raid-hero-hp { font-size: 12.5px; color: var(--btn-text); opacity: .65; margin: 4px 0 10px; }
+  .raid-hero-track { background: rgba(255,255,255,.14); border-radius: 99px; height: 9px; overflow: hidden; margin-bottom: 14px; }
+  [data-theme="dark"] .raid-hero-track { background: rgba(0,0,0,.2); }
+  .raid-hero-fill { background: var(--accent); height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .raid-hero-row { display: flex; gap: 8px; }
+  .raid-hero-row .btn-secondary { flex: 1; }
+
+  .feed-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; }
+  .feed-row { background: var(--surface); padding: 11px 14px; }
+  .feed-text { font-size: 13.5px; }
+  .feed-time { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+
+  .result-box { padding: 12px 14px; font-size: 14px; margin-bottom: 14px; white-space: pre-line; }
+  .result-ok { background: var(--ok-bg); color: var(--ok); border-color: transparent; }
+  .result-err { background: var(--err-bg); color: var(--err); border-color: transparent; }
+
+  .migrate-box { padding: 14px; }
+  .migrate-box summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text-soft); }
+  #migrate-form { display: flex; gap: 8px; margin-top: 12px; }
+  #migrate-form input { flex: 1; text-transform: uppercase; }
+
+  .loading { padding: 30px; text-align: center; color: var(--text-soft); }
+
+  /* ── Модалка с кратким гайдом (кнопка-инфо в шапке) ── */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100; background: rgba(20,17,12,.5);
+    display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay[hidden] { display: none; }
+  .modal-box {
+    background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    width: 100%; max-width: 420px; max-height: 80vh; overflow-y: auto; padding: 18px;
+  }
+  .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .modal-title { font-size: 16px; font-weight: 700; }
+  .modal-close {
+    background: none; border: none; font-size: 17px; color: var(--text-soft); cursor: pointer;
+    padding: 4px 8px; line-height: 1; font-family: inherit;
+  }
+  .modal-body { display: flex; flex-direction: column; gap: 12px; }
+  .guide-item { display: flex; gap: 10px; align-items: flex-start; }
+  .guide-item img, .guide-item svg { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+  .guide-item-title { font-size: 13.5px; font-weight: 650; margin-bottom: 2px; }
+  .guide-item-desc { font-size: 12.5px; color: var(--text-soft); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="hero" id="hero-title"></h1>
+    <div id="root"></div>
+  </div>
+
+  <div id="info-modal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Краткое руководство</div>
+        <button id="info-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body" id="info-modal-body"></div>
+    </div>
+  </div>
+
+  <script src="js/icons.js"></script>
+  <script src="config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
