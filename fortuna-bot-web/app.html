@@ -36,14 +36,42 @@
     line-height: 1.5; transition: background .3s ease;
   }
 
-  /* ── Жидкое стекло — включается классом .glass на <html> (не для пресета "Фортуна") ── */
+  /* ── Жидкое стекло — включается классом .glass на <html> (не для пресета "Фортуна") ──
+     Сильный блюр + глянцевая подсветка сверху (inset highlight) + мягкое цветное свечение —
+     это и отличает "стекло" от просто полупрозрачной плашки. */
   .glass .auth-card, .glass .stat, .glass .action-card, .glass .shop-row, .glass .container-card,
   .glass .game-nav, .glass .result-box, .glass .migrate-box, .glass .feed-row, .glass .loading,
-  .glass .theme-picker-panel {
-    backdrop-filter: blur(20px) saturate(170%);
-    -webkit-backdrop-filter: blur(20px) saturate(170%);
+  .glass .theme-picker-panel, .glass #theme-toggle-btn {
+    backdrop-filter: blur(28px) saturate(220%);
+    -webkit-backdrop-filter: blur(28px) saturate(220%);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 0 0 1px rgba(255,255,255,.08),
+      0 8px 32px rgba(0,0,0,.1);
+  }
+  [data-theme="dark"].glass .auth-card, [data-theme="dark"].glass .stat, [data-theme="dark"].glass .action-card,
+  [data-theme="dark"].glass .shop-row, [data-theme="dark"].glass .container-card, [data-theme="dark"].glass .game-nav,
+  [data-theme="dark"].glass .result-box, [data-theme="dark"].glass .migrate-box, [data-theme="dark"].glass .feed-row,
+  [data-theme="dark"].glass .loading, [data-theme="dark"].glass .theme-picker-panel {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.06),
+      0 8px 32px rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    .glass:not([data-theme="light"]) .auth-card, .glass:not([data-theme="light"]) .stat,
+    .glass:not([data-theme="light"]) .action-card, .glass:not([data-theme="light"]) .shop-row,
+    .glass:not([data-theme="light"]) .container-card, .glass:not([data-theme="light"]) .game-nav,
+    .glass:not([data-theme="light"]) .result-box, .glass:not([data-theme="light"]) .migrate-box,
+    .glass:not([data-theme="light"]) .feed-row, .glass:not([data-theme="light"]) .loading,
+    .glass:not([data-theme="light"]) .theme-picker-panel {
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.06),
+        0 8px 32px rgba(0,0,0,.35);
+    }
   }
   .glass .action-card:hover { background: var(--surface-2); }
+
+  /* Плитки статов и карточки фарма — каждый блок подкрашен своим оттенком палитры пресета
+     (в пресете "Фортуна" tint1/2/3 совпадают с обычным --surface-2, эффекта нет). */
+  .stats-grid .stat:nth-child(3n+1), .actions-grid .action-card:nth-child(3n+1) { background: var(--tint1); }
+  .stats-grid .stat:nth-child(3n+2), .actions-grid .action-card:nth-child(3n+2) { background: var(--tint2); }
+  .stats-grid .stat:nth-child(3n+3), .actions-grid .action-card:nth-child(3n+3) { background: var(--tint3); }
   .wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 90px; }
   h1.hero { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 18px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
 

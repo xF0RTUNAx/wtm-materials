@@ -30,11 +30,13 @@ const PRESETS = [
       bg: "#f5f2ec", surface: "#fbf9f5", surface2: "#f0ece3", border: "#e4ddd0",
       text: "#2a2722", textSoft: "#6b655c", accent: "#c8643c", accentSoft: "#f3e3da",
       btn: "#2a2722", btnText: "#fbf9f5", pageBg: "#f5f2ec",
+      tint1: "#f0ece3", tint2: "#f0ece3", tint3: "#f0ece3",
     },
     dark: {
       bg: "#1f1d1a", surface: "#2a2723", surface2: "#333029", border: "#3d3933",
       text: "#ece7df", textSoft: "#a39c8f", accent: "#e08252", accentSoft: "#3a2c23",
       btn: "#ece7df", btnText: "#1f1d1a", pageBg: "#1f1d1a",
+      tint1: "#333029", tint2: "#333029", tint3: "#333029",
     },
   },
   // ── Ниже — присланные палитры, каждая: [фон, акцент, второй цвет, тёмный] ──
@@ -50,28 +52,35 @@ function themeFromPalette(id, label, bg, accent, secondary, dark) {
     id, label, swatch: accent, glass: true,
     light: {
       bg,
-      surface: "rgba(255,255,255,.55)",
-      surface2: "rgba(255,255,255,.32)",
-      border: "rgba(255,255,255,.45)",
+      // "стекло" тонировано цветом пресета, а не нейтрально-белое
+      surface: rgba(mix(accent, "#ffffff", 0.9), 0.5),
+      surface2: rgba(mix(secondary, "#ffffff", 0.78), 0.42),
+      border: rgba(mix(accent, "#ffffff", 0.4), 0.45),
       text: dark,
       textSoft: mix(dark, bg, 0.4),
       accent,
       accentSoft: rgba(accent, 0.16),
       btn: dark,
       btnText: bg,
+      tint1: rgba(accent, 0.16),
+      tint2: rgba(secondary, 0.18),
+      tint3: rgba(mix(accent, secondary, 0.5), 0.16),
       pageBg: `linear-gradient(160deg, ${bg} 0%, ${mix(bg, secondary, 0.55)} 45%, ${mix(secondary, accent, 0.4)} 100%)`,
     },
     dark: {
       bg: dark,
-      surface: "rgba(24,24,28,.5)",
-      surface2: "rgba(255,255,255,.07)",
-      border: "rgba(255,255,255,.16)",
+      surface: rgba(mix(accent, "#000000", 0.82), 0.48),
+      surface2: rgba(mix(secondary, "#000000", 0.7), 0.4),
+      border: rgba(mix(accent, "#ffffff", 0.5), 0.2),
       text: mix(dark, "#ffffff", 0.92),
       textSoft: mix(dark, "#ffffff", 0.55),
       accent: mix(accent, "#ffffff", 0.12),
       accentSoft: rgba(accent, 0.24),
       btn: bg,
       btnText: dark,
+      tint1: rgba(accent, 0.22),
+      tint2: rgba(secondary, 0.28),
+      tint3: rgba(mix(accent, secondary, 0.5), 0.22),
       pageBg: `linear-gradient(160deg, ${dark} 0%, ${mix(dark, secondary, 0.5)} 50%, ${mix(secondary, accent, 0.35)} 100%)`,
     },
   };
@@ -98,6 +107,9 @@ function applyPreset(presetId, { save = true } = {}) {
   root.setProperty("--btn", t.btn);
   root.setProperty("--btn-text", t.btnText);
   root.setProperty("--page-bg", t.pageBg);
+  root.setProperty("--tint1", t.tint1);
+  root.setProperty("--tint2", t.tint2);
+  root.setProperty("--tint3", t.tint3);
   document.documentElement.classList.toggle("glass", preset.glass);
   document.body && document.body.setAttribute("data-preset", preset.id);
 
