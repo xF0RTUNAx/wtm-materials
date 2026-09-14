@@ -16,7 +16,7 @@ function fmtDuration(sec) {
 }
 
 function renderAuth(mode = "login") {
-  document.getElementById("hero-title").textContent = "Fortuna";
+  document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
   root.innerHTML = `
     <div class="auth-card">
       <div class="tabs">
@@ -24,7 +24,7 @@ function renderAuth(mode = "login") {
         <button class="tab ${mode === "register" ? "active" : ""}" data-mode="register">Регистрация</button>
       </div>
       <form id="auth-form" class="auth-form">
-        <input name="login" placeholder="${mode === "register" ? "Никнейм" : "Логин"}" autocomplete="username" required minlength="3" maxlength="32" />
+        <input name="login" placeholder="Никнейм" autocomplete="username" required minlength="3" maxlength="32" />
         <input name="password" type="password" placeholder="Пароль" autocomplete="${mode === "login" ? "current-password" : "new-password"}" required minlength="6" />
         <button type="submit" class="btn-primary">${mode === "login" ? "Войти" : "Создать аккаунт"}</button>
         <div id="auth-error" class="error-text"></div>
@@ -100,6 +100,7 @@ async function renderDashboard(flash) {
   root.innerHTML = `
     <div class="topbar">
       <button id="info-btn" class="icon-btn" aria-label="Краткое руководство">${icon("info", 18)}</button>
+      <button id="my-profile-btn" class="btn-ghost">Мой профиль</button>
       <button id="logout-btn" class="btn-ghost">Выйти</button>
     </div>
 
@@ -140,6 +141,7 @@ async function renderDashboard(flash) {
   renderTabContent(flash);
 
   document.getElementById("logout-btn").addEventListener("click", logout);
+  document.getElementById("my-profile-btn").addEventListener("click", () => openPlayerProfile(player.login));
   document.getElementById("info-btn").addEventListener("click", openInfoModal);
   document.getElementById("migrate-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
@@ -200,7 +202,8 @@ function renderMinigameTab(mount, flash) {
     showResult("minigame-result", null, "Крутим...");
     try {
       const res = await minigameSpin(player.id);
-      renderDashboard({ ok: true, text: describeSpinResult(res) });
+      await renderDashboard();
+      showMediaResult({ title: "Мини-игра Фортуны", mediaSrc: "media/fortuna_minigame.mp4", resultHTML: describeSpinResult(res) });
     } catch (err) {
       showResult("minigame-result", false, err.message);
     }
@@ -422,13 +425,16 @@ function renderFarmTab(mount, flash) {
 }
 
 const ACTION_FNS = { loot: farmLoot, fireball: farmFireball, radiofugas: farmRadiofugas, meladze: farmMeladze };
+const ACTION_TITLE = { loot: "Собрать лут", fireball: "Фаербол", radiofugas: "Радиофугас", meladze: "Меладзе" };
+const FARM_MEDIA = { loot: "media/farm.jpg", fireball: "media/fireball.jpg", radiofugas: "media/radiofugas.jpg", meladze: "media/meladze.jpg" };
 
 async function runAction(action) {
   const player = getCurrentPlayer();
   showResult("action-result", null, "...");
   try {
     const res = await ACTION_FNS[action](player.id);
-    renderDashboard({ ok: true, text: describeResult(action, res) });
+    await renderDashboard();
+    showMediaResult({ title: ACTION_TITLE[action], mediaSrc: FARM_MEDIA[action], resultHTML: describeResult(action, res) });
   } catch (err) {
     showResult(
       "action-result",
@@ -513,6 +519,12 @@ const TIER_INFO = {
   3: { name: "Эпический", price: 5 },
   4: { name: "Легендарный", price: 10 },
 };
+const TIER_MEDIA = {
+  1: "media/regular_case.mp4",
+  2: "media/advanced_case.mp4",
+  3: "media/epic_case.mp4",
+  4: "media/legend_case.mp4",
+};
 
 function renderContainersTab(mount, flash) {
   const cards = Object.entries(TIER_INFO)
@@ -539,10 +551,12 @@ function renderContainersTab(mount, flash) {
   mount.querySelectorAll("[data-tier]").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const player = getCurrentPlayer();
+      const tier = Number(btn.dataset.tier);
       showResult("container-result", null, "Открываем...");
       try {
-        const res = await containerOpen(player.id, Number(btn.dataset.tier), Number(btn.dataset.count));
-        renderDashboard({ ok: true, text: describeContainerResult(res) });
+        const res = await containerOpen(player.id, tier, Number(btn.dataset.count));
+        await renderDashboard();
+        showMediaResult({ title: TIER_INFO[tier].name, mediaSrc: TIER_MEDIA[tier], resultHTML: describeContainerResult(res) });
       } catch (err) {
         showResult("container-result", false, err.message);
       }
@@ -786,10 +800,33 @@ document.getElementById("profile-modal").addEventListener("click", (e) => {
   if (e.target.id === "profile-modal") closePlayerProfile();
 });
 
+// ── Модалка результата действия (медиа сверху, что получено — снизу) ──
+function showMediaResult({ title, mediaSrc, resultHTML }) {
+  document.getElementById("media-modal-title").textContent = title;
+  const isVideo = /\.(mp4|webm|mov)$/i.test(mediaSrc);
+  document.getElementById("media-modal-media").innerHTML = isVideo
+    ? `<video src="${mediaSrc}" autoplay muted loop playsinline></video>`
+    : `<img src="${mediaSrc}" alt="" />`;
+  document.getElementById("media-modal-result").innerHTML = resultHTML;
+  document.getElementById("media-modal").hidden = false;
+}
+
+function closeMediaModal() {
+  document.getElementById("media-modal").hidden = true;
+  document.getElementById("media-modal-media").innerHTML = "";
+}
+
+document.getElementById("media-modal-close").addEventListener("click", closeMediaModal);
+document.getElementById("media-modal-close-btn").addEventListener("click", closeMediaModal);
+document.getElementById("media-modal").addEventListener("click", (e) => {
+  if (e.target.id === "media-modal") closeMediaModal();
+});
+
 document.addEventListener("keydown", (e) => {
   if (e.key !== "Escape") return;
   closeInfoModal();
   closePlayerProfile();
+  closeMediaModal();
 });
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());

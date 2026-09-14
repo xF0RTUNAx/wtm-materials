@@ -204,6 +204,14 @@
   .profile-cd-row .cd-name { color: var(--text-soft); }
   .profile-items-list { display: flex; flex-direction: column; gap: 3px; font-size: 13px; margin-top: 2px; }
   .profile-empty { font-size: 13px; color: var(--text-soft); }
+
+  /* ── Модалка результата действия (медиа + что получено) ── */
+  .media-modal-box img, .media-modal-box video {
+    width: 100%; border-radius: var(--radius-sm); display: block; margin-bottom: 14px;
+    background: var(--surface-2); max-height: 50vh; object-fit: cover;
+  }
+  #media-modal-result { font-size: 14px; margin-bottom: 14px; }
+  #media-modal-close-btn { width: 100%; }
 </style>
 </head>
 <body>
@@ -229,6 +237,20 @@
         <button id="profile-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
       </div>
       <div class="modal-body" id="profile-modal-body"></div>
+    </div>
+  </div>
+
+  <div id="media-modal" class="modal-overlay" hidden>
+    <div class="modal-box media-modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="media-modal-title"></div>
+        <button id="media-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="media-modal-media"></div>
+        <div id="media-modal-result"></div>
+        <button id="media-modal-close-btn" class="btn-primary">Закрыть</button>
+      </div>
     </div>
   </div>
 
