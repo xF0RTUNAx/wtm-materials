@@ -9,7 +9,7 @@
     --bg: #f5f2ec; --surface: #fbf9f5; --surface-2: #f0ece3; --border: #e4ddd0;
     --text: #2a2722; --text-soft: #6b655c; --accent: #c8643c; --accent-soft: #f3e3da;
     --ok: #4a7c4e; --ok-bg: #e6f0e6; --err: #b5432f; --err-bg: #fbe8e4;
-    --btn: #2a2722; --btn-text: #fbf9f5; --page-bg: var(--bg);
+    --btn: #2a2722; --btn-text: #fbf9f5;
     --shadow: 0 1px 3px rgba(60,50,35,.06), 0 6px 20px rgba(60,50,35,.05);
     --radius: 16px; --radius-sm: 10px;
   }
@@ -31,45 +31,10 @@
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    background: var(--page-bg); background-attachment: fixed; color: var(--text); min-height: 100vh;
+    background: var(--bg); color: var(--text); min-height: 100vh;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.5; transition: background .3s ease;
+    line-height: 1.5;
   }
-
-  /* ── Жидкое стекло — включается классом .glass на <html> (не для пресета "Фортуна") ──
-     Сильный блюр + глянцевая подсветка сверху (inset highlight) + мягкое цветное свечение —
-     это и отличает "стекло" от просто полупрозрачной плашки. */
-  .glass .auth-card, .glass .stat, .glass .action-card, .glass .shop-row, .glass .container-card,
-  .glass .game-nav, .glass .result-box, .glass .migrate-box, .glass .feed-row, .glass .loading,
-  .glass .theme-picker-panel, .glass #theme-toggle-btn {
-    backdrop-filter: blur(28px) saturate(220%);
-    -webkit-backdrop-filter: blur(28px) saturate(220%);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.5), inset 0 0 0 1px rgba(255,255,255,.08),
-      0 8px 32px rgba(0,0,0,.1);
-  }
-  [data-theme="dark"].glass .auth-card, [data-theme="dark"].glass .stat, [data-theme="dark"].glass .action-card,
-  [data-theme="dark"].glass .shop-row, [data-theme="dark"].glass .container-card, [data-theme="dark"].glass .game-nav,
-  [data-theme="dark"].glass .result-box, [data-theme="dark"].glass .migrate-box, [data-theme="dark"].glass .feed-row,
-  [data-theme="dark"].glass .loading, [data-theme="dark"].glass .theme-picker-panel {
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.06),
-      0 8px 32px rgba(0,0,0,.35);
-  }
-  @media (prefers-color-scheme: dark) {
-    .glass:not([data-theme="light"]) .auth-card, .glass:not([data-theme="light"]) .stat,
-    .glass:not([data-theme="light"]) .action-card, .glass:not([data-theme="light"]) .shop-row,
-    .glass:not([data-theme="light"]) .container-card, .glass:not([data-theme="light"]) .game-nav,
-    .glass:not([data-theme="light"]) .result-box, .glass:not([data-theme="light"]) .migrate-box,
-    .glass:not([data-theme="light"]) .feed-row, .glass:not([data-theme="light"]) .loading,
-    .glass:not([data-theme="light"]) .theme-picker-panel {
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(255,255,255,.06),
-        0 8px 32px rgba(0,0,0,.35);
-    }
-  }
-  /* Плитки статов и карточки фарма — каждый блок подкрашен своим оттенком палитры пресета
-     (в пресете "Фортуна" tint1/2/3 совпадают с обычным --surface-2, эффекта нет). */
-  .stats-grid .stat:nth-child(3n+1), .actions-grid .action-card:nth-child(3n+1) { background: var(--tint1); }
-  .stats-grid .stat:nth-child(3n+2), .actions-grid .action-card:nth-child(3n+2) { background: var(--tint2); }
-  .stats-grid .stat:nth-child(3n+3), .actions-grid .action-card:nth-child(3n+3) { background: var(--tint3); }
   .wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 90px; }
   h1.hero { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 18px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
 
@@ -186,30 +151,6 @@
   #migrate-form input { flex: 1; text-transform: uppercase; }
 
   .loading { padding: 30px; text-align: center; color: var(--text-soft); }
-
-  /* ── Переключатель пресетов оформления ── */
-  #theme-toggle-btn {
-    position: fixed; right: 14px; bottom: 78px; z-index: 60;
-    width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--border);
-    background: var(--surface); box-shadow: var(--shadow); cursor: pointer;
-    display: flex; align-items: center; justify-content: center; padding: 0;
-  }
-  #theme-toggle-btn::after {
-    content: ""; width: 18px; height: 18px; border-radius: 50%;
-    background: conic-gradient(from 0deg, #c8643c, #407E8C, #EA9216, #7AA05A, #FF6E42, #c8643c);
-  }
-  .theme-picker-panel {
-    position: fixed; right: 14px; bottom: 128px; z-index: 60;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
-    box-shadow: var(--shadow); padding: 8px; display: none; grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-  }
-  .theme-picker-panel.open { display: grid; }
-  .theme-swatch {
-    width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; cursor: pointer;
-    padding: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
-  }
-  .theme-swatch.active { border-color: var(--text); }
 </style>
 </head>
 <body>
@@ -218,13 +159,8 @@
     <div id="root"></div>
   </div>
 
-  <button id="theme-toggle-btn" title="Оформление" aria-label="Оформление"></button>
-  <div id="theme-picker-panel" class="theme-picker-panel"></div>
-
   <script src="js/icons.js"></script>
   <script>document.getElementById("hero-title").insertAdjacentHTML("afterbegin", icon("sword", 22));</script>
-  <script src="js/themes.js"></script>
-  <script>initThemePicker();</script>
   <script src="config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>
