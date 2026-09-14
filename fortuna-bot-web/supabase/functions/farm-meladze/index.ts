@@ -3,7 +3,7 @@
 // (случайное число, не конверсия фрагов). gitara: +1 деталь. "Статуетка Улитки": +1 ключ.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem, secondsLeft, randInt, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
+import { ownedSlugs, secondsLeft, randInt, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 
 const BASE_CD = 24 * 3600;
 const REDUCED_CD = 12 * 3600;
@@ -18,20 +18,22 @@ Deno.serve(async (req) => {
     }
 
     const db = supabaseAdmin();
-    const { data: econ, error: econErr } = await db
-      .from("player_economy")
-      .select("last_meladze_farm, loot_points, keys_current, keys_lifetime, details, active_equipment")
-      .eq("player_id", player_id)
-      .maybeSingle();
+    const [{ data: econ, error: econErr }, items] = await Promise.all([
+      db
+        .from("player_economy")
+        .select("last_meladze_farm, loot_points, keys_current, keys_lifetime, details, active_equipment")
+        .eq("player_id", player_id)
+        .maybeSingle(),
+      ownedSlugs(db, player_id),
+    ]);
     if (econErr) throw econErr;
     if (!econ) return jsonResponse({ error: "Игрок не найден" }, 404);
 
-    if (!(await hasItem(db, player_id, "meladze_ticket"))) {
+    if (!items.has("meladze_ticket")) {
       return jsonResponse({ error: "Нужен «Билет на концерт Меладзе» из магазина" }, 403);
     }
 
-    const hasFragment = await hasItem(db, player_id, "urvv_fragment");
-    const cooldown = hasFragment ? REDUCED_CD : BASE_CD;
+    const cooldown = items.has("urvv_fragment") ? REDUCED_CD : BASE_CD;
     const left = secondsLeft(econ.last_meladze_farm, cooldown);
     if (left > 0) {
       return jsonResponse({ error: "Ещё рано на концерт", seconds_left: left }, 429);
@@ -39,7 +41,7 @@ Deno.serve(async (req) => {
 
     const coins = randInt(15000, 25000);
     const bonusDetails = econ.active_equipment === "gitara" ? 1 : 0;
-    const bonusKeys = (await hasItem(db, player_id, "snail_statuette")) ? 1 : 0;
+    const bonusKeys = items.has("snail_statuette") ? 1 : 0;
 
     const { error: updErr } = await db
       .from("player_economy")
@@ -54,8 +56,10 @@ Deno.serve(async (req) => {
       .eq("player_id", player_id);
     if (updErr) throw updErr;
 
-    const horseshoeHit = await applyHorseshoe(db, player_id);
-    await logFeedEvent(db, player_id, "farm", { action: "meladze", coins, bonus_keys: bonusKeys, bonus_details: bonusDetails });
+    const [horseshoeHit] = await Promise.all([
+      applyHorseshoe(db, player_id),
+      logFeedEvent(db, player_id, "farm", { action: "meladze", coins, bonus_keys: bonusKeys, bonus_details: bonusDetails }),
+    ]);
 
     return jsonResponse({
       coins_gained: coins,

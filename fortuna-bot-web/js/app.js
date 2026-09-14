@@ -159,10 +159,7 @@ async function renderDashboard(flash) {
   `;
 
   root.querySelectorAll(".nav-tab").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      currentTab = btn.dataset.tab;
-      renderDashboard();
-    });
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
   });
 
   renderTabContent(flash);
@@ -195,6 +192,19 @@ function renderTabContent(flash) {
   else if (currentTab === "raid") renderRaidTab(mount, flash);
   else if (currentTab === "minigame") renderMinigameTab(mount, flash);
   else if (currentTab === "feed") renderFeedTab(mount);
+}
+
+// Переключение вкладки нижней навигации — только локальный рендер, без повторного
+// getPlayerState: баланс/предметы не меняются от простого клика по вкладке, а полный
+// renderDashboard() на каждый клик означал лишний сетевой запрос и вспышку "Загрузка..."
+// на ровном месте. Экономика (getPlayerState) перезапрашивается только после действий,
+// которые её реально меняют — там renderDashboard() вызывается явно.
+function switchTab(tabId) {
+  currentTab = tabId;
+  root.querySelectorAll(".nav-tab").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.tab === tabId);
+  });
+  renderTabContent();
 }
 
 // ── Мини-игра ──

@@ -4,7 +4,7 @@
 // сознательное поведение оригинального бота, не баг. X2/rookie/"Секретные файлы" не перенесены.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem, ownedSlugs, secondsLeft, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
+import { ownedSlugs, secondsLeft, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 
 const BASE_CD = 8 * 3600;
 const REDUCED_CD = 7 * 3600;
@@ -19,15 +19,13 @@ Deno.serve(async (req) => {
     }
 
     const db = supabaseAdmin();
-    const { data: econ, error: econErr } = await db
-      .from("player_economy")
-      .select("*")
-      .eq("player_id", player_id)
-      .maybeSingle();
+    const [{ data: econ, error: econErr }, items] = await Promise.all([
+      db.from("player_economy").select("*").eq("player_id", player_id).maybeSingle(),
+      ownedSlugs(db, player_id),
+    ]);
     if (econErr) throw econErr;
     if (!econ) return jsonResponse({ error: "Игрок не найден" }, 404);
 
-    const items = await ownedSlugs(db, player_id);
     const cooldown = items.has("voydom_case") ? REDUCED_CD : BASE_CD;
     const left = secondsLeft(econ.last_loot_farm, cooldown);
     if (left > 0) {
@@ -69,8 +67,10 @@ Deno.serve(async (req) => {
       .eq("player_id", player_id);
     if (updErr) throw updErr;
 
-    const horseshoeHit = await applyHorseshoe(db, player_id);
-    await logFeedEvent(db, player_id, "farm", { action: "loot", coins: totalLoot, bonus_keys: bonusKeys });
+    const [horseshoeHit] = await Promise.all([
+      applyHorseshoe(db, player_id),
+      logFeedEvent(db, player_id, "farm", { action: "loot", coins: totalLoot, bonus_keys: bonusKeys }),
+    ]);
 
     return jsonResponse({
       loot_gained: totalLoot,

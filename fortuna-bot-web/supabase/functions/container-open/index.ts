@@ -18,11 +18,14 @@ Deno.serve(async (req) => {
     }
 
     const db = supabaseAdmin();
-    const { data: econ, error: econErr } = await db
-      .from("player_economy")
-      .select("keys_current, keys_lifetime, loot_points, tu4_points, fireball_kills, radiofugas_kills, details")
-      .eq("player_id", player_id)
-      .maybeSingle();
+    const [{ data: econ, error: econErr }, owned] = await Promise.all([
+      db
+        .from("player_economy")
+        .select("keys_current, keys_lifetime, loot_points, tu4_points, fireball_kills, radiofugas_kills, details")
+        .eq("player_id", player_id)
+        .maybeSingle(),
+      ownedSlugs(db, player_id),
+    ]);
     if (econErr) throw econErr;
     if (!econ) return jsonResponse({ error: "Игрок не найден" }, 404);
 
@@ -30,8 +33,6 @@ Deno.serve(async (req) => {
     if (econ.keys_current < price) {
       return jsonResponse({ error: `Недостаточно ключей: нужно ${price}` }, 402);
     }
-
-    const owned = await ownedSlugs(db, player_id);
     const delta = { coins: 0, tu4: 0, fireball: 0, radiofugas: 0, keys: 0, details: 0 };
     const newItems: string[] = [];
     const rolls: Array<{ itemSlug: string | null; dupCoins: number; coins: number; tu4: number; fireball: number; radiofugas: number; keys: number; details: number }> = [];
@@ -58,27 +59,26 @@ Deno.serve(async (req) => {
       rolls.push({ ...r, dupCoins });
     }
 
-    const { error: updErr } = await db
-      .from("player_economy")
-      .update({
-        keys_current: econ.keys_current - price + delta.keys,
-        keys_lifetime: econ.keys_lifetime + delta.keys,
-        loot_points: econ.loot_points + delta.coins,
-        tu4_points: econ.tu4_points + delta.tu4,
-        fireball_kills: econ.fireball_kills + delta.fireball,
-        radiofugas_kills: econ.radiofugas_kills + delta.radiofugas,
-        details: econ.details + delta.details,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("player_id", player_id);
+    const [{ error: updErr }, insErr] = await Promise.all([
+      db
+        .from("player_economy")
+        .update({
+          keys_current: econ.keys_current - price + delta.keys,
+          keys_lifetime: econ.keys_lifetime + delta.keys,
+          loot_points: econ.loot_points + delta.coins,
+          tu4_points: econ.tu4_points + delta.tu4,
+          fireball_kills: econ.fireball_kills + delta.fireball,
+          radiofugas_kills: econ.radiofugas_kills + delta.radiofugas,
+          details: econ.details + delta.details,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("player_id", player_id),
+      newItems.length > 0
+        ? db.from("player_items").insert(newItems.map((item_slug) => ({ player_id, item_slug }))).then((r) => r.error)
+        : Promise.resolve(null),
+    ]);
     if (updErr) throw updErr;
-
-    if (newItems.length > 0) {
-      const { error: insErr } = await db
-        .from("player_items")
-        .insert(newItems.map((item_slug) => ({ player_id, item_slug })));
-      if (insErr) throw insErr;
-    }
+    if (insErr) throw insErr;
 
     const horseshoeHit = await applyHorseshoe(db, player_id);
 
