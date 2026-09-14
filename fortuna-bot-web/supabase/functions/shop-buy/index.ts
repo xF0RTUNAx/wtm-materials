@@ -3,7 +3,7 @@
 // повторная покупка одного и того же предмета запрещена.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem } from "../_shared/game.ts";
+import { hasItem, applyHorseshoe } from "../_shared/game.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -59,10 +59,13 @@ Deno.serve(async (req) => {
       .insert({ player_id, item_slug });
     if (insErr) throw insErr;
 
+    const horseshoeHit = await applyHorseshoe(db, player_id);
+
     return jsonResponse({
       bought: item.name,
       price_paid: effPrice,
       new_loot_points: econ.loot_points - effPrice,
+      horseshoe_bonus: horseshoeHit,
     });
   } catch (e) {
     console.error(e);

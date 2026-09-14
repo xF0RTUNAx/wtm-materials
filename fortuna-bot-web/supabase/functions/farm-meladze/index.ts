@@ -3,7 +3,7 @@
 // (случайное число, не конверсия фрагов). gitara: +1 деталь. "Статуетка Улитки": +1 ключ.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem, secondsLeft, randInt } from "../_shared/game.ts";
+import { hasItem, secondsLeft, randInt, applyHorseshoe } from "../_shared/game.ts";
 
 const BASE_CD = 24 * 3600;
 const REDUCED_CD = 12 * 3600;
@@ -54,11 +54,14 @@ Deno.serve(async (req) => {
       .eq("player_id", player_id);
     if (updErr) throw updErr;
 
+    const horseshoeHit = await applyHorseshoe(db, player_id);
+
     return jsonResponse({
       coins_gained: coins,
       bonus_keys: bonusKeys,
       bonus_details: bonusDetails,
       new_loot_points: econ.loot_points + coins,
+      horseshoe_bonus: horseshoeHit,
     });
   } catch (e) {
     console.error(e);

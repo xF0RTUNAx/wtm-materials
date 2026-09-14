@@ -3,7 +3,7 @@
 // батче) конвертируется в монеты по CONTAINER_DUP_COMP.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { ownedSlugs } from "../_shared/game.ts";
+import { ownedSlugs, applyHorseshoe } from "../_shared/game.ts";
 import { CONTAINER_TIERS, CONTAINER_DUP_COMP, rollContainer } from "../_shared/containers.ts";
 
 const ALLOWED_COUNTS = [1, 5, 10];
@@ -80,7 +80,9 @@ Deno.serve(async (req) => {
       if (insErr) throw insErr;
     }
 
-    return jsonResponse({ rolls, totals: delta, new_items: newItems });
+    const horseshoeHit = await applyHorseshoe(db, player_id);
+
+    return jsonResponse({ rolls, totals: delta, new_items: newItems, horseshoe_bonus: horseshoeHit });
   } catch (e) {
     console.error(e);
     return jsonResponse({ error: "Внутренняя ошибка сервера" }, 500);

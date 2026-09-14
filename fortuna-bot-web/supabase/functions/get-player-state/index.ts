@@ -2,6 +2,7 @@
 // player_economy/player_items закрыты для anon напрямую, всё через service_role здесь.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
+import { touchLastSeen } from "../_shared/game.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -18,6 +19,7 @@ Deno.serve(async (req) => {
         db.from("player_economy").select("*").eq("player_id", player_id).maybeSingle(),
         db.from("player_items").select("item_slug").eq("player_id", player_id),
         db.from("player_equipment").select("equipment_slug").eq("player_id", player_id),
+        touchLastSeen(db, player_id), // "активность" для пула периодических ивентов (§ ivents)
       ]);
     if (econErr) throw econErr;
     if (!economy) return jsonResponse({ error: "Игрок не найден" }, 404);

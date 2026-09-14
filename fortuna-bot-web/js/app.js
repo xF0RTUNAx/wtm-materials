@@ -103,6 +103,7 @@ async function renderDashboard(flash) {
       <button class="tab ${currentTab === "farm" ? "active" : ""}" data-tab="farm">Фарм</button>
       <button class="tab ${currentTab === "shop" ? "active" : ""}" data-tab="shop">Магазин</button>
       <button class="tab ${currentTab === "containers" ? "active" : ""}" data-tab="containers">Контейнеры</button>
+      <button class="tab ${currentTab === "feed" ? "active" : ""}" data-tab="feed">Лента</button>
     </div>
 
     <div id="tab-content"></div>
@@ -148,6 +149,7 @@ function renderTabContent(flash) {
   if (currentTab === "farm") renderFarmTab(mount, flash);
   else if (currentTab === "shop") renderShopTab(mount, flash);
   else if (currentTab === "containers") renderContainersTab(mount, flash);
+  else if (currentTab === "feed") renderFeedTab(mount);
 }
 
 // ── Фарм ──
@@ -316,6 +318,47 @@ function describeContainerResult(res) {
     text += `. 🏆 Новый предмет: ${res.new_items.map(itemName).join(", ")}!`;
   }
   return text;
+}
+
+// ── Лента событий ──
+function describeFeedItem(row) {
+  const d = row.detail;
+  const login = d.login ?? "кто-то";
+  switch (row.event_type) {
+    case "strong_man":
+      return `💪 ${login} тронул сильный мужчина — +${fmtNum(d.amount)} очков Ту-4`;
+    case "weak_man":
+      if (d.protected) return `🛡 Слабый мужчина заходил к ${login}, но «Нестандартная мысль Линса» спасла`;
+      if (d.transferred) return `😈 У ${login} сработало «ДЗ Дэвида» — слабый мужчина ударил по другому игроку`;
+      if (d.no_effect) return `😐 Слабый мужчина заглянул к ${login}, но фрагов радиофугаса не нашлось`;
+      return `💥 Слабый мужчина отнял ${d.amount} фраг(а) радиофугаса у ${login}`;
+    case "anime_girl":
+      if (d.transferred) return `👧 У ${login} сработал «10000-й бой от Андрея» — визит аниме девочки достался другому`;
+      return `👧 Аниме девочка потрогала ${login} — статы ÷${d.divisor}`;
+    case "auto_key":
+      return `🔑 ${login} получил ключ и 1000 монет от бота`;
+    case "horseshoe":
+      return `🐴 У ${login} сработала Декаль подковы — +${fmtNum(d.amount)} монет`;
+    default:
+      return `${login}: ${row.event_type}`;
+  }
+}
+
+async function renderFeedTab(mount) {
+  mount.innerHTML = `<div class="loading">Загрузка...</div>`;
+  try {
+    const rows = await fetchTable("activity_feed", "select=*&order=created_at.desc&limit=30");
+    mount.innerHTML = rows.length
+      ? `<div class="feed-list">${rows
+          .map(
+            (r) =>
+              `<div class="feed-row"><div class="feed-text">${describeFeedItem(r)}</div><div class="feed-time">${new Date(r.created_at).toLocaleString("ru-RU")}</div></div>`,
+          )
+          .join("")}</div>`
+      : `<div class="loading">Пока событий не было</div>`;
+  } catch (err) {
+    mount.innerHTML = `<div class="error-text">${err.message}</div>`;
+  }
 }
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());

@@ -27,3 +27,18 @@ export function secondsLeft(lastTs: string | null, cooldownSeconds: number): num
 export function randInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
+
+// Декаль подковы: аналог "0.1% на сообщение в чате" — вызывается после любого игрового
+// действия. Проверка владения, ролл и начисление атомарны на стороне БД (apply_horseshoe_bonus).
+export async function applyHorseshoe(db: SupabaseClient, playerId: string): Promise<boolean> {
+  const { data, error } = await db.rpc("apply_horseshoe_bonus", { p_player_id: playerId });
+  if (error) {
+    console.error("apply_horseshoe_bonus failed", error);
+    return false;
+  }
+  return !!data;
+}
+
+export async function touchLastSeen(db: SupabaseClient, playerId: string): Promise<void> {
+  await db.from("players").update({ last_seen: new Date().toISOString() }).eq("id", playerId);
+}
