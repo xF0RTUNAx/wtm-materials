@@ -27,6 +27,11 @@ const _ICON_IMAGES = {
   farmBag: "img/tax.png",             // Иконка фарма — tax.png
   openChest: "img/open-treasure-chest.png", // Контейнеры (нижняя навигация)
   anvilImpact: "img/anvil-impact.png",      // Оборудование (нижняя навигация)
+  minerals: "img/minerals.png",             // Фарм (нижняя навигация)
+  banknote: "img/banknote.png",             // Магазин (нижняя навигация)
+  jigsawPiece: "img/jigsaw-piece.png",      // Игра (нижняя навигация)
+  crossedSwords: "img/crossed-swords.png",  // Рейд (нижняя навигация)
+  wireframeGlobe: "img/wireframe-globe.png",// Онлайн/лента (нижняя навигация)
 };
 
 function icon(name, sizePx) {

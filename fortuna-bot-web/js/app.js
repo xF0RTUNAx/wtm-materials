@@ -48,13 +48,13 @@ function renderAuth(mode = "login") {
 }
 
 const NAV_TABS = [
-  { id: "farm", icon: "farmBag", label: "Фарм" },
-  { id: "shop", icon: "coin", label: "Магазин" },
+  { id: "farm", icon: "minerals", label: "Фарм" },
+  { id: "shop", icon: "banknote", label: "Магазин" },
   { id: "containers", icon: "openChest", label: "Кейсы" },
   { id: "equipment", icon: "anvilImpact", label: "Оборудование" },
-  { id: "raid", icon: "sword", label: "Рейд" },
-  { id: "minigame", icon: "puzzle", label: "Игра" },
-  { id: "feed", icon: "award", label: "Лента" },
+  { id: "raid", icon: "crossedSwords", label: "Рейд" },
+  { id: "minigame", icon: "jigsawPiece", label: "Игра" },
+  { id: "feed", icon: "wireframeGlobe", label: "Онлайн" },
 ];
 
 let currentState = null;
