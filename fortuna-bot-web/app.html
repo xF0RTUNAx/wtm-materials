@@ -35,8 +35,8 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.5;
   }
-  .wrap { max-width: 480px; margin: 0 auto; padding: 24px 16px 60px; }
-  h1.hero { font-size: 24px; font-weight: 700; text-align: center; margin-bottom: 20px; color: var(--text); }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 20px 16px 90px; }
+  h1.hero { font-size: 22px; font-weight: 700; text-align: center; margin-bottom: 18px; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; }
 
   .auth-card, .stats-grid, .actions-grid, .migrate-box, .result-box, .loading {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
@@ -67,21 +67,38 @@
   .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
   .brand { font-size: 17px; font-weight: 650; }
 
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border); padding: 0; margin-bottom: 14px; overflow: hidden; }
-  .stat { background: var(--surface); padding: 12px 10px; }
-  .stat-label { font-size: 11px; color: var(--text-soft); margin-bottom: 4px; }
-  .stat-value { font-size: 15px; font-weight: 650; }
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0; margin-bottom: 14px; }
+  .stat { background: var(--surface-2); border-radius: var(--radius-sm); padding: 12px 10px; }
+  .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); margin-bottom: 4px; }
+  .stat-value { font-size: 16px; font-weight: 680; letter-spacing: -.01em; display: flex; align-items: center; gap: 5px; }
+  .stat-value svg { color: var(--accent); }
 
-  .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); padding: 0; margin-bottom: 14px; overflow: hidden; }
+  .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0; margin-bottom: 14px; }
   .action-card {
-    background: var(--surface); border: none; padding: 18px 12px; cursor: pointer; text-align: left;
-    font-family: inherit; transition: background .15s;
+    background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    box-shadow: var(--shadow); padding: 16px 14px; cursor: pointer; text-align: left;
+    font-family: inherit; transition: transform .15s, border-color .15s;
   }
-  .action-card:hover { background: var(--accent-soft); }
-  .action-title { font-size: 15px; font-weight: 650; margin-bottom: 3px; }
-  .action-sub { font-size: 12px; color: var(--text-soft); }
+  .action-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .action-title { font-size: 14.5px; font-weight: 650; margin-bottom: 6px; display: flex; align-items: center; gap: 7px; }
+  .action-title svg { color: var(--accent); }
+  .action-sub { font-size: 11.5px; color: var(--text-soft); }
 
-  .page-tabs { margin-bottom: 14px; }
+  /* ── Нижняя навигация, по образцу fortuna-game/app.html .game-nav ── */
+  .game-nav {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; background: var(--surface); border-top: 1px solid var(--border);
+    box-shadow: 0 -2px 12px rgba(0,0,0,.06); padding: 4px 2px calc(4px + env(safe-area-inset-bottom));
+    max-width: 480px; margin: 0 auto;
+  }
+  .nav-tab {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 7px 2px 6px; border: none; background: none; cursor: pointer; font-family: inherit;
+    border-bottom: 2px solid transparent; color: var(--text-soft); transition: color .15s;
+  }
+  .nav-tab svg { width: 19px; height: 19px; }
+  .nav-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+  .nav-label { font-size: 9px; font-weight: 650; white-space: nowrap; }
   .btn-sm { padding: 7px 14px; font-size: 13px; white-space: nowrap; }
 
   .shop-list, .containers-grid { display: flex; flex-direction: column; gap: 1px; background: var(--border); margin-bottom: 4px; overflow: hidden; border-radius: var(--radius); }
@@ -102,9 +119,22 @@
   .section-label { font-size: 13px; font-weight: 650; color: var(--text-soft); margin: 16px 0 8px; }
 
   .container-card { background: var(--surface); padding: 14px; }
-  .container-card-name { font-size: 15px; font-weight: 650; margin-bottom: 2px; }
-  .container-card-price { font-size: 12px; color: var(--text-soft); margin-bottom: 10px; }
+  .container-card-name { font-size: 15px; font-weight: 650; margin-bottom: 2px; display: flex; align-items: center; gap: 7px; }
+  .container-card-name svg { color: var(--accent); }
+  .container-card-price { font-size: 12px; color: var(--text-soft); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
   .container-buy-row { display: flex; gap: 8px; }
+
+  /* ── Активный рейд — тёмная инвертированная карточка, по образцу
+     fortuna-game/app.html .battle-hero (сама инвертируется с темой) ── */
+  .raid-hero { background: var(--btn); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; }
+  .raid-hero-title { font-size: 16px; font-weight: 650; color: var(--btn-text); display: flex; align-items: center; gap: 8px; }
+  .raid-hero-title svg { color: var(--accent); }
+  .raid-hero-hp { font-size: 12.5px; color: var(--btn-text); opacity: .65; margin: 4px 0 10px; }
+  .raid-hero-track { background: rgba(255,255,255,.14); border-radius: 99px; height: 9px; overflow: hidden; margin-bottom: 14px; }
+  [data-theme="dark"] .raid-hero-track { background: rgba(0,0,0,.2); }
+  .raid-hero-fill { background: var(--accent); height: 100%; border-radius: 99px; transition: width .4s ease; }
+  .raid-hero-row { display: flex; gap: 8px; }
+  .raid-hero-row .btn-secondary { flex: 1; }
 
   .feed-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); border-radius: var(--radius); overflow: hidden; }
   .feed-row { background: var(--surface); padding: 11px 14px; }
@@ -125,10 +155,12 @@
 </head>
 <body>
   <div class="wrap">
-    <h1 class="hero">⚔️ Fortuna — экономика</h1>
+    <h1 class="hero" id="hero-title">Fortuna — экономика</h1>
     <div id="root"></div>
   </div>
 
+  <script src="js/icons.js"></script>
+  <script>document.getElementById("hero-title").insertAdjacentHTML("afterbegin", icon("sword", 22));</script>
   <script src="config.js"></script>
   <script src="js/api.js"></script>
   <script src="js/auth.js"></script>

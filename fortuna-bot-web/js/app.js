@@ -47,6 +47,16 @@ function renderAuth(mode = "login") {
   });
 }
 
+const NAV_TABS = [
+  { id: "farm", icon: "arrowRotate", label: "Фарм" },
+  { id: "shop", icon: "coin", label: "Магазин" },
+  { id: "containers", icon: "chest", label: "Кейсы" },
+  { id: "equipment", icon: "shield", label: "Экип." },
+  { id: "raid", icon: "sword", label: "Рейд" },
+  { id: "minigame", icon: "dice", label: "Игра" },
+  { id: "feed", icon: "award", label: "Лента" },
+];
+
 let currentState = null;
 let currentTab = "farm";
 let catalog = null; // {itemsBySlug, equipmentBySlug, shopItems[], legendaryItems[], equipmentItems[]}
@@ -91,22 +101,12 @@ async function renderDashboard(flash) {
     </div>
 
     <div class="stats-grid">
-      <div class="stat"><div class="stat-label">Монеты</div><div class="stat-value">🪙 ${fmtNum(e.loot_points)}</div></div>
-      <div class="stat"><div class="stat-label">Ключи</div><div class="stat-value">🔑 ${fmtNum(e.keys_current)}</div></div>
-      <div class="stat"><div class="stat-label">Детали</div><div class="stat-value">🔩 ${fmtNum(e.details)}</div></div>
-      <div class="stat"><div class="stat-label">Ту-4</div><div class="stat-value">✈️ ${fmtNum(e.tu4_points)}</div></div>
-      <div class="stat"><div class="stat-label">Фаербол</div><div class="stat-value">🔥 ${fmtNum(e.fireball_kills)}</div></div>
-      <div class="stat"><div class="stat-label">Радиофугас</div><div class="stat-value">💥 ${fmtNum(e.radiofugas_kills)}</div></div>
-    </div>
-
-    <div class="tabs page-tabs">
-      <button class="tab ${currentTab === "farm" ? "active" : ""}" data-tab="farm">Фарм</button>
-      <button class="tab ${currentTab === "shop" ? "active" : ""}" data-tab="shop">Магазин</button>
-      <button class="tab ${currentTab === "containers" ? "active" : ""}" data-tab="containers">Контейнеры</button>
-      <button class="tab ${currentTab === "equipment" ? "active" : ""}" data-tab="equipment">Оборудование</button>
-      <button class="tab ${currentTab === "raid" ? "active" : ""}" data-tab="raid">Рейд</button>
-      <button class="tab ${currentTab === "minigame" ? "active" : ""}" data-tab="minigame">Мини-игра</button>
-      <button class="tab ${currentTab === "feed" ? "active" : ""}" data-tab="feed">Лента</button>
+      <div class="stat"><div class="stat-label">Монеты</div><div class="stat-value">${icon("coin")} ${fmtNum(e.loot_points)}</div></div>
+      <div class="stat"><div class="stat-label">Ключи</div><div class="stat-value">${icon("key")} ${fmtNum(e.keys_current)}</div></div>
+      <div class="stat"><div class="stat-label">Детали</div><div class="stat-value">${icon("detail")} ${fmtNum(e.details)}</div></div>
+      <div class="stat"><div class="stat-label">Ту-4</div><div class="stat-value">${icon("plane")} ${fmtNum(e.tu4_points)}</div></div>
+      <div class="stat"><div class="stat-label">Фаербол</div><div class="stat-value">${icon("campfire")} ${fmtNum(e.fireball_kills)}</div></div>
+      <div class="stat"><div class="stat-label">Радиофугас</div><div class="stat-value">${icon("explosion")} ${fmtNum(e.radiofugas_kills)}</div></div>
     </div>
 
     <div id="tab-content"></div>
@@ -119,9 +119,15 @@ async function renderDashboard(flash) {
       </form>
       <div id="migrate-result" class="result-box" hidden></div>
     </details>
+
+    <nav class="game-nav">
+      ${NAV_TABS.map(
+        (t) => `<button class="nav-tab ${currentTab === t.id ? "active" : ""}" data-tab="${t.id}">${icon(t.icon, 19)}<div class="nav-label">${t.label}</div></button>`,
+      ).join("")}
+    </nav>
   `;
 
-  root.querySelectorAll(".page-tabs .tab").forEach((btn) => {
+  root.querySelectorAll(".nav-tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       currentTab = btn.dataset.tab;
       renderDashboard();
@@ -177,8 +183,8 @@ function renderMinigameTab(mount, flash) {
   mount.innerHTML = `
     <div id="minigame-result" class="result-box" hidden></div>
     <div class="container-card">
-      <div class="container-card-name">Попытка ${Math.min(nextAttempt, 3)} из 3</div>
-      <div class="container-card-price">${canSpin ? `Цена: 🪙 ${fmtNum(cost)}` : "Попытки на сегодня закончились"}</div>
+      <div class="container-card-name">${icon("dice")} Попытка ${Math.min(nextAttempt, 3)} из 3</div>
+      <div class="container-card-price">${canSpin ? `Цена: ${icon("coin", 14)} ${fmtNum(cost)}` : "Попытки на сегодня закончились"}</div>
       ${canSpin ? `<button id="spin-btn" class="btn-secondary btn-sm">Крутить</button>` : ""}
     </div>
   `;
@@ -200,16 +206,16 @@ function renderMinigameTab(mount, flash) {
 function describeSpinResult(res) {
   const symbols = res.rolled.map((k) => SYMBOL_EMOJI[k]).join(" ");
   const parts = [];
-  if (res.coins_gained) parts.push(`🪙 ${res.coins_gained > 0 ? "+" : ""}${fmtNum(res.coins_gained)}`);
-  if (res.keys_gained) parts.push(`🔑 +${res.keys_gained}`);
-  if (res.details_gained) parts.push(`🔩 +${res.details_gained}`);
-  if (res.resources_gained.fireball_kills) parts.push(`🔥 +${res.resources_gained.fireball_kills}`);
-  if (res.resources_gained.radiofugas_kills) parts.push(`💥 +${res.resources_gained.radiofugas_kills}`);
-  if (res.resources_gained.tu4_points) parts.push(`✈️ +${res.resources_gained.tu4_points}`);
+  if (res.coins_gained) parts.push(`${icon("coin", 14)} ${res.coins_gained > 0 ? "+" : ""}${fmtNum(res.coins_gained)}`);
+  if (res.keys_gained) parts.push(`${icon("key", 14)} +${res.keys_gained}`);
+  if (res.details_gained) parts.push(`${icon("detail", 14)} +${res.details_gained}`);
+  if (res.resources_gained.fireball_kills) parts.push(`${icon("campfire", 14)} +${res.resources_gained.fireball_kills}`);
+  if (res.resources_gained.radiofugas_kills) parts.push(`${icon("explosion", 14)} +${res.resources_gained.radiofugas_kills}`);
+  if (res.resources_gained.tu4_points) parts.push(`${icon("plane", 14)} +${res.resources_gained.tu4_points}`);
   let text = `${symbols}\n${parts.join(", ") || "Пусто"}`;
   if (res.big_win) text = "🎉 БОЛЬШОЙ ВЫИГРЫШ! " + text;
-  if (res.item_drop === "new") text += "\n🏆 Выпал Набор Фортуны!";
-  if (res.item_drop === "duplicate") text += `\n🏆 Дубликат Набора Фортуны — +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет`;
+  if (res.item_drop === "new") text += `\n${icon("award", 14)} Выпал Набор Фортуны!`;
+  if (res.item_drop === "duplicate") text += `\n${icon("award", 14)} Дубликат Набора Фортуны — +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет`;
   return text;
 }
 const ITEM_DUP_COMP_DISPLAY = 50000;
@@ -246,16 +252,17 @@ async function renderRaidTab(mount, flash) {
 
   let bodyHtml;
   if (!active) {
-    bodyHtml = `<div class="loading">Сейчас нет активного рейда${raid ? ` (последний — ${RAID_TYPE_LABEL[raid.rtype]}, ${raid.status})` : ""}</div>`;
+    bodyHtml = `<div class="loading">${icon("fortress", 20)} Сейчас нет активного рейда${raid ? ` (последний — ${RAID_TYPE_LABEL[raid.rtype]}, ${raid.status})` : ""}</div>`;
   } else {
-    const pct = Math.round((raid.hp / raid.max_hp) * 100);
+    const pct = Math.max(0, Math.min(100, Math.round((raid.hp / raid.max_hp) * 100)));
     bodyHtml = `
-      <div class="container-card">
-        <div class="container-card-name">${RAID_TYPE_LABEL[raid.rtype]}</div>
-        <div class="container-card-price">HP: ${fmtNum(raid.hp)} / ${fmtNum(raid.max_hp)} (${pct}%)</div>
-        <div class="container-buy-row">
-          <button id="raid-buy-btn" class="btn-secondary btn-sm">Купить оружие (5000🪙)</button>
-          <button id="raid-attack-btn" class="btn-secondary btn-sm">Атаковать</button>
+      <div class="raid-hero">
+        <div class="raid-hero-title">${icon("fortress", 20)} ${RAID_TYPE_LABEL[raid.rtype]}</div>
+        <div class="raid-hero-hp">HP: ${fmtNum(raid.hp)} / ${fmtNum(raid.max_hp)} (${pct}%)</div>
+        <div class="raid-hero-track"><div class="raid-hero-fill" style="width:${pct}%"></div></div>
+        <div class="raid-hero-row">
+          <button id="raid-buy-btn" class="btn-secondary btn-sm">${icon("coin", 14)} Оружие (5000)</button>
+          <button id="raid-attack-btn" class="btn-secondary btn-sm">${icon("sword", 14)} Атаковать</button>
         </div>
       </div>
       <div class="section-label">Топ урона</div>
@@ -285,8 +292,8 @@ async function renderRaidTab(mount, flash) {
     const player = getCurrentPlayer();
     try {
       const res = await raidAttack(player.id);
-      let text = `Урон: ${fmtNum(res.damage_dealt)} (осталось ${fmtNum(res.new_hp)} HP)`;
-      if (res.finished) text += ` — 🏆 БОСС ПОВЕРЖЕН!`;
+      let text = `${icon("sword", 14)} Урон: ${fmtNum(res.damage_dealt)} (осталось ${fmtNum(res.new_hp)} HP)`;
+      if (res.finished) text += ` — ${icon("award", 14)} БОСС ПОВЕРЖЕН!`;
       renderDashboard({ ok: true, text });
     } catch (err) {
       showResult(
@@ -338,7 +345,7 @@ function renderEquipmentTab(mount, flash) {
         <div class="shop-row">
           <div class="shop-row-main">
             <div class="shop-row-name">${eq.name}</div>
-            <div class="shop-row-desc">${eq.description}${isOwned ? "" : ` · 🔩 ${fmtNum(eq.price_details)}`}</div>
+            <div class="shop-row-desc">${eq.description}${isOwned ? "" : ` · ${icon("detail", 13)} ${fmtNum(eq.price_details)}`}</div>
           </div>
           <div class="shop-row-side">${sideHtml}</div>
         </div>`;
@@ -390,16 +397,16 @@ function renderFarmTab(mount, flash) {
   mount.innerHTML = `
     <div class="actions-grid">
       <button class="action-card" data-action="loot">
-        <div class="action-title">Собрать лут</div><div class="action-sub">/gimmetheloot</div>
+        <div class="action-title">${icon("coin")} Собрать лут</div><div class="action-sub">/gimmetheloot</div>
       </button>
       <button class="action-card" data-action="fireball">
-        <div class="action-title">Фаербол</div><div class="action-sub">/fireball</div>
+        <div class="action-title">${icon("campfire")} Фаербол</div><div class="action-sub">/fireball</div>
       </button>
       <button class="action-card" data-action="radiofugas">
-        <div class="action-title">Радиофугас</div><div class="action-sub">/radiofugas</div>
+        <div class="action-title">${icon("explosion")} Радиофугас</div><div class="action-sub">/radiofugas</div>
       </button>
       <button class="action-card" data-action="meladze">
-        <div class="action-title">Меладзе</div><div class="action-sub">/meladze</div>
+        <div class="action-title">${icon("award")} Меладзе</div><div class="action-sub">/meladze</div>
       </button>
     </div>
     <div id="action-result" class="result-box" hidden></div>
@@ -428,18 +435,19 @@ async function runAction(action) {
 }
 
 function describeResult(action, res) {
-  if (action === "loot") return `+${fmtNum(res.loot_gained)} монет${res.bonus_keys ? `, +${res.bonus_keys} ключ` : ""}`;
-  if (action === "fireball") return `+${res.kills_gained} фрагов фаербола${res.bonus_keys ? `, +${res.bonus_keys} ключа, +${res.bonus_details} деталь` : ""}`;
-  if (action === "radiofugas") return `+${res.kills_gained} фрагов радиофугаса${res.bonus_keys ? `, +${res.bonus_keys} ключа, +${res.bonus_details} деталь` : ""}`;
-  if (action === "meladze") return `+${fmtNum(res.coins_gained)} монет${res.bonus_keys ? `, +${res.bonus_keys} ключ` : ""}${res.bonus_details ? `, +${res.bonus_details} деталь` : ""}`;
+  const c = icon("coin", 14), k = icon("key", 14), d = icon("detail", 14);
+  if (action === "loot") return `${c} +${fmtNum(res.loot_gained)}${res.bonus_keys ? `, ${k} +${res.bonus_keys}` : ""}`;
+  if (action === "fireball") return `${icon("campfire", 14)} +${res.kills_gained}${res.bonus_keys ? `, ${k} +${res.bonus_keys}, ${d} +${res.bonus_details}` : ""}`;
+  if (action === "radiofugas") return `${icon("explosion", 14)} +${res.kills_gained}${res.bonus_keys ? `, ${k} +${res.bonus_keys}, ${d} +${res.bonus_details}` : ""}`;
+  if (action === "meladze") return `${c} +${fmtNum(res.coins_gained)}${res.bonus_keys ? `, ${k} +${res.bonus_keys}` : ""}${res.bonus_details ? `, ${d} +${res.bonus_details}` : ""}`;
   return "Готово";
 }
 
-function showResult(id, ok, text) {
+function showResult(id, ok, html) {
   const box = document.getElementById(id);
   box.hidden = false;
   box.className = ok === null ? "result-box" : `result-box result-${ok ? "ok" : "err"}`;
-  box.textContent = text;
+  box.innerHTML = html;
 }
 
 // ── Магазин ──
@@ -459,7 +467,7 @@ function renderShopTab(mount, flash) {
             <div class="shop-row-desc">${item.description}</div>
           </div>
           <div class="shop-row-side">
-            <div class="shop-row-price">🪙 ${priceLabel}</div>
+            <div class="shop-row-price">${icon("coin", 13)} ${priceLabel}</div>
             ${isOwned
               ? `<span class="badge-owned">есть</span>`
               : `<button class="btn-secondary btn-sm" data-buy="${item.slug}">Купить</button>`}
@@ -486,7 +494,7 @@ function renderShopTab(mount, flash) {
       const player = getCurrentPlayer();
       try {
         const res = await shopBuy(player.id, btn.dataset.buy);
-        renderDashboard({ ok: true, text: `Куплено: ${res.bought} за ${fmtNum(res.price_paid)} монет` });
+        renderDashboard({ ok: true, text: `Куплено: ${res.bought} за ${icon("coin", 14)} ${fmtNum(res.price_paid)}` });
       } catch (err) {
         showResult("shop-result", false, err.message);
       }
@@ -507,8 +515,8 @@ function renderContainersTab(mount, flash) {
     .map(
       ([tier, info]) => `
       <div class="container-card">
-        <div class="container-card-name">${info.name}</div>
-        <div class="container-card-price">🔑 ${info.price} / шт</div>
+        <div class="container-card-name">${icon("chest")} ${info.name}</div>
+        <div class="container-card-price">${icon("key", 13)} ${info.price} / шт</div>
         <div class="container-buy-row">
           <button class="btn-secondary btn-sm" data-tier="${tier}" data-count="1">×1</button>
           <button class="btn-secondary btn-sm" data-tier="${tier}" data-count="5">×5</button>
@@ -540,15 +548,15 @@ function renderContainersTab(mount, flash) {
 
 function describeContainerResult(res) {
   const parts = [];
-  if (res.totals.coins) parts.push(`🪙 ${fmtNum(res.totals.coins)}`);
-  if (res.totals.tu4) parts.push(`✈️ ${res.totals.tu4}`);
-  if (res.totals.fireball) parts.push(`🔥 ${res.totals.fireball}`);
-  if (res.totals.radiofugas) parts.push(`💥 ${res.totals.radiofugas}`);
-  if (res.totals.keys) parts.push(`🔑 ${res.totals.keys}`);
-  if (res.totals.details) parts.push(`🔩 ${res.totals.details}`);
+  if (res.totals.coins) parts.push(`${icon("coin", 14)} ${fmtNum(res.totals.coins)}`);
+  if (res.totals.tu4) parts.push(`${icon("plane", 14)} ${res.totals.tu4}`);
+  if (res.totals.fireball) parts.push(`${icon("campfire", 14)} ${res.totals.fireball}`);
+  if (res.totals.radiofugas) parts.push(`${icon("explosion", 14)} ${res.totals.radiofugas}`);
+  if (res.totals.keys) parts.push(`${icon("key", 14)} ${res.totals.keys}`);
+  if (res.totals.details) parts.push(`${icon("detail", 14)} ${res.totals.details}`);
   let text = "Получено: " + (parts.join(", ") || "ничего");
   if (res.new_items.length) {
-    text += `. 🏆 Новый предмет: ${res.new_items.map(itemName).join(", ")}!`;
+    text += `. ${icon("award", 14)} Новый предмет: ${res.new_items.map(itemName).join(", ")}!`;
   }
   return text;
 }
