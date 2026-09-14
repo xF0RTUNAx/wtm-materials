@@ -42,6 +42,10 @@ function iconVal(name, sizePx, valueHTML) {
 function renderAuth(mode = "login") {
   document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
   root.innerHTML = `
+    <div class="auth-promo">
+      <img src="media/oplot.jpg" alt="" />
+      <div class="auth-promo-text">Вступай или продолжай соревнование между участниками чата сообщества с новыми механиками!</div>
+    </div>
     <div class="auth-card">
       <div class="tabs">
         <button class="tab ${mode === "login" ? "active" : ""}" data-mode="login">Вход</button>
