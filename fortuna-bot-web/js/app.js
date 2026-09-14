@@ -103,6 +103,7 @@ async function renderDashboard(flash) {
       <button class="tab ${currentTab === "farm" ? "active" : ""}" data-tab="farm">Фарм</button>
       <button class="tab ${currentTab === "shop" ? "active" : ""}" data-tab="shop">Магазин</button>
       <button class="tab ${currentTab === "containers" ? "active" : ""}" data-tab="containers">Контейнеры</button>
+      <button class="tab ${currentTab === "equipment" ? "active" : ""}" data-tab="equipment">Экипировка</button>
       <button class="tab ${currentTab === "feed" ? "active" : ""}" data-tab="feed">Лента</button>
     </div>
 
@@ -149,7 +150,72 @@ function renderTabContent(flash) {
   if (currentTab === "farm") renderFarmTab(mount, flash);
   else if (currentTab === "shop") renderShopTab(mount, flash);
   else if (currentTab === "containers") renderContainersTab(mount, flash);
+  else if (currentTab === "equipment") renderEquipmentTab(mount, flash);
   else if (currentTab === "feed") renderFeedTab(mount);
+}
+
+// ── Экипировка ──
+function renderEquipmentTab(mount, flash) {
+  const owned = new Set(currentState.equipment);
+  const active = currentState.economy.active_equipment;
+
+  const rows = catalog.equipmentItems
+    .map((eq) => {
+      const isOwned = owned.has(eq.slug);
+      const isActive = active === eq.slug;
+      let sideHtml;
+      if (isActive) sideHtml = `<span class="badge-owned">активно</span>`;
+      else if (isOwned) sideHtml = `<button class="btn-secondary btn-sm" data-equip="${eq.slug}">Активировать</button>`;
+      else sideHtml = `<button class="btn-secondary btn-sm" data-craft="${eq.slug}">Скрафтить</button>`;
+      return `
+        <div class="shop-row">
+          <div class="shop-row-main">
+            <div class="shop-row-name">${eq.name}</div>
+            <div class="shop-row-desc">${eq.description}${isOwned ? "" : ` · 🔩 ${fmtNum(eq.price_details)}`}</div>
+          </div>
+          <div class="shop-row-side">${sideHtml}</div>
+        </div>`;
+    })
+    .join("");
+
+  mount.innerHTML = `
+    <div id="equip-result" class="result-box" hidden></div>
+    ${active ? "" : `<div class="section-label">Ничего не активно</div>`}
+    <div class="shop-list">${rows}</div>
+    ${active ? `<button id="unequip-btn" class="btn-ghost" style="margin-top:12px">Снять активное</button>` : ""}
+  `;
+  if (flash) showResult("equip-result", flash.ok, flash.text);
+
+  mount.querySelectorAll("[data-craft]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const player = getCurrentPlayer();
+      try {
+        const res = await equipmentCraft(player.id, btn.dataset.craft);
+        renderDashboard({ ok: true, text: `Скрафчено: ${res.crafted} за ${fmtNum(res.details_spent)} деталей` });
+      } catch (err) {
+        showResult("equip-result", false, err.message);
+      }
+    });
+  });
+  mount.querySelectorAll("[data-equip]").forEach((btn) => {
+    btn.addEventListener("click", () => swapEquipment(btn.dataset.equip));
+  });
+  const unequipBtn = document.getElementById("unequip-btn");
+  if (unequipBtn) unequipBtn.addEventListener("click", () => swapEquipment(null));
+}
+
+async function swapEquipment(slug) {
+  const player = getCurrentPlayer();
+  try {
+    await equipmentEquip(player.id, slug);
+    renderDashboard({ ok: true, text: slug ? "Активировано" : "Снято" });
+  } catch (err) {
+    showResult(
+      "equip-result",
+      false,
+      err.seconds_left ? `${err.message} — осталось ${fmtDuration(err.seconds_left)}` : err.message,
+    );
+  }
 }
 
 // ── Фарм ──

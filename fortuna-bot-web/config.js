@@ -21,4 +21,9 @@ const CONFIG = {
   SHOP_BUY_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/shop-buy",
   CONTAINER_OPEN_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/container-open",
+
+  EQUIPMENT_CRAFT_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/equipment-craft",
+  EQUIPMENT_EQUIP_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/equipment-equip",
 };

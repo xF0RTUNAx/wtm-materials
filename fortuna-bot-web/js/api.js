@@ -38,6 +38,14 @@ function containerOpen(playerId, tier, count) {
   return callEdgeFunction(CONFIG.CONTAINER_OPEN_URL, { player_id: playerId, tier, count });
 }
 
+function equipmentCraft(playerId, equipmentSlug) {
+  return callEdgeFunction(CONFIG.EQUIPMENT_CRAFT_URL, { player_id: playerId, equipment_slug: equipmentSlug });
+}
+
+function equipmentEquip(playerId, equipmentSlug) {
+  return callEdgeFunction(CONFIG.EQUIPMENT_EQUIP_URL, { player_id: playerId, equipment_slug: equipmentSlug });
+}
+
 function getPlayerState(playerId) {
   return callEdgeFunction(CONFIG.PLAYER_STATE_URL, { player_id: playerId });
 }
