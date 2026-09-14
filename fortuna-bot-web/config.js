@@ -33,4 +33,6 @@ const CONFIG = {
   RAID_ATTACK_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-attack",
   RAID_START_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-start",
   RAID_STOP_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-stop",
+
+  MINIGAME_SPIN_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/minigame-spin",
 };

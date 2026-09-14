@@ -62,6 +62,10 @@ function raidStop(playerId) {
   return callEdgeFunction(CONFIG.RAID_STOP_URL, { player_id: playerId });
 }
 
+function minigameSpin(playerId) {
+  return callEdgeFunction(CONFIG.MINIGAME_SPIN_URL, { player_id: playerId });
+}
+
 function getPlayerState(playerId) {
   return callEdgeFunction(CONFIG.PLAYER_STATE_URL, { player_id: playerId });
 }

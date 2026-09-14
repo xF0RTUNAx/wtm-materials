@@ -103,8 +103,9 @@ async function renderDashboard(flash) {
       <button class="tab ${currentTab === "farm" ? "active" : ""}" data-tab="farm">Фарм</button>
       <button class="tab ${currentTab === "shop" ? "active" : ""}" data-tab="shop">Магазин</button>
       <button class="tab ${currentTab === "containers" ? "active" : ""}" data-tab="containers">Контейнеры</button>
-      <button class="tab ${currentTab === "equipment" ? "active" : ""}" data-tab="equipment">Экипировка</button>
+      <button class="tab ${currentTab === "equipment" ? "active" : ""}" data-tab="equipment">Оборудование</button>
       <button class="tab ${currentTab === "raid" ? "active" : ""}" data-tab="raid">Рейд</button>
+      <button class="tab ${currentTab === "minigame" ? "active" : ""}" data-tab="minigame">Мини-игра</button>
       <button class="tab ${currentTab === "feed" ? "active" : ""}" data-tab="feed">Лента</button>
     </div>
 
@@ -153,8 +154,65 @@ function renderTabContent(flash) {
   else if (currentTab === "containers") renderContainersTab(mount, flash);
   else if (currentTab === "equipment") renderEquipmentTab(mount, flash);
   else if (currentTab === "raid") renderRaidTab(mount, flash);
+  else if (currentTab === "minigame") renderMinigameTab(mount, flash);
   else if (currentTab === "feed") renderFeedTab(mount);
 }
+
+// ── Мини-игра ──
+const SYMBOL_EMOJI = {
+  skull: "💀", coin1: "🪙", coin2: "💰", coin3: "💵", coin4: "💎", coin5: "🏆", seven: "7️⃣",
+  key: "🔑", fireball: "🔥", radiofugas: "💥", tu4: "✈️", clover: "🍀", joker: "🃏",
+};
+const MINIGAME_COSTS = { 1: 7777, 2: 17777, 3: 27777 };
+
+function renderMinigameTab(mount, flash) {
+  const today = new Date().toISOString().slice(0, 10);
+  const e = currentState.economy;
+  const attemptsUsed = e.spin_day === today ? e.spin_count : 0;
+  const nextAttempt = attemptsUsed + 1;
+  const hasDiscount = currentState.items.includes("fortuna_set");
+  const canSpin = nextAttempt <= 3;
+  const cost = canSpin ? (hasDiscount ? Math.floor(MINIGAME_COSTS[nextAttempt] * 0.9) : MINIGAME_COSTS[nextAttempt]) : 0;
+
+  mount.innerHTML = `
+    <div id="minigame-result" class="result-box" hidden></div>
+    <div class="container-card">
+      <div class="container-card-name">Попытка ${Math.min(nextAttempt, 3)} из 3</div>
+      <div class="container-card-price">${canSpin ? `Цена: 🪙 ${fmtNum(cost)}` : "Попытки на сегодня закончились"}</div>
+      ${canSpin ? `<button id="spin-btn" class="btn-secondary btn-sm">Крутить</button>` : ""}
+    </div>
+  `;
+  if (flash) showResult("minigame-result", flash.ok, flash.text);
+
+  const btn = document.getElementById("spin-btn");
+  if (btn) btn.addEventListener("click", async () => {
+    const player = getCurrentPlayer();
+    showResult("minigame-result", null, "Крутим...");
+    try {
+      const res = await minigameSpin(player.id);
+      renderDashboard({ ok: true, text: describeSpinResult(res) });
+    } catch (err) {
+      showResult("minigame-result", false, err.message);
+    }
+  });
+}
+
+function describeSpinResult(res) {
+  const symbols = res.rolled.map((k) => SYMBOL_EMOJI[k]).join(" ");
+  const parts = [];
+  if (res.coins_gained) parts.push(`🪙 ${res.coins_gained > 0 ? "+" : ""}${fmtNum(res.coins_gained)}`);
+  if (res.keys_gained) parts.push(`🔑 +${res.keys_gained}`);
+  if (res.details_gained) parts.push(`🔩 +${res.details_gained}`);
+  if (res.resources_gained.fireball_kills) parts.push(`🔥 +${res.resources_gained.fireball_kills}`);
+  if (res.resources_gained.radiofugas_kills) parts.push(`💥 +${res.resources_gained.radiofugas_kills}`);
+  if (res.resources_gained.tu4_points) parts.push(`✈️ +${res.resources_gained.tu4_points}`);
+  let text = `${symbols}\n${parts.join(", ") || "Пусто"}`;
+  if (res.big_win) text = "🎉 БОЛЬШОЙ ВЫИГРЫШ! " + text;
+  if (res.item_drop === "new") text += "\n🏆 Выпал Набор Фортуны!";
+  if (res.item_drop === "duplicate") text += `\n🏆 Дубликат Набора Фортуны — +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет`;
+  return text;
+}
+const ITEM_DUP_COMP_DISPLAY = 50000;
 
 // ── Рейд ──
 const RAID_TYPE_LABEL = { normal: "Линс", hard: "Аполис", "13": "Тивашин13", ca: "ЦА" };
@@ -263,7 +321,7 @@ async function renderRaidTab(mount, flash) {
   });
 }
 
-// ── Экипировка ──
+// ── Оборудование ──
 function renderEquipmentTab(mount, flash) {
   const owned = new Set(currentState.equipment);
   const active = currentState.economy.active_equipment;
