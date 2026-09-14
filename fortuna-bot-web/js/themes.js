@@ -8,13 +8,6 @@ function _hexToRgb(hex) {
   const n = parseInt(hex.replace("#", ""), 16);
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
-function _toHex(v) {
-  return Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0");
-}
-function mix(hexA, hexB, t) {
-  const a = _hexToRgb(hexA), b = _hexToRgb(hexB);
-  return `#${_toHex(a.r + (b.r - a.r) * t)}${_toHex(a.g + (b.g - a.g) * t)}${_toHex(a.b + (b.b - a.b) * t)}`;
-}
 function rgba(hex, alpha) {
   const c = _hexToRgb(hex);
   return `rgba(${c.r},${c.g},${c.b},${alpha})`;
@@ -47,41 +40,43 @@ const PRESETS = [
   themeFromPalette("amber", "Янтарь", "#EEEEEE", "#EA9216", "#3A4750", "#313841"),
 ];
 
+// Строго 4 цвета материала — bg/accent/secondary/dark. Никаких mix() между ними и никакого
+// разбавления белым/чёрным: только alpha (прозрачность) одного и того же исходного HEX,
+// чтобы сохранить насыщенность ровно такой, как в присланных материалах.
 function themeFromPalette(id, label, bg, accent, secondary, dark) {
   return {
     id, label, swatch: accent, glass: true,
     light: {
       bg,
-      // "стекло" тонировано цветом пресета, а не нейтрально-белое
-      surface: rgba(mix(accent, "#ffffff", 0.9), 0.5),
-      surface2: rgba(mix(secondary, "#ffffff", 0.78), 0.42),
-      border: rgba(mix(accent, "#ffffff", 0.4), 0.45),
+      surface: rgba(bg, 0.5),
+      surface2: rgba(secondary, 0.3),
+      border: rgba(dark, 0.18),
       text: dark,
-      textSoft: mix(dark, bg, 0.4),
+      textSoft: rgba(dark, 0.62),
       accent,
-      accentSoft: rgba(accent, 0.16),
+      accentSoft: rgba(accent, 0.18),
       btn: dark,
       btnText: bg,
-      tint1: rgba(accent, 0.16),
-      tint2: rgba(secondary, 0.18),
-      tint3: rgba(mix(accent, secondary, 0.5), 0.16),
-      pageBg: `linear-gradient(160deg, ${bg} 0%, ${mix(bg, secondary, 0.55)} 45%, ${mix(secondary, accent, 0.4)} 100%)`,
+      tint1: rgba(accent, 0.3),
+      tint2: rgba(secondary, 0.34),
+      tint3: rgba(dark, 0.2),
+      pageBg: `linear-gradient(160deg, ${bg} 0%, ${secondary} 55%, ${accent} 100%)`,
     },
     dark: {
       bg: dark,
-      surface: rgba(mix(accent, "#000000", 0.82), 0.48),
-      surface2: rgba(mix(secondary, "#000000", 0.7), 0.4),
-      border: rgba(mix(accent, "#ffffff", 0.5), 0.2),
-      text: mix(dark, "#ffffff", 0.92),
-      textSoft: mix(dark, "#ffffff", 0.55),
-      accent: mix(accent, "#ffffff", 0.12),
-      accentSoft: rgba(accent, 0.24),
+      surface: rgba(dark, 0.5),
+      surface2: rgba(secondary, 0.32),
+      border: rgba(bg, 0.16),
+      text: bg,
+      textSoft: rgba(bg, 0.6),
+      accent,
+      accentSoft: rgba(accent, 0.26),
       btn: bg,
       btnText: dark,
-      tint1: rgba(accent, 0.22),
-      tint2: rgba(secondary, 0.28),
-      tint3: rgba(mix(accent, secondary, 0.5), 0.22),
-      pageBg: `linear-gradient(160deg, ${dark} 0%, ${mix(dark, secondary, 0.5)} 50%, ${mix(secondary, accent, 0.35)} 100%)`,
+      tint1: rgba(accent, 0.34),
+      tint2: rgba(secondary, 0.36),
+      tint3: rgba(bg, 0.12),
+      pageBg: `linear-gradient(160deg, ${dark} 0%, ${secondary} 55%, ${accent} 100%)`,
     },
   };
 }

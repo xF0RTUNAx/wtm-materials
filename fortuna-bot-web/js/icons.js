@@ -24,11 +24,15 @@ const _ICON_MARKUP_24 = {
     '<circle cx="4.6" cy="11" r="1.3"/><circle cx="8.3" cy="11.4" r="1.15"/>' +
     '<circle cx="19.4" cy="11" r="1.3"/><circle cx="15.7" cy="11.4" r="1.15"/>' +
     '<path d="M8.9 19.4L12 18.2L15.1 19.4L12 21.3Z"/>',
-  // Fireball — лёгкий одномоторный истребитель: короче Ту-4, крыло у'же, без мотогондол.
+  // Fireball — поршневой истребитель: винт на носу (диск + втулка), короткий фюзеляж,
+  // крыло у'же и без мотогондол — в отличие от Ту-4.
   fireballPlane:
-    '<path d="M12 2.1L13.3 5.6V17.4V17.4L12 21.2L10.7 17.4V5.6L12 2.1Z"/>' +
-    '<path d="M11 9.3L2.3 10.5V12.3L11 11.3Z"/><path d="M13 9.3L21.7 10.5V12.3L13 11.3Z"/>' +
-    '<path d="M10.1 18L12 17L13.9 18L12 19.9Z"/>',
+    '<rect x="10.7" y="1.5" width="2.6" height="1.6" rx=".6" transform="rotate(20 12 2.3)"/>' +
+    '<rect x="10.7" y="1.5" width="2.6" height="1.6" rx=".6" transform="rotate(-20 12 2.3)"/>' +
+    '<circle cx="12" cy="2.3" r="1" fill="none" stroke="currentColor" stroke-width="1.1"/>' +
+    '<path d="M12 3.6L13.3 6.6V17.6L12 21.2L10.7 17.6V6.6L12 3.6Z"/>' +
+    '<path d="M11 10.1L2.3 11.2V13L11 12Z"/><path d="M13 10.1L21.7 11.2V13L13 12Z"/>' +
+    '<path d="M10.1 18.4L12 17.4L13.9 18.4L12 20.2Z"/>',
   coinFallback: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".4"/>',
   key: '<circle cx="7" cy="12" r="4.1" fill="none" stroke="currentColor" stroke-width="2.2"/><rect x="10.6" y="10.9" width="10.4" height="2.2" rx=".3"/><rect x="17.2" y="13.1" width="2" height="3.3" rx=".3"/><rect x="20.2" y="13.1" width="2" height="2.3" rx=".3"/>',
   chest: '<path d="M4 10c0-3.3 2.2-5.5 5.3-5.5h5.4C17.8 4.5 20 6.7 20 10" fill="none" stroke="currentColor" stroke-width="1.9"/><rect x="3" y="10" width="18" height="9.7" rx="2" fill="none" stroke="currentColor" stroke-width="1.9"/><circle cx="12" cy="13.8" r="1.5"/><rect x="11.25" y="14.6" width="1.5" height="2.6" rx=".4"/>',
