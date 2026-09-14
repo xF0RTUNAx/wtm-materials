@@ -55,6 +55,17 @@ export async function logFeedEvent(
   if (error) console.error("log_feed_event failed", error);
 }
 
+// Выдаёт случайный дизайн профиля владельцу "Игрушечной админки от Максима" (maksym_toy_admin),
+// один раз навсегда — проверка владения и идемпотентность на стороне БД (assign_random_profile_theme).
+export async function assignRandomProfileTheme(db: SupabaseClient, playerId: string): Promise<string | null> {
+  const { data, error } = await db.rpc("assign_random_profile_theme", { p_player_id: playerId });
+  if (error) {
+    console.error("assign_random_profile_theme failed", error);
+    return null;
+  }
+  return data ?? null;
+}
+
 export async function touchLastSeen(db: SupabaseClient, playerId: string): Promise<void> {
   await db.from("players").update({ last_seen: new Date().toISOString() }).eq("id", playerId);
 }

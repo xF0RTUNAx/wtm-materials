@@ -212,6 +212,181 @@
 
   /* ── Модалка профиля участника ── */
   .profile-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+
+  /* ── Дизайны профиля (VIP-косметика от "Игрушечная админка от Максима") ──
+     Адаптация 6 тем из game/profile_themes.css под карточку профиля этого сайта:
+     карточка = .profile-head, обёрнутая в .profile-theme-card.theme-XXX. */
+  .profile-theme-card {
+    position: relative; z-index: 1; border-radius: var(--radius-sm); padding: 26px 16px; margin-bottom: 14px; overflow: hidden;
+    min-height: 130px; display: flex; align-items: center;
+  }
+  .profile-theme-card .profile-head { margin-bottom: 0; position: relative; z-index: 2; width: 100%; }
+  .profile-theme-card .theme-points-wrapper, .profile-theme-card .wheel-and-hamster { display: none; }
+
+  /* Арлекин (Pop-Art / Comic) */
+  .theme-harlequin {
+    background:
+      linear-gradient(245deg, #000000 0%, #fdff96 100%),
+      linear-gradient(245deg, #0038ff 0%, #000000 100%),
+      radial-gradient(100% 225% at 100% 0%, #4200ff 0%, #001169 100%),
+      linear-gradient(245deg, #000000 0%, #ffb800 100%),
+      radial-gradient(115% 107% at 40% 100%, #eaf5ff 0%, #eaf5ff 40%, #a9c6de calc(40% + 1px), #a9c6de 70%, #247e6c calc(70% + 2px), #247e6c 85%, #e4c666 calc(85% + 2px), #e4c666 100%),
+      linear-gradient(65deg, #083836 0%, #083836 40%, #66d37e calc(40% + 1px), #66d37e 60%, #c6e872 calc(60% + 1px), #c6e872 100%) !important;
+    background-blend-mode: overlay, screen, overlay, hard-light, overlay, normal !important;
+    border: 4px solid #000 !important; box-shadow: 6px 6px 0 rgba(0,0,0,0.8) !important; border-radius: 12px !important;
+    -webkit-transform: translate3d(0,0,0); transform: translateZ(0);
+  }
+  .theme-harlequin .profile-name {
+    color: #fff !important;
+    text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 4px 4px 0 rgba(0,0,0,0.5) !important;
+    letter-spacing: 2px; font-weight: 900 !important;
+  }
+  .theme-harlequin .profile-online { color: #fff !important; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000; }
+
+  /* Безмятежность (Serenity) */
+  .theme-serenity {
+    background: linear-gradient(180deg, #ff0b00 13%, #ff9e00 100%) !important;
+    border: 2px solid #ff9e00 !important; box-shadow: 0 0 20px rgba(255,158,0,0.4) !important;
+  }
+  .theme-serenity::before { content: ''; position: absolute; inset: 0; background: rgba(0,0,0,0.25); z-index: 0; pointer-events: none; }
+  .theme-serenity .theme-points-wrapper { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+  .theme-serenity .theme-point { display: block; position: absolute; will-change: transform; }
+  .theme-serenity .theme-point:nth-child(-n+5) {
+    border-radius: 50%; background-color: rgba(255,255,255,0.15); box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    top: 0; right: 20%; transform: translate(50%, -50%);
+  }
+  .theme-serenity .theme-point:nth-child(1) { width: 220px; height: 220px; animation: ser-pulse 6s ease-in-out infinite; }
+  .theme-serenity .theme-point:nth-child(2) { width: 170px; height: 170px; animation: ser-pulse 6s ease-in-out infinite 0.5s; }
+  .theme-serenity .theme-point:nth-child(3) { width: 120px; height: 120px; animation: ser-pulse 6s ease-in-out infinite 1s; }
+  .theme-serenity .theme-point:nth-child(4) { width: 70px; height: 70px; animation: ser-pulse 6s ease-in-out infinite 1.5s; }
+  .theme-serenity .theme-point:nth-child(5) { width: 40px; height: 40px; background-color: #fff; box-shadow: 0 0 30px rgba(255,255,255,0.8); animation: none; }
+  @keyframes ser-pulse { 0%, 100% { transform: translate(50%, -50%) scale(1); } 50% { transform: translate(50%, -50%) scale(1.03); } }
+  .theme-serenity .theme-point:nth-child(n+6):nth-child(-n+8) { background-color: #3a3a3a; border-radius: 12px; }
+  .theme-serenity .theme-point:nth-child(6) { width: 140px; height: 140px; bottom: -100px; left: -60px; z-index: 1; box-shadow: 0 0 30px rgba(0,0,0,0.8); animation: ser-drift1 12s ease-in-out infinite alternate; }
+  .theme-serenity .theme-point:nth-child(7) { width: 110px; height: 110px; bottom: -80px; left: 15%; z-index: 0; background-color: #2b2b2b; animation: ser-drift2 15s ease-in-out infinite alternate; }
+  .theme-serenity .theme-point:nth-child(8) { width: 160px; height: 160px; bottom: -115px; right: -40px; z-index: 2; box-shadow: 0 0 30px rgba(0,0,0,0.8); background-color: #454545; animation: ser-drift3 10s ease-in-out infinite alternate; }
+  @keyframes ser-drift1 { 0% { transform: rotate(45deg) translate(0,0); } 100% { transform: rotate(45deg) translate(6px,6px); } }
+  @keyframes ser-drift2 { 0% { transform: rotate(45deg) translate(0,0); } 100% { transform: rotate(45deg) translate(-4px,-4px); } }
+  @keyframes ser-drift3 { 0% { transform: rotate(45deg) translate(0,0); } 100% { transform: rotate(45deg) translate(-8px,8px); } }
+  .theme-serenity .theme-point:nth-child(n+9) { display: none; }
+  .theme-serenity .profile-name, .theme-serenity .profile-online { color: #fff !important; text-shadow: 0 0 10px rgba(0,0,0,0.8), 2px 2px 4px rgba(0,0,0,0.8) !important; }
+
+  /* Акварель (Aquarelle) */
+  .theme-aquarelle {
+    background-color: #050b14 !important; border: 2px solid transparent !important;
+    box-shadow: inset 0 0 50px rgba(0,0,0,0.8) !important;
+  }
+  .theme-aquarelle::before { content: ""; position: absolute; inset: 2px; background: rgba(0,0,0,0.4); border-radius: inherit; z-index: -1; pointer-events: none; }
+  .theme-aquarelle .theme-points-wrapper { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; pointer-events: none; overflow: hidden; }
+  .theme-aquarelle .theme-point { display: block; position: absolute; width: 90px; height: 90px; border-radius: 50%; filter: blur(18px); will-change: transform; }
+  .theme-aquarelle .theme-point:nth-child(1) { background: #ff007f; top: -20%; left: -10%; animation: aq-upRight 6s ease-in-out infinite; }
+  .theme-aquarelle .theme-point:nth-child(2) { background: #ff6a00; top: 0%; left: 10%; animation: aq-downLeft 5s ease-in-out infinite; animation-delay: 1s; }
+  .theme-aquarelle .theme-point:nth-child(3) { background: #ffcc00; top: 20%; left: 50%; animation: aq-right 4s ease-in-out infinite; animation-delay: 2s; }
+  .theme-aquarelle .theme-point:nth-child(4) { background: #00fff0; top: -20%; left: 70%; animation: aq-upLeft 7s ease-in-out infinite; animation-delay: 3s; }
+  .theme-aquarelle .theme-point:nth-child(5) { background: #9d00ff; top: 30%; left: -10%; animation: aq-downRight 3s ease-in-out infinite; animation-delay: 4s; }
+  .theme-aquarelle .theme-point:nth-child(6) { background: #ff007f; top: -10%; left: 30%; animation: aq-left 8s ease-in-out infinite; animation-delay: 0.5s; }
+  .theme-aquarelle .theme-point:nth-child(7) { background: #ff6a00; top: 40%; left: 60%; animation: aq-up 6s ease-in-out infinite; animation-delay: 1.5s; }
+  .theme-aquarelle .theme-point:nth-child(n+8) { display: none; }
+  @keyframes aq-upRight { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(100%,-100%); } 50% { transform: translate(-50%,50%); } 75% { transform: translate(50%,-50%); } }
+  @keyframes aq-downLeft { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-100%,100%); } 50% { transform: translate(50%,-50%); } 75% { transform: translate(-50%,50%); } }
+  @keyframes aq-right { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(100%,0); } 50% { transform: translate(-100%,50%); } 75% { transform: translate(50%,-50%); } }
+  @keyframes aq-upLeft { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-100%,-100%); } 50% { transform: translate(50%,50%); } 75% { transform: translate(-50%,-50%); } }
+  @keyframes aq-downRight { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(100%,100%); } 50% { transform: translate(-50%,-50%); } 75% { transform: translate(50%,50%); } }
+  @keyframes aq-left { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(-100%,0); } 50% { transform: translate(100%,-50%); } 75% { transform: translate(-50%,50%); } }
+  @keyframes aq-up { 0%, 100% { transform: translate(0,0); } 25% { transform: translate(0,-100%); } 50% { transform: translate(50%,50%); } 75% { transform: translate(-50%,-50%); } }
+  .theme-aquarelle .profile-name, .theme-aquarelle .profile-online { color: #fff !important; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px #ff007f, 0 0 30px #00fff0 !important; }
+
+  /* Ностальгия (Synthwave) */
+  .theme-nostalgia {
+    background-image: linear-gradient(#11091a, #11091a), linear-gradient(0deg, #ffdb3b 0%, #fe53bb 25%, #8f51ea 87%) !important;
+    background-origin: border-box !important; background-clip: padding-box, border-box !important;
+    border: 2px solid transparent !important; box-shadow: 0 0 30px rgba(254,83,187,0.2) !important;
+  }
+  .theme-nostalgia .theme-points-wrapper { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; perspective: 400px; }
+  .theme-nostalgia .theme-point { display: none; }
+  .theme-nostalgia .theme-points-wrapper::before {
+    content: ""; position: absolute; top: 20%; left: -50%; width: 200%; height: 800%;
+    background-image: linear-gradient(rgba(255,31,184,0.6) 2px, transparent 2px), linear-gradient(90deg, rgba(255,31,184,0.6) 2px, transparent 2px);
+    background-size: 50px 50px; transform: rotateX(65deg); transform-origin: top center;
+    animation: synthwave-fly 3s linear infinite; box-shadow: inset 0 0 50px #ff1fb8;
+  }
+  .theme-nostalgia .theme-points-wrapper::after {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 60%;
+    background-image: linear-gradient(to bottom, rgba(43,1,54,0.9) 0%, rgba(143,81,234,0.5) 40%, rgba(254,83,187,0.8) 80%, transparent 100%);
+    z-index: 1;
+  }
+  @keyframes synthwave-fly { 0% { background-position: 0 0; } 100% { background-position: 0 50px; } }
+  .theme-nostalgia .profile-name {
+    background-image: linear-gradient(0deg, rgba(254,83,187,1) 0%, rgba(255,255,255,1) 45%, rgba(0,229,255,1) 100%) !important;
+    background-clip: text !important; -webkit-background-clip: text !important; color: transparent !important;
+    text-shadow: 0 0 2px rgba(255,255,255,0.8), 0 0 8px rgba(0,229,255,0.9), 0 0 15px rgba(254,83,187,0.7) !important;
+    font-weight: 900 !important; letter-spacing: 2px;
+  }
+  .theme-nostalgia .profile-online { color: #fff !important; text-shadow: 0 0 8px rgba(0,229,255,0.7) !important; }
+
+  /* Звёздная тишина (Starry Silence) */
+  .theme-starry {
+    background-image: linear-gradient(#050b14, #050b14), linear-gradient(137.48deg, #ffffff 10%, #4b5a77 45%, #ffc107 67%, #4b5a77 87%) !important;
+    background-origin: border-box !important; background-clip: padding-box, border-box !important;
+    border: 2px solid transparent !important; background-size: 300% 300% !important; background-position: 50% 50% !important;
+    animation: starry-gradient 8s ease infinite !important;
+    box-shadow: 0 0 30px rgba(255,255,255,0.05), inset 0 0 40px rgba(0,0,0,0.8) !important;
+  }
+  @keyframes starry-gradient { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  .theme-starry .theme-points-wrapper { display: block; position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+  .theme-starry .theme-point { display: none; }
+  .theme-starry .theme-points-wrapper::before {
+    content: ""; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+    background-image: radial-gradient(#ffffff 1px, transparent 1%); background-size: 50px 50px; opacity: 0.5;
+    animation: animStarFall 50s linear infinite; will-change: transform;
+  }
+  .theme-starry .theme-points-wrapper::after {
+    content: ""; position: absolute; top: -100%; left: -100%; width: 300%; height: 300%;
+    background-image: radial-gradient(#ffffff 1px, transparent 1%); background-size: 70px 70px; opacity: 0.3;
+    animation: animStarRotate 150s linear infinite; will-change: transform;
+  }
+  @keyframes animStarFall { from { transform: translateY(0); } to { transform: translateY(-250px); } }
+  @keyframes animStarRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .theme-starry .profile-name { color: #fff !important; text-shadow: 0 0 10px rgba(255,255,255,0.8), 0 0 20px rgba(255,255,255,0.4) !important; letter-spacing: 2px; }
+  .theme-starry .profile-online { color: #fff !important; text-shadow: 0 0 8px rgba(255,255,255,0.5) !important; }
+
+  /* Верный друг (Hamster) */
+  .theme-hamster { background: linear-gradient(135deg, #2d2318, #1a1510) !important; border: 2px solid hsl(30,90%,55%) !important; border-radius: 12px !important; }
+  .theme-hamster .profile-name { color: hsl(30,90%,80%) !important; text-shadow: 2px 2px 0 #000 !important; }
+  .theme-hamster .profile-online { color: hsl(30,90%,70%) !important; text-shadow: 1px 1px 0 #000; }
+  .theme-hamster .wheel-and-hamster {
+    display: block; --dur: 1s; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%) scale(1.3); opacity: 0.18; z-index: -1; pointer-events: none;
+    width: 12em; height: 12em; font-size: 14px;
+  }
+  .theme-hamster .wheel, .theme-hamster .hamster, .theme-hamster .hamster div, .theme-hamster .spoke { position: absolute; }
+  .theme-hamster .wheel, .theme-hamster .spoke { border-radius: 50%; top: 0; left: 0; width: 100%; height: 100%; }
+  .theme-hamster .wheel { background: radial-gradient(100% 100% at center, hsla(0,0%,60%,0) 47.8%, hsl(0,0%,60%) 48%); z-index: 2; }
+  .theme-hamster .hamster { animation: hamster var(--dur) ease-in-out infinite; top: 50%; left: calc(50% - 3.5em); width: 7em; height: 3.75em; transform: rotate(4deg) translate(-0.8em,1.85em); transform-origin: 50% 0; z-index: 1; }
+  .theme-hamster .hamster__head { animation: hamsterHead var(--dur) ease-in-out infinite; background: hsl(30,90%,55%); border-radius: 70% 30% 0 100% / 40% 25% 25% 60%; box-shadow: 0 -0.25em 0 hsl(30,90%,80%) inset, 0.75em -1.55em 0 hsl(30,90%,90%) inset; top: 0; left: -2em; width: 2.75em; height: 2.5em; transform-origin: 100% 50%; }
+  .theme-hamster .hamster__ear { animation: hamsterEar var(--dur) ease-in-out infinite; background: hsl(0,90%,85%); border-radius: 50%; box-shadow: -0.25em 0 hsl(30,90%,55%) inset; top: -0.25em; right: -0.25em; width: 0.75em; height: 0.75em; transform-origin: 50% 75%; }
+  .theme-hamster .hamster__eye { animation: hamsterEye var(--dur) linear infinite; background-color: hsl(0,0%,0%); border-radius: 50%; top: 0.375em; left: 1.25em; width: 0.5em; height: 0.5em; }
+  .theme-hamster .hamster__nose { background: hsl(0,90%,75%); border-radius: 35% 65% 85% 15% / 70% 50% 50% 30%; top: 0.75em; left: 0; width: 0.2em; height: 0.25em; }
+  .theme-hamster .hamster__body { animation: hamsterBody var(--dur) ease-in-out infinite; background: hsl(30,90%,90%); border-radius: 50% 30% 50% 30% / 15% 60% 40% 40%; box-shadow: 0.1em 0.75em 0 hsl(30,90%,55%) inset, 0.15em -0.5em 0 hsl(30,90%,80%) inset; top: 0.25em; left: 2em; width: 4.5em; height: 3em; transform-origin: 17% 50%; transform-style: preserve-3d; }
+  .theme-hamster .hamster__limb--fr, .theme-hamster .hamster__limb--fl { clip-path: polygon(0 0,100% 0,70% 80%,60% 100%,0% 100%,40% 80%); top: 2em; left: 0.5em; width: 1em; height: 1.5em; transform-origin: 50% 0; }
+  .theme-hamster .hamster__limb--fr { animation: hamsterFRLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,80%) 80%,hsl(0,90%,75%) 80%); transform: rotate(15deg) translateZ(-1px); }
+  .theme-hamster .hamster__limb--fl { animation: hamsterFLLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,90%) 80%,hsl(0,90%,85%) 80%); transform: rotate(15deg); }
+  .theme-hamster .hamster__limb--br, .theme-hamster .hamster__limb--bl { border-radius: 0.75em 0.75em 0 0; clip-path: polygon(0 0,100% 0,100% 30%,70% 90%,70% 100%,30% 100%,40% 90%,0% 30%); top: 1em; left: 2.8em; width: 1.5em; height: 2.5em; transform-origin: 50% 30%; }
+  .theme-hamster .hamster__limb--br { animation: hamsterBRLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,80%) 90%,hsl(0,90%,75%) 90%); transform: rotate(-25deg) translateZ(-1px); }
+  .theme-hamster .hamster__limb--bl { animation: hamsterBLLimb var(--dur) linear infinite; background: linear-gradient(hsl(30,90%,90%) 90%,hsl(0,90%,85%) 90%); transform: rotate(-25deg); }
+  .theme-hamster .hamster__tail { animation: hamsterTail var(--dur) linear infinite; background: hsl(0,90%,85%); border-radius: 0.25em 50% 50% 0.25em; box-shadow: 0 -0.2em 0 hsl(0,90%,75%) inset; top: 1.5em; right: -0.5em; width: 1em; height: 0.5em; transform: rotate(30deg) translateZ(-1px); transform-origin: 0.25em 0.25em; }
+  .theme-hamster .spoke { animation: spoke var(--dur) linear infinite; background: radial-gradient(100% 100% at center,hsl(0,0%,60%) 4.8%,hsla(0,0%,60%,0) 5%), linear-gradient(hsla(0,0%,55%,0) 46.9%,hsl(0,0%,65%) 47% 52.9%,hsla(0,0%,65%,0) 53%) 50% 50% / 99% 99% no-repeat; }
+  @keyframes hamster { from, to { transform: rotate(4deg) translate(-0.8em,1.85em); } 50% { transform: rotate(0) translate(-0.8em,1.85em); } }
+  @keyframes hamsterHead { from, 25%, 50%, 75%, to { transform: rotate(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(8deg); } }
+  @keyframes hamsterEye { from, 90%, to { transform: scaleY(1); } 95% { transform: scaleY(0); } }
+  @keyframes hamsterEar { from, 25%, 50%, 75%, to { transform: rotate(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(12deg); } }
+  @keyframes hamsterBody { from, 25%, 50%, 75%, to { transform: rotate(0); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(-2deg); } }
+  @keyframes hamsterFRLimb { from, 25%, 50%, 75%, to { transform: rotate(50deg) translateZ(-1px); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(-30deg) translateZ(-1px); } }
+  @keyframes hamsterFLLimb { from, 25%, 50%, 75%, to { transform: rotate(-30deg); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(50deg); } }
+  @keyframes hamsterBRLimb { from, 25%, 50%, 75%, to { transform: rotate(-60deg) translateZ(-1px); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(20deg) translateZ(-1px); } }
+  @keyframes hamsterBLLimb { from, 25%, 50%, 75%, to { transform: rotate(20deg); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(-60deg); } }
+  @keyframes hamsterTail { from, 25%, 50%, 75%, to { transform: rotate(30deg) translateZ(-1px); } 12.5%, 37.5%, 62.5%, 87.5% { transform: rotate(10deg) translateZ(-1px); } }
+  @keyframes spoke { from { transform: rotate(0); } to { transform: rotate(-1turn); } }
   .profile-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--surface-2); flex-shrink: 0; }
   .profile-name { font-size: 17px; font-weight: 700; }
   .profile-online { font-size: 12px; color: var(--text-soft); margin-top: 2px; }

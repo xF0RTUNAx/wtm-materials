@@ -634,7 +634,11 @@ function renderShopTab(mount, flash) {
       const player = getCurrentPlayer();
       try {
         const res = await shopBuy(player.id, btn.dataset.buy);
-        renderDashboard({ ok: true, text: `Куплено: ${res.bought} за ${icon("coin", 14)} ${fmtNum(res.price_paid)}` });
+        let text = `Куплено: ${res.bought} за ${icon("coin", 14)} ${fmtNum(res.price_paid)}`;
+        if (res.assigned_theme) {
+          text += `. 🎨 Тебе выпал дизайн профиля «${PROFILE_THEME_NAMES[res.assigned_theme] ?? res.assigned_theme}»! Посмотри в «Мой профиль».`;
+        }
+        renderDashboard({ ok: true, text });
       } catch (err) {
         showResult("shop-result", false, err.message);
       }
@@ -1069,6 +1073,42 @@ document.getElementById("paytable-modal").addEventListener("click", (e) => {
   if (e.target.id === "paytable-modal") closePaytableModal();
 });
 
+// ── Дизайны профиля (VIP-косметика от "Игрушечная админка от Максима") ──
+const PROFILE_THEME_NAMES = {
+  "theme-harlequin": "Арлекин",
+  "theme-serenity": "Безмятежность",
+  "theme-aquarelle": "Акварель",
+  "theme-nostalgia": "Ностальгия",
+  "theme-hamster": "Верный друг",
+  "theme-starry": "Звёздная тишина",
+};
+const THEME_POINTS_HTML = `<div class="theme-points-wrapper">${"<i class=\"theme-point\"></i>".repeat(10)}</div>`;
+const THEME_HAMSTER_HTML = `
+  <div class="wheel-and-hamster theme-hamster-html">
+    <div class="wheel"></div>
+    <div class="hamster">
+      <div class="hamster__body">
+        <div class="hamster__head">
+          <div class="hamster__ear"></div>
+          <div class="hamster__eye"></div>
+          <div class="hamster__nose"></div>
+        </div>
+        <div class="hamster__limb hamster__limb--fr"></div>
+        <div class="hamster__limb hamster__limb--fl"></div>
+        <div class="hamster__limb hamster__limb--br"></div>
+        <div class="hamster__limb hamster__limb--bl"></div>
+        <div class="hamster__tail"></div>
+      </div>
+    </div>
+    <div class="spoke"></div>
+  </div>
+`;
+
+function wrapProfileHead(theme, headHTML) {
+  if (!theme) return headHTML;
+  return `<div class="profile-theme-card ${theme}">${THEME_POINTS_HTML}${THEME_HAMSTER_HTML}${headHTML}</div>`;
+}
+
 // ── Профиль участника (клик по нику в ленте "Онлайн") ──
 const AVATAR_OVERRIDES = { xFORTUNAx: "fortuna.webp" };
 
@@ -1132,7 +1172,7 @@ function renderPlayerProfileHTML(p) {
       ? `Последний раз был: ${new Date(p.last_seen).toLocaleString("ru-RU")}`
       : "—";
 
-  return `
+  const profileHeadHTML = `
     <div class="profile-head">
       <img class="profile-avatar" src="${avatarUrl(p.login)}" alt="" />
       <div>
@@ -1140,6 +1180,10 @@ function renderPlayerProfileHTML(p) {
         <div class="profile-online">${onlineStatus}</div>
       </div>
     </div>
+  `;
+
+  return `
+    ${wrapProfileHead(p.profile_theme, profileHeadHTML)}
 
     ${profileRow("commercialAirplane", "Очки на Ту-4", fmtNum(e.tu4_points))}
     ${profileRow("jetFighter", "Сбито на фаерболе", fmtNum(e.fireball_kills))}

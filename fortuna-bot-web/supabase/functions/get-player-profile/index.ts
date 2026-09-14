@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
     const db = supabaseAdmin();
     const { data: player, error: playerErr } = await db
       .from("players")
-      .select("id, login, last_seen")
+      .select("id, login, last_seen, profile_theme")
       .ilike("login", login.trim())
       .maybeSingle();
     if (playerErr) throw playerErr;
@@ -166,6 +166,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       login: player.login,
       last_seen: player.last_seen,
+      profile_theme: player.profile_theme,
       economy: {
         loot_points: econ.loot_points,
         tu4_points: econ.tu4_points,

@@ -3,7 +3,7 @@
 // повторная покупка одного и того же предмета запрещена.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { ownedSlugs, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
+import { ownedSlugs, applyHorseshoe, logFeedEvent, assignRandomProfileTheme } from "../_shared/game.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -51,9 +51,10 @@ Deno.serve(async (req) => {
     if (updErr) throw updErr;
     if (insErr) throw insErr;
 
-    const [horseshoeHit] = await Promise.all([
+    const [horseshoeHit, , assignedTheme] = await Promise.all([
       applyHorseshoe(db, player_id),
       logFeedEvent(db, player_id, "shop_buy", { item_name: item.name, price: effPrice }),
+      item_slug === "maksym_toy_admin" ? assignRandomProfileTheme(db, player_id) : Promise.resolve(null),
     ]);
 
     return jsonResponse({
@@ -61,6 +62,7 @@ Deno.serve(async (req) => {
       price_paid: effPrice,
       new_loot_points: econ.loot_points - effPrice,
       horseshoe_bonus: horseshoeHit,
+      assigned_theme: assignedTheme,
     });
   } catch (e) {
     console.error(e);
