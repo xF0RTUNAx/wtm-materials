@@ -3,7 +3,7 @@
 // wtm_setup). Оборудование raketen: ×1.25. "Набор с камуфляжем": 66% шанс +2 ключа +1 деталь.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem, secondsLeft, randInt, applyHorseshoe } from "../_shared/game.ts";
+import { hasItem, secondsLeft, randInt, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 
 const BASE_CD = 24 * 3600;
 const REDUCED_CD = 18 * 3600;
@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
     if (updErr) throw updErr;
 
     const horseshoeHit = await applyHorseshoe(db, player_id);
+    await logFeedEvent(db, player_id, "farm", { action: "radiofugas", kills, bonus_keys: bonusKeys, bonus_details: bonusDetails });
 
     return jsonResponse({
       kills_gained: kills,

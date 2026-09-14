@@ -1,7 +1,7 @@
 // /fortunagame — ECONOMY_CATALOG.md §5. 3 попытки/день, сброс по UTC-дате.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem, applyHorseshoe } from "../_shared/game.ts";
+import { hasItem, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 import { rollMinigame, ATTEMPT_COSTS, MAX_ATTEMPTS, ITEM_CHANCE, ITEM_DUP_COMP } from "../_shared/minigame.ts";
 
 function utcDay(): string {
@@ -73,6 +73,14 @@ Deno.serve(async (req) => {
     if (updErr) throw updErr;
 
     const horseshoeHit = await applyHorseshoe(db, player_id);
+    await logFeedEvent(db, player_id, "minigame", {
+      coins: spin.coins + dupCoins,
+      keys: spin.keys,
+      details: spin.details,
+      resources: spin.resources,
+      big_win: spin.bigWin,
+      item_drop: itemDrop,
+    });
 
     return jsonResponse({
       rolled: spin.rolled,

@@ -39,6 +39,22 @@ export async function applyHorseshoe(db: SupabaseClient, playerId: string): Prom
   return !!data;
 }
 
+// Пишет строку в публичную ленту событий (activity_feed) — логин игрока подставляется
+// на стороне БД (log_feed_event), чтобы не гонять players.login отдельным запросом отсюда.
+export async function logFeedEvent(
+  db: SupabaseClient,
+  playerId: string,
+  eventType: string,
+  detail: Record<string, unknown>,
+): Promise<void> {
+  const { error } = await db.rpc("log_feed_event", {
+    p_player_id: playerId,
+    p_event_type: eventType,
+    p_detail: detail,
+  });
+  if (error) console.error("log_feed_event failed", error);
+}
+
 export async function touchLastSeen(db: SupabaseClient, playerId: string): Promise<void> {
   await db.from("players").update({ last_seen: new Date().toISOString() }).eq("id", playerId);
 }

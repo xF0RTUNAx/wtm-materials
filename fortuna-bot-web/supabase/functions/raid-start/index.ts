@@ -1,7 +1,7 @@
 // raid-start — только для is_admin. Один активный рейд одновременно, как в боте.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { isAdmin } from "../_shared/game.ts";
+import { isAdmin, logFeedEvent } from "../_shared/game.ts";
 import { RAID_PARAMS } from "../_shared/raids.ts";
 
 Deno.serve(async (req) => {
@@ -36,6 +36,8 @@ Deno.serve(async (req) => {
       .select("*")
       .single();
     if (error) throw error;
+
+    await logFeedEvent(db, player_id, "raid_action", { action: "start", rtype });
 
     return jsonResponse({ raid });
   } catch (e) {

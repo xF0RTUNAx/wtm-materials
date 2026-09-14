@@ -4,7 +4,7 @@
 // сознательное поведение оригинального бота, не баг. X2/rookie/"Секретные файлы" не перенесены.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem, ownedSlugs, secondsLeft, applyHorseshoe } from "../_shared/game.ts";
+import { hasItem, ownedSlugs, secondsLeft, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 
 const BASE_CD = 8 * 3600;
 const REDUCED_CD = 7 * 3600;
@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
     if (updErr) throw updErr;
 
     const horseshoeHit = await applyHorseshoe(db, player_id);
+    await logFeedEvent(db, player_id, "farm", { action: "loot", coins: totalLoot, bonus_keys: bonusKeys });
 
     return jsonResponse({
       loot_gained: totalLoot,

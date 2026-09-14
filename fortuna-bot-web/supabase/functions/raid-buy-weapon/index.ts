@@ -1,7 +1,7 @@
 // raid-buy-weapon — 5000 монет (скидка fortuna_set), один раз за рейд, безлимит атак дальше.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem } from "../_shared/game.ts";
+import { hasItem, logFeedEvent } from "../_shared/game.ts";
 import { WEAPON_PRICE } from "../_shared/raids.ts";
 
 Deno.serve(async (req) => {
@@ -44,6 +44,8 @@ Deno.serve(async (req) => {
       .from("raid_participants")
       .upsert({ raid_id: raid.id, player_id, has_weapon: true }, { onConflict: "raid_id,player_id" });
     if (upsertErr) throw upsertErr;
+
+    await logFeedEvent(db, player_id, "raid_action", { action: "buy_weapon", price });
 
     return jsonResponse({ bought: true, price_paid: price });
   } catch (e) {

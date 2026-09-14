@@ -4,7 +4,7 @@
 // обновляются атомарно в raid_apply_attack (защита от гонки на добивающем ударе).
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { hasItem, secondsLeft, randInt, applyHorseshoe } from "../_shared/game.ts";
+import { hasItem, secondsLeft, randInt, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 import { RAID_PARAMS } from "../_shared/raids.ts";
 
 Deno.serve(async (req) => {
@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
     }
 
     const horseshoeHit = await applyHorseshoe(db, player_id);
+    await logFeedEvent(db, player_id, "raid_action", { action: "attack", damage: actual_damage, rtype: raid.rtype });
 
     return jsonResponse({
       damage_dealt: actual_damage,

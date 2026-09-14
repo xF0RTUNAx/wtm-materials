@@ -2,7 +2,7 @@
 // на количество скрафтенного (ограничение — только на то, что АКТИВНО, см. equipment-equip).
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
-import { applyHorseshoe } from "../_shared/game.ts";
+import { applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     if (insErr) throw insErr;
 
     const horseshoeHit = await applyHorseshoe(db, player_id);
+    await logFeedEvent(db, player_id, "equipment", { item_name: item.name, details_spent: item.price_details });
 
     return jsonResponse({ crafted: item.name, details_spent: item.price_details, horseshoe_bonus: horseshoeHit });
   } catch (e) {

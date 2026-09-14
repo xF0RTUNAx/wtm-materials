@@ -584,6 +584,40 @@ function describeFeedItem(row) {
       return `🔑 ${login} получил ключ и 1000 монет от бота`;
     case "horseshoe":
       return `🐴 У ${login} сработала Декаль подковы — +${fmtNum(d.amount)} монет`;
+    case "farm": {
+      const label = { loot: "собрал лут", fireball: "отфармил фаербол", radiofugas: "отфармил радиофугас", meladze: "сходил на концерт Меладзе" }[d.action] || "фармил";
+      const parts = [];
+      if (d.coins) parts.push(`+${fmtNum(d.coins)} монет`);
+      if (d.kills) parts.push(`+${fmtNum(d.kills)} фрагов`);
+      if (d.bonus_keys) parts.push(`+${d.bonus_keys} 🔑`);
+      if (d.bonus_details) parts.push(`+${d.bonus_details} деталей`);
+      return `🌾 ${login} ${label}: ${parts.join(", ") || "без добычи"}`;
+    }
+    case "shop_buy":
+      return `🛒 ${login} купил «${d.item_name}» за ${fmtNum(d.price)} монет`;
+    case "equipment":
+      return `🛠 ${login} скрафтил «${d.item_name}» за ${fmtNum(d.details_spent)} деталей`;
+    case "raid_action":
+      if (d.action === "start") return `⚔️ Начался рейд: ${RAID_TYPE_LABEL[d.rtype] ?? d.rtype}`;
+      if (d.action === "buy_weapon") return `🗡 ${login} купил оружие для рейда за ${fmtNum(d.price)} монет`;
+      if (d.action === "attack") return `💢 ${login} атаковал в рейде «${RAID_TYPE_LABEL[d.rtype] ?? d.rtype}» на ${fmtNum(d.damage)} урона`;
+      return `${login}: действие в рейде`;
+    case "raid_finish": {
+      const label = RAID_TYPE_LABEL[d.rtype] ?? d.rtype;
+      if (d.result === "victory") return `🏆 Рейд «${label}» завершён победой! Награды получили ${d.rewards?.length ?? 0} участников`;
+      if (d.result === "stopped") return `⏹ Рейд «${label}» остановлен администратором`;
+      return `⌛ Рейд «${label}» завершён без победы — время вышло`;
+    }
+    case "minigame": {
+      const parts = [];
+      if (d.coins) parts.push(`${d.coins > 0 ? "+" : ""}${fmtNum(d.coins)} монет`);
+      if (d.keys) parts.push(`+${d.keys} 🔑`);
+      if (d.details) parts.push(`+${d.details} деталей`);
+      let text = `🎰 ${login} сыграл в мини-игру: ${parts.join(", ") || "пусто"}`;
+      if (d.item_drop === "new") text += " — выпал Набор Фортуны!";
+      if (d.big_win) text += " 💥 Джекпот!";
+      return text;
+    }
     default:
       return `${login}: ${row.event_type}`;
   }
@@ -613,7 +647,7 @@ const GUIDE_ITEMS = [
   { icon: "openChest", title: "Кейсы", desc: "Открывай контейнеры за ключи — шанс на монеты, фраги и редкие предметы." },
   { icon: "anvilImpact", title: "Оборудование", desc: "Крафти за детали и держи активным один предмет — усиливает конкретное действие." },
   { icon: "crossedSwords", title: "Рейд", desc: "Покупай оружие и атакуй общего босса — награда делится между всеми участниками." },
-  { icon: "jigsawPiece", title: "Игра", desc: "Крути барабан за ключ — комбо символов даёт монеты, фраги или детали." },
+  { icon: "jigsawPiece", title: "Игра", desc: "Испытай удачу в мини-игре Фортуны — комбо символов даёт монеты, фраги или детали." },
   { icon: "wireframeGlobe", title: "Онлайн", desc: "Живая лента событий — кто что нафармил, открыл или выиграл." },
 ];
 
