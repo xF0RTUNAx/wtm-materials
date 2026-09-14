@@ -31,6 +31,14 @@ setInterval(() => {
   });
 }, 1000);
 
+// В свободном тексте (результаты действий) PNG-иконки (img/token.png, img/parts.png)
+// и inline-SVG по-разному считают vertical-align относительно baseline строки — в упор
+// смешанные с текстом они "улетают" друг от друга по вертикали. Оборачиваем каждую пару
+// иконка+значение в inline-flex, чтобы выравнивание не зависело от базовой линии текста.
+function iconVal(name, sizePx, valueHTML) {
+  return `<span class="icon-val">${icon(name, sizePx)}<span>${valueHTML}</span></span>`;
+}
+
 function renderAuth(mode = "login") {
   document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
   root.innerHTML = `
@@ -215,6 +223,12 @@ const MINIGAME_COSTS = { 1: 7777, 2: 17777, 3: 27777 };
 const JACKPOT_777_DISPLAY = 77777;
 const ANTI_JACKPOT_DISPLAY = 66666;
 
+function secondsUntilUtcReset() {
+  const now = new Date();
+  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0);
+  return Math.max(0, Math.round((next - now.getTime()) / 1000));
+}
+
 function renderMinigameTab(mount, flash) {
   const today = new Date().toISOString().slice(0, 10);
   const e = currentState.economy;
@@ -228,7 +242,11 @@ function renderMinigameTab(mount, flash) {
     <div id="minigame-result" class="result-box" hidden></div>
     <div class="container-card">
       <div class="container-card-name">${icon("puzzle")} Попытка ${Math.min(nextAttempt, 3)} из 3</div>
-      <div class="container-card-price">${canSpin ? `Цена: ${icon("coin", 14)} ${fmtNum(cost)}` : "Попытки на сегодня закончились"}</div>
+      <div class="container-card-price">${
+        canSpin
+          ? `Цена: ${iconVal("coin", 14, fmtNum(cost))}`
+          : `Попытки закончились — обновление через ${liveCountdown(secondsUntilUtcReset())}`
+      }</div>
       <div class="container-buy-row">
         ${canSpin ? `<button id="spin-btn" class="btn-secondary btn-sm">Крутить</button>` : ""}
         <button id="paytable-btn" class="btn-ghost btn-sm">Таблица наград</button>
@@ -260,12 +278,12 @@ function describeComboEntry(e) {
   if (e.key === "seven" && e.count >= 3) return `${head} → отправляется в джекпот ниже`;
   if (e.key === "skull" && e.count === 5) return `${head} → отправляется в анти-джекпот ниже`;
   if (e.coins) return `${head}: ${fmtNum(e.coins / e.count / e.comboMultiplier)} × ${e.count} × комбо ×${e.comboMultiplier} = +${fmtNum(e.coins)} монет`;
-  if (e.keys) return `${head} → +${e.keys} ${icon("carKey", 13)}`;
+  if (e.keys) return `${head} → ${iconVal("carKey", 13, `+${e.keys}`)}`;
   if (e.resourceAmount || e.detailsFromThis) {
     const resIcon = { fireball_kills: "jetFighter", radiofugas_kills: "fragmentedMeteor", tu4_points: "commercialAirplane" }[e.resourceField];
     const bits = [];
-    if (e.resourceAmount) bits.push(`+${fmtNum(e.resourceAmount)} ${icon(resIcon, 13)}`);
-    if (e.detailsFromThis) bits.push(`+${e.detailsFromThis} ${icon("detail", 13)} (конвертация из части копий)`);
+    if (e.resourceAmount) bits.push(iconVal(resIcon, 13, `+${fmtNum(e.resourceAmount)}`));
+    if (e.detailsFromThis) bits.push(iconVal("detail", 13, `+${e.detailsFromThis} (конвертация из части копий)`));
     return `${head} → ${bits.join(", ")}`;
   }
   if (e.key === "clover" && e.comboMultiplier) return `${head} → монеты спина ×${Number(e.comboMultiplier.toFixed(2))}`;
@@ -288,16 +306,16 @@ function describeSpinResult(res) {
 
   lines.push("");
   const parts = [];
-  if (res.coins_gained) parts.push(`${icon("coin", 14)} ${res.coins_gained > 0 ? "+" : ""}${fmtNum(res.coins_gained)}`);
-  if (res.keys_gained) parts.push(`${icon("carKey", 14)} +${res.keys_gained}`);
-  if (res.details_gained) parts.push(`${icon("detail", 14)} +${res.details_gained}`);
-  if (res.resources_gained.fireball_kills) parts.push(`${icon("jetFighter", 14)} +${res.resources_gained.fireball_kills}`);
-  if (res.resources_gained.radiofugas_kills) parts.push(`${icon("fragmentedMeteor", 14)} +${res.resources_gained.radiofugas_kills}`);
-  if (res.resources_gained.tu4_points) parts.push(`${icon("commercialAirplane", 14)} +${res.resources_gained.tu4_points}`);
+  if (res.coins_gained) parts.push(iconVal("coin", 14, `${res.coins_gained > 0 ? "+" : ""}${fmtNum(res.coins_gained)}`));
+  if (res.keys_gained) parts.push(iconVal("carKey", 14, `+${res.keys_gained}`));
+  if (res.details_gained) parts.push(iconVal("detail", 14, `+${res.details_gained}`));
+  if (res.resources_gained.fireball_kills) parts.push(iconVal("jetFighter", 14, `+${res.resources_gained.fireball_kills}`));
+  if (res.resources_gained.radiofugas_kills) parts.push(iconVal("fragmentedMeteor", 14, `+${res.resources_gained.radiofugas_kills}`));
+  if (res.resources_gained.tu4_points) parts.push(iconVal("commercialAirplane", 14, `+${res.resources_gained.tu4_points}`));
   lines.push(`Итого: ${parts.join(", ") || "ничего"}`);
 
-  if (res.item_drop === "new") lines.push(`${icon("award", 14)} Выпал Набор Фортуны!`);
-  if (res.item_drop === "duplicate") lines.push(`${icon("award", 14)} Дубликат Набора Фортуны — +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет`);
+  if (res.item_drop === "new") lines.push(iconVal("award", 14, "Выпал Набор Фортуны!"));
+  if (res.item_drop === "duplicate") lines.push(iconVal("award", 14, `Дубликат Набора Фортуны — +${fmtNum(ITEM_DUP_COMP_DISPLAY)} монет`));
 
   let text = lines.join("\n");
   if (res.big_win) text = "🎉 БОЛЬШОЙ ВЫИГРЫШ!\n" + text;
@@ -545,11 +563,13 @@ async function runAction(action) {
 }
 
 function describeResult(action, res) {
-  const c = icon("coin", 14), k = icon("carKey", 14), d = icon("detail", 14);
-  if (action === "loot") return `${c} +${fmtNum(res.loot_gained)}${res.bonus_keys ? `, ${k} +${res.bonus_keys}` : ""}`;
-  if (action === "fireball") return `${icon("jetFighter", 14)} +${res.kills_gained}${res.bonus_keys ? `, ${k} +${res.bonus_keys}, ${d} +${res.bonus_details}` : ""}`;
-  if (action === "radiofugas") return `${icon("fragmentedMeteor", 14)} +${res.kills_gained}${res.bonus_keys ? `, ${k} +${res.bonus_keys}, ${d} +${res.bonus_details}` : ""}`;
-  if (action === "meladze") return `${c} +${fmtNum(res.coins_gained)}${res.bonus_keys ? `, ${k} +${res.bonus_keys}` : ""}${res.bonus_details ? `, ${d} +${res.bonus_details}` : ""}`;
+  const c = (n) => iconVal("coin", 14, `+${fmtNum(n)}`);
+  const k = (n) => iconVal("carKey", 14, `+${n}`);
+  const d = (n) => iconVal("detail", 14, `+${n}`);
+  if (action === "loot") return `${c(res.loot_gained)}${res.bonus_keys ? `, ${k(res.bonus_keys)}` : ""}`;
+  if (action === "fireball") return `${iconVal("jetFighter", 14, `+${res.kills_gained}`)}${res.bonus_keys ? `, ${k(res.bonus_keys)}, ${d(res.bonus_details)}` : ""}`;
+  if (action === "radiofugas") return `${iconVal("fragmentedMeteor", 14, `+${res.kills_gained}`)}${res.bonus_keys ? `, ${k(res.bonus_keys)}, ${d(res.bonus_details)}` : ""}`;
+  if (action === "meladze") return `${c(res.coins_gained)}${res.bonus_keys ? `, ${k(res.bonus_keys)}` : ""}${res.bonus_details ? `, ${d(res.bonus_details)}` : ""}`;
   return "Готово";
 }
 
@@ -666,15 +686,15 @@ function renderContainersTab(mount, flash) {
 
 function describeContainerResult(res) {
   const parts = [];
-  if (res.totals.coins) parts.push(`${icon("coin", 14)} ${fmtNum(res.totals.coins)}`);
-  if (res.totals.tu4) parts.push(`${icon("commercialAirplane", 14)} ${res.totals.tu4}`);
-  if (res.totals.fireball) parts.push(`${icon("jetFighter", 14)} ${res.totals.fireball}`);
-  if (res.totals.radiofugas) parts.push(`${icon("fragmentedMeteor", 14)} ${res.totals.radiofugas}`);
-  if (res.totals.keys) parts.push(`${icon("carKey", 14)} ${res.totals.keys}`);
-  if (res.totals.details) parts.push(`${icon("detail", 14)} ${res.totals.details}`);
+  if (res.totals.coins) parts.push(iconVal("coin", 14, fmtNum(res.totals.coins)));
+  if (res.totals.tu4) parts.push(iconVal("commercialAirplane", 14, res.totals.tu4));
+  if (res.totals.fireball) parts.push(iconVal("jetFighter", 14, res.totals.fireball));
+  if (res.totals.radiofugas) parts.push(iconVal("fragmentedMeteor", 14, res.totals.radiofugas));
+  if (res.totals.keys) parts.push(iconVal("carKey", 14, res.totals.keys));
+  if (res.totals.details) parts.push(iconVal("detail", 14, res.totals.details));
   let text = "Получено: " + (parts.join(", ") || "ничего");
   if (res.new_items.length) {
-    text += `. ${icon("award", 14)} Новый предмет: ${res.new_items.map(itemName).join(", ")}!`;
+    text += `. ${iconVal("award", 14, `Новый предмет: ${res.new_items.map(itemName).join(", ")}!`)}`;
   }
   return text;
 }
