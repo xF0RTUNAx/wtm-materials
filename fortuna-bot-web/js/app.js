@@ -1,4 +1,4 @@
-// app.js — рендер: форма входа/регистрации либо дашборд фарм-команд.
+// app.js — рендер: форма входа/регистрации либо дашборд с вкладками (Фарм/Магазин/Контейнеры).
 const root = document.getElementById("root");
 
 function fmtNum(n) {
@@ -48,6 +48,28 @@ function renderAuth(mode = "login") {
 }
 
 let currentState = null;
+let currentTab = "farm";
+let catalog = null; // {itemsBySlug, equipmentBySlug, shopItems[], legendaryItems[], equipmentItems[]}
+
+async function loadCatalog() {
+  if (catalog) return catalog;
+  const [items, equipment] = await Promise.all([
+    fetchTable("shop_items", "select=*&order=price.asc"),
+    fetchTable("equipment_items", "select=*&order=price_details.asc"),
+  ]);
+  catalog = {
+    itemsBySlug: Object.fromEntries(items.map((i) => [i.slug, i])),
+    equipmentBySlug: Object.fromEntries(equipment.map((i) => [i.slug, i])),
+    shopItems: items.filter((i) => i.category === "shop"),
+    legendaryItems: items.filter((i) => i.category === "legendary"),
+    equipmentItems: equipment,
+  };
+  return catalog;
+}
+
+function itemName(slug) {
+  return catalog?.itemsBySlug[slug]?.name ?? slug;
+}
 
 async function renderDashboard(flash) {
   const player = getCurrentPlayer();
@@ -55,7 +77,7 @@ async function renderDashboard(flash) {
 
   root.innerHTML = `<div class="loading">Загрузка...</div>`;
   try {
-    currentState = await getPlayerState(player.id);
+    [currentState] = await Promise.all([getPlayerState(player.id), loadCatalog()]);
   } catch (err) {
     root.innerHTML = `<div class="error-text">${err.message}</div>`;
     return;
@@ -77,26 +99,13 @@ async function renderDashboard(flash) {
       <div class="stat"><div class="stat-label">Радиофугас</div><div class="stat-value">💥 ${fmtNum(e.radiofugas_kills)}</div></div>
     </div>
 
-    <div class="actions-grid">
-      <button class="action-card" data-action="loot">
-        <div class="action-title">Собрать лут</div>
-        <div class="action-sub">/gimmetheloot</div>
-      </button>
-      <button class="action-card" data-action="fireball">
-        <div class="action-title">Фаербол</div>
-        <div class="action-sub">/fireball</div>
-      </button>
-      <button class="action-card" data-action="radiofugas">
-        <div class="action-title">Радиофугас</div>
-        <div class="action-sub">/radiofugas</div>
-      </button>
-      <button class="action-card" data-action="meladze">
-        <div class="action-title">Меладзе</div>
-        <div class="action-sub">/meladze</div>
-      </button>
+    <div class="tabs page-tabs">
+      <button class="tab ${currentTab === "farm" ? "active" : ""}" data-tab="farm">Фарм</button>
+      <button class="tab ${currentTab === "shop" ? "active" : ""}" data-tab="shop">Магазин</button>
+      <button class="tab ${currentTab === "containers" ? "active" : ""}" data-tab="containers">Контейнеры</button>
     </div>
 
-    <div id="action-result" class="result-box" hidden></div>
+    <div id="tab-content"></div>
 
     <details class="migrate-box">
       <summary>Перенести прогресс из Telegram</summary>
@@ -108,17 +117,16 @@ async function renderDashboard(flash) {
     </details>
   `;
 
-  if (flash) {
-    const box = document.getElementById("action-result");
-    box.hidden = false;
-    box.className = `result-box result-${flash.ok ? "ok" : "err"}`;
-    box.textContent = flash.text;
-  }
+  root.querySelectorAll(".page-tabs .tab").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentTab = btn.dataset.tab;
+      renderDashboard();
+    });
+  });
+
+  renderTabContent(flash);
 
   document.getElementById("logout-btn").addEventListener("click", logout);
-  root.querySelectorAll(".action-card").forEach((btn) => {
-    btn.addEventListener("click", () => runAction(btn.dataset.action));
-  });
   document.getElementById("migrate-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const code = new FormData(ev.target).get("code").trim().toUpperCase();
@@ -135,27 +143,52 @@ async function renderDashboard(flash) {
   });
 }
 
-const ACTION_FNS = {
-  loot: farmLoot,
-  fireball: farmFireball,
-  radiofugas: farmRadiofugas,
-  meladze: farmMeladze,
-};
+function renderTabContent(flash) {
+  const mount = document.getElementById("tab-content");
+  if (currentTab === "farm") renderFarmTab(mount, flash);
+  else if (currentTab === "shop") renderShopTab(mount, flash);
+  else if (currentTab === "containers") renderContainersTab(mount, flash);
+}
+
+// ── Фарм ──
+function renderFarmTab(mount, flash) {
+  mount.innerHTML = `
+    <div class="actions-grid">
+      <button class="action-card" data-action="loot">
+        <div class="action-title">Собрать лут</div><div class="action-sub">/gimmetheloot</div>
+      </button>
+      <button class="action-card" data-action="fireball">
+        <div class="action-title">Фаербол</div><div class="action-sub">/fireball</div>
+      </button>
+      <button class="action-card" data-action="radiofugas">
+        <div class="action-title">Радиофугас</div><div class="action-sub">/radiofugas</div>
+      </button>
+      <button class="action-card" data-action="meladze">
+        <div class="action-title">Меладзе</div><div class="action-sub">/meladze</div>
+      </button>
+    </div>
+    <div id="action-result" class="result-box" hidden></div>
+  `;
+  if (flash) showResult("action-result", flash.ok, flash.text);
+  mount.querySelectorAll(".action-card").forEach((btn) => {
+    btn.addEventListener("click", () => runAction(btn.dataset.action));
+  });
+}
+
+const ACTION_FNS = { loot: farmLoot, fireball: farmFireball, radiofugas: farmRadiofugas, meladze: farmMeladze };
 
 async function runAction(action) {
   const player = getCurrentPlayer();
-  const box = document.getElementById("action-result");
-  box.hidden = false;
-  box.className = "result-box";
-  box.textContent = "...";
+  showResult("action-result", null, "...");
   try {
     const res = await ACTION_FNS[action](player.id);
     renderDashboard({ ok: true, text: describeResult(action, res) });
   } catch (err) {
-    box.className = "result-box result-err";
-    box.textContent = err.seconds_left
-      ? `${err.message} — осталось ${fmtDuration(err.seconds_left)}`
-      : err.message;
+    showResult(
+      "action-result",
+      false,
+      err.seconds_left ? `${err.message} — осталось ${fmtDuration(err.seconds_left)}` : err.message,
+    );
   }
 }
 
@@ -165,6 +198,124 @@ function describeResult(action, res) {
   if (action === "radiofugas") return `+${res.kills_gained} фрагов радиофугаса${res.bonus_keys ? `, +${res.bonus_keys} ключа, +${res.bonus_details} деталь` : ""}`;
   if (action === "meladze") return `+${fmtNum(res.coins_gained)} монет${res.bonus_keys ? `, +${res.bonus_keys} ключ` : ""}${res.bonus_details ? `, +${res.bonus_details} деталь` : ""}`;
   return "Готово";
+}
+
+function showResult(id, ok, text) {
+  const box = document.getElementById(id);
+  box.hidden = false;
+  box.className = ok === null ? "result-box" : `result-box result-${ok ? "ok" : "err"}`;
+  box.textContent = text;
+}
+
+// ── Магазин ──
+function renderShopTab(mount, flash) {
+  const owned = new Set(currentState.items);
+  const hasDiscount = owned.has("fortuna_set");
+
+  const rows = catalog.shopItems
+    .map((item) => {
+      const isOwned = owned.has(item.slug);
+      const price = hasDiscount ? Math.floor(item.price * 0.9) : item.price;
+      const priceLabel = price === 0 ? "бесплатно" : `${fmtNum(price)}${hasDiscount ? ` <s>${fmtNum(item.price)}</s>` : ""}`;
+      return `
+        <div class="shop-row">
+          <div class="shop-row-main">
+            <div class="shop-row-name">${item.name}</div>
+            <div class="shop-row-desc">${item.description}</div>
+          </div>
+          <div class="shop-row-side">
+            <div class="shop-row-price">🪙 ${priceLabel}</div>
+            ${isOwned
+              ? `<span class="badge-owned">есть</span>`
+              : `<button class="btn-secondary btn-sm" data-buy="${item.slug}">Купить</button>`}
+          </div>
+        </div>`;
+    })
+    .join("");
+
+  const legendaryOwned = catalog.legendaryItems.filter((i) => owned.has(i.slug));
+  const legendaryBlock = legendaryOwned.length
+    ? `<div class="section-label">Легендарные предметы</div>` +
+      legendaryOwned.map((i) => `<div class="shop-row"><div class="shop-row-main"><div class="shop-row-name">${i.name}</div><div class="shop-row-desc">${i.description}</div></div><span class="badge-owned">есть</span></div>`).join("")
+    : "";
+
+  mount.innerHTML = `
+    <div id="shop-result" class="result-box" hidden></div>
+    <div class="shop-list">${rows}</div>
+    ${legendaryBlock}
+  `;
+  if (flash) showResult("shop-result", flash.ok, flash.text);
+
+  mount.querySelectorAll("[data-buy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const player = getCurrentPlayer();
+      try {
+        const res = await shopBuy(player.id, btn.dataset.buy);
+        renderDashboard({ ok: true, text: `Куплено: ${res.bought} за ${fmtNum(res.price_paid)} монет` });
+      } catch (err) {
+        showResult("shop-result", false, err.message);
+      }
+    });
+  });
+}
+
+// ── Контейнеры ──
+const TIER_INFO = {
+  1: { name: "Обычный", price: 1 },
+  2: { name: "Продвинутый", price: 3 },
+  3: { name: "Эпический", price: 5 },
+  4: { name: "Легендарный", price: 10 },
+};
+
+function renderContainersTab(mount, flash) {
+  const cards = Object.entries(TIER_INFO)
+    .map(
+      ([tier, info]) => `
+      <div class="container-card">
+        <div class="container-card-name">${info.name}</div>
+        <div class="container-card-price">🔑 ${info.price} / шт</div>
+        <div class="container-buy-row">
+          <button class="btn-secondary btn-sm" data-tier="${tier}" data-count="1">×1</button>
+          <button class="btn-secondary btn-sm" data-tier="${tier}" data-count="5">×5</button>
+          <button class="btn-secondary btn-sm" data-tier="${tier}" data-count="10">×10</button>
+        </div>
+      </div>`,
+    )
+    .join("");
+
+  mount.innerHTML = `
+    <div id="container-result" class="result-box" hidden></div>
+    <div class="containers-grid">${cards}</div>
+  `;
+  if (flash) showResult("container-result", flash.ok, flash.text);
+
+  mount.querySelectorAll("[data-tier]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const player = getCurrentPlayer();
+      showResult("container-result", null, "Открываем...");
+      try {
+        const res = await containerOpen(player.id, Number(btn.dataset.tier), Number(btn.dataset.count));
+        renderDashboard({ ok: true, text: describeContainerResult(res) });
+      } catch (err) {
+        showResult("container-result", false, err.message);
+      }
+    });
+  });
+}
+
+function describeContainerResult(res) {
+  const parts = [];
+  if (res.totals.coins) parts.push(`🪙 ${fmtNum(res.totals.coins)}`);
+  if (res.totals.tu4) parts.push(`✈️ ${res.totals.tu4}`);
+  if (res.totals.fireball) parts.push(`🔥 ${res.totals.fireball}`);
+  if (res.totals.radiofugas) parts.push(`💥 ${res.totals.radiofugas}`);
+  if (res.totals.keys) parts.push(`🔑 ${res.totals.keys}`);
+  if (res.totals.details) parts.push(`🔩 ${res.totals.details}`);
+  let text = "Получено: " + (parts.join(", ") || "ничего");
+  if (res.new_items.length) {
+    text += `. 🏆 Новый предмет: ${res.new_items.map(itemName).join(", ")}!`;
+  }
+  return text;
 }
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());

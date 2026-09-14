@@ -17,4 +17,8 @@ const CONFIG = {
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/farm-loot",
   FARM_MELADZE_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/farm-meladze",
+
+  SHOP_BUY_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/shop-buy",
+  CONTAINER_OPEN_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/container-open",
 };

@@ -21,6 +21,23 @@ async function callEdgeFunction(url, body) {
   return data;
 }
 
+async function fetchTable(table, query = "select=*") {
+  const anonKey = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, "");
+  const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${table}?${query}`, {
+    headers: { Authorization: "Bearer " + anonKey, apikey: anonKey },
+  });
+  if (!res.ok) throw new Error(`Не удалось загрузить ${table}`);
+  return res.json();
+}
+
+function shopBuy(playerId, itemSlug) {
+  return callEdgeFunction(CONFIG.SHOP_BUY_URL, { player_id: playerId, item_slug: itemSlug });
+}
+
+function containerOpen(playerId, tier, count) {
+  return callEdgeFunction(CONFIG.CONTAINER_OPEN_URL, { player_id: playerId, tier, count });
+}
+
 function getPlayerState(playerId) {
   return callEdgeFunction(CONFIG.PLAYER_STATE_URL, { player_id: playerId });
 }
