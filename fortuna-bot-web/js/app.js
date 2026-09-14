@@ -15,6 +15,22 @@ function fmtDuration(sec) {
   return `${s}с`;
 }
 
+// ── Живые таймеры — любой элемент с data-until="<ms-timestamp>" тикает сам,
+// без перезагрузки и повторных кликов (обновляется раз в секунду глобальным таймером). ──
+function liveCountdown(seconds, sizePx = 13) {
+  const until = Date.now() + Math.max(0, seconds) * 1000;
+  return `<span class="live-cd" data-until="${until}">${icon("stopwatch", sizePx)}<span class="cd-text">${fmtDuration(seconds)}</span></span>`;
+}
+
+setInterval(() => {
+  document.querySelectorAll(".live-cd").forEach((el) => {
+    const left = Math.round((Number(el.dataset.until) - Date.now()) / 1000);
+    const textEl = el.querySelector(".cd-text");
+    if (!textEl) return;
+    textEl.textContent = left > 0 ? fmtDuration(left) : "готово";
+  });
+}, 1000);
+
 function renderAuth(mode = "login") {
   document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
   root.innerHTML = `
@@ -99,7 +115,10 @@ async function renderDashboard(flash) {
   const e = currentState.economy;
   root.innerHTML = `
     <div class="topbar">
-      <button id="info-btn" class="icon-btn" aria-label="Краткое руководство">${icon("info", 18)}</button>
+      <div class="topbar-group">
+        <button id="info-btn" class="icon-btn" aria-label="Краткое руководство">${icon("info", 18)}</button>
+        <a href="https://t.me/xfortunaxhelp" target="_blank" rel="noopener" class="icon-btn" aria-label="Техподдержка">🛟</a>
+      </div>
       <button id="my-profile-btn" class="btn-ghost">Мой профиль</button>
       <button id="logout-btn" class="btn-ghost">Выйти</button>
     </div>
@@ -306,7 +325,7 @@ async function renderRaidTab(mount, flash) {
       showResult(
         "raid-result",
         false,
-        err.seconds_left ? `${err.message} — осталось ${icon("stopwatch", 13)} ${fmtDuration(err.seconds_left)}` : err.message,
+        err.seconds_left ? `${err.message} — осталось ${liveCountdown(err.seconds_left)}` : err.message,
       );
     }
   });
@@ -394,26 +413,48 @@ async function swapEquipment(slug) {
     showResult(
       "equip-result",
       false,
-      err.seconds_left ? `${err.message} — осталось ${icon("stopwatch", 13)} ${fmtDuration(err.seconds_left)}` : err.message,
+      err.seconds_left ? `${err.message} — осталось ${liveCountdown(err.seconds_left)}` : err.message,
     );
   }
 }
 
 // ── Фарм ──
+const FARM_COOLDOWN_CFG = {
+  loot: { base: 8 * 3600, reduced: 7 * 3600, reducer: "voydom_case", ts: "last_loot_farm" },
+  fireball: { base: 24 * 3600, reduced: 18 * 3600, reducer: "junkers_bedding", ts: "last_fireball_farm" },
+  radiofugas: { base: 24 * 3600, reduced: 18 * 3600, reducer: "junkers_bedding", ts: "last_radiofugas_farm" },
+  meladze: { base: 24 * 3600, reduced: 12 * 3600, reducer: "urvv_fragment", ts: "last_meladze_farm", requires: "meladze_ticket" },
+};
+
+function farmSecondsLeft(action) {
+  const cfg = FARM_COOLDOWN_CFG[action];
+  const items = new Set(currentState.items);
+  if (cfg.requires && !items.has(cfg.requires)) return null;
+  const cdSeconds = items.has(cfg.reducer) ? cfg.reduced : cfg.base;
+  const lastTs = currentState.economy[cfg.ts];
+  if (!lastTs) return 0;
+  const left = Math.ceil(cdSeconds - (Date.now() - new Date(lastTs).getTime()) / 1000);
+  return Math.max(0, left);
+}
+
 function renderFarmTab(mount, flash) {
+  const actionCdHTML = (action) => {
+    const left = farmSecondsLeft(action);
+    return left > 0 ? `<div class="action-cd">${liveCountdown(left, 11)}</div>` : "";
+  };
   mount.innerHTML = `
     <div class="actions-grid">
       <button class="action-card" data-action="loot">
-        <div class="action-title">${icon("coin")} Собрать лут</div><div class="action-sub">/gimmetheloot</div>
+        <div class="action-title">${icon("coin")} Собрать лут</div><div class="action-sub">/gimmetheloot</div>${actionCdHTML("loot")}
       </button>
       <button class="action-card" data-action="fireball">
-        <div class="action-title">${icon("jetFighter")} Фаербол</div><div class="action-sub">/fireball</div>
+        <div class="action-title">${icon("jetFighter")} Фаербол</div><div class="action-sub">/fireball</div>${actionCdHTML("fireball")}
       </button>
       <button class="action-card" data-action="radiofugas">
-        <div class="action-title">${icon("fragmentedMeteor")} Радиофугас</div><div class="action-sub">/radiofugas</div>
+        <div class="action-title">${icon("fragmentedMeteor")} Радиофугас</div><div class="action-sub">/radiofugas</div>${actionCdHTML("radiofugas")}
       </button>
       <button class="action-card" data-action="meladze">
-        <div class="action-title">${icon("award")} Меладзе</div><div class="action-sub">/meladze</div>
+        <div class="action-title">${icon("award")} Меладзе</div><div class="action-sub">/meladze</div>${actionCdHTML("meladze")}
       </button>
     </div>
     <div id="action-result" class="result-box" hidden></div>
@@ -439,7 +480,7 @@ async function runAction(action) {
     showResult(
       "action-result",
       false,
-      err.seconds_left ? `${err.message} — осталось ${icon("stopwatch", 13)} ${fmtDuration(err.seconds_left)}` : err.message,
+      err.seconds_left ? `${err.message} — осталось ${liveCountdown(err.seconds_left)}` : err.message,
     );
   }
 }
@@ -716,7 +757,7 @@ function renderPlayerProfileHTML(p) {
       let status;
       if (!cd.unlocked) status = "🔒 недоступно (нет билета)";
       else if (cd.available) status = "✅ доступен";
-      else status = `⏳ осталось ${fmtDuration(cd.seconds_left)}`;
+      else status = `⏳ осталось ${liveCountdown(cd.seconds_left)}`;
       if (cd.reduced_by) status += ` (КД ${cd.cd_hours} ч — ${cd.reduced_by})`;
       return `<div class="profile-cd-row"><span class="cd-name">${FARM_LABEL[key]}</span><span>${status}</span></div>`;
     })
@@ -748,10 +789,20 @@ function renderPlayerProfileHTML(p) {
     ? `<div class="profile-items-list">${p.regular_items.map((i) => `<div>- ${i.name}</div>`).join("")}</div>`
     : `<div class="profile-empty">Пока ничего нет</div>`;
 
+  const isOnline = p.last_seen && Date.now() - new Date(p.last_seen).getTime() < 5 * 60 * 1000;
+  const onlineStatus = isOnline
+    ? `🟢 Онлайн`
+    : p.last_seen
+      ? `Последний раз был: ${new Date(p.last_seen).toLocaleString("ru-RU")}`
+      : "—";
+
   return `
     <div class="profile-head">
       <img class="profile-avatar" src="${avatarUrl(p.login)}" alt="" />
-      <div class="profile-name">${p.login}</div>
+      <div>
+        <div class="profile-name">${p.login}</div>
+        <div class="profile-online">${onlineStatus}</div>
+      </div>
     </div>
 
     ${profileRow("commercialAirplane", "Очки на Ту-4", fmtNum(e.tu4_points))}
