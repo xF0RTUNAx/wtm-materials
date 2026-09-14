@@ -14,11 +14,12 @@ Deno.serve(async (req) => {
     }
 
     const db = supabaseAdmin();
-    const [{ data: economy, error: econErr }, { data: items }, { data: equipment }] =
+    const [{ data: economy, error: econErr }, { data: items }, { data: equipment }, { data: player }] =
       await Promise.all([
         db.from("player_economy").select("*").eq("player_id", player_id).maybeSingle(),
         db.from("player_items").select("item_slug").eq("player_id", player_id),
         db.from("player_equipment").select("equipment_slug").eq("player_id", player_id),
+        db.from("players").select("is_admin").eq("id", player_id).maybeSingle(),
         touchLastSeen(db, player_id), // "активность" для пула периодических ивентов (§ ivents)
       ]);
     if (econErr) throw econErr;
@@ -28,6 +29,7 @@ Deno.serve(async (req) => {
       economy,
       items: (items ?? []).map((r) => r.item_slug),
       equipment: (equipment ?? []).map((r) => r.equipment_slug),
+      is_admin: !!player?.is_admin,
     });
   } catch (e) {
     console.error(e);

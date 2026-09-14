@@ -26,4 +26,11 @@ const CONFIG = {
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/equipment-craft",
   EQUIPMENT_EQUIP_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/equipment-equip",
+
+  RAID_STATUS_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/get-raid-status",
+  RAID_BUY_WEAPON_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-buy-weapon",
+  RAID_ATTACK_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-attack",
+  RAID_START_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-start",
+  RAID_STOP_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-stop",
 };

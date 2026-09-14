@@ -46,6 +46,22 @@ function equipmentEquip(playerId, equipmentSlug) {
   return callEdgeFunction(CONFIG.EQUIPMENT_EQUIP_URL, { player_id: playerId, equipment_slug: equipmentSlug });
 }
 
+function getRaidStatus() {
+  return callEdgeFunction(CONFIG.RAID_STATUS_URL, {});
+}
+function raidBuyWeapon(playerId) {
+  return callEdgeFunction(CONFIG.RAID_BUY_WEAPON_URL, { player_id: playerId });
+}
+function raidAttack(playerId) {
+  return callEdgeFunction(CONFIG.RAID_ATTACK_URL, { player_id: playerId });
+}
+function raidStart(playerId, rtype) {
+  return callEdgeFunction(CONFIG.RAID_START_URL, { player_id: playerId, rtype });
+}
+function raidStop(playerId) {
+  return callEdgeFunction(CONFIG.RAID_STOP_URL, { player_id: playerId });
+}
+
 function getPlayerState(playerId) {
   return callEdgeFunction(CONFIG.PLAYER_STATE_URL, { player_id: playerId });
 }

@@ -104,6 +104,7 @@ async function renderDashboard(flash) {
       <button class="tab ${currentTab === "shop" ? "active" : ""}" data-tab="shop">Магазин</button>
       <button class="tab ${currentTab === "containers" ? "active" : ""}" data-tab="containers">Контейнеры</button>
       <button class="tab ${currentTab === "equipment" ? "active" : ""}" data-tab="equipment">Экипировка</button>
+      <button class="tab ${currentTab === "raid" ? "active" : ""}" data-tab="raid">Рейд</button>
       <button class="tab ${currentTab === "feed" ? "active" : ""}" data-tab="feed">Лента</button>
     </div>
 
@@ -151,7 +152,115 @@ function renderTabContent(flash) {
   else if (currentTab === "shop") renderShopTab(mount, flash);
   else if (currentTab === "containers") renderContainersTab(mount, flash);
   else if (currentTab === "equipment") renderEquipmentTab(mount, flash);
+  else if (currentTab === "raid") renderRaidTab(mount, flash);
   else if (currentTab === "feed") renderFeedTab(mount);
+}
+
+// ── Рейд ──
+const RAID_TYPE_LABEL = { normal: "Линс", hard: "Аполис", "13": "Тивашин13", ca: "ЦА" };
+
+async function renderRaidTab(mount, flash) {
+  mount.innerHTML = `<div class="loading">Загрузка...</div>`;
+  let status;
+  try {
+    status = await getRaidStatus();
+  } catch (err) {
+    mount.innerHTML = `<div class="error-text">${err.message}</div>`;
+    return;
+  }
+
+  const isAdmin = currentState.is_admin;
+  const raid = status.raid;
+  const active = raid && raid.status === "active";
+
+  let adminHtml = "";
+  if (isAdmin) {
+    if (active) {
+      adminHtml = `<button id="raid-stop-btn" class="btn-ghost" style="margin-bottom:12px">Остановить рейд (админ)</button>`;
+    } else {
+      adminHtml = `
+        <div class="section-label">Запуск рейда (админ)</div>
+        <div class="container-buy-row" style="margin-bottom:14px">
+          ${Object.entries(RAID_TYPE_LABEL).map(([t, label]) => `<button class="btn-secondary btn-sm" data-start="${t}">${label}</button>`).join("")}
+        </div>`;
+    }
+  }
+
+  let bodyHtml;
+  if (!active) {
+    bodyHtml = `<div class="loading">Сейчас нет активного рейда${raid ? ` (последний — ${RAID_TYPE_LABEL[raid.rtype]}, ${raid.status})` : ""}</div>`;
+  } else {
+    const pct = Math.round((raid.hp / raid.max_hp) * 100);
+    bodyHtml = `
+      <div class="container-card">
+        <div class="container-card-name">${RAID_TYPE_LABEL[raid.rtype]}</div>
+        <div class="container-card-price">HP: ${fmtNum(raid.hp)} / ${fmtNum(raid.max_hp)} (${pct}%)</div>
+        <div class="container-buy-row">
+          <button id="raid-buy-btn" class="btn-secondary btn-sm">Купить оружие (5000🪙)</button>
+          <button id="raid-attack-btn" class="btn-secondary btn-sm">Атаковать</button>
+        </div>
+      </div>
+      <div class="section-label">Топ урона</div>
+      <div class="shop-list">
+        ${status.top.length
+          ? status.top.map((r, i) => `<div class="shop-row"><div class="shop-row-main">${i + 1}. ${r.login}</div><div class="shop-row-price">${fmtNum(r.damage)}</div></div>`).join("")
+          : `<div class="shop-row">Пока никто не атаковал</div>`}
+      </div>`;
+  }
+
+  mount.innerHTML = `<div id="raid-result" class="result-box" hidden></div>${adminHtml}${bodyHtml}`;
+  if (flash) showResult("raid-result", flash.ok, flash.text);
+
+  const buyBtn = document.getElementById("raid-buy-btn");
+  if (buyBtn) buyBtn.addEventListener("click", async () => {
+    const player = getCurrentPlayer();
+    try {
+      const res = await raidBuyWeapon(player.id);
+      renderDashboard({ ok: true, text: `Оружие куплено за ${fmtNum(res.price_paid)} монет` });
+    } catch (err) {
+      showResult("raid-result", false, err.message);
+    }
+  });
+
+  const attackBtn = document.getElementById("raid-attack-btn");
+  if (attackBtn) attackBtn.addEventListener("click", async () => {
+    const player = getCurrentPlayer();
+    try {
+      const res = await raidAttack(player.id);
+      let text = `Урон: ${fmtNum(res.damage_dealt)} (осталось ${fmtNum(res.new_hp)} HP)`;
+      if (res.finished) text += ` — 🏆 БОСС ПОВЕРЖЕН!`;
+      renderDashboard({ ok: true, text });
+    } catch (err) {
+      showResult(
+        "raid-result",
+        false,
+        err.seconds_left ? `${err.message} — осталось ${fmtDuration(err.seconds_left)}` : err.message,
+      );
+    }
+  });
+
+  const stopBtn = document.getElementById("raid-stop-btn");
+  if (stopBtn) stopBtn.addEventListener("click", async () => {
+    const player = getCurrentPlayer();
+    try {
+      await raidStop(player.id);
+      renderDashboard({ ok: true, text: "Рейд остановлен" });
+    } catch (err) {
+      showResult("raid-result", false, err.message);
+    }
+  });
+
+  mount.querySelectorAll("[data-start]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const player = getCurrentPlayer();
+      try {
+        await raidStart(player.id, btn.dataset.start);
+        renderDashboard({ ok: true, text: "Рейд запущен" });
+      } catch (err) {
+        showResult("raid-result", false, err.message);
+      }
+    });
+  });
 }
 
 // ── Экипировка ──

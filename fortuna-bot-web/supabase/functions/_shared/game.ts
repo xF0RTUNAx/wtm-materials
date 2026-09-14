@@ -42,3 +42,8 @@ export async function applyHorseshoe(db: SupabaseClient, playerId: string): Prom
 export async function touchLastSeen(db: SupabaseClient, playerId: string): Promise<void> {
   await db.from("players").update({ last_seen: new Date().toISOString() }).eq("id", playerId);
 }
+
+export async function isAdmin(db: SupabaseClient, playerId: string): Promise<boolean> {
+  const { data } = await db.from("players").select("is_admin").eq("id", playerId).maybeSingle();
+  return !!data?.is_admin;
+}
