@@ -243,6 +243,95 @@ function secondsUntilUtcReset() {
   return Math.max(0, Math.round((next - now.getTime()) / 1000));
 }
 
+// ── Аркада: Стратег и Морской бой (games/strat.html, games/sea.html) — раз в 24ч за
+// победу случайно 2 ключа или 2 детали; постоянный тренировочный режим без наград. ──
+const ARCADE_GAMES = [
+  { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html", cdField: "last_strat_win" },
+  { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html", cdField: "last_sea_win" },
+];
+const ARCADE_CD_SECONDS = 24 * 3600;
+
+function secondsLeftFromTimestamp(tsIso, cooldownSeconds) {
+  if (!tsIso) return 0;
+  const elapsed = (Date.now() - new Date(tsIso).getTime()) / 1000;
+  return Math.max(0, Math.ceil(cooldownSeconds - elapsed));
+}
+
+function renderArcadeSection() {
+  const cards = ARCADE_GAMES.map((g) => {
+    const left = secondsLeftFromTimestamp(currentState.economy[g.cdField], ARCADE_CD_SECONDS);
+    const available = left <= 0;
+    return `
+      <div class="container-card">
+        <div class="container-card-name">${icon(g.icon)} ${g.name}</div>
+        <div class="container-card-price">${
+          available ? "Награда доступна" : `Награда: обновление через ${liveCountdown(left)}`
+        }</div>
+        <div class="arcade-note">За победу: 2 ключа или 2 детали (случайно), раз в 24 часа</div>
+        <div class="container-buy-row">
+          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${available ? "" : "disabled"}>Играть на награду</button>
+          <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
+        </div>
+      </div>`;
+  }).join("");
+
+  return `
+    <div class="section-label">Аркада</div>
+    <div class="containers-grid">${cards}</div>
+  `;
+}
+
+function wireArcadeSection(mount) {
+  mount.querySelectorAll("[data-arcade-play]").forEach((btn) => {
+    btn.addEventListener("click", () => openArcadeGame(btn.dataset.arcadePlay, true));
+  });
+  mount.querySelectorAll("[data-arcade-train]").forEach((btn) => {
+    btn.addEventListener("click", () => openArcadeGame(btn.dataset.arcadeTrain, false));
+  });
+}
+
+let arcadeCurrentGame = null;
+let arcadeRanked = false;
+
+function openArcadeGame(gameId, ranked) {
+  const game = ARCADE_GAMES.find((g) => g.id === gameId);
+  if (!game) return;
+  arcadeCurrentGame = gameId;
+  arcadeRanked = ranked;
+  const iframe = document.getElementById("arcade-iframe");
+  iframe.src = ranked ? game.file : `${game.file}?mode=training`;
+  document.getElementById("arcade-overlay").hidden = false;
+}
+
+window.closeMgOverlay = function () {
+  document.getElementById("arcade-overlay").hidden = true;
+  document.getElementById("arcade-iframe").src = "about:blank";
+  arcadeCurrentGame = null;
+  arcadeRanked = false;
+};
+
+window.addEventListener("message", async (e) => {
+  if (!e.data || e.data.type !== "mg_win") return;
+  const iframe = document.getElementById("arcade-iframe");
+  if (e.source !== iframe.contentWindow) return;
+
+  const gameId = arcadeCurrentGame;
+  const ranked = arcadeRanked;
+  window.closeMgOverlay();
+  if (!ranked || !gameId) return;
+
+  try {
+    const res = await claimArcadeReward(getCurrentPlayer().id, gameId);
+    const label =
+      res.reward_type === "keys"
+        ? iconVal("carKey", 14, `+${res.reward_amount} ключа`)
+        : iconVal("detail", 14, `+${res.reward_amount} детали`);
+    await renderDashboard({ ok: true, text: `Победа в «${ARCADE_GAMES.find((g) => g.id === gameId)?.name ?? gameId}»! Награда: ${label}` });
+  } catch (err) {
+    await renderDashboard({ ok: false, text: err.message });
+  }
+});
+
 function renderMinigameTab(mount, flash) {
   const today = new Date().toISOString().slice(0, 10);
   const e = currentState.economy;
@@ -266,10 +355,13 @@ function renderMinigameTab(mount, flash) {
         <button id="paytable-btn" class="btn-ghost btn-sm">Таблица наград</button>
       </div>
     </div>
+
+    ${renderArcadeSection()}
   `;
   if (flash) showResult("minigame-result", flash.ok, flash.text);
 
   document.getElementById("paytable-btn").addEventListener("click", openPaytableModal);
+  wireArcadeSection(mount);
 
   const btn = document.getElementById("spin-btn");
   if (btn) btn.addEventListener("click", async () => {

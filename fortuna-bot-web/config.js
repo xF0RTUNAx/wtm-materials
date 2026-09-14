@@ -46,4 +46,7 @@ const CONFIG = {
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/admin-reset-cooldowns",
   ADMIN_SET_PROFILE_THEME_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/admin-set-profile-theme",
+
+  CLAIM_ARCADE_REWARD_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/claim-arcade-reward",
 };

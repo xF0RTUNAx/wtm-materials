@@ -1,6 +1,6 @@
 // /meladze — ECONOMY_CATALOG.md §4. Требует "Билет на концерт Меладзе" (meladze_ticket).
 // КД 24ч (12ч с "Фрагмент раннего УРВВ" — urvv_fragment). +15000-25000 монет напрямую
-// (случайное число, не конверсия фрагов). gitara: +1 деталь. "Статуетка Улитки": +1 ключ.
+// (случайное число, не конверсия фрагов). gitara: +3 детали. "Статуетка Улитки": +1 ключ.
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { ownedSlugs, secondsLeft, randInt, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
     }
 
     const coins = randInt(15000, 25000);
-    const bonusDetails = econ.active_equipment === "gitara" ? 1 : 0;
+    const bonusDetails = econ.active_equipment === "gitara" ? 3 : 0;
     const bonusKeys = items.has("snail_statuette") ? 1 : 0;
 
     const { error: updErr } = await db
