@@ -70,6 +70,10 @@ function getPlayerState(playerId) {
   return callEdgeFunction(CONFIG.PLAYER_STATE_URL, { player_id: playerId });
 }
 
+function getPlayerProfile(login) {
+  return callEdgeFunction(CONFIG.PLAYER_PROFILE_URL, { login });
+}
+
 function claimMigrationCode(playerId, code) {
   return callEdgeFunction(CONFIG.CLAIM_CODE_URL, { player_id: playerId, code });
 }

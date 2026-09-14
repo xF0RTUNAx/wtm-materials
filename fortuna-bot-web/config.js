@@ -35,4 +35,7 @@ const CONFIG = {
   RAID_STOP_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/raid-stop",
 
   MINIGAME_SPIN_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/minigame-spin",
+
+  PLAYER_PROFILE_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/get-player-profile",
 };

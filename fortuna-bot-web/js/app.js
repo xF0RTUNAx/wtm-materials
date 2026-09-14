@@ -566,9 +566,13 @@ function describeContainerResult(res) {
 }
 
 // ── Лента событий ──
+function playerLink(rawLogin) {
+  return `<span class="player-link" data-login="${rawLogin}">${rawLogin}</span>`;
+}
+
 function describeFeedItem(row) {
   const d = row.detail;
-  const login = d.login ?? "кто-то";
+  const login = d.login ? playerLink(d.login) : "кто-то";
   switch (row.event_type) {
     case "strong_man":
       return `💪 ${login} тронул сильный мужчина — +${fmtNum(d.amount)} очков Ту-4`;
@@ -635,6 +639,9 @@ async function renderFeedTab(mount) {
           )
           .join("")}</div>`
       : `<div class="loading">Пока событий не было</div>`;
+    mount.querySelectorAll(".player-link").forEach((el) => {
+      el.addEventListener("click", () => openPlayerProfile(el.dataset.login));
+    });
   } catch (err) {
     mount.innerHTML = `<div class="error-text">${err.message}</div>`;
   }
@@ -670,8 +677,119 @@ document.getElementById("info-modal-close").addEventListener("click", closeInfoM
 document.getElementById("info-modal").addEventListener("click", (e) => {
   if (e.target.id === "info-modal") closeInfoModal();
 });
+
+// ── Профиль участника (клик по нику в ленте "Онлайн") ──
+const AVATAR_OVERRIDES = { xFORTUNAx: "fortuna.webp" };
+
+function avatarUrl(login) {
+  if (AVATAR_OVERRIDES[login]) return `img/avatars/${AVATAR_OVERRIDES[login]}`;
+  let hash = 0;
+  for (let i = 0; i < login.length; i++) hash = (hash * 31 + login.charCodeAt(i)) >>> 0;
+  return `img/avatars/ava_${(hash % 6) + 1}.jpg`;
+}
+
+const FARM_LABEL = { loot: "Лут", fireball: "Фаербол", radiofugas: "Радиофугас", meladze: "Меладзе" };
+
+function profileRow(iconName, label, value) {
+  return `<div class="profile-row"><div class="profile-row-label">${icon(iconName, 15)}<span>${label}</span></div><div class="profile-row-value">${value}</div></div>`;
+}
+
+function renderPlayerProfileHTML(p) {
+  const e = p.economy;
+  const cdList = ["loot", "fireball", "radiofugas", "meladze"]
+    .map((key) => {
+      const cd = p.cooldowns[key];
+      let status;
+      if (!cd.unlocked) status = "🔒 недоступно (нет билета)";
+      else if (cd.available) status = "✅ доступен";
+      else status = `⏳ осталось ${fmtDuration(cd.seconds_left)}`;
+      if (cd.reduced_by) status += ` (КД ${cd.cd_hours} ч — ${cd.reduced_by})`;
+      return `<div class="profile-cd-row"><span class="cd-name">${FARM_LABEL[key]}</span><span>${status}</span></div>`;
+    })
+    .join("");
+
+  let raidSection = `<div class="profile-empty">Рейдов пока не проводилось</div>`;
+  if (p.raid_stats) {
+    const rs = p.raid_stats;
+    const rows = [
+      `Регулярность участия: ${Math.round(rs.participation_rate * 100)}% (${rs.participated}/${rs.total_raids})`,
+      `Средняя доля урона: ${rs.avg_damage_share_pct.toFixed(1)}% HP за рейд`,
+      `Частота атак: ${rs.attack_frequency.toFixed(2)} от максимума (всего ${rs.total_attacks} атак)`,
+      rs.best_raid
+        ? `Лучший рейд: ${fmtNum(rs.best_raid.damage)} урона (${rs.best_raid.hpSharePct.toFixed(1)}% HP), ${rs.best_raid.rank} место`
+        : null,
+      `Последний рейд: ${rs.last_raid.participated ? `${fmtNum(rs.last_raid.damage)} урона` : "пропущен"}`,
+    ].filter(Boolean);
+    raidSection = `<div class="profile-cd-list">${rows.map((r) => `<div class="profile-cd-row"><span>${r}</span></div>`).join("")}</div>`;
+  }
+
+  const activeRaidLine = p.active_raid
+    ? `${icon("crossedSwords", 14)} Сейчас идёт: ${RAID_TYPE_LABEL[p.active_raid.rtype] ?? p.active_raid.rtype}`
+    : `${icon("fortress", 14)} Активных рейдов сейчас нет.`;
+
+  const legendaryHTML = p.legendary_items.length
+    ? `<div class="profile-items-list">${p.legendary_items.map((i) => `<div>${icon("award", 13)} ${i.name}</div>`).join("")}</div>`
+    : `<div class="profile-empty">—</div>`;
+  const regularHTML = p.regular_items.length
+    ? `<div class="profile-items-list">${p.regular_items.map((i) => `<div>- ${i.name}</div>`).join("")}</div>`
+    : `<div class="profile-empty">Пока ничего нет</div>`;
+
+  return `
+    <div class="profile-head">
+      <img class="profile-avatar" src="${avatarUrl(p.login)}" alt="" />
+      <div class="profile-name">${p.login}</div>
+    </div>
+
+    ${profileRow("commercialAirplane", "Очки на Ту-4", fmtNum(e.tu4_points))}
+    ${profileRow("jetFighter", "Сбито на фаерболе", fmtNum(e.fireball_kills))}
+    ${profileRow("fragmentedMeteor", "Уничтожено радиофугасом", fmtNum(e.radiofugas_kills))}
+    ${profileRow("award", "Муты / Варны (за всё время)", p.legacy ? `${fmtNum(p.legacy.total_mutes)} / ${fmtNum(p.legacy.total_warns)}` : "—")}
+    ${profileRow("coin", "Монеты чата Фортуны", fmtNum(e.loot_points))}
+    ${profileRow("carKey", "Ключи", `${fmtNum(e.keys_current)} (всего: ${fmtNum(e.keys_lifetime)})`)}
+    ${profileRow("anvilImpact", "Оборудование", e.active_equipment ? e.active_equipment.name : "нет активного")}
+    ${profileRow("openChest", "Доступно ещё", fmtNum(e.equipment_available_count))}
+    ${profileRow("detail", "Детали", fmtNum(e.details))}
+
+    <div class="profile-section-title">${icon("stopwatch", 13)} Кулдауны фарма</div>
+    <div class="profile-cd-list">${cdList}</div>
+
+    <div class="profile-section-title">${icon("crossedSwords", 13)} Рейды</div>
+    ${raidSection}
+    <div class="profile-cd-row" style="margin-top:6px">${activeRaidLine}</div>
+
+    <div class="profile-section-title">${icon("award", 13)} Легендарные предметы</div>
+    ${legendaryHTML}
+
+    <div class="profile-section-title">${icon("openChest", 13)} Уникальные предметы</div>
+    ${regularHTML}
+  `;
+}
+
+async function openPlayerProfile(login) {
+  const body = document.getElementById("profile-modal-body");
+  body.innerHTML = `<div class="loading">Загрузка...</div>`;
+  document.getElementById("profile-modal").hidden = false;
+  try {
+    const data = await getPlayerProfile(login);
+    body.innerHTML = renderPlayerProfileHTML(data);
+  } catch (err) {
+    body.innerHTML = `<div class="error-text">${err.message}</div>`;
+  }
+}
+
+function closePlayerProfile() {
+  document.getElementById("profile-modal").hidden = true;
+}
+
+document.getElementById("profile-modal-close").addEventListener("click", closePlayerProfile);
+document.getElementById("profile-modal").addEventListener("click", (e) => {
+  if (e.target.id === "profile-modal") closePlayerProfile();
+});
+
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closeInfoModal();
+  if (e.key !== "Escape") return;
+  closeInfoModal();
+  closePlayerProfile();
 });
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());

@@ -178,6 +178,32 @@
   .guide-item img, .guide-item svg { width: 20px; height: 20px; flex-shrink: 0; margin-top: 1px; color: var(--accent); }
   .guide-item-title { font-size: 13.5px; font-weight: 650; margin-bottom: 2px; }
   .guide-item-desc { font-size: 12.5px; color: var(--text-soft); }
+
+  /* ── Ссылка на профиль в ленте ── */
+  .player-link { text-decoration: underline; text-underline-offset: 2px; cursor: pointer; font-weight: 650; color: var(--text); }
+  .player-link:hover { color: var(--accent); }
+
+  /* ── Модалка профиля участника ── */
+  .profile-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .profile-avatar { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; background: var(--surface-2); flex-shrink: 0; }
+  .profile-name { font-size: 17px; font-weight: 700; }
+  .profile-section-title {
+    font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    color: var(--text-soft); margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .profile-section-title:first-of-type { margin-top: 0; padding-top: 0; border-top: none; }
+  .profile-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    font-size: 13.5px; padding: 5px 0;
+  }
+  .profile-row-label { display: flex; align-items: center; gap: 7px; color: var(--text-soft); }
+  .profile-row-label svg, .profile-row-label img { width: 15px; height: 15px; flex-shrink: 0; color: var(--accent); }
+  .profile-row-value { font-weight: 650; text-align: right; }
+  .profile-cd-list { display: flex; flex-direction: column; gap: 4px; }
+  .profile-cd-row { display: flex; justify-content: space-between; font-size: 13px; }
+  .profile-cd-row .cd-name { color: var(--text-soft); }
+  .profile-items-list { display: flex; flex-direction: column; gap: 3px; font-size: 13px; margin-top: 2px; }
+  .profile-empty { font-size: 13px; color: var(--text-soft); }
 </style>
 </head>
 <body>
@@ -193,6 +219,16 @@
         <button id="info-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
       </div>
       <div class="modal-body" id="info-modal-body"></div>
+    </div>
+  </div>
+
+  <div id="profile-modal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Профиль участника</div>
+        <button id="profile-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body" id="profile-modal-body"></div>
     </div>
   </div>
 
