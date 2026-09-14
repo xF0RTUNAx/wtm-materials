@@ -1,0 +1,43 @@
+// api.js — низкоуровневый вызов Edge Functions. По образцу fortuna-game/js/auth.js:
+// anon-ключ обязателен в двух заголовках, тело — JSON, ошибки — {error: "..."}.
+async function callEdgeFunction(url, body) {
+  const anonKey = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, "");
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + anonKey,
+      apikey: anonKey,
+    },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.error || "Ошибка запроса");
+    err.status = res.status;
+    err.seconds_left = data.seconds_left;
+    throw err;
+  }
+  return data;
+}
+
+function getPlayerState(playerId) {
+  return callEdgeFunction(CONFIG.PLAYER_STATE_URL, { player_id: playerId });
+}
+
+function claimMigrationCode(playerId, code) {
+  return callEdgeFunction(CONFIG.CLAIM_CODE_URL, { player_id: playerId, code });
+}
+
+function farmFireball(playerId) {
+  return callEdgeFunction(CONFIG.FARM_FIREBALL_URL, { player_id: playerId });
+}
+function farmRadiofugas(playerId) {
+  return callEdgeFunction(CONFIG.FARM_RADIOFUGAS_URL, { player_id: playerId });
+}
+function farmLoot(playerId) {
+  return callEdgeFunction(CONFIG.FARM_LOOT_URL, { player_id: playerId });
+}
+function farmMeladze(playerId) {
+  return callEdgeFunction(CONFIG.FARM_MELADZE_URL, { player_id: playerId });
+}
