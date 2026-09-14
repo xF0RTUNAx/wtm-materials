@@ -92,7 +92,7 @@
   .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 9px; margin-bottom: 14px; }
   .action-card {
     background: var(--surface-2); border-radius: var(--radius-sm);
-    padding: 16px 14px; cursor: pointer; text-align: left;
+    padding: 16px 14px; cursor: pointer; text-align: left; color: var(--text);
     font-family: inherit; transition: transform .15s, filter .15s;
   }
   .action-card:hover { filter: brightness(0.97); transform: translateY(-1px); }
@@ -165,7 +165,12 @@
   .result-err { background: var(--err-bg); color: var(--err); border-color: transparent; }
 
   .migrate-box { padding: 14px; }
-  .migrate-box summary { cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text-soft); }
+  .migrate-box summary {
+    cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text-soft);
+    list-style: none; display: flex; align-items: center; gap: 7px;
+  }
+  .migrate-box summary::-webkit-details-marker { display: none; }
+  .migrate-box summary svg { color: var(--accent); flex-shrink: 0; }
   #migrate-form { display: flex; gap: 8px; margin-top: 12px; }
   #migrate-form input { flex: 1; text-transform: uppercase; }
 
@@ -234,6 +239,16 @@
   <div class="wrap">
     <h1 class="hero" id="hero-title"></h1>
     <div id="root"></div>
+  </div>
+
+  <div id="event-timers-modal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Таймеры до ивентов</div>
+        <button id="event-timers-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body" id="event-timers-modal-body"></div>
+    </div>
   </div>
 
   <div id="info-modal" class="modal-overlay" hidden>

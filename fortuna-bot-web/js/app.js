@@ -125,7 +125,7 @@ async function renderDashboard(flash) {
     <div class="topbar">
       <div class="topbar-group">
         <button id="info-btn" class="icon-btn" aria-label="Краткое руководство">${icon("info", 18)}</button>
-        <a href="https://t.me/xfortunaxhelp" target="_blank" rel="noopener" class="icon-btn" aria-label="Техподдержка">🛟</a>
+        <a href="https://t.me/xfortunaxhelp" target="_blank" rel="noopener" class="icon-btn" aria-label="Техподдержка">${icon("chatBubble", 18)}</a>
       </div>
       <button id="my-profile-btn" class="btn-ghost">Мой профиль</button>
       <button id="logout-btn" class="btn-ghost">Выйти</button>
@@ -143,7 +143,7 @@ async function renderDashboard(flash) {
     <div id="tab-content"></div>
 
     <details class="migrate-box">
-      <summary>Перенести прогресс из Telegram</summary>
+      <summary>${icon("share", 15)} Перенести прогресс из Telegram</summary>
       <form id="migrate-form">
         <input name="code" placeholder="XXXX-XXXX" maxlength="9" required />
         <button type="submit" class="btn-secondary">Перенести</button>
@@ -762,10 +762,18 @@ function describeFeedItem(row) {
 }
 
 async function renderFeedTab(mount) {
-  mount.innerHTML = `<div class="loading">Загрузка...</div>`;
+  mount.innerHTML = `
+    <div class="container-buy-row" style="margin-bottom:12px">
+      <button id="event-timers-btn" class="btn-ghost btn-sm">${icon("hazardSign", 15)} Таймеры до ивентов</button>
+    </div>
+    <div id="feed-list-mount"><div class="loading">Загрузка...</div></div>
+  `;
+  document.getElementById("event-timers-btn").addEventListener("click", openEventTimersModal);
+
+  const listMount = document.getElementById("feed-list-mount");
   try {
     const rows = await fetchTable("activity_feed", "select=*&order=created_at.desc&limit=30");
-    mount.innerHTML = rows.length
+    listMount.innerHTML = rows.length
       ? `<div class="feed-list">${rows
           .map(
             (r) =>
@@ -773,13 +781,59 @@ async function renderFeedTab(mount) {
           )
           .join("")}</div>`
       : `<div class="loading">Пока событий не было</div>`;
-    mount.querySelectorAll(".player-link").forEach((el) => {
+    listMount.querySelectorAll(".player-link").forEach((el) => {
       el.addEventListener("click", () => openPlayerProfile(el.dataset.login));
     });
   } catch (err) {
-    mount.innerHTML = `<div class="error-text">${err.message}</div>`;
+    listMount.innerHTML = `<div class="error-text">${err.message}</div>`;
   }
 }
+
+// ── Таймеры до периодических чат-ивентов (pg_cron, расписание "0 */N * * *" по UTC) ──
+const CHAT_EVENTS = [
+  { emoji: "💪", label: "Сильный мужчина", desc: "случайному активному игроку — очки на Ту-4", periodHours: 6 },
+  { emoji: "💥", label: "Слабый мужчина", desc: "отнимает 1–3 фрага радиофугаса", periodHours: 10 },
+  { emoji: "👧", label: "2Д аниме девочка", desc: "обнуляет половину статов", periodHours: 20 },
+  { emoji: "🔑", label: "Авто-ключ", desc: "+1 ключ и 1000 монет", periodHours: 12 },
+];
+
+function secondsUntilNextCronHour(periodHours) {
+  const matchHours = [];
+  for (let h = 0; h < 24; h++) if (h % periodHours === 0) matchHours.push(h);
+  const now = new Date();
+  const nowSecOfDay = now.getUTCHours() * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds();
+  for (const h of matchHours) {
+    const tickSec = h * 3600;
+    if (tickSec > nowSecOfDay) return tickSec - nowSecOfDay;
+  }
+  return 24 * 3600 - nowSecOfDay + matchHours[0] * 3600;
+}
+
+function openEventTimersModal() {
+  const body = document.getElementById("event-timers-modal-body");
+  body.innerHTML = `
+    ${CHAT_EVENTS.map(
+      (e) => `
+      <div class="profile-row">
+        <div class="profile-row-label"><span>${e.emoji}</span><span>${e.label}</span></div>
+        <div class="profile-row-value" style="font-weight:500">${liveCountdown(secondsUntilNextCronHour(e.periodHours))}</div>
+      </div>
+      <div class="profile-empty" style="margin:-4px 0 8px">${e.desc}</div>
+    `,
+    ).join("")}
+    <div class="profile-empty">Каждый ивент случайно достаётся активному участнику сайта (заходил за последние 14 дней).</div>
+  `;
+  document.getElementById("event-timers-modal").hidden = false;
+}
+
+function closeEventTimersModal() {
+  document.getElementById("event-timers-modal").hidden = true;
+}
+
+document.getElementById("event-timers-modal-close").addEventListener("click", closeEventTimersModal);
+document.getElementById("event-timers-modal").addEventListener("click", (e) => {
+  if (e.target.id === "event-timers-modal") closeEventTimersModal();
+});
 
 // ── Краткое руководство (модалка по кнопке-инфо в шапке) ──
 const GUIDE_ITEMS = [
@@ -1022,6 +1076,7 @@ document.addEventListener("keydown", (e) => {
   closePaytableModal();
   closePlayerProfile();
   closeMediaModal();
+  closeEventTimersModal();
 });
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());
