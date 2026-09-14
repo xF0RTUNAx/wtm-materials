@@ -16,6 +16,7 @@ function fmtDuration(sec) {
 }
 
 function renderAuth(mode = "login") {
+  document.getElementById("hero-title").textContent = "Fortuna";
   root.innerHTML = `
     <div class="auth-card">
       <div class="tabs">
@@ -23,7 +24,7 @@ function renderAuth(mode = "login") {
         <button class="tab ${mode === "register" ? "active" : ""}" data-mode="register">Регистрация</button>
       </div>
       <form id="auth-form" class="auth-form">
-        <input name="login" placeholder="Логин" autocomplete="username" required minlength="3" maxlength="32" />
+        <input name="login" placeholder="${mode === "register" ? "Никнейм" : "Логин"}" autocomplete="username" required minlength="3" maxlength="32" />
         <input name="password" type="password" placeholder="Пароль" autocomplete="${mode === "login" ? "current-password" : "new-password"}" required minlength="6" />
         <button type="submit" class="btn-primary">${mode === "login" ? "Войти" : "Создать аккаунт"}</button>
         <div id="auth-error" class="error-text"></div>
@@ -93,10 +94,12 @@ async function renderDashboard(flash) {
     return;
   }
 
+  document.getElementById("hero-title").textContent = `Привет, ${player.login}!`;
+
   const e = currentState.economy;
   root.innerHTML = `
     <div class="topbar">
-      <div class="brand">👤 ${player.login}</div>
+      <button id="info-btn" class="icon-btn" aria-label="Краткое руководство">${icon("info", 18)}</button>
       <button id="logout-btn" class="btn-ghost">Выйти</button>
     </div>
 
@@ -137,6 +140,7 @@ async function renderDashboard(flash) {
   renderTabContent(flash);
 
   document.getElementById("logout-btn").addEventListener("click", logout);
+  document.getElementById("info-btn").addEventListener("click", openInfoModal);
   document.getElementById("migrate-form").addEventListener("submit", async (ev) => {
     ev.preventDefault();
     const code = new FormData(ev.target).get("code").trim().toUpperCase();
@@ -601,5 +605,39 @@ async function renderFeedTab(mount) {
     mount.innerHTML = `<div class="error-text">${err.message}</div>`;
   }
 }
+
+// ── Краткое руководство (модалка по кнопке-инфо в шапке) ──
+const GUIDE_ITEMS = [
+  { icon: "minerals", title: "Фарм", desc: "Раз в сутки собирай лут, фаербол, радиофугас и (если открыт) Меладзе — у каждого действия свой кулдаун." },
+  { icon: "banknote", title: "Магазин", desc: "Постоянные бонусы к фарму покупаются один раз за монеты и действуют навсегда." },
+  { icon: "openChest", title: "Кейсы", desc: "Открывай контейнеры за ключи — шанс на монеты, фраги и редкие предметы." },
+  { icon: "anvilImpact", title: "Оборудование", desc: "Крафти за детали и держи активным один предмет — усиливает конкретное действие." },
+  { icon: "crossedSwords", title: "Рейд", desc: "Покупай оружие и атакуй общего босса — награда делится между всеми участниками." },
+  { icon: "jigsawPiece", title: "Игра", desc: "Крути барабан за ключ — комбо символов даёт монеты, фраги или детали." },
+  { icon: "wireframeGlobe", title: "Онлайн", desc: "Живая лента событий — кто что нафармил, открыл или выиграл." },
+];
+
+function openInfoModal() {
+  const body = document.getElementById("info-modal-body");
+  if (!body.dataset.filled) {
+    body.innerHTML = GUIDE_ITEMS.map(
+      (g) => `<div class="guide-item">${icon(g.icon, 20)}<div><div class="guide-item-title">${g.title}</div><div class="guide-item-desc">${g.desc}</div></div></div>`,
+    ).join("");
+    body.dataset.filled = "1";
+  }
+  document.getElementById("info-modal").hidden = false;
+}
+
+function closeInfoModal() {
+  document.getElementById("info-modal").hidden = true;
+}
+
+document.getElementById("info-modal-close").addEventListener("click", closeInfoModal);
+document.getElementById("info-modal").addEventListener("click", (e) => {
+  if (e.target.id === "info-modal") closeInfoModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeInfoModal();
+});
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());

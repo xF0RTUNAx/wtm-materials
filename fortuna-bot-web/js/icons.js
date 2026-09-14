@@ -32,6 +32,7 @@ const _ICON_IMAGES = {
   jigsawPiece: "img/jigsaw-piece.png",      // Игра (нижняя навигация)
   crossedSwords: "img/crossed-swords.png",  // Рейд (нижняя навигация)
   wireframeGlobe: "img/wireframe-globe.png",// Онлайн/лента (нижняя навигация)
+  info: "img/info.png",                     // Кнопка гайда в шапке
 };
 
 function icon(name, sizePx) {
