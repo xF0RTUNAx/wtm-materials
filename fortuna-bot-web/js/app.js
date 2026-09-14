@@ -651,6 +651,7 @@ function renderContainersTab(mount, flash) {
     .map(
       ([tier, info]) => `
       <div class="container-card">
+        <button class="container-info-btn" data-info-tier="${tier}" aria-label="Содержимое">${icon("magnifyingGlass")}</button>
         <div class="container-card-name">${icon("chest512")} ${info.name}</div>
         <div class="container-card-price">${icon("carKey", 13)} ${info.price} / шт</div>
         <div class="container-buy-row">
@@ -682,7 +683,81 @@ function renderContainersTab(mount, flash) {
       }
     });
   });
+
+  mount.querySelectorAll("[data-info-tier]").forEach((btn) => {
+    btn.addEventListener("click", () => openContainerInfoModal(Number(btn.dataset.infoTier)));
+  });
 }
+
+// ── Содержимое контейнеров (таблицы дропа, 1:1 с rollContainer на бэкенде) ──
+const CONTAINER_LOOT_TABLE = {
+  1: {
+    rows: [
+      { chance: "60%", html: iconVal("coin", 14, "100–400") },
+      { chance: "25%", html: iconVal("coin", 14, "400–800") },
+      { chance: "10%", html: `${iconVal("jetFighter", 14, "2–5")} или ${iconVal("fragmentedMeteor", 14, "1–3")}` },
+      { chance: "5%", html: iconVal("carKey", 14, "1") },
+    ],
+    extra: { chance: "0.5%", html: iconVal("award", 14, "Набор с красной краской и камуфляжами") },
+    detail: { chance: "12%", html: iconVal("detail", 14, "1") },
+  },
+  2: {
+    rows: [
+      { chance: "45%", html: iconVal("coin", 14, "800–1 500") },
+      { chance: "30%", html: iconVal("coin", 14, "1 500–3 000") },
+      { chance: "15%", html: `${iconVal("jetFighter", 14, "2–5")} или ${iconVal("fragmentedMeteor", 14, "1–3")}` },
+      { chance: "9%", html: iconVal("carKey", 14, "2") },
+    ],
+    extra: { chance: "1%", html: iconVal("award", 14, "Набор Максима с рипером и пукеко") },
+    detail: { chance: "18%", html: iconVal("detail", 14, "1–2") },
+  },
+  3: {
+    rows: [
+      { chance: "35%", html: iconVal("coin", 14, "3 000–6 000") },
+      { chance: "30%", html: iconVal("coin", 14, "6 000–10 000") },
+      { chance: "15%", html: iconVal("commercialAirplane", 14, "100–300 (Ту-4)") },
+      { chance: "13%", html: iconVal("carKey", 14, "3") },
+      { chance: "5%", html: iconVal("coin", 14, "25 000") },
+    ],
+    extra: { chance: "2%", html: iconVal("award", 14, "Набор Олега с Су-11 и рыбой") },
+    detail: { chance: "15%", html: iconVal("detail", 14, "2–3") },
+  },
+  4: {
+    rows: [
+      { chance: "25%", html: iconVal("coin", 14, "10 000–20 000") },
+      { chance: "25%", html: iconVal("coin", 14, "25 000") },
+      { chance: "20%", html: `${iconVal("jetFighter", 14, "15–25")} или ${iconVal("fragmentedMeteor", 14, "15–25")}` },
+      { chance: "15%", html: iconVal("carKey", 14, "5") },
+      { chance: "12%", html: iconVal("coin", 14, "40 000") },
+    ],
+    extra: { chance: "3%", html: iconVal("award", 14, "Набор Maksym'a с леопардом 2А5 и фиолетовым бобом") },
+    detail: { chance: "18%", html: iconVal("detail", 14, "3–5") },
+  },
+};
+
+function lootTableRow(chance, html) {
+  return `<div class="loot-table-row"><div>${html}</div><div class="loot-table-chance">${chance}</div></div>`;
+}
+
+function openContainerInfoModal(tier) {
+  const t = CONTAINER_LOOT_TABLE[tier];
+  document.getElementById("container-info-modal-title").textContent = `Содержимое: ${TIER_INFO[tier].name}`;
+  document.getElementById("container-info-modal-body").innerHTML = `
+    ${t.rows.map((r) => lootTableRow(r.chance, r.html)).join("")}
+    ${lootTableRow(t.extra.chance, t.extra.html)}
+    <div class="profile-empty" style="margin-top:8px">Независимо от основного ролла — ещё ${t.detail.chance} на ${t.detail.html}.</div>
+  `;
+  document.getElementById("container-info-modal").hidden = false;
+}
+
+function closeContainerInfoModal() {
+  document.getElementById("container-info-modal").hidden = true;
+}
+
+document.getElementById("container-info-modal-close").addEventListener("click", closeContainerInfoModal);
+document.getElementById("container-info-modal").addEventListener("click", (e) => {
+  if (e.target.id === "container-info-modal") closeContainerInfoModal();
+});
 
 function describeContainerResult(res) {
   const parts = [];
@@ -1132,6 +1207,7 @@ document.addEventListener("keydown", (e) => {
   closeMediaModal();
   closeEventTimersModal();
   closeTopModal();
+  closeContainerInfoModal();
 });
 
 (getCurrentPlayer() ? renderDashboard() : renderAuth());

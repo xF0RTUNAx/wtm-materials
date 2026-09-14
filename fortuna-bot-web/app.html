@@ -137,11 +137,19 @@
   }
   .section-label { font-size: 13px; font-weight: 650; color: var(--text-soft); margin: 16px 0 8px; }
 
-  .container-card { background: var(--surface); padding: 14px; }
-  .container-card-name { font-size: 15px; font-weight: 650; margin-bottom: 2px; display: flex; align-items: center; gap: 7px; }
+  .container-card { background: var(--surface); padding: 14px; position: relative; }
+  .container-card-name { font-size: 15px; font-weight: 650; margin-bottom: 2px; display: flex; align-items: center; gap: 7px; padding-right: 30px; }
   .container-card-name svg { color: var(--accent); }
   .container-card-price { font-size: 12px; color: var(--text-soft); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
   .container-buy-row { display: flex; gap: 8px; }
+  .container-info-btn {
+    position: absolute; top: 14px; right: 14px; background: none; border: none; padding: 2px;
+    color: var(--text-soft); cursor: pointer; display: flex;
+  }
+  .container-info-btn svg { width: 17px; height: 17px; }
+  .loot-table-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .loot-table-row:last-child { border-bottom: none; }
+  .loot-table-chance { color: var(--text-soft); font-size: 12px; min-width: 42px; text-align: right; }
 
   /* ── Активный рейд — тёмная инвертированная карточка, по образцу
      fortuna-game/app.html .battle-hero (сама инвертируется с темой) ── */
@@ -258,6 +266,16 @@
         <button id="top-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
       </div>
       <div class="modal-body" id="top-modal-body"></div>
+    </div>
+  </div>
+
+  <div id="container-info-modal" class="modal-overlay" hidden>
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title" id="container-info-modal-title">Содержимое</div>
+        <button id="container-info-modal-close" class="modal-close" aria-label="Закрыть">✕</button>
+      </div>
+      <div class="modal-body" id="container-info-modal-body"></div>
     </div>
   </div>
 
