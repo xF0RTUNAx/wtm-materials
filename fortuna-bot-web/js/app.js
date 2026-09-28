@@ -278,8 +278,8 @@ const ARCADE_GAMES = [
   { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html" },
   { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
   {
-    id: "drone", name: "Дрон-перехватчик", icon: "jetFighter", file: "games/drone.html", rankedSoon: true,
-    note: "FPV-полёт над 3D-картой: сбивай дронов «Подстилки улитки», собирай батареи, победи босса. Скоро — общий прогресс недели",
+    id: "drone", name: "Ударный дрон", icon: "jetFighter", file: "games/drone.html", rankedSoon: true,
+    note: "3D-вылет на ударном дроне: подвесь ракеты (AIM-9L, Р-73, AIM-7M, AIM-120C, Р-77 — со справкой), работай радаром, сбивай дронов «Подстилки улитки» и босса. Скоро — общий прогресс недели",
   },
 ];
 
