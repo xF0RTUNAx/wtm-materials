@@ -92,6 +92,10 @@
   .stat-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--text-soft); margin-bottom: 4px; }
   .stat-value { font-size: 16px; font-weight: 680; letter-spacing: -.01em; display: flex; align-items: center; gap: 5px; }
   .stat-value svg { color: var(--accent); }
+  .stat-wide { grid-column: 1 / -1; }
+  .ticket-pips { display: inline-flex; gap: 4px; margin-left: auto; }
+  .ticket-pip { width: 18px; height: 8px; border-radius: 3px; background: var(--surface); border: 1px solid var(--text-soft); opacity: .55; }
+  .ticket-pip.on { background: var(--accent); border-color: var(--accent); opacity: 1; }
 
   .actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 9px; margin-bottom: 14px; }
   .action-card {

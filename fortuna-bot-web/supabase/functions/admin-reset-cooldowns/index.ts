@@ -8,6 +8,8 @@ const FIELD_MAP: Record<string, string> = {
   fireball: "last_fireball_farm",
   radiofugas: "last_radiofugas_farm",
   meladze: "last_meladze_farm",
+  // "tickets" — не колонка-таймстемп, обрабатывается отдельно (обнуляет потраченные билеты).
+  tickets: "tickets_used",
 };
 
 Deno.serve(async (req) => {
@@ -34,8 +36,8 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Доступно только администратору" }, 403);
     }
 
-    const patch: Record<string, null> = {};
-    for (const f of chosen) patch[FIELD_MAP[f]] = null;
+    const patch: Record<string, null | number> = {};
+    for (const f of chosen) patch[FIELD_MAP[f]] = f === "tickets" ? 0 : null;
 
     const { error: updErr } = await db.from("player_economy").update(patch).eq("player_id", player_id);
     if (updErr) throw updErr;

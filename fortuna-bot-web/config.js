@@ -49,4 +49,6 @@ const CONFIG = {
 
   CLAIM_ARCADE_REWARD_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/claim-arcade-reward",
+  START_GAME_RUN_URL:
+    "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/start-game-run",
 };

@@ -1,12 +1,10 @@
-// /fortunagame — ECONOMY_CATALOG.md §5. 3 попытки/день, сброс по UTC-дате.
+// /fortunagame — ECONOMY_CATALOG.md §5. 3 попытки/день, сброс в полночь МСК. Каждая попытка,
+// помимо монет, тратит 1 билет (sql/017_tickets.sql).
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { hasItem, applyHorseshoe, logFeedEvent } from "../_shared/game.ts";
 import { rollMinigame, ATTEMPT_COSTS, MAX_ATTEMPTS, ITEM_CHANCE, ITEM_DUP_COMP } from "../_shared/minigame.ts";
-
-function utcDay(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+import { DAILY_TICKETS, mskDay } from "../_shared/tickets.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -23,7 +21,7 @@ Deno.serve(async (req) => {
     if (econErr) throw econErr;
     if (!econ) return jsonResponse({ error: "Игрок не найден" }, 404);
 
-    const today = utcDay();
+    const today = mskDay();
     const attemptsUsed = econ.spin_day === today ? econ.spin_count : 0;
     const attemptNumber = attemptsUsed + 1;
     if (attemptNumber > MAX_ATTEMPTS) {
@@ -35,6 +33,15 @@ Deno.serve(async (req) => {
       : ATTEMPT_COSTS[attemptNumber];
     if (econ.loot_points < cost) {
       return jsonResponse({ error: `Недостаточно монет: нужно ${cost}` }, 402);
+    }
+
+    const { data: ticketsLeft, error: ticketErr } = await db.rpc("spend_ticket", {
+      p_player_id: player_id,
+      p_daily: DAILY_TICKETS,
+    });
+    if (ticketErr) throw ticketErr;
+    if (ticketsLeft < 0) {
+      return jsonResponse({ error: "Билеты на сегодня закончились" }, 429);
     }
 
     const spin = rollMinigame(attemptNumber);
@@ -67,7 +74,10 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq("player_id", player_id);
-    if (updErr) throw updErr;
+    if (updErr) {
+      await db.rpc("refund_ticket", { p_player_id: player_id });
+      throw updErr;
+    }
 
     const [horseshoeHit] = await Promise.all([
       applyHorseshoe(db, player_id),
@@ -86,6 +96,7 @@ Deno.serve(async (req) => {
       cost_paid: cost,
       attempt_number: attemptNumber,
       attempts_left: MAX_ATTEMPTS - attemptNumber,
+      tickets_left: ticketsLeft,
       coins_gained: spin.coins + dupCoins,
       keys_gained: spin.keys,
       details_gained: spin.details,

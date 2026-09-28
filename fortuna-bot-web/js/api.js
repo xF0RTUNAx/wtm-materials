@@ -86,8 +86,12 @@ function adminSetProfileTheme(playerId, theme) {
   return callEdgeFunction(CONFIG.ADMIN_SET_PROFILE_THEME_URL, { player_id: playerId, theme });
 }
 
-function claimArcadeReward(playerId, game) {
-  return callEdgeFunction(CONFIG.CLAIM_ARCADE_REWARD_URL, { player_id: playerId, game });
+function startGameRun(playerId, game) {
+  return callEdgeFunction(CONFIG.START_GAME_RUN_URL, { player_id: playerId, game });
+}
+
+function claimArcadeReward(playerId, game, runId) {
+  return callEdgeFunction(CONFIG.CLAIM_ARCADE_REWARD_URL, { player_id: playerId, game, run_id: runId });
 }
 
 function claimMigrationCode(playerId, code) {

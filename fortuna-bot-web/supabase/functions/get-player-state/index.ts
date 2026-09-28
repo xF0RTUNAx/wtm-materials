@@ -3,6 +3,7 @@
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { touchLastSeen } from "../_shared/game.ts";
+import { DAILY_TICKETS } from "../_shared/tickets.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -30,6 +31,7 @@ Deno.serve(async (req) => {
       items: (items ?? []).map((r) => r.item_slug),
       equipment: (equipment ?? []).map((r) => r.equipment_slug),
       is_admin: !!player?.is_admin,
+      daily_tickets: DAILY_TICKETS,
     });
   } catch (e) {
     console.error(e);

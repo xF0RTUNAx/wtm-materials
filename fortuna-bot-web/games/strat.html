@@ -739,14 +739,16 @@
                 ` : `
                     <div class="result-reward">Награда: 2 ключа или 2 детали (выпадет случайно)</div>
                     <button class="btn-main" onclick="claimAndClose()">Получить награду</button>
-                    <button class="btn-restart" onclick="location.reload()">Сыграть снова</button>
                 `;
             } else {
                 title.innerText   = "ПОРАЖЕНИЕ";
                 title.className   = "result-title loss";
                 msg.innerText     = "Ваши войска разбиты. Попробуй снова!";
-                actions.innerHTML = `
+                actions.innerHTML = TRAINING_MODE ? `
                     <button class="btn-main" style="background:#ff4757;color:#fff;" onclick="location.reload()">Реванш</button>
+                    <button class="btn-restart" onclick="exitGame()">Выйти</button>
+                ` : `
+                    <div class="result-reward">Билет потрачен — для новой попытки запусти игру заново</div>
                     <button class="btn-restart" onclick="exitGame()">Выйти</button>
                 `;
             }

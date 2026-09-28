@@ -142,6 +142,7 @@ async function renderDashboard(flash) {
       <div class="stat"><div class="stat-label">Ту-4</div><div class="stat-value">${icon("commercialAirplane")} ${fmtNum(e.tu4_points)}</div></div>
       <div class="stat"><div class="stat-label">Фаербол</div><div class="stat-value">${icon("jetFighter")} ${fmtNum(e.fireball_kills)}</div></div>
       <div class="stat"><div class="stat-label">Радиофугас</div><div class="stat-value">${icon("fragmentedMeteor")} ${fmtNum(e.radiofugas_kills)}</div></div>
+      ${renderTicketsStat()}
     </div>
 
     <div id="tab-content"></div>
@@ -237,39 +238,59 @@ const MINIGAME_COSTS = { 1: 7777, 2: 17777, 3: 27777 };
 const JACKPOT_777_DISPLAY = 77777;
 const ANTI_JACKPOT_DISPLAY = 66666;
 
-function secondsUntilUtcReset() {
-  const now = new Date();
-  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0);
-  return Math.max(0, Math.round((next - now.getTime()) / 1000));
+// Сутки для билетов и попыток слота считаются по Москве (UTC+3) — как на сервере (_shared/tickets.ts).
+const MSK_OFFSET_MS = 3 * 3600 * 1000;
+
+function mskDate() {
+  return new Date(Date.now() + MSK_OFFSET_MS).toISOString().slice(0, 10);
+}
+
+function secondsUntilMskReset() {
+  const shifted = new Date(Date.now() + MSK_OFFSET_MS);
+  const next = Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate() + 1, 0, 0, 0);
+  return Math.max(0, Math.round((next - shifted.getTime()) / 1000));
+}
+
+// ── Билеты: 5 в день (значение с сервера, daily_tickets), сброс в полночь МСК ──
+function ticketsDaily() {
+  return currentState?.daily_tickets ?? 5;
+}
+
+function ticketsLeft() {
+  const e = currentState.economy;
+  return e.tickets_day === mskDate() ? Math.max(0, ticketsDaily() - e.tickets_used) : ticketsDaily();
+}
+
+function renderTicketsStat() {
+  const left = ticketsLeft();
+  const daily = ticketsDaily();
+  const pips = Array.from({ length: daily }, (_, i) => `<span class="ticket-pip ${i < left ? "on" : ""}"></span>`).join("");
+  return `
+    <div class="stat stat-wide">
+      <div class="stat-label">Билеты на игры · сброс в 00:00 МСК</div>
+      <div class="stat-value">${icon("ticket")} ${left} / ${daily} <span class="ticket-pips">${pips}</span></div>
+    </div>`;
 }
 
 // ── Аркада: Стратег и Морской бой (games/strat.html, games/sea.html) — раз в 24ч за
 // победу случайно 2 ключа или 2 детали; постоянный тренировочный режим без наград. ──
 const ARCADE_GAMES = [
-  { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html", cdField: "last_strat_win" },
-  { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html", cdField: "last_sea_win" },
+  { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html" },
+  { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
 ];
-const ARCADE_CD_SECONDS = 24 * 3600;
-
-function secondsLeftFromTimestamp(tsIso, cooldownSeconds) {
-  if (!tsIso) return 0;
-  const elapsed = (Date.now() - new Date(tsIso).getTime()) / 1000;
-  return Math.max(0, Math.ceil(cooldownSeconds - elapsed));
-}
 
 function renderArcadeSection() {
+  const hasTickets = ticketsLeft() > 0;
   const cards = ARCADE_GAMES.map((g) => {
-    const left = secondsLeftFromTimestamp(currentState.economy[g.cdField], ARCADE_CD_SECONDS);
-    const available = left <= 0;
     return `
       <div class="container-card">
         <div class="container-card-name">${icon(g.icon)} ${g.name}</div>
         <div class="container-card-price">${
-          available ? "Награда доступна" : `Награда: обновление через ${liveCountdown(left)}`
+          hasTickets ? `Партия на награду: ${iconVal("ticket", 14, "1 билет")}` : `Билеты закончились — обновление через ${liveCountdown(secondsUntilMskReset())}`
         }</div>
-        <div class="arcade-note">За победу: 2 ключа или 2 детали (случайно), раз в 24 часа</div>
+        <div class="arcade-note">За победу: 2 ключа или 2 детали (случайно). Билет тратится при старте, тренировка бесплатна</div>
         <div class="container-buy-row">
-          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${available ? "" : "disabled"}>Играть на награду</button>
+          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets ? "" : "disabled"}>Играть на награду</button>
           <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
         </div>
       </div>`;
@@ -292,10 +313,21 @@ function wireArcadeSection(mount) {
 
 let arcadeCurrentGame = null;
 let arcadeRanked = false;
+let arcadeRunId = null;
 
-function openArcadeGame(gameId, ranked) {
+async function openArcadeGame(gameId, ranked) {
   const game = ARCADE_GAMES.find((g) => g.id === gameId);
   if (!game) return;
+  if (ranked) {
+    // Билет списывается на сервере при старте партии; run_id потом даёт единоразовую награду.
+    try {
+      const run = await startGameRun(getCurrentPlayer().id, gameId);
+      arcadeRunId = run.run_id;
+    } catch (err) {
+      await renderDashboard({ ok: false, text: err.message });
+      return;
+    }
+  }
   arcadeCurrentGame = gameId;
   arcadeRanked = ranked;
   const iframe = document.getElementById("arcade-iframe");
@@ -303,11 +335,20 @@ function openArcadeGame(gameId, ranked) {
   document.getElementById("arcade-overlay").hidden = false;
 }
 
-window.closeMgOverlay = function () {
+function closeArcadeOverlay() {
   document.getElementById("arcade-overlay").hidden = true;
   document.getElementById("arcade-iframe").src = "about:blank";
   arcadeCurrentGame = null;
   arcadeRanked = false;
+  arcadeRunId = null;
+}
+
+// Вызывается из iframe при выходе без победы. Для партии на награду билет уже потрачен —
+// перерисовываем дашборд, чтобы счётчик билетов был актуальным.
+window.closeMgOverlay = function () {
+  const wasRanked = arcadeRanked;
+  closeArcadeOverlay();
+  if (wasRanked) renderDashboard();
 };
 
 window.addEventListener("message", async (e) => {
@@ -317,11 +358,12 @@ window.addEventListener("message", async (e) => {
 
   const gameId = arcadeCurrentGame;
   const ranked = arcadeRanked;
-  window.closeMgOverlay();
-  if (!ranked || !gameId) return;
+  const runId = arcadeRunId;
+  closeArcadeOverlay();
+  if (!ranked || !gameId || !runId) return;
 
   try {
-    const res = await claimArcadeReward(getCurrentPlayer().id, gameId);
+    const res = await claimArcadeReward(getCurrentPlayer().id, gameId, runId);
     const label =
       res.reward_type === "keys"
         ? iconVal("carKey", 14, `+${res.reward_amount} ключа`)
@@ -333,13 +375,15 @@ window.addEventListener("message", async (e) => {
 });
 
 function renderMinigameTab(mount, flash) {
-  const today = new Date().toISOString().slice(0, 10);
+  const today = mskDate();
   const e = currentState.economy;
   const attemptsUsed = e.spin_day === today ? e.spin_count : 0;
   const nextAttempt = attemptsUsed + 1;
   const hasDiscount = currentState.items.includes("fortuna_set");
-  const canSpin = nextAttempt <= 3;
-  const cost = canSpin ? (hasDiscount ? Math.floor(MINIGAME_COSTS[nextAttempt] * 0.9) : MINIGAME_COSTS[nextAttempt]) : 0;
+  const attemptsLeft = nextAttempt <= 3;
+  const hasTickets = ticketsLeft() > 0;
+  const canSpin = attemptsLeft && hasTickets;
+  const cost = attemptsLeft ? (hasDiscount ? Math.floor(MINIGAME_COSTS[nextAttempt] * 0.9) : MINIGAME_COSTS[nextAttempt]) : 0;
 
   mount.innerHTML = `
     <div id="minigame-result" class="result-box" hidden></div>
@@ -347,8 +391,10 @@ function renderMinigameTab(mount, flash) {
       <div class="container-card-name">${icon("puzzle")} Попытка ${Math.min(nextAttempt, 3)} из 3</div>
       <div class="container-card-price">${
         canSpin
-          ? `Цена: ${iconVal("coin", 14, fmtNum(cost))}`
-          : `Попытки закончились — обновление через ${liveCountdown(secondsUntilUtcReset())}`
+          ? `Цена: ${iconVal("coin", 14, fmtNum(cost))} + ${iconVal("ticket", 14, "1 билет")}`
+          : !attemptsLeft
+            ? `Попытки закончились — обновление через ${liveCountdown(secondsUntilMskReset())}`
+            : `Билеты закончились — обновление через ${liveCountdown(secondsUntilMskReset())}`
       }</div>
       <div class="container-buy-row">
         ${canSpin ? `<button id="spin-btn" class="btn-secondary btn-sm">Крутить</button>` : ""}
@@ -1081,6 +1127,7 @@ const GUIDE_ITEMS = [
   { icon: "openChest", title: "Кейсы", desc: "Открывай контейнеры за ключи — шанс на монеты, фраги и редкие предметы." },
   { icon: "anvilImpact", title: "Оборудование", desc: "Крафти за детали и держи активным один предмет — усиливает конкретное действие." },
   { icon: "crossedSwords", title: "Рейд", desc: "Покупай оружие и атакуй общего босса — награда делится между всеми участниками." },
+  { icon: "ticket", title: "Билеты", desc: "5 билетов в день (сброс в 00:00 МСК, не копятся). Один билет — одна игра с наградой: слот Фортуны (до 3 в день), Стратег, Морской бой. Тренировки бесплатны." },
   { icon: "jigsawPiece", title: "Игра", desc: "Испытай удачу в мини-игре Фортуны — комбо символов даёт монеты, фраги или детали." },
   { icon: "wireframeGlobe", title: "Онлайн", desc: "Живая лента событий — кто что нафармил, открыл или выиграл." },
 ];
@@ -1326,6 +1373,7 @@ function renderAdminPanelHTML(p) {
         <label><input type="checkbox" data-admin-cd="fireball" checked /> Фаербол</label>
         <label><input type="checkbox" data-admin-cd="radiofugas" checked /> Радиофугас</label>
         <label><input type="checkbox" data-admin-cd="meladze" checked /> Меладзе</label>
+        <label><input type="checkbox" data-admin-cd="tickets" checked /> Билеты</label>
       </div>
       <button id="admin-reset-cd-btn" class="btn-secondary btn-sm">Сбросить выбранные</button>
 
