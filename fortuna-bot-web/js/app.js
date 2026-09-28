@@ -277,6 +277,10 @@ function renderTicketsStat() {
 const ARCADE_GAMES = [
   { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html" },
   { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
+  {
+    id: "drone", name: "Дрон-перехватчик", icon: "jetFighter", file: "games/drone.html", rankedSoon: true,
+    note: "FPV-полёт над 3D-картой: сбивай дронов «Подстилки улитки», собирай батареи, победи босса. Скоро — общий прогресс недели",
+  },
 ];
 
 function renderArcadeSection() {
@@ -286,11 +290,11 @@ function renderArcadeSection() {
       <div class="container-card">
         <div class="container-card-name">${icon(g.icon)} ${g.name}</div>
         <div class="container-card-price">${
-          hasTickets ? `Партия на награду: ${iconVal("ticket", 14, "1 билет")}` : `Билеты закончились — обновление через ${liveCountdown(secondsUntilMskReset())}`
+          g.rankedSoon ? "Пока только тренировка (бесплатно)" : hasTickets ? `Партия на награду: ${iconVal("ticket", 14, "1 билет")}` : `Билеты закончились — обновление через ${liveCountdown(secondsUntilMskReset())}`
         }</div>
-        <div class="arcade-note">За победу: 2 ключа или 2 детали (случайно). Билет тратится при старте, тренировка бесплатна</div>
+        <div class="arcade-note">${g.note || "За победу: 2 ключа или 2 детали (случайно). Билет тратится при старте, тренировка бесплатна"}</div>
         <div class="container-buy-row">
-          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets ? "" : "disabled"}>Играть на награду</button>
+          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets && !g.rankedSoon ? "" : "disabled"}>${g.rankedSoon ? "Награда — скоро" : "Играть на награду"}</button>
           <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
         </div>
       </div>`;
