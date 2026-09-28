@@ -251,7 +251,7 @@ function secondsUntilMskReset() {
   return Math.max(0, Math.round((next - shifted.getTime()) / 1000));
 }
 
-// ── Билеты: 5 в день (значение с сервера, daily_tickets), сброс в полночь МСК ──
+// ── Билеты: 5 в день (значение с сервера, daily_tickets), обновление раз в сутки (граница — полночь МСК) ──
 function ticketsDaily() {
   return currentState?.daily_tickets ?? 5;
 }
@@ -267,7 +267,7 @@ function renderTicketsStat() {
   const pips = Array.from({ length: daily }, (_, i) => `<span class="ticket-pip ${i < left ? "on" : ""}"></span>`).join("");
   return `
     <div class="stat stat-wide">
-      <div class="stat-label">Билеты на игры · сброс в 00:00 МСК</div>
+      <div class="stat-label stat-label-row"><span>Билеты на игры</span><span>обновление через ${liveCountdown(secondsUntilMskReset(), 11)}</span></div>
       <div class="stat-value">${icon("ticket")} ${left} / ${daily} <span class="ticket-pips">${pips}</span></div>
     </div>`;
 }
@@ -1131,7 +1131,7 @@ const GUIDE_ITEMS = [
   { icon: "openChest", title: "Кейсы", desc: "Открывай контейнеры за ключи — шанс на монеты, фраги и редкие предметы." },
   { icon: "anvilImpact", title: "Оборудование", desc: "Крафти за детали и держи активным один предмет — усиливает конкретное действие." },
   { icon: "crossedSwords", title: "Рейд", desc: "Покупай оружие и атакуй общего босса — награда делится между всеми участниками." },
-  { icon: "ticket", title: "Билеты", desc: "5 билетов в день (сброс в 00:00 МСК, не копятся). Один билет — одна игра с наградой: слот Фортуны (до 3 в день), Стратег, Морской бой. Тренировки бесплатны." },
+  { icon: "ticket", title: "Билеты", desc: "5 билетов в день, не копятся; таймер до обновления виден в строке билетов. Один билет — одна игра с наградой: слот Фортуны (до 3 в день), Стратег, Морской бой. Тренировки бесплатны." },
   { icon: "jigsawPiece", title: "Игра", desc: "Испытай удачу в мини-игре Фортуны — комбо символов даёт монеты, фраги или детали." },
   { icon: "wireframeGlobe", title: "Онлайн", desc: "Живая лента событий — кто что нафармил, открыл или выиграл." },
 ];
