@@ -9,7 +9,7 @@
 
 ```bash
 git fetch origin +refs/heads/online-dev:refs/remotes/origin/online-dev   # работает и в «облегчённом» клоне только с main
-git checkout online-dev 2>/dev/null || git checkout -b online-dev --track origin/online-dev
+git checkout online-dev 2>/dev/null || git checkout -b online-dev origin/online-dev
 git pull --ff-only origin online-dev
 ```
 
