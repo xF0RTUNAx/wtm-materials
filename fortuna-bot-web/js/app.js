@@ -39,13 +39,44 @@ function iconVal(name, sizePx, valueHTML) {
   return `<span class="icon-val">${icon(name, sizePx)}<span>${valueHTML}</span></span>`;
 }
 
+// ── Реклама «Симулятора Летки»: ролик из игры, коротко о ней, путь в меню и кнопка тренировки ──
+// where: "auth" — экран входа вместо старого промо-фото (кнопка ведёт на регистрацию), "farm" — вкладка «Фарм» под переносом прогресса
+function gameAdHTML(where) {
+  const how = where === "auth"
+    ? `Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b>.`
+    : `Вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b>. Лучше всего — на телефоне в горизонтальном положении.`;
+  return `
+    <div class="game-ad">
+      <div class="game-ad-media">
+        <video src="media/letka_promo.mp4" poster="media/letka_promo.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
+        <span class="game-ad-badge">НОВАЯ ИГРА</span>
+        <div class="game-ad-cap"><div class="game-ad-title">Симулятор Летки</div><div class="game-ad-sub">3D-бой в небе прямо в браузере</div></div>
+      </div>
+      <div class="game-ad-body">
+        <div class="game-ad-text">Пилотируй «Изделие Фортуна-1» против истребителей «Подстилки улитки»: захватывай радаром, пускай ракеты, уходи от ответных ловушками и манёвром.</div>
+        <div class="game-ad-tags"><span>22 ракеты</span><span>Радар и СПО</span><span>Погода</span><span>Обучение</span><span>Аркада и Реализм</span></div>
+        <div class="game-ad-how">${how}</div>
+        <button class="${where === "auth" ? "btn-primary" : "btn-secondary"} game-ad-btn" data-game-ad>${where === "auth" ? "Регистрируйся и пробуй!" : "Играть — тренировка"}</button>
+      </div>
+    </div>`;
+}
+function bindGameAd(container) {
+  const btn = container.querySelector("[data-game-ad]");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    if (getCurrentPlayer()) return openArcadeGame("drone", false);
+    // экран входа: игра — повод зарегистрироваться, поэтому ведём на форму регистрации
+    renderAuth("register");
+    const card = root.querySelector(".auth-card");
+    card.scrollIntoView({ behavior: "smooth", block: "center" });
+    card.querySelector('input[name="login"]').focus({ preventScroll: true });
+  });
+}
+
 function renderAuth(mode = "login") {
   document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
   root.innerHTML = `
-    <div class="auth-promo">
-      <img src="media/oplot.jpg" alt="" />
-      <div class="auth-promo-text">Вступай или продолжай соревнование между участниками чата сообщества с новыми механиками!</div>
-    </div>
+    ${gameAdHTML("auth")}
     <div class="auth-card">
       <div class="tabs">
         <button class="tab ${mode === "login" ? "active" : ""}" data-mode="login">Вход</button>
@@ -59,6 +90,7 @@ function renderAuth(mode = "login") {
       </form>
     </div>
   `;
+  bindGameAd(root);
   root.querySelectorAll(".tab").forEach((btn) => {
     btn.addEventListener("click", () => renderAuth(btn.dataset.mode));
   });
@@ -155,6 +187,7 @@ async function renderDashboard(flash) {
       </form>
       <div id="migrate-result" class="result-box" hidden></div>
     </details>
+    <div id="game-ad-slot"></div>
 
     <nav class="game-nav">
       ${NAV_TABS.map(
@@ -190,6 +223,9 @@ async function renderDashboard(flash) {
 
 function renderTabContent(flash) {
   const mount = document.getElementById("tab-content");
+  // реклама «Симулятора Летки» — только на «Фарме», под переносом прогресса из Telegram
+  const adSlot = document.getElementById("game-ad-slot");
+  if (adSlot) { adSlot.innerHTML = currentTab === "farm" ? gameAdHTML("farm") : ""; bindGameAd(adSlot); }
   if (currentTab === "farm") renderFarmTab(mount, flash);
   else if (currentTab === "shop") renderShopTab(mount, flash);
   else if (currentTab === "containers") renderContainersTab(mount, flash);
