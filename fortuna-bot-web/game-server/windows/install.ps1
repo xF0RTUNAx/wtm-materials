@@ -67,6 +67,7 @@ if (Get-Service $Svc -ErrorAction SilentlyContinue) {
 & $Nssm set $Svc AppRotateBytes 5000000 | Out-Null
 & $Nssm set $Svc AppExit Default Restart | Out-Null
 & $Nssm set $Svc AppRestartDelay 3000 | Out-Null
+& $Nssm set $Svc AppStopMethodSkip 7 | Out-Null # сохранять серверу нечего — при остановке закрываем сразу (иначе Windows ждёт ~30 с)
 & $Nssm set $Svc Start SERVICE_AUTO_START | Out-Null
 & $Nssm set $Svc DisplayName "Fortuna Game Server (Simulator Letki online)" | Out-Null
 & $Nssm start $Svc | Out-Null
