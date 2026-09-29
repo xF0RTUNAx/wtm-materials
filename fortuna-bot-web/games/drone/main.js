@@ -2,16 +2,19 @@
 /* global THREE */
 import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js';
 import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin } from './world.js';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather } from './world.js';
 import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js';
 import { createPipeline } from './post.js';
+import { createAudio } from './audio.js';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
 const TRAINING = Q.get('mode') === 'training';
 const TEST = Q.get('test') === '1'; // отладочный хук window.__g — только вместе с mode=training
 const SEED = ((parseInt(Q.get('seed'), 10) || Math.floor(Math.random() * 2147483646) + 1) >>> 0);
-const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window;
+// тест (только ?mode=training&test=1): touch=1 — сенсорный интерфейс на ПК, insets=t,r,b,l,tg — эмуляция выреза и кнопок Telegram
+const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || (TEST && TRAINING && Q.get('touch') === '1');
+const TEST_INSETS = TEST && TRAINING && Q.get('insets') ? Q.get('insets').split(',').map((v) => +v || 0) : null;
 const IOS = /iPhone|iPod/.test(navigator.userAgent || '');
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -34,30 +37,31 @@ const DEFAULT_LOADOUT = ['aim9l', 'aim120c', null, null, null, null, 'aim120c', 
 //   scale — масштаб рендера, dyn — динамическое разрешение, min — нижняя граница масштаба, target — цель к/с,
 //   up — апскейлер ('off' | 'cas' | 'fsr'), sharp — резкость, aa — сглаживание ('off' | 'fxaa' | 'msaa').
 // post — эффекты кадра (свечение, лучи, цветокоррекция); у «Низкого» конвейера нет вовсе — самый дешёвый путь.
+// rainDrops — капель вокруг камеры в ливень, cirrus — высокие перистые облака в ясную погоду.
 const PRESETS = {
-  low:    { name: 'Низкий',  desc: 'слабые телефоны', prMul: 0.8, prCap: 1, terrainN: 150, trees: 600, treeDist: 6000, bldPerTown: 22, clouds: 14, cloudPuffs: 5, particles: 1000,
+  low:    { name: 'Низкий',  desc: 'слабые телефоны', prMul: 0.8, prCap: 1, terrainSeg: 16, trees: 800, treeDist: 6000, treeHi: 900, propsLvl: 0, treeCell: 5000, bldPerTown: 22, clouds: 14, cloudPuffs: 5, particles: 1000, rainDrops: 700,
     pbr: false, shadows: false, windows: false, detail: false, contrails: false,
     perf: { scale: 1, dyn: true, min: 0.55, target: 60, up: 'off', sharp: 0.4, aa: 'off' } },
-  medium: { name: 'Средний', desc: 'большинство устройств', prMul: 1, prCap: 1.5, terrainN: 240, trees: 2400, treeDist: 9000, bldPerTown: 40, clouds: 26, cloudPuffs: 8, particles: 2200,
+  medium: { name: 'Средний', desc: 'большинство устройств', prMul: 1, prCap: 1.5, terrainSeg: 32, trees: 3000, treeDist: 9000, treeHi: 1500, propsLvl: 1, treeCell: 3500, bldPerTown: 40, clouds: 26, cloudPuffs: 8, particles: 2200, rainDrops: 1600,
     pbr: true, shadows: false, windows: true, detail: true, cloudShadows: true, contrails: true,
-    perf: { scale: 1, dyn: true, min: 0.6, target: 60, up: 'cas', sharp: 0.45, aa: 'fxaa' }, post: { bloom: 0, grade: 0.1 } },
-  high:   { name: 'Высокий', desc: 'мощные ПК и планшеты', prMul: 1, prCap: 2, terrainN: 340, trees: 6000, treeDist: 12000, bldPerTown: 65, clouds: 40, cloudPuffs: 9, particles: 4000,
+    perf: { scale: 1, dyn: true, min: 0.6, target: 60, up: 'cas', sharp: 0.45, aa: 'fxaa' } }, // без эффектов кадра — облегчённый 8-битный конвейер
+  high:   { name: 'Высокий', desc: 'мощные ПК и планшеты', prMul: 1, prCap: 2, terrainSeg: 48, trees: 8000, treeDist: 12000, treeHi: 2200, propsLvl: 2, bldPerTown: 65, clouds: 40, cloudPuffs: 9, particles: 4000, rainDrops: 3000, cirrus: true,
     pbr: true, shadows: true, windows: true, detail: true, cloudShadows: true, cloudSprites: true, treeVariety: true, contrails: true, waterAnim: true,
     perf: { scale: 1, dyn: true, min: 0.67, target: 60, up: 'cas', sharp: 0.4, aa: 'msaa' }, post: { bloom: 0.35, grade: 0.15, vignette: 0.12 } },
   // топовые: HDR-конвейер, свечение, тени 4K с широким охватом, PBR-земля с микрорельефом, лучи от солнца («Кино»)
-  ultra:  { name: 'Ультра', desc: 'HDR-свечение, PBR-земля, тени 4K', prMul: 1, prCap: 2, terrainN: 460, trees: 10000, treeDist: 16000, bldPerTown: 80, clouds: 55, cloudPuffs: 12, particles: 6000,
+  ultra:  { name: 'Ультра', desc: 'HDR-свечение, PBR-земля, тени 4K', prMul: 1, prCap: 2, terrainSeg: 64, trees: 15000, treeDist: 16000, treeHi: 2800, propsLvl: 2, waterPBR: true, bldPerTown: 80, clouds: 55, cloudPuffs: 12, particles: 6000, rainDrops: 4500, cirrus: true,
     pbr: true, shadows: true, shadowMap: 4096, shadowBox: 400, windows: true, detail: true, terrainPBR: true, cloudShadows: true, cloudSprites: true, treeVariety: true, contrails: true, waterAnim: true, flares: true, lights: true,
-    perf: { scale: 1, dyn: true, min: 0.67, target: 60, up: 'fsr', sharp: 0.35, aa: 'msaa' }, post: { bloom: 0.75, vignette: 0.22, grade: 0.25 } },
-  cinema: { name: 'Кино', desc: 'ультра + лучи, киноцвет, зерно', prMul: 1, prCap: 2.5, terrainN: 520, trees: 14000, treeDist: 20000, bldPerTown: 90, clouds: 70, cloudPuffs: 13, particles: 8000,
+    perf: { scale: 1, dyn: true, min: 0.67, target: 60, up: 'fsr', sharp: 0.35, aa: 'msaa' }, post: { bloom: 0.75, vignette: 0.22, grade: 0.25, exposure: 0.95 } },
+  cinema: { name: 'Кино', desc: 'самая подробная земля и лес, лучи, отражения', prMul: 1, prCap: 2.5, terrainSeg: 96, trees: 22000, treeDist: 20000, treeHi: 3500, propsLvl: 3, waterPBR: true, lodD: [2600, 7000, 14000], bldPerTown: 90, clouds: 70, cloudPuffs: 13, particles: 8000, rainDrops: 6000, cirrus: true,
     pbr: true, shadows: true, shadowMap: 4096, shadowBox: 450, windows: true, detail: true, terrainPBR: true, cloudShadows: true, cloudSprites: true, treeVariety: true, contrails: true, waterAnim: true, flares: true, lights: true,
     perf: { scale: 0.85, dyn: true, min: 0.67, target: 60, up: 'fsr', sharp: 0.45, aa: 'msaa' },
-    post: { bloom: 1.0, vignette: 0.38, grain: 0.03, grade: 1, ca: 0.0022, threshold: 0.8, rays: true, raysK: 0.55, exposure: 1.1 } },
+    post: { bloom: 0.85, vignette: 0.18, grade: 0.7, threshold: 0.85, rays: true, raysK: 0.55, exposure: 1.0 } }, // без зерна и аберраций — чистая картинка
 };
 let gfxKey = store.get('fortuna_drone_gfx');
 if (!PRESETS[gfxKey]) gfxKey = IS_TOUCH ? 'low' : 'medium';
 const P = PRESETS[gfxKey];
 const DPR = window.devicePixelRatio || 1;
-const prFor = (p) => Math.min(DPR * p.prMul, p.prCap);
+const prFor = (p) => Math.min(DPR * p.prMul, p.prCap, IS_TOUCH ? 2 : 3); // на телефоне больше 2× не видно глазом — только нагрев
 // настройки производительности и экрана (сбрасываются к умолчаниям пресета при его смене)
 const PERF_KEYS = ['scale', 'dyn', 'min', 'target', 'up', 'sharp', 'aa'];
 let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true };
@@ -86,47 +90,78 @@ let modeKey = store.get('fortuna_drone_mode');
 if (!MODES[modeKey] || (modeKey === 'training' && !TRAINING)) modeKey = 'arcade'; // в партии на награду обучение недоступно
 let MODE = MODES[modeKey];
 
+// ═════════════ Погода ═════════════
+// Случайная на каждый вылет (по весам из WEATHERS) или выбранная в «Настройках». На расписание и счёт не влияет.
+let weatherPref = store.get('fortuna_drone_weather');
+if (weatherPref !== 'random' && !WEATHERS[weatherPref]) weatherPref = 'random';
+let weatherKey = weatherPref === 'random' ? pickWeather() : weatherPref;
+
 // ═════════════ Рендер, сцена, мир ═════════════
 // Линейный цвет: материалы считают свет в линейном пространстве, на выходе — ACES + sRGB.
 // Без конвейера это делает сам renderer; с конвейером (post.js) — композит-шейдер.
 const canvas = $('c');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', logarithmicDepthBuffer: true });
+// Глубина — обычная 24-битная (не логарифмическая): запись gl_FragDepth отключала бы на мобильных GPU отсечение
+// скрытых пикселей до шейдера (Apple HSR, early-Z) — а это самая дешёвая оптимизация перекрытий. Точности хватает
+// благодаря ближней плоскости 3 м (камера всегда ≥ 20 м от дрона).
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = 1.15;
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 if (perf.p3 && P3_OK) { try { renderer.getContext().drawingBufferColorSpace = 'display-p3'; } catch (_) { perf.p3 = false; } }
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(65, 1, 1, 90000);
+const camera = new THREE.PerspectiveCamera(65, 1, 3, 60000);
 camera.rotation.order = 'YXZ';
 let VW = 1, VH = 1, pipe = null;
 const basePR = prFor(P);
 // конвейер нужен, если есть эффекты кадра, сглаживание, апскейлер или широкий цвет
 function needPipe() { return !!P.post || perf.aa !== 'off' || perf.up !== 'off' || (perf.p3 && P3_OK); }
+// облегчённый конвейер (8 бит, тонмаппинг в материалах): когда нет эффектов кадра и широкого цвета
+const pipeLdr = () => !P.post && !(perf.p3 && P3_OK);
+let weatherExp = 1;
+function baseExposure() { return ((P.post && P.post.exposure) || 1.15) * weatherExp; }
+function applyExposure() { if (pipe && !pipe.cfg.ldr) pipe.setExposure(baseExposure()); else renderer.toneMappingExposure = baseExposure(); }
 function rebuildPipe() {
   if (pipe) { pipe.dispose(); pipe = null; }
   if (needPipe()) {
-    const pc = P.post || {};
-    pipe = createPipeline(renderer, { ...pc, exposure: pc.exposure || 1.15, scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
-    renderer.toneMapping = THREE.NoToneMapping; // тонмаппинг и гамму делает композит
+    const pc = P.post || {}, ldr = pipeLdr();
+    pipe = createPipeline(renderer, { ...pc, ldr, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
+    renderer.toneMapping = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping; // HDR: тонмаппинг и гамму делает композит
     renderer.setPixelRatio(basePR);
   } else {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.setPixelRatio(basePR * (perf.dyn ? dr.scale : perf.scale));
   }
+  applyExposure();
   scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); // смена тонмаппинга — пересборка шейдеров
   resize();
 }
-// Динамическое разрешение: каждые 0,5 с сравниваем среднее время кадра с целью и двигаем масштаб
-const dr = { scale: perf.scale, acc: 0, n: 0, t: 0, fps: 0 };
+// Динамическое разрешение и счётчик кадров. Раз в 0,5 с: частота кадров, «худшие 5 %» кадров и решение по масштабу.
+// Частота кадров не может быть выше частоты экрана (vs — период развёртки, меряется при загрузке), поэтому:
+//  • цель — не быстрее экрана (цель 120 на 60-Гц экране больше не «топит» разрешение до минимума);
+//  • запас мощности при упоре в частоту экрана не виден — масштаб осторожно пробует подняться раз в 2 с,
+//    а если после подъёма кадры просели — возвращается и 10 с не пробует снова (раньше он только падал).
+const REFRESH = [1000 / 144, 1000 / 120, 1000 / 90, 1000 / 75, 1000 / 60, 1000 / 30];
+const snapPeriod = (ms) => REFRESH.find((p) => Math.abs(ms - p) < p * 0.12) || 0;
+const dr = { scale: perf.scale, win: [], t: 0, fps: 0, low: 0, vs: 0, calm: 0, hold: 0, justUp: 0 };
+function drReset() { dr.win.length = 0; dr.t = 0; }
 function drUpdate(ms) {
-  dr.acc += ms; dr.n++; dr.t += ms;
+  dr.win.push(ms); dr.t += ms;
   if (dr.t < 500) return;
-  const avg = dr.acc / dr.n; dr.fps = 1000 / avg; dr.acc = dr.n = dr.t = 0;
+  const w = dr.win.slice().sort((a, b) => a - b), n = w.length, avg = dr.t / n;
+  dr.fps = 1000 / avg; dr.low = 1000 / w[Math.min(n - 1, Math.floor(n * 0.95))];
+  const q = snapPeriod(w[Math.floor(n * 0.25)]); if (q && (!dr.vs || q < dr.vs - 0.5)) dr.vs = q; // экран оказался быстрее, чем думали
+  drReset();
   if (!perf.dyn) return;
-  const goal = 1000 / (perf.cap || perf.target);
+  const goal = Math.max(1000 / (perf.cap || perf.target), dr.vs * 0.98);
   let s = dr.scale;
-  if (avg > goal * 1.08) s -= avg > goal * 1.5 ? 0.1 : 0.04;
-  else if (avg < goal * 0.82) s += 0.03;
+  if (dr.hold > 0) dr.hold--;
+  if (avg > goal * 1.1) {
+    s -= avg > goal * 1.5 ? 0.1 : 0.05; dr.calm = 0;
+    if (dr.justUp > 0) dr.hold = 20; // только что поднимали — не хватило мощности, 10 с не пробуем
+  } else if (avg < goal * 1.04) {
+    if (++dr.calm >= 4 && dr.hold <= 0 && s < perf.scale) { s += 0.04; dr.calm = 0; dr.justUp = 3; }
+  } else dr.calm = 0;
+  if (dr.justUp > 0) dr.justUp--;
   s = clamp(s, perf.min, perf.scale);
   if (Math.abs(s - dr.scale) >= 0.01) { dr.scale = s; if (pipe) pipe.setScale(s); else renderer.setPixelRatio(basePR * s); resize(); }
 }
@@ -137,10 +172,68 @@ function resize() {
   // адаптация интерфейса: узкий экран / низкий (телефон в альбомной ориентации)
   document.body.classList.toggle('narrow', VW < 700);
   document.body.classList.toggle('short', VH < 520);
+  applySafeArea();
 }
 window.addEventListener('resize', resize);
+
+// ═════════════ Безопасные зоны экрана и Telegram ═════════════
+// Игра живёт во фрейме сайта, а внутри фрейма env(safe-area-inset-*) всегда 0. Поэтому отступы берём
+// у страницы-родителя и у Telegram Mini App (кнопки «Закрыть» и «⋯» в полноэкранном режиме лежат поверх
+// страницы — contentSafeAreaInset), и отдаём в CSS переменными --sa-* и --tg-t.
+const TG = (() => {
+  try {
+    const w = window.parent !== window ? window.parent : window, T = w.Telegram && w.Telegram.WebApp;
+    return { W: T && T.platform && T.platform !== 'unknown' ? T : null, proxy: !!w.TelegramWebviewProxy };
+  } catch (_) { return { W: null, proxy: false }; }
+})();
+const tgv = (v) => { try { return !!(TG.W && TG.W.isVersionAtLeast && TG.W.isVersionAtLeast(v)); } catch (_) { return false; } };
+function envInsets(win) {
+  try {
+    const d = win.document.createElement('div');
+    d.style.cssText = 'position:fixed;left:0;top:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+    win.document.body.appendChild(d); const cs = win.getComputedStyle(d);
+    const r = [cs.paddingTop, cs.paddingRight, cs.paddingBottom, cs.paddingLeft].map((v) => parseFloat(v) || 0); d.remove(); return r;
+  } catch (_) { return [0, 0, 0, 0]; }
+}
+function applySafeArea() {
+  const ins = envInsets(window);
+  if (window.parent !== window) envInsets(window.parent).forEach((v, i) => { ins[i] = Math.max(ins[i], v); });
+  let tg = 0;
+  if (TG.W) {
+    const a = TG.W.safeAreaInset || {}, c = TG.W.contentSafeAreaInset || {};
+    ins[0] = Math.max(ins[0], a.top || 0); ins[1] = Math.max(ins[1], a.right || 0); ins[2] = Math.max(ins[2], a.bottom || 0); ins[3] = Math.max(ins[3], a.left || 0);
+    tg = c.top || (TG.W.isFullscreen ? 46 : 0);
+  } else if (TG.proxy && IS_TOUCH && Math.abs(window.innerHeight - (screen.height < screen.width === window.innerHeight < window.innerWidth ? screen.height : screen.width)) < 4) {
+    tg = 46; // Telegram без данных API, но страница во весь экран — значит, его кнопки поверх
+  }
+  if (TEST_INSETS) { for (let i = 0; i < 4; i++) ins[i] = TEST_INSETS[i] || 0; tg = TEST_INSETS[4] || 0; }
+  const st = document.documentElement.style;
+  ['t', 'r', 'b', 'l'].forEach((k, i) => st.setProperty('--sa-' + k, Math.round(ins[i]) + 'px'));
+  st.setProperty('--tg-t', Math.round(tg) + 'px');
+  document.body.classList.toggle('tgfs', tg > 0);
+}
+if (TG.W) {
+  const onTg = () => applySafeArea();
+  for (const ev of ['safeAreaChanged', 'contentSafeAreaChanged', 'fullscreenChanged', 'viewportChanged']) try { TG.W.onEvent(ev, onTg); } catch (_) { /* старый клиент */ }
+  window.addEventListener('pagehide', () => { for (const ev of ['safeAreaChanged', 'contentSafeAreaChanged', 'fullscreenChanged', 'viewportChanged']) try { TG.W.offEvent(ev, onTg); } catch (_) { /* нет */ } });
+}
+// Во время вылета: свайп вниз не сворачивает мини-приложение (им рулят!), закрытие — с подтверждением;
+// в режиме погружения — ещё полный экран Telegram и фиксация ориентации.
+const tgState = { fs: false };
+function tgFlight(on, screenToo = true) {
+  const T = TG.W; if (!T) return;
+  try {
+    if (tgv('7.7')) on ? T.disableVerticalSwipes() : T.enableVerticalSwipes();
+    if (tgv('6.2')) on ? T.enableClosingConfirmation() : T.disableClosingConfirmation();
+    if (tgv('8.0') && screenToo) {
+      if (on && perf.immersive) { if (!T.isFullscreen) { tgState.fs = true; T.requestFullscreen(); } if (IS_TOUCH) T.lockOrientation(); }
+      if (!on) { T.unlockOrientation(); if (tgState.fs) { tgState.fs = false; T.exitFullscreen(); } }
+    }
+  } catch (_) { /* метод недоступен в этой версии Telegram */ }
+}
 rebuildPipe();
-const world = buildWorld(scene, P, SEED, renderer);
+const world = buildWorld(scene, P, SEED, renderer, weatherKey);
+weatherExp = world.W.exposure || 1; applyExposure();
 const buildings = world.buildings;
 const boomLight = new THREE.PointLight(lin(0xffa040), 0, 600, 2); scene.add(boomLight);
 
@@ -352,6 +445,12 @@ try {
 } catch (_) { binds = defaultBinds(); }
 let mouseCfg = { steer: true, invert: false, sens: 1 };
 try { mouseCfg = Object.assign(mouseCfg, JSON.parse(store.get('fortuna_drone_mouse') || '{}')); } catch (_) { /* по умолчанию */ }
+// Сенсорная «ручка»: чувствительность (радиус хода пальца), мёртвая зона, кривая отклика, инверсия тангажа
+let touchCfg = { sens: 1, dead: 0.1, curve: 0.35, invert: false };
+try { touchCfg = Object.assign(touchCfg, JSON.parse(store.get('fortuna_drone_touch') || '{}')); } catch (_) { /* по умолчанию */ }
+const saveTouch = () => store.set('fortuna_drone_touch', JSON.stringify(touchCfg));
+// кривая: 0 — линейная, 1 — «экспонента» (у центра точнее, у края — полный отклик)
+const stickCurve = (v) => { const a = Math.abs(v); return Math.sign(v) * (a * (1 - touchCfg.curve) + a * a * a * touchCfg.curve); };
 const input = { sx: 0, sy: 0, fire: false, ab: false };
 const held = new Set();
 let capturing = null; // { id, slot } — ждём клавишу для назначения
@@ -444,22 +543,29 @@ function steerHint() {
 }
 function setHint(t) { const h = $('hint'); if (h._t !== t) { h._t = t; h.innerHTML = t; h.style.display = t ? 'block' : 'none'; } }
 
-$('wpn').addEventListener('pointerdown', (e) => { e.stopPropagation(); if (G.state === 'play') cycleWeapon(); });
+$('wpn').addEventListener('pointerdown', (e) => {
+  e.stopPropagation(); e.preventDefault();
+  if (G.state !== 'play') return;
+  cycleWeapon(); wpnT = 0; const w = $('wpn'); w.classList.remove('tap'); void w.offsetWidth; w.classList.add('tap'); // мгновенно обновить панель + вспышка
+});
 $('radar').addEventListener('pointerdown', (e) => { e.stopPropagation(); if (G.state === 'play') cycleRadarScale(); });
 if (IS_TOUCH) {
   document.body.classList.add('coarse');
   const zone = $('stickZone'), base = $('stickBase'), knob = $('stickKnob');
-  let sid = null, ox = 0, oy = 0; const R = 60;
+  let sid = null, ox = 0, oy = 0, R = 60;
   zone.addEventListener('pointerdown', (e) => {
     if (sid !== null) return; sid = e.pointerId; zone.setPointerCapture(sid);
+    R = Math.round(60 / clamp(touchCfg.sens, 0.4, 2.5)); // выше чувствительность — короче ход пальца до полного отклонения
+    base.style.width = base.style.height = 2 * R + 'px'; base.style.margin = `${-R}px 0 0 ${-R}px`;
     ox = e.clientX; oy = e.clientY; base.style.display = 'block'; base.style.left = ox + 'px'; base.style.top = oy + 'px'; knob.style.transform = 'translate(0,0)';
   });
   zone.addEventListener('pointermove', (e) => {
     if (e.pointerId !== sid) return;
     let dx = e.clientX - ox, dy = e.clientY - oy; const l = Math.hypot(dx, dy);
     if (l > R) { dx *= R / l; dy *= R / l; }
-    knob.style.transform = `translate(${dx}px,${dy}px)`;
-    input.sx = clamp(deadzone(dx / R, 0.1), -1, 1); input.sy = clamp(deadzone(-dy / R, 0.1), -1, 1);
+    knob.style.transform = `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
+    input.sx = clamp(stickCurve(deadzone(dx / R, touchCfg.dead)), -1, 1);
+    input.sy = clamp(stickCurve(deadzone(-dy / R, touchCfg.dead)), -1, 1) * (touchCfg.invert ? -1 : 1);
   });
   const endStick = (e) => { if (e.pointerId !== sid) return; sid = null; base.style.display = 'none'; input.sx = 0; input.sy = 0; };
   zone.addEventListener('pointerup', endStick); zone.addEventListener('pointercancel', endStick);
@@ -480,141 +586,25 @@ if (IS_TOUCH) {
   holdAct($('btnSlow'), 'thrDown'); holdAct($('btnBack'), 'lookBack');
 }
 
-// ═════════════ Звук (синтез) ═════════════
-let actx = null, master = null, reverbIn = null, engOsc = null, engFilter = null, engGain = null, roarGain = null, roarFilter = null, windGain = null, windFilter = null,
-  droneGain = null, growlOsc = null, growlGain = null, muted = false, noiseBuf = null;
-function initAudio() {
-  if (actx) return;
-  try {
-    actx = new (window.AudioContext || window.webkitAudioContext)();
-    noiseBuf = actx.createBuffer(1, actx.sampleRate * 2, actx.sampleRate);
-    const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    // общая шина: мягкий компрессор (не даёт хлопкам «рвать» звук) + общая реверберация
-    master = actx.createDynamicsCompressor(); master.threshold.value = -18; master.ratio.value = 4; master.connect(actx.destination);
-    const conv = actx.createConvolver(), ir = actx.createBuffer(2, actx.sampleRate * 2.2, actx.sampleRate);
-    for (let ch = 0; ch < 2; ch++) { const x = ir.getChannelData(ch); for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / x.length, 3.2); }
-    conv.buffer = ir; reverbIn = actx.createGain(); reverbIn.gain.value = 0.5; reverbIn.connect(conv); conv.connect(master);
-    const loopNoise = (rate) => { const n = actx.createBufferSource(); n.buffer = noiseBuf; n.loop = true; n.playbackRate.value = rate; n.start(); return n; };
-    // турбина: вой, на сверхзвуке «глохнет» (фильтр закрывается)
-    engOsc = actx.createOscillator(); engOsc.type = 'sawtooth'; engOsc.frequency.value = 180;
-    engFilter = actx.createBiquadFilter(); engFilter.type = 'lowpass'; engFilter.frequency.value = 900;
-    engGain = actx.createGain(); engGain.gain.value = 0;
-    engOsc.connect(engFilter); engFilter.connect(engGain); engGain.connect(master); engOsc.start();
-    // рёв выхлопа
-    roarFilter = actx.createBiquadFilter(); roarFilter.type = 'bandpass'; roarFilter.frequency.value = 500; roarFilter.Q.value = 0.5;
-    roarGain = actx.createGain(); roarGain.gain.value = 0;
-    loopNoise(1).connect(roarFilter); roarFilter.connect(roarGain); roarGain.connect(master);
-    // поток воздуха: мягкий «розовый» шум (фильтр низких частот), медленно «дышит» — на сверхзвуке главный звук
-    windFilter = actx.createBiquadFilter(); windFilter.type = 'lowpass'; windFilter.frequency.value = 700; windFilter.Q.value = 0.3;
-    const windShelf = actx.createBiquadFilter(); windShelf.type = 'peaking'; windShelf.frequency.value = 420; windShelf.gain.value = 5; windShelf.Q.value = 0.7;
-    windGain = actx.createGain(); windGain.gain.value = 0;
-    loopNoise(0.7).connect(windFilter); windFilter.connect(windShelf); windShelf.connect(windGain); windGain.connect(master);
-    const lfo = actx.createOscillator(), lfoGain = actx.createGain(); lfo.frequency.value = 0.23; lfoGain.gain.value = 0; lfo.connect(lfoGain); lfoGain.connect(windGain.gain); lfo.start();
-    windGain.lfo = lfoGain;
-    // низкий гул корпуса на сверхзвуке
-    const drone = actx.createOscillator(); drone.type = 'triangle'; drone.frequency.value = 46;
-    const drone2 = actx.createOscillator(); drone2.type = 'sine'; drone2.frequency.value = 69.5;
-    droneGain = actx.createGain(); droneGain.gain.value = 0;
-    drone.connect(droneGain); drone2.connect(droneGain); droneGain.connect(master); drone.start(); drone2.start();
-    growlOsc = actx.createOscillator(); growlOsc.type = 'triangle'; growlOsc.frequency.value = 400;
-    growlGain = actx.createGain(); growlGain.gain.value = 0;
-    growlOsc.connect(growlGain); growlGain.connect(master); growlOsc.start();
-    initSpatial();
-  } catch (_) { actx = null; }
-}
-function tone(freq, dur, type = 'square', vol = 0.06, slide = 0, wet = 0) {
-  if (!actx || muted) return;
-  const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.value = freq;
-  if (slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), actx.currentTime + dur);
-  g.gain.setValueAtTime(vol, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
-  o.connect(g); g.connect(master); if (wet) { const w = actx.createGain(); w.gain.value = wet; g.connect(w); w.connect(reverbIn); }
-  o.start(); o.stop(actx.currentTime + dur);
-}
-function noise(dur, vol = 0.18, cutoff = 900, wet = 0, when = 0) {
-  if (!actx || muted || !noiseBuf) return;
-  const t0 = actx.currentTime + when;
-  const s = actx.createBufferSource(), g = actx.createGain(), f = actx.createBiquadFilter(); s.buffer = noiseBuf; s.loop = true; f.type = 'lowpass'; f.frequency.value = cutoff;
-  g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-  s.connect(f); f.connect(g); g.connect(master); if (wet) { const w = actx.createGain(); w.gain.value = wet; g.connect(w); w.connect(reverbIn); }
-  s.start(t0); s.stop(t0 + dur + 0.05);
-}
-// «Ударная волна» N-образной формы: два глухих удара ~0,12 с друг от друга, с эхом
-function boomSound(vol = 0.3) {
-  if (!actx || muted) return;
-  for (const [dt, v] of [[0, 1], [0.12, 0.75]]) {
-    noise(0.9, vol * v, 180, 0.7, dt);
-    const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime + dt;
-    o.type = 'sine'; o.frequency.setValueAtTime(62, t0); o.frequency.exponentialRampToValueAtTime(34, t0 + 0.5);
-    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol * v * 0.9, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.7);
-    o.connect(g); g.connect(master); const w = actx.createGain(); w.gain.value = 0.5; g.connect(w); w.connect(reverbIn); o.start(t0); o.stop(t0 + 0.75);
-  }
-}
-
-// ═════════════ Объёмный звук: вражеские самолёты и ракеты (панорама HRTF, затухание, эффект Доплера) ═════════════
-const voices = [];
-function initSpatial() {
-  for (let i = 0; i < 5; i++) {
-    const pan = actx.createPanner(); pan.panningModel = 'HRTF'; pan.distanceModel = 'inverse'; pan.refDistance = 220; pan.maxDistance = 20000; pan.rolloffFactor = 1.15;
-    const g = actx.createGain(); g.gain.value = 0; g.connect(pan); pan.connect(master);
-    const n = actx.createBufferSource(); n.buffer = noiseBuf; n.loop = true; n.playbackRate.value = 0.9 + i * 0.03;
-    const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.6; n.connect(bp); bp.connect(g); n.start();
-    const o = actx.createOscillator(); o.type = 'sawtooth'; const olp = actx.createBiquadFilter(); olp.type = 'lowpass'; olp.frequency.value = 1400;
-    const og = actx.createGain(); og.gain.value = 0.35; o.connect(olp); olp.connect(og); og.connect(g); o.start();
-    voices.push({ pan, g, bp, o, og, src: null, d: 0 });
-  }
-}
-function setParam(p, v, t) { if (p.setTargetAtTime) p.setTargetAtTime(v, t, 0.08); else p.value = v; }
-let spatialT = 0;
-function updateSpatial(dt) {
-  if (!actx || !voices.length) return;
-  const t = actx.currentTime, L = actx.listener;
-  const f = TMP.set(0, 0, -1).applyQuaternion(camera.quaternion), u = TMP2.set(0, 1, 0).applyQuaternion(camera.quaternion), cp = camera.position;
-  if (L.positionX) { L.positionX.value = cp.x; L.positionY.value = cp.y; L.positionZ.value = cp.z; L.forwardX.value = f.x; L.forwardY.value = f.y; L.forwardZ.value = f.z; L.upX.value = u.x; L.upY.value = u.y; L.upZ.value = u.z; }
-  else { L.setPosition(cp.x, cp.y, cp.z); L.setOrientation(f.x, f.y, f.z, u.x, u.y, u.z); }
-  // раз в 0,25 с отдаём голоса ближайшим источникам
-  spatialT -= dt;
-  if (spatialT <= 0) {
-    spatialT = 0.25;
-    const src = [];
-    for (const e of enemies) if (!e.dead) src.push({ o: e, kind: e.type === 'boss' ? 'boss' : 'jet', d: e.pos.distanceTo(cp) });
-    for (const m of missiles) if (!m.dead && m.t - m.M.drop < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) src.push({ o: m, kind: 'msl', d: m.pos.distanceTo(cp) });
-    src.sort((a, b) => a.d - b.d);
-    const want = src.filter((x) => x.d < (x.kind === 'msl' ? 3500 : 9000)).slice(0, voices.length);
-    for (const v of voices) if (v.src && !want.some((w) => w.o === v.src.o)) { v.src = null; setParam(v.g.gain, 0, t); }
-    for (const w of want) if (!voices.some((v) => v.src && v.src.o === w.o)) { const v = voices.find((x) => !x.src); if (v) v.src = w; }
-  }
-  const G_ = G.state === 'play' && !muted;
-  for (const v of voices) {
-    if (!v.src) continue;
-    const o = v.src.o, p = o.pos;
-    if (o.dead || !G_) { setParam(v.g.gain, 0, t); if (o.dead) v.src = null; continue; }
-    if (v.pan.positionX) { v.pan.positionX.value = p.x; v.pan.positionY.value = p.y; v.pan.positionZ.value = p.z; } else v.pan.setPosition(p.x, p.y, p.z);
-    // Доплер: скорость сближения источника со слушателем (камера летит вместе с игроком)
-    const vel = o.vel || TMP3.copy(o.dir).multiplyScalar(o.speed);
-    const dir = TMP.copy(cp).sub(p); const d = dir.length() || 1; dir.divideScalar(d);
-    const approach = vel.dot(dir) - player.vel.dot(dir);
-    const dop = clamp(343 / (343 - clamp(approach, -300, 300)), 0.55, 2.4);
-    if (v.src.kind === 'msl') { setParam(v.bp.frequency, 1900 * dop, t); v.bp.Q.value = 0.9; setParam(v.og.gain, 0, t); setParam(v.g.gain, 0.5, t); }
-    else {
-      const big = v.src.kind === 'boss';
-      setParam(v.bp.frequency, (big ? 230 : 420) * dop, t); v.bp.Q.value = 0.5;
-      setParam(v.o.frequency, (big ? 55 : 95 + (o.ab ? 25 : 0)) * dop, t); setParam(v.og.gain, big ? 0.5 : 0.3, t);
-      setParam(v.g.gain, (big ? 1.2 : 0.8) * (o.ab ? 1.4 : 1), t);
-    }
-  }
-}
+// ═════════════ Звук ═════════════
+// Синтез — в audio.js (реактивный двигатель, объёмные голоса, взрывы, окружение). Здесь — привязка к игре.
+const AU = createAudio();
+let muted = store.get('fortuna_drone_mute') === '1';
+let soundVol = clamp(+(store.get('fortuna_drone_vol') || 0.9), 0, 1);
+AU.setMuted(muted); AU.setVolume(soundVol);
+const tone = (freq, dur, type, vol, slide) => AU.beep(freq, dur, type, vol, slide);
 const sfx = {
-  shot: () => tone(120, 0.04, 'square', 0.025, -40), boom: (v = 0.25) => noise(1.1, v, 500, 0.6), hit: () => { noise(0.3, 0.3, 400); tone(120, 0.25, 'sawtooth', 0.08, -60); },
-  pick: () => { tone(660, 0.08, 'triangle', 0.08); setTimeout(() => tone(990, 0.12, 'triangle', 0.08), 70); }, warn: () => tone(300, 0.15, 'square', 0.05),
-  launch: () => { noise(0.9, 0.2, 1800); tone(220, 0.5, 'sawtooth', 0.04, 300); }, lock: () => { tone(1250, 0.06, 'square', 0.05); setTimeout(() => tone(1250, 0.06, 'square', 0.05), 90); },
-  lost: () => tone(420, 0.2, 'square', 0.04, -200), cm: () => noise(0.12, 0.08, 3000),
+  boom: (d, size) => AU.explosion(d, size), hit: () => AU.hit(), pick: () => AU.chime(), warn: () => tone(300, 0.15, 'square', 0.045),
+  launch: () => AU.launch(), lock: () => { tone(1250, 0.06, 'square', 0.045); setTimeout(() => tone(1250, 0.06, 'square', 0.045), 90); },
+  lost: () => tone(420, 0.2, 'square', 0.035, -200),
 };
-function silenceLoops() {
-  if (!actx) return;
-  engGain.gain.value = 0; roarGain.gain.value = 0; windGain.gain.value = 0; windGain.lfo.gain.value = 0; droneGain.gain.value = 0; growlGain.gain.value = 0;
-  for (const v of voices) v.g.gain.value = 0;
-}
-$('mute').addEventListener('click', () => { muted = !muted; $('mute').style.opacity = muted ? 0.4 : 1; silenceLoops(); });
+function silenceLoops() { AU.silence(); }
+// звук включается первым же касанием/кликом (браузеры не дают играть звук до жеста) — в том числе в лобби
+function unlockAudio() { AU.init(); AU.resume(); }
+window.addEventListener('pointerdown', unlockAudio, true); window.addEventListener('keydown', unlockAudio, true);
+function setMute(m) { muted = m; store.set('fortuna_drone_mute', m ? '1' : '0'); AU.setMuted(m); $('mute').style.opacity = m ? 0.4 : 1; const c = $('sMute'); if (c) c.checked = m; }
+$('mute').addEventListener('click', () => setMute(!muted));
+$('mute').style.opacity = muted ? 0.4 : 1;
 
 // ═════════════ Тепловая заметность и провал в доплере ═════════════
 // ИК-заметность цели для головки в точке from: с форсажем ×2,2, в лоб ~40% от «хвоста».
@@ -809,7 +799,7 @@ function updateMissile(m, dt) {
         TGT.copy(T.pos).sub(m.pos);
         const gimbal = M_.ir.fov >= 45 ? 80 : 40;
         if (angleBetween(m.dir, TGT) > gimbal * D2R || (M_.ir.aspect < 180 && offTailDeg(T, m.pos) > M_.ir.aspect + 15)) { m.lost = true; m.why = 'gimbal'; }
-        else if (M_.ir.sun && angleBetween(m.dir, SUN_DIR) < 10 * D2R) { m.lost = true; m.why = 'sun'; } // ранняя ГСН «увелась» на солнце
+        else if (M_.ir.sun && world.W.sunVis && angleBetween(m.dir, SUN_DIR) < 10 * D2R) { m.lost = true; m.why = 'sun'; } // ранняя ГСН «увелась» на солнце
         else { aim = T.pos; avel = T.vel; }
       }
     } else if (M_.kind === 'sarh') {
@@ -884,7 +874,7 @@ function detonate(m, dealDamage) {
   if (m.dead) return;
   m.dead = true; scene.remove(m.mesh);
   explosion(m.pos, dealDamage ? 2.2 : 1.1);
-  if (m.pos.distanceTo(camera.position) < 3000) sfx.boom(dealDamage ? 0.25 : 0.1);
+  sfx.boom(m.pos.distanceTo(camera.position), dealDamage ? 1.4 : 0.7);
   if (!dealDamage) { if (m.target === player) G.evaded++; return; }
   let hitAny = false;
   for (const e of opponentsOf(m.owner)) {
@@ -902,7 +892,7 @@ function dropCM(owner, type) {
     if (G.state !== 'play') return;
     if (type === 'flare' ? player.flares <= 0 : player.chaff <= 0) { if (G.cmT <= 0) { popup(type === 'flare' ? 'ЛТЦ КОНЧИЛИСЬ' : 'ДИПОЛИ КОНЧИЛИСЬ', 'bad'); G.cmT = 0.5; } return; }
     if (type === 'flare') player.flares -= 2; else player.chaff -= 2;
-    sfx.cm();
+    if (type === 'flare') AU.flare(); else AU.chaff();
   } else {
     if (type === 'flare' ? owner.cmFlare <= 0 : owner.cmChaff <= 0) return;
     if (type === 'flare') owner.cmFlare -= 2; else owner.cmChaff -= 2;
@@ -953,7 +943,7 @@ function damage(e, amount, by, msl) {
 function killEnemy(e, by, msl) {
   e.dead = true;
   explosion(e.pos, e.type === 'boss' ? 7 : 3.2);
-  sfx.boom(0.3);
+  sfx.boom(e.pos.distanceTo(camera.position), e.type === 'boss' ? 5 : 3);
   if (radar.lock === e) radar.lock = null;
   radar.contacts.delete(e);
   G.kills += UNIT_KILLS[e.type];
@@ -1021,7 +1011,7 @@ function fireBullet(owner, target, dmg) {
   b.vel.copy(TMP3).multiplyScalar(1050).add(owner.vel);
   TMP.set((rnd() - 0.5) * 6, (rnd() - 0.5) * 6, (rnd() - 0.5) * 6); b.vel.add(TMP); // рассеивание
   b.mesh.quaternion.setFromUnitVectors(ZAXIS, TMP.copy(b.vel).normalize());
-  if (owner === player) { G.shots++; sfx.shot(); }
+  if (owner === player) G.shots++;
   FX.emit(b.mesh.position.x, b.mesh.position.y, b.mesh.position.z, 0, 0, 0, 1, 0.8, 0.4, 1, 2.2, 0, 0.05, 0, 0);
 }
 function segHitsSphere(a, b, c, r) {
@@ -1268,7 +1258,7 @@ function updatePlayer(dt) {
   p.thr += ((held.has('thrUp') ? 1 : held.has('thrDown') ? 0.55 : 0.85) - p.thr) * Math.min(1, 3 * dt);
   const wasAB = p.ab;
   p.ab = (input.ab || held.has('ab')) && p.fuel > 1;
-  if (p.ab && !wasAB) { G.kick = 1; noise(0.5, 0.14, 700); } // включение форсажа — толчок
+  if (p.ab && !wasAB) { G.kick = 1; AU.afterburner(); } // включение форсажа — толчок
   flyStep(p, sx, sy, dt);
   p.cmdX = sx; p.cmdY = sy;
   // земля и здания
@@ -1305,7 +1295,7 @@ function updatePlayer(dt) {
   const mach = p.speed / (340 - p.pos.y * 0.004);
   p.mach = mach;
   if (!p.sup && mach >= 1) { p.sup = true; sonicBoom(); }
-  else if (p.sup && mach < 0.97) { p.sup = false; noise(1.2, 0.05, 800, 0.4); popup('ДОЗВУК', 'info'); }
+  else if (p.sup && mach < 0.97) { p.sup = false; AU.subsonic(); popup('ДОЗВУК', 'info'); }
   if (mach > 0.95 && mach < 1.07 && p.pos.y < 9000) {
     fwdOf(p, TMP3); rightOf(p, TMP2); const upv = TMP.crossVectors(TMP2, TMP3);
     for (let k = 0; k < 6; k++) {
@@ -1321,7 +1311,7 @@ function sonicBoom() {
   G.shake = Math.max(G.shake, 0.9); G.kick = 1.6;
   popup('СВЕРХЗВУК · М1', 'info');
   // хлопок: низкий удар + широкополосный треск
-  boomSound(0.34);
+  AU.boom(0.34);
   // облако конденсата, разлетающееся кольцом
   fwdOf(p, TMP3); rightOf(p, TMP2); const upv = TMP.crossVectors(TMP2, TMP3);
   for (let k = 0; k < 90; k++) {
@@ -1427,7 +1417,9 @@ function updateRwr(dt) {
   const lm = out.filter((t) => t.mode === 'launch').sort((a, b) => a.d - b.d)[0];
   const near = inc.sort((a, b) => a.d - b.d)[0];
   const lk = out.find((t) => t.mode === 'lock');
-  if (near) txt = `РАКЕТА! ${clockOf(near.az)} ч · ${(near.d / 1000).toFixed(1)} км · ${closingText(near.m)}`;
+  if (near) txt = VW < 760 // узкий экран: «РАКЕТА 6 ч · 5.4 км · +195 м/с · 28 с» — в одну-две строки, не на прицел
+    ? `РАКЕТА ${clockOf(near.az)} ч · ${(near.d / 1000).toFixed(1)} км · ${near.m.closing !== undefined && near.m.closing < 15 ? 'НЕ ДОГОНЯЕТ' : '+' + Math.round(near.m.closing || 0) + ' м/с' + (near.m.closing > 15 && near.m.dPrev / near.m.closing < 60 ? ' · ' + Math.ceil(near.m.dPrev / near.m.closing) + ' с' : '')}`
+    : `РАКЕТА! ${clockOf(near.az)} ч · ${(near.d / 1000).toFixed(1)} км · ${closingText(near.m)}`;
   else if (lm) txt = lm.m ? `РАКЕТА (ГСН) ${clockOf(lm.az)} ч` : `ПУСК! ${lm.code} · ${clockOf(lm.az)} ч`;
   else if (lk) txt = `ЗАХВАТ ${lk.code} · ${clockOf(lk.az)} ч`;
   const th = $('threat'); if (th._t !== txt) { th._t = txt; th.textContent = txt; th.style.display = txt ? 'block' : 'none'; }
@@ -1501,8 +1493,9 @@ function updateHudSlow() {
   el.heat.style.width = player.heat + '%'; el.heat.style.background = player.overheated ? '#ef4444' : '#fbbf24';
   el.kills.textContent = G.kills; el.score.textContent = G.score;
   const next = schedule.slice(schedIdx).find((e) => e.type !== 'tanker');
-  if (MODE.training) el.combo.textContent = `ОБУЧЕНИЕ · разобрано ракет: ${TR.done}`;
-  else el.combo.textContent = next ? `следующая группа через ${Math.max(0, Math.ceil(next.t - G.runTime))} с` : enemies.some((e) => !e.dead) ? '' : 'все группы отбиты';
+  const cmp = VW < 760; // узкий экран — короткие подписи
+  if (MODE.training) el.combo.textContent = `ОБУЧЕНИЕ · разобрано${cmp ? '' : ' ракет'}: ${TR.done}`;
+  else el.combo.textContent = next ? `${cmp ? 'группа' : 'следующая группа'} через ${Math.max(0, Math.ceil(next.t - G.runTime))} с` : enemies.some((e) => !e.dead) ? '' : 'все группы отбиты';
   const mach = player.speed / (340 - player.pos.y * 0.004);
   el.spd.textContent = `${Math.round(player.speed * 3.6)} М${mach.toFixed(2)}${player.ab ? ' Ф' : ''}`;
   el.alt.textContent = `${Math.round(player.pos.y)} · ${player.n.toFixed(1)}g`;
@@ -1510,7 +1503,26 @@ function updateHudSlow() {
   const left = Math.max(0, H_CAP - G.runTime); el.clock.textContent = MODE.training ? 'ОБУЧЕНИЕ' : `${MODE.name.toUpperCase()} · ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`;
   el.spdBox.classList.toggle('sup', !!player.sup);
   drawRadar(); drawRwr();
+  if (IS_TOUCH) placeThreat();
 }
+// На телефоне подсказка обучения встаёт в просвет между панелью ракет и СПО, а плашка угрозы — сразу под ней
+let hintBox = '';
+function placeThreat() {
+  const th = $('threat'), h = $('hint');
+  const hintOn = h.style.display === 'block', thOn = th.style.display !== 'none';
+  if (!hintOn && !thOn) return;
+  const key = VW + 'x' + VH;
+  if (hintBox !== key) { // просвет между левой колонкой и СПО — пересчёт только при смене размера экрана
+    hintBox = key;
+    const l = $('wpn').parentNode.getBoundingClientRect().right + 8, r = $('rwr').getBoundingClientRect().left - 8;
+    const fit = r - l > 180, x = fit ? ((l + r) / 2).toFixed(0) + 'px' : '', w = fit ? Math.min(360, r - l).toFixed(0) + 'px' : '';
+    h.style.left = x; h.style.width = w; th.style.left = x; th.style.maxWidth = w;
+  }
+  if (!thOn) return;
+  const top = hintOn ? Math.round(h.offsetTop + h.offsetHeight + 6) + 'px' : '';
+  if (th._top !== top) { th._top = top; th.style.top = top; }
+}
+if (IS_TOUCH) { const tl = $('wpn').parentNode; if (tl) tl.appendChild($('ask')); } // «?» — под панелью ракет, слева
 function hudFast(dt, slow) {
   // визир и упреждение пушки
   fwdOf(player, TMP3);
@@ -1528,10 +1540,9 @@ function hudFast(dt, slow) {
     const s = seeker.target && !seeker.target.dead ? toScreen(seeker.target.pos) : bs;
     el.seeker.style.left = s.x + 'px'; el.seeker.style.top = s.y + 'px'; el.seeker.classList.toggle('lk', seeker.locked);
   } else el.seeker.style.display = 'none';
-  if (growlGain && !muted) {
+  { // «рычание» ИК-ГСН в наушнике: тише в поиске, громче и выше при захвате
     const on = M_ && M_.kind === 'ir' && G.state === 'play';
-    growlGain.gain.value = on ? (seeker.locked ? 0.035 : seeker.target ? 0.02 : 0.01) * (0.6 + 0.4 * Math.sin(radar.t * (seeker.locked ? 40 : 18))) : 0;
-    growlOsc.frequency.value = seeker.locked ? 1150 : seeker.target ? 700 : 380;
+    AU.growl(on ? (seeker.locked ? 0.035 : seeker.target ? 0.02 : 0.01) * (0.6 + 0.4 * Math.sin(radar.t * (seeker.locked ? 40 : 18))) : 0, seeker.locked ? 1150 : seeker.target ? 700 : 380);
   }
   // метки
   let n = 0; el.lockInfo.style.display = 'none'; dlzCache = null;
@@ -1807,7 +1818,7 @@ function renderGuideTab() {
 // ── Настройки: графика и управление ──
 function renderSettingsTab() {
   let bench = null; try { bench = JSON.parse(store.get('fortuna_drone_bench') || 'null'); } catch (_) { bench = null; }
-  const cards = Object.entries(PRESETS).map(([k, p]) => `<div class="gfx ${k === gfxKey ? 'on' : ''} ${bench && bench.rec === k ? 'rec' : ''}" data-g="${k}"><b>${p.name}</b><span>${p.desc}</span></div>`).join('');
+  const cards = Object.entries(PRESETS).map(([k, p]) => `<div class="gfx ${k === gfxKey ? 'on' : ''} ${bench && bench.rec === k ? 'rec' : ''}" data-g="${k}"><b>${p.name}</b></div>`).join('');
   let res = '';
   if (bench) {
     res = `<div id="benchRes"><table class="tt">${Object.keys(PRESETS).filter((k) => bench.results[k]).reverse().map((k) => `<tr><td>${PRESETS[k].name}</td><td>${Math.round(bench.results[k].fps)} кадр/с, худшие 5% — ${Math.round(bench.results[k].p95)} мс</td></tr>`).join('')}</table>
@@ -1815,10 +1826,18 @@ function renderSettingsTab() {
   }
   let ctrl;
   if (IS_TOUCH) {
-    ctrl = `<div class="help"><p><b>Левый палец</b> — «ручка»: курс и тангаж. Справа: <b>ПУШКА</b> — стрельба (держать), <b>РАКЕТА</b> — пуск, <b>ЗАХВАТ</b> — захват радаром / следующая цель, <b>ФОРСАЖ</b> — ускорение (топливо ×3), <b>ЛТЦ ДО</b> — сброс ловушек и диполей.</p>
-      <p>Слева внизу: <b>ГАЗ−</b> — малый газ (держать; нужен для заправки), <b>НАЗАД</b> — взгляд назад (держать).</p>
-      <p>Нажатие по панели оружия — сменить ракету, по индикатору радара — масштаб, кнопка <b>II</b> — пауза. В обучении — кнопка <b>«?»</b> в окошке-подсказке.</p>
-      <p>Назначение клавиш доступно на компьютере с клавиатурой.</p></div>`;
+    ctrl = `<div class="perf">
+        <label class="chk">Чувствительность ручки <input type="range" id="tSens" min="0.5" max="2" step="0.05" value="${touchCfg.sens}"> <span id="tSensV">${touchCfg.sens.toFixed(2)}</span></label>
+        <p class="hint">Выше — короче ход пальца до полного отклонения: резче манёвр, но легче «передёрнуть».</p>
+        <label class="chk">Мёртвая зона <input type="range" id="tDead" min="0" max="0.25" step="0.01" value="${touchCfg.dead}"> <span id="tDeadV">${Math.round(touchCfg.dead * 100)}%</span></label>
+        <p class="hint">Малые движения пальца у центра не поворачивают дрон — меньше случайных рысканий.</p>
+        <label class="chk">Кривая отклика <input type="range" id="tCurve" min="0" max="1" step="0.05" value="${touchCfg.curve}"> <span id="tCurveV">${Math.round(touchCfg.curve * 100)}%</span></label>
+        <p class="hint">0% — отклик пропорционален отклонению. Больше — точнее у центра (прицеливание), а полный манёвр — у края хода.</p>
+        <label class="chk"><input type="checkbox" id="tInv" ${touchCfg.invert ? 'checked' : ''}> Инверсия тангажа (палец вниз — нос вверх)</label>
+        <button class="btn alt sm" id="tReset">Сбросить ручку</button>
+      </div>
+      <div class="help" style="margin-top:8px"><p><b>Левый палец</b> — «ручка». Справа: <b>ПУШКА</b> (держать), <b>РАКЕТА</b>, <b>ЗАХВАТ</b>, <b>ФОРСАЖ</b>, <b>ЛТЦ ДО</b>. Слева внизу: <b>ГАЗ−</b> и <b>НАЗАД</b> (держать).</p>
+      <p>Тап по панели ракет — сменить ракету, по индикатору радара — масштаб, <b>II</b> — пауза.</p></div>`;
   } else {
     const rows = ACTIONS.map((a) => `<div class="kb-row"><span>${a.name}</span>${[0, 1].map((sl) => {
       const cap = capturing && capturing.id === a.id && capturing.slot === sl;
@@ -1833,14 +1852,19 @@ function renderSettingsTab() {
         <label class="chk">Чувствительность мыши <input type="range" id="mSens" min="0.5" max="2" step="0.1" value="${mouseCfg.sens}"> <span id="mSensV">${mouseCfg.sens.toFixed(1)}</span></label>
       </div>`;
   }
+  const wOpts = [['random', 'Случайная'], ...Object.entries(WEATHERS).map(([k, w]) => [k, w.name])];
   $('tab-set').innerHTML = `<div class="cat-h">Графика</div><div class="gfx-row">${cards}</div>
-    <div class="help"><p>Во всех пресетах — физически корректный цвет (линейное освещение + тонмаппинг ACES), небо с дымкой и солнечным ореолом.</p>
-    <p><b>Низкий</b> — сниженное разрешение, простые материалы, мало деревьев и облаков. <b>Средний</b> — металл с отражениями, окна в домах, детализированная земля, тени от облаков, FXAA и резкость CAS. <b>Высокий</b> — тени, объёмные облака, живая вода, смешанный лес, MSAA, лёгкое свечение.</p>
-    <p><b>Ультра</b> — HDR-конвейер, свечение ярких мест, земля с физическим освещением и микрорельефом, тени 4K на 800 м, свет от форсажа и ракет, блики объектива, апскейлер FSR. <b>Кино</b> — всё из «Ультра» плюс лучи от солнца сквозь облака, кинематографическая цветокоррекция, виньетка, зерно, разрешение до 2,5×.</p>
-    <p>Смена пресета перезагружает игру (подвеска и клавиши сохраняются).</p></div>
+    <p class="hint">Пресет задаёт дальность прорисовки, густоту леса и облаков, качество материалов и теней. С «Высокого» — тени и объёмные облака, в «Ультра» и «Кино» — отражения в воде, свечение и лучи; «Кино» — самая подробная земля и лес. Смена пресета перезагружает игру.</p>
     <button class="btn alt sm" id="benchBtn">Тест графики (≈ 15 с)</button>
     ${res}
     ${bench && bench.rec !== gfxKey ? `<button class="btn sm" id="applyRec">Применить рекомендованный</button>` : ''}
+    <div class="cat-h">Звук</div>
+    <div class="perf"><label class="chk">Громкость <input type="range" id="sVol" min="0" max="1" step="0.05" value="${soundVol}"> <span id="sVolV">${Math.round(soundVol * 100)}%</span></label>
+    <label class="chk"><input type="checkbox" id="sMute" ${muted ? 'checked' : ''}> Без звука</label>
+    <p class="hint">Двигатель синтезируется как настоящий: рёв струи, вой турбины, треск форсажа; чужие самолёты и ракеты слышны объёмно, с эффектом Доплера. Лучше всего — в наушниках.</p></div>
+    <div class="cat-h">Погода</div>
+    <div class="perf"><div class="prow">${seg('weather', weatherPref, wOpts)}</div>
+    <p class="hint">Сейчас: <b>${WEATHERS[weatherKey].name}</b>. Погода меняет свет, небо, облака и дальность видимости; в ливень темнее и хуже видно глазом — радар работает как обычно.</p></div>
     ${perfBlock()}
     <div class="cat-h">Управление</div>${ctrl}`;
 }
@@ -1848,35 +1872,49 @@ function renderSettingsTab() {
 const seg = (id, val, opts) => `<div class="seg" data-seg="${id}">${opts.map(([v, t]) => `<button class="${String(val) === String(v) ? 'on' : ''}" data-v="${v}">${t}</button>`).join('')}</div>`;
 function perfBlock() {
   const pct = (x) => Math.round(x * 100) + '%';
-  const upHint = { off: 'Без апскейлера: кадр рисуется в выбранном масштабе и просто растягивается — при масштабе меньше 100% картинка «мылится».',
-    cas: '<b>CAS</b> (AMD FidelityFX Contrast Adaptive Sharpening): растяжение + «умная» резкость, которая усиливает детали, не пересвечивая края. Почти бесплатно. Лучше всего при 77–100%.',
-    fsr: '<b>FSR-стиль</b> (как AMD FSR 1): растяжение фильтром Ланцоша с защитой от ореолов + «робастная» резкость RCAS. Лучше держит края и мелкие детали при 59–77%, чуть дороже CAS. Реализация упрощённая, принцип тот же.' }[perf.up];
-  const aaHint = { off: 'Без сглаживания: самый быстрый вариант, края «лесенкой».', fxaa: '<b>FXAA</b> — сглаживание по готовому кадру: почти бесплатно, слегка смягчает мелкие детали.',
-    msaa: '<b>MSAA ×4</b> — честное сглаживание геометрии: чётче и качественнее FXAA, но дороже по видеопамяти и скорости.' + (renderer.capabilities.isWebGL2 ? '' : ' На этом устройстве нет WebGL2 — будет работать как FXAA.') }[perf.aa];
+  const upHint = { off: 'Кадр просто растягивается до размера экрана: при масштабе ниже 100% картинка мягче.',
+    cas: '<b>CAS</b> растягивает кадр и добавляет резкость там, где контраст низкий, не пересвечивая края. Лучше всего при 77–100%.',
+    fsr: '<b>FSR</b> растягивает кадр фильтром Ланцоша с защитой от ореолов и добавляет адаптивную резкость. Чётче держит края и мелкие детали при 59–77%.' }[perf.up];
+  const aaHint = { off: 'Края объектов «лесенкой», зато быстрее всего.', fxaa: '<b>FXAA</b> находит края на готовом кадре и сглаживает «лесенку»; мелкие детали становятся чуть мягче.',
+    msaa: '<b>MSAA ×4</b> сглаживает края геометрии прямо при рисовании: чище FXAA, но заметно нагружает видеопамять.' + (renderer.capabilities.isWebGL2 ? '' : ' На этом устройстве работает как FXAA.') }[perf.aa];
   return `<div class="cat-h">Производительность и качество</div>
     <div class="perf">
       <div class="prow"><span>Цель, кадров/с</span>${seg('target', perf.target, [[30, '30'], [60, '60'], [120, '120']])}</div>
       <label class="chk"><input type="checkbox" id="pDyn" ${perf.dyn ? 'checked' : ''}> Динамическое разрешение</label>
-      <p class="hint">Если кадры проседают ниже цели, игра на ходу снижает разрешение рендера (до ${pct(perf.min)}) и растягивает кадр апскейлером; когда запас есть — возвращает. Главный способ держать плавность на слабых устройствах.</p>
+      <p class="hint">Когда кадры не успевают, разрешение рендера на ходу снижается (до ${pct(perf.min)}), а апскейлер растягивает кадр до экрана; появился запас — разрешение возвращается.</p>
       <div class="prow"><span>Масштаб рендера${perf.dyn ? ' (макс.)' : ''}</span>${seg('scale', perf.scale, [[1, '100%'], [0.85, '85%'], [0.77, '77%'], [0.67, '67%'], [0.59, '59%'], [0.5, '50%']])}</div>
-      <p class="hint">Какую долю пикселей экрана рисовать. Пресеты FSR: 77% — «ультра-качество», 67% — «качество», 59% — «баланс», 50% — «производительность». Меньше — быстрее, но нужен хороший апскейлер.</p>
+      <p class="hint">Доля пикселей экрана, которую рисует видеокарта. Меньше — быстрее; 67–77% с апскейлером почти не отличаются от 100%.</p>
       <div class="prow"><span>Апскейлер</span>${seg('up', perf.up, [['off', 'Выкл'], ['cas', 'CAS'], ['fsr', 'FSR']])}</div>
-      <p class="hint">${upHint} DLSS, FSR 2/3 и XeSS в браузере недоступны: им нужны векторы движения и нативный графический API.</p>
+      <p class="hint">${upHint}</p>
       ${perf.up !== 'off' ? `<label class="chk">Резкость <input type="range" id="pSharp" min="0" max="1" step="0.05" value="${perf.sharp}"> <span id="pSharpV">${perf.sharp.toFixed(2)}</span></label>` : ''}
       <div class="prow"><span>Сглаживание</span>${seg('aa', perf.aa, [['off', 'Выкл'], ['fxaa', 'FXAA'], ['msaa', 'MSAA ×4']])}</div>
       <p class="hint">${aaHint}</p>
       <div class="prow"><span>Ограничение кадров</span>${seg('cap', perf.cap, [[0, 'Нет'], [30, '30'], [60, '60']])}</div>
-      <p class="hint">Не рисовать чаще заданного — меньше нагрев и расход батареи на телефоне. Управление от этого не страдает.</p>
+      <p class="hint">Не рисовать чаще заданного: меньше нагрев и расход батареи.</p>
       ${P3_OK ? `<label class="chk"><input type="checkbox" id="pP3" ${perf.p3 ? 'checked' : ''}> Широкий цвет (Display P3)</label>
-      <p class="hint">Ваш экран поддерживает расширенный цветовой охват P3: насыщеннее зелень, небо, пламя. Это не HDR — реального HDR-вывода для WebGL в браузерах пока нет.</p>` : ''}
+      <p class="hint">Расширенный цветовой охват экрана: насыщеннее зелень, небо и пламя.</p>` : ''}
       <label class="chk"><input type="checkbox" id="pFps" ${perf.fps ? 'checked' : ''}> Показывать счётчик кадров</label>
+      <p class="hint">В полёте: кадров в секунду, частота экрана, худшие 5% кадров и текущий масштаб рендера.</p>
       <label class="chk"><input type="checkbox" id="pImm" ${perf.immersive ? 'checked' : ''}> Режим погружения</label>
-      <p class="hint">При взлёте игра разворачивается на весь экран без адресной строки и вкладок${IS_TOUCH ? ', экран не гаснет, ориентация фиксируется' : ', мышь захватывается (курсор не уедет на панели браузера), горячие клавиши браузера перехватываются где это разрешено'}; «Назад» ставит паузу, а закрыть страницу во время вылета можно только с подтверждением.${IOS ? ' На iPhone Safari не даёт сайтам полный экран — добавьте игру на экран «Домой» (Поделиться → На экран «Домой»).' : ''}</p>
-      <button class="btn alt sm" id="upTestBtn">Сравнить апскейлеры (≈ 8 с)</button>
+      <p class="hint">На время вылета — весь экран без панелей браузера${IS_TOUCH ? ', экран не гаснет, ориентация зафиксирована' : ', мышь не уходит за край окна'}; «Назад» ставит паузу, закрытие — только с подтверждением.${TG.W || TG.proxy ? ' В Telegram свайп вниз не сворачивает игру.' : IOS ? ' В Safari на iPhone весь экран доступен, если открыть игру с экрана «Домой».' : ''}</p>
+      <button class="btn alt sm" id="upTestBtn">Сравнить апскейлеры (≈ 12 с)</button>
       <button class="btn alt sm" id="perfReset">Сбросить к настройкам пресета</button>
     </div>`;
 }
 function applyPerf() { savePerf(); dr.scale = perf.scale; rebuildPipe(); renderSettingsTab(); }
+// Погода в меню меняется сразу (без перезагрузки); «Случайная» — новая погода на каждый вылет
+function setWeatherPref(v) {
+  weatherPref = v; store.set('fortuna_drone_weather', v);
+  const k = v === 'random' ? pickWeather() : v;
+  if (k !== weatherKey) applyWeatherKey(k);
+  renderSettingsTab(); renderWeatherChip();
+}
+function applyWeatherKey(k) {
+  const sh = world.sun.castShadow;
+  weatherKey = k; world.setWeather(k); weatherExp = world.W.exposure || 1; applyExposure();
+  if (sh !== world.sun.castShadow) scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); // тени вкл/выкл — пересборка шейдеров
+}
+function renderWeatherChip() { const c = $('weatherChip'); if (c) c.textContent = 'Погода: ' + WEATHERS[weatherKey].name; }
 function renderModeSel() {
   $('modeSel').innerHTML = Object.entries(MODES).map(([k, m]) => {
     const off = k === 'training' && !TRAINING; // в партии на награду обучения нет
@@ -1890,7 +1928,7 @@ function showTab(t) {
 $('mtabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showTab(b.dataset.tab); });
 $('modeSel').addEventListener('click', (e) => {
   const b = e.target.closest('[data-mode]'); if (!b || G.state !== 'menu') return;
-  modeKey = b.dataset.mode; store.set('fortuna_drone_mode', modeKey); applyMode(); renderModeSel();
+  modeKey = b.dataset.mode; store.set('fortuna_drone_mode', modeKey); applyMode(); renderModeSel(); renderStats();
 });
 $('tab-load').addEventListener('click', (e) => {
   const info = e.target.closest('[data-info]');
@@ -1917,10 +1955,12 @@ $('tab-set').addEventListener('click', (e) => {
   const sb = e.target.closest('.seg button');
   if (sb) {
     const id = sb.parentNode.dataset.seg, raw = sb.dataset.v, v = isNaN(+raw) ? raw : +raw;
+    if (id === 'weather') { setWeatherPref(raw); return; }
     perf[id] = v; applyPerf(); return;
   }
   if (e.target.id === 'perfReset') { Object.assign(perf, P.perf); applyPerf(); }
   if (e.target.id === 'upTestBtn') runUpscaleTest();
+  if (e.target.id === 'tReset') { touchCfg = { sens: 1, dead: 0.1, curve: 0.35, invert: false }; saveTouch(); renderSettingsTab(); }
 });
 $('tab-set').addEventListener('change', (e) => {
   if (e.target.id === 'mSteer') { mouseCfg.steer = e.target.checked; if (!mouseCfg.steer) { input.sx = 0; input.sy = 0; } saveMouse(); renderGuideTab(); }
@@ -1928,13 +1968,19 @@ $('tab-set').addEventListener('change', (e) => {
   if (e.target.id === 'pDyn') { perf.dyn = e.target.checked; applyPerf(); }
   if (e.target.id === 'pFps') { perf.fps = e.target.checked; savePerf(); }
   if (e.target.id === 'pImm') { perf.immersive = e.target.checked; savePerf(); renderSettingsTab(); }
+  if (e.target.id === 'sMute') setMute(e.target.checked);
+  if (e.target.id === 'tInv') { touchCfg.invert = e.target.checked; saveTouch(); }
   if (e.target.id === 'pP3') { perf.p3 = e.target.checked; try { renderer.getContext().drawingBufferColorSpace = perf.p3 ? 'display-p3' : 'srgb'; } catch (_) { perf.p3 = false; } applyPerf(); }
 });
 $('tab-set').addEventListener('input', (e) => {
   if (e.target.id === 'mSens') { mouseCfg.sens = +e.target.value; $('mSensV').textContent = mouseCfg.sens.toFixed(1); saveMouse(); }
+  if (e.target.id === 'sVol') { soundVol = +e.target.value; $('sVolV').textContent = Math.round(soundVol * 100) + '%'; AU.setVolume(soundVol); store.set('fortuna_drone_vol', String(soundVol)); }
+  if (e.target.id === 'tSens') { touchCfg.sens = +e.target.value; $('tSensV').textContent = touchCfg.sens.toFixed(2); saveTouch(); }
+  if (e.target.id === 'tDead') { touchCfg.dead = +e.target.value; $('tDeadV').textContent = Math.round(touchCfg.dead * 100) + '%'; saveTouch(); }
+  if (e.target.id === 'tCurve') { touchCfg.curve = +e.target.value; $('tCurveV').textContent = Math.round(touchCfg.curve * 100) + '%'; saveTouch(); }
   if (e.target.id === 'pSharp') { perf.sharp = +e.target.value; $('pSharpV').textContent = perf.sharp.toFixed(2); if (pipe) pipe.setSharp(perf.sharp); savePerf(); }
 });
-renderModeSel(); renderLoadTab(); renderRefTab(); renderGuideTab(); renderSettingsTab();
+renderModeSel(); renderLoadTab(); renderRefTab(); renderGuideTab(); renderSettingsTab(); renderWeatherChip();
 
 // ═════════════ Тест графики ═════════════
 // Отдельная «тяжёлая» сцена (мир на высоком пресете, 16 самолётов, взрывы, тени) рендерится
@@ -1942,11 +1988,11 @@ renderModeSel(); renderLoadTab(); renderRefTab(); renderGuideTab(); renderSettin
 const bench = { active: false };
 async function runBenchmark() {
   if (bench.active) return;
-  bench.active = true;
+  bench.active = true; AU.silence();
   show('menu', false); $('benchScr').classList.add('on'); $('benchBox').textContent = 'Тест графики: подготовка сцены…';
   await new Promise((r) => setTimeout(r, 30));
   const bScene = new THREE.Scene();
-  const bw = buildWorld(bScene, PRESETS.high, 4242, renderer);
+  const bw = buildWorld(bScene, PRESETS.high, 4242, renderer, weatherKey);
   const bFX = makeParticles(bScene, 3000, true, dotTex), bSM = makeParticles(bScene, 3000, false, smokeTex);
   const J = jetGeo('fighter'), jets = [];
   for (let i = 0; i < 16; i++) { const m = new THREE.Mesh(J.geo, MAT_JET); m.castShadow = true; m.rotation.order = 'YXZ'; bScene.add(m); jets.push({ m, a: i / 16 * Math.PI * 2, r: 250 + (i % 5) * 60, h: 380 + (i % 4) * 50 }); }
@@ -1956,12 +2002,12 @@ async function runBenchmark() {
   const prevSh = renderer.shadowMap.enabled;
   camera.clearViewOffset();
   for (const ph of phases) {
-    const pp = PRESETS[ph.key], pf = pp.perf, usePipe = !!pp.post || pf.aa !== 'off' || pf.up !== 'off';
-    renderer.setPixelRatio(usePipe ? prFor(pp) : prFor(pp) * pf.scale); renderer.toneMapping = usePipe ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping; resize();
+    const pp = PRESETS[ph.key], pf = pp.perf, usePipe = !!pp.post || pf.aa !== 'off' || pf.up !== 'off', ldr = !pp.post;
+    renderer.setPixelRatio(usePipe ? prFor(pp) : prFor(pp) * pf.scale); renderer.toneMapping = usePipe && !ldr ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping; resize();
     renderer.shadowMap.enabled = ph.shadows; bw.sun.castShadow = ph.shadows;
     const sm = PRESETS[ph.key].shadowMap || 2048;
     if (bw.sun.shadow.mapSize.x !== sm) { if (bw.sun.shadow.map) { bw.sun.shadow.map.dispose(); bw.sun.shadow.map = null; } bw.sun.shadow.mapSize.set(sm, sm); }
-    const bPost = usePipe ? createPipeline(renderer, { ...(pp.post || {}), exposure: (pp.post && pp.post.exposure) || 1.15, scale: pf.scale, upscaler: pf.up, sharp: pf.sharp, aa: pf.aa }) : null;
+    const bPost = usePipe ? createPipeline(renderer, { ...(pp.post || {}), ldr, exposure: (pp.post && pp.post.exposure) || 1.15, scale: pf.scale, upscaler: pf.up, sharp: pf.sharp, aa: pf.aa }) : null;
     if (bPost) bPost.setSize();
     bScene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
     const times = [];
@@ -2233,21 +2279,37 @@ $('askBtn').addEventListener('click', () => openLesson(TR.ask));
 $('lessonClose').addEventListener('click', closeLesson);
 
 // ═════════════ Сравнение апскейлеров ═════════════
-// Одна и та же сцена (дрон над аэродромом): натив 100%, 67% без апскейлера, 67% + CAS, 67% + FSR-стиль.
-// Для каждого — средняя частота кадров за ~1,6 с и снимок кадра; потом окно «шторкой» сравнивает снимки.
+// Натив 100%, 67% без апскейлера, 67% + CAS, 67% + FSR. Для каждого — средняя частота кадров (~1,6 с на сцене с дроном)
+// и снимки трёх сцен: дрон крупно, город с лесом, даль с облаками. В окне сравнения — «шторка», масштаб до ×4
+// и перетаскивание картинки (пальцем или мышью), щипок и колесо — увеличение.
+const UP_SHOTS = [
+  { name: 'Дрон крупно', pose: (t) => { const a = 0.5 + t * 0.1; return [HANGAR.x + Math.sin(a) * 24, HANGAR.y + 5, HANGAR.z + Math.cos(a) * 24, HANGAR.x, HANGAR.y - 3, HANGAR.z]; } },
+  { name: 'Город и лес', pose: () => { const T = TOWNS[0], y = terrainH(T.x, T.z); return [T.x + 700, y + 380, T.z + 900, T.x, y + 40, T.z]; } },
+  { name: 'Даль и облака', pose: () => [AIRFIELD.x, airfieldH() + 1600, AIRFIELD.z, AIRFIELD.x + 9000, airfieldH() + 900, AIRFIELD.z - 12000] },
+];
+let upUrls = [];
+function snapCanvas() {
+  return new Promise((res) => {
+    try {
+      if (canvas.toBlob) { canvas.toBlob((b) => res(b ? URL.createObjectURL(b) : ''), 'image/jpeg', 0.95); return; } // копия кадра снимается сразу при вызове
+      res(canvas.toDataURL('image/jpeg', 0.95));
+    } catch (_) { res(''); }
+  });
+}
 async function runUpscaleTest() {
   if (bench.active) return;
-  bench.active = true;
+  bench.active = true; AU.silence();
   show('menu', false); $('benchScr').classList.add('on');
+  for (const u of upUrls) if (u.startsWith('blob:')) URL.revokeObjectURL(u); upUrls = [];
   const saved = { ...perf }, S = 0.67;
   const cfgs = [{ k: 'native', name: 'Натив 100%', scale: 1, up: 'off' }, { k: 'bil', name: '67% без апскейлера', scale: S, up: 'off' },
     { k: 'cas', name: '67% + CAS', scale: S, up: 'cas' }, { k: 'fsr', name: '67% + FSR', scale: S, up: 'fsr' }];
   camera.clearViewOffset();
   if (camera.fov !== 50) { camera.fov = 50; camera.updateProjectionMatrix(); }
-  const pose = (t) => {
+  const pose = (shot, t) => {
     player.pos.copy(HANGAR); player.yaw = 0.9 + t * 0.15; player.pitch = 0.05; player.roll = 0.35; player.ab = true; placeShip();
-    camera.position.set(HANGAR.x + Math.sin(0.5 + t * 0.1) * 24, HANGAR.y + 5, HANGAR.z + Math.cos(0.5 + t * 0.1) * 24);
-    camera.up.set(0, 1, 0); camera.lookAt(HANGAR.x, HANGAR.y - 3, HANGAR.z);
+    const [x, y, z, lx, ly, lz] = shot.pose(t);
+    camera.position.set(x, y, z); camera.up.set(0, 1, 0); camera.lookAt(lx, ly, lz);
   };
   const out = [];
   for (const c of cfgs) {
@@ -2257,7 +2319,7 @@ async function runUpscaleTest() {
       const t0 = performance.now(); let lastT = t0;
       function f(now) {
         const el = now - t0; times.push(now - lastT); lastT = now;
-        pose(el / 1000); SMOKE.update(0.016); FX.update(0.016); render();
+        pose(UP_SHOTS[0], el / 1000); SMOKE.update(0.016); FX.update(0.016); render();
         $('benchBox').textContent = `Сравнение апскейлеров: ${c.name} — ${Math.min(100, Math.round(el / 1600 * 100))}%`;
         if (el < 1600) requestAnimationFrame(f); else res();
       }
@@ -2265,31 +2327,77 @@ async function runUpscaleTest() {
     });
     times.splice(0, 8); times.sort((a, b) => a - b);
     const avg = times.reduce((x, y) => x + y, 0) / Math.max(1, times.length);
-    pose(0.8); render();
-    let img = ''; try { img = canvas.toDataURL('image/jpeg', 0.92); } catch (_) { img = ''; }
-    out.push({ ...c, fps: 1000 / avg, img });
+    const imgs = [];
+    for (const shot of UP_SHOTS) {
+      pose(shot, 0.8); render(); render(); // второй кадр — уже с прогретыми тенями и облаками
+      imgs.push(await snapCanvas());
+    }
+    upUrls.push(...imgs);
+    out.push({ ...c, fps: 1000 / avg, imgs });
   }
   Object.assign(perf, saved); dr.scale = perf.scale; rebuildPipe();
   player.ab = false; bench.active = false;
   $('benchScr').classList.remove('on');
-  showUpscaleResult(out);
+  showUpscaleResult(out, VW / VH);
 }
-function showUpscaleResult(out) {
+function showUpscaleResult(out, aspect) {
   const nat = out[0];
   const rows = out.map((r) => `<tr><td>${r.name}</td><td>${Math.round(r.fps)} к/с ${r === nat ? '' : `<b style="color:${r.fps >= nat.fps ? '#86efac' : '#fca5a5'}">${r.fps >= nat.fps ? '+' : ''}${Math.round((r.fps / nat.fps - 1) * 100)}%</b>`}</td></tr>`).join('');
   $('upBody').innerHTML = `
-    <div class="cmp" id="cmp"><img id="cmpA" src="${nat.img}" alt="натив"><div class="cmpB" id="cmpB"><img id="cmpBi" src="${out[3].img}" alt="апскейл"></div>
-      <div class="cmpLine" id="cmpLine"></div><span class="cmpL">Натив 100%</span><span class="cmpR" id="cmpR">${out[3].name}</span></div>
-    <input type="range" id="cmpRange" min="0" max="100" value="50" style="width:100%">
-    <div class="seg" id="cmpSel">${out.slice(1).map((r, i) => `<button class="${i === 2 ? 'on' : ''}" data-i="${i + 1}">${r.name}</button>`).join('')}</div>
-    <label class="chk"><input type="checkbox" id="cmpZoom"> Увеличение ×2 (видно резкость мелких деталей)</label>
+    <div class="cmp" id="cmp" style="width:min(100%, calc(56vh * ${aspect.toFixed(3)})); aspect-ratio:${aspect.toFixed(3)}">
+      <img id="cmpA" alt="натив" draggable="false"><div class="cmpB" id="cmpB"><img id="cmpBi" alt="апскейл" draggable="false"></div>
+      <div class="cmpLine" id="cmpLine"><i></i></div><span class="cmpL">Натив 100%</span><span class="cmpR" id="cmpR"></span><span class="cmpZ" id="cmpZ"></span></div>
+    <div class="cmpBar">${seg('cmpShot', 0, UP_SHOTS.map((sh, i) => [i, sh.name]))}${seg('cmpZoom', 1, [[1, '×1'], [2, '×2'], [4, '×4']])}</div>
+    <div class="cmpBar">${seg('cmpVar', 3, out.slice(1).map((r, i) => [i + 1, r.name]))}</div>
     <table class="tt">${rows}</table>
-    <p class="hint">Двигайте ползунок: слева — натив, справа — выбранный вариант. Хороший апскейлер при 67% почти не отличается от натива, а кадров заметно больше. Разница в к/с видна, только если видеокарта не упирается в частоту экрана.</p>`;
-  const setPos = (v) => { $('cmpB').style.clipPath = `inset(0 0 0 ${v}%)`; $('cmpLine').style.left = v + '%'; };
-  setPos(50);
-  $('cmpRange').oninput = (e) => setPos(+e.target.value);
-  $('cmpSel').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; const r = out[+b.dataset.i]; $('cmpBi').src = r.img; $('cmpR').textContent = r.name; $('cmpSel').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); };
-  $('cmpZoom').onchange = (e) => $('cmp').classList.toggle('zoom', e.target.checked);
+    <p class="hint">Тяните жёлтую линию: слева — натив, справа — выбранный вариант. В увеличении картинку можно двигать пальцем или мышью; щипок, колесо и двойной тап — масштаб. Разница в к/с видна, только если видеокарта не упирается в частоту экрана.</p>`;
+  const cmp = $('cmp'), A = $('cmpA'), B = $('cmpBi'), clip = $('cmpB'), line = $('cmpLine');
+  const st = { shot: 0, v: 3, z: 1, tx: 0, ty: 0, split: 0.5 };
+  const size = () => { const r = cmp.getBoundingClientRect(); return [r.width || 1, r.height || 1, r.left, r.top]; };
+  const clampPan = () => { const [w, h] = size(); st.tx = clamp(st.tx, w - w * st.z, 0); st.ty = clamp(st.ty, h - h * st.z, 0); };
+  const draw = () => {
+    clampPan();
+    const tf = `translate(${st.tx.toFixed(1)}px,${st.ty.toFixed(1)}px) scale(${st.z})`;
+    A.style.transform = B.style.transform = tf; cmp.classList.toggle('px', st.z >= 2);
+    clip.style.clipPath = `inset(0 0 0 ${(st.split * 100).toFixed(2)}%)`; line.style.left = (st.split * 100).toFixed(2) + '%';
+    $('cmpZ').textContent = st.z > 1 ? '×' + (+st.z.toFixed(1)) : '';
+    $('upBody').querySelectorAll('[data-seg="cmpZoom"] button').forEach((b) => b.classList.toggle('on', +b.dataset.v === Math.round(st.z) && Math.abs(st.z - Math.round(st.z)) < 0.05));
+  };
+  const setImgs = () => { A.src = nat.imgs[st.shot]; B.src = out[st.v].imgs[st.shot]; $('cmpR').textContent = out[st.v].name; };
+  const zoomAt = (nz, cx, cy) => { nz = clamp(nz, 1, 6); const k = nz / st.z; st.tx = cx - (cx - st.tx) * k; st.ty = cy - (cy - st.ty) * k; st.z = nz; draw(); };
+  setImgs(); draw();
+  // жесты: линия-«шторка», перетаскивание картинки, щипок
+  const pts = new Map(); let mode = null, sx = 0, sy = 0, stx = 0, sty = 0, pinch = null, lastTap = 0;
+  cmp.onpointerdown = (e) => {
+    e.preventDefault(); cmp.setPointerCapture(e.pointerId);
+    const [w, , l, t] = size(), x = e.clientX - l, y = e.clientY - t;
+    pts.set(e.pointerId, [x, y]);
+    if (pts.size === 2) { const [p1, p2] = [...pts.values()]; pinch = { d: Math.hypot(p1[0] - p2[0], p1[1] - p2[1]) || 1, z: st.z }; mode = 'pinch'; return; }
+    const now = performance.now();
+    if (now - lastTap < 300) { zoomAt(st.z > 1.5 ? 1 : 2.5, x, y); lastTap = 0; mode = null; return; }
+    lastTap = now;
+    mode = Math.abs(x - st.split * w) < 24 || st.z <= 1 ? 'line' : 'pan';
+    sx = x; sy = y; stx = st.tx; sty = st.ty;
+    if (mode === 'line') { st.split = clamp(x / w, 0, 1); draw(); }
+  };
+  cmp.onpointermove = (e) => {
+    if (!pts.has(e.pointerId)) return;
+    const [w, , l, t] = size(), x = e.clientX - l, y = e.clientY - t; pts.set(e.pointerId, [x, y]);
+    if (mode === 'pinch' && pts.size === 2) { const [p1, p2] = [...pts.values()]; zoomAt(pinch.z * Math.hypot(p1[0] - p2[0], p1[1] - p2[1]) / pinch.d, (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2); }
+    else if (mode === 'line') { st.split = clamp(x / w, 0, 1); draw(); }
+    else if (mode === 'pan') { st.tx = stx + x - sx; st.ty = sty + y - sy; draw(); }
+  };
+  const up = (e) => { pts.delete(e.pointerId); if (pts.size < 2 && mode === 'pinch') mode = null; if (!pts.size) mode = null; };
+  cmp.onpointerup = up; cmp.onpointercancel = up;
+  cmp.onwheel = (e) => { e.preventDefault(); const [, , l, t] = size(); zoomAt(st.z * (e.deltaY < 0 ? 1.25 : 0.8), e.clientX - l, e.clientY - t); };
+  $('upBody').onclick = (e) => {
+    const b = e.target.closest('.seg button'); if (!b) return;
+    const id = b.parentNode.dataset.seg, v = +b.dataset.v;
+    b.parentNode.querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+    if (id === 'cmpShot') { st.shot = v; setImgs(); }
+    else if (id === 'cmpVar') { st.v = v; setImgs(); }
+    else if (id === 'cmpZoom') { const [w, h] = size(); zoomAt(v, w / 2, h / 2); }
+  };
   show('upTest', true);
 }
 $('upClose').addEventListener('click', () => { show('upTest', false); show('menu', true); showTab('set'); });
@@ -2303,11 +2411,11 @@ function placeAtStart() {
   fwdOf(player, player.vel).multiplyScalar(player.speed); camSnap = true;
 }
 function startCountdown() {
-  initAudio(); if (actx && actx.state === 'suspended') actx.resume();
+  unlockAudio();
   show('menu', false); setBody('playing'); $('hud').classList.add('on'); G.state = 'countdown';
-  camera.clearViewOffset(); applyMode(); applyLoadout(); placeAtStart();
+  camera.clearViewOffset(); applyMode(); applyLoadout(); placeAtStart(); world.sortieStart();
   setHint(''); if (MODE.training) trainingReset();
-  enterImmersive(); // клик «ВЗЛЁТ» — жест пользователя, браузер разрешит полный экран и захват мыши
+  enterImmersive(); tgFlight(true); drReset(); // клик «ВЗЛЁТ» — жест пользователя, браузер разрешит полный экран и захват мыши
   let n = 3; $('count').textContent = n;
   const iv = setInterval(() => {
     n--; if (n > 0) { $('count').textContent = n; tone(440, 0.1, 'square', 0.05); }
@@ -2323,9 +2431,9 @@ function togglePause() {
   else requestPointer(); // продолжение по кнопке — снова захватываем мышь
 }
 function endGame(reason) {
-  if (G.over) return; G.over = true; G.state = 'over'; input.fire = false; input.ab = false;
+  if (G.over) return; G.over = true; G.state = 'over'; input.fire = false; input.ab = false; tgFlight(false, false);
   try { if (document.pointerLockElement) document.exitPointerLock(); } catch (_) { /* нет */ } // курсор нужен для кнопок итогов
-  if (reason === 'hull') { explosion(player.pos, 4); sfx.boom(0.35); }
+  if (reason === 'hull') { explosion(player.pos, 4); sfx.boom(20, 4); }
   silenceLoops();
   const texts = { hull: 'Дрон сбит', fuel: 'Топливо закончилось', time: 'Время вылета вышло', win: 'Все группы противника уничтожены' };
   setTimeout(() => {
@@ -2338,6 +2446,7 @@ function endGame(reason) {
     else { $('serverMsg').textContent = 'Отправляем результат…'; $('againBtn').style.display = 'none'; $('closeBtn').textContent = 'Закрыть'; }
     show('end', true);
   }, 1300);
+  const rec = saveRunStats(); if (rec && G.score > 0) setTimeout(() => { $('eBoss').textContent = ($('eBoss').textContent ? $('eBoss').textContent + ' · ' : '') + 'Новый личный рекорд!'; }, 1350);
   if (!TRAINING) sendResult(reason);
 }
 function sendResult(reason) {
@@ -2351,7 +2460,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'mg_re
 $('startBtn').addEventListener('click', startCountdown);
 $('resumeBtn').addEventListener('click', togglePause);
 $('againBtn').addEventListener('click', () => location.reload());
-function exitGame() { exitImmersive(); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); } // вне сайта — назад в меню
+function exitGame() { exitImmersive(); tgFlight(false); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); } // вне сайта — назад в меню
 $('closeBtn').addEventListener('click', exitGame); $('exit').addEventListener('click', exitGame); $('pause').addEventListener('click', togglePause); $('pauseExit').addEventListener('click', exitGame);
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play') togglePause(); });
 $('modeBadge').className = 'badge ' + (TRAINING ? 'train' : 'rank');
@@ -2360,15 +2469,122 @@ setBody('menuing');
 
 // ═════════════ Главный цикл ═════════════
 const HANGAR = new THREE.Vector3(AIRFIELD.x, airfieldH() + 700, AIRFIELD.z);
+// ═════════════ Лобби: планы камеры, пролёты самолётов, советы, рекорды ═════════════
+// Камера медленно меняет планы (бок, низкий ракурс сзади с пламенем, сверху, общий план с местностью);
+// время от времени рядом проходит самолёт «Подстилки улитки», звено или заправщик — со звуком и эффектом Доплера.
+const LOBBY_SHOTS = [{ a: 0.6, d: 23, h: 6 }, { a: 2.75, d: 17, h: 2 }, { a: -0.55, d: 28, h: 12 }, { a: 1.35, d: 46, h: 15 }];
+const lobby = { shot: 0, t: 0, jets: [], nextT: 5 };
+function lobbySpawn() {
+  const r = rnd(), kind = r < 0.4 ? 'fighter' : r < 0.65 ? 'interceptor' : r < 0.85 ? 'ace' : 'tanker';
+  const tanker = kind === 'tanker', pair = !tanker && rnd() < 0.35;
+  // проход «за» дроном относительно камеры, поперёк взгляда (иногда наискось)
+  const cx = camera.position.x - HANGAR.x, cz = camera.position.z - HANGAR.z, cl = Math.hypot(cx, cz) || 1;
+  const away = new THREE.Vector3(-cx / cl, 0, -cz / cl), side = (rnd() < 0.5 ? 1 : -1);
+  const dir = new THREE.Vector3(-away.z * side, 0, away.x * side).applyAxisAngle(UP, (rnd() - 0.5) * 0.7);
+  const speed = tanker ? 170 : 260 + rnd() * 120, ab = !tanker && rnd() < 0.45;
+  const mid = HANGAR.clone().addScaledVector(away, tanker ? 420 + rnd() * 300 : 110 + rnd() * 220); mid.y += tanker ? 60 + rnd() * 80 : -25 + rnd() * 80;
+  const T = tanker ? 11 : 6.5;
+  for (let k = 0; k < (pair ? 2 : 1); k++) {
+    const g = new THREE.Group(); g.rotation.order = 'YXZ';
+    const mesh = tanker ? new THREE.Mesh(tankerGeo, MAT_METAL) : new THREE.Mesh(jetGeo(kind).geo, MAT_JET); g.add(mesh);
+    const flames = tanker ? [] : jetGeo(kind).nozzles.map((nz) => { const f = new THREE.Mesh(flameGeo, flameMat); f.position.copy(nz); f.scale.set(1.1, 1.1, ab ? 4.5 : 1.5); f.visible = ab; g.add(f); return f; });
+    const pos = mid.clone().addScaledVector(dir, -speed * T);
+    if (k) pos.addScaledVector(dir, -40).add(new THREE.Vector3(dir.z * 35 * side, -6, -dir.x * 35 * side)); // ведомый — уступом
+    const j = { g, flames, pos, vel: dir.clone().multiplyScalar(speed), fwd: dir.clone(), ab, tanker, life: T * 2 + 2, bank: 0 };
+    g.position.copy(pos); g.rotation.set(0, Math.atan2(-dir.x, -dir.z), 0); scene.add(g); lobby.jets.push(j);
+  }
+}
+function lobbyUpdate(dt) {
+  lobby.nextT -= dt;
+  if (lobby.nextT <= 0 && lobby.jets.length < 3) { lobbySpawn(); lobby.nextT = 16 + rnd() * 20; }
+  for (let i = lobby.jets.length - 1; i >= 0; i--) {
+    const j = lobby.jets[i]; j.life -= dt; j.pos.addScaledVector(j.vel, dt);
+    j.g.position.copy(j.pos);
+    for (const f of j.flames) f.scale.z = (j.ab ? 4.5 : 1.5) * (0.85 + rnd() * 0.3);
+    if (j.ab) { const n = TMP.set(0, 0, 7).applyQuaternion(j.g.quaternion).add(j.pos); FX.emit(n.x, n.y, n.z, -j.vel.x * 0.12, -j.vel.y * 0.12, -j.vel.z * 0.12, 1, 0.55, 0.2, 0.6, 2.2, 3, 0.1, 0, 0); }
+    if (j.life <= 0 || G.state !== 'menu') { scene.remove(j.g); lobby.jets.splice(i, 1); }
+  }
+}
 function menuView(dt) {
   G.menuT += dt;
   player.pos.copy(HANGAR); player.pitch = 0.06 * Math.sin(G.menuT * 0.7); player.roll = 0.12 * Math.sin(G.menuT * 0.5); player.yaw = G.menuT * 0.22;
   player.ab = false; player.thr = 0.85; player.cmdX = Math.sin(G.menuT * 0.8) * 0.4; player.cmdY = 0; placeShip();
-  const portrait = VW < VH, cd = portrait ? 27 : 23;
-  camera.position.set(HANGAR.x + Math.sin(0.6) * cd, HANGAR.y + 6, HANGAR.z + Math.cos(0.6) * cd);
+  // смена плана: 11 с на план, переход 2,5 с (плавный, без рывков)
+  lobby.t += dt; if (lobby.t > 11) { lobby.t = 0; lobby.shot = (lobby.shot + 1) % LOBBY_SHOTS.length; }
+  const a = LOBBY_SHOTS[(lobby.shot + LOBBY_SHOTS.length - 1) % LOBBY_SHOTS.length], b = LOBBY_SHOTS[lobby.shot];
+  const k = lobby.t < 2.5 ? (1 - Math.cos(Math.PI * lobby.t / 2.5)) / 2 : 1, drift = G.menuT * 0.02;
+  const portrait = VW < VH, ang = a.a + (b.a - a.a) * k + drift, cd = (a.d + (b.d - a.d) * k) * (portrait ? 1.17 : 1), ch = a.h + (b.h - a.h) * k;
+  camera.position.set(HANGAR.x + Math.sin(ang) * cd, HANGAR.y + ch, HANGAR.z + Math.cos(ang) * cd);
   camera.up.set(0, 1, 0); camera.lookAt(HANGAR);
   const fov = portrait ? 80 : 58; if (camera.fov !== fov) { camera.fov = fov; camera.updateProjectionMatrix(); }
   if (portrait) camera.setViewOffset(VW, VH, 0, VH * 0.24, VW, VH); else camera.setViewOffset(VW, VH, -VW * 0.2, 0, VW, VH);
+  lobbyUpdate(dt);
+}
+// Советы в лобби: сменяются сами, тап — следующий
+const TIPS = [
+  'Ракета «не догоняет»? Отворачивайте так, чтобы она оказалась на 3 или 9 часов — ей придётся тянуть перегрузку и терять скорость.',
+  'ЛТЦ отстреливайте, когда ИК-ракета ближе 3 км: раньше она успеет отличить ловушку от сопла.',
+  'Против радиолокационной ракеты — «провал»: держите её на 3/9 часов и снижайтесь, чтобы радар смотрел на землю. Плюс диполи.',
+  'Форсаж даёт скорость, но жжёт топливо втрое быстрее и делает вас ярче для ИК-головок.',
+  'Неизбежная зона пуска — зелёная полоса на шкале радара. Пуск в ней почти не оставляет цели шансов.',
+  'Полуактивным ракетам (AIM-7, Р-27Р) нужен захват радара до самого попадания — не отворачивайте нос от цели.',
+  'Активные ракеты (AIM-120, Р-77, Meteor) после «ГСН» наводятся сами — можно уходить.',
+  'Каждая ракета снаружи — масса и заметность: полностью увешанный дрон противник видит на треть дальше.',
+  'Заправщик — жёлтая метка. Подойдите к корзине на малом газу и держитесь в ней пару секунд.',
+  'Флагман «Подстилки улитки» ставит помехи: радар возьмёт его только ближе 16 км.',
+  'Сверху вниз радар противника путается на фоне земли — это ваш шанс подойти незамеченным.',
+  'Перегрузка съедает скорость. Резкий вираж хорош для уклонения, а для погони — плавный.',
+  'Ранние ИК-ракеты (AIM-9B, Р-3С) видят только горячее сопло — пускайте строго в хвост.',
+  'СПО показывает, кто вас облучает: ромб вокруг метки — захват, мигание — пуск.',
+  'Взгляд назад (кнопка «НАЗАД» / V) показывает догоняющие ракеты и позволяет рассчитать отворот.',
+  'В Реализме ракеты противника видны только по датчику пуска и СПО — слушайте звуковые сигналы.',
+];
+let tipI = (rnd() * TIPS.length) | 0, tipT = 0;
+function showTip(next) {
+  if (next) tipI = (tipI + 1) % TIPS.length;
+  const el2 = $('lobbyTip'); if (!el2) return;
+  el2.classList.remove('in'); void el2.offsetWidth; el2.classList.add('in');
+  el2.innerHTML = `<b>Совет.</b> ${TIPS[tipI]}`;
+}
+function tipTick(dt) { if (G.state !== 'menu') return; tipT += dt; if (tipT > 12) { tipT = 0; showTip(true); } }
+$('lobbyTip').addEventListener('click', () => { tipT = 0; showTip(true); });
+// Личные рекорды (на этом устройстве) — по режимам
+function loadStats() { try { return JSON.parse(store.get('fortuna_drone_stats') || '{}') || {}; } catch (_) { return {}; } }
+function saveRunStats() {
+  if (MODE.training) return;
+  const all = loadStats(), r = all[modeKey] || { runs: 0, best: 0, bestKills: 0, kills: 0, fired: 0, hits: 0, boss: 0 };
+  r.runs++; r.kills += G.kills; r.fired += G.mFired; r.hits += G.mHits; if (G.bossKilled) r.boss++;
+  const rec = G.score > r.best; r.best = Math.max(r.best, G.score); r.bestKills = Math.max(r.bestKills, G.kills);
+  all[modeKey] = r; store.set('fortuna_drone_stats', JSON.stringify(all)); return rec;
+}
+function renderStats() {
+  const el2 = $('lobbyStats'); if (!el2) return;
+  if (MODE.training) { el2.innerHTML = 'Обучение: 22 ракеты по очереди, игра на паузе с объяснением каждой.'; return; }
+  const r = loadStats()[modeKey];
+  el2.innerHTML = r && r.runs ? `Рекорд (${MODE.name}): <b>${r.best.toLocaleString('ru-RU')}</b> очков · ${r.bestKills} сбито за вылет · вылетов ${r.runs}${r.fired ? ` · точность ракет ${Math.round(r.hits / r.fired * 100)}%` : ''}${r.boss ? ` · флагман сбит ×${r.boss}` : ''}`
+    : `${MODE.name}: рекордов пока нет — первый вылет впереди.`;
+}
+renderStats(); showTip(false);
+// ═════════════ Звук: каждый кадр ═════════════
+const sndCands = [];
+function updateSound(dt) {
+  if (!AU.ready) return;
+  const st = G.state, flying = st === 'play' || st === 'countdown', inLobby = st === 'menu';
+  const on = (flying || inLobby) && !bench.active;
+  fwdOf(player, TMP3); TMP.copy(player.pos).sub(camera.position).normalize();
+  const rear = clamp((TMP.dot(TMP3) + 1) / 2, 0, 1); // 1 — камера за соплом, 0 — перед носом
+  const W_ = world.W, above = W_.deck ? clamp((camera.position.y - W_.deck.h + 200) / 400, 0, 1) : 0;
+  AU.frame(dt, { on, lobby: inLobby, rpmTarget: inLobby ? 0.66 : player.ab ? 1 : 0.6 + 0.4 * clamp((player.thr - 0.55) / 0.45, 0, 1),
+    ab: flying && player.ab, speed: inLobby ? 170 : player.speed, mach: inLobby ? 0.5 : player.mach, sup: flying && !!player.sup,
+    n: inLobby ? 1 : player.n, rear, agl: inLobby ? 700 : agl(player), rain: world.rainK * (1 - above) });
+  AU.gun(st === 'play' && (input.fire || held.has('fire')) && !player.overheated);
+  sndCands.length = 0;
+  if (flying) {
+    for (const e of enemies) if (!e.dead) { e.sfwd = fwdOf(e, e.sfwd || new THREE.Vector3()); sndCands.push({ o: e, kind: e.type === 'boss' ? 'boss' : 'jet', pos: e.pos, vel: e.vel, fwd: e.sfwd, ab: e.ab }); }
+    for (const m of missiles) if (!m.dead && m.t - m.M.drop < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) { m.svel = (m.svel || new THREE.Vector3()).copy(m.dir).multiplyScalar(m.speed); sndCands.push({ o: m, kind: 'msl', pos: m.pos, vel: m.svel }); }
+    for (const t of tankers) if (!t.done && t.mesh) sndCands.push({ o: t, kind: 'jet', pos: t.pos, vel: t.vel, gain: 0.8 });
+  } else if (inLobby) for (const j of lobby.jets) sndCands.push({ o: j, kind: 'jet', pos: j.pos, vel: j.vel, fwd: j.fwd, ab: j.ab, gain: j.tanker ? 0.9 : 1.3 });
+  AU.spatial(dt, camera, flying ? player.vel : null, sndCands, on);
 }
 function tick(dt) {
   if (G.state === 'play') {
@@ -2384,21 +2600,6 @@ function tick(dt) {
     if (MODE.training) { /* обучение без ограничения по времени */ }
     else if (G.runTime >= H_CAP) endGame('time');
     else if (G.bossSpawned && !enemies.length && !schedule.slice(schedIdx).some((ev) => ev.type !== 'tanker')) endGame('win');
-    if (actx && engGain && !muted) {
-      // дозвук: вой турбины + рёв выхлопа + лёгкий поток воздуха;
-      // сверхзвук: турбина приглушена (звук двигателя «отстаёт» от самолёта), низкий гул корпуса и мягкий «дышащий» поток
-      const sup = player.sup, mach = player.mach || 0, k = Math.min(1, 2.5 * dt);
-      engOsc.frequency.value = 140 + player.speed * 0.45;
-      engFilter.frequency.value += ((sup ? 320 : 900) - engFilter.frequency.value) * k;
-      engGain.gain.value += ((sup ? 0.012 : 0.02 + player.thr * 0.02) - engGain.gain.value) * k;
-      roarFilter.frequency.value += ((sup ? 190 : 500) - roarFilter.frequency.value) * k;
-      roarGain.gain.value += ((sup ? 0.05 + (player.ab ? 0.015 : 0) : (player.ab ? 0.1 : 0.03 + player.thr * 0.02)) - roarGain.gain.value) * k;
-      windFilter.frequency.value = sup ? 520 + clamp(mach - 1, 0, 1) * 300 : 500 + clamp(player.speed / 400, 0, 1) * 500;
-      windGain.gain.value += ((sup ? 0.05 + clamp(mach - 1, 0, 0.8) * 0.03 : clamp((player.speed - 120) / 400, 0, 1) * 0.03) - windGain.gain.value) * k;
-      windGain.lfo.gain.value = sup ? 0.015 : 0.004;
-      droneGain.gain.value += ((sup ? 0.035 : 0) - droneGain.gain.value) * k;
-    }
-    updateSpatial(dt);
   } else if (G.state === 'over') {
     for (let i = missiles.length - 1; i >= 0; i--) { const m = missiles[i]; if (!m.dead) updateMissile(m, dt); if (m.dead) missiles.splice(i, 1); }
     updateCMs(dt); updateWrecks(dt);
@@ -2410,8 +2611,22 @@ function tick(dt) {
     if (G.state !== 'over') updateHud(dt);
   } else if (G.state === 'menu') menuView(dt);
   if (G.state !== 'pause') {
-    SMOKE.update(dt); FX.update(dt); world.update(dt);
+    SMOKE.update(dt); FX.update(dt);
+    const ev = world.update(dt, G.state === 'play' || G.state === 'countdown' ? player.vel : null);
+    if (ev && ev.thunder) setTimeout(() => AU.thunder(ev.thunder), ev.delay * 1000);
+    if (P.propsLvl >= 1) smokeStacks(dt);
     if (boomLight.intensity > 0) boomLight.intensity = Math.max(0, boomLight.intensity - dt * 8);
+  }
+  updateSound(dt); tipTick(dt);
+}
+// дым труб и пар градирни промзоны (ветер несёт шлейф; дальше 14 км не рисуем)
+let stackT = 0;
+function smokeStacks(dt) {
+  stackT += dt; if (stackT < 0.3) return; stackT = 0;
+  for (const e of world.emitters) {
+    if (Math.hypot(e.x - camera.position.x, e.z - camera.position.z) > 14000) continue;
+    if (e.kind === 'steam') SMOKE.emit(e.x + (rnd() - 0.5) * 30, e.y, e.z + (rnd() - 0.5) * 30, 3 + rnd() * 2, 5 + rnd() * 2, 1.5, 0.96, 0.97, 0.98, 0.55, 30, 16, 10, 0.05, 0.4);
+    else SMOKE.emit(e.x, e.y, e.z, 4 + rnd() * 2, 3 + rnd() * 2, 1.5 + rnd(), 0.42, 0.41, 0.4, 0.45, 8, 9, 16, 0.03, 0.3);
   }
 }
 // положение солнца на экране и его видимость (рельеф на пути к солнцу гасит блики и лучи)
@@ -2421,12 +2636,13 @@ function updateSun() {
   let vis = sp.z < 1 && Math.abs(sp.x) < 1.3 && Math.abs(sp.y) < 1.3;
   if (vis) for (let k = 1; k <= 12; k++) { const q = TMP2.copy(camera.position).addScaledVector(SUN_DIR, k * 700); if (q.y < terrainH(q.x, q.z)) { vis = false; break; } }
   sunScr.x = (sp.x + 1) / 2; sunScr.y = (sp.y + 1) / 2; sunScr.nx = sp.x; sunScr.ny = sp.y;
+  vis = vis && world.W.sunVis > 0 && !(world.W.deck && camera.position.y < world.W.deck.h); // за сплошными облаками солнца нет
   sunScr.vis += ((vis ? clamp(1.35 - Math.hypot(sp.x, sp.y) * 0.6, 0, 1) : 0) - sunScr.vis) * 0.2;
 }
 function render() {
   const s = renderer.getPixelRatio() * (pipe ? pipe.scale : 1) * VH / (2 * Math.tan(camera.fov * D2R / 2));
   SMOKE.mat.uniforms.scale.value = s; FX.mat.uniforms.scale.value = s;
-  world.follow(camera.position, P.shadows ? player.pos : null);
+  world.follow(camera.position, P.shadows ? player.pos : null, agl(player));
   updateSun();
   if (pipe) pipe.render(scene, camera, performance.now() / 1000, sunScr); else renderer.render(scene, camera);
   if (P.flares) updateLensFlare();
@@ -2451,27 +2667,41 @@ function updateLensFlare() {
 const fpsEl = document.createElement('div'); fpsEl.id = 'fpsMeter'; document.body.appendChild(fpsEl);
 let fpsT = 0;
 function updateFpsMeter(dtMs) {
-  fpsT += dtMs; if (fpsT < 400) return; fpsT = 0;
-  fpsEl.style.display = perf.fps ? 'block' : 'none';
-  if (perf.fps) fpsEl.textContent = `${Math.round(dr.fps)} к/с · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
+  fpsT += dtMs; if (fpsT < 500) return; fpsT = 0;
+  const on = perf.fps && (G.state === 'play' || G.state === 'countdown' || G.state === 'pause'); // в меню не мешает кнопке «ВЗЛЁТ»
+  if (fpsEl._on !== on) { fpsEl._on = on; fpsEl.style.display = on ? 'block' : 'none'; }
+  if (!on || !dr.fps) return;
+  const hz = dr.vs ? Math.round(1000 / dr.vs) : 0;
+  fpsEl.textContent = `${Math.round(dr.fps)}${hz ? '/' + hz : ''} к/с · худш. ${Math.round(dr.low)} · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
 }
-let last = performance.now(), lastDraw = 0;
+let last = performance.now(), lastDraw = 0, lastState = '';
 function frame(now) {
   requestAnimationFrame(frame);
   if (bench.active) { last = now; return; }
-  // ограничитель кадров: пропускаем кадр, если с прошлого прошло меньше 1/cap (с запасом 1 мс)
-  if (perf.cap && now - lastDraw < 1000 / perf.cap - 1) return;
+  // ограничитель кадров (меню — 30 к/с: фон не должен греть телефон). Допуск — треть периода экрана:
+  // метки времени кадров «дрожат» на 1–2 мс, и с жёстким порогом каждый второй кадр пропускался бы (60 → 30)
+  const capMs = perf.cap ? 1000 / perf.cap : (G.state === 'menu' ? 1000 / 30 : 0);
+  if (capMs && now - lastDraw < capMs - Math.max(1.5, (dr.vs || 16.7) * 0.33)) return;
   const frameMs = now - lastDraw; lastDraw = now;
   const dt = Math.min(0.05, (now - last) / 1000) * (G.slowmo > 0 ? 0.3 : 1); last = now;
   if (G.slowmo > 0) G.slowmo -= dt / 0.3;
   tick(dt); render();
-  if (frameMs < 250) { drUpdate(frameMs); updateFpsMeter(frameMs); }
+  if (G.state !== lastState) { lastState = G.state; drReset(); } // окно замера — только внутри одного состояния
+  else if (frameMs < 250 && G.state !== 'menu') { drUpdate(frameMs); updateFpsMeter(frameMs); }
 }
-$('loading').remove();
-requestAnimationFrame(frame);
+// Частота экрана: несколько пустых кадров до начала отрисовки (нагрузки нет — интервал = период развёртки)
+function measureRefresh() {
+  return new Promise((res) => {
+    const t = []; let prev = 0, n = 0;
+    const f = (now) => { if (prev) t.push(now - prev); prev = now; if (++n < 14) requestAnimationFrame(f); else res(t); };
+    requestAnimationFrame(f); setTimeout(() => res(t), 600);
+  }).then((t) => { if (t.length > 4) { t.sort((a, b) => a - b); dr.vs = snapPeriod(t[Math.floor(t.length / 2)]); } });
+}
+measureRefresh().then(() => { $('loading').remove(); requestAnimationFrame(frame); });
 
 if (TEST && TRAINING) window.__g = { camera, ship, scene, G, player, enemies, missiles, tankers, bullets, cms, schedule, radar, seeker, input, held, binds, loaded, MISSILES, AC, rwr,
   spawnAI, spawnTanker, endGame, hurt, dlz, buildSchedule, maxKills, SEED, tick, render, launchPlayerMissile, launchMissile, cycleLock, cycleWeapon, dropCM, updateHud, runBenchmark,
+  renderer, AU, lobby, world, terrainH, TOWNS, AIRFIELD, applyWeatherKey, WEATHERS, showUpscaleResult, touchCfg: () => touchCfg,
   getSel: () => selType, gunT: () => gunTarget, gfx: () => gfxKey, mode: () => modeKey, TR, openLesson, closeLesson, perf, pipe: () => pipe, dr,
   renderAll() { renderModeSel(); renderLoadTab(); renderRefTab(); renderGuideTab(); renderSettingsTab(); }, setMode(k) { modeKey = k; applyMode(); renderModeSel(); },
   setLoadout(arr) { loadout = arr.slice(); applyLoadout(); renderLoadTab(); },

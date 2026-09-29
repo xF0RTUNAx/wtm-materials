@@ -8,11 +8,14 @@ var MODE_ARG = globalThis.MODE_ARG || 'arcade';
 var GFX_ARG = globalThis.GFX_ARG || null;
 if (GFX_ARG) localStorage.setItem('fortuna_drone_gfx', GFX_ARG);
 localStorage.setItem('fortuna_drone_mode', MODE_ARG);
+if (globalThis.WEATHER_ARG) localStorage.setItem('fortuna_drone_weather', globalThis.WEATHER_ARG);
 function step(name, f) { try { var r = f(); print('OK   ' + name + (r !== undefined ? ' → ' + JSON.stringify(r) : '')); } catch (e) { print('FAIL ' + name + ': ' + e + '\n' + e.stack); } }
 import(MAIN).then(function () {
   var g = window.__g;
   print('module loaded; gfx=' + g.gfx() + ' mode=' + g.mode());
-  step('menu frames', function () { runFrames(30, 16); return g.G.state; });
+  step('refresh probe', function () { runFrames(20, 16); return 'ok'; });
+  return Promise.resolve().then(function () {}).then(function () {}).then(function () {}).then(function () { // дать отработать measureRefresh → старт цикла
+  step('menu frames', function () { runFrames(30, 16); return { state: g.G.state, vs: +g.dr.vs.toFixed(2) }; });
   step('begin', function () { g.begin(); return g.G.state; });
   var hurtBefore = 0;
   step('fly 120 s with bot', function () {
@@ -34,7 +37,7 @@ import(MAIN).then(function () {
     runTimers();
     return { t: +g.G.runTime.toFixed(1), state: g.G.state, kills: g.G.kills, fired: g.G.mFired, mhits: g.G.mHits, hull: Math.round(g.player.hull), enemies: g.enemies.length, missiles: g.missiles.length, evaded: g.G.evaded };
   });
-  step('raf frames', function () { runFrames(20, 16); return { fps: Math.round(g.dr.fps), pipe: !!g.pipe(), scale: g.pipe() ? g.pipe().scale : null }; });
+  step('raf frames', function () { runFrames(45, 16); return { vs: +g.dr.vs.toFixed(2), win: g.dr.win.length, t: g.dr.t, st: g.G.state, fps: Math.round(g.dr.fps), pipe: !!g.pipe(), scale: g.pipe() ? g.pipe().scale : null }; });
   if (MODE_ARG === 'training') {
     step('training 150 s', function () {
       var dt = 1 / 60, phases = {}, asks = 0, lessons = 0;
@@ -52,4 +55,15 @@ import(MAIN).then(function () {
     });
   }
   step('settings/guide render', function () { g.renderAll && g.renderAll(); return 'ok'; });
+  step('weather cycle', function () {
+    var out = [];
+    Object.keys(g.WEATHERS).forEach(function (k) { g.applyWeatherKey(k); for (var i = 0; i < 20; i++) { g.tick(1 / 30); g.render(); } out.push(k + ':' + g.world.W.name); });
+    return out.join(', ');
+  });
+  step('upscale compare UI', function () {
+    var r = { imgs: ['a', 'b', 'c'], fps: 60 };
+    g.showUpscaleResult([Object.assign({ name: 'n' }, r), Object.assign({ name: 'b' }, r), Object.assign({ name: 'c' }, r), Object.assign({ name: 'f' }, r)], 16 / 9);
+    return 'ok';
+  });
+  });
 }).catch(function (e) { print('LOAD FAIL: ' + e + '\n' + (e && e.stack)); });

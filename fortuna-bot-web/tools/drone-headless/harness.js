@@ -12,7 +12,7 @@ function ctx2d() {
 }
 var ELS = {};
 function mkEl(tag) {
-  var e = { tagName: tag, style: {}, dataset: {}, children: [], _h: '', textContent: '', width: 300, height: 300, offsetWidth: 120, disabled: false,
+  var e = { tagName: tag, style: { setProperty: function (k, v) { this[k] = v; } }, dataset: {}, children: [], _h: '', textContent: '', width: 300, height: 300, offsetWidth: 120, disabled: false,
     classList: { _s: {}, add: function (c) { this._s[c] = 1; }, remove: function (c) { delete this._s[c]; }, toggle: function (c, on) { if (on === undefined ? !this._s[c] : on) this._s[c] = 1; else delete this._s[c]; }, contains: function (c) { return !!this._s[c]; } },
     addEventListener: function (t, f) { (this._ev = this._ev || {})[t] = f; }, removeEventListener: function () {},
     appendChild: function (c) { this.children.push(c); c.parentNode = this; return c; }, insertBefore: function (c) { this.children.push(c); c.parentNode = this; return c; },
@@ -37,7 +37,7 @@ G_.addEventListener = function () {}; G_.removeEventListener = function () {};
 G_.location = { search: SEARCH, reload: function () { print('reload()'); } };
 G_.matchMedia = function () { return { matches: false }; };
 G_.performance = { _t: 0, now: function () { return this._t; } };
-var RAF = null; G_.requestAnimationFrame = function (cb) { RAF = cb; return 1; };
+var RAF = []; G_.requestAnimationFrame = function (cb) { RAF.push(cb); return RAF.length; }; // как в браузере: все колбэки кадра
 var TIMERS = []; G_.setTimeout = function (f, ms) { TIMERS.push(f); return TIMERS.length; }; G_.clearTimeout = function () {};
 G_.setInterval = function (f) { return 0; }; G_.clearInterval = function () {};
 var LS = {}; G_.localStorage = { getItem: function (k) { return k in LS ? LS[k] : null; }, setItem: function (k, v) { LS[k] = String(v); }, removeItem: function (k) { delete LS[k]; } };
@@ -49,7 +49,7 @@ G_.self = G_;
 load(G_.THREE_PATH);
 // рендерер без GL: считаем вызовы, обновляем матрицы (как настоящий)
 THREE.WebGLRenderer = function () {
-  this.capabilities = { isWebGL2: true }; this.shadowMap = { enabled: false, type: 0 }; this.outputEncoding = 0; this.toneMapping = 0; this.toneMappingExposure = 1;
+  this.capabilities = { isWebGL2: true, getMaxAnisotropy: function () { return 8; } }; this.shadowMap = { enabled: false, type: 0 }; this.outputEncoding = 0; this.toneMapping = 0; this.toneMappingExposure = 1;
   this._pr = 1; this.renders = 0; this.domElement = mkEl('canvas');
 };
 THREE.WebGLRenderer.prototype = {
@@ -60,5 +60,5 @@ THREE.WebGLRenderer.prototype = {
 };
 THREE.PMREMGenerator = function () {}; THREE.PMREMGenerator.prototype = { fromScene: function () { return { texture: new THREE.Texture() }; }, dispose: function () {} };
 
-G_.runFrames = function (n, stepMs) { for (var i = 0; i < n; i++) { performance._t += stepMs; var cb = RAF; RAF = null; if (cb) cb(performance._t); } };
+G_.runFrames = function (n, stepMs) { for (var i = 0; i < n; i++) { performance._t += stepMs; var cbs = RAF; RAF = []; cbs.forEach(function (cb) { cb(performance._t); }); } };
 G_.runTimers = function () { var t = TIMERS; TIMERS = []; t.forEach(function (f) { try { f(); } catch (e) { print('timer error: ' + e + '\n' + e.stack); } }); };

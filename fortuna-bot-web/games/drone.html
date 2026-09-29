@@ -6,6 +6,11 @@
 <title>Симулятор Летки</title>
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* безопасные зоны: вырез/скругления экрана (--sa-*) и кнопки Telegram поверх страницы (--tg-t) — выставляет main.js */
+  :root { --sa-t: 0px; --sa-r: 0px; --sa-b: 0px; --sa-l: 0px; --tg-t: 0px; --top: calc(max(10px, var(--sa-t)) + var(--tg-t));
+    /* отступ от выреза (Dynamic Island) для кнопок и индикаторов у боковых краёв; углы экрана свободны — там кнопки ✕ II ♪ */
+    --edge-l: max(0px, calc(var(--sa-l) - 24px)); --edge-r: max(0px, calc(var(--sa-r) - 24px)); }
+  #touch { left: var(--edge-l) !important; right: var(--edge-r) !important; }
   html, body { overscroll-behavior: none; }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1016; color: #eaf6ff;
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
@@ -15,12 +20,15 @@
   #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; opacity: .8; z-index: 50; background: #0b1016; }
 
   /* ── HUD ── */
-  #hud { position: fixed; inset: 0; pointer-events: none; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  #hud { position: fixed; inset: 0; pointer-events: none; z-index: 11; /* над слоем сенсорного управления: тап по панели ракет и радару доходит до них */ font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     text-shadow: 0 0 5px rgba(0,0,0,.9); display: none; color: #b8ffc8; }
   #hud.on { display: block; }
-  .osd-tl { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 12px; width: min(42vw, 236px); }
-  .osd-tr { position: absolute; top: max(10px, env(safe-area-inset-top)); right: 58px; text-align: right; color: #eaf6ff; font-size: 12px; }
-  .osd-tc { position: absolute; top: max(8px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); text-align: center; color: #eaf6ff; }
+  .osd-tl { position: absolute; top: var(--top); left: max(12px, var(--sa-l)); width: min(42vw, 236px); }
+  .osd-tr { position: absolute; top: var(--top); right: 58px; text-align: right; color: #eaf6ff; font-size: 12px; }
+  .osd-tc { position: absolute; top: max(8px, var(--sa-t)); left: 50%; transform: translateX(-50%); text-align: center; color: #eaf6ff; }
+  /* телефон: очки, курс и время — одной строкой, чтобы под ними поместились радар и СПО */
+  body.coarse .osd-tr { right: calc(58px + var(--edge-r)); display: flex; gap: 8px; align-items: baseline; font-size: 11px; }
+  body.coarse .osd-tr .lbl { display: none; } body.coarse #score { font-size: 12px; } body.coarse #score::after { content: " очк"; font-weight: 400; opacity: .7; }
   .bar { height: 7px; border-radius: 2px; background: rgba(255,255,255,.14); overflow: hidden; margin: 2px 0 6px; }
   .bar > i { display: block; height: 100%; width: 100%; background: #4ade80; transition: width .08s linear; }
   #barHull > i { background: #f87171; } #barHeat > i { background: #fbbf24; }
@@ -36,6 +44,7 @@
   #wpn .row.sel::before { content: "▶"; margin-right: 4px; }
   #wpn .st { margin-top: 3px; font-weight: 700; color: #fde68a; min-height: 15px; }
   #wpn .fly { color: #93c5fd; } #wpn .cm { color: #fdba74; margin-top: 2px; }
+  #wpn.tap { animation: wpnTap .35s ease-out; } @keyframes wpnTap { from { background: rgba(251,146,60,.5); border-color: #fb923c; } }
 
   #cross { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; left: 50%; top: 50%; }
   #cross::before { content: ""; position: absolute; inset: 9px; border: 2px solid #b8ffc8; border-radius: 50%; }
@@ -65,13 +74,20 @@
     border: 1.5px solid rgba(184,255,200,.7); border-radius: 3px; min-width: 72px; text-align: center; background: rgba(0,20,10,.25); }
   .side small { display: block; font-size: 9px; opacity: .75; font-weight: 400; }
   #spdBox { left: calc(50% - 200px); } #altBox { left: calc(50% + 128px); }
-  body.coarse #spdBox { left: 8px; top: 60%; } body.coarse #altBox { left: auto; right: 8px; top: 60%; }
+  /* телефон: скорость и высота — столбиком слева, ниже середины (справа — кнопки) */
+  body.coarse #spdBox, body.coarse #altBox { left: max(8px, var(--sa-l)); right: auto; top: auto; transform: none; min-width: 96px; }
+  body.coarse #altBox { bottom: 156px; } body.coarse #spdBox { bottom: 200px; } /* над столбиком «НАЗАД» / «ГАЗ−» */
+  /* телефон вертикально: справа столбик радар → СПО, очки/курс/время — тремя короткими строками */
+  body.coarse.narrow:not(.short) .osd-tr { flex-direction: column; align-items: flex-end; gap: 0; font-size: 10.5px; line-height: 1.3; }
+  body.coarse.narrow:not(.short) #radar { top: calc(var(--top) + 50px); }
+  body.coarse.narrow:not(.short) #rwr { right: calc(68px + var(--edge-r)); top: calc(var(--top) + 50px + 119px); }
+  body.coarse.narrow:not(.short) #combo { max-width: 120px; margin: 0 auto; white-space: normal; height: auto; font-size: 10px; line-height: 1.25; }
   .osd-bc { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); width: min(30vw, 190px); }
   body.coarse .osd-bc { display: none; }
   #radar { position: absolute; right: 14px; bottom: 14px; width: 190px; height: 170px; border-radius: 10px; pointer-events: auto; cursor: pointer; }
   #rwr { position: absolute; left: 14px; bottom: 14px; width: 150px; height: 150px; }
-  body.coarse #radar { width: 124px; height: 111px; right: 54px; bottom: auto; top: max(58px, env(safe-area-inset-top)); }
-  body.coarse #rwr { width: 96px; height: 96px; left: auto; right: 182px; bottom: auto; top: max(62px, env(safe-area-inset-top)); }
+  body.coarse #radar { width: 124px; height: 111px; right: calc(54px + var(--edge-r)); bottom: auto; top: calc(var(--top) + 22px); }
+  body.coarse #rwr { width: 96px; height: 96px; left: auto; right: calc(182px + var(--edge-r)); bottom: auto; top: calc(var(--top) + 26px); }
   #lockInfo { position: absolute; font-size: 11px; font-weight: 700; white-space: nowrap; display: none; }
   #warn { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 800; color: #ff6b6b; letter-spacing: .08em; display: none; text-align: center; }
   #threat { position: absolute; top: 27%; left: 50%; transform: translateX(-50%); font-size: 17px; font-weight: 900; color: #ff3b3b; letter-spacing: .06em;
@@ -81,8 +97,11 @@
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 13.5px; line-height: 1.45; color: #eaf6ff; background: rgba(10,18,28,.72);
     border: 1px solid rgba(147,197,253,.35); border-radius: 12px; padding: 7px 12px; text-shadow: none; }
   #hint b { color: #fde68a; }
-  body.coarse #hint { bottom: auto; top: calc(max(58px, env(safe-area-inset-top)) + 122px); font-size: 12.5px; width: min(94vw, 440px); }
-  body.short #hint { top: 56px; left: 50%; width: min(52vw, 420px); font-size: 11.5px; padding: 5px 9px; }
+  /* телефон: подсказка и плашка угрозы на 20% компактнее; плашка угрозы встаёт под подсказку (main.js → placeThreat) */
+  body.coarse #hint { bottom: auto; top: calc(max(8px, var(--sa-t)) + 62px); font-size: 10px; width: min(76vw, 352px); padding: 4px 8px; border-radius: 10px; line-height: 1.4; }
+  body.short #hint { width: min(44vw, 336px); font-size: 9.5px; padding: 4px 7px; }
+  body.coarse #threat { top: calc(max(8px, var(--sa-t)) + 62px); font-size: 13.5px; padding: 2px 8px; border-width: 1.5px; width: max-content; max-width: min(76vw, 352px); line-height: 1.3; }
+  body.short #threat { font-size: 11px; } body.short.narrow #threat { font-size: 10px; } body.short.narrow #combo { font-size: 10.5px; }
   #ask { position: absolute; right: 60px; top: 40%; display: none; align-items: center; gap: 10px; pointer-events: auto; z-index: 15;
     background: rgba(30,20,6,.88); border: 2px solid #fbbf24; border-radius: 14px; padding: 8px 8px 8px 12px; max-width: min(78vw, 330px);
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif; color: #fff; text-shadow: none; animation: askIn .35s ease-out; }
@@ -90,8 +109,11 @@
   #ask b { display: block; font-size: 13.5px; } #ask small { display: block; font-size: 11px; opacity: .8; margin-top: 2px; }
   #askBtn { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: #fbbf24; color: #1a1205; font-size: 24px; font-weight: 900; cursor: pointer; }
   @keyframes askIn { from { transform: translateX(30px); opacity: 0; } to { transform: none; opacity: 1; } }
-  body.coarse #ask { right: 10px; top: auto; bottom: 280px; z-index: 12; }
-  body.short #ask { bottom: auto; top: 40%; right: 180px; }
+  /* телефон: окошко «?» — под панелью ракет (переносится туда из main.js), на четверть меньше */
+  body.coarse #ask { position: relative; right: auto; top: auto; margin-top: 6px; max-width: 100%; gap: 7px; padding: 5px 5px 5px 8px; border-width: 1.5px; border-radius: 10px; animation-name: askInL; }
+  body.coarse #ask b { font-size: 10px; } body.coarse #ask small { font-size: 8.5px; }
+  body.coarse #askBtn { width: 33px; height: 33px; font-size: 18px; }
+  @keyframes askInL { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
   #lesson { background: rgba(4,8,12,.72); z-index: 40; }
   .card.lesson { text-align: left; width: min(94vw, 560px); }
   .card.lesson h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
@@ -107,9 +129,9 @@
   body.narrow .osd-tl { width: min(46vw, 200px); } body.narrow #wpn { font-size: 10.5px; }
   body.short .osd-tl { width: 190px; } body.short #wpn { font-size: 10px; line-height: 1.3; padding: 3px 5px; }
   body.short .big { font-size: 22px; } body.short #threat { top: 20%; font-size: 14px; } body.short #warn { top: 14%; }
-  body.short.coarse #radar { width: 104px; height: 93px; } body.short.coarse #rwr { width: 84px; height: 84px; right: 162px; }
-  body.short .side { font-size: 11px; min-width: 60px; } body.short #popups { top: 26%; } body.short .pop { font-size: 15px; }
-  body.short .card { max-height: 96vh; padding: 12px; } body.short .card h1 { font-size: 19px; }
+  body.short.coarse #radar { width: 104px; height: 93px; } body.short.coarse #rwr { width: 84px; height: 84px; right: calc(162px + var(--edge-r)); }
+  body.short .side { font-size: 11px; min-width: 60px; } body.short.coarse #spdBox, body.short.coarse #altBox { bottom: 86px; } body.short.coarse #altBox { left: calc(max(8px, var(--sa-l)) + 102px); } /* горизонтально — в строку над кнопками */ body.short #popups { top: 26%; } body.short .pop { font-size: 15px; }
+  body.short .card { padding: 12px; } body.short .card h1 { font-size: 19px; }
   #bossbar { position: absolute; top: 76px; left: 50%; transform: translateX(-50%); width: min(60vw, 360px); text-align: center; display: none; color: #eaf6ff; }
   #bossbar .bar { height: 9px; } #bossbar .bar > i { background: #c084fc; }
   #popups { position: absolute; top: 34%; left: 0; right: 0; text-align: center; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -118,11 +140,11 @@
   @keyframes pop { 0% { opacity: 0; transform: scale(.7); } 15% { opacity: 1; transform: scale(1.1); } 100% { opacity: 0; transform: translateY(-38px); } }
   #count { position: absolute; top: 38%; left: 0; right: 0; text-align: center; font-size: 80px; font-weight: 900; color: #fff; text-shadow: 0 0 24px rgba(0,0,0,.7); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
 
-  #exit, #mute, #pause { position: fixed; top: max(10px, env(safe-area-inset-top)); width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3);
+  #exit, #mute, #pause { position: fixed; top: max(10px, var(--sa-t)); width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3);
     background: rgba(10,16,24,.55); color: #fff; font-size: 16px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 20; }
-  #exit { right: 10px; } #pause { right: 10px; top: 54px; } #mute { right: 10px; top: 98px; }
+  #exit { right: 10px; } #pause { right: 10px; top: calc(max(10px, var(--sa-t)) + 44px); } #mute { right: 10px; top: calc(max(10px, var(--sa-t)) + 88px); }
   body.playing #exit, body.playing #mute, body.playing #pause { display: flex; }
-  body.menuing #exit { display: flex; }
+  body.menuing #exit, body.menuing #mute { display: flex; } body.menuing #mute { top: calc(max(10px, var(--sa-t)) + 44px); }
 
   /* ── Мобильное управление ── */
   #touch { position: fixed; inset: 0; display: none; z-index: 10; pointer-events: none; }
@@ -145,7 +167,9 @@
   body.short #btnBack { left: 80px; bottom: 26px; }
 
   /* ── Экраны ── */
-  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; z-index: 30; }
+  .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 30;
+    padding: calc(max(16px, var(--sa-t)) + var(--tg-t)) max(16px, var(--sa-r)) max(16px, var(--sa-b)) max(16px, var(--sa-l)); }
+  .screen > .card { max-height: 100%; }
   .screen.on { display: flex; animation: scrIn .22s ease-out; }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
@@ -159,14 +183,18 @@
   .seg button.on { background: rgba(251,146,60,.9); color: #fff; }
   p.hint { font-size: 11.5px; line-height: 1.45; opacity: .72; margin: 3px 0 6px; text-align: left; }
   /* сравнение апскейлеров: шторка */
-  .cmp { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px; background: #000; margin-bottom: 6px; }
-  .cmp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 45%; transition: transform .2s; }
-  .cmp.zoom img { transform: scale(2); image-rendering: pixelated; }
-  .cmpB { position: absolute; inset: 0; }
-  .cmpLine { position: absolute; top: 0; bottom: 0; width: 2px; background: #fbbf24; box-shadow: 0 0 6px #000; }
-  .cmpL, .cmpR { position: absolute; top: 6px; font-size: 11px; font-weight: 800; background: rgba(0,0,0,.6); padding: 2px 6px; border-radius: 5px; }
-  .cmpL { left: 6px; } .cmpR { right: 6px; }
+  .cmp { position: relative; width: 100%; overflow: hidden; border-radius: 10px; background: #000; margin: 0 auto 6px; touch-action: none; cursor: grab; }
+  .cmp img { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; transform-origin: 0 0; will-change: transform; user-select: none; -webkit-user-drag: none; }
+  .cmp.px img { image-rendering: pixelated; }
+  .cmpB { position: absolute; inset: 0; overflow: hidden; }
+  .cmpLine { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #fbbf24; box-shadow: 0 0 6px #000; pointer-events: none; }
+  .cmpLine i { position: absolute; top: 50%; left: -10px; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 6px rgba(0,0,0,.7); }
+  .cmpLine i::before { content: "⇆"; position: absolute; inset: 0; text-align: center; line-height: 22px; font-size: 13px; color: #1a1205; font-weight: 900; }
+  .cmpL, .cmpR, .cmpZ { position: absolute; top: 6px; font-size: 11px; font-weight: 800; background: rgba(0,0,0,.6); padding: 2px 6px; border-radius: 5px; pointer-events: none; }
+  .cmpL { left: 6px; } .cmpR { right: 6px; } .cmpZ { top: auto; bottom: 6px; left: 6px; } .cmpZ:empty { display: none; }
+  .cmpBar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: space-between; margin: 0 0 6px; }
   #upTest { background: rgba(4,8,12,.85); z-index: 40; }
+  #upTest .card.lesson { width: min(96vw, 860px); }
   /* HUD: анимации */
   #lockAnim { position: absolute; left: 0; top: 0; width: 44px; height: 44px; margin: -22px 0 0 -22px; border: 2px solid #ff5b5b; display: none; box-shadow: 0 0 10px rgba(255,80,80,.8); }
   .hitmk { position: absolute; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; }
@@ -176,22 +204,32 @@
   #vcur { position: absolute; left: 0; top: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid rgba(255,255,255,.85); border-radius: 50%; display: none; }
   #vcur::after { content: ""; position: absolute; left: 6px; top: 6px; width: 2px; height: 2px; background: #fff; }
   .side.sup { border-color: #93c5fd; color: #bfdbfe; box-shadow: 0 0 10px rgba(147,197,253,.5); }
-  #fpsMeter { position: fixed; left: 50%; bottom: 4px; transform: translateX(-50%); z-index: 60; display: none; font: 700 11px ui-monospace, Menlo, monospace; color: #b8ffc8;
+  #fpsMeter { position: fixed; left: 50%; bottom: calc(max(4px, var(--sa-b)) + 4px); transform: translateX(-50%); white-space: nowrap; z-index: 60; display: none; font: 700 11px ui-monospace, Menlo, monospace; color: #b8ffc8;
     background: rgba(0,0,0,.45); padding: 2px 8px; border-radius: 6px; pointer-events: none; }
-  #menu { justify-content: flex-start; padding-left: max(16px, 3vw);
+  body.coarse #fpsMeter { bottom: calc(max(20px, var(--sa-b)) + 6px); font-size: 10px; } /* выше полоски «домой» */
+  #menu { justify-content: flex-start; padding-left: max(16px, 3vw, var(--sa-l));
     background: linear-gradient(90deg, rgba(6,12,20,.82) 0%, rgba(6,12,20,.45) 45%, rgba(6,12,20,0) 70%); }
   #pauseScr, #end { background: radial-gradient(ellipse at center, rgba(8,14,22,.72), rgba(4,8,12,.92)); }
   #benchScr { background: rgba(4,8,12,.25); align-items: flex-end; }
-  .card { width: min(94vw, 490px); max-height: 94vh; overflow: auto; background: rgba(15,23,34,.93); border: 1px solid rgba(255,255,255,.14);
+  .card { width: min(94vw, 490px); max-height: 100%; overflow: auto; background: rgba(15,23,34,.93); border: 1px solid rgba(255,255,255,.14);
     border-radius: 18px; padding: 18px 16px 16px; text-align: center; box-shadow: 0 14px 50px rgba(0,0,0,.55); }
   @media (max-aspect-ratio: 1/1) {
-    #menu { align-items: flex-end; justify-content: center; padding: 10px;
+    #menu { align-items: flex-end; justify-content: center; padding: calc(10px + var(--sa-t) + var(--tg-t)) 10px max(10px, var(--sa-b));
       background: linear-gradient(0deg, rgba(6,12,20,.86) 0%, rgba(6,12,20,.4) 55%, rgba(6,12,20,0) 75%); }
     #menu .card { max-height: 64vh; }
   }
   .card h1 { margin: 0 0 2px; font-size: 23px; letter-spacing: .02em; }
   .card .sub { font-size: 13px; opacity: .75; margin-bottom: 10px; }
   .badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 99px; margin-bottom: 10px; letter-spacing: .04em; }
+  .wchip { font-size: 12px; opacity: .75; margin: -4px 0 8px; } .wchip:empty { display: none; }
+  .lobby { text-align: left; font-size: 12px; line-height: 1.45; background: rgba(255,255,255,.05); border-radius: 12px; padding: 8px 10px; margin-bottom: 10px; }
+  #lobbyStats { color: #cbd5e1; } #lobbyStats b { color: #fde68a; }
+  #lobbyTip { margin-top: 5px; opacity: .85; cursor: pointer; min-height: 34px; } #lobbyTip b { color: #93c5fd; }
+  #lobbyTip.in { animation: tipIn .5s ease-out; } @keyframes tipIn { from { opacity: 0; transform: translateY(4px); } }
+  /* телефон горизонтально: меню компактнее — без подзаголовка, описаний режимов и советов, чтобы вкладки были видны сразу */
+  body.short .lobby { font-size: 11px; padding: 5px 8px; margin-bottom: 6px; } body.short #lobbyTip { display: none; }
+  body.short .card .sub { display: none; } body.short .modeSel span { display: none; } body.short .modeSel button { text-align: center; padding: 6px; }
+  body.short .badge { margin-bottom: 4px; padding: 3px 9px; } body.short .wchip { margin: -2px 0 5px; }
   .badge.train { background: rgba(96,165,250,.2); color: #93c5fd; } .badge.rank { background: rgba(251,191,36,.2); color: #fcd34d; }
   .help { text-align: left; font-size: 12.5px; line-height: 1.55; background: rgba(255,255,255,.05); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; }
   .help b { color: #fde68a; } .help p { margin: 0 0 7px; } .help p:last-child { margin: 0; }
@@ -313,6 +351,8 @@
     <h1>Симулятор Летки</h1>
     <div class="sub">«Изделие Фортуна-1» против авиации «Подстилки улитки»</div>
     <div class="badge" id="modeBadge"></div>
+    <div class="wchip" id="weatherChip"></div>
+    <div class="lobby"><div id="lobbyStats"></div><div id="lobbyTip" title="Следующий совет"></div></div>
     <div class="modeSel" id="modeSel"></div>
     <div class="mtabs" id="mtabs">
       <button data-tab="load" class="on">Подвеска</button>
