@@ -20,7 +20,7 @@
   :root {
     --bg: #f5f2ec; --surface: #fbf9f5; --surface-2: #f0ece3; --border: #e4ddd0;
     --text: #2a2722; --text-soft: #6b655c; --accent: #c8643c; --accent-soft: #f3e3da;
-    --ok: #4a7c4e; --ok-bg: #e6f0e6; --err: #b5432f; --err-bg: #fbe8e4;
+    --ok: #4a7c4e; --online: #3e8e4a; --ok-bg: #e6f0e6; --err: #b5432f; --err-bg: #fbe8e4;
     --btn: #2a2722; --btn-text: #fbf9f5;
     --shadow: 0 1px 3px rgba(60,50,35,.06), 0 6px 20px rgba(60,50,35,.05);
     --radius: 16px; --radius-sm: 10px;
@@ -28,7 +28,7 @@
   [data-theme="dark"] {
     --bg: #1f1d1a; --surface: #2a2723; --surface-2: #333029; --border: #3d3933;
     --text: #ece7df; --text-soft: #a39c8f; --accent: #e08252; --accent-soft: #3a2c23;
-    --ok: #7fc283; --ok-bg: #253a26; --err: #e08a7a; --err-bg: #3a2621;
+    --ok: #7fc283; --online: #3f9150; --ok-bg: #253a26; --err: #e08a7a; --err-bg: #3a2621;
     --btn: #ece7df; --btn-text: #1f1d1a;
     --shadow: 0 1px 3px rgba(0,0,0,.25), 0 6px 20px rgba(0,0,0,.3);
   }
@@ -36,7 +36,7 @@
     :root:not([data-theme="light"]) {
       --bg: #1f1d1a; --surface: #2a2723; --surface-2: #333029; --border: #3d3933;
       --text: #ece7df; --text-soft: #a39c8f; --accent: #e08252; --accent-soft: #3a2c23;
-      --ok: #7fc283; --ok-bg: #253a26; --err: #e08a7a; --err-bg: #3a2621;
+      --ok: #7fc283; --online: #3f9150; --ok-bg: #253a26; --err: #e08a7a; --err-bg: #3a2621;
       --btn: #ece7df; --btn-text: #1f1d1a;
       --shadow: 0 1px 3px rgba(0,0,0,.25), 0 6px 20px rgba(0,0,0,.3);
     }
@@ -185,10 +185,16 @@
   /* ── Реклама «Симулятора Летки» (экран входа и вкладка «Фарм») ── */
   .game-ad { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; margin: 16px 0; }
   .game-ad:first-child { margin-top: 0; }
+  #game-ad-slot .game-ad { margin-top: 18px; } /* «Фарм»: реклама не впритык к «Перенести прогресс» */
   .game-ad-media { position: relative; aspect-ratio: 16 / 9; background: #120e0b; }
   .game-ad-media video, .game-ad-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   .game-ad-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,.72) 100%); pointer-events: none; }
-  .game-ad-badge { position: absolute; top: 10px; left: 10px; z-index: 1; font-size: 10.5px; font-weight: 800; letter-spacing: .06em; color: #fff; background: var(--accent); padding: 3px 8px; border-radius: 999px; }
+  .game-ad-badges { position: absolute; top: 10px; left: 10px; z-index: 1; display: flex; gap: 6px; }
+  .game-ad-badge { font-size: 10.5px; font-weight: 800; letter-spacing: .06em; color: #fff; background: var(--accent); padding: 3px 8px; border-radius: 999px; }
+  .game-ad-badge.online, .game-ad-tags span.online { background: var(--online); color: #fff; }
+  .btn-online { font-family: inherit; font-size: 15px; font-weight: 650; padding: 11px; border: none; border-radius: var(--radius-sm); cursor: pointer; background: var(--online); color: #fff; }
+  .btn-online.btn-sm { padding: 9px 14px; font-size: 14px; }
+  .arcade-online-row { margin-top: 8px; } .arcade-online-row .btn-online { flex: 1; }
   .game-ad-cap { position: absolute; left: 14px; right: 14px; bottom: 11px; z-index: 1; color: #fff; }
   .game-ad-title { font-size: 20px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
   .game-ad-sub { font-size: 12.5px; opacity: .9; margin-top: 2px; text-shadow: 0 1px 6px rgba(0,0,0,.6); }

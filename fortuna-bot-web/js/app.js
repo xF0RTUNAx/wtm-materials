@@ -44,16 +44,16 @@ function iconVal(name, sizePx, valueHTML) {
 function gameAdHTML(where) {
   const how = where === "auth"
     ? `Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b>.`
-    : `Вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b>. Лучше всего — на телефоне в горизонтальном положении.`;
+    : `Вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b> или <b>«Онлайн-бой»</b>. Лучше всего — на телефоне в горизонтальном положении.`;
   return `
     <div class="game-ad">
       <div class="game-ad-media">
         <video src="media/letka_promo.mp4" poster="media/letka_promo.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
-        <span class="game-ad-badge">НОВАЯ ИГРА</span>
-        <div class="game-ad-cap"><div class="game-ad-title">Симулятор Летки</div><div class="game-ad-sub">3D-бой в небе прямо в браузере</div></div>
+        <div class="game-ad-badges"><span class="game-ad-badge">НОВАЯ ИГРА</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
+        <div class="game-ad-cap"><div class="game-ad-title">Симулятор поздней летки</div><div class="game-ad-sub">УВВВ, СПО и многое другое прямо в браузере</div></div>
       </div>
       <div class="game-ad-body">
-        <div class="game-ad-text">Пилотируй «Изделие Фортуна-1» против истребителей «Подстилки улитки»: захватывай радаром, пускай ракеты, уходи от ответных ловушками и манёвром.</div>
+        <div class="game-ad-text">Пилотируй «Изделие Фортуна-1» против ботов «Подстилки улитки» или играйте с друзьями в онлайне!</div>
         <div class="game-ad-tags"><span>22 ракеты</span><span>Радар и СПО</span><span>Погода</span><span>Обучение</span><span>Аркада и Реализм</span></div>
         <div class="game-ad-how">${how}</div>
         <button class="${where === "auth" ? "btn-primary" : "btn-secondary"} game-ad-btn" data-game-ad>${where === "auth" ? "Регистрируйся и пробуй!" : "Играть — тренировка"}</button>
@@ -338,8 +338,8 @@ function renderArcadeSection() {
         <div class="container-buy-row">
           <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets && !g.rankedSoon ? "" : "disabled"}>${g.rankedSoon ? "Награда — скоро" : "Играть на награду"}</button>
           <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
-          ${g.online ? `<button class="btn-secondary btn-sm" data-arcade-online="${g.id}">Онлайн-бой</button>` : ""}
         </div>
+        ${g.online ? `<div class="container-buy-row arcade-online-row"><button class="btn-online btn-sm" data-arcade-online="${g.id}">Онлайн-бой</button></div>` : ""}
         ${g.online ? `<div class="arcade-note" data-mp-live hidden></div>` : ""}
       </div>`;
   }).join("");
