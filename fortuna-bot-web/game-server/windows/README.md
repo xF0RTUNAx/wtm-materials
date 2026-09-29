@@ -26,6 +26,14 @@ git checkout main
 
 Скачиваются только сервер и логика игры (без картинок сайта). Папка — `C:\fortuna`.
 
+**Пока онлайн не опубликован на сайте** (код лежит только в ветке `online-dev`) — вместо `git checkout main`:
+
+```powershell
+git checkout online-dev
+```
+
+После деплоя на сайт вернуться на `main`: `git checkout main`, затем `git pull`.
+
 ## 2. Служба сервера
 
 ```powershell
