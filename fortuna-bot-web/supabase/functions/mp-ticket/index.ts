@@ -3,8 +3,15 @@
 // Билет живёт 10 минут: игра берёт новый при каждом подключении. Игровой сервер проверяет подпись тем же
 // секретом (server.js → checkTicket) и берёт ник из билета — подделать чужой ник без секрета нельзя.
 // Секрет: `supabase secrets set MP_SECRET=...` (тот же — в переменной окружения MP_SECRET игрового сервера).
-import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
-import { supabaseAdmin } from "../_shared/supabase-admin.ts";
+// Файл самодостаточный (без ../_shared): его можно и развернуть CLI, и вставить целиком в редактор функций панели Supabase.
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const TTL = 600;
 const enc = new TextEncoder();
@@ -25,7 +32,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Некорректные параметры" }, 400);
     }
 
-    const db = supabaseAdmin();
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
     const { data: player, error } = await db.from("players").select("id, login").eq("id", player_id).maybeSingle();
     if (error) throw error;
     if (!player) return jsonResponse({ error: "Игрок не найден — перезайдите на сайт" }, 404);
