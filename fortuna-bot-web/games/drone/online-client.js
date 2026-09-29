@@ -172,6 +172,7 @@ export function createOnline(K) {
     },
     gone(m) { const c = MP.remotes.get(m.id); if (c) dropRemote(c); },
     end(m) { MP.end = m; K.showEnd(m, MP.me, MP.team); },
+    result(m) { if (K.onResult) K.onResult(m); }, // итог боя, подписанный сервером, — награда и очки операции на сайте
   };
 
   // ═════════════ Бой ═════════════

@@ -10,6 +10,7 @@ import { AC, RADAR, createBattle } from './sim/battle.js?v=20260929d';
 import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260929d';
 import { TEAM_NAMES } from './sim/online.js?v=20260929d';
 import { createOnline } from './online-client.js?v=20260929d';
+import { createProgress, rewardText, plural } from './progress-client.js?v=20260929d';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, steerTo,
   seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260929d';
 
@@ -22,6 +23,10 @@ const SEED = ((parseInt(Q.get('seed'), 10) || Math.floor(Math.random() * 2147483
 const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in window || (TEST && TRAINING && Q.get('touch') === '1');
 const TEST_INSETS = TEST && TRAINING && Q.get('insets') ? Q.get('insets').split(',').map((v) => +v || 0) : null;
 const IOS = /iPhone|iPod/.test(navigator.userAgent || '');
+// прогресс на сайте: детали, билеты, открытые ракеты, награды, операция (progress-client.js); без аккаунта — выключен
+const PR = createProgress({ testName: (TEST && TRAINING && Q.get('mpname')) || '', onChange: () => { renderLoadTab(); renderRankRow(); } });
+// вылет на награду (тратит билет): из ссылки сайта (?ranked=1 / 0) или как в прошлый раз
+let rankWanted = Q.get('ranked') === '1' ? true : Q.get('ranked') === '0' ? false : localStorage.getItem('fortuna_drone_ranked') !== '0';
 const $ = (id) => document.getElementById(id);
 const rnd = Math.random; // визуальная и тактическая случайность — не влияет на расписание
 const store = {
@@ -1305,7 +1310,17 @@ function drawRadar() {
 // ═════════════ Меню: подвеска, справка, радар, графика, управление ═════════════
 let selSt = 1, symmetric = true;
 function saveLoadout() { store.set('fortuna_drone_loadout2', JSON.stringify(loadout)); }
-function applyLoadout() { for (let i = 0; i < 8; i++) loaded[i] = loadout[i]; rebuildPylonMeshes(); ensureSel(); saveLoadout(); }
+// на самолёт — подвеска из меню; в «Реализме» закрытая ракета заменяется открытой того же типа (тепловая — AIM-9B/Р-3С,
+// радиолокационная — AIM-7E), если та встаёт на этот пилон; иначе пилон пустой. Открывают ракеты за детали.
+const BASE_SUB = { ir: ['aim9b', 'r3s', 'firestreak'], sarh: ['aim7e'], arh: ['aim7e'] };
+function applyLoadout() {
+  for (let i = 0; i < 8; i++) {
+    const k = loadout[i];
+    loaded[i] = k && PR.locked(modeKey, k) ? null : k;
+    if (k && !loaded[i]) loaded[i] = BASE_SUB[MISSILES[k].kind].find((b) => canMount(i, b, loaded)) || null;
+  }
+  rebuildPylonMeshes(); ensureSel(); saveLoadout();
+}
 function gameText(M_) {
   const z = dlz(M_, 5000, 250, 250);
   let t = `Дальность пуска на 5 км высоты: до ≈ ${km(z.rmax)} в лоб, неизбежная зона ≈ ${km(z.rne)}. Перегрузка до ${M_.g} g. `;
@@ -1326,15 +1341,25 @@ function renderLoadTab() {
     for (const [key, M_] of Object.entries(MISSILES)) {
       if (M_.cat !== cat.id) continue;
       let why = '';
+      const lockR = PR.locked('real', key), lockedNow = PR.locked(modeKey, key);
       if (!M_.mounts.includes(sk) || M_.mass > STATION_KIND[sk].lim) why = 'не для этого пилона';
       else if (!canMount(selSt, key, loadout)) why = 'перегруз';
+      else if (lockedNow) why = 'закрыта для «Реализма»';
+      const buy = lockR ? `<span class="buy" data-buy="${key}" title="Открыть для «Реализма»">🔒 ${PR.price(key)} дет.</span>` : '';
       opts += `<button class="opt ${loadout[selSt] === key ? 'on' : ''} ${why ? 'dis' : ''}" data-k="${key}">
         <span class="tag ${M_.kind}">${KIND_TAG[M_.kind]}</span>
         <span class="nm"><b>${M_.name}</b><span>${M_.mass} кг · ${KIND_FULL[M_.kind]}${why ? ' · ' + why : ''}</span></span>
-        <span class="inf" data-info="${key}">справка</span></button>`;
+        ${buy}<span class="inf" data-info="${key}">справка</span></button>`;
     }
   }
-  $('tab-load').innerHTML = `
+  let prog = '';
+  if (PR.enabled && PR.state) {
+    const total = Object.keys(MISSILES).length, open = Object.keys(MISSILES).filter((k) => !PR.locked('real', k)).length;
+    const lost = modeKey === 'real' ? loadout.filter((k) => k && PR.locked('real', k)) : [];
+    prog = `<div class="prog">Детали: <b>${PR.state.details}</b> · открыто ракет для «Реализма»: <b>${open} из ${total}</b>. В «Аркаде» и «Обучении» доступны все; 🔒 — открыть за детали.`
+      + (lost.length ? `<br><span class="bad">В «Реализме» закрыты: ${lost.map((k) => MISSILES[k].short).join(', ')} — на взлёте их заменят AIM-9B / AIM-7E</span>` : '') + `</div>`;
+  } else if (PR.enabled && PR.err) prog = `<div class="prog bad">Прогресс не загрузился: ${PR.err}</div>`;
+  $('tab-load').innerHTML = `${prog}
     <div class="pyl-row">${pyl}</div>
     <div class="loadbar"><i style="width:${Math.min(100, mass / MAX_LOAD * 100)}%"></i></div>
     <div class="loadtxt"><span>Нагрузка ${mass} / ${MAX_LOAD} кг</span><span>ЭПР ${(1 + 0.15 * loadout.filter(Boolean).length).toFixed(2)} м²</span></div>
@@ -1575,13 +1600,14 @@ function showTab(t) {
 $('mtabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showTab(b.dataset.tab); });
 $('modeSel').addEventListener('click', (e) => {
   const b = e.target.closest('[data-mode]'); if (!b || G.state !== 'menu') return;
-  modeKey = b.dataset.mode; store.set('fortuna_drone_mode', modeKey); applyMode(); renderModeSel(); renderStats();
+  modeKey = b.dataset.mode; store.set('fortuna_drone_mode', modeKey); applyMode(); renderModeSel(); renderStats(); applyLoadout(); renderLoadTab(); renderRankRow();
 });
 $('tab-load').addEventListener('click', (e) => {
   const info = e.target.closest('[data-info]');
   if (info) { showTab('ref'); const d = $('ref-' + info.dataset.info); d.open = true; d.scrollIntoView({ block: 'start' }); return; }
   if (e.target.id === 'symChk') { symmetric = e.target.checked; return; }
   const p = e.target.closest('[data-p]'); if (p) { selSt = +p.dataset.p; renderLoadTab(); return; }
+  const bb = e.target.closest('[data-buy]'); if (bb) { buyMissile(bb.dataset.buy); return; }
   const o = e.target.closest('.opt'); if (!o) return;
   if (o.classList.contains('dis')) { tone(200, 0.1, 'square', 0.03); return; }
   const key = o.dataset.k || null;
@@ -1590,6 +1616,27 @@ $('tab-load').addEventListener('click', (e) => {
   if (symmetric && mir !== selSt && canMount(mir, key, next)) next[mir] = key;
   loadout = next; applyLoadout(); renderLoadTab();
 });
+async function buyMissile(key) {
+  const M_ = MISSILES[key], price = PR.price(key);
+  if (!PR.state) return;
+  if (PR.state.details < price) { popup(`НЕ ХВАТАЕТ ДЕТАЛЕЙ: НУЖНО ${price}, ЕСТЬ ${PR.state.details}`, 'bad'); return; }
+  if (!confirm(`Открыть ${M_.name} для «Реализма» за ${price} ${plural(price, 'деталь', 'детали', 'деталей')}?`)) return;
+  try { await PR.buy(key, M_.short); popup(`${M_.short} ОТКРЫТА`, 'good'); tone(1100, 0.12, 'square', 0.05); applyLoadout(); }
+  catch (err) { popup(String(err.message).toUpperCase(), 'bad'); }
+}
+// строка над «ВЗЛЁТ»: вылет на награду (билет) и операция — для «Аркады» и «Реализма» с аккаунтом сайта
+function renderRankRow() {
+  const el = $('rankRow'); if (!el) return;
+  if (!PR.enabled || modeKey === 'training' || MP.room) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  const s = PR.state;
+  if (!s) { el.innerHTML = `<span>${PR.err ? 'Прогресс не загрузился: ' + PR.err : 'Загружаем прогресс…'}</span>`; return; }
+  const left = s.tickets_left, op = s.operation;
+  const what = left > 0 ? (modeKey === 'real' ? 'Реализм: 6 деталей за успешный вылет, 50% ключ, 5% билет' : 'Аркада: 2 детали за успешный вылет (сбить ≥ 4 или флагмана)') : 'билеты кончились — вылет без награды';
+  el.innerHTML = `<label><input type="checkbox" id="rankChk" ${rankWanted && left > 0 ? 'checked' : ''} ${left > 0 ? '' : 'disabled'}> <b>Вылет на награду</b> · 1 билет, осталось ${left} из ${s.tickets_daily}</label>
+    <span>${rankWanted || left <= 0 ? what : 'вылет без награды'}${op ? ` · сбитые идут в операцию «${op.name}»: ${op.points.toLocaleString('ru-RU')} / ${op.goal.toLocaleString('ru-RU')}` : ''}</span>`;
+}
+$('rankRow').addEventListener('change', (e) => { if (e.target.id === 'rankChk') { rankWanted = e.target.checked; localStorage.setItem('fortuna_drone_ranked', rankWanted ? '1' : '0'); renderRankRow(); } });
 function saveMouse() { store.set('fortuna_drone_mouse', JSON.stringify(mouseCfg)); }
 $('tab-set').addEventListener('click', (e) => {
   const g = e.target.closest('[data-g]');
@@ -2066,6 +2113,9 @@ function startCountdown() {
   show('menu', false); setBody('playing'); $('hud').classList.add('on'); G.state = 'countdown';
   camera.clearViewOffset(); applyMode(); applyLoadout(); placeAtStart(); world.sortieStart();
   setHint(''); if (MODE.training) trainingReset();
+  if (loadout.some((k, i) => k && loaded[i] !== k)) setTimeout(() => popup('ЗАКРЫТЫЕ РАКЕТЫ ЗАМЕНЕНЫ БАЗОВЫМИ — В «РЕАЛИЗМЕ» ТОЛЬКО ОТКРЫТЫЕ', 'bad'), 2600);
+  endMsg = '';
+  if (!MODE.training) PR.startRun(modeKey, rankWanted && PR.state && PR.state.tickets_left > 0); // вылет в зачёт (и на награду — с билетом)
   enterImmersive(); tgFlight(true); drReset(); // клик «ВЗЛЁТ» — жест пользователя, браузер разрешит полный экран и захват мыши
   let n = 3; setCount(n);
   const iv = setInterval(() => {
@@ -2095,12 +2145,24 @@ function endGame(reason) {
     $('endReason').textContent = texts[reason] || '';
     $('eKills').textContent = G.kills; $('eMax').textContent = MAX_K; $('eScore').textContent = G.score; $('eMsl').textContent = G.mHits + '/' + G.mFired; $('eEvade').textContent = G.evaded;
     $('eBoss').textContent = G.bossKilled ? 'Флагман «Подстилка улитки» сбит (+5)' : (G.bossSpawned ? 'Флагман «Подстилка улитки» уцелел' : '');
-    if (TRAINING) $('serverMsg').textContent = 'Тренировка — результат не идёт в общий прогресс';
+    if (PR.enabled || TRAINING) setEndMsg(endMsg || (MODE.training ? 'Обучение — без наград и очков операции' : PR.enabled ? 'Считаем итог…' : 'Без аккаунта сайта — результат не сохраняется'));
     else { $('serverMsg').textContent = 'Отправляем результат…'; $('againBtn').style.display = 'none'; $('closeBtn').textContent = 'Закрыть'; }
     show('end', true);
   }, 1300);
+  if (PR.run) finishRun();
   const rec = saveRunStats(); if (rec && G.score > 0) setTimeout(() => { $('eBoss').textContent = ($('eBoss').textContent ? $('eBoss').textContent + ' · ' : '') + 'Новый личный рекорд!'; }, 1350);
   if (!TRAINING) sendResult(reason);
+}
+// итог вылета на сайте (награда и очки операции); endMsg — текст для экрана итогов (он появляется через 1,3 с)
+let endMsg = '';
+function setEndMsg(t) { endMsg = t; $('serverMsg').textContent = t; }
+async function finishRun() {
+  try {
+    const d = await PR.claimRun(G.kills, G.bossKilled);
+    if (!d) return;
+    const t = rewardText(d);
+    setEndMsg(t ? t : d.ranked ? 'Без награды — нужно сбить не меньше 4 или флагмана' : 'Вылет без награды (без билета)');
+  } catch (err) { setEndMsg('Итог не засчитан: ' + err.message); }
 }
 function sendResult(reason) {
   if (G.sent || MODE.training) return; G.sent = true;
@@ -2113,11 +2175,14 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'mg_re
 $('startBtn').addEventListener('click', () => { if (MP.room) { unlockAudio(); if (MP.inLobby()) MP.toggleReady(); return; } startCountdown(); }); // в онлайн-комнате — «Готов»
 $('resumeBtn').addEventListener('click', togglePause);
 $('againBtn').addEventListener('click', () => { if (MP.end) mpBackToMenu(); else location.reload(); });
-function exitGame() { MP.leave(); exitImmersive(); tgFlight(false); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); } // вне сайта — назад в меню
+async function exitGame() {
+  if (PR.run && G.state !== 'menu') await Promise.race([PR.claimRun(G.kills, G.bossKilled).catch(() => {}), new Promise((r) => setTimeout(r, 1500))]); // ушёл посреди вылета — сбитые всё равно в зачёт
+  MP.leave(); exitImmersive(); tgFlight(false); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); // вне сайта — назад в меню
+}
 $('closeBtn').addEventListener('click', exitGame); $('exit').addEventListener('click', exitGame); $('pause').addEventListener('click', togglePause); $('pauseExit').addEventListener('click', exitGame);
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play' && !MP.on) togglePause(); }); // онлайн-бой не ставится на паузу
 $('modeBadge').className = 'badge ' + (TRAINING ? 'train' : 'rank');
-$('modeBadge').textContent = TRAINING ? 'ТРЕНИРОВКА — без наград' : 'НА НАГРАДУ — результат идёт в общий прогресс недели';
+$('modeBadge').textContent = !TRAINING ? 'НА НАГРАДУ — результат идёт в общий прогресс недели' : PR.enabled ? 'АРКАДА · РЕАЛИЗМ · ОНЛАЙН — награды и операция' : 'ТРЕНИРОВКА — без наград';
 setBody('menuing');
 
 // ═════════════ Онлайн-бой ═════════════
@@ -2192,19 +2257,31 @@ function mpShowEnd(m, me, myTeam) {
   try { if (document.pointerLockElement) document.exitPointerLock(); } catch (_) { /* нет */ }
   silenceLoops(); show('pauseScr', false);
   const [a, b] = m.score, mine = m.score[myTeam], theirs = m.score[1 - myTeam];
+  if (!mpReward) mpReward = PR.enabled ? 'Считаем награду…' : '';
   setTimeout(() => {
     $('hud').classList.remove('on'); setBody(null); setCount('');
     $('endTitle').textContent = mine > theirs ? 'Победа!' : mine < theirs ? 'Поражение' : 'Ничья'; $('endTitle').className = mine > theirs ? 'win' : '';
     $('endReason').textContent = `${TEAM_NAMES[0]} ${a} : ${b} ${TEAM_NAMES[1]}`;
     const rows = m.players.slice().sort((x, y) => y.k - x.k || x.d - y.d)
       .map((p) => `<tr class="${p.id === me ? 'me' : ''}"><td>${String(p.name).replace(/[&<>]/g, '')}${p.bot ? ' <i>(бот)</i>' : ''}</td><td>${TEAM_NAMES[p.team]}</td><td>${p.k}</td><td>${p.d}</td></tr>`).join('');
-    $('serverMsg').innerHTML = `<table class="mpRes"><tr><th>Пилот</th><th>Команда</th><th>Сбил</th><th>Сбит</th></tr>${rows}</table>`;
+    $('serverMsg').innerHTML = `<table class="mpRes"><tr><th>Пилот</th><th>Команда</th><th>Сбил</th><th>Сбит</th></tr>${rows}</table><p id="mpRw" class="mpRw">${mpReward}</p>`;
     $('end').classList.add('mpEnd'); $('againBtn').style.display = ''; $('againBtn').textContent = 'В лобби'; $('closeBtn').textContent = 'Выйти';
     show('end', true);
   }, 1200);
 }
+// итог онлайн-боя от сервера (подписан) → награда и очки операции на сайте
+let mpReward = '';
+function setMpReward(t) { mpReward = t; const el = $('mpRw'); if (el) el.textContent = t; }
+function mpOnResult(m) {
+  if (!PR.enabled) return;
+  setMpReward('Считаем награду…');
+  PR.claimOnline(m.token).then((d) => {
+    const t = rewardText(d);
+    setMpReward(d.rewarded ? t : (d.online_rewards_left === 0 ? 'Наградные онлайн-бои на сегодня закончились' : 'Без награды — нужна победа или 2 сбитых') + (d.points ? ' · ' + t : ''));
+  }).catch((err) => setMpReward('Итог не засчитан: ' + err.message));
+}
 function mpBackToMenu() {
-  MP.closeResults();
+  MP.closeResults(); mpReward = ''; PR.refresh();
   show('end', false); show('pauseScr', false); $('end').classList.remove('mpEnd'); $('againBtn').textContent = 'Ещё вылет'; setCount('');
   $('hud').classList.remove('on'); setBody('menuing'); exitImmersive(); tgFlight(false);
   Object.assign(G, { state: 'menu', over: false, paused: false });
@@ -2218,6 +2295,7 @@ function mpSyncMenu(mp) {
   $('startBtn').textContent = !inRoom ? 'ВЗЛЁТ' : mp.inLobby() ? (me && me.ready ? 'ОТМЕНИТЬ ГОТОВНОСТЬ' : 'ГОТОВ') : 'ИДЁТ БОЙ…';
   $('startBtn').classList.toggle('ready', !!(inRoom && me && me.ready));
   $('modeSel').style.display = inRoom ? 'none' : '';
+  renderRankRow();
 }
 // приглашение в комнату: в Telegram — «поделиться» в чат, на телефоне — системное меню, иначе — ссылка в буфер
 function shareInvite(url, text, btn) {
@@ -2232,7 +2310,7 @@ const MP = createOnline({
   countdown: (n) => { setCount(n); },
   startOnline: mpStart, setHull: mpSetHull, hitMark: (c) => hitMarks.push({ pos: c.pos.clone(), t: 0.35, big: false }),
   meDown: mpMeDown, meUp: mpMeUp, makeRemote, remoteDown, remoteUp, removeRemote, remoteVisual,
-  remoteShot: (c) => fireBullet(c, null, 0), showEnd: mpShowEnd,
+  remoteShot: (c) => fireBullet(c, null, 0), showEnd: mpShowEnd, onResult: mpOnResult,
   firing: () => (input.fire || held.has('fire')) && !player.overheated,
   radarLock: () => radar.lock, loadout: () => loaded.slice(),
   status: (t) => { if (MP.on || !t) setCount(t); }, applyYou: mpApplyYou,
@@ -2246,6 +2324,7 @@ const MP = createOnline({
 $('tab-mp').addEventListener('click', (e) => MP.onClick(e));
 if (!TRAINING) $('mtabs').querySelector('[data-tab="mp"]').style.display = 'none'; // в партии на награду онлайна нет
 else if (Q.get('mp')) showTab('mp'); // ссылка-приглашение (?mp=КОД) или кнопка «Онлайн-бой» на сайте (?mp=1) — сразу вкладка «Онлайн»
+renderRankRow(); PR.refresh(); // прогресс с сайта: детали, билеты, открытые ракеты, операция
 
 // сетевая ракета пущена (событие сервера): модель и вспышка; своя — снимается с пилона, с которого просили пуск
 function mpNetLaunched(m, slot) {

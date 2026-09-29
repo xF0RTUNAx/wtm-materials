@@ -319,8 +319,8 @@ const ARCADE_GAMES = [
   { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html" },
   { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
   {
-    id: "drone", name: "Симулятор Летки", icon: "jetFighter", file: "games/drone.html", rankedSoon: true,
-    note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты со справкой, радар, СПО, ловушки, дозаправка. Режимы «Обучение», «Аркада» и «Реализм». Онлайн-бой команда на команду (1×1…4×4) с друзьями, быстрым поиском или против ботов",
+    id: "drone", name: "Симулятор Летки", icon: "jetFighter", file: "games/drone.html", perSortie: true,
+    note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты, радар, СПО, ловушки, дозаправка. Онлайн-бой 1×1…4×4 с друзьями, быстрым поиском или против ботов. За успешный вылет — детали (в «Реализме» ×3, шанс ключа и билета), ракеты для «Реализма» открываются за детали. Все сбитые идут в операцию «Истребительная угроза» (вкладка «Рейд»)",
     online: true, featured: true,
   },
 ];
@@ -354,8 +354,8 @@ function renderArcadeSection() {
 
 // «Симулятор Летки» — отдельной карточкой над остальными играми: кадр из игры, рамка, зелёная кнопка онлайна
 function featuredArcadeCard(g, hasTickets) {
-  const price = g.rankedSoon ? "Пока только тренировка (бесплатно)"
-    : hasTickets ? `Партия на награду: ${iconVal("ticket", 14, "1 билет")}` : `Билеты закончились — обновление через ${liveCountdown(secondsUntilMskReset())}`;
+  const price = hasTickets ? `Вылет на награду: ${iconVal("ticket", 14, "1 билет")} · без билета — только в зачёт операции`
+    : `Билеты закончились (вылеты — без награды) — обновление через ${liveCountdown(secondsUntilMskReset())}`;
   return `
     <div class="arcade-featured">
       <div class="arcade-featured-media">
@@ -367,8 +367,8 @@ function featuredArcadeCard(g, hasTickets) {
         <div class="container-card-price">${price}</div>
         <div class="arcade-note">${g.note}</div>
         <div class="container-buy-row">
-          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets && !g.rankedSoon ? "" : "disabled"}>${g.rankedSoon ? "Награда — скоро" : "Играть на награду"}</button>
-          <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
+          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets ? "" : "disabled"}>Играть на награду</button>
+          <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Без награды</button>
         </div>
         <div class="container-buy-row arcade-online-row"><button class="btn-online btn-sm" data-arcade-online="${g.id}">Онлайн-бой</button></div>
         <div class="arcade-note" data-mp-live hidden></div>
@@ -425,6 +425,10 @@ let arcadeRunId = null;
 async function openArcadeGame(gameId, ranked, extra) {
   const game = ARCADE_GAMES.find((g) => g.id === gameId);
   if (!game) return;
+  if (game.perSortie) { // «Симулятор Летки»: билет тратит сама игра на каждый вылет (drone-start); ranked — включён ли «вылет на награду»
+    if (!extra) extra = `ranked=${ranked ? 1 : 0}`;
+    ranked = false;
+  }
   if (ranked) {
     // Билет списывается на сервере при старте партии; run_id потом даёт единоразовую награду.
     try {
@@ -1094,6 +1098,22 @@ function describeFeedItem(row) {
       if (d.big_win) text += " 💥 Джекпот!";
       return text;
     }
+    case "drone_missile":
+      return `🚀 ${login} открыл ракету ${d.missile} для «Реализма» за ${d.price} деталей`;
+    case "drone_reward": {
+      const parts = [];
+      if (d.details) parts.push(`+${d.details} деталей`);
+      if (d.keys) parts.push(`+${d.keys} 🔑`);
+      if (d.ticket) parts.push("+1 билет");
+      const where = d.online ? `онлайн-бой в «${d.mode === "real" ? "Реализме" : "Аркаде"}»${d.win ? " — победа" : ""}` : `вылет в «${d.mode === "real" ? "Реализме" : "Аркаде"}»`;
+      return `✈️ ${login}: ${where} — ${parts.join(", ")}`;
+    }
+    case "operation_step":
+      return `🎯 Операция «${d.name}»: пройден шаг ${d.step} из ${d.steps}${d.step >= d.steps ? " — цель достигнута!" : ""} (решающий вклад — ${login})`;
+    case "operation_claim":
+      return `🎖 ${login} получил награды операции: +${d.details} деталей${d.keys ? `, +${d.keys} 🔑` : ""}`;
+    case "operation_start":
+      return `🎯 Началась операция «${d.name}»: цель — ${fmtNum(d.goal)} очков, ${d.steps} шагов`;
     default:
       return `${login}: ${row.event_type}`;
   }
