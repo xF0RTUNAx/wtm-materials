@@ -467,6 +467,25 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
 
   // лес: квадраты 2×2 км, у каждого свой InstancedMesh — вне кадра и дальше дальности прорисовки не рисуется
   const treeChunks = [], shadowTrees = {};
+  // Квадрат леса закрыт рельефом, если все лучи от камеры к верху квадрата (центр и 4 угла) упираются в склон.
+  // Проверка консервативная: между точками выборки гребень можно пропустить — тогда квадрат просто рисуется. Ближе
+  // OCC_NEAR не проверяем (там деревья видны почти всегда, а «выскакивание» заметнее).
+  const OCC_PER_FRAME = 10, OCC_SAMPLES = 14, OCC_NEAR = 2500, OCC_MARGIN = 25;
+  let occI = 0;
+  const OCC_OFS = [[0, 0], [-1, -1], [1, -1], [-1, 1], [1, 1]];
+  function hiddenByTerrain(cam, t) {
+    if (Math.hypot(t.x - cam.x, t.z - cam.z) < OCC_NEAR + t.half * 1.5) return false;
+    for (const [ox, oz] of OCC_OFS) {
+      const dx = t.x + ox * t.half - cam.x, dz = t.z + oz * t.half - cam.z, dy = t.top - cam.y;
+      let blocked = false;
+      for (let i = 1; i < OCC_SAMPLES; i++) {
+        const k = i / OCC_SAMPLES;
+        if (terrainH(cam.x + dx * k, cam.z + dz * k) > cam.y + dy * k + OCC_MARGIN) { blocked = true; break; }
+      }
+      if (!blocked) return false;
+    }
+    return true;
+  }
   {
     const spruce = mergeParts([
       part(new THREE.CylinderGeometry(0.5, 0.8, 5, 5), 0x5a4029, M(0, 2.5, 0)),
@@ -506,11 +525,13 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       list.forEach(([x, y, z, s, rot, sy], i) => { m.compose(new THREE.Vector3(x, y - 0.5, z), q.setFromEuler(e.set(0, rot, 0)), new THREE.Vector3(s, s * sy, s)); mesh.setMatrixAt(i, m); });
       mesh.instanceMatrix.needsUpdate = true; // тени леса рисует отдельный «теневой» набор ближних деревьев (ниже)
       const lo = new THREE.InstancedMesh(geoLo, trMat, list.length); lo.instanceMatrix = mesh.instanceMatrix; // общий буфер матриц
-      add(mesh); add(lo); treeChunks.push({ mesh, lo, x: cx, z: cz, leafy: !!isLeafy });
+      const top = list.reduce((mx, t) => Math.max(mx, t[1] + 18 * t[3] * t[5]), 0); // верх самого высокого дерева квадрата
+      add(mesh); add(lo); treeChunks.push({ mesh, lo, x: cx, z: cz, leafy: !!isLeafy, top, half: CH / 2, occ: false });
     }
     // «Теневой» лес: в карту теней попадают только деревья в зоне теней вокруг дрона (а не целые квадраты по 2 км),
     // и только для теневого прохода (слой 3 — основная камера его не видит). Набор пересобирается при смещении на 120 м.
-    if (P.shadows) for (const [k, g] of [['spruce', spruce], ['leafy', leafy]]) {
+    // в тени — упрощённые деревья (как дальний лес): силуэт тени почти тот же, треугольников в проходе теней в разы меньше
+    if (P.shadows) for (const [k, g] of [['spruce', spruceLo], ['leafy', leafyLo]]) {
       const cap = P.shadowTrees || 2500, im = new THREE.InstancedMesh(g.clone(), trMat, cap);
       im.count = 0; im.frustumCulled = false; im.castShadow = true; im.layers.set(3); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       add(im); shadowTrees[k] = im;
@@ -761,7 +782,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     get rainK() { return W.rain ? rainK : 0; },
     get emitters() { return props.emitters; },
     props,
-    // небо и слои облаков следуют за камерой, тень — за игроком; лес прорисовывается до treeDist;
+    // небо и слои облаков следуют за камерой, тень — за игроком; лес прорисовывается до treeDist (и не за холмами);
     // деревья и дома отбрасывают тени, только когда игрок низко (сверху этих теней всё равно не видно)
     follow(camPos, focus, focusAgl) {
       sky.position.copy(camPos);
@@ -782,8 +803,10 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       } else { sun.position.copy(base).addScaledVector(SUN_DIR, 2000); sun.target.position.copy(base); sun.target.updateMatrixWorld(); }
       updateTerrain(camPos);
       const hiD = ((P.treeHi || 2000) + 1000) * detailK, ch = Math.max(0, camPos.y - 300) * 0.8;
+      // квадраты леса за холмами не рисуем: проверяем по кругу OCC_PER_FRAME квадратов за кадр (весь лес — за несколько кадров)
+      for (let k = 0; k < OCC_PER_FRAME && treeChunks.length; k++) { const t = treeChunks[occI = (occI + 1) % treeChunks.length]; t.occ = hiddenByTerrain(camPos, t); }
       for (const t of treeChunks) {
-        const d = Math.hypot(t.x - camPos.x, t.z - camPos.z, ch), on = d < (treeDist + 1400) * (0.85 + 0.15 * detailK);
+        const d = Math.hypot(t.x - camPos.x, t.z - camPos.z, ch), on = d < (treeDist + 1400) * (0.85 + 0.15 * detailK) && !t.occ;
         t.mesh.visible = on && d < hiD; t.lo.visible = on && d >= hiD;
       }
       if (P.shadows) {

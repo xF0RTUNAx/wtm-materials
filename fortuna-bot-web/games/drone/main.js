@@ -70,11 +70,13 @@ const DPR = window.devicePixelRatio || 1;
 const prFor = (p) => Math.min(DPR * p.prMul, p.prCap, IS_TOUCH ? 2 : 3); // на телефоне больше 2× не видно глазом — только нагрев
 // настройки производительности и экрана (сбрасываются к умолчаниям пресета при его смене)
 const PERF_KEYS = ['scale', 'dyn', 'min', 'target', 'up', 'sharp', 'aa'];
-let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true, halfFx: false, smartQ: false };
+// halfFx (облака и дым в ½) — по умолчанию включено везде, где есть конвейер кадра (кроме «Низкого»); fxv — версия умолчаний
+let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true, halfFx: gfxKey !== 'low', smartQ: false, fxv: 2 };
 try {
   const sp = JSON.parse(store.get('fortuna_drone_perf') || 'null');
   if (sp && typeof sp === 'object') {
-    for (const k of ['cap', 'p3', 'fps', 'immersive', 'halfFx', 'smartQ']) if (k in sp) perf[k] = sp[k];
+    for (const k of ['cap', 'p3', 'fps', 'immersive', 'smartQ']) if (k in sp) perf[k] = sp[k];
+    if (sp.fxv === 2 && 'halfFx' in sp) perf.halfFx = sp.halfFx; // сохранённое до смены умолчания не считаем выбором игрока
     if (sp.preset === gfxKey) for (const k of PERF_KEYS) if (k in sp) perf[k] = sp[k];
   }
 } catch (_) { /* по умолчанию */ }
