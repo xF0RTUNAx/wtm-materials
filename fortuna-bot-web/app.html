@@ -195,6 +195,18 @@
   .btn-online { font-family: inherit; font-size: 15px; font-weight: 650; padding: 11px; border: none; border-radius: var(--radius-sm); cursor: pointer; background: var(--online); color: #fff; }
   .btn-online.btn-sm { padding: 9px 14px; font-size: 14px; }
   .arcade-online-row { margin-top: 8px; } .arcade-online-row .btn-online { flex: 1; }
+  /* «Симулятор Летки» — выделенная карточка над остальными играми аркады: рамка-градиент (цвет сайта → зелёный онлайна) */
+  .arcade-featured { position: relative; border-radius: var(--radius); margin-bottom: 12px; padding: 2px; box-shadow: var(--shadow);
+    background: linear-gradient(135deg, var(--accent), var(--online)); }
+  .arcade-featured > * { background: var(--surface); }
+  .arcade-featured-media { position: relative; aspect-ratio: 21 / 9; background: #120e0b; border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0; overflow: hidden; }
+  .arcade-featured-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .arcade-featured-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.7) 100%); }
+  .arcade-featured-cap { position: absolute; left: 12px; bottom: 9px; z-index: 1; color: #fff; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 7px; text-shadow: 0 1px 8px rgba(0,0,0,.55); }
+  .arcade-featured-cap svg { color: #fff; }
+  .arcade-featured-body { padding: 12px 14px 14px; border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
+    background: linear-gradient(180deg, color-mix(in srgb, var(--online) 7%, var(--surface)), var(--surface) 60%); }
+  .arcade-featured-body .arcade-note { margin-bottom: 10px; }
   .game-ad-cap { position: absolute; left: 14px; right: 14px; bottom: 11px; z-index: 1; color: #fff; }
   .game-ad-title { font-size: 20px; font-weight: 800; letter-spacing: -.01em; line-height: 1.15; text-shadow: 0 1px 8px rgba(0,0,0,.5); }
   .game-ad-sub { font-size: 12.5px; opacity: .9; margin-top: 2px; text-shadow: 0 1px 6px rgba(0,0,0,.6); }

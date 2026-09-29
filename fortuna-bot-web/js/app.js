@@ -321,13 +321,14 @@ const ARCADE_GAMES = [
   {
     id: "drone", name: "Симулятор Летки", icon: "jetFighter", file: "games/drone.html", rankedSoon: true,
     note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты со справкой, радар, СПО, ловушки, дозаправка. Режимы «Обучение», «Аркада» и «Реализм». Онлайн-бой команда на команду (1×1…4×4) с друзьями, быстрым поиском или против ботов",
-    online: true,
+    online: true, featured: true,
   },
 ];
 
 function renderArcadeSection() {
   const hasTickets = ticketsLeft() > 0;
-  const cards = ARCADE_GAMES.map((g) => {
+  const featured = ARCADE_GAMES.find((g) => g.featured);
+  const cards = ARCADE_GAMES.filter((g) => !g.featured).map((g) => {
     return `
       <div class="container-card">
         <div class="container-card-name">${icon(g.icon)} ${g.name}</div>
@@ -346,8 +347,33 @@ function renderArcadeSection() {
 
   return `
     <div class="section-label">Аркада</div>
+    ${featured ? featuredArcadeCard(featured, hasTickets) : ""}
     <div class="containers-grid">${cards}</div>
   `;
+}
+
+// «Симулятор Летки» — отдельной карточкой над остальными играми: кадр из игры, рамка, зелёная кнопка онлайна
+function featuredArcadeCard(g, hasTickets) {
+  const price = g.rankedSoon ? "Пока только тренировка (бесплатно)"
+    : hasTickets ? `Партия на награду: ${iconVal("ticket", 14, "1 билет")}` : `Билеты закончились — обновление через ${liveCountdown(secondsUntilMskReset())}`;
+  return `
+    <div class="arcade-featured">
+      <div class="arcade-featured-media">
+        <img src="media/letka_promo.jpg" alt="" loading="lazy">
+        <div class="game-ad-badges"><span class="game-ad-badge">ТОП</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
+        <div class="arcade-featured-cap">${icon(g.icon, 18)} ${g.name}</div>
+      </div>
+      <div class="arcade-featured-body">
+        <div class="container-card-price">${price}</div>
+        <div class="arcade-note">${g.note}</div>
+        <div class="container-buy-row">
+          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets && !g.rankedSoon ? "" : "disabled"}>${g.rankedSoon ? "Награда — скоро" : "Играть на награду"}</button>
+          <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
+        </div>
+        <div class="container-buy-row arcade-online-row"><button class="btn-online btn-sm" data-arcade-online="${g.id}">Онлайн-бой</button></div>
+        <div class="arcade-note" data-mp-live hidden></div>
+      </div>
+    </div>`;
 }
 
 function wireArcadeSection(mount) {
