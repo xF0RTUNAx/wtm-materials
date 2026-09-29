@@ -46,6 +46,16 @@ function equipmentEquip(playerId, equipmentSlug) {
   return callEdgeFunction(CONFIG.EQUIPMENT_EQUIP_URL, { player_id: playerId, equipment_slug: equipmentSlug });
 }
 
+// операция «Симулятора Летки» (общая цель): статус, забрать награды, запуск новой (админ)
+function operationStatus(playerId) {
+  return callEdgeFunction(CONFIG.OPERATION_URL, { player_id: playerId });
+}
+function operationClaim(playerId) {
+  return callEdgeFunction(CONFIG.OPERATION_URL, { player_id: playerId, action: "claim" });
+}
+function operationStart(playerId, name, goal, steps) {
+  return callEdgeFunction(CONFIG.OPERATION_URL, { player_id: playerId, action: "start", name, goal, steps });
+}
 function getRaidStatus() {
   return callEdgeFunction(CONFIG.RAID_STATUS_URL, {});
 }

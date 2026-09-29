@@ -589,11 +589,70 @@ const ITEM_DUP_COMP_DISPLAY = 50000;
 // ── Рейд ──
 const RAID_TYPE_LABEL = { normal: "Линс", hard: "Аполис", "13": "Тивашин13", ca: "ЦА" };
 
+// ── Операция «Симулятора Летки» (общая цель всех игроков) — блок над рейдом ──
+// Сбитые в игре: Аркада — 1 очко, Реализм — 3. Награды за шаги — всем с вкладом от min_contrib (кнопка «Забрать»).
+function operationHTML(st, admin) {
+  const o = st && st.operation;
+  if (!o) return "";
+  const pct = Math.min(100, (o.points / o.goal) * 100);
+  const per = o.goal / o.steps;
+  const next = o.reached < o.steps ? Math.ceil(per * (o.reached + 1) - o.points) : 0;
+  const ticks = Array.from({ length: o.steps - 1 }, (_, i) => `<i class="${(i + 1) % 5 === 0 ? "big" : ""} ${i + 1 <= o.reached ? "on" : ""}" style="left:${((i + 1) / o.steps) * 100}%"></i>`).join("");
+  const eligible = st.mine >= o.min_contrib;
+  const tb = o.top_bonus || [];
+  const claim = st.pending > 0 || (o.status === "finished" && st.rank && st.rank <= tb.length)
+    ? `<button class="btn-online op-claim" data-op-claim ${eligible ? "" : "disabled"}>Забрать награды${st.pending ? ` за ${st.pending} ${st.pending === 1 ? "шаг" : st.pending < 5 ? "шага" : "шагов"}` : ""}</button>`
+      + (eligible ? "" : `<div class="op-note">Награды — при вкладе от ${o.min_contrib} очков (у вас ${st.mine})</div>`)
+    : "";
+  const top = st.top.length
+    ? st.top.map((r, i) => `<div class="shop-row"><div class="shop-row-main">${i < 3 ? ["🥇", "🥈", "🥉"][i] : i + 1 + "."} ${playerLink(r.login)}</div><div class="shop-row-price">${fmtNum(r.points)}</div></div>`).join("")
+    : `<div class="shop-row">Пока никто не внёс вклад</div>`;
+  const adminForm = admin ? `<details class="op-admin"><summary>Новая операция (админ)</summary>
+      <div class="op-admin-row"><input id="op-name" placeholder="Название" value="Истребительная угроза II"><input id="op-goal" type="number" value="50000" min="100"><input id="op-steps" type="number" value="25" min="1" max="100"></div>
+      <button class="btn-ghost btn-sm" data-op-start>Запустить (текущая закроется)</button></details>` : "";
+  return `
+    <div class="op-card">
+      <div class="op-head"><span class="game-ad-badge online">ОПЕРАЦИЯ</span>${o.status === "finished" ? `<span class="game-ad-badge">ЗАВЕРШЕНА</span>` : ""}</div>
+      <div class="op-title">${icon("jetFighter", 18)} ${o.name}</div>
+      <div class="op-sub">Общая цель «Симулятора Летки»: каждый сбитый в «Аркаде» — 1 очко, в «Реализме» — 3 (одиночные вылеты и онлайн, с билетом и без)</div>
+      <div class="op-track"><div class="op-fill" style="width:${pct}%"></div>${ticks}</div>
+      <div class="op-nums"><b>${fmtNum(o.points)}</b> / ${fmtNum(o.goal)} · шаг <b>${o.reached}</b> из ${o.steps}${next ? ` · до следующего ${fmtNum(next)}` : ""}</div>
+      <div class="op-me">Ваш вклад: <b>${fmtNum(st.mine)}</b>${st.rank ? ` · место ${st.rank}` : ""}</div>
+      ${claim}
+      <details class="op-rules"><summary>Награды</summary>
+        Каждый шаг — ${o.step_details} деталей, каждый 5-й — ещё ${o.step5_keys} ключей; последний шаг — ${o.final_details} деталей и ${o.final_keys} ключей.
+        После финала топ-${tb.length} по вкладу — ${tb.join(" / ")} деталей и столько же ключей. Награды — всем с вкладом от ${o.min_contrib} очков.</details>
+      <div class="section-label">Лидеры операции</div>
+      <div class="shop-list">${top}</div>
+      <button class="btn-secondary btn-sm op-play" data-op-play>Играть в «Симулятор Летки»</button>
+      ${adminForm}
+    </div>`;
+}
+function wireOperation(mount) {
+  const c = mount.querySelector("[data-op-claim]");
+  if (c) c.addEventListener("click", async () => {
+    c.disabled = true;
+    try {
+      const r = await operationClaim(getCurrentPlayer().id);
+      renderDashboard({ ok: true, text: r.details || r.keys ? `Награды операции: +${r.details} деталей${r.keys ? `, +${r.keys} 🔑` : ""}` : "Новых наград пока нет" });
+    } catch (err) { showResult("raid-result", false, err.message); c.disabled = false; }
+  });
+  const p = mount.querySelector("[data-op-play]");
+  if (p) p.addEventListener("click", () => openArcadeGame("drone", ticketsLeft() > 0));
+  const s = mount.querySelector("[data-op-start]");
+  if (s) s.addEventListener("click", async () => {
+    try {
+      await operationStart(getCurrentPlayer().id, document.getElementById("op-name").value, +document.getElementById("op-goal").value, +document.getElementById("op-steps").value);
+      renderDashboard({ ok: true, text: "Новая операция запущена" });
+    } catch (err) { showResult("raid-result", false, err.message); }
+  });
+}
+
 async function renderRaidTab(mount, flash) {
   mount.innerHTML = `<div class="loading">Загрузка...</div>`;
-  let status;
+  let status, op = null;
   try {
-    status = await getRaidStatus();
+    [status, op] = await Promise.all([getRaidStatus(), operationStatus(getCurrentPlayer().id).catch(() => null)]); // операция не должна ломать рейды
   } catch (err) {
     mount.innerHTML = `<div class="error-text">${err.message}</div>`;
     return;
@@ -639,8 +698,9 @@ async function renderRaidTab(mount, flash) {
       </div>`;
   }
 
-  mount.innerHTML = `<div id="raid-result" class="result-box" hidden></div>${adminHtml}${bodyHtml}`;
+  mount.innerHTML = `<div id="raid-result" class="result-box" hidden></div>${operationHTML(op, isAdmin)}${adminHtml}${bodyHtml}`;
   if (flash) showResult("raid-result", flash.ok, flash.text);
+  wireOperation(mount);
 
   const buyBtn = document.getElementById("raid-buy-btn");
   if (buyBtn) buyBtn.addEventListener("click", async () => {
