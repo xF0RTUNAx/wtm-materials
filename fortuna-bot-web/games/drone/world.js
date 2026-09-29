@@ -4,9 +4,9 @@
 // Детализация задаётся пресетом графики (см. PRESETS в main.js), атмосфера — погодой (WEATHERS).
 // Шум для деталей земли, микрорельефа и облачного слоя — из одной текстуры (выборка вместо десятков sin() на пиксель).
 /* global THREE */
-import { mulberry32 } from './schedule.js';
-import { M, part, mergeParts } from './models.js';
-import { buildProps } from './props.js';
+import { mulberry32 } from './schedule.js?v=20260929a';
+import { M, part, mergeParts } from './models.js?v=20260929a';
+import { buildProps } from './props.js?v=20260929a';
 
 export const WORLD = { R: 12000, SIZE: 34000, WATER_Y: 60, CEIL: 14000 };
 export const SUN_DIR = new THREE.Vector3(0.42, 0.6, 0.38).normalize(); // меняется погодой (на месте — все ссылки видят новое)

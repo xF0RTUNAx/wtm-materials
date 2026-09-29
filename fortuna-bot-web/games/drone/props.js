@@ -4,8 +4,8 @@
 // поэтому вызовов отрисовки добавляется около десятка. Расстановка — по своему генератору от seed,
 // застройку городов и лес не сдвигает. Здесь же — «коробки» для столкновений дрона со строениями.
 /* global THREE */
-import { mulberry32 } from './schedule.js';
-import { M, part, mergeParts } from './models.js';
+import { mulberry32 } from './schedule.js?v=20260929a';
+import { M, part, mergeParts } from './models.js?v=20260929a';
 
 // C — окружение из world.js: { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, lin, add, P, rnd }
 export function buildProps(C) {
