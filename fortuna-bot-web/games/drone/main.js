@@ -1,11 +1,11 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js?v=20260929b';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260929b';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather } from './world.js?v=20260929b';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260929b';
-import { createPipeline } from './post.js?v=20260929b';
-import { createAudio } from './audio.js?v=20260929b';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js?v=20260929c';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260929c';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260929c';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260929c';
+import { createPipeline } from './post.js?v=20260929c';
+import { createAudio } from './audio.js?v=20260929c';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -64,11 +64,11 @@ const DPR = window.devicePixelRatio || 1;
 const prFor = (p) => Math.min(DPR * p.prMul, p.prCap, IS_TOUCH ? 2 : 3); // на телефоне больше 2× не видно глазом — только нагрев
 // настройки производительности и экрана (сбрасываются к умолчаниям пресета при его смене)
 const PERF_KEYS = ['scale', 'dyn', 'min', 'target', 'up', 'sharp', 'aa'];
-let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true };
+let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true, halfFx: false, smartQ: false };
 try {
   const sp = JSON.parse(store.get('fortuna_drone_perf') || 'null');
   if (sp && typeof sp === 'object') {
-    for (const k of ['cap', 'p3', 'fps', 'immersive']) if (k in sp) perf[k] = sp[k];
+    for (const k of ['cap', 'p3', 'fps', 'immersive', 'halfFx', 'smartQ']) if (k in sp) perf[k] = sp[k];
     if (sp.preset === gfxKey) for (const k of PERF_KEYS) if (k in sp) perf[k] = sp[k];
   }
 } catch (_) { /* по умолчанию */ }
@@ -125,7 +125,7 @@ function rebuildPipe() {
   if (pipe) { pipe.dispose(); pipe = null; }
   if (needPipe()) {
     const pc = P.post || {}, ldr = pipeLdr();
-    pipe = createPipeline(renderer, { ...pc, ldr, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
+    pipe = createPipeline(renderer, { ...pc, ldr, fx: perf.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
     renderer.toneMapping = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping; // HDR: тонмаппинг и гамму делает композит
     renderer.setPixelRatio(basePR);
   } else {
@@ -135,6 +135,15 @@ function rebuildPipe() {
   applyExposure();
   scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); // смена тонмаппинга — пересборка шейдеров
   resize();
+  applyFxLayers();
+}
+// облака, облачный слой и дым — в отдельный проход конвейера в половине разрешения (если опция включена и конвейер её поддерживает)
+let fxReady = false;
+function applyFxLayers() {
+  if (!fxReady) return;
+  const on = !!(pipe && pipe.fx);
+  world.setFxLayer(on); SMOKE.points.layers.set(on ? FX_LAYER : 0); FX.points.layers.set(on ? FX_ADD_LAYER : 0);
+  if (!on) { FXU.fxOn.value = 0; FXU.tDepth.value = null; }
 }
 // Динамическое разрешение и счётчик кадров. Раз в 0,5 с: частота кадров, «худшие 5 %» кадров и решение по масштабу.
 // Частота кадров не может быть выше частоты экрана (vs — период развёртки, меряется при загрузке), поэтому:
@@ -143,7 +152,10 @@ function rebuildPipe() {
 //    а если после подъёма кадры просели — возвращается и 10 с не пробует снова (раньше он только падал).
 const REFRESH = [1000 / 144, 1000 / 120, 1000 / 90, 1000 / 75, 1000 / 60, 1000 / 30];
 const snapPeriod = (ms) => REFRESH.find((p) => Math.abs(ms - p) < p * 0.12) || 0;
-const dr = { scale: perf.scale, win: [], t: 0, fps: 0, low: 0, vs: 0, calm: 0, hold: 0, justUp: 0 };
+const dr = { scale: perf.scale, win: [], t: 0, fps: 0, low: 0, vs: 0, calm: 0, hold: 0, justUp: 0, q: 0 };
+// «умное» качество: уровни детализации (дальность подробного леса и рельефа), которые снижаются раньше разрешения
+const QK = [1, 0.8, 0.65, 0.5];
+function setQ(q) { dr.q = q; world.setDetail(QK[q]); }
 function drReset() { dr.win.length = 0; dr.t = 0; }
 function drUpdate(ms) {
   dr.win.push(ms); dr.t += ms;
@@ -157,10 +169,16 @@ function drUpdate(ms) {
   let s = dr.scale;
   if (dr.hold > 0) dr.hold--;
   if (avg > goal * 1.1) {
-    s -= avg > goal * 1.5 ? 0.1 : 0.05; dr.calm = 0;
+    // сначала — детализация (глазу почти незаметно), и только потом разрешение (картинка мягче)
+    if (perf.smartQ && dr.q < QK.length - 1) setQ(dr.q + 1); else s -= avg > goal * 1.5 ? 0.1 : 0.05;
+    dr.calm = 0;
     if (dr.justUp > 0) dr.hold = 20; // только что поднимали — не хватило мощности, 10 с не пробуем
   } else if (avg < goal * 1.04) {
-    if (++dr.calm >= 4 && dr.hold <= 0 && s < perf.scale) { s += 0.04; dr.calm = 0; dr.justUp = 3; }
+    // возврат в обратном порядке: сначала чёткость, потом детализация
+    if (++dr.calm >= 4 && dr.hold <= 0) {
+      if (s < perf.scale) { s += 0.04; dr.calm = 0; dr.justUp = 3; }
+      else if (dr.q > 0) { setQ(dr.q - 1); dr.calm = 0; dr.justUp = 3; }
+    }
   } else dr.calm = 0;
   if (dr.justUp > 0) dr.justUp--;
   s = clamp(s, perf.min, perf.scale);
@@ -242,6 +260,7 @@ const dotTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,.6
 const smokeTex = radialTex([[0, 'rgba(255,255,255,.9)'], [0.55, 'rgba(255,255,255,.45)'], [1, 'rgba(255,255,255,0)']], 64);
 const SMOKE = makeParticles(scene, P.particles, false, smokeTex);
 const FX = makeParticles(scene, Math.round(P.particles * 0.7), true, dotTex);
+fxReady = true; applyFxLayers();
 function sph(s) { let x, y, z, l; do { x = rnd() * 2 - 1; y = rnd() * 2 - 1; z = rnd() * 2 - 1; l = x * x + y * y + z * z; } while (l > 1 || l < 0.01); return [x * s, y * s, z * s]; }
 function explosion(p, size, color) {
   const c = color || [1, 0.6, 0.18];
@@ -1529,7 +1548,8 @@ hudCanvasSize();
 const HF = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
 function hText(t, x, y, col, size = 10.5, align = 'left', base = 'middle') {
   hx.font = `700 ${size}px ${HF}`; hx.textAlign = align; hx.textBaseline = base;
-  hx.lineWidth = 3; hx.strokeStyle = 'rgba(0,0,0,.8)'; hx.strokeText(t, x, y); hx.fillStyle = col; hx.fillText(t, x, y);
+  // мягкая тень, как у текста HUD в HTML (text-shadow 0 0 5px), а не жёсткая обводка
+  hx.shadowColor = 'rgba(0,0,0,.9)'; hx.shadowBlur = 5 * hcR; hx.fillStyle = col; hx.fillText(t, x, y); hx.shadowBlur = 0;
 }
 function hRing(x, y, r, col, w = 2) { hx.beginPath(); hx.arc(x, y, r, 0, 6.2832); hx.lineWidth = w; hx.strokeStyle = col; hx.stroke(); }
 // метка: kind — 'c' контакт РЛС, 'l' захват, 'v' визуальный контакт, 't' заправщик, 'm' ракета
@@ -1917,6 +1937,10 @@ function perfBlock() {
       ${perf.up !== 'off' ? `<label class="chk">Резкость <input type="range" id="pSharp" min="0" max="1" step="0.05" value="${perf.sharp}"> <span id="pSharpV">${perf.sharp.toFixed(2)}</span></label>` : ''}
       <div class="prow"><span>Сглаживание</span>${seg('aa', perf.aa, [['off', 'Выкл'], ['fxaa', 'FXAA'], ['msaa', 'MSAA ×4']])}</div>
       <p class="hint">${aaHint}</p>
+      <label class="chk"><input type="checkbox" id="pSmartQ" ${perf.smartQ ? 'checked' : ''} ${perf.dyn ? '' : 'disabled'}> Умное динамическое качество</label>
+      <p class="hint">Когда кадры не успевают, сначала сокращается дальность подробного леса и рельефа, и только потом снижается разрешение; возвращается в обратном порядке. Картинка при нагрузке остаётся чёткой.${perf.dyn ? '' : ' Работает вместе с динамическим разрешением.'}</p>
+      <label class="chk"><input type="checkbox" id="pHalfFx" ${perf.halfFx ? 'checked' : ''} ${fxAvail() ? '' : 'disabled'}> Облака и дым в половинном разрешении</label>
+      <p class="hint">Облака, облачный слой и дым рисуются в четверть пикселей и накладываются на кадр, а на стыке с землёй и самолётами мягко растворяются. Сильно разгружает видеокарту в облаках, в пасмурную погоду и при взрывах; края дыма чуть мягче.${fxAvail() ? '' : ' Нужен конвейер кадра: включите сглаживание или апскейлер.'}</p>
       <div class="prow"><span>Ограничение кадров</span>${seg('cap', perf.cap, [[0, 'Нет'], [30, '30'], [60, '60']])}</div>
       <p class="hint">Не рисовать чаще заданного: меньше нагрев и расход батареи.</p>
       ${P3_OK ? `<label class="chk"><input type="checkbox" id="pP3" ${perf.p3 ? 'checked' : ''}> Широкий цвет (Display P3)</label>
@@ -1930,6 +1954,7 @@ function perfBlock() {
     </div>`;
 }
 function applyPerf() { savePerf(); dr.scale = perf.scale; rebuildPipe(); renderSettingsTab(); }
+const fxAvail = () => renderer.capabilities.isWebGL2 && needPipe();
 // Погода в меню меняется сразу (без перезагрузки); «Случайная» — новая погода на каждый вылет
 function setWeatherPref(v) {
   weatherPref = v; store.set('fortuna_drone_weather', v);
@@ -1993,7 +2018,9 @@ $('tab-set').addEventListener('click', (e) => {
 $('tab-set').addEventListener('change', (e) => {
   if (e.target.id === 'mSteer') { mouseCfg.steer = e.target.checked; if (!mouseCfg.steer) { input.sx = 0; input.sy = 0; } saveMouse(); renderGuideTab(); }
   if (e.target.id === 'mInv') { mouseCfg.invert = e.target.checked; saveMouse(); }
-  if (e.target.id === 'pDyn') { perf.dyn = e.target.checked; applyPerf(); }
+  if (e.target.id === 'pDyn') { perf.dyn = e.target.checked; if (!perf.dyn && dr.q) setQ(0); applyPerf(); }
+  if (e.target.id === 'pSmartQ') { perf.smartQ = e.target.checked; if (!perf.smartQ && dr.q) setQ(0); savePerf(); }
+  if (e.target.id === 'pHalfFx') { perf.halfFx = e.target.checked; applyPerf(); }
   if (e.target.id === 'pFps') { perf.fps = e.target.checked; savePerf(); }
   if (e.target.id === 'pImm') { perf.immersive = e.target.checked; savePerf(); renderSettingsTab(); }
   if (e.target.id === 'sMute') setMute(e.target.checked);
@@ -2705,7 +2732,7 @@ function updateFpsMeter(dtMs) {
   if (fpsEl._on !== on) { fpsEl._on = on; fpsEl.style.display = on ? 'block' : 'none'; }
   if (!on || !dr.fps) return;
   const hz = dr.vs ? Math.round(1000 / dr.vs) : 0;
-  fpsEl.textContent = `${Math.round(dr.fps)}${hz ? '/' + hz : ''} к/с · худш. ${Math.round(dr.low)} · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
+  fpsEl.textContent = `${Math.round(dr.fps)}${hz ? '/' + hz : ''} к/с · худш. ${Math.round(dr.low)} · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${dr.q ? ' · дет. ' + Math.round(QK[dr.q] * 100) + '%' : ''}${pipe && pipe.fx ? ' · FX½' : ''}${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
 }
 let last = performance.now(), lastDraw = 0, lastState = '';
 function frame(now) {
@@ -2741,7 +2768,7 @@ measureRefresh().then(() => { try { render(); } catch (_) { /* первый ка
 
 if (TEST && TRAINING) window.__g = { camera, ship, scene, G, player, enemies, missiles, tankers, bullets, cms, schedule, radar, seeker, input, held, binds, loaded, MISSILES, AC, rwr,
   spawnAI, spawnTanker, endGame, hurt, dlz, buildSchedule, maxKills, SEED, tick, render, launchPlayerMissile, launchMissile, cycleLock, cycleWeapon, dropCM, updateHud, runBenchmark,
-  renderer, AU, lobby, world, terrainH, TOWNS, AIRFIELD, applyWeatherKey, WEATHERS, showUpscaleResult, touchCfg: () => touchCfg,
+  renderer, AU, lobby, world, terrainH, TOWNS, AIRFIELD, explosion, SMOKE, applyPerf, applyWeatherKey, WEATHERS, showUpscaleResult, touchCfg: () => touchCfg,
   getSel: () => selType, gunT: () => gunTarget, gfx: () => gfxKey, mode: () => modeKey, TR, openLesson, closeLesson, perf, pipe: () => pipe, dr,
   renderAll() { renderModeSel(); renderLoadTab(); renderRefTab(); renderGuideTab(); renderSettingsTab(); }, setMode(k) { modeKey = k; applyMode(); renderModeSel(); },
   setLoadout(arr) { loadout = arr.slice(); applyLoadout(); renderLoadTab(); },

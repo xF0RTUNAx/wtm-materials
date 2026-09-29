@@ -4,11 +4,11 @@
 // Детализация задаётся пресетом графики (см. PRESETS в main.js), атмосфера — погодой (WEATHERS).
 // Шум для деталей земли, микрорельефа и облачного слоя — из одной текстуры (выборка вместо десятков sin() на пиксель).
 /* global THREE */
-import { mulberry32 } from './schedule.js?v=20260929b';
-import { M, part, mergeParts } from './models.js?v=20260929b';
-import { buildProps } from './props.js?v=20260929b';
+import { mulberry32 } from './schedule.js?v=20260929c';
+import { M, part, mergeParts } from './models.js?v=20260929c';
+import { buildProps } from './props.js?v=20260929c';
 
-import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260929b';
+import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260929c';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
 export const SUN_DIR = new THREE.Vector3(0.42, 0.6, 0.38).normalize(); // меняется погодой (на месте — все ссылки видят новое)
 export const FOG_D = 0.000042;
@@ -16,6 +16,14 @@ export const CLOUD_H = 2600;
 export const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 export const FOG_LIN = lin(0xc6d8e8);            // цвет тумана (общий объект: погода меняет его на месте)
 export const FOG_U = { value: FOG_D };           // плотность тумана — общий uniform для частиц и облаков
+// «Облака и дым в пониженном разрешении»: облака, облачный слой и дым переносятся на слой FX_LAYER и рисуются
+// конвейером (post.js) в половине разрешения. Глубины там нет — сравниваем с глубиной кадра сами и мягко гасим на стыке.
+export const FX_LAYER = 4, FX_ADD_LAYER = 5; // 5 — огонь и вспышки: рисуются после наложения дыма
+export const FXU = { tDepth: { value: null }, fxOn: { value: 0 }, fxSize: { value: new THREE.Vector2(1, 1) }, camNF: { value: new THREE.Vector2(3, 60000) } };
+const SOFT_GLSL = `uniform sampler2D tDepth; uniform float fxOn; uniform vec2 fxSize, camNF;
+  float fxLinZ(float d) { float z = d * 2.0 - 1.0; return 2.0 * camNF.x * camNF.y / (camNF.y + camNF.x - z * (camNF.y - camNF.x)); }
+  float fxSoft(float range) { if (fxOn < 0.5) return 1.0; float sz = texture2D(tDepth, gl_FragCoord.xy / fxSize).r;
+    return clamp((fxLinZ(sz) - fxLinZ(gl_FragCoord.z)) / range, 0.0, 1.0); }`;
 
 // ═════════════ Воздушная перспектива для всех стандартных материалов ═════════════
 // Вместо плоского тумана: плотность падает с высотой (интеграл exp(−y/H) вдоль луча — внизу долины дымка гуще,
@@ -337,7 +345,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   const jobs = new Map();
   try {
     if (typeof Worker !== 'undefined' && !opts.syncTerrain) {
-      worker = new Worker(new URL('./terrain-worker.js?v=20260929b', import.meta.url), { type: 'module' });
+      worker = new Worker(new URL('./terrain-worker.js?v=20260929c', import.meta.url), { type: 'module' });
       worker.onmessage = (e) => { const j = jobs.get(e.data.id); if (!j) return; jobs.delete(e.data.id); j.ch.pending[j.lv] = false; if (!disposed) j.ch.geos[j.lv] = toGeo(j.ch, j.lv, e.data); };
       worker.onerror = () => { worker = null; }; // модульные потоки не поддерживаются — дальше строим сразу
     }
@@ -356,13 +364,13 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     ch.mesh = add(new THREE.Mesh(ch.geos[3], tMat)); ch.mesh.receiveShadow = !!P.shadows;
     tChunks.push(ch);
   }
-  let tFrame = 0, tBuildT = 0;
+  let tFrame = 0, tBuildT = 0, detailK = 1; // detailK — «умное качество» (main.js) уменьшает дальности подробных уровней
   function updateTerrain(cam) {
     tFrame++; tBuildT--;
     for (const ch of tChunks) {
       const dx = Math.max(0, Math.abs(cam.x - (ch.x0 + TS / 2)) - TS / 2), dz = Math.max(0, Math.abs(cam.z - (ch.z0 + TS / 2)) - TS / 2);
       const d = Math.hypot(dx, dz, Math.max(0, cam.y - ch.cy) * 0.8);
-      let want = d < LOD_D[0] ? 0 : d < LOD_D[1] ? 1 : d < LOD_D[2] ? 2 : 3;
+      let want = d < LOD_D[0] * detailK ? 0 : d < LOD_D[1] * detailK ? 1 : d < LOD_D[2] * detailK ? 2 : 3;
       // в фоне — сколько угодно заданий; без фонового потока — не больше одного квадрата за 3 кадра
       if (!ch.geos[want] && (worker || tBuildT <= 0) && requestChunk(ch, want) && !worker) tBuildT = 2;
       while (!ch.geos[want]) want++;
@@ -513,7 +521,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   // ── облака-«кучи» там, где «поле облачности» выше порога (там же на земле их тени); пересобираются при смене погоды ──
   const CU = { lit: { value: new THREE.Color() }, dark: { value: new THREE.Color() }, sunTint: { value: new THREE.Color() }, flash: SU.flash };
   const puff = P.cloudSprites ? puffTex() : null;
-  let clouds = null;
+  let clouds = null, fxLayerOn = false;
   function buildClouds(th, mul) {
     if (clouds) { scene.remove(clouds); clouds.geometry.dispose(); if (!P.cloudSprites) clouds.material.dispose(); clouds = null; }
     const centers = [], st = 500, n = Math.round(30000 / st), F = [];
@@ -557,10 +565,11 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       }
       clouds = new THREE.Mesh(mergeParts(parts), new THREE.MeshLambertMaterial({ vertexColors: true, emissive: lin(0x8e9aa6) }));
     }
+    clouds.layers.set(fxLayerOn && P.cloudSprites ? FX_LAYER : 0);
     scene.add(clouds);
   }
   const cloudMat = !P.cloudSprites ? null : new THREE.ShaderMaterial({
-    uniforms: { map: { value: puff }, sunDir: SU.sunDir, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, ...CU },
+    uniforms: { map: { value: puff }, sunDir: SU.sunDir, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, ...CU, ...FXU },
     vertexShader: `attribute vec3 offset; attribute float psize, shade, rot; varying vec2 vUv; varying float vShade, vFog, vFade; varying vec3 vView;
       uniform float fogDensity;
       #include <common>
@@ -579,11 +588,12 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
         #include <logdepthbuf_vertex>
       }`,
     fragmentShader: `uniform sampler2D map; uniform vec3 sunDir, fogColor, lit, dark, sunTint; uniform float flash; varying vec2 vUv; varying float vShade, vFog, vFade; varying vec3 vView;
+      ${SOFT_GLSL}
       #include <common>
       #include <logdepthbuf_pars_fragment>
       void main() {
         #include <logdepthbuf_fragment>
-        float a = texture2D(map, vUv).a * vFade; if (a < 0.01) discard;
+        float a = texture2D(map, vUv).a * vFade * fxSoft(120.0); if (a < 0.01) discard;
         float fwd = pow(max(dot(vView, sunDir), 0.0), 8.0);
         vec3 col = mix(dark, lit, vShade) * 1.15 + sunTint * fwd * (1.0 - vShade * 0.5) + flash * vec3(0.7, 0.75, 0.9);
         gl_FragColor = vec4(mix(col, fogColor, vFog), a * 0.92);
@@ -595,7 +605,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
 
   // ── сплошной облачный слой (пасмурно/дождь) и высокие перистые облака (топовые пресеты): один большой квад ──
   const DU = { noiseTex: TU.noiseTex, lit: { value: new THREE.Color() }, dark: { value: new THREE.Color() }, sunTint: { value: new THREE.Color() },
-    cover: { value: 0.3 }, dens: { value: 1 }, stretch: { value: 1 }, freq: { value: 0.000085 }, fine: { value: 0.15 }, time: { value: 0 }, flash: SU.flash, sunDir: SU.sunDir, fogColor: { value: FOG_LIN }, fogDensity: FOG_U };
+    ...FXU, cover: { value: 0.3 }, dens: { value: 1 }, stretch: { value: 1 }, freq: { value: 0.000085 }, fine: { value: 0.15 }, time: { value: 0 }, flash: SU.flash, sunDir: SU.sunDir, fogColor: { value: FOG_LIN }, fogDensity: FOG_U };
   const deck = add(new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.ShaderMaterial({
     uniforms: DU,
     vertexShader: `varying vec3 vWP;
@@ -605,6 +615,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
         #include <logdepthbuf_vertex>
       }`,
     fragmentShader: `uniform sampler2D noiseTex; uniform vec3 lit, dark, sunTint, sunDir, fogColor; uniform float cover, dens, stretch, freq, fine, time, flash, fogDensity; varying vec3 vWP;
+      ${SOFT_GLSL}
       #include <common>
       #include <logdepthbuf_pars_fragment>
       void main() {
@@ -620,7 +631,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
         vec3 col = cameraPosition.y < vWP.y ? mix(dark, dark * 1.35, (1.0 - a) * 0.8 + shade * 0.2) : mix(dark, lit, shade);
         col += sunTint * pow(max(dot(v, sunDir), 0.0), 6.0) * (1.0 - a * 0.6) + flash * vec3(0.8, 0.85, 1.0);
         float d = length(vWP - cameraPosition), fog = 1.0 - exp(-fogDensity * fogDensity * 0.5 * d * d);
-        a *= smoothstep(15.0, 220.0, abs(cameraPosition.y - vWP.y)); // пролёт сквозь слой — без резкой «стенки»
+        a *= smoothstep(15.0, 220.0, abs(cameraPosition.y - vWP.y)) * fxSoft(200.0); // пролёт сквозь слой — без резкой «стенки»
         gl_FragColor = vec4(mix(col, fogColor, fog), a * (1.0 - fog * 0.35));
         #include <tonemapping_fragment>
         #include <encodings_fragment>
@@ -717,6 +728,9 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     get weather() { return wKey; },
     get W() { return W; },
     setWeather,
+    // облака и облачный слой — на слой FX (рисует конвейер в половине разрешения) или обратно в основной кадр
+    setDetail(k) { detailK = k; },
+    setFxLayer(on) { fxLayerOn = on; const l = on ? FX_LAYER : 0; if (clouds && P.cloudSprites) clouds.layers.set(l); deck.layers.set(l); },
     sortieStart() { sortieT = 0; driftT = 0; setSunDir(W.el, W.az); applyLight(); boltT = 5; },
     // dt — шаг игры; возвращает { thunder, delay } при ударе молнии (звук грома — в main.js)
     update(dt, camVel) {
@@ -767,9 +781,9 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
         } else if (shadowSet.on && shadowTrees.spruce) { shadowTrees.spruce.count = 0; shadowTrees.leafy.count = 0; shadowSet.on = false; }
       } else { sun.position.copy(base).addScaledVector(SUN_DIR, 2000); sun.target.position.copy(base); sun.target.updateMatrixWorld(); }
       updateTerrain(camPos);
-      const hiD = (P.treeHi || 2000) + 1000, ch = Math.max(0, camPos.y - 300) * 0.8;
+      const hiD = ((P.treeHi || 2000) + 1000) * detailK, ch = Math.max(0, camPos.y - 300) * 0.8;
       for (const t of treeChunks) {
-        const d = Math.hypot(t.x - camPos.x, t.z - camPos.z, ch), on = d < treeDist + 1400;
+        const d = Math.hypot(t.x - camPos.x, t.z - camPos.z, ch), on = d < (treeDist + 1400) * (0.85 + 0.15 * detailK);
         t.mesh.visible = on && d < hiD; t.lo.visible = on && d >= hiD;
       }
       if (P.shadows) {
@@ -808,24 +822,31 @@ export function makeParticles(scene, N, additive, tex) {
   for (const k of ['position', 'pcolor', 'alpha', 'size']) geo.attributes[k].setUsage(THREE.DynamicDrawUsage);
   geo.setDrawRange(0, 0);
   const mat = new THREE.ShaderMaterial({
-    uniforms: { map: { value: tex }, scale: { value: 500 }, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, glow: { value: additive ? 2.2 : 1 } },
+    uniforms: { map: { value: tex }, scale: { value: 500 }, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, glow: { value: additive ? 2.2 : 1 }, ...(additive ? {} : FXU) },
     defines: additive ? { ADDITIVE: 1 } : {},
     extensions: { fragDepth: true },
     vertexShader: `#include <common>
       #include <logdepthbuf_pars_vertex>
       attribute float alpha; attribute float size; attribute vec3 pcolor;
       uniform float scale; uniform float fogDensity; varying vec3 vC; varying float vA; varying float vF;
+      ${additive ? '' : 'uniform float fxOn;'}
       void main() { vC = pow(pcolor, vec3(2.2)); vA = alpha; vec4 mv = modelViewMatrix * vec4(position, 1.0); float d = -mv.z;
         vF = 1.0 - exp(-fogDensity * fogDensity * d * d);
-        gl_PointSize = (d > 0.0 && alpha > 0.0) ? min(size * scale / d, 400.0) : 0.0; gl_Position = projectionMatrix * mv;
+        float ps = size * scale / d;
+        ${additive ? '' : 'if (fxOn > 0.5) ps *= 0.5; // в проходе половинного разрешения пиксели вдвое крупнее'}
+        gl_PointSize = (d > 0.0 && alpha > 0.0) ? min(ps, 400.0) : 0.0; gl_Position = projectionMatrix * mv;
         #include <logdepthbuf_vertex>
       }`,
     fragmentShader: `#include <common>
       #include <logdepthbuf_pars_fragment>
       uniform sampler2D map; uniform vec3 fogColor; uniform float glow; varying vec3 vC; varying float vA; varying float vF;
+      ${additive ? '' : SOFT_GLSL}
       void main() {
         #include <logdepthbuf_fragment>
         float t = texture2D(map, gl_PointCoord).a;
+        #ifndef ADDITIVE
+          t *= fxSoft(8.0);
+        #endif
         #ifdef ADDITIVE
           gl_FragColor = vec4(vC * glow, vA * t * (1.0 - vF));
         #else

@@ -56,7 +56,7 @@ THREE.WebGLRenderer.prototype = {
   setPixelRatio: function (p) { this._pr = p; }, getPixelRatio: function () { return this._pr; }, setSize: function () {},
   getDrawingBufferSize: function (v) { return v.set(1280 * this._pr, 720 * this._pr); },
   render: function (scene, cam) { scene.updateMatrixWorld(); if (!cam.parent) cam.updateMatrixWorld(); this.renders++; },
-  setRenderTarget: function () {}, getRenderTarget: function () { return null; }, compile: function () {}, getContext: function () { return { getExtension: function () { return null; }, getParameter: function () { return 'stub'; } }; }, dispose: function () {},
+  setRenderTarget: function () {}, getRenderTarget: function () { return null; }, compile: function () {}, getClearColor: function (c) { return c.set(0); }, getClearAlpha: function () { return 1; }, setClearColor: function () {}, clear: function () {}, getContext: function () { return { getExtension: function () { return null; }, getParameter: function () { return 'stub'; } }; }, dispose: function () {},
 };
 THREE.PMREMGenerator = function () {}; THREE.PMREMGenerator.prototype = { fromScene: function () { return { texture: new THREE.Texture() }; }, dispose: function () {} };
 

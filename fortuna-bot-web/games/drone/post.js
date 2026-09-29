@@ -21,6 +21,12 @@ export function createPipeline(renderer, cfg) {
   const sceneRT = msaa ? new THREE.WebGLMultisampleRenderTarget(1, 1, rtOpt) : new THREE.WebGLRenderTarget(1, 1, rtOpt);
   if (msaa) sceneRT.samples = 4;
   if (ldr) sceneRT.texture.encoding = THREE.sRGBEncoding; // материалы сами переводят в sRGB
+  // «Облака и дым в пониженном разрешении» (cfg.fx): глубина кадра нужна шейдерам облаков и дыма, чтобы прятаться
+  // за землёй и самолётами и мягко растворяться на стыке; сами они рисуются в половине разрешения и накладываются сверху
+  const fxOn = !!cfg.fx && gl2;
+  if (fxOn) { const dt = new THREE.DepthTexture(1, 1, THREE.UnsignedInt248Type); dt.format = THREE.DepthStencilFormat; sceneRT.depthTexture = dt; }
+  const fxRT = fxOn ? new THREE.WebGLRenderTarget(1, 1, { type: hdr, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false }) : null;
+  if (fxRT && ldr) fxRT.texture.encoding = THREE.sRGBEncoding;
   const bloomOn = !ldr && (cfg.bloom || 0) > 0, raysOn = !ldr && !!cfg.rays;
   const hA = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr }), hB = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr });
   const qA = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr }), qB = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr });
@@ -132,12 +138,16 @@ export function createPipeline(renderer, cfg) {
   { tDiffuse: { value: null }, px: { value: new THREE.Vector2() }, sharp: { value: cfg.sharp ?? 0.5 } });
 
   const copy = mat('uniform sampler2D tDiffuse; varying vec2 vUv; void main() { gl_FragColor = vec4(texture2D(tDiffuse, vUv).rgb, 1.0); }', { tDiffuse: { value: null } });
-  const full = new THREE.Vector2();
+  // наложение облаков/дыма: цвет уже умножен на прозрачность, поэтому «над» = fx + кадр × (1 − альфа)
+  const fxOver = mat('uniform sampler2D tDiffuse; varying vec2 vUv; void main() { gl_FragColor = texture2D(tDiffuse, vUv); }', { tDiffuse: { value: null } });
+  fxOver.transparent = true; fxOver.blending = THREE.CustomBlending; fxOver.blendSrc = THREE.OneFactor; fxOver.blendDst = THREE.OneMinusSrcAlphaFactor;
+  fxOver.blendSrcAlpha = THREE.ZeroFactor; fxOver.blendDstAlpha = THREE.OneFactor;
+  const full = new THREE.Vector2(), ccTmp = new THREE.Color();
   let scale = cfg.scale || 1, sw = 1, sh = 1;
   function setSize() {
     renderer.getDrawingBufferSize(full);
     sw = Math.max(1, Math.round(full.x * scale)); sh = Math.max(1, Math.round(full.y * scale));
-    sceneRT.setSize(sw, sh); ldrA.setSize(sw, sh); ldrB.setSize(sw, sh); upRT.setSize(full.x, full.y);
+    sceneRT.setSize(sw, sh); if (fxRT) fxRT.setSize(Math.max(1, Math.ceil(sw / 2)), Math.max(1, Math.ceil(sh / 2))); ldrA.setSize(sw, sh); ldrB.setSize(sw, sh); upRT.setSize(full.x, full.y);
     hA.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); hB.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); rays.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2));
     qA.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4)); qB.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4));
   }
@@ -147,11 +157,26 @@ export function createPipeline(renderer, cfg) {
     cfg, setSize,
     get scale() { return scale; },
     get target() { return sceneRT; },
+    get fx() { return fxOn; },
     setScale(s) { s = Math.round(Math.max(0.35, Math.min(1, s)) * 100) / 100; if (s !== scale) { scale = s; setSize(); } },
     setSharp(v) { cas.uniforms.sharp.value = v; rcas.uniforms.sharp.value = v; },
     setExposure(v) { comp.uniforms.exposure.value = v; },
     render(scene, camera, t, sun) {
       renderer.setRenderTarget(sceneRT); renderer.render(scene, camera);
+      if (fxOn && cfg.fxU) { // облака и дым (слой FX) — в половине разрешения, с мягкой проверкой глубины по кадру
+        const U = cfg.fxU, mask = camera.layers.mask, au = renderer.shadowMap.autoUpdate, ac = renderer.autoClear;
+        U.tDepth.value = sceneRT.depthTexture; U.fxSize.value.set(fxRT.width, fxRT.height); U.camNF.value.set(camera.near, camera.far); U.fxOn.value = 1;
+        camera.layers.set(cfg.fxLayer); renderer.shadowMap.autoUpdate = false;
+        renderer.getClearColor(ccTmp); const ca = renderer.getClearAlpha();
+        renderer.setRenderTarget(fxRT); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.autoClear = false;
+        renderer.render(scene, camera);
+        camera.layers.mask = mask; renderer.shadowMap.autoUpdate = au; renderer.setClearColor(ccTmp, ca);
+        U.fxOn.value = 0; U.tDepth.value = null; // глубина кадра прикреплена к его буферу: в основном проходе её нельзя держать в шейдерах
+        fxOver.uniforms.tDiffuse.value = fxRT.texture; quad.material = fxOver; renderer.setRenderTarget(sceneRT); renderer.render(qScene, qCam);
+        // огонь и вспышки (аддитивные частицы) — поверх дыма, в полном разрешении и с обычной глубиной кадра
+        if (cfg.fxAddLayer) { camera.layers.set(cfg.fxAddLayer); renderer.shadowMap.autoUpdate = false; renderer.render(scene, camera); camera.layers.mask = mask; renderer.shadowMap.autoUpdate = au; }
+        renderer.autoClear = ac;
+      }
       let b1 = black, b2 = black, r = black;
       if (bloomOn || raysOn) { bright.uniforms.tDiffuse.value = sceneRT.texture; pass(bright, hA); }
       if (raysOn && sun && sun.vis > 0.01) {
@@ -181,8 +206,8 @@ export function createPipeline(renderer, cfg) {
       rcas.uniforms.px.value.set(1 / full.x, 1 / full.y); pass(rcas, null);
     },
     dispose() {
-      for (const r of [sceneRT, hA, hB, qA, qB, rays, ldrA, ldrB, upRT]) r.dispose();
-      for (const m of [bright, blur, radial, comp, fxaa, cas, lanczos, rcas, copy]) m.dispose();
+      for (const r of [sceneRT, hA, hB, qA, qB, rays, ldrA, ldrB, upRT]) r.dispose(); if (fxRT) fxRT.dispose(); if (sceneRT.depthTexture) sceneRT.depthTexture.dispose();
+      for (const m of [bright, blur, radial, comp, fxaa, cas, lanczos, rcas, copy, fxOver]) m.dispose();
       quad.geometry.dispose(); black.dispose();
     },
   };
