@@ -102,5 +102,8 @@ powershell -ExecutionPolicy Bypass -File fortuna-bot-web\game-server\windows\upd
 - **`/health` локально не отвечает** — смотреть `server.log`. Частое: нет интернета при первом запуске (Deno качает `three` из npm) — `install.ps1` ещё раз.
 - **Локально отвечает, `game.fortunawtm.com` — нет** — `tunnel.log`; `Get-Service FortunaTunnel`; подождать DNS 5 минут.
 - **В игре «Не удалось подтвердить аккаунт»** — секрет на ноутбуке и в Supabase разный или не развёрнута `mp-ticket`: повторить шаг 3 с секретом из `C:\ProgramData\FortunaGame\mp_secret.txt`, затем `Restart-Service FortunaGame`.
+- **Служба зависла в состоянии `StopPending`** (`Get-Service FortunaGame` → `StopP…`, сервер не отвечает): закрыть её обёртку и запустить заново —
+  `$p = (Get-CimInstance Win32_Service -Filter "Name='FortunaGame'").ProcessId; Stop-Process -Id $p -Force; Start-Service FortunaGame`.
+- **Журнал читается «кракозябрами»** — добавить `-Encoding UTF8` к `Get-Content`.
 - **Сменить секрет**: `install.ps1 -Secret <новый>`, затем шаг 3 с ним.
 - Ноутбук должен не засыпать (как для бота): «Электропитание» → сон — «Никогда» при питании от сети.
