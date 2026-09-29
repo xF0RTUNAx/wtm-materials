@@ -46,7 +46,15 @@ G_.WebGL2RenderingContext = function () {}; G_.WebGL2RenderingContext.prototype 
 G_.URLSearchParams = function (s) { var m = {}; String(s).replace(/^\?/, '').split('&').forEach(function (kv) { if (!kv) return; var p = kv.split('='); m[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || ''); }); this.get = function (k) { return k in m ? m[k] : null; }; };
 G_.self = G_;
 
-load(G_.THREE_PATH);
+// служебные UUID three.js — со своим счётчиком, а не из Math.random: иначе момент создания объектов сцены
+// сдвигает общую случайную последовательность, и контрольная сумма боя (run.js) зависит от порядка создания моделей
+(function () { var n = 0; G_.__uuidRnd = function () { n = (n + 1) % 4294967296; return ((n * 2654435761) >>> 0) / 4294967296; }; })();
+(function () {
+  var src = readFile(G_.THREE_PATH), fixed = src.replace('function ct(){const t=4294967295*Math.random()|0,e=4294967295*Math.random()|0,n=4294967295*Math.random()|0,i=4294967295*Math.random()|0;',
+  'function ct(){const t=4294967295*__uuidRnd()|0,e=4294967295*__uuidRnd()|0,n=4294967295*__uuidRnd()|0,i=4294967295*__uuidRnd()|0;');
+  if (fixed === src) throw new Error('three.min.js: не нашёл generateUUID для замены');
+  (0, eval)(fixed);
+})();
 // рендерер без GL: считаем вызовы, обновляем матрицы (как настоящий)
 THREE.WebGLRenderer = function () {
   this.capabilities = { isWebGL2: true, getMaxAnisotropy: function () { return 8; } }; this.shadowMap = { enabled: false, type: 0 }; this.outputEncoding = 0; this.toneMapping = 0; this.toneMappingExposure = 1;

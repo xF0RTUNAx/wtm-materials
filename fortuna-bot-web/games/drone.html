@@ -212,6 +212,32 @@
   .mtabs button { flex: 1; border: 0; background: transparent; color: #cbd5e1; font-size: 12px; font-weight: 700; padding: 8px 1px; border-radius: 8px; cursor: pointer; }
   .mtabs button.on { background: rgba(251,146,60,.9); color: #fff; }
   .tabp { display: none; } .tabp.on { display: block; }
+  /* Онлайн: лобби комнаты, команды, итоги боя */
+  #tab-mp { padding: 2px 0 8px; }
+  .mpRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 8px; font-size: 13px; color: #cbd5e1; }
+  #tab-mp .btn { margin: 8px 0 0; }
+  .mpJoin { display: flex; gap: 6px; margin-top: 8px; } .mpJoin .btn { margin: 0; flex: 1; }
+  .mpJoin input { width: 96px; flex: none; border-radius: 12px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06); color: #fff;
+    font: 800 16px ui-monospace, Menlo, monospace; letter-spacing: 3px; text-align: center; text-transform: uppercase; }
+  .mpNote { font-size: 12px; color: #94a3b8; line-height: 1.45; margin: 10px 0 0; } .mpNote.bad { color: #fca5a5; }
+  .mpHead { font-size: 13px; color: #cbd5e1; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .mpHead b { font: 800 17px ui-monospace, Menlo, monospace; letter-spacing: 2px; color: #fff; }
+  .mpCopy, .mpMove { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #cbd5e1; border-radius: 8px; font-size: 11px; padding: 4px 8px; cursor: pointer; }
+  .mpCopy { margin-left: auto; } .mpMove { width: 100%; margin-top: 4px; }
+  .mpTeams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .mpTeam { border-radius: 11px; padding: 6px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); min-width: 0; }
+  .mpTeam.t0 .mpTH { color: #fdba74; } .mpTeam.t1 .mpTH { color: #93c5fd; }
+  .mpTH { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; margin: 0 2px 5px; }
+  .mpP { display: flex; justify-content: space-between; gap: 6px; font-size: 12.5px; padding: 5px 6px; border-radius: 7px; background: rgba(255,255,255,.05); margin-bottom: 3px; }
+  .mpP span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .mpP i { font-style: normal; font-size: 10px; opacity: .6; }
+  .mpP b { font-size: 11px; color: #94a3b8; flex: none; } .mpP b.ok { color: #4ade80; }
+  .mpP.me { outline: 1px solid rgba(251,146,60,.6); } .mpP.free { opacity: .45; }
+  #startBtn.ready { background: #334155; }
+  #end.mpEnd .stats, #end.mpEnd #eBoss { display: none; }
+  .mpRes { width: 100%; border-collapse: collapse; font-size: 13px; margin: 6px 0 4px; }
+  .mpRes th { font-size: 11px; color: #94a3b8; font-weight: 600; padding: 3px 4px; } .mpRes td { padding: 5px 4px; border-top: 1px solid rgba(255,255,255,.08); }
+  .mpRes th, .mpRes td { text-align: center; } .mpRes th:first-child, .mpRes td:first-child { text-align: left; }
+  .mpRes tr.me td { color: #fdba74; font-weight: 700; }
 
   .pyl-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; margin-bottom: 8px; }
   .pyl { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #eaf6ff; border-radius: 8px; padding: 5px 1px; cursor: pointer; min-height: 50px; }
@@ -327,11 +353,13 @@
       <button data-tab="ref">Ракеты</button>
       <button data-tab="guide">Руководство</button>
       <button data-tab="set">Настройки</button>
+      <button data-tab="mp">Онлайн</button>
     </div>
     <div class="tabp on" id="tab-load"></div>
     <div class="tabp" id="tab-ref"></div>
     <div class="tabp" id="tab-guide"></div>
     <div class="tabp" id="tab-set"></div>
+    <div class="tabp" id="tab-mp"></div>
     <button class="btn" id="startBtn">ВЗЛЁТ</button>
   </div>
 </div>

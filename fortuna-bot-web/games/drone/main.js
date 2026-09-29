@@ -6,6 +6,12 @@ import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeP
 import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260929c';
 import { createPipeline } from './post.js?v=20260929c';
 import { createAudio } from './audio.js?v=20260929c';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260929c';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260929c';
+import { TEAM_NAMES } from './sim/online.js?v=20260929c';
+import { createOnline } from './online-client.js?v=20260929c';
+import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, steerTo,
+  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260929c';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -17,17 +23,12 @@ const IS_TOUCH = matchMedia('(pointer: coarse)').matches || 'ontouchstart' in wi
 const TEST_INSETS = TEST && TRAINING && Q.get('insets') ? Q.get('insets').split(',').map((v) => +v || 0) : null;
 const IOS = /iPhone|iPod/.test(navigator.userAgent || '');
 const $ = (id) => document.getElementById(id);
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const wrapPI = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
-const D2R = Math.PI / 180, G0 = 9.81;
 const rnd = Math.random; // визуальная и тактическая случайность — не влияет на расписание
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } },
   set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* хранилище недоступно */ } },
 };
-const rhoAt = (y) => Math.exp(-Math.max(0, y) / 9000);   // относительная плотность воздуха
 
-const FUEL_START = 190, FUEL_MAX = 240, FUEL_PICKUP = 70; // топливо — в секундах полёта на крейсерском режиме
 const MAX_LOAD = 1500;
 const STATION_KIND = { tip: { name: 'законцовка', lim: 110 }, mid: { name: 'средний', lim: 200 }, inner: { name: 'корневой', lim: 360 }, belly: { name: 'подфюзеляжный', lim: 500 } };
 const DEFAULT_LOADOUT = ['aim9l', 'aim120c', null, null, null, null, 'aim120c', 'aim9l'];
@@ -76,16 +77,7 @@ const savePerf = () => store.set('fortuna_drone_perf', JSON.stringify({ ...perf,
 const P3_OK = (() => { try { return matchMedia('(color-gamut: p3)').matches && 'drawingBufferColorSpace' in WebGL2RenderingContext.prototype; } catch (_) { return false; } })();
 
 // ═════════════ Режимы игры ═════════════
-// Аркада прощает ошибки, Реализм — полная энергетика, только СПО/датчик пуска, умный противник, ×1,5 очков.
-const MODES = {
-  arcade: { name: 'Аркада', desc: 'все ракеты видны на экране, меньше урона, больше ловушек, мягкий противник',
-    gmax: 15, wCap: 1.15, agil: 11, vStall: 50, bleed: 0.5, dmgTaken: 0.5, aiSkill: 0.7, cm: 48, gunCone: 4, gunHome: 3, lockT: 0.25, fuelK: 1.4, drogueR: 60, allMissiles: true, scoreK: 1 },
-  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полная энергетика и урон, опытный противник, очки ×1,5',
-    gmax: 12, wCap: 0.9, agil: 8, vStall: 75, bleed: 1, dmgTaken: 0.9, aiSkill: 1, cm: 32, gunCone: 1.5, gunHome: 0, lockT: 0.5, fuelK: 1, drogueR: 32, allMissiles: false, scoreK: 1.5 },
-};
-// Обучение: по игроку пускают ракеты всех типов с подсказками и паузой-объяснением; проиграть нельзя, наград нет.
-MODES.training = { name: 'Обучение', desc: 'по вам пускают разные ракеты, подсказки и объяснения с паузой, проиграть нельзя',
-  gmax: 15, wCap: 1.15, agil: 11, vStall: 50, bleed: 0.5, dmgTaken: 0.3, aiSkill: 0.6, cm: 99, gunCone: 4, gunHome: 3, lockT: 0.25, fuelK: 1, fuelBurn: 0, drogueR: 60, allMissiles: true, scoreK: 0, training: true };
+// (MODES — в sim/modes.js: их же использует онлайн-сервер)
 let modeKey = store.get('fortuna_drone_mode');
 if (!MODES[modeKey] || (modeKey === 'training' && !TRAINING)) modeKey = 'arcade'; // в партии на награду обучение недоступно
 let MODE = MODES[modeKey];
@@ -331,72 +323,31 @@ function updateMissileLights() {
 }
 
 // ═════════════ Летательные аппараты ═════════════
-function makeCraft(o) {
-  return Object.assign({ pos: new THREE.Vector3(), vel: new THREE.Vector3(), yaw: 0, pitch: 0, roll: 0, wy: 0, wp: 0, speed: 250, thr: 0.85, ab: false,
-    n: 1, massK: 1, dragK: 1, dead: false, agil: 4, vStall: 80, bleed: 1, rollK: 4, cmFlare: 0, cmChaff: 0 }, o);
-}
 // «Изделие Фортуна-1»: беспилотник без лётчика — держит большую перегрузку, быстро отвечает на ручку, мощный двигатель.
-const player = makeCraft({ isPlayer: true, hull: 100, fuel: FUEL_START, fuelMax: FUEL_MAX, milAcc: 16, abAcc: 34, cd0: 1.3e-4, rollK: 9,
-  ir: 0.8, r: 7, flares: 32, chaff: 32, heat: 0, overheated: false, invuln: 0 });
+const player = makeCraft({ isPlayer: true, hull: 100, fuel: FUEL_START, fuelMax: FUEL_MAX, ...DRONE, flares: 32, chaff: 32, heat: 0, overheated: false, invuln: 0 });
 function applyMode() {
   MODE = MODES[modeKey];
   Object.assign(player, { gmax: MODE.gmax, wCap: MODE.wCap, agil: MODE.agil, vStall: MODE.vStall, bleed: MODE.bleed,
     flares: MODE.cm, chaff: MODE.cm, fuelMax: Math.round(FUEL_MAX * MODE.fuelK), fuel: Math.round(FUEL_START * MODE.fuelK) });
 }
 applyMode();
-// Самолёты «Подстилки улитки» (вымышленные). Подвески: [внутр. L, внутр. R, внешн. L, внешн. R] (у босса — 6 точек).
-const AC = {
-  fighter: { name: '«Слизень»', code: 'СЛ', hp: 100, rcs: 3, ir: 1.0, gmax: 8, wCap: 0.5, milAcc: 12, abAcc: 25, cd0: 1.44e-4, skill: 0.45, radarR: 28000, r: 9, pts: 1000, cm: 12,
-    loadouts: [['r27r', 'r27r', 'r60m', 'r60m'], ['aim7m', 'aim7m', 'aim9l', 'aim9l'], ['r27r', 'r27t', 'r73', 'r73']] },
-  interceptor: { name: '«Раковина»', code: 'РК', hp: 130, rcs: 6, ir: 1.3, gmax: 6.5, wCap: 0.4, milAcc: 14, abAcc: 30, cd0: 1.3e-4, skill: 0.55, radarR: 36000, r: 12, pts: 1200, cm: 16,
-    loadouts: [['r27er', 'r27er', 'r73', 'r73'], ['aim7m', 'aim7m', 'aim9l', 'aim9l']] },
-  ace: { name: '«Улитка-ас»', code: 'АС', hp: 110, rcs: 1.2, ir: 0.9, gmax: 9, wCap: 0.55, milAcc: 14, abAcc: 28, cd0: 1.35e-4, skill: 0.85, radarR: 34000, r: 10, pts: 2500, cm: 24,
-    loadouts: [['r77', 'r77', 'r73', 'r73'], ['aim120c', 'aim120c', 'aim9x', 'aim9x'], ['derby', 'derby', 'python5', 'python5'], ['mica_em', 'mica_em', 'mica_ir', 'mica_ir']] },
-  boss: { name: '«Подстилка улитки»', code: 'ПУ', hp: 450, rcs: 25, ir: 1.8, gmax: 3, wCap: 0.18, milAcc: 8, abAcc: 10, cd0: 1.6e-4, skill: 0.6, radarR: 45000, r: 26, pts: 6000, cm: 60, jam: true,
-    loadouts: [['r73', 'r33', 'r33', 'r33', 'r33', 'r73'], ['aim9l', 'aim54', 'aim54', 'aim54', 'aim54', 'aim9l']] },
-};
-const enemies = [], missiles = [], bullets = [], cms = [], wrecks = [], tankers = [];
+const enemies = [], wrecks = [], tankers = [];
+player.human = true; player.team = 0;
+const PLAYER_ARR = [player], NONE = [];
+// бой (sim/battle.js): ракеты, ловушки, пушка, урон, ИИ — общий с онлайн-сервером; здесь — только эффекты, звук и HUD
+const B = createBattle({
+  mode: () => MODE,
+  opponents: (o) => (o === player ? enemies : o.remote ? NONE : PLAYER_ARR), // пули чужих онлайн-самолётов — только трассеры
+  targetable: (t) => !(t === player && G.over),
+  canAct: () => G.state === 'play',
+  hurt: (t, amount) => (t === player ? hurt(amount) : t.remote ? MP.hitRemote(t) : undefined), // по живому сопернику урон считает сервер
+  sunDir: SUN_DIR, sunVis: () => world.W.sunVis,
+  fx: battleFx(),
+});
+const { missiles, cms, bullets, updateMissile, detonate, dropCM, updateCMs, damage, fireBullet, updateBullets, spawnAI, updateAI } = B;
 const TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), TMP3 = new THREE.Vector3(), TGT = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
 const NEG_Z = new THREE.Vector3(0, 0, -1), ZAXIS = new THREE.Vector3(0, 0, 1);
-function fwdOf(a, out) { const cp = Math.cos(a.pitch); return out.set(-Math.sin(a.yaw) * cp, Math.sin(a.pitch), -Math.cos(a.yaw) * cp); }
-function rightOf(a, out) { return out.set(Math.cos(a.yaw), 0, -Math.sin(a.yaw)); }
-// азимут и угол места вектора rel относительно носа аппарата a
-function localAngles(a, rel) {
-  const cy = Math.cos(a.yaw), sy = Math.sin(a.yaw), cp = Math.cos(a.pitch), sp = Math.sin(a.pitch);
-  const x1 = rel.x * cy - rel.z * sy, z1 = rel.x * sy + rel.z * cy;
-  const y2 = rel.y * cp + z1 * sp, z2 = -rel.y * sp + z1 * cp;
-  return [Math.atan2(x1, -z2), Math.atan2(y2, Math.hypot(x1, z2))];
-}
-function angleBetween(a, b) { return Math.acos(clamp(a.dot(b) / ((a.length() * b.length()) || 1), -1, 1)); }
-function agl(a) { return a.pos.y - terrainH(a.pos.x, a.pos.z); }
 
-// Общая лётная модель: rx, ry — команды по рысканию/тангажу (−1…1). Угловая скорость ограничена перегрузкой.
-function flyStep(a, rx, ry, dt) {
-  const v = Math.max(a.speed, 60);
-  const wMax = Math.min(a.wCap, a.gmax * G0 / v);
-  let wy = -rx * wMax, wp = ry * wMax;
-  const w = Math.hypot(wy, wp); if (w > wMax) { wy *= wMax / w; wp *= wMax / w; }
-  const k = Math.min(1, a.agil * dt);
-  a.wy += (wy - a.wy) * k; a.wp += (wp - a.wp) * k;
-  a.yaw += a.wy * dt; a.pitch = clamp(a.pitch + a.wp * dt, -1.35, 1.35);
-  a.n = 1 + v * Math.hypot(a.wy * Math.cos(a.pitch), a.wp) / G0;
-  const bank = clamp(Math.atan2(v * a.wy * Math.cos(a.pitch), G0), -1.45, 1.45);
-  a.roll += (bank - a.roll) * Math.min(1, a.rollK * dt);
-  const rho = rhoAt(a.pos.y);
-  const thrust = (a.ab ? a.abAcc : a.milAcc * a.thr) * (0.25 + 0.75 * rho) / a.massK;
-  const drag = a.cd0 * rho * v * v * a.dragK + 0.32 * a.bleed * Math.pow(Math.max(0, a.n - 1), 2);
-  a.speed += (thrust - drag - G0 * Math.sin(a.pitch)) * dt;
-  if (a.speed < a.vStall) a.pitch -= (a.vStall - a.speed) * 0.015 * dt; // сваливание: нос опускается
-  a.speed = Math.max(a.speed, 45);
-  fwdOf(a, a.vel).multiplyScalar(a.speed);
-  a.pos.addScaledVector(a.vel, dt);
-}
-// Команды, чтобы развернуть нос в направлении dir
-function steerTo(a, dir, gain = 2.5) {
-  const wantYaw = Math.atan2(-dir.x, -dir.z), dy = wrapPI(wantYaw - a.yaw);
-  const wantPitch = Math.asin(clamp(dir.y / (dir.length() || 1), -1, 1));
-  return [clamp(-dy * gain, -1, 1), clamp((wantPitch - a.pitch) * gain, -1, 1)];
-}
 
 // ═════════════ Подвеска игрока ═════════════
 let loadout = DEFAULT_LOADOUT.slice();
@@ -631,80 +582,13 @@ function setMute(m) { muted = m; store.set('fortuna_drone_mute', m ? '1' : '0');
 $('mute').addEventListener('click', () => setMute(!muted));
 $('mute').style.opacity = muted ? 0.4 : 1;
 
-// ═════════════ Тепловая заметность и провал в доплере ═════════════
-// ИК-заметность цели для головки в точке from: с форсажем ×2,2, в лоб ~40% от «хвоста».
-// (у этих функций свои временные векторы — их зовут изнутри кода, который держит TMP*/TGT)
-const SH_A = new THREE.Vector3(), SH_B = new THREE.Vector3(), IRV = new THREE.Vector3(), NTV = new THREE.Vector3(), CLV = new THREE.Vector3();
-function seekerHeat(t, from) {
-  fwdOf(t, SH_A); SH_B.copy(from).sub(t.pos).normalize();
-  const tail = (1 - SH_A.dot(SH_B)) / 2; // 1 — смотрим строго в сопло
-  return t.ir * (t.ab ? 2.2 : 1) * (0.4 + 0.6 * tail);
-}
-function offTailDeg(t, from) { fwdOf(t, SH_A); SH_B.copy(from).sub(t.pos).normalize(); return Math.acos(clamp(-SH_A.dot(SH_B), -1, 1)) / D2R; }
-// ИК-ГСН ракеты M_ видит цель t из точки from с осью axis в конусе coneDeg?
-function irCanSee(M_, t, from, axis, coneDeg) {
-  IRV.copy(t.pos).sub(from); const d = IRV.length();
-  if (d > M_.ir.range * Math.sqrt(seekerHeat(t, from)) || d < 50) return false;
-  if (M_.ir.aspect < 180 && offTailDeg(t, from) > M_.ir.aspect) return false;
-  return angleBetween(axis, IRV) <= coneDeg * D2R;
-}
-// Цель на фоне земли и летит поперёк луча — импульсно-доплеровская РЛС (и РЛ ГСН) её отсекает.
-function isNotched(from, t) {
-  NTV.copy(t.pos).sub(from); const d = NTV.length() || 1;
-  if (NTV.y / d > -0.03) return false;
-  return Math.abs(t.vel.dot(NTV) / d) < 35;
-}
-
-// ═════════════ Зона пуска (расчёт по той же кинематике) ═════════════
-function dlz(M_, alt, vLaunch, vClose) {
-  const rho = rhoAt(alt), dt = 0.1;
-  let v = vLaunch, d = 0, t = 0, rmax = 0, rne = 0;
-  while (t < M_.life) {
-    const tb = t - M_.drop;
-    const acc = tb < 0 ? 0 : tb < M_.burn ? M_.acc : (M_.sustain && tb < M_.burn + M_.sustain.t ? M_.sustain.acc : 0);
-    v += (acc - M_.kd * 1e-4 * rho * v * v) * dt; d += v * dt; t += dt;
-    if (v < M_.vmin && tb > M_.burn) break;
-    rmax = Math.max(rmax, d + vClose * t); rne = Math.max(rne, d - 280 * t);
-  }
-  return { rmax, rne, rmin: M_.rmin };
-}
-function closingOf(t, from) { CLV.copy(from).sub(t.pos).normalize(); return t.vel.dot(CLV); }
 
 // ═════════════ Радар игрока ═════════════
-const RADAR = { range: 36000, refRcs: 5, az: 60 * D2R, el: 35 * D2R, burn: 16000 };
 const RSCALES = [10000, 20000, 40000];
 const radar = { contacts: new Map(), lock: null, lostT: 0, scanT: 0, t: 0, scale: 1 };
-function detectR(e) { return RADAR.range * Math.min(1.4, Math.pow(e.S.rcs / RADAR.refRcs, 0.25)); }
-function radarSees(e) {
-  const rel = TMP.copy(e.pos).sub(player.pos), d = rel.length();
-  const [az, el] = localAngles(player, rel);
-  if (Math.abs(az) > RADAR.az || Math.abs(el) > RADAR.el) return false;
-  if (e.jam && d > RADAR.burn) return 'jam';
-  if (d > detectR(e)) return false;
-  if (isNotched(player.pos, e)) return 'notch';
-  return true;
-}
-function updateRadar(dt) {
-  radar.t += dt; radar.scanT -= dt;
-  if (radar.scanT <= 0) {
-    radar.scanT = 0.25;
-    for (const e of enemies) {
-      if (e.dead) continue;
-      const s = radarSees(e);
-      if (s === true || s === 'jam') {
-        const [az] = localAngles(player, TMP.copy(e.pos).sub(player.pos));
-        radar.contacts.set(e, { t: radar.t, az, r: e.pos.distanceTo(player.pos), alt: e.pos.y, jam: s === 'jam' });
-      }
-    }
-    for (const [e, c] of radar.contacts) if (e.dead || radar.t - c.t > 2) radar.contacts.delete(e);
-  }
-  const L = radar.lock;
-  if (L) {
-    if (L.dead) radar.lock = null;
-    else if (radarSees(L) === true) radar.lostT = 0;
-    else { radar.lostT += dt; if (radar.lostT > 0.8) { radar.lock = null; popup('ЗАХВАТ ПОТЕРЯН', 'bad'); sfx.lost(); } }
-  }
-}
+player.radar = radar;
+function radarSees(e) { return B.radarSees(player, e); }
+function updateRadar(dt) { B.updateRadar(player, dt); }
 function cycleLock() {
   const list = [...radar.contacts.entries()].filter(([e, c]) => !e.dead && !c.jam && radarSees(e) === true).map(([e]) => e);
   if (!list.length) { if (radar.lock) { radar.lock = null; sfx.lost(); } else popup('НЕТ ЦЕЛЕЙ НА РАДАРЕ', 'bad'); return; }
@@ -721,8 +605,6 @@ function cycleWeapon() {
   selType = t[(t.indexOf(selType) + 1) % t.length]; seeker.target = null; seeker.t = 0; tone(700, 0.05, 'square', 0.03);
   if (MODE.training) askAbout('own', selType);
 }
-// радиокоррекция: РЛС игрока (сопровождение или свежая отметка обзора) «видит» цель
-function playerDatalink(t) { const c = radar.contacts.get(t); return radar.lock === t || (c && !c.jam && radar.t - c.t < 0.6); }
 
 // ═════════════ ИК-ГСН выбранной ракеты игрока ═════════════
 const seeker = { target: null, t: 0, locked: false };
@@ -743,25 +625,10 @@ function updateSeeker(dt) {
 }
 
 // ═════════════ Ракеты (общие для игрока и ИИ) ═════════════
-function launchMissile(owner, key, target, mesh) {
-  const M_ = MISSILES[key];
-  const wpos = new THREE.Vector3(), wq = new THREE.Quaternion();
-  if (mesh) { mesh.updateMatrixWorld(true); mesh.getWorldPosition(wpos); mesh.getWorldQuaternion(wq); mesh.parent.remove(mesh); }
-  else { mesh = missileMesh(key); wpos.copy(owner.pos); }
-  mesh.position.copy(wpos); mesh.quaternion.copy(wq); scene.add(mesh);
-  const fl = new THREE.Mesh(mslFlameGeo, flameMat); fl.position.z = M_.vis.L / 2 + 0.05; fl.visible = false; mesh.add(fl);
-  const dir = fwdOf(owner, new THREE.Vector3());
-  const m = { key, M: M_, owner, target, mesh, fl, pos: mesh.position, dir, speed: owner.speed, t: 0, flown: 0, active: false, lost: false, decoy: null, dead: false,
-    lastKnown: target ? target.pos.clone() : owner.pos.clone().addScaledVector(dir, 5000), lastVel: target ? target.vel.clone() : new THREE.Vector3(), notchT: 0, trailT: 0, hit: false, seenBy: new Set() };
-  missiles.push(m);
-  // вспышка запуска двигателя и облачко дыма у пилона
-  for (let k = 0; k < 18; k++) { const [vx, vy, vz] = sph(25); FX.emit(wpos.x, wpos.y, wpos.z, vx + owner.vel.x * 0.9, vy + owner.vel.y * 0.9, vz + owner.vel.z * 0.9, 1, 0.85, 0.5, 1, 1.6, 3, 0.25, 2, 0); }
-  for (let k = 0; k < 6; k++) { const [vx, vy, vz] = sph(8); SMOKE.emit(wpos.x, wpos.y, wpos.z, vx + owner.vel.x * 0.7, vy + owner.vel.y * 0.7, vz + owner.vel.z * 0.7, 0.85, 0.85, 0.85, 0.55, 2, 6, 1.8, 1.2, 0); }
-  if (owner === player) { G.mFired++; sfx.launch(); popup(M_.short + ' — ПУСК', 'info'); }
-  return m;
-}
+function launchMissile(owner, key, target, mesh) { return B.launchMissile(owner, key, target, mesh ? { mesh } : null); }
 function launchPlayerMissile() {
   if (G.state !== 'play' || G.mslT > 0) return;
+  if (MP.on) { if (G.cmT <= 0) { popup('РАКЕТЫ В ОНЛАЙНЕ — В СЛЕДУЮЩЕМ ОБНОВЛЕНИИ', 'info'); G.cmT = 1; } return; }
   ensureSel();
   if (!selType) { popup('РАКЕТ НЕТ', 'bad'); return; }
   const M_ = MISSILES[selType];
@@ -789,184 +656,9 @@ function launchPlayerMissile() {
   G.mslT = 0.45; ensureSel();
 }
 function rebuildLoadStats() { const mass = loadMass(loaded); player.massK = 1 + mass / 6000; player.dragK = 1 + 0.03 * loaded.filter(Boolean).length; }
-function turnToward(dir, desired, maxAng) {
-  const a = Math.acos(clamp(dir.dot(desired), -1, 1));
-  if (a < 1e-5) return 0;
-  TMP3.crossVectors(dir, desired); if (TMP3.lengthSq() < 1e-12) return 0; TMP3.normalize();
-  const turn = Math.min(a, maxAng); dir.applyAxisAngle(TMP3, turn).normalize(); return turn;
-}
-function opponentsOf(owner) { return owner === player ? enemies : [player]; }
-function missileDatalink(m, T) {
-  if (T.jam) return true; // наведение на источник помех
-  return m.owner === player ? playerDatalink(T) : (!m.owner.dead && m.owner.stt);
-}
-function updateMissile(m, dt) {
-  const M_ = m.M; m.t += dt;
-  const tb = m.t - M_.drop;
-  if (tb < 0) { // сброс с пилона
-    m.pos.addScaledVector(m.dir, m.speed * dt); m.pos.y -= 14 * m.t * dt * 4;
-    m.mesh.quaternion.setFromUnitVectors(NEG_Z, m.dir); return;
-  }
-  const acc = tb < M_.burn ? M_.acc : (M_.sustain && tb < M_.burn + M_.sustain.t ? M_.sustain.acc : 0);
-  const motor = acc > 0;
-  m.fl.visible = motor; if (motor) m.fl.scale.set(1, 1, (M_.sustain && tb > M_.burn ? 0.5 : 1) * (0.8 + rnd() * 0.5));
-  // ── наведение ──
-  const T = m.target, alive = T && !T.dead && !(T.isPlayer && G.over);
-  let aim = null, avel = null;
-  if (m.decoy) { aim = m.decoy.pos; avel = m.decoy.vel; if (m.decoy.life <= 0) { m.decoy = null; m.lost = true; m.why = m.why || 'decoy'; } }
-  else if (!m.lost) {
-    if (M_.kind === 'ir') {
-      if (!T && M_.ir.loal && tb > 0.4) { // захват после пуска
-        let best = null, bd = 1e9;
-        for (const e of opponentsOf(m.owner)) { if (e.dead || !irCanSee(M_, e, m.pos, m.dir, 35)) continue; const d = e.pos.distanceTo(m.pos); if (d < bd) { bd = d; best = e; } }
-        if (best) m.target = best;
-      } else if (alive) {
-        TGT.copy(T.pos).sub(m.pos);
-        const gimbal = M_.ir.fov >= 45 ? 80 : 40;
-        if (angleBetween(m.dir, TGT) > gimbal * D2R || (M_.ir.aspect < 180 && offTailDeg(T, m.pos) > M_.ir.aspect + 15)) { m.lost = true; m.why = 'gimbal'; }
-        else if (M_.ir.sun && world.W.sunVis && angleBetween(m.dir, SUN_DIR) < 10 * D2R) { m.lost = true; m.why = 'sun'; } // ранняя ГСН «увелась» на солнце
-        else { aim = T.pos; avel = T.vel; }
-      }
-    } else if (M_.kind === 'sarh') {
-      const illuminated = alive && (m.owner === player ? radar.lock === T : (!m.owner.dead && m.owner.stt));
-      if (illuminated) {
-        if (isNotched(m.pos, T)) { m.notchT += dt; if (m.notchT > 0.4 + 1.2 * M_.eccm) { m.lost = true; m.why = 'notch'; } } else m.notchT = Math.max(0, m.notchT - dt);
-        aim = T.pos; avel = T.vel;
-      }
-    } else {
-      if (!m.active) {
-        if (alive && missileDatalink(m, T)) { m.lastKnown.copy(T.pos); m.lastVel.copy(T.vel); }
-        else m.lastKnown.addScaledVector(m.lastVel, dt);
-        aim = m.lastKnown; avel = m.lastVel;
-        if (m.pos.distanceTo(m.lastKnown) < M_.pitbull) { m.active = true; if (m.owner === player) tone(1600, 0.05, 'square', 0.02); }
-      }
-      if (m.active && alive) {
-        TGT.copy(T.pos).sub(m.pos); const d = TGT.length();
-        if (d > M_.pitbull * 1.7 || angleBetween(m.dir, TGT) > 60 * D2R) { m.lost = true; m.why = 'gimbal'; }
-        else {
-          if (isNotched(m.pos, T)) { m.notchT += dt; if (m.notchT > 0.4 + 1.2 * M_.eccm) { m.lost = true; m.why = 'notch'; } } else m.notchT = Math.max(0, m.notchT - dt);
-          aim = T.pos; avel = T.vel;
-        }
-      }
-    }
-  }
-  let lat = 0;
-  if (aim) {
-    const d = m.pos.distanceTo(aim), tgo = d / Math.max(200, m.speed);
-    TGT.copy(aim).addScaledVector(avel, tgo * 0.95).sub(m.pos).normalize();
-    const gEff = M_.g * G0 * Math.pow(clamp(m.speed / M_.vmin, 0.3, 1), 2);
-    lat = turnToward(m.dir, TGT, gEff / Math.max(150, m.speed) * dt) / dt * m.speed;
-  }
-  const rho = rhoAt(m.pos.y);
-  m.speed += (acc - M_.kd * 1e-4 * rho * m.speed * m.speed - 0.1 * lat - G0 * m.dir.y) * dt;
-  const step = m.speed * dt; m.flown += step;
-  m.pos.addScaledVector(m.dir, step);
-  m.mesh.quaternion.setFromUnitVectors(NEG_Z, m.dir);
-  // скорость сближения с целью: после выгорания ракета, которая не догоняет, «сдыхает» (исчерпала энергию)
-  if (T && !T.dead) {
-    const dNow = m.pos.distanceTo(T.pos);
-    if (m.dPrev !== undefined) m.closing = (m.dPrev - dNow) / dt;
-    m.dPrev = dNow;
-    if (!motor && m.closing !== undefined && m.closing < 15) { m.slowT = (m.slowT || 0) + dt; if (m.slowT > 2.5 && !m.lost) { m.lost = true; m.spent = true; m.why = 'energy'; } }
-    else m.slowT = 0;
-  }
-  if (m.spent && (m.spentT = (m.spentT || 0) + dt) > 1.5) { detonate(m, false); return; }
-  // след
-  m.trailT -= dt;
-  if (motor && m.trailT <= 0) {
-    m.trailT = 0.025;
-    SMOKE.emit(m.pos.x, m.pos.y, m.pos.z, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3 + 1, (rnd() - 0.5) * 3, 0.9, 0.9, 0.9, M_.sustain && tb > M_.burn ? 0.18 : 0.55, 2.2, 6, 3.5, 0.5, 0.3);
-    FX.emit(m.pos.x - m.dir.x * 3, m.pos.y - m.dir.y * 3, m.pos.z - m.dir.z * 3, 0, 0, 0, 1, 0.7, 0.3, 0.9, 2.2, -3, 0.08, 0, 0);
-  }
-  // неконтактный взрыватель: сближение внутри кадра
-  if (m.flown > M_.rmin * 0.6) {
-    for (const e of opponentsOf(m.owner)) {
-      if (e.dead) continue;
-      const px = e.pos.x - m.pos.x, py = e.pos.y - m.pos.y, pz = e.pos.z - m.pos.z;
-      if (px * px + py * py + pz * pz > 600 * 600) continue;
-      const vx = e.vel.x - m.dir.x * m.speed, vy = e.vel.y - m.dir.y * m.speed, vz = e.vel.z - m.dir.z * m.speed;
-      const qx = px - vx * dt, qy = py - vy * dt, qz = pz - vz * dt; // положение в начале кадра
-      const vv = vx * vx + vy * vy + vz * vz || 1e-6;
-      const ts = clamp(-(qx * vx + qy * vy + qz * vz) / vv, 0, dt);
-      const rx = qx + vx * ts, ry = qy + vy * ts, rz = qz + vz * ts, dmin = Math.hypot(rx, ry, rz);
-      if (dmin < e.r * 0.4 + M_.blast * 0.7) { m.pos.set(e.pos.x - rx, e.pos.y - ry, e.pos.z - rz); detonate(m, true); return; }
-    }
-    if (m.decoy && m.pos.distanceTo(m.decoy.pos) < 20) { detonate(m, false); return; }
-  }
-  if (m.pos.y < terrainH(m.pos.x, m.pos.z) || (!motor && m.speed < Math.max(220, M_.vmin * 0.75)) || m.t > M_.life) detonate(m, false);
-}
-function detonate(m, dealDamage) {
-  if (m.dead) return;
-  m.dead = true; scene.remove(m.mesh);
-  explosion(m.pos, dealDamage ? 2.2 : 1.1);
-  sfx.boom(m.pos.distanceTo(camera.position), dealDamage ? 1.4 : 0.7);
-  if (!dealDamage) { if (m.target === player) G.evaded++; return; }
-  let hitAny = false;
-  for (const e of opponentsOf(m.owner)) {
-    if (e.dead) continue;
-    const d = Math.max(0, e.pos.distanceTo(m.pos) - e.r * 0.4);
-    if (d < m.M.blast) { damage(e, m.M.dmg * Math.pow(1 - d / m.M.blast, 0.6), m.M.short, m.owner === player && e !== player ? m : null); hitAny = true; if (e === player) m.hitPlayer = true; }
-  }
-  if (hitAny && m.owner === player) G.mHits++;
-  if (!hitAny && m.target === player) G.evaded++;
-}
-
-// ═════════════ Контрмеры: ЛТЦ и дипольные отражатели ═════════════
-function dropCM(owner, type) {
-  if (owner === player) {
-    if (G.state !== 'play') return;
-    if (type === 'flare' ? player.flares <= 0 : player.chaff <= 0) { if (G.cmT <= 0) { popup(type === 'flare' ? 'ЛТЦ КОНЧИЛИСЬ' : 'ДИПОЛИ КОНЧИЛИСЬ', 'bad'); G.cmT = 0.5; } return; }
-    if (type === 'flare') player.flares -= 2; else player.chaff -= 2;
-    if (type === 'flare') AU.flare(); else AU.chaff();
-  } else {
-    if (type === 'flare' ? owner.cmFlare <= 0 : owner.cmChaff <= 0) return;
-    if (type === 'flare') owner.cmFlare -= 2; else owner.cmChaff -= 2;
-  }
-  let last = null;
-  for (let k = 0; k < 2; k++) {
-    const c = { type, owner, pos: owner.pos.clone(), vel: owner.vel.clone().multiplyScalar(0.8).add(new THREE.Vector3((rnd() - 0.5) * 30, -20 - rnd() * 15, (rnd() - 0.5) * 30)), life: type === 'flare' ? 4 : 3.5 };
-    cms.push(c); last = c;
-  }
-  // ракеты, наведённые на owner, могут переключиться на ловушку / отражатели
-  for (const m of missiles) {
-    if (m.dead || m.target !== owner || m.decoy || m.lost || m.pos.distanceTo(owner.pos) > 7000) continue;
-    if (type === 'flare' && m.M.kind === 'ir') {
-      const heat = seekerHeat(owner, m.pos);
-      if (rnd() < clamp((1 - m.M.ir.irccm) * 1.7 / (1.7 + heat), 0, 0.92)) { m.decoy = last; m.why = 'flare'; }
-    } else if (type === 'chaff' && m.M.kind !== 'ir' && (m.M.kind === 'sarh' || m.active)) {
-      if (rnd() < (1 - m.M.eccm) * (isNotched(m.pos, owner) ? 0.85 : 0.22)) { m.decoy = last; m.why = 'chaff'; }
-    }
-  }
-  if (type === 'chaff') { // срыв сопровождения РЛС
-    if (owner === player) {
-      for (const e of enemies) if (e.stt && !e.dead && rnd() < (isNotched(e.pos, player) ? 0.8 : 0.2) * (1 - 0.3 * e.skill)) { e.stt = false; e.sttCD = 2; }
-    } else if (radar.lock === owner && rnd() < (isNotched(player.pos, owner) ? 0.8 : 0.15)) { radar.lock = null; popup('ЗАХВАТ СОРВАН ДИПОЛЯМИ', 'bad'); sfx.lost(); }
-  }
-  while (cms.length > 160) cms.shift();
-}
-function updateCMs(dt) {
-  for (let i = cms.length - 1; i >= 0; i--) {
-    const c = cms[i]; c.life -= dt;
-    c.vel.multiplyScalar(Math.max(0, 1 - (c.type === 'flare' ? 0.9 : 2.5) * dt)); c.vel.y -= (c.type === 'flare' ? 8 : 2) * dt;
-    c.pos.addScaledVector(c.vel, dt);
-    if (c.type === 'flare') {
-      FX.emit(c.pos.x, c.pos.y, c.pos.z, 0, 0, 0, 1, 0.95, 0.75, 1, 5, -3, 0.12, 0, 0);
-      if (rnd() < 0.6) SMOKE.emit(c.pos.x, c.pos.y, c.pos.z, 0, 1, 0, 0.9, 0.9, 0.9, 0.5, 2, 5, 1.8, 0.3, 0);
-    } else if (rnd() < 0.5) FX.emit(c.pos.x + (rnd() - 0.5) * 12, c.pos.y + (rnd() - 0.5) * 12, c.pos.z + (rnd() - 0.5) * 12, 0, -1, 0, 0.8, 0.85, 0.9, 0.6, 1.4, 0, 0.4, 0, 0);
-    if (c.life <= 0) cms.splice(i, 1);
-  }
-}
-
 // ═════════════ Урон, сбитие, обломки ═════════════
-function damage(e, amount, by, msl) {
-  if (e.dead) return;
-  if (e === player) { hurt(amount * MODE.dmgTaken); return; }
-  e.hp -= amount;
-  if (by !== 'ЗЕМЛЯ' && by !== 'ТАРАН') hitMarks.push({ pos: e.pos.clone(), t: 0.35, big: amount > 40 }); // маркер попадания
-  if (e.hp <= 0) killEnemy(e, by, msl);
-}
-function killEnemy(e, by, msl) {
-  e.dead = true;
+// сбит самолёт ИИ (sim/battle.js уже пометил его dead): взрыв, очки, лента, обломки
+function onKilled(e, by, msl) {
   explosion(e.pos, e.type === 'boss' ? 7 : 3.2);
   sfx.boom(e.pos.distanceTo(camera.position), e.type === 'boss' ? 5 : 3);
   if (radar.lock === e) radar.lock = null;
@@ -998,12 +690,17 @@ function updateWrecks(dt) {
     if (p.y < terrainH(p.x, p.z) + 2 || w.t > 40) { explosion(p, w.big ? 8 : w.small ? 1.2 : 4); scene.remove(w.group); wrecks.splice(i, 1); }
   }
 }
-function hurt(amount) {
-  if (G.god || player.invuln > 0 || G.over) return;
-  player.hull -= amount; player.invuln = 0.3; G.shake = Math.min(1.2, 0.4 + amount / 60);
+function hurtFx(amount) {
+  G.shake = Math.min(1.2, 0.4 + amount / 60);
   $('flash').style.transition = 'none'; $('flash').style.opacity = Math.min(0.6, 0.2 + amount / 100);
   requestAnimationFrame(() => { $('flash').style.transition = 'opacity .6s'; $('flash').style.opacity = 0; });
   sfx.hit();
+}
+function hurt(amount) {
+  if (MP.on) { if (!MP.down && G.state === 'play' && player.invuln <= 0) { MP.selfDamage(amount); player.invuln = 0.3; } return; } // корпус в онлайне ведёт сервер
+  if (G.god || player.invuln > 0 || G.over) return;
+  player.hull -= amount; player.invuln = 0.3;
+  hurtFx(amount);
   if (player.hull <= 0) {
     if (MODE.training) { player.hull = 100; popup('В бою вы были бы сбиты — корпус восстановлен', 'bad'); return; }
     player.hull = 0; endGame('hull');
@@ -1013,7 +710,7 @@ function hurt(amount) {
 // ═════════════ Пушка (общая) ═════════════
 const bulletGeo = new THREE.BoxGeometry(0.3, 0.3, 14);
 const bulletMat = new THREE.MeshBasicMaterial({ color: lin(0xffe9a0).multiplyScalar(4), fog: false }), bulletMatE = new THREE.MeshBasicMaterial({ color: lin(0xff8a6a).multiplyScalar(4), fog: false });
-for (let i = 0; i < 180; i++) { const m = new THREE.Mesh(bulletGeo, bulletMat); m.visible = false; scene.add(m); bullets.push({ mesh: m, on: false, vel: new THREE.Vector3(), life: 0, owner: null, target: null, prev: new THREE.Vector3() }); }
+for (const b of bullets) { const m = new THREE.Mesh(bulletGeo, bulletMat); m.visible = false; scene.add(m); b.mesh = m; b.pos = m.position; } // пули боя двигают свои модели напрямую
 let gunTarget = null;
 function findGunTarget() {
   gunTarget = null; let best = Math.cos(MODE.gunCone * D2R);
@@ -1026,194 +723,76 @@ function findGunTarget() {
     const c = TMP.dot(TMP3) / TMP.length(); if (c > best) { best = c; gunTarget = e; }
   }
 }
-function fireBullet(owner, target, dmg) {
-  const b = bullets.find((x) => !x.on); if (!b) return;
-  fwdOf(owner, TMP3);
-  b.on = true; b.mesh.visible = true; b.life = 1.6; b.owner = owner; b.target = target; b.dmg = dmg;
-  b.mesh.material = owner === player ? bulletMat : bulletMatE;
-  b.mesh.position.copy(owner.pos).addScaledVector(TMP3, 9); b.mesh.position.y -= 0.4;
-  b.prev.copy(b.mesh.position);
-  b.vel.copy(TMP3).multiplyScalar(1050).add(owner.vel);
-  TMP.set((rnd() - 0.5) * 6, (rnd() - 0.5) * 6, (rnd() - 0.5) * 6); b.vel.add(TMP); // рассеивание
-  b.mesh.quaternion.setFromUnitVectors(ZAXIS, TMP.copy(b.vel).normalize());
-  if (owner === player) G.shots++;
-  FX.emit(b.mesh.position.x, b.mesh.position.y, b.mesh.position.z, 0, 0, 0, 1, 0.8, 0.4, 1, 2.2, 0, 0.05, 0, 0);
-}
-function segHitsSphere(a, b, c, r) {
-  const abx = b.x - a.x, aby = b.y - a.y, abz = b.z - a.z, l2 = abx * abx + aby * aby + abz * abz || 1e-6;
-  const t = clamp(((c.x - a.x) * abx + (c.y - a.y) * aby + (c.z - a.z) * abz) / l2, 0, 1);
-  const dx = a.x + abx * t - c.x, dy = a.y + aby * t - c.y, dz = a.z + abz * t - c.z;
-  return dx * dx + dy * dy + dz * dz < r * r;
-}
-function updateBullets(dt) {
-  for (const b of bullets) {
-    if (!b.on) continue;
-    b.life -= dt; b.prev.copy(b.mesh.position);
-    if (MODE.gunHome > 0 && b.target && !b.target.dead && b.owner === player) { // лёгкое «доведение» — прощает мелкие ошибки прицеливания
-      TMP.copy(b.target.pos).sub(b.mesh.position).normalize().multiplyScalar(b.vel.length());
-      b.vel.lerp(TMP, Math.min(1, MODE.gunHome * dt));
-    }
-    b.vel.y -= G0 * dt;
-    b.mesh.position.addScaledVector(b.vel, dt);
-    let hit = false;
-    for (const e of opponentsOf(b.owner)) {
-      if (e.dead) continue;
-      if (segHitsSphere(b.prev, b.mesh.position, e.pos, e.r + 2)) {
-        if (b.owner === player) G.hits++;
-        FX.emit(e.pos.x, e.pos.y, e.pos.z, 0, 0, 0, 1, 0.9, 0.5, 1, 3, 0, 0.15, 0, 0);
-        damage(e, b.dmg, 'ПУШКА'); hit = true; break;
-      }
-    }
-    const p = b.mesh.position;
-    if (!hit && p.y < terrainH(p.x, p.z)) hit = true;
-    if (hit || b.life <= 0) { b.on = false; b.mesh.visible = false; }
-  }
-}
-
 // ═════════════ ИИ «Подстилки улитки» ═════════════
-function spawnAI(type, pos, yaw, leader, off) {
-  const S = AC[type], J = jetGeo(type);
+// самолёт ИИ появился в бою (sim/battle.js): модель, пламя, ракеты на пилонах
+function onSpawned(e) {
+  const type = e.type, J = jetGeo(type);
   const g = new THREE.Group(); g.rotation.order = 'YXZ';
   const mesh = new THREE.Mesh(J.geo, MAT_JET); mesh.castShadow = !!P.shadows; g.add(mesh);
   const flames = J.nozzles.map((nz) => { const f = new THREE.Mesh(flameGeo, flameMat); f.position.copy(nz); f.scale.set(type === 'boss' ? 1.8 : 1.1, type === 'boss' ? 1.8 : 1.1, 2); g.add(f); return f; });
-  const lo = S.loadouts[(rnd() * S.loadouts.length) | 0];
-  const msl = J.stations.map((st, i) => {
-    const k = lo[i]; if (!k) return null;
-    const mm = missileMesh(k); mm.position.copy(st); mm.position.y -= MISSILES[k].vis.r; g.add(mm); return { key: k, mesh: mm };
-  });
+  e.msl.forEach((x, i) => { if (!x) return; const mm = missileMesh(x.key); mm.position.copy(J.stations[i]); mm.position.y -= MISSILES[x.key].vis.r; g.add(mm); x.mesh = mm; });
   scene.add(g);
-  const e = makeCraft({ type, S, group: g, flames, msl, hp: S.hp, gmax: S.gmax, wCap: S.wCap, agil: 2 + S.skill * MODE.aiSkill * 2.5, milAcc: S.milAcc, abAcc: S.abAcc, cd0: S.cd0,
-    ir: S.ir, r: S.r, jam: !!S.jam, cmFlare: S.cm, cmChaff: S.cm, skill: S.skill * MODE.aiSkill,
-    state: 'ingress', thinkT: rnd() * 0.3, stt: false, sttLostT: 0, sttCD: 0, mslCD: 6 + rnd() * 6, cmT: 0, crank: rnd() < 0.5 ? 1 : -1, reactT: 0, threat: null,
-    gunT: 0, want: new THREE.Vector3(0, 0, -1), wantAB: false, leader, off });
-  e.pos.copy(pos); e.yaw = yaw; e.speed = type === 'boss' ? 220 : 260;
-  fwdOf(e, e.vel).multiplyScalar(e.speed);
+  e.group = g; e.flames = flames;
   enemies.push(e);
-  return e;
 }
-const AS_A = new THREE.Vector3(), AS_B = new THREE.Vector3(), AI_TOP = new THREE.Vector3();
-function aiSees(e) { // РЛС ИИ видит игрока?
-  const rel = AS_A.copy(player.pos).sub(e.pos), d = rel.length();
-  fwdOf(e, AS_B);
-  if (angleBetween(AS_B, rel) > 60 * D2R) return false;
-  if (d > e.S.radarR * Math.pow(player.rcs() / 5, 0.25)) return false;
-  return !isNotched(e.pos, player);
-}
-function aiLaunch(e, key) {
-  const i = e.msl.findIndex((x) => x && x.key === key); if (i < 0) return;
-  const mesh = e.msl[i].mesh; e.msl[i] = null;
-  launchMissile(e, key, player, mesh);
-}
-function aiThink(e) {
-  const p = player, toP = AI_TOP.copy(p.pos).sub(e.pos), d = toP.length();
-  const sees = aiSees(e);
-  // ── угрозы: ракеты игрока, летящие в e (что «знает» его СПО / что видно глазами) ──
-  let threat = null, tD = 1e9;
-  for (const m of missiles) {
-    if (m.dead || m.owner !== player || m.target !== e || m.lost || m.decoy) continue;
-    const md = m.pos.distanceTo(e.pos);
-    let known = m.seenBy.has(e);
-    if (!known) {
-      if (m.M.kind === 'arh' && m.active) known = true;                          // СПО слышит активную ГСН
-      else if (m.M.kind !== 'ir' && radar.lock === e && m.t < 6) known = true;   // пуск при захвате
-      else if (m.M.kind === 'sarh' && radar.lock === e) known = true;            // подсвет
-      else if (md < 4000 && rnd() < e.skill * 0.35) known = true;                // увидел дымный след
-      if (known) m.seenBy.add(e);
-    }
-    if (known && md < tD) { threat = m; tD = md; }
-  }
-  if (threat && tD < (threat.M.kind === 'ir' ? 5000 : 15000)) {
-    if (e.threat !== threat) { e.threat = threat; e.reactT = (1 - e.skill) * 1.4; }
-    e.reactT -= 0.25;
-    if (e.reactT <= 0) e.state = 'defend';
-  } else { e.threat = null; if (e.state === 'defend') e.state = 'engage'; }
-  // ── оборона: выход на траверз (в доплеровский провал), снижение, контрмеры ──
-  if (e.state === 'defend') {
-    const m = e.threat;
-    TMP2.copy(e.pos).sub(m.pos); TMP2.y = 0; TMP2.normalize();
-    const perp = TMP3.set(-TMP2.z, 0, TMP2.x); fwdOf(e, TGT);
-    if (perp.dot(TGT) < 0) perp.negate();
-    e.want.copy(perp); e.want.y = agl(e) > 1500 ? -0.3 : 0.05;
-    e.wantAB = m.M.kind !== 'ir';
-    if (tD < 1800) { e.want.addScaledVector(TMP2, -0.4).normalize(); } // в последний момент — резкий доворот на ракету
-    if (e.cmT <= 0) {
-      if (m.M.kind === 'ir' && tD < 3500) { dropCM(e, 'flare'); e.cmT = 0.7 - e.skill * 0.3; }
-      else if (m.M.kind !== 'ir' && tD < 7000) { dropCM(e, 'chaff'); e.cmT = 0.9 - e.skill * 0.3; }
-    }
-    safety(e); return;
-  }
-  // ── сопровождение ──
-  const hasR = e.msl.some((x) => x && MISSILES[x.key].kind !== 'ir');
-  const hasIR = e.msl.some((x) => x && MISSILES[x.key].kind === 'ir');
-  let guiding = 0; for (const m of missiles) if (!m.dead && m.owner === e && !m.lost && (m.M.kind === 'sarh' || (m.M.kind === 'arh' && !m.active))) guiding++;
-  const radarKey = hasR ? e.msl.find((x) => x && MISSILES[x.key].kind !== 'ir').key : null;
-  const rK = radarKey && dlz(MISSILES[radarKey], e.pos.y, e.speed, closingOf(p, e.pos));
-  const launchR = rK ? rK.rne + (rK.rmax - rK.rne) * (0.55 - 0.35 * e.skill) : 0;
-  if (sees && e.sttCD <= 0 && (guiding || (hasR && d < launchR * 1.25))) { if (!e.stt) { e.stt = true; e.sttLostT = 0; } }
-  else if (!guiding && !(hasR && d < launchR * 1.25)) e.stt = false;
-  // ── пуски ──
-  fwdOf(e, TMP2);
-  const off = angleBetween(TMP2, toP);
-  const maxInFlight = e.type === 'boss' ? 2 : 1;
-  if (e.mslCD <= 0 && radarKey && e.stt && guiding < maxInFlight && d < launchR && d > MISSILES[radarKey].rmin && off < 25 * D2R) {
-    aiLaunch(e, radarKey); e.mslCD = 9 + (1 - e.skill) * 7; e.state = 'crank';
-  } else if (e.mslCD <= 0 && hasIR && d < 10000) {
-    const irKey = e.msl.find((x) => x && MISSILES[x.key].kind === 'ir').key, M_ = MISSILES[irKey];
-    if (d > M_.rmin && irCanSee(M_, p, e.pos, TMP2, Math.min(M_.ir.fov, 30)) && d < dlz(M_, e.pos.y, e.speed, closingOf(p, e.pos)).rmax * 0.8) {
-      aiLaunch(e, irKey); e.mslCD = 6 + (1 - e.skill) * 5;
-    }
-  }
-  // ── манёвр ──
-  const lead = TGT.copy(p.pos).addScaledVector(p.vel, Math.min(6, d / 900));
-  if (e.type === 'boss') {
-    // флагман держит дистанцию, эскорт прикрывает
-    if (d < 14000) { e.want.copy(e.pos).sub(p.pos).normalize(); e.want.y = 0; } else { e.want.copy(toP).normalize(); e.want.y = (7000 - e.pos.y) / 4000; }
-    e.wantAB = false;
-  } else if (e.leader && !e.leader.dead && d > 18000) {
-    e.want.copy(e.leader.pos).add(e.off).sub(e.pos); if (e.want.lengthSq() < 1) e.want.copy(fwdOf(e.leader, TMP3)); e.want.normalize(); e.wantAB = e.pos.distanceTo(e.leader.pos) > 800;
-  } else if (e.state === 'crank' && guiding) {
-    // держим цель у края зоны обзора РЛС (~50°), чтобы медленнее сближаться и не терять захват
-    const a = Math.atan2(toP.x, toP.z) + e.crank * 50 * D2R;
-    e.want.set(Math.sin(a), (p.pos.y - e.pos.y) / Math.max(3000, d), Math.cos(a)).normalize(); e.wantAB = false;
-  } else if (d > 6000) {
-    e.state = 'engage';
-    e.want.copy(lead).sub(e.pos); e.want.y += 800; e.want.normalize(); e.wantAB = d < 20000 && e.speed < 300;
-  } else {
-    e.state = 'dogfight';
-    e.want.copy(lead).sub(e.pos).normalize(); e.wantAB = e.speed < 290;
-  }
-  safety(e);
-}
-// земля и граница арены важнее всего остального
-function safety(e) {
-  const ahead = TMP3.copy(e.pos).addScaledVector(e.vel, 5);
-  const clearance = ahead.y - terrainH(ahead.x, ahead.z);
-  if (clearance < 600 || agl(e) < 400) { e.want.y = Math.max(e.want.y, clearance < 250 ? 0.9 : 0.45); e.want.normalize(); }
-  const r = Math.hypot(e.pos.x, e.pos.z);
-  if (r > WORLD.R + 800) { e.want.set(-e.pos.x, 0, -e.pos.z).normalize(); }
-  if (e.pos.y > WORLD.CEIL - 1500) e.want.y = Math.min(e.want.y, -0.2);
-}
-function updateAI(e, dt) {
-  e.thinkT -= dt; e.mslCD -= dt; e.cmT -= dt; e.sttCD -= dt; e.gunT -= dt;
-  if (e.stt) { if (!aiSees(e)) { e.sttLostT += dt; if (e.sttLostT > 0.8) { e.stt = false; e.sttCD = 1.5; } } else e.sttLostT = 0; }
-  if (e.thinkT <= 0) { e.thinkT = 0.25; aiThink(e); }
-  const [rx, ry] = steerTo(e, e.want, 2.2 + e.skill);
-  e.ab = e.wantAB; e.thr = 1;
-  flyStep(e, rx, ry, dt);
-  if (agl(e) < 5) { e.hp = 0; killEnemy(e, 'ЗЕМЛЯ'); return; } // загнали в землю — засчитывается
-  // пушка на малой дистанции
-  const d = e.pos.distanceTo(player.pos);
-  if (d < 1300 && e.gunT <= 0 && !G.over) {
-    fwdOf(e, TMP2); TMP.copy(player.pos).addScaledVector(player.vel, d / 1100).sub(e.pos);
-    if (angleBetween(TMP2, TMP) < 2.5 * D2R) { fireBullet(e, player, 4); e.gunT = 0.09; }
-  }
-  // столкновение с игроком
-  if (d < e.r + player.r && !G.over) { hurt(50); damage(e, 80, 'ТАРАН'); }
-  // визуал
-  e.group.position.copy(e.pos); e.group.rotation.set(e.pitch, e.yaw, e.roll);
-  for (const f of e.flames) { f.visible = e.ab || e.type === 'boss'; f.scale.z = (e.ab ? 4.5 : 1.5) * (0.85 + rnd() * 0.3); }
-  if (P.contrails && e.pos.y > 7000 && rnd() < 0.5) SMOKE.emit(e.pos.x, e.pos.y, e.pos.z, 0, 0, 0, 0.95, 0.96, 1, 0.35, 4, 5, 6, 0, 0);
-  if (e.type === 'boss') $('bossFill').style.width = Math.max(0, e.hp / e.S.hp * 100) + '%';
+// эффекты и звук боя: sim/battle.js зовёт их там, где раньше стоял этот код (порядок случайных чисел не изменился)
+function battleFx() {
+  return {
+    launchPos(owner, key, slot, out) { // ракета стартует с пилона: берём её модель и мировое положение
+      if (slot && slot.mesh) { const mesh = slot.mesh; mesh.updateMatrixWorld(true); mesh.getWorldPosition(out); slot.q = mesh.getWorldQuaternion(new THREE.Quaternion()); mesh.parent.remove(mesh); }
+      else out.copy(owner.pos);
+    },
+    launched(m, slot) {
+      const M_ = m.M, owner = m.owner, mesh = (slot && slot.mesh) || missileMesh(m.key);
+      mesh.position.copy(m.pos); if (slot && slot.q) mesh.quaternion.copy(slot.q); scene.add(mesh);
+      const fl = new THREE.Mesh(mslFlameGeo, flameMat); fl.position.z = M_.vis.L / 2 + 0.05; fl.visible = false; mesh.add(fl);
+      m.mesh = mesh; m.fl = fl; m.pos = mesh.position; // ракета двигает свою модель напрямую
+      const wpos = m.pos;
+      // вспышка запуска двигателя и облачко дыма у пилона
+      for (let k = 0; k < 18; k++) { const [vx, vy, vz] = sph(25); FX.emit(wpos.x, wpos.y, wpos.z, vx + owner.vel.x * 0.9, vy + owner.vel.y * 0.9, vz + owner.vel.z * 0.9, 1, 0.85, 0.5, 1, 1.6, 3, 0.25, 2, 0); }
+      for (let k = 0; k < 6; k++) { const [vx, vy, vz] = sph(8); SMOKE.emit(wpos.x, wpos.y, wpos.z, vx + owner.vel.x * 0.7, vy + owner.vel.y * 0.7, vz + owner.vel.z * 0.7, 0.85, 0.85, 0.85, 0.55, 2, 6, 1.8, 1.2, 0); }
+      if (owner === player) { G.mFired++; sfx.launch(); popup(M_.short + ' — ПУСК', 'info'); }
+    },
+    motor(m, motor, tb) { m.fl.visible = motor; if (motor) m.fl.scale.set(1, 1, (m.M.sustain && tb > m.M.burn ? 0.5 : 1) * (0.8 + rnd() * 0.5)); },
+    trail(m, tb) {
+      SMOKE.emit(m.pos.x, m.pos.y, m.pos.z, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3 + 1, (rnd() - 0.5) * 3, 0.9, 0.9, 0.9, m.M.sustain && tb > m.M.burn ? 0.18 : 0.55, 2.2, 6, 3.5, 0.5, 0.3);
+      FX.emit(m.pos.x - m.dir.x * 3, m.pos.y - m.dir.y * 3, m.pos.z - m.dir.z * 3, 0, 0, 0, 1, 0.7, 0.3, 0.9, 2.2, -3, 0.08, 0, 0);
+    },
+    pitbull(m) { if (m.owner === player) tone(1600, 0.05, 'square', 0.02); },
+    detonated(m, dealDamage) {
+      scene.remove(m.mesh);
+      explosion(m.pos, dealDamage ? 2.2 : 1.1);
+      sfx.boom(m.pos.distanceTo(camera.position), dealDamage ? 1.4 : 0.7);
+    },
+    missileResult(m, hit) { if (hit && m.owner === player) G.mHits++; if (!hit && m.target === player) G.evaded++; },
+    cmEmpty(o, type) { if (G.cmT <= 0) { popup(type === 'flare' ? 'ЛТЦ КОНЧИЛИСЬ' : 'ДИПОЛИ КОНЧИЛИСЬ', 'bad'); G.cmT = 0.5; } },
+    cmDrop(o, type) { if (type === 'flare') AU.flare(); else AU.chaff(); },
+    lockBroken() { popup('ЗАХВАТ СОРВАН ДИПОЛЯМИ', 'bad'); sfx.lost(); },
+    cm(c) {
+      if (c.type === 'flare') {
+        FX.emit(c.pos.x, c.pos.y, c.pos.z, 0, 0, 0, 1, 0.95, 0.75, 1, 5, -3, 0.12, 0, 0);
+        if (rnd() < 0.6) SMOKE.emit(c.pos.x, c.pos.y, c.pos.z, 0, 1, 0, 0.9, 0.9, 0.9, 0.5, 2, 5, 1.8, 0.3, 0);
+      } else if (rnd() < 0.5) FX.emit(c.pos.x + (rnd() - 0.5) * 12, c.pos.y + (rnd() - 0.5) * 12, c.pos.z + (rnd() - 0.5) * 12, 0, -1, 0, 0.8, 0.85, 0.9, 0.6, 1.4, 0, 0.4, 0, 0);
+    },
+    hit(e, amount, by) { if (by !== 'ЗЕМЛЯ' && by !== 'ТАРАН') hitMarks.push({ pos: e.pos.clone(), t: 0.35, big: amount > 40 }); }, // маркер попадания
+    killed: onKilled,
+    shot(b) {
+      b.mesh.visible = true; b.mesh.material = b.owner === player ? bulletMat : bulletMatE;
+      b.mesh.quaternion.setFromUnitVectors(ZAXIS, TMP.copy(b.vel).normalize());
+      if (b.owner === player) G.shots++;
+      FX.emit(b.pos.x, b.pos.y, b.pos.z, 0, 0, 0, 1, 0.8, 0.4, 1, 2.2, 0, 0.05, 0, 0);
+    },
+    bulletHit(b, e) { if (b.owner === player) G.hits++; FX.emit(e.pos.x, e.pos.y, e.pos.z, 0, 0, 0, 1, 0.9, 0.5, 1, 3, 0, 0.15, 0, 0); },
+    bulletOff(b) { b.mesh.visible = false; },
+    spawned: onSpawned,
+    aiVisual(e) {
+      e.group.position.copy(e.pos); e.group.rotation.set(e.pitch, e.yaw, e.roll);
+      for (const f of e.flames) { f.visible = e.ab || e.type === 'boss'; f.scale.z = (e.ab ? 4.5 : 1.5) * (0.85 + rnd() * 0.3); }
+      if (P.contrails && e.pos.y > 7000 && rnd() < 0.5) SMOKE.emit(e.pos.x, e.pos.y, e.pos.z, 0, 0, 0, 0.95, 0.96, 1, 0.35, 4, 5, 6, 0, 0);
+      if (e.type === 'boss') $('bossFill').style.width = Math.max(0, e.hp / e.S.hp * 100) + '%';
+    },
+    radarLost() { popup('ЗАХВАТ ПОТЕРЯН', 'bad'); sfx.lost(); },
+  };
 }
 function runSchedule() {
   while (schedIdx < schedule.length && schedule[schedIdx].t <= G.runTime) {
@@ -1407,7 +986,6 @@ function closingText(m) {
 // записи СПО берутся из пулов и переиспользуются (раньше каждый кадр создавались новые массивы и объекты)
 const RWR_POOL = [], MAWS_POOL = [], INC_POOL = [];
 const pooled = (pool, i) => pool[i] || (pool[i] = {});
-function localAz(a, rel) { const cy = Math.cos(a.yaw), sy = Math.sin(a.yaw), cp = Math.cos(a.pitch), sp = Math.sin(a.pitch); const x1 = rel.x * cy - rel.z * sy, z1 = rel.x * sy + rel.z * cy; return Math.atan2(x1, -(-rel.y * sp + z1 * cp)); }
 const byDist = (a, b) => a.d - b.d;
 function updateRwr(dt) {
   const out = rwr.list, maws = rwr.maws, inc = rwr.inc; out.length = 0; maws.length = 0; inc.length = 0;
@@ -1510,13 +1088,14 @@ function updateHudSlow() {
   el.kills.textContent = G.kills; el.score.textContent = G.score;
   let next = null; for (let i = schedIdx; i < schedule.length; i++) if (schedule[i].type !== 'tanker') { next = schedule[i]; break; }
   const cmp = VW < 760; // узкий экран — короткие подписи
-  if (MODE.training) el.combo.textContent = `ОБУЧЕНИЕ · разобрано${cmp ? '' : ' ракет'}: ${TR.done}`;
+  if (MP.on) el.combo.textContent = `${TEAM_NAMES[0]} ${MP.score[0]} : ${MP.score[1]} ${TEAM_NAMES[1]} · вы — «${TEAM_NAMES[MP.team]}»`;
+  else if (MODE.training) el.combo.textContent = `ОБУЧЕНИЕ · разобрано${cmp ? '' : ' ракет'}: ${TR.done}`;
   else el.combo.textContent = next ? `${cmp ? 'группа' : 'следующая группа'} через ${Math.max(0, Math.ceil(next.t - G.runTime))} с` : enemies.some((e) => !e.dead) ? '' : 'все группы отбиты';
   const mach = player.speed / (340 - player.pos.y * 0.004);
   el.spd.textContent = `${Math.round(player.speed * 3.6)} М${mach.toFixed(2)}${player.ab ? ' Ф' : ''}`;
   el.alt.textContent = `${Math.round(player.pos.y)} · ${player.n.toFixed(1)}g`;
   el.hdg.textContent = 'КУРС ' + String(Math.round(((-player.yaw / D2R) % 360 + 360) % 360)).padStart(3, '0') + '°';
-  const left = Math.max(0, H_CAP - G.runTime); el.clock.textContent = MODE.training ? 'ОБУЧЕНИЕ' : `${MODE.name.toUpperCase()} · ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`;
+  const left = MP.on ? MP.leftSec() : Math.max(0, H_CAP - G.runTime); el.clock.textContent = MODE.training ? 'ОБУЧЕНИЕ' : `${MODE.name.toUpperCase()} · ${Math.floor(left / 60)}:${String(Math.floor(left % 60)).padStart(2, '0')}`;
   el.spdBox.classList.toggle('sup', !!player.sup);
   drawRadar(); drawRwr();
   if (IS_TOUCH) placeThreat();
@@ -1629,6 +1208,18 @@ function hudFast(dt, slow) {
     if (t.done || n >= MAXM) continue;
     const s = toScreen(t.drogue, SCR[1]), d = t.drogue.distanceTo(player.pos);
     if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) { hMark('t', s.x, s.y, 'ЗАПРАВЩИК ' + (d < 1000 ? Math.round(d) + ' м' : km(d))); n++; } else if (hArrow(t.drogue, '#fde047')) n++;
+  }
+  if (MP.on) { // онлайн: ники соперников над метками и союзники (голубым)
+    for (const e of enemies) {
+      if (!e.remote || e.dead) continue;
+      const d = e.pos.distanceTo(player.pos); if (d > 12000) continue;
+      const s = toScreen(e.pos, SCR[1]); if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) hText(e.name, s.x, s.y - 17, '#fca5a5', 10.5, 'center', 'bottom');
+    }
+    for (const a of MP.allies) {
+      if (a.dead || n >= MAXM) continue;
+      const d = a.pos.distanceTo(player.pos), s = toScreen(a.pos, SCR[1]);
+      if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) { hRing(s.x, s.y, 7, '#93c5fd', 1.5); hText(`${a.name} · ${km(d)}`, s.x, s.y - 12, '#93c5fd', 10.5, 'center', 'bottom'); n++; }
+    }
   }
   // анимация захвата: рамка «схлопывается» на цель
   if (G.lockAnimT > 0 && radar.lock && !radar.lock.dead) {
@@ -1977,6 +1568,7 @@ function renderModeSel() {
 function showTab(t) {
   document.querySelectorAll('#mtabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('.tabp').forEach((p) => p.classList.toggle('on', p.id === 'tab-' + t));
+  if (t === 'mp') { MP.connect(); MP.render(); }
 }
 $('mtabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) showTab(b.dataset.tab); });
 $('modeSel').addEventListener('click', (e) => {
@@ -2479,6 +2071,7 @@ function startCountdown() {
 }
 function togglePause() {
   if (G.lesson) { closeLesson(); return; }
+  if (MP.on) { show('pauseScr', !$('pauseScr').classList.contains('on')); held.clear(); return; } // онлайн: мир не останавливается — только меню
   if (G.state !== 'play' && !G.paused) return;
   G.paused = !G.paused; G.state = G.paused ? 'pause' : 'play';
   show('pauseScr', G.paused);
@@ -2493,6 +2086,7 @@ function endGame(reason) {
   const texts = { hull: 'Дрон сбит', fuel: 'Топливо закончилось', time: 'Время вылета вышло', win: 'Все группы противника уничтожены' };
   setTimeout(() => {
     $('hud').classList.remove('on'); setBody(null);
+    $('end').classList.remove('mpEnd');
     $('endTitle').textContent = G.bossKilled ? 'Победа над Подстилкой!' : 'Вылет окончен'; $('endTitle').className = G.bossKilled ? 'win' : '';
     $('endReason').textContent = texts[reason] || '';
     $('eKills').textContent = G.kills; $('eMax').textContent = MAX_K; $('eScore').textContent = G.score; $('eMsl').textContent = G.mHits + '/' + G.mFired; $('eEvade').textContent = G.evaded;
@@ -2512,15 +2106,117 @@ function sendResult(reason) {
   if (window.parent !== window) window.parent.postMessage(payload, '*');
 }
 window.addEventListener('message', (e) => { if (e.data && e.data.type === 'mg_result_ack') $('serverMsg').textContent = String(e.data.text || ''); });
-$('startBtn').addEventListener('click', startCountdown);
+$('startBtn').addEventListener('click', () => { if (MP.room) { unlockAudio(); if (MP.inLobby()) MP.toggleReady(); return; } startCountdown(); }); // в онлайн-комнате — «Готов»
 $('resumeBtn').addEventListener('click', togglePause);
-$('againBtn').addEventListener('click', () => location.reload());
-function exitGame() { exitImmersive(); tgFlight(false); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); } // вне сайта — назад в меню
+$('againBtn').addEventListener('click', () => { if (MP.end) mpBackToMenu(); else location.reload(); });
+function exitGame() { MP.leave(); exitImmersive(); tgFlight(false); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); } // вне сайта — назад в меню
 $('closeBtn').addEventListener('click', exitGame); $('exit').addEventListener('click', exitGame); $('pause').addEventListener('click', togglePause); $('pauseExit').addEventListener('click', exitGame);
-document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play') togglePause(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play' && !MP.on) togglePause(); }); // онлайн-бой не ставится на паузу
 $('modeBadge').className = 'badge ' + (TRAINING ? 'train' : 'rank');
 $('modeBadge').textContent = TRAINING ? 'ТРЕНИРОВКА — без наград' : 'НА НАГРАДУ — результат идёт в общий прогресс недели';
 setBody('menuing');
+
+// ═════════════ Онлайн-бой ═════════════
+// Связь, лобби и чужие самолёты — online-client.js; здесь — то, что трогает саму игру: старт, модели соперников, урон, итоги.
+const MAT_ALLY = MAT_METAL.clone(); MAT_ALLY.color.set(0xaecbff); // союзники — голубоватые, соперники — красноватые
+const MAT_FOE = MAT_METAL.clone(); MAT_FOE.color.set(0xffb4a6);
+let remoteGeo = null;
+function mpPlace(s) {
+  Object.assign(player, { yaw: s[3], pitch: 0, roll: 0, wy: 0, wp: 0, speed: 240, thr: 0.85 });
+  player.pos.set(s[0], s[1], s[2]); fwdOf(player, player.vel).multiplyScalar(player.speed); camSnap = true;
+}
+function mpStart(o) {
+  unlockAudio();
+  show('end', false); show('pauseScr', false); show('menu', false); setBody('playing'); $('hud').classList.add('on');
+  modeKey = o.mode; applyMode(); MODE = { ...MODE, fuelBurn: 0 }; // режим задаёт комната (не сохраняем как свой); топливо в онлайне не тратится
+  if (WEATHERS[o.weather] && o.weather !== weatherKey) applyWeatherKey(o.weather);
+  renderWeatherChip();
+  Object.assign(G, { state: 'countdown', paused: false, over: false, runTime: 0, kills: 0, score: 0, shots: 0, hits: 0, mFired: 0, mHits: 0, evaded: 0, shake: 0 });
+  camera.clearViewOffset(); applyLoadout(); mpPlace(o.spawn); world.sortieStart();
+  player.hull = 100; player.invuln = 0; player.heat = 0; player.overheated = false; radar.lock = null; radar.contacts.clear();
+  setHint(''); enterImmersive(); tgFlight(true); drReset();
+  $('count').textContent = o.cd;
+}
+function mpGoPlay() { G.state = 'play'; $('count').textContent = 'В БОЙ!'; tone(880, 0.25, 'square', 0.06); setTimeout(() => { if ($('count').textContent === 'В БОЙ!') $('count').textContent = ''; }, 700); }
+function mpSetHull(hp) { const was = player.hull; player.hull = hp; if (hp < was) hurtFx(was - hp); }
+function mpMeDown() {
+  explosion(player.pos, 4); sfx.boom(20, 4); G.shake = 1.2; input.fire = false; input.ab = false; held.clear();
+  radar.lock = null; $('count').textContent = 'СБИТ · возрождение через 5 с';
+}
+function mpMeUp(s) {
+  mpPlace(s); applyLoadout();
+  Object.assign(player, { hull: 100, invuln: 1.5, heat: 0, overheated: false, flares: MODE.cm, chaff: MODE.cm });
+  radar.lock = null; $('count').textContent = ''; popup('ВОЗРОЖДЕНИЕ', 'info');
+}
+const REMOTE_RCS = () => 1.6; // «Изделие» с типовой подвеской
+function makeRemote(info, ally) {
+  const c = makeCraft({ remote: true, human: true, team: info.team, ...DRONE, hp: 100, flares: 0, chaff: 0, rcs: REMOTE_RCS,
+    S: { name: info.name, code: 'ИЗ', hp: 100, rcs: 1.6, radarR: RADAR.range, pts: 0 }, radar: { contacts: new Map(), lock: null, lostT: 0, scanT: 0, t: 0 } });
+  c.ally = ally; remoteUp(c);
+  return c;
+}
+function remoteUp(c) { // модель «Изделия» соперника/союзника (заново после каждого сбития — старая падает обломком)
+  const g = new THREE.Group(); g.rotation.order = 'YXZ';
+  const m = new THREE.Mesh(remoteGeo || (remoteGeo = buildShipGeo()), c.ally ? MAT_ALLY : MAT_FOE); m.castShadow = !!P.shadows; g.add(m);
+  const f = new THREE.Mesh(flameGeo, flameMat); f.position.z = 7.35; g.add(f);
+  scene.add(g); c.group = g; c.flames = [f];
+}
+function remoteVisual(c) {
+  const g = c.group; if (!g) return;
+  g.position.copy(c.pos); g.rotation.set(c.pitch, c.yaw, c.roll);
+  const f = c.flames[0]; f.scale.set(c.ab ? 1.25 : 0.9, c.ab ? 1.25 : 0.9, (c.ab ? 6 : 1.2 * c.thr) * (0.9 + rnd() * 0.2));
+}
+function remoteDown(c) {
+  explosion(c.pos, 3.2); sfx.boom(c.pos.distanceTo(camera.position), 3);
+  if (radar.lock === c) radar.lock = null; radar.contacts.delete(c);
+  if (c.group) wrecks.push({ group: c.group, vel: c.vel.clone(), spin: (rnd() - 0.5) * 3, t: 0, big: false });
+  c.group = null;
+}
+function removeRemote(c) { if (c.group) scene.remove(c.group); c.group = null; if (radar.lock === c) radar.lock = null; radar.contacts.delete(c); }
+function mpShowEnd(m, me, myTeam) {
+  G.over = true; G.state = 'over'; input.fire = false; input.ab = false; held.clear(); tgFlight(false, false);
+  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (_) { /* нет */ }
+  silenceLoops(); show('pauseScr', false);
+  const [a, b] = m.score, mine = m.score[myTeam], theirs = m.score[1 - myTeam];
+  setTimeout(() => {
+    $('hud').classList.remove('on'); setBody(null); $('count').textContent = '';
+    $('endTitle').textContent = mine > theirs ? 'Победа!' : mine < theirs ? 'Поражение' : 'Ничья'; $('endTitle').className = mine > theirs ? 'win' : '';
+    $('endReason').textContent = `${TEAM_NAMES[0]} ${a} : ${b} ${TEAM_NAMES[1]}`;
+    const rows = m.players.slice().sort((x, y) => y.k - x.k || x.d - y.d)
+      .map((p) => `<tr class="${p.id === me ? 'me' : ''}"><td>${String(p.name).replace(/[&<>]/g, '')}</td><td>${TEAM_NAMES[p.team]}</td><td>${p.k}</td><td>${p.d}</td></tr>`).join('');
+    $('serverMsg').innerHTML = `<table class="mpRes"><tr><th>Пилот</th><th>Команда</th><th>Сбил</th><th>Сбит</th></tr>${rows}</table>`;
+    $('end').classList.add('mpEnd'); $('againBtn').style.display = ''; $('againBtn').textContent = 'В лобби'; $('closeBtn').textContent = 'Выйти';
+    show('end', true);
+  }, 1200);
+}
+function mpBackToMenu() {
+  MP.closeResults();
+  show('end', false); show('pauseScr', false); $('end').classList.remove('mpEnd'); $('againBtn').textContent = 'Ещё вылет'; $('count').textContent = '';
+  $('hud').classList.remove('on'); setBody('menuing'); exitImmersive(); tgFlight(false);
+  Object.assign(G, { state: 'menu', over: false, paused: false });
+  for (const m of missiles) scene.remove(m.mesh); missiles.length = 0; cms.length = 0;
+  for (const b of bullets) { b.on = false; b.mesh.visible = false; }
+  modeKey = MODES[store.get('fortuna_drone_mode')] ? store.get('fortuna_drone_mode') : 'arcade'; if (modeKey === 'training' && !TRAINING) modeKey = 'arcade';
+  applyMode(); renderModeSel(); show('menu', true); showTab('mp');
+}
+// меню в онлайн-комнате: большая кнопка — «Готов», выбор режима скрыт (режим задаёт комната)
+function mpSyncMenu(mp) {
+  const me = mp.myInfo(), inRoom = !!mp.room;
+  $('startBtn').textContent = !inRoom ? 'ВЗЛЁТ' : mp.inLobby() ? (me && me.ready ? 'ОТМЕНИТЬ ГОТОВНОСТЬ' : 'ГОТОВ') : 'ИДЁТ БОЙ…';
+  $('startBtn').classList.toggle('ready', !!(inRoom && me && me.ready));
+  $('modeSel').style.display = inRoom ? 'none' : '';
+}
+const MP = createOnline({
+  G, player, enemies, testName: (TEST && TRAINING && Q.get('mpname')) || '',
+  popup, tabEl: () => $('tab-mp'), syncMenu: mpSyncMenu, backToMenu: mpBackToMenu, goPlay: mpGoPlay,
+  countdown: (n) => { $('count').textContent = n; },
+  startOnline: mpStart, setHull: mpSetHull, hitMark: (c) => hitMarks.push({ pos: c.pos.clone(), t: 0.35, big: false }),
+  meDown: mpMeDown, meUp: mpMeUp, makeRemote, remoteDown, remoteUp, removeRemote, remoteVisual,
+  remoteShot: (c) => fireBullet(c, null, 0), showEnd: mpShowEnd,
+  firing: () => (input.fire || held.has('fire')) && !player.overheated,
+});
+$('tab-mp').addEventListener('click', (e) => MP.onClick(e));
+if (!TRAINING) $('mtabs').querySelector('[data-tab="mp"]').style.display = 'none'; // в партии на награду онлайна нет
 
 // ═════════════ Главный цикл ═════════════
 const HANGAR = new THREE.Vector3(AIRFIELD.x, airfieldH() + 700, AIRFIELD.z);
@@ -2644,26 +2340,26 @@ function updateSound(dt) {
   AU.spatial(dt, camera, flying ? player.vel : null, sndCands, on);
 }
 function tick(dt) {
+  MP.update(dt);
   if (G.state === 'play') {
     G.runTime += dt;
-    if (!MODE.training) runSchedule();
-    updatePlayer(dt);
-    updateRadar(dt); updateSeeker(dt);
-    for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (!e.dead) updateAI(e, dt); if (e.dead) enemies.splice(i, 1); }
+    if (!MODE.training && !MP.on) runSchedule();
+    if (!MP.down) { updatePlayer(dt); updateRadar(dt); updateSeeker(dt); }
+    for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (!e.dead && !e.remote) updateAI(e, dt); if (e.dead) enemies.splice(i, 1); }
     if (MODE.training) trainingTick(dt);
-    for (let i = missiles.length - 1; i >= 0; i--) { const m = missiles[i]; if (!m.dead) updateMissile(m, dt); if (m.dead) missiles.splice(i, 1); }
+    for (let i = missiles.length - 1; i >= 0; i--) { const m = missiles[i]; if (!m.dead) { updateMissile(m, dt); m.mesh.quaternion.setFromUnitVectors(NEG_Z, m.dir); } if (m.dead) missiles.splice(i, 1); }
     updateBullets(dt); updateCMs(dt); updateWrecks(dt); updateTankers(dt); updateRwr(dt);
     updateMissileLights();
-    if (MODE.training) { /* обучение без ограничения по времени */ }
+    if (MODE.training || MP.on) { /* обучение без ограничения по времени; онлайн-бой заканчивает сервер */ }
     else if (G.runTime >= H_CAP) endGame('time');
     else if (G.bossSpawned && !enemies.length && !schedule.slice(schedIdx).some((ev) => ev.type !== 'tanker')) endGame('win');
   } else if (G.state === 'over') {
-    for (let i = missiles.length - 1; i >= 0; i--) { const m = missiles[i]; if (!m.dead) updateMissile(m, dt); if (m.dead) missiles.splice(i, 1); }
+    for (let i = missiles.length - 1; i >= 0; i--) { const m = missiles[i]; if (!m.dead) { updateMissile(m, dt); m.mesh.quaternion.setFromUnitVectors(NEG_Z, m.dir); } if (m.dead) missiles.splice(i, 1); }
     updateCMs(dt); updateWrecks(dt);
   }
   if (G.state === 'play' || G.state === 'countdown' || G.state === 'over') {
     if (G.state === 'countdown') { player.pos.addScaledVector(player.vel, dt); }
-    ship.visible = !(G.over && player.hull <= 0);
+    ship.visible = !(G.over && player.hull <= 0) && !MP.down;
     placeShip(); updateCamera(dt); updateShock(dt);
     if (G.state !== 'over') updateHud(dt);
   } else if (G.state === 'menu') menuView(dt);
@@ -2766,7 +2462,7 @@ function warmShaders() {
 warmShaders();
 measureRefresh().then(() => { try { render(); } catch (_) { /* первый кадр — ещё под экраном загрузки */ } $('loading').remove(); requestAnimationFrame(frame); });
 
-if (TEST && TRAINING) window.__g = { camera, ship, scene, G, player, enemies, missiles, tankers, bullets, cms, schedule, radar, seeker, input, held, binds, loaded, MISSILES, AC, rwr,
+if (TEST && TRAINING) window.__g = { MP, camera, ship, scene, G, player, enemies, missiles, tankers, bullets, cms, schedule, radar, seeker, input, held, binds, loaded, MISSILES, AC, rwr,
   spawnAI, spawnTanker, endGame, hurt, dlz, buildSchedule, maxKills, SEED, tick, render, launchPlayerMissile, launchMissile, cycleLock, cycleWeapon, dropCM, updateHud, runBenchmark,
   renderer, AU, lobby, world, terrainH, TOWNS, AIRFIELD, explosion, SMOKE, applyPerf, applyWeatherKey, WEATHERS, showUpscaleResult, touchCfg: () => touchCfg,
   getSel: () => selType, gunT: () => gunTarget, gfx: () => gfxKey, mode: () => modeKey, TR, openLesson, closeLesson, perf, pipe: () => pipe, dr,
