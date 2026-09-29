@@ -16,7 +16,7 @@ git -C $Repo pull --ff-only
 if ($LASTEXITCODE -ne 0) { Write-Host "git pull не прошёл — код не обновлён." -ForegroundColor Red; exit 1 }
 $env:DENO_DIR = Join-Path $env:ProgramData "FortunaGame\deno"
 & (Join-Path $env:ProgramData "FortunaGame\bin\deno.exe") cache (Join-Path $PSScriptRoot "..\server.js")
-nssm restart FortunaGame | Out-Null
+Restart-Service FortunaGame # встроенная команда Windows: nssm может быть не в PATH старого окна
 Start-Sleep 5
 try { $h = Invoke-RestMethod "http://127.0.0.1:$Port/health" -TimeoutSec 5; Write-Host ("Обновлено, сервер работает: " + ($h | ConvertTo-Json -Compress)) -ForegroundColor Green }
 catch { Write-Host "Сервер не ответил. Журнал: $env:ProgramData\FortunaGame\logs\server.log" -ForegroundColor Red }

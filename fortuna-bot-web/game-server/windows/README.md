@@ -26,13 +26,12 @@ git checkout main
 
 Скачиваются только сервер и логика игры (без картинок сайта). Папка — `C:\fortuna`.
 
-**Пока онлайн не опубликован на сайте** (код лежит только в ветке `online-dev`) — вместо `git checkout main`:
+Если ноутбук когда-то переключали на `online-dev` — вернуться на `main` так (сначала свежий код, потом переключение — иначе git попробует удалить папку работающего сервера):
 
 ```powershell
-git checkout online-dev
+git fetch origin
+git checkout -B main origin/main
 ```
-
-После деплоя на сайт вернуться на `main`: `git checkout main`, затем `git pull`.
 
 ## 2. Служба сервера
 
@@ -91,8 +90,9 @@ powershell -ExecutionPolicy Bypass -File fortuna-bot-web\game-server\windows\upd
 | Что | Команда |
 |---|---|
 | Состояние служб | `Get-Service FortunaGame, FortunaTunnel` |
-| Перезапустить сервер | `nssm restart FortunaGame` |
-| Остановить / запустить | `nssm stop FortunaGame` / `nssm start FortunaGame` |
+| Перезапустить туннель | `Restart-Service FortunaTunnel` |
+| Перезапустить сервер | `Restart-Service FortunaGame` |
+| Остановить / запустить | `Stop-Service FortunaGame` / `Start-Service FortunaGame` |
 | Журнал сервера | `Get-Content C:\ProgramData\FortunaGame\logs\server.log -Tail 50 -Wait` |
 | Журнал туннеля | `Get-Content C:\ProgramData\FortunaGame\logs\tunnel.log -Tail 50` |
 | Кто сейчас играет | `https://game.fortunawtm.com/health` |
@@ -101,6 +101,6 @@ powershell -ExecutionPolicy Bypass -File fortuna-bot-web\game-server\windows\upd
 
 - **`/health` локально не отвечает** — смотреть `server.log`. Частое: нет интернета при первом запуске (Deno качает `three` из npm) — `install.ps1` ещё раз.
 - **Локально отвечает, `game.fortunawtm.com` — нет** — `tunnel.log`; `Get-Service FortunaTunnel`; подождать DNS 5 минут.
-- **В игре «Не удалось подтвердить аккаунт»** — секрет на ноутбуке и в Supabase разный или не развёрнута `mp-ticket`: повторить шаг 3 с секретом из `C:\ProgramData\FortunaGame\mp_secret.txt`, затем `nssm restart FortunaGame`.
+- **В игре «Не удалось подтвердить аккаунт»** — секрет на ноутбуке и в Supabase разный или не развёрнута `mp-ticket`: повторить шаг 3 с секретом из `C:\ProgramData\FortunaGame\mp_secret.txt`, затем `Restart-Service FortunaGame`.
 - **Сменить секрет**: `install.ps1 -Secret <новый>`, затем шаг 3 с ним.
 - Ноутбук должен не засыпать (как для бота): «Электропитание» → сон — «Никогда» при питании от сети.
