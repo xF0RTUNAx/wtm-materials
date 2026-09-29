@@ -9,8 +9,8 @@ TMP=$(mktemp)
 for a in "medium arcade day" "medium arcade day god" "high real rain god" "low training day" "cinema arcade sunset god" "ultra real overcast"; do
   echo "== $a" | tee -a "$TMP"
   # ограничение 240 с на прогон (perl alarm — есть и в macOS, и в Linux); stdin закрыт, чтобы Deno ничего не ждал
-  perl -e 'alarm 240; exec @ARGV' deno run --allow-read --allow-net --allow-env run-deno.js $a < /dev/null 2>&1 \
-    | grep -E "fly 120|training 150|FAIL|LOAD" | sed 's/→ {"hash":\(-*[0-9]*\).*/hash \1/' | tee -a "$TMP"
+  perl -e 'alarm 240; exec @ARGV' deno run --allow-read --allow-write --allow-net --allow-env run-deno.js $a < /dev/null 2>&1 \
+    | grep -E "fly 120|training 150|FAIL|LOAD|error" | sed 's/→ {"hash":\(-*[0-9]*\).*/hash \1/' | tee -a "$TMP"
 done
 if [ "$1" = "--update" ]; then mv "$TMP" baseline.txt; echo "эталон обновлён"; exit 0; fi
 if diff baseline.txt "$TMP" > /dev/null; then echo "СОВПАДАЕТ с эталоном (6 сценариев)"; rm -f "$TMP"; else echo "РАСХОЖДЕНИЕ с эталоном:"; diff baseline.txt "$TMP"; rm -f "$TMP"; exit 1; fi

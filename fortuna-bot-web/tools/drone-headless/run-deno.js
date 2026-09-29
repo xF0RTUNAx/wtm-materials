@@ -1,5 +1,5 @@
 // Тот же headless-прогон, что run.sh, но под Deno — для Linux и облачных сессий (там нет JavaScriptCore из macOS).
-//   deno run --allow-read --allow-net tools/drone-headless/run-deno.js [пресет] [режим] [погода] [god]
+//   deno run --allow-read --allow-write --allow-net --allow-env tools/drone-headless/run-deno.js [пресет] [режим] [погода] [god]
 // Результаты (контрольные суммы боя) совпадают с run.sh: оба гоняют один и тот же run.js + harness.js.
 const dir = new URL('.', import.meta.url).pathname;
 Deno.chdir(dir);
