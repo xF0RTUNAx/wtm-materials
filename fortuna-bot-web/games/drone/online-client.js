@@ -352,16 +352,16 @@ export function createOnline(K) {
     MP.err = '';
     const a = b.dataset.mp;
     if (a === 'retry') connect();
-    else if (a === 'create') send({ t: 'create', mode: MP.pick.mode, size: MP.pick.size });
-    else if (a === 'join') { const code = cleanCode((document.getElementById('mpCode') || {}).value); if (code.length === 4) send({ t: 'join', code }); else { MP.err = 'Код комнаты — 4 символа'; render(); } }
+    else if (a === 'create') { const { mode, size } = MP.pick; K.gate(() => send({ t: 'create', mode, size })); }
+    else if (a === 'join') { const code = cleanCode((document.getElementById('mpCode') || {}).value); if (code.length === 4) K.gate(() => send({ t: 'join', code })); else { MP.err = 'Код комнаты — 4 символа'; render(); } }
     else if (a === 'leave') { send({ t: 'leave' }); MP.room = null; render(); }
     else if (a === 'team') send({ t: 'team', team: +b.dataset.team });
     else if (a === 'bot') send({ t: 'bot', team: +b.dataset.team });
     else if (a === 'kick') send({ t: 'kick', id: +b.dataset.id });
     else if (a === 'move') send({ t: 'move', id: +b.dataset.id });
-    else if (a === 'queue') send({ t: 'queue', mode: MP.pick.mode });
+    else if (a === 'queue') { const mode = MP.pick.mode; K.gate(() => send({ t: 'queue', mode })); }
     else if (a === 'unqueue') { send({ t: 'unqueue' }); MP.q = null; render(); }
-    else if (a === 'accept') { send({ t: 'accept' }); if (MP.q) { MP.q.state = 'accepted'; render(); } }
+    else if (a === 'accept') K.gate(() => { send({ t: 'accept' }); if (MP.q) { MP.q.state = 'accepted'; render(); } });
     else if (a === 'decline') { send({ t: 'decline' }); MP.q = null; render(); }
     else if (a === 'copy') { try { navigator.clipboard.writeText(MP.room.code); b.textContent = 'скопировано'; } catch (_) { /* нет доступа к буферу */ } }
     else if (a === 'invite') K.share(inviteUrl(MP.room.code), `Летим вместе в «Симуляторе Летки»! Комната ${MP.room.code} (${MODES[MP.room.mode].name} ${MP.room.size}×${MP.room.size})`, b);
@@ -371,7 +371,7 @@ export function createOnline(K) {
   return Object.assign(MP, {
     connect, render, onClick, update,
     inLobby: () => !!(MP.room && MP.room.state === 'lobby' && !MP.on),
-    toggleReady: () => { const me = myInfo(); if (me) send({ t: 'ready', on: !me.ready }); },
+    toggleReady: () => { const me = myInfo(); if (!me) return; if (me.ready) send({ t: 'ready', on: false }); else K.gate(() => send({ t: 'ready', on: true })); },
     leave: () => { MP.reconn = 0; send({ t: 'leave' }); if (MP.ws) MP.ws.close(); },
     hitRemote: (c) => send({ t: 'hit', target: c.id }),
     launch: (key, target, slot) => send({ t: 'launch', key, target: target && target.remote ? target.id : 0, slot, s: packState(K.player, false) }),

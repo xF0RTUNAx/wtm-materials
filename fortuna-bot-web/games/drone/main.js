@@ -2480,7 +2480,21 @@ function shareInvite(url, text, btn) {
   const done = () => { btn.textContent = 'ссылка скопирована'; };
   try { navigator.clipboard.writeText(url).then(done, () => popup(url, 'info')); } catch (_) { popup(url, 'info'); }
 }
+// Онлайн с телефона: перед входом в бой (быстрый поиск, «Подтвердить», создание комнаты, вход по коду, «Готов») настойчиво
+// просим повернуть телефон горизонтально. Повернул — окно закрывается и действие выполняется само; «всё равно вертикально» —
+// больше не спрашиваем до перезагрузки игры.
+const rotAsk = { fn: null, ok: false };
+const isPortrait = () => window.innerHeight > window.innerWidth;
+function landscapeGate(fn) {
+  if (!IS_TOUCH || rotAsk.ok || !isPortrait()) { fn(); return; }
+  rotAsk.fn = fn; show('rotateScr', true);
+}
+function rotDone(run) { show('rotateScr', false); const f = rotAsk.fn; rotAsk.fn = null; if (run && f) f(); }
+window.addEventListener('resize', () => { if (rotAsk.fn && !isPortrait()) rotDone(true); });
+$('rotGo').addEventListener('click', () => { rotAsk.ok = true; rotDone(true); });
+$('rotCancel').addEventListener('click', () => rotDone(false));
 const MP = createOnline({
+  gate: landscapeGate,
   G, player, enemies, testName: (TEST && TRAINING && Q.get('mpname')) || '', inviteCode: (TRAINING && Q.get('mp')) || '', share: shareInvite,
   popup, tabEl: () => $('tab-mp'), syncMenu: mpSyncMenu, backToMenu: mpBackToMenu, goPlay: mpGoPlay,
   countdown: (n) => { setCount(n); },

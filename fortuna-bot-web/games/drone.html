@@ -153,6 +153,13 @@
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
   @keyframes cardIn { from { transform: translateY(14px) scale(.98); opacity: .4; } to { transform: none; opacity: 1; } }
   body.immersive.playing, body.immersive.playing canvas { cursor: none; }
+  /* онлайн с телефона в вертикальном положении: просьба повернуть перед входом в бой */
+  #rotateScr { z-index: 40; background: rgba(6,12,20,.72); }
+  .rotCard h2 { margin: 0 0 8px; font-size: 19px; } .rotCard p { font-size: 13.5px; line-height: 1.5; margin: 0 0 8px; }
+  .rotCard #rotGo { opacity: .75; font-weight: 500; }
+  .rotPh { width: 34px; height: 58px; border: 3px solid #fb923c; border-radius: 9px; margin: 6px auto 16px; position: relative; animation: rotPh 2.4s ease-in-out infinite; }
+  .rotPh::after { content: ''; position: absolute; left: 50%; bottom: 4px; width: 8px; height: 3px; margin-left: -4px; border-radius: 2px; background: #fb923c; }
+  @keyframes rotPh { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
   /* производительность и качество */
   .perf { text-align: left; font-size: 12.5px; }
   .prow { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 8px 0 2px; flex-wrap: wrap; }
@@ -384,6 +391,14 @@
   </div>
 </div>
 
+<div class="screen" id="rotateScr"><div class="card rotCard">
+  <div class="rotPh"></div>
+  <h2>Поверните телефон горизонтально</h2>
+  <p>Онлайн-бой рассчитан на горизонтальный экран: так видны приборы, радар и соперники, а «ручка» и кнопки стоят под пальцами. Вертикально играть очень неудобно — соперники будут в выигрыше.</p>
+  <p class="hint">Поверните телефон — окно закроется, и вход продолжится сам. Экран не поворачивается — выключите блокировку поворота (на iPhone — в Пункте управления).</p>
+  <button class="btn alt" id="rotCancel">Отмена</button>
+  <button class="btn alt sm" id="rotGo">Всё равно продолжить вертикально</button>
+</div></div>
 <div class="screen" id="pauseScr">
   <div class="card">
     <h1>Пауза</h1>
