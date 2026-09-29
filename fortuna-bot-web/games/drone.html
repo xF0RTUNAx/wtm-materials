@@ -247,6 +247,11 @@
   .mpRes th, .mpRes td { text-align: center; } .mpRes th:first-child, .mpRes td:first-child { text-align: left; }
   .mpRes tr.me td { color: #fdba74; font-weight: 700; }
 
+  /* шапка «Подвески» (пилоны, нагрузка, ЭПР, выбранный пилон) закреплена у верха меню, пока листаешь ракеты; −18 px — верхний отступ .card */
+  .loadHead { position: sticky; top: -18px; z-index: 3; margin: 0 -16px 4px; padding: 8px 16px 2px; background: rgba(15,23,34,.97); box-shadow: 0 10px 12px -8px rgba(0,0,0,.7); }
+  body.short .loadHead { top: -12px; margin: 0 -12px 4px; padding: 6px 12px 2px; }
+  body.short .pyl { min-height: 36px; padding: 3px 1px; } body.short .pyl b { margin-top: 1px; } body.short .pyl-row { margin-bottom: 5px; }
+  body.short .loadtxt { margin: 3px 0 4px; } body.short .pick-t { margin: 0 0 3px; }
   .pyl-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; margin-bottom: 8px; }
   .pyl { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05); color: #eaf6ff; border-radius: 8px; padding: 5px 1px; cursor: pointer; min-height: 50px; }
   .pyl small { display: block; font-size: 9px; opacity: .6; }

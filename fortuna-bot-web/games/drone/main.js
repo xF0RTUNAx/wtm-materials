@@ -1531,11 +1531,12 @@ function renderLoadTab() {
       + (lost.length ? `<br><span class="bad">В «Реализме» закрыты: ${lost.map((k) => MISSILES[k].short).join(', ')} — на взлёте их заменят AIM-9B / AIM-7E</span>` : '') + `</div>`;
   } else if (PR.enabled && PR.err) prog = `<div class="prog bad">Прогресс не загрузился: ${PR.err}</div>`;
   $('tab-load').innerHTML = `${prog}
+    <div class="loadHead"><!-- закреплена при прокрутке списка ракет: что подвешено, масса, ЭПР, выбранный пилон -->
     <div class="pyl-row">${pyl}</div>
     <div class="loadbar"><i style="width:${Math.min(100, mass / MAX_LOAD * 100)}%"></i></div>
     <div class="loadtxt"><span>Нагрузка ${mass} / ${MAX_LOAD} кг</span><span>ЭПР ${(1 + 0.15 * loadout.filter(Boolean).length).toFixed(2)} м²</span></div>
     <div class="pick-t"><span>Пилон ${STATIONS[selSt].id} · ${STATION_KIND[sk].name}, до ${STATION_KIND[sk].lim} кг</span>
-      <label><input type="checkbox" id="symChk" ${symmetric ? 'checked' : ''}> симметрично</label></div>
+      <label><input type="checkbox" id="symChk" ${symmetric ? 'checked' : ''}> симметрично</label></div></div>
     ${opts}
     <div class="help" style="margin-top:8px"><p>8 точек подвески: <b>законцовки</b> — до 110 кг, <b>средние</b> — до 200 кг, <b>корневые</b> — до 360 кг, <b>подфюзеляжные</b> — до 500 кг (только они держат Р-33 и AIM-54). Общий лимит — ${MAX_LOAD} кг.</p>
     <p>Масса замедляет разгон, каждая ракета снаружи добавляет сопротивление и <b>заметность для радаров</b> противника. После пусков дрон становится легче и «тише». Всегда есть пушка, ЛТЦ и диполи (32 или 48 — зависит от режима).</p></div>`;
