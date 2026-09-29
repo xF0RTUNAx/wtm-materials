@@ -8,7 +8,9 @@
 **Рабочая ветка: `online-dev`.** Если текущая ветка другая — сначала:
 
 ```bash
-git fetch origin && git checkout online-dev && git pull origin online-dev
+git fetch origin +refs/heads/online-dev:refs/remotes/origin/online-dev   # работает и в «облегчённом» клоне только с main
+git checkout online-dev 2>/dev/null || git checkout -b online-dev --track origin/online-dev
+git pull --ff-only origin online-dev
 ```
 
 Затем прочитать `fortuna-bot-web/SESSION_HANDOFF.md` **целиком** — там всё: кто Mark и как с ним работать, что сделано, где остановились,

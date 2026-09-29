@@ -34,7 +34,7 @@
 
 ## Если Mark пишет «продолжаем» (или «продолжи», «дальше») — без дополнительных вопросов
 
-1. Убедиться, что рабочая ветка — `online-dev` (`git fetch origin && git checkout online-dev && git pull`). Коммиты — в неё, `git push origin online-dev`. В `main` не пушить без явного «деплой».
+1. Убедиться, что рабочая ветка — `online-dev` (команды — в `.claude/CLAUDE.md`: `git fetch origin +refs/heads/online-dev:refs/remotes/origin/online-dev`, `git checkout online-dev || git checkout -b online-dev --track origin/online-dev`, `git pull --ff-only origin online-dev`). Коммиты — в неё, `git push origin online-dev`. В `main` не пушить без явного «деплой».
 2. Если нет Deno — поставить: `curl -fsSL https://deno.land/install.sh | sh -s -- -y` и `export PATH="$HOME/.deno/bin:$PATH"`.
 3. Проверить, что всё на месте: `deno run --allow-net --allow-read --allow-env --allow-run fortuna-bot-web/game-server/smoke-test.js` (ждём «ИТОГ: всё прошло») и `fortuna-bot-web/tools/drone-headless/regress.sh` (ждём «СОВПАДАЕТ с эталоном»).
 4. Взяться за **этап 2** (ниже и в `ONLINE_PLAN.md` → «Заметки к следующим этапам»): сначала сервер (прокси игроков в `createBattle`, `launch`/`lock`/`cm`, ракеты в снимках) + расширить `smoke-test.js`, потом клиент (сетевые ракеты в `missiles`, снять блокировку в `launchPlayerMissile`, СПО по захватам соперников), потом `regress.sh` и обновить `ONLINE_PLAN.md` («Состояние») и `WEB_ADDITIONS.md` §13.
