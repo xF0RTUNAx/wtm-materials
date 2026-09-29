@@ -12,9 +12,9 @@
 import { MODES, DRONE } from '../games/drone/sim/modes.js';
 import { MATCH_T, RESPAWN_T, COUNTDOWN_T, RESULTS_T, SNAP_HZ, SIZES, ONLINE_MODES, MAX_HP, GUN_DMG, F_AB,
   teamSpawn, packState, validState, validLoadout, sunFor, packMissile, makeCode, cleanCode } from '../games/drone/sim/online.js';
-import { MISSILES } from '../games/drone/missiles.js?v=20260929c';
-import { makeCraft, fwdOf, irCanSee } from '../games/drone/sim/core.js?v=20260929c';
-import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260929c';
+import { MISSILES } from '../games/drone/missiles.js?v=20260929d';
+import { makeCraft, fwdOf, irCanSee } from '../games/drone/sim/core.js?v=20260929d';
+import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260929d';
 
 const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast', 'rain'];
 const GUN_RANGE = 2200;       // дальше этого попадание пушки не засчитываем (пуля живёт 1,6 с)
@@ -30,6 +30,10 @@ const FOUND_T = 15;           // быстрый поиск: время на «П
 const QUICK_WAIT = 8;         // быстрый поиск: ждём ещё игроков столько после второго в очереди (8 и больше — сразу)
 const BOT_SKILL = 0.75;       // «умение» ботов (× aiSkill режима)
 const RETARGET_T = 3;         // ИИ онлайна перепроверяет ближайшую цель раз в столько секунд
+const MSG_MAX = 4096;          // длиннее — не наше сообщение, не разбираем
+const MSG_RATE = 120;          // сообщений в секунду с одной связи (st 20 + hit 25 + прочее); лишние выбрасываем,
+const MSG_KILL = 600;          // а столько за секунду — закрываем связь
+const ROOMS_MAX = 300;
 const BOT_NAMES = ['Слизень', 'Раковина', 'Рожок', 'Панцирь', 'Тихоход', 'Слизун', 'Усик', 'Ракушка'];
 const BOT_LOADOUTS = [
   ['aim9l', 'aim120c', null, null, null, null, 'aim120c', 'aim9l'],
@@ -357,6 +361,7 @@ export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
     },
     create(c, m) {
       if (!ONLINE_MODES.includes(m.mode) || !SIZES.includes(m.size)) return;
+      if (rooms.size >= ROOMS_MAX) return send(c, { t: 'err', msg: 'Сервер занят — попробуйте позже' });
       unqueue(c); createRoom(c, m.mode, m.size);
     },
     join(c, m) {
@@ -546,7 +551,11 @@ export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
     connect(ws) {
       let c = { id: nextId++, ws, name: '?', room: null, authed: false };
       clients.add(c);
+      let rateT = 0, rateN = 0;
       ws.onmessage = async (ev) => {
+        const now = clock(); if (now - rateT >= 1) { rateT = now; rateN = 0; }
+        if (++rateN > MSG_RATE) { if (rateN > MSG_KILL) try { ws.close(); } catch (_) { /* уже */ } return; }
+        if (typeof ev.data !== 'string' || ev.data.length > MSG_MAX) return;
         let m; try { m = JSON.parse(ev.data); } catch (_) { return; }
         if (!m || typeof m.t !== 'string' || !handlers[m.t]) return;
         if (!c.authed && m.t !== 'hello') return;

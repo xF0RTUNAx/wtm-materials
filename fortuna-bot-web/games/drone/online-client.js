@@ -7,10 +7,10 @@
 // переподключение (связь оборвалась в бою — до RECONN_T с пробуем вернуться, самолёт тем временем ведёт ИИ сервера),
 // «you» — сервер отдаёт самолёт обратно после ИИ (вкладка была свёрнута) с его положением, корпусом, подвеской.
 // main.js передаёт в createOnline объект K — доступ к игре (игрок, списки противников, эффекты, HUD).
-/* global THREE */
-import { MATCH_T, SNAP_HZ, SIZES, TEAM_NAMES, ONLINE_MODES, PORT, F_AB, F_FIRE, MF_MOTOR, MF_ACTIVE, MF_LOST, packState, cleanCode } from './sim/online.js?v=20260929c';
-import { MODES } from './sim/modes.js?v=20260929c';
-import { MISSILES } from './missiles.js?v=20260929c';
+/* global THREE, CONFIG */
+import { MATCH_T, SNAP_HZ, SIZES, TEAM_NAMES, ONLINE_MODES, PORT, F_AB, F_FIRE, MF_MOTOR, MF_ACTIVE, MF_LOST, packState, cleanCode } from './sim/online.js?v=20260929d';
+import { MODES } from './sim/modes.js?v=20260929d';
+import { MISSILES } from './missiles.js?v=20260929d';
 
 const INTERP = 0.12;   // чужие самолёты показываем на 120 мс в прошлом — между двумя снимками, без рывков
 const EXTRAP = 0.35;   // если снимки не пришли — продолжаем движение по прямой не дольше этого, с
@@ -27,6 +27,23 @@ export function serverUrl() {
 function account(testName) {
   if (testName) return { id: 'test-' + testName, login: testName };
   try { const p = JSON.parse(localStorage.getItem('fortuna_web_player') || 'null'); return p && p.id && p.login ? p : null; } catch (_) { return null; }
+}
+// билет онлайна: подписанный сайтом {pid, login, exp} (функция mp-ticket) — сервер с MP_SECRET пускает только по нему.
+// Нет конфига/функции (локальная проверка) — null: сервер разработки пускает по нику.
+async function fetchTicket(acc) {
+  try {
+    if (typeof CONFIG === 'undefined' || !CONFIG.MP_TICKET_URL || String(acc.id).startsWith('test-')) return null;
+    const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
+    const res = await fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key },
+      body: JSON.stringify({ player_id: acc.id }) });
+    const d = await res.json().catch(() => ({}));
+    return res.ok && d.ticket ? d.ticket : null;
+  } catch (_) { return null; }
+}
+// ссылка-приглашение в комнату: на сайте — короткий вход /play (сохраняет #mp=КОД), локально — эта же страница с ?mp=КОД
+export function inviteUrl(code) {
+  if (/(^|\.)fortunawtm\.com$/.test(location.hostname)) return `https://fortunawtm.com/play#mp=${code}`;
+  const u = new URL(location.href); u.searchParams.set('mp', code); return u.href;
 }
 const esc = (s) => String(s).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
 const wrapPI = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
@@ -59,7 +76,10 @@ export function createOnline(K) {
     MP.conn = 'connecting'; MP.err = ''; render();
     let ws; try { ws = new WebSocket(serverUrl()); } catch (_) { MP.conn = 'error'; render(); return; }
     MP.ws = ws;
-    ws.onopen = () => send({ t: 'hello', name: acc.login, pid: acc.id, resume: MP.reconn > 0 ? 1 : 0 });
+    ws.onopen = async () => {
+      const ticket = await fetchTicket(acc);
+      if (MP.ws === ws) send({ t: 'hello', name: acc.login, pid: acc.id, ticket, resume: MP.reconn > 0 ? 1 : 0 });
+    };
     ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (_) { return; } if (on[m.t]) on[m.t](m); };
     ws.onclose = () => {
       if (MP.ws !== ws) return;
@@ -89,7 +109,11 @@ export function createOnline(K) {
     send({ t: 'back', n: y.n });
   }
   const on = {
-    welcome(m) { MP.me = m.id; MP.conn = 'on'; render(); },
+    welcome(m) {
+      MP.me = m.id; MP.conn = 'on';
+      if (MP.autoCode && !m.resumed) { send({ t: 'join', code: MP.autoCode }); MP.autoCode = ''; } // пришли по ссылке-приглашению
+      render();
+    },
     noresume() { if (MP.reconn) giveUp(); },
     search(m) { MP.searching = { arcade: m.arcade, real: m.real }; if (!MP.room) render(); },
     queued(m) { MP.q = { mode: m.mode, state: 'wait' }; render(); },
@@ -311,7 +335,7 @@ export function createOnline(K) {
         return `<div class="mpTeam t${t}"><div class="mpTH">${TEAM_NAMES[t]}${!lobby ? ' · ' + r.score[t] : ''}</div>${rows}${btns ? `<div class="mpBtns">${btns}</div>` : ''}</div>`;
       };
       const st = { lobby: 'лобби', countdown: 'отсчёт', play: 'идёт бой', end: 'итоги' }[r.state];
-      h = `<div class="mpHead">Комната <b>${r.code}</b> · ${MODES[r.mode].name} ${r.size}×${r.size} · ${st}<button class="mpCopy" data-mp="copy">скопировать код</button></div>
+      h = `<div class="mpHead">Комната <b>${r.code}</b> · ${MODES[r.mode].name} ${r.size}×${r.size} · ${st}<button class="mpCopy" data-mp="invite">пригласить</button><button class="mpCopy mpCopy2" data-mp="copy">код</button></div>
         <div class="mpTeams">${team(0)}${team(1)}</div>
         <p class="mpNote">${lobby ? 'Бой начнётся, когда <b>все</b> игроки нажмут «Готов» (кнопка внизу) и в обеих командах будет хотя бы по одному (можно боты).'
           + (host ? ' Вы создатель: «+ бот» — отдать свободное место боту, × — убрать бота, ⇄ — перевести в другую команду.' : '') : 'В комнате идёт бой — дождитесь его конца.'}</p>
@@ -339,8 +363,10 @@ export function createOnline(K) {
     else if (a === 'accept') { send({ t: 'accept' }); if (MP.q) { MP.q.state = 'accepted'; render(); } }
     else if (a === 'decline') { send({ t: 'decline' }); MP.q = null; render(); }
     else if (a === 'copy') { try { navigator.clipboard.writeText(MP.room.code); b.textContent = 'скопировано'; } catch (_) { /* нет доступа к буферу */ } }
+    else if (a === 'invite') K.share(inviteUrl(MP.room.code), `Летим вместе в «Симуляторе Летки»! Комната ${MP.room.code} (${MODES[MP.room.mode].name} ${MP.room.size}×${MP.room.size})`, b);
   }
 
+  MP.autoCode = cleanCode(K.inviteCode || ''); if (MP.autoCode.length !== 4) MP.autoCode = ''; // ?mp=КОД — сразу войти в комнату после подключения (?mp=1 — только открыть вкладку)
   return Object.assign(MP, {
     connect, render, onClick, update,
     inLobby: () => !!(MP.room && MP.room.state === 'lobby' && !MP.on),

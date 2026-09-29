@@ -19,7 +19,7 @@
 - Монорепо `xF0RTUNAx/wtm-materials`, ветка `main` **сразу публикуется** GitHub Pages на `fortunawtm.com` (корень репо = корень сайта; значит, все файлы, включая эти .md, публично доступны — **секреты сюда не класть**).
 - Сайт мини-игр сообщества: `fortuna-bot-web/` (статика: `app.html`, `js/app.js`, `js/api.js`, `config.js`) + Supabase (Postgres, Edge Functions на Deno, project ref `bhcvxunvbxodkpcrjwbq`). Вход — своя таблица `players` (`auth-password`), сессия — `localStorage['fortuna_web_player'] = {id, login}`; личность в запросах = `player_id` (UUID наружу не отдаётся).
 - Игра **«Симулятор Летки»**: `fortuna-bot-web/games/drone.html` + `games/drone/*.js` (three.js r128 глобальным скриптом, ES-модули). Сайт открывает её во фрейме: тренировка — `drone.html?mode=training`, партия на награду — без параметра (билеты, `start-game-run`/`claim-arcade-reward`).
-- **Кэш модулей:** у всех относительных импортов и точки входа — `?v=<версия>` (сейчас `20260929c`). При каждом деплое игры менять версию во всех файлах: `sed -i '' -E "s#\?v=[0-9a-z]+'#?v=НОВАЯ'#g" games/drone/*.js games/drone/sim/*.js game-server/*.js` и в `games/drone.html` (на Linux — `sed -i -E …`; `game-server/` — чтобы сервер грузил те же экземпляры модулей боя).
+- **Кэш модулей:** у всех относительных импортов и точки входа — `?v=<версия>` (сейчас `20260929d`). При каждом деплое игры менять версию во всех файлах: `sed -i '' -E "s#\?v=[0-9a-z]+'#?v=НОВАЯ'#g" games/drone/*.js games/drone/sim/*.js game-server/*.js` и в `games/drone.html` — у `main.js` и `../config.js` (на Linux — `sed -i -E …`; `game-server/` — чтобы сервер грузил те же экземпляры модулей боя).
 
 ## Что сделано в этой сессии (коротко, по порядку)
 
@@ -35,7 +35,7 @@
 
 ## Если Mark пишет «продолжаем» (или «продолжи», «дальше») — без дополнительных вопросов
 
-(Этапы 2 и 3 сделаны — теперь пункт 4 = **этап 4**, см. «Где остановились». Часть этапа 4 требует Mark: секрет в Supabase, установка на его Windows-ноутбук, деплой — сначала спросить.)
+(Этапы 2–4 сделаны в коде. Дальше — запуск в прод вместе с Mark: `ONLINE_PLAN.md` → «Запуск в прод» и `game-server/windows/README.md`; потом общее тестирование и исправления. В `main` — только по «деплой».)
 
 1. Убедиться, что рабочая ветка — `online-dev` (команды — в `.claude/CLAUDE.md`: `git fetch origin +refs/heads/online-dev:refs/remotes/origin/online-dev`, `git checkout online-dev || git checkout -b online-dev origin/online-dev`, `git pull --ff-only origin online-dev`). Коммиты — в неё, `git push origin online-dev`. В `main` не пушить без явного «деплой».
 2. Если нет Deno — поставить: `curl -fsSL https://deno.land/install.sh | sh -s -- -y` и `export PATH="$HOME/.deno/bin:$PATH"`. В облаке deno.land и cdnjs закрыты, открыт реестр npm: `mkdir -p ~/denonpm && cd ~/denonpm && npm init -y && npm i deno && mkdir -p ~/.deno/bin && ln -sf ~/denonpm/node_modules/@deno/linux-x64-glibc/deno ~/.deno/bin/deno` (three.min.js `run-deno.js` сам берёт из npm-пакета three@0.128.0).
@@ -45,7 +45,7 @@
 
 ## Где остановились и что дальше
 
-**Этапы 2 и 3 готовы** (ракеты, ЛТЦ/диполи, захват РЛС и СПО по сети; боты, подхват самолёта ИИ, переподключение, вход в идущий бой, быстрый поиск — `ONLINE_PLAN.md`). Мелочи на потом: ракеты на пилонах у моделей соперников не рисуются; у сервера нет своей проверки ИК-ГСН на «рычание» (только угол/дальность при пуске); нет кнопки/ссылки «пригласить» с кодом. **Следующий шаг — этап 4** (билет `mp-ticket`, установка сервера на Windows-ноутбук с ботом: Deno + NSSM + Cloudflare Tunnel `game.fortunawtm.com`, кнопка на сайте).
+**Этапы 2, 3 и 4 готовы в коде** (ракеты, ЛТЦ/диполи, захват РЛС и СПО по сети; боты, подхват самолёта ИИ, переподключение, вход в идущий бой, быстрый поиск; билет `mp-ticket`, приглашения, кнопка «Онлайн-бой» на сайте, комплект для Windows — `ONLINE_PLAN.md`). **Следующий шаг — запуск в прод** (`ONLINE_PLAN.md` → «Запуск в прод»): Mark ставит сервер на ноутбук (`game-server/windows/README.md`), задаёт секрет и разворачивает `mp-ticket` с Мака, говорит «деплой» → `online-dev` в `main`; потом тестируем вместе и чиним. Мелочи на потом: ракеты на пилонах у моделей соперников не рисуются; у сервера нет своей проверки ИК-ГСН на «рычание» (только угол/дальность при пуске).
 
 Правила работы с онлайном:
 - Любая правка `games/drone/sim/*` или боевой логики `main.js`, которая **не должна** менять одиночную игру → `tools/drone-headless/regress.sh` до и после (6 контрольных сумм должны совпасть). Если поведение меняется намеренно — `regress.sh --update` и написать в коммите почему.

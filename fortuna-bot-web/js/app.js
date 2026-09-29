@@ -75,7 +75,9 @@ function bindGameAd(container) {
 
 function renderAuth(mode = "login") {
   document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
+  const invite = pendingMpInvite();
   root.innerHTML = `
+    ${invite ? `<div class="result-box result-ok">Вас пригласили в онлайн-бой «Симулятора Летки» (комната <b>${invite}</b>). Войдите или зарегистрируйтесь — игра откроется сама.</div>` : ""}
     ${gameAdHTML("auth")}
     <div class="auth-card">
       <div class="tabs">
@@ -219,6 +221,9 @@ async function renderDashboard(flash) {
       box.textContent = err.message;
     }
   });
+
+  const invite = takeMpInvite(); // пришёл по ссылке-приглашению в онлайн-бой — сразу в игру, в эту комнату
+  if (invite) openArcadeGame("drone", false, "mp=" + invite);
 }
 
 function renderTabContent(flash) {
@@ -315,7 +320,8 @@ const ARCADE_GAMES = [
   { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
   {
     id: "drone", name: "Симулятор Летки", icon: "jetFighter", file: "games/drone.html", rankedSoon: true,
-    note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты со справкой, радар, СПО, ловушки, дозаправка. Режимы «Обучение», «Аркада» и «Реализм». Скоро — общий прогресс недели",
+    note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты со справкой, радар, СПО, ловушки, дозаправка. Режимы «Обучение», «Аркада» и «Реализм». Онлайн-бой команда на команду (1×1…4×4) с друзьями, быстрым поиском или против ботов",
+    online: true,
   },
 ];
 
@@ -332,7 +338,9 @@ function renderArcadeSection() {
         <div class="container-buy-row">
           <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets && !g.rankedSoon ? "" : "disabled"}>${g.rankedSoon ? "Награда — скоро" : "Играть на награду"}</button>
           <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
+          ${g.online ? `<button class="btn-secondary btn-sm" data-arcade-online="${g.id}">Онлайн-бой</button>` : ""}
         </div>
+        ${g.online ? `<div class="arcade-note" data-mp-live hidden></div>` : ""}
       </div>`;
   }).join("");
 
@@ -349,13 +357,46 @@ function wireArcadeSection(mount) {
   mount.querySelectorAll("[data-arcade-train]").forEach((btn) => {
     btn.addEventListener("click", () => openArcadeGame(btn.dataset.arcadeTrain, false));
   });
+  mount.querySelectorAll("[data-arcade-online]").forEach((btn) => {
+    btn.addEventListener("click", () => openArcadeGame(btn.dataset.arcadeOnline, false, "mp=1"));
+  });
+  const live = mount.querySelector("[data-mp-live]");
+  if (live) showMpLive(live);
 }
+
+// ── Онлайн «Симулятора Летки»: сервер (game-server) на ноутбуке за Cloudflare Tunnel ──
+// строка «на сервере N · ищут бой» под карточкой; сервер недоступен — строки нет
+function mpHealthUrl() {
+  return /(^|\.)fortunawtm\.com$/.test(location.hostname) ? "https://game.fortunawtm.com/health" : `http://${location.hostname || "localhost"}:8787/health`;
+}
+async function showMpLive(el) {
+  try {
+    const ctl = new AbortController();
+    setTimeout(() => ctl.abort(), 4000);
+    const h = await (await fetch(mpHealthUrl(), { signal: ctl.signal, cache: "no-store" })).json();
+    const q = h.searching || { arcade: 0, real: 0 };
+    el.innerHTML = `${icon("jetFighter", 13)} Онлайн: в игре <b>${h.online}</b> · ищут бой: Аркада <b>${q.arcade}</b>, Реализм <b>${q.real}</b>`;
+    el.hidden = false;
+  } catch (_) { el.hidden = true; }
+}
+// приглашение в комнату: fortunawtm.com/play#mp=КОД → после входа сразу игра с этой комнатой
+function stashMpInvite() {
+  const m = /[#&]mp=([A-Za-z0-9]{4})/.exec(location.hash);
+  if (!m) return;
+  try { sessionStorage.setItem("mp_invite", m[1].toUpperCase()); } catch (_) {}
+  history.replaceState(null, "", location.pathname + location.search);
+}
+function takeMpInvite() {
+  try { const c = sessionStorage.getItem("mp_invite"); sessionStorage.removeItem("mp_invite"); return c; } catch (_) { return null; }
+}
+function pendingMpInvite() { try { return sessionStorage.getItem("mp_invite"); } catch (_) { return null; } }
+stashMpInvite();
 
 let arcadeCurrentGame = null;
 let arcadeRanked = false;
 let arcadeRunId = null;
 
-async function openArcadeGame(gameId, ranked) {
+async function openArcadeGame(gameId, ranked, extra) {
   const game = ARCADE_GAMES.find((g) => g.id === gameId);
   if (!game) return;
   if (ranked) {
@@ -371,7 +412,7 @@ async function openArcadeGame(gameId, ranked) {
   arcadeCurrentGame = gameId;
   arcadeRanked = ranked;
   const iframe = document.getElementById("arcade-iframe");
-  iframe.src = ranked ? game.file : `${game.file}?mode=training`;
+  iframe.src = ranked ? game.file : `${game.file}?mode=training${extra ? "&" + extra : ""}`;
   document.getElementById("arcade-overlay").hidden = false;
 }
 

@@ -1,17 +1,17 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js?v=20260929c';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260929c';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260929c';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260929c';
-import { createPipeline } from './post.js?v=20260929c';
-import { createAudio } from './audio.js?v=20260929c';
-import { AC, RADAR, createBattle } from './sim/battle.js?v=20260929c';
-import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260929c';
-import { TEAM_NAMES } from './sim/online.js?v=20260929c';
-import { createOnline } from './online-client.js?v=20260929c';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js?v=20260929d';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260929d';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260929d';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260929d';
+import { createPipeline } from './post.js?v=20260929d';
+import { createAudio } from './audio.js?v=20260929d';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260929d';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260929d';
+import { TEAM_NAMES } from './sim/online.js?v=20260929d';
+import { createOnline } from './online-client.js?v=20260929d';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260929c';
+  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260929d';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -2219,8 +2219,15 @@ function mpSyncMenu(mp) {
   $('startBtn').classList.toggle('ready', !!(inRoom && me && me.ready));
   $('modeSel').style.display = inRoom ? 'none' : '';
 }
+// приглашение в комнату: в Telegram — «поделиться» в чат, на телефоне — системное меню, иначе — ссылка в буфер
+function shareInvite(url, text, btn) {
+  try { if (TG.W && TG.W.openTelegramLink) { TG.W.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text)); return; } } catch (_) { /* не Telegram */ }
+  if (navigator.share && IS_TOUCH) { navigator.share({ title: 'Симулятор Летки', text, url }).catch(() => {}); return; }
+  const done = () => { btn.textContent = 'ссылка скопирована'; };
+  try { navigator.clipboard.writeText(url).then(done, () => popup(url, 'info')); } catch (_) { popup(url, 'info'); }
+}
 const MP = createOnline({
-  G, player, enemies, testName: (TEST && TRAINING && Q.get('mpname')) || '',
+  G, player, enemies, testName: (TEST && TRAINING && Q.get('mpname')) || '', inviteCode: (TRAINING && Q.get('mp')) || '', share: shareInvite,
   popup, tabEl: () => $('tab-mp'), syncMenu: mpSyncMenu, backToMenu: mpBackToMenu, goPlay: mpGoPlay,
   countdown: (n) => { setCount(n); },
   startOnline: mpStart, setHull: mpSetHull, hitMark: (c) => hitMarks.push({ pos: c.pos.clone(), t: 0.35, big: false }),
@@ -2238,6 +2245,7 @@ const MP = createOnline({
 });
 $('tab-mp').addEventListener('click', (e) => MP.onClick(e));
 if (!TRAINING) $('mtabs').querySelector('[data-tab="mp"]').style.display = 'none'; // в партии на награду онлайна нет
+else if (Q.get('mp')) showTab('mp'); // ссылка-приглашение (?mp=КОД) или кнопка «Онлайн-бой» на сайте (?mp=1) — сразу вкладка «Онлайн»
 
 // сетевая ракета пущена (событие сервера): модель и вспышка; своя — снимается с пилона, с которого просили пуск
 function mpNetLaunched(m, slot) {

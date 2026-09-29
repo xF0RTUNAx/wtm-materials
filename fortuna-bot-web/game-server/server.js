@@ -4,6 +4,8 @@
 //
 // Переменные окружения:
 //   PORT       — порт (по умолчанию 8787)
+//   HOST       — адрес (по умолчанию 0.0.0.0 — виден в локальной сети, для проверки с телефона;
+//                на ноутбуке-сервере 127.0.0.1 — снаружи только через Cloudflare Tunnel)
 //   MP_SECRET  — общий секрет с edge-функцией mp-ticket: вход только по подписанному билету аккаунта сайта.
 //                Без него — режим разработки: сервер верит нику из клиента (только для локальной проверки!).
 //   MATCH_T    — длина боя, с (для проверки; по умолчанию — из sim/online.js)
@@ -14,6 +16,7 @@ const { PORT: DEF_PORT } = await import('../games/drone/sim/online.js');
 const { createRooms } = await import('./rooms.js');
 
 const PORT = +(Deno.env.get('PORT') || DEF_PORT);
+const HOST = Deno.env.get('HOST') || '0.0.0.0';
 const SECRET = Deno.env.get('MP_SECRET') || '';
 const log = (s) => console.log(new Date().toISOString().slice(11, 19), s);
 
@@ -36,13 +39,15 @@ async function auth(m) {
   return name ? { pid: String(m.pid || ''), name } : null;
 }
 
+const MAX_CLIENTS = +(Deno.env.get('MAX_CLIENTS') || 400);
 const rooms = createRooms({ log, auth, matchT: +(Deno.env.get('MATCH_T') || 0) || undefined });
 const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json; charset=utf-8' };
 
-Deno.serve({ port: PORT, hostname: '0.0.0.0', onListen: () => log(`онлайн-сервер на :${PORT}${SECRET ? '' : ' (режим разработки: вход по нику без билета)'}`) }, (req) => {
+Deno.serve({ port: PORT, hostname: HOST, onListen: () => log(`онлайн-сервер на ${HOST}:${PORT}${SECRET ? ' (вход по билетам сайта)' : ' (режим разработки: вход по нику без билета)'}`) }, (req) => {
   const url = new URL(req.url);
   if (url.pathname === '/ws') {
     if ((req.headers.get('upgrade') || '').toLowerCase() !== 'websocket') return new Response('нужен WebSocket', { status: 426 });
+    if (rooms.stats().online >= MAX_CLIENTS) return new Response('сервер заполнен', { status: 503 });
     const { socket, response } = Deno.upgradeWebSocket(req);
     rooms.connect(socket);
     return response;

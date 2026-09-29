@@ -224,7 +224,7 @@
   .mpHead { font-size: 13px; color: #cbd5e1; margin-bottom: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .mpHead b { font: 800 17px ui-monospace, Menlo, monospace; letter-spacing: 2px; color: #fff; }
   .mpCopy, .mpMove { border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: #cbd5e1; border-radius: 8px; font-size: 11px; padding: 4px 8px; cursor: pointer; }
-  .mpCopy { margin-left: auto; } .mpMove { width: 100%; margin-top: 4px; }
+  .mpCopy { margin-left: auto; } .mpCopy2 { margin-left: 0; } .mpMove { width: 100%; margin-top: 4px; }
   .mpTeams { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .mpTeam { border-radius: 11px; padding: 6px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.1); min-width: 0; }
   .mpTeam.t0 .mpTH { color: #fdba74; } .mpTeam.t1 .mpTH { color: #93c5fd; }
@@ -416,7 +416,8 @@
   </div>
 </div>
 
+<script src="../config.js?v=20260929d"></script> <!-- адрес функции mp-ticket и открытый ключ Supabase (билет онлайна) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script type="module" src="drone/main.js?v=20260929c"></script>
+<script type="module" src="drone/main.js?v=20260929d"></script>
 </body>
 </html>

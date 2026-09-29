@@ -1,7 +1,8 @@
 // Автопроверка онлайн-сервера без браузера. Печатает PASS/FAIL по шагам.
 //   этап 1 — вход, комната по коду, «Готов», отсчёт, бой, попадания пушки (с проверкой угла), сбитие, счёт, возрождение;
 //   этап 2 — подвеска, отказ в пуске, захват РЛС (виден цели), пуск ракеты, ракета в снимках, попадание, ЛТЦ, потеря захвата;
-//   этап 3 — боты в лобби, самолёт молчащего игрока ведёт ИИ и возвращается к нему, переподключение, быстрый поиск.
+//   этап 3 — боты в лобби, самолёт молчащего игрока ведёт ИИ и возвращается к нему, переподключение, быстрый поиск;
+//   этап 4 — вход по билету сайта (второй сервер с MP_SECRET): правильный, поддельный и просроченный билет.
 //   deno run --allow-net --allow-read --allow-env --allow-run game-server/smoke-test.js
 // Сам поднимает сервер на свободном порту (PORT=8799) и гасит его в конце.
 const PORT = 8799, url = `ws://localhost:${PORT}/ws`;
@@ -162,6 +163,40 @@ try {
   await waitFor(() => e1.last.start && e2.last.start, 2000);
   check('оба подтвердили — комната и старт', e1.last.start && e2.last.start && e1.last.room.quick && e1.last.room.players.length === 2);
   for (const x of [a, b2, c, d2, e1, e2]) { clearInterval(x.flyT); x.ws.close(); }
+
+  // ── этап 4: вход по билету (формат — как в supabase/functions/mp-ticket) ──
+  const SECRET = 'test-secret-' + Math.random(), P2 = 8798;
+  const srv2 = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
+    env: { PORT: String(P2), MP_SECRET: SECRET, HOST: '127.0.0.1' }, stdout: 'null', stderr: 'inherit' }).spawn();
+  const enc = new TextEncoder(), b64u = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const ticket = async (login, exp, secret = SECRET) => {
+    const body = b64u(enc.encode(JSON.stringify({ pid: 'uuid-' + login, login, exp })));
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return body + '.' + b64u(new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(body))));
+  };
+  const tryHello = async (hello) => {
+    for (let i = 0; i < 50; i++) {
+      try {
+        const ws = new WebSocket(`ws://127.0.0.1:${P2}/ws`), got = [];
+        await new Promise((res, rej) => { ws.onopen = res; ws.onerror = rej; });
+        ws.onmessage = (e) => got.push(JSON.parse(e.data));
+        ws.send(JSON.stringify({ t: 'hello', ...hello })); await sleep(300); ws.close();
+        return got;
+      } catch (_) { await sleep(200); }
+    }
+    return [];
+  };
+  const now = Math.floor(Date.now() / 1000);
+  const ok = await tryHello({ name: 'Самозванец', ticket: await ticket('Марк', now + 600) });
+  const w = ok.find((m) => m.t === 'welcome');
+  check('билет сайта: вход, ник — из билета (не из клиента)', w && w.name === 'Марк', w ? w.name : JSON.stringify(ok));
+  const forged = await tryHello({ name: 'Марк', ticket: await ticket('Марк', now + 600, 'чужой-секрет') });
+  check('поддельный билет — отказ', !forged.some((m) => m.t === 'welcome') && forged.some((m) => m.t === 'err'));
+  const old = await tryHello({ name: 'Марк', ticket: await ticket('Марк', now - 5) });
+  check('просроченный билет — отказ', !old.some((m) => m.t === 'welcome') && old.some((m) => m.t === 'err'));
+  const none = await tryHello({ name: 'Марк' });
+  check('без билета при MP_SECRET — отказ', !none.some((m) => m.t === 'welcome'));
+  srv2.kill(); await srv2.status;
 } catch (e) { fails++; console.log('FAIL исключение: ' + (e && e.stack || e)); }
 srv.kill(); await srv.status;
 console.log(fails ? `ИТОГ: ${fails} ошибок` : 'ИТОГ: всё прошло');

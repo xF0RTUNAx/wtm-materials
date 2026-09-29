@@ -1,7 +1,7 @@
 // Онлайн-бой «Симулятора Летки»: правила, точки появления и формат сетевых сообщений — общие для клиента и сервера.
 // Правила согласованы в ONLINE_PLAN.md: командный бой с возрождением, 5 минут, форматы 1×1…4×4, Аркада и Реализм раздельно.
-import { terrainH } from '../terrain-core.js?v=20260929c';
-import { MISSILES } from '../missiles.js?v=20260929c';
+import { terrainH } from '../terrain-core.js?v=20260929d';
+import { MISSILES } from '../missiles.js?v=20260929d';
 
 export const MATCH_T = 300;     // длина боя, с
 export const RESPAWN_T = 5;     // возрождение после сбития, с

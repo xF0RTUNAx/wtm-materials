@@ -3,6 +3,7 @@ const CONFIG = {
   SUPABASE_ANON_KEY:
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJoY3Z4dW52YnhvZGtwY3Jqd2JxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzNTIzNDQsImV4cCI6MjEwNDkyODM0NH0.GLhVO5uv2vjSVcGyflOLYVRs6TytXOWZDqRpDGAbhN4",
 
+  MP_TICKET_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/mp-ticket", // билет онлайн-боя «Симулятора Летки»
   AUTH_URL: "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/auth-password",
   PLAYER_STATE_URL:
     "https://bhcvxunvbxodkpcrjwbq.supabase.co/functions/v1/get-player-state",
