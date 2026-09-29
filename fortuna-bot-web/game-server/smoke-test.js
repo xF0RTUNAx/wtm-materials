@@ -1,5 +1,6 @@
 // Автопроверка онлайн-сервера без браузера: два клиента проходят весь круг — вход, комната по коду, «Готов»,
-// отсчёт, бой, попадания пушки (с проверкой угла), сбитие, счёт, возрождение. Печатает PASS/FAIL по шагам.
+// отсчёт, бой, попадания пушки (с проверкой угла), сбитие, счёт, возрождение; затем этап 2 — подвеска, отказ в пуске,
+// захват РЛС (виден цели), пуск ракеты, ракета в снимках, попадание, ЛТЦ, потеря захвата. Печатает PASS/FAIL по шагам.
 //   deno run --allow-net --allow-read --allow-env --allow-run game-server/smoke-test.js
 // Сам поднимает сервер на свободном порту (PORT=8799) и гасит его в конце.
 const PORT = 8799, url = `ws://localhost:${PORT}/ws`;
@@ -45,6 +46,48 @@ try {
   check('счёт команды', kill && kill.score[0] === 1);
   await sleep(5300);
   check('возрождение через 5 с', a.msgs.some((m) => m.t === 'spawn' && m.id === idB));
+
+  // ── этап 2: ракеты, захват, ловушки ──
+  const idA = a.last.welcome.id, LOAD = ['aim9l', 'aim120c', null, null, null, null, 'aim120c', 'aim9l'];
+  // оба летят навстречу друг другу на 4 км высоты, 8 км между ними; состояние — 20 раз в секунду, как у клиента
+  const fly = { a: { x: 0, y: 4000, z: 4000, yaw: 0 }, b: { x: 0, y: 4000, z: -4000, yaw: Math.PI } };
+  const st = (f) => [f.x, f.y, f.z, f.yaw, 0, 0, 250, 1, 0];
+  const flyT = setInterval(() => {
+    for (const [k, c] of [['a', a], ['b', b]]) { const f = fly[k]; f.x -= Math.sin(f.yaw) * 250 * 0.05; f.z -= Math.cos(f.yaw) * 250 * 0.05; c.send({ t: 'st', s: st(f) }); }
+  }, 50);
+  await sleep(300);
+  a.send({ t: 'load', l: LOAD }); b.send({ t: 'load', l: LOAD }); await sleep(100);
+  a.msgs.length = 0; b.msgs.length = 0;
+  a.send({ t: 'launch', key: 'r77', target: idB, slot: 1 }); await sleep(150);
+  check('пуск ракеты, которой нет на подвеске, — отказ', a.msgs.some((m) => m.t === 'deny') && !a.msgs.some((m) => m.t === 'ml'));
+  a.send({ t: 'launch', key: 'aim9l', target: idB, slot: 0, s: [fly.a.x, 4000, fly.a.z, Math.PI, 0, 0, 250, 1, 0] }); await sleep(150); // нос от цели
+  check('ИК-пуск без цели в поле ГСН — отказ', a.msgs.filter((m) => m.t === 'deny').length === 2 && !a.msgs.some((m) => m.t === 'ml'));
+  a.send({ t: 'lock', target: idB }); await sleep(500);
+  const rowA = b.last.snap.P.find((row) => row[0] === idA);
+  check('захват РЛС виден цели в снимке (СПО)', rowA && rowA[12] === idB, rowA ? 'lock=' + rowA[12] : 'нет строки');
+  a.send({ t: 'launch', key: 'aim120c', target: idB, slot: 1, s: st(fly.a) }); await sleep(200);
+  const ml = b.msgs.find((m) => m.t === 'ml');
+  check('пуск AIM-120C по захвату — обоим событие ml', ml && ml.owner === idA && ml.target === idB && ml.key === 'aim120c' && a.msgs.some((m) => m.t === 'ml'), ml ? 'ракета ' + ml.id : 'нет пуска');
+  await sleep(1000);
+  const row0 = b.last.snap.M && b.last.snap.M.find((row) => row[0] === (ml && ml.id));
+  const dist = (row) => Math.hypot(row[1] - fly.b.x, row[2] - fly.b.y, row[3] - fly.b.z);
+  const d0 = row0 ? dist(row0) : 0; await sleep(500);
+  const row1 = b.last.snap.M && b.last.snap.M.find((row) => row[0] === (ml && ml.id));
+  check('ракета в снимках летит к цели', row0 && row1 && dist(row1) < d0 - 200 && row1[9] === idB, row0 && row1 ? `${Math.round(d0)} → ${Math.round(dist(row1))} м, сближение ${row1[10]} м/с` : 'нет в снимке');
+  for (let i = 0; i < 100 && !b.msgs.some((m) => m.t === 'mx'); i++) await sleep(100);
+  const mx = b.msgs.find((m) => m.t === 'mx'), hp = b.msgs.find((m) => m.t === 'hp' && m.id === idB);
+  check('ракета попала: mx с попаданием, урон цели засчитан стрелку', mx && mx.hit === 1 && hp && hp.by === idA && hp.hp < 100, hp ? 'корпус ' + hp.hp : mx ? 'промах' : 'нет подрыва');
+  b.msgs.length = 0; a.msgs.length = 0;
+  for (let i = 0; i < 26; i++) { b.send({ t: 'cm', type: 'flare' }); await sleep(20); }
+  await sleep(200);
+  const cmN = a.msgs.filter((m) => m.t === 'cm' && m.id === idB && m.type === 'flare').length;
+  check('ЛТЦ: событие остальным, запас 48 = 24 сброса', cmN === 24 && !b.msgs.some((m) => m.t === 'cm'), cmN + ' событий');
+  a.send({ t: 'lock', target: idB }); await sleep(100);
+  fly.a.yaw = Math.PI; // отвернулся — РЛС больше не видит цель
+  for (let i = 0; i < 25 && !a.msgs.some((m) => m.t === 'lockx'); i++) await sleep(100);
+  const lx = a.msgs.find((m) => m.t === 'lockx');
+  check('цель вне обзора РЛС — сервер снимает захват', lx && lx.why === 'lost');
+  clearInterval(flyT);
   a.ws.close(); b.ws.close();
 } catch (e) { fails++; console.log('FAIL исключение: ' + (e && e.stack || e)); }
 srv.kill(); await srv.status;

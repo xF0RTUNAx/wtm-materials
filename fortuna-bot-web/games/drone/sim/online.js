@@ -1,6 +1,7 @@
 // Онлайн-бой «Симулятора Летки»: правила, точки появления и формат сетевых сообщений — общие для клиента и сервера.
 // Правила согласованы в ONLINE_PLAN.md: командный бой с возрождением, 5 минут, форматы 1×1…4×4, Аркада и Реализм раздельно.
 import { terrainH } from '../terrain-core.js?v=20260929c';
+import { MISSILES } from '../missiles.js?v=20260929c';
 
 export const MATCH_T = 300;     // длина боя, с
 export const RESPAWN_T = 5;     // возрождение после сбития, с
@@ -30,6 +31,39 @@ export function packState(c, fire) {
 export function validState(s) {
   return Array.isArray(s) && s.length === 9 && s.every((v) => typeof v === 'number' && Number.isFinite(v))
     && Math.abs(s[0]) < 40000 && s[1] > -500 && s[1] < 30000 && Math.abs(s[2]) < 40000 && s[6] >= 0 && s[6] < 1500;
+}
+
+// Подвеска «Изделия» в сети: 8 пилонов [L3 L2 L1 Ф1 Ф2 R1 R2 R3] — как STATIONS (models.js) и MAX_LOAD/STATION_KIND (main.js)
+export const MAX_LOAD = 1500;
+const ST_KIND = ['tip', 'mid', 'inner', 'belly', 'belly', 'inner', 'mid', 'tip'];
+const ST_LIM = { tip: 110, mid: 200, inner: 360, belly: 500 };
+export function validLoadout(l) {
+  if (!Array.isArray(l) || l.length !== 8) return false;
+  let mass = 0;
+  for (let i = 0; i < 8; i++) {
+    const k = l[i]; if (k === null) continue;
+    const M_ = typeof k === 'string' && Object.prototype.hasOwnProperty.call(MISSILES, k) ? MISSILES[k] : null;
+    if (!M_ || !M_.mounts.includes(ST_KIND[i]) || M_.mass > ST_LIM[ST_KIND[i]]) return false;
+    mass += M_.mass;
+  }
+  return mass <= MAX_LOAD;
+}
+
+// Солнце по погоде (угол места и азимут, °; видно ли) — как WEATHERS в world.js (без медленного смещения за вылет).
+// Сервер берёт отсюда направление для «увода» ранних ИК-ГСН на солнце.
+const SUN = { day: [46.6, 47.9, 1], morning: [15, 100, 1], evening: [13, 235, 1], sunset: [5.5, 250, 1], overcast: [45, 60, 0], rain: [45, 60, 0] };
+export function sunFor(weather, out) {
+  const [el, az, vis] = SUN[weather] || SUN.day, e = el * Math.PI / 180, a = az * Math.PI / 180;
+  out.set(Math.cos(e) * Math.sin(a), Math.sin(e), Math.cos(e) * Math.cos(a));
+  return !!vis;
+}
+
+// Ракета в снимке сервера: [id, x, y, z, dx, dy, dz, скорость, flags, цель (id игрока или 0), сближение с целью м/с или null]
+export const MF_MOTOR = 1, MF_ACTIVE = 2, MF_LOST = 4;
+export function packMissile(m, targetId) {
+  const tb = m.t - m.M.drop, motor = tb >= 0 && (tb < m.M.burn || (m.M.sustain && tb < m.M.burn + m.M.sustain.t));
+  return [m.id, r1(m.pos.x), r1(m.pos.y), r1(m.pos.z), r3(m.dir.x), r3(m.dir.y), r3(m.dir.z), Math.round(m.speed),
+    (motor ? MF_MOTOR : 0) | (m.active ? MF_ACTIVE : 0) | (m.lost || m.decoy ? MF_LOST : 0), targetId, m.closing === undefined ? null : Math.round(m.closing)];
 }
 
 // Короткий код комнаты: без похожих символов (0/O, 1/I/L)

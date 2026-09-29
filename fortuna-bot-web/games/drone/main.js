@@ -335,14 +335,16 @@ const enemies = [], wrecks = [], tankers = [];
 player.human = true; player.team = 0;
 const PLAYER_ARR = [player], NONE = [];
 // бой (sim/battle.js): ракеты, ловушки, пушка, урон, ИИ — общий с онлайн-сервером; здесь — только эффекты, звук и HUD
+const BFX = battleFx(); // хуки эффектов — их же зовёт онлайн для сетевых ракет и чужих ловушек
 const B = createBattle({
   mode: () => MODE,
   opponents: (o) => (o === player ? enemies : o.remote ? NONE : PLAYER_ARR), // пули чужих онлайн-самолётов — только трассеры
   targetable: (t) => !(t === player && G.over),
-  canAct: () => G.state === 'play',
+  canAct: () => G.state === 'play' && !MP.down,
   hurt: (t, amount) => (t === player ? hurt(amount) : t.remote ? MP.hitRemote(t) : undefined), // по живому сопернику урон считает сервер
+  remoteCM: (o) => MP.on && o === player, // онлайн: свои ловушки только показываем, увод ракет и срыв захвата — на сервере
   sunDir: SUN_DIR, sunVis: () => world.W.sunVis,
-  fx: battleFx(),
+  fx: BFX,
 });
 const { missiles, cms, bullets, updateMissile, detonate, dropCM, updateCMs, damage, fireBullet, updateBullets, spawnAI, updateAI } = B;
 const TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), TMP3 = new THREE.Vector3(), TGT = new THREE.Vector3(), UP = new THREE.Vector3(0, 1, 0);
@@ -627,8 +629,7 @@ function updateSeeker(dt) {
 // ═════════════ Ракеты (общие для игрока и ИИ) ═════════════
 function launchMissile(owner, key, target, mesh) { return B.launchMissile(owner, key, target, mesh ? { mesh } : null); }
 function launchPlayerMissile() {
-  if (G.state !== 'play' || G.mslT > 0) return;
-  if (MP.on) { if (G.cmT <= 0) { popup('РАКЕТЫ В ОНЛАЙНЕ — В СЛЕДУЮЩЕМ ОБНОВЛЕНИИ', 'info'); G.cmT = 1; } return; }
+  if (G.state !== 'play' || G.mslT > 0 || MP.down) return;
   ensureSel();
   if (!selType) { popup('РАКЕТ НЕТ', 'bad'); return; }
   const M_ = MISSILES[selType];
@@ -650,6 +651,7 @@ function launchPlayerMissile() {
   const idxs = loaded.map((k, i) => (k === selType ? i : -1)).filter((i) => i >= 0);
   const side = G.mFired % 2 ? 1 : -1;
   const pi = idxs.find((i) => STATIONS[i].side === side) ?? idxs[0];
+  if (MP.on) { MP.launch(selType, tgt, pi); G.mslT = 0.45; return; } // онлайн: пуск проверяет и ведёт сервер, ракета придёт событием
   const mesh = pylonMeshes[pi]; pylonMeshes[pi] = null; loaded[pi] = null;
   launchMissile(player, selType, tgt, mesh);
   rebuildLoadStats();
@@ -766,7 +768,7 @@ function battleFx() {
     },
     missileResult(m, hit) { if (hit && m.owner === player) G.mHits++; if (!hit && m.target === player) G.evaded++; },
     cmEmpty(o, type) { if (G.cmT <= 0) { popup(type === 'flare' ? 'ЛТЦ КОНЧИЛИСЬ' : 'ДИПОЛИ КОНЧИЛИСЬ', 'bad'); G.cmT = 0.5; } },
-    cmDrop(o, type) { if (type === 'flare') AU.flare(); else AU.chaff(); },
+    cmDrop(o, type) { if (type === 'flare') AU.flare(); else AU.chaff(); if (MP.on && o === player) MP.cm(type); },
     lockBroken() { popup('ЗАХВАТ СОРВАН ДИПОЛЯМИ', 'bad'); sfx.lost(); },
     cm(c) {
       if (c.type === 'flare') {
@@ -2132,7 +2134,7 @@ function mpStart(o) {
   if (WEATHERS[o.weather] && o.weather !== weatherKey) applyWeatherKey(o.weather);
   renderWeatherChip();
   Object.assign(G, { state: 'countdown', paused: false, over: false, runTime: 0, kills: 0, score: 0, shots: 0, hits: 0, mFired: 0, mHits: 0, evaded: 0, shake: 0 });
-  camera.clearViewOffset(); applyLoadout(); mpPlace(o.spawn); world.sortieStart();
+  camera.clearViewOffset(); clearMissiles(); applyLoadout(); mpPlace(o.spawn); world.sortieStart();
   player.hull = 100; player.invuln = 0; player.heat = 0; player.overheated = false; radar.lock = null; radar.contacts.clear();
   setHint(''); enterImmersive(); tgFlight(true); drReset();
   $('count').textContent = o.cd;
@@ -2194,8 +2196,7 @@ function mpBackToMenu() {
   show('end', false); show('pauseScr', false); $('end').classList.remove('mpEnd'); $('againBtn').textContent = 'Ещё вылет'; $('count').textContent = '';
   $('hud').classList.remove('on'); setBody('menuing'); exitImmersive(); tgFlight(false);
   Object.assign(G, { state: 'menu', over: false, paused: false });
-  for (const m of missiles) scene.remove(m.mesh); missiles.length = 0; cms.length = 0;
-  for (const b of bullets) { b.on = false; b.mesh.visible = false; }
+  clearMissiles();
   modeKey = MODES[store.get('fortuna_drone_mode')] ? store.get('fortuna_drone_mode') : 'arcade'; if (modeKey === 'training' && !TRAINING) modeKey = 'arcade';
   applyMode(); renderModeSel(); show('menu', true); showTab('mp');
 }
@@ -2214,9 +2215,43 @@ const MP = createOnline({
   meDown: mpMeDown, meUp: mpMeUp, makeRemote, remoteDown, remoteUp, removeRemote, remoteVisual,
   remoteShot: (c) => fireBullet(c, null, 0), showEnd: mpShowEnd,
   firing: () => (input.fire || held.has('fire')) && !player.overheated,
+  radarLock: () => radar.lock, loadout: () => loaded.slice(),
+  netLaunched: mpNetLaunched, netMotor: mpNetMotor,
+  netDetonated: (m, hit) => { BFX.detonated(m, hit); BFX.missileResult(m, hit); },
+  netGone: (m) => { scene.remove(m.mesh); },
+  netCM: (c, type) => { B.spawnCMs(c, type); }, // чужие ловушки — только картинка
+  lockLost: (why) => { if (!radar.lock) return; radar.lock = null; if (why === 'chaff') BFX.lockBroken(); else BFX.radarLost(); },
 });
 $('tab-mp').addEventListener('click', (e) => MP.onClick(e));
 if (!TRAINING) $('mtabs').querySelector('[data-tab="mp"]').style.display = 'none'; // в партии на награду онлайна нет
+
+// сетевая ракета пущена (событие сервера): модель и вспышка; своя — снимается с пилона, с которого просили пуск
+function mpNetLaunched(m, slot) {
+  let sl = null;
+  if (m.owner === player && slot >= 0 && slot < 8) {
+    if (pylonMeshes[slot]) { sl = { mesh: pylonMeshes[slot] }; BFX.launchPos(player, m.key, sl, TMP); m.off.copy(TMP).sub(m.srv); } // показ стартует с пилона
+    pylonMeshes[slot] = null; loaded[slot] = null; rebuildLoadStats(); ensureSel();
+  }
+  m.pos.copy(m.srv).add(m.off);
+  BFX.launched(m, sl); // здесь m.pos становится положением модели
+  missiles.push(m);
+}
+function mpNetMotor(m, motor, dt) {
+  const tb = m.t - m.M.drop;
+  BFX.motor(m, motor, tb);
+  m.trailT -= dt; if (motor && m.trailT <= 0) { m.trailT = 0.025; BFX.trail(m, tb); }
+}
+function clearMissiles() {
+  for (const m of missiles) scene.remove(m.mesh); missiles.length = 0; cms.length = 0;
+  for (const b of bullets) { b.on = false; b.mesh.visible = false; }
+}
+function stepMissiles(dt) {
+  for (let i = missiles.length - 1; i >= 0; i--) {
+    const m = missiles[i];
+    if (!m.dead) { if (m.net) MP.stepMissile(m, dt); else updateMissile(m, dt); m.mesh.quaternion.setFromUnitVectors(NEG_Z, m.dir); }
+    if (m.dead) missiles.splice(i, 1);
+  }
+}
 
 // ═════════════ Главный цикл ═════════════
 const HANGAR = new THREE.Vector3(AIRFIELD.x, airfieldH() + 700, AIRFIELD.z);
@@ -2347,14 +2382,14 @@ function tick(dt) {
     if (!MP.down) { updatePlayer(dt); updateRadar(dt); updateSeeker(dt); }
     for (let i = enemies.length - 1; i >= 0; i--) { const e = enemies[i]; if (!e.dead && !e.remote) updateAI(e, dt); if (e.dead) enemies.splice(i, 1); }
     if (MODE.training) trainingTick(dt);
-    for (let i = missiles.length - 1; i >= 0; i--) { const m = missiles[i]; if (!m.dead) { updateMissile(m, dt); m.mesh.quaternion.setFromUnitVectors(NEG_Z, m.dir); } if (m.dead) missiles.splice(i, 1); }
+    stepMissiles(dt);
     updateBullets(dt); updateCMs(dt); updateWrecks(dt); updateTankers(dt); updateRwr(dt);
     updateMissileLights();
     if (MODE.training || MP.on) { /* обучение без ограничения по времени; онлайн-бой заканчивает сервер */ }
     else if (G.runTime >= H_CAP) endGame('time');
     else if (G.bossSpawned && !enemies.length && !schedule.slice(schedIdx).some((ev) => ev.type !== 'tanker')) endGame('win');
   } else if (G.state === 'over') {
-    for (let i = missiles.length - 1; i >= 0; i--) { const m = missiles[i]; if (!m.dead) { updateMissile(m, dt); m.mesh.quaternion.setFromUnitVectors(NEG_Z, m.dir); } if (m.dead) missiles.splice(i, 1); }
+    stepMissiles(dt);
     updateCMs(dt); updateWrecks(dt);
   }
   if (G.state === 'play' || G.state === 'countdown' || G.state === 'over') {

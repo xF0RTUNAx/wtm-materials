@@ -8,7 +8,9 @@
 //   opponents(owner)  — массив противников аппарата (живых и сбитых — мёртвых пропускаем сами),
 //   targetable(t)     — можно ли сейчас бить по t (у клиента игрок после конца вылета — нельзя),
 //   canAct(owner)     — может ли игрок сейчас ставить помехи (у клиента — только во время боя),
-//   hurt(t, amount)   — урон по аппарату игрока (у него корпус, неуязвимость, конец вылета — это логика хозяина),
+//   hurt(t, amount, by, msl) — урон по аппарату игрока (у него корпус, неуязвимость, конец вылета — это логика хозяина;
+//                       by — чем, msl — ракета: онлайн-сервер по ней находит, кому засчитать сбитие),
+//   remoteCM(owner)   — необязательно: true — ловушки owner только показываем (онлайн: увод ракет и срыв захвата решает сервер),
 //   sunDir, sunVis()  — направление на солнце и видно ли его (ранние ИК-ГСН уводятся на солнце),
 //   fx: { ... }       — хуки, все необязательные (список — в NOOP_FX ниже),
 // }
@@ -225,11 +227,8 @@ export function createBattle(ctx) {
       if (type === 'flare' ? owner.cmFlare <= 0 : owner.cmChaff <= 0) return;
       if (type === 'flare') owner.cmFlare -= 2; else owner.cmChaff -= 2;
     }
-    let last = null;
-    for (let k = 0; k < 2; k++) {
-      const c = { type, owner, pos: owner.pos.clone(), vel: owner.vel.clone().multiplyScalar(0.8).add(new THREE.Vector3((rnd() - 0.5) * 30, -20 - rnd() * 15, (rnd() - 0.5) * 30)), life: type === 'flare' ? 4 : 3.5 };
-      cms.push(c); last = c;
-    }
+    const last = spawnCMs(owner, type);
+    if (ctx.remoteCM && ctx.remoteCM(owner)) return;
     // ракеты, наведённые на owner, могут переключиться на ловушку / отражатели
     for (const m of missiles) {
       if (m.dead || m.target !== owner || m.decoy || m.lost || m.pos.distanceTo(owner.pos) > 7000) continue;
@@ -247,7 +246,16 @@ export function createBattle(ctx) {
         } else if (o.stt && o.tgt === owner && !o.dead && rnd() < (isNotched(o.pos, owner) ? 0.8 : 0.2) * (1 - 0.3 * o.skill)) { o.stt = false; o.sttCD = 2; }
       }
     }
+  }
+  // пара ловушек из-под owner (только сами ловушки — без счётчиков и увода ракет); возвращает последнюю
+  function spawnCMs(owner, type) {
+    let last = null;
+    for (let k = 0; k < 2; k++) {
+      const c = { type, owner, pos: owner.pos.clone(), vel: owner.vel.clone().multiplyScalar(0.8).add(new THREE.Vector3((rnd() - 0.5) * 30, -20 - rnd() * 15, (rnd() - 0.5) * 30)), life: type === 'flare' ? 4 : 3.5 };
+      cms.push(c); last = c;
+    }
     while (cms.length > 160) cms.shift();
+    return last;
   }
   function updateCMs(dt) {
     for (let i = cms.length - 1; i >= 0; i--) {
@@ -263,7 +271,7 @@ export function createBattle(ctx) {
   // by — чем (для ленты сбитых), msl — ракета (дальний пуск даёт бонус очков)
   function damage(e, amount, by, msl) {
     if (e.dead) return;
-    if (e.human) { ctx.hurt(e, amount * ctx.mode().dmgTaken); return; }
+    if (e.human) { ctx.hurt(e, amount * ctx.mode().dmgTaken, by, msl); return; }
     e.hp -= amount;
     fx.hit(e, amount, by);
     if (e.hp <= 0) kill(e, by, msl);
@@ -451,5 +459,5 @@ export function createBattle(ctx) {
   }
 
   return { missiles, cms, bullets, radarSees, updateRadar, radarDatalink, lockedOn, launchMissile, updateMissile, detonate,
-    dropCM, updateCMs, damage, kill, fireBullet, updateBullets, pickTarget, spawnAI, aiSees, aiLaunch, updateAI };
+    dropCM, spawnCMs, updateCMs, damage, kill, fireBullet, updateBullets, pickTarget, spawnAI, aiSees, aiLaunch, updateAI };
 }

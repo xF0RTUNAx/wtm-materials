@@ -5,8 +5,26 @@ const dir = new URL('.', import.meta.url).pathname;
 Deno.chdir(dir);
 const [gfx = 'medium', mode = 'arcade', weather = '', god = ''] = Deno.args;
 if (!(await Deno.stat('three.min.js').catch(() => null))) {
-  const r = await fetch('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
-  await Deno.writeTextFile('three.min.js', await r.text());
+  await Deno.writeTextFile('three.min.js', await fetchThree());
+}
+// three.min.js r128: cdnjs (как в игре), а если он закрыт (облачная сессия пускает только реестр npm) — тот же файл из пакета three@0.128.0
+async function fetchThree() {
+  try {
+    const r = await fetch('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js');
+    if (r.ok) return await r.text();
+  } catch (_) { /* пробуем npm */ }
+  const r = await fetch('https://registry.npmjs.org/three/-/three-0.128.0.tgz');
+  if (!r.ok) throw new Error('three.min.js: ни cdnjs, ни npm недоступны');
+  const tar = new Uint8Array(await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
+  const dec = new TextDecoder();
+  for (let o = 0; o + 512 <= tar.length;) { // tar: заголовок 512 байт (имя 0–99, размер 124–135 восьмеричный), данные кратны 512
+    const name = dec.decode(tar.subarray(o, o + 100)).replace(/\0.*$/s, '');
+    if (!name) break;
+    const size = parseInt(dec.decode(tar.subarray(o + 124, o + 136)).replace(/\0.*$/s, '').trim(), 8) || 0;
+    if (name === 'package/build/three.min.js') return dec.decode(tar.subarray(o + 512, o + 512 + size));
+    o += 512 + Math.ceil(size / 512) * 512;
+  }
+  throw new Error('three.min.js не найден в пакете three@0.128.0');
 }
 // глобальные объекты Deno, которые подменяет harness.js (в JavaScriptCore их нет) — делаем обычными записываемыми свойствами
 for (const k of ['window', 'navigator', 'location', 'localStorage', 'performance', 'document', 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'requestAnimationFrame', 'addEventListener', 'removeEventListener', 'screen', 'history', 'matchMedia', 'innerWidth', 'innerHeight', 'devicePixelRatio', 'parent', 'self']) {

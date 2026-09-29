@@ -42,13 +42,15 @@ games/drone/sim/            — чистая логика без сцены/DOM 
   battle.js                 createBattle(ctx): ракеты, ловушки, пушка, урон, РЛС игрока, ИИ; AC (самолёты ИИ), RADAR, rcsOf
   modes.js                  MODES (arcade/real/training), FUEL_*, DRONE (характеристики «Изделия»)
   online.js                 правила онлайна (MATCH_T 300, RESPAWN_T 5, COUNTDOWN_T 3, RESULTS_T 20, SNAP_HZ 20, SIZES,
-                            TEAM_NAMES ['Фортуна','Улитка'], GUN_DMG 7, PORT 8787), teamSpawn, packState/validState, makeCode
+                            TEAM_NAMES ['Фортуна','Улитка'], GUN_DMG 7, PORT 8787), teamSpawn, packState/validState, makeCode,
+                            validLoadout (8 пилонов, лимиты как в main.js), sunFor (солнце по погоде), packMissile, флаги MF_*
 games/drone/main.js         клиент: рендер, HUD, ввод, звук, меню; одиночная игра = createBattle с хуками эффектов;
                             раздел «Онлайн-бой» — старт/модели соперников/урон/итоги (mpStart, makeRemote, mpShowEnd…)
 games/drone/online-client.js связь, вкладка «Онлайн», чужие самолёты (интерполяция), отправка своего состояния
 game-server/server.js       Deno.serve: /ws (WebSocket), /health (JSON {online, rooms}); билеты MP_SECRET; env PORT, MATCH_T
-game-server/rooms.js        комнаты, лобби, отсчёт, бой, урон, счёт, возрождение, итоги
-game-server/test-client.js  тестовый соперник по коду комнаты (кружит, стреляет)
+game-server/rooms.js        комнаты, лобби, отсчёт, бой, урон, счёт, возрождение, итоги; createBattle на комнату (ракеты, ЛТЦ, РЛС)
+game-server/test-client.js  тестовый соперник по коду комнаты: по 20 с дальний круг 5 км (захват + Р-77 каждые 10 с)
+                            и ближний 1,5 км (пушка, Р-73); на ракеты по себе — ЛТЦ/диполи
 game-server/smoke-test.js   автопроверка сервера без браузера (сам поднимает сервер на :8799) — PASS/FAIL
 ```
 
@@ -60,14 +62,31 @@ game-server/smoke-test.js   автопроверка сервера без бр�
 
 ### Протокол (JSON по WebSocket)
 Клиент → сервер: `hello {name, pid | ticket}` · `create {mode, size}` · `join {code}` · `leave` · `team {team}` · `ready {on}` ·
-`st {s:[x,y,z,yaw,pitch,roll,speed,thr,flags]}` 20 Гц (flags: 1 форсаж, 2 стреляет) · `hit {target}` (попадание пушки) · `self {dmg}` (удар о землю/здание).
+`st {s:[x,y,z,yaw,pitch,roll,speed,thr,flags]}` 20 Гц (flags: 1 форсаж, 2 стреляет) · `hit {target}` (попадание пушки) · `self {dmg}` (удар о землю/здание) ·
+`load {l:[8 ключей|null]}` (подвеска, один раз на жизнь — после `start` и своего `spawn`) · `lock {target|0}` (захват РЛС / сброс) ·
+`launch {key, target|0, slot, s}` (пуск; `s` — своё состояние в момент нажатия) · `cm {type:'flare'|'chaff'}`.
 Сервер → клиент: `welcome {id,name}` · `err {msg}` · `room {code,mode,size,host,state:'lobby'|'countdown'|'play'|'end',left,score,players:[{id,name,team,ready,k,d}]}` ·
-`start {seed,weather,mode,cd,len,spawns:{id:[x,y,z,yaw]}}` · `snap {T, P:[[id,alive,hp,...s]]}` 20 Гц · `hp {id,hp,by}` · `kill {victim,killer,by,score}` · `spawn {id,s:[x,y,z,yaw]}` · `gone {id}` · `end {score, players:[{id,name,team,k,d}]}`.
+`start {seed,weather,mode,cd,len,spawns:{id:[x,y,z,yaw]}}` · `snap {T, P:[[id,alive,hp,...s(9),lock]], M:[[mid,x,y,z,dx,dy,dz,speed,flags,target,closing]]}` 20 Гц
+(`lock` — id того, кого ведёт РЛС игрока, 0 — никого; у ракеты flags: 1 двигатель, 2 активная ГСН, 4 потеряла цель/уведена; closing — сближение с целью, м/с, или null) ·
+`ml {id,key,owner,target,slot,p:[x,y,z]}` (пуск) · `mx {id,hit,p}` (подрыв) · `cm {id,type}` (ловушки игрока id — всем, кроме него) · `lockx {why:'lost'|'chaff'}` (сервер снял ваш захват) · `deny {msg,slot}` (пуск отклонён) ·
+`hp {id,hp,by}` · `kill {victim,killer,by,score}` (by — «ПУШКА», «ЗЕМЛЯ» или название ракеты) · `spawn {id,s:[x,y,z,yaw]}` · `gone {id}` · `end {score, players:[{id,name,team,k,d}]}`.
 Проверки на сервере: состояние — конечные числа в пределах карты и скорость < 1500 м/с (`validState`); попадание — оба живы, разные команды, дистанция ≤ 2200 м, нос стрелка в пределах 25° от цели, ≤ 25 заявок/с; урон пушки = `GUN_DMG × MODES[mode].dmgTaken`. Разбился сам — очко команде соперника. Старт — все в комнате «Готов» и в обеих командах ≥ 1 человек.
+
+### Ракеты, ловушки, РЛС на сервере (этап 2, как сделано)
+- На комнату — `createBattle(ctx)` из `sim/battle.js` (тот же код, что в одиночной игре). У каждого игрока на одну жизнь — прокси `makeCraft({human:true, cid, team, ...DRONE, flares/chaff = MODES[mode].cm, radar, load})`; после сбития — новый прокси (старые ракеты на возродившегося не наводятся). Позиция прокси — из `st`, между состояниями — по прямой ≤ 0,3 с. `opponents` — массив команды соперника (`r.sides`), `ctx.hurt(t, amount, by, msl)` → урон игроку, сбитие — хозяину ракеты. Солнце — `sunFor(погода)`.
+- Такт 20 Гц, внутри 2 шага по 25 мс: `updateRadar` каждого прокси, `updateMissile`, `updateCMs`.
+- Пуск: ракета есть в `load[slot]`, перезарядка 0,4 с, ИК — `irCanSee` по прокси с конусом max(fov, slaved) + 5° (запас на задержку сети; без цели — только у `loal`), ПАРЛ — `radar.lock` на цели, АРЛ — захват, свежая отметка обзора или `radarSees`. Иначе `deny`.
+- Захват: `lock` ставит `radar.lock` прокси, дальше его ведёт та же логика РЛС (цель вне обзора > 0,8 с — `lockx lost`; диполи цели — `lockx chaff`). Он же подсвет ПАРЛ, радиокоррекция АРЛ и СПО цели (поле `lock` в снимке).
+- ЛТЦ/диполи: `battle.dropCM(прокси)` — счётчики, увод ракет, срыв захватов на сервере; остальным — `cm` для картинки.
+
+### Клиент этапа 2
+- Сетевые ракеты (`net: true`) лежат в общем `missiles` (их видят HUD, СПО, датчик пуска, звук, свет); в `tick` для них вместо `updateMissile` — `MP.stepMissile`: последний снимок + скорость × прошедшее время (≤ 0,5 с), расхождение гасится за ~0,2 с; своя ракета стартует с пилона (`mpNetLaunched`), пилон снимается только по `ml`. Нет снимков > 1,5 с — ракета убирается.
+- `launchPlayerMissile` в онлайне делает те же проверки и шлёт `launch` (`MP.launch`); свои ЛТЦ — `dropCM` с `ctx.remoteCM` (только картинка + `cm` серверу); чужие — `B.spawnCMs`. Захват отправляется при каждой смене `radar.lock` (`MP.lockSent`). У соперника `c.stt`/`c.radar.lock` — из снимка (СПО: захват, пуск ПАРЛ/АРЛ, «М»).
+- `sim/battle.js`: `ctx.hurt` получает `by, msl`; выделена `spawnCMs`; `ctx.remoteCM` — одиночная игра не изменилась (`regress.sh`).
 
 ### Клиент (online-client.js ↔ main.js)
 `createOnline(K)` — K: `G, player, enemies, testName, popup, tabEl, syncMenu, backToMenu, goPlay, countdown, startOnline, setHull, hitMark, meDown, meUp, makeRemote, remoteDown, remoteUp, removeRemote, remoteVisual, remoteShot, showEnd, firing`.
-Чужой самолёт — `makeCraft({remote:true, human:true, team, S:{name, code:'ИЗ', radarR, rcs:1.6…}, radar…})`; соперники кладутся в `enemies` (их видят радар, ИК-ГСН, прицел, HUD, звук), союзники — в `MP.allies` (голубые метки с ником). Интерполяция: `MP.srvT` подтягивается к `T` снимков, показ на `INTERP = 0.12 с` в прошлом, после последнего снимка — экстраполяция ≤ 0,35 с. В `tick`: `MP.update(dt)` первым; в онлайне не идёт расписание противников, нет конца вылета по времени/топливу (топливо не тратится, `MODE = {...MODES[mode], fuelBurn: 0}`), `updateAI` пропускает `remote`. `hurt()` в онлайне = заявка `self` серверу; корпус приходит в `hp`. Пауза в онлайне — только меню (мир не останавливается), `visibilitychange` паузу не ставит. Вкладка «Онлайн» скрыта в партии на награду (без `?mode=training`). Ракеты в онлайне заблокированы в `launchPlayerMissile` (сообщение «в следующем обновлении»).
+Чужой самолёт — `makeCraft({remote:true, human:true, team, S:{name, code:'ИЗ', radarR, rcs:1.6…}, radar…})`; соперники кладутся в `enemies` (их видят радар, ИК-ГСН, прицел, HUD, звук), союзники — в `MP.allies` (голубые метки с ником). Интерполяция: `MP.srvT` подтягивается к `T` снимков, показ на `INTERP = 0.12 с` в прошлом, после последнего снимка — экстраполяция ≤ 0,35 с. В `tick`: `MP.update(dt)` первым; в онлайне не идёт расписание противников, нет конца вылета по времени/топливу (топливо не тратится, `MODE = {...MODES[mode], fuelBurn: 0}`), `updateAI` пропускает `remote`. `hurt()` в онлайне = заявка `self` серверу; корпус приходит в `hp`. Пауза в онлайне — только меню (мир не останавливается), `visibilitychange` паузу не ставит. Вкладка «Онлайн» скрыта в партии на награду (без `?mode=training`). Ракеты — с этапа 2 (ниже).
 Адрес сервера (`serverUrl`): на `fortunawtm.com` → `wss://game.fortunawtm.com/ws`, иначе `ws://<тот же хост>:8787/ws`.
 
 ## Заметки к следующим этапам (продуманные решения)
@@ -94,6 +113,7 @@ game-server/smoke-test.js   автопроверка сервера без бр�
 ## Состояние
 
 - **Этап 0 — готов** (2026-09-29): одиночная игра считается в точности как раньше (эталон `tools/drone-headless/baseline.txt`, сверка `regress.sh`).
+- **Этап 2 — готов, не опубликован** (2026-09-29): ракеты, ЛТЦ/диполи, захват РЛС и СПО по сети (см. выше). Проверено: `smoke-test.js` 18/18 (подвеска, отказы в пуске, захват виден цели, ракета в снимках, попадание с уроном стрелку, ЛТЦ 24 сброса, снятие захвата), `regress.sh` совпадает, Chromium (в облаке, SwiftShader) против `test-client.js`: предупреждение о ракете, СПО «захват»/«М», свой AIM-120C через сервер, сбитие Р-73, ошибок нет; экран 844×390 с сенсорным интерфейсом. Не проверено руками на iPhone и с двумя живыми игроками.
 - **Этап 1 — готов, не опубликован** (2026-09-29): всё выше в «Как сделано». Проверено: автотест сервера (`smoke-test.js`, 11/11), браузер с тестовым соперником (лобби, «Готов», бой, попадания в обе стороны, сбитие, возрождение, конец боя, итоги, «В лобби»), телефон в горизонтали (вкладки и лобби помещаются).
 - Код лежит в ветке **`online-dev`** (не в `main`: `main` сразу публикуется на сайт). В `main` вливать вместе с поднятой версией модулей и только когда сервер будет на ноутбуке (иначе вкладка покажет «сервер недоступен»).
 

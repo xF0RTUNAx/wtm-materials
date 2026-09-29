@@ -1,12 +1,18 @@
 // Онлайн «Симулятора Летки» на стороне игрока: связь с сервером (game-server), лобби во вкладке «Онлайн»,
 // чужие самолёты (сглаженные снимки сервера), отправка своего состояния, сбития, возрождение, итоги боя.
 // Своим самолётом игрок управляет у себя без задержки; урон, счёт и время ведёт сервер.
+// Ракеты, ловушки и захваты РЛС тоже считает сервер: пуск/захват/ЛТЦ — заявка серверу, ракеты («сетевые», net: true)
+// лежат в общем списке missiles игры и двигаются по снимкам сервера с досчётом по скорости — их видят HUD, СПО и звук.
 // main.js передаёт в createOnline объект K — доступ к игре (игрок, списки противников, эффекты, HUD).
-import { MATCH_T, SNAP_HZ, SIZES, TEAM_NAMES, ONLINE_MODES, PORT, F_AB, F_FIRE, packState, cleanCode } from './sim/online.js?v=20260929c';
+/* global THREE */
+import { MATCH_T, SNAP_HZ, SIZES, TEAM_NAMES, ONLINE_MODES, PORT, F_AB, F_FIRE, MF_MOTOR, MF_ACTIVE, MF_LOST, packState, cleanCode } from './sim/online.js?v=20260929c';
 import { MODES } from './sim/modes.js?v=20260929c';
+import { MISSILES } from './missiles.js?v=20260929c';
 
 const INTERP = 0.12;   // чужие самолёты показываем на 120 мс в прошлом — между двумя снимками, без рывков
 const EXTRAP = 0.35;   // если снимки не пришли — продолжаем движение по прямой не дольше этого, с
+const M_AHEAD = 0.5;   // ракету показываем «сейчас»: последний снимок + скорость × прошедшее время (не дольше этого, с)
+const M_LOST_T = 1.5;  // ракета пропала из снимков дольше этого — убираем без взрыва
 
 export function serverUrl() {
   const h = location.hostname;
@@ -30,7 +36,10 @@ export function createOnline(K) {
     pick: { mode: 'arcade', size: 2 },
     remotes: new Map(), allies: [],
     score: [0, 0], srvT: 0, sendT: 0, cdT: 0, end: null,
+    msls: new Map(),      // сетевые ракеты по id сервера
+    lockSent: 0,          // какой захват РЛС сервер знает от нас (id соперника или 0)
   };
+  const MP_V = new THREE.Vector3();
   const send = (m) => { if (MP.ws && MP.ws.readyState === 1) MP.ws.send(JSON.stringify(m)); };
   const myInfo = () => MP.room && MP.room.players.find((p) => p.id === MP.me);
   const nameOf = (id) => { if (id === MP.me) return 'вы'; const p = MP.room && MP.room.players.find((x) => x.id === id); return p ? p.name : '?'; };
@@ -68,10 +77,21 @@ export function createOnline(K) {
       for (const row of m.P) {
         const id = row[0]; if (id === MP.me) continue;
         const c = remote(id); if (!c || !row[1]) continue;
-        c.buf.push({ T: m.T, s: row.slice(3) }); if (c.buf.length > 40) c.buf.shift();
+        c.buf.push({ T: m.T, s: row.slice(3, 12) }); if (c.buf.length > 40) c.buf.shift();
         c.hp = row[2];
+        c.radar.lock = craftOf(row[12] || 0); c.stt = row[12] === MP.me; c.tgt = c.stt ? K.player : null; // СПО: кто нас ведёт РЛС
       }
+      for (const row of m.M || []) snapMissile(row, m.T);
     },
+    ml(m) { if (MP.on) netMissile(m); },
+    mx(m) {
+      const x = MP.msls.get(m.id); if (!x) return;
+      MP.msls.delete(m.id); if (x.dead) return;
+      x.pos.set(m.p[0], m.p[1], m.p[2]); x.dead = true; K.netDetonated(x, !!m.hit);
+    },
+    cm(m) { const c = MP.remotes.get(m.id); if (MP.on && c && !c.dead) K.netCM(c, m.type); },
+    lockx(m) { MP.lockSent = 0; if (MP.on) K.lockLost(m.why); },
+    deny(m) { if (m.msg && MP.on) K.popup(m.msg, 'bad'); },
     hp(m) {
       if (m.id === MP.me) K.setHull(m.hp);
       else { const c = MP.remotes.get(m.id); if (c) { c.hp = m.hp; if (m.by === MP.me) K.hitMark(c); } }
@@ -85,7 +105,7 @@ export function createOnline(K) {
       else { const c = MP.remotes.get(m.victim); if (c && !c.dead) { c.dead = true; c.buf.length = 0; K.remoteDown(c); dropAlly(c); } }
     },
     spawn(m) {
-      if (m.id === MP.me) { MP.down = false; K.meUp(m.s); return; }
+      if (m.id === MP.me) { MP.down = false; MP.lockSent = 0; K.meUp(m.s); send({ t: 'load', l: K.loadout() }); return; }
       const c = remote(m.id); if (!c) return;
       c.buf.length = 0; c.hp = 100;
       if (c.dead) { c.dead = false; K.remoteUp(c); (c.team === MP.team ? MP.allies : K.enemies).push(c); }
@@ -97,13 +117,14 @@ export function createOnline(K) {
 
   // ═════════════ Бой ═════════════
   function startBattle(m) {
-    clearRemotes();
-    Object.assign(MP, { on: true, down: false, score: [0, 0], srvT: 0, sendT: 0, end: null, cdT: m.cd, len: m.len || MATCH_T });
+    clearRemotes(); MP.msls.clear();
+    Object.assign(MP, { on: true, down: false, score: [0, 0], srvT: 0, sendT: 0, end: null, cdT: m.cd, len: m.len || MATCH_T, lockSent: 0 });
     const me = myInfo(); if (me) MP.team = me.team;
     K.startOnline({ mode: m.mode, weather: m.weather, spawn: m.spawns[MP.me], cd: m.cd });
+    send({ t: 'load', l: K.loadout() }); // подвеска на эту жизнь — сервер проверит её и будет знать, что есть на пилонах
     for (const p of MP.room.players) if (p.id !== MP.me) remote(p.id);
   }
-  function stopBattle() { MP.on = false; MP.down = false; MP.end = null; clearRemotes(); }
+  function stopBattle() { MP.on = false; MP.down = false; MP.end = null; clearRemotes(); MP.msls.clear(); }
   function remote(id) {
     let c = MP.remotes.get(id); if (c) return c;
     const info = MP.room && MP.room.players.find((p) => p.id === id); if (!info) return null;
@@ -120,6 +141,41 @@ export function createOnline(K) {
     c.dead = true; K.removeRemote(c);
   }
   function clearRemotes() { for (const c of [...MP.remotes.values()]) dropRemote(c); }
+  const craftOf = (id) => (!id ? null : id === MP.me ? K.player : MP.remotes.get(id) || null);
+
+  // ═════════════ Сетевые ракеты ═════════════
+  // пуск (событие ml): ракета появляется в списке игры; хозяин вышел из комнаты — вместо него «пустышка» с его точкой
+  function netMissile(m) {
+    const M_ = MISSILES[m.key]; if (!M_ || MP.msls.has(m.id)) return;
+    const owner = craftOf(m.owner) || { pos: new THREE.Vector3(m.p[0], m.p[1], m.p[2]), vel: new THREE.Vector3(), speed: 250, yaw: 0, pitch: 0, team: -1 };
+    const cp = Math.cos(owner.pitch), dir = new THREE.Vector3(-Math.sin(owner.yaw) * cp, Math.sin(owner.pitch), -Math.cos(owner.yaw) * cp);
+    const x = { net: true, id: m.id, key: m.key, M: M_, owner, target: craftOf(m.target), pos: new THREE.Vector3(m.p[0], m.p[1], m.p[2]), dir,
+      speed: owner.speed, t: 0, flown: 0, active: false, lost: false, decoy: null, dead: false, trailT: 0, motor: false, seenBy: new Set(),
+      srv: new THREE.Vector3(m.p[0], m.p[1], m.p[2]), sdir: dir.clone(), sT: MP.srvT, off: new THREE.Vector3(), seenT: 0 };
+    MP.msls.set(m.id, x);
+    K.netLaunched(x, m.slot); // модель, вспышка пуска; своя ракета снимается с пилона (x.off — от пилона к точке сервера)
+  }
+  function snapMissile(row, T) {
+    const x = MP.msls.get(row[0]); if (!x || x.dead) return;
+    x.srv.set(row[1], row[2], row[3]); x.sdir.set(row[4], row[5], row[6]).normalize(); x.speed = row[7]; x.sT = T; x.seenT = 0;
+    x.motor = !!(row[8] & MF_MOTOR); x.active = !!(row[8] & MF_ACTIVE); x.lost = !!(row[8] & MF_LOST);
+    x.target = craftOf(row[9]); x.closing = row[10] === null ? undefined : row[10];
+    // без рывка: разницу между показанным и новым положением гасим за ~0,2 с
+    MP_V.copy(x.srv).addScaledVector(x.sdir, x.speed * Math.min(M_AHEAD, Math.max(0, MP.srvT - T)));
+    x.off.copy(x.pos).sub(MP_V); if (x.off.lengthSq() > 300 * 300) x.off.set(0, 0, 0);
+  }
+  // каждый кадр (из tick вместо updateMissile): положение «сейчас» по последнему снимку, эффекты двигателя
+  function stepMissile(x, dt) {
+    x.t += dt; x.seenT += dt;
+    if (x.seenT > M_LOST_T) { x.dead = true; MP.msls.delete(x.id); K.netGone(x); return; }
+    x.off.multiplyScalar(Math.max(0, 1 - 6 * dt));
+    const prevX = x.pos.x, prevY = x.pos.y, prevZ = x.pos.z;
+    x.pos.copy(x.srv).addScaledVector(x.sdir, x.speed * Math.min(M_AHEAD, Math.max(0, MP.srvT - x.sT))).add(x.off);
+    x.flown += Math.hypot(x.pos.x - prevX, x.pos.y - prevY, x.pos.z - prevZ);
+    x.dir.lerp(x.sdir, Math.min(1, 12 * dt)).normalize();
+    if (x.target && !x.target.dead) x.dPrev = x.pos.distanceTo(x.target.pos);
+    K.netMotor(x, x.motor, dt);
+  }
   function placeRemote(c, x, y, z, yaw, pitch, roll, speed, thr, flags) {
     c.pos.set(x, y, z); c.yaw = yaw; c.pitch = pitch; c.roll = roll; c.speed = speed; c.thr = thr; c.ab = !!(flags & F_AB);
     const cp = Math.cos(pitch); c.vel.set(-Math.sin(yaw) * cp, Math.sin(pitch), -Math.cos(yaw) * cp).multiplyScalar(speed);
@@ -151,6 +207,11 @@ export function createOnline(K) {
       c.fireT -= dt;
       const last = c.buf[c.buf.length - 1];
       if (last && (last.s[8] & F_FIRE) && c.fireT <= 0) { c.fireT = 1 / 20; K.remoteShot(c); } // трассеры чужой пушки (урон считает сервер)
+    }
+    // захват РЛС: сервер должен знать, кого мы ведём (подсвет для ПАРЛ, СПО цели)
+    if (K.G.state === 'play' && !MP.down) {
+      const L = K.radarLock(), id = L && L.remote && !L.dead ? L.id : 0;
+      if (id !== MP.lockSent) { MP.lockSent = id; send({ t: 'lock', target: id }); }
     }
     // своё состояние — SNAP_HZ раз в секунду (и во время отсчёта, чтобы нас сразу было видно)
     MP.sendT -= dt;
@@ -214,6 +275,9 @@ export function createOnline(K) {
     toggleReady: () => { const me = myInfo(); if (me) send({ t: 'ready', on: !me.ready }); },
     leave: () => { send({ t: 'leave' }); if (MP.ws) MP.ws.close(); },
     hitRemote: (c) => send({ t: 'hit', target: c.id }),
+    launch: (key, target, slot) => send({ t: 'launch', key, target: target && target.remote ? target.id : 0, slot, s: packState(K.player, false) }),
+    cm: (type) => send({ t: 'cm', type }),
+    stepMissile,
     selfDamage: (dmg) => send({ t: 'self', dmg }),
     leftSec, myInfo, nameOf,
     closeResults: () => { stopBattle(); render(); },
