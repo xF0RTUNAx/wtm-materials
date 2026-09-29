@@ -1,11 +1,11 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js?v=20260929a';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260929a';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather } from './world.js?v=20260929a';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260929a';
-import { createPipeline } from './post.js?v=20260929a';
-import { createAudio } from './audio.js?v=20260929a';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js?v=20260929b';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260929b';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather } from './world.js?v=20260929b';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260929b';
+import { createPipeline } from './post.js?v=20260929b';
+import { createAudio } from './audio.js?v=20260929b';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -112,6 +112,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(65, 1, 3, 60000);
 camera.rotation.order = 'YXZ';
 let VW = 1, VH = 1, pipe = null;
+let hc = null, hx = null, hcR = 1; // HUD-холст (раздел «HUD»)
 const basePR = prFor(P);
 // конвейер нужен, если есть эффекты кадра, сглаживание, апскейлер или широкий цвет
 function needPipe() { return !!P.post || perf.aa !== 'off' || perf.up !== 'off' || (perf.p3 && P3_OK); }
@@ -172,7 +173,7 @@ function resize() {
   // адаптация интерфейса: узкий экран / низкий (телефон в альбомной ориентации)
   document.body.classList.toggle('narrow', VW < 700);
   document.body.classList.toggle('short', VH < 520);
-  applySafeArea();
+  applySafeArea(); hudCanvasSize();
 }
 window.addEventListener('resize', resize);
 
@@ -293,16 +294,21 @@ function debrisGeo(kind) {
   ];
   return DEBRIS[kind];
 }
-const hitMarks = [], hitEls = [];
-for (let i = 0; i < 5; i++) { const d = document.createElement('div'); d.className = 'hitmk'; d.style.display = 'none'; $('marks').appendChild(d); hitEls.push(d); }
+const hitMarks = []; // маркеры попаданий рисует HUD-холст
 // свет: форсаж подсвечивает дрон, горящие ракеты — всё вокруг (только топовые пресеты: каждый источник дорог)
 const abLight = P.lights ? new THREE.PointLight(lin(0xff8a3c), 0, 70, 2) : null;
 if (abLight) { abLight.position.set(0, 0, 10); ship.add(abLight); }
 const mslLights = P.lights ? [0, 1].map(() => { const l = new THREE.PointLight(lin(0xffb070), 0, 260, 2); scene.add(l); return l; }) : [];
 function updateMissileLights() {
   if (!mslLights.length) return;
-  const burning = missiles.filter((m) => !m.dead && m.fl && m.fl.visible).sort((a, b) => a.pos.distanceTo(camera.position) - b.pos.distanceTo(camera.position));
-  mslLights.forEach((l, i) => { const m = burning[i]; if (m && m.pos.distanceTo(camera.position) < 2500) { l.position.copy(m.pos); l.intensity = 4 * (0.8 + rnd() * 0.4); } else l.intensity = 0; });
+  // две ближайшие горящие ракеты — простым проходом, без новых массивов
+  let a = null, b = null, da = 2500, db = 2500;
+  for (const m of missiles) {
+    if (m.dead || !m.fl || !m.fl.visible) continue;
+    const d = m.pos.distanceTo(camera.position);
+    if (d < da) { b = a; db = da; a = m; da = d; } else if (d < db) { b = m; db = d; }
+  }
+  [a, b].forEach((m, i) => { const l = mslLights[i]; if (m) { l.position.copy(m.pos); l.intensity = 4 * (0.8 + rnd() * 0.4); } else l.intensity = 0; });
 }
 
 // ═════════════ Летательные аппараты ═════════════
@@ -1120,7 +1126,7 @@ function aiThink(e) {
   // ── сопровождение ──
   const hasR = e.msl.some((x) => x && MISSILES[x.key].kind !== 'ir');
   const hasIR = e.msl.some((x) => x && MISSILES[x.key].kind === 'ir');
-  const guiding = missiles.filter((m) => !m.dead && m.owner === e && !m.lost && (m.M.kind === 'sarh' || (m.M.kind === 'arh' && !m.active))).length;
+  let guiding = 0; for (const m of missiles) if (!m.dead && m.owner === e && !m.lost && (m.M.kind === 'sarh' || (m.M.kind === 'arh' && !m.active))) guiding++;
   const radarKey = hasR ? e.msl.find((x) => x && MISSILES[x.key].kind !== 'ir').key : null;
   const rK = radarKey && dlz(MISSILES[radarKey], e.pos.y, e.speed, closingOf(p, e.pos));
   const launchR = rK ? rK.rne + (rK.rmax - rK.rne) * (0.55 - 0.35 * e.skill) : 0;
@@ -1379,44 +1385,47 @@ function closingText(m) {
   const tti = m.dPrev / m.closing;
   return `догоняет ${Math.round(m.closing)} м/с · ${tti < 60 ? Math.ceil(tti) + ' с' : '>1 мин'}`;
 }
+// записи СПО берутся из пулов и переиспользуются (раньше каждый кадр создавались новые массивы и объекты)
+const RWR_POOL = [], MAWS_POOL = [], INC_POOL = [];
+const pooled = (pool, i) => pool[i] || (pool[i] = {});
+function localAz(a, rel) { const cy = Math.cos(a.yaw), sy = Math.sin(a.yaw), cp = Math.cos(a.pitch), sp = Math.sin(a.pitch); const x1 = rel.x * cy - rel.z * sy, z1 = rel.x * sy + rel.z * cy; return Math.atan2(x1, -(-rel.y * sp + z1 * cp)); }
+const byDist = (a, b) => a.d - b.d;
 function updateRwr(dt) {
-  const out = [];
+  const out = rwr.list, maws = rwr.maws, inc = rwr.inc; out.length = 0; maws.length = 0; inc.length = 0;
   for (const e of enemies) {
     if (e.dead) continue;
     const rel = TMP.copy(player.pos).sub(e.pos), d = rel.length();
     fwdOf(e, TMP2);
     if (angleBetween(TMP2, rel) > 65 * D2R || d > e.S.radarR * 1.5) continue; // СПО слышит РЛС дальше, чем она видит нас
-    const launch = missiles.some((m) => !m.dead && m.owner === e && m.target === player && !m.lost && (m.M.kind === 'sarh' || (m.M.kind === 'arh' && !m.active && m.t < 4)));
-    const [az] = localAngles(player, TMP.copy(e.pos).sub(player.pos));
-    out.push({ az, d, code: e.S.code, mode: launch ? 'launch' : e.stt ? 'lock' : 'search', e });
+    let launch = false;
+    for (const m of missiles) if (!m.dead && m.owner === e && m.target === player && !m.lost && (m.M.kind === 'sarh' || (m.M.kind === 'arh' && !m.active && m.t < 4))) { launch = true; break; }
+    const r = pooled(RWR_POOL, out.length); r.az = localAz(player, TMP.copy(e.pos).sub(player.pos)); r.d = d; r.code = e.S.code; r.mode = launch ? 'launch' : e.stt ? 'lock' : 'search'; r.e = e; r.m = null;
+    out.push(r);
   }
-  const maws = [];
   for (const m of missiles) {
     if (m.dead || m.owner === player || m.target !== player) continue;
-    const d = m.pos.distanceTo(player.pos);
-    const [az] = localAngles(player, TMP.copy(m.pos).sub(player.pos));
-    if (m.M.kind === 'arh' && m.active && !m.lost) out.push({ az, d, code: 'М', mode: 'launch', m });
+    const d = m.pos.distanceTo(player.pos), az = localAz(player, TMP.copy(m.pos).sub(player.pos));
+    if (m.M.kind === 'arh' && m.active && !m.lost) { const r = pooled(RWR_POOL, out.length); r.az = az; r.d = d; r.code = 'М'; r.mode = 'launch'; r.e = null; r.m = m; out.push(r); }
     const tb = m.t - m.M.drop, motor = tb >= 0 && (tb < m.M.burn || (m.M.sustain && tb < m.M.burn + m.M.sustain.t));
-    if (motor && d < 9000) maws.push({ az, d, m }); // УФ/ИК-датчик видит факел двигателя
+    m.mawSeen = motor && d < 9000; // УФ/ИК-датчик видит факел двигателя
+    if (m.mawSeen) { const w = pooled(MAWS_POOL, maws.length); w.az = az; w.d = d; w.m = m; maws.push(w); }
   }
   // звук: новая РЛС — короткий сигнал, захват — прерывистый, пуск — частый
-  for (const t of out) if (t.e && !rwr.known.has(t.e)) { rwr.known.add(t.e); tone(1700, 0.07, 'square', 0.03); }
+  let anyLaunch = maws.length > 0, anyLock = false;
+  for (const t of out) { if (t.e && !rwr.known.has(t.e)) { rwr.known.add(t.e); tone(1700, 0.07, 'square', 0.03); } if (t.mode === 'launch') anyLaunch = true; else if (t.mode === 'lock') anyLock = true; }
   rwr.beepT -= dt;
-  const worst = out.some((t) => t.mode === 'launch') || maws.length ? 'launch' : out.some((t) => t.mode === 'lock') ? 'lock' : '';
+  const worst = anyLaunch ? 'launch' : anyLock ? 'lock' : '';
   if (worst && rwr.beepT <= 0) { rwr.beepT = worst === 'launch' ? 0.12 : 0.45; tone(worst === 'launch' ? 1400 : 1000, 0.06, 'square', 0.035); }
   // в «Аркаде» на экране видны все ракеты, летящие в игрока (не только с работающим двигателем)
-  const inc = [];
   for (const m of missiles) {
     if (m.dead || m.owner === player || m.target !== player || m.lost || m.decoy) continue;
-    const d = m.pos.distanceTo(player.pos);
-    if (MODE.allMissiles || maws.some((w) => w.m === m) || (m.M.kind === 'arh' && m.active)) inc.push({ m, d, az: localAngles(player, TMP.copy(m.pos).sub(player.pos))[0] });
+    if (MODE.allMissiles || m.mawSeen || (m.M.kind === 'arh' && m.active)) { const w = pooled(INC_POOL, inc.length); w.m = m; w.d = m.pos.distanceTo(player.pos); w.az = localAz(player, TMP.copy(m.pos).sub(player.pos)); inc.push(w); }
   }
-  rwr.list = out; rwr.maws = maws; rwr.inc = inc;
   // текст угрозы: откуда, как далеко и догоняет ли
   let txt = '';
-  const lm = out.filter((t) => t.mode === 'launch').sort((a, b) => a.d - b.d)[0];
-  const near = inc.sort((a, b) => a.d - b.d)[0];
-  const lk = out.find((t) => t.mode === 'lock');
+  let lm = null, lk = null;
+  for (const t of out) { if (t.mode === 'launch' && (!lm || t.d < lm.d)) lm = t; if (!lk && t.mode === 'lock') lk = t; }
+  inc.sort(byDist); const near = inc[0];
   if (near) txt = VW < 760 // узкий экран: «РАКЕТА 6 ч · 5.4 км · +195 м/с · 28 с» — в одну-две строки, не на прицел
     ? `РАКЕТА ${clockOf(near.az)} ч · ${(near.d / 1000).toFixed(1)} км · ${near.m.closing !== undefined && near.m.closing < 15 ? 'НЕ ДОГОНЯЕТ' : '+' + Math.round(near.m.closing || 0) + ' м/с' + (near.m.closing > 15 && near.m.dPrev / near.m.closing < 60 ? ' · ' + Math.ceil(near.m.dPrev / near.m.closing) + ' с' : '')}`
     : `РАКЕТА! ${clockOf(near.az)} ч · ${(near.d / 1000).toFixed(1)} км · ${closingText(near.m)}`;
@@ -1452,9 +1461,7 @@ function drawRwr() {
 
 // ═════════════ HUD ═════════════
 const el = { spdBox: $('spdBox'), fuel: $('barFuel').firstElementChild, hull: $('barHull').firstElementChild, heat: $('barHeat').firstElementChild, fuelTxt: $('fuelTxt'),
-  kills: $('kills'), combo: $('combo'), score: $('score'), spd: $('spd'), alt: $('alt'), warn: $('warn'), cross: $('cross'), pipper: $('pipper'),
-  seeker: $('seeker'), lockInfo: $('lockInfo'), wpn: $('wpn'), hdg: $('hdg'), clock: $('clock') };
-const marks = []; for (let i = 0; i < 22; i++) { const d = document.createElement('div'); d.className = 'mk'; d.innerHTML = '<i></i><span></span>'; $('marks').appendChild(d); marks.push(d); }
+  kills: $('kills'), combo: $('combo'), score: $('score'), spd: $('spd'), alt: $('alt'), warn: $('warn'), wpn: $('wpn'), hdg: $('hdg'), clock: $('clock') };
 let lastWarn = '';
 function warn(t) { if (t !== lastWarn) { lastWarn = t; el.warn.textContent = t; el.warn.style.display = t ? 'block' : 'none'; if (t) sfx.warn(); } }
 function popup(text, cls) {
@@ -1462,19 +1469,9 @@ function popup(text, cls) {
   while ($('popups').children.length > 4) $('popups').firstChild.remove();
   setTimeout(() => d.remove(), 1400);
 }
-const _v = new THREE.Vector3();
-function toScreen(pos) { _v.copy(pos).project(camera); return { x: (_v.x + 1) / 2 * VW, y: (1 - _v.y) / 2 * VH, behind: _v.z > 1, nx: _v.x, ny: _v.y }; }
-function setMark(i, cls, x, y, label) {
-  const m = marks[i]; if (m._c !== cls) { m.className = 'mk ' + cls; m._c = cls; }
-  m.style.display = 'block'; m.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px)`;
-  const s = m.lastChild; if (s._t !== label) { s.textContent = label; s._t = label; }
-}
-function edgeArrow(i, pos, cls) {
-  const s = toScreen(pos); let x = s.nx, y = s.ny; if (s.behind) { x = -x; y = -y; }
-  if (!s.behind && Math.abs(x) < 0.92 && Math.abs(y) < 0.9) return false;
-  const k = Math.max(Math.abs(x), Math.abs(y)) || 1; x = clamp(x / k * 0.92, -0.92, 0.92); y = clamp(y / k * 0.86, -0.86, 0.86);
-  setMark(i, 'arr' + (cls ? ' ' + cls : ''), (x + 1) / 2 * VW, (1 - y) / 2 * VH, ''); return true;
-}
+// экранные координаты без новых объектов: результат пишется в out (по умолчанию — общий)
+const _v = new THREE.Vector3(), SCR = [0, 1, 2, 3].map(() => ({ x: 0, y: 0, behind: false, nx: 0, ny: 0 }));
+function toScreen(pos, out = SCR[0]) { _v.copy(pos).project(camera); out.x = (_v.x + 1) / 2 * VW; out.y = (1 - _v.y) / 2 * VH; out.behind = _v.z > 1; out.nx = _v.x; out.ny = _v.y; return out; }
 const km = (m) => (m / 1000).toFixed(m < 10000 ? 1 : 0) + ' км';
 let wpnT = 0, dlzCache = null;
 let hudSlowT = 0;
@@ -1492,7 +1489,7 @@ function updateHudSlow() {
   el.hull.style.width = player.hull + '%';
   el.heat.style.width = player.heat + '%'; el.heat.style.background = player.overheated ? '#ef4444' : '#fbbf24';
   el.kills.textContent = G.kills; el.score.textContent = G.score;
-  const next = schedule.slice(schedIdx).find((e) => e.type !== 'tanker');
+  let next = null; for (let i = schedIdx; i < schedule.length; i++) if (schedule[i].type !== 'tanker') { next = schedule[i]; break; }
   const cmp = VW < 760; // узкий экран — короткие подписи
   if (MODE.training) el.combo.textContent = `ОБУЧЕНИЕ · разобрано${cmp ? '' : ' ракет'}: ${TR.done}`;
   else el.combo.textContent = next ? `${cmp ? 'группа' : 'следующая группа'} через ${Math.max(0, Math.ceil(next.t - G.runTime))} с` : enemies.some((e) => !e.dead) ? '' : 'все группы отбиты';
@@ -1523,93 +1520,123 @@ function placeThreat() {
   if (th._top !== top) { th._top = top; th.style.top = top; }
 }
 if (IS_TOUCH) { const tl = $('wpn').parentNode; if (tl) tl.appendChild($('ask')); } // «?» — под панелью ракет, слева
+// ── Быстрая часть HUD — один прозрачный холст поверх кадра вместо 30 HTML-элементов, которые браузер каждый кадр
+// двигал и заново собирал страницу: визир, упреждение, ИК-ГСН, метки целей/ракет/заправщиков, стрелки у края экрана,
+// рамка захвата с анимацией, подпись захваченной цели, маркеры попаданий, виртуальный курсор мыши. Вид — как был.
+hc = $('hudc'); hx = hc.getContext('2d');
+function hudCanvasSize() { if (!hc) return; hcR = Math.min(2, window.devicePixelRatio || 1); const w = Math.round(VW * hcR), h = Math.round(VH * hcR); if (hc.width !== w || hc.height !== h) { hc.width = w; hc.height = h; } }
+hudCanvasSize();
+const HF = 'ui-monospace, "SF Mono", Menlo, Consolas, monospace';
+function hText(t, x, y, col, size = 10.5, align = 'left', base = 'middle') {
+  hx.font = `700 ${size}px ${HF}`; hx.textAlign = align; hx.textBaseline = base;
+  hx.lineWidth = 3; hx.strokeStyle = 'rgba(0,0,0,.8)'; hx.strokeText(t, x, y); hx.fillStyle = col; hx.fillText(t, x, y);
+}
+function hRing(x, y, r, col, w = 2) { hx.beginPath(); hx.arc(x, y, r, 0, 6.2832); hx.lineWidth = w; hx.strokeStyle = col; hx.stroke(); }
+// метка: kind — 'c' контакт РЛС, 'l' захват, 'v' визуальный контакт, 't' заправщик, 'm' ракета
+function hMark(kind, x, y, label) {
+  if (kind === 'c') { hx.save(); hx.translate(x, y); hx.rotate(0.7854); hx.lineWidth = 1.5; hx.strokeStyle = '#7CFF9B'; hx.strokeRect(-8, -8, 16, 16); hx.restore(); hText(label, x + 14, y, '#b8ffc8'); }
+  else if (kind === 'l') { hx.shadowColor = 'rgba(255,80,80,.6)'; hx.shadowBlur = 8; hx.lineWidth = 2; hx.strokeStyle = '#ff5b5b'; hx.strokeRect(x - 18, y - 18, 36, 36); hx.shadowBlur = 0; hText(label, x + 22, y - 12, '#ffb4b4'); }
+  else if (kind === 'v') { hRing(x, y, 6, 'rgba(255,255,255,.55)', 1.5); hText(label, x + 10, y, 'rgba(255,255,255,.7)'); }
+  else if (kind === 't') { hRing(x, y, 8, '#fde047', 1.5); hText(label, x + 14, y, '#fde047'); }
+  else if (kind === 'm') { hx.beginPath(); hx.arc(x, y, 7, 0, 6.2832); hx.fillStyle = 'rgba(255,60,60,.3)'; hx.fill(); hRing(x, y, 7, '#ff3b3b'); hText(label, x + 12, y, '#ff8a8a'); }
+}
+// стрелка у края экрана к цели вне кадра (или позади)
+function hArrow(pos, col) {
+  const s = toScreen(pos, SCR[3]); let x = s.nx, y = s.ny; if (s.behind) { x = -x; y = -y; }
+  if (!s.behind && Math.abs(x) < 0.92 && Math.abs(y) < 0.9) return false;
+  const k = Math.max(Math.abs(x), Math.abs(y)) || 1; x = clamp(x / k * 0.92, -0.92, 0.92); y = clamp(y / k * 0.86, -0.86, 0.86);
+  const px = (x + 1) / 2 * VW, py = (1 - y) / 2 * VH, a = Math.atan2(px - VW / 2, VH / 2 - py);
+  hx.save(); hx.translate(px, py); hx.rotate(a); hx.beginPath(); hx.moveTo(0, -10); hx.lineTo(8, 7); hx.lineTo(-8, 7); hx.closePath();
+  hx.fillStyle = col; hx.fill(); hx.lineWidth = 1.5; hx.strokeStyle = 'rgba(0,0,0,.6)'; hx.stroke(); hx.restore(); return true;
+}
 function hudFast(dt, slow) {
-  // визир и упреждение пушки
+  hx.setTransform(hcR, 0, 0, hcR, 0, 0); hx.clearRect(0, 0, VW, VH);
+  // визир (кольцо и «крылья») и упреждение пушки
   fwdOf(player, TMP3);
-  const bs = toScreen(TMP.copy(player.pos).addScaledVector(TMP3, 800));
-  el.cross.style.left = bs.x + 'px'; el.cross.style.top = bs.y + 'px';
+  const bs = toScreen(TMP.copy(player.pos).addScaledVector(TMP3, 800), SCR[0]), bx = bs.x, by = bs.y;
+  hRing(bx, by, 8, '#b8ffc8'); hx.fillStyle = '#b8ffc8'; hx.fillRect(bx - 29, by - 1, 12, 2); hx.fillRect(bx + 17, by - 1, 12, 2);
   if (gunTarget && !gunTarget.dead) {
-    const d = gunTarget.pos.distanceTo(player.pos);
-    const s = toScreen(TMP.copy(gunTarget.pos).addScaledVector(gunTarget.vel, d / 1100));
-    el.pipper.style.display = s.behind ? 'none' : 'block'; el.pipper.style.left = s.x + 'px'; el.pipper.style.top = s.y + 'px';
-  } else el.pipper.style.display = 'none';
+    const d = gunTarget.pos.distanceTo(player.pos), s = toScreen(TMP.copy(gunTarget.pos).addScaledVector(gunTarget.vel, d / 1100), SCR[1]);
+    if (!s.behind) { hRing(s.x, s.y, 7, '#fde68a'); hx.fillStyle = '#fde68a'; hx.fillRect(s.x - 1, s.y - 1, 2, 2); }
+  }
   // ИК-ГСН
   const M_ = selType && MISSILES[selType];
   if (M_ && M_.kind === 'ir') {
-    el.seeker.style.display = 'block';
-    const s = seeker.target && !seeker.target.dead ? toScreen(seeker.target.pos) : bs;
-    el.seeker.style.left = s.x + 'px'; el.seeker.style.top = s.y + 'px'; el.seeker.classList.toggle('lk', seeker.locked);
-  } else el.seeker.style.display = 'none';
+    const t = seeker.target && !seeker.target.dead ? toScreen(seeker.target.pos, SCR[1]) : null, sx = t ? t.x : bx, sy = t ? t.y : by;
+    if (seeker.locked) { if (Math.floor(radar.t * 8) % 2 === 0) { hx.shadowColor = 'rgba(255,80,80,.7)'; hx.shadowBlur = 10; hRing(sx, sy, 22, '#ff5b5b'); hx.shadowBlur = 0; } else hRing(sx, sy, 22, 'rgba(255,91,91,.35)'); }
+    else hRing(sx, sy, 22, '#fbbf24');
+  }
   { // «рычание» ИК-ГСН в наушнике: тише в поиске, громче и выше при захвате
     const on = M_ && M_.kind === 'ir' && G.state === 'play';
     AU.growl(on ? (seeker.locked ? 0.035 : seeker.target ? 0.02 : 0.01) * (0.6 + 0.4 * Math.sin(radar.t * (seeker.locked ? 40 : 18))) : 0, seeker.locked ? 1150 : seeker.target ? 700 : 380);
   }
-  // метки
-  let n = 0; el.lockInfo.style.display = 'none'; dlzCache = null;
+  // метки: контакты РЛС (захваченный — с подписью), визуальные контакты, ракеты, заправщики
+  let n = 0; dlzCache = null;
+  const MAXM = 22;
   for (const [e, c] of radar.contacts) {
-    if (n >= marks.length - 8) break;
+    if (n >= MAXM - 8) break;
     if (e.dead || c.jam) continue;
-    const s = toScreen(e.pos), d = e.pos.distanceTo(player.pos);
+    const s = toScreen(e.pos, SCR[1]), d = e.pos.distanceTo(player.pos);
     if (e === radar.lock) {
-      if (s.behind) { if (edgeArrow(n, e.pos)) n++; continue; }
-      setMark(n++, 'l', s.x, s.y, km(d));
+      if (s.behind) { if (hArrow(e.pos, '#ff5b5b')) n++; continue; }
+      hMark('l', s.x, s.y, km(d)); n++;
       const vc = Math.round(closingOf(e, player.pos) * 3.6 + player.speed * 3.6 * Math.cos(angleBetween(TMP3, TMP.copy(e.pos).sub(player.pos))));
-      let info = `${e.S.name} · Vсбл ${vc} км/ч`;
+      const l1 = `${e.S.name} · Vсбл ${vc} км/ч`; let l2 = '', c2 = '#86efac';
       if (M_) {
         dlzCache = dlz(M_, player.pos.y, player.speed, closingOf(e, player.pos));
         const st = d < M_.rmin ? ['БЛИЗКО', '#fca5a5'] : d < dlzCache.rne ? ['НЕИЗБЕЖНАЯ ЗОНА', '#4ade80'] : d < dlzCache.rmax ? ['ПУСК РАЗРЕШЁН', '#86efac'] : ['ДАЛЕКО', '#fde68a'];
-        info += `<br><span style="color:${st[1]}">${M_.short}: ${st[0]} (макс ${km(dlzCache.rmax)})</span>`;
+        l2 = `${M_.short}: ${st[0]} (макс ${km(dlzCache.rmax)})`; c2 = st[1];
       }
-      el.lockInfo.innerHTML = info; el.lockInfo.style.display = 'block'; el.lockInfo.style.top = (s.y + 22) + 'px';
-      if (s.x + 24 + el.lockInfo.offsetWidth > VW - 4) { el.lockInfo.style.left = 'auto'; el.lockInfo.style.right = Math.max(4, VW - s.x + 24) + 'px'; el.lockInfo.style.textAlign = 'right'; }
-      else { el.lockInfo.style.right = 'auto'; el.lockInfo.style.left = Math.max(4, s.x + 24) + 'px'; el.lockInfo.style.textAlign = 'left'; }
-    } else if (!s.behind) setMark(n++, 'c', s.x, s.y, km(d));
+      // подпись справа от цели, а если не влезает — слева
+      hx.font = `700 11px ${HF}`; const w = Math.max(hx.measureText(l1).width, l2 ? hx.measureText(l2).width : 0);
+      const right = s.x + 24 + w <= VW - 4, lx = right ? Math.max(4, s.x + 24) : Math.min(VW - 4, s.x - 24), al = right ? 'left' : 'right';
+      hText(l1, lx, s.y + 22, '#b8ffc8', 11, al, 'top'); if (l2) hText(l2, lx, s.y + 37, c2, 11, al, 'top');
+    } else if (!s.behind) { hMark('c', s.x, s.y, km(d)); n++; }
   }
   for (const e of enemies) { // визуальный контакт вблизи (без радара)
-    if (n >= marks.length - 6 || e.dead || radar.contacts.has(e)) continue;
+    if (n >= MAXM - 6 || e.dead || radar.contacts.has(e)) continue;
     const d = e.pos.distanceTo(player.pos); if (d > 5000) continue;
-    const s = toScreen(e.pos);
-    if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) setMark(n++, 'v', s.x, s.y, km(d)); else if (d < 3000 && edgeArrow(n, e.pos)) n++;
+    const s = toScreen(e.pos, SCR[1]);
+    if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) { hMark('v', s.x, s.y, km(d)); n++; } else if (d < 3000 && hArrow(e.pos, '#ff5b5b')) n++;
   }
   for (const w of rwr.inc) {
-    if (n >= marks.length - 3) break;
-    const s = toScreen(w.m.pos), lbl = `${km(w.d)} · ${w.m.closing !== undefined && w.m.closing < 15 ? 'отстаёт' : '+' + Math.round(w.m.closing || 0) + ' м/с'}`;
-    if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) setMark(n++, 'm', s.x, s.y, lbl); else if (edgeArrow(n, w.m.pos)) n++;
+    if (n >= MAXM - 3) break;
+    const s = toScreen(w.m.pos, SCR[1]);
+    if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) { hMark('m', s.x, s.y, `${km(w.d)} · ${w.m.closing !== undefined && w.m.closing < 15 ? 'отстаёт' : '+' + Math.round(w.m.closing || 0) + ' м/с'}`); n++; }
+    else if (hArrow(w.m.pos, '#ff5b5b')) n++;
   }
   for (const t of tankers) {
-    if (t.done || n >= marks.length) continue;
-    const s = toScreen(t.drogue), d = t.drogue.distanceTo(player.pos);
-    if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) setMark(n++, 't', s.x, s.y, 'ЗАПРАВЩИК ' + (d < 1000 ? Math.round(d) + ' м' : km(d))); else if (edgeArrow(n, t.drogue, 't')) n++;
+    if (t.done || n >= MAXM) continue;
+    const s = toScreen(t.drogue, SCR[1]), d = t.drogue.distanceTo(player.pos);
+    if (!s.behind && Math.abs(s.nx) < 1 && Math.abs(s.ny) < 1) { hMark('t', s.x, s.y, 'ЗАПРАВЩИК ' + (d < 1000 ? Math.round(d) + ' м' : km(d))); n++; } else if (hArrow(t.drogue, '#fde047')) n++;
   }
-  for (; n < marks.length; n++) if (marks[n].style.display !== 'none') marks[n].style.display = 'none';
   // анимация захвата: рамка «схлопывается» на цель
-  const la = $('lockAnim');
   if (G.lockAnimT > 0 && radar.lock && !radar.lock.dead) {
-    G.lockAnimT -= dt; const s2 = toScreen(radar.lock.pos), k = Math.max(0, G.lockAnimT / 0.35);
-    la.style.display = s2.behind ? 'none' : 'block'; la.style.opacity = (1 - k * 0.3).toFixed(2);
-    la.style.transform = `translate(${s2.x.toFixed(0)}px,${s2.y.toFixed(0)}px) scale(${(1 + k * 2.4).toFixed(2)}) rotate(${(k * 45).toFixed(0)}deg)`;
-  } else if (la.style.display !== 'none') la.style.display = 'none';
+    G.lockAnimT -= dt; const s = toScreen(radar.lock.pos, SCR[1]), k = Math.max(0, G.lockAnimT / 0.35);
+    if (!s.behind) {
+      hx.save(); hx.translate(s.x, s.y); hx.rotate(k * 0.785); hx.scale(1 + k * 2.4, 1 + k * 2.4); hx.globalAlpha = 1 - k * 0.3;
+      hx.shadowColor = 'rgba(255,80,80,.8)'; hx.shadowBlur = 10; hx.lineWidth = 2 / (1 + k * 2.4); hx.strokeStyle = '#ff5b5b'; hx.strokeRect(-22, -22, 44, 44); hx.restore();
+    }
+  }
   // виртуальный курсор (мышь захвачена в режиме погружения)
-  const vc = $('vcur');
-  if (document.pointerLockElement === canvas) { vc.style.display = 'block'; vc.style.transform = `translate(${((vcur.x + 1) / 2 * VW).toFixed(0)}px,${((vcur.y + 1) / 2 * VH).toFixed(0)}px)`; }
-  else if (vc.style.display !== 'none') vc.style.display = 'none';
-  // маркеры попаданий
-  for (let i = 0; i < hitEls.length; i++) {
-    const h = hitMarks[i], d = hitEls[i];
-    if (!h) { if (d.style.display !== 'none') d.style.display = 'none'; continue; }
-    h.t -= dt; const s3 = toScreen(h.pos);
-    if (h.t <= 0 || s3.behind) { d.style.display = 'none'; continue; }
-    d.style.display = 'block'; d.className = 'hitmk' + (h.big ? ' big' : ''); d.style.opacity = (h.t / 0.35).toFixed(2);
-    d.style.transform = `translate(${s3.x.toFixed(0)}px,${s3.y.toFixed(0)}px) scale(${(1.4 - h.t).toFixed(2)})`;
+  if (document.pointerLockElement === canvas) { const x = (vcur.x + 1) / 2 * VW, y = (vcur.y + 1) / 2 * VH; hRing(x, y, 8, 'rgba(255,255,255,.85)'); hx.fillStyle = '#fff'; hx.fillRect(x - 1, y - 1, 2, 2); }
+  // маркеры попаданий: белый (крупное — жёлтый) косой крест, гаснет за 0,35 с
+  for (let i = 0; i < hitMarks.length; i++) {
+    const h = hitMarks[i]; h.t -= dt; if (h.t <= 0) continue;
+    const s = toScreen(h.pos, SCR[1]); if (s.behind) continue;
+    const L = (h.big ? 17 : 13) * (1.4 - h.t);
+    hx.save(); hx.translate(s.x, s.y); hx.globalAlpha = h.t / 0.35; hx.lineWidth = 2; hx.strokeStyle = h.big ? '#fde047' : '#fff'; hx.shadowColor = '#000'; hx.shadowBlur = 4;
+    hx.beginPath(); hx.moveTo(-L * 0.7, -L * 0.7); hx.lineTo(L * 0.7, L * 0.7); hx.moveTo(L * 0.7, -L * 0.7); hx.lineTo(-L * 0.7, L * 0.7); hx.stroke(); hx.restore();
   }
   while (hitMarks.length && hitMarks[0].t <= 0) hitMarks.shift();
-  while (hitMarks.length > hitEls.length) hitMarks.shift();
-  // панель вооружения
+  while (hitMarks.length > 5) hitMarks.shift();
+  // панель вооружения: собираем текст раз в 0,12 с, а в страницу пишем, только если он изменился
   wpnT -= dt;
   if (wpnT <= 0) {
     wpnT = 0.12;
     const types = typesLoaded();
-    let h = types.map((k) => `<div class="row ${k === selType ? 'sel' : ''}"><span>${MISSILES[k].short}</span><span>×${countOf(k)} ${KIND_TAG[MISSILES[k].kind]}</span></div>`).join('');
+    let h = '';
+    for (const k of types) h += `<div class="row ${k === selType ? 'sel' : ''}"><span>${MISSILES[k].short}</span><span>×${countOf(k)} ${KIND_TAG[MISSILES[k].kind]}</span></div>`;
     if (!types.length) h = '<div class="row">ракеты израсходованы</div>';
     let st = '';
     if (M_) {
@@ -1617,9 +1644,10 @@ function hudFast(dt, slow) {
       else if (radar.lock) st = 'РЛС: СОПРОВОЖДЕНИЕ';
       else st = M_.kind === 'arh' && radar.contacts.size ? 'РЛС: ОБЗОР · пуск по отметке' : (M_.kind === 'sarh' ? 'РЛС: нужен захват (R)' : 'РЛС: ОБЗОР');
     }
-    const fly = missiles.filter((m) => !m.dead && m.owner === player);
-    const fs = fly.length ? `<div class="fly">в полёте: ${fly.map((m) => m.M.short + (m.lost || m.decoy ? '·ПОТЕРЯ' : m.M.kind === 'arh' ? (m.active ? '·ГСН' : '·КОРР') : m.M.kind === 'sarh' ? (radar.lock === m.target ? '·ПОДСВ' : '·НЕТ ПОДСВ') : '')).join(', ')}</div>` : '';
-    el.wpn.innerHTML = h + `<div class="st">${st}</div>` + fs + `<div class="cm">ЛТЦ ${player.flares} · ДО ${player.chaff}</div>`;
+    let fs = '';
+    for (const m of missiles) if (!m.dead && m.owner === player) fs += (fs ? ', ' : '') + m.M.short + (m.lost || m.decoy ? '·ПОТЕРЯ' : m.M.kind === 'arh' ? (m.active ? '·ГСН' : '·КОРР') : m.M.kind === 'sarh' ? (radar.lock === m.target ? '·ПОДСВ' : '·НЕТ ПОДСВ') : '');
+    const html = h + `<div class="st">${st}</div>` + (fs ? `<div class="fly">в полёте: ${fs}</div>` : '') + `<div class="cm">ЛТЦ ${player.flares} · ДО ${player.chaff}</div>`;
+    if (el.wpn._h !== html) { el.wpn._h = html; el.wpn.innerHTML = html; }
   }
 }
 // Индикатор РЛС: B-развёртка + шкала зоны пуска
@@ -1912,7 +1940,7 @@ function setWeatherPref(v) {
 function applyWeatherKey(k) {
   const sh = world.sun.castShadow;
   weatherKey = k; world.setWeather(k); weatherExp = world.W.exposure || 1; applyExposure();
-  if (sh !== world.sun.castShadow) scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); // тени вкл/выкл — пересборка шейдеров
+  if (sh !== world.sun.castShadow) { scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; }); warmShaders(); } // тени вкл/выкл — пересборка шейдеров
 }
 function renderWeatherChip() { const c = $('weatherChip'); if (c) c.textContent = 'Погода: ' + WEATHERS[weatherKey].name; }
 function renderModeSel() {
@@ -2566,7 +2594,7 @@ function renderStats() {
 }
 renderStats(); showTip(false);
 // ═════════════ Звук: каждый кадр ═════════════
-const sndCands = [];
+const sndCands = [], SND_POOL = [];
 function updateSound(dt) {
   if (!AU.ready) return;
   const st = G.state, flying = st === 'play' || st === 'countdown', inLobby = st === 'menu';
@@ -2579,11 +2607,13 @@ function updateSound(dt) {
     n: inLobby ? 1 : player.n, rear, agl: inLobby ? 700 : agl(player), rain: world.rainK * (1 - above) });
   AU.gun(st === 'play' && (input.fire || held.has('fire')) && !player.overheated);
   sndCands.length = 0;
+  // записи для объёмного звука — из пула (без новых объектов каждый кадр)
+  const cand = (o, kind, pos, vel, fwd, ab, gain) => { const c = pooled(SND_POOL, sndCands.length); c.o = o; c.kind = kind; c.pos = pos; c.vel = vel; c.fwd = fwd; c.ab = ab; c.gain = gain; sndCands.push(c); };
   if (flying) {
-    for (const e of enemies) if (!e.dead) { e.sfwd = fwdOf(e, e.sfwd || new THREE.Vector3()); sndCands.push({ o: e, kind: e.type === 'boss' ? 'boss' : 'jet', pos: e.pos, vel: e.vel, fwd: e.sfwd, ab: e.ab }); }
-    for (const m of missiles) if (!m.dead && m.t - m.M.drop < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) { m.svel = (m.svel || new THREE.Vector3()).copy(m.dir).multiplyScalar(m.speed); sndCands.push({ o: m, kind: 'msl', pos: m.pos, vel: m.svel }); }
-    for (const t of tankers) if (!t.done && t.mesh) sndCands.push({ o: t, kind: 'jet', pos: t.pos, vel: t.vel, gain: 0.8 });
-  } else if (inLobby) for (const j of lobby.jets) sndCands.push({ o: j, kind: 'jet', pos: j.pos, vel: j.vel, fwd: j.fwd, ab: j.ab, gain: j.tanker ? 0.9 : 1.3 });
+    for (const e of enemies) if (!e.dead) { e.sfwd = fwdOf(e, e.sfwd || new THREE.Vector3()); cand(e, e.type === 'boss' ? 'boss' : 'jet', e.pos, e.vel, e.sfwd, e.ab, 1); }
+    for (const m of missiles) if (!m.dead && m.t - m.M.drop < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) { m.svel = (m.svel || new THREE.Vector3()).copy(m.dir).multiplyScalar(m.speed); cand(m, 'msl', m.pos, m.svel, null, false, 1); }
+    for (const t of tankers) if (!t.done && t.mesh) cand(t, 'jet', t.pos, t.vel, null, false, 0.8);
+  } else if (inLobby) for (const j of lobby.jets) cand(j, 'jet', j.pos, j.vel, j.fwd, j.ab, j.tanker ? 0.9 : 1.3);
   AU.spatial(dt, camera, flying ? player.vel : null, sndCands, on);
 }
 function tick(dt) {
@@ -2647,21 +2677,24 @@ function render() {
   if (pipe) pipe.render(scene, camera, performance.now() / 1000, sunScr); else renderer.render(scene, camera);
   if (P.flares) updateLensFlare();
 }
-// Блики объектива (Ультра/Кино): цепочка кругов через центр кадра
-const flareEls = [];
-if (P.flares) {
-  const box = document.createElement('div'); box.id = 'flares'; document.body.insertBefore(box, $('hud'));
-  for (const [sz, col] of [[300, 'rgba(255,240,200,.26)'], [70, 'rgba(160,210,255,.35)'], [130, 'rgba(255,200,140,.2)'], [40, 'rgba(200,255,220,.4)'], [190, 'rgba(140,170,255,.13)'], [22, 'rgba(255,255,255,.5)']]) {
-    const d = document.createElement('i'); d.style.cssText = `width:${sz}px;height:${sz}px;margin:${-sz / 2}px 0 0 ${-sz / 2}px;background:radial-gradient(circle, ${col} 0%, rgba(0,0,0,0) 70%)`;
-    box.appendChild(d); flareEls.push(d);
-  }
-}
+// Блики объектива (Ультра/Кино): цепочка кругов через центр кадра — на своём холсте (раньше — DOM-слой с режимом
+// смешивания «экран», который iPhone пересобирал каждый кадр); холст перерисовывается, только пока солнце в кадре
+const FLARES = [[300, '255,240,200', 0.26], [70, '160,210,255', 0.35], [130, '255,200,140', 0.2], [40, '200,255,220', 0.4], [190, '140,170,255', 0.13], [22, '255,255,255', 0.5]];
+const FLARE_PTS = [1, 0.4, -0.2, -0.6, -1.1, 0.15];
+let fc = null, fx = null, flareDrawn = false;
+if (P.flares) { fc = document.createElement('canvas'); fc.id = 'flarec'; document.body.insertBefore(fc, $('hud')); fx = fc.getContext('2d'); }
 function updateLensFlare() {
-  const a = sunScr.vis, pts = [1, 0.4, -0.2, -0.6, -1.1, 0.15];
-  flareEls.forEach((d, i) => {
-    const x = (sunScr.nx * pts[i] + 1) / 2 * VW, y = (1 - sunScr.ny * pts[i]) / 2 * VH;
-    d.style.transform = `translate(${x.toFixed(0)}px,${y.toFixed(0)}px)`; d.style.opacity = a.toFixed(2);
+  const a = sunScr.vis;
+  if (a < 0.01) { if (flareDrawn) { fx.setTransform(1, 0, 0, 1, 0, 0); fx.clearRect(0, 0, fc.width, fc.height); flareDrawn = false; } return; }
+  const r = Math.min(1.5, window.devicePixelRatio || 1), w = Math.round(VW * r), h = Math.round(VH * r);
+  if (fc.width !== w || fc.height !== h) { fc.width = w; fc.height = h; }
+  fx.setTransform(r, 0, 0, r, 0, 0); fx.clearRect(0, 0, VW, VH); fx.globalCompositeOperation = 'lighter';
+  FLARES.forEach(([sz, rgb, al], i) => {
+    const x = (sunScr.nx * FLARE_PTS[i] + 1) / 2 * VW, y = (1 - sunScr.ny * FLARE_PTS[i]) / 2 * VH, R = sz / 2;
+    const g = fx.createRadialGradient(x, y, 0, x, y, R); g.addColorStop(0, `rgba(${rgb},${(al * a).toFixed(3)})`); g.addColorStop(0.7, `rgba(${rgb},0)`);
+    fx.fillStyle = g; fx.fillRect(x - R, y - R, sz, sz);
   });
+  fx.globalCompositeOperation = 'source-over'; flareDrawn = true;
 }
 // Счётчик кадров (включается в «Настройках»)
 const fpsEl = document.createElement('div'); fpsEl.id = 'fpsMeter'; document.body.appendChild(fpsEl);
@@ -2697,7 +2730,14 @@ function measureRefresh() {
     requestAnimationFrame(f); setTimeout(() => res(t), 600);
   }).then((t) => { if (t.length > 4) { t.sort((a, b) => a - b); dr.vs = snapPeriod(t[Math.floor(t.length / 2)]); } });
 }
-measureRefresh().then(() => { $('loading').remove(); requestAnimationFrame(frame); });
+// Прогрев шейдеров: все материалы (в том числе скрытые — пламя форсажа, пули, самолёты противника) собираются
+// за экраном загрузки, а не в момент первого взрыва или пуска — без заморозок посреди боя
+const warmGroup = new THREE.Group(); warmGroup.visible = false; warmGroup.add(new THREE.Mesh(jetGeo('fighter').geo, MAT_JET)); scene.add(warmGroup);
+function warmShaders() {
+  try { const prev = renderer.getRenderTarget(); if (pipe && pipe.target && !pipe.cfg.ldr) renderer.setRenderTarget(pipe.target); renderer.compile(scene, camera); renderer.setRenderTarget(prev); } catch (_) { /* не критично */ }
+}
+warmShaders();
+measureRefresh().then(() => { try { render(); } catch (_) { /* первый кадр — ещё под экраном загрузки */ } $('loading').remove(); requestAnimationFrame(frame); });
 
 if (TEST && TRAINING) window.__g = { camera, ship, scene, G, player, enemies, missiles, tankers, bullets, cms, schedule, radar, seeker, input, held, binds, loaded, MISSILES, AC, rwr,
   spawnAI, spawnTanker, endGame, hurt, dlz, buildSchedule, maxKills, SEED, tick, render, launchPlayerMissile, launchMissile, cycleLock, cycleWeapon, dropCM, updateHud, runBenchmark,

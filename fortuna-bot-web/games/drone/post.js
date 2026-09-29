@@ -146,6 +146,7 @@ export function createPipeline(renderer, cfg) {
   return {
     cfg, setSize,
     get scale() { return scale; },
+    get target() { return sceneRT; },
     setScale(s) { s = Math.round(Math.max(0.35, Math.min(1, s)) * 100) / 100; if (s !== scale) { scale = s; setSize(); } },
     setSharp(v) { cas.uniforms.sharp.value = v; rcas.uniforms.sharp.value = v; },
     setExposure(v) { comp.uniforms.exposure.value = v; },

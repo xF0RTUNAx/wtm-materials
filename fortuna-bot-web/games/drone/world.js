@@ -4,11 +4,12 @@
 // Детализация задаётся пресетом графики (см. PRESETS в main.js), атмосфера — погодой (WEATHERS).
 // Шум для деталей земли, микрорельефа и облачного слоя — из одной текстуры (выборка вместо десятков sin() на пиксель).
 /* global THREE */
-import { mulberry32 } from './schedule.js?v=20260929a';
-import { M, part, mergeParts } from './models.js?v=20260929a';
-import { buildProps } from './props.js?v=20260929a';
+import { mulberry32 } from './schedule.js?v=20260929b';
+import { M, part, mergeParts } from './models.js?v=20260929b';
+import { buildProps } from './props.js?v=20260929b';
 
-export const WORLD = { R: 12000, SIZE: 34000, WATER_Y: 60, CEIL: 14000 };
+import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260929b';
+export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
 export const SUN_DIR = new THREE.Vector3(0.42, 0.6, 0.38).normalize(); // меняется погодой (на месте — все ссылки видят новое)
 export const FOG_D = 0.000042;
 export const CLOUD_H = 2600;
@@ -51,6 +52,7 @@ export const ATMO = { sunDir: { x: 0.5, y: 0.7, z: 0.5 }, sunCol: { x: 1, y: 0.9
 #endif`;
 })();
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const UP_V = new THREE.Vector3(0, 1, 0);
 const smooth01 = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 
 // ═════════════ Погода ═════════════
@@ -93,31 +95,8 @@ export function pickWeather(r = Math.random) {
 }
 function setSunDir(el, az) { const e = el * Math.PI / 180, a = az * Math.PI / 180; SUN_DIR.set(Math.cos(e) * Math.sin(a), Math.sin(e), Math.cos(e) * Math.cos(a)); }
 
-// Города и аэродром — ровные площадки (позиции постоянные, застройка — по seed)
-export const TOWNS = [{ x: -3500, z: -2500, r: 950 }, { x: 4200, z: -4800, r: 900 }, { x: 5200, z: 2600, r: 850 }, { x: -5200, z: 4500, r: 900 }];
-export const AIRFIELD = { x: -2600, z: 8200, r: 1700 };
-function riverX(z) { return 2200 * Math.sin(z * 0.00022 + 1.1) + 900 * Math.sin(z * 0.00061); }
-function baseH(x, z) {
-  const r = Math.hypot(x, z);
-  let h = 200 + 220 * Math.sin(x * 0.00031 + 0.7) * Math.cos(z * 0.00027) + 120 * Math.sin(x * 0.00071 + 1.3) * Math.sin(z * 0.00063 + 0.4)
-    + 45 * Math.sin(x * 0.0019) * Math.cos(z * 0.0017 + 1) + 14 * Math.sin(x * 0.0053 + z * 0.0041);
-  h += Math.pow(smooth01(11000, 16500, r), 1.4) * 1700 * (0.75 + 0.25 * Math.sin(Math.atan2(z, x) * 6 + 1.3));
-  const dr = x - riverX(z);
-  h -= 190 * Math.exp(-(dr * dr) / (2 * 340 * 340)) * (1 - smooth01(9000, 12000, r));
-  return h;
-}
-const FLATS = [...TOWNS, AIRFIELD].map((f) => ({ ...f, h: Math.max(WORLD.WATER_Y + 25, baseH(f.x, f.z)) }));
-export function terrainH(x, z) {
-  let h = baseH(x, z);
-  for (const f of FLATS) {
-    const dx = x - f.x, dz = z - f.z;
-    if (Math.abs(dx) > f.r || Math.abs(dz) > f.r) continue;
-    const d = Math.hypot(dx, dz);
-    if (d < f.r) h += (f.h - h) * (1 - smooth01(f.r * 0.55, f.r, d));
-  }
-  return h;
-}
-export function airfieldH() { return FLATS[FLATS.length - 1].h; }
+// Высота земли, города и аэродром — в terrain-core.js (общие с фоновым потоком)
+
 
 // ── «поле облачности»: где стоят облака (JS) и где на земле их тени (текстура из той же функции) ──
 const fract = (v) => v - Math.floor(v);
@@ -273,7 +252,7 @@ function skyMaterial(SU, discMul) {
 
 // buildWorld: наполняет сцену. P — пресет, weather — ключ WEATHERS. Возвращает здания (для столкновений),
 // follow/update, setWeather и dispose.
-export function buildWorld(scene, P, seed, renderer, weather = 'day') {
+export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {}) {
   const owned = [];
   const add = (o) => { scene.add(o); owned.push(o); return o; };
   const rnd = mulberry32((seed ^ 0x51ed270b) >>> 0);
@@ -289,6 +268,25 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
     sun.castShadow = true; sun.shadow.mapSize.set(P.shadowMap || 2048, P.shadowMap || 2048);
     const c = sun.shadow.camera; c.left = -shBox; c.right = shBox; c.top = shBox; c.bottom = -shBox; c.near = 10; c.far = 5000;
     sun.shadow.bias = -0.0005; sun.shadow.normalBias = 0.02;
+    sun.shadow.camera.layers.enable(3); // «теневые» объекты (набор ближних деревьев) видит только теневая камера
+  }
+  // Теневая камера двигается за дроном шагами ровно в пиксель карты теней: края теней больше не «кипят» в полёте
+  const shTexel = 2 * shBox / (P.shadowMap || 2048), SX = new THREE.Vector3(), SY = new THREE.Vector3(), SNAP = new THREE.Vector3();
+  const shadowSet = { cx: 1e9, cz: 1e9, sd: '', on: true };
+  function rebuildShadowTrees(f) {
+    const ims = [shadowTrees.spruce, shadowTrees.leafy], cnt = [0, 0], lim = shBox + 60, reach = shBox + 1600;
+    for (const t of treeChunks) {
+      const dx = t.x - f.x, dz = t.z - f.z;
+      if (Math.abs(dx * SX.x + dz * SX.z) > reach + 1450 || Math.abs(dx * SY.x + (terrainH(t.x, t.z) - f.y) * SY.y + dz * SY.z) > reach + 1450) continue;
+      const src = t.mesh.instanceMatrix.array, n = t.mesh.count, k = t.leafy ? 1 : 0, im = ims[k], dst = im.instanceMatrix.array, cap = im.instanceMatrix.count;
+      for (let i = 0; i < n && cnt[k] < cap; i++) {
+        const o = i * 16, px = src[o + 12] - f.x, py = src[o + 13] - f.y, pz = src[o + 14] - f.z;
+        if (Math.abs(px * SX.x + py * SX.y + pz * SX.z) > lim || Math.abs(px * SY.x + py * SY.y + pz * SY.z) > lim) continue;
+        for (let q = 0; q < 16; q++) dst[cnt[k] * 16 + q] = src[o + q];
+        cnt[k]++;
+      }
+    }
+    ims.forEach((im, k) => { im.count = cnt[k]; im.instanceMatrix.updateRange.offset = 0; im.instanceMatrix.updateRange.count = cnt[k] * 16; im.instanceMatrix.needsUpdate = true; });
   }
   const hemiBase = P.terrainPBR ? 0.55 : 0.8, sunBase = P.terrainPBR ? 1.9 : 1.25; // PBR-земля: свет «честный», без пересвета
 
@@ -324,45 +322,36 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
   const tMat = P.terrainPBR ? new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0, envMapIntensity: 0.3 })
     : new THREE.MeshLambertMaterial({ vertexColors: true });
   terrainShader(tMat, P, TU);
-  const hsh2 = (x, z) => { const v = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return v - Math.floor(v); };
-  function groundColor(x, y, z, ny, c) {
-    const j = (hsh2(x, z) - 0.5) * 0.05;
-    const field = Math.sin(x * 0.0021 + Math.sin(z * 0.0013) * 2) * Math.sin(z * 0.0019 + 0.5);
-    const forest = Math.sin(x * 0.0009 + 2) * Math.cos(z * 0.0011) + 0.4 * Math.sin(x * 0.0031 + z * 0.0027);
-    const town = TOWNS.some((t) => Math.abs(x - t.x) < t.r && Math.hypot(x - t.x, z - t.z) < t.r * 0.8);
-    if (y < WORLD.WATER_Y + 12) c.setRGB(0.72 + j, 0.66 + j, 0.48 + j);
-    else if (y > 1450) c.setRGB(0.94, 0.95, 0.97);
-    else if (ny < 0.78 || y > 1050) c.setRGB(0.47 + j, 0.45 + j, 0.42 + j);
-    else if (town) c.setRGB(0.5 + j, 0.5 + j, 0.46 + j);
-    else if (forest > 0.55) c.setRGB(0.17 + j, 0.33 + j, 0.15 + j);
-    else if (field > 0.45) c.setRGB(0.66 + j, 0.6 + j, 0.32 + j);
-    else if (field < -0.5) c.setRGB(0.42 + j, 0.52 + j, 0.24 + j);
-    else c.setRGB(0.32 + j, 0.5 + j, 0.24 + j);
-    return c.convertSRGBToLinear();
-  }
-  function chunkGeo(ch, lv) {
-    const seg = Math.max(4, SEG0 >> lv), step = TS / seg, n = seg + 3, e = Math.max(step, 12);
-    const pos = new Float32Array(n * n * 3), nor = new Float32Array(n * n * 3), col = new Float32Array(n * n * 3), c = new THREE.Color();
-    let k = 0, lo = 1e9, hi = -1e9;
-    for (let j = -1; j <= seg + 1; j++) for (let i = -1; i <= seg + 1; i++, k++) {
-      const ii = Math.min(Math.max(i, 0), seg), jj = Math.min(Math.max(j, 0), seg), x = ch.x0 + ii * step, z = ch.z0 + jj * step, y = terrainH(x, z);
-      const hx = terrainH(x + e, z) - terrainH(x - e, z), hz = terrainH(x, z + e) - terrainH(x, z - e), nl = Math.hypot(hx, 2 * e, hz);
-      pos[k * 3] = x; pos[k * 3 + 1] = y - (i !== ii || j !== jj ? SKIRT[lv] : 0); pos[k * 3 + 2] = z;
-      nor[k * 3] = -hx / nl; nor[k * 3 + 1] = 2 * e / nl; nor[k * 3 + 2] = -hz / nl;
-      groundColor(x, y, z, 2 * e / nl, c); col[k * 3] = c.r; col[k * 3 + 1] = c.g; col[k * 3 + 2] = c.b;
-      lo = Math.min(lo, y); hi = Math.max(hi, y);
-    }
-    const idx = new Uint16Array((n - 1) * (n - 1) * 6); let o = 0;
-    for (let j = 0; j < n - 1; j++) for (let i = 0; i < n - 1; i++) { const a = j * n + i, b = a + 1, cc = a + n, d = cc + 1; idx.set([a, cc, b, b, cc, d], o); o += 6; }
+  // Сетки строит фоновый поток (terrain-worker.js), чтобы подлёт к новому участку не «дёргал» кадр;
+  // пока подробная сетка готовится, показывается более грубая. Без поддержки модульных потоков — строим сразу.
+  const toGeo = (ch, lv, a) => {
     const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    g.setIndex(new THREE.BufferAttribute(idx, 1));
-    g.boundingSphere = new THREE.Sphere(new THREE.Vector3(ch.x0 + TS / 2, (lo + hi) / 2, ch.z0 + TS / 2), Math.hypot(TS / 2, TS / 2, (hi - lo) / 2 + SKIRT[lv]));
-    ch.cy = (lo + hi) / 2;
+    g.setAttribute('position', new THREE.BufferAttribute(a.pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(a.nor, 3)); g.setAttribute('color', new THREE.BufferAttribute(a.col, 3));
+    g.setIndex(new THREE.BufferAttribute(a.idx, 1));
+    g.boundingSphere = new THREE.Sphere(new THREE.Vector3(ch.x0 + TS / 2, (a.lo + a.hi) / 2, ch.z0 + TS / 2), Math.hypot(TS / 2, TS / 2, (a.hi - a.lo) / 2 + SKIRT[lv]));
+    ch.cy = (a.lo + a.hi) / 2;
     return g;
+  };
+  const chunkGeo = (ch, lv) => toGeo(ch, lv, buildChunkArrays(ch.x0, ch.z0, TS, Math.max(4, SEG0 >> lv), SKIRT[lv]));
+  let worker = null, jobId = 0;
+  const jobs = new Map();
+  try {
+    if (typeof Worker !== 'undefined' && !opts.syncTerrain) {
+      worker = new Worker(new URL('./terrain-worker.js?v=20260929b', import.meta.url), { type: 'module' });
+      worker.onmessage = (e) => { const j = jobs.get(e.data.id); if (!j) return; jobs.delete(e.data.id); j.ch.pending[j.lv] = false; if (!disposed) j.ch.geos[j.lv] = toGeo(j.ch, j.lv, e.data); };
+      worker.onerror = () => { worker = null; }; // модульные потоки не поддерживаются — дальше строим сразу
+    }
+  } catch (_) { worker = null; }
+  let disposed = false;
+  function requestChunk(ch, lv) {
+    if (ch.pending[lv]) return false;
+    if (!worker) { ch.geos[lv] = chunkGeo(ch, lv); return true; }
+    const id = ++jobId; jobs.set(id, { ch, lv }); ch.pending[lv] = true;
+    worker.postMessage({ id, x0: ch.x0, z0: ch.z0, size: TS, seg: Math.max(4, SEG0 >> lv), skirt: SKIRT[lv] });
+    return true;
   }
   for (let cj = 0; cj < TCH; cj++) for (let ci = 0; ci < TCH; ci++) {
-    const ch = { x0: -WORLD.SIZE / 2 + ci * TS, z0: -WORLD.SIZE / 2 + cj * TS, geos: [], last: [0, 0, 0, 0], lv: 3 };
+    const ch = { x0: -WORLD.SIZE / 2 + ci * TS, z0: -WORLD.SIZE / 2 + cj * TS, geos: [], pending: [], last: [0, 0, 0, 0], lv: 3 };
     ch.geos[3] = chunkGeo(ch, 3); ch.geos[2] = chunkGeo(ch, 2);
     ch.mesh = add(new THREE.Mesh(ch.geos[3], tMat)); ch.mesh.receiveShadow = !!P.shadows;
     tChunks.push(ch);
@@ -374,7 +363,8 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
       const dx = Math.max(0, Math.abs(cam.x - (ch.x0 + TS / 2)) - TS / 2), dz = Math.max(0, Math.abs(cam.z - (ch.z0 + TS / 2)) - TS / 2);
       const d = Math.hypot(dx, dz, Math.max(0, cam.y - ch.cy) * 0.8);
       let want = d < LOD_D[0] ? 0 : d < LOD_D[1] ? 1 : d < LOD_D[2] ? 2 : 3;
-      if (!ch.geos[want] && tBuildT <= 0) { ch.geos[want] = chunkGeo(ch, want); tBuildT = 2; } // не больше одного квадрата за 3 кадра
+      // в фоне — сколько угодно заданий; без фонового потока — не больше одного квадрата за 3 кадра
+      if (!ch.geos[want] && (worker || tBuildT <= 0) && requestChunk(ch, want) && !worker) tBuildT = 2;
       while (!ch.geos[want]) want++;
       ch.last[want] = tFrame;
       if (ch.mesh.geometry !== ch.geos[want]) ch.mesh.geometry = ch.geos[want];
@@ -468,7 +458,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
   buildings.push(...props.boxes);
 
   // лес: квадраты 2×2 км, у каждого свой InstancedMesh — вне кадра и дальше дальности прорисовки не рисуется
-  const treeChunks = [];
+  const treeChunks = [], shadowTrees = {};
   {
     const spruce = mergeParts([
       part(new THREE.CylinderGeometry(0.5, 0.8, 5, 5), 0x5a4029, M(0, 2.5, 0)),
@@ -506,9 +496,16 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
       geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(cx, list[0][1], cz), CH * 0.75 + 300); geoLo.boundingSphere = geo.boundingSphere.clone();
       const mesh = new THREE.InstancedMesh(geo, trMat, list.length);
       list.forEach(([x, y, z, s, rot, sy], i) => { m.compose(new THREE.Vector3(x, y - 0.5, z), q.setFromEuler(e.set(0, rot, 0)), new THREE.Vector3(s, s * sy, s)); mesh.setMatrixAt(i, m); });
-      mesh.instanceMatrix.needsUpdate = true; mesh.castShadow = !!P.shadows;
+      mesh.instanceMatrix.needsUpdate = true; // тени леса рисует отдельный «теневой» набор ближних деревьев (ниже)
       const lo = new THREE.InstancedMesh(geoLo, trMat, list.length); lo.instanceMatrix = mesh.instanceMatrix; // общий буфер матриц
-      add(mesh); add(lo); treeChunks.push({ mesh, lo, x: cx, z: cz });
+      add(mesh); add(lo); treeChunks.push({ mesh, lo, x: cx, z: cz, leafy: !!isLeafy });
+    }
+    // «Теневой» лес: в карту теней попадают только деревья в зоне теней вокруг дрона (а не целые квадраты по 2 км),
+    // и только для теневого прохода (слой 3 — основная камера его не видит). Набор пересобирается при смещении на 120 м.
+    if (P.shadows) for (const [k, g] of [['spruce', spruce], ['leafy', leafy]]) {
+      const cap = P.shadowTrees || 2500, im = new THREE.InstancedMesh(g.clone(), trMat, cap);
+      im.count = 0; im.frustumCulled = false; im.castShadow = true; im.layers.set(3); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      add(im); shadowTrees[k] = im;
     }
     spruce.dispose(); leafy.dispose(); spruceLo.dispose(); leafyLo.dispose();
   }
@@ -757,7 +754,18 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
       deck.position.x = camPos.x; deck.position.z = camPos.z;
       RU.camPos.value.copy(camPos);
       const base = focus || camPos;
-      sun.position.copy(base).addScaledVector(SUN_DIR, 2000); sun.target.position.copy(base); sun.target.updateMatrixWorld();
+      if (P.shadows) {
+        // оси теневой камеры (как их строит lookAt) и «привязка» центра к сетке пикселей карты теней
+        SX.crossVectors(UP_V, SUN_DIR).normalize(); SY.crossVectors(SUN_DIR, SX);
+        const a = Math.round(base.dot(SX) / shTexel) * shTexel, b = Math.round(base.dot(SY) / shTexel) * shTexel, c = Math.round(base.dot(SUN_DIR) / shTexel) * shTexel;
+        SNAP.copy(SX).multiplyScalar(a).addScaledVector(SY, b).addScaledVector(SUN_DIR, c);
+        sun.position.copy(SNAP).addScaledVector(SUN_DIR, 2000); sun.target.position.copy(SNAP); sun.target.updateMatrixWorld();
+        // теневой набор леса: пересобрать при смещении на 120 м или повороте солнца
+        const low = focusAgl === undefined || focusAgl < 900, sd = SUN_DIR.x.toFixed(3) + SUN_DIR.z.toFixed(3);
+        if (low && sun.castShadow && shadowTrees.spruce) {
+          if (Math.hypot(base.x - shadowSet.cx, base.z - shadowSet.cz) > 120 || sd !== shadowSet.sd || !shadowSet.on) { rebuildShadowTrees(base); shadowSet.cx = base.x; shadowSet.cz = base.z; shadowSet.sd = sd; shadowSet.on = true; }
+        } else if (shadowSet.on && shadowTrees.spruce) { shadowTrees.spruce.count = 0; shadowTrees.leafy.count = 0; shadowSet.on = false; }
+      } else { sun.position.copy(base).addScaledVector(SUN_DIR, 2000); sun.target.position.copy(base); sun.target.updateMatrixWorld(); }
       updateTerrain(camPos);
       const hiD = (P.treeHi || 2000) + 1000, ch = Math.max(0, camPos.y - 300) * 0.8;
       for (const t of treeChunks) {
@@ -766,7 +774,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
       }
       if (P.shadows) {
         const low = focusAgl === undefined || focusAgl < 900;
-        if (low !== treeShadows) { treeShadows = low; for (const t of treeChunks) t.mesh.castShadow = low; for (const b of bldMeshes) b.castShadow = low; }
+        if (low !== treeShadows) { treeShadows = low; for (const b of bldMeshes) b.castShadow = low; }
       }
     },
     dispose() {
@@ -778,6 +786,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day') {
       if (cloudMat) cloudMat.dispose();
       if (puff) puff.dispose();
       if (cloudTex) cloudTex.dispose();
+      disposed = true; if (worker) worker.terminate();
       for (const ch of tChunks) for (const g of ch.geos) if (g) g.dispose();
       if (envTex) { envTex.dispose(); if (scene.environment === envTex) scene.environment = null; }
     },

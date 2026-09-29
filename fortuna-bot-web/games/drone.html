@@ -23,6 +23,8 @@
   #hud { position: fixed; inset: 0; pointer-events: none; z-index: 11; /* над слоем сенсорного управления: тап по панели ракет и радару доходит до них */ font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     text-shadow: 0 0 5px rgba(0,0,0,.9); display: none; color: #b8ffc8; }
   #hud.on { display: block; }
+  #hudc { position: absolute; inset: 0; width: 100%; height: 100%; } /* визир, метки, рамка захвата, маркеры попаданий */
+  #flarec { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; mix-blend-mode: normal; }
   .osd-tl { position: absolute; top: var(--top); left: max(12px, var(--sa-l)); width: min(42vw, 236px); }
   .osd-tr { position: absolute; top: var(--top); right: 58px; text-align: right; color: #eaf6ff; font-size: 12px; }
   .osd-tc { position: absolute; top: max(8px, var(--sa-t)); left: 50%; transform: translateX(-50%); text-align: center; color: #eaf6ff; }
@@ -46,29 +48,7 @@
   #wpn .fly { color: #93c5fd; } #wpn .cm { color: #fdba74; margin-top: 2px; }
   #wpn.tap { animation: wpnTap .35s ease-out; } @keyframes wpnTap { from { background: rgba(251,146,60,.5); border-color: #fb923c; } }
 
-  #cross { position: absolute; width: 34px; height: 34px; margin: -17px 0 0 -17px; left: 50%; top: 50%; }
-  #cross::before { content: ""; position: absolute; inset: 9px; border: 2px solid #b8ffc8; border-radius: 50%; }
-  #cross::after { content: ""; position: absolute; left: -12px; right: -12px; top: 16px; height: 2px;
-    background: linear-gradient(90deg, #b8ffc8 0 12px, transparent 12px calc(100% - 12px), #b8ffc8 calc(100% - 12px)); }
-  #pipper { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid #fde68a; border-radius: 50%; display: none; }
-  #pipper::after { content: ""; position: absolute; left: 4px; top: 4px; width: 2px; height: 2px; background: #fde68a; }
-  #seeker { position: absolute; width: 46px; height: 46px; margin: -23px 0 0 -23px; border: 2px solid #fbbf24; border-radius: 50%; display: none; }
-  #seeker.lk { border-color: #ff5b5b; box-shadow: 0 0 10px rgba(255,80,80,.7); animation: blink .25s steps(2) infinite; }
   @keyframes blink { 50% { opacity: .35; } }
-  .mk { position: absolute; width: 0; height: 0; display: none; }
-  .mk i { position: absolute; left: -8px; top: -8px; width: 16px; height: 16px; border: 1.5px solid #7CFF9B; transform: rotate(45deg); }
-  .mk span { position: absolute; left: 14px; top: -7px; font-size: 10.5px; white-space: nowrap; font-weight: 700; }
-  .mk.l i { left: -18px; top: -18px; width: 36px; height: 36px; border: 2px solid #ff5b5b; transform: none; box-shadow: 0 0 8px rgba(255,80,80,.6); }
-  .mk.l span { left: 22px; top: -18px; color: #ffb4b4; }
-  .mk.v i { border-color: rgba(255,255,255,.55); border-radius: 50%; transform: none; left: -6px; top: -6px; width: 12px; height: 12px; }
-  .mk.v span { color: rgba(255,255,255,.7); left: 10px; top: -6px; }
-  .mk.t i { border-color: #fde047; border-radius: 50%; transform: none; } .mk.t span { color: #fde047; }
-  .mk.m i { border: 2px solid #ff3b3b; border-radius: 50%; transform: none; left: -7px; top: -7px; width: 14px; height: 14px; background: rgba(255,60,60,.3); }
-  .mk.m span { color: #ff8a8a; }
-  .mk.arr i { border: 0; transform: none; width: 0; height: 0; left: -9px; top: -9px; }
-  .mk.arr i::before { content: "▲"; position: absolute; font-size: 18px; color: #ff5b5b; }
-  .mk.arr.t i::before { color: #fde047; content: "●"; }
-  .mk.arr span { display: none; }
 
   .side { position: absolute; top: 50%; transform: translateY(-50%); font-size: 13px; font-weight: 700; padding: 3px 6px;
     border: 1.5px solid rgba(184,255,200,.7); border-radius: 3px; min-width: 72px; text-align: center; background: rgba(0,20,10,.25); }
@@ -88,7 +68,6 @@
   #rwr { position: absolute; left: 14px; bottom: 14px; width: 150px; height: 150px; }
   body.coarse #radar { width: 124px; height: 111px; right: calc(54px + var(--edge-r)); bottom: auto; top: calc(var(--top) + 22px); }
   body.coarse #rwr { width: 96px; height: 96px; left: auto; right: calc(182px + var(--edge-r)); bottom: auto; top: calc(var(--top) + 26px); }
-  #lockInfo { position: absolute; font-size: 11px; font-weight: 700; white-space: nowrap; display: none; }
   #warn { position: absolute; top: 22%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 800; color: #ff6b6b; letter-spacing: .08em; display: none; text-align: center; }
   #threat { position: absolute; top: 27%; left: 50%; transform: translateX(-50%); font-size: 17px; font-weight: 900; color: #ff3b3b; letter-spacing: .06em;
     display: none; text-align: center; padding: 3px 10px; border: 2px solid #ff3b3b; border-radius: 6px; background: rgba(40,0,0,.35); animation: blink .3s steps(2) infinite; }
@@ -123,8 +102,6 @@
   #lessonBody .now { background: rgba(248,113,113,.15); border-radius: 8px; padding: 6px 9px; color: #fecaca; }
   #lessonBody .dim { opacity: .7; font-size: 12px; }
   kbd { display: inline-block; font-family: ui-monospace, Menlo, monospace; font-size: .92em; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; }
-  #flares { position: fixed; inset: 0; pointer-events: none; mix-blend-mode: screen; }
-  #flares i { position: absolute; left: 0; top: 0; border-radius: 50%; opacity: 0; }
   /* узкие и низкие экраны */
   body.narrow .osd-tl { width: min(46vw, 200px); } body.narrow #wpn { font-size: 10.5px; }
   body.short .osd-tl { width: 190px; } body.short #wpn { font-size: 10px; line-height: 1.3; padding: 3px 5px; }
@@ -196,13 +173,6 @@
   #upTest { background: rgba(4,8,12,.85); z-index: 40; }
   #upTest .card.lesson { width: min(96vw, 860px); }
   /* HUD: анимации */
-  #lockAnim { position: absolute; left: 0; top: 0; width: 44px; height: 44px; margin: -22px 0 0 -22px; border: 2px solid #ff5b5b; display: none; box-shadow: 0 0 10px rgba(255,80,80,.8); }
-  .hitmk { position: absolute; left: 0; top: 0; width: 22px; height: 22px; margin: -11px 0 0 -11px; }
-  .hitmk::before, .hitmk::after { content: ""; position: absolute; left: 10px; top: -2px; width: 2px; height: 26px; background: #fff; box-shadow: 0 0 4px #000; }
-  .hitmk::before { transform: rotate(45deg); } .hitmk::after { transform: rotate(-45deg); }
-  .hitmk.big::before, .hitmk.big::after { background: #fde047; height: 34px; top: -6px; }
-  #vcur { position: absolute; left: 0; top: 0; width: 18px; height: 18px; margin: -9px 0 0 -9px; border: 2px solid rgba(255,255,255,.85); border-radius: 50%; display: none; }
-  #vcur::after { content: ""; position: absolute; left: 6px; top: 6px; width: 2px; height: 2px; background: #fff; }
   .side.sup { border-color: #93c5fd; color: #bfdbfe; box-shadow: 0 0 10px rgba(147,197,253,.5); }
   #fpsMeter { position: fixed; left: 50%; bottom: calc(max(4px, var(--sa-b)) + 4px); transform: translateX(-50%); white-space: nowrap; z-index: 60; display: none; font: 700 11px ui-monospace, Menlo, monospace; color: #b8ffc8;
     background: rgba(0,0,0,.45); padding: 2px 8px; border-radius: 6px; pointer-events: none; }
@@ -316,14 +286,12 @@
   <div class="osd-tc"><div class="lbl">СБИТО</div><div class="big" id="kills">0</div><div id="combo"></div></div>
   <div class="osd-tr"><div class="lbl">ОЧКИ</div><div id="score">0</div><div id="hdg"></div><div id="clock"></div></div>
   <div id="bossbar"><div class="lbl">ПОДСТИЛКА УЛИТКИ</div><div class="bar"><i id="bossFill"></i></div></div>
-  <div id="marks"></div>
   <div id="warn"></div><div id="threat"></div>
   <div id="hint"></div>
   <div id="ask"><div><b id="askTxt"></b><small id="askKey"></small></div><button id="askBtn" aria-label="Объяснение">?</button></div>
   <div id="popups"></div>
   <div id="count"></div>
-  <div id="lockAnim"></div><div id="vcur"></div>
-  <div id="cross"></div><div id="pipper"></div><div id="seeker"></div><div id="lockInfo"></div>
+  <canvas id="hudc"></canvas>
   <div class="side" id="spdBox"><small>СКОРОСТЬ</small><span id="spd">0</span></div>
   <div class="side" id="altBox"><small>ВЫСОТА</small><span id="alt">0</span></div>
   <div class="osd-bc"><div class="lbl">ПУШКА · ПЕРЕГРЕВ</div><div class="bar" id="barHeat"><i style="width:0"></i></div></div>
@@ -413,6 +381,6 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script type="module" src="drone/main.js?v=20260929a"></script>
+<script type="module" src="drone/main.js?v=20260929b"></script>
 </body>
 </html>

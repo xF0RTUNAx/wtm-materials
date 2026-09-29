@@ -16,6 +16,7 @@ export function createAudio() {
   const E = {};     // слои двигателя и окружения
   const voices = [];
   let rpm = 0.55, crackleT = 0, spatialT = 0;
+  const spatialWant = [];
   const now = () => ctx.currentTime;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const set = (p, v, tc = 0.06) => { p.setTargetAtTime(v, now(), tc); };
@@ -113,7 +114,7 @@ export function createAudio() {
       const rumbG = gain(0.8); chain(src('brown', 0.9 + i * 0.03), filt('lowpass', 170, 0.6), rumbG, air);
       const whF = filt('bandpass', 2600, 12), whG = gain(0); chain(src('white', 1 + i * 0.01), whF, whG, air);
       const crG = gain(0); chain(src('crackle', 0.55 + i * 0.04), filt('highpass', 180), filt('lowpass', 1900, 0.5), crG, air);
-      voices.push({ pan, air, g, roarF, roarG, rumbG, whF, whG, crG, src: null });
+      voices.push({ pan, air, g, roarF, roarG, rumbG, whF, whG, crG, o: null });
     }
   }
   // listener — камера; cands — [{ o, kind: 'jet'|'boss'|'msl', pos, vel, fwd?, ab? }]; lvel — скорость слушателя
@@ -126,14 +127,21 @@ export function createAudio() {
     spatialT -= dt;
     if (spatialT <= 0) { // раз в 0,25 с: голоса — ближайшим источникам
       spatialT = 0.25;
-      const want = cands.map((c) => ({ c, d: c.pos.distanceTo(cp) })).filter((x) => x.d < (x.c.kind === 'msl' ? 4000 : 12000)).sort((a, b) => a.d - b.d).slice(0, voices.length);
-      for (const v of voices) if (v.src && !want.some((w) => w.c.o === v.src.o)) { v.src = null; set(v.g.gain, 0, 0.15); }
-      for (const w of want) { const v = voices.find((x) => x.src && x.src.o === w.c.o) || voices.find((x) => !x.src); if (v) v.src = w.c; }
+      // ближайшие источники (без сортировки и новых массивов: голосов всего 6)
+      const want = spatialWant; want.length = 0;
+      for (const c of cands) {
+        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : 12000)) continue;
+        c._d = d; let i = want.length; while (i > 0 && want[i - 1]._d > d) i--;
+        if (i < voices.length) { want.splice(i, 0, c); if (want.length > voices.length) want.pop(); }
+      }
+      // голос помнит сам источник (v.o), а не запись о нём: записи переиспользуются каждый кадр
+      for (const v of voices) if (v.o) { let keep = false; for (const w of want) if (w.o === v.o) { keep = true; break; } if (!keep) { v.o = null; set(v.g.gain, 0, 0.15); } }
+      for (const w of want) { let v = null; for (const x of voices) if (x.o === w.o) { v = x; break; } if (!v) for (const x of voices) if (!x.o) { v = x; break; } if (v) v.o = w.o; }
     }
     for (const v of voices) {
-      const c = v.src && cands.find((x) => x.o === v.src.o);
-      if (!c || !active || muted) { if (v.src) set(v.g.gain, 0, 0.1); if (!c) v.src = null; continue; }
-      v.src = c; const p = c.pos;
+      let c = null; if (v.o) for (const x of cands) if (x.o === v.o) { c = x; break; }
+      if (!c || !active || muted) { if (v.o) set(v.g.gain, 0, 0.1); if (!c) v.o = null; continue; }
+      const p = c.pos;
       if (v.pan.positionX) { v.pan.positionX.value = p.x; v.pan.positionY.value = p.y; v.pan.positionZ.value = p.z; } else v.pan.setPosition(p.x, p.y, p.z);
       const dx = cp.x - p.x, dy = cp.y - p.y, dz = cp.z - p.z, d = Math.hypot(dx, dy, dz) || 1;
       const ax = dx / d, ay = dy / d, az = dz / d;
