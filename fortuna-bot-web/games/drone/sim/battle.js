@@ -11,11 +11,13 @@
 //   hurt(t, amount, by, msl) — урон по аппарату игрока (у него корпус, неуязвимость, конец вылета — это логика хозяина;
 //                       by — чем, msl — ракета: онлайн-сервер по ней находит, кому засчитать сбитие),
 //   remoteCM(owner)   — необязательно: true — ловушки owner только показываем (онлайн: увод ракет и срыв захвата решает сервер),
+//   retarget          — необязательно: раз в столько секунд ИИ заново выбирает ближайшую цель (онлайн; в одиночной игре — только когда цель сбита),
 //   sunDir, sunVis()  — направление на солнце и видно ли его (ранние ИК-ГСН уводятся на солнце),
 //   fx: { ... }       — хуки, все необязательные (список — в NOOP_FX ниже),
 // }
 // Аппарат игрока (живой человек): human = true, radar = { contacts: Map, lock, lostT, scanT, t }, flares/chaff, rcs().
 // Аппарат ИИ: S (характеристики из AC), tgt (цель), stt (РЛС сопровождает tgt), cmFlare/cmChaff, msl (подвеска).
+// Онлайн-аппарат (mp = true: бот или самолёт игрока под ИИ на сервере): урон по нему тоже уходит в ctx.hurt — корпус ведёт хозяин боя.
 /* global THREE */
 import { MISSILES } from '../missiles.js?v=20260929c';
 import { WORLD, terrainH } from '../terrain-core.js?v=20260929c';
@@ -46,7 +48,7 @@ export function detectR(e) { return RADAR.range * Math.min(1.4, Math.pow(rcsOf(e
 const NOOP_FX = {
   launchPos(owner, key, slot, out) { out.copy(owner.pos); }, // откуда стартует ракета (у клиента — с пилона)
   launched() {}, motor() {}, trail() {}, pitbull() {}, detonated() {}, missileResult() {},
-  cmEmpty() {}, cmDrop() {}, lockBroken() {}, cm() {},
+  cmEmpty() {}, cmDrop() {}, aiCM() {}, lockBroken() {}, cm() {},
   hit() {}, killed() {}, shot() {}, bulletHit() {}, bulletOff() {},
   spawned() {}, aiVisual() {}, radarLost() {},
 };
@@ -226,6 +228,7 @@ export function createBattle(ctx) {
     } else {
       if (type === 'flare' ? owner.cmFlare <= 0 : owner.cmChaff <= 0) return;
       if (type === 'flare') owner.cmFlare -= 2; else owner.cmChaff -= 2;
+      fx.aiCM(owner, type);
     }
     const last = spawnCMs(owner, type);
     if (ctx.remoteCM && ctx.remoteCM(owner)) return;
@@ -268,10 +271,10 @@ export function createBattle(ctx) {
   }
 
   // ═════════════ Урон и сбитие ═════════════
-  // by — чем (для ленты сбитых), msl — ракета (дальний пуск даёт бонус очков)
-  function damage(e, amount, by, msl) {
+  // by — чем (для ленты сбитых), msl — ракета (дальний пуск даёт бонус очков), src — кто стрелял (пушка)
+  function damage(e, amount, by, msl, src) {
     if (e.dead) return;
-    if (e.human) { ctx.hurt(e, amount * ctx.mode().dmgTaken, by, msl); return; }
+    if (e.human || e.mp) { ctx.hurt(e, amount * ctx.mode().dmgTaken, by, msl, src); return; }
     e.hp -= amount;
     fx.hit(e, amount, by);
     if (e.hp <= 0) kill(e, by, msl);
@@ -303,7 +306,7 @@ export function createBattle(ctx) {
       let hit = false;
       for (const e of ctx.opponents(b.owner)) {
         if (e.dead) continue;
-        if (segHitsSphere(b.prev, b.pos, e.pos, e.r + 2)) { fx.bulletHit(b, e); if (b.dmg) damage(e, b.dmg, 'ПУШКА'); hit = true; break; } // dmg 0 — только трассер
+        if (segHitsSphere(b.prev, b.pos, e.pos, e.r + 2)) { fx.bulletHit(b, e); if (b.dmg) damage(e, b.dmg, 'ПУШКА', undefined, b.owner); hit = true; break; } // dmg 0 — только трассер
       }
       const p = b.pos;
       if (!hit && p.y < terrainH(p.x, p.z)) hit = true;
@@ -319,17 +322,26 @@ export function createBattle(ctx) {
     return best;
   }
   function spawnAI(type, pos, yaw, leader, off, team = 1) {
-    const S = AC[type], mode = ctx.mode();
+    const S = AC[type];
     const lo = S.loadouts[(rnd() * S.loadouts.length) | 0];
-    const e = makeCraft({ type, team, S, msl: lo.map((k) => (k ? { key: k } : null)), hp: S.hp, gmax: S.gmax, wCap: S.wCap, agil: 2 + S.skill * mode.aiSkill * 2.5, milAcc: S.milAcc, abAcc: S.abAcc, cd0: S.cd0,
-      ir: S.ir, r: S.r, jam: !!S.jam, cmFlare: S.cm, cmChaff: S.cm, skill: S.skill * mode.aiSkill,
-      state: 'ingress', thinkT: rnd() * 0.3, stt: false, sttLostT: 0, sttCD: 0, mslCD: 6 + rnd() * 6, cmT: 0, crank: rnd() < 0.5 ? 1 : -1, reactT: 0, threat: null,
-      gunT: 0, want: new THREE.Vector3(0, 0, -1), wantAB: false, leader, off });
+    return spawnCraft(type, S, lo, pos, yaw, leader, off, team);
+  }
+  // аппарат ИИ с характеристиками S (как в AC) и подвеской lo (ключи ракет, null — пусто)
+  function spawnCraft(type, S, lo, pos, yaw, leader, off, team = 1) {
+    const e = makeCraft({ ...aiFields(type, S, lo, team), leader, off });
     e.pos.copy(pos); e.yaw = yaw; e.speed = type === 'boss' ? 220 : 260;
     fwdOf(e, e.vel).multiplyScalar(e.speed);
     e.tgt = pickTarget(e);
     fx.spawned(e);
     return e;
+  }
+  // поля «мозгов» ИИ — ими же онлайн-сервер отдаёт боту самолёт игрока (Object.assign поверх аппарата)
+  function aiFields(type, S, lo, team) {
+    const mode = ctx.mode();
+    return { type, team, S, msl: lo.map((k) => (k ? { key: k } : null)), hp: S.hp, gmax: S.gmax, wCap: S.wCap, agil: 2 + S.skill * mode.aiSkill * 2.5, milAcc: S.milAcc, abAcc: S.abAcc, cd0: S.cd0,
+      ir: S.ir, r: S.r, jam: !!S.jam, cmFlare: S.cm, cmChaff: S.cm, skill: S.skill * mode.aiSkill,
+      state: 'ingress', thinkT: rnd() * 0.3, stt: false, sttLostT: 0, sttCD: 0, mslCD: 6 + rnd() * 6, cmT: 0, crank: rnd() < 0.5 ? 1 : -1, reactT: 0, threat: null,
+      gunT: 0, want: new THREE.Vector3(0, 0, -1), wantAB: false };
   }
   const AS_A = new THREE.Vector3(), AS_B = new THREE.Vector3(), AI_TOP = new THREE.Vector3();
   function aiSees(e, t) { // РЛС ИИ видит цель t?
@@ -345,6 +357,7 @@ export function createBattle(ctx) {
     launchMissile(e, key, e.tgt, slot);
   }
   function aiThink(e) {
+    if (ctx.retarget && (e.rtT = (e.rtT || 0) - 0.25) <= 0 && e.tgt && !e.tgt.dead) { e.rtT = ctx.retarget; const t = pickTarget(e); if (t !== e.tgt) { e.tgt = t; e.stt = false; } }
     if (!e.tgt || e.tgt.dead) { const t = pickTarget(e); if (t !== e.tgt) { e.tgt = t; e.stt = false; } }
     const p = e.tgt;
     if (!p) { fwdOf(e, e.want); e.want.y = 0; e.wantAB = false; safety(e); return; } // противников нет — патруль
@@ -459,5 +472,5 @@ export function createBattle(ctx) {
   }
 
   return { missiles, cms, bullets, radarSees, updateRadar, radarDatalink, lockedOn, launchMissile, updateMissile, detonate,
-    dropCM, spawnCMs, updateCMs, damage, kill, fireBullet, updateBullets, pickTarget, spawnAI, aiSees, aiLaunch, updateAI };
+    dropCM, spawnCMs, updateCMs, damage, kill, fireBullet, updateBullets, pickTarget, spawnAI, spawnCraft, aiFields, aiSees, aiLaunch, updateAI };
 }

@@ -2053,6 +2053,8 @@ $('upClose').addEventListener('click', () => { show('upTest', false); show('menu
 
 // ═════════════ Состояния игры ═════════════
 function show(id, on) { $(id).classList.toggle('on', on); }
+// крупная надпись по центру: цифры отсчёта и «В БОЙ!» — большим шрифтом, сообщения («СБИТ…», «НЕТ СВЯЗИ…») — мелким
+function setCount(t) { const c = $('count'); t = String(t); c.textContent = t; c.classList.toggle('msg', t.length > 8); }
 function setBody(cls) { document.body.classList.remove('menuing', 'playing'); if (cls) document.body.classList.add(cls); }
 function placeAtStart() {
   player.yaw = 0; player.pitch = 0; player.roll = 0; player.wy = player.wp = 0; player.speed = 240; player.thr = 0.85;
@@ -2065,10 +2067,10 @@ function startCountdown() {
   camera.clearViewOffset(); applyMode(); applyLoadout(); placeAtStart(); world.sortieStart();
   setHint(''); if (MODE.training) trainingReset();
   enterImmersive(); tgFlight(true); drReset(); // клик «ВЗЛЁТ» — жест пользователя, браузер разрешит полный экран и захват мыши
-  let n = 3; $('count').textContent = n;
+  let n = 3; setCount(n);
   const iv = setInterval(() => {
-    n--; if (n > 0) { $('count').textContent = n; tone(440, 0.1, 'square', 0.05); }
-    else { clearInterval(iv); $('count').textContent = 'В БОЙ!'; tone(880, 0.25, 'square', 0.06); G.state = 'play'; setTimeout(() => { $('count').textContent = ''; }, 700); }
+    n--; if (n > 0) { setCount(n); tone(440, 0.1, 'square', 0.05); }
+    else { clearInterval(iv); setCount('В БОЙ!'); tone(880, 0.25, 'square', 0.06); G.state = 'play'; setTimeout(() => { setCount(''); }, 700); }
   }, 800);
 }
 function togglePause() {
@@ -2137,18 +2139,28 @@ function mpStart(o) {
   camera.clearViewOffset(); clearMissiles(); applyLoadout(); mpPlace(o.spawn); world.sortieStart();
   player.hull = 100; player.invuln = 0; player.heat = 0; player.overheated = false; radar.lock = null; radar.contacts.clear();
   setHint(''); enterImmersive(); tgFlight(true); drReset();
-  $('count').textContent = o.cd;
+  setCount(o.cd > 0 ? Math.ceil(o.cd) : '');
 }
-function mpGoPlay() { G.state = 'play'; $('count').textContent = 'В БОЙ!'; tone(880, 0.25, 'square', 0.06); setTimeout(() => { if ($('count').textContent === 'В БОЙ!') $('count').textContent = ''; }, 700); }
+function mpGoPlay() { G.state = 'play'; setCount('В БОЙ!'); tone(880, 0.25, 'square', 0.06); setTimeout(() => { if ($('count').textContent === 'В БОЙ!') setCount(''); }, 700); }
 function mpSetHull(hp) { const was = player.hull; player.hull = hp; if (hp < was) hurtFx(was - hp); }
 function mpMeDown() {
   explosion(player.pos, 4); sfx.boom(20, 4); G.shake = 1.2; input.fire = false; input.ab = false; held.clear();
-  radar.lock = null; $('count').textContent = 'СБИТ · возрождение через 5 с';
+  radar.lock = null; setCount('СБИТ · возрождение через 5 с');
 }
 function mpMeUp(s) {
   mpPlace(s); applyLoadout();
   Object.assign(player, { hull: 100, invuln: 1.5, heat: 0, overheated: false, flares: MODE.cm, chaff: MODE.cm });
-  radar.lock = null; $('count').textContent = ''; popup('ВОЗРОЖДЕНИЕ', 'info');
+  radar.lock = null; setCount(''); popup('ВОЗРОЖДЕНИЕ', 'info');
+}
+// сервер вернул самолёт после ИИ (вкладка была свёрнута или оборвалась связь): где он сейчас, корпус, что осталось на пилонах
+function mpApplyYou(y) {
+  const s = y.s;
+  Object.assign(player, { yaw: s[3], pitch: s[4], roll: s[5], wy: 0, wp: 0, speed: s[6], thr: 0.85, invuln: 0.5 });
+  player.pos.set(s[0], s[1], s[2]); fwdOf(player, player.vel).multiplyScalar(player.speed); camSnap = true;
+  if (typeof y.hp === 'number') player.hull = y.hp;
+  if (Array.isArray(y.load)) { for (let i = 0; i < 8; i++) loaded[i] = y.load[i] || null; rebuildPylonMeshes(); ensureSel(); }
+  if (typeof y.flares === 'number') { player.flares = y.flares; player.chaff = y.chaff; }
+  radar.lock = null;
 }
 const REMOTE_RCS = () => 1.6; // «Изделие» с типовой подвеской
 function makeRemote(info, ally) {
@@ -2181,11 +2193,11 @@ function mpShowEnd(m, me, myTeam) {
   silenceLoops(); show('pauseScr', false);
   const [a, b] = m.score, mine = m.score[myTeam], theirs = m.score[1 - myTeam];
   setTimeout(() => {
-    $('hud').classList.remove('on'); setBody(null); $('count').textContent = '';
+    $('hud').classList.remove('on'); setBody(null); setCount('');
     $('endTitle').textContent = mine > theirs ? 'Победа!' : mine < theirs ? 'Поражение' : 'Ничья'; $('endTitle').className = mine > theirs ? 'win' : '';
     $('endReason').textContent = `${TEAM_NAMES[0]} ${a} : ${b} ${TEAM_NAMES[1]}`;
     const rows = m.players.slice().sort((x, y) => y.k - x.k || x.d - y.d)
-      .map((p) => `<tr class="${p.id === me ? 'me' : ''}"><td>${String(p.name).replace(/[&<>]/g, '')}</td><td>${TEAM_NAMES[p.team]}</td><td>${p.k}</td><td>${p.d}</td></tr>`).join('');
+      .map((p) => `<tr class="${p.id === me ? 'me' : ''}"><td>${String(p.name).replace(/[&<>]/g, '')}${p.bot ? ' <i>(бот)</i>' : ''}</td><td>${TEAM_NAMES[p.team]}</td><td>${p.k}</td><td>${p.d}</td></tr>`).join('');
     $('serverMsg').innerHTML = `<table class="mpRes"><tr><th>Пилот</th><th>Команда</th><th>Сбил</th><th>Сбит</th></tr>${rows}</table>`;
     $('end').classList.add('mpEnd'); $('againBtn').style.display = ''; $('againBtn').textContent = 'В лобби'; $('closeBtn').textContent = 'Выйти';
     show('end', true);
@@ -2193,7 +2205,7 @@ function mpShowEnd(m, me, myTeam) {
 }
 function mpBackToMenu() {
   MP.closeResults();
-  show('end', false); show('pauseScr', false); $('end').classList.remove('mpEnd'); $('againBtn').textContent = 'Ещё вылет'; $('count').textContent = '';
+  show('end', false); show('pauseScr', false); $('end').classList.remove('mpEnd'); $('againBtn').textContent = 'Ещё вылет'; setCount('');
   $('hud').classList.remove('on'); setBody('menuing'); exitImmersive(); tgFlight(false);
   Object.assign(G, { state: 'menu', over: false, paused: false });
   clearMissiles();
@@ -2210,12 +2222,14 @@ function mpSyncMenu(mp) {
 const MP = createOnline({
   G, player, enemies, testName: (TEST && TRAINING && Q.get('mpname')) || '',
   popup, tabEl: () => $('tab-mp'), syncMenu: mpSyncMenu, backToMenu: mpBackToMenu, goPlay: mpGoPlay,
-  countdown: (n) => { $('count').textContent = n; },
+  countdown: (n) => { setCount(n); },
   startOnline: mpStart, setHull: mpSetHull, hitMark: (c) => hitMarks.push({ pos: c.pos.clone(), t: 0.35, big: false }),
   meDown: mpMeDown, meUp: mpMeUp, makeRemote, remoteDown, remoteUp, removeRemote, remoteVisual,
   remoteShot: (c) => fireBullet(c, null, 0), showEnd: mpShowEnd,
   firing: () => (input.fire || held.has('fire')) && !player.overheated,
   radarLock: () => radar.lock, loadout: () => loaded.slice(),
+  status: (t) => { if (MP.on || !t) setCount(t); }, applyYou: mpApplyYou,
+  onFound: () => { if (G.state === 'menu') showTab('mp'); for (let i = 0; i < 3; i++) setTimeout(() => tone(880 + i * 220, 0.12, 'square', 0.05), i * 160); }, // «Бой найден» — вкладка и сигнал
   netLaunched: mpNetLaunched, netMotor: mpNetMotor,
   netDetonated: (m, hit) => { BFX.detonated(m, hit); BFX.missileResult(m, hit); },
   netGone: (m) => { scene.remove(m.mesh); },

@@ -5,11 +5,13 @@
 // На ракеты по себе отвечает ловушками: ИК — ЛТЦ, радиолокационные — диполи.
 //
 //   deno run --allow-net --allow-read game-server/test-client.js КОД [ник] [адрес сервера]
+//   deno run --allow-net --allow-read game-server/test-client.js --queue=arcade [ник]   — быстрый поиск (arcade | real), сам подтверждает бой
 //
 import { MISSILES } from '../games/drone/missiles.js?v=20260929c';
 
 const [code, name = 'Тестер', url = 'ws://localhost:8787/ws'] = Deno.args;
-if (!code) { console.log('нужен код комнаты'); Deno.exit(1); }
+if (!code) { console.log('нужен код комнаты или --queue=arcade'); Deno.exit(1); }
+const QUEUE = code.startsWith('--queue') ? (code.split('=')[1] || 'arcade') : null;
 const LOAD = ['r73', 'r77', null, null, null, null, 'r77', 'r73'];
 const ws = new WebSocket(url);
 const send = (m) => ws.readyState === 1 && ws.send(JSON.stringify(m));
@@ -19,7 +21,10 @@ const threats = new Map(); // ракеты в меня: id → вид ГСН
 ws.onopen = () => send({ t: 'hello', name, pid: 'test-' + name });
 ws.onmessage = (e) => {
   const m = JSON.parse(e.data);
-  if (m.t === 'welcome') { me = m.id; send({ t: 'join', code }); }
+  if (m.t === 'welcome') { me = m.id; if (QUEUE) send({ t: 'queue', mode: QUEUE }); else send({ t: 'join', code }); }
+  else if (m.t === 'found') { console.log('бой найден, игроков', m.n, '— подтверждаю'); send({ t: 'accept' }); }
+  else if (m.t === 'unqueued') console.log('поиск остановлен:', m.why);
+  else if (m.t === 'you') { if (m.s) pos = { x: m.s[0], y: m.s[1], z: m.s[2] }; send({ t: 'back', n: m.n }); }
   else if (m.t === 'room') { room = m; const my = m.players.find((p) => p.id === me); if (m.state === 'lobby' && my && !my.ready) send({ t: 'ready', on: true }); }
   else if (m.t === 'start') { const s = m.spawns[me]; pos = { x: s[0], y: s[1], z: s[2] }; alive = true; rearm(); console.log('бой!'); }
   else if (m.t === 'spawn' && m.id === me) { pos = { x: m.s[0], y: m.s[1], z: m.s[2] }; alive = true; rearm(); }
