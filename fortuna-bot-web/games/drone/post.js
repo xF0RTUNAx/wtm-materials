@@ -2,14 +2,22 @@
 // Сцена рендерится в линейный HDR-буфер (HalfFloat) в масштабе scale (динамическое разрешение), затем:
 //   свечение (bloom, 2 масштаба) → лучи от солнца (радиальное размытие, «Кино») → композит: ACES, цветокоррекция,
 //   виньетка, хроматическая аберрация, перевод в P3 (если включён широкий цвет), гамма sRGB →
-//   FXAA (по желанию) → апскейл до экрана: CAS (билинейный + адаптивная резкость) или FSR-стиль
+//   FXAA или TAA (по желанию) → апскейл до экрана: CAS (билинейный + адаптивная резкость) или FSR-стиль
 //   (Lanczos-2 с защитой от ореолов + RCAS). Реализация апскейлеров упрощённая, идея — как у AMD FidelityFX.
 // Облегчённый путь (cfg.ldr — пресеты без свечения и цветокоррекции): тонмаппинг и гамму делают сами материалы,
 // сцена пишется в 8-битный буфер (вдвое меньше трафика памяти), дальше — только сглаживание и апскейл.
 // Глубина — 24 бита (буфер с трафаретом): без логарифмической глубины нужна точность на дальних дистанциях.
+// TAA (сглаживание по времени): каждый кадр проекция сдвигается на долю пикселя (последовательность Халтона), готовый
+// кадр смешивается с накопленной «историей», перенесённой по глубине туда, где эта точка была в прошлом кадре;
+// историю ограничивает разброс цветов соседних пикселей — против шлейфов. Ближе TAA_NEAR (свой самолёт, он летит вместе
+// с камерой) история берётся с того же места экрана.
+// Дрожание горячего воздуха (cfg.haze): частицы слоя cfg.hazeLayer рисуются в ¼ разрешения как «сила искажения»,
+// композит сдвигает выборку кадра по бегущей синусоидальной ряби там, где она есть.
 /* global THREE */
 
 const VS = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+const HALTON = Array.from({ length: 8 }, (_, i) => { const h = (b, n) => { let f = 1, r = 0; for (let k = n; k > 0; k = Math.floor(k / b)) { f /= b; r += f * (k % b); } return r; }; return [h(2, i + 1) - 0.5, h(3, i + 1) - 0.5]; });
+const TAA_NEAR = 80;
 
 
 export function createPipeline(renderer, cfg) {
@@ -17,6 +25,7 @@ export function createPipeline(renderer, cfg) {
   const hdr = gl2 && !ldr ? THREE.HalfFloatType : THREE.UnsignedByteType;
   const lin = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false };
   const msaa = cfg.aa === 'msaa' && gl2 && THREE.WebGLMultisampleRenderTarget;
+  const taaOn = cfg.aa === 'taa' && gl2; // без WebGL2 (нет текстуры глубины) — как FXAA
   const rtOpt = { type: hdr, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, stencilBuffer: true };
   const sceneRT = msaa ? new THREE.WebGLMultisampleRenderTarget(1, 1, rtOpt) : new THREE.WebGLRenderTarget(1, 1, rtOpt);
   if (msaa) sceneRT.samples = 4;
@@ -24,13 +33,15 @@ export function createPipeline(renderer, cfg) {
   // «Облака и дым в пониженном разрешении» (cfg.fx): глубина кадра нужна шейдерам облаков и дыма, чтобы прятаться
   // за землёй и самолётами и мягко растворяться на стыке; сами они рисуются в половине разрешения и накладываются сверху
   const fxOn = !!cfg.fx && gl2;
-  if (fxOn) { const dt = new THREE.DepthTexture(1, 1, THREE.UnsignedInt248Type); dt.format = THREE.DepthStencilFormat; sceneRT.depthTexture = dt; }
+  if (fxOn || taaOn) { const dt = new THREE.DepthTexture(1, 1, THREE.UnsignedInt248Type); dt.format = THREE.DepthStencilFormat; sceneRT.depthTexture = dt; }
   const fxRT = fxOn ? new THREE.WebGLRenderTarget(1, 1, { type: hdr, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false }) : null;
   if (fxRT && ldr) fxRT.texture.encoding = THREE.sRGBEncoding;
   const bloomOn = !ldr && (cfg.bloom || 0) > 0, raysOn = !ldr && !!cfg.rays;
   const hA = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr }), hB = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr });
   const qA = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr }), qB = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr });
   const rays = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr });
+  const taaRT = taaOn ? [0, 1].map(() => new THREE.WebGLRenderTarget(1, 1, { ...lin, type: THREE.HalfFloatType })) : null; // 16 бит: иначе смешивание по 10% «залипает»
+  const hazeOn = !!cfg.haze && gl2 && !ldr, hazeRT = hazeOn ? new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr }) : null;
   const ldrA = new THREE.WebGLRenderTarget(1, 1, lin), ldrB = new THREE.WebGLRenderTarget(1, 1, lin), upRT = new THREE.WebGLRenderTarget(1, 1, lin);
   const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)); quad.frustumCulled = false;
   const qScene = new THREE.Scene(); qScene.add(quad);
@@ -55,13 +66,16 @@ export function createPipeline(renderer, cfg) {
       for (int i = 0; i < 28; i++) { s += texture2D(tDiffuse, uv).rgb * w; w *= 0.951; uv += d; }
       gl_FragColor = vec4(s / 28.0 * vis, 1.0); }`,
   { tDiffuse: { value: null }, sun: { value: new THREE.Vector2(0.5, 0.5) }, vis: { value: 0 } });
-  const comp = mat(`uniform sampler2D tDiffuse, tBloom, tBloom2, tRays; uniform float bloom, raysK, exposure, vignette, grade, ca, p3;
+  const comp = mat(`uniform sampler2D tDiffuse, tBloom, tBloom2, tRays, tHaze; uniform float bloom, raysK, exposure, vignette, grade, ca, p3, hazeK, time;
     varying vec2 vUv;
     vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
     vec3 toSRGB(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
     void main() {
+      vec2 uv = vUv;
+      if (hazeK > 0.0) { float h = min(texture2D(tHaze, vUv).r, 1.0);
+        if (h > 0.002) uv += vec2(sin(vUv.y * 260.0 + time * 23.0) + sin(vUv.x * 170.0 - time * 17.0), cos(vUv.x * 210.0 + time * 19.0) + cos(vUv.y * 190.0 - time * 29.0)) * h * hazeK; }
       vec2 off = (vUv - 0.5) * ca;
-      vec3 col = ca > 0.0 ? vec3(texture2D(tDiffuse, vUv + off).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - off).b) : texture2D(tDiffuse, vUv).rgb;
+      vec3 col = ca > 0.0 ? vec3(texture2D(tDiffuse, uv + off).r, texture2D(tDiffuse, uv).g, texture2D(tDiffuse, uv - off).b) : texture2D(tDiffuse, uv).rgb;
       col += (texture2D(tBloom, vUv).rgb * 0.6 + texture2D(tBloom2, vUv).rgb * 0.9) * bloom;
       col += texture2D(tRays, vUv).rgb * raysK;
       col = aces(col * exposure);
@@ -73,7 +87,7 @@ export function createPipeline(renderer, cfg) {
       col = toSRGB(clamp(col, 0.0, 1.0));
       gl_FragColor = vec4(col, 1.0);
     }`,
-  { tDiffuse: { value: null }, tBloom: { value: null }, tBloom2: { value: null }, tRays: { value: null }, bloom: { value: cfg.bloom || 0 }, raysK: { value: raysOn ? (cfg.raysK || 0.5) : 0 },
+  { tDiffuse: { value: null }, tBloom: { value: null }, tBloom2: { value: null }, tRays: { value: null }, tHaze: { value: null }, hazeK: { value: 0 }, time: { value: 0 }, bloom: { value: cfg.bloom || 0 }, raysK: { value: raysOn ? (cfg.raysK || 0.5) : 0 },
     exposure: { value: cfg.exposure || 1.15 }, vignette: { value: cfg.vignette || 0 }, grade: { value: cfg.grade || 0 },
     ca: { value: cfg.ca || 0 }, p3: { value: cfg.p3 ? 1 : 0 } });
   // FXAA (классический «лёгкий» вариант, 5 выборок + 4 вдоль направления края)
@@ -93,6 +107,28 @@ export function createPipeline(renderer, cfg) {
       gl_FragColor = vec4((lB < lMin || lB > lMax) ? a : b, 1.0);
     }`,
   { tDiffuse: { value: null }, rcp: { value: new THREE.Vector2() } });
+  // TAA: перенос истории по глубине и прошлой матрице камеры, ограничение разбросом 3×3 соседей в YCoCg
+  const taa = mat(`uniform sampler2D tCur, tHist, tDepth; uniform mat4 invVP, prevVP; uniform vec2 rcp, camNF; uniform float reset;
+    varying vec2 vUv;
+    vec3 toY(vec3 c) { return vec3(dot(c, vec3(0.25, 0.5, 0.25)), dot(c, vec3(0.5, 0.0, -0.5)), dot(c, vec3(-0.25, 0.5, -0.25))); }
+    vec3 toRGB(vec3 y) { return vec3(y.x + y.y - y.z, y.x + y.z, y.x - y.y - y.z); }
+    void main() {
+      vec3 c = toY(texture2D(tCur, vUv).rgb), m1 = c, m2 = c * c;
+      for (int i = 0; i < 8; i++) {
+        vec2 o = i == 0 ? vec2(-1.0, -1.0) : i == 1 ? vec2(0.0, -1.0) : i == 2 ? vec2(1.0, -1.0) : i == 3 ? vec2(-1.0, 0.0) : i == 4 ? vec2(1.0, 0.0) : i == 5 ? vec2(-1.0, 1.0) : i == 6 ? vec2(0.0, 1.0) : vec2(1.0, 1.0);
+        vec3 s = toY(texture2D(tCur, vUv + o * rcp).rgb); m1 += s; m2 += s * s;
+      }
+      m1 /= 9.0; vec3 sig = sqrt(max(m2 / 9.0 - m1 * m1, 0.0));
+      float d = texture2D(tDepth, vUv).r, z = 2.0 * camNF.x * camNF.y / (camNF.y + camNF.x - (d * 2.0 - 1.0) * (camNF.y - camNF.x));
+      vec2 puv = vUv;
+      if (z > ${TAA_NEAR.toFixed(1)}) { vec4 w = invVP * vec4(vUv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0); w /= w.w; vec4 p = prevVP * w; puv = p.xy / p.w * 0.5 + 0.5; }
+      vec3 h = clamp(toY(texture2D(tHist, puv).rgb), m1 - sig, m1 + sig);
+      float a = 0.1 + min(length((puv - vUv) / rcp) * 0.01, 0.15); // быстрое движение — меньше истории, меньше мыла
+      if (reset > 0.5 || puv.x < 0.0 || puv.y < 0.0 || puv.x > 1.0 || puv.y > 1.0) a = 1.0;
+      gl_FragColor = vec4(toRGB(mix(h, c, a)), 1.0);
+    }`,
+  { tCur: { value: null }, tHist: { value: null }, tDepth: { value: null }, invVP: { value: new THREE.Matrix4() }, prevVP: { value: new THREE.Matrix4() },
+    rcp: { value: new THREE.Vector2() }, camNF: { value: new THREE.Vector2() }, reset: { value: 1 } });
   // CAS: билинейный апскейл + контрастно-адаптивная резкость (крест из 5 выборок в пикселях экрана)
   const cas = mat(`uniform sampler2D tDiffuse; uniform vec2 px; uniform float sharp; varying vec2 vUv;
     void main() {
@@ -143,13 +179,16 @@ export function createPipeline(renderer, cfg) {
   fxOver.transparent = true; fxOver.blending = THREE.CustomBlending; fxOver.blendSrc = THREE.OneFactor; fxOver.blendDst = THREE.OneMinusSrcAlphaFactor;
   fxOver.blendSrcAlpha = THREE.ZeroFactor; fxOver.blendDstAlpha = THREE.OneFactor;
   const full = new THREE.Vector2(), ccTmp = new THREE.Color();
-  let scale = cfg.scale || 1, sw = 1, sh = 1;
+  let scale = cfg.scale || 1, sw = 1, sh = 1, taaI = 0, taaReset = true;
+  const vp = new THREE.Matrix4(), prevVP = new THREE.Matrix4(), prevCam = new THREE.Vector3();
   function setSize() {
     renderer.getDrawingBufferSize(full);
     sw = Math.max(1, Math.round(full.x * scale)); sh = Math.max(1, Math.round(full.y * scale));
     sceneRT.setSize(sw, sh); if (fxRT) fxRT.setSize(Math.max(1, Math.ceil(sw / 2)), Math.max(1, Math.ceil(sh / 2))); ldrA.setSize(sw, sh); ldrB.setSize(sw, sh); upRT.setSize(full.x, full.y);
     hA.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); hB.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); rays.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2));
     qA.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4)); qB.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4));
+    if (taaRT) { for (const r of taaRT) r.setSize(sw, sh); taaReset = true; }
+    if (hazeRT) hazeRT.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4));
   }
   function pass(m, target) { quad.material = m; renderer.setRenderTarget(target); renderer.render(qScene, qCam); }
   const black = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1); black.needsUpdate = true;
@@ -162,6 +201,8 @@ export function createPipeline(renderer, cfg) {
     setSharp(v) { cas.uniforms.sharp.value = v; rcas.uniforms.sharp.value = v; },
     setExposure(v) { comp.uniforms.exposure.value = v; },
     render(scene, camera, t, sun) {
+      const pm = camera.projectionMatrix.elements, p8 = pm[8], p9 = pm[9];
+      if (taaOn) { const j = HALTON[taaI = (taaI + 1) % 8]; pm[8] += j[0] * 2 / sw; pm[9] += j[1] * 2 / sh; } // дрожание на долю пикселя
       renderer.setRenderTarget(sceneRT); renderer.render(scene, camera);
       if (fxOn && cfg.fxU) { // облака и дым (слой FX) — в половине разрешения, с мягкой проверкой глубины по кадру
         const U = cfg.fxU, mask = camera.layers.mask, au = renderer.shadowMap.autoUpdate, ac = renderer.autoClear;
@@ -177,6 +218,16 @@ export function createPipeline(renderer, cfg) {
         if (cfg.fxAddLayer) { camera.layers.set(cfg.fxAddLayer); renderer.shadowMap.autoUpdate = false; renderer.render(scene, camera); camera.layers.mask = mask; renderer.shadowMap.autoUpdate = au; }
         renderer.autoClear = ac;
       }
+      if (hazeOn && cfg.hazeLayer) { // дрожание воздуха: «сила искажения» от частиц слоя hazeLayer
+        const mask = camera.layers.mask, au = renderer.shadowMap.autoUpdate, ac = renderer.autoClear;
+        renderer.getClearColor(ccTmp); const ca = renderer.getClearAlpha();
+        camera.layers.set(cfg.hazeLayer); renderer.shadowMap.autoUpdate = false;
+        renderer.setRenderTarget(hazeRT); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.autoClear = false;
+        renderer.render(scene, camera);
+        camera.layers.mask = mask; renderer.shadowMap.autoUpdate = au; renderer.setClearColor(ccTmp, ca); renderer.autoClear = ac;
+        comp.uniforms.tHaze.value = hazeRT.texture; comp.uniforms.hazeK.value = cfg.hazeK || 0.0016; comp.uniforms.time.value = t || 0;
+      }
+      pm[8] = p8; pm[9] = p9;
       let b1 = black, b2 = black, r = black;
       if (bloomOn || raysOn) { bright.uniforms.tDiffuse.value = sceneRT.texture; pass(bright, hA); }
       if (raysOn && sun && sun.vis > 0.01) {
@@ -189,15 +240,24 @@ export function createPipeline(renderer, cfg) {
         blur.uniforms.tDiffuse.value = qA.texture; blur.uniforms.dir.value.set(0, 2 / qB.height); pass(blur, qB);
         b1 = hA.texture; b2 = qB.texture;
       }
-      const up = cfg.upscaler || 'off', useFxaa = cfg.aa === 'fxaa';
+      const up = cfg.upscaler || 'off', useFxaa = cfg.aa === 'fxaa' || (cfg.aa === 'taa' && !taaOn);
       let src = ldrA;
       if (ldr) { // сцена уже в sRGB: композит не нужен
         src = sceneRT;
-        if (!useFxaa && up === 'off') { copy.uniforms.tDiffuse.value = sceneRT.texture; pass(copy, null); return; }
+        if (!useFxaa && !taaOn && up === 'off') { copy.uniforms.tDiffuse.value = sceneRT.texture; pass(copy, null); return; }
       } else {
         const u = comp.uniforms; u.tDiffuse.value = sceneRT.texture; u.tBloom.value = b1; u.tBloom2.value = b2; u.tRays.value = r;
-        if (!useFxaa && up === 'off') { pass(comp, null); return; } // билинейно растянется до экрана само
+        if (!useFxaa && !taaOn && up === 'off') { pass(comp, null); return; } // билинейно растянется до экрана само
         pass(comp, ldrA);
+      }
+      if (taaOn) {
+        const u = taa.uniforms, [hPrev, hNext] = taaRT;
+        vp.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+        if (prevCam.distanceToSquared(camera.position) > 250000) taaReset = true; // камеру перенесли (рестарт, взгляд назад)
+        u.tCur.value = src.texture; u.tHist.value = hPrev.texture; u.tDepth.value = sceneRT.depthTexture; u.invVP.value.copy(vp).invert(); u.prevVP.value.copy(prevVP);
+        u.rcp.value.set(1 / sw, 1 / sh); u.camNF.value.set(camera.near, camera.far); u.reset.value = taaReset ? 1 : 0;
+        pass(taa, hNext); taaRT.reverse(); prevVP.copy(vp); prevCam.copy(camera.position); taaReset = false; src = hNext;
+        if (up === 'off') { cas.uniforms.tDiffuse.value = src.texture; cas.uniforms.px.value.set(1 / sw, 1 / sh); pass(cas, null); return; } // лёгкая резкость против «мыла»
       }
       if (useFxaa) { fxaa.uniforms.tDiffuse.value = src.texture; fxaa.uniforms.rcp.value.set(1 / sw, 1 / sh); if (up === 'off') { pass(fxaa, null); return; } pass(fxaa, ldrB); src = ldrB; }
       if (up === 'cas') { cas.uniforms.tDiffuse.value = src.texture; cas.uniforms.px.value.set(1 / full.x, 1 / full.y); pass(cas, null); return; }
@@ -206,8 +266,8 @@ export function createPipeline(renderer, cfg) {
       rcas.uniforms.px.value.set(1 / full.x, 1 / full.y); pass(rcas, null);
     },
     dispose() {
-      for (const r of [sceneRT, hA, hB, qA, qB, rays, ldrA, ldrB, upRT]) r.dispose(); if (fxRT) fxRT.dispose(); if (sceneRT.depthTexture) sceneRT.depthTexture.dispose();
-      for (const m of [bright, blur, radial, comp, fxaa, cas, lanczos, rcas, copy, fxOver]) m.dispose();
+      for (const r of [sceneRT, hA, hB, qA, qB, rays, ldrA, ldrB, upRT, ...(taaRT || []), ...(hazeRT ? [hazeRT] : [])]) r.dispose(); if (fxRT) fxRT.dispose(); if (sceneRT.depthTexture) sceneRT.depthTexture.dispose();
+      for (const m of [bright, blur, radial, comp, taa, fxaa, cas, lanczos, rcas, copy, fxOver]) m.dispose();
       quad.geometry.dispose(); black.dispose();
     },
   };

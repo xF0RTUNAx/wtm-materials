@@ -661,6 +661,78 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   })));
   deck.rotation.x = -Math.PI / 2; deck.scale.set(110000, 110000, 1); deck.frustumCulled = false; deck.renderOrder = 1; deck.visible = false;
 
+  // ── объёмные облака («Кино», тестовая графика): луч от камеры проходит слой кучевых облаков, плотность — из того же
+  //    «поля облачности», что у спрайтов и теней на земле, края «выедает» шум. Свет — одна выборка к солнцу (закон Бера).
+  //    Рисуются только в проходе ½ разрешения: там есть глубина кадра, и луч обрывается на земле и самолётах ──
+  let vol = null, volOn = false;
+  const VOL_B = CLOUD_H - 120, VOL_T = CLOUD_H + 2200;
+  function makeVol() {
+    const S = 512, data = new Uint8Array(S * S * 4);
+    for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const o = (y * S + x) * 4; data[o] = cloudField((x / (S - 1) - 0.5) * CLOUD_SPAN, (y / (S - 1) - 0.5) * CLOUD_SPAN) * 255; data[o + 3] = 255; }
+    const cov = new THREE.DataTexture(data, S, S, THREE.RGBAFormat); cov.magFilter = cov.minFilter = THREE.LinearFilter; cov.needsUpdate = true;
+    const VU = { ...FXU, noiseTex: TU.noiseTex, covTex: { value: cov }, th: { value: 0.62 }, vpInv: { value: new THREE.Matrix4() }, sunDir: SU.sunDir, lit: CU.lit, dark: CU.dark,
+      sunTint: CU.sunTint, flash: SU.flash, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, time: DU.time };
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
+      uniforms: VU,
+      vertexShader: 'varying vec2 vNdc; void main() { vNdc = position.xy; gl_Position = vec4(position.xy, 0.999, 1.0); }',
+      fragmentShader: `uniform sampler2D noiseTex, covTex; uniform mat4 vpInv; uniform float th, time, flash, fogDensity; uniform vec3 sunDir, lit, dark, sunTint, fogColor;
+        varying vec2 vNdc;
+        ${SOFT_GLSL}
+        #include <common>
+        const float B = ${VOL_B.toFixed(1)}, T = ${VOL_T.toFixed(1)};
+        float dens(vec3 p) {
+          vec2 uv = p.xz / ${CLOUD_SPAN.toFixed(1)} + 0.5;
+          float c = (texture2D(covTex, uv).r - th) * smoothstep(0.5, 0.45, max(abs(uv.x - 0.5), abs(uv.y - 0.5)));
+          if (c <= 0.0) return 0.0;
+          vec2 q = p.xz * 0.0004 + vec2(time * 0.0006, 0.0);
+          float n = texture2D(noiseTex, q + p.y * 0.00025).r * 0.6 + texture2D(noiseTex, q * 3.1 - p.y * 0.0006).g * 0.4;
+          float n2 = texture2D(noiseTex, q * 2.3 + p.y * 0.0012 + 0.37).r;       // «клубы» по ~30 м
+          float nb = texture2D(noiseTex, q * 0.45 + 0.61).g;                     // крупные «башни» по ~170 м
+          float top = min(B + 250.0 + c * 6000.0 + (nb - 0.5) * 1100.0, T), h = (p.y - B) / (top - B);
+          if (h < 0.0 || h > 1.0) return 0.0;
+          // плоское дно; шапка — неровная, «цветная капуста» из двух слоёв шума
+          float shape = smoothstep(0.0, 0.08, h) * (1.0 - smoothstep(0.3, 1.0, h + (n2 - 0.5) * 0.45)) * smoothstep(0.0, 0.05, c);
+          return clamp((shape - (1.0 - n) * 0.42 - (1.0 - n2) * 0.28) * 2.6, 0.0, 1.0) * 0.012; // ослабление на метр
+        }
+        void main() {
+          if (fxOn < 0.5) discard;
+          vec4 w = vpInv * vec4(vNdc, 1.0, 1.0); vec3 dir = normalize(w.xyz / w.w - cameraPosition), ro = cameraPosition;
+          float t0 = 0.0, t1 = 14000.0;
+          if (abs(dir.y) > 1e-4) { float ta = (B - ro.y) / dir.y, tb = (T - ro.y) / dir.y; t0 = max(min(ta, tb), 0.0); t1 = max(ta, tb); }
+          else if (ro.y < B || ro.y > T) discard;
+          vec3 fwd = -vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
+          float sz = texture2D(tDepth, gl_FragCoord.xy / fxSize).r;
+          t1 = min(min(t1, fxLinZ(sz) / max(dot(dir, fwd), 1e-3)), t0 + 14000.0);
+          if (t1 <= t0) discard;
+          const int N = 44; float st = (t1 - t0) / float(N);
+          float tt = t0 + st * fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+          float Tr = 1.0, sumT = 0.0, sumW = 0.0; vec3 col = vec3(0.0);
+          float phase = 0.55 + 1.8 * pow(max(dot(dir, sunDir), 0.0), 6.0); // ярче против солнца — «серебряная кромка»
+          for (int i = 0; i < N; i++) {
+            vec3 p = ro + dir * tt;
+            float d = dens(p);
+            if (d > 0.0) {
+              float light = exp(-dens(p + sunDir * 260.0) * 160.0), hh = clamp((p.y - B) / 1400.0, 0.0, 1.0);
+              vec3 c = mix(dark, lit, light * 0.75 + hh * 0.25) * 1.12 + sunTint * light * phase * 0.3 + flash * vec3(0.7, 0.75, 0.9);
+              float a = 1.0 - exp(-d * st);
+              col += Tr * a * c; sumT += Tr * a * tt; sumW += Tr * a; Tr *= 1.0 - a;
+              if (Tr < 0.02) break;
+            }
+            tt += st;
+          }
+          float alpha = 1.0 - Tr; if (alpha < 0.004) discard;
+          float fd = sumT / max(sumW, 1e-4), fog = 1.0 - exp(-fogDensity * fogDensity * 0.64 * fd * fd);
+          gl_FragColor = vec4(mix(col / alpha, fogColor, fog), alpha * (1.0 - smoothstep(0.93, 1.0, fog)));
+          #include <tonemapping_fragment>
+          #include <encodings_fragment>
+        }`,
+      transparent: true, depthWrite: false, depthTest: false,
+    }));
+    m.frustumCulled = false; m.renderOrder = 2; m.layers.set(FX_LAYER); m.visible = false;
+    m.onBeforeRender = (r, sc, cam) => { VU.vpInv.value.multiplyMatrices(cam.matrixWorld, cam.projectionMatrixInverse); };
+    scene.add(m); vol = m; vol.VU = VU; if (W) VU.th.value = W.clouds + 0.02;
+  }
+
   // ── ливень: отрезки-капли вокруг камеры (анимация целиком в шейдере), вытянуты по относительной скорости ──
   const RAIN_N = P.rainDrops || 1500;
   const RU = { time: { value: 0 }, camPos: { value: new THREE.Vector3() }, rel: { value: new THREE.Vector3() }, alpha: { value: 0 }, col: { value: new THREE.Color() }, top: { value: 2400 } };
@@ -729,6 +801,8 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     CU.lit.value.copy(lin(W.cloudLit)); CU.dark.value.copy(lin(W.cloudDark)); CU.sunTint.value.copy(lin(W.sun)).multiplyScalar(W.sunVis ? 0.9 : 0);
     if (!P.cloudSprites) { /* у простых облаков цвет — через emissive (пересобираются ниже) */ }
     buildClouds(W.clouds, W.deck ? 1.3 : 1);
+    if (clouds && volOn) clouds.visible = false;
+    if (vol) vol.VU.th.value = W.clouds + 0.02;
     if (clouds && !P.cloudSprites) { clouds.material.color.copy(lin(W.cloudLit)); clouds.material.emissive.copy(lin(W.cloudLit)).lerp(lin(W.cloudDark), 0.5).multiplyScalar(0.55); }
     const dk = W.deck || (P.cirrus ? W.cirrus : null);
     deck.visible = !!dk;
@@ -752,6 +826,12 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     // облака и облачный слой — на слой FX (рисует конвейер в половине разрешения) или обратно в основной кадр
     setDetail(k) { detailK = k; },
     setFxLayer(on) { fxLayerOn = on; const l = on ? FX_LAYER : 0; if (clouds && P.cloudSprites) clouds.layers.set(l); deck.layers.set(l); },
+    // объёмные облака вместо облаков-спрайтов (только вместе с проходом ½ — см. applyFxLayers в main.js)
+    setVolClouds(on) {
+      if (on && !vol) makeVol();
+      volOn = !!on && !!vol; if (vol) vol.visible = volOn;
+      if (clouds) clouds.visible = !volOn;
+    },
     sortieStart() { sortieT = 0; driftT = 0; setSunDir(W.el, W.az); applyLight(); boltT = 5; },
     // dt — шаг игры; возвращает { thunder, delay } при ударе молнии (звук грома — в main.js)
     update(dt, camVel) {
@@ -821,6 +901,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       }
       if (clouds) { scene.remove(clouds); clouds.geometry.dispose(); clouds.material.dispose(); }
       if (cloudMat) cloudMat.dispose();
+      if (vol) { scene.remove(vol); vol.geometry.dispose(); vol.material.dispose(); vol.VU.covTex.value.dispose(); }
       if (puff) puff.dispose();
       if (cloudTex) cloudTex.dispose();
       disposed = true; if (worker) worker.terminate();

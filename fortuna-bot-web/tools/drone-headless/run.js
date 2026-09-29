@@ -19,6 +19,7 @@ var GFX_ARG = globalThis.GFX_ARG || null;
 if (GFX_ARG) localStorage.setItem('fortuna_drone_gfx', GFX_ARG);
 localStorage.setItem('fortuna_drone_mode', MODE_ARG);
 if (globalThis.WEATHER_ARG) localStorage.setItem('fortuna_drone_weather', globalThis.WEATHER_ARG);
+if (globalThis.PERF_ARG) localStorage.setItem('fortuna_drone_perf', globalThis.PERF_ARG); // настройки производительности, напр. {"fxTest":true}
 function step(name, f) { try { var r = f(); print('OK   ' + name + (r !== undefined ? ' → ' + JSON.stringify(r) : '')); } catch (e) { print('FAIL ' + name + ': ' + e + '\n' + e.stack); } }
 import(MAIN).then(function () {
   var g = window.__g;

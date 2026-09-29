@@ -41,7 +41,7 @@ const DEFAULT_LOADOUT = ['aim9l', 'aim120c', null, null, null, null, 'aim120c', 
 // ═════════════ Пресеты графики ═════════════
 // perf — настройки производительности по умолчанию для пресета (игрок может поменять в «Настройках»):
 //   scale — масштаб рендера, dyn — динамическое разрешение, min — нижняя граница масштаба, target — цель к/с,
-//   up — апскейлер ('off' | 'cas' | 'fsr'), sharp — резкость, aa — сглаживание ('off' | 'fxaa' | 'msaa').
+//   up — апскейлер ('off' | 'cas' | 'fsr'), sharp — резкость, aa — сглаживание ('off' | 'fxaa' | 'msaa' | 'taa').
 // post — эффекты кадра (свечение, лучи, цветокоррекция); у «Низкого» конвейера нет вовсе — самый дешёвый путь.
 // rainDrops — капель вокруг камеры в ливень, cirrus — высокие перистые облака в ясную погоду.
 const PRESETS = {
@@ -71,16 +71,22 @@ const prFor = (p) => Math.min(DPR * p.prMul, p.prCap, IS_TOUCH ? 2 : 3); // на
 // настройки производительности и экрана (сбрасываются к умолчаниям пресета при его смене)
 const PERF_KEYS = ['scale', 'dyn', 'min', 'target', 'up', 'sharp', 'aa'];
 // halfFx (облака и дым в ½) — по умолчанию включено везде, где есть конвейер кадра (кроме «Низкого»); fxv — версия умолчаний
-let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true, halfFx: gfxKey !== 'low', smartQ: false, fxv: 2 };
+let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true, halfFx: gfxKey !== 'low', smartQ: false, fxTest: false, fxv: 2 };
 try {
   const sp = JSON.parse(store.get('fortuna_drone_perf') || 'null');
   if (sp && typeof sp === 'object') {
-    for (const k of ['cap', 'p3', 'fps', 'immersive', 'smartQ']) if (k in sp) perf[k] = sp[k];
+    for (const k of ['cap', 'p3', 'fps', 'immersive', 'smartQ', 'fxTest']) if (k in sp) perf[k] = sp[k];
     if (sp.fxv === 2 && 'halfFx' in sp) perf.halfFx = sp.halfFx; // сохранённое до смены умолчания не считаем выбором игрока
     if (sp.preset === gfxKey) for (const k of PERF_KEYS) if (k in sp) perf[k] = sp[k];
   }
 } catch (_) { /* по умолчанию */ }
 const savePerf = () => store.set('fortuna_drone_perf', JSON.stringify({ ...perf, preset: gfxKey }));
+// «Тестовая улучшенная графика» (Высокий, Ультра, Кино; по умолчанию выключена): ЛТЦ, диполи, пуски, взрывы, форсаж и
+// конденсат на крыле; на «Ультра»/«Кино» — дрожание горячего воздуха, на «Кино» — объёмные облака. Только картинка:
+// бой, расписание и случайности боя от неё не зависят.
+const XFX_OK = gfxKey === 'high' || gfxKey === 'ultra' || gfxKey === 'cinema', XFX_TOP = gfxKey === 'ultra' || gfxKey === 'cinema';
+const xfx = () => XFX_OK && perf.fxTest;
+const HAZE_LAYER = 6; // слой частиц «горячего воздуха»: их видит только проход искажения конвейера
 const P3_OK = (() => { try { return matchMedia('(color-gamut: p3)').matches && 'drawingBufferColorSpace' in WebGL2RenderingContext.prototype; } catch (_) { return false; } })();
 
 // ═════════════ Режимы игры ═════════════
@@ -124,7 +130,7 @@ function rebuildPipe() {
   if (pipe) { pipe.dispose(); pipe = null; }
   if (needPipe()) {
     const pc = P.post || {}, ldr = pipeLdr();
-    pipe = createPipeline(renderer, { ...pc, ldr, fx: perf.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
+    pipe = createPipeline(renderer, { ...pc, ldr, fx: perf.halfFx, haze: XFX_TOP && perf.fxTest, hazeLayer: HAZE_LAYER, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
     renderer.toneMapping = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping; // HDR: тонмаппинг и гамму делает композит
     renderer.setPixelRatio(basePR);
   } else {
@@ -142,6 +148,7 @@ function applyFxLayers() {
   if (!fxReady) return;
   const on = !!(pipe && pipe.fx);
   world.setFxLayer(on); SMOKE.points.layers.set(on ? FX_LAYER : 0); FX.points.layers.set(on ? FX_ADD_LAYER : 0);
+  world.setVolClouds(on && gfxKey === 'cinema' && xfx()); // объёмным облакам нужна глубина кадра — только в проходе ½
   if (!on) { FXU.fxOn.value = 0; FXU.tDepth.value = null; }
 }
 // Динамическое разрешение и счётчик кадров. Раз в 0,5 с: частота кадров, «худшие 5 %» кадров и решение по масштабу.
@@ -257,16 +264,172 @@ const boomLight = new THREE.PointLight(lin(0xffa040), 0, 600, 2); scene.add(boom
 
 const dotTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,.6)'], [1, 'rgba(255,255,255,0)']], 64);
 const smokeTex = radialTex([[0, 'rgba(255,255,255,.9)'], [0.55, 'rgba(255,255,255,.45)'], [1, 'rgba(255,255,255,0)']], 64);
-const SMOKE = makeParticles(scene, P.particles, false, smokeTex);
-const FX = makeParticles(scene, Math.round(P.particles * 0.7), true, dotTex);
+const XK = xfx() ? 1.6 : 1; // в тестовой графике частиц больше
+const SMOKE = makeParticles(scene, Math.round(P.particles * XK), false, smokeTex);
+const FX = makeParticles(scene, Math.round(P.particles * 0.7 * XK), true, dotTex);
+const HAZE = XFX_TOP ? makeParticles(scene, 600, true, dotTex) : null; // «сила искажения» горячего воздуха (не рисуется в кадр)
+if (HAZE) { HAZE.points.layers.set(HAZE_LAYER); HAZE.mat.uniforms.glow.value = 1; }
 fxReady = true; applyFxLayers();
 function sph(s) { let x, y, z, l; do { x = rnd() * 2 - 1; y = rnd() * 2 - 1; z = rnd() * 2 - 1; l = x * x + y * y + z * z; } while (l > 1 || l < 0.01); return [x * s, y * s, z * s]; }
 function explosion(p, size, color) {
   const c = color || [1, 0.6, 0.18];
+  if (xfx()) { xBoom(p, size, c); boomLight.position.copy(p); boomLight.intensity = 3.5 * Math.min(4, size); boomLight.distance = 170 * size; return; }
   for (let k = 0; k < 14 + size * 8; k++) { const [vx, vy, vz] = sph(20 * size); FX.emit(p.x, p.y, p.z, vx, vy, vz, c[0], c[1], c[2], 1, 4 * size + rnd() * 4 * size, 8 * size, 0.35 + rnd() * 0.5, 2.5, 2); }
   for (let k = 0; k < 16 + size * 5; k++) { const [vx, vy, vz] = sph(40 * size); FX.emit(p.x, p.y, p.z, vx, vy, vz, 1, 0.9, 0.55, 1, 0.8 + rnd(), 0, 0.5 + rnd() * 0.7, 1.2, -15); }
   for (let k = 0; k < 8 + size * 4; k++) { const [vx, vy, vz] = sph(10 * size); SMOKE.emit(p.x, p.y, p.z, vx, vy + 3, vz, 0.24, 0.23, 0.22, 0.75, 5 * size, 9 * size, 2.5 + rnd() * 2, 0.8, 1.5); }
   boomLight.position.copy(p); boomLight.intensity = 3 * Math.min(4, size); boomLight.distance = 150 * size;
+}
+
+// ── «Тестовая улучшенная графика»: эффекты ловушек, пусков, взрывов и самолётов (включается в «Настройках») ──
+// Здесь только частицы и меши: состояние боя они не трогают.
+let XDT = 1 / 60; // шаг последнего кадра: у ловушек и конденсата — частота выброса частиц
+// дымность двигателя: старые ракеты — густой след, современные — почти бездымные (AIM-120, Р-77, Meteor)
+const XSMOKE = { aim9b: 1.7, r3s: 1.7, firestreak: 1.8, aim7e: 1.6, r60m: 1.3, aim9l: 1.3, aim7m: 1.2, r27r: 1.3, r27t: 1.3, r27er: 1.3, r73: 1.1, r33: 1.2, aim54: 1.2,
+  mica_ir: 0.5, mica_em: 0.5, aim9x: 0.45, iris_t: 0.45, python5: 0.5, derby: 0.55, aim120c: 0.35, r77: 0.4, meteor: 0.25 };
+const xDebris = [];
+const xRings = [0, 1, 2, 3].map(() => {
+  const r = new THREE.Mesh(new THREE.RingGeometry(0.9, 1, 48), new THREE.MeshBasicMaterial({ color: lin(0xfff2dc).multiplyScalar(1.3), transparent: true, opacity: 0,
+    blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, fog: false }));
+  r.visible = false; r.t = 0; r.size = 1; scene.add(r); return r;
+});
+// свет от ловушек: две ближайшие к камере подсвечивают самолёты и землю (только пресеты с динамическим светом)
+const flareLights = P.lights && xfx() ? [0, 1].map(() => { const l = new THREE.PointLight(lin(0xfff0d0), 0, 450, 2); scene.add(l); return l; }) : [];
+function xBoom(p, size, c) {
+  FX.emit(p.x, p.y, p.z, 0, 0, 0, 1.3, 1.15, 0.95, 0.9, 8 * size, 30 * size, 0.1, 0, 0); // вспышка
+  // огненный шар: белое ядро → оранжевые клубы → тёмно-красные края; клубы растут и медленно всплывают
+  for (let k = 0; k < 10 + size * 6; k++) { const [vx, vy, vz] = sph(14 * size), [ox, oy, oz] = sph(2 * size); FX.emit(p.x + ox, p.y + oy, p.z + oz, vx, vy, vz, 1, 0.8, 0.45, 1, 3 * size + rnd() * 3 * size, 10 * size, 0.25 + rnd() * 0.35, 3, 3); }
+  for (let k = 0; k < 8 + size * 4; k++) { const [vx, vy, vz] = sph(9 * size), [ox, oy, oz] = sph(3 * size); FX.emit(p.x + ox, p.y + oy, p.z + oz, vx, vy, vz, c[0], c[1], c[2], 0.8, 5 * size + rnd() * 4 * size, 8 * size, 0.6 + rnd() * 0.6, 2.2, 4); }
+  for (let k = 0; k < 6 + size * 3; k++) { const [vx, vy, vz] = sph(6 * size), [ox, oy, oz] = sph(4 * size); FX.emit(p.x + ox, p.y + oy, p.z + oz, vx, vy, vz, 0.75, 0.2, 0.06, 0.5, 7 * size, 6 * size, 1 + rnd() * 0.6, 1.5, 5); }
+  // искры
+  for (let k = 0; k < 16 + size * 5; k++) { const [vx, vy, vz] = sph(45 * size); FX.emit(p.x, p.y, p.z, vx, vy, vz, 1, 0.9, 0.55, 1, 0.8 + rnd(), 0, 0.5 + rnd() * 0.8, 1.2, -15); }
+  // ударное кольцо
+  const r = xRings.find((x) => !x.visible) || xRings[0];
+  r.position.copy(p); r.t = 0; r.size = size; r.visible = true;
+  // обломки со своими огненными шлейфами
+  for (let k = 0; k < Math.min(14, 3 + size * 2); k++) {
+    const [vx, vy, vz] = sph(55 + size * 25);
+    xDebris.push({ p: p.clone(), v: new THREE.Vector3(vx, vy + 15, vz), t: 0, life: 1.2 + rnd() * 2, s: 0.6 + rnd() * 0.8 * Math.sqrt(size) });
+  }
+  if (xDebris.length > 60) xDebris.splice(0, xDebris.length - 60);
+  // густой дым, который долго висит в воздухе и медленно светлеет (второй слой — светлее и дольше)
+  for (let k = 0; k < 8 + size * 4; k++) { const [vx, vy, vz] = sph(6 * size), [ox, oy, oz] = sph(3 * size); SMOKE.emit(p.x + ox, p.y + oy, p.z + oz, vx, vy + 2, vz, 0.2, 0.19, 0.18, 0.75, 5 * size, 7 * size, 6 + rnd() * 6, 0.9, 0.8); }
+  for (let k = 0; k < 4 + size * 2; k++) { const [vx, vy, vz] = sph(4 * size), [ox, oy, oz] = sph(4 * size); SMOKE.emit(p.x + ox, p.y + oy, p.z + oz, vx, vy + 1.5, vz, 0.46, 0.44, 0.42, 0.4, 8 * size, 5 * size, 12 + rnd() * 8, 0.6, 0.5); }
+}
+// неконтактный подрыв: облако осколков и чёрное облачко боевой части
+function xFrag(m) {
+  const p = m.pos, d = m.dir, sp = (m.speed || 0) * 0.4;
+  for (let k = 0; k < 70; k++) {
+    const [x, y, z] = sph(1), l = Math.hypot(x, y, z) || 1, v = (260 + rnd() * 200) / l;
+    FX.emit(p.x, p.y, p.z, x * v + d.x * sp, y * v + d.y * sp, z * v + d.z * sp, 1, 0.78, 0.45, 0.85, 0.45 + rnd() * 0.35, 0, 0.12 + rnd() * 0.14, 0.8, 0);
+  }
+  for (let k = 0; k < 7; k++) { const [x, y, z] = sph(5); SMOKE.emit(p.x + x, p.y + y, p.z + z, x * 2, y * 2 + 1, z * 2, 0.13, 0.13, 0.13, 0.85, 4, 13, 5 + rnd() * 3, 0.9, 0.3); }
+}
+// сброс ракеты с пилона: облачко пиропатрона; в струе — «ромбы» скачков уплотнения (видны на стартовом режиме)
+function xLaunch(m, o, p) {
+  for (let k = 0; k < 8; k++) { const [x, y, z] = sph(6); SMOKE.emit(p.x + x * 0.3, p.y + y * 0.3, p.z + z * 0.3, o.vel.x * 0.75 + x, o.vel.y * 0.75 + y, o.vel.z * 0.75 + z, 0.72, 0.72, 0.74, 0.55, 1.6, 7, 1.5 + rnd(), 2, 0); }
+  m.xd = [0, 1, 2].map((k) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.z = m.M.vis.L / 2 + 0.55 + k * 0.5; d.scale.setScalar(0.3); d.visible = false; m.mesh.add(d); return d; });
+}
+function xMotor(m, motor, tb) {
+  const sus = !!(m.M.sustain && tb > m.M.burn), p = m.pos, d = m.dir;
+  for (const x of m.xd) { x.visible = motor && !sus; if (x.visible) x.scale.setScalar(0.26 + rnd() * 0.12); }
+  if (motor && !m.xIgn) { // воспламенение: вспышка, искры, белое облачко
+    m.xIgn = true;
+    FX.emit(p.x, p.y, p.z, 0, 0, 0, 1.4, 1.2, 0.9, 1, 7, 25, 0.1, 0, 0);
+    for (let k = 0; k < 10; k++) { const [x, y, z] = sph(30); FX.emit(p.x, p.y, p.z, x - d.x * 40, y - d.y * 40, z - d.z * 40, 1, 0.8, 0.45, 1, 0.6 + rnd() * 0.5, 0, 0.25 + rnd() * 0.3, 2, -9); }
+    for (let k = 0; k < 5; k++) { const [x, y, z] = sph(5); SMOKE.emit(p.x + x, p.y + y, p.z + z, x, y + 1, z, 0.9, 0.9, 0.9, 0.6 * Math.min(1, XSMOKE[m.key] || 1), 2.5, 8, 2.5 + rnd(), 1.5, 0); }
+  }
+  if (motor && sus && !m.xSus) { // смена стартового режима на маршевый: «хлопок» и клуб дыма
+    m.xSus = true;
+    FX.emit(p.x - d.x * 2, p.y - d.y * 2, p.z - d.z * 2, 0, 0, 0, 1.2, 0.9, 0.5, 1, 5, 10, 0.12, 0, 0);
+    for (let k = 0; k < 4; k++) { const [x, y, z] = sph(4); SMOKE.emit(p.x + x, p.y + y, p.z + z, x, y + 1, z, 0.9, 0.9, 0.9, 0.5 * Math.min(1, XSMOKE[m.key] || 1), 3, 7, 3 + rnd(), 1, 0); }
+  }
+}
+function xTrail(m, tb) {
+  const sus = !!(m.M.sustain && tb > m.M.burn), k = XSMOKE[m.key] || 1, p = m.pos, d = m.dir;
+  const a = Math.min(0.85, (sus ? 0.22 : 0.5) * k);
+  SMOKE.emit(p.x, p.y, p.z, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3 + 1, (rnd() - 0.5) * 3, 0.93, 0.93, 0.92, Math.max(a, 0.07), 1.6 + k, 5 + 2.5 * k, 3.5 + rnd() * 3 * Math.min(k, 1.2), 0.5, 0.3);
+  if (k > 1 && !sus) { const b = (m.speed || 0) * 0.0125; SMOKE.emit(p.x - d.x * b, p.y - d.y * b, p.z - d.z * b, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3 + 1, (rnd() - 0.5) * 3, 0.93, 0.93, 0.92, a, 1.6 + k, 5 + 2.5 * k, 3.5 + rnd() * 3, 0.5, 0.3); } // густой след без «бусин»
+  // горячая струя: на стартовом режиме ярче и длиннее
+  FX.emit(p.x - d.x * 3, p.y - d.y * 3, p.z - d.z * 3, 0, 0, 0, 1, sus ? 0.6 : 0.8, sus ? 0.3 : 0.45, 0.9, sus ? 1.5 : 2.8, -3, 0.08, 0, 0);
+  if (!sus && rnd() < 0.3) { const [x, y, z] = sph(12); FX.emit(p.x - d.x * 4, p.y - d.y * 4, p.z - d.z * 4, x, y, z, 1, 0.75, 0.4, 1, 0.5, 0, 0.2, 1, -5); }
+  if (HAZE && XFX_TOP && p.distanceToSquared(camera.position) < 2.25e6) HAZE.emit(p.x - d.x * 5, p.y - d.y * 5, p.z - d.z * 5, 0, 0, 0, 0.9, 0.9, 0.9, sus ? 0.5 : 1, 4, 10, 0.3, 0, 0);
+}
+// ЛТЦ: слепящее мерцающее ядро с ореолом, сыплющиеся искры и толстый белый дым (ловушка падает — след сам уходит дугой вниз)
+function xFlare(c) {
+  const p = c.pos, k = clamp(c.life / 4, 0, 1), fl = 0.7 + rnd() * 0.6;
+  FX.emit(p.x, p.y, p.z, 0, 0, 0, 1.5, 1.35, 1.1, 1, (4 + 3 * k) * fl, -4, 0.07, 0, 0);
+  FX.emit(p.x, p.y, p.z, 0, 0, 0, 1, 0.55, 0.2, 0.3 * fl, 16 + 10 * k, 0, 0.07, 0, 0);
+  if (rnd() < 0.5) { const [vx, vy, vz] = sph(18); FX.emit(p.x, p.y, p.z, c.vel.x * 0.5 + vx, c.vel.y * 0.5 + vy, c.vel.z * 0.5 + vz, 1, 0.8, 0.45, 1, 0.7 + rnd() * 0.5, -0.5, 0.3 + rnd() * 0.4, 1.5, -12); }
+  // дым — через каждые 3 м пути, а не по времени: след сплошной и на скорости сброса (200 м/с), и в конце падения
+  if (!c.xp) { c.xp = p.clone(); return; }
+  const d = c.xp.distanceTo(p), n = Math.min(12, Math.floor(d / 3));
+  for (let i = 1; i <= n; i++) {
+    const f = i * 3 / d, x = c.xp.x + (p.x - c.xp.x) * f, y = c.xp.y + (p.y - c.xp.y) * f, z = c.xp.z + (p.z - c.xp.z) * f;
+    SMOKE.emit(x + rnd() - 0.5, y + rnd() - 0.5, z + rnd() - 0.5, (rnd() - 0.5) * 2, 0.5 + rnd(), (rnd() - 0.5) * 2, 0.95, 0.95, 0.93, 0.15 + 0.55 * k, 3.2, 5, 3.5 + rnd() * 2, 0.4, 0.4);
+  }
+  if (n) c.xp.lerp(p, Math.min(1, n * 3 / d));
+}
+// диполи: облако фольги расползается, блёстки вспыхивают на солнце и гаснут; лёгкая серебристая дымка
+function xChaff(c) {
+  const p = c.pos, age = 3.5 - c.life, r = 3 + age * 9, k = clamp(c.life / 3.5, 0, 1), glintP = world.W.sunVis ? 0.22 : 0.06;
+  for (let i = 0; i < 5; i++) {
+    const [ox, oy, oz] = sph(r), g = rnd() < glintP;
+    FX.emit(p.x + ox, p.y + oy, p.z + oz, 0, -1.5, 0, g ? 1.5 : 0.75, g ? 1.5 : 0.8, g ? 1.45 : 0.88, (g ? 1 : 0.55) * (0.4 + 0.6 * k), g ? 2.6 : 1.3, 0, g ? 0.05 : 0.12, 0, 0);
+  }
+  c.xs = (c.xs || 0) - XDT;
+  if (c.xs <= 0) { c.xs = 0.07; SMOKE.emit(p.x, p.y, p.z, (rnd() - 0.5) * 3, -1, (rnd() - 0.5) * 3, 0.8, 0.82, 0.86, 0.2 * k + 0.05, r * 0.8, 6, 2.5, 0.2, 0); }
+}
+// самолёт ИИ: «ромбы» в форсажном пламени, дрожание воздуха за соплом (рядом с камерой)
+function xJet(e) {
+  const g = e.group, J = jetGeo(e.type);
+  if (!e.xd) e.xd = J.nozzles.flatMap((nz) => [0, 1, 2].map((k) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.copy(nz); d.position.z += 0.9 + k * 1.05; d.visible = false; g.add(d); return d; }));
+  const big = e.type === 'boss' ? 1.5 : 1;
+  for (const d of e.xd) { d.visible = e.ab; if (e.ab) d.scale.setScalar((0.75 + rnd() * 0.3) * big); }
+  if (HAZE && XFX_TOP && (e.ab || e.type === 'boss') && e.pos.distanceToSquared(camera.position) < 4e6)
+    for (const nz of J.nozzles) { const q = TMP.copy(nz).applyQuaternion(g.quaternion).add(g.position); HAZE.emit(q.x, q.y, q.z, e.vel.x * 0.95, e.vel.y * 0.95, e.vel.z * 0.95, 0.9, 0.9, 0.9, 1, 5 * big, 10, 0.22, 0, 0); }
+}
+// свой дрон: дрожание воздуха за соплом, конденсат над крылом и жгуты с законцовок при большой перегрузке
+let xWing = null;
+function xShip() {
+  const p = player, q = ship.quaternion, o = ship.position;
+  if (HAZE && XFX_TOP && (p.ab || p.thr > 0.3)) {
+    const n = TMP.set(0, 0, 8.6).applyQuaternion(q).add(o);
+    HAZE.emit(n.x, n.y, n.z, p.vel.x * 0.96, p.vel.y * 0.96, p.vel.z * 0.96, 0.9, 0.9, 0.9, p.ab ? 1 : 0.45, p.ab ? 5 : 3, 8, 0.22, 0, 0);
+  }
+  const I = clamp(((p.n || 1) - 5) / 4, 0, 1) * (p.speed > 150 ? 1 : 0) * (world.W.wet ? 1.3 : 1);
+  if (I <= 0) return;
+  if (!xWing) { const b = new THREE.Box3(); for (const c of ship.children) if (c.geometry) { c.geometry.computeBoundingBox(); b.union(c.geometry.boundingBox); } xWing = b; }
+  const b = xWing, half = b.max.x * 0.85, zm = (b.min.z + b.max.z) * 0.5, ch = (b.max.z - b.min.z) * 0.35, v = 0.96;
+  for (let i = 0; i < Math.ceil(I * 4 * XDT * 60); i++) {
+    const w = TMP.set((rnd() * 2 - 1) * half, b.max.y * 0.4, zm + (rnd() - 0.3) * ch).applyQuaternion(q).add(o);
+    SMOKE.emit(w.x, w.y, w.z, p.vel.x * v, p.vel.y * v, p.vel.z * v, 0.97, 0.98, 1, 0.28 * Math.min(I, 1), 2.2 + rnd() * 1.5, 4, 0.22 + rnd() * 0.12, 0, 0);
+  }
+  for (const sx of [-1, 1]) { const w = TMP.set(sx * b.max.x, 0, zm + ch).applyQuaternion(q).add(o); SMOKE.emit(w.x, w.y, w.z, 0, 0, 0, 0.95, 0.96, 1, 0.35 * Math.min(I, 1), 0.9, 1.5, 0.9, 0, 0); }
+}
+function xUpdate(dt) {
+  for (const r of xRings) {
+    if (!r.visible) continue;
+    r.t += dt; const k = r.t / 0.45;
+    r.scale.setScalar(3 + k * 35 * r.size); r.material.opacity = 0.4 * (1 - k) * (1 - k); r.quaternion.copy(camera.quaternion);
+    if (k >= 1) r.visible = false;
+  }
+  for (let i = xDebris.length - 1; i >= 0; i--) {
+    const d = xDebris[i]; d.t += dt;
+    d.v.y -= G0 * dt; d.v.multiplyScalar(Math.max(0, 1 - 0.4 * dt)); d.p.addScaledVector(d.v, dt);
+    const f = 1 - d.t / d.life;
+    FX.emit(d.p.x, d.p.y, d.p.z, 0, 0, 0, 1, 0.6, 0.2, f, 2.2 * d.s, 0, 0.12, 0, 0);
+    if (rnd() < 0.6) SMOKE.emit(d.p.x, d.p.y, d.p.z, 0, 1, 0, 0.2, 0.2, 0.2, 0.5 * f, 1.5 * d.s, 4, 2.5, 0.3, 0.3);
+    if (d.t >= d.life || d.p.y < terrainH(d.p.x, d.p.z)) xDebris.splice(i, 1);
+  }
+  if (flareLights.length) {
+    let a = null, b = null, da = 9e6, db = 9e6;
+    if (xfx()) for (const c of cms) {
+      if (c.type !== 'flare') continue;
+      const d = c.pos.distanceToSquared(camera.position);
+      if (d < da) { b = a; db = da; a = c; da = d; } else if (d < db) { b = c; db = d; }
+    }
+    [a, b].forEach((c, i) => { const l = flareLights[i]; if (c) { l.position.copy(c.pos); l.intensity = 6 * (0.7 + rnd() * 0.6) * Math.min(1, c.life); } else l.intensity = 0; });
+  }
 }
 
 // ═════════════ Материалы и модели ═════════════
@@ -760,16 +923,19 @@ function battleFx() {
       // вспышка запуска двигателя и облачко дыма у пилона
       for (let k = 0; k < 18; k++) { const [vx, vy, vz] = sph(25); FX.emit(wpos.x, wpos.y, wpos.z, vx + owner.vel.x * 0.9, vy + owner.vel.y * 0.9, vz + owner.vel.z * 0.9, 1, 0.85, 0.5, 1, 1.6, 3, 0.25, 2, 0); }
       for (let k = 0; k < 6; k++) { const [vx, vy, vz] = sph(8); SMOKE.emit(wpos.x, wpos.y, wpos.z, vx + owner.vel.x * 0.7, vy + owner.vel.y * 0.7, vz + owner.vel.z * 0.7, 0.85, 0.85, 0.85, 0.55, 2, 6, 1.8, 1.2, 0); }
+      if (xfx()) xLaunch(m, owner, wpos);
       if (owner === player) { G.mFired++; sfx.launch(); popup(M_.short + ' — ПУСК', 'info'); }
     },
-    motor(m, motor, tb) { m.fl.visible = motor; if (motor) m.fl.scale.set(1, 1, (m.M.sustain && tb > m.M.burn ? 0.5 : 1) * (0.8 + rnd() * 0.5)); },
+    motor(m, motor, tb) { m.fl.visible = motor; if (motor) m.fl.scale.set(1, 1, (m.M.sustain && tb > m.M.burn ? 0.5 : 1) * (0.8 + rnd() * 0.5)); if (m.xd) xMotor(m, motor, tb); },
     trail(m, tb) {
+      if (xfx()) { xTrail(m, tb); return; }
       SMOKE.emit(m.pos.x, m.pos.y, m.pos.z, (rnd() - 0.5) * 3, (rnd() - 0.5) * 3 + 1, (rnd() - 0.5) * 3, 0.9, 0.9, 0.9, m.M.sustain && tb > m.M.burn ? 0.18 : 0.55, 2.2, 6, 3.5, 0.5, 0.3);
       FX.emit(m.pos.x - m.dir.x * 3, m.pos.y - m.dir.y * 3, m.pos.z - m.dir.z * 3, 0, 0, 0, 1, 0.7, 0.3, 0.9, 2.2, -3, 0.08, 0, 0);
     },
     pitbull(m) { if (m.owner === player) tone(1600, 0.05, 'square', 0.02); },
     detonated(m, dealDamage) {
       scene.remove(m.mesh);
+      if (xfx()) xFrag(m);
       explosion(m.pos, dealDamage ? 2.2 : 1.1);
       sfx.boom(m.pos.distanceTo(camera.position), dealDamage ? 1.4 : 0.7);
     },
@@ -778,6 +944,7 @@ function battleFx() {
     cmDrop(o, type) { if (type === 'flare') AU.flare(); else AU.chaff(); if (MP.on && o === player) MP.cm(type); },
     lockBroken() { popup('ЗАХВАТ СОРВАН ДИПОЛЯМИ', 'bad'); sfx.lost(); },
     cm(c) {
+      if (xfx()) { if (c.type === 'flare') xFlare(c); else xChaff(c); return; }
       if (c.type === 'flare') {
         FX.emit(c.pos.x, c.pos.y, c.pos.z, 0, 0, 0, 1, 0.95, 0.75, 1, 5, -3, 0.12, 0, 0);
         if (rnd() < 0.6) SMOKE.emit(c.pos.x, c.pos.y, c.pos.z, 0, 1, 0, 0.9, 0.9, 0.9, 0.5, 2, 5, 1.8, 0.3, 0);
@@ -797,6 +964,7 @@ function battleFx() {
     aiVisual(e) {
       e.group.position.copy(e.pos); e.group.rotation.set(e.pitch, e.yaw, e.roll);
       for (const f of e.flames) { f.visible = e.ab || e.type === 'boss'; f.scale.z = (e.ab ? 4.5 : 1.5) * (0.85 + rnd() * 0.3); }
+      if (xfx()) xJet(e);
       if (P.contrails && e.pos.y > 7000 && rnd() < 0.5) SMOKE.emit(e.pos.x, e.pos.y, e.pos.z, 0, 0, 0, 0.95, 0.96, 1, 0.35, 4, 5, 6, 0, 0);
       if (e.type === 'boss') $('bossFill').style.width = Math.max(0, e.hp / e.S.hp * 100) + '%';
     },
@@ -951,6 +1119,7 @@ function placeShip() {
   flameMat.opacity = ab ? 0.9 : 0.5;
   for (const d of diamonds) { d.visible = ab; d.scale.setScalar(0.8 + rnd() * 0.3); }
   if (abLight) abLight.intensity = ab ? 5 * (0.8 + rnd() * 0.4) : 0.4 * player.thr;
+  if (xfx() && ship.visible) xShip();
 }
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 let camSnap = true;
@@ -1523,6 +1692,8 @@ function renderSettingsTab() {
   const wOpts = [['random', 'Случайная'], ...Object.entries(WEATHERS).map(([k, w]) => [k, w.name])];
   $('tab-set').innerHTML = `<div class="cat-h">Графика</div><div class="gfx-row">${cards}</div>
     <p class="hint">Пресет задаёт дальность прорисовки, густоту леса и облаков, качество материалов и теней. С «Высокого» — тени и объёмные облака, в «Ультра» и «Кино» — отражения в воде, свечение и лучи; «Кино» — самая подробная земля и лес. Смена пресета перезагружает игру.</p>
+    ${XFX_OK ? `<label class="chk"><input type="checkbox" id="pFxTest" ${perf.fxTest ? 'checked' : ''}> Тестовая улучшенная графика</label>
+    <p class="hint">Пробный режим, может меняться. Ловушки ЛТЦ — слепящее ядро с искрами и толстым дымным следом${P.lights ? ', подсвечивают самолёт и землю' : ''}; диполи — облако сверкающей фольги; пуск ракеты — вспышка воспламенения, «ромбы» в струе, дымный след у старых ракет и почти бездымный у AIM-120 и Р-77; взрывы — огненный шар, ударное кольцо, обломки со шлейфами, облако осколков у неконтактного подрыва; конденсат на крыле при большой перегрузке${XFX_TOP ? '; дрожание горячего воздуха за соплами' : ''}${gfxKey === 'cinema' ? '; объёмные облака (очень тяжело: только мощные видеокарты, нужны «Облака и дым в половинном разрешении»)' : ''}. Частиц больше — в тяжёлом бою кадров может стать меньше.${P.lights ? ' Свет от ловушек включается со следующего запуска игры.' : ''}</p>` : ''}
     <button class="btn alt sm" id="benchBtn">Тест графики (≈ 15 с)</button>
     ${res}
     ${bench && bench.rec !== gfxKey ? `<button class="btn sm" id="applyRec">Применить рекомендованный</button>` : ''}
@@ -1544,7 +1715,8 @@ function perfBlock() {
     cas: '<b>CAS</b> растягивает кадр и добавляет резкость там, где контраст низкий, не пересвечивая края. Лучше всего при 77–100%.',
     fsr: '<b>FSR</b> растягивает кадр фильтром Ланцоша с защитой от ореолов и добавляет адаптивную резкость. Чётче держит края и мелкие детали при 59–77%.' }[perf.up];
   const aaHint = { off: 'Края объектов «лесенкой», зато быстрее всего.', fxaa: '<b>FXAA</b> находит края на готовом кадре и сглаживает «лесенку»; мелкие детали становятся чуть мягче.',
-    msaa: '<b>MSAA ×4</b> сглаживает края геометрии прямо при рисовании: чище FXAA, но заметно нагружает видеопамять.' + (renderer.capabilities.isWebGL2 ? '' : ' На этом устройстве работает как FXAA.') }[perf.aa];
+    msaa: '<b>MSAA ×4</b> сглаживает края геометрии прямо при рисовании: чище FXAA, но заметно нагружает видеопамять.' + (renderer.capabilities.isWebGL2 ? '' : ' На этом устройстве работает как FXAA.'),
+    taa: '<b>TAA</b> — сглаживание по времени: каждый кадр чуть сдвигается, и соседние кадры смешиваются. Убирает не только «лесенку», но и мерцание дальнего леса, проводов и мелких деталей. <b style="color:#fca5a5">Очень требовательная технология</b>: добавляет проходы глубины и истории кадров, при быстрых манёврах картинка мягче, за быстрыми объектами возможны лёгкие шлейфы. Только для мощных видеокарт.' + (renderer.capabilities.isWebGL2 ? '' : ' На этом устройстве работает как FXAA.') }[perf.aa];
   return `<div class="cat-h">Производительность и качество</div>
     <div class="perf">
       <div class="prow"><span>Цель, кадров/с</span>${seg('target', perf.target, [[30, '30'], [60, '60'], [120, '120']])}</div>
@@ -1555,7 +1727,7 @@ function perfBlock() {
       <div class="prow"><span>Апскейлер</span>${seg('up', perf.up, [['off', 'Выкл'], ['cas', 'CAS'], ['fsr', 'FSR']])}</div>
       <p class="hint">${upHint}</p>
       ${perf.up !== 'off' ? `<label class="chk">Резкость <input type="range" id="pSharp" min="0" max="1" step="0.05" value="${perf.sharp}"> <span id="pSharpV">${perf.sharp.toFixed(2)}</span></label>` : ''}
-      <div class="prow"><span>Сглаживание</span>${seg('aa', perf.aa, [['off', 'Выкл'], ['fxaa', 'FXAA'], ['msaa', 'MSAA ×4']])}</div>
+      <div class="prow"><span>Сглаживание</span>${seg('aa', perf.aa, [['off', 'Выкл'], ['fxaa', 'FXAA'], ['msaa', 'MSAA ×4'], ['taa', 'TAA']])}</div>
       <p class="hint">${aaHint}</p>
       <label class="chk"><input type="checkbox" id="pSmartQ" ${perf.smartQ ? 'checked' : ''} ${perf.dyn ? '' : 'disabled'}> Умное динамическое качество</label>
       <p class="hint">Когда кадры не успевают, сначала сокращается дальность подробного леса и рельефа, и только потом снижается разрешение; возвращается в обратном порядке. Картинка при нагрузке остаётся чёткой.${perf.dyn ? '' : ' Работает вместе с динамическим разрешением.'}</p>
@@ -1664,6 +1836,7 @@ $('tab-set').addEventListener('change', (e) => {
   if (e.target.id === 'pDyn') { perf.dyn = e.target.checked; if (!perf.dyn && dr.q) setQ(0); applyPerf(); }
   if (e.target.id === 'pSmartQ') { perf.smartQ = e.target.checked; if (!perf.smartQ && dr.q) setQ(0); savePerf(); }
   if (e.target.id === 'pHalfFx') { perf.halfFx = e.target.checked; applyPerf(); }
+  if (e.target.id === 'pFxTest') { perf.fxTest = e.target.checked; applyPerf(); }
   if (e.target.id === 'pFps') { perf.fps = e.target.checked; savePerf(); }
   if (e.target.id === 'pImm') { perf.immersive = e.target.checked; savePerf(); renderSettingsTab(); }
   if (e.target.id === 'sMute') setMute(e.target.checked);
@@ -2502,7 +2675,8 @@ function tick(dt) {
     if (G.state !== 'over') updateHud(dt);
   } else if (G.state === 'menu') menuView(dt);
   if (G.state !== 'pause') {
-    SMOKE.update(dt); FX.update(dt);
+    XDT = dt; if (xfx() || xDebris.length || xRings.some((r) => r.visible)) xUpdate(dt);
+    SMOKE.update(dt); FX.update(dt); if (HAZE) HAZE.update(dt);
     const ev = world.update(dt, G.state === 'play' || G.state === 'countdown' ? player.vel : null);
     if (ev && ev.thunder) setTimeout(() => AU.thunder(ev.thunder), ev.delay * 1000);
     if (P.propsLvl >= 1) smokeStacks(dt);
@@ -2532,7 +2706,7 @@ function updateSun() {
 }
 function render() {
   const s = renderer.getPixelRatio() * (pipe ? pipe.scale : 1) * VH / (2 * Math.tan(camera.fov * D2R / 2));
-  SMOKE.mat.uniforms.scale.value = s; FX.mat.uniforms.scale.value = s;
+  SMOKE.mat.uniforms.scale.value = s; FX.mat.uniforms.scale.value = s; if (HAZE) HAZE.mat.uniforms.scale.value = s;
   world.follow(camera.position, P.shadows ? player.pos : null, agl(player));
   updateSun();
   if (pipe) pipe.render(scene, camera, performance.now() / 1000, sunScr); else renderer.render(scene, camera);

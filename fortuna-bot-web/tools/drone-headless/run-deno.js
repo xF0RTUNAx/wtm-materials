@@ -39,5 +39,6 @@ Object.assign(globalThis, {
   load: (p) => (0, eval)(decoder.decode(Deno.readFileSync(p))),
   THREE_PATH: 'three.min.js', MAIN_PATH: new URL(`../../games/drone/${Deno.env.get('DRONE_MAIN') || 'main'}.js`, import.meta.url).href,
   GFX_ARG: gfx, MODE_ARG: mode, WEATHER_ARG: weather, GOD_ARG: god,
+  PERF_ARG: Deno.env.get('DRONE_PERF') || '', // DRONE_PERF='{"fxTest":true}' — прогон с тестовой графикой
 });
 load('run.js');
