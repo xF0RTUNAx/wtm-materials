@@ -37,7 +37,10 @@ Deno.serve(async (req) => {
     if (error) throw error;
     if (!player) return jsonResponse({ error: "Игрок не найден — перезайдите на сайт" }, 404);
 
-    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: player.login, exp: Math.floor(Date.now() / 1000) + TTL })));
+    // u — купленные ракеты (в «Реализме» онлайн можно подвешивать только их и базовые — проверяет игровой сервер)
+    const owned = await db.from("drone_missiles").select("missile").eq("player_id", player.id);
+    const u = owned.error ? [] : (owned.data ?? []).map((r: { missile: string }) => r.missile);
+    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: player.login, u, exp: Math.floor(Date.now() / 1000) + TTL })));
     const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const sig = b64u(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(body))));
     return jsonResponse({ ticket: `${body}.${sig}` });

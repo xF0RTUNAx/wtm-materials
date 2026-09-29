@@ -197,6 +197,49 @@ try {
   const none = await tryHello({ name: 'Марк' });
   check('без билета при MP_SECRET — отказ', !none.some((m) => m.t === 'welcome'));
   srv2.kill(); await srv2.status;
+
+  // ── награды: «Реализм» только с открытыми ракетами, подписанный итог боя (сервер с MP_SECRET и коротким боем) ──
+  const P3 = 8797;
+  const srv3 = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
+    env: { PORT: String(P3), MP_SECRET: SECRET, MATCH_T: '5' }, stdout: 'null', stderr: 'inherit' }).spawn();
+  const ticketU = async (login, u) => {
+    const body = b64u(enc.encode(JSON.stringify({ pid: 'uuid-' + login, login, u, exp: now + 600 })));
+    const key = await crypto.subtle.importKey('raw', enc.encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    return body + '.' + b64u(new Uint8Array(await crypto.subtle.sign('HMAC', key, enc.encode(body))));
+  };
+  const cl = async (login, u) => {
+    for (let i = 0; i < 50; i++) {
+      try {
+        const x = { last: {}, msgs: [] }; x.ws = new WebSocket(`ws://localhost:${P3}/ws`);
+        await new Promise((res, rej) => { x.ws.onopen = res; x.ws.onerror = rej; });
+        x.ws.onmessage = (e) => { const m = JSON.parse(e.data); x.last[m.t] = m; x.msgs.push(m); };
+        x.send = (m) => x.ws.send(JSON.stringify(m));
+        x.send({ t: 'hello', ticket: await ticketU(login, u) }); await sleep(200);
+        return x;
+      } catch (_) { await sleep(200); }
+    }
+  };
+  const r1 = await cl('Реалист', ['r73']), r2 = await cl('Соперник', []);
+  r1.send({ t: 'create', mode: 'real', size: 1 }); await sleep(150);
+  r2.send({ t: 'join', code: r1.last.room.code }); await sleep(150);
+  r1.send({ t: 'ready', on: true }); r2.send({ t: 'ready', on: true }); await sleep(300);
+  flier(r1, { x: 0, y: 4000, z: 9000, yaw: 0 }); flier(r2, { x: 0, y: 4000, z: -9000, yaw: Math.PI });
+  r1.msgs.length = 0;
+  r1.send({ t: 'load', l: ['aim9b', 'aim120c', null, null, null, null, null, null] }); await sleep(150);
+  check('«Реализм»: закрытая ракета на подвеске — отказ', r1.msgs.some((m) => m.t === 'err' && /открытые/.test(m.msg)));
+  r1.msgs.length = 0;
+  r1.send({ t: 'load', l: ['aim9b', 'aim7e', null, null, null, null, 'r73', 'firestreak'] }); await sleep(150);
+  check('«Реализм»: базовые и купленные — можно', !r1.msgs.some((m) => m.t === 'err'));
+  await waitFor(() => r1.last.result && r2.last.result, 12000);
+  const res = r1.last.result;
+  // проверяем той же функцией, что и edge-функция drone-claim
+  const { verifySigned } = await import('../supabase/functions/_shared/drone.ts');
+  const payload = res ? await verifySigned(res.token, SECRET) : null;
+  check('поддельная подпись итога не проходит', res && !(await verifySigned(res.token, SECRET + 'x')));
+  check('итог боя подписан сервером (проверка drone-claim проходит)', payload && payload.p === 'uuid-Реалист' && payload.mode === 'real' && payload.hm === 1 && typeof payload.m === 'string',
+    payload ? JSON.stringify({ m: payload.m, w: payload.w, k: payload.k, hm: payload.hm }) : 'нет итога');
+  for (const x of [r1, r2]) { clearInterval(x.flyT); x.ws.close(); }
+  srv3.kill(); await srv3.status;
 } catch (e) { fails++; console.log('FAIL исключение: ' + (e && e.stack || e)); }
 srv.kill(); await srv.status;
 console.log(fails ? `ИТОГ: ${fails} ошибок` : 'ИТОГ: всё прошло');

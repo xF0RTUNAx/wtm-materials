@@ -12,6 +12,7 @@
 import { MODES, DRONE } from '../games/drone/sim/modes.js';
 import { MATCH_T, RESPAWN_T, COUNTDOWN_T, RESULTS_T, SNAP_HZ, SIZES, ONLINE_MODES, MAX_HP, GUN_DMG, F_AB,
   teamSpawn, packState, validState, validLoadout, sunFor, packMissile, makeCode, cleanCode } from '../games/drone/sim/online.js';
+import { lockedIn } from '../games/drone/sim/progress.js?v=20260929d';
 import { MISSILES } from '../games/drone/missiles.js?v=20260929d';
 import { makeCraft, fwdOf, irCanSee } from '../games/drone/sim/core.js?v=20260929d';
 import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260929d';
@@ -54,7 +55,7 @@ function botSpec(mode) {
     cd0: DRONE.cd0, skill: BOT_SKILL, radarR: RADAR.range, r: DRONE.r, pts: 0, cm: M.cm };
 }
 
-export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
+export function createRooms({ log = () => {}, auth, sign = async () => null, matchT = MATCH_T }) {
   const rooms = new Map();     // код → комната
   const clients = new Set();   // подключённые участники (записи людей с живым сокетом)
   const queues = { arcade: [], real: [] }; // быстрый поиск: [{ c, t }] по режимам
@@ -137,7 +138,7 @@ export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
     if (r.state !== 'lobby') return;
     const ps = [...r.players.values()], hs = ps.filter((p) => !p.bot);
     if (!hs.length || !hs.every((p) => p.ready && p.ws) || !teamCount(r, 0) || !teamCount(r, 1)) return;
-    r.state = 'countdown'; r.cd = COUNTDOWN_T; r.t = 0; r.score = [0, 0];
+    r.state = 'countdown'; r.cd = COUNTDOWN_T; r.t = 0; r.score = [0, 0]; r.startedAt = Date.now();
     r.seed = (Math.random() * 2147483646 + 1) >>> 0; r.weather = WEATHER_KEYS[(Math.random() * WEATHER_KEYS.length) | 0];
     r.sunVis = sunFor(r.weather, r.sunDir);
     r.battle = roomBattle(r); r.sides = [[], []]; r.mid = 1;
@@ -171,6 +172,18 @@ export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
     if (killer && killer.team !== victim.team) { killer.k++; r.score[killer.team]++; }
     else r.score[1 - victim.team]++; // разбился сам — очко противнику
     broadcast(r, { t: 'kill', victim: victim.id, killer: killer ? killer.id : null, by, score: r.score });
+  }
+
+  // итог боя каждому человеку — подписанный сервером (награды и очки операции выдаёт edge-функция drone-claim):
+  // m — бой, p — игрок сайта, w — 1 победа / 0 ничья / −1 поражение, k — сбил, hm — людей больше половины участников
+  async function sendResults(r) {
+    const all = [...r.players.values()], hm = all.filter((p) => !p.bot).length * 2 > all.length ? 1 : 0;
+    for (const p of all) {
+      if (p.bot || !p.pid || !p.ws) continue;
+      const w = Math.sign(r.score[p.team] - r.score[1 - p.team]);
+      const token = await sign({ m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, w, k: p.k, hm, exp: Math.floor(Date.now() / 1000) + 3600 });
+      if (token) send(p, { t: 'result', token, w, k: p.k });
+    }
   }
 
   // ═════════════ Бой комнаты: ракеты, ловушки, РЛС, ИИ (games/drone/sim/battle.js) ═════════════
@@ -351,7 +364,7 @@ export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
     async hello(c, m) {
       const who = await auth(m);
       if (!who) { send(c, { t: 'err', msg: 'Не удалось подтвердить аккаунт — перезайдите на сайт' }); c.ws.close(); return; }
-      c.name = who.name; c.pid = who.pid; c.authed = true;
+      c.name = who.name; c.pid = who.pid; c.authed = true; c.owned = who.owned ? new Set(who.owned) : null;
       // вернулся в идущий бой (обрыв связи): занимает свою прежнюю запись
       const old = who.pid && findAway(who.pid, !!m.resume);
       if (old) return resume(c, old);
@@ -415,6 +428,7 @@ export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
     },
     load(c, m) { // подвеска на эту жизнь — один раз после старта/возрождения (иначе ракеты можно было бы «перезаряжать»)
       if (!c.room || !validLoadout(m.l)) return;
+      if (c.owned && m.l.some((k) => k && lockedIn(c.room.mode, k, c.owned))) return send(c, { t: 'err', msg: 'В «Реализме» — только открытые ракеты' });
       c.load = m.l.slice(); // её же возьмёт ИИ, если игрок пропадёт до возрождения
       if (c.craft && c.craft.human && !c.craft.load) c.craft.load = m.l.slice();
     },
@@ -530,6 +544,7 @@ export function createRooms({ log = () => {}, auth, matchT = MATCH_T }) {
           const players = [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, k: p.k, d: p.d, bot: p.bot ? 1 : 0 }));
           broadcast(r, { t: 'end', score: r.score, players });
           pushRoom(r);
+          sendResults(r);
           log(`комната ${r.code}: итог ${r.score.join(':')}`);
         }
       } else if (r.state === 'end') {

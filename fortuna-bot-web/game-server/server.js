@@ -30,17 +30,26 @@ async function checkTicket(ticket) {
   if (!(await crypto.subtle.verify('HMAC', hmacKey, b64u(sig), new TextEncoder().encode(body)))) return null;
   const p = JSON.parse(new TextDecoder().decode(b64u(body)));
   if (!p.pid || !p.login || !(p.exp * 1000 > Date.now())) return null;
-  return { pid: String(p.pid), name: String(p.login).slice(0, 24) };
+  return { pid: String(p.pid), name: String(p.login).slice(0, 24), owned: Array.isArray(p.u) ? p.u.map(String) : [] };
+}
+// Итог боя для наград (edge-функция drone-claim проверяет той же подписью): base64url(JSON) + '.' + base64url(HMAC)
+const b64uEnc = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+let signKey = null;
+async function sign(obj) {
+  if (!SECRET) return null; // режим разработки — наград нет
+  signKey ||= await crypto.subtle.importKey('raw', new TextEncoder().encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const body = b64uEnc(new TextEncoder().encode(JSON.stringify(obj)));
+  return body + '.' + b64uEnc(new Uint8Array(await crypto.subtle.sign('HMAC', signKey, new TextEncoder().encode(body))));
 }
 const cleanName = (s) => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 24);
 async function auth(m) {
   if (SECRET) { try { return await checkTicket(m.ticket); } catch (_) { return null; } }
   const name = cleanName(m.name);
-  return name ? { pid: String(m.pid || ''), name } : null;
+  return name ? { pid: String(m.pid || ''), name, owned: null } : null; // owned null — в разработке ограничений Реализма нет
 }
 
 const MAX_CLIENTS = +(Deno.env.get('MAX_CLIENTS') || 400);
-const rooms = createRooms({ log, auth, matchT: +(Deno.env.get('MATCH_T') || 0) || undefined });
+const rooms = createRooms({ log, auth, sign, matchT: +(Deno.env.get('MATCH_T') || 0) || undefined });
 const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json; charset=utf-8' };
 
 Deno.serve({ port: PORT, hostname: HOST, onListen: () => log(`онлайн-сервер на ${HOST}:${PORT}${SECRET ? ' (вход по билетам сайта)' : ' (режим разработки: вход по нику без билета)'}`) }, (req) => {
