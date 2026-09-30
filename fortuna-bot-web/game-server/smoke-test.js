@@ -3,12 +3,13 @@
 //   этап 2 — подвеска, отказ в пуске, захват РЛС (виден цели), пуск ракеты, ракета в снимках, попадание, ЛТЦ, потеря захвата;
 //   этап 3 — боты в лобби, самолёт молчащего игрока ведёт ИИ и возвращается к нему, переподключение, быстрый поиск;
 //   этап 4 — вход по билету сайта (второй сервер с MP_SECRET): правильный, поддельный и просроченный билет;
-//   ИК-ГСН в онлайне — пуск с хвоста принят, в лоб ранней ракетой и за дальностью — отказ с текстом «СЕРВЕР: …».
-//   deno run --allow-net --allow-read --allow-env --allow-run game-server/smoke-test.js
+//   ИК-ГСН в онлайне — пуск с хвоста принят, в лоб ранней ракетой и за дальностью — отказ «ПОМЕХИ» (причина — поле why).
+//   deno run --allow-net --allow-read --allow-write --allow-env --allow-run game-server/smoke-test.js
 // Сам поднимает сервер на свободном порту (PORT=8799) и гасит его в конце.
 const PORT = 8799, url = `ws://localhost:${PORT}/ws`;
-const srv = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
-  env: { PORT: String(PORT) }, stdout: 'null', stderr: 'inherit' }).spawn();
+const LOG_DIR = Deno.makeTempDirSync({ prefix: 'letka-log-' }); // журнал этого прогона — во временной папке, в конце проверяем его
+const srv = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-write', '--allow-env', new URL('./server.js', import.meta.url).pathname],
+  env: { PORT: String(PORT), LOG_DIR, LOG_KEY: 'test-key' }, stdout: 'null', stderr: 'inherit' }).spawn();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fails = 0;
 const check = (name, ok, info = '') => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : '')); };
@@ -261,12 +262,20 @@ try {
   Object.assign(i2.f, { yaw: Math.PI }); await sleep(600); i1.msgs.length = 0; // i2 развернулся в лоб
   i1.send({ t: 'launch', key: 'aim9b', target: idI2, slot: 7, s: sI1 }); await sleep(250);
   const dn1 = i1.msgs.find((m) => m.t === 'deny');
-  check('ИК: AIM-9B в лоб — отказ сервера «нужен заход в хвост»', dn1 && /СЕРВЕР/.test(dn1.msg) && /ХВОСТ/.test(dn1.msg) && !i1.msgs.some((m) => m.t === 'ml'), dn1 ? dn1.msg : 'нет отказа');
+  check('ИК: AIM-9B в лоб — отказ «ПОМЕХИ», причина — ракурс', dn1 && /ПОМЕХИ/.test(dn1.msg) && dn1.why === 'aspect' && !i1.msgs.some((m) => m.t === 'ml'), dn1 ? dn1.msg + ' / ' + dn1.why : 'нет отказа');
   Object.assign(i2.f, { z: -10000, yaw: 0 }); await sleep(600); i1.msgs.length = 0; // 15 км, хвостом
   i1.send({ t: 'launch', key: 'aim9l', target: idI2, slot: 1, s: sI1 }); await sleep(250);
   const dn2 = i1.msgs.find((m) => m.t === 'deny');
-  check('ИК: AIM-9L с 15 км — отказ сервера «дальше дальности ГСН»', dn2 && /СЕРВЕР/.test(dn2.msg) && /ДАЛЬНОСТИ/.test(dn2.msg), dn2 ? dn2.msg : 'нет отказа');
+  check('ИК: AIM-9L с 15 км — отказ «ПОМЕХИ», причина — дальность', dn2 && /ПОМЕХИ/.test(dn2.msg) && dn2.why === 'range', dn2 ? dn2.msg + ' / ' + dn2.why : 'нет отказа');
+  i1.send({ t: 'clog', k: 'test', d: { fps: 58, why: 'проверка' } }); await sleep(200);
   for (const x of [i1, i2]) { clearInterval(x.flyT); x.ws.close(); }
+  // ── журнал боёв (journal.js): события на месте, чтение по ключу ──
+  await sleep(5200); // хотя бы один снимок состояния
+  const jr = await fetch(`http://localhost:${PORT}/logs?key=test-key&date=${new Date().toISOString().slice(0, 10)}`).then((x) => x.text());
+  const evs = new Set(jr.split('\n').filter(Boolean).map((l) => JSON.parse(l).ev));
+  const need = ['server_start', 'hello', 'join', 'start', 'launch', 'deny', 'missile_end', 'kill', 'state', 'client', 'disconnect'];
+  check('журнал: все основные события записаны', need.every((e) => evs.has(e)), 'нет: ' + need.filter((e) => !evs.has(e)).join(', '));
+  check('журнал: без ключа не читается', (await fetch(`http://localhost:${PORT}/logs?date=x`)).status === 403);
 } catch (e) { fails++; console.log('FAIL исключение: ' + (e && e.stack || e)); }
 srv.kill(); await srv.status;
 console.log(fails ? `ИТОГ: ${fails} ошибок` : 'ИТОГ: всё прошло');

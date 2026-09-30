@@ -96,6 +96,9 @@ powershell -ExecutionPolicy Bypass -File fortuna-bot-web\game-server\windows\upd
 | Журнал сервера | `Get-Content C:\ProgramData\FortunaGame\logs\server.log -Tail 50 -Wait` |
 | Журнал туннеля | `Get-Content C:\ProgramData\FortunaGame\logs\tunnel.log -Tail 50` |
 | Кто сейчас играет | `https://game.fortunawtm.com/health` |
+| **Журнал боёв** (для разбора, что пошло не так) | `powershell -ExecutionPolicy Bypass -File fortuna-bot-web\game-server\windows\logs.ps1` — кладёт журнал за сегодня на рабочий стол (`-Date 2026-10-01` — за другой день); файл прислать Claude |
+
+Журнал боёв — `C:\fortuna\fortuna-bot-web\game-server\logs\ГГГГ-ММ-ДД.jsonl`, 14 дней: входы, старт/итог, пуски и отказы с причиной, чем кончилась каждая ракета, сбития, обрывы связи, подхват ИИ, ошибки, снимок раз в 5 с и записи игры (её отказы пуска, ошибки страницы, кадры/устройство). Серверу для него нужна запись — `update.ps1` сам выставляет службе `--allow-write`. Чтение по сети (по желанию): переменная службы `LOG_KEY` → `https://game.fortunawtm.com/logs?key=…&date=ГГГГ-ММ-ДД`. Разбор: `deno run --allow-read game-server/log-view.js файл.jsonl [КОД] [--state]`.
 
 ## Если что-то не так
 

@@ -57,7 +57,7 @@ if (Get-Service $Svc -ErrorAction SilentlyContinue) {
   & $Nssm remove $Svc confirm | Out-Null
   Start-Sleep 2
 }
-& $Nssm install $Svc $Deno "run --allow-net --allow-read --allow-env `"$Server`"" | Out-Null
+& $Nssm install $Svc $Deno "run --allow-net --allow-read --allow-write --allow-env `"$Server`"" | Out-Null # запись — журнал боёв (game-server\logs)
 & $Nssm set $Svc AppDirectory $ServerDir | Out-Null
 & $Nssm set $Svc AppEnvironmentExtra "MP_SECRET=$Secret" "PORT=$Port" "HOST=127.0.0.1" "DENO_DIR=$Data\deno" "NO_COLOR=1" | Out-Null
 & $Nssm set $Svc AppStdout "$Data\logs\server.log" | Out-Null

@@ -1,18 +1,18 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930f';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930f';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930f';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930f';
-import { createPipeline } from './post.js?v=20260930f';
-import { createAudio } from './audio.js?v=20260930f';
-import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930f';
-import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930f';
-import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930f';
-import { createOnline } from './online-client.js?v=20260930f';
-import { createProgress, rewardText, plural } from './progress-client.js?v=20260930f';
-import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930f';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930g';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930g';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930g';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930g';
+import { createPipeline } from './post.js?v=20260930g';
+import { createAudio } from './audio.js?v=20260930g';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930g';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930g';
+import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930g';
+import { createOnline } from './online-client.js?v=20260930g';
+import { createProgress, rewardText, plural } from './progress-client.js?v=20260930g';
+import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, pilotStep, steerTo,
+  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930g';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -458,7 +458,8 @@ const elevons = [1, -1].map((s) => {
   const { geo, hinge } = buildElevon(s); const piv = new THREE.Group(); piv.position.copy(hinge);
   const m = new THREE.Mesh(geo, MAT_METAL); m.castShadow = !!P.shadows; piv.add(m); ship.add(piv); return { piv, s };
 });
-const flame = new THREE.Mesh(flameGeo, flameMat); flame.position.z = 7.35; ship.add(flame);
+const flameMatP = flameMat.clone(); // своё: яркость пламени игрока следует за газом, у остальных — общий материал
+const flame = new THREE.Mesh(flameGeo, flameMatP); flame.position.z = 7.35; ship.add(flame);
 const flame2 = new THREE.Mesh(flameGeo, flameCore); flame2.position.z = 7.35; ship.add(flame2);
 const diamonds = [0, 1, 2, 3].map((k) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.z = 8.2 + k * 1.15; ship.add(d); return d; });
 const pylonMeshes = [];
@@ -584,6 +585,7 @@ const ACTIONS = [
   { id: 'up', name: 'Нос вверх', hold: true, def: ['ArrowUp', null] },
   { id: 'down', name: 'Нос вниз', hold: true, def: ['ArrowDown', null] },
   { id: 'lookBack', name: 'Взгляд назад (держать)', hold: true, def: ['KeyV', null] },
+  { id: 'assist', name: 'Помощь в бою: автоогонь и автопуск (вкл/выкл)', def: ['KeyT', null] },
   { id: 'radarScale', name: 'Масштаб индикатора РЛС', def: ['KeyZ', null] },
   { id: 'help', name: 'Обучение: объяснение ракеты («?»)', def: ['KeyH', null] },
   { id: 'pause', name: 'Пауза', def: ['KeyP', null] },
@@ -595,12 +597,52 @@ try {
   if (sb && typeof sb === 'object') for (const a of ACTIONS) if (Array.isArray(sb[a.id]) && sb[a.id].length === 2) binds[a.id] = sb[a.id].map((c) => (typeof c === 'string' && c !== 'Escape' ? c : null));
 } catch (_) { binds = defaultBinds(); }
 let mouseCfg = { steer: true, invert: false, sens: 1 };
+// газ на сенсорной кнопке (переключатель): null — крейсерский (до первого нажатия), 'up' — полный, 'down' — малый
+let thrLatch = null;
+// «Помощь в бою» (кнопка «АВТО» / клавиша T): пушка стреляет сама, когда прицел с упреждением на цели ближе 1,2 км;
+// ракета пускается сама по захвату ГСН (ИК) или по захвату РЛС в зоне пуска (радарные) — по одной на цель. Ручная стрельба работает как обычно.
+// Намеренно не идеален (так задумал Mark: упрощать бой, а не играть лучше человека): пушка — с реакцией 0,3–0,8 с и очередями,
+// ракета — с задержкой 0,6–1,8 с после захвата, радарная — то с уверенной дистанции, то почти с предела (может не долететь).
+let assist = store.get('fortuna_drone_assist') === '1', autoMslT = 0;
+const AS = { aimT: 0, react: 0.5, cyc: 0, wait: -1, rK: 0.8 };
+function setAssist(on) {
+  assist = on; store.set('fortuna_drone_assist', on ? '1' : '0');
+  const b = $('btnAssist'); if (b) b.classList.toggle('on', on);
+  popup(on ? 'ПОМОЩЬ В БОЮ: ВКЛ — автоогонь и автопуск' : 'ПОМОЩЬ В БОЮ: ВЫКЛ', 'info');
+}
+function autoLaunch(dt) {
+  autoMslT -= dt; if (autoMslT > 0 || G.mslT > 0) return;
+  const M_ = selType && MISSILES[selType]; let tgt = null;
+  if (M_ && M_.kind === 'ir') { if (seeker.locked) tgt = seeker.target; }
+  else if (M_) {
+    const L = radar.lock, d = L && !L.dead ? L.pos.distanceTo(player.pos) : 0;
+    if (d > M_.rmin && d < dlz(M_, player.pos.y, player.speed, closingOf(L, player.pos)).rmax * AS.rK) { // AS.rK — «насколько смел» в этот раз
+      fwdOf(player, TMP2); if (angleBetween(TMP2, TMP.copy(L.pos).sub(player.pos)) <= 25 * D2R) tgt = L;
+    }
+  }
+  if (tgt) for (const m of missiles) if (!m.dead && m.owner === player && m.target === tgt && !m.lost) { tgt = null; break; } // одна ракета на цель
+  if (!tgt) { AS.wait = -1; return; }
+  if (AS.wait < 0) { AS.wait = 0.6 + rnd() * 1.2; return; } // «подумал» перед пуском
+  if ((AS.wait -= dt) > 0) return;
+  AS.wait = -1; AS.rK = 0.55 + rnd() * 0.45; autoMslT = 2; launchPlayerMissile();
+}
+let padX = 0, padY = 0;
+function applyPadGap() { document.documentElement.style.setProperty('--pad-gap', (touchCfg.padGap ?? 3) + 'px'); } // крестовина пилотажного управления: −1…1 по крену и тангажу
+function thrLabel() {
+  const b = $('btnSlow'); if (!b) return;
+  b.textContent = thrLatch === 'up' ? 'ГАЗ+' : thrLatch === 'down' ? 'ГАЗ−' : 'ГАЗ';
+  b.classList.toggle('on', thrLatch === 'up');
+}
+// «Управление»: simple — как было (ручка — поворот носа, крен рисуется сам), pilot — пилотажное (крен + тангаж, петли)
+let flightMode = store.get('fortuna_drone_flight') === 'pilot' ? 'pilot' : 'simple';
+document.body.classList.toggle('pilot', flightMode === 'pilot'); // кнопки крена видны только в пилотажном
 try { mouseCfg = Object.assign(mouseCfg, JSON.parse(store.get('fortuna_drone_mouse') || '{}')); } catch (_) { /* по умолчанию */ }
 // Сенсорная «ручка»: чувствительность (сколько вести палец до полного отклонения), сила поворота и тангажа по отдельности,
 // размер кружка, мёртвая зона, кривая отклика, инверсия тангажа
-const TOUCH_DEF = { sens: 1, dead: 0.1, curve: 0.35, invert: false, kx: 1, ky: 1, size: 1 };
+const TOUCH_DEF = { sens: 1, dead: 0.1, curve: 0.35, invert: false, kx: 1, ky: 1, size: 1, rollK: 0.7, padGap: 3 };
 let touchCfg = { ...TOUCH_DEF };
 try { touchCfg = Object.assign(touchCfg, JSON.parse(store.get('fortuna_drone_touch') || '{}')); } catch (_) { /* по умолчанию */ }
+applyPadGap(); // расстояние между стрелками крестовины
 const saveTouch = () => store.set('fortuna_drone_touch', JSON.stringify(touchCfg));
 // кривая: 0 — линейная, 1 — «экспонента» (у центра точнее, у края — полный отклик)
 const stickCurve = (v) => { const a = Math.abs(v); return Math.sign(v) * (a * (1 - touchCfg.curve) + a * a * a * touchCfg.curve); };
@@ -620,6 +662,7 @@ function trigger(id) {
   else if (id === 'chaff') dropCM(player, 'chaff');
   else if (id === 'cm') { dropCM(player, 'flare'); dropCM(player, 'chaff'); }
   else if (id === 'radarScale') cycleRadarScale();
+  else if (id === 'assist') setAssist(!assist);
 }
 function press(code) { for (const a of actionsFor(code)) { if (a.hold) held.add(a.id); else trigger(a.id); } }
 function release(code) { for (const a of actionsFor(code)) if (a.hold) held.delete(a.id); }
@@ -690,6 +733,8 @@ function ctl(id) {
 }
 const POS = IS_TOUCH ? { radar: 'вверху справа', rwr: 'вверху, левее радара' } : { radar: 'справа внизу', rwr: 'слева внизу' };
 function steerHint() {
+  if (flightMode === 'pilot') return IS_TOUCH ? 'левый палец: влево-вправо — крен, вверх-вниз — нос вверх-вниз (или крестовина «КРЕН»); поворот — накренитесь и тяните нос вверх'
+    : `${ctl('left')} / ${ctl('right')} — крен, ${ctl('up')} / ${ctl('down')} — тангаж${mouseCfg.steer ? ' (или мышью от центра экрана)' : ''}`;
   if (IS_TOUCH) return 'ведите левым пальцем — дрон поворачивает туда, куда отклонена «ручка»';
   return mouseCfg.steer ? `отводите мышь от центра экрана (или ${ctl('left')} ${ctl('right')} ${ctl('up')} ${ctl('down')})`
     : `${ctl('left')} / ${ctl('right')} — курс, ${ctl('up')} / ${ctl('down')} — нос вверх / вниз`;
@@ -738,12 +783,29 @@ if (IS_TOUCH) {
     const up = () => { held.delete(id); el.classList.remove('on'); };
     el.addEventListener('pointerup', up); el.addEventListener('pointercancel', up);
   };
-  holdAct($('btnSlow'), 'thrDown'); holdAct($('btnBack'), 'lookBack');
+  holdAct($('btnBack'), 'lookBack');
+  $('btnAssist').addEventListener('pointerdown', (e) => { e.preventDefault(); if (G.state === 'play' || G.state === 'countdown') setAssist(!assist); });
+  $('btnAssist').classList.toggle('on', assist);
+  // крестовина: направление — от центра блока (палец можно вести, не отрывая; угол — крен и тангаж сразу)
+  const pad = $('btnPad'), arms = { pu: pad.querySelector('.pu'), pd: pad.querySelector('.pd'), pl: pad.querySelector('.pl'), pr: pad.querySelector('.pr') };
+  let padId = null;
+  const padAt = (e) => {
+    const b = pad.getBoundingClientRect(), dx = (e.clientX - b.left) / b.width - 0.5, dy = (e.clientY - b.top) / b.height - 0.5;
+    padX = dx > 0.12 ? 1 : dx < -0.12 ? -1 : 0; padY = dy < -0.12 ? 1 : dy > 0.12 ? -1 : 0; // вверх по экрану — нос вверх
+    arms.pr.classList.toggle('on', padX > 0); arms.pl.classList.toggle('on', padX < 0); arms.pu.classList.toggle('on', padY > 0); arms.pd.classList.toggle('on', padY < 0);
+  };
+  pad.addEventListener('pointerdown', (e) => { e.preventDefault(); if (padId !== null) return; padId = e.pointerId; try { pad.setPointerCapture(padId); } catch (_) { /* нет */ } padAt(e); });
+  pad.addEventListener('pointermove', (e) => { if (e.pointerId === padId) padAt(e); });
+  const padEnd = (e) => { if (e.pointerId !== padId) return; padId = null; padX = padY = 0; for (const a of Object.values(arms)) a.classList.remove('on'); };
+  pad.addEventListener('pointerup', padEnd); pad.addEventListener('pointercancel', padEnd);
+  // кнопка газа — переключатель: каждое нажатие меняет «ГАЗ+» (полный, скорость растёт) ⇄ «ГАЗ−» (малый, скорость падает)
+  $('btnSlow').addEventListener('pointerdown', (e) => { e.preventDefault(); thrLatch = thrLatch === 'up' ? 'down' : 'up'; thrLabel(); });
+  thrLabel();
 }
 
 // ═════════════ Расположение сенсорных кнопок: свои места, размер и прозрачность каждой ═════════════
 // Хранится в долях экрана (отдельно для горизонтального и вертикального положения телефона), поверх мест по умолчанию из drone.html.
-const LAYOUT_BTNS = { btnFire: 'ПУШКА', btnMsl: 'РАКЕТА', btnLock: 'ЗАХВАТ', btnAB: 'ФОРСАЖ', btnCM: 'ЛТЦ ДО', btnSlow: 'ГАЗ−', btnBack: 'НАЗАД' };
+const LAYOUT_BTNS = { btnFire: 'ПУШКА', btnMsl: 'РАКЕТА', btnLock: 'ЗАХВАТ', btnAB: 'ФОРСАЖ', btnCM: 'ЛТЦ ДО', btnSlow: 'ГАЗ', btnBack: 'НАЗАД', btnAssist: 'АВТО', btnPad: 'КРЕСТОВИНА' };
 let layout = {};
 try { const v = JSON.parse(store.get('fortuna_drone_layout') || '{}'); if (v && typeof v === 'object') layout = v; } catch (_) { /* по умолчанию */ }
 const layoutKey = () => (innerWidth >= innerHeight ? 'land' : 'port');
@@ -899,17 +961,22 @@ function seekerWhyText() {
 
 // ═════════════ Ракеты (общие для игрока и ИИ) ═════════════
 function launchMissile(owner, key, target, mesh) { return B.launchMissile(owner, key, target, mesh ? { mesh } : null); }
+// отказ в пуске у себя (до сервера): сообщение игроку и, в онлайне, запись в журнал боёв — с причиной ГСН и дистанцией
+function mslFail(msg) {
+  popup(msg, 'bad');
+  if (MP.on) { const w = seeker.why, L = radar.lock; MP.clog('launch_fail', { key: selType, msg, why: w ? w.why : null, km: w ? Math.round(w.d / 100) / 10 : L ? Math.round(L.pos.distanceTo(player.pos) / 100) / 10 : null, seeR: w ? Math.round(w.maxR / 100) / 10 : null, lock: L ? L.name || L.S.name : null }); }
+}
 function launchPlayerMissile() {
   if (G.state !== 'play' || G.mslT > 0 || MP.down) return;
   ensureSel();
-  if (!selType) { popup('РАКЕТ НЕТ', 'bad'); return; }
+  if (!selType) { mslFail('РАКЕТ НЕТ'); return; }
   const M_ = MISSILES[selType];
   let tgt = null;
   if (M_.kind === 'ir') {
     if (seeker.locked) tgt = seeker.target;
-    else if (!M_.ir.loal) { const w = seekerWhyText(); popup('НЕТ ЗАХВАТА ГСН' + (w ? ' · ' + w : ''), 'bad'); return; }
+    else if (!M_.ir.loal) { const w = seekerWhyText(); mslFail('НЕТ ЗАХВАТА ГСН' + (w ? ' · ' + w : '')); return; }
   } else if (M_.kind === 'sarh') {
-    if (!radar.lock) { popup('НУЖЕН ЗАХВАТ РЛС (R)', 'bad'); return; }
+    if (!radar.lock) { mslFail('НУЖЕН ЗАХВАТ РЛС (R)'); return; }
     tgt = radar.lock;
   } else {
     tgt = radar.lock;
@@ -917,7 +984,7 @@ function launchPlayerMissile() {
       let bestA = 30 * D2R; fwdOf(player, TMP2);
       for (const [e, c] of radar.contacts) { if (e.dead || c.jam) continue; const a = angleBetween(TMP2, TMP.copy(e.pos).sub(player.pos)); if (a < bestA) { bestA = a; tgt = e; } }
     }
-    if (!tgt) { popup('НЕТ ЦЕЛИ НА РАДАРЕ', 'bad'); return; }
+    if (!tgt) { mslFail('НЕТ ЦЕЛИ НА РАДАРЕ'); return; }
   }
   const idxs = loaded.map((k, i) => (k === selType ? i : -1)).filter((i) => i >= 0);
   const side = G.mFired % 2 ? 1 : -1;
@@ -1122,11 +1189,14 @@ function updateTankers(dt) {
 }
 
 // ═════════════ Игрок ═════════════
+const THR_IDLE = 0.3, THR_SPOOL = 1.2; // малый газ (скорость заметно падает) и «раскрутка» двигателя, 1/с
 function updatePlayer(dt) {
   const p = player;
   const kx = (held.has('right') ? 1 : 0) - (held.has('left') ? 1 : 0);
   const ky = (held.has('up') ? 1 : 0) - (held.has('down') ? 1 : 0);
   let sx = clamp(input.sx + kx, -1, 1), sy = clamp(input.sy + ky, -1, 1);
+  const pk = flightMode === 'pilot' ? touchCfg.rollK || 0.7 : 0; // крестовина (только пилотажное): ◀ ▶ — крен, ▲ ▼ — тангаж
+  const rx0 = clamp(sx + padX * pk, -1, 1), ry0 = clamp(sy + padY * pk * (touchCfg.invert ? -1 : 1), -1, 1); // ручка как есть (пилотажному режиму автопилот зоны не нужен, пока не улетел далеко)
   const r = Math.hypot(p.pos.x, p.pos.z), h = agl(p);
   if (r > WORLD.R) {
     const diff = wrapPI(Math.atan2(p.pos.x, p.pos.z) - p.yaw); // yaw «к центру»: нос на −pos
@@ -1134,14 +1204,17 @@ function updatePlayer(dt) {
     warn('ВЕРНИСЬ В ЗОНУ');
   } else if (p.pos.y > WORLD.CEIL) { sy = Math.min(sy, -0.5); warn('ПОТОЛОК'); }
   else if (h < 300 && p.pitch < -0.1) warn('ВЫСОТА! ВВЕРХ');
+  else if (p.fuel <= 0) warn('ТОПЛИВО КОНЧИЛОСЬ — ДВИГАТЕЛЬ ВСТАЛ');
   else if (p.fuel < 35) warn('БИНГО — МАЛО ТОПЛИВА');
   else if (p.speed < 110) warn('МАЛАЯ СКОРОСТЬ');
   else warn('');
-  p.thr += ((held.has('thrUp') ? 1 : held.has('thrDown') ? 0.55 : 0.85) - p.thr) * Math.min(1, 3 * dt);
+  const tUp = held.has('thrUp') || thrLatch === 'up', tDown = held.has('thrDown') || thrLatch === 'down';
+  p.thr += (p.fuel <= 0 ? -p.thr : (tUp ? 1 : tDown ? THR_IDLE : 0.85) - p.thr) * Math.min(1, THR_SPOOL * dt); // без топлива обороты падают до нуля // обороты растут и падают плавно — за ними и пламя
   const wasAB = p.ab;
   p.ab = (input.ab || held.has('ab')) && p.fuel > 1;
   if (p.ab && !wasAB) { G.kick = 1; AU.afterburner(); } // включение форсажа — толчок
-  flyStep(p, sx, sy, dt);
+  if (flightMode === 'pilot' && r <= WORLD.R + 1500) pilotStep(p, rx0, ry0, dt, p.pos.y > WORLD.CEIL ? 0.6 : 0);
+  else flyStep(p, sx, sy, dt); // далеко за зоной — возврат автоматикой простого режима
   p.cmdX = sx; p.cmdY = sy;
   // земля и здания
   const gh = terrainH(p.pos.x, p.pos.z);
@@ -1161,13 +1234,20 @@ function updatePlayer(dt) {
   if (p.overheated && p.heat < 40) p.overheated = false;
   G.fireT -= dt; G.mslT -= dt; G.cmT -= dt;
   findGunTarget();
-  if ((input.fire || held.has('fire')) && !p.overheated && G.fireT <= 0) {
+  let autoGun = false; // помощь в бою: прицел на цели ближе 1,2 км — после реакции, очередями ~0,6 с через ~0,4 с
+  if (assist && gunTarget && !gunTarget.dead && gunTarget.pos.distanceTo(p.pos) < 1200) {
+    if (AS.aimT === 0) AS.react = 0.3 + rnd() * 0.5;
+    AS.aimT += dt; AS.cyc = (AS.cyc + dt) % 1;
+    autoGun = AS.aimT > AS.react && AS.cyc < 0.6;
+  } else AS.aimT = 0;
+  if (assist) autoLaunch(dt);
+  if ((input.fire || held.has('fire') || autoGun) && !p.overheated && G.fireT <= 0) {
     G.fireT = 1 / 20; fireBullet(p, gunTarget, 7); p.heat += 2.2;
     if (p.heat >= 100) { p.heat = 100; p.overheated = true; popup('ПЕРЕГРЕВ ПУШКИ', 'bad'); }
   }
   // топливо: форсаж ×3, малый газ экономичнее
   p.fuel -= dt * (p.ab ? 3 : 0.45 + 0.6 * p.thr) * (MODE.fuelBurn ?? 1);
-  if (p.fuel <= 0) { p.fuel = 0; endGame('fuel'); }
+  if (p.fuel <= 0) { p.fuel = 0; if (!MP.on) endGame('fuel'); } // в онлайне бой не кончается: двигатель встаёт (газ → 0), планируем до сбития или земли
   // следы
   const nz = TMP.set(0, 0, 7.6).applyQuaternion(ship.quaternion).add(p.pos);
   if (p.ab) FX.emit(nz.x, nz.y, nz.z, -p.vel.x * 0.15, -p.vel.y * 0.15, -p.vel.z * 0.15, 1, 0.55, 0.2, 0.7, 2.4, 3, 0.12, 0, 0);
@@ -1215,15 +1295,18 @@ function placeShip() {
   ship.position.copy(player.pos); ship.rotation.set(player.pitch, player.yaw, player.roll);
   for (const el of elevons) el.piv.rotation.x = clamp(-(player.cmdY || 0) * 0.35 + (player.cmdX || 0) * 0.3 * el.s, -0.45, 0.45);
   const ab = player.ab;
-  flame.scale.set(ab ? 1.25 : 0.9, ab ? 1.25 : 0.9, (ab ? 6 : 1.2 * player.thr) * (0.9 + rnd() * 0.2));
-  flame2.scale.set(0.6, 0.6, (ab ? 3.2 : 0.7) * (0.9 + rnd() * 0.2));
-  flameMat.opacity = ab ? 0.9 : 0.5;
+  const t = player.thr, fw = ab ? 1.25 : 0.5 + 0.45 * t; // малый газ — пламя короткое, узкое и тусклое; полный — длиннее и ярче
+  flame.scale.set(fw, fw, (ab ? 6 : 0.25 + 1.2 * t) * (0.9 + rnd() * 0.2));
+  flame2.scale.set(0.6, 0.6, (ab ? 3.2 : 0.15 + 0.65 * t) * (0.9 + rnd() * 0.2));
+  flameMatP.opacity = ab ? 0.9 : 0.12 + 0.45 * t;
+  flame.visible = flame2.visible = ab || t > 0.06; // двигатель встал — пламени нет
   for (const d of diamonds) { d.visible = ab; d.scale.setScalar(0.8 + rnd() * 0.3); }
   if (abLight) abLight.intensity = ab ? 5 * (0.8 + rnd() * 0.4) : 0.4 * player.thr;
   if (xfx() && ship.visible) xShip();
 }
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3();
 let camSnap = true;
+const PUP = new THREE.Vector3(), camUp = new THREE.Vector3(0, 1, 0);
 function updateCamera(dt) {
   const p = player;
   fwdOf(p, TMP3); rightOf(p, TMP2);
@@ -1234,12 +1317,23 @@ function updateCamera(dt) {
   } else {
     // камера «уходит» наружу виража, отстаёт при перегрузке и на форсаже
     const back = 20 + (p.n - 1) * 0.9 + (p.ab ? 4 : 0);
+    if (flightMode === 'pilot' && p.q) { // пилотажное: камера кренится вместе с дроном, «верх» — по его оси (петля без переворота кадра)
+      // в пилотаже на полной перегрузке летают долго — отъезд камеры ограничен, слежение плотнее (иначе дрон — точка)
+      PUP.set(0, 1, 0).applyQuaternion(p.q);
+      TGT.copy(p.pos).addScaledVector(TMP3, -(20 + Math.min(p.n - 1, 5) * 0.9 + (p.ab ? 4 : 0))).addScaledVector(PUP, 5.5 - p.wp * 6);
+      if (camSnap) { camPos.copy(TGT); camUp.copy(PUP); camSnap = false; if (pipe && pipe.resetHistory) pipe.resetHistory(); }
+      else { camPos.lerp(TGT, 1 - Math.exp(-14 * dt)); camUp.lerp(PUP, 1 - Math.exp(-10 * dt)).normalize(); }
+      camera.position.copy(camPos);
+      camLook.copy(p.pos).addScaledVector(TMP3, 60).addScaledVector(camUp, 2);
+      camera.up.copy(camUp); camera.lookAt(camLook);
+    } else {
     TGT.copy(p.pos).addScaledVector(TMP3, -back).addScaledVector(UP, 5.5 - p.wp * 10).addScaledVector(TMP2, p.wy * 18);
     if (camSnap) { camPos.copy(TGT); camSnap = false; if (pipe && pipe.resetHistory) pipe.resetHistory(); } else camPos.lerp(TGT, 1 - Math.exp(-7 * dt));
     camera.position.copy(camPos);
     camLook.copy(p.pos).addScaledVector(TMP3, 60).addScaledVector(UP, 2);
     camera.up.set(0, 1, 0); camera.lookAt(camLook);
     camera.rotation.z += p.roll * 0.3;
+    }
   }
   // тряска: попадания, перегрузка, околозвук, форсаж
   const mach = p.speed / (340 - p.pos.y * 0.004);
@@ -1697,9 +1791,10 @@ function renderGuideTab() {
       <p><b>Сбитые:</b> «Слизень» и «Раковина» — 1, «Ас» — 2, флагман — 5 (максимум в вылете показан на экране итогов). <b>Очки:</b> 1000–6000 за самолёт; сбитие пушкой ×1,5; ракетой, пролетевшей больше 20 км, ×1,3; в «Реализме» всё ×1,5. Загнанный в землю противник засчитывается тебе.</p>`),
     guideSection('3. Полёт и энергия', `
       <p><b>Управление:</b> ${steerHint()}. Чем сильнее отклонение, тем быстрее поворот.</p>
+      <p><b>Две модели управления</b> (Настройки → Управление). <b>Простое</b> (по умолчанию): дрон поворачивает нос туда, куда отклонена ручка, крен ставится сам — удобно целиться. <b>Пилотажное</b>: ручка влево-вправо — <b>крен</b>, вверх-вниз — <b>тангаж</b> вокруг крыла, как у настоящего самолёта. Чтобы повернуть — накренись в сторону поворота и тяни нос вверх; так можно сделать петлю через вертикаль, «бочку», лететь вверх ногами. Камера кренится вместе с дроном.${IS_TOUCH ? ' В пилотажном на экране есть <b>крестовина</b>: ◀ ▶ — крен, ▲ ▼ — нос вверх-вниз; палец можно вести, не отрывая (по диагонали — крен и тангаж сразу). Её место, размер, прозрачность («Расположение кнопок…») и расстояние между стрелками настраиваются.' : ''}</p>
       <p><b>Перегрузка (g)</b> ограничивает разворот: максимальная угловая скорость = g × 9,81 / скорость. На 900 км/ч при 12 g это ≈ 27°/с, на 500 км/ч — почти вдвое быстрее. «Изделие Фортуна-1» — беспилотник, лётчика нет, поэтому оно выдерживает 12–15 g против 6–9 g у противника.</p>
       <p><b>Энергия.</b> Каждый резкий вираж съедает скорость, набор высоты — тоже; пикирование разгоняет. Два-три крутых разворота подряд — и ты медленный и уязвимый. Если скорость падает ниже ~400 км/ч, выровняйся, опусти нос или включи форсаж.</p>
-      <p><b>Газ:</b> ${IS_TOUCH ? '«ГАЗ−» — малый (экономит топливо и помогает при заправке), без неё — крейсерский' : ctl('thrUp') + ' — полный, ' + ctl('thrDown') + ' — малый (экономит топливо), по умолчанию — крейсерский'}. <b>Форсаж</b> (${ctl('ab')}) — резкий разгон, но топливо уходит втрое быстрее, а ты становишься в 2,2 раза «горячее» для тепловых ракет.</p>
+      <p><b>Газ:</b> ${IS_TOUCH ? 'кнопка «ГАЗ» — каждое нажатие меняет ГАЗ+ (полный: скорость растёт) ⇄ ГАЗ− (малый: скорость падает, топливо экономится); до первого нажатия — крейсерский' : ctl('thrUp') + ' — полный, ' + ctl('thrDown') + ' — малый (скорость падает, топливо экономится), по умолчанию — крейсерский'}. Обороты меняются плавно — видно по пламени: на малом газе оно короткое и тусклое. В онлайн-бою топливо тоже расходуется; кончилось — двигатель встаёт, дрон планирует, после возрождения бак полный. <b>Форсаж</b> (${ctl('ab')}) — резкий разгон, но топливо уходит втрое быстрее, а ты становишься в 2,2 раза «горячее» для тепловых ракет.</p>
       <p><b>Высота.</b> Наверху воздух реже: быстрее летишь, ракеты (и твои, и чужие) летят дальше, но противник видит тебя на фоне неба. Внизу ракеты быстро теряют скорость, а на фоне земли легче «спрятаться» в доплеровском провале (глава 5). Ниже 300 м при снижении загорится «ВЫСОТА! ВВЕРХ».</p>
       <p><b>Граница зоны</b> — 12 км от центра карты: за ней автопилот разворачивает к центру.</p>`),
     guideSection('4. Экран (HUD)', `
@@ -1727,6 +1822,8 @@ function renderGuideTab() {
       <p><b>Советы:</b> стреляй с высоты и на скорости — ракета получит больше энергии; по манёвренной цели — ближе к неизбежной зоне; по уходящей цели дальность резко падает; пара ракет разных типов (например АРЛ + ИК) сложнее для уклонения.</p>`),
     guideSection('7. Как стрелять — по шагам', `
       <p><b>ИК-ракета:</b> выбери ракету (${ctl('weapon')}) → наведи нос на цель (или захвати радаром — ГСН «привяжется» к ней) → дождись мигающего красного круга и высокого тона → пуск. Лучше всего — сзади, по цели на форсаже, ближе 5–8 км.</p>
+      <p><b>Почему ИК не захватывает — смотри строку ГСН</b> в панели оружия: «<b>ДАЛЕКО · видит с N км</b>» — подойди ближе указанного; «<b>ЗАЙДИ В ХВОСТ</b>» — ранние ракеты (AIM-9B, Р-3С, Р-60 и похожие, в «Ракетах» у них ракурс ±30°) видят только горячее сопло, в лоб не захватят никогда; «<b>НАВЕДИ НОС НА ЦЕЛЬ</b>» — цель вне поля зрения ГСН (у ранних всего 3°, у поздних до 45°). Дальность захвата растёт, если цель на <b>форсаже</b> (×1,5) и ты смотришь ей строго в хвост. Для боя в лоб и на 7–10 км бери всеракурсные ИК (AIM-9L/X, Р-73, Python, MICA ИК) или радарные ракеты.</p>
+      <p><b>В онлайне</b> «Изделие» соперника заметнее для ИК, чем в одиночной игре. Если при пуске пришло «<b>ПОМЕХИ — ЗАХВАТ ГСН СОРВАН</b>» — в момент пуска цель ушла из захвата (на краю дальности, из хвоста или из поля ГСН): подойди ближе или зайди точнее в хвост.</p>
       <p><b>Полуактивная:</b> захват (${ctl('lock')}) → «ПУСК РАЗРЕШЁН» → пуск → <b>держи цель в пределах ±60° от носа</b> до попадания (можно отвернуть на 40–50°, чтобы медленнее сближаться, — «крэнк»).</p>
       <p><b>Активная:</b> захват или просто отметка впереди → пуск → держи цель на радаре, пока в панели «·КОРР»; после «·ГСН» можно разворачиваться и уходить или брать следующую цель.</p>
       <p><b>Пушка</b> (${ctl('fire')}): ближе 1,5 км, совмести визир с жёлтым кружком упреждения, стреляй очередями — перегрев выключит пушку на несколько секунд.</p>`),
@@ -1755,7 +1852,11 @@ function renderGuideTab() {
     guideSection('12. Режимы «Аркада» и «Реализм»', `<table class="tt"><tr><td></td><td><b>Аркада</b></td><td><b>Реализм</b></td></tr>${modeRows}</table>
       <p style="margin-top:6px">Физика ракет, радара и СПО одинаковая — различаются подсказки, прощение ошибок и опыт противника. Режим выбирается над вкладками меню.</p>
       <p><b>Обучение</b> — третий режим: вместо волн противника учебные носители по очереди пускают по тебе все 22 типа ракет (в случайном порядке) — каждый оттуда, откуда такую ракету пускают на самом деле. По ходу полёта ракеты внизу экрана — короткие подсказки, что делать и какую кнопку нажать; окошко «?» (${ctl('help')}) ставит игру на паузу и объясняет, как работает именно эта ракета. После каждого пуска — разбор (ушла на ловушку, потеряла в провале, не догнала…), затем носитель можно сбить. При смене своей ракеты — тоже «?» с инструкцией, как ей стрелять. Сбить тебя нельзя, топливо не тратится, ракеты перезаряжаются; очки и награды не начисляются.</p>`),
-    guideSection('13. Подвеска — советы', `
+    guideSection('13. Помощь в бою — «АВТО»', `
+      <p>${IS_TOUCH ? 'Кнопка <b>«АВТО»</b> (слева внизу)' : 'Клавиша ' + ctl('assist')} включает и выключает помощь прямо в бою — когда пальцам нужно заняться креном и скоростью. Пока она горит зелёным:</p>
+      <p>• <b>пушка</b> стреляет сама, когда визир с упреждением на противнике ближе 1,2 км — очередями;<br>• <b>ракета</b> пускается сама: ИК — когда ГСН захватила цель, радарная — когда цель захвачена радаром и в зоне пуска, по одной ракете на цель.</p>
+      <p><b>«АВТО» не призвано работать идеально</b> — оно только упрощает бой в некоторых ситуациях. Оно реагирует с задержкой, стреляет очередями, пускает ракету не мгновенно и не всегда с лучшей дистанции: бывает, что с предела, и ракета не долетает. Лучший момент для пуска и атаки по-прежнему выбирает сам пилот — стрелять и пускать вручную можно и при включённом «АВТО». Работает во всех режимах, в том числе в онлайне.</p>`),
+    guideSection('14. Подвеска — советы', `
       <p>Каждая ракета снаружи — масса (медленнее разгон), сопротивление и +0,15 м² заметности: полностью увешанное «Изделие» противник видит на треть дальше.</p>
       <p><b>Универсал:</b> законцовки — AIM-9X или Р-73, средние — AIM-120C или Р-77, корневые — пусто или Р-27ЭР. <b>Дальний бой:</b> 2 × Meteor на средних, 2 × AIM-54 под фюзеляжем, ИК на законцовках (тяжело — меньше манёвренности). <b>Ближний бой:</b> 4–6 ИК (Python-5, IRIS-T) — лёгкий и вёрткий, но придётся подбираться близко. <b>Историческая:</b> AIM-9B + AIM-7E — почувствуй, каково было во Вьетнаме.</p>`),
   ].join('');
@@ -1783,11 +1884,14 @@ function renderSettingsTab() {
         <label class="chk">Кривая отклика <input type="range" id="tCurve" min="0" max="1" step="0.05" value="${touchCfg.curve}"> <span id="tCurveV">${Math.round(touchCfg.curve * 100)}%</span></label>
         <p class="hint">0% — отклик пропорционален отклонению. Больше — точнее у центра (прицеливание), а полный манёвр — у края хода.</p>
         <label class="chk"><input type="checkbox" id="tInv" ${touchCfg.invert ? 'checked' : ''}> Инверсия тангажа (палец вниз — нос вверх)</label>
+        <label class="chk">Сила крестовины <input type="range" id="tRoll" min="0.3" max="1" step="0.05" value="${touchCfg.rollK || 0.7}"> <span id="tRollV">${Math.round((touchCfg.rollK || 0.7) * 100)}%</span></label>
+        <label class="chk">Расстояние между стрелками <input type="range" id="tGap" min="0" max="40" step="1" value="${touchCfg.padGap ?? 3}"> <span id="tGapV">${touchCfg.padGap ?? 3} px</span></label>
+        <p class="hint">Крестовина в пилотажном управлении: ◀ ▶ — крен, ▲ ▼ — нос вверх-вниз, палец можно вести не отрывая (угол — крен и тангаж сразу). Где ей стоять и какого размера — «Расположение кнопок…».</p>
         <button class="btn alt sm" id="tReset">Сбросить ручку</button>
         <button class="btn sm" id="tLayout" style="margin-top:6px">Расположение кнопок…</button>
         <p class="hint">Перетащить кнопки пальцем под себя, поменять размер и прозрачность каждой. Для горизонтального и вертикального положения телефона — отдельно.</p>
       </div>
-      <div class="help" style="margin-top:8px"><p><b>Левый палец</b> — «ручка». Справа: <b>ПУШКА</b> (держать), <b>РАКЕТА</b>, <b>ЗАХВАТ</b>, <b>ФОРСАЖ</b>, <b>ЛТЦ ДО</b>. Слева внизу: <b>ГАЗ−</b> и <b>НАЗАД</b> (держать).</p>
+      <div class="help" style="margin-top:8px"><p><b>Левый палец</b> — «ручка». Справа: <b>ПУШКА</b> (держать), <b>РАКЕТА</b>, <b>ЗАХВАТ</b>, <b>ФОРСАЖ</b>, <b>ЛТЦ ДО</b>. Слева внизу: <b>ГАЗ</b> — каждое нажатие меняет ГАЗ+ (полный, скорость растёт) ⇄ ГАЗ− (малый, скорость падает, пламя гаснет), <b>НАЗАД</b> (держать) и <b>АВТО</b> — помощь в бою: пока включена, пушка стреляет сама, когда прицел на цели ближе 1,2 км, а ракета пускается сама по захвату. Включать и выключать можно прямо в бою. «АВТО» не работает идеально — реагирует с задержкой и не всегда пускает с лучшей дистанции: оно упрощает бой, а решает всё равно пилот (Руководство, гл. 13).</p>
       <p>Тап по панели ракет — сменить ракету, по индикатору радара — масштаб, <b>II</b> — пауза.</p></div>`;
   } else {
     const rows = ACTIONS.map((a) => `<div class="kb-row"><span>${a.name}</span>${[0, 1].map((sl) => {
@@ -1800,6 +1904,7 @@ function renderSettingsTab() {
       <div class="help" style="margin-top:8px">
         <label class="chk"><input type="checkbox" id="mSteer" ${mouseCfg.steer ? 'checked' : ''}> Управление мышью (смещение курсора от центра экрана)</label>
         <label class="chk"><input type="checkbox" id="mInv" ${mouseCfg.invert ? 'checked' : ''}> Инверсия мыши по тангажу</label>
+        <p class="hint">${ctl('assist')} — «АВТО», помощь в бою: пушка сама стреляет, когда прицел на цели ближе 1,2 км, ракета пускается сама по захвату. Работает не идеально (с задержкой, не всегда с лучшей дистанции) — упрощает бой, а решает пилот (Руководство, гл. 13).</p>
         <label class="chk">Чувствительность мыши <input type="range" id="mSens" min="0.5" max="2" step="0.1" value="${mouseCfg.sens}"> <span id="mSensV">${mouseCfg.sens.toFixed(1)}</span></label>
       </div>`;
   }
@@ -1819,7 +1924,11 @@ function renderSettingsTab() {
     <div class="perf"><div class="prow">${seg('weather', weatherPref, wOpts)}</div>
     <p class="hint">Сейчас: <b>${WEATHERS[weatherKey].name}</b>. Погода меняет свет, небо, облака и дальность видимости; в ливень темнее и хуже видно глазом — радар работает как обычно.</p></div>
     ${perfBlock()}
-    <div class="cat-h">Управление</div>${ctrl}`;
+    <div class="cat-h">Управление</div>
+    <div class="perf"><div class="prow"><span>Модель управления</span>${seg('flight', flightMode, [['simple', 'Простое'], ['pilot', 'Пилотажное']])}</div>
+      <p class="hint">${flightMode === 'pilot'
+    ? '<b>Пилотажное:</b> ручка влево-вправо — <b>крен</b>, на себя / от себя — <b>тангаж</b> вокруг крыла. Чтобы повернуть — накренитесь и тяните на себя; можно петлю через вертикаль и полёт вверх ногами. Камера кренится вместе с дроном.'
+    : '<b>Простое:</b> дрон поворачивает нос туда, куда отклонена ручка, крен ставится сам. Удобно для прицеливания.'}</p></div>${ctrl}`;
 }
 // ── Производительность и качество: апскейлеры, сглаживание, частота кадров, экран ──
 const seg = (id, val, opts) => `<div class="seg" data-seg="${id}">${opts.map(([v, t]) => `<button class="${String(val) === String(v) ? 'on' : ''}" data-v="${v}">${t}</button>`).join('')}</div>`;
@@ -1940,12 +2049,13 @@ $('tab-set').addEventListener('click', (e) => {
   if (sb) {
     const id = sb.parentNode.dataset.seg, raw = sb.dataset.v, v = isNaN(+raw) ? raw : +raw;
     if (id === 'weather') { setWeatherPref(raw); return; }
+    if (id === 'flight') { flightMode = raw; store.set('fortuna_drone_flight', raw); document.body.classList.toggle('pilot', raw === 'pilot'); renderSettingsTab(); renderGuideTab(); return; }
     perf[id] = v; applyPerf(); return;
   }
   if (e.target.id === 'perfReset') { Object.assign(perf, P.perf); applyPerf(); }
   if (e.target.id === 'upTestBtn') runUpscaleTest();
   if (e.target.id === 'aaTestBtn') runAaTest();
-  if (e.target.id === 'tReset') { touchCfg = { ...TOUCH_DEF }; saveTouch(); renderSettingsTab(); }
+  if (e.target.id === 'tReset') { touchCfg = { ...TOUCH_DEF }; saveTouch(); applyPadGap(); thrLatch = null; thrLabel(); renderSettingsTab(); }
   if (e.target.id === 'tLayout') openLayoutEditor();
 });
 $('tab-set').addEventListener('change', (e) => {
@@ -1965,6 +2075,8 @@ $('tab-set').addEventListener('input', (e) => {
   if (e.target.id === 'mSens') { mouseCfg.sens = +e.target.value; $('mSensV').textContent = mouseCfg.sens.toFixed(1); saveMouse(); }
   if (e.target.id === 'sVol') { soundVol = +e.target.value; $('sVolV').textContent = Math.round(soundVol * 100) + '%'; AU.setVolume(soundVol); store.set('fortuna_drone_vol', String(soundVol)); }
   if (e.target.id === 'tSens') { touchCfg.sens = +e.target.value; $('tSensV').textContent = touchCfg.sens.toFixed(2); saveTouch(); }
+  if (e.target.id === 'tGap') { touchCfg.padGap = +e.target.value; $('tGapV').textContent = touchCfg.padGap + ' px'; applyPadGap(); saveTouch(); }
+  if (e.target.id === 'tRoll') { touchCfg.rollK = +e.target.value; $('tRollV').textContent = Math.round(touchCfg.rollK * 100) + '%'; saveTouch(); }
   if (e.target.id === 'tKx') { touchCfg.kx = +e.target.value; $('tKxV').textContent = '×' + touchCfg.kx.toFixed(2); saveTouch(); }
   if (e.target.id === 'tKy') { touchCfg.ky = +e.target.value; $('tKyV').textContent = '×' + touchCfg.ky.toFixed(2); saveTouch(); }
   if (e.target.id === 'tSize') { touchCfg.size = +e.target.value; $('tSizeV').textContent = '×' + touchCfg.size.toFixed(2); saveTouch(); }
@@ -2513,7 +2625,7 @@ function mpPlace(s) {
 function mpStart(o) {
   unlockAudio();
   show('end', false); show('pauseScr', false); show('menu', false); setBody('playing'); $('hud').classList.add('on');
-  modeKey = o.mode; applyMode(); MODE = { ...MODE, fuelBurn: 0 }; // режим задаёт комната (не сохраняем как свой); топливо в онлайне не тратится
+  modeKey = o.mode; applyMode(); // режим задаёт комната (не сохраняем как свой); топливо — как в режиме (Аркада ×1,4, Реализм ×1)
   if (WEATHERS[o.weather] && o.weather !== weatherKey) applyWeatherKey(o.weather);
   renderWeatherChip();
   Object.assign(G, { state: 'countdown', paused: false, over: false, runTime: 0, kills: 0, score: 0, shots: 0, hits: 0, mFired: 0, mHits: 0, evaded: 0, shake: 0 });
@@ -2531,7 +2643,7 @@ function mpMeDown() {
 function mpMeUp(s) {
   mpPlace(s); applyLoadout();
   for (const x of MP.msls.values()) if (x.target === player) x.target = null; // ракеты, летевшие в сбитый самолёт, — не угроза новому
-  Object.assign(player, { hull: 100, invuln: 1.5, heat: 0, overheated: false, flares: MODE.cm, chaff: MODE.cm });
+  Object.assign(player, { hull: 100, invuln: 1.5, heat: 0, overheated: false, flares: MODE.cm, chaff: MODE.cm, fuel: Math.round(FUEL_START * MODE.fuelK) }); // после сбития — полный бак
   radar.lock = null; setCount(''); popup('ВОЗРОЖДЕНИЕ', 'info');
 }
 // сервер вернул самолёт после ИИ (вкладка была свёрнута или оборвалась связь): где он сейчас, корпус, что осталось на пилонах
@@ -2560,7 +2672,7 @@ function remoteUp(c) { // модель «Изделия» соперника/с�
 function remoteVisual(c) {
   const g = c.group; if (!g) return;
   g.position.copy(c.pos); g.rotation.set(c.pitch, c.yaw, c.roll);
-  const f = c.flames[0]; f.scale.set(c.ab ? 1.25 : 0.9, c.ab ? 1.25 : 0.9, (c.ab ? 6 : 1.2 * c.thr) * (0.9 + rnd() * 0.2));
+  const f = c.flames[0], fw = c.ab ? 1.25 : 0.4 + 0.5 * c.thr; f.scale.set(fw, fw, (c.ab ? 6 : 0.2 + 1.1 * c.thr) * (0.9 + rnd() * 0.2)); // газ соперника виден по пламени
 }
 function remoteDown(c) {
   explosion(c.pos, 3.2); sfx.boom(c.pos.distanceTo(camera.position), 3);
@@ -2634,6 +2746,16 @@ function rotDone(run) { show('rotateScr', false); const f = rotAsk.fn; rotAsk.fn
 window.addEventListener('resize', () => { if (rotAsk.fn && !isPortrait()) rotDone(true); });
 $('rotGo').addEventListener('click', () => { rotAsk.ok = true; rotDone(true); });
 $('rotCancel').addEventListener('click', () => rotDone(false));
+// журнал боёв: ошибки страницы в онлайне и раз в 30 с — кадры, качество, управление, устройство
+window.addEventListener('error', (e) => { if (MP.on) MP.clog('js_error', { msg: String(e.message).slice(0, 300), at: (e.filename || '').split('/').pop() + ':' + e.lineno }); });
+window.addEventListener('unhandledrejection', (e) => { if (MP.on) MP.clog('js_error', { msg: String(e.reason && (e.reason.stack || e.reason)).slice(0, 300) }); });
+let mpLogT = 0;
+function mpClogTick(dt) {
+  if (!MP.on || (mpLogT -= dt) > 0) return; mpLogT = 30;
+  MP.clog('client', { fps: Math.round(dr.fps), low: Math.round(dr.low), scale: +(pipe ? pipe.scale : dr.scale).toFixed(2), gfx: gfxKey, flight: flightMode, assist: assist ? 1 : 0,
+    touch: IS_TOUCH ? 1 : 0, thr: +player.thr.toFixed(2), scr: VW + '×' + VH, tg: TG.W ? TG.W.platform : 0, ua: (navigator.userAgent || '').slice(0, 120),
+    hull: Math.round(player.hull), fuel: Math.round(player.fuel), spd: Math.round(player.speed), alt: Math.round(player.pos.y), mode: modeKey });
+}
 const MP = createOnline({
   gate: landscapeGate,
   G, player, enemies, testName: (TEST && TRAINING && Q.get('mpname')) || '', inviteCode: (TRAINING && Q.get('mp')) || '', share: shareInvite,
@@ -2807,7 +2929,7 @@ function updateSound(dt) {
   AU.spatial(dt, camera, flying ? player.vel : null, sndCands, on);
 }
 function tick(dt) {
-  MP.update(dt);
+  MP.update(dt); mpClogTick(dt);
   if (G.state === 'play') {
     G.runTime += dt;
     if (!MODE.training && !MP.on) runSchedule();
@@ -2933,7 +3055,7 @@ function warmShaders() {
 warmShaders();
 measureRefresh().then(() => { try { render(); } catch (_) { /* первый кадр — ещё под экраном загрузки */ } $('loading').remove(); requestAnimationFrame(frame); });
 
-if (TEST && TRAINING) window.__g = { MP, camera, ship, scene, G, player, enemies, missiles, tankers, bullets, cms, schedule, radar, seeker, input, held, binds, loaded, MISSILES, AC, rwr,
+if (TEST && TRAINING) window.__g = { setFlight: (m) => { flightMode = m; }, MP, camera, ship, scene, G, player, enemies, missiles, tankers, bullets, cms, schedule, radar, seeker, input, held, binds, loaded, MISSILES, AC, rwr,
   spawnAI, spawnTanker, endGame, hurt, dlz, buildSchedule, maxKills, SEED, tick, render, launchPlayerMissile, launchMissile, cycleLock, cycleWeapon, dropCM, updateHud, runBenchmark,
   renderer, AU, lobby, world, terrainH, TOWNS, AIRFIELD, explosion, SMOKE, applyPerf, applyWeatherKey, WEATHERS, showUpscaleResult, touchCfg: () => touchCfg,
   getSel: () => selType, gunT: () => gunTarget, gfx: () => gfxKey, mode: () => modeKey, TR, openLesson, closeLesson, perf, pipe: () => pipe, dr,

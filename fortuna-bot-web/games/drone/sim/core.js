@@ -2,7 +2,7 @@
 // Без сцены и DOM — только THREE.Vector3 (глобальный THREE: в браузере — из скрипта, на сервере — из npm three@0.128.0).
 // Этот файл импортируют и клиент (main.js), и онлайн-сервер — любые правки меняют поведение обоих.
 /* global THREE */
-import { terrainH } from '../terrain-core.js?v=20260930f';
+import { terrainH } from '../terrain-core.js?v=20260930g';
 
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const wrapPI = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
@@ -45,6 +45,43 @@ export function flyStep(a, rx, ry, dt) {
   a.speed += (thrust - drag - G0 * Math.sin(a.pitch)) * dt;
   if (a.speed < a.vStall) a.pitch -= (a.vStall - a.speed) * 0.015 * dt; // сваливание: нос опускается
   a.speed = Math.max(a.speed, 45);
+  fwdOf(a, a.vel).multiplyScalar(a.speed);
+  a.pos.addScaledVector(a.vel, dt);
+}
+// Пилотажная лётная модель (настройка «Управление: Пилотажное», только самолёт игрока): ориентация — кватернион в осях
+// самолёта; ручка вверх-вниз — тангаж вокруг правого крыла (петля через вертикаль возможна), влево-вправо — крен.
+// Каждый шаг раскладывается обратно в yaw/pitch/roll (порядок YXZ, как у моделей) — fwdOf, HUD, сеть и ракеты не меняются.
+// Энергетика (тяга, сопротивление, перегрузка, сваливание) — как во flyStep. sink — принудительное опускание носа, рад/с (потолок).
+export const ROLL_RATE = 3.6; // рад/с (~200°/с) — «Изделие» без лётчика
+const PQ = new THREE.Quaternion(), PE = new THREE.Euler(0, 0, 0, 'YXZ'), PAX = new THREE.Vector3(), PFW = new THREE.Vector3();
+const AX_X = new THREE.Vector3(1, 0, 0), AX_Z = new THREE.Vector3(0, 0, 1), UP_W = new THREE.Vector3(0, 1, 0);
+export function pilotStep(a, rx, ry, dt, sink = 0) {
+  const e = a.qe;
+  if (!a.q || !e || e[0] !== a.pitch || e[1] !== a.yaw || e[2] !== a.roll) { // углы поменяли снаружи: старт, удар о землю, возрождение
+    a.q = (a.q || new THREE.Quaternion()).setFromEuler(PE.set(a.pitch, a.yaw, a.roll, 'YXZ'));
+    a.wr = 0;
+  }
+  const v = Math.max(a.speed, 60);
+  const wMax = Math.min(a.wCap, a.gmax * G0 / v); // тангаж ограничен перегрузкой, как во flyStep
+  const k = Math.min(1, a.agil * dt);
+  a.wp += (clamp(ry, -1, 1) * wMax - a.wp) * k;
+  a.wr += (-clamp(rx, -1, 1) * ROLL_RATE - a.wr) * k; // ручка вправо — правое крыло вниз (крен < 0, как у моделей)
+  a.q.multiply(PQ.setFromAxisAngle(AX_X, a.wp * dt)).multiply(PQ.setFromAxisAngle(AX_Z, a.wr * dt));
+  // сваливание и потолок: нос опускается к земле в мировых осях (и в перевёрнутом полёте — тоже к земле)
+  const drop = (a.speed < a.vStall ? (a.vStall - a.speed) * 0.015 : 0) + sink;
+  if (drop > 0) {
+    PFW.set(0, 0, -1).applyQuaternion(a.q); PAX.crossVectors(PFW, UP_W);
+    if (PAX.lengthSq() > 1e-6) a.q.premultiply(PQ.setFromAxisAngle(PAX.normalize(), -drop * dt));
+  }
+  a.q.normalize();
+  PE.setFromQuaternion(a.q, 'YXZ'); a.pitch = PE.x; a.yaw = PE.y; a.roll = PE.z;
+  a.qe = [a.pitch, a.yaw, a.roll];
+  a.wy = 0; // у вертикали рыскание по углам скачет на 180° — камере и HUD оно здесь не нужно
+  a.n = 1 + v * Math.abs(a.wp) / G0;
+  const rho = rhoAt(a.pos.y);
+  const thrust = (a.ab ? a.abAcc : a.milAcc * a.thr) * (0.25 + 0.75 * rho) / a.massK;
+  const drag = a.cd0 * rho * v * v * a.dragK + 0.32 * a.bleed * Math.pow(Math.max(0, a.n - 1), 2);
+  a.speed = Math.max(45, a.speed + (thrust - drag - G0 * Math.sin(a.pitch)) * dt);
   fwdOf(a, a.vel).multiplyScalar(a.speed);
   a.pos.addScaledVector(a.vel, dt);
 }

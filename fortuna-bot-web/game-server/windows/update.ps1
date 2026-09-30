@@ -32,6 +32,11 @@ if ((Get-Service $Svc).Status -ne 'Stopped') {
 }
 Get-Process deno -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $DenoExe } | Stop-Process -Force -ErrorAction SilentlyContinue
 for ($i = 0; $i -lt 10 -and (Get-Service $Svc).Status -ne 'Stopped'; $i++) { Start-Sleep 1 }
+# права сервера: журналу боёв (game-server\logs) нужна запись. Ставим при каждом обновлении — у первых установок её не было.
+$Nssm = (Get-Command nssm -ErrorAction SilentlyContinue).Source
+$Server = (Resolve-Path (Join-Path $PSScriptRoot "..\server.js")).Path
+if ($Nssm) { & $Nssm set $Svc AppParameters "run --allow-net --allow-read --allow-write --allow-env `"$Server`"" | Out-Null }
+else { Write-Host "Не нашёл nssm — журнал боёв не включится (нет права записи). Запустите install.ps1." -ForegroundColor Yellow }
 Start-Service $Svc
 Start-Sleep 5
 try { $h = Invoke-RestMethod "http://127.0.0.1:$Port/health" -TimeoutSec 5; Write-Host ("Обновлено, сервер работает: " + ($h | ConvertTo-Json -Compress)) -ForegroundColor Green }

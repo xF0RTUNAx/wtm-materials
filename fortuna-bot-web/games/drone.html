@@ -143,6 +143,18 @@
   #btnSlow { left: 16px; bottom: 26px; } #btnBack { left: 16px; bottom: 90px; }
   body.short #btnMsl { bottom: 112px; } body.short #btnCM { right: 100px; bottom: 170px; width: 54px; height: 54px; }
   body.short #btnBack { left: 80px; bottom: 26px; }
+  /* «АВТО» — помощь в бою: автоогонь пушкой и автопуск ракет по захвату (включается и выключается прямо в бою) */
+  #btnAssist { left: 80px; bottom: 26px; } body.short #btnAssist { left: 144px; bottom: 26px; }
+  #btnAssist.on { background: rgba(74,222,128,.5); border-color: #86efac; }
+  /* крестовина пилотажного управления: ◀ ▶ — крен, ▲ ▼ — тангаж (только в «Пилотажном»; в редакторе видна всегда) */
+  #btnPad { left: 16px; bottom: 154px; width: auto; height: auto; border-radius: 0; background: transparent; border: 0; display: grid;
+    grid-template: repeat(3, 56px) / repeat(3, 56px); gap: var(--pad-gap, 3px); /* расстояние — «Настройки → Расстояние между стрелками» */ align-items: stretch; justify-items: stretch; } /* у .tbtn — по центру, стрелки сжимались */
+  #btnPad i { font-style: normal; display: flex; align-items: center; justify-content: center; border-radius: 10px; border: 2px solid rgba(255,255,255,.5);
+    background: rgba(255,255,255,.14); font-size: 20px; pointer-events: none; }
+  #btnPad .pu { grid-area: 1 / 2; } #btnPad .pl { grid-area: 2 / 1; } #btnPad .pr { grid-area: 2 / 3; } #btnPad .pd { grid-area: 3 / 2; }
+  #btnPad i.on { background: rgba(255,120,60,.55); }
+  body.short #btnPad { left: auto; right: 180px; bottom: 14px; } /* слева на низком экране — табло скорости */
+  body:not(.pilot):not(.layoutEdit) #btnPad { display: none; }
   /* редактор расположения кнопок (Настройки → «Расположение кнопок…») */
   body.layoutEdit #touch { display: block; z-index: 56; background: rgba(6,12,20,.62); }
   body.layoutEdit .screen.on { visibility: hidden; } /* меню не мешает; HUD виден — чтобы не ставить кнопки на радар и панель оружия */
@@ -378,8 +390,10 @@
 <div id="touch">
   <div id="stickZone"><div id="stickBase"><div id="stickKnob"></div></div></div>
   <div class="tbtn" id="btnCM">ЛТЦ<br>ДО</div>
-  <div class="tbtn sm" id="btnSlow">ГАЗ−</div>
+  <div class="tbtn sm" id="btnSlow">ГАЗ</div>
+  <div class="tbtn pad" id="btnPad"><i class="pu">▲</i><i class="pl">◀</i><i class="pr">▶</i><i class="pd">▼</i></div>
   <div class="tbtn sm" id="btnBack">НАЗАД</div>
+  <div class="tbtn sm" id="btnAssist">АВТО</div>
   <div class="tbtn" id="btnAB">ФОР-<br>САЖ</div>
   <div class="tbtn" id="btnLock">ЗАХВАТ</div>
   <div class="tbtn" id="btnMsl">РАКЕТА</div>
@@ -467,8 +481,8 @@
   </div>
 </div>
 
-<script src="../config.js?v=20260930f"></script> <!-- адрес функции mp-ticket и открытый ключ Supabase (билет онлайна) -->
+<script src="../config.js?v=20260930g"></script> <!-- адрес функции mp-ticket и открытый ключ Supabase (билет онлайна) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script type="module" src="drone/main.js?v=20260930f"></script>
+<script type="module" src="drone/main.js?v=20260930g"></script>
 </body>
 </html>

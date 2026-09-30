@@ -12,10 +12,10 @@
 import { MODES, DRONE } from '../games/drone/sim/modes.js';
 import { MATCH_T, RESPAWN_T, COUNTDOWN_T, RESULTS_T, SNAP_HZ, SIZES, ONLINE_MODES, MAX_HP, GUN_DMG, F_AB,
   teamSpawn, packState, validState, validLoadout, sunFor, packMissile, makeCode, cleanCode, ONLINE_IR } from '../games/drone/sim/online.js';
-import { lockedIn } from '../games/drone/sim/progress.js?v=20260930f';
-import { MISSILES } from '../games/drone/missiles.js?v=20260930f';
-import { makeCraft, fwdOf, irWhy } from '../games/drone/sim/core.js?v=20260930f';
-import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260930f';
+import { lockedIn } from '../games/drone/sim/progress.js?v=20260930g';
+import { MISSILES } from '../games/drone/missiles.js?v=20260930g';
+import { makeCraft, fwdOf, irWhy } from '../games/drone/sim/core.js?v=20260930g';
+import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260930g';
 
 const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast', 'rain'];
 const GUN_RANGE = 2200;       // дальше этого попадание пушки не засчитываем (пуля живёт 1,6 с)
@@ -27,7 +27,7 @@ const LAUNCH_CD = 0.4;        // перезарядка пусков (у кли�
 const IR_SLACK = 5;           // запас по углу для ИК-ГСН на сервере (позиции у клиента и сервера расходятся на задержку сети), °
 const IR_RANGE_K = 1.15;      // и по дальности (×) — у края дальности клиент видит захват, а сервер по старой позиции цели — нет
 const IR_ASPECT_SLACK = 10;   // и по ракурсу для ранних «хвостовых» ГСН, °
-const IR_DENY = { cone: 'СЕРВЕР: ЦЕЛЬ ВНЕ ПОЛЯ ГСН', aspect: 'СЕРВЕР: НУЖЕН ЗАХОД В ХВОСТ', range: 'СЕРВЕР: ЦЕЛЬ ДАЛЬШЕ ДАЛЬНОСТИ ГСН' };
+const IR_JAM = 'ПОМЕХИ — ЗАХВАТ ГСН СОРВАН'; // игроку — игровой текст; причина (why) — отдельным полем для проверок
 const AFK_T = 1;              // нет состояний дольше — самолёт берёт ИИ (свёрнутая вкладка не рвёт связь, но молчит)
 const RESUME_T = 60;          // оборвалась связь — ждём игрока столько, потом место освобождается
 const FOUND_T = 15;           // быстрый поиск: время на «Подтвердить»
@@ -58,7 +58,11 @@ function botSpec(mode) {
     cd0: DRONE.cd0, skill: BOT_SKILL, radarR: RADAR.range, r: DRONE.r, pts: 0, cm: M.cm };
 }
 
-export function createRooms({ log = () => {}, auth, sign = async () => null, matchT = MATCH_T }) {
+export function createRooms({ log = () => {}, auth, sign = async () => null, matchT = MATCH_T, journal = () => {} }) {
+  // журнал боёв (journal.js): событие + комната + время боя; см. game-server/log-view.js
+  const J = (r, ev, d = {}) => journal(ev, r ? { room: r.code, mode: r.mode, st: r.state, t: r.state === 'play' ? Math.round(r.t * 10) / 10 : undefined, ...d } : d);
+  const nm = (o) => (o ? o.name || '?' : null);
+  const km1 = (v) => Math.round(v / 100) / 10;
   const rooms = new Map();     // код → комната
   const clients = new Set();   // подключённые участники (записи людей с живым сокетом)
   const queues = { arcade: [], real: [] }; // быстрый поиск: [{ c, t }] по режимам
@@ -88,7 +92,8 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     const r = c.room; if (!r) return;
     r.players.delete(c.id); c.room = null;
     dropCraft(r, c);
-    if (!humans(r).length) { rooms.delete(r.code); log(`комната ${r.code} закрыта`); return; }
+    J(r, 'leave', { who: nm(c), bot: c.bot ? 1 : 0 });
+    if (!humans(r).length) { rooms.delete(r.code); log(`комната ${r.code} закрыта`); J(r, 'room_closed'); return; }
     if (r.host === c.id) r.host = humans(r).find((p) => p.ws) ? humans(r).find((p) => p.ws).id : humans(r)[0].id;
     if (r.state !== 'lobby') broadcast(r, { t: 'gone', id: c.id });
     pushRoom(r);
@@ -110,6 +115,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     const seat = seatFor(r, prefer); if (!seat) return false;
     if (seat.bot) leave(seat.bot);
     reset(c, r, seat.team);
+    J(r, 'join', { who: nm(c), bot: c.bot ? 1 : 0, team: seat.team });
     r.players.set(c.id, c);
     if (r.state === 'countdown' || r.state === 'play') { // вход в идущий бой
       const s = teamSpawn(c.team, (Math.random() * 4) | 0);
@@ -154,6 +160,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     for (const p of hs) sendStart(r, p, null);
     pushRoom(r);
     log(`комната ${r.code}: бой ${ps.map((p) => p.name + '/' + p.team).join(', ')}`);
+    J(r, 'start', { size: r.size, weather: r.weather, players: ps.map((p) => ({ n: p.name, team: p.team, bot: p.bot ? 1 : 0, load: p.load || null })) });
   }
   // start: всем в начале боя; вошедшему в идущий бой или вернувшемуся — с resume (время, счёт, свой самолёт)
   function sendStart(r, p, resume) {
@@ -168,6 +175,8 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
   function damage(r, victim, amount, killer, by) {
     if (!victim.alive || r.state !== 'play') return;
     victim.hp = Math.max(0, victim.hp - amount);
+    if (by !== 'ПУШКА') J(r, 'dmg', { victim: nm(victim), killer: nm(killer), by, amount: Math.round(amount * 10) / 10, hp: Math.round(victim.hp) });
+    else if (killer) killer.gunHits = (killer.gunHits || 0) + 1;
     broadcast(r, { t: 'hp', id: victim.id, hp: Math.round(victim.hp * 10) / 10, by: killer ? killer.id : null });
     if (victim.hp > 0) return;
     victim.alive = false; victim.respawnAt = r.t + RESPAWN_T; victim.d++;
@@ -175,6 +184,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     if (killer && killer.team !== victim.team) { killer.k++; r.score[killer.team]++; }
     else r.score[1 - victim.team]++; // разбился сам — очко противнику
     broadcast(r, { t: 'kill', victim: victim.id, killer: killer ? killer.id : null, by, score: r.score });
+    J(r, 'kill', { victim: nm(victim), killer: nm(killer), by, score: r.score, dist: killer && killer.st && victim.st ? km1(Math.hypot(killer.st[0] - victim.st[0], killer.st[1] - victim.st[1], killer.st[2] - victim.st[2])) : null });
   }
 
   // итог боя каждому человеку — подписанный сервером (награды и очки операции выдаёт edge-функция drone-claim):
@@ -209,10 +219,13 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
       fx: {
         launched(m, slot) {
           m.id = r.mid++;
+          J(r, 'launch', { id: m.id, key: m.key, who: nm(ownerOf(r, m.owner)), target: nm(m.target && ownerOf(r, m.target)), km: m.target ? km1(m.target.pos.distanceTo(m.pos)) : null, ai: m.owner.human ? 0 : 1 });
           broadcast(r, { t: 'ml', id: m.id, key: m.key, owner: m.owner.cid, target: m.target && !m.target.dead ? m.target.cid : 0, slot: slot && slot.i !== undefined ? slot.i : -1,
             p: [r1(m.pos.x), r1(m.pos.y), r1(m.pos.z)] });
         },
-        missileResult(m, hit) { broadcast(r, { t: 'mx', id: m.id, hit: hit ? 1 : 0, p: [r1(m.pos.x), r1(m.pos.y), r1(m.pos.z)] }); },
+        missileResult(m, hit) {
+          J(r, 'missile_end', { id: m.id, key: m.key, who: nm(ownerOf(r, m.owner)), target: nm(m.target && ownerOf(r, m.target)), hit: hit ? 1 : 0, why: m.why || (hit ? '' : 'промах'), flown: km1(m.flown || 0), sec: Math.round(m.t * 10) / 10 });
+          broadcast(r, { t: 'mx', id: m.id, hit: hit ? 1 : 0, p: [r1(m.pos.x), r1(m.pos.y), r1(m.pos.z)] }); },
         cmDrop(o, type) { broadcast(r, { t: 'cm', id: o.cid, type }, o.cid); },
         aiCM(o, type) { broadcast(r, { t: 'cm', id: o.cid, type }); },
         lockBroken(o) { sendTo(r, o.cid, { t: 'lockx', why: 'chaff' }); },
@@ -261,11 +274,13 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     Object.assign(o, r.battle.aiFields('drone', r.S, o.load || DEF_LOAD, o.team), { human: false, mp: true, cmFlare: o.flares, cmChaff: o.chaff, thr: 1, fireT: -9 });
     o.radar.lock = null; o.tgt = r.battle.pickTarget(o);
     log(`комната ${r.code}: самолёт ${p.name} ведёт ИИ`);
+    J(r, 'to_ai', { who: nm(p), why: p.ws ? 'молчит (нет состояний)' : 'нет связи', silent: p.lastSt ? Math.round((clock() - p.lastSt) * 10) / 10 : null });
     pushRoom(r);
   }
   // и обратно человеку: подвеска и ловушки — сколько осталось у ИИ
   function toHuman(r, p) {
     p.ai = false; p.lastSt = clock();
+    J(r, 'to_human', { who: nm(p) });
     const o = p.craft; if (!o || o.dead || o.human) return;
     Object.assign(o, { human: true, mp: false, load: o.msl.map((x) => (x ? x.key : null)), flares: o.cmFlare, chaff: o.cmChaff, stt: false, tgt: null,
       mslT: -9, base: (o.base || new THREE.Vector3()).copy(o.pos), stT: clock(), radar: { contacts: new Map(), lock: null, lostT: 0, scanT: 0, t: 0 } });
@@ -373,6 +388,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
       if (old) return resume(c, old);
       if (m.resume) send(c, { t: 'noresume' });
       send(c, { t: 'welcome', id: c.id, name: c.name });
+      J(null, 'hello', { who: c.name });
       send(c, { t: 'search', ...searching() });
     },
     create(c, m) {
@@ -446,7 +462,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     launch(c, m) { // пуск ракеты: сервер проверяет подвеску, перезарядку и захват, потом ракету ведёт сам
       const r = c.room; if (!r || r.state !== 'play' || !c.alive || !c.craft || !c.craft.human || !r.battle) return;
       const o = c.craft, key = m.key, slot = m.slot | 0, M_ = typeof key === 'string' && Object.prototype.hasOwnProperty.call(MISSILES, key) ? MISSILES[key] : null;
-      const deny = (msg) => send(c, { t: 'deny', msg, slot });
+      const deny = (msg, why) => { if (msg) J(r, 'deny', { who: nm(c), key, why: why || msg, target: m.target ? nm(r.players.get(m.target)) : null }); send(c, { t: 'deny', msg, slot, why }); };
       if (!M_ || !o.load || o.load[slot] !== key) return deny('РАКЕТЫ НЕТ НА ПОДВЕСКЕ');
       const now = clock(); if (now - o.mslT < LAUNCH_CD) return deny('');
       if (validState(m.s)) { c.st = m.s; c.lastSt = now; placeCraft(o, m.s); } // точка пуска — где игрок был в момент нажатия
@@ -454,8 +470,8 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
       if (m.target && !t) return deny('ЦЕЛЬ ПОТЕРЯНА');
       if (M_.kind === 'ir') {
         const w = t && irWhy(M_, t, o.pos, fwdOf(o, AX), Math.max(M_.ir.fov, M_.ir.slaved) + IR_SLACK, IR_RANGE_K, IR_ASPECT_SLACK);
-        if (w) return deny(IR_DENY[w.why]); // свой текст — чтобы отличать отказ сервера от «НЕТ ЗАХВАТА ГСН» у клиента
-        if (!t && !M_.ir.loal) return deny('СЕРВЕР: НЕТ ЦЕЛИ ДЛЯ ГСН');
+        if (w) return deny(IR_JAM, w.why); // свой текст — чтобы отличать отказ сервера от «НЕТ ЗАХВАТА ГСН» у клиента
+        if (!t && !M_.ir.loal) return deny(IR_JAM, 'none');
       } else if (M_.kind === 'sarh') {
         if (!t || o.radar.lock !== t) return deny('НУЖЕН ЗАХВАТ РЛС');
       } else if (!t || !(o.radar.lock === t || o.radar.contacts.has(t) || r.battle.radarSees(o, t) === true)) return deny('НЕТ ЦЕЛИ НА РАДАРЕ');
@@ -470,12 +486,19 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
       const r = c.room; if (!r || r.state !== 'play' || !c.alive || c.ai || !c.st) return;
       const v = r.players.get(m.target); if (!v || !v.alive || !v.st || v.team === c.team) return;
       const now = r.t; if (now - c.hitT >= 1) { c.hitT = now; c.hitN = 0; }
-      if (++c.hitN > HITS_PER_S) return;
+      const rej = (k) => { c.gunRej = c.gunRej || {}; c.gunRej[k] = (c.gunRej[k] || 0) + 1; };
+      if (++c.hitN > HITS_PER_S) return rej('темп');
       const dx = v.st[0] - c.st[0], dy = v.st[1] - c.st[1], dz = v.st[2] - c.st[2], d = Math.hypot(dx, dy, dz);
-      if (d > GUN_RANGE) return;
+      if (d > GUN_RANGE) return rej('дальность');
       const yaw = c.st[3], cp = Math.cos(c.st[4]); // нос стрелка (как fwdOf в sim/core.js)
-      if ((-Math.sin(yaw) * cp * dx + Math.sin(c.st[4]) * dy - Math.cos(yaw) * cp * dz) / (d || 1) < GUN_AIM) return;
+      if ((-Math.sin(yaw) * cp * dx + Math.sin(c.st[4]) * dy - Math.cos(yaw) * cp * dz) / (d || 1) < GUN_AIM) return rej('угол');
       damage(r, v, GUN_DMG * MODES[r.mode].dmgTaken, c, 'ПУШКА');
+    },
+    clog(c, m) { // запись игры в журнал: отказ пуска у себя, ошибка страницы, кадры и устройство — не чаще 30 в минуту, до 1500 символов
+      const now = clock(); if (now - (c.clogT || 0) > 60) { c.clogT = now; c.clogN = 0; }
+      if (++c.clogN > 30) return;
+      let d = ''; try { d = JSON.stringify(m.d === undefined ? null : m.d).slice(0, 1500); } catch (_) { return; }
+      J(c.room, 'client', { who: nm(c), k: String(m.k || '').slice(0, 40), d });
     },
     self(c, m) { // удар о землю или здание — клиент сообщает о себе сам
       const r = c.room; if (!r || r.state !== 'play' || !c.alive || c.ai) return;
@@ -496,6 +519,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     Object.assign(p, { ws: c.ws, name: c.name, authed: true, awayT: 0 });
     send(p, { t: 'welcome', id: p.id, name: p.name, resumed: 1 });
     log(`комната ${r.code}: ${p.name} вернулся`);
+    J(r, 'resume', { who: nm(p) });
     pushRoom(r);
     if (r.state === 'countdown' || r.state === 'play') {
       if (!p.ai) toAI(r, p); // пока клиент не поставил самолёт по «you» — ведёт ИИ
@@ -510,6 +534,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     const r = c.room;
     if (r && (r.state === 'countdown' || r.state === 'play')) { // в бою место держим RESUME_T, самолёт ведёт ИИ
       c.ws = null; c.awayT = clock();
+      J(r, 'disconnect', { who: nm(c) });
       toAI(r, c);
       if (!humans(r).some((p) => p.ws)) log(`комната ${r.code}: все люди без связи`);
       pushRoom(r);
@@ -541,6 +566,16 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
         for (const p of r.players.values()) if (p.st) P.push([p.id, p.alive ? 1 : 0, Math.round(p.hp), ...p.st, lockOf(p)]);
         for (const m of r.battle.missiles) if (!m.dead) M.push(packMissile(m, m.target && !m.target.dead ? m.target.cid : 0)); // цель сбита — ракета ни в кого (иначе после возрождения её «цель» — новый самолёт с тем же id)
         broadcast(r, { t: 'snap', T: Math.round(r.t * 1000) / 1000, P, M });
+        if ((r.logT = (r.logT || 0) + dt) >= 5) { // журнал: кто где и в каком состоянии (st — сколько секунд нет состояний от игры)
+          r.logT = 0;
+          J(r, 'state', { score: r.score, missiles: M.length, P: [...r.players.values()].map((p) => {
+            const o = p.craft, row = { n: p.name, team: p.team, alive: p.alive ? 1 : 0, hp: Math.round(p.hp), ai: p.ai ? 1 : 0, bot: p.bot ? 1 : 0, net: p.bot ? null : p.ws ? 1 : 0,
+              silent: !p.bot && p.lastSt ? Math.round((clock() - p.lastSt) * 10) / 10 : null,
+              pos: o && !o.dead ? [Math.round(o.pos.x), Math.round(o.pos.y), Math.round(o.pos.z)] : null, v: o && !o.dead ? Math.round(o.speed) : null,
+              lock: o && o.radar && o.radar.lock ? nm(ownerOf(r, o.radar.lock)) : null, gun: p.gunHits || 0, gunRej: p.gunRej || null, flares: o ? (o.human ? o.flares : o.cmFlare) : null };
+            p.gunHits = 0; p.gunRej = null; return row;
+          }) });
+        }
         if (r.t >= matchT) {
           r.state = 'end'; r.endT = RESULTS_T; r.battle = null;
           for (const p of r.players.values()) p.craft = null;
@@ -550,6 +585,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
           pushRoom(r);
           sendResults(r);
           log(`комната ${r.code}: итог ${r.score.join(':')}`);
+          J(r, 'end', { score: r.score, players });
         }
       } else if (r.state === 'end') {
         r.endT -= dt;
@@ -579,7 +615,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
         if (!m || typeof m.t !== 'string' || !handlers[m.t]) return;
         if (!c.authed && m.t !== 'hello') return;
         if (c.ws !== ws) return; // запись уже заняла новая связь
-        try { const p = await handlers[m.t](c, m); if (m.t === 'hello' && p && p.ws === ws) c = p; } catch (e) { log('ошибка в ' + m.t + ': ' + (e && e.stack || e)); }
+        try { const p = await handlers[m.t](c, m); if (m.t === 'hello' && p && p.ws === ws) c = p; } catch (e) { log('ошибка в ' + m.t + ': ' + (e && e.stack || e)); J(c.room, 'error', { in: m.t, who: nm(c), err: String(e && e.stack || e).slice(0, 1500) }); }
       };
       ws.onclose = () => { if (c.ws === ws) dropped(c); }; // иначе запись уже заняла новая связь (переподключение)
       ws.onerror = () => {};
