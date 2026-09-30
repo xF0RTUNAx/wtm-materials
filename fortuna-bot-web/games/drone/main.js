@@ -1516,8 +1516,11 @@ function renderLoadTab() {
       if (!M_.mounts.includes(sk) || M_.mass > STATION_KIND[sk].lim) why = 'не для этого пилона';
       else if (!canMount(selSt, key, loadout)) why = 'перегруз';
       else if (lockedNow) why = 'закрыта для «Реализма»';
-      const buy = lockR ? `<span class="buy" data-buy="${key}" title="Открыть для «Реализма»">🔒 ${PR.price(key)} дет.</span>` : '';
-      opts += `<button class="opt ${loadout[selSt] === key ? 'on' : ''} ${why ? 'dis' : ''}" data-k="${key}">
+      // хватает деталей — значок зелёный и строка подсвечена; не хватает — серый значок «ещё N»
+      const price = PR.price(key), have = PR.state ? PR.state.details : 0, can = lockR && have >= price;
+      const buy = !lockR ? '' : can ? `<span class="buy can" data-buy="${key}" title="Хватает деталей — открыть для «Реализма»">🔓 ${price} дет.</span>`
+        : `<span class="buy no" data-buy="${key}" title="Не хватает ${price - have} дет.">🔒 ${price} · ещё ${price - have}</span>`;
+      opts += `<button class="opt ${loadout[selSt] === key ? 'on' : ''} ${why ? 'dis' : ''} ${can ? 'afford' : ''}" data-k="${key}">
         <span class="tag ${M_.kind}">${KIND_TAG[M_.kind]}</span>
         <span class="nm"><b>${M_.name}</b><span>${M_.mass} кг · ${KIND_FULL[M_.kind]}${why ? ' · ' + why : ''}</span></span>
         ${buy}<span class="inf" data-info="${key}">справка</span></button>`;
@@ -1527,14 +1530,17 @@ function renderLoadTab() {
   if (PR.enabled && PR.state) {
     const total = Object.keys(MISSILES).length, open = Object.keys(MISSILES).filter((k) => !PR.locked('real', k)).length;
     const lost = modeKey === 'real' ? loadout.filter((k) => k && PR.locked('real', k)) : [];
-    prog = `<div class="prog">Детали: <b>${PR.state.details}</b> · открыто ракет для «Реализма»: <b>${open} из ${total}</b>. В «Аркаде» и «Обучении» доступны все; 🔒 — открыть за детали.`
+    const d = PR.state.details, canN = Object.keys(MISSILES).filter((k) => PR.locked('real', k) && d >= PR.price(k)).length;
+    prog = `<div class="prog"><div class="bal"><span class="balN">🔩 ${d}</span> ${plural(d, 'деталь', 'детали', 'деталей')} на счету`
+      + (canN ? ` · <span class="ok">можно открыть ${canN} ${plural(canN, 'ракету', 'ракеты', 'ракет')}</span> — подсвечены зелёным` : '') + `</div>`
+      + `Открыто ракет для «Реализма»: <b>${open} из ${total}</b>. В «Аркаде» и «Обучении» доступны все; 🔒 — открыть за детали (нажмите на цену).`
       + (lost.length ? `<br><span class="bad">В «Реализме» закрыты: ${lost.map((k) => MISSILES[k].short).join(', ')} — на взлёте их заменят AIM-9B / AIM-7E</span>` : '') + `</div>`;
   } else if (PR.enabled && PR.err) prog = `<div class="prog bad">Прогресс не загрузился: ${PR.err}</div>`;
   $('tab-load').innerHTML = `${prog}
     <div class="loadHead"><!-- закреплена при прокрутке списка ракет: что подвешено, масса, ЭПР, выбранный пилон -->
     <div class="pyl-row">${pyl}</div>
     <div class="loadbar"><i style="width:${Math.min(100, mass / MAX_LOAD * 100)}%"></i></div>
-    <div class="loadtxt"><span>Нагрузка ${mass} / ${MAX_LOAD} кг</span><span>ЭПР ${(1 + 0.15 * loadout.filter(Boolean).length).toFixed(2)} м²</span></div>
+    <div class="loadtxt"><span>Нагрузка ${mass} / ${MAX_LOAD} кг</span>${PR.enabled && PR.state ? `<span class="balS">🔩 ${PR.state.details} дет.</span>` : ''}<span>ЭПР ${(1 + 0.15 * loadout.filter(Boolean).length).toFixed(2)} м²</span></div>
     <div class="pick-t"><span>Пилон ${STATIONS[selSt].id} · ${STATION_KIND[sk].name}, до ${STATION_KIND[sk].lim} кг</span>
       <label><input type="checkbox" id="symChk" ${symmetric ? 'checked' : ''}> симметрично</label></div></div>
     ${opts}
@@ -1728,8 +1734,10 @@ function perfBlock() {
       <div class="prow"><span>Апскейлер</span>${seg('up', perf.up, [['off', 'Выкл'], ['cas', 'CAS'], ['fsr', 'FSR']])}</div>
       <p class="hint">${upHint}</p>
       ${perf.up !== 'off' ? `<label class="chk">Резкость <input type="range" id="pSharp" min="0" max="1" step="0.05" value="${perf.sharp}"> <span id="pSharpV">${perf.sharp.toFixed(2)}</span></label>` : ''}
+      <button class="btn alt sm" id="upTestBtn">Сравнить апскейлеры (≈ 12 с)</button>
       <div class="prow"><span>Сглаживание</span>${seg('aa', perf.aa, [['off', 'Выкл'], ['fxaa', 'FXAA'], ['msaa', 'MSAA ×4'], ['taa', 'TAA']])}</div>
       <p class="hint">${aaHint}</p>
+      <button class="btn alt sm" id="aaTestBtn">Сравнить сглаживание (≈ 12 с)</button>
       <label class="chk"><input type="checkbox" id="pSmartQ" ${perf.smartQ ? 'checked' : ''} ${perf.dyn ? '' : 'disabled'}> Умное динамическое качество</label>
       <p class="hint">Когда кадры не успевают, сначала сокращается дальность подробного леса и рельефа, и только потом снижается разрешение; возвращается в обратном порядке. Картинка при нагрузке остаётся чёткой.${perf.dyn ? '' : ' Работает вместе с динамическим разрешением.'}</p>
       <label class="chk"><input type="checkbox" id="pHalfFx" ${perf.halfFx ? 'checked' : ''} ${fxAvail() ? '' : 'disabled'}> Облака и дым в половинном разрешении</label>
@@ -1742,7 +1750,6 @@ function perfBlock() {
       <p class="hint">В полёте: кадров в секунду, частота экрана, худшие 5% кадров и текущий масштаб рендера.</p>
       <label class="chk"><input type="checkbox" id="pImm" ${perf.immersive ? 'checked' : ''}> Режим погружения</label>
       <p class="hint">На время вылета — весь экран без панелей браузера${IS_TOUCH ? ', экран не гаснет, ориентация зафиксирована' : ', мышь не уходит за край окна'}; «Назад» ставит паузу, закрытие — только с подтверждением.${TG.W || TG.proxy ? ' В Telegram свайп вниз не сворачивает игру.' : IOS ? ' В Safari на iPhone весь экран доступен, если открыть игру с экрана «Домой».' : ''}</p>
-      <button class="btn alt sm" id="upTestBtn">Сравнить апскейлеры (≈ 12 с)</button>
       <button class="btn alt sm" id="perfReset">Сбросить к настройкам пресета</button>
     </div>`;
 }
@@ -1829,6 +1836,7 @@ $('tab-set').addEventListener('click', (e) => {
   }
   if (e.target.id === 'perfReset') { Object.assign(perf, P.perf); applyPerf(); }
   if (e.target.id === 'upTestBtn') runUpscaleTest();
+  if (e.target.id === 'aaTestBtn') runAaTest();
   if (e.target.id === 'tReset') { touchCfg = { sens: 1, dead: 0.1, curve: 0.35, invert: false }; saveTouch(); renderSettingsTab(); }
 });
 $('tab-set').addEventListener('change', (e) => {
@@ -1945,13 +1953,25 @@ function requestPointer() {
   if (IS_TOUCH || !IMM.on || !mouseCfg.steer || document.pointerLockElement === canvas) return;
   try { const r = canvas.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (_) { /* не поддерживается */ }
 }
+// Возвращает обещание, которое выполняется, когда полный экран действительно снят (не дольше 0,8 с): если фрейм игры
+// закрыть раньше, Safari оставляет страницу сайта в «полноэкранном» состоянии с пустым фреймом — сайт перестаёт
+// отвечать на нажатия до перезагрузки.
 function exitImmersive() {
-  if (!IMM.on) return;
-  IMM.on = false; document.body.classList.remove('immersive');
-  try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (_) { /* нет */ }
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+  const wasFs = !!fsEl();
+  if (IMM.on) {
+    IMM.on = false; document.body.classList.remove('immersive');
+    try { if (navigator.keyboard && navigator.keyboard.unlock) navigator.keyboard.unlock(); } catch (_) { /* нет */ }
+    try { if (IMM.wake) IMM.wake.release(); } catch (_) { /* нет */ } IMM.wake = null;
+  }
   try { if (document.pointerLockElement) document.exitPointerLock(); } catch (_) { /* нет */ }
-  try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (_) { /* нет */ }
-  try { if (IMM.wake) IMM.wake.release(); } catch (_) { /* нет */ } IMM.wake = null;
+  if (!wasFs) return Promise.resolve();
+  return new Promise((res) => {
+    const done = () => { clearTimeout(t); document.removeEventListener('fullscreenchange', done); document.removeEventListener('webkitfullscreenchange', done); res(); };
+    const t = setTimeout(done, 800);
+    document.addEventListener('fullscreenchange', done); document.addEventListener('webkitfullscreenchange', done);
+    try { if (document.exitFullscreen) document.exitFullscreen().catch(done); else if (document.webkitExitFullscreen) document.webkitExitFullscreen(); } catch (_) { done(); }
+  });
 }
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement !== canvas && IMM.on && G.state === 'play') togglePause(); });
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && IMM.on && G.state === 'play') togglePause(); });
@@ -2168,14 +2188,21 @@ function snapCanvas() {
     } catch (_) { res(''); }
   });
 }
-async function runUpscaleTest() {
+// Сравнение сглаживания — тем же окном: без сглаживания (слева), FXAA, MSAA ×4, TAA при текущих масштабе и апскейлере.
+// TAA копит кадры, поэтому перед снимком каждой сцены рисуем её много раз с неподвижной камерой.
+function runAaTest() { return runUpscaleTest('aa'); }
+async function runUpscaleTest(kind = 'up') {
   if (bench.active) return;
   bench.active = true; AU.silence();
   show('menu', false); $('benchScr').classList.add('on');
   for (const u of upUrls) if (u.startsWith('blob:')) URL.revokeObjectURL(u); upUrls = [];
-  const saved = { ...perf }, S = 0.67;
-  const cfgs = [{ k: 'native', name: 'Натив 100%', scale: 1, up: 'off' }, { k: 'bil', name: '67% без апскейлера', scale: S, up: 'off' },
-    { k: 'cas', name: '67% + CAS', scale: S, up: 'cas' }, { k: 'fsr', name: '67% + FSR', scale: S, up: 'fsr' }];
+  const saved = { ...perf }, S = 0.67, aa = kind === 'aa';
+  const title = aa ? 'Сравнение сглаживания' : 'Сравнение апскейлеров';
+  const cfgs = aa
+    ? [{ name: 'Без сглаживания', aa: 'off' }, { name: 'FXAA', aa: 'fxaa' }, { name: 'MSAA ×4', aa: 'msaa' }, { name: 'TAA', aa: 'taa' }]
+      .map((c) => ({ ...c, scale: saved.dyn ? dr.scale : saved.scale, up: saved.up }))
+    : [{ k: 'native', name: 'Натив 100%', scale: 1, up: 'off' }, { k: 'bil', name: '67% без апскейлера', scale: S, up: 'off' },
+      { k: 'cas', name: '67% + CAS', scale: S, up: 'cas' }, { k: 'fsr', name: '67% + FSR', scale: S, up: 'fsr' }];
   camera.clearViewOffset();
   if (camera.fov !== 50) { camera.fov = 50; camera.updateProjectionMatrix(); }
   const pose = (shot, t) => {
@@ -2185,14 +2212,14 @@ async function runUpscaleTest() {
   };
   const out = [];
   for (const c of cfgs) {
-    Object.assign(perf, { scale: c.scale, dyn: false, up: c.up }); dr.scale = c.scale; rebuildPipe();
+    Object.assign(perf, { scale: c.scale, dyn: false, up: c.up }, c.aa ? { aa: c.aa } : {}); dr.scale = c.scale; rebuildPipe();
     const times = [];
     await new Promise((res) => {
       const t0 = performance.now(); let lastT = t0;
       function f(now) {
         const el = now - t0; times.push(now - lastT); lastT = now;
         pose(UP_SHOTS[0], el / 1000); SMOKE.update(0.016); FX.update(0.016); render();
-        $('benchBox').textContent = `Сравнение апскейлеров: ${c.name} — ${Math.min(100, Math.round(el / 1600 * 100))}%`;
+        $('benchBox').textContent = `${title}: ${c.name} — ${Math.min(100, Math.round(el / 1600 * 100))}%`;
         if (el < 1600) requestAnimationFrame(f); else res();
       }
       requestAnimationFrame(f);
@@ -2201,7 +2228,7 @@ async function runUpscaleTest() {
     const avg = times.reduce((x, y) => x + y, 0) / Math.max(1, times.length);
     const imgs = [];
     for (const shot of UP_SHOTS) {
-      pose(shot, 0.8); render(); render(); // второй кадр — уже с прогретыми тенями и облаками
+      pose(shot, 0.8); for (let i = 0; i < (c.aa === 'taa' ? 16 : 2); i++) render(); // прогретые тени и облака; TAA — накопленная история
       imgs.push(await snapCanvas());
     }
     upUrls.push(...imgs);
@@ -2210,19 +2237,20 @@ async function runUpscaleTest() {
   Object.assign(perf, saved); dr.scale = perf.scale; rebuildPipe();
   player.ab = false; bench.active = false;
   $('benchScr').classList.remove('on');
-  showUpscaleResult(out, VW / VH);
+  showUpscaleResult(out, VW / VH, title);
 }
-function showUpscaleResult(out, aspect) {
+function showUpscaleResult(out, aspect, title = 'Сравнение апскейлеров') {
+  $('upTitle').textContent = title;
   const nat = out[0];
   const rows = out.map((r) => `<tr><td>${r.name}</td><td>${Math.round(r.fps)} к/с ${r === nat ? '' : `<b style="color:${r.fps >= nat.fps ? '#86efac' : '#fca5a5'}">${r.fps >= nat.fps ? '+' : ''}${Math.round((r.fps / nat.fps - 1) * 100)}%</b>`}</td></tr>`).join('');
   $('upBody').innerHTML = `
     <div class="cmp" id="cmp" style="width:min(100%, calc(56vh * ${aspect.toFixed(3)})); aspect-ratio:${aspect.toFixed(3)}">
       <img id="cmpA" alt="натив" draggable="false"><div class="cmpB" id="cmpB"><img id="cmpBi" alt="апскейл" draggable="false"></div>
-      <div class="cmpLine" id="cmpLine"><i></i></div><span class="cmpL">Натив 100%</span><span class="cmpR" id="cmpR"></span><span class="cmpZ" id="cmpZ"></span></div>
+      <div class="cmpLine" id="cmpLine"><i></i></div><span class="cmpL">${nat.name}</span><span class="cmpR" id="cmpR"></span><span class="cmpZ" id="cmpZ"></span></div>
     <div class="cmpBar">${seg('cmpShot', 0, UP_SHOTS.map((sh, i) => [i, sh.name]))}${seg('cmpZoom', 1, [[1, '×1'], [2, '×2'], [4, '×4']])}</div>
     <div class="cmpBar">${seg('cmpVar', 3, out.slice(1).map((r, i) => [i + 1, r.name]))}</div>
     <table class="tt">${rows}</table>
-    <p class="hint">Тяните жёлтую линию: слева — натив, справа — выбранный вариант. В увеличении картинку можно двигать пальцем или мышью; щипок, колесо и двойной тап — масштаб. Разница в к/с видна, только если видеокарта не упирается в частоту экрана.</p>`;
+    <p class="hint">Тяните жёлтую линию: слева — ${nat.name.toLowerCase()}, справа — выбранный вариант. В увеличении картинку можно двигать пальцем или мышью; щипок, колесо и двойной тап — масштаб. Разница в к/с видна, только если видеокарта не упирается в частоту экрана.</p>`;
   const cmp = $('cmp'), A = $('cmpA'), B = $('cmpBi'), clip = $('cmpB'), line = $('cmpLine');
   const st = { shot: 0, v: 3, z: 1, tx: 0, ty: 0, split: 0.5 };
   const size = () => { const r = cmp.getBoundingClientRect(); return [r.width || 1, r.height || 1, r.left, r.top]; };
@@ -2353,7 +2381,7 @@ $('resumeBtn').addEventListener('click', togglePause);
 $('againBtn').addEventListener('click', () => { if (MP.end) mpBackToMenu(); else location.reload(); });
 async function exitGame() {
   if (PR.run && G.state !== 'menu') await Promise.race([PR.claimRun(G.kills, G.bossKilled).catch(() => {}), new Promise((r) => setTimeout(r, 1500))]); // ушёл посреди вылета — сбитые всё равно в зачёт
-  MP.leave(); exitImmersive(); tgFlight(false); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); // вне сайта — назад в меню
+  MP.leave(); await exitImmersive(); tgFlight(false); if (window.parent !== window && window.parent.closeMgOverlay) window.parent.closeMgOverlay(); else location.reload(); // вне сайта — назад в меню
 }
 $('closeBtn').addEventListener('click', exitGame); $('exit').addEventListener('click', exitGame); $('pause').addEventListener('click', togglePause); $('pauseExit').addEventListener('click', exitGame);
 document.addEventListener('visibilitychange', () => { if (document.hidden && G.state === 'play' && !MP.on) togglePause(); }); // онлайн-бой не ставится на паузу

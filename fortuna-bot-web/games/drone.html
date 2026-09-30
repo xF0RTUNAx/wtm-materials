@@ -276,6 +276,13 @@
   .opt.on { border-color: #fb923c; background: rgba(251,146,60,.14); }
   .opt.dis { opacity: .38; cursor: not-allowed; } .opt.dis .buy { opacity: 1; }
   .opt .buy { flex: none; font-size: 11px; font-weight: 800; color: #fde68a; background: rgba(251,191,36,.16); border: 1px solid rgba(251,191,36,.35); padding: 4px 7px; border-radius: 7px; cursor: pointer; }
+  /* детали: крупный баланс, ракеты «по карману» — зелёные, остальные — серые с «ещё N» */
+  .opt .buy.can { color: #bbf7d0; background: rgba(74,222,128,.2); border-color: rgba(74,222,128,.6); }
+  .opt .buy.no { color: #cbd5e1; background: rgba(255,255,255,.06); border-color: rgba(255,255,255,.16); font-weight: 600; }
+  .opt.afford { border-color: rgba(74,222,128,.55); box-shadow: inset 0 0 0 1px rgba(74,222,128,.2); }
+  .opt.dis.afford { opacity: .75; }
+  .prog .bal { font-size: 13.5px; color: #e2e8f0; margin-bottom: 3px; } .prog .balN { font-size: 17px; font-weight: 800; color: #fde68a; } .prog .ok { color: #86efac; font-weight: 700; }
+  .loadtxt .balS { color: #fde68a; font-weight: 700; }
   .prog { font-size: 12px; color: #cbd5e1; background: rgba(255,255,255,.05); border-radius: 9px; padding: 7px 9px; margin-bottom: 8px; line-height: 1.45; } .prog b { color: #fff; } .prog .bad, .prog.bad { color: #fca5a5; }
   .rankRow { font-size: 12px; color: #cbd5e1; background: rgba(34,197,94,.08); border: 1px solid rgba(74,222,128,.25); border-radius: 11px; padding: 7px 10px; margin: 8px 0 0; line-height: 1.4; }
   .rankRow label { display: block; color: #fff; cursor: pointer; } .rankRow span { display: block; opacity: .8; margin-top: 2px; } .rankRow input { vertical-align: -2px; }
@@ -418,7 +425,7 @@
 
 <div class="screen" id="upTest">
   <div class="card lesson">
-    <h1>Сравнение апскейлеров</h1>
+    <h1 id="upTitle">Сравнение апскейлеров</h1>
     <div id="upBody"></div>
     <button class="btn" id="upClose">ГОТОВО</button>
   </div>

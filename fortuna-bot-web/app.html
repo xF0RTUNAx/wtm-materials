@@ -200,7 +200,7 @@
     background: linear-gradient(135deg, var(--accent), var(--online)); }
   .arcade-featured > * { background: var(--surface); }
   .arcade-featured-media { position: relative; aspect-ratio: 21 / 9; background: #120e0b; border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0; overflow: hidden; }
-  .arcade-featured-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .arcade-featured-media img, .arcade-featured-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .arcade-featured-media::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,.7) 100%); }
   .arcade-featured-cap { position: absolute; left: 12px; bottom: 9px; z-index: 1; color: #fff; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 7px; text-shadow: 0 1px 8px rgba(0,0,0,.55); }
   .arcade-featured-cap svg { color: #fff; }

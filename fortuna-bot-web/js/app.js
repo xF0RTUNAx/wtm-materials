@@ -359,7 +359,7 @@ function featuredArcadeCard(g, hasTickets) {
   return `
     <div class="arcade-featured">
       <div class="arcade-featured-media">
-        <img src="media/letka_promo.jpg" alt="" loading="lazy">
+        <video src="media/letka_promo.mp4" poster="media/letka_promo.jpg" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
         <div class="game-ad-badges"><span class="game-ad-badge">ТОП</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
         <div class="arcade-featured-cap">${icon(g.icon, 18)} ${g.name}</div>
       </div>
@@ -447,6 +447,13 @@ async function openArcadeGame(gameId, ranked, extra) {
 }
 
 function closeArcadeOverlay() {
+  // игра могла оставить страницу в полноэкранном режиме или с захваченной мышью (Safari): без этого после закрытия
+  // фрейма сайт не отвечает на нажатия до перезагрузки
+  try {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen();
+  } catch (_) { /* нет полноэкранного режима */ }
+  try { if (document.pointerLockElement) document.exitPointerLock(); } catch (_) { /* нет захвата мыши */ }
   document.getElementById("arcade-overlay").hidden = true;
   document.getElementById("arcade-iframe").src = "about:blank";
   arcadeCurrentGame = null;

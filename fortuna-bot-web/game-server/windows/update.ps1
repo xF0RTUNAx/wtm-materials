@@ -14,9 +14,27 @@ try {
 } catch { }
 git -C $Repo pull --ff-only
 if ($LASTEXITCODE -ne 0) { Write-Host "git pull не прошёл — код не обновлён." -ForegroundColor Red; exit 1 }
+$Svc = "FortunaGame"
+$DenoExe = Join-Path $env:ProgramData "FortunaGame\bin\deno.exe"
 $env:DENO_DIR = Join-Path $env:ProgramData "FortunaGame\deno"
-& (Join-Path $env:ProgramData "FortunaGame\bin\deno.exe") cache (Join-Path $PSScriptRoot "..\server.js")
-Restart-Service FortunaGame # встроенная команда Windows: nssm может быть не в PATH старого окна
+Write-Host "Готовим модули сервера..."
+& $DenoExe cache (Join-Path $PSScriptRoot "..\server.js")
+# Перезапуск. Restart-Service зависал на остановке (служба «висит» в StopPending), поэтому: просим остановиться без
+# ожидания, ждём до 15 с, не остановилась — завершаем процесс службы принудительно. Сервер (deno) службы завершаем
+# в любом случае: иначе старая копия может остаться и держать порт, а новая не запустится.
+Write-Host "Перезапускаем сервер..."
+$old = Get-CimInstance Win32_Service -Filter "Name='$Svc'"
+Stop-Service $Svc -NoWait -ErrorAction SilentlyContinue
+for ($i = 0; $i -lt 15 -and (Get-Service $Svc).Status -ne 'Stopped'; $i++) { Start-Sleep 1 }
+if ((Get-Service $Svc).Status -ne 'Stopped') {
+  Write-Host "Служба не остановилась сама — завершаем принудительно." -ForegroundColor Yellow
+  if ($old.ProcessId) { Stop-Process -Id $old.ProcessId -Force -ErrorAction SilentlyContinue }
+}
+Get-Process deno -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $DenoExe } | Stop-Process -Force -ErrorAction SilentlyContinue
+for ($i = 0; $i -lt 10 -and (Get-Service $Svc).Status -ne 'Stopped'; $i++) { Start-Sleep 1 }
+Start-Service $Svc
 Start-Sleep 5
 try { $h = Invoke-RestMethod "http://127.0.0.1:$Port/health" -TimeoutSec 5; Write-Host ("Обновлено, сервер работает: " + ($h | ConvertTo-Json -Compress)) -ForegroundColor Green }
 catch { Write-Host "Сервер не ответил. Журнал: $env:ProgramData\FortunaGame\logs\server.log" -ForegroundColor Red }
+$d = Get-Process deno -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $DenoExe }
+if ($d) { Write-Host ("Сервер запущен в " + (($d | ForEach-Object { $_.StartTime.ToString('HH:mm:ss') }) -join ', ')) }
