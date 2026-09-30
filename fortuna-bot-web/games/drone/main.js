@@ -8,11 +8,11 @@ import { createPipeline } from './post.js?v=20260930f';
 import { createAudio } from './audio.js?v=20260930f';
 import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930f';
 import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930f';
-import { TEAM_NAMES } from './sim/online.js?v=20260930f';
+import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930f';
 import { createOnline } from './online-client.js?v=20260930f';
 import { createProgress, rewardText, plural } from './progress-client.js?v=20260930f';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930f';
+  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930f';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -883,6 +883,18 @@ function updateSeeker(dt) {
   }
   if (best && best === seeker.target) seeker.t += dt; else { seeker.target = best; seeker.t = 0; }
   seeker.locked = !!best && seeker.t >= MODE.lockT;
+  // почему ГСН не видит: захваченная РЛС цель, иначе ближайший к оси носа противник в ±40° (для строки оружия и отказа в пуске)
+  seeker.why = null;
+  if (!best) {
+    let c = L && !L.dead ? L : null, ca = 40 * D2R;
+    if (!c) for (const e of enemies) { if (e.dead) continue; const a = angleBetween(TMP2, TMP.copy(e.pos).sub(player.pos)); if (a < ca) { ca = a; c = e; } }
+    if (c) seeker.why = irWhy(M_, c, player.pos, TMP2, c === L ? M_.ir.slaved : M_.ir.fov);
+  }
+}
+// короткое объяснение для строки ГСН: «далеко · видит с 4,4 км», «зайди в хвост», «наведи нос»
+function seekerWhyText() {
+  const w = seeker.why; if (!w) return '';
+  return w.why === 'range' ? `ДАЛЕКО · видит с ${km(w.maxR)}` : w.why === 'aspect' ? 'ЗАЙДИ В ХВОСТ' : 'НАВЕДИ НОС НА ЦЕЛЬ';
 }
 
 // ═════════════ Ракеты (общие для игрока и ИИ) ═════════════
@@ -895,7 +907,7 @@ function launchPlayerMissile() {
   let tgt = null;
   if (M_.kind === 'ir') {
     if (seeker.locked) tgt = seeker.target;
-    else if (!M_.ir.loal) { popup('НЕТ ЗАХВАТА ГСН', 'bad'); return; }
+    else if (!M_.ir.loal) { const w = seekerWhyText(); popup('НЕТ ЗАХВАТА ГСН' + (w ? ' · ' + w : ''), 'bad'); return; }
   } else if (M_.kind === 'sarh') {
     if (!radar.lock) { popup('НУЖЕН ЗАХВАТ РЛС (R)', 'bad'); return; }
     tgt = radar.lock;
@@ -1518,7 +1530,7 @@ function hudFast(dt, slow) {
     if (!types.length) h = '<div class="row">ракеты израсходованы</div>';
     let st = '';
     if (M_) {
-      if (M_.kind === 'ir') st = seeker.locked ? 'ГСН: ЗАХВАТ — ПУСК!' : seeker.target ? 'ГСН: СОПРОВОЖДЕНИЕ…' : (M_.ir.loal ? 'ГСН: ПОИСК · можно пуск без захвата' : 'ГСН: ПОИСК');
+      if (M_.kind === 'ir') st = seeker.locked ? 'ГСН: ЗАХВАТ — ПУСК!' : seeker.target ? 'ГСН: СОПРОВОЖДЕНИЕ…' : (seeker.why ? 'ГСН: ' + seekerWhyText() : M_.ir.loal ? 'ГСН: ПОИСК · можно пуск без захвата' : 'ГСН: ПОИСК');
       else if (radar.lock) st = 'РЛС: СОПРОВОЖДЕНИЕ';
       else st = M_.kind === 'arh' && radar.contacts.size ? 'РЛС: ОБЗОР · пуск по отметке' : (M_.kind === 'sarh' ? 'РЛС: нужен захват (R)' : 'РЛС: ОБЗОР');
     }
@@ -2534,7 +2546,7 @@ function mpApplyYou(y) {
 }
 const REMOTE_RCS = () => 1.6; // «Изделие» с типовой подвеской
 function makeRemote(info, ally) {
-  const c = makeCraft({ remote: true, human: true, team: info.team, ...DRONE, hp: 100, flares: 0, chaff: 0, rcs: REMOTE_RCS,
+  const c = makeCraft({ remote: true, human: true, team: info.team, ...DRONE, ir: ONLINE_IR, hp: 100, flares: 0, chaff: 0, rcs: REMOTE_RCS,
     S: { name: info.name, code: 'ИЗ', hp: 100, rcs: 1.6, radarR: RADAR.range, pts: 0 }, radar: { contacts: new Map(), lock: null, lostT: 0, scanT: 0, t: 0 } });
   c.ally = ally; remoteUp(c);
   return c;

@@ -72,6 +72,15 @@ export function irCanSee(M_, t, from, axis, coneDeg) {
   if (M_.ir.aspect < 180 && offTailDeg(t, from) > M_.ir.aspect) return false;
   return angleBetween(axis, IRV) <= coneDeg * D2R;
 }
+// Почему ИК-ГСН не видит цель: null — видит, иначе { why: 'cone' | 'aspect' | 'range', d, maxR } (d и maxR — м).
+// rangeK, aspectSlack — запас по дальности (множитель) и ракурсу (°): их даёт сервер, у которого позиции на задержку сети старее.
+export function irWhy(M_, t, from, axis, coneDeg, rangeK = 1, aspectSlack = 0) {
+  IRV.copy(t.pos).sub(from); const d = IRV.length(), maxR = M_.ir.range * rangeK * Math.sqrt(seekerHeat(t, from));
+  if (angleBetween(axis, IRV) > coneDeg * D2R) return { why: 'cone', d, maxR };
+  if (M_.ir.aspect < 180 && offTailDeg(t, from) > M_.ir.aspect + aspectSlack) return { why: 'aspect', d, maxR };
+  if (d > maxR || d < 50) return { why: 'range', d, maxR };
+  return null;
+}
 // Цель на фоне земли и летит поперёк луча — импульсно-доплеровская РЛС (и РЛ ГСН) её отсекает.
 export function isNotched(from, t) {
   NTV.copy(t.pos).sub(from); const d = NTV.length() || 1;

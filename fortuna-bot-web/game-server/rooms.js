@@ -11,10 +11,10 @@
 /* global THREE */
 import { MODES, DRONE } from '../games/drone/sim/modes.js';
 import { MATCH_T, RESPAWN_T, COUNTDOWN_T, RESULTS_T, SNAP_HZ, SIZES, ONLINE_MODES, MAX_HP, GUN_DMG, F_AB,
-  teamSpawn, packState, validState, validLoadout, sunFor, packMissile, makeCode, cleanCode } from '../games/drone/sim/online.js';
+  teamSpawn, packState, validState, validLoadout, sunFor, packMissile, makeCode, cleanCode, ONLINE_IR } from '../games/drone/sim/online.js';
 import { lockedIn } from '../games/drone/sim/progress.js?v=20260930f';
 import { MISSILES } from '../games/drone/missiles.js?v=20260930f';
-import { makeCraft, fwdOf, irCanSee } from '../games/drone/sim/core.js?v=20260930f';
+import { makeCraft, fwdOf, irWhy } from '../games/drone/sim/core.js?v=20260930f';
 import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260930f';
 
 const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast', 'rain'];
@@ -25,6 +25,9 @@ const SUBSTEPS = 2;           // ракеты и ИИ считаем с шаго
 const EXTRAP_MAX = 0.3;       // прокси игрока между его состояниями летит по прямой не дольше этого, с
 const LAUNCH_CD = 0.4;        // перезарядка пусков (у клиента 0,45 с)
 const IR_SLACK = 5;           // запас по углу для ИК-ГСН на сервере (позиции у клиента и сервера расходятся на задержку сети), °
+const IR_RANGE_K = 1.15;      // и по дальности (×) — у края дальности клиент видит захват, а сервер по старой позиции цели — нет
+const IR_ASPECT_SLACK = 10;   // и по ракурсу для ранних «хвостовых» ГСН, °
+const IR_DENY = { cone: 'СЕРВЕР: ЦЕЛЬ ВНЕ ПОЛЯ ГСН', aspect: 'СЕРВЕР: НУЖЕН ЗАХОД В ХВОСТ', range: 'СЕРВЕР: ЦЕЛЬ ДАЛЬШЕ ДАЛЬНОСТИ ГСН' };
 const AFK_T = 1;              // нет состояний дольше — самолёт берёт ИИ (свёрнутая вкладка не рвёт связь, но молчит)
 const RESUME_T = 60;          // оборвалась связь — ждём игрока столько, потом место освобождается
 const FOUND_T = 15;           // быстрый поиск: время на «Подтвердить»
@@ -51,7 +54,7 @@ const AX = new THREE.Vector3();
 // «Изделие» для ИИ (поля как у AC в battle.js): перегрузка и угловая скорость — из режима, как у игрока
 function botSpec(mode) {
   const M = MODES[mode];
-  return { name: 'Изделие', code: 'ИЗ', hp: MAX_HP, rcs: 1.6, ir: DRONE.ir, gmax: M.gmax, wCap: M.wCap, milAcc: DRONE.milAcc, abAcc: DRONE.abAcc,
+  return { name: 'Изделие', code: 'ИЗ', hp: MAX_HP, rcs: 1.6, ir: ONLINE_IR, gmax: M.gmax, wCap: M.wCap, milAcc: DRONE.milAcc, abAcc: DRONE.abAcc,
     cd0: DRONE.cd0, skill: BOT_SKILL, radarR: RADAR.range, r: DRONE.r, pts: 0, cm: M.cm };
 }
 
@@ -233,7 +236,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
     } else {
       p.ai = false; p.lastSt = clock();
       const M = MODES[r.mode];
-      o = makeCraft({ human: true, cid: p.id, team: p.team, ...DRONE, flares: M.cm, chaff: M.cm, load: null, mslT: -9, stT: clock(), base: new THREE.Vector3(),
+      o = makeCraft({ human: true, cid: p.id, team: p.team, ...DRONE, ir: ONLINE_IR, flares: M.cm, chaff: M.cm, load: null, mslT: -9, stT: clock(), base: new THREE.Vector3(),
         radar: { contacts: new Map(), lock: null, lostT: 0, scanT: 0, t: 0 } });
       o.pos.copy(pos); o.base.copy(pos); o.yaw = s.yaw; o.speed = 240; fwdOf(o, o.vel).multiplyScalar(o.speed);
     }
@@ -450,8 +453,9 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
       const v = m.target ? r.players.get(m.target) : null, t = v && v.alive && v.craft && v.team !== c.team ? v.craft : null;
       if (m.target && !t) return deny('ЦЕЛЬ ПОТЕРЯНА');
       if (M_.kind === 'ir') {
-        if (t && !irCanSee(M_, t, o.pos, fwdOf(o, AX), Math.max(M_.ir.fov, M_.ir.slaved) + IR_SLACK)) return deny('НЕТ ЗАХВАТА ГСН');
-        if (!t && !M_.ir.loal) return deny('НЕТ ЗАХВАТА ГСН');
+        const w = t && irWhy(M_, t, o.pos, fwdOf(o, AX), Math.max(M_.ir.fov, M_.ir.slaved) + IR_SLACK, IR_RANGE_K, IR_ASPECT_SLACK);
+        if (w) return deny(IR_DENY[w.why]); // свой текст — чтобы отличать отказ сервера от «НЕТ ЗАХВАТА ГСН» у клиента
+        if (!t && !M_.ir.loal) return deny('СЕРВЕР: НЕТ ЦЕЛИ ДЛЯ ГСН');
       } else if (M_.kind === 'sarh') {
         if (!t || o.radar.lock !== t) return deny('НУЖЕН ЗАХВАТ РЛС');
       } else if (!t || !(o.radar.lock === t || o.radar.contacts.has(t) || r.battle.radarSees(o, t) === true)) return deny('НЕТ ЦЕЛИ НА РАДАРЕ');
