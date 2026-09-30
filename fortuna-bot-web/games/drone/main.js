@@ -130,7 +130,9 @@ function rebuildPipe() {
   if (pipe) { pipe.dispose(); pipe = null; }
   if (needPipe()) {
     const pc = P.post || {}, ldr = pipeLdr();
-    pipe = createPipeline(renderer, { ...pc, ldr, fx: perf.halfFx, haze: XFX_TOP && perf.fxTest, hazeLayer: HAZE_LAYER, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
+    // «Кино» + тестовая графика: объёмным облакам нужен отдельный проход с глубиной кадра — без галочки «в ½» он идёт в полном разрешении
+    const volWanted = gfxKey === 'cinema' && perf.fxTest;
+    pipe = createPipeline(renderer, { ...pc, ldr, fx: perf.halfFx || volWanted, fxFull: !perf.halfFx, haze: XFX_TOP && perf.fxTest, hazeLayer: HAZE_LAYER, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
     renderer.toneMapping = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping; // HDR: тонмаппинг и гамму делает композит
     renderer.setPixelRatio(basePR);
   } else {
@@ -1700,7 +1702,7 @@ function renderSettingsTab() {
   $('tab-set').innerHTML = `<div class="cat-h">Графика</div><div class="gfx-row">${cards}</div>
     <p class="hint">Пресет задаёт дальность прорисовки, густоту леса и облаков, качество материалов и теней. С «Высокого» — тени и объёмные облака, в «Ультра» и «Кино» — отражения в воде, свечение и лучи; «Кино» — самая подробная земля и лес. Смена пресета перезагружает игру.</p>
     ${XFX_OK ? `<label class="chk"><input type="checkbox" id="pFxTest" ${perf.fxTest ? 'checked' : ''}> Тестовая улучшенная графика</label>
-    <p class="hint">Пробный режим, может меняться. Ловушки ЛТЦ — слепящее ядро с искрами и толстым дымным следом${P.lights ? ', подсвечивают самолёт и землю' : ''}; диполи — облако сверкающей фольги; пуск ракеты — вспышка воспламенения, «ромбы» в струе, дымный след у старых ракет и почти бездымный у AIM-120 и Р-77; взрывы — огненный шар, ударное кольцо, обломки со шлейфами, облако осколков у неконтактного подрыва; конденсат на крыле при большой перегрузке${XFX_TOP ? '; дрожание горячего воздуха за соплами' : ''}${gfxKey === 'cinema' ? '; объёмные облака (очень тяжело: только мощные видеокарты, нужны «Облака и дым в половинном разрешении»)' : ''}. Частиц больше — в тяжёлом бою кадров может стать меньше.${P.lights ? ' Свет от ловушек включается со следующего запуска игры.' : ''}</p>` : ''}
+    <p class="hint">Пробный режим, может меняться. Ловушки ЛТЦ — слепящее ядро с искрами и толстым дымным следом${P.lights ? ', подсвечивают самолёт и землю' : ''}; диполи — облако сверкающей фольги; пуск ракеты — вспышка воспламенения, «ромбы» в струе, дымный след у старых ракет и почти бездымный у AIM-120 и Р-77; взрывы — огненный шар, ударное кольцо, обломки со шлейфами, облако осколков у неконтактного подрыва; конденсат на крыле при большой перегрузке${XFX_TOP ? '; дрожание горячего воздуха за соплами' : ''}${gfxKey === 'cinema' ? '; объёмные облака (очень тяжело: только мощные видеокарты; с «Облаками и дымом в половинном разрешении» — легче, без неё — в полном разрешении, красивее)' : ''}. Частиц больше — в тяжёлом бою кадров может стать меньше.${P.lights ? ' Свет от ловушек включается со следующего запуска игры.' : ''}</p>` : ''}
     <button class="btn alt sm" id="benchBtn">Тест графики (≈ 15 с)</button>
     ${res}
     ${bench && bench.rec !== gfxKey ? `<button class="btn sm" id="applyRec">Применить рекомендованный</button>` : ''}

@@ -188,7 +188,7 @@ export function createPipeline(renderer, cfg) {
   function setSize() {
     renderer.getDrawingBufferSize(full);
     sw = Math.max(1, Math.round(full.x * scale)); sh = Math.max(1, Math.round(full.y * scale));
-    sceneRT.setSize(sw, sh); if (fxRT) fxRT.setSize(Math.max(1, Math.ceil(sw / 2)), Math.max(1, Math.ceil(sh / 2))); ldrA.setSize(sw, sh); ldrB.setSize(sw, sh); upRT.setSize(full.x, full.y);
+    sceneRT.setSize(sw, sh); if (fxRT) { const k = cfg.fxFull ? 1 : 2; fxRT.setSize(Math.max(1, Math.ceil(sw / k)), Math.max(1, Math.ceil(sh / k))); } ldrA.setSize(sw, sh); ldrB.setSize(sw, sh); upRT.setSize(full.x, full.y);
     hA.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); hB.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); rays.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2));
     qA.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4)); qB.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4));
     if (taaRT) { for (const r of taaRT) r.setSize(sw, sh); taaReset = true; }
@@ -211,7 +211,7 @@ export function createPipeline(renderer, cfg) {
       renderer.setRenderTarget(sceneRT); renderer.render(scene, camera);
       if (fxOn && cfg.fxU) { // облака и дым (слой FX) — в половине разрешения, с мягкой проверкой глубины по кадру
         const U = cfg.fxU, mask = camera.layers.mask, au = renderer.shadowMap.autoUpdate, ac = renderer.autoClear;
-        U.tDepth.value = sceneRT.depthTexture; U.fxSize.value.set(fxRT.width, fxRT.height); U.camNF.value.set(camera.near, camera.far); U.fxOn.value = 1;
+        U.tDepth.value = sceneRT.depthTexture; U.fxSize.value.set(fxRT.width, fxRT.height); U.camNF.value.set(camera.near, camera.far); U.fxOn.value = 1; if (U.fxK) U.fxK.value = cfg.fxFull ? 1 : 0.5;
         camera.layers.set(cfg.fxLayer); renderer.shadowMap.autoUpdate = false;
         renderer.getClearColor(ccTmp); const ca = renderer.getClearAlpha();
         renderer.setRenderTarget(fxRT); renderer.setClearColor(0x000000, 0); renderer.clear(); renderer.autoClear = false;

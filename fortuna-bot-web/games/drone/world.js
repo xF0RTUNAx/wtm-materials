@@ -19,7 +19,7 @@ export const FOG_U = { value: FOG_D };           // плотность тума�
 // «Облака и дым в пониженном разрешении»: облака, облачный слой и дым переносятся на слой FX_LAYER и рисуются
 // конвейером (post.js) в половине разрешения. Глубины там нет — сравниваем с глубиной кадра сами и мягко гасим на стыке.
 export const FX_LAYER = 4, FX_ADD_LAYER = 5; // 5 — огонь и вспышки: рисуются после наложения дыма
-export const FXU = { tDepth: { value: null }, fxOn: { value: 0 }, fxSize: { value: new THREE.Vector2(1, 1) }, camNF: { value: new THREE.Vector2(3, 60000) } };
+export const FXU = { tDepth: { value: null }, fxOn: { value: 0 }, fxK: { value: 0.5 }, fxSize: { value: new THREE.Vector2(1, 1) }, camNF: { value: new THREE.Vector2(3, 60000) } };
 const SOFT_GLSL = `uniform sampler2D tDepth; uniform float fxOn; uniform vec2 fxSize, camNF;
   float fxLinZ(float d) { float z = d * 2.0 - 1.0; return 2.0 * camNF.x * camNF.y / (camNF.y + camNF.x - z * (camNF.y - camNF.x)); }
   float fxSoft(float range) { if (fxOn < 0.5) return 1.0; float sz = texture2D(tDepth, gl_FragCoord.xy / fxSize).r;
@@ -664,18 +664,18 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   // ── объёмные облака («Кино», тестовая графика): луч от камеры проходит слой кучевых облаков, плотность — из того же
   //    «поля облачности», что у спрайтов и теней на земле, края «выедает» шум. Свет — одна выборка к солнцу (закон Бера).
   //    Рисуются только в проходе ½ разрешения: там есть глубина кадра, и луч обрывается на земле и самолётах ──
-  let vol = null, volOn = false;
+  let vol = null, volOn = false, volSteps = 44; // шагов луча: 44 — игра, до 160 — ролик/скриншоты
   const VOL_B = CLOUD_H - 120, VOL_T = CLOUD_H + 2200;
   function makeVol() {
     const S = 512, data = new Uint8Array(S * S * 4);
     for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const o = (y * S + x) * 4; data[o] = cloudField((x / (S - 1) - 0.5) * CLOUD_SPAN, (y / (S - 1) - 0.5) * CLOUD_SPAN) * 255; data[o + 3] = 255; }
     const cov = new THREE.DataTexture(data, S, S, THREE.RGBAFormat); cov.magFilter = cov.minFilter = THREE.LinearFilter; cov.needsUpdate = true;
     const VU = { ...FXU, noiseTex: TU.noiseTex, covTex: { value: cov }, th: { value: 0.62 }, vpInv: { value: new THREE.Matrix4() }, sunDir: SU.sunDir, lit: CU.lit, dark: CU.dark,
-      sunTint: CU.sunTint, flash: SU.flash, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, time: DU.time };
+      sunTint: CU.sunTint, flash: SU.flash, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, time: DU.time, steps: { value: volSteps } };
     const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
       uniforms: VU,
       vertexShader: 'varying vec2 vNdc; void main() { vNdc = position.xy; gl_Position = vec4(position.xy, 0.999, 1.0); }',
-      fragmentShader: `uniform sampler2D noiseTex, covTex; uniform mat4 vpInv; uniform float th, time, flash, fogDensity; uniform vec3 sunDir, lit, dark, sunTint, fogColor;
+      fragmentShader: `uniform sampler2D noiseTex, covTex; uniform mat4 vpInv; uniform float th, time, flash, fogDensity, steps; uniform vec3 sunDir, lit, dark, sunTint, fogColor;
         varying vec2 vNdc;
         ${SOFT_GLSL}
         #include <common>
@@ -704,17 +704,19 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
           float sz = texture2D(tDepth, gl_FragCoord.xy / fxSize).r;
           t1 = min(min(t1, fxLinZ(sz) / max(dot(dir, fwd), 1e-3)), t0 + 14000.0);
           if (t1 <= t0) discard;
-          const int N = 44; float st = (t1 - t0) / float(N);
+          float st = (t1 - t0) / steps;
           // сдвиг старта луча — свой в каждом кадре: TAA и смешивание кадров сглаживают его, а не оставляют неподвижные «полосы»
           vec2 jf = gl_FragCoord.xy + vec2(fract(time * 13.7) * 97.0, fract(time * 7.3) * 61.0);
           float tt = t0 + st * fract(sin(dot(jf, vec2(12.9898, 78.233))) * 43758.5453);
           float Tr = 1.0, sumT = 0.0, sumW = 0.0; vec3 col = vec3(0.0);
           float phase = 0.55 + 1.8 * pow(max(dot(dir, sunDir), 0.0), 6.0); // ярче против солнца — «серебряная кромка»
-          for (int i = 0; i < N; i++) {
+          for (int i = 0; i < 160; i++) {
+            if (float(i) >= steps) break;
             vec3 p = ro + dir * tt;
             float d = dens(p);
             if (d > 0.0) {
-              float light = exp(-dens(p + sunDir * 260.0) * 160.0), hh = clamp((p.y - B) / 1400.0, 0.0, 1.0);
+              float dl = dens(p + sunDir * 260.0); if (steps > 64.0) dl += dens(p + sunDir * 650.0) * 0.6; // высокое качество — вторая выборка к солнцу
+              float light = exp(-dl * 160.0), hh = clamp((p.y - B) / 1400.0, 0.0, 1.0);
               vec3 c = mix(dark, lit, light * 0.75 + hh * 0.25) * 1.12 + sunTint * light * phase * 0.3 + flash * vec3(0.7, 0.75, 0.9);
               float a = 1.0 - exp(-d * st);
               col += Tr * a * c; sumT += Tr * a * tt; sumW += Tr * a; Tr *= 1.0 - a;
@@ -829,6 +831,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     setDetail(k) { detailK = k; },
     setFxLayer(on) { fxLayerOn = on; const l = on ? FX_LAYER : 0; if (clouds && P.cloudSprites) clouds.layers.set(l); deck.layers.set(l); },
     // объёмные облака вместо облаков-спрайтов (только вместе с проходом ½ — см. applyFxLayers в main.js)
+    setVolQuality(n) { volSteps = Math.max(8, Math.min(160, n | 0)); if (vol) vol.VU.steps.value = volSteps; },
     setVolClouds(on) {
       if (on && !vol) makeVol();
       volOn = !!on && !!vol; if (vol) vol.visible = volOn;
@@ -935,11 +938,11 @@ export function makeParticles(scene, N, additive, tex) {
       #include <logdepthbuf_pars_vertex>
       attribute float alpha; attribute float size; attribute vec3 pcolor;
       uniform float scale; uniform float fogDensity; varying vec3 vC; varying float vA; varying float vF;
-      ${additive ? '' : 'uniform float fxOn;'}
+      ${additive ? '' : 'uniform float fxOn, fxK;'}
       void main() { vC = pow(pcolor, vec3(2.2)); vA = alpha; vec4 mv = modelViewMatrix * vec4(position, 1.0); float d = -mv.z;
         vF = 1.0 - exp(-fogDensity * fogDensity * d * d);
         float ps = size * scale / d;
-        ${additive ? '' : 'if (fxOn > 0.5) ps *= 0.5; // в проходе половинного разрешения пиксели вдвое крупнее'}
+        ${additive ? '' : 'if (fxOn > 0.5) ps *= fxK; // в проходе половинного разрешения пиксели вдвое крупнее (fxK = 0,5), в полном — 1'}
         gl_PointSize = (d > 0.0 && alpha > 0.0) ? min(ps, 400.0) : 0.0; gl_Position = projectionMatrix * mv;
         #include <logdepthbuf_vertex>
       }`,
