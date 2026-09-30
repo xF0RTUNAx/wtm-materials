@@ -1918,7 +1918,7 @@ function renderSettingsTab() {
     const featRows = H ? [['f_shadow', 'Тени'], ['f_post', 'Эффекты кадра (свечение, цвет, апскейлер)'], ['f_aa', 'Сглаживание'], ['f_res', 'Разрешение 100% вместо 70%'], ['f_fx', 'Взрывы, дым и огонь']]
       .filter(([k]) => R[k] && R[k].ms).map(([k, n]) => { const d = H - R[k].ms; return `<tr><td>${n}</td><td>${d < 0.3 ? '≈ 0' : '+' + f1(d)} мс</td></tr>`; }).join('') : ''; // меньше 0,3 мс — в пределах шума замера
     res = `<div id="benchRes"><table class="tt"><tr><th>Пресет</th><th>цена кадра</th><th>худшие 5%</th><th>потянет, к/с</th><th>показано, к/с</th></tr>${presetRows}</table>
-      <p class="hint">«Цена кадра» — сколько устройство реально тратит на кадр (рисование и работа видеочипа); это не упирается в частоту экрана. 60 кадров — это 16,7 мс: чем меньше цена, тем больше запас и тем меньше телефон греется. «Показано» — сколько кадров было на экране (не больше частоты экрана).</p>
+      <p class="hint">«Цена кадра» — сколько видеочип тратит на один кадр сцены (кадр рисуется то 1, то 4 раза — разница убирает время ожидания самого устройства, которое на iPhone ~10 мс на любом пресете). 60 кадров — это 16,7 мс: чем меньше цена, тем больше запас и тем меньше телефон греется. «Показано» — сколько кадров было на экране. Запускайте тест на остывшем телефоне: на горячем цифры хуже.</p>
       ${featRows ? `<table class="tt"><tr><th>Сколько стоит (на «Высоком»)</th><th>мс на кадр</th></tr>${featRows}</table>` : ''}
       <p style="margin:6px 0 0">Рекомендуем: <b style="color:#86efac">${PRESETS[bench.rec].name}</b>${bench.rec === gfxKey ? ' (уже выбран)' : ''} — с запасом, чтобы не перегревать. Видеокарта: ${bench.gpu}.</p></div>`;
   }
@@ -1969,7 +1969,7 @@ function renderSettingsTab() {
     <p class="hint">Пресет задаёт дальность прорисовки, густоту леса и облаков, качество материалов и теней. С «Высокого» — тени и объёмные облака, в «Ультра» и «Кино» — отражения в воде, свечение и лучи; «Кино» — самая подробная земля и лес. Смена пресета перезагружает игру.</p>
     <div class="cat-h" style="margin-top:10px">Тестовые пресеты графики</div><div class="gfx-row gfxTestRow">${testCards}</div>
     <p class="hint">Пробные: могут меняться. Выбранный тестовый пресет заменяет обычный.</p>
-    <button class="btn alt sm" id="benchBtn">Тест графики (≈ 30 с)</button>
+    <button class="btn alt sm" id="benchBtn">Тест графики (≈ 35 с)</button>
     ${res}
     ${bench && bench.rec !== gfxKey ? `<button class="btn sm" id="applyRec">Применить рекомендованный</button>` : ''}
     <div class="cat-h">Звук</div>
@@ -2189,13 +2189,15 @@ async function runBenchmark() {
     const bPost = usePipe ? createPipeline(renderer, { ...(pp.post || {}), ldr, exposure: (pp.post && pp.post.exposure) || 1.15, scale: pf.scale * ph.scaleK, upscaler: pf.up, sharp: pf.sharp, aa: pf.aa }) : null;
     if (bPost) bPost.setSize();
     bScene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
-    const times = [], costs = []; // costs — цена кадра: рисование + ожидание, пока видеочип закончит (не упирается в частоту экрана)
+    // цена кадра «двумя точками»: кадр рисуется то 1, то 4 раза с одним ожиданием видеочипа (readPixels); (t4 − t1) / 3 — чистая
+    // стоимость одной отрисовки сцены без постоянной задержки ожидания (на iPhone это ~10 мс на любом пресете — она и путала замер)
+    const times = [], c1 = [], c4 = [];
     if (bPost) bPost.render(bScene, camera, 0); else renderer.render(bScene, camera); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); // прогрев: сборка шейдеров — не в замер
     await new Promise((res) => {
-      const t0 = performance.now(); let last = t0, boomT = 0, nf = 0;
+      const t0 = performance.now(); let last = t0, boomT = 0, nf = 0, lastReps = 1;
       function f(now) {
         const dt = now - last, elT = now - t0; last = now;
-        if (elT > 450 && nf > 5) times.push(dt);
+        if (elT > 450 && nf > 6 && lastReps === 1) times.push(dt); // «показано» — только по обычным кадрам
         const s = elT / 1000;
         camera.position.set(T0.x + Math.sin(s * 0.3) * 900, cy + 320, T0.z + Math.cos(s * 0.3) * 900);
         camera.lookAt(T0.x, cy + 120, T0.z); if (camera.fov !== 66) { camera.fov = 66; camera.updateProjectionMatrix(); }
@@ -2206,9 +2208,11 @@ async function runBenchmark() {
         bFX.update(dt / 1000); bSM.update(dt / 1000);
         const sc = renderer.getPixelRatio() * VH / (2 * Math.tan(camera.fov * D2R / 2)); bFX.mat.uniforms.scale.value = sc; bSM.mat.uniforms.scale.value = sc;
         bw.follow(camera.position, camera.position);
-        const c0 = performance.now();
-        if (bPost) bPost.render(bScene, camera, s); else renderer.render(bScene, camera);
-        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); if (elT > 450 && ++nf > 5) costs.push(performance.now() - c0);
+        const reps = elT > 450 && (nf & 1) ? 4 : 1, c0 = performance.now();
+        for (let r = 0; r < reps; r++) { if (bPost) bPost.render(bScene, camera, s); else renderer.render(bScene, camera); }
+        gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+        if (elT > 450 && ++nf > 6) (reps === 4 ? c4 : c1).push(performance.now() - c0);
+        lastReps = reps;
         $('benchBox').textContent = `Тест графики: ${BENCH_LABEL[ph.key] || PRESETS[ph.key].name} — ${Math.min(100, Math.round(elT / 2300 * 100))}% (шаг ${phases.indexOf(ph) + 1} из ${phases.length})`;
         if (elT < 2300) requestAnimationFrame(f); else res();
       }
@@ -2216,9 +2220,11 @@ async function runBenchmark() {
     });
     times.sort((a, b) => a - b);
     const avg = times.reduce((s, x) => s + x, 0) / Math.max(1, times.length);
-    costs.sort((a, b) => a - b);
-    const ms = costs.reduce((s, x) => s + x, 0) / Math.max(1, costs.length);
-    results[ph.key] = { fps: 1000 / avg, p95: times[Math.floor(times.length * 0.95)] || avg, ms, ms95: costs[Math.floor(costs.length * 0.95)] || ms };
+    c1.sort((a, b) => a - b); c4.sort((a, b) => a - b);
+    const mean = (a) => a.reduce((s, x) => s + x, 0) / Math.max(1, a.length), q = (a, k) => a[Math.min(a.length - 1, Math.floor(a.length * k))] || 0;
+    const ms = Math.max(0.1, (mean(c4) - mean(c1)) / 3);
+    const ms95 = Math.max(ms, (q(c4, 0.95) - q(c1, 0.5)) / 3);
+    results[ph.key] = { fps: 1000 / avg, p95: times[Math.floor(times.length * 0.95)] || avg, ms, ms95, wait: Math.max(0, mean(c1) - ms) };
     if (bPost) bPost.dispose();
   }
   renderer.shadowMap.enabled = prevSh; rebuildPipe(); // вернуть свой конвейер, разрешение и тонмаппинг
@@ -2228,7 +2234,8 @@ async function runBenchmark() {
   let gpu = 'не определена';
   try { const gl = renderer.getContext(), ext = gl.getExtension('WEBGL_debug_renderer_info'); if (ext) gpu = String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)).slice(0, 80); } catch (_) { /* нет доступа */ }
   // по цене кадра с запасом под нагрев: 60 к/с = 16,7 мс, берём пресет, которому хватает ~2/3 этого (телефон не упирается и меньше греется)
-  const rec = ['cinema', 'ultra', 'high', 'medium'].find((k) => results[k].ms95 <= 11) || (results.low.ms95 <= 16 ? 'low' : 'min');
+  // видеочип занят не больше ~55% кадра при 60 к/с (≈ 9 мс) — меньше нагрев; если нет — ниже
+  const rec = ['cinema', 'ultra', 'high'].find((k) => results[k].ms95 <= 9) || (results.medium.ms95 <= 11 ? 'medium' : results.low.ms95 <= 14 ? 'low' : 'min');
   store.set('fortuna_drone_bench', JSON.stringify({ results, rec, gpu, at: Date.now() }));
   bench.active = false; bench.last = { results, rec, gpu };
   $('benchScr').classList.remove('on'); show('menu', true); renderSettingsTab(); showTab('set');
