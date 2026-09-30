@@ -1134,7 +1134,7 @@ function updateCamera(dt) {
     // камера «уходит» наружу виража, отстаёт при перегрузке и на форсаже
     const back = 20 + (p.n - 1) * 0.9 + (p.ab ? 4 : 0);
     TGT.copy(p.pos).addScaledVector(TMP3, -back).addScaledVector(UP, 5.5 - p.wp * 10).addScaledVector(TMP2, p.wy * 18);
-    if (camSnap) { camPos.copy(TGT); camSnap = false; } else camPos.lerp(TGT, 1 - Math.exp(-7 * dt));
+    if (camSnap) { camPos.copy(TGT); camSnap = false; if (pipe && pipe.resetHistory) pipe.resetHistory(); } else camPos.lerp(TGT, 1 - Math.exp(-7 * dt));
     camera.position.copy(camPos);
     camLook.copy(p.pos).addScaledVector(TMP3, 60).addScaledVector(UP, 2);
     camera.up.set(0, 1, 0); camera.lookAt(camLook);

@@ -705,7 +705,9 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
           t1 = min(min(t1, fxLinZ(sz) / max(dot(dir, fwd), 1e-3)), t0 + 14000.0);
           if (t1 <= t0) discard;
           const int N = 44; float st = (t1 - t0) / float(N);
-          float tt = t0 + st * fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+          // сдвиг старта луча — свой в каждом кадре: TAA и смешивание кадров сглаживают его, а не оставляют неподвижные «полосы»
+          vec2 jf = gl_FragCoord.xy + vec2(fract(time * 13.7) * 97.0, fract(time * 7.3) * 61.0);
+          float tt = t0 + st * fract(sin(dot(jf, vec2(12.9898, 78.233))) * 43758.5453);
           float Tr = 1.0, sumT = 0.0, sumW = 0.0; vec3 col = vec3(0.0);
           float phase = 0.55 + 1.8 * pow(max(dot(dir, sunDir), 0.0), 6.0); // ярче против солнца — «серебряная кромка»
           for (int i = 0; i < N; i++) {
