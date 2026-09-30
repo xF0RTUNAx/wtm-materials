@@ -1,18 +1,18 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills } from './schedule.js?v=20260930c';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930c';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930c';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930c';
-import { createPipeline } from './post.js?v=20260930c';
-import { createAudio } from './audio.js?v=20260930c';
-import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930c';
-import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930c';
-import { TEAM_NAMES } from './sim/online.js?v=20260930c';
-import { createOnline } from './online-client.js?v=20260930c';
-import { createProgress, rewardText, plural } from './progress-client.js?v=20260930c';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930d';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930d';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930d';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930d';
+import { createPipeline } from './post.js?v=20260930d';
+import { createAudio } from './audio.js?v=20260930d';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930d';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930d';
+import { TEAM_NAMES } from './sim/online.js?v=20260930d';
+import { createOnline } from './online-client.js?v=20260930d';
+import { createProgress, rewardText, plural } from './progress-client.js?v=20260930d';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930c';
+  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930d';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -71,11 +71,11 @@ const prFor = (p) => Math.min(DPR * p.prMul, p.prCap, IS_TOUCH ? 2 : 3); // на
 // настройки производительности и экрана (сбрасываются к умолчаниям пресета при его смене)
 const PERF_KEYS = ['scale', 'dyn', 'min', 'target', 'up', 'sharp', 'aa'];
 // halfFx (облака и дым в ½) — по умолчанию включено везде, где есть конвейер кадра (кроме «Низкого»); fxv — версия умолчаний
-let perf = { ...P.perf, cap: 0, p3: false, fps: false, immersive: true, halfFx: gfxKey !== 'low', smartQ: false, fxTest: false, fxv: 2 };
+let perf = { ...P.perf, cap: 0, p3: false, p3mode: 'vivid', fps: false, immersive: true, halfFx: gfxKey !== 'low', smartQ: false, fxTest: false, fxv: 2 };
 try {
   const sp = JSON.parse(store.get('fortuna_drone_perf') || 'null');
   if (sp && typeof sp === 'object') {
-    for (const k of ['cap', 'p3', 'fps', 'immersive', 'smartQ', 'fxTest']) if (k in sp) perf[k] = sp[k];
+    for (const k of ['cap', 'p3', 'p3mode', 'fps', 'immersive', 'smartQ', 'fxTest']) if (k in sp) perf[k] = sp[k];
     if (sp.fxv === 2 && 'halfFx' in sp) perf.halfFx = sp.halfFx; // сохранённое до смены умолчания не считаем выбором игрока
     if (sp.preset === gfxKey) for (const k of PERF_KEYS) if (k in sp) perf[k] = sp[k];
   }
@@ -132,7 +132,7 @@ function rebuildPipe() {
     const pc = P.post || {}, ldr = pipeLdr();
     // «Кино» + тестовая графика: объёмным облакам нужен отдельный проход с глубиной кадра — без галочки «в ½» он идёт в полном разрешении
     const volWanted = gfxKey === 'cinema' && perf.fxTest;
-    pipe = createPipeline(renderer, { ...pc, ldr, fx: perf.halfFx || volWanted, fxFull: !perf.halfFx, haze: XFX_TOP && perf.fxTest, hazeLayer: HAZE_LAYER, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK });
+    pipe = createPipeline(renderer, { ...pc, ldr, fx: perf.halfFx || volWanted, fxFull: !perf.halfFx, haze: XFX_TOP && perf.fxTest, hazeLayer: HAZE_LAYER, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, exposure: baseExposure(), scale: perf.dyn ? dr.scale : perf.scale, upscaler: perf.up, sharp: perf.sharp, aa: perf.aa, p3: perf.p3 && P3_OK, p3exact: perf.p3mode === 'exact' });
     renderer.toneMapping = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping; // HDR: тонмаппинг и гамму делает композит
     renderer.setPixelRatio(basePR);
   } else {
@@ -268,6 +268,7 @@ const dotTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,.6
 const smokeTex = radialTex([[0, 'rgba(255,255,255,.9)'], [0.55, 'rgba(255,255,255,.45)'], [1, 'rgba(255,255,255,0)']], 64);
 const XK = xfx() ? 1.6 : 1; // в тестовой графике частиц больше
 const SMOKE = makeParticles(scene, Math.round(P.particles * XK), false, smokeTex);
+SMOKE.points.renderOrder = 3; // дым — после облачного слоя и облаков (у них 1–2): иначе слой над головой «срезает» дым взрыва по горизонту
 const FX = makeParticles(scene, Math.round(P.particles * 0.7 * XK), true, dotTex);
 const HAZE = XFX_TOP ? makeParticles(scene, 600, true, dotTex) : null; // «сила искажения» горячего воздуха (не рисуется в кадр)
 if (HAZE) { HAZE.points.layers.set(HAZE_LAYER); HAZE.mat.uniforms.glow.value = 1; }
@@ -1747,7 +1748,8 @@ function perfBlock() {
       <div class="prow"><span>Ограничение кадров</span>${seg('cap', perf.cap, [[0, 'Нет'], [30, '30'], [60, '60']])}</div>
       <p class="hint">Не рисовать чаще заданного: меньше нагрев и расход батареи.</p>
       ${P3_OK ? `<label class="chk"><input type="checkbox" id="pP3" ${perf.p3 ? 'checked' : ''}> Широкий цвет (Display P3)</label>
-      <p class="hint">Расширенный цветовой охват экрана (Mac, iPhone, iPad и другие экраны с P3): зелень, небо, вода и пламя насыщеннее, серые и белые не меняются. На обычном экране разницы нет.</p>` : ''}
+      ${perf.p3 ? `<div class="prow"><span>Цвета</span>${seg('p3mode', perf.p3mode, [['vivid', 'Насыщенные'], ['exact', 'Точные']])}</div>` : ''}
+      <p class="hint">Экран с широким охватом (Mac, iPhone, iPad и другие с P3). <b>Насыщенные</b> — зелень, небо, вода и пламя уходят в широкий охват экрана, серые и белые не меняются (как «яркий» режим телевизора). <b>Точные</b> — цвета ровно как задуманы, без усиления: на глаз почти как без этой настройки. На обычном экране разницы нет.</p>` : ''}
       <label class="chk"><input type="checkbox" id="pFps" ${perf.fps ? 'checked' : ''}> Показывать счётчик кадров</label>
       <p class="hint">В полёте: кадров в секунду, частота экрана, худшие 5% кадров и текущий масштаб рендера.</p>
       <label class="chk"><input type="checkbox" id="pImm" ${perf.immersive ? 'checked' : ''}> Режим погружения</label>
@@ -2730,7 +2732,10 @@ function tick(dt) {
   updateSound(dt); tipTick(dt);
 }
 // дым труб и пар градирни промзоны (ветер несёт шлейф; дальше 14 км не рисуем)
+// у новых объектов карты (пена за лодками) — свой генератор: общий Math.random от них не сдвигается
+const vr = mulberry32(0x5eed);
 let stackT = 0;
+world.setWake((x, y, z, dx, dz) => { if (vr() < 0.5) SMOKE.emit(x + (vr() - 0.5) * 2, y, z + (vr() - 0.5) * 2, -dx * 1.5 + (vr() - 0.5) * 2, 0.2, -dz * 1.5 + (vr() - 0.5) * 2, 0.95, 0.97, 0.98, 0.45, 2.2, 3.5, 3.5, 0.6, 0); });
 function smokeStacks(dt) {
   stackT += dt; if (stackT < 0.3) return; stackT = 0;
   for (const e of world.emitters) {
@@ -2785,7 +2790,7 @@ function updateFpsMeter(dtMs) {
   if (fpsEl._on !== on) { fpsEl._on = on; fpsEl.style.display = on ? 'block' : 'none'; }
   if (!on || !dr.fps) return;
   const hz = dr.vs ? Math.round(1000 / dr.vs) : 0;
-  fpsEl.textContent = `${Math.round(dr.fps)}${hz ? '/' + hz : ''} к/с · худш. ${Math.round(dr.low)} · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${dr.q ? ' · дет. ' + Math.round(QK[dr.q] * 100) + '%' : ''}${pipe && pipe.fx ? ' · FX½' : ''}${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
+  fpsEl.textContent = `${Math.round(dr.fps)}${hz ? '/' + hz : ''} к/с · худш. ${Math.round(dr.low)} · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${dr.q ? ' · дет. ' + Math.round(QK[dr.q] * 100) + '%' : ''}${pipe && pipe.fx ? (pipe.cfg.fxFull ? ' · FX 1:1' : ' · FX½') : ''}${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
 }
 let last = performance.now(), lastDraw = 0, lastState = '';
 function frame(now) {

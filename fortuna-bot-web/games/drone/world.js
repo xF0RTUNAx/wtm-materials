@@ -4,11 +4,12 @@
 // Детализация задаётся пресетом графики (см. PRESETS в main.js), атмосфера — погодой (WEATHERS).
 // Шум для деталей земли, микрорельефа и облачного слоя — из одной текстуры (выборка вместо десятков sin() на пиксель).
 /* global THREE */
-import { mulberry32 } from './schedule.js?v=20260930c';
-import { M, part, mergeParts } from './models.js?v=20260930c';
-import { buildProps } from './props.js?v=20260930c';
+import { mulberry32 } from './schedule.js?v=20260930d';
+import { M, part, mergeParts } from './models.js?v=20260930d';
+import { buildProps } from './props.js?v=20260930d';
+import { buildLandmarks } from './landmarks.js?v=20260930d';
 
-import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930c';
+import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930d';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
 export const SUN_DIR = new THREE.Vector3(0.42, 0.6, 0.38).normalize(); // меняется погодой (на месте — все ссылки видят новое)
 export const FOG_D = 0.000042;
@@ -172,11 +173,31 @@ function puffTex() {
 function terrainShader(mat, P, U) {
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, U);
-    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;')
-      .replace('#include <project_vertex>', '#include <project_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN;')
+      .replace('#include <project_vertex>', '#include <project_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz; vWN = normalize(mat3(modelMatrix) * objectNormal);');
     let frag = sh.fragmentShader.replace('#include <common>', `#include <common>
-      varying vec3 vWP; uniform sampler2D noiseTex, cloudTex; uniform vec2 sunXZ; uniform float cloudK, wet, desat;`);
-    let colorCode = '';
+      varying vec3 vWP; varying vec3 vWN; uniform sampler2D noiseTex, cloudTex; uniform vec2 sunXZ; uniform float cloudK, wet, desat;`);
+    // скалы, снег, поля — по пикселю (раньше — только цветом вершин): классификация по цвету вершины (vColor)
+    let colorCode = `
+        { vec3 wn = normalize(vWN); float slope = 1.0 - wn.y, dist = length(vWP - cameraPosition);
+          float nR = texture2D(noiseTex, vWP.xz * 0.0041).r, above = step(${(WORLD.WATER_Y + 4).toFixed(1)}, vWP.y);
+          // скалы на крутых склонах: трипланарная выборка (на отвесных стенах текстура не тянется) и осадочные слои
+          vec3 bw = abs(wn); bw /= bw.x + bw.y + bw.z;
+          float tri = texture2D(noiseTex, vWP.zy * 0.009).r * bw.x + texture2D(noiseTex, vWP.xz * 0.009 + 0.31).g * bw.y + texture2D(noiseTex, vWP.xy * 0.009 + 0.63).r * bw.z;
+          float strata = 0.5 + 0.5 * sin(vWP.y * 0.33 + tri * 7.0);
+          float rockK = smoothstep(0.2, 0.34, slope + (nR - 0.5) * 0.14) * above;
+          vec3 rock = mix(vec3(0.07, 0.065, 0.055), vec3(0.2, 0.18, 0.15), tri * 0.65 + strata * 0.35);
+          diffuseColor.rgb = mix(diffuseColor.rgb, rock, rockK);
+          // снег: выше линии снега (с «языками» по шуму), только на пологих местах — с круч он сползает
+          float snowK = smoothstep(1180.0, 1380.0, vWP.y + (nR - 0.5) * 260.0) * smoothstep(0.42, 0.26, slope);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78, 0.82, 0.88), snowK);
+          // поля (жёлтые и зелёные квадраты): борозды/рядки — у каждого поля своё направление, вблизи
+          vec3 vc = vColor.rgb; float rg = vc.r / max(vc.g, 1e-3), bg = vc.b / max(vc.g, 1e-3);
+          float fieldK = smoothstep(0.52, 0.62, rg) * (1.0 - smoothstep(0.36, 0.44, bg)) * (1.0 - rockK) * (1.0 - smoothstep(300.0, 1800.0, dist));
+          if (fieldK > 0.0) { vec2 cell = floor(vWP.xz / 330.0); float ang = fract(sin(dot(cell, vec2(41.3, 17.9))) * 4375.85) * 3.1416;
+            float v = dot(vWP.xz, vec2(cos(ang), sin(ang)));
+            float rows = 0.5 + 0.5 * sin(v * 1.14);                          // рядки через 5,5 м
+            diffuseColor.rgb *= 1.0 - fieldK * (0.16 * rows + 0.06 * step(0.5, fract(v / 90.0))); } }`;
     if (P.detail) colorCode += `
         float n1 = texture2D(noiseTex, vWP.xz * ${(0.012 / 32).toFixed(7)}).r, n2 = texture2D(noiseTex, vWP.xz * ${(0.09 / 32).toFixed(7)} + 0.37).g;
         float n3 = texture2D(noiseTex, vWP.xz * ${(0.6 / 32).toFixed(7)} + 0.71).r;
@@ -345,7 +366,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   const jobs = new Map();
   try {
     if (typeof Worker !== 'undefined' && !opts.syncTerrain) {
-      worker = new Worker(new URL('./terrain-worker.js?v=20260930c', import.meta.url), { type: 'module' });
+      worker = new Worker(new URL('./terrain-worker.js?v=20260930d', import.meta.url), { type: 'module' });
       worker.onmessage = (e) => { const j = jobs.get(e.data.id); if (!j) return; jobs.delete(e.data.id); j.ch.pending[j.lv] = false; if (!disposed) j.ch.geos[j.lv] = toGeo(j.ch, j.lv, e.data); };
       worker.onerror = () => { worker = null; }; // модульные потоки не поддерживаются — дальше строим сразу
     }
@@ -464,6 +485,10 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   // деревни, промзона, дороги, ЛЭП, вышки, ветряки (props.js) — их коробки тоже участвуют в столкновениях
   const props = buildProps({ WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P, seed });
   buildings.push(...props.boxes);
+  // крупные ориентиры и «жизнь» (landmarks.js): мост, порт, маяк, лодки
+  // Столкновений у них нет (дрон пролетает сквозь) — бой от них не зависит
+  const marks = buildLandmarks({ WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P, seed, villages: props.villages, industry: props.industry, waterMat: water.material, noiseTex: NT, waterTime });
+  let lastCam = null, wakeFn = null;
 
   // лес: квадраты 2×2 км, у каждого свой InstancedMesh — вне кадра и дальше дальности прорисовки не рисуется
   const treeChunks = [], shadowTrees = {};
@@ -501,18 +526,39 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     const spruceLo = mergeParts([part(new THREE.ConeGeometry(4.3, 17, 5), 0x2e6a2a, M(0, 8.5, 0))]);
     const leafyLo = mergeParts([part(new THREE.IcosahedronGeometry(5.4, 0), 0x447f31, M(0.6, 10.5, 0.3, 0, 0, 0, 1, 0.9, 1)), part(new THREE.CylinderGeometry(0.6, 0.8, 7, 3), 0x5e4630, M(0, 3.5, 0))]);
     const trMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+    // на площадке порта леса нет
+    const bare = marks.sites.filter((q) => !['bridge', 'lighthouse'].includes(q.name));
+    const noTree = (x, z) => bare.some((q) => Math.abs(x - q.x) < q.r && Math.abs(z - q.z) < q.r && Math.hypot(x - q.x, z - q.z) < q.r * 0.9);
     const CH = P.treeCell || 2000, cells = new Map(); // на слабых пресетах деревьев мало — крупнее квадраты, меньше вызовов отрисовки
     let placed = 0;
     for (let k = 0; k < P.trees * 6 && placed < P.trees; k++) {
       const x = (rnd() - 0.5) * 24000, z = (rnd() - 0.5) * 24000;
       const forest = Math.sin(x * 0.0009 + 2) * Math.cos(z * 0.0011) + 0.4 * Math.sin(x * 0.0031 + z * 0.0027);
       if (forest < 0.5) continue;
+      if (noTree(x, z)) continue;
       const y = terrainH(x, z);
       if (y < WORLD.WATER_Y + 15 || y > 1000) continue;
       const key = Math.floor(x / CH) + ':' + Math.floor(z / CH);
       if (!cells.has(key)) cells.set(key, []);
       cells.get(key).push([x, y, z, 0.8 + rnd() * 0.9, rnd() * 6, 0.9 + rnd() * 0.4]);
       placed++;
+    }
+    // лесополосы вдоль дорог (со «Среднего»): через 30–40 м по обе стороны, кроме городов, деревень и воды — свой генератор
+    if ((P.propsLvl || 0) >= 1 && props.roads) {
+      const RB = mulberry32((seed ^ 0xbe17) >>> 0), cap = Math.round(P.trees * 0.3), vil = props.villages || [];
+      let extra = 0;
+      for (const pts of props.roads) for (let i = 1; i < pts.length - 1 && extra < cap; i++) {
+        const a = pts[i - 1], b = pts[i + 1], tl = Math.hypot(b.x - a.x, b.z - a.z) || 1, tx = (b.x - a.x) / tl, tz = (b.z - a.z) / tl;
+        for (const side of [-1, 1]) {
+          if (RB() < 0.45) continue;
+          const off = 14 + RB() * 6, x = pts[i].x - tz * off * side + (RB() - 0.5) * 8, z = pts[i].z + tx * off * side + (RB() - 0.5) * 8, y = terrainH(x, z);
+          if (y < WORLD.WATER_Y + 12 || y > 1000 || Math.abs(pts[i].y - pts[i].g) > 1.5) continue; // на мостах и у воды — нет
+          if (noTree(x, z) || TOWNS.some((t) => Math.hypot(x - t.x, z - t.z) < t.r * 0.9) || vil.some((v) => Math.hypot(x - v.x, z - v.z) < v.r) || Math.hypot(x - AIRFIELD.x, z - AIRFIELD.z) < AIRFIELD.r) continue;
+          const key = Math.floor(x / CH) + ':' + Math.floor(z / CH);
+          if (!cells.has(key)) cells.set(key, []);
+          cells.get(key).push([x, y, z, 0.7 + RB() * 0.7, RB() * 6, 0.9 + RB() * 0.3]); extra++;
+        }
+      }
     }
     const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
     let v = 0;
@@ -538,6 +584,40 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     }
     spruce.dispose(); leafy.dispose(); spruceLo.dispose(); leafyLo.dispose();
   }
+
+  // ── трава и кусты у самой земли («Ультра», «Кино»): только когда камера ниже ~350 м над землёй; сетка 8 м вокруг
+  //    камеры с постоянным «хешем» клетки (при полёте кусты не прыгают), пересборка — при смещении на 35 м ──
+  const grass = !P.terrainPBR ? null : (() => {
+    const tuft = mergeParts([0, 1, 2].map((k) => part(new THREE.ConeGeometry(0.35, 1.6, 3), k ? 0x5f8a36 : 0x6f9a3e, M(Math.cos(k * 2.1) * 0.5, 0.8, Math.sin(k * 2.1) * 0.5, Math.cos(k * 2.1) * 0.25, 0, Math.sin(k * 2.1) * 0.25))));
+    const bush = mergeParts([part(new THREE.IcosahedronGeometry(1.6, 0), 0x3b6a2c, M(0, 1.1, 0, 0, 0, 0, 1, 0.75, 1)), part(new THREE.IcosahedronGeometry(1.1, 0), 0x4a7d33, M(0.9, 1.5, 0.4, 0, 0, 0, 1, 0.8, 1))]);
+    const gm = new THREE.MeshLambertMaterial({ vertexColors: true }), CAP = 2600;
+    // у травы — свой цвет экземпляров, у кустов нет: материалы раздельно
+    const mk = (geo) => { const im = new THREE.InstancedMesh(geo, gm.clone(), CAP); im.count = 0; im.frustumCulled = false; im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); add(im); return im; };
+    const T = mk(tuft), B = mk(bush);
+    T.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(CAP * 3).fill(1), 3); T.instanceColor.setUsage(THREE.DynamicDrawUsage);
+    const wheat = new THREE.Color(2.6, 1.05, 1.5), plain = new THREE.Color(1, 1, 1), mm = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sv = new THREE.Vector3(), pv = new THREE.Vector3();
+    const h1 = (i, j) => { const v = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return v - Math.floor(v); };
+    let cx = 1e9, cz = 1e9;
+    return {
+      follow(cam) {
+        const agl = cam.y - terrainH(cam.x, cam.z), on = agl < 350; T.visible = B.visible = on;
+        if (!on || Math.hypot(cam.x - cx, cam.z - cz) < 35) return;
+        cx = cam.x; cz = cam.z; let nt = 0, nb = 0; const G = 8, RAD = 210, i0 = Math.floor((cx - RAD) / G), j0 = Math.floor((cz - RAD) / G);
+        for (let i = i0; i <= i0 + 2 * RAD / G; i++) for (let j = j0; j <= j0 + 2 * RAD / G; j++) {
+          const r = h1(i, j); if (r > 0.34) continue;
+          const x = (i + h1(j, i)) * G, z = (j + h1(i + 7, j - 3)) * G;
+          if (Math.hypot(x - cx, z - cz) > RAD) continue;
+          const y = terrainH(x, z); if (y < WORLD.WATER_Y + 3 || y > 1100) continue;
+          if (Math.abs(terrainH(x + 6, z) - y) > 3.2 || TOWNS.some((t) => Math.abs(x - t.x) < t.r && Math.hypot(x - t.x, z - t.z) < t.r * 0.8)) continue;
+          const bushy = r < 0.045, s = bushy ? 0.8 + h1(i + 3, j) * 1.2 : 0.7 + h1(i, j + 5) * 0.8;
+          mm.compose(pv.set(x, y - 0.1, z), q.setFromEuler(e.set(0, h1(j, i + 2) * 6.28, 0)), sv.set(s, s * (bushy ? 1 : 0.8 + r * 1.2), s));
+          const onField = Math.sin(x * 0.0021 + Math.sin(z * 0.0013) * 2) * Math.sin(z * 0.0019 + 0.5) > 0.45; // жёлтое поле (как в terrain-core)
+          if (bushy && nb < CAP) B.setMatrixAt(nb++, mm); else if (!bushy && nt < CAP) { T.setColorAt(nt, onField ? wheat : plain); T.setMatrixAt(nt++, mm); }
+        }
+        T.count = nt; B.count = nb; T.instanceMatrix.needsUpdate = true; B.instanceMatrix.needsUpdate = true; if (T.instanceColor) T.instanceColor.needsUpdate = true;
+      },
+    };
+  })();
 
   // ── облака-«кучи» там, где «поле облачности» выше порога (там же на земле их тени); пересобираются при смене погоды ──
   const CU = { lit: { value: new THREE.Color() }, dark: { value: new THREE.Color() }, sunTint: { value: new THREE.Color() }, flash: SU.flash };
@@ -899,7 +979,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     sortieStart() { sortieT = 0; driftT = 0; setSunDir(W.el, W.az); applyLight(); boltT = 5; },
     // dt — шаг игры; возвращает { thunder, delay } при ударе молнии (звук грома — в main.js)
     update(dt, camVel) {
-      waterTime.value += dt; DU.time.value += dt; props.update(dt, BU.night.value);
+      waterTime.value += dt; DU.time.value += dt; props.update(dt, BU.night.value); marks.update(dt, Math.max(BU.night.value, W && W.rain ? 0.3 : 0), lastCam, wakeFn);
       let ev = null;
       // «живое» солнце: за вылет оно чуть смещается (рассвет поднимается, закат опускается)
       sortieT += dt;
@@ -924,11 +1004,14 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       return ev;
     },
     get rainK() { return W.rain ? rainK : 0; },
-    get emitters() { return props.emitters; },
+    get emitters() { return props.emitters.concat(marks.emitters); },
+    get landmarks() { return marks; },
+    setWake(fn) { wakeFn = fn; }, // пена за лодками — частицами main.js
     props,
     // небо и слои облаков следуют за камерой, тень — за игроком; лес прорисовывается до treeDist (и не за холмами);
     // деревья и дома отбрасывают тени, только когда игрок низко (сверху этих теней всё равно не видно)
     follow(camPos, focus, focusAgl) {
+      lastCam = camPos; if (grass) grass.follow(camPos);
       sky.position.copy(camPos);
       deck.position.x = camPos.x; deck.position.z = camPos.z;
       RU.camPos.value.copy(camPos);
