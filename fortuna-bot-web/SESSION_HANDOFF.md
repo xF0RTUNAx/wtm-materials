@@ -19,7 +19,7 @@
 - Монорепо `xF0RTUNAx/wtm-materials`, ветка `main` **сразу публикуется** GitHub Pages на `fortunawtm.com` (корень репо = корень сайта; значит, все файлы, включая эти .md, публично доступны — **секреты сюда не класть**).
 - Сайт мини-игр сообщества: `fortuna-bot-web/` (статика: `app.html`, `js/app.js`, `js/api.js`, `config.js`) + Supabase (Postgres, Edge Functions на Deno, project ref `bhcvxunvbxodkpcrjwbq`). Вход — своя таблица `players` (`auth-password`), сессия — `localStorage['fortuna_web_player'] = {id, login}`; личность в запросах = `player_id` (UUID наружу не отдаётся).
 - Игра **«Симулятор Летки»**: `fortuna-bot-web/games/drone.html` + `games/drone/*.js` (three.js r128 глобальным скриптом, ES-модули). Сайт открывает её во фрейме: тренировка — `drone.html?mode=training`, партия на награду — без параметра (билеты, `start-game-run`/`claim-arcade-reward`).
-- **Кэш модулей:** у всех относительных импортов и точки входа — `?v=<версия>` (сейчас `20260930c`). При каждом деплое игры менять версию во всех файлах: `sed -i '' -E "s#\?v=[0-9a-z]+'#?v=НОВАЯ'#g" games/drone/*.js games/drone/sim/*.js game-server/*.js` и в `games/drone.html` — у `main.js` и `../config.js` (на Linux — `sed -i -E …`; `game-server/` — чтобы сервер грузил те же экземпляры модулей боя).
+- **Кэш модулей:** у всех относительных импортов и точки входа — `?v=<версия>` (сейчас `20260930d`). При каждом деплое игры менять версию во всех файлах: `sed -i '' -E "s#\?v=[0-9a-z]+'#?v=НОВАЯ'#g" games/drone/*.js games/drone/sim/*.js game-server/*.js` и в `games/drone.html` — у `main.js` и `../config.js` (на Linux — `sed -i -E …`; `game-server/` — чтобы сервер грузил те же экземпляры модулей боя).
 
 ## Что сделано в этой сессии (коротко, по порядку)
 
