@@ -129,6 +129,7 @@
   #touch > * { pointer-events: auto; }
   body.coarse.playing #touch { display: block; }
   #stickZone { position: absolute; left: 0; top: 0; bottom: 0; width: 48%; }
+  body.aimCtl #stickZone { width: 100%; } /* «ведение пальцем» — по всему экрану, кнопки лежат поверх */
   #stickBase { position: absolute; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35); background: rgba(255,255,255,.06); display: none; }
   #stickKnob { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: rgba(255,255,255,.45); }
   .tbtn { position: absolute; border-radius: 50%; border: 2px solid rgba(255,255,255,.5); background: rgba(255,255,255,.12); color: #fff;
