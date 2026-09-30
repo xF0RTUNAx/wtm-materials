@@ -86,7 +86,11 @@ export function createPipeline(renderer, cfg) {
       col = mix(col, col * mix(vec3(0.9, 0.99, 1.1), vec3(1.1, 1.0, 0.88), l), grade);  // холодные тени, тёплые света
       col = max(mix(vec3(l), col, 1.0 + 0.15 * grade), 0.0);
       col *= mix(1.0, smoothstep(0.9, 0.25, length(vUv - 0.5)), vignette);
-      if (p3 > 0.5) col = mat3(0.8225, 0.0332, 0.0171, 0.1774, 0.9669, 0.0724, 0.0, 0.0, 0.9108) * col; // линейный sRGB → Display P3
+      // широкий цвет: точный перевод sRGB → Display P3 выглядит на P3-экране так же, как sRGB (разницы не видно), поэтому
+      // насыщенные цвета (зелень, небо, вода, пламя) расширяем в P3-охват: чем насыщеннее цвет, тем сильнее; серые не меняются
+      if (p3 > 0.5) { vec3 cp = mat3(0.8225, 0.0332, 0.0171, 0.1774, 0.9669, 0.0724, 0.0, 0.0, 0.9108) * col;
+        float mxc = max(col.r, max(col.g, col.b)), sat = clamp((mxc - min(col.r, min(col.g, col.b))) / max(mxc, 1e-4), 0.0, 1.0);
+        col = mix(cp, col, 0.65 * sqrt(sat)); }
       col = toSRGB(clamp(col, 0.0, 1.0));
       gl_FragColor = vec4(col, 1.0);
     }`,

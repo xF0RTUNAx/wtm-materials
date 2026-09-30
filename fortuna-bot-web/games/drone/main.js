@@ -172,25 +172,25 @@ function drUpdate(ms) {
   dr.fps = 1000 / avg; dr.low = 1000 / w[Math.min(n - 1, Math.floor(n * 0.95))];
   const q = snapPeriod(w[Math.floor(n * 0.25)]); if (q && (!dr.vs || q < dr.vs - 0.5)) dr.vs = q; // экран оказался быстрее, чем думали
   drReset();
-  if (!perf.dyn) return;
+  if (!perf.dyn && !perf.smartQ) return; // «умное качество» работает и без динамического разрешения — тогда меняется только детализация
   const goal = Math.max(1000 / (perf.cap || perf.target), dr.vs * 0.98);
   let s = dr.scale;
   if (dr.hold > 0) dr.hold--;
   if (avg > goal * 1.1) {
     // сначала — детализация (глазу почти незаметно), и только потом разрешение (картинка мягче)
-    if (perf.smartQ && dr.q < QK.length - 1) setQ(dr.q + 1); else s -= avg > goal * 1.5 ? 0.1 : 0.05;
+    if (perf.smartQ && dr.q < QK.length - 1) setQ(dr.q + 1); else if (perf.dyn) s -= avg > goal * 1.5 ? 0.1 : 0.05;
     dr.calm = 0;
     if (dr.justUp > 0) dr.hold = 20; // только что поднимали — не хватило мощности, 10 с не пробуем
   } else if (avg < goal * 1.04) {
     // возврат в обратном порядке: сначала чёткость, потом детализация
     if (++dr.calm >= 4 && dr.hold <= 0) {
-      if (s < perf.scale) { s += 0.04; dr.calm = 0; dr.justUp = 3; }
+      if (perf.dyn && s < perf.scale) { s += 0.04; dr.calm = 0; dr.justUp = 3; }
       else if (dr.q > 0) { setQ(dr.q - 1); dr.calm = 0; dr.justUp = 3; }
     }
   } else dr.calm = 0;
   if (dr.justUp > 0) dr.justUp--;
   s = clamp(s, perf.min, perf.scale);
-  if (Math.abs(s - dr.scale) >= 0.01) { dr.scale = s; if (pipe) pipe.setScale(s); else renderer.setPixelRatio(basePR * s); resize(); }
+  if (perf.dyn && Math.abs(s - dr.scale) >= 0.01) { dr.scale = s; if (pipe) pipe.setScale(s); else renderer.setPixelRatio(basePR * s); resize(); }
 }
 function resize() {
   VW = window.innerWidth; VH = window.innerHeight;
@@ -1740,14 +1740,14 @@ function perfBlock() {
       <div class="prow"><span>Сглаживание</span>${seg('aa', perf.aa, [['off', 'Выкл'], ['fxaa', 'FXAA'], ['msaa', 'MSAA ×4'], ['taa', 'TAA']])}</div>
       <p class="hint">${aaHint}</p>
       <button class="btn alt sm" id="aaTestBtn">Сравнить сглаживание (≈ 12 с)</button>
-      <label class="chk"><input type="checkbox" id="pSmartQ" ${perf.smartQ ? 'checked' : ''} ${perf.dyn ? '' : 'disabled'}> Умное динамическое качество</label>
-      <p class="hint">Когда кадры не успевают, сначала сокращается дальность подробного леса и рельефа, и только потом снижается разрешение; возвращается в обратном порядке. Картинка при нагрузке остаётся чёткой.${perf.dyn ? '' : ' Работает вместе с динамическим разрешением.'}</p>
+      <label class="chk"><input type="checkbox" id="pSmartQ" ${perf.smartQ ? 'checked' : ''}> Умное динамическое качество</label>
+      <p class="hint">Когда кадры не успевают, сначала сокращается дальность подробного леса и рельефа, и только потом снижается разрешение; возвращается в обратном порядке. Картинка при нагрузке остаётся чёткой.${perf.dyn ? '' : ' Сейчас динамическое разрешение выключено — меняется только детализация, разрешение всегда 100% от выбранного масштаба.'}</p>
       <label class="chk"><input type="checkbox" id="pHalfFx" ${perf.halfFx ? 'checked' : ''} ${fxAvail() ? '' : 'disabled'}> Облака и дым в половинном разрешении</label>
       <p class="hint">Облака, облачный слой и дым рисуются в четверть пикселей и накладываются на кадр, а на стыке с землёй и самолётами мягко растворяются. Сильно разгружает видеокарту в облаках, в пасмурную погоду и при взрывах; края дыма чуть мягче.${fxAvail() ? '' : ' Нужен конвейер кадра: включите сглаживание или апскейлер.'}</p>
       <div class="prow"><span>Ограничение кадров</span>${seg('cap', perf.cap, [[0, 'Нет'], [30, '30'], [60, '60']])}</div>
       <p class="hint">Не рисовать чаще заданного: меньше нагрев и расход батареи.</p>
       ${P3_OK ? `<label class="chk"><input type="checkbox" id="pP3" ${perf.p3 ? 'checked' : ''}> Широкий цвет (Display P3)</label>
-      <p class="hint">Расширенный цветовой охват экрана: насыщеннее зелень, небо и пламя.</p>` : ''}
+      <p class="hint">Расширенный цветовой охват экрана (Mac, iPhone, iPad и другие экраны с P3): зелень, небо, вода и пламя насыщеннее, серые и белые не меняются. На обычном экране разницы нет.</p>` : ''}
       <label class="chk"><input type="checkbox" id="pFps" ${perf.fps ? 'checked' : ''}> Показывать счётчик кадров</label>
       <p class="hint">В полёте: кадров в секунду, частота экрана, худшие 5% кадров и текущий масштаб рендера.</p>
       <label class="chk"><input type="checkbox" id="pImm" ${perf.immersive ? 'checked' : ''}> Режим погружения</label>

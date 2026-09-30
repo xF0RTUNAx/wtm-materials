@@ -665,35 +665,88 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   //    «поля облачности», что у спрайтов и теней на земле, края «выедает» шум. Свет — одна выборка к солнцу (закон Бера).
   //    Рисуются только в проходе ½ разрешения: там есть глубина кадра, и луч обрывается на земле и самолётах ──
   let vol = null, volOn = false, volSteps = 44; // шагов луча: 44 — игра, до 160 — ролик/скриншоты
-  const VOL_B = CLOUD_H - 120, VOL_T = CLOUD_H + 2200;
+  const VOL_B = CLOUD_H - 120, VOL_T = CLOUD_H + 2600;
+  // Тайлящийся 3D-шум для объёмных облаков (считается один раз, при первом включении): «форма» 64³ — Перлин–Уорли
+  // (value-noise, «надутый» ячейками Уорли — клубы с круглыми краями), «детали» 32³ — Уорли из трёх октав (выедает края).
+  function noise3D(S, worleyFreqs, valueFreqs, seed) {
+    const R = mulberry32(seed), out = new Uint8Array(S * S * S);
+    const worley = (f) => { // 1 − расстояние до ближайшей точки (по одной точке на ячейку, решётка f³, бесшовно)
+      const pts = new Float32Array(f * f * f * 3); for (let i = 0; i < pts.length; i++) pts[i] = R();
+      const v = new Float32Array(S * S * S);
+      for (let z = 0; z < S; z++) for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+        const px = x / S * f, py = y / S * f, pz = z / S * f, cx = Math.floor(px), cy = Math.floor(py), cz = Math.floor(pz);
+        let md = 9;
+        for (let dz = -1; dz <= 1; dz++) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const ix = cx + dx, iy = cy + dy, iz = cz + dz, w = (((iz % f) + f) % f * f + (((iy % f) + f) % f)) * f + (((ix % f) + f) % f), o = w * 3;
+          const qx = ix + pts[o] - px, qy = iy + pts[o + 1] - py, qz = iz + pts[o + 2] - pz, d = qx * qx + qy * qy + qz * qz;
+          if (d < md) md = d;
+        }
+        v[(z * S + y) * S + x] = 1 - Math.min(1, Math.sqrt(md));
+      }
+      return v;
+    };
+    const value = (f) => { // гладкий value-noise на решётке f³, бесшовно
+      const L = new Float32Array(f * f * f); for (let i = 0; i < L.length; i++) L[i] = R();
+      const g = (i, j, k) => L[(((k % f) + f) % f * f + (((j % f) + f) % f)) * f + (((i % f) + f) % f)], sm = (t) => t * t * (3 - 2 * t);
+      const v = new Float32Array(S * S * S);
+      for (let z = 0; z < S; z++) for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+        const px = x / S * f, py = y / S * f, pz = z / S * f, i = Math.floor(px), j = Math.floor(py), k = Math.floor(pz);
+        const u = sm(px - i), w = sm(py - j), t = sm(pz - k);
+        const a = g(i, j, k) + (g(i + 1, j, k) - g(i, j, k)) * u, b = g(i, j + 1, k) + (g(i + 1, j + 1, k) - g(i, j + 1, k)) * u;
+        const c = g(i, j, k + 1) + (g(i + 1, j, k + 1) - g(i, j, k + 1)) * u, d = g(i, j + 1, k + 1) + (g(i + 1, j + 1, k + 1) - g(i, j + 1, k + 1)) * u;
+        v[(z * S + y) * S + x] = (a + (b - a) * w) + ((c + (d - c) * w) - (a + (b - a) * w)) * t;
+      }
+      return v;
+    };
+    const Ws = worleyFreqs.map(worley), Wk = [0.625, 0.25, 0.125];
+    const Vs = valueFreqs.map(value), Vk = [0.6, 0.28, 0.12];
+    for (let i = 0; i < out.length; i++) {
+      let wv = 0; for (let o = 0; o < Ws.length; o++) wv += Ws[o][i] * Wk[o];
+      let r = wv;
+      if (Vs.length) { let vv = 0; for (let o = 0; o < Vs.length; o++) vv += Vs[o][i] * Vk[o]; r = clamp((vv - (wv - 1)) / (1 - (wv - 1)) * 1.15 - 0.15, 0, 1); } // Перлин–Уорли
+      out[i] = r * 255;
+    }
+    const t = new THREE.DataTexture3D(out, S, S, S);
+    t.format = THREE.RedFormat; t.type = THREE.UnsignedByteType; t.minFilter = t.magFilter = THREE.LinearFilter;
+    t.wrapS = t.wrapT = t.wrapR = THREE.RepeatWrapping; t.unpackAlignment = 1; t.needsUpdate = true;
+    return t;
+  }
   function makeVol() {
     const S = 512, data = new Uint8Array(S * S * 4);
     for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) { const o = (y * S + x) * 4; data[o] = cloudField((x / (S - 1) - 0.5) * CLOUD_SPAN, (y / (S - 1) - 0.5) * CLOUD_SPAN) * 255; data[o + 3] = 255; }
     const cov = new THREE.DataTexture(data, S, S, THREE.RGBAFormat); cov.magFilter = cov.minFilter = THREE.LinearFilter; cov.needsUpdate = true;
-    const VU = { ...FXU, noiseTex: TU.noiseTex, covTex: { value: cov }, th: { value: 0.62 }, vpInv: { value: new THREE.Matrix4() }, sunDir: SU.sunDir, lit: CU.lit, dark: CU.dark,
+    const shape = noise3D(64, [4, 8, 16], [4, 8, 16], 7101), detail = noise3D(32, [2, 4, 8], [], 7102);
+    const VU = { ...FXU, shape3: { value: shape }, detail3: { value: detail }, covTex: { value: cov }, th: { value: 0.62 }, vpInv: { value: new THREE.Matrix4() }, sunDir: SU.sunDir, lit: CU.lit, dark: CU.dark,
       sunTint: CU.sunTint, flash: SU.flash, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, time: DU.time, steps: { value: volSteps } };
     const m = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.ShaderMaterial({
       uniforms: VU,
       vertexShader: 'varying vec2 vNdc; void main() { vNdc = position.xy; gl_Position = vec4(position.xy, 0.999, 1.0); }',
-      fragmentShader: `uniform sampler2D noiseTex, covTex; uniform mat4 vpInv; uniform float th, time, flash, fogDensity, steps; uniform vec3 sunDir, lit, dark, sunTint, fogColor;
+      fragmentShader: `precision highp sampler3D;
+        uniform sampler3D shape3, detail3; uniform sampler2D covTex; uniform mat4 vpInv; uniform float th, time, flash, fogDensity, steps; uniform vec3 sunDir, lit, dark, sunTint, fogColor;
         varying vec2 vNdc;
         ${SOFT_GLSL}
         #include <common>
         const float B = ${VOL_B.toFixed(1)}, T = ${VOL_T.toFixed(1)};
-        float dens(vec3 p) {
+        float remap(float v, float l0, float h0, float l1, float h1) { return l1 + (v - l0) * (h1 - l1) / (h0 - l0); }
+        // плотность (ослабление на метр). Где стоят облака — «поле облачности» (как у теней на земле); форма — 3D-шум,
+        // профиль высоты кучевого облака: плотное округлое дно, шапка тем выше, чем гуще облачность; детали выедают края
+        float dens(vec3 p, bool full) {
           vec2 uv = p.xz / ${CLOUD_SPAN.toFixed(1)} + 0.5;
           float c = (texture2D(covTex, uv).r - th) * smoothstep(0.5, 0.45, max(abs(uv.x - 0.5), abs(uv.y - 0.5)));
-          if (c <= 0.0) return 0.0;
-          vec2 q = p.xz * 0.0004 + vec2(time * 0.0006, 0.0);
-          float n = texture2D(noiseTex, q + p.y * 0.00025).r * 0.6 + texture2D(noiseTex, q * 3.1 - p.y * 0.0006).g * 0.4;
-          float n2 = texture2D(noiseTex, q * 2.3 + p.y * 0.0012 + 0.37).r;       // «клубы» по ~30 м
-          float nb = texture2D(noiseTex, q * 0.45 + 0.61).g;                     // крупные «башни» по ~170 м
-          float top = min(B + 250.0 + c * 6000.0 + (nb - 0.5) * 1100.0, T), h = (p.y - B) / (top - B);
-          if (h < 0.0 || h > 1.0) return 0.0;
-          // плоское дно; шапка — неровная, «цветная капуста» из двух слоёв шума
-          float shape = smoothstep(0.0, 0.08, h) * (1.0 - smoothstep(0.3, 1.0, h + (n2 - 0.5) * 0.45)) * smoothstep(0.0, 0.05, c);
-          return clamp((shape - (1.0 - n) * 0.42 - (1.0 - n2) * 0.28) * 2.6, 0.0, 1.0) * 0.012; // ослабление на метр
+          if (c <= -0.02) return 0.0;
+          float cov = clamp(c * 3.5 + 0.08, 0.0, 1.0);
+          float hn = (p.y - B) / ((T - B) * mix(0.28, 0.85, cov));
+          if (hn < 0.0 || hn > 1.0) return 0.0;
+          float grad = smoothstep(0.0, 0.12, hn) * smoothstep(1.0, 0.4, hn);
+          vec3 w = p + vec3(time * 6.0, 0.0, time * 2.0);                     // медленный дрейф по ветру
+          float base = texture(shape3, w / 2800.0).r;
+          float d = remap(base * grad, 1.0 - cov * 0.75, 1.0, 0.0, 1.0);
+          if (d <= 0.0) return 0.0;
+          if (full) { float det = texture(detail3, w / 460.0).r;
+            d = remap(d, mix(det, 1.0 - det, clamp(hn * 3.0, 0.0, 1.0)) * 0.32, 1.0, 0.0, 1.0); } // внизу — рваные края, вверху — клубы
+          return clamp(d, 0.0, 1.0) * 0.03;
         }
+        float hg(float c, float g) { float g2 = g * g; return (1.0 - g2) / pow(1.0 + g2 - 2.0 * g * c, 1.5); }
         void main() {
           if (fxOn < 0.5) discard;
           vec4 w = vpInv * vec4(vNdc, 1.0, 1.0); vec3 dir = normalize(w.xyz / w.w - cameraPosition), ro = cameraPosition;
@@ -702,27 +755,33 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
           else if (ro.y < B || ro.y > T) discard;
           vec3 fwd = -vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
           float sz = texture2D(tDepth, gl_FragCoord.xy / fxSize).r;
-          t1 = min(min(t1, fxLinZ(sz) / max(dot(dir, fwd), 1e-3)), t0 + 14000.0);
+          t1 = min(min(t1, fxLinZ(sz) / max(dot(dir, fwd), 1e-3)), t0 + 12000.0);
           if (t1 <= t0) discard;
-          float st = (t1 - t0) / steps;
-          // сдвиг старта луча — свой в каждом кадре: TAA и смешивание кадров сглаживают его, а не оставляют неподвижные «полосы»
+          float st = max((t1 - t0) / steps, 25.0);
+          // сдвиг старта луча — свой в каждом кадре: TAA и смешивание кадров сглаживают шум
           vec2 jf = gl_FragCoord.xy + vec2(fract(time * 13.7) * 97.0, fract(time * 7.3) * 61.0);
           float tt = t0 + st * fract(sin(dot(jf, vec2(12.9898, 78.233))) * 43758.5453);
           float Tr = 1.0, sumT = 0.0, sumW = 0.0; vec3 col = vec3(0.0);
-          float phase = 0.55 + 1.8 * pow(max(dot(dir, sunDir), 0.0), 6.0); // ярче против солнца — «серебряная кромка»
+          float ct = dot(dir, sunDir), phase = mix(hg(ct, 0.6), hg(ct, -0.25), 0.35) * 0.35; // вперёд — «серебряная кромка», назад — мягкий отсвет
+          bool hq = steps > 64.0;
           for (int i = 0; i < 160; i++) {
-            if (float(i) >= steps) break;
+            if (float(i) >= steps || tt > t1) break;
             vec3 p = ro + dir * tt;
-            float d = dens(p);
+            float d = dens(p, true);
             if (d > 0.0) {
-              float dl = dens(p + sunDir * 260.0); if (steps > 64.0) dl += dens(p + sunDir * 650.0) * 0.6; // высокое качество — вторая выборка к солнцу
-              float light = exp(-dl * 160.0), hh = clamp((p.y - B) / 1400.0, 0.0, 1.0);
-              vec3 c = mix(dark, lit, light * 0.75 + hh * 0.25) * 1.12 + sunTint * light * phase * 0.3 + flash * vec3(0.7, 0.75, 0.9);
+              // свет к солнцу: несколько выборок с растущим шагом (грубая плотность — без деталей)
+              float dl = dens(p + sunDir * 60.0, false) * 60.0 + dens(p + sunDir * 200.0, false) * 140.0;
+              if (hq) dl += dens(p + sunDir * 420.0, false) * 220.0 + dens(p + sunDir * 800.0, false) * 380.0;
+              else dl += dens(p + sunDir * 500.0, false) * 300.0;
+              float hn = clamp((p.y - B) / 1600.0, 0.0, 1.0);
+              float sun = exp(-dl * 0.9) * (1.0 - exp(-d * 90.0));          // закон Бера × «порошок» (тёмные края у толщи)
+              vec3 amb = mix(dark, lit, 0.35 + 0.65 * hn);                      // низ облаков темнее, верх — светлее
+              vec3 c = amb * 0.85 + lit * sun * 1.4 + sunTint * sun * phase * 2.2 + flash * vec3(0.7, 0.75, 0.9);
               float a = 1.0 - exp(-d * st);
               col += Tr * a * c; sumT += Tr * a * tt; sumW += Tr * a; Tr *= 1.0 - a;
-              if (Tr < 0.02) break;
-            }
-            tt += st;
+              if (Tr < 0.015) break;
+              tt += st;
+            } else tt += st * 1.6;                                              // в пустоте — шаг крупнее
           }
           float alpha = 1.0 - Tr; if (alpha < 0.004) discard;
           float fd = sumT / max(sumW, 1e-4), fog = 1.0 - exp(-fogDensity * fogDensity * 0.64 * fd * fd);
@@ -906,7 +965,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       }
       if (clouds) { scene.remove(clouds); clouds.geometry.dispose(); clouds.material.dispose(); }
       if (cloudMat) cloudMat.dispose();
-      if (vol) { scene.remove(vol); vol.geometry.dispose(); vol.material.dispose(); vol.VU.covTex.value.dispose(); }
+      if (vol) { scene.remove(vol); vol.geometry.dispose(); vol.material.dispose(); vol.VU.covTex.value.dispose(); vol.VU.shape3.value.dispose(); vol.VU.detail3.value.dispose(); }
       if (puff) puff.dispose();
       if (cloudTex) cloudTex.dispose();
       disposed = true; if (worker) worker.terminate();
