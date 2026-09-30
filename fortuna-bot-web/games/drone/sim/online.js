@@ -1,7 +1,7 @@
 // Онлайн-бой «Симулятора Летки»: правила, точки появления и формат сетевых сообщений — общие для клиента и сервера.
 // Правила согласованы в ONLINE_PLAN.md: командный бой с возрождением, 5 минут, форматы 1×1…4×4, Аркада и Реализм раздельно.
-import { terrainH } from '../terrain-core.js?v=20260930d';
-import { MISSILES } from '../missiles.js?v=20260930d';
+import { terrainH } from '../terrain-core.js?v=20260930e';
+import { MISSILES } from '../missiles.js?v=20260930e';
 
 export const MATCH_T = 300;     // длина боя, с
 export const RESPAWN_T = 5;     // возрождение после сбития, с
@@ -9,7 +9,7 @@ export const COUNTDOWN_T = 3;   // отсчёт перед боем, с
 export const RESULTS_T = 20;    // экран итогов, потом — снова лобби, с
 export const SNAP_HZ = 20;      // снимков в секунду от сервера и состояний от клиента
 export const SIZES = [1, 2, 3, 4];
-export const TEAM_NAMES = ['Фортуна', 'Улитка'];
+export const TEAM_NAMES = ['Команда 1', 'Команда 2'];
 export const ONLINE_MODES = ['arcade', 'real'];
 export const MAX_HP = 100;
 export const GUN_DMG = 7;       // урон одной очереди-попадания пушки «Изделия» (как у игрока в одиночной игре)
