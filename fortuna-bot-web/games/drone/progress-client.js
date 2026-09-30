@@ -3,7 +3,7 @@
 // правила наград — supabase/functions/_shared/drone.ts, цены ракет — sim/progress.js.
 // Без аккаунта сайта (игра открыта отдельно или тестовый ник) прогресса нет: награды не выдаются, ракеты не закрыты.
 /* global CONFIG */
-import { lockedIn } from './sim/progress.js?v=20260930d';
+import { lockedIn } from './sim/progress.js?v=20260930e';
 
 function account(testName) {
   if (testName) return null;
