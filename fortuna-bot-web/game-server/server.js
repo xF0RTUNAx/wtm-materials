@@ -9,11 +9,14 @@
 //   MP_SECRET  — общий секрет с edge-функцией mp-ticket: вход только по подписанному билету аккаунта сайта.
 //                Без него — режим разработки: сервер верит нику из клиента (только для локальной проверки!).
 //   MATCH_T    — длина боя, с (для проверки; по умолчанию — из sim/online.js)
+//   LOG_DIR    — папка журнала боёв (по умолчанию game-server/logs), LOG_DAYS — сколько дней хранить (14)
+//   LOG_KEY    — ключ для чтения журнала по сети: /logs?key=…&date=ГГГГ-ММ-ДД[&room=КОД] (без ключа чтение по сети выключено)
 import * as THREE from 'npm:three@0.128.0';
 globalThis.THREE = THREE; // модули боя (games/drone/sim) считают векторами three.js, как в браузере
 
 const { PORT: DEF_PORT } = await import('../games/drone/sim/online.js');
 const { createRooms } = await import('./rooms.js');
+const { createJournal } = await import('./journal.js');
 
 const PORT = +(Deno.env.get('PORT') || DEF_PORT);
 const HOST = Deno.env.get('HOST') || '0.0.0.0';
@@ -49,7 +52,11 @@ async function auth(m) {
 }
 
 const MAX_CLIENTS = +(Deno.env.get('MAX_CLIENTS') || 400);
-const rooms = createRooms({ log, auth, sign, matchT: +(Deno.env.get('MATCH_T') || 0) || undefined });
+const journal = createJournal({ dir: Deno.env.get('LOG_DIR') || decodeURIComponent(new URL('./logs', import.meta.url).pathname).replace(/^\/([A-Za-z]:)/, '$1'),
+  days: +(Deno.env.get('LOG_DAYS') || 14), log });
+const LOG_KEY = Deno.env.get('LOG_KEY') || '';
+const rooms = createRooms({ log, auth, sign, matchT: +(Deno.env.get('MATCH_T') || 0) || undefined, journal: journal.write });
+journal.write('server_start', { port: PORT, dev: SECRET ? 0 : 1 });
 const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json; charset=utf-8' };
 
 Deno.serve({ port: PORT, hostname: HOST, onListen: () => log(`онлайн-сервер на ${HOST}:${PORT}${SECRET ? ' (вход по билетам сайта)' : ' (режим разработки: вход по нику без билета)'}`) }, (req) => {
@@ -60,6 +67,13 @@ Deno.serve({ port: PORT, hostname: HOST, onListen: () => log(`онлайн-се�
     const { socket, response } = Deno.upgradeWebSocket(req);
     rooms.connect(socket);
     return response;
+  }
+  if (url.pathname === '/logs') { // журнал боёв по ключу LOG_KEY: без date — список файлов
+    if (!LOG_KEY || url.searchParams.get('key') !== LOG_KEY) return new Response('нет доступа', { status: 403 });
+    const date = url.searchParams.get('date');
+    if (!date) return new Response(journal.list().join('\n'), { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+    const txt = journal.read(date, (url.searchParams.get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || null);
+    return txt === null ? new Response('нет журнала за эту дату', { status: 404 }) : new Response(txt, { headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8' } });
   }
   if (url.pathname === '/health') return new Response(JSON.stringify({ ok: true, ...rooms.stats() }), { headers: cors });
   return new Response('Симулятор Летки — онлайн-сервер', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });

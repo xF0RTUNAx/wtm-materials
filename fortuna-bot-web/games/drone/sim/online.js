@@ -1,7 +1,7 @@
 // Онлайн-бой «Симулятора Летки»: правила, точки появления и формат сетевых сообщений — общие для клиента и сервера.
 // Правила согласованы в ONLINE_PLAN.md: командный бой с возрождением, 5 минут, форматы 1×1…4×4, Аркада и Реализм раздельно.
-import { terrainH } from '../terrain-core.js?v=20260930f';
-import { MISSILES } from '../missiles.js?v=20260930f';
+import { terrainH } from '../terrain-core.js?v=20260930g';
+import { MISSILES } from '../missiles.js?v=20260930g';
 
 export const MATCH_T = 300;     // длина боя, с
 export const RESPAWN_T = 5;     // возрождение после сбития, с
@@ -12,6 +12,9 @@ export const SIZES = [1, 2, 3, 4];
 export const TEAM_NAMES = ['Команда 1', 'Команда 2'];
 export const ONLINE_MODES = ['arcade', 'real'];
 export const MAX_HP = 100;
+// ИК-заметность «Изделия» в онлайне (в одиночной игре — DRONE.ir 0,8: от неё зависят ракеты ИИ по игроку и regress.sh).
+// 0,8 → 1,2: дальность захвата ИК-ГСН ×1,22 (Р-3С с хвоста ≈4,4 км, AIM-9L ≈8,8 км; на форсаже — ещё ×1,48)
+export const ONLINE_IR = 1.2;
 export const GUN_DMG = 7;       // урон одной очереди-попадания пушки «Изделия» (как у игрока в одиночной игре)
 export const PORT = 8787;
 

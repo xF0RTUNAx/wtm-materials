@@ -2,12 +2,14 @@
 //   этап 1 — вход, комната по коду, «Готов», отсчёт, бой, попадания пушки (с проверкой угла), сбитие, счёт, возрождение;
 //   этап 2 — подвеска, отказ в пуске, захват РЛС (виден цели), пуск ракеты, ракета в снимках, попадание, ЛТЦ, потеря захвата;
 //   этап 3 — боты в лобби, самолёт молчащего игрока ведёт ИИ и возвращается к нему, переподключение, быстрый поиск;
-//   этап 4 — вход по билету сайта (второй сервер с MP_SECRET): правильный, поддельный и просроченный билет.
-//   deno run --allow-net --allow-read --allow-env --allow-run game-server/smoke-test.js
+//   этап 4 — вход по билету сайта (второй сервер с MP_SECRET): правильный, поддельный и просроченный билет;
+//   ИК-ГСН в онлайне — пуск с хвоста принят, в лоб ранней ракетой и за дальностью — отказ «ПОМЕХИ» (причина — поле why).
+//   deno run --allow-net --allow-read --allow-write --allow-env --allow-run game-server/smoke-test.js
 // Сам поднимает сервер на свободном порту (PORT=8799) и гасит его в конце.
 const PORT = 8799, url = `ws://localhost:${PORT}/ws`;
-const srv = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
-  env: { PORT: String(PORT) }, stdout: 'null', stderr: 'inherit' }).spawn();
+const LOG_DIR = Deno.makeTempDirSync({ prefix: 'letka-log-' }); // журнал этого прогона — во временной папке, в конце проверяем его
+const srv = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-write', '--allow-env', new URL('./server.js', import.meta.url).pathname],
+  env: { PORT: String(PORT), LOG_DIR, LOG_KEY: 'test-key' }, stdout: 'null', stderr: 'inherit' }).spawn();
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let fails = 0;
 const check = (name, ok, info = '') => { if (!ok) fails++; console.log((ok ? 'PASS ' : 'FAIL ') + name + (info ? ' — ' + info : '')); };
@@ -240,6 +242,40 @@ try {
     payload ? JSON.stringify({ m: payload.m, w: payload.w, k: payload.k, hm: payload.hm }) : 'нет итога');
   for (const x of [r1, r2]) { clearInterval(x.flyT); x.ws.close(); }
   srv3.kill(); await srv3.status;
+
+  // ── ИК-ГСН в онлайне (п. 1 отзыва Mark): «Изделие» заметнее (ONLINE_IR), у сервера запас по дальности/ракурсу и свои тексты отказа ──
+  const i1 = client('ИК-1'), i2 = client('ИК-2');
+  await i1.open; await i2.open; i1.listen(); i2.listen();
+  i1.send({ t: 'hello', name: 'ИК-1', pid: 'p-ir1' }); i2.send({ t: 'hello', name: 'ИК-2', pid: 'p-ir2' }); await sleep(150);
+  i1.send({ t: 'create', mode: 'arcade', size: 1 }); await waitFor(() => i1.last.room);
+  i2.send({ t: 'join', code: i1.last.room.code }); await sleep(150);
+  i1.send({ t: 'ready', on: true }); i2.send({ t: 'ready', on: true });
+  await waitFor(() => i1.last.room && i1.last.room.state === 'play', 5000);
+  // i1 на юге смотрит на север, i2 в 3 км впереди летит от него (хвостом к i1)
+  flier(i1, { x: 0, y: 4000, z: 5000, yaw: 0, move: false }); flier(i2, { x: 0, y: 4000, z: 2000, yaw: 0, move: false });
+  const IRL = ['aim9b', 'aim9l', null, null, null, null, 'aim9l', 'aim9b'];
+  i1.send({ t: 'load', l: IRL }); await sleep(400);
+  const idI2 = i2.last.welcome.id, sI1 = [0, 4000, 5000, 0, 0, 0, 250, 1, 0];
+  i1.msgs.length = 0;
+  i1.send({ t: 'launch', key: 'aim9b', target: idI2, slot: 0, s: sI1 }); await sleep(250);
+  check('ИК: AIM-9B с хвоста с 3 км — пуск принят', i1.msgs.some((m) => m.t === 'ml' && m.key === 'aim9b'), (i1.msgs.find((m) => m.t === 'deny') || {}).msg || '');
+  Object.assign(i2.f, { yaw: Math.PI }); await sleep(600); i1.msgs.length = 0; // i2 развернулся в лоб
+  i1.send({ t: 'launch', key: 'aim9b', target: idI2, slot: 7, s: sI1 }); await sleep(250);
+  const dn1 = i1.msgs.find((m) => m.t === 'deny');
+  check('ИК: AIM-9B в лоб — отказ «ПОМЕХИ», причина — ракурс', dn1 && /ПОМЕХИ/.test(dn1.msg) && dn1.why === 'aspect' && !i1.msgs.some((m) => m.t === 'ml'), dn1 ? dn1.msg + ' / ' + dn1.why : 'нет отказа');
+  Object.assign(i2.f, { z: -10000, yaw: 0 }); await sleep(600); i1.msgs.length = 0; // 15 км, хвостом
+  i1.send({ t: 'launch', key: 'aim9l', target: idI2, slot: 1, s: sI1 }); await sleep(250);
+  const dn2 = i1.msgs.find((m) => m.t === 'deny');
+  check('ИК: AIM-9L с 15 км — отказ «ПОМЕХИ», причина — дальность', dn2 && /ПОМЕХИ/.test(dn2.msg) && dn2.why === 'range', dn2 ? dn2.msg + ' / ' + dn2.why : 'нет отказа');
+  i1.send({ t: 'clog', k: 'test', d: { fps: 58, why: 'проверка' } }); await sleep(200);
+  for (const x of [i1, i2]) { clearInterval(x.flyT); x.ws.close(); }
+  // ── журнал боёв (journal.js): события на месте, чтение по ключу ──
+  await sleep(5200); // хотя бы один снимок состояния
+  const jr = await fetch(`http://localhost:${PORT}/logs?key=test-key&date=${new Date().toISOString().slice(0, 10)}`).then((x) => x.text());
+  const evs = new Set(jr.split('\n').filter(Boolean).map((l) => JSON.parse(l).ev));
+  const need = ['server_start', 'hello', 'join', 'start', 'launch', 'deny', 'missile_end', 'kill', 'state', 'client', 'disconnect'];
+  check('журнал: все основные события записаны', need.every((e) => evs.has(e)), 'нет: ' + need.filter((e) => !evs.has(e)).join(', '));
+  check('журнал: без ключа не читается', (await fetch(`http://localhost:${PORT}/logs?date=x`)).status === 403);
 } catch (e) { fails++; console.log('FAIL исключение: ' + (e && e.stack || e)); }
 srv.kill(); await srv.status;
 console.log(fails ? `ИТОГ: ${fails} ошибок` : 'ИТОГ: всё прошло');
