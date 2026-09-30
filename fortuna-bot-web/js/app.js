@@ -48,7 +48,7 @@ function gameAdHTML(where) {
   return `
     <div class="game-ad">
       <div class="game-ad-media">
-        <video src="media/letka_promo.mp4?v=20260930b" poster="media/letka_promo.jpg?v=20260930b" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
+        <video src="media/letka_promo.mp4?v=20260930d" poster="media/letka_promo.jpg?v=20260930d" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
         <div class="game-ad-badges"><span class="game-ad-badge">НОВАЯ ИГРА</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
         <div class="game-ad-cap"><div class="game-ad-title">Симулятор поздней летки</div><div class="game-ad-sub">УВВВ, СПО и многое другое прямо в браузере</div></div>
       </div>
@@ -359,7 +359,7 @@ function featuredArcadeCard(g, hasTickets) {
   return `
     <div class="arcade-featured">
       <div class="arcade-featured-media">
-        <video src="media/letka_promo.mp4?v=20260930b" poster="media/letka_promo.jpg?v=20260930b" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
+        <video src="media/letka_promo.mp4?v=20260930d" poster="media/letka_promo.jpg?v=20260930d" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
         <div class="game-ad-badges"><span class="game-ad-badge">ТОП</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
         <div class="arcade-featured-cap">${icon(g.icon, 18)} ${g.name}</div>
       </div>
