@@ -1,18 +1,18 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930e';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930e';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930e';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930e';
-import { createPipeline } from './post.js?v=20260930e';
-import { createAudio } from './audio.js?v=20260930e';
-import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930e';
-import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930e';
-import { TEAM_NAMES } from './sim/online.js?v=20260930e';
-import { createOnline } from './online-client.js?v=20260930e';
-import { createProgress, rewardText, plural } from './progress-client.js?v=20260930e';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930f';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930f';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930f';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930f';
+import { createPipeline } from './post.js?v=20260930f';
+import { createAudio } from './audio.js?v=20260930f';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930f';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930f';
+import { TEAM_NAMES } from './sim/online.js?v=20260930f';
+import { createOnline } from './online-client.js?v=20260930f';
+import { createProgress, rewardText, plural } from './progress-client.js?v=20260930f';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930e';
+  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930f';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -1634,7 +1634,7 @@ function renderLoadTab() {
       <label><input type="checkbox" id="symChk" ${symmetric ? 'checked' : ''}> симметрично</label></div></div>
     ${opts}
     <div class="help" style="margin-top:8px"><p>8 точек подвески: <b>законцовки</b> — до 110 кг, <b>средние</b> — до 200 кг, <b>корневые</b> — до 360 кг, <b>подфюзеляжные</b> — до 500 кг (только они держат Р-33 и AIM-54). Общий лимит — ${MAX_LOAD} кг.</p>
-    <p>Масса замедляет разгон, каждая ракета снаружи добавляет сопротивление и <b>заметность для радаров</b> противника. После пусков дрон становится легче и «тише». Всегда есть пушка, ЛТЦ и диполи (32 или 48 — зависит от режима).</p></div>`;
+    <p>Масса замедляет разгон, каждая ракета снаружи добавляет сопротивление и <b>заметность для радаров</b> противника. После пусков дрон становится легче и «тише». Всегда есть пушка, ЛТЦ и диполи (40 или 60 — зависит от режима).</p></div>`;
 }
 function renderRefTab() {
   let h = '';
@@ -2518,6 +2518,7 @@ function mpMeDown() {
 }
 function mpMeUp(s) {
   mpPlace(s); applyLoadout();
+  for (const x of MP.msls.values()) if (x.target === player) x.target = null; // ракеты, летевшие в сбитый самолёт, — не угроза новому
   Object.assign(player, { hull: 100, invuln: 1.5, heat: 0, overheated: false, flares: MODE.cm, chaff: MODE.cm });
   radar.lock = null; setCount(''); popup('ВОЗРОЖДЕНИЕ', 'info');
 }

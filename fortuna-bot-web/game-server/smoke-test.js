@@ -88,10 +88,10 @@ try {
   const mx = b.msgs.find((m) => m.t === 'mx'), hp = b.msgs.find((m) => m.t === 'hp' && m.id === idB);
   check('ракета попала: mx с попаданием, урон цели засчитан стрелку', mx && mx.hit === 1 && hp && hp.by === idA && hp.hp < 100, hp ? 'корпус ' + hp.hp : mx ? 'промах' : 'нет подрыва');
   b.msgs.length = 0; a.msgs.length = 0;
-  for (let i = 0; i < 26; i++) { b.send({ t: 'cm', type: 'flare' }); await sleep(20); }
+  for (let i = 0; i < 32; i++) { b.send({ t: 'cm', type: 'flare' }); await sleep(20); }
   await sleep(200);
   const cmN = a.msgs.filter((m) => m.t === 'cm' && m.id === idB && m.type === 'flare').length;
-  check('ЛТЦ: событие остальным, запас 48 = 24 сброса', cmN === 24 && !b.msgs.some((m) => m.t === 'cm'), cmN + ' событий');
+  check('ЛТЦ: событие остальным, запас 60 («Аркада») = 30 сбросов', cmN === 30 && !b.msgs.some((m) => m.t === 'cm'), cmN + ' событий');
   a.send({ t: 'lock', target: idB }); await sleep(100);
   a.f.yaw = Math.PI; // отвернулся — РЛС больше не видит цель
   await waitFor(() => a.msgs.some((m) => m.t === 'lockx'), 2500);
