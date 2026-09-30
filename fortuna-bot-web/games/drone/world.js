@@ -4,12 +4,12 @@
 // Детализация задаётся пресетом графики (см. PRESETS в main.js), атмосфера — погодой (WEATHERS).
 // Шум для деталей земли, микрорельефа и облачного слоя — из одной текстуры (выборка вместо десятков sin() на пиксель).
 /* global THREE */
-import { mulberry32 } from './schedule.js?v=20260930h';
-import { M, part, mergeParts } from './models.js?v=20260930h';
-import { buildProps } from './props.js?v=20260930h';
-import { buildLandmarks } from './landmarks.js?v=20260930h';
+import { mulberry32 } from './schedule.js?v=20260930i';
+import { M, part, mergeParts } from './models.js?v=20260930i';
+import { buildProps } from './props.js?v=20260930i';
+import { buildLandmarks } from './landmarks.js?v=20260930i';
 
-import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930h';
+import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930i';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
 export const SUN_DIR = new THREE.Vector3(0.42, 0.6, 0.38).normalize(); // меняется погодой (на месте — все ссылки видят новое)
 export const FOG_D = 0.000042;
@@ -366,7 +366,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   const jobs = new Map();
   try {
     if (typeof Worker !== 'undefined' && !opts.syncTerrain) {
-      worker = new Worker(new URL('./terrain-worker.js?v=20260930h', import.meta.url), { type: 'module' });
+      worker = new Worker(new URL('./terrain-worker.js?v=20260930i', import.meta.url), { type: 'module' });
       worker.onmessage = (e) => { const j = jobs.get(e.data.id); if (!j) return; jobs.delete(e.data.id); j.ch.pending[j.lv] = false; if (!disposed) j.ch.geos[j.lv] = toGeo(j.ch, j.lv, e.data); };
       worker.onerror = () => { worker = null; }; // модульные потоки не поддерживаются — дальше строим сразу
     }

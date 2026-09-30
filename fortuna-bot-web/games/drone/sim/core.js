@@ -2,7 +2,7 @@
 // Без сцены и DOM — только THREE.Vector3 (глобальный THREE: в браузере — из скрипта, на сервере — из npm three@0.128.0).
 // Этот файл импортируют и клиент (main.js), и онлайн-сервер — любые правки меняют поведение обоих.
 /* global THREE */
-import { terrainH } from '../terrain-core.js?v=20260930h';
+import { terrainH } from '../terrain-core.js?v=20260930i';
 
 export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const wrapPI = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
