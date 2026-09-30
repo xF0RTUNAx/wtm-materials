@@ -54,8 +54,8 @@ export function flyStep(a, rx, ry, dt) {
 // Энергетика (тяга, сопротивление, перегрузка, сваливание) — как во flyStep. sink — принудительное опускание носа, рад/с (потолок).
 export const ROLL_RATE = 3.6; // рад/с (~200°/с) — «Изделие» без лётчика
 const PQ = new THREE.Quaternion(), PE = new THREE.Euler(0, 0, 0, 'YXZ'), PAX = new THREE.Vector3(), PFW = new THREE.Vector3();
-const AX_X = new THREE.Vector3(1, 0, 0), AX_Z = new THREE.Vector3(0, 0, 1), UP_W = new THREE.Vector3(0, 1, 0);
-export function pilotStep(a, rx, ry, dt, sink = 0, rollK = 1) { // rollK — чувствительность крена (настройка игрока)
+const AX_X = new THREE.Vector3(1, 0, 0), AX_Y = new THREE.Vector3(0, 1, 0), AX_Z = new THREE.Vector3(0, 0, 1), UP_W = new THREE.Vector3(0, 1, 0);
+export function pilotStep(a, rx, ry, dt, sink = 0, rollK = 1, rz = 0) { // rollK — чувствительность крена; rz — руль направления −1…1 (половина тангажа)
   const e = a.qe;
   if (!a.q || !e || e[0] !== a.pitch || e[1] !== a.yaw || e[2] !== a.roll) { // углы поменяли снаружи: старт, удар о землю, возрождение
     a.q = (a.q || new THREE.Quaternion()).setFromEuler(PE.set(a.pitch, a.yaw, a.roll, 'YXZ'));
@@ -66,7 +66,8 @@ export function pilotStep(a, rx, ry, dt, sink = 0, rollK = 1) { // rollK — ч�
   const k = Math.min(1, a.agil * dt);
   a.wp += (clamp(ry, -1, 1) * wMax - a.wp) * k;
   a.wr += (-clamp(rx, -1, 1) * ROLL_RATE * rollK - a.wr) * k; // ручка вправо — правое крыло вниз (крен < 0, как у моделей)
-  a.q.multiply(PQ.setFromAxisAngle(AX_X, a.wp * dt)).multiply(PQ.setFromAxisAngle(AX_Z, a.wr * dt));
+  a.wz = (a.wz || 0) + (clamp(rz, -1, 1) * wMax * 0.5 - (a.wz || 0)) * k; // руль: нос влево-вправо без крена, слабее тангажа
+  a.q.multiply(PQ.setFromAxisAngle(AX_X, a.wp * dt)).multiply(PQ.setFromAxisAngle(AX_Z, a.wr * dt)).multiply(PQ.setFromAxisAngle(AX_Y, a.wz * dt));
   // сваливание и потолок: нос опускается к земле в мировых осях (и в перевёрнутом полёте — тоже к земле)
   const drop = (a.speed < a.vStall ? (a.vStall - a.speed) * 0.015 : 0) + sink;
   if (drop > 0) {

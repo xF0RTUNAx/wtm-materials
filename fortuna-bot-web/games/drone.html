@@ -118,11 +118,11 @@
   #count { position: absolute; top: 38%; left: 0; right: 0; text-align: center; font-size: 80px; font-weight: 900; color: #fff; text-shadow: 0 0 24px rgba(0,0,0,.7); font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }
   #count.msg { top: 30%; font-size: 24px; font-weight: 800; padding: 0 70px; }
 
-  #exit, #mute, #pause { position: fixed; top: max(10px, var(--sa-t)); width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3);
+  #exit, #mute, #pause { position: fixed; top: var(--top); width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3);
     background: rgba(10,16,24,.55); color: #fff; font-size: 16px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 20; }
-  #exit { right: 10px; } #pause { right: 10px; top: calc(max(10px, var(--sa-t)) + 44px); } #mute { right: 10px; top: calc(max(10px, var(--sa-t)) + 88px); }
+  #exit { right: max(10px, var(--sa-r)); } #pause { right: max(10px, var(--sa-r)); top: calc(var(--top) + 44px); } #mute { right: max(10px, var(--sa-r)); top: calc(var(--top) + 88px); } /* --top — ниже кнопок Telegram */
   body.playing #exit, body.playing #mute, body.playing #pause { display: flex; }
-  body.menuing #exit, body.menuing #mute { display: flex; } body.menuing #mute { top: calc(max(10px, var(--sa-t)) + 44px); }
+  body.menuing #exit, body.menuing #mute { display: flex; } body.menuing #mute { top: calc(var(--top) + 44px); }
 
   /* ── Мобильное управление ── */
   #touch { position: fixed; inset: 0; display: none; z-index: 10; pointer-events: none; }
@@ -250,6 +250,11 @@
   .mtabs button { flex: 1; border: 0; background: transparent; color: #cbd5e1; font-size: 12px; font-weight: 700; padding: 8px 1px; border-radius: 8px; cursor: pointer; }
   .mtabs button.on { background: rgba(251,146,60,.9); color: #fff; }
   .tabp { display: none; } .tabp.on { display: block; }
+  /* настройки управления в паузе — прокручиваются внутри окна */
+  #pauseCtl { max-height: 52vh; overflow-y: auto; text-align: left; margin: 10px 0; -webkit-overflow-scrolling: touch; } #pauseCtl:empty { display: none; }
+  .pauseBtns { display: flex; gap: 8px; } .pauseBtns .btn { margin: 0; flex: 1; } /* кнопки — сверху: видны всегда, настройки ниже прокручиваются */
+  #pauseScr .card { max-height: calc(100vh - 16px); display: flex; flex-direction: column; } #pauseCtl { flex: 1 1 auto; min-height: 0; max-height: none; }
+  body.short #pauseScr h1 { margin: 0 0 6px; font-size: 18px; }
   /* Онлайн: лобби комнаты, команды, итоги боя */
   #tab-mp { padding: 2px 0 8px; }
   .mpRow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0 0 8px; font-size: 13px; color: #cbd5e1; }
@@ -334,7 +339,7 @@
   table.tt { width: 100%; border-collapse: collapse; font-size: 12px; }
   table.tt td { padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: top; }
   table.tt td:first-child { opacity: .7; width: 44%; }
-  .gfx-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; margin-bottom: 8px; }
+  .gfx-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); /* «Минимальный» не влезал в 84 px */ gap: 6px; margin-bottom: 8px; }
   .gfx { border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05); color: #eaf6ff; border-radius: 10px; padding: 9px 6px; cursor: pointer; text-align: center; }
   .gfx b { display: block; font-size: 14px; } .gfx span { display: block; font-size: 10.5px; opacity: .7; margin-top: 3px; }
   .gfx.on { border-color: #fb923c; background: rgba(251,146,60,.18); }
@@ -441,8 +446,8 @@
 <div class="screen" id="pauseScr">
   <div class="card">
     <h1>Пауза</h1>
-    <button class="btn" id="resumeBtn">ПРОДОЛЖИТЬ</button>
-    <button class="btn alt" id="pauseExit">Выйти</button>
+    <div class="pauseBtns"><button class="btn" id="resumeBtn">ПРОДОЛЖИТЬ</button><button class="btn alt" id="pauseExit">В меню игры</button></div>
+    <div id="pauseCtl"></div>
   </div>
 </div>
 
