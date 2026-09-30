@@ -2224,7 +2224,7 @@ async function runUpscaleTest(kind = 'up') {
       }
       requestAnimationFrame(f);
     });
-    times.splice(0, 8); times.sort((a, b) => a - b);
+    times.splice(0, Math.min(8, times.length >> 1)); times.sort((a, b) => a - b); // первые кадры — сборка шейдеров; на медленной видеокарте кадров мало
     const avg = times.reduce((x, y) => x + y, 0) / Math.max(1, times.length);
     const imgs = [];
     for (const shot of UP_SHOTS) {
