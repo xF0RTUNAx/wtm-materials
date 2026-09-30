@@ -49,6 +49,18 @@ function groundColor(x, y, z, ny, out, o) {
   else { r = 0.32 + j; g = 0.5 + j; b = 0.24 + j; }
   out[o] = toLin(r); out[o + 1] = toLin(g); out[o + 2] = toLin(b);
 }
+// Затенение рельефа (ambient occlusion): насколько небо над точкой закрыто склонами вокруг — лощины и подножия холмов
+// темнее, гребни светлее. Считается один раз при построении участка (8 направлений × 3 расстояния), красит цвет вершины.
+const AO_DIRS = Array.from({ length: 8 }, (_, i) => [Math.cos(i * Math.PI / 4), Math.sin(i * Math.PI / 4)]), AO_DIST = [45, 140, 380];
+function aoAt(x, y, z) {
+  let occ = 0;
+  for (const [cx, cz] of AO_DIRS) {
+    let s = 0;
+    for (const d of AO_DIST) { const h = terrainH(x + cx * d, z + cz * d) - y; if (h > 0) s = Math.max(s, h / Math.hypot(h, d)); }
+    occ += s;
+  }
+  return 1 - 0.8 * Math.min(1, occ / 8 * 1.6);
+}
 export function buildChunkArrays(x0, z0, size, seg, skirt) {
   const step = size / seg, n = seg + 3, e = Math.max(step, 12);
   const pos = new Float32Array(n * n * 3), nor = new Float32Array(n * n * 3), col = new Float32Array(n * n * 3);
@@ -59,6 +71,7 @@ export function buildChunkArrays(x0, z0, size, seg, skirt) {
     pos[k * 3] = x; pos[k * 3 + 1] = y - (i !== ii || j !== jj ? skirt : 0); pos[k * 3 + 2] = z;
     nor[k * 3] = -hx / nl; nor[k * 3 + 1] = 2 * e / nl; nor[k * 3 + 2] = -hz / nl;
     groundColor(x, y, z, 2 * e / nl, col, k * 3);
+    if (y > WORLD.WATER_Y - 30) { const ao = aoAt(x, y, z); col[k * 3] *= ao; col[k * 3 + 1] *= ao; col[k * 3 + 2] *= ao; }
     lo = Math.min(lo, y); hi = Math.max(hi, y);
   }
   const idx = new Uint16Array((n - 1) * (n - 1) * 6); let o = 0;

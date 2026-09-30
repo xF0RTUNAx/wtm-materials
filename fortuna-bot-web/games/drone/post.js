@@ -67,7 +67,7 @@ export function createPipeline(renderer, cfg) {
       for (int i = 0; i < 28; i++) { s += texture2D(tDiffuse, uv).rgb * w; w *= 0.951; uv += d; }
       gl_FragColor = vec4(s / 28.0 * vis, 1.0); }`,
   { tDiffuse: { value: null }, sun: { value: new THREE.Vector2(0.5, 0.5) }, vis: { value: 0 } });
-  const comp = mat(`uniform sampler2D tDiffuse, tBloom, tBloom2, tRays, tHaze, tDepth; uniform vec2 camNF; uniform float bloom, raysK, exposure, vignette, grade, ca, p3, hazeK, time;
+  const comp = mat(`uniform sampler2D tDiffuse, tBloom, tBloom2, tRays, tHaze, tDepth; uniform vec2 camNF; uniform float bloom, raysK, exposure, vignette, grade, ca, p3, p3k, hazeK, time;
     varying vec2 vUv;
     vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
     vec3 toSRGB(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
@@ -90,13 +90,13 @@ export function createPipeline(renderer, cfg) {
       // насыщенные цвета (зелень, небо, вода, пламя) расширяем в P3-охват: чем насыщеннее цвет, тем сильнее; серые не меняются
       if (p3 > 0.5) { vec3 cp = mat3(0.8225, 0.0332, 0.0171, 0.1774, 0.9669, 0.0724, 0.0, 0.0, 0.9108) * col;
         float mxc = max(col.r, max(col.g, col.b)), sat = clamp((mxc - min(col.r, min(col.g, col.b))) / max(mxc, 1e-4), 0.0, 1.0);
-        col = mix(cp, col, 0.65 * sqrt(sat)); }
+        col = mix(cp, col, p3k * sqrt(sat)); }
       col = toSRGB(clamp(col, 0.0, 1.0));
       gl_FragColor = vec4(col, 1.0);
     }`,
   { tDiffuse: { value: null }, tBloom: { value: null }, tBloom2: { value: null }, tRays: { value: null }, tHaze: { value: null }, tDepth: { value: null }, camNF: { value: new THREE.Vector2(3, 60000) }, hazeK: { value: 0 }, time: { value: 0 }, bloom: { value: cfg.bloom || 0 }, raysK: { value: raysOn ? (cfg.raysK || 0.5) : 0 },
     exposure: { value: cfg.exposure || 1.15 }, vignette: { value: cfg.vignette || 0 }, grade: { value: cfg.grade || 0 },
-    ca: { value: cfg.ca || 0 }, p3: { value: cfg.p3 ? 1 : 0 } });
+    ca: { value: cfg.ca || 0 }, p3: { value: cfg.p3 ? 1 : 0 }, p3k: { value: cfg.p3exact ? 0 : 0.65 } });
   // FXAA (классический «лёгкий» вариант, 5 выборок + 4 вдоль направления края)
   const fxaa = mat(`uniform sampler2D tDiffuse; uniform vec2 rcp; varying vec2 vUv;
     float lu(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }

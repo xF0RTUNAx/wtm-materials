@@ -262,7 +262,7 @@ export function buildProps(C) {
   });
   let t = 0;
   return {
-    boxes, emitters, villages, industry: ind,
+    boxes, emitters, villages, industry: ind, roads: roadPts,
     update(dt, night) {
       t += dt;
       for (const a of anim) a.o.rotation.z += a.w * dt;
