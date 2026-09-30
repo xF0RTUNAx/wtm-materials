@@ -7,7 +7,7 @@
 //   deno run --allow-net --allow-read game-server/test-client.js КОД [ник] [адрес сервера]
 //   deno run --allow-net --allow-read game-server/test-client.js --queue=arcade [ник]   — быстрый поиск (arcade | real), сам подтверждает бой
 //
-import { MISSILES } from '../games/drone/missiles.js?v=20260929d';
+import { MISSILES } from '../games/drone/missiles.js?v=20260930a';
 
 const [code, name = 'Тестер', url = 'ws://localhost:8787/ws'] = Deno.args;
 if (!code) { console.log('нужен код комнаты или --queue=arcade'); Deno.exit(1); }
