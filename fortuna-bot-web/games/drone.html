@@ -143,6 +143,23 @@
   #btnSlow { left: 16px; bottom: 26px; } #btnBack { left: 16px; bottom: 90px; }
   body.short #btnMsl { bottom: 112px; } body.short #btnCM { right: 100px; bottom: 170px; width: 54px; height: 54px; }
   body.short #btnBack { left: 80px; bottom: 26px; }
+  /* редактор расположения кнопок (Настройки → «Расположение кнопок…») */
+  body.layoutEdit #touch { display: block; z-index: 56; background: rgba(6,12,20,.62); }
+  body.layoutEdit .screen.on { visibility: hidden; } /* меню не мешает; HUD виден — чтобы не ставить кнопки на радар и панель оружия */
+  body.layoutEdit .tbtn { cursor: grab; }
+  body.layoutEdit .tbtn.ledOn { border-color: #fb923c; box-shadow: 0 0 0 3px rgba(251,146,60,.45); }
+  body.layoutEdit #stickZone { outline: 2px dashed rgba(255,255,255,.18); outline-offset: -10px; pointer-events: none; }
+  body.layoutEdit #stickZone::after { content: 'зона ручки — палец в любом месте слева'; position: absolute; left: 50%; top: 58%; transform: translateX(-50%);
+    font-size: 12px; color: rgba(255,255,255,.45); white-space: nowrap; }
+  #ledBar { position: fixed; z-index: 57; top: calc(max(8px, var(--sa-t)) + var(--tg-t)); left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
+    background: rgba(15,23,42,.94); border: 1px solid rgba(255,255,255,.14); border-radius: 12px; padding: 8px 10px; font-size: 12px; color: #e2e8f0; }
+  #ledBar.low { top: auto; bottom: max(8px, var(--sa-b)); } #ledBar.drag { opacity: .25; pointer-events: none; } /* не закрывать кнопку, которую двигают */
+  #ledBar .ledHelp { margin: 0 0 6px; line-height: 1.35; opacity: .85; }
+  #ledCtl { display: none; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; } #ledCtl.on { display: flex; }
+  #ledCtl b { color: #fb923c; min-width: 58px; } #ledCtl label { display: flex; align-items: center; gap: 4px; } #ledCtl input { width: 92px; }
+  #ledBar .ledBtns { display: flex; gap: 8px; justify-content: flex-end; }
+  #ledBar .btn { width: auto; display: inline-block; padding: 7px 12px; font-size: 12.5px; margin: 0; }
+  body.short #ledBar { padding: 6px 8px; } body.short #ledBar .ledHelp { font-size: 11px; margin-bottom: 4px; }
 
   /* ── Экраны ── */
   .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 30;

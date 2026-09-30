@@ -596,8 +596,10 @@ try {
 } catch (_) { binds = defaultBinds(); }
 let mouseCfg = { steer: true, invert: false, sens: 1 };
 try { mouseCfg = Object.assign(mouseCfg, JSON.parse(store.get('fortuna_drone_mouse') || '{}')); } catch (_) { /* по умолчанию */ }
-// Сенсорная «ручка»: чувствительность (радиус хода пальца), мёртвая зона, кривая отклика, инверсия тангажа
-let touchCfg = { sens: 1, dead: 0.1, curve: 0.35, invert: false };
+// Сенсорная «ручка»: чувствительность (сколько вести палец до полного отклонения), сила поворота и тангажа по отдельности,
+// размер кружка, мёртвая зона, кривая отклика, инверсия тангажа
+const TOUCH_DEF = { sens: 1, dead: 0.1, curve: 0.35, invert: false, kx: 1, ky: 1, size: 1 };
+let touchCfg = { ...TOUCH_DEF };
 try { touchCfg = Object.assign(touchCfg, JSON.parse(store.get('fortuna_drone_touch') || '{}')); } catch (_) { /* по умолчанию */ }
 const saveTouch = () => store.set('fortuna_drone_touch', JSON.stringify(touchCfg));
 // кривая: 0 — линейная, 1 — «экспонента» (у центра точнее, у края — полный отклик)
@@ -703,20 +705,22 @@ $('radar').addEventListener('pointerdown', (e) => { e.stopPropagation(); if (G.s
 if (IS_TOUCH) {
   document.body.classList.add('coarse');
   const zone = $('stickZone'), base = $('stickBase'), knob = $('stickKnob');
-  let sid = null, ox = 0, oy = 0, R = 60;
+  let sid = null, ox = 0, oy = 0, R = 60, Rv = 60;
   zone.addEventListener('pointerdown', (e) => {
     if (sid !== null) return; sid = e.pointerId; zone.setPointerCapture(sid);
-    R = Math.round(60 / clamp(touchCfg.sens, 0.4, 2.5)); // выше чувствительность — короче ход пальца до полного отклонения
-    base.style.width = base.style.height = 2 * R + 'px'; base.style.margin = `${-R}px 0 0 ${-R}px`;
+    Rv = Math.round(60 * clamp(touchCfg.size || 1, 0.6, 1.8));   // размер кружка на экране
+    R = Rv / clamp(touchCfg.sens, 0.3, 3);                          // выше чувствительность — короче ход пальца до полного отклонения
+    base.style.width = base.style.height = 2 * Rv + 'px'; base.style.margin = `${-Rv}px 0 0 ${-Rv}px`;
     ox = e.clientX; oy = e.clientY; base.style.display = 'block'; base.style.left = ox + 'px'; base.style.top = oy + 'px'; knob.style.transform = 'translate(0,0)';
   });
   zone.addEventListener('pointermove', (e) => {
     if (e.pointerId !== sid) return;
     let dx = e.clientX - ox, dy = e.clientY - oy; const l = Math.hypot(dx, dy);
     if (l > R) { dx *= R / l; dy *= R / l; }
-    knob.style.transform = `translate(${dx.toFixed(1)}px,${dy.toFixed(1)}px)`;
-    input.sx = clamp(stickCurve(deadzone(dx / R, touchCfg.dead)), -1, 1);
-    input.sy = clamp(stickCurve(deadzone(-dy / R, touchCfg.dead)), -1, 1) * (touchCfg.invert ? -1 : 1);
+    const kv = Math.min(1, Rv / Math.max(1, Math.hypot(dx, dy))); // кружок не выходит за край «ручки»
+    knob.style.transform = `translate(${(dx * kv).toFixed(1)}px,${(dy * kv).toFixed(1)}px)`;
+    input.sx = clamp(stickCurve(deadzone(dx / R, touchCfg.dead)) * (touchCfg.kx || 1), -1, 1);
+    input.sy = clamp(stickCurve(deadzone(-dy / R, touchCfg.dead)) * (touchCfg.ky || 1), -1, 1) * (touchCfg.invert ? -1 : 1);
   });
   const endStick = (e) => { if (e.pointerId !== sid) return; sid = null; base.style.display = 'none'; input.sx = 0; input.sy = 0; };
   zone.addEventListener('pointerup', endStick); zone.addEventListener('pointercancel', endStick);
@@ -736,6 +740,88 @@ if (IS_TOUCH) {
   };
   holdAct($('btnSlow'), 'thrDown'); holdAct($('btnBack'), 'lookBack');
 }
+
+// ═════════════ Расположение сенсорных кнопок: свои места, размер и прозрачность каждой ═════════════
+// Хранится в долях экрана (отдельно для горизонтального и вертикального положения телефона), поверх мест по умолчанию из drone.html.
+const LAYOUT_BTNS = { btnFire: 'ПУШКА', btnMsl: 'РАКЕТА', btnLock: 'ЗАХВАТ', btnAB: 'ФОРСАЖ', btnCM: 'ЛТЦ ДО', btnSlow: 'ГАЗ−', btnBack: 'НАЗАД' };
+let layout = {};
+try { const v = JSON.parse(store.get('fortuna_drone_layout') || '{}'); if (v && typeof v === 'object') layout = v; } catch (_) { /* по умолчанию */ }
+const layoutKey = () => (innerWidth >= innerHeight ? 'land' : 'port');
+const saveLayout = () => store.set('fortuna_drone_layout', JSON.stringify(layout));
+function applyLayout() {
+  const L = layout[layoutKey()] || {};
+  for (const id of Object.keys(LAYOUT_BTNS)) {
+    const el = $(id), c = L[id]; if (!el) continue;
+    const moved = c && Number.isFinite(c.x) && Number.isFinite(c.y), sc = c && Number.isFinite(c.s) ? clamp(c.s, 0.5, 2) : 1;
+    el.style.left = moved ? (clamp(c.x, 0, 1) * 100).toFixed(2) + '%' : ''; el.style.top = moved ? (clamp(c.y, 0, 1) * 100).toFixed(2) + '%' : '';
+    el.style.right = el.style.bottom = moved ? 'auto' : '';
+    el.style.transform = moved ? `translate(-50%,-50%) scale(${sc})` : sc !== 1 ? `scale(${sc})` : '';
+    el.style.opacity = c && Number.isFinite(c.o) ? String(clamp(c.o, 0.15, 1)) : '';
+  }
+}
+applyLayout(); addEventListener('resize', applyLayout);
+let led = null; // редактор: { bar, sel, drag }
+function ledEntry(id) { // запись кнопки (создаётся с текущим местом на экране)
+  const L = layout[layoutKey()] || (layout[layoutKey()] = {});
+  if (!L[id] || !Number.isFinite(L[id].x)) {
+    const tr = $('touch').getBoundingClientRect(), r = $(id).getBoundingClientRect();
+    L[id] = { ...(L[id] || {}), x: (r.left + r.width / 2 - tr.left) / tr.width, y: (r.top + r.height / 2 - tr.top) / tr.height };
+  }
+  return L[id];
+}
+function ledSelect(id) {
+  if (!led) return; led.sel = id;
+  for (const k of Object.keys(LAYOUT_BTNS)) $(k).classList.toggle('ledOn', k === id);
+  const c = ledEntry(id);
+  $('ledSel').textContent = LAYOUT_BTNS[id]; $('ledS').value = c.s || 1; $('ledO').value = c.o || 1; $('ledCtl').classList.add('on');
+  led.bar.classList.toggle('low', c.y < 0.45); // панель — с другой стороны экрана от выбранной кнопки
+}
+function openLayoutEditor() {
+  if (led) return;
+  const bar = document.createElement('div'); bar.id = 'ledBar';
+  bar.innerHTML = `<p class="ledHelp">Перетащите кнопку пальцем. Нажмите на кнопку — можно поменять её размер и прозрачность.</p>
+    <div id="ledCtl"><b id="ledSel"></b>
+      <label>Размер <input type="range" id="ledS" min="0.6" max="1.8" step="0.05"></label>
+      <label>Прозрачность <input type="range" id="ledO" min="0.2" max="1" step="0.05"></label>
+      <button class="btn alt sm" id="ledReset1">Вернуть кнопку</button></div>
+    <div class="ledBtns"><button class="btn alt sm" id="ledResetAll">Всё по умолчанию</button><button class="btn sm" id="ledDone">Готово</button></div>`;
+  document.body.appendChild(bar); document.body.classList.add('layoutEdit');
+  led = { bar, sel: null, drag: null, hud: $('hud').classList.contains('on') }; $('hud').classList.add('on');
+  bar.addEventListener('input', (e) => {
+    if (!led.sel) return; const c = ledEntry(led.sel);
+    if (e.target.id === 'ledS') c.s = +e.target.value; if (e.target.id === 'ledO') c.o = +e.target.value;
+    applyLayout(); saveLayout();
+  });
+  bar.addEventListener('click', (e) => {
+    const L = layout[layoutKey()] || {};
+    if (e.target.id === 'ledReset1' && led.sel) { delete L[led.sel]; applyLayout(); saveLayout(); ledSelect(led.sel); }
+    if (e.target.id === 'ledResetAll') { delete layout[layoutKey()]; applyLayout(); saveLayout(); if (led.sel) ledSelect(led.sel); }
+    if (e.target.id === 'ledDone') closeLayoutEditor();
+  });
+}
+function closeLayoutEditor() {
+  if (!led) return;
+  saveLayout(); led.bar.remove(); document.body.classList.remove('layoutEdit'); if (!led.hud) $('hud').classList.remove('on');
+  for (const k of Object.keys(LAYOUT_BTNS)) $(k).classList.remove('ledOn', 'on');
+  led = null;
+}
+// в редакторе нажатия на кнопки не доходят до игры (перехват на фазе погружения) — они только выбирают и двигают кнопку
+$('touch').addEventListener('pointerdown', (e) => {
+  if (!led) return;
+  e.stopPropagation(); e.preventDefault();
+  const el = e.target.closest && e.target.closest('.tbtn'); if (!el || !LAYOUT_BTNS[el.id]) return;
+  ledSelect(el.id);
+  const r = el.getBoundingClientRect();
+  led.drag = { id: el.id, pid: e.pointerId, dx: e.clientX - (r.left + r.width / 2), dy: e.clientY - (r.top + r.height / 2) }; led.bar.classList.add('drag');
+}, true);
+addEventListener('pointermove', (e) => {
+  if (!led || !led.drag || e.pointerId !== led.drag.pid) return;
+  const tr = $('touch').getBoundingClientRect(), c = ledEntry(led.drag.id);
+  c.x = clamp((e.clientX - led.drag.dx - tr.left) / tr.width, 0.03, 0.97); c.y = clamp((e.clientY - led.drag.dy - tr.top) / tr.height, 0.05, 0.97);
+  applyLayout();
+});
+const ledUp = (e) => { if (led && led.drag && e.pointerId === led.drag.pid) { const id = led.drag.id; led.drag = null; led.bar.classList.remove('drag'); saveLayout(); ledSelect(id); } };
+addEventListener('pointerup', ledUp); addEventListener('pointercancel', ledUp);
 
 // ═════════════ Звук ═════════════
 // Синтез — в audio.js (реактивный двигатель, объёмные голоса, взрывы, окружение). Здесь — привязка к игре.
@@ -1269,7 +1355,7 @@ function updateHudSlow() {
   el.kills.textContent = G.kills; el.score.textContent = G.score;
   let next = null; for (let i = schedIdx; i < schedule.length; i++) if (schedule[i].type !== 'tanker') { next = schedule[i]; break; }
   const cmp = VW < 760; // узкий экран — короткие подписи
-  if (MP.on) el.combo.textContent = `${TEAM_NAMES[0]} ${MP.score[0]} : ${MP.score[1]} ${TEAM_NAMES[1]} · вы — «${TEAM_NAMES[MP.team]}»`;
+  if (MP.on) el.combo.textContent = cmp ? `К1 ${MP.score[0]} : ${MP.score[1]} К2 · вы — К${MP.team + 1}` : `${TEAM_NAMES[0]} ${MP.score[0]} : ${MP.score[1]} ${TEAM_NAMES[1]} · вы — ${TEAM_NAMES[MP.team]}`;
   else if (MODE.training) el.combo.textContent = `ОБУЧЕНИЕ · разобрано${cmp ? '' : ' ракет'}: ${TR.done}`;
   else el.combo.textContent = next ? `${cmp ? 'группа' : 'следующая группа'} через ${Math.max(0, Math.ceil(next.t - G.runTime))} с` : enemies.some((e) => !e.dead) ? '' : 'все группы отбиты';
   const mach = player.speed / (340 - player.pos.y * 0.004);
@@ -1674,14 +1760,20 @@ function renderSettingsTab() {
   let ctrl;
   if (IS_TOUCH) {
     ctrl = `<div class="perf">
-        <label class="chk">Чувствительность ручки <input type="range" id="tSens" min="0.5" max="2" step="0.05" value="${touchCfg.sens}"> <span id="tSensV">${touchCfg.sens.toFixed(2)}</span></label>
+        <label class="chk">Чувствительность ручки <input type="range" id="tSens" min="0.3" max="3" step="0.05" value="${touchCfg.sens}"> <span id="tSensV">${touchCfg.sens.toFixed(2)}</span></label>
         <p class="hint">Выше — короче ход пальца до полного отклонения: резче манёвр, но легче «передёрнуть».</p>
+        <label class="chk">Сила поворота (влево-вправо) <input type="range" id="tKx" min="0.4" max="2" step="0.05" value="${touchCfg.kx || 1}"> <span id="tKxV">×${(touchCfg.kx || 1).toFixed(2)}</span></label>
+        <label class="chk">Сила тангажа (нос вверх-вниз) <input type="range" id="tKy" min="0.4" max="2" step="0.05" value="${touchCfg.ky || 1}"> <span id="tKyV">×${(touchCfg.ky || 1).toFixed(2)}</span></label>
+        <p class="hint">Отдельно для каждой оси: меньше 1 — плавнее и точнее (даже при полном отклонении манёвр слабее), больше 1 — полный манёвр наступает раньше.</p>
+        <label class="chk">Размер ручки <input type="range" id="tSize" min="0.6" max="1.8" step="0.05" value="${touchCfg.size || 1}"> <span id="tSizeV">×${(touchCfg.size || 1).toFixed(2)}</span></label>
         <label class="chk">Мёртвая зона <input type="range" id="tDead" min="0" max="0.25" step="0.01" value="${touchCfg.dead}"> <span id="tDeadV">${Math.round(touchCfg.dead * 100)}%</span></label>
         <p class="hint">Малые движения пальца у центра не поворачивают дрон — меньше случайных рысканий.</p>
         <label class="chk">Кривая отклика <input type="range" id="tCurve" min="0" max="1" step="0.05" value="${touchCfg.curve}"> <span id="tCurveV">${Math.round(touchCfg.curve * 100)}%</span></label>
         <p class="hint">0% — отклик пропорционален отклонению. Больше — точнее у центра (прицеливание), а полный манёвр — у края хода.</p>
         <label class="chk"><input type="checkbox" id="tInv" ${touchCfg.invert ? 'checked' : ''}> Инверсия тангажа (палец вниз — нос вверх)</label>
         <button class="btn alt sm" id="tReset">Сбросить ручку</button>
+        <button class="btn sm" id="tLayout" style="margin-top:6px">Расположение кнопок…</button>
+        <p class="hint">Перетащить кнопки пальцем под себя, поменять размер и прозрачность каждой. Для горизонтального и вертикального положения телефона — отдельно.</p>
       </div>
       <div class="help" style="margin-top:8px"><p><b>Левый палец</b> — «ручка». Справа: <b>ПУШКА</b> (держать), <b>РАКЕТА</b>, <b>ЗАХВАТ</b>, <b>ФОРСАЖ</b>, <b>ЛТЦ ДО</b>. Слева внизу: <b>ГАЗ−</b> и <b>НАЗАД</b> (держать).</p>
       <p>Тап по панели ракет — сменить ракету, по индикатору радара — масштаб, <b>II</b> — пауза.</p></div>`;
@@ -1841,7 +1933,8 @@ $('tab-set').addEventListener('click', (e) => {
   if (e.target.id === 'perfReset') { Object.assign(perf, P.perf); applyPerf(); }
   if (e.target.id === 'upTestBtn') runUpscaleTest();
   if (e.target.id === 'aaTestBtn') runAaTest();
-  if (e.target.id === 'tReset') { touchCfg = { sens: 1, dead: 0.1, curve: 0.35, invert: false }; saveTouch(); renderSettingsTab(); }
+  if (e.target.id === 'tReset') { touchCfg = { ...TOUCH_DEF }; saveTouch(); renderSettingsTab(); }
+  if (e.target.id === 'tLayout') openLayoutEditor();
 });
 $('tab-set').addEventListener('change', (e) => {
   if (e.target.id === 'mSteer') { mouseCfg.steer = e.target.checked; if (!mouseCfg.steer) { input.sx = 0; input.sy = 0; } saveMouse(); renderGuideTab(); }
@@ -1860,6 +1953,9 @@ $('tab-set').addEventListener('input', (e) => {
   if (e.target.id === 'mSens') { mouseCfg.sens = +e.target.value; $('mSensV').textContent = mouseCfg.sens.toFixed(1); saveMouse(); }
   if (e.target.id === 'sVol') { soundVol = +e.target.value; $('sVolV').textContent = Math.round(soundVol * 100) + '%'; AU.setVolume(soundVol); store.set('fortuna_drone_vol', String(soundVol)); }
   if (e.target.id === 'tSens') { touchCfg.sens = +e.target.value; $('tSensV').textContent = touchCfg.sens.toFixed(2); saveTouch(); }
+  if (e.target.id === 'tKx') { touchCfg.kx = +e.target.value; $('tKxV').textContent = '×' + touchCfg.kx.toFixed(2); saveTouch(); }
+  if (e.target.id === 'tKy') { touchCfg.ky = +e.target.value; $('tKyV').textContent = '×' + touchCfg.ky.toFixed(2); saveTouch(); }
+  if (e.target.id === 'tSize') { touchCfg.size = +e.target.value; $('tSizeV').textContent = '×' + touchCfg.size.toFixed(2); saveTouch(); }
   if (e.target.id === 'tDead') { touchCfg.dead = +e.target.value; $('tDeadV').textContent = Math.round(touchCfg.dead * 100) + '%'; saveTouch(); }
   if (e.target.id === 'tCurve') { touchCfg.curve = +e.target.value; $('tCurveV').textContent = Math.round(touchCfg.curve * 100) + '%'; saveTouch(); }
   if (e.target.id === 'pSharp') { perf.sharp = +e.target.value; $('pSharpV').textContent = perf.sharp.toFixed(2); if (pipe) pipe.setSharp(perf.sharp); savePerf(); }
