@@ -636,6 +636,8 @@ function thrLabel() {
 // «Управление»: simple — как было (ручка — поворот носа, крен рисуется сам), pilot — пилотажное (крен + тангаж, петли)
 let flightMode = store.get('fortuna_drone_flight') === 'pilot' ? 'pilot' : 'simple';
 document.body.classList.toggle('pilot', flightMode === 'pilot'); // кнопки крена видны только в пилотажном
+// чувствительность крена (пилотажное): ×0,3…1,6 к скорости крена 200°/с — для ПК и телефона одна
+let rollSens = Math.min(1.6, Math.max(0.3, +(store.get('fortuna_drone_rollsens') || 1) || 1));
 try { mouseCfg = Object.assign(mouseCfg, JSON.parse(store.get('fortuna_drone_mouse') || '{}')); } catch (_) { /* по умолчанию */ }
 // Сенсорная «ручка»: чувствительность (сколько вести палец до полного отклонения), сила поворота и тангажа по отдельности,
 // размер кружка, мёртвая зона, кривая отклика, инверсия тангажа
@@ -1213,7 +1215,7 @@ function updatePlayer(dt) {
   const wasAB = p.ab;
   p.ab = (input.ab || held.has('ab')) && p.fuel > 1;
   if (p.ab && !wasAB) { G.kick = 1; AU.afterburner(); } // включение форсажа — толчок
-  if (flightMode === 'pilot' && r <= WORLD.R + 1500) pilotStep(p, rx0, ry0, dt, p.pos.y > WORLD.CEIL ? 0.6 : 0);
+  if (flightMode === 'pilot' && r <= WORLD.R + 1500) pilotStep(p, rx0, ry0, dt, p.pos.y > WORLD.CEIL ? 0.6 : 0, rollSens);
   else flyStep(p, sx, sy, dt); // далеко за зоной — возврат автоматикой простого режима
   p.cmdX = sx; p.cmdY = sy;
   // земля и здания
@@ -1791,7 +1793,7 @@ function renderGuideTab() {
       <p><b>Сбитые:</b> «Слизень» и «Раковина» — 1, «Ас» — 2, флагман — 5 (максимум в вылете показан на экране итогов). <b>Очки:</b> 1000–6000 за самолёт; сбитие пушкой ×1,5; ракетой, пролетевшей больше 20 км, ×1,3; в «Реализме» всё ×1,5. Загнанный в землю противник засчитывается тебе.</p>`),
     guideSection('3. Полёт и энергия', `
       <p><b>Управление:</b> ${steerHint()}. Чем сильнее отклонение, тем быстрее поворот.</p>
-      <p><b>Две модели управления</b> (Настройки → Управление). <b>Простое</b> (по умолчанию): дрон поворачивает нос туда, куда отклонена ручка, крен ставится сам — удобно целиться. <b>Пилотажное</b>: ручка влево-вправо — <b>крен</b>, вверх-вниз — <b>тангаж</b> вокруг крыла, как у настоящего самолёта. Чтобы повернуть — накренись в сторону поворота и тяни нос вверх; так можно сделать петлю через вертикаль, «бочку», лететь вверх ногами. Камера кренится вместе с дроном.${IS_TOUCH ? ' В пилотажном на экране есть <b>крестовина</b>: ◀ ▶ — крен, ▲ ▼ — нос вверх-вниз; палец можно вести, не отрывая (по диагонали — крен и тангаж сразу). Её место, размер, прозрачность («Расположение кнопок…») и расстояние между стрелками настраиваются.' : ''}</p>
+      <p><b>Две модели управления</b> (Настройки → Управление). <b>Простое</b> (по умолчанию): дрон поворачивает нос туда, куда отклонена ручка, крен ставится сам — удобно целиться. <b>Пилотажное</b>: ручка влево-вправо — <b>крен</b>, вверх-вниз — <b>тангаж</b> вокруг крыла, как у настоящего самолёта. Чтобы повернуть — накренись в сторону поворота и тяни нос вверх; так можно сделать петлю через вертикаль, «бочку», лететь вверх ногами. Камера кренится вместе с дроном. Скорость крена — «Чувствительность крена» в тех же настройках.${IS_TOUCH ? ' В пилотажном на экране есть <b>крестовина</b>: ◀ ▶ — крен, ▲ ▼ — нос вверх-вниз; палец можно вести, не отрывая (по диагонали — крен и тангаж сразу). Её место, размер, прозрачность («Расположение кнопок…») и расстояние между стрелками настраиваются.' : ''}</p>
       <p><b>Перегрузка (g)</b> ограничивает разворот: максимальная угловая скорость = g × 9,81 / скорость. На 900 км/ч при 12 g это ≈ 27°/с, на 500 км/ч — почти вдвое быстрее. «Изделие Фортуна-1» — беспилотник, лётчика нет, поэтому оно выдерживает 12–15 g против 6–9 g у противника.</p>
       <p><b>Энергия.</b> Каждый резкий вираж съедает скорость, набор высоты — тоже; пикирование разгоняет. Два-три крутых разворота подряд — и ты медленный и уязвимый. Если скорость падает ниже ~400 км/ч, выровняйся, опусти нос или включи форсаж.</p>
       <p><b>Газ:</b> ${IS_TOUCH ? 'кнопка «ГАЗ» — каждое нажатие меняет ГАЗ+ (полный: скорость растёт) ⇄ ГАЗ− (малый: скорость падает, топливо экономится); до первого нажатия — крейсерский' : ctl('thrUp') + ' — полный, ' + ctl('thrDown') + ' — малый (скорость падает, топливо экономится), по умолчанию — крейсерский'}. Обороты меняются плавно — видно по пламени: на малом газе оно короткое и тусклое. В онлайн-бою топливо тоже расходуется; кончилось — двигатель встаёт, дрон планирует, после возрождения бак полный. <b>Форсаж</b> (${ctl('ab')}) — резкий разгон, но топливо уходит втрое быстрее, а ты становишься в 2,2 раза «горячее» для тепловых ракет.</p>
@@ -1928,7 +1930,9 @@ function renderSettingsTab() {
     <div class="perf"><div class="prow"><span>Модель управления</span>${seg('flight', flightMode, [['simple', 'Простое'], ['pilot', 'Пилотажное']])}</div>
       <p class="hint">${flightMode === 'pilot'
     ? '<b>Пилотажное:</b> ручка влево-вправо — <b>крен</b>, на себя / от себя — <b>тангаж</b> вокруг крыла. Чтобы повернуть — накренитесь и тяните на себя; можно петлю через вертикаль и полёт вверх ногами. Камера кренится вместе с дроном.'
-    : '<b>Простое:</b> дрон поворачивает нос туда, куда отклонена ручка, крен ставится сам. Удобно для прицеливания.'}</p></div>${ctrl}`;
+    : '<b>Простое:</b> дрон поворачивает нос туда, куда отклонена ручка, крен ставится сам. Удобно для прицеливания.'}</p>${flightMode === 'pilot' ? `
+      <label class="chk">Чувствительность крена <input type="range" id="rollSens" min="0.3" max="1.6" step="0.05" value="${rollSens}"> <span id="rollSensV">${Math.round(rollSens * 200)}°/с</span></label>
+      <p class="hint">Как быстро дрон кренится при полном отклонении (${IS_TOUCH ? 'ручки или крестовины' : 'клавиш или мыши'}). Меньше — плавнее и точнее, больше — резче «бочка».</p>` : ''}</div>${ctrl}`;
 }
 // ── Производительность и качество: апскейлеры, сглаживание, частота кадров, экран ──
 const seg = (id, val, opts) => `<div class="seg" data-seg="${id}">${opts.map(([v, t]) => `<button class="${String(val) === String(v) ? 'on' : ''}" data-v="${v}">${t}</button>`).join('')}</div>`;
@@ -2075,6 +2079,7 @@ $('tab-set').addEventListener('input', (e) => {
   if (e.target.id === 'mSens') { mouseCfg.sens = +e.target.value; $('mSensV').textContent = mouseCfg.sens.toFixed(1); saveMouse(); }
   if (e.target.id === 'sVol') { soundVol = +e.target.value; $('sVolV').textContent = Math.round(soundVol * 100) + '%'; AU.setVolume(soundVol); store.set('fortuna_drone_vol', String(soundVol)); }
   if (e.target.id === 'tSens') { touchCfg.sens = +e.target.value; $('tSensV').textContent = touchCfg.sens.toFixed(2); saveTouch(); }
+  if (e.target.id === 'rollSens') { rollSens = +e.target.value; $('rollSensV').textContent = Math.round(rollSens * 200) + '°/с'; store.set('fortuna_drone_rollsens', String(rollSens)); }
   if (e.target.id === 'tGap') { touchCfg.padGap = +e.target.value; $('tGapV').textContent = touchCfg.padGap + ' px'; applyPadGap(); saveTouch(); }
   if (e.target.id === 'tRoll') { touchCfg.rollK = +e.target.value; $('tRollV').textContent = Math.round(touchCfg.rollK * 100) + '%'; saveTouch(); }
   if (e.target.id === 'tKx') { touchCfg.kx = +e.target.value; $('tKxV').textContent = '×' + touchCfg.kx.toFixed(2); saveTouch(); }
@@ -2753,7 +2758,7 @@ let mpLogT = 0;
 function mpClogTick(dt) {
   if (!MP.on || (mpLogT -= dt) > 0) return; mpLogT = 30;
   MP.clog('client', { fps: Math.round(dr.fps), low: Math.round(dr.low), scale: +(pipe ? pipe.scale : dr.scale).toFixed(2), gfx: gfxKey, flight: flightMode, assist: assist ? 1 : 0,
-    touch: IS_TOUCH ? 1 : 0, thr: +player.thr.toFixed(2), scr: VW + '×' + VH, tg: TG.W ? TG.W.platform : 0, ua: (navigator.userAgent || '').slice(0, 120),
+    touch: IS_TOUCH ? 1 : 0, rollSens, thr: +player.thr.toFixed(2), scr: VW + '×' + VH, tg: TG.W ? TG.W.platform : 0, ua: (navigator.userAgent || '').slice(0, 120),
     hull: Math.round(player.hull), fuel: Math.round(player.fuel), spd: Math.round(player.speed), alt: Math.round(player.pos.y), mode: modeKey });
 }
 const MP = createOnline({
