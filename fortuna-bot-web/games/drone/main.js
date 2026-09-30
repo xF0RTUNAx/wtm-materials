@@ -1,18 +1,18 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930j';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930j';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930j';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930j';
-import { createPipeline } from './post.js?v=20260930j';
-import { createAudio } from './audio.js?v=20260930j';
-import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930j';
-import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930j';
-import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930j';
-import { createOnline } from './online-client.js?v=20260930j';
-import { createProgress, rewardText, plural } from './progress-client.js?v=20260930j';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930k';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930k';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930k';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930k';
+import { createPipeline } from './post.js?v=20260930k';
+import { createAudio } from './audio.js?v=20260930k';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930k';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930k';
+import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930k';
+import { createOnline } from './online-client.js?v=20260930k';
+import { createProgress, rewardText, plural } from './progress-client.js?v=20260930k';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, pilotStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930j';
+  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930k';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);

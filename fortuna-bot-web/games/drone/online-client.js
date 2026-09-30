@@ -8,9 +8,9 @@
 // «you» — сервер отдаёт самолёт обратно после ИИ (вкладка была свёрнута) с его положением, корпусом, подвеской.
 // main.js передаёт в createOnline объект K — доступ к игре (игрок, списки противников, эффекты, HUD).
 /* global THREE, CONFIG */
-import { MATCH_T, SNAP_HZ, SIZES, TEAM_NAMES, ONLINE_MODES, PORT, F_AB, F_FIRE, MF_MOTOR, MF_ACTIVE, MF_LOST, packState, cleanCode } from './sim/online.js?v=20260930j';
-import { MODES } from './sim/modes.js?v=20260930j';
-import { MISSILES } from './missiles.js?v=20260930j';
+import { MATCH_T, SNAP_HZ, SIZES, TEAM_NAMES, ONLINE_MODES, PORT, F_AB, F_FIRE, MF_MOTOR, MF_ACTIVE, MF_LOST, packState, cleanCode } from './sim/online.js?v=20260930k';
+import { MODES } from './sim/modes.js?v=20260930k';
+import { MISSILES } from './missiles.js?v=20260930k';
 
 const INTERP = 0.12;   // чужие самолёты показываем на 120 мс в прошлом — между двумя снимками, без рывков
 const EXTRAP = 0.35;   // если снимки не пришли — продолжаем движение по прямой не дольше этого, с
