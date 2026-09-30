@@ -12,10 +12,10 @@
 import { MODES, DRONE } from '../games/drone/sim/modes.js';
 import { MATCH_T, RESPAWN_T, COUNTDOWN_T, RESULTS_T, SNAP_HZ, SIZES, ONLINE_MODES, MAX_HP, GUN_DMG, F_AB,
   teamSpawn, packState, validState, validLoadout, sunFor, packMissile, makeCode, cleanCode } from '../games/drone/sim/online.js';
-import { lockedIn } from '../games/drone/sim/progress.js?v=20260930e';
-import { MISSILES } from '../games/drone/missiles.js?v=20260930e';
-import { makeCraft, fwdOf, irCanSee } from '../games/drone/sim/core.js?v=20260930e';
-import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260930e';
+import { lockedIn } from '../games/drone/sim/progress.js?v=20260930f';
+import { MISSILES } from '../games/drone/missiles.js?v=20260930f';
+import { makeCraft, fwdOf, irCanSee } from '../games/drone/sim/core.js?v=20260930f';
+import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260930f';
 
 const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast', 'rain'];
 const GUN_RANGE = 2200;       // дальше этого попадание пушки не засчитываем (пуля живёт 1,6 с)
@@ -206,7 +206,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
       fx: {
         launched(m, slot) {
           m.id = r.mid++;
-          broadcast(r, { t: 'ml', id: m.id, key: m.key, owner: m.owner.cid, target: m.target ? m.target.cid : 0, slot: slot && slot.i !== undefined ? slot.i : -1,
+          broadcast(r, { t: 'ml', id: m.id, key: m.key, owner: m.owner.cid, target: m.target && !m.target.dead ? m.target.cid : 0, slot: slot && slot.i !== undefined ? slot.i : -1,
             p: [r1(m.pos.x), r1(m.pos.y), r1(m.pos.z)] });
         },
         missileResult(m, hit) { broadcast(r, { t: 'mx', id: m.id, hit: hit ? 1 : 0, p: [r1(m.pos.x), r1(m.pos.y), r1(m.pos.z)] }); },
@@ -535,7 +535,7 @@ export function createRooms({ log = () => {}, auth, sign = async () => null, mat
         stepBattle(r, dt);
         const P = [], M = [];
         for (const p of r.players.values()) if (p.st) P.push([p.id, p.alive ? 1 : 0, Math.round(p.hp), ...p.st, lockOf(p)]);
-        for (const m of r.battle.missiles) if (!m.dead) M.push(packMissile(m, m.target ? m.target.cid : 0));
+        for (const m of r.battle.missiles) if (!m.dead) M.push(packMissile(m, m.target && !m.target.dead ? m.target.cid : 0)); // цель сбита — ракета ни в кого (иначе после возрождения её «цель» — новый самолёт с тем же id)
         broadcast(r, { t: 'snap', T: Math.round(r.t * 1000) / 1000, P, M });
         if (r.t >= matchT) {
           r.state = 'end'; r.endT = RESULTS_T; r.battle = null;

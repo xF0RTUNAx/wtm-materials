@@ -6,8 +6,8 @@
 // общий Math.random не трогается (бой и расписание от этих объектов не зависят).
 // Статика склеена в несколько мешей по материалам; анимация (луч маяка, лодки) — отдельными объектами.
 /* global THREE */
-import { mulberry32 } from './schedule.js?v=20260930e';
-import { M, part, mergeParts } from './models.js?v=20260930e';
+import { mulberry32 } from './schedule.js?v=20260930f';
+import { M, part, mergeParts } from './models.js?v=20260930f';
 
 // C: { WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P, seed, villages, industry, waterMat, noiseTex, waterTime }
 export function buildLandmarks(C) {
