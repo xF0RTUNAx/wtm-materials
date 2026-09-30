@@ -12,10 +12,10 @@
 import { MODES, DRONE } from '../games/drone/sim/modes.js';
 import { MATCH_T, RESPAWN_T, COUNTDOWN_T, RESULTS_T, SNAP_HZ, SIZES, ONLINE_MODES, MAX_HP, GUN_DMG, F_AB,
   teamSpawn, packState, validState, validLoadout, sunFor, packMissile, makeCode, cleanCode, ONLINE_IR } from '../games/drone/sim/online.js';
-import { lockedIn } from '../games/drone/sim/progress.js?v=20260930i';
-import { MISSILES } from '../games/drone/missiles.js?v=20260930i';
-import { makeCraft, fwdOf, irWhy } from '../games/drone/sim/core.js?v=20260930i';
-import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260930i';
+import { lockedIn } from '../games/drone/sim/progress.js?v=20260930j';
+import { MISSILES } from '../games/drone/missiles.js?v=20260930j';
+import { makeCraft, fwdOf, irWhy } from '../games/drone/sim/core.js?v=20260930j';
+import { createBattle, RADAR } from '../games/drone/sim/battle.js?v=20260930j';
 
 const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast', 'rain'];
 const GUN_RANGE = 2200;       // дальше этого попадание пушки не засчитываем (пуля живёт 1,6 с)

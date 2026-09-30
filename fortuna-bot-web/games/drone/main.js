@@ -1,18 +1,18 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930i';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930i';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930i';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930i';
-import { createPipeline } from './post.js?v=20260930i';
-import { createAudio } from './audio.js?v=20260930i';
-import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930i';
-import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930i';
-import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930i';
-import { createOnline } from './online-client.js?v=20260930i';
-import { createProgress, rewardText, plural } from './progress-client.js?v=20260930i';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930j';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930j';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930j';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930j';
+import { createPipeline } from './post.js?v=20260930j';
+import { createAudio } from './audio.js?v=20260930j';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930j';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930j';
+import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930j';
+import { createOnline } from './online-client.js?v=20260930j';
+import { createProgress, rewardText, plural } from './progress-client.js?v=20260930j';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, pilotStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930i';
+  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930j';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -46,7 +46,7 @@ const DEFAULT_LOADOUT = ['aim9l', 'aim120c', null, null, null, null, 'aim120c', 
 // rainDrops — капель вокруг камеры в ливень, cirrus — высокие перистые облака в ясную погоду.
 const PRESETS = {
   // тестовый: только необходимое для боя — для самых слабых или перегретых устройств и ради батареи (по умолчанию 30 к/с)
-  min:    { name: 'Минимальный', desc: 'слабые и перегретые устройства, экономия батареи', test: true, prMul: 0.6, prCap: 0.8, terrainSeg: 12, trees: 300, treeDist: 3500, treeHi: 400, propsLvl: 0, treeCell: 6000, bldPerTown: 8, clouds: 6, cloudPuffs: 3, particles: 450, rainDrops: 200,
+  min:    { name: 'Минимальный', desc: 'слабые и перегретые устройства, экономия батареи', test: true, tdesc: 'Только необходимое для боя: без теней и эффектов, редкий лес, 30 кадров. Для самых слабых или перегретых устройств и чтобы экономить батарею.', prMul: 0.6, prCap: 0.8, terrainSeg: 12, trees: 300, treeDist: 3500, treeHi: 400, propsLvl: 0, treeCell: 6000, bldPerTown: 8, clouds: 6, cloudPuffs: 3, particles: 450, rainDrops: 200,
     lodD: [1400, 4200, 9000], pbr: false, shadows: false, windows: false, detail: false, contrails: false,
     perf: { scale: 1, dyn: true, min: 0.5, target: 30, up: 'off', sharp: 0.4, aa: 'off' } },
   low:    { name: 'Низкий',  desc: 'слабые телефоны', prMul: 0.8, prCap: 1, terrainSeg: 16, trees: 800, treeDist: 6000, treeHi: 900, propsLvl: 0, treeCell: 5000, bldPerTown: 22, clouds: 14, cloudPuffs: 5, particles: 1000, rainDrops: 700,
@@ -67,7 +67,8 @@ const PRESETS = {
     perf: { scale: 0.85, dyn: true, min: 0.67, target: 60, up: 'fsr', sharp: 0.45, aa: 'msaa' },
     post: { bloom: 0.85, vignette: 0.18, grade: 0.7, threshold: 0.85, rays: true, raysK: 0.55, exposure: 1.0 } }, // без зерна и аберраций — чистая картинка
 };
-PRESETS.max = { ...PRESETS.cinema, name: 'Максимальный', desc: '«Кино» + все пробные эффекты: ЛТЦ, взрывы, дрожание воздуха, объёмные облака', test: true };
+PRESETS.max = { ...PRESETS.cinema, name: 'Максимальный', desc: '«Кино» + все пробные эффекты: ЛТЦ, взрывы, дрожание воздуха, объёмные облака', test: true,
+  tdesc: '«Кино» и все пробные эффекты: яркие ЛТЦ и взрывы с осколками, дрожание горячего воздуха, объёмные облака. Только для мощных устройств.' };
 let gfxKey = store.get('fortuna_drone_gfx');
 if (!PRESETS[gfxKey]) gfxKey = IS_TOUCH ? 'low' : 'medium';
 const P = PRESETS[gfxKey];
@@ -647,7 +648,7 @@ let rollSens = Math.min(1.6, Math.max(0.3, +(store.get('fortuna_drone_rollsens')
 try { mouseCfg = Object.assign(mouseCfg, JSON.parse(store.get('fortuna_drone_mouse') || '{}')); } catch (_) { /* по умолчанию */ }
 // Сенсорная «ручка»: чувствительность (сколько вести палец до полного отклонения), сила поворота и тангажа по отдельности,
 // размер кружка, мёртвая зона, кривая отклика, инверсия тангажа
-const TOUCH_DEF = { sens: 1, dead: 0.1, curve: 0.35, invert: false, kx: 1, ky: 1, size: 1, rollK: 0.7, padGap: 3, ctl: 'stick', aimSens: 1 }; // ctl: stick — ручка, aim — ведение пальцем (прицел, как в War Thunder)
+const TOUCH_DEF = { sens: 1, dead: 0.1, curve: 0.35, invert: false, kx: 1, ky: 1, size: 1, rollK: 0.7, padGap: 3, ctl: 'stick', aimSens: 1 }; // ctl: stick — ручка, aim — ведение пальцем (камера и прицел)
 let touchCfg = { ...TOUCH_DEF };
 try { touchCfg = Object.assign(touchCfg, JSON.parse(store.get('fortuna_drone_touch') || '{}')); } catch (_) { /* по умолчанию */ }
 applyPadGap(); // расстояние между стрелками крестовины
@@ -1905,7 +1906,10 @@ function renderGuideTab() {
 // ── Настройки: графика и управление ──
 function renderSettingsTab() {
   let bench = null; try { bench = JSON.parse(store.get('fortuna_drone_bench') || 'null'); } catch (_) { bench = null; }
-  const cards = Object.entries(PRESETS).map(([k, p]) => `<div class="gfx ${k === gfxKey ? 'on' : ''} ${bench && bench.rec === k ? 'rec' : ''}" data-g="${k}"><b>${p.name}</b>${p.test ? '<span>тест</span>' : ''}</div>`).join('');
+  const card = ([k, p]) => `<div class="gfx ${k === gfxKey ? 'on' : ''} ${bench && bench.rec === k ? 'rec' : ''}" data-g="${k}"><b>${p.name}</b></div>`;
+  const cards = Object.entries(PRESETS).filter(([, p]) => !p.test).map(card).join('');
+  // тестовые пресеты — отдельно, с описанием (как раньше «Тестовая улучшенная графика»)
+  const testCards = Object.entries(PRESETS).filter(([, p]) => p.test).map(([k, p]) => `<div class="gfx gfxTest ${k === gfxKey ? 'on' : ''}" data-g="${k}"><b>${p.name}</b><span>${p.tdesc}</span></div>`).join('');
   let res = '';
   if (bench) {
     const R = bench.results, f1 = (x) => (Math.round(x * 10) / 10).toFixed(1);
@@ -1963,7 +1967,8 @@ function renderSettingsTab() {
   const wOpts = [['random', 'Случайная'], ...Object.entries(WEATHERS).map(([k, w]) => [k, w.name])];
   $('tab-set').innerHTML = `<div class="cat-h">Графика</div><div class="gfx-row">${cards}</div>
     <p class="hint">Пресет задаёт дальность прорисовки, густоту леса и облаков, качество материалов и теней. С «Высокого» — тени и объёмные облака, в «Ультра» и «Кино» — отражения в воде, свечение и лучи; «Кино» — самая подробная земля и лес. Смена пресета перезагружает игру.</p>
-    <p class="hint"><b>Минимальный</b> и <b>Максимальный</b> — тестовые пресеты. Минимальный — только необходимое для боя: для самых слабых или перегретых устройств или чтобы экономить батарею (по умолчанию 30 кадров в секунду). Максимальный — «Кино» и все пробные эффекты (ЛТЦ, взрывы, осколки, дрожание горячего воздуха, объёмные облака) — только для мощных устройств.</p>
+    <div class="cat-h" style="margin-top:10px">Тестовые пресеты графики</div><div class="gfx-row gfxTestRow">${testCards}</div>
+    <p class="hint">Пробные: могут меняться. Выбранный тестовый пресет заменяет обычный.</p>
     <button class="btn alt sm" id="benchBtn">Тест графики (≈ 30 с)</button>
     ${res}
     ${bench && bench.rec !== gfxKey ? `<button class="btn sm" id="applyRec">Применить рекомендованный</button>` : ''}

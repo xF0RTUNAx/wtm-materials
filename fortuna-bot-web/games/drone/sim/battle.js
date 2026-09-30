@@ -19,10 +19,10 @@
 // Аппарат ИИ: S (характеристики из AC), tgt (цель), stt (РЛС сопровождает tgt), cmFlare/cmChaff, msl (подвеска).
 // Онлайн-аппарат (mp = true: бот или самолёт игрока под ИИ на сервере): урон по нему тоже уходит в ctx.hurt — корпус ведёт хозяин боя.
 /* global THREE */
-import { MISSILES } from '../missiles.js?v=20260930i';
-import { WORLD, terrainH } from '../terrain-core.js?v=20260930i';
+import { MISSILES } from '../missiles.js?v=20260930j';
+import { WORLD, terrainH } from '../terrain-core.js?v=20260930j';
 import { clamp, D2R, G0, rhoAt, makeCraft, fwdOf, localAngles, angleBetween, agl, flyStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './core.js?v=20260930i';
+  seekerHeat, offTailDeg, irCanSee, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './core.js?v=20260930j';
 
 const rnd = Math.random;
 
