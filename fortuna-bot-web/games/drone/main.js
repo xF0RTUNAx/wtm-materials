@@ -2785,7 +2785,7 @@ function updateFpsMeter(dtMs) {
   if (fpsEl._on !== on) { fpsEl._on = on; fpsEl.style.display = on ? 'block' : 'none'; }
   if (!on || !dr.fps) return;
   const hz = dr.vs ? Math.round(1000 / dr.vs) : 0;
-  fpsEl.textContent = `${Math.round(dr.fps)}${hz ? '/' + hz : ''} к/с · худш. ${Math.round(dr.low)} · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${dr.q ? ' · дет. ' + Math.round(QK[dr.q] * 100) + '%' : ''}${pipe && pipe.fx ? ' · FX½' : ''}${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
+  fpsEl.textContent = `${Math.round(dr.fps)}${hz ? '/' + hz : ''} к/с · худш. ${Math.round(dr.low)} · ${Math.round((pipe ? pipe.scale : dr.scale) * 100)}%${dr.q ? ' · дет. ' + Math.round(QK[dr.q] * 100) + '%' : ''}${pipe && pipe.fx ? (pipe.cfg.fxFull ? ' · FX 1:1' : ' · FX½') : ''}${perf.up !== 'off' ? ' · ' + (perf.up === 'fsr' ? 'FSR' : 'CAS') : ''}${perf.aa !== 'off' ? ' · ' + perf.aa.toUpperCase() : ''}`;
 }
 let last = performance.now(), lastDraw = 0, lastState = '';
 function frame(now) {
