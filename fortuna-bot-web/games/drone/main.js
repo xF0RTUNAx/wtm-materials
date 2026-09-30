@@ -2732,7 +2732,7 @@ function tick(dt) {
   updateSound(dt); tipTick(dt);
 }
 // дым труб и пар градирни промзоны (ветер несёт шлейф; дальше 14 км не рисуем)
-// у новых объектов карты (АЭС, плотина, лодки) — свой генератор: общий Math.random от них не сдвигается
+// у новых объектов карты (пена за лодками) — свой генератор: общий Math.random от них не сдвигается
 const vr = mulberry32(0x5eed);
 let stackT = 0;
 world.setWake((x, y, z, dx, dz) => { if (vr() < 0.5) SMOKE.emit(x + (vr() - 0.5) * 2, y, z + (vr() - 0.5) * 2, -dx * 1.5 + (vr() - 0.5) * 2, 0.2, -dz * 1.5 + (vr() - 0.5) * 2, 0.95, 0.97, 0.98, 0.45, 2.2, 3.5, 3.5, 0.6, 0); });
@@ -2740,8 +2740,6 @@ function smokeStacks(dt) {
   stackT += dt; if (stackT < 0.3) return; stackT = 0;
   for (const e of world.emitters) {
     if (Math.hypot(e.x - camera.position.x, e.z - camera.position.z) > 14000) continue;
-    if (e.kind === 'steamL') { for (let k = 0; k < 2; k++) SMOKE.emit(e.x + (vr() - 0.5) * 50, e.y, e.z + (vr() - 0.5) * 50, 3 + vr() * 2, 6 + vr() * 3, 1.5, 0.96, 0.97, 0.98, 0.6, 40, 20, 12, 0.05, 0.4); continue; } // градирни АЭС
-    if (e.kind === 'spray') { for (let k = 0; k < 3; k++) SMOKE.emit(e.x + (vr() - 0.5) * 20, e.y, e.z + (vr() - 0.5) * 20, (vr() - 0.5) * 6, 5 + vr() * 5, (vr() - 0.5) * 6, 0.93, 0.95, 0.97, 0.5, 10, 12, 3.5, 0.3, -0.5); continue; } // водосброс плотины
     if (e.kind === 'steam') SMOKE.emit(e.x + (rnd() - 0.5) * 30, e.y, e.z + (rnd() - 0.5) * 30, 3 + rnd() * 2, 5 + rnd() * 2, 1.5, 0.96, 0.97, 0.98, 0.55, 30, 16, 10, 0.05, 0.4);
     else SMOKE.emit(e.x, e.y, e.z, 4 + rnd() * 2, 3 + rnd() * 2, 1.5 + rnd(), 0.42, 0.41, 0.4, 0.45, 8, 9, 16, 0.03, 0.3);
   }
