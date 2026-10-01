@@ -85,12 +85,13 @@ const prFor = (p) => Math.min(DPR * p.prMul, p.prCap, IS_TOUCH ? 2 : 3); // на
 // настройки производительности и экрана (сбрасываются к умолчаниям пресета при его смене)
 const PERF_KEYS = ['scale', 'dyn', 'min', 'target', 'up', 'sharp', 'aa'];
 // halfFx (облака и дым в ½) — по умолчанию включено везде, где есть конвейер кадра (кроме «Низкого»); fxv — версия умолчаний
-let perf = { ...P.perf, cap: gfxKey === 'min' ? 30 : IS_TOUCH ? 60 : 0, p3: false, p3mode: 'vivid', fps: false, immersive: true, halfFx: gfxKey !== 'low' && gfxKey !== 'min', smartQ: false, fxTest: false, fxv: 2 };
+let perf = { ...P.perf, cap: gfxKey === 'min' ? 30 : IS_TOUCH ? 60 : 0, p3: false, p3mode: 'vivid', fps: false, immersive: true, halfFx: gfxKey !== 'low' && gfxKey !== 'min', smartQ: IS_TOUCH, fxTest: false, fxv: 2 }; // smartQ на телефонах: перегрелся или слабый — сначала детализация, потом разрешение
 try {
   const sp = JSON.parse(store.get('fortuna_drone_perf') || 'null');
   if (sp && typeof sp === 'object') {
-    for (const k of ['cap', 'p3', 'p3mode', 'fps', 'immersive', 'smartQ', 'fxTest']) if (k in sp && (k !== 'cap' || sp.capSet)) perf[k] = sp[k]; // cap — только выбранный игроком (раньше у всех сохранялся «без ограничения»)
+    for (const k of ['cap', 'p3', 'p3mode', 'fps', 'immersive', 'smartQ', 'fxTest']) if (k in sp && (k !== 'cap' || sp.capSet) && (k !== 'smartQ' || sp.qSet)) perf[k] = sp[k]; // cap — только выбранный игроком (раньше у всех сохранялся «без ограничения»)
     if (sp.capSet) perf.capSet = true;
+    if (sp.qSet) perf.qSet = true; // «Умное качество» выбирал сам (иначе на телефоне — включено по умолчанию)
     if (sp.fxv === 2 && 'halfFx' in sp) perf.halfFx = sp.halfFx; // сохранённое до смены умолчания не считаем выбором игрока
     if (sp.preset === gfxKey) for (const k of PERF_KEYS) if (k in sp && !(PERF_OLD[gfxKey] && k in PERF_OLD[gfxKey] && sp[k] === PERF_OLD[gfxKey][k])) perf[k] = sp[k]; // прежнее умолчание — берём новое
   }
@@ -2139,7 +2140,7 @@ onSet('change', (e) => {
   if (e.target.id === 'mSteer') { mouseCfg.steer = e.target.checked; if (!mouseCfg.steer) { input.sx = 0; input.sy = 0; } saveMouse(); renderGuideTab(); }
   if (e.target.id === 'mInv') { mouseCfg.invert = e.target.checked; saveMouse(); }
   if (e.target.id === 'pDyn') { perf.dyn = e.target.checked; if (!perf.dyn && dr.q) setQ(0); applyPerf(); }
-  if (e.target.id === 'pSmartQ') { perf.smartQ = e.target.checked; if (!perf.smartQ && dr.q) setQ(0); savePerf(); }
+  if (e.target.id === 'pSmartQ') { perf.smartQ = e.target.checked; perf.qSet = true; if (!perf.smartQ && dr.q) setQ(0); savePerf(); }
   if (e.target.id === 'pHalfFx') { perf.halfFx = e.target.checked; applyPerf(); }
   if (e.target.id === 'pFps') { perf.fps = e.target.checked; savePerf(); }
   if (e.target.id === 'pImm') { perf.immersive = e.target.checked; savePerf(); renderSettingsTab(); }
@@ -2175,7 +2176,7 @@ async function runBenchmark() {
   show('menu', false); $('benchScr').classList.add('on'); $('benchBox').textContent = 'Тест графики: подготовка сцены…';
   await new Promise((r) => setTimeout(r, 30));
   const bScene = new THREE.Scene();
-  const bw = buildWorld(bScene, PRESETS.high, 4242, renderer, weatherKey);
+  let bw = null, bwKey = null; // мир — свой у каждого пресета (раньше все мерились на мире «Высокого»: лес и рельеф не различались)
   const bFX = makeParticles(bScene, 3000, true, dotTex), bSM = makeParticles(bScene, 3000, false, smokeTex);
   const J = jetGeo('fighter'), jets = [];
   for (let i = 0; i < 16; i++) { const m = new THREE.Mesh(J.geo, MAT_JET); m.castShadow = true; m.rotation.order = 'YXZ'; bScene.add(m); jets.push({ m, a: i / 16 * Math.PI * 2, r: 250 + (i % 5) * 60, h: 380 + (i % 4) * 50 }); }
@@ -2189,6 +2190,13 @@ async function runBenchmark() {
   const prevSh = renderer.shadowMap.enabled;
   camera.clearViewOffset();
   for (const ph of phases) {
+    if (bwKey !== ph.preset) {
+      if (bw) bw.dispose();
+      $('benchBox').textContent = `Тест графики: строим мир «${PRESETS[ph.preset].name}»…`; await new Promise((r) => setTimeout(r, 30));
+      bw = buildWorld(bScene, PRESETS[ph.preset], 4242, renderer, weatherKey, { syncTerrain: true }); bwKey = ph.preset;
+      camera.position.set(T0.x, cy + 320, T0.z + 900); camera.lookAt(T0.x, cy + 120, T0.z);
+      for (let i = 0; i < 12; i++) bw.follow(camera.position, camera.position); // рельеф вокруг — до замера
+    }
     const pp = PRESETS[ph.preset], pf = { ...pp.perf, aa: ph.aa || pp.perf.aa }, usePipe = ph.pipe === false ? false : !!pp.post || pf.aa !== 'off' || pf.up !== 'off', ldr = !pp.post;
     renderer.setPixelRatio((usePipe ? prFor(pp) : prFor(pp) * pf.scale) * ph.scaleK); renderer.toneMapping = usePipe && !ldr ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping; resize();
     renderer.shadowMap.enabled = ph.shadows; bw.sun.castShadow = ph.shadows;
