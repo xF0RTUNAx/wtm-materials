@@ -1,18 +1,18 @@
 // «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ «Подстилки улитки», HUD, меню, тест графики.
 /* global THREE */
-import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930k';
-import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930k';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930k';
-import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930k';
-import { createPipeline } from './post.js?v=20260930k';
-import { createAudio } from './audio.js?v=20260930k';
-import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930k';
-import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930k';
-import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930k';
-import { createOnline } from './online-client.js?v=20260930k';
-import { createProgress, rewardText, plural } from './progress-client.js?v=20260930k';
+import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930l';
+import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930l';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20260930l';
+import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930l';
+import { createPipeline } from './post.js?v=20260930l';
+import { createAudio } from './audio.js?v=20260930l';
+import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930l';
+import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930l';
+import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930l';
+import { createOnline } from './online-client.js?v=20260930l';
+import { createProgress, rewardText, plural } from './progress-client.js?v=20260930l';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, pilotStep, steerTo,
-  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930k';
+  seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930l';
 
 // ═════════════ Параметры и режимы ═════════════
 const Q = new URLSearchParams(location.search);
@@ -69,6 +69,14 @@ const PRESETS = {
 };
 PRESETS.max = { ...PRESETS.cinema, name: 'Максимальный', desc: '«Кино» + все пробные эффекты: ЛТЦ, взрывы, дрожание воздуха, объёмные облака', test: true,
   tdesc: '«Кино» и все пробные эффекты: яркие ЛТЦ и взрывы с осколками, дрожание горячего воздуха, объёмные облака. Только для мощных устройств.' };
+// Телефоны и планшеты: MSAA стоил ≈ +4,7 мс на кадр, полное разрешение Retina — ≈ +6 мс (замер на iPhone 14) — отсюда нагрев.
+// Там на верхних пресетах — FXAA и рендер 85% (80% с «Ультра») с подчёркиванием резкости: картинка почти та же, видеочипу вдвое легче.
+// PERF_OLD — прежние умолчания: сохранённое значение, равное им, считаем «не трогал» (получит новое), иначе — выбор игрока.
+const PERF_OLD = {};
+if (IS_TOUCH) for (const k of ['high', 'ultra', 'cinema', 'max']) {
+  const pf = PRESETS[k].perf; PERF_OLD[k] = { aa: pf.aa, scale: pf.scale };
+  PRESETS[k].perf = { ...pf, aa: 'fxaa', scale: Math.min(pf.scale, k === 'high' ? 0.85 : 0.8) };
+}
 let gfxKey = store.get('fortuna_drone_gfx');
 if (!PRESETS[gfxKey]) gfxKey = IS_TOUCH ? 'low' : 'medium';
 const P = PRESETS[gfxKey];
@@ -84,7 +92,7 @@ try {
     for (const k of ['cap', 'p3', 'p3mode', 'fps', 'immersive', 'smartQ', 'fxTest']) if (k in sp && (k !== 'cap' || sp.capSet)) perf[k] = sp[k]; // cap — только выбранный игроком (раньше у всех сохранялся «без ограничения»)
     if (sp.capSet) perf.capSet = true;
     if (sp.fxv === 2 && 'halfFx' in sp) perf.halfFx = sp.halfFx; // сохранённое до смены умолчания не считаем выбором игрока
-    if (sp.preset === gfxKey) for (const k of PERF_KEYS) if (k in sp) perf[k] = sp[k];
+    if (sp.preset === gfxKey) for (const k of PERF_KEYS) if (k in sp && !(PERF_OLD[gfxKey] && k in PERF_OLD[gfxKey] && sp[k] === PERF_OLD[gfxKey][k])) perf[k] = sp[k]; // прежнее умолчание — берём новое
   }
 } catch (_) { /* по умолчанию */ }
 const savePerf = () => store.set('fortuna_drone_perf', JSON.stringify({ ...perf, preset: gfxKey }));
@@ -1918,7 +1926,7 @@ function renderSettingsTab() {
     const featRows = H ? [['f_shadow', 'Тени'], ['f_post', 'Эффекты кадра (свечение, цвет, апскейлер)'], ['f_aa', 'Сглаживание'], ['f_res', 'Разрешение 100% вместо 70%'], ['f_fx', 'Взрывы, дым и огонь']]
       .filter(([k]) => R[k] && R[k].ms).map(([k, n]) => { const d = H - R[k].ms; return `<tr><td>${n}</td><td>${d < 0.3 ? '≈ 0' : '+' + f1(d)} мс</td></tr>`; }).join('') : ''; // меньше 0,3 мс — в пределах шума замера
     res = `<div id="benchRes"><table class="tt"><tr><th>Пресет</th><th>цена кадра</th><th>худшие 5%</th><th>потянет, к/с</th><th>показано, к/с</th></tr>${presetRows}</table>
-      <p class="hint">«Цена кадра» — сколько видеочип тратит на один кадр сцены (кадр рисуется то 1, то 4 раза — разница убирает время ожидания самого устройства, которое на iPhone ~10 мс на любом пресете). 60 кадров — это 16,7 мс: чем меньше цена, тем больше запас и тем меньше телефон греется. «Показано» — сколько кадров было на экране. Запускайте тест на остывшем телефоне: на горячем цифры хуже.</p>
+      <p class="hint">«Цена кадра» — сколько видеочип тратит на один кадр сцены. 60 кадров — это 16,7 мс: чем меньше цена, тем больше запас и тем меньше телефон греется. «Показано» — сколько кадров было на экране. Запускайте тест на остывшем телефоне: на горячем цифры хуже.</p>
       ${featRows ? `<table class="tt"><tr><th>Сколько стоит (на «Высоком»)</th><th>мс на кадр</th></tr>${featRows}</table>` : ''}
       <p style="margin:6px 0 0">Рекомендуем: <b style="color:#86efac">${PRESETS[bench.rec].name}</b>${bench.rec === gfxKey ? ' (уже выбран)' : ''} — с запасом, чтобы не перегревать. Видеокарта: ${bench.gpu}.</p></div>`;
   }
