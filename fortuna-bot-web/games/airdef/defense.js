@@ -4,13 +4,13 @@
 // оператором: круговой обзор (ИКО), назначение цели касанием, захват за реальное время станции, пуск, РЛС вкл/выкл,
 // метод наведения; пушки — прицел с упреждением и огонь удержанием; ПЗРК — перекрестие и тон захвата ГСН.
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
-//   noEnd, onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
+//   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261010m';
-import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261010m';
-import { samClass, samCost, LIMIT1 } from './sim/online.js?v=20261010m';
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261010m';
-import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261010m';
+import { CITY, mulberry32 } from './city.js?v=20261010t';
+import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261010t';
+import { samClass, samCost, LIMIT1 } from './sim/online.js?v=20261010t';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261010t';
+import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261010t';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -363,7 +363,7 @@ export function createDefense(C) {
   const DIR = V3(), TMP = V3(), LEAD = V3(), EYE = V3();
   function enterOp(u) {
     if (st.op) leaveOp();
-    st.op = u; st.view = 'op'; C.S.setManual(u, true); op.camInit = false;
+    st.op = u; st.view = 'op'; C.S.setManual(u, true); op.camInit = false; obs.clear();
     const t = nearestTarget(u);
     TMP.copy(t ? t.pos : C.S.objects[0] ? new THREE.Vector3(C.S.objects[0].x, 400, C.S.objects[0].z) : TMP.set(0, 400, 0)).sub(u.pos);
     op.yaw = Math.atan2(-TMP.x, -TMP.z); op.pitch = clamp(Math.atan2(TMP.y, Math.hypot(TMP.x, TMP.z)), 0.02, 1.2); op.fov = u.S.hp <= 15 ? 40 : 55; op.follow = true;
@@ -383,6 +383,12 @@ export function createDefense(C) {
   }
   // цели оператора: самолёты (и ложные цели), а у «Тора», «Панциря», PAC-3 — ещё и летящее оружие
   const opT = (u) => (u && u.S.antiMun ? [...C.raid.alive(), ...C.S.wpns.filter((w) => !w.dead && w.t > 1.5 && w.W.kind !== 'decoy')] : C.raid.alive());
+  // класс отметки по траектории, скорости и ЭПР: «Аркада» — сразу, «Реализм» — после ~2,5 с наблюдения (до этого «?»).
+  // Ложная цель для РЛС — самолёт (в этом её смысл); летящее оружие вообще видят только комплексы с antiMun
+  const obs = new Map(); // цель → секунд под наблюдением оператора
+  const CLS = { bomb: 'БОМБА', lgb: 'БОМБА', tvb: 'БОМБА', gps: 'БОМБА', agm: 'УР', arm: 'ПРР', cruise: 'КР' };
+  const clsOf = (a) => (a.isMun ? CLS[a.W.kind] || 'ОРУЖИЕ' : 'САМОЛЁТ');
+  const clsKnown = (a) => C.MODE().markers || (obs.get(a) || 0) > 2.5;
   function nearestTarget(u) { let b = null, bd = 1e12; for (const a of opT(st.op)) { const d = a.pos.distanceToSquared(u.pos); if (d < bd) { bd = d; b = a; } } return b; }
   // кого видит этот комплекс (РЛС — если излучает; иначе глаз/оптика)
   const sees = (u, a) => (u.S.radar && u.emit && C.S.radarSees(u, a)) || C.S.eyesSee(u, a);
@@ -464,8 +470,9 @@ export function createDefense(C) {
       if (!sees(u, a)) continue;
       const x = c + (a.pos.x - u.pos.x) * k, y = c + (a.pos.z - u.pos.z) * k;
       if (Math.hypot(x - c, y - c) > c - 4) continue;
-      pc.fillStyle = a === u.track ? '#ff4d4d' : a === u.desig ? '#fde047' : '#9fffb8';
-      pc.beginPath(); pc.arc(x, y, a === u.desig || a === u.track ? 7 : 5, 0, 7); pc.fill();
+      const mun = a.isMun && clsKnown(a), rr = a === u.desig || a === u.track ? 7 : 5;
+      pc.fillStyle = a === u.track ? '#ff4d4d' : a === u.desig ? '#fde047' : mun ? '#fb923c' : '#9fffb8';
+      pc.beginPath(); if (mun) { pc.moveTo(x, y - rr); pc.lineTo(x + rr, y); pc.lineTo(x, y + rr); pc.lineTo(x - rr, y); pc.closePath(); } else pc.arc(x, y, a.isMun ? 3.5 : rr, 0, 7); pc.fill(); // оружие — ромбом (пока не опознано — маленькая точка)
       if (a === u.desig && !u.track) { pc.strokeStyle = '#fde047'; pc.lineWidth = 3; pc.beginPath(); pc.arc(x, y, 12, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * clamp(u.seeT / (u.S.radar ? u.S.radar.acq * (C.MODE().reactK || 1) : 2), 0, 1)); pc.stroke(); }
     }
     // помехи: «строб» по пеленгу на самолёт со станцией помех, пока РЛС его не «прожгла»
@@ -484,17 +491,22 @@ export function createDefense(C) {
     // перекрестие (в виде оператора и снаружи, когда наводят камерой)
     if (op.cam === 'op' || op.extAim) hx.strokeStyle = 'rgba(255,255,255,.75)'; else hx.strokeStyle = 'rgba(0,0,0,0)'; hx.beginPath(); hx.moveTo(VW / 2 - 22, VH / 2); hx.lineTo(VW / 2 - 6, VH / 2); hx.moveTo(VW / 2 + 6, VH / 2); hx.lineTo(VW / 2 + 22, VH / 2); hx.moveTo(VW / 2, VH / 2 - 22); hx.lineTo(VW / 2, VH / 2 - 6); hx.moveTo(VW / 2, VH / 2 + 6); hx.lineTo(VW / 2, VH / 2 + 22); hx.stroke();
     if (S.type === 'ir' && op.cam === 'op') { hx.strokeStyle = u.track ? '#ff4d4d' : u.seek > 0 ? '#fde047' : 'rgba(255,255,255,.5)'; hx.beginPath(); hx.arc(VW / 2, VH / 2, 3.5 * D2R / (op.fov * D2R) * VH, 0, 7); hx.stroke(); }
-    // отметки целей
+    // отметки целей; кучные (ближе 28 пикс. на экране) — одна подпись с числом: «БОМБА ×3»
+    const labs = [];
     for (const a of opT(st.op)) {
+      const vis = sees(u, a); if (vis) obs.set(a, (obs.get(a) || 0) + dt); if (obs.size > 400) obs.clear();
       const p = C.proj(a.pos); if (!p) continue;
-      const vis = sees(u, a), d = a.pos.distanceTo(u.pos);
       if (!vis && !C.MODE().markers) continue;
-      const col = a === u.track ? '#ff4d4d' : a === u.desig ? '#fde047' : vis ? '#9fffb8' : 'rgba(159,255,184,.4)';
+      const known = clsKnown(a), mun = a.isMun && known;
+      const col = a === u.track ? '#ff4d4d' : a === u.desig ? '#fde047' : mun ? '#fb923c' : vis ? '#9fffb8' : 'rgba(159,255,184,.4)';
       hx.strokeStyle = col; hx.fillStyle = col;
-      const s = a === u.track ? 16 : 11; hx.strokeRect(p[0] - s, p[1] - s, s * 2, s * 2);
-      hx.fillText(`${(d / 1000).toFixed(1)} км · ${Math.round(a.pos.y - city.groundH(a.pos.x, a.pos.z))} м`, p[0], p[1] + s + 12);
+      const s = a === u.track ? 16 : a.isMun ? 8 : 11; hx.strokeRect(p[0] - s, p[1] - s, s * 2, s * 2);
       if (a === u.track) hx.fillText('ЗАХВАТ', p[0], p[1] - s - 5);
+      const name = known ? clsOf(a) : '?', key = a === u.track || a === u.desig; // назначенная — всегда своей подписью
+      const g = !key && labs.find((q) => !q.key && q.name === name && Math.hypot(q.x - p[0], q.y - p[1]) < 28);
+      if (g) g.n++; else labs.push({ a, name, key, x: p[0], y: p[1], s, col, n: 1 });
     }
+    for (const q of labs) { hx.fillStyle = q.col; hx.fillText(`${q.name}${q.n > 1 ? ' ×' + q.n : ''} · ${(q.a.pos.distanceTo(u.pos) / 1000).toFixed(1)} км · ${Math.round(q.a.pos.y - city.groundH(q.a.pos.x, q.a.pos.z))} м`, q.x, q.y + q.s + 12); }
     // пушка: кружок упреждения для цели в секторе ствола
     if (S.type === 'guns' && u.gunTgt) {
       C.S.gunLead(u, u.gunTgt, LEAD); const p = C.proj(LEAD);
@@ -688,7 +700,7 @@ export function createDefense(C) {
     if (st.op && st.op.S.type === 'guns') st.op.gunFire = op.fireHeld || (op.keys && op.keys.has('Space'));
     if (st.op && C.auto) autoOp(dt);
     const busy = C.raid.planes.some((a) => !a.dead && !a.out) || C.S.wpns.length > 0;
-    if (!busy && !st.net) endWave(); // онлайн: конец волны решает сервер
+    if (!busy && !st.net && !st.opts.hold) endWave(); // онлайн: конец волны решает сервер; уроки (hold) — сами подают цели
     if (st.opts.onTick) st.opts.onTick(dt);
     if ((sideT -= dt) <= 0) { sideT = 0.5; if (st.view === 'map') renderSide(); }
   }

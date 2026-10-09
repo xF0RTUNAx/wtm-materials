@@ -5,9 +5,9 @@
 // пуск, захват, РЛС, ручное наведение, покупки) уходят серверу — их перехватывает обёртка методов зеркала (wrapMirror).
 // Чужие самолёты и боты — «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
-import * as O from './sim/online.js?v=20261010m';
-import { AG, SAM } from './arsenal.js?v=20261010m';
-import { LNCH } from './launchers.js?v=20261010m';
+import * as O from './sim/online.js?v=20261010t';
+import { AG, SAM } from './arsenal.js?v=20261010t';
+import { LNCH } from './launchers.js?v=20261010t';
 
 const PORT = 8787;
 export function adServerUrl() {

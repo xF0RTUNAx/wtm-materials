@@ -1,12 +1,12 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261010m';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261010m';
-import { MODES } from './sim/strike.js?v=20261010m';
-import { WEATHERS } from '../drone/world.js?v=20261010m';
-import { LESSONS } from './training.js?v=20261010m';
-import { MODEL_CREDITS } from './models.js?v=20261010m';
-import { openLayoutEditor } from './layout.js?v=20261010m';
+import { CITY } from './city.js?v=20261010t';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261010t';
+import { MODES } from './sim/strike.js?v=20261010t';
+import { WEATHERS } from '../drone/world.js?v=20261010t';
+import { LESSONS } from './training.js?v=20261010t';
+import { MODEL_CREDITS } from './models.js?v=20261010t';
+import { openLayoutEditor } from './layout.js?v=20261010t';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },

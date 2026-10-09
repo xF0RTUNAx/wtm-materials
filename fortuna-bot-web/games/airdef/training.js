@@ -2,9 +2,9 @@
 // подвеска пополняется). На каждом шаге — подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND } from './arsenal.js?v=20261010m';
-import { spotNear, freeGround } from './mission.js?v=20261010m';
-import { riverX } from './city.js?v=20261010m';
+import { SAM, AG, SAM_TYPE, AG_KIND } from './arsenal.js?v=20261010t';
+import { spotNear, freeGround } from './mission.js?v=20261010t';
+import { riverX } from './city.js?v=20261010t';
 
 const K = (k) => `<kbd>${k}</kbd>`;
 // подписи управления: ПК или телефон
@@ -59,7 +59,7 @@ function DL(c) {
   const spawnP = (C) => { const t = objOf(C, 'tpp'); for (let i = 0; i < (c.n || 1); i++) { const a = C.raid.spawn(c.role || 'bomber', t, Math.random() * 6.28, i * 5, c.R || 11000); if (c.alt) a.cruise = c.alt; else if (!c.role) a.cruise = 2200; } };
   return { id: c.id, sec: c.sec || 'Комплексы', name: c.name, desc: c.desc, era: c.era,
     intro: (C) => { const S = SAM[c.unit(C)]; return card(S.name, c.how(S), c.errs(S), '<p class="dim">Сначала — показ: «АВТО» сам ведёт комплекс по первой цели. Потом — вы.</p>'); },
-    def: (C) => ({ budget: 0, waves: 1, plan: false, op: 0, units: [[c.unit(C), ...near(C, objOf(C, 'tpp'), c.dist || 600)]], wave: () => spawnP(C) }),
+    def: (C) => ({ budget: 0, waves: 1, plan: false, op: 0, hold: true, units: [[c.unit(C), ...near(C, objOf(C, 'tpp'), c.dist || 600)]], wave: () => spawnP(C) }),
     tick(T, C) {
       const u = C.S.units[0], D = C.ctrl.inner, d = T.d, need = c.need || 1;
       if (u && (u.reloadT > 0 || u.ammo <= 0)) { u.ammo = u.S.ammo; u.reloadT = 0; } // в обучении — без перезарядки
@@ -73,7 +73,8 @@ function DL(c) {
       else T.hint(`<b>Теперь вы.</b> ${c.hint(T, C, u, D)}`);
       if (u && !u.dead && !C.raid.planes.some((a) => !a.dead && !a.out) && T.st > 2) spawnP(C);
     },
-    hooks: (T) => ({ planeDown: () => { T.d.downs = (T.d.downs || 0) + 1; }, ...(c.hooks ? c.hooks(T) : {}) }) };
+    hooks: (T) => (c.mun ? { wpnEnd: (w, res) => { if (res.intercepted) T.d.downs = (T.d.downs || 0) + 1; } } // счёт — сбитые бомбы и ракеты
+      : { planeDown: () => { T.d.downs = (T.d.downs || 0) + 1; }, ...(c.hooks ? c.hooks(T) : {}) }) };
 }
 // Каждый урок открывается карточкой «Как это работает в игре» + «Типичные ошибки» (игра на паузе), уроки с оружием —
 // показ (автопилот и «АВТО» применяют его по учебной цели, камера — за оружием), затем то же самое делает игрок по другой цели.
@@ -289,6 +290,22 @@ export const LESSONS = {
         else { T.hint(`<b>Итог:</b> без помех — ${d.d1} км, с помехами — ${d.d2} км; сопровождение срывалось ${d.br} раз за 25 с. Против С-400 разница была бы в пару километров.`); if (T.st > 8) T.done(); }
       },
       hooks: (T) => ({ trackBroken: () => { if (T.s === 2) T.d.br++; } }) },
+    { id: 'mun', sec: 'Защита', name: 'Прорыв под «Тором»', desc: 'ПВО сбивает бомбы: серия, ПРР, ложные цели, крылатые ракеты',
+      intro: (C) => { const S = SAM[C.setup.side === 'east' ? 'torm2' : 'pac3']; return card('Когда ПВО сбивает оружие', [
+        `${S.short} и подобные («Тор», «Панцирь», Patriot, IRIS-T, Skynex) сбивают <b>летящие бомбы и ракеты</b>, а не только самолёты.`,
+        'У них мало каналов и ракет: <b>серия</b> из 3–4 бомб сразу перегружает комплекс — часть дойдёт.', 'Можно сначала выбить сам комплекс <b>ПРР</b>, потом бомбить спокойно.', 'Ложные цели и крылатые ракеты на малой высоте тоже отвлекают и проходят.'],
+        ['Бросать по одной бомбе — каждую сбивают.', 'Лезть самому в зону ближнего рубежа — он стреляет и по вам.']); },
+      air: (C) => ({ items: [[C.setup.side === 'east' ? 'gbu31' : 'kab500s', 4], [C.setup.side === 'east' ? 'agm88' : 'kh31p', 2]], pod: true, targets: ['tpp'], spawn: approach(C, objOf(C, 'tpp'), 14000, 4000),
+        defense: (S) => { const t = objOf(C, 'tpp'), [x, z] = near(C, t, 350); const u = S.addUnit(C.setup.side === 'east' ? 'torm2' : 'pac3', x, z, { skill: 1 }); u.emit = true; u.ambush = false; } }),
+      tick(T, C) {
+        const a = C.ctrl.inner, o = objOf(C, 'tpp'), u = C.S.units[0], d = T.d;
+        if (!d.hp) { d.hp = 1; o.hp = Math.min(o.hp, 60); }
+        if (o.dead) { T.hint(`<b>Склад поражён!</b> ${d.icp ? `ПВО сбила ${d.icp} из ваших бомб, но не все.` : ''} Серия, ПРР и ложные цели — так прорывают ближний рубеж.`); d.w = d.w || T.t; if (T.t - d.w > 4) T.done(); return; }
+        if (!a.loadout.some((l) => l.n > 0) && !C.S.wpns.some((w) => w.owner === a.craft)) a.rearm();
+        if (T.s === 0) { T.hint(`Склад боеприпасов прикрывает <b>${u.S.short}</b>. Сбросьте <b>одну</b> спутниковую бомбу при «В ЗОНЕ» (${ctl(C, K('Пробел'), '«СБРОС»')}) — посмотрим, что будет.`); if (d.icp) T.next(); }
+        else T.hint(u.dead ? 'Комплекс уничтожен — теперь бомбы дойдут. Сбрасывайте.' : `<b>${u.S.short} сбил бомбу.</b> Два способа: <b>ПРР</b> по комплексу (${ctl(C, K('Q'), 'тап по строке оружия')} — выбор, нос на него) или <b>серия</b> — сбросьте 3–4 бомбы подряд.`);
+      },
+      hooks: (T) => ({ onWpnEnd: (w, res) => { if (res.intercepted) T.d.icp = (T.d.icp || 0) + 1; } }) },
   ],
   def: [
     { id: 'd_plan', sec: 'Оборона', name: 'Расстановка', desc: 'покупка, тени зон, приказы, первая волна',
@@ -324,6 +341,50 @@ export const LESSONS = {
       demoHint: () => '«Оса» сама назначит ближайшую цель, захватит и пустит. Смотрите на ИКО и окно сопровождения.',
       hint: (T, C, u) => (!u.desig ? `Коснитесь отметки цели (на ИКО слева внизу или в кадре)${ctl(C, ` или ${K('Tab')}`, '')}.` : !u.track ? 'Идёт <b>захват</b> — нужна прямая видимость.' : `Захват есть! «<b>В ЗОНЕ</b>» — ${ctl(C, K('Пробел'), '«ПУСК»')}. РЛС держать до попадания.`),
       win: 'Цель сбита! Захват → пуск → РЛС ведёт ракету.' }),
+    { id: 'd_method', sec: 'Комплексы', name: 'Методы наведения', desc: '«три точки» и «половинное спрямление»: два пуска по одной цели', era: 2,
+      intro: () => card('Методы наведения командных ракет', [
+        '<b>«Три точки»</b>: станция, цель и ракета — на одной прямой. Ракета всё время на линии «станция → цель» и <b>догоняет</b> цель: путь изгибается, к концу — резкие повороты, ракета теряет скорость.',
+        '<b>«Половинное спрямление»</b>: ракету выводят <b>вперёд</b> линии визирования — на половину угла упреждения, туда, где цель будет. Путь прямее, скорость сохраняется, достаёт дальше.',
+        'Цель идёт на вас или от вас — разницы почти нет, «три точки» надёжнее против манёвра. Цель <b>поперёк</b>, быстрая и далеко — «половинное спрямление».',
+        `Переключатель — «МЕТОД 3Т / ½» у оператора${''} (на ПК — M). Только у командных комплексов: С-75, С-125, «Оса», «Тор», «Панцирь».`],
+        ['«Три точки» по быстрой цели поперёк на пределе дальности — ракета не догонит.', '«Спрямление» по цели, которая резко отворачивает рядом, — ракета уходит вперёд «не туда».'],
+        METHOD_SVG + '<p class="dim">Сейчас — опыт: самолёт пройдёт поперёк, «Оса» пустит по нему дважды — сначала «три точки» (красный след), потом «спрямление» (зелёный).</p>'),
+      def: (C) => ({ budget: 0, waves: 1, plan: false, op: 0, hold: true, units: [['osa', ...near(C, objOf(C, 'tpp'), 500)]], wave: () => {} }),
+      tick(T, C) {
+        const u = C.S.units[0], D = C.ctrl.inner, d = T.d;
+        if (d.auto0 === undefined) { d.auto0 = C.auto; C.auto = false; }
+        if (u.reloadT > 0 || u.ammo <= 0) { u.ammo = u.S.ammo; u.reloadT = 0; }
+        const run = (i, method, col) => { // один опытный пуск: цель поперёк, пуск по готовности, запись путей
+          const R = d.runs[i];
+          if (!R.a) { R.a = crossing(C, u, d); u.method = method; R.line = trail(C, col); R.tl = trail(C, 0x9ca3af); }
+          const a = R.a;
+          if (!R.m && (a.out || a.dead)) { R.line.dispose(); R.tl.dispose(); R.a = null; return false; } // не успели пустить — новый заход
+          const mine = C.S.sams.filter((m) => m.unit === u && !m.dead);
+          if (!R.m) { // пуск — только когда своих ракет в воздухе нет (у «Осы» пуск парой); следим за первой новой
+            if (u.desig !== a) D.designate(a);
+            if (!mine.length && u.track) { C.S.launch(u); R.m = C.S.sams.filter((m) => m.unit === u && !m.dead).sort((p, q) => p.id - q.id)[0]; if (R.m) { R.t0 = T.t; R.mp.push([u.pos.x, u.pos.y + 3, u.pos.z]); } }
+          }
+          if (R.m) {
+            if ((R.k = (R.k || 0) + 1) % 3 === 0 && !R.end) { R.mp.push([R.m.pos.x, R.m.pos.y, R.m.pos.z]); R.tp.push([a.pos.x, a.pos.y, a.pos.z]); R.line.set(R.mp); R.tl.set(R.tp); }
+            if (!R.m.dead) { R.v = R.m.speed; R.tf = T.t - R.t0; } else if (!R.end) R.end = T.t;
+          }
+          if (R.end && T.t - R.end > 1.5 && !mine.length) { R.hit = a.dead || a.hp < a.hpMax; if (!a.dead) a.out = true; return true; } // попадание — по урону цели
+          return false;
+        };
+        if (!d.runs) d.runs = [{ mp: [], tp: [] }, { mp: [], tp: [] }];
+        if (T.s === 0) { T.hint('<b>Пуск 1 — «три точки».</b> Самолёт идёт поперёк. Смотрите на <b>красный след</b>: ракета держится на линии «станция → цель» и заворачивает за самолётом.'); if (run(0, '3t', 0xff4d4d)) T.next(); }
+        else if (T.s === 1) { T.hint('<b>Пуск 2 — «половинное спрямление»</b>, тот же заход. <b>Зелёный след</b>: ракета сразу идёт вперёд, на точку встречи.'); if (run(1, 'half', 0x4ade80)) T.next(); }
+        else if (T.s === 2) { // итог — схема по настоящим путям
+          const [A, B] = d.runs, f = (R) => `${R.hit ? 'попала' : 'промах'}, полёт ${R.tf.toFixed(1)} с, скорость ракеты у цели ${Math.round(R.v)} м/с`;
+          C.openLesson('Два пуска — сверху', resultSvg(u, A, B) + `<p class="dim">Квадрат — станция, пунктир — путь цели, кружки — где ракеты закончили полёт.</p><ul><li><b style="color:#ff6b6b">«Три точки»</b>: ${f(A)}.</li><li><b style="color:#4ade80">«Спрямление»</b>: ${f(B)}.</li></ul><p>${!A.hit && B.hit ? '<b>«Три точки» не догнала</b>: ракета всё время доворачивала за целью, теряла скорость, и время её полёта кончилось. «Спрямление» сразу пошло на точку встречи и успело.' : 'Спрямлённый путь короче, ракета приходит быстрее и с большей скоростью — запас на манёвр цели. «Три точки» тратит скорость на погоню.'}</p><p class="dim">Теперь вы: цель снова пойдёт поперёк — включите «МЕТОД ½» и собейте её.</p>`, 'Опыт · вид сверху');
+          T.next();
+        } else if (T.s === 3) { for (const R of d.runs) { R.line.dispose(); R.tl.dispose(); } d.p = crossing(C, u, d); T.next(); }
+        else {
+          if (d.p.dead) { T.hint('<b>Сбит!</b> Поперечную быструю цель лучше бить «спрямлением».'); d.w = d.w || T.t; if (T.t - d.w > 3) T.done(); return; }
+          if (d.p.out || (!C.S.sams.some((m) => m.unit === u && !m.dead) && T.st > 60)) { d.p = crossing(C, u, d); T.go(4); }
+          T.hint(u.method !== 'half' ? `Включите <b>«МЕТОД ½»</b> (${ctl(C, K('M'), 'кнопка справа')}).` : !u.desig ? 'Назначьте цель — тап по отметке.' : !u.track ? 'Захват…' : `Пуск — ${ctl(C, K('Пробел'), '«ПУСК»')}.`);
+        }
+      } },
     DL({ id: 'd_sarh', name: 'Полуактивное наведение', desc: 'Куб / Hawk: подсвет цели до попадания', unit: (C) => (C.setup.side === 'east' ? 'kub' : 'hawk'), dist: 1200,
       how: (S) => ['Ракета летит на <b>отражённый от цели сигнал</b> вашей РЛС подсвета — РЛС должна держать цель до попадания.', `${S.short} — доплеровская РЛС: цель, идущая <b>поперёк</b> низко над землёй, пропадает в «провале». Пускайте, когда она идёт на вас или от вас.`, 'Против диполей — устойчивее старых командных.'],
       errs: () => ['Пуск по цели, идущей поперёк на малой высоте, — срыв подсвета.', 'Переключиться на другую цель до попадания — ракета теряет подсвет.'],
@@ -354,6 +415,12 @@ export const LESSONS = {
       demoHint: () => '«АВТО» ведёт ствол в кружок упреждения и стреляет очередями.',
       hint: (T, C) => `Поворачивайте ствол (${ctl(C, 'мышью или стрелками', 'тяните по экрану')}), перекрестие — на <b>жёлтый кружок упреждения</b>, держите ${ctl(C, K('Пробел'), '«ОГОНЬ»')}.`,
       win: 'Сбит! Огонь — в точку упреждения.' }),
+    DL({ id: 'd_mun', sec: 'Перехват оружия', name: 'Сбить бомбы и ракеты', desc: 'Тор-М2 / IRIS-T: планирующие бомбы и ракеты — тоже цели', unit: (C) => (C.setup.side === 'east' ? 'torm2' : 'iris'), dist: 450, era: 4, n: 2, need: 2, alt: 6000, R: 15000, mun: true,
+      how: (S) => [`Летящее оружие видят и сбивают только комплексы ближнего рубежа: «Тор», «Панцирь», Patriot, IRIS-T, Skynex. ${S.short} — один из них.`, 'Бомбы и ракеты маленькие и плохо заметны: берёт их ближе, чем самолёты (до ~60 % своей дальности).', 'На экране оператора у отметки — <b>класс</b>: «БОМБА», «УР», «ПРР», «КР» или «САМОЛЁТ»; оружие — <b>оранжевая</b> рамка, на круговом обзоре — ромб. В «Реализме» класс появляется через ~2,5 с наблюдения (до этого «?»).', 'Ложная цель для РЛС — «САМОЛЁТ»: так и задумано.'],
+      errs: () => ['Тратить ракеты на самолёты вне зоны, пока на объект падают бомбы.', 'Ставить комплекс далеко от объекта — бомбы пролетят мимо его зоны.'],
+      demoHint: (C, u) => `Носители сбрасывают планирующие бомбы издалека — за зоной ${u.S.short}. «АВТО» берёт подлетающие бомбы.`,
+      hint: (T, C, u) => (!u.desig ? 'Оранжевые ромбы «БОМБА» — назначайте их (тап по отметке) и пускайте.' : !u.track ? 'Захват…' : `Пуск — ${ctl(C, K('Пробел'), '«ПУСК»')}, затем следующая бомба.`),
+      win: 'Две бомбы сбиты на подлёте! Объект прикрыт.' }),
     { id: 'd_arm', sec: 'Против ПРР и помех', name: 'ПРР и помехи', desc: 'выключить РЛС от ПРР; что делают станции помех',
       intro: () => card('ПРР и помехи', [
         '<b>ПРР</b> летит на излучение вашей РЛС. Без памяти (Shrike, Х-28) — промахнётся, если выключить РЛС до попадания (E / «РЛС»). С памятью (HARM, Х-58, Х-31П) — спасает только переезд между волнами.',
@@ -388,6 +455,44 @@ export const LESSONS = {
       } },
   ],
 };
+// «Методы наведения»: самолёт идёт прямо поперёк линии на комплекс — 7,5 км в стороне, с 9 км до траверза, 1,5 км над землёй, 340 м/с
+function crossing(C, u, d) {
+  const t = objOf(C, 'tpp'), a = C.raid.spawn('bomber', t, 0, 0, 12000);
+  if (d.side === undefined) d.side = Math.atan2(u.pos.x, u.pos.z); // вдоль окружности города — подальше от высоток центра
+  const g = d.geo || { off: 7500, run: 9000, v: 340, h: 1500 }; // заход у края зоны «Осы», быстро и поперёк: «три точки» не догоняет, «спрямление» — попадает
+  const nx = Math.sin(d.side), nz = Math.cos(d.side), tx = nz, tz = -nx, h = C.city.groundH(u.pos.x, u.pos.z) + g.h;
+  a.pos.set(u.pos.x + nx * g.off - tx * g.run, h, u.pos.z + nz * g.off - tz * g.run); a.yaw = Math.atan2(-tx, -tz); a.pitch = 0; a.speed = g.v; a.vel.set(tx, 0, tz).multiplyScalar(g.v); a.massK = 0.7;
+  const DIR = new THREE.Vector3();
+  a.script = (q, dt, fly) => { DIR.set(tx, Math.max(-0.2, Math.min(0.2, (h - q.pos.y) / 900)), tz).normalize(); fly(q, DIR, dt); if (Math.abs(q.pos.x) > 15000 || Math.abs(q.pos.z) > 15000) q.out = true; };
+  return a;
+}
+// след в небе (линия по точкам), dispose — убрать
+function trail(C, color) {
+  const g = new THREE.BufferGeometry(), l = new THREE.Line(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.95 })); l.frustumCulled = false; C.scene.add(l);
+  return { set(pts) { g.setAttribute('position', new THREE.Float32BufferAttribute(pts.flat(), 3)); g.computeBoundingSphere(); }, dispose() { C.scene.remove(l); g.dispose(); } };
+}
+// схема методов (вид сверху, условно): станция внизу, цель идёт слева направо
+const METHOD_SVG = `<svg viewBox="0 0 320 170" style="width:100%;max-width:420px;display:block;margin:6px auto;background:rgba(0,20,10,.5);border-radius:10px" font-family="-apple-system,sans-serif" font-size="10">
+  <line x1="30" y1="34" x2="300" y2="34" stroke="#9ca3af" stroke-dasharray="5 4"/><text x="300" y="26" fill="#9ca3af" text-anchor="end">путь цели →</text>
+  <circle cx="230" cy="34" r="5" fill="#fde047"/><text x="230" y="22" fill="#fde047" text-anchor="middle">цель сейчас</text>
+  <line x1="120" y1="150" x2="230" y2="34" stroke="#fff" stroke-opacity=".35" stroke-dasharray="3 3"/><text x="186" y="104" fill="#fff" fill-opacity=".6">линия визирования</text>
+  <path d="M120 150 C 130 110, 170 70, 236 40" fill="none" stroke="#ff6b6b" stroke-width="2.5"/><text x="96" y="118" fill="#ff6b6b">«три точки»</text><text x="96" y="129" fill="#ff6b6b" fill-opacity=".8">догоняет, изгиб</text>
+  <path d="M120 150 L 262 36" fill="none" stroke="#4ade80" stroke-width="2.5"/><text x="262" y="60" fill="#4ade80">«спрямление»</text><text x="262" y="71" fill="#4ade80" fill-opacity=".8">на точку встречи</text>
+  <circle cx="262" cy="34" r="4" fill="none" stroke="#4ade80"/>
+  <rect x="112" y="146" width="16" height="10" rx="2" fill="#9fffb8"/><text x="138" y="158" fill="#9fffb8">станция</text></svg>`;
+// итог опыта: настоящие пути двух пусков сверху (станция, путь цели, ракеты)
+function resultSvg(u, A, B) {
+  const all = [...A.mp, ...A.tp, ...B.mp, ...B.tp, [u.pos.x, 0, u.pos.z]];
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const p of all) { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[2]); z1 = Math.max(z1, p[2]); }
+  const W = 320, H = 190, k = Math.min((W - 30) / Math.max(1, x1 - x0), (H - 30) / Math.max(1, z1 - z0)), X = (p) => (15 + (p[0] - x0) * k).toFixed(1), Y = (p) => (15 + (p[2] - z0) * k).toFixed(1);
+  const path = (pts, col, w, dash) => (pts.length > 1 ? `<polyline points="${pts.map((p) => `${X(p)},${Y(p)}`).join(' ')}" fill="none" stroke="${col}" stroke-width="${w}"${dash ? ' stroke-dasharray="5 4"' : ''}/>` : '');
+  const end = (R, col) => (R.mp.length ? `<circle cx="${X(R.mp[R.mp.length - 1])}" cy="${Y(R.mp[R.mp.length - 1])}" r="4" fill="none" stroke="${col}" stroke-width="2"/>` : '');
+  const U = [u.pos.x, 0, u.pos.z], km = Math.round(1000 * k);
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:440px;display:block;margin:6px auto;background:rgba(0,20,10,.5);border-radius:10px" font-family="-apple-system,sans-serif" font-size="10">
+    ${path(A.tp.length > B.tp.length ? A.tp : B.tp, '#9ca3af', 1.5, true)}${path(A.mp, '#ff6b6b', 2.5)}${path(B.mp, '#4ade80', 2.5)}${end(A, '#ff6b6b')}${end(B, '#4ade80')}
+    <rect x="${(+X(U) - 6).toFixed(1)}" y="${(+Y(U) - 5).toFixed(1)}" width="12" height="10" rx="2" fill="#9fffb8"/>
+    <line x1="${W - 15 - km}" y1="${H - 8}" x2="${W - 15}" y2="${H - 8}" stroke="#fff" stroke-opacity=".6"/><text x="${W - 15 - km / 2}" y="${H - 11}" fill="#fff" fill-opacity=".7" text-anchor="middle">1 км</text></svg>`;
+}
 // свободное место у объекта (для готовых комплексов в уроках)
 function near(C, t, r) {
   for (let k = 0; k < 400; k++) { const a = k * 2.399, d = r * (0.7 + (k % 7) * 0.08), x = t.x + Math.cos(a) * d, z = t.z + Math.sin(a) * d; if (freeGround(C.city, x, z)) return [x, z]; }

@@ -2,15 +2,15 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261010m';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261010m';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261010m';
-import { applyLayout } from './layout.js?v=20261010m';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261010m';
-import { DRONE } from '../drone/sim/modes.js?v=20261010m';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261010m';
-import { predictBomb } from './sim/strike.js?v=20261010m';
-import { placeDefense, pickTargets } from './mission.js?v=20261010m';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261010t';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261010t';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261010t';
+import { applyLayout } from './layout.js?v=20261010t';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261010t';
+import { DRONE } from '../drone/sim/modes.js?v=20261010t';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261010t';
+import { predictBomb } from './sim/strike.js?v=20261010t';
+import { placeDefense, pickTargets } from './mission.js?v=20261010t';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -768,7 +768,9 @@ export function createAir(C) {
       let rz = 0;
       if (demo) { // показ в обучении: автопилот на высоте demo.alt к точке demo.pt, оружие применяет «АВТО»
         DP.set(demo.pt.x, city.groundH(demo.pt.x, demo.pt.z) + demo.alt, demo.pt.z).sub(craft.pos);
-        if (Math.hypot(DP.x, DP.z) < 400) DP.set(-Math.sin(craft.yaw), 0, -Math.cos(craft.yaw)); // над точкой — прямо
+        // оружие в полёте — плавный отворот ~70° и горизонт: цель сбоку, контейнер держит подсвет (над целью её закрыл бы корпус)
+        if (C.S.wpns.some((w) => w.owner === craft && !w.dead)) { if (demo.relYaw === undefined) demo.relYaw = craft.yaw + 1.2; DP.set(-Math.sin(demo.relYaw), (demo.alt + city.groundH(craft.pos.x, craft.pos.z) - craft.pos.y) / 4000, -Math.cos(demo.relYaw)); }
+        else { demo.relYaw = undefined; if (Math.hypot(DP.x, DP.z) < 400) DP.set(-Math.sin(craft.yaw), 0, -Math.cos(craft.yaw)); } // над точкой — прямо
         DP.normalize(); aim.yaw = Math.atan2(-DP.x, -DP.z); aim.pitch = clamp(Math.asin(DP.y), -0.35, 0.35);
         const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2];
       } else if (aimOn()) { if (rx || ry) aimSync(); else { const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2]; } } // крестовина нажата — взгляд за носом
