@@ -1,4 +1,5 @@
 // Онлайн-сервер «Симулятора Летки» (Deno). Комнаты и бой — rooms.js, правила — ONLINE_PLAN.md.
+// «Воздушное превосходство» — airdef-rooms.js на адресе /ad (правила — AIRDEF_PLAN.md).
 //
 //   deno run --allow-net --allow-read --allow-env game-server/server.js
 //
@@ -56,16 +57,22 @@ const journal = createJournal({ dir: Deno.env.get('LOG_DIR') || decodeURICompone
   days: +(Deno.env.get('LOG_DAYS') || 14), log });
 const LOG_KEY = Deno.env.get('LOG_KEY') || '';
 const rooms = createRooms({ log, auth, sign, matchT: +(Deno.env.get('MATCH_T') || 0) || undefined, journal: journal.write });
+// «Воздушное превосходство» — свои комнаты на /ad. Грузится мягко: нет его файлов (на ноутбуке не скачана папка игры) или
+// ошибка в нём — «Летка» работает как раньше, /ad отвечает 503
+let adRooms = null;
+try { const { createAdRooms } = await import('./airdef-rooms.js'); adRooms = createAdRooms({ log, auth, sign, journal: journal.write }); }
+catch (e) { log('«Воздушное превосходство» не загрузилось — онлайн только «Летки»: ' + (e && e.message || e)); }
 journal.write('server_start', { port: PORT, dev: SECRET ? 0 : 1 });
 const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json; charset=utf-8' };
 
 Deno.serve({ port: PORT, hostname: HOST, onListen: () => log(`онлайн-сервер на ${HOST}:${PORT}${SECRET ? ' (вход по билетам сайта)' : ' (режим разработки: вход по нику без билета)'}`) }, (req) => {
   const url = new URL(req.url);
-  if (url.pathname === '/ws') {
+  if (url.pathname === '/ws' || url.pathname === '/ad') {
     if ((req.headers.get('upgrade') || '').toLowerCase() !== 'websocket') return new Response('нужен WebSocket', { status: 426 });
-    if (rooms.stats().online >= MAX_CLIENTS) return new Response('сервер заполнен', { status: 503 });
+    if (url.pathname === '/ad' && !adRooms) return new Response('«Воздушное превосходство» на сервере не установлено', { status: 503 });
+    if (rooms.stats().online + (adRooms ? adRooms.stats().online : 0) >= MAX_CLIENTS) return new Response('сервер заполнен', { status: 503 });
     const { socket, response } = Deno.upgradeWebSocket(req);
-    rooms.connect(socket);
+    (url.pathname === '/ad' ? adRooms : rooms).connect(socket);
     return response;
   }
   if (url.pathname === '/logs') { // журнал боёв по ключу LOG_KEY: без date — список файлов
@@ -75,6 +82,6 @@ Deno.serve({ port: PORT, hostname: HOST, onListen: () => log(`онлайн-се�
     const txt = journal.read(date, (url.searchParams.get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || null);
     return txt === null ? new Response('нет журнала за эту дату', { status: 404 }) : new Response(txt, { headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8' } });
   }
-  if (url.pathname === '/health') return new Response(JSON.stringify({ ok: true, ...rooms.stats() }), { headers: cors });
+  if (url.pathname === '/health') return new Response(JSON.stringify({ ok: true, ...rooms.stats(), airdef: adRooms ? adRooms.stats() : null }), { headers: cors });
   return new Response('Симулятор Летки — онлайн-сервер', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 });

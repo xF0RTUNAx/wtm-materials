@@ -12,6 +12,9 @@ try {
     if ($a -notmatch '^(д|да|y|yes)$') { Write-Host "Отменено."; exit 0 }
   }
 } catch { }
+# сервер «Воздушного превосходства» берёт логику боя из games\airdef — добавляем папку к скачиваемым (один раз; ~55 МБ с моделями)
+$sp = git -C $Repo sparse-checkout list 2>$null
+if ($LASTEXITCODE -eq 0 -and $sp -and -not ($sp -match 'games/airdef')) { Write-Host "Добавляем папку игры «Воздушное превосходство»..."; git -C $Repo sparse-checkout add fortuna-bot-web/games/airdef }
 git -C $Repo pull --ff-only
 if ($LASTEXITCODE -ne 0) { Write-Host "git pull не прошёл — код не обновлён." -ForegroundColor Red; exit 1 }
 $Svc = "FortunaGame"

@@ -39,38 +39,51 @@ function iconVal(name, sizePx, valueHTML) {
   return `<span class="icon-val">${icon(name, sizePx)}<span>${valueHTML}</span></span>`;
 }
 
-// ── Реклама «Симулятора Летки»: ролик из игры, коротко о ней, путь в меню и кнопка тренировки ──
-// where: "auth" — экран входа вместо старого промо-фото (кнопка ведёт на регистрацию), "farm" — вкладка «Фарм» под переносом прогресса
-function gameAdHTML(where) {
-  const how = where === "auth"
-    ? `Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b>.`
-    : `Вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b> или <b>«Онлайн-бой»</b>. Лучше всего — на телефоне в горизонтальном положении.`;
+// ── Реклама игр сайта: ролик из игры, коротко о ней, путь в меню и кнопка ──
+// «Воздушное превосходство» — первым (экран входа, «Фарм»); «Симулятор Летки» — под ним на экране входа.
+// where: "auth" — экран входа (кнопка ведёт на регистрацию), "farm" — вкладка «Фарм» под переносом прогресса
+const GAME_ADS = {
+  airdef: {
+    promo: "media/airdef_promo", v: "20261009c", badges: ["НОВАЯ ИГРА", "ОНЛАЙН"], title: "Воздушное превосходство", sub: "Авиация против ПВО — прямо в браузере",
+    text: "Прорвись к целям сквозь ПВО огромного города — или защити его: С-400, Patriot, «Тор», «Панцирь». Против ИИ или команда на команду в онлайне!",
+    tags: ["Авиация и ПВО", "Онлайн 1×1…6×6", "Управляемое оружие", "Обучение", "Аркада и Реализм"],
+    how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Воздушное превосходство»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Воздушное превосходство»</b>: вылет, оборона, обучение или <b>«Онлайн-бой»</b> с наградой. Лучше всего — на телефоне в горизонтальном положении." },
+    btn: "Играть",
+  },
+  drone: {
+    promo: "media/letka_promo", v: "20260930d", badges: ["ОНЛАЙН"], title: "Симулятор поздней летки", sub: "УВВВ, СПО и многое другое прямо в браузере",
+    text: "Пилотируй «Изделие Фортуна-1» против ботов «Подстилки улитки» или играйте с друзьями в онлайне!",
+    tags: ["22 ракеты", "Радар и СПО", "Погода", "Обучение", "Аркада и Реализм"],
+    how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b> или <b>«Онлайн-бой»</b>. Лучше всего — на телефоне в горизонтальном положении." },
+    btn: "Играть — тренировка",
+  },
+};
+function gameAdHTML(where, id = "airdef") {
+  const A = GAME_ADS[id];
   return `
     <div class="game-ad">
       <div class="game-ad-media">
-        <video src="media/letka_promo.mp4?v=20260930d" poster="media/letka_promo.jpg?v=20260930d" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
-        <div class="game-ad-badges"><span class="game-ad-badge">НОВАЯ ИГРА</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
-        <div class="game-ad-cap"><div class="game-ad-title">Симулятор поздней летки</div><div class="game-ad-sub">УВВВ, СПО и многое другое прямо в браузере</div></div>
+        <video src="${A.promo}.mp4?v=${A.v}" poster="${A.promo}.jpg?v=${A.v}" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «${A.title}»"></video>
+        <div class="game-ad-badges">${A.badges.map((b) => `<span class="game-ad-badge ${b === "ОНЛАЙН" ? "online" : ""}">${b}</span>`).join("")}</div>
+        <div class="game-ad-cap"><div class="game-ad-title">${A.title}</div><div class="game-ad-sub">${A.sub}</div></div>
       </div>
       <div class="game-ad-body">
-        <div class="game-ad-text">Пилотируй «Изделие Фортуна-1» против ботов «Подстилки улитки» или играйте с друзьями в онлайне!</div>
-        <div class="game-ad-tags"><span>22 ракеты</span><span>Радар и СПО</span><span>Погода</span><span>Обучение</span><span>Аркада и Реализм</span></div>
-        <div class="game-ad-how">${how}</div>
-        <button class="${where === "auth" ? "btn-primary" : "btn-secondary"} game-ad-btn" data-game-ad>${where === "auth" ? "Регистрируйся и пробуй!" : "Играть — тренировка"}</button>
+        <div class="game-ad-text">${A.text}</div>
+        <div class="game-ad-tags">${A.tags.map((t) => `<span>${t}</span>`).join("")}</div>
+        <div class="game-ad-how">${A.how[where]}</div>
+        <button class="${where === "auth" ? "btn-primary" : "btn-secondary"} game-ad-btn" data-game-ad="${id}">${where === "auth" ? "Регистрируйся и пробуй!" : A.btn}</button>
       </div>
     </div>`;
 }
 function bindGameAd(container) {
-  const btn = container.querySelector("[data-game-ad]");
-  if (!btn) return;
-  btn.addEventListener("click", () => {
-    if (getCurrentPlayer()) return openArcadeGame("drone", false);
+  container.querySelectorAll("[data-game-ad]").forEach((btn) => btn.addEventListener("click", () => {
+    if (getCurrentPlayer()) return openArcadeGame(btn.dataset.gameAd, false);
     // экран входа: игра — повод зарегистрироваться, поэтому ведём на форму регистрации
     renderAuth("register");
     const card = root.querySelector(".auth-card");
     card.scrollIntoView({ behavior: "smooth", block: "center" });
     card.querySelector('input[name="login"]').focus({ preventScroll: true });
-  });
+  }));
 }
 
 function renderAuth(mode = "login") {
@@ -78,7 +91,7 @@ function renderAuth(mode = "login") {
   const invite = pendingMpInvite();
   root.innerHTML = `
     ${invite ? `<div class="result-box result-ok">Вас пригласили в онлайн-бой «Симулятора Летки» (комната <b>${invite}</b>). Войдите или зарегистрируйтесь — игра откроется сама.</div>` : ""}
-    ${gameAdHTML("auth")}
+    ${gameAdHTML("auth", "airdef")}
     <div class="auth-card">
       <div class="tabs">
         <button class="tab ${mode === "login" ? "active" : ""}" data-mode="login">Вход</button>
@@ -91,6 +104,7 @@ function renderAuth(mode = "login") {
         <div id="auth-error" class="error-text"></div>
       </form>
     </div>
+    ${gameAdHTML("auth", "drone")}
   `;
   bindGameAd(root);
   root.querySelectorAll(".tab").forEach((btn) => {
@@ -230,7 +244,7 @@ function renderTabContent(flash) {
   const mount = document.getElementById("tab-content");
   // реклама «Симулятора Летки» — только на «Фарме», под переносом прогресса из Telegram
   const adSlot = document.getElementById("game-ad-slot");
-  if (adSlot) { adSlot.innerHTML = currentTab === "farm" ? gameAdHTML("farm") : ""; bindGameAd(adSlot); }
+  if (adSlot) { adSlot.innerHTML = currentTab === "farm" ? gameAdHTML("farm", "airdef") : ""; bindGameAd(adSlot); }
   if (currentTab === "farm") renderFarmTab(mount, flash);
   else if (currentTab === "shop") renderShopTab(mount, flash);
   else if (currentTab === "containers") renderContainersTab(mount, flash);
@@ -316,12 +330,17 @@ function renderTicketsStat() {
 // ── Аркада: Стратег и Морской бой (games/strat.html, games/sea.html) — раз в 24ч за
 // победу случайно 2 ключа или 2 детали; постоянный тренировочный режим без наград. ──
 const ARCADE_GAMES = [
+  {
+    id: "airdef", name: "Воздушное превосходство", icon: "crossedSwords", file: "games/airdef.html", trainOnly: true, promo: "media/airdef_promo", promoV: "20261009c",
+    note: "Авиация против ПВО над огромным городом: управляемые бомбы, ПРР и ловушки — или С-400, Patriot, «Тор», «Панцирь» и зенитки против налёта. Вылет, оборона и обучение против ИИ — бесплатно; онлайн-бой команда на команду (1×1…6×6, Аркада и Реализм) — с наградой за бой",
+    online: true, featured: true,
+  },
   { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html" },
   { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
   {
     id: "drone", name: "Симулятор Летки", icon: "jetFighter", file: "games/drone.html", perSortie: true,
     note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты, радар, СПО, ловушки, дозаправка. Онлайн-бой 1×1…4×4 с друзьями, быстрым поиском или против ботов. За успешный вылет — детали (в «Реализме» ×3, шанс ключа и билета), ракеты для «Реализма» открываются за детали. Все сбитые идут в операцию «Истребительная угроза» (вкладка «Рейд»)",
-    online: true, featured: true,
+    online: true,
   },
 ];
 
@@ -341,7 +360,7 @@ function renderArcadeSection() {
           <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Тренировка</button>
         </div>
         ${g.online ? `<div class="container-buy-row arcade-online-row"><button class="btn-online btn-sm" data-arcade-online="${g.id}">Онлайн-бой</button></div>` : ""}
-        ${g.online ? `<div class="arcade-note" data-mp-live hidden></div>` : ""}
+        ${g.online ? `<div class="arcade-note" data-mp-live="${g.id}" hidden></div>` : ""}
       </div>`;
   }).join("");
 
@@ -354,24 +373,27 @@ function renderArcadeSection() {
 
 // «Симулятор Летки» — отдельной карточкой над остальными играми: кадр из игры, рамка, зелёная кнопка онлайна
 function featuredArcadeCard(g, hasTickets) {
-  const price = hasTickets ? `Вылет на награду: ${iconVal("ticket", 14, "1 билет")} · без билета — только в зачёт операции`
+  // trainOnly («Воздушное превосходство»): игра против ИИ — бесплатно, награда — за онлайн-бой (airdef-claim)
+  const price = g.trainOnly ? `Бесплатно · награда — за онлайн-бой` : hasTickets ? `Вылет на награду: ${iconVal("ticket", 14, "1 билет")} · без билета — только в зачёт операции`
     : `Билеты закончились (вылеты — без награды) — обновление через ${liveCountdown(secondsUntilMskReset())}`;
+  const promo = g.promo || "media/letka_promo", v = g.promoV || "20260930d";
   return `
     <div class="arcade-featured">
       <div class="arcade-featured-media">
-        <video src="media/letka_promo.mp4?v=20260930d" poster="media/letka_promo.jpg?v=20260930d" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «Симулятор Летки»"></video>
-        <div class="game-ad-badges"><span class="game-ad-badge">ТОП</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
+        <video src="${promo}.mp4?v=${v}" poster="${promo}.jpg?v=${v}" autoplay muted loop playsinline preload="metadata" aria-label="Кадры из игры «${g.name}»"></video>
+        <div class="game-ad-badges"><span class="game-ad-badge">${g.trainOnly ? "НОВАЯ" : "ТОП"}</span><span class="game-ad-badge online">ОНЛАЙН</span></div>
         <div class="arcade-featured-cap">${icon(g.icon, 18)} ${g.name}</div>
       </div>
       <div class="arcade-featured-body">
         <div class="container-card-price">${price}</div>
         <div class="arcade-note">${g.note}</div>
         <div class="container-buy-row">
-          <button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets ? "" : "disabled"}>Играть на награду</button>
-          <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Без награды</button>
+          ${g.trainOnly ? `<button class="btn-secondary btn-sm" data-arcade-train="${g.id}">Играть</button>`
+            : `<button class="btn-secondary btn-sm" data-arcade-play="${g.id}" ${hasTickets ? "" : "disabled"}>Играть на награду</button>
+          <button class="btn-ghost btn-sm" data-arcade-train="${g.id}">Без награды</button>`}
         </div>
         <div class="container-buy-row arcade-online-row"><button class="btn-online btn-sm" data-arcade-online="${g.id}">Онлайн-бой</button></div>
-        <div class="arcade-note" data-mp-live hidden></div>
+        <div class="arcade-note" data-mp-live="${g.id}" hidden></div>
       </div>
     </div>`;
 }
@@ -386,8 +408,7 @@ function wireArcadeSection(mount) {
   mount.querySelectorAll("[data-arcade-online]").forEach((btn) => {
     btn.addEventListener("click", () => openArcadeGame(btn.dataset.arcadeOnline, false, "mp=1"));
   });
-  const live = mount.querySelector("[data-mp-live]");
-  if (live) showMpLive(live);
+  mount.querySelectorAll("[data-mp-live]").forEach((el) => showMpLive(el, el.dataset.mpLive));
 }
 
 // ── Онлайн «Симулятора Летки»: сервер (game-server) на ноутбуке за Cloudflare Tunnel ──
@@ -395,13 +416,15 @@ function wireArcadeSection(mount) {
 function mpHealthUrl() {
   return /(^|\.)fortunawtm\.com$/.test(location.hostname) ? "https://game.fortunawtm.com/health" : `http://${location.hostname || "localhost"}:8787/health`;
 }
-async function showMpLive(el) {
+async function showMpLive(el, gameId = "drone") {
   try {
     const ctl = new AbortController();
     setTimeout(() => ctl.abort(), 4000);
     const h = await (await fetch(mpHealthUrl(), { signal: ctl.signal, cache: "no-store" })).json();
-    const q = h.searching || { arcade: 0, real: 0 };
-    el.innerHTML = `${icon("jetFighter", 13)} Онлайн: в игре <b>${h.online}</b> · ищут бой: Аркада <b>${q.arcade}</b>, Реализм <b>${q.real}</b>`;
+    const H = gameId === "airdef" ? h.airdef : h; // «Воздушное превосходство» — свой раздел в /health
+    if (!H) { el.hidden = true; return; }
+    const q = H.searching || { arcade: 0, real: 0 };
+    el.innerHTML = `${icon("jetFighter", 13)} Онлайн: в игре <b>${H.online}</b> · ищут бой: Аркада <b>${q.arcade}</b>, Реализм <b>${q.real}</b>`;
     el.hidden = false;
   } catch (_) { el.hidden = true; }
 }
@@ -1172,7 +1195,8 @@ function describeFeedItem(row) {
       if (d.details) parts.push(`+${d.details} деталей`);
       if (d.keys) parts.push(`+${d.keys} 🔑`);
       if (d.ticket) parts.push("+1 билет");
-      const where = d.online ? `онлайн-бой в «${d.mode === "real" ? "Реализме" : "Аркаде"}»${d.win ? " — победа" : ""}` : `вылет в «${d.mode === "real" ? "Реализме" : "Аркаде"}»`;
+      const where = d.game === "airdef" ? `«Воздушное превосходство», ${d.team === "pvo" ? "ПВО" : "авиация"}${d.win ? " — победа" : ""}`
+        : d.online ? `онлайн-бой в «${d.mode === "real" ? "Реализме" : "Аркаде"}»${d.win ? " — победа" : ""}` : `вылет в «${d.mode === "real" ? "Реализме" : "Аркаде"}»`;
       return `✈️ ${login}: ${where} — ${parts.join(", ")}`;
     }
     case "operation_step":

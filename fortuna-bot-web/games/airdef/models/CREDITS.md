@@ -1,0 +1,65 @@
+# 3D-модели «Воздушного превосходства»
+
+Все — с Sketchfab, лицензии указаны. Для игры изменены (tools/airdef-models/prepare.js): убраны лишние части, упрощены
+сетки, переведены в метры и развёрнуты, разделены на корпус / башню / пакет, текстуры уменьшены и пересжаты в JPEG.
+
+- "[PBR] Sukhoi Su-30" (https://sketchfab.com/3d-models/pbr-sukhoi-su-30-421bd56fd97c4c7196904e778f27aef7) by Immersive3D — CC-BY-4.0 — `su30.glb`
+- "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `f18.glb`, `msl_aim120.glb`
+- "General Dynamics F-16D Block 60" (https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3) by Muhamad Mirza Arrafi — CC-BY-4.0 — `f16.glb`, `w_gbu12.glb`
+- "FAB-500 M62" (https://sketchfab.com/3d-models/fab-500-m62-9f49025bbd8d487cb3c245e40a07ab57) by Jeyhun1985 — CC-BY-4.0 — `w_umpk.glb`, `w_fab500.glb`
+- "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_kh29t.glb`, `w_kh31p.glb`
+- "Kh-38MT air-to-ground missile" (https://sketchfab.com/3d-models/kh-38mt-air-to-ground-missile-559e695e8ade454eb575745cc1213ab9) by Jeyhun1985 — CC-BY-4.0 — `w_kh25ml.glb`
+- "AGM 65 MAVERICK" (https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a) by HEAVYCLOUD — CC-BY-4.0 — `w_agm65b.glb`
+- "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`
+- "Agm-158 - wings extended" (https://sketchfab.com/3d-models/agm-158-wings-extended-1b1f0f509249401297057ee97b511ee0) by samadsamadi — CC-BY-4.0 — `w_jassm.glb`
+- "AGM-88 HARM transport cart" (https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198) by Tiltow — CC-BY-4.0 — `w_agm88.glb`
+- "AIM-160A "Screamer"" (https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c) by Peter Primini — CC-BY-4.0 — `w_mald.glb`
+- "Harpy Drone" (https://sketchfab.com/3d-models/harpy-drone-84d8d2dc8ca14d64ac05b19e3c88b385) by KillCaptureDestroy — CC-BY-4.0 — `w_decoy_e.glb`
+- "AN/AAQ-28(V) Lightning (FBX)" (https://sketchfab.com/3d-models/anaaq-28v-lightning-fbx-e86fe5084f09463b8e3abb0a4cb1a04f) by Jeyhun1985 — CC-BY-4.0 — `w_pod.glb`
+- "GBU-39B Small Diameter Bomb Weapon System" (https://sketchfab.com/3d-models/gbu-39b-small-diameter-bomb-weapon-system-108c5bf859cb41c5b72163b4e2758f26) by KillCaptureDestroy — CC-BY-4.0 — `w_gbu39.glb`
+- "F-111F Aardvark with GBU-24 Mk.84" (https://sketchfab.com/3d-models/f-111f-aardvark-with-gbu-24-mk84-61b374227e474c3f9ab225e35998c6c0) by Jeyhun1985 — CC-BY-4.0 — `w_gbu31.glb`
+- "FIM-92 Stinger" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik — CC-BY-4.0 — `mp_stinger.glb`
+- "MANPADS model 9K333 Verba" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 — CC-BY-4.0 — `mp_verba.glb`, `msl_manpads.glb`
+- "MiG 29" (https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3) by Uxman — CC-BY-4.0 — `mig29.glb`
+- "9K331 Tor-M1" (https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db) by 42manako — CC-BY-4.0 — `tor.glb`
+- "96K6 Pantsir-S2" (https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b) by 42manako — CC-BY-4.0 — `pantsir.glb`
+- "S-400 Triumf missile launcher truck" (https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f) by Chenzoss — CC-BY-4.0 — `s400.glb`
+- "9K31 Strela-1 SAM" (https://sketchfab.com/3d-models/9k31-strela-1-sam-bf3bf22d2a684d0d883e03d533a52a36) by 42manako — CC-BY-4.0 — `strela1.glb`
+- "Osa-AKM SAM system" (https://sketchfab.com/3d-models/osa-akm-sam-system-485a4207e55545188e93bef5f1e2413f) by Jeyhun1985 — CC-BY-4.0 — `osa.glb`
+- "MIM-104 Patriot Surface-To-Air Missile (SAM)" (https://sketchfab.com/3d-models/mim-104-patriot-surface-to-air-missile-sam-7a64d0af78514a159877edab1ab2bccb) by Muhamad Mirza Arrafi — CC-BY-4.0 — `patriot.glb`
+- "SAM S-75 "Dvina"" (https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4) by manyakasia — CC-BY-4.0 — `s75.glb`
+- "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid — CC-BY-4.0 — `s125.glb`
+- "2K12 Kub" (https://sketchfab.com/3d-models/2k12-kub-4e2e8506c9e546b3b7da1554db8185bc) by UltraKill — CC-BY-4.0 — `kub.glb`
+- "Mim-23 Hawk SAM air defence system (game-ready)" (https://sketchfab.com/3d-models/mim-23-hawk-sam-air-defence-system-game-ready-8728909b6ce24ef8baeffabbf5bae8f4) by Dominik Biały — CC-BY-4.0 — `hawk.glb`
+- "M163 VADS" (https://sketchfab.com/3d-models/m163-vads-66a6f08ad2d945ccb6e72267e55bc685) by 42manako — CC-BY-4.0 — `m163.glb`
+- "Flakpanzer Gepard | High-Quality model" (https://sketchfab.com/3d-models/flakpanzer-gepard-high-quality-model-43746c9ec4a64f8d9a30db81b82843bd) by Scout — CC-BY-4.0 — `gepard.glb`
+- "Nasams 1 Surface-to-Air Missile System" (https://sketchfab.com/3d-models/nasams-1-surface-to-air-missile-system-5fb34fab137c430988fd5642a3b87db3) by Muhamad Mirza Arrafi — CC-BY-4.0 — `nasams.glb`
+- "Renault TRM Radar Truck" (https://sketchfab.com/3d-models/renault-trm-radar-truck-1ad95e5724624a3bba7d36a686817efc) by Muhamad Mirza Arrafi — CC-BY-4.0 — `ew_w.glb`
+- "IBIS150 air defense radar" (https://sketchfab.com/3d-models/ibis150-air-defense-radar-ffd78c2b016943f7b60252e94d3bc8ad) by 42manako — CC-BY-4.0 — `ew_e.glb`
+- "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`
+- "Low poly Fuel Tank 4-X + Pipe" (https://sketchfab.com/3d-models/low-poly-fuel-tank-4-x-pipe-59799d2419874de5a018666c500c52fd) by Aditya Graphical — CC-BY-4.0 — `obj_tank4.glb`
+- "Rusty airbase fuel tank" (https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692) by LuddePudde — CC-BY-4.0 — `obj_rtank.glb`
+- "Hangar" (https://sketchfab.com/3d-models/hangar-bad8c6349749480d85ee58f8d1a9355b) by Matvis — CC-BY-4.0 — `obj_hangar.glb`
+- "j type hanger" (https://sketchfab.com/3d-models/j-type-hanger-d86713d61b4941378a6ad21569e0cbac) by ElectricLeo — CC-BY-4.0 — `obj_jhangar.glb`
+- "Modular containers and barrells pack game ready" (https://sketchfab.com/3d-models/modular-containers-and-barrells-pack-game-ready-542b68aa56ee44f49c8860fdf158f831) by Salah3D — CC-BY-4.0 — `obj_cont.glb`
+- "Small Military base" (https://sketchfab.com/3d-models/small-military-base-2c5bea48650c4f1b989bf716512daaf2) by Jungle Jim — CC-BY-4.0 — `obj_milbase.glb`
+- "Old Industrial Building" (https://sketchfab.com/3d-models/old-industrial-building-0dafa7aaadfd4666bb4a32776c84b14e) by Hrvoje Wächter — CC-BY-4.0 — `obj_oldind.glb`
+- "Factory Low-Poly" (https://sketchfab.com/3d-models/factory-low-poly-7d3bc4d7ce6d48d9986a664d48f3cca1) by KIFIR — CC-BY-4.0 — `obj_factory.glb`
+- "Soviet Panelki — Voxel Style Apartment Buildings" (https://sketchfab.com/3d-models/soviet-panelki-voxel-style-apartment-buildings-632517fa9977439895f8953f2e541ee5) by My Name Is This — CC-BY-4.0 — `bld_p5.glb`
+- "Soviet panel house built in the 1970s" (https://sketchfab.com/3d-models/soviet-panel-house-built-in-the-1970s-94996e8cf4a8452d91ec1e206b5b4137) by Unka II — CC-BY-4.0 — `bld_p9.glb`
+- "LOW POLY - SOVIET  APARTMENT BUILDING 8K" (https://sketchfab.com/3d-models/low-poly-soviet-apartment-building-8k-05229ac1d1f94e6c8cacaad91110c602) by Colin.Greenall — CC-BY-4.0 — `bld_b12.glb`
+- "Old Soviet Apartment Building" (https://sketchfab.com/3d-models/old-soviet-apartment-building-a546c0af8c184b1da4de1b547097f7a3) by dimmeyster — CC-BY-4.0 — `bld_st.glb`
+- "Low-poly Brick House" (https://sketchfab.com/3d-models/low-poly-brick-house-ea82ea891829493aadeea889cd473e89) by Vitalii.Sandula — CC-BY-4.0 — `h_brick.glb`
+- "House" (https://sketchfab.com/3d-models/house-e70c4aebc911429ba9a894b38146892c) by Mateusz Woliński — CC-BY-4.0 — `h_house.glb`
+- "Cottage" (https://sketchfab.com/3d-models/cottage-18a0c42859db4e358bdcfd6dae14e558) by Arya — CC-BY-4.0 — `h_log.glb`
+- "Thatched rural houses" (https://sketchfab.com/3d-models/thatched-rural-houses-2c860d668b0f44689fe4de0cb4dd4af4) by massive-graphisme — CC-BY-4.0 — `h_khata.glb`
+- "Large Low Poly Building" (https://sketchfab.com/3d-models/large-low-poly-building-67b32912ff9d45c2a6ce5d32c72f69df) by jimbogies — CC-BY-4.0 — `o_block.glb`
+- "Shanty | Mansion | Wooden" (https://sketchfab.com/3d-models/shanty-mansion-wooden-cf93dfd6da1640f08ebe051ba280426d) by Erroratten — CC-BY-4.0 — `h_shanty.glb`
+- "LP Americans House Mobile" (https://sketchfab.com/3d-models/lp-americans-house-mobile-bdd2465e5ff54fe09701cd55b9543b25) by spaceparmesan — CC-BY-4.0 — `h_mobile.glb`
+- "Trees Low Poly" (https://sketchfab.com/3d-models/trees-low-poly-1d2dcca2ccb1496c85b7cc5789a2a261) by Igor_K. — CC-BY-4.0 — `tr_oak.glb`, `tr_lime.glb`
+- "Low Poly Forest Tree Pack" (https://sketchfab.com/3d-models/low-poly-forest-tree-pack-5ff5a51e74324845a4e4905f182dfb2b) by 99.Miles — CC-BY-4.0 — `tr_pine.glb`, `tr_bush.glb`
+- "Abandoned street lights pack" (https://sketchfab.com/3d-models/abandoned-street-lights-pack-c853eca300e8435d8fe9206bcb524eda) by sergeilihandristov — CC-BY-4.0 — `p_lamp.glb`
+- "Low-poly Urban Street Props Pack (PS1 Style)" (https://sketchfab.com/3d-models/low-poly-urban-street-props-pack-ps1-style-381b65d98a5b4e3886ac2acace7e5c74) by S1lMoon — CC-BY-4.0 — `pr_vend.glb`, `pr_booth.glb`, `pr_bin.glb`
+- "PSX - Vending Machine" (https://sketchfab.com/3d-models/psx-vending-machine-aff31f282155471d8222287596c7ac59) by Kasugay𓅂 — CC-BY-4.0 — `pr_vend2.glb`
+- "Garbage Bin" (https://sketchfab.com/3d-models/garbage-bin-fba6b5a8afdd4eb0a43be29aabceb3d6) by Glen Ortiz — CC-BY-4.0 — `pr_wbins.glb`
+- "Buk-M3 9K317 SAM" (https://sketchfab.com/3d-models/buk-m3-9k317-sam-923878eda87a4b28bae10799023086c5) by Jeyhun1985 — CC-BY-4.0 — `bukm3.glb`

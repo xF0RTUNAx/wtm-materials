@@ -249,7 +249,7 @@ function windowBuildings(mat, U) {
 }
 
 // Физическое небо: градиент зенит→горизонт, зарево заката у горизонта, дымка у солнца, ореол и яркий (HDR) диск
-function skyMaterial(SU, discMul) {
+export function skyMaterial(SU, discMul) { // экспорт — для неба «Воздушного превосходства»
   return new THREE.ShaderMaterial({
     uniforms: { ...SU, discMul: { value: discMul } },
     vertexShader: `varying vec3 vDir;

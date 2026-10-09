@@ -20,7 +20,7 @@ PowerShell **от имени администратора**:
 cd C:\
 git clone --filter=blob:none --no-checkout https://github.com/xF0RTUNAx/wtm-materials.git fortuna
 cd C:\fortuna
-git sparse-checkout set --cone fortuna-bot-web/game-server fortuna-bot-web/games/drone
+git sparse-checkout set --cone fortuna-bot-web/game-server fortuna-bot-web/games/drone fortuna-bot-web/games/airdef
 git checkout main
 ```
 

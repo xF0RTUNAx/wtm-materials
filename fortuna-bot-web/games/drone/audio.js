@@ -268,6 +268,9 @@ export function createAudio() {
       for (let i = 0; i < 4; i++) burst('brown', 1.4 + Math.random() * 1.6, (0.4 - i * 0.07) * power, 'lowpass', 90 + Math.random() * 160, 0.7, (power > 0.75 ? 0.08 : 0.2) + i * (0.3 + Math.random() * 0.5), 0.9, out, 0.08);
     },
     chime() { osc('triangle', 660, 660, 0.12, 0.07, 0, 0, avionics); osc('triangle', 990, 990, 0.16, 0.07, 0.07, 0, avionics); },
+    // кирпичи для других игр на этом звуке («Воздушное превосходство»): шумовой и тональный всплеск; avio — через «гарнитуру»
+    noise(buf, dur, vol, type, freq, q = 0.7, when = 0, wet = 0, avio = false, att = 0.008) { return burst(buf, dur, vol, type, freq, q, when, wet, avio ? avionics : out, att); },
+    tone(type, f0, f1, dur, vol, when = 0, wet = 0, avio = false) { osc(type, f0, f1, dur, vol, when, wet, avio ? avionics : out); },
   };
   return A;
 }

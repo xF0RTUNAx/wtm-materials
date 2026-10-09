@@ -24,7 +24,10 @@ export function localAngles(a, rel) {
   return [Math.atan2(x1, -z2), Math.atan2(y2, Math.hypot(x1, z2))];
 }
 export function angleBetween(a, b) { return Math.acos(clamp(a.dot(b) / ((a.length() * b.length()) || 1), -1, 1)); }
-export function agl(a) { return a.pos.y - terrainH(a.pos.x, a.pos.z); }
+// высота земли под аппаратом: по умолчанию рельеф «Летки»; другая игра на этом же ядре («Воздушное превосходство») подставляет свою
+let groundH = terrainH;
+export function setGround(fn) { groundH = fn; }
+export function agl(a) { return a.pos.y - groundH(a.pos.x, a.pos.z); }
 export function localAz(a, rel) { const cy = Math.cos(a.yaw), sy = Math.sin(a.yaw), cp = Math.cos(a.pitch), sp = Math.sin(a.pitch); const x1 = rel.x * cy - rel.z * sy, z1 = rel.x * sy + rel.z * cy; return Math.atan2(x1, -(-rel.y * sp + z1 * cp)); }
 
 // Общая лётная модель: rx, ry — команды по рысканию/тангажу (−1…1). Угловая скорость ограничена перегрузкой.

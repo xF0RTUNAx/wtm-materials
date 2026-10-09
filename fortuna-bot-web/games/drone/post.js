@@ -193,8 +193,9 @@ export function createPipeline(renderer, cfg) {
     renderer.getDrawingBufferSize(full);
     sw = Math.max(1, Math.round(full.x * scale)); sh = Math.max(1, Math.round(full.y * scale));
     sceneRT.setSize(sw, sh); if (fxRT) { const k = cfg.fxFull ? 1 : 2; fxRT.setSize(Math.max(1, Math.ceil(sw / k)), Math.max(1, Math.ceil(sh / k))); } ldrA.setSize(sw, sh); ldrB.setSize(sw, sh); upRT.setSize(full.x, full.y);
-    hA.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); hB.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2)); rays.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2));
-    qA.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4)); qB.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4));
+    const bd = cfg.bloomQ ? 4 : 2; // bloomQ — свечение с четверти разрешения (телефоны: вдвое меньше выборок)
+    hA.setSize(Math.ceil(sw / bd), Math.ceil(sh / bd)); hB.setSize(Math.ceil(sw / bd), Math.ceil(sh / bd)); rays.setSize(Math.ceil(sw / 2), Math.ceil(sh / 2));
+    qA.setSize(Math.ceil(sw / bd / 2), Math.ceil(sh / bd / 2)); qB.setSize(Math.ceil(sw / bd / 2), Math.ceil(sh / bd / 2));
     if (taaRT) { for (const r of taaRT) r.setSize(sw, sh); taaReset = true; }
     if (hazeRT) hazeRT.setSize(Math.ceil(sw / 4), Math.ceil(sh / 4));
   }

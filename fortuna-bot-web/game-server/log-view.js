@@ -32,10 +32,25 @@ const line = (e) => {
     case 'error': return `ОШИБКА СЕРВЕРА в «${e.in}» (${e.who}): ${e.err.split('\n')[0]}`;
     case 'client': return `игра ${e.who} [${e.k}]: ${e.d}`;
     case 'state': return 'снимок: ' + e.P.map((p) => `${p.n}${p.bot ? '(бот)' : ''} ${p.alive ? 'hp' + p.hp : 'сбит'}${p.ai && !p.bot ? ' ИИ' : ''}${p.net === 0 ? ' БЕЗ СВЯЗИ' : ''}${p.silent > 1 ? ` молчит ${p.silent}с` : ''} v${p.v ?? '-'}${p.gun ? ' пушка:' + p.gun : ''}${p.gunRej ? ' отклонено:' + JSON.stringify(p.gunRej) : ''}`).join(' | ');
+    // «Воздушное превосходство» (ad_*)
+    case 'ad_room': return `ВП: комната создана, ${e.size}×${e.size}, эпоха ${e.era}`;
+    case 'ad_join': return `ВП: в комнату ${e.who} → ${e.team}`;
+    case 'ad_start': return `ВП: СТАРТ, эпоха ${e.era}, авиация — ${e.sideAir}; авиация: ${e.air.join(', ')}; ПВО: ${e.pvo.join(', ')}`;
+    case 'ad_plan': return `ВП: расстановка, волна ${e.wave}; очки: ${e.budgets.map(([n, b]) => n + ' ' + b).join(', ')}`;
+    case 'ad_wave': return `ВП: ВОЛНА ${e.wave}: ${e.air.map(([n, c]) => n + ' связка ' + c).join(', ')}`;
+    case 'ad_wave_end': return `ВП: конец волны ${e.wave} (${e.why}): уничтожено ${Math.round(e.totalK * 100)}%, сбито ${e.downs}, комплексов ${e.unitKills}`;
+    case 'ad_end': return `ВП: КОНЕЦ — победила ${e.winner === 'air' ? 'авиация' : 'ПВО'}, ${Math.round(e.valueK * 100)}%`;
+    case 'ad_down': return `ВП: сбит ${e.who} — ${e.by}`;
+    case 'ad_to_ai': return `ВП: самолёт ${e.who} ведёт ИИ (${e.why})`;
+    case 'ad_cmd': { const { ts, ev, room, mode, st, wave, who, cmd, ...d } = e; return `ВП: ${who} → ${cmd} ${JSON.stringify(d)}`; }
+    case 'ad_deny': return `ВП: ОТКАЗ ${e.who} (${e.cmd}): ${e.msg}`;
+    case 'ad_client': return `ВП: игра ${e.who} [${e.k}]: ${e.d}`;
+    case 'ad_error': return `ВП: ОШИБКА СЕРВЕРА: ${e.msg}`;
+    case 'ad_state': return `ВП снимок: уничтожено ${e.V}%, в воздухе ${e.air}, ЗУР ${e.sams}, оружия ${e.wpns} | ` + e.P.map((p) => `${p.n}${p.bot ? '(бот)' : ''}/${p.team}${p.net === 0 ? ' БЕЗ СВЯЗИ' : ''}${p.silent > 1 ? ` молчит ${p.silent}с` : ''}${p.hp !== undefined ? ' hp' + p.hp : ''}${p.ai ? ' ИИ' : ''}${p.op ? ' у пульта ' + p.op : ''}`).join('; ') + ' | ' + e.U.join('; ');
     default: return `${e.ev} ${JSON.stringify(e)}`;
   }
 };
-for (const e of rows) if (e.ev !== 'state' || showState) console.log(tm(e) + '  ' + line(e));
+for (const e of rows) if ((e.ev !== 'state' && e.ev !== 'ad_state') || showState) console.log(tm(e) + '  ' + line(e));
 // сводка по комнатам: пуски/попадания по ракетам, отказы и промахи по причинам, подхваты ИИ, жалобы игры
 const by = {};
 for (const e of rows) {
