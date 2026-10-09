@@ -1,6 +1,6 @@
 // Задания и расстановка ПВО: общие для вылета (ИИ-ПВО против игрока), фона меню и обучения.
-import { CITY, KIND, riverX } from './city.js?v=20261010t';
-import { SAM, DEFENSE } from './arsenal.js?v=20261010t';
+import { CITY, KIND, riverX } from './city.js?v=20261011b';
+import { SAM, DEFENSE } from './arsenal.js?v=20261011b';
 
 // свободное место на земле: без зданий рядом и не в реке
 export function freeGround(city, x, z, r = 9) {

@@ -7,10 +7,10 @@
 - "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `f18.glb`, `msl_aim120.glb`
 - "General Dynamics F-16D Block 60" (https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3) by Muhamad Mirza Arrafi — CC-BY-4.0 — `f16.glb`, `w_gbu12.glb`
 - "FAB-500 M62" (https://sketchfab.com/3d-models/fab-500-m62-9f49025bbd8d487cb3c245e40a07ab57) by Jeyhun1985 — CC-BY-4.0 — `w_umpk.glb`, `w_fab500.glb`
-- "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_kh29t.glb`, `w_kh31p.glb`
+- "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_kh29t.glb`, `w_kh31p.glb`, `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
 - "Kh-38MT air-to-ground missile" (https://sketchfab.com/3d-models/kh-38mt-air-to-ground-missile-559e695e8ade454eb575745cc1213ab9) by Jeyhun1985 — CC-BY-4.0 — `w_kh25ml.glb`
 - "AGM 65 MAVERICK" (https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a) by HEAVYCLOUD — CC-BY-4.0 — `w_agm65b.glb`
-- "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`
+- "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`, `aam_aim9.glb`, `aam_aim54.glb`
 - "Agm-158 - wings extended" (https://sketchfab.com/3d-models/agm-158-wings-extended-1b1f0f509249401297057ee97b511ee0) by samadsamadi — CC-BY-4.0 — `w_jassm.glb`
 - "AGM-88 HARM transport cart" (https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198) by Tiltow — CC-BY-4.0 — `w_agm88.glb`
 - "AIM-160A "Screamer"" (https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c) by Peter Primini — CC-BY-4.0 — `w_mald.glb`

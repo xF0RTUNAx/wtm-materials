@@ -2,9 +2,9 @@
 // подвеска пополняется). На каждом шаге — подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND } from './arsenal.js?v=20261010t';
-import { spotNear, freeGround } from './mission.js?v=20261010t';
-import { riverX } from './city.js?v=20261010t';
+import { SAM, AG, SAM_TYPE, AG_KIND } from './arsenal.js?v=20261011b';
+import { spotNear, freeGround } from './mission.js?v=20261011b';
+import { riverX } from './city.js?v=20261011b';
 
 const K = (k) => `<kbd>${k}</kbd>`;
 // подписи управления: ПК или телефон
@@ -62,6 +62,7 @@ function DL(c) {
     def: (C) => ({ budget: 0, waves: 1, plan: false, op: 0, hold: true, units: [[c.unit(C), ...near(C, objOf(C, 'tpp'), c.dist || 600)]], wave: () => spawnP(C) }),
     tick(T, C) {
       const u = C.S.units[0], D = C.ctrl.inner, d = T.d, need = c.need || 1;
+      if (!u || u.dead) return T.fail('Комплекс уничтожен.');
       if (u && (u.reloadT > 0 || u.ammo <= 0)) { u.ammo = u.S.ammo; u.reloadT = 0; } // в обучении — без перезарядки
       if (d.auto0 === undefined) d.auto0 = C.auto;
       d.downs = d.downs || 0;
@@ -308,20 +309,25 @@ export const LESSONS = {
       hooks: (T) => ({ onWpnEnd: (w, res) => { if (res.intercepted) T.d.icp = (T.d.icp || 0) + 1; } }) },
   ],
   def: [
-    { id: 'd_plan', sec: 'Оборона', name: 'Расстановка', desc: 'покупка, тени зон, приказы, первая волна',
+    { id: 'd_plan', sec: 'Оборона', name: 'Расстановка', desc: 'покупка, тени зон, приказы, первая волна', side: 'east', era: 2,
       intro: () => card('Расстановка ПВО', [
         'Перед волной — <b>очки обороны</b>: покупайте комплексы и ставьте их на карте. Между волнами — докупка, перенос и продажа.',
         '<b>Тени зон</b>: дома закрывают обзор — коснитесь комплекса, зелёным видно, где он видит цель на 300 м.',
         'Дальние комплексы — по краю, ближние (пушки, ПЗРК, «Оса», «Тор») — у ценных объектов; ПЗРК можно ставить на крыши.',
         'В бою комплексы стреляют сами; приказы — излучение вкл/выкл, огонь по готовности или по команде; «Управлять» — вы за оператора.'],
         ['Всё в одну точку — один ПРР или удар по скоплению выбивает всё.', 'Дальний комплекс в глубине застройки — тени съедают зону.']),
-      def: (C) => ({ budget: 450, waves: 1, focus: [5900, 1500, 0.09], wave: (raid, rnd, n, tg) => { const t = objOf(C, 'tpp'); raid.spawn('bomber', t, 0.3, 0, 9000); raid.spawn('bomber', t, -0.2, 6, 9500); } }),
+      def: (C) => ({ budget: 450, waves: 1, focus: [5900, 1500, 0.09], allow: new Set(['osa']), wave: (raid, rnd, n, tg) => { const t = objOf(C, 'tpp'); raid.spawn('bomber', t, 0.3, 0, 9000); raid.spawn('bomber', t, -0.2, 6, 9500); } }),
       tick(T, C) {
         const D = C.ctrl.inner.st;
-        if (T.s === 0) { T.hint('Это тактическая карта города. Справа — <b>очки обороны</b> и комплексы. Выберите «Оса» и поставьте рядом со складом боеприпасов (жёлтый ромб).'); if (C.S.units.length) T.next(); }
-        else if (T.s === 1) { T.hint('Коснитесь своего комплекса: <b>зелёная тень</b> — где он видит цель на 300 м, а где её закрывают дома. Поставьте ещё ПЗРК поближе к складу.'); if (C.S.units.length > 1 || T.st > 20) T.next(); }
-        else if (T.s === 2) { T.hint('Готово — нажмите «<b>В БОЙ</b>». Комплексы стреляют сами; комплекс можно выбрать и отдать приказ.'); if (D.phase === 'wave') T.next(); }
-        else if (T.s === 3) { T.hint('Волна идёт: красные треугольники — цели, которые видит сеть РЛС (цифра — высота над землёй).'); if (D.phase !== 'wave') T.done(); }
+        const osa = C.S.units.some((u) => u.key === 'osa');
+        if (T.s === 0) { T.hint('Это тактическая карта города. Справа — <b>очки обороны</b> и комплексы. Выберите «<b>Оса</b>» и поставьте рядом со складом боеприпасов (жёлтый ромб).'); if (osa) { D.opts.allow = new Set(['osa', 'igla', 'strela2']); C.ctrl.inner.renderSide(); T.next(); } }
+        else if (T.s === 1) { T.hint('Коснитесь своего комплекса: <b>зелёная тень</b> — где он видит цель на 300 м, а где её закрывают дома. Поставьте ещё ПЗРК («Игла») поближе к складу.'); if (C.S.units.length > 1 || T.st > 20) T.next(); }
+        else if (T.s === 2) { if (!osa && D.phase === 'plan') { T.go(0); return; } T.hint('Готово — нажмите «<b>В БОЙ</b>». Комплексы стреляют сами; комплекс можно выбрать и отдать приказ.'); if (D.phase === 'wave') T.next(); }
+        else if (T.s === 3) {
+          if (D.over && D.win === false) return T.fail('Оборона прорвана.');
+          T.hint(D.over ? '<b>Волна отбита!</b>' : 'Волна идёт: красные треугольники — цели, которые видит сеть РЛС (цифра — высота над землёй).');
+          if (D.over || D.phase !== 'wave') { T.d.end = T.d.end || T.t; if (T.t - T.d.end > 3) T.done(); }
+        }
       } },
     { id: 'd_short', sec: 'Оборона', name: 'Короткая оборона', desc: 'две волны: расстановка и бой целиком',
       intro: () => card('Короткая оборона', [
@@ -332,7 +338,8 @@ export const LESSONS = {
       def: () => ({ budget: 900, waves: 2 }),
       tick(T, C) {
         const D = C.ctrl.inner.st;
-        if (D.over) { T.hint('<b>Оборона выдержала!</b> Теперь можно играть «Оборону» на очки.'); if (T.st > 4) T.done(); return; }
+        if (D.over && D.win === false) return T.fail('Оборона прорвана.');
+        if (D.over) { T.hint('<b>Оборона выдержала!</b> Теперь можно играть «Оборону» на очки.'); T.d.end = T.d.end || T.t; if (T.t - T.d.end > 4) T.done(); return; }
         T.hint(D.phase === 'plan' ? 'Расставьте ПВО на свой вкус и начните волну. Дальние комплексы — по краю, пушки и ПЗРК — у целей.' : D.phase === 'wave' ? 'Командуйте: выберите комплекс → «Управлять», чтобы стрелять самому.' : 'Итоги волны — докупите комплексы и продолжайте.');
       } },
     DL({ id: 'd_op', name: 'Командное наведение', desc: '«Оса»: обзор, назначение цели, захват, пуск, методы', unit: () => 'osa',
@@ -501,7 +508,8 @@ function near(C, t, r) {
 
 export function createTraining(C, ctrls) {
   const { $, setup } = C;
-  let L = null, side = 'air', idx = 0, inner = null, eraSave = null;
+  let L = null, side = 'air', idx = 0, inner = null, eraSave = null, sideSave = null;
+  const restore = () => { if (eraSave !== null) { setup.era = eraSave; eraSave = null; } if (sideSave !== null) { setup.side = sideSave; sideSave = null; } };
   const T = { t: 0, s: 0, st: 0, d: {}, C };
   T.hint = (h) => C.hint(h);
   T.next = () => { T.s++; T.st = 0; };
@@ -509,6 +517,7 @@ export function createTraining(C, ctrls) {
   T.ask = (card) => { T.card = card; $('askTxt').textContent = card.title; $('ask').style.display = 'flex'; T.askT = 14; };
   T.askW = (key) => T.ask(weaponCard(AG[key]));
   T.restart = () => run();
+  T.fail = (why) => { T.hint(`<b>${why}</b> Урок начнётся заново.`); T.d.failT = T.d.failT || T.t; if (T.t - T.d.failT > 4) T.restart(); }; // неудача — заново, а не тупик
   T.done = () => {
     if (T.finished) return; T.finished = true;
     C.menu.lessonDone(L.id || side + idx);
@@ -520,10 +529,11 @@ export function createTraining(C, ctrls) {
   $('askBtn').addEventListener('click', () => { if (T.card && C.ctrl === api) { $('ask').style.display = 'none'; C.openLesson(T.card.title, T.card.body); } });
   function run() {
     if (inner && inner.stop) inner.stop();
-    if (eraSave !== null) { setup.era = eraSave; eraSave = null; }
+    restore();
     if (T.d && T.d.auto0 !== undefined) C.auto = T.d.auto0;
     L = LESSONS[side][idx];
     if (L.era) { eraSave = setup.era; setup.era = L.era; }
+    if (L.side) { sideSave = setup.side; setup.side = L.side; } // урок про конкретный комплекс — его сторона
     Object.assign(T, { t: 0, s: 0, st: 0, d: {}, finished: false, card: null, introShown: false });
     $('ask').style.display = 'none'; $('lessonClose').textContent = 'ПОНЯТНО — ПРОДОЛЖИТЬ';
     inner = side === 'air' ? ctrls.air : ctrls.defense;
@@ -543,7 +553,7 @@ export function createTraining(C, ctrls) {
   const api = {
     inner: null, sim: true, T,
     start() { side = setup.tside === 'def' ? 'def' : 'air'; idx = Math.min(setup.tl || 0, LESSONS[side].length - 1); run(); },
-    stop() { if (inner && inner.stop) inner.stop(); if (eraSave !== null) { setup.era = eraSave; eraSave = null; } if (T.d && T.d.auto0 !== undefined) { C.auto = T.d.auto0; T.d.auto0 = undefined; } $('ask').style.display = 'none'; C.hint(''); },
+    stop() { if (inner && inner.stop) inner.stop(); restore(); if (T.d && T.d.auto0 !== undefined) { C.auto = T.d.auto0; T.d.auto0 = undefined; } $('ask').style.display = 'none'; C.hint(''); },
     update(dt, t) {
       if (L.intro && !T.introShown) { T.introShown = true; const k = L.intro(C); C.openLesson(k.title, k.body, `Урок · ${L.sec ? L.sec + ' · ' : ''}${L.name}`); return; } // сначала — как это работает
       inner.update(dt, t); T.t += dt; T.st += dt; if (T.askT > 0 && (T.askT -= dt) <= 0) $('ask').style.display = 'none'; if (!T.finished) L.tick(T, C);

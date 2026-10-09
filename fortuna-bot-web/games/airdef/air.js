@@ -2,15 +2,15 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261010t';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261010t';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261010t';
-import { applyLayout } from './layout.js?v=20261010t';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261010t';
-import { DRONE } from '../drone/sim/modes.js?v=20261010t';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261010t';
-import { predictBomb } from './sim/strike.js?v=20261010t';
-import { placeDefense, pickTargets } from './mission.js?v=20261010t';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261011b';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261011b';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261011b';
+import { applyLayout } from './layout.js?v=20261011b';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261011b';
+import { DRONE } from '../drone/sim/modes.js?v=20261011b';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261011b';
+import { predictBomb } from './sim/strike.js?v=20261011b';
+import { placeDefense, pickTargets } from './mission.js?v=20261011b';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -91,9 +91,10 @@ export function createAir(C) {
   function layoutPod() {
     const VW = C.VW, VH = C.VH;
     let w = IS_TOUCH ? Math.min(VW * 0.27, 230) : Math.min(VW * 0.3, 380), h = w * 0.75;
-    // телефон: под кнопками Telegram (--tg-t) и левее кнопок паузы/звука (у них отступ от выреза справа)
-    const tg = (typeof getComputedStyle === 'function' && parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tg-t'))) || 0, pb = $('pause').getBoundingClientRect ? $('pause').getBoundingClientRect() : { width: 0 };
-    const y = IS_TOUCH ? Math.max(6, tg + 4) : VH - h - 180;
+    // телефон: вровень с рядом паузы и звука (он уже под кнопками Telegram и панелью состояния) и левее него
+    const rr = ['pause', 'mute'].map((id) => ($(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null)).filter((r) => r && r.width);
+    const pb = rr.length ? { width: 1, left: Math.min(...rr.map((r) => r.left)), top: Math.min(...rr.map((r) => r.top)) } : { width: 0, top: 6 };
+    const y = IS_TOUCH ? Math.max(6, pb.top) : VH - h - 180;
     if (IS_TOUCH) { // не ниже верха кнопок справа («КАРТА», «АВТО»)
       let lim = VH; for (const id of ['tMap', 'tAuto']) { const r = $(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null; if (r && r.height) lim = Math.min(lim, r.top); }
       h = Math.max(90, Math.min(h, lim - y - 6)); w = h / 0.75;
@@ -366,12 +367,13 @@ export function createAir(C) {
     const end = (e) => { if (e.pointerId !== pad.id) return; pad.id = null; pad.x = pad.y = 0; for (const a of Object.values(arms)) a.classList.remove('on'); };
     el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
   }
-  const tap = (id, fn) => $(id).addEventListener('pointerdown', (e) => { e.preventDefault(); if (C.ctrl === api) fn(); });
+  const mine = () => C.ctrl === api || (C.ctrl && C.ctrl.inner === api); // в обучении управляет урок, а самолёт — внутри него
+  const tap = (id, fn) => $(id).addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) fn(); });
   tap('tFire', fire); tap('tLock', podNext); tap('tFlare', cm); tap('tThr', thrStep);
   tap('tMap', () => toggleMap()); tap('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
   // панель: тап по строке оружия — выбрать его, «ЦЕЛЬ …» — следующая цель, «ТВ» — окно контейнера
   $('wpn').addEventListener('pointerdown', (e) => {
-    e.stopPropagation(); if (C.ctrl !== api) return;
+    e.stopPropagation(); if (!mine()) return;
     const tv = e.target.closest('.tvb'), tg = e.target.closest('.tgl'), r = e.target.closest('[data-w]');
     if (tv) podView(); else if (tg) podNext();
     else if (r) { const i = +r.dataset.w; if (usable(loadout[i]) && i !== sel) { sel = i; snd.click(); } }

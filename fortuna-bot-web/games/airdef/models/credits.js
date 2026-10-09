@@ -46,7 +46,11 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_kh29t",
-   "w_kh31p"
+   "w_kh31p",
+   "aam_r73",
+   "aam_r77",
+   "aam_r27",
+   "aam_r33"
   ]
  },
  {
@@ -73,7 +77,9 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e",
   "license": "CC-BY-4.0",
   "files": [
-   "w_mk82"
+   "w_mk82",
+   "aam_aim9",
+   "aam_aim54"
   ]
  },
  {

@@ -110,8 +110,9 @@
   /* кнопки поверх игры: выход, пауза, звук (ниже кнопок Telegram) */
   #exit, #mute, #pause { position: fixed; top: var(--top); width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3);
     background: rgba(10,16,24,.55); color: #fff; font-size: 16px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 25; }
-  #exit { right: max(10px, var(--sa-r)); } #pause { right: max(10px, var(--sa-r)); top: calc(var(--top) + 44px); } #mute { right: max(10px, var(--sa-r)); top: calc(var(--top) + 88px); }
-  body.playing #pause, body.playing #mute { display: flex; } body.menuing #mute { display: flex; top: var(--top); }
+  /* пауза и звук — в ряд у верхнего края: в столбик на низких экранах (Android с панелью состояния и кнопками Telegram) налезали на «КАРТУ» */
+  #exit { right: max(10px, var(--sa-r)); } #pause { right: max(10px, var(--sa-r)); } #mute { right: calc(max(10px, var(--sa-r)) + 44px); }
+  body.playing #pause, body.playing #mute { display: flex; } body.menuing #mute { display: flex; top: var(--top); right: max(10px, var(--sa-r)); }
 
   /* ── HUD самолёта ── */
   #hudc { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 11; }
@@ -167,10 +168,14 @@
   #map { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 20; display: none; border-radius: 12px; box-shadow: 0 6px 40px rgba(0,0,0,.6); pointer-events: none; }
 
   /* ── обучение: подсказка и «?» ── */
-  #hint { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); width: min(92vw, 560px); display: none; text-align: center; z-index: 14; pointer-events: none;
+  #hint { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); width: min(92vw, 560px); display: none; text-align: center; z-index: 21; pointer-events: none; /* над картой полёта */
     font-size: 13.5px; line-height: 1.45; color: #eaf6ff; background: rgba(10,18,28,.78); border: 1px solid rgba(147,197,253,.35); border-radius: 12px; padding: 7px 12px; }
   #hint b { color: #fde68a; }
-  body.coarse #hint { bottom: auto; top: calc(var(--top) + 64px); font-size: 11px; width: min(60vw, 420px); padding: 5px 9px; }
+  /* телефон: между панелью оружия слева и кнопками справа; оборона — левее панели расстановки */
+  body.coarse #hint { bottom: auto; top: calc(var(--top) + 64px); font-size: 11px; padding: 5px 9px; transform: none; width: auto; max-width: 420px; margin: 0 auto;
+    left: calc(max(12px, var(--sa-l)) + min(30vw, 196px) + 8px); right: calc(max(10px, var(--sa-r)) + 172px); }
+  body.defense.dmap #hint { top: calc(var(--top) + 30px); bottom: auto; transform: none; width: auto; max-width: 520px; margin: 0 auto;
+    left: max(12px, var(--sa-l)); right: calc(max(10px, var(--sa-r)) + 290px); }
   #ask { position: fixed; z-index: 15; left: 50%; top: calc(var(--top) + 46px); transform: translateX(-50%); display: none; align-items: center; gap: 8px; pointer-events: auto;
     background: rgba(15,23,34,.88); border: 1px solid rgba(251,146,60,.6); border-radius: 12px; padding: 5px 6px 5px 10px; font-size: 12px; }
   #ask small { display: block; opacity: .7; font-size: 10.5px; }
@@ -205,7 +210,7 @@
   body.dmap #tmap { display: block; }
   #dtop { position: fixed; top: var(--top); left: max(12px, var(--sa-l)); z-index: 14; display: none; font-size: 13px; line-height: 1.4; text-shadow: 0 0 4px #000; }
   #dtop b { color: #fde68a; } body.defense #dtop { display: block; } body.oper #dtop { display: none; }
-  #dside { position: fixed; z-index: 14; top: calc(var(--top) + 44px); right: calc(max(10px, var(--sa-r)) + 46px); width: 270px; max-height: calc(100% - var(--top) - 56px); overflow-y: auto; display: none;
+  #dside { position: fixed; z-index: 14; top: calc(var(--top) + 44px); right: max(10px, var(--sa-r)); width: 270px; max-height: calc(100% - var(--top) - 56px); overflow-y: auto; display: none;
     background: rgba(15,23,34,.9); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 10px; font-size: 12.5px; -webkit-overflow-scrolling: touch; }
   body.defense.dmap #dside { display: block; }
   #dside h3 { margin: 2px 0 6px; font-size: 14px; } #dside .btn { margin-top: 6px; }
@@ -392,7 +397,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261010t"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261010t"></script>
+<script src="../config.js?v=20261011b"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261011b"></script>
 </body>
 </html>

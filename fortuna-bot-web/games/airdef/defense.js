@@ -6,11 +6,11 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261010t';
-import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261010t';
-import { samClass, samCost, LIMIT1 } from './sim/online.js?v=20261010t';
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261010t';
-import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261010t';
+import { CITY, mulberry32 } from './city.js?v=20261011b';
+import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261011b';
+import { samClass, samCost, LIMIT1 } from './sim/online.js?v=20261011b';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261011b';
+import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261011b';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -261,10 +261,12 @@ export function createDefense(C) {
           ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? 'Засада: вкл' : 'Засада: выкл'}</button>` : ''}<button class="btn alt" data-a="desel">Готово</button></div>`;
       }
       h += '<div class="cat-h">Купить</div>';
-      for (const [k, s] of Object.entries(SAM)) {
+      const al = st.opts.allow, cat = Object.entries(SAM);
+      if (al) cat.sort(([a], [b]) => al.has(b) - al.has(a)); // урок: нужное — сверху
+      for (const [k, s] of cat) {
         if (s.side !== C.setup.side || s.era > C.setup.era) continue;
-        const c = SAM_COST[k];
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${s.short}</b><span>${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км / ${(s.hmax / 1000).toFixed(1)} км</span></div><span class="pr">${c}</span></div>`;
+        const c = SAM_COST[k], shut = st.opts.allow && !st.opts.allow.has(k); // урок: покупать только то, о чём он
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${s.short}</b><span>${shut ? 'не в этом уроке' : `${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км / ${(s.hmax / 1000).toFixed(1)} км`}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? 'Коснитесь карты, чтобы поставить. ПЗРК можно на плоские крыши.' : 'Выберите комплекс и коснитесь карты. Коснитесь своего комплекса — тень его зоны на высоте 300 м и приказы.'}</p>`;
       h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>В БОЙ — волна ${st.wave + 1}</button>`;
@@ -300,6 +302,7 @@ export function createDefense(C) {
       else if (a === 'help') { st.net.help(); say('Союзникам: «Мне нужна помощь!»', 2); }
       snd.click(); renderSide(); return;
     }
+    if (buy && st.opts.allow && !st.opts.allow.has(buy.dataset.buy)) { say(`В этом уроке — ${[...st.opts.allow].filter((k) => SAM[k] && SAM[k].side === C.setup.side).map((k) => `«${SAM[k].short}»`).join(' или ')}`, 3); snd.deny(); return; }
     if (buy) { const k = buy.dataset.buy; if (SAM_COST[k] > st.budget) { say('Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; snd.click(); } renderSide(); return; }
     if (!b) return;
     const u = st.sel, a = b.dataset.a;
@@ -343,7 +346,7 @@ export function createDefense(C) {
     st.phase = 'debrief'; st.sel = null; renderSide(); snd.good();
   }
   function finish(why, win) {
-    if (st.over) return; st.over = true;
+    if (st.over) return; st.over = true; st.win = win;
     if (st.view === 'op') leaveOp();
     if (st.opts.noEnd) return;
     C.showEnd({ title: win ? 'Город отстоял' : win === false ? 'Оборона прорвана' : 'Бой завершён', reason: why, win,
@@ -644,7 +647,7 @@ export function createDefense(C) {
       unitDestroyed(u) { say(`Потерян комплекс: ${u.S.short}`, 3); },
       wpnRelease(w) { if (w.W.kind === 'arm' && w.target) on('armLaunch', w); },
     };
-    Object.assign(st, { phase: 'plan', wave: 0, waves: opts.waves || WAVES, budget: opts.budget ?? (C.setup.diff === 'arcade' ? 1200 : 1000), score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, sel: null, moving: false, view: 'map', op: null, over: false, targets: [] });
+    Object.assign(st, { phase: 'plan', wave: 0, waves: opts.waves || WAVES, budget: opts.budget ?? (C.setup.diff === 'arcade' ? 1200 : 1000), score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, targets: [] });
     st.value0 = C.S.objects.reduce((s, o) => s + (o.noTarget ? 0 : o.value), 0);
     for (const [k, x, z, roof] of opts.units || []) { const u = C.S.addUnit(k, x, z, { roof, skill: 0.75 }); u.paid = SAM_COST[k]; }
     C.syncUnits(); seen.clear();
