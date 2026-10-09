@@ -1,9 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261009z';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261009z';
-import { LNCH } from './launchers.js?v=20261009z';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261010g';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261010g';
+import { LNCH } from './launchers.js?v=20261010g';
+import { createBook } from './flipbook.js?v=20261010g';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -354,23 +355,41 @@ export function createFx(scene, P) {
   const tracers = new THREE.LineSegments(tGeo, new THREE.LineBasicMaterial({ color: 0xffb070, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
   tracers.frustumCulled = false; scene.add(tracers);
   let tHead = 0;
-  const burning = []; // постоянные пожары: { pos, r, t, k }
+  const burning = []; // постоянные пожары: { pos, r, t, fl — языки пламени (раскадровка) }
+  // раскадровки: огненный шар с дымом (ohyhei), вспышка с ударным кольцом и пламя (Explosion FX Free, heyheythere);
+  // на слабых пресетах — вдвое меньше (P.fxLo)
+  const FXU_ = (f) => new URL(`./fx/${f}${P.fxLo ? '_lo' : ''}.png`, import.meta.url).href;
+  const EX = createBook(scene, { url: FXU_('explosion'), cols: 8, rows: 7, frames: 50, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.4 }, 48);
+  const BL = createBook(scene, { url: FXU_('blast'), cols: 8, rows: 2, frames: 16, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.6 }, 16);
+  const FL = createBook(scene, { url: FXU_('flame'), cols: 8, rows: 3, frames: 24, cell: [0.5, 1], anchor: [0.5, 0.92], up: true, loop: true, gain: 2.4 }, 96);
+  const books = [EX, BL, FL], LT = new THREE.Vector3();
+  let hemi = null, sunL = null;
   const clouds = [];  // облака диполей: блёстки ещё 3 с
   const V = new THREE.Vector3();
   return {
     mats: [smoke.mat, fire.mat], // хозяин выставляет uniforms.scale по высоте кадра
-    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); }, // дым — в половине разрешения, огонь — поверх (post.js)
+    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); }, // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
+    // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
-      const big = Math.min(3, R / 20);
-      fire.emit(p.x, p.y + 2, p.z, 0, 4, 0, 1, 0.85, 0.6, 1, R * 1.4, R * 2, 0.35, 0, 0); // вспышка
-      for (let i = 0; i < 10 + big * 6; i++) {
-        const a = Math.random() * 6.283, e = Math.random() * 1.2, s = (8 + Math.random() * 22) * (0.6 + big * 0.4);
-        fire.emit(p.x, p.y + 1, p.z, Math.cos(a) * Math.cos(e) * s, Math.sin(e) * s + 4, Math.sin(a) * Math.cos(e) * s, 1, 0.55 + Math.random() * 0.2, 0.2, 0.9, R * 0.35, R * 0.6, 0.6 + Math.random() * 0.5, 1.5, 0);
+      if (R < 6) { // мелочь (обломки) — частицами
+        fire.emit(p.x, p.y + 1, p.z, 0, 2, 0, 1, 0.7, 0.35, 0.9, R * 1.6, R, 0.3, 0, 0);
+        smoke.emit(p.x, p.y + 1, p.z, 0, 3, 0, 0.3, 0.28, 0.26, 0.6, R, R, 2.5, 0.5, 1);
+        return;
       }
-      const sk = kind === 'air' ? 0.75 : 0.3;
-      for (let i = 0; i < 8 + big * 6; i++) {
-        const a = Math.random() * 6.283, s = 4 + Math.random() * 10;
-        smoke.emit(p.x, p.y + 2, p.z, Math.cos(a) * s, 6 + Math.random() * 10, Math.sin(a) * s, sk, sk * 0.95, sk * 0.9, 0.75, R * 0.5, R * 0.5, 3 + Math.random() * 4, 0.5, 1.5);
+      const air = kind === 'air', bomb = kind === 'bomb';
+      const h = air ? Math.max(14, R * 4.2) : bomb ? R * 4.2 : R * 3.6, fps = air ? 26 : bomb ? 18 : 22;
+      V.set(p.x, p.y + (air ? 0 : h * 0.33), p.z); EX.add(V, h, fps);
+      if (air) return;
+      if (bomb) { V.set(p.x, p.y + R * 0.3, p.z); BL.add(V, R * 2.6, 26); }
+      // пыль от земли — низким кольцом; тёмный дым остаётся висеть после огненного шара
+      const k = bomb ? 1 : 0.6, nd = Math.round((10 + R * 0.3) * k);
+      for (let i = 0; i < nd; i++) {
+        const a = Math.random() * 6.283, s = (10 + Math.random() * 16) * (R / 30 + 0.5);
+        smoke.emit(p.x, p.y + 1.5, p.z, Math.cos(a) * s, 1.5 + Math.random() * 3, Math.sin(a) * s, 0.44, 0.4, 0.34, 0.6, R * 0.35, R * 0.7, 2.5 + Math.random() * 2, 1.6, 0.2);
+      }
+      for (let i = 0; i < 2 + R * 0.05; i++) { // лёгкий остаток дыма (основной — в самой раскадровке)
+        const a = Math.random() * 6.283, s = 3 + Math.random() * 5;
+        smoke.emit(p.x + Math.cos(a) * R * 0.3, p.y + h * 0.4, p.z + Math.sin(a) * R * 0.3, Math.cos(a) * s, 4 + Math.random() * 4, Math.sin(a) * s, 0.3, 0.28, 0.26, 0.3, R * 0.4, R * 0.6, 5 + Math.random() * 3, 0.5, 1);
       }
     },
     samTrail(m) { // дымный след ЗУР: у больших ракет — густой белый, у ПЗРК — тонкий серый; после ускорителя (маршевый ЖРД
@@ -484,11 +503,25 @@ export function createFx(scene, P) {
         tVel[i * 3] = V.x * 950; tVel[i * 3 + 1] = V.y * 950; tVel[i * 3 + 2] = V.z * 950; tLife[i] = Math.min(3, (d + 400) / 950);
       }
     },
-    burn(pos, r) { burning.push({ pos: pos.clone(), r, t: 0 }); },
-    clearBurning() { burning.length = 0; },
+    // пожар: несколько языков пламени (раскадровка, вразнобой) + столб дыма частицами (ветер, солнце, рост)
+    burn(pos, r) {
+      const n = Math.max(1, Math.min(4, Math.round(r / 9))), fl = [];
+      for (let i = 0; i < n; i++) {
+        const a = Math.random() * 6.283, d = i ? r * (0.2 + Math.random() * 0.25) : 0;
+        V.set(pos.x + Math.cos(a) * d, pos.y - 0.5, pos.z + Math.sin(a) * d);
+        fl.push(FL.add(V, Math.max(8, r * (1 + Math.random() * 0.4)) * (i ? 0.75 : 1), 20 + Math.random() * 6, { t0: -Math.random() * 0.4 }));
+      }
+      burning.push({ pos: pos.clone(), r, t: 0, fl });
+    },
+    clearBurning() { burning.length = 0; FL.clear(); },
     wreckSmoke(p) { smoke.emit(p.x, p.y, p.z, 0, 2, 0, 0.15, 0.14, 0.13, 0.6, 6, 7, 5, 0.2, 0.5); fire.emit(p.x, p.y, p.z, 0, 0, 0, 1, 0.5, 0.15, 0.8, 4, 1, 0.3, 0, 0); },
     update(dt) {
       smoke.update(dt); fire.update(dt);
+      // раскадровки: освещение дыма — небо и солнце сцены
+      if (!hemi) for (const o of scene.children) { if (o.isHemisphereLight) hemi = o; else if (o.isDirectionalLight && !sunL) sunL = o; }
+      LT.set(0.6, 0.6, 0.6); if (hemi) LT.set(hemi.color.r, hemi.color.g, hemi.color.b).multiplyScalar(hemi.intensity * 0.55);
+      if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
+      for (const b of books) b.update(dt, LT, scene.fog);
       for (let i = 0; i < NT; i++) {
         if (tLife[i] <= 0) continue;
         tLife[i] -= dt; const i6 = i * 6, i3 = i * 3;
@@ -505,7 +538,8 @@ export function createFx(scene, P) {
       // пожары: огонь и столб дыма, со временем слабее
       for (const b of burning) {
         b.t += dt; const k = Math.max(0.25, 1 - b.t / 240);
-        if (Math.random() < dt * 14 * k) fire.emit(b.pos.x + (Math.random() - 0.5) * b.r, b.pos.y + Math.random() * 4, b.pos.z + (Math.random() - 0.5) * b.r, 0, 8, 0, 1, 0.5, 0.15, 0.8, b.r * 0.35, b.r * 0.2, 1.2, 0.5, 2);
+        for (const f of b.fl) f.a = 0.45 + 0.55 * k; // пламя со временем слабее
+        if (Math.random() < dt * 3 * k) fire.emit(b.pos.x + (Math.random() - 0.5) * b.r * 0.6, b.pos.y + 2 + Math.random() * b.r * 0.4, b.pos.z + (Math.random() - 0.5) * b.r * 0.6, 0, 10, 0, 1, 0.6, 0.2, 0.9, 0.8, 0, 1.2, 0.3, 0); // искры
         if (Math.random() < dt * 9 * k) smoke.emit(b.pos.x + (Math.random() - 0.5) * b.r, b.pos.y + 6, b.pos.z + (Math.random() - 0.5) * b.r, 3 + Math.random() * 2, 9, 1, 0.12, 0.11, 0.1, 0.7, b.r * 0.6, b.r * 0.9, 16, 0.05, 1.2);
       }
     },

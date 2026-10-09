@@ -8,25 +8,25 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261009z';
-import { buildCityScene, updateCityScene, UPX } from './city-render.js?v=20261009z';
-import { createPipeline } from '../drone/post.js?v=20261009z';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261009z';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261009z';
-import { AG, SAM, LOADOUTS, DEFENSE } from './arsenal.js?v=20261009z';
-import { createStrike, MODES } from './sim/strike.js?v=20261009z';
-import { createRaid } from './sim/raid.js?v=20261009z';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261009z';
-import { slotCount } from './launchers.js?v=20261009z';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261009z';
-import { createSound } from './sound.js?v=20261009z';
-import { createAir } from './air.js?v=20261009z';
-import { createDefense } from './defense.js?v=20261009z';
-import { createDirector } from './director.js?v=20261009z';
-import { createOnline } from './online.js?v=20261009z';
-import { createShell } from './shell.js?v=20261009z';
-import { createTraining } from './training.js?v=20261009z';
-import { createMenu } from './menu.js?v=20261009z';
+import { buildCity, CITY } from './city.js?v=20261010g';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261010g';
+import { createPipeline } from '../drone/post.js?v=20261010g';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261010g';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261010g';
+import { AG, SAM, LOADOUTS, DEFENSE } from './arsenal.js?v=20261010g';
+import { createStrike, MODES } from './sim/strike.js?v=20261010g';
+import { createRaid } from './sim/raid.js?v=20261010g';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261010g';
+import { slotCount } from './launchers.js?v=20261010g';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261010g';
+import { createSound } from './sound.js?v=20261010g';
+import { createAir } from './air.js?v=20261010g';
+import { createDefense } from './defense.js?v=20261010g';
+import { createDirector } from './director.js?v=20261010g';
+import { createOnline } from './online.js?v=20261010g';
+import { createShell } from './shell.js?v=20261010g';
+import { createTraining } from './training.js?v=20261010g';
+import { createMenu } from './menu.js?v=20261010g';
 
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
@@ -37,19 +37,19 @@ const ls = { get(k) { try { return localStorage.getItem(k); } catch (_) { return
 
 // ═════════════ Пресеты графики ═════════════
 export const PRESETS = {
-  low: { name: 'Низкий', desc: 'слабые телефоны', prCap: 1, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
-    perf: { scale: 1, min: 0.55, aa: 'off', up: 'off' } },
-  medium: { name: 'Средний', desc: 'большинство телефонов', prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
-    perf: { scale: 1, min: 0.6, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
+  low: { name: 'Низкий', fxLo: true, lodObj: 3500, desc: 'слабые телефоны', prCap: 1.25, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
+    perf: { scale: 1, min: 0.75, aa: 'off', up: 'off' } },
+  medium: { name: 'Средний', fxLo: true, lodObj: 4500, desc: 'большинство телефонов', prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
+    perf: { scale: 1, min: 0.7, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
   // «Кастомный»: всё настраивается (Настройки → «Кастомный»). Основа — техника, ракеты, бомбы, самолёты и эффекты как на
   // «Высоком» (тени вблизи, свечение, сглаживание), город проще
-  custom: { name: 'Кастомный', desc: 'свои настройки: разрешение, тени, город, эффекты', prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
+  custom: { name: 'Кастомный', lodObj: 5000, desc: 'свои настройки: разрешение, тени, город, эффекты', prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 450, aniso: 4, props: false,
     perf: { scale: 1, min: 0.6, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
-  high: { name: 'Высокий', desc: 'мощные телефоны и ПК: тени, свечение', prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
+  high: { name: 'Высокий', lodObj: 6000, desc: 'мощные телефоны и ПК: тени, свечение', prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 600, aniso: 4,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
-  ultra: { name: 'Ультра', desc: 'тени 4K, тени деревьев, дальняя прорисовка', prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
+  ultra: { name: 'Ультра', lodObj: 8000, desc: 'тени 4K, тени деревьев, дальняя прорисовка', prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
     shadows: true, treeShadows: true, shadowMap: 4096, shadowBox: 800, aniso: 8,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'fsr', sharp: 0.35 }, post: { bloom: 0.6, vignette: 0.18, grade: 0.3, exposure: 0.95 } },
 };
@@ -95,13 +95,13 @@ function touchGfx(P, custom) {
   if (!IS_TOUCH) return P;
   if (P.shadowMap > 2048) Object.assign(P, { shadowMap: 2048, shadowBox: Math.min(P.shadowBox, 600) });
   if (!custom && P.perf.aa === 'msaa') P.perf.aa = 'fxaa';
-  P.bloomQ = true; P.halfFx = true;
+  P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
   return P;
 }
 // окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
 for (const k in PRESETS) if (PRESETS[k].podHalf === undefined) PRESETS[k].podHalf = IS_TOUCH || k === 'low' || k === 'medium';
 const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGfx(PRESETS[gfxKey], { fullRes: GO.fullRes }), gfxKey === 'custom'); // свои настройки — только у «Кастомного»
-const P = CINEMA ? Object.assign(P0, { name: 'Кино', draw: 26000, bldNear: 5000, treeNear: 3000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
+const P = CINEMA ? Object.assign(P0, { name: 'Кино', lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
 const weatherKey = Q.get('weather') || ls.get('fortuna_airdef_weather') || 'random';
 const W_KEY = WEATHER_KEYS.includes(weatherKey) ? weatherKey : WEATHER_KEYS[Math.floor(Math.random() * WEATHER_KEYS.length)];
@@ -254,6 +254,35 @@ function addBlob(g) {
   q.rotation.x = -Math.PI / 2; q.scale.set(Math.max(2, sz.x * 1.35), Math.max(2, sz.z * 1.25), 1); q.position.y = 0.08; q.renderOrder = 1; g.add(q);
 }
 const dist = (p) => camera.position.distanceTo(p);
+// объекты-цели: готовые постройки (сотни тысяч треугольников на объект) — только ближе P.lodObj, дальше — коробки-заглушки
+// по их габаритам (в пиксель-два разницы не видно). Окно ТВ — всё подробно (его узкое поле зрения само отсекает лишнее)
+const objC = new Map();
+function objLod(p, D) {
+  const G = C.G; if (!G || !G.objGroup) return;
+  for (const o of city.objects) {
+    const g = G.objGroup[o.id]; if (!g) continue;
+    let c = objC.get(o.id);
+    if (!c) { const L = o.models && o.models.length ? o.models : o.parts; let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
+    const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D, b = G.objBox[o.id];
+    g.visible = full; if (b) b.visible = !full || g.userData.left.size > 0; // заглушка видна и пока не пришли все модели
+  }
+}
+// окно ТВ (контейнер): своя детализация на время его кадра — машины по размеру в пикселях окна, объекты подробно, дома и
+// деревья моделями вокруг точки, куда смотрит контейнер, фасады — с детализацией по пикселю окна. Остальной кадр не трогается.
+// at — точка взгляда, hPx — высота окна в пикселях; возвращает функцию «вернуть как было»
+const podSaved = [];
+C.podPass = function (cam, at, hPx) {
+  const pk = hPx / 2 / Math.tan(cam.fov * D2R / 2); podSaved.length = 0;
+  for (const g of unitMeshes.values()) { const R = g.userData.R; if (R === undefined) continue; const v = R * pk > 1.5 * cam.position.distanceTo(g.position); if (v !== g.visible) { podSaved.push(g, g.visible); g.visible = v; } }
+  objLod(cam.position, 1e9);
+  const px0 = UPX.value, c0 = ENV.uCam.value.clone();
+  UPX.value = 2 * Math.tan(cam.fov * D2R / 2) / hPx; ENV.uCam.value.copy(cam.position);
+  const d = cam.position.distanceTo(at), back = C.G && C.G.nearPod && P.bldNear ? C.G.nearPod(cam, at, clamp(d * Math.tan(cam.fov * D2R / 2) * 1.5, 150, 600)) : null;
+  return () => {
+    for (let i = 0; i < podSaved.length; i += 2) podSaved[i].visible = podSaved[i + 1];
+    objLod(camera.position, P.lodObj); UPX.value = px0; ENV.uCam.value.copy(c0); if (back) back();
+  };
+};
 const raidFx = {
   down(a) { C.fx.explosion(a.pos, a.role === 'decoy' ? 8 : 22, 'air'); if (a.role === 'decoy') snd.samBurst(dist(a.pos), 0.8); else snd.planeKill(dist(a.pos)); const g = planeMeshes.get(a.id); if (g) { planeMeshes.delete(a.id); wrecks.push({ g, vel: a.vel.clone(), spin: (Math.random() - 0.5) * 3, t: 0 }); } if (C.hooks.planeDown) C.hooks.planeDown(a); },
   out(a) { const g = planeMeshes.get(a.id); if (g) { scene.remove(g); planeMeshes.delete(a.id); } if (C.hooks.planeOut) C.hooks.planeOut(a); },
@@ -362,7 +391,7 @@ function syncWorld(dt, t) {
     // машина на экране меньше ~1,5 пикселя — не рисуем (детальные модели тяжёлые, а вдали их не видно)
     if (g.userData.R === undefined) g.userData.R = Math.max(2, new THREE.Box3().setFromObject(g).getSize(LP).length() * 0.5);
     g.visible = g.userData.R * pxK > 1.5 * camera.position.distanceTo(u.pos);
-    if (u.dead || !g.visible) continue;
+    if (u.dead) continue;
     // пусковые: азимут и угол места из симуляции; слот пуст — ракета ушла (или нет боекомплекта)
     for (const T of g.userData.tur) { T.tg.rotation.y = u.lyaw; T.cg.rotation.x = u.lel; }
     const N = g.userData.nSlots, sl = g.userData.slots;
@@ -523,19 +552,26 @@ document.addEventListener('visibilitychange', () => { if (document.hidden && C.s
 
 // ═════════════ Кадр ═════════════
 let last = performance.now(), lastDraw = 0, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0;
-const msWin = [], dr = { scale: perf.scale, calm: 0 };
+const msWin = [], dr = { scale: perf.scale, calm: 0, prev: 0, before: 0, hold: 0, miss: 0 };
 const pf = { cpu: 0, n: 0, cpuS: 0, calls: 0, tris: 0 };
 C.perfHud = ls.get('fortuna_airdef_perfhud') === '1';
 if (renderer.info) renderer.info.autoReset = false; // счётчики — за весь кадр (постобработка рисует в несколько проходов); сброс — в начале кадра
 C.gpuName = (() => { try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (_) { return '?'; } })();
 C.GO = GO; document.body.classList.toggle('perfhud', C.perfHud);
+// динамическое разрешение: медиана 30 кадров (подгрузка моделей и сборка шейдеров не тянут вниз). Снизили — и кадр не ускорился
+// (упор не в пиксели: вызовы, ЦП, ожидание экрана) — возвращаем как было и долго не трогаем, а не «мылим» картинку зря
 function dynRes(ms) {
   if (perf.dynOff) return;
   msWin.push(ms); if (msWin.length < 30) return;
-  const avg = msWin.reduce((a, b) => a + b) / msWin.length; msWin.length = 0;
-  const goal = 1000 / Math.min(perf.goal || 60, P.cap || 999); // при ограничении 30 к/с — цель не выше него // цель динамического разрешения — 60 или 30 к/с (тонкая настройка)
+  msWin.sort((a, b) => a - b); const med = msWin[15]; msWin.length = 0;
+  const goal = 1000 / Math.min(perf.goal || 60, P.cap || 999); // при ограничении 30 к/с — цель не выше него
   let s = dr.scale;
-  if (avg > goal * 1.15) { s -= avg > goal * 1.5 ? 0.1 : 0.05; dr.calm = 0; } else if (avg < goal * 1.04 && ++dr.calm >= 4) { s += 0.04; dr.calm = 0; }
+  if (dr.prev) { // проверка прошлого снижения
+    if (med > dr.before * 0.94) { s = dr.prev; dr.hold = 20 * ++dr.miss; } else dr.miss = 0; // не помогло — назад, пауза растёт (≈10 с, 20 с, …)
+    dr.prev = 0;
+  } else if (dr.hold > 0) dr.hold--;
+  else if (med > goal * 1.15 && s > perf.min) { dr.prev = s; dr.before = med; s -= med > goal * 1.5 ? 0.1 : 0.05; dr.calm = 0; }
+  else if (med < goal * 1.08 && ++dr.calm >= 3) { s += 0.05; dr.calm = 0; }
   s = clamp(s, perf.min, perf.scale);
   if (Math.abs(s - dr.scale) >= 0.01) { dr.scale = s; if (pipe) pipe.setScale(s); else renderer.setPixelRatio(basePR * s); resize(); }
 }
@@ -565,7 +601,8 @@ function frame(now) {
     if (ctrl && ctrl.near && ctrl.near()) nearW = Math.min(nearW, ctrl.near()); // крупный план у самолёта — ближе
     if (Math.abs(camera.near - nearW) > camera.near * 0.15) { camera.near = nearW; camera.updateProjectionMatrix(); } }
   syncWorld(C.paused ? 0 : dt, t);
-  updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t, ctrl && ctrl.extraCam ? ctrl.extraCam() : null);
+  objLod(camera.position, P.lodObj);
+  updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t); // окно ТВ — свой набор моделей вблизи (C.podPass)
   // тактическая карта обороны закрывает весь экран — 3D-кадр не рисуем (телефон не греется)
   // «Тени через кадр»: карта теней перерисовывается раз в P.shEvery кадров (город стоит, тени техники чуть запаздывают)
   if (P.shEvery > 1 && renderer.shadowMap.enabled) { renderer.shadowMap.autoUpdate = false; if (++shN >= P.shEvery) { shN = 0; renderer.shadowMap.needsUpdate = true; } }

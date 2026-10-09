@@ -11,9 +11,10 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW } from './city.js?v=20261009z';
-import { part, mergeParts, M } from '../drone/models.js?v=20261009z';
-import { WEATHERS, ATMO, skyMaterial, FXU } from '../drone/world.js?v=20261009z';
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW } from './city.js?v=20261010g';
+import { part, mergeParts, M } from '../drone/models.js?v=20261010g';
+import { WEATHERS, ATMO, skyMaterial, FXU } from '../drone/world.js?v=20261010g';
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261010g'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -26,6 +27,7 @@ export const ENV = {
   uZen: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uGnd: { value: new THREE.Color() }, uSunCol: { value: new THREE.Color() },
   uNight: { value: 0 }, uTime: { value: 0 },
   uMdl: { value: new Array(24).fill(0) }, // радиус, в котором коробки вида дома скрыты (вместо них — модели; 0 — модели нет)
+  uHide: { value: new THREE.Vector3() }, // центр этого радиуса: камера (в окне ТВ — точка, куда смотрит контейнер)
 };
 // ═════════════ Текстуры (ambientCG, CC0): земля, дороги, тротуары, крыши, фасады ═════════════
 // грузятся в фоне (fetch + createImageBitmap); пока не пришли все — uTexOn = 0 и шейдеры обходятся без них
@@ -38,7 +40,7 @@ function loadCityTextures(aniso) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = f === 'asphalt' ? THREE.MirroredRepeatWrapping : THREE.RepeatWrapping;
     t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
-    fetch(new URL(`./tex/${f}.jpg?v=20261009z`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261010g`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { t.image = bmp; t.needsUpdate = true; if (--left === 0) TEX.uTexOn.value = 1; })
       .catch((e) => console.warn('текстура не загрузилась:', e.message));
   }
@@ -174,9 +176,9 @@ function buildingMaterial() {
   const m = new THREE.MeshPhongMaterial({ specular: 0x8a8a8a, shininess: 90 });
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, ENV, TEX);
-    sh.vertexShader = 'attribute float aKind, aMdl;\nuniform vec3 uCam; uniform float uMdl[24];\nvarying float vKind; varying vec3 vObj, vSize, vNw, vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
+    sh.vertexShader = 'attribute float aKind, aMdl;\nuniform vec3 uCam, uHide; uniform float uMdl[24];\nvarying float vKind; varying vec3 vObj, vSize, vNw, vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
   // вблизи дом нарисован готовой моделью — коробку убираем за экран
-  if (aMdl > 0.5 && distance(instanceMatrix[3].xz, uCam.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+  if (aMdl > 0.5 && distance(instanceMatrix[3].xz, uHide.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
   vWp = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz; vKind = aKind; vObj = position;
   vNw = normalize(mat3(instanceMatrix) * normal);
   vSize = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));`);
@@ -351,6 +353,26 @@ function tiled(scene, list, baseGeo, mat, opts, drawK = 1) {
 }
 
 // ═════════════ Дома вблизи — готовые модели ═════════════
+// упрощённая копия сетки для средней дальности: те же вершины (нормали, текстура), меньше треугольников (meshoptimizer).
+// Сливаются только полные дубли (положение, текстура, нормаль); швы текстуры и острые грани — границы, они закреплены
+// (иначе текстура «течёт» полосами). err — допустимая ошибка в долях размера модели
+async function loIndex(geo, ratio, err) {
+  const pos = geo.attributes.position, uv = geo.attributes.uv, nor = geo.attributes.normal, idx = geo.index;
+  if (!idx || idx.count < 900) return null;
+  await MeshoptSimplifier.ready;
+  const nv = pos.count, wid = new Uint32Array(nv), key = new Map(), wpos = [], rep = [], r = (x, k) => Math.round(x * k);
+  for (let v = 0; v < nv; v++) {
+    const x = pos.getX(v), y = pos.getY(v), z = pos.getZ(v);
+    const k = r(x, 1e4) + ',' + r(y, 1e4) + ',' + r(z, 1e4) + (uv ? ',' + r(uv.getX(v), 2e3) + ',' + r(uv.getY(v), 2e3) : '') + (nor ? ',' + r(nor.getX(v), 50) + ',' + r(nor.getY(v), 50) + ',' + r(nor.getZ(v), 50) : '');
+    let w = key.get(k); if (w === undefined) { key.set(k, w = rep.length); wpos.push(x, y, z); rep.push(v); }
+    wid[v] = w;
+  }
+  const widx = new Uint32Array(idx.count); for (let i = 0; i < idx.count; i++) widx[i] = wid[idx.getX(i)];
+  const [out] = MeshoptSimplifier.simplify(widx, Float32Array.from(wpos), 3, Math.max(3, Math.floor(widx.length * ratio / 3) * 3), err, ['LockBorder']);
+  if (out.length > widx.length * 0.75) return null; // почти не упростилось — незачем
+  const I = new Uint32Array(out.length); for (let i = 0; i < out.length; i++) I[i] = rep[out[i]];
+  return new THREE.BufferAttribute(I, 1);
+}
 // вид (номер = aMdl) → модель и её габариты [X, Y, Z] при масштабе 1 (как печатает tools/airdef-models/prepare.js)
 export const BLD = [null, ['bld_p5', 16.24, 16.5, 53.0], ['bld_p9', 24.1, 25.4, 178.6], null,
   ['bld_b12', 17.76, 29.86, 43.19], ['bld_st', 15.44, 17.43, 25.92], ['obj_factory', 97.09, 27.93, 27.23],
@@ -361,8 +383,8 @@ export const BLD = [null, ['bld_p5', 16.24, 16.5, 53.0], ['bld_p9', 24.1, 25.4, 
 const TREES = [[14, 'tr_oak', 10.36], [15, 'tr_lime', 9.52], [16, 'tr_pine', 12.71], [17, 'tr_bush', 7.12]];
 const HOUSES = [7, 8, 9, 10, 12, 13];
 // прятать процедурное вблизи (вершинный шейдер): у инстанса aMdl > 0 и до камеры меньше uMdl[aMdl] — за экран
-const HIDE_HEAD = 'attribute float aMdl;\nuniform vec3 uCam; uniform float uMdl[24];\n';
-const HIDE_BODY = 'if (aMdl > 0.5 && distance(instanceMatrix[3].xz, uCam.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);';
+const HIDE_HEAD = 'attribute float aMdl;\nuniform vec3 uHide; uniform float uMdl[24];\n';
+const HIDE_BODY = 'if (aMdl > 0.5 && distance(instanceMatrix[3].xz, uHide.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);';
 const roofH = (c) => 2.2 + c * 2.2; // высота скатной крыши частного дома (как у коробки с крышей)
 // какой моделью рисовать дом вблизи (0 — остаётся коробкой): пятиэтажки, длинные девятиэтажки,
 // многоэтажки, сталинки (школы, магазины — невысокие «простые»), цеха складов
@@ -413,12 +435,12 @@ function nearHouses(G, scene, B, near, P, sh) {
   }
   // модель пришла: по мешу на материал, общая матрица инстансов; коробки этого вида вблизи прячутся
   G.attachBld = (name, group) => {
-    for (const S of sets.values()) {
+    for (const [key, S] of sets) {
       if (S.name !== name || S.meshes.length) continue;
       let cast = false;
       group.traverse((c) => {
         if (!c.isMesh) return;
-        const m = new THREE.InstancedMesh(c.geometry, c.material, S.n); m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false;
+        const m = new THREE.InstancedMesh(c.geometry, c.material, S.n); m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false; m.userData.set = key;
         m.castShadow = !!sh.cast && !c.material.alphaTest; m.receiveShadow = !!sh.receive; scene.add(m); S.meshes.push(m); cast = cast || m.castShadow;
       });
       // шар вокруг начала модели, вмещающий её, × масштаб экземпляра — для отсечения по полю зрения (+ запас на тень, если отбрасывает)
@@ -430,8 +452,23 @@ function nearHouses(G, scene, B, near, P, sh) {
         S.rad[j] = r0 * k + (cast ? 45 : 15); // запас 15 м: отбор — через кадр
         S.cxyz[j * 3] = e[o + 12]; S.cxyz[j * 3 + 1] = e[o + 13]; S.cxyz[j * 3 + 2] = e[o + 14];
       }
+      S.imPod = new THREE.InstancedBufferAttribute(new Float32Array(S.n * 16), 16); S.imPod.setUsage(THREE.DynamicDrawUsage);
       if (S.slot) ENV.uMdl.value[S.slot] = S.R;
       lx = 1e9;
+      // тяжёлая модель (больше 2500 треугольников) — на средней дальности упрощённой копией (~ четверть треугольников)
+      let tri = 0; for (const m of S.meshes) tri += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3;
+      if (tri > 2500 && P.bldLo !== false) Promise.all(S.meshes.map((m) => loIndex(m.geometry, 0.25, 0.012))).then((ix) => {
+        let lt = 0; S.meshes.forEach((m, i) => { lt += ix[i] ? ix[i].count / 3 : (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3; });
+        if (lt > tri * 0.7) return; // выигрыш меньше 30 % — лишние вызовы отрисовки дороже
+        S.imLo = new THREE.InstancedBufferAttribute(new Float32Array(S.n * 16), 16); S.imLo.setUsage(THREE.DynamicDrawUsage);
+        S.lo = S.meshes.map((h, i) => {
+          let g = h.geometry;
+          if (ix[i]) { g = new THREE.BufferGeometry(); for (const a in h.geometry.attributes) g.setAttribute(a, h.geometry.attributes[a]); g.setIndex(ix[i]); g.boundingSphere = h.geometry.boundingSphere; }
+          const m = new THREE.InstancedMesh(g, h.material, S.n); m.instanceMatrix = S.imLo; m.count = 0; m.visible = false; m.frustumCulled = false;
+          m.castShadow = h.castShadow; m.receiveShadow = h.receiveShadow; Object.assign(m.userData, { set: key, lo: true }); scene.add(m); return m;
+        });
+        S.R1 = Math.max(120, S.R * 0.45); lx = 1e9;
+      }).catch(() => { /* без упрощения — модель целиком */ });
     }
   };
   Object.defineProperty(G, 'bldNames', { get: () => [...new Set([...sets.values()].map((S) => S.name))] });
@@ -450,17 +487,48 @@ function nearHouses(G, scene, B, near, P, sh) {
     for (let i = 0; i < nf; i++) { const c = cams[i]; c.updateMatrixWorld(); PM.multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse.copy(c.matrixWorld).invert()); FR[i].setFromProjectionMatrix(PM); }
     for (const S of sets.values()) {
       if (!S.meshes.length) continue;
-      const a = S.im.array, R2 = S.R * S.R, C3 = S.cxyz; let c = 0;
+      const a = S.im.array, R2 = S.R * S.R, C3 = S.cxyz, al = S.lo ? S.imLo.array : null, R12 = al ? S.R1 * S.R1 : R2; let c = 0, cl = 0;
       for (let j = 0; j < S.n; j++) {
-        const dx = S.xz[j * 2] - p.x, dz = S.xz[j * 2 + 1] - p.z;
-        if (dx * dx + dz * dz >= R2) continue;
+        const dx = S.xz[j * 2] - p.x, dz = S.xz[j * 2 + 1] - p.z, d2 = dx * dx + dz * dz;
+        if (d2 >= R2) continue;
         const x = C3[j * 3], y = C3[j * 3 + 1], z = C3[j * 3 + 2], r = S.rad[j];
         let vis = false;
         for (let f = 0; f < nf && !vis; f++) { const pl = FR[f].planes; vis = true; for (let k = 0; k < 6; k++) { const q = pl[k]; if (q.normal.x * x + q.normal.y * y + q.normal.z * z + q.constant < -r) { vis = false; break; } } }
-        if (vis) { a.set(S.mats.subarray(j * 16, j * 16 + 16), c * 16); c++; }
+        if (!vis) continue;
+        if (d2 < R12) { a.set(S.mats.subarray(j * 16, j * 16 + 16), c * 16); c++; } else { al.set(S.mats.subarray(j * 16, j * 16 + 16), cl * 16); cl++; }
       }
       S.im.needsUpdate = true; for (const m of S.meshes) { m.count = c; m.visible = c > 0; } // пустые — без вызова отрисовки
+      if (al) { S.imLo.needsUpdate = true; for (const m of S.lo) { m.count = cl; m.visible = cl > 0; } }
     }
+  };
+  // окно ТВ: модели вблизи точки at (радиус R) в поле зрения cam — во втором буфере инстансов; коробки там прячет шейдер
+  // (uHide = at). Возвращает, как вернуть основной кадр. Основной набор не трогается — нагрузки на остальной кадр нет
+  const podFr = new THREE.Frustum(), mdl0 = new Array(24), keep = [];
+  G.nearPod = (cam, at, R) => {
+    cam.updateMatrixWorld(); PM.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse.copy(cam.matrixWorld).invert()); podFr.setFromProjectionMatrix(PM);
+    const pl = podFr.planes, R2 = R * R, U = ENV.uMdl.value; keep.length = 0;
+    for (let i = 0; i < 24; i++) mdl0[i] = U[i];
+    for (const S of sets.values()) {
+      if (!S.meshes.length) continue;
+      const a = S.imPod.array, C3 = S.cxyz; let c = 0;
+      for (let j = 0; j < S.n; j++) {
+        const dx = S.xz[j * 2] - at.x, dz = S.xz[j * 2 + 1] - at.z;
+        if (dx * dx + dz * dz >= R2) continue;
+        const x = C3[j * 3], y = C3[j * 3 + 1], z = C3[j * 3 + 2], r = S.rad[j];
+        let vis = true; for (let k = 0; k < 6; k++) { const q = pl[k]; if (q.normal.x * x + q.normal.y * y + q.normal.z * z + q.constant < -r) { vis = false; break; } }
+        if (vis) { a.set(S.mats.subarray(j * 16, j * 16 + 16), c * 16); c++; }
+      }
+      S.imPod.needsUpdate = true;
+      for (const m of S.meshes) { keep.push(m, m.count, m.visible); m.instanceMatrix = S.imPod; m.count = c; m.visible = c > 0; }
+      if (S.lo) for (const m of S.lo) { keep.push(m, m.count, m.visible); m.visible = false; }
+      if (S.slot) U[S.slot] = R;
+    }
+    const h0 = ENV.uHide.value.clone(); ENV.uHide.value.copy(at);
+    return () => {
+      for (let i = 0; i < keep.length; i += 3) { const m = keep[i], S = sets.get(m.userData.set); m.instanceMatrix = m.userData.lo ? S.imLo : S.im; m.count = keep[i + 1]; m.visible = keep[i + 2]; }
+      for (let i = 0; i < 24; i++) U[i] = mdl0[i];
+      ENV.uHide.value.copy(h0);
+    };
   };
 }
 
@@ -668,14 +736,14 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   water.position.y = CITY.WATER_Y; water.receiveShadow = !!P.shadows; scene.add(water);
 
   // здания, надстройки и скатные крыши
-  const B = city.B, list = [], roofs = [], extras = [], col = new THREE.Color(), near = BLD.map(() => []);
+  const B = city.B, list = [], small = [], roofs = [], extras = [], col = new THREE.Color(), near = BLD.map(() => []);
   const pick = (kind, c) => { const pal = PAL[kind]; return col.set(pal[Math.floor(c * pal.length) % pal.length]).convertSRGBToLinear().multiplyScalar(0.62 + 0.2 * ((c * 7.31) % 1)).clone(); };
   for (let i = 0; i < B.n; i++) {
     const k = B.k[i], c = B.c[i], y0 = B.y0[i], gy = groundH(B.x[i], B.z[i]);
     if (k === KIND.HOUSE && P.houseK < 1 && ((i * 2654435761) >>> 0) / 4294967296 > P.houseK) continue; // слабые пресеты: часть частных домов не рисуем
     const raised = y0 > 0, mdl = P.bldNear ? bldVariant(B, i) : 0;
     if (mdl) near[mdl].push(i);
-    list.push({ x: B.x[i], z: B.z[i], y: raised ? gy + y0 : gy - 1, sx: B.w[i], sy: B.h[i] + (raised ? 0 : 1), sz: B.d[i], color: pick(k, c), kind: k + c * 0.9 + (raised ? 10 : 0), mdl });
+    (k === KIND.HOUSE ? small : list).push({ x: B.x[i], z: B.z[i], y: raised ? gy + y0 : gy - 1, sx: B.w[i], sy: B.h[i] + (raised ? 0 : 1), sz: B.d[i], color: pick(k, c), kind: k + c * 0.9 + (raised ? 10 : 0), mdl });
     const top = gy + y0 + B.h[i];
     if (k === KIND.HOUSE) {
       const along = B.w[i] >= B.d[i], rh = roofH(c);
@@ -691,6 +759,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   }
   const bMat = buildingMaterial();
   G.tiles.push(...tiled(scene, list, boxGeo(), bMat, sh));
+  // частные дома (их больше половины) вдали — в пиксель-два, только рябят: дальность как у их крыш
+  if (small.length) G.tiles.push(...tiled(scene, small, boxGeo(), bMat, sh, 0.55));
   nearHouses(G, scene, B, near, P, sh);
   if (G.addNear && P.props !== false) streetProps(G, city, B, P); // «Детали улиц» можно выключить (тонкая настройка)
   if (roofs.length) G.tiles.push(...tiled(scene, roofs, roofGeo(), bMat, sh, 0.55));
@@ -780,9 +850,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
         L.forEach((t, j) => { m4.compose(pp.set(t.x, t.y + 0.3, t.z), qq.setFromAxisAngle(YY, t.ry), ss.setScalar(1.3 * t.sy / h)); m4.toArray(mats, j * 16); xz[j * 2] = t.x; xz[j * 2 + 1] = t.z; });
         G.addNear('t' + slot, slot, name, P.treeNear, xz, mats);
       });
-      tMat.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, { uCam: ENV.uCam, uMdl: ENV.uMdl }); sh.vertexShader = HIDE_HEAD + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n' + HIDE_BODY); };
+      tMat.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, { uHide: ENV.uHide, uMdl: ENV.uMdl }); sh.vertexShader = HIDE_HEAD + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n' + HIDE_BODY); };
     }
-    G.tiles.push(...tiled(scene, tl, treeGeo(), tMat, { cast: P.shadows && P.treeShadows, receive: false, lo: treeGeoLo(), loD: 2600 }, 0.6));
+    G.tiles.push(...tiled(scene, tl, treeGeo(), tMat, { cast: P.shadows && P.treeShadows, receive: false, lo: treeGeoLo(), loD: P.treeLoD || 2600 }, 0.6)); // на сенсорных — простая крона ближе (P.treeLoD)
   }
 
   if (P.clouds > 0 && !W.rain) G.clouds = buildClouds(scene, Math.round(P.clouds * (W.deck ? 1.8 : 1)), city.seed, W);
@@ -794,7 +864,7 @@ const SX = new THREE.Vector3(), SY = new THREE.Vector3(), SN = new THREE.Vector3
 const CAM1 = [null], CAM2 = [null, null];
 // extra — вторая камера с той же сценой (контейнер): модели вблизи нужны и в её поле зрения
 export function updateCityScene(G, camera, P, focus, t, extra) {
-  G.sky.position.copy(camera.position); ENV.uCam.value.copy(camera.position); ENV.uTime.value = t || 0;
+  G.sky.position.copy(camera.position); ENV.uCam.value.copy(camera.position); ENV.uHide.value.copy(camera.position); ENV.uTime.value = t || 0;
   if (G.near) { camera.updateMatrixWorld(); const cs = extra ? CAM2 : CAM1; cs[0] = camera; if (extra) cs[1] = extra; G.near(camera, cs); }
   const cx = camera.position.x, cz = camera.position.z, D = P.draw + TILE;
   for (const m of G.tiles) {

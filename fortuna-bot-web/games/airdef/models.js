@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261009z';
+import { CREDITS } from './models/credits.js?v=20261010g';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -73,7 +73,12 @@ const META = {
 // авторы и лицензии — из исходных файлов (tools/airdef-models/prepare.js --credits)
 // текстуры города (tex/*.jpg) — ambientCG: Grass004, Road008A, PavingStones151, Concrete042A, RoofingTiles006, Facade002/017/018A
 const TEX_CREDIT = { title: 'Текстуры земли, дорог, крыш и фасадов', author: 'ambientCG', url: 'https://ambientcg.com', license: 'CC0', files: ['tex/*.jpg'] };
-export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT].map((c) => ({ ...c, licenseUrl: /CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/' }));
+// взрывы и пламя (fx/*.png): огненный шар с дымом — ohyhei; вспышка с кольцом и пламя — Explosion FX Free (heyheythere)
+const FX_CREDITS = [
+  { title: 'Explosion sprite sheets', author: 'ohyhei', url: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', license: 'бесплатно, с указанием автора', licenseUrl: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', files: ['fx/explosion*.png'] },
+  { title: 'Explosion FX Free', author: 'heyheythere', url: 'https://heyheythere.itch.io/explosion-fx-free', license: 'CC BY 4.0', files: ['fx/blast*.png', 'fx/flame*.png'] },
+];
+export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
@@ -87,7 +92,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=20261009z`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=20261010g`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;

@@ -193,8 +193,8 @@
   #tPad .pu { grid-area: 1 / 2; } #tPad .pl { grid-area: 2 / 1; } #tPad .pr { grid-area: 2 / 3; } #tPad .pd { grid-area: 3 / 2; } #tPad i.on { background: rgba(255,120,60,.55); }
   body.nopad:not(.layoutEdit) #tPad { display: none; } body.short #tPad { bottom: 10px; grid-template: repeat(3, 42px) / repeat(3, 42px); } /* низкий экран: под панелью оружия */
   #tAuto.on, #opAuto.on { background: rgba(34,140,70,.6); border-color: #86efac; }
-  body.coarse #rwr { width: 96px; height: 96px; right: auto; left: calc(50% - 48px); bottom: auto; top: var(--top); }
-  body.coarse #warn { top: calc(var(--top) + 102px); font-size: 14px; }
+  body.coarse #rwr { width: 88px; height: 88px; right: auto; left: calc(50% - 44px); bottom: auto; top: max(4px, var(--sa-t)); } /* СПО — у самого верха, между кнопками Telegram */
+  body.coarse #warn { top: calc(max(4px, var(--sa-t)) + 94px); font-size: 14px; }
   body.coarse #wpn { font-size: 10px; line-height: 1.3; width: min(30vw, 196px); padding: 3px 6px; background: rgba(0,20,10,.24); border-color: rgba(140,255,170,.16); }
   body.coarse #wpn .fl { font-size: 10.5px; } body.coarse #wpn .fl b { font-size: 13px; } body.coarse #wpn .tvb { padding: 2px 6px; font-size: 10px; }
   body.coarse #osd { font-size: 11px; } body.coarse #osd b { font-size: 15px; }
@@ -392,7 +392,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261009z"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261009z"></script>
+<script src="../config.js?v=20261010g"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261010g"></script>
 </body>
 </html>

@@ -13,9 +13,9 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261009z';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261009z';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261009z';
+import { AG, SAM } from '../arsenal.js?v=20261010g';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261010g';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261010g';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
@@ -577,7 +577,7 @@ export function createStrike(ctx) {
     w.dead = true;
     const res = blast(w.pos, w.W.dmg, w.W.blast, w.W.short, w.owner);
     fx.wpnEnd(w, res);
-    fx.explosion(w.pos, w.W.blast, 'ground');
+    fx.explosion(w.pos, w.W.blast, w.W.vis && w.W.vis.kind !== 'missile' ? 'bomb' : 'ground'); // бомба — крупнее, со вспышкой и пылью
   }
   // урон взрывом по объектам и комплексам; возвращает, кого задело
   function blast(p, dmg, R, by, owner = null) { // owner — самолёт, чьё оружие (онлайн: кому засчитать)

@@ -2,15 +2,15 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261009z';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261009z';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261009z';
-import { applyLayout } from './layout.js?v=20261009z';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261009z';
-import { DRONE } from '../drone/sim/modes.js?v=20261009z';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261009z';
-import { predictBomb } from './sim/strike.js?v=20261009z';
-import { placeDefense, pickTargets } from './mission.js?v=20261009z';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261010g';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261010g';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261010g';
+import { applyLayout } from './layout.js?v=20261010g';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261010g';
+import { DRONE } from '../drone/sim/modes.js?v=20261010g';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261010g';
+import { predictBomb } from './sim/strike.js?v=20261010g';
+import { placeDefense, pickTargets } from './mission.js?v=20261010g';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -76,7 +76,7 @@ export function createAir(C) {
   // «Контейнер 30 к/с» (C.P.podHalf): сцена в окно контейнера — через кадр, в свою текстуру; на экран она кладётся каждый кадр
   // одним прямоугольником (второй проход сцены — самый дорогой после основного; настоящие ТВ-каналы и так 25–30 к/с)
   // на сенсорных окно рисуется в своей текстуре в 65% разрешения (картинка «ТВ» и так зернистая) — и при «каждый кадр»
-  const POD_K = IS_TOUCH ? 0.65 : 1;
+  const POD_K = IS_TOUCH ? 0.9 : 1;
   const podRT = C.P.podHalf || IS_TOUCH ? new THREE.WebGLRenderTarget(1, 1, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }) : null;
   let podQS = null, podQC = null, podN = 0;
   if (podRT) {
@@ -119,7 +119,7 @@ export function createAir(C) {
     podSet(L[(L.indexOf(pod.tgt) + 1) % L.length]); snd.click();
     say(`Цель: ${pod.lockName}`, 1.4);
   }
-  const LP = V3(), LQ = V3();
+  const LP = V3(), LQ = V3(), PAT = V3();
   function updatePod(dt) {
     pod.pos.copy(craft.pos); pod.pos.y -= 1.5;
     if (!hasPod || craft.dead) { pod.laser = false; laserSpot = null; return; }
@@ -173,7 +173,10 @@ export function createAir(C) {
     if (ir) { fog.density *= 0.35; fog.color.setRGB(0.1, 0.1, 0.1); H.intensity = 1.7; H.color.setRGB(0.75, 0.75, 0.75); H.groundColor.setRGB(0.45, 0.45, 0.45); renderer.toneMappingExposure = ex * 1.6; }
     renderer.setRenderTarget(target); renderer.toneMapping = THREE.ACESFilmicToneMapping;
     if (r) { renderer.setScissorTest(true); renderer.setScissor(r.x, VH - r.y - r.h, r.w, r.h); renderer.setViewport(r.x, VH - r.y - r.h, r.w, r.h); }
-    renderer.autoClear = false; renderer.clear(); renderer.render(scene, podCam);
+    // точка взгляда контейнера (пересечение с землёй) — вокруг неё дома и техника подробно, только на время кадра окна
+    const gy = C.city.groundH(pod.pos.x, pod.pos.z), tt = pod.dir.y < -0.02 ? Math.min(30000, (pod.pos.y - gy) / -pod.dir.y) : 6000;
+    const back = C.podPass ? C.podPass(podCam, PAT.copy(pod.pos).addScaledVector(pod.dir, tt), target ? target.height : r.h * renderer.getPixelRatio()) : null;
+    renderer.autoClear = false; renderer.clear(); renderer.render(scene, podCam); if (back) back();
     renderer.autoClear = true; renderer.setScissorTest(false); if (r) renderer.setViewport(0, 0, C.VW, VH);
     renderer.toneMapping = C.sceneTM; renderer.shadowMap.autoUpdate = au; ship.visible = sv;
     if (ir) { fog.density = keep.fd; fog.color.copy(keep.fc); H.intensity = keep.hi; H.color.copy(keep.hc); H.groundColor.copy(keep.hg); renderer.toneMappingExposure = ex; }

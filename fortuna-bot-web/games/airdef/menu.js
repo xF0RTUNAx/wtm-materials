@@ -1,12 +1,12 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261009z';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261009z';
-import { MODES } from './sim/strike.js?v=20261009z';
-import { WEATHERS } from '../drone/world.js?v=20261009z';
-import { LESSONS } from './training.js?v=20261009z';
-import { MODEL_CREDITS } from './models.js?v=20261009z';
-import { openLayoutEditor } from './layout.js?v=20261009z';
+import { CITY } from './city.js?v=20261010g';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261010g';
+import { MODES } from './sim/strike.js?v=20261010g';
+import { WEATHERS } from '../drone/world.js?v=20261010g';
+import { LESSONS } from './training.js?v=20261010g';
+import { MODEL_CREDITS } from './models.js?v=20261010g';
+import { openLayoutEditor } from './layout.js?v=20261010g';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -178,7 +178,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <p class="hint">«АВТО» в вылете сбрасывает бомбы и пускает ракеты, у оператора ЗРК — назначает цель, пускает и наводит пушку. Помогает, но не идеально: реагирует с задержкой и ошибается — пилотирование, уклонение и выбор момента остаются за вами.</p>
       <div class="cat-h">Звук</div><label class="chk"><input type="checkbox" id="sMute" ${snd.muted ? '' : 'checked'}> звук включён</label>
       <label class="chk">громкость <input type="range" id="sVol" min="0" max="1" step="0.05" value="${snd.volume}"></label>
-      <details class="ref credits"><summary>3D-модели и текстуры — авторы</summary><div class="body"><p class="hint">${MODEL_CREDITS.map((m) => `<a href="${m.url}" target="_blank" rel="noopener">«${m.title}»</a> — ${m.author} (<a href="${m.licenseUrl}" target="_blank" rel="noopener">${m.license}</a>)`).join(' · ')}. Для игры модели упрощены, разделены на части, текстуры уменьшены.</p>
+      <details class="ref credits"><summary>3D-модели, текстуры и эффекты — авторы</summary><div class="body"><p class="hint">${MODEL_CREDITS.map((m) => `<a href="${m.url}" target="_blank" rel="noopener">«${m.title}»</a> — ${m.author} (<a href="${m.licenseUrl}" target="_blank" rel="noopener">${m.license}</a>)`).join(' · ')}. Для игры модели упрощены, разделены на части, текстуры уменьшены.</p>
       <p class="hint">Остальные модели — процедурные, сделаны для игры.</p></div></details>`;
   }
   $('tab-set').onclick = (e) => {
