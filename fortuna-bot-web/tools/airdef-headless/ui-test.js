@@ -57,20 +57,20 @@ console.log(`     фон за 40 с: пусков ЗУР ${C.S.sams.length}, с�
   console.log(`     планы фона за 150 с: ${Object.entries(kinds).map(([k, v]) => `${k} ${Math.round(v)} с`).join(', ')}`);
   check('фон: кадр по свободной части экрана', C.camera.view && C.camera.view.enabled && C.camera.view.fullWidth < C.VW); }
 
-{ const { planeModel } = await import('../../games/airdef/models.js?v=20261010g');
+{ const { planeModel } = await import('../../games/airdef/models.js?v=20261010m');
   for (const [side, cls] of [['east', 'strike'], ['east', 'fighter'], ['west', 'strike'], ['west', 'fighter']]) {
     const pm = planeModel(side, cls); let tris = 0, tex = 0; if (pm) pm.obj.traverse((o) => { if (o.isMesh) { tris += o.geometry.index ? o.geometry.index.count / 3 : 0; if (o.material.map) tex++; } });
     check(`готовая модель ${side}/${cls}: ${pm ? `${pm.name}, ${tris} треуг., мешей с текстурой ${tex}` : 'нет'}`, pm && pm.cls === cls);
   } }
-{ const { unitModelGlb, wantUnit } = await import('../../games/airdef/models.js?v=20261010g');
+{ const { unitModelGlb, wantUnit } = await import('../../games/airdef/models.js?v=20261010m');
   const keys = ['bukm3', 'osa', 'tor', 'torm2', 'pantsir', 's400', 's300', 'patriot', 'pac3', 's75', 's125', 'kub', 'hawk', 'm163', 'gepard', 'nasams', 'gpsjam', 'gpsjamw']; for (const k of keys) wantUnit(k);
   await new Promise((r) => setTimeout(r, 1500));
   for (const k of keys) { const m = unitModelGlb(k); let n = 0; if (m) for (const q of ['body', 'turret', 'cradle']) if (m[q]) m[q].traverse((o) => { if (o.isMesh) n += o.geometry.index.count / 3; });
     check(`готовая модель комплекса ${k}: ${m ? `${n} треуг., башня ${m.turret ? 'да' : 'нет'}, пакет ${m.cradle ? 'да' : 'нет'}` : 'нет'}`, !!m); }
-  { const { weaponMesh } = await import('../../games/airdef/models.js?v=20261010g'); const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261010g'); const { AG } = await import('../../games/airdef/arsenal.js?v=20261010g');
+  { const { weaponMesh } = await import('../../games/airdef/models.js?v=20261010m'); const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261010m'); const { AG } = await import('../../games/airdef/arsenal.js?v=20261010m');
     const want = ['fab500', 'umpk', 'kh29t', 'kh31p', 'kh25ml', 'agm65b', 'mk82', 'gbu12', 'jassm', 'agm88', 'aargm', 'mald', 'decoy_e', 'gbu39', 'gbu31'], got = want.filter((k) => !weaponMesh(k, AG[k], weaponGeo, null).isMesh);
     check(`готовые модели оружия (${got.length}/${want.length}): ${want.filter((k) => !got.includes(k)).join(', ') || 'все'}`, got.length === want.length);
-    const { podModel, launcherGlb, unitMissileGlb } = await import('../../games/airdef/models.js?v=20261010g');
+    const { podModel, launcherGlb, unitMissileGlb } = await import('../../games/airdef/models.js?v=20261010m');
     for (let i = 0; i < 30 && !(podModel() && launcherGlb('igla') && launcherGlb('stinger')); i++) await new Promise((r) => setTimeout(r, 200));
     check(`контейнер LITENING, трубы ПЗРК, ракеты ПЗРК и NASAMS: ${!!podModel()} ${!!launcherGlb('igla')} ${!!launcherGlb('stinger')} ${!!unitMissileGlb('verba')} ${!!unitMissileGlb('nasams')}`, podModel() && launcherGlb('igla') && launcherGlb('stinger') && unitMissileGlb('verba') && unitMissileGlb('nasams')); }
   const gm = unitModelGlb('bukm3'); let n = 0; if (gm) for (const k of ['body', 'turret', 'cradle']) gm[k].traverse((o) => { if (o.isMesh) n += o.geometry.index.count / 3; });
@@ -108,7 +108,7 @@ C.setAuto(false);
 air.finish('тест', true); frames(5);
 
 // 2б. все подвески всех эпох обеих сторон под «АВТО»: свой самолёт, оружие расходуется (эпоха IV, F/A-18 — ещё камера за оружием)
-{ const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261010g');
+{ const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261010m');
   const planes = new Set(); let used = 0, total = 0;
   for (const era of [1, 2, 3, 4]) for (const [lo, L] of LOADOUTS[era].entries()) {
     C.toMenu(); frames(3); C.setup.era = era; C.setup.side = L.side === 'east' ? 'west' : 'east'; C.setup.lo = lo; C.setup.game = 'air'; C.start('air'); C.setAuto(true);
@@ -166,7 +166,7 @@ C.setup.era = 2;
 
 // 4. обучение — все уроки обеих сторон: каждый запускается и идёт 25 с без ошибок
 for (const side of ['air', 'def']) {
-  const n = side === 'air' ? 6 : 6;
+  const n = C.lessons[side].length;
   for (let i = 0; i < n; i++) {
     C.toMenu(); frames(3);
     C.setup.game = 'training'; C.setup.tside = side; C.setup.tl = i; C.start('training');
@@ -175,20 +175,30 @@ for (const side of ['air', 'def']) {
   }
 }
 // 5. уроки проходятся: «бот» делает то, что просит подсказка
-const passed = (side, i) => (C.ctrl && C.ctrl.T && C.ctrl.T.finished) || (JSON.parse(store.fortuna_airdef_stats || '{}').lessons || {})[side + i] === 1;
+const passed = (side, i) => (C.ctrl && C.ctrl.T && C.ctrl.T.finished) || (JSON.parse(store.fortuna_airdef_stats || '{}').lessons || {})[C.lessons[side][i].id] === 1;
 function runLesson(side, i, bot, sec) {
   C.toMenu(); frames(3); C.setup.game = 'training'; C.setup.tside = side; C.setup.tl = i; C.start('training');
-  for (let k = 0; k < sec * 30 && !passed(side, i); k++) { bot(C.ctrl.inner); frames(1); }
+  for (let k = 0; k < sec * 30 && !passed(side, i); k++) { if (byId('lesson')._cls.has('on')) C.closeLesson(); bot(C.ctrl.inner); frames(1); }
   check(`урок ${side} ${i + 1} пройден ботом`, passed(side, i));
   if (byId('lesson')._cls.has('on')) C.closeLesson();
 }
+// уроки с бомбами: показ (автопилот и «АВТО») и практика — бот летит тем же автопилотом на цель задания
+const LI = (side, id) => C.lessons[side].findIndex((l) => l.id === id);
+for (const [id, alt] of [['bomb', 900], ['lgb', 2000], ['tvb', 2000], ['gps', 4000], ['agm', 2000], ['cruise', 3000]]) {
+  runLesson('air', LI('air', id), (A) => { const T = C.ctrl.T; if (T.s >= 2 && A.game.targets[0] && !T.d.bot) { T.d.bot = 1; A.demo({ pt: A.game.targets[0], alt }); } }, 420);
+}
+// ложная цель: выбрать её и пустить по курсу
+runLesson('air', LI('air', 'decoy'), (A) => { const DK = ['mald', 'decoy_e'], i = A.loadout.findIndex((l) => DK.includes(l.key) && l.n > 0); if (i >= 0 && !C.raid.planes.some((q) => q.role === 'decoy' && !q.dead) && C.ctrl.T.t > 2) { A.onKey({ code: 'KeyQ', repeat: false, preventDefault: noop }, true); A.onKey({ code: 'KeyQ' }, false); if (A.curW() && DK.includes(A.curW().key)) A.fire(); } }, 240);
+// станция помех: два захода автопилотом на комплекс
+runLesson('air', LI('air', 'ecm'), (A) => { const u = C.S.units[0]; if (u && C.ctrl.T.d.botS !== C.ctrl.T.s) { C.ctrl.T.d.botS = C.ctrl.T.s; A.demo({ pt: u.pos, alt: 4000 }); } }, 300);
 // оператор «Осы»: назначить ближайшую видимую цель, пускать в зоне
-runLesson('def', 1, (D) => { const u = C.S.units[0]; if (!u || !D.st.op) return; const a = C.raid.alive()[0]; if (a && u.desig !== a) D.designate(a); if (u.track) C.S.launch(u); }, 180);
+const OPB = (D) => { const u = C.S.units[0]; if (!u || !D.st.op) return; const a = C.raid.alive()[0]; if (a && u.desig !== a) D.designate(a); if (u.track) C.S.launch(u); };
+for (const id of ['d_op', 'd_sarh', 'd_tvm', 'd_arh']) runLesson('def', LI('def', id), OPB, 300);
 // ПРР: выключить РЛС, как только ракета в воздухе
-runLesson('def', 4, (D) => { const u = C.S.units[0]; if (u && C.S.wpns.some((w) => w.W.kind === 'arm' && !w.dead) && u.emit) C.S.setEmit(u, false); }, 200);
+runLesson('def', LI('def', 'd_arm'), (D) => { const u = C.S.units[0]; if (u && C.S.wpns.some((w) => w.W.kind === 'arm' && !w.dead) && u.emit) C.S.setEmit(u, false); }, 200);
 // пушки: ствол в точку упреждения, огонь
 const LEAD = new THREE.Vector3();
-runLesson('def', 2, (D) => { const u = C.S.units[0]; if (!u || !u.aimDir) return; const a = C.raid.alive()[0]; if (!a) return; C.S.gunLead(u, a, LEAD); u.aimDir.copy(LEAD).sub(u.pos).normalize(); if (D.st.op) D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, a.pos.distanceTo(u.pos) < u.S.rmax); }, 200);
+runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || !u.aimDir) return; const a = C.raid.alive()[0]; if (!a) return; C.S.gunLead(u, a, LEAD); u.aimDir.copy(LEAD).sub(u.pos).normalize(); if (D.st.op) D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, a.pos.distanceTo(u.pos) < u.S.rmax); }, 200);
 C.toMenu(); frames(30);
 console.error = origErr;
 console.log(errors.length ? `\nОШИБКИ (${errors.length}):\n${errors.slice(0, 12).join('\n')}` : '\nошибок нет');

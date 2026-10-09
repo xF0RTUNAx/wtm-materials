@@ -1,12 +1,12 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261010g';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261010g';
-import { MODES } from './sim/strike.js?v=20261010g';
-import { WEATHERS } from '../drone/world.js?v=20261010g';
-import { LESSONS } from './training.js?v=20261010g';
-import { MODEL_CREDITS } from './models.js?v=20261010g';
-import { openLayoutEditor } from './layout.js?v=20261010g';
+import { CITY } from './city.js?v=20261010m';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261010m';
+import { MODES } from './sim/strike.js?v=20261010m';
+import { WEATHERS } from '../drone/world.js?v=20261010m';
+import { LESSONS } from './training.js?v=20261010m';
+import { MODEL_CREDITS } from './models.js?v=20261010m';
+import { openLayoutEditor } from './layout.js?v=20261010m';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -41,15 +41,22 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
     $('startBtn').textContent = setup.game === 'online' ? C.online.primaryText() : setup.game === 'training' ? 'НАЧАТЬ УРОК' : setup.game === 'defense' ? 'К РАССТАНОВКЕ' : 'ВЗЛЁТ';
   }
+  // пройденные уроки по id; записи прежнего обучения («air0»… — по номеру) переносятся на те же уроки нового учебника
+  const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
+  function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
   $('modeSel').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save(); render(); };
   function renderPlay() {
     const g = setup.game, el = $('tab-play');
     if (g === 'online') { C.online.panel(el); return; } // онлайн — свой раздел (online.js)
     if (g === 'training') {
-      const done = stats().lessons || {};
-      el.innerHTML = `<div class="prow"><span>Сторона</span>${seg('tside', setup.tside, [['air', 'За самолёт'], ['def', 'За ПВО']])}</div>
-        <div class="cat-h">Уроки</div>` + LESSONS[setup.tside].map((l, i) => `<button class="opt ${i === setup.tl ? 'on' : ''} ${done[setup.tside + i] ? 'done' : ''}" data-tl="${i}"><div class="nm"><b>${i + 1}. ${l.name}${done[setup.tside + i] ? ' ✓' : ''}</b><span>${l.desc}</span></div></button>`).join('') +
-        '<p class="hint">Проиграть нельзя: урон отключён, боеприпасы пополняются. На каждом шаге — подсказка, кнопка «?» ставит игру на паузу и объясняет, как работает оружие или комплекс.</p>';
+      const done = lessonsDone(), list = LESSONS[setup.tside];
+      // учебник: уроки по разделам («Основы», «Системы», «Бомбы»… / «Оборона», «Комплексы»…), номер — сквозной
+      let h = `<div class="prow"><span>Сторона</span>${seg('tside', setup.tside, [['air', 'За самолёт'], ['def', 'За ПВО']])}</div>`, sec = null;
+      list.forEach((l, i) => {
+        if (l.sec !== sec) { sec = l.sec; const n = list.filter((q) => q.sec === sec).length, k = list.filter((q) => q.sec === sec && done[q.id]).length; h += `<div class="cat-h">${sec} <span class="dim">${k}/${n}</span></div>`; }
+        h += `<button class="opt ${i === setup.tl ? 'on' : ''} ${done[l.id] ? 'done' : ''}" data-tl="${i}"><div class="nm"><b>${i + 1}. ${l.name}${done[l.id] ? ' ✓' : ''}</b><span>${l.desc}</span></div></button>`;
+      });
+      el.innerHTML = h + '<p class="hint">Каждый урок: как это работает в игре и типичные ошибки → показ (самолёт всё делает сам) → вы. Проиграть нельзя: урон отключён, боеприпасы пополняются. Кнопка «?» ставит игру на паузу и объясняет оружие или комплекс.</p>';
       return;
     }
     let h = `<div class="prow"><span>Режим</span>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, m.name]))}</div><p class="hint">${MODES[setup.diff].desc}</p>
@@ -217,7 +224,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function renderStats() {
     const s = stats(), g = setup.game;
     if (g === 'online') { $('lobbyStats').innerHTML = 'Онлайн: авиация против ПВО города, три волны.'; return; }
-    $('lobbyStats').innerHTML = g === 'training' ? `Обучение: ${Object.keys(s.lessons || {}).length} из ${LESSONS.air.length + LESSONS.def.length} уроков пройдено.`
+    $('lobbyStats').innerHTML = g === 'training' ? `Обучение: ${[...LESSONS.air, ...LESSONS.def].filter((l) => lessonsDone()[l.id]).length} из ${LESSONS.air.length + LESSONS.def.length} уроков пройдено.`
       : g === 'air' ? (s.air ? `Рекорд вылета: <b>${s.air.best.toLocaleString('ru-RU')}</b> очков · вылетов ${s.air.runs}` : 'Вылетов пока не было.')
         : (s.defense ? `Рекорд обороны: <b>${s.defense.best.toLocaleString('ru-RU')}</b> очков · лучший итог — ${s.defense.waves} волн` : 'Обороны пока не было.');
   }
@@ -250,6 +257,6 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       r.runs++; r.best = Math.max(r.best, score); if (extra.waves) r.waves = Math.max(r.waves, extra.waves);
       s[game] = r; ls.set('fortuna_airdef_stats', JSON.stringify(s));
     },
-    lessonDone(side, i) { const s = stats(); s.lessons = s.lessons || {}; s.lessons[side + i] = 1; ls.set('fortuna_airdef_stats', JSON.stringify(s)); },
+    lessonDone(id) { const s = stats(); s.lessons = s.lessons || {}; s.lessons[id] = 1; ls.set('fortuna_airdef_stats', JSON.stringify(s)); },
   };
 }

@@ -13,14 +13,14 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261010g';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261010g';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261010g';
+import { AG, SAM } from '../arsenal.js?v=20261010m';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261010m';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261010m';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
-  arcade: { name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 360, fuelS: 330, markers: true, gunK: 0.7 },
-  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 240, fuelS: 240, markers: false, gunK: 1 }, // fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
+  arcade: { name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 360, fuelS: 330, markers: true, gunK: 0.7, reload: 'auto' },
+  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 240, fuelS: 240, markers: false, gunK: 1, reload: 'home' }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
 };
 
 const NOOP_FX = {
