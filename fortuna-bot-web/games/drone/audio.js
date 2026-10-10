@@ -9,6 +9,16 @@
 // Чужие самолёты и ракеты — объёмные голоса (HRTF, эффект Доплера, поглощение высоких частот воздухом).
 // Взрывы слышны с задержкой по скорости звука; бортовые сигналы (СПО, захват, ГСН) идут через «гарнитуру».
 
+// Экономный звук (слабый или «придушенный» процессор: на Android при низком заряде частоты снижаются, синтез не успевает —
+// треск и обрывы): вдвое ниже частота дискретизации, больший буфер вывода, короткая моно-реверберация, панорама без HRTF.
+// Включается сам при заряде ≤ 35 % без зарядки (Battery API — Chrome / Android) или вручную: localStorage fortuna_audio_eco = '1' / '0'.
+let ECO = null; // null — ещё не знаем (решится к первому касанию)
+try { const v = localStorage.getItem('fortuna_audio_eco'); if (v === '1' || v === '0') ECO = v === '1'; } catch (_) { /* приватный режим */ }
+if (ECO === null && navigator.getBattery) navigator.getBattery().then((b) => { if (ECO === null) ECO = !b.charging && b.level <= 0.35; }).catch(() => {});
+// выбор в «Настройках»: 'auto' | 'on' | 'off' (применяется при следующем запуске игры — звук пересоздаётся при загрузке)
+export function audioEcoMode() { try { const v = localStorage.getItem('fortuna_audio_eco'); return v === '1' ? 'on' : v === '0' ? 'off' : 'auto'; } catch (_) { return 'auto'; } }
+export function setAudioEcoMode(m) { try { if (m === 'auto') localStorage.removeItem('fortuna_audio_eco'); else localStorage.setItem('fortuna_audio_eco', m === 'on' ? '1' : '0'); } catch (_) { /* нет */ } }
+export const ECO_SELECT = (id) => `<label class="chk">Звук для слабого устройства <select id="${id}">${[['auto', 'авто (при заряде ≤ 35 %)'], ['on', 'включён — если трещит'], ['off', 'выключен']].map(([k, n]) => `<option value="${k}" ${audioEcoMode() === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label><p class="hint">Меньше нагрузка на процессор: убирает треск и обрывы на планшетах и телефонах в режиме экономии. Применится после перезапуска игры.</p>`;
 export function createAudio() {
   let ctx = null, master = null, out = null, reverbIn = null, avionics = null, engBus = null, engVerb = null;
   let muted = false, volume = 1;
@@ -55,13 +65,15 @@ export function createAudio() {
   function init() {
     if (ctx) return;
     try {
-      ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const eco = ECO === true, AC = window.AudioContext || window.webkitAudioContext;
+      try { ctx = eco ? new AC({ latencyHint: 'playback', sampleRate: 24000 }) : new AC({ latencyHint: 'interactive' }); } catch (_) { ctx = new AC(); }
+      ctx.eco = eco;
       makeBuffers();
       // шина: громкость → мягкий компрессор → выход; общая реверберация (сгенерированный импульс «открытого пространства»)
       out = gain(muted ? 0 : volume); master = ctx.createDynamicsCompressor(); master.threshold.value = -16; master.ratio.value = 3.5; master.knee.value = 12;
       chain(out, master, ctx.destination);
-      const conv = ctx.createConvolver(), ir = ctx.createBuffer(2, ctx.sampleRate * 2.6, ctx.sampleRate);
-      for (let ch = 0; ch < 2; ch++) { const x = ir.getChannelData(ch); for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / x.length, 3.6) * (i < 400 ? i / 400 : 1); }
+      const conv = ctx.createConvolver(), nch = ctx.eco ? 1 : 2, ir = ctx.createBuffer(nch, ctx.sampleRate * (ctx.eco ? 1.1 : 2.6), ctx.sampleRate); // экономный — короче и моно
+      for (let ch = 0; ch < nch; ch++) { const x = ir.getChannelData(ch); for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / x.length, 3.6) * (i < 400 ? i / 400 : 1); }
       conv.buffer = ir; reverbIn = gain(0.55); chain(reverbIn, filt('lowpass', 3500), conv, out);
       // «гарнитура»: бортовые сигналы звучат как из наушника, а не как игрушка
       avionics = chain(gain(1), filt('highpass', 350), filt('peaking', 1800, 0.9, 5)); avionics.connect(out);
@@ -108,7 +120,7 @@ export function createAudio() {
   // ── объёмные голоса: самолёты, ракеты, пролёты в лобби ──
   function buildVoices() {
     for (let i = 0; i < 6; i++) {
-      const pan = ctx.createPanner(); pan.panningModel = 'HRTF'; pan.distanceModel = 'inverse'; pan.refDistance = 140; pan.maxDistance = 30000; pan.rolloffFactor = 1.1;
+      const pan = ctx.createPanner(); pan.panningModel = ctx.eco ? 'equalpower' : 'HRTF'; pan.distanceModel = 'inverse'; pan.refDistance = 140; pan.maxDistance = 30000; pan.rolloffFactor = 1.1;
       const air = filt('lowpass', 8000, 0.5), g = gain(); chain(air, g, pan, out);
       const roarF = filt('bandpass', 350, 0.6), roarG = gain(1); chain(src('pink', 0.95 + i * 0.02), roarF, roarG, air);
       const rumbG = gain(0.8); chain(src('brown', 0.9 + i * 0.03), filt('lowpass', 170, 0.6), rumbG, air);

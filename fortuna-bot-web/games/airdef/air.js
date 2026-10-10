@@ -2,15 +2,15 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261012d';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261012d';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261012d';
-import { applyLayout } from './layout.js?v=20261012d';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261012d';
-import { DRONE } from '../drone/sim/modes.js?v=20261012d';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261012d';
-import { predictBomb } from './sim/strike.js?v=20261012d';
-import { placeDefense, pickTargets } from './mission.js?v=20261012d';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261013a';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261013a';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261013a';
+import { applyLayout } from './layout.js?v=20261013a';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261013a';
+import { DRONE } from '../drone/sim/modes.js?v=20261013a';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261013a';
+import { predictBomb } from './sim/strike.js?v=20261013a';
+import { placeDefense, pickTargets } from './mission.js?v=20261013a';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -21,7 +21,7 @@ export function createAir(C) {
   const game = { targets: [], score: 0, kills: 0, done: false, over: false, t: 0, opts: {} };
   const loadout = [];
   let sel = 0, hasPod = false, flashT = 0, laserSpot = null;
-  const home = new THREE.Vector3(); let homeT = 0; // точка вылета (пополнение в «Реализме») и время над ней
+  const home = new THREE.Vector3(); let homeT = 0, homeLeft = 1; // точка вылета (пополнение в «Реализме») и время над ней
 
   // ── модель самолёта и подвеска ──
   // самолёт игрока: многоцелевой ударный самолёт стороны атакующих (как в превью меню), подвеска — на его пилонах
@@ -454,7 +454,7 @@ export function createAir(C) {
     }
     const M = C.MODE();
     // «Реализм»: подвеска пуста (или мало ловушек/топлива) — метка точки вылета, где пополняются
-    if (M.reload === 'home' && reloadable() && (needsRearm() || craft.cmFlare < M.cm * 0.5 || craft.fuel < 0.6)) {
+    if (M.reload === 'home' && reloadable() && homeLeft > 0 && (needsRearm() || craft.cmFlare < M.cm * 0.5 || craft.fuel < 0.6)) {
       const p = proj(LP.set(home.x, home.y + 30, home.z));
       if (p) { const d = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z); hx.strokeStyle = hx.fillStyle = '#86efac'; hx.beginPath(); hx.arc(p[0], p[1], 9, 0, 7); hx.moveTo(p[0] - 5, p[1]); hx.lineTo(p[0] + 5, p[1]); hx.moveTo(p[0], p[1] - 5); hx.lineTo(p[0], p[1] + 5); hx.stroke(); hx.fillText(`Пополнение ${(d / 1000).toFixed(1)}${d < 2500 ? ' · ниже 1500 м' : ''}`, p[0], p[1] - 13); }
     }
@@ -508,9 +508,9 @@ export function createAir(C) {
     }
     const dead = game.targets.filter((o) => o.dead).length, fuel = Math.round((craft.fuel ?? 1) * 100);
     $('wpn').innerHTML = `<div class="fl"><b>${Math.round(craft.speed * 3.6)}</b> км/ч <b>${Math.round(craft.pos.y - g)}</b> м <span class="${craft.fuel < 0.2 ? 'warnc' : 'dim'}">⛽${fuel}%</span>${craft.ab ? ' <b class="ab">Ф</b>' : ''}</div>` +
-      `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' ●' : ' ×' + l.n}${l.rt > 0 ? ` <span class="dim">↻${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
+      `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' ●' : ' ×' + l.n}${AG[l.key].kind !== 'ecm' && Number.isFinite(l.res) && !game.net ? ` <span class="dim">+${l.res}</span>` : ''}${l.rt > 0 ? ` <span class="dim">↻${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
       `<div class="st">${msgT > 0 ? msgText : larText}${inAir ? ` <span class="fly">· в полёте ${inAir}</span>` : ''}</div>` + tgl +
-      `<div class="cm">ловушки ${Math.max(craft.cmFlare, craft.cmChaff)}${game.targets.length ? ` · цели ${dead}/${game.targets.length}` : ''}${craft.hp < 100 ? ` · <span class="${craft.hp < 40 ? 'warnc' : ''}">корпус ${Math.round(craft.hp)}%</span>` : ''}${C.auto ? ' · <b style="color:#86efac">АВТО</b>' : ''}${hasPod && pod.laserMan !== null ? ` · лазер ${pod.laserMan ? 'вкл' : 'выкл'}` : ''}${homeT > 0 ? ` · <b style="color:#86efac">пополнение ${Math.ceil(12 - homeT)} с</b>` : ''}</div>`;
+      `<div class="cm">ловушки ${Math.max(craft.cmFlare, craft.cmChaff)}${game.hunt ? ` · РЛС ${game.hunt.n}/${game.hunt.need}` : game.targets.length ? ` · цели ${dead}/${game.targets.length}` : ''}${craft.hp < 100 ? ` · <span class="${craft.hp < 40 ? 'warnc' : ''}">корпус ${Math.round(craft.hp)}%</span>` : ''}${C.auto ? ' · <b style="color:#86efac">АВТО</b>' : ''}${hasPod && pod.laserMan !== null ? ` · лазер ${pod.laserMan ? 'вкл' : 'выкл'}` : ''}${homeT > 0 ? ` · <b style="color:#86efac">пополнение ${Math.ceil(12 - homeT)} с</b>` : ''}</div>`;
     const lk = rw.find((e) => e.state === 'launch'), tr = rw.find((e) => e.state === 'track'), wn = $('warn');
     if (mw.length || lk) { wn.textContent = `ПУСК РАКЕТЫ${lk ? ' — ' + (lk.u.S.rwr || lk.u.S.short) : ''}`; wn.style.display = 'block'; }
     else if (tr) { wn.textContent = `ЗАХВАТ — ${tr.u.S.rwr || tr.u.S.short}`; wn.style.display = 'block'; }
@@ -613,7 +613,20 @@ export function createAir(C) {
     game.opts = opts; C.lastGame = opts.lastGame || 'air'; C.ended = false; demo = null;
     const rnd = mulberry32((Date.now() & 0xffffff) ^ 0x9e37);
     craft.dead = false;
-    const S = C.newBattle({ defSide: setup.side, era: setup.era, player: craft, rnd });
+    // «Операция» (setup.op): вылет 1 — охота за ПВО (setup.lo), вылет 2 — удар (setup.lo2) по тому же городу: что разбито в первом —
+    // остаётся разбитым, уцелевшие комплексы перезаряжаются и снова включают РЛС
+    const opOn = !!(setup.op && !opts.items && !opts.targets && !opts.defense && C.lastGame === 'air');
+    if (!opOn) C.op = null;
+    else if (C.op && C.op.next && C.S) { C.op.stage = 2; C.op.next = false; }
+    else C.op = { stage: 1, next: false };
+    const cont = !!(C.op && C.op.stage === 2);
+    if (C.op) setup.lo = cont ? setup.lo2 : setup.lo1;
+    const S = cont ? C.S : C.newBattle({ defSide: setup.side, era: setup.era, player: craft, rnd });
+    if (cont) {
+      C.player = craft;
+      for (const m of S.sams) m.dead = true; for (const w of S.wpns) w.dead = true; S.flares.length = 0; // небо — чистое
+      for (const u of S.units) if (!u.dead) { u.ammo = u.S.ammo; u.reloadT = 0; u.salvoLeft = 0; u.track = null; u.shutT = 0; if (u.S.radar && !u.manual) u.emit = !u.ambush; }
+    }
     buildShip(setup.side === 'east' ? 'west' : 'east');
     C.hooks = {
       hurtPlayer: hurt, playerLaser: () => laserSpot,
@@ -628,17 +641,30 @@ export function createAir(C) {
         game.score += Math.round(o.value * (isT ? 10 : 4) * (setup.diff === 'real' ? 1.5 : 1));
         say(`УНИЧТОЖЕН: ${o.name}${isT ? ' — цель задания' : ''}`, 3);
         if (isT) snd.good();
-        if (!game.done && game.targets.length && game.targets.every((q) => q.dead)) { game.done = true; say('ЗАДАЧА ВЫПОЛНЕНА — уходите за границу района или охотьтесь на ПВО', 5); }
+        if (!game.done && !game.hunt && game.targets.length && game.targets.every((q) => q.dead)) { game.done = true; say('ЗАДАЧА ВЫПОЛНЕНА — уходите за границу района или охотьтесь на ПВО', 5); }
       },
-      unitDestroyed(u) { game.kills++; game.score += Math.round((u.S.radar ? 400 : 200) * (setup.diff === 'real' ? 1.5 : 1)); say(`Уничтожен комплекс: ${u.S.name}`, 2.5); snd.good(); if (opts.onUnitDestroyed) opts.onUnitDestroyed(u); },
+      unitDestroyed(u) {
+        // охота за ПВО: задача — уничтожить hunt.need комплексов с РЛС
+        if (game.hunt && u.S.radar && ++game.hunt.n >= game.hunt.need && !game.done) { game.done = true; say('ЗАДАЧА ВЫПОЛНЕНА — ПВО подавлена: уходите за границу района или продолжайте охоту', 5); }
+        game.kills++; game.score += Math.round((u.S.radar ? 400 : 200) * (setup.diff === 'real' ? 1.5 : 1)); say(`Уничтожен комплекс: ${u.S.name}`, 2.5); snd.good(); if (opts.onUnitDestroyed) opts.onUnitDestroyed(u); },
       samLaunch(m) { if (opts.onSamLaunch) opts.onSamLaunch(m); },
       samEnd(m, hit) { if (opts.onSamEnd) opts.onSamEnd(m, hit); },
     };
-    game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd);
-    if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets);
+    if (cont) game.targets = C.op.targets;
+    else {
+      game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd);
+      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets);
+      if (C.op) C.op.targets = game.targets;
+    }
     C.syncUnits();
     // подвеска: тяжёлое — ближе к фюзеляжу
     rearm();
+    // задача по подвеске: «охота за ПВО» — половина комплексов с РЛС (1…4), «штурмовка» — объекты города
+    game.hunt = null;
+    if (!opts.items && !opts.targets && loadoutRole(LOADOUTS[setup.era][setup.lo]) === 'sead') {
+      const radars = S.units.filter((u) => u.S.radar).length;
+      if (radars) game.hunt = { n: 0, need: Math.max(1, Math.min(4, Math.ceil(radars * 0.5))), total: radars };
+    }
     const sp = opts.spawn || { x: riverX(14000) + 1500, y: 3200, z: 14000, yaw: 0 };
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = 240; thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
@@ -649,7 +675,8 @@ export function createAir(C) {
     ship.visible = true; camMode = 0; camInit = false; snd.resetRwr();
     $('hud').style.display = 'block'; document.body.classList.add('flying'); document.body.classList.toggle('aimmode', aimOn());
     layoutTouch(); layoutPod();
-    if (!opts.noIntro) say(`Цели: ${game.targets.map((o) => o.name).join(', ')}. ПВО: ${setup.side === 'east' ? 'советская' : 'западная'}, эпоха ${ERAS[setup.era - 1].short}`, 6);
+    if (C.op) { const left = S.units.filter((u) => !u.dead && u.S.radar).length; say(cont ? `Вылет 2 из 2 — удар: ${game.targets.filter((o) => !o.dead).map((o) => o.name).join(', ')}. Комплексов с РЛС осталось: ${left}` : `Операция, вылет 1 из 2 — охота за ПВО: уничтожьте ${game.hunt ? game.hunt.need : 1} комплекса с РЛС. Вторым вылетом — удар по целям города.`, 7); }
+    else if (!opts.noIntro) say(game.hunt ? `Охота за ПВО: уничтожьте ${game.hunt.need} из ${game.hunt.total} комплексов с РЛС (цели города — по желанию).` : `Цели: ${game.targets.map((o) => o.name).join(', ')}. ПВО: ${setup.side === 'east' ? 'советская' : 'западная'}, эпоха ${ERAS[setup.era - 1].short}`, 6);
   }
   // подвеска: тяжёлое — ближе к фюзеляжу (обучение перезаряжает этой же функцией)
   function rearm() {
@@ -661,7 +688,10 @@ export function createAir(C) {
     const L = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
     hasPod = !!L.pod;
     const order = [3, 4, 2, 5, 1, 6, 0, 7]; let oi = 0;
-    for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) { const st = []; for (let i = 0; i < n && oi < 8; i++) st.push(order[oi++]); loadout.push({ key, n: st.length, n0: st.length, st, st0: st.slice(), rt: 0 }); }
+    // запас на борт (ошибки, промахи): «Аркада» — ещё 2 полных комплекта (пополняются сами), «Реализм» — 1 пополнение на точке вылета;
+    // обучение (opts.reload) — без ограничений
+    const sets = opts.reload ? Infinity : (C.MODE().rearms ?? 1); homeLeft = sets;
+    for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) { const st = []; for (let i = 0; i < n && oi < 8; i++) st.push(order[oi++]); loadout.push({ key, n: st.length, n0: st.length, st, st0: st.slice(), rt: 0, res: st.length * sets }); }
     sel = 0;
     buildShip(L.side || att, classOf(L.items, AG), L.plane || null); // модель самолёта — из подвески
     craft.cmFlare = craft.cmChaff = C.MODE().cm;
@@ -713,8 +743,23 @@ export function createAir(C) {
     if (game.over) return; game.over = true;
     if (game.opts.noEnd) return;
     const dead = game.targets.filter((o) => o.dead).length, real = C.setup.diff === 'real';
+    if (C.op && C.op.stage === 1) { // операция: итоги первого вылета — дальше удар
+      C.op.s1 = { score: game.score, kills: game.kills, hunt: game.hunt, alive: !craft.dead }; C.op.next = true;
+      const h = game.hunt || { n: 0, need: 0 };
+      C.showEnd({ title: 'Вылет 1 из 2 завершён', reason: why, win: craft.dead ? false : game.done ? true : null, again: 'Вылет 2: удар →',
+        stats: [[`${Math.min(h.n, h.need)}/${h.need}`, 'РЛС уничтожено'], [game.kills, 'комплексов ПВО'], [game.score, 'очков'], [craft.dead ? 'сбит' : 'вернулся', 'самолёт']],
+        note: `Уничтоженное остаётся уничтоженным; уцелевшие комплексы перезарядятся и снова включат РЛС. ${h.n >= h.need ? 'ПВО подавлена — удару будет легче.' : 'ПВО подавлена не полностью — удар будет опаснее.'}` });
+      return;
+    }
+    if (C.op && C.op.stage === 2) { // операция: общий итог
+      const s1 = C.op.s1 || { score: 0, kills: 0, alive: false, hunt: null }, bonus = s1.alive && !craft.dead ? 300 : 0, total = s1.score + game.score + bonus;
+      C.showEnd({ title: 'Операция завершена', reason: why, win: game.done ? true : craft.dead ? false : null, again: 'Новая операция',
+        stats: [[s1.hunt ? `${Math.min(s1.hunt.n, s1.hunt.need)}/${s1.hunt.need}` : '—', 'РЛС (вылет 1)'], [`${dead}/${game.targets.length}`, 'целей (вылет 2)'], [s1.kills + game.kills, 'комплексов ПВО'], [total, 'очков']],
+        note: `Очки: ${s1.score} + ${game.score}${bonus ? ` + ${bonus} за два возвращения` : ''}. ${real ? 'Реализм' : 'Аркада'}, эпоха ${ERAS[C.setup.era - 1].short}.` });
+      C.op = null; C.menu.record('air', total); return;
+    }
     C.showEnd({ title: craft.dead ? 'Самолёт потерян' : 'Вылет завершён', reason: why, win: craft.dead ? false : game.done ? true : null,
-      stats: [[`${dead}/${game.targets.length}`, 'целей уничтожено'], [game.kills, 'комплексов ПВО'], [game.score, 'очков'], [real ? 'Реализм' : 'Аркада', `эпоха ${ERAS[C.setup.era - 1].short}`]],
+      stats: [game.hunt ? [`${Math.min(game.hunt.n, game.hunt.need)}/${game.hunt.need}`, 'РЛС уничтожено'] : [`${dead}/${game.targets.length}`, 'целей уничтожено'], [game.kills, 'комплексов ПВО'], [game.score, 'очков'], [real ? 'Реализм' : 'Аркада', `эпоха ${ERAS[C.setup.era - 1].short}`]],
       note: game.done ? 'Задание выполнено.' : '' });
     C.menu.record('air', game.score);
   }
@@ -725,10 +770,10 @@ export function createAir(C) {
   // «Реализм»: только у точки вылета — ниже 1500 м в 2,5 км от неё 12 с: подвеска, ловушки и топливо целиком
   const relT = (l) => clamp(20 + AG[l.key].mass / 30, 20, 60);
   const reloadable = () => !game.net && (!game.opts.items || game.opts.reload) && !craft.dead && !game.over;
-  const needsRearm = () => loadout.some((l) => AG[l.key].kind !== 'ecm' && l.n < l.n0);
+  const needsRearm = () => loadout.some((l) => AG[l.key].kind !== 'ecm' && l.n < l.n0 && l.res > 0);
   function reloadOne(l) {
-    const st = l.st0.find((q) => !l.st.includes(q)); if (st === undefined) return;
-    l.st.push(st); l.n++;
+    const st = l.st0.find((q) => !l.st.includes(q)); if (st === undefined || !(l.res > 0)) return;
+    l.st.push(st); l.n++; l.res--;
     const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal;
     craft.massK = 1 + loadout.reduce((s, q) => s + q.n * AG[q.key].mass, 0) / 9000;
     if (!usable(loadout[sel])) sel = loadout.indexOf(l);
@@ -737,7 +782,7 @@ export function createAir(C) {
     if (!reloadable()) return;
     if (C.MODE().reload === 'auto') {
       for (const l of loadout) {
-        if (AG[l.key].kind === 'ecm' || l.n >= l.n0) { l.rt = 0; continue; }
+        if (AG[l.key].kind === 'ecm' || l.n >= l.n0 || !(l.res > 0)) { l.rt = 0; continue; }
         if (!l.rt) l.rt = relT(l);
         if ((l.rt -= dt) > 0) continue;
         reloadOne(l); l.rt = l.n < l.n0 ? relT(l) : 0;
@@ -746,13 +791,13 @@ export function createAir(C) {
       return;
     }
     const near = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z) < 2500 && craft.pos.y - city.groundH(craft.pos.x, craft.pos.z) < 1500;
-    const need = needsRearm() || craft.cmFlare < C.MODE().cm * 0.5 || craft.fuel < 0.6;
+    const need = homeLeft > 0 && (needsRearm() || craft.cmFlare < C.MODE().cm * 0.5 || craft.fuel < 0.6);
     if (!near || !need) { homeT = 0; return; }
     homeT += dt;
     if (homeT < 12) return;
     for (const l of loadout) { while (l.n < l.n0) reloadOne(l); l.rt = 0; }
-    craft.cmFlare = craft.cmChaff = C.MODE().cm; craft.fuel = 1; fuelWarn = 0; homeT = 0;
-    say('Пополнение: подвеска, ловушки и топливо', 3); snd.good();
+    craft.cmFlare = craft.cmChaff = C.MODE().cm; craft.fuel = 1; fuelWarn = 0; homeT = 0; homeLeft--;
+    say(`Пополнение: подвеска, ловушки и топливо${Number.isFinite(homeLeft) ? ` · осталось пополнений: ${homeLeft}` : ''}`, 3); snd.good();
   }
   function update(dt) {
     game.t += dt;

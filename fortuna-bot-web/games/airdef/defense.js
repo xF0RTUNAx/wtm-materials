@@ -6,11 +6,11 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261012d';
-import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261012d';
-import { samClass, samCost, LIMIT1 } from './sim/online.js?v=20261012d';
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261012d';
-import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261012d';
+import { CITY, mulberry32 } from './city.js?v=20261013a';
+import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261013a';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261013a';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261013a';
+import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261013a';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -21,6 +21,8 @@ export function createDefense(C) {
   const V3 = () => new THREE.Vector3();
   const st = { phase: 'plan', wave: 0, waves: WAVES, budget: 0, score: 0, value0: 1, downs: 0, leaked: 0, lostUnits: 0, placing: null, sel: null, moving: false,
     view: 'map', op: null, opts: {}, waveDowns: 0, waveLeak: 0, waveLost: [], over: false, rnd: Math.random, msg: '', msgT: 0, net: null, ready: false };
+  // цена комплекса: в онлайне ведущая ПВО платит за дальние больше (sim/online.js LEAD_K)
+  const costOf = (k) => (st.net ? samCostFor(k, st.net.room && st.net.room.lead) : samCost(k));
   const seen = new Map(); // самолёт → время, когда его последний раз видела сеть ПВО
   const tm = $('tmap'), tx = tm.getContext('2d');
   const view = { cx: 500, cz: -300, k: 0.05 }; // центр карты (м) и масштаб (px на м)
@@ -174,7 +176,7 @@ export function createDefense(C) {
       const roof = buildingAt(city, wx, wz) >= 0;
       if (st.net) { // онлайн: покупку и переезд проверяет и делает сервер (комплекс придёт событием)
         if (st.moving) { st.net.move(st.sel.id, wx, wz, roof); st.moving = false; }
-        else { if (samCost(st.placing) > st.budget) { say('Не хватает очков обороны'); snd.deny(); return; } st.net.buyUnit(st.placing, wx, wz, roof); }
+        else { if (costOf(st.placing) > st.budget) { say('Не хватает очков обороны'); snd.deny(); return; } st.net.buyUnit(st.placing, wx, wz, roof); }
         snd.click(); renderSide(); return;
       }
       if (st.moving) { C.S.moveUnit(st.sel, wx, wz, roof); st.sel.cov = null; st.moving = false; C.syncUnits(); snd.click(); renderSide(); return; }
@@ -216,7 +218,7 @@ export function createDefense(C) {
     const left = N.room && N.room.left !== null ? ` · ${N.room.left} с` : '';
     if (st.phase === 'plan') {
       h += `<h3>Расстановка · волна ${st.wave}/${st.waves}${left}</h3><div>Очки обороны: <b style="color:#fde68a">${st.budget}</b></div>`;
-      if (st.wave === 1) h += '<p class="hint">Первая волна: не больше 1 дальнего и 2 средних комплексов, ближние — за очки.</p>';
+      if (st.wave === 1) h += '<p class="hint">Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние — за очки.</p>';
       if (st.sel && !st.sel.dead && mine(st.sel)) {
         const u = st.sel;
         h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км</span></div></div>
@@ -226,7 +228,7 @@ export function createDefense(C) {
       const side = B.sideAir === 'east' ? 'west' : 'east';
       for (const [k, s] of Object.entries(SAM)) {
         if (s.side !== side || s.era > B.era) continue;
-        const c = samCost(k), lim = netLeft(k), no = c > st.budget || (lim !== null && lim <= 0);
+        const c = costOf(k), lim = netLeft(k), no = c > st.budget || (lim !== null && lim <= 0);
         h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${s.short}</b><span>${CLS_NAME[samClass(k)]} · ${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км${lim !== null ? ` · можно ещё ${Math.max(0, lim)}` : ''}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? 'Коснитесь карты, чтобы поставить. ПЗРК можно на плоские крыши.' : 'Выберите комплекс и коснитесь карты. Свои комплексы можно переставить и продать.'}</p>`;
@@ -290,7 +292,7 @@ export function createDefense(C) {
   }
   side.onclick = (e) => {
     const b = e.target.closest('[data-a]'), buy = e.target.closest('[data-buy]');
-    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (samCost(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? 'Лимит первой волны для этого класса' : 'Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; snd.click(); } renderSide(); return; }
+    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (costOf(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? 'Лимит первой волны для этого класса' : 'Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; snd.click(); } renderSide(); return; }
     if (b && st.net) {
       const u = st.sel, a = b.dataset.a;
       if (a === 'ready') { st.ready = !st.ready; st.net.ready(st.ready); }

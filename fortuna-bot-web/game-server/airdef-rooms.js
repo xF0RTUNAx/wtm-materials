@@ -15,7 +15,7 @@ import { buildCity, CITY } from '../games/airdef/city.js?v=20260930m';
 import { createStrike, MODES } from '../games/airdef/sim/strike.js?v=20260930m';
 import { createRaid, STRIKERS } from '../games/airdef/sim/raid.js?v=20260930m';
 import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/airdef/mission.js?v=20260930m';
-import { AG, SAM, LOADOUTS, DEFENSE } from '../games/airdef/arsenal.js?v=20260930m';
+import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal.js?v=20260930m';
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 
@@ -51,7 +51,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   // ── вид комнаты (выбор связок авиации видят только союзники) ──
   const view = (r, me) => ({
     t: 'room', code: r.code, mode: r.mode, size: r.size, era: r.era, sideAir: r.sideAir, host: r.host, quick: !!r.quick, state: r.state, wave: r.wave,
-    left: r.phaseT ? Math.max(0, Math.round(r.phaseT - r.t)) : null, valueK: r.valueK || 0, fill: !!r.fill,
+    left: r.phaseT ? Math.max(0, Math.round(r.phaseT - r.t)) : null, valueK: r.valueK || 0, fill: !!r.fill, lead: r.lead || null,
     players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws,
       budget: !me || p.team === me.team ? p.budget : null, choice: (!me || p.team === me.team) && p.choice !== null && p.choice !== undefined ? p.choice : null,
       kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0), lives: p.lives ?? null })),
@@ -115,6 +115,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   }
   function startBattle(r) {
     r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], aircraft: () => r.air, laserSpot: (a) => a.laser || null, night: 0,
+      reloadK: () => (r.state === 'play' && r.waveRes ? O.reloadKOf(r.t, r.waveRes.radarKills) : 1), // две фазы волны: подавленная ПВО перезаряжается дольше
       hurt: (a, dmg, by) => hurtAir(r, a, dmg, by), spawnDecoy: (a, key, aim) => announce(r, r.raid.spawnDecoy(a, key, aim)), fx: strikeFx(r) });
     r.raid = createRaid(r.S, city, Math.random, { side: r.sideAir, era: r.era, fx: raidFx(r) });
     r.humanCraft = new Map();
@@ -129,9 +130,9 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
 
   // ═════════════ Волны ═════════════
   function nextWave(r) {
-    r.wave++; r.state = 'plan'; r.t = 0; r.phaseT = PLAN_T; r.waveRes = { downs: 0, unitKills: 0, value0K: r.valueK };
+    r.wave++; r.state = 'plan'; r.t = 0; r.phaseT = PLAN_T; r.waveRes = { downs: 0, downsSead: 0, unitKills: 0, radarKills: 0, value0K: r.valueK };
     for (const p of r.players.values()) {
-      p.ready = !!p.bot; p.choice = null; p.craft = null; p.plane = null; p.lives = p.team === 'air' ? O.RESPAWNS[r.wave - 1] + 1 : null; p.out = false; p.respT = 0;
+      p.ready = !!p.bot; p.choice = null; p.paid = null; p.craft = null; p.plane = null; p.lives = p.team === 'air' ? O.RESPAWNS[r.wave - 1] + 1 + (r.lead === 'pvo' ? 1 : 0) : null; // отстающей авиации — +1 вылет p.out = false; p.respT = 0;
       p.limit = r.wave === 1 && p.team === 'pvo' ? { top: O.LIMIT1.top, mid: O.LIMIT1.mid } : null;
     }
     // ПВО между волнами: уничтоженные комплексы убираем, живые перезаряжаются
@@ -188,11 +189,12 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     for (const p of team(r, 'air')) { if (p.craft) { r.humanCraft.delete(p.id); p.craft = null; } }
     for (const a of r.raid.planes) if (!a.dead) a.out = true;
     r.raid.planes.length = 0;
-    const res = { wave: r.wave, why, valueK: Math.max(0, r.valueK - r.waveRes.value0K), totalK: r.valueK, downs: r.waveRes.downs, unitKills: r.waveRes.unitKills };
+    const res = { wave: r.wave, why, valueK: Math.max(0, r.valueK - r.waveRes.value0K), totalK: r.valueK, downs: r.waveRes.downs, downsSead: r.waveRes.downsSead, unitKills: r.waveRes.unitKills, radarKills: r.waveRes.radarKills };
     const airWins = r.valueK >= O.WIN_K, last = r.wave >= O.WAVES || airWins;
     r.state = 'debrief'; r.t = 0; r.phaseT = DEBRIEF_T; r.last = last; r.lastRes = res;
     // бюджеты на следующую волну: проигрывающая сторона (по ходу боя) получает прибавку
     const airLosing = r.valueK < O.WIN_K * r.wave / O.WAVES;
+    r.lead = airLosing ? 'pvo' : 'air'; res.lead = r.lead; // ведущая сторона платит больше в следующей волне (O.LEAD_K)
     for (const p of r.players.values()) p.budget = (p.budget || 0) + O.waveBudget(p.team, res, p.team === 'air' ? airLosing : !airLosing);
     bcast(r, { t: 'waveEnd', ...res, last });
     sendRoom(r);
@@ -213,20 +215,28 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   }
 
   // ═════════════ Боты: расстановка и выбор связки ═════════════
-  const afford = (r, p) => LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && O.loadoutCost(L) <= p.budget);
+  const afford = (r, p) => LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && O.loadoutCostFor(L, r.lead) <= p.budget);
+  // подвески остальных лётчиков команды (для лимита охотников)
+  const othersL = (r, p) => team(r, 'air').filter((q) => q !== p).map((q) => (q.choice !== null && q.choice !== undefined ? LOADOUTS[r.era][q.choice] : null));
   function autoChoice(r, p) {
-    const list = afford(r, p).sort((a, b) => O.loadoutCost(a[0]) - O.loadoutCost(b[0]));
+    // в пределах лимита охотников; бот берёт недостающую роль: нет штурмовика — штурмовку, нет охотника — охоту (если лимит позволяет)
+    const others = othersL(r, p), nAir = team(r, 'air').length, ok = ([L]) => !O.roleDeny(L, others, nAir);
+    let list = afford(r, p).filter(ok).sort((a, b) => O.loadoutCostFor(a[0], r.lead) - O.loadoutCostFor(b[0], r.lead));
+    if (p.bot && list.length) {
+      const has = (role) => others.some((x) => x && loadoutRole(x) === role), want = !has('strike') ? 'strike' : !has('sead') ? 'sead' : null;
+      const w = want && list.filter(([L]) => loadoutRole(L) === want); if (w && w.length) list = w;
+    }
     const pick = p.bot && list.length ? list[Math.floor(Math.random() * list.length)] : list[0];
-    const all = LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir).sort((a, b) => O.loadoutCost(a[0]) - O.loadoutCost(b[0]));
-    const [L, i] = pick || all[0];
-    p.choice = i; p.budget = Math.max(0, p.budget - O.loadoutCost(L));
+    const all = LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir).filter(ok).sort((a, b) => O.loadoutCost(a[0]) - O.loadoutCost(b[0]));
+    const [L, i] = pick || all[0] || LOADOUTS[r.era].map((q, j) => [q, j]).find(([q]) => q.side === r.sideAir);
+    p.choice = i; p.paid = O.loadoutCostFor(L, r.lead); p.budget = Math.max(0, p.budget - p.paid);
   }
   function botPlan(r, p) {
     if (p.team === 'air') { if (p.choice === null) autoChoice(r, p); return; }
     const side = opp(r.sideAir), list = (DEFENSE[side][r.era] || []).map(([k]) => k).filter((k) => O.samOk(k, r.era, side));
     const order = [...list.filter((k) => O.samClass(k) === 'top'), ...list.filter((k) => O.samClass(k) === 'mid'), ...list.filter((k) => O.samClass(k) === 'near')];
     for (let guard = 0; guard < 12; guard++) {
-      const k = order.find((k) => O.samCost(k) <= p.budget && canClass(r, p, k)); if (!k) break;
+      const k = order.find((k) => O.samCostFor(k, r.lead) <= p.budget && canClass(r, p, k)); if (!k) break;
       const tgt = r.targets[guard % r.targets.length], Sx = SAM[k], man = Sx.type === 'ir' && Sx.hp <= 15;
       const xz = Sx.rmax >= 15000 ? spotNear(city, Math.random, tgt.x * 0.5, tgt.z * 0.5, 600, 2500, false) : spotNear(city, Math.random, tgt.x, tgt.z, 250, man ? 1600 : 1400, man);
       buyUnit(r, p, k, xz[0], xz[1], xz[2], true);
@@ -242,14 +252,14 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   function buyUnit(r, p, k, x, z, roof, quiet) {
     const side = opp(r.sideAir);
     if (!O.samOk(k, r.era, side)) return 'Комплекс недоступен';
-    if (O.samCost(k) > p.budget) return 'Не хватает очков';
-    if (!canClass(r, p, k)) return O.samClass(k) === 'top' ? 'На первой волне — один дальний комплекс' : 'На первой волне — два комплекса средней дальности';
+    if (O.samCostFor(k, r.lead) > p.budget) return 'Не хватает очков';
+    if (!canClass(r, p, k)) return O.samClass(k) === 'top' ? 'На первой волне — один дальний комплекс' : 'На первой волне — один комплекс средней дальности';
     if (!Number.isFinite(x) || !Number.isFinite(z) || Math.abs(x) > CITY.HALF - 1500 || Math.abs(z) > CITY.HALF - 1500) return 'Вне карты';
     const Sx = SAM[k], man = Sx.type === 'ir' && Sx.hp <= 15;
     if (roof) { if (!man) return 'На крышу — только ПЗРК'; const bi = buildingAt(city, x, z); if (bi < 0 || !roofOk(city, bi)) return 'Сюда на крышу нельзя'; }
     else if (!freeGround(city, x, z, man ? 3 : 9)) return 'Место занято — нужна свободная земля'; // как у клиента (defense.js placeOk)
     const u = r.S.addUnit(k, x, z, { roof: !!roof, skill: 0.75, yaw: Math.random() * 6.28 });
-    u.owner = p.id; p.budget -= O.samCost(k);
+    u.owner = p.id; u.paid = O.samCostFor(k, r.lead); p.budget -= u.paid;
     bcast(r, { t: 'ev', e: [['ua', u.id, k, r1(x), r1(z), roof ? 1 : 0, p.id, Math.round(u.yaw * 1000) / 1000]] });
     if (!quiet) sendRoom(r);
     return null;
@@ -270,7 +280,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       cmDrop: (a, type) => push(r, ['cm', a.id, type === 'flare' ? 1 : 2]),
       objectDestroyed: (o, by, owner) => { push(r, ['od', o.id]); updValue(r); const p = airOwner(r, owner); if (p) p.score += o.value * (r.targets.some((q) => q.id === o.id) ? 2 : 0.5); killLog(r, p ? p.name : 'Авиация', o.name, by); },
       objectHit: () => updValue(r),
-      unitDestroyed: (u, by, owner) => { push(r, ['ud', u.id]); r.waveRes.unitKills++; const p = airOwner(r, owner); if (p) { p.kills++; p.score += 40; } const v = r.players.get(u.owner); killLog(r, p ? p.name : 'Авиация', `${u.S.short}${v ? ' (' + v.name + ')' : ''}`, by); },
+      unitDestroyed: (u, by, owner) => { push(r, ['ud', u.id]); r.waveRes.unitKills++; if (u.S.radar) r.waveRes.radarKills++; const p = airOwner(r, owner); if (p) { p.kills++; p.score += 40; } const v = r.players.get(u.owner); killLog(r, p ? p.name : 'Авиация', `${u.S.short}${v ? ' (' + v.name + ')' : ''}`, by); },
     };
   }
   function raidFx(r) {
@@ -301,6 +311,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (a.role === 'decoy') return;
     r.waveRes.downs++;
     const owner = r.players.get(a.owner || a.fromHuman || 0);
+    { const L = owner && O.bundleOf(r.era, r.sideAir, owner.choice); if (L ? loadoutRole(L) === 'sead' : a.role === 'sead') r.waveRes.downsSead++; } // охотник за ПВО
     if (owner) { owner.deaths++; if (owner.craft === a) { r.humanCraft.delete(owner.id); owner.craft = null; } if (owner.plane === a) owner.plane = null; owner.respT = r.t + O.RESPAWN_T; }
     // сбитие — ПВО: очки владельцу комплекса, который вёл цель (или всей команде поровну, если неизвестно)
     const shooter = r.S.units.find((u) => !u.dead && u.track === a) || null;
@@ -438,12 +449,13 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       case 'buyAir': {
         if (r.state !== 'plan' || c.team !== 'air') return;
         const L = O.bundleOf(r.era, r.sideAir, +m.i); if (!L) return;
-        const back = c.choice !== null ? O.loadoutCost(LOADOUTS[r.era][c.choice]) : 0;
-        if (O.loadoutCost(L) > c.budget + back) return deny(c, 'Не хватает очков на эту связку', 'buyAir');
-        c.budget += back - O.loadoutCost(L); c.choice = +m.i; sendRoom(r); return;
+        const back = c.choice !== null ? (c.paid ?? O.loadoutCostFor(LOADOUTS[r.era][c.choice], r.lead)) : 0, cost = O.loadoutCostFor(L, r.lead);
+        if (cost > c.budget + back) return deny(c, 'Не хватает очков на эту связку', 'buyAir');
+        const rd = O.roleDeny(L, othersL(r, c), team(r, 'air').length); if (rd) return deny(c, rd, 'buyAir');
+        c.budget += back - cost; c.choice = +m.i; c.paid = cost; sendRoom(r); return;
       }
       case 'buyUnit': { if (r.state !== 'plan' || c.team !== 'pvo') return; const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) deny(c, why, 'buyUnit ' + m.k); else J(r, 'cmd', { who: c.name, cmd: 'buyUnit', k: m.k, x: Math.round(+m.x), z: Math.round(+m.z) }); return; }
-      case 'sell': { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round(O.samCost(u.key) * 0.7); r.S.removeUnit(u); bcast(r, { t: 'ev', e: [['ur', u.id]] }); sendRoom(r); return; }
+      case 'sell': { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? O.samCost(u.key)) * 0.7); r.S.removeUnit(u); bcast(r, { t: 'ev', e: [['ur', u.id]] }); sendRoom(r); return; }
       case 'move': { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id || !Number.isFinite(+m.x) || !Number.isFinite(+m.z)) return; if (!(m.roof ? buildingAt(city, +m.x, +m.z) >= 0 : freeGround(city, +m.x, +m.z))) return deny(c, 'Место занято', 'move'); r.S.moveUnit(u, +m.x, +m.z, !!m.roof); bcast(r, { t: 'ev', e: [['um', u.id, r1(+m.x), r1(+m.z), m.roof ? 1 : 0]] }); return; }
     }
     // журнал игры: ошибки, отказы у себя, связь, частота кадров (≤ 30 в минуту)

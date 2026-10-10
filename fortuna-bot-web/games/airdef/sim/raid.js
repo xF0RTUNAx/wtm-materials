@@ -4,10 +4,10 @@
 // ракеты по включённым РЛС; low — прорыв на малой высоте между домами со свободнопадающими бомбами.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { AG } from '../arsenal.js?v=20261012d';
-import { makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261012d';
-import { predictBomb } from './strike.js?v=20261012d';
-import { CITY } from '../city.js?v=20261012d';
+import { AG } from '../arsenal.js?v=20261013a';
+import { makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261013a';
+import { predictBomb } from './strike.js?v=20261013a';
+import { CITY } from '../city.js?v=20261013a';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {

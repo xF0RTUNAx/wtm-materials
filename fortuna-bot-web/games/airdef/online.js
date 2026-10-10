@@ -3,10 +3,10 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261012d';
-import * as O from './sim/online.js?v=20261012d';
-import { AG, LOADOUTS, PLANES, ERAS } from './arsenal.js?v=20261012d';
-import { MODES } from './sim/strike.js?v=20261012d';
+import { createNet } from './net.js?v=20261013a';
+import * as O from './sim/online.js?v=20261013a';
+import { AG, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261013a';
+import { MODES } from './sim/strike.js?v=20261013a';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -131,12 +131,14 @@ export function createOnline(C, ctrls) {
     const r = N.room, show = N.battle && r && r.state === 'plan' && team() === 'air';
     planEl.style.display = show ? 'block' : 'none'; if (!show) return;
     const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir);
-    const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id);
-    planEl.innerHTML = `<h3>Волна ${r.wave}/${O.WAVES} · выбор связки · ${r.left ?? ''} с</h3><div>Очки: <b style="color:#fde68a">${me.budget}</b> · вылетов на волну: ${O.RESPAWNS[r.wave - 1] + 1}</div>
-      ${allies.length ? `<div class="cat-h">Союзники</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${esc(p.name)}</b> — ${L ? `${PLANES[L.plane]} · ${O.approachOf(L)}` : 'выбирает…'}${p.ready ? ' <span class="okc">✓</span>' : ''}</div>`; }).join('')}` : ''}
+    const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LOADOUTS[B.era][p.choice] : null));
+    const nAir = allies.length + 1, hunters = others.filter((x) => x && loadoutRole(x) === 'sead').length;
+    planEl.innerHTML = `<h3>Волна ${r.wave}/${O.WAVES} · выбор связки · ${r.left ?? ''} с</h3><div>Очки: <b style="color:#fde68a">${me.budget}</b> · вылетов на волну: ${me.lives ?? O.RESPAWNS[r.wave - 1] + 1}${r.lead === 'pvo' ? ' (+1: команда отстаёт)' : ''}</div>
+      <div class="dim">Охотников за ПВО в команде: ${hunters + (me.choice !== null && loadoutRole(LOADOUTS[B.era][me.choice]) === 'sead' ? 1 : 0)}/${O.huntCap(nAir)} · после ${O.SUPPRESS_T} с каждая уничтоженная РЛС замедляет перезарядку ПВО${r.lead === 'air' ? ' · вы ведёте — связки на 10 % дороже' : ''}</div>
+      ${allies.length ? `<div class="cat-h">Союзники</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${esc(p.name)}</b> — ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : 'выбирает…'}${p.ready ? ' <span class="okc">✓</span>' : ''}</div>`; }).join('')}` : ''}
       <div class="cat-h">Связки</div>` + list.map(([L, i]) => {
-      const cost = O.loadoutCost(L), back = me.choice !== null ? O.loadoutCost(LOADOUTS[B.era][me.choice]) : 0, no = cost > me.budget + back;
-      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span>${O.approachOf(L)} · ${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}</span></div><span class="pr">${cost}</span></button>`;
+      const cost = O.loadoutCostFor(L, r.lead), back = me.choice !== null ? O.loadoutCostFor(LOADOUTS[B.era][me.choice], r.lead) : 0, deny = O.roleDeny(L, others, nAir), no = cost > me.budget + back || !!deny;
+      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}${deny ? ' · <b class="warnc">лимит охотников</b>' : ''}</span></div><span class="pr">${cost}</span></button>`;
     }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
   }
   planEl.onclick = (e) => {
@@ -166,7 +168,9 @@ export function createOnline(C, ctrls) {
   N.on('kill', (who, whom, by) => { feed.push({ t: performance.now(), s: `${who} → ${whom}${by ? ' · ' + by : ''}` }); if (feed.length > 6) feed.shift(); });
   N.on('help', (m) => { feed.push({ t: performance.now(), s: `${m.name}: Мне нужна помощь!`, help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); snd.alarm(); });
   N.on('waveEnd', (m) => {
-    C.say(m.last ? (m.totalK >= O.WIN_K ? 'Авиация уничтожила цели' : 'Последняя волна отбита') : `Волна ${m.wave} окончена · уничтожено ${Math.round(m.totalK * 100)}% ценности целей`, 5);
+    // итоги волны: вклад каждой роли — цели, подавленные РЛС, сбитые охотники и ударники
+    const det = `РЛС уничтожено: ${m.radarKills || 0} · сбито охотников за ПВО: ${m.downsSead || 0}, ударников: ${Math.max(0, (m.downs || 0) - (m.downsSead || 0))}`;
+    C.say(m.last ? `${m.totalK >= O.WIN_K ? 'Авиация уничтожила цели' : 'Последняя волна отбита'} · ${det}` : `Волна ${m.wave} окончена · уничтожено ${Math.round(m.totalK * 100)}% ценности целей · ${det}${m.lead ? ` · ведёт ${m.lead === 'air' ? 'авиация' : 'ПВО'}` : ''}`, 7);
     if (team() === 'pvo') ctrls.defense.setNetRes(m);
   });
   N.on('end', (m) => {

@@ -8,25 +8,25 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261012d';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261012d';
-import { createPipeline } from '../drone/post.js?v=20261012d';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261012d';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261012d';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261012d';
-import { createStrike, MODES } from './sim/strike.js?v=20261012d';
-import { createRaid } from './sim/raid.js?v=20261012d';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261012d';
-import { slotCount } from './launchers.js?v=20261012d';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261012d';
-import { createSound } from './sound.js?v=20261012d';
-import { createAir } from './air.js?v=20261012d';
-import { createDefense } from './defense.js?v=20261012d';
-import { createDirector } from './director.js?v=20261012d';
-import { createOnline } from './online.js?v=20261012d';
-import { createShell } from './shell.js?v=20261012d';
-import { createTraining, LESSONS } from './training.js?v=20261012d';
-import { createMenu } from './menu.js?v=20261012d';
+import { buildCity, CITY } from './city.js?v=20261013a';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261013a';
+import { createPipeline } from '../drone/post.js?v=20261013a';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261013a';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261013a';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261013a';
+import { createStrike, MODES } from './sim/strike.js?v=20261013a';
+import { createRaid } from './sim/raid.js?v=20261013a';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261013a';
+import { slotCount } from './launchers.js?v=20261013a';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261013a';
+import { createSound } from './sound.js?v=20261013a';
+import { createAir } from './air.js?v=20261013a';
+import { createDefense } from './defense.js?v=20261013a';
+import { createDirector } from './director.js?v=20261013a';
+import { createOnline } from './online.js?v=20261013a';
+import { createShell } from './shell.js?v=20261013a';
+import { createTraining, LESSONS } from './training.js?v=20261013a';
+import { createMenu } from './menu.js?v=20261013a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -112,7 +112,8 @@ if (CINEMA) { W.hazeK = (W.hazeK || 0) * 0.45; W.fogD = (W.fogD || 0) * 0.55; } 
 // ═════════════ Настройки боя (сохраняются) ═════════════
 // game: 'air' — вылет, 'defense' — оборона, 'training'; diff — Аркада/Реализм; era; side — сторона ПВО города; lo — подвеска;
 // tside — ветка обучения ('air' | 'def'), tl — урок
-const setup = { game: 'air', diff: 'arcade', era: 2, side: 'east', lo: 0, tside: 'air', tl: 0 };
+// op — «Операция» из 2 вылетов: lo1 — охота за ПВО, lo2 — удар
+const setup = { game: 'air', diff: 'arcade', era: 2, side: 'east', lo: 0, op: false, lo1: 0, lo2: 0, tside: 'air', tl: 0 };
 try { Object.assign(setup, JSON.parse(ls.get('fortuna_airdef_setup') || '{}')); } catch (_) { /* по умолчанию */ }
 if (!MODES[setup.diff]) setup.diff = 'arcade';
 if (!LOADOUTS[setup.era]) setup.era = 2;
@@ -505,6 +506,7 @@ C.start = function (game) {
   resize();
 };
 C.toMenu = function () {
+  C.op = null; // «Операция» прервана
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
   C.hooks = {}; C.paused = false; C.hint(''); C.say(''); $('ask').style.display = 'none'; $('warn').style.display = 'none';
   for (const id of ['end', 'pauseScr', 'lesson']) $(id).classList.remove('on');
@@ -523,8 +525,8 @@ C.togglePause = function () {
   if (C.paused) snd.silence();
 };
 // итоги: title, reason, stats [[число, подпись]], note, win (true/false/null)
-C.showEnd = function ({ title, reason, stats, note, win }) {
-  C.ended = true;
+C.showEnd = function ({ title, reason, stats, note, win, again }) {
+  C.ended = true; $('againBtn').textContent = again || 'Ещё раз'; // «Операция»: «Вылет 2: удар →»
   $('endTitle').textContent = title; $('endTitle').className = win === true ? 'win' : win === false ? 'lose' : '';
   $('endReason').textContent = reason || '';
   $('endStats').innerHTML = (stats || []).map(([v, l]) => `<div class="stt"><b>${v}</b><span>${l}</span></div>`).join('');

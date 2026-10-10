@@ -6,10 +6,10 @@ import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeP
 import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930m';
 import { createBook } from '../airdef/flipbook.js?v=20261011b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { createGlbMap } from './glbmap.js?v=20261012j';
-import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261012j';
+import { createGlbMap } from './glbmap.js?v=20261013a';
+import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261013a';
 import { createPipeline } from './post.js?v=20260930m';
-import { createAudio } from './audio.js?v=20260930m';
+import { createAudio, ECO_SELECT, setAudioEcoMode } from './audio.js?v=20261013a';
 import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930m';
 import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930m';
 import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930m';
@@ -2058,6 +2058,7 @@ function renderSettingsTab() {
     <div class="cat-h">Звук</div>
     <div class="perf"><label class="chk">Громкость <input type="range" id="sVol" min="0" max="1" step="0.05" value="${soundVol}"> <span id="sVolV">${Math.round(soundVol * 100)}%</span></label>
     <label class="chk"><input type="checkbox" id="sMute" ${muted ? 'checked' : ''}> Без звука</label>
+    ${ECO_SELECT('sEco')}
     <p class="hint">Двигатель синтезируется как настоящий: рёв струи, вой турбины, треск форсажа; чужие самолёты и ракеты слышны объёмно, с эффектом Доплера. Лучше всего — в наушниках.</p></div>
     <div class="cat-h">Погода</div>
     <div class="perf"><div class="prow">${seg('weather', weatherPref, wOpts)}</div>
@@ -2226,6 +2227,7 @@ onSet('change', (e) => {
 });
 onSet('input', (e) => {
   if (e.target.id === 'mSens') { mouseCfg.sens = +e.target.value; $('mSensV').textContent = mouseCfg.sens.toFixed(1); saveMouse(); }
+  if (e.target.id === 'sEco') setAudioEcoMode(e.target.value);
   if (e.target.id === 'sVol') { soundVol = +e.target.value; $('sVolV').textContent = Math.round(soundVol * 100) + '%'; AU.setVolume(soundVol); store.set('fortuna_drone_vol', String(soundVol)); }
   if (e.target.id === 'tSens') { touchCfg.sens = +e.target.value; $('tSensV').textContent = touchCfg.sens.toFixed(2); saveTouch(); }
   if (e.target.id === 'rollSens') { rollSens = +e.target.value; $('rollSensV').textContent = Math.round(rollSens * 200) + '°/с'; store.set('fortuna_drone_rollsens', String(rollSens)); }

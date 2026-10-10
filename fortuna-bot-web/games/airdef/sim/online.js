@@ -2,7 +2,7 @@
 // Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
-import { AG, SAM, SAM_COST, LOADOUTS, PLANES } from '../arsenal.js?v=20261012d';
+import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261013a';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
 export const AD_MODES = ['arcade', 'real'];
@@ -21,20 +21,37 @@ export const QUEUE_EXTRA_T = 15;          // набралось 2 на 2 — ж�
 export const QUEUE_BOTS_T = 60;           // людей мало дольше минуты — добираем ботами
 export const MAX_HP = 100;
 
-// классы ПВО для лимита первой волны (на игрока): 1 топовый и 2 средних; ближние (пушки, ПЗРК, «Стрела-1») — только за очки
+// классы ПВО для лимита первой волны (на игрока): 1 топовый и 1 средний; ближние (пушки, ПЗРК, «Стрела-1») — только за очки
 export const TOP = new Set(['s75', 's300', 's400', 'patriot', 'pac3', 'hawk']);
 export const MID = new Set(['s125', 'kub', 'bukm3', 'osa', 'tor', 'torm2', 'pantsir', 'nasams']);
 export const samClass = (k) => (TOP.has(k) ? 'top' : MID.has(k) ? 'mid' : 'near');
-export const LIMIT1 = { top: 1, mid: 2 };
+export const LIMIT1 = { top: 1, mid: 1 }; // первая волна: на игрока ПВО — 1 дальний и 1 средний комплекс
 export const samCost = (k) => SAM_COST[k] || 100;
 
 // связка авиации — самолёт и подвеска из LOADOUTS эпохи: цена по самолёту и оружию
 const KIND_COST = { bomb: 12, lgb: 35, tvb: 40, gps: 45, agm: 45, arm: 55, cruise: 110, decoy: 35, ecm: 30 };
 export const PLANE_COST = 120;
 export const loadoutCost = (L) => PLANE_COST + L.items.reduce((s, [k, n]) => s + (KIND_COST[(AG[k] || {}).kind] || 40) * n, 0) + (L.pod ? 20 : 0);
-// подход: больше бомб по массе — «штурмовка», больше ракет (ПРР, ТВ, крылатые) — «истребление»
-const BOMBS = new Set(['bomb', 'lgb', 'tvb', 'gps']);
-export const approachOf = (L) => { let b = 0, m = 0; for (const [k, n] of L.items) { const W = AG[k]; if (!W || W.kind === 'ecm') continue; if (BOMBS.has(W.kind)) b += n * W.mass; else m += n * W.mass; } return b >= m ? 'штурмовка' : 'истребление'; };
+// роль связки в лобби: «охота за ПВО» (ПРР) или «штурмовка» (бомбы, ракеты по объектам) — arsenal.js loadoutRole
+export const approachOf = (L) => ROLE_NAME[loadoutRole(L)];
+// ── баланс онлайна (решения Mark, 2026-10-13) ──
+// роли авиации: охотников за ПВО — не больше половины команды (при 1–2 лётчиках — один); остальные — штурмовка
+export const huntCap = (nAir) => (nAir <= 2 ? 1 : Math.floor(nAir / 2));
+// others — подвески остальных лётчиков команды (null — ещё не выбрал); причина отказа или null
+export function roleDeny(L, others, nAir) {
+  if (loadoutRole(L) !== 'sead') return null;
+  const h = others.filter((x) => x && loadoutRole(x) === 'sead').length, cap = huntCap(nAir);
+  return h >= cap ? `Охотников за ПВО в команде уже ${h} (лимит ${cap}) — возьмите штурмовку` : null;
+}
+// две фазы волны: первые SUPPRESS_T с у ПВО полная готовность, дальше каждый уничтоженный в этой волне комплекс с РЛС
+// замедляет перезарядку уцелевших на SUPPRESS_PER (не больше SUPPRESS_MAX) — охотник помогает ударникам, даже не разбив ни одной цели
+export const SUPPRESS_T = 90, SUPPRESS_PER = 0.15, SUPPRESS_MAX = 0.6;
+export const reloadKOf = (t, radarKills) => (t < SUPPRESS_T ? 1 : 1 + Math.min(SUPPRESS_MAX, radarKills * SUPPRESS_PER));
+// догоняющая механика: ведущая сторона (lead) платит больше — авиация за все связки, ПВО за дальние комплексы; отстающая авиация
+// получает +1 возрождение на следующую волну (проигрывающим и так +20 % бюджета)
+export const LEAD_K = { air: 1.1, pvo: 1.15 };
+export const loadoutCostFor = (L, lead) => Math.round(loadoutCost(L) * (lead === 'air' ? LEAD_K.air : 1));
+export const samCostFor = (k, lead) => Math.round(samCost(k) * (lead === 'pvo' && samClass(k) === 'top' ? LEAD_K.pvo : 1));
 export const bundleOf = (era, side, i) => { const L = LOADOUTS[era][i]; return L && L.side === side ? L : null; };
 export const bundleName = (L) => `${PLANES[L.plane] || L.plane} · ${L.name}`;
 
@@ -42,7 +59,8 @@ export const bundleName = (L) => `${PLANES[L.plane] || L.plane} · ${L.name}`;
 export const BUDGET0 = { air: 420, pvo: 1100 };
 // res: { valueK — доля ценности целей, уничтоженная за волну; downs — сбито самолётов; unitKills — уничтожено комплексов }
 export function waveBudget(team, res, losing) {
-  const b = team === 'air' ? 380 + res.valueK * 700 + res.unitKills * 50 : 450 + res.downs * 70 + (1 - res.valueK) * 300;
+  // ПВО: за сбитого охотника за ПВО — больше (он опаснее для комплексов): 90 против 70
+  const b = team === 'air' ? 380 + res.valueK * 700 + res.unitKills * 50 : 450 + res.downs * 70 + (res.downsSead || 0) * 20 + (1 - res.valueK) * 300;
   return Math.round(b * (losing ? 1.2 : 1));
 }
 

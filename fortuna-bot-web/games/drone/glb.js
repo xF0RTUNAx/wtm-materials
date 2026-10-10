@@ -3,7 +3,7 @@
 // Только картинка: лётные данные у всех одинаковые («Изделие»). Нет модели (или не загрузилась) — процедурная.
 // Материалы — как у остальной техники «Летки»: PBR на средних и выше (карта окружения сцены), Ламберт на «Низком».
 /* global THREE */
-import { PLANE_META, MODEL_CREDITS } from '../airdef/models.js?v=20261012d';
+import { PLANE_META, MODEL_CREDITS } from '../airdef/models.js?v=20261013a';
 
 const BASE = new URL('../airdef/models/', import.meta.url).href;
 // самолёты на выбор: key — glb (или 'izd' — процедурное «Изделие»)

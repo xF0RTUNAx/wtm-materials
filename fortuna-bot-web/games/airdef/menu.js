@@ -1,13 +1,14 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261012d';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261012d';
-import { MODES } from './sim/strike.js?v=20261012d';
-import { WEATHERS } from '../drone/world.js?v=20261012d';
-import { LESSONS } from './training.js?v=20261012d';
-import { MODEL_CREDITS } from './models.js?v=20261012d';
-import { openLayoutEditor } from './layout.js?v=20261012d';
+import { CITY } from './city.js?v=20261013a';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME } from './arsenal.js?v=20261013a';
+import { MODES } from './sim/strike.js?v=20261013a';
+import { WEATHERS } from '../drone/world.js?v=20261013a';
+import { LESSONS } from './training.js?v=20261013a';
+import { MODEL_CREDITS } from './models.js?v=20261013a';
+import { openLayoutEditor } from './layout.js?v=20261013a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261013a';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -68,8 +69,19 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       // подвески стороны, которая атакует выбранную ПВО; у каждой — свой самолёт
       const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att);
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
-      h += mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}</span></div>${L.items.map(([k]) => tags(AG[k].kind, AG_KIND[AG[k].kind].split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`).join('');
-      const L = LOADOUTS[setup.era][setup.lo];
+      const loBtn = ([L, i], attr, on) => `<button class="opt ${on ? 'on' : ''}" ${attr}="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${ROLE_NAME[loadoutRole(L)]}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}</span></div>${L.items.map(([k]) => tags(AG[k].kind, AG_KIND[AG[k].kind].split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`;
+      // «Операция»: два вылета — сначала охота за ПВО, потом удар (у стороны нет охотничьей подвески — только одиночный вылет)
+      const sead = mine.filter(([L]) => loadoutRole(L) === 'sead'), strike = mine.filter(([L]) => loadoutRole(L) !== 'sead');
+      const canOp = sead.length > 0 && strike.length > 0; if (!canOp) setup.op = false;
+      if (canOp) h += `<div class="prow"><span>Вылеты</span>${seg('op', setup.op ? 'op' : 'one', [['one', 'Один вылет'], ['op', 'Операция: 2 вылета']])}</div>`;
+      if (setup.op) {
+        if (!sead.some(([, i]) => i === setup.lo1)) setup.lo1 = sead[0][1];
+        if (!strike.some(([, i]) => i === setup.lo2)) setup.lo2 = strike[0][1];
+        h += `<p class="hint">Как в жизни: сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки — за оба вылета, +300 за два возвращения.</p>`;
+        h += `<div class="cat-h">Вылет 1 — охота за ПВО</div>` + sead.map((x) => loBtn(x, 'data-lo1', x[1] === setup.lo1)).join('');
+        h += `<div class="cat-h">Вылет 2 — штурмовка</div>` + strike.map((x) => loBtn(x, 'data-lo2', x[1] === setup.lo2)).join('');
+      } else h += mine.map((x) => loBtn(x, 'data-lo', x[1] === setup.lo)).join('') + `<p class="hint">У подвески «охота за ПВО» задача — уничтожить комплексы с РЛС, у «штурмовки» — цели города.</p>`;
+      const L = LOADOUTS[setup.era][setup.op ? setup.lo1 : setup.lo];
       h += `<p class="hint">${L.items.map(([k]) => `<b>${AG[k].short}</b> — ${AG[k].guide}`).join('<br>')}</p>`;
     } else {
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era);
@@ -80,11 +92,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   }
   $('tab-play').onclick = (e) => {
     if (setup.game === 'online') { C.online.onClick(e); return; }
-    const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), tl = e.target.closest('[data-tl]');
+    const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
-      if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tside') { setup.tside = v; setup.tl = 0; }
-    } else if (lo) setup.lo = +lo.dataset.lo; else if (tl) setup.tl = +tl.dataset.tl; else return;
+      if (id === 'op') setup.op = v === 'op'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tside') { setup.tside = v; setup.tl = 0; }
+    } else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
     save(); render();
   };
   // ── Арсенал ──
@@ -104,6 +116,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       f18: ['F/A-18 Hornet', 'США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM.'],
       f16: ['F-16', 'США · лёгкий многоцелевой: Mk 82, Maverick, HARM, JASSM.'],
       e_gripen: ['JAS 39 Gripen', 'Швеция · лёгкий многоцелевой с контейнером LITENING: GBU-12, JDAM.'],
+      e_f22: ['F-22A Raptor', 'США · малозаметный: JDAM и SDB во внутренних отсеках, наведение по GPS (прицельного контейнера нет).'],
       e_f35: ['F-35A Lightning II', 'США · малозаметный: SDB во внутренних отсеках, встроенная оптико-электронная система EOTS.'] };
     h += `<div class="cat-h">Самолёты</div>` + Object.entries(PL).map(([k, [n, d]]) => `<details class="ref"><summary>${n}</summary><div class="body"><p>${d}</p><p>Подвески: ${Object.entries(LOADOUTS).flatMap(([era, list]) => list.filter((L) => L.plane === k).map((L) => `${L.name} (эп. ${ERAS[era - 1].short})`)).join('; ')}.</p></div></details>`).join('');
     for (const e of ERAS.filter((x) => LOADOUTS[x.id])) {
@@ -195,6 +208,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <p class="hint">«АВТО» в вылете сбрасывает бомбы и пускает ракеты, у оператора ЗРК — назначает цель, пускает и наводит пушку. Помогает, но не идеально: реагирует с задержкой и ошибается — пилотирование, уклонение и выбор момента остаются за вами.</p>
       <div class="cat-h">Звук</div><label class="chk"><input type="checkbox" id="sMute" ${snd.muted ? '' : 'checked'}> звук включён</label>
       <label class="chk">громкость <input type="range" id="sVol" min="0" max="1" step="0.05" value="${snd.volume}"></label>
+      ${ECO_SELECT('sEco')}
       <details class="ref credits"><summary>3D-модели, текстуры и эффекты — авторы</summary><div class="body"><p class="hint">${MODEL_CREDITS.map((m) => `<a href="${m.url}" target="_blank" rel="noopener">«${m.title}»</a> — ${m.author} (<a href="${m.licenseUrl}" target="_blank" rel="noopener">${m.license}</a>)`).join(' · ')}. Для игры модели упрощены, разделены на части, текстуры уменьшены.</p>
       <p class="hint">Остальные модели — процедурные, сделаны для игры.</p></div></details>`;
   }
@@ -212,6 +226,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (w) { ls.set('fortuna_airdef_weather', w.dataset.v); const u = new URL(location.href); u.searchParams.delete('weather'); location.href = u.href; }
   };
   $('tab-set').oninput = (e) => {
+    if (e.target.id === 'sEco') setAudioEcoMode(e.target.value);
     if (e.target.id === 'sVol') { snd.unlock(); snd.setVolume(+e.target.value); }
     for (const [id, k, v] of [['sStick', 'stick', 'vStick'], ['sLook', 'look', 'vLook']]) if (e.target.id === id) { C.sens[k] = +e.target.value; $(v).textContent = '×' + C.sens[k].toFixed(2); C.saveSens(); }
     if (e.target.id === 'sAuto') C.setAuto(e.target.checked);

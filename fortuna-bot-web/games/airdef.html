@@ -67,6 +67,9 @@
   .opt.on { border-color: #fb923c; background: rgba(251,146,60,.14); }
   .opt.done { border-color: rgba(74,222,128,.5); }
   .opt .nm { flex: 1; } .opt .nm b { display: block; font-size: 13px; } .opt .nm span { opacity: .7; font-size: 11px; }
+  /* роль подвески: охота за ПВО — красная, штурмовка — оранжевая */
+  .role { display: inline-block; font-size: 10.5px !important; font-weight: 800; padding: 1px 7px; border-radius: 7px; margin: 2px 6px 2px 0; opacity: 1 !important; letter-spacing: .02em; }
+  .role.sead { background: rgba(239,68,68,.22); color: #fca5a5; } .role.strike { background: rgba(251,146,60,.22); color: #fdba74; }
   .opt .pr { flex: none; font-size: 11px; font-weight: 800; color: #fde68a; }
   .tag { display: inline-block; font-size: 10px; font-weight: 800; padding: 2px 5px; border-radius: 5px; letter-spacing: .03em; min-width: 34px; text-align: center; background: rgba(255,255,255,.12); color: #e2e8f0; }
   .tag.command { background: rgba(250,204,21,.2); color: #fde047; } .tag.sarh { background: rgba(251,146,60,.25); color: #fdba74; } .tag.ir { background: rgba(248,113,113,.22); color: #fca5a5; }
@@ -397,7 +400,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261012d"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261012d"></script>
+<script src="../config.js?v=20261013a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261013a"></script>
 </body>
 </html>

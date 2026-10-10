@@ -171,7 +171,7 @@ export const DEFENSE = {
 // подвески вылета: side — чья авиация (показываются подвески стороны, атакующей выбранную ПВО), plane — модель самолёта
 // (у каждой подвески — свой реальный носитель этого оружия и эпохи), pod — прицельный контейнер (у кого он встроен — не вешается)
 export const PLANES = { su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
-  e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A' };
+  e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A', e_f22: 'F-22A Raptor' };
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },
@@ -378,10 +378,19 @@ LOADOUTS[4] = [
   { side: 'east', plane: 'e_mig31', name: 'Охота за ПВО: Х-31П + ложные цели', items: [['kh31p', 4], ['decoy_e', 2], ['ecm_e', 1]] },
   { side: 'east', plane: 'e_su57', name: 'Ракеты: Х-59МК2 + Х-29Т', items: [['kh59mk2', 2], ['kh29t', 2]], pod: true },
   { side: 'west', plane: 'e_f35', name: 'SDB + JASSM + MALD + помехи', items: [['gbu39', 4], ['jassm', 1], ['mald', 2], ['ecm_w', 1]], pod: true },
-  { side: 'west', plane: 'f18', name: 'JDAM ×4 + GBU-12 + помехи', items: [['gbu31', 4], ['gbu12', 2], ['ecm_w', 1]], pod: true },
-  { side: 'west', plane: 'f18', name: 'AARGM + JDAM (охота за ПВО)', items: [['aargm', 4], ['gbu31', 2], ['ecm_w', 1]], pod: true },
+  { side: 'west', plane: 'e_f22', name: 'Малозаметный: JDAM ×2 + SDB ×4', items: [['gbu31', 2], ['gbu39', 4], ['ecm_w', 1]] }, // всё — в отсеках, цели по координатам (контейнера у F-22 нет)
+  { side: 'west', plane: 'f18', name: 'AARGM + JDAM (охота за ПВО)', items: [['aargm', 4], ['gbu31', 2], ['ecm_w', 1]], pod: true, role: 'sead' },
   { side: 'west', plane: 'f16', name: 'Крылатые JASSM ×2 + MALD', items: [['jassm', 2], ['mald', 2], ['agm88', 2]], pod: true },
 ];
+// роль подвески: 'sead' — охота за ПВО (противорадиолокационных ракет по массе не меньше, чем остального ударного), иначе 'strike' —
+// штурмовка; помехи и ложные цели не считаются; L.role — задана явно (где по массе спорно)
+export function loadoutRole(L) {
+  if (L.role) return L.role;
+  let arm = 0, oth = 0;
+  for (const [k, n] of L.items) { const W = AG[k]; if (!W || W.kind === 'ecm' || W.kind === 'decoy') continue; if (W.kind === 'arm') arm += n * W.mass; else oth += n * W.mass; }
+  return arm >= oth && arm > 0 ? 'sead' : 'strike';
+}
+export const ROLE_NAME = { sead: 'охота за ПВО', strike: 'штурмовка' };
 // индексы подвесок стороны и первая подходящая (если выбранная — чужой стороны)
 export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 });
 // комплексы без готовых моделей — выведены из игры (вернутся, если найдутся модели; их описание и пусковые остались)

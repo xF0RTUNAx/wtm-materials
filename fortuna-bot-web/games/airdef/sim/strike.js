@@ -13,14 +13,14 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261012d';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261012d';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261012d';
+import { AG, SAM } from '../arsenal.js?v=20261013a';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261013a';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261013a';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
-  arcade: { name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 360, fuelS: 330, markers: true, gunK: 0.7, reload: 'auto' },
-  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 240, fuelS: 240, markers: false, gunK: 1, reload: 'home' }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
+  arcade: { name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 360, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.7, reload: 'auto' },
+  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 240, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home' }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
 };
 
 const NOOP_FX = {
@@ -158,7 +158,7 @@ export function createStrike(ctx) {
         if (!launcherReady(u)) return; // пусковая ещё разворачивается
         launchSam(u, tr);
         u.cool = 2.2 + rnd() * 1.5;
-        if (u.ammo <= 0) u.reloadT = S.reload;
+        if (u.ammo <= 0) u.reloadT = S.reload * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
       }
     } else u.reactT = Math.max(0, u.reactT - dt * 0.5);
   }
@@ -273,7 +273,7 @@ export function createStrike(ctx) {
     if (h < S.hmin) return 'цель ниже зоны поражения';
     if (h > S.hmax) return 'цель выше зоны поражения';
     if (!launcherReady(u)) return 'пусковая разворачивается';
-    launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = S.reload;
+    launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = S.reload * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
   }
   function designate(u, t) { if (u.desig !== t) { u.desig = t; u.track = null; u.seeT = 0; fx.radarState(u); } }
