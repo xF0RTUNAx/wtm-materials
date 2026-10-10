@@ -1,12 +1,12 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261011c';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261011c';
-import { MODES } from './sim/strike.js?v=20261011c';
-import { WEATHERS } from '../drone/world.js?v=20261011c';
-import { LESSONS } from './training.js?v=20261011c';
-import { MODEL_CREDITS } from './models.js?v=20261011c';
-import { openLayoutEditor } from './layout.js?v=20261011c';
+import { CITY } from './city.js?v=20261012c';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261012c';
+import { MODES } from './sim/strike.js?v=20261012c';
+import { WEATHERS } from '../drone/world.js?v=20261012c';
+import { LESSONS } from './training.js?v=20261012c';
+import { MODEL_CREDITS } from './models.js?v=20261012c';
+import { openLayoutEditor } from './layout.js?v=20261012c';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const GAMES = [

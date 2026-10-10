@@ -17,43 +17,67 @@ export const PLANES = [
   { key: 'e_mig31', name: 'МиГ-31', desc: 'тяжёлый перехватчик' },
   { key: 'e_su57', name: 'Су-57', desc: 'малозаметный истребитель пятого поколения' },
   { key: 'e_tu22m3', name: 'Ту-22М3', desc: 'дальний бомбардировщик-ракетоносец (лётные данные — как у «Изделия»)' },
+  { key: 'e_gripen', name: 'JAS-39 Gripen', desc: 'лёгкий многоцелевой (Швеция)' },
+  { key: 'e_f22', name: 'F-22 Raptor', desc: 'малозаметный: ракеты во внутренних отсеках' },
+  { key: 'e_f35', name: 'F-35A', desc: 'малозаметный: ракеты во внутренних отсеках' },
 ];
 // ракета каталога → модель (вариации одного корпуса — одной моделью, длина подгоняется под каталог)
 export const MSL_MODEL = { aim9b: 'aam_aim9', r3s: 'aam_aim9', aim9l: 'aam_aim9', aim9x: 'aam_aim9x', r60m: 'aam_r60', r73: 'aam_r73', iris_t: 'aam_iris',
   aim7e: 'aam_aim7', aim7m: 'aam_aim7', r27r: 'aam_r27', r27t: 'aam_r27', r27er: 'aam_r27', mica_em: 'aam_mica', mica_ir: 'aam_mica',
   r77: 'aam_r77', r33: 'aam_r33', aim120c: 'msl_aim120', aim54: 'aam_aim54' }; // нет моделей: Firestreak, Python-5, Derby, Meteor — процедурные
-// противник: тип ИИ (sim/battle.js) → модель, точки подвески (порядок как у процедурных: внутр. L, R, внешн. L, R; у Ту-22М3 —
-// 6 точек слева направо; py — высота дорисованного пилона) и сопла (k — размер пламени относительно «Изделия»)
+// противник: модель → точки подвески (4: внутр. L, R, внешн. L, R; у Ту-22М3 — 6 слева направо; py — высота дорисованного
+// пилона), сопла (k — размер пламени относительно «Изделия»), internal — ракеты во внутренних отсеках (снаружи не видны,
+// при пуске выходят из отсека). Модель у каждой подвески ИИ своя (sim/battle.js AC[type].models). Самолёты игрока
+// (Су-30, МиГ-29, F/A-18, F-16 — META_ALL ниже): внутренние точки — корневые L1/R1, внешние — законцовки L3/R3
 const P3 = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
-export const ENEMY = {
-  fighter: { model: 'e_mig21', stations: [P3(-2.56, -2.07, 0.8), P3(2.95, -2.07, 0.8), P3(-3.16, -1.44, 1.27), P3(3.54, -1.44, 1.27)], nozzles: [{ pos: P3(0.2, -1.25, 5.0), k: 1.2 }] },
-  interceptor: { model: 'e_mig31', stations: [P3(-1.19, -1.92, -1.5), P3(1.19, -1.92, -1.5), P3(-4.62, -1.24, 4.4), P3(4.62, -1.24, 4.4)],
-    nozzles: [{ pos: P3(-0.78, -1.09, 11.1), k: 1.1 }, { pos: P3(0.78, -1.09, 11.1), k: 1.1 }] },
-  ace: { model: 'e_su57', stations: [P3(-0.6, -1.3, 1.0, 0.15), P3(0.6, -1.3, 1.0, 0.15), P3(-3.8, -1.1, 4.4, 0.3), P3(3.8, -1.1, 4.4, 0.3)],
-    nozzles: [{ pos: P3(-1.37, -0.66, 8.25), k: 0.75 }, { pos: P3(1.37, -0.66, 8.25), k: 0.75 }] },
-  boss: { model: 'e_tu22m3', stations: [P3(-9.5, -3.7, 7.0, 0.35), P3(-5.07, -3.79, 5.15), P3(-1.83, -3.53, 3.58), P3(1.83, -3.53, 3.58), P3(5.07, -3.79, 5.15), P3(9.5, -3.7, 7.0, 0.35)],
-    nozzles: [{ pos: P3(-0.93, -2.17, 19.05), k: 1.3 }, { pos: P3(0.93, -2.17, 19.05), k: 1.3 }] },
+const EM = {
+  e_mig21: { stations: [P3(-2.56, -2.07, 0.8), P3(2.95, -2.07, 0.8), P3(-3.16, -1.44, 1.27), P3(3.54, -1.44, 1.27)], nozzles: [{ pos: P3(0.2, -1.25, 5.0), k: 1.18 }] },
+  e_mig31: { stations: [P3(-1.19, -1.92, -1.5), P3(1.19, -1.92, -1.5), P3(-4.62, -1.24, 4.4), P3(4.62, -1.24, 4.4)],
+    nozzles: [{ pos: P3(-0.78, -1.09, 11.1), k: 0.95 }, { pos: P3(0.78, -1.09, 11.1), k: 0.95 }] },
+  // Су-57: основные отсеки — тандемом по оси, малые — под наплывами у корней крыла
+  e_su57: { internal: true, stations: [P3(-0.35, -1.2, 0.5), P3(0.35, -1.2, 0.5), P3(-1.9, -0.95, 1.5), P3(1.9, -0.95, 1.5)],
+    nozzles: [{ pos: P3(-1.37, -0.66, 8.25), k: 0.58 }, { pos: P3(1.37, -0.66, 8.25), k: 0.58 }] },
+  e_tu22m3: { stations: [P3(-9.5, -3.7, 7.0, 0.35), P3(-5.07, -3.79, 5.15), P3(-1.83, -3.53, 3.58), P3(1.83, -3.53, 3.58), P3(5.07, -3.79, 5.15), P3(9.5, -3.7, 7.0, 0.35)],
+    nozzles: [{ pos: P3(-0.93, -2.17, 19.05), k: 0.9 }, { pos: P3(0.93, -2.17, 19.05), k: 0.9 }] },
+  // Gripen: средние ракеты — внутренние подкрыльевые пилоны, тепловые — на направляющих законцовок
+  e_gripen: { stations: [P3(-1.95, -1.41, 1.77), P3(1.95, -1.41, 1.77), P3(-4.18, -1.06, 3.77), P3(4.18, -1.06, 3.77)], nozzles: [{ pos: P3(0, -0.94, 7.3), k: 0.6 }] },
+  // F-22: AIM-120 — в основном отсеке под фюзеляжем, AIM-9 — в боковых у воздухозаборников
+  e_f22: { internal: true, stations: [P3(-0.45, -1.75, 1.0), P3(0.45, -1.75, 1.0), P3(-1.3, -1.3, -1.5), P3(1.3, -1.3, -1.5)],
+    nozzles: [{ pos: P3(-0.75, -0.98, 7.33), k: 1, sx: 0.62, sy: 0.37 }, { pos: P3(0.75, -0.98, 7.33), k: 1, sx: 0.62, sy: 0.37 }] }, // плоские сопла 0,75 × 0,45 м
+  // F-35A: два отсека по бокам от оси
+  e_f35: { internal: true, stations: [P3(-0.65, -1.35, 1.0), P3(0.65, -1.35, 1.0), P3(-0.9, -1.3, 2.4), P3(0.9, -1.3, 2.4)], nozzles: [{ pos: P3(0, -0.55, 6.5), k: 0.6 }] }, // срез сопла — 6,5 (дальше — хвостовые плоскости)
 };
+// модель по умолчанию для типа (старый сервер без поля model и учебные цели)
+export const ENEMY_DEFAULT = { fighter: 'e_mig21', interceptor: 'e_mig31', ace: 'e_su57', boss: 'e_tu22m3' };
+export function enemyMeta(model) {
+  if (EM[model]) return EM[model];
+  const m = META_ALL[model]; if (!m) return null; const S = m.stations;
+  return { stations: [S[2], S[5], S[0], S[7]], nozzles: m.nozzles.map((p) => ({ pos: p, k: (m.nr || 0.5) / 0.5 })), internal: !!m.internal };
+}
 export const TANKER = { model: 't_il78', hose: new THREE.Vector3(0, -2.6, 20.5) }; // Ил-78: шланг — из-под хвоста
-// дальние копии (_lo) — первыми: лёгкие, противник сразу готовой моделью; вблизи — подробная
-export const enemyModels = () => [...Object.values(ENEMY).map((e) => e.model + '_lo'), ...Object.values(ENEMY).map((e) => e.model), TANKER.model];
-const LOD_D = { boss: 2500 }; // дальше — упрощённая копия (у истребителей — 900 м); вблизи — полная, без упрощения
+// сразу грузятся только лёгкие дальние копии (_lo) и заправщик; подробная модель — когда такой самолёт впервые появится (want в enemyGlb)
+export const enemyModels = () => [...Object.keys(EM).map((m) => m + '_lo'), TANKER.model];
+const ENEMY_ALL = [...Object.keys(EM), 'mig29', 'f16', 'su30', 'f18'];
+const LOD_D = { e_tu22m3: 2500 }; // дальше — упрощённая копия (у истребителей — 900 м); вблизи — полная, без упрощения
 const pylonMat = () => new THREE.MeshStandardMaterial({ color: 0x4a4f54, metalness: 0.4, roughness: 0.6 });
-// самолёт противника: { obj, stations, nozzles } или null (модель ещё грузится — тогда процедурный)
-export function enemyGlb(kind) {
-  const m = ENEMY[kind], hi = m && LOADED[m.model], lo = m && LOADED[m.model + '_lo']; if (!hi && !lo) return null;
+// самолёт противника: { obj, stations, nozzles, nk, internal } или null (модель ещё грузится — тогда процедурный)
+export function enemyGlb(model) {
+  const m = enemyMeta(model); if (!m) return null;
+  const hi = LOADED[model], lo = LOADED[model + '_lo']; if (!hi) want(model); if (!hi && !lo) return null;
   const obj = new THREE.Group(), pm = pylonMat();
-  if (hi && lo) { const L = new THREE.LOD(); L.addLevel(hi.clone(), 0); L.addLevel(lo.clone(), LOD_D[kind] || 900); obj.add(L); } else obj.add((hi || lo).clone());
-  for (const p of m.stations) if (p.py > 0) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.4), pm); b.position.set(p.x, p.y + p.py / 2, p.z); obj.add(b); }
-  return { obj, stations: m.stations, nozzles: m.nozzles.map((n) => n.pos), nk: m.nozzles.map((n) => n.k) };
+  if (hi && lo) { const L = new THREE.LOD(); L.addLevel(hi.clone(), 0); L.addLevel(lo.clone(), LOD_D[model] || 900); obj.add(L); } else obj.add((hi || lo).clone());
+  if (EM[model]) for (const p of m.stations) if (p.py > 0) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.4), pm); b.position.set(p.x, p.y + p.py / 2, p.z); obj.add(b); }
+  return { obj, stations: m.stations, nozzles: m.nozzles.map((n) => n.pos), nk: m.nozzles.map((n) => n.k), nsh: m.nozzles.map((n) => [n.sx || 1, n.sy || 1]), internal: !!m.internal };
 }
 export const loadedModel = (n) => LOADED[n] || null; // исходная модель (не копия): её геометрию и материалы берут экземпляры
 export const tankerGlb = () => (LOADED[TANKER.model] ? LOADED[TANKER.model].clone() : null);
 // авторы моделей, которые использует «Летка»
 // модели карты (glbmap.js): ЛЭП, ветряки, порт, маяк, промзона, аэродром, дома деревень, ближний лес
 export const MAP_MODELS = ['m_pylon', 'm_wind', 'obj_tanks', 'm_crane', 'm_cont', 'm_ship', 'm_light', 'obj_jhangar', 'obj_rtank', 'su30', 'mig29',
-  'h_brick', 'h_house', 'h_log', 'h_khata', 'h_mobile', 'tr_pine', 'tr_oak', 'tr_lime'];
-const USED = new Set([...PLANES.map((p) => p.key), ...Object.values(MSL_MODEL), ...enemyModels(), ...MAP_MODELS]);
+  'h_brick', 'h_house', 'h_log', 'h_khata', 'h_mobile', 'tr_pine', 'tr_oak', 'tr_lime',
+  'bld_p5', 'bld_st', 'bld_b12', 'o_block',
+  ...['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police'].map((c) => 'c_' + c)];
+const USED = new Set([...PLANES.map((p) => p.key), ...Object.values(MSL_MODEL), ...enemyModels(), ...ENEMY_ALL, ...MAP_MODELS]);
 export const LETKA_CREDITS = MODEL_CREDITS.filter((c) => (c.files || []).some((f) => USED.has(f)));
 
 // самолёты противника на выбор игроку: 8 точек подвески (L3 L2 L1 Ф1 → … Ф2 R1 R2 R3, как у «Изделия»: законцовка, средняя,
@@ -62,13 +86,20 @@ const V3 = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py }
 const mirrorC = (L, cx = 0) => [...L, ...L.slice().reverse().map((p) => V3(2 * cx - p.x, p.y, p.z, p.py))];
 const OWN_META = {
   e_mig21: { stations: mirrorC([V3(-3.6, -1.35, 2.2, 0.25), V3(-3.16, -1.44, 1.27), V3(-2.56, -2.07, 0.8), V3(-0.4, -2.05, -0.4, 0.15)], 0.19),
-    nozzles: [V3(0.2, -1.25, 5.0)], nr: 0.65 },
+    nozzles: [V3(0.2, -1.25, 5.0)], nr: 0.65 }, // радиус пламени на форсаже ≈ nr ≈ 0,9 внутреннего радиуса сопла
   e_mig31: { stations: mirrorC([V3(-5.6, -0.95, 5.4, 0.3), V3(-4.62, -1.24, 4.4), V3(-1.55, -1.55, 7.5), V3(-1.19, -1.92, -1.5)]),
-    nozzles: [V3(-0.78, -1.09, 11.1), V3(0.78, -1.09, 11.1)], nr: 0.6 },
-  e_su57: { stations: mirrorC([V3(-5.2, -0.85, 4.6, 0.3), V3(-4.0, -0.85, 4.2, 0.3), V3(-2.6, -0.9, 3.2, 0.3), V3(-0.6, -1.3, 1.0, 0.15)]),
-    nozzles: [V3(-1.37, -0.66, 8.25), V3(1.37, -0.66, 8.25)], nr: 0.4 },
+    nozzles: [V3(-0.78, -1.09, 11.1), V3(0.78, -1.09, 11.1)], nr: 0.52 },
+  // малозаметные: все 8 точек — во внутренних отсеках (internal: ракеты не видны, выходят из отсека при пуске)
+  e_su57: { internal: true, stations: mirrorC([V3(-1.9, -0.95, 1.5), V3(-1.6, -1.0, 0.0), V3(-0.35, -1.2, 0.5), V3(-0.3, -1.2, 2.6)]),
+    nozzles: [V3(-1.37, -0.66, 8.25), V3(1.37, -0.66, 8.25)], nr: 0.32 },
+  e_f22: { internal: true, stations: mirrorC([V3(-1.3, -1.3, -1.5), V3(-0.75, -1.7, 0.2), V3(-0.45, -1.75, 1.0), V3(-0.2, -1.8, 2.2)]),
+    nozzles: [V3(-0.75, -0.98, 7.33), V3(0.75, -0.98, 7.33)], nr: 0.62, nsh: [0.55, 0.33] }, // плоские сопла
+  e_f35: { internal: true, stations: mirrorC([V3(-0.9, -1.3, 2.4), V3(-0.85, -1.3, 0.4), V3(-0.65, -1.35, 1.0), V3(-0.45, -1.4, 1.8)]),
+    nozzles: [V3(0, -0.55, 6.5)], nr: 0.33 },
+  e_gripen: { stations: mirrorC([V3(-4.18, -1.06, 3.77), V3(-2.92, -1.4, 3.03), V3(-1.95, -1.41, 1.77), V3(-0.45, -1.62, 0.2, 0.1)]),
+    nozzles: [V3(0, -0.94, 7.3)], nr: 0.33 },
   e_tu22m3: { stations: mirrorC([V3(-11, -3.35, 7.6, 0.35), V3(-8, -3.4, 6.8, 0.35), V3(-5.07, -3.79, 5.15), V3(-1.83, -3.53, 3.58)]),
-    nozzles: [V3(-0.93, -2.17, 19.05), V3(0.93, -2.17, 19.05)], nr: 0.7 },
+    nozzles: [V3(-0.93, -2.17, 19.05), V3(0.93, -2.17, 19.05)], nr: 0.49 },
 };
 const META_ALL = { ...PLANE_META, ...OWN_META };
 function parseGlb(buf) {
@@ -85,14 +116,14 @@ let PBR = true, SHADOW = false, ANISO = 4;
 // настройка материалов под пресет: pbr — MeshStandard, shadows — отбрасывать тень, aniso — фильтрация текстур
 export function setupGlb(o) { PBR = !!o.pbr; SHADOW = !!o.shadows; ANISO = o.aniso || 4; }
 async function load(name) {
-  const r = await fetch(`${BASE}${name}.glb?v=20261011i`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${BASE}${name}.glb?v=20261012g`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
     let bmp; try { bmp = await createImageBitmap(images[t.source]); } catch (_) { return null; }
     const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = THREE.sRGBEncoding; x.anisotropy = ANISO; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true; return x;
   }));
-  const group = new THREE.Group(), matte = /^(tr_|h_|obj_|m_light|m_cont)/.test(name); // деревья, дома и постройки — без металлического блеска
+  const group = new THREE.Group(), matte = /^(tr_|h_|obj_|bld_|o_block|m_light|m_cont)/.test(name); // деревья, дома и постройки — без металлического блеска
   for (const m of meshes) {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(m.pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(m.nor, 3));
@@ -121,7 +152,7 @@ export function planeGlb(key) {
   const obj = G.clone(), pylon = new THREE.MeshStandardMaterial({ color: 0x4a4f54, metalness: 0.4, roughness: 0.6 });
   for (const p of m.stations) if (p.py > 0) { const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylon); pm.position.set(p.x, p.y + p.py / 2, p.z); obj.add(pm); } // дорисованные пилоны
   const bb = new THREE.Box3().setFromObject(G);
-  return { obj, stations: m.stations, nozzles: m.nozzles, nr: m.nr, len: bb.max.z - bb.min.z, box: bb };
+  return { obj, stations: m.stations, nozzles: m.nozzles, nr: m.nr, nsh: m.nsh || [1, 1], len: bb.max.z - bb.min.z, box: bb, internal: !!m.internal };
 }
 // ракета каталога: готовая модель длиной L (нос в −Z, центр в начале) или null
 const MLEN = {};

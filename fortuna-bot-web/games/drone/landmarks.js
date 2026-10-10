@@ -24,7 +24,7 @@ export function buildLandmarks(C) {
   // локальная система объекта: поворот rot вокруг центра (cx, cz), y0 — высота площадки
   const frame = (cx, cz, y0, rot) => {
     const at = (lx, lz) => [cx + Math.cos(rot) * lx - Math.sin(rot) * lz, cz + Math.sin(rot) * lx + Math.cos(rot) * lz];
-    const P_ = (list, geo, col, lx, ly, lz, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx) => { const [x, z] = at(lx, lz); list.push(part(geo, col, M(x, y0 + ly, z, rx, rot + ry, rz, sx, sy, sz))); return [x, z]; };
+    const P_ = (list, geo, col, lx, ly, lz, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx) => { const [x, z] = at(lx, lz); list.push(part(geo, col, M(x, y0 + ly, z, rx, ry - rot, rz, sx, sy, sz))); return [x, z]; }; // поворот −rot — как у at() (раньше был +rot: на косом берегу корабль въезжал в причал)
     return { at, P: (...a) => P_(parts, ...a), L: (...a) => P_(glass, ...a) };
   };
   const BOX = new THREE.BoxGeometry(1, 1, 1); BOX.translate(0, 0.5, 0);
@@ -100,17 +100,17 @@ export function buildLandmarks(C) {
         const n0 = parts.length;
         for (const ox of [-10, 10]) for (const oz of [-8, 8]) f.P(BOX, 0xd9822b, lx + ox, 0, lz + oz, 0, 0, 0, 2, 38, 2);
         f.P(BOX, 0xd9822b, lx, 38, lz + 15, 0, 0, 0, 24, 5, 70); f.P(BOX, 0x44505a, lx, 43, lz - 6, 0, 0, 0, 8, 6, 8);
-        cut('cranes', n0); cranes.push({ ...at3(lx, 0, lz), yaw: rot });
+        cut('cranes', n0); cranes.push({ ...at3(lx, 0, lz), yaw: -rot });
       }
       const CC = [0xb23b2e, 0x2f5f9e, 0x3f8a4a, 0xd0a33a, 0x7a7f86, 0xe0e0da];
       { const n0 = parts.length;
-        for (let i = 0; i < 70; i++) { const c = CC[(R() * CC.length) | 0], lx = -190 + (i % 14) * 14, ly = 2.6 * Math.floor(i / 28), lz = -30 + Math.floor((i % 28) / 14) * 6; f.P(BOX, c, lx, ly, lz, 0, 0, 0, 12, 2.6, 2.5); conts.push({ ...at3(lx, ly, lz), yaw: rot + Math.PI / 2, c }); }
+        for (let i = 0; i < 70; i++) { const c = CC[(R() * CC.length) | 0], lx = -190 + (i % 14) * 14, ly = 2.6 * Math.floor(i / 28), lz = -30 + Math.floor((i % 28) / 14) * 6; f.P(BOX, c, lx, ly, lz, 0, 0, 0, 12, 2.6, 2.5); conts.push({ ...at3(lx, ly, lz), yaw: Math.PI / 2 - rot, c }); }
         cut('conts', n0); }
       for (const lx of [80, 150]) f.P(BOX, 0xa9a397, lx, 0, -20, 0, 0, 0, 60, 14, 40);
       for (const [lx, lz, len, col] of [[-80, 150, 120, 0x27313b], [150, 160, 90, 0x6b2b24]]) { // корабли у причалов
         const n0 = parts.length;
         f.P(BOX, col, lx, -6, lz, 0, 0, 0, 18, 9, len); f.P(BOX, 0xe8e8e2, lx, 3, lz + len * 0.35, 0, 0, 0, 14, 10, 16); f.P(BOX, 0xe8e8e2, lx, 13, lz + len * 0.35, 0, 0, 0, 10, 4, 10);
-        cut('ships', n0); const [x, z] = f.at(lx, lz); ships.push({ x, y: W, z, yaw: rot, len });
+        cut('ships', n0); const [x, z] = f.at(lx, lz); ships.push({ x, y: W, z, yaw: -rot, len });
       }
       glb.port = { cranes, conts, ships };
       const lamp = []; for (let i = 0; i < 8; i++) { const [x, z] = f.at(-200 + i * 57, 55); lamp.push(V(x, y0 + 16, z)); } lights.push({ pts: lamp, color: 0xffb060, size: 1.1 });

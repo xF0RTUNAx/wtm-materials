@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261011c';
+import { CREDITS } from './models/credits.js?v=20261012c';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -94,7 +94,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=20261011c`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=20261012c`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
@@ -119,14 +119,21 @@ async function load(name, base) {
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; partOf(m.name || '').add(mesh);
   }
   // дорисованные пилоны там, где у модели их нет
-  for (const p of META[name].stations) if (p.py > 0) { const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); group.add(pm); }
+  for (const p of (META[name] || META[name.replace(/_lo$/, "")] || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo — по описанию основной */ const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); group.add(pm); }
   return group;
 }
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
+// у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
+const UNIT_LO = new Set(['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir']);
 export function unitModelGlb(key) {
-  const n = UMODEL[key], G = n && LOADED[n]; if (!G) return null;
-  const get = (k) => { const p = G.children.find((c) => c.name === k); return p ? p.clone() : null; };
+  const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
+  const find = (M, k) => M.children.find((c) => c.name === k);
+  const get = (k) => {
+    const p = find(G, k); if (!p) return null;
+    const l = GL && k !== 'missile' && k !== 'booster' && find(GL, k); if (!l) return p.clone();
+    const L = new THREE.LOD(); L.addLevel(p.clone(), 0); L.addLevel(l.clone(), 400); return L;
+  };
   return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster') };
 }
 // ракета комплекса из его модели (маршевая ступень + ускоритель) или null
@@ -139,7 +146,7 @@ export function unitMissileGlb(key) {
 }
 export const isObjModel = (name) => !!(META[name] && META[name].obj);
 export function objModel(name) { return LOADED[name] ? LOADED[name].clone() : null; }
-export const isUnitModel = (name) => !!(META[name] && (META[name].units || META[name].launcher)); // пришла — пересобрать машины
+export const isUnitModel = (name) => { const b = name.replace(/_lo$/, ''); return !!(META[b] && (META[b].units || META[b].launcher)); }; // пришла — пересобрать машины
 // фоновая загрузка всех моделей; onReady — когда что-то загрузилось (чтобы пересобрать самолёты)
 // самолёты и оружие — сразу; комплексы — по запросу wantUnit (только те, что есть в бою: файлы у них крупнее)
 let BASE = '', READY = null; const LOADING = new Set();
@@ -151,7 +158,7 @@ export function loadModels(base, onReady) {
   BASE = base; READY = onReady;
   for (const [name, m] of Object.entries(META)) if (!m.units && !m.bld) start(name); // самолёты, оружие, ракеты ПЗРК — сразу
 }
-export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) start(n); }
+export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); start(n); } } // сначала лёгкая дальняя копия
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
 export function wantBuildings() { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld) start(n); }
 export const bldModel = (name) => (META[name] && (META[name].bld || META[name].obj) && LOADED[name]) || null;

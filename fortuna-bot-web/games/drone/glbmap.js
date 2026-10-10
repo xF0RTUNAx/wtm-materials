@@ -7,24 +7,24 @@
 //    радиусе прячет шейдер (все вершины экземпляра — в одну точку), дальше — прежние коробки и конусы.
 // Пока модель грузится (или не загрузилась) — всё процедурное, как раньше.
 /* global THREE */
-import { want, loadedModel } from './glb.js?v=20261011j';
+import { want, loadedModel } from './glb.js?v=20261012i';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z), Q = new THREE.Quaternion(), UPY = V(0, 1, 0);
 const mtx = (x, y, z, yaw, sx = 1, sy = sx, sz = sx) => new THREE.Matrix4().compose(V(x, y, z), Q.setFromAxisAngle(UPY, yaw), V(sx, sy, sz));
 // прятать экземпляры процедурного InstancedMesh ближе R к камере (uNear: x, z камеры, R², мин. ширина экземпляра —
 // у стен деревни так остаются водонапорные башни: их ствол 3 м, дома от 7 м)
-function hideNear(mat, U) {
+function hideNear(mat, U, cond = 'length(instanceMatrix[0].xyz) >= uNear.w') { // cond — какие экземпляры вообще можно прятать
   const prev = mat.onBeforeCompile;
   mat.onBeforeCompile = (sh, r) => {
     if (prev) prev(sh, r);
     sh.uniforms.uNear = U;
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nuniform vec4 uNear;').replace('#include <begin_vertex>', `#include <begin_vertex>
 #ifdef USE_INSTANCING
-{ vec4 io = modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0); vec2 dd = io.xz - uNear.xy; if (dot(dd, dd) < uNear.z && length(instanceMatrix[0].xyz) >= uNear.w) transformed = vec3(0.0); }
+{ vec4 io = modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0); vec2 dd = io.xz - uNear.xy; if (dot(dd, dd) < uNear.z && (${cond})) transformed = vec3(0.0); }
 #endif`);
   };
   const key = mat.customProgramCacheKey ? mat.customProgramCacheKey.bind(mat) : () => '';
-  mat.customProgramCacheKey = () => key() + '|hideNear';
+  mat.customProgramCacheKey = () => key() + '|hideNear|' + cond;
   mat.needsUpdate = true;
 }
 
@@ -192,10 +192,85 @@ export function createGlbMap(scene, sites, P, { water }) {
     });
   }
 
+  // ── города вблизи: дома до 48 м — модели по форме коробки (вытянутые низкие — панельная пятиэтажка, квадратные низкие —
+  // сталинка, средние — многоэтажка или офисный блок; высота — растяжкой ×0,85…1,5), у подъездов — машины. Выше 48 м —
+  // прежние стеклянные башни с окнами. Дальше радиуса — коробки
+  if (lvl >= 1 && S.towns && S.towns.items.length) {
+    const BT = ['bld_p5', 'bld_st', 'bld_b12', 'o_block'], PARK = ['c_compact', 'c_coupe', 'c_hatch', 'c_van', 'c_offroad', 'c_pickup', 'c_sedan', 'c_sport', 'c_suv', 'c_wagon', 'c_police'];
+    const R = lvl >= 2 ? 1500 : 1000, HMAX = 48, U = { value: new THREE.Vector4(0, 0, -1, 0) };
+    const items = S.towns.items.filter((b) => b.h <= HMAX).map((b, i) => {
+      const lng = Math.max(b.w, b.d) / Math.min(b.w, b.d) > 1.45, t = b.h <= 22 ? (lng ? 'bld_p5' : 'bld_st') : (lng ? 'bld_b12' : 'o_block');
+      return { ...b, t, i };
+    });
+    when([...BT, ...PARK], () => {
+      const dim = {}; for (const t of BT) { const bb = new THREE.Box3().setFromObject(loadedModel(t)); dim[t] = [bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z]; }
+      const pools = {}; for (const t of BT) pools[t] = inst(t, [], { cap: items.filter((b) => b.t === t).length || 1 });
+      const cars = {}; for (const c of PARK) cars[c] = inst(c, [], { cap: items.length, shadow: false });
+      hideNear(S.towns.mat, U, `length(instanceMatrix[1].xyz) <= ${HMAX.toFixed(1)}`);
+      const M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = V(1, 1, 1), p = V(0, 0, 0);
+      near.push({ R, step: 80, last: null, fill(cam) {
+        const cnt = {}; for (const t of BT) cnt[t] = 0; const cc = {}; for (const c of PARK) cc[c] = 0;
+        for (const b of items) {
+          if (Math.hypot(b.x - cam.x, b.z - cam.z) > R) continue;
+          const [mx, my, mz] = dim[b.t], alongX = b.w > b.d, L = Math.max(b.w, b.d), Wd = Math.min(b.w, b.d);
+          sc.set(Wd / mx, Math.min(1.5, Math.max(0.85, b.h / my)), L / mz); // длинная сторона модели — z
+          M4.compose(p.set(b.x, b.y - 1.5, b.z), q.setFromAxisAngle(UPY, alongX ? Math.PI / 2 : 0), sc);
+          for (const im of pools[b.t]) im.setMatrixAt(cnt[b.t], M4); cnt[b.t]++;
+          if (b.i % 3 !== 2) { // машина у дома — вдоль длинной стороны, в 4 м от стены
+            const c = PARK[(b.i * 7 + 3) % PARK.length], side = b.i % 2 ? 1 : -1, off = Wd / 2 + 4, sh = ((b.i * 13) % 10 - 5) * L / 14;
+            p.set(b.x + (alongX ? sh : side * off), b.y - 0.1, b.z + (alongX ? side * off : sh));
+            M4.compose(p, q.setFromAxisAngle(UPY, (alongX ? Math.PI / 2 : 0) + (b.i % 4 < 2 ? 0 : Math.PI)), V(1, 1, 1));
+            for (const im of cars[c]) im.setMatrixAt(cc[c], M4); cc[c]++;
+          }
+        }
+        for (const t of BT) for (const im of pools[t]) { im.count = cnt[t]; im.instanceMatrix.needsUpdate = true; }
+        for (const c of PARK) for (const im of cars[c]) { im.count = cc[c]; im.instanceMatrix.needsUpdate = true; }
+        U.value.set(cam.x, cam.z, R * R, 0);
+      } });
+    });
+  }
+
+  // ── машины на дорогах: едут по правой полосе в обе стороны, на концах дороги разворачиваются; вблизи (< 250 м) — подробные,
+  // до 3 км — упрощённые (_lo), дальше не рисуются. Полицейская — примерно каждая восьмая. Только картинка: столкновений нет
+  const traffic = [];
+  const CARS = ['c_compact', 'c_coupe', 'c_hatch', 'c_van', 'c_offroad', 'c_pickup', 'c_sedan', 'c_sport', 'c_suv', 'c_wagon', 'c_police'];
+  const nCars = [0, 120, 220][Math.min(2, lvl)] + (P.propsLvl === 3 ? 80 : 0); // «Кино» — уровень 3
+  if (nCars && S.roads && S.roads.length) when([...CARS, ...CARS.map((c) => c + '_lo')], () => {
+    const roads = S.roads.filter((r) => r.length > 3).map((pts) => { const L = [0]; for (let i = 1; i < pts.length; i++) L.push(L[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].z - pts[i - 1].z)); return { pts, L, len: L[L.length - 1] }; });
+    const total = roads.reduce((a, r) => a + r.len, 0); let seed = 7;
+    const rr = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }; // своя случайность: бой и общий Math.random не трогаем
+    const cars = [];
+    for (let k = 0; k < nCars; k++) {
+      let u = rr() * total, ri = 0; while (u > roads[ri].len) { u -= roads[ri].len; ri++; }
+      const t = k % 8 === 7 ? 10 : (rr() * 10) | 0;
+      cars.push({ r: roads[ri], s: u, dir: rr() < 0.5 ? 1 : -1, v: 11 + rr() * 11, t });
+    }
+    const pools = CARS.map((c) => ({ hi: inst(c, [], { cap: nCars, shadow: SH }), lo: inst(c + '_lo', [], { cap: nCars, shadow: false }) }));
+    const M4 = new THREE.Matrix4(), q = new THREE.Quaternion(), one = V(1, 1, 1), pos = V(0, 0, 0);
+    traffic.cars = cars;
+    traffic.push((dt, cam) => {
+      const cnt = CARS.map(() => [0, 0]);
+      for (const c of cars) {
+        const R = c.r; c.s += c.v * c.dir * dt;
+        if (c.s > R.len - 5) { c.s = R.len - 5; c.dir = -1; } else if (c.s < 5) { c.s = 5; c.dir = 1; }
+        let i = 1; while (i < R.L.length - 1 && R.L[i] < c.s) i++;
+        const a = R.pts[i - 1], b = R.pts[i], f = (c.s - R.L[i - 1]) / Math.max(1e-3, R.L[i] - R.L[i - 1]);
+        const tx = (b.x - a.x) * c.dir, tz = (b.z - a.z) * c.dir, tl = Math.hypot(tx, tz) || 1, dx = tx / tl, dz = tz / tl;
+        pos.set(a.x + (b.x - a.x) * f - dz * 2.2, a.y + (b.y - a.y) * f + 0.05, a.z + (b.z - a.z) * f + dx * 2.2); // правая полоса
+        const d = Math.hypot(pos.x - cam.x, pos.z - cam.z); if (d > 3000) continue;
+        M4.compose(pos, q.setFromAxisAngle(UPY, Math.atan2(-dx, -dz)), one);
+        const P_ = pools[c.t], hi = d < 250, set = hi ? P_.hi : P_.lo, n = cnt[c.t][hi ? 0 : 1]++;
+        for (const im of set) im.setMatrixAt(n, M4);
+      }
+      pools.forEach((P_, j) => { for (const im of P_.hi) { im.count = cnt[j][0]; im.instanceMatrix.needsUpdate = true; } for (const im of P_.lo) { im.count = cnt[j][1]; im.instanceMatrix.needsUpdate = true; } });
+    });
+  });
+
   return {
-    near, // для проверки
+    near, traffic, // для проверки
     update(dt, cam) {
       for (const s of spin) s.m.rotation.z += s.w * dt;
+      for (const f of traffic) f(dt, cam);
       for (const g of groups) { const v = Math.hypot(g.c.x - cam.x, g.c.z - cam.z) < g.far + g.r; for (const o of g.objs) o.visible = v; }
       for (const n of near) if (!n.last || Math.hypot(cam.x - n.last.x, cam.z - n.last.z) > n.step) { n.last = { x: cam.x, z: cam.z }; n.fill(cam); }
     },

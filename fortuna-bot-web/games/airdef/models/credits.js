@@ -165,6 +165,74 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Generic passenger car pack",
+  "author": "Comrade1280",
+  "url": "https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5",
+  "license": "CC-BY-4.0",
+  "files": [
+   "c_compact",
+   "c_coupe",
+   "c_hatch",
+   "c_van",
+   "c_offroad",
+   "c_pickup",
+   "c_sedan",
+   "c_sport",
+   "c_suv",
+   "c_wagon",
+   "c_compact_lo",
+   "c_coupe_lo",
+   "c_hatch_lo",
+   "c_van_lo",
+   "c_offroad_lo",
+   "c_pickup_lo",
+   "c_sedan_lo",
+   "c_sport_lo",
+   "c_suv_lo",
+   "c_wagon_lo"
+  ]
+ },
+ {
+  "title": "Low Poly Car",
+  "author": "Roma",
+  "url": "https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85",
+  "license": "CC-BY-4.0",
+  "files": [
+   "c_police",
+   "c_police_lo"
+  ]
+ },
+ {
+  "title": "Saab JAS-39С Gripen fighter jet",
+  "author": "Lanko Mykhailo",
+  "url": "https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_gripen",
+   "e_gripen_lo"
+  ]
+ },
+ {
+  "title": "Lockheed Martin F-22 \"Raptor\"",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/lockheed-martin-f-22-raptor-7e7b3c372e374dda98e70208d09cfdcf",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f22",
+   "e_f22_lo"
+  ]
+ },
+ {
+  "title": "F-35A Lightning II",
+  "author": "shangus930",
+  "url": "https://sketchfab.com/3d-models/f-35a-lightning-ii-a06d6113cfb44a0aa7b8f17106aca9c4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f35",
+   "e_f35_lo"
+  ]
+ },
+ {
   "title": "MiG-21 Chibi",
   "author": "Oleh",
   "url": "https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6",

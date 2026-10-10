@@ -29,17 +29,25 @@ const rnd = Math.random;
 // РЛС «Изделия»: дальность по цели с ЭПР refRcs, обзор ±az/±el, дальность «прожига» помех
 export const RADAR = { range: 36000, refRcs: 5, az: 60 * D2R, el: 35 * D2R, burn: 16000 };
 
-// Самолёты противника (модели и названия — реальные, лётные данные — игровые). Подвески: [внутр. L, внутр. R, внешн. L, внешн. R] (у босса — 6 точек).
+// Самолёты противника: класс (лётные данные — игровые) и у каждой подвески — свой реальный самолёт (models[i] → AC_MODEL:
+// название и код на СПО; модель рисует клиент). Подвески: [внутр. L, внутр. R, внешн. L, внешн. R] (у босса — 6 точек).
 export const AC = {
-  fighter: { name: 'МиГ-21', code: '21', hp: 100, rcs: 3, ir: 1.0, gmax: 8, wCap: 0.5, milAcc: 12, abAcc: 25, cd0: 1.44e-4, skill: 0.45, radarR: 28000, r: 9, pts: 1000, cm: 12,
-    loadouts: [['r3s', 'r3s', 'r60m', 'r60m'], ['r60m', 'r60m', 'r60m', 'r60m'], ['r77', 'r77', 'r73', 'r73']] }, // МиГ-21бис (Р-3С, Р-60М); МиГ-21-93 / Bison (Р-77, Р-73)
-  interceptor: { name: 'МиГ-31', code: '31', hp: 130, rcs: 6, ir: 1.3, gmax: 6.5, wCap: 0.4, milAcc: 14, abAcc: 30, cd0: 1.3e-4, skill: 0.55, radarR: 36000, r: 12, pts: 1200, cm: 16,
-    loadouts: [['r33', 'r33', 'r60m', 'r60m'], ['r33', 'r33', 'r73', 'r73'], ['r33', 'r33', 'r77', 'r77']] }, // Р-33 под фюзеляжем, на крыле — Р-60М; МиГ-31БМ — Р-73 / Р-77
-  ace: { name: 'Су-57', code: '57', hp: 110, rcs: 1.2, ir: 0.9, gmax: 9, wCap: 0.55, milAcc: 14, abAcc: 28, cd0: 1.35e-4, skill: 0.85, radarR: 34000, r: 10, pts: 2500, cm: 24,
-    loadouts: [['r77', 'r77', 'r73', 'r73'], ['r77', 'r77', 'r77', 'r77']] }, // отсеки: Р-77 в основных, Р-73 в боковых
-  boss: { name: 'Ту-22М3', code: '22', hp: 450, rcs: 25, ir: 1.8, gmax: 3, wCap: 0.18, milAcc: 8, abAcc: 10, cd0: 1.6e-4, skill: 0.6, radarR: 45000, r: 26, pts: 6000, cm: 60, jam: true,
-    loadouts: [[null, null, null, null, null, null]], tailGun: true }, // ракет «воздух–воздух» нет: РЭБ, ловушки и кормовая ГШ-23 с радиоприцелом
+  fighter: { name: 'Истребитель', code: '21', hp: 100, rcs: 3, ir: 1.0, gmax: 8, wCap: 0.5, milAcc: 12, abAcc: 25, cd0: 1.44e-4, skill: 0.45, radarR: 28000, r: 9, pts: 1000, cm: 12,
+    loadouts: [['r3s', 'r3s', 'r60m', 'r60m'], ['r60m', 'r60m', 'r60m', 'r60m'], ['r27r', 'r27r', 'r73', 'r73'], ['aim120c', 'aim120c', 'aim9l', 'aim9l'], ['aim120c', 'aim120c', 'iris_t', 'iris_t']],
+    models: ['e_mig21', 'e_mig21', 'mig29', 'f16', 'e_gripen'] }, // МиГ-21бис; МиГ-29 (Р-27Р, Р-73); F-16 (AMRAAM, AIM-9L); Gripen (AMRAAM, IRIS-T)
+  interceptor: { name: 'Перехватчик', code: '31', hp: 130, rcs: 6, ir: 1.3, gmax: 6.5, wCap: 0.4, milAcc: 14, abAcc: 30, cd0: 1.3e-4, skill: 0.55, radarR: 36000, r: 12, pts: 1200, cm: 16,
+    loadouts: [['r33', 'r33', 'r60m', 'r60m'], ['r33', 'r33', 'r73', 'r73'], ['r33', 'r33', 'r77', 'r77'], ['r27er', 'r27er', 'r73', 'r73'], ['aim7m', 'aim7m', 'aim9l', 'aim9l']],
+    models: ['e_mig31', 'e_mig31', 'e_mig31', 'su30', 'f18'] }, // МиГ-31 (Р-33; БМ — Р-73 / Р-77); Су-30 (Р-27ЭР); F/A-18 (Sparrow, AIM-9L)
+  ace: { name: 'Малозаметный', code: '57', hp: 110, rcs: 1.2, ir: 0.9, gmax: 9, wCap: 0.55, milAcc: 14, abAcc: 28, cd0: 1.35e-4, skill: 0.85, radarR: 34000, r: 10, pts: 2500, cm: 24,
+    loadouts: [['r77', 'r77', 'r73', 'r73'], ['r77', 'r77', 'r77', 'r77'], ['aim120c', 'aim120c', 'aim9x', 'aim9x'], ['aim120c', 'aim120c', 'aim120c', 'aim120c']],
+    models: ['e_su57', 'e_su57', 'e_f22', 'e_f35'] }, // все — во внутренних отсеках: Су-57 (Р-77, Р-73), F-22 (AMRAAM, AIM-9X), F-35A (AMRAAM)
+  boss: { name: 'Ту-22М3', code: 'ТУ', hp: 450, rcs: 25, ir: 1.8, gmax: 3, wCap: 0.18, milAcc: 8, abAcc: 10, cd0: 1.6e-4, skill: 0.6, radarR: 45000, r: 26, pts: 6000, cm: 60, jam: true,
+    loadouts: [[null, null, null, null, null, null]], models: ['e_tu22m3'], tailGun: true }, // ракет «воздух–воздух» нет: РЭБ, ловушки и кормовая ГШ-23 с радиоприцелом
 };
+
+// реальный самолёт подвески: название и код на СПО
+export const AC_MODEL = { e_mig21: ['МиГ-21', '21'], mig29: ['МиГ-29', '29'], f16: ['F-16', '16'], e_gripen: ['Gripen', '39'], e_mig31: ['МиГ-31', '31'], su30: ['Су-30', '30'],
+  f18: ['F/A-18', '18'], e_su57: ['Су-57', '57'], e_f22: ['F-22', '22'], e_f35: ['F-35', '35'], e_tu22m3: ['Ту-22М3', 'ТУ'] };
 
 // ЭПР аппарата: у игрока растёт с внешней подвеской (функция), у ИИ — из характеристик
 export function rcsOf(t) { return typeof t.rcs === 'function' ? t.rcs() : t.S.rcs; }
@@ -323,13 +331,12 @@ export function createBattle(ctx) {
     return best;
   }
   function spawnAI(type, pos, yaw, leader, off, team = 1) {
-    const S = AC[type];
-    const lo = S.loadouts[(rnd() * S.loadouts.length) | 0];
-    return spawnCraft(type, S, lo, pos, yaw, leader, off, team);
+    const S = AC[type], i = (rnd() * S.loadouts.length) | 0, lo = S.loadouts[i], model = S.models && S.models[i], nm = model && AC_MODEL[model];
+    return spawnCraft(type, nm ? { ...S, name: nm[0], code: nm[1] } : S, lo, pos, yaw, leader, off, team, model);
   }
   // аппарат ИИ с характеристиками S (как в AC) и подвеской lo (ключи ракет, null — пусто)
-  function spawnCraft(type, S, lo, pos, yaw, leader, off, team = 1) {
-    const e = makeCraft({ ...aiFields(type, S, lo, team), leader, off });
+  function spawnCraft(type, S, lo, pos, yaw, leader, off, team = 1, model = null) {
+    const e = makeCraft({ ...aiFields(type, S, lo, team), leader, off }); e.model = model;
     e.pos.copy(pos); e.yaw = yaw; e.speed = type === 'boss' ? 220 : 260;
     fwdOf(e, e.vel).multiplyScalar(e.speed);
     e.tgt = pickTarget(e);

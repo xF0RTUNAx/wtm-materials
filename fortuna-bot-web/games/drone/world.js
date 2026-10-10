@@ -7,7 +7,7 @@
 import { mulberry32 } from './schedule.js?v=20260930m';
 import { M, part, mergeParts } from './models.js?v=20260930m';
 import { buildProps } from './props.js?v=20261011i';
-import { buildLandmarks } from './landmarks.js?v=20261011i';
+import { buildLandmarks } from './landmarks.js?v=20261011l';
 
 import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930m';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
@@ -457,7 +457,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   }
 
   // здания: отдельный InstancedMesh на город — невидимые города отсекаются целиком
-  const buildings = [], bldMeshes = [];
+  const buildings = [], bldMeshes = [], townItems = []; // townItems — места под модели домов (glbmap.js)
   const bMat = new THREE.MeshLambertMaterial();
   if (P.windows) windowBuildings(bMat, BU);
   for (const t of TOWNS) {
@@ -470,14 +470,15 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       do { const a = rnd() * Math.PI * 2; rr = Math.pow(rnd(), 0.8) * t.r * 0.72; x = t.x + Math.cos(a) * rr; z = t.z + Math.sin(a) * rr; tries++; }
       while (tries < 20 && buildings.some((b) => Math.abs(b.x - x) < b.hw + 22 && Math.abs(b.z - z) < b.hd + 22));
       const w = 16 + rnd() * 26, d = 16 + rnd() * 26;
-      const hgt = Math.min(170, (14 + rnd() * 40) * (1 + 1.8 * Math.max(0, 1 - rr / (t.r * 0.5))));
+      let hgt = Math.min(170, (14 + rnd() * 40) * (1 + 1.8 * Math.max(0, 1 - rr / (t.r * 0.5))));
+      if (rr > t.r * 0.2) hgt = Math.min(hgt, 44); // высотки — только в центре, остальное — панельки, сталинки, офисы (модели вблизи, glbmap.js)
       const base = terrainH(x, z) - 3;
       m.compose(new THREE.Vector3(x, base + hgt / 2, z), q, new THREE.Vector3(w, hgt, d));
       mesh.setMatrixAt(k, m);
       const tt = rnd();
       if (tt < 0.4) c.setRGB(0.72, 0.70, 0.66); else if (tt < 0.7) c.setRGB(0.62, 0.64, 0.68); else if (tt < 0.88) c.setRGB(0.74, 0.62, 0.52); else c.setRGB(0.5, 0.56, 0.62);
       mesh.setColorAt(k, c.convertSRGBToLinear());
-      buildings.push({ x, z, hw: w / 2, hd: d / 2, y0: base, y1: base + hgt });
+      buildings.push({ x, z, hw: w / 2, hd: d / 2, y0: base, y1: base + hgt }); townItems.push({ x, z, w, d, h: hgt, y: base + 3, k });
       maxH = Math.max(maxH, base + hgt);
     }
     geo.boundingSphere = new THREE.Sphere(new THREE.Vector3(t.x, maxH / 2, t.z), t.r + maxH);
@@ -968,7 +969,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   return {
     buildings, sun, sky,
     // места под готовые модели (glbmap.js в main.js): деревни, промзона, ЛЭП, ветряки, порт, маяк, аэродром и ближний лес
-    glbSites: { ...props.glb, ...marks.glb, airfield: afGlb, trees: { chunks: treeChunks, mat: treeMat } },
+    glbSites: { ...props.glb, ...marks.glb, airfield: afGlb, trees: { chunks: treeChunks, mat: treeMat }, roads: props.roads || [], towns: { items: townItems, mat: bMat } },
     get weather() { return wKey; },
     get W() { return W; },
     setWeather,

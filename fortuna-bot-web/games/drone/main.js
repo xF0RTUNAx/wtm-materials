@@ -2,12 +2,12 @@
 /* global THREE */
 import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930m';
 import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930m';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20261011i';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20261012e';
 import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930m';
 import { createBook } from '../airdef/flipbook.js?v=20261011b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { createGlbMap } from './glbmap.js?v=20261011j';
-import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER } from './glb.js?v=20261011j';
+import { createGlbMap } from './glbmap.js?v=20261012i';
+import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261012i';
 import { createPipeline } from './post.js?v=20260930m';
 import { createAudio } from './audio.js?v=20260930m';
 import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930m';
@@ -419,7 +419,7 @@ function xChaff(c) {
 }
 // самолёт ИИ: «ромбы» в форсажном пламени, дрожание воздуха за соплом (рядом с камерой)
 function xJet(e) {
-  const g = e.group, J = e.J || jetModel(e.type);
+  const g = e.group, J = e.J || jetModel(e.type, e.model);
   if (!e.xd) e.xd = J.nozzles.flatMap((nz) => [0, 1, 2].map((k) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.copy(nz); d.position.z += 0.9 + k * 1.05; d.visible = false; g.add(d); return d; }));
   const big = e.type === 'boss' ? 1.5 : 1;
   for (const d of e.xd) { d.visible = e.ab; if (e.ab) d.scale.setScalar((0.75 + rnd() * 0.3) * big); }
@@ -478,9 +478,9 @@ const MAT_JET = P.pbr ? new THREE.MeshStandardMaterial({ vertexColors: true, met
 const MGEO = {}, JGEO = {};
 const missileGeo = (k) => MGEO[k] || (MGEO[k] = buildMissileGeo(MISSILES[k].vis));
 const jetGeo = (k) => JGEO[k] || (JGEO[k] = buildJet(k));
-// самолёт противника: готовая модель (glb.js: МиГ-21, МиГ-31, Су-57, Ту-22М3) или процедурная, пока та не загрузилась
-function jetModel(kind) {
-  const G = enemyGlb(kind); if (G) return G;
+// самолёт противника: готовая модель своей подвески (glb.js; e.model из sim/battle.js) или процедурная, пока та не загрузилась
+function jetModel(kind, model) {
+  const G = enemyGlb(model || ENEMY_DEFAULT[kind]); if (G) return G;
   const J = jetGeo(kind), m = new THREE.Mesh(J.geo, MAT_JET); m.castShadow = !!P.shadows;
   return { obj: m, stations: J.stations, nozzles: J.nozzles, nk: J.nozzles.map(() => 1) };
 }
@@ -509,10 +509,10 @@ const nozzleFx = [];
 function setNozzles(list) {
   for (const n of nozzleFx) for (const o of [n.f, n.f2, ...n.ds]) ship.remove(o);
   nozzleFx.length = 0;
-  for (const { pos, k } of list) {
+  for (const { pos, k, sh = [1, 1] } of list) {
     const f = new THREE.Mesh(flameGeo, flameMatP), f2 = new THREE.Mesh(flameGeo, flameCore); f.position.copy(pos); f2.position.copy(pos); ship.add(f); ship.add(f2);
     const ds = [0, 1, 2, 3].map((i) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.set(pos.x, pos.y, pos.z + (0.85 + i * 1.15) * k); ship.add(d); return d; });
-    nozzleFx.push({ f, f2, ds, k, pos: pos.clone() });
+    nozzleFx.push({ f, f2, ds, k, sx: sh[0], sy: sh[1], pos: pos.clone() }); // sx/sy — форма пламени (у F-22 плоское)
   }
 }
 setNozzles([{ pos: new THREE.Vector3(0, 0, 7.35), k: 1 }]);
@@ -599,7 +599,7 @@ function rebuildPylonMeshes() {
   loaded.forEach((k, i) => {
     if (!k) { pylonMeshes.push(null); return; }
     const m = missileMesh(k), p = stPos(i); m.position.copy(p);
-    if (curPlane) m.position.y -= MISSILES[k].vis.r + 0.05; // у готовых моделей — под пилоном
+    if (curPlane) { m.position.y -= MISSILES[k].vis.r + 0.05; m.visible = !curPlane.internal; } // у готовых моделей — под пилоном; у малозаметных — в отсеке
     else if (STATIONS[i].kind !== 'tip') m.position.y -= MISSILES[k].vis.r - 0.06;
     ship.add(m); pylonMeshes.push(m);
   });
@@ -619,7 +619,7 @@ function applyPlane() {
   shipProc.visible = !curPlane;
   if (curPlane) {
     shipGlb = curPlane.obj; ship.add(shipGlb);
-    setNozzles(curPlane.nozzles.map((n) => ({ pos: new THREE.Vector3(n.x, n.y, n.z), k: curPlane.nr / 0.62 })));
+    setNozzles(curPlane.nozzles.map((n) => ({ pos: new THREE.Vector3(n.x, n.y, n.z), k: curPlane.nr / 0.62, sh: curPlane.nsh })));
     camK = clamp(curPlane.len / 14.4, 1, 3.2); xWing = curPlane.box.clone(); // камера дальше от длинного самолёта
   } else { setNozzles([{ pos: new THREE.Vector3(0, 0, 7.35), k: 1 }]); camK = 1; xWing = null; }
   rebuildPylonMeshes();
@@ -1160,11 +1160,11 @@ function findGunTarget() {
 // ═════════════ ИИ противника ═════════════
 // самолёт ИИ появился в бою (sim/battle.js): модель, пламя, ракеты на пилонах
 function onSpawned(e) {
-  const type = e.type, J = jetModel(type);
+  const type = e.type, J = jetModel(type, e.model);
   const g = new THREE.Group(); g.rotation.order = 'YXZ';
   g.add(J.obj); e.J = J; // сопла и пилоны — свои у каждой модели
-  const flames = J.nozzles.map((nz, i) => { const f = new THREE.Mesh(flameGeo, flameMat), k = J.nk[i] * (type === 'boss' && J.nk[i] === 1 ? 1.8 : 1.1); f.position.copy(nz); f.scale.set(k, k, 2); g.add(f); return f; });
-  e.msl.forEach((x, i) => { if (!x) return; const mm = missileMesh(x.key); mm.position.copy(J.stations[i]); mm.position.y -= MISSILES[x.key].vis.r; g.add(mm); x.mesh = mm; });
+  const flames = J.nozzles.map((nz, i) => { const f = new THREE.Mesh(flameGeo, flameMat), k = J.nk[i] * (type === 'boss' && J.nk[i] === 1 ? 1.8 : 1.1), sh = (J.nsh && J.nsh[i]) || [1, 1]; f.position.copy(nz); f.scale.set(k * sh[0], k * sh[1], 2); g.add(f); return f; });
+  e.msl.forEach((x, i) => { if (!x) return; const mm = missileMesh(x.key); mm.position.copy(J.stations[i]); mm.position.y -= MISSILES[x.key].vis.r; mm.visible = !J.internal; g.add(mm); x.mesh = mm; }); // во внутренних отсеках — не видна до пуска
   scene.add(g);
   e.group = g; e.flames = flames;
   enemies.push(e);
@@ -1177,7 +1177,7 @@ function battleFx() {
       else out.copy(owner.pos);
     },
     launched(m, slot) {
-      const M_ = m.M, owner = m.owner, mesh = (slot && slot.mesh) || missileMesh(m.key);
+      const M_ = m.M, owner = m.owner, mesh = (slot && slot.mesh) || missileMesh(m.key); mesh.visible = true; // из внутреннего отсека — появляется при пуске
       mesh.position.copy(m.pos); if (slot && slot.q) mesh.quaternion.copy(slot.q); scene.add(mesh);
       const fl = new THREE.Mesh(mslFlameGeo, flameMat); fl.position.z = M_.vis.L / 2 + 0.05; fl.visible = false; mesh.add(fl);
       m.mesh = mesh; m.fl = fl; m.pos = mesh.position; // ракета двигает свою модель напрямую
@@ -1414,7 +1414,7 @@ function placeShip() {
   const L1 = (ab ? 6 : 0.25 + 1.2 * t) * (0.9 + rnd() * 0.2), L2 = (ab ? 3.2 : 0.15 + 0.65 * t) * (0.9 + rnd() * 0.2), on = ab || t > 0.06; // двигатель встал — пламени нет
   flameMatP.opacity = ab ? 0.9 : 0.12 + 0.45 * t;
   for (const n of nozzleFx) {
-    n.f.scale.set(fw * n.k, fw * n.k, L1 * n.k); n.f2.scale.set(0.6 * n.k, 0.6 * n.k, L2 * n.k); n.f.visible = n.f2.visible = on;
+    n.f.scale.set(fw * n.k * n.sx, fw * n.k * n.sy, L1 * n.k); n.f2.scale.set(0.6 * n.k * n.sx, 0.6 * n.k * n.sy, L2 * n.k); n.f.visible = n.f2.visible = on;
     for (const d of n.ds) { d.visible = ab; d.scale.setScalar((0.8 + rnd() * 0.3) * n.k); }
   }
   if (abLight) abLight.intensity = ab ? 5 * (0.8 + rnd() * 0.4) : 0.4 * player.thr;
@@ -1883,9 +1883,9 @@ function renderRefTab() {
     }
   }
   h += `<div class="cat-h">Противник</div>` + Object.values(AC).map((a) => `<details class="ref"><summary>${a.name}</summary><div class="body"><p>${{
-    'МиГ-21': 'Лёгкий фронтовой истребитель. МиГ-21бис несёт только тепловые Р-3С и Р-60М (ближний бой), модернизированный МиГ-21-93 — Р-77 и Р-73. Средняя подготовка лётчика (ИИ), ЭПР около 3 м².',
-    'МиГ-31': 'Тяжёлый перехватчик: мощный радар, 2 дальние Р-33 под фюзеляжем, на крыле — Р-60М, Р-73 или Р-77 (МиГ-31БМ). Быстрый на прямой, но неповоротливый. ЭПР около 6 м².',
-    'Су-57': 'Малозаметный истребитель с лучшим лётчиком (ИИ): ракеты во внутренних отсеках — Р-77 и Р-73. Грамотно выходит на траверз, ставит помехи, стреляет с неизбежной дистанции. ЭПР около 1,2 м². Засчитывается как 2 сбитых.',
+    'Истребитель': 'Лёгкие истребители, у каждой подвески свой самолёт: МиГ-21бис (только тепловые Р-3С и Р-60М — опасен вблизи), МиГ-29 (Р-27Р и Р-73), F-16 (AIM-120 и AIM-9L), Gripen (AIM-120 и IRIS-T на законцовках). Средняя подготовка лётчика (ИИ), ЭПР около 3 м².',
+    'Перехватчик': 'Тяжёлые: МиГ-31 (2 дальние Р-33 под фюзеляжем, на крыле Р-60М, Р-73 или Р-77), Су-30 (Р-27ЭР и Р-73), F/A-18 (Sparrow и AIM-9L). Мощный радар, быстрые на прямой, но неповоротливые. ЭПР около 6 м².',
+    'Малозаметный': 'Су-57, F-22 и F-35A: ракеты во внутренних отсеках — снаружи их не видно, ракета появляется из отсека при пуске. Лучшие лётчики (ИИ): выходят на траверз, ставят помехи, стреляют с неизбежной дистанции. ЭПР около 1,2 м². Засчитывается как 2 сбитых.',
     'Ту-22М3': 'Дальний бомбардировщик-ракетоносец, ведущий налёта. Ракет «воздух–воздух» не несёт: защищают эскорт, мощная РЭБ (радар берёт его только ближе 16 км), много ловушек и кормовая пушка ГШ-23 с радиоприцелом (1,5 км, задняя полусфера). Засчитывается как 5 сбитых.',
   }[a.name]}</p></div></details>`).join('');
   h += `<div class="help"><p><b>ИК</b> — тепловая ГСН: «выстрелил и забыл», но ловушки и ракурс. <b>ПАРЛ</b> — полуактивная: держи захват до попадания. <b>АРЛ</b> — активная: коррекция от радара, потом ракета сама.</p></div>`;
@@ -1911,9 +1911,9 @@ function renderGuideTab() {
       <p><b>5.</b> Если по центру загорелось красное <b>«ПУСК!»</b> или <b>«РАКЕТА!»</b> — сейчас важнее уклониться, чем атаковать (глава 9).</p>
       <p><b>6.</b> Следи за топливом: жёлтая метка <b>«ЗАПРАВЩИК»</b> — пролети через корзину шланга (глава 11).</p>`, true),
     guideSection('2. Как проходит вылет и как считаются очки', `
-      <p>Вылет длится до <b>5 минут</b>. Противник присылает 4 группы с разных сторон: пару МиГ-21, затем 2–3 МиГ-21 или МиГ-31, затем Су-57 с ведомыми и в конце Ту-22М3 с эскортом. Время до следующей группы — под счётчиком сбитых.</p>
+      <p>Вылет длится до <b>5 минут</b>. Противник присылает 4 группы с разных сторон: пару истребителей (МиГ-21, МиГ-29, F-16, Gripen), затем 2–3 истребителя или перехватчика (МиГ-31, Су-30, F/A-18), затем малозаметного (Су-57, F-22, F-35A) с ведомыми и в конце Ту-22М3 с эскортом. Время до следующей группы — под счётчиком сбитых.</p>
       <p><b>Конец вылета:</b> победа, если все группы, включая Ту-22М3, уничтожены; поражение — корпус 0 или кончилось топливо; иначе — по времени.</p>
-      <p><b>Сбитые:</b> МиГ-21 и МиГ-31 — 1, Су-57 — 2, Ту-22М3 — 5 (максимум в вылете показан на экране итогов). <b>Очки:</b> 1000–6000 за самолёт; сбитие пушкой ×1,5; ракетой, пролетевшей больше 20 км, ×1,3; в «Реализме» всё ×1,5. Загнанный в землю противник засчитывается тебе.</p>`),
+      <p><b>Сбитые:</b> истребитель и перехватчик — 1, малозаметный — 2, Ту-22М3 — 5 (максимум в вылете показан на экране итогов). <b>Очки:</b> 1000–6000 за самолёт; сбитие пушкой ×1,5; ракетой, пролетевшей больше 20 км, ×1,3; в «Реализме» всё ×1,5. Загнанный в землю противник засчитывается тебе.</p>`),
     guideSection('3. Полёт и энергия', `
       <p><b>Управление:</b> ${steerHint()}. Чем сильнее отклонение, тем быстрее поворот.</p>
       <p><b>Две модели управления</b> (Настройки → Управление). <b>Простое</b> (по умолчанию): дрон поворачивает нос туда, куда отклонена ручка, крен ставится сам — удобно целиться. <b>Пилотажное</b>: ручка влево-вправо — <b>крен</b>, вверх-вниз — <b>тангаж</b> вокруг крыла, как у настоящего самолёта. Чтобы повернуть — накренись в сторону поворота и тяни нос вверх; так можно сделать петлю через вертикаль, «бочку», лететь вверх ногами. Камера кренится вместе с дроном. Скорость крена — «Чувствительность крена» в тех же настройках.${IS_TOUCH ? ' В пилотажном на экране есть <b>крестовина</b>: ◀ ▶ — крен, ▲ ▼ — нос вверх-вниз; палец можно вести, не отрывая (по диагонали — крен и тангаж сразу). Её место, размер, прозрачность («Расположение кнопок…») и расстояние между стрелками настраиваются.' : ''}</p>
@@ -1953,7 +1953,7 @@ function renderGuideTab() {
       <p><b>Активная:</b> захват или просто отметка впереди → пуск → держи цель на радаре, пока в панели «·КОРР»; после «·ГСН» можно разворачиваться и уходить или брать следующую цель.</p>
       <p><b>Пушка</b> (${ctl('fire')}): ближе 1,5 км, совмести визир с жёлтым кружком упреждения, стреляй очередями — перегрев выключит пушку на несколько секунд.</p>`),
     guideSection('8. СПО и датчик пуска ракет', `
-      <p><b>СПО</b> (круг ${POS.rwr}) слышит чужие радары: метка — тип (21 — МиГ-21, 31 — МиГ-31, 57 — Су-57, 22 — Ту-22М3), положение — пеленг (верх — нос), ближе к центру — ближе источник.</p>
+      <p><b>СПО</b> (круг ${POS.rwr}) слышит чужие радары: метка — самолёт (21 — МиГ-21, 29 — МиГ-29, 16 — F-16, 39 — Gripen, 31 — МиГ-31, 30 — Су-30, 18 — F/A-18, 57 — Су-57, 22 — F-22, 35 — F-35, ТУ — Ту-22М3), положение — пеленг (верх — нос), ближе к центру — ближе источник.</p>
       <p>• <b>Зелёная метка</b> — тебя ищут (обзор), короткий сигнал при появлении. • <b>Жёлтая в ромбе</b> — захват, прерывистый сигнал. • <b>Мигающая красная</b> — пуск полуактивной/активной ракеты, частый сигнал. • <b>«М»</b> — включилась активная ГСН ракеты: она уже рядом.</p>
       <p><b>Датчик пуска ракет</b> видит факел работающего двигателя любой ракеты ближе 9 км — красные точки на краю круга и надпись <b>«РАКЕТА! 4 ч · 3,1 км · догоняет 250 м/с · 12 с»</b> («4 ч» — направление по циферблату: 12 — нос, 6 — хвост). Тепловые ракеты СПО <b>не видит</b> — о них предупредит только этот датчик или дымный след. После выгорания двигателя в «Реализме» дальняя ракета летит «молча» — поэтому важно заметить пуск.</p>`),
     guideSection('9. Как уклоняться и противодействовать', `
@@ -1966,9 +1966,9 @@ function renderGuideTab() {
       <p><b>Против Ту-22М3.</b> РЭБ прячет его дальше 16 км. Ракет у него нет, но кормовая пушка бьёт в заднюю полусферу ближе 1,5 км: не висни у него на хвосте — стреляй ракетами издалека или заходи сбоку. Сначала выбей эскорт, потом заходи на Ту-22М3 — у него 450 единиц прочности, нужно 3–5 ракет или долгая работа пушкой.</p>
       <p><b>Приоритеты:</b> в тебя летит ракета → уклонение важнее атаки; два противника на хвосте → уходи на энергии и разворачивай их по одному; кончается топливо → к заправщику.</p>`),
     guideSection('10. Противник', Object.values(AC).map((a) => `<p><b>${a.name}</b> — ${{
-      'МиГ-21': 'лёгкий истребитель. Средний ИИ, радар ≈ 28 км. Обычно только тепловые Р-3С и Р-60М: опасен ближе 8–10 км, Р-3С — только сзади. Модернизированный (МиГ-21-93) — Р-77 и Р-73. Слабость: ракеты малой дальности — держи его на дистанции.',
-      'МиГ-31': 'тяжёлый перехватчик: мощный радар (≈ 36 км), 2 дальние полуактивные Р-33 и 2 ракеты на крыле. Быстрый на прямой. Слабость: Р-33 слепнет без его захвата — сорви захват траверзом; плохо крутится (6,5 g) — в ближнем бою лёгкая добыча.',
-      'Су-57': 'малозаметный (ЭПР ≈ 1,2 м² — радар видит его поздно), лучший ИИ: быстро реагирует, выходит на траверз, ставит помехи, пускает с неизбежной дистанции активные ракеты. Засчитывается как 2 сбитых. Слабость: ракет всего 4 — вымани пуски и контратакуй.',
+      'Истребитель': 'МиГ-21, МиГ-29, F-16 или Gripen. Средний ИИ, радар ≈ 28 км. У МиГ-21бис только тепловые ракеты — держи его дальше 8–10 км; у МиГ-29 полуактивные Р-27Р — сорви его захват, и ракета ослепнет; у F-16 и Gripen — активные AIM-120.',
+      'Перехватчик': 'МиГ-31, Су-30 или F/A-18: мощный радар (≈ 36 км), дальние полуактивные ракеты (Р-33, Р-27ЭР, Sparrow). Слабость: полуактивная слепнет без его захвата — сорви захват траверзом; плохо крутится (6,5 g) — в ближнем бою лёгкая добыча.',
+      'Малозаметный': 'Су-57, F-22 или F-35A: ЭПР ≈ 1,2 м² — радар видит его поздно; ракеты в отсеках, не видны до пуска. Лучший ИИ: быстро реагирует, выходит на траверз, ставит помехи, пускает с неизбежной дистанции активные ракеты. Засчитывается как 2 сбитых. Слабость: ракет всего 4 — вымани пуски и контратакуй.',
       'Ту-22М3': 'дальний бомбардировщик-ракетоносец, ведущий налёта: 450 прочности, ракет «воздух–воздух» нет, РЭБ, много ловушек, кормовая пушка (1,5 км, ±40° от хвоста). Уходит от тебя под прикрытием эскорта. Засчитывается как 5 сбитых.',
     }[a.name]}</p>`).join('') + `<p>ИИ реагирует на твой захват радаром, на активную ГСН твоей ракеты и (с шансом) на дымный след. Пуск по отметке обзора активной ракетой он заметит только когда включится её ГСН — это главный способ застать врасплох.</p>`),
     guideSection('11. Дозаправка', `
@@ -2428,7 +2428,7 @@ function trSpawn(key) {
   for (const x of e.msl) if (x) e.group.remove(x.mesh);
   e.msl = (e.J || jetGeo(e.type)).stations.map((st, i) => {
     if (i > 1) return null;
-    const mm = missileMesh(key); mm.position.copy(st); mm.position.y -= MISSILES[key].vis.r; e.group.add(mm); return { key, mesh: mm };
+    const mm = missileMesh(key); mm.position.copy(st); mm.position.y -= MISSILES[key].vis.r; mm.visible = !(e.J && e.J.internal); e.group.add(mm); return { key, mesh: mm };
   });
   e.mslCD = 1e9; e.cmFlare = 0; e.cmChaff = 0; e.trainer = true; // сам не стреляет ракетами и не ставит помехи
   return e;
@@ -3011,8 +3011,8 @@ function lobbySpawn() {
   const T = tanker ? 11 : 6.5;
   for (let k = 0; k < (pair ? 2 : 1); k++) {
     const g = new THREE.Group(); g.rotation.order = 'YXZ';
-    const JM = tanker ? null : jetModel(kind); g.add(tanker ? tankerMesh() : JM.obj);
-    const flames = tanker ? [] : JM.nozzles.map((nz) => { const f = new THREE.Mesh(flameGeo, flameMat); f.position.copy(nz); f.scale.set(1.1, 1.1, ab ? 4.5 : 1.5); f.visible = ab; g.add(f); return f; });
+    const ms = !tanker && AC[kind].models, JM = tanker ? null : jetModel(kind, ms && ms[(rnd() * ms.length) | 0]); g.add(tanker ? tankerMesh() : JM.obj); // фон меню: самолёт своего класса наугад
+    const flames = tanker ? [] : JM.nozzles.map((nz, i) => { const f = new THREE.Mesh(flameGeo, flameMat), sh = (JM.nsh && JM.nsh[i]) || [1, 1]; f.position.copy(nz); f.scale.set(1.1 * sh[0], 1.1 * sh[1], ab ? 4.5 : 1.5); f.visible = ab; g.add(f); return f; });
     const pos = mid.clone().addScaledVector(dir, -speed * T);
     if (k) pos.addScaledVector(dir, -40).add(new THREE.Vector3(dir.z * 35 * side, -6, -dir.x * 35 * side)); // ведомый — уступом
     const j = { g, flames, pos, vel: dir.clone().multiplyScalar(speed), fwd: dir.clone(), ab, tanker, life: T * 2 + 2, bank: 0 };
