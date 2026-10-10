@@ -29,6 +29,11 @@
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita — CC-BY-4.0 — `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan — CC-BY-4.0 — `e_su57.glb`, `e_su57_lo.glb`
 - "Tupolev Tu-22M3" (https://sketchfab.com/3d-models/tupolev-tu-22m3-6b398ad795fc40f6955ce345d4baeaf8) by Jeyhun1985 — CC-BY-4.0 — `e_tu22m3.glb`, `e_tu22m3_lo.glb`
+- "Russian Su-24" (https://sketchfab.com/3d-models/russian-su-24-17ca351ca78149d09393b3926db66454) by 42manako — CC-BY-4.0 — `e_su24.glb`
+- "[PBR] Sukhoi Su-25" (https://sketchfab.com/3d-models/pbr-sukhoi-su-25-956d0cb0bbe54fa8ad72e8c3e224fd2d) by Immersive3D — CC-BY-4.0 — `e_su25.glb`
+- "Su-34 prototype (Su-32FN)" (https://sketchfab.com/3d-models/su-34-prototype-su-32fn-d621b381bf734545b047e7e19972780c) by 42manako — CC-BY-4.0 — `e_su34.glb`
+- "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — `e_su17.glb`
+- "McDonnell Douglas F-4 Phantom II" (https://sketchfab.com/3d-models/mcdonnell-douglas-f-4-phantom-ii-1ea38a66a59048529d27b24a570c5e07) by andertan — CC-BY-4.0 — `e_f4.glb`
 - "High Voltage Transmission Line Tower (tileable)" (https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313) by mednios — CC-BY-4.0 — `m_pylon.glb`
 - "Wind Turbine [Demo]" (https://sketchfab.com/3d-models/wind-turbine-demo-68669d1cfb3647ba9b1da47cbe580931) by 3Dexter — CC-BY-4.0 — `m_wind.glb`
 - "Low Poly Cargo Ship" (https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c) by Javier_Fernandez — CC-BY-4.0 — `m_ship.glb`
@@ -44,21 +49,21 @@
 - "Low poly German IRIS-T AAM" (https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4) by Raptor9 — CC-BY-4.0 — `aam_iris.glb`
 - "Low Poly Missiles and Torpedos" (https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35) by sakigakefuruzawa — CC-BY-4.0 — `aam_mica.glb`
 - "MiG 29" (https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3) by Uxman — CC-BY-4.0 — `mig29.glb`
-- "9K331 Tor-M1" (https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db) by 42manako — CC-BY-4.0 — `tor.glb`
-- "96K6 Pantsir-S2" (https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b) by 42manako — CC-BY-4.0 — `pantsir.glb`
-- "S-400 Triumf missile launcher truck" (https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f) by Chenzoss — CC-BY-4.0 — `s400.glb`
+- "9K331 Tor-M1" (https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db) by 42manako — CC-BY-4.0 — `tor.glb`, `tor_lo.glb`
+- "96K6 Pantsir-S2" (https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b) by 42manako — CC-BY-4.0 — `pantsir.glb`, `pantsir_lo.glb`
+- "S-400 Triumf missile launcher truck" (https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f) by Chenzoss — CC-BY-4.0 — `s400.glb`, `s400_lo.glb`
 - "9K31 Strela-1 SAM" (https://sketchfab.com/3d-models/9k31-strela-1-sam-bf3bf22d2a684d0d883e03d533a52a36) by 42manako — CC-BY-4.0 — `strela1.glb`
-- "Osa-AKM SAM system" (https://sketchfab.com/3d-models/osa-akm-sam-system-485a4207e55545188e93bef5f1e2413f) by Jeyhun1985 — CC-BY-4.0 — `osa.glb`
+- "Osa-AKM SAM system" (https://sketchfab.com/3d-models/osa-akm-sam-system-485a4207e55545188e93bef5f1e2413f) by Jeyhun1985 — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
 - "MIM-104 Patriot Surface-To-Air Missile (SAM)" (https://sketchfab.com/3d-models/mim-104-patriot-surface-to-air-missile-sam-7a64d0af78514a159877edab1ab2bccb) by Muhamad Mirza Arrafi — CC-BY-4.0 — `patriot.glb`
 - "SAM S-75 "Dvina"" (https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4) by manyakasia — CC-BY-4.0 — `s75.glb`
-- "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid — CC-BY-4.0 — `s125.glb`
+- "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid — CC-BY-4.0 — `s125.glb`, `s125_lo.glb`
 - "2K12 Kub" (https://sketchfab.com/3d-models/2k12-kub-4e2e8506c9e546b3b7da1554db8185bc) by UltraKill — CC-BY-4.0 — `kub.glb`
 - "Mim-23 Hawk SAM air defence system (game-ready)" (https://sketchfab.com/3d-models/mim-23-hawk-sam-air-defence-system-game-ready-8728909b6ce24ef8baeffabbf5bae8f4) by Dominik Biały — CC-BY-4.0 — `hawk.glb`
 - "M163 VADS" (https://sketchfab.com/3d-models/m163-vads-66a6f08ad2d945ccb6e72267e55bc685) by 42manako — CC-BY-4.0 — `m163.glb`
-- "Flakpanzer Gepard | High-Quality model" (https://sketchfab.com/3d-models/flakpanzer-gepard-high-quality-model-43746c9ec4a64f8d9a30db81b82843bd) by Scout — CC-BY-4.0 — `gepard.glb`
+- "Flakpanzer Gepard | High-Quality model" (https://sketchfab.com/3d-models/flakpanzer-gepard-high-quality-model-43746c9ec4a64f8d9a30db81b82843bd) by Scout — CC-BY-4.0 — `gepard.glb`, `gepard_lo.glb`
 - "Nasams 1 Surface-to-Air Missile System" (https://sketchfab.com/3d-models/nasams-1-surface-to-air-missile-system-5fb34fab137c430988fd5642a3b87db3) by Muhamad Mirza Arrafi — CC-BY-4.0 — `nasams.glb`
 - "Renault TRM Radar Truck" (https://sketchfab.com/3d-models/renault-trm-radar-truck-1ad95e5724624a3bba7d36a686817efc) by Muhamad Mirza Arrafi — CC-BY-4.0 — `ew_w.glb`
-- "IBIS150 air defense radar" (https://sketchfab.com/3d-models/ibis150-air-defense-radar-ffd78c2b016943f7b60252e94d3bc8ad) by 42manako — CC-BY-4.0 — `ew_e.glb`
+- "IBIS150 air defense radar" (https://sketchfab.com/3d-models/ibis150-air-defense-radar-ffd78c2b016943f7b60252e94d3bc8ad) by 42manako — CC-BY-4.0 — `ew_e.glb`, `ew_e_lo.glb`
 - "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`
 - "Low poly Fuel Tank 4-X + Pipe" (https://sketchfab.com/3d-models/low-poly-fuel-tank-4-x-pipe-59799d2419874de5a018666c500c52fd) by Aditya Graphical — CC-BY-4.0 — `obj_tank4.glb`
 - "Rusty airbase fuel tank" (https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692) by LuddePudde — CC-BY-4.0 — `obj_rtank.glb`
@@ -85,4 +90,4 @@
 - "Low-poly Urban Street Props Pack (PS1 Style)" (https://sketchfab.com/3d-models/low-poly-urban-street-props-pack-ps1-style-381b65d98a5b4e3886ac2acace7e5c74) by S1lMoon — CC-BY-4.0 — `pr_vend.glb`, `pr_booth.glb`, `pr_bin.glb`
 - "PSX - Vending Machine" (https://sketchfab.com/3d-models/psx-vending-machine-aff31f282155471d8222287596c7ac59) by Kasugay𓅂 — CC-BY-4.0 — `pr_vend2.glb`
 - "Garbage Bin" (https://sketchfab.com/3d-models/garbage-bin-fba6b5a8afdd4eb0a43be29aabceb3d6) by Glen Ortiz — CC-BY-4.0 — `pr_wbins.glb`
-- "Buk-M3 9K317 SAM" (https://sketchfab.com/3d-models/buk-m3-9k317-sam-923878eda87a4b28bae10799023086c5) by Jeyhun1985 — CC-BY-4.0 — `bukm3.glb`
+- "Buk-M3 9K317 SAM" (https://sketchfab.com/3d-models/buk-m3-9k317-sam-923878eda87a4b28bae10799023086c5) by Jeyhun1985 — CC-BY-4.0 — `bukm3.glb`, `bukm3_lo.glb`

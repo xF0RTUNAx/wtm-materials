@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261012c';
+import { CREDITS } from './models/credits.js?v=20261012d';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -22,6 +22,28 @@ const META = {
   // (на законцовках крыльев — свои AIM-120, пилоны под крылом дорисованы)
   f16: { side: 'west', cls: 'fighter', stations: mirror([V(-3.9, -1.34, 2.4, 0.36), V(-3.0, -1.38, 2.2, 0.38), V(-2.15, -1.39, 2.0, 0.38), V(-0.75, -1.6, 1.0, 0.22)]),
     nozzles: [V(0, -0.9, 6.5)], nr: 0.55, pod: V(0.75, -1.62, -0.5) },
+  // ── свой самолёт у каждой подвески (2026-10-12); lazy — грузится, когда нужен (выбран в подвеске или летит в налёте),
+  // pod: null — прицельная система встроенная (контейнер не вешается); internal — оружие во внутренних отсеках (не видно до пуска)
+  e_su24: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.8, -1.39, 2.19), V(-2.1, -1.23, 0.8), V(-0.49, -2.48, 3.21), V(-0.35, -2.48, -0.4)]),
+    nozzles: [V(-0.68, -1.28, 10.1), V(0.68, -1.28, 10.1)], nr: 0.32, pod: null }, // Су-24М — 42manako («Кайра» встроена)
+  e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.37, -1.11, 0.67), V(-3.59, -1.09, 0.4), V(-2.81, -1.09, 0.2), V(-2.03, -1.07, -0.04)]),
+    nozzles: [V(-0.88, -1.4, 3.85), V(0.88, -1.4, 3.85)], nr: 0.2, pod: null }, // Су-25 — Immersive3D («Шквал» у Су-25Т встроен)
+  e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.21, -1.51, 4.94), V(-4.63, -1.5, 3.8), V(-3.55, -1.72, 3.21), V(-1.33, -2.42, 2.5)]),
+    nozzles: [V(-1.18, -1.5, 9.4), V(1.18, -1.5, 9.4)], nr: 0.22, pod: null }, // Су-34 (Су-32ФН) — 42manako («Платан» встроен)
+  e_su17: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.56, -1.33, 2.63), V(-1.72, -1.41, 0.51), V(-1.25, -1.68, -1.4), V(-0.37, -2.07, -0.25)]),
+    nozzles: [V(0, -1.02, 8.21)], nr: 0.3, pod: V(0, -2.3, 1.8) }, // Су-17М4 — manilov.ap
+  e_su57: { side: 'east', cls: 'fighter', lazy: true, internal: true, stations: mirror([V(-1.9, -0.95, 1.5), V(-1.6, -1.0, 0.0), V(-0.35, -1.2, 0.5), V(-0.3, -1.2, 2.6)]),
+    nozzles: [V(-1.37, -0.66, 8.25), V(1.37, -0.66, 8.25)], nr: 0.23, pod: null }, // Су-57
+  e_mig31: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-5.6, -0.95, 5.4, 0.3), V(-4.62, -1.24, 4.4), V(-1.55, -1.55, 7.5), V(-1.19, -1.92, -1.5)]),
+    nozzles: [V(-0.78, -1.09, 11.1), V(0.78, -1.09, 11.1)], nr: 0.37, pod: null }, // МиГ-31БМ
+  e_tu22m3: { side: 'east', cls: 'heavy', lazy: true, stations: mirror([V(-11, -3.35, 7.6, 0.35), V(-8, -3.4, 6.8, 0.35), V(-5.07, -3.79, 5.15), V(-1.83, -3.53, 3.58)]),
+    nozzles: [V(-0.93, -2.17, 19.05), V(0.93, -2.17, 19.05)], nr: 0.35, pod: null }, // Ту-22М3 — только в налётах ИИ
+  e_f4: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-3.7, -1.78, 1.69), V(-2.29, -2.46, -0.5), V(-1.26, -1.46, -0.6), V(-1.26, -1.46, 2.4)]),
+    nozzles: [V(-0.5, -0.2, 6.6), V(0.5, -0.2, 6.6)], nr: 0.29, pod: V(0, -1.55, 1.0) }, // F-4 Phantom II — andertan («Пэйв Тэк» под фюзеляжем)
+  e_gripen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.18, -1.06, 3.77), V(-2.92, -1.4, 3.03), V(-1.95, -1.41, 1.77), V(-0.45, -1.62, 0.2, 0.1)]),
+    nozzles: [V(0, -0.94, 7.3)], nr: 0.24, pod: V(0.75, -1.5, -1.6) }, // JAS 39 Gripen (LITENING на подфюзеляжной точке)
+  e_f35: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.9, -1.3, 2.4), V(-0.85, -1.3, 0.4), V(-0.65, -1.35, 1.0), V(-0.45, -1.4, 1.8)]),
+    nozzles: [V(0, -0.55, 6.5)], nr: 0.24, pod: null }, // F-35A (EOTS встроена)
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II с F-16D
   w_fab500: { weapon: 'fab500', stations: [] }, // ФАБ-500М-62 — Jeyhun1985 (модель с УМПК, комплект снят)
@@ -94,7 +116,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=20261012c`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=20261012d`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
@@ -156,7 +178,7 @@ function start(name) {
 }
 export function loadModels(base, onReady) {
   BASE = base; READY = onReady;
-  for (const [name, m] of Object.entries(META)) if (!m.units && !m.bld) start(name); // самолёты, оружие, ракеты ПЗРК — сразу
+  for (const [name, m] of Object.entries(META)) if (!m.units && !m.bld && !m.lazy) start(name); // самолёты (кроме lazy), оружие, ракеты ПЗРК — сразу
 }
 export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); start(n); } } // сначала лёгкая дальняя копия
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
@@ -185,9 +207,10 @@ export const classOfRole = (role) => (role === 'sead' || role === 'low' || role 
 // готовая модель стороны и класса (своего класса нет — любая модель стороны; нет ничего — null, тогда процедурная)
 // name — конкретная модель (из подвески), если загрузилась
 export function planeModel(side, cls = 'strike', name = null) {
+  if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла — пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);
   const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n]).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
   const [n, m] = pick;
-  return { obj: LOADED[n].clone(), stations: m.stations, nozzles: m.nozzles, nr: m.nr, pod: m.pod, name: n, cls: m.cls };
+  return { obj: LOADED[n].clone(), stations: m.stations, nozzles: m.nozzles, nr: m.nr, pod: m.pod, name: n, cls: m.cls, internal: !!m.internal };
 }

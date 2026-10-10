@@ -10,6 +10,9 @@ import { render, writePpm } from './raster.js';
 import { MeshoptSimplifier } from 'npm:meshoptimizer@0.21.0';
 
 const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads`;
+// перекраска: синие пиксели (синий заметно больше красного и зелёного) → оливковый той же яркости, остальное как было
+const BLUE = 'gt(b(X,Y),r(X,Y)+25)*gt(b(X,Y),g(X,Y)+10)', LUM = '(0.3*r(X,Y)+0.59*g(X,Y)+0.11*b(X,Y))';
+const OLIVE = `format=gbrp,geq=r='if(${BLUE},min(255,${LUM}*1.35),r(X,Y))':g='if(${BLUE},min(255,${LUM}*1.4),g(X,Y))':b='if(${BLUE},${LUM}*0.9,b(X,Y))'`;
 const LS = (c) => { if (Deno.env.get('LS') && Math.max(...c.size) > 0.4) console.log('  часть', c.mat, 'ц', c.ctr.map((v) => v.toFixed(2)).join(' '), 'р', c.size.map((v) => v.toFixed(2)).join(' ')); return 'body'; }; // LS=1 … --groups: список частей
 const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? 99); // верх корпуса ФАБ-500 в осях игры без центровки (см. --groups)
 // nose — куда смотрит нос модели в её осях; center — [y оси фюзеляжа] в её единицах (иначе середина габаритов)
@@ -64,7 +67,7 @@ const CONFIG = {
   c_wagon: { src: `${DL}/generic_passenger_car_pack.glb`, scale: 1, unit: true, tex: () => 256, pick: [1.8, -0.5, 2.8, 5.8, 3, 7.5], axes: (x, y, z) => [x * 0.8047 - z * 0.5937, y, x * 0.5937 + z * 0.8047] },
   c_police: { src: `${DL}/low_poly_car.glb`, scale: 1, nose: '-x', unit: true, tex: () => 512, pickMesh: /./ }, // полицейская
   // ── Gripen, F-22, F-35A (2026-10-12): нос в −Z, метры; без своих ракет, шасси и открытых створок
-  e_gripen: { src: `${DL}/saab_jas-39_gripen_fighter_jet.glb`, scale: 1, nose: '+x', rulesIn: 'game', tex: () => 512, opaque: /^(Camo|material|White|Jet_m)$/, opaque: /^(Camo|material|White|Jet_m)$/, groups: (c) => (Math.abs(c.ctr[0]) > 1.5 && [1, 4, 5].includes(c.mat) ? null : 'body') }, // свои ракеты и баки — долой, пилоны и направляющие — оставить
+  e_gripen: { src: `${DL}/saab_jas-39_gripen_fighter_jet.glb`, scale: 1, nose: '+x', rulesIn: 'game', tex: () => 512, opaque: /^(Camo|material|White|Jet_m)$/, cutout: true, groups: (c) => (Math.abs(c.ctr[0]) > 1.5 && [1, 4, 5].includes(c.mat) ? null : 'body'), glassPart: (c) => c.mat === 3 && Math.abs(c.ctr[0]) < 0.6 && c.ctr[2] < -3 }, // свои ракеты и баки — долой, пилоны и направляющие — оставить
   e_f22: { src: `${DL}/lockheed_martin_f-22_raptor.glb`, scale: 18.92 / 12.11, nose: '-x', rulesIn: 'game', tex: () => 512, groups: (c) => ([16, 17].includes(c.mat) ? null : 'body') }, // без встроенного выхлопа (plumes): пламя рисует игра
   e_f35: { src: `${DL}/f-35a_lightning_ii.glb`, scale: 0.56, nose: '+z', rulesIn: 'game', tex: () => 512, groups: (c) => (Math.abs(c.ctr[0]) > 5.9 ? null : LS(c)) }, // модель ×1,8 — к 15,7 м; летающие створки — долой
   // ── противник «Летки» (2026-10-11): нос в −Z, метры; без шасси и подставки
@@ -74,6 +77,21 @@ const CONFIG = {
   e_mig31: { src: `${DL}/b168fbca1f6c4ad0ad4e45b7a22f52bc.glb`, scale: 9.95, nose: '+x', rulesIn: 'game', tex: () => 512, groups: (c) => (c.min[1] < -1.25 && Math.max(...c.size) < 2.5 ? null : 'body') }, // без шасси
   e_su57: { src: `${DL}/sukhoi_su-57_felon.glb`, scale: 7.42, nose: '-x', rulesIn: 'game', tex: () => 512, glass: /^Darkness\.001$/, groups: () => 'body' },
   e_tu22m3: { src: `${DL}/tupolev_tu-22m3.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 512, groups: () => 'body' }, // вблизи — без упрощения: тонкие крылья и закрылки от него рвутся (дальняя копия _lo — упрощённая)
+  // ── «Воздушное превосходство»: свой самолёт у каждой подвески (2026-10-12)
+  e_su24: { src: `${DL}/russian_su-24.glb`, scale: 0.0543, nose: '-z', rulesIn: 'game', tex: () => 512, // крыло — в развёрнутом положении
+    groups: (c) => (c.ctr[1] < -0.4 && Math.abs(c.ctr[0]) < 2.2 && Math.max(...c.size) < 1.9 && !(c.size[2] > 1.5 && c.size[1] < 0.3) && ((c.ctr[2] > 1.6 && c.ctr[2] < 4.7) || (c.ctr[2] > -5.7 && c.ctr[2] < -3.2)) ? null : LS(c)) }, // шасси и створки (пилоны под фюзеляжем — оставить)
+  e_su25: { src: `${DL}/pbr_sukhoi_su-25.glb`, scale: 0.483, nose: '-z', rulesIn: 'game', tex: () => 512,
+    groups: (c) => (c.ctr[1] < 1.35 && Math.abs(c.ctr[0]) < 1.5 && c.ctr[2] > -3.2 && c.ctr[2] < 1.8 ? null : LS(c)) }, // шасси
+  e_su34: { src: `${DL}/su-34_prototype_su-32fn.glb`, scale: 0.98, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, texVf: 'hue=h=152:s=0.32,eq=brightness=-0.04', // меши подписаны: без шасси, створок, лестницы и своего оружия
+    pickMesh: /^(?!.*(Wheel|Strut|Ladder|Step|TaxiLight|R-73|R-27|Kh-31|AB-500|Tank|Door))/, groups: LS },
+  e_su17: { src: `${DL}/su17.glb`, scale: 1, fwd: [-0.6933, 0.7207], rulesIn: 'game', tex: () => 512, centerX: true, // лежит повёрнутой в плоскости XZ, ось — x −0,4
+    groups: (c) => { const dx = Math.abs(c.ctr[0] + 0.4), [, y, z] = c.ctr; return (y < 1.45 && dx > 1.6 && dx < 2.9 && z > 0.2 && z < 2.0) || (y < 1.15 && dx < 0.45 && z > -5.6 && z < -4.0) ? null : LS(c); } }, // шасси и створки
+  e_f4: { src: `${DL}/mcdonnell_douglas_f-4_phantom_ii.glb`, scale: 0.93, nose: '+x', rulesIn: 'game', tex: () => 512, // «полная подвеска» в одном меше — снимаем: баки, бомбы на МБД, «Спарроу»; без выхлопа
+    groups: (c) => { const [x, y] = c.ctr, ax = Math.abs(x), s = c.size; if (c.mat === 14) return null;
+      if (y < -0.18 && ax > 1.75 && !(s[0] < 0.12 && s[1] > 0.4)) return null; // под крылом: всё, кроме самих пилонов
+      if (y < -0.55 && ax < 0.3 && s[0] > 0.6) return null; // подфюзеляжный бак
+      if (y < -0.1 && ax < 1.75 && s[0] < 0.25 && s[1] < 0.25 && s[2] > 2) return null; // «Спарроу» в нишах
+      return LS(c); } },
   // ── карта «Летки»: ЛЭП, ветряк, порт, маяк, поезда; танкеры (2026-10-11)
   m_pylon: { src: `${DL}/high_voltage_transmission_line_tower_tileable.glb`, scale: 3.2, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.size[2] > 20 || c.ctr[2] < -60 ? null : 'body') }, // только опора: провода (крепления — 3 фазы x −7 / 0 / +7, y 23,1) рисует игра, изоляторы соседней опоры — долой // опора с пролётом проводов (стыкуются через 144 м)
   m_wind: { src: `${DL}/wind_turbine_demo.glb`, scale: 18, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.ctr[2] < 0.3 ? 'rotor' : 'body') }, // ротор — своя группа (крутится) // ветряк ~100 м
@@ -92,7 +110,7 @@ const CONFIG = {
   aam_iris: { src: `${DL}/low_poly_german_iris-t_aam.glb`, scale: 2.936 / 924.74, nose: '-x', tex: () => 256, pickMesh: /./ }, // IRIS-T
   aam_mica: { src: `${DL}/low_poly_missiles_and_torpedos.glb`, scale: 1, nose: '+z', tex: () => 256, pickMesh: /VL MICA/ }, // MICA (EM и IR — один корпус)
   msl_aim120: { src: `${DL}/boeing_fa-18ef_super_hornet.glb`, scale: 1, nose: '+x', tex: () => 256, pick: [-6, -0.5, 4.5, -1, -0.02, 4.9] }, // AIM-120 с F/A-18 — для NASAMS
-  w_gbu12: { src: `${DL}/general_dynamics_f-16d_block_60.glb`, scale: 1, nose: '-z', tex: () => 512, pick: [-3.0, 0.7, -1.5, -2.75, 1.1, 3] }, // GBU-12 Paveway II с F-16
+  w_gbu12: { src: `${DL}/general_dynamics_f-16d_block_60.glb`, scale: 1, nose: '-z', tex: () => 512, texVf: OLIVE, /* у автора — синяя учебная, перекрашена в оливковую боевую */ pick: [-3.0, 0.7, -1.5, -2.75, 1.1, 3] }, // GBU-12 Paveway II с F-16
   mig29: { src: `${DL}/mig_29.glb`, scale: 17.32 / 947.3, nose: '+z', tex: () => 1024 },
   // правила частей — в осях игры (без центровки): along/across — положение центра части вдоль и поперёк оси пакета
   tor: { src: `${DL}/9k331_tor-m1.glb`, scale: 1, fwd: [0.767, 0.641], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, target: 55000,
@@ -277,6 +295,8 @@ async function prepare(name, views) {
       // мелочь (болты, заклёпки, ручки) меньше minPart — долой: на упрощение она почти не поддаётся
       for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; gid.set(c.id, Math.max(...c.size) * tsc < (cfg.minPart || 0) ? null : cfg.groups(c)); }
       p.group = (t) => gid.get(comp[t]); p.comp = comp; keep = (t) => !!gid.get(comp[t]);
+      // glassPart(c) — эта часть — стекло, хоть материал у неё общий с другими (у Gripen «Glass» — и фонарь, и огни на крыле)
+      if (cfg.glassPart) { const gs = new Set(list.filter((c) => cfg.glassPart(c)).map((c) => c.id)); p.glassT = (t) => gs.has(comp[t]); }
     } else if (cfg.remove) {
       const { comp, list } = components(p.P, p.I, cfg.scale < 0.1 ? 0.5 : 0.001), drop = new Set();
       list.forEach((c, i) => { c.size = c.max.map((v, k) => v - c.min[k]); c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.mat = p.material; if (cfg.remove(c, i)) drop.add(c.id); });
@@ -285,8 +305,8 @@ async function prepare(name, views) {
     const remaps = new Map();
     for (let t = 0; t < p.I.length / 3; t++) {
       if (keep && !keep(t)) { removed++; continue; }
-      const grp = p.group ? p.group(t) : 'body', key = `${grp}|${p.material}`;
-      let M = byMat.get(key); if (!M) byMat.set(key, M = { group: grp, mat: p.material, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: !!p.UV });
+      const fg = !!(p.glassT && p.glassT(t)), grp = p.group ? p.group(t) : 'body', key = `${grp}|${p.material}${fg ? '|g' : ''}`;
+      let M = byMat.get(key); if (!M) byMat.set(key, M = { group: grp, mat: p.material, forceGlass: fg, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: !!p.UV });
       let remap = remaps.get(key); if (!remap) remaps.set(key, remap = new Int32Array(p.P.length / 3).fill(-1));
       if (p.comp) M.tc.push(`${p.node}.${p.prim}:${p.comp[t]}`);
       for (let k = 0; k < 3; k++) {
@@ -306,7 +326,7 @@ async function prepare(name, views) {
   // центр по корпусу
   const all = bbox(Float32Array.from([...byMat.values()].flatMap((m) => m.pos)));
   const bodyB = cfg.unit ? bbox(Float32Array.from([...byMat.values()].filter((m) => m.group === 'body').flatMap((m) => m.pos))) : all;
-  const dz = (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? all.mn[1] : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.pick || cfg.pickMesh || cfg.unit ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
+  const dz = (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? all.mn[1] : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.pick || cfg.pickMesh || cfg.unit || cfg.centerX ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
   for (const m of byMat.values()) for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= dx; m.pos[i + 1] -= dy; m.pos[i + 2] -= dz; }
   if (cfg.groups && cfg.unit) articulate(cfg, byMat, [dx, dy, dz], cfg.rulesIn === 'game' ? (x, y, z) => [x / cfg.scale, y / cfg.scale, z / cfg.scale] : ax);
   SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster;
@@ -329,7 +349,9 @@ async function prepare(name, views) {
     const ext = im.mimeType === 'image/jpeg' ? 'jpg' : 'png';
     Deno.writeFileSync(`${tmp}/t.${ext}`, g.bin.subarray(bv.byteOffset || 0, (bv.byteOffset || 0) + bv.byteLength));
     const of = png ? 'o.png' : 'o.jpg';
-    await new Deno.Command('sips', { args: png ? ['-s', 'format', 'png', '-Z', String(size), `${tmp}/t.${ext}`, '--out', `${tmp}/${of}`] : ['-s', 'format', 'jpeg', '-s', 'formatOptions', '80', '-Z', String(size), `${tmp}/t.${ext}`, '--out', `${tmp}/${of}`], stdout: 'null', stderr: 'null' }).output();
+    let srcT = `${tmp}/t.${ext}`; // texVf — фильтр ffmpeg для перекраски (у прототипа Су-34 грунт жёлтый → серо-голубой строевой)
+    if (cfg.texVf) { await new Deno.Command('ffmpeg', { args: ['-loglevel', 'error', '-y', '-i', srcT, '-vf', cfg.texVf, `${tmp}/f.png`] }).output(); srcT = `${tmp}/f.png`; }
+    await new Deno.Command('sips', { args: png ? ['-s', 'format', 'png', '-Z', String(size), srcT, '--out', `${tmp}/${of}`] : ['-s', 'format', 'jpeg', '-s', 'formatOptions', '80', '-Z', String(size), srcT, '--out', `${tmp}/${of}`], stdout: 'null', stderr: 'null' }).output();
     const jpg = Deno.readFileSync(`${tmp}/${of}`); texBytes += jpg.length;
     images.push({ bufferView: add(jpg), mimeType: png ? 'image/png' : 'image/jpeg' }); textures.push({ sampler: 0, source: images.length - 1 });
     texCache.set(key, textures.length - 1); return textures.length - 1;
@@ -346,12 +368,13 @@ async function prepare(name, views) {
     // корпус «Вербы», крыша хаты) — без этого правила такие части выходили белыми «стёклами» без текстуры. cfg.glass — свои имена стёкол
     const GLASS = /glass|стекл|canopy|window|visor|lens|fonar|фонар/i, nm = src.name || '';
     const blend = src.alphaMode === 'BLEND', solid = !!(cfg.opaque && cfg.opaque.test(nm));
-    const glass = blend && !solid && !cfg.cutout && (GLASS.test(nm) || !!(cfg.glass && cfg.glass.test(nm)));
+    const glass = m.forceGlass || (blend && !solid && !cfg.cutout && (GLASS.test(nm) || !!(cfg.glass && cfg.glass.test(nm))));
     const cut = blend && !solid && !glass; // остальное полупрозрачное — вырезкой по альфе: заборы и наклейки сохраняют дыры, корпуса — текстуру
     // colors — свои цвета материалов по имени (у модели без текстур цвета бывают «служебные»)
     const own = cfg.colors && Object.entries(cfg.colors).find(([re]) => new RegExp(re).test(src.name || ''));
     const mat = { name: src.name, doubleSided: true, pbrMetallicRoughness: { baseColorFactor: own ? [...own[1], 1] : pbr.baseColorFactor || [1, 1, 1, 1], metallicFactor: 0.3, roughnessFactor: 0.6 } };
     if (glass) mat.alphaMode = 'BLEND';
+    if (m.forceGlass) mat.pbrMetallicRoughness.baseColorFactor = [0.3, 0.36, 0.42, 0.35]; // своё стекло — тонированное, полупрозрачное
     if (src.alphaMode === 'MASK' || cut) { mat.alphaMode = 'MASK'; mat.alphaCutoff = src.alphaCutoff ?? 0.5; }
     if (pbr.baseColorTexture && m.hasUv && !glass) mat.pbrMetallicRoughness.baseColorTexture = { index: await texture(pbr.baseColorTexture.index, cfg.tex(src), mat.alphaMode === 'MASK') };
     materials.push(mat);

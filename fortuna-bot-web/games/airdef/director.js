@@ -9,12 +9,12 @@
 // вертикальном), чтобы ракета и пусковая не прятались под ней. Внизу справа — подпись, что сейчас в кадре.
 // Раз в несколько минут бой начинается заново (город восстанавливается).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261012c';
-import { SAM_TYPE, AG, PLANES } from './arsenal.js?v=20261012c';
-import { planeModel, classOfRole } from './models.js?v=20261012c';
-import { fwdOf } from '../drone/sim/core.js?v=20261012c';
-import { placeDefense, pickTargets } from './mission.js?v=20261012c';
-import { LNCH, trainable } from './launchers.js?v=20261012c';
+import { mulberry32 } from './city.js?v=20261012d';
+import { SAM_TYPE, AG, PLANES, raidPlane } from './arsenal.js?v=20261012d';
+import { planeModel, classOfRole } from './models.js?v=20261012d';
+import { fwdOf } from '../drone/sim/core.js?v=20261012d';
+import { placeDefense, pickTargets } from './mission.js?v=20261012d';
+import { LNCH, trainable } from './launchers.js?v=20261012d';
 
 export function createDirector(C) {
   const { camera, city } = C;
@@ -131,7 +131,7 @@ export function createDirector(C) {
     const u = C.S.units.find((q) => q.gunOn && !q.dead && q.track); if (!u) return null;
     return { kind: 'aaa', dur: 6, cap: `${u.S.name} · заградительный огонь`, cam() { if (!u.track || u.dead) return false; TMP.copy(u.track.pos).sub(u.pos).normalize(); camPos.copy(u.pos).addScaledVector(TMP, -18).y += 6; look.copy(u.track.pos); return true; } };
   }
-  const planeName = (a) => { const pm = planeModel(a.side, classOfRole(a.role)); return pm ? PLANES[pm.name] : a.side === 'east' ? 'Ударник' : 'Strike'; };
+  const planeName = (a) => { const pm = planeModel(a.side, classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)); return pm ? PLANES[pm.name] : a.side === 'east' ? 'Ударник' : 'Strike'; };
   const fighters = () => C.raid.alive().filter((a) => a.role !== 'decoy');
   // рядом с самолётом: v — wing (ведомый сбоку), close (из-за плеча), under (подвеска снизу спереди), orbit (облёт)
   function planeClose(v) {

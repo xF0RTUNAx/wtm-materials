@@ -11,10 +11,10 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW } from './city.js?v=20261012c';
-import { part, mergeParts, M } from '../drone/models.js?v=20261012c';
-import { WEATHERS, ATMO, skyMaterial, FXU } from '../drone/world.js?v=20261012c';
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261012c'; // MIT, meshoptimizer 0.21
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW } from './city.js?v=20261012d';
+import { part, mergeParts, M } from '../drone/models.js?v=20261012d';
+import { WEATHERS, ATMO, skyMaterial, FXU } from '../drone/world.js?v=20261012d';
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261012d'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -40,7 +40,7 @@ function loadCityTextures(aniso) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = f === 'asphalt' ? THREE.MirroredRepeatWrapping : THREE.RepeatWrapping;
     t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
-    fetch(new URL(`./tex/${f}.jpg?v=20261012c`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261012d`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { t.image = bmp; t.needsUpdate = true; if (--left === 0) TEX.uTexOn.value = 1; })
       .catch((e) => console.warn('текстура не загрузилась:', e.message));
   }

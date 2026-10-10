@@ -218,3 +218,10 @@
 - airdef ПВО: вблизи — подробнее (osa / bukm3 / s125 110 тыс., ew_e 120 тыс., gepard и s400 — полные), _lo 15–20 тыс.; models.js
   unitModelGlb — части THREE.LOD (UNIT_LO), wantUnit грузит _lo первой; main.js переключает уровни сам (конвейер LOD не обновляет),
   расстояние × tan(fov/2)/tan(30°) < 400 м — подробная. Версия airdef 20261012c (не опубликовано).
+
+## 2026-10-12 — «Воздушное превосходство»: свой самолёт у каждой подвески
+- Новые модели (tools/airdef-models/prepare.js): e_su24, e_su25, e_su34 (прототип Су-32ФН, жёлтый грунт перекрашен `texVf`), e_su17, e_f4; у Gripen «Glass» → вырезка (`cutout`).
+  F-15E от andertan — CC-BY-ND, НЕ использовать. Нужны ещё F-15E (не ND) и A-7 Corsair II: в эп. II и IV у запада по два F/A-18.
+- models.js: самолёты `lazy` (грузятся при выборе подвески / в налёте), `internal` (F-35, Су-57 — оружие не видно), `pod: null` — встроенная прицельная система.
+- arsenal.js: `plane` у подвесок, PLANES, RAID_PLANES/raidPlane (вид ИИ-налёта по стороне/эпохе/роли); sim/online.js approachOf — по массе бомб.
+- Сервер: arsenal.js/sim/online.js изменились → после деплоя update.ps1.

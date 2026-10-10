@@ -273,6 +273,51 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Russian Su-24",
+  "author": "42manako",
+  "url": "https://sketchfab.com/3d-models/russian-su-24-17ca351ca78149d09393b3926db66454",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su24"
+  ]
+ },
+ {
+  "title": "[PBR] Sukhoi Su-25",
+  "author": "Immersive3D",
+  "url": "https://sketchfab.com/3d-models/pbr-sukhoi-su-25-956d0cb0bbe54fa8ad72e8c3e224fd2d",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su25"
+  ]
+ },
+ {
+  "title": "Su-34 prototype (Su-32FN)",
+  "author": "42manako",
+  "url": "https://sketchfab.com/3d-models/su-34-prototype-su-32fn-d621b381bf734545b047e7e19972780c",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su34"
+  ]
+ },
+ {
+  "title": "Su17",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su17"
+  ]
+ },
+ {
+  "title": "McDonnell Douglas F-4 Phantom II",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-f-4-phantom-ii-1ea38a66a59048529d27b24a570c5e07",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f4"
+  ]
+ },
+ {
   "title": "High Voltage Transmission Line Tower (tileable)",
   "author": "mednios",
   "url": "https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313",
@@ -414,7 +459,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db",
   "license": "CC-BY-4.0",
   "files": [
-   "tor"
+   "tor",
+   "tor_lo"
   ]
  },
  {
@@ -423,7 +469,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b",
   "license": "CC-BY-4.0",
   "files": [
-   "pantsir"
+   "pantsir",
+   "pantsir_lo"
   ]
  },
  {
@@ -432,7 +479,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f",
   "license": "CC-BY-4.0",
   "files": [
-   "s400"
+   "s400",
+   "s400_lo"
   ]
  },
  {
@@ -450,7 +498,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/osa-akm-sam-system-485a4207e55545188e93bef5f1e2413f",
   "license": "CC-BY-4.0",
   "files": [
-   "osa"
+   "osa",
+   "osa_lo"
   ]
  },
  {
@@ -477,7 +526,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd",
   "license": "CC-BY-4.0",
   "files": [
-   "s125"
+   "s125",
+   "s125_lo"
   ]
  },
  {
@@ -513,7 +563,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/flakpanzer-gepard-high-quality-model-43746c9ec4a64f8d9a30db81b82843bd",
   "license": "CC-BY-4.0",
   "files": [
-   "gepard"
+   "gepard",
+   "gepard_lo"
   ]
  },
  {
@@ -540,7 +591,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/ibis150-air-defense-radar-ffd78c2b016943f7b60252e94d3bc8ad",
   "license": "CC-BY-4.0",
   "files": [
-   "ew_e"
+   "ew_e",
+   "ew_e_lo"
   ]
  },
  {
@@ -787,7 +839,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/buk-m3-9k317-sam-923878eda87a4b28bae10799023086c5",
   "license": "CC-BY-4.0",
   "files": [
-   "bukm3"
+   "bukm3",
+   "bukm3_lo"
   ]
  }
 ];

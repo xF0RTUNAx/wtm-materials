@@ -1,12 +1,12 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261012c';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261012c';
-import { MODES } from './sim/strike.js?v=20261012c';
-import { WEATHERS } from '../drone/world.js?v=20261012c';
-import { LESSONS } from './training.js?v=20261012c';
-import { MODEL_CREDITS } from './models.js?v=20261012c';
-import { openLayoutEditor } from './layout.js?v=20261012c';
+import { CITY } from './city.js?v=20261012d';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261012d';
+import { MODES } from './sim/strike.js?v=20261012d';
+import { WEATHERS } from '../drone/world.js?v=20261012d';
+import { LESSONS } from './training.js?v=20261012d';
+import { MODEL_CREDITS } from './models.js?v=20261012d';
+import { openLayoutEditor } from './layout.js?v=20261012d';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const GAMES = [
@@ -92,10 +92,19 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function renderRef() {
     let h = '<p class="hint">Реальные характеристики — округлённые открытые данные. Дальности в игре уменьшены под размер карты.</p>';
     // самолёты: какие подвески несёт каждый
-    const PL = { su30: ['Су-30', 'Россия · двухместный многоцелевой: ударные загрузки — бомбы ФАБ, КАБ, УМПК, крылатые Х-59МК2.'],
-      mig29: ['МиГ-29', 'СССР / Россия · лёгкий фронтовой: ракетные загрузки — ПРР Х-28, Х-58, Х-31П, ракеты Х-25МЛ, Х-29Т.'],
-      f18: ['F/A-18E Super Hornet', 'США · палубный многоцелевой: ударные загрузки — Mk 82, GBU-12, JDAM, SDB, JASSM.'],
-      f16: ['F-16D Block 60', 'США · лёгкий многоцелевой: ракетные загрузки — Shrike, HARM, AARGM, Maverick, JASSM.'] };
+    const PL = { e_su17: ['Су-17М4', 'СССР · истребитель-бомбардировщик с крылом изменяемой стреловидности: ФАБ, ПРР Х-28 и Х-58, Х-25МЛ.'],
+      e_su24: ['Су-24М', 'СССР / Россия · фронтовой бомбардировщик, встроенная лазерно-телевизионная система «Кайра»: КАБ-500Л, Х-58, Х-29Т, Х-31П.'],
+      e_su25: ['Су-25', 'СССР / Россия · бронированный штурмовик: ФАБ-500, Х-29Т, Х-25МЛ (у Су-25Т — встроенный «Шквал»).'],
+      su30: ['Су-30', 'Россия · двухместный многоцелевой: КАБ-500, УМПК.'],
+      mig29: ['МиГ-29СМТ', 'Россия · лёгкий фронтовой: ПРР Х-31П.'],
+      e_su34: ['Су-34', 'Россия · фронтовой бомбардировщик, встроенный прицельный комплекс «Платан»: КАБ-500С, УМПК, Х-59МК2, Х-31П.'],
+      e_mig31: ['МиГ-31БМ', 'Россия · перехватчик, в модернизации — ПРР Х-31П против ПВО.'],
+      e_su57: ['Су-57', 'Россия · малозаметный: оружие во внутренних отсеках (Х-59МК2 создавалась под них), выходит из отсека при пуске.'],
+      e_f4: ['F-4 Phantom II', 'США · «Дикая ласка» F-4G — охотник за ПВО: Shrike, HARM.'],
+      f18: ['F/A-18 Hornet', 'США · палубный многоцелевой: Mk 82, GBU-12, JDAM, HARM, AARGM.'],
+      f16: ['F-16', 'США · лёгкий многоцелевой: Mk 82, Maverick, HARM, JASSM.'],
+      e_gripen: ['JAS 39 Gripen', 'Швеция · лёгкий многоцелевой с контейнером LITENING: GBU-12, JDAM.'],
+      e_f35: ['F-35A Lightning II', 'США · малозаметный: SDB во внутренних отсеках, встроенная оптико-электронная система EOTS.'] };
     h += `<div class="cat-h">Самолёты</div>` + Object.entries(PL).map(([k, [n, d]]) => `<details class="ref"><summary>${n}</summary><div class="body"><p>${d}</p><p>Подвески: ${Object.entries(LOADOUTS).flatMap(([era, list]) => list.filter((L) => L.plane === k).map((L) => `${L.name} (эп. ${ERAS[era - 1].short})`)).join('; ')}.</p></div></details>`).join('');
     for (const e of ERAS.filter((x) => LOADOUTS[x.id])) {
       h += `<div class="cat-h">Зенитные комплексы · эпоха ${e.short}</div>`;

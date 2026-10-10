@@ -8,25 +8,25 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261012c';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261012c';
-import { createPipeline } from '../drone/post.js?v=20261012c';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261012c';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261012c';
-import { AG, SAM, LOADOUTS, DEFENSE } from './arsenal.js?v=20261012c';
-import { createStrike, MODES } from './sim/strike.js?v=20261012c';
-import { createRaid } from './sim/raid.js?v=20261012c';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261012c';
-import { slotCount } from './launchers.js?v=20261012c';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261012c';
-import { createSound } from './sound.js?v=20261012c';
-import { createAir } from './air.js?v=20261012c';
-import { createDefense } from './defense.js?v=20261012c';
-import { createDirector } from './director.js?v=20261012c';
-import { createOnline } from './online.js?v=20261012c';
-import { createShell } from './shell.js?v=20261012c';
-import { createTraining, LESSONS } from './training.js?v=20261012c';
-import { createMenu } from './menu.js?v=20261012c';
+import { buildCity, CITY } from './city.js?v=20261012d';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261012d';
+import { createPipeline } from '../drone/post.js?v=20261012d';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261012d';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261012d';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261012d';
+import { createStrike, MODES } from './sim/strike.js?v=20261012d';
+import { createRaid } from './sim/raid.js?v=20261012d';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261012d';
+import { slotCount } from './launchers.js?v=20261012d';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261012d';
+import { createSound } from './sound.js?v=20261012d';
+import { createAir } from './air.js?v=20261012d';
+import { createDefense } from './defense.js?v=20261012d';
+import { createDirector } from './director.js?v=20261012d';
+import { createOnline } from './online.js?v=20261012d';
+import { createShell } from './shell.js?v=20261012d';
+import { createTraining, LESSONS } from './training.js?v=20261012d';
+import { createMenu } from './menu.js?v=20261012d';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -180,7 +180,7 @@ C.newBattle = function (o) {
     laserSpot: (a) => (a === C.player ? (C.hooks.playerLaser ? C.hooks.playerLaser() : null) : raid.laserSpot(a)),
     spawnDecoy: (a, key, aim) => { const d = raid.spawnDecoy(a, key, aim); if (C.hooks.decoyOut) C.hooks.decoyOut(d); } });
   const raid = createRaid(S, city, rnd, { side: o.defSide === 'east' ? 'west' : 'east', era: o.era, fx: raidFx });
-  C.S = S; C.raid = raid; C.player = o.player || null;
+  C.S = S; C.raid = raid; C.player = o.player || null; C.raidEra = o.era || 2;
   for (const ob of S.objects) objLook(ob.id, false);
   return S;
 };
@@ -204,7 +204,7 @@ C.netBattle = function (N, o) {
   const S = createStrike({ city, rnd: Math.random, mode: () => MODES[o.mode] || C.MODE(), night: C.NIGHT, fx: simFx,
     aircraft: () => { const a = N.raid.alive(); return C.player && !C.player.dead && N.myCraft ? [C.player, ...a] : a; },
     hurt: () => {}, laserSpot: () => null, spawnDecoy: () => {} });
-  C.S = S; C.raid = N.raid; C.player = o.player || C.player || null; C.net = N;
+  C.S = S; C.raid = N.raid; C.player = o.player || C.player || null; C.net = N; C.raidEra = o.era || (N.battle && N.battle.era) || 2;
   for (const ob of S.objects) objLook(ob.id, false);
   return S;
 };
@@ -419,10 +419,10 @@ function syncWorld(dt, t) {
       if (a.role === 'decoy') { g.add(weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat)); g.userData.flames = { update() {} }; }
       else {
         // вблизи — готовая модель (подвеска отдельными моделями на пилонах, сброшенное пропадает), вдали — простая
-        const pm = planeModel(a.side, classOfRole(a.role), a.plane || null), sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
+        const pm = planeModel(a.side, classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)), sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
         if (pm) {
           pm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(pm.obj);
-          g.userData.flames = attachFlames(g, pm.nozzles, pm.nr / 0.45); g.userData.hung = hangLoad(g, pm.stations, a.load);
+          g.userData.flames = attachFlames(g, pm.nozzles, pm.nr / 0.45); g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load); // во внутренних отсеках — не видно
           g.userData.lod = { hi: pm.obj, lo };
         } else g.userData.flames = attachFlames(g, sg.nozzles, sg.nr / 0.45);
       }

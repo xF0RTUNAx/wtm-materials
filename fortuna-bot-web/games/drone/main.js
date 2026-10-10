@@ -6,8 +6,8 @@ import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeP
 import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930m';
 import { createBook } from '../airdef/flipbook.js?v=20261011b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { createGlbMap } from './glbmap.js?v=20261012i';
-import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261012i';
+import { createGlbMap } from './glbmap.js?v=20261012j';
+import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261012j';
 import { createPipeline } from './post.js?v=20260930m';
 import { createAudio } from './audio.js?v=20260930m';
 import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930m';

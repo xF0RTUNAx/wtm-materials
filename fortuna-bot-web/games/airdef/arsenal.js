@@ -169,26 +169,35 @@ export const DEFENSE = {
 };
 // Готовые подвески «Изделия» для удара (по эпохе и стороне вооружения самолёта); pod — прицельный контейнер
 // подвески вылета: side — чья авиация (показываются подвески стороны, атакующей выбранную ПВО), plane — модель самолёта
-// (Су-30 и F/A-18 — ударные загрузки с бомбами, МиГ-29 и F-16 — ракетные), pod — прицельный контейнер
-export const PLANES = { su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D' };
+// (у каждой подвески — свой реальный носитель этого оружия и эпохи), pod — прицельный контейнер (у кого он встроен — не вешается)
+export const PLANES = { su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
+  e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A' };
+// самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
+export const RAID_PLANES = {
+  east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },
+    3: { bomber: 'e_su34', tv: 'e_su24', sead: 'mig29', low: 'e_su25' }, 4: { bomber: 'e_su34', cruise: 'e_su57', sead: 'e_mig31', decoyer: 'su30', low: 'e_su25' } },
+  west: { 1: { bomber: 'e_f4', sead: 'e_f4', low: 'f16' }, 2: { bomber: 'f18', tv: 'f16', sead: 'e_f4', low: 'f16' },
+    3: { bomber: 'f18', tv: 'e_gripen', sead: 'f16', low: 'e_gripen' }, 4: { bomber: 'e_f35', cruise: 'f16', sead: 'f18', decoyer: 'f16', low: 'e_gripen' } },
+};
+export const raidPlane = (side, era, role) => { const t = (RAID_PLANES[side] || {})[era] || {}; return t[role] || t.bomber || null; };
 export const LOADOUTS = {
   1: [
-    { side: 'east', plane: 'su30', name: 'Бомбы ФАБ-500', items: [['fab500', 6]] },
-    { side: 'east', plane: 'su30', name: 'ФАБ-500 + Х-28', items: [['fab500', 4], ['kh28', 2]] },
-    { side: 'east', plane: 'mig29', name: 'Охота за ПВО: Х-28', items: [['kh28', 2], ['fab500', 2]] },
-    { side: 'west', plane: 'f18', name: 'Бомбы Mk 82', items: [['mk82', 8]] },
+    { side: 'east', plane: 'e_su25', name: 'Бомбы ФАБ-500', items: [['fab500', 6]] },
+    { side: 'east', plane: 'e_su17', name: 'ФАБ-500 + Х-28', items: [['fab500', 4], ['kh28', 2]] },
+    { side: 'east', plane: 'e_su24', name: 'Охота за ПВО: Х-28', items: [['kh28', 2], ['fab500', 2]] },
+    { side: 'west', plane: 'f16', name: 'Бомбы Mk 82', items: [['mk82', 8]] },
     { side: 'west', plane: 'f18', name: 'Mk 82 + Shrike', items: [['mk82', 6], ['agm45', 2]] },
-    { side: 'west', plane: 'f16', name: 'Охота за ПВО: Shrike', items: [['agm45', 4], ['mk82', 2]] },
+    { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: Shrike', items: [['agm45', 4], ['mk82', 2]] },
   ],
   2: [
-    { side: 'east', plane: 'su30', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
+    { side: 'east', plane: 'e_su24', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
     { side: 'east', plane: 'su30', name: 'ТВ-бомбы КАБ-500Кр + ФАБ-500', items: [['kab500kr', 2], ['fab500', 4]], pod: true },
-    { side: 'east', plane: 'mig29', name: 'Ракеты: Х-29Т + Х-25МЛ', items: [['kh29t', 2], ['kh25ml', 2]], pod: true },
-    { side: 'east', plane: 'mig29', name: 'Охота за ПВО: Х-58 + Х-25МЛ', items: [['kh58', 2], ['kh25ml', 2]], pod: true },
+    { side: 'east', plane: 'e_su25', name: 'Ракеты: Х-29Т + Х-25МЛ', items: [['kh29t', 2], ['kh25ml', 2]], pod: true },
+    { side: 'east', plane: 'e_su17', name: 'Охота за ПВО: Х-58 + Х-25МЛ', items: [['kh58', 2], ['kh25ml', 2]], pod: true },
     { side: 'west', plane: 'f18', name: 'GBU-12 + HARM', items: [['gbu12', 4], ['agm88', 2]], pod: true },
     { side: 'west', plane: 'f18', name: 'Бомбы Mk 82 + HARM', items: [['mk82', 6], ['agm88', 2]] },
     { side: 'west', plane: 'f16', name: 'Ракеты: Maverick + HARM', items: [['agm65b', 4], ['agm88', 2]], pod: true },
-    { side: 'west', plane: 'f16', name: 'Охота за ПВО: HARM ×4', items: [['agm88', 4], ['gbu12', 2]], pod: true },
+    { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: HARM ×4', items: [['agm88', 4], ['gbu12', 2]], pod: true },
   ],
 };
 
@@ -354,23 +363,23 @@ DEFENSE.east[4] = [['s400', 1], ['bukm3', 2], ['torm2', 2], ['pantsir', 2], ['ve
 DEFENSE.west[3] = [['patriot', 1], ['hawk', 2], ['nasams', 1], ['gepard', 2], ['stinger', 4], ['gpsjamw', 1]];
 DEFENSE.west[4] = [['pac3', 1], ['patriot', 1], ['nasams', 2], ['gepard', 2], ['stinger', 4], ['gpsjamw', 1]];
 LOADOUTS[3] = [
-  { side: 'east', plane: 'su30', name: 'КАБ-500С + Х-31П + «Сорбция»', items: [['kab500s', 3], ['kh31p', 2], ['ecm_e', 1]], pod: true },
+  { side: 'east', plane: 'e_su34', name: 'КАБ-500С + Х-31П + «Сорбция»', items: [['kab500s', 3], ['kh31p', 2], ['ecm_e', 1]], pod: true },
   { side: 'east', plane: 'su30', name: 'Лазерные и ТВ: КАБ-500Л + КАБ-500Кр', items: [['kab500l', 2], ['kab500kr', 2], ['ecm_e', 1]], pod: true },
   { side: 'east', plane: 'mig29', name: 'Охота за ПВО: Х-31П ×4 + «Сорбция»', items: [['kh31p', 4], ['ecm_e', 1]] },
-  { side: 'east', plane: 'mig29', name: 'Ракеты: Х-29Т + Х-31П', items: [['kh29t', 2], ['kh31p', 2]], pod: true },
+  { side: 'east', plane: 'e_su24', name: 'Ракеты: Х-29Т + Х-31П', items: [['kh29t', 2], ['kh31p', 2]], pod: true },
   { side: 'west', plane: 'f18', name: 'JDAM + HARM + станция помех', items: [['gbu31', 2], ['agm88', 2], ['ecm_w', 1]], pod: true },
-  { side: 'west', plane: 'f18', name: 'Лазерные GBU-12 + JDAM', items: [['gbu12', 4], ['gbu31', 2]], pod: true },
+  { side: 'west', plane: 'e_gripen', name: 'Лазерные GBU-12 + JDAM', items: [['gbu12', 4], ['gbu31', 2]], pod: true },
   { side: 'west', plane: 'f16', name: 'Ракеты: Maverick + HARM + помехи', items: [['agm65b', 4], ['agm88', 2], ['ecm_w', 1]], pod: true },
-  { side: 'west', plane: 'f16', name: 'Охота за ПВО: HARM ×4 + помехи', items: [['agm88', 4], ['ecm_w', 1]] },
+  { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: HARM ×4 + помехи', items: [['agm88', 4], ['ecm_w', 1]] },
 ];
 LOADOUTS[4] = [
-  { side: 'east', plane: 'su30', name: 'УМПК + Х-59МК2 + Х-31П + помехи', items: [['umpk', 2], ['kh59mk2', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },
+  { side: 'east', plane: 'e_su34', name: 'УМПК + Х-59МК2 + Х-31П + помехи', items: [['umpk', 2], ['kh59mk2', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },
   { side: 'east', plane: 'su30', name: 'Планирующие УМПК ×4 + КАБ-500С', items: [['umpk', 4], ['kab500s', 2], ['ecm_e', 1]], pod: true },
-  { side: 'east', plane: 'mig29', name: 'Охота за ПВО: Х-31П + ложные цели', items: [['kh31p', 4], ['decoy_e', 2], ['ecm_e', 1]] },
-  { side: 'east', plane: 'mig29', name: 'Ракеты: Х-59МК2 + Х-29Т', items: [['kh59mk2', 2], ['kh29t', 2]], pod: true },
-  { side: 'west', plane: 'f18', name: 'SDB + JASSM + MALD + помехи', items: [['gbu39', 4], ['jassm', 1], ['mald', 2], ['ecm_w', 1]], pod: true },
+  { side: 'east', plane: 'e_mig31', name: 'Охота за ПВО: Х-31П + ложные цели', items: [['kh31p', 4], ['decoy_e', 2], ['ecm_e', 1]] },
+  { side: 'east', plane: 'e_su57', name: 'Ракеты: Х-59МК2 + Х-29Т', items: [['kh59mk2', 2], ['kh29t', 2]], pod: true },
+  { side: 'west', plane: 'e_f35', name: 'SDB + JASSM + MALD + помехи', items: [['gbu39', 4], ['jassm', 1], ['mald', 2], ['ecm_w', 1]], pod: true },
   { side: 'west', plane: 'f18', name: 'JDAM ×4 + GBU-12 + помехи', items: [['gbu31', 4], ['gbu12', 2], ['ecm_w', 1]], pod: true },
-  { side: 'west', plane: 'f16', name: 'AARGM + JDAM (охота за ПВО)', items: [['aargm', 4], ['gbu31', 2], ['ecm_w', 1]], pod: true },
+  { side: 'west', plane: 'f18', name: 'AARGM + JDAM (охота за ПВО)', items: [['aargm', 4], ['gbu31', 2], ['ecm_w', 1]], pod: true },
   { side: 'west', plane: 'f16', name: 'Крылатые JASSM ×2 + MALD', items: [['jassm', 2], ['mald', 2], ['agm88', 2]], pod: true },
 ];
 // индексы подвесок стороны и первая подходящая (если выбранная — чужой стороны)

@@ -2,7 +2,7 @@
 // Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
-import { AG, SAM, SAM_COST, LOADOUTS, PLANES } from '../arsenal.js?v=20261012c';
+import { AG, SAM, SAM_COST, LOADOUTS, PLANES } from '../arsenal.js?v=20261012d';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
 export const AD_MODES = ['arcade', 'real'];
@@ -32,8 +32,9 @@ export const samCost = (k) => SAM_COST[k] || 100;
 const KIND_COST = { bomb: 12, lgb: 35, tvb: 40, gps: 45, agm: 45, arm: 55, cruise: 110, decoy: 35, ecm: 30 };
 export const PLANE_COST = 120;
 export const loadoutCost = (L) => PLANE_COST + L.items.reduce((s, [k, n]) => s + (KIND_COST[(AG[k] || {}).kind] || 40) * n, 0) + (L.pod ? 20 : 0);
-// подход: истребители (МиГ-29, F-16) — «истребление» (ПРР, ракеты), ударные (Су-30, F/A-18) — «штурмовка» (бомбы)
-export const approachOf = (L) => (L.plane === 'mig29' || L.plane === 'f16' ? 'истребление' : 'штурмовка');
+// подход: больше бомб по массе — «штурмовка», больше ракет (ПРР, ТВ, крылатые) — «истребление»
+const BOMBS = new Set(['bomb', 'lgb', 'tvb', 'gps']);
+export const approachOf = (L) => { let b = 0, m = 0; for (const [k, n] of L.items) { const W = AG[k]; if (!W || W.kind === 'ecm') continue; if (BOMBS.has(W.kind)) b += n * W.mass; else m += n * W.mass; } return b >= m ? 'штурмовка' : 'истребление'; };
 export const bundleOf = (era, side, i) => { const L = LOADOUTS[era][i]; return L && L.side === side ? L : null; };
 export const bundleName = (L) => `${PLANES[L.plane] || L.plane} · ${L.name}`;
 

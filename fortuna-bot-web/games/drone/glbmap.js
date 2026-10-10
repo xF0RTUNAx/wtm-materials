@@ -7,7 +7,7 @@
 //    радиусе прячет шейдер (все вершины экземпляра — в одну точку), дальше — прежние коробки и конусы.
 // Пока модель грузится (или не загрузилась) — всё процедурное, как раньше.
 /* global THREE */
-import { want, loadedModel } from './glb.js?v=20261012i';
+import { want, loadedModel } from './glb.js?v=20261012j';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z), Q = new THREE.Quaternion(), UPY = V(0, 1, 0);
 const mtx = (x, y, z, yaw, sx = 1, sy = sx, sz = sx) => new THREE.Matrix4().compose(V(x, y, z), Q.setFromAxisAngle(UPY, yaw), V(sx, sy, sz));

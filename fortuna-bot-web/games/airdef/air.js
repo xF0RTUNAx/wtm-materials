@@ -2,15 +2,15 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261012c';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261012c';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261012c';
-import { applyLayout } from './layout.js?v=20261012c';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261012c';
-import { DRONE } from '../drone/sim/modes.js?v=20261012c';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261012c';
-import { predictBomb } from './sim/strike.js?v=20261012c';
-import { placeDefense, pickTargets } from './mission.js?v=20261012c';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261012d';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261012d';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261012d';
+import { applyLayout } from './layout.js?v=20261012d';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261012d';
+import { DRONE } from '../drone/sim/modes.js?v=20261012d';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf } from './arsenal.js?v=20261012d';
+import { predictBomb } from './sim/strike.js?v=20261012d';
+import { placeDefense, pickTargets } from './mission.js?v=20261012d';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -27,16 +27,18 @@ export function createAir(C) {
   // самолёт игрока: многоцелевой ударный самолёт стороны атакующих (как в превью меню), подвеска — на его пилонах
   const ship = new THREE.Group(); ship.rotation.order = 'YXZ';
   const shipMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x666666, shininess: 55 });
-  let shipModel = null, shipSide = null, shipCls = null, shipName = null, shipReal = false, flames = null, stations = [], podPos = new THREE.Vector3(0, -1.6, -3.5);
+  let shipModel = null, shipSide = null, shipCls = null, shipName = null, shipReal = false, shipInternal = false, flames = null, stations = [], podPos = new THREE.Vector3(0, -1.6, -3.5);
   // cls — ударный (бомбы) или ракетный: Су-30 / F/A-18 или МиГ-29 / F-16
   function buildShip(side, cls = 'strike', name = null) {
     // готовая модель (models.js), если загрузилась, иначе — процедурная
     const pm = planeModel(side, cls, name);
-    if (shipSide === side && shipCls === cls && shipName === name && (shipReal || !pm)) return;
+    // shipReal — стоит именно модель подвески (пока она грузится — подходящая из загруженных, потом заменяется)
+    const exact = !!pm && (!name || pm.name === name);
+    if (shipSide === side && shipCls === cls && shipName === name && (shipReal || !pm || (!exact && shipModel && shipModel.userData.pm === pm.name))) return;
     if (shipModel) ship.remove(shipModel);
-    shipSide = side; shipCls = cls; shipName = name; shipReal = !!pm;
+    shipSide = side; shipCls = cls; shipName = name; shipReal = exact; shipInternal = !!(pm && pm.internal);
     if (pm) {
-      shipModel = pm.obj; stations = pm.stations; podPos = pm.pod;
+      shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = pm.stations; podPos = pm.pod; // pod: null — встроенная прицельная система
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
       flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true);
     } else {
@@ -53,9 +55,9 @@ export function createAir(C) {
     pylonMeshes.length = 0;
     for (const l of loadout) for (const st of l.st) {
       const m = weaponMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat); const p = stations[st], W0 = AG[l.key].vis; m.position.set(p.x, p.y - W0.r - 0.05, p.z);
-      m.userData.st = st; ship.add(m); pylonMeshes.push(m);
+      m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); // во внутренних отсеках — не видно
     }
-    if (hasPod) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); } // LITENING или цилиндр
+    if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); } // LITENING или цилиндр
   }
   function hurt(dmg, by) {
     if (craft.dead || game.over || game.net) return; // онлайн: урон и сбитие — от сервера (netHit / netDown)
@@ -661,7 +663,7 @@ export function createAir(C) {
     const order = [3, 4, 2, 5, 1, 6, 0, 7]; let oi = 0;
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) { const st = []; for (let i = 0; i < n && oi < 8; i++) st.push(order[oi++]); loadout.push({ key, n: st.length, n0: st.length, st, st0: st.slice(), rt: 0 }); }
     sel = 0;
-    buildShip(L.side || att, L.plane ? (L.plane === 'su30' || L.plane === 'f18' ? 'strike' : 'fighter') : classOf(L.items, AG), L.plane || null); // модель самолёта — из подвески
+    buildShip(L.side || att, classOf(L.items, AG), L.plane || null); // модель самолёта — из подвески
     craft.cmFlare = craft.cmChaff = C.MODE().cm;
     buildPylons();
     craft.jam = Math.max(0, ...loadout.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
@@ -727,7 +729,7 @@ export function createAir(C) {
   function reloadOne(l) {
     const st = l.st0.find((q) => !l.st.includes(q)); if (st === undefined) return;
     l.st.push(st); l.n++;
-    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = true;
+    const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal;
     craft.massK = 1 + loadout.reduce((s, q) => s + q.n * AG[q.key].mass, 0) / 9000;
     if (!usable(loadout[sel])) sel = loadout.indexOf(l);
   }
