@@ -6,8 +6,8 @@
 /* global THREE */
 import { mulberry32 } from './schedule.js?v=20260930m';
 import { M, part, mergeParts } from './models.js?v=20260930m';
-import { buildProps } from './props.js?v=20260930m';
-import { buildLandmarks } from './landmarks.js?v=20260930m';
+import { buildProps } from './props.js?v=20261011i';
+import { buildLandmarks } from './landmarks.js?v=20261011i';
 
 import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930m';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
@@ -427,19 +427,23 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   }
 
   // аэродром: полоса с разметкой, рулёжка, ангары; вечером — огни полосы
-  const runwayLights = [];
+  const runwayLights = [], afGlb = { hangars: [] };
   {
     const h = airfieldH() + 0.6, parts = [];
     parts.push(part(new THREE.BoxGeometry(60, 1, 3000), 0x3c3f42, M(0, 0, 0)));
     for (let k = -14; k <= 14; k++) parts.push(part(new THREE.BoxGeometry(1.5, 1.05, 40), 0xe8e8e0, M(0, 0.12, k * 100)));
     for (const s of [-1, 1]) for (let k = 0; k < 8; k++) parts.push(part(new THREE.BoxGeometry(3, 1.05, 30), 0xe8e8e0, M((k - 3.5) * 6, 0.12, s * 1450)));
     parts.push(part(new THREE.BoxGeometry(24, 0.9, 2600), 0x4a4d50, M(120, 0, 0)));
+    const hp = []; // ангары — своим мешем (готовые модели заменяют их, glbmap.js)
     for (let k = 0; k < 6; k++) {
-      parts.push(part(new THREE.BoxGeometry(40, 12, 50), 0x7c8278, M(210, 6, -900 + k * 360)));
-      parts.push(part(new THREE.CylinderGeometry(25, 25, 50, 16, 1, false, 0, Math.PI), 0x6d736a, M(210, 12, -900 + k * 360, Math.PI / 2, 0, Math.PI / 2)));
+      hp.push(part(new THREE.BoxGeometry(40, 12, 50), 0x7c8278, M(210, 6, -900 + k * 360)));
+      hp.push(part(new THREE.CylinderGeometry(25, 25, 50, 16, 1, false, 0, Math.PI), 0x6d736a, M(210, 12, -900 + k * 360, Math.PI / 2, 0, Math.PI / 2)));
+      afGlb.hangars.push({ x: AIRFIELD.x + 210, y: h, z: AIRFIELD.z - 900 + k * 360 });
     }
     const m = add(new THREE.Mesh(mergeParts(parts), new THREE.MeshLambertMaterial({ vertexColors: true })));
     m.position.set(AIRFIELD.x, h, AIRFIELD.z); m.receiveShadow = !!P.shadows;
+    const hm = add(new THREE.Mesh(mergeParts(hp), new THREE.MeshLambertMaterial({ vertexColors: true }))); hm.position.copy(m.position); hm.receiveShadow = !!P.shadows;
+    afGlb.hide = [hm]; afGlb.y = h;
     if (P.windows) { // огни: HDR-яркие точки (свечение в топовых пресетах), видны только в сумерках
       const lg = new THREE.SphereGeometry(0.7, 6, 4), lm = new THREE.MeshBasicMaterial({ color: lin(0xffd49a).multiplyScalar(6), fog: true });
       const n = 2 * 31 + 2 * 9, inst = new THREE.InstancedMesh(lg, lm, n), mm = new THREE.Matrix4();
@@ -491,7 +495,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   let lastCam = null, wakeFn = null;
 
   // лес: квадраты 2×2 км, у каждого свой InstancedMesh — вне кадра и дальше дальности прорисовки не рисуется
-  const treeChunks = [], shadowTrees = {};
+  const treeChunks = [], shadowTrees = {}; let treeMat = null;
   // Квадрат леса закрыт рельефом, если все лучи от камеры к верху квадрата (центр и 4 угла) упираются в склон.
   // Проверка консервативная: между точками выборки гребень можно пропустить — тогда квадрат просто рисуется. Ближе
   // OCC_NEAR не проверяем (там деревья видны почти всегда, а «выскакивание» заметнее).
@@ -525,7 +529,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     // дальние деревья — упрощённые (конус или многогранник вместо 3 частей): вдали разницы не видно, треугольников в 10–20 раз меньше
     const spruceLo = mergeParts([part(new THREE.ConeGeometry(4.3, 17, 5), 0x2e6a2a, M(0, 8.5, 0))]);
     const leafyLo = mergeParts([part(new THREE.IcosahedronGeometry(5.4, 0), 0x447f31, M(0.6, 10.5, 0.3, 0, 0, 0, 1, 0.9, 1)), part(new THREE.CylinderGeometry(0.6, 0.8, 7, 3), 0x5e4630, M(0, 3.5, 0))]);
-    const trMat = new THREE.MeshLambertMaterial({ vertexColors: true });
+    const trMat = new THREE.MeshLambertMaterial({ vertexColors: true }); treeMat = trMat;
     // на площадке порта леса нет
     const bare = marks.sites.filter((q) => !['bridge', 'lighthouse'].includes(q.name));
     const noTree = (x, z) => bare.some((q) => Math.abs(x - q.x) < q.r && Math.abs(z - q.z) < q.r && Math.hypot(x - q.x, z - q.z) < q.r * 0.9);
@@ -963,6 +967,8 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   let treeShadows = true;
   return {
     buildings, sun, sky,
+    // места под готовые модели (glbmap.js в main.js): деревни, промзона, ЛЭП, ветряки, порт, маяк, аэродром и ближний лес
+    glbSites: { ...props.glb, ...marks.glb, airfield: afGlb, trees: { chunks: treeChunks, mat: treeMat } },
     get weather() { return wKey; },
     get W() { return W; },
     setWeather,

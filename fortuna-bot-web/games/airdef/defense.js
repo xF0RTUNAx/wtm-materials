@@ -6,11 +6,11 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261011b';
-import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261011b';
-import { samClass, samCost, LIMIT1 } from './sim/online.js?v=20261011b';
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261011b';
-import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261011b';
+import { CITY, mulberry32 } from './city.js?v=20261011c';
+import { SAM, SAM_COST, SAM_TYPE, AG } from './arsenal.js?v=20261011c';
+import { samClass, samCost, LIMIT1 } from './sim/online.js?v=20261011c';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261011c';
+import { freeGround, buildingAt, roofOk, pickTargets } from './mission.js?v=20261011c';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];

@@ -165,6 +165,173 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "MiG-21 Chibi",
+  "author": "Oleh",
+  "url": "https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig21",
+   "e_mig21_lo"
+  ]
+ },
+ {
+  "title": "Миг - 31",
+  "author": "mamont nikita",
+  "url": "https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig31",
+   "e_mig31_lo"
+  ]
+ },
+ {
+  "title": "Sukhoi Su-57 \"Felon\"",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su57",
+   "e_su57_lo"
+  ]
+ },
+ {
+  "title": "Tupolev Tu-22M3",
+  "author": "Jeyhun1985",
+  "url": "https://sketchfab.com/3d-models/tupolev-tu-22m3-6b398ad795fc40f6955ce345d4baeaf8",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tu22m3",
+   "e_tu22m3_lo"
+  ]
+ },
+ {
+  "title": "High Voltage Transmission Line Tower (tileable)",
+  "author": "mednios",
+  "url": "https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_pylon"
+  ]
+ },
+ {
+  "title": "Wind Turbine [Demo]",
+  "author": "3Dexter",
+  "url": "https://sketchfab.com/3d-models/wind-turbine-demo-68669d1cfb3647ba9b1da47cbe580931",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_wind"
+  ]
+ },
+ {
+  "title": "Low Poly Cargo Ship",
+  "author": "Javier_Fernandez",
+  "url": "https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_ship"
+  ]
+ },
+ {
+  "title": "Sea ​​container - Low Poly",
+  "author": "Mozhet_Moroz",
+  "url": "https://sketchfab.com/3d-models/sea-container-low-poly-979114d6e1754f5591735ef3e5e203d4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_cont"
+  ]
+ },
+ {
+  "title": "Port crane \"Sokol\"",
+  "author": "Vitaliy Kovalchuk",
+  "url": "https://sketchfab.com/3d-models/port-crane-sokol-4964eaa7634e47c9bac4c2a74fa91c20",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_crane"
+  ]
+ },
+ {
+  "title": "Lighthouse",
+  "author": "KarlDufresne",
+  "url": "https://sketchfab.com/3d-models/lighthouse-464af883421f4ac68ede2605f4f1407b",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_light"
+  ]
+ },
+ {
+  "title": "Train | Locomotive, Low-poly locomotive",
+  "author": "Nikcore",
+  "url": "https://sketchfab.com/3d-models/train-locomotive-low-poly-locomotive-0eea1fa85cfa40769ce8e0cbb98e1d05",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_loco"
+  ]
+ },
+ {
+  "title": "Train | Locomotive SD40-2",
+  "author": "Nikcore",
+  "url": "https://sketchfab.com/3d-models/train-locomotive-sd40-2-bdeadf60bf774adc9a39c744792c02c4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_loco2"
+  ]
+ },
+ {
+  "title": "Il78",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/il78-0c0da2cc1b4c441dadc2510212c25fb7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "t_il78"
+  ]
+ },
+ {
+  "title": "Boeing KC-135R Stratotanker",
+  "author": "Muhamad Mirza Arrafi",
+  "url": "https://sketchfab.com/3d-models/boeing-kc-135r-stratotanker-86f1e11310e546db9bf323fa1a62f069",
+  "license": "CC-BY-4.0",
+  "files": [
+   "t_kc135"
+  ]
+ },
+ {
+  "title": "US Weapon Pack",
+  "author": "Rhine_Lab_Muelsyse",
+  "url": "https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_aim7",
+   "aam_aim9x"
+  ]
+ },
+ {
+  "title": "Simple GameReady Weapons for Fighter Jet Games",
+  "author": "ekmekarasikodlamaytb",
+  "url": "https://sketchfab.com/3d-models/simple-gameready-weapons-for-fighter-jet-games-4c231dda5e8a4db39c2f53c3e16f57e9",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_r60"
+  ]
+ },
+ {
+  "title": "Low poly German IRIS-T AAM",
+  "author": "Raptor9",
+  "url": "https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_iris"
+  ]
+ },
+ {
+  "title": "Low Poly Missiles and Torpedos",
+  "author": "sakigakefuruzawa",
+  "url": "https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_mica"
+  ]
+ },
+ {
   "title": "MiG 29",
   "author": "Uxman",
   "url": "https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3",

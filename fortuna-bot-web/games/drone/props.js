@@ -13,6 +13,9 @@ export function buildProps(C) {
   const R = mulberry32(0x7a11 ^ C.seed);
   const W = WORLD.WATER_Y, lvl = Math.min(2, P.propsLvl ?? 2); // 0 — низкий, 1 — средний, 2 — высокий и выше (3 у «Кино» — ещё гуще)
   const boxes = [], emitters = [], anim = [], lights = [];
+  // места под готовые модели (main.js → glbmap.js): что заменить и какие процедурные меши спрятать, когда модель загрузится.
+  // Расстановка и коробки столкновений — прежние, генератор R() тот же
+  const glb = {};
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const flat = (x, z, r) => { let lo = 1e9, hi = -1e9; for (const [dx, dz] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r], [r * 0.7, r * 0.7], [-r * 0.7, -r * 0.7]]) { const h = terrainH(x + dx, z + dz); lo = Math.min(lo, h); hi = Math.max(hi, h); } return [hi - lo, lo, hi]; };
   const farFrom = (x, z, list, d) => list.every((p) => Math.hypot(p.x - x, p.z - z) > d + (p.r || 0));
@@ -69,14 +72,17 @@ export function buildProps(C) {
     const roof = new THREE.CylinderGeometry(0.58, 0.58, 1, 3, 1); roof.rotateX(Math.PI / 2); roof.rotateZ(Math.PI); roof.translate(0, 0.29, 0); roof.scale(1, 1 / 0.87, 1);
     const tank = new THREE.CylinderGeometry(0.5, 0.5, 1, 10); tank.translate(0, 0.5, 0);
     const mk = (geo, list, fn) => {
-      const items = list.filter(fn); if (!items.length) return;
+      const items = list.filter(fn); if (!items.length) return null;
       const im = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial(), items.length), m = new THREE.Matrix4(), q = new THREE.Quaternion(), c = new THREE.Color();
       items.forEach((b, i) => { q.setFromAxisAngle(new THREE.Vector3(0, 1, 0), b.rot); m.compose(V(b.x, b.y, b.z), q, V(b.w, b.h, b.d)); im.setMatrixAt(i, m); im.setColorAt(i, c.set(b.c).convertSRGBToLinear()); });
       im.instanceMatrix.needsUpdate = true; im.instanceColor.needsUpdate = true;
       geo.boundingSphere = new THREE.Sphere(V(0, 300, 0), WORLD.SIZE); // вся карта — одна проверка видимости
-      im.castShadow = im.receiveShadow = !!P.shadows; add(im);
+      im.castShadow = im.receiveShadow = !!P.shadows; add(im); return im;
     };
-    mk(box, walls, () => true); mk(roof, roofs, (b) => !b.tank); mk(tank, roofs, (b) => b.tank);
+    // дома (без водонапорных башен): стена i и крыша i — один дом
+    const houses = walls.map((w, i) => (roofs[i].tank ? null : { x: w.x, y: w.y + 1.5, z: w.z, w: w.w, d: w.d, h: w.h - 1.5, rot: w.rot, i })).filter(Boolean);
+    const wm = mk(box, walls, () => true), rm = mk(roof, roofs, (b) => !b.tank); mk(tank, roofs, (b) => b.tank);
+    glb.houses = { items: houses, walls: wm, roofs: rm }; // вблизи — модели домов, процедурные экземпляры прячет шейдер
   }
 
   // ── промзона: площадка, цеха, трубы, резервуары, градирня ──
@@ -99,10 +105,12 @@ export function buildProps(C) {
       const [x, z] = at(lx, lz); emitters.push({ x, y: y0 + h + 2, z, kind: 'smoke' }); boxes.push({ x, z, hw: 5, hd: 5, y0: y0, y1: y0 + h + 3 });
     }
     // резервуары
+    const tanks = [], tankParts = [];
     for (let k = 0; k < 6; k++) {
-      const lx = -300 + (k % 3) * 44, lz = 170 + Math.floor(k / 3) * 44;
+      const lx = -300 + (k % 3) * 44, lz = 170 + Math.floor(k / 3) * 44, n0 = parts.length;
       P_(new THREE.CylinderGeometry(16, 16, 15, 20), 0xd6d8d6, lx, 7.5, lz); P_(new THREE.CylinderGeometry(4, 16, 3, 20), 0xc4c6c4, lx, 16.5, lz);
-      const [x, z] = at(lx, lz); boxes.push({ x, z, hw: 16, hd: 16, y0: y0, y1: y0 + 18 });
+      tankParts.push(...parts.splice(n0)); // отдельным мешем — его прячем, когда загрузится модель резервуаров
+      const [x, z] = at(lx, lz); boxes.push({ x, z, hw: 16, hd: 16, y0: y0, y1: y0 + 18 }); tanks.push({ x, y: y0, z, yaw: rot });
     }
     // градирня (гиперболоид) с паром
     if (lvl >= 1) {
@@ -111,6 +119,8 @@ export function buildProps(C) {
       const [x, z] = at(300, -40); emitters.push({ x, y: y0 + 95, z, kind: 'steam' }); boxes.push({ x, z, hw: 42, hd: 42, y0: y0, y1: y0 + 92 });
     }
     const mesh = add(new THREE.Mesh(mergeParts(parts), solidMat)); mesh.castShadow = mesh.receiveShadow = !!P.shadows;
+    const tm = add(new THREE.Mesh(mergeParts(tankParts), solidMat)); tm.castShadow = tm.receiveShadow = !!P.shadows;
+    glb.tanks = { items: tanks, hide: [tm] };
     // фонари площадки — светятся в сумерки
     if (lvl >= 1) {
       const pts = []; for (let i = 0; i < 18; i++) { const [x, z] = at(-360 + (i % 6) * 144, -260 + Math.floor(i / 6) * 260); pts.push(V(x, y0 + 14, z)); }
@@ -196,13 +206,13 @@ export function buildProps(C) {
 
   // ── ЛЭП: опоры и провода с провисом от промзоны к двум городам ──
   if (lvl >= 1 && ind) {
-    const parts = [], wires = [];
+    const parts = [], wires = [], pyl = [];
     for (const T of [TOWNS[0], TOWNS[2]]) {
       const dx = T.x - ind.x, dz = T.z - ind.z, L = Math.hypot(dx, dz) - T.r * 0.8, n = Math.max(2, Math.round(L / 330)), ux = dx / Math.hypot(dx, dz), uz = dz / Math.hypot(dx, dz);
       const yaw = Math.atan2(ux, uz); let prev = null;
       for (let i = 0; i <= n; i++) {
         const t = i / n, x = ind.x + ux * (L * t + 200) + Math.sin(t * 7) * 40 * -uz, z = ind.z + uz * (L * t + 200) + Math.sin(t * 7) * 40 * ux, y = terrainH(x, z);
-        parts.push(part(new THREE.CylinderGeometry(0.8, 3.4, 36, 4), 0x7d8288, M(x, y + 18, z, 0, yaw + Math.PI / 4)));
+        parts.push(part(new THREE.CylinderGeometry(0.8, 3.4, 36, 4), 0x7d8288, M(x, y + 18, z, 0, yaw + Math.PI / 4))); pyl.push({ x, y, z, yaw, line: T === TOWNS[0] ? 0 : 1 });
         parts.push(part(new THREE.BoxGeometry(18, 1, 1.2), 0x7d8288, M(x, y + 31, z, 0, yaw)));
         boxes.push({ x, z, hw: 4, hd: 4, y0: y, y1: y + 37 });
         const arms = [-8.5, 0, 8.5].map((o) => V(x + Math.cos(yaw) * o, y + (o ? 30.5 : 36), z - Math.sin(yaw) * o));
@@ -210,9 +220,10 @@ export function buildProps(C) {
         prev = arms;
       }
     }
-    add(new THREE.Mesh(mergeParts(parts), solidMat)).castShadow = !!P.shadows;
+    const pm = add(new THREE.Mesh(mergeParts(parts), solidMat)); pm.castShadow = !!P.shadows;
     const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wires, 3));
-    add(new THREE.LineSegments(wg, wireMat(0x2a2c2e)));
+    const wl = add(new THREE.LineSegments(wg, wireMat(0x2a2c2e)));
+    glb.pylons = { items: pyl, hide: [pm, wl], wireMat: () => wireMat(0x2a2c2e) };
   }
 
   // ── телевышки на холмах у городов: красно-белые, с растяжками и мигающими огнями ──
@@ -238,7 +249,7 @@ export function buildProps(C) {
     let best = null;
     for (let k = 0; k < 160; k++) { const a = R() * Math.PI * 2, d = 7500 + R() * 2500, x = Math.cos(a) * d, z = Math.sin(a) * d, y = terrainH(x, z); if (farFrom(x, z, [...avoid, ...villages], 700) && (!best || y > best.y)) best = { x, z, y, a }; }
     if (best) {
-      const parts = [], dirA = best.a + Math.PI / 2, n = lvl >= 2 ? 8 : 5, yaw = R() * Math.PI * 2;
+      const parts = [], dirA = best.a + Math.PI / 2, n = lvl >= 2 ? 8 : 5, yaw = R() * Math.PI * 2, wind = [], rotors = [];
       const rotorGeo = mergeParts([0, 1, 2].map((k) => part(new THREE.BoxGeometry(1.4, 38, 0.35), 0xf2f2ee, M(0, 0, 0, 0, 0, k * Math.PI * 2 / 3).multiply(new THREE.Matrix4().makeTranslation(0, 19, 0))))
         .concat([part(new THREE.SphereGeometry(1.6, 10, 8), 0xe8e8e4, M(0, 0, 0))]));
       for (let i = 0; i < n; i++) {
@@ -246,10 +257,11 @@ export function buildProps(C) {
         parts.push(part(new THREE.CylinderGeometry(1.3, 2.2, 82, 12), 0xf0f0ec, M(x, y + 41, z)));
         parts.push(part(new THREE.BoxGeometry(3.4, 3.6, 10), 0xe4e4e0, M(x, y + 83, z, 0, yaw)));
         const rotor = new THREE.Mesh(rotorGeo, solidMat); rotor.position.set(x - Math.sin(yaw) * 5.6, y + 83, z - Math.cos(yaw) * 5.6); rotor.rotation.order = 'YXZ'; rotor.rotation.y = yaw;
-        add(rotor); anim.push({ o: rotor, w: 0.9 + R() * 0.25 });
+        add(rotor); anim.push({ o: rotor, w: 0.9 + R() * 0.25 }); rotors.push(rotor); wind.push({ x, y, z, yaw, w: anim[anim.length - 1].w });
         boxes.push({ x, z, hw: 22, hd: 22, y0: y, y1: y + 122 });
       }
-      add(new THREE.Mesh(mergeParts(parts), solidMat)).castShadow = !!P.shadows;
+      const tw = add(new THREE.Mesh(mergeParts(parts), solidMat)); tw.castShadow = !!P.shadows;
+      glb.wind = { items: wind, hide: [tw, ...rotors] };
     }
   }
 
@@ -262,7 +274,7 @@ export function buildProps(C) {
   });
   let t = 0;
   return {
-    boxes, emitters, villages, industry: ind, roads: roadPts,
+    boxes, emitters, villages, industry: ind, roads: roadPts, glb,
     update(dt, night) {
       t += dt;
       for (const a of anim) a.o.rotation.z += a.w * dt;

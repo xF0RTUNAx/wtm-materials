@@ -1,12 +1,13 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261011b';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261011b';
-import { MODES } from './sim/strike.js?v=20261011b';
-import { WEATHERS } from '../drone/world.js?v=20261011b';
-import { LESSONS } from './training.js?v=20261011b';
-import { MODEL_CREDITS } from './models.js?v=20261011b';
-import { openLayoutEditor } from './layout.js?v=20261011b';
+import { CITY } from './city.js?v=20261011c';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf } from './arsenal.js?v=20261011c';
+import { MODES } from './sim/strike.js?v=20261011c';
+import { WEATHERS } from '../drone/world.js?v=20261011c';
+import { LESSONS } from './training.js?v=20261011c';
+import { MODEL_CREDITS } from './models.js?v=20261011c';
+import { openLayoutEditor } from './layout.js?v=20261011c';
+import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -232,7 +233,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function showTip(next) { if (next) tipI = (tipI + 1) % TIPS.length; const el = $('lobbyTip'); el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); el.innerHTML = `<b>Совет.</b> ${TIPS[tipI]}`; }
   $('lobbyTip').onclick = () => { tipT = 0; showTip(true); };
   setInterval(() => { if (C.state === 'menu' && (tipT += 1) > 12) { tipT = 0; showTip(true); } }, 1000);
-  $('startBtn').onclick = () => { if (setup.game === 'online') { C.online.primary(); return; } C.lastGame = setup.game; C.start(setup.game); };
+  $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; } C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
   function render() { renderModeSel(); renderPlay(); renderStats(); }
   $('weatherChip').textContent = `${C.W.name} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);

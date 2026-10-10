@@ -1,13 +1,13 @@
 == medium arcade day
-OK   fly 120 s with bot hash 425133794
+OK   fly 120 s with bot hash -1854888232
 == medium arcade day god
-OK   fly 120 s with bot hash 1269607731
+OK   fly 120 s with bot hash -1862905955
 == high real rain god
-OK   fly 120 s with bot hash -543838803
+OK   fly 120 s with bot hash -1377033204
 == low training day
 OK   fly 120 s with bot hash 1440100060
 OK   training 150 s hash 1188011748
 == cinema arcade sunset god
-OK   fly 120 s with bot hash 597989773
+OK   fly 120 s with bot hash 541845467
 == ultra real overcast
-OK   fly 120 s with bot hash -1399875055
+OK   fly 120 s with bot hash -851047448

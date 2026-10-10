@@ -8,25 +8,26 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261011b';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261011b';
-import { createPipeline } from '../drone/post.js?v=20261011b';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261011b';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261011b';
-import { AG, SAM, LOADOUTS, DEFENSE } from './arsenal.js?v=20261011b';
-import { createStrike, MODES } from './sim/strike.js?v=20261011b';
-import { createRaid } from './sim/raid.js?v=20261011b';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261011b';
-import { slotCount } from './launchers.js?v=20261011b';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261011b';
-import { createSound } from './sound.js?v=20261011b';
-import { createAir } from './air.js?v=20261011b';
-import { createDefense } from './defense.js?v=20261011b';
-import { createDirector } from './director.js?v=20261011b';
-import { createOnline } from './online.js?v=20261011b';
-import { createShell } from './shell.js?v=20261011b';
-import { createTraining, LESSONS } from './training.js?v=20261011b';
-import { createMenu } from './menu.js?v=20261011b';
+import { buildCity, CITY } from './city.js?v=20261011c';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261011c';
+import { createPipeline } from '../drone/post.js?v=20261011c';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261011c';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261011c';
+import { AG, SAM, LOADOUTS, DEFENSE } from './arsenal.js?v=20261011c';
+import { createStrike, MODES } from './sim/strike.js?v=20261011c';
+import { createRaid } from './sim/raid.js?v=20261011c';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261011c';
+import { slotCount } from './launchers.js?v=20261011c';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261011c';
+import { createSound } from './sound.js?v=20261011c';
+import { createAir } from './air.js?v=20261011c';
+import { createDefense } from './defense.js?v=20261011c';
+import { createDirector } from './director.js?v=20261011c';
+import { createOnline } from './online.js?v=20261011c';
+import { createShell } from './shell.js?v=20261011c';
+import { createTraining, LESSONS } from './training.js?v=20261011c';
+import { createMenu } from './menu.js?v=20261011c';
+import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
@@ -535,7 +536,7 @@ $('resumeBtn').onclick = () => C.togglePause();
 $('pauseExit').onclick = () => C.toMenu();
 $('pauseEnd').onclick = () => { C.togglePause(); if (C.ctrl.finish) C.ctrl.finish('Бой завершён досрочно'); };
 $('pause').onclick = () => C.togglePause();
-$('againBtn').onclick = () => { C.ended = false; C.start(C.lastGame || 'air'); };
+$('againBtn').onclick = () => orientGate(() => { C.ended = false; C.start(C.lastGame || 'air'); }, IS_TOUCH);
 $('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
 $('exit').onclick = () => C.toMenu();
 $('mute').onclick = () => { snd.unlock(); snd.setMuted(!snd.muted); $('mute').textContent = snd.muted ? '✕♪' : '♪';

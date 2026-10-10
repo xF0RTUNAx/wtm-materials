@@ -16,6 +16,8 @@ export function buildLandmarks(C) {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
   const parts = [], glass = [], lights = [], emitters = [], lines = [];
   const placed = []; // занятые места (x, z, r)
+  // места под готовые модели (glbmap.js): заменяемые части — своими мешами, их прячем, когда модель загрузилась
+  const glb = {}, swap = {}; const cut = (key, n0) => { (swap[key] = swap[key] || []).push(...parts.splice(n0)); };
   const avoid = [...TOWNS.map((t) => ({ ...t, r: t.r + 250 })), { ...AIRFIELD, r: AIRFIELD.r + 700 },
     ...(C.industry ? [{ ...C.industry, r: C.industry.r + 300 }] : []), ...(C.villages || []).map((v) => ({ ...v, r: v.r + 250 }))];
   const free = (x, z, r) => avoid.every((a) => Math.hypot(a.x - x, a.z - z) > a.r + r) && placed.every((a) => Math.hypot(a.x - x, a.z - z) > a.r + r + 200);
@@ -93,16 +95,24 @@ export function buildLandmarks(C) {
       const y0 = Math.max(s.g, W + 3), rot = s.sd.a - Math.PI / 2, f = frame(s.x, s.z, y0, rot); // +z локально — к воде
       f.P(BOX, 0x8b8c88, 0, -8, 0, 0, 0, 0, 420, 9, 120);                                          // набережная
       for (const lx of [-120, 110]) { f.P(BOX, 0x8b8c88, lx, -2.5, 150, 0, 0, 0, 26, 3.5, 200); for (let k = 0; k < 6; k++) f.P(CYL(1.2, 1.2, 12, 8), 0x6f706c, lx + (k % 2 ? 10 : -10), -14, 70 + Math.floor(k / 2) * 60); }
+      const cranes = [], conts = [], ships = [], at3 = (lx, ly, lz) => { const [x, z] = f.at(lx, lz); return { x, y: y0 + ly, z }; };
       for (const [lx, lz] of [[-150, 40], [-60, 40], [30, 40]]) { // козловые краны
+        const n0 = parts.length;
         for (const ox of [-10, 10]) for (const oz of [-8, 8]) f.P(BOX, 0xd9822b, lx + ox, 0, lz + oz, 0, 0, 0, 2, 38, 2);
         f.P(BOX, 0xd9822b, lx, 38, lz + 15, 0, 0, 0, 24, 5, 70); f.P(BOX, 0x44505a, lx, 43, lz - 6, 0, 0, 0, 8, 6, 8);
+        cut('cranes', n0); cranes.push({ ...at3(lx, 0, lz), yaw: rot });
       }
       const CC = [0xb23b2e, 0x2f5f9e, 0x3f8a4a, 0xd0a33a, 0x7a7f86, 0xe0e0da];
-      for (let i = 0; i < 70; i++) f.P(BOX, CC[(R() * CC.length) | 0], -190 + (i % 14) * 14, 2.6 * Math.floor(i / 28), -30 + Math.floor((i % 28) / 14) * 6, 0, 0, 0, 12, 2.6, 2.5);
+      { const n0 = parts.length;
+        for (let i = 0; i < 70; i++) { const c = CC[(R() * CC.length) | 0], lx = -190 + (i % 14) * 14, ly = 2.6 * Math.floor(i / 28), lz = -30 + Math.floor((i % 28) / 14) * 6; f.P(BOX, c, lx, ly, lz, 0, 0, 0, 12, 2.6, 2.5); conts.push({ ...at3(lx, ly, lz), yaw: rot + Math.PI / 2, c }); }
+        cut('conts', n0); }
       for (const lx of [80, 150]) f.P(BOX, 0xa9a397, lx, 0, -20, 0, 0, 0, 60, 14, 40);
       for (const [lx, lz, len, col] of [[-80, 150, 120, 0x27313b], [150, 160, 90, 0x6b2b24]]) { // корабли у причалов
+        const n0 = parts.length;
         f.P(BOX, col, lx, -6, lz, 0, 0, 0, 18, 9, len); f.P(BOX, 0xe8e8e2, lx, 3, lz + len * 0.35, 0, 0, 0, 14, 10, 16); f.P(BOX, 0xe8e8e2, lx, 13, lz + len * 0.35, 0, 0, 0, 10, 4, 10);
+        cut('ships', n0); const [x, z] = f.at(lx, lz); ships.push({ x, y: W, z, yaw: rot, len });
       }
+      glb.port = { cranes, conts, ships };
       const lamp = []; for (let i = 0; i < 8; i++) { const [x, z] = f.at(-200 + i * 57, 55); lamp.push(V(x, y0 + 16, z)); } lights.push({ pts: lamp, color: 0xffb060, size: 1.1 });
       placed.push({ name: 'port',  x: s.x, z: s.z, r: 300 });
     }
@@ -114,10 +124,11 @@ export function buildLandmarks(C) {
     const s = findSite(300, () => { const a = R() * Math.PI * 2, d = 1500 + R() * 9000, x = Math.cos(a) * d, z = Math.sin(a) * d, g = terrainH(x, z); if (g < W + 3 || g > W + 30 || !free(x, z, 120)) return null;
       let wet = 0; for (let i = 0; i < 12; i++) { const t = i / 12 * Math.PI * 2; if (terrainH(x + Math.cos(t) * 260, z + Math.sin(t) * 260) < W - 2) wet++; } return wet >= 6 ? { x, z, g, wet } : null; }, (c) => c.wet);
     if (s) {
-      const f = frame(s.x, s.z, s.g - 1, 0);
+      const f = frame(s.x, s.z, s.g - 1, 0), n0 = parts.length;
       f.P(lathe([[6.5, 0], [5.4, 22], [4.2, 38], [0.001, 38]], 18), 0xf0efe9, 0, 0, 0);
       for (const [y, h] of [[7, 4], [17, 4], [27, 4]]) f.P(CYL(6.1 - y * 0.058, 6.1 - (y + h) * 0.058, h, 18), 0xc2352b, 0, y, 0);
       f.P(CYL(5.2, 5.2, 1, 16), 0x3a3c3e, 0, 38, 0); f.L(CYL(3.2, 3.2, 4.5, 12), 0xfff2c8, 0, 39, 0); f.P(new THREE.ConeGeometry(3.8, 3.5, 12), 0xc2352b, 0, 45.2, 0);
+      cut('light', n0); swap.lightGlass = glass.splice(glass.length - 1); glb.light = { x: s.x, y: s.g - 1, z: s.z };
       const beamGeo = new THREE.ConeGeometry(28, 420, 20, 1, true); beamGeo.translate(0, -210, 0); beamGeo.rotateX(-Math.PI / 2);
       const beam = new THREE.Mesh(beamGeo, new THREE.MeshBasicMaterial({ color: lin(0xfff0c0).multiplyScalar(1.4), transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
       beam.position.set(s.x, s.g + 40, s.z); beam.visible = false; add(beam); beacon = { beam, a: 0 };
@@ -130,6 +141,8 @@ export function buildLandmarks(C) {
   const solid = new THREE.MeshLambertMaterial({ vertexColors: true });
   const mk = (list, mat) => { if (!list.length) return null; const g = mergeParts(list); g.boundingSphere = new THREE.Sphere(V(0, 300, 0), WORLD.SIZE); const m = add(new THREE.Mesh(g, mat)); m.castShadow = m.receiveShadow = !!P.shadows; return m; };
   mk(parts, solid);
+  for (const k of Object.keys(swap)) swap[k] = mk(swap[k], k === 'lightGlass' && P.pbr ? new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.2, roughness: 0.08, envMapIntensity: 1.1 }) : solid);
+  glb.hide = swap; // меши заменяемых частей (main.js прячет по готовности моделей)
   mk(glass, P.pbr ? new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.2, roughness: 0.08, envMapIntensity: 1.1 }) : solid);
   if (lines.length) { // ванты моста — тонкие цилиндры (линия в 1 пиксель вблизи смотрится бедно)
     const cp = []; for (let i = 0; i < lines.length; i += 2) { const a = lines[i], b = lines[i + 1], len = a.distanceTo(b), mid = a.clone().add(b).multiplyScalar(0.5);
@@ -161,7 +174,7 @@ export function buildLandmarks(C) {
 
   let t = 0;
   return {
-    emitters, bridge, sites: placed,
+    emitters, bridge, sites: placed, glb,
     // dt — шаг, night — темнота 0…1, cam — положение камеры, wake(x, y, z, dx, dz) — пена за лодкой (частицы main.js)
     update(dt, night, cam, wake) {
       t += dt;

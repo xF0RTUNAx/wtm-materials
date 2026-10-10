@@ -20,6 +20,24 @@
 - "F-111F Aardvark with GBU-24 Mk.84" (https://sketchfab.com/3d-models/f-111f-aardvark-with-gbu-24-mk84-61b374227e474c3f9ab225e35998c6c0) by Jeyhun1985 — CC-BY-4.0 — `w_gbu31.glb`
 - "FIM-92 Stinger" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik — CC-BY-4.0 — `mp_stinger.glb`
 - "MANPADS model 9K333 Verba" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 — CC-BY-4.0 — `mp_verba.glb`, `msl_manpads.glb`
+- "MiG-21 Chibi" (https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6) by Oleh — CC-BY-4.0 — `e_mig21.glb`, `e_mig21_lo.glb`
+- "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita — CC-BY-4.0 — `e_mig31.glb`, `e_mig31_lo.glb`
+- "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan — CC-BY-4.0 — `e_su57.glb`, `e_su57_lo.glb`
+- "Tupolev Tu-22M3" (https://sketchfab.com/3d-models/tupolev-tu-22m3-6b398ad795fc40f6955ce345d4baeaf8) by Jeyhun1985 — CC-BY-4.0 — `e_tu22m3.glb`, `e_tu22m3_lo.glb`
+- "High Voltage Transmission Line Tower (tileable)" (https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313) by mednios — CC-BY-4.0 — `m_pylon.glb`
+- "Wind Turbine [Demo]" (https://sketchfab.com/3d-models/wind-turbine-demo-68669d1cfb3647ba9b1da47cbe580931) by 3Dexter — CC-BY-4.0 — `m_wind.glb`
+- "Low Poly Cargo Ship" (https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c) by Javier_Fernandez — CC-BY-4.0 — `m_ship.glb`
+- "Sea ​​container - Low Poly" (https://sketchfab.com/3d-models/sea-container-low-poly-979114d6e1754f5591735ef3e5e203d4) by Mozhet_Moroz — CC-BY-4.0 — `m_cont.glb`
+- "Port crane "Sokol"" (https://sketchfab.com/3d-models/port-crane-sokol-4964eaa7634e47c9bac4c2a74fa91c20) by Vitaliy Kovalchuk — CC-BY-4.0 — `m_crane.glb`
+- "Lighthouse" (https://sketchfab.com/3d-models/lighthouse-464af883421f4ac68ede2605f4f1407b) by KarlDufresne — CC-BY-4.0 — `m_light.glb`
+- "Train | Locomotive, Low-poly locomotive" (https://sketchfab.com/3d-models/train-locomotive-low-poly-locomotive-0eea1fa85cfa40769ce8e0cbb98e1d05) by Nikcore — CC-BY-4.0 — `m_loco.glb`
+- "Train | Locomotive SD40-2" (https://sketchfab.com/3d-models/train-locomotive-sd40-2-bdeadf60bf774adc9a39c744792c02c4) by Nikcore — CC-BY-4.0 — `m_loco2.glb`
+- "Il78" (https://sketchfab.com/3d-models/il78-0c0da2cc1b4c441dadc2510212c25fb7) by manilov.ap — CC-BY-4.0 — `t_il78.glb`
+- "Boeing KC-135R Stratotanker" (https://sketchfab.com/3d-models/boeing-kc-135r-stratotanker-86f1e11310e546db9bf323fa1a62f069) by Muhamad Mirza Arrafi — CC-BY-4.0 — `t_kc135.glb`
+- "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_aim7.glb`, `aam_aim9x.glb`
+- "Simple GameReady Weapons for Fighter Jet Games" (https://sketchfab.com/3d-models/simple-gameready-weapons-for-fighter-jet-games-4c231dda5e8a4db39c2f53c3e16f57e9) by ekmekarasikodlamaytb — CC-BY-4.0 — `aam_r60.glb`
+- "Low poly German IRIS-T AAM" (https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4) by Raptor9 — CC-BY-4.0 — `aam_iris.glb`
+- "Low Poly Missiles and Torpedos" (https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35) by sakigakefuruzawa — CC-BY-4.0 — `aam_mica.glb`
 - "MiG 29" (https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3) by Uxman — CC-BY-4.0 — `mig29.glb`
 - "9K331 Tor-M1" (https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db) by 42manako — CC-BY-4.0 — `tor.glb`
 - "96K6 Pantsir-S2" (https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b) by 42manako — CC-BY-4.0 — `pantsir.glb`

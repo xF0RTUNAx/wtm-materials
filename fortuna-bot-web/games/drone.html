@@ -365,6 +365,9 @@
   #endTitle.win { color: #86efac; }
   #serverMsg { font-size: 13px; margin: 6px 0 2px; min-height: 18px; color: #fde68a; }
   #benchBox { width: min(94vw, 420px); background: rgba(15,23,34,.9); border-radius: 14px; padding: 12px 14px; margin-bottom: 20px; text-align: center; font-size: 14px; }
+  .planeRow { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 10px; }
+  .planeRow .pl { flex: 1 1 30%; min-width: 92px; padding: 7px 8px; border-radius: 9px; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.06); color: #e5e7eb; font: 600 12px -apple-system, Segoe UI, sans-serif; cursor: pointer; }
+  .planeRow .pl.on { border-color: #fb923c; background: rgba(251,146,60,.18); color: #fff; }
 </style>
 </head>
 <body>
@@ -380,7 +383,7 @@
   </div>
   <div class="osd-tc"><div class="lbl">СБИТО</div><div class="big" id="kills">0</div><div id="combo"></div></div>
   <div class="osd-tr"><div class="lbl">ОЧКИ</div><div id="score">0</div><div id="hdg"></div><div id="clock"></div></div>
-  <div id="bossbar"><div class="lbl">ПОДСТИЛКА УЛИТКИ</div><div class="bar"><i id="bossFill"></i></div></div>
+  <div id="bossbar"><div class="lbl">ТУ-22М3</div><div class="bar"><i id="bossFill"></i></div></div>
   <div id="warn"></div><div id="threat"></div>
   <div id="hint"></div>
   <div id="ask"><div><b id="askTxt"></b><small id="askKey"></small></div><button id="askBtn" aria-label="Объяснение">?</button></div>
@@ -414,7 +417,7 @@
 <div class="screen on" id="menu">
   <div class="card">
     <h1>Симулятор Летки</h1>
-    <div class="sub">«Изделие Фортуна-1» против авиации «Подстилки улитки»</div>
+    <div class="sub">«Изделие Фортуна-1» против вражеской авиации</div>
     <div class="badge" id="modeBadge"></div>
     <div class="wchip" id="weatherChip"></div>
     <div class="lobby"><div id="lobbyStats"></div><div id="lobbyTip" title="Следующий совет"></div></div>
@@ -490,6 +493,6 @@
 
 <script src="../config.js?v=20260930m"></script> <!-- адрес функции mp-ticket и открытый ключ Supabase (билет онлайна) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script type="module" src="drone/main.js?v=20260930m"></script>
+<script type="module" src="drone/main.js?v=20261011k"></script>
 </body>
 </html>
