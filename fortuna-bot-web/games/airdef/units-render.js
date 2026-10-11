@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261013a';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261013a';
-import { LNCH } from './launchers.js?v=20261013a';
-import { createBook } from './flipbook.js?v=20261013a';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261016a';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261016a';
+import { LNCH } from './launchers.js?v=20261016a';
+import { createBook } from './flipbook.js?v=20261016a';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -301,10 +301,11 @@ export function rocketFlame(group, z, r) {
     // k: 0 — двигатель не работает, 1 — маршевый режим, 2 — стартовый (ускоритель): длинный и широкий факел
     set(k, rr = r) {
       outer.visible = core.visible = k > 0; if (!k) return;
-      const f = 0.85 + Math.random() * 0.3, w = rr * (k > 1 ? 2.6 : 1.8);
+      const f = 0.85 + Math.random() * 0.3, w = rr * (k > 1 ? 1.7 : 1.4); // ширина у среза — по соплу: 0,85 радиуса корпуса на старте, 0,7 — маршевый
       outer.scale.set(w, w, rr * (k > 1 ? 26 : 12) * f); core.scale.set(w * 0.5, w * 0.5, rr * (k > 1 ? 11 : 5) * f);
     },
     move(z2) { outer.position.z = core.position.z = z2; },
+    at(x, y, z) { outer.position.set(x, y, z); core.position.set(x, y, z); }, // срез сопла модели (не на оси)
   };
 }
 
@@ -468,9 +469,10 @@ export function createFx(scene, P) {
         if (dark && Math.random() < 0.5) fire.emit(x, y, z, a.vel.x * 0.3, a.vel.y * 0.3, a.vel.z * 0.3, 1, 0.5 + Math.random() * 0.2, 0.15, 0.9, 2.6, 3, 0.22, 2, 0);
       }
     },
-    wpnTrail(w) {
-      smoke.emit(w.pos.x - w.dir.x * 2, w.pos.y - w.dir.y * 2, w.pos.z - w.dir.z * 2, 0, 0.5, 0, 0.8, 0.8, 0.78, 0.35, 3, 3, 4, 0.3, 0.2);
-      fire.emit(w.pos.x - w.dir.x * 2, w.pos.y - w.dir.y * 2, w.pos.z - w.dir.z * 2, 0, 0, 0, 1, 0.7, 0.35, 0.9, 1.6, 0, 0.05, 0, 0);
+    wpnTrail(w, p) { // p — срез сопла (если известен), иначе 2 м за центром
+      const x = p ? p.x : w.pos.x - w.dir.x * 2, y = p ? p.y : w.pos.y - w.dir.y * 2, z = p ? p.z : w.pos.z - w.dir.z * 2, k = p && w.W.vis ? Math.min(1, w.W.vis.r * 2.5) : 1;
+      smoke.emit(x, y, z, 0, 0.5, 0, 0.8, 0.8, 0.78, 0.35, 3, 3, 4, 0.3, 0.2);
+      fire.emit(x, y, z, 0, 0, 0, 1, 0.7, 0.35, 0.9, 1.6 * k, 0, 0.05, 0, 0);
     },
     // ЛТЦ — каждый кадр, пока горит: слепящее ядро, узкий огненный хвост (частицы живут доли секунды — хвост вытягивается
     // по траектории и укорачивается, когда ловушка тормозит), белый дымный след; с выгоранием всё тускнеет и сужается

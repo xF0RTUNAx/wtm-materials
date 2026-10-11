@@ -13,9 +13,9 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261013a';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261013a';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261013a';
+import { AG, SAM } from '../arsenal.js?v=20261016a';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261016a';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261016a';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
@@ -71,6 +71,7 @@ export function createStrike(ctx) {
   function radarSees(u, t) {
     const R = u.S.radar, d = u.ant.distanceTo(t.pos);
     let range = R.range * Math.min(1.4, Math.pow((t.rcs || 5) / 5, 0.25));
+    if (t.W && t.W.kind === 'tbm' && u.S.abm) range = R.range * 1.2; // противоракетный режим РЛС: баллистическую цель видно на полную дальность
     // станция помех цели: РЛС видит её ближе, пока не «прожжёт» помеху (помехозащищённые — почти не замечают)
     if (t.jam) range = Math.max(R.range * 0.3 * (1 + (u.S.eccm || 0)), range * (1 - t.jam * 0.6 * (1 - (u.S.eccm || 0))));
     if (d > range) return false;
@@ -90,7 +91,21 @@ export function createStrike(ctx) {
   }
   function inZone(u, t) {
     const S = u.S, d = u.pos.distanceTo(t.pos), h = aglOf(t);
-    return d > S.rmin && d < S.rmax && h > S.hmin && h < S.hmax;
+    return d > S.rmin && d < S.rmax && h > S.hmin && h < S.hmax || meetSoon(u, t);
+  }
+  // баллистика: противоракетный ЗРК стреляет в упреждённую точку — пуск разрешён, если к подлёту ЗУР (≈ 1,1 км/с в среднем,
+  // плюс 1,5 с на старт) цель уже будет в зоне, хотя сейчас она выше или дальше
+  const MEET = new THREE.Vector3();
+  function meetSoon(u, t) {
+    if (!t.W || t.W.kind !== 'tbm' || !u.S.abm || t.vel.y >= 0) return false;
+    const S = u.S;
+    for (let tau = 1; tau < 25; tau += 0.5) {
+      MEET.copy(t.pos).addScaledVector(t.vel, tau);
+      const h = MEET.y - city.groundH(MEET.x, MEET.z), d = u.pos.distanceTo(MEET);
+      if (h < Math.max(S.hmin, 1500)) return false; // так низко — уже не успеть
+      if (Math.abs(d / 1100 + 1.5 - tau) < 0.5) return d > S.rmin && d < S.rmax && h < S.hmax;
+    }
+    return false;
   }
   function updateUnit(u, dt, targets) {
     if (u.dead) return;
@@ -98,7 +113,7 @@ export function createStrike(ctx) {
     u.cool = Math.max(0, u.cool - dt);
     if (u.reloadT > 0) { u.reloadT -= dt; if (u.reloadT <= 0) u.ammo = S.ammo; }
     if (S.type === 'jammer') return; // станция подавления навигации работает сама (см. updateWpn)
-    if (S.antiMun) targets = targetsFor(u, targets);
+    if (S.antiMun || evOn) targets = targetsFor(u, targets);
     if (u.manual) { manualUnit(u, dt, targets); return; }
     // ПРР в воздухе: опытный расчёт выключает РЛС («мигание»), пока ракета не упадёт
     if (S.radar) {
@@ -181,9 +196,17 @@ export function createStrike(ctx) {
     return true;
   }
   // комплексы против летящего оружия: к самолётам добавляются бомбы, крылатые ракеты и ПРР в пределах ~60 % дальности
+  // летящее оружие как цель: «Тор», «Панцирь», C-RAM (antiMun) — любое вблизи; оружие «Мульти-волны» (ev) — крылатые
+  // и дроны берут все ЗРК, баллистику (tbm) — только противоракетные (S.abm)
   function targetsFor(u, aircraft) {
-    const out = aircraft.slice(), R2 = Math.pow(u.S.rmax * 0.6, 2);
-    for (const w of wpns) if (!w.dead && w.t > 1.5 && w.W.kind !== 'decoy' && w.pos.distanceToSquared(u.pos) < R2) out.push(w);
+    const out = aircraft.filter((a) => !a.immune), S = u.S, // immune — носитель «Мульти-волны» за краем района (в жизни — за сотни км)
+      R2 = Math.pow(S.rmax * 0.6, 2), E2 = Math.pow(S.rmax * 0.95, 2);
+    for (const w of wpns) {
+      if (w.dead || w.t < 1.5 || w.W.kind === 'decoy') continue;
+      const d2 = w.pos.distanceToSquared(u.pos);
+      if (w.ev) { if (w.W.kind === 'tbm' ? S.abm && w.vel.y < 0 && d2 < E2 * 1.6 : (S.radar || S.type === 'ir' || S.type === 'guns') && d2 < E2) out.push(w); } // баллистику — на нисходящем участке
+      else if (S.antiMun && d2 < R2) out.push(w);
+    }
     return out;
   }
   // урон самолёту (хозяину боя) или летящему оружию (перехват)
@@ -268,10 +291,12 @@ export function createStrike(ctx) {
     if (S.radar && !u.emit && S.type !== 'saclos' && !S.optTrack && S.type !== 'ir') return 'РЛС выключена — ракету некому вести';
     if (S.type === 'jammer') return 'станция РЭБ не стреляет';
     const d = u.pos.distanceTo(t.pos), h = aglOf(t);
-    if (d < S.rmin) return 'слишком близко';
-    if (d > S.rmax) return 'далеко — цель вне зоны';
-    if (h < S.hmin) return 'цель ниже зоны поражения';
-    if (h > S.hmax) return 'цель выше зоны поражения';
+    if (!meetSoon(u, t)) { // баллистику можно и раньше — в упреждённую точку
+      if (d < S.rmin) return 'слишком близко';
+      if (d > S.rmax) return 'далеко — цель вне зоны';
+      if (h < S.hmin) return 'цель ниже зоны поражения';
+      if (h > S.hmax) return 'цель выше зоны поражения';
+    }
     if (!launcherReady(u)) return 'пусковая разворачивается';
     launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = S.reload * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
@@ -338,7 +363,7 @@ export function createStrike(ctx) {
   function irSees(S, t, from, axis, fovDeg) {
     const d = from.distanceTo(t.pos), R = S.rmax * 1.1 * Math.sqrt(seekerHeat(t, from));
     if (d > R) return false;
-    if ((S.aspect || 180) < 180 && offTailDeg(t, from) > S.aspect) return false;
+    if ((S.aspect || 180) < 180 && !(t.W && t.W.uav) && offTailDeg(t, from) > S.aspect) return false; // дрон (медленный, горячий мотор и корпус) — с любого ракурса
     if (axis && angleBetween(axis, TMP2.copy(t.pos).sub(from)) > fovDeg * D2R) return false;
     return true;
   }
@@ -418,9 +443,24 @@ export function createStrike(ctx) {
     fx.samMotor(m, motor);
     m.trailT -= dt; if (motor && m.trailT <= 0) { m.trailT = M_.L > 5 ? 0.03 : 0.04; fx.samTrail(m); }
     // неконтактный взрыватель
-    if (T && T.isMun && !T.dead && m.flown > 150 && m.pos.distanceTo(T.pos) < M_.blast * 0.85 + 2) { intercept(T); m.dead = true; fx.samEnd(m, true); fx.explosion(m.pos, M_.blast * 0.6, 'air'); return; }
+    if (T && T.isMun && !T.dead && m.flown > 150) {
+      // перехват летящего оружия: ближайшее сближение за шаг (баллистика за кадр проходит десятки метров)
+      const px = T.pos.x - m.pos.x, py = T.pos.y - m.pos.y, pz = T.pos.z - m.pos.z;
+      if (px * px + py * py + pz * pz < 2500 * 2500) {
+        const vx = T.vel.x - m.dir.x * m.speed, vy = T.vel.y - m.dir.y * m.speed, vz = T.vel.z - m.dir.z * m.speed, vv = vx * vx + vy * vy + vz * vz || 1e-6;
+        const qx = px - vx * dt, qy = py - vy * dt, qz = pz - vz * dt, ts = clamp(-(qx * vx + qy * vy + qz * vz) / vv, 0, dt);
+        const dmin = Math.hypot(qx + vx * ts, qy + vy * ts, qz + vz * ts);
+        if (dmin < (T.W.kind === 'tbm' ? Math.max(70, M_.blast * 2) : M_.blast * 0.85 + 2)) { // по баллистике на встречных 3+ км/с — шире (успех решает S.abm)
+          // баллистическую цель — с вероятностью комплекса (S.abm), манёвр на конечном участке её снижает
+          const pk = T.W.kind === 'tbm' ? (S.abm || 0) * (T.W.man && T.phase === 'term' ? 0.6 : 1) : 1;
+          m.dead = true; fx.explosion(m.pos, M_.blast * 0.6, 'air');
+          if (rnd() < pk) { intercept(T); fx.samEnd(m, true); } else fx.samEnd(m, false);
+          return;
+        }
+      }
+    }
     if (m.flown > 150) for (const a of ctx.aircraft()) {
-      if (a.dead) continue;
+      if (a.dead || a.immune) continue; // носитель «Мульти-волны» — вне досягаемости (ракета по только что пущенной крылатой его не задевает)
       const px = a.pos.x - m.pos.x, py = a.pos.y - m.pos.y, pz = a.pos.z - m.pos.z;
       if (px * px + py * py + pz * pz > 400 * 400) continue;
       const vx = a.vel.x - m.dir.x * m.speed, vy = a.vel.y - m.dir.y * m.speed, vz = a.vel.z - m.dir.z * m.speed;
@@ -438,7 +478,7 @@ export function createStrike(ctx) {
     m.dead = true;
     let hit = false;
     if (near) for (const a of ctx.aircraft()) {
-      if (a.dead) continue;
+      if (a.dead || a.immune) continue;
       const d = Math.max(0, a.pos.distanceTo(m.pos) - a.r * 0.5);
       if (d < m.M.blast) { ctx.hurt(a, m.M.dmg * Math.pow(1 - d / m.M.blast, 0.6), m.S.short); hit = true; }
     }
@@ -496,8 +536,75 @@ export function createStrike(ctx) {
     fx.wpnRelease(w);
     return w;
   }
-  function updateWpn(w, dt) {
+  // ═════════════ «Мульти-волна»: оружие без самолёта (пуск из-за края района) ═════════════
+  // key — из AG; from — точка пуска; aim — точка цели (у tbm к ней прибавляется круговое отклонение); o: { decoy, target, route }
+  let evOn = false;
+  function spawnMun(key, from, aim, o = {}) {
+    const W = AG[key]; evOn = true;
+    const w = { id: mid++, key, W, owner: o.owner || null, pos: from.clone(), vel: new THREE.Vector3(), dir: new THREE.Vector3(0, 1, 0), speed: 0, t: 0, flown: 0, dead: false,
+      aim: aim ? aim.clone() : null, target: o.target || null, mem: null, lost: false, homing: true, trailT: 0, ev: true, decoy: !!(o.decoy || W.decoyMun), route: o.route || null,
+      isMun: true, r: W.kind === 'tbm' ? 1 : 1.2, rcs: W.rcs ?? 0.12, ir: W.kind === 'tbm' ? 0.6 : W.uav ? 0.9 : 0.35, // дрон: ПЗРК и ИК-ГСН берут уверенно mhp: W.mhp ?? (W.kind === 'cruise' ? 18 : 10), yaw: 0, pitch: 0, ab: false,
+      alt: o.alt ?? null, launcher: o.launcher || null, podDir: o.podDir || null }; // podDir — пуск из пакета: первые секунды по его оси // alt — высота полёта по плану удара (иначе своя у ракеты); launcher — пусковая
+    if (W.kind === 'tbm') {
+      // точка падения: КВО — по нормальному закону (у разведанных комплексов и с действующим разведчиком — как в таблице, иначе ×3)
+      const cep = (W.cep || 0) * (o.blind ? 3 : 1), a2 = rnd() * 6.283, r2 = cep * Math.sqrt(-1.4427 * Math.log(Math.max(1e-6, rnd())));
+      w.aim.x += Math.cos(a2) * r2; w.aim.z += Math.sin(a2) * r2; w.aim.y = city.topAt(w.aim.x, w.aim.z);
+      w.p0 = from.clone(); w.T = W.T * (0.92 + rnd() * 0.16); w.phase = 'boost';
+      if (o.decoy) { w.T = o.T; w.p0 = o.p0.clone(); w.s0 = o.s0; w.t = o.t0; } // ложная цель — отделилась на спуске от ракеты
+    } else {
+      // o.dir — пуск с самолёта: ракета сначала идёт по курсу носителя и разворачивается к цели сама
+      w.speed = W.speed; if (o.dir) TMP.copy(o.dir).setY(0).normalize(); else TMP.copy(w.aim || TMP2.set(0, 0, 0)).sub(from).setY(0).normalize(); w.dir.copy(TMP); w.vel.copy(w.dir).multiplyScalar(w.speed);
+    }
+    wpns.push(w); fx.wpnRelease(w);
+    return w;
+  }
+  // баллистика по сжатой дуге: горизонталь — от точки пуска к цели, высота — парабола с апогеем W.H; s = (t/T)^1,1 — разгон на старте,
+  // на спуске скорость растёт (у «Искандера» ≈ 2 км/с). Отделение ложных целей и манёвр — на спуске
+  const BP = new THREE.Vector3(), BQ = new THREE.Vector3();
+  function tbmPos(w, s, out) {
+    const H = w.W.H, p0 = w.p0, a = w.aim;
+    out.set(p0.x + (a.x - p0.x) * s, p0.y + (a.y - p0.y) * s + 4 * H * s * (1 - s), p0.z + (a.z - p0.z) * s);
+    if (w.W.man && s > 0.86) { const k = (s - 0.86) / 0.14, sw = Math.sin(k * 9 + w.id) * 160 * (1 - k); out.x += sw * 0.7; out.z += sw * 0.7; } // манёвр, к цели сходится
+    return out;
+  }
+  function updateTbm(w, dt) {
+    // разгон на старте: первые tb с скорость растёт от нуля (ракета медленно сходит с пусковой) — «своё» время tw идёт
+    // как t²/(2·tb), дальше — ровно; к T ракета всё так же у цели. tb: «Скад» (жидкостный) — 16 с, «Искандер» — 14, «Точка» и ATACMS — 10 (≈ 10–15 g)
+    w.t += dt; const W = w.W, tb = W.boostT || 8, tw = w.t < tb ? Math.max(0, w.t) * Math.max(0, w.t) / (2 * tb) : w.t - tb / 2;
+    const s = Math.min(1, Math.pow(Math.max(0, tw) / Math.max(1, w.T - tb / 2), 1.1));
+    tbmPos(w, s, BP); tbmPos(w, Math.min(1, s + 0.002), BQ);
+    if (w.podDir && w.t < 4) { // из пакета: сначала по оси пакета, за 4 с плавно переходит на свою дугу
+      const k = Math.min(1, w.t / 4), sm = k * k * (3 - 2 * k);
+      for (const B of [BP, BQ]) { const a = B.distanceTo(w.p0); B.lerp(TMP2.copy(w.p0).addScaledVector(w.podDir, a), 1 - sm); }
+    }
+    w.vel.copy(BP).sub(w.pos).divideScalar(Math.max(dt, 1e-3)); w.speed = w.vel.length();
+    if (BQ.distanceToSquared(BP) > 1e-6) w.dir.copy(BQ).sub(BP).normalize();
+    w.pos.copy(BP); w.flown += w.speed * dt;
+    w.phase = s < 0.25 ? 'boost' : s < 0.86 ? 'mid' : 'term';
+    w.trailT -= dt; if (s < 0.22 && w.trailT <= 0) { w.trailT = 0.04; fx.wpnTrail(w); }
+    // ложные цели «Искандера»: на спуске отделяются и летят рядом (для РЛС — неотличимы)
+    if (W.dec && !w.decoy && !w.decSpawned && s > 0.74) {
+      w.decSpawned = true;
+      for (let i = 0; i < W.dec; i++) { const d = spawnMun(w.key, w.pos, w.aim.clone().add(TMP2.set((rnd() - 0.5) * 900, 0, (rnd() - 0.5) * 900)), { decoy: true, T: w.T, p0: w.p0, t0: w.t, owner: w.owner }); d.aim.y = city.topAt(d.aim.x, d.aim.z); }
+    }
+    if (s >= 1 || w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4)) { if (w.decoy) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); fx.explosion(w.pos, 4, 'ground'); } else wpnDetonate(w); }
+  }
+  // разведчик: облёт по маршруту над городом; кого видит (прямая видимость, до 7 км) — те комплексы «разведаны»
+  function updateRecon(w, dt) {
     const W = w.W; w.t += dt;
+    if (!w.route || !w.route.length) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); return; }
+    const wp = w.route[0]; TMP.set(wp.x - w.pos.x, 0, wp.z - w.pos.z); if (TMP.length() < 400) { w.route.push(w.route.shift()); }
+    TMP.normalize(); TMP.y = clamp((W.alt - w.pos.y) / 400, -0.2, 0.2); TMP.normalize(); turnToward(w.dir, TMP, 0.35 * dt);
+    w.speed = W.speed; w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed);
+    w.scanT = (w.scanT || 0) - dt;
+    if (w.scanT <= 0) { w.scanT = 1; for (const u of units) if (!u.dead && !u.spotted && u.pos.distanceTo(w.pos) < 7000 && city.los(w.pos.x, w.pos.y, w.pos.z, u.pos.x, u.pos.y + 2, u.pos.z, 4)) { u.spotted = true; fx.unitSpotted && fx.unitSpotted(u, w); } }
+    if (w.t > W.life) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); }
+  }
+  function updateWpn(w, dt) {
+    const W = w.W;
+    if (W.kind === 'tbm') { updateTbm(w, dt); w.yaw = Math.atan2(-w.dir.x, -w.dir.z); w.pitch = Math.asin(clamp(w.dir.y, -1, 1)); return; }
+    if (W.recon) { updateRecon(w, dt); w.yaw = Math.atan2(-w.dir.x, -w.dir.z); w.pitch = Math.asin(clamp(w.dir.y, -1, 1)); return; }
+    w.t += dt;
     w.yaw = Math.atan2(-w.dir.x, -w.dir.z); w.pitch = Math.asin(clamp(w.dir.y, -1, 1));
     if (W.kind === 'cruise') { updateCruise(w, dt); return; }
     if (W.kind === 'bomb' || W.kind === 'lgb' || W.kind === 'tvb' || W.kind === 'gps') {
@@ -557,24 +664,61 @@ export function createStrike(ctx) {
     if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > (W.life || 150)) wpnDetonate(w);
   }
   // крылатая ракета: маршевый двигатель держит скорость, полёт на малой высоте с облётом крыш (смотрит вперёд),
-  // за 1,8 км до цели — пикирование в точку (на конце — оптическая/тепловизионная ГСН)
+  // за 1,8 км до цели — пикирование в точку (на конце — оптическая/тепловизионная ГСН). w.route — точки маршрута
+  // (план удара): сначала через них, потом на цель; w.alt — высота по плану
   function updateCruise(w, dt) {
-    const W = w.W, aim = w.aim; w.t += 0; w.speed += (W.speed - w.speed) * Math.min(1, dt * 0.5);
+    const W = w.W, alt = w.alt ?? W.alt; w.speed += (W.speed - w.speed) * Math.min(1, dt * 0.5);
+    if (w.route && w.route.length && Math.hypot(w.route[0].x - w.pos.x, w.route[0].z - w.pos.z) < 700) w.route.shift();
+    const wp = w.route && w.route.length ? w.route[0] : null, aim = wp || w.aim;
     TMP.copy(aim || w.pos.clone().addScaledVector(w.dir, 1000)).sub(w.pos); const dh = Math.hypot(TMP.x, TMP.z);
-    if (dh < 1800) TMP.normalize();
+    // у цели: пикирование, когда прямая до неё свободна от домов; иначе — горка над крышами по пути к цели (без неё врезалась в высотки)
+    let dive = false;
+    if (dh < 2500 && !wp && aim) {
+      if ((w.losT = (w.losT || 0) - dt) <= 0) {
+        w.losT = 0.2; w.clear = dh < 150 || city.los(w.pos.x, w.pos.y - 20, w.pos.z, aim.x, aim.y + 2, aim.z, 25); // с запасом: на довороте траектория чуть ниже прямой
+        w.popY = 0; for (let k = 1; k <= 90; k++) { const f = Math.min(1, (k * 30) / dh); w.popY = Math.max(w.popY, city.topAt(w.pos.x + TMP.x * f, w.pos.z + TMP.z * f)); if (f >= 1) break; } // шаг 30 м — узкие высотки не проскакивают
+      }
+      dive = w.clear;
+    }
+    if (dive) TMP.normalize();
+    else if (dh < 2500 && !wp && aim) { TMP.y = 0; TMP.normalize(); TMP.y = clamp((w.popY + 40 - w.pos.y) / 150, -0.15, 0.6); TMP.normalize(); }
     else {
       TMP.y = 0; TMP.normalize();
-      let top = 0; for (const L of [150, 400, 800]) top = Math.max(top, city.topAt(w.pos.x + TMP.x * L, w.pos.z + TMP.z * L));
-      TMP.y = clamp((top + W.alt - w.pos.y) / 300, -0.25, 0.4); TMP.normalize();
+      // огибание рельефа и крыш: впереди по курсу на цель и по текущему курсу (на развороте дуга уходит в сторону)
+      let top = city.topAt(w.pos.x, w.pos.z), hx = Math.hypot(w.dir.x, w.dir.z) || 1;
+      for (const L of [150, 400, 800]) top = Math.max(top, city.topAt(w.pos.x + TMP.x * L, w.pos.z + TMP.z * L));
+      for (const L of [40, 110, 220, 380]) top = Math.max(top, city.topAt(w.pos.x + w.dir.x / hx * L, w.pos.z + w.dir.z / hx * L));
+      TMP.y = clamp((top + alt - w.pos.y) / 200, -0.25, 0.55); TMP.normalize();
     }
     turnToward(w.dir, TMP, 0.7 * dt);
     w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed); w.homing = true;
-    w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.08; fx.wpnTrail(w); }
+    if (!W.uav) { w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.08; fx.wpnTrail(w); } } // у дронов (поршневой мотор) следа нет
     if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > W.life) wpnDetonate(w);
+  }
+  // истинное время до цели: прогон той же кинематики (разгон, разворот 0,7 рад/с, маршрутные точки — снимаются за 700 м, пикирование
+  // с 1,8 км) вперёд с шагом 0,25 с; пересчёт раз в 2 с, между ними — убывает ровно. Баллистика — по своему расписанию (T)
+  function etaOf(w) {
+    if (w.W.kind === 'tbm') return { t: Math.max(0, w.T - w.t), d: w.aim ? Math.hypot(w.aim.x - w.pos.x, w.aim.z - w.pos.z) : 0 };
+    const C = w.etaC;
+    if (C && w.t - C.t0 < 2 && C.route === (w.route ? w.route.length : 0)) { const k = w.t - C.t0; return { t: Math.max(0, C.v - k), d: Math.max(0, C.d * (1 - k / Math.max(1e-3, C.v))) }; }
+    const W = w.W, route = w.route || [], h = 0.25;
+    let px = w.pos.x, pz = w.pos.z, a = Math.atan2(w.dir.z, w.dir.x), sp = w.speed, ri = 0, T = 0, L = 0;
+    while (T < 900) {
+      while (ri < route.length && Math.hypot(route[ri].x - px, route[ri].z - pz) < 700) ri++;
+      const tg = ri < route.length ? route[ri] : w.aim; if (!tg) break;
+      const ex = tg.x - px, ez = tg.z - pz, dist = Math.hypot(ex, ez);
+      if (ri >= route.length && dist < 1800) { const dl = Math.hypot(dist, w.pos.y - tg.y); T += dl / Math.max(30, sp); L += dist; break; }
+      a += clamp(wrapPi(Math.atan2(ez, ex) - a), -0.7 * h, 0.7 * h);
+      sp += (W.speed - sp) * Math.min(1, h * 0.5);
+      px += Math.cos(a) * sp * h; pz += Math.sin(a) * sp * h; T += h; L += sp * h;
+    }
+    w.etaC = { t0: w.t, v: T, d: L, route: route.length };
+    return { t: T, d: L };
   }
   function wpnDetonate(w) {
     if (w.dead) return;
     w.dead = true;
+    if (w.decoy || !w.W.dmg) { fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); fx.explosion(w.pos, 4, 'ground'); return; } // ложная цель — без боевой части
     const res = blast(w.pos, w.W.dmg, w.W.blast, w.W.short, w.owner);
     fx.wpnEnd(w, res);
     fx.explosion(w.pos, w.W.blast, w.W.vis && w.W.vis.kind !== 'missile' ? 'bomb' : 'ground'); // бомба — крупнее, со вспышкой и пылью
@@ -654,7 +798,7 @@ export function createStrike(ctx) {
     return out;
   }
 
-  return { units, sams, wpns, flares, objects, net, addUnit, release, dropCM, step, rwr, mws, radarSees, eyesSee, inZone, blast, aglOf,
+  return { units, sams, wpns, flares, objects, net, addUnit, release, spawnMun, dropCM, step, rwr, mws, radarSees, eyesSee, inZone, blast, aglOf, etaOf,
     launch, designate, setEmit, setManual, gunLead, irSees, removeUnit, moveUnit, launcherReady };
 }
 

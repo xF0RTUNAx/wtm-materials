@@ -217,6 +217,29 @@
     background: rgba(15,23,34,.9); border: 1px solid rgba(255,255,255,.14); border-radius: 14px; padding: 10px; font-size: 12.5px; -webkit-overflow-scrolling: touch; }
   body.defense.dmap #dside { display: block; }
   #dside h3 { margin: 2px 0 6px; font-size: 14px; } #dside .btn { margin-top: 6px; }
+  /* «Мульти-волна»: состав удара (± по пунктам), полоса слежения за ракетой */
+  #dside .btn.mini { margin: 0; padding: 4px 0; width: 30px; min-width: 0; font-size: 15px; line-height: 1; }
+  #dside .seg button { padding: 5px 8px; font-size: 11.5px; }
+  #evBtn { position: fixed; z-index: 15; top: calc(var(--top) + 26px); left: max(12px, var(--sa-l)); display: none; background: rgba(15,23,42,.82); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 7px 12px; font: 700 12.5px -apple-system, Segoe UI, sans-serif; cursor: pointer; }
+  body.evon #evBtn { display: block; } body.evopen #evBtn { background: #c2410c; }
+  #evPanel { position: fixed; z-index: 15; top: calc(var(--top) + 62px); left: max(12px, var(--sa-l)); width: 290px; max-height: calc(100% - var(--top) - 170px); overflow-y: auto; display: none;
+    background: rgba(11,18,24,.9); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 8px 10px; font-size: 12px; }
+  body.evon.evopen #evPanel { display: block; }
+  body.watch.evopen #evPanel { max-height: calc(100% - var(--top) - 150px); }
+  #evPanel h3 { margin: 0 0 4px; font-size: 13.5px; }
+  .evr { display: flex; gap: 6px; align-items: center; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,.06); }
+  .evr.on { background: rgba(251,146,60,.14); } .evr .nm { flex: 1; min-width: 0; } .evr .nm b { display: block; font-size: 12px; } .evr .nm span { font-size: 10.5px; opacity: .75; }
+  #evPanel .btn.mini2, #dside .btn.mini2 { margin: 0; padding: 4px 7px; min-width: 0; width: auto; flex: none; font-size: 11px; }
+  #dside .useg { display: flex; flex-wrap: wrap; gap: 4px; margin: -2px 0 6px 10px; } /* единицы на цели: «Калибр 3 · 4:04» */
+  #dside .uchip { font: 600 11px -apple-system, Segoe UI, sans-serif; padding: 4px 7px; border-radius: 6px; border: 1px solid rgba(148,163,184,.45); background: rgba(30,41,59,.85); color: #e2e8f0; cursor: pointer; }
+  #dside .uchip.all { border-color: #f59e0b; color: #fde68a; } #dside .uchip.done { opacity: .5; cursor: default; }
+  #dside .btn.mini { width: 30px; flex: none; } #evPanel .btn.mini2.on, #dside .btn.mini.on { background: #c2410c; color: #fff; }
+  body.coarse #evPanel { width: 240px; font-size: 11px; }
+  #wBar { position: fixed; z-index: 14; left: 50%; transform: translateX(-50%); bottom: max(12px, var(--sa-b)); display: none; flex-direction: column; align-items: center; gap: 6px; text-shadow: 0 0 4px #000; }
+  body.watch #wBar { display: flex; }
+  #wInfo { font-size: 13px; font-weight: 600; }
+  #wBar .wb { display: flex; gap: 8px; }
+  #wBar button { background: rgba(15,23,42,.78); color: #fff; border: 1px solid rgba(255,255,255,.25); border-radius: 10px; padding: 9px 14px; font: 700 13px -apple-system, Segoe UI, sans-serif; cursor: pointer; }
   .dcard { display: flex; gap: 8px; align-items: center; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04); border-radius: 10px; padding: 6px 8px; margin-bottom: 4px; cursor: pointer; }
   .dcard.on { border-color: #fb923c; background: rgba(251,146,60,.16); } .dcard.no { opacity: .4; }
   .dcard .nm { flex: 1; } .dcard .nm b { display: block; font-size: 12.5px; } .dcard .nm span { font-size: 10.5px; opacity: .72; }
@@ -319,6 +342,8 @@
 <div id="mapNav"><div id="mnPad" title="Сдвиг карты"><div id="mnKnob"></div></div>
   <div class="mnCol"><div class="mnZoom"><button id="mnOut" aria-label="Мельче">−</button><input type="range" id="mnZ" min="0" max="100" step="0.5" aria-label="Масштаб"><button id="mnIn" aria-label="Крупнее">+</button></div>
   <button id="mnFit">⌖ весь город</button></div></div>
+<button id="evBtn">☰ Ход волны</button><div id="evPanel"></div>
+<div id="wBar"><div id="wInfo"></div><div class="wb"><button id="wNext">Следующая ▶</button><button id="wSpeed">×4</button><button id="wMap">КАРТА</button></div></div>
 <div id="opHud">
   <div id="opDrag"></div>
   <div id="opInfo"></div>
@@ -400,7 +425,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261013a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261013a"></script>
+<script src="../config.js?v=20261016a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261016a"></script>
 </body>
 </html>

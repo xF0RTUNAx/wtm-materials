@@ -17,6 +17,10 @@ const LS = (c) => { if (Deno.env.get('LS') && Math.max(...c.size) > 0.4) console
 const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? 99); // верх корпуса ФАБ-500 в осях игры без центровки (см. --groups)
 // nose — куда смотрит нос модели в её осях; center — [y оси фюзеляжа] в её единицах (иначе середина габаритов)
 // remove(c, i) — c: часть меша { min, max, ctr, size, tris, mat }, i — номер по размеру в своём примитиве
+// ось модели наклонена: x = bx·z, y = by·z (нос в −Z) — поворот, чтобы ось легла на Z
+const tiltFix = (bx, by) => { const a = Math.atan(bx), b = Math.atan(by * Math.cos(a)), ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b); return (x, y, z) => { const x1 = x * ca - z * sa, z1 = x * sa + z * ca; return [x1, y * cb - z1 * sb, y * sb + z1 * cb]; }; };
+// атлас ракет модели HIMARS: надписи автора модели на корпусе ракеты — закрашены (в игре их быть не должно)
+const NO_TAG = 'drawbox=x=iw*0.325:y=ih*0.41:w=iw*0.375:h=ih*0.09:color=0x141414:t=fill,drawbox=x=iw*0.355:y=ih*0.515:w=iw*0.09:h=ih*0.41:color=0x141414:t=fill';
 const CONFIG = {
   su30: { src: `${DL}/pbr_sukhoi_su-30.glb`, raw: true, scale: 0.01, nose: '+x', centerY: 240, tex: () => 1024,
     remove: (c, i) => c.mat === 0 && i > 0 && c.min[1] < 130 && c.max[0] > -380 }, // шасси, створки и кронштейны ниш (брюшные гребни — оставить)
@@ -92,6 +96,26 @@ const CONFIG = {
       if (y < -0.55 && ax < 0.3 && s[0] > 0.6) return null; // подфюзеляжный бак
       if (y < -0.1 && ax < 1.75 && s[0] < 0.25 && s[1] < 0.25 && s[2] > 2) return null; // «Спарроу» в нишах
       return LS(c); } },
+  // ── «Мульти-волна» (2026-10-13): крылатые ракеты, дроны, носители, пусковые оперативно-тактических ракет
+  w_tomahawk: { src: `${DL}/tomahawk.glb`, scale: 1.44, nose: '-z', rulesIn: 'game', tex: () => 256, groups: LS }, // BGM-109 — 5,56 м
+  w_kh555: { src: `${DL}/kh-555_cruise_missile_high_poly_fbx.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, target: 120000, simpErr: 0.004, /* 768 тыс. треугольников — почти без потерь */ groups: LS }, // Х-555 (и вид Х-55 / Х-101) — 6,04 м
+  w_kalibr: { src: `${DL}/sizzler_ss-n-27_kalibr_3m-54.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, groups: LS }, // «Калибр» — 6,2 м
+  w_agm86: { src: `${DL}/agm-86.glb`, scale: 0.1454, nose: '-z', rulesIn: 'game', tex: () => 256, centerX: true, groups: LS }, // AGM-86 ALCM — 6,32 м
+  w_storm: { src: `${DL}/ukrainian_su-24_with_storm_shadow_agms.glb`, scale: 2.48, nose: '+z', rulesIn: 'game', tex: () => 256, pickMesh: /ss_misile/, pick: [0.3, -99, -99, 99, 99, 99], groups: LS }, // Storm Shadow — 5,1 м, одна из двух с Су-24
+  d_shahed: { src: `${DL}/shahed_136.glb`, scale: 1.45, nose: '+z', rulesIn: 'game', tex: () => 256, groups: (c) => (c.ctr[2] > 0.25 && Math.hypot(c.ctr[0], c.ctr[1] - 0.25) < 0.5 && c.size[2] < 0.3 ? 'prop' : LS(c)) }, // «Шахед-136» — 3,5 м; винт сзади — своя группа (крутится)
+  d_uav: { src: `${DL}/uav.glb`, scale: 6, nose: '-z', rulesIn: 'game', tex: () => 256, // винты — свои группы (крутятся каждый вокруг своей оси); без шасси
+    groups: (c) => { const [x, y, z] = c.ctr, ax = Math.abs(x); if (y < -0.55 && Math.max(...c.size) < 5) return null; if (ax > 0.9 && ax < 1.85 && z > 3.1 && z < 3.45 && Math.abs(y) < 0.5) return x > 0 ? 'prop' : 'prop2'; return LS(c); } }, // разведывательно-ударный БПЛА — размах 12 м; два толкающих винта
+  e_tu160: { src: `${DL}/tupolev_tu-160.glb`, scale: 0.235, nose: '+z', rulesIn: 'game', tex: () => 512, groups: (c) => (c.ctr[1] < 2.6 && Math.max(...c.size) < 4 && Math.abs(c.ctr[0]) < 4.5 ? null : LS(c)) } /* без шасси */, // Ту-160 — 54 м
+  e_b1b: { src: `${DL}/rockwell_b-1b_lancer.glb`, scale: 0.95, nose: '-z', rulesIn: 'game', tex: () => 512, groups: (c) => (c.ctr[1] < 2.2 && Math.max(...c.size) < 4 && Math.abs(c.ctr[0]) < 4.5 ? null : LS(c)) } /* без шасси */, // B-1B — 44,5 м
+  l_iskander: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027, nose: '-x', rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П78 — 13 м, две ракеты стоят на старте в корме
+    groups: (c) => { const [x, y, z] = c.ctr, thin = c.size[0] < 1.15 && c.size[2] < 1.15 && !(Math.max(c.size[0], c.size[2]) < 0.3 && c.size[1] > 2); /* не направляющие пусковой (длинные и тонкие; стабилизаторы — короткие) */ if (z > 6.3 && y > 2.2 && thin) { if (Math.abs(x - 2.75) < 0.62) return 'tbm'; if (Math.abs(x - 4.06) < 0.62) return 'tbm2'; } return 'body'; } },
+  l_tochka: { src: `${DL}/ukrainian_otr-21_tochka-u.glb`, scale: 0.0284, nose: '+z', rulesIn: 'game', dedupe: true, renorm: true, texVf: "curves=all='0/0 0.5/0.42 1/0.68'", /* светлые пятна камуфляжа на солнце выгорали в белое */ colors: { '^(White|material_1)$': [0.07, 0.085, 0.05], '^0059_DarkOliveGreen': [0.06, 0.08, 0.035], '^material$': [0.1, 0.11, 0.08] }, /* цвета — линейные (0,06 ≈ 27 % яркости на экране); у автора белые без текстуры — под цвет машины */ dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П129 — 11,8 м, ракета на старте в корме
+    groups: (c) => ((Math.abs(c.ctr[0] + 3.98) < 0.4 && c.ctr[2] > 13.2 && c.ctr[1] > 2.4 && c.size[0] < 0.8) || (Math.abs(c.ctr[0] + 3.98) < 0.45 && c.ctr[2] > 12.9 && c.ctr[1] > 2.4 && c.ctr[1] < 2.7 && c.size[1] < 0.1) ? 'tbm' : 'body') }, /* второе условие — два нижних решётчатых руля (плоские, у хвоста) */
+  l_scud: { src: `${DL}/scud__ballistic_missile.glb`, scale: 3.13, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, // Р-17 на МАЗ-543 — 13,4 м, ракета на старте
+    groups: (c) => (Math.abs(c.ctr[0]) < 0.75 && c.ctr[2] > 4.6 && c.ctr[1] > 2.2 && c.size[0] < 1.4 && !(c.size[1] > 2 && c.size[0] < 0.6 && c.size[2] > 0.6) ? 'tbm' : 'body') }, /* без наклонной стойки пусковой (высокая и тонкая) */ // tbm — ракета на старте: при пуске прячется, улетает её копия
+  l_himars: { src: `${DL}/m142_himars__free_model__animation.glb`, scale: 0.43, nose: '-z', rulesIn: 'game', texVf: (src) => "curves=all='0/0 0.5/0.4 1/0.78'" + (src === 0 ? ',' + NO_TAG : '') /* атлас ракет (картинка 0) — без надписей автора */, colors: { '^Material_147$': [0.3, 0.25, 0.16] }, /* песочная окраска — чуть темнее, иначе на солнце белая */ unit: true, tex: () => 512, // M142 HIMARS — 7 м
+    pickMesh: /^(?!.*(_dam\/|Default_2))/, groups: (c) => (c.mat === 3 && c.ctr[2] > -0.7 && c.ctr[1] > -0.6 ? 'pod' : LS(c)) }, /* pod — пакет с ракетами (узел misc_a, материал 3; без колпаков колёс того же материала и мелочи у кабины): поднимается перед пуском */ // без «повреждённых» дублей дверей и капота и без ракеты, лежащей рядом
+  w_atacms: { src: `${DL}/m142_himars__free_model__animation.glb`, scale: 0.43, nose: '-z', axes: tiltFix(-0.0796, 0.0242) /* ракета в модели повёрнута на 4,5° / 1,4° — ось вдоль Z */, rulesIn: 'game', tex: () => 256, pickMesh: /Default_2/, groups: LS, texVf: () => NO_TAG }, // ракета HIMARS — как ATACMS (4 м); надписи автора модели на корпусе — закрашены
   // ── карта «Летки»: ЛЭП, ветряк, порт, маяк, поезда; танкеры (2026-10-11)
   m_pylon: { src: `${DL}/high_voltage_transmission_line_tower_tileable.glb`, scale: 3.2, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.size[2] > 20 || c.ctr[2] < -60 ? null : 'body') }, // только опора: провода (крепления — 3 фазы x −7 / 0 / +7, y 23,1) рисует игра, изоляторы соседней опоры — долой // опора с пролётом проводов (стыкуются через 144 м)
   m_wind: { src: `${DL}/wind_turbine_demo.glb`, scale: 18, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.ctr[2] < 0.3 ? 'rotor' : 'body') }, // ротор — своя группа (крутится) // ветряк ~100 м
@@ -228,7 +252,8 @@ const CONFIG = {
   pr_wbins: { src: `${DL}/garbage_bin.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 3000, groups: () => 'body' }, // баки у дома
   // ── зенитные комплексы: unit — земля в y = 0, центр по корпусу; groups — корпус / башня (азимут) / пакет (угол места);
   // hinge — ось качания пакета в осях модели; simplify — доля треугольников после упрощения (meshoptimizer)
-  bukm3: { src: `${DL}/buk-m3_9k317_sam.glb`, scale: 1, nose: '+z', unit: true, tex: () => 512, target: 110000, minPart: 0.06, absorb: 0, hinge: [0, 2.6, -3.85],
+  bukm3: { src: `${DL}/buk-m3_9k317_sam.glb`, scale: 1, nose: '+z', unit: true, tex: () => 512, minPart: 0.06, absorb: 0, hinge: [0, 2.6, -3.85],
+    copyParts: [{ sel: (c) => c.mat === 12 && Math.abs(c.ctr[0] + 0.66) < 0.05 && Math.abs(c.ctr[1] - 4.6) < 0.05 && c.size[0] > 0.5, offs: [[0.6, 0, 0], [1.2, 0, 0]] }], // два недостающих нижних ТПК
     groups: (c) => {
       if (c.min[1] < 1.9) return 'body';
       if (c.size[0] > 0.27 && c.size[0] < 0.34 && c.size[1] > 3) return 'missile'; // 9М317 внутри контейнеров (сечение тоньше ТПК)
@@ -251,13 +276,27 @@ const AX = { '+x': (x, y, z) => [z, y, -x], '+z': (x, y, z) => [-x, y, -z], '-z'
 // нос задан вектором [fx, fz] в осях модели (модель лежит повёрнутой): вперёд → −Z, вправо → +X
 const axFwd = ([fx, fz]) => { const l = Math.hypot(fx, fz); fx /= l; fz /= l; const rx = -fz, rz = fx; return (x, y, z) => [x * rx + z * rz, y, -(x * fx + z * fz)]; };
 async function prepare(name, views) {
-  const cfg = CONFIG[name], g = readGlb(Deno.readFileSync(cfg.src)), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => !cfg.pickMesh || cfg.pickMesh.test(p.path)), ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
+  const cfg = CONFIG[name], g = readGlb(Deno.readFileSync(cfg.src)), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => (!cfg.pickMesh || cfg.pickMesh.test(p.path)) && !(cfg.dropMat && cfg.dropMat.test(((J.materials || [])[p.material] || {}).name || ''))) /* dropMat — материалы долой (линии рёбер SketchUp) */, ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
   // rulesIn: 'game' — правила частей (groups / remove), hinge и просмотр — в осях игры (метры, нос в −Z, без центровки)
   if (cfg.rulesIn === 'game') for (const p of prims) {
     for (let i = 0; i < p.P.length; i += 3) { const v = ax(p.P[i], p.P[i + 1], p.P[i + 2]); p.P[i] = v[0] * cfg.scale; p.P[i + 1] = v[1] * cfg.scale; p.P[i + 2] = v[2] * cfg.scale; }
     if (p.N) for (let i = 0; i < p.N.length; i += 3) { const v = ax(p.N[i], p.N[i + 1], p.N[i + 2]); p.N[i] = v[0]; p.N[i + 1] = v[1]; p.N[i + 2] = v[2]; }
   }
   const tx = cfg.rulesIn === 'game' ? (x, y, z) => [x, y, z] : ax, tsc = cfg.rulesIn === 'game' ? 1 : cfg.scale;
+  // copyParts — недостающие у автора детали копией соседних: [{ sel(c) — какие части (c: ctr, size, mat — в осях правил), offs: [[dx, dy, dz], …] }]
+  // (у «Бука-М3» в двух колонках нет нижнего ТПК — копия нижнего из первой колонки со сдвигом)
+  if (cfg.copyParts) for (const p of prims) {
+    const { comp, list } = components(p.P, p.I, 0.001), want = new Map();
+    for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; for (const cp of cfg.copyParts) if (cp.sel(c)) want.set(c.id, cp.offs); }
+    if (!want.size) continue;
+    const P = [...p.P], N = p.N ? [...p.N] : null, UV = p.UV ? [...p.UV] : null, I = [...p.I];
+    for (const [id, offs] of want) for (const o of offs) {
+      const map = new Map();
+      for (let t = 0; t < p.I.length / 3; t++) { if (comp[t] !== id) continue;
+        for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k]; if (!map.has(v)) { map.set(v, P.length / 3); P.push(p.P[v * 3] + o[0], p.P[v * 3 + 1] + o[1], p.P[v * 3 + 2] + o[2]); if (N) N.push(p.N[v * 3], p.N[v * 3 + 1], p.N[v * 3 + 2]); if (UV) UV.push(p.UV[v * 2], p.UV[v * 2 + 1]); } I.push(map.get(v)); } }
+    }
+    p.P = Float32Array.from(P); if (N) p.N = Float32Array.from(N); if (UV) p.UV = Float32Array.from(UV); p.I = Uint32Array.from(I);
+  }
   // --groups: только осмотр разбивки (в осях модели): корпус серый, башня красная, пакет синий, убранное не рисуется
   if (Deno.args.includes('--groups')) {
     const P = [], I = [], C = []; let b = 0, cnt = {};
@@ -275,7 +314,26 @@ async function prepare(name, views) {
     return;
   }
   const byMat = new Map(); let removed = 0;
-  for (const p of prims) {
+  // dedupe — двойные грани SketchUp: две совпадающие плоскости (лицевая «белая» и обратная с текстурой) при двусторонней отрисовке
+  // перебивают друг друга (белые пятна). Из совпадающих треугольников остаётся тот, у материала которого есть текстура (иначе — первый)
+  const dup = new Map(); // prim → Set номеров треугольников долой
+  if (cfg.dedupe) {
+    // оценка материала: с текстурой — лучше, светлее и «белое» в имени — хуже (белая лицевая сторона SketchUp — заглушка)
+    const score = (pi) => { const m = (J.materials || [])[prims[pi].material] || {}, pb = m.pbrMetallicRoughness || {}, f = pb.baseColorFactor || [1, 1, 1, 1];
+      return (pb.baseColorTexture ? 2 : 0) + (1 - (f[0] + f[1] + f[2]) / 3) - (/white|^material(_\d+)?$/i.test(m.name || '') ? 1.5 : 0); };
+    const best = new Map();
+    const q = (v) => Math.round(v * 2000);
+    prims.forEach((p, pi) => { for (let t = 0; t < p.I.length / 3; t++) {
+      const k = [0, 1, 2].map((j) => { const v = p.I[t * 3 + j] * 3; return `${q(p.P[v])},${q(p.P[v + 1])},${q(p.P[v + 2])}`; }).sort().join('|');
+      const cur = best.get(k);
+      if (!cur) { best.set(k, [pi, t]); continue; }
+      const [bi, bt] = cur, drop = score(pi) > score(bi) ? [bi, bt] : [pi, t];
+      if (drop[0] === bi) best.set(k, [pi, t]);
+      if (!dup.has(drop[0])) dup.set(drop[0], new Set()); dup.get(drop[0]).add(drop[1]);
+    } });
+    let n = 0; for (const v of dup.values()) n += v.size; console.log(`  двойных граней убрано: ${n}`);
+  }
+  for (const [pi, p] of prims.entries()) {
     let keep = null;
     if (cfg.pick) {
       const { comp, list } = components(p.P, p.I, 0.001), B = cfg.pick, sel = new Set();
@@ -304,7 +362,7 @@ async function prepare(name, views) {
     }
     const remaps = new Map();
     for (let t = 0; t < p.I.length / 3; t++) {
-      if (keep && !keep(t)) { removed++; continue; }
+      if ((keep && !keep(t)) || (dup.has(pi) && dup.get(pi).has(t))) { removed++; continue; }
       const fg = !!(p.glassT && p.glassT(t)), grp = p.group ? p.group(t) : 'body', key = `${grp}|${p.material}${fg ? '|g' : ''}`;
       let M = byMat.get(key); if (!M) byMat.set(key, M = { group: grp, mat: p.material, forceGlass: fg, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: !!p.UV });
       let remap = remaps.get(key); if (!remap) remaps.set(key, remap = new Int32Array(p.P.length / 3).fill(-1));
@@ -321,6 +379,17 @@ async function prepare(name, views) {
         M.idx.push(remap[v]);
       }
     }
+  }
+  // renorm — нормали заново по треугольникам (у вывернутых граней SketchUp нормаль смотрит против обхода вершин — грань пересвечена)
+  if (cfg.renorm) for (const m of byMat.values()) {
+    const N = new Float64Array(m.pos.length);
+    for (let i = 0; i < m.idx.length; i += 3) {
+      const a = m.idx[i] * 3, b = m.idx[i + 1] * 3, c = m.idx[i + 2] * 3, P = m.pos;
+      const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+      for (const k of [a, b, c]) { N[k] += nx; N[k + 1] += ny; N[k + 2] += nz; }
+    }
+    for (let i = 0; i < N.length; i += 3) { const l = Math.hypot(N[i], N[i + 1], N[i + 2]) || 1; m.nor[i] = N[i] / l; m.nor[i + 1] = N[i + 1] / l; m.nor[i + 2] = N[i + 2] / l; }
   }
   // центр: по длине — середина, по высоте — ось фюзеляжа (centerY) или середина габаритов; у комплексов — земля y = 0,
   // центр по корпусу
@@ -350,7 +419,8 @@ async function prepare(name, views) {
     Deno.writeFileSync(`${tmp}/t.${ext}`, g.bin.subarray(bv.byteOffset || 0, (bv.byteOffset || 0) + bv.byteLength));
     const of = png ? 'o.png' : 'o.jpg';
     let srcT = `${tmp}/t.${ext}`; // texVf — фильтр ffmpeg для перекраски (у прототипа Су-34 грунт жёлтый → серо-голубой строевой)
-    if (cfg.texVf) { await new Deno.Command('ffmpeg', { args: ['-loglevel', 'error', '-y', '-i', srcT, '-vf', cfg.texVf, `${tmp}/f.png`] }).output(); srcT = `${tmp}/f.png`; }
+    const vf = typeof cfg.texVf === 'function' ? cfg.texVf(J.textures[ti].source) : cfg.texVf; // функция — свой фильтр у каждой картинки (по номеру в исходнике)
+    if (vf) { await new Deno.Command('ffmpeg', { args: ['-loglevel', 'error', '-y', '-i', srcT, '-vf', vf, `${tmp}/f.png`] }).output(); srcT = `${tmp}/f.png`; }
     await new Deno.Command('sips', { args: png ? ['-s', 'format', 'png', '-Z', String(size), srcT, '--out', `${tmp}/${of}`] : ['-s', 'format', 'jpeg', '-s', 'formatOptions', '80', '-Z', String(size), srcT, '--out', `${tmp}/${of}`], stdout: 'null', stderr: 'null' }).output();
     const jpg = Deno.readFileSync(`${tmp}/${of}`); texBytes += jpg.length;
     images.push({ bufferView: add(jpg), mimeType: png ? 'image/png' : 'image/jpeg' }); textures.push({ sampler: 0, source: images.length - 1 });
@@ -379,7 +449,7 @@ async function prepare(name, views) {
     if (glass && cfg.glassColor) mat.pbrMetallicRoughness.baseColorFactor = cfg.glassColor;
     else if (glass && !m.forceGlass && !pbr.baseColorFactor) mat.pbrMetallicRoughness.baseColorFactor = [0.3, 0.36, 0.42, 0.35];
     if (src.alphaMode === 'MASK' || cut) { mat.alphaMode = 'MASK'; mat.alphaCutoff = src.alphaCutoff ?? 0.5; }
-    if (pbr.baseColorTexture && m.hasUv && !glass) mat.pbrMetallicRoughness.baseColorTexture = { index: await texture(pbr.baseColorTexture.index, cfg.tex(src), mat.alphaMode === 'MASK') };
+    if (pbr.baseColorTexture && m.hasUv && !glass && !(cfg.noTex && cfg.noTex.test(nm))) /* noTex — без текстуры (растянутая по торцам выгорает) */ mat.pbrMetallicRoughness.baseColorTexture = { index: await texture(pbr.baseColorTexture.index, cfg.tex(src), mat.alphaMode === 'MASK') };
     materials.push(mat);
     const pos = new Float32Array(m.pos), b = bbox(pos), n = pos.length / 3, attrs = {};
     accs.push({ bufferView: add(pos, 34962), componentType: 5126, count: n, type: 'VEC3', min: b.mn, max: b.mx }); attrs.POSITION = accs.length - 1;

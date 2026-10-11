@@ -34,6 +34,19 @@
 - "Su-34 prototype (Su-32FN)" (https://sketchfab.com/3d-models/su-34-prototype-su-32fn-d621b381bf734545b047e7e19972780c) by 42manako — CC-BY-4.0 — `e_su34.glb`
 - "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — `e_su17.glb`
 - "McDonnell Douglas F-4 Phantom II" (https://sketchfab.com/3d-models/mcdonnell-douglas-f-4-phantom-ii-1ea38a66a59048529d27b24a570c5e07) by andertan — CC-BY-4.0 — `e_f4.glb`
+- "TOMAHAWK" (https://sketchfab.com/3d-models/tomahawk-7f2cda9c50864d8ab136a63659ca0658) by Pan_Ar4ik — CC-BY-4.0 — `w_tomahawk.glb`
+- "Kh-555 Cruise missile (High poly FBX)" (https://sketchfab.com/3d-models/kh-555-cruise-missile-high-poly-fbx-406db6e7ffdf4b0fbb1f842e9850a65d) by Jeyhun1985 — CC-BY-4.0 — `w_kh555.glb`
+- "Sizzler SS-N-27 Kalibr 3M-54" (https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c) by mmickel — CC-BY-4.0 — `w_kalibr.glb`
+- "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 — CC-BY-4.0 — `w_agm86.glb`
+- "Ukrainian Su-24 with Storm Shadow AGMs" (https://sketchfab.com/3d-models/ukrainian-su-24-with-storm-shadow-agms-277154c4744c4313baab1d4011e3b872) by 42manako — CC-BY-4.0 — `w_storm.glb`
+- "Shahed 136" (https://sketchfab.com/3d-models/shahed-136-bc8754128c9d48c48baadeff1db8f0c7) by faintastic — CC-BY-4.0 — `d_shahed.glb`
+- "UAV" (https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5) by Artem Goyko — CC-BY-4.0 — `d_uav.glb`
+- "Tupolev TU-160" (https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40) by KOG_THORNS — CC-BY-4.0 — `e_tu160.glb`
+- "Rockwell B-1B Lancer" (https://sketchfab.com/3d-models/rockwell-b-1b-lancer-d32a5cbbd16f4521bdd37e8b4b1c79bc) by Muhamad Mirza Arrafi — CC-BY-4.0 — `e_b1b.glb`
+- "Chinese 9K720 Iskander TELAR" (https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1) by 42manako — CC-BY-4.0 — `l_iskander.glb`
+- "Ukrainian OTR-21 Tochka-U" (https://sketchfab.com/3d-models/ukrainian-otr-21-tochka-u-3b41c4e2d03d4bbb9a4acc339fc495bc) by 42manako — CC-BY-4.0 — `l_tochka.glb`
+- "Scud ( Ballistic missile )" (https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0) by AlexDang — CC-BY-4.0 — `l_scud.glb`
+- "M142 HIMARS | FREE MODEL | ANIMATION" (https://sketchfab.com/3d-models/m142-himars-free-model-animation-53c53a112c674d29a2afdbddbe3cecb5) by Denis.Cherkasov1 — CC-BY-4.0 — `l_himars.glb`, `w_atacms.glb`
 - "High Voltage Transmission Line Tower (tileable)" (https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313) by mednios — CC-BY-4.0 — `m_pylon.glb`
 - "Wind Turbine [Demo]" (https://sketchfab.com/3d-models/wind-turbine-demo-68669d1cfb3647ba9b1da47cbe580931) by 3Dexter — CC-BY-4.0 — `m_wind.glb`
 - "Low Poly Cargo Ship" (https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c) by Javier_Fernandez — CC-BY-4.0 — `m_ship.glb`

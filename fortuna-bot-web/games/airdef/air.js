@@ -2,15 +2,15 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261013a';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261013a';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261013a';
-import { applyLayout } from './layout.js?v=20261013a';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261013a';
-import { DRONE } from '../drone/sim/modes.js?v=20261013a';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261013a';
-import { predictBomb } from './sim/strike.js?v=20261013a';
-import { placeDefense, pickTargets } from './mission.js?v=20261013a';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261016a';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261016a';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261016a';
+import { applyLayout } from './layout.js?v=20261016a';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261016a';
+import { DRONE } from '../drone/sim/modes.js?v=20261016a';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261016a';
+import { predictBomb } from './sim/strike.js?v=20261016a';
+import { placeDefense, pickTargets } from './mission.js?v=20261016a';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -215,6 +215,9 @@ export function createAir(C) {
     for (const e of C.S.rwr(craft)) { const a = angleBetween(f, LP.copy(e.u.ant).sub(craft.pos)); if (a < Wp.fov * D2R && e.d < Wp.rmax * 1.1 && a < ba) { ba = a; best = e.u; } }
     return best;
   }
+  const BOMBK = new Set(['bomb', 'lgb', 'tvb', 'gps']), UPQ = V3();
+  // самолёт «почти ровно»: верх смотрит вверх (крен и тангаж вместе — не больше 60° от вертикали)
+  const levelOk = () => UPQ.set(0, 1, 0).applyQuaternion(craft.q || shipQ).y > 0.5;
   function fire() {
     const l = curW(); if (!l || game.over || craft.dead) return;
     const Wp = AG[l.key], opts = {};
@@ -233,6 +236,8 @@ export function createAir(C) {
       const a = coordAim(Wp.rmax * 1.2); if (!a) return no('Нет координат: захватите точку контейнером или доверните на цель задания');
       opts.aim = a;
     } else if (Wp.kind === 'decoy') opts.aim = coordAim(30000);
+    // бомбу с держателя не сбросить при крене больше 60° или вверх ногами (отделится в самолёт); ракеты сходят с направляющих в любом положении
+    if (BOMBK.has(Wp.kind) && !levelOk()) return no('Сброс невозможен: крен больше 60° или самолёт перевёрнут');
     const st = l.st.pop(); l.n--;
     const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = false;
     C.S.release(craft, l.key, opts);
@@ -476,7 +481,19 @@ export function createAir(C) {
     const l = curW();
     if (l && ccipOk && AG[l.key].kind !== 'agm' && AG[l.key].kind !== 'arm') {
       const p = proj(CCIP);
-      if (p) { hx.strokeStyle = '#9fffb8'; hx.beginPath(); hx.arc(p[0], p[1], 9, 0, 7); hx.stroke(); hx.fillStyle = '#9fffb8'; hx.beginPath(); hx.arc(p[0], p[1], 1.6, 0, 7); hx.fill(); if (fp) { hx.setLineDash([4, 4]); hx.beginPath(); hx.moveTo(fp[0], fp[1]); hx.lineTo(p[0], p[1]); hx.stroke(); hx.setLineDash([]); } }
+      // прицел бомбы: круг на земле — радиус поражения (разлёт), перекрестие — точка падения; при большом крене — красный («сброс невозможен»)
+      if (p) {
+        const Wb = AG[l.key], R = Math.max(8, Wb.blast || 20), ok = levelOk(), col = ok ? '#9fffb8' : '#f87171';
+        hx.strokeStyle = col; hx.lineWidth = 2.2; hx.beginPath(); let first = true, span = 0;
+        const ring = []; for (let i = 0; i <= 32; i++) { const a2 = i / 32 * Math.PI * 2, q = proj(TMP0.set(CCIP.x + Math.cos(a2) * R, CCIP.y + 0.5, CCIP.z + Math.sin(a2) * R)); ring.push(q); if (q) span = Math.max(span, Math.hypot(q[0] - p[0], q[1] - p[1])); }
+        // круг поражения на земле; если вдали он меньше 14 px — рисуем не меньше (иначе не разглядеть)
+        if (span < 14) hx.arc(p[0], p[1], 14, 0, 7);
+        else for (const q of ring) { if (!q) { first = true; continue; } if (first) { hx.moveTo(q[0], q[1]); first = false; } else hx.lineTo(q[0], q[1]); }
+        hx.stroke();
+        const c = 16, g = 5; hx.beginPath(); hx.moveTo(p[0] - c, p[1]); hx.lineTo(p[0] - g, p[1]); hx.moveTo(p[0] + g, p[1]); hx.lineTo(p[0] + c, p[1]); hx.moveTo(p[0], p[1] - c); hx.lineTo(p[0], p[1] - g); hx.moveTo(p[0], p[1] + g); hx.lineTo(p[0], p[1] + c); hx.stroke();
+        hx.beginPath(); hx.arc(p[0], p[1], 1.8, 0, 7); hx.fillStyle = col; hx.fill(); hx.lineWidth = 1;
+        if (!ok) hx.fillText('КРЕН', p[0], p[1] - 22);
+      }
     }
     for (const w of C.S.wpns) { if (w.owner !== craft) continue; const p = proj(w.pos); if (!p) continue; hx.fillStyle = w.homing ? '#fde047' : '#aaa'; hx.beginPath(); hx.arc(p[0], p[1], 3, 0, 7); hx.fill(); }
   }

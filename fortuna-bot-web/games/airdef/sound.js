@@ -1,7 +1,7 @@
 // Звук «Воздушного превосходства»: движок и синтез — из «Летки» (drone/audio.js: двигатель, объёмные голоса самолётов
 // и ракет, взрывы с задержкой по скорости звука, «гарнитура» для бортовых сигналов). Здесь — звуки этой игры из тех же
 // кирпичей (A.noise / A.tone): старт ЗУР, очереди зениток, сброс бомб, тоны СПО и датчика пуска, пульт оператора ПВО.
-import { createAudio } from '../drone/audio.js?v=20261013a';
+import { createAudio } from '../drone/audio.js?v=20261016a';
 
 export function createSound() {
   const A = createAudio();
@@ -9,7 +9,14 @@ export function createSound() {
   let vol = +(ls.get('fortuna_airdef_vol') ?? 0.8); if (!(vol >= 0 && vol <= 1)) vol = 0.8;
   let muted = ls.get('fortuna_airdef_mute') === '1';
   A.setVolume(vol); A.setMuted(muted);
+  // записанные звуки (games/airdef/sounds): мотор «Шахеда» — петля для голосов дронов; далёкий взрыв —
+  // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
+  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261016a'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261016a');
+  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261016a`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261016a'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261016a'); A.setPropSample('prop');
   const delayOf = (d) => Math.min(2.5, d / 343);
+  let sirenEnd = 0; // до какого времени звучит сирена воздушной тревоги
+  // записи вертикального старта: [хлопок выброса, начало рёва двигателя], с (по огибающей громкости)
+  const COLD_SYNC = [[0.3, 0.65], [0.2, 0.6], [0.15, 0.75]];
   const near = (d, ref = 600) => Math.min(1, ref / (d + ref));
   // СПО: свои ритмы на обзор, захват, пуск; датчик пуска — сирена
   const rw = { known: new Set(), beepT: 0, mwsT: 0, state: '' };
@@ -21,7 +28,53 @@ export function createSound() {
     setMuted(m) { muted = m; A.setMuted(m); ls.set('fortuna_airdef_mute', m ? '1' : '0'); },
     setVolume(v) { vol = v; A.setVolume(v); ls.set('fortuna_airdef_vol', String(v)); },
     frame: A.frame, spatial: A.spatial, silence: A.silence, growl: A.growl,
-    explosion(d, size) { A.explosion(d, size); },
+    // взрыв на земле: резкий «хлопок» ударной волны, глубокий толчок (инфранизкий тон), тело взрыва (низкий шум с быстрой
+    // атакой), раскат с эхом от домов, треск обломков вблизи. Вдали — позже (скорость звука) и глуше (верх съедает воздух)
+    explosion(d, size = 1) {
+      const dl0 = Math.min(4, d / 343), far = Math.min(1, Math.max(0, (d - 600) / 1800)); // вдали — записанный раскат, вблизи — синтез
+      const fs = Math.min(1.8, 0.6 + size * 0.22), sv = Math.min(1.3, 2600 / (d + 1400)) * fs * (0.25 + 0.75 * far);
+      const played = A.sample('boomFar', sv, dl0, 1.08 - Math.min(0.3, size * 0.04) + Math.random() * 0.06, 400 + 6000 * Math.exp(-d / 2500), 0.35);
+      const dl = dl0, k = Math.max(0.03, near(d, 1200)) * fs * (played ? 1 - 0.7 * far : 1), wet = 0.35 + 0.5 * (1 - k), cut = 300 + 4500 * Math.exp(-d / 1100), big = Math.min(2.5, size / 2);
+      if (d < 3000) A.noise('white', 0.035, 0.6 * k, 'highpass', 900, 0.6, dl, 0, false, 0.002);
+      A.tone('sine', 62, 18, 0.7 + big * 0.4, 0.95 * k, dl, 0.2);
+      A.tone('triangle', 95, 30, 0.35, 0.4 * k, dl, 0.1);
+      A.noise('brown', 1.6 + big * 0.9, 0.85 * k, 'lowpass', Math.min(cut, 700), 0.6, dl, wet, false, 0.004);
+      A.noise('pink', 1.1 + big * 0.5, 0.42 * k, 'lowpass', cut, 0.5, dl + 0.01, wet, false, 0.006);
+      A.noise('brown', 3.5 + big * 1.5, 0.4 * k, 'lowpass', 110, 0.7, dl + 0.15, 0.9, false, 0.35); // раскат
+      A.noise('pink', 1.4, 0.13 * k, 'lowpass', 380, 0.5, dl + 0.45 + d / 4000, 1); // эхо от домов
+      A.noise('pink', 1.8, 0.08 * k, 'lowpass', 260, 0.5, dl + 1.1 + d / 3000, 1);
+      if (d < 900) A.noise('crackle', 1.3, 0.55 * k, 'bandpass', 2200, 0.6, dl + 0.06); // обломки
+    },
+    // пуск крылатой ракеты с самолёта: щелчок замка, свист падения, запуск двигателя — нарастающий вой и шипение
+    cruiseLaunch(d) {
+      const k = near(d, 900), w = delayOf(d), wet = 0.3 + 0.5 * (1 - k);
+      A.noise('brown', 0.15, 0.35 * k, 'lowpass', 260, 0.7, w);
+      A.tone('sawtooth', 380, 2400, 2.2, 0.06 * k, w + 0.6, wet); A.tone('sine', 1200, 4200, 2.4, 0.05 * k, w + 0.6, wet);
+      const f = A.noise('pink', 2.6, 0.32 * k, 'bandpass', 600, 0.6, w + 0.55, wet, false, 0.25); if (f) f.frequency.exponentialRampToValueAtTime(1800, f.context.currentTime + w + 3);
+      A.noise('white', 1.8, 0.1 * k, 'highpass', 3500, 0.6, w + 0.7, wet, false, 0.2);
+    },
+    // старт баллистической ракеты: глухой удар зажигания, долгий рёв с «треском» факела, уходит вверх — глуше
+    tbmLaunch(d) {
+      const k = near(d, 2500), w = delayOf(d), wet = 0.4 + 0.5 * (1 - k);
+      A.tone('sine', 48, 24, 1.2, 0.9 * k, w, 0.3);
+      A.noise('brown', 7, 0.95 * k, 'lowpass', 140, 0.7, w, wet, false, 0.15);
+      const f = A.noise('pink', 7.5, 0.5 * k, 'bandpass', 520, 0.5, w + 0.05, wet, false, 0.3); if (f) f.frequency.exponentialRampToValueAtTime(160, f.context.currentTime + w + 7.5);
+      A.noise('crackle', 6, 0.45 * k, 'bandpass', 950, 0.6, w + 0.2, wet, false, 0.3);
+      A.noise('pink', 3, 0.15 * k, 'lowpass', 300, 0.5, w + 2.2 + d / 3000, 1);
+    },
+    // сирена воздушной тревоги: двухтональный «вой» (подъём — держит — спад), kind 'tbm' — чаще и выше
+    // записанная сирена (47 с, сама затихает): пока звучит — повторно не включается; возвращает, сколько ещё звучать (с)
+    siren(kind) {
+      const dur = A.sampleDur('siren');
+      if (dur) {
+        const left = sirenEnd - A.time(); if (left > 0.5) return left;
+        if (A.sample('siren', 0.55, 0, 1, 20000, 0.15)) { sirenEnd = A.time() + dur; return dur; }
+      }
+      const tb = kind === 'tbm', lo = tb ? 420 : 300, hi = tb ? 900 : 760, per = tb ? 2.2 : 4.5, n = tb ? 4 : 2, pts = [[0, lo]];
+      for (let i = 0; i < n; i++) { const t0 = i * per; pts.push([t0 + per * 0.45, hi], [t0 + per * 0.6, hi], [t0 + per, lo]); }
+      A.sweep('sawtooth', pts, 0.07, 0, 0.6); A.sweep('square', pts.map(([t, f]) => [t, f * 1.5]), 0.025, 0, 0.6);
+      return pts[pts.length - 1][0];
+    },
     // подрыв боевой части ЗУР в воздухе: резкий хлопок (ударная волна), раскат и эхо от города; в воздухе слышно далеко
     samBurst(d, size = 1) {
       const dl = Math.min(3, d / 343), k = Math.max(0.04, near(d, 1500)) * Math.min(1.4, 0.7 + size * 0.3), wet = 0.3 + 0.5 * (1 - k), cut = 350 + 2500 * Math.exp(-d / 1500);
@@ -64,8 +117,19 @@ export function createSound() {
       A.noise('crackle', 0.16, 0.35 * k, 'bandpass', big ? 420 : 600, 0.6, w, 0.5);
       A.noise('pink', 0.2, 0.12 * k, 'lowpass', 380, 0.7, w + 0.04, 0.7);
     },
-    // своё оружие: «клац» замка держателя, у ракет — ещё рёв двигателя
-    release(missile) { A.noise('brown', 0.12, 0.3, 'lowpass', 220); A.noise('white', 0.05, 0.12, 'bandpass', 2500, 1.2); if (missile) A.launch(); },
+    // своё оружие: «клац» замка держателя, у ракет — запись пуска (нет записи — синтез)
+    release(missile) { A.noise('brown', 0.12, 0.3, 'lowpass', 220); A.noise('white', 0.05, 0.12, 'bandpass', 2500, 1.2); if (missile && !S.airLaunch(0)) A.launch(); },
+    // пуск ракеты с самолёта (ПРР, ракеты «воздух — земля»): запись, с задержкой и глуше вдали
+    airLaunch(d) { return A.sample('launchAir', 0.85 * near(d, 900), delayOf(d), 0.97 + Math.random() * 0.06, 500 + 9000 * Math.exp(-d / 2000), 0.25 + 0.4 * (1 - near(d, 900)), 0.18); }, // с начала звука (0,18 с — тишина)
+    // вертикальный («холодный») старт ЗУР как у С-300 / С-400: одна из трёх записей, случайно; играет до конца.
+    // Нет записей — прежний синтез (хлопок газогенератора). small — малые ракеты («Тор»): тише и чуть выше
+    coldLaunch(d, small) {
+      // в каждой записи: хлопок выброса (pop) и запуск двигателя (рёв) — запись идёт с хлопка в момент выброса, а двигатель
+      // ракеты в игре включается, когда в записи начинается рёв: возвращаем этот промежуток (с) — по нему ставится зажигание
+      const i = 1 + Math.floor(Math.random() * 3), [pop, roar] = COLD_SYNC[i - 1], rate = (small ? 1.12 : 1) * (0.97 + Math.random() * 0.06);
+      if (A.sample('cold' + i, (small ? 0.6 : 0.95) * near(d, small ? 900 : 1600), delayOf(d), rate, 500 + 9000 * Math.exp(-d / 2500), 0.3 + 0.4 * (1 - near(d, 1500)), Math.max(0, pop - 0.02))) return { gap: (roar - pop) / rate };
+      S.eject(d, !small); return null;
+    },
     // свист падающей бомбы рядом с камерой
     whistle(d) { const k = near(d, 300); if (k < 0.15) return; A.tone('sine', 1500, 500, 2.4, 0.04 * k, 0, 0.3); },
     // бортовые сигналы

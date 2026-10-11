@@ -8,25 +8,26 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261013a';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261013a';
-import { createPipeline } from '../drone/post.js?v=20261013a';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261013a';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261013a';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261013a';
-import { createStrike, MODES } from './sim/strike.js?v=20261013a';
-import { createRaid } from './sim/raid.js?v=20261013a';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261013a';
-import { slotCount } from './launchers.js?v=20261013a';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings } from './models.js?v=20261013a';
-import { createSound } from './sound.js?v=20261013a';
-import { createAir } from './air.js?v=20261013a';
-import { createDefense } from './defense.js?v=20261013a';
-import { createDirector } from './director.js?v=20261013a';
-import { createOnline } from './online.js?v=20261013a';
-import { createShell } from './shell.js?v=20261013a';
-import { createTraining, LESSONS } from './training.js?v=20261013a';
-import { createMenu } from './menu.js?v=20261013a';
+import { buildCity, CITY } from './city.js?v=20261016a';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261016a';
+import { createPipeline } from '../drone/post.js?v=20261016a';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261016a';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261016a';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261016a';
+import { createStrike, MODES } from './sim/strike.js?v=20261016a';
+import { createRaid } from './sim/raid.js?v=20261016a';
+import { POD } from './sim/combined.js?v=20261016a';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261016a';
+import { slotCount } from './launchers.js?v=20261016a';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel } from './models.js?v=20261016a';
+import { createSound } from './sound.js?v=20261016a';
+import { createAir } from './air.js?v=20261016a';
+import { createDefense } from './defense.js?v=20261016a';
+import { createDirector } from './director.js?v=20261016a';
+import { createOnline } from './online.js?v=20261016a';
+import { createShell } from './shell.js?v=20261016a';
+import { createTraining, LESSONS } from './training.js?v=20261016a';
+import { createMenu } from './menu.js?v=20261016a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -119,7 +120,7 @@ if (!MODES[setup.diff]) setup.diff = 'arcade';
 if (!LOADOUTS[setup.era]) setup.era = 2;
 if (!LOADOUTS[setup.era][setup.lo]) setup.lo = 0;
 if (!DEFENSE[setup.side]) setup.side = 'east';
-if (!['air', 'defense', 'training', 'online'].includes(setup.game)) setup.game = 'air';
+if (!['air', 'defense', 'multi', 'training', 'online'].includes(setup.game)) setup.game = 'air';
 
 // ═════════════ Город и рендер ═════════════
 const city = buildCity(1);
@@ -164,6 +165,7 @@ const C = {
 
 // ═════════════ Бой: город + ПВО + налёт (+ самолёт игрока) ═════════════
 const unitMeshes = new Map(), wpnMeshes = new Map(), samMeshes = new Map(), planeMeshes = new Map(), wrecks = [], debris = [];
+const evLaunch = new Map(); // пусковые «Мульти-волны»
 C.unitMeshes = unitMeshes; C.planeMeshes = planeMeshes; // модели самолётов ИИ (промо-ролик: подвеска на пилонах)
 const wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
 const unitMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x222222, shininess: 18 });
@@ -195,6 +197,7 @@ function clearBattle() {
   for (const m of [...unitMeshes.values(), ...wpnMeshes.values(), ...samMeshes.values(), ...planeMeshes.values()]) scene.remove(m);
   for (const w of [...wrecks, ...debris]) scene.remove(w.g);
   unitMeshes.clear(); wpnMeshes.clear(); samMeshes.clear(); planeMeshes.clear(); wrecks.length = 0; debris.length = 0;
+  for (const g of evLaunch.values()) scene.remove(g); evLaunch.clear(); C.ev = null;
   if (C.fx) C.fx.clearBurning();
   C.S = null; C.raid = null; C.player = null;
 }
@@ -245,7 +248,7 @@ C.syncUnits = function () {
       if (!P.shadows) addBlob(g); // без карты теней — мягкое пятно под машиной (иначе «висит» над землёй)
       g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g);
     }
-    g.position.copy(u.pos); g.position.y -= 1.5;
+    g.position.copy(u.pos); g.position.y -= 1.5; seat(g, u); // по рельефу: на склоне длинная машина не уходит в землю
   }
 };
 // мягкое тёмное пятно под машиной по её габаритам (радиальный градиент, без записи глубины)
@@ -256,6 +259,7 @@ function addBlob(g) {
   q.rotation.x = -Math.PI / 2; q.scale.set(Math.max(2, sz.x * 1.35), Math.max(2, sz.z * 1.25), 1); q.position.y = 0.08; q.renderOrder = 1; g.add(q);
 }
 const dist = (p) => camera.position.distanceTo(p);
+const TX = new THREE.Vector3(), TY = new THREE.Vector3(), TZ = new THREE.Vector3(), TP = new THREE.Vector3();
 // объекты-цели: готовые постройки (сотни тысяч треугольников на объект) — только ближе P.lodObj, дальше — коробки-заглушки
 // по их габаритам (в пиксель-два разницы не видно). Окно ТВ — всё подробно (его узкое поле зрения само отсекает лишнее)
 const objC = new Map();
@@ -288,7 +292,7 @@ C.podPass = function (cam, at, hPx) {
 const raidFx = {
   down(a) { C.fx.explosion(a.pos, a.role === 'decoy' ? 8 : 22, 'air'); if (a.role === 'decoy') snd.samBurst(dist(a.pos), 0.8); else snd.planeKill(dist(a.pos)); const g = planeMeshes.get(a.id); if (g) { planeMeshes.delete(a.id); wrecks.push({ g, vel: a.vel.clone(), spin: (Math.random() - 0.5) * 3, t: 0 }); } if (C.hooks.planeDown) C.hooks.planeDown(a); },
   out(a) { const g = planeMeshes.get(a.id); if (g) { scene.remove(g); planeMeshes.delete(a.id); } if (C.hooks.planeOut) C.hooks.planeOut(a); },
-  release(a, key) { if (C.hooks.aiRelease) C.hooks.aiRelease(a, key); },
+  release(a, key) { const k = AG[key] && AG[key].kind; if ((k === 'agm' || k === 'arm' || k === 'cruise') && a.role !== 'carrier') snd.airLaunch(dist(a.pos)); if (C.hooks.aiRelease) C.hooks.aiRelease(a, key); }, // ракета с самолёта ИИ — запись пуска
 };
 const aaaT = new Map();
 const simFx = {
@@ -303,15 +307,21 @@ const simFx = {
       if (geos.booster) { const b = new THREE.Mesh(geos.booster, wMat); b.position.z = geos.boosterZ; g.add(b); g.userData.booster = b; hasBoost = true; }
     }
     g.userData.flame = rocketFlame(g, L / 2, hasBoost ? r * m.ln.stageR : r);
+    if (gm) { // готовая модель: сопло ищем по самой модели (один раз на комплекс), а не по паспортной длине
+      const key = m.unit.key, nm = NZC['sam:' + key] || (NZC['sam:' + key] = nozzleOf(gm.missile, r));
+      const nb = hasBoost ? NZC['samb:' + key] || (NZC['samb:' + key] = nozzleOf(gm.booster, r * m.ln.stageR)) : null;
+      g.userData.nzM = nm; const n0 = nb || nm; g.userData.flame.at(n0.x, n0.y, n0.z);
+    }
     g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
     scene.add(g); samMeshes.set(m.id, g);
     const mode = m.ln ? m.ln.mode : 'rail', d = dist(m.pos);
-    if (mode === 'cold') { C.fx.launchCold(LP.copy(m.pos).addScaledVector(m.dir, L / 2), m.dir, big); snd.eject(d, big); }
+    if (mode === 'cold') { C.fx.launchCold(LP.copy(m.pos).addScaledVector(m.dir, L / 2), m.dir, big); const rec = snd.coldLaunch(d, !big); m.coldRec = !!rec; // С-300 / С-400 / «Тор»: запись старта
+      if (rec) m.visIgn = rec.gap; } // только видимое: вспышка и факел — когда в записи начинается рёв; полёт (зажигание в расчёте) — прежний
     else if (mode === 'tube') { C.fx.launchTube(m.pos, m.dir); snd.eject(d, false); }
     else { C.fx.launchHot(m.pos, m.dir, big, m.unit.pos.clone().setY(city.groundH(m.unit.pos.x, m.unit.pos.z))); snd.samLaunch(d, big); }
     if (C.hooks.samLaunch) C.hooks.samLaunch(m);
   },
-  samIgnite(m) { C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), m.dir, m.M.L > 5); snd.samLaunch(dist(m.pos), m.M.L > 5); },
+  samIgnite(m) { if (m.visIgn !== undefined) return; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), m.dir, m.M.L > 5); if (!m.coldRec) snd.samLaunch(dist(m.pos), m.M.L > 5); }, // под запись — вспышка в отрисовке
   samJet(m) { C.fx.jet(m.pos, m.dir); },
   samStage(m) {
     const g = samMeshes.get(m.id), b = g && g.userData.booster; if (!b) return;
@@ -319,17 +329,29 @@ const simFx = {
     b.getWorldPosition(LP); g.remove(b);
     const q = new THREE.Group(); q.add(b); b.position.set(0, 0, 0); q.position.copy(LP); q.quaternion.copy(g.quaternion); scene.add(q);
     debris.push({ g: q, vel: m.dir.clone().multiplyScalar(m.speed * 0.85), spin: new THREE.Vector3((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 3), t: 0 });
-    g.userData.booster = null; g.userData.flame.move(-m.M.L / 2 + m.M.L * m.ln.stage);
+    g.userData.booster = null;
+    if (g.userData.nzM) { const n = g.userData.nzM; g.userData.flame.at(n.x, n.y, n.z); } else g.userData.flame.move(-m.M.L / 2 + m.M.L * m.ln.stage);
     C.fx.stage(LP, m.dir);
   },
   samTrail(m) { C.fx.samTrail(m); },
   samEnd(m, hit) { const g = samMeshes.get(m.id); if (g) { scene.remove(g); samMeshes.delete(m.id); } if (C.hooks.samEnd) C.hooks.samEnd(m, hit); },
   wpnRelease(w) {
-    const g = weaponMesh(w.key, w.W, weaponGeo, wMat); scene.add(g); wpnMeshes.set(w.id, g);
+    const g = w.ev ? evMesh(w) : weaponMesh(w.key, w.W, weaponGeo, wMat); scene.add(g); wpnMeshes.set(w.id, g);
+    if (!w.ev && (w.W.kind === 'agm' || w.W.kind === 'arm' || w.W.kind === 'cruise')) { // ракета с двигателем: факел и след — из сопла
+      const nz = w.nzL = NZC[w.key] || (NZC[w.key] = nozzleOf(g, w.W.vis.r, w.W.vis.nzAx));
+      g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = w.W.kind === 'cruise' ? 'jet' : 'rocket';
+    }
+    // «Мульти-волна»: старт баллистики с пусковой — рёв; крылатая с носителя — хлопок и запуск двигателя
+    if (w.ev && !w.decoy && w.W.kind === 'tbm') snd.tbmLaunch(dist(w.pos));
+    else if (w.ev && w.owner && w.owner.role === 'carrier') snd.cruiseLaunch(dist(w.pos));
     if (w.owner === C.player) snd.release(w.W.kind === 'agm' || w.W.kind === 'arm');
     if (C.hooks.wpnRelease) C.hooks.wpnRelease(w);
   },
-  wpnTrail(w) { C.fx.wpnTrail(w); },
+  wpnTrail(w) { // огонь и дым — из среза сопла (w.nzL — сопло в осях модели: +Z к хвосту, как после lookAt)
+    if (!w.nzL) { C.fx.wpnTrail(w); return; }
+    TZ.copy(w.dir).negate(); TX.set(0, 1, 0).cross(TZ).normalize(); TY.copy(TZ).cross(TX);
+    C.fx.wpnTrail(w, TP.copy(w.pos).addScaledVector(TZ, w.nzL.z).addScaledVector(TX, w.nzL.x).addScaledVector(TY, w.nzL.y));
+  },
   wpnEnd(w, res) { const g = wpnMeshes.get(w.id); if (g) { scene.remove(g); wpnMeshes.delete(w.id); } if (C.hooks.wpnEnd) C.hooks.wpnEnd(w, res); },
   explosion(p, R, kind) { C.fx.explosion(p, R, kind); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / 20); }, // в воздухе — подрыв ЗУР / перехват
   gunFire(u, t, hits, dt) {
@@ -363,6 +385,98 @@ function hangLoad(g, stations, load) {
   }
   return out;
 }
+// посадка машины на рельеф: наклон по высоте земли спереди / сзади и слева / справа, высота — по средней из четырёх точек
+// (раньше — по центру: на склоне нос или корма длинной машины уходили в землю). Пересчёт — когда машину переставили
+const SEAT_B = new THREE.Box3();
+function seat(g, u) {
+  if (u.roof) return; // ПЗРК на крыше
+  const k = `${u.pos.x},${u.pos.z},${u.yaw}`;
+  if (g.userData.seatK !== k) {
+    g.userData.seatK = k;
+    if (!g.userData.half) { const r0 = g.rotation.y, p0 = g.position.clone(); g.rotation.set(0, 0, 0); g.position.set(0, 0, 0); g.updateMatrixWorld(true); SEAT_B.setFromObject(g); g.rotation.y = r0; g.userData.half = [Math.max(0.8, (SEAT_B.max.x - SEAT_B.min.x) * 0.42), Math.max(1, (SEAT_B.max.z - SEAT_B.min.z) * 0.42)]; g.position.copy(p0); }
+    const [hw, hl] = g.userData.half, c = Math.cos(u.yaw), s = Math.sin(u.yaw);
+    const h = (lx, lz) => city.groundH(u.pos.x + lx * c + lz * s, u.pos.z - lx * s + lz * c);
+    const hf = h(0, -hl), hb = h(0, hl), hL = h(-hw, 0), hR = h(hw, 0);
+    g.userData.seat = { dy: (hf + hb + hL + hR) / 4 - city.groundH(u.pos.x, u.pos.z), rx: Math.atan2(hf - hb, 2 * hl), rz: Math.atan2(hR - hL, 2 * hw) };
+  }
+  const st = g.userData.seat; g.rotation.order = 'YXZ'; g.rotation.set(st.rx, u.yaw, st.rz); g.position.y += st.dy;
+}
+// ── «Мульти-волна»: модели ракет и дронов, пусковые за городом ──
+// ракета с пусковой (tbm у «Искандера», «Точки», «Скада»): копия части модели, центр — в середину, ось — вперёд (−Z)
+const EVB = new THREE.Box3(), EVC = new THREE.Vector3();
+function evPart(glb, part) {
+  const m = anyModel(glb); if (!m) return null;
+  const p = m.children.find((c) => c.name === part); if (!p) return null;
+  const g = new THREE.Group(), inner = p.clone(); EVB.setFromObject(inner); EVB.getCenter(EVC); inner.position.sub(EVC);
+  const tilt = new THREE.Group(); tilt.rotation.x = -Math.PI / 2; tilt.add(inner); g.add(tilt); // стоит вертикально — нос в −Z
+  return g;
+}
+// срез сопла: ось — медиана вершин корпуса в средней трети (стабилизаторы её не сдвигают), срез — 97-й процентиль по +Z среди вершин
+// у оси (не выступающие провода и кромки); центр факела — на оси, чуть внутри среза
+const NV = new THREE.Vector3();
+function nozzleOf(g, r, ax) { // ax — ось сопла [x, y], если медиана врёт (крыло сверху у Storm Shadow)
+  g.updateMatrixWorld(true); const P = [];
+  g.traverse((m) => { if (!m.isMesh) return; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { NV.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); P.push(NV.x, NV.y, NV.z); } });
+  let z0 = 1e9, z1 = -1e9; for (let i = 2; i < P.length; i += 3) { z0 = Math.min(z0, P[i]); z1 = Math.max(z1, P[i]); }
+  const L = z1 - z0, xs = [], ys = [];
+  for (let i = 0; i < P.length; i += 3) if (P[i + 2] > z0 + L / 3 && P[i + 2] < z1 - L / 3) { xs.push(P[i]); ys.push(P[i + 1]); }
+  const med = (a) => { a.sort((u, v) => u - v); return a.length ? a[a.length >> 1] : 0; }, cx = ax ? ax[0] : med(xs), cy = ax ? ax[1] : med(ys);
+  const zs = []; for (let i = 0; i < P.length; i += 3) if (Math.hypot(P[i] - cx, P[i + 1] - cy) < r * 0.95) zs.push(P[i + 2]);
+  zs.sort((u, v) => u - v);
+  return { x: cx, y: cy, z: (zs.length ? zs[Math.floor(zs.length * 0.97)] : z1) - 0.05 };
+}
+const NZC = {};
+// факел оружия: баллистика — на разгоне; крылатая (турбореактивный) — вспышка запуска 1,5 с, потом маленький; ракета — пока горит двигатель
+function flameOf(g, w) {
+  const f = g.userData.flame, r = w.W.vis.r, k = g.userData.fl;
+  if (k === 'jet') f.set(1, r * (w.t < 1.5 ? 0.6 : 0.3));
+  else if (k === 'rocket') f.set(w.t < (w.W.burn || 3) ? 1 : 0, r * 0.85);
+  else f.set(w.phase === 'boost' ? 2 : 0);
+}
+function evMesh(w) {
+  const M = w.W.model;
+  let g = M && M.part ? evPart(M.glb, M.part) : M ? anyModel(M.glb) : null;
+  if (!g) { g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (M) g.userData.stub = true; } // модель ещё грузится — временная
+  g.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; });
+  // баллистическая: факел двигателя на разгоне (у сопла — корма, +Z)
+  if (w.W.kind === 'tbm') { const nz = nozzleOf(g, w.W.vis.r); w.nzL = nz; g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.move(nz.z); g.children.filter((c) => c.renderOrder === 5).forEach((c) => { c.position.x = nz.x; c.position.y = nz.y; }); } // факел — из среза сопла
+  if (g.children.some((c) => /^prop/.test(c.name))) g.userData.props = true;
+  if (w.W.kind === 'cruise' && !w.W.uav && !w.W.recon) { // крылатая: факел из среза сопла — ускоритель на старте, потом маршевый (слабый)
+    const nz = w.nzL = NZC[w.key] || (NZC[w.key] = nozzleOf(g, w.W.vis.r, w.W.vis.nzAx));
+    g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = 'jet'; // пуск с самолёта: запуск двигателя, потом маршевый
+  }
+  return g;
+}
+// винты дронов: части prop / prop2 крутятся вокруг своей оси (центр — по габаритам части, один раз)
+function spinProps(g, dt) {
+  for (const c of g.children) {
+    if (!/^prop/.test(c.name)) continue;
+    if (!c.userData.pivot) { EVB.setFromObject(c); const ctr = EVB.getCenter(new THREE.Vector3()); g.worldToLocal(ctr); const pv = new THREE.Group(); pv.position.copy(ctr); g.add(pv); c.position.sub(ctr); pv.add(c); pv.userData.prop = true; c.userData.pivot = pv; }
+  }
+  for (const c of g.children) if (c.userData.prop) c.rotation.z += dt * 70;
+}
+// пусковые: ставим, когда удар начался; ракеты на пусковой прячутся по мере пусков (evLaunch — рядом с unitMeshes)
+C.evPreload = (comp) => { for (const [k, , , via] of comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); if (W.launcher) wantModel(W.launcher); if (via) wantModel(via); } };
+C.evReady = (ev) => {
+  for (const [k] of ev.comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); }
+  for (const L of ev.launchers) wantModel(L.key);
+  for (const a of ev.carriers) { wantModel(a.plane); for (const l of a.load) wantWeapon(l.key); }
+};
+function syncEv() {
+  const ev = C.ev;
+  if (!ev) { for (const g of evLaunch.values()) scene.remove(g); evLaunch.clear(); return; }
+  for (const L of ev.launchers) {
+    let g = evLaunch.get(L.id);
+    if (!g) { const m = anyModel(L.key); if (!m) continue; g = m; g.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); scene.add(g); evLaunch.set(L.id, g); g.position.copy(L.pos); seat(g, { pos: L.pos, yaw: L.yaw, roof: false }, 0); } // по рельефу, как ЗРК
+    const parts = g.children.filter((c) => /^tbm/.test(c.name));
+    parts.forEach((c, i) => { c.visible = i >= L.fired; });
+    const PO = POD[L.key];
+    if (PO) { // пакет HIMARS: поворот вокруг оси у кормы (своя «петля», один раз), подъём — по L.podEl
+      if (!g.userData.podPivot) { const pod = g.children.find((c) => /^pod/.test(c.name)); if (pod) { const pv = new THREE.Group(); pv.position.set(...PO.hinge); g.add(pv); pod.position.sub(pv.position); pv.add(pod); g.userData.podPivot = pv; } }
+      if (g.userData.podPivot) g.userData.podPivot.rotation.x = (PO.el - PO.rest) * L.podEl;
+    }
+  }
+}
 // синхронизация моделей с боем
 const LP = new THREE.Vector3();
 function syncWorld(dt, t) {
@@ -376,7 +490,9 @@ function syncWorld(dt, t) {
   for (const m of S.sams) {
     const g = samMeshes.get(m.id); if (!g) continue;
     g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
-    const on = m.tb >= 0 && (m.tb < m.M.burn || (m.M.sustain && m.tb < m.M.burn + m.M.sustain.t));
+    // под запись старта: факел и вспышка — с момента рёва в записи (m.visIgn), раньше расчётного зажигания; дальше — как в расчёте
+    if (m.visIgn !== undefined && !m.visLit && m.t >= m.visIgn) { m.visLit = true; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), m.dir, m.M.L > 5); }
+    const on = (m.tb >= 0 || m.visLit) && (m.tb < m.M.burn || (m.M.sustain && m.tb < m.M.burn + m.M.sustain.t));
     g.userData.flame.set(on ? (m.tb < m.M.burn && (m.M.L > 2.5 || g.userData.booster) ? 2 : 1) : 0, g.userData.booster ? m.M.r * m.ln.stageR : m.M.r);
   }
   // отделившиеся ускорители: падают, кувыркаются, первые секунды дымят
@@ -386,7 +502,11 @@ function syncWorld(dt, t) {
     if (b.t < 2.5 && Math.random() < dt * 20) C.fx.debrisSmoke(b.g.position);
     if (b.g.position.y < city.topAt(b.g.position.x, b.g.position.z) + 0.5 || b.t > 40) { C.fx.explosion(b.g.position, 3, 'ground'); scene.remove(b.g); debris.splice(i, 1); }
   }
-  for (const w of S.wpns) { const g = wpnMeshes.get(w.id); if (g) { g.position.copy(w.pos); g.lookAt(LP.copy(w.pos).sub(w.vel)); } }
+  for (const w of S.wpns) {
+    let g = wpnMeshes.get(w.id);
+    if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = evMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла — подменить временную
+    if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) flameOf(g, w); } }
+  syncEv();
   const pxK = VH / 2 / Math.tan(camera.fov * D2R / 2); // пикселей на метр на расстоянии 1 м
   for (const u of S.units) {
     const g = unitMeshes.get(u.id); if (!g) continue;
@@ -420,11 +540,11 @@ function syncWorld(dt, t) {
       if (a.role === 'decoy') { g.add(weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat)); g.userData.flames = { update() {} }; }
       else {
         // вблизи — готовая модель (подвеска отдельными моделями на пилонах, сброшенное пропадает), вдали — простая
-        const pm = planeModel(a.side, classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)), sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
+        const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)), sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
         if (pm) {
           pm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(pm.obj);
           g.userData.flames = attachFlames(g, pm.nozzles, pm.nr / 0.45); g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load); // во внутренних отсеках — не видно
-          g.userData.lod = { hi: pm.obj, lo };
+          if (a.role === 'carrier') lo.visible = false; else g.userData.lod = { hi: pm.obj, lo }; // носитель велик — модель видна и издали
         } else g.userData.flames = attachFlames(g, sg.nozzles, sg.nr / 0.45);
       }
       scene.add(g); planeMeshes.set(a.id, g);
@@ -459,6 +579,13 @@ function updateSound(dt) {
   if (C.S) {
     for (const m of C.S.sams) if (!m.dead && m.tb >= 0 && m.tb < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) { m.svel = (m.svel || new THREE.Vector3()).copy(m.dir).multiplyScalar(m.speed); cand(m, 'msl', m.pos, m.svel, null, false, 1); }
     for (const w of C.S.wpns) if (!w.dead && w.W.burn && w.t < w.W.burn) cand(w, 'msl', w.pos, w.vel, null, false, 0.8);
+    // «Мульти-волна»: крылатые — маленький турбовентилятор, дроны — поршневой мотор, баллистика — рёв на разгоне и свист на спуске
+    for (const w of C.S.wpns) {
+      if (w.dead || !w.ev) continue;
+      if (w.W.kind === 'tbm') { if (w.phase !== 'mid') cand(w, 'msl', w.pos, w.vel, null, false, w.phase === 'boost' ? 1.5 : 0.7); }
+      else if (w.W.uav) cand(w, 'prop', w.pos, w.vel, w.dir, false, 0.9);
+      else cand(w, 'jet', w.pos, w.vel, w.dir, false, 0.55);
+    }
   }
   snd.spatial(dt, camera, pl && C.state === 'play' ? pl.vel : null, sndCands, on && !C.paused);
 }
@@ -594,15 +721,19 @@ function frame(now) {
   if (capMs && now - lastDraw < capMs - 2) return;
   const ms = now - lastDraw; lastDraw = now;
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр
-  const dt = Math.min(0.05, (now - last) / 1000), t = now / 1000; last = now;
+  const dt = clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным
   C.t = t;
   const ctrl = C.ctrl;
   const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза — только меню), бой считает сервер
   if ((!C.paused || online) && ctrl) {
-    if (ctrl.update) ctrl.update(dt, t);
-    if (online) C.net.update(dt);
-    else if (C.S && ctrl.sim !== false) { if (C.raid) C.raid.step(dt); C.S.step(dt); }
-    if (C.fx) C.fx.update(dt);
+    // ускорение времени (смотреть удар «Мульти-волны»): несколько шагов боя за кадр
+    const nK = !online && ctrl.timeK ? ctrl.timeK() : 1;
+    for (let k = 0; k < nK; k++) {
+      if (ctrl.update) ctrl.update(dt, t);
+      if (online) C.net.update(dt);
+      else if (C.S && ctrl.sim !== false) { if (C.raid) C.raid.step(dt); C.S.step(dt); }
+      if (C.fx) C.fx.update(dt);
+    }
   }
   if (view) { camera.position.set(view[0], view[1], view[2]); camera.rotation.set((view[4] || 0) * D2R, (view[3] || 0) * D2R, 0); }
   else if (ctrl && ctrl.camera) ctrl.camera(dt, t);
@@ -652,7 +783,10 @@ setTimeout(() => {
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(); } // дома вблизи — только если пресет их рисует
   C.fx = createFx(scene, P);
   if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым — в половине разрешения
-  ctrls.air = createAir(C); ctrls.defense = createDefense(C); ctrls.director = createDirector(C); ctrls.training = createTraining(C, ctrls);
+  ctrls.air = createAir(C); ctrls.defense = createDefense(C);
+  ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
+  $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
+  ctrls.director = createDirector(C); ctrls.training = createTraining(C, ctrls);
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
   resize();

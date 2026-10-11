@@ -318,6 +318,124 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "TOMAHAWK",
+  "author": "Pan_Ar4ik",
+  "url": "https://sketchfab.com/3d-models/tomahawk-7f2cda9c50864d8ab136a63659ca0658",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_tomahawk"
+  ]
+ },
+ {
+  "title": "Kh-555 Cruise missile (High poly FBX)",
+  "author": "Jeyhun1985",
+  "url": "https://sketchfab.com/3d-models/kh-555-cruise-missile-high-poly-fbx-406db6e7ffdf4b0fbb1f842e9850a65d",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_kh555"
+  ]
+ },
+ {
+  "title": "Sizzler SS-N-27 Kalibr 3M-54",
+  "author": "mmickel",
+  "url": "https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_kalibr"
+  ]
+ },
+ {
+  "title": "AGM-86",
+  "author": "mahmadsaleem11111",
+  "url": "https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_agm86"
+  ]
+ },
+ {
+  "title": "Ukrainian Su-24 with Storm Shadow AGMs",
+  "author": "42manako",
+  "url": "https://sketchfab.com/3d-models/ukrainian-su-24-with-storm-shadow-agms-277154c4744c4313baab1d4011e3b872",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_storm"
+  ]
+ },
+ {
+  "title": "Shahed 136",
+  "author": "faintastic",
+  "url": "https://sketchfab.com/3d-models/shahed-136-bc8754128c9d48c48baadeff1db8f0c7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "d_shahed"
+  ]
+ },
+ {
+  "title": "UAV",
+  "author": "Artem Goyko",
+  "url": "https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5",
+  "license": "CC-BY-4.0",
+  "files": [
+   "d_uav"
+  ]
+ },
+ {
+  "title": "Tupolev TU-160",
+  "author": "KOG_THORNS",
+  "url": "https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tu160"
+  ]
+ },
+ {
+  "title": "Rockwell B-1B Lancer",
+  "author": "Muhamad Mirza Arrafi",
+  "url": "https://sketchfab.com/3d-models/rockwell-b-1b-lancer-d32a5cbbd16f4521bdd37e8b4b1c79bc",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_b1b"
+  ]
+ },
+ {
+  "title": "Chinese 9K720 Iskander TELAR",
+  "author": "42manako",
+  "url": "https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1",
+  "license": "CC-BY-4.0",
+  "files": [
+   "l_iskander"
+  ]
+ },
+ {
+  "title": "Ukrainian OTR-21 Tochka-U",
+  "author": "42manako",
+  "url": "https://sketchfab.com/3d-models/ukrainian-otr-21-tochka-u-3b41c4e2d03d4bbb9a4acc339fc495bc",
+  "license": "CC-BY-4.0",
+  "files": [
+   "l_tochka"
+  ]
+ },
+ {
+  "title": "Scud ( Ballistic missile )",
+  "author": "AlexDang",
+  "url": "https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0",
+  "license": "CC-BY-4.0",
+  "files": [
+   "l_scud"
+  ]
+ },
+ {
+  "title": "M142 HIMARS | FREE MODEL | ANIMATION",
+  "author": "Denis.Cherkasov1",
+  "url": "https://sketchfab.com/3d-models/m142-himars-free-model-animation-53c53a112c674d29a2afdbddbe3cecb5",
+  "license": "CC-BY-4.0",
+  "files": [
+   "l_himars",
+   "w_atacms"
+  ]
+ },
+ {
   "title": "High Voltage Transmission Line Tower (tileable)",
   "author": "mednios",
   "url": "https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313",

@@ -1,13 +1,14 @@
 // ИИ-налёт «Воздушного превосходства»: ударные самолёты против ПВО города (игра за ПВО и живой фон главного меню).
 // Без сцены и DOM. Самолёты — на лётной модели «Летки» (flyStep), оружие и урон — через бой sim/strike.js.
 // Роли: bomber — бомбы (свободнопадающие, лазерные с подсветом, ТВ) и ракеты по объекту; sead — противорадиолокационные
-// ракеты по включённым РЛС; low — прорыв на малой высоте между домами со свободнопадающими бомбами.
+// ракеты по включённым РЛС; low — прорыв на малой высоте между домами со свободнопадающими бомбами;
+// carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { AG } from '../arsenal.js?v=20261013a';
-import { makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261013a';
-import { predictBomb } from './strike.js?v=20261013a';
-import { CITY } from '../city.js?v=20261013a';
+import { AG } from '../arsenal.js?v=20261016a';
+import { makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261016a';
+import { predictBomb } from './strike.js?v=20261016a';
+import { CITY } from '../city.js?v=20261016a';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -50,15 +51,21 @@ export function createRaid(S, city, rnd, opts = {}) {
       spawn(role, tgt, br, g * 25 + rnd() * 8, R);
     }
   }
-  function spawn(role, tgt, bearing, delay = 0, R0) {
-    const ST = STRIKERS[side], load = (RAID_LOADS[side][era][role] || RAID_LOADS[side][era].bomber).map(([k, c]) => ({ key: k, n: c }));
+  // o — поправки для особых ролей (носитель «Мульти-волны»: plane, load, cruise, hp, rcs, salvo)
+  function spawn(role, tgt, bearing, delay = 0, R0, o = {}) {
+    const ST = STRIKERS[side], load = o.load || (RAID_LOADS[side][era][role] || RAID_LOADS[side][era].bomber).map(([k, c]) => ({ key: k, n: c }));
     const R = R0 || CITY.HALF - 600;
     const a = makeCraft({ ...ST, id: pid++, ai: true, role, side, load, tgt, hp: ST.hp, hpMax: ST.hp, cmFlare: 30, cmChaff: 30, speed: 230, thr: 0.9, delay, phase: delay > 0 ? 'wait' : 'ingress',
       cruise: role === 'low' ? 110 : role === 'sead' ? 4500 + rnd() * 1500 : 3000 + rnd() * 2500, skill: 0.4 + rnd() * 0.5, laser: null, lockPt: null, evadeT: 0, cmT: 0, relT: 0, t: 0, out: false,
       rcs: ST.rcs, massK: 1.15 });
+    if (o.cruise) Object.assign(a, o, { hpMax: o.hp || a.hpMax, t: 0 });
     a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
     a.pos.set(Math.sin(bearing) * R, a.cruise + (role === 'low' ? 300 : 0), Math.cos(bearing) * R);
     const to = TMP.set(tgt.x, 0, tgt.z).sub(a.pos); a.yaw = Math.atan2(-to.x, -to.z); a.pitch = 0;
+    if (role === 'carrier') { // носитель: заходит из-за края карты (o.R0) к рубежу пуска (o.R), там — вдоль края района
+      a.R = o.R; a.b = bearing; a.inbound = true; a.relT = 2;
+      a.pos.set(Math.sin(bearing) * R, a.cruise, Math.cos(bearing) * R); a.yaw = Math.atan2(Math.sin(bearing), Math.cos(bearing)); fwdOf(a, a.vel).multiplyScalar(a.speed);
+    }
     fwdOf(a, a.vel).multiplyScalar(a.speed);
     planes.push(a);
     return a;
@@ -121,13 +128,41 @@ export function createRaid(S, city, rnd, opts = {}) {
         if (a.cmChaff > 0 && launch) { a.cmChaff--; S.dropCM(a, 'chaff'); }
         if (rnd() < a.skill) a.evadeT = 3 + rnd() * 3;
       }
+      if (a.role === 'carrier') {
+        // носитель «Мульти-волны»: идёт прямо к рубежу a.R (за краем района — ПВО не достаёт), там ходит по дуге и пускает
+        // каждую ракету в её время (q.t — от начала боя, a.t — тоже), по своему курсу (ракета сама разворачивается к цели);
+        // последний пуск — разворот и уход за край карты
+        a.immune = true; // носитель в жизни — за сотни км: ПВО района его не достаёт (на развороте он может зайти за край — всё равно)
+        const r0 = Math.hypot(a.pos.x, a.pos.z) || 1;
+        if (a.phase === 'egress') {
+          steerToward(a, TMP2.set(a.pos.x / r0 * (r0 + 6000), 0, a.pos.z / r0 * (r0 + 6000)), a.cruise, dt); // назад, от района
+          if (r0 > CITY.HALF + 9500) { a.out = true; if (fx.out) fx.out(a); }
+          continue;
+        }
+        if (a.inbound) {
+          steerToward(a, TMP2.set(a.pos.x - a.pos.x / r0 * 3000, 0, a.pos.z - a.pos.z / r0 * 3000), a.cruise, dt);
+          if (r0 <= a.R + 300) { a.inbound = false; a.b = Math.atan2(a.pos.x, a.pos.z); }
+          continue;
+        }
+        a.b += (a.speed / a.R) * dt; steerToward(a, TMP2.set(Math.sin(a.b + 0.25) * a.R, 0, Math.cos(a.b + 0.25) * a.R), a.cruise, dt);
+        a.relT -= dt;
+        if (a.relT <= 0 && a.salvo.length && a.t + (a.t0 || 0) >= (a.salvo[0].t ?? 0)) { // время волны = a.t0 (когда заказан) + своё
+          const q = a.salvo.shift(), L = a.load.find((l) => l.key === q.key && l.n > 0); if (L) L.n--;
+          // цель — в момент пуска (по ПВО — только по уже засечённым комплексам), маршрут и высота — по плану
+          const aim = q.aimFn ? q.aimFn() : q.aim;
+          TMP.copy(a.pos); TMP.y -= 8; const w = S.spawnMun(q.key, TMP, aim.p || aim, { owner: a, route: q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt, dir: fwdOf(a, DIR) }); a.relT = a.every;
+          if (q.done) q.done(w); if (fx.release) fx.release(a, q.key);
+        }
+        if (!a.salvo.length) a.phase = 'egress';
+        continue;
+      }
       if (a.evadeT > 0 && a.phase !== 'lase') { a.evadeT -= dt; evade(a, dt, (launch && launch.u.pos) || (mw[0] && mw[0].m.pos) || a.pos); a.ab = true; continue; }
       const L = curLoad(a);
       if (!L && a.phase !== 'lase') a.phase = 'egress';
       if (a.phase === 'egress') {
         // уход к ближнему краю карты на форсаже
         const ex = Math.abs(a.pos.x) > Math.abs(a.pos.z) ? Math.sign(a.pos.x) * CITY.HALF : a.pos.x, ez = Math.abs(a.pos.x) > Math.abs(a.pos.z) ? a.pos.z : Math.sign(a.pos.z) * CITY.HALF;
-        a.ab = true; steerToward(a, TMP2.set(ex, 0, ez), a.role === 'low' ? 120 : 3500, dt);
+        a.ab = a.role !== 'carrier'; steerToward(a, TMP2.set(ex, 0, ez), a.role === 'low' ? 120 : a.role === 'carrier' ? a.cruise : 3500, dt);
         if (Math.abs(a.pos.x) > CITY.HALF - 250 || Math.abs(a.pos.z) > CITY.HALF - 250) { a.out = true; if (fx.out) fx.out(a); }
         continue;
       }

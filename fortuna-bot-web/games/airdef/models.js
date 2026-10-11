@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261013a';
+import { CREDITS } from './models/credits.js?v=20261016a';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -46,6 +46,21 @@ const META = {
     nozzles: [V(-0.75, -0.98, 7.33), V(0.75, -0.98, 7.33)], nr: 0.25, pod: null }, // F-22A: JDAM и SDB во внутренних отсеках, наведение по GPS
   e_f35: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.9, -1.3, 2.4), V(-0.85, -1.3, 0.4), V(-0.65, -1.35, 1.0), V(-0.45, -1.4, 1.8)]),
     nozzles: [V(0, -0.55, 6.5)], nr: 0.24, pod: null }, // F-35A (EOTS встроена)
+  // ── «Мульти-волна» (2026-10-13): грузится по требованию (lazy) — wantModel / anyModel
+  w_tomahawk: { weapon: 'tomahawk', lazy: true, stations: [] }, // BGM-109 Tomahawk — Pan_Ar4ik
+  w_kh555: { weapon: ['kh555', 'kh55', 'kh55d'], lazy: true, stations: [] }, // Х-555 (и вид Х-55) — Jeyhun1985
+  w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // «Калибр» — mmickel
+  w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM — mahmadsaleem11111
+  w_storm: { weapon: 'storm', lazy: true, stations: [] }, // Storm Shadow — с Су-24 42manako
+  w_atacms: { weapon: 'atacms', lazy: true, stations: [] }, // ракета M142 HIMARS — Denis.Cherkasov1
+  d_shahed: { ev: true, lazy: true, stations: [] }, // «Шахед-136» — faintastic (винт — группа prop)
+  d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
+  e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.62 }, // Ту-160 — KOG_THORNS; носитель «Мульти-волны»
+  e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
+  l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» — 42manako (ракеты на старте — tbm, tbm2)
+  l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — 42manako (tbm)
+  l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
+  l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS — Denis.Cherkasov1
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II с F-16D
   w_fab500: { weapon: 'fab500', stations: [] }, // ФАБ-500М-62 — Jeyhun1985 (модель с УМПК, комплект снят)
@@ -57,7 +72,7 @@ const META = {
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 83 → размер Mk 82 — набор NETRUNNER_pl
   w_jassm: { weapon: 'jassm', stations: [] }, // AGM-158 JASSM
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) — и для AARGM
-  w_mald: { weapon: 'mald', stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
+  w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
   w_decoy_e: { weapon: 'decoy_e', stations: [] }, // Harpy — ложная цель
   w_gbu39: { weapon: 'gbu39', stations: [] }, // GBU-39 SDB
   w_gbu31: { weapon: 'gbu31', stations: [] }, // Mk 84 с хвостом (GBU-24 с F-111 без головки) — как JDAM
@@ -118,7 +133,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=20261013a`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=20261016a`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
@@ -127,6 +142,7 @@ async function load(name, base) {
     const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true; return x;
   }));
   // меш «часть|материал»: у комплексов — body / turret / cradle, у остальных всё в body
+  const matte = !!(META[name] || META[name.replace(/_lo$/, '')] || {}).matte;
   const group = new THREE.Group(), parts = {};
   const partOf = (n) => { const k = n.includes('|') ? n.split('|')[0] : 'body'; if (!parts[k]) { parts[k] = new THREE.Group(); parts[k].name = k; group.add(parts[k]); } return parts[k]; };
   for (const m of meshes) {
@@ -138,7 +154,7 @@ async function load(name, base) {
     const map = pbr.baseColorTexture ? tex[pbr.baseColorTexture.index] : null;
     const mat = glass
       ? new THREE.MeshPhongMaterial({ color: new THREE.Color(f[0], f[1], f[2]).lerp(new THREE.Color(0.2, 0.26, 0.32), f[0] + f[1] + f[2] > 1.8 ? 0.8 : 0.4), /* белое «стекло» авторов — в тонированное, своё цветное — почти как есть */ transparent: true, opacity: Math.max(0.5, f[3]), specular: 0xffffff, shininess: 120, side: THREE.DoubleSide, depthWrite: false }) // стекло заметно: не меньше 0,5
-      : new THREE.MeshPhongMaterial({ map, color: new THREE.Color(f[0], f[1], f[2]), specular: 0x3a3a3a, shininess: 38, side: THREE.DoubleSide,
+      : new THREE.MeshPhongMaterial({ map, color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
         ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}) });
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; partOf(m.name || '').add(mesh);
   }
@@ -182,6 +198,9 @@ export function loadModels(base, onReady) {
   BASE = base; READY = onReady;
   for (const [name, m] of Object.entries(META)) if (!m.units && !m.bld && !m.lazy) start(name); // самолёты (кроме lazy), оружие, ракеты ПЗРК — сразу
 }
+// модели «Мульти-волны» и прочие lazy: начать загрузку / копия загруженной (или null)
+export function wantModel(name) { if (META[name] && BASE) start(name); }
+export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
 export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); start(n); } } // сначала лёгкая дальняя копия
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
 export function wantBuildings() { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld) start(n); }
@@ -189,6 +208,8 @@ export const bldModel = (name) => (META[name] && (META[name].bld || META[name].o
 // модель оружия: готовая (если есть и загрузилась) или процедурная геометрия с общим материалом
 const byKey = (f) => Object.fromEntries(Object.entries(META).filter(([, m]) => m[f]).flatMap(([n, m]) => [].concat(m[f]).map((k) => [k, n])));
 const WMODEL = byKey('weapon'), SAMMSL = byKey('samMissile'), LAUNCHER = byKey('launcher');
+// модель оружия по ключу AG — загрузить (lazy: оружие «Мульти-волны»)
+export function wantWeapon(key) { const n = WMODEL[key]; if (n && BASE) start(n); }
 // прицельный контейнер игрока (или null — тогда цилиндр)
 // (у самолётов pod — место подвески контейнера: ищем именно модель контейнера, pod === true)
 export function podModel() { const n = Object.keys(META).find((k) => META[k].pod === true); return n && LOADED[n] ? LOADED[n].clone() : null; }
@@ -211,7 +232,7 @@ export const classOfRole = (role) => (role === 'sead' || role === 'low' || role 
 export function planeModel(side, cls = 'strike', name = null) {
   if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла — пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);
-  const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n]).sort((a, b) => rank(a) - rank(b))[0];
+  const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name)).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
   const [n, m] = pick;
   return { obj: LOADED[n].clone(), stations: m.stations, nozzles: m.nozzles, nr: m.nr, pod: m.pod, name: n, cls: m.cls, internal: !!m.internal };

@@ -25,6 +25,24 @@ export function createAudio() {
   const B = {};     // буферы шумов
   const E = {};     // слои двигателя и окружения
   const voices = [];
+  // записанные звуки (файлы): имя → { url, buf }; грузятся после создания контекста. prop — петля мотора дрона в голосах
+  const SAMPLES = {}; let propSample = null;
+  function loadSample(name, url) {
+    const S0 = SAMPLES[name] = SAMPLES[name] || { url, buf: null, busy: false };
+    if (!ctx || S0.buf || S0.busy) return;
+    S0.busy = true;
+    fetch(url).then((r) => r.arrayBuffer()).then((ab) => new Promise((ok, no) => ctx.decodeAudioData(ab, ok, no)))
+      .then((b) => { S0.buf = b; if (name === propSample) attachProp(); }).catch(() => { S0.busy = false; });
+  }
+  // петля мотора дрона в каждом голосе: свой сдвиг начала и чуть разные обороты — повтор не слышен, дроны звучат по-разному
+  function attachProp() {
+    const S0 = SAMPLES[propSample]; if (!S0 || !S0.buf) return;
+    for (const v of voices) {
+      if (v.ps) continue;
+      const s0 = ctx.createBufferSource(); s0.buffer = S0.buf; s0.loop = true; v.psRate = 0.95 + Math.random() * 0.1; s0.playbackRate.value = v.psRate;
+      v.psG = gain(0); chain(s0, v.psG, v.air); s0.start(0, Math.random() * S0.buf.duration); v.ps = s0;
+    }
+  }
   let rpm = 0.55, crackleT = 0, spatialT = 0;
   const spatialWant = [];
   const now = () => ctx.currentTime;
@@ -78,6 +96,7 @@ export function createAudio() {
       // «гарнитура»: бортовые сигналы звучат как из наушника, а не как игрушка
       avionics = chain(gain(1), filt('highpass', 350), filt('peaking', 1800, 0.9, 5)); avionics.connect(out);
       buildEngine(); buildEnv(); buildVoices();
+      for (const [n, S0] of Object.entries(SAMPLES)) loadSample(n, S0.url); // заказанные до создания контекста
     } catch (_) { ctx = null; }
   }
 
@@ -126,10 +145,16 @@ export function createAudio() {
       const rumbG = gain(0.8); chain(src('brown', 0.9 + i * 0.03), filt('lowpass', 170, 0.6), rumbG, air);
       const whF = filt('bandpass', 2600, 12), whG = gain(0); chain(src('white', 1 + i * 0.01), whF, whG, air);
       const crG = gain(0); chain(src('crackle', 0.55 + i * 0.04), filt('highpass', 180), filt('lowpass', 1900, 0.5), crG, air);
-      voices.push({ pan, air, g, roarF, roarG, rumbG, whF, whG, crG, o: null });
+      // поршневой мотор дрона (prop): пила по частоте вспышек + «квадрат» на полторы частоты, через фильтр — «мопедный» звук;
+      // дрожание оборотов — медленный LFO по частоте. Для остальных голосов prG = 0
+      const po = ctx.createOscillator(), po2 = ctx.createOscillator(), pf = filt('lowpass', 1400, 1.6), prG = gain(0), p2g = gain(0.45);
+      po.type = 'sawtooth'; po2.type = 'square'; po.frequency.value = 110; po2.frequency.value = 165;
+      const wob = ctx.createOscillator(), wobG = gain(3); wob.frequency.value = 5.5 + i * 0.4; chain(wob, wobG); wobG.connect(po.frequency); wobG.connect(po2.frequency);
+      chain(po, pf); chain(po2, p2g, pf); chain(pf, prG, air); po.start(); po2.start(); wob.start();
+      voices.push({ pan, air, g, roarF, roarG, rumbG, whF, whG, crG, po, po2, pf, prG, ph: i * 1.7, o: null });
     }
   }
-  // listener — камера; cands — [{ o, kind: 'jet'|'boss'|'msl', pos, vel, fwd?, ab? }]; lvel — скорость слушателя
+  // listener — камера; cands — [{ o, kind: 'jet'|'boss'|'msl'|'prop', pos, vel, fwd?, ab? }]; lvel — скорость слушателя (prop — поршневой мотор дрона)
   function spatial(dt, camera, lvel, cands, active) {
     if (!ctx) return;
     const L = ctx.listener, cp = camera.position, e = camera.matrixWorld.elements;
@@ -142,7 +167,7 @@ export function createAudio() {
       // ближайшие источники (без сортировки и новых массивов: голосов всего 6)
       const want = spatialWant; want.length = 0;
       for (const c of cands) {
-        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : 12000)) continue;
+        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : c.kind === 'prop' ? 5000 : 12000)) continue;
         c._d = d; let i = want.length; while (i > 0 && want[i - 1]._d > d) i--;
         if (i < voices.length) { want.splice(i, 0, c); if (want.length > voices.length) want.pop(); }
       }
@@ -152,7 +177,8 @@ export function createAudio() {
     }
     for (const v of voices) {
       let c = null; if (v.o) for (const x of cands) if (x.o === v.o) { c = x; break; }
-      if (!c || !active || muted) { if (v.o) set(v.g.gain, 0, 0.1); if (!c) v.o = null; continue; }
+      if (!c || !active || muted) { if (v.o) set(v.g.gain, 0, 0.1); if (!c) v.o = null; set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); continue; }
+      if (c.kind !== 'prop') { set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); }
       const p = c.pos;
       if (v.pan.positionX) { v.pan.positionX.value = p.x; v.pan.positionY.value = p.y; v.pan.positionZ.value = p.z; } else v.pan.setPosition(p.x, p.y, p.z);
       const dx = cp.x - p.x, dy = cp.y - p.y, dz = cp.z - p.z, d = Math.hypot(dx, dy, dz) || 1;
@@ -163,6 +189,16 @@ export function createAudio() {
       if (c.kind === 'msl') { // ракетный двигатель: жёсткий шипящий рёв
         set(v.roarF.frequency, 1300 * dop); v.roarF.Q.value = 0.45; set(v.roarG.gain, 1.6); set(v.rumbG.gain, 0.3);
         set(v.whF.frequency, 4200 * dop); v.whF.Q.value = 1.2; set(v.whG.gain, 1.2); set(v.crG.gain, 0.6); set(v.g.gain, 0.55);
+      } else if (c.kind === 'prop') { // поршневой мотор с толкающим винтом: «мопедный» тон (генераторы) + немного шума винта
+        const wob = 1 + 0.03 * Math.sin(performance.now() / 1300 + v.ph); // обороты «гуляют»
+        if (v.ps) { // записанный мотор (петля): высота — по допплеру; синтез и шум — выключены
+          set(v.ps.playbackRate, v.psRate * dop * wob); set(v.psG.gain, 1.6); set(v.prG.gain, 0); set(v.roarG.gain, 0); set(v.rumbG.gain, 0.08); set(v.crG.gain, 0);
+        } else {
+          const f = 108 * dop * wob;
+          set(v.po.frequency, f); set(v.po2.frequency, f * 1.5); set(v.pf.frequency, 900 + 1400 * Math.exp(-d / 1500)); set(v.prG.gain, 0.5);
+          set(v.roarF.frequency, 420 * dop); v.roarF.Q.value = 1.2; set(v.roarG.gain, 0.25); set(v.rumbG.gain, 0.15); set(v.crG.gain, 0.35);
+        }
+        set(v.whG.gain, 0); set(v.g.gain, 0.9 * (c.gain || 1));
       } else {
         const big = c.kind === 'boss';
         // спереди слышнее вой компрессора, сзади — рёв струи и треск форсажа
@@ -215,6 +251,14 @@ export function createAudio() {
     g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t0 + att); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     chain(s, f, g, dest); if (wet) { const w = gain(wet); g.connect(w); w.connect(reverbIn); }
     s.start(t0, Math.random() * 2); s.stop(t0 + dur + 0.05); return f;
+  }
+  // сирена и т. п.: держит громкость (нарастание 0,4 с, спад 0,8 с), частота — по точкам [[время, Гц], …] (линейно)
+  function sweep(type, pts, vol, when = 0, wet = 0, dest = out) {
+    if (!ctx || muted) return;
+    const t0 = now() + when, dur = pts[pts.length - 1][0], o = ctx.createOscillator(), g = ctx.createGain(), f = filt('lowpass', 2400, 0.7); o.type = type;
+    o.frequency.setValueAtTime(pts[0][1], t0); for (const [t, hz] of pts.slice(1)) o.frequency.linearRampToValueAtTime(hz, t0 + t);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.4); g.gain.setValueAtTime(vol, t0 + dur - 0.8); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    chain(o, f, g, dest); if (wet) { const w = gain(wet); g.connect(w); w.connect(reverbIn); } o.start(t0); o.stop(t0 + dur + 0.05);
   }
   function osc(type, f0, f1, dur, vol, when = 0, wet = 0, dest = out) {
     if (!ctx || muted) return;
@@ -283,6 +327,16 @@ export function createAudio() {
     // кирпичи для других игр на этом звуке («Воздушное превосходство»): шумовой и тональный всплеск; avio — через «гарнитуру»
     noise(buf, dur, vol, type, freq, q = 0.7, when = 0, wet = 0, avio = false, att = 0.008) { return burst(buf, dur, vol, type, freq, q, when, wet, avio ? avionics : out, att); },
     tone(type, f0, f1, dur, vol, when = 0, wet = 0, avio = false) { osc(type, f0, f1, dur, vol, when, wet, avio ? avionics : out); },
+    sweep(type, pts, vol, when = 0, wet = 0) { sweep(type, pts, vol, when, wet); },
+    loadSample, setPropSample(name) { propSample = name; if (ctx) attachProp(); },
+    sampleDur(name) { const S0 = SAMPLES[name]; return S0 && S0.buf ? S0.buf.duration : 0; },
+    time() { return ctx ? ctx.currentTime : 0; },
+    // разовый записанный звук: громкость, задержка, скорость (ниже — «тяжелее»), срез верха, доля в реверберации
+    sample(name, vol, when = 0, rate = 1, cut = 20000, wet = 0, offset = 0) { // offset — с какого места записи (с)
+      const S0 = SAMPLES[name]; if (!ctx || muted || !S0 || !S0.buf) return false;
+      const t0 = now() + when, s0 = ctx.createBufferSource(), g = gain(vol), f = filt('lowpass', cut, 0.6); s0.buffer = S0.buf; s0.playbackRate.value = rate;
+      chain(s0, f, g, out); if (wet) { const w = gain(wet); g.connect(w); w.connect(reverbIn); } s0.start(t0, offset); return true;
+    },
   };
   return A;
 }
