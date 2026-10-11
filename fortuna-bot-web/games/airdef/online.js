@@ -3,10 +3,11 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261016a';
-import * as O from './sim/online.js?v=20261016a';
-import { AG, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261016a';
-import { MODES } from './sim/strike.js?v=20261016a';
+import { createNet } from './net.js?v=20261018j';
+import * as O from './sim/online.js?v=20261018j';
+import * as MW from './sim/online-multi.js?v=20261018j';
+import { AG, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261018j';
+import { MODES } from './sim/strike.js?v=20261018j';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -15,8 +16,8 @@ const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<
 export function createOnline(C, ctrls) {
   const { $, ls, snd } = C;
   const N = createNet(C); C.netc = N;
-  const ui = { mode: ls.get('fortuna_ad_mode') || 'arcade', role: ls.get('fortuna_ad_role') || 'any', size: +(ls.get('fortuna_ad_size') || 2), era: +(ls.get('fortuna_ad_era') || 2), sideAir: ls.get('fortuna_ad_side') || 'random', fill: ls.get('fortuna_ad_fill') !== '0', code: '' };
-  const saveUi = () => { ls.set('fortuna_ad_mode', ui.mode); ls.set('fortuna_ad_role', ui.role); ls.set('fortuna_ad_size', String(ui.size)); ls.set('fortuna_ad_era', String(ui.era)); ls.set('fortuna_ad_side', ui.sideAir); ls.set('fortuna_ad_fill', ui.fill ? '1' : '0'); };
+  const ui = { kind: ls.get('fortuna_ad_kind') || 'air', mode: ls.get('fortuna_ad_mode') || 'arcade', role: ls.get('fortuna_ad_role') || 'any', size: +(ls.get('fortuna_ad_size') || 2), era: +(ls.get('fortuna_ad_era') || 2), sideAir: ls.get('fortuna_ad_side') || 'random', fill: ls.get('fortuna_ad_fill') !== '0', code: '' };
+  const saveUi = () => { ls.set('fortuna_ad_kind', ui.kind); ls.set('fortuna_ad_mode', ui.mode); ls.set('fortuna_ad_role', ui.role); ls.set('fortuna_ad_size', String(ui.size)); ls.set('fortuna_ad_era', String(ui.era)); ls.set('fortuna_ad_side', ui.sideAir); ls.set('fortuna_ad_fill', ui.fill ? '1' : '0'); };
   const seg = (id, cur, items) => `<div class="seg" data-oseg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const inMenu = () => C.state === 'menu' && C.setup.game === 'online';
   const rerender = () => { if (inMenu()) C.menu.render(); renderWait(); };
@@ -33,14 +34,17 @@ export function createOnline(C, ctrls) {
     const r = N.room;
     if (r && r.state === 'lobby') return lobby(el, r);
     if (N.queued) { el.innerHTML = `<div class="cat-h">Поиск боя</div><p class="hint">${waitText()}</p>`; return; }
-    el.innerHTML = `<div class="cat-h">Быстрый бой</div>
+    const mw = ui.kind === 'multi', srch = N.search || {};
+    el.innerHTML = `<div class="prow"><span>Игра</span>${seg('kind', ui.kind, [['air', 'Вылет и оборона'], ['multi', 'Мульти-волна']])}</div>
+      <div class="cat-h">Быстрый бой</div>
       <div class="prow"><span>Режим</span>${seg('mode', ui.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>
-      <div class="prow"><span>Роль</span>${seg('role', ui.role, ROLES)}</div>
-      <p class="hint">Авиация против ПВО города, три волны. Ждём минимум 2 на 2, потом ещё 15 с — вдруг наберётся больше. Людей долго нет — добавим ботов.${N.search ? ` Сейчас ищут: аркада ${N.search.arcade}, реализм ${N.search.real}.` : ''}</p>
+      ${mw ? '' : `<div class="prow"><span>Роль</span>${seg('role', ui.role, ROLES)}</div>`}
+      <p class="hint">${mw ? `Команда против команды, два раунда: в одном ваша команда собирает волну (дроны, крылатые, баллистика — наряд на цели), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка — ${MW.PREP_T} с, на ней — чат команды.${N.search ? ` Сейчас ищут: аркада ${srch.marcade || 0}, реализм ${srch.mreal || 0}.` : ''}`
+        : `Авиация против ПВО города, три волны. Ждём минимум 2 на 2, потом ещё 15 с — вдруг наберётся больше. Людей долго нет — добавим ботов.${N.search ? ` Сейчас ищут: аркада ${srch.arcade}, реализм ${srch.real}.` : ''}`}</p>
       <div class="cat-h">Своя комната</div>
       <div class="prow"><span>Формат</span>${seg('size', ui.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>
-      <div class="prow"><span>Эпоха</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>
-      <div class="prow"><span>Авиация</span>${seg('side', ui.sideAir, SIDES)}</div>
+      <div class="prow"><span>Эпоха</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id] && (!mw || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
+      ${mw ? '' : `<div class="prow"><span>Авиация</span>${seg('side', ui.sideAir, SIDES)}</div>`}
       <div class="prow"><span>Пустые места</span>${seg('fill', ui.fill ? 1 : 0, [[1, 'Боты'], [0, 'Без ботов']])}</div>
       <button class="btn alt" data-oa="create">Создать комнату</button>
       <div class="cat-h">Войти по коду</div>
@@ -48,14 +52,15 @@ export function createOnline(C, ctrls) {
   }
   function lobby(el, r) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
-    const col = (t) => `<div class="adteam"><div class="cat-h">${O.ROLE_NAMES[t]} · ${r.players.filter((p) => p.team === t).length}/${r.size}</div>` +
+    const TN = r.kind === 'multi' ? MW.TEAM_NAME : O.ROLE_NAMES, TT = r.kind === 'multi' ? MW.TEAMS : ['air', 'pvo'];
+    const col = (t) => `<div class="adteam"><div class="cat-h">${TN[t]} · ${r.players.filter((p) => p.team === t).length}/${r.size}</div>` +
       r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}"><b>${esc(p.name)}</b>${p.bot ? ' <span class="dim">бот</span>' : ''}${p.ready ? ' <span class="okc">✓</span>' : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
       (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">Перейти сюда</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">+ бот</button>` : '') + '</div>';
     el.innerHTML = `<div class="cat-h">Комната <b class="adcode">${r.code}</b> <button class="mini" data-oa="invite">Пригласить</button> <button class="mini" data-oa="leave">Выйти</button></div>
-      <p class="hint">${MODES[r.mode].name} · ${r.size}×${r.size} · эпоха ${ERAS[r.era - 1].short || r.era} · авиация — ${r.sideAir === 'east' ? 'восток' : 'запад'}${r.fill ? ' · пустые места — боты' : ''}</p>
+      <p class="hint">${r.kind === 'multi' ? 'Мульти-волна · два раунда со сменой сторон' : ''}${r.kind === 'multi' ? ' · ' : ''}${MODES[r.mode].name} · ${r.size}×${r.size} · эпоха ${ERAS[r.era - 1].short || r.era}${r.kind === 'multi' ? '' : ` · авиация — ${r.sideAir === 'east' ? 'восток' : 'запад'}`}${r.fill ? ' · пустые места — боты' : ''}</p>
       ${host ? `<div class="prow"><span>Формат</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div><div class="prow"><span>Эпоха</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>
-        <div class="prow"><span>Авиация</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div><div class="prow"><span>Режим</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
-      <div class="adteams">${col('air')}${col('pvo')}</div>
+        ${r.kind === 'multi' ? '' : `<div class="prow"><span>Авиация</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>Режим</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
+      <div class="adteams">${TT.map(col).join('')}</div>
       <p class="hint">Бой начнётся, когда все нажмут «Готов».</p>`;
   }
   // кнопка внизу карточки меню
@@ -67,13 +72,13 @@ export function createOnline(C, ctrls) {
   function primary() {
     if (N.conn !== 'on') { N.connect(); return; }
     if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); N.ready(!(me && me.ready)); return; }
-    if (N.queued) N.unqueue(); else N.queue(ui.mode, ui.role);
+    if (N.queued) N.unqueue(); else N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined);
   }
   function onClick(e) {
     const b = e.target.closest('[data-v]'), sg = b && b.closest('[data-oseg]');
     if (sg) {
       const v = b.dataset.v, k = sg.dataset.oseg;
-      if (k === 'mode') ui.mode = v; else if (k === 'role') ui.role = v; else if (k === 'size') ui.size = +v; else if (k === 'era') ui.era = +v; else if (k === 'side') ui.sideAir = v; else if (k === 'fill') ui.fill = v === '1';
+      if (k === 'kind') { ui.kind = v; if (v === 'multi' && ui.era < 2) ui.era = 4; } else if (k === 'mode') ui.mode = v; else if (k === 'role') ui.role = v; else if (k === 'size') ui.size = +v; else if (k === 'era') ui.era = +v; else if (k === 'side') ui.sideAir = v; else if (k === 'fill') ui.fill = v === '1';
       else if (k === 'rsize') N.opts({ size: +v }); else if (k === 'rera') N.opts({ era: +v }); else if (k === 'rside') N.opts({ sideAir: v }); else if (k === 'rmode') N.opts({ mode: v });
       saveUi(); snd.click(); rerender(); return;
     }
@@ -84,15 +89,15 @@ export function createOnline(C, ctrls) {
     snd.click();
     switch (a.dataset.oa) {
       case 'retry': N.conn = 'off'; N.connect(); break;
-      case 'create': N.create({ mode: ui.mode, size: ui.size, era: ui.era, sideAir: ui.sideAir === 'random' ? null : ui.sideAir, fill: ui.fill, team: ui.role === 'any' ? null : ui.role }); break;
-      case 'join': { const v = ($('adCode') && $('adCode').value || '').toUpperCase(); ui.code = v; if (v.length === 4) N.join(v, ui.role === 'any' ? null : ui.role); break; }
+      case 'create': N.create(ui.kind === 'multi' ? { kind: 'multi', mode: ui.mode, size: ui.size, era: Math.max(2, ui.era), fill: ui.fill } : { mode: ui.mode, size: ui.size, era: ui.era, sideAir: ui.sideAir === 'random' ? null : ui.sideAir, fill: ui.fill, team: ui.role === 'any' ? null : ui.role }); break;
+      case 'join': { const v = ($('adCode') && $('adCode').value || '').toUpperCase(); ui.code = v; if (v.length === 4) N.join(v, ui.kind === 'multi' || ui.role === 'any' ? null : ui.role); break; }
       case 'leave': N.leave(); break;
       case 'team': N.team(a.dataset.t); break;
       case 'invite': invite(); break;
     }
   }
   function invite() {
-    const url = `https://fortunawtm.com/fortuna-bot-web/games/airdef.html?ad=${N.room.code}`, text = `Бой «Воздушное превосходство»: комната ${N.room.code}`;
+    const url = `https://fortunawtm.com/fortuna-bot-web/games/airdef.html?ad=${N.room.code}`, text = `Бой «Air Superiority Online»: комната ${N.room.code}`;
     try { const tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.openTelegramLink) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`); return; } } catch (_) { /* не Telegram */ }
     if (navigator.share) { navigator.share({ title: text, url }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(url); C.say('Ссылка скопирована', 2); } catch (_) { C.say(`Код комнаты: ${N.room.code}`, 3); }
@@ -103,7 +108,7 @@ export function createOnline(C, ctrls) {
   function waitText() {
     const q = N.queued; if (!q) return '';
     const sec = Math.floor((performance.now() - q.t) / 1000), w = N.qwait ? Math.max(0, Math.ceil((N.qwait - performance.now()) / 1000)) : 0;
-    return `${MODES[q.mode].name} · роль: ${ROLES.find((r) => r[0] === ui.role)[1]} · ищем ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}${w ? ` · набралось 2 на 2 — старт через ${w} с` : ''}`;
+    return `${q.kind === 'multi' ? 'Мульти-волна · ' : ''}${MODES[q.mode].name}${q.kind === 'multi' ? '' : ` · роль: ${ROLES.find((r) => r[0] === ui.role)[1]}`} · ищем ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}${w ? ` · набралось 2 на 2 — старт через ${w} с` : ''}`;
   }
   function renderWait() {
     const on = !!N.queued && C.state === 'menu';
@@ -123,12 +128,13 @@ export function createOnline(C, ctrls) {
     for (const id of ['menu', 'end', 'pauseScr']) $(id).classList.remove('on');
     document.body.classList.remove('menuing'); document.body.classList.add('playing');
     C.state = 'play'; C.camera.clearViewOffset(); C.lastGame = 'online'; C.shell.play(true);
-    if (team() === 'air') { C.ctrl = ctrls.air; ctrls.air.startNet(N); } else { C.ctrl = ctrls.defense; ctrls.defense.startNet(N); }
+    if (N.battle && N.battle.kind === 'multi') { C.ctrl = ctrls.defense; ctrls.defense.startNetMulti(N); }
+    else if (team() === 'air') { C.ctrl = ctrls.air; ctrls.air.startNet(N); } else { C.ctrl = ctrls.defense; ctrls.defense.startNet(N); }
     feed = []; helps = []; renderWait(); renderPlan();
   }
   // выбор связки лётчиком: что по карману, что выбрали союзники
   function renderPlan() {
-    const r = N.room, show = N.battle && r && r.state === 'plan' && team() === 'air';
+    const r = N.room, show = N.battle && N.battle.kind !== 'multi' && r && r.state === 'plan' && team() === 'air';
     planEl.style.display = show ? 'block' : 'none'; if (!show) return;
     const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir);
     const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LOADOUTS[B.era][p.choice] : null));
@@ -157,9 +163,9 @@ export function createOnline(C, ctrls) {
     rerender();
     const r = N.room; if (!r || !N.battle) return;
     if (C.state !== 'play') enterBattle();
-    if (team() === 'pvo') ctrls.defense.netSync();
+    if (team() === 'pvo' || N.battle.kind === 'multi') ctrls.defense.netSync();
     renderPlan();
-    if (was !== r.state && r.state === 'play') { C.say(`Волна ${r.wave}!`, 2.5); snd.alarm(); }
+    if (was !== r.state && r.state === 'play' && N.battle.kind !== 'multi') { C.say(`Волна ${r.wave}!`, 2.5); snd.alarm(); }
   });
   N.on('spawn', (m) => { N.clog('spawn', { lives: m.lives, plane: m.plane, load: m.load.map((l) => l.key + ':' + l.n).join(',') }); if (team() === 'air') ctrls.air.netSpawn(m); });
   N.on('meHit', (hp, by) => ctrls.air.netHit(hp, by));
@@ -167,6 +173,8 @@ export function createOnline(C, ctrls) {
   N.on('meAI', () => { N.clog('to_ai', { hidden: document.visibilityState }); ctrls.air.netDown('Связь пропала — самолёт довёл ИИ'); });
   N.on('kill', (who, whom, by) => { feed.push({ t: performance.now(), s: `${who} → ${whom}${by ? ' · ' + by : ''}` }); if (feed.length > 6) feed.shift(); });
   N.on('help', (m) => { feed.push({ t: performance.now(), s: `${m.name}: Мне нужна помощь!`, help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); snd.alarm(); });
+  N.on('chat', () => ctrls.defense.chatSync());
+  N.on('roundEnd', (m) => { ctrls.defense.setNetRes(m); C.say(`Раунд ${m.round}: ${MW.TEAM_NAME[m.atk]} разрушил ${Math.round(m.k * 100)}% ценности объектов${m.last ? '' : ' · стороны меняются'}`, 6); });
   N.on('waveEnd', (m) => {
     // итоги волны: вклад каждой роли — цели, подавленные РЛС, сбитые охотники и ударники
     const det = `РЛС уничтожено: ${m.radarKills || 0} · сбито охотников за ПВО: ${m.downsSead || 0}, ударников: ${Math.max(0, (m.downs || 0) - (m.downsSead || 0))}`;
@@ -174,6 +182,14 @@ export function createOnline(C, ctrls) {
     if (team() === 'pvo') ctrls.defense.setNetRes(m);
   });
   N.on('end', (m) => {
+    if (m.kind === 'multi') {
+      const me = N.myPlayer(), v0 = m.v0 || 1, list = m.players.slice().sort((a, b) => b.score - a.score), win = m.winner ? me && m.winner === me.team : null;
+      C.showEnd({ title: win ? 'Победа' : win === false ? 'Поражение' : 'Ничья', win, reason: `Волна Востока разрушила ${Math.round(100 * m.scores.east / v0)}%, Запада — ${Math.round(100 * m.scores.west / v0)}% ценности объектов`,
+        stats: [[`${Math.round(100 * m.scores.east / v0)}%`, 'Восток'], [`${Math.round(100 * m.scores.west / v0)}%`, 'Запад'], [me ? Math.round(me.score || 0) : 0, 'очков']],
+        note: list.map((p) => `${esc(p.name)}${p.bot ? ' (бот)' : ''} — ${MW.TEAM_NAME[p.team]}: ${p.kills} перехв./уничт., ${p.score} очков`).join('<br>') });
+      if (m.result && C.claimOnline) C.claimOnline(m.result);
+      return;
+    }
     const me = N.myPlayer(), win = me && m.winner === me.team, list = m.players.slice().sort((a, b) => b.score - a.score);
     C.showEnd({ title: win ? 'Победа' : 'Поражение', win, reason: m.winner === 'air' ? `Авиация уничтожила ${Math.round(m.valueK * 100)}% ценности целей` : `ПВО отстояла город: уничтожено ${Math.round(m.valueK * 100)}% ценности целей`,
       stats: [[me ? me.kills || 0 : 0, me && me.team === 'air' ? 'комплексов уничтожено' : 'самолётов сбито'], [me ? Math.round(me.score || 0) : 0, 'очков'], [m.winner === 'air' ? 'Авиация' : 'ПВО', 'победила']],
@@ -233,5 +249,5 @@ export function createOnline(C, ctrls) {
   const inv = new URLSearchParams(location.search).get('ad');
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }
   else if (new URLSearchParams(location.search).get('mp') === '1') { C.setup.game = 'online'; N.connect(); } // сайт: кнопка «Онлайн-бой» — сразу раздел онлайна
-  return { N, panel, primary, primaryText, onClick, again() { C.toMenu(); C.setup.game = 'online'; if (N.conn === 'on') N.queue(ui.mode, ui.role); C.menu.render(); } };
+  return { N, panel, primary, primaryText, onClick, again() { C.toMenu(); C.setup.game = 'online'; if (N.conn === 'on') N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined); C.menu.render(); } };
 }

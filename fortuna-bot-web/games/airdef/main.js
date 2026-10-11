@@ -8,26 +8,26 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261016a';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261016a';
-import { createPipeline } from '../drone/post.js?v=20261016a';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261016a';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261016a';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261016a';
-import { createStrike, MODES } from './sim/strike.js?v=20261016a';
-import { createRaid } from './sim/raid.js?v=20261016a';
-import { POD } from './sim/combined.js?v=20261016a';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261016a';
-import { slotCount } from './launchers.js?v=20261016a';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel } from './models.js?v=20261016a';
-import { createSound } from './sound.js?v=20261016a';
-import { createAir } from './air.js?v=20261016a';
-import { createDefense } from './defense.js?v=20261016a';
-import { createDirector } from './director.js?v=20261016a';
-import { createOnline } from './online.js?v=20261016a';
-import { createShell } from './shell.js?v=20261016a';
-import { createTraining, LESSONS } from './training.js?v=20261016a';
-import { createMenu } from './menu.js?v=20261016a';
+import { buildCity, CITY } from './city.js?v=20261018j';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261018j';
+import { createPipeline } from '../drone/post.js?v=20261018j';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261018j';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261018j';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261018j';
+import { createStrike, MODES } from './sim/strike.js?v=20261018j';
+import { createRaid } from './sim/raid.js?v=20261018j';
+import { POD } from './sim/combined.js?v=20261018j';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261018j';
+import { slotCount } from './launchers.js?v=20261018j';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel } from './models.js?v=20261018j';
+import { createSound } from './sound.js?v=20261018j';
+import { createAir } from './air.js?v=20261018j';
+import { createDefense } from './defense.js?v=20261018j';
+import { createDirector } from './director.js?v=20261018j';
+import { createOnline } from './online.js?v=20261018j';
+import { createShell } from './shell.js?v=20261018j';
+import { createTraining, LESSONS } from './training.js?v=20261018j';
+import { createMenu } from './menu.js?v=20261018j';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -244,6 +244,8 @@ C.syncUnits = function () {
         if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); slots.push(sm); }
         tg.add(cg); g.add(tg); tur.push({ tg, cg });
       }
+      // антенна обзора (готовая модель): на первой башне, ось вращения — центр её опоры (нижние 15 % по высоте)
+      if (gm && gm.radar && tur.length) { const rd = gm.radar.clone(), pv = new THREE.Group(); obj(rd, pv); tur[0].tg.add(pv); const ax = radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv; }
       g.userData.tur = tur; g.userData.slots = slots; g.userData.nSlots = md.LN ? slotCount(md.LN) : 0;
       if (!P.shadows) addBlob(g); // без карты теней — мягкое пятно под машиной (иначе «висит» над землёй)
       g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g);
@@ -251,6 +253,16 @@ C.syncUnits = function () {
     g.position.copy(u.pos); g.position.y -= 1.5; seat(g, u); // по рельефу: на склоне длинная машина не уходит в землю
   }
 };
+// ось антенны обзора: центр (x, z) вершин её нижней части — опоры или мачты (тарелка бывает смещена от оси)
+const RADAR_W = { gepard: 6.3, tor: 6.3, osa: 3.5, pantsir: 4.2 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее
+function radarAxis(o) {
+  o.updateMatrixWorld(true); const V = new THREE.Vector3(), P = [];
+  o.traverse((m) => { if (!m.isMesh) return; const a = m.geometry.attributes.position; for (let i = 0; i < a.count; i += 3) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld); P.push(V.x, V.y, V.z); } });
+  let y0 = 1e9, y1 = -1e9; for (let i = 1; i < P.length; i += 3) { y0 = Math.min(y0, P[i]); y1 = Math.max(y1, P[i]); }
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; const lim = y0 + (y1 - y0) * 0.15;
+  for (let i = 0; i < P.length; i += 3) if (P[i + 1] <= lim) { x0 = Math.min(x0, P[i]); x1 = Math.max(x1, P[i]); z0 = Math.min(z0, P[i + 2]); z1 = Math.max(z1, P[i + 2]); }
+  return x0 < 1e8 ? [(x0 + x1) / 2, (z0 + z1) / 2] : [0, 0];
+}
 // мягкое тёмное пятно под машиной по её габаритам (радиальный градиент, без записи глубины)
 let blobTex = null;
 function addBlob(g) {
@@ -528,6 +540,7 @@ function syncWorld(dt, t) {
       const rem = u.reloadT > 0 ? 0 : Math.max(0, Math.round(u.ammo)), fired = u.S.ammo - rem;
       for (let k = 0; k < sl.length; k++) sl[k].visible = (rem >= N || ((k - fired % N) + N) % N < rem) && !(u.slotT[k] > 0);
     }
+    if (g.userData.radar && u.emit) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена
     const d = g.userData.dish; if (!d) continue;
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;
@@ -680,6 +693,7 @@ for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); };
 $('mute').textContent = snd.muted ? '✕♪' : '♪';
 for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto);
 addEventListener('keydown', (e) => {
+  if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; // ввод текста (код комнаты, чат команды) — не управление
   if (C.state === 'play' && (e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) { C.togglePause(); return; }
   if (C.ctrl && C.ctrl.onKey && !C.paused) C.ctrl.onKey(e, true);
 });

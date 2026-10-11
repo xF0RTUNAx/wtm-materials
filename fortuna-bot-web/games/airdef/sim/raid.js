@@ -5,10 +5,10 @@
 // carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { AG } from '../arsenal.js?v=20261016a';
-import { makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261016a';
-import { predictBomb } from './strike.js?v=20261016a';
-import { CITY } from '../city.js?v=20261016a';
+import { AG } from '../arsenal.js?v=20261018j';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261018j';
+import { predictBomb } from './strike.js?v=20261018j';
+import { CITY } from '../city.js?v=20261018j';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -30,6 +30,7 @@ const V = () => new THREE.Vector3();
 const TMP = V(), TMP2 = V(), DIR = V(), PI = V();
 
 export function createRaid(S, city, rnd, opts = {}) {
+  setGround(city.groundH); // рельеф города — в той же копии core.js, что у налёта (сервер и проверки грузят её по другому адресу)
   const side = opts.side || 'west', era = opts.era || 2;   // сторона и эпоха АТАКУЮЩИХ
   const planes = [];
   let pid = 1000;

@@ -46,7 +46,7 @@ function equipmentEquip(playerId, equipmentSlug) {
   return callEdgeFunction(CONFIG.EQUIPMENT_EQUIP_URL, { player_id: playerId, equipment_slug: equipmentSlug });
 }
 
-// операция «Симулятора Летки» (общая цель): статус, забрать награды, запуск новой (админ)
+// операция «Fighter Jet Online» (общая цель): статус, забрать награды, запуск новой (админ)
 function operationStatus(playerId) {
   return callEdgeFunction(CONFIG.OPERATION_URL, { player_id: playerId });
 }

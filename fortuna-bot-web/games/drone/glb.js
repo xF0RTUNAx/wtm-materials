@@ -8,7 +8,7 @@ import { PLANE_META, MODEL_CREDITS } from '../airdef/models.js?v=20261013a';
 const BASE = new URL('../airdef/models/', import.meta.url).href;
 // самолёты на выбор: key — glb (или 'izd' — процедурное «Изделие»)
 export const PLANES = [
-  { key: 'izd', name: '«Изделие Фортуна-1»', desc: 'беспилотник «Летки» — бесхвостка с развалёнными килями' },
+  { key: 'izd', name: '«Изделие Фортуна-1»', desc: 'беспилотник Fighter Jet Online — бесхвостка с развалёнными килями' },
   { key: 'su30', name: 'Су-30', desc: 'двухместный тяжёлый истребитель' },
   { key: 'mig29', name: 'МиГ-29', desc: 'лёгкий фронтовой истребитель' },
   { key: 'f18', name: 'F/A-18E Super Hornet', desc: 'палубный многоцелевой (на законцовках — свои учебные «Сайдуайндеры»)' },

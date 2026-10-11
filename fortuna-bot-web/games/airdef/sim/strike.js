@@ -13,9 +13,9 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261016a';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261016a';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261016a';
+import { AG, SAM } from '../arsenal.js?v=20261018j';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261018j';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261018j';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
@@ -452,7 +452,7 @@ export function createStrike(ctx) {
         const dmin = Math.hypot(qx + vx * ts, qy + vy * ts, qz + vz * ts);
         if (dmin < (T.W.kind === 'tbm' ? Math.max(70, M_.blast * 2) : M_.blast * 0.85 + 2)) { // по баллистике на встречных 3+ км/с — шире (успех решает S.abm)
           // баллистическую цель — с вероятностью комплекса (S.abm), манёвр на конечном участке её снижает
-          const pk = T.W.kind === 'tbm' ? (S.abm || 0) * (T.W.man && T.phase === 'term' ? 0.6 : 1) : 1;
+          const pk = T.W.kind === 'tbm' ? Math.min(0.85, (S.abm || 0) * 1.2) * (T.W.man && T.phase === 'term' ? 0.7 : 1) : 1; // ×1,2 — игровая поблажка (2026-10-16)
           m.dead = true; fx.explosion(m.pos, M_.blast * 0.6, 'air');
           if (rnd() < pk) { intercept(T); fx.samEnd(m, true); } else fx.samEnd(m, false);
           return;

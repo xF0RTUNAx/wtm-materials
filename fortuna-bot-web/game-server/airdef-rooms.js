@@ -18,6 +18,7 @@ import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/
 import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal.js?v=20260930m';
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
+import { createMulti } from './airdef-multi.js';
 
 const city = buildCity(1); setGround(city.groundH); // город один для всех комнат (как у клиентов: seed 1), только чтение
 const clock = () => performance.now() / 1000;
@@ -40,6 +41,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   const rooms = new Map(), clients = new Set();
   const queues = { arcade: [], real: [] };   // [{ c, role, t }]
   const goAt = { arcade: 0, real: 0 };        // набралось 2 на 2 — когда собирать комнату
+  const mqueues = { arcade: [], real: [] }, mgoAt = { arcade: 0, real: 0 }; // «Мульти-волна»: своя очередь (роль не нужна — оба раунда)
   let nextId = 1;
   // отказ игроку — с записью в журнал (что просил, почему нельзя)
   const deny = (c, msg, cmd) => { send(c, { t: 'deny', msg }); J(c.room, 'deny', { who: c.name, cmd, msg }); };
@@ -47,12 +49,15 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   const bcast = (r, msg, filter = null) => { const s = JSON.stringify(msg); for (const p of r.players.values()) if (p.ws && (!filter || filter(p))) try { if (p.ws.readyState === 1) p.ws.send(s); } catch (_) { /* закрылся */ } };
   const team = (r, t) => [...r.players.values()].filter((p) => p.team === t);
   const humans = (r) => [...r.players.values()].filter((p) => !p.bot);
+  const teamsOf = (r) => (r.kind === 'multi' ? ['east', 'west'] : ['air', 'pvo']); // «Мульти-волна» — восток и запад (оба раунда)
+  let MU = null; // «Мульти-волна» (airdef-multi.js) — после sendRoom/closeRoom
 
   // ── вид комнаты (выбор связок авиации видят только союзники) ──
   const view = (r, me) => ({
     t: 'room', code: r.code, mode: r.mode, size: r.size, era: r.era, sideAir: r.sideAir, host: r.host, quick: !!r.quick, state: r.state, wave: r.wave,
     left: r.phaseT ? Math.max(0, Math.round(r.phaseT - r.t)) : null, valueK: r.valueK || 0, fill: !!r.fill, lead: r.lead || null,
-    players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws,
+    ...(r.kind === 'multi' && MU ? MU.viewExtra(r, me) : {}),
+    players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws, spent: !me || p.team === me.team ? p.spent || 0 : null,
       budget: !me || p.team === me.team ? p.budget : null, choice: (!me || p.team === me.team) && p.choice !== null && p.choice !== undefined ? p.choice : null,
       kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0), lives: p.lives ?? null })),
   });
@@ -64,7 +69,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     const code = O.makeCode(new Set(rooms.keys()));
     const r = { code, mode: O.AD_MODES.includes(o.mode) ? o.mode : 'arcade', size: O.AD_SIZES.includes(+o.size) ? +o.size : 2, era: [1, 2, 3, 4].includes(+o.era) ? +o.era : 1 + Math.floor(Math.random() * 4),
       sideAir: o.sideAir === 'east' || o.sideAir === 'west' ? o.sideAir : Math.random() < 0.5 ? 'east' : 'west', host: host ? host.id : 0, quick: !!o.quick, fill: o.fill !== false,
-      players: new Map(), state: 'lobby', t: 0, phaseT: 0, wave: 0, tick: 0, S: null, raid: null, targets: [], valueK: 0, events: [] };
+      players: new Map(), state: 'lobby', t: 0, phaseT: 0, wave: 0, tick: 0, S: null, raid: null, targets: [], valueK: 0, events: [], kind: o.kind === 'multi' ? 'multi' : 'air' };
     rooms.set(code, r);
     J(r, 'room', { size: r.size, era: r.era });
     return r;
@@ -73,25 +78,27 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     leaveRoom(c);
     const cap = (t) => team(r, t).length < r.size;
     // бот на месте нужной команды уступает человеку
-    let t = wantTeam === 'air' || wantTeam === 'pvo' ? wantTeam : team(r, 'air').length <= team(r, 'pvo').length ? 'air' : 'pvo';
-    if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else t = t === 'air' ? 'pvo' : 'air'; }
+    const [T1, T2] = teamsOf(r);
+    let t = wantTeam === T1 || wantTeam === T2 ? wantTeam : team(r, T1).length <= team(r, T2).length ? T1 : T2;
+    if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else t = t === T1 ? T2 : T1; }
     if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else return send(c, { t: 'err', msg: 'Комната заполнена' }); }
-    Object.assign(c, { room: r, team: t, ready: !!r.quick, bot: false, budget: O.BUDGET0[t], choice: null, kills: 0, deaths: 0, score: 0, lives: null, units: 0 });
+    Object.assign(c, { room: r, team: t, ready: !!r.quick, bot: false, budget: O.BUDGET0[t] || 0, choice: null, kills: 0, deaths: 0, score: 0, lives: null, units: 0, plan: null, spent: 0 });
     r.players.set(c.id, c);
-    if (r.state !== 'lobby') { c.budget = r.wave > 1 ? Math.round(O.BUDGET0[t] * 0.8) : O.BUDGET0[t]; sendState(r, c); }
+    if (r.state !== 'lobby') { if (r.kind === 'multi') MU.resume(r, c); else { c.budget = r.wave > 1 ? Math.round(O.BUDGET0[t] * 0.8) : O.BUDGET0[t]; sendState(r, c); } }
     sendRoom(r); J(r, 'join', { who: c.name, team: t });
   }
   function addBot(r, t) {
     if (team(r, t).length >= r.size) return;
     const used = new Set([...r.players.values()].map((p) => p.name));
     const name = BOT_NAMES.find((n) => !used.has(n)) || 'Бот';
-    const b = { id: nextId++, name, bot: true, team: t, ready: true, budget: O.BUDGET0[t], choice: null, kills: 0, deaths: 0, score: 0, lives: null, ws: null };
+    const b = { id: nextId++, name, bot: true, team: t, ready: true, budget: O.BUDGET0[t] || 0, choice: null, kills: 0, deaths: 0, score: 0, lives: null, ws: null, plan: null, spent: 0 };
     r.players.set(b.id, b);
-    if (r.state === 'plan') botPlan(r, b);
+    if (r.state === 'plan' && r.kind !== 'multi') botPlan(r, b);
     sendRoom(r);
   }
   function dropPlayer(r, p) {
     r.players.delete(p.id);
+    if (r.kind === 'multi') { if (MU) MU.drop(r, p); return; }
     if (r.S) { for (const u of r.S.units.filter((u) => u.owner === p.id)) { if (r.state === 'lobby') r.S.removeUnit(u); else u.owner = 0; } } // комплексы ушедшего остаются ИИ-расчётам
     if (p.craft) { toAI(r, p, 'left'); }
   }
@@ -109,9 +116,10 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (r.state !== 'lobby') return;
     const hs = humans(r);
     if (!hs.length || !hs.every((p) => p.ready && p.ws)) return;
-    if (r.fill) for (const t of ['air', 'pvo']) while (team(r, t).length < r.size) addBot(r, t); // «боты» — все пустые места комнаты
-    if (!team(r, 'air').length || !team(r, 'pvo').length) return;
-    startBattle(r);
+    const [T1, T2] = teamsOf(r);
+    if (r.fill) for (const t of [T1, T2]) while (team(r, t).length < r.size) addBot(r, t); // «боты» — все пустые места комнаты
+    if (!team(r, T1).length || !team(r, T2).length) return;
+    if (r.kind === 'multi') MU.start(r); else startBattle(r);
   }
   function startBattle(r) {
     r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], aircraft: () => r.air, laserSpot: (a) => a.laser || null, night: 0,
@@ -325,6 +333,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   function step(r, dt) {
     r.t += dt;
     if (r.state !== 'lobby' && Math.floor(r.t) !== r.sec) { r.sec = Math.floor(r.t); sendRoom(r); } // таймер фазы — раз в секунду
+    if (r.kind === 'multi') { if (r.state !== 'lobby') MU.step(r, dt); return; }
     if (r.state === 'plan') { if (r.t >= r.phaseT || team(r, 'air').concat(team(r, 'pvo')).every((p) => p.ready || !p.ws && !p.bot)) startWave(r); return; }
     if (r.state === 'debrief') { if (r.t >= r.phaseT) { if (r.last) endBattle(r); else nextWave(r); } return; }
     if (r.state === 'end') { if (r.t >= r.phaseT) { for (const p of humans(r)) { p.room = null; send(p, { t: 'closed' }); } closeRoom(r); } return; }
@@ -371,7 +380,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       objects: r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0]) };
     if (only) send(only, msg); else bcast(r, msg);
   }
-  setInterval(() => { for (const r of [...rooms.values()]) { try { step(r, DT); } catch (e) { log('ad: ошибка такта ' + (e && e.stack || e)); J(r, 'error', { msg: String(e && e.message || e) }); } } queueStep(); }, 1000 * DT);
+  MU = createMulti({ city, send, bcast, team, humans, J, sign, clock, sendRoom, closeRoom, FAST });
+  setInterval(() => { for (const r of [...rooms.values()]) { try { step(r, DT); } catch (e) { log('ad: ошибка такта ' + (e && e.stack || e)); J(r, 'error', { msg: String(e && e.message || e) }); } } queueStep(); mqueueStep(); }, 1000 * DT);
 
   // ═════════════ Быстрый поиск ═════════════
   // очередь по режиму: роли «авиация», «ПВО», «любая». Набралось 2 на 2 — ждём ещё QUEUE_EXTRA_T (вдруг 3 на 3 …);
@@ -398,7 +408,26 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       } else if (!fits) goAt[mode] = 0;
     }
   }
-  const searching = () => ({ arcade: queues.arcade.length, real: queues.real.length });
+  // «Мульти-волна»: двое и больше — ждём ещё QUEUE_EXTRA_T (вдруг больше); один дольше QUEUE_BOTS_T — 1 на 1 с ботом
+  function mqueueStep() {
+    const now = clock();
+    for (const mode of O.AD_MODES) {
+      const q = mqueues[mode] = mqueues[mode].filter((e) => e.c.ws && e.c.ws.readyState === 1 && !e.c.room);
+      if (!q.length) { mgoAt[mode] = 0; continue; }
+      const oldest = Math.min(...q.map((e) => e.t)), per = Math.min(6, Math.ceil(q.length / 2));
+      if (q.length >= 2 && !mgoAt[mode]) { mgoAt[mode] = now + QUEUE_EXTRA_T; for (const e of q) send(e.c, { t: 'qwait', T: QUEUE_EXTRA_T, n: q.length }); }
+      if ((mgoAt[mode] && (now >= mgoAt[mode] || q.length >= 12)) || now - oldest > QUEUE_BOTS_T) {
+        mgoAt[mode] = 0;
+        const r = newRoom(null, { mode, size: per, quick: true, fill: true, kind: 'multi' }); if (!r) continue;
+        const pick = [...q].sort((a, b) => a.t - b.t).slice(0, r.size * 2);
+        for (const e of pick) joinRoom(r, e.c, null);
+        mqueues[mode] = mqueues[mode].filter((e) => !pick.includes(e));
+        for (const t of teamsOf(r)) while (team(r, t).length < r.size) addBot(r, t);
+        MU.start(r);
+      }
+    }
+  }
+  const searching = () => ({ arcade: queues.arcade.length, real: queues.real.length, marcade: mqueues.arcade.length, mreal: mqueues.real.length });
 
   // ═════════════ Сообщения ═════════════
   function connect(ws) {
@@ -414,7 +443,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     };
     ws.onclose = () => {
       clients.delete(c);
-      for (const q of Object.values(queues)) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); }
+      for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); }
       const r = c.room;
       if (r) { c.ws = null; if (r.state === 'lobby' || r.state === 'end') leaveRoom(c); else { if (c.craft) toAI(r, c, 'disconnect'); if (!humans(r).some((p) => p.ws)) closeRoom(r); else sendRoom(r); } }
     };
@@ -424,7 +453,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
       Object.assign(c, { name: who.name, pid: who.pid }); clients.add(c);
       // возвращение в идущий бой тем же аккаунтом
-      for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && !p.ws); if (old && r.state !== 'lobby') { const ws = c.ws; Object.assign(c, old, { ws }); c.room = r; r.players.set(c.id, c); /* прежний id — комплексы и счёт остаются за игроком */ send(c, { t: 'welcome', id: c.id, name: c.name, resumed: 1 }); sendState(r, c); send(c, view(r, c)); return; } }
+      for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && !p.ws); if (old && r.state !== 'lobby') { const ws = c.ws; Object.assign(c, old, { ws }); c.room = r; r.players.set(c.id, c); /* прежний id — комплексы и счёт остаются за игроком */ send(c, { t: 'welcome', id: c.id, name: c.name, resumed: 1 }); if (r.kind === 'multi') MU.resume(r, c); else sendState(r, c); send(c, view(r, c)); return; } }
       return send(c, { t: 'welcome', id: c.id, name: c.name, search: searching() });
     }
     if (!c.name) return;
@@ -433,16 +462,19 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       case 'create': { const nr = newRoom(c, m); if (!nr) return send(c, { t: 'err', msg: 'Сервер занят' }); joinRoom(nr, c, m.team); return; }
       case 'join': { const jr = rooms.get(O.cleanCode(m.code)); if (!jr) return send(c, { t: 'err', msg: 'Комната не найдена' }); if (jr.state === 'end') return send(c, { t: 'err', msg: 'Бой уже закончился' }); joinRoom(jr, c, m.team); return; }
       case 'leave': leaveRoom(c); return send(c, { t: 'left' });
-      case 'queue': { if (r || !O.AD_MODES.includes(m.mode)) return; for (const q of Object.values(queues)) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); } queues[m.mode].push({ c, role: ['air', 'pvo'].includes(m.role) ? m.role : 'any', t: clock() }); return send(c, { t: 'queued', mode: m.mode, n: queues[m.mode].length }); }
-      case 'unqueue': for (const q of Object.values(queues)) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); } return send(c, { t: 'unqueued' });
+      case 'queue': { if (r || !O.AD_MODES.includes(m.mode)) return; for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); }
+        if (m.kind === 'multi') { mqueues[m.mode].push({ c, t: clock() }); return send(c, { t: 'queued', mode: m.mode, kind: 'multi', n: mqueues[m.mode].length }); }
+        queues[m.mode].push({ c, role: ['air', 'pvo'].includes(m.role) ? m.role : 'any', t: clock() }); return send(c, { t: 'queued', mode: m.mode, n: queues[m.mode].length }); }
+      case 'unqueue': for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); } return send(c, { t: 'unqueued' });
     }
     if (!r) return;
     const me = c, host = r.host === c.id;
+    if (r.kind === 'multi' && r.state !== 'lobby' && m.t !== 'clog') { MU.onMsg(c, r, m); return; } // «Мульти-волна» — свой разбор
     switch (m.t) {
       // ── лобби ──
-      case 'team': if (r.state === 'lobby' && ['air', 'pvo'].includes(m.team) && team(r, m.team).length < r.size) { c.team = m.team; c.budget = O.BUDGET0[m.team]; c.ready = false; sendRoom(r); } return;
+      case 'team': if (r.state === 'lobby' && teamsOf(r).includes(m.team) && team(r, m.team).length < r.size) { c.team = m.team; c.budget = O.BUDGET0[m.team] || 0; c.ready = false; sendRoom(r); } return;
       case 'ready': if (r.state === 'lobby') { c.ready = !!m.on; sendRoom(r); tryStart(r); } else if (r.state === 'plan') { c.ready = !!m.on; sendRoom(r); } return;
-      case 'bot': if (host && r.state === 'lobby') addBot(r, m.team === 'pvo' ? 'pvo' : 'air'); return;
+      case 'bot': if (host && r.state === 'lobby') addBot(r, teamsOf(r).includes(m.team) ? m.team : teamsOf(r)[0]); return;
       case 'kick': { const b = r.players.get(+m.id); if (host && r.state === 'lobby' && b && b.bot) { r.players.delete(b.id); sendRoom(r); } return; }
       case 'opts': if (host && r.state === 'lobby') { if ([1, 2, 3, 4].includes(+m.era)) r.era = +m.era; if (m.sideAir === 'east' || m.sideAir === 'west') r.sideAir = m.sideAir; if (O.AD_MODES.includes(m.mode)) r.mode = m.mode; if (O.AD_SIZES.includes(+m.size)) r.size = +m.size; if (m.fill !== undefined) r.fill = !!m.fill; for (const p of r.players.values()) if (!p.bot) p.ready = false; sendRoom(r); } return;
       // ── расстановка и покупки ──

@@ -5,9 +5,10 @@
 // пуск, захват, РЛС, ручное наведение, покупки) уходят серверу — их перехватывает обёртка методов зеркала (wrapMirror).
 // Чужие самолёты и боты — «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
-import * as O from './sim/online.js?v=20261016a';
-import { AG, SAM } from './arsenal.js?v=20261016a';
-import { LNCH } from './launchers.js?v=20261016a';
+import * as O from './sim/online.js?v=20261018j';
+import * as MW from './sim/online-multi.js?v=20261018j';
+import { AG, SAM } from './arsenal.js?v=20261018j';
+import { LNCH } from './launchers.js?v=20261018j';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -55,7 +56,7 @@ export function createNet(C) {
   };
   N.close = () => { try { ws && ws.close(); } catch (_) { /* уже */ } };
   // лобби и очередь
-  N.queue = (mode, role) => N.send({ t: 'queue', mode, role });
+  N.queue = (mode, role, kind) => N.send({ t: 'queue', mode, role, kind });
   N.unqueue = () => N.send({ t: 'unqueue' });
   N.create = (o) => N.send({ t: 'create', ...o });
   N.join = (code, team) => N.send({ t: 'join', code, team });
@@ -72,13 +73,20 @@ export function createNet(C) {
   N.move = (id, x, z, roof) => N.send({ t: 'move', id, x, z, roof: roof ? 1 : 0 });
   N.myTeam = () => { const p = N.room && N.me && N.room.players.find((q) => q.id === N.me.id); return p ? p.team : null; };
   N.myPlayer = () => N.room && N.me && N.room.players.find((q) => q.id === N.me.id);
+  // «Мульти-волна»: роль в этом раунде, план атакующего (не чаще PLAN_RATE — последний), чат команды, «Помощь» с точкой
+  N.myRole = () => (N.battle && N.battle.kind === 'multi' ? (N.myTeam() === N.battle.atk ? 'atk' : 'def') : null);
+  let planJson = null, planTimer = 0;
+  N.sendPlan = (plan) => { planJson = JSON.stringify(plan); if (!planTimer) planTimer = setTimeout(() => { planTimer = 0; if (planJson) N.send({ t: 'plan', json: planJson }); planJson = null; }, MW.PLAN_RATE * 1000 + 60); };
+  N.chat = []; N.mutes = new Set();
+  N.say = (text) => N.send({ t: 'chat', text });
+  N.helpAt = (p) => N.send({ t: 'help', p });
 
   function handle(m) {
     switch (m.t) {
       case 'welcome': N.me = { id: m.id, name: m.name }; N.conn = 'on'; N.search = m.search || null; emit('conn'); return;
       case 'err': N.err = m.msg; emit('err', m.msg); return;
       case 'deny': emit('deny', m.msg); return;
-      case 'queued': N.queued = { mode: m.mode, n: m.n, t: performance.now() }; N.qwait = 0; emit('queue'); return;
+      case 'queued': N.queued = { mode: m.mode, kind: m.kind, n: m.n, t: performance.now() }; N.qwait = 0; emit('queue'); return;
       case 'unqueued': N.queued = null; N.qwait = 0; emit('queue'); return;
       case 'qwait': N.qwait = performance.now() + m.T * 1000; emit('queue'); return;
       case 'room': {
@@ -89,8 +97,11 @@ export function createNet(C) {
         return;
       }
       case 'left': case 'closed': N.room = null; endMirror(); emit('room', null); return;
-      case 'start': startMirror(m); emit('start'); return;
+      case 'start': if (m.kind === 'multi') startMulti(m); else startMirror(m); emit('start'); return;
       case 'state': applyState(m); emit('state'); return;
+      case 'sched': N.sched = m; if (N.ev) N.ev.t = m.T; return;
+      case 'chat': if (!N.mutes.has(m.id)) { N.chat.push({ id: m.id, name: m.name, text: m.text, t: performance.now() }); if (N.chat.length > 30) N.chat.shift(); emit('chat', m); } return;
+      case 'roundEnd': if (N.battle) { N.battle.scores = m.scores; N.battle.res = m; } emit('roundEnd', m); return;
       case 'spawn': onSpawn(m); return;
       case 's': snapshot(m); return;
       case 'ev': for (const e of m.e) applyEv(e); return;
@@ -110,7 +121,32 @@ export function createNet(C) {
     C.netBattle(N, { defSide: m.sideAir === 'east' ? 'west' : 'east', era: m.era, mode: m.mode });
     wrapMirror(C.S);
   }
-  function endMirror() { ac.clear(); sams.clear(); wpns.clear(); N.raid.planes.length = 0; N.battle = null; N.myCraft = false; }
+  function endMirror() { ac.clear(); sams.clear(); wpns.clear(); lnch.clear(); N.raid.planes.length = 0; N.battle = null; N.myCraft = false; N.sched = null; N.ev = null; }
+  // ── «Мульти-волна»: раунд — новое зеркало (город целый); C.ev — заместитель волны: пусковые и носители из снимков,
+  // расписание и лента «Ход волны» — от сервера (sched), правки плана — серверу
+  const lnch = new Map(), keys = new Set();
+  function startMulti(m) {
+    endMirror();
+    N.battle = { kind: 'multi', era: m.era, mode: m.mode, round: m.round, rounds: m.rounds, atk: m.atk, scores: m.scores, v0: m.v0, state: 'plan', T: 0, k: 1, sideAir: m.atk, targets: [], waves: 1, wave: 1 };
+    C.netBattle(N, { defSide: m.atk === 'east' ? 'west' : 'east', era: m.era, mode: m.mode });
+    wrapMirror(C.S);
+    N.ev = makeEv();
+  }
+  const refObj = (r) => (!r ? null : r[0] === 'L' ? lnch.get(r[1]) || null : r[0] === 'w' ? wpns.get(r[1]) || null : ac.get(r[1]) || null);
+  function makeEv() {
+    const ev = {
+      t: 0, side: N.battle.atk, era: N.battle.era, log: [],
+      get comp() { return [...keys].map((k) => [k, 1, 2, null]); },
+      get launchers() { return [...lnch.values()]; },
+      get carriers() { return N.raid.planes.filter((a) => a.role === 'carrier'); },
+      unitInfo(k, i) { const s = N.sched && N.sched.u[k] && N.sched.u[k][i]; if (!s) return { launched: false, t: ev.t + 30, earliest: ev.t + 1 }; return s[0] ? { launched: true } : { launched: false, t: s[1], earliest: s[2] }; },
+      events() { return ((N.sched && N.sched.ev) || []).map(([g, label, sub, eta, o, cue]) => ({ g, label, sub, eta: eta === null ? null : eta - (ev.t - N.sched.T), obj: refObj(o), cue: refObj(cue) })); },
+      pending: () => true, step() {}, start() {},
+      applyPlan() {}, extend() {}, // план целиком уходит с правкой (defense.js afterEdit → N.sendPlan)
+    };
+    return ev;
+  }
+  const want = () => { if (C.evReady && N.ev) C.evReady(N.ev); };
   const findAir = (id) => (id > 0 ? (N.me && id === N.me.id && C.player ? C.player : ac.get(id)) : id < 0 ? wpns.get(-id) : null) || null;
   // команды игрока — серверу; на месте — только то, что нужно интерфейсу
   function wrapMirror(S) {
@@ -148,6 +184,12 @@ export function createNet(C) {
     if (m.e) for (const e of m.e) applyEv(e);
     const now = performance.now() / 1000;
     N.battle.T = m.T; N.battle.valueK = m.V;
+    if (N.battle.kind === 'multi') {
+      N.battle.k = m.k || 1; N.battle.V = m.V; if (N.ev) N.ev.t = m.T;
+      let nw = false;
+      for (const q of m.L || []) { let L = lnch.get(q[0]); if (!L) { L = { id: q[0], key: q[1], pos: V(), yaw: q[4], isLauncher: true, fired: 0, podEl: 0, n0: q[7], name: q[8] }; L.pos.set(q[2], C.city.groundH(q[2], q[3]), q[3]); lnch.set(q[0], L); nw = true; } L.fired = q[5]; L.podEl = q[6]; }
+      if (nw) want();
+    }
     const seen = new Set();
     for (const s of m.A) {
       const id = s[0]; seen.add(id);
@@ -177,13 +219,13 @@ export function createNet(C) {
       if (!mm.started) { mm.pos.copy(mm.sp); mm.started = true; C.simFx.samLaunch(mm); }
     }
     // оружие самолётов
-    for (const s of m.W) { const w = wpns.get(s[0]); if (!w) continue; w.sp.set(s[1], s[2], s[3]); w.vel.set(s[4], s[5], s[6]); w.st = now; if (!w.started) { w.pos.copy(w.sp); w.started = true; } }
+    for (const s of m.W) { const w = wpns.get(s[0]); if (!w) continue; w.sp.set(s[1], s[2], s[3]); w.vel.set(s[4], s[5], s[6]); w.st = now; if (!w.started) { w.pos.copy(w.sp); w.started = true; } if (s.length > 7) w.phase = s[7] & MW.W_BOOST ? 'boost' : 'mid'; }
   }
   function applyEv(e) {
     const S = C.S; if (!S || !N.battle) return;
     const P = (i) => new THREE.Vector3(e[i], e[i + 1], e[i + 2]);
     switch (e[0]) {
-      case 'an': { const [, id, role, plane, dk, owner, load] = e; if (N.me && id === N.me.id) return; const a = ac.get(id); if (a) dropAir(a); mkAir(id, role, plane, dk, owner, load); return; }
+      case 'an': { const [, id, role, plane, dk, owner, load, cname] = e; if (N.me && id === N.me.id && N.battle.kind !== 'multi') return; const a0 = ac.get(id); if (a0) dropAir(a0); const a = mkAir(id, role, plane, dk, owner, load); if (role === 'carrier') { a.carrierName = cname || ''; a.salvo = []; a.immune = true; want(); } return; }
       case 'sl': { // пуск ЗУР: ракета появится на месте по снимку (в этом же сообщении)
         const [, id, uid, tg, slot] = e, u = S.units.find((q) => q.id === uid); if (!u) return;
         const LN = LNCH[u.key] || null;
@@ -197,9 +239,13 @@ export function createNet(C) {
       case 'wr': {
         const [, id, key, owner] = e, W = AG[key]; if (!W) return;
         const own = N.me && owner === N.me.id && C.player ? C.player : ac.get(owner) || null;
-        const w = { id, key, W, owner: own, pos: P(4), sp: P(4), vel: P(7), dir: P(7).normalize(), st: performance.now() / 1000, speed: 0, t: 0, dead: false, isMun: true, started: true, trailT: 0, homing: W.kind !== 'bomb' };
+        const multi = N.battle.kind === 'multi', fl = e[10] || 0;
+        const w = { id, key, W, owner: multi ? null : own, pos: P(4), sp: P(4), vel: P(7), dir: P(7).normalize(), st: performance.now() / 1000, speed: 0, t: 0, dead: false, isMun: true, started: true, trailT: 0, homing: W.kind !== 'bomb',
+          ev: multi, decoy: multi && !!(fl & MW.W_DECOY) && !W.decoyMun, phase: fl & MW.W_BOOST ? 'boost' : 'mid', T: W.T || 0, aim: null, ownerPid: multi ? owner : 0 };
+        if (e.length > 14) { w.aim = new THREE.Vector3(e[11], 0, e[12]); w.t = e[13]; w.T = e[14]; } // баллистика: куда, сколько летит, полное время
+        if (multi && !keys.has(key)) { keys.add(key); want(); }
         w.speed = w.vel.length(); wpns.set(id, w); S.wpns.push(w); C.simFx.wpnRelease(w);
-        if (own && own.load) { const l = own.load.find((q) => q.key === key && q.n > 0); if (l) l.n--; }
+        if (!multi && own && own.load) { const l = own.load.find((q) => q.key === key && q.n > 0); if (l) l.n--; }
         return;
       }
       case 'we': { const w = wpns.get(e[1]); if (!w) return; w.dead = true; w.pos.copy(P(2)); wpns.delete(w.id); const i = S.wpns.indexOf(w); if (i >= 0) S.wpns.splice(i, 1); C.simFx.wpnEnd(w, { objects: [], units: [], intercepted: !!e[5] }); return; }
@@ -238,7 +284,7 @@ export function createNet(C) {
     }
     for (const w of wpns.values()) {
       const ahead = Math.min(AHEAD, now - w.st); w.pos.copy(w.sp).addScaledVector(w.vel, ahead); w.t += dt;
-      w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.08; C.fx.wpnTrail(w); }
+      w.trailT -= dt; if (w.trailT <= 0 && !w.W.uav && !(w.W.kind === 'tbm' && w.phase !== 'boost')) { w.trailT = w.W.kind === 'tbm' ? 0.04 : 0.08; if (C.simFx.wpnTrail) C.simFx.wpnTrail(w); else C.fx.wpnTrail(w); } // дроны — без следа; баллистика — на разгоне
     }
     for (const u of S.units) if (u.slotT) for (const k in u.slotT) if (u.slotT[k] > 0) u.slotT[k] -= dt;
     for (const u of S.units) if (u.gunOn && u.track && !u.dead) C.simFx.gunFire(u, u.track, 0, dt); // трассы зениток — по флагу из снимка

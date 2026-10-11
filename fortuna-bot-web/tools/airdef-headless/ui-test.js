@@ -42,6 +42,7 @@ THREE.WebGLRenderer = FakeRenderer;
 const errors = [];
 const origErr = console.error; console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
+const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261018j');
 await new Promise((r) => setTimeout(r, 200));
 const C = globalThis.__a;
 let now = 1000;
@@ -57,20 +58,20 @@ console.log(`     фон за 40 с: пусков ЗУР ${C.S.sams.length}, с�
   console.log(`     планы фона за 150 с: ${Object.entries(kinds).map(([k, v]) => `${k} ${Math.round(v)} с`).join(', ')}`);
   check('фон: кадр по свободной части экрана', C.camera.view && C.camera.view.enabled && C.camera.view.fullWidth < C.VW); }
 
-{ const { planeModel } = await import('../../games/airdef/models.js?v=20261016a');
+{ const { planeModel } = await import('../../games/airdef/models.js?v=20261018j');
   for (const [side, cls] of [['east', 'strike'], ['east', 'fighter'], ['west', 'strike'], ['west', 'fighter']]) {
     const pm = planeModel(side, cls); let tris = 0, tex = 0; if (pm) pm.obj.traverse((o) => { if (o.isMesh) { tris += o.geometry.index ? o.geometry.index.count / 3 : 0; if (o.material.map) tex++; } });
     check(`готовая модель ${side}/${cls}: ${pm ? `${pm.name}, ${tris} треуг., мешей с текстурой ${tex}` : 'нет'}`, pm && pm.cls === cls);
   } }
-{ const { unitModelGlb, wantUnit } = await import('../../games/airdef/models.js?v=20261016a');
+{ const { unitModelGlb, wantUnit } = await import('../../games/airdef/models.js?v=20261018j');
   const keys = ['bukm3', 'osa', 'tor', 'torm2', 'pantsir', 's400', 's300', 'patriot', 'pac3', 's75', 's125', 'kub', 'hawk', 'm163', 'gepard', 'nasams', 'gpsjam', 'gpsjamw']; for (const k of keys) wantUnit(k);
   await new Promise((r) => setTimeout(r, 1500));
   for (const k of keys) { const m = unitModelGlb(k); let n = 0; if (m) for (const q of ['body', 'turret', 'cradle']) if (m[q]) m[q].traverse((o) => { if (o.isMesh) n += o.geometry.index.count / 3; });
     check(`готовая модель комплекса ${k}: ${m ? `${n} треуг., башня ${m.turret ? 'да' : 'нет'}, пакет ${m.cradle ? 'да' : 'нет'}` : 'нет'}`, !!m); }
-  { const { weaponMesh } = await import('../../games/airdef/models.js?v=20261016a'); const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261016a'); const { AG } = await import('../../games/airdef/arsenal.js?v=20261016a');
+  { const { weaponMesh } = await import('../../games/airdef/models.js?v=20261018j'); const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261018j'); const { AG } = await import('../../games/airdef/arsenal.js?v=20261018j');
     const want = ['fab500', 'umpk', 'kh29t', 'kh31p', 'kh25ml', 'agm65b', 'mk82', 'gbu12', 'jassm', 'agm88', 'aargm', 'mald', 'decoy_e', 'gbu39', 'gbu31'], got = want.filter((k) => !weaponMesh(k, AG[k], weaponGeo, null).isMesh);
     check(`готовые модели оружия (${got.length}/${want.length}): ${want.filter((k) => !got.includes(k)).join(', ') || 'все'}`, got.length === want.length);
-    const { podModel, launcherGlb, unitMissileGlb } = await import('../../games/airdef/models.js?v=20261016a');
+    const { podModel, launcherGlb, unitMissileGlb } = await import('../../games/airdef/models.js?v=20261018j');
     for (let i = 0; i < 30 && !(podModel() && launcherGlb('igla') && launcherGlb('stinger')); i++) await new Promise((r) => setTimeout(r, 200));
     check(`контейнер LITENING, трубы ПЗРК, ракеты ПЗРК и NASAMS: ${!!podModel()} ${!!launcherGlb('igla')} ${!!launcherGlb('stinger')} ${!!unitMissileGlb('verba')} ${!!unitMissileGlb('nasams')}`, podModel() && launcherGlb('igla') && launcherGlb('stinger') && unitMissileGlb('verba') && unitMissileGlb('nasams')); }
   const gm = unitModelGlb('bukm3'); let n = 0; if (gm) for (const k of ['body', 'turret', 'cradle']) gm[k].traverse((o) => { if (o.isMesh) n += o.geometry.index.count / 3; });
@@ -108,7 +109,7 @@ C.setAuto(false);
 air.finish('тест', true); frames(5);
 
 // 2б. все подвески всех эпох обеих сторон под «АВТО»: свой самолёт, оружие расходуется (эпоха IV, F/A-18 — ещё камера за оружием)
-{ const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261016a');
+{ const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261018j');
   const planes = new Set(); let used = 0, total = 0;
   for (const era of [1, 2, 3, 4]) for (const [lo, L] of LOADOUTS[era].entries()) {
     C.toMenu(); frames(3); C.setup.era = era; C.setup.side = L.side === 'east' ? 'west' : 'east'; C.setup.lo = lo; C.setup.game = 'air'; C.start('air'); C.setAuto(true);
@@ -171,7 +172,7 @@ for (const role of ['atk', 'def']) {
   if (role === 'def') { const t4 = C.S.objects.find((o) => o.key === 'tpp'); for (const [k, dx] of [['s400', 2500], ['pantsir', 600], ['torm2', -700]]) C.S.addUnit(k, t4.x + dx, t4.z - 400, {}); C.syncUnits(); }
   if (role === 'atk') { // готового состава нет — собираем: по типам на цели (как «+» в карточке цели)
     check(`мульти-волна: план пуст (${JSON.stringify(st.plan.n)}), ПУСК ${C.ctrl.st.plan && Object.keys(st.plan.n).length ? 'есть' : 'ждёт наряда'}`, !Object.keys(st.plan.n).length);
-    Object.assign(st.plan.n, { shahed: 12, kh55d: 2, kh555: 3, kalibr: 3, iskander: 4 });
+    Object.assign(st.plan.n, { shahed: 12, kh55d: 2, kh555: 3, kalibr: 3, iskander: 1 }); // баллистика — одна на человека
     for (const [k, j] of [['kh55d', 0], ['kalibr', 1]]) st.plan.cfg[k] = { pts: [], alt: null, t: null, sam: k === 'kh55d', tgt: st.targets[j].id, units: [] };
   }
   if (role === 'atk') { // у типа — маршрут и высота; у Х-555 №2 — свой маршрут, время и цель «ПВО»; баллистика — на 30 с позже
@@ -202,7 +203,7 @@ for (const role of ['atk', 'def']) {
 C.setup.era = 2; C.setup.game = 'defense';
 
 // 4. обучение — все уроки обеих сторон: каждый запускается и идёт 25 с без ошибок
-for (const side of ['air', 'def']) {
+for (const side of ['air', 'def', 'matk', 'mdef']) {
   const n = C.lessons[side].length;
   for (let i = 0; i < n; i++) {
     C.toMenu(); frames(3);
@@ -216,7 +217,7 @@ const passed = (side, i) => (C.ctrl && C.ctrl.T && C.ctrl.T.finished) || (JSON.p
 function runLesson(side, i, bot, sec) {
   C.toMenu(); frames(3); C.setup.game = 'training'; C.setup.tside = side; C.setup.tl = i; C.start('training');
   for (let k = 0; k < sec * 30 && !passed(side, i); k++) { if (byId('lesson')._cls.has('on')) C.closeLesson(); bot(C.ctrl.inner); frames(1); }
-  check(`урок ${side} ${i + 1} пройден ботом`, passed(side, i));
+  const ok = passed(side, i); check(`урок ${side} ${i + 1} пройден ботом${ok ? '' : ` — шаг ${C.ctrl.T.s}: ${(document.getElementById('hint').innerHTML || '').replace(/<[^>]+>/g, '').slice(0, 120)}`}`, ok);
   if (byId('lesson')._cls.has('on')) C.closeLesson();
 }
 // уроки с бомбами: показ (автопилот и «АВТО») и практика — бот летит тем же автопилотом на цель задания
@@ -242,6 +243,30 @@ runLesson('def', LI('def', 'd_arm'), (D) => { const u = C.S.units[0]; if (u && C
 // пушки: ствол в точку упреждения, огонь
 const LEAD = new THREE.Vector3();
 runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || !u.aimDir) return; const a = C.raid.alive()[0]; if (!a) return; C.S.gunLead(u, a, LEAD); u.aimDir.copy(LEAD).sub(u.pos).normalize(); if (D.st.op) D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, a.pos.distanceTo(u.pos) < u.S.rmax); }, 200);
+// «Мульти-волна»: бот делает то, что просит подсказка, — через состояние режима (как кнопки окна цели и настроек)
+{
+  const tg = (st, i = 0) => 'o' + st.targets[Math.min(i, st.targets.length - 1)].id;
+  const add = (D, k, n, key) => { const st = D.st; for (let j = 0; j < n; j++) { const i = (st.plan.n[k] = (st.plan.n[k] || 0) + 1) - 1; D.setTkey(k, i, key); if (st.phase === 'wave') { st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 0.05; } } };
+  const once = (T, tag, f) => { if (T.d['b' + tag]) return; T.d['b' + tag] = 1; f(); };
+  const go = (D) => { if (D.st.phase === 'plan') { D.st.edKey = null; D.st.tsel = null; D.startWave(); } D.st.timeK = 4; };
+  const B = {
+    m_scout: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) once(T, 1, () => add(D, 'shahed', 3, st.tsel)); else go(D); },
+    m_alloc: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) { once(T, 1, () => add(D, 'shahed', 2, st.tsel)); if (!T.d.k || T.d.k < T.t) { T.d.k = T.t + 0.2; add(D, 'kh555', 1, st.tsel); } } else if (T.s === 2) once(T, 2, () => { st.plan.n.shahed--; }); else if (T.s === 3) once(T, 3, () => { const o = C.S.objects.find((q) => !q.noTarget && !q.dead && 'o' + q.id !== st.tsel); st.tsel = 'o' + o.id; add(D, 'shahed', 2, st.tsel); }); },
+    m_unit: (D, T) => { const st = D.st, u = (i) => (st.plan.cfg.kalibr.units[i] = st.plan.cfg.kalibr.units[i] || {}); if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) { st.edKey = 'kalibr'; st.edUnit = 0; } else if (T.s === 2) u(0).pts = [[4000, 3000], [2000, 5000]]; else if (T.s === 3) u(0).alt = 300; else if (T.s === 4) u(0).t = 280; else if (T.s === 5) st.edUnit = null; else if (T.s === 6) u(1).t = 290; },
+    m_carrier: (D, T) => { go(D); document.body.classList.add('evopen'); },
+    m_tbm: (D, T) => { const st = D.st; if (T.s === 0) once(T, 0, () => { st.tsel = tg(st); add(D, 'iskander', 1, st.tsel); }); else if (T.s === 1) st.edKey = 'iskander'; else if (T.s === 2) (st.plan.cfg.iskander.units[0] = st.plan.cfg.iskander.units[0] || {}).t = 60; else go(D); },
+    m_sam: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = 'sam'; else if (T.s === 1) once(T, 1, () => add(D, 'kh55d', 3, 'sam')); else if (T.s === 2) once(T, 2, () => add(D, 'kh555', 3, tg(st))); else go(D); },
+    m_live: (D, T) => { const st = D.st; if (T.s === 0) go(D); else if (T.s === 1) once(T, 1, () => add(D, 'shahed', 1, tg(st))); else if (T.s === 2) once(T, 2, () => { st.plan.cfg.iskander.units[0].t = Math.ceil(C.ev.t + 1); C.ev.applyPlan(st.plan.cfg); });
+      else if (T.s === 3) { const u = C.S.units.find((q) => !q.dead && samKnown(q) && q.S.radar); if (u) once(T, 3, () => add(D, 'shahed', 1, 'u' + u.id)); } },
+    m_final: (D, T) => { const st = D.st; if (st.phase === 'plan') once(T, 0, () => { add(D, 'shahed', 8, tg(st)); add(D, 'kh55d', 2, 'sam'); add(D, 'kalibr', 3, tg(st, 1)); add(D, 'iskander', 1, tg(st, 2)); go(D); }); else st.timeK = 4; },
+    md_alarm: (D) => go(D),
+    md_drones: (D, T) => { if (D.st.phase === 'plan') once(T, 0, () => { for (const [k, key, dx] of [['gepard', 'tpp', 300], ['stinger', 'tpp', -300], ['gepard', 'oil', 300], ['stinger', 'oil', -300], ['gepard', 'tpp', 900], ['stinger', 'oil', 900]]) { const o = C.S.objects.find((q) => q.key === key); C.S.addUnit(k, o.x + dx, o.z + 200, {}); } C.syncUnits(); go(D); }); else D.st.timeK = 4; },
+    md_cruise: (D, T) => { if (D.st.phase === 'plan') once(T, 0, () => { const o = C.S.objects.find((q) => q.key === 'oil'); C.S.addUnit('gepard', o.x + 300, o.z + 200, {}); C.syncUnits(); go(D); }); else D.st.timeK = 4; },
+    md_tbm: (D, T) => { const st = D.st, u = C.S.units.find((q) => q.key === 'pac3'); if (T.s === 0) go(D); else if (T.s === 1) D.enterOp(u); else { st.timeK = 4; const w = C.S.wpns.find((q) => !q.dead && q.ev && q.W.kind === 'tbm' && q.vel.y < 0); if (w && st.op && u.desig !== w) D.designate(w); if (st.op && u.track) C.S.launch(u); } },
+    md_final: (D, T) => { if (D.st.phase === 'plan') once(T, 0, () => { for (const [k, key, dx] of [['pac3', 'tpp', 1500], ['nasams', 'oil', 900], ['gepard', 'tpp', 300], ['gepard', 'oil', 300], ['stinger', 'air', 300]]) { const o = C.S.objects.find((q) => q.key === key); if (o) C.S.addUnit(k, o.x + dx, o.z + 200, {}); } C.syncUnits(); go(D); }); else D.st.timeK = 4; },
+  };
+  for (const side of ['matk', 'mdef']) C.lessons[side].forEach((l, i) => runLesson(side, i, (D) => B[l.id](D, C.ctrl.T), 900));
+}
 C.toMenu(); frames(30);
 console.error = origErr;
 console.log(errors.length ? `\nОШИБКИ (${errors.length}):\n${errors.slice(0, 12).join('\n')}` : '\nошибок нет');

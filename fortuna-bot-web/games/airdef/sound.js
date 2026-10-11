@@ -1,7 +1,7 @@
 // Звук «Воздушного превосходства»: движок и синтез — из «Летки» (drone/audio.js: двигатель, объёмные голоса самолётов
 // и ракет, взрывы с задержкой по скорости звука, «гарнитура» для бортовых сигналов). Здесь — звуки этой игры из тех же
 // кирпичей (A.noise / A.tone): старт ЗУР, очереди зениток, сброс бомб, тоны СПО и датчика пуска, пульт оператора ПВО.
-import { createAudio } from '../drone/audio.js?v=20261016a';
+import { createAudio } from '../drone/audio.js?v=20261018j';
 
 export function createSound() {
   const A = createAudio();
@@ -11,10 +11,10 @@ export function createSound() {
   A.setVolume(vol); A.setMuted(muted);
   // записанные звуки (games/airdef/sounds): мотор «Шахеда» — петля для голосов дронов; далёкий взрыв —
   // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
-  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261016a'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261016a');
-  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261016a`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261016a'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261016a'); A.setPropSample('prop');
+  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261018j'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261018j');
+  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261018j`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261018j'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261018j'); A.setPropSample('prop');
   const delayOf = (d) => Math.min(2.5, d / 343);
-  let sirenEnd = 0; // до какого времени звучит сирена воздушной тревоги
+  let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
   // записи вертикального старта: [хлопок выброса, начало рёва двигателя], с (по огибающей громкости)
   const COLD_SYNC = [[0.3, 0.65], [0.2, 0.6], [0.15, 0.75]];
   const near = (d, ref = 600) => Math.min(1, ref / (d + ref));
@@ -64,11 +64,13 @@ export function createSound() {
     },
     // сирена воздушной тревоги: двухтональный «вой» (подъём — держит — спад), kind 'tbm' — чаще и выше
     // записанная сирена (47 с, сама затихает): пока звучит — повторно не включается; возвращает, сколько ещё звучать (с)
-    siren(kind) {
+    // restart — звучит уже — плавно погасить и начать заново (реализм: баллистика во время тревоги по крылатым)
+    siren(kind, restart = false) {
       const dur = A.sampleDur('siren');
       if (dur) {
-        const left = sirenEnd - A.time(); if (left > 0.5) return left;
-        if (A.sample('siren', 0.55, 0, 1, 20000, 0.15)) { sirenEnd = A.time() + dur; return dur; }
+        const left = sirenEnd - A.time(); if (left > 0.5 && !restart) return left;
+        if (left > 0.5 && sirenV && sirenV.vol) { const g = sirenV.vol.gain, t = A.time(); g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 0.4); try { sirenV.stop(t + 0.45); } catch (_) { /* уже */ } }
+        const v = A.sample('siren', 0.55, left > 0.5 ? 0.35 : 0, 1, 20000, 0.15); if (v) { sirenV = v; sirenEnd = A.time() + dur + (left > 0.5 ? 0.35 : 0); return dur; }
       }
       const tb = kind === 'tbm', lo = tb ? 420 : 300, hi = tb ? 900 : 760, per = tb ? 2.2 : 4.5, n = tb ? 4 : 2, pts = [[0, lo]];
       for (let i = 0; i < n; i++) { const t0 = i * per; pts.push([t0 + per * 0.45, hi], [t0 + per * 0.6, hi], [t0 + per, lo]); }

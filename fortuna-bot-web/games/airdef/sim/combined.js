@@ -9,8 +9,8 @@
 // дроны и носители в зоне станции) и пуск ЗУР. По ПВО бьют только по засечённым — цель выбирается в момент пуска;
 // по комплексу, которого разведчик не видел сам (засечён по излучению или пуску), баллистика ложится с тройным промахом.
 /* global THREE */
-import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261016a';
-import { CITY } from '../city.js?v=20261016a';
+import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261018j';
+import { CITY } from '../city.js?v=20261018j';
 
 export const COMBINED_NAME = 'Мульти-волна';
 export const combinedOk = (side, era) => !!(COMBINED[side] && COMBINED[side][era]);
@@ -32,6 +32,9 @@ export function podPose(L, pos, dir) {
 export const LAUNCH_R = CITY.HALF + 1500; // рубеж пусков носителя: за краем района (ПВО не достаёт), там он ходит по дуге
 export const CARRIER_WAIT = 90;            // самолёт-носитель у рубежа: от первого пуска до последнего — не дольше 1,5 мин
 const SPAWN_R = CITY.HALF + 9000, CARRIER_V = 230;
+// пределы расписания: одиночная игра (LIM) и онлайн (LIM_ON — время волны общее: короче, носитель заходит ближе, ≈ 45 с до рубежа)
+export const LIM = { spawnR: SPAWN_R, uav: 600, tbm: 900, car: 300 };
+export const LIM_ON = { spawnR: LAUNCH_R + CARRIER_V * 45, uav: 300, tbm: 360, car: 180 };
 const pathLen = (from, pts, aim) => { let d = 0, p = from; for (const q of pts || []) { d += Math.hypot(q.x - p.x, q.z - p.z); p = q; } return d + Math.hypot(aim.x - p.x, aim.z - p.z); };
 const bearingOf = (pts, c) => (pts && pts.length ? Math.atan2(pts[0][0], pts[0][1]) : Math.hypot(c.x, c.z) > 1 ? Math.atan2(c.x, c.z) : 0);
 // настройка единицы: своя (plan[k].units[i]) поверх общей для типа (plan[k]); pts — [[x, z]], tgt — id объекта-цели
@@ -45,19 +48,19 @@ export const carrierOf = (n, via, i) => { const nC = Math.ceil(n / CARRIERS[via]
 // расписание: у каждой единицы — время пуска (с от начала боя) и когда она у цели. Пределы по типу: tmin (носителю надо
 // долететь до рубежа), tmax (самолёт у района долго не ходит — до 5 мин; дроны — до 10, баллистика — до 15).
 // Без плана — как у ИИ: дроны сразу, крылатые к T2 (после дронов), баллистика сразу за крылатыми
-export function planDefaults(comp, targets, plan = {}) {
+export function planDefaults(comp, targets, plan = {}, lim = LIM) {
   const c = targets.length ? { x: targets.reduce((s, o) => s + o.x, 0) / targets.length, z: targets.reduce((s, o) => s + o.z, 0) / targets.length } : { x: 0, z: 0 };
   const xz = (p) => (p ? p.map(([x, z]) => ({ x, z })) : null), aimOf = (u) => { const o = u.tgt != null && targets.find((q) => q.id === u.tgt); return o || c; };
   const fromAt = (pts, R, aim = c) => { const b = bearingOf(pts, aim); return { x: Math.sin(b) * R, z: Math.cos(b) * R }; }; // без маршрута — со стороны цели
   const out = {};
   let maxDrone = 0;
   for (const [k, n] of comp) { const W = AG[k]; if (!W.uav || W.recon) continue; const fly = pathLen(fromAt(plan[k] && plan[k].pts, CITY.HALF - 500), xz(plan[k] && plan[k].pts), c) / W.speed; maxDrone = Math.max(maxDrone, fly + n * 2); }
-  const T2 = maxDrone ? Math.max(300, maxDrone + 20) : 150;
+  const T2 = maxDrone ? Math.max(Math.min(300, lim.uav), maxDrone + 20) : 150;
   for (const [k, n, , via] of comp) {
     const W = AG[k]; if (W.recon) continue;
     const car = via && CARRIERS[via], tb = W.kind === 'tbm';
-    const o = out[k] = { n, units: [], tmin: 0, tmax: W.uav ? 600 : tb ? 900 : car ? 300 : 600, dt: W.uav ? 2 : tb ? 6 : car ? car.every : 2 };
-    if (car) o.tmin = Math.ceil(Math.max(0, SPAWN_R - LAUNCH_R) / CARRIER_V) + 2;
+    const o = out[k] = { n, units: [], tmin: 0, tmax: W.uav ? lim.uav : tb ? lim.tbm : car ? lim.car : lim.uav, dt: W.uav ? 2 : tb ? 6 : car ? car.every : 2 };
+    if (car) o.tmin = Math.ceil(Math.max(0, lim.spawnR - LAUNCH_R) / CARRIER_V) + 2;
     const fly0 = tb ? W.T : pathLen(fromAt(plan[k] && plan[k].pts, W.uav ? CITY.HALF - 500 : LAUNCH_R), xz(plan[k] && plan[k].pts), c) / W.speed;
     const def = W.uav ? 0 : tb ? Math.max(10, T2 + 8 - W.T) : Math.max(5, T2 - fly0 - n * o.dt * 0.3);
     for (let i = 0; i < n; i++) {
@@ -98,7 +101,9 @@ export function createCombined(S, city, rnd, opts = {}) {
     return { p: objAim(i, id), u: null };
   };
   // targets — объекты-цели волны
-  const approachT = (SPAWN_R - LAUNCH_R) / CARRIER_V, PD = new THREE.Vector3();
+  // OWN — онлайн: метка игрока { id, owner } у его ракет, дронов и носителей (кому очки, чья лента); mineW — своё оружие
+  const OWN = opts.owner || null, mineW = (w) => !OWN || w.owner === OWN || (w.owner && w.owner.ownTag === OWN);
+  const lim = opts.lim || LIM, approachT = (lim.spawnR - LAUNCH_R) / CARRIER_V, PD = new THREE.Vector3();
   let b0 = 0, dirs = [0, 0, 0], di = 0, ci = 0, oi = 0;
   // единицы типа k с номерами i0…i1-1 — в расписание (на старте — все; во время волны — докупленные). tFloor — не раньше
   function schedule(k, n, via, i0, i1, D, tFloor) {
@@ -144,9 +149,10 @@ export function createCombined(S, city, rnd, opts = {}) {
         salvo.sort((a, b) => a.t - b.t);
         const rq = salvo.find((q) => q.b !== null), b = rq ? rq.b + (j - (nC - 1) / 2) * 0.15 : dirs[ci++ % dirs.length] + (rnd() - 0.5) * 0.3;
         const T = Math.max(salvo[0].t, t + approachT * 0.1), approach = approachT, delay = Math.max(0, T - t - approach);
-        const spawnR = delay > 0 ? SPAWN_R : LAUNCH_R + Math.max(300, (T - t) * CARRIER_V);
+        const spawnR = delay > 0 ? lim.spawnR : LAUNCH_R + Math.max(300, (T - t) * CARRIER_V);
         const a = raid.spawn('carrier', { x: 0, z: 0 }, b, delay, spawnR,
           { plane: via, mside: CA.side, load: [{ key: k, n: salvo.length }], salvo, n0: salvo.length, cruise: CA.alt, hp: CA.hp, rcs: CA.rcs, every: CA.every, carrierName: CA.name, len: CA.len, R: LAUNCH_R, launchAt: T, t0: t });
+        if (OWN) { a.owner = OWN.owner; a.ownTag = OWN; } // онлайн: чей носитель (очки, лента «Ход волны» игрока)
         carriers.push(a);
       }
       return;
@@ -161,7 +167,7 @@ export function createCombined(S, city, rnd, opts = {}) {
     started = true; t = 0;
     b0 = rnd() * Math.PI * 2; dirs = [b0, b0 + 1.9 + rnd() * 0.6, b0 - 1.9 - rnd() * 0.6];
     objs = targets.length ? targets : S.objects.filter((o) => !o.dead && !o.noTarget);
-    const D = planDefaults(comp, objs, plan);
+    const D = planDefaults(comp, objs, plan, lim);
     for (const [k, n, , via] of comp) schedule(k, n, via, 0, n, D, 0);
     queue.sort((a, b) => a.t - b.t);
     return true;
@@ -172,7 +178,7 @@ export function createCombined(S, city, rnd, opts = {}) {
     if (newPlan && newPlan !== plan) { Object.keys(plan).forEach((q) => delete plan[q]); Object.assign(plan, newPlan); }
     let e = comp.find(([q]) => q === k); if (!e) { e = [k, 0, AG[k].uav ? 1 : AG[k].kind === 'tbm' ? 3 : 2, via]; comp.push(e); }
     const n0 = e[1]; e[1] += add;
-    schedule(k, e[1], via, n0, n0 + add, planDefaults(comp, objs, plan), t + 0.5);
+    schedule(k, e[1], via, n0, n0 + add, planDefaults(comp, objs, plan, lim), t + 0.5);
     queue.sort((a, b) => a.t - b.t);
   }
   // ── правка плана во время удара: для ещё не пущенных единиц — время (не раньше «сейчас» и прилёта носителя на рубеж),
@@ -195,7 +201,7 @@ export function createCombined(S, city, rnd, opts = {}) {
   function applyPlan(newPlan) {
     if (!started) return;
     if (newPlan && newPlan !== plan) { Object.keys(plan).forEach((k) => delete plan[k]); Object.assign(plan, newPlan); } // обычно — тот же объект плана игрока
-    const D = planDefaults(comp, objs, plan);
+    const D = planDefaults(comp, objs, plan, lim);
     const upd = (q, a) => {
       const u = unitCfg(plan, q.k, q.i), lo = a ? Math.max(t + 0.5, carrierEarliest(a)) : t + 0.5;
       q.t = Math.max(lo, D[q.k] ? D[q.k].units[q.i].t : q.t);
@@ -210,7 +216,7 @@ export function createCombined(S, city, rnd, opts = {}) {
       a.salvo.sort((x, y) => x.t - y.t); a.launchAt = a.salvo[0].t;
       if (a.phase === 'wait') { // ещё не вылетел: вылет — под первое время, направление — по маршруту
         a.delay = Math.max(0, a.salvo[0].t - approachT - t);
-        const rq = a.salvo.find((q) => q.route); if (rq) { a.b = Math.atan2(rq.route[0].x, rq.route[0].z); a.pos.set(Math.sin(a.b) * SPAWN_R, a.cruise, Math.cos(a.b) * SPAWN_R); a.yaw = Math.atan2(Math.sin(a.b), Math.cos(a.b)); }
+        const rq = a.salvo.find((q) => q.route); if (rq) { a.b = Math.atan2(rq.route[0].x, rq.route[0].z); a.pos.set(Math.sin(a.b) * lim.spawnR, a.cruise, Math.cos(a.b) * lim.spawnR); a.yaw = Math.atan2(Math.sin(a.b), Math.cos(a.b)); }
       }
     }
   }
@@ -235,15 +241,16 @@ export function createCombined(S, city, rnd, opts = {}) {
       L.podEl = Math.min(1, Math.max(0, L.podEl + (up ? 1 : -1) * P.rate * dt));
     }
     while (queue.length && queue[0].t <= t) {
+      if (opts.gate && !opts.gate()) { for (const q of queue) if (q.t <= t) q.t = t + 1; break; } // онлайн: в воздухе слишком много — пуски ждут
       if (queue[0].L && POD[queue[0].L.key] && queue[0].L.podEl < 1) { queue[0].t = t + 0.25; queue.sort((a, b) => a.t - b.t); break; } // пакет ещё не поднят — ждём
       const q = queue.shift(), W = AG[q.key], aim = q.aimFn();
       if (W.kind === 'tbm') {
         const L = q.L, pod = POD[L.key], from = pod ? podPose(L, V(0, 0, 0), PD) : L.pos.clone().setY(L.pos.y + 6);
         const blind = aim.u ? !aim.u.spotted : false; // по комплексу, которого не видел разведчик, — тройной промах
-        L.fired++; L.lastFire = t; S.spawnMun(q.key, from, aim.p, { blind, launcher: L, podDir: pod ? PD.clone() : null }); // из пакета — по его оси
+        L.fired++; L.lastFire = t; S.spawnMun(q.key, from, aim.p, { blind, launcher: L, podDir: pod ? PD.clone() : null, owner: OWN }); // из пакета — по его оси
         log.push({ t, key: q.key, kind: 'tbm' });
       } else {
-        S.spawnMun(q.key, q.from, aim.p, { ...(q.o || {}), route: q.o && q.o.route ? q.o.route : q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt });
+        S.spawnMun(q.key, q.from, aim.p, { ...(q.o || {}), route: q.o && q.o.route ? q.o.route : q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt, owner: OWN });
         log.push({ t, key: q.key, kind: W.kind });
       }
     }
@@ -254,11 +261,11 @@ export function createCombined(S, city, rnd, opts = {}) {
   // cue — за чем смотреть, когда событие наступит: носитель перед пуском, пусковая перед стартом)
   function events() {
     const out = [];
-    const recon = S.wpns.find((w) => w.ev && w.W.recon && !w.dead), rq = queue.find((q) => AG[q.key].recon);
+    const recon = S.wpns.find((w) => w.ev && w.W.recon && !w.dead && mineW(w)), rq = queue.find((q) => AG[q.key].recon);
     if (recon || rq) out.push({ g: 'Разведка', label: AG[(recon || rq).key].short, sub: recon ? `в воздухе · засечено ПВО: ${S.units.filter((u) => samKnown(u)).length}` : 'вылет', obj: recon || null, eta: rq ? rq.t - t : null });
     for (const [k, tot] of comp) { // дроны — группой по типу
       const W = AG[k]; if (!W.uav || W.recon) continue;
-      const fly = S.wpns.filter((w) => w.key === k && !w.dead), wait = queue.filter((q) => q.key === k), gone = log.filter((e) => e.key === k).length - fly.length;
+      const fly = S.wpns.filter((w) => w.key === k && !w.dead && mineW(w)), wait = queue.filter((q) => q.key === k), gone = log.filter((e) => e.key === k).length - fly.length;
       out.push({ g: 'Дроны', label: `${W.short} ×${tot}`, sub: `в воздухе ${fly.length}${wait.length ? ` · ещё вылетят ${wait.length}` : ''}${gone ? ` · закончили полёт ${gone}` : ''}`, obj: fly[0] || null, eta: wait.length ? wait[0].t - t : null });
     }
     for (const a of carriers) {
@@ -271,7 +278,7 @@ export function createCombined(S, city, rnd, opts = {}) {
       out.push({ g: 'Пусковые', label: L.name, sub: next ? `пуск через ${Math.ceil(next.t - t)} с · пущено ${L.fired}/${L.n0}` : `пущено ${L.fired}/${L.n0}`, obj: L, eta: next ? next.t - t : null, cue: next ? L : null });
     }
     for (const w of S.wpns) {
-      if (!w.ev || w.dead || w.W.uav || w.W.recon) continue;
+      if (!w.ev || w.dead || w.W.uav || w.W.recon || !mineW(w)) continue;
       const tb = w.W.kind === 'tbm', h = Math.round(w.pos.y - city.groundH(w.pos.x, w.pos.z));
       const { t: eta, d } = S.etaOf(w); // с учётом маршрута, разворотов и разгона
       out.push({ g: tb ? 'Баллистика в полёте' : 'Крылатые в полёте', label: `${w.W.short}${w.decoy ? ' (ложная)' : ''}`, sub: `${h > 9999 ? (h / 1000).toFixed(0) + ' км' : h + ' м'} · ${Math.round(w.speed * 3.6)} км/ч · до цели ${(d / 1000).toFixed(1)} км · ${Math.max(0, Math.ceil(eta))} с`, obj: w, eta: null });

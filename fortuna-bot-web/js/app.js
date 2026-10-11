@@ -40,21 +40,21 @@ function iconVal(name, sizePx, valueHTML) {
 }
 
 // ── Реклама игр сайта: ролик из игры, коротко о ней, путь в меню и кнопка ──
-// «Воздушное превосходство» — первым (экран входа, «Фарм»); «Симулятор Летки» — под ним на экране входа.
+// «Воздушное превосходство» — первым (экран входа, «Фарм»); «Fighter Jet Online» — под ним на экране входа.
 // where: "auth" — экран входа (кнопка ведёт на регистрацию), "farm" — вкладка «Фарм» под переносом прогресса
 const GAME_ADS = {
   airdef: {
-    promo: "media/airdef_promo", v: "20261009c", badges: ["НОВАЯ ИГРА", "ОНЛАЙН"], title: "Воздушное превосходство", sub: "Авиация против ПВО — прямо в браузере",
+    promo: "media/airdef_promo", v: "20261009c", badges: ["НОВАЯ ИГРА", "ОНЛАЙН"], title: "Air Superiority Online", sub: "Авиация против ПВО — прямо в браузере",
     text: "Прорвись к целям сквозь ПВО огромного города — или защити его: С-400, Patriot, «Тор», «Панцирь». Против ИИ или команда на команду в онлайне!",
     tags: ["Авиация и ПВО", "Онлайн 1×1…6×6", "Управляемое оружие", "Обучение", "Аркада и Реализм"],
-    how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Воздушное превосходство»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Воздушное превосходство»</b>: вылет, оборона, обучение или <b>«Онлайн-бой»</b> с наградой. Лучше всего — на телефоне в горизонтальном положении." },
+    how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Air Superiority Online»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Air Superiority Online»</b>: вылет, оборона, обучение или <b>«Онлайн-бой»</b> с наградой. Лучше всего — на телефоне в горизонтальном положении." },
     btn: "Играть",
   },
   drone: {
-    promo: "media/letka_promo", v: "20260930d", badges: ["ОНЛАЙН"], title: "Симулятор поздней летки", sub: "УВВВ, СПО и многое другое прямо в браузере",
+    promo: "media/letka_promo", v: "20260930d", badges: ["ОНЛАЙН"], title: "Fighter Jet Online", sub: "УВВВ, СПО и многое другое прямо в браузере",
     text: "Пилотируй «Изделие Фортуна-1» против ботов «Подстилки улитки» или играйте с друзьями в онлайне!",
     tags: ["22 ракеты", "Радар и СПО", "Погода", "Обучение", "Аркада и Реализм"],
-    how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Симулятор Летки»</b> → <b>«Тренировка»</b> или <b>«Онлайн-бой»</b>. Лучше всего — на телефоне в горизонтальном положении." },
+    how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Fighter Jet Online»</b> → <b>«Тренировка»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Fighter Jet Online»</b> → <b>«Тренировка»</b> или <b>«Онлайн-бой»</b>. Лучше всего — на телефоне в горизонтальном положении." },
     btn: "Играть — тренировка",
   },
 };
@@ -90,7 +90,7 @@ function renderAuth(mode = "login") {
   document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
   const invite = pendingMpInvite();
   root.innerHTML = `
-    ${invite ? `<div class="result-box result-ok">Вас пригласили в онлайн-бой «Симулятора Летки» (комната <b>${invite}</b>). Войдите или зарегистрируйтесь — игра откроется сама.</div>` : ""}
+    ${invite ? `<div class="result-box result-ok">Вас пригласили в онлайн-бой «Fighter Jet Online» (комната <b>${invite}</b>). Войдите или зарегистрируйтесь — игра откроется сама.</div>` : ""}
     ${gameAdHTML("auth", "airdef")}
     <div class="auth-card">
       <div class="tabs">
@@ -242,7 +242,7 @@ async function renderDashboard(flash) {
 
 function renderTabContent(flash) {
   const mount = document.getElementById("tab-content");
-  // реклама «Симулятора Летки» — только на «Фарме», под переносом прогресса из Telegram
+  // реклама «Fighter Jet Online» — только на «Фарме», под переносом прогресса из Telegram
   const adSlot = document.getElementById("game-ad-slot");
   if (adSlot) { adSlot.innerHTML = currentTab === "farm" ? gameAdHTML("farm", "airdef") : ""; bindGameAd(adSlot); }
   if (currentTab === "farm") renderFarmTab(mount, flash);
@@ -331,14 +331,14 @@ function renderTicketsStat() {
 // победу случайно 2 ключа или 2 детали; постоянный тренировочный режим без наград. ──
 const ARCADE_GAMES = [
   {
-    id: "airdef", name: "Воздушное превосходство", icon: "crossedSwords", file: "games/airdef.html", trainOnly: true, promo: "media/airdef_promo", promoV: "20261009c",
+    id: "airdef", name: "Air Superiority Online", icon: "crossedSwords", file: "games/airdef.html", trainOnly: true, promo: "media/airdef_promo", promoV: "20261009c",
     note: "Авиация против ПВО над огромным городом: управляемые бомбы, ПРР и ловушки — или С-400, Patriot, «Тор», «Панцирь» и зенитки против налёта. Вылет, оборона и обучение против ИИ — бесплатно; онлайн-бой команда на команду (1×1…6×6, Аркада и Реализм) — с наградой за бой",
     online: true, featured: true,
   },
   { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html" },
   { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
   {
-    id: "drone", name: "Симулятор Летки", icon: "jetFighter", file: "games/drone.html", perSortie: true,
+    id: "drone", name: "Fighter Jet Online", icon: "jetFighter", file: "games/drone.html", perSortie: true,
     note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты, радар, СПО, ловушки, дозаправка. Онлайн-бой 1×1…4×4 с друзьями, быстрым поиском или против ботов. За успешный вылет — детали (в «Реализме» ×3, шанс ключа и билета), ракеты для «Реализма» открываются за детали. Все сбитые идут в операцию «Истребительная угроза» (вкладка «Рейд»)",
     online: true,
   },
@@ -371,7 +371,7 @@ function renderArcadeSection() {
   `;
 }
 
-// «Симулятор Летки» — отдельной карточкой над остальными играми: кадр из игры, рамка, зелёная кнопка онлайна
+// «Fighter Jet Online» — отдельной карточкой над остальными играми: кадр из игры, рамка, зелёная кнопка онлайна
 function featuredArcadeCard(g, hasTickets) {
   // trainOnly («Воздушное превосходство»): игра против ИИ — бесплатно, награда — за онлайн-бой (airdef-claim)
   const price = g.trainOnly ? `Бесплатно · награда — за онлайн-бой` : hasTickets ? `Вылет на награду: ${iconVal("ticket", 14, "1 билет")} · без билета — только в зачёт операции`
@@ -411,7 +411,7 @@ function wireArcadeSection(mount) {
   mount.querySelectorAll("[data-mp-live]").forEach((el) => showMpLive(el, el.dataset.mpLive));
 }
 
-// ── Онлайн «Симулятора Летки»: сервер (game-server) на ноутбуке за Cloudflare Tunnel ──
+// ── Онлайн «Fighter Jet Online»: сервер (game-server) на ноутбуке за Cloudflare Tunnel ──
 // строка «на сервере N · ищут бой» под карточкой; сервер недоступен — строки нет
 function mpHealthUrl() {
   return /(^|\.)fortunawtm\.com$/.test(location.hostname) ? "https://game.fortunawtm.com/health" : `http://${location.hostname || "localhost"}:8787/health`;
@@ -421,7 +421,7 @@ async function showMpLive(el, gameId = "drone") {
     const ctl = new AbortController();
     setTimeout(() => ctl.abort(), 4000);
     const h = await (await fetch(mpHealthUrl(), { signal: ctl.signal, cache: "no-store" })).json();
-    const H = gameId === "airdef" ? h.airdef : h; // «Воздушное превосходство» — свой раздел в /health
+    const H = gameId === "airdef" ? h.airdef : h; // «Air Superiority Online» — свой раздел в /health
     if (!H) { el.hidden = true; return; }
     const q = H.searching || { arcade: 0, real: 0 };
     el.innerHTML = `${icon("jetFighter", 13)} Онлайн: в игре <b>${H.online}</b> · ищут бой: Аркада <b>${q.arcade}</b>, Реализм <b>${q.real}</b>`;
@@ -448,7 +448,7 @@ let arcadeRunId = null;
 async function openArcadeGame(gameId, ranked, extra) {
   const game = ARCADE_GAMES.find((g) => g.id === gameId);
   if (!game) return;
-  if (game.perSortie) { // «Симулятор Летки»: билет тратит сама игра на каждый вылет (drone-start); ranked — включён ли «вылет на награду»
+  if (game.perSortie) { // «Fighter Jet Online»: билет тратит сама игра на каждый вылет (drone-start); ranked — включён ли «вылет на награду»
     if (!extra) extra = `ranked=${ranked ? 1 : 0}`;
     ranked = false;
   }
@@ -619,7 +619,7 @@ const ITEM_DUP_COMP_DISPLAY = 50000;
 // ── Рейд ──
 const RAID_TYPE_LABEL = { normal: "Линс", hard: "Аполис", "13": "Тивашин13", ca: "ЦА" };
 
-// ── Операция «Симулятора Летки» (общая цель всех игроков) — блок над рейдом ──
+// ── Операция «Fighter Jet Online» (общая цель всех игроков) — блок над рейдом ──
 // Сбитые в игре: Аркада — 1 очко, Реализм — 3. Награды за шаги — всем с вкладом от min_contrib (кнопка «Забрать»).
 function operationHTML(st, admin) {
   const o = st && st.operation;
@@ -644,7 +644,7 @@ function operationHTML(st, admin) {
     <div class="op-card">
       <div class="op-head"><span class="game-ad-badge online">ОПЕРАЦИЯ</span>${o.status === "finished" ? `<span class="game-ad-badge">ЗАВЕРШЕНА</span>` : ""}</div>
       <div class="op-title">${icon("jetFighter", 18)} ${o.name}</div>
-      <div class="op-sub">Общая цель «Симулятора Летки»: каждый сбитый в «Аркаде» — 1 очко, в «Реализме» — 3 (одиночные вылеты и онлайн, с билетом и без)</div>
+      <div class="op-sub">Общая цель «Fighter Jet Online»: каждый сбитый в «Аркаде» — 1 очко, в «Реализме» — 3 (одиночные вылеты и онлайн, с билетом и без)</div>
       <div class="op-track"><div class="op-fill" style="width:${pct}%"></div>${ticks}</div>
       <div class="op-nums"><b>${fmtNum(o.points)}</b> / ${fmtNum(o.goal)} · шаг <b>${o.reached}</b> из ${o.steps}${next ? ` · до следующего ${fmtNum(next)}` : ""}</div>
       <div class="op-me">Ваш вклад: <b>${fmtNum(st.mine)}</b>${st.rank ? ` · место ${st.rank}` : ""}</div>
@@ -654,7 +654,7 @@ function operationHTML(st, admin) {
         После финала топ-${tb.length} по вкладу — ${tb.join(" / ")} деталей и столько же ключей. Награды — всем с вкладом от ${o.min_contrib} очков.</details>
       <div class="section-label">Лидеры операции</div>
       <div class="shop-list">${top}</div>
-      <button class="btn-secondary btn-sm op-play" data-op-play>Играть в «Симулятор Летки»</button>
+      <button class="btn-secondary btn-sm op-play" data-op-play>Играть в «Fighter Jet Online»</button>
       ${adminForm}
     </div>`;
 }
@@ -1195,7 +1195,7 @@ function describeFeedItem(row) {
       if (d.details) parts.push(`+${d.details} деталей`);
       if (d.keys) parts.push(`+${d.keys} 🔑`);
       if (d.ticket) parts.push("+1 билет");
-      const where = d.game === "airdef" ? `«Воздушное превосходство», ${d.team === "pvo" ? "ПВО" : "авиация"}${d.win ? " — победа" : ""}`
+      const where = d.game === "airdef" ? `«Air Superiority Online», ${d.team === "pvo" ? "ПВО" : "авиация"}${d.win ? " — победа" : ""}`
         : d.online ? `онлайн-бой в «${d.mode === "real" ? "Реализме" : "Аркаде"}»${d.win ? " — победа" : ""}` : `вылет в «${d.mode === "real" ? "Реализме" : "Аркаде"}»`;
       return `✈️ ${login}: ${where} — ${parts.join(", ")}`;
     }

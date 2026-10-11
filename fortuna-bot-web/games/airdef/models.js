@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261016a';
+import { CREDITS } from './models/credits.js?v=20261018j';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -133,7 +133,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=20261016a`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=20261018j`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
@@ -174,7 +174,7 @@ export function unitModelGlb(key) {
     const l = GL && k !== 'missile' && k !== 'booster' && find(GL, k); if (!l) return p.clone();
     const L = new THREE.LOD(); L.addLevel(p.clone(), 0); L.addLevel(l.clone(), 400); return L;
   };
-  return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster') };
+  return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar') }; // radar — антенна обзора на башне (крутится)
 }
 // ракета комплекса из его модели (маршевая ступень + ускоритель) или null
 export function unitMissileGlb(key) {

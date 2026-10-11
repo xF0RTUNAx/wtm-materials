@@ -1,4 +1,4 @@
-// Онлайн «Симулятора Летки» на стороне игрока: связь с сервером (game-server), лобби во вкладке «Онлайн»,
+// Онлайн «Fighter Jet Online» на стороне игрока: связь с сервером (game-server), лобби во вкладке «Онлайн»,
 // чужие самолёты (сглаженные снимки сервера), отправка своего состояния, сбития, возрождение, итоги боя.
 // Своим самолётом игрок управляет у себя без задержки; урон, счёт и время ведёт сервер.
 // Ракеты, ловушки и захваты РЛС тоже считает сервер: пуск/захват/ЛТЦ — заявка серверу, ракеты («сетевые», net: true)
@@ -364,7 +364,7 @@ export function createOnline(K) {
     else if (a === 'accept') K.gate(() => { send({ t: 'accept' }); if (MP.q) { MP.q.state = 'accepted'; render(); } });
     else if (a === 'decline') { send({ t: 'decline' }); MP.q = null; render(); }
     else if (a === 'copy') { try { navigator.clipboard.writeText(MP.room.code); b.textContent = 'скопировано'; } catch (_) { /* нет доступа к буферу */ } }
-    else if (a === 'invite') K.share(inviteUrl(MP.room.code), `Летим вместе в «Симуляторе Летки»! Комната ${MP.room.code} (${MODES[MP.room.mode].name} ${MP.room.size}×${MP.room.size})`, b);
+    else if (a === 'invite') K.share(inviteUrl(MP.room.code), `Летим вместе в Fighter Jet Online! Комната ${MP.room.code} (${MODES[MP.room.mode].name} ${MP.room.size}×${MP.room.size})`, b);
   }
 
   MP.autoCode = cleanCode(K.inviteCode || ''); if (MP.autoCode.length !== 4) MP.autoCode = ''; // ?mp=КОД — сразу войти в комнату после подключения (?mp=1 — только открыть вкладку)

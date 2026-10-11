@@ -335,7 +335,7 @@ export function createAudio() {
     sample(name, vol, when = 0, rate = 1, cut = 20000, wet = 0, offset = 0) { // offset — с какого места записи (с)
       const S0 = SAMPLES[name]; if (!ctx || muted || !S0 || !S0.buf) return false;
       const t0 = now() + when, s0 = ctx.createBufferSource(), g = gain(vol), f = filt('lowpass', cut, 0.6); s0.buffer = S0.buf; s0.playbackRate.value = rate;
-      chain(s0, f, g, out); if (wet) { const w = gain(wet); g.connect(w); w.connect(reverbIn); } s0.start(t0, offset); return true;
+      chain(s0, f, g, out); if (wet) { const w = gain(wet); g.connect(w); w.connect(reverbIn); } s0.start(t0, offset); s0.vol = g; return s0; // голос — чтобы можно было погасить (vol — его громкость)
     },
   };
   return A;

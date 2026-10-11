@@ -1,4 +1,4 @@
-// «Симулятор Летки» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ противника, HUD, меню, тест графики.
+// «Fighter Jet Online» — основной модуль: лётная модель, ракеты, радар, СПО, ИИ противника, HUD, меню, тест графики.
 /* global THREE */
 import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930m';
 import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930m';
@@ -7,13 +7,13 @@ import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, build
 import { createBook } from '../airdef/flipbook.js?v=20261011b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 import { createGlbMap } from './glbmap.js?v=20261013a';
-import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261013a';
+import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261018j';
 import { createPipeline } from './post.js?v=20260930m';
 import { createAudio, ECO_SELECT, setAudioEcoMode } from './audio.js?v=20261013a';
 import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930m';
 import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930m';
 import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930m';
-import { createOnline } from './online-client.js?v=20260930m';
+import { createOnline } from './online-client.js?v=20261018j';
 import { createProgress, rewardText, plural } from './progress-client.js?v=20260930m';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, pilotStep, steerTo,
   seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930m';
@@ -2915,7 +2915,7 @@ function mpSyncMenu(mp) {
 // приглашение в комнату: в Telegram — «поделиться» в чат, на телефоне — системное меню, иначе — ссылка в буфер
 function shareInvite(url, text, btn) {
   try { if (TG.W && TG.W.openTelegramLink) { TG.W.openTelegramLink('https://t.me/share/url?url=' + encodeURIComponent(url) + '&text=' + encodeURIComponent(text)); return; } } catch (_) { /* не Telegram */ }
-  if (navigator.share && IS_TOUCH) { navigator.share({ title: 'Симулятор Летки', text, url }).catch(() => {}); return; }
+  if (navigator.share && IS_TOUCH) { navigator.share({ title: 'Fighter Jet Online', text, url }).catch(() => {}); return; }
   const done = () => { btn.textContent = 'ссылка скопирована'; };
   try { navigator.clipboard.writeText(url).then(done, () => popup(url, 'info')); } catch (_) { popup(url, 'info'); }
 }

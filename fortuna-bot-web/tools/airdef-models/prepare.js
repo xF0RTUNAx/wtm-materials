@@ -138,10 +138,12 @@ const CONFIG = {
   mig29: { src: `${DL}/mig_29.glb`, scale: 17.32 / 947.3, nose: '+z', tex: () => 1024 },
   // правила частей — в осях игры (без центровки): along/across — положение центра части вдоль и поперёк оси пакета
   tor: { src: `${DL}/9k331_tor-m1.glb`, scale: 1, fwd: [0.767, 0.641], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, target: 55000,
-    groups: (c) => (c.min[1] > -0.13 && c.ctr[2] > 5.8 && c.ctr[2] < 12.8 ? 'turret' : 'body') }, // башня сшита с корпусом одной сеткой — по треугольникам
+    radarRaise: { hinge: [-9.33, 1.04, 10.3], angle: 1.85 }, tpFix: [0.01, 2.29, -0.19], /* ось башни — как в launchers.js (кромка сложенной решётки лежала у основания и сдвигала расчёт) */ // антенна в модели сложена назад на вилке; шарнир — верх тумбы (центр x −9,33, z 10,3): вилку с решёткой и запросчиком — в боевое положение
+    groups: (c) => (c.min[1] > -0.13 && c.ctr[2] > 5.8 && c.ctr[2] < 12.8 ? ((c.ctr[2] > 10.5 && Math.abs(c.ctr[0] + 9.33) < (c.ctr[2] > 11.0 ? 1.15 : 1.0)) || (c.ctr[2] > 10.1 && c.ctr[1] > 0.98 && Math.abs(c.ctr[0] + 9.33) < 0.65) ? 'radar' : 'turret') : 'body') }, // башня сшита с корпусом одной сеткой — по треугольникам; radar — антенна обзора (в модели сложена назад)
   pantsir: { src: `${DL}/96k6_pantsir-s2.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 55000, minPart: 0.04, hinge: [0, 3.35, -0.6], tube: [0.12, 0.35],
     groups: (c) => {
       if (c.min[1] < 2.4 || c.ctr[2] < -3.2 || c.ctr[2] > 2.4) return 'body';
+      if (Math.abs(c.ctr[0]) < 0.72 && c.min[1] > 3.1 && c.ctr[2] > 0.9 && c.ctr[2] < 2.4 && (Math.abs(c.ctr[0]) < 0.4 || c.min[1] > 3.6)) return 'radar'; // РЛС обнаружения на крыше башни (блок 1,33 м — с боковыми деталями) — крутится
       return c.min[1] > 2.7 && c.max[1] < 3.95 && c.ctr[2] < 0.6 && (c.size[2] > 0.8 || Math.abs(c.ctr[0]) > 0.75) ? 'cradle' : 'turret';
     } },
   s400: { src: `${DL}/s-400_triumf_missile_launcher_truck.glb`, scale: 13.5 / 1.9, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 1024, target: 120000, hinge: [0, -1.53, 5.44], tube: [0.6, 1.4], // скан: весь тягач — одна сетка, делим по треугольникам
@@ -157,6 +159,7 @@ const CONFIG = {
     groups: (c) => {
       if (c.min[1] < 2.05 || c.ctr[2] < -2.2 || c.ctr[2] > 3.4) return 'body';
       if (Math.abs(c.ctr[0]) > 0.75 && Math.abs(c.size[0] - 0.21) < 0.05 && c.size[2] > 2.4) return 'missile'; // 9М33 в решётчатых контейнерах
+      { const r = Math.hypot(c.ctr[0], c.ctr[2] - 1.1); if ((c.min[1] > 4.1 && r < 1.3) || (c.min[1] > 4.0 && r < 0.6) || (c.min[1] > 3.95 && r < 0.3)) return 'radar'; } // антенна обзора, запросчик над ней и верх мачты — крутятся, пока РЛС работает
       return Math.abs(c.ctr[0]) > 0.75 && axis(c, [1.32, 3.06], [-0.906, 0.423], 0.55, -2.4, 2.8) ? 'cradle' : 'turret';
     } },
   patriot: { src: `${DL}/mim-104_patriot_surface-to-air_missile_sam.glb`, scale: 1, nose: '+x', rulesIn: 'game', unit: true, tex: () => 1024, hinge: [0, 3.95, 12.81], tube: [0.5, 1.2],
@@ -206,6 +209,7 @@ const CONFIG = {
       // пушки (корпуса и стволы) по бортам башни качаются
       const gunX = Math.abs(c.ctr[0]) > 0.7 && Math.abs(c.ctr[0]) < 1.45 && c.ctr[1] > 1.95 && c.ctr[1] < 2.7;
       // пушка целиком (и мелкие детали ствола впереди цапф — дульные тормоза, кожухи) качается вместе
+      if (c.min[1] > 2.82 && c.ctr[2] > 1.2 && Math.abs(c.ctr[0]) < 0.8) return 'radar'; // РЛС обзора сзади на башне — крутится (передняя — сопровождения, с башней)
       return gunX && (c.size[2] > 1.0 || c.ctr[2] < -0.3) ? 'cradle' : 'turret';
     } },
   nasams: { src: `${DL}/nasams_1_surface-to-air_missile_system.glb`, scale: 0.4, fwd: [0.174, 0.985], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, hinge: [0, 1.16, 1.42], tube: [0.3, 0.9],
@@ -303,14 +307,27 @@ async function prepare(name, views) {
     for (const p of prims) {
       const { comp, list } = components(p.P, p.I, 0.001), gid = new Map();
       for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; gid.set(c.id, Math.max(...c.size) * tsc < (cfg.minPart || 0) ? null : cfg.groups ? cfg.groups(c) : 'body'); }
+      if (Deno.env.get('LSALL')) for (const c of list) if (Math.max(...c.size) * tsc > +(Deno.env.get('LSALL') || 0.3) && c.min[1] > +(Deno.env.get('LSY') || -1e9)) console.log('  деталь', gid.get(c.id), 'мат', c.mat, 'ц', c.ctr.map((v) => v.toFixed(2)).join(' '), 'р', c.size.map((v) => v.toFixed(2)).join(' ')); // LSALL=0.3 LSY=2 — детали крупнее 0,3 м выше y=2
       for (const x of p.P) P.push(x);
       const triG = (t) => { if (!cfg.perTri) return gid.get(comp[t]); const c = { min: [1e9, 1e9, 1e9], max: [-1e9, -1e9, -1e9] }; for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k] * 3; for (let d = 0; d < 3; d++) { c.min[d] = Math.min(c.min[d], p.P[v + d]); c.max[d] = Math.max(c.max[d], p.P[v + d]); } } c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); return cfg.groups(c); };
-      for (let t = 0; t < p.I.length / 3; t++) { const gname = triG(t); if (!gname) continue; cnt[gname] = (cnt[gname] || 0) + 1; I.push(p.I[t * 3] + b, p.I[t * 3 + 1] + b, p.I[t * 3 + 2] + b); C.push({ body: [175, 175, 180], turret: [215, 95, 85], cradle: [80, 105, 220], missile: [60, 190, 90] }[gname]); }
+      for (let t = 0; t < p.I.length / 3; t++) { const gname = triG(t); if (!gname) continue; cnt[gname] = (cnt[gname] || 0) + 1; I.push(p.I[t * 3] + b, p.I[t * 3 + 1] + b, p.I[t * 3 + 2] + b); C.push({ body: [175, 175, 180], turret: [215, 95, 85], cradle: [80, 105, 220], missile: [60, 190, 90] , radar: [235, 205, 40]}[gname]); }
       b += p.P.length / 3;
+    }
+    // RADROT=1.57 — антенну обзора повернуть вокруг её оси (как в игре: центр нижних 15 % по высоте) — видно, что не поехало с ней
+    if (cfg.radarRaise && !Deno.env.get('NORAISE')) { const RC0 = [235, 205, 40], vs0 = new Set(); for (let t = 0; t < C.length; t++) if (C[t] && C[t][0] === RC0[0] && C[t][1] === RC0[1] && C[t][2] === RC0[2]) for (let k = 0; k < 3; k++) vs0.add(I[t * 3 + k]);
+      const q = new Float32Array(vs0.size * 3), ids = [...vs0]; ids.forEach((v, j) => { q[j * 3] = P[v * 3]; q[j * 3 + 1] = P[v * 3 + 1]; q[j * 3 + 2] = P[v * 3 + 2]; });
+      raiseX(q, null, cfg.radarRaise.hinge, cfg.radarRaise.angle); const o = cfg.radarRaise.offset || [0, 0, 0]; for (let j = 0; j < q.length; j += 3) { q[j] += o[0]; q[j + 1] += o[1]; q[j + 2] += o[2]; } ids.forEach((v, j) => { P[v * 3] = q[j * 3]; P[v * 3 + 1] = q[j * 3 + 1]; P[v * 3 + 2] = q[j * 3 + 2]; }); }
+    if (Deno.env.get('RADROT')) {
+      const RC = [235, 205, 40], vs = new Set(); for (let t = 0; t < C.length; t++) if (C[t] && C[t][0] === RC[0] && C[t][1] === RC[1] && C[t][2] === RC[2]) for (let k = 0; k < 3; k++) vs.add(I[t * 3 + k]);
+      let y0 = 1e9, y1 = -1e9; for (const v of vs) { y0 = Math.min(y0, P[v * 3 + 1]); y1 = Math.max(y1, P[v * 3 + 1]); }
+      let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (const v of vs) if (P[v * 3 + 1] <= y0 + (y1 - y0) * 0.15) { x0 = Math.min(x0, P[v * 3]); x1 = Math.max(x1, P[v * 3]); z0 = Math.min(z0, P[v * 3 + 2]); z1 = Math.max(z1, P[v * 3 + 2]); }
+      const ax = (x0 + x1) / 2, az = (z0 + z1) / 2, a = +Deno.env.get('RADROT'), c = Math.cos(a), sn = Math.sin(a);
+      for (const v of vs) { const x = P[v * 3] - ax, z = P[v * 3 + 2] - az; P[v * 3] = ax + x * c + z * sn; P[v * 3 + 2] = az - x * sn + z * c; }
+      console.log(`  антенна: ось x ${ax.toFixed(2)} z ${az.toFixed(2)}, повёрнута на ${a}`);
     }
     const dir = Deno.args[Deno.args.indexOf('--groups') + 1], mk = cfg.hinge ? [cfg.hinge] : [];
     const bb = bbox(Float32Array.from(P)); console.log(name, 'треугольников по группам', JSON.stringify(cnt), 'габариты', bb.mn.map((v) => v.toFixed(2)).join(' '), '…', bb.mx.map((v) => v.toFixed(2)).join(' '));
-    for (const v of ['front', 'side', 'top']) writePpm(`${dir}/g_${name}_${v}.ppm`, render(Float32Array.from(P), Uint32Array.from(I), (t) => C[t], { view: v, w: 900, h: 520, marks: mk }));
+    for (const v of ['front', 'side', 'top']) writePpm(`${dir}/g_${name}_${v}.ppm`, render(Float32Array.from(P), Uint32Array.from(I), (t) => C[t], { view: v, w: +(Deno.env.get('GW') || 900), h: +(Deno.env.get('GH') || 520), marks: mk }));
     return;
   }
   const byMat = new Map(); let removed = 0;
@@ -481,18 +498,26 @@ async function prepare(name, views) {
 }
 // ── шарниры комплекса: башня — вокруг вертикали через центр её основания, пакет — вокруг оси hinge; пакет поворачивается
 // так, чтобы его ось смотрела в −Z (угол места 0), — в игре его поднимает u.lel. Печатает данные для launchers.js.
+// подъём сложенной антенны: поворот вокруг горизонтальной оси X через шарнир h (a > 0 — задняя часть уходит вверх)
+function raiseX(pos, nor, h, a) {
+  const c = Math.cos(a), s = Math.sin(a);
+  for (let i = 0; i < pos.length; i += 3) { const dy = pos[i + 1] - h[1], dz = pos[i + 2] - h[2]; pos[i + 1] = h[1] + dy * c + dz * s; pos[i + 2] = h[2] - dy * s + dz * c; }
+  if (nor) for (let i = 0; i < nor.length; i += 3) { const y = nor[i + 1], z = nor[i + 2]; nor[i + 1] = y * c + z * s; nor[i + 2] = -y * s + z * c; }
+}
 function articulate(cfg, byMat, shift, ax) {
   const sub = (p) => [p[0] - shift[0], p[1] - shift[1], p[2] - shift[2]];
+  if (cfg.radarRaise) { const h = sub(ax(...cfg.radarRaise.hinge).map((v) => v * cfg.scale)); const o = cfg.radarRaise.offset || [0, 0, 0]; for (const m of byMat.values()) if (m.group === 'radar') { raiseX(m.pos, m.nor, h, cfg.radarRaise.angle); for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] += o[0]; m.pos[i + 1] += o[1]; m.pos[i + 2] += o[2]; } } } // и сдвиг: на крышу башни
   const hinge = cfg.hinge ? sub(ax(...cfg.hinge).map((v) => v * cfg.scale)) : null;
   // ракеты на направляющих (группа missile) качаются вместе с пакетом
-  const T = [...byMat.values()].filter((m) => m.group === 'turret'), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile');
+  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar'), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile');
   if (!T.length && !K.length) return; // машина целиком (станция РЭБ)
   // основание башни: нижние 0,5 м её вершин
-  let y0 = 1e9; for (const m of T) for (let i = 1; i < m.pos.length; i += 3) y0 = Math.min(y0, m.pos[i]);
+  const T0 = T.filter((m) => m.group === 'turret'); // основание — по самой башне (антенна обзора ось не сдвигает)
+  let y0 = 1e9; for (const m of T0) for (let i = 1; i < m.pos.length; i += 3) y0 = Math.min(y0, m.pos[i]);
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9;
-  for (const m of T) for (let i = 0; i < m.pos.length; i += 3) if (m.pos[i + 1] < y0 + 0.5) { x0 = Math.min(x0, m.pos[i]); x1 = Math.max(x1, m.pos[i]); z0 = Math.min(z0, m.pos[i + 2]); z1 = Math.max(z1, m.pos[i + 2]); }
+  for (const m of T0) for (let i = 0; i < m.pos.length; i += 3) if (m.pos[i + 1] < y0 + 0.5) { x0 = Math.min(x0, m.pos[i]); x1 = Math.max(x1, m.pos[i]); z0 = Math.min(z0, m.pos[i + 2]); z1 = Math.max(z1, m.pos[i + 2]); }
   // башни нет (С-400) — ось поворота в петле пакета
-  const tp = T.length ? [(x0 + x1) / 2, y0, (z0 + z1) / 2] : hinge.slice();
+  const tp = cfg.tpFix ? cfg.tpFix.slice() : T.length ? [(x0 + x1) / 2, y0, (z0 + z1) / 2] : hinge.slice(); // tpFix — ось башни задана (как печатается ниже), если расчёт её сдвигает
   // turretYaw — башня в модели развёрнута (пусковая смотрит вбок): поворачиваем башню, пакет и петлю вокруг вертикали
   // через центр основания башни в нулевое положение (как у three.js: x' = x·cos + z·sin, z' = −x·sin + z·cos)
   if (cfg.turretYaw) {
