@@ -1,15 +1,15 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261018j';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261018j';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261018j';
-import { MODES } from './sim/strike.js?v=20261018j';
-import { WEATHERS } from '../drone/world.js?v=20261018j';
-import { LESSONS } from './training.js?v=20261018j';
-import { MODEL_CREDITS } from './models.js?v=20261018j';
-import { openLayoutEditor } from './layout.js?v=20261018j';
+import { CITY } from './city.js?v=20261018k';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261018k';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261018k';
+import { MODES } from './sim/strike.js?v=20261018k';
+import { WEATHERS } from '../drone/world.js?v=20261018k';
+import { LESSONS } from './training.js?v=20261018k';
+import { MODEL_CREDITS } from './models.js?v=20261018k';
+import { openLayoutEditor } from './layout.js?v=20261018k';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261018j';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261018k';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -254,8 +254,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <div class="cat-h">Отдельное спасибо за помощь</div>
       <p class="hint">3D-модели (для игры упрощены, разделены на части, текстуры уменьшены): ${MODEL_CREDITS.map((m) => `${A(m.url, `«${m.title}»`)} — ${m.author} (${A(m.licenseUrl, m.license)})`).join(' · ')}.</p>
       <p class="hint">Звук далёкого взрыва: ${A('https://freesound.org/people/puniho/sounds/116677/', '«Stretched Canvas Bass Drum Granulated»')} — Puniho (${A('https://creativecommons.org/licenses/by/3.0/', 'CC BY 3.0')}), обрезан и сведён в моно.</p>
-      <p class="hint">Звуки мотора дрона, сирены воздушной тревоги и пусков ракет — звуковые эффекты с YouTube, выложенные авторами для свободного использования: «Iranian drone Shahed 136 sound effect», «Air Raid Siren Sound Effect», «Missile launch Sound effect», «Missile Launch Sound Effects». Обрезаны, зациклены и сведены для игры.</p>
-      <p class="hint">Остальные модели, эффекты и звуки сделаны для игры.</p>`;
+      <p class="hint">Остальное в игре реализовано процедурным способом.</p>`;
   }
   $('tab-set').onclick = (e) => {
     const g = e.target.closest('[data-gfx]'), w = e.target.closest('[data-seg="wx"] [data-v]');

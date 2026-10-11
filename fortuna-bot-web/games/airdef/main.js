@@ -8,26 +8,26 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261018j';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261018j';
-import { createPipeline } from '../drone/post.js?v=20261018j';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261018j';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261018j';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261018j';
-import { createStrike, MODES } from './sim/strike.js?v=20261018j';
-import { createRaid } from './sim/raid.js?v=20261018j';
-import { POD } from './sim/combined.js?v=20261018j';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261018j';
-import { slotCount } from './launchers.js?v=20261018j';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel } from './models.js?v=20261018j';
-import { createSound } from './sound.js?v=20261018j';
-import { createAir } from './air.js?v=20261018j';
-import { createDefense } from './defense.js?v=20261018j';
-import { createDirector } from './director.js?v=20261018j';
-import { createOnline } from './online.js?v=20261018j';
-import { createShell } from './shell.js?v=20261018j';
-import { createTraining, LESSONS } from './training.js?v=20261018j';
-import { createMenu } from './menu.js?v=20261018j';
+import { buildCity, CITY } from './city.js?v=20261018k';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261018k';
+import { createPipeline } from '../drone/post.js?v=20261018k';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261018k';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261018k';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261018k';
+import { createStrike, MODES } from './sim/strike.js?v=20261018k';
+import { createRaid } from './sim/raid.js?v=20261018k';
+import { POD } from './sim/combined.js?v=20261018k';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261018k';
+import { slotCount } from './launchers.js?v=20261018k';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel } from './models.js?v=20261018k';
+import { createSound } from './sound.js?v=20261018k';
+import { createAir } from './air.js?v=20261018k';
+import { createDefense } from './defense.js?v=20261018k';
+import { createDirector } from './director.js?v=20261018k';
+import { createOnline } from './online.js?v=20261018k';
+import { createShell } from './shell.js?v=20261018k';
+import { createTraining, LESSONS } from './training.js?v=20261018k';
+import { createMenu } from './menu.js?v=20261018k';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);

@@ -9,14 +9,14 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261018j';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261018j';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261018j';
-import { TEAM_NAME, TBM_CAP, tbmOf } from './sim/online-multi.js?v=20261018j';
+import { CITY, mulberry32 } from './city.js?v=20261018k';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261018k';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261018k';
+import { TEAM_NAME, TBM_CAP, tbmOf } from './sim/online-multi.js?v=20261018k';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261018j';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261018j';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261018j';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261018k';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261018k';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261018k';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
