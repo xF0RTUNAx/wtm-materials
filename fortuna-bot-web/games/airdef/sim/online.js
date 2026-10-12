@@ -2,7 +2,7 @@
 // Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
-import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261020d';
+import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261020e';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
 export const AD_MODES = ['arcade', 'real'];
@@ -95,6 +95,8 @@ export const samOk = (k, era, side) => !!SAM[k] && SAM[k].era <= era && SAM[k].s
 // ── зона пополнения (решение Mark 2026-10-12): круг радиусом R над землёй; лётчик пробыл в нём STAY с — пополнение: топливо
 // (FUEL раз за вылет) и боекомплект с ловушками (AMMO раз за вылет). Раз в MOVE с зона переезжает — но не пока в ней кто-то
 // пополняется: дождётся конца. Одиночный «Вылет» считает её у себя (air.js), онлайн — сервер (airdef-rooms.js) ──
+// «Нужна помощь»: не чаще раза в HELP_CD с (сервер и игра); метка у союзников горит HELP_T с
+export const HELP_CD = 20, HELP_T = 5;
 export const ZONE = { R: 1200, STAY: 12, MOVE: 30, FUEL: 1, AMMO: 2 };
 // новое место: кольцо 6,5–11,5 км от центра, не ближе 5 км к прежнему
 export function zoneSpot(rnd, prev) {

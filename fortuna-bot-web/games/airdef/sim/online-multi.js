@@ -2,8 +2,8 @@
 // (game-server/airdef-multi.js) и клиента. Две команды — восток и запад, два раунда со сменой сторон: в каждом одна команда
 // собирает волну (наряд на цели, как в одиночной «За волну»), другая ставит ПВО. Победа — по сумме: чья волна разрушила больше
 // ценности военных объектов. Подготовка — одновременная, общий таймер; атака не видит ПВО до обнаружения, оборона — план волны.
-import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261020d';
-import { LIM_ON } from './combined.js?v=20261020d';
+import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261020e';
+import { LIM_ON } from './combined.js?v=20261020e';
 
 export const KIND = 'multi';
 export const ROUNDS = 2;
@@ -33,15 +33,16 @@ export function cleanChat(s) {
   t = t.replace(BAD, (w) => '*'.repeat(Math.min(6, w.length)));
   return t;
 }
-// баллистика на волну (одиночная) или на атакующую команду (онлайн), решение Mark 2026-10-12: «Кинжал» — только без другой
-// баллистики (1, у команды из 5–6 — 2); иначе не больше 1 «Искандера» и всего 2 ракет (у 5–6 игроков — 3)
-export const TBM_RULE = (n) => (n >= 5 ? { kinzhal: 2, iskander: 1, total: 3 } : { kinzhal: 1, iskander: 1, total: 2 });
+// баллистика на волну (одиночная) или на атакующую команду (онлайн), решение Mark 2026-10-12/13: «Кинжал» и «Искандер» (у него
+// ложные цели) — только без другой баллистики, по 1 (у команды из 5–6 — по 2); иначе всего 2 ракеты (у 5–6 игроков — 3)
+export const TBM_RULE = (n) => (n >= 5 ? { kinzhal: 2, iskander: 2, total: 3 } : { kinzhal: 1, iskander: 1, total: 2 });
 export const TBM_CAP = (n) => TBM_RULE(n).total;
 export const tbmOf = (n) => Object.entries(n || {}).reduce((s, [k, v]) => s + (AG[k] && AG[k].kind === 'tbm' ? v : 0), 0);
 // суммарный состав баллистики команды (планы союзников и свой) → текст запрета или null
 export function tbmCheck(n, players) {
   const r = TBM_RULE(players), K = n.kinzhal || 0, I = n.iskander || 0, A = tbmOf(n);
   if (K && A > K) return '«Кинжал» — только без другой баллистики';
+  if (I && A > I) return '«Искандер» — только без другой баллистики';
   if (K > r.kinzhal) return `«Кинжал» — не больше ${r.kinzhal}`;
   if (I > r.iskander) return `«Искандер» — не больше ${r.iskander}`;
   if (A > r.total) return `Баллистика — не больше ${r.total}`;

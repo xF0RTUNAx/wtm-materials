@@ -266,7 +266,8 @@
   #opBtns .tb { position: static; width: 92px; height: 50px; }
   #opBtns .tb.big { height: 74px; font-size: 14px; }
   #opBtns .tb.off { opacity: .45; }
-  body.short #opBtns { gap: 6px; } body.short #opBtns .tb { height: 40px; } body.short #opBtns .tb.big { height: 56px; }
+  body.short #opBtns { gap: 5px; } body.short #opBtns .tb { height: 36px; } body.short #opBtns .tb.big { height: 52px; }
+  #opBtns .tb.on { background: rgba(251,146,60,.7); border-color: #fdba74; }
   #opCam.on { background: rgba(37,99,235,.55); border-color: #93c5fd; }
 
   /* панель перемещения по тактической карте: джойстик сдвига, масштаб, «весь город» */
@@ -313,6 +314,21 @@
   #phSide { position: fixed; z-index: 14; right: max(10px, var(--sa-r)); bottom: max(8px, var(--sa-b)); display: flex; flex-direction: column-reverse; gap: 5px; }
   #phSide button { width: 42px; padding: 0; font-size: 13px; }
   #phCap { position: fixed; z-index: 14; left: max(12px, var(--sa-l)); top: var(--top); max-width: calc(100vw - 150px); font: 600 12.5px -apple-system, Segoe UI, sans-serif; text-shadow: 0 0 4px #000; pointer-events: none; line-height: 36px; }
+  /* онлайн: «Игроки» (кто в сети и кто готов), «ПОМОЩЬ» лётчика, подсветка кнопки карты при просьбе союзника */
+  #plBtn { position: fixed; top: var(--top); right: calc(max(10px, var(--sa-r)) + 88px); width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3);
+    background: rgba(10,16,24,.55); color: #fff; font-size: 15px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 25; padding: 0; }
+  body.playing.netOn #plBtn { display: flex; } body.plOpen #plBtn { background: rgba(251,146,60,.75); }
+  #plPanel { position: fixed; z-index: 26; top: calc(var(--top) + 44px); right: max(10px, var(--sa-r)); width: min(300px, calc(100vw - 24px)); max-height: calc(100% - var(--top) - 60px); overflow-y: auto;
+    display: none; background: rgba(15,23,42,.92); border: 1px solid rgba(255,255,255,.18); border-radius: 12px; padding: 8px 10px; font-size: 12px; line-height: 1.35; }
+  body.playing.netOn.plOpen #plPanel { display: block; }
+  #plPanel .plh { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; } #plPanel .plh button { margin-left: auto; background: none; border: 0; color: #fff; font-size: 14px; cursor: pointer; }
+  #plPanel .plt { font-weight: 800; margin: 6px 0 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  #plPanel .plr { display: flex; align-items: center; gap: 5px; padding: 2px 0; } #plPanel .plr.me b { color: #fde68a; }
+  #plPanel .plx { margin-left: auto; white-space: nowrap; opacity: .85; } #plPanel .pll { margin-top: 6px; font-size: 10.5px; }
+  #plPanel .pld { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; } .pld.on { background: #4ade80; } .pld.off { border: 1.5px solid #94a3b8; } .pld.bot { background: #94a3b8; border-radius: 1px; transform: rotate(45deg) scale(.8); }
+  #tHelp { display: none; } body.netOn #tHelp { display: flex; }
+  .helpGlow { box-shadow: 0 0 0 3px #facc15, 0 0 16px #facc15 !important; animation: helpGlow .5s ease-in-out infinite alternate; }
+  @keyframes helpGlow { from { box-shadow: 0 0 0 2px #facc15, 0 0 6px #facc15; } to { box-shadow: 0 0 0 4px #facc15, 0 0 18px #facc15; } }
   #promoNav { position: fixed; z-index: 31; right: max(14px, var(--sa-r)); bottom: 36px; display: none; gap: 6px; }
   #promoNav button { width: 40px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3); background: rgba(10,20,30,.55); color: #fff; font-size: 14px; cursor: pointer; }
   #promoNav button:active { background: rgba(251,146,60,.6); }
@@ -376,6 +392,7 @@
     <div class="tb" id="opMap">КАРТА</div>
     <div class="tb" id="opAuto">АВТО</div>
     <div class="tb" id="opCam">КАМ.</div>
+    <div class="tb" id="opBino">БИНОКЛЬ</div>
     <div class="tb" id="opMethod">МЕТОД</div>
     <div class="tb" id="opRadar">РЛС</div>
     <div class="tb big" id="opFire">ПУСК</div>
@@ -390,6 +407,7 @@
   <div class="tb" id="tMap">КАРТА</div>
   <div class="tb" id="tCam">КАМ.</div>
   <div class="tb" id="tAuto">АВТО</div>
+  <div class="tb" id="tHelp">ПОМОЩЬ</div>
   <div class="tb" id="tThr">ГАЗ 80%</div>
   <div class="tb pad" id="tPad"><i class="pu">▲</i><i class="pl">⟲</i><i class="pr">⟳</i><i class="pd">▼</i></div>
 </div>
@@ -397,6 +415,8 @@
 <button id="exit" aria-label="Выйти">✕</button>
 <button id="pause" aria-label="Пауза">II</button>
 <button id="mute" aria-label="Звук">♪</button>
+<button id="plBtn" aria-label="Игроки" title="Игроки: кто в сети и кто готов">👥</button>
+<div id="plPanel"></div>
 
 <div id="netWait"><span class="dot"></span><span class="t">Ищем бой…</span><button>Отмена</button></div>
 <div id="netPlan"></div>
@@ -454,7 +474,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261020d"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261020d"></script>
+<script src="../config.js?v=20261020e"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261020e"></script>
 </body>
 </html>

@@ -110,6 +110,25 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     sendRoom(r);
   }
   function closeRoom(r) { rooms.delete(r.code); J(r, 'closed'); }
+  // после итогов боя комната снова в лобби с теми же игроками: хост меняет режим, формат, эпоху, сторону, игру — и снова «Готов».
+  // Ушедшие (без связи) — долой; хоста нет — хост первый человек; быстрый бой становится своей комнатой
+  function toLobby(r) {
+    for (const p of [...r.players.values()]) if (!p.bot && !p.ws) { p.room = null; r.players.delete(p.id); }
+    if (!humans(r).length) { closeRoom(r); return; }
+    if (!r.players.has(r.host) || r.players.get(r.host).bot) r.host = humans(r)[0].id;
+    Object.assign(r, { quick: false, state: 'lobby', t: 0, phaseT: 0, wave: 0, tick: 0, S: null, raid: null, targets: [], valueK: 0, events: [], zone: null, humanCraft: null, lead: null,
+      E: null, round: 0, atk: null, scores: null, last: false, lastRes: null, waveRes: null });
+    for (const p of r.players.values()) Object.assign(p, { ready: !!p.bot, budget: O.BUDGET0[p.team] || 0, choice: null, paid: null, kills: 0, deaths: 0, score: 0, lives: null, craft: null, plane: null,
+      op: null, plan: null, spent: 0, E: null, out: false, units: 0 });
+    sendRoom(r); J(r, 'lobby', { players: humans(r).map((p) => p.name) });
+  }
+  // смена игры в лобби: «Вылет и оборона» (авиация / ПВО) ↔ «Мульти-волна» (восток / запад) — команды по порядку
+  function setKind(r, kind) {
+    if (kind === r.kind) return;
+    const from = teamsOf(r); r.kind = kind; const to = teamsOf(r);
+    for (const p of r.players.values()) { p.team = to[Math.max(0, from.indexOf(p.team))]; p.budget = O.BUDGET0[p.team] || 0; }
+    if (kind === 'multi' && r.era < 2) r.era = 2; // у «Мульти-волны» — с эпохи II
+  }
 
   // ── старт: все люди «Готов», в каждой команде кто-то есть (пусто — боты, если включено) ──
   function tryStart(r) {
@@ -339,7 +358,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (r.kind === 'multi') { if (r.state !== 'lobby') MU.step(r, dt); return; }
     if (r.state === 'plan') { if (r.t >= r.phaseT || team(r, 'air').concat(team(r, 'pvo')).every((p) => p.ready || !p.ws && !p.bot)) startWave(r); return; }
     if (r.state === 'debrief') { if (r.t >= r.phaseT) { if (r.last) endBattle(r); else nextWave(r); } return; }
-    if (r.state === 'end') { if (r.t >= r.phaseT) { for (const p of humans(r)) { p.room = null; send(p, { t: 'closed' }); } closeRoom(r); } return; }
+    if (r.state === 'end') { if (r.t >= r.phaseT) toLobby(r); return; } // итоги показаны — снова лобби той же комнаты
     if (r.state !== 'play') return;
     const now = clock();
     // лётчики: прокси между состояниями — по прямой; молчит — самолёт берёт ИИ
@@ -397,8 +416,16 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       objects: r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0]) };
     if (only) send(only, msg); else bcast(r, msg);
   }
-  MU = createMulti({ city, send, bcast, team, humans, J, sign, clock, sendRoom, closeRoom, FAST });
-  setInterval(() => { for (const r of [...rooms.values()]) { try { step(r, DT); } catch (e) { log('ad: ошибка такта ' + (e && e.stack || e)); J(r, 'error', { msg: String(e && e.message || e) }); } } queueStep(); mqueueStep(); }, 1000 * DT);
+  MU = createMulti({ city, send, bcast, team, humans, J, sign, clock, sendRoom, closeRoom, toLobby, FAST });
+  // нагрузка: время такта всех комнат (среднее и худшее за минуту) — в /health; бюджет такта — 1000 × DT мс
+  const load = { ema: 0, max: 0, maxPrev: 0, maxT: 0 };
+  setInterval(() => {
+    const t0 = performance.now();
+    for (const r of [...rooms.values()]) { try { step(r, DT); } catch (e) { log('ad: ошибка такта ' + (e && e.stack || e)); J(r, 'error', { msg: String(e && e.message || e) }); } }
+    queueStep(); mqueueStep();
+    const ms = performance.now() - t0, now = clock(); load.ema += (ms - load.ema) * 0.02; load.max = Math.max(load.max, ms);
+    if (now - load.maxT > 60) { load.maxPrev = load.max; load.max = 0; load.maxT = now; }
+  }, 1000 * DT);
 
   // ═════════════ Быстрый поиск ═════════════
   // очередь по режиму: роли «авиация», «ПВО», «любая». Набралось 2 на 2 — ждём ещё QUEUE_EXTRA_T (вдруг 3 на 3 …);
@@ -466,6 +493,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     };
   }
   async function onMsg(c, m) {
+    if (m.t === 'ping') return send(c, { t: 'pong', i: +m.i || 0 }); // клиент меряет задержку и потери (раз в 2 с)
     if (m.t === 'hello') {
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
       Object.assign(c, { name: who.name, pid: who.pid }); clients.add(c);
@@ -493,7 +521,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       case 'ready': if (r.state === 'lobby') { c.ready = !!m.on; sendRoom(r); tryStart(r); } else if (r.state === 'plan') { c.ready = !!m.on; sendRoom(r); } return;
       case 'bot': if (host && r.state === 'lobby') addBot(r, teamsOf(r).includes(m.team) ? m.team : teamsOf(r)[0]); return;
       case 'kick': { const b = r.players.get(+m.id); if (host && r.state === 'lobby' && b && b.bot) { r.players.delete(b.id); sendRoom(r); } return; }
-      case 'opts': if (host && r.state === 'lobby') { if ([1, 2, 3, 4].includes(+m.era)) r.era = +m.era; if (m.sideAir === 'east' || m.sideAir === 'west') r.sideAir = m.sideAir; if (O.AD_MODES.includes(m.mode)) r.mode = m.mode; if (O.AD_SIZES.includes(+m.size)) r.size = +m.size; if (m.fill !== undefined) r.fill = !!m.fill; for (const p of r.players.values()) if (!p.bot) p.ready = false; sendRoom(r); } return;
+      case 'opts': if (host && r.state === 'lobby') { if (m.kind === 'air' || m.kind === 'multi') setKind(r, m.kind); if ([1, 2, 3, 4].includes(+m.era) && !(r.kind === 'multi' && +m.era < 2)) r.era = +m.era; if (m.sideAir === 'east' || m.sideAir === 'west') r.sideAir = m.sideAir; if (O.AD_MODES.includes(m.mode)) r.mode = m.mode; if (O.AD_SIZES.includes(+m.size)) r.size = +m.size; if (m.fill !== undefined) r.fill = !!m.fill; for (const p of r.players.values()) if (!p.bot) p.ready = false; sendRoom(r); } return;
       // ── расстановка и покупки ──
       case 'buyAir': {
         if (r.state !== 'plan' || c.team !== 'air') return;
@@ -514,10 +542,10 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       return;
     }
     // «Мне нужна помощь!» — союзникам (с точкой: самолёт или свой комплекс под управлением)
-    if (m.t === 'help' && r.state !== 'lobby' && clock() - (c.helpT || 0) > 5) {
+    if (m.t === 'help' && r.state !== 'lobby' && clock() - (c.helpT || -1e9) >= O.HELP_CD - 0.5) {
       c.helpT = clock();
-      const at = c.craft ? c.craft.pos : c.op ? c.op.pos : null;
-      bcast(r, { t: 'help', id: c.id, name: c.name, p: at ? [r1(at.x), r1(at.z)] : null }, (q) => q.team === c.team);
+      const at = c.craft ? c.craft.pos : c.op ? c.op.pos : null, mp = Array.isArray(m.p) && m.p.length === 2 && m.p.every(Number.isFinite) ? [r1(m.p[0]), r1(m.p[1])] : null; // ПВО без пульта — точка от игры (свой комплекс или карта)
+      bcast(r, { t: 'help', id: c.id, name: c.name, p: at ? [r1(at.x), r1(at.z)] : mp }, (q) => q.team === c.team);
       return;
     }
     if (r.state !== 'play') return;
@@ -575,7 +603,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   }
   return {
     connect,
-    stats: () => ({ online: clients.size, rooms: rooms.size, searching: searching() }),
+    stats: () => ({ online: clients.size, rooms: rooms.size, searching: searching(), load: { tickMs: Math.round(load.ema * 100) / 100, tickMaxMs: Math.round(Math.max(load.max, load.maxPrev) * 10) / 10, budgetMs: Math.round(1000 * DT) } }),
     _rooms: rooms,
   };
 }

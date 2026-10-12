@@ -1,7 +1,7 @@
 // Звук «Воздушного превосходства»: движок и синтез — из «Летки» (drone/audio.js: двигатель, объёмные голоса самолётов
 // и ракет, взрывы с задержкой по скорости звука, «гарнитура» для бортовых сигналов). Здесь — звуки этой игры из тех же
 // кирпичей (A.noise / A.tone): старт ЗУР, очереди зениток, сброс бомб, тоны СПО и датчика пуска, пульт оператора ПВО.
-import { createAudio } from '../drone/audio.js?v=20261020d';
+import { createAudio } from '../drone/audio.js?v=20261020e';
 
 export function createSound() {
   const A = createAudio();
@@ -11,8 +11,8 @@ export function createSound() {
   A.setVolume(vol); A.setMuted(muted);
   // записанные звуки (games/airdef/sounds): мотор «Шахеда» — петля для голосов дронов; далёкий взрыв —
   // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
-  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261020d'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261020d');
-  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261020d`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261020d'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261020d'); A.setPropSample('prop');
+  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261020e'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261020e');
+  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261020e`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261020e'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261020e'); A.setPropSample('prop');
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
   // записи вертикального старта: [хлопок выброса, начало рёва двигателя], с (по огибающей громкости)
@@ -141,6 +141,7 @@ export function createSound() {
     deny() { A.beep(240, 0.18, 'square', 0.05); },
     laser(on) { A.beep(on ? 2200 : 1100, 0.06, 'sine', 0.04); },
     alarm() { A.beep(900, 0.15, 'sawtooth', 0.05, -300); },
+    help() { [880, 1320, 1760].forEach((f, i) => setTimeout(() => A.beep(f, 0.11, 'triangle', 0.07), i * 130)); }, // «нужна помощь» союзника — три восходящих тона
     good() { A.chime(); },
     // каждый кадр в бою за самолёт: list — rwr(a), mws — датчик пуска
     rwrTick(dt, list, mws) {

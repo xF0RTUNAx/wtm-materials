@@ -9,14 +9,14 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261020d';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020d';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020d';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020d';
+import { CITY, mulberry32 } from './city.js?v=20261020e';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020e';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020e';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020e';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020d';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020d';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020d';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020e';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020e';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020e';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -122,7 +122,7 @@ export function createDefense(C) {
       tx.fillStyle = '#fecaca'; tx.fillText(`${Math.round((a.pos.y - city.groundH(a.pos.x, a.pos.z)) / 10) * 10}`, px, py - 12);
     }
     // онлайн: «нужна помощь» союзников — метка на карте (8 с)
-    if (st.net && C.netHelps) for (const h of C.netHelps()) { if (!h.p) continue; const [hx, hy] = w2s(h.p[0], h.p[1]), a = 0.6 + 0.4 * Math.sin(performance.now() / 200); tx.strokeStyle = `rgba(251,146,60,${a})`; tx.lineWidth = 3; tx.beginPath(); tx.arc(hx, hy, 16, 0, 7); tx.stroke(); tx.fillStyle = '#fb923c'; tx.font = '800 14px -apple-system, Segoe UI, sans-serif'; tx.fillText('⚠', hx, hy + 5); tx.font = '700 11px -apple-system, Segoe UI, sans-serif'; tx.fillText(`${h.name}: помощь`, hx, hy - 22); }
+    if (st.net && C.netHelps && C.drawWarn) for (const h of C.netHelps()) { if (!h.p) continue; const [hx, hy] = w2s(h.p[0], h.p[1]); C.drawWarn(tx, hx, hy, 12); tx.fillStyle = '#fde047'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.font = '700 11px -apple-system, Segoe UI, sans-serif'; tx.strokeText(`${h.name}: помощь`, hx, hy - 18); tx.fillText(`${h.name}: помощь`, hx, hy - 18); } // союзник просит помощи — знак у места
     tx.font = '600 11px -apple-system, Segoe UI, sans-serif';
     // ракеты: свои — белые, чужое оружие — оранжевое
     for (const m of C.S.sams) { if (m.dead) continue; const [px, py] = w2s(m.pos.x, m.pos.z); tx.fillStyle = '#fff'; tx.fillRect(px - 1.5, py - 1.5, 3, 3); }
@@ -524,7 +524,7 @@ export function createDefense(C) {
     const other = al ? sumN(...al.filter((p) => p.id !== me).map((p) => p.tbn || {})) : {}, mine = {};
     for (const [k, v] of Object.entries(st.plan.n)) if (AG[k] && AG[k].kind === 'tbm') mine[k] = v;
     if (add) mine[add] = (mine[add] || 0) + 1;
-    const all = sumN(other, mine); return { rule: TBM_RULE(n), other: tbmOf(other), used: tbmOf(all), kinzhal: all.kinzhal || 0, deny: add ? tbmCheck(all, n) : null }; }
+    const all = sumN(other, mine); return { rule: TBM_RULE(n), other: tbmOf(other), used: tbmOf(all), kinzhal: all.kinzhal || 0, iskander: all.iskander || 0, deny: add ? tbmCheck(all, n) : null }; }
   function addTo(key, k) {
     const free = idxOf(k, null).filter((i) => !launchedU(k, i));
     if (free.length) { setTkey(k, free[0], key); return true; }
@@ -563,7 +563,7 @@ export function createDefense(C) {
   function renderTgtCard() {
     const key = st.tsel, f = forecast(key), left = st.budget - planCost(), wave = st.phase === 'wave', DD = planDefaults(planComp(), st.targets, st.plan.cfg, st.net ? LIM_ON : undefined);
     const tb = tbmRoom();
-    let h = `<h3>Наряд на «${tName(key)}»</h3><div>Очки угрозы: <b style="color:#fde68a">${left}</b> · баллистика <b>${tb.used}/${tb.kinzhal ? tb.rule.kinzhal : tb.rule.total}</b>${tb.kinzhal ? ' («Кинжал» — без другой)' : ` (из них «Искандер» ≤ ${tb.rule.iskander})`}${st.net ? ' на команду' : ''}</div>`;
+    let h = `<h3>Наряд на «${tName(key)}»</h3><div>Очки угрозы: <b style="color:#fde68a">${left}</b> · баллистика <b>${tb.used}/${tb.kinzhal ? tb.rule.kinzhal : tb.iskander ? tb.rule.iskander : tb.rule.total}</b>${tb.kinzhal ? ' («Кинжал» — без другой)' : tb.iskander ? ' («Искандер» — без другой)' : ' («Кинжал» и «Искандер» — только без другой)'}${st.net ? ' на команду' : ''}</div>`;
     if (f) h += `<div style="margin:6px 0"><div style="height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:${Math.round(100 * f.hp / f.hpMax)}%;background:#94a3b8"></div></div>
       <div style="margin-top:4px">Прочность ${Math.round(f.hp)}/${f.hpMax} · наряд разрушит <b style="color:${fcCol(f.k)}">≈ ${Math.round(f.k * 100)} %</b>${f.over >= 1.5 ? ` · запас ×${f.over.toFixed(1).replace('.', ',')} — часть можно перенести на другие цели` : ''}</div><p class="hint">Оценка: часть собьют (дроны чаще, баллистику реже), ложные цели урона не наносят.${f.k < 1 ? ' Мало — добавьте ещё.' : ''}</p></div>`;
     else if (key === 'sam') h += '<p class="hint">Где ПВО — заранее неизвестно. Назначенные сюда бьют по комплексам, засечённым к моменту пуска (разведчик, излучение РЛС, пуски ЗУР); никого не нашли — по целям наряда. По тем, кого разведчик сам не видел, баллистика промахивается сильнее. Ложные цели — лучше сюда: ПВО тратит на них ракеты.</p>';
@@ -702,7 +702,7 @@ export function createDefense(C) {
       else if (a === 'sell' && u && mine(u)) { st.net.sell(u.id); st.sel = null; }
       else if (a === 'emit' && u && mine(u)) C.S.setEmit(u, !u.emit);
       else if (a === 'op' && u && mine(u)) enterOp(u);
-      else if (a === 'help') { if (st.multi) { const p = u && !u.dead ? [u.pos.x, u.pos.z] : [view.cx, view.cz]; st.net.helpAt(p); say('Союзникам: «Нужна помощь» — метка на карте', 2); } else st.net.help(); say('Союзникам: «Мне нужна помощь!»', 2); }
+      else if (a === 'help') { const q = st.op && !st.op.dead ? st.op : u && !u.dead && mine(u) ? u : C.S.units.find((x) => !x.dead && mine(x)); if (C.askHelp) C.askHelp(q ? [q.pos.x, q.pos.z] : [view.cx, view.cz]); } // метка — у своего комплекса (за пультом, выбранного или любого), иначе — центр карты
       else if (a === 'hold' && u && mine(u)) { u.hold = !u.hold; st.net.send({ t: 'hold', id: u.id, on: u.hold }); }
       snd.click(); renderSide(); return;
     }
@@ -865,11 +865,21 @@ export function createDefense(C) {
   const CAMS = { op: 'вид оператора', ext: 'снаружи — пусковая от третьего лица', chase: 'за ракетой' };
   // у ПЗРК вида снаружи нет (модели стрелка нет): оператор ↔ за ракетой
   const manpads = (u) => !!(u && u.S.type === 'ir' && u.S.hp <= 15);
-  function cycleCam() { op.cam = op.cam === 'op' ? (manpads(st.op) ? 'chase' : 'ext') : op.cam === 'ext' ? 'chase' : 'op'; op.orbit = false; op.od = 1; opSay('Камера: ' + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
+  // «БИНОКЛЬ»: только при захвате — камера с сильным увеличением прямо на захваченную цель (видно, какой стороной она к вам
+  // и как маневрирует — важно для тепловой ГСН). Захват сорвался или цель сменилась — сам выключается, нужен новый захват
+  function binoToggle() {
+    const u = st.op; if (!u) return;
+    if (op.bino) { binoOff('Бинокль выключен'); snd.click(); return; }
+    if (!u.track || u.track.dead) { opSay('Бинокль — только когда цель захвачена'); snd.deny(); return; }
+    op.bino = true; op.binoT = u.track; op.binoCam = op.cam; op.cam = 'op'; op.bf = 0; op.bDir = null; $('opBino').classList.add('on'); $('opCam').classList.remove('on'); snd.click(); on('bino', u);
+  }
+  function binoOff(msg) { if (!op.bino) return; op.bino = false; op.cam = op.binoCam || 'op'; $('opBino').classList.remove('on'); $('opCam').classList.toggle('on', op.cam !== 'op'); if (msg) opSay(msg); }
+  const binoLen = (a) => (a.W ? (a.W.vis ? a.W.vis.L : 5) : a.M ? a.M.L : a.len || 17);
+  function cycleCam() { if (op.bino) binoOff(); op.cam = op.cam === 'op' ? (manpads(st.op) ? 'chase' : 'ext') : op.cam === 'ext' ? 'chase' : 'op'; op.orbit = false; op.od = 1; opSay('Камера: ' + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
   const DIR = V3(), TMP = V3(), LEAD = V3(), EYE = V3();
   function enterOp(u) {
     if (st.op) leaveOp();
-    st.op = u; st.view = 'op'; C.S.setManual(u, true); op.camInit = false; obs.clear();
+    st.op = u; st.view = 'op'; C.S.setManual(u, true); op.camInit = false; obs.clear(); op.bino = false; $('opBino').classList.remove('on');
     const t = nearestTarget(u);
     TMP.copy(t ? t.pos : C.S.objects[0] ? new THREE.Vector3(C.S.objects[0].x, 400, C.S.objects[0].z) : TMP.set(0, 400, 0)).sub(u.pos);
     op.yaw = Math.atan2(-TMP.x, -TMP.z); op.pitch = clamp(Math.atan2(TMP.y, Math.hypot(TMP.x, TMP.z)), 0.02, 1.2); op.fov = u.S.hp <= 15 ? 40 : 55; op.follow = true;
@@ -883,7 +893,7 @@ export function createDefense(C) {
   }
   function leaveOp() {
     const u = st.op; if (u) { C.S.setManual(u, false); u.gunFire = false; }
-    st.op = null; st.view = 'map'; op.fireHeld = false;
+    binoOff(); st.op = null; st.view = 'map'; op.fireHeld = false;
     document.body.classList.remove('oper'); document.body.classList.add('dmap');
     C.setFov(62); renderSide();
   }
@@ -930,6 +940,7 @@ export function createDefense(C) {
       if (!drag || e.pointerId !== drag.id) return;
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
       if (drag.moved > 6) {
+        if (op.bino) return; // в бинокль — взгляд держит цель
         if (op.cam !== 'op') { const k = 0.006 * C.sens.look; if (!op.orbit) { op.orbit = true; op.oy = op.camYaw; } op.oy -= dx * k; op.op = clamp(op.op + dy * k, -1.35, 1.3); op.follow = false; return; } // снаружи — облёт камерой (ниже земли не опускается — взгляд поднимается)
         const k = op.fov * D2R / C.VH * C.sens.look; op.yaw -= dx * k; op.pitch = clamp(op.pitch - dy * k, -0.15, 1.5); op.follow = false; // палец вправо — взгляд вправо, вверх — вверх (как в шутерах)
       }
@@ -960,6 +971,7 @@ export function createDefense(C) {
     btn('opMap', () => leaveOp());
     btn('opAuto', () => C.setAuto(!C.auto));
     btn('opCam', () => cycleCam());
+    btn('opBino', () => binoToggle());
     btn('opRadar', () => { const u = st.op; if (u && u.S.radar) { C.S.setEmit(u, !u.emit); snd.click(); on('radar', u); } });
     btn('opMethod', () => { const u = st.op; if (u) { u.method = u.method === 'half' ? '3t' : 'half'; snd.click(); opSay(u.method === 'half' ? 'Метод: половинное спрямление' : 'Метод: три точки'); } });
     $('opFire').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); opFire(true); });
@@ -1041,6 +1053,19 @@ export function createDefense(C) {
       (tr ? `<br>цель: ${(d / 1000).toFixed(1)} км, ${Math.round(h)} м — <b>${zone}</b>${!u.track && u.desig ? ` · захват ${Math.round(clamp(u.seeT / ((S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1)), 0, 1) * 100)}%` : ''}` : S.type === 'ir' ? '<br>наведите перекрестие на самолёт — ГСН «зарычит» и захватит' : S.type === 'guns' ? '<br>ведите ствол в жёлтый кружок упреждения и держите «ОГОНЬ»' : '<br>коснитесь отметки цели на экране или на круговом обзоре')
       + (arm ? '<br><span class="st">⚠ ПРР ЛЕТИТ В ВАС — выключите РЛС!</span>' : '') + (op.msgT > 0 ? `<br><span class="st">${op.msg}</span>` : '');
     $('opRadar').textContent = u.emit ? 'РЛС ВКЛ' : 'РЛС ВЫКЛ'; $('opRadar').classList.toggle('off', !u.emit);
+    $('opBino').classList.toggle('off', !op.bino && !(u.track && !u.track.dead)); // без захвата — недоступен
+    if (op.bino && u.track) { // ракурс и манёвр цели
+      const tg = u.track, v = tg.vel && tg.vel.lengthSq() > 1 ? TMP.copy(tg.vel).normalize() : tg.dir ? TMP.copy(tg.dir) : null;
+      let asp = '', man = '';
+      if (v) {
+        const c = v.dot(LEAD.copy(u.pos).sub(tg.pos).normalize());
+        asp = c > 0.7 ? 'идёт на вас — нос к вам' : c < -0.7 ? 'уходит — хвост к вам' : 'проходит боком';
+        const yaw = Math.atan2(v.x, v.z); if (op.bDir !== null && op.bDir !== undefined && dt > 0) { let dy = yaw - op.bDir; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; op.bTurn = (op.bTurn || 0) * 0.9 + (dy / dt) * 0.1; } op.bDir = yaw;
+        man = Math.abs(op.bTurn || 0) > 0.12 ? ' · разворот' : v.y > 0.25 ? ' · набирает высоту' : v.y < -0.25 ? ' · снижается' : '';
+      }
+      hx.font = '700 13px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.fillStyle = '#fde68a'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
+      hx.fillText(`БИНОКЛЬ ×${Math.max(2, Math.round(55 / (op.bf || 55)))} · ${asp}${man}`, VW / 2, Math.max(60, VH * 0.14)); hx.shadowBlur = 0;
+    }
     $('opMethod').textContent = u.method === 'half' ? 'МЕТОД ½' : 'МЕТОД 3Т';
     if (arm && !op.armWarned) { op.armWarned = true; snd.alarm(); on('arm', u, arm); } else if (!arm) op.armWarned = false;
     drawPpi(t);
@@ -1088,6 +1113,15 @@ export function createDefense(C) {
     DIR.set(-Math.sin(op.yaw) * Math.cos(op.pitch), Math.sin(op.pitch), -Math.cos(op.yaw) * Math.cos(op.pitch));
     u.aimDir.copy(DIR);
     EYE.copy(u.pos); EYE.y += u.S.hp <= 15 ? 1.7 : 3.2;
+    if (op.bino) {
+      const tg = u.track;
+      if (!tg || tg.dead || tg !== op.binoT) binoOff('Захват потерян — бинокль выключен, нужен новый захват');
+      else { // цель — примерно четверть высоты кадра; поле зрения меняем ступенями (смена — пересчёт кадра)
+        const d = Math.max(60, tg.pos.distanceTo(EYE)), f = clamp(2 * Math.atan(binoLen(tg) * 2.2 / d) / D2R, 0.3, 14);
+        if (!op.bf || Math.abs(f - op.bf) / op.bf > 0.12) op.bf = f;
+        camera.position.copy(EYE); camera.up.set(0, 1, 0); camera.lookAt(tg.pos); C.setFov(op.bf); return;
+      }
+    }
     if (op.cam !== 'op') { extCamera(dt, u); return; }
     camera.position.copy(EYE); camera.up.set(0, 1, 0); camera.lookAt(TMP.copy(EYE).add(DIR));
     C.setFov(op.fov);
@@ -1460,6 +1494,7 @@ export function createDefense(C) {
     else if (e.code === 'KeyQ' || e.code === 'Backspace') leaveOp();
     else if (e.code === 'KeyT') C.setAuto(!C.auto);
     else if (e.code === 'KeyV') cycleCam();
+    else if (e.code === 'KeyB') binoToggle();
     else if (e.code === 'KeyZ') op.fov = op.fov > 30 ? 20 : op.fov > 12 ? 8 : 55;
   }
   const api = {

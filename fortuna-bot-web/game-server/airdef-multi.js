@@ -17,7 +17,7 @@ import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
 const r1 = (v) => Math.round(v * 10) / 10;
 const opp = (s) => (s === 'east' ? 'west' : 'east');
 
-// ctx — общее с комнатами airdef-rooms.js: city, send, bcast, team, humans, J, sign, clock, closeRoom, sendRoom, FAST
+// ctx — общее с комнатами airdef-rooms.js: city, send, bcast, team, humans, J, sign, clock, closeRoom, toLobby, sendRoom, FAST
 export function createMulti(ctx) {
   const { city, send, bcast, team, humans, J, sign, clock, sendRoom, FAST } = ctx;
   const PREP_T = FAST ? 8 : M.PREP_T, DEBRIEF_T = FAST ? 1 : M.DEBRIEF_T, RESULTS_T = FAST ? 3 : M.RESULTS_T, WAVE_MAX = M.WAVE_MAX;
@@ -212,7 +212,7 @@ export function createMulti(ctx) {
       return;
     }
     if (r.state === 'debrief') { if (r.t >= r.phaseT) { if (r.last) endBattle(r); else nextRound(r); } return; }
-    if (r.state === 'end') { if (r.t >= r.phaseT) { for (const p of humans(r)) { p.room = null; send(p, { t: 'closed' }); } ctx.closeRoom(r); } return; }
+    if (r.state === 'end') { if (r.t >= r.phaseT) ctx.toLobby(r); return; } // итоги показаны — снова лобби той же комнаты
     if (r.state !== 'play') return;
     r.k = quiet(r) ? M.QUIET_K : 1;
     for (let s = 0; s < r.k * (FAST ? 4 : 1); s++) { // AD_FAST (автопроверка) — ещё ×4
@@ -263,7 +263,7 @@ export function createMulti(ctx) {
     }
     // «Помощь» обороны — метка на карте союзникам (всегда)
     if (m.t === 'help') {
-      if (!r.atk || c.team === r.atk || (c.helpT !== undefined && clock() - c.helpT < 4)) return;
+      if (!r.atk || c.team === r.atk || (c.helpT !== undefined && clock() - c.helpT < O.HELP_CD - 0.5)) return;
       const p = Array.isArray(m.p) && m.p.length === 2 && m.p.every(Number.isFinite) ? [r1(m.p[0]), r1(m.p[1])] : c.op ? [r1(c.op.pos.x), r1(c.op.pos.z)] : null;
       c.helpT = clock(); bcast(r, { t: 'help', id: c.id, name: c.name, p }, (q) => q.team === c.team);
       return;

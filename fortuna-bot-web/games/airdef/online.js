@@ -3,11 +3,11 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261020d';
-import * as O from './sim/online.js?v=20261020d';
-import * as MW from './sim/online-multi.js?v=20261020d';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020d';
-import { MODES } from './sim/strike.js?v=20261020d';
+import { createNet } from './net.js?v=20261020e';
+import * as O from './sim/online.js?v=20261020e';
+import * as MW from './sim/online-multi.js?v=20261020e';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020e';
+import { MODES } from './sim/strike.js?v=20261020e';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -21,7 +21,7 @@ export function createOnline(C, ctrls) {
   const seg = (id, cur, items) => `<div class="seg" data-oseg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const inMenu = () => C.state === 'menu' && C.setup.game === 'online';
   const rerender = () => { if (inMenu()) C.menu.render(); renderWait(); };
-  let feed = [], helps = [];
+  let feed = [], helps = [], keepRoom = false, afterBattle = false; // keepRoom — в меню, не выходя из комнаты; afterBattle — лобби после боя
 
   // ═════════════ Меню: вкладка «Бой» в режиме «Онлайн» ═════════════
   function panel(el) {
@@ -58,7 +58,8 @@ export function createOnline(C, ctrls) {
       (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">Перейти сюда</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">+ бот</button>` : '') + '</div>';
     el.innerHTML = `<div class="cat-h">Комната <b class="adcode">${r.code}</b> <button class="mini" data-oa="invite">Пригласить</button> <button class="mini" data-oa="leave">Выйти</button></div>
       <p class="hint">${r.kind === 'multi' ? 'Мульти-волна · два раунда со сменой сторон' : ''}${r.kind === 'multi' ? ' · ' : ''}${MODES[r.mode].name} · ${r.size}×${r.size} · эпоха ${ERAS[r.era - 1].short || r.era}${r.kind === 'multi' ? '' : ` · авиация — ${r.sideAir === 'east' ? 'восток' : 'запад'}`}${r.fill ? ' · пустые места — боты' : ''}</p>
-      ${host ? `<div class="prow"><span>Формат</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div><div class="prow"><span>Эпоха</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>
+      ${afterBattle ? '<p class="hint"><b>Бой окончен — вы снова в комнате.</b> Хост может сменить игру, режим, формат, эпоху и сторону; затем все — «Готов».</p>' : ''}
+      ${host ? `<div class="prow"><span>Игра</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', 'Вылет и оборона'], ['multi', 'Мульти-волна']])}</div><div class="prow"><span>Формат</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div><div class="prow"><span>Эпоха</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id] && (r.kind !== 'multi' || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
         ${r.kind === 'multi' ? '' : `<div class="prow"><span>Авиация</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>Режим</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
       <div class="adteams">${TT.map(col).join('')}</div>
       <p class="hint">Бой начнётся, когда все нажмут «Готов».</p>`;
@@ -79,7 +80,7 @@ export function createOnline(C, ctrls) {
     if (sg) {
       const v = b.dataset.v, k = sg.dataset.oseg;
       if (k === 'kind') { ui.kind = v; if (v === 'multi' && ui.era < 2) ui.era = 4; } else if (k === 'mode') ui.mode = v; else if (k === 'role') ui.role = v; else if (k === 'size') ui.size = +v; else if (k === 'era') ui.era = +v; else if (k === 'side') ui.sideAir = v; else if (k === 'fill') ui.fill = v === '1';
-      else if (k === 'rsize') N.opts({ size: +v }); else if (k === 'rera') N.opts({ era: +v }); else if (k === 'rside') N.opts({ sideAir: v }); else if (k === 'rmode') N.opts({ mode: v });
+      else if (k === 'rkind') N.opts({ kind: v }); else if (k === 'rsize') N.opts({ size: +v }); else if (k === 'rera') N.opts({ era: +v }); else if (k === 'rside') N.opts({ sideAir: v }); else if (k === 'rmode') N.opts({ mode: v });
       saveUi(); snd.click(); rerender(); return;
     }
     const a = e.target.closest('[data-oa]'), bot = e.target.closest('[data-bot]'), kick = e.target.closest('[data-kick]');
@@ -122,7 +123,7 @@ export function createOnline(C, ctrls) {
   const planEl = $('netPlan');
   const team = () => N.myTeam();
   function enterBattle() {
-    snd.unlock();
+    snd.unlock(); afterBattle = false;
     if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
     C.hooks = {}; C.paused = false; C.hint(''); C.say('');
     for (const id of ['menu', 'end', 'pauseScr']) $(id).classList.remove('on');
@@ -131,6 +132,7 @@ export function createOnline(C, ctrls) {
     if (N.battle && N.battle.kind === 'multi') { C.ctrl = ctrls.defense; ctrls.defense.startNetMulti(N); }
     else if (team() === 'air') { C.ctrl = ctrls.air; ctrls.air.startNet(N); } else { C.ctrl = ctrls.defense; ctrls.defense.startNet(N); }
     feed = []; helps = []; renderWait(); renderPlan();
+    document.body.classList.add('netOn'); // кнопка «Игроки»
   }
   // выбор связки лётчиком: что по карману, что выбрали союзники
   function renderPlan() {
@@ -161,12 +163,14 @@ export function createOnline(C, ctrls) {
   N.on('start', () => enterBattle());
   N.on('room', (was) => {
     rerender();
-    const r = N.room; if (!r || !N.battle) return;
+    const r = N.room; if (!r || !N.battle || r.state === 'end' || r.state === 'lobby') return; // итоги и лобби — не бой
     if (C.state !== 'play') enterBattle();
     if (team() === 'pvo' || N.battle.kind === 'multi') ctrls.defense.netSync();
     renderPlan();
     if (was !== r.state && r.state === 'play' && N.battle.kind !== 'multi') { C.say(`Волна ${r.wave}!`, 2.5); snd.alarm(); }
   });
+  // бой кончился, комната снова в лобби: с итогов «В КОМНАТУ» (или сразу, если итоги уже закрыли)
+  N.on('lobby', () => { afterBattle = true; document.body.classList.remove('netOn', 'plOpen'); if (C.state === 'play' && !C.ended) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; } if (inMenu()) C.menu.render(); });
   N.on('resupply', (e) => { if (team() === 'air') ctrls.air.netResupply(e); });
   N.on('spawn', (m) => { N.clog('spawn', { lives: m.lives, plane: m.plane, load: m.load.map((l) => l.key + ':' + l.n).join(',') }); if (team() === 'air') ctrls.air.netSpawn(m); });
   N.on('meHit', (hp, by) => ctrls.air.netHit(hp, by));
@@ -175,7 +179,35 @@ export function createOnline(C, ctrls) {
   // журнал сбитий: своя команда — синим, противник — красным; под ником — техника, которой он управлял в этот момент
   const vehName = (v) => { const [k, key] = String(v || '').split(':'); return !key ? '' : k === 'p' ? (PLANES[key] || (CARRIERS[key] && CARRIERS[key].name) || key) : k === 'u' ? (SAM[key] ? SAM[key].short : key) : (AG[key] ? AG[key].short : key); };
   N.on('kill', (who, whom, by, wt, mt, wv, mv) => { feed.push({ t: performance.now(), who, whom, by, wt, mt, wv: vehName(wv), mv: vehName(mv) }); if (feed.length > 6) feed.shift(); });
-  N.on('help', (m) => { feed.push({ t: performance.now(), s: `${m.name}: Мне нужна помощь!`, help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); snd.alarm(); });
+  N.on('help', (m) => { feed.push({ t: performance.now(), s: `${m.name}: Мне нужна помощь!`, help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); if (snd.help) snd.help(); else snd.alarm(); });
+  // «Нужна помощь»: не чаще раза в HELP_CD с; p — [x, z] (самолёт, свой комплекс или место на карте)
+  let helpAt = -1e9;
+  C.askHelp = (p) => {
+    const left = O.HELP_CD - (performance.now() - helpAt) / 1000;
+    if (left > 0) { C.say(`Просить помощи снова можно через ${Math.ceil(left)} с`, 2); snd.deny(); return false; }
+    helpAt = performance.now(); N.help(p); C.say('Союзникам: «Нужна помощь!» — знак на их карте', 2); snd.click(); return true;
+  };
+  // знак «внимание»: жёлтый треугольник с чёрным ободком и чёрным «!» (s — половина стороны, px)
+  C.drawWarn = (g, x, y, s = 9) => {
+    g.save(); g.beginPath(); g.moveTo(x, y - s * 1.05); g.lineTo(x + s * 1.15, y + s * 0.95); g.lineTo(x - s * 1.15, y + s * 0.95); g.closePath();
+    g.fillStyle = '#facc15'; g.fill(); g.lineJoin = 'round'; g.lineWidth = Math.max(1.5, s * 0.22); g.strokeStyle = '#000'; g.stroke();
+    g.fillStyle = '#000'; g.font = `900 ${Math.round(s * 1.25)}px -apple-system, Segoe UI, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', x, y + s * 0.2); g.textBaseline = 'alphabetic'; g.restore();
+  };
+  // ═════════════ Игроки: кто в сети и кто готов (кнопка 👥 вверху, во всех онлайн-боях) ═════════════
+  const plBtn = $('plBtn'), plEl = $('plPanel');
+  function renderPl() {
+    const r = N.room; if (!r || !document.body.classList.contains('plOpen')) return;
+    const multi = r.kind === 'multi', TN = multi ? MW.TEAM_NAME : O.ROLE_NAMES, TT = multi ? MW.TEAMS : ['air', 'pvo'], me = N.me && N.me.id, myT = N.myTeam();
+    const ph = { plan: multi ? 'подготовка' : 'расстановка', play: 'бой', debrief: 'итоги', end: 'итоги боя' }[r.state] || '', ready = r.state === 'plan';
+    plEl.innerHTML = `<div class="plh"><b>Комната ${r.code}</b> · ${MODES[r.mode].name} · ${ph}${r.left != null ? ` · ${r.left} с` : ''}<button data-pl="x" aria-label="Закрыть">✕</button></div>` +
+      TT.map((t) => `<div class="plt" style="color:${t === myT ? '#93c5fd' : '#fca5a5'}">${TN[t]}${multi && r.atk ? (r.atk === t ? ' · волна' : ' · ПВО') : ''}</div>` + r.players.filter((p) => p.team === t).map((p) =>
+        `<div class="plr${p.id === me ? ' me' : ''}"><i class="pld ${p.bot ? 'bot' : p.away ? 'off' : 'on'}"></i><b>${esc(p.name)}</b>${p.bot ? ' <span class="dim">бот</span>' : p.away ? ' <span class="dim">нет связи</span>' : ''}<span class="plx">${p.lives != null ? `вылетов ${p.lives} · ` : ''}${p.kills || 0} · ${p.score || 0} оч.${ready ? (p.ready ? ' <b class="okc">✓</b>' : ' <span class="dim">…</span>') : ''}</span></div>`).join('')).join('') +
+      `<div class="dim pll">● в сети · ○ нет связи · ◆ бот${ready ? ' · ✓ готов' : ''} · число — сбито / уничтожено</div>`;
+  }
+  plBtn.onclick = (e) => { e.stopPropagation(); document.body.classList.toggle('plOpen'); snd.click(); renderPl(); };
+  plEl.addEventListener('pointerdown', (e) => e.stopPropagation());
+  plEl.onclick = (e) => { if (e.target.closest('[data-pl="x"]')) { document.body.classList.remove('plOpen'); snd.click(); } };
+  N.on('room', renderPl);
   N.on('chat', () => ctrls.defense.chatSync());
   N.on('roundEnd', (m) => { ctrls.defense.setNetRes(m); C.say(`Раунд ${m.round}: ${MW.TEAM_NAME[m.atk]} разрушил ${Math.round(m.k * 100)}% ценности объектов${m.last ? '' : ' · стороны меняются'}`, 6); });
   N.on('waveEnd', (m) => {
@@ -187,14 +219,14 @@ export function createOnline(C, ctrls) {
   N.on('end', (m) => {
     if (m.kind === 'multi') {
       const me = N.myPlayer(), v0 = m.v0 || 1, list = m.players.slice().sort((a, b) => b.score - a.score), win = m.winner ? me && m.winner === me.team : null;
-      C.showEnd({ title: win ? 'Победа' : win === false ? 'Поражение' : 'Ничья', win, reason: `Волна Востока разрушила ${Math.round(100 * m.scores.east / v0)}%, Запада — ${Math.round(100 * m.scores.west / v0)}% ценности объектов`,
+      C.showEnd({ again: 'В КОМНАТУ', title: win ? 'Победа' : win === false ? 'Поражение' : 'Ничья', win, reason: `Волна Востока разрушила ${Math.round(100 * m.scores.east / v0)}%, Запада — ${Math.round(100 * m.scores.west / v0)}% ценности объектов`,
         stats: [[`${Math.round(100 * m.scores.east / v0)}%`, 'Восток'], [`${Math.round(100 * m.scores.west / v0)}%`, 'Запад'], [me ? Math.round(me.score || 0) : 0, 'очков']],
         note: list.map((p) => `${esc(p.name)}${p.bot ? ' (бот)' : ''} — ${MW.TEAM_NAME[p.team]}: ${p.kills} перехв./уничт., ${p.score} очков`).join('<br>') });
       if (m.result && C.claimOnline) C.claimOnline(m.result);
       return;
     }
     const me = N.myPlayer(), win = me && m.winner === me.team, list = m.players.slice().sort((a, b) => b.score - a.score);
-    C.showEnd({ title: win ? 'Победа' : 'Поражение', win, reason: m.winner === 'air' ? `Авиация уничтожила ${Math.round(m.valueK * 100)}% ценности целей` : `ПВО отстояла город: уничтожено ${Math.round(m.valueK * 100)}% ценности целей`,
+    C.showEnd({ again: 'В КОМНАТУ', title: win ? 'Победа' : 'Поражение', win, reason: m.winner === 'air' ? `Авиация уничтожила ${Math.round(m.valueK * 100)}% ценности целей` : `ПВО отстояла город: уничтожено ${Math.round(m.valueK * 100)}% ценности целей`,
       stats: [[me ? me.kills || 0 : 0, me && me.team === 'air' ? 'комплексов уничтожено' : 'самолётов сбито'], [me ? Math.round(me.score || 0) : 0, 'очков'], [m.winner === 'air' ? 'Авиация' : 'ПВО', 'победила']],
       note: list.map((p) => `${esc(p.name)}${p.bot ? ' (бот)' : ''} — ${O.ROLE_NAMES[p.team]}: ${p.kills}/${p.deaths}, ${p.score} очков`).join('<br>') });
     if (m.result && C.claimOnline) C.claimOnline(m.result);
@@ -218,7 +250,7 @@ export function createOnline(C, ctrls) {
     if (!N.battle || C.state !== 'play') return;
     fr++;
     const hx = C.hx, now = performance.now();
-    feed = feed.filter((f) => now - f.t < 6000); helps = helps.filter((h) => now - h.t < 8000);
+    feed = feed.filter((f) => now - f.t < 6000); helps = helps.filter((h) => now - h.t < O.HELP_T * 1000);
     hx.textAlign = 'right'; hx.font = '600 12px -apple-system, Segoe UI, sans-serif'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
     const myT = N.myTeam(), col = (t, a) => (!t ? `rgba(255,255,255,${a})` : t === myT ? `rgba(96,165,250,${a})` : `rgba(248,113,113,${a})`);
     let y = 70;
@@ -239,14 +271,17 @@ export function createOnline(C, ctrls) {
       }
       y += 17;
     }
-    hx.font = '600 12px -apple-system, Segoe UI, sans-serif';
-    for (const h of helps) {
-      if (!h.p) continue;
-      const p = C.proj(new THREE.Vector3(h.p[0], C.city.groundH(h.p[0], h.p[1]) + 60, h.p[1])); if (!p) continue;
-      hx.textAlign = 'center'; hx.fillStyle = '#fb923c'; hx.font = '800 16px -apple-system, Segoe UI, sans-serif'; hx.fillText('⚠', p[0], p[1]);
-      hx.font = '600 11px -apple-system, Segoe UI, sans-serif'; hx.fillText(h.name, p[0], p[1] + 14);
-    }
     hx.shadowBlur = 0;
+    // помощь союзнику: на карте — знак у места (рисуют air.js / defense.js); не на карте — подсвечена кнопка карты и знак рядом
+    // (на ПК кнопки нет — знак и подсказка вверху по центру)
+    const air = C.ctrl === ctrls.air, onMap = air ? ctrls.air.mapOn : C.ctrl === ctrls.defense ? ctrls.defense.st.view === 'map' : true, glow = helps.length > 0 && !onMap;
+    const mb = $(air ? 'tMap' : 'opMap'), r = mb.getBoundingClientRect ? mb.getBoundingClientRect() : null;
+    for (const id of ['tMap', 'opMap']) { const on = glow && id === mb.id; if ($(id).classList.contains('helpGlow') !== on) $(id).classList.toggle('helpGlow', on); }
+    if (glow) {
+      const h = helps[helps.length - 1];
+      if (r && r.width) C.drawWarn(hx, r.left - 16, r.top + r.height / 2, 10);
+      else { const y = 64; C.drawWarn(hx, C.VW / 2, y, 11); hx.textAlign = 'center'; hx.font = '700 12px -apple-system, Segoe UI, sans-serif'; hx.fillStyle = '#fde047'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillText(`${h.name}: нужна помощь — ${air ? 'M' : 'Q'}: карта`, C.VW / 2, y + 26); hx.shadowBlur = 0; }
+    }
   };
   C.netHelps = () => helps; // для тактической карты ПВО
 
@@ -265,11 +300,15 @@ export function createOnline(C, ctrls) {
     } catch (e) { N.clog('claim_fail', String(e)); }
   };
   // выход в меню посреди боя — уходим из комнаты
+  // после боя «В КОМНАТУ» — остаться (keepRoom: комната вернётся в лобби), «Закрыть» и выход из боя — уйти из комнаты
   const toMenu0 = C.toMenu;
-  C.toMenu = function () { if (N.battle || N.room) N.leave(); planEl.style.display = 'none'; toMenu0(); };
+  C.toMenu = function () { if ((N.battle || N.room) && !keepRoom) { N.leave(); afterBattle = false; } keepRoom = false; planEl.style.display = 'none'; document.body.classList.remove('netOn', 'plOpen'); for (const id of ['tMap', 'opMap']) $(id).classList.remove('helpGlow'); toMenu0(); };
   // ?ad=КОД — приглашение: сразу режим «Онлайн» и вход в комнату
   const inv = new URLSearchParams(location.search).get('ad');
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }
   else if (new URLSearchParams(location.search).get('mp') === '1') { C.setup.game = 'online'; N.connect(); } // сайт: кнопка «Онлайн-бой» — сразу раздел онлайна
-  return { N, panel, primary, primaryText, onClick, again() { C.toMenu(); C.setup.game = 'online'; if (N.conn === 'on') N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined); C.menu.render(); } };
+  return { N, panel, primary, primaryText, onClick, again() {
+    if (N.room && (N.room.state === 'end' || N.room.state === 'lobby')) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; C.menu.render(); return; } // в ту же комнату
+    C.toMenu(); C.setup.game = 'online'; if (N.conn === 'on') N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined); C.menu.render();
+  } };
 }

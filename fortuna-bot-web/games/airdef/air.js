@@ -2,16 +2,16 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020d';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261020d';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261020d';
-import { applyLayout } from './layout.js?v=20261020d';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020d';
-import { DRONE } from '../drone/sim/modes.js?v=20261020d';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020d';
-import { predictBomb } from './sim/strike.js?v=20261020d';
-import { placeDefense, pickTargets } from './mission.js?v=20261020d';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020d';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020e';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261020e';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261020e';
+import { applyLayout } from './layout.js?v=20261020e';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020e';
+import { DRONE } from '../drone/sim/modes.js?v=20261020e';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020e';
+import { predictBomb } from './sim/strike.js?v=20261020e';
+import { placeDefense, pickTargets } from './mission.js?v=20261020e';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020e';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -95,11 +95,11 @@ export function createAir(C) {
     const VW = C.VW, VH = C.VH;
     let w = IS_TOUCH ? Math.min(VW * 0.27, 230) : Math.min(VW * 0.3, 380), h = w * 0.75;
     // телефон: вровень с рядом паузы и звука (он уже под кнопками Telegram и панелью состояния) и левее него
-    const rr = ['pause', 'mute'].map((id) => ($(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null)).filter((r) => r && r.width);
+    const rr = ['pause', 'mute', 'plBtn'].map((id) => ($(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null)).filter((r) => r && r.width);
     const pb = rr.length ? { width: 1, left: Math.min(...rr.map((r) => r.left)), top: Math.min(...rr.map((r) => r.top)) } : { width: 0, top: 6 };
     const y = IS_TOUCH ? Math.max(6, pb.top) : VH - h - 180;
     if (IS_TOUCH) { // не ниже верха кнопок справа («КАРТА», «АВТО»)
-      let lim = VH; for (const id of ['tMap', 'tAuto']) { const r = $(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null; if (r && r.height) lim = Math.min(lim, r.top); }
+      let lim = VH; for (const id of ['tMap', 'tAuto', 'tHelp']) { const r = $(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null; if (r && r.height) lim = Math.min(lim, r.top); }
       h = Math.max(90, Math.min(h, lim - y - 6)); w = h / 0.75;
     }
     const x = IS_TOUCH ? (pb.width ? pb.left - w - 8 : VW - w - 58) : VW - w - 14;
@@ -310,7 +310,7 @@ export function createAir(C) {
       case 'ShiftLeft': case 'ShiftRight': setThr(thrI === AB_I ? 3 : AB_I); break;
       case 'KeyZ': pod.zi = (pod.zi + 1) % ZOOMS.length; snd.click(); break;
       case 'KeyO': pod.laserMan = pod.laserMan === null ? !pod.laser : pod.laserMan ? false : null; say(`Лазер: ${pod.laserMan === null ? 'авто' : pod.laserMan ? 'вкл' : 'выкл'}`, 1.2); break;
-      case 'KeyH': if (game.net) { game.net.help(); say('Союзникам: «Мне нужна помощь!»', 2); } break;
+      case 'KeyH': if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); break;
       case 'KeyX': case 'KeyC': cm(); break;
       case 'KeyV': nextCam(); break;
       case 'KeyN': nextCam(camMode === 3 ? 0 : 3); break;
@@ -378,6 +378,7 @@ export function createAir(C) {
   const mine = () => C.ctrl === api || (C.ctrl && C.ctrl.inner === api); // в обучении управляет урок, а самолёт — внутри него
   const tap = (id, fn) => $(id).addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) fn(); });
   tap('tFire', fire); tap('tLock', podNext); tap('tFlare', cm); tap('tThr', thrStep);
+  tap('tHelp', () => { if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); });
   tap('tMap', () => toggleMap()); tap('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
   // панель: тап по строке оружия — выбрать его, «ЦЕЛЬ …» — следующая цель, «ТВ» — окно контейнера
   $('wpn').addEventListener('pointerdown', (e) => {
@@ -391,7 +392,7 @@ export function createAir(C) {
   function layoutTouch() {
     if (!IS_TOUCH) return;
     const R = (id, right, bottom) => { const e = $(id); e.dataset.r = `calc(${right}px + var(--sa-r))`; e.dataset.b = bottom + 'px'; };
-    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136);
+    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136); R('tHelp', 102, 196);
     const cam = $('tCam'); cam.style.right = 'calc(172px + var(--sa-r))'; cam.style.bottom = '16px';
     applyLayout(); // свои места кнопок игрока (Настройки → «Расположение кнопок»)
   }
@@ -423,6 +424,7 @@ export function createAir(C) {
       mx.save(); mx.translate(ax, az); mx.rotate(-a.yaw); mx.fillStyle = '#4ade80'; mx.beginPath(); mx.moveTo(0, -8); mx.lineTo(5, 6); mx.lineTo(-5, 6); mx.closePath(); mx.fill(); mx.restore();
       mx.fillStyle = '#bbf7d0'; mx.strokeStyle = 'rgba(0,0,0,.7)'; mx.lineWidth = 3; const nm = allyName(a); mx.strokeText(nm, ax, az - 10); mx.fillText(nm, ax, az - 10);
     }
+    if (game.net && C.netHelps && C.drawWarn) for (const h of C.netHelps()) { if (!h.p) continue; const [hx2, hz2] = P2(h.p[0], h.p[1]); C.drawWarn(mx, hx2, hz2, 10); mx.fillStyle = '#fde047'; mx.strokeStyle = 'rgba(0,0,0,.8)'; mx.lineWidth = 3; mx.strokeText(h.name, hx2, hz2 - 15); mx.fillText(h.name, hx2, hz2 - 15); } // союзник просит помощи
     const [px, pz] = P2(craft.pos.x, craft.pos.z);
     mx.save(); mx.translate(px, pz); mx.rotate(-craft.yaw); mx.fillStyle = '#7cf'; mx.beginPath(); mx.moveTo(0, -9); mx.lineTo(6, 7); mx.lineTo(-6, 7); mx.closePath(); mx.fill(); mx.restore();
   }

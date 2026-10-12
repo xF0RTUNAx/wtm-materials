@@ -82,6 +82,6 @@ Deno.serve({ port: PORT, hostname: HOST, onListen: () => log(`онлайн-се�
     const txt = journal.read(date, (url.searchParams.get('room') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4) || null);
     return txt === null ? new Response('нет журнала за эту дату', { status: 404 }) : new Response(txt, { headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8' } });
   }
-  if (url.pathname === '/health') return new Response(JSON.stringify({ ok: true, ...rooms.stats(), airdef: adRooms ? adRooms.stats() : null }), { headers: cors });
+  if (url.pathname === '/health') return new Response(JSON.stringify({ ok: true, ...rooms.stats(), airdef: adRooms ? adRooms.stats() : null, memMb: Math.round(Deno.memoryUsage().rss / 1048576) }), { headers: cors }); // memMb — память процесса
   return new Response('Симулятор Летки — онлайн-сервер', { headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
 });

@@ -8,11 +8,11 @@
 // объекта (по горизонтали и вертикали), щипок, колесо и ＋/－ — ближе или дальше, «зум» — угол поля зрения.
 // ◎ прячет весь интерфейс (тап по экрану — вернуть); скорость ×1 / ×½ / ×¼ / стоп-кадр (камеру можно крутить и на стопе).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261020d';
-import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020d';
-import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020d';
-import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020d';
-import { fwdOf } from '../drone/sim/core.js?v=20261020d';
+import { mulberry32 } from './city.js?v=20261020e';
+import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020e';
+import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020e';
+import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020e';
+import { fwdOf } from '../drone/sim/core.js?v=20261020e';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]
@@ -362,6 +362,7 @@ export function createPhoto(C, ctrls) {
       else if (c === 'KeyR') act('reset');
       else if (c === 'KeyN') act('new');
     },
+    modelsReady() { if (st.br === 'air') { ctrls.air.modelsReady(); const b = BX.setFromObject(ctrls.air.ship).getSize(TMP); st.shipL = clamp(Math.max(b.x, b.z), 8, 40) || 16; } }, // модель самолёта догрузилась — вместо макета
     focus: () => camera.position,
     near: () => clamp(curDist * 0.15, 0.25, 3),
     resize() {},

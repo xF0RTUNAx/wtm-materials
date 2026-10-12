@@ -5,10 +5,10 @@
 // пуск, захват, РЛС, ручное наведение, покупки) уходят серверу — их перехватывает обёртка методов зеркала (wrapMirror).
 // Чужие самолёты и боты — «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
-import * as O from './sim/online.js?v=20261020d';
-import * as MW from './sim/online-multi.js?v=20261020d';
-import { AG, SAM } from './arsenal.js?v=20261020d';
-import { LNCH } from './launchers.js?v=20261020d';
+import * as O from './sim/online.js?v=20261020e';
+import * as MW from './sim/online-multi.js?v=20261020e';
+import { AG, SAM } from './arsenal.js?v=20261020e';
+import { LNCH } from './launchers.js?v=20261020e';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -92,6 +92,7 @@ export function createNet(C) {
       case 'room': {
         const was = N.room ? N.room.state : null;
         N.room = m; N.queued = null;
+        if (N.battle && m.state === 'lobby') { endMirror(); emit('lobby'); } // бой кончился — комната снова в лобби (те же игроки)
         if (N.battle) { N.battle.wave = m.wave; N.battle.state = m.state; }
         emit('room', was);
         return;
@@ -108,8 +109,18 @@ export function createNet(C) {
       case 'waveEnd': emit('waveEnd', m); return;
       case 'end': emit('end', m); return;
       case 'help': emit('help', m); return;
+      case 'pong': { const t0 = pings.get(m.i); if (t0 === undefined) return; pings.delete(m.i); const rtt = performance.now() - t0; N.ping = N.ping ? N.ping * 0.7 + rtt * 0.3 : rtt; netRes.push(1); if (netRes.length > 20) netRes.shift(); return; }
     }
   }
+  // связь: пинг раз в 2 с; ответа нет за 3 с — потерян. N.ping — задержка (мс, сглаженная), N.pl — доля потерянных за последние 20, %
+  const pings = new Map(), netRes = []; let pingI = 0;
+  N.ping = 0; N.pl = 0;
+  setInterval(() => {
+    const now = performance.now();
+    for (const [i, t0] of pings) if (now - t0 > 3000) { pings.delete(i); netRes.push(0); if (netRes.length > 20) netRes.shift(); }
+    N.pl = netRes.length ? Math.round(100 * netRes.filter((x) => !x).length / netRes.length) : 0;
+    if (N.conn === 'on' && ws && ws.readyState === 1) { pings.set(++pingI, now); N.send({ t: 'ping', i: pingI }); } else { pings.clear(); netRes.length = 0; N.ping = 0; N.pl = 0; }
+  }, 2000);
 
   // ═════════════ Зеркало боя ═════════════
   const ac = new Map();          // id → зеркальный самолёт (чужие люди, боты, ИИ, ложные цели)
@@ -300,7 +311,7 @@ export function createNet(C) {
     if (u && (aimT -= dt) <= 0) { aimT = SEND_AIM; if (u.aimDir) N.send({ t: 'aim', id: u.id, d: [u.aimDir.x, u.aimDir.y, u.aimDir.z], f: u.gunFire ? 1 : 0 }); if (u.method !== lastMethod) { lastMethod = u.method; N.send({ t: 'method', id: u.id, m: u.method }); } }
   };
   N.selfCrash = () => N.send({ t: 'self' });
-  N.help = () => N.send({ t: 'help' });
+  N.help = (p) => N.send({ t: 'help', p: p || undefined }); // p — [x, z]: самолёт, свой комплекс или место на карте
   N.clog = (k, d) => N.send({ t: 'clog', k, d: typeof d === 'string' ? d : JSON.stringify(d) }); // журнал боя на сервере (что видела игра)
   return N;
 }
