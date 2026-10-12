@@ -8,6 +8,16 @@ import { mulberry32 } from './schedule.js?v=20260930m';
 import { M, part, mergeParts } from './models.js?v=20260930m';
 
 // C — окружение из world.js: { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, lin, add, P, rnd }
+// детали поверхности (Poly Haven, CC0; ../airdef/tex/p_*.jpg — серые 512 px): скалы, пашня, асфальт. Пока не пришла — серая 1×1
+const DETAIL = {};
+export function detailTex(name) {
+  if (DETAIL[name]) return DETAIL[name];
+  const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; DETAIL[name] = t;
+  if (typeof document === 'undefined' || typeof document.createElementNS !== 'function') return t; // без браузера (тесты) — без картинки
+  const c = document.createElement('canvas'); c.width = c.height = 1; const x = c.getContext('2d'); if (x) { x.fillStyle = '#808080'; x.fillRect(0, 0, 1, 1); } t.image = c; t.needsUpdate = true;
+  new THREE.ImageLoader().load(new URL(`../airdef/tex/${name}.jpg?v=20261020a`, import.meta.url).href, (img) => { t.image = img; t.needsUpdate = true; }, undefined, () => {});
+  return t;
+}
 export function buildProps(C) {
   const { WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P } = C;
   const R = mulberry32(0x7a11 ^ C.seed);
@@ -85,8 +95,29 @@ export function buildProps(C) {
     };
     // дома (без водонапорных башен): стена i и крыша i — один дом
     const houses = walls.map((w, i) => (roofs[i].tank ? null : { x: w.x, y: w.y + 1.5, z: w.z, w: w.w, d: w.d, h: w.h - 1.5, rot: w.rot, i })).filter(Boolean);
-    const wm = mk(box, walls, () => true), rm = mk(roof, roofs, (b) => !b.tank); mk(tank, roofs, (b) => b.tank);
+    const isT = walls.map((w, i) => !!roofs[i].tank);
+    const wm = mk(box, walls, (w) => !isT[walls.indexOf(w)]), rm = mk(roof, roofs, (b) => !b.tank);
+    const tp = mk(box, walls, (w) => isT[walls.indexOf(w)]), tt = mk(tank, roofs, (b) => b.tank); // водонапорные башни — своими мешами (их заменяет модель)
     glb.houses = { items: houses, walls: wm, roofs: rm }; // вблизи — модели домов, процедурные экземпляры прячет шейдер
+    // село моделями (glbmap.js): водонапорные башни, у домов — забор вдоль улицы, сараи, в полях — трактор и комбайн; у городов —
+    // вышки сотовой связи. Своя случайность: остальная карта не сдвигается
+    const RV = mulberry32((0x5e10 ^ C.seed) >>> 0), vg = { wt: [], fence: [], barn: [], tractor: [], combine: [], mast: [], hide: [tp, tt].filter(Boolean) };
+    walls.forEach((w, i) => { if (isT[i]) vg.wt.push({ x: w.x, y: terrainH(w.x, w.z) - 0.3, z: w.z, yaw: RV() * 6.28 }); });
+    const vOf = (x, z) => villages.reduce((b, v) => (Math.hypot(v.x - x, v.z - z) < Math.hypot(b.x - x, b.z - z) ? v : b), villages[0]);
+    for (const h of houses) {
+      const v = vOf(h.x, h.z); if (!v || RV() > 0.75) continue;
+      const nx = -Math.sin(v.main), nz = Math.cos(v.main), tx = Math.cos(v.main), tz = Math.sin(v.main), o = (h.x - v.x) * nx + (h.z - v.z) * nz, sd = o > 0 ? -1 : 1;
+      const dep = Math.max(h.w, h.d) / 2 + 4, L = Math.max(h.w, h.d) + 6, n = Math.max(2, Math.round(L / 4)), yaw = Math.atan2(tx, tz);
+      for (let k = 0; k < n; k++) { const t = (k + 0.5) * L / n - L / 2, x = h.x + nx * sd * dep + tx * t, z = h.z + nz * sd * dep + tz * t; if (roadDist(x, z) > 2) vg.fence.push({ x, y: terrainH(x, z) - 0.1, z, yaw }); }
+    }
+    const spot = (v, d0, d1, clear) => { for (let k = 0; k < 12; k++) { const a = RV() * 6.28, d = d0 + RV() * (d1 - d0), x = v.x + Math.cos(a) * d, z = v.z + Math.sin(a) * d; if (roadDist(x, z) > clear && !boxes.some((b) => Math.abs(b.x - x) < b.hw + clear && Math.abs(b.z - z) < b.hd + clear) && Math.abs(terrainH(x + 6, z) - terrainH(x - 6, z)) < 3) return { x, y: terrainH(x, z) - 0.2, z, yaw: RV() * 6.28 }; } return null; };
+    for (const v of villages) {
+      for (let k = 0; k < 2; k++) { const q = spot(v, 40, v.r * 0.8, 12); if (q) vg.barn.push(q); }
+      let q = spot(v, v.r + 60, v.r + 260, 10); if (q) vg.tractor.push(q);
+      if (RV() < 0.6 && (q = spot(v, v.r + 120, v.r + 400, 12))) vg.combine.push(q);
+    }
+    for (const t of TOWNS) for (let k = 0; k < 2; k++) { const q = spot(t, t.r * 0.85, t.r * 1.2, 20); if (q) vg.mast.push(q); }
+    glb.village = vg;
     };
   }
 
@@ -154,15 +185,40 @@ export function buildProps(C) {
     const d = terrainH(X + MS, Z + MS); return d + (terrainH(X, Z + MS) - d) * (1 - u) + (terrainH(X + MS, Z) - d) * (1 - v);
   };
   let addRoads = () => {};
+  const bridgeItems = [], bridgeHide = []; glb.bridges = { items: bridgeItems, hide: bridgeHide };
+  const trussItems = [], trussHide = []; glb.trusses = { items: trussItems, hide: trussHide }; // ж/д мосты — ферма br_truss
   const groundAt = (x, z) => (MS ? Math.max(terrainH(x, z), meshH(x, z)) : terrainH(x, z));
   {
     // дороги между городами идут в центр города (там сходятся), а не обрываются на полпути
     const nodes = [...TOWNS.map((t) => ({ x: t.x, z: t.z, r: 0, big: true })), { x: AIRFIELD.x + 150, z: AIRFIELD.z - 1500, r: 0, big: true }];
     const links = [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4]];
     if (ind) { nodes.push({ x: ind.x, z: ind.z, r: 300 }); links.push([1, nodes.length - 1]); }
-    const pos = [], rd = [], idx = [], piers = [], sk = [];
-    const quad = (a, b, c, d) => sk.push(...a, ...b, ...c, ...a, ...c, ...d);
+    const pos = [], rd = [], idx = [], piers = [], sk = [], skW = [], skT = [];
+    const quad = (a, b, c, d) => sk.push(...a, ...b, ...c, ...a, ...c, ...d), quadW = (a, b, c, d) => skW.push(...a, ...b, ...c, ...a, ...c, ...d), quadT = (a, b, c, d) => skT.push(...a, ...b, ...c, ...a, ...c, ...d);
+    // пролёты над водой — готовой моделью br_seg (glbmap.js): настил 9,6 м, опора (колонны до дна) — через каждые три
+    const spanSegs = (P, half) => {
+      const L = [0]; for (let k = 1; k < P.length; k++) L.push(L[k - 1] + Math.hypot(P[k].x - P[k - 1].x, P[k].z - P[k - 1].z));
+      const tot = L[L.length - 1], n = Math.max(1, Math.round(tot / 9.6)), sl = tot / (n * 9.6);
+      for (let s = 0; s < n; s++) {
+        const d = (s + 0.5) * tot / n; let k = 1; while (k < P.length - 1 && L[k] < d) k++;
+        const f = (d - L[k - 1]) / ((L[k] - L[k - 1]) || 1), A = P[k - 1], B = P[k];
+        bridgeItems.push({ x: A.x + (B.x - A.x) * f, y: A.y + (B.y - A.y) * f, z: A.z + (B.z - A.z) * f, g: A.g + (B.g - A.g) * f, yaw: Math.atan2(-(B.x - A.x), -(B.z - A.z)),
+          sx: (2 * half) / 5.5, sl, pier: n < 3 ? s === Math.floor(n / 2) : s % 3 === 1 });
+      }
+    };
+    // ж/д над водой — ферма br_truss (glbmap.js): пролёт фермы 242 м (×sl), длинная переправа — несколько ферм подряд
+    const trussSegs = (P) => {
+      const L = [0]; for (let k = 1; k < P.length; k++) L.push(L[k - 1] + Math.hypot(P[k].x - P[k - 1].x, P[k].z - P[k - 1].z));
+      const tot = L[L.length - 1], n = Math.max(1, Math.ceil((tot + 30) / (242 * 1.6))), seg = tot / n;
+      const at = (d) => { let k = 1; while (k < P.length - 1 && L[k] < d) k++; const f = Math.min(1, Math.max(0, (d - L[k - 1]) / ((L[k] - L[k - 1]) || 1))), A = P[k - 1], B = P[k]; return { x: A.x + (B.x - A.x) * f, y: A.y + (B.y - A.y) * f, z: A.z + (B.z - A.z) * f }; };
+      for (let s = 0; s < n; s++) {
+        const a = at(s * seg), b = at((s + 1) * seg), c = at((s + 0.5) * seg);
+        trussItems.push({ x: c.x, y: c.y, z: c.z, yaw: Math.atan2(-(b.x - a.x), -(b.z - a.z)), sl: Math.max(0.5, (seg / 2 + 15) / 121) });
+      }
+    };
     const ribbon = (pts, half, kind) => {
+      if (kind === 2) { let a = -1; for (let i = 0; i <= pts.length; i++) { const ok = i < pts.length && pts[i].g < W + 2.5; if (ok && a < 0) a = i; if (!ok && a >= 0) { if (i - a >= 2) trussSegs(pts.slice(a, i)); a = -1; } } }
+      if (kind === 0) { let a = -1; for (let i = 0; i <= pts.length; i++) { const ok = i < pts.length && pts[i].g < W + 2.5; if (ok && a < 0) a = i; if (!ok && a >= 0) { if (i - a >= 2) spanSegs(pts.slice(a, i), half); a = -1; } } }
       const base = pos.length / 3; let along = 0, prev = null;
       for (let i = 0; i < pts.length; i++) {
         const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], p = pts[i];
@@ -174,10 +230,11 @@ export function buildProps(C) {
         if (i) { const o = base + i * 2; idx.push(o - 2, o - 1, o, o - 1, o + 1, o); }
         // мост и насыпь: где лента поднята над землёй — боковины до земли (над водой — балка 1,8 м), низ и ограждение
         const up = p.y - p.gm > 0.8, bot = p.g < W + 0.5 ? p.y - 1.8 : p.gm - 0.6;
-        const cur = { l, r, bl: [l[0], bot, l[2]], br: [r[0], bot, r[2]], ul: [l[0], p.y + 1, l[2]], ur: [r[0], p.y + 1, r[2]], up };
+        const cur = { l, r, bl: [l[0], bot, l[2]], br: [r[0], bot, r[2]], ul: [l[0], p.y + 1, l[2]], ur: [r[0], p.y + 1, r[2]], up, wet: kind !== 1 && p.g < W + 2.5 };
         if (prev && (prev.up || up)) {
-          quad(prev.bl, prev.l, cur.l, cur.bl); quad(prev.r, prev.br, cur.br, cur.r); quad(prev.br, prev.bl, cur.bl, cur.br);
-          if (prev.up && up && p.g < W + 4) { quad(prev.l, prev.ul, cur.ul, cur.l); quad(prev.ur, prev.r, cur.r, cur.ur); }
+          const q = prev.wet && cur.wet ? (kind === 2 ? quadT : quadW) : quad; // над водой — отдельным мешем: его заменяют пролёты br_seg (ж/д — ферма)
+          q(prev.bl, prev.l, cur.l, cur.bl); q(prev.r, prev.br, cur.br, cur.r); q(prev.br, prev.bl, cur.bl, cur.br);
+          if (prev.up && up && p.g < W + 4) { q(prev.l, prev.ul, cur.ul, cur.l); q(prev.ur, prev.r, cur.r, cur.ur); }
         }
         prev = cur;
         if (i) { // в индекс расстояний
@@ -225,7 +282,7 @@ export function buildProps(C) {
     // железная дорога: через всю долину, мимо промзоны
     if (lvl >= 1) {
       const A = { x: -10500, z: -6000, r: 0 }, B = { x: 10500, z: 5000, r: 0 }, mid = ind ? { x: ind.x + 500, z: ind.z + 500, r: 0 } : { x: 0, z: 0, r: 0 };
-      for (const [p, q] of [[A, mid], [mid, B]]) { const pts = path(p, q, false); pts.forEach((t) => { t.y += 0.4; }); if (pts.length > 2) ribbon(pts, 4.2, 2); }
+      for (const [p, q] of [[A, mid], [mid, B]]) { const pts = path(p, q, false); pts.forEach((t) => { t.y += 0.4; t.rail = 1; }); if (pts.length > 2) ribbon(pts, 4.2, 2); }
     }
     // перекрёсток в центре города: круглая площадка асфальта поверх сходящихся концов (без разметки — u = 0,2)
     const hub = (n, R0) => {
@@ -234,19 +291,21 @@ export function buildProps(C) {
     };
     nodes.forEach((n, i) => { if (n.big && links.filter((l) => l.includes(i)).length >= 2) hub(n, 16); });
     const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
+    const tAsph = detailTex('p_asph'), tGrav = detailTex('p_grav');
     mat.onBeforeCompile = (sh) => {
+      sh.uniforms.tAsph = { value: tAsph }; sh.uniforms.tGrav = { value: tGrav };
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 rd; varying vec2 vRd; varying float vDist;')
         // «притянуть» ленту к камере на 0,2 % расстояния: на экране она на том же месте, но не тонет в рельефе и не мерцает вдали
         .replace('#include <project_vertex>', '#include <project_vertex>\nvRd = rd; vDist = -mvPosition.z; mvPosition.xyz *= 0.998; gl_Position = projectionMatrix * mvPosition;');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vRd; varying float vDist;')
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec2 vRd; varying float vDist; uniform sampler2D tAsph, tGrav;\nfloat dlum(sampler2D t, vec2 uv, float avg) { return clamp(dot(texture2D(t, uv).rgb, vec3(0.333)) / avg, 0.35, 1.9); }')
         .replace('#include <color_fragment>', `#include <color_fragment>
           float near = 1.0 - smoothstep(250.0, 1400.0, vDist);
           if (vRd.x < 1.5) { // дорога: асфальт, прерывистая осевая и сплошные края
-            float u = vRd.x; diffuseColor.rgb = vec3(0.055, 0.058, 0.062);
+            float u = vRd.x; diffuseColor.rgb = vec3(0.055, 0.058, 0.062) * mix(1.0, dlum(tAsph, vec2(u * 10.0, vRd.y) / 4.0, 0.351), near); // асфальт вблизи — фактура
             float mark = step(abs(u - 0.5), 0.018) * step(0.55, fract(vRd.y / 14.0)) + step(0.455, abs(u - 0.5)) * step(abs(u - 0.5), 0.475);
             diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.75), mark * near);
           } else { // железная дорога: щебень, шпалы, два рельса
-            float u = vRd.x - 2.0; diffuseColor.rgb = vec3(0.16, 0.14, 0.12);
+            float u = vRd.x - 2.0; diffuseColor.rgb = vec3(0.16, 0.14, 0.12) * mix(1.0, dlum(tGrav, vec2(u * 8.4, vRd.y) / 2.5, 0.257), near);
             float sleeper = step(0.5, fract(vRd.y / 0.9)) * step(abs(u - 0.5), 0.34);
             diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.2, 0.13, 0.08), sleeper * near);
             float rail = step(abs(abs(u - 0.5) - 0.18), 0.02);
@@ -259,16 +318,23 @@ export function buildProps(C) {
     g.computeVertexNormals(); g.boundingSphere = new THREE.Sphere(V(0, 300, 0), WORLD.SIZE);
     const roads = add(new THREE.Mesh(g, mat)); roads.receiveShadow = !!P.shadows; roads.renderOrder = -1;
     // опоры мостов
-    if (piers.length) {
-      const parts = piers.map((p) => part(new THREE.BoxGeometry(3, Math.max(2, p.y - 1.8 - p.g + 6), 6), 0x8a8a84, M(p.x, (p.y - 1.8 + p.g - 6) / 2, p.z)));
-      add(new THREE.Mesh(mergeParts(parts), solidMat));
+    for (const [rail, H] of [[0, bridgeHide], [1, trussHide]]) {
+      const pp = piers.filter((p) => !p.rail === !rail); if (!pp.length) continue;
+      const parts = pp.map((p) => part(new THREE.BoxGeometry(3, Math.max(2, p.y - 1.8 - p.g + 6), 6), 0x8a8a84, M(p.x, (p.y - 1.8 + p.g - 6) / 2, p.z)));
+      H.push(add(new THREE.Mesh(mergeParts(parts), solidMat)));
+    }
+    for (const [S, H] of [[skW, bridgeHide], [skT, trussHide]]) { // балки мостов над водой — прячутся, когда придут пролёты br_seg (ж/д — ферма)
+      if (!S.length) continue;
+      const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(S, 3)); sg.computeVertexNormals();
+      const sm = add(new THREE.Mesh(mergeParts([part(sg, 0x8f8d86, null)]), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
+      sm.castShadow = sm.receiveShadow = !!P.shadows; H.push(sm);
     }
     if (sk.length) { // боковины мостов и насыпей
       const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sk, 3)); sg.computeVertexNormals();
       const sm = add(new THREE.Mesh(mergeParts([part(sg, 0x8f8d86, null)]), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
       sm.castShadow = sm.receiveShadow = !!P.shadows;
     }
-    pos.length = rd.length = idx.length = piers.length = sk.length = 0;
+    pos.length = rd.length = idx.length = piers.length = sk.length = skW.length = skT.length = 0;
     };
     flush();
     finishHouses(roadDist);

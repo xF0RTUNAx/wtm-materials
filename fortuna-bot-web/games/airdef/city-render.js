@@ -11,10 +11,10 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261019c';
-import { part, mergeParts, M } from '../drone/models.js?v=20261019c';
-import { WEATHERS, ATMO, skyMaterial, FXU } from '../drone/world.js?v=20261019c';
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261019c'; // MIT, meshoptimizer 0.21
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261020a';
+import { part, mergeParts, M } from '../drone/models.js?v=20261020a';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261020a';
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261020a'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -29,25 +29,25 @@ export const ENV = {
   uMdl: { value: new Array(24).fill(0) }, // радиус, в котором коробки вида дома скрыты (вместо них — модели; 0 — модели нет)
   uHide: { value: new THREE.Vector3() }, // центр этого радиуса: камера (в окне ТВ — точка, куда смотрит контейнер)
 };
-// ═════════════ Текстуры (ambientCG, CC0): земля, дороги, тротуары, крыши, фасады ═════════════
+// ═════════════ Текстуры (ambientCG и Poly Haven, CC0): земля, дороги, обочины, тротуары, крыши, фасады ═════════════
 // грузятся в фоне (fetch + createImageBitmap); пока не пришли все — uTexOn = 0 и шейдеры обходятся без них
 export const TEX = { uTexOn: { value: 0 } };
-const TEX_FILES = { tGrass: 'grass', tAsph: 'asphalt', tPave: 'paving', tConc: 'concrete', tRoof: 'roof', tOff: 'f_office', tGls: 'f_glass', tBrk: 'f_brick' };
+const TEX_FILES = { tGrass: 'grass', tAsph: 'p_asph', tAsphR: 'p_road', tGrav: 'p_grav', tConcP: 'p_conc', tDry: 'p_dry', tIron: 'p_iron', tPave: 'paving', tConc: 'concrete', tRoof: 'roof', tOff: 'f_office', tGls: 'f_glass', tBrk: 'f_brick' };
 function loadCityTextures(aniso) {
   if (TEX.tGrass) return;
   let left = Object.keys(TEX_FILES).length;
   for (const [u, f] of Object.entries(TEX_FILES)) {
-    const t = new THREE.Texture(); t.wrapS = t.wrapT = f === 'asphalt' ? THREE.MirroredRepeatWrapping : THREE.RepeatWrapping;
+    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
-    fetch(new URL(`./tex/${f}.jpg?v=20261019c`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261020a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { t.image = bmp; t.needsUpdate = true; if (--left === 0) TEX.uTexOn.value = 1; })
       .catch((e) => console.warn('текстура не загрузилась:', e.message));
   }
 }
 // яркость текстуры относительно её среднего (детализация поверх своего цвета); картинки — sRGB, без переворота
 const GLSL_TEX = `
-uniform sampler2D tGrass, tAsph, tPave, tConc, tRoof, tOff, tGls, tBrk; uniform float uTexOn;
+uniform sampler2D tGrass, tAsph, tAsphR, tGrav, tConcP, tDry, tIron, tPave, tConc, tRoof, tOff, tGls, tBrk; uniform float uTexOn;
 float dl(sampler2D t, vec2 uv, float avg) { return clamp(dot(texture2D(t, uv).rgb, vec3(0.3, 0.59, 0.11)) / avg, 0.35, 1.9); }
 vec3 srgb(vec3 c) { return c * c; }
 `;
@@ -147,11 +147,12 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   col *= 0.86 + 0.28 * n2;
   col *= mix(1.0, 0.9 + 0.2 * n1, fine);
   // текстуры вблизи: трава / бетон по цвету района, асфальт, плитка; дальше — их среднее (1)
-  float tk = 0.0, dG = 1.0, dC = 1.0, dA = 1.0, dP = 1.0;
+  float tk = 0.0, dG = 1.0, dC = 1.0, dA = 1.0, dR = 1.0, dS = 1.0, dP = 1.0;
   if (uTexOn > 0.5) {
     tk = 1.0 - smoothstep(0.12, 1.0, px);
-    dG = mix(1.0, dl(tGrass, vWp.xz / 3.0, 0.387), tk); dC = mix(1.0, dl(tConc, vWp.xz / 7.0, 0.364), tk);
-    dA = mix(1.0, dl(tAsph, vWp.xz / vec2(3.0, 6.0), 0.27), tk); dP = mix(1.0, dl(tPave, vWp.xz / 2.5, 0.435), tk);
+    dG = mix(1.0, mix(dl(tGrass, vWp.xz / 3.0, 0.387), dl(tDry, vWp.xz / 3.5, 0.481), smoothstep(0.55, 0.75, n2)), tk); dC = mix(1.0, dl(tConc, vWp.xz / 7.0, 0.364), tk); // трава с проплешинами сухой земли
+    dA = mix(1.0, dl(tAsph, vWp.xz / 4.0, 0.351), tk); dP = mix(1.0, dl(tPave, vWp.xz / 2.5, 0.435), tk);
+    dR = mix(1.0, dl(tAsphR, vWp.xz / 5.0, 0.276), tk); dS = mix(1.0, dl(tGrav, vWp.xz / 2.5, 0.257), tk); // загородная трасса — латаный асфальт, обочина — щебень
   }
   col *= mix(dC, dG, clamp((col.g - col.b) * 14.0, 0.0, 1.0));
   if (urb > 0.01) {
@@ -175,10 +176,10 @@ void roadAt(float p, out float o, out float hw, out float ave) {
     float walk = max(swX * cX, swZ * cZ) * (1.0 - road);
     float shX = 1.0 - smoothstep(hwx + 2.0 - px, hwx + 3.5 + px, ax), shZ = 1.0 - smoothstep(hwz + 2.0 - px, hwz + 3.5 + px, az);
     float shoulder = max(shX * eX * (1.0 - cX), shZ * eZ * (1.0 - cZ)) * (1.0 - road) * (1.0 - walk);
-    vec3 asph = vec3(0.032, 0.034, 0.038) * (0.85 + 0.3 * n1) * dA;
-    asph = mix(asph * 1.35, asph, max(cX * onX, cZ * onZ)); // загородный асфальт светлее, выгоревший
+    vec3 asph = vec3(0.032, 0.034, 0.038) * (0.85 + 0.3 * n1);
+    asph = mix(asph * 1.35 * dR, asph * dA, max(cX * onX, cZ * onZ)); // загородный асфальт светлее, выгоревший, в заплатах
     col = mix(col, vec3(0.15, 0.15, 0.145) * (0.9 + 0.2 * n1) * dP, walk);    // тротуар
-    col = mix(col, vec3(0.2, 0.17, 0.12) * (0.85 + 0.3 * n1) * dG, shoulder * 0.8); // грунтовая обочина
+    col = mix(col, vec3(0.2, 0.18, 0.15) * (0.85 + 0.3 * n1) * dS, shoulder * 0.8); // обочина — щебень
     col = mix(col, asph, road);
     // разметка (пока линия толще ~пикселя)
     float mk = (1.0 - smoothstep(0.25, 0.9, px)) * road;
@@ -202,7 +203,7 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   float rwy = (1.0 - smoothstep(uAir.z - px, uAir.z + px, ra.x)) * (1.0 - smoothstep(uAir.w - px, uAir.w + px, ra.y));
   float cl = step(ra.y, 0.7) * step(0.5, fract(vWp.x / 50.0)) * step(ra.x, uAir.z - 90.0);
   float keys = step(uAir.z - 60.0, ra.x) * step(ra.x, uAir.z - 10.0) * step(0.5, fract(ra.y / 3.0)) * step(ra.y, uAir.w - 4.0);
-  col = mix(col, vec3(0.045, 0.047, 0.05) * dC, rwy);
+  col = mix(col, vec3(0.1, 0.1, 0.098) * mix(1.0, dl(tConcP, vWp.xz / 5.0, 0.463), tk), rwy); // ВПП — бетонные плиты
   col = mix(col, vec3(0.6), min(cl + keys, 1.0) * rwy * (1.0 - smoothstep(0.6, 3.0, px)));
   // затенение у домов
   float ao = texture2D(tAO, (vWp.xz + ${CITY.GH.toFixed(1)}) / ${(2 * CITY.GH).toFixed(1)}).r;
@@ -319,6 +320,7 @@ function buildingMaterial() {
     float nn = vns(vWp.xz * 0.35 + seed * 50.0);
     float tr = uTexOn > 0.5 ? 1.0 - smoothstep(0.1, 0.8, px) : 0.0;
     if (k == ${ROOF}) diffuseColor.rgb = base * mix(0.85 + 0.15 * step(0.5, fract(y * 2.5)), dl(tRoof, vec2(vObj.x * vSize.x, vObj.z * vSize.z * 1.4) / 3.2, 0.319), tr) * (0.9 + 0.2 * nn);
+    else if (k == ${KIND.WAREHOUSE}) diffuseColor.rgb = base * 0.8 * (0.85 + 0.3 * nn) * mix(1.0, dl(tIron, vec2(vObj.x * vSize.x, vObj.z * vSize.z) / 3.0, 0.208), tr); // цеха и склады — ржавый профнастил
     else diffuseColor.rgb = base * mix(0.42, 0.75, step(edge, 0.6)) * (0.85 + 0.3 * nn) * mix(1.0, dl(tConc, vWp.xz / 6.0, 0.364), tr);
   }`).replace('#include <specularmap_fragment>', '#include <specularmap_fragment>\n specularStrength = bSpec;')
         .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += bEmis;');
@@ -420,7 +422,9 @@ export const BLD = [null, ['bld_p5', 16.24, 16.5, 53.0], ['bld_p9', 24.1, 25.4, 
   ['bld_b12', 17.76, 29.86, 43.19], ['bld_st', 15.44, 17.43, 25.92], ['obj_factory', 97.09, 27.93, 27.23],
   // частные дома (с крышей; модель вписана в участок без растяжения, по одной на участок); офисный корпус
   ['h_brick', 11.39, 7.53, 13.38, 1], ['h_house', 12.01, 7.4, 9.71, 1], ['h_log', 10.23, 5.96, 12.24, 1], ['h_khata', 9.64, 3.86, 13.31, 1], ['o_block', 25.6, 32, 30.7],
-  ['h_shanty', 18.39, 14.25, 29.59, 1], ['h_mobile', 7.42, 5.97, 11.74, 1]];
+  ['h_shanty', 18.39, 14.25, 29.59, 1], ['h_mobile', 7.42, 5.97, 11.74, 1], null, null, null, null, // 14…17 — деревья
+  // 18…: точечная девятиэтажка, 16-этажная «пластина», офисный корпус, стеклянные башни
+  ['bld_t9', 14.2, 28.42, 15], ['bld_a16', 16.25, 50.5, 50], ['o_tall', 37.09, 33.19, 18.36], ['g_amel', 25.15, 56.37, 27.19], ['g_fortune', 38.88, 111.23, 31.55]];
 // деревья вблизи (номер в uMdl — 14…17) и их высота при масштабе 1; фонарь
 const TREES = [[14, 'tr_oak', 10.36], [15, 'tr_lime', 9.52], [16, 'tr_pine', 12.71], [17, 'tr_bush', 7.12]];
 const HOUSES = [7, 8, 9, 10, 12, 13];
@@ -433,11 +437,14 @@ const roofH = (c) => 2.2 + c * 2.2; // высота скатной крыши ч
 function bldVariant(B, i) {
   if (B.y0[i] > 0) return 0;
   const k = B.k[i], h = B.h[i], L = Math.max(B.w[i], B.d[i]), S = Math.min(B.w[i], B.d[i]);
-  if (k === KIND.PANEL) return L / S < 1.6 ? 0 : h < 20 ? 1 : L > 100 ? 2 : 4; // точечные башни — пока коробками (у скачанной модели упрощение рвёт развёртку)
+  // башня (L / S < 1,6) — модель растягивается по коробке: годится, если по высоте она растянута не сильнее, чем по плану (×0,7…1,45)
+  const tower = (...vs) => { let best = 0, bk = 0.37; for (const v of vs) { const [, mx, my, mz] = BLD[v], kp = Math.sqrt((B.w[i] * B.d[i]) / (mx * mz)), d = Math.abs(Math.log((h / my) / kp)); if (d < bk && kp < 2) { bk = d; best = v; } } return best; }; // и не крупнее ×2 (окна — не огромные)
+  if (k === KIND.PANEL) return L / S < 1.6 ? tower(18) : h < 20 ? 1 : h > 40 ? 19 : L > 100 && h < 30 ? 2 : 4;
   if (k === KIND.PLAIN) return S > 15 && h > 11 && h < 20 && L < 70 ? 5 : 0;
   if (k === KIND.WAREHOUSE) return 6;
   if (k === KIND.HOUSE) return HOUSES[Math.floor(B.c[i] * HOUSES.length) % HOUSES.length];
-  if (k === KIND.OFFICE) return h > 20 && h < 45 && L / S < 1.5 ? 11 : 0;
+  if (k === KIND.OFFICE) return L / S < 1.5 ? (h > 20 && h < 45 ? 11 : 0) : h > 22 && h < 48 ? 20 : 0;
+  if (k === KIND.GLASS) return L / S < 1.6 ? tower(21, 22) : 0;
   return 0;
 }
 // модели ставятся по готовым матрицам (растянуты по коробке дома, длинной стороной вдоль длинной стороны коробки);
@@ -637,8 +644,57 @@ function streetProps(G, city, B, P) {
     const lx = B.w[i] > B.d[i], e = (lx ? B.w[i] : B.d[i]) / 2 + 4, sd = rnd() < 0.5 ? 1 : -1, x = B.x[i] + (lx ? e * sd : 0), z = B.z[i] + (lx ? 0 : e * sd);
     if (city.bldAt(x, z) <= 0) put('pr_wbins', x, z, (lx ? Math.PI / 2 : 0) + (rnd() < 0.5 ? Math.PI : 0));
   }
+  // остановки, знаки, село — своей случайностью (прежние детали улиц не сдвигаются)
+  const r2 = mulberry32(city.seed * 53 + 11), BIG = { v_wtower: 1, m_5g: 1, v_barn: 0.8, v_combine: 0.6, v_tractor: 0.5, pr_bstop: 0.45, pr_rstop: 0.45, v_picket: 0.3, sg_main: 0.3, sg_yield: 0.3 };
+  const city0 = (zn) => zn === ZONE.MID || zn === ZONE.CBD, rural = (zn) => zn === ZONE.LOW || zn === ZONE.FIELD;
+  for (let i = -n0; i <= n0; i++) for (let j = -n0; j < n0; j++) for (const alongX of [true, false]) {
+    // середина квартала у дороги по линии i: городская остановка (через 3–4 квартала) или старая сельская; навесом к дороге
+    const c = i * GR, a = j * GR + GR / 2, rx = alongX ? a : c, rz = alongX ? c : a, zn = zoneAt(rx, rz);
+    if (!city.onRoad(rx, rz)) continue;
+    const pc = city0(zn) ? 0.14 : rural(zn) ? 0.05 : 0; if (!pc || r2() > pc) continue;
+    const side = r2() < 0.5 ? 1 : -1, off = (city0(zn) ? lineW(i) / 2 : RURAL_HW) + 4.5, x = rx + (alongX ? 0 : side * off), z = rz + (alongX ? side * off : 0);
+    if (city.bldAt(x, z) > 0) continue;
+    put(city0(zn) ? 'pr_bstop' : 'pr_rstop', x, z, alongX ? (side > 0 ? 0 : Math.PI) : (side > 0 ? -Math.PI / 2 : Math.PI / 2));
+  }
+  // перекрёстки за городом: на одной дороге «Главная», на другой «Уступи дорогу» (знак — лицом к подъезжающим)
+  for (let i = -n0; i <= n0; i++) for (let j = -n0; j <= n0; j++) {
+    const cx = i * GR, cz = j * GR; if (!rural(zoneAt(cx, cz)) || r2() > 0.3) continue;
+    const ex = city.onRoad(cx + 30, cz) || city.onRoad(cx - 30, cz), ez = city.onRoad(cx, cz + 30) || city.onRoad(cx, cz - 30); if (!ex || !ez) continue;
+    const o = RURAL_HW + 3, mainX = r2() < 0.5;
+    for (const sd of [1, -1]) {
+      const xm = cx + sd * 14, zm = cz + sd * o, xy = cx + sd * o, zy = cz - sd * 14; // знак у правой обочины, за 14 м до перекрёстка
+      if (city.bldAt(mainX ? xm : xy, mainX ? zm : zy) <= 0) put('sg_main', mainX ? xm : xy, mainX ? zm : zy, mainX ? (sd > 0 ? Math.PI / 2 : -Math.PI / 2) : (sd > 0 ? 0 : Math.PI));
+      if (city.bldAt(mainX ? xy : xm, mainX ? zy : zm) <= 0) put('sg_yield', mainX ? xy : xm, mainX ? zy : zm, mainX ? (sd > 0 ? 0 : Math.PI) : (sd > 0 ? Math.PI / 2 : -Math.PI / 2));
+    }
+  }
+  // село: у частных домов за городом — штакетник со стороны улицы, сарай во дворе; рядом с домами — трактор, комбайн,
+  // водонапорная башня, вышка сотовой связи
+  const free = (x, z, r) => city.bldAt(x, z) <= 0 && city.bldAt(x + r, z) <= 0 && city.bldAt(x - r, z) <= 0 && city.bldAt(x, z + r) <= 0 && city.bldAt(x, z - r) <= 0 && !city.onRoad(x, z);
+  for (let i = 0; i < B.n; i++) {
+    if (B.k[i] !== KIND.HOUSE || B.y0[i] > 0) continue;
+    const zn = zoneAt(B.x[i], B.z[i]); if (!rural(zn)) continue;
+    const hx = B.w[i] / 2, hz = B.d[i] / 2;
+    // улица — ближайшая к дому линия сетки
+    const gx = Math.round(B.x[i] / GR) * GR, gz = Math.round(B.z[i] / GR) * GR, dx = B.x[i] - gx, dz = B.z[i] - gz, toX = Math.abs(dx) < Math.abs(dz);
+    if (r2() < 0.7) { // штакетник: секции по 3 м вдоль фасада, в 4 м от стены
+      const sd = toX ? -Math.sign(dx) : -Math.sign(dz), L = (toX ? B.d[i] : B.w[i]) + 6, n = Math.max(2, Math.round(L / 3));
+      for (let k = 0; k < n; k++) {
+        const t = (k + 0.5) * L / n - L / 2, x = toX ? B.x[i] + sd * (hx + 4) : B.x[i] + t, z = toX ? B.z[i] + t : B.z[i] + sd * (hz + 4);
+        if (!city.onRoad(x, z)) put('v_picket', x, z, toX ? 0 : Math.PI / 2); // bldAt — по сетке: у своей стены всегда «дом»
+      }
+    }
+    const back = (d) => [toX ? B.x[i] + Math.sign(dx || 1) * (hx + d) : B.x[i], toX ? B.z[i] : B.z[i] + Math.sign(dz || 1) * (hz + d)];
+    if (r2() < 0.18) { const [x, z] = back(11); if (free(x, z, 7)) put('v_barn', x, z, toX ? Math.PI / 2 : 0); }
+    const r = r2();
+    const spot = (d) => { const a = r2() * Math.PI * 2, x = B.x[i] + Math.cos(a) * d, z = B.z[i] + Math.sin(a) * d; return free(x, z, 6) ? [x, z, a] : null; };
+    let q;
+    if (r < 0.012 && (q = spot(35 + r2() * 30))) put('v_tractor', q[0], q[1], q[2]);
+    else if (r < 0.02 && (q = spot(60 + r2() * 60))) put('v_combine', q[0], q[1], q[2]);
+    else if (r < 0.023 && (q = spot(40))) put('v_wtower', q[0], q[1], r2() * 6);
+    else if (r < 0.026 && (q = spot(70))) put('m_5g', q[0], q[1], r2() * 6);
+  }
   const add = (name, arr, Rk) => { const n = arr.length / 18, xz = new Float32Array(n * 2), mats = new Float32Array(n * 16); for (let k = 0; k < n; k++) { xz[k * 2] = arr[k * 18]; xz[k * 2 + 1] = arr[k * 18 + 1]; mats.set(arr.slice(k * 18 + 2, k * 18 + 18), k * 16); } G.addNear(name, 0, name, R * Rk, xz, mats); };
-  for (const [name, arr] of Object.entries(sets)) add(name, arr, name === 'p_lamp' ? 0.6 : 0.33);
+  for (const [name, arr] of Object.entries(sets)) add(name, arr, name === 'p_lamp' ? 0.6 : BIG[name] || 0.33);
   if (wire.length) {
     add('p_wire', wire, 0.5);
     // провод — тонкий цилиндр длиной 1 вдоль X (модель не грузится — своя)
@@ -715,14 +771,17 @@ function buildClouds(scene, count, seed, W) {
 
 // мост поперёк реки (вдоль X): пролёт над водой, пологие въезды до самой земли (у берега — сплошная опора-устой), перила,
 // разметка, быки в русле. Части для столкновений и сетки высот — прежние (city.js), здесь только картинка
+const topR = [], conR = [], mkR = []; // въезды (общие буферы на вызов bridgeParts — очищаются в начале)
 function bridgeParts(o) {
+  topR.length = conR.length = mkR.length = 0;
   const Yd = 9, T = 2.4, HW = 18, SPAN = CITY.RIVER_W / 2 + 30, K = 0.07, DS = 5;
   const prof = (s) => (Math.abs(s) <= SPAN ? Yd : Yd - K * (Math.abs(s) - SPAN));
   // въезд кончается, где настил лёг на землю (с каждой стороны — своя длина)
   const end = (dir) => { let s = SPAN; while (s < SPAN + 400 && prof(dir * s) > groundH(o.x + dir * s, o.z) + 0.3) s += DS; return s + DS; };
-  const s0 = -end(-1), s1 = end(1), top = [], con = [], mk = [];
+  const s0 = -end(-1), s1 = end(1), top = [], con = [], mk = [], topS = [], conS = [], mkS = [];
   const quad = (arr, a, b, c, d) => arr.push(...a, ...b, ...c, ...a, ...c, ...d);
   for (let s = s0; s < s1 - 0.1; s += DS) {
+    const span = s >= -SPAN - 0.1 && s + DS <= SPAN + 0.1, [top, con, mk] = span ? [topS, conS, mkS] : [topR, conR, mkR]; // над водой — пролёт (его заменяет модель br_seg)
     const sa = s, sb = Math.min(s1, s + DS), xa = o.x + sa, xb = o.x + sb, ga = groundH(xa, o.z), gb = groundH(xb, o.z);
     const ya = Math.max(prof(sa), ga + 0.3), yb = Math.max(prof(sb), gb + 0.3);
     // низ: над водой — балка толщиной T, у берега (под настилом меньше 4 м) — сплошной устой до земли
@@ -736,10 +795,48 @@ function bridgeParts(o) {
     if (Math.floor(s / 12) % 2 === 0) quad(mk, [xa, ya + 0.04, o.z - 0.15], [xa, ya + 0.04, o.z + 0.15], [xb, yb + 0.04, o.z + 0.15], [xb, yb + 0.04, o.z - 0.15]);
   }
   const geo = (arr) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); g.computeVertexNormals(); return g; };
-  const out = [part(geo(top), 0x34363a), part(geo(con), 0x8f8d88), part(geo(mk), 0xd8d8d0)];
+  const ramp = [part(geo(topR), 0x34363a), part(geo(conR), 0x8f8d88), part(geo(mkR), 0xd8d8d0)], span = [part(geo(topS), 0x34363a), part(geo(conS), 0x8f8d88), part(geo(mkS), 0xd8d8d0)];
   // быки в русле
-  for (const s of [-75, 0, 75]) { const h = Yd - T - CITY.WATER_Y + 8; out.push(part(new THREE.BoxGeometry(7, h, HW * 2 - 8), 0x7f7d78, M(o.x + s, CITY.WATER_Y - 8 + h / 2, o.z))); }
-  return out;
+  for (const s of [-75, 0, 75]) { const h = Yd - T - CITY.WATER_Y + 8; span.push(part(new THREE.BoxGeometry(7, h, HW * 2 - 8), 0x7f7d78, M(o.x + s, CITY.WATER_Y - 8 + h / 2, o.z))); }
+  return { ramp, span, Yd, SPAN, HW };
+}
+
+// пролёты мостов над водой — моделью br_seg (VectorMan): экземплярами (одна отрисовка на деталь на все мосты), процедурный
+// пролёт прячется. Модель: асфальт на +3,2 м, колонны опоры — от −4,71 до −0,28 м (растягиваются до дна), ригель (cap) — только
+// над колоннами (через пролёт-два), ширина асфальта 5,5 м
+// аэродром: огни приближения — стойки через 60 м на 900 м за торцами ВПП (ось — по X; где дом — пропуск), топливозаправщики у цистерн
+function attachAirfield(G, scene, name, model, city, P) {
+  const { x, z, rwyL } = AIRPORT, pts = [];
+  if (name === 'af_appr') { for (const s of [-1, 1]) for (let k = 0; k < 15; k++) { const px = x + s * (rwyL / 2 + 30 + k * 60); if (Math.abs(px) < CITY.HALF - 50 && city.bldAt(px, z) <= 0) pts.push([px, z, Math.PI / 2]); } }
+  else pts.push([x + 380, z + 578, Math.PI / 2], [x + 396, z + 578, Math.PI / 2], [x + 300, z + 470, 0]);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), v = new THREE.Vector3(), one = new THREE.Vector3(1, 1, 1);
+  model.traverse((c) => {
+    if (!c.isMesh) return;
+    const im = new THREE.InstancedMesh(c.geometry, c.material, pts.length);
+    pts.forEach(([px, pz, yaw], i) => im.setMatrixAt(i, m4.compose(v.set(px, groundH(px, pz), pz), q.setFromAxisAngle(Y, yaw), one)));
+    im.castShadow = name === 'af_fuel' && !!P.shadows; im.receiveShadow = !!P.shadows; scene.add(im);
+  });
+}
+function attachBridgeSegs(G, scene, model, P) {
+  const list = G.bridgeSpans || []; if (!list.length) return;
+  // широкий городской мост — четыре параллельных пролёта (ширина модели 7,75 м), перила — только по внешним краям
+  const L = { deck: [], railL: [], railR: [], pier: [], cap: [] }, m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2), v = new THREE.Vector3(), sc = new THREE.Vector3();
+  for (const b of list) {
+    const n = Math.max(1, Math.round(2 * b.SPAN / 9.6)), sl = 2 * b.SPAN / (n * 9.6), NS = 4, sx = (2 * b.HW) / (NS * 7.75), y0 = b.Yd - 3.2;
+    for (let k = 0; k < n; k++) for (let st = 0; st < NS; st++) {
+      const x = b.o.x - b.SPAN + (k + 0.5) * 2 * b.SPAN / n, z = b.o.z + (st - (NS - 1) / 2) * 7.75 * sx; // поворот на 90°: +x модели → −z мира
+      const dm = m4.compose(v.set(x, y0, z), q, sc.set(sx, 1, sl)).clone(); L.deck.push(dm);
+      if (st === 0) L.railR.push(dm); if (st === NS - 1) L.railL.push(dm);
+      if (k % 3 === 1 || n < 3) { L.cap.push(dm); const top = y0 - 0.28, bot = CITY.WATER_Y - 8, sy = (top - bot) / 4.43; L.pier.push(m4.compose(v.set(x, top + 0.28 * sy, z), q, sc.set(sx, sy, sl)).clone()); }
+    }
+    b.mesh.visible = false;
+  }
+  model.traverse((c) => {
+    if (!c.isMesh) return;
+    const k = (c.name.match(/^(railL|railR|pier|cap)\|/) || [])[1] || 'deck', mats = L[k], im = new THREE.InstancedMesh(c.geometry, c.material, mats.length);
+    mats.forEach((m, i) => im.setMatrixAt(i, m)); im.instanceMatrix.needsUpdate = true; im.frustumCulled = false;
+    im.castShadow = im.receiveShadow = !!P.shadows; scene.add(im);
+  });
 }
 
 // ═════════════ Сборка сцены ═════════════
@@ -755,7 +852,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   ENV.uSunCol.value.copy(lin(W.sun)).multiplyScalar(W.sunVis ? 1 : 0.15); ENV.uNight.value = W.night || 0;
   const SU = { sunDir: { value: sunDir }, zenith: { value: lin(W.zenith) }, horizon: { value: lin(W.horizon) }, ground: { value: lin(W.fog).multiplyScalar(0.75) },
     glow: { value: lin(W.glow).multiplyScalar(W.glowK || 0) }, haze: { value: lin(W.haze) }, sunCol: { value: lin(W.sun).lerp(new THREE.Color(1, 0.95, 0.85), W.el < 20 ? 0.25 : 0.5) },
-    hazeK: { value: W.hazeK }, halo: { value: W.halo }, discK: { value: W.disc }, flash: { value: 0 } };
+    hazeK: { value: W.hazeK }, halo: { value: W.halo }, discK: { value: W.disc }, flash: { value: 0 }, ...skyUniforms() };
+  SKY.hi = !P.skyOnly && renderer.capabilities.maxTextureSize >= 8192; skyPano(SU, W); // панорама неба (Poly Haven); 8K — не на телефонных пресетах
   const sky = new THREE.Mesh(new THREE.SphereGeometry(42000, 48, 24), skyMaterial(SU, 1));
   sky.renderOrder = -2; sky.frustumCulled = false; scene.add(sky); G.sky = sky;
   // дымка: не реже, чем нужно, чтобы дальние плитки растворялись до того, как пропадут
@@ -856,10 +954,15 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const objMat = new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, specular: 0x222222, shininess: 20 });
   G.objMesh = {}; G.objMat = objMat; G.ruinMat = new THREE.MeshPhongMaterial({ color: 0x1c1a18, specular: 0x050505, shininess: 4, side: THREE.DoubleSide });
   G.objBox = {}; G.objGroup = {};
+  // вышка аэродрома — моделью КДП (цилиндр из city.js остаётся только для LOS)
+  const ATC = (o, p) => o.key === 'air' && p.t === 'cyl' && p.r === 6 && p.h === 30;
+  for (const o of city.objects) if (o.key === 'air' && o.models && !o.models.some((q) => q.m === 'af_atc')) { const p = o.parts.find((q) => ATC(o, q)); if (p) o.models.push({ m: 'af_atc', x: p.x, z: p.z, rot: 0, s: 1 }); }
   for (const o of city.objects) {
-  const parts = o.bridge ? bridgeParts(o) : [], boxes = [];
+  const br = o.bridge ? bridgeParts(o) : null, parts = br ? br.ramp : [], boxes = [];
+  if (br) { const sm = new THREE.Mesh(mergeParts(br.span), objMat); sm.castShadow = sm.receiveShadow = !!P.shadows; scene.add(sm); (G.bridgeSpans = G.bridgeSpans || []).push({ o, mesh: sm, Yd: br.Yd, SPAN: br.SPAN, HW: br.HW }); }
   for (const p of o.bridge ? [] : o.parts) {
     // коробки готовых построек — временная заглушка, пока не загрузилась модель
+    if (ATC(o, p)) continue;
     if (p.model) { const gy = groundH(p.x, p.z) - 1; boxes.push(part(new THREE.BoxGeometry(p.w, p.h + 1, p.d), OCOL[o.key] || 0xbbbbbb, M(p.x, gy + (p.h + 1) / 2, p.z))); continue; }
     const y0 = (p.y0 !== undefined ? p.y0 : groundH(p.x, p.z) - 1), color = OCOL[o.key] || 0xbbbbbb, hh = p.h + (p.y0 !== undefined ? 0 : 1);
     if (p.t === 'box') parts.push(part(new THREE.BoxGeometry(p.w, hh, p.d), color, M(p.x, y0 + hh / 2, p.z)));
@@ -880,6 +983,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   }
   // модель постройки загрузилась: копии во все места, где она стоит; все модели объекта на месте — заглушка прячется
   G.attachObjModel = (name, make) => {
+    if (name === 'br_seg') { attachBridgeSegs(G, scene, make(), P); return; }
+    if (name === 'af_appr' || name === 'af_fuel') { attachAirfield(G, scene, name, make(), city, P); return; }
     for (const o of city.objects) {
       const g = G.objGroup[o.id]; if (!g || !g.userData.left.has(name)) continue;
       for (const q of o.models) if (q.m === name) {
@@ -939,7 +1044,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     G.tiles.push(...tiled(scene, tl, treeGeo(), tMat, { cast: P.shadows && P.treeShadows, receive: false, lo: treeGeoLo(), loD: P.treeLoD || 2600 }, 0.6)); // на сенсорных — простая крона ближе (P.treeLoD)
   }
 
-  if (P.clouds > 0 && !W.rain) G.clouds = buildClouds(scene, Math.round(P.clouds * (W.deck ? 1.8 : 1)), city.seed, W);
+  if (P.clouds > 0 && !W.rain && !(P.skyOnly && W.hdri)) G.clouds = buildClouds(scene, Math.round(P.clouds * (W.deck ? 1.8 : 1)), city.seed, W);
   return G;
 }
 

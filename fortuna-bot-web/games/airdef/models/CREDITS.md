@@ -46,11 +46,12 @@
 - "Boeing B-52 Stratofortress" (https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144) by bohmerang — CC-BY-4.0 — `e_b52.glb`
 - "Eurofighter Typhoon EF-2000" (https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865) by andertan — CC-BY-4.0 — `e_typhoon.glb`
 - "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`
-- "Game Ready Low Poly R-33" (https://sketchfab.com/3d-models/game-ready-low-poly-r-33-1f9108d505b245bfa225a44af41e554e) by Mustafa.Garip — CC-BY-4.0 — `w_kinzhal.glb`
-- "Chinese 9K720 Iskander TELAR" (https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1) by 42manako — CC-BY-4.0 — `l_iskander.glb`
+- "Chinese 9K720 Iskander TELAR" (https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1) by 42manako — CC-BY-4.0 — `w_kinzhal.glb`, `l_iskander.glb`
 - "Ukrainian OTR-21 Tochka-U" (https://sketchfab.com/3d-models/ukrainian-otr-21-tochka-u-3b41c4e2d03d4bbb9a4acc339fc495bc) by 42manako — CC-BY-4.0 — `l_tochka.glb`
 - "Scud ( Ballistic missile )" (https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0) by AlexDang — CC-BY-4.0 — `l_scud.glb`
 - "M142 HIMARS | FREE MODEL | ANIMATION" (https://sketchfab.com/3d-models/m142-himars-free-model-animation-53c53a112c674d29a2afdbddbe3cecb5) by Denis.Cherkasov1 — CC-BY-4.0 — `l_himars.glb`, `w_atacms.glb`
+- "Modular Road Bridge" (https://sketchfab.com/3d-models/modular-road-bridge-f14e768fde1d4d4d9ef8886ca55cfc03) by VectorMan — CC-BY-4.0 — `br_seg.glb`
+- "McClintic Marshall Products Co., Tender B" (https://sketchfab.com/3d-models/mcclintic-marshall-products-co-tender-b-34ccaa9abec244d999004055ffcd02c3) by statelibrarynsw — CC-BY-4.0 — `br_truss.glb`
 - "High Voltage Transmission Line Tower (tileable)" (https://sketchfab.com/3d-models/high-voltage-transmission-line-tower-tileable-cbeec33de6d64374b6d22de2749c1313) by mednios — CC-BY-4.0 — `m_pylon.glb`
 - "Wind Turbine [Demo]" (https://sketchfab.com/3d-models/wind-turbine-demo-68669d1cfb3647ba9b1da47cbe580931) by 3Dexter — CC-BY-4.0 — `m_wind.glb`
 - "Low Poly Cargo Ship" (https://sketchfab.com/3d-models/low-poly-cargo-ship-4c22cbaf01c1427f8ab60b3a07b1b32c) by Javier_Fernandez — CC-BY-4.0 — `m_ship.glb`
@@ -100,6 +101,24 @@
 - "Soviet panel house built in the 1970s" (https://sketchfab.com/3d-models/soviet-panel-house-built-in-the-1970s-94996e8cf4a8452d91ec1e206b5b4137) by Unka II — CC-BY-4.0 — `bld_p9.glb`
 - "LOW POLY - SOVIET  APARTMENT BUILDING 8K" (https://sketchfab.com/3d-models/low-poly-soviet-apartment-building-8k-05229ac1d1f94e6c8cacaad91110c602) by Colin.Greenall — CC-BY-4.0 — `bld_b12.glb`
 - "Old Soviet Apartment Building" (https://sketchfab.com/3d-models/old-soviet-apartment-building-a546c0af8c184b1da4de1b547097f7a3) by dimmeyster — CC-BY-4.0 — `bld_st.glb`
+- "9 storey residential building (updated)" (https://sketchfab.com/3d-models/9-storey-residential-building-updated-4407c6bd0d944a9c8ad0b9c08e65a1da) by bean(alwayshasbean) — CC-BY-4.0 — `bld_t9.glb`
+- "Apartment building House GameReady" (https://sketchfab.com/3d-models/apartment-building-house-gameready-9356c589d74e4e029366d0c6410f33ba) by Xvoer — CC-BY-4.0 — `bld_a16.glb`
+- "fortune tower" (https://sketchfab.com/3d-models/fortune-tower-e09c587a08054cae8d1b9144fdf1645b) by jishateny — CC-BY-4.0 — `g_fortune.glb`
+- "Amelinco Office Building" (https://sketchfab.com/3d-models/amelinco-office-building-634313e81a78452d90d0c85850a6d896) by adonis-dio — CC-BY-4.0 — `g_amel.glb`
+- "High Rise Office Building" (https://sketchfab.com/3d-models/high-rise-office-building-3db1659ca3984bdbb18d9d3838095bea) by Arsen Ismailov — CC-BY-4.0 — `o_tall.glb`
+- "Air Traffic Control Tower" (https://sketchfab.com/3d-models/air-traffic-control-tower-84f215391662453680e646649d42b264) by abass20 — CC-BY-4.0 — `af_atc.glb`
+- "Airport Fuel Truck" (https://sketchfab.com/3d-models/airport-fuel-truck-15a96ac34ece464480a9b8620dc3a3d3) by Nguyễn Tuấn Nghĩa — CC-BY-4.0 — `af_fuel.glb`
+- "Approach lighting system / Runway lights" (https://sketchfab.com/3d-models/approach-lighting-system-runway-lights-57b8e146fc1048b989f69f024b985dd8) by TRYFIELD — CC-BY-4.0 — `af_appr.glb`
+- "Bus Stop" (https://sketchfab.com/3d-models/bus-stop-367bdb5ca8c745978410c6e3ffd9b910) by bloooob — CC-BY-4.0 — `pr_bstop.glb`
+- "Old Russian bus stop" (https://sketchfab.com/3d-models/old-russian-bus-stop-074e11d7adb9420a83bc862e81579a9f) by halkiridze — CC-BY-4.0 — `pr_rstop.glb`
+- "Soviet Road Signs (Single Model From Asset Pack)" (https://sketchfab.com/3d-models/soviet-road-signs-single-model-from-asset-pack-bc83452e427647c098a93647244a66c0) by Cherk — CC-BY-4.0 — `sg_main.glb`, `sg_yield.glb`
+- "Low Poly Barn" (https://sketchfab.com/3d-models/low-poly-barn-fce7ec6e083e41d7b6e32f9bfcab6cd0) by Periltek Games — CC-BY-4.0 — `v_barn.glb`
+- "Weathered Water Tower" (https://sketchfab.com/3d-models/weathered-water-tower-bff3a33dff32414e83fa57e650e701ce) by Peter Primini — CC-BY-4.0 — `v_wtower.glb`
+- "SK-5_NIVA" (https://sketchfab.com/3d-models/sk-5-niva-e76e04dced84428babcab4b712f4d169) by Vebis_V_stolb_GT — CC-BY-4.0 — `v_combine.glb`
+- "Tractor Low Poly" (https://sketchfab.com/3d-models/tractor-low-poly-6a585922ed344639824958d82d15d0f5) by bhagathgoud — CC-BY-4.0 — `v_tractor.glb`
+- "Fence (Wood)" (https://sketchfab.com/3d-models/fence-wood-e530c55db10348a3a547ef92149bdd10) by trentspi — CC-BY-4.0 — `v_fence.glb`
+- "Wood Wooden fence Protector of the farm low poly" (https://sketchfab.com/3d-models/wood-wooden-fence-protector-of-the-farm-low-poly-ace00004692b48c6afee9f9d505e6e35) by adventurer — CC-BY-4.0 — `v_picket.glb`
+- "5G Telecommunications Mast" (https://sketchfab.com/3d-models/5g-telecommunications-mast-c9ea1b7b2e9043deb8c082e392deb4bc) by ThomasRedfern12 — CC-BY-4.0 — `m_5g.glb`
 - "Low-poly Brick House" (https://sketchfab.com/3d-models/low-poly-brick-house-ea82ea891829493aadeea889cd473e89) by Vitalii.Sandula — CC-BY-4.0 — `h_brick.glb`
 - "House" (https://sketchfab.com/3d-models/house-e70c4aebc911429ba9a894b38146892c) by Mateusz Woliński — CC-BY-4.0 — `h_house.glb`
 - "Cottage" (https://sketchfab.com/3d-models/cottage-18a0c42859db4e358bdcfd6dae14e558) by Arya — CC-BY-4.0 — `h_log.glb`

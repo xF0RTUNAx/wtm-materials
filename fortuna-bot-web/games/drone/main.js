@@ -2,18 +2,18 @@
 /* global THREE */
 import { SCHEDULE_VERSION, H_CAP, UNIT_KILLS, buildSchedule, maxKills, mulberry32 } from './schedule.js?v=20260930m';
 import { MISSILES, CATS, KIND_TAG, KIND_FULL } from './missiles.js?v=20260930m';
-import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20261019c';
+import { WORLD, SUN_DIR, TOWNS, AIRFIELD, terrainH, airfieldH, buildWorld, makeParticles, radialTex, lin, WEATHERS, pickWeather, FX_LAYER, FX_ADD_LAYER, FXU } from './world.js?v=20261020a';
 import { STATIONS, stationPos, buildShipGeo, buildElevon, buildMissileGeo, buildJet, buildTanker, TANKER_DROGUE, JET_SPECS, M as Mx, part, mergeParts } from './models.js?v=20260930m';
 import { createBook } from '../airdef/flipbook.js?v=20261011b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { createGlbMap } from './glbmap.js?v=20261013a';
-import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261019c';
+import { createGlbMap } from './glbmap.js?v=20261020a';
+import { PLANES, setupGlb, want, planeGlb, missileGlb, missileModels, LETKA_CREDITS, enemyGlb, enemyModels, tankerGlb, TANKER, ENEMY_DEFAULT } from './glb.js?v=20261020a';
 import { createPipeline } from './post.js?v=20260930m';
 import { createAudio, ECO_SELECT, setAudioEcoMode } from './audio.js?v=20261013a';
 import { AC, RADAR, createBattle } from './sim/battle.js?v=20260930m';
 import { MODES, FUEL_START, FUEL_MAX, FUEL_PICKUP, DRONE } from './sim/modes.js?v=20260930m';
 import { TEAM_NAMES, ONLINE_IR } from './sim/online.js?v=20260930m';
-import { createOnline } from './online-client.js?v=20261019c';
+import { createOnline } from './online-client.js?v=20261020a';
 import { createProgress, rewardText, plural } from './progress-client.js?v=20260930m';
 import { clamp, wrapPI, D2R, G0, rhoAt, makeCraft, fwdOf, rightOf, localAngles, angleBetween, agl, localAz, flyStep, pilotStep, steerTo,
   seekerHeat, offTailDeg, irCanSee, irWhy, isNotched, dlz, closingOf, turnToward, segHitsSphere } from './sim/core.js?v=20260930m';
@@ -50,13 +50,13 @@ const DEFAULT_LOADOUT = ['aim9l', 'aim120c', null, null, null, null, 'aim120c', 
 // rainDrops — капель вокруг камеры в ливень, cirrus — высокие перистые облака в ясную погоду.
 const PRESETS = {
   // тестовый: только необходимое для боя — для самых слабых или перегретых устройств и ради батареи (по умолчанию 30 к/с)
-  min:    { name: 'Минимальный', desc: 'слабые и перегретые устройства, экономия батареи', test: true, tdesc: 'Только необходимое для боя: без теней и эффектов, редкий лес, 30 кадров. Для самых слабых или перегретых устройств и чтобы экономить батарею.', prMul: 0.6, prCap: 0.8, terrainSeg: 12, trees: 300, treeDist: 3500, treeHi: 400, propsLvl: 0, treeCell: 6000, bldPerTown: 8, clouds: 6, cloudPuffs: 3, particles: 450, rainDrops: 200,
+  min:    { name: 'Минимальный', skyOnly: true, desc: 'слабые и перегретые устройства, экономия батареи', test: true, tdesc: 'Только необходимое для боя: без теней и эффектов, редкий лес, 30 кадров. Для самых слабых или перегретых устройств и чтобы экономить батарею.', prMul: 0.6, prCap: 0.8, terrainSeg: 12, trees: 300, treeDist: 3500, treeHi: 400, propsLvl: 0, treeCell: 6000, bldPerTown: 8, clouds: 6, cloudPuffs: 3, particles: 450, rainDrops: 200,
     lodD: [1400, 4200, 9000], pbr: false, shadows: false, windows: false, detail: false, contrails: false,
     perf: { scale: 1, dyn: true, min: 0.5, target: 30, up: 'off', sharp: 0.4, aa: 'off' } },
-  low:    { name: 'Низкий',  desc: 'слабые телефоны', prMul: 0.8, prCap: 1, terrainSeg: 16, trees: 800, treeDist: 6000, treeHi: 900, propsLvl: 0, treeCell: 5000, bldPerTown: 22, clouds: 14, cloudPuffs: 5, particles: 1000, rainDrops: 700,
+  low:    { name: 'Низкий', skyOnly: true,  desc: 'слабые телефоны', prMul: 0.8, prCap: 1, terrainSeg: 16, trees: 800, treeDist: 6000, treeHi: 900, propsLvl: 0, treeCell: 5000, bldPerTown: 22, clouds: 14, cloudPuffs: 5, particles: 1000, rainDrops: 700,
     pbr: false, shadows: false, windows: false, detail: false, contrails: false,
     perf: { scale: 1, dyn: true, min: 0.55, target: 60, up: 'off', sharp: 0.4, aa: 'off' } },
-  medium: { name: 'Средний', desc: 'большинство устройств', prMul: 1, prCap: 1.5, terrainSeg: 32, trees: 3000, treeDist: 9000, treeHi: 1500, propsLvl: 1, treeCell: 3500, bldPerTown: 40, clouds: 26, cloudPuffs: 8, particles: 2200, rainDrops: 1600,
+  medium: { name: 'Средний', skyOnly: true, desc: 'большинство устройств', prMul: 1, prCap: 1.5, terrainSeg: 32, trees: 3000, treeDist: 9000, treeHi: 1500, propsLvl: 1, treeCell: 3500, bldPerTown: 40, clouds: 26, cloudPuffs: 8, particles: 2200, rainDrops: 1600,
     pbr: true, shadows: false, windows: true, detail: true, cloudShadows: true, contrails: true,
     perf: { scale: 1, dyn: true, min: 0.6, target: 60, up: 'cas', sharp: 0.45, aa: 'fxaa' } }, // без эффектов кадра — облегчённый 8-битный конвейер
   high:   { name: 'Высокий', desc: 'мощные ПК и планшеты', prMul: 1, prCap: 2, terrainSeg: 48, trees: 8000, treeDist: 12000, treeHi: 2200, propsLvl: 2, bldPerTown: 65, clouds: 40, cloudPuffs: 9, particles: 4000, rainDrops: 3000, cirrus: true,

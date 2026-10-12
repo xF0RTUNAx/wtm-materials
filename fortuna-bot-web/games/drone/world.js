@@ -6,8 +6,8 @@
 /* global THREE */
 import { mulberry32 } from './schedule.js?v=20260930m';
 import { M, part, mergeParts } from './models.js?v=20260930m';
-import { buildProps } from './props.js?v=20261019c';
-import { buildLandmarks } from './landmarks.js?v=20261019c';
+import { buildProps, detailTex } from './props.js?v=20261020a';
+import { buildLandmarks } from './landmarks.js?v=20261020a';
 
 import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930m';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
@@ -71,30 +71,35 @@ const smooth01 = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return
 // перистые облака (только топовые пресеты); night — сколько окон горит; wet — мокрая земля; rain — ливень;
 // drift — смещение солнца за вылет, °. w — вес при случайном выборе.
 export const WEATHERS = {
-  day: { name: 'Ясный день', w: 30, el: 46.6, az: 47.9, sun: 0xfff0d8, sunI: 1, sky: 0xd6e8ff, gnd: 0x6d7560, hemiI: 1,
+  day: { name: 'Ясный день', w: 30, el: 48, az: 47.9, sun: 0xfff0d8, sunI: 1, sky: 0xd6e8ff, gnd: 0x6d7560, hemiI: 1,
     zenith: 0x2d63b4, horizon: 0xcadcec, glow: 0x000000, haze: 0xffdbad, hazeK: 0.22, halo: 0.9, disc: 40, fog: 0xc6d8e8, fogD: 0.000042,
     clouds: 0.6, cloudLit: 0xfffaf2, cloudDark: 0x9aa6b8, cirrus: { h: 8800, cover: 0.58, dens: 0.4, lit: 0xffffff, dark: 0xd4dce8 },
-    night: 0, water: 0x2c6d8c, exposure: 1, shadows: true, sunVis: 1 },
-  morning: { name: 'Утро', w: 14, el: 15, az: 100, drift: 3, sun: 0xffd9b0, sunI: 0.85, sky: 0xc8d8f0, gnd: 0x6a7060, hemiI: 0.95,
+    night: 0, water: 0x2c6d8c, exposure: 1, shadows: true, sunVis: 1, hdri: { f: 'day', u: 0.595, k: 1 } },
+  morning: { name: 'Утро', w: 14, el: 18, az: 100, drift: 3, sun: 0xffd9b0, sunI: 0.85, sky: 0xc8d8f0, gnd: 0x6a7060, hemiI: 0.95,
     zenith: 0x4274c4, horizon: 0xf0dcc8, glow: 0xffc49a, glowK: 0.25, haze: 0xffd2a8, hazeK: 0.35, halo: 1, disc: 34, fog: 0xdde2e6, fogD: 0.00006,
     clouds: 0.64, cloudLit: 0xfff0e0, cloudDark: 0xa0a8b8, cirrus: { h: 8800, cover: 0.6, dens: 0.35, lit: 0xfff0e4, dark: 0xd8d4d8 },
-    night: 0.08, water: 0x3a7890, exposure: 1.08, shadows: true, sunVis: 1 },
-  evening: { name: 'Вечер', w: 15, el: 13, az: 235, drift: -2.5, sun: 0xffc080, sunI: 0.8, sky: 0xaab8d8, gnd: 0x5a5448, hemiI: 0.85,
+    night: 0.08, water: 0x3a7890, exposure: 1.08, shadows: true, sunVis: 1, hdri: { f: 'morning', u: 0.5999, k: 1 } },
+  evening: { name: 'Вечер', w: 15, el: 18, az: 235, drift: -2.5, sun: 0xffc080, sunI: 0.8, sky: 0xaab8d8, gnd: 0x5a5448, hemiI: 0.85,
     zenith: 0x33589a, horizon: 0xf2c69a, glow: 0xffa860, glowK: 0.45, haze: 0xffb070, hazeK: 0.4, halo: 1, disc: 32, fog: 0xd6c0a6, fogD: 0.000045,
     clouds: 0.6, cloudLit: 0xffe0bc, cloudDark: 0x8a8ea8, cirrus: { h: 8800, cover: 0.56, dens: 0.45, lit: 0xffd0b0, dark: 0xb8aab8 },
-    night: 0.3, water: 0x305e7c, exposure: 1.12, shadows: true, sunVis: 1 },
-  sunset: { name: 'Закат', w: 15, el: 5.5, az: 250, drift: -3, sun: 0xff8a3a, sunI: 0.55, sky: 0x7a86b0, gnd: 0x4a3c34, hemiI: 0.75,
+    night: 0.3, water: 0x305e7c, exposure: 1.12, shadows: true, sunVis: 1, hdri: { f: 'evening', u: 0.6003, k: 1 } },
+  sunset: { name: 'Закат', w: 15, el: 4, az: 250, drift: -3, sun: 0xff8a3a, sunI: 0.55, sky: 0x7a86b0, gnd: 0x4a3c34, hemiI: 0.75,
     zenith: 0x2a3a6e, horizon: 0xf0a868, glow: 0xff7a3a, glowK: 0.9, haze: 0xff9a50, hazeK: 0.6, halo: 1.2, disc: 25, fog: 0xc89a80, fogD: 0.00005,
     clouds: 0.58, cloudLit: 0xffb07a, cloudDark: 0x6a6a8a, cirrus: { h: 8800, cover: 0.53, dens: 0.55, lit: 0xff9a7a, dark: 0x8a7a9a },
-    night: 0.6, water: 0x2a4a66, exposure: 1.25, shadows: true, sunVis: 1 },
+    night: 0.6, water: 0x2a4a66, exposure: 1.25, shadows: true, sunVis: 1, hdri: { f: 'sunset', u: 0.5798, k: 0.6 } },
   overcast: { name: 'Пасмурно', w: 13, el: 45, az: 60, sun: 0xdfe6ee, sunI: 0.25, sky: 0xb4bcc6, gnd: 0x5a5e58, hemiI: 1.0,
     zenith: 0x7c8896, horizon: 0xb4bcc4, glow: 0x000000, haze: 0xffffff, hazeK: 0.05, halo: 0.1, disc: 0, fog: 0xa8b0b8, fogD: 0.00006,
     clouds: 0.5, cloudLit: 0xc8cdd2, cloudDark: 0x7a828c, deck: { h: 3400, cover: 0.3, dens: 0.97, lit: 0xeef1f4, dark: 0x8a929c },
-    night: 0.15, water: 0x3c5a68, exposure: 1.05, shadows: false, sunVis: 0, desat: 0.35 },
+    night: 0.15, water: 0x3c5a68, exposure: 1.05, shadows: false, sunVis: 0, desat: 0.35, hdri: { f: 'overcast', u: 0.5818, k: 1 } },
   rain: { name: 'Ливень', w: 13, el: 45, az: 60, sun: 0xc8d0da, sunI: 0.12, sky: 0x8a949e, gnd: 0x40463f, hemiI: 0.95,
     zenith: 0x4e5864, horizon: 0x78828c, glow: 0x000000, haze: 0xffffff, hazeK: 0.03, halo: 0, disc: 0, fog: 0x747e88, fogD: 0.00009,
     clouds: 0.46, cloudLit: 0x868e98, cloudDark: 0x4c545e, deck: { h: 2700, cover: 0.18, dens: 1, lit: 0xc8ced4, dark: 0x5c646e },
-    night: 0.4, water: 0x34464e, exposure: 1.08, shadows: false, sunVis: 0, rain: 1, wet: 1, lightning: true, desat: 0.45 },
+    night: 0.4, water: 0x34464e, exposure: 1.08, shadows: false, sunVis: 0, rain: 1, wet: 1, lightning: true, desat: 0.45, hdri: { f: 'overcast', u: 0.5818, k: 0.6 } },
+  // ночь: «солнце» — луна (свет холодный и слабый, без диска — луна и звёзды в панораме), окна и огни горят
+  night: { name: 'Ночь', w: 0, /* случайная погода её не выбирает, онлайн — тоже (сервер: rooms.js) */ el: 60, az: 200, sun: 0xa8bce0, sunI: 0.16, sky: 0x26324a, gnd: 0x101418, hemiI: 0.32,
+    zenith: 0x060a14, horizon: 0x1c2434, glow: 0x000000, haze: 0x8a9ab8, hazeK: 0.02, halo: 0.05, disc: 0, fog: 0x121822, fogD: 0.00005,
+    clouds: 0.62, cloudLit: 0x262c38, cloudDark: 0x0c1016, cirrus: { h: 8800, cover: 0.6, dens: 0.3, lit: 0x4a5468, dark: 0x1a2030 },
+    night: 1, water: 0x0e1a26, exposure: 1.35, shadows: false, sunVis: 0, desat: 0.25, hdri: { f: 'night', u: 0.783, k: 0.35 } },
 };
 export function pickWeather(r = Math.random) {
   const list = Object.entries(WEATHERS), tot = list.reduce((s, [, w]) => s + w.w, 0);
@@ -176,7 +181,8 @@ function terrainShader(mat, P, U) {
     sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN;')
       .replace('#include <project_vertex>', '#include <project_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz; vWN = normalize(mat3(modelMatrix) * objectNormal);');
     let frag = sh.fragmentShader.replace('#include <common>', `#include <common>
-      varying vec3 vWP; varying vec3 vWN; uniform sampler2D noiseTex, cloudTex; uniform vec2 sunXZ; uniform float cloudK, wet, desat;`);
+      varying vec3 vWP; varying vec3 vWN; uniform sampler2D noiseTex, cloudTex, tRock, tMud, tAGrass, tADirt, tAGround, tASnow, tABeach, tField; uniform vec2 sunXZ; uniform float cloudK, wet, desat;
+      float dlum(sampler2D t, vec2 uv, float avg) { return clamp(dot(texture2D(t, uv).rgb, vec3(0.333)) / avg, 0.35, 1.9); }`);
     // скалы, снег, поля — по пикселю (раньше — только цветом вершин): классификация по цвету вершины (vColor)
     let colorCode = `
         { vec3 wn = normalize(vWN); float slope = 1.0 - wn.y, dist = length(vWP - cameraPosition);
@@ -187,17 +193,33 @@ function terrainShader(mat, P, U) {
           float strata = 0.5 + 0.5 * sin(vWP.y * 0.33 + tri * 7.0);
           float rockK = smoothstep(0.2, 0.34, slope + (nR - 0.5) * 0.14) * above;
           vec3 rock = mix(vec3(0.07, 0.065, 0.055), vec3(0.2, 0.18, 0.15), tri * 0.65 + strata * 0.35);
+          // вблизи — фактура камня (две плоскости проекции по наклону: на стене текстура не тянется)
+          float nearD = 1.0 - smoothstep(120.0, 900.0, dist);
+          if (rockK * nearD > 0.0) rock *= mix(1.0, mix(dlum(tRock, (abs(wn.x) > abs(wn.z) ? vWP.zy : vWP.xy) / 7.0, 0.253), dlum(tRock, vWP.xz / 7.0, 0.253), wn.y * wn.y), nearD);
           diffuseColor.rgb = mix(diffuseColor.rgb, rock, rockK);
           // снег: выше линии снега (с «языками» по шуму), только на пологих местах — с круч он сползает
           float snowK = smoothstep(1180.0, 1380.0, vWP.y + (nR - 0.5) * 260.0) * smoothstep(0.42, 0.26, slope);
-          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78, 0.82, 0.88), snowK);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.78, 0.82, 0.88) * mix(1.0, dlum(tASnow, vWP.xz / 70.0, 0.533), 0.7), snowK);
           // поля (жёлтые и зелёные квадраты): борозды/рядки — у каждого поля своё направление, вблизи
           vec3 vc = vColor.rgb; float rg = vc.r / max(vc.g, 1e-3), bg = vc.b / max(vc.g, 1e-3);
           float fieldK = smoothstep(0.52, 0.62, rg) * (1.0 - smoothstep(0.36, 0.44, bg)) * (1.0 - rockK) * (1.0 - smoothstep(300.0, 1800.0, dist));
           if (fieldK > 0.0) { vec2 cell = floor(vWP.xz / 330.0); float ang = fract(sin(dot(cell, vec2(41.3, 17.9))) * 4375.85) * 3.1416;
             float v = dot(vWP.xz, vec2(cos(ang), sin(ang)));
             float rows = 0.5 + 0.5 * sin(v * 1.14);                          // рядки через 5,5 м
-            diffuseColor.rgb *= 1.0 - fieldK * (0.16 * rows + 0.06 * step(0.5, fract(v / 90.0))); } }`;
+            diffuseColor.rgb *= 1.0 - fieldK * (0.16 * rows + 0.06 * step(0.5, fract(v / 90.0)));
+            float pf = step(0.5, fract(sin(dot(cell, vec2(12.9, 78.2))) * 43758.5)); // половина полей — сухая пашня, половина — свежая
+            diffuseColor.rgb *= mix(1.0, mix(dlum(tMud, vWP.xz / 4.0, 0.293), dlum(tField, vWP.xz / 5.0, 0.121), pf), fieldK * nearD * 0.8); }
+          // с высоты (до ~6 км) — фотофактура земли: трава с камнями и грунт пятнами, на скалах — каменистый грунт; у воды — песок
+          float midD = 1.0 - smoothstep(2500.0, 7000.0, dist), nM = smoothstep(0.38, 0.62, texture2D(noiseTex, vWP.xz * 0.00031 + 0.17).g);
+          // два масштаба: крупные пятна (тайл 500 м — с высоты не видно повтора) и вблизи — мелкая фактура (тайл 60 м)
+          float nearA = 1.0 - smoothstep(250.0, 1400.0, dist);
+          float aerF = mix(dlum(tAGrass, vWP.xz / 520.0, 0.168), dlum(tADirt, vWP.xz / 430.0 + 0.4, 0.212), nM);
+          float aerN = mix(dlum(tAGrass, vWP.xz / 60.0, 0.168), dlum(tADirt, vWP.xz / 50.0 + 0.4, 0.212), nM);
+          float gK = (1.0 - rockK) * (1.0 - snowK) * above;
+          diffuseColor.rgb *= mix(1.0, aerF, midD * 0.45 * gK) * mix(1.0, aerN, nearA * 0.5 * gK);
+          diffuseColor.rgb *= mix(1.0, dlum(tAGround, vWP.xz / 300.0, 0.316), midD * 0.5 * rockK * (1.0 - snowK));
+          float beachK = (1.0 - smoothstep(${(WORLD.WATER_Y + 1.5).toFixed(1)}, ${(WORLD.WATER_Y + 7).toFixed(1)}, vWP.y)) * step(${(WORLD.WATER_Y - 2).toFixed(1)}, vWP.y) * (1.0 - rockK);
+          diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.42, 0.38, 0.3) * dlum(tABeach, vWP.xz / 45.0, 0.532), beachK * 0.75); }`; // пашня вблизи — комья земли
     if (P.detail) colorCode += `
         float n1 = texture2D(noiseTex, vWP.xz * ${(0.012 / 32).toFixed(7)}).r, n2 = texture2D(noiseTex, vWP.xz * ${(0.09 / 32).toFixed(7)} + 0.37).g;
         float n3 = texture2D(noiseTex, vWP.xz * ${(0.6 / 32).toFixed(7)} + 0.71).r;
@@ -249,6 +271,24 @@ function windowBuildings(mat, U) {
 }
 
 // Физическое небо: градиент зенит→горизонт, зарево заката у горизонта, дымка у солнца, ореол и яркий (HDR) диск
+// панорамы неба (Poly Haven, CC0; ../airdef/sky/*.jpg — без солнца: его рисует шейдер): hdri.u — где в панораме было солнце
+// (доля ширины; панорама поворачивается за солнцем погоды), k — яркость. Пока панорама грузится — небо градиентом
+const SKY_PANO = {};
+export const SKY = { hi: false }; // hi — панорамы 8192 px (мощные пресеты и видеокарта, что держит такие текстуры); иначе 4096
+export const skyUniforms = () => ({ skyTex: { value: null }, skyOn: { value: 0 }, skyU: { value: 0 }, skyK: { value: 1 } });
+export function skyPano(SU, W) {
+  const h = W && W.hdri; SU.skyOn.value = 0; if (!h || !SU.skyTex) return;
+  const key = h.f + (SKY.hi ? '_hi' : ''); let t = SKY_PANO[key];
+  if (!t) {
+    // в файле — только верхняя полусфера (ширина : высота = 4 : 1); мип-уровни — без шва на стыке (шейдер берёт производные без скачка)
+    t = SKY_PANO[key] = new THREE.Texture(); t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4;
+    const done = (img) => { t.image = img; t.needsUpdate = true; t.ok = true; for (const S of t.wait || []) if (S.skyTex.value === t) S.skyOn.value = 1; };
+    const load = (f, fail) => new THREE.ImageLoader().load(new URL(`../airdef/sky/${f}.jpg?v=20261020a`, import.meta.url).href, done, undefined, fail);
+    if (typeof document !== 'undefined' && typeof document.createElementNS === 'function') load(key, () => { if (key !== h.f) load(h.f, () => {}); }); // нет _hi — обычная
+  }
+  SU.skyTex.value = t; SU.skyU.value = h.u; SU.skyK.value = h.k;
+  if (t.ok) SU.skyOn.value = 1; else (t.wait = t.wait || []).push(SU); // у Texture в r128 нет userData
+}
 export function skyMaterial(SU, discMul) { // экспорт — для неба «Воздушного превосходства»
   return new THREE.ShaderMaterial({
     uniforms: { ...SU, discMul: { value: discMul } },
@@ -258,30 +298,43 @@ export function skyMaterial(SU, discMul) { // экспорт — для неба
       void main() { vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         #include <logdepthbuf_vertex>
       }`,
-    fragmentShader: `uniform vec3 sunDir, zenith, horizon, ground, glow, haze, sunCol; uniform float hazeK, halo, discK, discMul, flash; varying vec3 vDir;
+    fragmentShader: `uniform vec3 sunDir, zenith, horizon, ground, glow, haze, sunCol; uniform float hazeK, halo, discK, discMul, flash, skyOn, skyU, skyK; uniform sampler2D skyTex; varying vec3 vDir;
       #include <common>
       #include <logdepthbuf_pars_fragment>
       void main() {
         #include <logdepthbuf_fragment>
         vec3 d = normalize(vDir); float h = d.y;
         vec3 col = h > 0.0 ? mix(horizon, zenith, pow(h, 0.45)) : mix(horizon, ground, pow(min(-h * 5.0, 1.0), 0.6));
-        float sd = max(dot(d, sunDir), 0.0);
+        // панорама: выше горизонта, у самого горизонта — свой цвет (совпадает с дымкой над землёй)
+        if (skyOn > 0.5 && h > 0.0) {
+          float u = fract((atan(d.z, d.x) - atan(sunDir.z, sunDir.x)) / 6.2831853 + skyU), v = asin(min(h, 1.0)) / 1.5707963;
+          #if defined(GL_EXT_shader_texture_lod) || __VERSION__ >= 300
+            float u2 = fract(u + 0.5) - 0.5; // на стыке u скачет 1 → 0: производные — по сдвинутой копии (иначе шов из мелкого мипа)
+            vec2 gx = vec2(abs(dFdx(u)) < abs(dFdx(u2)) ? dFdx(u) : dFdx(u2), dFdx(v)), gy = vec2(abs(dFdy(u)) < abs(dFdy(u2)) ? dFdy(u) : dFdy(u2), dFdy(v));
+            vec3 p = texture2DGradEXT(skyTex, vec2(u, v), gx, gy).rgb;
+          #else
+            vec3 p = texture2D(skyTex, vec2(u, v), -1.0).rgb;
+          #endif
+          col = mix(col, p * p * skyK, smoothstep(0.0, 0.12, h));
+        }
+        float sd = max(dot(d, sunDir), 0.0), gk = 1.0 - 0.75 * skyOn; // у панорамы своё зарево — градиентное слабее
         float az = dot(normalize(d.xz + 1e-5), normalize(sunDir.xz + 1e-5)) * 0.5 + 0.5;
-        col += glow * pow(az, 3.0) * exp(-max(h, 0.0) * 7.0) * (1.0 - smoothstep(0.0, 0.15, -h));
-        col += haze * pow(sd, 6.0) * hazeK * (1.0 - abs(h));
+        col += glow * pow(az, 3.0) * exp(-max(h, 0.0) * 7.0) * (1.0 - smoothstep(0.0, 0.15, -h)) * gk;
+        col += haze * pow(sd, 6.0) * hazeK * (1.0 - abs(h)) * gk;
         col += sunCol * (pow(sd, 90.0) * halo + pow(sd, 2400.0) * discK * discMul);
         col += flash * vec3(0.75, 0.8, 1.0) * (0.35 + 0.65 * max(h, 0.0));
         gl_FragColor = vec4(col, 1.0);
         #include <tonemapping_fragment>
         #include <encodings_fragment>
       }`,
-    side: THREE.BackSide, depthWrite: false, fog: false, extensions: { fragDepth: true },
+    side: THREE.BackSide, depthWrite: false, fog: false, extensions: { fragDepth: true, derivatives: true, shaderTextureLOD: true },
   });
 }
 
 // buildWorld: наполняет сцену. P — пресет, weather — ключ WEATHERS. Возвращает здания (для столкновений),
 // follow/update, setWeather и dispose.
 export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {}) {
+  SKY.hi = !P.skyOnly && !!renderer && renderer.capabilities.maxTextureSize >= 8192; // панорамы неба 8K — не на телефонных пресетах
   const owned = [];
   const add = (o) => { scene.add(o); owned.push(o); return o; };
   const rnd = mulberry32((seed ^ 0x51ed270b) >>> 0);
@@ -322,8 +375,9 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   // общие uniform'ы атмосферы (погода и вспышки молний меняют их на месте)
   const SU = { sunDir: { value: SUN_DIR }, zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, ground: { value: new THREE.Color() },
     glow: { value: new THREE.Color() }, haze: { value: new THREE.Color() }, sunCol: { value: lin(0xfff9ee) }, hazeK: { value: 0.22 }, halo: { value: 0.9 },
-    discK: { value: 40 }, flash: { value: 0 } };
-  const TU = { noiseTex: { value: NT }, cloudTex: { value: null }, sunXZ: { value: new THREE.Vector2() }, cloudK: { value: 0.38 }, wet: { value: 0 }, desat: { value: 0 } };
+    discK: { value: 40 }, flash: { value: 0 }, ...skyUniforms() };
+  const TU = { noiseTex: { value: NT }, tRock: { value: detailTex('p_rock') }, tMud: { value: detailTex('p_mud') }, tField: { value: detailTex('p_field') }, tAGrass: { value: detailTex('p_agrass') },
+    tADirt: { value: detailTex('p_adirt') }, tAGround: { value: detailTex('p_aground') }, tASnow: { value: detailTex('p_asnow') }, tABeach: { value: detailTex('p_abeach') }, cloudTex: { value: null }, sunXZ: { value: new THREE.Vector2() }, cloudK: { value: 0.38 }, wet: { value: 0 }, desat: { value: 0 } };
   const BU = { night: { value: 0 } };
 
   // небо
@@ -440,18 +494,29 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
       hp.push(part(new THREE.CylinderGeometry(25, 25, 50, 16, 1, false, 0, Math.PI), 0x6d736a, M(210, 12, -900 + k * 360, Math.PI / 2, 0, Math.PI / 2)));
       afGlb.hangars.push({ x: AIRFIELD.x + 210, y: h, z: AIRFIELD.z - 900 + k * 360 });
     }
-    const m = add(new THREE.Mesh(mergeParts(parts), new THREE.MeshLambertMaterial({ vertexColors: true })));
+    const rMat = new THREE.MeshLambertMaterial({ vertexColors: true }), tConc = detailTex('p_conc');
+    rMat.onBeforeCompile = (sh) => { // полоса и рулёжка — бетонные плиты вблизи
+      sh.uniforms.tConc = { value: tConc };
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWq;').replace('#include <project_vertex>', '#include <project_vertex>\nvWq = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWq; uniform sampler2D tConc;')
+        .replace('#include <color_fragment>', '#include <color_fragment>\n diffuseColor.rgb *= mix(1.0, clamp(dot(texture2D(tConc, vWq.xz / 5.0).rgb, vec3(0.333)) / 0.463, 0.4, 1.8), 1.0 - smoothstep(300.0, 2500.0, length(vWq - cameraPosition)));');
+    };
+    const m = add(new THREE.Mesh(mergeParts(parts), rMat));
     m.position.set(AIRFIELD.x, h, AIRFIELD.z); m.receiveShadow = !!P.shadows;
     const hm = add(new THREE.Mesh(mergeParts(hp), new THREE.MeshLambertMaterial({ vertexColors: true }))); hm.position.copy(m.position); hm.receiveShadow = !!P.shadows;
     afGlb.hide = [hm]; afGlb.y = h;
+    // вышка КДП у южного края стоянки; огни приближения — стойки через 60 м на 900 м за каждым торцом полосы (glbmap.js)
+    afGlb.atc = { x: AIRFIELD.x + 300, y: h, z: AIRFIELD.z - 1120 };
+    afGlb.appr = []; for (const s of [-1, 1]) for (let k = 0; k < 15; k++) { const z = AIRFIELD.z + s * (1530 + k * 60); afGlb.appr.push({ x: AIRFIELD.x, y: terrainH(AIRFIELD.x, z), z }); }
     if (P.windows) { // огни: HDR-яркие точки (свечение в топовых пресетах), видны только в сумерках
       const lg = new THREE.SphereGeometry(0.7, 6, 4), lm = new THREE.MeshBasicMaterial({ color: lin(0xffd49a).multiplyScalar(6), fog: true });
-      const n = 2 * 31 + 2 * 9, inst = new THREE.InstancedMesh(lg, lm, n), mm = new THREE.Matrix4();
+      const n = 2 * 31 + 2 * 9 + afGlb.appr.length * 5, inst = new THREE.InstancedMesh(lg, lm, n), mm = new THREE.Matrix4();
       let k = 0;
       for (const s of [-1, 1]) for (let i = 0; i <= 30; i++) inst.setMatrixAt(k++, mm.makeTranslation(s * 32, 1.2, -1500 + i * 100));
       for (const s of [-1, 1]) for (let i = 0; i < 9; i++) inst.setMatrixAt(k++, mm.makeTranslation((i - 4) * 7, 1.2, s * 1510));
+      for (const q of afGlb.appr) for (let i = 0; i < 5; i++) inst.setMatrixAt(k++, mm.makeTranslation((i - 2) * 0.8, q.y - h + 6.1, q.z - AIRFIELD.z)); // огни приближения — на планках стоек
       inst.instanceMatrix.needsUpdate = true; inst.position.copy(m.position); inst.visible = false;
-      lg.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 1600);
+      lg.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 2500);
       add(inst); runwayLights.push(inst);
     }
   }
@@ -954,7 +1019,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     sun.color.copy(lin(s.sun)); sun.intensity = sunBase * s.sunI * (0.35 + 0.65 * sunUp);
     hemi.color.copy(lin(s.sky)); hemi.groundColor.copy(lin(s.gnd)); hemi.intensity = hemiBase * s.hemiI;
     TU.sunXZ.value.set(SUN_DIR.x / Math.max(0.05, SUN_DIR.y), SUN_DIR.z / Math.max(0.05, SUN_DIR.y));
-    TU.cloudK.value = s.sunVis ? 0.38 * smooth01(0.18, 0.42, SUN_DIR.y) : 0;
+    TU.cloudK.value = s.sunVis && !(P.skyOnly && s.hdri) ? 0.38 * smooth01(0.18, 0.42, SUN_DIR.y) : 0;
     // воздушная перспектива: дымка к солнцу подсвечена его цветом (сильнее при низком солнце); в пасмурно — нет
     ATMO.sunDir.x = SUN_DIR.x; ATMO.sunDir.y = SUN_DIR.y; ATMO.sunDir.z = SUN_DIR.z;
     const sc = lin(s.sun), fc = lin(s.fog), lowSun = 1 - smooth01(0.1, 0.6, SUN_DIR.y);
@@ -966,7 +1031,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     setSunDir(W.el, W.az);
     SU.zenith.value.copy(lin(W.zenith)); SU.horizon.value.copy(lin(W.horizon)); SU.ground.value.copy(lin(W.fog)).multiplyScalar(0.75);
     SU.glow.value.copy(lin(W.glow)).multiplyScalar(W.glowK || 0); SU.haze.value.copy(lin(W.haze)); SU.hazeK.value = W.hazeK; SU.halo.value = W.halo; SU.discK.value = W.disc;
-    SU.sunCol.value.copy(lin(W.sun)).lerp(new THREE.Color(1, 0.95, 0.85), W.el < 20 ? 0.25 : 0.5);
+    SU.sunCol.value.copy(lin(W.sun)).lerp(new THREE.Color(1, 0.95, 0.85), W.el < 20 ? 0.25 : 0.5); skyPano(SU, W);
     FOG_LIN.copy(lin(W.fog)); FOG_U.value = W.fogD; scene.fog.density = W.fogD;
     applyLight();
     if (P.shadows) sun.castShadow = !!W.shadows;
@@ -977,11 +1042,12 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     for (const l of runwayLights) l.visible = (W.night || 0) > 0.25;
     CU.lit.value.copy(lin(W.cloudLit)); CU.dark.value.copy(lin(W.cloudDark)); CU.sunTint.value.copy(lin(W.sun)).multiplyScalar(W.sunVis ? 0.9 : 0);
     if (!P.cloudSprites) { /* у простых облаков цвет — через emissive (пересобираются ниже) */ }
-    buildClouds(W.clouds, W.deck ? 1.3 : 1);
+    const skyOnly = !!(P.skyOnly && W.hdri); // «облака — панорамой» (слабые устройства): без объёмных облаков и их теней
+    buildClouds(W.clouds, skyOnly ? 0 : W.deck ? 1.3 : 1);
     if (clouds && volOn) clouds.visible = false;
     if (vol) vol.VU.th.value = W.clouds + 0.02;
     if (clouds && !P.cloudSprites) { clouds.material.color.copy(lin(W.cloudLit)); clouds.material.emissive.copy(lin(W.cloudLit)).lerp(lin(W.cloudDark), 0.5).multiplyScalar(0.55); }
-    const dk = W.deck || (P.cirrus ? W.cirrus : null);
+    const dk = W.deck || (P.cirrus && !W.hdri ? W.cirrus : null); // у панорамы неба свои высокие облака — перистый слой не нужен (минус проход на весь экран)
     deck.visible = !!dk;
     if (dk) {
       deck.position.y = dk.h; DU.cover.value = dk.cover; DU.dens.value = dk.dens; DU.lit.value.copy(lin(dk.lit)); DU.dark.value.copy(lin(dk.dark));

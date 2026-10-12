@@ -14,6 +14,7 @@ const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads`;
 const BLUE = 'gt(b(X,Y),r(X,Y)+25)*gt(b(X,Y),g(X,Y)+10)', LUM = '(0.3*r(X,Y)+0.59*g(X,Y)+0.11*b(X,Y))';
 const OLIVE = `format=gbrp,geq=r='if(${BLUE},min(255,${LUM}*1.35),r(X,Y))':g='if(${BLUE},min(255,${LUM}*1.4),g(X,Y))':b='if(${BLUE},${LUM}*0.9,b(X,Y))'`;
 const LS = (c) => { if (Deno.env.get('LS') && Math.max(...c.size) > Number(Deno.env.get('LSMIN') ?? 0.4)) console.log('  часть', c.mat, 'ц', c.ctr.map((v) => v.toFixed(2)).join(' '), 'р', c.size.map((v) => v.toFixed(2)).join(' ')); return 'body'; }; // LS=1 … --groups: список частей
+const KZ = 7.2 / 8.4; // «Кинжал» из ракеты «Искандера»: длина 7,2 м
 const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? 99); // верх корпуса ФАБ-500 в осях игры без центровки (см. --groups)
 // nose — куда смотрит нос модели в её осях; center — [y оси фюзеляжа] в её единицах (иначе середина габаритов)
 // remove(c, i) — c: часть меша { min, max, ctr, size, tris, mat }, i — номер по размеру в своём примитиве
@@ -113,7 +114,14 @@ const CONFIG = {
     groups: (c) => (c.ctr[1] < -0.8 && Math.abs(c.ctr[0]) > 0.4 && !(c.size[0] < 0.12 && c.size[1] > 0.3) ? null : LS(c)) }, // подвеска модели (ракеты, баки) — долой, пилоны остаются // Eurofighter Typhoon — 16 м; носитель Storm Shadow
   w_slam: { src: `${DL}/ugm-84_harpoon_free.glb`, scale: 4.49 / 7.3, nose: '+x', tex: () => 256, target: 5000, pickMesh: /./ }, // AGM-84E SLAM (по Harpoon) — 4,49 м
   w_jsow: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM-154 JSOW/, groups: (c) => (c.size[1] < 0.05 && c.ctr[1] > 2.9 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // AGM-154 JSOW — 4,1 м; крылья в модели сложены — раскрываются после сброса
-  w_kinzhal: { src: `${DL}/game_ready_low_poly_r-33.glb`, scale: 7.2 / 4.2, nose: '+x', tex: () => 256, pickMesh: /./ }, // «Кинжал» (по Р-33, увеличена до 7,2 м — решение Mark)
+  // «Кинжал» — ракета 9М723 с пусковой «Искандера» (Х-47М2 сделан на её основе; решение Mark 2026-10-12): на старте она стоит
+  // вертикально — поворот носом в −Z; правила частей — как у l_iskander (в её осях); светло-серая, как на фото
+  w_kinzhal: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027 * KZ, centerX: true, /* 7,2 м (у автора 8,4); ракета стоит в стороне от оси пусковой */ axes: (x, y, z) => { const [a, b, c] = AX['-x'](x, y, z); return [a, c, -b]; }, rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, tex: () => 256,
+    texVf: 'hue=s=0,eq=brightness=0.22:contrast=0.45,colorchannelmixer=rr=0.97:bb=1.03',
+    groups: (c) => { const x = c.ctr[0] / KZ, y = -c.ctr[2] / KZ, z = c.ctr[1] / KZ, sx = c.size[0] / KZ, sy = c.size[2] / KZ, sz = c.size[1] / KZ; // обратно в оси и масштаб пусковой (правила l_iskander)
+      const thin = sx < 1.15 && sz < 1.15 && !(Math.max(sx, sz) < 0.3 && sy > 2);
+      const fin = sx < 0.3 && sz < 0.3 && sy > 1 && sy < 1.3; // рули (4 «косым крестом»): нижние — у l_iskander отрезаны порогом z > 6,3 (ось ракеты — z 6,53)
+      return (z > 6.3 || (z > 6 && fin)) && y > 2.2 && thin && Math.abs(x - 2.75) < 0.62 ? 'body' : null; } },
   l_iskander: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027, nose: '-x', rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П78 — 13 м, две ракеты стоят на старте в корме
     groups: (c) => { const [x, y, z] = c.ctr, thin = c.size[0] < 1.15 && c.size[2] < 1.15 && !(Math.max(c.size[0], c.size[2]) < 0.3 && c.size[1] > 2); /* не направляющие пусковой (длинные и тонкие; стабилизаторы — короткие) */ if (z > 6.3 && y > 2.2 && thin) { if (Math.abs(x - 2.75) < 0.62) return 'tbm'; if (Math.abs(x - 4.06) < 0.62) return 'tbm2'; } return 'body'; } },
   l_tochka: { src: `${DL}/ukrainian_otr-21_tochka-u.glb`, scale: 0.0284, nose: '+z', rulesIn: 'game', dedupe: true, renorm: true, texVf: "curves=all='0/0 0.5/0.42 1/0.68'", /* светлые пятна камуфляжа на солнце выгорали в белое */ colors: { '^(White|material_1)$': [0.07, 0.085, 0.05], '^0059_DarkOliveGreen': [0.06, 0.08, 0.035], '^material$': [0.1, 0.11, 0.08] }, /* цвета — линейные (0,06 ≈ 27 % яркости на экране); у автора белые без текстуры — под цвет машины */ dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П129 — 11,8 м, ракета на старте в корме
@@ -124,6 +132,10 @@ const CONFIG = {
     pickMesh: /^(?!.*(_dam\/|Default_2))/, groups: (c) => (c.mat === 3 && c.ctr[2] > -0.7 && c.ctr[1] > -0.6 ? 'pod' : LS(c)) }, /* pod — пакет с ракетами (узел misc_a, материал 3; без колпаков колёс того же материала и мелочи у кабины): поднимается перед пуском */ // без «повреждённых» дублей дверей и капота и без ракеты, лежащей рядом
   w_atacms: { src: `${DL}/m142_himars__free_model__animation.glb`, scale: 0.43, nose: '-z', axes: tiltFix(-0.0796, 0.0242) /* ракета в модели повёрнута на 4,5° / 1,4° — ось вдоль Z */, rulesIn: 'game', tex: () => 256, pickMesh: /Default_2/, groups: LS, texVf: () => NO_TAG }, // ракета HIMARS — как ATACMS (4 м); надписи автора модели на корпусе — закрашены
   // ── карта «Летки»: ЛЭП, ветряк, порт, маяк, поезда; танкеры (2026-10-11)
+  // пролёт моста — VectorMan: квадратный настил ~7,5 м (асфальт, тротуары, перила, балка) и опора — отдельной частью pier
+  // (в игре её тянут до дна); модель повёрнута на 45° — fwd по перилам
+  br_seg: { src: `${DL}/modular_road_bridge.glb`, scale: 0.0024, fwd: [1, -1], rulesIn: 'game', tex: () => 512, groups: (c) => (c.mat === 1 && c.max[1] < 4.6 && c.size[1] > 2 ? 'pier' : c.mat === 1 && c.max[1] < 5.6 ? 'cap' : c.mat === 4 ? (c.ctr[0] < 0 ? 'railL' : 'railR') : LS(c)) }, // cap — ригель опоры (только там, где колонны); перила — по сторонам (у широкого моста внутренние долой)
+  br_truss: { src: `${DL}/mcclintic_marshall_products_co._tender_b.glb`, scale: 1, nose: '-z', rulesIn: 'game', tex: () => 256, perTri: true, groups: (c) => (Math.abs(c.ctr[2]) > (c.ctr[1] < 0 ? 128 : 123) || c.size[2] > 40 ? null : 'body') }, // ферменный мост — statelibrarynsw: только ферма с концевыми опорами (|z| ≤ 122 м), подходы долой
   m_pylon: { src: `${DL}/high_voltage_transmission_line_tower_tileable.glb`, scale: 3.2, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.size[2] > 20 || c.ctr[2] < -60 ? null : 'body') }, // только опора: провода (крепления — 3 фазы x −7 / 0 / +7, y 23,1) рисует игра, изоляторы соседней опоры — долой // опора с пролётом проводов (стыкуются через 144 м)
   m_wind: { src: `${DL}/wind_turbine_demo.glb`, scale: 18, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.ctr[2] < 0.3 ? 'rotor' : 'body') }, // ротор — своя группа (крутится) // ветряк ~100 м
   m_ship: { src: `${DL}/low_poly_cargo_ship.glb`, scale: 150 / 4200, nose: '+z', rulesIn: 'game', unit: true, tex: () => 1024, groups: () => 'body' }, // сухогруз 150 м
@@ -287,6 +299,29 @@ const CONFIG = {
   bld_p9: { src: `${DL}/soviet_panel_house_built_in_the_1970s.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // длинная девятиэтажка
   bld_b12: { src: `${DL}/low_poly_-_soviet__apartment_building_8k.glb`, scale: 26, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, groups: () => 'body' }, // многоэтажка
   bld_st: { src: `${DL}/old_soviet_apartment_building.glb`, scale: 13, nose: '-x', rulesIn: 'game', unit: true, tex: () => 1024, groups: () => 'body' }, // сталинка (фотоскан: упрощение рвёт развёртку)
+  bld_t9: { src: `${DL}/9_storey_residential_building_updated.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, groups: () => 'body' }, // точечная девятиэтажка (фото-текстуры)
+  bld_a16: { src: `${DL}/apartment_building_house_gameready.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // 16-этажная «пластина» (упрощение рвёт развёртку)
+  g_fortune: { src: `${DL}/fortune_tower.glb`, scale: 14, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // стеклянная башня
+  g_amel: { src: `${DL}/amelinco_office_building.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // стеклянный офис со стилобатом
+  o_tall: { src: `${DL}/high_rise_office_building.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // офисный корпус в 10 этажей (упрощение рвёт развёртку)
+  // аэродромы: вышка КДП, топливозаправщик (надписи закрашены, жёлтый → оливковый), огни приближения (без фото-задника)
+  af_atc: { src: `${DL}/air_traffic_control_tower.glb`, scale: 0.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // вышка ~36 м
+  af_fuel: { src: `${DL}/airport_fuel_truck.glb`, scale: 0.022, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512,
+    texVf: 'drawbox=x=78:y=830:w=228:h=100:color=0xFEDC00:t=fill,drawbox=x=490:y=470:w=22:h=140:color=0xFEDC00:t=fill,hue=s=0.4,colorchannelmixer=rr=0.46:gg=0.5:bb=0.4', groups: () => 'body' }, // ~9,5 м
+  af_appr: { src: `${DL}/approach_lighting_system__runway_lights.glb`, scale: 0.018, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, groups: (c) => (c.mat === 0 || c.mat === 4 || c.tris > 3000 ? null : 'body') }, // огни приближения: стойка с планкой (без задника, лестницы и решётчатых мостков — упрощение рвёт)
+  // улицы и село: остановки (городская, старая сельская), знаки «Главная дорога» / «Уступи дорогу», сарай, водонапорная башня,
+  // комбайн СК-5 «Нива», трактор, заборы, вышки сотовой связи
+  pr_bstop: { src: `${DL}/bus_stop.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, target: 3000, groups: () => 'body' },
+  pr_rstop: { src: `${DL}/old_russian_bus_stop.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, groups: () => 'body' },
+  sg_main: { src: `${DL}/soviet_road_signs_single_model_from_asset_pack.glb`, scale: 1, nose: '-z', unit: true, tex: () => 256, groups: (c) => (Math.abs(c.ctr[2] - 1.5) < 0.3 ? 'body' : null) },
+  sg_yield: { src: `${DL}/soviet_road_signs_single_model_from_asset_pack.glb`, scale: 1, nose: '-z', unit: true, tex: () => 256, groups: (c) => (Math.abs(c.ctr[2] + 1.5) < 0.3 ? 'body' : null) },
+  v_barn: { src: `${DL}/low_poly_barn.glb`, scale: 5, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
+  v_wtower: { src: `${DL}/weathered_water_tower.glb`, scale: 10, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
+  v_combine: { src: `${DL}/sk-5_niva.glb`, scale: 0.8, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 5000, groups: () => 'body' },
+  v_tractor: { src: `${DL}/tractor_low_poly.glb`, scale: 0.25, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, groups: () => 'body' },
+  v_fence: { src: `${DL}/fence_wood.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, groups: () => 'body' },
+  v_picket: { src: `${DL}/wood_wooden_fence_protector_of_the_farm_low_poly.glb`, scale: 0.0105, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, groups: () => 'body' },
+  m_5g: { src: `${DL}/5g_telecommunications_mast.glb`, scale: 1.6, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, groups: () => 'body' },
   // частный сектор (вместо коробок со скатной крышей) и офис средней высоты
   h_brick: { src: `${DL}/low-poly_brick_house.glb`, scale: 2.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // кирпичный дом
   h_house: { src: `${DL}/house.glb`, scale: 0.08, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.size[0] > 16 || c.size[2] > 16 ? null : 'body') }, // одноэтажный дом (без участка земли)

@@ -427,20 +427,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Game Ready Low Poly R-33",
-  "author": "Mustafa.Garip",
-  "url": "https://sketchfab.com/3d-models/game-ready-low-poly-r-33-1f9108d505b245bfa225a44af41e554e",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_kinzhal"
-  ]
- },
- {
   "title": "Chinese 9K720 Iskander TELAR",
   "author": "42manako",
   "url": "https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1",
   "license": "CC-BY-4.0",
   "files": [
+   "w_kinzhal",
    "l_iskander"
   ]
  },
@@ -470,6 +462,24 @@ export const CREDITS = [
   "files": [
    "l_himars",
    "w_atacms"
+  ]
+ },
+ {
+  "title": "Modular Road Bridge",
+  "author": "VectorMan",
+  "url": "https://sketchfab.com/3d-models/modular-road-bridge-f14e768fde1d4d4d9ef8886ca55cfc03",
+  "license": "CC-BY-4.0",
+  "files": [
+   "br_seg"
+  ]
+ },
+ {
+  "title": "McClintic Marshall Products Co., Tender B",
+  "author": "statelibrarynsw",
+  "url": "https://sketchfab.com/3d-models/mcclintic-marshall-products-co-tender-b-34ccaa9abec244d999004055ffcd02c3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "br_truss"
   ]
  },
  {
@@ -924,6 +934,169 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "bld_st"
+  ]
+ },
+ {
+  "title": "9 storey residential building (updated)",
+  "author": "bean(alwayshasbean)",
+  "url": "https://sketchfab.com/3d-models/9-storey-residential-building-updated-4407c6bd0d944a9c8ad0b9c08e65a1da",
+  "license": "CC-BY-4.0",
+  "files": [
+   "bld_t9"
+  ]
+ },
+ {
+  "title": "Apartment building House GameReady",
+  "author": "Xvoer",
+  "url": "https://sketchfab.com/3d-models/apartment-building-house-gameready-9356c589d74e4e029366d0c6410f33ba",
+  "license": "CC-BY-4.0",
+  "files": [
+   "bld_a16"
+  ]
+ },
+ {
+  "title": "fortune tower",
+  "author": "jishateny",
+  "url": "https://sketchfab.com/3d-models/fortune-tower-e09c587a08054cae8d1b9144fdf1645b",
+  "license": "CC-BY-4.0",
+  "files": [
+   "g_fortune"
+  ]
+ },
+ {
+  "title": "Amelinco Office Building",
+  "author": "adonis-dio",
+  "url": "https://sketchfab.com/3d-models/amelinco-office-building-634313e81a78452d90d0c85850a6d896",
+  "license": "CC-BY-4.0",
+  "files": [
+   "g_amel"
+  ]
+ },
+ {
+  "title": "High Rise Office Building",
+  "author": "Arsen Ismailov",
+  "url": "https://sketchfab.com/3d-models/high-rise-office-building-3db1659ca3984bdbb18d9d3838095bea",
+  "license": "CC-BY-4.0",
+  "files": [
+   "o_tall"
+  ]
+ },
+ {
+  "title": "Air Traffic Control Tower",
+  "author": "abass20",
+  "url": "https://sketchfab.com/3d-models/air-traffic-control-tower-84f215391662453680e646649d42b264",
+  "license": "CC-BY-4.0",
+  "files": [
+   "af_atc"
+  ]
+ },
+ {
+  "title": "Airport Fuel Truck",
+  "author": "Nguyễn Tuấn Nghĩa",
+  "url": "https://sketchfab.com/3d-models/airport-fuel-truck-15a96ac34ece464480a9b8620dc3a3d3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "af_fuel"
+  ]
+ },
+ {
+  "title": "Approach lighting system / Runway lights",
+  "author": "TRYFIELD",
+  "url": "https://sketchfab.com/3d-models/approach-lighting-system-runway-lights-57b8e146fc1048b989f69f024b985dd8",
+  "license": "CC-BY-4.0",
+  "files": [
+   "af_appr"
+  ]
+ },
+ {
+  "title": "Bus Stop",
+  "author": "bloooob",
+  "url": "https://sketchfab.com/3d-models/bus-stop-367bdb5ca8c745978410c6e3ffd9b910",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_bstop"
+  ]
+ },
+ {
+  "title": "Old Russian bus stop",
+  "author": "halkiridze",
+  "url": "https://sketchfab.com/3d-models/old-russian-bus-stop-074e11d7adb9420a83bc862e81579a9f",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_rstop"
+  ]
+ },
+ {
+  "title": "Soviet Road Signs (Single Model From Asset Pack)",
+  "author": "Cherk",
+  "url": "https://sketchfab.com/3d-models/soviet-road-signs-single-model-from-asset-pack-bc83452e427647c098a93647244a66c0",
+  "license": "CC-BY-4.0",
+  "files": [
+   "sg_main",
+   "sg_yield"
+  ]
+ },
+ {
+  "title": "Low Poly Barn",
+  "author": "Periltek Games",
+  "url": "https://sketchfab.com/3d-models/low-poly-barn-fce7ec6e083e41d7b6e32f9bfcab6cd0",
+  "license": "CC-BY-4.0",
+  "files": [
+   "v_barn"
+  ]
+ },
+ {
+  "title": "Weathered Water Tower",
+  "author": "Peter Primini",
+  "url": "https://sketchfab.com/3d-models/weathered-water-tower-bff3a33dff32414e83fa57e650e701ce",
+  "license": "CC-BY-4.0",
+  "files": [
+   "v_wtower"
+  ]
+ },
+ {
+  "title": "SK-5_NIVA",
+  "author": "Vebis_V_stolb_GT",
+  "url": "https://sketchfab.com/3d-models/sk-5-niva-e76e04dced84428babcab4b712f4d169",
+  "license": "CC-BY-4.0",
+  "files": [
+   "v_combine"
+  ]
+ },
+ {
+  "title": "Tractor Low Poly",
+  "author": "bhagathgoud",
+  "url": "https://sketchfab.com/3d-models/tractor-low-poly-6a585922ed344639824958d82d15d0f5",
+  "license": "CC-BY-4.0",
+  "files": [
+   "v_tractor"
+  ]
+ },
+ {
+  "title": "Fence (Wood)",
+  "author": "trentspi",
+  "url": "https://sketchfab.com/3d-models/fence-wood-e530c55db10348a3a547ef92149bdd10",
+  "license": "CC-BY-4.0",
+  "files": [
+   "v_fence"
+  ]
+ },
+ {
+  "title": "Wood Wooden fence Protector of the farm low poly",
+  "author": "adventurer",
+  "url": "https://sketchfab.com/3d-models/wood-wooden-fence-protector-of-the-farm-low-poly-ace00004692b48c6afee9f9d505e6e35",
+  "license": "CC-BY-4.0",
+  "files": [
+   "v_picket"
+  ]
+ },
+ {
+  "title": "5G Telecommunications Mast",
+  "author": "ThomasRedfern12",
+  "url": "https://sketchfab.com/3d-models/5g-telecommunications-mast-c9ea1b7b2e9043deb8c082e392deb4bc",
+  "license": "CC-BY-4.0",
+  "files": [
+   "m_5g"
   ]
  },
  {

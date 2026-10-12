@@ -75,7 +75,7 @@ export const tankerGlb = () => (LOADED[TANKER.model] ? LOADED[TANKER.model].clon
 // модели карты (glbmap.js): ЛЭП, ветряки, порт, маяк, промзона, аэродром, дома деревень, ближний лес
 export const MAP_MODELS = ['m_pylon', 'm_wind', 'obj_tanks', 'm_crane', 'm_cont', 'm_ship', 'm_light', 'obj_jhangar', 'obj_rtank', 'su30', 'mig29',
   'h_brick', 'h_house', 'h_log', 'h_khata', 'h_mobile', 'tr_pine', 'tr_oak', 'tr_lime',
-  'bld_p5', 'bld_st', 'bld_b12', 'o_block',
+  'bld_p5', 'bld_st', 'bld_b12', 'o_block', 'bld_t9', 'bld_a16', 'g_amel', 'g_fortune', 'af_atc', 'af_fuel', 'af_appr', 'br_seg', 'br_truss', 'v_wtower', 'v_fence', 'v_barn', 'v_tractor', 'v_combine', 'm_5g', 'tex/p_*.jpg',
   ...['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police'].map((c) => 'c_' + c)];
 const USED = new Set([...PLANES.map((p) => p.key), ...Object.values(MSL_MODEL), ...enemyModels(), ...ENEMY_ALL, ...MAP_MODELS]);
 export const LETKA_CREDITS = MODEL_CREDITS.filter((c) => (c.files || []).some((f) => USED.has(f)));

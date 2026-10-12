@@ -8,26 +8,26 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261019c';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261019c';
-import { createPipeline } from '../drone/post.js?v=20261019c';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261019c';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261019c';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261019c';
-import { createStrike, MODES } from './sim/strike.js?v=20261019c';
-import { createRaid } from './sim/raid.js?v=20261019c';
-import { POD } from './sim/combined.js?v=20261019c';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261019c';
-import { slotCount } from './launchers.js?v=20261019c';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261019c';
-import { createSound } from './sound.js?v=20261019c';
-import { createAir } from './air.js?v=20261019c';
-import { createDefense } from './defense.js?v=20261019c';
-import { createDirector } from './director.js?v=20261019c';
-import { createOnline } from './online.js?v=20261019c';
-import { createShell } from './shell.js?v=20261019c';
-import { createTraining, LESSONS } from './training.js?v=20261019c';
-import { createMenu } from './menu.js?v=20261019c';
+import { buildCity, CITY } from './city.js?v=20261020a';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020a';
+import { createPipeline } from '../drone/post.js?v=20261020a';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020a';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020a';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020a';
+import { createStrike, MODES } from './sim/strike.js?v=20261020a';
+import { createRaid } from './sim/raid.js?v=20261020a';
+import { POD } from './sim/combined.js?v=20261020a';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020a';
+import { slotCount } from './launchers.js?v=20261020a';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020a';
+import { createSound } from './sound.js?v=20261020a';
+import { createAir } from './air.js?v=20261020a';
+import { createDefense } from './defense.js?v=20261020a';
+import { createDirector } from './director.js?v=20261020a';
+import { createOnline } from './online.js?v=20261020a';
+import { createShell } from './shell.js?v=20261020a';
+import { createTraining, LESSONS } from './training.js?v=20261020a';
+import { createMenu } from './menu.js?v=20261020a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -39,9 +39,9 @@ const ls = { get(k) { try { return localStorage.getItem(k); } catch (_) { return
 
 // ═════════════ Пресеты графики ═════════════
 export const PRESETS = {
-  low: { name: 'Низкий', fxLo: true, lodObj: 3500, desc: 'слабые телефоны', prCap: 1.25, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
+  low: { name: 'Низкий', skyOnly: true, fxLo: true, lodObj: 3500, desc: 'слабые телефоны', prCap: 1.25, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
     perf: { scale: 1, min: 0.75, aa: 'off', up: 'off' } },
-  medium: { name: 'Средний', fxLo: true, lodObj: 4500, desc: 'большинство телефонов', prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
+  medium: { name: 'Средний', skyOnly: true, fxLo: true, lodObj: 4500, desc: 'большинство телефонов', prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
     perf: { scale: 1, min: 0.7, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
   // «Кастомный»: всё настраивается (Настройки → «Кастомный»). Основа — техника, ракеты, бомбы, самолёты и эффекты как на
   // «Высоком» (тени вблизи, свечение, сглаживание), город проще
@@ -55,7 +55,7 @@ export const PRESETS = {
     shadows: true, treeShadows: true, shadowMap: 4096, shadowBox: 800, aniso: 8,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'fsr', sharp: 0.35 }, post: { bloom: 0.6, vignette: 0.18, grade: 0.3, exposure: 0.95 } },
 };
-export const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast'];
+export const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast', 'night'];
 const CINEMA = Q.get('gfx') === 'cinema'; // запись промо-ролика (tools/airdef-promo): «Ультра» на пределе; в меню его нет
 let gfxKey = CINEMA ? 'ultra' : Q.get('gfx') || ls.get('fortuna_airdef_gfx') || (IS_TOUCH ? 'medium' : 'high');
 if (!PRESETS[gfxKey]) gfxKey = 'medium';
@@ -106,7 +106,8 @@ const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGf
 const P = CINEMA ? Object.assign(P0, { name: 'Кино', lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
 const weatherKey = Q.get('weather') || ls.get('fortuna_airdef_weather') || 'random';
-const W_KEY = WEATHER_KEYS.includes(weatherKey) ? weatherKey : WEATHER_KEYS[Math.floor(Math.random() * WEATHER_KEYS.length)];
+const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
+const W_KEY = WEATHER_KEYS.includes(weatherKey) && !(weatherKey === 'night' && (Q.get('mp') === '1' || Q.get('ad'))) ? weatherKey : RND_KEYS[Math.floor(Math.random() * RND_KEYS.length)];
 const W = WEATHERS[W_KEY];
 if (CINEMA) { W.hazeK = (W.hazeK || 0) * 0.45; W.fogD = (W.fogD || 0) * 0.55; } // ролик: даль чище — высотки Сити не тонут в дымке
 
@@ -393,7 +394,7 @@ function hangLoad(g, stations, load) {
   const out = []; let oi = 0;
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
     const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = weaponMesh(l.key, W, weaponGeo, wMat);
-    m.position.set(p.x, p.y - W.vis.r - 0.05, p.z); g.add(m); out.push({ m, l, k });
+    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - W.vis.r - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» — под фюзеляжем по оси
   }
   return out;
 }

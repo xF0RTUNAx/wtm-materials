@@ -7,7 +7,7 @@
 //    радиусе прячет шейдер (все вершины экземпляра — в одну точку), дальше — прежние коробки и конусы.
 // Пока модель грузится (или не загрузилась) — всё процедурное, как раньше.
 /* global THREE */
-import { want, loadedModel } from './glb.js?v=20261019c';
+import { want, loadedModel } from './glb.js?v=20261020a';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z), Q = new THREE.Quaternion(), UPY = V(0, 1, 0);
 const mtx = (x, y, z, yaw, sx = 1, sy = sx, sz = sx) => new THREE.Matrix4().compose(V(x, y, z), Q.setFromAxisAngle(UPY, yaw), V(sx, sy, sz));
@@ -76,6 +76,27 @@ export function createGlbMap(scene, sites, P, { water }) {
     group([...objs, wl], it, 9000); hide(S.pylons.hide);
   });
 
+  // ── мосты: пролёты br_seg над водой (настил, балки, перила; асфальт модели — на 4 см ниже ленты дороги), опора — колонны
+  //    от ригеля до дна (в модели — от −4,71 до −0,28 м; растягиваются по высоте) ──
+  if (S.bridges && S.bridges.items.length) when(['br_seg'], () => {
+    const it = S.bridges.items, isP = (c) => /^pier/.test(c.name);
+    const isC = (c) => /^cap/.test(c.name), dm = (b) => mtx(b.x, b.y - 3.24, b.z, b.yaw, b.sx, 1, b.sl);
+    const deck = inst('br_seg', it.map(dm), { skip: (c) => isP(c) || isC(c) }), caps = inst('br_seg', it.filter((b) => b.pier).map(dm), { skip: (c) => !isC(c) }); // ригель — только над колоннами
+    const piers = inst('br_seg', it.filter((b) => b.pier).map((b) => {
+      const top = b.y - 3.24 - 0.28, bot = Math.min(b.g, water - 2), sy = Math.max(0.2, (top - bot) / 4.43);
+      return mtx(b.x, top + 0.28 * sy, b.z, b.yaw, b.sx, sy, b.sl);
+    }), { skip: (c) => !isP(c) });
+    group([...deck, ...caps, ...piers], it, 9000); hide(S.bridges.hide);
+  });
+
+  // ── ж/д мосты: ферма br_truss (подходы срезаны в prepare.js; ось фермы в модели — x = −8 м, проезжая часть — y ≈ 4,3 м),
+  //    ширина ×0,6 (между фермами ≈ 9,6 м), длина — по переправе ──
+  if (S.trusses && S.trusses.items.length) when(['br_truss'], () => {
+    const it = S.trusses.items, sx = 0.6, ox = 8 * sx;
+    const objs = inst('br_truss', it.map((b) => mtx(b.x + Math.cos(b.yaw) * ox, b.y - 4.6, b.z - Math.sin(b.yaw) * ox, b.yaw, sx, 1, b.sl)), { colors: it.map(() => '#4c5456') }); // у модели нет текстуры (цвет — кремовый) — сталь серо-зелёная
+    group(objs, it, 9000); hide(S.trusses.hide);
+  });
+
   // ── ветряки: башня с гондолой экземплярами, ротор — свой у каждого (крутится вокруг ступицы) ──
   if (S.wind && S.wind.items.length) when(['m_wind'], () => {
     const it = S.wind.items, objs = inst('m_wind', it.map((p) => mtx(p.x, p.y, p.z, p.yaw)), { skip: (c) => /^rotor/.test(c.name) });
@@ -125,7 +146,7 @@ export function createGlbMap(scene, sites, P, { water }) {
   // ── маяк ──
   if (S.light) when(['m_light'], () => { group(inst('m_light', [mtx(S.light.x, S.light.y, S.light.z, 0)]), [S.light], 9000); hide([S.hide && S.hide.light, S.hide && S.hide.lightGlass]); });
 
-  // ── аэродром: арочные ангары, топливозаправщики, самолёты на стоянке ──
+  // ── аэродром: арочные ангары, цистерны и топливозаправщики, самолёты на стоянке, вышка КДП, огни приближения ──
   if (S.airfield && S.airfield.hangars.length) {
     const A = S.airfield, hs = A.hangars;
     when(['obj_jhangar'], () => { group(inst('obj_jhangar', hs.map((p) => mtx(p.x, p.y, p.z, -Math.PI / 2, 0.75))), hs, 9000); hide(A.hide); });
@@ -136,6 +157,25 @@ export function createGlbMap(scene, sites, P, { water }) {
     });
     const fuel = hs.slice(0, 3).map((p, i) => ({ x: p.x + 45, y: p.y, z: p.z - 150 + i * 14 }));
     when(['obj_rtank'], () => group(inst('obj_rtank', fuel.map((p) => mtx(p.x, p.y, p.z, 0))), fuel, 5000));
+    const trucks = hs.slice(0, 3).map((p, i) => ({ x: p.x + 78, y: p.y, z: p.z - 152 + i * 15 })); // топливозаправщики у цистерн
+    when(['af_fuel'], () => group(inst('af_fuel', trucks.map((p) => mtx(p.x, p.y, p.z, 0))), trucks, 4000));
+    if (A.atc) when(['af_atc'], () => group(inst('af_atc', [mtx(A.atc.x, A.atc.y, A.atc.z, Math.PI / 2)]), [A.atc], 12000));
+    if (A.appr && A.appr.length) when(['af_appr'], () => group(inst('af_appr', A.appr.map((p) => mtx(p.x, p.y, p.z, 0)), { shadow: false }), A.appr, 7000));
+  }
+
+  // ── село: водонапорные башни (процедурные прячутся), заборы у домов, сараи, трактора и комбайны в полях; вышки связи у городов ──
+  if (S.village) {
+    const VG = S.village, put = (name, list, k, far, opt) => { // мелочь — клетками по 2 км: дальние клетки не рисуются
+      if (!list.length) return;
+      when([name], () => {
+        const cells = new Map(); for (const p of list) { const key = far < 5000 ? Math.floor(p.x / 2000) * 100 + Math.floor(p.z / 2000) : 0; if (!cells.has(key)) cells.set(key, []); cells.get(key).push(p); }
+        for (const c of cells.values()) group(inst(name, c.map((p) => mtx(p.x, p.y, p.z, p.yaw, k)), opt), c, far);
+        if (name === 'v_wtower') hide(VG.hide);
+      });
+    };
+    put('v_wtower', VG.wt, 1.3, 9000);
+    if (lvl >= 1) { put('v_fence', VG.fence, 1, 2500, { shadow: false }); put('v_barn', VG.barn, 1, 5000); put('v_tractor', VG.tractor, 1, 2500); put('v_combine', VG.combine, 1, 3000); }
+    put('m_5g', VG.mast, 1, 7000, { shadow: false });
   }
 
   // ── вблизи камеры: дома деревень и лес моделями (набор пересобирается при смещении камеры) ──
@@ -192,15 +232,18 @@ export function createGlbMap(scene, sites, P, { water }) {
     });
   }
 
-  // ── города вблизи: дома до 48 м — модели по форме коробки (вытянутые низкие — панельная пятиэтажка, квадратные низкие —
-  // сталинка, средние — многоэтажка или офисный блок; высота — растяжкой ×0,85…1,5), у подъездов — машины. Выше 48 м —
-  // прежние стеклянные башни с окнами. Дальше радиуса — коробки
+  // ── города вблизи: дома — модели по форме коробки (вытянутые низкие — панельная пятиэтажка, квадратные низкие —
+  // сталинка, средние — многоэтажка, точечная девятиэтажка или офисный блок, высокие вытянутые — 16-этажка; высота — растяжкой
+  // ×0,85…1,5), у подъездов — машины. Выше 48 м — стеклянные башни (какая ближе по пропорциям, высота — точно по коробке).
+  // Дальше радиуса — коробки
   if (lvl >= 1 && S.towns && S.towns.items.length) {
-    const BT = ['bld_p5', 'bld_st', 'bld_b12', 'o_block'], PARK = ['c_compact', 'c_coupe', 'c_hatch', 'c_van', 'c_offroad', 'c_pickup', 'c_sedan', 'c_sport', 'c_suv', 'c_wagon', 'c_police'];
-    const R = lvl >= 2 ? 1500 : 1000, HMAX = 48, U = { value: new THREE.Vector4(0, 0, -1, 0) };
+    const BT = ['bld_p5', 'bld_st', 'bld_b12', 'o_block', 'bld_t9', 'bld_a16', 'g_amel', 'g_fortune'], PARK = ['c_compact', 'c_coupe', 'c_hatch', 'c_van', 'c_offroad', 'c_pickup', 'c_sedan', 'c_sport', 'c_suv', 'c_wagon', 'c_police'];
+    const R = lvl >= 2 ? 1500 : 1000, HMAX = 175, U = { value: new THREE.Vector4(0, 0, -1, 0) };
     const items = S.towns.items.filter((b) => b.h <= HMAX).map((b, i) => {
-      const lng = Math.max(b.w, b.d) / Math.min(b.w, b.d) > 1.45, t = b.h <= 22 ? (lng ? 'bld_p5' : 'bld_st') : (lng ? 'bld_b12' : 'o_block');
-      return { ...b, t, i };
+      const lng = Math.max(b.w, b.d) / Math.min(b.w, b.d) > 1.45, kp = Math.sqrt(b.w * b.d) / 26; // башни: g_amel ≈ 26 × 56 м, g_fortune ≈ 35 × 111 м
+      const t = b.h > 48 ? (Math.abs(Math.log(b.h / 56 / kp)) < Math.abs(Math.log(b.h / 111 / (kp * 26 / 35))) ? 'g_amel' : 'g_fortune')
+        : b.h <= 22 ? (lng ? 'bld_p5' : 'bld_st') : lng ? (b.h > 36 ? 'bld_a16' : 'bld_b12') : b.k % 2 ? 'bld_t9' : 'o_block';
+      return { ...b, t, i, tall: b.h > 48 };
     });
     when([...BT, ...PARK], () => {
       const dim = {}; for (const t of BT) { const bb = new THREE.Box3().setFromObject(loadedModel(t)); dim[t] = [bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z]; }
@@ -213,7 +256,7 @@ export function createGlbMap(scene, sites, P, { water }) {
         for (const b of items) {
           if (Math.hypot(b.x - cam.x, b.z - cam.z) > R) continue;
           const [mx, my, mz] = dim[b.t], alongX = b.w > b.d, L = Math.max(b.w, b.d), Wd = Math.min(b.w, b.d);
-          sc.set(Wd / mx, Math.min(1.5, Math.max(0.85, b.h / my)), L / mz); // длинная сторона модели — z
+          sc.set(Wd / mx, b.tall ? b.h / my : Math.min(1.5, Math.max(0.85, b.h / my)), L / mz); // длинная сторона модели — z; башня — ровно по коробке
           M4.compose(p.set(b.x, b.y - 1.5, b.z), q.setFromAxisAngle(UPY, alongX ? Math.PI / 2 : 0), sc);
           for (const im of pools[b.t]) im.setMatrixAt(cnt[b.t], M4); cnt[b.t]++;
           if (b.i % 3 !== 2) { // машина у дома — вдоль длинной стороны, в 4 м от стены

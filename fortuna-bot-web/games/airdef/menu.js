@@ -1,15 +1,15 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261019c';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261019c';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261019c';
-import { MODES } from './sim/strike.js?v=20261019c';
-import { WEATHERS } from '../drone/world.js?v=20261019c';
-import { LESSONS } from './training.js?v=20261019c';
-import { MODEL_CREDITS } from './models.js?v=20261019c';
-import { openLayoutEditor } from './layout.js?v=20261019c';
+import { CITY } from './city.js?v=20261020a';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020a';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020a';
+import { MODES } from './sim/strike.js?v=20261020a';
+import { WEATHERS } from '../drone/world.js?v=20261020a';
+import { LESSONS } from './training.js?v=20261020a';
+import { MODEL_CREDITS } from './models.js?v=20261020a';
+import { openLayoutEditor } from './layout.js?v=20261020a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261019c';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020a';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -48,7 +48,12 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // пройденные уроки по id; записи прежнего обучения («air0»… — по номеру) переносятся на те же уроки нового учебника
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
-  $('modeSel').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save(); render(); };
+  $('modeSel').onclick = (e) => {
+    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save();
+    // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
+    if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
+    render();
+  };
   function renderPlay() {
     const g = setup.game, el = $('tab-play');
     if (g === 'online') { C.online.panel(el); return; } // онлайн — свой раздел (online.js)
