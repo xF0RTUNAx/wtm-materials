@@ -1,15 +1,15 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261020b';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020b';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020b';
-import { MODES } from './sim/strike.js?v=20261020b';
-import { WEATHERS } from '../drone/world.js?v=20261020b';
-import { LESSONS } from './training.js?v=20261020b';
-import { MODEL_CREDITS } from './models.js?v=20261020b';
-import { openLayoutEditor } from './layout.js?v=20261020b';
+import { CITY } from './city.js?v=20261020c';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020c';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020c';
+import { MODES } from './sim/strike.js?v=20261020c';
+import { WEATHERS } from '../drone/world.js?v=20261020c';
+import { LESSONS } from './training.js?v=20261020c';
+import { MODEL_CREDITS } from './models.js?v=20261020c';
+import { openLayoutEditor } from './layout.js?v=20261020c';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020b';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020c';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },

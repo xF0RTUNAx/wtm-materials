@@ -287,7 +287,8 @@ const CONFIG = {
     } },
   nasams: { src: `${DL}/nasams_1_surface-to-air_missile_system.glb`, scale: 0.4, fwd: [0.174, 0.985], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, hinge: [0, 1.16, 1.42], tube: [0.3, 0.9],
     groups: (c) => {
-      if (axis(c, [1.42, 1.16], [-0.903, 0.43], 2.0, -1.6, 6) && c.min[1] > 0.55 && !(c.size[1] > 2 && c.size[2] < 0.3)) return 'cradle';
+      if (axis(c, [1.42, 1.16], [-0.903, 0.43], 2.0, -1.6, 6) && (c.min[1] > 0.55 || (c.ctr[1] > 0.45 && Math.abs(c.ctr[0]) < 1.4)) && !(c.size[1] > 2 && c.size[2] < 0.3)) return 'cradle'; // и большие грани контейнеров, уходящие ниже 0,55 м (были «корпусом» — при повороте пакета застывали)
+      if (Math.abs(c.ctr[0] - 1.3) < 0.35 && Math.abs(c.ctr[2] - 0.6) < 0.4 && c.ctr[1] > 0.6) return 'turret'; // мачта с антенной стоит на поворотной части — крутится с ней (не протыкает пакет)
       return c.min[1] > -0.1 && c.ctr[2] > -1.1 && c.ctr[2] < 1.2 && Math.abs(c.ctr[0]) < 1.0 && c.max[1] < 1.7 ? 'turret' : 'body';
     } },
   ew_w: { src: `${DL}/renault_trm_radar_truck.glb`, scale: 0.0097, nose: '+z', rulesIn: 'game', unit: true, tex: () => 256, groups: () => 'body' }, // станция РЭБ (запад)

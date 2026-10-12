@@ -5,10 +5,10 @@
 // пуск, захват, РЛС, ручное наведение, покупки) уходят серверу — их перехватывает обёртка методов зеркала (wrapMirror).
 // Чужие самолёты и боты — «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
-import * as O from './sim/online.js?v=20261020b';
-import * as MW from './sim/online-multi.js?v=20261020b';
-import { AG, SAM } from './arsenal.js?v=20261020b';
-import { LNCH } from './launchers.js?v=20261020b';
+import * as O from './sim/online.js?v=20261020c';
+import * as MW from './sim/online-multi.js?v=20261020c';
+import { AG, SAM } from './arsenal.js?v=20261020c';
+import { LNCH } from './launchers.js?v=20261020c';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -183,7 +183,7 @@ export function createNet(C) {
     const S = C.S; if (!S || !N.battle) return;
     if (m.e) for (const e of m.e) applyEv(e);
     const now = performance.now() / 1000;
-    N.battle.T = m.T; N.battle.valueK = m.V;
+    N.battle.T = m.T; N.battle.valueK = m.V; N.zone = m.Z || null;
     if (N.battle.kind === 'multi') {
       N.battle.k = m.k || 1; N.battle.V = m.V; if (N.ev) N.ev.t = m.T;
       let nw = false;
@@ -206,7 +206,7 @@ export function createNet(C) {
       const u = S.units.find((q) => q.id === s[0]); if (!u) continue;
       const wasDead = u.dead; u.dead = !!(s[1] & O.U_DEAD);
       u.emit = !!(s[1] & O.U_EMIT); u.gunOn = !!(s[1] & O.U_GUN); if (!(u.manual && u.owner === (N.me && N.me.id))) u.manual = !!(s[1] & O.U_MAN);
-      u.lyaw = s[2]; u.lel = s[3]; u.track = findAir(s[4]); u.ammo = s[5]; u.reloadT = s[6]; u.hp = s[7];
+      u.lyaw = s[2]; u.lel = s[3]; u.track = findAir(s[4]); u.ammo = s[5]; u.reloadT = s[6]; u.hp = s[7]; if (s.length > 8) u.seeT = s[8];
       if (u.dead && !wasDead) { C.simFx.unitDestroyed && C.simFx.unitDestroyed(u); }
     }
     // ЗУР
@@ -264,6 +264,7 @@ export function createNet(C) {
       case 'kl': emit('kill', e[1], e[2], e[3]); return;
       case 'ai': if (N.me && e[1] === N.me.id) { N.myCraft = false; emit('meAI'); } return;
       case 'out': if (N.me && e[1] === N.me.id) { N.myCraft = false; emit('meOut'); } return;
+      case 'zr': if (N.me && e[1] === N.me.id) emit('resupply', e); return; // зона пополнения: [_, id, топливо, боекомплект, осталось топлива, осталось БК, подвеска, ЛТЦ, диполи]
     }
   }
 
@@ -291,7 +292,7 @@ export function createNet(C) {
     // свой самолёт: состояние 20 Гц, подсвет лазером
     const a = C.player;
     if (N.myCraft && a && !a.dead) {
-      if ((stT -= dt) <= 0) { stT = SEND_ST; N.send({ t: 'st', s: [a.pos.x, a.pos.y, a.pos.z, a.yaw, a.pitch, a.roll, a.speed, a.thr, a.ab ? 1 : 0] }); }
+      if ((stT -= dt) <= 0) { stT = SEND_ST; N.send({ t: 'st', s: [a.pos.x, a.pos.y, a.pos.z, a.yaw, a.pitch, a.roll, a.speed, a.thr, a.ab ? 1 : 0, Math.round((a.fuel ?? 1) * 100) / 100] }); }
       if ((laserT -= dt) <= 0) { laserT = SEND_LASER; const p = C.hooks.playerLaser ? C.hooks.playerLaser() : null; N.send({ t: 'laser', p: p ? [p.x, p.y, p.z] : null }); }
     }
     // свой комплекс под ручным управлением: ствол / метод

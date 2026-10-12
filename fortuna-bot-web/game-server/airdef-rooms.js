@@ -156,6 +156,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     const air = team(r, 'air'), b0 = Math.random() * Math.PI * 2;
     air.forEach((p, i) => { p.bearing = b0 + (i - (air.length - 1) / 2) * 0.35; spawnAir(r, p); });
     for (const p of team(r, 'pvo')) p.op = null;
+    r.zone = O.newZone(Math.random); // зона пополнения — новое место на каждую волну
     sendRoom(r);
     J(r, 'wave', { air: air.map((p) => [p.name, p.choice]) });
   }
@@ -176,6 +177,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     a.pos.set(x, y, z); a.yaw = yaw; a.pitch = 0; a.roll = 0; fwdOf(a, a.vel).multiplyScalar(a.speed);
     a.jam = Math.max(0, ...L.items.map(([k]) => AG[k].jam || 0));
     p.craft = a; p.load = L.items.map(([k, n]) => ({ key: k, n })); p.cm = { flare: MODES[r.mode].cm, chaff: MODES[r.mode].cm }; p.relT = 0; p.cmT = 0; p.stT = r.t; p.lastSt = clock();
+    p.zFuel = O.ZONE.FUEL; p.zAmmo = O.ZONE.AMMO; p.fuel = 1; p.zT = 0; // зона пополнения: на этот вылет — 1 раз топливо, 2 раза боекомплект
     r.humanCraft.set(p.id, a); a.load = p.load; announce(r, a);
     bcast(r, { t: 'spawn', id: p.id, s: [r1(x), y, r1(z), Math.round(yaw * 1000) / 1000], lives: p.lives, load: p.load, cm: p.cm, plane: L.plane, choice: p.choice });
   }
@@ -350,6 +352,20 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       if (!p.craft && !p.plane && !p.out && p.lives > 0 && p.respT && r.t >= p.respT && (p.bot || p.ws)) spawnAir(r, p);
     }
     r.S.step(dt); r.raid.step(dt);
+    // зона пополнения: лётчики-люди (боты — нет); кто пробыл 12 с — топливо и/или боекомплект с ловушками
+    if (!r.zone) r.zone = O.newZone(Math.random);
+    O.zoneStep(r.zone, team(r, 'air').filter((p) => p.craft && !p.craft.dead).map((p) => { p.pos = p.craft.pos; return p; }), dt, Math.random,
+      (p) => {
+        const L = O.bundleOf(r.era, r.sideAir, p.choice), cm = MODES[r.mode].cm;
+        const spent = !!L && (L.items.some(([k, n]) => ((p.load || []).find((l) => l.key === k) || { n: 0 }).n < n) || !p.cm || p.cm.flare < cm * 0.5 || p.cm.chaff < cm * 0.5);
+        return { fuel: (p.zFuel || 0) > 0 && (p.fuel ?? 1) < 0.9, ammo: (p.zAmmo || 0) > 0 && spent };
+      },
+      (p, n) => {
+        if (n.fuel) { p.zFuel--; p.fuel = 1; }
+        if (n.ammo) { p.zAmmo--; const L = O.bundleOf(r.era, r.sideAir, p.choice); p.load = L.items.map(([k, q]) => ({ key: k, n: q })); p.craft.load = p.load; p.cm = { flare: MODES[r.mode].cm, chaff: MODES[r.mode].cm }; }
+        push(r, ['zr', p.id, n.fuel ? 1 : 0, n.ammo ? 1 : 0, p.zFuel, p.zAmmo, (p.load || []).map((l) => l.key + ':' + l.n).join(','), p.cm ? p.cm.flare : 0, p.cm ? p.cm.chaff : 0]);
+        J(r, 'resupply', { who: p.name, fuel: n.fuel ? 1 : 0, ammo: n.ammo ? 1 : 0, left: [p.zFuel, p.zAmmo] });
+      });
     for (const a of r.raid.planes) if (a.out && a.owner) { const p = r.players.get(a.owner); if (p && p.plane === a) { p.plane = null; p.out = true; } }
     // конец волны: ≥ 75 % ценности — сразу; авиации в воздухе нет и не будет; время
     if (r.valueK >= O.WIN_K) return endWave(r, 'value');
@@ -369,7 +385,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   function snapshot(r) {
     const ev = r.events; r.events = [];
     const msg = { t: 's', T: Math.round(r.t * 100) / 100, A: r.air.filter((a) => !a.dead || a.t < 1).map(O.packA), U: r.S.units.map(O.packU), M: r.S.sams.filter((m) => !m.dead).map(O.packM),
-      W: r.S.wpns.filter((w) => !w.dead).map(O.packW), V: Math.round(r.valueK * 1000) / 1000, e: ev.length ? ev : undefined };
+      W: r.S.wpns.filter((w) => !w.dead).map(O.packW), V: Math.round(r.valueK * 1000) / 1000, e: ev.length ? ev : undefined, Z: r.zone ? O.packZ(r.zone) : undefined };
     bcast(r, msg);
   }
   // полное состояние входящему / новой волне: комплексы, объекты, бюджеты
@@ -509,6 +525,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       case 'st': {
         const a = c.craft; if (!a || a.dead || !O.validState(m.s)) return;
         const s = m.s; a.pos.set(s[0], s[1], s[2]); a.yaw = s[3]; a.pitch = s[4]; a.roll = s[5]; a.speed = s[6]; a.thr = s[7]; a.ab = !!(s[8] & 1);
+        if (Number.isFinite(s[9])) c.fuel = Math.max(0, Math.min(1, s[9])); // топливо (для зоны пополнения)
         fwdOf(a, a.vel).multiplyScalar(a.speed); c.lastSt = clock();
         if (Math.abs(s[0]) > CITY.HALF - 200 || Math.abs(s[2]) > CITY.HALF - 200) { if (r.t > 60 && !(c.load || []).some((l) => l.n > 0 && AG[l.key].kind !== 'ecm')) { r.humanCraft.delete(c.id); c.craft = null; c.out = true; push(r, ['out', c.id]); } }
         return;

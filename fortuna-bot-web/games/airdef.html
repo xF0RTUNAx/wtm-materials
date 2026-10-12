@@ -152,7 +152,7 @@
   #wpn .ms .tg i { display: inline-block; width: 28px; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; } #wpn .ms .tg i > u { display: block; height: 100%; background: #fbbf24; }
   #wpn .sc { font-weight: 800; color: #fde68a; margin-top: 2px; }
   #tThr.ab { background: rgba(160,70,10,.65); border-color: #fb923c; }
-  body.coarse #tCam { display: none; } body.coarse.spect #tCam { display: flex; }
+  body.coarse #tCam { display: none; } body.coarse.spect #tCam, body.coarse.adnet #tCam { display: flex; }
   #rwr { position: absolute; right: max(14px, var(--sa-r)); bottom: 14px; width: 150px; height: 150px; }
   #warn { position: fixed; top: 24%; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 900; color: #ff5b5b; display: none; letter-spacing: .06em; text-align: center; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #msg { position: fixed; top: 31%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; color: #fde68a; display: none; text-align: center; max-width: 80vw; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
@@ -436,7 +436,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261020b"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261020b"></script>
+<script src="../config.js?v=20261020c"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261020c"></script>
 </body>
 </html>

@@ -9,14 +9,14 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261020b';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020b';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020b';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020b';
+import { CITY, mulberry32 } from './city.js?v=20261020c';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020c';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020c';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020c';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020b';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020b';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020b';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020c';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020c';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020c';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -97,6 +97,11 @@ export function createDefense(C) {
       tx.fill(); tx.stroke();
       if (u.dead) { tx.strokeStyle = '#ef4444'; tx.beginPath(); tx.moveTo(px - 6, py - 6); tx.lineTo(px + 6, py + 6); tx.moveTo(px + 6, py - 6); tx.lineTo(px - 6, py + 6); tx.stroke(); }
       if (u.manual) { tx.strokeStyle = '#fb923c'; tx.beginPath(); tx.arc(px, py, 11, 0, 7); tx.stroke(); }
+      if (st.net && !mine(u) && !u.dead) { // союзник: его комплексы — голубой ободок, тот, за пультом которого он сейчас, — пульсирует с именем
+        const al = allyName(u.owner);
+        if (u.manual) { const a = 0.55 + 0.45 * Math.sin(performance.now() / 220); tx.strokeStyle = `rgba(56,189,248,${a})`; tx.lineWidth = 3; tx.beginPath(); tx.arc(px, py, 16, 0, 7); tx.stroke(); tx.fillStyle = '#7dd3fc'; tx.fillText(`${al} — за пультом`, px, py - 20); }
+        else { tx.strokeStyle = 'rgba(56,189,248,.55)'; tx.lineWidth = 1.5; tx.beginPath(); tx.arc(px, py, 12, 0, 7); tx.stroke(); }
+      }
       tx.fillStyle = '#e2e8f0'; tx.fillText(u.S.rwr || u.S.short, px, py + 18);
       if (u.reloadT > 0) { tx.fillStyle = '#fdba74'; tx.fillText(`${Math.ceil(u.reloadT)}с`, px + 18, py - 4); }
     }
@@ -393,6 +398,7 @@ export function createDefense(C) {
   }
   // онлайн: мои комплексы, лимит первой волны по классам, сторона ПВО и эпоха — из боя
   const mine = (u) => !st.net || u.owner === (st.net.me && st.net.me.id);
+  const allyName = (id) => { const p = st.net && st.net.room && (st.net.room.players || []).find((q) => q.id === id); return p ? `${p.name}${p.bot ? ' (бот)' : ''}` : 'союзник'; };
   const CLS_NAME = { top: 'дальний', mid: 'средний', near: 'ближний' };
   function netLeft(k) { // сколько ещё можно купить этого класса на первой волне (null — без лимита)
     if (!st.net || st.multi || st.wave !== 1) return null; const cls = samClass(k); if (cls === 'near') return null;
@@ -884,7 +890,7 @@ export function createDefense(C) {
       const dx = e.clientX - drag.x, dy = e.clientY - drag.y; drag.moved += Math.abs(dx) + Math.abs(dy); drag.x = e.clientX; drag.y = e.clientY;
       if (drag.moved > 6) {
         if (op.cam !== 'op') { const k = 0.006 * C.sens.look; if (!op.orbit) { op.orbit = true; op.oy = op.camYaw; } op.oy -= dx * k; op.op = clamp(op.op + dy * k, -1.35, 1.3); op.follow = false; return; } // снаружи — облёт камерой (ниже земли не опускается — взгляд поднимается)
-        const k = op.fov * D2R / C.VH * C.sens.look; op.yaw += dx * k; op.pitch = clamp(op.pitch + dy * k, -0.15, 1.5); op.follow = false;
+        const k = op.fov * D2R / C.VH * C.sens.look; op.yaw -= dx * k; op.pitch = clamp(op.pitch - dy * k, -0.15, 1.5); op.follow = false; // палец вправо — взгляд вправо, вверх — вверх (как в шутерах)
       }
     });
     const end = (e) => {
@@ -975,6 +981,13 @@ export function createDefense(C) {
     if (S.type === 'guns' && u.gunTgt) {
       C.S.gunLead(u, u.gunTgt, LEAD); const p = C.proj(LEAD);
       if (p) { hx.strokeStyle = '#fde047'; hx.beginPath(); hx.arc(p[0], p[1], 9, 0, 7); hx.stroke(); hx.beginPath(); hx.arc(p[0], p[1], 1.5, 0, 7); hx.fill(); }
+    }
+    // онлайн: комплекс, за пультом которого союзник, — метка с именем
+    if (st.net) for (const q of C.S.units) {
+      if (q === u || q.dead || mine(q) || !q.manual) continue;
+      const p = C.proj(TMP.copy(q.pos).setY(q.pos.y + 7)); if (!p) continue;
+      hx.strokeStyle = '#38bdf8'; hx.fillStyle = '#7dd3fc'; hx.beginPath(); hx.moveTo(p[0], p[1] + 8); hx.lineTo(p[0] - 7, p[1] - 4); hx.lineTo(p[0] + 7, p[1] - 4); hx.closePath(); hx.stroke();
+      hx.fillText(`${allyName(q.owner)} · ${q.S.short} · ${(q.pos.distanceTo(u.pos) / 1000).toFixed(1)} км`, p[0], p[1] - 10);
     }
     // свои ракеты
     for (const m of C.S.sams) { if (m.dead || m.unit !== u) continue; const p = C.proj(m.pos); if (p) { hx.fillStyle = '#fff'; hx.beginPath(); hx.arc(p[0], p[1], 3, 0, 7); hx.fill(); } }

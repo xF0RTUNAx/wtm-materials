@@ -2,7 +2,7 @@
 // Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
-import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261020b';
+import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261020c';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
 export const AD_MODES = ['arcade', 'real'];
@@ -72,7 +72,7 @@ export const packA = (a) => [a.id, (a.dead ? 0 : A_ALIVE) | (a.ab ? A_AB : 0) | 
 // комплекс: [id, флаги, lyaw, lel, track (id самолёта; летящее оружие — минус id; 0 — нет), ammo, reloadT, hp] — флаги: 1 уничтожен, 2 излучает, 4 пушка стреляет, 8 ручное
 export const U_DEAD = 1, U_EMIT = 2, U_GUN = 4, U_MAN = 8;
 export const packU = (u) => [u.id, (u.dead ? U_DEAD : 0) | (u.emit ? U_EMIT : 0) | (u.gunOn ? U_GUN : 0) | (u.manual ? U_MAN : 0), r3(u.lyaw), r3(u.lel),
-  u.track ? (u.track.isMun ? -u.track.id : u.track.id) : 0, Math.round(u.ammo * 10) / 10, r1(u.reloadT), Math.round(u.hp)];
+  u.track ? (u.track.isMun ? -u.track.id : u.track.id) : 0, Math.round(u.ammo * 10) / 10, r1(u.reloadT), Math.round(u.hp), r1(u.seeT || 0)]; // seeT — набор захвата (процент у оператора)
 // ЗУР: [id, x, y, z, dx, dy, dz, speed, флаги, target] — флаги: 1 двигатель запущен, 2 ускоритель отделён, 4 потеряла цель / уведена
 export const M_MOTOR = 1, M_STAGED = 2, M_LOST = 4;
 export const packM = (m) => [m.id, r1(m.pos.x), r1(m.pos.y), r1(m.pos.z), r3(m.dir.x), r3(m.dir.y), r3(m.dir.z), Math.round(m.speed),
@@ -91,3 +91,33 @@ export const makeCode = (taken) => { for (;;) { let c = ''; for (let i = 0; i < 
 export const cleanCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
 export const ROLE_NAMES = { air: 'Авиация', pvo: 'ПВО' };
 export const samOk = (k, era, side) => !!SAM[k] && SAM[k].era <= era && SAM[k].side === side;
+
+// ── зона пополнения (решение Mark 2026-10-12): круг радиусом R над землёй; лётчик пробыл в нём STAY с — пополнение: топливо
+// (FUEL раз за вылет) и боекомплект с ловушками (AMMO раз за вылет). Раз в MOVE с зона переезжает — но не пока в ней кто-то
+// пополняется: дождётся конца. Одиночный «Вылет» считает её у себя (air.js), онлайн — сервер (airdef-rooms.js) ──
+export const ZONE = { R: 1200, STAY: 12, MOVE: 30, FUEL: 1, AMMO: 2 };
+// новое место: кольцо 6,5–11,5 км от центра, не ближе 5 км к прежнему
+export function zoneSpot(rnd, prev) {
+  for (let k = 0; k < 40; k++) {
+    const a = rnd() * Math.PI * 2, d = 6500 + rnd() * 5000, x = Math.round(Math.sin(a) * d), z = Math.round(Math.cos(a) * d);
+    if (!prev || Math.hypot(x - prev.x, z - prev.z) > 5000) return { x, z };
+  }
+  return { x: prev ? -prev.x : 8000, z: prev ? -prev.z : 0 };
+}
+export const newZone = (rnd) => ({ ...zoneSpot(rnd, null), t: 0, busy: false });
+// шаг: list — лётчики { pos, zT }; need(it) → { fuel, ammo } (что ему ещё можно и нужно); grant(it, n) — выдать.
+// Возвращает true, если зона переехала
+export function zoneStep(Z, list, dt, rnd, need, grant) {
+  Z.t += dt; let busy = false;
+  for (const it of list) {
+    const n = need(it), inside = (n.fuel || n.ammo) && Math.hypot(it.pos.x - Z.x, it.pos.z - Z.z) < ZONE.R;
+    if (!inside) { it.zT = 0; continue; }
+    busy = true; it.zT = (it.zT || 0) + dt;
+    if (it.zT >= ZONE.STAY) { it.zT = 0; grant(it, n); }
+  }
+  Z.busy = busy;
+  if (Z.t >= ZONE.MOVE && !busy) { Object.assign(Z, zoneSpot(rnd, Z)); Z.t = 0; return true; }
+  return false;
+}
+// снимок зоны: [x, z, секунд до переезда (0 — ждёт пополняющегося)]
+export const packZ = (Z) => [Z.x, Z.z, Z.busy && Z.t >= ZONE.MOVE ? 0 : Math.max(0, Math.round(ZONE.MOVE - Z.t))];

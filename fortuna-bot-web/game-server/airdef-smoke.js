@@ -73,6 +73,8 @@ try {
   }
   const snaps = A.msgs.filter((m) => m.t === 's');
   check('снимки идут', snaps.length > 100);
+  check('в снимке — зона пополнения', snaps.some((m) => Array.isArray(m.Z) && m.Z.length === 3));
+  check('комплекс в снимке — с набором захвата', snaps.some((m) => m.U.some((u) => u.length >= 9)));
   check('в снимке — свой самолёт', snaps.some((m) => m.A.some((a) => a[0] === spawn.id || a[0] === A.last.welcome.id)));
   check('в снимке — комплекс ПВО', snaps.some((m) => m.U.length > 0));
   const evs = A.msgs.filter((m) => m.t === 's' && m.e).flatMap((m) => m.e);

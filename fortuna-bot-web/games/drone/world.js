@@ -6,8 +6,8 @@
 /* global THREE */
 import { mulberry32 } from './schedule.js?v=20260930m';
 import { M, part, mergeParts } from './models.js?v=20260930m';
-import { buildProps, detailTex } from './props.js?v=20261020b';
-import { buildLandmarks } from './landmarks.js?v=20261020b';
+import { buildProps, detailTex } from './props.js?v=20261020c';
+import { buildLandmarks } from './landmarks.js?v=20261020c';
 
 import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930m';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
@@ -283,7 +283,7 @@ export function skyPano(SU, W) {
     // в файле — только верхняя полусфера (ширина : высота = 4 : 1); мип-уровни — без шва на стыке (шейдер берёт производные без скачка)
     t = SKY_PANO[key] = new THREE.Texture(); t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.wrapS = THREE.RepeatWrapping; t.anisotropy = 4;
     const done = (img) => { t.image = img; t.needsUpdate = true; t.ok = true; for (const S of t.wait || []) if (S.skyTex.value === t) S.skyOn.value = 1; };
-    const load = (f, fail) => new THREE.ImageLoader().load(new URL(`../airdef/sky/${f}.jpg?v=20261020b`, import.meta.url).href, done, undefined, fail);
+    const load = (f, fail) => new THREE.ImageLoader().load(new URL(`../airdef/sky/${f}.jpg?v=20261020c`, import.meta.url).href, done, undefined, fail);
     if (typeof document !== 'undefined' && typeof document.createElementNS === 'function') load(key, () => { if (key !== h.f) load(h.f, () => {}); }); // нет _hi — обычная
   }
   SU.skyTex.value = t; SU.skyU.value = h.u; SU.skyK.value = h.k;
