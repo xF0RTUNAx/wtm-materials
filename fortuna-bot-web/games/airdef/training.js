@@ -2,10 +2,10 @@
 // подвеска пополняется). На каждом шаге — подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, SAM_COST } from './arsenal.js?v=20261020c';
-import { samKnown } from './sim/combined.js?v=20261020c';
-import { spotNear, freeGround } from './mission.js?v=20261020c';
-import { riverX } from './city.js?v=20261020c';
+import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, SAM_COST } from './arsenal.js?v=20261020d';
+import { samKnown } from './sim/combined.js?v=20261020d';
+import { spotNear, freeGround } from './mission.js?v=20261020d';
+import { riverX } from './city.js?v=20261020d';
 
 const K = (k) => `<kbd>${k}</kbd>`;
 // подписи управления: ПК или телефон
@@ -329,8 +329,8 @@ export const LESSONS = {
       tick(T, C) {
         const D = C.ctrl.inner.st;
         const osa = C.S.units.some((u) => u.key === 'osa');
-        if (T.s === 0) { T.hint('Это тактическая карта города. Справа — <b>очки обороны</b> и комплексы. Выберите «<b>Оса</b>» и поставьте рядом со складом боеприпасов (жёлтый ромб).'); if (osa) { D.opts.allow = new Set(['osa', 'igla', 'strela2']); C.ctrl.inner.renderSide(); T.next(); } }
-        else if (T.s === 1) { T.hint('Коснитесь своего комплекса: <b>зелёная тень</b> — где он видит цель на 300 м, а где её закрывают дома. Поставьте ещё ПЗРК («Игла») поближе к складу.'); if (C.S.units.length > 1 || T.st > 20) T.next(); }
+        if (T.s === 0) { T.hint('Это тактическая карта города. Справа — <b>очки обороны</b> и комплексы. Выберите «<b>Оса</b>», коснитесь карты рядом со складом боеприпасов (жёлтый ромб) — место можно менять касаниями — и «<b>Подтвердить</b>».'); if (osa) { D.opts.allow = new Set(['osa', 'igla', 'strela2']); C.ctrl.inner.renderSide(); T.next(); } }
+        else if (T.s === 1) { T.hint('Коснитесь своего комплекса: <b>зелёная тень</b> — где он видит цель на 300 м, а где её закрывают дома (касание карты и «Подтвердить перенос» — переставить). Поставьте ещё ПЗРК («Игла») поближе к складу.'); if (C.S.units.length > 1 || T.st > 20) T.next(); }
         else if (T.s === 2) { if (!osa && D.phase === 'plan') { T.go(0); return; } T.hint('Готово — нажмите «<b>В БОЙ</b>». Комплексы стреляют сами; комплекс можно выбрать и отдать приказ.'); if (D.phase === 'wave') T.next(); }
         else if (T.s === 3) {
           if (D.over && D.win === false) return T.fail('Оборона прорвана.');
@@ -464,7 +464,7 @@ export const LESSONS = {
       tick(T, C) {
         const D = C.ctrl.inner.st, jam = C.S.units.find((u) => u.S.type === 'jammer'), d = T.d;
         for (const w of C.S.wpns) if (w.jammed) d.j = (d.j || 0) + (w.__j ? 0 : (w.__j = 1));
-        if (T.s === 0) { T.hint('Поставьте <b>станцию РЭБ</b> (в каталоге — «РЭБ») рядом со складом боеприпасов — жёлтый ромб.'); if (jam) T.next(); }
+        if (T.s === 0) { T.hint('Поставьте <b>станцию РЭБ</b> (в каталоге — «РЭБ») рядом со складом боеприпасов — жёлтый ромб — и «<b>Подтвердить</b>».'); if (jam) T.next(); }
         else if (T.s === 1) { T.hint('Готово — «<b>В БОЙ</b>». Пойдут бомбардировщики со спутниковыми бомбами.'); if (D.phase === 'wave') T.next(); }
         else if (T.s === 2) { T.hint(d.j ? `<b>Помехи работают:</b> ${d.j} бомб(ы) уходят мимо — «мимо — помехи навигации».` : 'Бомбардировщики идут к складу. Следите за бомбами: в радиусе станции они собьются с курса.'); if (D.phase !== 'wave') T.next(); }
         else { T.hint(d.j ? `Станция сбила с курса ${d.j} спутниковых бомб. Против лазерных и ТВ — нужны ракеты и пушки.` : 'В этот раз бомбы не дошли до радиуса станции. Ставьте её ближе к объектам.'); if (T.st > 5) T.done(); }
@@ -808,7 +808,7 @@ export function createTraining(C, ctrls) {
       if (L.intro && !T.introShown) { T.introShown = true; const k = L.intro(C); C.openLesson(k.title, k.body, `Урок · ${L.sec ? L.sec + ' · ' : ''}${L.name}`); return; } // сначала — как это работает
       inner.update(dt, t); T.t += dt; T.st += dt; if (T.askT > 0 && (T.askT -= dt) <= 0) $('ask').style.display = 'none'; if (!T.finished) L.tick(T, C);
     },
-    camera: (dt, t) => inner.camera(dt, t), hud: (dt, t) => inner.hud(dt, t), onKey: (e, d) => inner.onKey(e, d),
+    camera: (dt, t) => inner.camera(dt, t), hud: (dt, t) => inner.hud(dt, t), onKey: (e, d) => inner.onKey(e, d), onEsc: () => !!(inner && inner.onEsc && inner.onEsc()),
     afterRender: () => inner.afterRender && inner.afterRender(), focus: () => inner.focus(), skip3D: () => !!(inner.skip3D && inner.skip3D()),
     resize: () => inner && inner.resize && inner.resize(), pauseHelp: () => inner.pauseHelp(), finish: () => C.toMenu(),
     timeK: () => (inner && inner.timeK ? inner.timeK() : 1), near: () => (inner && inner.near ? inner.near() : 0), // «Время ×4» и ближняя плоскость — как у самого режима

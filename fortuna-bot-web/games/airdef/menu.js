@@ -1,15 +1,16 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261020c';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020c';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020c';
-import { MODES } from './sim/strike.js?v=20261020c';
-import { WEATHERS } from '../drone/world.js?v=20261020c';
-import { LESSONS } from './training.js?v=20261020c';
-import { MODEL_CREDITS } from './models.js?v=20261020c';
-import { openLayoutEditor } from './layout.js?v=20261020c';
+import { CITY } from './city.js?v=20261020d';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020d';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020d';
+import { MODES } from './sim/strike.js?v=20261020d';
+import { WEATHERS } from '../drone/world.js?v=20261020d';
+import { LESSONS } from './training.js?v=20261020d';
+import { MODEL_CREDITS } from './models.js?v=20261020d';
+import { openLayoutEditor } from './layout.js?v=20261020d';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020c';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020d';
+import { photoItems } from './photo.js?v=20261020d';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -17,6 +18,7 @@ const GAMES = [
   { k: 'multi', name: 'Мульти-волна', desc: 'ракеты, дроны и баллистика: за атакующую волну или за ПВО' },
   { k: 'training', name: 'Обучение', desc: 'по шагам, с объяснениями, проиграть нельзя' },
   { k: 'online', name: 'Онлайн', desc: 'люди против людей: авиация против ПВО' },
+  { k: 'photo', name: 'Съёмка', desc: 'автобой и свободная камера: красивые кадры' },
 ];
 const TIPS = [
   'Здания закрывают РЛС обзор: на малой высоте между домами комплекс видит вас урывками и не успевает выстрелить.',
@@ -43,7 +45,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
 
   function renderModeSel() {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
-    $('startBtn').textContent = setup.game === 'online' ? C.online.primaryText() : setup.game === 'training' ? 'НАЧАТЬ УРОК' : setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk') ? 'К РАССТАНОВКЕ' : setup.game === 'multi' ? 'К ПЛАНУ ВОЛНЫ' : 'ВЗЛЁТ';
+    $('startBtn').textContent = setup.game === 'online' ? C.online.primaryText() : setup.game === 'training' ? 'НАЧАТЬ УРОК' : setup.game === 'photo' ? 'СНИМАТЬ' : setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk') ? 'К РАССТАНОВКЕ' : setup.game === 'multi' ? 'К ПЛАНУ ВОЛНЫ' : 'ВЗЛЁТ';
   }
   // пройденные уроки по id; записи прежнего обучения («air0»… — по номеру) переносятся на те же уроки нового учебника
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
@@ -72,6 +74,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       return;
     }
     if (g === 'multi') { el.innerHTML = renderMulti(); return; }
+    if (g === 'photo') { el.innerHTML = renderPhoto(); return; }
     let h = `<div class="prow"><span>Режим</span>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, m.name]))}</div><p class="hint">${MODES[setup.diff].desc}</p>
       <div class="prow"><span>Эпоха</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.name]))}</div>
       <div class="prow"><span>${g === 'defense' ? 'Ваша ПВО' : 'ПВО города'}</span>${seg('side', setup.side, [['east', 'Советская'], ['west', 'Западная']])}</div>`;
@@ -107,6 +110,34 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     }
     el.innerHTML = h;
   }
+  // «Съёмка»: что снимаем (самолёт с подвеской, комплекс ПВО, оружие «Мульти-волны»), эпоха и сторона ПВО города
+  function renderPhoto() {
+    const ps = setup.pside || 'air', att = setup.side === 'east' ? 'west' : 'east';
+    let h = `<div class="prow"><span>Снимаем</span>${seg('pside', ps, [['air', 'Самолёт'], ['def', 'ПВО'], ['multi', 'Мульти-волна']])}</div>
+      <div class="prow"><span>Эпоха</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.name]))}</div>
+      <div class="prow"><span>${ps === 'def' ? 'Сторона ПВО' : 'ПВО города'}</span>${seg('side', setup.side, [['east', 'Советская'], ['west', 'Западная']])}</div>`;
+    if (ps === 'air') {
+      const mine = loadoutsOf(setup.era, att);
+      if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
+      h += `<div class="prow"><span>Высота</span>${seg('palt', setup.palt || 'mid', [['low', '250 м'], ['mid', '1,5 км'], ['high', '4 км']])}</div><div class="cat-h">Самолёт и подвеска</div>` +
+        mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}</span></div></button>`).join('') +
+        '<p class="hint">Самолёт летит сам от цели к цели, сам сбрасывает и пускает, ставит ловушки; урона не получает, подвеска пополняется. Камеру можно привязать к каждому оружию на пилоне — снять сход с подвески и полёт до разрыва. На 250 м контейнер не захватывает цели: лазерные и ТВ не пускаются.</p>';
+    } else if (ps === 'def') {
+      const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era);
+      if (!list.some(([k]) => k === setup.psam)) setup.psam = list[0][0];
+      const canM = combinedOk(att, setup.era);
+      h += `<div class="prow"><span>Против</span>${seg('pvs', canM && setup.pvs === 'multi' ? 'multi' : 'air', canM ? [['air', 'Самолётов'], ['multi', COMBINED_NAME]] : [['air', 'Самолётов']])}</div><div class="cat-h">Комплекс</div>` +
+        list.map(([k, s]) => `<button class="opt ${k === setup.psam ? 'on' : ''}" data-psam="${k}"><div class="nm"><b>${s.name}</b><span>${SAM_TYPE[s.type]} · до ${(s.rmax / 1000).toFixed(1)} км</span></div></button>`).join('') +
+        '<p class="hint">Комплекс стоит у цели и отражает налёт за налётом (неуязвим, перезаряжается быстро); вокруг — ИИ-ПВО города.</p>';
+    } else {
+      const items = photoItems(att, setup.era);
+      if (!items.some(([k]) => k === setup.pmun) && items.length) setup.pmun = items[0][0];
+      h += '<div class="cat-h">Оружие волны</div>' + (items.length ? items.map(([k, via]) => `<button class="opt ${k === setup.pmun ? 'on' : ''}" data-pmun="${k}"><div class="nm"><b>${AG[k].name}</b><span>${AG[k].recon ? 'разведчик' : AG[k].uav ? 'дрон' : AG[k].kind === 'tbm' ? (via ? 'аэробаллистическая' : 'баллистическая, с пусковой') : 'крылатая / планирующая'}${via ? ` · носитель ${CARRIERS[via].name}` : ''}</span></div></button>`).join('')
+        : '<p class="hint">В этой эпохе у этой стороны нечего снять — выберите другую эпоху.</p>') +
+        '<p class="hint">Выбранное оружие снова и снова идёт на город: носитель или пусковая → пуск → полёт → перехват или попадание. ПВО города — ИИ.</p>';
+    }
+    return h + `<p class="hint">${C.IS_TOUCH ? 'Тяните по экрану — камера вокруг объекта, два пальца — ближе/дальше.' : 'Мышь — вокруг объекта, колесо — ближе/дальше, ←/→ ракурс, ↑/↓ объект, H — спрятать интерфейс.'} Внизу — что снимать и ракурс, справа — зум, скорость (×½, ×¼, стоп-кадр) и ◎ — убрать весь интерфейс (тап по экрану вернёт).</p>`;
+  }
   // «Мульти-волна» отдельно: роль, сторона игрока, эпоха (есть ли у атакующих чем ударить), что ждёт
   function renderMulti() {
     const atk = setup.mrole === 'atk', me = setup.side, att = atk ? me : me === 'east' ? 'west' : 'east', def = att === 'east' ? 'west' : 'east';
@@ -133,8 +164,9 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
-      if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
-    } else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
+      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
+    } else if (e.target.closest('[data-psam]')) setup.psam = e.target.closest('[data-psam]').dataset.psam; else if (e.target.closest('[data-pmun]')) setup.pmun = e.target.closest('[data-pmun]').dataset.pmun;
+    else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
     save(); render();
   };
   // ── Арсенал ──
@@ -190,6 +222,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <p><b>ПЗРК</b>: стартовый двигатель выталкивает ракету из трубы, маршевый включается в 5–8 м от стрелка, чтобы не обжечь его.</p>`],
     ['Камеры', `<p><b>В вылете</b> V перебирает камеры: за самолётом, облёт, из кабины, за оружием (N — сразу она). Камера за оружием летит за вашей бомбой или ракетой до разрыва и 3 с смотрит на попадание. Если своего оружия в воздухе нет, она летит за ракетой ПВО, которая идёт в вас.</p>
       <p><b>Оператор ЗРК</b>: V или «КАМ.» — вид оператора, снаружи (машина от третьего лица, видно разворот пусковой и старт) и за ракетой (после старта камера летит за своей ракетой до подрыва). Снаружи тянуть по экрану — облёт, колесо — ближе или дальше.</p>`],
+    ['Съёмка', `<p>Режим для красивых кадров: бой идёт сам (автопилот и «АВТО» у самолёта, ИИ у ПВО и волны), вы управляете только камерой. Выберите, что снимать: самолёт с нужной подвеской, комплекс ПВО (против самолётов или «Мульти-волны») или оружие «Мульти-волны» — дроны, крылатые ракеты с носителями, баллистику с пусковыми.</p>
+      <p>Внизу два ряда: <b>объект</b> (самолёт, каждое оружие на пилоне — до пуска и в полёте до разрыва, ракета ПВО, комплекс, цель…) и <b>ракурс</b> (сзади, сбоку, спереди, снизу, сверху, облёт, пролёт / издалека). Тяните по экрану — камера обходит объект, щипок или колесо — ближе и дальше; справа — зум, скорость (×½, ×¼, стоп-кадр — камеру можно крутить и на нём), ⟲ — ракурс по умолчанию, ↻ — новый бой, ◎ — спрятать весь интерфейс (тап по экрану вернёт).</p>`],
     ['Ударное оружие', `<p><b>Свободнопадающие</b> — кружок точки падения (CCIP) на экране, сбрасывать, когда он на цели. <b>Лазерные</b> — контейнер захватывает цель сам (1–18 км, самолёт не ниже 400 м, цель не закрыта домами; «ЦЕЛЬ» — другая цель), сбросьте «В ЗОНЕ», держите подсвет до попадания (корпус и здания его срывают). <b>ТВ</b> — захват до пуска, дальше сами; ночью не работают. <b>ПРР</b> — по включённой РЛС впереди.</p>`],
     ['Оборона волнами', `<p>Очки обороны тратятся на комплексы; за сбитых и уцелевшие объекты начисляются новые. Ценность — сумма уцелевших военных объектов (узел связи, командный пункт, склады, аэродром, база, парк техники); ниже 40 % — поражение. Командир видит то, что видит сеть РЛС; кнопки комплекса: «Управлять», «РЛС вкл/выкл», «Огонь: свободный / по команде».</p>
       <p>Оператор: тап по отметке на круговом обзоре — назначить цель, захват занимает реальное время станции, затем «ПУСК». Пушки — ведите прицел в кружок упреждения и держите «ОГОНЬ». ПЗРК — наведите перекрестие на самолёт, дождитесь тона захвата.</p>`],
@@ -298,6 +332,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function renderStats() {
     const s = stats(), g = setup.game;
     if (g === 'online') { $('lobbyStats').innerHTML = 'Онлайн: авиация против ПВО города, три волны.'; return; }
+    if (g === 'photo') { $('lobbyStats').innerHTML = 'Съёмка: бой идёт сам, вы — оператор камеры.'; return; }
     $('lobbyStats').innerHTML = g === 'training' ? `Обучение: ${Object.values(LESSONS).flat().filter((l) => lessonsDone()[l.id]).length} из ${Object.values(LESSONS).flat().length} уроков пройдено.`
       : g === 'multi' ? (s.multi ? `Рекорд «Мульти-волны»: <b>${s.multi.best.toLocaleString('ru-RU')}</b> очков · боёв ${s.multi.runs}` : 'Мульти-волну пока не играли.')
       : g === 'air' ? (s.air ? `Рекорд вылета: <b>${s.air.best.toLocaleString('ru-RU')}</b> очков · вылетов ${s.air.runs}` : 'Вылетов пока не было.')

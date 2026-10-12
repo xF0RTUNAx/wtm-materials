@@ -5,10 +5,10 @@
 // пуск, захват, РЛС, ручное наведение, покупки) уходят серверу — их перехватывает обёртка методов зеркала (wrapMirror).
 // Чужие самолёты и боты — «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
-import * as O from './sim/online.js?v=20261020c';
-import * as MW from './sim/online-multi.js?v=20261020c';
-import { AG, SAM } from './arsenal.js?v=20261020c';
-import { LNCH } from './launchers.js?v=20261020c';
+import * as O from './sim/online.js?v=20261020d';
+import * as MW from './sim/online-multi.js?v=20261020d';
+import { AG, SAM } from './arsenal.js?v=20261020d';
+import { LNCH } from './launchers.js?v=20261020d';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -163,7 +163,7 @@ export function createNet(C) {
     const S = C.S; if (!S) return;
     N.battle.wave = m.wave;
     for (const u of [...S.units]) S.removeUnit(u);
-    for (const [id, k, x, z, roof, owner, yaw, dead] of m.units) { if (!SAM[k]) continue; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.dead = !!dead; }
+    for (const [id, k, x, z, roof, owner, yaw, dead] of m.units) { if (!SAM[k]) continue; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.dead = !!dead; if (N.battle.kind === 'multi') u.spotted = true; } // мульти-волна: атакующему сервер шлёт только засечённые
     for (const [id, hp, dead] of m.objects) { const o = S.objects.find((q) => q.id === id); if (o) { o.hp = hp; if (dead && !o.dead) { o.dead = true; C.objLook(id, true); } } }
     C.syncUnits();
   }
@@ -258,10 +258,10 @@ export function createNet(C) {
         const a = ac.get(e[1]); if (!a || a.dead) return; a.dead = true; a.pos.copy(a.sp); C.raidFx.down(a); dropAir(a); return;
       }
       case 'hp': { if (N.me && e[1] === N.me.id) { emit('meHit', e[2], e[3]); return; } const a = ac.get(e[1]); if (a) a.hp = e[2]; return; }
-      case 'ua': { const [, id, k, x, z, roof, owner, yaw] = e; if (!SAM[k] || S.units.some((u) => u.id === id)) return; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; C.syncUnits(); emit('units'); return; }
+      case 'ua': { const [, id, k, x, z, roof, owner, yaw] = e; if (!SAM[k] || S.units.some((u) => u.id === id)) return; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.spotted = true; C.syncUnits(); emit('units'); return; } // засечён разведкой / по излучению — атакующему виден (samKnown)
       case 'ur': { const u = S.units.find((q) => q.id === e[1]); if (u) { S.removeUnit(u); C.syncUnits(); emit('units'); } return; }
       case 'um': { const u = S.units.find((q) => q.id === e[1]); if (u) { S.moveUnit(u, e[2], e[3], !!e[4]); u.cov = null; C.syncUnits(); emit('units'); } return; }
-      case 'kl': emit('kill', e[1], e[2], e[3]); return;
+      case 'kl': emit('kill', e[1], e[2], e[3], e[4] || '', e[5] || '', e[6] || '', e[7] || ''); return;
       case 'ai': if (N.me && e[1] === N.me.id) { N.myCraft = false; emit('meAI'); } return;
       case 'out': if (N.me && e[1] === N.me.id) { N.myCraft = false; emit('meOut'); } return;
       case 'zr': if (N.me && e[1] === N.me.id) emit('resupply', e); return; // зона пополнения: [_, id, топливо, боекомплект, осталось топлива, осталось БК, подвеска, ЛТЦ, диполи]

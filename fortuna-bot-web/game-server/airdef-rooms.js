@@ -288,9 +288,9 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       wpnEnd: (w, res) => push(r, ['we', w.id, ...v3(w.pos), res.intercepted ? 1 : 0]),
       explosion: (p, R, kind) => push(r, ['x', ...v3(p), r1(R), kind]),
       cmDrop: (a, type) => push(r, ['cm', a.id, type === 'flare' ? 1 : 2]),
-      objectDestroyed: (o, by, owner) => { push(r, ['od', o.id]); updValue(r); const p = airOwner(r, owner); if (p) p.score += o.value * (r.targets.some((q) => q.id === o.id) ? 2 : 0.5); killLog(r, p ? p.name : 'Авиация', o.name, by); },
+      objectDestroyed: (o, by, owner) => { push(r, ['od', o.id]); updValue(r); const p = airOwner(r, owner); if (p) p.score += o.value * (r.targets.some((q) => q.id === o.id) ? 2 : 0.5); killLog(r, p ? p.name : 'Авиация', o.name, by, 'air', 'pvo', owner && owner.plane ? 'p:' + owner.plane : ''); },
       objectHit: () => updValue(r),
-      unitDestroyed: (u, by, owner) => { push(r, ['ud', u.id]); r.waveRes.unitKills++; if (u.S.radar) r.waveRes.radarKills++; const p = airOwner(r, owner); if (p) { p.kills++; p.score += 40; } const v = r.players.get(u.owner); killLog(r, p ? p.name : 'Авиация', `${u.S.short}${v ? ' (' + v.name + ')' : ''}`, by); },
+      unitDestroyed: (u, by, owner) => { push(r, ['ud', u.id]); r.waveRes.unitKills++; if (u.S.radar) r.waveRes.radarKills++; const p = airOwner(r, owner); if (p) { p.kills++; p.score += 40; } const v = r.players.get(u.owner); killLog(r, p ? p.name : 'Авиация', v ? v.name : 'ПВО', by, 'air', 'pvo', owner && owner.plane ? 'p:' + owner.plane : '', 'u:' + u.key); },
     };
   }
   function raidFx(r) {
@@ -301,7 +301,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   }
   const airOwner = (r, a) => (a ? r.players.get(a.owner || a.fromHuman || a.id) || null : null);
   // журнал сбитий: кто — кого — чем (клиенты показывают 6 с)
-  const killLog = (r, who, whom, by) => push(r, ['kl', String(who || '?').slice(0, 24), String(whom || '?').slice(0, 40), String(by || '').slice(0, 24)]);
+  // журнал сбитий: кто, кого, чем; команды обоих (свои у игры — синим, чужие — красным) и техника под ником: «p:самолёт» / «u:комплекс»
+  const killLog = (r, who, whom, by, wt = '', mt = '', wv = '', mv = '') => push(r, ['kl', String(who || '?').slice(0, 24), String(whom || '?').slice(0, 40), String(by || '').slice(0, 24), wt, mt, String(wv).slice(0, 24), String(mv).slice(0, 24)]);
   function updValue(r) {
     let v = 0; for (const o of r.targets) { const S = r.S.objects.find((q) => q.id === o.id); v += o.value * (S.dead ? 1 : Math.min(1, S.dmgTaken / S.hpMax)); }
     r.valueK = v / r.value0;
@@ -327,7 +328,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     const shooter = r.S.units.find((u) => !u.dead && u.track === a) || null;
     const sp = shooter && r.players.get(shooter.owner);
     if (sp) { sp.kills++; sp.score += 50; } else { const pv = team(r, 'pvo'); for (const p of pv) p.score += 50 / pv.length; }
-    killLog(r, sp ? `${sp.name} (${shooter.S.short})` : by === 'ЗЕМЛЯ' ? 'Земля' : 'ПВО', owner ? owner.name : 'Самолёт', by);
+    killLog(r, sp ? sp.name : by === 'ЗЕМЛЯ' ? 'Земля' : 'ПВО', owner ? owner.name : 'Самолёт', by, by === 'ЗЕМЛЯ' && !sp ? '' : 'pvo', 'air', shooter ? 'u:' + shooter.key : '', a.plane ? 'p:' + a.plane : '');
     J(r, 'down', { who: owner ? owner.name : '?', by });
   }
 

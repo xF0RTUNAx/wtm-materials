@@ -286,7 +286,7 @@ export function createAudio() {
       g.gain.setValueAtTime(vol, t0); g.gain.setValueAtTime(vol, t0 + Math.max(0, dur - 0.02)); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
       chain(o, g, avionics); o.start(t0); o.stop(t0 + dur + 0.02);
     },
-    growl(level, freq) { if (!ctx) return; E.growlG.gain.value = muted ? 0 : level; E.growlO.frequency.value = freq; },
+    growl(level, freq) { if (!ctx || !Number.isFinite(level) || !Number.isFinite(freq)) return; E.growlG.gain.value = muted ? 0 : level; E.growlO.frequency.value = freq; },
     gun(on) { if (ctx) set(E.gunG.gain, on && !muted ? 0.36 : 0, on ? 0.008 : 0.05); }, // громче прежнего (было 0,22)
     // пуск своей ракеты: хлопок пиропатрона, рёв двигателя уходит вперёд и выше (полоса «съезжает»)
     launch() {

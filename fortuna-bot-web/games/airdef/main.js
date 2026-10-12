@@ -8,26 +8,27 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261020c';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020c';
-import { createPipeline } from '../drone/post.js?v=20261020c';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020c';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020c';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020c';
-import { createStrike, MODES } from './sim/strike.js?v=20261020c';
-import { createRaid } from './sim/raid.js?v=20261020c';
-import { POD } from './sim/combined.js?v=20261020c';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020c';
-import { slotCount } from './launchers.js?v=20261020c';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020c';
-import { createSound } from './sound.js?v=20261020c';
-import { createAir } from './air.js?v=20261020c';
-import { createDefense } from './defense.js?v=20261020c';
-import { createDirector } from './director.js?v=20261020c';
-import { createOnline } from './online.js?v=20261020c';
-import { createShell } from './shell.js?v=20261020c';
-import { createTraining, LESSONS } from './training.js?v=20261020c';
-import { createMenu } from './menu.js?v=20261020c';
+import { buildCity, CITY } from './city.js?v=20261020d';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020d';
+import { createPipeline } from '../drone/post.js?v=20261020d';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020d';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020d';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020d';
+import { createStrike, MODES } from './sim/strike.js?v=20261020d';
+import { createRaid } from './sim/raid.js?v=20261020d';
+import { POD } from './sim/combined.js?v=20261020d';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020d';
+import { slotCount } from './launchers.js?v=20261020d';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020d';
+import { createSound } from './sound.js?v=20261020d';
+import { createAir } from './air.js?v=20261020d';
+import { createDefense } from './defense.js?v=20261020d';
+import { createDirector } from './director.js?v=20261020d';
+import { createOnline } from './online.js?v=20261020d';
+import { createShell } from './shell.js?v=20261020d';
+import { createTraining, LESSONS } from './training.js?v=20261020d';
+import { createPhoto } from './photo.js?v=20261020d';
+import { createMenu } from './menu.js?v=20261020d';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -122,7 +123,7 @@ if (!MODES[setup.diff]) setup.diff = 'arcade';
 if (!LOADOUTS[setup.era]) setup.era = 2;
 if (!LOADOUTS[setup.era][setup.lo]) setup.lo = 0;
 if (!DEFENSE[setup.side]) setup.side = 'east';
-if (!['air', 'defense', 'multi', 'training', 'online'].includes(setup.game)) setup.game = 'air';
+if (!['air', 'defense', 'multi', 'training', 'online', 'photo'].includes(setup.game)) setup.game = 'air';
 
 // ═════════════ Город и рендер ═════════════
 const city = buildCity(1);
@@ -708,7 +709,7 @@ $('mute').textContent = snd.muted ? '✕♪' : '♪';
 for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto);
 addEventListener('keydown', (e) => {
   if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; // ввод текста (код комнаты, чат команды) — не управление
-  if (C.state === 'play' && (e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) { C.togglePause(); return; }
+  if (C.state === 'play' && (e.code === 'Escape' || e.code === 'KeyP') && !e.repeat) { if (e.code === 'Escape' && !C.paused && C.ctrl && C.ctrl.onEsc && C.ctrl.onEsc()) return; C.togglePause(); return; } // Esc в расстановке — отмена размещения
   if (C.ctrl && C.ctrl.onKey && !C.paused) C.ctrl.onKey(e, true);
 });
 addEventListener('keyup', (e) => { if (C.ctrl && C.ctrl.onKey) C.ctrl.onKey(e, false); });
@@ -747,7 +748,7 @@ function frame(now) {
   // «Кастомный»: своё ограничение (30 к/с — вдвое меньше нагрев и расход батареи)
   // телефон: 60 к/с — только в полёте за самолёт; оборона, мульти-волна, карта, оператор и наблюдение — 30 к/с (камера там
   // медленная, а нагрев и расход батареи вдвое меньше). Свой предел из «Кастомного» — главнее
-  const cc = C.ctrl, fly = !!(cc && (cc.craft || (cc.inner && cc.inner.craft)));
+  const cc = C.ctrl, fly = !!(cc && (cc.craft || cc.fps60 || (cc.inner && cc.inner.craft))); // «Съёмка» — тоже 60
   const capMs = C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / (fly ? 60 : 30) : 0;
   if (capMs && now - lastDraw < capMs - 2) return;
   const ms = now - lastDraw; lastDraw = now;
@@ -756,14 +757,16 @@ function frame(now) {
   C.t = t;
   const ctrl = C.ctrl;
   const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза — только меню), бой считает сервер
-  if ((!C.paused || online) && ctrl) {
+  // «Съёмка»: замедление и стоп-кадр (ctrl.dtK) — бой идёт медленнее, камера — как обычно
+  const dts = dt * (ctrl && ctrl.dtK && !online ? ctrl.dtK() : 1);
+  if ((!C.paused || online) && ctrl && dts > 0) {
     // ускорение времени (смотреть удар «Мульти-волны»): несколько шагов боя за кадр
     const nK = !online && ctrl.timeK ? ctrl.timeK() : 1;
     for (let k = 0; k < nK; k++) {
-      if (ctrl.update) ctrl.update(dt, t);
+      if (ctrl.update) ctrl.update(dts, t);
       if (online) C.net.update(dt);
-      else if (C.S && ctrl.sim !== false) { if (C.raid) C.raid.step(dt); C.S.step(dt); }
-      if (C.fx) C.fx.update(dt);
+      else if (C.S && ctrl.sim !== false) { if (C.raid) C.raid.step(dts); C.S.step(dts); }
+      if (C.fx) C.fx.update(dts);
     }
   }
   if (view) { camera.position.set(view[0], view[1], view[2]); camera.rotation.set((view[4] || 0) * D2R, (view[3] || 0) * D2R, 0); }
@@ -772,7 +775,7 @@ function frame(now) {
   { let nearW = clamp((camera.position.y - city.groundH(camera.position.x, camera.position.z)) * 0.006, 3, 20);
     if (ctrl && ctrl.near && ctrl.near()) nearW = Math.min(nearW, ctrl.near()); // крупный план у самолёта — ближе
     if (Math.abs(camera.near - nearW) > camera.near * 0.15) { camera.near = nearW; camera.updateProjectionMatrix(); } }
-  syncWorld(C.paused ? 0 : dt, t);
+  syncWorld(C.paused ? 0 : dts, t);
   objLod(camera.position, P.lodObj);
   updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t); // окно ТВ — свой набор моделей вблизи (C.podPass)
   // тактическая карта обороны закрывает весь экран — 3D-кадр не рисуем (телефон не греется)
@@ -817,7 +820,7 @@ setTimeout(() => {
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);
   ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
-  ctrls.director = createDirector(C); ctrls.training = createTraining(C, ctrls);
+  ctrls.director = createDirector(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
   resize();

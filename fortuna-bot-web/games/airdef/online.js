@@ -3,11 +3,11 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261020c';
-import * as O from './sim/online.js?v=20261020c';
-import * as MW from './sim/online-multi.js?v=20261020c';
-import { AG, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020c';
-import { MODES } from './sim/strike.js?v=20261020c';
+import { createNet } from './net.js?v=20261020d';
+import * as O from './sim/online.js?v=20261020d';
+import * as MW from './sim/online-multi.js?v=20261020d';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020d';
+import { MODES } from './sim/strike.js?v=20261020d';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -172,7 +172,9 @@ export function createOnline(C, ctrls) {
   N.on('meHit', (hp, by) => ctrls.air.netHit(hp, by));
   N.on('meDown', () => { N.clog('down', { hp: C.player && C.player.hp, pos: C.player && C.player.pos.toArray().map(Math.round) }); ctrls.air.netDown('Самолёт сбит'); });
   N.on('meAI', () => { N.clog('to_ai', { hidden: document.visibilityState }); ctrls.air.netDown('Связь пропала — самолёт довёл ИИ'); });
-  N.on('kill', (who, whom, by) => { feed.push({ t: performance.now(), s: `${who} → ${whom}${by ? ' · ' + by : ''}` }); if (feed.length > 6) feed.shift(); });
+  // журнал сбитий: своя команда — синим, противник — красным; под ником — техника, которой он управлял в этот момент
+  const vehName = (v) => { const [k, key] = String(v || '').split(':'); return !key ? '' : k === 'p' ? (PLANES[key] || (CARRIERS[key] && CARRIERS[key].name) || key) : k === 'u' ? (SAM[key] ? SAM[key].short : key) : (AG[key] ? AG[key].short : key); };
+  N.on('kill', (who, whom, by, wt, mt, wv, mv) => { feed.push({ t: performance.now(), who, whom, by, wt, mt, wv: vehName(wv), mv: vehName(mv) }); if (feed.length > 6) feed.shift(); });
   N.on('help', (m) => { feed.push({ t: performance.now(), s: `${m.name}: Мне нужна помощь!`, help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); snd.alarm(); });
   N.on('chat', () => ctrls.defense.chatSync());
   N.on('roundEnd', (m) => { ctrls.defense.setNetRes(m); C.say(`Раунд ${m.round}: ${MW.TEAM_NAME[m.atk]} разрушил ${Math.round(m.k * 100)}% ценности объектов${m.last ? '' : ' · стороны меняются'}`, 6); });
@@ -218,7 +220,26 @@ export function createOnline(C, ctrls) {
     const hx = C.hx, now = performance.now();
     feed = feed.filter((f) => now - f.t < 6000); helps = helps.filter((h) => now - h.t < 8000);
     hx.textAlign = 'right'; hx.font = '600 12px -apple-system, Segoe UI, sans-serif'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
-    feed.forEach((f, i) => { const a = Math.min(1, (6000 - (now - f.t)) / 800); hx.fillStyle = f.help ? `rgba(253,186,116,${a})` : `rgba(255,255,255,${a})`; hx.fillText(f.s, C.VW - 60, 70 + i * 17); });
+    const myT = N.myTeam(), col = (t, a) => (!t ? `rgba(255,255,255,${a})` : t === myT ? `rgba(96,165,250,${a})` : `rgba(248,113,113,${a})`);
+    let y = 70;
+    for (const f of feed) {
+      const a = Math.min(1, (6000 - (now - f.t)) / 800);
+      if (f.help) { hx.fillStyle = `rgba(253,186,116,${a})`; hx.fillText(f.s, C.VW - 60, y); y += 17; continue; }
+      // справа налево: « · оружие», ник цели, « → », ник стрелка; под никами — техника мелко
+      let x = C.VW - 60; hx.font = '600 12px -apple-system, Segoe UI, sans-serif';
+      const tail = f.by ? ` · ${f.by}` : '', wTail = hx.measureText(tail).width; hx.fillStyle = `rgba(226,232,240,${a})`; hx.fillText(tail, x, y); x -= wTail;
+      const wWhom = hx.measureText(f.whom).width; hx.fillStyle = col(f.mt, a); hx.fillText(f.whom, x, y); const cWhom = x - wWhom / 2; x -= wWhom;
+      const arr = ' → ', wArr = hx.measureText(arr).width; hx.fillStyle = `rgba(226,232,240,${a})`; hx.fillText(arr, x, y); x -= wArr;
+      const wWho = hx.measureText(f.who).width; hx.fillStyle = col(f.wt, a); hx.fillText(f.who, x, y); const cWho = x - wWho / 2;
+      if (f.wv || f.mv) {
+        hx.font = '500 10px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center';
+        if (f.wv) { hx.fillStyle = col(f.wt, a * 0.85); hx.fillText(`(${f.wv})`, cWho, y + 12); }
+        if (f.mv) { hx.fillStyle = col(f.mt, a * 0.85); hx.fillText(`(${f.mv})`, cWhom, y + 12); }
+        hx.textAlign = 'right'; y += 12;
+      }
+      y += 17;
+    }
+    hx.font = '600 12px -apple-system, Segoe UI, sans-serif';
     for (const h of helps) {
       if (!h.p) continue;
       const p = C.proj(new THREE.Vector3(h.p[0], C.city.groundH(h.p[0], h.p[1]) + 60, h.p[1])); if (!p) continue;

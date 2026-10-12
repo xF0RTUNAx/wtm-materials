@@ -152,7 +152,7 @@
   #wpn .ms .tg i { display: inline-block; width: 28px; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; } #wpn .ms .tg i > u { display: block; height: 100%; background: #fbbf24; }
   #wpn .sc { font-weight: 800; color: #fde68a; margin-top: 2px; }
   #tThr.ab { background: rgba(160,70,10,.65); border-color: #fb923c; }
-  body.coarse #tCam { display: none; } body.coarse.spect #tCam, body.coarse.adnet #tCam { display: flex; }
+  body.coarse #tCam { display: none; } body.coarse.spect #tCam { display: flex; }
   #rwr { position: absolute; right: max(14px, var(--sa-r)); bottom: 14px; width: 150px; height: 150px; }
   #warn { position: fixed; top: 24%; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 900; color: #ff5b5b; display: none; letter-spacing: .06em; text-align: center; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #msg { position: fixed; top: 31%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; color: #fde68a; display: none; text-align: center; max-width: 80vw; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
@@ -298,6 +298,21 @@
   #netPlan h3 { margin: 2px 0 6px; font-size: 14px; } #netPlan .opt.no { opacity: .45; } #netPlan .pr { font-weight: 800; color: #fde68a; }
   body.short #netPlan { width: min(300px, 46vw); font-size: 11.5px; }
   /* кнопки листания планов фона меню (над подписью справа внизу; карточка меню — ниже по z) */
+  /* «Съёмка» (photo.js): объект и ракурс внизу, справа — дальность, зум, скорость; .clean — без интерфейса */
+  #photoZone { position: fixed; inset: 0; z-index: 9; display: none; touch-action: none; }
+  #photoUi { display: none; }
+  body.photo #photoZone, body.photo #photoUi { display: block; }
+  body.photo #hud, body.photo #touch, body.photo #warn, body.photo #msg, body.photo #hint, body.photo #podBox, body.photo #map, body.photo #ask { display: none !important; }
+  body.photo.clean #photoUi, body.photo.clean #pause, body.photo.clean #mute, body.photo.clean #exit, body.photo.clean #perf { display: none !important; }
+  .phRow { position: fixed; z-index: 14; left: max(10px, var(--sa-l)); right: calc(max(10px, var(--sa-r)) + 52px); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  .phRow::-webkit-scrollbar { display: none; }
+  #phSubj { bottom: calc(max(8px, var(--sa-b)) + 40px); } #phAng { bottom: max(8px, var(--sa-b)); }
+  .phRow button, #phSide button { flex: none; height: 32px; padding: 0 11px; border-radius: 10px; border: 1px solid rgba(255,255,255,.28); background: rgba(10,16,24,.6); color: #fff;
+    font: 600 12.5px -apple-system, Segoe UI, sans-serif; white-space: nowrap; cursor: pointer; }
+  .phRow button.on { background: rgba(251,146,60,.85); border-color: #fdba74; }
+  #phSide { position: fixed; z-index: 14; right: max(10px, var(--sa-r)); bottom: max(8px, var(--sa-b)); display: flex; flex-direction: column-reverse; gap: 5px; }
+  #phSide button { width: 42px; padding: 0; font-size: 13px; }
+  #phCap { position: fixed; z-index: 14; left: max(12px, var(--sa-l)); top: var(--top); max-width: calc(100vw - 150px); font: 600 12.5px -apple-system, Segoe UI, sans-serif; text-shadow: 0 0 4px #000; pointer-events: none; line-height: 36px; }
   #promoNav { position: fixed; z-index: 31; right: max(14px, var(--sa-r)); bottom: 36px; display: none; gap: 6px; }
   #promoNav button { width: 40px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,255,255,.3); background: rgba(10,20,30,.55); color: #fff; font-size: 14px; cursor: pointer; }
   #promoNav button:active { background: rgba(251,146,60,.6); }
@@ -385,6 +400,9 @@
 
 <div id="netWait"><span class="dot"></span><span class="t">Ищем бой…</span><button>Отмена</button></div>
 <div id="netPlan"></div>
+<div id="photoZone"></div>
+<div id="photoUi"><div id="phCap"></div><div class="phRow" id="phSubj"></div><div class="phRow" id="phAng"></div>
+  <div id="phSide"><button data-ph="hide" title="Спрятать интерфейс (H) — тап по экрану вернёт">◎</button><button data-ph="new" title="Новый бой (N)">↻</button><button data-ph="reset" title="Ракурс по умолчанию (R)">⟲</button><button data-ph="speed" id="phSpd" title="Скорость: ×1 / ×½ / ×¼ / стоп-кадр">×1</button><button data-ph="zoom" id="phZoom" title="Угол поля зрения (Z)">ЗУМ</button><button data-ph="far" title="Дальше (−)">－</button><button data-ph="near" title="Ближе (+)">＋</button></div></div>
 <div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план">◀</button><button data-nav="1" aria-label="Следующий план">▶</button></div>
 <div class="screen on" id="menu">
   <div class="card">
@@ -436,7 +454,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261020c"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261020c"></script>
+<script src="../config.js?v=20261020d"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261020d"></script>
 </body>
 </html>

@@ -9,14 +9,14 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261020c';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020c';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020c';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020c';
+import { CITY, mulberry32 } from './city.js?v=20261020d';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020d';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020d';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020d';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020c';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020c';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020c';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020d';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020d';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020d';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -25,7 +25,7 @@ export function createDefense(C) {
   const { $, city, camera, snd, IS_TOUCH } = C;
   C.WAVES = WAVES;
   const V3 = () => new THREE.Vector3();
-  const st = { phase: 'plan', wave: 0, waves: WAVES, budget: 0, score: 0, value0: 1, downs: 0, leaked: 0, lostUnits: 0, placing: null, sel: null, moving: false,
+  const st = { phase: 'plan', wave: 0, waves: WAVES, budget: 0, score: 0, value0: 1, downs: 0, leaked: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false,
     view: 'map', op: null, opts: {}, waveDowns: 0, waveLeak: 0, waveLost: [], over: false, rnd: Math.random, msg: '', msgT: 0, net: null, ready: false,
     multi: null, defSide: null, plan: null, flash: new Map(), watch: null, timeK: 1, mres: null, cue: null, watchNextAt: null, edKey: null };
   const dside = () => st.defSide || C.setup.side; // сторона ПВО (в «Мульти-волне» за удар — противник)
@@ -46,19 +46,26 @@ export function createDefense(C) {
   // присваивание размера очищает холст — только если размер правда другой (иначе динамическое разрешение 3D-кадра «моргало» картой)
   function sizeMap() { const k = Math.min(2, devicePixelRatio || 1), w = Math.round(C.VW * k), h = Math.round(C.VH * k); if (tm.width !== w || tm.height !== h) { tm.width = w; tm.height = h; } }
   // «тень» зоны: на высоте 300 м над землёй по 72 направлениям — докуда антенна (или глаз расчёта) видит без перерыва
-  function coverage(u) {
-    const S = u.S, R = S.rmax, pts = [], eye = u.ant, h = 300;
-    for (let i = 0; i < 72; i++) {
-      const a = i / 72 * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
+  // (для ещё не поставленного — covAt: место размещения или переноса; n направлений, m шагов по дальности)
+  function covAt(S, x0, z0, eye, n = 72, m = 40) {
+    const R = S.rmax, pts = [], h = 300;
+    for (let i = 0; i < n; i++) {
+      const a = i / n * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a);
       let d = R;
-      for (let s = 1; s <= 40; s++) {
-        const r = R * s / 40, x = u.pos.x + dx * r, z = u.pos.z + dz * r, y = city.groundH(x, z) + Math.min(h, S.hmax);
-        if (!city.los(eye.x, eye.y, eye.z, x, y, z, 15)) { d = R * (s - 1) / 40; break; }
+      for (let s = 1; s <= m; s++) {
+        const r = R * s / m, x = x0 + dx * r, z = z0 + dz * r, y = city.groundH(x, z) + Math.min(h, S.hmax);
+        if (!city.los(eye.x, eye.y, eye.z, x, y, z, 15)) { d = R * (s - 1) / m; break; }
       }
-      pts.push([u.pos.x + dx * Math.max(d, S.rmin), u.pos.z + dz * Math.max(d, S.rmin)]);
+      pts.push([x0 + dx * Math.max(d, S.rmin), z0 + dz * Math.max(d, S.rmin)]);
     }
-    u.cov = pts;
+    return pts;
   }
+  function coverage(u) { u.cov = covAt(u.S, u.pos.x, u.pos.z, u.ant); }
+  // антенна (или глаз расчёта) на месте x, z — как у addUnit: земля или крыша + мачта
+  const eyeAt = (S, x, z, roof) => ({ x, z, y: (roof ? city.topAt(x, z) : city.groundH(x, z)) + (S.radar ? S.radar.mast : 2) });
+  function drawCov(pts, fill, stroke) { tx.fillStyle = fill; tx.strokeStyle = stroke; tx.lineWidth = 1.5; tx.beginPath(); pts.forEach(([x, z], i) => { const [a, b] = w2s(x, z); if (i) tx.lineTo(a, b); else tx.moveTo(a, b); }); tx.closePath(); tx.fill(); tx.stroke(); }
+  // мышь (ПК) в размещении и переносе: тень зоны — под курсором, грубее и не чаще ~7 раз в секунду
+  const hov = { x: 1e9, z: 1e9, t: 0, cov: null, ok: false };
   const unitColor = (u) => (u.dead ? '#555' : u.track ? (C.S.sams.some((m) => !m.dead && m.unit === u) || u.gunOn ? '#ff4d4d' : '#fde047') : u.S.radar && u.emit ? '#4ade80' : u.S.radar ? '#94a3b8' : '#86efac');
   function drawMap(t) {
     navStep();
@@ -84,8 +91,8 @@ export function createDefense(C) {
       const [px, py] = w2s(u.pos.x, u.pos.z);
       if (u === st.sel) {
         if (!u.cov) coverage(u);
-        tx.fillStyle = 'rgba(74,222,128,.13)'; tx.strokeStyle = 'rgba(74,222,128,.75)'; tx.lineWidth = 1.5;
-        tx.beginPath(); u.cov.forEach(([x, z], i) => { const [a, b] = w2s(x, z); if (i) tx.lineTo(a, b); else tx.moveTo(a, b); }); tx.closePath(); tx.fill(); tx.stroke();
+        const was = st.moving && st.phase === 'plan' && (st.draft || ptr.over); // перенос: нынешняя зона — серой, новая — зелёной
+        drawCov(u.cov, was ? 'rgba(148,163,184,.08)' : 'rgba(74,222,128,.13)', was ? 'rgba(148,163,184,.55)' : 'rgba(74,222,128,.75)');
         tx.setLineDash([5, 5]); tx.strokeStyle = 'rgba(255,255,255,.4)'; tx.beginPath(); tx.arc(px, py, u.S.rmax * view.k, 0, 7); tx.stroke(); tx.setLineDash([]);
       } else if (u.S.type === 'jammer') { tx.fillStyle = 'rgba(56,189,248,.08)'; tx.strokeStyle = 'rgba(56,189,248,.5)'; tx.setLineDash([3, 5]); tx.beginPath(); tx.arc(px, py, u.S.jamR * view.k, 0, 7); tx.fill(); tx.stroke(); tx.setLineDash([]); }
       else { tx.strokeStyle = 'rgba(148,163,184,.22)'; tx.lineWidth = 1; tx.beginPath(); tx.arc(px, py, u.S.rmax * view.k, 0, 7); tx.stroke(); }
@@ -132,9 +139,22 @@ export function createDefense(C) {
     // постановка: «призрак» под пальцем
     if ((st.placing || st.moving) && ptr.over) {
       const S = st.placing ? SAM[st.placing] : st.sel.S, [wx, wz] = s2w(ptr.x, ptr.y), ok = placeOk(S, wx, wz);
+      const now = performance.now();
+      if (Math.hypot(wx - hov.x, wz - hov.z) * view.k > 4 && now - hov.t > 140) { hov.x = wx; hov.z = wz; hov.t = now; hov.ok = ok; hov.cov = ok ? covAt(S, wx, wz, eyeAt(S, wx, wz, buildingAt(city, wx, wz) >= 0), 48, 28) : null; }
+      if (hov.cov && hov.ok) drawCov(hov.cov, 'rgba(74,222,128,.10)', 'rgba(74,222,128,.55)');
       tx.strokeStyle = ok ? 'rgba(74,222,128,.9)' : 'rgba(248,113,113,.9)'; tx.lineWidth = 1.5; tx.setLineDash([4, 4]);
       tx.beginPath(); tx.arc(ptr.x, ptr.y, S.rmax * view.k, 0, 7); tx.stroke(); tx.setLineDash([]);
       tx.fillStyle = ok ? '#4ade80' : '#f87171'; tx.beginPath(); tx.arc(ptr.x, ptr.y, 6, 0, 7); tx.fill();
+    }
+    // выбранное место (до «Подтвердить»): зона и метка; при переносе — линия от комплекса
+    if (st.draft && st.phase === 'plan' && (st.placing || (st.moving && st.sel))) {
+      const S = st.placing ? SAM[st.placing] : st.sel.S, [dx, dy] = w2s(st.draft.x, st.draft.z);
+      if (!st.draft.cov) st.draft.cov = covAt(S, st.draft.x, st.draft.z, eyeAt(S, st.draft.x, st.draft.z, st.draft.roof)); // что будет перекрыто с нового места
+      drawCov(st.draft.cov, 'rgba(74,222,128,.16)', 'rgba(74,222,128,.85)');
+      if (st.moving) { const [ux, uy] = w2s(st.sel.pos.x, st.sel.pos.z); tx.strokeStyle = 'rgba(253,230,138,.85)'; tx.lineWidth = 1.5; tx.setLineDash([3, 4]); tx.beginPath(); tx.moveTo(ux, uy); tx.lineTo(dx, dy); tx.stroke(); }
+      tx.strokeStyle = 'rgba(253,230,138,.95)'; tx.lineWidth = 2; tx.setLineDash([6, 4]); tx.beginPath(); tx.arc(dx, dy, Math.max(10, S.rmax * view.k), 0, 7); tx.stroke(); tx.setLineDash([]);
+      tx.fillStyle = 'rgba(253,230,138,.95)'; tx.beginPath(); tx.arc(dx, dy, 7, 0, 7); tx.fill(); tx.strokeStyle = 'rgba(0,0,0,.7)'; tx.lineWidth = 1.5; tx.stroke();
+      tx.font = '700 12px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; tx.lineWidth = 3; const lb = `${S.short} — «Подтвердить»`; tx.strokeText(lb, dx, dy - 12); tx.fillText(lb, dx, dy - 12); tx.textAlign = 'left';
     }
     drawMsg();
   }
@@ -304,6 +324,7 @@ export function createDefense(C) {
   };
   tm.addEventListener('pointerup', up); tm.addEventListener('pointercancel', up);
   tm.addEventListener('pointerleave', () => { ptr.over = false; });
+  tm.addEventListener('contextmenu', (e) => { e.preventDefault(); if (st.phase === 'plan' && (st.placing || st.moving)) cancelDraft(); }); // ПК: правая кнопка — отмена размещения / переноса
   tm.addEventListener('wheel', (e) => { zoomAt(e.deltaY < 0 ? 1.2 : 1 / 1.2, e.clientX, e.clientY); e.preventDefault(); }, { passive: false });
   // ── панель перемещения: джойстик (сдвиг тем быстрее, чем дальше палец от центра — у центра точно и медленно),
   // ползунок масштаба (−/+), «вся карта». Масштаб — логарифмический: 0 — весь город, 100 — отдельные дома.
@@ -354,29 +375,48 @@ export function createDefense(C) {
       if (st.pick) { if (!best) { say('Коснитесь цели: объект или засечённый ЗРК'); snd.deny(); return; } setTkey(st.pick.k, st.pick.i, best); st.pick = null; st.tsel = best; say(`${uName(st.edKey, st.edUnit)} → «${tName(best)}»`, 2); snd.click(); afterEdit(); return; } // окно — уже новой цели
       st.tsel = best; if (best) st.edKey = null; snd.click(); renderSide(); return;
     }
+    // размещение и перенос: каждое касание — новое место («призрак» с зоной), купить или переехать — «Подтвердить»
     if (st.phase === 'plan' && (st.placing || st.moving)) {
+      if (st.moving && !st.draft) { const o = unitAt(px, py); if (o && o !== st.sel) { st.sel = o; st.moving = mine(o); snd.click(); renderSide(); return; } } // место ещё не выбрано — касание другого комплекса выбирает его
       const S = st.placing ? SAM[st.placing] : st.sel.S;
       if (!placeOk(S, wx, wz)) { say(S.hp <= 15 ? 'Здесь нельзя: нужна земля или плоская крыша' : 'Здесь нельзя: дом, река или край карты'); snd.deny(); return; }
-      const roof = buildingAt(city, wx, wz) >= 0;
-      if (st.net) { // онлайн: покупку и переезд проверяет и делает сервер (комплекс придёт событием)
-        if (st.moving) { st.net.move(st.sel.id, wx, wz, roof); st.moving = false; }
-        else { if (costOf(st.placing) > st.budget) { say('Не хватает очков обороны'); snd.deny(); return; } st.net.buyUnit(st.placing, wx, wz, roof); }
-        snd.click(); renderSide(); return;
-      }
-      if (st.moving) { C.S.moveUnit(st.sel, wx, wz, roof); st.sel.cov = null; st.moving = false; C.syncUnits(); snd.click(); renderSide(); return; }
-      const cost = SAM_COST[st.placing];
-      if (cost > st.budget) { say('Не хватает очков обороны'); snd.deny(); return; }
-      st.budget -= cost;
-      const u = C.S.addUnit(st.placing, wx, wz, { roof, skill: 0.75, yaw: st.rnd() * 6.28 });
-      u.paid = cost; C.syncUnits(); st.sel = u; snd.click(); on('place', u);
-      if (SAM_COST[st.placing] > st.budget) st.placing = null;
-      renderSide(); return;
+      st.draft = { x: wx, z: wz, roof: buildingAt(city, wx, wz) >= 0 }; snd.click(); renderSide(); return;
     }
-    // выбор комплекса под пальцем
-    let best = null, bd = IS_TOUCH ? 26 : 16;
-    for (const u of C.S.units) { const [x, y] = w2s(u.pos.x, u.pos.z), d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = u; } }
-    st.sel = best; st.placing = null; if (best) snd.click(); renderSide();
+    // выбор комплекса под пальцем; в расстановке свой — сразу перенос (место — касанием карты, затем «Подтвердить»)
+    const best = unitAt(px, py);
+    st.sel = best; st.placing = null; st.draft = null; st.moving = !!(best && st.phase === 'plan' && mine(best)); if (best) snd.click(); renderSide();
   }
+  function unitAt(px, py) {
+    let best = null, bd = IS_TOUCH ? 26 : 16;
+    for (const u of C.S.units) { if (u.dead) continue; const [x, y] = w2s(u.pos.x, u.pos.z), d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = u; } }
+    return best;
+  }
+  // «Подтвердить»: покупка на выбранном месте или переезд; «Отмена» — без покупки / комплекс остаётся где был
+  function confirmDraft() {
+    const d = st.draft; if (!d) { say('Сначала коснитесь карты — место'); snd.deny(); return; }
+    if (st.moving && st.sel) {
+      if (st.net) st.net.move(st.sel.id, d.x, d.z, d.roof); // онлайн: переезд проверяет и делает сервер
+      else { C.S.moveUnit(st.sel, d.x, d.z, d.roof); st.sel.cov = null; C.syncUnits(); }
+      st.moving = false; st.draft = null; snd.click(); renderSide(); return;
+    }
+    const k = st.placing; if (!k) return;
+    const cost = st.net ? costOf(k) : SAM_COST[k], lim = netLeft(k);
+    if (cost > st.budget) { say('Не хватает очков обороны'); snd.deny(); return; }
+    if (lim !== null && lim <= 0) { say('Лимит первой волны для этого класса'); snd.deny(); return; }
+    if (st.net) st.net.buyUnit(k, d.x, d.z, d.roof); // онлайн: комплекс придёт событием
+    else { st.budget -= cost; const u = C.S.addUnit(k, d.x, d.z, { roof: d.roof, skill: 0.75, yaw: st.rnd() * 6.28 }); u.paid = cost; C.syncUnits(); st.sel = u; on('place', u); }
+    st.placing = null; st.draft = null; snd.click(); renderSide();
+  }
+  function cancelDraft() { if (st.moving) st.sel = null; st.placing = null; st.moving = false; st.draft = null; snd.click(); renderSide(); }
+  // карточка размещения / выбранного своего комплекса в расстановке
+  function placeCard() {
+    if (!st.placing) return '';
+    const S = SAM[st.placing], c = costOf(st.placing);
+    return `<div class="dcard on"><div class="nm"><b>${S.name} — размещение</b><span>${st.draft ? 'место выбрано — коснитесь карты, чтобы сдвинуть' : 'коснитесь карты — место'}${S.hp <= 15 ? ' · можно на плоскую крышу' : ''}${IS_TOUCH ? '' : ' · Enter — подтвердить, Esc или правая кнопка — отмена'}</span></div><span class="pr">${c}</span></div>
+      <div class="dact"><button class="btn" data-a="pok" ${st.draft ? '' : 'disabled'}>Подтвердить −${c}</button><button class="btn alt" data-a="pno">Отмена</button></div>`;
+  }
+  const moveBtns = (u) => (st.moving ? `${st.draft ? '<button class="btn" data-a="pok">Подтвердить перенос</button>' : ''}<button class="btn alt" data-a="pno">${st.draft ? 'Отмена' : 'Не переносить'}</button>` : '<button class="btn alt" data-a="move">Переместить</button>');
+  const moveHint = () => (st.moving ? `<p class="hint">${st.draft ? 'Новое место выбрано — «Подтвердить перенос» или коснитесь карты ещё раз.' : IS_TOUCH ? 'Коснитесь карты — новое место комплекса.' : 'Наведите мышь — тень зоны с нового места, щелчок — выбрать место.'} Зелёная тень — что будет перекрыто на 300 м, серая — нынешняя зона.${IS_TOUCH ? '' : ' Enter — подтвердить, Esc или правая кнопка — отмена.'}</p>` : '');
 
   // ═════════════ Боковая панель ═════════════
   const side = $('dside');
@@ -413,16 +453,16 @@ export function createDefense(C) {
       if (st.sel && !st.sel.dead && mine(st.sel)) {
         const u = st.sel;
         h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км</span></div></div>
-          <div class="dact"><button class="btn alt" data-a="move">${st.moving ? 'Куда? Коснитесь карты' : 'Переместить'}</button><button class="btn alt" data-a="sell">Продать +${Math.round(samCost(u.key) * 0.7)}</button><button class="btn alt" data-a="desel">Готово</button></div>`;
+          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">Продать +${Math.round(samCost(u.key) * 0.7)}</button>${st.moving ? '' : '<button class="btn alt" data-a="desel">Готово</button>'}</div>${moveHint()}`;
       } else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>союзника</span></div></div>`;
-      h += '<div class="cat-h">Купить</div>';
+      h += placeCard() + '<div class="cat-h">Купить</div>';
       const side = B.sideAir === 'east' ? 'west' : 'east';
       for (const [k, s] of Object.entries(SAM)) {
         if (s.side !== side || s.era > B.era) continue;
         const c = costOf(k), lim = netLeft(k), no = c > st.budget || (lim !== null && lim <= 0);
         h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${s.short}</b><span>${CLS_NAME[samClass(k)]} · ${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км${lim !== null ? ` · можно ещё ${Math.max(0, lim)}` : ''}</span></div><span class="pr">${c}</span></div>`;
       }
-      h += `<p class="hint">${st.placing ? 'Коснитесь карты, чтобы поставить. ПЗРК можно на плоские крыши.' : 'Выберите комплекс и коснитесь карты. Свои комплексы можно переставить и продать.'}</p>`;
+      h += `<p class="hint">${st.placing ? (IS_TOUCH ? 'Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.' : 'Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.') : 'Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса на карте — перенос (новое место и «Подтвердить») или продажа.'}</p>`;
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
     } else if (st.phase === 'wave') {
       const air = C.raid.planes.filter((a) => !a.dead && !a.out && a.role !== 'decoy').length;
@@ -618,10 +658,10 @@ export function createDefense(C) {
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
         h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км · ${unitStatus(u)}</span></div></div>
-          <div class="dact"><button class="btn alt" data-a="move">${st.moving ? 'Куда? Коснитесь карты' : 'Переместить'}</button><button class="btn alt" data-a="sell">Продать +${Math.round((u.paid || SAM_COST[u.key]) * 0.7)}</button>
-          ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? 'Засада: вкл' : 'Засада: выкл'}</button>` : ''}<button class="btn alt" data-a="desel">Готово</button></div>`;
+          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">Продать +${Math.round((u.paid || SAM_COST[u.key]) * 0.7)}</button>
+          ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? 'Засада: вкл' : 'Засада: выкл'}</button>` : ''}${st.moving ? '' : '<button class="btn alt" data-a="desel">Готово</button>'}</div>${moveHint()}`;
       }
-      h += '<div class="cat-h">Купить</div>';
+      h += placeCard() + '<div class="cat-h">Купить</div>';
       const al = st.opts.allow, cat = Object.entries(SAM);
       if (al) cat.sort(([a], [b]) => al.has(b) - al.has(a)); // урок: нужное — сверху
       for (const [k, s] of cat) {
@@ -629,7 +669,7 @@ export function createDefense(C) {
         const c = SAM_COST[k], shut = st.opts.allow && !st.opts.allow.has(k); // урок: покупать только то, о чём он
         h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${s.short}</b><span>${shut ? 'не в этом уроке' : `${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км / ${(s.hmax / 1000).toFixed(1)} км`}</span></div><span class="pr">${c}</span></div>`;
       }
-      h += `<p class="hint">${st.placing ? 'Коснитесь карты, чтобы поставить. ПЗРК можно на плоские крыши.' : 'Выберите комплекс и коснитесь карты. Коснитесь своего комплекса — тень его зоны на высоте 300 м и приказы.'}</p>`;
+      h += `<p class="hint">${st.placing ? (IS_TOUCH ? 'Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.' : 'Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.') : 'Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса — тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») и продажа.'}</p>`;
       h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>В БОЙ — ${st.multi ? 'Мульти-волна' : `волна ${st.wave + 1}`}</button>`;
     } else if (st.phase === 'wave') {
       const air = C.raid.planes.filter((a) => !a.dead && !a.out).length + C.S.wpns.filter((w) => w.ev && !w.dead && (C.MODE().markers || seen.has(w))).length; // и ракеты / дроны Мульти-волны, которые видит сеть
@@ -652,12 +692,13 @@ export function createDefense(C) {
   }
   side.onclick = (e) => {
     const b = e.target.closest('[data-a]'), buy = e.target.closest('[data-buy]');
-    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (costOf(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? 'Лимит первой волны для этого класса' : 'Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; snd.click(); } renderSide(); return; }
+    if (b && (b.dataset.a === 'pok' || b.dataset.a === 'pno')) { if (b.dataset.a === 'pok') confirmDraft(); else cancelDraft(); return; }
+    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (costOf(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? 'Лимит первой волны для этого класса' : 'Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
     if (b && st.net && !(st.multi === 'atk' && b.dataset.a !== 'ready')) {
       const u = st.sel, a = b.dataset.a;
       if (a === 'ready') { st.ready = !st.ready; st.net.ready(st.ready); }
-      else if (a === 'desel') { st.sel = null; st.moving = false; }
-      else if (a === 'move' && u && mine(u)) st.moving = !st.moving;
+      else if (a === 'desel') { st.sel = null; st.moving = false; st.draft = null; }
+      else if (a === 'move' && u && mine(u)) { st.moving = !st.moving; st.draft = null; }
       else if (a === 'sell' && u && mine(u)) { st.net.sell(u.id); st.sel = null; }
       else if (a === 'emit' && u && mine(u)) C.S.setEmit(u, !u.emit);
       else if (a === 'op' && u && mine(u)) enterOp(u);
@@ -666,7 +707,7 @@ export function createDefense(C) {
       snd.click(); renderSide(); return;
     }
     if (buy && st.opts.allow && !st.opts.allow.has(buy.dataset.buy)) { say(`В этом уроке — ${[...st.opts.allow].filter((k) => SAM[k] && SAM[k].side === C.setup.side).map((k) => `«${SAM[k].short}»`).join(' или ')}`, 3); snd.deny(); return; }
-    if (buy) { const k = buy.dataset.buy; if (SAM_COST[k] > st.budget) { say('Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; snd.click(); } renderSide(); return; }
+    if (buy) { const k = buy.dataset.buy; if (SAM_COST[k] > st.budget) { say('Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
     if (!b) return;
     const u = st.sel, a = b.dataset.a;
     if (a === 'winc') { // докупка во время волны: копится 1,5 с (пачка — на одном носителе), потом — в расписание
@@ -732,8 +773,8 @@ export function createDefense(C) {
     if (a === 'speed') { st.timeK = st.timeK === 1 ? 4 : 1; snd.click(); renderSide(); return; }
     if (a === 'go') startWave();
     else if (a === 'next') { st.phase = 'plan'; renderSide(); }
-    else if (a === 'desel') { st.sel = null; st.moving = false; }
-    else if (a === 'move') st.moving = !st.moving;
+    else if (a === 'desel') { st.sel = null; st.moving = false; st.draft = null; }
+    else if (a === 'move') { st.moving = !st.moving; st.draft = null; }
     else if (a === 'sell' && u) { st.budget += Math.round((u.paid || SAM_COST[u.key]) * 0.7); C.S.removeUnit(u); C.syncUnits(); st.sel = null; }
     else if (a === 'amb' && u) { u.ambush = !u.ambush; u.emit = !u.ambush; }
     else if (a === 'emit' && u) { C.S.setEmit(u, !u.emit); on('radar', u); }
@@ -745,7 +786,7 @@ export function createDefense(C) {
   // ═════════════ Волны ═════════════
   const cityValue = () => C.S.objects.reduce((s, o) => s + (o.dead || o.noTarget ? 0 : o.value * Math.max(0, o.hp / o.hpMax)), 0) / st.value0;
   function startWave() {
-    st.phase = 'wave'; st.wave++; st.placing = null; st.moving = false; st.waveDowns = 0; st.waveLeak = 0; st.waveLost = [];
+    st.phase = 'wave'; st.wave++; st.placing = null; st.moving = false; st.draft = null; st.waveDowns = 0; st.waveLeak = 0; st.waveLost = [];
     const alive = C.S.objects.filter((o) => !o.dead && !o.noTarget); // цели волн — только военные объекты
     if (!atk()) st.targets = st.opts.tkeys ? alive.filter((o) => st.opts.tkeys.includes(o.key)) : pickTargets({ objects: alive }, st.rnd, st.wave > 3 || st.multi ? 3 : 2, [...new Set(alive.map((o) => o.key))]); // урок — свои цели
     st.tv0 = st.targets.reduce((s, o) => s + o.value * Math.max(0, o.hp / o.hpMax), 0) || 1;
@@ -1004,7 +1045,7 @@ export function createDefense(C) {
     if (arm && !op.armWarned) { op.armWarned = true; snd.alarm(); on('arm', u, arm); } else if (!arm) op.armWarned = false;
     drawPpi(t);
     // звук: тон ГСН у ИК, тон захвата
-    if (S.type === 'ir') snd.growl(u.seek ? (u.track ? 0.05 : 0.03) : 0, u.track ? 900 : 420 + u.seek * 200);
+    if (S.type === 'ir') snd.growl(u.seek ? (u.track ? 0.05 : 0.03) : 0, u.track ? 900 : 420 + (u.seek || 0) * 200); // онлайн у комплекса нет seek (не в снимке) — было NaN и ошибка звука
     if (u.track !== op.lastTrack) { if (u.track) snd.lock(); op.lastTrack = u.track; }
   }
   // «АВТО» оператора: цель — ближайшая видимая; пуск в зоне (по одной ракете, с задержкой реакции); пушка и ПЗРК — расчёт
@@ -1227,7 +1268,7 @@ export function createDefense(C) {
     C.newBattle({ defSide: dside(), era: C.setup.era, rnd: st.rnd });
     C.hooks = atk() ? atkHooks() : defHooks();
     const b0 = st.multi === 'atk' ? multiBudget(attSide(), C.setup.era) : st.multi ? Math.round(MULTI.sam[C.setup.era] * (C.setup.diff === 'arcade' ? 1.2 : 1)) : null;
-    Object.assign(st, { phase: 'plan', wave: 0, waves: opts.waves || WAVES, budget: opts.budget ?? b0 ?? (C.setup.diff === 'arcade' ? 1200 : 1000), score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, targets: [] });
+    Object.assign(st, { phase: 'plan', wave: 0, waves: opts.waves || WAVES, budget: opts.budget ?? b0 ?? (C.setup.diff === 'arcade' ? 1200 : 1000), score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, targets: [] });
     st.value0 = C.S.objects.reduce((s, o) => s + (o.noTarget ? 0 : o.value), 0);
     for (const [k, x, z, roof] of opts.units || []) { const u = C.S.addUnit(k, x, z, { roof, skill: 0.75 }); u.paid = SAM_COST[k]; }
     if (atk()) { // ПВО противника — ИИ, как в «Вылете»; где она — заранее неизвестно (засекают разведчик, излучение РЛС, пуски)
@@ -1255,7 +1296,7 @@ export function createDefense(C) {
       objectDestroyed(o) { say(`Разрушен: ${o.name}`, 3); snd.alarm(); },
       unitDestroyed(u) { say(`Потерян комплекс: ${u.S.short}`, 3); },
     };
-    Object.assign(st, { phase: 'plan', wave: N.battle.wave || 1, waves: N.battle.waves, budget: 0, score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, sel: null, moving: false, view: 'map', op: null, over: false, ready: false, netRes: null });
+    Object.assign(st, { phase: 'plan', wave: N.battle.wave || 1, waves: N.battle.waves, budget: 0, score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, ready: false, netRes: null });
     st.targets = N.battle.targets.map((id) => C.S.objects.find((o) => o.id === id)).filter(Boolean);
     st.value0 = st.targets.reduce((s, o) => s + o.value, 0) || 1;
     C.syncUnits(); seen.clear();
@@ -1270,7 +1311,7 @@ export function createDefense(C) {
     if (ph !== st.phase) {
       if (st.view === 'op' && ph !== 'wave') leaveOp();
       if (st.view === 'watch' && ph !== 'wave') unwatch();
-      st.phase = ph; st.placing = null; st.moving = false;
+      st.phase = ph; st.placing = null; st.moving = false; st.draft = null;
       if (ph === 'wave' && st.multi) netWaveStart();
       else if (ph === 'wave') { snd.alarm(); say(`Волна ${st.wave}: налёт!`, 3); }
       if (ph !== 'wave') document.body.classList.remove('evon', 'evopen');
@@ -1288,7 +1329,7 @@ export function createDefense(C) {
     if (!st.setupSave) st.setupSave = { era: C.setup.era, diff: C.setup.diff }; C.setup.era = B.era; C.setup.diff = B.mode === 'real' ? 'real' : 'arcade'; // эпоха и режим — матча (после боя — свои)
     st.rnd = mulberry32((Date.now() & 0xffffff) ^ 0x1357);
     C.hooks = role === 'atk' ? atkHooks() : defHooks();
-    Object.assign(st, { phase: 'plan', wave: 1, waves: 1, budget: 0, score: 0, downs: 0, waveDowns: 0, leaked: 0, waveLeak: 0, lostUnits: 0, placing: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, ready: false, netRes: null,
+    Object.assign(st, { phase: 'plan', wave: 1, waves: 1, budget: 0, score: 0, downs: 0, waveDowns: 0, leaked: 0, waveLeak: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, ready: false, netRes: null,
       watch: null, timeK: 1, cue: null, watchNextAt: null, edKey: null, edUnit: null, tsel: null, pick: null, addQ: {}, addT: 0, alertT: 0, sirenC: false, sirenT: false, flash: new Map(), mres: { launched: 0, down: 0, hits: 0, carriers: 0 }, targets: [] });
     st.plan = { n: {}, cfg: {} };
     st.value0 = C.S.objects.reduce((q, o) => q + (o.noTarget ? 0 : o.value), 0) || 1;
@@ -1318,9 +1359,9 @@ export function createDefense(C) {
     if (st.phase === 'plan') {
       h += `<h3>Раунд ${B.round}/${B.rounds} · расстановка ПВО${left}</h3><div>Очки обороны: <b style="color:#fde68a">${st.budget}</b></div>
         <p class="hint">Волну собирает ${who}: дроны, крылатые ракеты, баллистика — что и по каким объектам, неизвестно. Пушки и ПЗРК — у объектов, противоракетные — у самых ценных.</p>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км</span></div></div><div class="dact"><button class="btn alt" data-a="move">${st.moving ? 'Куда? Коснитесь карты' : 'Переместить'}</button><button class="btn alt" data-a="sell">Продать +${Math.round(samCost(u.key) * 0.7)}</button><button class="btn alt" data-a="desel">Готово</button></div>`; }
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км</span></div></div><div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">Продать +${Math.round(samCost(u.key) * 0.7)}</button>${st.moving ? '' : '<button class="btn alt" data-a="desel">Готово</button>'}</div>${moveHint()}`; }
       else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>союзника</span></div></div>`;
-      h += '<div class="cat-h">Купить</div>';
+      h += placeCard() + '<div class="cat-h">Купить</div>';
       for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || sm.era > B.era) continue; const c = costOf(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}</b><span>${SAM_TYPE[sm.type]} · ${(sm.rmax / 1000).toFixed(1)} км${sm.abm ? ' · сбивает баллистику' : ''}</span></div><span class="pr">${c}</span></div>`; }
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
     } else if (st.phase === 'wave') {
@@ -1406,6 +1447,7 @@ export function createDefense(C) {
       x.fillStyle = `rgba(185,28,28,${0.75 + 0.2 * Math.sin(performance.now() / 300)})`; x.fillRect(C.VW / 2 - w / 2, y - 22, w, 32); x.fillStyle = '#fff'; x.fillText(st.alert, C.VW / 2, y); x.textAlign = 'left'; }
   }
   function onKey(e, down) {
+    if (st.view !== 'op' && down && st.phase === 'plan' && st.draft && (e.code === 'Enter' || e.code === 'NumpadEnter')) { confirmDraft(); return; }
     if (st.view !== 'op') { if (down && e.code === 'Space' && st.phase === 'plan') { if (st.net) { st.ready = !st.ready; st.net.ready(st.ready); renderSide(); } else startWave(); } return; }
     op.keys = op.keys || new Set();
     if (!down) { op.keys.delete(e.code); if (e.code === 'Space' || e.code === 'KeyF') opFire(false); return; }
@@ -1421,7 +1463,7 @@ export function createDefense(C) {
     else if (e.code === 'KeyZ') op.fov = op.fov > 30 ? 20 : op.fov > 12 ? 8 : 55;
   }
   const api = {
-    startNetMulti, chatSync, st, sim: true, forecast: (key) => forecast(key), idxOf: (k, key) => idxOf(k, key), tkeyOf: (k, i) => tkeyOf(k, i), setTkey: (k, i, key) => setTkey(k, i, key), start, stop, update, hud, onKey, enterOp, leaveOp, startWave, designate, renderSide, startNet, netSync,
+    startNetMulti, chatSync, st, sim: true, confirmDraft, cancelDraft, onEsc: () => { if (st.view !== 'op' && st.phase === 'plan' && (st.placing || st.moving)) { cancelDraft(); return true; } return false; }, tapAt: (x, z) => { const [px, py] = w2s(x, z); mapTap(px, py); }, /* tapAt — касание карты в точке мира (проверки) */ forecast: (key) => forecast(key), idxOf: (k, key) => idxOf(k, key), tkeyOf: (k, i) => tkeyOf(k, i), setTkey: (k, i, key) => setTkey(k, i, key), start, stop, update, hud, onKey, enterOp, leaveOp, startWave, designate, renderSide, startNet, netSync,
     setNetRes(r) { st.netRes = r; renderSide(); },
     camera(dt) { if (st.view === 'op' && st.op) opCamera(dt); else if (st.view === 'watch') watchCamera(dt); else { camera.position.set(view.cx, 9000, view.cz + 1); camera.lookAt(view.cx, 0, view.cz); } },
     focus: () => (st.op ? st.op.pos : st.watch ? st.watch.pos : camera.position),

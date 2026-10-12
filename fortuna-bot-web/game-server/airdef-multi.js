@@ -156,8 +156,9 @@ export function createMulti(ctx) {
       wpnRelease: (w) => { pushTo(r, 'atk', wrEv(w)); },
       wpnEnd: (w, res) => { const e = ['we', w.id, ...v3(w.pos), res.intercepted ? 1 : 0]; pushTo(r, w.defSeen ? 'all' : 'atk', e); },
       explosion: (p, R, kind) => pushTo(r, 'all', ['x', ...v3(p), r1(R), kind]),
-      objectDestroyed: (o, by, owner) => { pushTo(r, 'all', ['od', o.id]); const p = owner && r.players.get(owner.owner || owner.id); pushTo(r, 'all', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(o.name).slice(0, 40), String(by || '').slice(0, 24)]); },
-      unitDestroyed: (u, by, owner) => { pushTo(r, u.atkSeen ? 'all' : 'def', ['ud', u.id]); const p = owner && r.players.get(owner.owner || owner.id); if (p) { p.kills++; p.score += 40; } },
+      objectDestroyed: (o, by, owner) => { pushTo(r, 'all', ['od', o.id]); const p = owner && r.players.get(owner.owner || owner.id); pushTo(r, 'all', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(o.name).slice(0, 40), String(by || '').slice(0, 24), r.atk, r.atk === 'east' ? 'west' : 'east', '', '']); },
+      unitDestroyed: (u, by, owner) => { pushTo(r, u.atkSeen ? 'all' : 'def', ['ud', u.id]); const p = owner && r.players.get(owner.owner || owner.id); if (p) { p.kills++; p.score += 40; }
+        const v = r.players.get(u.owner); pushTo(r, u.atkSeen ? 'all' : 'def', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(v ? v.name : 'ПВО').slice(0, 40), String(by || '').slice(0, 24), r.atk, opp(r.atk), '', 'u:' + u.key]); },
     };
   }
 
