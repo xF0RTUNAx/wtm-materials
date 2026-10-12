@@ -13,7 +13,7 @@ const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads`;
 // перекраска: синие пиксели (синий заметно больше красного и зелёного) → оливковый той же яркости, остальное как было
 const BLUE = 'gt(b(X,Y),r(X,Y)+25)*gt(b(X,Y),g(X,Y)+10)', LUM = '(0.3*r(X,Y)+0.59*g(X,Y)+0.11*b(X,Y))';
 const OLIVE = `format=gbrp,geq=r='if(${BLUE},min(255,${LUM}*1.35),r(X,Y))':g='if(${BLUE},min(255,${LUM}*1.4),g(X,Y))':b='if(${BLUE},${LUM}*0.9,b(X,Y))'`;
-const LS = (c) => { if (Deno.env.get('LS') && Math.max(...c.size) > 0.4) console.log('  часть', c.mat, 'ц', c.ctr.map((v) => v.toFixed(2)).join(' '), 'р', c.size.map((v) => v.toFixed(2)).join(' ')); return 'body'; }; // LS=1 … --groups: список частей
+const LS = (c) => { if (Deno.env.get('LS') && Math.max(...c.size) > Number(Deno.env.get('LSMIN') ?? 0.4)) console.log('  часть', c.mat, 'ц', c.ctr.map((v) => v.toFixed(2)).join(' '), 'р', c.size.map((v) => v.toFixed(2)).join(' ')); return 'body'; }; // LS=1 … --groups: список частей
 const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? 99); // верх корпуса ФАБ-500 в осях игры без центровки (см. --groups)
 // nose — куда смотрит нос модели в её осях; center — [y оси фюзеляжа] в её единицах (иначе середина габаритов)
 // remove(c, i) — c: часть меша { min, max, ctr, size, tris, mat }, i — номер по размеру в своём примитиве
@@ -32,7 +32,7 @@ const CONFIG = {
     remove: (c) => (c.mat === 10 && Math.abs(c.ctr[0]) < 4.5) || [17, 6, 7, 8, 9, 12, 13, 14, 15].includes(c.mat) || ((c.mat === 5 || c.mat === 1) && c.max[1] < 1.3) },
   // оружие из моделей самолётов: pick — коробка [x0,y0,z0, x1,y1,z1] в осях модели, берутся части с центром внутри;
   // модель ставится центром габаритов в начало координат
-  w_umpk: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', groups: () => 'body' }, // ФАБ-500 с УМПК
+  w_umpk: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', groups: (c) => (c.size[0] > 2 && c.size[1] < 0.15 ? 'wing' : 'body') }, // ФАБ-500 с УМПК; wing — крыло (на подвеске сложено вдоль бомбы)
   w_fab500: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
   w_kh29t: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /ru_kh-29/ }, // Х-29 из набора
   w_kh31p: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /w_lasm/ }, // Х-31 из набора
@@ -46,7 +46,8 @@ const CONFIG = {
   w_mald: { src: `${DL}/aim-160a_screamer.glb`, scale: 2.84 / 2, nose: '-x', tex: () => 256, target: 7000, pickMesh: /./ },
   w_decoy_e: { src: `${DL}/harpy_drone.glb`, scale: 0.1, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Harpy — ложная цель
   w_pod: { src: `${DL}/anaaq-28v_lightning_fbx.glb`, scale: 1, nose: '+z', tex: () => 256, target: 9000, simpErr: 0.3, cluster: true, minPart: 0.03, pickMesh: /./ }, // LITENING — прицельный контейнер
-  w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, nose: '+z', tex: () => 256, pickMesh: /./ },
+  w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, nose: '+z', tex: () => 256, pickMesh: /./,
+    groups: (c) => (Math.abs(c.ctr[0]) > 3 && c.size[1] < 1 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') }, // крылья — свои части (на подвеске сложены)
   w_gbu31: { src: `${DL}/f-111f_aardvark_with_gbu-24_mk.84.glb`, scale: 1, nose: '+z', tex: () => 256, target: 7000, pick: [-3.4, -1.2, -3, -2.6, -0.02, 1.75] }, // GBU-24 с F-111 без головки и рулей → Mk 84 с хвостом (как JDAM)
   mp_stinger: { src: `${DL}/fim-92_stinger.glb`, scale: 7.6, nose: '+x', tex: () => 256, pickMesh: /./, remove: (c) => c.ctr[0] < -0.05 }, // труба Stinger (ракета — отдельно)
   mp_verba: { src: `${DL}/manpads_model_9k333_verba.glb`, scale: 0.0774, nose: '+x', tex: () => 256, target: 7000, pickMesh: /PZRC|battery|pen_|trigger|nab_|button|switch/ }, // труба «Вербы»
@@ -107,6 +108,12 @@ const CONFIG = {
     groups: (c) => { const [x, y, z] = c.ctr, ax = Math.abs(x); if (y < -0.55 && Math.max(...c.size) < 5) return null; if (ax > 0.9 && ax < 1.85 && z > 3.1 && z < 3.45 && Math.abs(y) < 0.5) return x > 0 ? 'prop' : 'prop2'; return LS(c); } }, // разведывательно-ударный БПЛА — размах 12 м; два толкающих винта
   e_tu160: { src: `${DL}/tupolev_tu-160.glb`, scale: 0.235, nose: '+z', rulesIn: 'game', tex: () => 512, groups: (c) => (c.ctr[1] < 2.6 && Math.max(...c.size) < 4 && Math.abs(c.ctr[0]) < 4.5 ? null : LS(c)) } /* без шасси */, // Ту-160 — 54 м
   e_b1b: { src: `${DL}/rockwell_b-1b_lancer.glb`, scale: 0.95, nose: '-z', rulesIn: 'game', tex: () => 512, groups: (c) => (c.ctr[1] < 2.2 && Math.max(...c.size) < 4 && Math.abs(c.ctr[0]) < 4.5 ? null : LS(c)) } /* без шасси */, // B-1B — 44,5 м
+  e_b52: { src: `${DL}/boeing_b-52_stratofortress.glb`, scale: 1, nose: '-z', rulesIn: 'game', tex: () => 512, groups: LS }, // B-52H — 48,5 м; носитель «Мульти-волны»
+  e_typhoon: { src: `${DL}/eurofighter_typhoon_ef-2000.glb`, scale: 15.96 / 18.72, nose: '+x', rulesIn: 'game', tex: () => 512, target: 20000, pickMesh: /Eurofighter typhoon/,
+    groups: (c) => (c.ctr[1] < -0.8 && Math.abs(c.ctr[0]) > 0.4 && !(c.size[0] < 0.12 && c.size[1] > 0.3) ? null : LS(c)) }, // подвеска модели (ракеты, баки) — долой, пилоны остаются // Eurofighter Typhoon — 16 м; носитель Storm Shadow
+  w_slam: { src: `${DL}/ugm-84_harpoon_free.glb`, scale: 4.49 / 7.3, nose: '+x', tex: () => 256, target: 5000, pickMesh: /./ }, // AGM-84E SLAM (по Harpoon) — 4,49 м
+  w_jsow: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM-154 JSOW/, groups: (c) => (c.size[1] < 0.05 && c.ctr[1] > 2.9 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // AGM-154 JSOW — 4,1 м; крылья в модели сложены — раскрываются после сброса
+  w_kinzhal: { src: `${DL}/game_ready_low_poly_r-33.glb`, scale: 7.2 / 4.2, nose: '+x', tex: () => 256, pickMesh: /./ }, // «Кинжал» (по Р-33, увеличена до 7,2 м — решение Mark)
   l_iskander: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027, nose: '-x', rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П78 — 13 м, две ракеты стоят на старте в корме
     groups: (c) => { const [x, y, z] = c.ctr, thin = c.size[0] < 1.15 && c.size[2] < 1.15 && !(Math.max(c.size[0], c.size[2]) < 0.3 && c.size[1] > 2); /* не направляющие пусковой (длинные и тонкие; стабилизаторы — короткие) */ if (z > 6.3 && y > 2.2 && thin) { if (Math.abs(x - 2.75) < 0.62) return 'tbm'; if (Math.abs(x - 4.06) < 0.62) return 'tbm2'; } return 'body'; } },
   l_tochka: { src: `${DL}/ukrainian_otr-21_tochka-u.glb`, scale: 0.0284, nose: '+z', rulesIn: 'game', dedupe: true, renorm: true, texVf: "curves=all='0/0 0.5/0.42 1/0.68'", /* светлые пятна камуфляжа на солнце выгорали в белое */ colors: { '^(White|material_1)$': [0.07, 0.085, 0.05], '^0059_DarkOliveGreen': [0.06, 0.08, 0.035], '^material$': [0.1, 0.11, 0.08] }, /* цвета — линейные (0,06 ≈ 27 % яркости на экране); у автора белые без текстуры — под цвет машины */ dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П129 — 11,8 м, ракета на старте в корме
@@ -131,6 +138,9 @@ const CONFIG = {
   aam_aim7: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /us_aim-7\// }, // AIM-7 (E и M)
   aam_aim9x: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /us_aim-9x/ }, // AIM-9X
   aam_r60: { src: `${DL}/simple_gameready_weapons_for_fighter_jet_games.glb`, scale: 2.09 / 4.53, nose: '+z', tex: () => 256, pickMesh: /R-60_6/ }, // Р-60М (в наборе ×2,2)
+  // Aster 30 для SAMP/T — по модели IRIS-T (Raptor9): увеличена до 4,9 м; голубые и сиреневые детали — в серые тона Aster
+  msl_aster: { src: `${DL}/low_poly_german_iris-t_aam.glb`, scale: 4.9 / 924.74, nose: '-x', tex: () => 256, pickMesh: /./,
+    colors: { '^ff18aef9$': [0.35, 0.35, 0.35], '^ff9(06680|55f8d)$': [0.5, 0.5, 0.5] } },
   aam_iris: { src: `${DL}/low_poly_german_iris-t_aam.glb`, scale: 2.936 / 924.74, nose: '-x', tex: () => 256, pickMesh: /./ }, // IRIS-T
   aam_mica: { src: `${DL}/low_poly_missiles_and_torpedos.glb`, scale: 1, nose: '+z', tex: () => 256, pickMesh: /VL MICA/ }, // MICA (EM и IR — один корпус)
   msl_aim120: { src: `${DL}/boeing_fa-18ef_super_hornet.glb`, scale: 1, nose: '+x', tex: () => 256, pick: [-6, -0.5, 4.5, -1, -0.02, 4.9] }, // AIM-120 с F/A-18 — для NASAMS
@@ -154,6 +164,49 @@ const CONFIG = {
       if (c.mat === 1) return c.ctr[0] < -1.4 ? null : 'missile'; // ракеты 9М31 на направляющих (и одна «в полёте»)
       if (c.min[1] > 2.75) return 'cradle';
       return c.min[1] > 1.88 ? 'turret' : 'body';
+    } },
+  // Roland 2 на Marder — ScurvyWoof: без текстур, цвета авторов «мятные» — перекраска в бронзово-зелёный бундесвера (RAL 6031)
+  roland: { src: `${DL}/marder_roland_low-poly.glb`, scale: 2.3, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 30000, hinge: [0, 2.74, 0.5], tube: [0.25, 0.4],
+    colors: { '^Material$': [0.07, 0.084, 0.04], '^Material\\.001$': [0.045, 0.054, 0.03], '^Material\\.002$': [0.05, 0.06, 0.065], '^Material\\.003$': [0.07, 0.084, 0.04] },
+    groups: (c) => {
+      if (c.min[1] < 2.0 || c.ctr[2] < -1.2 || c.ctr[2] > 1.9) return 'body';
+      if (Math.abs(c.ctr[0]) < 0.6 && c.min[1] > 3.15 && c.ctr[2] > 0.9) return 'radar'; // РЛС обзора на мачте — крутится
+      return Math.abs(c.ctr[0]) > 0.65 && c.min[1] > 2.12 ? 'cradle' : 'turret'; // контейнеры с ракетами и их рычаги — качаются
+    } },
+  // 2К22 «Тунгуска» — usedm: башня с РЛС сопровождения спереди и обзора сзади (крутится); по бокам — спарки 2А38 и по 4 ТПК 9М311,
+  // они качаются вместе (общая цапфа)
+  tunguska: { src: `${DL}/2k22_tunguska.glb`, scale: 10, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 40000, hinge: [0, 2.2, 0.1], tube: [0.18, 0.3],
+    groups: (c) => {
+      if (c.min[1] < 1.5 || Math.abs(c.ctr[2]) > 2.7) return 'body';
+      if (Math.abs(c.ctr[0]) < 0.5 && c.min[1] > 3.05 && c.ctr[2] > 1.3) return 'radar';
+      return Math.abs(c.ctr[0]) > 0.74 && c.min[1] > 1.65 && c.ctr[2] < 1.3 ? 'cradle' : 'turret';
+    } },
+  // SAMP/T — Chenzoss: скан, вся машина — одна сетка; пакет из 8 контейнеров Aster лежит по-походному — делим по треугольникам,
+  // в игре он поднимается вертикально (u.lel = 90°) вокруг оси у кормы
+  sampt: { src: `${DL}/samp-t_air_defense_system.glb`, scale: 5.5, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 1024, target: 60000, hinge: [0, 0.45, 4.3],
+    groups: (c) => (c.ctr[1] > 0.4 && c.ctr[2] > -0.8 && c.ctr[2] < 4.35 && Math.abs(c.ctr[0]) < 1.7 ? 'cradle' : 'body') }, // пакет: два ряда контейнеров, y 0,5–1,75 (под ним — пустой промежуток до рамы)
+  khordad: { src: `${DL}/iranian_sevom_khordad_sam.glb`, scale: 100, nose: '-x', texVf: "hue=h=48:s=0.85,curves=all='0/0 0.5/0.3 1/0.58'", rulesIn: 'game', unit: true, tex: () => 512, target: 30000, hinge: [0, 3.0, 3.7],
+    groups: (c) => (c.size[2] > 5 && c.size[0] < 0.5 && c.min[1] > 3.3 ? 'missile' : c.min[1] > 2.95 && c.ctr[2] > 0.5 && c.ctr[2] < 4.2 && c.size[0] < 2 ? 'cradle' : 'body') }, // Sevom Khordad — 42manako: пустынный камуфляж → оливковый (у запада — трофейный); пусковая с 3 ракетами — без башни, ось у кормы
+  // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221): одна из двух пушек (сцена в мм, пушка — в половину размера → ×0,002);
+  // станок поворачивается, спарка со стволами и коробами — качается на цапфах; подложка, кабели, радар и вторая пушка — долой
+  skyguard: { src: `${DL}/oerlikon_35mm_skyguard_radar.glb`, scale: 0.002, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 80000, simpErr: 0.002, minPart: 0.06, hinge: [19.62, 1.45, -8.1],
+    groups: (c) => {
+      if (Math.abs(c.ctr[0] - 19.6) > 6 || Math.abs(c.ctr[2] + 7.2) > 6.8 || Math.max(...c.size) > 12) return null;
+      const dx = c.ctr[0] - 19.62;
+      // вся верхняя часть (спарка, короба, стволы с дульными тормозами) — качающаяся: по отдельности детали расходились в воздухе
+      if (c.min[1] > 1.0 && Math.abs(dx) < 1.3) return 'cradle';
+      return c.min[1] > 0.85 && Math.abs(dx) < 1.3 ? 'turret' : 'body';
+    } },
+  // Tracked Rapier — stealth86: пусковая на корме стоит ракетами назад — turretYaw разворачивает её в рабочее положение;
+  // по бокам — балки с 8 ракетами (качаются), сзади — малая тарелка РЛС (крутится). Цвет авторов — жёлтый хаки → тёмно-зелёный
+  rapier: { src: `${DL}/tracked_rapier.glb`, scale: 0.001373, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, texVf: "hue=h=48:s=0.75,curves=all='0/0 0.5/0.33 1/0.62'", target: 40000, simpErr: 0.002,
+    hinge: [0, 0.21, 1.45], turretYaw: Math.PI, pack0: 0, instR: 0.12, absorb: 0.13, tplNear: [0.83, 0.02],
+    colors: { '^(Base|Base\\.001|Cylinder\\.009__0)$': [0.05, 0.066, 0.032], '^missile$': [0.55, 0.55, 0.52] },
+    groups: (c) => {
+      if (c.min[1] < -0.25 || c.ctr[2] < 0.6) return 'body';
+      if (c.mat === 15) return 'missile';
+      if (c.ctr[2] > 2.85 && Math.abs(c.ctr[0]) < 0.35 && c.ctr[1] > -0.1) return 'radar';
+      return Math.abs(c.ctr[0]) > 0.6 ? 'cradle' : 'turret';
     } },
   osa: { src: `${DL}/osa-akm_sam_system.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 110000, minPart: 0.06, absorb: 0, tplNear: [0.91, 0.14], hinge: [0, 3.06, 1.32], tube: [0.15, 0.5],
     groups: (c) => {
@@ -266,7 +319,7 @@ const CONFIG = {
     } },
 };
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256 };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
@@ -531,7 +584,7 @@ function articulate(cfg, byMat, shift, ax) {
   let n = 0, mz = 0, my = 0; for (const m of K) for (let i = 0; i < m.pos.length; i += 3) { n++; my += m.pos[i + 1]; mz += m.pos[i + 2]; } my /= n; mz /= n;
   let szz = 0, syy = 0, syz = 0; for (const m of K) for (let i = 0; i < m.pos.length; i += 3) { const a = m.pos[i + 2] - mz, b = m.pos[i + 1] - my; szz += a * a; syy += b * b; syz += a * b; }
   const th = 0.5 * Math.atan2(2 * syz, szz - syy); let ez = Math.cos(th), ey = Math.sin(th); if (ez > 0) { ez = -ez; ey = -ey; } // ось — вперёд (−Z)
-  const el0 = Math.atan2(ey, -ez), ce = Math.cos(el0), se = Math.sin(el0);
+  const el0 = cfg.pack0 !== undefined ? cfg.pack0 : Math.atan2(ey, -ez), ce = Math.cos(el0), se = Math.sin(el0);
   for (const m of T) for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= tp[0]; m.pos[i + 1] -= tp[1]; m.pos[i + 2] -= tp[2]; }
   const rot = (a, i, o) => { const y = a[i + 1] - o[1], z = a[i + 2] - o[2]; a[i] -= o[0]; a[i + 1] = y * ce + z * se; a[i + 2] = -y * se + z * ce; };
   for (const m of K) { for (let i = 0; i < m.pos.length; i += 3) rot(m.pos, i, hinge); for (let i = 0; i < m.nor.length; i += 3) rot(m.nor, i, [0, 0, 0]); }
@@ -559,7 +612,7 @@ function extractMissile(cfg, byMat) {
   const L = [...parts.values()], par = L.map((_, i) => i), f = (i) => (par[i] === i ? i : (par[i] = f(par[i])));
   // экземпляры — по оси: центры сечений ближе 0,35 м; короткие куски (рули, крылья) потом — к ближайшей длинной ракете
   const ctr = (b) => [(b.mn[0] + b.mx[0]) / 2, (b.mn[1] + b.mx[1]) / 2];
-  for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const a = ctr(L[i]), b = ctr(L[j]); if (Math.hypot(a[0] - b[0], a[1] - b[1]) < 0.35) par[f(i)] = f(j); }
+  for (let i = 0; i < L.length; i++) for (let j = i + 1; j < L.length; j++) { const a = ctr(L[i]), b = ctr(L[j]); if (Math.hypot(a[0] - b[0], a[1] - b[1]) < (cfg.instR || 0.35)) par[f(i)] = f(j); } // instR — ракеты стоят теснее 0,35 м
   const inst = new Map(); L.forEach((b, i) => { const r = f(i); let q = inst.get(r); if (!q) inst.set(r, q = { ids: new Set(), mn: [1e9, 1e9, 1e9], mx: [-1e9, -1e9, -1e9] }); q.ids.add(b.id); for (let d = 0; d < 3; d++) { q.mn[d] = Math.min(q.mn[d], b.mn[d]); q.mx[d] = Math.max(q.mx[d], b.mx[d]); } });
   let list = [...inst.values()].map((q) => ({ ...q, c: q.mn.map((v, d) => (v + q.mx[d]) / 2), len: q.mx[2] - q.mn[2] }));
   const maxLen = Math.max(...list.map((q) => q.len)), big = list.filter((q) => q.len > maxLen * 0.6);

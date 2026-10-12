@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261018k';
+import { CREDITS } from './models/credits.js?v=20261019c';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -57,6 +57,11 @@ const META = {
   d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.62 }, // Ту-160 — KOG_THORNS; носитель «Мульти-волны»
   e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
+  e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [], nr: 0.4 }, // B-52H — bohmerang; носитель «Мульти-волны» (без форсажа — пламени нет)
+  e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-0.54, -0.63, 8.6), V(0.54, -0.63, 8.6)], nr: 0.38 }, // Eurofighter Typhoon — andertan; носитель Storm Shadow
+  w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // «Кинжал» — по Р-33 (Mustafa.Garip), увеличена до 7,2 м
+  w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM — по UGM-84 Harpoon (FeriseCAT)
+  w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW — набор NETRUNNER_pl
   l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» — 42manako (ракеты на старте — tbm, tbm2)
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — 42manako (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
@@ -64,7 +69,7 @@ const META = {
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II с F-16D
   w_fab500: { weapon: 'fab500', stations: [] }, // ФАБ-500М-62 — Jeyhun1985 (модель с УМПК, комплект снят)
-  w_umpk: { weapon: 'umpk', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
+  w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29 — Russian weapon pack, Rhine_Lab_Muelsyse
   w_kh31p: { weapon: 'kh31p', stations: [] }, // Х-31 — Russian weapon pack
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-38МТ — Jeyhun1985 (вместо Х-25МЛ: та же схема)
@@ -74,7 +79,7 @@ const META = {
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) — и для AARGM
   w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
   w_decoy_e: { weapon: 'decoy_e', stations: [] }, // Harpy — ложная цель
-  w_gbu39: { weapon: 'gbu39', stations: [] }, // GBU-39 SDB
+  w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'fold', stations: [] }, // GBU-39 SDB (и для «Мульти-волны»)
   w_gbu31: { weapon: 'gbu31', stations: [] }, // Mk 84 с хвостом (GBU-24 с F-111 без головки) — как JDAM
   w_pod: { pod: true, stations: [] }, // AN/AAQ-28 LITENING — прицельный контейнер
   // постройки военных объектов (целей) — расставляются по OBJ_DIMS из city.js
@@ -98,7 +103,14 @@ const META = {
   kub: { units: ['kub'], stations: [] }, // 2К12 «Куб» — UltraKill
   hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk — Dominik Biały
   m163: { units: ['m163'], stations: [] }, // M163 VADS — 42manako
-  gepard: { units: ['gepard'], stations: [] }, // Flakpanzer Gepard (не «War Thunder»)
+  gepard: { units: ['gepard'], stations: [] },
+  roland: { units: ['roland'], stations: [] },
+  tunguska: { units: ['tunguska'], stations: [] },
+  skyguard: { units: ['skyguard'], stations: [] },
+  rapier: { units: ['rapier'], stations: [] }, // Tracked Rapier — stealth86 (перекрашен, пусковая развёрнута в рабочее положение) // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
+  sampt: { units: ['sampt'], stations: [] }, // SAMP/T — Chenzoss
+  khordad: { units: ['khordad'], stations: [] }, // Sevom Khordad — 42manako (перекрашен, у запада — трофейный)
+  msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 — по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder — ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
   nasams: { units: ['nasams'], stations: [] }, // NASAMS 1 — пусковая
   ew_e: { units: ['gpsjam'], stations: [] }, // станция РЭБ (восток) — машина с РЛС IBIS-150
   ew_w: { units: ['gpsjamw'], stations: [] }, // станция РЭБ (запад) — радарная машина Renault TRM
@@ -133,7 +145,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=20261018k`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=20261019c`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
@@ -158,6 +170,36 @@ async function load(name, base) {
         ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}) });
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; partOf(m.name || '').add(mesh);
   }
+  // крылья планирующих бомб (части wing*): своя ось поворота (вертикальная) — у корня по передней кромке; у цельного крыла
+  // поперёк бомбы (УМПК) — посередине. wa — [угол на подвеске, угол в полёте]: сложенное лежит вдоль бомбы назад,
+  // раскрытое — в стороны (модель с раскрытыми — wings: 'fold', со сложенными — 'deploy'); setWings ставит долю раскрытия
+  const WM = (META[name] || {}).wings;
+  // цельная деталь крыла поперёк бомбы (у УМПК две консоли на общей оси слиты в одну) — делим на левую и правую по
+  // треугольникам: каждая консоль складывается сама, вокруг общей оси посередине
+  for (const part of group.children.filter((c) => WM && /^wing/.test(c.name))) {
+    const b = new THREE.Box3().setFromObject(part), c = b.getCenter(new THREE.Vector3());
+    if (!(b.min.x < -0.3 && b.max.x > 0.3 && Math.abs(c.x) < 0.1)) continue;
+    const halves = [new THREE.Group(), new THREE.Group()], acc = [new THREE.Vector3(), new THREE.Vector3()], cnt = [0, 0]; halves[0].name = part.name + 'R'; halves[1].name = part.name + 'L';
+    for (const m of part.children) {
+      const P = m.geometry.attributes.position, I = m.geometry.index.array, keep = [[], []];
+      for (let t = 0; t < I.length; t += 3) { const x = (P.getX(I[t]) + P.getX(I[t + 1]) + P.getX(I[t + 2])) / 3; const h = x >= c.x ? 0 : 1; keep[h].push(I[t], I[t + 1], I[t + 2]);
+        for (let j = 0; j < 3; j++) acc[h].add(new THREE.Vector3(P.getX(I[t + j]), P.getY(I[t + j]), P.getZ(I[t + j]))); cnt[h] += 3; }
+      keep.forEach((ix, h) => { if (!ix.length) return; const g = m.geometry.clone(); g.setIndex(ix); halves[h].add(new THREE.Mesh(g, m.material)); });
+    }
+    halves.forEach((h, i) => { h.userData.pivot = c.clone(); h.userData.ctr = acc[i].divideScalar(Math.max(1, cnt[i])); group.add(h); }); group.remove(part); // габариты у клонов геометрии — от целой: центр половины считаем сами
+  }
+  if (WM) for (const part of group.children.filter((c) => /^wing/.test(c.name))) {
+    const b = new THREE.Box3().setFromObject(part), c = part.userData.ctr ? part.userData.ctr.clone() : b.getCenter(new THREE.Vector3());
+    const side = Math.sign(c.x) || 1, pv = part.userData.pivot ? part.userData.pivot.clone() : new THREE.Vector3(side > 0 ? b.min.x : b.max.x, c.y, b.min.z);
+    if (WM === 'deploy' && !part.userData.pivot) pv.set(c.x, c.y, b.min.z);
+    const piv = new THREE.Group(); piv.name = part.name; piv.position.copy(pv);
+    for (const m of part.children.slice()) { m.position.sub(pv); piv.add(m); }
+    group.remove(part); group.add(piv);
+    const ang = (x, z) => Math.atan2(x, z), d = c.clone().sub(pv), wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+    if (WM === 'fold') piv.userData.wa = [wrap(ang(0, 1) - ang(d.x, d.z)), 0]; // вдоль бомбы, назад
+    else { const sx = Math.sign(d.x) || (part.name === 'wingA' ? 1 : -1); piv.userData.wa = [0, wrap(ang(sx * 0.98, 0.17) - ang(d.x, d.z))]; } // в сторону, со стреловидностью ~10°
+    group.userData.wings = true;
+  }
   // дорисованные пилоны там, где у модели их нет
   for (const p of (META[name] || META[name.replace(/_lo$/, "")] || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo — по описанию основной */ const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); group.add(pm); }
   return group;
@@ -165,7 +207,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir']);
+const UNIT_LO = new Set(['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
@@ -215,9 +257,11 @@ export function wantWeapon(key) { const n = WMODEL[key]; if (n && BASE) start(n)
 export function podModel() { const n = Object.keys(META).find((k) => META[k].pod === true); return n && LOADED[n] ? LOADED[n].clone() : null; }
 // труба ПЗРК (качающаяся часть пусковой у расчёта) или null
 export function launcherGlb(key) { const n = LAUNCHER[key]; return n && LOADED[n] ? LOADED[n].clone() : null; }
+// крылья планирующей бомбы: k = 0 — сложены (на подвеске), 1 — раскрыты (в полёте)
+export function setWings(obj, k) { if (obj.userData.wings) obj.traverse((n) => { const a = n.userData.wa; if (a) n.rotation.y = a[0] + (a[1] - a[0]) * k; }); }
 export function weaponMesh(key, W, geoFn, mat) {
   const n = WMODEL[key];
-  if (n && LOADED[n]) { const o = LOADED[n].clone(); o.traverse((q) => { if (q.isMesh) q.castShadow = true; }); return o; }
+  if (n && LOADED[n]) { const o = LOADED[n].clone(); o.traverse((q) => { if (q.isMesh) q.castShadow = true; }); setWings(o, 0); return o; } // крылья — сложены (на подвеске)
   return new THREE.Mesh(geoFn(key, W), mat);
 }
 // класс машины по подвеске: бомбы (в том числе управляемые) — ударный, иначе — ракетный

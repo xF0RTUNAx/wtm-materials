@@ -72,6 +72,17 @@ export function zoneAt(x, z) {
 }
 // линия сетки улиц: проспект или улица
 export const lineW = (i) => (((i % CITY.AVE_EVERY) + CITY.AVE_EVERY) % CITY.AVE_EVERY === 0 ? CITY.AVENUE : CITY.STREET);
+// насколько точка «внутри» жилой застройки, м: < 0 — за краем города или деревни (для редеющей окраины)
+export function edgeIn(x, z) {
+  const n = vnoise(x * 0.0007 + 3.1, z * 0.0007 + 7.7), d = Math.hypot(x - CX, z - CZ);
+  return Math.max(CITY.R - 500 + 800 * (n - 0.5) - d, (vnoise(x * 0.0011, z * 0.0011) - 0.78) * 9000);
+}
+// дорожная сеть: отрезок линии сетки между соседними перекрёстками. RN — сколько линий в каждую сторону от центра
+export const RN = Math.round(CITY.HALF / CITY.GRID), RS = 2 * RN;
+export const ROAD = { NONE: 0, RURAL: 1, CITY: 2 };
+export const HWY_EVERY = 10;    // каждая 10-я линия (2 км) — загородная трасса до края карты
+export const RURAL_HW = 6;      // полуширина загородной дороги, м
+export const BRIDGE_Z = [-6000, -3000, -1000, 1000, 3000, 7000]; // мосты — по проспектам вдоль X
 
 // ═════════════ Объекты-цели ═════════════
 // габариты готовых построек при масштабе 1 (ширина по X, высота, длина по Z) — как печатает tools/airdef-models/prepare.js
@@ -117,7 +128,7 @@ function makeObjects() {
     add({ key: 'air', name: 'Военный аэродром', x, z: z + 500, w: 900, d: 260, value: 150, hp: 220, models: M,
       parts: [...M.map(mbox), { t: 'cyl', x: x - 150, z: z + 520, r: 6, h: 30 }, { t: 'box', x: x - 150, z: z + 535, w: 20, d: 14, h: 8 }] }); }
   // мосты через реку — по проспектам
-  for (const zb of [-6000, -3000, -1000, 1000, 3000, 7000]) {
+  for (const zb of BRIDGE_Z) {
     const xr = riverX(zb), L = CITY.RIVER_W + 80;
     add({ key: 'bridge', name: 'Мост', x: xr, z: zb, w: L, d: 34, value: 90, hp: 160, bridge: true, noTarget: true, // не цель: просто часть города
       parts: [{ t: 'box', x: xr, z: zb, w: L, d: 30, h: 4, y0: 10 }, { t: 'box', x: xr - 60, z: zb, w: 8, d: 24, h: 10, y0: CITY.WATER_Y },
@@ -160,12 +171,21 @@ export function buildCity(seed = 1) {
     if (rnd() < 0.4) put(x, z, 2.2, 2.2, 18 + rnd() * 45, KIND.PLAIN, H); // шпиль-антенна
   };
   const G = CITY.GRID, N = Math.ceil(CITY.R / G) + 1;
+  const urb = new Uint8Array(RS * RS); // квартал (i, j) городской — вокруг него улицы
+  const hwy = (k) => ((k % HWY_EVERY) + HWY_EVERY) % HWY_EVERY === 0;
   for (let i = -N; i < N; i++) for (let j = -N; j < N; j++) {
     const x0 = i * G + lineW(i) / 2, x1 = (i + 1) * G - lineW(i + 1) / 2, z0 = j * G + lineW(j) / 2, z1 = (j + 1) * G - lineW(j + 1) / 2;
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
     if (Math.hypot(cx, cz) > CITY.HALF - 3000) continue;
-    const zn = zoneAt(cx, cz);
-    if (zn === ZONE.WATER || zn === ZONE.AIR || zn === ZONE.PARK || zn === ZONE.FIELD && rnd() < 0.85) continue;
+    const zn = zoneAt(cx, cz), e = edgeIn(cx, cz);
+    if (zn === ZONE.WATER || zn === ZONE.AIR || zn === ZONE.PARK) continue;
+    if (zn === ZONE.FIELD) {
+      // за городом: хутора вдоль трасс и редеющая окраина у края застройки (раньше — случайные кварталы посреди поля)
+      const p = Math.max(hwy(i) || hwy(i + 1) || hwy(j) || hwy(j + 1) ? 0.22 : 0, e > -700 ? 0.5 * (1 + e / 700) : 0);
+      if (rnd() >= p) continue;
+    }
+    const qb = (j + RN) * RS + i + RN, n0 = n;
+    if (e > 350) urb[qb] = 2; // окраина и деревни (1) — ниже, только если в квартале встал хоть один дом
     // квартал у реки — набережная 40 м
     const near = Math.min(Math.abs(x0 - riverX(z0)), Math.abs(x1 - riverX(z0)), Math.abs(x0 - riverX(z1)), Math.abs(x1 - riverX(z1)), Math.abs(cx - riverX(cz)));
     if (near < CITY.RIVER_W / 2 + 45 || Math.sign(x0 - riverX(cz)) !== Math.sign(x1 - riverX(cz))) continue;
@@ -195,10 +215,10 @@ export function buildCity(seed = 1) {
       else if (rnd() < 0.4) put(cx, cz, 34 + rnd() * 20, 26, 9 + rnd() * 5, KIND.PLAIN); // школа, магазин
     } else if (zn === ZONE.LOW || zn === ZONE.FIELD) {
       // частный сектор и пятиэтажки по краям
-      const five = d < 8000 && rnd() < 0.35;
+      const five = d < 8000 && e > 500 && rnd() < 0.35;
       if (five) { put(cx, z0 + m + 6, bw - 2 * m - 30, 12, 15.5, KIND.PANEL); put(cx, z1 - m - 6, bw - 2 * m - 30, 12, 15.5, KIND.PANEL); }
       else for (let a = 0; a < 2; a++) for (let b = 0; b < 2; b++) {
-        if (rnd() < 0.18) continue;
+        if (rnd() < 0.18 + 0.5 * (1 - smooth(0, 900, e))) continue; // к краю города и деревни дома редеют
         const qx = x0 + m + (a + 0.5) * (bw - 2 * m) / 2 + (rnd() - 0.5) * 20, qz = z0 + m + (b + 0.5) * (bd - 2 * m) / 2 + (rnd() - 0.5) * 20;
         put(qx, qz, 11 + rnd() * 8, 10 + rnd() * 8, 5 + rnd() * 6, KIND.HOUSE);
       }
@@ -211,7 +231,69 @@ export function buildCity(seed = 1) {
       }
       if (rnd() < 0.12) put(x0 + m + 6, z0 + m + 6, 5, 5, 45 + rnd() * 50, KIND.PLAIN); // заводская труба
     }
+    if (!urb[qb] && n > n0) urb[qb] = 1;
   }
+  // ── дорожная сеть: улица — вдоль городского квартала, трасса — по каждой 10-й линии до края карты; не по воде (кроме
+  //    мостов), не через объекты и аэропорт. Отрезок целиком от перекрёстка до перекрёстка — дорога кончается на перекрёстке.
+  // RX[(j+RN)·RS + i+RN] — линия x = i·G, отрезок z ∈ [j·G, (j+1)·G]; RZ — линия z = j·G, отрезок x ∈ [i·G, (i+1)·G]
+  const RX = new Uint8Array(RS * RS), RZ = new Uint8Array(RS * RS);
+  const ub = (i, j) => (i >= -RN && j >= -RN && i < RN && j < RN ? urb[(j + RN) * RS + i + RN] : 0);
+  // у окраинных и деревенских кварталов (1) — не сетка вокруг каждого, а ряды-улицы в одну сторону (своя в каждой округе)
+  // и поперечный проезд раз в километр; у городских (2) — улицы со всех сторон
+  const rowZ = (x, z) => vnoise(x * 0.00035 + 5.3, z * 0.00035 + 1.7) > 0.5;
+  const kind = (a, b, hw, k, alongZ, x, z) => {
+    const u = Math.max(a, b);
+    if (u === 2) return ROAD.CITY;
+    if (hw || (u === 1 && (rowZ(x, z) === alongZ || k % CITY.AVE_EVERY === 0))) return ROAD.RURAL;
+    return 0;
+  };
+  const segOk = (x0, z0, x1, z1, bridge) => {
+    for (let t = 0; t <= 1.001; t += 0.1) {
+      const x = x0 + (x1 - x0) * t, z = z0 + (z1 - z0) * t;
+      if (!bridge && Math.abs(x - riverX(z)) < CITY.RIVER_W / 2 + 12) return false;
+      if (Math.abs(x - AIRPORT.x) < AIRPORT.w / 2 + 40 && Math.abs(z - AIRPORT.z) < AIRPORT.d / 2 + 40) return false;
+      if (Math.hypot(x, z) > CITY.HALF - 1800) return false;
+    }
+    return !objects.some((o) => !o.bridge && x1 > o.x - o.w / 2 - 10 && x0 < o.x + o.w / 2 + 10 && z1 > o.z - o.d / 2 - 10 && z0 < o.z + o.d / 2 + 10);
+  };
+  for (let j = -RN; j < RN; j++) for (let i = -RN; i < RN; i++) {
+    const q = (j + RN) * RS + i + RN;
+    let t = kind(ub(i - 1, j), ub(i, j), hwy(i), i, true, i * G, (j + 0.5) * G);
+    if (t && segOk(i * G, j * G, i * G, (j + 1) * G, false)) RX[q] = t;
+    t = kind(ub(i, j - 1), ub(i, j), hwy(j), j, false, (i + 0.5) * G, j * G);
+    if (t && segOk(i * G, j * G, (i + 1) * G, j * G, BRIDGE_Z.includes(j * G))) RZ[q] = t;
+  }
+  // сельские улицы, не связанные с городом или трассой, убираем (отдельный хутор — без асфальта посреди поля)
+  {
+    const NS = RS + 1, seen = new Uint8Array(NS * NS), st = [];
+    const nd = (i, j) => (j + RN) * NS + i + RN;
+    for (let j = -RN; j < RN; j++) for (let i = -RN; i < RN; i++) {
+      const q = (j + RN) * RS + i + RN;
+      if (RX[q] === ROAD.CITY || (RX[q] && hwy(i))) for (const v of [nd(i, j), nd(i, j + 1)]) if (!seen[v]) { seen[v] = 1; st.push(v); }
+      if (RZ[q] === ROAD.CITY || (RZ[q] && hwy(j))) for (const v of [nd(i, j), nd(i + 1, j)]) if (!seen[v]) { seen[v] = 1; st.push(v); }
+    }
+    const go = (v, q, A) => { if (A[q] && !seen[v]) { seen[v] = 1; st.push(v); } };
+    while (st.length) {
+      const v = st.pop(), i = (v % NS) - RN, j = Math.floor(v / NS) - RN;
+      if (i < RN && j < RN) { go(nd(i, j + 1), (j + RN) * RS + i + RN, RX); go(nd(i + 1, j), (j + RN) * RS + i + RN, RZ); }
+      if (j > -RN && i < RN) go(nd(i, j - 1), (j - 1 + RN) * RS + i + RN, RX);
+      if (i > -RN && j < RN) go(nd(i - 1, j), (j + RN) * RS + i - 1 + RN, RZ);
+    }
+    for (let j = -RN; j < RN; j++) for (let i = -RN; i < RN; i++) {
+      const q = (j + RN) * RS + i + RN;
+      if (RX[q] && !seen[nd(i, j)]) RX[q] = 0;
+      if (RZ[q] && !seen[nd(i, j)]) RZ[q] = 0;
+    }
+  }
+  const roadT = (i, j, alongZ) => (i < -RN || j < -RN || i >= RN || j >= RN ? 0 : (alongZ ? RX : RZ)[(j + RN) * RS + i + RN]);
+  // точка на проезжей части (pad — запас за край, м): для деревьев и фонарей
+  const onRoad = (x, z, pad = 0) => {
+    const i = Math.round(x / G), j = Math.floor(z / G), t1 = roadT(i, j, true);
+    if (t1 && Math.abs(x - i * G) < (t1 === ROAD.CITY ? lineW(i) / 2 : RURAL_HW) + pad) return true;
+    const j2 = Math.round(z / G), i2 = Math.floor(x / G), t2 = roadT(i2, j2, false);
+    return !!t2 && Math.abs(z - j2 * G) < (t2 === ROAD.CITY ? lineW(j2) / 2 : RURAL_HW) + pad;
+  };
+
   const B = { n, x: BX.subarray(0, n), z: BZ.subarray(0, n), w: BW.subarray(0, n), d: BD.subarray(0, n), h: BH.subarray(0, n), y0: BY.subarray(0, n), k: BK.subarray(0, n), c: BC.subarray(0, n) };
 
   // ── сетка высот застройки (над землёй, м) и грубая сетка максимумов (с землёй) ──
@@ -281,5 +363,5 @@ export function buildCity(seed = 1) {
     }
     return null;
   }
-  return { seed, B, objects, grid, GN, coarse, CN, bldAt, topAt, los, raycast, zoneAt, groundH };
+  return { seed, B, objects, grid, GN, coarse, CN, bldAt, topAt, los, raycast, zoneAt, groundH, RX, RZ, roadT, onRoad };
 }

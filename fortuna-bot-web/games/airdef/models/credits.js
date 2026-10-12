@@ -79,7 +79,8 @@ export const CREDITS = [
   "files": [
    "w_mk82",
    "aam_aim9",
-   "aam_aim54"
+   "aam_aim54",
+   "w_jsow"
   ]
  },
  {
@@ -399,6 +400,42 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Boeing B-52 Stratofortress",
+  "author": "bohmerang",
+  "url": "https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_b52"
+  ]
+ },
+ {
+  "title": "Eurofighter Typhoon EF-2000",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_typhoon"
+  ]
+ },
+ {
+  "title": "UGM-84 Harpoon (FREE)",
+  "author": "FeriseCAT",
+  "url": "https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_slam"
+  ]
+ },
+ {
+  "title": "Game Ready Low Poly R-33",
+  "author": "Mustafa.Garip",
+  "url": "https://sketchfab.com/3d-models/game-ready-low-poly-r-33-1f9108d505b245bfa225a44af41e554e",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_kinzhal"
+  ]
+ },
+ {
   "title": "Chinese 9K720 Iskander TELAR",
   "author": "42manako",
   "url": "https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1",
@@ -550,6 +587,7 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4",
   "license": "CC-BY-4.0",
   "files": [
+   "msl_aster",
    "aam_iris"
   ]
  },
@@ -608,6 +646,64 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "strela1"
+  ]
+ },
+ {
+  "title": "Marder Roland (low-poly)",
+  "author": "ScurvyWoof",
+  "url": "https://sketchfab.com/3d-models/marder-roland-low-poly-2f30452b85ec461db2de4bc118b7448e",
+  "license": "CC-BY-4.0",
+  "files": [
+   "roland"
+  ]
+ },
+ {
+  "title": "2K22 Tunguska",
+  "author": "usedm",
+  "url": "https://sketchfab.com/3d-models/2k22-tunguska-54ff4d655755473d99eab1ccc7eb6bfc",
+  "license": "CC-BY-4.0",
+  "files": [
+   "tunguska",
+   "tunguska_lo"
+  ]
+ },
+ {
+  "title": "samp-t air defense system",
+  "author": "Chenzoss",
+  "url": "https://sketchfab.com/3d-models/samp-t-air-defense-system-096f1bd31fc646b9908d5f1d9b7e0d34",
+  "license": "CC-BY-4.0",
+  "files": [
+   "sampt",
+   "sampt_lo"
+  ]
+ },
+ {
+  "title": "Iranian Sevom Khordad SAM",
+  "author": "42manako",
+  "url": "https://sketchfab.com/3d-models/iranian-sevom-khordad-sam-ca18f97aeb6a4aaf992a973d513de306",
+  "license": "CC-BY-4.0",
+  "files": [
+   "khordad"
+  ]
+ },
+ {
+  "title": "OERLIKON 35MM SKYGUARD RADAR",
+  "author": "lm9241221",
+  "url": "https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d",
+  "license": "CC-BY-4.0",
+  "files": [
+   "skyguard",
+   "skyguard_lo"
+  ]
+ },
+ {
+  "title": "Tracked Rapier",
+  "author": "stealth86",
+  "url": "https://sketchfab.com/3d-models/tracked-rapier-23db0462ce604a64af5ea282b5df59b9",
+  "license": "CC-BY-4.0",
+  "files": [
+   "rapier",
+   "rapier_lo"
   ]
  },
  {

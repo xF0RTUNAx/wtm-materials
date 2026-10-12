@@ -13,9 +13,9 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261018k';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261018k';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261018k';
+import { AG, SAM } from '../arsenal.js?v=20261019c';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261019c';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261019c';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
@@ -682,7 +682,14 @@ export function createStrike(ctx) {
     }
     if (dive) TMP.normalize();
     else if (dh < 2500 && !wp && aim) { TMP.y = 0; TMP.normalize(); TMP.y = clamp((w.popY + 40 - w.pos.y) / 150, -0.15, 0.6); TMP.normalize(); }
-    else {
+    else if (W.glide && w.aim) {
+      // планирующая бомба: с высоты сброса — по прямой вниз к цели (над крышами не ниже 60 м), скорость — своя
+      TMP.y = 0; TMP.normalize();
+      const dA = Math.hypot(w.aim.x - w.pos.x, w.aim.z - w.pos.z);
+      if (w.gy0 === undefined) { w.gy0 = w.pos.y; w.gd0 = Math.max(1, dA); }
+      const want = Math.max(city.topAt(w.pos.x + TMP.x * 300, w.pos.z + TMP.z * 300) + 60, w.aim.y + (w.gy0 - w.aim.y) * clamp(dA / w.gd0, 0, 1));
+      TMP.y = clamp((want - w.pos.y) / 300, -0.6, 0.15); TMP.normalize();
+    } else {
       TMP.y = 0; TMP.normalize();
       // огибание рельефа и крыш: впереди по курсу на цель и по текущему курсу (на развороте дуга уходит в сторону)
       let top = city.topAt(w.pos.x, w.pos.z), hx = Math.hypot(w.dir.x, w.dir.z) || 1;
@@ -692,7 +699,7 @@ export function createStrike(ctx) {
     }
     turnToward(w.dir, TMP, 0.7 * dt);
     w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed); w.homing = true;
-    if (!W.uav) { w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.08; fx.wpnTrail(w); } } // у дронов (поршневой мотор) следа нет
+    if (!W.uav && !W.glide) { w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.08; fx.wpnTrail(w); } } // у дронов (поршневой мотор) и планирующих бомб следа нет
     if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > W.life) wpnDetonate(w);
   }
   // истинное время до цели: прогон той же кинематики (разгон, разворот 0,7 рад/с, маршрутные точки — снимаются за 700 м, пикирование

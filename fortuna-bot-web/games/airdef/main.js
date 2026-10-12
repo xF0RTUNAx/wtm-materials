@@ -8,26 +8,26 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261018k';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261018k';
-import { createPipeline } from '../drone/post.js?v=20261018k';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261018k';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261018k';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261018k';
-import { createStrike, MODES } from './sim/strike.js?v=20261018k';
-import { createRaid } from './sim/raid.js?v=20261018k';
-import { POD } from './sim/combined.js?v=20261018k';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261018k';
-import { slotCount } from './launchers.js?v=20261018k';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel } from './models.js?v=20261018k';
-import { createSound } from './sound.js?v=20261018k';
-import { createAir } from './air.js?v=20261018k';
-import { createDefense } from './defense.js?v=20261018k';
-import { createDirector } from './director.js?v=20261018k';
-import { createOnline } from './online.js?v=20261018k';
-import { createShell } from './shell.js?v=20261018k';
-import { createTraining, LESSONS } from './training.js?v=20261018k';
-import { createMenu } from './menu.js?v=20261018k';
+import { buildCity, CITY } from './city.js?v=20261019c';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261019c';
+import { createPipeline } from '../drone/post.js?v=20261019c';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261019c';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261019c';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261019c';
+import { createStrike, MODES } from './sim/strike.js?v=20261019c';
+import { createRaid } from './sim/raid.js?v=20261019c';
+import { POD } from './sim/combined.js?v=20261019c';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261019c';
+import { slotCount } from './launchers.js?v=20261019c';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261019c';
+import { createSound } from './sound.js?v=20261019c';
+import { createAir } from './air.js?v=20261019c';
+import { createDefense } from './defense.js?v=20261019c';
+import { createDirector } from './director.js?v=20261019c';
+import { createOnline } from './online.js?v=20261019c';
+import { createShell } from './shell.js?v=20261019c';
+import { createTraining, LESSONS } from './training.js?v=20261019c';
+import { createMenu } from './menu.js?v=20261019c';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -254,7 +254,7 @@ C.syncUnits = function () {
   }
 };
 // ось антенны обзора: центр (x, z) вершин её нижней части — опоры или мачты (тарелка бывает смещена от оси)
-const RADAR_W = { gepard: 6.3, tor: 6.3, osa: 3.5, pantsir: 4.2 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее
+const RADAR_W = { gepard: 6.3, tor: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее
 function radarAxis(o) {
   o.updateMatrixWorld(true); const V = new THREE.Vector3(), P = [];
   o.traverse((m) => { if (!m.isMesh) return; const a = m.geometry.attributes.position; for (let i = 0; i < a.count; i += 3) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld); P.push(V.x, V.y, V.z); } });
@@ -453,7 +453,7 @@ function evMesh(w) {
   // баллистическая: факел двигателя на разгоне (у сопла — корма, +Z)
   if (w.W.kind === 'tbm') { const nz = nozzleOf(g, w.W.vis.r); w.nzL = nz; g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.move(nz.z); g.children.filter((c) => c.renderOrder === 5).forEach((c) => { c.position.x = nz.x; c.position.y = nz.y; }); } // факел — из среза сопла
   if (g.children.some((c) => /^prop/.test(c.name))) g.userData.props = true;
-  if (w.W.kind === 'cruise' && !w.W.uav && !w.W.recon) { // крылатая: факел из среза сопла — ускоритель на старте, потом маршевый (слабый)
+  if (w.W.kind === 'cruise' && !w.W.uav && !w.W.recon && !w.W.glide) { // крылатая (планирующая бомба — без двигателя): факел из среза сопла — ускоритель на старте, потом маршевый (слабый)
     const nz = w.nzL = NZC[w.key] || (NZC[w.key] = nozzleOf(g, w.W.vis.r, w.W.vis.nzAx));
     g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = 'jet'; // пуск с самолёта: запуск двигателя, потом маршевый
   }
@@ -517,7 +517,8 @@ function syncWorld(dt, t) {
   for (const w of S.wpns) {
     let g = wpnMeshes.get(w.id);
     if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = evMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла — подменить временную
-    if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) flameOf(g, w); } }
+    if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) flameOf(g, w);
+      if (g.userData.wings) { const k = ((g.userData.wingT = (g.userData.wingT || 0) + dt) - 0.3) / 0.8; setWings(g, Math.min(1, Math.max(0, k))); } } } // крылья раскрываются через 0,3 с после сброса
   syncEv();
   const pxK = VH / 2 / Math.tan(camera.fov * D2R / 2); // пикселей на метр на расстоянии 1 м
   for (const u of S.units) {

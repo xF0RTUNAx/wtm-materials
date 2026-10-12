@@ -96,8 +96,8 @@ export function createMulti(ctx) {
   // атака: состав ИИ этой эпохи, урезанный под бюджет; цели — два случайных объекта, ложные цели — на ПВО
   function botAttack(r, p) {
     const base = (COMBINED[r.atk] || {})[r.era] || [], n = {}; let cost = 0;
-    let tbmLeft = M.TBM_CAP(atkTeam(r).length) - atkTeam(r).filter((q) => q !== p).reduce((q, x) => q + M.tbmOf(x.plan && x.plan.n), 0);
-    for (let pass = 0; pass < 6; pass++) for (const [k] of base) { if (AG[k].recon || !multiItems(r.atk, r.era).some(([q]) => q === k)) continue; const c = THREAT[k] ?? 3, tb = AG[k].kind === 'tbm'; if (cost + c <= p.budget && (!tb || tbmLeft > 0)) { n[k] = (n[k] || 0) + 1; cost += c; if (tb) tbmLeft--; } }
+    const others = M.sumN(...atkTeam(r).filter((q) => q !== p).map((x) => x.plan && x.plan.n)), team = atkTeam(r).length;
+    for (let pass = 0; pass < 6; pass++) for (const [k] of base) { if (AG[k].recon || !multiItems(r.atk, r.era).some(([q]) => q === k)) continue; const c = THREAT[k] ?? 3, tb = AG[k].kind === 'tbm'; if (cost + c <= p.budget && (!tb || !M.tbmCheck(M.sumN(others, n, { [k]: 1 }), team))) { n[k] = (n[k] || 0) + 1; cost += c; } }
     const objs = r.S.objects.filter((o) => !o.noTarget), pick = [objs[Math.floor(Math.random() * objs.length)], objs[Math.floor(Math.random() * objs.length)]], cfg = {};
     for (const [k, c] of Object.entries(n)) cfg[k] = { pts: [], alt: null, t: null, sam: false, tgt: null, units: Array.from({ length: c }, (_, i) => (AG[k].decoyMun ? { sam: true } : { sam: false, tgt: pick[i % 2].id })) };
     p.plan = { n, cfg }; p.spent = cost;
@@ -240,7 +240,7 @@ export function createMulti(ctx) {
   // вид комнаты для мульти: раунд, кто атакует, план союзников-атакующих (сводка по целям) — только своей команде
   function viewExtra(r, me) {
     const out = { kind: 'multi', round: r.round || 0, rounds: M.ROUNDS, atk: r.atk || null, scores: r.scores ? { east: Math.round(r.scores.east), west: Math.round(r.scores.west) } : null, k: r.k || 1 };
-    if (me && r.atk && me.team === r.atk) out.allies = atkTeam(r).map((p) => ({ id: p.id, name: p.name, cost: M.planCost(p.plan && p.plan.n), tbm: M.tbmOf(p.plan && p.plan.n), tg: tgSummary(p.plan) }));
+    if (me && r.atk && me.team === r.atk) out.allies = atkTeam(r).map((p) => ({ id: p.id, name: p.name, cost: M.planCost(p.plan && p.plan.n), tbm: M.tbmOf(p.plan && p.plan.n), tbn: Object.fromEntries(Object.entries((p.plan && p.plan.n) || {}).filter(([k, v]) => v > 0 && AG[k] && AG[k].kind === 'tbm')), tg: tgSummary(p.plan) }));
     return out;
   }
   function tgSummary(plan) { // { 'o12': 'Калибр 2, Дрон ударный 4' } — что союзник шлёт на какую цель
@@ -277,8 +277,9 @@ export function createMulti(ctx) {
       const plan = M.cleanPlan(raw, r.atk, r.era, ids, CITY.HALF); if (!plan) return;
       const cost = M.planCost(plan.n);
       if (cost > c.budget) return send(c, { t: 'deny', msg: 'Не хватает очков угрозы' });
-      { const cap = M.TBM_CAP(atkTeam(r).length), other = atkTeam(r).filter((p) => p !== c).reduce((q, p) => q + M.tbmOf(p.plan && p.plan.n), 0);
-        if (M.tbmOf(plan.n) > M.tbmOf(c.plan && c.plan.n) && M.tbmOf(plan.n) + other > cap) return send(c, { t: 'deny', msg: `Баллистика: на команду не больше ${cap}` }); } // меньше — можно всегда
+      { const others = M.sumN(...atkTeam(r).filter((p) => p !== c).map((p) => p.plan && p.plan.n)), old = (c.plan && c.plan.n) || {};
+        const more = Object.keys(plan.n).some((k) => AG[k] && AG[k].kind === 'tbm' && (plan.n[k] || 0) > (old[k] || 0)), why = more && M.tbmCheck(M.sumN(others, plan.n), atkTeam(r).length);
+        if (why) return send(c, { t: 'deny', msg: `${why} на команду` }); } // меньше — можно всегда
       if (r.state === 'play' && c.E) { // нельзя убрать то, что уже в бою: число единиц — не меньше прежнего
         for (const [k, n0] of Object.entries(c.plan.n)) if ((plan.n[k] || 0) < n0) plan.n[k] = n0;
         const items = new Map(multiItems(r.atk, r.era));

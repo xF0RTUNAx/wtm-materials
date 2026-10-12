@@ -48,26 +48,30 @@ export function buildProps(C) {
   }
 
   // ── деревни: дома (стены и крыши — два InstancedMesh на всю карту), у каждой — сарай и водонапорная башня ──
+  let finishHouses = null;
   {
     const per = [8, 12, 18][lvl] + (P.propsLvl === 3 ? 6 : 0);
     const walls = [], roofs = [];
     const WALL = [0xe9e2d0, 0xf2ecdf, 0xd9cfae, 0xc9d6de, 0xb86b4b, 0xe3d6b8, 0xa9b7a0], ROOF = [0x8a3b2c, 0x6b3a2a, 0x4a4f57, 0x7a6a58, 0x3d5a3e, 0x9b4a32];
     for (const v of villages) {
-      const main = R() * Math.PI; // дома вдоль «улицы»
+      const main = R() * Math.PI; v.main = main; // дома вдоль «улицы» (её рисуем с дорогами ниже)
       for (let i = 0; i < per; i++) {
         const along = (R() - 0.5) * v.r * 1.8, off = (R() < 0.5 ? -1 : 1) * (18 + R() * 30) + (R() - 0.5) * 20;
         const x = v.x + Math.cos(main) * along - Math.sin(main) * off, z = v.z + Math.sin(main) * along + Math.cos(main) * off;
         const w = 7 + R() * 5, d = 8 + R() * 6, h = 4 + R() * 3.5, y = terrainH(x, z), rot = main + (R() < 0.3 ? Math.PI / 2 : 0) + (R() - 0.5) * 0.2;
-        walls.push({ x, y: y - 1.5, z, w, h: h + 1.5, d, rot, c: WALL[(R() * WALL.length) | 0] });
+        walls.push({ x, y: y - 1.5, z, w, h: h + 1.5, d, rot, c: WALL[(R() * WALL.length) | 0], box: { x, z, hw: Math.max(w, d) / 2, hd: Math.max(w, d) / 2, y0: y - 2, y1: y + h + 3 } });
         roofs.push({ x, y: y + h, z, w: w * 1.12, h: 2.2 + R() * 2.2, d: d * 1.06, rot, c: ROOF[(R() * ROOF.length) | 0] });
-        boxes.push({ x, z, hw: Math.max(w, d) / 2, hd: Math.max(w, d) / 2, y0: y - 2, y1: y + h + 3 });
       }
       if (lvl >= 1) { // водонапорная башня
         const x = v.x + (R() - 0.5) * 120, z = v.z + (R() - 0.5) * 120, y = terrainH(x, z);
-        walls.push({ x, y, z, w: 3, h: 22, d: 3, rot: 0, c: 0x8d8f8a }); roofs.push({ x, y: y + 22, z, w: 9, h: 7, d: 9, rot: 0, c: 0x9a5b3a, tank: true });
-        boxes.push({ x, z, hw: 5, hd: 5, y0: y, y1: y + 30 });
+        walls.push({ x, y, z, w: 3, h: 22, d: 3, rot: 0, c: 0x8d8f8a, box: { x, z, hw: 5, hd: 5, y0: y, y1: y + 30 } }); roofs.push({ x, y: y + 22, z, w: 9, h: 7, d: 9, rot: 0, c: 0x9a5b3a, tank: true });
       }
     }
+    // меши — после дорог (ниже): дом, на который легла дорога или улица, убираем
+    finishHouses = (roadDist) => {
+    const keep = walls.map((w) => roadDist(w.x, w.z) > Math.hypot(w.w, w.d) / 2 + 2);
+    for (let i = walls.length - 1; i >= 0; i--) if (!keep[i]) { walls.splice(i, 1); roofs.splice(i, 1); }
+    for (const w of walls) boxes.push(w.box);
     const box = new THREE.BoxGeometry(1, 1, 1); box.translate(0, 0.5, 0);
     const roof = new THREE.CylinderGeometry(0.58, 0.58, 1, 3, 1); roof.rotateX(Math.PI / 2); roof.rotateZ(Math.PI); roof.translate(0, 0.29, 0); roof.scale(1, 1 / 0.87, 1);
     const tank = new THREE.CylinderGeometry(0.5, 0.5, 1, 10); tank.translate(0, 0.5, 0);
@@ -83,6 +87,7 @@ export function buildProps(C) {
     const houses = walls.map((w, i) => (roofs[i].tank ? null : { x: w.x, y: w.y + 1.5, z: w.z, w: w.w, d: w.d, h: w.h - 1.5, rot: w.rot, i })).filter(Boolean);
     const wm = mk(box, walls, () => true), rm = mk(roof, roofs, (b) => !b.tank); mk(tank, roofs, (b) => b.tank);
     glb.houses = { items: houses, walls: wm, roofs: rm }; // вблизи — модели домов, процедурные экземпляры прячет шейдер
+    };
   }
 
   // ── промзона: площадка, цеха, трубы, резервуары, градирня ──
@@ -130,52 +135,104 @@ export function buildProps(C) {
 
   // ── дороги и железная дорога: ленты по рельефу, мосты над водой, разметка в шейдере ──
   const roadPts = []; // для столкновений не нужны
+  // расстояние до края ближайшей дороги или ж/д (м; дальше ~40 м — «далеко»): дома, лес и трава не встают на дорогу
+  const RC = 64, rSeg = [], rHash = new Map(), rKey = (i, j) => (i + 4096) * 8192 + j + 4096;
+  const roadDist = (x, z) => {
+    const L = rHash.get(rKey(Math.floor(x / RC), Math.floor(z / RC))); let best = 1e9;
+    if (L) for (const k of L) {
+      const [ax, az, bx, bz, h] = rSeg[k], dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz || 1)));
+      best = Math.min(best, Math.hypot(x - ax - dx * t, z - az - dz * t) - h);
+    }
+    return best;
+  };
+  // высота земли под дорогой: сетка рельефа между узлами — плоскости треугольников, на вогнутом склоне она выше настоящей
+  // поверхности (лента по terrainH там тонула — дорога «прерывалась»); берём большее из двух
+  const MS = C.meshStep || 0, MX0 = -WORLD.SIZE / 2;
+  const meshH = (x, z) => {
+    const fx = (x - MX0) / MS, fz = (z - MX0) / MS, i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, X = MX0 + i * MS, Z = MX0 + j * MS;
+    if (u + v <= 1) { const a = terrainH(X, Z); return a + (terrainH(X + MS, Z) - a) * u + (terrainH(X, Z + MS) - a) * v; }
+    const d = terrainH(X + MS, Z + MS); return d + (terrainH(X, Z + MS) - d) * (1 - u) + (terrainH(X + MS, Z) - d) * (1 - v);
+  };
+  let addRoads = () => {};
+  const groundAt = (x, z) => (MS ? Math.max(terrainH(x, z), meshH(x, z)) : terrainH(x, z));
   {
-    const nodes = [...TOWNS.map((t) => ({ x: t.x, z: t.z, r: t.r * 0.55, big: true })), { x: AIRFIELD.x + 150, z: AIRFIELD.z - 1500, r: 0, big: true }];
+    // дороги между городами идут в центр города (там сходятся), а не обрываются на полпути
+    const nodes = [...TOWNS.map((t) => ({ x: t.x, z: t.z, r: 0, big: true })), { x: AIRFIELD.x + 150, z: AIRFIELD.z - 1500, r: 0, big: true }];
     const links = [[0, 1], [1, 2], [2, 3], [3, 0], [3, 4]];
     if (ind) { nodes.push({ x: ind.x, z: ind.z, r: 300 }); links.push([1, nodes.length - 1]); }
-    for (const v of villages) {
-      let best = -1, bd = 1e9;
-      nodes.forEach((n, i) => { const d = Math.hypot(n.x - v.x, n.z - v.z); if (d < bd) { bd = d; best = i; } });
-      nodes.push({ x: v.x, z: v.z, r: 0 }); links.push([best, nodes.length - 1]);
-    }
-    const pos = [], rd = [], idx = [], piers = [];
+    const pos = [], rd = [], idx = [], piers = [], sk = [];
+    const quad = (a, b, c, d) => sk.push(...a, ...b, ...c, ...a, ...c, ...d);
     const ribbon = (pts, half, kind) => {
-      const base = pos.length / 3; let along = 0;
+      const base = pos.length / 3; let along = 0, prev = null;
       for (let i = 0; i < pts.length; i++) {
         const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], p = pts[i];
         let tx = b.x - a.x, tz = b.z - a.z; const tl = Math.hypot(tx, tz) || 1; tx /= tl; tz /= tl;
         if (i) along += Math.hypot(p.x - pts[i - 1].x, p.z - pts[i - 1].z);
-        pos.push(p.x - tz * half, p.y, p.z + tx * half, p.x + tz * half, p.y, p.z - tx * half);
+        const l = [p.x - tz * half, p.y, p.z + tx * half], r = [p.x + tz * half, p.y, p.z - tx * half];
+        pos.push(...l, ...r);
         rd.push(kind, along, kind + 1, along);
         if (i) { const o = base + i * 2; idx.push(o - 2, o - 1, o, o - 1, o + 1, o); }
+        // мост и насыпь: где лента поднята над землёй — боковины до земли (над водой — балка 1,8 м), низ и ограждение
+        const up = p.y - p.gm > 0.8, bot = p.g < W + 0.5 ? p.y - 1.8 : p.gm - 0.6;
+        const cur = { l, r, bl: [l[0], bot, l[2]], br: [r[0], bot, r[2]], ul: [l[0], p.y + 1, l[2]], ur: [r[0], p.y + 1, r[2]], up };
+        if (prev && (prev.up || up)) {
+          quad(prev.bl, prev.l, cur.l, cur.bl); quad(prev.r, prev.br, cur.br, cur.r); quad(prev.br, prev.bl, cur.bl, cur.br);
+          if (prev.up && up && p.g < W + 4) { quad(prev.l, prev.ul, cur.ul, cur.l); quad(prev.ur, prev.r, cur.r, cur.ur); }
+        }
+        prev = cur;
+        if (i) { // в индекс расстояний
+          const q = pts[i - 1], k = rSeg.length, e = half + 40; rSeg.push([q.x, q.z, p.x, p.z, half]);
+          for (let ci = Math.floor((Math.min(q.x, p.x) - e) / RC); ci <= Math.floor((Math.max(q.x, p.x) + e) / RC); ci++)
+            for (let cj = Math.floor((Math.min(q.z, p.z) - e) / RC); cj <= Math.floor((Math.max(q.z, p.z) + e) / RC); cj++) {
+              const key = rKey(ci, cj); let L = rHash.get(key); if (!L) rHash.set(key, L = []); L.push(k);
+            }
+        }
       }
     };
-    const path = (A, B, curvy) => {
+    // wig — извилистость (0 — прямая деревенская улица); у концов изгибы гаснут, чтобы дороги сходились точно в узел
+    const path = (A, B, curvy, wig = 1) => {
       const dx = B.x - A.x, dz = B.z - A.z, L = Math.hypot(dx, dz), ux = dx / L, uz = dz / L;
-      const t0 = A.r / L, t1 = 1 - B.r / L, amp = (R() - 0.5) * L * (curvy ? 0.18 : 0.1), ph = R() * 6;
-      const pts = [], step = 32;
-      for (let s = t0 * L; s <= t1 * L; s += step) {
-        const t = s / L, off = amp * Math.sin(Math.PI * t) + 25 * Math.sin(t * 9 + ph);
+      const t0 = A.r / L, t1 = 1 - B.r / L, amp = (R() - 0.5) * L * (curvy ? 0.18 : 0.1) * wig, ph = R() * 6;
+      const pts = [], step = 16;
+      for (let s = t0 * L; s <= t1 * L + 0.01; s += step) {
+        // в последних ~900 м перед узлом дорога прямая: дороги, подходящие к городу с близких сторон, не переплетаются
+        const t = Math.min(s, t1 * L) / L, e = Math.min(t - t0, t1 - t) * L, fade = e <= 0 ? 0 : e >= 900 ? 1 : (e / 900) * (e / 900) * (3 - 2 * e / 900);
+        const off = (amp * Math.sin(Math.PI * t) + 25 * wig * Math.sin(t * 9 + ph)) * fade;
         const x = A.x + dx * t - uz * off, z = A.z + dz * t + ux * off, g = terrainH(x, z);
-        pts.push({ x, z, g, y: g + 0.35 });
+        // по ширине дороги — самая высокая точка сетки (на косом склоне край ленты не уходит в землю)
+        const gm = Math.max(groundAt(x, z), groundAt(x - uz * 6.5, z + ux * 6.5), groundAt(x + uz * 6.5, z - ux * 6.5));
+        pts.push({ x, z, g, gm, y: gm + 0.35 });
+        if (s < t1 * L && s + step > t1 * L) s = t1 * L - step; // последняя точка — ровно в конце
       }
       // мосты: над водой — настил на высоте, въезды плавные
       for (let i = 0; i < pts.length; i++) {
         let wet = 0; for (let k = -4; k <= 4; k++) { const q = pts[i + k]; if (q && q.g < W + 2.5) wet = Math.max(wet, 1 - Math.abs(k) / 5); }
-        if (wet > 0) { pts[i].y = Math.max(pts[i].y, pts[i].g + 0.35 + (W + 7 - pts[i].g) * Math.min(1, wet * 1.4)); if (pts[i].g < W + 2.5 && i % 2 === 0) piers.push(pts[i]); }
+        if (wet > 0) { pts[i].y = Math.max(pts[i].y, pts[i].gm + 0.35 + (W + 7 - pts[i].gm) * Math.min(1, wet * 1.4)); if (pts[i].g < W + 2.5 && i % 4 === 0) piers.push(pts[i]); }
       }
       return pts;
     };
     for (const [a, b] of links) { const pts = path(nodes[a], nodes[b], !nodes[a].big || !nodes[b].big); if (pts.length > 2) { ribbon(pts, nodes[a].big && nodes[b].big ? 6.5 : 4, 0); roadPts.push(pts); } }
+    // деревня — вдоль своей улицы; к ближнему концу улицы подходит дорога от ближайшей точки уже проложенных дорог
+    // (примыкание буквой «Т», а не своя лента от центра города рядом с другой — так они шли парой и переплетались)
+    for (const v of villages) {
+      const ux = Math.cos(v.main), uz = Math.sin(v.main), Lh = v.r * 0.9 + 30;
+      const E = [{ x: v.x - ux * Lh, z: v.z - uz * Lh, r: 0 }, { x: v.x + ux * Lh, z: v.z + uz * Lh, r: 0 }];
+      let best = null, bd = 1e9, end = 0;
+      for (const pts of roadPts) for (let k = 0; k < pts.length; k += 2) E.forEach((e, j) => { const d = Math.hypot(pts[k].x - e.x, pts[k].z - e.z); if (d < bd) { bd = d; best = pts[k]; end = j; } });
+      const st = path(E[1 - end], E[end], false, 0); if (st.length > 2) { ribbon(st, 3.5, 0); roadPts.push(st); }
+      if (best && bd > 30) { const pts = path(E[end], { x: best.x, z: best.z, r: 5 }, true); if (pts.length > 2) { ribbon(pts, 4, 0); roadPts.push(pts); } }
+    }
     // железная дорога: через всю долину, мимо промзоны
     if (lvl >= 1) {
       const A = { x: -10500, z: -6000, r: 0 }, B = { x: 10500, z: 5000, r: 0 }, mid = ind ? { x: ind.x + 500, z: ind.z + 500, r: 0 } : { x: 0, z: 0, r: 0 };
       for (const [p, q] of [[A, mid], [mid, B]]) { const pts = path(p, q, false); pts.forEach((t) => { t.y += 0.4; }); if (pts.length > 2) ribbon(pts, 4.2, 2); }
     }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('rd', new THREE.Float32BufferAttribute(rd, 2)); g.setIndex(idx);
-    g.computeVertexNormals(); g.boundingSphere = new THREE.Sphere(V(0, 300, 0), WORLD.SIZE);
+    // перекрёсток в центре города: круглая площадка асфальта поверх сходящихся концов (без разметки — u = 0,2)
+    const hub = (n, R0) => {
+      const base = pos.length / 3, y = groundAt(n.x, n.z) + 0.45; pos.push(n.x, y, n.z); rd.push(0.2, 0);
+      for (let k = 0; k <= 24; k++) { const a = k / 24 * Math.PI * 2, x = n.x + Math.cos(a) * R0, z = n.z + Math.sin(a) * R0; pos.push(x, Math.max(y, groundAt(x, z) + 0.45), z); rd.push(0.2, 0); if (k) idx.push(base, base + k + 1, base + k); }
+    };
+    nodes.forEach((n, i) => { if (n.big && links.filter((l) => l.includes(i)).length >= 2) hub(n, 16); });
     const mat = new THREE.MeshLambertMaterial({ color: 0xffffff, side: THREE.DoubleSide });
     mat.onBeforeCompile = (sh) => {
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nattribute vec2 rd; varying vec2 vRd; varying float vDist;')
@@ -196,12 +253,27 @@ export function buildProps(C) {
             diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.32, 0.3, 0.3), max(rail * near, 0.0));
           }`);
     };
+    const flush = () => {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('rd', new THREE.Float32BufferAttribute(rd, 2)); g.setIndex(idx);
+    g.computeVertexNormals(); g.boundingSphere = new THREE.Sphere(V(0, 300, 0), WORLD.SIZE);
     const roads = add(new THREE.Mesh(g, mat)); roads.receiveShadow = !!P.shadows; roads.renderOrder = -1;
     // опоры мостов
     if (piers.length) {
-      const parts = piers.map((p) => part(new THREE.BoxGeometry(3, Math.max(2, p.y - p.g + 6), 3), 0x8a8a84, M(p.x, (p.y + p.g - 6) / 2, p.z)));
+      const parts = piers.map((p) => part(new THREE.BoxGeometry(3, Math.max(2, p.y - 1.8 - p.g + 6), 6), 0x8a8a84, M(p.x, (p.y - 1.8 + p.g - 6) / 2, p.z)));
       add(new THREE.Mesh(mergeParts(parts), solidMat));
     }
+    if (sk.length) { // боковины мостов и насыпей
+      const sg = new THREE.BufferGeometry(); sg.setAttribute('position', new THREE.Float32BufferAttribute(sk, 3)); sg.computeVertexNormals();
+      const sm = add(new THREE.Mesh(mergeParts([part(sg, 0x8f8d86, null)]), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
+      sm.castShadow = sm.receiveShadow = !!P.shadows;
+    }
+    pos.length = rd.length = idx.length = piers.length = sk.length = 0;
+    };
+    flush();
+    finishHouses(roadDist);
+    // ещё дороги позже (landmarks.js: подъезды к большому мосту): пары [A, B, полуширина], у узлов r — отступ от узла
+    addRoads = (pairs) => { for (const [a, b, h] of pairs) { const pts = path(a, b, true); if (pts.length > 2) { ribbon(pts, h, 0); roadPts.push(pts); } } if (pos.length) flush(); };
   }
 
   // ── ЛЭП: опоры и провода с провисом от промзоны к двум городам ──
@@ -274,7 +346,7 @@ export function buildProps(C) {
   });
   let t = 0;
   return {
-    boxes, emitters, villages, industry: ind, roads: roadPts, glb,
+    boxes, emitters, villages, industry: ind, roads: roadPts, glb, roadDist, addRoads: (p) => addRoads(p),
     update(dt, night) {
       t += dt;
       for (const a of anim) a.o.rotation.z += a.w * dt;

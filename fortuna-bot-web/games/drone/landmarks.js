@@ -45,7 +45,8 @@ export function buildLandmarks(C) {
       const cx = rx(z); if (terrainH(cx, z) > W - 5) continue;
       const tl = Math.hypot(drx(z), 1), p0x = 1 / tl, p0z = -drx(z) / tl, px = p0x * Math.cos(ang) - p0z * Math.sin(ang), pz = p0x * Math.sin(ang) + p0z * Math.cos(ang);
       let a = null, b = null;
-      for (let d = 0; d < 1500; d += 15) { if (a === null && terrainH(cx - px * d, z - pz * d) >= deck - 4) a = d; if (b === null && terrainH(cx + px * d, z + pz * d) >= deck - 4) b = d; }
+      // концы — где склон дошёл до высоты настила (раньше — за 4 м до неё: конец висел над землёй)
+      for (let d = 0; d < 1500; d += 5) { if (a === null && terrainH(cx - px * d, z - pz * d) >= deck - 0.3) a = d; if (b === null && terrainH(cx + px * d, z + pz * d) >= deck - 0.3) b = d; }
       if (a === null || b === null || a + b < 1200 || a + b > 2400) continue;
       let wet = 0; for (let d = -a; d <= b; d += 50) if (terrainH(cx + px * d, z + pz * d) < W) wet += 50;
       const sc = wet + (a + b) * 0.3 - Math.abs(ang) * 300;
@@ -56,10 +57,24 @@ export function buildLandmarks(C) {
       const pt = (s, o = 0) => [x0 + ux * s + uz * o, z0 + uz * s - ux * o]; // s — вдоль, o — поперёк (вправо)
       const put = (geo, col, s, y, o = 0, sx = 1, sy = 1, sz = 1, list = parts) => { const [x, z] = pt(s, o); list.push(part(geo, col, M(x, y, z, 0, yaw, 0, sx, sy, sz))); };
       const W_ = 34, T = 4.5;
-      put(BOX, 0x8e9196, L / 2, Y - T, 0, W_, T, L + 40);                              // балка-коробка
-      put(BOX, 0x2a2c30, L / 2, Y, 0, W_ - 6, 0.3, L + 40);                              // асфальт
+      put(BOX, 0x8e9196, L / 2, Y - T, 0, W_, T, L + 4);                               // балка-коробка
+      put(BOX, 0x2a2c30, L / 2, Y, 0, W_ - 6, 0.3, L + 4);                               // асфальт
+      // устои: последние 60 м настила стоят на сплошной опоре до земли
+      for (const s0 of [0, L - 60]) { let g = 1e9; for (let s = s0; s <= s0 + 60; s += 10) g = Math.min(g, terrainH(...pt(s))); put(BOX, 0xa9a7a0, s0 + 30, g - 6, 0, W_ - 2, Y - T - g + 6, 60); }
       for (let s = 10; s < L; s += 24) put(BOX, 0xe8e8e0, s, Y + 0.3, 0, 0.35, 0.05, 10); // разметка
-      for (const o of [-W_ / 2 + 1, W_ / 2 - 1]) put(BOX, 0xc9ccd0, L / 2, Y, o, 0.6, 1.4, L + 40); // ограждения
+      for (const o of [-W_ / 2 + 1, W_ / 2 - 1]) put(BOX, 0xc9ccd0, L / 2, Y, o, 0.6, 1.4, L + 4); // ограждения
+      // подъезды: от каждого конца — прямо 150 м по оси моста, дальше к ближней дороге на том же берегу (без переправы)
+      if (C.addRoads && C.roads) {
+        const pairs = [];
+        for (const [ex, ez, dir] of [[x0, z0, -1], [x1, z1, 1]]) {
+          const E = { x: ex, z: ez, r: 0 }, E2 = { x: ex + ux * 150 * dir, z: ez + uz * 150 * dir, r: 0 };
+          const dry = (A, B) => { const n = Math.ceil(Math.hypot(B.x - A.x, B.z - A.z) / 40); for (let k = 0; k <= n; k++) if (terrainH(A.x + (B.x - A.x) * k / n, A.z + (B.z - A.z) * k / n) < W + 3) return false; return true; };
+          let best = null, bd = 6000;
+          for (const pts of C.roads) for (let k = 0; k < pts.length; k += 4) { const q = pts[k], d = Math.hypot(q.x - E2.x, q.z - E2.z); if (d < bd && d > 200 && dry(E2, q)) { bd = d; best = q; } }
+          pairs.push([E, E2, 6.5]); if (best) pairs.push([E2, { x: best.x, z: best.z, r: 0 }, 6.5]);
+        }
+        C.addRoads(pairs);
+      }
       const pyl = [L * 0.27, L * 0.73], Htop = Y + 175;
       for (const s of pyl) {
         const g = Math.min(terrainH(...pt(s)), W - 12) - 4, h = Htop - g;

@@ -168,7 +168,7 @@ export const SAM = {
 // Наборы ПВО по эпохе и стороне: [ключ, сколько] — ближняя и дальняя оборона
 export const DEFENSE = {
   east: { 1: [['s75', 2], ['s125', 3], ['strela1', 3], ['strela2', 4]], 2: [['kub', 2], ['s125', 1], ['osa', 3], ['strela1', 2], ['igla', 4]] },
-  west: { 1: [['hawk', 3], ['m163', 5], ['redeye', 4]], 2: [['hawk', 3], ['gepard', 4], ['stinger', 5]] },
+  west: { 1: [['hawk', 3], ['m163', 5], ['redeye', 4]], 2: [['hawk', 3], ['roland', 1], ['rapier', 1], ['gepard', 2], ['skyguard', 1], ['stinger', 5]] },
 };
 // Готовые подвески «Изделия» для удара (по эпохе и стороне вооружения самолёта); pod — прицельный контейнер
 // подвески вылета: side — чья авиация (показываются подвески стороны, атакующей выбранную ПВО), plane — модель самолёта
@@ -296,6 +296,32 @@ Object.assign(SAM, {
     msl: { acc: 220, burn: 6, sustain: { acc: 20, t: 8 }, kd: 0.8, g: 40, vmin: 280, life: 45, blast: 14, dmg: 100, L: 3.0, r: 0.08, color: 0xd8dcd6 },
     guide: 'РЛС TRML-4D даёт целеуказание, ракета стартует вертикально и захватывает цель тепловизионной ГСН уже в полёте. Ловушки почти бесполезны.',
     specs: [['Страна', 'Германия'], ['Наведение', 'инерциальное + тепловизионное'], ['Дальность', 'до 40 км (в игре меньше)'], ['Высота', 'до 20 км']] },
+  rapier: { name: 'Tracked Rapier', short: 'Rapier', side: 'west', era: 2, type: 'saclos', rwr: 'RAP', hp: 30,
+    radar: { range: 15000, acq: 2.5, doppler: true, clutter: 10, mast: 3, band: 'E' }, rmin: 500, rmax: 6800, hmin: 15, hmax: 3000, react: 5, salvo: 1, ammo: 8, reload: 60, eccm: 0.5,
+    msl: { acc: 300, burn: 2.5, kd: 1.2, g: 25, vmin: 300, life: 15, blast: 4, dmg: 55, L: 2.24, r: 0.07, color: 0xd8d8d0 },
+    guide: 'Британская ЗРК ближнего действия на гусеничном шасси: РЛС обзора даёт целеуказание, оператор ведёт ракету по оптике. Ракета малая и быстрая — рассчитана на прямое попадание.',
+    specs: [['Страна', 'Великобритания'], ['Наведение', 'по линии визирования'], ['Дальность', '0,5–6,8 км'], ['Высота', 'до 3 км']] },
+  skyguard: { name: 'Skyguard (Oerlikon GDF 35 мм)', short: 'Skyguard', side: 'west', era: 2, type: 'guns', rwr: 'SG', hp: 30,
+    radar: { range: 20000, acq: 2.5, doppler: true, clutter: 0, mast: 3, band: 'X' }, rmin: 100, rmax: 4000, hmin: 0, hmax: 3000, react: 4, ammo: 560, eccm: 0.45,
+    gun: { burst: 0.5, pause: 1.0, hitK: 0.5, dmg: 7, v: 1175 },
+    guide: 'Буксируемая спарка 35 мм с радарным управлением огнём Skyguard: станция обнаружения и сопровождения наводит пушки — бьёт до ~4 км, против крылатых ракет и дронов.',
+    specs: [['Страна', 'Швейцария'], ['Вооружение', '2 × 35 мм'], ['Дальность огня', '≈ 4 км'], ['Высота', 'до 3 км']] },
+  sampt: { name: 'SAMP/T (Aster 30)', short: 'SAMP/T', side: 'west', era: 4, type: 'arh', rwr: 'AST', hp: 55, channels: 6, vls: true, pitbull: 8000, antiMun: true,
+    radar: { range: 50000, acq: 2, doppler: true, clutter: 20, mast: 6, band: 'G' }, rmin: 3000, rmax: 38000, hmin: 30, hmax: 20000, react: 5, salvo: 2, ammo: 8, reload: 90, eccm: 0.85,
+    msl: { acc: 260, burn: 4, sustain: { acc: 22, t: 8 }, kd: 0.75, g: 45, vmin: 320, life: 45, blast: 15, dmg: 140, L: 4.9, r: 0.18, color: 0xeeeeea },
+    guide: 'Франко-итальянский комплекс: восемь ракет Aster 30 стартуют вертикально, на конце — активная ГСН и газодинамическое управление (резкий манёвр у цели). Может перехватывать баллистические ракеты.',
+    specs: [['Страна', 'Франция / Италия'], ['Наведение', 'инерциальное + активное'], ['Дальность', 'до 100 км (в игре меньше)'], ['Высота', 'до 20 км']] },
+  khordad: { name: 'Sevom Khordad (трофейный)', short: 'Khordad', side: 'west', era: 4, type: 'sarh', rwr: 'KHD', hp: 45, channels: 2,
+    radar: { range: 40000, acq: 3, doppler: true, clutter: 15, mast: 5, band: 'H' }, rmin: 3000, rmax: 30000, hmin: 20, hmax: 22000, react: 5, salvo: 2, ammo: 3, reload: 60, eccm: 0.6,
+    msl: { acc: 140, burn: 5, sustain: { acc: 28, t: 12 }, kd: 0.8, g: 20, vmin: 280, life: 45, blast: 28, dmg: 110, L: 5.8, r: 0.2, color: 0xdcdcd0 },
+    guide: 'Трофейный комплекс средней дальности: самоходная пусковая с тремя ракетами и своей РЛС на шасси. Полуактивная ГСН — цель нужно подсвечивать до попадания.',
+    specs: [['Страна', 'Иран'], ['В игре', 'трофейный, у запада'], ['Ракеты', 'Taer-2'], ['Дальность', 'до ≈ 50 км (в игре меньше)']] },
+  tunguska: { name: '2К22 «Тунгуска»', short: 'Тунгуска', side: 'east', era: 3, type: 'command', rwr: 'ТНГ', hp: 45, channels: 1, optTrack: 8000,
+    radar: { range: 18000, acq: 2.5, doppler: true, clutter: 5, mast: 4, band: 'E' }, rmin: 2500, rmax: 8000, hmin: 15, hmax: 3500, react: 6, salvo: 1, ammo: 8, reload: 60, eccm: 0.55,
+    msl: { acc: 250, burn: 2.6, kd: 1.3, g: 18, vmin: 300, life: 16, blast: 9, dmg: 55, L: 2.56, r: 0.085, color: 0xd8d8d0 },
+    gun: { burst: 0.5, pause: 0.8, hitK: 0.55, dmg: 8, v: 960, rmax: 4000 },
+    guide: 'Пушечно-ракетный комплекс: РЛС обзора сзади на башне, сопровождения — спереди; по бокам две спарки 30 мм и восемь ракет 9М311 с наведением по линии визирования.',
+    specs: [['Страна', 'СССР / Россия'], ['Наведение', 'радиокомандное по оптике'], ['Ракеты', '2,5–8 км, до 3,5 км высоты'], ['Пушки', '2 × 2 × 30 мм, до 4 км']] },
   skynex: { name: 'Skynex (35 мм, снаряды AHEAD)', short: 'Skynex', side: 'west', era: 4, type: 'guns', rwr: 'SKY', hp: 35, antiMun: true,
     radar: { range: 20000, acq: 1.5, doppler: true, clutter: 0, mast: 4, band: 'X' }, rmin: 100, rmax: 4000, hmin: 0, hmax: 3000, react: 2, ammo: 900, eccm: 0.6,
     gun: { burst: 0.4, pause: 0.7, hitK: 0.75, dmg: 9, v: 1050 },
@@ -382,6 +408,20 @@ Object.assign(AG, {
     launcher: 'l_himars',
     guide: 'Тактическая ракета для РСЗО M270 и HIMARS: наведение по GPS, на спуске — около 1 км/с.',
     specs: [['Страна', 'США'], ['Дальность', '≈ 300 км'], ['КВО', '≈ 10 м']], vis: { L: 3.98, r: 0.3, kind: 'missile', color: 0xc7c0a8 } },
+  // air — баллистика воздушного пуска: с носителя (CARRIERS), дуга начинается с его высоты; разгон короткий — ракета уже на скорости
+  kinzhal: { boostT: 3, air: true, name: 'Х-47М2 «Кинжал»', short: 'Кинжал', side: 'east', era: 4, kind: 'tbm', mass: 4300, H: 38000, T: 70, cep: 10, man: 1, dec: 0, dmg: 480, blast: 54, rcs: 0.15,
+    guide: 'Аэробаллистическая ракета с МиГ-31К: сброс на большой высоте и скорости, разгон, полёт по высокой дуге и манёвр на спуске. Перехват — только Patriot PAC-3 / С-400, и то редко. Взят «Кинжал» — другой баллистики в волне нет.',
+    specs: [['Страна', 'Россия'], ['Носитель', 'МиГ-31К'], ['Дальность', '≈ 1500–2000 км'], ['Скорость на спуске', '≈ 2,5 км/с']], vis: { L: 7.2, r: 0.5, kind: 'missile', color: 0xd8d8d2 } },
+  // glide — планирующее оружие без двигателя: с высоты сброса снижается по прямой к цели (sim/strike.js updateCruise), без следа
+  slam: { name: 'AGM-84E SLAM', short: 'SLAM', side: 'west', era: 3, kind: 'cruise', ev: true, mass: 630, speed: 240, alt: 40, life: 400, rmax: 90000, dmg: 160, blast: 32, rcs: 0.1,
+    guide: 'Ракета на основе противокорабельной Harpoon для ударов по земле: малая высота, тепловизионная ГСН на конце. Носитель — F/A-18.',
+    specs: [['Страна', 'США'], ['Дальность', '≈ 110 км'], ['БЧ', '≈ 220 кг']], vis: { L: 4.5, r: 0.17, kind: 'cruise', color: 0xb9bdbf } },
+  jsow: { name: 'AGM-154 JSOW', short: 'JSOW', side: 'west', era: 3, kind: 'cruise', ev: true, glide: true, wings: true, mass: 483, speed: 260, alt: 60, life: 400, rmax: 90000, dmg: 150, blast: 30, rcs: 0.02,
+    guide: 'Планирующая бомба: сбрасывается с большой высоты, раскрывает крылья и сама идёт к цели по GPS. Двигателя нет — нет и теплового следа, но и снижается она заметно для РЛС.',
+    specs: [['Страна', 'США'], ['Дальность', '≈ 130 км с высоты'], ['Носитель', 'F/A-18, B-52']], vis: { L: 4.1, r: 0.2, kind: 'cruise', color: 0x8a8f86 } },
+  sdb: { name: 'GBU-39 SDB', short: 'SDB', side: 'west', era: 4, kind: 'cruise', ev: true, glide: true, wings: true, mass: 130, speed: 250, alt: 60, life: 400, rmax: 90000, dmg: 55, blast: 23, rcs: 0.008,
+    guide: 'Малая планирующая бомба: по восемь на F-16, раскрывает крылья после сброса. Мала и незаметна для РЛС, но боевая часть слабая — берёт числом.',
+    specs: [['Страна', 'США'], ['Масса', '≈ 130 кг'], ['Дальность', '≈ 110 км с высоты']], vis: { L: 1.8, r: 0.1, kind: 'cruise', color: 0x9aa0a6 } },
   kh55: { name: 'Х-55', short: 'Х-55', side: 'east', era: 2, kind: 'cruise', ev: true, mass: 1185, speed: 220, alt: 60, life: 420, rmax: 90000, dmg: 200, blast: 54, rcs: 0.1,
     guide: 'Стратегическая крылатая ракета с Ту-95МС и Ту-160: дозвуковая, на малой высоте с облётом рельефа.', specs: [['Страна', 'СССР'], ['Дальность', '≈ 2500 км']],
     vis: { L: 6.04, r: 0.31, kind: 'cruise', color: 0x8d9184 } },
@@ -395,10 +435,10 @@ Object.assign(AG, {
     guide: 'Крылатая ракета корабельного пуска: малая высота, коррекция по рельефу и GPS. Флота в игре нет — её пускает B-1B у края района.', specs: [['Страна', 'США'], ['Дальность', '≈ 1600 км']],
     vis: { L: 5.56, r: 0.26, kind: 'cruise', color: 0x9aa0a6 } },
   agm86: { name: 'AGM-86 ALCM', short: 'AGM-86', side: 'west', era: 2, kind: 'cruise', ev: true, mass: 1450, speed: 230, alt: 60, life: 420, rmax: 90000, dmg: 280, blast: 77, rcs: 0.1,
-    guide: 'Крылатая ракета воздушного пуска: основной носитель — B-52, в игре — B-1B. Пуск далеко за пределами досягаемости ПВО.', specs: [['Страна', 'США'], ['Дальность', '≈ 2400 км']],
+    guide: 'Крылатая ракета воздушного пуска: основной носитель — B-52. Пуск далеко за пределами досягаемости ПВО.', specs: [['Страна', 'США'], ['Дальность', '≈ 2400 км']],
     vis: { L: 6.32, r: 0.32, kind: 'cruise', color: 0x9aa0a6 } },
   storm: { name: 'Storm Shadow', short: 'Storm Shadow', side: 'west', era: 3, kind: 'cruise', ev: true, mass: 1300, speed: 270, alt: 40, life: 400, rmax: 80000, dmg: 300, blast: 43, rcs: 0.06,
-    guide: 'Малозаметная англо-французская крылатая ракета: малая высота, тепловизионная ГСН на конце. В игре — с Су-24М.', specs: [['Страна', 'Великобритания / Франция'], ['Дальность', '≈ 550 км']],
+    guide: 'Малозаметная англо-французская крылатая ракета: малая высота, тепловизионная ГСН на конце. В игре — с Eurofighter Typhoon.', specs: [['Страна', 'Великобритания / Франция'], ['Дальность', '≈ 550 км']],
     vis: { L: 5.1, r: 0.32, kind: 'cruise', color: 0x7b8086, nzAx: [0, 0] } }, // сопло — по оси хвоста (крыло сверху сбивает медиану)
   shahed: { name: 'Дрон ударный', short: 'Дрон ударный', side: 'east', era: 4, kind: 'cruise', ev: true, uav: true, mass: 200, speed: 50, alt: 120, life: 900, rmax: 90000, dmg: 90, blast: 25, rcs: 0.1, mhp: 6,
     model: { glb: 'd_shahed' }, guide: 'Дрон-камикадзе: медленный и шумный, но дешёвый и многочисленный — на него тратят зенитные ракеты. Хорошо бьют пушки и ПЗРК.',
@@ -420,44 +460,50 @@ Object.assign(AG, {
 Object.assign(AG_KIND, { tbm: 'оперативно-тактическая ракета' });
 // противоракетные возможности: вероятность сбить баллистическую цель одним перехватом (остальные ЗРК её не берут)
 Object.assign(SAM.s300 || {}, { abm: 0.3 }); Object.assign(SAM.s400 || {}, { abm: 0.5 }); Object.assign(SAM.patriot || {}, { abm: 0.3 });
-Object.assign(SAM.pac3 || {}, { abm: 0.7 }); Object.assign(SAM.bukm3 || {}, { abm: 0.15 });
+Object.assign(SAM.pac3 || {}, { abm: 0.7 }); Object.assign(SAM.sampt || {}, { abm: 0.45 }); Object.assign(SAM.bukm3 || {}, { abm: 0.15 });
 // носители крылатых ракет и ложных целей (модель самолёта): сколько берёт, высота пуска, прочность, ЭПР, темп пуска (с)
 export const CARRIERS = {
   e_tu160: { name: 'Ту-160', side: 'east', cap: 12, alt: 8000, hp: 160, rcs: 15, every: 2, len: 54 },
   e_b1b: { name: 'B-1B', side: 'west', cap: 12, alt: 7000, hp: 140, rcs: 1, every: 1.8, len: 44 },
   f16: { name: 'F-16', side: 'west', cap: 4, alt: 5000, hp: 60, rcs: 4, every: 1.5, len: 15 },
   e_su24: { name: 'Су-24М', side: 'east', cap: 2, alt: 400, hp: 70, rcs: 6, every: 1.5, len: 22 },
+  e_mig31: { name: 'МиГ-31К', side: 'east', cap: 1, alt: 15000, hp: 70, rcs: 10, every: 2, len: 22.7 },
+  e_b52: { name: 'B-52H', side: 'west', cap: 12, alt: 9000, hp: 180, rcs: 100, every: 2, len: 48.5 },
+  e_typhoon: { name: 'Eurofighter Typhoon', side: 'west', cap: 2, alt: 6000, hp: 60, rcs: 1, every: 1.5, len: 16 },
+  f18: { name: 'F/A-18E', side: 'west', cap: 2, alt: 7000, hp: 60, rcs: 3, every: 1.5, len: 18.3 },
 };
 // состав удара: сторона атакующих → эпоха → [ключ, сколько, эшелон, носитель] (эшелон: 1 — разведка и дроны, 2 — крылатые
 // и ложные цели с носителей, 3 — баллистика). По очкам угрозы (THREAT): восток II — 33, III — 42, IV — 60; запад — на 15 % больше
 export const COMBINED = {
-  east: { 1: [['scout_e', 1, 1], ['r17', 3, 3]],
-    2: [['scout_e', 1, 1], ['kh55d', 3, 2, 'e_tu160'], ['kh55', 5, 2, 'e_tu160'], ['tochka', 3, 3]],
-    3: [['scout_e', 1, 1], ['kh55d', 4, 2, 'e_tu160'], ['kh555', 6, 2, 'e_tu160'], ['tochka', 4, 3]],
-    4: [['scout_e', 1, 1], ['shahed', 12, 1], ['kh55d', 2, 2, 'e_tu160'], ['kh555', 3, 2, 'e_tu160'], ['kalibr', 3, 2, 'e_tu160'], ['iskander', 4, 3]] },
-  // у запада моделей меньше (нет дронов и ложных Х-55, одна оперативно-тактическая) — очков на 15 % больше (MULTI.westK)
-  west: { 2: [['scout', 1, 1], ['agm86', 13, 2, 'e_b1b']],
-    3: [['scout', 1, 1], ['uav_w', 4, 1], ['tomahawk', 4, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b1b'], ['atacms', 3, 3]],
-    4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 8, 2, 'f16'], ['tomahawk', 5, 2, 'e_b1b'], ['jassm', 4, 2, 'e_b1b'], ['storm', 2, 2, 'e_su24'], ['atacms', 3, 3]] },
+  east: { 1: [['scout_e', 1, 1], ['r17', 2, 3]],
+    2: [['scout_e', 1, 1], ['kh55d', 3, 2, 'e_tu160'], ['kh55', 7, 2, 'e_tu160'], ['tochka', 2, 3]],
+    3: [['scout_e', 1, 1], ['kh55d', 4, 2, 'e_tu160'], ['kh555', 9, 2, 'e_tu160'], ['tochka', 2, 3]],
+    4: [['scout_e', 1, 1], ['shahed', 14, 1], ['kh55d', 2, 2, 'e_tu160'], ['kh555', 5, 2, 'e_tu160'], ['kalibr', 4, 2, 'e_tu160'], ['iskander', 1, 3], ['tochka', 1, 3]] },
+  // баллистика в составах — по правилу tbmCheck (online-multi.js): не больше 1 «Искандера» и 2 ракет. У запада во II эпохе нет
+  // баллистики и ложных целей — там очков больше (MULTI.westK по эпохам)
+  west: { 2: [['scout', 1, 1], ['agm86', 13, 2, 'e_b52']],
+    3: [['scout', 1, 1], ['uav_w', 4, 1], ['tomahawk', 3, 2, 'e_b1b'], ['slam', 2, 2, 'f18'], ['jsow', 2, 2, 'f18'], ['atacms', 2, 3]],
+    4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 6, 2, 'f16'], ['sdb', 6, 2, 'f16'], ['tomahawk', 3, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b52'], ['storm', 2, 2, 'e_typhoon'], ['atacms', 2, 3]] },
 };
 // очки угрозы: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 5, с манёвром и ложными целями — 7
-export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, kh55: 3, kh555: 3, kalibr: 3, tomahawk: 3, agm86: 3, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, iskander: 7 };
+export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, sdb: 1, kh55: 3, kh555: 3, kalibr: 3, tomahawk: 3, agm86: 3, slam: 3, jsow: 2, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, iskander: 7, kinzhal: 9 };
 export const threatOf = (comp) => comp.reduce((n, [k, c]) => n + (THREAT[k] ?? 3) * c, 0);
 // отдельный режим «Мульти-волна»: что можно заказать за удар (ключ, носитель или null — пусковая / своим ходом, с какой эпохи),
 // бюджет удара в очках угрозы (у запада ×1,15) и очки обороны на расстановку под одну волну
 export const MULTI = {
-  items: { east: [['shahed', null, 4], ['kh55d', 'e_tu160', 2], ['kh55', 'e_tu160', 2], ['kh555', 'e_tu160', 3], ['kalibr', 'e_tu160', 4], ['r17', null, 1], ['tochka', null, 2], ['iskander', null, 4]],
-    west: [['uav_w', null, 3], ['quail', 'f16', 4], ['agm86', 'e_b1b', 2], ['tomahawk', 'e_b1b', 3], ['jassm', 'e_b1b', 3], ['storm', 'e_su24', 4], ['atacms', null, 3]] },
-  budget: { 1: 15, 2: 33, 3: 42, 4: 60 }, westK: 1.15,
+  items: { east: [['shahed', null, 4], ['kh55d', 'e_tu160', 2], ['kh55', 'e_tu160', 2], ['kh555', 'e_tu160', 3], ['kalibr', 'e_tu160', 4], ['r17', null, 1], ['tochka', null, 2], ['iskander', null, 4], ['kinzhal', 'e_mig31', 4]],
+    west: [['uav_w', null, 3], ['quail', 'f16', 4], ['sdb', 'f16', 4], ['agm86', 'e_b52', 2], ['slam', 'f18', 3], ['jsow', 'f18', 3], ['tomahawk', 'e_b1b', 3], ['jassm', 'e_b52', 4], ['storm', 'e_typhoon', 4], ['atacms', null, 3]] },
+  // у запада во II эпохе нет баллистики и ложных целей — очков больше; с III (SLAM, JSOW, SDB) — почти поровну (пересчёт 2026-10-12)
+  budget: { 1: 15, 2: 33, 3: 42, 4: 60 }, westK: { 1: 1, 2: 1.15, 3: 1.05, 4: 1 },
   sam: { 1: 1500, 2: 1800, 3: 2200, 4: 2500 },
 };
-export const multiBudget = (side, era) => Math.round((MULTI.budget[era] || 0) * (side === 'west' ? MULTI.westK : 1));
+export const multiBudget = (side, era) => Math.round((MULTI.budget[era] || 0) * (side === 'west' ? MULTI.westK[era] || 1 : 1));
 export const multiItems = (side, era) => (MULTI.items[side] || []).filter(([, , e]) => e <= era);
 
-DEFENSE.east[3] = [['s300', 1], ['kub', 2], ['tor', 2], ['osa', 2], ['strela1', 1], ['iglas', 4], ['gpsjam', 1]];
-DEFENSE.east[4] = [['s400', 1], ['bukm3', 2], ['torm2', 2], ['pantsir', 2], ['verba', 4], ['gpsjam', 1]];
-DEFENSE.west[3] = [['patriot', 1], ['hawk', 2], ['nasams', 1], ['gepard', 2], ['stinger', 4], ['gpsjamw', 1]];
-DEFENSE.west[4] = [['pac3', 1], ['patriot', 1], ['nasams', 2], ['gepard', 2], ['stinger', 4], ['gpsjamw', 1]];
+DEFENSE.east[3] = [['s300', 1], ['kub', 2], ['tor', 2], ['osa', 1], ['tunguska', 1], ['strela1', 1], ['iglas', 4], ['gpsjam', 1]];
+DEFENSE.east[4] = [['s400', 1], ['bukm3', 2], ['torm2', 2], ['pantsir', 1], ['tunguska', 1], ['verba', 4], ['gpsjam', 1]];
+DEFENSE.west[3] = [['patriot', 1], ['hawk', 2], ['nasams', 1], ['roland', 1], ['rapier', 1], ['gepard', 1], ['skyguard', 1], ['stinger', 4], ['gpsjamw', 1]];
+DEFENSE.west[4] = [['pac3', 1], ['sampt', 1], ['khordad', 1], ['nasams', 1], ['roland', 1], ['gepard', 2], ['stinger', 4], ['gpsjamw', 1]];
 LOADOUTS[3] = [
   { side: 'east', plane: 'e_su34', name: 'КАБ-500С + Х-31П + «Сорбция»', items: [['kab500s', 3], ['kh31p', 2], ['ecm_e', 1]], pod: true },
   { side: 'east', plane: 'su30', name: 'Лазерные и ТВ: КАБ-500Л + КАБ-500Кр', items: [['kab500l', 2], ['kab500kr', 2], ['ecm_e', 1]], pod: true },
@@ -488,7 +534,7 @@ export function loadoutRole(L) {
 }
 export const ROLE_NAME = { sead: 'охота за ПВО', strike: 'штурмовка' };
 // индексы подвесок стороны и первая подходящая (если выбранная — чужой стороны)
-export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 });
+export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, khordad: 320, skyguard: 120, rapier: 170 });
 // комплексы без готовых моделей — выведены из игры (вернутся, если найдутся модели; их описание и пусковые остались)
-export const NO_MODEL = ['zsu234', 'strela10', 'roland', 'buk', 'avenger', 'iris', 'skynex'];
+export const NO_MODEL = ['zsu234', 'strela10', 'buk', 'avenger', 'iris', 'skynex'];
 for (const k of NO_MODEL) { delete SAM[k]; delete SAM_COST[k]; }

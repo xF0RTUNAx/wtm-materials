@@ -6,8 +6,8 @@
 /* global THREE */
 import { mulberry32 } from './schedule.js?v=20260930m';
 import { M, part, mergeParts } from './models.js?v=20260930m';
-import { buildProps } from './props.js?v=20261011i';
-import { buildLandmarks } from './landmarks.js?v=20261011l';
+import { buildProps } from './props.js?v=20261019c';
+import { buildLandmarks } from './landmarks.js?v=20261019c';
 
 import { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH, buildChunkArrays } from './terrain-core.js?v=20260930m';
 export { WORLD, TOWNS, AIRFIELD, terrainH, airfieldH };
@@ -488,11 +488,37 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
   }
 
   // деревни, промзона, дороги, ЛЭП, вышки, ветряки (props.js) — их коробки тоже участвуют в столкновениях
-  const props = buildProps({ WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P, seed });
+  const props = buildProps({ WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P, seed, meshStep: TS / SEG0 });
+  // крупные ориентиры (landmarks.js) — сразу после дорог: подъезды к большому мосту — тоже дороги (дома ниже их обходят)
+  const marks = buildLandmarks({ WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P, seed, villages: props.villages, industry: props.industry, waterMat: water.material, noiseTex: NT, waterTime, roads: props.roads, addRoads: props.addRoads });
+  // дороги теперь идут через центр города: дом, на который легла дорога, переносим на свободное место того же города
+  {
+    const RB = mulberry32((seed ^ 0x51ee7) >>> 0), m = new THREE.Matrix4(), q = new THREE.Quaternion(), zero = new THREE.Matrix4().makeScale(0, 0, 0);
+    const clear = (x, z, hw, hd, self) => props.roadDist(x, z) > Math.hypot(hw, hd) + 4 && !buildings.some((b) => b !== self && b.ok !== false && Math.abs(b.x - x) < b.hw + hw + 12 && Math.abs(b.z - z) < b.hd + hd + 12);
+    let bi = 0;
+    TOWNS.forEach((t, ti) => {
+      const mesh = bldMeshes[ti];
+      for (let k = 0; k < mesh.count; k++, bi++) {
+        const b = buildings[bi], it = townItems[bi];
+        if (props.roadDist(b.x, b.z) > Math.hypot(b.hw, b.hd) + 4) continue;
+        b.ok = false; let done = false;
+        for (let tr = 0; tr < 30 && !done; tr++) {
+          const a = RB() * Math.PI * 2, rr = (0.15 + RB() * 0.57) * t.r, x = t.x + Math.cos(a) * rr, z = t.z + Math.sin(a) * rr;
+          if (!clear(x, z, b.hw, b.hd, b)) continue;
+          const hgt = Math.min(it.h, rr > t.r * 0.2 ? 44 : 170), base = terrainH(x, z) - 3;
+          Object.assign(b, { x, z, y0: base, y1: base + hgt, ok: true }); Object.assign(it, { x, z, h: hgt, y: base + 3 });
+          m.compose(new THREE.Vector3(x, base + hgt / 2, z), q, new THREE.Vector3(b.hw * 2, hgt, b.hd * 2)); mesh.setMatrixAt(k, m); done = true;
+        }
+        if (!done) mesh.setMatrixAt(k, zero);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+    });
+    const kb = buildings.filter((b) => b.ok !== false), kt = townItems.filter((_, i) => buildings[i].ok !== false);
+    buildings.length = 0; buildings.push(...kb); townItems.length = 0; townItems.push(...kt);
+  }
   buildings.push(...props.boxes);
   // крупные ориентиры и «жизнь» (landmarks.js): мост, порт, маяк, лодки
   // Столкновений у них нет (дрон пролетает сквозь) — бой от них не зависит
-  const marks = buildLandmarks({ WORLD, TOWNS, AIRFIELD, terrainH, lin, add, P, seed, villages: props.villages, industry: props.industry, waterMat: water.material, noiseTex: NT, waterTime });
   let lastCam = null, wakeFn = null;
 
   // лес: квадраты 2×2 км, у каждого свой InstancedMesh — вне кадра и дальше дальности прорисовки не рисуется
@@ -534,13 +560,16 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
     // на площадке порта леса нет
     const bare = marks.sites.filter((q) => !['bridge', 'lighthouse'].includes(q.name));
     const noTree = (x, z) => bare.some((q) => Math.abs(x - q.x) < q.r && Math.abs(z - q.z) < q.r && Math.hypot(x - q.x, z - q.z) < q.r * 0.9);
+    const vils = props.villages || [];
+    const offLimits = (x, z) => props.roadDist(x, z) < 5 || TOWNS.some((t) => Math.abs(x - t.x) < t.r && Math.hypot(x - t.x, z - t.z) < t.r * 0.75)
+      || vils.some((v) => { const dx = x - v.x, dz = z - v.z, c = Math.cos(v.main), s = Math.sin(v.main); return Math.abs(dx * c + dz * s) < v.r * 0.95 + 20 && Math.abs(-dx * s + dz * c) < 68; });
     const CH = P.treeCell || 2000, cells = new Map(); // на слабых пресетах деревьев мало — крупнее квадраты, меньше вызовов отрисовки
     let placed = 0;
     for (let k = 0; k < P.trees * 6 && placed < P.trees; k++) {
       const x = (rnd() - 0.5) * 24000, z = (rnd() - 0.5) * 24000;
       const forest = Math.sin(x * 0.0009 + 2) * Math.cos(z * 0.0011) + 0.4 * Math.sin(x * 0.0031 + z * 0.0027);
       if (forest < 0.5) continue;
-      if (noTree(x, z)) continue;
+      if (noTree(x, z) || offLimits(x, z)) continue; // не на дорогах, не в городах и не на улицах деревень
       const y = terrainH(x, z);
       if (y < WORLD.WATER_Y + 15 || y > 1000) continue;
       const key = Math.floor(x / CH) + ':' + Math.floor(z / CH);
@@ -558,7 +587,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
           if (RB() < 0.45) continue;
           const off = 14 + RB() * 6, x = pts[i].x - tz * off * side + (RB() - 0.5) * 8, z = pts[i].z + tx * off * side + (RB() - 0.5) * 8, y = terrainH(x, z);
           if (y < WORLD.WATER_Y + 12 || y > 1000 || Math.abs(pts[i].y - pts[i].g) > 1.5) continue; // на мостах и у воды — нет
-          if (noTree(x, z) || TOWNS.some((t) => Math.hypot(x - t.x, z - t.z) < t.r * 0.9) || vil.some((v) => Math.hypot(x - v.x, z - v.z) < v.r) || Math.hypot(x - AIRFIELD.x, z - AIRFIELD.z) < AIRFIELD.r) continue;
+          if (noTree(x, z) || offLimits(x, z) || TOWNS.some((t) => Math.hypot(x - t.x, z - t.z) < t.r * 0.9) || vil.some((v) => Math.hypot(x - v.x, z - v.z) < v.r) || Math.hypot(x - AIRFIELD.x, z - AIRFIELD.z) < AIRFIELD.r) continue;
           const key = Math.floor(x / CH) + ':' + Math.floor(z / CH);
           if (!cells.has(key)) cells.set(key, []);
           cells.get(key).push([x, y, z, 0.7 + RB() * 0.7, RB() * 6, 0.9 + RB() * 0.3]); extra++;
@@ -613,7 +642,7 @@ export function buildWorld(scene, P, seed, renderer, weather = 'day', opts = {})
           const x = (i + h1(j, i)) * G, z = (j + h1(i + 7, j - 3)) * G;
           if (Math.hypot(x - cx, z - cz) > RAD) continue;
           const y = terrainH(x, z); if (y < WORLD.WATER_Y + 3 || y > 1100) continue;
-          if (Math.abs(terrainH(x + 6, z) - y) > 3.2 || TOWNS.some((t) => Math.abs(x - t.x) < t.r && Math.hypot(x - t.x, z - t.z) < t.r * 0.8)) continue;
+          if (Math.abs(terrainH(x + 6, z) - y) > 3.2 || TOWNS.some((t) => Math.abs(x - t.x) < t.r && Math.hypot(x - t.x, z - t.z) < t.r * 0.8) || props.roadDist(x, z) < 1.5) continue;
           const bushy = r < 0.045, s = bushy ? 0.8 + h1(i + 3, j) * 1.2 : 0.7 + h1(i, j + 5) * 0.8;
           mm.compose(pv.set(x, y - 0.1, z), q.setFromEuler(e.set(0, h1(j, i + 2) * 6.28, 0)), sv.set(s, s * (bushy ? 1 : 0.8 + r * 1.2), s));
           const onField = Math.sin(x * 0.0021 + Math.sin(z * 0.0013) * 2) * Math.sin(z * 0.0019 + 0.5) > 0.45; // жёлтое поле (как в terrain-core)

@@ -1,5 +1,5 @@
 // «Мульти-волна» без браузера: ИИ-ПВО против удара (sim/combined.js) — сколько пусков, перехватов, попаданий.
-//   deno run --allow-read tools/airdef-headless/combined-test.js [сторона атакующих] [эпоха]
+//   deno run --allow-read --allow-env tools/airdef-headless/combined-test.js [сторона атакующих] [эпоха]  (COMP=… — свой состав)
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 const { buildCity } = await import('../../games/airdef/city.js');
@@ -23,7 +23,7 @@ for (const [att, era] of runs) {
   const S = createStrike({ city, rnd, mode: () => MODES.real, aircraft: () => raid.alive(), laserSpot: () => null, night: 0, fx, hurt: (a, d) => raid.hurt(a, d) });
   raid = createRaid(S, city, rnd, { side: att, era, fx: {} });
   const targets = pickTargets(S, rnd); placeDefense(S, city, rnd, def, era, targets);
-  const E = createCombined(S, city, rnd, { side: att, era, raid });
+  const E = createCombined(S, city, rnd, { side: att, era, raid, comp: Deno.env.get('COMP') ? JSON.parse(Deno.env.get('COMP')) : undefined }); // COMP='[["kinzhal",1,3,"e_mig31"]]' — свой состав
   if (!E.start(targets)) { console.log(`${att} ${era}: удара нет`); continue; }
   let T = 0; while ((E.pending() || S.wpns.length) && T < 900) { E.step(0.05); raid.step(0.05); S.step(0.05); T += 0.05; }
   const v = S.objects.reduce((s, o) => s + (o.dead ? 1 : 0), 0);

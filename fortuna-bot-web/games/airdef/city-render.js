@@ -11,10 +11,10 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW } from './city.js?v=20261018k';
-import { part, mergeParts, M } from '../drone/models.js?v=20261018k';
-import { WEATHERS, ATMO, skyMaterial, FXU } from '../drone/world.js?v=20261018k';
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261018k'; // MIT, meshoptimizer 0.21
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261019c';
+import { part, mergeParts, M } from '../drone/models.js?v=20261019c';
+import { WEATHERS, ATMO, skyMaterial, FXU } from '../drone/world.js?v=20261019c';
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261019c'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -40,7 +40,7 @@ function loadCityTextures(aniso) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = f === 'asphalt' ? THREE.MirroredRepeatWrapping : THREE.RepeatWrapping;
     t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
-    fetch(new URL(`./tex/${f}.jpg?v=20261018k`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261019c`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { t.image = bmp; t.needsUpdate = true; if (--left === 0) TEX.uTexOn.value = 1; })
       .catch((e) => console.warn('текстура не загрузилась:', e.message));
   }
@@ -78,6 +78,21 @@ function zoneTexture(size) {
     const q = (j * size + i) * 4;
     data[q] = Math.min(255, c.r * 255 * v); data[q + 1] = Math.min(255, c.g * 255 * v); data[q + 2] = Math.min(255, c.b * 255 * v); data[q + 3] = urb * 255;
   }
+  // границы районов — не ступенькой в текстель, а переходом ~120 м (окраина города плавно уходит в поле)
+  const r = Math.max(1, Math.round(size / 1024 * 2)), tmp = new Float32Array(size * 4);
+  const pass = (stride, step) => {
+    for (let l = 0; l < size; l++) {
+      const o = l * stride, s = [0, 0, 0, 0];
+      for (let k = -r; k <= r; k++) { const q = o + Math.min(size - 1, Math.max(0, k)) * step; for (let c4 = 0; c4 < 4; c4++) s[c4] += data[q + c4]; }
+      for (let i = 0; i < size; i++) {
+        for (let c4 = 0; c4 < 4; c4++) tmp[i * 4 + c4] = s[c4] / (2 * r + 1) + 0.5;
+        const qa = o + Math.min(size - 1, i + r + 1) * step, qb = o + Math.max(0, i - r) * step;
+        for (let c4 = 0; c4 < 4; c4++) s[c4] += data[qa + c4] - data[qb + c4];
+      }
+      for (let i = 0; i < size; i++) for (let c4 = 0; c4 < 4; c4++) data[o + i * step + c4] = tmp[i * 4 + c4];
+    }
+  };
+  for (let it = 0; it < 2; it++) { pass(size * 4, 4); pass(4, size * 4); }
   const t = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
   t.encoding = THREE.sRGBEncoding; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true;
   t.needsUpdate = true;
@@ -100,13 +115,24 @@ function aoTexture(city) {
   t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
   return t;
 }
-function groundMaterial(tex, ao) {
+// дорожная сеть (city.RX/RZ) — текстура RS×RS: r — отрезок линии вдоль Z, g — вдоль X; 0 — нет, 0,5 — трасса, 1 — улица
+function roadTexture(city) {
+  const data = new Uint8Array(RS * RS * 4);
+  for (let q = 0; q < RS * RS; q++) { data[q * 4] = city.RX[q] * 127; data[q * 4 + 1] = city.RZ[q] * 127; data[q * 4 + 3] = 255; }
+  const t = new THREE.DataTexture(data, RS, RS, THREE.RGBAFormat);
+  t.magFilter = t.minFilter = THREE.NearestFilter; t.generateMipmaps = false; t.flipY = false; t.needsUpdate = true;
+  return t;
+}
+function groundMaterial(tex, ao, road) {
   const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 });
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, ENV, TEX, { tAO: { value: ao }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
+    Object.assign(sh.uniforms, ENV, TEX, { tAO: { value: ao }, tRoad: { value: road }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     const G = CITY.GRID.toFixed(1), AV = CITY.AVE_EVERY.toFixed(1), HA = (CITY.AVENUE / 2).toFixed(1), HS = (CITY.STREET / 2).toFixed(1);
-    sh.fragmentShader = 'varying vec3 vWp; uniform sampler2D tAO; uniform vec4 uAir;\n' + GLSL_COMMON + GLSL_TEX + `
+    const RNf = RN.toFixed(1), RSf = RS.toFixed(1), HR = RURAL_HW.toFixed(1);
+    sh.fragmentShader = 'varying vec3 vWp; uniform sampler2D tAO, tRoad; uniform vec4 uAir;\n' + GLSL_COMMON + GLSL_TEX + `
+// вид отрезка дороги: линия i (вдоль Z) между j и j+1 — .r, линия j (вдоль X) между i и i+1 — .g
+vec2 roadSeg(float i, float j) { return texture2D(tRoad, (vec2(i, j) + ${RNf} + 0.5) / ${RSf}).rg; }
 // дорога вдоль линии сетки: o — смещение от оси, hw — полуширина, ave — проспект
 void roadAt(float p, out float o, out float hw, out float ave) {
   float i = floor(p / ${G} + 0.5); o = p - i * ${G};
@@ -131,17 +157,28 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   if (urb > 0.01) {
     // дворы: газоны в жилых кварталах, плитка и парковки в мощёных
     float yard = smoothstep(0.42, 0.62, vns(vWp.xz / 38.0 + 3.0));
-    col = mix(col, urb > 0.75 ? vec3(0.07, 0.11, 0.04) * (0.8 + 0.4 * n1) * dG : vec3(0.16, 0.16, 0.15) * dP, yard * 0.75);
+    col = mix(col, urb > 0.75 ? vec3(0.07, 0.11, 0.04) * (0.8 + 0.4 * n1) * dG : vec3(0.16, 0.16, 0.15) * dP, yard * 0.75 * smoothstep(0.1, 0.4, urb));
+  }
+  {
+    // дороги — по сетке отрезков (city.js): улица кончается на перекрёстке, за городом — узкая трасса с обочиной
     float ox, hwx, avx, oz, hwz, avz;
     roadAt(vWp.x, ox, hwx, avx); roadAt(vWp.z, oz, hwz, avz);
+    float tX = roadSeg(floor(vWp.x / ${G} + 0.5), floor(vWp.z / ${G})).r, tZ = roadSeg(floor(vWp.x / ${G}), floor(vWp.z / ${G} + 0.5)).g;
+    float cX = step(0.75, tX), cZ = step(0.75, tZ), eX = step(0.25, tX), eZ = step(0.25, tZ); // c — улица, e — есть дорога
+    float hx0 = hwx, hz0 = hwz;
+    hwx = mix(${HR}, hwx, cX); hwz = mix(${HR}, hwz, cZ); avx *= cX; avz *= cZ;
     float ax = abs(ox), az = abs(oz);
-    float onX = 1.0 - smoothstep(hwx - px, hwx + px, ax);   // проезжая часть улицы, идущей вдоль z
-    float onZ = 1.0 - smoothstep(hwz - px, hwz + px, az);   // … вдоль x
+    float onX = eX * (1.0 - smoothstep(hwx - px, hwx + px, ax));   // проезжая часть дороги, идущей вдоль z
+    float onZ = eZ * (1.0 - smoothstep(hwz - px, hwz + px, az));   // … вдоль x
     float road = max(onX, onZ);
     float swX = 1.0 - smoothstep(hwx + 4.5 - px, hwx + 4.5 + px, ax), swZ = 1.0 - smoothstep(hwz + 4.5 - px, hwz + 4.5 + px, az);
-    float walk = max(swX, swZ) * (1.0 - road);
+    float walk = max(swX * cX, swZ * cZ) * (1.0 - road);
+    float shX = 1.0 - smoothstep(hwx + 2.0 - px, hwx + 3.5 + px, ax), shZ = 1.0 - smoothstep(hwz + 2.0 - px, hwz + 3.5 + px, az);
+    float shoulder = max(shX * eX * (1.0 - cX), shZ * eZ * (1.0 - cZ)) * (1.0 - road) * (1.0 - walk);
     vec3 asph = vec3(0.032, 0.034, 0.038) * (0.85 + 0.3 * n1) * dA;
+    asph = mix(asph * 1.35, asph, max(cX * onX, cZ * onZ)); // загородный асфальт светлее, выгоревший
     col = mix(col, vec3(0.15, 0.15, 0.145) * (0.9 + 0.2 * n1) * dP, walk);    // тротуар
+    col = mix(col, vec3(0.2, 0.17, 0.12) * (0.85 + 0.3 * n1) * dG, shoulder * 0.8); // грунтовая обочина
     col = mix(col, asph, road);
     // разметка (пока линия толще ~пикселя)
     float mk = (1.0 - smoothstep(0.25, 0.9, px)) * road;
@@ -151,8 +188,13 @@ void roadAt(float p, out float o, out float hw, out float ave) {
     lane += inX * (avx > 0.5 ? step(abs(ax - 0.3), 0.12) + step(abs(ax - 7.5), 0.1) * step(fract(vWp.z / 12.0), 0.4) : step(ax, 0.1) * step(fract(vWp.z / 9.0), 0.5));
     lane += inZ * (avz > 0.5 ? step(abs(az - 0.3), 0.12) + step(abs(az - 7.5), 0.1) * step(fract(vWp.x / 12.0), 0.4) : step(az, 0.1) * step(fract(vWp.x / 9.0), 0.5));
     // «зебры» у перекрёстков
-    lane += onX * step(hwz + 0.8, az) * step(az, hwz + 4.0) * step(0.5, fract(vWp.x / 1.1)) * step(ax, hwx - 1.0);
-    lane += onZ * step(hwx + 0.8, ax) * step(ax, hwx + 4.0) * step(0.5, fract(vWp.z / 1.1)) * step(az, hwz - 1.0);
+    // загородная трасса: сплошные края
+    lane += inX * (1.0 - cX) * step(abs(ax - hwx + 0.5), 0.1) + inZ * (1.0 - cZ) * step(abs(az - hwz + 0.5), 0.1);
+    // «зебры» у перекрёстков — только где поперечная улица есть
+    float ix = floor(vWp.x / ${G} + 0.5), jz = floor(vWp.z / ${G} + 0.5);
+    float nZ = step(0.75, max(roadSeg(ix - 1.0, jz).g, roadSeg(ix, jz).g)), nX = step(0.75, max(roadSeg(ix, jz - 1.0).r, roadSeg(ix, jz).r));
+    lane += onX * cX * nZ * step(hz0 + 0.8, az) * step(az, hz0 + 4.0) * step(0.5, fract(vWp.x / 1.1)) * step(ax, hwx - 1.0);
+    lane += onZ * cZ * nX * step(hx0 + 0.8, ax) * step(ax, hx0 + 4.0) * step(0.5, fract(vWp.z / 1.1)) * step(az, hwz - 1.0);
     col = mix(col, vec3(0.55), min(lane, 1.0) * mk);
   }
   // ВПП аэропорта: асфальт, осевая, торцевые «клавиши»
@@ -558,10 +600,10 @@ function streetProps(G, city, B, P) {
   const att = (x, z, rot, k, out) => out.set(x + Math.sin(rot) * WIRE_AT[k], groundH(x, z) + WIRE_Y, z + Math.cos(rot) * WIRE_AT[k]);
   // линия столбов вдоль оси: проспекты — фонари с обеих сторон, улицы частного сектора — ЛЭП с одной стороны
   const line = (alongX, c, side, step, okZone, withBins) => {
-    let prev = null;
+    let prev = null; const rc = Math.round(c / GR) * GR; // ось дороги
     for (let a = -CITY.R; a <= CITY.R; a += step) {
       const m = ((a % GR) + GR) % GR, x = alongX ? a : c, z = alongX ? c : a;
-      const ok = m >= 30 && m <= GR - 30 && okZone(zoneAt(x, z)) && city.bldAt(x, z) <= 0;
+      const ok = m >= 30 && m <= GR - 30 && okZone(zoneAt(x, z)) && city.bldAt(x, z) <= 0 && city.onRoad(alongX ? x : rc, alongX ? rc : z); // столбы — только у существующей дороги
       if (!ok) { prev = null; continue; }
       const rot = alongX ? (side > 0 ? Math.PI : 0) : -side * Math.PI / 2; // консоль — к дороге
       put('p_lamp', x, z, rot);
@@ -671,6 +713,35 @@ function buildClouds(scene, count, seed, W) {
   return mesh;
 }
 
+// мост поперёк реки (вдоль X): пролёт над водой, пологие въезды до самой земли (у берега — сплошная опора-устой), перила,
+// разметка, быки в русле. Части для столкновений и сетки высот — прежние (city.js), здесь только картинка
+function bridgeParts(o) {
+  const Yd = 9, T = 2.4, HW = 18, SPAN = CITY.RIVER_W / 2 + 30, K = 0.07, DS = 5;
+  const prof = (s) => (Math.abs(s) <= SPAN ? Yd : Yd - K * (Math.abs(s) - SPAN));
+  // въезд кончается, где настил лёг на землю (с каждой стороны — своя длина)
+  const end = (dir) => { let s = SPAN; while (s < SPAN + 400 && prof(dir * s) > groundH(o.x + dir * s, o.z) + 0.3) s += DS; return s + DS; };
+  const s0 = -end(-1), s1 = end(1), top = [], con = [], mk = [];
+  const quad = (arr, a, b, c, d) => arr.push(...a, ...b, ...c, ...a, ...c, ...d);
+  for (let s = s0; s < s1 - 0.1; s += DS) {
+    const sa = s, sb = Math.min(s1, s + DS), xa = o.x + sa, xb = o.x + sb, ga = groundH(xa, o.z), gb = groundH(xb, o.z);
+    const ya = Math.max(prof(sa), ga + 0.3), yb = Math.max(prof(sb), gb + 0.3);
+    // низ: над водой — балка толщиной T, у берега (под настилом меньше 4 м) — сплошной устой до земли
+    const ba = ga > ya - T - 4 ? ga - 1 : ya - T, bb = gb > yb - T - 4 ? gb - 1 : yb - T;
+    quad(top, [xa, ya, o.z - HW], [xa, ya, o.z + HW], [xb, yb, o.z + HW], [xb, yb, o.z - HW]);
+    for (const zz of [o.z - HW, o.z + HW]) {
+      quad(con, [xa, ba, zz], [xa, ya, zz], [xb, yb, zz], [xb, bb, zz]);                       // боковина
+      quad(con, [xa, ya, zz], [xa, ya + 1.1, zz], [xb, yb + 1.1, zz], [xb, yb, zz]);           // перила
+    }
+    quad(con, [xa, ba, o.z + HW], [xa, ba, o.z - HW], [xb, bb, o.z - HW], [xb, bb, o.z + HW]);  // низ
+    if (Math.floor(s / 12) % 2 === 0) quad(mk, [xa, ya + 0.04, o.z - 0.15], [xa, ya + 0.04, o.z + 0.15], [xb, yb + 0.04, o.z + 0.15], [xb, yb + 0.04, o.z - 0.15]);
+  }
+  const geo = (arr) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(arr, 3)); g.computeVertexNormals(); return g; };
+  const out = [part(geo(top), 0x34363a), part(geo(con), 0x8f8d88), part(geo(mk), 0xd8d8d0)];
+  // быки в русле
+  for (const s of [-75, 0, 75]) { const h = Yd - T - CITY.WATER_Y + 8; out.push(part(new THREE.BoxGeometry(7, h, HW * 2 - 8), 0x7f7d78, M(o.x + s, CITY.WATER_Y - 8 + h / 2, o.z))); }
+  return out;
+}
+
 // ═════════════ Сборка сцены ═════════════
 export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const W = WEATHERS[weatherKey] || WEATHERS.day;
@@ -718,7 +789,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   gg.computeVertexNormals();
   const zt = zoneTexture(P.zoneTex || 1024); zt.flipY = false;
   if (renderer) zt.anisotropy = Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy());
-  const ground = new THREE.Mesh(gg, groundMaterial(zt, aoTexture(city)));
+  const ground = new THREE.Mesh(gg, groundMaterial(zt, aoTexture(city), roadTexture(city)));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
 
   // река: тёмная вода, волны, отражение неба, блик солнца
@@ -786,8 +857,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   G.objMesh = {}; G.objMat = objMat; G.ruinMat = new THREE.MeshPhongMaterial({ color: 0x1c1a18, specular: 0x050505, shininess: 4, side: THREE.DoubleSide });
   G.objBox = {}; G.objGroup = {};
   for (const o of city.objects) {
-  const parts = [], boxes = [];
-  for (const p of o.parts) {
+  const parts = o.bridge ? bridgeParts(o) : [], boxes = [];
+  for (const p of o.bridge ? [] : o.parts) {
     // коробки готовых построек — временная заглушка, пока не загрузилась модель
     if (p.model) { const gy = groundH(p.x, p.z) - 1; boxes.push(part(new THREE.BoxGeometry(p.w, p.h + 1, p.d), OCOL[o.key] || 0xbbbbbb, M(p.x, gy + (p.h + 1) / 2, p.z))); continue; }
     const y0 = (p.y0 !== undefined ? p.y0 : groundH(p.x, p.z) - 1), color = OCOL[o.key] || 0xbbbbbb, hh = p.h + (p.y0 !== undefined ? 0 : 1);
@@ -838,7 +909,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       if (zn !== ZONE.MID && zn !== ZONE.LOW && zn !== ZONE.CBD) continue;
       for (let s = 0; s < 6 && tl.length < streetN; s++) {
         const a2 = along + s * 14, x2 = alongX ? a2 : across, z2 = alongX ? across : a2;
-        const m2 = ((a2 % G2) + G2) % G2; if (m2 < 30 || m2 > G2 - 30 || city.bldAt(x2, z2) > 0) break;
+        const m2 = ((a2 % G2) + G2) % G2; if (m2 < 30 || m2 > G2 - 30 || city.bldAt(x2, z2) > 0 || !city.onRoad(alongX ? x2 : i * G2, alongX ? i * G2 : z2)) break; // ряд — только вдоль существующей улицы
         if (rnd() < 0.85) tree(x2, z2, 5 + rnd() * 3);
       }
     }
@@ -847,7 +918,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     while (tl.length < P.trees && tries++ < P.trees * 14) {
       const x = (rnd() * 2 - 1) * (CITY.R + 1500), z = (rnd() * 2 - 1) * (CITY.R + 1500), zn = zoneAt(x, z);
       const ok = zn === ZONE.PARK || (zn === ZONE.LOW && rnd() < 0.3) || (zn === ZONE.MID && rnd() < 0.15) || (zn === ZONE.FIELD && rnd() < 0.04);
-      if (!ok || city.bldAt(x, z) > 0) continue;
+      if (!ok || city.bldAt(x, z) > 0 || city.onRoad(x, z, 4)) continue; // не на дороге и не на обочине
       const gx = Math.abs(x - Math.round(x / G2) * G2), gz = Math.abs(z - Math.round(z / G2) * G2);
       if (zn !== ZONE.PARK && zn !== ZONE.FIELD && (gx < 20 || gz < 20)) continue;
       tree(x, z, 6 + rnd() * 6);

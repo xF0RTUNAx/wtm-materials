@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261018k';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261018k';
-import { LNCH } from './launchers.js?v=20261018k';
-import { createBook } from './flipbook.js?v=20261018k';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261019c';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261019c';
+import { LNCH } from './launchers.js?v=20261019c';
+import { createBook } from './flipbook.js?v=20261019c';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -110,7 +110,7 @@ export function unitModel(key, S) {
       T.push(part(new THREE.BoxGeometry(2.6, 1.0, 3), C, M(0, 0.5, 0)));
       for (const [x, y] of [[-0.25, -0.12], [0.25, -0.12], [-0.25, 0.16], [0.25, 0.16]]) K.push(part(new THREE.CylinderGeometry(0.06, 0.08, 2.4, 6), DARK, M(x, y, -1.3, Math.PI / 2)));
       dish = dishGeo(0.8, C); dishY = 3.4; break;
-    case 'gepard':
+    case 'gepard': case 'skyguard':
       hull(P, 7.5, 3.3, 1.5, C);
       T.push(part(new THREE.BoxGeometry(2.8, 1.4, 3), C, M(0, 0.7, 0)), part(new THREE.BoxGeometry(1.4, 0.8, 0.3), C, M(0, 0.6, -1.65)));
       for (const s of [-1, 1]) K.push(part(new THREE.BoxGeometry(0.5, 0.7, 1.6), C, M(s * 1.6, 0, 0)), part(new THREE.CylinderGeometry(0.09, 0.12, 4, 8), DARK, M(s * 1.6, 0, -2.4, Math.PI / 2)));
@@ -120,7 +120,7 @@ export function unitModel(key, S) {
       T.push(part(new THREE.CylinderGeometry(0.9, 0.9, 0.8, 12), SAND, M(0, 0.2, 0)));
       K.push(part(new THREE.CylinderGeometry(0.15, 0.15, 2.2, 8), DARK, M(0, 0, -1.1, Math.PI / 2)));
       dish = dishGeo(0.35, SAND); dishY = 3.3; break;
-    case 'roland':
+    case 'roland': case 'rapier':
       hull(P, 6.5, 3.2, 1.5, C);
       T.push(part(new THREE.BoxGeometry(1.6, 1.0, 1.8), C, M(0, 0.5, 0)));
       canBoxes(K, LN.box, sl, C);
@@ -142,7 +142,7 @@ export function unitModel(key, S) {
       canBoxes(K, LN.box, sl, 0xc8c4b0);
       P.push(part(new THREE.BoxGeometry(2.8, 2.6, 6), SAND, M(-14, 1.6, 5)), part(new THREE.BoxGeometry(3.4, 3.2, 0.4), 0x8c8a74, M(-14, 3.6, 2, -0.35)));
       break;
-    case 'buk': case 'bukm3':
+    case 'buk': case 'bukm3': case 'khordad':
       hull(P, 7.5, 3.2, 1.5, C);
       T.push(part(new THREE.BoxGeometry(2.4, 1.0, 3), C, M(0, 0.5, 0)));
       if (key === 'bukm3') canBoxes(K, LN.box, sl, C);
@@ -153,7 +153,7 @@ export function unitModel(key, S) {
       P.push(part(new THREE.BoxGeometry(2.8, 2.6, 3.2), C, M(0, 3.4, 0.6)), part(new THREE.BoxGeometry(1.6, 1.2, 0.3), C, M(0, 3.6, -1.1)));
       canBoxes(K, LN.box, sl, C);
       dish = plateGeo(2.8, 1.2, C); dishY = 5.6; break;
-    case 'pantsir': // 8×8 с башней: два пакета по 6 ракет, две спарки пушек, РЛС
+    case 'pantsir': case 'tunguska': // 8×8 с башней: два пакета по 6 ракет, две спарки пушек, РЛС
       truck(P, 11, 3, C);
       T.push(part(new THREE.BoxGeometry(2.4, 1.6, 2.4), C, M(0, 0.8, 0)));
       canBoxes(K, LN.box, sl, C);
@@ -166,7 +166,7 @@ export function unitModel(key, S) {
       canBoxes(K, LN.box, sl, NATO);
       P.push(part(new THREE.CylinderGeometry(0.12, 0.15, 5, 8), STEEL, M(8, 2.5, 0)));
       dish = plateGeo(1.6, 1.1, NATO); dishY = 5.5; break;
-    case 'iris': // грузовик с 8 вертикальными контейнерами
+    case 'iris': case 'sampt': // грузовик с 8 вертикальными контейнерами
       truck(P, 9, 2.6, NATO, 3); canBoxes(K, LN.box, sl, NATO);
       P.push(part(new THREE.CylinderGeometry(0.12, 0.15, 4, 8), STEEL, M(-10, 2, 0)));
       dish = plateGeo(1.8, 1.2, NATO); dishY = 4.5; break;

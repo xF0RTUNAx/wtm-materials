@@ -9,8 +9,8 @@
 // дроны и носители в зоне станции) и пуск ЗУР. По ПВО бьют только по засечённым — цель выбирается в момент пуска;
 // по комплексу, которого разведчик не видел сам (засечён по излучению или пуску), баллистика ложится с тройным промахом.
 /* global THREE */
-import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261018k';
-import { CITY } from '../city.js?v=20261018k';
+import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261019c';
+import { CITY } from '../city.js?v=20261019c';
 
 export const COMBINED_NAME = 'Мульти-волна';
 export const combinedOk = (side, era) => !!(COMBINED[side] && COMBINED[side][era]);
@@ -59,7 +59,7 @@ export function planDefaults(comp, targets, plan = {}, lim = LIM) {
   for (const [k, n, , via] of comp) {
     const W = AG[k]; if (W.recon) continue;
     const car = via && CARRIERS[via], tb = W.kind === 'tbm';
-    const o = out[k] = { n, units: [], tmin: 0, tmax: W.uav ? lim.uav : tb ? lim.tbm : car ? lim.car : lim.uav, dt: W.uav ? 2 : tb ? 6 : car ? car.every : 2 };
+    const o = out[k] = { n, units: [], tmin: 0, tmax: W.uav ? lim.uav : tb && !car ? lim.tbm : car ? lim.car : lim.uav, dt: W.uav ? 2 : tb && !car ? 6 : car ? car.every : 2 }; // tb с носителем — «Кинжал»
     if (car) o.tmin = Math.ceil(Math.max(0, lim.spawnR - LAUNCH_R) / CARRIER_V) + 2;
     const fly0 = tb ? W.T : pathLen(fromAt(plan[k] && plan[k].pts, W.uav ? CITY.HALF - 500 : LAUNCH_R), xz(plan[k] && plan[k].pts), c) / W.speed;
     const def = W.uav ? 0 : tb ? Math.max(10, T2 + 8 - W.T) : Math.max(5, T2 - fly0 - n * o.dt * 0.3);
@@ -118,7 +118,7 @@ export function createCombined(S, city, rnd, opts = {}) {
     const bTgt = (u) => { const o = u.tgt != null && objs.find((q) => q.id === u.tgt); return o && Math.hypot(o.x, o.z) > 300 ? Math.atan2(o.x, o.z) : null; };
     const U = (i) => { const u = unitCfg(plan, k, i); return { ...u, tL: Math.max(tFloor, D[k].units[i].t), toSam: mine ? u.sam : toSamN(i, aiFrac(k)), route: vecs(u.pts), b: u.pts ? Math.atan2(u.pts[0][0], u.pts[0][1]) : mine ? bTgt(u) : null }; };
     const m = i1 - i0;
-    if (W.kind === 'tbm') {
+    if (W.kind === 'tbm' && !W.air) { // воздушного пуска («Кинжал») — с носителя, ниже
       // пусковые оперативно-тактических ракет: у края района (12,2–13,4 км от центра), за городом; у каждой ракеты — своё время
       const per = k === 'iskander' ? 2 : 1, nL = Math.ceil(m / per);
       for (let l = 0; l < nL; l++) {

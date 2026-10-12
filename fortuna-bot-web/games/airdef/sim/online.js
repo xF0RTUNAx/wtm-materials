@@ -2,7 +2,7 @@
 // Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
-import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261018k';
+import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261019c';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
 export const AD_MODES = ['arcade', 'real'];
@@ -22,8 +22,8 @@ export const QUEUE_BOTS_T = 60;           // людей мало дольше м
 export const MAX_HP = 100;
 
 // классы ПВО для лимита первой волны (на игрока): 1 топовый и 1 средний; ближние (пушки, ПЗРК, «Стрела-1») — только за очки
-export const TOP = new Set(['s75', 's300', 's400', 'patriot', 'pac3', 'hawk']);
-export const MID = new Set(['s125', 'kub', 'bukm3', 'osa', 'tor', 'torm2', 'pantsir', 'nasams']);
+export const TOP = new Set(['s75', 's300', 's400', 'patriot', 'pac3', 'hawk', 'sampt']);
+export const MID = new Set(['s125', 'kub', 'bukm3', 'osa', 'tor', 'torm2', 'pantsir', 'nasams', 'roland', 'rapier', 'tunguska', 'khordad']);
 export const samClass = (k) => (TOP.has(k) ? 'top' : MID.has(k) ? 'mid' : 'near');
 export const LIMIT1 = { top: 1, mid: 1 }; // первая волна: на игрока ПВО — 1 дальний и 1 средний комплекс
 export const samCost = (k) => SAM_COST[k] || 100;

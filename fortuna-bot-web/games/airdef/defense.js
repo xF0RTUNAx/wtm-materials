@@ -9,14 +9,14 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261018k';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261018k';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261018k';
-import { TEAM_NAME, TBM_CAP, tbmOf } from './sim/online-multi.js?v=20261018k';
+import { CITY, mulberry32 } from './city.js?v=20261019c';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261019c';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261019c';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261019c';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261018k';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261018k';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261018k';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261019c';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261019c';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261019c';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -473,13 +473,16 @@ export function createDefense(C) {
   }
   const fcCol = (f) => (f >= 1 ? '#4ade80' : f >= 0.75 ? '#fde047' : '#f87171');
   // «+»: свободная (без цели) единица этого типа — на цель; нет — купить (в бою — заказ, улетит через 30 с); «−»: снять (до боя — вернуть очки)
-  // баллистика: потолок на атакующую команду (онлайн — по числу игроков, минус уже взятое союзниками; одиночная — 4)
-  function tbmRoom() { const al = st.net && st.net.room && st.net.room.allies, n = al ? al.length : 1, me = st.net && st.net.me && st.net.me.id;
-    const other = al ? al.filter((p) => p.id !== me).reduce((q, p) => q + (p.tbm || 0), 0) : 0; return { cap: TBM_CAP(n), other, left: TBM_CAP(n) - other - tbmOf(st.plan.n) }; }
+  // баллистика: правило на волну / на атакующую команду (online-multi.js tbmCheck) с учётом взятого союзниками
+  function tbmRoom(add) { const al = st.net && st.net.room && st.net.room.allies, n = al ? al.length : 1, me = st.net && st.net.me && st.net.me.id;
+    const other = al ? sumN(...al.filter((p) => p.id !== me).map((p) => p.tbn || {})) : {}, mine = {};
+    for (const [k, v] of Object.entries(st.plan.n)) if (AG[k] && AG[k].kind === 'tbm') mine[k] = v;
+    if (add) mine[add] = (mine[add] || 0) + 1;
+    const all = sumN(other, mine); return { rule: TBM_RULE(n), other: tbmOf(other), used: tbmOf(all), kinzhal: all.kinzhal || 0, deny: add ? tbmCheck(all, n) : null }; }
   function addTo(key, k) {
     const free = idxOf(k, null).filter((i) => !launchedU(k, i));
     if (free.length) { setTkey(k, free[0], key); return true; }
-    if (AG[k].kind === 'tbm') { const b = tbmRoom(); if (b.left <= 0) { say(`Баллистика: ${st.net ? 'на команду' : 'на волну'} не больше ${b.cap}${b.other ? ` (у союзников уже ${b.other})` : ''}`, 3); snd.deny(); return false; } }
+    if (AG[k].kind === 'tbm') { const b = tbmRoom(k); if (b.deny) { say(`${b.deny} ${st.net ? 'на команду' : 'на волну'}${b.other ? ` (у союзников уже ${b.other})` : ''}`, 3); snd.deny(); return false; } }
     if (planCost() + (THREAT[k] ?? 3) > st.budget) { say('Не хватает очков угрозы'); snd.deny(); return false; }
     const i = st.plan.n[k] = (st.plan.n[k] || 0) + 1; setTkey(k, i - 1, key);
     if (st.phase === 'wave') { st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 1.5; }
@@ -514,13 +517,13 @@ export function createDefense(C) {
   function renderTgtCard() {
     const key = st.tsel, f = forecast(key), left = st.budget - planCost(), wave = st.phase === 'wave', DD = planDefaults(planComp(), st.targets, st.plan.cfg, st.net ? LIM_ON : undefined);
     const tb = tbmRoom();
-    let h = `<h3>Наряд на «${tName(key)}»</h3><div>Очки угрозы: <b style="color:#fde68a">${left}</b> · баллистика <b>${tb.cap - tb.left}/${tb.cap}</b>${st.net ? ' на команду' : ''}</div>`;
+    let h = `<h3>Наряд на «${tName(key)}»</h3><div>Очки угрозы: <b style="color:#fde68a">${left}</b> · баллистика <b>${tb.used}/${tb.kinzhal ? tb.rule.kinzhal : tb.rule.total}</b>${tb.kinzhal ? ' («Кинжал» — без другой)' : ` (из них «Искандер» ≤ ${tb.rule.iskander})`}${st.net ? ' на команду' : ''}</div>`;
     if (f) h += `<div style="margin:6px 0"><div style="height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:${Math.round(100 * f.hp / f.hpMax)}%;background:#94a3b8"></div></div>
       <div style="margin-top:4px">Прочность ${Math.round(f.hp)}/${f.hpMax} · наряд разрушит <b style="color:${fcCol(f.k)}">≈ ${Math.round(f.k * 100)} %</b>${f.over >= 1.5 ? ` · запас ×${f.over.toFixed(1).replace('.', ',')} — часть можно перенести на другие цели` : ''}</div><p class="hint">Оценка: часть собьют (дроны чаще, баллистику реже), ложные цели урона не наносят.${f.k < 1 ? ' Мало — добавьте ещё.' : ''}</p></div>`;
     else if (key === 'sam') h += '<p class="hint">Где ПВО — заранее неизвестно. Назначенные сюда бьют по комплексам, засечённым к моменту пуска (разведчик, излучение РЛС, пуски ЗУР); никого не нашли — по целям наряда. По тем, кого разведчик сам не видел, баллистика промахивается сильнее. Ложные цели — лучше сюда: ПВО тратит на них ракеты.</p>';
     else h += '<p class="hint">Засечённый комплекс ПВО: назначенные сюда бьют именно по нему (уничтожен — по другим засечённым).</p>';
     for (const [k, via] of multiItems(attSide(), C.setup.era).filter(([q]) => !st.opts.items || st.opts.items.has(q) || idxOf(q, key).length)) { // урок — только нужные типы
-      const W = AG[k], here = idxOf(k, key), done = here.filter((i) => launchedU(k, i)).length, free = idxOf(k, null).filter((i) => !launchedU(k, i)).length, c = THREAT[k] ?? 3, tbFull = W.kind === 'tbm' && !free && tbmRoom().left <= 0;
+      const W = AG[k], here = idxOf(k, key), done = here.filter((i) => launchedU(k, i)).length, free = idxOf(k, null).filter((i) => !launchedU(k, i)).length, c = THREAT[k] ?? 3, tbFull = W.kind === 'tbm' && !free && !!tbmRoom(k).deny;
       h += `<div class="dcard ${here.length ? 'on' : ''}"><div class="nm"><b>${W.short} ×${here.length}</b><span>${via ? CARRIERS[via].name : W.kind === 'tbm' ? 'пусковая' : 'своим ходом'}${W.decoyMun ? ' · ложная' : ''}${done ? ` · пущено ${done}` : ''}${free ? ` · без цели: ${free}` : ''}</span></div>
         <span class="pr">${free ? '' : c}</span><button class="btn alt mini" data-a="tdec" data-k="${k}">−</button><button class="btn alt mini ${(!free && c > left) || tbFull ? 'no' : ''}" data-a="tinc" data-k="${k}">+</button></div>`;
       if (here.length) { // единицы на этой цели: номер и время пуска; касание — её маршрут, высота, время

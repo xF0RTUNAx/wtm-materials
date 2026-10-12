@@ -10,7 +10,7 @@
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_kh29t.glb`, `w_kh31p.glb`, `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
 - "Kh-38MT air-to-ground missile" (https://sketchfab.com/3d-models/kh-38mt-air-to-ground-missile-559e695e8ade454eb575745cc1213ab9) by Jeyhun1985 — CC-BY-4.0 — `w_kh25ml.glb`
 - "AGM 65 MAVERICK" (https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a) by HEAVYCLOUD — CC-BY-4.0 — `w_agm65b.glb`
-- "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`, `aam_aim9.glb`, `aam_aim54.glb`
+- "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`, `aam_aim9.glb`, `aam_aim54.glb`, `w_jsow.glb`
 - "Agm-158 - wings extended" (https://sketchfab.com/3d-models/agm-158-wings-extended-1b1f0f509249401297057ee97b511ee0) by samadsamadi — CC-BY-4.0 — `w_jassm.glb`
 - "AGM-88 HARM transport cart" (https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198) by Tiltow — CC-BY-4.0 — `w_agm88.glb`
 - "AIM-160A "Screamer"" (https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c) by Peter Primini — CC-BY-4.0 — `w_mald.glb`
@@ -43,6 +43,10 @@
 - "UAV" (https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5) by Artem Goyko — CC-BY-4.0 — `d_uav.glb`
 - "Tupolev TU-160" (https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40) by KOG_THORNS — CC-BY-4.0 — `e_tu160.glb`
 - "Rockwell B-1B Lancer" (https://sketchfab.com/3d-models/rockwell-b-1b-lancer-d32a5cbbd16f4521bdd37e8b4b1c79bc) by Muhamad Mirza Arrafi — CC-BY-4.0 — `e_b1b.glb`
+- "Boeing B-52 Stratofortress" (https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144) by bohmerang — CC-BY-4.0 — `e_b52.glb`
+- "Eurofighter Typhoon EF-2000" (https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865) by andertan — CC-BY-4.0 — `e_typhoon.glb`
+- "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`
+- "Game Ready Low Poly R-33" (https://sketchfab.com/3d-models/game-ready-low-poly-r-33-1f9108d505b245bfa225a44af41e554e) by Mustafa.Garip — CC-BY-4.0 — `w_kinzhal.glb`
 - "Chinese 9K720 Iskander TELAR" (https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1) by 42manako — CC-BY-4.0 — `l_iskander.glb`
 - "Ukrainian OTR-21 Tochka-U" (https://sketchfab.com/3d-models/ukrainian-otr-21-tochka-u-3b41c4e2d03d4bbb9a4acc339fc495bc) by 42manako — CC-BY-4.0 — `l_tochka.glb`
 - "Scud ( Ballistic missile )" (https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0) by AlexDang — CC-BY-4.0 — `l_scud.glb`
@@ -59,13 +63,19 @@
 - "Boeing KC-135R Stratotanker" (https://sketchfab.com/3d-models/boeing-kc-135r-stratotanker-86f1e11310e546db9bf323fa1a62f069) by Muhamad Mirza Arrafi — CC-BY-4.0 — `t_kc135.glb`
 - "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_aim7.glb`, `aam_aim9x.glb`
 - "Simple GameReady Weapons for Fighter Jet Games" (https://sketchfab.com/3d-models/simple-gameready-weapons-for-fighter-jet-games-4c231dda5e8a4db39c2f53c3e16f57e9) by ekmekarasikodlamaytb — CC-BY-4.0 — `aam_r60.glb`
-- "Low poly German IRIS-T AAM" (https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4) by Raptor9 — CC-BY-4.0 — `aam_iris.glb`
+- "Low poly German IRIS-T AAM" (https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4) by Raptor9 — CC-BY-4.0 — `msl_aster.glb`, `aam_iris.glb`
 - "Low Poly Missiles and Torpedos" (https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35) by sakigakefuruzawa — CC-BY-4.0 — `aam_mica.glb`
 - "MiG 29" (https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3) by Uxman — CC-BY-4.0 — `mig29.glb`
 - "9K331 Tor-M1" (https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db) by 42manako — CC-BY-4.0 — `tor.glb`, `tor_lo.glb`
 - "96K6 Pantsir-S2" (https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b) by 42manako — CC-BY-4.0 — `pantsir.glb`, `pantsir_lo.glb`
 - "S-400 Triumf missile launcher truck" (https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f) by Chenzoss — CC-BY-4.0 — `s400.glb`, `s400_lo.glb`
 - "9K31 Strela-1 SAM" (https://sketchfab.com/3d-models/9k31-strela-1-sam-bf3bf22d2a684d0d883e03d533a52a36) by 42manako — CC-BY-4.0 — `strela1.glb`
+- "Marder Roland (low-poly)" (https://sketchfab.com/3d-models/marder-roland-low-poly-2f30452b85ec461db2de4bc118b7448e) by ScurvyWoof — CC-BY-4.0 — `roland.glb`
+- "2K22 Tunguska" (https://sketchfab.com/3d-models/2k22-tunguska-54ff4d655755473d99eab1ccc7eb6bfc) by usedm — CC-BY-4.0 — `tunguska.glb`, `tunguska_lo.glb`
+- "samp-t air defense system" (https://sketchfab.com/3d-models/samp-t-air-defense-system-096f1bd31fc646b9908d5f1d9b7e0d34) by Chenzoss — CC-BY-4.0 — `sampt.glb`, `sampt_lo.glb`
+- "Iranian Sevom Khordad SAM" (https://sketchfab.com/3d-models/iranian-sevom-khordad-sam-ca18f97aeb6a4aaf992a973d513de306) by 42manako — CC-BY-4.0 — `khordad.glb`
+- "OERLIKON 35MM SKYGUARD RADAR" (https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d) by lm9241221 — CC-BY-4.0 — `skyguard.glb`, `skyguard_lo.glb`
+- "Tracked Rapier" (https://sketchfab.com/3d-models/tracked-rapier-23db0462ce604a64af5ea282b5df59b9) by stealth86 — CC-BY-4.0 — `rapier.glb`, `rapier_lo.glb`
 - "Osa-AKM SAM system" (https://sketchfab.com/3d-models/osa-akm-sam-system-485a4207e55545188e93bef5f1e2413f) by Jeyhun1985 — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
 - "MIM-104 Patriot Surface-To-Air Missile (SAM)" (https://sketchfab.com/3d-models/mim-104-patriot-surface-to-air-missile-sam-7a64d0af78514a159877edab1ab2bccb) by Muhamad Mirza Arrafi — CC-BY-4.0 — `patriot.glb`
 - "SAM S-75 "Dvina"" (https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4) by manyakasia — CC-BY-4.0 — `s75.glb`
