@@ -3,11 +3,11 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261020a';
-import * as O from './sim/online.js?v=20261020a';
-import * as MW from './sim/online-multi.js?v=20261020a';
-import { AG, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020a';
-import { MODES } from './sim/strike.js?v=20261020a';
+import { createNet } from './net.js?v=20261020b';
+import * as O from './sim/online.js?v=20261020b';
+import * as MW from './sim/online-multi.js?v=20261020b';
+import { AG, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020b';
+import { MODES } from './sim/strike.js?v=20261020b';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];

@@ -2,10 +2,10 @@
 // подвеска пополняется). На каждом шаге — подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, SAM_COST } from './arsenal.js?v=20261020a';
-import { samKnown } from './sim/combined.js?v=20261020a';
-import { spotNear, freeGround } from './mission.js?v=20261020a';
-import { riverX } from './city.js?v=20261020a';
+import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, SAM_COST } from './arsenal.js?v=20261020b';
+import { samKnown } from './sim/combined.js?v=20261020b';
+import { spotNear, freeGround } from './mission.js?v=20261020b';
+import { riverX } from './city.js?v=20261020b';
 
 const K = (k) => `<kbd>${k}</kbd>`;
 // подписи управления: ПК или телефон
@@ -681,6 +681,7 @@ export const LESSONS = {
       hooks: (T) => ({ wpnEnd: (w, r) => { if (w.W.kind === 'tbm' && !w.decoy) { if (r.intercepted) T.d.kill = (T.d.kill || 0) + 1; else T.d.hit = (T.d.hit || 0) + 1; } } }),
       tick(T, C) {
         const D = DS(C), d = T.d, u = D.view === 'op' ? D.op : null, tb = C.S.wpns.filter((w) => w.ev && w.W.kind === 'tbm');
+        if (D.over && T.s >= 1 && T.s < 5) T.s = 5; // волна кончилась раньше, чем успели (обе ракеты долетели) — сразу к итогу
         for (const q of C.S.units) if (q.ammo < q.S.ammo && q.reloadT > 0) { q.ammo = q.S.ammo; q.reloadT = 0; } // в уроке — без перезарядки
         if (T.s === 0) { T.hint('У склада боеприпасов — PAC-3 и Patriot. Нажмите «<b>В БОЙ</b>».'); if (D.phase === 'wave') T.next(); }
         else if (T.s === 1) { T.hint('Коснитесь <b>PAC-3</b> на карте и нажмите «<b>Управлять</b>» — вы за пультом.'); if (u && u.key === 'pac3') T.next(); }
@@ -794,6 +795,7 @@ export function createTraining(C, ctrls) {
       if (extra.trackBroken) C.hooks.trackBroken = extra.trackBroken;
     } else {
       inner.start({ ...L.def(C), noEnd: true, lastGame: 'training' });
+      if (side === 'mdef') C.hooks.unitDmgK = 0; // оборона от волны: комплексы не выбивают — урок не ломается, если ракета дошла
       for (const [k, f] of Object.entries(extra)) { if (k === 'aiDmgK') C.hooks.aiDmgK = f; else { const prev = C.hooks[k]; C.hooks[k] = (...a) => { if (prev) prev(...a); f(...a); }; } }
     }
     C.lastGame = 'training';
@@ -809,6 +811,7 @@ export function createTraining(C, ctrls) {
     camera: (dt, t) => inner.camera(dt, t), hud: (dt, t) => inner.hud(dt, t), onKey: (e, d) => inner.onKey(e, d),
     afterRender: () => inner.afterRender && inner.afterRender(), focus: () => inner.focus(), skip3D: () => !!(inner.skip3D && inner.skip3D()),
     resize: () => inner && inner.resize && inner.resize(), pauseHelp: () => inner.pauseHelp(), finish: () => C.toMenu(),
+    timeK: () => (inner && inner.timeK ? inner.timeK() : 1), near: () => (inner && inner.near ? inner.near() : 0), // «Время ×4» и ближняя плоскость — как у самого режима
   };
   return api;
 }

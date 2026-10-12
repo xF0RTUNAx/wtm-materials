@@ -1,7 +1,7 @@
 // Звук «Воздушного превосходства»: движок и синтез — из «Летки» (drone/audio.js: двигатель, объёмные голоса самолётов
 // и ракет, взрывы с задержкой по скорости звука, «гарнитура» для бортовых сигналов). Здесь — звуки этой игры из тех же
 // кирпичей (A.noise / A.tone): старт ЗУР, очереди зениток, сброс бомб, тоны СПО и датчика пуска, пульт оператора ПВО.
-import { createAudio } from '../drone/audio.js?v=20261020a';
+import { createAudio } from '../drone/audio.js?v=20261020b';
 
 export function createSound() {
   const A = createAudio();
@@ -11,8 +11,8 @@ export function createSound() {
   A.setVolume(vol); A.setMuted(muted);
   // записанные звуки (games/airdef/sounds): мотор «Шахеда» — петля для голосов дронов; далёкий взрыв —
   // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
-  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261020a'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261020a');
-  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261020a`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261020a'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261020a'); A.setPropSample('prop');
+  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261020b'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261020b');
+  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261020b`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261020b'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261020b'); A.setPropSample('prop');
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
   // записи вертикального старта: [хлопок выброса, начало рёва двигателя], с (по огибающей громкости)

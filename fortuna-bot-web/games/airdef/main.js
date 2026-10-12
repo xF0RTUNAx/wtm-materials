@@ -8,26 +8,26 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261020a';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020a';
-import { createPipeline } from '../drone/post.js?v=20261020a';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020a';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020a';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020a';
-import { createStrike, MODES } from './sim/strike.js?v=20261020a';
-import { createRaid } from './sim/raid.js?v=20261020a';
-import { POD } from './sim/combined.js?v=20261020a';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020a';
-import { slotCount } from './launchers.js?v=20261020a';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020a';
-import { createSound } from './sound.js?v=20261020a';
-import { createAir } from './air.js?v=20261020a';
-import { createDefense } from './defense.js?v=20261020a';
-import { createDirector } from './director.js?v=20261020a';
-import { createOnline } from './online.js?v=20261020a';
-import { createShell } from './shell.js?v=20261020a';
-import { createTraining, LESSONS } from './training.js?v=20261020a';
-import { createMenu } from './menu.js?v=20261020a';
+import { buildCity, CITY } from './city.js?v=20261020b';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020b';
+import { createPipeline } from '../drone/post.js?v=20261020b';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020b';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020b';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020b';
+import { createStrike, MODES } from './sim/strike.js?v=20261020b';
+import { createRaid } from './sim/raid.js?v=20261020b';
+import { POD } from './sim/combined.js?v=20261020b';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020b';
+import { slotCount } from './launchers.js?v=20261020b';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020b';
+import { createSound } from './sound.js?v=20261020b';
+import { createAir } from './air.js?v=20261020b';
+import { createDefense } from './defense.js?v=20261020b';
+import { createDirector } from './director.js?v=20261020b';
+import { createOnline } from './online.js?v=20261020b';
+import { createShell } from './shell.js?v=20261020b';
+import { createTraining, LESSONS } from './training.js?v=20261020b';
+import { createMenu } from './menu.js?v=20261020b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -98,6 +98,7 @@ function touchGfx(P, custom) {
   if (P.shadowMap > 2048) Object.assign(P, { shadowMap: 2048, shadowBox: Math.min(P.shadowBox, 600) });
   if (!custom && P.perf.aa === 'msaa') P.perf.aa = 'fxaa';
   P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
+  if (!custom) P.prCap = Math.min(P.prCap, P.prCap > 1.5 ? 1.5 : 1.25); // телефон и планшет: экран и так плотный — меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
   return P;
 }
 // окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
@@ -181,6 +182,7 @@ C.newBattle = function (o) {
   const S = createStrike({ city, rnd, mode: C.MODE, night: C.NIGHT, fx: simFx,
     aircraft: () => { const a = raid ? raid.alive() : []; return C.player && !C.player.dead ? [C.player, ...a] : a; },
     hurt: (a, dmg, by) => { if (a === C.player) { if (C.hooks.hurtPlayer) C.hooks.hurtPlayer(dmg, by); } else raid.hurt(a, dmg * (C.hooks.aiDmgK || 1)); },
+    unitDmgK: () => C.hooks.unitDmgK ?? 1,
     laserSpot: (a) => (a === C.player ? (C.hooks.playerLaser ? C.hooks.playerLaser() : null) : raid.laserSpot(a)),
     spawnDecoy: (a, key, aim) => { const d = raid.spawnDecoy(a, key, aim); if (C.hooks.decoyOut) C.hooks.decoyOut(d); } });
   const raid = createRaid(S, city, rnd, { side: o.defSide === 'east' ? 'west' : 'east', era: o.era, fx: raidFx });
@@ -348,6 +350,7 @@ const simFx = {
   },
   samTrail(m) { C.fx.samTrail(m); },
   samEnd(m, hit) { const g = samMeshes.get(m.id); if (g) { scene.remove(g); samMeshes.delete(m.id); } if (C.hooks.samEnd) C.hooks.samEnd(m, hit); },
+  wpnIgnite(w) { snd.tbmLaunch(dist(w.pos)); C.fx.ignite(w.pos, w.dir, true); }, // «Кинжал» сошёл с пилона — двигатель
   wpnRelease(w) {
     const g = w.ev ? evMesh(w) : weaponMesh(w.key, w.W, weaponGeo, wMat); scene.add(g); wpnMeshes.set(w.id, g);
     if (!w.ev && (w.W.kind === 'agm' || w.W.kind === 'arm' || w.W.kind === 'cruise')) { // ракета с двигателем: факел и след — из сопла
@@ -355,7 +358,7 @@ const simFx = {
       g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = w.W.kind === 'cruise' ? 'jet' : 'rocket';
     }
     // «Мульти-волна»: старт баллистики с пусковой — рёв; крылатая с носителя — хлопок и запуск двигателя
-    if (w.ev && !w.decoy && w.W.kind === 'tbm') snd.tbmLaunch(dist(w.pos));
+    if (w.ev && !w.decoy && w.W.kind === 'tbm' && w.phase !== 'drop') snd.tbmLaunch(dist(w.pos)); // воздушный пуск — рёв при зажигании (wpnIgnite)
     else if (w.ev && w.owner && w.owner.role === 'carrier') snd.cruiseLaunch(dist(w.pos));
     if (w.owner === C.player) snd.release(w.W.kind === 'agm' || w.W.kind === 'arm');
     if (C.hooks.wpnRelease) C.hooks.wpnRelease(w);
@@ -410,7 +413,8 @@ function seat(g, u) {
     const [hw, hl] = g.userData.half, c = Math.cos(u.yaw), s = Math.sin(u.yaw);
     const h = (lx, lz) => city.groundH(u.pos.x + lx * c + lz * s, u.pos.z - lx * s + lz * c);
     const hf = h(0, -hl), hb = h(0, hl), hL = h(-hw, 0), hR = h(hw, 0);
-    g.userData.seat = { dy: (hf + hb + hL + hR) / 4 - city.groundH(u.pos.x, u.pos.z), rx: Math.atan2(hf - hb, 2 * hl), rz: Math.atan2(hR - hL, 2 * hw) };
+    if (C.S && C.S.unitTilt) C.S.unitTilt(u); // наклон — тот же, по которому считается старт ракеты (sim/strike.js)
+    g.userData.seat = { dy: (hf + hb + hL + hR) / 4 - city.groundH(u.pos.x, u.pos.z), rx: u.tx ?? Math.atan2(hf - hb, 2 * hl), rz: u.tz ?? Math.atan2(hR - hL, 2 * hw) };
   }
   const st = g.userData.seat; g.rotation.order = 'YXZ'; g.rotation.set(st.rx, u.yaw, st.rz); g.position.y += st.dy;
 }
@@ -446,8 +450,16 @@ function flameOf(g, w) {
   else if (k === 'rocket') f.set(w.t < (w.W.burn || 3) ? 1 : 0, r * 0.85);
   else f.set(w.phase === 'boost' ? 2 : 0);
 }
+// ложная цель баллистической ракеты — отделившаяся головная часть (w_tbmdec), сзади закрыта диском; двигателя у неё нет
+function decoyMesh() {
+  const m = anyModel('w_tbmdec'); if (!m) return null;
+  const b = new THREE.Box3().setFromObject(m), r = (b.max.x - b.min.x) / 2;
+  const cap = new THREE.Mesh(new THREE.CircleGeometry(r * 0.97, 16), new THREE.MeshLambertMaterial({ color: 0x3a3c3e })); cap.position.set((b.max.x + b.min.x) / 2, (b.max.y + b.min.y) / 2, b.max.z - 0.01); m.add(cap);
+  m.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); return m;
+}
 function evMesh(w) {
   const M = w.W.model;
+  if (w.decoy && w.W.kind === 'tbm') { const d = decoyMesh(); if (d) return d; }
   let g = M && M.part ? evPart(M.glb, M.part) : M ? anyModel(M.glb) : null;
   if (!g) { g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (M) g.userData.stub = true; } // модель ещё грузится — временная
   g.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; });
@@ -469,9 +481,9 @@ function spinProps(g, dt) {
   for (const c of g.children) if (c.userData.prop) c.rotation.z += dt * 70;
 }
 // пусковые: ставим, когда удар начался; ракеты на пусковой прячутся по мере пусков (evLaunch — рядом с unitMeshes)
-C.evPreload = (comp) => { for (const [k, , , via] of comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); if (W.launcher) wantModel(W.launcher); if (via) wantModel(via); } };
+C.evPreload = (comp) => { for (const [k, , , via] of comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); if (W.dec) wantModel('w_tbmdec'); if (W.launcher) wantModel(W.launcher); if (via) wantModel(via); } };
 C.evReady = (ev) => {
-  for (const [k] of ev.comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); }
+  for (const [k] of ev.comp) { const W = AG[k]; if (W.model) wantModel(W.model.glb); else wantWeapon(k); if (W.dec) wantModel('w_tbmdec'); }
   for (const L of ev.launchers) wantModel(L.key);
   for (const a of ev.carriers) { wantModel(a.plane); for (const l of a.load) wantWeapon(l.key); }
 };
@@ -733,7 +745,10 @@ function frame(now) {
   requestAnimationFrame(frame);
   // меню и пауза — 30 к/с (фон не должен греть телефон), бой на телефоне — не больше 60
   // «Кастомный»: своё ограничение (30 к/с — вдвое меньше нагрев и расход батареи)
-  const capMs = C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / 60 : 0;
+  // телефон: 60 к/с — только в полёте за самолёт; оборона, мульти-волна, карта, оператор и наблюдение — 30 к/с (камера там
+  // медленная, а нагрев и расход батареи вдвое меньше). Свой предел из «Кастомного» — главнее
+  const cc = C.ctrl, fly = !!(cc && (cc.craft || (cc.inner && cc.inner.craft)));
+  const capMs = C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / (fly ? 60 : 30) : 0;
   if (capMs && now - lastDraw < capMs - 2) return;
   const ms = now - lastDraw; lastDraw = now;
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр

@@ -15,7 +15,7 @@ export function detailTex(name) {
   const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 4; DETAIL[name] = t;
   if (typeof document === 'undefined' || typeof document.createElementNS !== 'function') return t; // без браузера (тесты) — без картинки
   const c = document.createElement('canvas'); c.width = c.height = 1; const x = c.getContext('2d'); if (x) { x.fillStyle = '#808080'; x.fillRect(0, 0, 1, 1); } t.image = c; t.needsUpdate = true;
-  new THREE.ImageLoader().load(new URL(`../airdef/tex/${name}.jpg?v=20261020a`, import.meta.url).href, (img) => { t.image = img; t.needsUpdate = true; }, undefined, () => {});
+  new THREE.ImageLoader().load(new URL(`../airdef/tex/${name}.jpg?v=20261020b`, import.meta.url).href, (img) => { t.image = img; t.needsUpdate = true; }, undefined, () => {});
   return t;
 }
 export function buildProps(C) {

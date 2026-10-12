@@ -5,10 +5,10 @@
 // carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { AG } from '../arsenal.js?v=20261020a';
-import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261020a';
-import { predictBomb } from './strike.js?v=20261020a';
-import { CITY } from '../city.js?v=20261020a';
+import { AG } from '../arsenal.js?v=20261020b';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261020b';
+import { predictBomb } from './strike.js?v=20261020b';
+import { CITY } from '../city.js?v=20261020b';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -145,13 +145,19 @@ export function createRaid(S, city, rnd, opts = {}) {
           if (r0 <= a.R + 300) { a.inbound = false; a.b = Math.atan2(a.pos.x, a.pos.z); }
           continue;
         }
-        a.b += (a.speed / a.R) * dt; steerToward(a, TMP2.set(Math.sin(a.b + 0.25) * a.R, 0, Math.cos(a.b + 0.25) * a.R), a.cruise, dt);
+        // перед воздушным пуском баллистики («Кинжал») — крылья в горизонт и нос вверх: 4 с прямо и с набором высоты
+        const nq = a.salvo[0], airTbm = nq && AG[nq.key] && AG[nq.key].kind === 'tbm' && AG[nq.key].air, soon = airTbm && a.relT < 4 && a.t + (a.t0 || 0) >= (nq.t ?? 0) - 4;
+        if (soon) { fwdOf(a, DIR); steerToward(a, TMP2.set(a.pos.x + DIR.x * 9000, 0, a.pos.z + DIR.z * 9000), a.cruise + 2500, dt); }
+        else { a.b += (a.speed / a.R) * dt; steerToward(a, TMP2.set(Math.sin(a.b + 0.25) * a.R, 0, Math.cos(a.b + 0.25) * a.R), a.cruise, dt); }
         a.relT -= dt;
         if (a.relT <= 0 && a.salvo.length && a.t + (a.t0 || 0) >= (a.salvo[0].t ?? 0)) { // время волны = a.t0 (когда заказан) + своё
           const q = a.salvo.shift(), L = a.load.find((l) => l.key === q.key && l.n > 0); if (L) L.n--;
           // цель — в момент пуска (по ПВО — только по уже засечённым комплексам), маршрут и высота — по плану
           const aim = q.aimFn ? q.aimFn() : q.aim;
-          TMP.copy(a.pos); TMP.y -= 8; const w = S.spawnMun(q.key, TMP, aim.p || aim, { owner: a, route: q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt, dir: fwdOf(a, DIR) }); a.relT = a.every;
+          const air = AG[q.key] && AG[q.key].kind === 'tbm' && AG[q.key].air;
+          if (air && a.q) TMP.set(0, -2.45, -1.5).applyQuaternion(a.q).add(a.pos); else { TMP.copy(a.pos); TMP.y -= 8; } // «Кинжал» — с подфюзеляжного пилона (как висел)
+          const w = S.spawnMun(q.key, TMP, aim.p || aim, { owner: a, route: q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt, dir: fwdOf(a, DIR).clone(),
+            ...(air ? { air: true, vel: a.vel.clone(), up: a.q ? new THREE.Vector3(0, 1, 0).applyQuaternion(a.q) : null } : {}) }); a.relT = a.every;
           if (q.done) q.done(w); if (fx.release) fx.release(a, q.key);
         }
         if (!a.salvo.length) a.phase = 'egress';

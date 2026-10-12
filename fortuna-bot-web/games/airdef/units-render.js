@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261020a';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261020a';
-import { LNCH } from './launchers.js?v=20261020a';
-import { createBook } from './flipbook.js?v=20261020a';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261020b';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261020b';
+import { LNCH } from './launchers.js?v=20261020b';
+import { createBook } from './flipbook.js?v=20261020b';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -542,7 +542,7 @@ export function createFx(scene, P) {
         b.t += dt; const k = Math.max(0.25, 1 - b.t / 240);
         for (const f of b.fl) f.a = 0.45 + 0.55 * k; // пламя со временем слабее
         if (Math.random() < dt * 3 * k) fire.emit(b.pos.x + (Math.random() - 0.5) * b.r * 0.6, b.pos.y + 2 + Math.random() * b.r * 0.4, b.pos.z + (Math.random() - 0.5) * b.r * 0.6, 0, 10, 0, 1, 0.6, 0.2, 0.9, 0.8, 0, 1.2, 0.3, 0); // искры
-        if (Math.random() < dt * 9 * k) smoke.emit(b.pos.x + (Math.random() - 0.5) * b.r, b.pos.y + 6, b.pos.z + (Math.random() - 0.5) * b.r, 3 + Math.random() * 2, 9, 1, 0.12, 0.11, 0.1, 0.7, b.r * 0.6, b.r * 0.9, 16, 0.05, 1.2);
+        if (Math.random() < dt * 9 * k) { const g = 0.15 + Math.random() * 0.13; smoke.emit(b.pos.x + (Math.random() - 0.5) * b.r, b.pos.y + 6, b.pos.z + (Math.random() - 0.5) * b.r, 3 + Math.random() * 2, 9, 1, g, g * 0.94, g * 0.88, 0.48, b.r * 0.6, b.r * 0.9, 16, 0.05, 1.2); } // клубы разного тона, полупрозрачные (вблизи не сплошное чёрное пятно)
       }
     },
   };

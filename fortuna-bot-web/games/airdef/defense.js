@@ -9,14 +9,14 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261020a';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020a';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020a';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020a';
+import { CITY, mulberry32 } from './city.js?v=20261020b';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020b';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020b';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020b';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020a';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020a';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020a';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020b';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020b';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020b';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -1165,6 +1165,12 @@ export function createDefense(C) {
   // Аркада: плашка «Угроза …», сирена при баллистике доигрывает; реализм: без плашек, баллистика во время тревоги — сирена заново
   function siren(w) {
     if (!w.ev || w.decoy || w.W.uav || w.W.recon) return;
+    // «Кинжал» — своя тревога (и в реализме: о пуске с МиГ-31К объявляют отдельно), каждый пуск
+    if (w.W.kind === 'tbm' && w.W.air) {
+      snd.siren('tbm', true); st.sirenT = true;
+      st.alert = `Пуск «Кинжала» с МиГ-31К — у цели через ≈ ${Math.max(10, Math.round((w.T || 70) / 10) * 10)} с`; st.alertTb = true; st.alertT = Math.max(st.alertT || 0, 8);
+      return;
+    }
     const tb = w.W.kind === 'tbm', arc = C.MODE().markers; if (tb ? st.sirenT : st.sirenC) return;
     if (tb) st.sirenT = true; else st.sirenC = true;
     if (!arc) { snd.siren(tb ? 'tbm' : 'cruise', tb); return; }

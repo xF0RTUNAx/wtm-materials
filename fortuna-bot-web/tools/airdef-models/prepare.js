@@ -122,6 +122,12 @@ const CONFIG = {
       const thin = sx < 1.15 && sz < 1.15 && !(Math.max(sx, sz) < 0.3 && sy > 2);
       const fin = sx < 0.3 && sz < 0.3 && sy > 1 && sy < 1.3; // рули (4 «косым крестом»): нижние — у l_iskander отрезаны порогом z > 6,3 (ось ракеты — z 6,53)
       return (z > 6.3 || (z > 6 && fin)) && y > 2.2 && thin && Math.abs(x - 2.75) < 0.62 ? 'body' : null; } },
+  // ложная цель «Искандера» — отделяемая головная часть той же ракеты (обычного цвета ракеты, без перекраски)
+  w_tbmdec: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027 * KZ, centerX: true, /* 7,2 м (у автора 8,4); ракета стоит в стороне от оси пусковой */ axes: (x, y, z) => { const [a, b, c] = AX['-x'](x, y, z); return [a, c, -b]; }, rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, tex: () => 256, cutZ: [-99, -6.85], /* только головная часть: обтекатель и боевая часть (нос — z ≈ −8,9), ~2 м */
+    groups: (c) => { const x = c.ctr[0] / KZ, y = -c.ctr[2] / KZ, z = c.ctr[1] / KZ, sx = c.size[0] / KZ, sy = c.size[2] / KZ, sz = c.size[1] / KZ; // обратно в оси и масштаб пусковой (правила l_iskander)
+      const thin = sx < 1.15 && sz < 1.15 && !(Math.max(sx, sz) < 0.3 && sy > 2);
+      const fin = sx < 0.3 && sz < 0.3 && sy > 1 && sy < 1.3; // рули (4 «косым крестом»): нижние — у l_iskander отрезаны порогом z > 6,3 (ось ракеты — z 6,53)
+      return (z > 6.3 || (z > 6 && fin)) && y > 2.2 && thin && Math.abs(x - 2.75) < 0.62 ? 'body' : null; } },
   l_iskander: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027, nose: '-x', rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П78 — 13 м, две ракеты стоят на старте в корме
     groups: (c) => { const [x, y, z] = c.ctr, thin = c.size[0] < 1.15 && c.size[2] < 1.15 && !(Math.max(c.size[0], c.size[2]) < 0.3 && c.size[1] > 2); /* не направляющие пусковой (длинные и тонкие; стабилизаторы — короткие) */ if (z > 6.3 && y > 2.2 && thin) { if (Math.abs(x - 2.75) < 0.62) return 'tbm'; if (Math.abs(x - 4.06) < 0.62) return 'tbm2'; } return 'body'; } },
   l_tochka: { src: `${DL}/ukrainian_otr-21_tochka-u.glb`, scale: 0.0284, nose: '+z', rulesIn: 'game', dedupe: true, renorm: true, texVf: "curves=all='0/0 0.5/0.42 1/0.68'", /* светлые пятна камуфляжа на солнце выгорали в белое */ colors: { '^(White|material_1)$': [0.07, 0.085, 0.05], '^0059_DarkOliveGreen': [0.06, 0.08, 0.035], '^material$': [0.1, 0.11, 0.08] }, /* цвета — линейные (0,06 ≈ 27 % яркости на экране); у автора белые без текстуры — под цвет машины */ dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П129 — 11,8 м, ракета на старте в корме
@@ -230,7 +236,9 @@ const CONFIG = {
   patriot: { src: `${DL}/mim-104_patriot_surface-to-air_missile_sam.glb`, scale: 1, nose: '+x', rulesIn: 'game', unit: true, tex: () => 1024, hinge: [0, 3.95, 12.81], tube: [0.5, 1.2],
     groups: (c) => {
       if (c.size[1] > 3 && c.size[2] < 0.6 && c.size[0] < 0.6) return null; // мачта антенны: в модели стоит на поднятом пакете — у нас висела в воздухе
+      if (Math.abs(c.ctr[0] + 1.33) < 0.35 && Math.abs(c.ctr[2] - 10.1) < 0.35 && c.ctr[1] > 4.2) return null; // и её крепёж: колпак наверху (≈ 10 м) и хомуты — без мачты висели в воздухе
       if (axis(c, [12.81, 3.95], [-0.781, 0.625], 1.25, -0.3, 10.8)) return 'cradle';
+      if (c.min[1] > 4.5 && axis(c, [12.81, 3.95], [-0.781, 0.625], 2.2, 6, 11.5)) return 'cradle'; // рамка на верхнем (переднем) конце пакета — едет с пакетом (была «корпусом» и висела в воздухе)
       return c.min[1] > 2.4 && c.ctr[2] > 6.5 && c.ctr[2] < 13.6 && Math.abs(c.ctr[0]) < 1.6 ? 'turret' : 'body';
     } },
   // ── комплексы с ракетами на направляющих: ракета модели — образец для слотов и полёта (missile), stage — доля маршевой ступени
@@ -465,6 +473,8 @@ async function prepare(name, views) {
       list.forEach((c, i) => { c.size = c.max.map((v, k) => v - c.min[k]); c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.mat = p.material; if (cfg.remove(c, i)) drop.add(c.id); });
       keep = (t) => !drop.has(comp[t]);
     }
+    // cutZ: [z0, z1] — оставить треугольники с центром в этих пределах по длине (оси правил): головная часть ракеты и т. п.
+    if (cfg.cutZ) { const k0 = keep, [z0, z1] = cfg.cutZ; keep = (t) => { if (k0 && !k0(t)) return false; for (let k = 0; k < 3; k++) { const z = p.P[p.I[t * 3 + k] * 3 + 2]; if (z < z0 || z > z1) return false; } return true; }; } // все три вершины внутри: длинные грани корпуса не торчат «иглами»
     const remaps = new Map();
     for (let t = 0; t < p.I.length / 3; t++) {
       if ((keep && !keep(t)) || (dup.has(pi) && dup.get(pi).has(t))) { removed++; continue; }

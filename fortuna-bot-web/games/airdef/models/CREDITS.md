@@ -46,7 +46,7 @@
 - "Boeing B-52 Stratofortress" (https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144) by bohmerang — CC-BY-4.0 — `e_b52.glb`
 - "Eurofighter Typhoon EF-2000" (https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865) by andertan — CC-BY-4.0 — `e_typhoon.glb`
 - "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`
-- "Chinese 9K720 Iskander TELAR" (https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1) by 42manako — CC-BY-4.0 — `w_kinzhal.glb`, `l_iskander.glb`
+- "Chinese 9K720 Iskander TELAR" (https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1) by 42manako — CC-BY-4.0 — `w_kinzhal.glb`, `w_tbmdec.glb`, `l_iskander.glb`
 - "Ukrainian OTR-21 Tochka-U" (https://sketchfab.com/3d-models/ukrainian-otr-21-tochka-u-3b41c4e2d03d4bbb9a4acc339fc495bc) by 42manako — CC-BY-4.0 — `l_tochka.glb`
 - "Scud ( Ballistic missile )" (https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0) by AlexDang — CC-BY-4.0 — `l_scud.glb`
 - "M142 HIMARS | FREE MODEL | ANIMATION" (https://sketchfab.com/3d-models/m142-himars-free-model-animation-53c53a112c674d29a2afdbddbe3cecb5) by Denis.Cherkasov1 — CC-BY-4.0 — `l_himars.glb`, `w_atacms.glb`

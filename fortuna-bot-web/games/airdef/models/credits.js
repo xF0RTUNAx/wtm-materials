@@ -433,6 +433,7 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_kinzhal",
+   "w_tbmdec",
    "l_iskander"
   ]
  },

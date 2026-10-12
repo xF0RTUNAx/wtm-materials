@@ -76,14 +76,23 @@ export function lnchToWorld(u, Ld, p, out) {
   const cy = Math.cos(u.lyaw), sy = Math.sin(u.lyaw);
   let x2 = x * cy + z * sy, z2 = -x * sy + z * cy;
   x2 += Ld.tp[0]; const y2 = y + Ld.tp[1]; z2 += Ld.tp[2];
-  // машина вокруг Y
-  const cu = Math.cos(u.yaw), su = Math.sin(u.yaw);
-  return out.set(u.pos.x + x2 * cu + z2 * su, u.pos.y - 1.5 + y2, u.pos.z - x2 * su + z2 * cu);
+  // наклон машины по рельефу (u.tx — тангаж, u.tz — крен; порядок как у отрисовки: Y, потом X, потом Z) и курс
+  const v = tilt(u, x2, y2, z2), cu = Math.cos(u.yaw), su = Math.sin(u.yaw);
+  return out.set(u.pos.x + v[0] * cu + v[2] * su, u.pos.y - 1.5 + v[1], u.pos.z - v[0] * su + v[2] * cu);
+}
+// вектор в осях машины → с наклоном по рельефу (Rx(tx)·Rz(tz)), ещё без курса
+function tilt(u, x, y, z) {
+  const tz = u.tz || 0, tx = u.tx || 0;
+  if (!tz && !tx) return [x, y, z];
+  const cz = Math.cos(tz), sz = Math.sin(tz), x1 = x * cz - y * sz, y1 = x * sz + y * cz;
+  const cx = Math.cos(tx), sx = Math.sin(tx);
+  return [x1, y1 * cx - z * sx, y1 * sx + z * cx];
 }
 // направление «вперёд по направляющей» в мире
 export function lnchDir(u, out) {
-  const Y = u.yaw + u.lyaw, ce = Math.cos(u.lel);
-  return out.set(-Math.sin(Y) * ce, Math.sin(u.lel), -Math.cos(Y) * ce);
+  const ce = Math.cos(u.lel), cy = Math.cos(u.lyaw), sy = Math.sin(u.lyaw);
+  const v = tilt(u, -sy * ce, Math.sin(u.lel), -cy * ce), cu = Math.cos(u.yaw), su = Math.sin(u.yaw);
+  return out.set(v[0] * cu + v[2] * su, v[1], -v[0] * su + v[2] * cu);
 }
 // какой слот уйдёт n-м пуском (n = сколько уже израсходовано из боекомплекта)
 export function slotOf(LN, n) {

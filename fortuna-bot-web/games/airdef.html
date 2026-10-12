@@ -123,7 +123,7 @@
   #osd { position: absolute; top: var(--top); left: max(12px, var(--sa-l)); font-size: 13px; line-height: 1.4; color: #d6ffe0; }
   #osd b { font-size: 19px; } .dim { opacity: .75; font-size: 11.5px; }
   #perf { position: fixed; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 10.5px; opacity: .5; white-space: nowrap; z-index: 12; pointer-events: none; text-shadow: 0 0 4px #000; }
-  body.perfhud #perf { opacity: .85; white-space: normal; text-align: center; width: min(92vw, 760px); bottom: calc(max(6px, var(--sa-b)) + 18px); } /* выше полоски «домой» */ /* подробный счётчик — в несколько строк */
+  body.perfhud #perf { opacity: 1; white-space: normal; text-align: center; width: min(92vw, 760px); bottom: calc(max(6px, var(--sa-b)) + 18px); z-index: 2147483000; background: rgba(8,12,18,.62); color: #e6edf5; padding: 3px 10px; border-radius: 8px; } /* выше полоски «домой» */ /* подробный счётчик — в несколько строк */
   #mission { position: absolute; top: var(--top); left: 50%; transform: translateX(-50%); font-size: 12px; text-align: center; min-width: 200px; }
   #mission .tg { display: inline-flex; align-items: center; gap: 5px; margin: 0 6px; }
   #mission .tg i { display: inline-block; width: 44px; height: 5px; background: rgba(255,255,255,.2); border-radius: 2px; overflow: hidden; }
@@ -436,7 +436,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261020a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261020a"></script>
+<script src="../config.js?v=20261020b"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261020b"></script>
 </body>
 </html>
