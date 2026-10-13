@@ -2,16 +2,16 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020g';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261020g';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261020g';
-import { applyLayout } from './layout.js?v=20261020g';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020g';
-import { DRONE } from '../drone/sim/modes.js?v=20261020g';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020g';
-import { predictBomb } from './sim/strike.js?v=20261020g';
-import { placeDefense, pickTargets } from './mission.js?v=20261020g';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020g';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020h';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261020h';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261020h';
+import { applyLayout } from './layout.js?v=20261020h';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020h';
+import { DRONE } from '../drone/sim/modes.js?v=20261020h';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020h';
+import { predictBomb } from './sim/strike.js?v=20261020h';
+import { placeDefense, pickTargets } from './mission.js?v=20261020h';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020h';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;

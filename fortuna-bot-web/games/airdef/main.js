@@ -8,28 +8,28 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261020g';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020g';
-import { createPipeline } from '../drone/post.js?v=20261020g';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020g';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020g';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020g';
-import { createStrike, MODES } from './sim/strike.js?v=20261020g';
-import { createRaid } from './sim/raid.js?v=20261020g';
-import { POD } from './sim/combined.js?v=20261020g';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020g';
-import { slotCount } from './launchers.js?v=20261020g';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020g';
-import { createSound } from './sound.js?v=20261020g';
-import { createAir } from './air.js?v=20261020g';
-import { createDefense } from './defense.js?v=20261020g';
-import { createDirector } from './director.js?v=20261020g';
-import { createMenuBg } from './menubg.js?v=20261020g';
-import { createOnline } from './online.js?v=20261020g';
-import { createShell } from './shell.js?v=20261020g';
-import { createTraining, LESSONS } from './training.js?v=20261020g';
-import { createPhoto } from './photo.js?v=20261020g';
-import { createMenu } from './menu.js?v=20261020g';
+import { buildCity, CITY } from './city.js?v=20261020h';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020h';
+import { createPipeline } from '../drone/post.js?v=20261020h';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020h';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020h';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020h';
+import { createStrike, MODES } from './sim/strike.js?v=20261020h';
+import { createRaid } from './sim/raid.js?v=20261020h';
+import { POD } from './sim/combined.js?v=20261020h';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020h';
+import { slotCount } from './launchers.js?v=20261020h';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020h';
+import { createSound } from './sound.js?v=20261020h';
+import { createAir } from './air.js?v=20261020h';
+import { createDefense } from './defense.js?v=20261020h';
+import { createDirector } from './director.js?v=20261020h';
+import { createMenuBg } from './menubg.js?v=20261020h';
+import { createOnline } from './online.js?v=20261020h';
+import { createShell } from './shell.js?v=20261020h';
+import { createTraining, LESSONS } from './training.js?v=20261020h';
+import { createPhoto } from './photo.js?v=20261020h';
+import { createMenu } from './menu.js?v=20261020h';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -723,6 +723,12 @@ addEventListener('keydown', (e) => {
 addEventListener('keyup', (e) => { if (C.ctrl && C.ctrl.onKey) C.ctrl.onKey(e, false); });
 addEventListener('pointerdown', () => snd.unlock(), { once: true });
 document.addEventListener('visibilitychange', () => { if (document.hidden && C.state === 'play' && !C.paused) C.togglePause(); });
+// телефон вертикально — экран «Поверните телефон» поверх всего, бой — на паузу (повернул — снимает паузу кнопкой «Продолжить»)
+function orient() {
+  const p = IS_TOUCH && innerHeight > innerWidth * 1.05; document.body.classList.toggle('portrait', p);
+  if (p && C.state === 'play' && !C.paused && !C.ended) C.togglePause();
+}
+addEventListener('resize', orient); addEventListener('orientationchange', () => setTimeout(orient, 120)); orient();
 
 // ═════════════ Кадр ═════════════
 let last = performance.now(), lastDraw = 0, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0;

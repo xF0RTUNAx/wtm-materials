@@ -1,25 +1,25 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { CITY } from './city.js?v=20261020g';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020g';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020g';
-import { MODES } from './sim/strike.js?v=20261020g';
-import { WEATHERS } from '../drone/world.js?v=20261020g';
-import { LESSONS } from './training.js?v=20261020g';
-import { MODEL_CREDITS } from './models.js?v=20261020g';
-import { openLayoutEditor } from './layout.js?v=20261020g';
+import { CITY } from './city.js?v=20261020h';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020h';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020h';
+import { MODES } from './sim/strike.js?v=20261020h';
+import { WEATHERS } from '../drone/world.js?v=20261020h';
+import { LESSONS } from './training.js?v=20261020h';
+import { MODEL_CREDITS } from './models.js?v=20261020h';
+import { openLayoutEditor } from './layout.js?v=20261020h';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020g';
-import { photoItems } from './photo.js?v=20261020g';
-import { guideChapters } from './guide.js?v=20261020g';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020h';
+import { photoItems } from './photo.js?v=20261020h';
+import { guideChapters } from './guide.js?v=20261020h';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
   { k: 'defense', name: 'Оборона', desc: 'за ПВО: отразить волны налётов на город' },
   { k: 'multi', name: 'Мульти-волна', desc: 'ракеты, дроны и баллистика: за атакующую волну или за ПВО' },
   { k: 'training', name: 'Обучение', desc: 'по шагам, с объяснениями, проиграть нельзя' },
-  { k: 'online', name: 'Онлайн', desc: 'люди против людей: авиация против ПВО' },
-  { k: 'photo', name: 'Съёмка', desc: 'автобой и свободная камера: красивые кадры' },
+  { k: 'online', name: 'Онлайн', desc: 'командные бои с другими игроками: авиация против ПВО' },
+  { k: 'photo', name: 'Режим съёмки', desc: 'автобой и свободная камера: красивые кадры' },
 ];
 const TIPS = [
   'Здания закрывают РЛС обзор: на малой высоте между домами комплекс видит вас урывками и не успевает выстрелить.',
@@ -343,7 +343,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function renderStats() {
     const s = stats(), g = setup.game;
     if (g === 'online') { $('lobbyStats').innerHTML = 'Онлайн: авиация против ПВО города, три волны.'; return; }
-    if (g === 'photo') { $('lobbyStats').innerHTML = 'Съёмка: бой идёт сам, вы — оператор камеры.'; return; }
+    if (g === 'photo') { $('lobbyStats').innerHTML = 'Бой идёт сам, вы — оператор камеры.'; return; }
     $('lobbyStats').innerHTML = g === 'training' ? `Обучение: ${Object.values(LESSONS).flat().filter((l) => lessonsDone()[l.id]).length} из ${Object.values(LESSONS).flat().length} уроков пройдено.`
       : g === 'multi' ? (s.multi ? `Рекорд «Мульти-волны»: <b>${s.multi.best.toLocaleString('ru-RU')}</b> очков · боёв ${s.multi.runs}` : 'Мульти-волну пока не играли.')
       : g === 'air' ? (s.air ? `Рекорд вылета: <b>${s.air.best.toLocaleString('ru-RU')}</b> очков · вылетов ${s.air.runs}` : 'Вылетов пока не было.')

@@ -1,7 +1,7 @@
 // Фон главного меню — готовые кадры (shots/shots.js, снимаются tools/airdef-shots/capture.js из «Съёмки»): смена раз в
 // ~6,5 с с плавной склейкой и медленным наездом (CSS — на видеокарте почти бесплатно). 3D-сцена в меню не рисуется и бой
-// не считается (idle) — телефон в меню не греется. Кадры подбираются под выбранный режим (метки t), иначе — все.
-import { SHOTS } from './shots/shots.js?v=20261020g';
+// не считается (idle) — телефон в меню не греется. Звук — эмбиент (sound.js ambient). Кадры подбираются под выбранный режим (метки t), иначе — все.
+import { SHOTS } from './shots/shots.js?v=20261020h';
 
 const TAG = { air: 'air', defense: 'pvo', multi: 'multi', photo: null, training: null, online: null };
 
@@ -20,9 +20,9 @@ export function createMenuBg(C) {
   return {
     has: () => SHOTS.length > 0,
     sim: false, idle: () => true, skip3D: () => true,
-    start() { if (el) el.style.display = 'block'; next(); clearInterval(timer); timer = setInterval(() => { if (C.state === 'menu' && !document.hidden) next(); }, 6500); },
-    stop() { clearInterval(timer); timer = 0; pend = null; if (el) el.style.display = 'none'; for (const L of layers) L.classList.remove('on'); },
-    modeChanged() { next(); }, // выбран другой режим — кадр под него
+    start() { if (el) el.style.display = 'block'; next(); C.snd.ambient(true, C.setup.game); clearInterval(timer); timer = setInterval(() => { if (C.state === 'menu' && !document.hidden) next(); }, 6500); },
+    stop() { C.snd.ambient(false); clearInterval(timer); timer = 0; pend = null; if (el) el.style.display = 'none'; for (const L of layers) L.classList.remove('on'); },
+    modeChanged() { next(); C.snd.ambient(true, C.setup.game); }, // выбран другой режим — кадр и фоновые звуки под него
     update() {}, camera() {}, hud() {}, focus: () => C.camera.position,
   };
 }

@@ -1,7 +1,7 @@
 // Звук «Воздушного превосходства»: движок и синтез — из «Летки» (drone/audio.js: двигатель, объёмные голоса самолётов
 // и ракет, взрывы с задержкой по скорости звука, «гарнитура» для бортовых сигналов). Здесь — звуки этой игры из тех же
 // кирпичей (A.noise / A.tone): старт ЗУР, очереди зениток, сброс бомб, тоны СПО и датчика пуска, пульт оператора ПВО.
-import { createAudio } from '../drone/audio.js?v=20261020g';
+import { createAudio } from '../drone/audio.js?v=20261020h';
 
 export function createSound() {
   const A = createAudio();
@@ -11,8 +11,8 @@ export function createSound() {
   A.setVolume(vol); A.setMuted(muted);
   // записанные звуки (games/airdef/sounds): мотор «Шахеда» — петля для голосов дронов; далёкий взрыв —
   // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
-  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261020g'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261020g');
-  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261020g`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261020g'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261020g'); A.setPropSample('prop');
+  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261020h'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261020h');
+  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261020h`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261020h'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261020h'); A.setPropSample('prop');
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
   // записи вертикального старта: [хлопок выброса, начало рёва двигателя], с (по огибающей громкости)
@@ -155,6 +155,34 @@ export function createSound() {
       if (mws.length && rw.mwsT <= 0) { rw.mwsT = 0.6; A.beep(780, 0.25, 'sawtooth', 0.05, 380); }
     },
     resetRwr() { rw.known.clear(); rw.beepT = rw.mwsT = 0; },
+    // эмбиент главного меню: ветер порывами, далёкий гул города; изредка — пролёт самолёта вдали, далёкий раскат, старт ЗУР
+    // за горизонтом, птицы в затишье. mood — выбранный режим ('air' — чаще самолёты, 'defense' — пуски, 'multi' — раскаты)
+    ambient(on, mood) { amb.mood = mood || amb.mood; if (on === amb.on) return; amb.on = on; clearInterval(amb.timer); amb.timer = 0; if (on) { amb.next = 3 + Math.random() * 3; amb.timer = setInterval(ambTick, 250); } else if (amb.beds) { for (const b of amb.beds) b.stop(); amb.beds = null; } },
   };
+  const amb = { on: false, timer: 0, beds: null, next: 0, gust: 0, gustT: 0, mood: 'air', last: '' };
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  const AMB = { // события: вес по режиму, звук
+    jet: [{ air: 5, defense: 3, multi: 2 }, () => { // пролёт вдали: гул нарастает и стихает, полоса «съезжает» (Доплер)
+      const t = A.time(), dur = rnd(8, 11), f = A.noise('pink', dur, 0.1, 'bandpass', 300, 0.9, 0, 0.7, false, dur * 0.45);
+      if (f) { f.frequency.setValueAtTime(300, t); f.frequency.linearRampToValueAtTime(760, t + dur * 0.45); f.frequency.linearRampToValueAtTime(240, t + dur); }
+      A.noise('brown', dur, 0.12, 'lowpass', 140, 0.7, 0.3, 0.6, false, dur * 0.5);
+      const w = A.noise('white', dur * 0.8, 0.02, 'bandpass', 2600, 3, 0.4, 0.5, false, dur * 0.35); if (w) w.frequency.linearRampToValueAtTime(1500, t + dur);
+    }],
+    boom: [{ air: 1, defense: 2, multi: 4 }, () => { if (!A.sample('boomFar', rnd(0.12, 0.22), 0, rnd(0.8, 0.95), 900, 0.7)) A.noise('brown', 3, 0.25, 'lowpass', 120, 0.7, 0, 0.8, false, 0.05); A.tone('sine', 50, 24, 1.6, 0.12, 0, 0.6); }],
+    sam: [{ air: 1, defense: 3, multi: 2 }, () => S.samLaunch(rnd(4000, 6500), Math.random() < 0.5)],
+    birds: [{ air: 2, defense: 2, multi: 1 }, () => { const n = 2 + Math.floor(Math.random() * 4), f0 = rnd(2800, 3800); for (let i = 0; i < n; i++) { const w = i * rnd(0.12, 0.3); A.tone('sine', f0 * rnd(0.95, 1.08), f0 * rnd(1.15, 1.35), 0.07, 0.012, w, 0.4); A.tone('sine', f0 * 1.2, f0 * 0.9, 0.05, 0.008, w + 0.08, 0.4); } }],
+  };
+  function ambTick() {
+    if (!A.ready || muted) return;
+    if (!amb.beds) amb.beds = [A.bed('pink', 0.7, 'lowpass', 480, 0.5), A.bed('brown', 0.8, 'lowpass', 105, 0.6), A.bed('pink', 1, 'bandpass', 2400, 0.4)].filter(Boolean);
+    const hid = document.hidden, [wind, hum, air] = amb.beds;
+    amb.gustT -= 0.25; if (amb.gustT <= 0) { amb.gustT = rnd(2, 6); amb.gust = rnd(0.35, 1); } // порыв ветра
+    if (wind) { wind.set(hid ? 0 : 0.035 + 0.06 * amb.gust, 1.4); wind.f.frequency.setTargetAtTime(300 + 450 * amb.gust, A.time(), 1.4); }
+    if (hum) hum.set(hid ? 0 : 0.07, 1); if (air) air.set(hid ? 0 : 0.004 + 0.01 * amb.gust, 1.4);
+    if (hid || (amb.next -= 0.25) > 0) return;
+    const pool = Object.entries(AMB).filter(([k]) => k !== amb.last), tot = pool.reduce((s, [, [w]]) => s + (w[amb.mood] || 1), 0); let r = Math.random() * tot;
+    for (const [k, [w, play]] of pool) { r -= w[amb.mood] || 1; if (r <= 0) { amb.last = k; play(); break; } }
+    amb.next = rnd(6, 13);
+  }
   return S;
 }

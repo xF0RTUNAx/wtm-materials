@@ -328,6 +328,12 @@ export function createAudio() {
     noise(buf, dur, vol, type, freq, q = 0.7, when = 0, wet = 0, avio = false, att = 0.008) { return burst(buf, dur, vol, type, freq, q, when, wet, avio ? avionics : out, att); },
     tone(type, f0, f1, dur, vol, when = 0, wet = 0, avio = false) { osc(type, f0, f1, dur, vol, when, wet, avio ? avionics : out); },
     sweep(type, pts, vol, when = 0, wet = 0) { sweep(type, pts, vol, when, wet); },
+    // непрерывный фон (петля шума через фильтр): set(громкость, сек. сглаживания), stop() — затухает и освобождается
+    bed(buf, rate, type, freq, q = 0.7) {
+      if (!ctx) return null;
+      const s = src(buf, rate), f = filt(type, freq, q), g = gain(0); chain(s, f, g, out);
+      return { f, set(v, tc = 1) { set(g.gain, muted ? 0 : v, tc); }, stop() { set(g.gain, 0, 0.3); setTimeout(() => { try { s.stop(); s.disconnect(); g.disconnect(); } catch (_) { /* уже */ } }, 2000); } };
+    },
     loadSample, setPropSample(name) { propSample = name; if (ctx) attachProp(); },
     sampleDur(name) { const S0 = SAMPLES[name]; return S0 && S0.buf ? S0.buf.duration : 0; },
     time() { return ctx ? ctx.currentTime : 0; },

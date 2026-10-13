@@ -374,6 +374,15 @@
   body.menuing #mute { top: calc(10px + var(--sa-t) + var(--tg-t)); bottom: auto; right: auto; left: calc(132px + var(--sa-l)); border-radius: 0; z-index: 31; } /* поверх меню, справа от названия */
   #menu .opt { flex-wrap: wrap; } #menu .opt .nm { flex: 1 1 60%; min-width: 0; } #menu .opt .nm b { display: block; } /* подвески: название целиком, метки — строкой ниже */
   #menu .opt .tag { border-radius: 0; }
+  body.menuing #perf { display: none; } /* счётчик производительности — только в бою: меню ничего не рисует */
+  /* телефон вертикально — игра ждёт, пока его повернут (бой на паузе) */
+  #rotLock { display: none; position: fixed; inset: 0; z-index: 2147483600; background: #10140f; color: #e9e6dc; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; text-align: center; font-family: 'IBM Plex Sans', sans-serif; }
+  body.portrait #rotLock { display: flex; }
+  #rotLock .rph { width: 46px; height: 80px; border: 3px solid #e8b04a; border-radius: 9px; position: relative; animation: rotPh 2.4s ease-in-out infinite; }
+  #rotLock .rph::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 12px; height: 3px; margin-left: -6px; background: #e8b04a; border-radius: 2px; }
+  #rotLock b { font: 400 21px/1.25 'Russo One', sans-serif; letter-spacing: .02em; max-width: 300px; }
+  #rotLock span { font-size: 14px; color: #b3baa5; max-width: 300px; line-height: 1.45; }
+  @keyframes rotPh { 0%, 25% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
   #menu .gfx { border-radius: 0; border-color: #4a5443; background: #161c13; color: #e9e6dc; } #menu .gfx.on { border-color: #e8b04a; background: #2a2a17; }
   #promoNav { right: calc(min(330px, 42vw) + 26px + var(--sa-r)); bottom: max(16px, var(--sa-b)); }
   @media (max-aspect-ratio: 1/1) { /* вертикально: режимы — полосой сверху, задание — снизу */
@@ -435,6 +444,7 @@
   <div id="podBox"><div class="x"></div><div class="info"></div><div class="info2"></div><div class="zoom">×1</div><div class="mask">МАСКИРОВКА</div></div>
 </div>
 <div id="warn"></div><div id="msg"></div><div id="perf"></div>
+<div id="rotLock" role="alertdialog" aria-label="Поверните телефон"><div class="rph"></div><b>Поверните телефон горизонтально</b><span>Игра рассчитана на широкий экран. Как повернёте — продолжим с того же места.</span></div>
 <div id="hint"></div>
 <div id="ask"><div><b id="askTxt"></b><small>объяснение — нажмите «?» (игра на паузе)</small></div><button id="askBtn" aria-label="Объяснение">?</button></div>
 <canvas id="map"></canvas>
@@ -534,7 +544,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261020g"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261020g"></script>
+<script src="../config.js?v=20261020h"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261020h"></script>
 </body>
 </html>
