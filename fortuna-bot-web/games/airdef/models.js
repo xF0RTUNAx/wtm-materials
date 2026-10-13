@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261020h';
+import { CREDITS } from './models/credits.js?v=20261020i';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -125,7 +125,7 @@ const META = {
   osa: { units: ['osa'], stations: [] }, // «Оса-АКМ» — Jeyhun1985
   tor: { units: ['tor', 'torm2'], stations: [] }, // «Тор-М1» — 42manako
   pantsir: { units: ['pantsir'], stations: [] }, // «Панцирь-С2» — 42manako
-  s400: { units: ['s400', 's300'], stations: [] }, // пусковая С-400 — Chenzoss (и для С-300: та же схема, 4 контейнера)
+  s400: { units: ['s400', 's300'], matte: true, stations: [] }, // пусковая С-400 — Chenzoss (и для С-300: та же схема, 4 контейнера)
   patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
 };
 // самолёты — и для «Симулятора Летки» (выбор самолёта игрока; точки подвески — те же 8, что у его «Изделия»)
@@ -142,6 +142,8 @@ const FX_CREDITS = [
 ];
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};
+// версия файла модели (сброс кэша) — у пересобранных моделей своя, остальные не перекачиваются
+const GLB_V = { s400: '20261013a', s400_lo: '20261013a' };
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
@@ -154,7 +156,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=20261020d`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261020d'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
@@ -268,6 +270,10 @@ export function podModel() { const n = Object.keys(META).find((k) => META[k].pod
 export function launcherGlb(key) { const n = LAUNCHER[key]; return n && LOADED[n] ? LOADED[n].clone() : null; }
 // крылья планирующей бомбы: k = 0 — сложены (на подвеске), 1 — раскрыты (в полёте)
 export function setWings(obj, k) { if (obj.userData.wings) obj.traverse((n) => { const a = n.userData.wa; if (a) n.rotation.y = a[0] + (a[1] - a[0]) * k; }); }
+// у оружия есть готовая модель, но она ещё грузится (временную фигуру потом подменить)
+// у оружия есть настоящая модель (а не процедурная фигура): только к такому подводим камеру (ЗУР — всегда, это не про них)
+export const weaponHasModel = (key, W) => !!(WMODEL[key] || (W && W.model));
+export const weaponPending = (key) => { const n = WMODEL[key]; return !!(n && !LOADED[n]); };
 export function weaponMesh(key, W, geoFn, mat) {
   const n = WMODEL[key];
   if (n && LOADED[n]) { const o = LOADED[n].clone(); o.traverse((q) => { if (q.isMesh) q.castShadow = true; }); setWings(o, 0); return o; } // крылья — сложены (на подвеске)

@@ -9,14 +9,15 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261020h';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020h';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020h';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020h';
+import { CITY, mulberry32 } from './city.js?v=20261020i';
+import { weaponHasModel } from './models.js?v=20261020i';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020i';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020i';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020i';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020h';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020h';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020h';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020i';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020i';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020i';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -274,19 +275,22 @@ export function createDefense(C) {
       }
     }
   }
+  // онлайн «Мульти-волна» за атаку: что запустили союзники (своё — синее и жёлтое, союзников — фиолетовое)
+  const ally = (o) => !!(st.net && st.net.isAlly && st.net.isAlly(o));
   function drawOwn() {
     for (const m of C.S.sams) { if (m.dead) continue; const [px, py] = w2s(m.pos.x, m.pos.z); tx.fillStyle = '#f87171'; tx.fillRect(px - 1.5, py - 1.5, 3, 3); } // зенитные ракеты противника
     if (C.raid) for (const a of C.raid.planes) {
       if (a.dead || a.out || a.phase === 'wait') continue;
       const [px, py] = w2s(a.pos.x, a.pos.z);
-      tx.save(); tx.translate(px, py); tx.rotate(-a.yaw); tx.fillStyle = '#60a5fa'; tx.beginPath(); tx.moveTo(0, -10); tx.lineTo(7, 8); tx.lineTo(-7, 8); tx.closePath(); tx.fill(); tx.restore();
-      tx.fillStyle = '#bfdbfe'; tx.fillText(a.carrierName || '', px, py - 13);
+      const al = ally(a); // онлайн: носитель союзника — фиолетовый, с его ником
+      tx.save(); tx.translate(px, py); tx.rotate(-a.yaw); tx.fillStyle = al ? '#a78bfa' : '#60a5fa'; tx.beginPath(); tx.moveTo(0, -10); tx.lineTo(7, 8); tx.lineTo(-7, 8); tx.closePath(); tx.fill(); tx.restore();
+      tx.fillStyle = al ? '#ddd6fe' : '#bfdbfe'; tx.fillText(al ? `${allyName(a.ownerPid || a.owner)} · ${a.carrierName || ''}` : a.carrierName || '', px, py - 13);
     }
     for (const w of C.S.wpns) {
       if (w.dead) continue;
       if (w.ev && w.W.kind === 'tbm') { drawTbm(w, true); continue; }
       const [px, py] = w2s(w.pos.x, w.pos.z);
-      tx.fillStyle = w === st.watch ? '#fff' : w.W.recon ? '#93c5fd' : w.decoy ? '#cbd5e1' : w.W.uav ? '#fde047' : '#38bdf8';
+      tx.fillStyle = w === st.watch ? '#fff' : ally(w) ? (w.W.uav ? '#e9d5ff' : '#c084fc') : w.W.recon ? '#93c5fd' : w.decoy ? '#cbd5e1' : w.W.uav ? '#fde047' : '#38bdf8';
       const r = w === st.watch ? 4 : w.W.uav ? 1.8 : 2.5; tx.fillRect(px - r, py - r, r * 2, r * 2);
     }
   }
@@ -649,7 +653,7 @@ export function createDefense(C) {
       h += `<h3>Волна идёт</h3><div>Пущено <b>${r.launched}</b> · сбито <b>${r.down}</b> · попаданий <b>${r.hits}</b></div><div>Цели разрушены на <b>${Math.round((1 - targetsValue()) * 100)}%</b></div>`;
       if (ev) for (const a of ev.carriers) h += `<div class="dcard"><div class="nm"><b>${a.carrierName}</b><span>${a.dead ? 'сбит' : a.out ? 'ушёл' : a.phase === 'wait' ? 'на подлёте к рубежу пуска' : a.salvo.length ? `пуск: осталось ${a.salvo.length}` : 'уходит'}</span></div></div>`;
       if (ev) h += `<div class="cat-h">Наряд (можно менять) · очки угрозы: ${st.budget - planCost()}</div>` + targetRows() + '<p class="hint">Коснитесь цели (объекта или засечённого ЗРК) — её наряд: докупить, перенацелить; у ещё не пущенных единиц — время («Пуск сейчас»), маршрут, высота.</p>';
-      h += tbmPanel() + watchBtns() + '<p class="hint">«Ход волны» слева — что летит, что будет и когда; «Смотреть» и «Ждать» — камера к событию. Коснитесь ракеты или носителя на карте — камера за ним. Синие — ваши, красные — засечённые комплексы ПВО (жёлтый круг — РЛС излучает, «ПУСК» — стреляет).</p>';
+      h += tbmPanel() + watchBtns() + '<p class="hint">«Ход волны» слева — что летит, что будет и когда; «Смотреть» и «Ждать» — камера к событию. Коснитесь ракеты или носителя на карте — камера за ним. Синие — ваши' + (st.net ? ', фиолетовые — союзников' : '') + ', красные — засечённые комплексы ПВО (жёлтый круг — РЛС излучает, «ПУСК» — стреляет).</p>';
       setSide(h); return;
     }
     if (st.phase === 'plan') {
@@ -1194,10 +1198,12 @@ export function createDefense(C) {
     if (!evOpen || !C.ev || (evHold && !force)) return;
     evList = C.ev.events(); let h = '<h3>Ход волны</h3>', g = null;
     evList.forEach((e, i) => {
-      if (e.g !== g) { g = e.g; h += `<div class="cat-h">${g}</div>`; }
-      const eta = e.eta !== null && e.eta > 0 ? ` · через ${Math.ceil(e.eta)} с` : '', cue = st.cue && st.cue.obj === e.cue;
-      h += `<div class="evr${e.obj && e.obj === st.watch ? ' on' : ''}"><div class="nm"><b>${e.label}</b><span>${e.sub}${e.g === 'Носители' || e.g === 'Пусковые' ? '' : eta}</span></div>
-        ${e.obj ? `<button class="btn alt mini2" data-i="${i}" data-a="see">Смотреть</button>` : ''}${e.cue && e.eta > 6 ? `<button class="btn alt mini2 ${cue ? 'on' : ''}" data-i="${i}" data-a="wait">${cue ? 'Ждём…' : 'Ждать'}</button>` : ''}</div>`;
+      const gk = e.ally ? `${e.ally}·${e.g}` : e.g;
+      if (gk !== g) { g = gk; h += e.ally ? `<div class="cat-h ally">Союзник ${esc(e.ally)} · ${e.g}</div>` : `<div class="cat-h">${e.g}</div>`; }
+      const eta = e.eta !== null && e.eta > 0 ? ` · через ${Math.ceil(e.eta)} с` : '', cue = st.cue && st.cue.obj === e.cue, inT = e.eta !== null && e.eta > 0.5 ? `через ${Math.ceil(e.eta)} с` : 'вот-вот';
+      const sub = e.sub.includes('{eta}') ? e.sub.replace('{eta}', inT) : e.sub + (e.g === 'Носители' || e.g === 'Пусковые' ? '' : eta); // {eta} — время считаем здесь: не уходит в минус и не отстаёт
+      h += `<div class="evr${e.obj && e.obj === st.watch ? ' on' : ''}"><div class="nm"><b>${e.label}</b><span>${sub}</span></div>
+        ${e.obj && canWatch(e.obj) ? `<button class="btn alt mini2" data-i="${i}" data-a="see">Смотреть</button>` : ''}${e.cue && e.eta > 6 ? `<button class="btn alt mini2 ${cue ? 'on' : ''}" data-i="${i}" data-a="wait">${cue ? 'Ждём…' : 'Ждать'}</button>` : ''}</div>`;
     });
     if (st.cue) h += `<p class="hint">Ждём события: время ×4, за 4 с — камера к нему.</p>`;
     if (h !== evHtml) { evHtml = h; evp.innerHTML = h; }
@@ -1212,12 +1218,15 @@ export function createDefense(C) {
   // ═════════════ «Мульти-волна»: камера за ракетой, хуки удара ═════════════
   // кого можно смотреть: за удар — свои ракеты, дроны, носители; за ПВО — то, что видит сеть, и баллистику
   function watchList() {
-    const ev = C.S.wpns.filter((w) => w.ev && !w.dead && (atk() || C.MODE().markers || w.W.kind === 'tbm' || seen.has(w)));
+    const ev = C.S.wpns.filter((w) => w.ev && !w.dead && canWatch(w) && (atk() || C.MODE().markers || w.W.kind === 'tbm' || seen.has(w)));
     ev.sort((a, b) => (b.W.kind === 'tbm') - (a.W.kind === 'tbm') || a.id - b.id); // баллистика — первой
     const car = C.ev ? C.ev.carriers.filter((a) => !a.dead && !a.out && a.phase !== 'wait') : [];
     return [...ev, ...car];
   }
+  // камера — только к оружию с готовой моделью (процедурную фигуру вблизи не показываем); носители и пусковые — всегда
+  const canWatch = (o) => !o || !o.isMun || !o.W || weaponHasModel(o.key, o.W);
   function watch(o) {
+    if (o && !canWatch(o)) { say('Для этого оружия нет модели — следите по карте'); snd.deny(); return; }
     const L = watchList(); if (!L.length) { say('Сейчас в воздухе смотреть не на что'); snd.deny(); return; }
     if (!o) { const i = L.indexOf(st.watch); o = L[(i + 1) % L.length]; }
     st.watch = o; st.watchEnd = 0; st.view = 'watch'; WCAM.init = false; WCAM.at = null; document.body.classList.remove('dmap'); document.body.classList.add('watch'); snd.click();
@@ -1242,7 +1251,7 @@ export function createDefense(C) {
   }
   function watchHud() {
     const o = st.watch; if (!o) return;
-    if (o.isLauncher) { const ev = C.ev && C.ev.events().find((e) => e.obj === o); $('wInfo').textContent = `${o.name} · ${ev ? ev.sub : ''}`; setWSpeed(); return; }
+    if (o.isLauncher) { const ev = C.ev && C.ev.events().find((e) => e.obj === o); $('wInfo').textContent = `${o.name} · ${ev ? ev.sub.replace('{eta}', ev.eta > 0.5 ? `через ${Math.ceil(ev.eta)} с` : 'вот-вот') : ''}`; setWSpeed(); return; }
     const name = o.W ? `${o.W.short}${o.decoy && (atk() || C.MODE().markers) ? ' (ложная)' : ''}` : o.carrierName, h = Math.round(o.pos.y - city.groundH(o.pos.x, o.pos.z));
     const sp = Math.round((o.vel ? o.vel.length() : o.speed || 0) * 3.6), left = o.W && o.W.kind === 'tbm' ? ` · до падения ${Math.max(0, Math.ceil(o.T - o.t))} с` : o.isMun && o.ev && o.aim && !o.W.recon ? ` · до цели ${Math.ceil(C.S.etaOf(o).t)} с` : '';
     $('wInfo').textContent = `${name}${o.salvo && o.salvo.length && !o.inbound ? ` · пуск ${o.n0 - o.salvo.length}/${o.n0}` : ''} · высота ${h > 9999 ? (h / 1000).toFixed(0) + ' км' : h + ' м'} · ${sp} км/ч${left}${o.dead ? ' · поражена' : ''}`;
@@ -1299,7 +1308,7 @@ export function createDefense(C) {
     st.rnd = mulberry32((Date.now() & 0xffffff) ^ 0x2468);
     st.multi = opts.multi || null; st.defSide = null; st.flash = new Map(); st.watch = null; st.timeK = 1; st.cue = null; st.watchNextAt = null; st.edKey = null; st.edUnit = null; st.addQ = {}; st.addT = 0; st.alertT = 0;
     if (st.multi) { st.defSide = st.multi === 'atk' ? (C.setup.side === 'east' ? 'west' : 'east') : C.setup.side; opts.waves = 1; }
-    C.newBattle({ defSide: dside(), era: C.setup.era, rnd: st.rnd });
+    C.newBattle({ defSide: dside(), era: C.setup.era, rnd: st.rnd, game: st.multi ? 'multi' : null });
     C.hooks = atk() ? atkHooks() : defHooks();
     const b0 = st.multi === 'atk' ? multiBudget(attSide(), C.setup.era) : st.multi ? Math.round(MULTI.sam[C.setup.era] * (C.setup.diff === 'arcade' ? 1.2 : 1)) : null;
     Object.assign(st, { phase: 'plan', wave: 0, waves: opts.waves || WAVES, budget: opts.budget ?? b0 ?? (C.setup.diff === 'arcade' ? 1200 : 1000), score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, targets: [] });
@@ -1365,7 +1374,7 @@ export function createDefense(C) {
     C.hooks = role === 'atk' ? atkHooks() : defHooks();
     Object.assign(st, { phase: 'plan', wave: 1, waves: 1, budget: 0, score: 0, downs: 0, waveDowns: 0, leaked: 0, waveLeak: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, ready: false, netRes: null,
       watch: null, timeK: 1, cue: null, watchNextAt: null, edKey: null, edUnit: null, tsel: null, pick: null, addQ: {}, addT: 0, alertT: 0, sirenC: false, sirenT: false, flash: new Map(), mres: { launched: 0, down: 0, hits: 0, carriers: 0 }, targets: [] });
-    st.plan = { n: {}, cfg: {} };
+    st.plan = N.battle && N.battle.myPlan ? N.battle.myPlan : { n: {}, cfg: {} }; // переподключение: свой план — от сервера (иначе первая правка затёрла бы его пустым)
     st.value0 = C.S.objects.reduce((q, o) => q + (o.noTarget ? 0 : o.value), 0) || 1;
     C.ev = N.ev;
     C.syncUnits(); seen.clear();

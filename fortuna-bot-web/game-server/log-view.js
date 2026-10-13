@@ -35,11 +35,18 @@ const line = (e) => {
     // «Воздушное превосходство» (ad_*)
     case 'ad_room': return `ВП: комната создана, ${e.size}×${e.size}, эпоха ${e.era}`;
     case 'ad_join': return `ВП: в комнату ${e.who} → ${e.team}`;
-    case 'ad_start': return `ВП: СТАРТ, эпоха ${e.era}, авиация — ${e.sideAir}; авиация: ${e.air.join(', ')}; ПВО: ${e.pvo.join(', ')}`;
+    case 'ad_start': return e.kind === 'multi' ? `ВП: СТАРТ «Мульти-волна», эпоха ${e.era}, первым атакует ${e.first}; восток: ${(e.east || []).join(', ')}; запад: ${(e.west || []).join(', ')}` : `ВП: СТАРТ, эпоха ${e.era}, авиация — ${e.sideAir}; авиация: ${(e.air || []).join(', ')}; ПВО: ${(e.pvo || []).join(', ')}`;
+    case 'ad_round': return `ВП: раунд ${e.round}, атакует ${e.atk}; очки: ${(e.budgets || []).map(([n, , b]) => n + ' ' + b).join(', ')}`;
+    case 'ad_round_end': return `ВП: конец раунда ${e.round} (${e.why}): разрушено ${Math.round((e.k || 0) * 100)}%, сбито ${e.downs}; счёт восток ${e.scores && e.scores.east} / запад ${e.scores && e.scores.west}`;
+    case 'ad_resume': return `ВП: ВЕРНУЛСЯ ${e.who} (${e.team}, ${e.state})`;
+    case 'ad_dead': return `ВП: связь умерла: ${e.who} — соединение закрыто, место ждёт`;
+    case 'ad_to_human': return `ВП: самолёт снова у ${e.who}`;
+    case 'ad_lobby': return `ВП: снова лобби: ${(e.players || []).join(', ')}`;
+    case 'ad_closed': return 'ВП: комната закрыта';
     case 'ad_plan': return `ВП: расстановка, волна ${e.wave}; очки: ${e.budgets.map(([n, b]) => n + ' ' + b).join(', ')}`;
-    case 'ad_wave': return `ВП: ВОЛНА ${e.wave}: ${e.air.map(([n, c]) => n + ' связка ' + c).join(', ')}`;
+    case 'ad_wave': return e.plans ? `ВП: ВОЛНА раунда ${e.round}: ${e.plans.map(([n, c, k]) => `${n} ${c} (${k || '—'})`).join('; ')}` : `ВП: ВОЛНА ${e.wave}: ${(e.air || []).map(([n, c]) => n + ' связка ' + c).join(', ')}`;
     case 'ad_wave_end': return `ВП: конец волны ${e.wave} (${e.why}): уничтожено ${Math.round(e.totalK * 100)}%, сбито ${e.downs}, комплексов ${e.unitKills}`;
-    case 'ad_end': return `ВП: КОНЕЦ — победила ${e.winner === 'air' ? 'авиация' : 'ПВО'}, ${Math.round(e.valueK * 100)}%`;
+    case 'ad_end': return e.scores ? `ВП: КОНЕЦ — победил ${e.winner || 'никто (ничья)'}, счёт восток ${e.scores.east} / запад ${e.scores.west}` : `ВП: КОНЕЦ — победила ${e.winner === 'air' ? 'авиация' : 'ПВО'}, ${Math.round(e.valueK * 100)}%`;
     case 'ad_down': return `ВП: сбит ${e.who} — ${e.by}`;
     case 'ad_to_ai': return `ВП: самолёт ${e.who} ведёт ИИ (${e.why})`;
     case 'ad_cmd': { const { ts, ev, room, mode, st, wave, who, cmd, ...d } = e; return `ВП: ${who} → ${cmd} ${JSON.stringify(d)}`; }

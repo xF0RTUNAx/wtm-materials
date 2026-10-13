@@ -13,14 +13,14 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261020h';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261020h';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261020h';
+import { AG, SAM } from '../arsenal.js?v=20261020i';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261020i';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261020i';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
-  arcade: { name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 290, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.7, reload: 'auto' },
-  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home' }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
+  arcade: { name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 290, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.7, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
+  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home', reloadK: { air: 0.7, multi: 0.9 } }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
 };
 
 const NOOP_FX = {
@@ -43,6 +43,8 @@ export function createStrike(ctx) {
   const city = ctx.city;
   const units = [], sams = [], wpns = [], flares = [];
   const objects = city.objects.map((o) => ({ ...o, hpMax: o.hp, dead: false, dmgTaken: 0 }));
+  // перезарядка ПВО по игре: ctx.game 'air' (вылеты) / 'multi' («Мульти-волна») — быстрее по режиму (MODES.reloadK), до 5 с
+  const reloadOf = (S) => { const b = S.reload || 60, k = ctx.game && ((ctx.mode() || {}).reloadK || {})[ctx.game]; return k ? Math.max(5, Math.round(b * k / 5) * 5) : b; };
   const net = { alertT: 0, last: new THREE.Vector3() }; // общая сеть ПВО: кто-то сопровождает цель — засада включается
   let uid = 1, mid = 1;
 
@@ -184,7 +186,7 @@ export function createStrike(ctx) {
         if (!launcherReady(u)) return; // пусковая ещё разворачивается
         launchSam(u, tr);
         u.cool = 2.2 + rnd() * 1.5;
-        if (u.ammo <= 0) u.reloadT = S.reload * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
+        if (u.ammo <= 0) u.reloadT = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
       }
     } else u.reactT = Math.max(0, u.reactT - dt * 0.5);
   }
@@ -201,7 +203,7 @@ export function createStrike(ctx) {
     const p = G.hitK * M.gunK * Math.pow(1 - d / rmax, 1.4) / (1 + w * 9) * u.skill * M.samSkill * (tr.isMun ? 0.6 : 1);
     if (p * 8 < 0.1) { u.gunOn = false; return true; }
     if (u.gunOn) {
-      if (S.type === 'guns') { u.ammo -= dt * (G.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = S.reload || 60; } } // темп — по пушкам комплекса; кончились — подвоз
+      if (S.type === 'guns') { u.ammo -= dt * (G.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = reloadOf(S); } } // темп — по пушкам комплекса; кончились — подвоз
       const hits = rnd() < p * dt * 8 ? 1 + Math.floor(rnd() * 3) : 0;
       fx.gunFire(u, tr, hits, dt);
       if (hits) { hurtAny(tr, G.dmg * hits, S.short); fx.gunHit(u, tr, hits); }
@@ -279,7 +281,7 @@ export function createStrike(ctx) {
     if (!t) { let ba = 0.3; for (const a of targets) { if (a.dead || a.pos.distanceTo(u.pos) > S.rmax * 1.3) continue; const ang = angleBetween(u.aimDir, TMP.copy(a.pos).sub(u.pos)); if (ang < ba) { ba = ang; t = a; } } }
     u.gunTgt = t;
     if (!u.gunFire || u.ammo <= 0) { u.gunOn = false; return; }
-    u.gunOn = true; u.ammo -= dt * (S.gun.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = S.reload || 60; }
+    u.gunOn = true; u.ammo -= dt * (S.gun.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = reloadOf(S); }
     let hits = 0;
     if (t) {
       gunLead(u, t, LEAD);
@@ -311,7 +313,7 @@ export function createStrike(ctx) {
       if (h > S.hmax) return 'цель выше зоны поражения';
     }
     if (!launcherReady(u)) return 'пусковая разворачивается';
-    launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = S.reload * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
+    launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
   }
   function designate(u, t) { if (u.desig !== t) { u.desig = t; u.track = null; u.seeT = 0; fx.radarState(u); } }

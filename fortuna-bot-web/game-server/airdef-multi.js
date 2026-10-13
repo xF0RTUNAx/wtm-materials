@@ -35,7 +35,7 @@ export function createMulti(ctx) {
   function nextRound(r) {
     r.round++; r.atk = r.round === 1 ? r.first : opp(r.first);
     const def = opp(r.atk);
-    r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], aircraft: () => r.raid.planes, laserSpot: () => null, night: 0, hurt: (a, d) => r.raid.hurt(a, d), fx: strikeFx(r) });
+    r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], game: 'multi', aircraft: () => r.raid.planes, laserSpot: () => null, night: 0, hurt: (a, d) => r.raid.hurt(a, d), fx: strikeFx(r) });
     r.raid = createRaid(r.S, city, Math.random, { side: r.atk, era: r.era, fx: {} });
     r.E = []; r.events = []; r.state = 'plan'; r.t = 0; r.phaseT = PREP_T; r.tick = 0; r.wt = 0; r.k = 1; r.seenT = 0; r.announced = new Set();
     r.v0 = M.totalValue(r.S.objects);
@@ -60,7 +60,7 @@ export function createMulti(ctx) {
       const own = { id: p.id, owner: p.id };
       const E = createCombined(r.S, city, Math.random, { side: r.atk, era: r.era, raid: r.raid, comp: M.compOf(r.atk, r.era, p.plan.n), plan: p.plan.cfg, lim: M.LIM, owner: own,
         gate: () => r.S.wpns.length < M.INFLIGHT_CAP });
-      E.start(tg.length ? tg : military); p.E = E; p.own = own; r.E.push(E);
+      E.start(tg.length ? tg : military); E.pid = p.id; p.E = E; p.own = own; r.E.push(E);
     }
     sendRoom(r);
     J(r, 'wave', { round: r.round, plans: atkTeam(r).map((p) => [p.name, M.planCost(p.plan && p.plan.n), Object.entries((p.plan && p.plan.n) || {}).map(([k, n]) => k + ':' + n).join(',')]) });
@@ -73,7 +73,7 @@ export function createMulti(ctx) {
     const spent = atkTeam(r).reduce((s, p) => s + M.planCost(p.plan && p.plan.n), 0) || 1;
     for (const p of atkTeam(r)) p.score += Math.round(k * 1000 * M.planCost(p.plan && p.plan.n) / spent);
     const last = r.round >= M.ROUNDS;
-    r.state = 'debrief'; r.t = 0; r.phaseT = DEBRIEF_T; r.last = last;
+    r.state = 'debrief'; r.t = 0; r.phaseT = last ? Math.min(DEBRIEF_T, 2.5) : DEBRIEF_T; r.last = last; // последний раунд — сразу к итогам боя
     const res = { round: r.round, atk: r.atk, why, value: Math.round(value), k: Math.round(k * 1000) / 1000, v0: r.v0, scores: { east: Math.round(r.scores.east), west: Math.round(r.scores.west) }, last,
       downs: r.downs || 0 };
     r.downs = 0;
@@ -180,7 +180,7 @@ export function createMulti(ctx) {
     const pick = (side) => ev.filter(([to]) => to === 'all' || to === side).map(([, e]) => e);
     const M_ = S.sams.filter((m) => !m.dead).map(O.packM), base = { t: 's', T: Math.round(r.wt * 100) / 100, k: r.k, V: Math.round(M.damageValue(S.objects)) };
     const W = (f) => S.wpns.filter((w) => !w.dead && w.ev && f(w)).map((w) => [...O.packW(w), wFlags(w)]);
-    const L = []; for (const E of r.E) for (const q of E.launchers) L.push([q.id, q.key, r1(q.pos.x), r1(q.pos.z), Math.round(q.yaw * 1000) / 1000, q.fired, Math.round((q.podEl || 0) * 100) / 100, q.n0, q.name]);
+    const L = []; for (const E of r.E) for (const q of E.launchers) L.push([q.id, q.key, r1(q.pos.x), r1(q.pos.z), Math.round(q.yaw * 1000) / 1000, q.fired, Math.round((q.podEl || 0) * 100) / 100, q.n0, q.name, E.pid || 0]); // последнее — чья пусковая (союзники — своим цветом)
     const A = r.raid.planes.filter((a) => !a.dead && !a.out && a.phase !== 'wait').map(O.packA);
     const ea = pick('atk'), ed = pick('def');
     bcast(r, { ...base, A, U: S.units.filter((u) => u.atkSeen).map(O.packU), M: M_, W: W(() => true), L, e: ea.length ? ea : undefined }, (q) => q.team === r.atk);
@@ -190,11 +190,14 @@ export function createMulti(ctx) {
   const refOf = (o) => (!o ? null : o.isLauncher ? ['L', o.id] : o.isMun ? ['w', o.id] : o.id !== undefined ? ['a', o.id] : null);
   function sched(r) {
     for (const p of atkTeam(r)) {
-      if (!p.E || !p.ws) continue;
+      if (!p.ws) continue;
       const E = p.E, u = {};
-      for (const [k, n] of E.comp) { if (AG[k].recon) continue; u[k] = []; for (let i = 0; i < n; i++) { const f = E.unitInfo(k, i); u[k].push(f.launched ? [1] : [0, Math.round(f.t * 10) / 10, Math.round(f.earliest * 10) / 10]); } }
-      const ev = E.events().map((e) => [e.g, e.label, e.sub, e.eta === null ? null : Math.round(e.eta * 10) / 10, refOf(e.obj), refOf(e.cue)]);
-      send(p, { t: 'sched', T: Math.round(E.t * 10) / 10, u, ev });
+      if (E) for (const [k, n] of E.comp) { if (AG[k].recon) continue; u[k] = []; for (let i = 0; i < n; i++) { const f = E.unitInfo(k, i); u[k].push(f.launched ? [1] : [0, Math.round(f.t * 10) / 10, Math.round(f.earliest * 10) / 10]); } }
+      const pack = (e) => [e.g, e.label, e.sub, e.eta === null ? null : Math.round(e.eta * 10) / 10, refOf(e.obj), refOf(e.cue)];
+      const ev = E ? E.events().map(pack) : []; // без своего наряда — только союзники
+      // союзники по атаке: их носители, пусковые и то, что летит (без подробностей плана) — отдельным разделом ленты
+      const al = []; for (const q of atkTeam(r)) if (q !== p && q.E) for (const e of q.E.events().slice(0, 14)) al.push([q.name, ...pack(e)]);
+      send(p, { t: 'sched', T: Math.round((E ? E.t : r.wt) * 10) / 10, u, ev, al });
     }
   }
   // ПВО «за пультом» или над районом летит — время ×1, иначе ×3 (подлёт носителей, ожидание пусков)
@@ -224,7 +227,7 @@ export function createMulti(ctx) {
     if ((r.seenT -= dt) <= 0) { r.seenT = 0.5; fog(r); }
     if (++r.tick % SNAP_EVERY === 0) snapshot(r);
     if (r.tick % O.TICK_HZ === 0) sched(r);
-    const busy = r.E.some((E) => E.pending()) || r.S.wpns.some((w) => !w.dead && !w.W.recon) || r.S.sams.some((m) => !m.dead); // разведчик волну не держит
+    const busy = r.E.some((E) => E.pending()) || r.S.wpns.some((w) => !w.dead && !w.W.recon); // разведчик и ЗУР без целей волну не держат
     if (!busy && r.wt > 5) return endRound(r, 'done');
     if (r.wt >= r.phaseT) return endRound(r, 'time');
     if (r.tick % (O.TICK_HZ * 5) === 0) J(r, 'state', { wt: Math.round(r.wt), k: r.k, wpns: r.S.wpns.length, sams: r.S.sams.length, V: Math.round(M.damageValue(r.S.objects)) });
@@ -294,7 +297,7 @@ export function createMulti(ctx) {
       } else if (r.state === 'play' && cost) { // в подготовке ничего не собрал — волна стартует сейчас
         c.plan = plan; c.planT = clock(); c.spent = cost;
         const own = { id: c.id, owner: c.id }, E = createCombined(r.S, city, Math.random, { side: r.atk, era: r.era, raid: r.raid, comp: M.compOf(r.atk, r.era, plan.n), plan: plan.cfg, lim: M.LIM, owner: own, gate: () => r.S.wpns.length < M.INFLIGHT_CAP });
-        E.start(r.S.objects.filter((o) => !o.noTarget && !o.dead)); c.E = E; r.E.push(E); return;
+        E.start(r.S.objects.filter((o) => !o.noTarget && !o.dead)); E.pid = c.id; c.E = E; r.E.push(E); return;
       }
       c.plan = plan; c.planT = clock(); c.spent = cost; sendRoom(r);
       return;
@@ -318,7 +321,7 @@ export function createMulti(ctx) {
     }
   }
   // вернувшийся в бой: раунд, комплексы (по туману своей команды)
-  function resume(r, c) { send(c, { t: 'start', kind: 'multi', round: r.round, rounds: M.ROUNDS, atk: r.atk, era: r.era, mode: r.mode, scores: r.scores, v0: r.v0 }); sendState(r, c); }
+  function resume(r, c) { send(c, { t: 'start', kind: 'multi', round: r.round, rounds: M.ROUNDS, atk: r.atk, era: r.era, mode: r.mode, scores: r.scores, v0: r.v0, plan: c.team === r.atk && c.plan ? c.plan : undefined }); sendState(r, c); } // переподключение: и свой план (наряд атаки)
   // ушёл игрок: его комплексы — ИИ-расчётам, его волна летит по плану
   function drop(r, p) { if (r.S) for (const u of r.S.units) if (u.owner === p.id) u.owner = 0; }
   return { start, step, onMsg, viewExtra, resume, drop, DT };

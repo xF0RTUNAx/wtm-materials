@@ -3,11 +3,11 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261020h';
-import * as O from './sim/online.js?v=20261020h';
-import * as MW from './sim/online-multi.js?v=20261020h';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020h';
-import { MODES } from './sim/strike.js?v=20261020h';
+import { createNet } from './net.js?v=20261020i';
+import * as O from './sim/online.js?v=20261020i';
+import * as MW from './sim/online-multi.js?v=20261020i';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020i';
+import { MODES } from './sim/strike.js?v=20261020i';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -175,7 +175,7 @@ export function createOnline(C, ctrls) {
   N.on('spawn', (m) => { N.clog('spawn', { lives: m.lives, plane: m.plane, load: m.load.map((l) => l.key + ':' + l.n).join(',') }); if (team() === 'air') ctrls.air.netSpawn(m); });
   N.on('meHit', (hp, by) => ctrls.air.netHit(hp, by));
   N.on('meDown', () => { N.clog('down', { hp: C.player && C.player.hp, pos: C.player && C.player.pos.toArray().map(Math.round) }); ctrls.air.netDown('Самолёт сбит'); });
-  N.on('meAI', () => { N.clog('to_ai', { hidden: document.visibilityState }); ctrls.air.netDown('Связь пропала — самолёт довёл ИИ'); });
+  N.on('meAI', () => { N.clog('to_ai', { hidden: document.visibilityState }); ctrls.air.netAI(); });
   // журнал сбитий: своя команда — синим, противник — красным; под ником — техника, которой он управлял в этот момент
   const vehName = (v) => { const [k, key] = String(v || '').split(':'); return !key ? '' : k === 'p' ? (PLANES[key] || (CARRIERS[key] && CARRIERS[key].name) || key) : k === 'u' ? (SAM[key] ? SAM[key].short : key) : (AG[key] ? AG[key].short : key); };
   N.on('kill', (who, whom, by, wt, mt, wv, mv) => { feed.push({ t: performance.now(), who, whom, by, wt, mt, wv: vehName(wv), mv: vehName(mv) }); if (feed.length > 6) feed.shift(); });
@@ -231,7 +231,45 @@ export function createOnline(C, ctrls) {
       note: list.map((p) => `${esc(p.name)}${p.bot ? ' (бот)' : ''} — ${O.ROLE_NAMES[p.team]}: ${p.kills}/${p.deaths}, ${p.score} очков`).join('<br>') });
     if (m.result && C.claimOnline) C.claimOnline(m.result);
   });
-  N.on('lost', () => { if (C.state === 'play' && C.lastGame === 'online' && !C.ended) C.showEnd({ title: 'Связь потеряна', reason: 'Соединение с сервером оборвалось', win: null, stats: [] }); });
+  N.on('lost', () => { hideModal(); if (C.state === 'play' && C.lastGame === 'online' && !C.ended) C.showEnd({ title: 'Связь потеряна', reason: 'Не удалось вернуться в бой: комната закрыта или сервер недоступен', win: null, stats: [] }); });
+
+  // ═════════════ Окна поверх игры: переподключение, возвращение в комнату, «покинуть комнату?» ═════════════
+  const md = $('netModal');
+  let mdKind = null;
+  function showModal(kind, title, text, btns, spin) {
+    mdKind = kind;
+    md.innerHTML = `<div class="nmb">${spin ? '<div class="nms"></div>' : ''}<b>${title}</b><p>${text}</p><div class="nmr">${btns.map(([l, , alt], i) => `<button class="btn${alt ? ' alt' : ''}" data-nm="${i}">${l}</button>`).join('')}</div></div>`;
+    md.onclick = (e) => { const b = e.target.closest('[data-nm]'); if (b) { snd.click(); btns[+b.dataset.nm][1](); } };
+    md.classList.add('on');
+  }
+  function hideModal(kind) { if (kind && mdKind !== kind) return; mdKind = null; md.classList.remove('on'); }
+  // связь оборвалась в комнате или в бою — переподключаемся сами; бой на сервере идёт, место держится
+  function renderRe() {
+    if (!N.re) { hideModal('re'); return; }
+    const s = Math.round((performance.now() - N.re.t0) / 1000);
+    showModal('re', 'Связь потеряна', `Переподключаемся${N.re.n > 1 ? ` · попытка ${N.re.n}` : ''}… ${s} с<br><span class="dim">Ваше место в команде сохранено${N.battle ? ', бой продолжается (самолёт пока ведёт ИИ)' : ''}.</span>`,
+      [['Выйти в меню', () => { N.stopRe(); hideModal(); keepRoom = false; if (C.state === 'play') C.toMenu(); }, true]], true);
+  }
+  N.on('re', renderRe); setInterval(() => { if (N.re) renderRe(); }, 1000);
+  // «В КОМНАТУ» после итогов: комната вернётся в лобби, когда все нажмут (или кончится показ итогов) — до тех пор это окно
+  let backWait = false;
+  function renderBack() {
+    const r = N.room;
+    if (!backWait || !r || r.state !== 'end') { if (backWait && (!r || r.state === 'lobby')) backWait = false; hideModal('back'); return; }
+    const hs = r.players.filter((p) => !p.bot && !p.away);
+    showModal('back', `Возвращаемся в комнату ${r.code}`, `Ждём остальных игроков${r.left ? `, не дольше ${r.left} с` : ''}…<br><span class="dim">Людей в комнате: ${hs.length}</span>`,
+      [['Выйти из комнаты', () => { backWait = false; hideModal(); N.leave(); afterBattle = false; C.menu.render(); }, true]], true);
+  }
+  N.on('room', renderBack);
+  // уйти из комнаты (итоги, пауза) — переспросить: комнату с друзьями потерять легко, вернуться — только по коду
+  function confirmLeave(go, inBattle) {
+    if (!N.room || N.conn !== 'on') { go(); return; }
+    showModal('leave', inBattle ? 'Покинуть бой?' : 'Покинуть комнату?', inBattle ? 'Вы действительно хотите покинуть бой и текущую комнату? Ваш самолёт или комплексы дальше поведёт ИИ.' : 'Вы действительно хотите покинуть текущую комнату? Вернуться можно будет только по коду.',
+      [['Покинуть', () => { hideModal(); go(); }], ['Остаться', () => hideModal(), true]]);
+  }
+  const close0 = $('closeBtn').onclick, pexit0 = $('pauseExit').onclick;
+  $('closeBtn').onclick = () => (C.lastGame === 'online' ? confirmLeave(close0) : close0());
+  $('pauseExit').onclick = () => (C.lastGame === 'online' && N.battle ? confirmLeave(pexit0, true) : pexit0());
 
   // ═════════════ Журнал боя (что видела игра): ошибки, частота кадров, зеркало ═════════════
   let fr = 0, frT = performance.now();
@@ -308,7 +346,7 @@ export function createOnline(C, ctrls) {
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }
   else if (new URLSearchParams(location.search).get('mp') === '1') { C.setup.game = 'online'; N.connect(); } // сайт: кнопка «Онлайн-бой» — сразу раздел онлайна
   return { N, panel, primary, primaryText, onClick, again() {
-    if (N.room && (N.room.state === 'end' || N.room.state === 'lobby')) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; C.menu.render(); return; } // в ту же комнату
+    if (N.room && (N.room.state === 'end' || N.room.state === 'lobby')) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; C.menu.render(); if (N.room.state === 'end') { backWait = true; N.back(); renderBack(); } return; } // в ту же комнату
     C.toMenu(); C.setup.game = 'online'; if (N.conn === 'on') N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined); C.menu.render();
   } };
 }

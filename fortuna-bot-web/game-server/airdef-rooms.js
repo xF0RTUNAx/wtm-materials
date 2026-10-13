@@ -28,9 +28,11 @@ const FAST = (() => { try { return Deno.env.get('AD_FAST') === '1'; } catch (_) 
 const QUEUE_BOTS_T = FAST ? 4 : O.QUEUE_BOTS_T, QUEUE_EXTRA_T = FAST ? 2 : O.QUEUE_EXTRA_T;
 const PLAN_T = FAST ? 3 : O.PLAN_T, WAVE_T = FAST ? 45 : O.WAVE_T, DEBRIEF_T = FAST ? 1 : O.DEBRIEF_T, RESULTS_T = FAST ? 3 : O.RESULTS_T;
 const MSG_MAX = 4096, MSG_RATE = 120, MSG_KILL = 600, ROOMS_MAX = 200;
-const AFK_T = 1.5;            // лётчик молчит дольше — его самолёт ведёт ИИ до конца вылета
+const AFK_T = 4;              // лётчик молчит дольше — его самолёт ведёт ИИ, пока игра не попросит его назад ('retake')
+const DEAD_T = 9;             // от игры ничего (даже пинга раз в 2 с) дольше — соединение мёртвое: закрываем, место ждёт переподключения
 const EXTRAP_MAX = 0.3;       // прокси между состояниями летит по прямой не дольше, с
 const REL_CD = 0.25, CM_CD = 0.3;
+const LAST_T = 2.5;           // после последней волны — итоги боя через, с (раньше ждали полный разбор волны и картинка стояла)
 const BOT_NAMES = ['Беркут', 'Кречет', 'Сапсан', 'Ястреб', 'Гроза', 'Буран', 'Вихрь', 'Шквал', 'Тайфун', 'Орлан', 'Филин', 'Гранит']; // позывные ботов
 const r1 = (v) => Math.round(v * 10) / 10;
 const V = () => new THREE.Vector3();
@@ -75,6 +77,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     return r;
   }
   function joinRoom(r, c, wantTeam) {
+    const same = c.pid && [...r.players.values()].find((p) => !p.bot && p !== c && p.pid === c.pid);
+    if (same) return takeSeat(r, same, c); // вход по коду тем же аккаунтом (связь оборвалась) — своё место, а не новое в чужой команде
     leaveRoom(c);
     const cap = (t) => team(r, t).length < r.size;
     // бот на месте нужной команды уступает человеку
@@ -84,7 +88,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else return send(c, { t: 'err', msg: 'Комната заполнена' }); }
     Object.assign(c, { room: r, team: t, ready: !!r.quick, bot: false, budget: O.BUDGET0[t] || 0, choice: null, kills: 0, deaths: 0, score: 0, lives: null, units: 0, plan: null, spent: 0 });
     r.players.set(c.id, c);
-    if (r.state !== 'lobby') { if (r.kind === 'multi') MU.resume(r, c); else { c.budget = r.wave > 1 ? Math.round(O.BUDGET0[t] * 0.8) : O.BUDGET0[t]; sendState(r, c); } }
+    if (r.state !== 'lobby') { if (r.kind === 'multi') MU.resume(r, c); else { c.budget = r.wave > 1 ? Math.round(O.BUDGET0[t] * 0.8) : O.BUDGET0[t]; sendStart(r, c); sendState(r, c); } }
     sendRoom(r); J(r, 'join', { who: c.name, team: t });
   }
   function addBot(r, t) {
@@ -107,9 +111,26 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     c.room = null; dropPlayer(r, c);
     if (!humans(r).length) { closeRoom(r); return; }
     if (r.host === c.id) r.host = humans(r)[0].id;
-    sendRoom(r);
+    sendRoom(r); checkBack(r);
   }
   function closeRoom(r) { rooms.delete(r.code); J(r, 'closed'); }
+  // тот же аккаунт снова в сети (обрыв связи, вход по коду, вторая вкладка): занимает своё место — команда, комплексы, счёт,
+  // самолёт. Старое соединение отключаем (его обработчики больше ничего не трогают: room = null)
+  function takeSeat(r, old, c) {
+    if (c.room && c.room !== r) leaveRoom(c);
+    const ws = c.ws, ows = old.ws, msgN = c.msgN, msgT = c.msgT;
+    clients.delete(old); old.ws = null; old.room = null;
+    if (ows && ows !== ws) try { ows.close(); } catch (_) { /* уже */ }
+    Object.assign(c, old, { ws, msgN, msgT, lastMsg: clock(), back: false }); c.room = r; r.players.set(c.id, c); clients.add(c); // прежний id — комплексы и счёт остаются за игроком
+    send(c, { t: 'welcome', id: c.id, name: c.name, resumed: 1 });
+    if (r.state !== 'lobby' && r.state !== 'end') { if (r.kind === 'multi') MU.resume(r, c); else { sendStart(r, c); sendState(r, c); } }
+    send(c, view(r, c)); sendRoom(r);
+    J(r, 'resume', { who: c.name, team: c.team, state: r.state });
+  }
+  // начало боя «Вылет и оборона» — входящему посреди боя (без него игра не знает, что бой идёт)
+  const sendStart = (r, c) => send(c, { t: 'start', era: r.era, sideAir: r.sideAir, mode: r.mode, targets: r.targets.map((o) => o.id), waves: O.WAVES });
+  // после боя «В КОМНАТУ» нажали все, кто на связи, — лобби сразу, не дожидаясь конца показа итогов
+  function checkBack(r) { if (r.state === 'end' && humans(r).some((p) => p.ws) && humans(r).filter((p) => p.ws).every((p) => p.back)) toLobby(r); }
   // после итогов боя комната снова в лобби с теми же игроками: хост меняет режим, формат, эпоху, сторону, игру — и снова «Готов».
   // Ушедшие (без связи) — долой; хоста нет — хост первый человек; быстрый бой становится своей комнатой
   function toLobby(r) {
@@ -118,7 +139,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (!r.players.has(r.host) || r.players.get(r.host).bot) r.host = humans(r)[0].id;
     Object.assign(r, { quick: false, state: 'lobby', t: 0, phaseT: 0, wave: 0, tick: 0, S: null, raid: null, targets: [], valueK: 0, events: [], zone: null, humanCraft: null, lead: null,
       E: null, round: 0, atk: null, scores: null, last: false, lastRes: null, waveRes: null });
-    for (const p of r.players.values()) Object.assign(p, { ready: !!p.bot, budget: O.BUDGET0[p.team] || 0, choice: null, paid: null, kills: 0, deaths: 0, score: 0, lives: null, craft: null, plane: null,
+    for (const p of r.players.values()) Object.assign(p, { back: false, ready: !!p.bot, budget: O.BUDGET0[p.team] || 0, choice: null, paid: null, kills: 0, deaths: 0, score: 0, lives: null, craft: null, plane: null,
       op: null, plan: null, spent: 0, E: null, out: false, units: 0 });
     sendRoom(r); J(r, 'lobby', { players: humans(r).map((p) => p.name) });
   }
@@ -141,7 +162,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (r.kind === 'multi') MU.start(r); else startBattle(r);
   }
   function startBattle(r) {
-    r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], aircraft: () => r.air, laserSpot: (a) => a.laser || null, night: 0,
+    r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], game: 'air', aircraft: () => r.air, laserSpot: (a) => a.laser || null, night: 0,
       reloadK: () => (r.state === 'play' && r.waveRes ? O.reloadKOf(r.t, r.waveRes.radarKills) : 1), // две фазы волны: подавленная ПВО перезаряжается дольше
       hurt: (a, dmg, by) => hurtAir(r, a, dmg, by), spawnDecoy: (a, key, aim) => announce(r, r.raid.spawnDecoy(a, key, aim)), fx: strikeFx(r) });
     r.raid = createRaid(r.S, city, Math.random, { side: r.sideAir, era: r.era, fx: raidFx(r) });
@@ -191,14 +212,31 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       p.plane = a; announce(r, a);
       return;
     }
-    const ST = STRIKERS[r.sideAir];
-    const a = makeCraft({ ...ST, id: p.id, human: true, side: r.sideAir, hp: O.MAX_HP, hpMax: O.MAX_HP, rcs: ST.rcs, speed: 240, thr: 0.8, owner: p.id, plane: L.plane });
-    a.pos.set(x, y, z); a.yaw = yaw; a.pitch = 0; a.roll = 0; fwdOf(a, a.vel).multiplyScalar(a.speed);
-    a.jam = Math.max(0, ...L.items.map(([k]) => AG[k].jam || 0));
-    p.craft = a; p.load = L.items.map(([k, n]) => ({ key: k, n })); p.cm = { flare: MODES[r.mode].cm, chaff: MODES[r.mode].cm }; p.relT = 0; p.cmT = 0; p.stT = r.t; p.lastSt = clock();
+    humanCraft(r, p, L.plane, L.items.map(([k, n]) => ({ key: k, n })), x, y, z, yaw, 240, O.MAX_HP);
+    p.cm = { flare: MODES[r.mode].cm, chaff: MODES[r.mode].cm }; p.stT = r.t;
     p.zFuel = O.ZONE.FUEL; p.zAmmo = O.ZONE.AMMO; p.fuel = 1; p.zT = 0; // зона пополнения: на этот вылет — 1 раз топливо, 2 раза боекомплект
+    sendSpawn(r, p);
+  }
+  function humanCraft(r, p, plane, load, x, y, z, yaw, speed, hp) {
+    const ST = STRIKERS[r.sideAir];
+    const a = makeCraft({ ...ST, id: p.id, human: true, side: r.sideAir, hp, hpMax: O.MAX_HP, rcs: ST.rcs, speed, thr: 0.8, owner: p.id, plane });
+    a.pos.set(x, y, z); a.yaw = yaw; a.pitch = 0; a.roll = 0; fwdOf(a, a.vel).multiplyScalar(a.speed);
+    a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0));
+    p.craft = a; p.load = load; p.relT = 0; p.relTok = 2; p.cmT = 0; p.lastSt = clock();
     r.humanCraft.set(p.id, a); a.load = p.load; announce(r, a);
-    bcast(r, { t: 'spawn', id: p.id, s: [r1(x), y, r1(z), Math.round(yaw * 1000) / 1000], lives: p.lives, load: p.load, cm: p.cm, plane: L.plane, choice: p.choice });
+    return a;
+  }
+  // back — управление вернулось игроку (связь восстановилась): с того же места, скорости и прочности
+  const sendSpawn = (r, p, back) => { const a = p.craft; bcast(r, { t: 'spawn', id: p.id, s: [r1(a.pos.x), r1(a.pos.y), r1(a.pos.z), Math.round(a.yaw * 1000) / 1000], lives: p.lives, load: p.load, cm: p.cm, plane: a.plane, choice: p.choice, back: back ? 1 : undefined, v: back ? Math.round(a.speed) : undefined, hp: back ? Math.round(a.hp) : undefined }); };
+  // самолёт, который вёл ИИ (связь пропадала), — снова игроку; ИИ-двойник тихо исчезает (без взрыва)
+  function retake(r, p) {
+    if (r.state !== 'play' || !p.ws) return;
+    if (p.craft && !p.craft.dead) { p.lastSt = clock(); sendSpawn(r, p, true); return; } // самолёт ещё у игрока (вернулся быстро) — только напомнить где он
+    const b = p.plane; if (!b || b.dead || b.out || !p.ai || b.fromHuman !== p.id) return;
+    p.plane = null; p.ai = false; b.out = true;
+    humanCraft(r, p, b.plane, (b.load || []).map((l) => ({ key: l.key, n: l.n })), b.pos.x, b.pos.y, b.pos.z, b.yaw, Math.max(150, b.speed), b.hp);
+    sendSpawn(r, p, true);
+    J(r, 'to_human', { who: p.name });
   }
   // самолёт человека без связи (или ушедшего) — дальше его ведёт ИИ с тем, что осталось на подвеске
   function toAI(r, p, why) {
@@ -220,7 +258,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     r.raid.planes.length = 0;
     const res = { wave: r.wave, why, valueK: Math.max(0, r.valueK - r.waveRes.value0K), totalK: r.valueK, downs: r.waveRes.downs, downsSead: r.waveRes.downsSead, unitKills: r.waveRes.unitKills, radarKills: r.waveRes.radarKills };
     const airWins = r.valueK >= O.WIN_K, last = r.wave >= O.WAVES || airWins;
-    r.state = 'debrief'; r.t = 0; r.phaseT = DEBRIEF_T; r.last = last; r.lastRes = res;
+    r.state = 'debrief'; r.t = 0; r.phaseT = last ? Math.min(DEBRIEF_T, LAST_T) : DEBRIEF_T; r.last = last; r.lastRes = res; // последняя волна — сразу к итогам боя
     // бюджеты на следующую волну: проигрывающая сторона (по ходу боя) получает прибавку
     const airLosing = r.valueK < O.WIN_K * r.wave / O.WAVES;
     r.lead = airLosing ? 'pvo' : 'air'; res.lead = r.lead; // ведущая сторона платит больше в следующей волне (O.LEAD_K)
@@ -390,8 +428,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     // конец волны: ≥ 75 % ценности — сразу; авиации в воздухе нет и не будет; время
     if (r.valueK >= O.WIN_K) return endWave(r, 'value');
     const inAir = team(r, 'air').some((p) => (p.craft && !p.craft.dead) || (p.plane && !p.plane.dead && !p.plane.out) || (!p.out && p.lives > 0 && (p.bot || p.ws)));
-    const munitions = r.S.wpns.length + r.S.sams.length;
-    if (!inAir && !munitions) return endWave(r, 'air_done');
+    if (!inAir && !r.S.wpns.some((w) => !w.dead)) return endWave(r, 'air_done'); // ЗУР, которым уже некого ловить, волну не держат
     if (r.t >= r.phaseT) return endWave(r, 'time');
     if (++r.tick % SNAP_EVERY === 0) snapshot(r);
     if (r.tick % (O.TICK_HZ * 5) === 0) J(r, 'state', { // раз в 5 с: кто где, связь, комплексы
@@ -419,6 +456,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   MU = createMulti({ city, send, bcast, team, humans, J, sign, clock, sendRoom, closeRoom, toLobby, FAST });
   // нагрузка: время такта всех комнат (среднее и худшее за минуту) — в /health; бюджет такта — 1000 × DT мс
   const load = { ema: 0, max: 0, maxPrev: 0, maxT: 0 };
+  // мёртвые соединения (телефон ушёл из сети, приложение свернули): закрываем — место ждёт переподключения, самолёт ведёт ИИ
+  setInterval(() => { const now = clock(); for (const c of [...clients]) if (c.room && c.ws && now - (c.lastMsg || now) > DEAD_T) { J(c.room, 'dead', { who: c.name }); try { c.ws.close(); } catch (_) { /* уже */ } c.ws.onclose && c.ws.onclose(); } }, 2000);
   setInterval(() => {
     const t0 = performance.now();
     for (const r of [...rooms.values()]) { try { step(r, DT); } catch (e) { log('ad: ошибка такта ' + (e && e.stack || e)); J(r, 'error', { msg: String(e && e.message || e) }); } }
@@ -477,6 +516,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   function connect(ws) {
     const c = { id: nextId++, ws, name: null, pid: '', room: null, msgN: 0, msgT: 0 };
     ws.onmessage = (ev) => {
+      c.lastMsg = clock();
       if (typeof ev.data !== 'string' || ev.data.length > MSG_MAX) return;
       const s = Math.floor(clock()); if (s !== c.msgT) { c.msgT = s; c.msgN = 0; }
       if (++c.msgN > MSG_KILL) { try { ws.close(); } catch (_) { /* уже */ } return; }
@@ -486,6 +526,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       onMsg(c, m).catch((e) => log('ad: ошибка сообщения ' + (e && e.message || e)));
     };
     ws.onclose = () => {
+      if (ws.gone) return; ws.gone = true; // закрываем и сами (мёртвое соединение) — второй раз не разбираем
       clients.delete(c);
       for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); }
       const r = c.room;
@@ -498,7 +539,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
       Object.assign(c, { name: who.name, pid: who.pid }); clients.add(c);
       // возвращение в идущий бой тем же аккаунтом
-      for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && !p.ws); if (old && r.state !== 'lobby') { const ws = c.ws; Object.assign(c, old, { ws }); c.room = r; r.players.set(c.id, c); /* прежний id — комплексы и счёт остаются за игроком */ send(c, { t: 'welcome', id: c.id, name: c.name, resumed: 1 }); if (r.kind === 'multi') MU.resume(r, c); else sendState(r, c); send(c, view(r, c)); return; } }
+      for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && p !== c); if (old) { takeSeat(r, old, c); return; } } // и когда старое соединение ещё не закрылось
       return send(c, { t: 'welcome', id: c.id, name: c.name, search: searching() });
     }
     if (!c.name) return;
@@ -507,6 +548,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       case 'create': { const nr = newRoom(c, m); if (!nr) return send(c, { t: 'err', msg: 'Сервер занят' }); joinRoom(nr, c, m.team); return; }
       case 'join': { const jr = rooms.get(O.cleanCode(m.code)); if (!jr) return send(c, { t: 'err', msg: 'Комната не найдена' }); if (jr.state === 'end') return send(c, { t: 'err', msg: 'Бой уже закончился' }); joinRoom(jr, c, m.team); return; }
       case 'leave': leaveRoom(c); return send(c, { t: 'left' });
+      case 'back': if (r && r.state === 'end') { c.back = true; checkBack(r); } return; // «В КОМНАТУ» после итогов
+      case 'retake': if (r && r.kind !== 'multi') retake(r, c); return; // связь вернулась — самолёт снова у игрока
       case 'queue': { if (r || !O.AD_MODES.includes(m.mode)) return; for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); }
         if (m.kind === 'multi') { mqueues[m.mode].push({ c, t: clock() }); return send(c, { t: 'queued', mode: m.mode, kind: 'multi', n: mqueues[m.mode].length }); }
         queues[m.mode].push({ c, role: ['air', 'pvo'].includes(m.role) ? m.role : 'any', t: clock() }); return send(c, { t: 'queued', mode: m.mode, n: queues[m.mode].length }); }
@@ -560,9 +603,12 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
         return;
       }
       case 'rel': {
-        const a = c.craft; if (!a || a.dead || r.t - c.relT < REL_CD) return;
+        const a = c.craft; if (!a || a.dead) return;
+        // темп сброса: запас на 2 подряд, восполняется раз в REL_CD (сообщения в сети приходят пачками — второй сброс не терялся бы)
+        c.relTok = Math.min(2, (c.relTok ?? 2) + (r.t - (c.relT || 0)) / REL_CD); c.relT = r.t;
+        if (c.relTok < 1) return deny(c, 'Слишком часто — сброс не прошёл', 'rel ' + m.k);
         const l = (c.load || []).find((q) => q.key === m.k && q.n > 0); if (!l) return deny(c, 'Нет такого оружия', 'rel ' + m.k);
-        c.relT = r.t; l.n--;
+        c.relTok -= 1; l.n--;
         const aim = Array.isArray(m.aim) && m.aim.every(Number.isFinite) ? new THREE.Vector3(m.aim[0], m.aim[1], m.aim[2]) : null;
         const tgt = m.tg ? r.S.units.find((u) => u.id === +m.tg) || null : null;
         r.S.release(a, l.key, { aim, target: tgt });

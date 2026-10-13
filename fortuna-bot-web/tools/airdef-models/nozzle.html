@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Сопло ракеты</title>
+<style>body{margin:0;background:#9fb3c8;font:13px sans-serif}canvas{display:block}#l{position:fixed;left:8px;top:6px}</style></head>
+<body><div id="l"></div>
+<!-- Проверка точки сопла у моделей оружия: ?m=w_kh555&nz=0,-0.48,2.66 — модель с трёх сторон (сбоку, сзади, снизу), красная точка — сопло
+     (координаты модели игры: хвост — +Z). Снимок — tools/airdef-shots или вручную в браузере. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+const Q = new URLSearchParams(location.search), M = Q.get('m') || 'w_kh555', nz = (Q.get('nz') || '0,0,0').split(',').map(Number);
+document.getElementById('l').textContent = `${M} · сопло ${nz.join(', ')}`;
+const W = 1500, H = 500, r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); r.setScissorTest(true); document.body.appendChild(r.domElement);
+const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x445566, 1.1)); const dl = new THREE.DirectionalLight(0xffffff, 0.6); dl.position.set(3, 5, 2); sc.add(dl);
+fetch(`../../games/airdef/models/${M}.glb`).then((x) => x.arrayBuffer()).then((buf) => {
+  const dv = new DataView(buf), jl = dv.getUint32(12, true), j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bo = 28 + jl;
+  const T = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array };
+  const acc = (i) => { const a = j.accessors[i], bv = j.bufferViews[a.bufferView], C = T[a.componentType], n = { SCALAR: 1, VEC2: 2, VEC3: 3 }[a.type]; return new C(buf.slice(bo + (bv.byteOffset || 0) + (a.byteOffset || 0), bo + (bv.byteOffset || 0) + (a.byteOffset || 0) + a.count * n * C.BYTES_PER_ELEMENT)); };
+  const g0 = new THREE.Group();
+  for (const m of j.meshes) { const p = m.primitives[0], g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(acc(p.attributes.POSITION), 3)); g.setAttribute('normal', new THREE.BufferAttribute(acc(p.attributes.NORMAL), 3)); g.setIndex(new THREE.BufferAttribute(acc(p.indices), 1));
+    g0.add(new THREE.Mesh(g, new THREE.MeshPhongMaterial({ color: 0xd8dde2, side: THREE.DoubleSide, transparent: true, opacity: 0.75 }))); }
+  sc.add(g0);
+  const dot = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 12), new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false })); dot.position.set(...nz); dot.renderOrder = 9; sc.add(dot);
+  const ax = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 3, 6).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xff7700, depthTest: false })); ax.position.set(nz[0], nz[1], nz[2] + 1.5); ax.renderOrder = 9; sc.add(ax); // куда пойдёт факел
+  const b = new THREE.Box3().setFromObject(g0), c = b.getCenter(new THREE.Vector3()), L = b.max.z - b.min.z;
+  const views = [[new THREE.Vector3(L * 1.1, 0, 0), c.clone()], [new THREE.Vector3(0.4, 0.3, L * 0.9), new THREE.Vector3(c.x, c.y, b.max.z)], [new THREE.Vector3(0.01, -L * 1.1, 0), c.clone()]];
+  views.forEach(([off, at], i) => { const s = i === 1 ? 2.2 : L * 0.6, cam = new THREE.OrthographicCamera(-s, s, s * H / (W / 3), -s * H / (W / 3), 0.01, 100); cam.position.copy(at).add(off); cam.lookAt(at); r.setViewport(i * W / 3, 0, W / 3, H); r.setScissor(i * W / 3, 0, W / 3, H); r.render(sc, cam); });
+  window.__ok = 1;
+});
+</script></body></html>

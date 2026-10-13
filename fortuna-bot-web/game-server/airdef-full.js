@@ -23,6 +23,7 @@ ws.onmessage = (e) => {
   if (m.t === 'end') end = m;
 };
 send({ t: 'ping', i: 1 }); send({ t: 'hello', name: 'зенитчик', pid: 'test-full' });
+const pinger = setInterval(() => { try { send({ t: 'ping', i: 2 }); } catch (_) { /* закрыт */ } }, 2000); // как игра: пинг раз в 2 с (молчащее соединение сервер закрывает)
 // быстрый поиск: ещё четверо в очереди «Реализма» (двое — авиация, двое — любая) → комната 2 на 2 без ботов
 const qc = [];
 for (const [i, role] of [[1, 'air'], [2, 'air'], [3, 'any'], [4, 'any']].map(([i, r]) => [i, r])) {
@@ -46,5 +47,5 @@ check(`после итогов — снова лобби той же комна�
 check(`в лобби хост сменил игру на «Мульти-волну», эпоху и режим (${lobbyAgain && lobbyAgain.kind}, эп. ${lobbyAgain && lobbyAgain.era}, ${lobbyAgain && lobbyAgain.mode})`, lobbyAgain && lobbyAgain.kind === 'multi' && lobbyAgain.era === 3 && lobbyAgain.mode === 'real' && lobbyAgain.players.find((p) => p.id === me).team === 'west');
 check('пинг: сервер отвечает', pong >= 1);
 console.log(`  победила ${end ? end.winner : '?'}, уничтожено ${end ? Math.round(end.valueK * 100) : '?'}%, сбитий ${downs}, записей журнала сбитий ${kills}`);
-srv.kill();
+clearInterval(pinger); srv.kill();
 const bad = results.filter(([, ok]) => !ok); console.log(bad.length ? `ИТОГ: ошибок ${bad.length}` : 'ИТОГ: всё прошло'); Deno.exit(bad.length ? 1 : 0);

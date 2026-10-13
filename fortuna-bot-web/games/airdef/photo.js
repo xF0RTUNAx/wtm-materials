@@ -8,11 +8,12 @@
 // объекта (по горизонтали и вертикали), щипок, колесо и ＋/－ — ближе или дальше, «зум» — угол поля зрения.
 // ◎ прячет весь интерфейс (тап по экрану — вернуть); скорость ×1 / ×½ / ×¼ / стоп-кадр (камеру можно крутить и на стопе).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261020h';
-import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020h';
-import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020h';
-import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020h';
-import { fwdOf } from '../drone/sim/core.js?v=20261020h';
+import { mulberry32 } from './city.js?v=20261020i';
+import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020i';
+import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020i';
+import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020i';
+import { fwdOf } from '../drone/sim/core.js?v=20261020i';
+import { weaponHasModel } from './models.js?v=20261020i';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]
@@ -113,9 +114,9 @@ export function createPhoto(C, ctrls) {
       if (!u) { R.kind = 'hold'; R.look.set(0, 200, 0); R.cap = ''; return; }
       if (sub.id === 'unit') { unit(u.track ? 'цель на сопровождении' : u.reloadT > 0 ? `перезарядка ${Math.ceil(u.reloadT)} с` : 'поиск'); return; }
       if (sub.id === 'msl') { if (!showF(follow('msl', () => newest(S.sams, (m) => m.unit === u)), samCap)) { unit('ждём пуска'); R.fb = true; } return; }
-      if (sub.id === 'trk') { const t = u.track && !u.track.dead ? u.track : null; if (t) setMv(t, `Цель ${u.S.short}: ${t.W ? munCap(t, false) : `${t.carrierName || 'самолёт'} · ${kmh(t)} км/ч · ${hTxt(t.pos)}`}`); else { unit('целей нет'); R.fb = true; } return; }
+      if (sub.id === 'trk') { const t = u.track && !u.track.dead && (!u.track.W || weaponHasModel(u.track.key, u.track.W)) ? u.track : null; if (t) setMv(t, `Цель ${u.S.short}: ${t.W ? munCap(t, false) : `${t.carrierName || 'самолёт'} · ${kmh(t)} км/ч · ${hTxt(t.pos)}`}`); else { unit('целей нет'); R.fb = true; } return; }
       if (sub.id === 'plane') { if (!showF(follow('plane', () => { const ps = C.raid.alive().filter((a) => a.role !== 'decoy'); return ps.length ? ps[Math.floor(rnd() * ps.length)] : null; }), (a, dead) => `${a.carrierName || 'Ударник налёта'}${dead ? ' — сбит' : ` · ${kmh(a)} км/ч · ${hTxt(a.pos)}`}`)) { unit('ждём налёта'); R.fb = true; } return; }
-      if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(S.wpns, (w) => w.ev && !w.W.recon)), munCap)) { unit('ждём волну'); R.fb = true; } return; }
+      if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(S.wpns, (w) => w.ev && !w.W.recon && weaponHasModel(w.key, w.W))), munCap)) { unit('ждём волну'); R.fb = true; } return; }
       const o = st.targets[0]; setObj(o, u.pos, `${o.name} — прикрывает ${u.S.short}`); return;
     }
     // «Мульти-волна»
@@ -132,7 +133,7 @@ export function createPhoto(C, ctrls) {
     const wait = () => { const a = ev && ev.carriers.find((q) => !q.dead && !q.out); return a && a.phase === 'wait' ? `носитель вылетит через ${Math.ceil(a.delay)} с` : 'ждём пуска'; };
     if (sub.id === 'src') { if (!src()) { tgt(`${W.short}: ${wait()}`); R.fb = true; } return; }
     if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk && !w.decoy) || newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap)) { R.fb = true; if (!src()) tgt(`${W.short}: ${wait()}`); } return; }
-    if (sub.id === 'isam') { if (!showF(follow('isam', () => newest(C.S.sams, (m) => m.target && m.target.ev)), samCap)) { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap)) tgt('ПВО: пока не стреляли'); R.fb = true; } return; }
+    if (sub.id === 'isam') { if (!showF(follow('isam', () => newest(C.S.sams, (m) => m.target && m.target.ev)), samCap)) { if (!(weaponHasModel(st.mk, AG[st.mk]) && showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap))) tgt('ПВО: пока не стреляли'); R.fb = true; } return; }
     tgt();
   }
 
@@ -231,7 +232,7 @@ export function createPhoto(C, ctrls) {
   // ── бой ──
   const subsAir = () => {
     const A = ctrls.air, out = [{ id: 'ship', n: st.planeName }];
-    for (const l of A.loadout) { if (AG[l.key].kind === 'ecm') continue; l.st0.forEach((s, j) => out.push({ id: 'st', st: s, key: l.key, n: `${AG[l.key].short}${l.st0.length > 1 ? ' ' + (j + 1) : ''}` })); }
+    for (const l of A.loadout) { if (AG[l.key].kind === 'ecm' || !weaponHasModel(l.key, AG[l.key])) continue; /* без готовой модели — камеру не подводим */ l.st0.forEach((s, j) => out.push({ id: 'st', st: s, key: l.key, n: `${AG[l.key].short}${l.st0.length > 1 ? ' ' + (j + 1) : ''}` })); }
     return [...out, { id: 'sam', n: 'Ракета ПВО' }, { id: 'pvo', n: 'Комплекс ПВО' }, { id: 'tgt', n: 'Цель' }];
   };
   function newBattle() {
@@ -270,7 +271,7 @@ export function createPhoto(C, ctrls) {
       st.mk = it ? it[0] : null; st.via = it ? it[1] : null;
       if (st.mk) startEvMulti();
       const W = AG[st.mk] || { short: '—' };
-      st.subs = [...(st.via || (W.kind === 'tbm' && !W.air) ? [{ id: 'src', n: st.via ? CARRIERS[st.via].name : 'Пусковая' }] : []), { id: 'mun', n: W.short }, { id: 'isam', n: 'Ракета ПВО' }, { id: 'tgt', n: 'Цель' }];
+      st.subs = [...(st.via || (W.kind === 'tbm' && !W.air) ? [{ id: 'src', n: st.via ? CARRIERS[st.via].name : 'Пусковая' }] : []), ...(st.mk && weaponHasModel(st.mk, W) ? [{ id: 'mun', n: W.short }] : []), { id: 'isam', n: 'Ракета ПВО' }, { id: 'tgt', n: 'Цель' }];
     }
     if (st.subj >= st.subs.length) st.subj = 0;
     renderUi();

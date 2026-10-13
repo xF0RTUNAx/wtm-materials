@@ -20,7 +20,9 @@ async function client(name) {
       ws.onmessage = (e) => { const m = JSON.parse(e.data); c.msgs.push(m); if (c.on) c.on(m); };
       c.send = (m) => ws.send(JSON.stringify(m));
       c.wait = async (f, ms = 20000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const m = c.msgs.find(f); if (m) return m; await sleep(50); } return null; };
-      c.send({ t: 'hello', name, pid: 'test-' + name }); return c;
+      c.send({ t: 'hello', name, pid: 'test-' + name });
+      const pi = setInterval(() => { if (ws.readyState === 1) c.send({ t: 'ping', i: 1 }); else clearInterval(pi); }, 2000); // как игра: пинг раз в 2 с (молчащее соединение сервер закрывает)
+      return c;
     } catch (_) { await sleep(250); }
   }
   throw new Error('сервер не поднялся');

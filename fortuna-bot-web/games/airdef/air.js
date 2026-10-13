@@ -2,16 +2,16 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020h';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261020h';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261020h';
-import { applyLayout } from './layout.js?v=20261020h';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020h';
-import { DRONE } from '../drone/sim/modes.js?v=20261020h';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020h';
-import { predictBomb } from './sim/strike.js?v=20261020h';
-import { placeDefense, pickTargets } from './mission.js?v=20261020h';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020h';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020i';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261020i';
+import { planeModel, classOf, weaponMesh, podModel, weaponHasModel } from './models.js?v=20261020i';
+import { applyLayout } from './layout.js?v=20261020i';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020i';
+import { DRONE } from '../drone/sim/modes.js?v=20261020i';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020i';
+import { predictBomb } from './sim/strike.js?v=20261020i';
+import { placeDefense, pickTargets } from './mission.js?v=20261020i';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020i';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -219,8 +219,10 @@ export function createAir(C) {
   const BOMBK = new Set(['bomb', 'lgb', 'tvb', 'gps']), UPQ = V3();
   // самолёт «почти ровно»: верх смотрит вверх (крен и тангаж вместе — не больше 60° от вертикали)
   const levelOk = () => UPQ.set(0, 1, 0).applyQuaternion(craft.q || shipQ).y > 0.5;
+  let fireAt = 0; // онлайн: не чаще раза в 0,3 с (сервер принимает сброс с запасом на 2 подряд — бомба не пропадёт с пилона зря)
   function fire() {
     const l = curW(); if (!l || game.over || craft.dead) return;
+    if (game.net) { const now = performance.now(); if (now - fireAt < 300) return; fireAt = now; }
     const Wp = AG[l.key], opts = {};
     const no = (t) => { say(t); snd.deny(); };
     if (Wp.tv) {
@@ -470,7 +472,9 @@ export function createAir(C) {
     // «Реализм»: подвеска пуста (или мало ловушек/топлива) — метка точки вылета, где пополняются
     if (M.reload === 'home' && reloadable() && homeLeft > 0 && (needsRearm() || craft.cmFlare < M.cm * 0.5 || craft.fuel < 0.6)) {
       const p = proj(LP.set(home.x, home.y + 30, home.z));
-      if (p) { const d = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z); hx.strokeStyle = hx.fillStyle = '#86efac'; hx.beginPath(); hx.arc(p[0], p[1], 9, 0, 7); hx.moveTo(p[0] - 5, p[1]); hx.lineTo(p[0] + 5, p[1]); hx.moveTo(p[0], p[1] - 5); hx.lineTo(p[0], p[1] + 5); hx.stroke(); hx.fillText(`Пополнение ${(d / 1000).toFixed(1)}${d < 2500 ? ' · ниже 1500 м' : ''}`, p[0], p[1] - 13); }
+      const dh = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z), z0 = game.net ? game.net.zone : zn.Z;
+      if (!z0 || (!zn.fuel && !zn.ammo)) edgeArrow(LP.set(home.x, home.y + 30, home.z), `Точка вылета ${(dh / 1000).toFixed(1)} км`, '#86efac'); // зоны нет (или кончилась) — пополнение у точки вылета
+      if (p) { const d = dh; hx.strokeStyle = hx.fillStyle = '#86efac'; hx.beginPath(); hx.arc(p[0], p[1], 9, 0, 7); hx.moveTo(p[0] - 5, p[1]); hx.lineTo(p[0] + 5, p[1]); hx.moveTo(p[0], p[1] - 5); hx.lineTo(p[0], p[1] + 5); hx.stroke(); hx.fillText(`Пополнение ${(d / 1000).toFixed(1)}${d < 2500 ? ' · ниже 1500 м' : ''}`, p[0], p[1] - 13); }
     }
     for (const u of C.S.units) {
       if (u.dead) continue;
@@ -561,7 +565,7 @@ export function createAir(C) {
   function nextCam(to) { camMode = to ?? (camMode + 1) % 4; wc.obj = null; wc.init = false; say(`Камера: ${CAM_NAMES[camMode]}`, 1.4); }
   function pickWcam() {
     let best = null;
-    for (const w of C.S.wpns) if (!w.dead && w.owner === craft && (!best || w.id < best.id)) best = w; // раньше сброшенное — раньше упадёт
+    for (const w of C.S.wpns) if (!w.dead && w.owner === craft && weaponHasModel(w.key, w.W) && (!best || w.id < best.id)) best = w; // раньше сброшенное — раньше упадёт; без готовой модели — камеру не подводим
     if (best) return [best, 'w'];
     let bd = 1e12;
     for (const m of C.S.sams) if (!m.dead && m.target === craft) { const d = m.pos.distanceToSquared(craft.pos); if (d < bd) { bd = d; best = m; } }
@@ -651,7 +655,7 @@ export function createAir(C) {
     else C.op = { stage: 1, next: false };
     const cont = !!(C.op && C.op.stage === 2);
     if (C.op) setup.lo = cont ? setup.lo2 : setup.lo1;
-    const S = cont ? C.S : C.newBattle({ defSide: setup.side, era: setup.era, player: craft, rnd });
+    const S = cont ? C.S : C.newBattle({ defSide: setup.side, era: setup.era, player: craft, rnd, game: 'air' });
     if (cont) {
       C.player = craft;
       for (const m of S.sams) m.dead = true; for (const w of S.wpns) w.dead = true; S.flares.length = 0; // небо — чистое
@@ -752,11 +756,18 @@ export function createAir(C) {
     rearm();
     craft.cmFlare = m.cm.flare; craft.cmChaff = m.cm.chaff;
     const [x, y, z, yaw] = m.s;
-    craft.dead = false; craft.pos.set(x, y, z); craft.yaw = yaw; craft.pitch = 0; craft.roll = 0; craft.speed = 240; thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0; zoneReset();
-    craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
+    craft.dead = false; craft.pos.set(x, y, z); craft.yaw = yaw; craft.pitch = 0; craft.roll = 0; craft.speed = m.v || 240; thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0; zoneReset();
+    craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = m.hp ?? 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize();
     ship.visible = true; camMode = 0; camInit = false; game.over = false;
+    if (m.back) { say('Связь восстановлена — управление снова у вас', 3); snd.good(); return; } // самолёт вёл ИИ, пока не было связи
     say(`Вылет! Цели: ${game.targets.map((q) => q.name).join(', ')}. Вылетов в запасе: ${m.lives}`, 5);
+  }
+  // связь пропала — самолёт ведёт ИИ (без взрыва: он летит дальше); вернётся связь — управление снова у игрока (netSpawn back)
+  function netAI() {
+    if (craft.dead) return;
+    craft.dead = true; ship.visible = false;
+    spec.why = 'Связь пропала — самолёт ведёт ИИ. Управление вернётся, как только связь восстановится'; spec.t = 0; spec.init = false; say(spec.why, 5);
   }
   function netHit(hp, by) { if (craft.dead) return; craft.hp = hp; flashT = 0.35; snd.hit(); if (by) say(`Попадание: ${by}`, 1.5); }
   function netDown(why) {
@@ -845,6 +856,21 @@ export function createAir(C) {
     const txt = zn.it.zT > 0 ? `ПОПОЛНЕНИЕ ${Math.ceil(ZONE.STAY - zn.it.zT)} с — держитесь в зоне` : `Зона пополнения: ${(d / 1000).toFixed(1)} км${left ? ` · переезд через ${left} с` : ' · ждёт пополняющегося'} · топливо ${zn.fuel}, БК ${zn.ammo}`;
     hx.fillText(txt, C.VW / 2, C.VH - (IS_TOUCH ? 150 : 70)); hx.shadowBlur = 0;
     if (zn.it.zT <= 0) { const p = C.proj(fw.set(zx, city.groundH(zx, zz) + 300, zz)); if (p) { hx.strokeStyle = '#4ade80'; hx.lineWidth = 2; hx.beginPath(); hx.arc(p[0], p[1], 10, 0, 7); hx.stroke(); hx.fillStyle = '#bbf7d0'; hx.fillText('ПОПОЛНЕНИЕ', p[0], p[1] - 14); } }
+    const nd = zoneNeed(); if (zn.it.zT <= 0 && (nd.fuel || nd.ammo || (craft.fuel ?? 1) < 0.35)) edgeArrow(fw.set(zx, city.groundH(zx, zz) + 300, zz), `Пополнение ${(d / 1000).toFixed(1)} км`, '#4ade80'); // нужно пополниться — куда лететь
+  }
+  // стрелка у края экрана к точке, которой нет в кадре (за краем или позади): направление и подпись
+  const EA = new THREE.Vector3();
+  function edgeArrow(wp, label, col) {
+    const W = C.VW, H = C.VH, v = EA.copy(wp).project(C.camera), behind = v.z > 1;
+    let dx = (v.x + 1) / 2 * W - W / 2, dy = (1 - v.y) / 2 * H - H / 2;
+    if (!behind && Math.abs(dx) < W / 2 - 50 && Math.abs(dy) < H / 2 - 60) return; // в кадре — там своя метка
+    if (behind) { dx = -dx; dy = -dy; if (Math.abs(dx) + Math.abs(dy) < 1) dy = H; }
+    const mx = W / 2 - (IS_TOUCH ? 110 : 70), my = H / 2 - (IS_TOUCH ? 95 : 70), k = Math.min(mx / Math.max(1e-6, Math.abs(dx)), my / Math.max(1e-6, Math.abs(dy)));
+    const ax = W / 2 + dx * k, ay = H / 2 + dy * k, ang = Math.atan2(dy, dx), hx = C.hx, pulse = 0.75 + 0.25 * Math.sin(performance.now() / 180);
+    hx.save(); hx.translate(ax, ay); hx.rotate(ang); hx.globalAlpha = pulse; hx.fillStyle = col; hx.strokeStyle = 'rgba(0,0,0,.75)'; hx.lineWidth = 2;
+    hx.beginPath(); hx.moveTo(18, 0); hx.lineTo(-10, -12); hx.lineTo(-4, 0); hx.lineTo(-10, 12); hx.closePath(); hx.stroke(); hx.fill(); hx.restore();
+    hx.font = '700 12px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillStyle = col;
+    hx.fillText(label, ax - Math.cos(ang) * 34, ay - Math.sin(ang) * 26 + 4); hx.shadowBlur = 0;
   }
   function reloadOne(l) {
     const st = l.st0.find((q) => !l.st.includes(q)); if (st === undefined || !(l.res > 0)) return;
@@ -973,7 +999,7 @@ export function createAir(C) {
     // «Съёмка»: модель самолёта и подвеска (пилоны — userData.st), поставить модель в точку самолёта до кадра
     ship, pylons: () => pylonMeshes, poseShip() { ship.position.copy(craft.pos); ship.rotation.set(craft.pitch, craft.yaw, craft.roll, 'YXZ'); ship.updateMatrixWorld(true); },
     get hasPod() { return hasPod; }, get sel() { return sel; }, get mapOn() { return mapOn; }, curW,
-    start, stop, update, hud, onKey, finish, camera: updateCamera, startNet, netSpawn, netHit, netDown, focus: () => craft.pos, afterRender: renderPod, extraCam: () => (pod.show && hasPod && craft && !craft.dead ? podCam : null),
+    start, stop, update, hud, onKey, finish, camera: updateCamera, startNet, netSpawn, netHit, netDown, netAI, focus: () => craft.pos, afterRender: renderPod, extraCam: () => (pod.show && hasPod && craft && !craft.dead ? podCam : null),
     resize() { layoutTouch(); layoutPod(); },
     pauseHelp: () => (IS_TOUCH ? `${aimOn() ? 'Ведите пальцем по экрану — камера поворачивается, самолёт летит туда, куда она смотрит (белый кружок). Крестовина — точные крен и тангаж.' : 'Левая половина экрана — ручка.'} «ГАЗ» — ступени, после 100 % — форсаж. «ЛОВУШКИ» — ЛТЦ и диполи разом. Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно контейнера (тап по окну — увеличение). Контейнер захватывает цель сам: 1–18 км, высота от 400 м, цель не закрыта домами.`
       : 'Стрелки — тангаж и крен · A/D — крен · W/S — газ ступенями (после 100 % — форсаж) · Shift — форсаж вкл/выкл · Пробел/F — сброс · Q — оружие · V — камера · N — камера за оружием<br>Контейнер захватывает цель сам (1–18 км, высота от 400 м, цель не закрыта домами) · R — следующая цель · G — окно контейнера · Z — увеличение · O — лазер<br>X — ловушки (ЛТЦ и диполи) · M — карта · Esc — пауза'),
