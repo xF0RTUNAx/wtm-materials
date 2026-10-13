@@ -2,16 +2,16 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020e';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261020e';
-import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261020e';
-import { applyLayout } from './layout.js?v=20261020e';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020e';
-import { DRONE } from '../drone/sim/modes.js?v=20261020e';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020e';
-import { predictBomb } from './sim/strike.js?v=20261020e';
-import { placeDefense, pickTargets } from './mission.js?v=20261020e';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020e';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261020f';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261020f';
+import { planeModel, classOf, weaponMesh, podModel } from './models.js?v=20261020f';
+import { applyLayout } from './layout.js?v=20261020f';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261020f';
+import { DRONE } from '../drone/sim/modes.js?v=20261020f';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261020f';
+import { predictBomb } from './sim/strike.js?v=20261020f';
+import { placeDefense, pickTargets } from './mission.js?v=20261020f';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261020f';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -55,7 +55,7 @@ export function createAir(C) {
     for (const m of pylonMeshes) ship.remove(m);
     pylonMeshes.length = 0;
     for (const l of loadout) for (const st of l.st) {
-      const m = weaponMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat); const p = stations[st], W0 = AG[l.key].vis; m.position.set(p.x, p.y - W0.r - 0.05, p.z);
+      const m = weaponMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat); const p = stations[st], W0 = AG[l.key].vis; m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang — у ракет с гондолой под корпусом
       m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); // во внутренних отсеках — не видно
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); } // LITENING или цилиндр

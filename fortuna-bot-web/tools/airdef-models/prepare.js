@@ -37,6 +37,7 @@ const CONFIG = {
   w_fab500: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
   w_kh29t: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /ru_kh-29/ }, // Х-29 из набора
   w_kh31p: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /w_lasm/ }, // Х-31 из набора
+  w_kh59m: { src: `${DL}/su-30mk2_with_kh-59m.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 512, target: 9000, pickMesh: /Object_4[56]$/ }, // Х-59М из «Su-30MK2 with Kh-59M» (Jeyhun1985) — правая ракета под крылом
   w_kh25ml: { src: `${DL}/kh-38mt_air-to-ground_missile.glb`, scale: 3.7 / 4.17, nose: '+x', tex: () => 512, target: 7000, pickMesh: /./ }, // Х-38МТ — вместо Х-25МЛ (та же компоновка)
   w_agm65b: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM65 Maverick/ },
   w_mk82: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 2.22 / 2.9, nose: '-x', tex: () => 256, pickMesh: /Mk83 bomb/ }, // Mk 83 → размер Mk 82

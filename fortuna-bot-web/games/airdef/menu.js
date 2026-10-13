@@ -1,17 +1,17 @@
 // Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
 // рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261020e';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020e';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020e';
-import { MODES } from './sim/strike.js?v=20261020e';
-import { WEATHERS } from '../drone/world.js?v=20261020e';
-import { LESSONS } from './training.js?v=20261020e';
-import { MODEL_CREDITS } from './models.js?v=20261020e';
-import { openLayoutEditor } from './layout.js?v=20261020e';
+import { CITY } from './city.js?v=20261020f';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020f';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020f';
+import { MODES } from './sim/strike.js?v=20261020f';
+import { WEATHERS } from '../drone/world.js?v=20261020f';
+import { LESSONS } from './training.js?v=20261020f';
+import { MODEL_CREDITS } from './models.js?v=20261020f';
+import { openLayoutEditor } from './layout.js?v=20261020f';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020e';
-import { photoItems } from './photo.js?v=20261020e';
-import { guideChapters } from './guide.js?v=20261020e';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020f';
+import { photoItems } from './photo.js?v=20261020f';
+import { guideChapters } from './guide.js?v=20261020f';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -180,7 +180,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       e_su25: ['Су-25', 'СССР / Россия · бронированный штурмовик: ФАБ-500, Х-29Т, Х-25МЛ (у Су-25Т — встроенный «Шквал»).'],
       su30: ['Су-30', 'Россия · двухместный многоцелевой: КАБ-500, УМПК.'],
       mig29: ['МиГ-29СМТ', 'Россия · лёгкий фронтовой: ПРР Х-31П.'],
-      e_su34: ['Су-34', 'Россия · фронтовой бомбардировщик, встроенный прицельный комплекс «Платан»: КАБ-500С, УМПК, Х-59МК2, Х-31П.'],
+      e_su34: ['Су-34', 'Россия · фронтовой бомбардировщик, встроенный прицельный комплекс «Платан»: КАБ-500С, УМПК, Х-59М, Х-31П.'],
       e_mig31: ['МиГ-31БМ', 'Россия · перехватчик, в модернизации — ПРР Х-31П против ПВО.'],
       e_su57: ['Су-57', 'Россия · малозаметный: оружие во внутренних отсеках (Х-59МК2 создавалась под них), выходит из отсека при пуске.'],
       e_f4: ['F-4 Phantom II', 'США · «Дикая ласка» F-4G — охотник за ПВО: Shrike, HARM.'],

@@ -1,7 +1,7 @@
 // Руководство «Воздушного превосходства» (вкладка меню): режимы, механики, управление, обозначения и каждый юнит.
 // Пишется для игрока — что это и как работает, без точных внутренних чисел игры. Списки юнитов строятся из arsenal.js,
 // чтобы не расходиться с игрой; описание каждого — guide из арсенала + общие советы по типу.
-import { AG, SAM, ERAS, LOADOUTS, PLANES, CARRIERS, MULTI, SAM_TYPE } from './arsenal.js?v=20261020e';
+import { AG, SAM, ERAS, LOADOUTS, PLANES, CARRIERS, MULTI, SAM_TYPE } from './arsenal.js?v=20261020f';
 
 const era = (e) => (ERAS[e - 1] ? ERAS[e - 1].short : e);
 const li = (a) => a.map((t) => `<li>${t}</li>`).join('');

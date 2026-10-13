@@ -54,6 +54,15 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Su-30MK2 with Kh-59M",
+  "author": "Jeyhun1985",
+  "url": "https://sketchfab.com/3d-models/su-30mk2-with-kh-59m-d7dd73091bd3499ca0f6a1d079074bf2",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_kh59m"
+  ]
+ },
+ {
   "title": "Kh-38MT air-to-ground missile",
   "author": "Jeyhun1985",
   "url": "https://sketchfab.com/3d-models/kh-38mt-air-to-ground-missile-559e695e8ade454eb575745cc1213ab9",

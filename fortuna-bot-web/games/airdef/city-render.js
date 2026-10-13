@@ -11,10 +11,10 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261020e';
-import { part, mergeParts, M } from '../drone/models.js?v=20261020e';
-import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261020e';
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261020e'; // MIT, meshoptimizer 0.21
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261020f';
+import { part, mergeParts, M } from '../drone/models.js?v=20261020f';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261020f';
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261020f'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -40,7 +40,7 @@ function loadCityTextures(aniso) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
-    fetch(new URL(`./tex/${f}.jpg?v=20261020e`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261020f`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { t.image = bmp; t.needsUpdate = true; if (--left === 0) TEX.uTexOn.value = 1; })
       .catch((e) => console.warn('текстура не загрузилась:', e.message));
   }

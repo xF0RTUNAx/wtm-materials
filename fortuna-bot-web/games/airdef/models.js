@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261020e';
+import { CREDITS } from './models/credits.js?v=20261020f';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -72,7 +72,8 @@ const META = {
   w_fab500: { weapon: 'fab500', stations: [] }, // ФАБ-500М-62 — Jeyhun1985 (модель с УМПК, комплект снят)
   w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29 — Russian weapon pack, Rhine_Lab_Muelsyse
-  w_kh31p: { weapon: 'kh31p', stations: [] }, // Х-31 — Russian weapon pack
+  w_kh31p: { weapon: 'kh31p', stations: [] },
+  w_kh59m: { weapon: 'kh59m', lazy: true, stations: [] }, // Х-59М — из «Su-30MK2 with Kh-59M», Jeyhun1985 // Х-31 — Russian weapon pack
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-38МТ — Jeyhun1985 (вместо Х-25МЛ: та же схема)
   w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65 — набор NETRUNNER_pl
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 83 → размер Mk 82 — набор NETRUNNER_pl

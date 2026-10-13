@@ -8,6 +8,7 @@
 - "General Dynamics F-16D Block 60" (https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3) by Muhamad Mirza Arrafi — CC-BY-4.0 — `f16.glb`, `w_gbu12.glb`
 - "FAB-500 M62" (https://sketchfab.com/3d-models/fab-500-m62-9f49025bbd8d487cb3c245e40a07ab57) by Jeyhun1985 — CC-BY-4.0 — `w_umpk.glb`, `w_fab500.glb`
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_kh29t.glb`, `w_kh31p.glb`, `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
+- "Su-30MK2 with Kh-59M" (https://sketchfab.com/3d-models/su-30mk2-with-kh-59m-d7dd73091bd3499ca0f6a1d079074bf2) by Jeyhun1985 — CC-BY-4.0 — `w_kh59m.glb`
 - "Kh-38MT air-to-ground missile" (https://sketchfab.com/3d-models/kh-38mt-air-to-ground-missile-559e695e8ade454eb575745cc1213ab9) by Jeyhun1985 — CC-BY-4.0 — `w_kh25ml.glb`
 - "AGM 65 MAVERICK" (https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a) by HEAVYCLOUD — CC-BY-4.0 — `w_agm65b.glb`
 - "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`, `aam_aim9.glb`, `aam_aim54.glb`, `w_jsow.glb`

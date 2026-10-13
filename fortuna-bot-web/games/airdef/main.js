@@ -8,27 +8,27 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261020e';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020e';
-import { createPipeline } from '../drone/post.js?v=20261020e';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020e';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020e';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020e';
-import { createStrike, MODES } from './sim/strike.js?v=20261020e';
-import { createRaid } from './sim/raid.js?v=20261020e';
-import { POD } from './sim/combined.js?v=20261020e';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020e';
-import { slotCount } from './launchers.js?v=20261020e';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020e';
-import { createSound } from './sound.js?v=20261020e';
-import { createAir } from './air.js?v=20261020e';
-import { createDefense } from './defense.js?v=20261020e';
-import { createDirector } from './director.js?v=20261020e';
-import { createOnline } from './online.js?v=20261020e';
-import { createShell } from './shell.js?v=20261020e';
-import { createTraining, LESSONS } from './training.js?v=20261020e';
-import { createPhoto } from './photo.js?v=20261020e';
-import { createMenu } from './menu.js?v=20261020e';
+import { buildCity, CITY } from './city.js?v=20261020f';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020f';
+import { createPipeline } from '../drone/post.js?v=20261020f';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020f';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020f';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020f';
+import { createStrike, MODES } from './sim/strike.js?v=20261020f';
+import { createRaid } from './sim/raid.js?v=20261020f';
+import { POD } from './sim/combined.js?v=20261020f';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020f';
+import { slotCount } from './launchers.js?v=20261020f';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020f';
+import { createSound } from './sound.js?v=20261020f';
+import { createAir } from './air.js?v=20261020f';
+import { createDefense } from './defense.js?v=20261020f';
+import { createDirector } from './director.js?v=20261020f';
+import { createOnline } from './online.js?v=20261020f';
+import { createShell } from './shell.js?v=20261020f';
+import { createTraining, LESSONS } from './training.js?v=20261020f';
+import { createPhoto } from './photo.js?v=20261020f';
+import { createMenu } from './menu.js?v=20261020f';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -398,7 +398,7 @@ function hangLoad(g, stations, load) {
   const out = []; let oi = 0;
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
     const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = weaponMesh(l.key, W, weaponGeo, wMat);
-    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - W.vis.r - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» — под фюзеляжем по оси
+    m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» — под фюзеляжем по оси
   }
   return out;
 }
