@@ -8,27 +8,28 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261020f';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020f';
-import { createPipeline } from '../drone/post.js?v=20261020f';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020f';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020f';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020f';
-import { createStrike, MODES } from './sim/strike.js?v=20261020f';
-import { createRaid } from './sim/raid.js?v=20261020f';
-import { POD } from './sim/combined.js?v=20261020f';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020f';
-import { slotCount } from './launchers.js?v=20261020f';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020f';
-import { createSound } from './sound.js?v=20261020f';
-import { createAir } from './air.js?v=20261020f';
-import { createDefense } from './defense.js?v=20261020f';
-import { createDirector } from './director.js?v=20261020f';
-import { createOnline } from './online.js?v=20261020f';
-import { createShell } from './shell.js?v=20261020f';
-import { createTraining, LESSONS } from './training.js?v=20261020f';
-import { createPhoto } from './photo.js?v=20261020f';
-import { createMenu } from './menu.js?v=20261020f';
+import { buildCity, CITY } from './city.js?v=20261020g';
+import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020g';
+import { createPipeline } from '../drone/post.js?v=20261020g';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020g';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020g';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020g';
+import { createStrike, MODES } from './sim/strike.js?v=20261020g';
+import { createRaid } from './sim/raid.js?v=20261020g';
+import { POD } from './sim/combined.js?v=20261020g';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020g';
+import { slotCount } from './launchers.js?v=20261020g';
+import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, anyModel, setWings } from './models.js?v=20261020g';
+import { createSound } from './sound.js?v=20261020g';
+import { createAir } from './air.js?v=20261020g';
+import { createDefense } from './defense.js?v=20261020g';
+import { createDirector } from './director.js?v=20261020g';
+import { createMenuBg } from './menubg.js?v=20261020g';
+import { createOnline } from './online.js?v=20261020g';
+import { createShell } from './shell.js?v=20261020g';
+import { createTraining, LESSONS } from './training.js?v=20261020g';
+import { createPhoto } from './photo.js?v=20261020g';
+import { createMenu } from './menu.js?v=20261020g';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -675,7 +676,7 @@ C.toMenu = function () {
   for (const c of ['playing', 'flying', 'defense', 'dmap', 'oper']) document.body.classList.remove(c);
   document.body.classList.add('menuing');
   hx.setTransform(1, 0, 0, 1, 0, 0); hx.clearRect(0, 0, hc.width, hc.height);
-  C.state = 'menu'; C.shell.play(false); C.ctrl = ctrls.director; C.ctrl.start(); C.menu.show();
+  C.state = 'menu'; C.shell.play(false); C.ctrl = ctrls.menuBg.has() ? ctrls.menuBg : ctrls.director; C.ctrl.start(); C.menu.show(); // фон: кадры, если есть, иначе живой бой
   resize();
 };
 C.togglePause = function () {
@@ -756,13 +757,15 @@ function frame(now) {
   // телефон: 60 к/с — только в полёте за самолёт; оборона, мульти-волна, карта, оператор и наблюдение — 30 к/с (камера там
   // медленная, а нагрев и расход батареи вдвое меньше). Свой предел из «Кастомного» — главнее
   const cc = C.ctrl, fly = !!(cc && (cc.craft || cc.fps60 || (cc.inner && cc.inner.craft))); // «Съёмка» — тоже 60
-  const capMs = C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / (fly ? 60 : 30) : 0;
+  const idle = !!(cc && cc.idle && cc.idle()); // фон меню — готовые кадры: 3D не рисуется
+  const capMs = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / (fly ? 60 : 30) : 0;
   if (capMs && now - lastDraw < capMs - 2) return;
   const ms = now - lastDraw; lastDraw = now;
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр
   const dt = clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным
   C.t = t;
   const ctrl = C.ctrl;
+  if (idle) { hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH); updateSound(dt); $('perf').textContent = ''; return; } // меню на кадрах: ни боя, ни 3D
   const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза — только меню), бой считает сервер
   // «Съёмка»: замедление и стоп-кадр (ctrl.dtK) — бой идёт медленнее, камера — как обычно
   const dts = dt * (ctrl && ctrl.dtK && !online ? ctrl.dtK() : 1);
@@ -829,7 +832,7 @@ setTimeout(() => {
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);
   ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
-  ctrls.director = createDirector(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
+  ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
   resize();

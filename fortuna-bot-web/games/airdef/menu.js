@@ -1,17 +1,17 @@
-// Главное меню (карточка в стиле «Симулятора Летки»): режимы, вкладки «Бой», «Арсенал», «Руководство», «Настройки»,
-// рекорды и советы. Фон за карточкой — живой бой (director.js).
-import { CITY } from './city.js?v=20261020f';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020f';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020f';
-import { MODES } from './sim/strike.js?v=20261020f';
-import { WEATHERS } from '../drone/world.js?v=20261020f';
-import { LESSONS } from './training.js?v=20261020f';
-import { MODEL_CREDITS } from './models.js?v=20261020f';
-import { openLayoutEditor } from './layout.js?v=20261020f';
+// Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
+// Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
+import { CITY } from './city.js?v=20261020g';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020g';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020g';
+import { MODES } from './sim/strike.js?v=20261020g';
+import { WEATHERS } from '../drone/world.js?v=20261020g';
+import { LESSONS } from './training.js?v=20261020g';
+import { MODEL_CREDITS } from './models.js?v=20261020g';
+import { openLayoutEditor } from './layout.js?v=20261020g';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020f';
-import { photoItems } from './photo.js?v=20261020f';
-import { guideChapters } from './guide.js?v=20261020f';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020g';
+import { photoItems } from './photo.js?v=20261020g';
+import { guideChapters } from './guide.js?v=20261020g';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -46,13 +46,15 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
 
   function renderModeSel() {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
+    const G = GAMES.find((g) => g.k === setup.game) || GAMES[0]; // «папка задания»: режим и что в нём делать
+    $('mpKind').textContent = G.name; $('mpTitle').textContent = G.desc[0].toUpperCase() + G.desc.slice(1);
     $('startBtn').textContent = setup.game === 'online' ? C.online.primaryText() : setup.game === 'training' ? 'НАЧАТЬ УРОК' : setup.game === 'photo' ? 'СНИМАТЬ' : setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk') ? 'К РАССТАНОВКЕ' : setup.game === 'multi' ? 'К ПЛАНУ ВОЛНЫ' : 'ВЗЛЁТ';
   }
   // пройденные уроки по id; записи прежнего обучения («air0»… — по номеру) переносятся на те же уроки нового учебника
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
   $('modeSel').onclick = (e) => {
-    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save();
+    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save(); if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
     if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
     render();
@@ -60,11 +62,12 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function renderPlay() {
     const g = setup.game, el = $('tab-play');
     if (g === 'online') { C.online.panel(el); return; } // онлайн — свой раздел (online.js)
+    if (g === 'training' && !setup.tlist) { el.innerHTML = renderFirst(); return; } // «Первые шаги»
     if (g === 'training') {
       const done = lessonsDone(), list = LESSONS[setup.tside];
       // учебник: уроки по разделам («Основы», «Системы», «Бомбы»… / «Оборона», «Комплексы»…), номер — сквозной
       const mw = setup.tside === 'matk' || setup.tside === 'mdef'; // учебник «Мульти-волны» — свои две ветки
-      let h = `<div class="prow"><span>Учебник</span>${seg('tbook', mw ? 'multi' : 'base', [['base', 'Вылет и оборона'], ['multi', 'Мульти-волна']])}</div>
+      let h = `<p class="hint"><button class="fsl" data-fs="wiz">‹ Первые шаги — подобрать урок по ответам</button></p><div class="prow"><span>Учебник</span>${seg('tbook', mw ? 'multi' : 'base', [['base', 'Вылет и оборона'], ['multi', 'Мульти-волна']])}</div>
         <div class="prow"><span>Сторона</span>${seg('tside', setup.tside, mw ? [['matk', 'За волну'], ['mdef', 'За ПВО']] : [['air', 'За самолёт'], ['def', 'За ПВО']])}</div>`, sec = null;
       list.forEach((l, i) => {
         if (l.sec !== sec) { sec = l.sec; const n = list.filter((q) => q.sec === sec).length, k = list.filter((q) => q.sec === sec && done[q.id]).length; h += `<div class="cat-h">${sec} <span class="dim">${k}/${n}</span></div>`; }
@@ -139,6 +142,40 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     }
     return h + `<p class="hint">${C.IS_TOUCH ? 'Тяните по экрану — камера вокруг объекта, два пальца — ближе/дальше.' : 'Мышь — вокруг объекта, колесо — ближе/дальше, ←/→ ракурс, ↑/↓ объект, H — спрятать интерфейс.'} Внизу — что снимать и ракурс, справа — зум, скорость (×½, ×¼, стоп-кадр) и ◎ — убрать весь интерфейс (тап по экрану вернёт).</p>`;
   }
+  // «Первые шаги» в обучении: за кого → опыт → первый урок по ответам (решение Mark 2026-10-13). Ответ про опыт ведёт к
+  // уроку: впервые — с самого начала, немного — к оружию, уверенно — к защите от ПВО (у ПВО — к защите от ПРР)
+  const FIRST = {
+    air: { q: 'Вы уже летали в авиасимуляторах?', a: [['ctl', 'Нет, впервые', 'начнём с управления самолётом'], ['bomb', 'Да, немного', 'сразу к бомбам и ракетам'], ['evade', 'Да, уверенно', 'к уклонению от ракет ПВО']] },
+    def: { q: 'Вы уже играли за ПВО в похожих играх?', a: [['d_plan', 'Нет, впервые', 'начнём с расстановки комплексов'], ['d_op', 'Да, немного', 'сразу к стрельбе из комплекса'], ['d_arm', 'Да, уверенно', 'к защите от противорадарных ракет']] },
+    multi: { q: 'Что хотите освоить в «Мульти-волне»?', a: [['matk', 'Собирать удар', 'дроны, крылатые ракеты, баллистика'], ['mdef', 'Отбивать удар', 'ПВО против волны']] },
+  };
+  const fs = { side: null, pick: null };
+  function renderFirst() {
+    const SN = { air: 'Самолёт', def: 'ПВО', multi: 'Мульти-волна' }, step = !fs.side ? 0 : fs.pick === null ? 1 : 2;
+    const chip = (t, k) => `<span class="fsc ${k}">${t}</span>`;
+    let h = `<div class="fsh">${chip(fs.side ? SN[fs.side] + ' ✓' : 'За кого', step === 0 ? 'on' : 'ok')}${chip(fs.side === 'multi' ? 'Роль' : 'Опыт', step === 1 ? 'on' : step > 1 ? 'ok' : '')}${chip('Первый урок', step === 2 ? 'on' : '')}<button class="fsl" data-fs="list">Все уроки</button></div>`;
+    if (step === 0) h += `<div class="fsq">За кого хотите научиться играть?</div>` + [['air', 'Самолёт', 'прорваться через ПВО и поразить цели'], ['def', 'ПВО', 'защитить город от налётов'], ['multi', 'Мульти-волна', 'дроны, ракеты и баллистика']].map(([k, n, d]) => `<button class="fso" data-fs="side:${k}"><b>${n}</b><span>${d}</span></button>`).join('');
+    else if (step === 1) h += `<div class="fsq">${FIRST[fs.side].q}</div>` + FIRST[fs.side].a.map(([, n, d], i) => `<button class="fso" data-fs="pick:${i}"><b>${n}</b><span>${d}</span></button>`).join('') + '<button class="fsl" data-fs="back">‹ Назад</button>';
+    else {
+      const L = LESSONS[setup.tside][setup.tl] || LESSONS[setup.tside][0];
+      h += `<div class="fsq">Ваш первый урок</div><div class="opt on"><div class="nm"><b>${L.name}</b><span>${L.desc}</span></div></div>
+        <p class="hint">Урок короткий, проиграть нельзя: сначала объяснение, потом показ, потом вы. Дальше уроки идут по порядку — список в «Все уроки».</p><button class="fsl" data-fs="reset">Ответить заново</button>`;
+    }
+    return h;
+  }
+  function firstClick(v) {
+    if (v === 'list') { setup.tlist = true; save(); return; }
+    if (v === 'wiz') { setup.tlist = false; fs.side = null; fs.pick = null; save(); return; }
+    if (v === 'reset') { fs.side = null; fs.pick = null; return; }
+    if (v === 'back') { fs.side = null; return; }
+    const [k, x] = v.split(':');
+    if (k === 'side') { fs.side = x; fs.pick = null; return; }
+    if (k === 'pick') {
+      fs.pick = +x; const [id] = FIRST[fs.side].a[fs.pick];
+      const side = fs.side === 'multi' ? id : fs.side, list = LESSONS[side], i = fs.side === 'multi' ? 0 : list.findIndex((l) => l.id === id);
+      setup.tside = side; setup.tl = Math.max(0, i); save();
+    }
+  }
   // «Мульти-волна» отдельно: роль, сторона игрока, эпоха (есть ли у атакующих чем ударить), что ждёт
   function renderMulti() {
     const atk = setup.mrole === 'atk', me = setup.side, att = atk ? me : me === 'east' ? 'west' : 'east', def = att === 'east' ? 'west' : 'east';
@@ -162,6 +199,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   }
   $('tab-play').onclick = (e) => {
     if (setup.game === 'online') { C.online.onClick(e); return; }
+    const f = e.target.closest('[data-fs]'); if (f) { firstClick(f.dataset.fs); snd.click(); render(); return; }
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
@@ -290,10 +328,15 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sFs') C.shell.setFs(e.target.checked);
     if (e.target.id === 'sMute') { snd.unlock(); snd.setMuted(!e.target.checked); $('mute').textContent = snd.muted ? '✕♪' : '♪'; }
   };
-  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; tab = b.dataset.tab; showTab(); };
+  // Арсенал / Справка / Настройки / Об игре — панель поверх меню; повторное касание, ✕ или Esc — закрыть
+  const SHEET = { ref: 'Арсенал', guide: 'Справка', set: 'Настройки', misc: 'Об игре' };
+  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; snd.click(); showTab(); };
+  $('msClose').onclick = () => { tab = 'play'; snd.click(); showTab(); };
+  addEventListener('keydown', (e) => { if (e.code === 'Escape' && C.state === 'menu' && tab !== 'play') { tab = 'play'; showTab(); } });
   function showTab() {
     for (const b of $('mtabs').querySelectorAll('button')) b.classList.toggle('on', b.dataset.tab === tab);
-    for (const t of ['play', 'ref', 'guide', 'set', 'misc']) $('tab-' + t).classList.toggle('on', t === tab);
+    for (const t of ['play', 'ref', 'guide', 'set', 'misc']) $('tab-' + t).classList.toggle('on', t === tab || t === 'play');
+    document.body.classList.toggle('msheetOn', tab !== 'play'); $('msTitle').textContent = SHEET[tab] || '';
     if (tab === 'set') renderSet(); if (tab === 'misc') renderMisc();
   }
   // ── рекорды, советы ──

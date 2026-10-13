@@ -9,19 +9,19 @@
 // вертикальном), чтобы ракета и пусковая не прятались под ней. Внизу справа — подпись, что сейчас в кадре.
 // Раз в несколько минут бой начинается заново (город восстанавливается).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261020f';
-import { SAM_TYPE, AG, PLANES, raidPlane } from './arsenal.js?v=20261020f';
-import { planeModel, classOfRole } from './models.js?v=20261020f';
-import { fwdOf } from '../drone/sim/core.js?v=20261020f';
-import { placeDefense, pickTargets } from './mission.js?v=20261020f';
-import { LNCH, trainable } from './launchers.js?v=20261020f';
+import { mulberry32 } from './city.js?v=20261020g';
+import { SAM_TYPE, AG, PLANES, raidPlane } from './arsenal.js?v=20261020g';
+import { planeModel, classOfRole } from './models.js?v=20261020g';
+import { fwdOf } from '../drone/sim/core.js?v=20261020g';
+import { placeDefense, pickTargets } from './mission.js?v=20261020g';
+import { LNCH, trainable } from './launchers.js?v=20261020g';
 
 export function createDirector(C) {
   const { camera, city } = C;
   const V3 = () => new THREE.Vector3();
   let rnd = Math.random, targets = [], wave = 1, battleT = 0, shot = null, events = [], caption = '', capT = 0, pending = null, era = 2, side = 'east';
   const camPos = V3(), look = V3(), lookS = V3(), TMP = V3(), F = V3(), RT = V3(), OFF = V3(), BX = new THREE.Box3();
-  const fade = document.getElementById('fade'), card = document.getElementById('menu').querySelector('.card');
+  const fade = document.getElementById('fade'), menuEl = document.getElementById('menu'), rail = menuEl.querySelector('.mrail'), card = menuEl.querySelector('.mpanel');
   const sizeOf = new Map(); // полуразмер машины (с пусковыми) — для планов у пусковой
   function unitR(u) {
     if (sizeOf.has(u.id)) return sizeOf.get(u.id);
@@ -222,12 +222,13 @@ export function createDirector(C) {
   function frameFree() {
     const VW = C.VW, VH = C.VH, r = card && card.getBoundingClientRect ? card.getBoundingClientRect() : null;
     if (!(VW > 1 && VH > 1)) { camera.clearViewOffset(); return; } // окно ещё без размера (страница открыта в фоне) — без смещения
+    const q = rail && rail.getBoundingClientRect ? rail.getBoundingClientRect() : null; // меню: слева — режимы, справа (снизу) — задание
     if (VW >= VH) {
-      const x0 = r && r.width ? Math.min(VW * 0.62, Math.max(0, (r.right ?? r.left + r.width) + 8)) : VW * 0.4, Wf = VW - x0;
+      const x0 = q && q.width ? q.left + q.width : VW * 0.2, x1 = r && r.width ? r.left - 8 : VW * 0.6, Wf = Math.max(VW * 0.25, x1 - x0);
       camera.aspect = Wf / VH; camera.setViewOffset(Wf, VH, -x0, 0, VW, VH);
     } else {
-      const y1 = r && r.height ? Math.max(VH * 0.35, r.top - 8) : VH * 0.6;
-      camera.aspect = VW / y1; camera.setViewOffset(VW, y1, 0, 0, VW, VH);
+      const y0 = q && q.height ? q.top + q.height : 0, y1 = r && r.height ? Math.max(y0 + VH * 0.2, r.top - 8) : VH * 0.6, Hf = y1 - y0;
+      camera.aspect = VW / Hf; camera.setViewOffset(VW, Hf, 0, -y0, VW, VH);
     }
   }
   function cameraUpdate(dt) {
@@ -251,23 +252,13 @@ export function createDirector(C) {
     camera.up.set(0, 1, 0); camera.lookAt(lookS);
     capT += dt;
   }
-  function hud() {
-    if (!caption) return;
-    const hx = C.hx, VW = C.VW, VH = C.VH, a = Math.min(1, capT * 2);
-    hx.font = '600 12px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'right'; hx.fillStyle = `rgba(255,255,255,${0.8 * a})`;
-    hx.shadowColor = 'rgba(0,0,0,.8)'; hx.shadowBlur = 4;
-    // на вертикальном экране снизу карточка — подпись над ней
-    const r = VW < VH && card && card.getBoundingClientRect ? card.getBoundingClientRect() : null;
-    const y = r && r.height ? r.top - 10 : VH - 16;
-    hx.fillText(caption, VW - 16, y); hx.shadowBlur = 0;
-    if (navEl) navEl.style.bottom = (VH - y + 10) + 'px'; // кнопки — над подписью
-  }
+  function hud() {} // без подписи кадра (решение Mark 2026-10-13: в меню нет плашек с названием техники)
   // кнопки ◀ ▶ поверх меню
   const navEl = document.getElementById('promoNav');
   if (navEl) navEl.addEventListener('click', (e) => { const b = e.target.closest('[data-nav]'); if (b) nav(+b.dataset.nav); });
   return {
     sim: true,
-    start() { newBattle(); if (navEl) navEl.style.display = 'flex'; },
+    start() { newBattle(); },
     near: () => (shot && shot.near) || 0,
     nav,
     stop() { if (navEl) navEl.style.display = 'none'; camera.clearViewOffset(); camera.aspect = C.VW / C.VH; camera.updateProjectionMatrix(); fade.style.opacity = '0'; pending = null; },

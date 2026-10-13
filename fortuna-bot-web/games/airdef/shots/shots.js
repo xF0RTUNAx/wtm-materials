@@ -1,0 +1,3 @@
+// Кадры фона главного меню (menubg.js): f — файл в этой папке, t — метки режима (air, pvo, multi). Список пишет
+// tools/airdef-shots/capture.js; пустой — фон меню остаётся живым боем (director.js)
+export const SHOTS = [{"f":"su34-kh59.webp","t":["air"]},{"f":"su30-top.webp","t":["air"]},{"f":"sam-chase.webp","t":["air","pvo"]},{"f":"patriot-launch.webp","t":["pvo"]},{"f":"pantsir-side.webp","t":["pvo"]},{"f":"tor-launch.webp","t":["pvo"]},{"f":"iskander-flight.webp","t":["multi"]},{"f":"tu160-kh555.webp","t":["multi"]},{"f":"f16-front.webp","t":["air"]},{"f":"s400-unit.webp","t":["pvo"]},{"f":"mig31-kinzhal.webp","t":["multi"]},{"f":"iskander-launcher.webp","t":["multi"]}];

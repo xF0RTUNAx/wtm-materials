@@ -8,11 +8,11 @@
 // объекта (по горизонтали и вертикали), щипок, колесо и ＋/－ — ближе или дальше, «зум» — угол поля зрения.
 // ◎ прячет весь интерфейс (тап по экрану — вернуть); скорость ×1 / ×½ / ×¼ / стоп-кадр (камеру можно крутить и на стопе).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261020f';
-import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020f';
-import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020f';
-import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020f';
-import { fwdOf } from '../drone/sim/core.js?v=20261020f';
+import { mulberry32 } from './city.js?v=20261020g';
+import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020g';
+import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020g';
+import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020g';
+import { fwdOf } from '../drone/sim/core.js?v=20261020g';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]
@@ -77,7 +77,7 @@ export function createPhoto(C, ctrls) {
   const samCap = (m, dead) => `Ракета ${m.S.short}${dead ? ' — подрыв' : ` · ${kmh(m)} км/ч · до цели ${m.target ? (m.pos.distanceTo(m.target.pos) / 1000).toFixed(1) : '—'} км`}`;
 
   function resolve() {
-    const S = C.S, sub = st.subs[st.subj] || st.subs[0];
+    const S = C.S, sub = st.subs[st.subj] || st.subs[0]; R.fb = false;
     if (st.br === 'air') {
       const A = ctrls.air, cr = A.craft, ship = () => setMv(cr, `${st.planeName} · ${kmh(cr)} км/ч · ${hTxt(cr.pos)}`);
       if (sub.id === 'ship') { ship(); R.L = st.shipL; return; }
@@ -90,19 +90,19 @@ export function createPhoto(C, ctrls) {
         }
         A.poseShip();
         const m = A.pylons().find((q) => q.userData.st === sub.st);
-        if (!m) { ship(); R.L = st.shipL; return; }
+        if (!m) { ship(); R.L = st.shipL; R.fb = true; return; }
         R.kind = 'py'; m.getWorldPosition(R.pos); R.F.set(0, 0, -1).applyQuaternion(A.ship.quaternion); R.U.set(0, 1, 0).applyQuaternion(A.ship.quaternion);
         R.L = AG[sub.key].vis ? AG[sub.key].vis.L : 4; R.side = m.position.x < 0 ? -1 : 1; R.v = cr.speed;
         R.cap = `${AG[sub.key].name} · ${m.visible ? 'на подвеске' : A.loadout.some((l) => l.st.includes(sub.st)) ? 'во внутреннем отсеке' : 'пилон пуст — ждём пополнения'}`;
         return;
       }
-      if (sub.id === 'sam') { if (!showF(follow('sam', () => newest(S.sams, (m) => m.target === cr)), samCap)) { ship(); R.L = st.shipL; R.cap = 'Ракета ПВО: пока не пускали — пока самолёт'; } return; }
+      if (sub.id === 'sam') { if (!showF(follow('sam', () => newest(S.sams, (m) => m.target === cr)), samCap)) { ship(); R.L = st.shipL; R.cap = 'Ракета ПВО: пока не пускали — пока самолёт'; R.fb = true; } return; }
       if (sub.id === 'pvo') { // комплекс: который ведёт самолёт, иначе ближайший
         const f = st.fol.pvo || (st.fol.pvo = { o: null });
         const tr = S.units.find((u) => !u.dead && u.track === cr && u.S.type !== 'jammer');
         if (tr) f.o = tr; else if (!f.o || f.o.dead) { let bd = 1e12; f.o = null; for (const u of S.units) { if (u.dead || u.S.type === 'jammer') continue; const d = u.pos.distanceToSquared(cr.pos); if (d < bd) { bd = d; f.o = u; } } }
         if (f.o) { setUnit(f.o, `${f.o.S.name}${f.o.track === cr ? ' · ведёт самолёт' : ''}`); return; }
-        ship(); R.L = st.shipL; return;
+        ship(); R.L = st.shipL; R.fb = true; return;
       }
       const o = st.airTgt || A.game.targets[0]; if (o) { setObj(o, cr.pos, `${o.name}${o.dead ? ' — уничтожен' : ''}`); return; }
       ship(); R.L = st.shipL; return;
@@ -112,10 +112,10 @@ export function createPhoto(C, ctrls) {
       const unit = (why) => setUnit(u, `${u.S.name}${why ? ' · ' + why : ''}`);
       if (!u) { R.kind = 'hold'; R.look.set(0, 200, 0); R.cap = ''; return; }
       if (sub.id === 'unit') { unit(u.track ? 'цель на сопровождении' : u.reloadT > 0 ? `перезарядка ${Math.ceil(u.reloadT)} с` : 'поиск'); return; }
-      if (sub.id === 'msl') { if (!showF(follow('msl', () => newest(S.sams, (m) => m.unit === u)), samCap)) { unit('ждём пуска'); } return; }
-      if (sub.id === 'trk') { const t = u.track && !u.track.dead ? u.track : null; if (t) setMv(t, `Цель ${u.S.short}: ${t.W ? munCap(t, false) : `${t.carrierName || 'самолёт'} · ${kmh(t)} км/ч · ${hTxt(t.pos)}`}`); else unit('целей нет'); return; }
-      if (sub.id === 'plane') { if (!showF(follow('plane', () => { const ps = C.raid.alive().filter((a) => a.role !== 'decoy'); return ps.length ? ps[Math.floor(rnd() * ps.length)] : null; }), (a, dead) => `${a.carrierName || 'Ударник налёта'}${dead ? ' — сбит' : ` · ${kmh(a)} км/ч · ${hTxt(a.pos)}`}`)) unit('ждём налёта'); return; }
-      if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(S.wpns, (w) => w.ev && !w.W.recon)), munCap)) unit('ждём волну'); return; }
+      if (sub.id === 'msl') { if (!showF(follow('msl', () => newest(S.sams, (m) => m.unit === u)), samCap)) { unit('ждём пуска'); R.fb = true; } return; }
+      if (sub.id === 'trk') { const t = u.track && !u.track.dead ? u.track : null; if (t) setMv(t, `Цель ${u.S.short}: ${t.W ? munCap(t, false) : `${t.carrierName || 'самолёт'} · ${kmh(t)} км/ч · ${hTxt(t.pos)}`}`); else { unit('целей нет'); R.fb = true; } return; }
+      if (sub.id === 'plane') { if (!showF(follow('plane', () => { const ps = C.raid.alive().filter((a) => a.role !== 'decoy'); return ps.length ? ps[Math.floor(rnd() * ps.length)] : null; }), (a, dead) => `${a.carrierName || 'Ударник налёта'}${dead ? ' — сбит' : ` · ${kmh(a)} км/ч · ${hTxt(a.pos)}`}`)) { unit('ждём налёта'); R.fb = true; } return; }
+      if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(S.wpns, (w) => w.ev && !w.W.recon)), munCap)) { unit('ждём волну'); R.fb = true; } return; }
       const o = st.targets[0]; setObj(o, u.pos, `${o.name} — прикрывает ${u.S.short}`); return;
     }
     // «Мульти-волна»
@@ -130,9 +130,9 @@ export function createPhoto(C, ctrls) {
     };
     const tgt = (cap) => { const w = st.fol.mun && st.fol.mun.o, aim = w && w.aim ? w.aim : null; const o = st.targets[0]; if (aim) setSt(TMP2.copy(aim).setY(aim.y + 6), w.pos.x - aim.x, w.pos.z - aim.z, 60, cap || 'Точка прицеливания'); else setObj(o, null, cap || o.name); };
     const wait = () => { const a = ev && ev.carriers.find((q) => !q.dead && !q.out); return a && a.phase === 'wait' ? `носитель вылетит через ${Math.ceil(a.delay)} с` : 'ждём пуска'; };
-    if (sub.id === 'src') { if (!src()) tgt(`${W.short}: ${wait()}`); return; }
-    if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk && !w.decoy) || newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap) && !src()) tgt(`${W.short}: ${wait()}`); return; }
-    if (sub.id === 'isam') { if (!showF(follow('isam', () => newest(C.S.sams, (m) => m.target && m.target.ev)), samCap)) { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap)) tgt('ПВО: пока не стреляли'); } return; }
+    if (sub.id === 'src') { if (!src()) { tgt(`${W.short}: ${wait()}`); R.fb = true; } return; }
+    if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk && !w.decoy) || newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap)) { R.fb = true; if (!src()) tgt(`${W.short}: ${wait()}`); } return; }
+    if (sub.id === 'isam') { if (!showF(follow('isam', () => newest(C.S.sams, (m) => m.target && m.target.ev)), samCap)) { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap)) tgt('ПВО: пока не стреляли'); R.fb = true; } return; }
     tgt();
   }
 
@@ -144,7 +144,7 @@ export function createPhoto(C, ctrls) {
     resolve();
     const A = ANG[st.ang];
     if (R.kind !== st.kind) { st.kind = R.kind; farName(); }
-    const fov = FOVS[st.fi] || (A.fixed ? (R.kind === 'st' ? 11 : 32) : 55);
+    const fov = (shot && shot.f) || FOVS[st.fi] || (A.fixed ? (R.kind === 'st' ? 11 : 32) : 55);
     if (Math.abs(camera.fov - fov) > 0.01) C.setFov(fov);
     if (R.kind === 'hold') { lookS.lerp(R.look, 1 - Math.exp(-dt * 4)); camera.up.set(0, 1, 0); camera.lookAt(lookS); return; }
     const snap = st.snap || !hadPos || prevPos.distanceToSquared(R.pos) > 400 * 400; st.snap = false; prevPos.copy(R.pos); hadPos = true;
@@ -218,13 +218,15 @@ export function createPhoto(C, ctrls) {
   // ПВО против волны: расписание сжато для съёмки — дроны сразу, крылатые через ~15 с, баллистика через ~45 с
   function startEvDef() {
     const plan = {}; for (const [k] of COMBINED[st.att][st.era]) if (!AG[k].recon) plan[k] = { t: AG[k].uav ? 0 : AG[k].kind === 'tbm' ? 45 : 15 };
-    C.ev = createCombined(C.S, city, rnd, { side: st.att, era: st.era, raid: C.raid, lim: LIMQ, plan }); C.ev.start(st.targets);
+    C.ev = createCombined(C.S, city, rnd, { side: st.att, era: st.era, raid: C.raid, lim: LIMQ, plan }); C.ev.start(st.targets); evModels();
   }
   function startEvMulti() {
     const W = AG[st.mk], n = W.recon ? 1 : W.kind === 'tbm' ? 2 : st.via ? Math.min(4, CARRIERS[st.via].cap) : 4;
     C.ev = createCombined(C.S, city, rnd, { side: st.att, era: st.era, raid: C.raid, lim: LIMQ, comp: [[st.mk, n, W.uav ? 1 : W.kind === 'tbm' ? 3 : 2, st.via || undefined]], plan: { [st.mk]: { t: 2 } } });
-    C.ev.start(st.targets);
+    C.ev.start(st.targets); evModels();
   }
+  // готовые модели ракет, пусковых и носителей удара — загрузить (сами они грузятся по требованию)
+  function evModels() { if (C.evPreload) C.evPreload(C.ev.comp); if (C.evReady) C.evReady(C.ev); }
 
   // ── бой ──
   const subsAir = () => {
@@ -325,13 +327,30 @@ export function createPhoto(C, ctrls) {
   zone.addEventListener('pointerup', up); zone.addEventListener('pointercancel', up);
   zone.addEventListener('wheel', (e) => { st.adj.k = clamp(st.adj.k * (e.deltaY > 0 ? 1.1 : 0.9), 0.3, 4); e.preventDefault(); }, { passive: false });
 
+  // съёмка кадров для фона меню (tools/airdef-shots/capture.js): ?shot={s: объект (id или key подвески), a: ракурс, az/el/k —
+  // подстройка, f — поле зрения, t — не раньше стольких секунд боя, max — предел}. До t время ×4; объект на месте (не запасной) —
+  // стоп-кадр, через ~1,2 с window.__shot = 'ready' (не дождались к max — 'timeout')
+  let shot = null; try { const q = C.Q.get('shot'); if (q) shot = JSON.parse(q); } catch (_) { shot = null; }
+  function shotApply() {
+    if (!shot) return;
+    const i = st.subs.findIndex((x) => x.id === shot.s || x.key === shot.s); if (i >= 0) st.subj = i;
+    const j = ANG.findIndex((x) => x.k === shot.a); if (j >= 0) st.ang = j;
+    st.adj.az = shot.az || 0; st.adj.el = shot.el || 0; st.adj.k = shot.k || 1; st.snap = true; setClean(true); window.__shot = 'wait'; st.shotT = -1;
+  }
+  function shotTick(dt) {
+    if (!shot || window.__shot === 'ready' || window.__shot === 'timeout') return;
+    if (st.shotT >= 0) { if ((st.shotT += dt) > 1.2) window.__shot = 'ready'; return; }
+    if (st.simT > (shot.max || 240)) { window.__shot = 'timeout'; return; }
+    if (st.simT >= (shot.t || 0) && !R.fb && R.kind !== 'hold') { st.spd = 3; st.shotT = 0; } // стоп-кадр, камера доезжает
+  }
   const api = {
+    timeK: () => (shot && st.shotT < 0 && st.simT < (shot.t || 0) ? 4 : 1),
     get craft() { return st.br === 'air' ? ctrls.air.craft : null; }, fps60: true, // на телефоне — 60 к/с (плавные кадры)
     start() {
       st.br = setup.pside === 'def' || setup.pside === 'multi' ? setup.pside : 'air';
       sayKeep = C.say; C.say = () => {}; // сообщения боя в кадре не нужны
       document.body.classList.add('photo'); setClean(false); st.spd = 0; st.fi = 0; resetAdj(); st.subj = 0; st.ang = 0;
-      C.lastGame = 'photo'; newBattle();
+      C.lastGame = 'photo'; newBattle(); shotApply();
     },
     stop() {
       if (st.br === 'air') ctrls.air.stop();
@@ -343,7 +362,7 @@ export function createPhoto(C, ctrls) {
       if (st.br === 'air') { ctrls.air.update(dt); airTick(dt); } else if (st.br === 'def') defTick(dt); else evTick(dt, startEvMulti);
     },
     dtK: () => SPD[st.spd],
-    camera: cameraUpdate,
+    camera(dt) { cameraUpdate(dt); shotTick(dt); },
     hud(dt, t) {
       if (st.br === 'air') ctrls.air.hud(dt, t); // пламя форсажа и видимость модели
       if (!st.clean && (st.capT -= dt) <= 0) { st.capT = 0.2; $('phCap').textContent = R.cap; }
