@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Дальняя копия</title>
+<style>body{margin:0;background:#9fb3c8;font:13px sans-serif}#l{position:fixed;left:8px;top:6px}</style></head>
+<body><div id="l"></div>
+<!-- Проверка копий моделей (city-render.js): ?m=h_brick&k=0.04&min=16&err=0.08 — дальняя (farIndex); &mode=lo&ratio=0.25&lerr=0.012 — средняя (loIndex). Слева модель, справа копия -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+import { farGeo, loIndex } from '../../games/airdef/city-render.js';
+const Q = new URLSearchParams(location.search), LO = Q.get('mode') === 'lo', M = Q.get('m') || 'h_brick';
+const W = 1200, H = 500, r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); r.setScissorTest(true); document.body.appendChild(r.domElement);
+const buf = await (await fetch(`../../games/airdef/models/${M}.glb`)).arrayBuffer();
+const dv = new DataView(buf), jl = dv.getUint32(12, true), j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bo = 28 + jl;
+const T = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array };
+const acc = (i) => { const a = j.accessors[i], bv = j.bufferViews[a.bufferView], C = T[a.componentType], n = { SCALAR: 1, VEC2: 2, VEC3: 3 }[a.type]; return new C(buf.slice(bo + (bv.byteOffset || 0) + (a.byteOffset || 0), bo + (bv.byteOffset || 0) + (a.byteOffset || 0) + a.count * n * C.BYTES_PER_ELEMENT)); };
+const mk = () => new THREE.Group(), A = mk(), B = mk(); let t0 = 0, t1 = 0;
+for (const m of j.meshes) {
+  const p = m.primitives[0], g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(acc(p.attributes.POSITION), 3)); g.setAttribute('normal', new THREE.BufferAttribute(acc(p.attributes.NORMAL), 3)); g.setIndex(new THREE.BufferAttribute(acc(p.indices), 1)); if (p.attributes.TEXCOORD_0 !== undefined) g.setAttribute('uv', new THREE.BufferAttribute(acc(p.attributes.TEXCOORD_0), 2));
+  const f = (j.materials[p.material].pbrMetallicRoughness.baseColorFactor || [0.8, 0.8, 0.8]), mat = new THREE.MeshLambertMaterial({ color: new THREE.Color(f[0], f[1], f[2]), side: THREE.DoubleSide });
+  A.add(new THREE.Mesh(g, mat)); let g2;
+  if (LO) { const ix = await loIndex(g, +(Q.get('ratio') || 0.35), +(Q.get('lerr') || 0.005)); g2 = new THREE.BufferGeometry(); for (const a in g.attributes) g2.setAttribute(a, g.attributes[a]); g2.setIndex(ix || g.index); t1 += (ix || g.index).count / 3; }
+  else { g2 = await farGeo(g, Q.get('big') === '1' || j.meshes.reduce((t, mm) => t + j.accessors[mm.primitives[0].indices].count / 3, 0) >= 8000, { ...(Q.get('k') ? { k: +Q.get('k') } : {}), ...(Q.get('err') ? { err: +Q.get('err') } : {}) }); t1 += g2.index ? g2.index.count / 3 : g2.attributes.position.count / 3; }
+  B.add(new THREE.Mesh(g2, mat)); t0 += g.index.count / 3;
+}
+document.getElementById('l').textContent = `${M}: ${t0} → ${t1} треугольников (${LO ? 'средняя' : 'дальняя'} копия)`;
+const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x445566, 1.0)); const dl = new THREE.DirectionalLight(0xffffff, 0.7); dl.position.set(3, 5, 2); sc.add(dl);
+const b = new THREE.Box3().setFromObject(A), c = b.getCenter(new THREE.Vector3()), s = b.getSize(new THREE.Vector3()).length() * 0.6;
+[A, B].forEach((G, i) => { sc.children.filter((x) => x.isGroup).forEach((x) => sc.remove(x)); sc.add(G); const cam = new THREE.PerspectiveCamera(35, (W / 2) / H, 0.1, 5000); cam.position.copy(c).add(new THREE.Vector3(1, 0.7, 1.3).normalize().multiplyScalar(s * 2.6)); cam.lookAt(c); r.setViewport(i * W / 2, 0, W / 2, H); r.setScissor(i * W / 2, 0, W / 2, H); r.render(sc, cam); });
+window.__ok = 1;
+</script></body></html>

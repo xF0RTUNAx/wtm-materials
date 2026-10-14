@@ -9,15 +9,16 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261020i';
-import { weaponHasModel } from './models.js?v=20261020i';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020i';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020i';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020i';
+import { CITY, mulberry32 } from './city.js?v=20261020j';
+import { weaponHasModel } from './models.js?v=20261020j';
+import { ico } from './icons.js?v=20261020j';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261020j';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261020j';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261020j';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020i';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020i';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020i';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261020j';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261020j';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261020j';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -71,7 +72,7 @@ export function createDefense(C) {
   function drawMap(t) {
     navStep();
     const k = Math.min(2, devicePixelRatio || 1); tx.setTransform(k, 0, 0, k, 0, 0);
-    tx.fillStyle = '#0b1218'; tx.fillRect(0, 0, C.VW, C.VH);
+    tx.fillStyle = '#10140f'; tx.fillRect(0, 0, C.VW, C.VH);
     const base = C.menu.mapBase(1600), [x0, y0] = w2s(-CITY.HALF, -CITY.HALF), sz = 2 * CITY.HALF * view.k;
     tx.globalAlpha = 0.85; tx.drawImage(base, x0, y0, sz, sz); tx.globalAlpha = 1;
     tx.font = '600 11px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center';
@@ -892,7 +893,7 @@ export function createDefense(C) {
     document.body.classList.remove('dmap'); document.body.classList.add('oper');
     $('opMethod').style.display = u.S.type === 'command' ? 'flex' : 'none';
     $('opRadar').style.display = u.S.radar ? 'flex' : 'none';
-    $('opFire').textContent = u.S.type === 'guns' ? 'ОГОНЬ' : 'ПУСК';
+    $('opFire').title = u.S.type === 'guns' ? 'Огонь' : 'Пуск'; ofb.s = ''; ofb.cool = 0; ofb.ammo = u.ammo;
     on('op', u); snd.click();
   }
   function leaveOp() {
@@ -1011,6 +1012,26 @@ export function createDefense(C) {
     for (const m of C.S.sams) { if (m.dead || m.unit !== u) continue; pc.fillStyle = '#fff'; pc.fillRect(c + (m.pos.x - u.pos.x) * k - 2, c + (m.pos.z - u.pos.z) * k - 2, 4, 4); }
     pc.fillStyle = '#9fffb8'; pc.beginPath(); pc.arc(c, c, 4, 0, 7); pc.fill();
   }
+  // кнопка «ПУСК» оператора: «3/4» — ракет в пакете; по часовой — красным выдержка между пусками, зелёным — готово, жёлтым — набор
+  // захвата; после последней ракеты — тускло-жёлтая перезарядка и вместо ракет — секунды. Онлайн выдержки в снимке нет — считаем сами
+  const ofb = { s: '', cool: 0, ammo: 0, t: 0 };
+  function opFireBtn(u, dt) {
+    const b = $('opFire'), S = u.S, guns = S.type === 'guns';
+    if (u.ammo < ofb.ammo - 0.5 && !guns) ofb.cool = 1.6; ofb.ammo = u.ammo; if (ofb.cool > 0) ofb.cool -= dt;
+    if ((ofb.t -= dt) > 0) return; ofb.t = 0.08;
+    if (u.reloadT > (u.reload0 || 0)) u.reload0 = u.reloadT; // онлайн: полное время — по наибольшему увиденному
+    const cool = Math.max(u.cool || 0, ofb.cool), acq = (S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1);
+    let p, c, txt;
+    if (u.reloadT > 0) { p = 1 - u.reloadT / Math.max(1, u.reload0 || u.reloadT); c = 'rgba(232,176,74,.32)'; txt = `${Math.ceil(u.reloadT)}с`; }
+    else {
+      txt = guns ? `${Math.round(100 * u.ammo / S.ammo)}%` : `${Math.round(u.ammo)}/${S.ammo}`;
+      if (cool > 0 && !guns) { p = 1 - cool / 1.6; c = 'rgba(239,68,68,.6)'; }
+      else if (u.desig && !u.track && !u.desig.dead) { p = clamp(u.seeT / acq, 0, 1); c = 'rgba(250,204,21,.6)'; }
+      else { p = 1; c = 'rgba(74,222,128,.5)'; }
+    }
+    const key = `${txt}|${Math.round(p * 60)}|${c}`; if (key === ofb.s) return; ofb.s = key;
+    b.innerHTML = `<span>${ico('fire')}<em>${txt}</em></span>`; if (b.style.setProperty) { b.style.setProperty('--fb', `${Math.round(p * 360)}deg`); b.style.setProperty('--fc', c); }
+  }
   function opHud(dt, t) {
     const u = st.op, hx = C.hx, VW = C.VW, VH = C.VH, S = u.S;
     if (u.dead) { opSay('Комплекс уничтожен'); leaveOp(); return; }
@@ -1056,7 +1077,8 @@ export function createDefense(C) {
     $('opInfo').innerHTML = `${clock()}${C.auto ? '<b style="color:#86efac">АВТО</b> · ' : ''}<b>${S.name}</b> · ${SAM_TYPE[S.type]}<br>${unitStatus(u)}${S.type === 'command' ? ` · метод: ${u.method === 'half' ? 'половинное спрямление' : 'три точки'}` : ''}` +
       (tr ? `<br>цель: ${(d / 1000).toFixed(1)} км, ${Math.round(h)} м — <b>${zone}</b>${!u.track && u.desig ? ` · захват ${Math.round(clamp(u.seeT / ((S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1)), 0, 1) * 100)}%` : ''}` : S.type === 'ir' ? '<br>наведите перекрестие на самолёт — ГСН «зарычит» и захватит' : S.type === 'guns' ? '<br>ведите ствол в жёлтый кружок упреждения и держите «ОГОНЬ»' : '<br>коснитесь отметки цели на экране или на круговом обзоре')
       + (arm ? '<br><span class="st">⚠ ПРР ЛЕТИТ В ВАС — выключите РЛС!</span>' : '') + (op.msgT > 0 ? `<br><span class="st">${op.msg}</span>` : '');
-    $('opRadar').textContent = u.emit ? 'РЛС ВКЛ' : 'РЛС ВЫКЛ'; $('opRadar').classList.toggle('off', !u.emit);
+    $('opRadar').classList.toggle('on', !!u.emit); $('opRadar').title = u.emit ? 'РЛС включена — выключить' : 'РЛС выключена — включить'; // иконка закрашена — излучает
+    opFireBtn(u, dt);
     $('opBino').classList.toggle('off', !op.bino && !(u.track && !u.track.dead)); // без захвата — недоступен
     if (op.bino && u.track) { // ракурс и манёвр цели
       const tg = u.track, v = tg.vel && tg.vel.lengthSq() > 1 ? TMP.copy(tg.vel).normalize() : tg.dir ? TMP.copy(tg.dir) : null;

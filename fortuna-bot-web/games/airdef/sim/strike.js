@@ -13,9 +13,9 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261020i';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261020i';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261020i';
+import { AG, SAM } from '../arsenal.js?v=20261020j';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261020j';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261020j';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
@@ -186,7 +186,7 @@ export function createStrike(ctx) {
         if (!launcherReady(u)) return; // пусковая ещё разворачивается
         launchSam(u, tr);
         u.cool = 2.2 + rnd() * 1.5;
-        if (u.ammo <= 0) u.reloadT = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
+        if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
       }
     } else u.reactT = Math.max(0, u.reactT - dt * 0.5);
   }
@@ -203,7 +203,7 @@ export function createStrike(ctx) {
     const p = G.hitK * M.gunK * Math.pow(1 - d / rmax, 1.4) / (1 + w * 9) * u.skill * M.samSkill * (tr.isMun ? 0.6 : 1);
     if (p * 8 < 0.1) { u.gunOn = false; return true; }
     if (u.gunOn) {
-      if (S.type === 'guns') { u.ammo -= dt * (G.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = reloadOf(S); } } // темп — по пушкам комплекса; кончились — подвоз
+      if (S.type === 'guns') { u.ammo -= dt * (G.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = u.reload0 = reloadOf(S); } } // темп — по пушкам комплекса; кончились — подвоз
       const hits = rnd() < p * dt * 8 ? 1 + Math.floor(rnd() * 3) : 0;
       fx.gunFire(u, tr, hits, dt);
       if (hits) { hurtAny(tr, G.dmg * hits, S.short); fx.gunHit(u, tr, hits); }
@@ -281,7 +281,7 @@ export function createStrike(ctx) {
     if (!t) { let ba = 0.3; for (const a of targets) { if (a.dead || a.pos.distanceTo(u.pos) > S.rmax * 1.3) continue; const ang = angleBetween(u.aimDir, TMP.copy(a.pos).sub(u.pos)); if (ang < ba) { ba = ang; t = a; } } }
     u.gunTgt = t;
     if (!u.gunFire || u.ammo <= 0) { u.gunOn = false; return; }
-    u.gunOn = true; u.ammo -= dt * (S.gun.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = reloadOf(S); }
+    u.gunOn = true; u.ammo -= dt * (S.gun.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = u.reload0 = reloadOf(S); }
     let hits = 0;
     if (t) {
       gunLead(u, t, LEAD);
@@ -313,7 +313,7 @@ export function createStrike(ctx) {
       if (h > S.hmax) return 'цель выше зоны поражения';
     }
     if (!launcherReady(u)) return 'пусковая разворачивается';
-    launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
+    launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
   }
   function designate(u, t) { if (u.desig !== t) { u.desig = t; u.track = null; u.seeT = 0; fx.radarState(u); } }

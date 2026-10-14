@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261020i';
+import { CREDITS } from './models/credits.js?v=20261020j';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -137,13 +137,14 @@ const TEX_CREDIT = { title: 'Текстуры земли, дорог, крыш �
 const PH_CREDIT = { title: 'Текстуры асфальта, щебня, скал и пашни; панорамы неба', author: 'Poly Haven', url: 'https://polyhaven.com', license: 'CC0', files: ['tex/p_*.jpg', 'sky/*.jpg'] };
 // взрывы и пламя (fx/*.png): огненный шар с дымом — ohyhei; вспышка с кольцом и пламя — Explosion FX Free (heyheythere)
 const FX_CREDITS = [
+  { title: 'Иконки управления', author: 'Delapouite (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },
   { title: 'Explosion sprite sheets', author: 'ohyhei', url: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', license: 'бесплатно, с указанием автора', licenseUrl: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', files: ['fx/explosion*.png'] },
   { title: 'Explosion FX Free', author: 'heyheythere', url: 'https://heyheythere.itch.io/explosion-fx-free', license: 'CC BY 4.0', files: ['fx/blast*.png', 'fx/flame*.png'] },
 ];
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};
 // версия файла модели (сброс кэша) — у пересобранных моделей своя, остальные не перекачиваются
-const GLB_V = { s400: '20261013a', s400_lo: '20261013a' };
+const GLB_V = { s400: '20261013a', s400_lo: '20261013a', w_fab500: '20261014b' };
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
@@ -243,9 +244,12 @@ export const isUnitModel = (name) => { const b = name.replace(/_lo$/, ''); retur
 // фоновая загрузка всех моделей; onReady — когда что-то загрузилось (чтобы пересобрать самолёты)
 // самолёты и оружие — сразу; комплексы — по запросу wantUnit (только те, что есть в бою: файлы у них крупнее)
 let BASE = '', READY = null; const LOADING = new Set();
+// счёт загрузки (статус «Загружаем город» в меню): сколько моделей запрошено и сколько пришло (или не пришло)
+const LSTAT = { req: 0, done: 0 };
+export const modelStats = () => LSTAT;
 function start(name) {
-  if (LOADING.has(name)) return; LOADING.add(name);
-  load(name, BASE).then((g) => { LOADED[name] = g; if (READY) READY(name); }).catch((e) => console.warn('модель не загрузилась:', e.message));
+  if (LOADING.has(name)) return; LOADING.add(name); LSTAT.req++;
+  load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; if (READY) READY(name); }).catch((e) => { LSTAT.done++; console.warn('модель не загрузилась:', e.message); });
 }
 export function loadModels(base, onReady) {
   BASE = base; READY = onReady;

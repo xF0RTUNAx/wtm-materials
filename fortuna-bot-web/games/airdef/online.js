@@ -3,11 +3,12 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261020i';
-import * as O from './sim/online.js?v=20261020i';
-import * as MW from './sim/online-multi.js?v=20261020i';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020i';
-import { MODES } from './sim/strike.js?v=20261020i';
+import { createNet } from './net.js?v=20261020j';
+import * as O from './sim/online.js?v=20261020j';
+import * as MW from './sim/online-multi.js?v=20261020j';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261020j';
+import { MODES } from './sim/strike.js?v=20261020j';
+import { ICON } from './icons.js?v=20261020j';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -188,12 +189,15 @@ export function createOnline(C, ctrls) {
     helpAt = performance.now(); N.help(p); C.say('Союзникам: «Нужна помощь!» — знак на их карте', 2); snd.click(); return true;
   };
   // знак «внимание»: жёлтый треугольник с чёрным ободком и чёрным «!» (s — половина стороны, px)
+  // метка «Нужна помощь» на картах — значок «hazard-sign» (icons.js): жёлтый на тёмной подложке
+  let HZ = null;
   C.drawWarn = (g, x, y, s = 9) => {
-    g.save(); g.beginPath(); g.moveTo(x, y - s * 1.05); g.lineTo(x + s * 1.15, y + s * 0.95); g.lineTo(x - s * 1.15, y + s * 0.95); g.closePath();
-    g.fillStyle = '#facc15'; g.fill(); g.lineJoin = 'round'; g.lineWidth = Math.max(1.5, s * 0.22); g.strokeStyle = '#000'; g.stroke();
-    g.fillStyle = '#000'; g.font = `900 ${Math.round(s * 1.25)}px -apple-system, Segoe UI, sans-serif`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', x, y + s * 0.2); g.textBaseline = 'alphabetic'; g.restore();
+    if (!HZ && typeof Path2D === 'function') HZ = new Path2D(ICON.help);
+    g.save(); g.fillStyle = 'rgba(16,20,15,.85)'; g.fillRect(x - s * 1.25, y - s * 1.25, s * 2.5, s * 2.5);
+    if (HZ) { const k = (s * 2.3) / 512; g.translate(x - s * 1.15, y - s * 1.15); g.scale(k, k); g.fillStyle = '#facc15'; g.fill(HZ); }
+    g.restore();
   };
-  // ═════════════ Игроки: кто в сети и кто готов (кнопка 👥 вверху, во всех онлайн-боях) ═════════════
+  // ═════════════ Игроки: кто в сети и кто готов (кнопка «Игроки» вверху, во всех онлайн-боях) ═════════════
   const plBtn = $('plBtn'), plEl = $('plPanel');
   function renderPl() {
     const r = N.room; if (!r || !document.body.classList.contains('plOpen')) return;

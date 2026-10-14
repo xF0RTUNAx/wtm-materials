@@ -10,7 +10,7 @@ const Q = new URLSearchParams(location.search), M = Q.get('m') || 'w_kh555', nz 
 document.getElementById('l').textContent = `${M} · сопло ${nz.join(', ')}`;
 const W = 1500, H = 500, r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); r.setScissorTest(true); document.body.appendChild(r.domElement);
 const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xffffff, 0x445566, 1.1)); const dl = new THREE.DirectionalLight(0xffffff, 0.6); dl.position.set(3, 5, 2); sc.add(dl);
-fetch(`../../games/airdef/models/${M}.glb`).then((x) => x.arrayBuffer()).then((buf) => {
+fetch(Q.get("f") || `../../games/airdef/models/${M}.glb`).then((x) => x.arrayBuffer()).then((buf) => {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), j = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl))), bo = 28 + jl;
   const T = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array };
   const acc = (i) => { const a = j.accessors[i], bv = j.bufferViews[a.bufferView], C = T[a.componentType], n = { SCALAR: 1, VEC2: 2, VEC3: 3 }[a.type]; return new C(buf.slice(bo + (bv.byteOffset || 0) + (a.byteOffset || 0), bo + (bv.byteOffset || 0) + (a.byteOffset || 0) + a.count * n * C.BYTES_PER_ELEMENT)); };

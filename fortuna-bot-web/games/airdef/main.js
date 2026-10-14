@@ -8,28 +8,29 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { buildCity, CITY } from './city.js?v=20261020i';
-import { buildCityScene, updateCityScene, UPX, ENV } from './city-render.js?v=20261020i';
-import { createPipeline } from '../drone/post.js?v=20261020i';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020i';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020i';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020i';
-import { createStrike, MODES } from './sim/strike.js?v=20261020i';
-import { createRaid } from './sim/raid.js?v=20261020i';
-import { POD } from './sim/combined.js?v=20261020i';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020i';
-import { slotCount } from './launchers.js?v=20261020i';
-import { loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings } from './models.js?v=20261020i';
-import { createSound } from './sound.js?v=20261020i';
-import { createAir } from './air.js?v=20261020i';
-import { createDefense } from './defense.js?v=20261020i';
-import { createDirector } from './director.js?v=20261020i';
-import { createMenuBg } from './menubg.js?v=20261020i';
-import { createOnline } from './online.js?v=20261020i';
-import { createShell } from './shell.js?v=20261020i';
-import { createTraining, LESSONS } from './training.js?v=20261020i';
-import { createPhoto } from './photo.js?v=20261020i';
-import { createMenu } from './menu.js?v=20261020i';
+import { buildCity, CITY } from './city.js?v=20261020j';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261020j';
+import { createPipeline } from '../drone/post.js?v=20261020j';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261020j';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261020j';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261020j';
+import { createStrike, MODES } from './sim/strike.js?v=20261020j';
+import { createRaid } from './sim/raid.js?v=20261020j';
+import { POD } from './sim/combined.js?v=20261020j';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261020j';
+import { slotCount } from './launchers.js?v=20261020j';
+import { modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings } from './models.js?v=20261020j';
+import { createSound } from './sound.js?v=20261020j';
+import { ico, iconize } from './icons.js?v=20261020j';
+import { createAir } from './air.js?v=20261020j';
+import { createDefense } from './defense.js?v=20261020j';
+import { createDirector } from './director.js?v=20261020j';
+import { createMenuBg } from './menubg.js?v=20261020j';
+import { createOnline } from './online.js?v=20261020j';
+import { createShell } from './shell.js?v=20261020j';
+import { createTraining, LESSONS } from './training.js?v=20261020j';
+import { createPhoto } from './photo.js?v=20261020j';
+import { createMenu } from './menu.js?v=20261020j';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -43,17 +44,17 @@ const ls = { get(k) { try { return localStorage.getItem(k); } catch (_) { return
 export const PRESETS = {
   low: { name: 'Низкий', skyOnly: true, fxLo: true, lodObj: 3500, desc: 'слабые телефоны', prCap: 1.25, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
     perf: { scale: 1, min: 0.75, aa: 'off', up: 'off' } },
-  medium: { name: 'Средний', skyOnly: true, fxLo: true, lodObj: 4500, desc: 'большинство телефонов', prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
+  medium: { name: 'Средний', skyOnly: true, fxLo: true, lodObj: 4500, desc: 'большинство телефонов', prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, bldFar: 1600, treeFar: 450, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
     perf: { scale: 1, min: 0.7, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
   // «Кастомный»: всё настраивается (Настройки → «Кастомный»). Основа — техника, ракеты, бомбы, самолёты и эффекты как на
   // «Высоком» (тени вблизи, свечение, сглаживание), город проще
   custom: { name: 'Кастомный', lodObj: 5000, desc: 'свои настройки: разрешение, тени, город, эффекты', prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 450, aniso: 4, props: false,
     perf: { scale: 1, min: 0.6, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
-  high: { name: 'Высокий', lodObj: 6000, desc: 'мощные телефоны и ПК: тени, свечение', prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
+  high: { name: 'Высокий', lodObj: 6000, desc: 'мощные телефоны и ПК: тени, свечение', prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, bldFar: 2600, treeFar: 700, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 600, aniso: 4,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
-  ultra: { name: 'Ультра', lodObj: 8000, desc: 'тени 4K, тени деревьев, дальняя прорисовка', prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
+  ultra: { name: 'Ультра', lodObj: 8000, desc: 'тени 4K, тени деревьев, дальняя прорисовка', prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, bldFar: 3600, treeFar: 1000, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
     shadows: true, treeShadows: true, shadowMap: 4096, shadowBox: 800, aniso: 8,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'fsr', sharp: 0.35 }, post: { bloom: 0.6, vignette: 0.18, grade: 0.3, exposure: 0.95 } },
 };
@@ -76,9 +77,9 @@ function applyGfx(base, o) {
   else if (o.sh === 'mid') Object.assign(P, { shadows: true, shadowMap: 2048, shadowBox: 600, treeShadows: false });
   else if (o.sh === 'high') Object.assign(P, { shadows: true, shadowMap: 4096, shadowBox: 800, treeShadows: true });
   // город: простой — коробки и мало деревьев; средний — дома и деревья моделями вблизи; полный — как на «Высоком»
-  if (o.city === 'low') Object.assign(P, { bldNear: 0, treeNear: 0, trees: 3000, houseK: 0.6, groundSeg: Math.min(P.groundSeg, 192) });
-  else if (o.city === 'mid') Object.assign(P, { bldNear: 250, treeNear: 100, trees: 8000, houseK: 0.9 });
-  else if (o.city === 'full') Object.assign(P, { bldNear: 450, treeNear: 170, trees: 14000, houseK: 1 });
+  if (o.city === 'low') Object.assign(P, { bldNear: 0, treeNear: 0, bldFar: 0, treeFar: 0, trees: 3000, houseK: 0.6, groundSeg: Math.min(P.groundSeg, 192) });
+  else if (o.city === 'mid') Object.assign(P, { bldNear: 250, treeNear: 100, bldFar: 1400, treeFar: 400, trees: 8000, houseK: 0.9 });
+  else if (o.city === 'full') Object.assign(P, { bldNear: 450, treeNear: 170, bldFar: 2600, treeFar: 700, trees: 14000, houseK: 1 });
   if (o.trees !== undefined) { const k = clamp(+o.trees, 0, 2); P.trees = Math.round(P.trees * k); if (!k) P.treeNear = 0; }
   if (o.props === false) P.props = false; else if (o.props === true) P.props = true;
   if (o.fx === false) P.post = null;
@@ -106,8 +107,9 @@ function touchGfx(P, custom) {
 // окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
 for (const k in PRESETS) if (PRESETS[k].podHalf === undefined) PRESETS[k].podHalf = IS_TOUCH || k === 'low' || k === 'medium';
 const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGfx(PRESETS[gfxKey], { fullRes: GO.fullRes }), gfxKey === 'custom'); // свои настройки — только у «Кастомного»
-const P = CINEMA ? Object.assign(P0, { name: 'Кино', lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
+const P = CINEMA ? Object.assign(P0, { name: 'Кино', lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
+if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 — без дальних копий моделей
 const weatherKey = Q.get('weather') || ls.get('fortuna_airdef_weather') || 'random';
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
 const W_KEY = WEATHER_KEYS.includes(weatherKey) && !(weatherKey === 'night' && (Q.get('mp') === '1' || Q.get('ad'))) ? weatherKey : RND_KEYS[Math.floor(Math.random() * RND_KEYS.length)];
@@ -195,8 +197,9 @@ C.newBattle = function (o) {
 // вид объекта-цели: целый или разрушенный (осел и почернел) — процедурная часть, заглушка и готовые постройки
 function objLook(id, ruin) {
   for (const m of [C.G.objMesh[id], C.G.objBox[id]]) if (m) { m.material = ruin ? C.G.ruinMat : C.G.objMat; m.scale.y = ruin ? 0.35 : 1; }
-  const g = C.G.objGroup[id];
-  if (g) { g.scale.y = ruin ? 0.35 : 1; g.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = ruin ? C.G.ruinMat : c.userData.mat0; }); }
+  for (const g of [C.G.objGroup[id], C.G.objFar && C.G.objFar[id]]) { // и дальняя копия (если она придёт позже — objFarLook)
+    if (g) { g.userData.ruin = ruin; g.scale.y = ruin ? 0.35 : 1; g.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = ruin ? C.G.ruinMat : c.userData.mat0; }); }
+  }
 }
 function clearBattle() {
   for (const m of [...unitMeshes.values(), ...wpnMeshes.values(), ...samMeshes.values(), ...planeMeshes.values()]) scene.remove(m);
@@ -277,8 +280,8 @@ function addBlob(g) {
 }
 const dist = (p) => camera.position.distanceTo(p);
 const TX = new THREE.Vector3(), TY = new THREE.Vector3(), TZ = new THREE.Vector3(), TP = new THREE.Vector3();
-// объекты-цели: готовые постройки (сотни тысяч треугольников на объект) — только ближе P.lodObj, дальше — коробки-заглушки
-// по их габаритам (в пиксель-два разницы не видно). Окно ТВ — всё подробно (его узкое поле зрения само отсекает лишнее)
+// объекты-цели: готовые постройки (сотни тысяч треугольников на объект) — только ближе P.lodObj, дальше — их сильно упрощённые
+// копии (city-render.js farIndex: та же форма и текстура), коробки — только пока модели грузятся. Окно ТВ — всё подробно (его узкое поле зрения само отсекает лишнее)
 const objC = new Map();
 function objLod(p, D) {
   const G = C.G; if (!G || !G.objGroup) return;
@@ -286,8 +289,9 @@ function objLod(p, D) {
     const g = G.objGroup[o.id]; if (!g) continue;
     let c = objC.get(o.id);
     if (!c) { const L = o.models && o.models.length ? o.models : o.parts; let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
-    const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D, b = G.objBox[o.id];
-    g.visible = full; if (b) b.visible = !full || g.userData.left.size > 0; // заглушка видна и пока не пришли все модели
+    const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D, b = G.objBox[o.id], f = G.objFar && G.objFar[o.id], fr = !!(f && f.userData.ready);
+    g.visible = full; if (f) { f.visible = !full && fr; if (fr && f.userData.ruin !== g.userData.ruin && g.userData.ruin !== undefined) objLook(o.id, g.userData.ruin); } // вдали — упрощённые копии тех же построек
+    if (b) b.visible = (!full && !fr) || g.userData.left.size > 0; // коробка — пока не пришли модели (или нет дальних копий)
   }
 }
 // окно ТВ (контейнер): своя детализация на время его кадра — машины по размеру в пикселях окна, объекты подробно, дома и
@@ -633,8 +637,8 @@ C.hx = hx;
 const PRJ = new THREE.Vector3();
 C.proj = (p, cam = camera) => { PRJ.copy(p).project(cam); return PRJ.z < 1 && PRJ.z > -1 ? [(PRJ.x + 1) / 2 * VW, (1 - PRJ.y) / 2 * VH] : null; };
 let msgT = 0;
-C.say = (t, s = 2.4) => { const m = $('msg'); m.innerHTML = t; m.style.display = t ? 'block' : 'none'; msgT = s; };
-C.hint = (h) => { const e = $('hint'); if (e._h === h) return; e._h = h; e.innerHTML = h || ''; e.style.display = h ? 'block' : 'none'; };
+C.say = (t, s = 2.4) => { const m = $('msg'); m.innerHTML = iconize(t); m.style.display = t ? 'block' : 'none'; msgT = s; };
+C.hint = (h) => { const e = $('hint'); if (e._h === h) return; e._h = h; e.innerHTML = iconize(h || ''); e.style.display = h ? 'block' : 'none'; };
 C.setBody = (cls, on) => document.body.classList.toggle(cls, on);
 function resize() {
   VW = C.VW = window.innerWidth; VH = C.VH = window.innerHeight;
@@ -684,7 +688,7 @@ C.togglePause = function () {
   if ($('lesson').classList.contains('on')) { C.closeLesson(); return; }
   C.paused = !C.paused;
   $('pauseScr').classList.toggle('on', C.paused);
-  $('pauseHelp').innerHTML = C.ctrl.pauseHelp ? C.ctrl.pauseHelp() : '';
+  $('pauseHelp').innerHTML = iconize(C.ctrl.pauseHelp ? C.ctrl.pauseHelp() : '');
   if (C.paused) snd.silence();
 };
 // итоги: title, reason, stats [[число, подпись]], note, win (true/false/null)
@@ -699,7 +703,7 @@ C.showEnd = function ({ title, reason, stats, note, win, again }) {
 // объяснение на паузе (обучение и «?»)
 C.openLesson = function (title, body, sub) {
   C.paused = true; snd.silence();
-  $('lessonTitle').innerHTML = title; $('lessonBody').innerHTML = body; $('lessonSub').textContent = sub || 'Объяснение · игра на паузе';
+  $('lessonTitle').innerHTML = title; $('lessonBody').innerHTML = iconize(body); $('lessonSub').textContent = sub || 'Объяснение · игра на паузе';
   $('lesson').classList.add('on');
 };
 C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = false; if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
@@ -711,9 +715,16 @@ $('pause').onclick = () => C.togglePause();
 $('againBtn').onclick = () => orientGate(() => { C.ended = false; C.start(C.lastGame || 'air'); }, IS_TOUCH);
 $('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
 $('exit').onclick = () => C.toMenu();
-$('mute').onclick = () => { snd.unlock(); snd.setMuted(!snd.muted); $('mute').textContent = snd.muted ? '✕♪' : '♪';
+// кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
+const ICO = { tFlare: ['flares', 'Ловушки'], tMap: ['map', 'Карта'], tLock: ['target', 'Цель'], tAuto: ['auto', 'АВТО — помощник'], tLook: ['camera', 'Обзор — свободная камера'], tCam: ['camera', 'Камера: следующий союзник'],
+  tHelp: ['help', 'Нужна помощь'], opMap: ['map', 'Карта'], opAuto: ['auto', 'АВТО — расчёт сам'], opCam: ['camera', 'Камера'], opBino: ['bino', 'Бинокль'], opRadar: ['radar', 'РЛС: включить / выключить'],
+  pause: ['pause', 'Пауза'], plBtn: ['players', 'Игроки'], lsnBtn: ['lesson', 'Урок: задание и подсказки'], askBtn: ['lesson', 'Объяснение'], wMap: ['map', 'Карта'] };
+for (const [id, [n, t]] of Object.entries(ICO)) { const e = $(id); if (!e) continue; e.innerHTML = ico(n); e.title = t; if (e.setAttribute) e.setAttribute('aria-label', t); e.classList.add('icb'); }
+{ const pd = $('tPad'); if (pd && pd.querySelector) { const l = pd.querySelector('.pl'), r = pd.querySelector('.pr'); if (l) l.innerHTML = ico('rollL'); if (r) r.innerHTML = ico('rollR'); } } // крен — стрелки вращения
+const muteIco = C.muteIco = () => { $('mute').innerHTML = ico(snd.muted ? 'soundOff' : 'soundOn'); $('mute').title = snd.muted ? 'Звук выключен' : 'Звук'; };
+$('mute').onclick = () => { snd.unlock(); snd.setMuted(!snd.muted); muteIco();
 for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); };
-$('mute').textContent = snd.muted ? '✕♪' : '♪';
+muteIco();
 for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto);
 addEventListener('keydown', (e) => {
   if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return; // ввод текста (код комнаты, чат команды) — не управление
@@ -828,13 +839,29 @@ loadModels(new URL('./', import.meta.url).href, (name) => {
   for (const g of planeMeshes.values()) scene.remove(g); planeMeshes.clear();
   if (C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady();
 });
-setTimeout(() => {
+// запуск по этапам: между ними экран успевает показать, что сейчас строится (полоса и подпись)
+const ldStep = (txt, k) => new Promise((r) => { const t = $('ldTxt'), b = $('ldBar'); if (t) t.textContent = txt; if (b) b.style.width = Math.round(k * 100) + '%'; setTimeout(r, 30); });
+// догрузка после старта: модели техники и домов, текстуры — статус внизу, пока не придёт всё
+let alShown = false;
+setInterval(() => {
+  const m = modelStats(), t = texStats, need = m.req + t.req, got = m.done + t.done, e = $('assetLoad'); if (!e || !need) return;
+  const left = need - got;
+  if (left > 0 && C.state !== 'loading') {
+    alShown = true; e.classList.add('on');
+    $('alTxt').textContent = `Загружаем город: модели ${m.done} из ${m.req}${t.req ? `, текстуры ${t.done} из ${t.req}` : ''}`;
+    $('alBar').style.width = Math.round(100 * got / need) + '%';
+  } else if (alShown && left <= 0) { alShown = false; $('alTxt').textContent = 'Город загружен'; $('alBar').style.width = '100%'; setTimeout(() => { if (!alShown) e.classList.remove('on'); }, 1500); }
+}, 400);
+(async () => {
+  await ldStep('Строим улицы, дома и реку…', 0.15);
   const t0 = performance.now();
   C.G = buildCityScene(scene, city, P, renderer, W_KEY);
+  await ldStep('Деревья, вода, облака и эффекты…', 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(); } // дома вблизи — только если пресет их рисует
   C.fx = createFx(scene, P);
   if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым — в половине разрешения
+  await ldStep('Режимы игры: вылет, оборона, обучение…', 0.7);
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);
   ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
@@ -843,10 +870,12 @@ setTimeout(() => {
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
   resize();
   C.buildMs = Math.round(performance.now() - t0);
+  await ldStep('Готовим графику (шейдеры)…', 0.85);
   try { renderer.compile(scene, camera); } catch (_) { /* не критично */ }
+  await ldStep('Готово', 1);
   $('loading').remove();
   C.toMenu();
   requestAnimationFrame(frame);
   const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; C.lastGame = go; C.start(go); }
-}, 30);
+})();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)

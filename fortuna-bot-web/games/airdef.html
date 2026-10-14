@@ -14,7 +14,14 @@
     font-family: -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
   canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 5; transition: opacity .35s; }
-  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; z-index: 60; background: #0b1016; }
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; z-index: 60; background: #10140f; color: #e9e6dc; font-family: 'IBM Plex Sans', -apple-system, sans-serif; }
+  #loading .ldb { width: min(360px, 80vw); display: flex; flex-direction: column; gap: 10px; } #loading b { font: 400 22px 'Russo One', sans-serif; letter-spacing: .04em; }
+  #loading span { font-size: 14px; color: #c9cebd; min-height: 1.4em; }
+  .ldbar { height: 4px; background: #2a3226; overflow: hidden; } .ldbar i { display: block; height: 100%; width: 3%; background: #e8b04a; transition: width .25s; }
+  /* догрузка моделей и текстур после старта (меню уже на экране): статус внизу, исчезает, когда всё пришло */
+  #assetLoad { position: fixed; z-index: 2147482000; left: 50%; transform: translateX(-50%); bottom: max(8px, var(--sa-b)); width: min(340px, 70vw); display: none; flex-direction: column; gap: 4px;
+    background: rgba(16,20,15,.82); border: 1px solid #3a4334; padding: 6px 10px; color: #c9cebd; font: 500 11.5px 'IBM Plex Sans', sans-serif; text-align: center; pointer-events: none; }
+  #assetLoad.on { display: flex; } body.playing #assetLoad { bottom: auto; top: calc(var(--top) + 46px); width: min(260px, 50vw); opacity: .85; }
   button { font: inherit; }
   kbd { display: inline-block; font-family: ui-monospace, Menlo, monospace; font-size: .92em; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; }
 
@@ -113,7 +120,24 @@
     background: rgba(10,16,24,.55); color: #fff; font-size: 16px; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 25; }
   /* пауза и звук — в ряд у верхнего края: в столбик на низких экранах (Android с панелью состояния и кнопками Telegram) налезали на «КАРТУ» */
   #exit { right: max(10px, var(--sa-r)); } #pause { right: max(10px, var(--sa-r)); } #mute { right: calc(max(10px, var(--sa-r)) + 44px); }
-  body.playing #pause, body.playing #mute { display: flex; } body.menuing #mute { display: flex; top: var(--top); right: max(10px, var(--sa-r)); }
+  body.playing #pause, body.playing #mute { display: flex; }
+  /* обучение: кнопка урока «?» (рядом со звуком, всегда подсвечена) и сворачиваемая панель — задание, что делать сейчас, как это работает */
+  #lsnBtn { position: fixed; top: var(--top); right: calc(max(10px, var(--sa-r)) + 88px); width: 36px; height: 36px; border-radius: 10px; border: 1px solid #e8b04a; background: rgba(232,176,74,.22); color: #f3c96f;
+    font: 400 18px 'Russo One', sans-serif; display: none; align-items: center; justify-content: center; cursor: pointer; z-index: 25; box-shadow: 0 0 10px rgba(232,176,74,.45); }
+  body.playing.training #lsnBtn { display: flex; animation: lsnGlow 2.6s ease-in-out infinite; } body.lsnOpen #lsnBtn { background: #e8b04a; color: #17190f; animation: none; }
+  @keyframes lsnGlow { 0%, 100% { background: rgba(16,20,15,.72); color: #f3c96f; } 50% { background: #e8b04a; color: #17190f; } } /* свёрнута — переливается: тёмная ↔ как нажатая */
+  body.playing.training #lsnBtn.new { animation: lsnPulse 1.1s ease-in-out 4, lsnGlow 2.6s ease-in-out infinite; } @keyframes lsnPulse { 50% { box-shadow: 0 0 0 7px rgba(232,176,74,.35), 0 0 18px rgba(232,176,74,.8); transform: scale(1.08); } }
+  #lsnPanel { position: fixed; top: calc(var(--top) + 44px); right: max(10px, var(--sa-r)); width: min(380px, calc(100vw - 24px)); max-height: calc(100% - var(--top) - 60px); overflow-y: auto; display: none; z-index: 24;
+    background: rgba(16,20,15,.95); border: 1px solid #3a4334; color: #e9e6dc; padding: 12px 14px; font: 13.5px/1.45 'IBM Plex Sans', -apple-system, sans-serif; text-shadow: none; }
+  body.playing.training.lsnOpen #lsnPanel { display: block; }
+  #lsnPanel .lph { display: flex; justify-content: space-between; align-items: center; color: #a9b19c; font: 600 10.5px 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  #lsnPanel #lsnX { border: 0; background: none; color: #a9b19c; font-size: 16px; cursor: pointer; padding: 2px 4px; }
+  #lsnPanel #lsnName { display: block; font: 400 17px/1.25 'Russo One', sans-serif; margin: 4px 0 8px; color: #f4f1e8; }
+  #lsnPanel .lnow { border-left: 3px solid #e8b04a; background: rgba(232,176,74,.08); padding: 6px 9px; margin-bottom: 8px; } #lsnPanel .lnow b { color: #f3c96f; }
+  #lsnPanel .cat-h { color: #a9b19c; font: 600 10.5px 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 3px; }
+  #lsnPanel h4 { margin: 10px 0 4px; color: #a9b19c; font: 600 10.5px 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  #lsnPanel ul, #lsnPanel ol { margin: 0; padding-left: 18px; } #lsnPanel li { margin: 2px 0; } #lsnPanel table { font-size: 12px; } #lsnPanel .btn { margin-top: 10px; border-radius: 0; }
+  body.coarse #lsnPanel { font-size: 12.5px; max-height: calc(100% - var(--top) - 50px); } body.menuing #mute { display: flex; top: var(--top); right: max(10px, var(--sa-r)); }
 
   /* ── HUD самолёта ── */
   #hudc { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 11; }
@@ -192,6 +216,10 @@
     font: 700 11px -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.1; cursor: pointer; }
   .tb.big { width: 82px; height: 70px; font-size: 13px; border-color: rgba(253,224,71,.7); }
   .tb.on { background: rgba(120,90,10,.6); }
+  /* «ПУСК» (сброс и пуск): заливка по часовой — перезарядка следующей единицы (--fb), внизу «готово×секунд»; .dry — пусто и пополнять нечем */
+  #tFire { --fb: 360deg; background: conic-gradient(rgba(232,176,74,.42) var(--fb), rgba(10,20,30,.45) 0); transition: opacity .2s; }
+  #tFire span { display: flex; flex-direction: column; align-items: center; gap: 1px; } #tFire small { font: 600 9.5px -apple-system, sans-serif; opacity: .85; max-width: 74px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tFire em { font: 700 11px 'IBM Plex Mono', ui-monospace, monospace; font-style: normal; color: #fde68a; text-transform: none; } #tFire.dry { opacity: .32; }
   .warnc { color: #fca5a5; font-weight: 700; }
   /* крестовина: ▲▼ — тангаж, ⟲⟳ — крен (Настройки → «Крестовина»; в редакторе кнопок — двигается и меняет размер) */
   #tPad { left: max(16px, var(--sa-l)); bottom: 120px; width: auto; height: auto; background: transparent; border: 0; display: grid; grid-template: repeat(3, 48px) / repeat(3, 48px); gap: 3px; align-items: stretch; justify-items: stretch; }
@@ -436,13 +464,75 @@
   #ledCtl b { color: #fb923c; min-width: 58px; } #ledCtl label { display: flex; align-items: center; gap: 4px; } #ledCtl input { width: 92px; }
   #ledBar .ledBtns { display: flex; gap: 8px; justify-content: flex-end; }
   #ledBar .btn { width: auto; display: inline-block; padding: 7px 12px; font-size: 12.5px; margin: 0; }
+
+  /* ═════ Игра в стиле главного меню (2026-10-14): плоско, без скруглений, тёмно-оливковые панели, янтарный акцент, Russo One /
+     IBM Plex. Только вид (цвет, углы, шрифт) — места и размеры прежние. Меню (#menu …) этим не затрагивается ═════ */
+  :root { --th-bg: rgba(16,20,15,.9); --th-bg2: rgba(16,20,15,.58); --th-line: #3a4334; --th-ac: #e8b04a; --th-tx: #e9e6dc; --th-dim: #a9b19c; }
+  #hud, #touch, #dside, #dtop, #evPanel, #netPlan, #plPanel, #netChat, #opHud, #photoUi, #wBar, .screen, #msg, #warn, #hint, #ask, #ledBar { font-family: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif; }
+  /* окна: пауза, итоги, объяснение */
+  .screen .card { background: rgba(16,20,15,.96); border: 1px solid var(--th-line); border-radius: 0; box-shadow: 0 10px 40px rgba(0,0,0,.55); color: var(--th-tx); }
+  .screen .card h1 { font: 400 23px/1.2 'Russo One', sans-serif; letter-spacing: .03em; }
+  .btn { border-radius: 0; background: var(--th-ac); color: #17190f; font: 400 15px 'Russo One', sans-serif; letter-spacing: .05em; box-shadow: none; }
+  .btn.alt { background: #1c2318; color: var(--th-tx); border: 1px solid var(--th-line); font: 600 14px 'IBM Plex Sans', sans-serif; letter-spacing: 0; }
+  .btn:hover { filter: brightness(1.08); }
+  .seg { border-radius: 0; } .seg button { border-radius: 0; color: var(--th-tx); } .seg button.on { background: var(--th-ac); color: #17190f; }
+  .opt, .dcard, .evr { border-radius: 0; border-color: #2f372b; background: rgba(233,230,220,.03); } .opt.on, .dcard.on, .evr.on { border-color: var(--th-ac); background: rgba(232,176,74,.1); }
+  .tag, .role { border-radius: 0; }
+  .cat-h { color: var(--th-dim); font-family: 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .08em; }
+  details.ref { border-radius: 0; background: #151a12; }
+  /* кнопки поверх игры */
+  #exit, #mute, #pause, #plBtn { border-radius: 0; background: var(--th-bg2); border: 1px solid var(--th-line); color: var(--th-tx); }
+  #lsnBtn { border-radius: 0; }
+  /* HUD самолёта: панель слева, задание, окно ТВ, карта */
+  #wpn, #osd { background: var(--th-bg2); border: 1px solid rgba(58,67,52,.8); border-radius: 0 !important; color: var(--th-tx); }
+  #wpn .r.sel { color: #f3c96f; } #wpn .tvb, #wpn .tgl { border-radius: 0; }
+  #podBox { border-radius: 0; border-color: rgba(232,176,74,.55); }
+  #map { border-radius: 0; border: 1px solid var(--th-line); }
+  #msg { color: #f3c96f; font-weight: 600; } #warn { font-family: 'Russo One', sans-serif; font-weight: 400; letter-spacing: .08em; }
+  #ask { border-radius: 0; background: var(--th-bg); border-color: rgba(232,176,74,.6); } #ask button { border-radius: 0; background: var(--th-ac); color: #17190f; font-family: 'Russo One', sans-serif; font-weight: 400; }
+  #hint { border-radius: 0 !important; }
+  /* сенсорные кнопки */
+  .tb { border-radius: 0; background: rgba(16,20,15,.5); border: 1px solid rgba(233,230,220,.26); color: var(--th-tx); font: 600 11px 'IBM Plex Sans', sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+  .tb.big { border-color: var(--th-ac); font: 400 13px 'Russo One', sans-serif; letter-spacing: .05em; }
+  .tb.on, #tAuto.on, #opAuto.on, #opBtns .tb.on, #opCam.on { background: rgba(232,176,74,.42); border-color: var(--th-ac); color: #fff; }
+  #tFire { background: conic-gradient(rgba(232,176,74,.42) var(--fb), rgba(16,20,15,.5) 0); } #tFire small { font-family: 'IBM Plex Sans', sans-serif; text-transform: none; }
+  #tPad i { border-radius: 0; }
+  /* ПВО: карта, правая панель, лента, оператор, «Мульти-волна» */
+  #dside, #evPanel, #netPlan, #plPanel, #netChat { background: var(--th-bg); border: 1px solid var(--th-line); border-radius: 0; color: var(--th-tx); }
+  #dside h3, #evPanel h3, #netPlan h3 { font: 400 15px 'Russo One', sans-serif; letter-spacing: .02em; color: #f4f1e8; }
+  #dside .btn.mini, #evPanel .btn.mini2, #dside .btn.mini2 { border-radius: 0; }
+  #dtop { color: var(--th-tx); } #dtop b { color: #f3c96f; }
+  #opInfo { color: var(--th-tx); } #opInfo b { color: #f3c96f; }
+  #opBtns .tb { border-radius: 0; } #mnFit, #mnZ, #evBtn, #wBar button { border-radius: 0 !important; }
+  #wBar .wb, #wInfo { border-radius: 0; }
+  /* «Режим съёмки», игроки онлайна, редактор кнопок */
+  .phRow button, #phSide button { border-radius: 0; background: var(--th-bg2); border-color: rgba(233,230,220,.26); } .phRow button.on { background: var(--th-ac); border-color: var(--th-ac); color: #17190f; }
+  #plPanel .plh { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+  #ledBar { border-radius: 0; background: var(--th-bg); border: 1px solid var(--th-line); }
+  /* иконки управления (icons.js): вместо надписей; подпись — мелко под иконкой, где нужна (газ, пуск) */
+  .ic { width: 26px; height: 26px; display: block; flex: none; } .ii { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
+  .tb { flex-direction: column; gap: 2px; } .tb small { font: 600 10px 'IBM Plex Sans', sans-serif; text-transform: none; letter-spacing: 0; opacity: .9; }
+  .tb.big .ic { width: 30px; height: 30px; } #tFire .ic, #opFire .ic { width: 28px; height: 28px; }
+  #exit .ic, #mute .ic, #pause .ic, #plBtn .ic, #lsnBtn .ic { width: 20px; height: 20px; } #askBtn .ic { width: 18px; height: 18px; margin: auto; }
+  body.short .tb .ic { width: 22px; height: 22px; } body.short #opBtns .tb .ic { width: 20px; height: 20px; }
+  #tPad i .ic { width: 22px; height: 22px; margin: auto; }
+  #opBtns #opRadar.on { background: var(--th-ac); border-color: var(--th-ac); color: #17190f; } /* РЛС излучает — иконка закрашена */
+  #opBtns .tb.off { opacity: .45; }
+  #opFire { --fb: 360deg; --fc: rgba(74,222,128,.5); background: conic-gradient(var(--fc) var(--fb), rgba(16,20,15,.5) 0); }
+  #opFire span { display: flex; flex-direction: column; align-items: center; gap: 2px; } #opFire em { font: 700 12px 'IBM Plex Mono', ui-monospace, monospace; font-style: normal; text-transform: none; color: #fff; }
+  #wMap .ic { width: 18px; height: 18px; }
+  .bi { white-space: nowrap; } .bi .ii { color: #f3c96f; } table.tt.ilg td:first-child { width: 34px; opacity: 1; } table.tt.ilg .ii { width: 22px; height: 22px; color: #f3c96f; } /* значки в текстах и легенда */
+  #mapNav { background: var(--th-bg) !important; border: 1px solid var(--th-line) !important; border-radius: 0 !important; }
+  #mnPad { border-radius: 0; border-color: var(--th-line); background: rgba(233,230,220,.03); } #mnKnob { border-radius: 0; background: rgba(232,176,74,.9); }
+  #mnZ { accent-color: var(--th-ac); } #podBox .zoom { border-radius: 0; }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Russo+One&display=swap">
 </head>
 <body>
 <canvas id="c"></canvas>
 <div id="fade"></div>
-<div id="loading">Строим город…</div>
+<div id="loading"><div class="ldb"><b>AIR SUPERIORITY</b><span id="ldTxt">Генерируем город: улицы, кварталы, река…</span><div class="ldbar"><i id="ldBar"></i></div></div></div>
+<div id="assetLoad"><span id="alTxt"></span><div class="ldbar"><i id="alBar"></i></div></div>
 <canvas id="hudc"></canvas>
 
 <div id="hud">
@@ -485,12 +575,13 @@
 
 <div id="touch">
   <div id="stickZone"></div><div id="stickKnob"></div>
-  <div class="tb big" id="tFire">СБРОС</div>
+  <div class="tb big" id="tFire">ПУСК</div>
   <div class="tb" id="tLock">ЦЕЛЬ</div>
   <div class="tb" id="tFlare">ЛОВУШКИ</div>
   <div class="tb" id="tMap">КАРТА</div>
   <div class="tb" id="tCam">КАМ.</div>
   <div class="tb" id="tAuto">АВТО</div>
+  <div class="tb" id="tLook">ОБЗОР</div>
   <div class="tb" id="tHelp">ПОМОЩЬ</div>
   <div class="tb" id="tThr">ГАЗ 80%</div>
   <div class="tb pad" id="tPad"><i class="pu">▲</i><i class="pl">⟲</i><i class="pr">⟳</i><i class="pd">▼</i></div>
@@ -498,8 +589,11 @@
 
 <button id="exit" aria-label="Выйти">✕</button>
 <button id="pause" aria-label="Пауза">II</button>
-<button id="mute" aria-label="Звук">♪</button>
-<button id="plBtn" aria-label="Игроки" title="Игроки: кто в сети и кто готов">👥</button>
+<button id="mute" aria-label="Звук"></button>
+<button id="lsnBtn" aria-label="Урок: задание и подсказки">?</button>
+<div id="lsnPanel" role="dialog" aria-label="Урок"><div class="lph"><span id="lsnSec"></span><button id="lsnX" aria-label="Свернуть">✕</button></div><b id="lsnName"></b>
+  <div class="lnow"><div class="cat-h">Сейчас</div><div id="lsnNow"></div></div><div id="lsnBody"></div><button id="lsnRestart" class="btn alt">Начать урок заново</button></div>
+<button id="plBtn" aria-label="Игроки" title="Игроки: кто в сети и кто готов"></button>
 <div id="plPanel"></div>
 
 <div id="netWait"><span class="dot"></span><span class="t">Ищем бой…</span><button>Отмена</button></div>
@@ -554,7 +648,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261020i"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261020i"></script>
+<script src="../config.js?v=20261020j"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261020j"></script>
 </body>
 </html>

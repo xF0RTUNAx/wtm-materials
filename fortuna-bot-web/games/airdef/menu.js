@@ -1,17 +1,18 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { CITY } from './city.js?v=20261020i';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020i';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020i';
-import { MODES } from './sim/strike.js?v=20261020i';
-import { WEATHERS } from '../drone/world.js?v=20261020i';
-import { LESSONS } from './training.js?v=20261020i';
-import { MODEL_CREDITS } from './models.js?v=20261020i';
-import { openLayoutEditor } from './layout.js?v=20261020i';
+import { CITY } from './city.js?v=20261020j';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020j';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020j';
+import { MODES } from './sim/strike.js?v=20261020j';
+import { WEATHERS } from '../drone/world.js?v=20261020j';
+import { LESSONS } from './training.js?v=20261020j';
+import { MODEL_CREDITS } from './models.js?v=20261020j';
+import { openLayoutEditor } from './layout.js?v=20261020j';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020i';
-import { photoItems } from './photo.js?v=20261020i';
-import { guideChapters } from './guide.js?v=20261020i';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020j';
+import { photoItems } from './photo.js?v=20261020j';
+import { guideChapters } from './guide.js?v=20261020j';
+import { iconize } from './icons.js?v=20261020j';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -239,7 +240,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     $('tab-ref').innerHTML = h;
   }
   // ── Руководство ──
-  function renderGuide() { $('tab-guide').innerHTML = guideChapters(C).map(([t, b], i) => `<details class="ref"${i === 0 ? ' open' : ''}><summary>${t}</summary><div class="body">${b}</div></details>`).join(''); }
+  function renderGuide() { $('tab-guide').innerHTML = guideChapters(C).map(([t, b], i) => `<details class="ref"${i === 0 ? ' open' : ''}><summary>${t}</summary><div class="body">${iconize(b)}</div></details>`).join(''); }
   // ── Настройки ──
   // «Кастомный»: свои настройки (C.GO → localStorage, применяются перезапуском)
   function customPanel() {
@@ -326,7 +327,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sPadOn') { C.sens.pad = e.target.checked; C.saveSens(); document.body.classList.toggle('nopad', !C.sens.pad); }
     if (e.target.id === 'sPadK') { C.sens.padK = +e.target.value; $('vPadK').textContent = Math.round(C.sens.padK * 100) + '%'; C.saveSens(); }
     if (e.target.id === 'sFs') C.shell.setFs(e.target.checked);
-    if (e.target.id === 'sMute') { snd.unlock(); snd.setMuted(!e.target.checked); $('mute').textContent = snd.muted ? '✕♪' : '♪'; }
+    if (e.target.id === 'sMute') { snd.unlock(); snd.setMuted(!e.target.checked); C.muteIco(); }
   };
   // Арсенал / Справка / Настройки / Об игре — панель поверх меню; повторное касание, ✕ или Esc — закрыть
   const SHEET = { ref: 'Арсенал', guide: 'Справка', set: 'Настройки', misc: 'Об игре' };

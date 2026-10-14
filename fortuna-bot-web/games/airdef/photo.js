@@ -8,12 +8,12 @@
 // объекта (по горизонтали и вертикали), щипок, колесо и ＋/－ — ближе или дальше, «зум» — угол поля зрения.
 // ◎ прячет весь интерфейс (тап по экрану — вернуть); скорость ×1 / ×½ / ×¼ / стоп-кадр (камеру можно крутить и на стопе).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261020i';
-import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020i';
-import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020i';
-import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020i';
-import { fwdOf } from '../drone/sim/core.js?v=20261020i';
-import { weaponHasModel } from './models.js?v=20261020i';
+import { mulberry32 } from './city.js?v=20261020j';
+import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261020j';
+import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261020j';
+import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261020j';
+import { fwdOf } from '../drone/sim/core.js?v=20261020j';
+import { weaponHasModel } from './models.js?v=20261020j';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]
@@ -147,6 +147,7 @@ export function createPhoto(C, ctrls) {
     if (R.kind !== st.kind) { st.kind = R.kind; farName(); }
     const fov = (shot && shot.f) || FOVS[st.fi] || (A.fixed ? (R.kind === 'st' ? 11 : 32) : 55);
     if (Math.abs(camera.fov - fov) > 0.01) C.setFov(fov);
+    if (shot && shot.cam) { const q = shot.cam; camera.position.set(q[0], q[1], q[2]); camera.up.set(0, 1, 0); camera.lookAt(q[3], q[4], q[5]); return; } // проверка: камера в точке [x, y, z, куда x, y, z]
     if (R.kind === 'hold') { lookS.lerp(R.look, 1 - Math.exp(-dt * 4)); camera.up.set(0, 1, 0); camera.lookAt(lookS); return; }
     const snap = st.snap || !hadPos || prevPos.distanceToSquared(R.pos) > 400 * 400; st.snap = false; prevPos.copy(R.pos); hadPos = true;
     if (snap || R.kind === 'py') Fs.copy(R.F); else Fs.lerp(R.F, 1 - Math.exp(-dt * 5)).normalize();
@@ -236,7 +237,7 @@ export function createPhoto(C, ctrls) {
     return [...out, { id: 'sam', n: 'Ракета ПВО' }, { id: 'pvo', n: 'Комплекс ПВО' }, { id: 'tgt', n: 'Цель' }];
   };
   function newBattle() {
-    rnd = mulberry32((Date.now() & 0xfffff) ^ 0x7a11);
+    { const sd = new URLSearchParams(location.search).get('seed'); rnd = mulberry32(sd ? +sd : (Date.now() & 0xfffff) ^ 0x7a11); } // ?seed= — тот же бой (сравнение кадров)
     st.rel.clear(); st.prevSt = new Map(); st.fol = {}; st.airTgt = null; st.hero = null; st.wave = 1; st.endT = 0; st.evNext = false; sizeOf.clear(); st.snap = true; hadPos = false;
     st.era = setup.era;
     if (st.br === 'air') {

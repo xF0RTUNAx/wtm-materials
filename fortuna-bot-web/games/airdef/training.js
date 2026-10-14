@@ -2,15 +2,18 @@
 // подвеска пополняется). На каждом шаге — подсказка; кнопка «?» ставит игру на паузу и объясняет комплекс или оружие.
 // Урок сам запускает режим air.js или defense.js со своими опциями и следит за шагами через tick(T).
 /* global THREE */
-import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, SAM_COST } from './arsenal.js?v=20261020i';
-import { samKnown } from './sim/combined.js?v=20261020i';
-import { spotNear, freeGround } from './mission.js?v=20261020i';
-import { riverX } from './city.js?v=20261020i';
+import { SAM, AG, SAM_TYPE, AG_KIND, THREAT, SAM_COST } from './arsenal.js?v=20261020j';
+import { samKnown } from './sim/combined.js?v=20261020j';
+import { spotNear, freeGround } from './mission.js?v=20261020j';
+import { riverX } from './city.js?v=20261020j';
+import { iconize } from './icons.js?v=20261020j';
 
 const K = (k) => `<kbd>${k}</kbd>`;
 // подписи управления: ПК или телефон
 const ctl = (C, pc, phone) => (C.IS_TOUCH ? phone : pc);
-const objOf = (C, key) => C.S.objects.find((o) => o.key === key);
+const objOf = (C, key) => (C.S ? C.S.objects : C.city.objects).find((o) => o.key === key); // до старта боя (урок из меню — боя на фоне нет) — объекты города: те же места
+// «АВТО» в уроке: показ — включено, «Теперь вы» — выключено (иначе практику делает помощник); выбор игрока вернётся после урока
+function autoSet(C, T, on) { if (T.d.auto0 === undefined) T.d.auto0 = C.auto; C.auto = on; for (const id of ['tAuto', 'opAuto']) { const b = document.getElementById(id); if (b) b.classList.toggle('on', on); } }
 
 // ветки обучения: обычная игра и «Мульти-волна»
 export const TSIDES = { air: 'за самолёт', def: 'за ПВО', matk: 'мульти-волна за волну', mdef: 'мульти-волна за ПВО' };
@@ -76,9 +79,9 @@ function DL(c) {
       if (d.auto0 === undefined) d.auto0 = C.auto;
       d.downs = d.downs || 0;
       if (T.s === 0) {
-        C.auto = true;
+        autoSet(C, T, true);
         T.hint(`<b>Показ.</b> ${c.demoHint(C, u)} <span class="dim">«АВТО» назначает цель и стреляет сам — смотрите.</span>`);
-        if (d.downs >= Math.min(need, c.n || 1) || T.st > 100) { C.auto = d.auto0; d.base = d.downs; T.next(); }
+        if (d.downs >= Math.min(need, c.n || 1) || T.st > 100) { autoSet(C, T, false); d.base = d.downs; T.next(); }
       } else if (d.downs - (d.base || 0) >= need) { T.hint(`<b>${c.win}</b>`); d.win = d.win || T.t; if (T.t - d.win > 3) T.done(); }
       else T.hint(`<b>Теперь вы.</b> ${c.hint(T, C, u, D)}`);
       if (u && !u.dead && !C.raid.planes.some((a) => !a.dead && !a.out) && T.st > 2) spawnP(C);
@@ -115,7 +118,7 @@ function WL(c) {
         if (dO.dead && !fly) { T.d.wait = T.d.wait || T.st; if (T.st - T.d.wait > 2.5) T.next(); } else if (T.st > 90) T.next(); // не вышло — к практике
         return;
       }
-      if (T.s === 1) { a.demo(null); a.setCam(0); a.rearm(); a.retarget([pO]); a.place(approach(C, pO, c.prac[1], c.prac[2], c.prac[3])); a.say('Теперь вы', 2); T.next(); return; }
+      if (T.s === 1) { a.demo(null); autoSet(C, T, false); a.setCam(0); a.rearm(); a.retarget([pO]); a.place(approach(C, pO, c.prac[1], c.prac[2], c.prac[3])); a.say('Теперь вы', 2); T.next(); return; }
       if (pO.dead) { T.hint(`<b>${c.win}</b>`); T.d.win = T.d.win || T.t; if (T.t - T.d.win > 3) T.done(); return; }
       if (empty) { a.rearm(); a.say('Подвеска пополнена (обучение)', 1.5); }
       T.hint(`<b>Теперь вы.</b> ${c.hint(T, C, a, pO, W)}`);
@@ -129,7 +132,8 @@ export const LESSONS = {
         ctl(C, `Ручка — стрелки или ${K('A')}/${K('D')} и ↑/↓: крен и тангаж. Самолёт поворачивает креном — накрените и потяните на себя.`, C.sens.aim !== false ? '<b>Наведение камерой</b>: ведите пальцем по экрану — самолёт сам летит туда, куда смотрит камера (белый кружок). Это основной способ на телефоне.' : 'Левая половина экрана — ручка: от себя — нос вниз, на себя — вверх, в стороны — крен.'),
         `Крестовина ${ctl(C, '(стрелки)', 'слева')} — точные крен и тангаж: пока нажата, камера идёт за носом.`,
         `Газ ступенями 40–60–80–100 %, после 100 % — <b>форсаж</b> (${ctl(C, `${K('W')}/${K('S')}, ${K('Shift')} — сразу`, 'кнопка «ГАЗ»')}). На форсаже топливо уходит втрое быстрее, а сопло горячее вдвое — тепловым ракетам легче.`,
-        'Высота над землёй — в панели слева вверху. Ниже ~100 м многие РЛС вас не видят, но дома и земля ближе.'],
+        'Высота над землёй — в панели слева вверху. Ниже ~100 м многие РЛС вас не видят, но дома и земля ближе.',
+        ctl(C, 'Кнопки сверху — значки: пауза, звук, «?» — этот урок. Мышью тяните по экрану в обзоре (L).', 'Кнопки — значки: «ПУСК», «ЛОВУШКИ», «ЦЕЛЬ», «КАРТА», «ГАЗ», «АВТО», «ОБЗОР» (осмотреться, самолёт держит курс). Все значки — в руководстве, глава «Значки кнопок».')],
         ['Резкий тангаж на малой высоте — задели крышу высотки.', 'Весь полёт на форсаже — топливо кончится за пару минут.']),
       air: () => ({ items: [['fab500', 2]], targets: [], defense: () => {}, spawn: { x: 0, y: 1500, z: 9000, yaw: 0 } }),
       tick(T, C) {
@@ -166,7 +170,7 @@ export const LESSONS = {
       air: () => ({ items: [['mk82', 2]], targets: [], defense: () => {}, reload: true, spawn: { x: 0, y: 1500, z: 9000, yaw: 0 } }),
       tick(T, C) {
         const a = C.ctrl.inner, l = a.loadout[0];
-        if (T.s === 0) { T.hint(`Сбросьте обе бомбы куда угодно — ${ctl(C, K('Пробел'), '«СБРОС»')}.`); if (l.n === 0) T.next(); }
+        if (T.s === 0) { T.hint(`Сбросьте обе бомбы куда угодно — ${ctl(C, K('Пробел'), '«ПУСК»')}.`); if (l.n === 0) T.next(); }
         else if (T.s === 1) { T.hint(l.rt > 0 ? `Пилон пуст — смотрите в строку оружия: <b>↻ ${Math.ceil(l.rt)} с</b> до следующей бомбы (так в «Аркаде»). В «Реализме» за ней пришлось бы лететь к точке вылета.` : 'Бомба вернулась на пилон.'); if (l.n > 0) T.next(); }
         else { T.hint(`<b>Пополнено.</b> Включите форсаж (${ctl(C, K('Shift'), '«ГАЗ» до «ФОРСАЖ»')}) и посмотрите, как быстрее тает топливо ⛽.`); if (T.st > 10) T.done(); }
       } },
@@ -211,35 +215,35 @@ export const LESSONS = {
       how: (W) => [`Прицел — <b>зелёный кружок</b>: куда упадёт бомба, если сбросить сейчас (CCIP). Выведите его на цель и сбрасывайте.`, `Радиус поражения ${W.short} — около ${W.blast} м: промах на 30–40 м уже не страшен, на 100 м — мимо.`, 'Чем ниже и медленнее — тем точнее, но низко и близко к цели работают пушки и ПЗРК.', 'Бомба летит долго: с 1000 м — около 15 с до земли.'],
       errs: () => ['Сброс, когда кружок только подходит к цели, — бомба ляжет с недолётом.', 'Крен в момент сброса — кружок «гуляет», бомба уходит вбок.'],
       demoHint: () => 'Автопилот ведёт самолёт на цель на 900 м — следите за зелёным кружком: он ползёт к ромбу, и как только накроет его — сброс.',
-      hint: (T, C, a, o) => `Цель — «${o.name}». Ведите самолёт так, чтобы <b>зелёный кружок</b> наехал на ромб, и сбрасывайте — ${ctl(C, K('Пробел'), '«СБРОС»')}.`,
+      hint: (T, C, a, o) => `Цель — «${o.name}». Ведите самолёт так, чтобы <b>зелёный кружок</b> наехал на ромб, и сбрасывайте — ${ctl(C, K('Пробел'), '«ПУСК»')}.`,
       win: 'Цель поражена! Свободнопадающая бомба — только прицел и ваш заход.' }),
     WL({ id: 'lgb', name: 'Лазерные бомбы', desc: 'КАБ-500Л / GBU-12: захват, «В ЗОНЕ», подсвет до попадания', key: (C) => (C.setup.side === 'east' ? 'gbu12' : 'kab500l'), pod: true, n: 4,
       demo: ['tv', 7000, 2000], prac: ['tpp', 7000, 2000],
       how: (W) => ['Контейнер захватывает цель и <b>подсвечивает её лазером</b>, бомба летит на пятно.', `Сброс — когда в панели «<b>В ЗОНЕ</b>»: бомба долетит до точки. Дальность ${W.short} в игре — до ${W.rmax / 1000} км.`, 'После сброса <b>держите подсвет</b> до попадания: лазер ● горит, пока контейнер видит точку.', 'Работает ночью и в дымке; облака и дым между контейнером и целью мешают.'],
       errs: () => ['Резкий отворот после сброса — точку закрывает корпус («МАСКИРОВКА»), бомба падает мимо.', 'Сброс вне зоны — бомба не долетит.', 'Подход ниже 400 м — нет захвата.'],
       demoHint: (C, W, a) => `Автопилот идёт на «Узел связи» на 2 км. Контейнер ${a.pod.lock ? '<b>захватил</b> цель' : 'ищет цель'} — сброс будет, когда бомба долетит до точки.`,
-      hint: (T, C, a, o) => (a.pod.lock ? `Захват «${o.name}» есть. Летите к цели, при «<b>В ЗОНЕ</b>» — сброс (${ctl(C, K('Пробел'), '«СБРОС»')}), потом держите подсвет — не отворачивайте круто.` : `Ждём захват контейнером: ${a.pod.why || 'захват…'}.`),
+      hint: (T, C, a, o) => (a.pod.lock ? `Захват «${o.name}» есть. Летите к цели, при «<b>В ЗОНЕ</b>» — сброс (${ctl(C, K('Пробел'), '«ПУСК»')}), потом держите подсвет — не отворачивайте круто.` : `Ждём захват контейнером: ${a.pod.why || 'захват…'}.`),
       win: 'Цель поражена! Бомба шла на лазерное пятно, пока вы его держали.' }),
     WL({ id: 'tvb', name: 'ТВ-бомбы', desc: 'КАБ-500Кр: захват до сброса — «сбросил и забыл»', key: () => 'kab500kr', pod: true, n: 4,
       demo: ['gov', 7000, 2000], prac: ['oil', 7000, 2000],
       how: (W) => ['ТВ-головка бомбы <b>запоминает картинку</b> цели из контейнера: захват нужен <b>до сброса</b>.', `После сброса бомба наводится сама — можно сразу уходить. Дальность ${W.short} в игре — до ${W.rmax / 1000} км.`, 'Ночью не видит — только днём и в сумерках.'],
       errs: () => ['Сброс без захвата — бомба упадёт как обычная.', 'Ночной вылет с ТВ-оружием — бесполезно, берите лазерное или спутниковое.'],
       demoHint: (C, W, a) => (C.NIGHT >= 0.5 ? 'Сейчас ночь — ТВ-головка не видит, показ будет без сброса.' : `Автопилот идёт на «Командный пункт». Контейнер ${a.pod.lock ? '<b>захватил</b>' : 'захватывает'} цель — бомба запомнит её и после сброса уйдёт сама.`),
-      hint: (T, C, a, o) => (C.NIGHT >= 0.5 ? 'Ночью ТВ-бомба не видит цель. Выберите дневную погоду в «Настройках» и пройдите урок ещё раз.' : a.pod.lock ? `Захват «${o.name}» есть — при «<b>В ЗОНЕ</b>» сбрасывайте (${ctl(C, K('Пробел'), '«СБРОС»')}) и можно отворачивать.` : `Ждём захват: ${a.pod.why || 'захват…'}.`),
+      hint: (T, C, a, o) => (C.NIGHT >= 0.5 ? 'Ночью ТВ-бомба не видит цель. Выберите дневную погоду в «Настройках» и пройдите урок ещё раз.' : a.pod.lock ? `Захват «${o.name}» есть — при «<b>В ЗОНЕ</b>» сбрасывайте (${ctl(C, K('Пробел'), '«ПУСК»')}) и можно отворачивать.` : `Ждём захват: ${a.pod.why || 'захват…'}.`),
       win: 'Цель поражена! Вы могли уходить сразу после сброса — бомба наводилась сама.' }),
     WL({ id: 'gps', name: 'Спутниковые бомбы', desc: 'JDAM / КАБ-500С: по координатам, ночью и в облаках', key: (C) => (C.setup.side === 'east' ? 'gbu31' : 'kab500s'), pod: true, n: 4,
       demo: ['port', 10000, 4000], prac: ['stad', 10000, 4000],
       how: (W) => ['Бомба летит в <b>координаты</b>: захват контейнером или цель задания впереди.', `Сброс при «<b>В ЗОНЕ</b>», дальше — сама: ночью, в облаках, в дыму. Дальность ${W.short} в игре — до ${W.rmax / 1000} км, радиус поражения ~${W.blast} м.`, 'Подсвет не нужен — сразу уходите.', '<b>Станция подавления навигации</b> ПВО (РЭБ, III–IV эпоха) в радиусе 9 км сбивает её на десятки метров — «мимо — помехи навигации».'],
       errs: () => ['Бросать в зоне РЭБ — промах. Сначала уничтожьте станцию или возьмите лазерное оружие.', 'Сбрасывать с предела дальности на малой высоте — не долетит.'],
       demoHint: () => 'Автопилот идёт на «Военно-морскую базу» на 4 км. Координаты есть — бомба уйдёт, когда будет «В ЗОНЕ».',
-      hint: (T, C, a, o) => `Цель — «${o.name}». Координаты дадут контейнер или сама цель задания. При «<b>В ЗОНЕ</b>» — сброс (${ctl(C, K('Пробел'), '«СБРОС»')}), дальше бомба сама.`,
+      hint: (T, C, a, o) => `Цель — «${o.name}». Координаты дадут контейнер или сама цель задания. При «<b>В ЗОНЕ</b>» — сброс (${ctl(C, K('Пробел'), '«ПУСК»')}), дальше бомба сама.`,
       win: 'Цель поражена! Спутниковой бомбе не нужен ни подсвет, ни картинка — только координаты.' }),
     WL({ id: 'agm', sec: 'Ракеты', name: 'Управляемые ракеты', desc: 'Maverick / Х-29Т: ТВ-головка, захват до пуска', key: (C) => (C.setup.side === 'east' ? 'agm65b' : 'kh29t'), pod: true, n: 3,
       demo: ['oil', 9000, 2000], prac: ['stad', 9000, 2000],
       how: (W) => ['Ракета с двигателем: летит быстро и далеко, ТВ-головка <b>запоминает цель из контейнера</b> — захват нужен до пуска.', `Пуск — нос на цель (поле ГСН ±${W.fov}°), дальность ${W.short} в игре — до ${W.rmax / 1000} км; дальше ракета сама.`, 'Лазерные ракеты (Х-25МЛ) — как лазерная бомба: подсвет до попадания.', 'ТВ-головка ночью не видит.'],
       errs: () => ['Пуск без захвата или в сторону от цели — ракета уйдёт мимо.', 'Ночной вылет с ТВ-ракетами.'],
       demoHint: (C, W, a) => (C.NIGHT >= 0.5 ? 'Сейчас ночь — ТВ-головка не видит, показ будет без пуска.' : `Автопилот ведёт нос на «Склад горючего». Контейнер ${a.pod.lock ? '<b>захватил</b> цель — пуск, как только цель войдёт в поле ГСН' : 'захватывает цель'}.`),
-      hint: (T, C, a, o) => (C.NIGHT >= 0.5 ? 'Ночью ТВ-головка не видит. Выберите день в «Настройках».' : a.pod.lock ? `Захват есть — доверните нос на «${o.name}» и пускайте (${ctl(C, K('Пробел'), '«СБРОС»')}). После пуска можно уходить.` : `Ждём захват: ${a.pod.why || 'захват…'}.`),
+      hint: (T, C, a, o) => (C.NIGHT >= 0.5 ? 'Ночью ТВ-головка не видит. Выберите день в «Настройках».' : a.pod.lock ? `Захват есть — доверните нос на «${o.name}» и пускайте (${ctl(C, K('Пробел'), '«ПУСК»')}). После пуска можно уходить.` : `Ждём захват: ${a.pod.why || 'захват…'}.`),
       win: 'Цель поражена! ТВ-головка вела ракету сама.' }),
     { id: 'arm', sec: 'Ракеты', name: 'Противорадиолокационные ракеты', desc: 'Shrike без памяти и Х-58 с памятью',
       intro: () => card('Противорадиолокационные ракеты (ПРР)', [
@@ -264,7 +268,7 @@ export const LESSONS = {
       how: (W) => ['Пуск <b>издалека по координатам</b> (цель задания впереди или захват контейнера) — самолёт может не входить в зону ПВО.', `Ракета идёт на ${W.alt} м, огибая дома: видят её только станции, которые различают низкие цели («Тор», «Панцирь», NASAMS).`, `Летит долго (${W.speed} м/с) — её успевают перехватить; ${W.short} в игре — до ${W.rmax / 1000} км.`],
       errs: () => ['Пуск ближе 5 км — ракета не успеет снизиться и разогнаться.', 'Одна ракета по объекту под «Тором» — перехватят; пускайте парой или вместе с ложными целями.'],
       demoHint: () => 'Автопилот идёт к «Складу боеприпасов» — пуск с ~9 км, дальше смотрите за ракетой: она прижимается к крышам.',
-      hint: (T, C, a, o) => `Цель — «${o.name}». Пуск издалека (${ctl(C, K('Пробел'), '«СБРОС»')}), когда цель впереди, — ракета найдёт её сама.`,
+      hint: (T, C, a, o) => `Цель — «${o.name}». Пуск издалека (${ctl(C, K('Пробел'), '«ПУСК»')}), когда цель впереди, — ракета найдёт её сама.`,
       win: 'Цель поражена! Самолёт даже не входил в зону ПВО.' }),
     { id: 'decoy', sec: 'Защита', name: 'Ложные цели', desc: 'MALD: для РЛС — ещё один самолёт',
       intro: () => card('Ложные цели', [
@@ -277,7 +281,7 @@ export const LESSONS = {
       tick(T, C) {
         const a = C.ctrl.inner, d = T.d, dec = C.raid.planes.find((q) => q.role === 'decoy' && !q.dead);
         if (d.hit) { T.hint(`<b>${C.S.units[0].S.short} стреляет по ложной цели!</b> Для РЛС она — самолёт. Пока ПВО занята ею, ударники проходят.`); d.w = d.w || T.t; if (T.t - d.w > 5) T.done(); return; }
-        if (!dec && !d.out) T.hint(`Впереди — склад боеприпасов под прикрытием «${C.S.units[0].S.short}». Выберите <b>${a.loadout[0] && AG[a.loadout[0].key].short}</b> (${ctl(C, K('Q'), 'тап по строке оружия')}) и пустите её вперёд, пока до ПВО больше 10 км (${ctl(C, K('Пробел'), '«СБРОС»')}).`);
+        if (!dec && !d.out) T.hint(`Впереди — склад боеприпасов под прикрытием «${C.S.units[0].S.short}». Выберите <b>${a.loadout[0] && AG[a.loadout[0].key].short}</b> (${ctl(C, K('Q'), 'тап по строке оружия')}) и пустите её вперёд, пока до ПВО больше 10 км (${ctl(C, K('Пробел'), '«ПУСК»')}).`);
         else { d.out = true; T.hint(`Ложная цель летит к складу. Смотрите на метки: <b>«${C.S.units[0].S.short}»</b> возьмёт её на сопровождение, как самолёт.`); if (T.st > 70) T.done(); }
         if (!a.loadout.some((l) => l.n > 0) && !dec) a.rearm();
       },
@@ -312,7 +316,7 @@ export const LESSONS = {
         if (!d.hp) { d.hp = 1; o.hp = Math.min(o.hp, 60); }
         if (o.dead) { T.hint(`<b>Склад поражён!</b> ${d.icp ? `ПВО сбила ${d.icp} из ваших бомб, но не все.` : ''} Серия, ПРР и ложные цели — так прорывают ближний рубеж.`); d.w = d.w || T.t; if (T.t - d.w > 4) T.done(); return; }
         if (!a.loadout.some((l) => l.n > 0) && !C.S.wpns.some((w) => w.owner === a.craft)) a.rearm();
-        if (T.s === 0) { T.hint(`Склад боеприпасов прикрывает <b>${u.S.short}</b>. Сбросьте <b>одну</b> спутниковую бомбу при «В ЗОНЕ» (${ctl(C, K('Пробел'), '«СБРОС»')}) — посмотрим, что будет.`); if (d.icp) T.next(); }
+        if (T.s === 0) { T.hint(`Склад боеприпасов прикрывает <b>${u.S.short}</b>. Сбросьте <b>одну</b> спутниковую бомбу при «В ЗОНЕ» (${ctl(C, K('Пробел'), '«ПУСК»')}) — посмотрим, что будет.`); if (d.icp) T.next(); }
         else T.hint(u.dead ? 'Комплекс уничтожен — теперь бомбы дойдут. Сбрасывайте.' : `<b>${u.S.short} сбил бомбу.</b> Два способа: <b>ПРР</b> по комплексу (${ctl(C, K('Q'), 'тап по строке оружия')} — выбор, нос на него) или <b>серия</b> — сбросьте 3–4 бомбы подряд.`);
       },
       hooks: (T) => ({ onWpnEnd: (w, res) => { if (res.intercepted) T.d.icp = (T.d.icp || 0) + 1; } }) },
@@ -759,13 +763,30 @@ export function createTraining(C, ctrls) {
   let L = null, side = 'air', idx = 0, inner = null, eraSave = null, sideSave = null, diffSave = null;
   const restore = () => { if (eraSave !== null) { setup.era = eraSave; eraSave = null; } if (sideSave !== null) { setup.side = sideSave; sideSave = null; } if (diffSave !== null) { setup.diff = diffSave; diffSave = null; } };
   const T = { t: 0, s: 0, st: 0, d: {}, C };
-  T.hint = (h) => C.hint(h);
+  // подсказка шага — не плашкой поверх экрана, а в панели урока (кнопка «?» рядом со звуком): смена шага — короткая строка и вспышка кнопки
+  T.hint = (h) => { if (h === T.cur) return; T.cur = h; if (lsnOpen) renderNow(); };
+  let lsnOpen = false, nowT = 0;
+  const strip = (h) => String(h || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  const lead = (h) => { const m = /^\s*<b>([^<]+)<\/b>/.exec(h || ''); return m ? m[1].trim() : strip(h).split(/(?<=[.!?])\s/)[0]; }; // «Теперь вы.» / первая фраза
+  function renderNow() { $('lsnNow').innerHTML = iconize(T.cur || (L ? L.desc : '')); }
+  function renderLsn() {
+    if (!L) return;
+    $('lsnSec').textContent = `Урок ${idx + 1} из ${LESSONS[side].length}${L.sec ? ' · ' + L.sec : ''}`;
+    $('lsnName').textContent = L.name; renderNow();
+    $('lsnBody').innerHTML = iconize(T.introCard ? T.introCard.body : `<p>${L.desc}</p>`);
+  }
+  function lsnShow(on) { lsnOpen = on; document.body.classList.toggle('lsnOpen', on); $('lsnBtn').classList.remove('new'); if (on) renderLsn(); }
+  function lsnFlash() { const b = $('lsnBtn'); b.classList.remove('new'); void b.offsetWidth; b.classList.add('new'); }
+  $('lsnBtn').addEventListener('click', (e) => { e.stopPropagation(); lsnShow(!lsnOpen); C.snd.click(); });
+  $('lsnX').addEventListener('click', (e) => { e.stopPropagation(); lsnShow(false); });
+  $('lsnRestart').addEventListener('click', (e) => { e.stopPropagation(); lsnShow(false); run(); });
+  $('lsnPanel').addEventListener('pointerdown', (e) => e.stopPropagation());
   T.next = () => { T.s++; T.st = 0; };
   T.go = (s) => { T.s = s; T.st = 0; };
   T.ask = (card) => { T.card = card; $('askTxt').textContent = card.title; $('ask').style.display = 'flex'; T.askT = 14; };
   T.askW = (key) => T.ask(weaponCard(AG[key]));
   T.restart = () => run();
-  T.fail = (why) => { T.hint(`<b>${why}</b> Урок начнётся заново.`); T.d.failT = T.d.failT || T.t; if (T.t - T.d.failT > 4) T.restart(); }; // неудача — заново, а не тупик
+  T.fail = (why) => { T.hint(`<b>${why}</b> Урок начнётся заново.`); if (!T.d.failT) C.say(`${why} Урок начнётся заново.`, 4); T.d.failT = T.d.failT || T.t; if (T.t - T.d.failT > 4) T.restart(); }; // неудача — заново, а не тупик
   T.done = () => {
     if (T.finished) return; T.finished = true;
     C.menu.lessonDone(L.id || side + idx);
@@ -778,12 +799,12 @@ export function createTraining(C, ctrls) {
   function run() {
     if (inner && inner.stop) inner.stop();
     restore();
-    if (T.d && T.d.auto0 !== undefined) C.auto = T.d.auto0;
+    if (T.d && T.d.auto0 !== undefined) autoSet(C, T, T.d.auto0);
     L = LESSONS[side][idx];
     if (L.era) { eraSave = setup.era; setup.era = L.era; }
     if (L.side) { sideSave = setup.side; setup.side = L.side; } // урок про конкретный комплекс — его сторона
     if (L.diff) { diffSave = setup.diff; setup.diff = L.diff; } // мульти-волна: аркада — с подсказками и плашками
-    Object.assign(T, { t: 0, s: 0, st: 0, d: {}, finished: false, card: null, introShown: false, result: '' });
+    Object.assign(T, { t: 0, s: 0, st: 0, d: {}, finished: false, card: null, introShown: false, result: '', cur: '', lastS: -1, introCard: null });
     $('ask').style.display = 'none'; $('lessonClose').textContent = 'ПОНЯТНО — ПРОДОЛЖИТЬ';
     inner = side === 'air' ? ctrls.air : ctrls.defense;
     api.inner = inner;
@@ -802,11 +823,16 @@ export function createTraining(C, ctrls) {
   }
   const api = {
     inner: null, sim: true, T,
-    start() { side = TSIDES[setup.tside] ? setup.tside : 'air'; idx = Math.min(setup.tl || 0, LESSONS[side].length - 1); run(); },
-    stop() { if (inner && inner.stop) inner.stop(); restore(); if (T.d && T.d.auto0 !== undefined) { C.auto = T.d.auto0; T.d.auto0 = undefined; } $('ask').style.display = 'none'; C.hint(''); },
+    start() { side = TSIDES[setup.tside] ? setup.tside : 'air'; idx = Math.min(setup.tl || 0, LESSONS[side].length - 1); document.body.classList.add('training'); run(); },
+    stop() { if (inner && inner.stop) inner.stop(); restore(); if (T.d && T.d.auto0 !== undefined) { autoSet(C, T, T.d.auto0); T.d.auto0 = undefined; } $('ask').style.display = 'none'; C.hint(''); lsnShow(false); document.body.classList.remove('training'); },
     update(dt, t) {
-      if (L.intro && !T.introShown) { T.introShown = true; const k = L.intro(C); C.openLesson(k.title, k.body, `Урок · ${L.sec ? L.sec + ' · ' : ''}${L.name}`); return; } // сначала — как это работает
+      if (!T.introShown) { // начало урока: коротко о теме; «как это работает» и задание — в панели «?»
+        T.introShown = true; T.introCard = L.intro ? L.intro(C) : null; lsnShow(false); lsnFlash();
+        C.say(`<b>${L.name}</b> — ${L.desc}.<br><span class="dim">Задание и подсказки — кнопка «?» вверху справа</span>`, 6);
+      }
       inner.update(dt, t); T.t += dt; T.st += dt; if (T.askT > 0 && (T.askT -= dt) <= 0) $('ask').style.display = 'none'; if (!T.finished) L.tick(T, C);
+      if (T.s !== T.lastS && T.t > 0.5) { const first = T.lastS < 0; T.lastS = T.s; if (!first && T.cur && !T.finished) { lsnFlash(); C.say(`${lead(T.cur)} <span class="dim">· подробности — «?»</span>`, 3.5); } } // новый шаг
+      if (lsnOpen && (nowT -= dt) <= 0) { nowT = 0.4; renderNow(); } // «Сейчас» — живые расстояния и счёт
     },
     camera: (dt, t) => inner.camera(dt, t), hud: (dt, t) => inner.hud(dt, t), onKey: (e, d) => inner.onKey(e, d), onEsc: () => !!(inner && inner.onEsc && inner.onEsc()),
     afterRender: () => inner.afterRender && inner.afterRender(), modelsReady: () => inner && inner.modelsReady && inner.modelsReady(), // модель самолёта догрузилась focus: () => inner.focus(), skip3D: () => !!(inner.skip3D && inner.skip3D()),

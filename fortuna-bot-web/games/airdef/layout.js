@@ -4,7 +4,7 @@
 const $ = (id) => document.getElementById(id);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const LAYOUT_SETS = {
-  air: { name: 'Вылет', btns: { tFire: 'СБРОС', tThr: 'ГАЗ / ФОРСАЖ', tFlare: 'ЛОВУШКИ', tLock: 'ЦЕЛЬ', tMap: 'КАРТА', tAuto: 'АВТО', tPad: 'КРЕСТОВИНА' } },
+  air: { name: 'Вылет', btns: { tFire: 'ПУСК', tThr: 'ГАЗ / ФОРСАЖ', tFlare: 'ЛОВУШКИ', tLock: 'ЦЕЛЬ', tMap: 'КАРТА', tAuto: 'АВТО', tLook: 'ОБЗОР', tPad: 'КРЕСТОВИНА' } },
   op: { name: 'Оператор ЗРК', btns: { opFire: 'ПУСК', opRadar: 'РЛС', opMethod: 'МЕТОД', opCam: 'КАМ.', opAuto: 'АВТО', opMap: 'КАРТА' } },
 };
 const ALL = Object.assign({}, LAYOUT_SETS.air.btns, LAYOUT_SETS.op.btns);
