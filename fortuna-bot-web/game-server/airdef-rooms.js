@@ -19,8 +19,10 @@ import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import { createMulti } from './airdef-multi.js';
+import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
 
 const city = buildCity(1); setGround(city.groundH); // город один для всех комнат (как у клиентов: seed 1), только чтение
+const winter = buildWinter(1); // «Мульти-волна» — зимняя горная долина «Северный рубеж» (как у клиентов: seed 1)
 const clock = () => performance.now() / 1000;
 const DT = 1 / O.TICK_HZ, SNAP_EVERY = Math.round(O.TICK_HZ / O.SNAP_HZ);
 // AD_FAST=1 — для автопроверки (game-server/airdef-full.js): короткие фазы, всё остальное как в бою
@@ -29,6 +31,7 @@ const QUEUE_BOTS_T = FAST ? 4 : O.QUEUE_BOTS_T, QUEUE_EXTRA_T = FAST ? 2 : O.QUE
 const PLAN_T = FAST ? 3 : O.PLAN_T, WAVE_T = FAST ? 45 : O.WAVE_T, DEBRIEF_T = FAST ? 1 : O.DEBRIEF_T, RESULTS_T = FAST ? 3 : O.RESULTS_T;
 const MSG_MAX = 4096, MSG_RATE = 120, MSG_KILL = 600, ROOMS_MAX = 200;
 const AFK_T = 4;              // лётчик молчит дольше — его самолёт ведёт ИИ, пока игра не попросит его назад ('retake')
+const LOBBY_HOLD_T = 30;      // в лобби связь пропала (перезагрузка под карту комнаты, обрыв) — место ждёт, потом игрок выбывает
 const DEAD_T = 9;             // от игры ничего (даже пинга раз в 2 с) дольше — соединение мёртвое: закрываем, место ждёт переподключения
 const EXTRAP_MAX = 0.3;       // прокси между состояниями летит по прямой не дольше, с
 const REL_CD = 0.25, CM_CD = 0.3;
@@ -121,7 +124,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     const ws = c.ws, ows = old.ws, msgN = c.msgN, msgT = c.msgT;
     clients.delete(old); old.ws = null; old.room = null;
     if (ows && ows !== ws) try { ows.close(); } catch (_) { /* уже */ }
-    Object.assign(c, old, { ws, msgN, msgT, lastMsg: clock(), back: false }); c.room = r; r.players.set(c.id, c); clients.add(c); // прежний id — комплексы и счёт остаются за игроком
+    Object.assign(c, old, { ws, msgN, msgT, lastMsg: clock(), back: false, goneT: 0 }); c.room = r; r.players.set(c.id, c); clients.add(c); // прежний id — комплексы и счёт остаются за игроком
     send(c, { t: 'welcome', id: c.id, name: c.name, resumed: 1 });
     if (r.state !== 'lobby' && r.state !== 'end') { if (r.kind === 'multi') MU.resume(r, c); else { sendStart(r, c); sendState(r, c); } }
     send(c, view(r, c)); sendRoom(r);
@@ -453,10 +456,12 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       objects: r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0]) };
     if (only) send(only, msg); else bcast(r, msg);
   }
-  MU = createMulti({ city, send, bcast, team, humans, J, sign, clock, sendRoom, closeRoom, toLobby, FAST });
+  MU = createMulti({ city: winter, send, bcast, team, humans, J, sign, clock, sendRoom, closeRoom, toLobby, FAST });
   // нагрузка: время такта всех комнат (среднее и худшее за минуту) — в /health; бюджет такта — 1000 × DT мс
   const load = { ema: 0, max: 0, maxPrev: 0, maxT: 0 };
   // мёртвые соединения (телефон ушёл из сети, приложение свернули): закрываем — место ждёт переподключения, самолёт ведёт ИИ
+  // лобби и итоги: место без связи держим LOBBY_HOLD_T (тот же аккаунт вернётся — takeSeat), потом — долой
+  setInterval(() => { const now = clock(); for (const r of [...rooms.values()]) if (r.state === 'lobby' || r.state === 'end') for (const p of humans(r)) if (!p.ws && p.goneT && now - p.goneT > LOBBY_HOLD_T) { p.goneT = 0; if (p.room === r) leaveRoom(p); else { r.players.delete(p.id); if (!humans(r).length) closeRoom(r); else sendRoom(r); } } }, 2000);
   setInterval(() => { const now = clock(); for (const c of [...clients]) if (c.room && c.ws && now - (c.lastMsg || now) > DEAD_T) { J(c.room, 'dead', { who: c.name }); try { c.ws.close(); } catch (_) { /* уже */ } c.ws.onclose && c.ws.onclose(); } }, 2000);
   setInterval(() => {
     const t0 = performance.now();
@@ -530,7 +535,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       clients.delete(c);
       for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); }
       const r = c.room;
-      if (r) { c.ws = null; if (r.state === 'lobby' || r.state === 'end') leaveRoom(c); else { if (c.craft) toAI(r, c, 'disconnect'); if (!humans(r).some((p) => p.ws)) closeRoom(r); else sendRoom(r); } }
+      if (r) { c.ws = null; if (r.state === 'lobby' || r.state === 'end') { c.goneT = clock(); sendRoom(r); } else { if (c.craft) toAI(r, c, 'disconnect'); if (!humans(r).some((p) => p.ws)) closeRoom(r); else sendRoom(r); } }
     };
   }
   async function onMsg(c, m) {

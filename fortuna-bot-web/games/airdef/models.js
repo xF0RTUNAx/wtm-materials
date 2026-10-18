@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261022a';
+import { CREDITS } from './models/credits.js?v=20261022d';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -89,7 +89,8 @@ const META = {
   bld_p5: { bld: true, stations: [] }, bld_p9: { bld: true, stations: [] }, bld_b12: { bld: true, stations: [] }, bld_st: { bld: true, stations: [] },
   h_brick: { bld: true, stations: [] }, h_house: { bld: true, stations: [] }, h_log: { bld: true, stations: [] }, h_khata: { bld: true, stations: [] }, o_block: { bld: true, stations: [] }, h_shanty: { bld: true, stations: [] }, h_mobile: { bld: true, stations: [] }, // дома города
   bld_t9: { bld: true, stations: [] }, bld_a16: { bld: true, stations: [] }, o_tall: { bld: true, stations: [] }, g_amel: { bld: true, stations: [] }, g_fortune: { bld: true, stations: [] }, // башни и корпуса
-  tr_oak: { bld: true, stations: [] }, tr_lime: { bld: true, stations: [] }, tr_pine: { bld: true, stations: [] }, tr_bush: { bld: true, stations: [] }, p_lamp: { bld: true, stations: [] }, // деревья и фонари вблизи
+  tr_oak: { bld: true, stations: [] }, tr_lime: { bld: true, stations: [] }, tr_pine: { bld: true, stations: [] }, tr_bush: { bld: true, stations: [] }, p_lamp: { bld: true, stations: [] },
+  w_fir1: { bld: true, stations: [] }, w_fir3: { bld: true, stations: [] }, w_pine1: { bld: true, stations: [] }, w_pine2: { bld: true, stations: [] }, // зимний лес вблизи // деревья и фонари вблизи
   pr_vend: { bld: true, stations: [] }, pr_vend2: { bld: true, stations: [] }, pr_booth: { bld: true, stations: [] }, pr_bin: { bld: true, stations: [] }, pr_wbins: { bld: true, stations: [] }, // уличные мелочи
   pr_bstop: { bld: true, stations: [] }, pr_rstop: { bld: true, stations: [] }, sg_main: { bld: true, stations: [] }, sg_yield: { bld: true, stations: [] }, // остановки и знаки
   v_barn: { bld: true, stations: [] }, v_wtower: { bld: true, stations: [] }, v_combine: { bld: true, stations: [] }, v_tractor: { bld: true, stations: [] }, v_picket: { bld: true, stations: [] }, m_5g: { bld: true, stations: [] }, // село
@@ -157,7 +158,7 @@ function parseGlb(buf) {
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261021a'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
+  const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
@@ -180,7 +181,7 @@ async function load(name, base) {
     const mat = glass
       ? new THREE.MeshPhongMaterial({ color: new THREE.Color(f[0], f[1], f[2]).lerp(new THREE.Color(0.2, 0.26, 0.32), f[0] + f[1] + f[2] > 1.8 ? 0.8 : 0.4), /* белое «стекло» авторов — в тонированное, своё цветное — почти как есть */ transparent: true, opacity: Math.max(0.5, f[3]), specular: 0xffffff, shininess: 120, side: THREE.DoubleSide, depthWrite: false }) // стекло заметно: не меньше 0,5
       : new THREE.MeshPhongMaterial({ map, color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
-        ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.ao ? { vertexColors: true } : {}) });
+        ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '') ? { vertexColors: true } : {}) }); // ?ao=0 — без затенения (сравнение)
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; partOf(m.name || '').add(mesh);
   }
   // крылья планирующих бомб (части wing*): своя ось поворота (вертикальная) — у корня по передней кромке; у цельного крыла
@@ -261,7 +262,7 @@ export function wantModel(name) { if (META[name] && BASE) start(name); }
 export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
 export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); start(n); } } // сначала лёгкая дальняя копия
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
-export function wantBuildings() { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld) start(n); }
+export function wantBuildings(names) { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld && (!names || names.includes(n))) start(n); } // names — только модели этой карты (зимний лес городу не нужен и наоборот)
 export const bldModel = (name) => (META[name] && (META[name].bld || META[name].obj) && LOADED[name]) || null;
 // модель оружия: готовая (если есть и загрузилась) или процедурная геометрия с общим материалом
 const byKey = (f) => Object.fromEntries(Object.entries(META).filter(([, m]) => m[f]).flatMap(([n, m]) => [].concat(m[f]).map((k) => [k, n])));

@@ -8,32 +8,32 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { ktxInit } from './ktx.js?v=20261022a';
-import { buildCity, CITY } from './city.js?v=20261022a';
-import { buildWinter } from './map-winter.js?v=20261022a';
-import { WINTER_KEYS } from './winter-render.js?v=20261022a';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022a';
-import { createPipeline } from '../drone/post.js?v=20261022a';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022a';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022a';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022a';
-import { createStrike, MODES } from './sim/strike.js?v=20261022a';
-import { createRaid } from './sim/raid.js?v=20261022a';
-import { POD } from './sim/combined.js?v=20261022a';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022a';
-import { slotCount } from './launchers.js?v=20261022a';
-import { modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings } from './models.js?v=20261022a';
-import { createSound } from './sound.js?v=20261022a';
-import { ico, iconize } from './icons.js?v=20261022a';
-import { createAir } from './air.js?v=20261022a';
-import { createDefense } from './defense.js?v=20261022a';
-import { createDirector } from './director.js?v=20261022a';
-import { createMenuBg } from './menubg.js?v=20261022a';
-import { createOnline } from './online.js?v=20261022a';
-import { createShell } from './shell.js?v=20261022a';
-import { createTraining, LESSONS } from './training.js?v=20261022a';
-import { createPhoto } from './photo.js?v=20261022a';
-import { createMenu } from './menu.js?v=20261022a';
+import { ktxInit } from './ktx.js?v=20261022d';
+import { buildCity, CITY } from './city.js?v=20261022d';
+import { buildWinter } from './map-winter.js?v=20261022d';
+import { WINTER_KEYS } from './winter-render.js?v=20261022d';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022d';
+import { createPipeline } from '../drone/post.js?v=20261022d';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022d';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022d';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022d';
+import { createStrike, MODES } from './sim/strike.js?v=20261022d';
+import { createRaid } from './sim/raid.js?v=20261022d';
+import { POD } from './sim/combined.js?v=20261022d';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022d';
+import { slotCount } from './launchers.js?v=20261022d';
+import { modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings } from './models.js?v=20261022d';
+import { createSound } from './sound.js?v=20261022d';
+import { ico, iconize } from './icons.js?v=20261022d';
+import { createAir } from './air.js?v=20261022d';
+import { createDefense } from './defense.js?v=20261022d';
+import { createDirector } from './director.js?v=20261022d';
+import { createMenuBg } from './menubg.js?v=20261022d';
+import { createOnline } from './online.js?v=20261022d';
+import { createShell } from './shell.js?v=20261022d';
+import { createTraining, LESSONS } from './training.js?v=20261022d';
+import { createPhoto } from './photo.js?v=20261022d';
+import { createMenu } from './menu.js?v=20261022d';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -121,9 +121,14 @@ const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGf
 const P = CINEMA ? Object.assign(P0, { name: 'Кино', lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
 if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 — без дальних копий моделей
-// карта: «Мульти-волна» и «Кино» — только зимняя долина «Северный рубеж», остальные режимы — город (?map=winter|city — принудительно); у зимы — свои погоды
-// зимняя карта — только «Мульти-волна» и «Режим съёмки» (вылеты, задания и уроки — на город)
-const MAP = Q.get('map') === 'winter' || (Q.get('map') !== 'city' && (() => { try { return ['multi', 'photo'].includes(JSON.parse(ls.get('fortuna_airdef_setup') || '{}').game); } catch (_) { return false; } })()) ? 'winter' : 'city';
+// карта: «Мульти-волна» (и в онлайне) и «Кино» — только зимняя долина «Северный рубеж», вылеты, задания и уроки — город
+// (?map=winter|city — принудительно); у зимы — свои погоды. Карта строится при загрузке: смена — перезагрузкой страницы
+function wantMap(game) {
+  if (Q.get('map') === 'winter' || Q.get('map') === 'city') return Q.get('map');
+  const online = game === 'online' || Q.get('ad') || Q.get('mp') === '1';
+  return ['multi', 'photo'].includes(game) || (online && ls.get('fortuna_ad_kind') === 'multi') ? 'winter' : 'city';
+}
+const MAP = wantMap((() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}').game; } catch (_) { return null; } })());
 const weatherKey = Q.get('weather') || ls.get('fortuna_airdef_weather') || 'random';
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
 const W_KEY = MAP === 'winter' ? (WINTER_KEYS.includes(weatherKey) ? weatherKey : WINTER_KEYS[Math.floor(Math.random() * WINTER_KEYS.length)])
@@ -170,7 +175,7 @@ const snd = createSound();
 
 // ═════════════ Общий контекст режимов ═════════════
 const C = {
-  $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP,
+  $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,
   hooks: {}, // события боя для текущего режима
@@ -391,7 +396,7 @@ const simFx = {
     C.fx.wpnTrail(w, TP.copy(w.pos).addScaledVector(TZ, w.nzL.z).addScaledVector(TX, w.nzL.x).addScaledVector(TY, w.nzL.y));
   },
   wpnEnd(w, res) { const g = wpnMeshes.get(w.id); if (g) { scene.remove(g); wpnMeshes.delete(w.id); } if (C.hooks.wpnEnd) C.hooks.wpnEnd(w, res); },
-  explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / 20); }, // в воздухе — подрыв ЗУР / перехват
+  explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20)); }, // в воздухе — подрыв ЗУР / перехват
   gunFire(u, t, hits, dt) {
     C.fx.gunFire(u.pos, t.pos, hits, dt);
     const k = (aaaT.get(u.id) || 0) - dt; if (k <= 0) { snd.aaa(dist(u.pos), u.key === 'gepard' ? 35 : 23); aaaT.set(u.id, 0.16); } else aaaT.set(u.id, k);
@@ -874,7 +879,7 @@ setInterval(() => {
   C.G = buildCityScene(scene, city, P, renderer, W_KEY);
   await ldStep('Деревья, вода, облака и эффекты…', 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
-  if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(); } // дома вблизи — только если пресет их рисует
+  if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует
   C.fx = createFx(scene, P);
   if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым — в половине разрешения
   await ldStep('Режимы игры: вылет, оборона, обучение…', 0.7);

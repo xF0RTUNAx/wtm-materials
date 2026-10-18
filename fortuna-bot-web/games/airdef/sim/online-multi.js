@@ -2,12 +2,12 @@
 // (game-server/airdef-multi.js) и клиента. Две команды — восток и запад, два раунда со сменой сторон: в каждом одна команда
 // собирает волну (наряд на цели, как в одиночной «За волну»), другая ставит ПВО. Победа — по сумме: чья волна разрушила больше
 // ценности военных объектов. Подготовка — одновременная, общий таймер; атака не видит ПВО до обнаружения, оборона — план волны.
-import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261022a';
-import { LIM_ON } from './combined.js?v=20261022a';
+import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261022d';
+import { LIM_ON } from './combined.js?v=20261022d';
 
 export const KIND = 'multi';
 export const ROUNDS = 2;
-export const PREP_T = 100;               // подготовка раунда, с (все «Готов» — раньше)
+export const PREP_T = 130;               // подготовка раунда, с (все «Готов» — раньше; Mark 2026-10-18: +30 с)
 export const WAVE_MAX = 720;             // волна не дольше, с времени боя (дроны — пуск до 5 мин и ≈ 6 мин над районом; пустые отрезки — ×3)
 export const DEBRIEF_T = 12, RESULTS_T = 25;
 export const QUIET_K = 3;                // над районом пусто и никто не за пультом — сервер считает ×3

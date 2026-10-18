@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022a';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261022a';
-import { LNCH } from './launchers.js?v=20261022a';
-import { createBook } from './flipbook.js?v=20261022a';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022d';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022d';
+import { LNCH } from './launchers.js?v=20261022d';
+import { createBook } from './flipbook.js?v=20261022d';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -436,7 +436,8 @@ export function createFx(scene, P) {
   let hemi = null, sunL = null;
   const clouds = [];  // облака диполей: блёстки ещё 3 с
   const V = new THREE.Vector3();
-  return {
+  let api = null; // сам объект эффектов (explosion вызывают и через обёртки — без this)
+  return api = {
     mats: [smoke.mat, fire.mat], // хозяин выставляет uniforms.scale по высоте кадра
     setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); }, // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
@@ -446,11 +447,12 @@ export function createFx(scene, P) {
         smoke.emit(p.x, p.y + 1, p.z, 0, 3, 0, 0.3, 0.28, 0.26, 0.6, R, R, 2.5, 0.5, 1);
         return;
       }
-      const air = kind === 'air', bomb = kind === 'bomb';
-      const h = air ? Math.max(14, R * 4.2) : bomb ? R * 4.2 : R * 3.6, fps = air ? 26 : bomb ? 18 : 22;
+      const air = kind === 'air', tbm = kind === 'tbm', bomb = kind === 'bomb' || tbm, heavy = !air && (tbm || R >= 45);
+      const h = air ? Math.max(14, R * 4.2) : tbm ? R * 7 : heavy ? R * 5.6 : bomb ? R * 4.2 : R * 3.6, fps = air ? 26 : tbm ? 15 : bomb ? 18 : 22;
       V.set(p.x, p.y + (air ? 0 : h * 0.33), p.z); EX.add(V, h, fps);
       if (air) return;
-      if (bomb) { V.set(p.x, p.y + R * 0.3, p.z); BL.add(V, R * 2.6, 26); }
+      if (bomb) { V.set(p.x, p.y + R * 0.3, p.z); BL.add(V, R * (tbm ? 6 : heavy ? 4.2 : 2.6), tbm ? 18 : 24); }
+      if (heavy) api.heavyBlast(p, R, tbm);
       // пыль от земли — низким кольцом; тёмный дым остаётся висеть после огненного шара
       const k = bomb ? 1 : 0.6, nd = Math.round((10 + R * 0.3) * k);
       for (let i = 0; i < nd; i++) {
@@ -460,6 +462,39 @@ export function createFx(scene, P) {
       for (let i = 0; i < 2 + R * 0.05; i++) { // лёгкий остаток дыма (основной — в самой раскадровке)
         const a = Math.random() * 6.283, s = 3 + Math.random() * 5;
         smoke.emit(p.x + Math.cos(a) * R * 0.3, p.y + h * 0.4, p.z + Math.sin(a) * R * 0.3, Math.cos(a) * s, 4 + Math.random() * 4, Math.sin(a) * s, 0.3, 0.28, 0.26, 0.3, R * 0.4, R * 0.6, 5 + Math.random() * 3, 0.5, 1);
+      }
+    },
+    // тяжёлая боевая часть (≳ 250 кг) и баллистика: вспышка, второй огненный шар, выброс грунта комьями, столб пыли,
+    // поднимающийся «грибом», широкая стелющаяся волна пыли и долго висящий тёмный дым
+    heavyBlast(p, R, tbm) {
+      const k = tbm ? 1.4 : 1, h = R * (tbm ? 7 : 5.6);
+      fire.emit(p.x, p.y + R * 0.4, p.z, 0, 0, 0, 1, 0.92, 0.75, 1, R * 3.2 * k, R * 2, 0.22, 0, 0); // вспышка
+      V.set(p.x + (Math.random() - 0.5) * R * 0.3, p.y + h * 0.45, p.z + (Math.random() - 0.5) * R * 0.3); EX.add(V, h * 0.8, 13, { t0: -0.3 });
+      // выбросы грунта лучами: в каждом луче частицы с разной скоростью — тёмная струя по дуге, потом оседает
+      const nr = Math.round(10 * k);
+      for (let r = 0; r < nr; r++) {
+        const a = r / nr * 6.283 + Math.random() * 0.5, e = 0.55 + Math.random() * 0.75, s0 = (45 + Math.random() * 45) * Math.sqrt(R / 45) * k;
+        for (let i = 0; i < 9; i++) {
+          const s = s0 * (0.25 + i / 9 * 0.75), c = 0.12 + Math.random() * 0.06;
+          smoke.emit(p.x, p.y + 2, p.z, Math.cos(a) * Math.cos(e) * s, Math.sin(e) * s, Math.sin(a) * Math.cos(e) * s, c, c * 0.92, c * 0.85, 0.85, R * 0.06 + 1.5, R * 0.12, 3 + Math.random() * 2.5, 0.35, -9.8);
+        }
+      }
+      for (let i = 0; i < 40 * k; i++) { // комья: летят по дуге и падают
+        const a = Math.random() * 6.283, e = 0.35 + Math.random() * 0.55, s = (25 + Math.random() * 40) * (R / 45) * Math.sqrt(k);
+        smoke.emit(p.x, p.y + 2, p.z, Math.cos(a) * s * Math.cos(e), s * Math.sin(e) * 1.4, Math.sin(a) * s * Math.cos(e), 0.14, 0.12, 0.1, 0.95, 1.6 + Math.random() * 2, 0.4, 2.5 + Math.random() * 2, 0.12, -9.8);
+      }
+      for (let i = 0; i < 18 * k; i++) { // столб пыли и дыма: тормозит, но поднимается дальше, расплываясь шапкой
+        const a = Math.random() * 6.283, d = Math.random() * R * 0.3, c = 0.3 + Math.random() * 0.12;
+        smoke.emit(p.x + Math.cos(a) * d, p.y + 3 + Math.random() * R * 0.3, p.z + Math.sin(a) * d, Math.cos(a) * 3, (14 + Math.random() * 20) * Math.sqrt(R / 45) * k, Math.sin(a) * 3,
+          c, c * 0.93, c * 0.85, 0.55, R * 0.4, R * (0.5 + Math.random() * 0.35), 20 + Math.random() * 10, 0.5, 1.1);
+      }
+      for (let i = 0; i < 34 * k; i++) { // стелющаяся волна пыли у земли
+        const a = i / (34 * k) * 6.283 + Math.random() * 0.2, s = (30 + Math.random() * 25) * (R / 45);
+        smoke.emit(p.x + Math.cos(a) * R * 0.3, p.y + 2, p.z + Math.sin(a) * R * 0.3, Math.cos(a) * s * 1.3, 0.5 + Math.random() * 2, Math.sin(a) * s * 1.3, 0.5, 0.47, 0.42, 0.6, R * 0.35, R * 0.7, 9 + Math.random() * 5, 1.0, 0.2);
+      }
+      for (let i = 0; i < 6; i++) { // тёмный дым над местом удара — висит долго
+        const a = Math.random() * 6.283;
+        smoke.emit(p.x + Math.cos(a) * R * 0.2, p.y + h * (0.35 + Math.random() * 0.3), p.z + Math.sin(a) * R * 0.2, Math.cos(a) * 1.5, 2 + Math.random() * 2, Math.sin(a) * 1.5, 0.14, 0.13, 0.12, 0.45, R * 0.7, R * 0.55, 30 + Math.random() * 10, 0.2, 0.4);
       }
     },
     samTrail(m) { // дымный след ЗУР: у больших ракет — густой белый, у ПЗРК — тонкий серый; после ускорителя (маршевый ЖРД
@@ -591,9 +626,10 @@ export function createFx(scene, P) {
     crater(p, R, kind, gh, bh) {
       const top = gh + bh;
       if (kind === 'air' || R < 4 || p.y - top > Math.max(6, R * 0.25)) return;
-      const roof = bh > 1.5, bomb = kind === 'bomb';
-      const pit = roof ? 0 : R * (bomb ? 0.13 : 0.07), soot = Math.max(pit * 3.2, R * (bomb ? 0.46 : 0.34));
-      const dk = bomb ? 0.38 : 0.3; // глубина ямы — доля радиуса
+      const roof = bh > 1.5, tbm = kind === 'tbm', bomb = kind === 'bomb' || tbm, heavy = tbm || R >= 45;
+      // баллистика бьёт сверху на скорости 2–6 М — воронка глубже и шире; тяжёлые бомбы и ракеты — крупнее обычных
+      const pit = roof ? 0 : R * (tbm ? 0.2 : bomb ? (heavy ? 0.16 : 0.13) : heavy ? 0.11 : 0.07), soot = Math.max(pit * 3.4, R * (tbm ? 1.0 : bomb ? (heavy ? 0.58 : 0.46) : heavy ? 0.46 : 0.34));
+      const dk = tbm ? 0.46 : bomb ? 0.38 : 0.3; // глубина ямы — доля радиуса
       CR.add(p.x, top + 0.06 + (roof ? 0 : 0.3 * dk * pit + soot * 0.03), p.z, soot, pit, dk); // плоскость — на верху бруствера
     },
     clearCraters() { CR.clear(); },
@@ -605,7 +641,8 @@ export function createFx(scene, P) {
       LT.set(0.6, 0.6, 0.6); if (hemi) LT.set(hemi.color.r, hemi.color.g, hemi.color.b).multiplyScalar(hemi.intensity * 0.55);
       if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
       for (const b of books) b.update(dt, LT, scene.fog);
-      CR.mat.uniforms.uLight.value.copy(LT).multiplyScalar(0.8); if (sunL) CR.mat.uniforms.uSun.value.copy(sunL.position).sub(sunL.target.position).normalize(); // свет ходит за камерой if (scene.fog) { CR.mat.uniforms.uFog.value.copy(scene.fog.color); CR.mat.uniforms.uFogD.value = scene.fog.density || 0; }
+      CR.mat.uniforms.uLight.value.copy(LT).multiplyScalar(0.8); if (sunL) CR.mat.uniforms.uSun.value.copy(sunL.position).sub(sunL.target.position).normalize(); // свет ходит за камерой
+      if (scene.fog) { CR.mat.uniforms.uFog.value.copy(scene.fog.color); CR.mat.uniforms.uFogD.value = scene.fog.density || 0; }
       for (let i = 0; i < NT; i++) {
         if (tLife[i] <= 0) continue;
         tLife[i] -= dt; const i6 = i * 6, i3 = i * 3;

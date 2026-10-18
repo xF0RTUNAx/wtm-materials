@@ -129,6 +129,8 @@
 - "LP Americans House Mobile" (https://sketchfab.com/3d-models/lp-americans-house-mobile-bdd2465e5ff54fe09701cd55b9543b25) by spaceparmesan — CC-BY-4.0 — `h_mobile.glb`
 - "Trees Low Poly" (https://sketchfab.com/3d-models/trees-low-poly-1d2dcca2ccb1496c85b7cc5789a2a261) by Igor_K. — CC-BY-4.0 — `tr_oak.glb`, `tr_lime.glb`
 - "Low Poly Forest Tree Pack" (https://sketchfab.com/3d-models/low-poly-forest-tree-pack-5ff5a51e74324845a4e4905f182dfb2b) by 99.Miles — CC-BY-4.0 — `tr_pine.glb`, `tr_bush.glb`
+- "Realistic fir trees pack (LODS, gameready)" (https://sketchfab.com/3d-models/realistic-fir-trees-pack-lods-gameready-f58e8b6d733e4b0586e5b7db847b89e7) by LOLIPOP — CC-BY-4.0 — `w_fir1.glb`, `w_fir3.glb`
+- "Pine trees pack (lowpoly, game ready, LODs)" (https://sketchfab.com/3d-models/pine-trees-pack-lowpoly-game-ready-lods-e1e9c07b8e2e445c943fec660beefba2) by LOLIPOP — CC-BY-4.0 — `w_pine1.glb`, `w_pine2.glb`
 - "Abandoned street lights pack" (https://sketchfab.com/3d-models/abandoned-street-lights-pack-c853eca300e8435d8fe9206bcb524eda) by sergeilihandristov — CC-BY-4.0 — `p_lamp.glb`
 - "Low-poly Urban Street Props Pack (PS1 Style)" (https://sketchfab.com/3d-models/low-poly-urban-street-props-pack-ps1-style-381b65d98a5b4e3886ac2acace7e5c74) by S1lMoon — CC-BY-4.0 — `pr_vend.glb`, `pr_booth.glb`, `pr_bin.glb`
 - "PSX - Vending Machine" (https://sketchfab.com/3d-models/psx-vending-machine-aff31f282155471d8222287596c7ac59) by Kasugay𓅂 — CC-BY-4.0 — `pr_vend2.glb`

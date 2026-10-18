@@ -11,15 +11,15 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261022a';
-import { part, mergeParts, M } from '../drone/models.js?v=20261022a';
-import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022a';
-import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022a';
-import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022a';
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261022d';
+import { part, mergeParts, M } from '../drone/models.js?v=20261022d';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022d';
+import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022d';
+import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022d';
 Object.assign(WEATHERS, winterWeathers(WEATHERS)); // зимние погоды — только в «Воздушном превосходстве»
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt;
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022a'; // MIT, meshoptimizer 0.21
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022d'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -75,7 +75,7 @@ function loadCityTextures(aniso) {
     jpg(u, f, t);
   }
   function jpg(u, f, t) {
-    fetch(new URL(`./tex/${f}.jpg?v=20261022a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261022d`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { if (u === 'tGGn' || u === 'tGDn') packNormalsFrom(u, bmp); else { TEX[u].value = t; t.image = bmp; t.needsUpdate = true; } const av = TEX['uAvg' + u.slice(1)]; if (av && !viaKtx) av.value.copy(avgColor(bmp)); done(); })
       .catch((e) => { texStats.done++; console.warn('текстура не загрузилась:', e.message); });
   }
@@ -446,10 +446,10 @@ function roofGeo() {
 // Импосторы деревьев (tools/airdef-trees/bake.html): каждое дерево снято с 6×6 направлений полусферы (полу-октаэдр), атлас 2×2
 // вида: цвет + покрытие и нормаль + затенение кроны. В шейдере — квадрат лицом к камере, кадр по направлению взгляда
 // (4 соседних кадра смешиваются), свет как у Phong (небо + солнце). city — модели ближнего кольца (дуб, липа, сосна, куст):
-// вдали то же дерево, что вблизи; winter — ель и сосна Poly Haven (CC0). Вид: [радиус описанной сферы, центр по высоте, высота]
+// вдали то же дерево, что вблизи; winter — две ели и две сосны LOLIPOP (CC BY, TREES_W — они же вблизи). Вид: [радиус описанной сферы, центр по высоте, высота]
 export const TREE_IMP = {
   city: { G: 6, tint: [0.1, 0.14, 0.085], snow: 0, sp: [[6.446, 5.18, 10.36], [6.812, 4.759, 9.519], [6.905, 6.353, 12.706], [4.679, 3.56, 7.12]] },
-  winter: { G: 6, tint: [0.3, 0.36, 0.27], snow: 1, sp: [[10.514, 9.382, 18.925], [8.151, 6.941, 14.055], [11.641, 10.107, 20.375], [10.34, 8.678, 17.544]] },
+  winter: { G: 6, tint: [0.1, 0.13, 0.095], snow: 0.7, sp: [[5.907, 4.654, 9.309], [5.189, 4.048, 8.096], [10.073, 8.444, 16.887], [11.48, 9.808, 19.617]] },
 };
 function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
   const t = new THREE.Texture(); t.flipY = false; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
@@ -458,7 +458,7 @@ function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
   texStats.req++;
   if (ktxOn()) { ktxLoad(f).then((k) => { U.value = k; texStats.done++; }).catch(() => webp()); return U; }
   webp(); return U;
-  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261021a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022c`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
     .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; })
     .catch((e) => { texStats.done++; console.warn('деревья не загрузились:', e.message); }); }
 }
@@ -728,6 +728,8 @@ export const BLD = [null, ['bld_p5', 16.24, 16.5, 53.0], ['bld_p9', 24.1, 25.4, 
   ['bld_t9', 14.2, 28.42, 15], ['bld_a16', 16.25, 50.5, 50], ['o_tall', 37.09, 33.19, 18.36], ['g_amel', 25.15, 56.37, 27.19], ['g_fortune', 38.88, 111.23, 31.55]];
 // деревья вблизи (номер в uMdl — 14…17) и их высота при масштабе 1; фонарь
 const TREES = [[14, 'tr_oak', 10.36], [15, 'tr_lime', 9.52], [16, 'tr_pine', 12.71], [17, 'tr_bush', 7.12]];
+// зимний лес вблизи (те же номера: на зимней карте городских деревьев нет): две ели, две сосны — высота модели, м
+const TREES_W = [[14, 'w_fir1', 9.31], [15, 'w_fir3', 8.1], [16, 'w_pine1', 16.89], [17, 'w_pine2', 19.62]];
 const HOUSES = [7, 8, 9, 10, 12, 13];
 // прятать процедурное вблизи (вершинный шейдер): у инстанса aMdl > 0 и до камеры меньше uMdl[aMdl] — за экран
 const HIDE_HEAD = 'attribute float aMdl;\nuniform vec3 uHide; uniform float uMdl[24];\n';
@@ -1047,7 +1049,7 @@ function cloudTex(f, done) { // → uniform { value }: KTX2, иначе WebP
   if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') return U;
   texStats.req++;
   webp(); return U; // облака — WebP: в KTX2 светотень в кадре выходила площе (данные те же — разница в выборке мипов; не разобрались)
-  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022d`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
     .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; done(); })
     .catch((e) => { texStats.done++; console.warn('облака не загрузились:', e.message); }); }
 }
@@ -1393,7 +1395,17 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   // деревья: вдоль улиц, в парках и во дворах
   if (P.trees > 0 && WINT) { // зимняя карта: ельник по району «лес» — импосторы ели и сосны, снег на ветвях
     const tl = winterTrees(city, P, mulberry32(city.seed * 7 + 3), GH), q = new THREE.PlaneGeometry(1, 1);
-    const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y, sx: 1.3 * t.sy, sy: 1.3 * t.sy, sz: 1.3 * t.sy, kind: t.v, color: t.color, ry: t.ry }));
+    // вблизи — 3D-модели (снег на лапах — snowify в attachBld), импосторы там прячутся; радиус больше городского — лес гуще
+    if (G.addNear && P.treeNear) {
+      const per = TREES_W.map(() => []), m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3();
+      for (const t of tl) { per[t.v].push(t); t.mdl = TREES_W[t.v][0]; }
+      TREES_W.forEach(([slot, name, h], v) => {
+        const L = per[v], xz = new Float32Array(L.length * 2), mats = new Float32Array(L.length * 16);
+        L.forEach((t, j) => { m4.compose(pp.set(t.x, t.y + 0.3, t.z), qq.setFromAxisAngle(YY, t.ry), ss.setScalar(1.3 * t.sy / h)); m4.toArray(mats, j * 16); xz[j * 2] = t.x; xz[j * 2 + 1] = t.z; });
+        G.addNear('w' + slot, slot, name, Math.round(P.treeNear * 1.6), xz, mats);
+      });
+    }
+    const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y + 0.3, sx: 1.3 * t.sy, sy: 1.3 * t.sy, sz: 1.3 * t.sy, kind: t.v, color: t.color, ry: t.ry, mdl: t.mdl || 0 }));
     G.tiles.push(...tiled(scene, li, q, treeImpMat('winter', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8));
   } else if (P.trees > 0) {
     const rnd = mulberry32(city.seed * 7 + 3), tl = [], tc = new THREE.Color();

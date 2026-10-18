@@ -3,12 +3,12 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261022a';
-import * as O from './sim/online.js?v=20261022a';
-import * as MW from './sim/online-multi.js?v=20261022a';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261022a';
-import { MODES } from './sim/strike.js?v=20261022a';
-import { ICON } from './icons.js?v=20261022a';
+import { createNet } from './net.js?v=20261022d';
+import * as O from './sim/online.js?v=20261022d';
+import * as MW from './sim/online-multi.js?v=20261022d';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261022d';
+import { MODES } from './sim/strike.js?v=20261022d';
+import { ICON } from './icons.js?v=20261022d';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -82,7 +82,7 @@ export function createOnline(C, ctrls) {
       const v = b.dataset.v, k = sg.dataset.oseg;
       if (k === 'kind') { ui.kind = v; if (v === 'multi' && ui.era < 2) ui.era = 4; } else if (k === 'mode') ui.mode = v; else if (k === 'role') ui.role = v; else if (k === 'size') ui.size = +v; else if (k === 'era') ui.era = +v; else if (k === 'side') ui.sideAir = v; else if (k === 'fill') ui.fill = v === '1';
       else if (k === 'rkind') N.opts({ kind: v }); else if (k === 'rsize') N.opts({ size: +v }); else if (k === 'rera') N.opts({ era: +v }); else if (k === 'rside') N.opts({ sideAir: v }); else if (k === 'rmode') N.opts({ mode: v });
-      saveUi(); snd.click(); rerender(); return;
+      saveUi(); snd.click(); if (k === 'kind' && !N.room && !N.queued && C.wantMap('online') !== C.MAP) { mapFix(v); return; } rerender(); return;
     }
     const a = e.target.closest('[data-oa]'), bot = e.target.closest('[data-bot]'), kick = e.target.closest('[data-kick]');
     if (bot) { N.bot(bot.dataset.bot); return; }
@@ -161,8 +161,21 @@ export function createOnline(C, ctrls) {
   N.on('queue', rerender);
   N.on('err', (m) => { C.say(m, 3); rerender(); });
   N.on('deny', (m) => { N.clog('deny', m); C.say(m, 2.5); snd.deny(); if (ctrls.defense.st.net) ctrls.defense.st.msg = m; });
-  N.on('start', () => enterBattle());
+  // карта комнаты: «Мульти-волна» — «Северный рубеж», «Вылет и оборона» — город. Карта строится при загрузке страницы: не та —
+  // перезагружаемся под неё; сервер держит место (в лобби — 30 с, в бою — как при обрыве) и тот же аккаунт возвращает в комнату
+  let mapGo = false;
+  function mapFix(kind) {
+    if (mapGo) return true; // уже уходим на другую карту
+    const k = kind === 'multi' ? 'multi' : 'air'; ls.set('fortuna_ad_kind', k);
+    if (C.wantMap('online') === C.MAP) return false;
+    mapGo = true; N.quit = true; // уходящая страница не переподключается (иначе две вкладки одного аккаунта отнимают место друг у друга)
+    N.clog('map_reload', k); C.say('Загружаем карту комнаты…', 5);
+    const u = new URL(location.href); u.searchParams.delete('ad'); u.searchParams.set('mp', '1'); location.replace(u.href);
+    return true;
+  }
+  N.on('start', () => { if (N.battle && mapFix(N.battle.kind)) return; enterBattle(); });
   N.on('room', (was) => {
+    if (N.room && mapFix(N.room.kind)) return;
     rerender();
     const r = N.room; if (!r || !N.battle || r.state === 'end' || r.state === 'lobby') return; // итоги и лобби — не бой
     if (C.state !== 'play') enterBattle();
@@ -344,7 +357,8 @@ export function createOnline(C, ctrls) {
   // выход в меню посреди боя — уходим из комнаты
   // после боя «В КОМНАТУ» — остаться (keepRoom: комната вернётся в лобби), «Закрыть» и выход из боя — уйти из комнаты
   const toMenu0 = C.toMenu;
-  C.toMenu = function () { if ((N.battle || N.room) && !keepRoom) { N.leave(); afterBattle = false; } keepRoom = false; planEl.style.display = 'none'; document.body.classList.remove('netOn', 'plOpen'); for (const id of ['tMap', 'opMap']) $(id).classList.remove('helpGlow'); toMenu0(); };
+  let booted = false; // первый вызов — показ меню при загрузке: комната (вернулись в неё после перезагрузки под карту) остаётся
+  C.toMenu = function () { if (booted && (N.battle || N.room) && !keepRoom) { N.leave(); afterBattle = false; } booted = true; keepRoom = false; planEl.style.display = 'none'; document.body.classList.remove('netOn', 'plOpen'); for (const id of ['tMap', 'opMap']) $(id).classList.remove('helpGlow'); toMenu0(); };
   // ?ad=КОД — приглашение: сразу режим «Онлайн» и вход в комнату
   const inv = new URLSearchParams(location.search).get('ad');
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }

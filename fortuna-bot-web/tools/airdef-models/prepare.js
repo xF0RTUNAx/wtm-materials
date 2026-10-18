@@ -345,6 +345,11 @@ const CONFIG = {
   tr_lime: { src: `${DL}/trees_low_poly.glb`, scale: 0.012, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, target: 1200, pickMesh: /tree6/, groups: () => 'body' },
   tr_pine: { src: `${DL}/low_poly_forest_tree_pack.glb`, scale: 0.5, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, pickMesh: /(^|\/)(Tree_Branches_01|Tree_Trunk_01\.001)\//, groups: () => 'body' },
   tr_bush: { src: `${DL}/low_poly_forest_tree_pack.glb`, scale: 0.6, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, pickMesh: /(^|\/)(Tree_Branches_02|Tree_Trunk_02)\//, groups: () => 'body' },
+  // зимний лес вблизи (CC BY, LOLIPOP: Realistic fir trees pack / Pine trees pack) — ели — LOD1 (LOD2 слишком редкая), сосны — LOD2; из них же импосторы
+  w_fir1: { src: `${DL}/realistic_fir_trees_pack_lods_gameready.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, pickMesh: /\/Christmas tree_LOD1\//, cutoff: 0.3, groups: () => 'body' },
+  w_fir3: { src: `${DL}/realistic_fir_trees_pack_lods_gameready.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, pickMesh: /\/Christmas tree_3_LOD1\//, cutoff: 0.3, groups: () => 'body' },
+  w_pine1: { src: `${DL}/pine_trees_pack_lowpoly_game_ready_lods.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, pickMesh: /\/Pine_big_1_LOD2\//, cutoff: 0.35, groups: () => 'body' },
+  w_pine2: { src: `${DL}/pine_trees_pack_lowpoly_game_ready_lods.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, pickMesh: /\/Pine_big_3_LOD2\//, cutoff: 0.35, groups: () => 'body' },
   p_lamp: { src: `${DL}/abandoned_street_lights_pack.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, target: 600, pickMesh: /(^|\/)pillar_01\//, groups: () => 'body' }, // фонарь с консолью
   // уличные мелочи (набор S1lMoon, автомат Kasugay, баки Glen Ortiz)
   pr_vend: { src: `${DL}/low-poly_urban_street_props_pack_ps1_style.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /(^|\/)(SodaMachine|Glass)\//, groups: () => 'body' }, // автомат с газировкой
@@ -567,7 +572,7 @@ async function prepare(name, views) {
     // стекло без своего цвета (белое непрозрачное по умолчанию) — тонированное; glassColor — свой цвет стекла модели (у F-35 — золотистый)
     if (glass && cfg.glassColor) mat.pbrMetallicRoughness.baseColorFactor = cfg.glassColor;
     else if (glass && !m.forceGlass && !pbr.baseColorFactor) mat.pbrMetallicRoughness.baseColorFactor = [0.3, 0.36, 0.42, 0.35];
-    if (src.alphaMode === 'MASK' || cut) { mat.alphaMode = 'MASK'; mat.alphaCutoff = src.alphaCutoff ?? 0.5; }
+    if (src.alphaMode === 'MASK' || cut) { mat.alphaMode = 'MASK'; mat.alphaCutoff = cfg.cutoff ?? src.alphaCutoff ?? 0.5; } // cutoff — свой порог (тонкая хвоя: ниже, чтобы не «облезала»)
     if (pbr.baseColorTexture && m.hasUv && !glass && !(cfg.noTex && cfg.noTex.test(nm))) /* noTex — без текстуры (растянутая по торцам выгорает) */ mat.pbrMetallicRoughness.baseColorTexture = { index: await texture(pbr.baseColorTexture.index, cfg.tex(src), mat.alphaMode === 'MASK') };
     materials.push(mat);
     const pos = new Float32Array(m.pos), b = bbox(pos), n = pos.length / 3, attrs = {};

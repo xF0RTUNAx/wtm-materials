@@ -3,7 +3,7 @@
 // Нет поддержки, ?ktx=0 или ошибка загрузки — вызывающий берёт прежний JPEG/WebP.
 /* global THREE */
 import { KTX2Loader } from './vendor/basis/KTX2Loader.js?v=20261021a';
-const V = '20261021a';
+const V = '20261022c';
 let L = null, META = null;
 export function ktxInit(renderer) {
   if (L || !renderer || typeof Worker === 'undefined' || typeof WebAssembly === 'undefined') return;

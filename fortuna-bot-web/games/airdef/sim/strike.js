@@ -13,9 +13,9 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261022a';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022a';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022a';
+import { AG, SAM } from '../arsenal.js?v=20261022d';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022d';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022d';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
@@ -760,7 +760,7 @@ export function createStrike(ctx) {
     if (w.decoy || !w.W.dmg) { fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); fx.explosion(w.pos, 4, 'ground'); return; } // ложная цель — без боевой части
     const res = blast(w.pos, w.W.dmg, w.W.blast, w.W.short, w.owner);
     fx.wpnEnd(w, res);
-    fx.explosion(w.pos, w.W.blast, w.W.vis && w.W.vis.kind !== 'missile' ? 'bomb' : 'ground'); // бомба — крупнее, со вспышкой и пылью
+    fx.explosion(w.pos, w.W.blast, w.W.kind === 'tbm' ? 'tbm' : w.W.vis && w.W.vis.kind !== 'missile' ? 'bomb' : 'ground'); // бомба — крупнее, со вспышкой и пылью; баллистика — ещё крупнее (удар сверху на 2–6 М)
   }
   // урон взрывом по объектам и комплексам; возвращает, кого задело
   function blast(p, dmg, R, by, owner = null) { // owner — самолёт, чьё оружие (онлайн: кому засчитать)

@@ -1193,6 +1193,26 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Realistic fir trees pack (LODS, gameready)",
+  "author": "LOLIPOP",
+  "url": "https://sketchfab.com/3d-models/realistic-fir-trees-pack-lods-gameready-f58e8b6d733e4b0586e5b7db847b89e7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_fir1",
+   "w_fir3"
+  ]
+ },
+ {
+  "title": "Pine trees pack (lowpoly, game ready, LODs)",
+  "author": "LOLIPOP",
+  "url": "https://sketchfab.com/3d-models/pine-trees-pack-lowpoly-game-ready-lods-e1e9c07b8e2e445c943fec660beefba2",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_pine1",
+   "w_pine2"
+  ]
+ },
+ {
   "title": "Abandoned street lights pack",
   "author": "sergeilihandristov",
   "url": "https://sketchfab.com/3d-models/abandoned-street-lights-pack-c853eca300e8435d8fe9206bcb524eda",

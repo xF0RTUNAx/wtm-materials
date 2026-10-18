@@ -1,18 +1,18 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { CITY, ZONE } from './city.js?v=20261022a';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022a';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022a';
-import { MODES } from './sim/strike.js?v=20261022a';
-import { WEATHERS } from '../drone/world.js?v=20261022a';
-import { LESSONS } from './training.js?v=20261022a';
-import { MODEL_CREDITS } from './models.js?v=20261022a';
-import { openLayoutEditor } from './layout.js?v=20261022a';
+import { CITY, ZONE } from './city.js?v=20261022d';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022d';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022d';
+import { MODES } from './sim/strike.js?v=20261022d';
+import { WEATHERS } from '../drone/world.js?v=20261022d';
+import { LESSONS } from './training.js?v=20261022d';
+import { MODEL_CREDITS } from './models.js?v=20261022d';
+import { openLayoutEditor } from './layout.js?v=20261022d';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022a';
-import { photoItems } from './photo.js?v=20261022a';
-import { guideChapters } from './guide.js?v=20261022a';
-import { iconize } from './icons.js?v=20261022a';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022d';
+import { photoItems } from './photo.js?v=20261022d';
+import { guideChapters } from './guide.js?v=20261022d';
+import { iconize } from './icons.js?v=20261022d';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -56,7 +56,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
   $('modeSel').onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save();
-    if ((C.MAP === 'winter') !== ['multi', 'photo'].includes(setup.game) && !C.Q.get('map')) { location.reload(); return; } // «Мульти-волна» — на зимней карте, остальное — на городе if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
+    if (C.wantMap(setup.game) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
+    if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
     if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
     render();

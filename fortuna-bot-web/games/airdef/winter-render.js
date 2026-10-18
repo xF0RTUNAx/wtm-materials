@@ -3,8 +3,8 @@
 // и гребнях, лёд с наметёнными пятнами снега, хвойная крона издали (лес читается лесом между редкими импосторами),
 // укатанный снег и асфальт у базы, ВПП. Нормали — из сетки высот (50 м): склоны освещены точнее, чем грубая сетка земли.
 /* global THREE */
-import { ZONE } from './city.js?v=20261022a';
-import { WINTER } from './map-winter.js?v=20261022a';
+import { ZONE } from './city.js?v=20261022d';
+import { WINTER } from './map-winter.js?v=20261022d';
 
 // погода зимней карты (панорамы — Poly Haven, CC0): ясный мороз, морозная дымка, пасмурно со снегом
 export function winterWeathers(W) {
@@ -122,19 +122,19 @@ export function winterGroundMaterial(city, zt, nt, ENV, WT) {
   };
   return m;
 }
-// лес: импосторы ели и сосны по району «лес» — в 8 раз больше городских деревьев (каждое — 2 треугольника), куртинами:
+// лес: ели и сосны (вблизи — модели, вдали — импосторы) по району «лес» — в 8 раз больше городских деревьев, куртинами; елей ~¾:
 // центр куртины — случайная точка леса, вокруг неё 6–14 деревьев в радиусе 40–90 м
 export function winterTrees(city, P, rnd, gh = city.groundH) {
-  const tl = [], want = Math.round((P.trees || 0) * 8), H = 15500;
+  const tl = [], want = Math.round((P.trees || 0) * 12), H = 15500;
   for (let t = 0; t < want && tl.length < want; t++) {
     const cx = (rnd() * 2 - 1) * H, cz = (rnd() * 2 - 1) * H;
     if (city.zoneAt(cx, cz) !== ZONE.PARK) continue;
-    const k = 6 + Math.floor(rnd() * 9), R = 40 + rnd() * 50;
+    const k = 8 + Math.floor(rnd() * 12), R = 25 + rnd() * 40;
     for (let c = 0; c < k && tl.length < want; c++) {
     const a = rnd() * 6.283, r = Math.sqrt(rnd()) * R, x = cx + Math.cos(a) * r, z = cz + Math.sin(a) * r;
     if (city.zoneAt(x, z) !== ZONE.PARK) continue;
     const ht = 11 + rnd() * 11;
-    tl.push({ x, z, y: gh(x, z) - 0.6, sy: ht / 1.3, v: Math.floor(rnd() * 4), color: new THREE.Color(0.05, 0.06, 0.05), ry: rnd() * 6.283 });
+    const sp = rnd(); tl.push({ x, z, y: gh(x, z) - 0.6, sy: ht / 1.3, v: sp < 0.42 ? 0 : sp < 0.78 ? 1 : sp < 0.9 ? 2 : 3, color: new THREE.Color(0.05, 0.06, 0.05), ry: rnd() * 6.283 });
     }
   }
   return tl;
