@@ -1,18 +1,18 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { CITY } from './city.js?v=20261020j';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261020j';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261020j';
-import { MODES } from './sim/strike.js?v=20261020j';
-import { WEATHERS } from '../drone/world.js?v=20261020j';
-import { LESSONS } from './training.js?v=20261020j';
-import { MODEL_CREDITS } from './models.js?v=20261020j';
-import { openLayoutEditor } from './layout.js?v=20261020j';
+import { CITY, ZONE } from './city.js?v=20261022a';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022a';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022a';
+import { MODES } from './sim/strike.js?v=20261022a';
+import { WEATHERS } from '../drone/world.js?v=20261022a';
+import { LESSONS } from './training.js?v=20261022a';
+import { MODEL_CREDITS } from './models.js?v=20261022a';
+import { openLayoutEditor } from './layout.js?v=20261022a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261020j';
-import { photoItems } from './photo.js?v=20261020j';
-import { guideChapters } from './guide.js?v=20261020j';
-import { iconize } from './icons.js?v=20261020j';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022a';
+import { photoItems } from './photo.js?v=20261022a';
+import { guideChapters } from './guide.js?v=20261022a';
+import { iconize } from './icons.js?v=20261022a';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -55,7 +55,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
   $('modeSel').onclick = (e) => {
-    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save(); if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
+    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save();
+    if ((C.MAP === 'winter') !== ['multi', 'photo'].includes(setup.game) && !C.Q.get('map')) { location.reload(); return; } // «Мульти-волна» — на зимней карте, остальное — на городе if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
     if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
     render();
@@ -185,7 +186,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     let h = `<div class="prow"><span>Роль</span>${seg('mrole', atk ? 'atk' : 'def', [['def', 'За ПВО'], ['atk', 'За волну']])}</div>
       <div class="prow"><span>Сторона</span>${seg('side', me, [['east', 'Восток'], ['west', 'Запад']])}</div>
       <div class="prow"><span>Режим</span>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, m.name]))}</div><p class="hint">${MODES[setup.diff].desc}</p>
-      <div class="prow"><span>Эпоха</span>${seg('era', setup.era, eras.map((e) => [e.id, e.name]))}</div>`;
+      <div class="prow"><span>Эпоха</span>${seg('era', setup.era, eras.map((e) => [e.id, e.name]))}</div>
+      <p class="hint">Карта «Северный рубеж» — зимняя горная долина: объекты разнесены по карте — авиабаза, ГЭС на плотине, РЛС на вершине, арсенал в ущелье; хребты прикрывают от РЛС и ракет.</p>`;
     const items = multiItems(att, setup.era), carriers = [...new Set(items.map(([, v]) => v).filter(Boolean))].map((v) => CARRIERS[v].name);
     h += `<div class="cat-h">Как идёт волна</div><p class="hint">1. <b>Дрон разведчик</b> (без боевой части, с камерой) облетает город и засекает комплексы ПВО. 2. <b>${(att === 'east' && setup.era >= 4) || (att === 'west' && setup.era >= 3) ? 'Ударные дроны' : 'Дроны'} и ложные цели</b> — ПВО тратит на них ракеты и включает РЛС.
       3. <b>Крылатые ракеты</b> — носители (${carriers.join(', ') || '—'}) заходят из-за края карты и пускают их с рубежа за краем района (там ПВО их не достаёт); ракеты идут на малой высоте с 2–3 направлений. 4. <b>Баллистика</b> — с пусковых за городом, по крутой дуге с высоты 25–45 км.
@@ -363,6 +365,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function mapBase(S2) {
     if (baseCache[S2]) return baseCache[S2];
     const c = document.createElement('canvas'); c.width = c.height = S2; const x = c.getContext('2d'), city = C.city;
+    if (city.kind === 'winter') return (baseCache[S2] = winterMapBase(c, x, city, S2));
     const ZC = ['#56603e', '#6f7262', '#7d7f78', '#8f9093', '#7a7569', '#3c5a2e', '#2d5574', '#6d7858', '#77746c'];
     const st = Math.max(2, Math.round(S2 / 400)), step = 2 * CITY.HALF / S2;
     for (let j = 0; j < S2; j += st) for (let i = 0; i < S2; i += st) { x.fillStyle = ZC[city.zoneAt(-CITY.HALF + i * step, -CITY.HALF + j * step)]; x.fillRect(i, j, st, st); }
@@ -370,6 +373,53 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     x.fillStyle = 'rgba(30,30,36,.6)';
     for (let i = 0; i < B.n; i++) if (B.h[i] > 18) x.fillRect((B.x[i] - B.w[i] / 2 + CITY.HALF) * k, (B.z[i] - B.d[i] / 2 + CITY.HALF) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
     return (baseCache[S2] = c);
+  }
+  // зимняя карта — как топографическая: мягкая отмывка (свет с северо-запада + рассеянный), цвет по высоте, горизонтали
+  // (сглаженные, толщина — по крутизне), утолщённые — через 500 м; лес — размытой плотностью, лёд — по уровню берега
+  function winterMapBase(c, x, city, S2) {
+    const H = CITY.HALF, step = 2 * H / S2, img = x.createImageData(S2, S2), d = img.data, gh = city.groundH, e = Math.max(25, step * 0.75);
+    const CI = S2 >= 1200 ? 100 : 200, IX = S2 >= 1200 ? 500 : 1000; // шаг горизонталей и утолщённых
+    // плотность леса и лёд — по сетке 100 м, потом билинейно (края мягкие)
+    const FG = 321, fs = 2 * H / (FG - 1), FD = new Float32Array(FG * FG), ID = new Float32Array(FG * FG);
+    for (let j = 0; j < FG; j++) for (let i = 0; i < FG; i++) { const wx = -H + i * fs, wz = -H + j * fs; FD[j * FG + i] = city.zoneAt(wx, wz) === ZONE.PARK ? 1 : 0; ID[j * FG + i] = city.iceAt(wx, wz) ? 1 : 0; }
+    const blur = (A) => { const T = A.slice(); for (let j = 1; j < FG - 1; j++) for (let i = 1; i < FG - 1; i++) { const q = j * FG + i; A[q] = (4 * T[q] + T[q - 1] + T[q + 1] + T[q - FG] + T[q + FG]) / 8; } };
+    blur(FD); blur(FD); blur(ID);
+    const bil = (A, wx, wz) => { const fx = Math.min(FG - 1.001, Math.max(0, (wx + H) / fs)), fz = Math.min(FG - 1.001, Math.max(0, (wz + H) / fs)), i = fx | 0, j = fz | 0, u = fx - i, v = fz - j, q = j * FG + i;
+      return (A[q] * (1 - u) + A[q + 1] * u) * (1 - v) + (A[q + FG] * (1 - u) + A[q + FG + 1] * u) * v; };
+    const W = city.winter || {}, lakeN = W.LAKE_N_Y, lakeS = W.LAKE_S_Y, damZ = W.DAM_Z;
+    const L = [-0.55, 0.7, -0.45], ll = Math.hypot(...L); L[0] /= ll; L[1] /= ll; L[2] /= ll;
+    const sm = (a, b, t) => { t = Math.min(1, Math.max(0, (t - a) / (b - a))); return t * t * (3 - 2 * t); };
+    for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++) {
+      const wx = -H + (i + 0.5) * step, wz = -H + (j + 0.5) * step, h = gh(wx, wz);
+      const hx = (gh(wx + e, wz) - gh(wx - e, wz)) / (2 * e), hz = (gh(wx, wz + e) - gh(wx, wz - e)) / (2 * e), g = Math.hypot(hx, hz), nl = Math.hypot(hx, 1, hz);
+      const sh = 0.8 * ((-hx * L[0] + L[1] - hz * L[2]) / nl - L[1]) + 0.2 * (1 / nl - 1); // 0 на равнине
+      const f = Math.max(0.7, Math.min(1.12, 1 + sh * 0.6));
+      // цвет по высоте: дно долины — светлый снег, к вершинам — серо-голубой; на крутых склонах — камень
+      const t = sm(100, 1700, h);
+      let r = 214 - 52 * t, gg = 220 - 46 * t, b = 228 - 36 * t;
+      const rk = sm(0.75, 1.15, g); r += (138 - r) * rk * 0.6; gg += (134 - gg) * rk * 0.6; b += (132 - b) * rk * 0.6;
+      const fo = sm(0.2, 0.8, bil(FD, wx, wz)) * 0.5; r += (120 - r) * fo; gg += (150 - gg) * fo; b += (124 - b) * fo; // лес — бледно-зелёный, рельеф под ним виден
+      // лёд: у льда на сетке, а берег — по высоте над уровнем льда
+      const iy = wz < damZ ? lakeN : Math.max(lakeS, 144 - wz * 0.004), ik = bil(ID, wx, wz) > 0.05 ? 1 - sm(0.4, 2.5, h - iy) : 0;
+      r += (156 - r) * ik; gg += (192 - gg) * ik; b += (214 - b) * ik;
+      // горизонтали: расстояние до ближайшей в пикселях (по крутизне), сглаженная линия
+      const dh = Math.abs(h - Math.round(h / CI) * CI), px = dh / (g * step + 1e-6), idx = Math.abs(h - Math.round(h / IX) * IX) < CI / 2;
+      const clF = sm(1.5, 3.5, CI / (g * step + 1e-6)); // на кручах горизонтали сливаются — там бледнее
+      const cl = (1 - sm(idx ? 0.55 : 0.3, idx ? 1.25 : 0.95, px)) * (idx ? 0.5 : 0.3) * (1 - ik) * (idx ? 0.4 + 0.6 * clF : clF);
+      const shore = ik > 0 && ik < 1 ? (1 - Math.abs(ik - 0.5) * 2) * 0.45 : 0;
+      const q = (j * S2 + i) * 4, k = f * 0.86;
+      d[q] = (r * k) * (1 - cl) + 96 * cl; d[q + 1] = (gg * k) * (1 - cl) + 84 * cl; d[q + 2] = (b * k) * (1 - cl) + 72 * cl;
+      if (shore) { d[q] = d[q] * (1 - shore) + 60 * shore; d[q + 1] = d[q + 1] * (1 - shore) + 100 * shore; d[q + 2] = d[q + 2] * (1 - shore) + 135 * shore; }
+      d[q + 3] = 255;
+    }
+    x.putImageData(img, 0, 0);
+    const k = S2 / (2 * H);
+    x.strokeStyle = 'rgba(40,36,32,.85)'; x.lineCap = 'round';
+    for (const r of city.roads || []) { x.lineWidth = Math.max(1, r.w * k * 1.6); x.beginPath(); r.pts.forEach(([px, pz], q) => { const X = (px + H) * k, Y = (pz + H) * k; if (q) x.lineTo(X, Y); else x.moveTo(X, Y); }); x.stroke(); }
+    const a = city.airport; x.fillStyle = 'rgba(30,30,34,.9)'; x.fillRect((a.x - a.rwyW / 2 + H) * k - 1, (a.z - a.rwyL / 2 + H) * k, Math.max(2, a.rwyW * k + 2), a.rwyL * k); // ВПП
+    const B = city.B; x.fillStyle = 'rgba(30,30,36,.75)';
+    for (let i = 0; i < B.n; i++) x.fillRect((B.x[i] - B.w[i] / 2 + H) * k, (B.z[i] - B.d[i] / 2 + H) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
+    return c;
   }
   return {
     show() { render(); showTab(); $('menu').classList.add('on'); },

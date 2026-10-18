@@ -11,10 +11,15 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261020j';
-import { part, mergeParts, M } from '../drone/models.js?v=20261020j';
-import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261020j';
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261020j'; // MIT, meshoptimizer 0.21
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261022a';
+import { part, mergeParts, M } from '../drone/models.js?v=20261022a';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022a';
+import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022a';
+import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022a';
+Object.assign(WEATHERS, winterWeathers(WEATHERS)); // зимние погоды — только в «Воздушном превосходстве»
+// высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
+let GH = groundH, ZA = zoneAt;
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022a'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -25,7 +30,7 @@ export const UPX = { value: 0.0015 }; // размер пикселя на 1 м �
 export const ENV = {
   uCam: { value: new THREE.Vector3() }, uPx: UPX, uSun: { value: new THREE.Vector3(0.4, 0.7, 0.4).normalize() },
   uZen: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uGnd: { value: new THREE.Color() }, uSunCol: { value: new THREE.Color() },
-  uNight: { value: 0 }, uTime: { value: 0 },
+  uNight: { value: 0 }, uTime: { value: 0 }, uSnowK: { value: 0 }, // uSnowK — снег на крышах и уступах (зимняя карта)
   uMdlCol: { value: Array.from({ length: 24 }, () => new THREE.Vector4(0, 0, 0, 0)) }, // средний цвет модели вида (w = 1 — есть): дальняя коробка — в цвет своей модели
   uMdl: { value: new Array(24).fill(0) }, // радиус, в котором коробки вида дома скрыты (вместо них — модели; 0 — модели нет)
   uHide: { value: new THREE.Vector3() }, // центр этого радиуса: камера (в окне ТВ — точка, куда смотрит контейнер)
@@ -57,12 +62,21 @@ export const texStats = { req: 0, done: 0 }; // статус загрузки т
 function loadCityTextures(aniso) {
   if (TEX.tGG) return;
   let left = Object.keys(TEX_FILES).length; texStats.req = left;
+  const done = () => { texStats.done++; if (--left === 0) TEX.uTexOn.value = 1; };
+  // сжатые KTX2: нормали травы и сухой земли — уже одной текстурой (g_gn), средние цвета — из tex/ktx.json
+  const viaKtx = ktxOn();
+  if (viaKtx) { left -= 1; texStats.req = left; ktxMeta().then((m) => { for (const [u, c] of Object.entries(m.avg || {})) { const av = TEX['uAvg' + u.slice(1)]; if (av) av.value.set(c[0], c[1], c[2]); } }).catch(() => {}); }
   for (const [u, f] of Object.entries(TEX_FILES)) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
-    fetch(new URL(`./tex/${f}.jpg?v=20261020j`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
-      .then((b) => createImageBitmap(b)).then((bmp) => { if (u === 'tGGn' || u === 'tGDn') packNormalsFrom(u, bmp); else { t.image = bmp; t.needsUpdate = true; } const av = TEX['uAvg' + u.slice(1)]; if (av) av.value.copy(avgColor(bmp)); texStats.done++; if (--left === 0) TEX.uTexOn.value = 1; })
+    if (viaKtx && (u === 'tGGn' || u === 'tGDn')) { if (u === 'tGGn') ktxLoad('g_gn').then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; TEX.tGN.value = k; done(); }).catch(() => done()); continue; }
+    if (viaKtx) { ktxLoad(f).then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.anisotropy = aniso; TEX[u].value = k; done(); }).catch(() => jpg(u, f, t)); continue; }
+    jpg(u, f, t);
+  }
+  function jpg(u, f, t) {
+    fetch(new URL(`./tex/${f}.jpg?v=20261022a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+      .then((b) => createImageBitmap(b)).then((bmp) => { if (u === 'tGGn' || u === 'tGDn') packNormalsFrom(u, bmp); else { TEX[u].value = t; t.image = bmp; t.needsUpdate = true; } const av = TEX['uAvg' + u.slice(1)]; if (av && !viaKtx) av.value.copy(avgColor(bmp)); done(); })
       .catch((e) => { texStats.done++; console.warn('текстура не загрузилась:', e.message); });
   }
 }
@@ -97,7 +111,7 @@ function zoneTexture(size) {
   const data = new Uint8Array(size * size * 4), c = new THREE.Color();
   for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
     const x = -CITY.HALF + (i + 0.5) * 2 * CITY.HALF / size, z = -CITY.HALF + (j + 0.5) * 2 * CITY.HALF / size;
-    const [hex, urb] = ZCOL[zoneAt(x, z)];
+    const [hex, urb] = ZCOL[ZA(x, z)];
     c.set(hex);
     const v = 0.9 + 0.2 * Math.sin(x * 0.0021 + Math.sin(z * 0.0013) * 2) * Math.sin(z * 0.0019 + 0.5); // поля и кварталы — пятнами
     const q = (j * size + i) * 4;
@@ -287,6 +301,19 @@ void roadAt(float p, out float o, out float hw, out float ave) {
 
 // ═════════════ Здания ═════════════
 // aKind = вид + 0,9·случайное (своё у каждого здания) + 10, если часть поднята над землёй (верхняя ступень башни)
+// снег на всём, что смотрит вверх (крыши, уступы, верх объектов): поверх своего onBeforeCompile материала; включает ENV.uSnowK
+export function snowify(m) {
+  if (!m || m.userData.snow) return m; m.userData.snow = true;
+  const prev = m.onBeforeCompile;
+  m.onBeforeCompile = (sh, r) => {
+    if (prev) prev(sh, r);
+    sh.uniforms.uSnowK = ENV.uSnowK;
+    sh.fragmentShader = 'uniform float uSnowK;\n' + sh.fragmentShader.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+  { float upv = dot(normal, normalize((viewMatrix * vec4(0.0, 1.0, 0.0, 0.0)).xyz)); diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.84, 0.87, 0.92), uSnowK * smoothstep(0.45, 0.75, upv)); }`);
+  };
+  m.customProgramCacheKey = () => (prev ? String(prev) : '') + 'snow';
+  m.needsUpdate = true; return m;
+}
 function buildingMaterial() {
   const m = new THREE.MeshPhongMaterial({ specular: 0x8a8a8a, shininess: 90 });
   m.onBeforeCompile = (sh) => {
@@ -416,6 +443,91 @@ function roofGeo() {
   return g;
 }
 // дерево: ствол и крона (цвет кроны задаёт инстанс)
+// Импосторы деревьев (tools/airdef-trees/bake.html): каждое дерево снято с 6×6 направлений полусферы (полу-октаэдр), атлас 2×2
+// вида: цвет + покрытие и нормаль + затенение кроны. В шейдере — квадрат лицом к камере, кадр по направлению взгляда
+// (4 соседних кадра смешиваются), свет как у Phong (небо + солнце). city — модели ближнего кольца (дуб, липа, сосна, куст):
+// вдали то же дерево, что вблизи; winter — ель и сосна Poly Haven (CC0). Вид: [радиус описанной сферы, центр по высоте, высота]
+export const TREE_IMP = {
+  city: { G: 6, tint: [0.1, 0.14, 0.085], snow: 0, sp: [[6.446, 5.18, 10.36], [6.812, 4.759, 9.519], [6.905, 6.353, 12.706], [4.679, 3.56, 7.12]] },
+  winter: { G: 6, tint: [0.3, 0.36, 0.27], snow: 1, sp: [[10.514, 9.382, 18.925], [8.151, 6.941, 14.055], [11.641, 10.107, 20.375], [10.34, 8.678, 17.544]] },
+};
+function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
+  const t = new THREE.Texture(); t.flipY = false; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
+  const U = { value: t };
+  if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') return U;
+  texStats.req++;
+  if (ktxOn()) { ktxLoad(f).then((k) => { U.value = k; texStats.done++; }).catch(() => webp()); return U; }
+  webp(); return U;
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261021a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; })
+    .catch((e) => { texStats.done++; console.warn('деревья не загрузились:', e.message); }); }
+}
+function treeImpMat(set, hi, hemi, sunL, a2c = false) {
+  const I = TREE_IMP[set], sfx = hi ? '' : '_lo';
+  const sp = I.sp.map(([R, cy, H]) => new THREE.Vector4(R / H, cy / H, 0, 0)); // в долях высоты: экземпляр масштабирован под высоту модели
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { ...THREE.UniformsLib.fog, uCam: ENV.uCam, uHide: ENV.uHide, uMdl: ENV.uMdl, uSun: ENV.uSun,
+      tA: treeImpTex(`tr_${set}_a${sfx}`), tN: treeImpTex(`tr_${set}_n${sfx}`), uSp: { value: sp },
+      uHS: { value: hemi.color.clone().multiplyScalar(hemi.intensity) }, uHG: { value: hemi.groundColor.clone().multiplyScalar(hemi.intensity) },
+      uSL: { value: sunL.color.clone().multiplyScalar(sunL.intensity) }, uTint: { value: new THREE.Vector3(...I.tint) }, uSnow: { value: I.snow } },
+    vertexShader: `attribute float aKind, aMdl; uniform vec3 uCam, uHide; uniform float uMdl[24]; uniform vec4 uSp[4];
+      varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz; varying float vSp, vTint, vVar;
+      #include <fog_pars_vertex>
+      void main() {
+        vSp = aKind; vec4 S = uSp[int(aKind + 0.5)];
+        float h = length(instanceMatrix[1].xyz); vec3 base = instanceMatrix[3].xyz; vVar = fract(sin(dot(base.xz, vec2(12.9898, 78.233))) * 43758.5453); vec3 ctr = base + vec3(0.0, S.y * h, 0.0); float R = S.x * h;
+        vAx = normalize(instanceMatrix[0].xyz); vAz = normalize(instanceMatrix[2].xyz);
+        vec3 V = normalize(uCam - ctr), Vl = vec3(dot(V, vAx), max(V.y, 0.0), dot(V, vAz)); Vl = normalize(Vl + vec3(0.0, 1e-3, 0.0));
+        vec2 p = Vl.xz / (abs(Vl.x) + Vl.y + abs(Vl.z)), o = vec2(p.x + p.y, p.x - p.y);                 // полу-октаэдр → [−1, 1]²
+        vec2 g = (o * 0.5 + 0.5) * ${I.G.toFixed(1)} - 0.5; vG0 = clamp(floor(g), 0.0, ${(I.G - 1).toFixed(1)}); vG1 = min(vG0 + 1.0, ${(I.G - 1).toFixed(1)}); vF = clamp(g - vG0, 0.0, 1.0);
+        vec3 up = vec3(0.0, 1.0, 0.0) - Vl * Vl.y; up = dot(up, up) < 1e-6 ? vec3(0.0, 0.0, -1.0) : normalize(up);   // как камера запекания
+        vec3 rt = normalize(cross(up, Vl)); up = cross(Vl, rt);
+        vec3 Rw = vAx * rt.x + vec3(0.0, rt.y, 0.0) + vAz * rt.z, Uw = vAx * up.x + vec3(0.0, up.y, 0.0) + vAz * up.z;
+        vUv = position.xy + 0.5;
+        vec4 mvPosition = viewMatrix * vec4(ctr + (Rw * position.x + Uw * position.y) * 2.0 * R, 1.0); gl_Position = projectionMatrix * mvPosition;
+        if (aMdl > 0.5 && distance(base.xz, uHide.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // вблизи — модели
+        #ifdef USE_INSTANCING_COLOR
+          vTint = dot(instanceColor, vec3(0.3, 0.59, 0.11));
+        #else
+          vTint = 0.05;
+        #endif
+        #include <fog_vertex>
+      }`,
+    fragmentShader: `uniform sampler2D tA, tN; uniform vec3 uHS, uHG, uSL, uSun, uTint; uniform float uSnow;
+      varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz; varying float vSp, vTint, vVar;
+      #include <fog_pars_fragment>
+      vec2 at(vec2 c) { float s = floor(vSp + 0.5); vec2 o = vec2(mod(s, 2.0), floor(s / 2.0)) * ${I.G.toFixed(1)};
+        vec2 q = (o + c + clamp(vUv, 0.01, 0.99)) / ${(I.G * 2).toFixed(1)}; return vec2(q.x, 1.0 - q.y); }
+      void main() {
+        vec2 a0 = at(vG0), a1 = at(vec2(vG1.x, vG0.y)), a2 = at(vec2(vG0.x, vG1.y)), a3 = at(vG1);
+        float w0 = (1.0 - vF.x) * (1.0 - vF.y), w1 = vF.x * (1.0 - vF.y), w2 = (1.0 - vF.x) * vF.y, w3 = vF.x * vF.y;
+        vec4 A = texture2D(tA, a0) * w0 + texture2D(tA, a1) * w1 + texture2D(tA, a2) * w2 + texture2D(tA, a3) * w3;
+        // порог покрытия — ниже на мелких мип-уровнях (иначе редкая хвоя и листва вдали «облезают» до ствола)
+        vec2 ts = vec2(${(I.G * 2 * 128).toFixed(1)}); float lod = log2(max(max(length(dFdx(a0 * ts)), length(dFdy(a0 * ts))), 1.0)), lk = clamp(lod / 4.0, 0.0, 1.0);
+        float thr = mix(0.45, 0.1, lk);
+        ${a2c ? `float cov = clamp((A.a - thr) / max(fwidth(A.a), 1e-3) + 0.5, 0.0, 1.0); if (cov < 0.01) discard; // край хвои — сглаженный (MSAA: покрытие из альфы), без мерцания вдали`
+          : 'if (A.a < thr) discard;'}
+        vec4 Nn = texture2D(tN, a0) * w0 + texture2D(tN, a1) * w1 + texture2D(tN, a2) * w2 + texture2D(tN, a3) * w3;
+        vec3 alb = pow(A.rgb / max(A.a, 0.05), vec3(2.2)) * (0.85 + 3.0 * vTint); // атлас — sRGB; тон — от цвета экземпляра
+        alb *= uTint * mix(1.0, 0.85, clamp(lod / 4.0, 0.0, 1.0)); // крона в тени самой себя: темнее и зеленее, вдали — как у моделей
+        vec3 nl = normalize(Nn.rgb / max(A.a, 0.05) * 2.0 - 1.0), n = normalize(vAx * nl.x + vec3(0.0, nl.y, 0.0) + vAz * nl.z);
+        float ao = clamp(Nn.a / max(A.a, 0.05), 0.0, 1.0);
+        float ny0 = n.y; n = normalize(mix(n, vec3(0.0, 0.6, 0.0) + normalize(uSun) * 0.25, lk * 0.6)); // вдали мелкий рельеф кроны не виден — свет ровнее (без искр)
+        vec3 lt = mix(uHG, uHS, n.y * 0.5 + 0.5) * ao + uSL * max(dot(n, normalize(uSun)) * 0.8 + 0.2, 0.0) * mix(0.6, 1.0, ao);
+        vec3 col = alb * lt;
+        // снег на ветвях: плавно на обращённых вверх лапах, у каждого дерева — своё количество; вдали — приглушённо
+        float sn = uSnow * smoothstep(0.35, 0.9, ny0) * (0.2 + 0.35 * vVar) * mix(1.0, 0.5, lk) * ao;
+        col = mix(col, vec3(0.74, 0.77, 0.82) * lt, sn);
+        gl_FragColor = vec4(col, ${a2c ? 'cov' : '1.0'});
+        #include <tonemapping_fragment>
+        #include <encodings_fragment>
+        #include <fog_fragment>
+      }`,
+    fog: true, extensions: { derivatives: true },
+  });
+  mat.alphaToCoverage = a2c;
+  return mat;
+}
 function treeGeo() {
   return mergeParts([
     part(new THREE.CylinderGeometry(0.06, 0.09, 0.5, 5), 0x5a4a3c, M(0, 0.25, 0)),
@@ -593,6 +705,7 @@ export function makeImpostor(group, renderer, cell = 256) {
   const Y = IMP_UP.set(0, 1, 0);
   shot(0, 0, IMP_V.set(1, 0, 0), S.z, S.y, S.x, Y); shot(1, 0, IMP_V.set(-1, 0, 0), S.z, S.y, S.x, Y);
   shot(2, 0, IMP_V.set(0, 0, 1), S.x, S.y, S.z, Y); shot(3, 0, IMP_V.set(0, 0, -1), S.x, S.y, S.z, Y);
+  if (ENV.uSnowK.value > 0) sc.traverse((q) => { if (q.isMesh) { const o = q.material; q.material = new THREE.MeshBasicMaterial({ color: 0xd2d8e0, side: THREE.DoubleSide, alphaTest: o.alphaTest, map: o.alphaTest ? o.map : null, toneMapped: false }); o.dispose(); } }); // зима: крыша сверху — снег
   shot(0, 1, IMP_V.set(0, 1, 0), S.x, S.z, S.y, IMP_C.set(0, 0, -1));
   renderer.setScissorTest(prevSc); renderer.setScissor(sp); renderer.setViewport(vp); renderer.setRenderTarget(prevRT); renderer.autoClear = prevAuto; renderer.setClearColor(prevCol, prevA);
   sc.traverse((q) => { if (q.isMesh) q.material.dispose(); });
@@ -669,7 +782,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       s.set((mLongX ? sl : S) / mx, B.h[i] / my, (mLongX ? S : sl) / mz); // вдоль длинной оси модели — секция, поперёк — ширина дома
       if (house) s.setScalar(Math.min(s.x, s.z)); // частный дом — без растяжения: свои пропорции, вписан в участок
       const x = B.x[i] + (longX ? off : 0), z = B.z[i] + (longX ? 0 : off);
-      mtx.compose(p.set(x, groundH(x, z) - 0.2, z), q, s); mtx.toArray(mats, j * 16);
+      mtx.compose(p.set(x, GH(x, z) - 0.2, z), q, s); mtx.toArray(mats, j * 16);
       xz[j * 2] = B.x[i]; xz[j * 2 + 1] = B.z[i];
     });
     // мелких частных домов много — их радиус меньше; офисный корпус издали светлый и плоский — дальше коробки с фасадом
@@ -682,6 +795,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       let cast = false;
       group.traverse((c) => {
         if (!c.isMesh) return;
+        if (G.winter) snowify(c.material); // зимой — снег на крышах моделей
         const m = new THREE.InstancedMesh(c.geometry, c.material, S.n); m.instanceMatrix = S.im; m.count = 0; m.frustumCulled = false; m.userData.set = key;
         m.castShadow = !!sh.cast && !c.material.alphaTest; m.receiveShadow = !!sh.receive; scene.add(m); S.meshes.push(m); cast = cast || m.castShadow;
       });
@@ -808,16 +922,16 @@ const WIRE_AT = [-1.4, -0.95, -0.25, 0.3], WIRE_Y = 6.1, WIRE_SAG = 0.7;
 function streetProps(G, city, B, P) {
   const R = P.bldNear || 0, rnd = mulberry32(city.seed * 31 + 7), GR = CITY.GRID, n0 = Math.ceil(CITY.R / GR);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), X = new THREE.Vector3(1, 0, 0), p = new THREE.Vector3(), sc = new THREE.Vector3(), a3 = new THREE.Vector3(), b3 = new THREE.Vector3();
-  const sets = {}; const put = (name, x, z, rot, s = 1, y = groundH(x, z)) => { (sets[name] = sets[name] || []).push(x, z, ...m4.compose(p.set(x, y, z), q.setFromAxisAngle(Y, rot), sc.setScalar(s)).elements); };
+  const sets = {}; const put = (name, x, z, rot, s = 1, y = GH(x, z)) => { (sets[name] = sets[name] || []).push(x, z, ...m4.compose(p.set(x, y, z), q.setFromAxisAngle(Y, rot), sc.setScalar(s)).elements); };
   const wire = [], seg = (A, Bp) => { const d = b3.copy(Bp).sub(A), L = d.length(); q.setFromUnitVectors(X, d.normalize()); wire.push((A.x + Bp.x) / 2, (A.z + Bp.z) / 2, ...m4.compose(p.copy(A).add(Bp).multiplyScalar(0.5), q, sc.set(L, 1, 1)).elements); };
   // точка крепления провода k у столба: столб (x, z), поворот rot (консоль +Z модели)
-  const att = (x, z, rot, k, out) => out.set(x + Math.sin(rot) * WIRE_AT[k], groundH(x, z) + WIRE_Y, z + Math.cos(rot) * WIRE_AT[k]);
+  const att = (x, z, rot, k, out) => out.set(x + Math.sin(rot) * WIRE_AT[k], GH(x, z) + WIRE_Y, z + Math.cos(rot) * WIRE_AT[k]);
   // линия столбов вдоль оси: проспекты — фонари с обеих сторон, улицы частного сектора — ЛЭП с одной стороны
   const line = (alongX, c, side, step, okZone, withBins) => {
     let prev = null; const rc = Math.round(c / GR) * GR; // ось дороги
     for (let a = -CITY.R; a <= CITY.R; a += step) {
       const m = ((a % GR) + GR) % GR, x = alongX ? a : c, z = alongX ? c : a;
-      const ok = m >= 30 && m <= GR - 30 && okZone(zoneAt(x, z)) && city.bldAt(x, z) <= 0 && city.onRoad(alongX ? x : rc, alongX ? rc : z); // столбы — только у существующей дороги
+      const ok = m >= 30 && m <= GR - 30 && okZone(ZA(x, z)) && city.bldAt(x, z) <= 0 && city.onRoad(alongX ? x : rc, alongX ? rc : z); // столбы — только у существующей дороги
       if (!ok) { prev = null; continue; }
       const rot = alongX ? (side > 0 ? Math.PI : 0) : -side * Math.PI / 2; // консоль — к дороге
       put('p_lamp', x, z, rot);
@@ -835,7 +949,7 @@ function streetProps(G, city, B, P) {
   }
   // углы перекрёстков в городе: автоматы и телефонные будки на тротуаре, лицом к дороге
   for (let i = -n0; i <= n0; i++) for (let j = -n0; j <= n0; j++) {
-    const cx = i * GR, cz = j * GR, zn = zoneAt(cx, cz); if (zn !== ZONE.MID && zn !== ZONE.CBD) continue;
+    const cx = i * GR, cz = j * GR, zn = ZA(cx, cz); if (zn !== ZONE.MID && zn !== ZONE.CBD) continue;
     for (const [sx, sz] of [[1, 1], [-1, 1], [1, -1], [-1, -1]]) {
       if (rnd() > 0.35) continue;
       const hx = lineW(i) / 2 + 3, hz = lineW(j) / 2 + 3, x = cx + sx * (hx + 6 + rnd() * 10), z = cz + sz * hz;
@@ -856,7 +970,7 @@ function streetProps(G, city, B, P) {
   const city0 = (zn) => zn === ZONE.MID || zn === ZONE.CBD, rural = (zn) => zn === ZONE.LOW || zn === ZONE.FIELD;
   for (let i = -n0; i <= n0; i++) for (let j = -n0; j < n0; j++) for (const alongX of [true, false]) {
     // середина квартала у дороги по линии i: городская остановка (через 3–4 квартала) или старая сельская; навесом к дороге
-    const c = i * GR, a = j * GR + GR / 2, rx = alongX ? a : c, rz = alongX ? c : a, zn = zoneAt(rx, rz);
+    const c = i * GR, a = j * GR + GR / 2, rx = alongX ? a : c, rz = alongX ? c : a, zn = ZA(rx, rz);
     if (!city.onRoad(rx, rz)) continue;
     const pc = city0(zn) ? 0.14 : rural(zn) ? 0.05 : 0; if (!pc || r2() > pc) continue;
     const side = r2() < 0.5 ? 1 : -1, off = (city0(zn) ? lineW(i) / 2 : RURAL_HW) + 4.5, x = rx + (alongX ? 0 : side * off), z = rz + (alongX ? side * off : 0);
@@ -865,7 +979,7 @@ function streetProps(G, city, B, P) {
   }
   // перекрёстки за городом: на одной дороге «Главная», на другой «Уступи дорогу» (знак — лицом к подъезжающим)
   for (let i = -n0; i <= n0; i++) for (let j = -n0; j <= n0; j++) {
-    const cx = i * GR, cz = j * GR; if (!rural(zoneAt(cx, cz)) || r2() > 0.3) continue;
+    const cx = i * GR, cz = j * GR; if (!rural(ZA(cx, cz)) || r2() > 0.3) continue;
     const ex = city.onRoad(cx + 30, cz) || city.onRoad(cx - 30, cz), ez = city.onRoad(cx, cz + 30) || city.onRoad(cx, cz - 30); if (!ex || !ez) continue;
     const o = RURAL_HW + 3, mainX = r2() < 0.5;
     for (const sd of [1, -1]) {
@@ -879,7 +993,7 @@ function streetProps(G, city, B, P) {
   const free = (x, z, r) => city.bldAt(x, z) <= 0 && city.bldAt(x + r, z) <= 0 && city.bldAt(x - r, z) <= 0 && city.bldAt(x, z + r) <= 0 && city.bldAt(x, z - r) <= 0 && !city.onRoad(x, z);
   for (let i = 0; i < B.n; i++) {
     if (B.k[i] !== KIND.HOUSE || B.y0[i] > 0) continue;
-    const zn = zoneAt(B.x[i], B.z[i]); if (!rural(zn)) continue;
+    const zn = ZA(B.x[i], B.z[i]); if (!rural(zn)) continue;
     const hx = B.w[i] / 2, hz = B.d[i] / 2;
     // улица — ближайшая к дому линия сетки
     const gx = Math.round(B.x[i] / GR) * GR, gz = Math.round(B.z[i] / GR) * GR, dx = B.x[i] - gx, dz = B.z[i] - gz, toX = Math.abs(dx) < Math.abs(dz);
@@ -923,54 +1037,89 @@ const PAL = {
 };
 
 // ═════════════ Облака ═════════════
-function puffTex() {
-  const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const x = c.getContext('2d'), r = mulberry32(99);
-  for (let i = 0; i < 46; i++) {
-    const a = r() * Math.PI * 2, d = Math.pow(r(), 0.7) * S * 0.2, cx = S / 2 + Math.cos(a) * d, cy = S / 2 + Math.sin(a) * d * 0.8, rad = S * (0.1 + r() * 0.12);
-    const g = x.createRadialGradient(cx, cy, 0, cx, cy, rad); g.addColorStop(0, 'rgba(255,255,255,.26)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-    x.fillStyle = g; x.beginPath(); x.arc(cx, cy, rad, 0, 7); x.fill();
-  }
-  return new THREE.CanvasTexture(c);
+// запечённые объёмные облака (tools/airdef-clouds/bake.html): атлас 4×4 — 0–11 кучевые, 12–15 слоисто-кучевые;
+// clouds_n — свет сквозь объём от солнца справа / сверху / слева, clouds_d — R прозрачность, G свет от солнца за облаком,
+// B рассеянный свет неба. В шейдере свет смешивается по направлению на солнце (квадраты осей картинки). Картинка всегда стоит вертикально (без крена камеры).
+const CLOUD_BASE = 0.35; // низ облака в клетке — примерно на 0,35 размера ниже центра (BASE −0,62 в запекании, клубы чуть ниже)
+function cloudTex(f, done) { // → uniform { value }: KTX2, иначе WebP
+  const t = new THREE.Texture(); t.flipY = false; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
+  const U = { value: t };
+  if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') return U;
+  texStats.req++;
+  webp(); return U; // облака — WebP: в KTX2 светотень в кадре выходила площе (данные те же — разница в выборке мипов; не разобрались)
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; done(); })
+    .catch((e) => { texStats.done++; console.warn('облака не загрузились:', e.message); }); }
 }
-function buildClouds(scene, count, seed, W) {
+function buildClouds(scene, count, seed, W, hi, SU) {
   const rnd = mulberry32(seed * 31 + 7), pos = [], cor = [], dat = [];
   let made = 0;
-  const thick = W.deck ? 1.6 : 1;
+  const thick = W.deck ? 1.6 : 1, flatP = W.deck ? 0.55 : 0.18;
   while (made < count) {
     const cx = (rnd() * 2 - 1) * 24000, cz = (rnd() * 2 - 1) * 24000, cy = 2300 + rnd() * 900, k = 8 + Math.floor(rnd() * 10), R = 500 + rnd() * 900;
     for (let i = 0; i < k && made < count; i++, made++) {
-      const x = cx + (rnd() - 0.5) * R * 2, z = cz + (rnd() - 0.5) * R * 2, y = cy + (rnd() - 0.3) * 220 * thick, s = (700 + rnd() * 900) * thick;
-      const rot = rnd(); // поворот — один на всю «пуховку», иначе четырёхугольник перекручивается
-      for (const [u, v] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]) { pos.push(x, y, z); cor.push(u, v); dat.push(s, rot); }
+      const x = cx + (rnd() - 0.5) * R * 2, z = cz + (rnd() - 0.5) * R * 2, s = (700 + rnd() * 900) * thick;
+      const cell = rnd() < flatP ? 12 + Math.floor(rnd() * 4) : Math.floor(rnd() * 12);
+      const y = cy + (rnd() - 0.5) * 60 * thick + CLOUD_BASE * s; // у облаков гряды — общее ровное основание
+      const code = (cell + 1) * (rnd() < 0.5 ? -1 : 1); // знак — зеркально
+      for (const [u, v] of [[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]) { pos.push(x, y, z); cor.push(u, v); dat.push(s, code); }
     }
   }
   const idx = []; for (let i = 0; i < made; i++) idx.push(i * 4, i * 4 + 1, i * 4 + 2, i * 4, i * 4 + 2, i * 4 + 3);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('corner', new THREE.Float32BufferAttribute(cor, 2)); g.setAttribute('dat', new THREE.Float32BufferAttribute(dat, 2));
   g.setIndex(idx); g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 60000);
+  const rdy = { value: 0 }; let left = 2; const one = () => { if (--left === 0) rdy.value = 1; };
+  const sfx = hi ? '' : '_lo';
   const mat = new THREE.ShaderMaterial({
-    uniforms: { ...ENV, ...FXU, tex: { value: puffTex() }, lit: { value: lin(W.cloudLit) }, dark: { value: lin(W.cloudDark) }, fogC: { value: lin(W.fog) }, fogD: { value: W.fogD } },
-    vertexShader: `attribute vec2 corner, dat; varying vec2 vUv; varying float vShade, vFade, vFog;
+    uniforms: { ...ENV, ...FXU, tN: cloudTex('clouds_n' + sfx, one), tD: cloudTex('clouds_d' + sfx, one), uRdy: rdy,
+      skyTex: SU.skyTex, skyOn: SU.skyOn, skyU: SU.skyU, skyK: SU.skyK, zenith: SU.zenith, horizon: SU.horizon,
+      lit: { value: lin(W.cloudLit) }, dark: { value: lin(W.cloudDark) }, fogC: { value: lin(W.fog) }, fogD: { value: W.fogD } },
+    vertexShader: `attribute vec2 corner, dat; varying vec2 vUv; varying vec3 vL, vW; varying float vFade, vFog;
       uniform vec3 uCam, uSun; uniform float fogD;
       void main() {
-        vec3 R = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), U = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-        float a = dat.y * 6.283, c = cos(a), s = sin(a); vec2 cr = vec2(c * corner.x - s * corner.y, s * corner.x + c * corner.y);
-        vec3 p = position + (R * cr.x + U * cr.y) * dat.x;
-        vUv = corner + 0.5; vShade = 0.45 + 0.55 * (corner.y + 0.5) * (0.6 + 0.4 * max(uSun.y, 0.0));
-        float d = length(position - uCam); vFade = smoothstep(dat.x * 0.4, dat.x * 1.4, d); vFog = 1.0 - exp(-pow(d * fogD * 0.55, 2.0));
-        gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+        vec3 toC = uCam - position; float d = length(toC); vec3 F = toC / max(d, 1.0);
+        vec3 Rc = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), Rh = cross(vec3(0.0, 1.0, 0.0), F); float rl = length(Rh);
+        vec3 Rb = normalize(mix(Rc, Rh / max(rl, 1e-4), smoothstep(0.05, 0.3, rl))); // сверху и снизу — по камере
+        Rb = normalize(Rb - F * dot(Rb, F)); vec3 Ub = cross(F, Rb);
+        float fl = sign(dat.y), cell = abs(dat.y) - 1.0;
+        vec2 uv = corner + 0.5; if (fl < 0.0) uv.x = 1.0 - uv.x;
+        uv = clamp(uv, 0.004, 0.996);
+        vUv = vec2((mod(cell, 4.0) + uv.x) * 0.25, 1.0 - (floor(cell / 4.0) + uv.y) * 0.25);
+        vL = vec3(dot(uSun, Rb) * fl, dot(uSun, Ub), dot(uSun, F));
+        vFade = smoothstep(dat.x * 0.4, dat.x * 1.4, d); vFog = max(1.0 - exp(-pow(d * fogD * 0.55, 2.0)), 1.0 - exp(-d / 15000.0)); // + воздушная перспектива
+        vW = position + (Rb * corner.x + Ub * corner.y) * dat.x;
+        gl_Position = projectionMatrix * viewMatrix * vec4(vW, 1.0);
       }`,
     // в проходе половинного разрешения (post.js, fxOn) глубины нет — облако гасится само там, где оно за домом или самолётом
-    fragmentShader: `uniform sampler2D tex, tDepth; uniform vec3 lit, dark, fogC, uSunCol; uniform float fxOn; uniform vec2 fxSize, camNF; varying vec2 vUv; varying float vShade, vFade, vFog;
+    fragmentShader: `uniform sampler2D tN, tD, tDepth, skyTex; uniform vec3 lit, dark, fogC, uSunCol, uSun, uCam, zenith, horizon; uniform float fxOn, uRdy, skyOn, skyU, skyK; uniform vec2 fxSize, camNF;
+      varying vec2 vUv; varying vec3 vL, vW; varying float vFade, vFog;
+      vec3 skyAt(vec3 d) { // небо за облаком — как рисует небо (drone/world.js skyMaterial), размыто
+        float h = max(d.y, 0.0); vec3 col = mix(horizon, zenith, pow(h, 0.45));
+        if (skyOn > 0.5) { vec2 uv = vec2(fract((atan(d.z, d.x) - atan(uSun.z, uSun.x)) / 6.2831853 + skyU), asin(min(h, 1.0)) / 1.5707963);
+          #if defined(GL_EXT_shader_texture_lod) || __VERSION__ >= 300
+            vec3 p = texture2DLodEXT(skyTex, uv, 5.0).rgb;
+          #else
+            vec3 p = texture2D(skyTex, uv, 6.0).rgb;
+          #endif
+          col = mix(col, p * p * skyK, smoothstep(0.0, 0.12, h)); }
+        return col; }
       float fxLinZ(float d) { float z = d * 2.0 - 1.0; return 2.0 * camNF.x * camNF.y / (camNF.y + camNF.x - z * (camNF.y - camNF.x)); }
-      void main() { vec4 t = texture2D(tex, vUv); float a = t.a * 2.4 * vFade * smoothstep(0.5, 0.3, length(vUv - 0.5)); if (a < 0.01) discard;
+      void main() { vec4 D = texture2D(tD, vUv); float a = pow(D.r, 1.5) * 0.8 * vFade * uRdy; if (a < 0.01) discard; // края — прозрачнее
         if (fxOn > 0.5) { a *= clamp((fxLinZ(texture2D(tDepth, gl_FragCoord.xy / fxSize).r) - fxLinZ(gl_FragCoord.z)) / 120.0, 0.0, 1.0); if (a < 0.01) discard; }
-        vec3 c = mix(dark, lit, vShade) * (0.85 + 0.25 * uSunCol); c = mix(c, fogC, vFog);
-        gl_FragColor = vec4(c, min(a, 1.0) * (1.0 - vFog * 0.5));
+        vec3 A = texture2D(tN, vUv).rgb, L = normalize(vL), q = L * L; // свет сквозь объём: справа, сверху, слева; веса — квадраты осей
+        float day = smoothstep(-0.08, 0.12, uSun.y), avg = (A.r + A.g + A.b) / 3.0;
+        float sun = (L.x > 0.0 ? q.x * A.r : q.x * A.b) + (L.y > 0.0 ? q.y * A.g : q.y * avg * 0.3)
+                  + (L.z > 0.0 ? q.z * (0.3 + 0.7 * mix(avg, A.g, 0.45)) : q.z * D.g * 1.3); // солнце за спиной — облако светлое; за облаком — светятся тонкие края
+        vec3 bg = skyAt(normalize(vW - uCam)), amb = mix(dark, bg, 0.55); // тень облака — в цвет неба за ним
+        vec3 lt = mix(vec3(dot(lit, vec3(0.3, 0.59, 0.11))), lit, 0.6); // закатный свет — приглушённый
+        vec3 c = (amb * (0.26 + 0.58 * D.b) + max(lt - amb * 0.4, vec3(0.0)) * pow(sun, 1.25) * 0.9 * day) * (0.85 + 0.25 * uSunCol);
+        c = mix(c, bg, max(vFog, 0.14)); // всегда чуть в дымке неба, вдали растворяется в нём
+        gl_FragColor = vec4(c, min(a * 1.1, 1.0) * (1.0 - vFog * 0.35));
         #include <tonemapping_fragment>
         #include <encodings_fragment>
       }`,
-    transparent: true, depthWrite: false, fog: false,
+    transparent: true, depthWrite: false, fog: false, extensions: { shaderTextureLOD: true },
   });
   const mesh = new THREE.Mesh(g, mat); mesh.frustumCulled = false; mesh.renderOrder = 2; scene.add(mesh);
   return mesh;
@@ -984,12 +1133,12 @@ function bridgeParts(o) {
   const Yd = 9, T = 2.4, HW = 18, SPAN = CITY.RIVER_W / 2 + 30, K = 0.07, DS = 5;
   const prof = (s) => (Math.abs(s) <= SPAN ? Yd : Yd - K * (Math.abs(s) - SPAN));
   // въезд кончается, где настил лёг на землю (с каждой стороны — своя длина)
-  const end = (dir) => { let s = SPAN; while (s < SPAN + 400 && prof(dir * s) > groundH(o.x + dir * s, o.z) + 0.3) s += DS; return s + DS; };
+  const end = (dir) => { let s = SPAN; while (s < SPAN + 400 && prof(dir * s) > GH(o.x + dir * s, o.z) + 0.3) s += DS; return s + DS; };
   const s0 = -end(-1), s1 = end(1), top = [], con = [], mk = [], topS = [], conS = [], mkS = [];
   const quad = (arr, a, b, c, d) => arr.push(...a, ...b, ...c, ...a, ...c, ...d);
   for (let s = s0; s < s1 - 0.1; s += DS) {
     const span = s >= -SPAN - 0.1 && s + DS <= SPAN + 0.1, [top, con, mk] = span ? [topS, conS, mkS] : [topR, conR, mkR]; // над водой — пролёт (его заменяет модель br_seg)
-    const sa = s, sb = Math.min(s1, s + DS), xa = o.x + sa, xb = o.x + sb, ga = groundH(xa, o.z), gb = groundH(xb, o.z);
+    const sa = s, sb = Math.min(s1, s + DS), xa = o.x + sa, xb = o.x + sb, ga = GH(xa, o.z), gb = GH(xb, o.z);
     const ya = Math.max(prof(sa), ga + 0.3), yb = Math.max(prof(sb), gb + 0.3);
     // низ: над водой — балка толщиной T, у берега (под настилом меньше 4 м) — сплошной устой до земли
     const ba = ga > ya - T - 4 ? ga - 1 : ya - T, bb = gb > yb - T - 4 ? gb - 1 : yb - T;
@@ -1020,7 +1169,7 @@ function attachAirfield(G, scene, name, model, city, P) {
   model.traverse((c) => {
     if (!c.isMesh) return;
     const im = new THREE.InstancedMesh(c.geometry, c.material, pts.length);
-    pts.forEach(([px, pz, yaw], i) => im.setMatrixAt(i, m4.compose(v.set(px, groundH(px, pz), pz), q.setFromAxisAngle(Y, yaw), one)));
+    pts.forEach(([px, pz, yaw], i) => im.setMatrixAt(i, m4.compose(v.set(px, GH(px, pz), pz), q.setFromAxisAngle(Y, yaw), one)));
     im.castShadow = name === 'af_fuel' && !!P.shadows; im.receiveShadow = !!P.shadows; scene.add(im);
   });
 }
@@ -1048,8 +1197,9 @@ function attachBridgeSegs(G, scene, model, P) {
 
 // ═════════════ Сборка сцены ═════════════
 export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
+  GH = city.groundH; ZA = city.zoneAt; const WINT = city.kind === 'winter'; ENV.uSnowK.value = WINT ? 1 : 0; // зимняя карта: своя земля и лес, без реки-воды и улиц
   const W = WEATHERS[weatherKey] || WEATHERS.day;
-  const G = { tiles: [], W, renderer }; // renderer — снимки моделей для дальних копий домов (makeImpostor)
+  const G = { tiles: [], W, renderer, winter: WINT }; // renderer — снимки моделей для дальних копий домов (makeImpostor)
   if (P.roofDetail) loadCityTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1); // на «Низком» — без текстур
   else for (const u of Object.keys(TEX_FILES)) if (!TEX[u]) TEX[u] = { value: null };
   // солнце и атмосфера по погоде (как setWeather в «Летке»)
@@ -1084,18 +1234,29 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const sh = { cast: P.shadows, receive: P.shadows };
 
   // земля
-  const seg = P.groundSeg;
+  const seg = WINT ? Math.min(640, Math.round(P.groundSeg * 1.6)) : P.groundSeg; // горы — сетка гуще
   const gg = new THREE.PlaneGeometry(2 * CITY.HALF, 2 * CITY.HALF, seg, seg); gg.rotateX(-Math.PI / 2);
   const pa = gg.attributes.position, uv = gg.attributes.uv;
   for (let i = 0; i < pa.count; i++) {
-    pa.setY(i, groundH(pa.getX(i), pa.getZ(i)));
+    pa.setY(i, GH(pa.getX(i), pa.getZ(i)));
     uv.setXY(i, (pa.getX(i) + CITY.HALF) / (2 * CITY.HALF), (pa.getZ(i) + CITY.HALF) / (2 * CITY.HALF));
   }
   gg.computeVertexNormals();
-  const zt = zoneTexture(P.zoneTex || 1024); zt.flipY = false;
-  if (renderer) zt.anisotropy = Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy());
-  const ground = new THREE.Mesh(gg, groundMaterial(zt, aoTexture(city), roadTexture(city)));
+  const zt = WINT ? null : zoneTexture(P.zoneTex || 1024); if (zt) zt.flipY = false;
+  if (renderer && zt) zt.anisotropy = Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy());
+  const ground = new THREE.Mesh(gg, WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
+  if (WINT) { // дальше всё ставится по высоте самой сетки земли (треугольники через 2·HALF/seg м), а не по точной высоте карты:
+    // на выпуклом склоне сетка выше на метры — дороги и дома «тонули» бы
+    const st = 2 * CITY.HALF / seg, gH = city.groundH, n1 = seg + 1, hv = new Float32Array(n1 * n1);
+    for (let j = 0; j < n1; j++) for (let i = 0; i < n1; i++) hv[j * n1 + i] = gH(-CITY.HALF + i * st, -CITY.HALF + j * st);
+    GH = (x, z) => {
+      const fx = Math.min(seg - 1e-4, Math.max(0, (x + CITY.HALF) / st)), fz = Math.min(seg - 1e-4, Math.max(0, (z + CITY.HALF) / st)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j;
+      const a = hv[j * n1 + i], b = hv[(j + 1) * n1 + i], c = hv[(j + 1) * n1 + i + 1], d = hv[j * n1 + i + 1]; // как PlaneGeometry: (a, b, d) и (b, c, d)
+      return u + v <= 1 ? a + (d - a) * u + (b - a) * v : c + (b - c) * (1 - u) + (d - c) * (1 - v);
+    };
+    G.meshH = GH; G.roads = winterRoads(scene, city, ground.material.userData.WT || {}, P, GH);
+  }
 
   // река: тёмная вода, волны, отражение неба, блик солнца
   const wm = new THREE.MeshPhongMaterial({ color: lin(0x1a2e3a), specular: lin(W.sun).multiplyScalar(W.sunVis ? 1.2 : 0.2), shininess: 260 });
@@ -1132,13 +1293,13 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   }
   const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wv, 3)); wg.setIndex(wi); wg.computeVertexNormals();
   const water = new THREE.Mesh(wg, wm);
-  water.position.y = CITY.WATER_Y; water.receiveShadow = !!P.shadows; scene.add(water);
+  water.position.y = CITY.WATER_Y; water.receiveShadow = !!P.shadows; if (!WINT) scene.add(water); // зимой реки и озёра — лёд в земле
 
   // здания, надстройки и скатные крыши
   const B = city.B, list = [], small = [], roofs = [], extras = [], col = new THREE.Color(), near = BLD.map(() => []);
   const pick = (kind, c) => { const pal = PAL[kind]; return col.set(pal[Math.floor(c * pal.length) % pal.length]).convertSRGBToLinear().multiplyScalar(0.62 + 0.2 * ((c * 7.31) % 1)).clone(); };
   for (let i = 0; i < B.n; i++) {
-    const k = B.k[i], c = B.c[i], y0 = B.y0[i], gy = groundH(B.x[i], B.z[i]);
+    const k = B.k[i], c = B.c[i], y0 = B.y0[i], gy = GH(B.x[i], B.z[i]);
     if (k === KIND.HOUSE && P.houseK < 1 && ((i * 2654435761) >>> 0) / 4294967296 > P.houseK) continue; // слабые пресеты: часть частных домов не рисуем
     const raised = y0 > 0, mdl = P.bldNear ? bldVariant(B, i) : 0;
     if (mdl) near[mdl].push(i);
@@ -1156,19 +1317,19 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       }
     }
   }
-  const bMat = buildingMaterial();
+  const bMat = buildingMaterial(); if (WINT) snowify(bMat);
   G.tiles.push(...tiled(scene, list, boxGeo(), bMat, sh));
   // частные дома (их больше половины) вдали — в пиксель-два, только рябят: дальность как у их крыш
   if (small.length) G.tiles.push(...tiled(scene, small, boxGeo(), bMat, sh, 0.55));
   nearHouses(G, scene, B, near, P, sh);
-  if (G.addNear && P.props !== false) streetProps(G, city, B, P); // «Детали улиц» можно выключить (тонкая настройка)
+  if (G.addNear && P.props !== false && !WINT) streetProps(G, city, B, P); // «Детали улиц» можно выключить (тонкая настройка)
   if (roofs.length) G.tiles.push(...tiled(scene, roofs, roofGeo(), bMat, sh, 0.55));
   if (extras.length) G.tiles.push(...tiled(scene, extras, boxGeo(), bMat, { cast: false, receive: P.shadows }, 0.45));
 
   // объекты-цели
   // объекты-цели — каждый своей сеткой (разрушенный объект оседает и чернеет)
-  const OCOL = { tv: 0x9a9c94, gov: 0x8f9384, tpp: 0x7d8270, oil: 0xc9c6b8, stad: 0x6f7563, air: 0xa6a99c, bridge: 0x8f8d88, port: 0xd08a2c }; // военные объекты — защитные и бетонные тона
-  const objMat = new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, specular: 0x222222, shininess: 20 });
+  const OCOL = { w_dam: 0xa8a8a2, w_radar: 0xd8dcdc, w_air: 0xa6a99c, w_cp: 0x8f9384, tv: 0x9a9c94, gov: 0x8f9384, tpp: 0x7d8270, oil: 0xc9c6b8, stad: 0x6f7563, air: 0xa6a99c, bridge: 0x8f8d88, port: 0xd08a2c }; // военные объекты — защитные и бетонные тона
+  const objMat = new THREE.MeshPhongMaterial({ vertexColors: true, side: THREE.DoubleSide, specular: 0x222222, shininess: 20 }); if (WINT) snowify(objMat);
   G.objMesh = {}; G.objMat = objMat; G.ruinMat = new THREE.MeshPhongMaterial({ color: 0x1c1a18, specular: 0x050505, shininess: 4, side: THREE.DoubleSide });
   G.objBox = {}; G.objGroup = {}; G.objFar = {}; const FARC = {};
   // вышка аэродрома — моделью КДП (цилиндр из city.js остаётся только для LOS)
@@ -1180,8 +1341,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   for (const p of o.bridge ? [] : o.parts) {
     // коробки готовых построек — временная заглушка, пока не загрузилась модель
     if (ATC(o, p)) continue;
-    if (p.model) { const gy = groundH(p.x, p.z) - 1; boxes.push(part(new THREE.BoxGeometry(p.w, p.h + 1, p.d), OCOL[o.key] || 0xbbbbbb, M(p.x, gy + (p.h + 1) / 2, p.z))); continue; }
-    const y0 = (p.y0 !== undefined ? p.y0 : groundH(p.x, p.z) - 1), color = OCOL[o.key] || 0xbbbbbb, hh = p.h + (p.y0 !== undefined ? 0 : 1);
+    if (p.model) { const gy = GH(p.x, p.z) - 1; boxes.push(part(new THREE.BoxGeometry(p.w, p.h + 1, p.d), OCOL[o.key] || 0xbbbbbb, M(p.x, gy + (p.h + 1) / 2, p.z))); continue; }
+    const y0 = (p.y0 !== undefined ? p.y0 : GH(p.x, p.z) - 1), color = OCOL[o.key] || 0xbbbbbb, hh = p.h + (p.y0 !== undefined ? 0 : 1);
     if (p.t === 'box') parts.push(part(new THREE.BoxGeometry(p.w, hh, p.d), color, M(p.x, y0 + hh / 2, p.z)));
     else if (p.t === 'cyl') {
       const bands = p.h > 150 && p.r < 10 ? 8 : 1; // заводские трубы — красно-белые
@@ -1206,8 +1367,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     for (const o of city.objects) {
       const g = G.objGroup[o.id]; if (!g || !g.userData.left.has(name)) continue;
       for (const q of o.models) if (q.m === name) {
-        const m = make(); m.position.set(q.x, groundH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s);
-        m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; } }); g.add(m);
+        const m = make(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s);
+        m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; if (G.winter) snowify(c.material); } }); g.add(m);
       }
       g.userData.left.delete(name);
       if (!g.userData.left.size && G.objBox[o.id]) G.objBox[o.id].visible = false;
@@ -1223,18 +1384,22 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     })()).then((t) => {
       for (const o of city.objects) {
         const f = G.objFar[o.id]; if (!f || !f.userData.left.has(name)) continue;
-        for (const q of o.models) if (q.m === name) { const m = t.clone(); m.position.set(q.x, groundH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); f.add(m); }
+        for (const q of o.models) if (q.m === name) { const m = t.clone(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); f.add(m); }
         f.userData.left.delete(name); f.userData.ready = !f.userData.left.size;
       }
     }).catch(() => { /* без дальней копии — коробка */ });
   };
 
   // деревья: вдоль улиц, в парках и во дворах
-  if (P.trees > 0) {
+  if (P.trees > 0 && WINT) { // зимняя карта: ельник по району «лес» — импосторы ели и сосны, снег на ветвях
+    const tl = winterTrees(city, P, mulberry32(city.seed * 7 + 3), GH), q = new THREE.PlaneGeometry(1, 1);
+    const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y, sx: 1.3 * t.sy, sy: 1.3 * t.sy, sz: 1.3 * t.sy, kind: t.v, color: t.color, ry: t.ry }));
+    G.tiles.push(...tiled(scene, li, q, treeImpMat('winter', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8));
+  } else if (P.trees > 0) {
     const rnd = mulberry32(city.seed * 7 + 3), tl = [], tc = new THREE.Color();
     const tree = (x, z, s) => {
       tc.setHSL(0.2 + rnd() * 0.09, 0.38 + rnd() * 0.22, 0.17 + rnd() * 0.1).convertSRGBToLinear();
-      tl.push({ x, z, y: groundH(x, z) - 0.3, sx: s, sy: s * (1.1 + rnd() * 0.5), sz: s, color: tc.clone(), ry: rnd() * 6 });
+      tl.push({ x, z, y: GH(x, z) - 0.3, sx: s, sy: s * (1.1 + rnd() * 0.5), sz: s, color: tc.clone(), ry: rnd() * 6 });
     };
     // вдоль улиц жилых районов: ряд у тротуара, шаг ~14 м, с пропусками
     const G2 = CITY.GRID, streetN = Math.floor(P.trees * 0.45);
@@ -1243,7 +1408,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       const hw = (((i % 5) + 5) % 5 === 0 ? CITY.AVENUE : CITY.STREET) / 2 + 2.5;
       const along = (rnd() * 2 - 1) * CITY.R * 0.8, across = i * G2 + side * hw;
       const x = alongX ? along : across, z = alongX ? across : along;
-      const zn = zoneAt(x, z);
+      const zn = ZA(x, z);
       if (zn !== ZONE.MID && zn !== ZONE.LOW && zn !== ZONE.CBD) continue;
       for (let s = 0; s < 6 && tl.length < streetN; s++) {
         const a2 = along + s * 14, x2 = alongX ? a2 : across, z2 = alongX ? across : a2;
@@ -1254,7 +1419,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     // парки и дворы
     let tries = 0;
     while (tl.length < P.trees && tries++ < P.trees * 14) {
-      const x = (rnd() * 2 - 1) * (CITY.R + 1500), z = (rnd() * 2 - 1) * (CITY.R + 1500), zn = zoneAt(x, z);
+      const x = (rnd() * 2 - 1) * (CITY.R + 1500), z = (rnd() * 2 - 1) * (CITY.R + 1500), zn = ZA(x, z);
       const ok = zn === ZONE.PARK || (zn === ZONE.LOW && rnd() < 0.3) || (zn === ZONE.MID && rnd() < 0.15) || (zn === ZONE.FIELD && rnd() < 0.04);
       if (!ok || city.bldAt(x, z) > 0 || city.onRoad(x, z, 4)) continue; // не на дороге и не на обочине
       const gx = Math.abs(x - Math.round(x / G2) * G2), gz = Math.abs(z - Math.round(z / G2) * G2);
@@ -1262,10 +1427,13 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       tree(x, z, 6 + rnd() * 6);
     }
     const tMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x000000, shininess: 4 });
+    // вид дерева (дуб, липа, сосна, куст) — для ближних моделей и импосторов одинаковый
+    const rr = mulberry32(city.seed * 13 + 5);
+    for (const t of tl) { const r = rr(); t.v = r < 0.35 ? 0 : r < 0.7 ? 1 : r < 0.9 ? 2 : 3; }
     // вблизи — готовые деревья (процедурные там прячутся): вид по случайному, высота — как у процедурного (крона ~1,3 высоты)
     if (G.addNear && P.treeNear) {
-      const per = TREES.map(() => []), rr = mulberry32(city.seed * 13 + 5);
-      for (const t of tl) { const r = rr(), v = r < 0.35 ? 0 : r < 0.7 ? 1 : r < 0.9 ? 2 : 3; per[v].push(t); t.mdl = TREES[v][0]; }
+      const per = TREES.map(() => []);
+      for (const t of tl) { per[t.v].push(t); t.mdl = TREES[t.v][0]; }
       const m4 = new THREE.Matrix4(), qq = new THREE.Quaternion(), YY = new THREE.Vector3(0, 1, 0), pp = new THREE.Vector3(), ss = new THREE.Vector3();
       TREES.forEach(([slot, name, h], v) => {
         const L = per[v], xz = new Float32Array(L.length * 2), mats = new Float32Array(L.length * 16);
@@ -1274,10 +1442,15 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       });
       tMat.onBeforeCompile = (sh) => { Object.assign(sh.uniforms, { uHide: ENV.uHide, uMdl: ENV.uMdl }); sh.vertexShader = HIDE_HEAD + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n' + HIDE_BODY); };
     }
-    G.tiles.push(...tiled(scene, tl, treeGeo(), tMat, { cast: P.shadows && P.treeShadows, receive: false, lo: treeGeoLo(), loD: P.treeLoD || 2600 }, 0.6)); // на сенсорных — простая крона ближе (P.treeLoD)
+    // вдали — импосторы тех же деревьев (без ?treeimp=0); иначе — прежние простые кроны
+    if (!(typeof location !== "undefined" && /[?&]treeimp=0/.test(location.search))) {
+      const q = new THREE.PlaneGeometry(1, 1), li = tl.map((t) => ({ ...t, y: t.y + 0.3, sx: 1.3 * t.sy, sy: 1.3 * t.sy, sz: 1.3 * t.sy, kind: t.v })); // масштаб — высота дерева
+      G.tiles.push(...tiled(scene, li, q, treeImpMat('city', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.6));
+    } else G.tiles.push(...tiled(scene, tl, treeGeo(), tMat, { cast: P.shadows && P.treeShadows, receive: false, lo: treeGeoLo(), loD: P.treeLoD || 2600 }, 0.6)); // на сенсорных — простая крона ближе (P.treeLoD)
   }
 
-  if (P.clouds > 0 && !W.rain && !(P.skyOnly && W.hdri)) G.clouds = buildClouds(scene, Math.round(P.clouds * (W.deck ? 1.8 : 1)), city.seed, W);
+  if (W.snow) G.snow = makeSnowfall(scene, Math.round((P.particles || 3000) * 2), W); // снегопад (зимняя погода «Снегопад»)
+  if (P.clouds > 0 && !W.rain && !(P.skyOnly && W.hdri)) G.clouds = buildClouds(scene, Math.round(P.clouds * (W.deck ? 1.8 : 1)), city.seed, W, P.clouds >= 500, SU);
   return G;
 }
 
@@ -1287,6 +1460,7 @@ const CAM1 = [null], CAM2 = [null, null];
 // extra — вторая камера с той же сценой (контейнер): модели вблизи нужны и в её поле зрения
 export function updateCityScene(G, camera, P, focus, t, extra) {
   G.sky.position.copy(camera.position); ENV.uCam.value.copy(camera.position); ENV.uHide.value.copy(camera.position); ENV.uTime.value = t || 0;
+  if (G.snow) G.snow.update(camera, t || 0, G.renderer ? G.renderer.domElement.height : 720);
   if (G.near) { camera.updateMatrixWorld(); const cs = extra ? CAM2 : CAM1; cs[0] = camera; if (extra) cs[1] = extra; G.near(camera, cs); }
   const cx = camera.position.x, cz = camera.position.z, D = P.draw + TILE;
   for (const m of G.tiles) {

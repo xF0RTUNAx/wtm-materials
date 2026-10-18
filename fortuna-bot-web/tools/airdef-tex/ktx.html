@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Проверка KTX2</title></head>
+<body style="margin:0;background:#333;color:#fff;font:13px sans-serif"><div id="l"></div>
+<!-- Проверка сжатых текстур: ?f=../../games/airdef/tex/имя.ktx2 — загрузка через vendor/basis (three r128 KTX2Loader), формат GPU -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+import { KTX2Loader } from '../../games/airdef/vendor/basis/KTX2Loader.js';
+const f = new URLSearchParams(location.search).get('f') || '_test.ktx2';
+const r = new THREE.WebGLRenderer(); r.setSize(512, 512); document.body.appendChild(r.domElement);
+const L = new KTX2Loader().setTranscoderPath('../../games/airdef/vendor/basis/').detectSupport(r);
+L.load(f, (t) => {
+  const sc = new THREE.Scene(), cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1); sc.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: t }))); r.render(sc, cam);
+  document.getElementById('l').textContent = `${f}: ${t.image.width}×${t.image.height}, формат ${t.format}, мипов ${t.mipmaps.length}`; window.__ok = 1;
+}, undefined, (e) => { document.getElementById('l').textContent = 'ошибка ' + e; window.__ok = 2; });
+</script></body></html>

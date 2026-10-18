@@ -1,11 +1,13 @@
 // Задания и расстановка ПВО: общие для вылета (ИИ-ПВО против игрока), фона меню и обучения.
-import { CITY, KIND, riverX } from './city.js?v=20261020j';
-import { SAM, DEFENSE } from './arsenal.js?v=20261020j';
+import { CITY, KIND, riverX } from './city.js?v=20261022a';
+import { SAM, DEFENSE } from './arsenal.js?v=20261022a';
 
-// свободное место на земле: без зданий рядом и не в реке
+// свободное место на земле: без зданий рядом и не в реке (в горах — не на крутом склоне)
 export function freeGround(city, x, z, r = 9) {
   for (const [dx, dz] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) if (city.bldAt(x + dx, z + dz) > 0) return false;
-  return Math.abs(x - riverX(z)) > CITY.RIVER_W / 2 + 15 && Math.abs(x) < CITY.HALF - 1200 && Math.abs(z) < CITY.HALF - 1200;
+  if (Math.abs(x) >= CITY.HALF - 1200 || Math.abs(z) >= CITY.HALF - 1200) return false;
+  if (city.kind === 'winter') return city.slopeAt(x, z) <= 0.32; // горы: не на крутом склоне (лёд — можно)
+  return Math.abs(x - riverX(z)) > CITY.RIVER_W / 2 + 15;
 }
 // крыша, на которую можно поставить ПЗРК (не стеклянная башня, не частный дом, не выше 90 м)
 export function roofOk(city, i) { const B = city.B; return B.h[i] >= 12 && B.h[i] <= 90 && B.y0[i] === 0 && B.k[i] !== KIND.GLASS && B.k[i] !== KIND.HOUSE; }
@@ -32,9 +34,12 @@ export function spotNear(city, rnd, cx, cz, r0, r1, roof) {
 // цели: n объектов (мост — один случайный)
 // цели — только военные объекты (мосты — часть города, не цель)
 export function pickTargets(S, rnd, n = 3, pool = ['tpp', 'oil', 'tv', 'gov', 'port', 'air', 'stad']) {
-  const keys = [];
-  while (keys.length < Math.min(n, pool.length)) { const k = pool[Math.floor(rnd() * pool.length)]; if (!keys.includes(k)) keys.push(k); }
-  return keys.map((k) => S.objects.find((o) => o.key === k));
+  // цели города по ключам; на другой карте (зимняя долина — свои ключи) — любые объекты-цели
+  let cand = pool.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean);
+  if (!cand.length) cand = S.objects.filter((o) => !o.noTarget);
+  const out = [];
+  while (out.length < Math.min(n, cand.length)) { const o = cand[Math.floor(rnd() * cand.length)]; if (!out.includes(o)) out.push(o); }
+  return out;
 }
 // ИИ-ПВО по набору эпохи и стороны: дальние — кольцом вокруг центра, ближние и пушки — у целей, ПЗРК — на крышах
 export function placeDefense(S, city, rnd, side, era, targets, k = 1) {

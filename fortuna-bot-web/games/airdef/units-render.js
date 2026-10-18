@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261020j';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261020j';
-import { LNCH } from './launchers.js?v=20261020j';
-import { createBook } from './flipbook.js?v=20261020j';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022a';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022a';
+import { LNCH } from './launchers.js?v=20261022a';
+import { createBook } from './flipbook.js?v=20261022a';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -346,6 +346,74 @@ export function weaponGeo(key, W) {
 
 // ═════════════ Эффекты ═════════════
 // взрывы, следы, пожары: частицы из «Летки» (makeParticles: обычные — дым, аддитивные — огонь и вспышки)
+// Воронки и копоть: все — один вызов отрисовки (кольцевой буфер, новая заменяет самую старую). Без текстур: в шейдере —
+// профиль ямы с бруствером (нормаль по наклону, свет солнца), неровный край, комья выброшенной земли, копоть вокруг.
+// iA: x, y, z, радиус копоти; iB: радиус ямы (0 — только копоть, на крыше), зерно, глубина (доля радиуса)
+function makeCraters(scene, n) {
+  const g = new THREE.InstancedBufferGeometry(); const b = new THREE.PlaneGeometry(2, 2); b.rotateX(-Math.PI / 2);
+  g.index = b.index; g.setAttribute('position', b.attributes.position);
+  const A = new THREE.InstancedBufferAttribute(new Float32Array(n * 4), 4), B = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
+  A.setUsage(THREE.DynamicDrawUsage); B.setUsage(THREE.DynamicDrawUsage); g.setAttribute('iA', A); g.setAttribute('iB', B); g.instanceCount = 0;
+  const mat = new THREE.ShaderMaterial({
+    uniforms: { uSun: { value: new THREE.Vector3(0.4, 0.7, 0.4) }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() }, uFogD: { value: 0 } },
+    vertexShader: `attribute vec4 iA; attribute vec3 iB; varying vec3 vW, vB; varying vec2 vQ; varying float vS, vD;
+      void main() { vB = iB; vS = iA.w; vQ = position.xz * iA.w; // vQ — точка от центра воронки, м
+        vW = iA.xyz + vec3(position.x * iA.w, 0.0, position.z * iA.w);
+        vec4 mv = viewMatrix * vec4(vW, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; }`,
+    // плоскость лежит на высоте верха бруствера; луч взгляда идёт вниз до рельефа (яма + бруствер + земля) — яма объёмная
+    fragmentShader: `uniform vec3 uSun, uLight, uFog; uniform float uFogD; varying vec3 vW, vB; varying vec2 vQ; varying float vS, vD;
+      float h2(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(h2(i), h2(i + vec2(1, 0)), f.x), mix(h2(i + vec2(0, 1)), h2(i + vec2(1, 1)), f.x), f.y); }
+      float sd, rc, dep, rim;
+      float xr(vec2 p) { float ang = atan(p.y, p.x); float rag = 1.0 + 0.16 * (vn(vec2(ang * 2.2 + sd, sd)) - 0.5) + 0.08 * (vn(vec2(ang * 7.0 - sd, sd)) - 0.5); return length(p) / (rc * rag); }
+      float H(vec2 p) { float x = xr(p); return (x < 1.0 ? -dep * (1.0 - x * x) : 0.0) + rim * exp(-pow((x - 1.0) / 0.36, 2.0)) * (0.8 + 0.4 * vn(p * 0.8 + sd)); }
+      void main() {
+        sd = vB.y * 13.7; rc = max(vB.x, 0.01); dep = vB.z * rc; rim = vB.x > 0.0 ? 0.3 * dep : 0.0;
+        vec2 p0 = vQ;
+        vec3 V = normalize(vW - cameraPosition); V.y = min(V.y, -0.03);
+        vec2 p = p0; float hitD = 0.0;
+        if (vB.x > 0.0) { // трассировка: 28 шагов + уточнение
+          float dmax = rim + dep, tmax = min(dmax / -V.y, vS * 1.5 / max(length(V.xz), 1e-3)), t0 = 0.0, t1 = 0.0;
+          for (int i = 1; i <= 28; i++) { t1 = tmax * float(i) / 28.0; vec2 q = p0 + V.xz * t1; if (t1 * -V.y >= rim - H(q)) break; t0 = t1; }
+          for (int i = 0; i < 5; i++) { float tm = 0.5 * (t0 + t1); vec2 q = p0 + V.xz * tm; if (tm * -V.y >= rim - H(q)) t1 = tm; else t0 = tm; }
+          p = p0 + V.xz * t1; hitD = t1;
+        }
+        float r = length(p), x = xr(p);
+        float soot = (1.0 - smoothstep(0.45, 1.0, r / vS * (0.85 + 0.3 * vn(p * 0.35 + sd)))) * (0.55 + 0.45 * vn(p * 1.3 + sd));
+        float a = soot * 0.88; vec3 col = vec3(0.035, 0.03, 0.028);
+        if (vB.x > 0.0) {
+          float e = 0.06 * rc; vec3 n = normalize(vec3(H(p - vec2(e, 0.0)) - H(p + vec2(e, 0.0)), 2.0 * e, H(p - vec2(0.0, e)) - H(p + vec2(0.0, e))));
+          vec3 L = normalize(uSun);
+          // тень от края: луч к солнцу над рельефом
+          float shd = 1.0, h0 = H(p);
+          for (int i = 1; i <= 8; i++) { vec2 q = p + L.xz / max(length(L.xz), 1e-3) * rc * 0.28 * float(i); float hy = h0 + L.y / max(length(L.xz), 1e-3) * rc * 0.28 * float(i); if (H(q) > hy) { shd = 0.35; break; } }
+          float ins = 1.0 - smoothstep(0.92, 1.02, x), bank = exp(-pow((x - 1.0) / 0.4, 2.0));
+          float clods = step(0.82, vn(p * 2.4 + sd)) * (1.0 - smoothstep(1.0, 1.9, x)) * step(0.9, x);
+          vec3 earth = mix(vec3(0.05, 0.043, 0.036), vec3(0.13, 0.11, 0.085), smoothstep(0.15, 1.05, x)) * (0.75 + 0.5 * vn(p * 3.0 + sd));
+          float sh = 0.38 + 0.7 * max(dot(n, L), 0.0) * shd * smoothstep(-0.05, 0.2, uSun.y);
+          vec3 ec = earth * sh * uLight;
+          float ea = max(ins, max(bank * 0.9, clods * 0.9));
+          col = mix(col, ec, ea / max(ea + a * (1.0 - ea), 1e-3)); a = ea + a * (1.0 - ea);
+        }
+        if (a < 0.01) discard;
+        float fog = 1.0 - exp(-vD * vD * uFogD * uFogD);
+        gl_FragColor = vec4(mix(col, uFog, fog), a * (1.0 - fog * 0.5));
+        #include <tonemapping_fragment>
+        #include <encodings_fragment>
+      }`,
+    transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -4,
+  });
+  const mesh = new THREE.Mesh(g, mat); mesh.frustumCulled = false; mesh.renderOrder = 1; scene.add(mesh);
+  let head = 0;
+  return {
+    mat,
+    add(x, y, z, soot, pit, depth) {
+      const i = head; head = (head + 1) % n; if (g.instanceCount < n) g.instanceCount++;
+      A.setXYZW(i, x, y, z, soot); B.setXYZ(i, pit, Math.random() * 100, depth); A.needsUpdate = B.needsUpdate = true;
+    },
+    clear() { g.instanceCount = 0; head = 0; },
+  };
+}
 export function createFx(scene, P) {
   const softTex = radialTex([[0, 'rgba(255,255,255,1)'], [0.4, 'rgba(255,255,255,.55)'], [1, 'rgba(255,255,255,0)']]);
   const smoke = makeParticles(scene, P.particles || 3000, false, softTex);
@@ -364,6 +432,7 @@ export function createFx(scene, P) {
   const BL = createBook(scene, { url: FXU_('blast'), cols: 8, rows: 2, frames: 16, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.6 }, 16);
   const FL = createBook(scene, { url: FXU_('flame'), cols: 8, rows: 3, frames: 24, cell: [0.5, 1], anchor: [0.5, 0.92], up: true, loop: true, gain: 2.4 }, 96);
   const books = [EX, BL, FL], LT = new THREE.Vector3();
+  const CR = makeCraters(scene, P.craters || 150);
   let hemi = null, sunL = null;
   const clouds = [];  // облака диполей: блёстки ещё 3 с
   const V = new THREE.Vector3();
@@ -516,6 +585,18 @@ export function createFx(scene, P) {
       burning.push({ pos: pos.clone(), r, t: 0, fl });
     },
     clearBurning() { burning.length = 0; FL.clear(); },
+    // след взрыва у земли или на крыше: gh — высота земли (city.groundH), bh — высота здания (city.bldAt); kind 'bomb' — яма с
+    // бруствером, 'ground' (ракета, снаряд) — ямка поменьше; на крыше — только копоть. Размер — от радиуса поражения R (≈ ∛ массы ВВ).
+    // Земля за городом — с холмами: пятно чуть приподнято (на склоне край уходит в грунт)
+    crater(p, R, kind, gh, bh) {
+      const top = gh + bh;
+      if (kind === 'air' || R < 4 || p.y - top > Math.max(6, R * 0.25)) return;
+      const roof = bh > 1.5, bomb = kind === 'bomb';
+      const pit = roof ? 0 : R * (bomb ? 0.13 : 0.07), soot = Math.max(pit * 3.2, R * (bomb ? 0.46 : 0.34));
+      const dk = bomb ? 0.38 : 0.3; // глубина ямы — доля радиуса
+      CR.add(p.x, top + 0.06 + (roof ? 0 : 0.3 * dk * pit + soot * 0.03), p.z, soot, pit, dk); // плоскость — на верху бруствера
+    },
+    clearCraters() { CR.clear(); },
     wreckSmoke(p) { smoke.emit(p.x, p.y, p.z, 0, 2, 0, 0.15, 0.14, 0.13, 0.6, 6, 7, 5, 0.2, 0.5); fire.emit(p.x, p.y, p.z, 0, 0, 0, 1, 0.5, 0.15, 0.8, 4, 1, 0.3, 0, 0); },
     update(dt) {
       smoke.update(dt); fire.update(dt);
@@ -524,6 +605,7 @@ export function createFx(scene, P) {
       LT.set(0.6, 0.6, 0.6); if (hemi) LT.set(hemi.color.r, hemi.color.g, hemi.color.b).multiplyScalar(hemi.intensity * 0.55);
       if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
       for (const b of books) b.update(dt, LT, scene.fog);
+      CR.mat.uniforms.uLight.value.copy(LT).multiplyScalar(0.8); if (sunL) CR.mat.uniforms.uSun.value.copy(sunL.position).sub(sunL.target.position).normalize(); // свет ходит за камерой if (scene.fog) { CR.mat.uniforms.uFog.value.copy(scene.fog.color); CR.mat.uniforms.uFogD.value = scene.fog.density || 0; }
       for (let i = 0; i < NT; i++) {
         if (tLife[i] <= 0) continue;
         tLife[i] -= dt; const i6 = i * 6, i3 = i * 3;

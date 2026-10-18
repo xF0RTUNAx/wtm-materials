@@ -13,9 +13,9 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261020j';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261020j';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261020j';
+import { AG, SAM } from '../arsenal.js?v=20261022a';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022a';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022a';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 export const MODES = {
@@ -725,7 +725,9 @@ export function createStrike(ctx) {
       let top = city.topAt(w.pos.x, w.pos.z), hx = Math.hypot(w.dir.x, w.dir.z) || 1;
       for (const L of [150, 400, 800]) top = Math.max(top, city.topAt(w.pos.x + TMP.x * L, w.pos.z + TMP.z * L));
       for (const L of [40, 110, 220, 380]) top = Math.max(top, city.topAt(w.pos.x + w.dir.x / hx * L, w.pos.z + w.dir.z / hx * L));
-      TMP.y = clamp((top + alt - w.pos.y) / 200, -0.25, 0.55); TMP.normalize();
+      const hills = city.kind === 'winter'; // в горах — смотреть дальше и набирать высоту круче (крутые склоны; в городе — как было)
+      if (hills) for (const L of [1300, 2000]) top = Math.max(top, city.topAt(w.pos.x + TMP.x * L, w.pos.z + TMP.z * L) - L * 0.12);
+      TMP.y = clamp((top + alt - w.pos.y) / 200, -0.25, hills ? 0.8 : 0.55); TMP.normalize();
     }
     turnToward(w.dir, TMP, 0.7 * dt);
     w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed); w.homing = true;

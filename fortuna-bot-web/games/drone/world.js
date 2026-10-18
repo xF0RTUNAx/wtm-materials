@@ -275,7 +275,7 @@ function windowBuildings(mat, U) {
 // (доля ширины; панорама поворачивается за солнцем погоды), k — яркость. Пока панорама грузится — небо градиентом
 const SKY_PANO = {};
 export const SKY = { hi: false }; // hi — панорамы 8192 px (мощные пресеты и видеокарта, что держит такие текстуры); иначе 4096
-export const skyUniforms = () => ({ skyTex: { value: null }, skyOn: { value: 0 }, skyU: { value: 0 }, skyK: { value: 1 } });
+export const skyUniforms = () => ({ skyTex: { value: null }, skyOn: { value: 0 }, skyU: { value: 0 }, skyK: { value: 1 }, skyH0: { value: 0 } }); // skyH0 — с какой высоты над горизонтом панорама (у неё там пейзаж)
 export function skyPano(SU, W) {
   const h = W && W.hdri; SU.skyOn.value = 0; if (!h || !SU.skyTex) return;
   const key = h.f + (SKY.hi ? '_hi' : ''); let t = SKY_PANO[key];
@@ -286,7 +286,7 @@ export function skyPano(SU, W) {
     const load = (f, fail) => new THREE.ImageLoader().load(new URL(`../airdef/sky/${f}.jpg?v=20261020g`, import.meta.url).href, done, undefined, fail);
     if (typeof document !== 'undefined' && typeof document.createElementNS === 'function') load(key, () => { if (key !== h.f) load(h.f, () => {}); }); // нет _hi — обычная
   }
-  SU.skyTex.value = t; SU.skyU.value = h.u; SU.skyK.value = h.k;
+  SU.skyTex.value = t; SU.skyU.value = h.u; SU.skyK.value = h.k; if (SU.skyH0) SU.skyH0.value = h.h0 || 0;
   if (t.ok) SU.skyOn.value = 1; else (t.wait = t.wait || []).push(SU); // у Texture в r128 нет userData
 }
 export function skyMaterial(SU, discMul) { // экспорт — для неба «Воздушного превосходства»
@@ -298,7 +298,7 @@ export function skyMaterial(SU, discMul) { // экспорт — для неба
       void main() { vDir = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
         #include <logdepthbuf_vertex>
       }`,
-    fragmentShader: `uniform vec3 sunDir, zenith, horizon, ground, glow, haze, sunCol; uniform float hazeK, halo, discK, discMul, flash, skyOn, skyU, skyK; uniform sampler2D skyTex; varying vec3 vDir;
+    fragmentShader: `uniform vec3 sunDir, zenith, horizon, ground, glow, haze, sunCol; uniform float hazeK, halo, discK, discMul, flash, skyOn, skyU, skyK, skyH0; uniform sampler2D skyTex; varying vec3 vDir;
       #include <common>
       #include <logdepthbuf_pars_fragment>
       void main() {
@@ -315,7 +315,7 @@ export function skyMaterial(SU, discMul) { // экспорт — для неба
           #else
             vec3 p = texture2D(skyTex, vec2(u, v), -1.0).rgb;
           #endif
-          col = mix(col, p * p * skyK, smoothstep(0.0, 0.12, h));
+          col = mix(col, p * p * skyK, smoothstep(skyH0, skyH0 + 0.12, h));
         }
         float sd = max(dot(d, sunDir), 0.0), gk = 1.0 - 0.75 * skyOn; // у панорамы своё зарево — градиентное слабее
         float az = dot(normalize(d.xz + 1e-5), normalize(sunDir.xz + 1e-5)) * 0.5 + 0.5;

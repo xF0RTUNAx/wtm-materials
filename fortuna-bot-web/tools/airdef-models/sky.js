@@ -12,6 +12,11 @@ const SKIES = {
   sunset: { src: 'citrus_orchard_road_puresky', k: 0.45, rs: 2.5 },
   overcast: { src: 'kloofendal_overcast_puresky', k: 0.7, rs: 0 },
   night: { src: 'qwantani_night_puresky', k: 0.07, rs: 0 },
+  // зима (Poly Haven, CC0; не «puresky» — у горизонта пейзаж, его прячет переход неба к дымке)
+  w_sky: { src: 'winter_sky', k: 1.0, rs: 4 },
+  w_field: { src: 'snow_field', k: 1.0, rs: 4 },
+  w_horn: { src: 'horn-koppe_snow', k: 1.0, rs: 4 },
+  w_pass: { src: 'passendorf_snow', k: 1.0, rs: 0 },
 };
 const run = async (args) => { const p = new Deno.Command('ffmpeg', { args: ['-loglevel', 'error', '-y', ...args], stdout: 'piped' }).outputSync(); if (!p.success) throw new Error('ffmpeg ' + args.join(' ')); return p.stdout; };
 for (const name of Deno.args.length ? Deno.args : Object.keys(SKIES)) {

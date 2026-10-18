@@ -67,7 +67,7 @@ export function createPipeline(renderer, cfg) {
       for (int i = 0; i < 28; i++) { s += texture2D(tDiffuse, uv).rgb * w; w *= 0.951; uv += d; }
       gl_FragColor = vec4(s / 28.0 * vis, 1.0); }`,
   { tDiffuse: { value: null }, sun: { value: new THREE.Vector2(0.5, 0.5) }, vis: { value: 0 } });
-  const comp = mat(`uniform sampler2D tDiffuse, tBloom, tBloom2, tRays, tHaze, tDepth; uniform vec2 camNF; uniform float bloom, raysK, exposure, vignette, grade, ca, p3, p3k, hazeK, time;
+  const comp = mat(`uniform sampler2D tDiffuse, tBloom, tBloom2, tRays, tHaze, tDepth; uniform vec2 camNF; uniform float bloom, raysK, exposure, vignette, grade, ca, p3, p3k, hazeK, time, gSat, gCon; uniform vec3 gLift, gGain;
     varying vec2 vUv;
     vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
     vec3 toSRGB(vec3 c) { return mix(c * 12.92, 1.055 * pow(c, vec3(1.0 / 2.4)) - 0.055, step(0.0031308, c)); }
@@ -85,6 +85,8 @@ export function createPipeline(renderer, cfg) {
       float l = dot(col, vec3(0.2126, 0.7152, 0.0722));
       col = mix(col, col * mix(vec3(0.9, 0.99, 1.1), vec3(1.1, 1.0, 0.88), l), grade);  // холодные тени, тёплые света
       col = max(mix(vec3(l), col, 1.0 + 0.15 * grade), 0.0);
+      // своя цветокоррекция (погода «Воздушного превосходства»): оттенок светов и теней, насыщенность, контраст вокруг серого 0,18
+      col = max(col * gGain + gLift * (1.0 - l), 0.0); col = max(mix(vec3(dot(col, vec3(0.2126, 0.7152, 0.0722))), col, gSat), 0.0); col = 0.18 * pow(col / 0.18, vec3(gCon));
       col *= mix(1.0, smoothstep(0.9, 0.25, length(vUv - 0.5)), vignette);
       // широкий цвет: точный перевод sRGB → Display P3 выглядит на P3-экране так же, как sRGB (разницы не видно), поэтому
       // насыщенные цвета (зелень, небо, вода, пламя) расширяем в P3-охват: чем насыщеннее цвет, тем сильнее; серые не меняются
@@ -96,7 +98,8 @@ export function createPipeline(renderer, cfg) {
     }`,
   { tDiffuse: { value: null }, tBloom: { value: null }, tBloom2: { value: null }, tRays: { value: null }, tHaze: { value: null }, tDepth: { value: null }, camNF: { value: new THREE.Vector2(3, 60000) }, hazeK: { value: 0 }, time: { value: 0 }, bloom: { value: cfg.bloom || 0 }, raysK: { value: raysOn ? (cfg.raysK || 0.5) : 0 },
     exposure: { value: cfg.exposure || 1.15 }, vignette: { value: cfg.vignette || 0 }, grade: { value: cfg.grade || 0 },
-    ca: { value: cfg.ca || 0 }, p3: { value: cfg.p3 ? 1 : 0 }, p3k: { value: cfg.p3exact ? 0 : 0.65 } });
+    ca: { value: cfg.ca || 0 }, p3: { value: cfg.p3 ? 1 : 0 }, p3k: { value: cfg.p3exact ? 0 : 0.65 },
+    gLift: { value: new THREE.Vector3(...(cfg.gLift || [0, 0, 0])) }, gGain: { value: new THREE.Vector3(...(cfg.gGain || [1, 1, 1])) }, gSat: { value: cfg.gSat ?? 1 }, gCon: { value: cfg.gCon ?? 1 } });
   // FXAA (классический «лёгкий» вариант, 5 выборок + 4 вдоль направления края)
   const fxaa = mat(`uniform sampler2D tDiffuse; uniform vec2 rcp; varying vec2 vUv;
     float lu(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }

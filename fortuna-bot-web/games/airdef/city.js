@@ -28,11 +28,11 @@ export function mulberry32(a) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+export const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+export const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
 // гладкий шум по значению (детерминированный, без зерна — форма города постоянна, зерно меняет только застройку)
 const h2 = (i, j) => { const v = Math.sin(i * 127.1 + j * 311.7) * 43758.5453; return v - Math.floor(v); };
-function vnoise(x, z) {
+export function vnoise(x, z) {
   const i = Math.floor(x), j = Math.floor(z), fx = x - i, fz = z - j, ux = fx * fx * (3 - 2 * fx), uz = fz * fz * (3 - 2 * fz);
   const a = h2(i, j), b = h2(i + 1, j), c = h2(i, j + 1), d = h2(i + 1, j + 1);
   return a + (b - a) * ux + (c - a) * uz + (a - b - c + d) * ux * uz;
@@ -89,8 +89,8 @@ export const BRIDGE_Z = [-6000, -3000, -1000, 1000, 3000, 7000]; // мосты �
 export const OBJ_DIMS = { obj_tanks: [28.42, 14.38, 33.45], obj_tank4: [30.27, 9.22, 55.93], obj_rtank: [8.62, 5.45, 10.0], obj_hangar: [61.15, 7.76, 61.15],
   obj_jhangar: [61.89, 19.3, 89.88], obj_cont: [27.61, 2.6, 10.8], obj_milbase: [29.92, 10.24, 30.06], obj_oldind: [11.61, 15.17, 34.51], obj_factory: [97.09, 27.93, 27.23] };
 // постройка: модель m в точке (x, z), поворот на 90°·rot, масштаб s; mbox — её коробка для урона и сетки высот
-const mp = (m, x, z, rot = 0, s = 1) => ({ m, x, z, rot, s });
-const mbox = (q) => { const [w, h, d] = OBJ_DIMS[q.m], sw = (q.rot % 2 ? d : w) * q.s, sd = (q.rot % 2 ? w : d) * q.s; return { t: 'box', x: q.x, z: q.z, w: sw, d: sd, h: h * q.s, model: true }; };
+export const mp = (m, x, z, rot = 0, s = 1) => ({ m, x, z, rot, s });
+export const mbox = (q) => { const [w, h, d] = OBJ_DIMS[q.m], sw = (q.rot % 2 ? d : w) * q.s, sd = (q.rot % 2 ? w : d) * q.s; return { t: 'box', x: q.x, z: q.z, w: sw, d: sd, h: h * q.s, model: true }; };
 // parts — простые тела для отрисовки и сетки высот: box {x,z,w,d,h,y0}, cyl {x,z,r,h,y0}, cone (градирня) {x,z,r,h}
 // value — «ценность» для счёта, hp — прочность (кг тротила-эквивалента условно: сколько урона выдерживает)
 function makeObjects() {
@@ -295,6 +295,16 @@ export function buildCity(seed = 1) {
   };
 
   const B = { n, x: BX.subarray(0, n), z: BZ.subarray(0, n), w: BW.subarray(0, n), d: BD.subarray(0, n), h: BH.subarray(0, n), y0: BY.subarray(0, n), k: BK.subarray(0, n), c: BC.subarray(0, n) };
+  return { ...mapRuntime(seed, B, objects, groundH), zoneAt, RX, RZ, roadT, onRoad, kind: 'city', airport: AIRPORT };
+}
+
+
+// ═════════════ Общее для карт ═════════════
+// сетка высот застройки, грубая сетка максимумов, прямая видимость и луч — по зданиям B, частям объектов и земле gH
+// (город — buildCity, зимняя карта — map-winter.js); waterY — уровень воды для луча (у зимней карты лёд — сама земля)
+// cellMax(x0, z0, x1, z1) — наибольшая высота земли в ячейке грубой сетки (горы: иначе луч «пролетает» вершину); нет — по 5 точкам
+export function mapRuntime(seed, B, objects, gH, waterY = CITY.WATER_Y, cellMax = null) {
+  const groundH = gH, n = B.n;
 
   // ── сетка высот застройки (над землёй, м) и грубая сетка максимумов (с землёй) ──
   const CELL = CITY.CELL, GN = Math.round(2 * CITY.GH / CELL), grid = new Uint16Array(GN * GN);
@@ -314,7 +324,8 @@ export function buildCity(seed = 1) {
   for (let j = 0; j < CN; j++) for (let i = 0; i < CN; i++) {
     const x = -CITY.HALF + (i + 0.5) * CC, z = -CITY.HALF + (j + 0.5) * CC;
     let g = -1e9;
-    for (const [ox, oz] of [[0, 0], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]) g = Math.max(g, groundH(x + ox * CC, z + oz * CC));
+    if (cellMax) g = cellMax(x - CC / 2, z - CC / 2, x + CC / 2, z + CC / 2);
+    else for (const [ox, oz] of [[0, 0], [-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]) g = Math.max(g, groundH(x + ox * CC, z + oz * CC));
     let b = 0;
     const gi = Math.floor((x - CC / 2 + CITY.GH) / CELL), gj = Math.floor((z - CC / 2 + CITY.GH) / CELL);
     if (gi >= 0 && gj >= 0 && gi + ratio <= GN && gj + ratio <= GN) for (let jj = 0; jj < ratio; jj++) for (let ii = 0; ii < ratio; ii++) b = Math.max(b, grid[(gj + jj) * GN + gi + ii]);
@@ -349,12 +360,12 @@ export function buildCity(seed = 1) {
       const x = o.x + d.x * s, y = o.y + d.y * s, z = o.z + d.z * s;
       const ci = Math.floor((x + CITY.HALF) / CC), cj = Math.floor((z + CITY.HALF) / CC);
       if (ci >= 0 && cj >= 0 && ci < CN && cj < CN && y > coarse[cj * CN + ci]) { px = x; py = y; pz = z; continue; }
-      if (y < Math.max(topAt(x, z), CITY.WATER_Y)) {
+      if (y < Math.max(topAt(x, z), waterY)) {
         // уточняем делением пополам между последней свободной точкой и попаданием
         let ax = px, ay = py, az = pz, bx = x, by = y, bz = z;
         for (let k = 0; k < 8; k++) {
           const mx = (ax + bx) / 2, my = (ay + by) / 2, mz = (az + bz) / 2;
-          if (my < Math.max(topAt(mx, mz), CITY.WATER_Y)) { bx = mx; by = my; bz = mz; } else { ax = mx; ay = my; az = mz; }
+          if (my < Math.max(topAt(mx, mz), waterY)) { bx = mx; by = my; bz = mz; } else { ax = mx; ay = my; az = mz; }
         }
         out.x = bx; out.y = by; out.z = bz;
         return out;
@@ -363,5 +374,5 @@ export function buildCity(seed = 1) {
     }
     return null;
   }
-  return { seed, B, objects, grid, GN, coarse, CN, bldAt, topAt, los, raycast, zoneAt, groundH, RX, RZ, roadT, onRoad };
+  return { seed, B, objects, grid, GN, coarse, CN, bldAt, topAt, los, raycast, groundH };
 }

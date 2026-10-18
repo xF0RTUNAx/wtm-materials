@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Импосторы деревьев</title>
+<style>body{margin:0;background:#556;font:13px sans-serif;color:#fff}canvas{display:block;max-width:100%}</style></head>
+<body>
+<!-- Импосторы деревьев (Poly Haven, CC0: fir_tree_01, pine_tree_01 — модели по 7–17 млн треугольников): каждый вариант
+     снимается с G×G направлений полусферы (полу-октаэдр: клетка ↔ направление взгляда), ортокамерой по описанной сфере.
+     Два атласа: цвет + покрытие (RGBA) и нормаль в мировых осях + затенение кроны (RGBA). Варианты — сеткой COLS × ROWS.
+     Открывается с сервера, где лежат папки моделей (bake.js), ?trees=fir_tree_01_1k:0,fir_tree_01_1k:1,…&g=6&c=128 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+const Q = new URLSearchParams(location.search), G = +(Q.get('g') || 6), C = +(Q.get('c') || 128);
+const LIST = (Q.get('trees') || 'fir_tree_01_1k:0').split(',').map((s) => { const [f, i] = s.split(':'); return { f, i: +i }; });
+const COLS = +(Q.get('cols') || Math.min(3, LIST.length)), ROWS = Math.ceil(LIST.length / COLS), VW = G * C;
+// клетка (i, j) → направление на камеру (полу-октаэдр, y вверх); то же — в шейдере игры (city-render.js)
+function dirOf(i, j) { const u = (i + 0.5) / G * 2 - 1, v = (j + 0.5) / G * 2 - 1, px = (u + v) / 2, pz = (u - v) / 2; return new THREE.Vector3(px, 1 - Math.abs(px) - Math.abs(pz), pz).normalize(); }
+function upOf(d) { const u = new THREE.Vector3(0, 1, 0).addScaledVector(d, -d.y); return u.lengthSq() < 1e-6 ? new THREE.Vector3(0, 0, -1) : u.normalize(); }
+const NORMAL_FS = `uniform sampler2D map; uniform float hasMap; uniform vec3 uC; uniform float uR, uH, uY0; varying vec2 vUv; varying vec3 vN, vW;
+  void main() { float a = hasMap > 0.5 ? texture2D(map, vUv).a : 1.0; if (a < 0.5) discard;
+    vec3 n = normalize(vN) * (gl_FrontFacing ? 1.0 : -1.0);
+    float h = clamp((vW.y - uY0) / uH, 0.0, 1.0), r = length(vW.xz - uC.xz) / max(uR * (1.08 - 0.9 * h), 0.05); // крона — конус: у ствола темнее
+    gl_FragColor = vec4(n * 0.5 + 0.5, mix(0.45, 1.0, smoothstep(0.15, 0.95, r))); }`;
+const NORMAL_VS = `varying vec2 vUv; varying vec3 vN, vW; void main() { vUv = uv; vN = normalize(mat3(modelMatrix) * normal); vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+(async () => {
+  const r = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, alpha: true, antialias: true, premultipliedAlpha: false }); r.setPixelRatio(1);
+  r.setSize(VW * COLS, VW * ROWS, false); r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0x000000, 0); r.setScissorTest(true); document.body.appendChild(r.domElement);
+  const rn = new THREE.WebGLRenderer({ preserveDrawingBuffer: true, alpha: true, antialias: true, premultipliedAlpha: false }); rn.setPixelRatio(1);
+  rn.setSize(VW * COLS, VW * ROWS, false); rn.setClearColor(0x808080, 0); rn.setScissorTest(true); document.body.appendChild(rn.domElement);
+  r.clear(); rn.clear();
+  const cache = {}, info = [];
+  for (const [k, t] of LIST.entries()) {
+    const gl = cache[t.f] || (cache[t.f] = await new Promise((ok, no) => new THREE.GLTFLoader().load(/\.glb$/.test(t.f) ? t.f : `${t.f}/${t.f}.gltf`, ok, undefined, no)));
+    const node = /\.glb$/.test(t.f) ? gl.scene : gl.scene.children[t.i]; node.updateMatrixWorld(true); // .glb игры — одна модель (узлы — её части)
+    const sc = new THREE.Scene(), obj = node.clone(true); if (node !== gl.scene) obj.position.set(0, 0, 0); sc.add(obj); obj.updateMatrixWorld(true);
+    const bb = new THREE.Box3().setFromObject(obj), ctr = bb.getCenter(new THREE.Vector3()), R = bb.getSize(new THREE.Vector3()).length() / 2;
+    const crown = Math.max(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2, H = bb.max.y - bb.min.y;
+    const albedo = new Map(), normal = new Map();
+    obj.traverse((o) => { if (!o.isMesh) return; const m = o.material, map = m.map || null;
+      albedo.set(o, new THREE.MeshBasicMaterial({ map, color: m.color, alphaTest: 0.5, transparent: false, side: THREE.DoubleSide, vertexColors: !!o.geometry.attributes.color })); // цвет вершин — затенение в стыках (ao.js)
+      normal.set(o, new THREE.ShaderMaterial({ uniforms: { map: { value: map }, hasMap: { value: map ? 1 : 0 }, uC: { value: ctr }, uR: { value: crown }, uH: { value: H }, uY0: { value: bb.min.y } }, vertexShader: NORMAL_VS, fragmentShader: NORMAL_FS, side: THREE.DoubleSide })); });
+    const cam = new THREE.OrthographicCamera(-R, R, R, -R, 0.1, R * 4);
+    const ox = (k % COLS) * VW, oy = Math.floor(k / COLS) * VW;
+    for (let j = 0; j < G; j++) for (let i = 0; i < G; i++) {
+      const d = dirOf(i, j); cam.position.copy(ctr).addScaledVector(d, R * 2); cam.up.copy(upOf(d)); cam.lookAt(ctr); cam.updateMatrixWorld();
+      const x = ox + i * C, y = oy + j * C;
+      obj.traverse((o) => { if (o.isMesh) o.material = albedo.get(o); }); r.setViewport(x, y, C, C); r.setScissor(x, y, C, C); r.render(sc, cam);
+      obj.traverse((o) => { if (o.isMesh) o.material = normal.get(o); }); rn.setViewport(x, y, C, C); rn.setScissor(x, y, C, C); rn.render(sc, cam);
+    }
+    info.push({ name: `${t.f}:${t.i}`, R: +R.toFixed(3), H: +H.toFixed(3), cy: +(ctr.y - bb.min.y).toFixed(3), cyO: +ctr.y.toFixed(3), cx: +ctr.x.toFixed(3), cz: +ctr.z.toFixed(3), crown: +crown.toFixed(2) }); // cyO — центр от начала координат модели
+  }
+  window.__info = { G, C, COLS, ROWS, trees: info };
+  window.__bake = () => ({ a: r.domElement.toDataURL('image/png'), n: rn.domElement.toDataURL('image/png') });
+  window.__ok = 1;
+})().catch((e) => { window.__err = String(e); });
+</script></body></html>
