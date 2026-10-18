@@ -5,10 +5,12 @@
 // carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { AG } from '../arsenal.js?v=20261022d';
-import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022d';
-import { predictBomb } from './strike.js?v=20261022d';
-import { CITY } from '../city.js?v=20261022d';
+import { AG, raidPlane } from '../arsenal.js?v=20261022e';
+import { flightModel, loadOf } from './flight.js?v=20261022e';
+import { initDamage, hitZones, burnRate } from './damage.js?v=20261022e';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022e';
+import { predictBomb } from './strike.js?v=20261022e';
+import { CITY } from '../city.js?v=20261022e';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -61,6 +63,9 @@ export function createRaid(S, city, rnd, opts = {}) {
       rcs: ST.rcs, massK: 1.15 });
     if (o.cruise) Object.assign(a, o, { hpMax: o.hp || a.hpMax, t: 0 });
     a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
+    // свои ТТХ самолёта (sim/flight.js): модель — как в отрисовке (носитель — o.plane); ИИ — честная лётная модель
+    a.model = o.plane || raidPlane(side, era, role); a.fm = flightModel(a.model) || null;
+    if (a.fm) { a.fuel = 0.8; setLoad(a); a.speed = Math.min(a.speed, a.fm.s.vSL / 3.6 * 0.7); initDamage(a); }
     a.pos.set(Math.sin(bearing) * R, a.cruise + (role === 'low' ? 300 : 0), Math.cos(bearing) * R);
     const to = TMP.set(tgt.x, 0, tgt.z).sub(a.pos); a.yaw = Math.atan2(-to.x, -to.z); a.pitch = 0;
     if (role === 'carrier') { // носитель: заходит из-за края карты (o.R0) к рубежу пуска (o.R), там — вдоль края района
@@ -71,9 +76,14 @@ export function createRaid(S, city, rnd, opts = {}) {
     planes.push(a);
     return a;
   }
+  // оторвало консоль: подвески на ней (внешние пилоны — примерно четверть груза под крылом) уходят вместе с ней
+  function loseCons(a) { for (const l of a.load) { const k = AG[l.key]; if (!k || k.kind === 'ecm' || l.n < 2) continue; l.n -= Math.max(1, Math.floor(l.n / 4)); } setLoad(a); }
+  // груз и сопротивление подвесок → лётная модель (после каждого пуска и сброса)
+  function setLoad(a) { if (!a.fm) return; const L = loadOf(a.fm.key, a.load.map((l) => ({ mass: (AG[l.key] || {}).mass || 0, n: l.n }))); a.payload = L.payload; a.dragK = L.dragK; }
   const alive = () => planes.filter((a) => !a.dead && !a.out && a.phase !== 'wait');
   // урон: корпус, при гибели — падение
-  function hurt(a, dmg) { if (a.dead) return; a.hp -= dmg; if (a.hp <= 0) { a.dead = true; a.laser = null; if (fx.down) fx.down(a); } else if (fx.hit) fx.hit(a, dmg); }
+  // from — точка подрыва: зоны повреждений (sim/damage.js) — отрыв частей, пожар, потеря тяги и управления
+  function hurt(a, dmg, from = null) { if (a.dead) return; a.hp -= dmg; if (a.dz) { a.dmgEv = hitZones(a, dmg, from, rnd); if (a.dmgEv.some((e) => e === 'consL' || e === 'consR')) loseCons(a); } if (a.hp <= 0) { a.dead = true; a.laser = null; if (fx.down) fx.down(a); } else if (fx.hit) fx.hit(a, dmg); }
   const curLoad = (a) => a.load.find((l) => l.n > 0 && AG[l.key].kind !== 'ecm');
   // ложная цель (MALD): для РЛС — самолёт; летит к точке и кружит, пока не кончится топливо
   function spawnDecoy(src, key, aimPt) {
@@ -109,6 +119,13 @@ export function createRaid(S, city, rnd, opts = {}) {
     for (const a of planes) {
       if (a.dead || a.out) continue;
       a.t += dt;
+      // повреждения: пожар и оторванные части добивают самолёт; сильно подбитый (тяга < ½, нет консоли) бросает задачу и уходит
+      if (a.dz && !a.script) {
+        const burn = burnRate(a); // пожар, весь хвост оторван — падает; без консоли — держится и уходит
+        if (burn) { a.hp -= burn * dt; if (a.hp <= 0) { a.dead = true; a.laser = null; if (fx.down) fx.down(a); continue; } }
+        if (a.leak) a.fuel = Math.max(0, a.fuel - a.leak * dt);
+        if ((a.thrK < 0.5 || a.det.consL || a.det.consR) && a.phase === 'ingress' && a.role !== 'carrier') a.phase = 'egress';
+      }
       if (a.phase === 'wait') { a.delay -= dt; if (a.delay <= 0) a.phase = 'ingress'; continue; }
       if (a.script) { a.script(a, dt, fly); continue; } // постановка (промо-ролик, tools/airdef-promo): полёт задаёт сценарий
       if (a.role === 'decoy') {
@@ -151,7 +168,7 @@ export function createRaid(S, city, rnd, opts = {}) {
         else { a.b += (a.speed / a.R) * dt; steerToward(a, TMP2.set(Math.sin(a.b + 0.25) * a.R, 0, Math.cos(a.b + 0.25) * a.R), a.cruise, dt); }
         a.relT -= dt;
         if (a.relT <= 0 && a.salvo.length && a.t + (a.t0 || 0) >= (a.salvo[0].t ?? 0)) { // время волны = a.t0 (когда заказан) + своё
-          const q = a.salvo.shift(), L = a.load.find((l) => l.key === q.key && l.n > 0); if (L) L.n--;
+          const q = a.salvo.shift(), L = a.load.find((l) => l.key === q.key && l.n > 0); if (L) { L.n--; setLoad(a); }
           // цель — в момент пуска (по ПВО — только по уже засечённым комплексам), маршрут и высота — по плану
           const aim = q.aimFn ? q.aimFn() : q.aim;
           const air = AG[q.key] && AG[q.key].kind === 'tbm' && AG[q.key].air;
@@ -188,7 +205,7 @@ export function createRaid(S, city, rnd, opts = {}) {
         // ПРР: ищем излучающую РЛС впереди в поле ГСН; если нет — к центру ПВО
         let best = null, ba = 1e9; fwdOf(a, DIR);
         for (const e of rw) { const ang = angleBetween(DIR, TMP.copy(e.u.ant).sub(a.pos)); if (ang < W.fov * D2R && e.d < W.rmax && ang < ba) { ba = ang; best = e.u; } }
-        if (best && a.relT <= 0) { L.n--; S.release(a, L.key, { target: best }); a.relT = 2.5; if (fx.release) fx.release(a, L.key); }
+        if (best && a.relT <= 0) { L.n--; setLoad(a); S.release(a, L.key, { target: best }); a.relT = 2.5; if (fx.release) fx.release(a, L.key); }
         a.relT -= dt;
         // заход на излучатель: издалека — по горизонтали на своей высоте, в зоне пуска — нос на станцию;
         // проскочили (станция под нами) — отходим на 9 км и разворачиваемся снова
@@ -208,7 +225,7 @@ export function createRaid(S, city, rnd, opts = {}) {
         // крылатые ракеты и ложные цели пускают издалека, носом к цели
         const range = W.kind === 'cruise' ? Math.min(W.rmax * 0.6, 22000) : 16000;
         if (d < range && a.relT <= 0 && angleBetween(fwdOf(a, DIR), TMP.set(aim.x - a.pos.x, 0, aim.z - a.pos.z)) < 40 * D2R) {
-          L.n--; S.release(a, L.key, { aim }); a.relT = W.kind === 'decoy' ? 1.2 : 2.5; if (fx.release) fx.release(a, L.key);
+          L.n--; setLoad(a); S.release(a, L.key, { aim }); a.relT = W.kind === 'decoy' ? 1.2 : 2.5; if (fx.release) fx.release(a, L.key);
         }
         steerToward(a, aim, a.cruise, dt);
         if (a.t > 220) a.phase = 'egress';
@@ -218,7 +235,7 @@ export function createRaid(S, city, rnd, opts = {}) {
         const tImp = a.relT <= 0 && d < 16000 ? predictBomb(city, W, a.pos, a.vel, guided ? aim : null, TMP2) : -1;
         const miss = tImp > 0 ? TMP2.distanceTo(aim) : 1e9;
         if (miss < (guided ? 14 : Math.max(18, W.blast * 0.5))) {
-          L.n--; S.release(a, L.key, guided ? { aim } : {}); a.relT = guided ? 1.2 : 0.25; if (fx.release) fx.release(a, L.key);
+          L.n--; setLoad(a); S.release(a, L.key, guided ? { aim } : {}); a.relT = guided ? 1.2 : 0.25; if (fx.release) fx.release(a, L.key);
           if (W.kind === 'lgb') { a.lockPt = aim.clone(); a.phase = 'lase'; }
           else if (!guided && L.n % 2 === 1 && L.n > 0) a.relT = 0.25; // серия по две
         }
@@ -228,7 +245,7 @@ export function createRaid(S, city, rnd, opts = {}) {
       } else {
         // ракета: ТВ — пуск по захваченной точке в зоне; лазерная — пуск и подсвет
         if (d < W.rmax * 0.8 && angleBetween(fwdOf(a, DIR), TMP.copy(aim).sub(a.pos)) < W.fov * 0.7 * D2R && a.relT <= 0) {
-          L.n--; S.release(a, L.key, { aim }); a.relT = 2; if (fx.release) fx.release(a, L.key);
+          L.n--; setLoad(a); S.release(a, L.key, { aim }); a.relT = 2; if (fx.release) fx.release(a, L.key);
           if (W.seeker === 'laser') { a.lockPt = aim.clone(); a.phase = 'lase'; }
         }
         steerToward(a, aim, Math.min(a.cruise, 2500), dt);

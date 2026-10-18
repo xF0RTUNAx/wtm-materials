@@ -13,6 +13,7 @@ import { spotNear, freeGround, roofOk, buildingAt } from '../games/airdef/missio
 import { AG, SAM, SAM_COST, DEFENSE, COMBINED, THREAT, multiItems } from '../games/airdef/arsenal.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
+import { dmgPack } from '../games/airdef/sim/damage.js?v=20261022d';
 
 const r1 = (v) => Math.round(v * 10) / 10;
 const opp = (s) => (s === 'east' ? 'west' : 'east');
@@ -35,7 +36,7 @@ export function createMulti(ctx) {
   function nextRound(r) {
     r.round++; r.atk = r.round === 1 ? r.first : opp(r.first);
     const def = opp(r.atk);
-    r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], game: 'multi', aircraft: () => r.raid.planes, laserSpot: () => null, night: 0, hurt: (a, d) => r.raid.hurt(a, d), fx: strikeFx(r) });
+    r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], game: 'multi', aircraft: () => r.raid.planes, laserSpot: () => null, night: 0, hurt: (a, d, by, from) => { r.raid.hurt(a, d, from); if (a.dz && !a.dead) pushTo(r, 'all', ['hp', a.id, Math.max(0, Math.round(a.hp)), by, dmgPack(a)]); }, fx: strikeFx(r) });
     r.raid = createRaid(r.S, city, Math.random, { side: r.atk, era: r.era, fx: {} });
     r.E = []; r.events = []; r.state = 'plan'; r.t = 0; r.phaseT = PREP_T; r.tick = 0; r.wt = 0; r.k = 1; r.seenT = 0; r.announced = new Set();
     r.v0 = M.totalValue(r.S.objects);

@@ -2,17 +2,20 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022d';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261022d';
-import { planeModel, classOf, weaponMesh, podModel, weaponHasModel } from './models.js?v=20261022d';
-import { ico } from './icons.js?v=20261022d';
-import { applyLayout } from './layout.js?v=20261022d';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022d';
-import { DRONE } from '../drone/sim/modes.js?v=20261022d';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022d';
-import { predictBomb } from './sim/strike.js?v=20261022d';
-import { placeDefense, pickTargets } from './mission.js?v=20261022d';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022d';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022e';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261022e';
+import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta } from './models.js?v=20261022e';
+import { ico } from './icons.js?v=20261022e';
+import { applyLayout } from './layout.js?v=20261022e';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022e';
+import { DRONE } from '../drone/sim/modes.js?v=20261022e';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022e';
+import { predictBomb } from './sim/strike.js?v=20261022e';
+import { flightModel, loadOf } from './sim/flight.js?v=20261022e';
+import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022e';
+import { planeDamageVis } from './plane-damage.js?v=20261022e';
+import { placeDefense, pickTargets } from './mission.js?v=20261022e';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022e';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -43,7 +46,9 @@ export function createAir(C) {
       shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = pm.stations; podPos = pm.pod; // pod: null — встроенная прицельная система
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
       flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true);
+      craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
     } else {
+      craft.dmgVis = null;
       const sg = strikerGeo(side, true); stations = sg.stations; podPos = new THREE.Vector3(0, -1.6, -3.5);
       shipModel = new THREE.Group(); const m = new THREE.Mesh(sg.geo, shipMat); m.castShadow = !!P.shadows; shipModel.add(m);
       flames = attachFlames(shipModel, sg.nozzles, sg.nr / 0.45, true);
@@ -61,11 +66,32 @@ export function createAir(C) {
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); } // LITENING или цилиндр
   }
-  function hurt(dmg, by) {
+  function hurt(dmg, by, from = null) {
     if (craft.dead || game.over || game.net) return; // онлайн: урон и сбитие — от сервера (netHit / netDown)
     if (game.opts.invuln) { if (!game.opts.photo) { flashT = 0.3; snd.hit(); } return; }
-    craft.hp -= dmg * C.MODE().dmgTaken; flashT = 0.35; snd.hit();
+    const d = dmg * C.MODE().dmgTaken;
+    craft.hp -= d; flashT = 0.35; snd.hit();
+    dmgEvents(hitZones(craft, d, from), by);
     if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0); finish(`Сбит: ${by}`, false); }
+  }
+  // повреждения зон (sim/damage.js): что случилось — словами и звуком, отлетевшее — с самолёта (plane-damage.js)
+  const ZNAME = { consL: 'Оторвало законцовку левого крыла — тянет влево, держите ручку', consR: 'Оторвало законцовку правого крыла — тянет вправо, держите ручку', tailL: 'Разбит хвост слева — управление хуже, уводит', tailR: 'Разбит хвост справа — управление хуже, уводит', tailAll: 'Хвост разрушен — самолёт неуправляем!', fire: 'Пожар на борту!' };
+  function dmgEvents(ev, by) {
+    if (craft.dmgVis) craft.dmgVis.sync(craft);
+    // с оторванной консолью уходят и подвески на ней
+    for (const z of ev) if ((z === 'consL' || z === 'consR') && craft.dmgVis) {
+      const cx = craft.dmgVis.P.consX, sg = z === 'consL' ? -1 : 1;
+      // пилоны на оторванной консоли выбывают до конца вылета: ни пуска, ни перезарядки в воздухе, ни пополнения в зоне
+      for (const l of loadout) for (const st of l.st0.slice()) { const p = stations[st]; if (!p || p.x * sg <= cx * 0.92) continue;
+        l.st0.splice(l.st0.indexOf(st), 1); l.n0 = l.st0.length; const k = l.st.indexOf(st); if (k >= 0) { l.st.splice(k, 1); l.n--; }
+        l.res = Math.min(l.res, l.n0 * Math.max(0, homeLeft)); const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = false; }
+      updLoad(); if (!usable(loadout[sel])) nextWeapon();
+      if (game.net) game.net.send({ t: 'lost', k: loadout.map((l) => [l.key, l.n, l.n0]) }); // и серверу: сколько осталось и сколько теперь пилонов
+    }
+    if (ev.length) { const e2 = ev.includes('tailAll') ? ev.filter((e) => e !== 'tailL' && e !== 'tailR') : ev; say(e2.map((e) => ZNAME[e]).filter(Boolean).join(' · '), 4); snd.alarm(); return; }
+    const D = craft.dz; if (!D || !by) return; // без источника (пожар раз в секунду) — молча
+    const bad = [D.wingL < 0.6 && 'левое крыло', D.wingR < 0.6 && 'правое крыло', D.tail < 0.6 && 'хвост', D.eng.some((e) => e < 0.6) && (D.eng.length > 1 ? (D.eng[0] < 0.6 && D.eng[1] < 0.6 ? 'оба двигателя' : D.eng[0] < 0.6 ? 'левый двигатель' : 'правый двигатель') : 'двигатель'), D.fuel < 0.7 && 'бак — течь'].filter(Boolean);
+    if (bad.length) say(`Попадание${by ? `: ${by}` : ''} · повреждено: ${bad.join(', ')}`, 2.5);
   }
 
   // ═════════════ Прицельный контейнер ═════════════
@@ -245,7 +271,7 @@ export function createAir(C) {
     const st = l.st.pop(); l.n--;
     const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = false;
     C.S.release(craft, l.key, opts);
-    craft.massK = 1 + loadout.reduce((s, q) => s + q.n * AG[q.key].mass, 0) / 9000;
+    updLoad();
     if (C.hooks.trainFire) C.hooks.trainFire(l.key);
     if (l.n <= 0) nextWeapon();
   }
@@ -557,7 +583,7 @@ export function createAir(C) {
     $('wpn').innerHTML = `<div class="fl"><b>${Math.round(craft.speed * 3.6)}</b> км/ч <b>${Math.round(craft.pos.y - g)}</b> м <span class="${craft.fuel < 0.2 ? 'warnc' : 'dim'}">${ico('fuel', 'ii')}${fuel}%</span>${craft.ab ? ' <b class="ab">Ф</b>' : ''}</div>` +
       `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' ●' : ' ×' + l.n}${AG[l.key].kind !== 'ecm' && Number.isFinite(l.res) && !game.net ? ` <span class="dim">+${l.res}</span>` : ''}${l.rt > 0 ? ` <span class="dim">↻${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
       `<div class="st">${msgT > 0 ? msgText : larText}${inAir ? ` <span class="fly">· в полёте ${inAir}</span>` : ''}</div>` + tgl +
-      `<div class="cm">ловушки ${Math.max(craft.cmFlare, craft.cmChaff)}${game.hunt ? ` · РЛС ${game.hunt.n}/${game.hunt.need}` : game.targets.length ? ` · цели ${dead}/${game.targets.length}` : ''}${craft.hp < 100 ? ` · <span class="${craft.hp < 40 ? 'warnc' : ''}">корпус ${Math.round(craft.hp)}%</span>` : ''}${C.auto ? ' · <b style="color:#86efac">АВТО</b>' : ''}${hasPod && pod.laserMan !== null ? ` · лазер ${pod.laserMan ? 'вкл' : 'выкл'}` : ''}${homeT > 0 ? ` · <b style="color:#86efac">пополнение ${Math.ceil(12 - homeT)} с</b>` : ''}</div>`;
+      `<div class="cm">ловушки ${Math.max(craft.cmFlare, craft.cmChaff)}${game.hunt ? ` · РЛС ${game.hunt.n}/${game.hunt.need}` : game.targets.length ? ` · цели ${dead}/${game.targets.length}` : ''}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ' · <b style="color:#86efac">АВТО</b>' : ''}${hasPod && pod.laserMan !== null ? ` · лазер ${pod.laserMan ? 'вкл' : 'выкл'}` : ''}${homeT > 0 ? ` · <b style="color:#86efac">пополнение ${Math.ceil(12 - homeT)} с</b>` : ''}</div>`;
     const lk = rw.find((e) => e.state === 'launch'), tr = rw.find((e) => e.state === 'track'), wn = $('warn');
     if (mw.length || lk) { wn.textContent = `ПУСК РАКЕТЫ${lk ? ' — ' + (lk.u.S.rwr || lk.u.S.short) : ''}`; wn.style.display = 'block'; }
     else if (tr) { wn.textContent = `ЗАХВАТ — ${tr.u.S.rwr || tr.u.S.short}`; wn.style.display = 'block'; }
@@ -714,7 +740,7 @@ export function createAir(C) {
     }
     C.syncUnits();
     // подвеска: тяжёлое — ближе к фюзеляжу
-    rearm();
+    rearm(); initDamage(craft); if (craft.dmgVis) craft.dmgVis.sync(craft); // новый вылет — самолёт целый
     // задача по подвеске: «охота за ПВО» — половина комплексов с РЛС (1…4), «штурмовка» — объекты города
     game.hunt = null;
     if (!opts.items && !opts.targets && loadoutRole(LOADOUTS[setup.era][setup.lo]) === 'sead') {
@@ -723,9 +749,9 @@ export function createAir(C) {
     }
     const sp = opts.spawn || { x: riverX(14000) + 1500, y: 3200, z: 14000, yaw: 0 };
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
-    craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = 240; thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
+    craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
-    craft.massK = 1 + loadout.reduce((s, q) => s + q.n * AG[q.key].mass, 0) / 9000;
+    updLoad();
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize(); // окно на телефоне — по «ТВ»
     Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0 });
     ship.visible = true; camMode = 0; camInit = false; snd.resetRwr();
@@ -754,7 +780,16 @@ export function createAir(C) {
     buildPylons();
     craft.jam = Math.max(0, ...loadout.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
     if (!usable(loadout[sel])) nextWeapon();
+    // свои ТТХ самолёта (sim/flight.js): модель — из подвески; режим (Аркада/Реализм) — мягкость виража
+    craft.fm = flightModel(L.plane || (att === 'east' ? 'su30' : 'f16'), { ind: (C.MODE() || {}).ind });
+    updLoad();
+  }
+  // скорость на старте — не быстрее, чем самолёт может (Су-25, B-52)
+  const startV = (v) => (craft.fm ? Math.min(v, craft.fm.s.vSL / 3.6 * 0.8 * 0.85) : v);
+  // груз и сопротивление подвесок → лётная модель (масса топлива — из craft.fuel)
+  function updLoad() {
     craft.massK = 1 + loadout.reduce((s, q) => s + q.n * AG[q.key].mass, 0) / 9000;
+    if (craft.fm) { const L = loadOf(craft.fm.key, loadout.map((q) => ({ mass: AG[q.key].mass, n: q.n }))); craft.payload = L.payload; craft.dragK = L.dragK; }
   }
   // ═════════════ Онлайн ═════════════
   // зеркало боя собрано (net.js); вылет — по событию сервера spawn (связка, точка, подвеска), урон — netHit, сбитие — netDown
@@ -775,10 +810,10 @@ export function createAir(C) {
   function netSpawn(m) {
     const o = game.opts, L = { items: m.load.map((l) => [l.key, l.n]), plane: m.plane };
     o.items = L.items; o.plane = m.plane; o.pod = !!(m.choice !== undefined && LOADOUTS[game.net.battle.era][m.choice] && LOADOUTS[game.net.battle.era][m.choice].pod);
-    rearm();
+    rearm(); if (!m.back || !craft.dz) { initDamage(craft); if (craft.dmgVis) craft.dmgVis.sync(craft); }
     craft.cmFlare = m.cm.flare; craft.cmChaff = m.cm.chaff;
     const [x, y, z, yaw] = m.s;
-    craft.dead = false; craft.pos.set(x, y, z); craft.yaw = yaw; craft.pitch = 0; craft.roll = 0; craft.speed = m.v || 240; thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0; zoneReset();
+    craft.dead = false; craft.pos.set(x, y, z); craft.yaw = yaw; craft.pitch = 0; craft.roll = 0; craft.speed = m.back ? (m.v || 240) : startV(m.v || 240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0; zoneReset();
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = m.hp ?? 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize();
     ship.visible = true; camMode = 0; camInit = false; game.over = false;
@@ -791,7 +826,7 @@ export function createAir(C) {
     craft.dead = true; ship.visible = false;
     spec.why = 'Связь пропала — самолёт ведёт ИИ. Управление вернётся, как только связь восстановится'; spec.t = 0; spec.init = false; say(spec.why, 5);
   }
-  function netHit(hp, by) { if (craft.dead) return; craft.hp = hp; flashT = 0.35; snd.hit(); if (by) say(`Попадание: ${by}`, 1.5); }
+  function netHit(hp, by, pk) { if (craft.dead) return; const hurtNow = hp < craft.hp; craft.hp = hp; if (hurtNow && by) { flashT = 0.35; snd.hit(); } if (pk) dmgEvents(dmgUnpack(craft, pk), by); else if (by) say(`Попадание: ${by}`, 1.5); }
   function netDown(why) {
     if (craft.dead) return;
     craft.dead = true; craft.hp = 0; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0);
@@ -913,7 +948,7 @@ export function createAir(C) {
     const st = l.st0.find((q) => !l.st.includes(q)); if (st === undefined || !(l.res > 0)) return;
     l.st.push(st); l.n++; l.res--;
     const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal;
-    craft.massK = 1 + loadout.reduce((s, q) => s + q.n * AG[q.key].mass, 0) / 9000;
+    updLoad();
     if (!usable(loadout[sel])) sel = loadout.indexOf(l);
   }
   function reloadStep(dt) {
@@ -933,7 +968,7 @@ export function createAir(C) {
     if (!near || !need) { homeT = 0; return; }
     homeT += dt;
     if (homeT < 12) return;
-    for (const l of loadout) { while (l.n < l.n0) reloadOne(l); l.rt = 0; }
+    for (const l of loadout) { while (l.n < l.n0 && l.res > 0) reloadOne(l); l.rt = 0; } // запас кончился — сколько есть (иначе цикл не кончится)
     craft.cmFlare = craft.cmChaff = C.MODE().cm; craft.fuel = 1; fuelWarn = 0; homeT = 0; homeLeft--;
     say(`Пополнение: подвеска, ловушки и топливо${Number.isFinite(homeLeft) ? ` · осталось пополнений: ${homeLeft}` : ''}`, 3); snd.good();
   }
@@ -949,7 +984,7 @@ export function createAir(C) {
       if (keys.has('ArrowUp')) ry += inv; if (keys.has('ArrowDown')) ry -= inv;
       if (pad.x || pad.y) { rx += pad.x * C.sens.padK; ry += pad.y * C.sens.padK * inv; }
       if (craft.fuel > 0) craft.thr = THR_STEPS[thrI];
-      const tt = craft.fuel <= 0 ? 'двиг. ✕' : thrI === AB_I ? 'форсаж' : `${Math.round(craft.thr * 100)}%`, tb = $('tThr');
+      const tt = craft.fuel <= 0 ? 'двиг. ✕' : thrI === AB_I ? (craft.fm && !(craft.fm.s.ab > 0) ? 'макс.' : 'форсаж') : `${Math.round(craft.thr * 100)}%`, tb = $('tThr');
       if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = 'Газ'; tb.classList.toggle('ab', thrI === AB_I); } // спидометр и газ
       if (stick.id !== null) { rx += stick.x; ry -= stick.y * inv; }
       let rz = 0;
@@ -961,7 +996,13 @@ export function createAir(C) {
         DP.normalize(); aim.yaw = Math.atan2(-DP.x, -DP.z); aim.pitch = clamp(Math.asin(DP.y), -0.35, 0.35);
         const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2];
       } else if (aimOn()) { if (rx || ry) aimSync(); else { const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2]; } } // крестовина нажата — взгляд за носом
-      craft.ab = thrI === AB_I && craft.fuel > 0;
+      craft.ab = thrI === AB_I && craft.fuel > 0 && !(craft.fm && !(craft.fm.s.ab > 0))&& !craft.noAB; // без форсажа (Су-25) — верхняя ступень = 100 %
+      // повреждения: течь бака, пожар ест корпус (онлайн — урон считает сервер)
+      if (craft.dz && !game.opts.invuln) {
+        if (craft.leak && craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - craft.leak * dt);
+        const br = burnRate(craft); if (br && !game.net) { craft.hp -= br * dt; if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0); finish(craft.det.tailAll ? 'Потеря управления: хвост разрушен' : 'Сгорел: пожар на борту', false); } }
+      }
+      if (craft.dmgVis) craft.dmgVis.update(dt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
       // топливо: расход по газу, форсаж — втрое; кончилось — двигатель встал, самолёт планирует (в обучении не тратится)
       if (!game.opts.invuln) {
         if (craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - (0.35 + 0.65 * craft.thr) * (craft.ab ? 3 : 1) / (C.MODE().fuelS || 240) * dt);

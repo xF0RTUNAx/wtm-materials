@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261022d';
+import { CREDITS } from './models/credits.js?v=20261022e';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -294,6 +294,7 @@ export function classOf(items, AG) {
 export const classOfRole = (role) => (role === 'sead' || role === 'low' || role === 'tv' ? 'fighter' : 'strike');
 // готовая модель стороны и класса (своего класса нет — любая модель стороны; нет ничего — null, тогда процедурная)
 // name — конкретная модель (из подвески), если загрузилась
+export const planeMeta = (name) => META[name] || null; // сопла, пилоны — для зон повреждений (plane-zones.js) и проверок
 export function planeModel(side, cls = 'strike', name = null) {
   if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла — пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);

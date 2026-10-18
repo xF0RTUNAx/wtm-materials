@@ -3,12 +3,12 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261022d';
-import * as O from './sim/online.js?v=20261022d';
-import * as MW from './sim/online-multi.js?v=20261022d';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261022d';
-import { MODES } from './sim/strike.js?v=20261022d';
-import { ICON } from './icons.js?v=20261022d';
+import { createNet } from './net.js?v=20261022e';
+import * as O from './sim/online.js?v=20261022e';
+import * as MW from './sim/online-multi.js?v=20261022e';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261022e';
+import { MODES } from './sim/strike.js?v=20261022e';
+import { ICON } from './icons.js?v=20261022e';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -187,7 +187,7 @@ export function createOnline(C, ctrls) {
   N.on('lobby', () => { afterBattle = true; document.body.classList.remove('netOn', 'plOpen'); if (C.state === 'play' && !C.ended) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; } if (inMenu()) C.menu.render(); });
   N.on('resupply', (e) => { if (team() === 'air') ctrls.air.netResupply(e); });
   N.on('spawn', (m) => { N.clog('spawn', { lives: m.lives, plane: m.plane, load: m.load.map((l) => l.key + ':' + l.n).join(',') }); if (team() === 'air') ctrls.air.netSpawn(m); });
-  N.on('meHit', (hp, by) => ctrls.air.netHit(hp, by));
+  N.on('meHit', (hp, by, pk) => ctrls.air.netHit(hp, by, pk));
   N.on('meDown', () => { N.clog('down', { hp: C.player && C.player.hp, pos: C.player && C.player.pos.toArray().map(Math.round) }); ctrls.air.netDown('Самолёт сбит'); });
   N.on('meAI', () => { N.clog('to_ai', { hidden: document.visibilityState }); ctrls.air.netAI(); });
   // журнал сбитий: своя команда — синим, противник — красным; под ником — техника, которой он управлял в этот момент

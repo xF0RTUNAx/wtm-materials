@@ -31,22 +31,30 @@ export function agl(a) { return a.pos.y - groundH(a.pos.x, a.pos.z); }
 export function localAz(a, rel) { const cy = Math.cos(a.yaw), sy = Math.sin(a.yaw), cp = Math.cos(a.pitch), sp = Math.sin(a.pitch); const x1 = rel.x * cy - rel.z * sy, z1 = rel.x * sy + rel.z * cy; return Math.atan2(x1, -(-rel.y * sp + z1 * cp)); }
 
 // Общая лётная модель: rx, ry — команды по рысканию/тангажу (−1…1). Угловая скорость ограничена перегрузкой.
+// a.fm — своя лётная модель самолёта («Воздушное превосходство», airdef/sim/flight.js): перегрузка, сваливание и ускорение
+// берутся из неё (turnK — доля бокового ускорения в масштабе скоростей); без fm — как было («Летка» не меняется)
+const gLim = (a, v) => (a.fm ? a.fm.nMax(a, v) * a.fm.turnK : a.gmax);
+const nOf = (a, v, w) => 1 + v * w / G0 / (a.fm ? a.fm.turnK : 1);
 export function flyStep(a, rx, ry, dt) {
   const v = Math.max(a.speed, 60);
-  const wMax = Math.min(a.wCap, a.gmax * G0 / v);
+  const wMax = Math.min(a.wCap, gLim(a, v) * G0 / v);
   let wy = -rx * wMax, wp = ry * wMax;
   const w = Math.hypot(wy, wp); if (w > wMax) { wy *= wMax / w; wp *= wMax / w; }
   const k = Math.min(1, a.agil * dt);
   a.wy += (wy - a.wy) * k; a.wp += (wp - a.wp) * k;
   a.yaw += a.wy * dt; a.pitch = clamp(a.pitch + a.wp * dt, -1.35, 1.35);
-  a.n = 1 + v * Math.hypot(a.wy * Math.cos(a.pitch), a.wp) / G0;
+  a.n = nOf(a, v, Math.hypot(a.wy * Math.cos(a.pitch), a.wp));
   const bank = clamp(Math.atan2(v * a.wy * Math.cos(a.pitch), G0), -1.45, 1.45);
   a.roll += (bank - a.roll) * Math.min(1, a.rollK * dt);
-  const rho = rhoAt(a.pos.y);
-  const thrust = (a.ab ? a.abAcc : a.milAcc * a.thr) * (0.25 + 0.75 * rho) / a.massK;
-  const drag = a.cd0 * rho * v * v * a.dragK + 0.32 * a.bleed * Math.pow(Math.max(0, a.n - 1), 2);
-  a.speed += (thrust - drag - G0 * Math.sin(a.pitch)) * dt;
-  if (a.speed < a.vStall) a.pitch -= (a.vStall - a.speed) * 0.015 * dt; // сваливание: нос опускается
+  if (a.fm) a.speed += a.fm.dv(a, v) * dt;
+  else {
+    const rho = rhoAt(a.pos.y);
+    const thrust = (a.ab ? a.abAcc : a.milAcc * a.thr) * (0.25 + 0.75 * rho) / a.massK;
+    const drag = a.cd0 * rho * v * v * a.dragK + 0.32 * a.bleed * Math.pow(Math.max(0, a.n - 1), 2);
+    a.speed += (thrust - drag - G0 * Math.sin(a.pitch)) * dt;
+  }
+  const vs = a.fm ? a.fm.vStall(a) : a.vStall;
+  if (a.speed < vs) a.pitch -= (vs - a.speed) * 0.015 * dt; // сваливание: нос опускается
   a.speed = Math.max(a.speed, 45);
   fwdOf(a, a.vel).multiplyScalar(a.speed);
   a.pos.addScaledVector(a.vel, dt);
@@ -65,14 +73,14 @@ export function pilotStep(a, rx, ry, dt, sink = 0, rollK = 1, rz = 0) { // rollK
     a.wr = 0;
   }
   const v = Math.max(a.speed, 60);
-  const wMax = Math.min(a.wCap, a.gmax * G0 / v); // тангаж ограничен перегрузкой, как во flyStep
+  const wMax = Math.min(a.wCap, gLim(a, v) * G0 / v); // тангаж ограничен перегрузкой, как во flyStep
   const k = Math.min(1, a.agil * dt);
   a.wp += (clamp(ry, -1, 1) * wMax - a.wp) * k;
-  a.wr += (-clamp(rx, -1, 1) * ROLL_RATE * rollK - a.wr) * k; // ручка вправо — правое крыло вниз (крен < 0, как у моделей)
+  a.wr += (-clamp(rx, -1, 1) * (a.fm ? a.fm.rollRate : ROLL_RATE) * rollK + (a.rollBias || 0) - a.wr) * k; // rollBias — повреждённое крыло тянет в крен // ручка вправо — правое крыло вниз (крен < 0, как у моделей); у самолёта с fm — своя скорость крена
   a.wz = (a.wz || 0) + (clamp(rz, -1, 1) * wMax * 0.5 - (a.wz || 0)) * k; // руль: нос влево-вправо без крена, слабее тангажа
   a.q.multiply(PQ.setFromAxisAngle(AX_X, a.wp * dt)).multiply(PQ.setFromAxisAngle(AX_Z, a.wr * dt)).multiply(PQ.setFromAxisAngle(AX_Y, a.wz * dt));
   // сваливание и потолок: нос опускается к земле в мировых осях (и в перевёрнутом полёте — тоже к земле)
-  const drop = (a.speed < a.vStall ? (a.vStall - a.speed) * 0.015 : 0) + sink;
+  const vs = a.fm ? a.fm.vStall(a) : a.vStall, drop = (a.speed < vs ? (vs - a.speed) * 0.015 : 0) + sink;
   if (drop > 0) {
     PFW.set(0, 0, -1).applyQuaternion(a.q); PAX.crossVectors(PFW, UP_W);
     if (PAX.lengthSq() > 1e-6) a.q.premultiply(PQ.setFromAxisAngle(PAX.normalize(), -drop * dt));
@@ -81,11 +89,14 @@ export function pilotStep(a, rx, ry, dt, sink = 0, rollK = 1, rz = 0) { // rollK
   PE.setFromQuaternion(a.q, 'YXZ'); a.pitch = PE.x; a.yaw = PE.y; a.roll = PE.z;
   a.qe = [a.pitch, a.yaw, a.roll];
   a.wy = 0; // у вертикали рыскание по углам скачет на 180° — камере и HUD оно здесь не нужно
-  a.n = 1 + v * Math.abs(a.wp) / G0;
-  const rho = rhoAt(a.pos.y);
-  const thrust = (a.ab ? a.abAcc : a.milAcc * a.thr) * (0.25 + 0.75 * rho) / a.massK;
-  const drag = a.cd0 * rho * v * v * a.dragK + 0.32 * a.bleed * Math.pow(Math.max(0, a.n - 1), 2);
-  a.speed = Math.max(45, a.speed + (thrust - drag - G0 * Math.sin(a.pitch)) * dt);
+  a.n = nOf(a, v, Math.abs(a.wp));
+  if (a.fm) a.speed = Math.max(45, a.speed + a.fm.dv(a, v) * dt);
+  else {
+    const rho = rhoAt(a.pos.y);
+    const thrust = (a.ab ? a.abAcc : a.milAcc * a.thr) * (0.25 + 0.75 * rho) / a.massK;
+    const drag = a.cd0 * rho * v * v * a.dragK + 0.32 * a.bleed * Math.pow(Math.max(0, a.n - 1), 2);
+    a.speed = Math.max(45, a.speed + (thrust - drag - G0 * Math.sin(a.pitch)) * dt);
+  }
   fwdOf(a, a.vel).multiplyScalar(a.speed);
   a.pos.addScaledVector(a.vel, dt);
 }

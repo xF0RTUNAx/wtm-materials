@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022d';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261022d';
-import { LNCH } from './launchers.js?v=20261022d';
-import { createBook } from './flipbook.js?v=20261022d';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022e';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022e';
+import { LNCH } from './launchers.js?v=20261022e';
+import { createBook } from './flipbook.js?v=20261022e';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -276,8 +276,8 @@ export function attachFlames(group, nozzles, r = 1, own = false) {
   const set = nozzles.map((nz) => {
     // пламя не пишет глубину — рисуется после облаков и дыма (renderOrder), иначе облако позади самолёта его закрашивает
     const outer = new THREE.Mesh(flameGeo, mat), core = new THREE.Mesh(flameGeo, flameCore);
-    outer.position.copy(nz); core.position.copy(nz); outer.renderOrder = core.renderOrder = 5; group.add(outer); group.add(core);
-    const dia = [0, 1, 2, 3].map((k) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.copy(nz); d.position.z += (0.85 + k * 1.15) * r; d.renderOrder = 5; group.add(d); return d; });
+    outer.position.copy(nz); core.position.copy(nz); outer.renderOrder = core.renderOrder = 5; outer.userData.fx = core.userData.fx = true; group.add(outer); group.add(core); // fx — не часть модели (зоны повреждений их не режут)
+    const dia = [0, 1, 2, 3].map((k) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.copy(nz); d.position.z += (0.85 + k * 1.15) * r; d.renderOrder = 5; d.userData.fx = true; group.add(d); return d; });
     return { outer, core, dia };
   });
   return {
@@ -556,6 +556,12 @@ export function createFx(scene, P) {
     stage(p, d) {
       fire.emit(p.x, p.y, p.z, 0, 0, 0, 1, 0.8, 0.5, 0.8, 4, 4, 0.15, 0, 0);
       for (let i = 0; i < 8; i++) smoke.emit(p.x, p.y, p.z, (Math.random() - 0.5) * 10 - d.x * 15, (Math.random() - 0.5) * 10 - d.y * 15, (Math.random() - 0.5) * 10 - d.z * 15, 0.85, 0.85, 0.83, 0.55, 2, 3, 4, 1.2, 0.2);
+    },
+    // след из повреждённой зоны самолёта (plane-damage.js): kind 0 — серый дым, 1 — чёрный, 2 — огонь с чёрным дымом; v — скорость самолёта
+    zoneTrail(p, v, wind, kind, k = 1) {
+      const c = kind ? 0.1 + Math.random() * 0.06 : 0.45 + Math.random() * 0.1;
+      smoke.emit(p.x, p.y, p.z, v.x * 0.12 + wind.x + (Math.random() - 0.5) * 2, v.y * 0.12 + 1, v.z * 0.12 + wind.z + (Math.random() - 0.5) * 2, c, c, c * 0.97, (0.35 + 0.3 * k) * (kind ? 1.1 : 0.8), 1.5 + 2 * k, 4 + 6 * k, 3 + 3 * k, 1.5, 0.7);
+      if (kind === 2) fire.emit(p.x, p.y, p.z, v.x * 0.35, v.y * 0.35, v.z * 0.35, 1, 0.55 + Math.random() * 0.2, 0.18, 0.95, 1.6 + 1.6 * k, 2.5, 0.25, 1.5, 0);
     },
     debrisSmoke(p) { smoke.emit(p.x, p.y, p.z, 0, 0.5, 0, 0.6, 0.6, 0.58, 0.35, 1.2, 2, 2.5, 0.2, 0.2); },
     // подбитый самолёт (прочность frac < 0,5): шлейф из хвоста — частица получает часть скорости самолёта и быстро

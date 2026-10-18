@@ -11,15 +11,15 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261022d';
-import { part, mergeParts, M } from '../drone/models.js?v=20261022d';
-import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022d';
-import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022d';
-import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022d';
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261022e';
+import { part, mergeParts, M } from '../drone/models.js?v=20261022e';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022e';
+import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022e';
+import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022e';
 Object.assign(WEATHERS, winterWeathers(WEATHERS)); // зимние погоды — только в «Воздушном превосходстве»
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt;
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022d'; // MIT, meshoptimizer 0.21
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022e'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -75,7 +75,7 @@ function loadCityTextures(aniso) {
     jpg(u, f, t);
   }
   function jpg(u, f, t) {
-    fetch(new URL(`./tex/${f}.jpg?v=20261022d`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261022e`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { if (u === 'tGGn' || u === 'tGDn') packNormalsFrom(u, bmp); else { TEX[u].value = t; t.image = bmp; t.needsUpdate = true; } const av = TEX['uAvg' + u.slice(1)]; if (av && !viaKtx) av.value.copy(avgColor(bmp)); done(); })
       .catch((e) => { texStats.done++; console.warn('текстура не загрузилась:', e.message); });
   }
@@ -1049,7 +1049,7 @@ function cloudTex(f, done) { // → uniform { value }: KTX2, иначе WebP
   if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') return U;
   texStats.req++;
   webp(); return U; // облака — WebP: в KTX2 светотень в кадре выходила площе (данные те же — разница в выборке мипов; не разобрались)
-  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022d`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022e`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
     .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; done(); })
     .catch((e) => { texStats.done++; console.warn('облака не загрузились:', e.message); }); }
 }
@@ -1272,6 +1272,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   gw += (vec2(vns(q * 0.35 + t * 0.4), vns(q.yx * 0.35 - t * 0.4)) - 0.5) * 1.6;
   vec3 nW = normalize(vec3(gw.x * 0.05, 1.0, gw.y * 0.05));
   float wd = length(vWp - uCam), wpx = wd * uPx, rimD = ${(CITY.RIVER_W / 2).toFixed(1)} - abs(vWp.x - riverX(vWp.z)); // до берега, м
+  if (rimD < -1.5) discard; // полоса воды шире реки (закрыть урез) — за линией берега её нет: там, где земля ниже уровня, иначе вылезала голубым
   if (uTexOn > 0.5) { // рябь (three.js waternormals): два слоя навстречу по течению, вдали — спокойнее
     vec3 a = texture2D(tWN, q / 21.0 + vec2(0.012, 0.031) * t).rgb * 2.0 - 1.0, b = texture2D(tWN, q / 53.0 - vec2(0.021, 0.017) * t).rgb * 2.0 - 1.0;
     vec2 rp = (a.xy + b.xy) * (0.22 * (1.0 - smoothstep(1.0, 12.0, wpx)) + 0.05);
@@ -1280,11 +1281,13 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz);
   vec3 Vw = normalize(uCam - vWp), Rf = reflect(-Vw, nW);
   float fres = 0.03 + 0.97 * pow(1.0 - max(dot(nW, Vw), 0.0), 5.0);
-  wEmis = skyAt(Rf) * fres * 0.9;
   float shallow = 1.0 - smoothstep(4.0, 45.0, rimD); // у берега — мельче: светлее, мутно-зелёная
+  wEmis = skyAt(Rf) * fres * 0.9 * (1.0 - 0.45 * shallow); // у кромки отражение неба слабее (мелко, видно дно)
   diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.6, 1.9, 1.5) + vec3(0.01, 0.012, 0.006), shallow * 0.6);
-  float foam = (1.0 - smoothstep(0.5, 4.0, rimD)) * (0.6 + 0.4 * vns(q * 0.4 + t * 0.6)) * (1.0 - smoothstep(2.0, 8.0, wpx)); // пена у самого берега
-  wEmis += vec3(0.5) * foam * 0.35;`)
+  // у самой кромки (≈ 12 м) вода — цвета мокрого песка под ней, без отражения неба: никакой голубой каёмки у берега
+  float edge = 1.0 - smoothstep(0.0, 12.0 + 6.0 * vns(q * 0.05), rimD);
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.085, 0.075, 0.055), edge);
+  wEmis *= 1.0 - edge;`)
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += wEmis;');
   };
   // вода — только полосой вдоль реки: сплошная плоскость в 4–10 м под землёй «мерцала» с большой высоты (не хватало точности глубины)

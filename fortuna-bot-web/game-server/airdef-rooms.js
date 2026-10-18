@@ -19,6 +19,8 @@ import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import { createMulti } from './airdef-multi.js';
+import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
+import { initDamage, hitZones, dmgPack, burnRate } from '../games/airdef/sim/damage.js?v=20261022d';
 import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
 
 const city = buildCity(1); setGround(city.groundH); // город один для всех комнат (как у клиентов: seed 1), только чтение
@@ -167,7 +169,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   function startBattle(r) {
     r.S = createStrike({ city, rnd: Math.random, mode: () => MODES[r.mode], game: 'air', aircraft: () => r.air, laserSpot: (a) => a.laser || null, night: 0,
       reloadK: () => (r.state === 'play' && r.waveRes ? O.reloadKOf(r.t, r.waveRes.radarKills) : 1), // две фазы волны: подавленная ПВО перезаряжается дольше
-      hurt: (a, dmg, by) => hurtAir(r, a, dmg, by), spawnDecoy: (a, key, aim) => announce(r, r.raid.spawnDecoy(a, key, aim)), fx: strikeFx(r) });
+      hurt: (a, dmg, by, from) => hurtAir(r, a, dmg, by, from), spawnDecoy: (a, key, aim) => announce(r, r.raid.spawnDecoy(a, key, aim)), fx: strikeFx(r) });
     r.raid = createRaid(r.S, city, Math.random, { side: r.sideAir, era: r.era, fx: raidFx(r) });
     r.humanCraft = new Map();
     Object.defineProperty(r, 'air', { get: () => [...r.humanCraft.values(), ...r.raid.planes], configurable: true });
@@ -225,7 +227,11 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     const a = makeCraft({ ...ST, id: p.id, human: true, side: r.sideAir, hp, hpMax: O.MAX_HP, rcs: ST.rcs, speed, thr: 0.8, owner: p.id, plane });
     a.pos.set(x, y, z); a.yaw = yaw; a.pitch = 0; a.roll = 0; fwdOf(a, a.vel).multiplyScalar(a.speed);
     a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0));
-    p.craft = a; p.load = load; p.relT = 0; p.relTok = 2; p.cmT = 0; p.lastSt = clock();
+    // свои ТТХ самолёта (когда его ведёт ИИ сервера — после обрыва связи): масса, подвески, режим комнаты
+    a.fm = flightModel(plane || (r.sideAir === 'east' ? 'su30' : 'f16'), { ind: MODES[r.mode].ind }); a.fuel = 1;
+    if (a.fm) { const Lw = loadOf(a.fm.key, load.map((l) => ({ mass: (AG[l.key] || {}).mass || 0, n: l.n }))); a.payload = Lw.payload; a.dragK = Lw.dragK; }
+    initDamage(a); // зоны повреждений: считает сервер, игроку — в событии 'hp'
+    p.craft = a; p.load = load; p.cap = null; p.relT = 0; p.relTok = 2; p.cmT = 0; p.lastSt = clock();
     r.humanCraft.set(p.id, a); a.load = p.load; announce(r, a);
     return a;
   }
@@ -368,15 +374,17 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     r.valueK = v / r.value0;
   }
   // урон самолёту: люди — свой корпус, боты/ИИ — через налёт; кто сбил — тому очки
-  function hurtAir(r, a, dmg, by) {
+  // урон самолёту: корпус и зоны (sim/damage.js, from — точка подрыва); всем — прочность и зоны (отрыв частей, дым, пожар)
+  function hurtAir(r, a, dmg, by, from = null) {
     const k = MODES[r.mode].dmgTaken;
     if (a.human) {
       if (a.dead) return;
-      a.hp -= dmg * k; push(r, ['hp', a.id, Math.max(0, Math.round(a.hp)), by]);
+      a.hp -= dmg * k; hitZones(a, dmg * k, from); push(r, ['hp', a.id, Math.max(0, Math.round(a.hp)), by, dmgPack(a)]);
       if (a.hp <= 0) { a.dead = true; push(r, ['dn', a.id]); onAirDown(r, a, by); }
       return;
     }
-    a.lastBy = by; r.raid.hurt(a, dmg * k);
+    a.lastBy = by; r.raid.hurt(a, dmg * k, from);
+    if (a.dz && !a.dead) push(r, ['hp', a.id, Math.max(0, Math.round(a.hp)), by, dmgPack(a)]);
   }
   function onAirDown(r, a, by) {
     if (a.role === 'decoy') return;
@@ -395,6 +403,12 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   // ═════════════ Такт ═════════════
   function step(r, dt) {
     r.t += dt;
+    // пожар на борту и разрушенный хвост у самолётов игроков: корпус тает (раз в секунду — всем)
+    if (r.humanCraft) for (const a of r.humanCraft.values()) if (burnRate(a) && !a.dead) {
+      a.hp -= burnRate(a) * dt; a.fireT = (a.fireT || 0) + dt;
+      if (a.hp <= 0) { a.hp = 0; a.dead = true; push(r, ['hp', a.id, 0, 'пожар', dmgPack(a)]); push(r, ['dn', a.id]); onAirDown(r, a, a.lastBy || 'пожар'); }
+      else if (a.fireT > 1) { a.fireT = 0; push(r, ['hp', a.id, Math.round(a.hp), null, dmgPack(a)]); }
+    }
     if (r.state !== 'lobby' && Math.floor(r.t) !== r.sec) { r.sec = Math.floor(r.t); sendRoom(r); } // таймер фазы — раз в секунду
     if (r.kind === 'multi') { if (r.state !== 'lobby') MU.step(r, dt); return; }
     if (r.state === 'plan') { if (r.t >= r.phaseT || team(r, 'air').concat(team(r, 'pvo')).every((p) => p.ready || !p.ws && !p.bot)) startWave(r); return; }
@@ -418,12 +432,12 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     O.zoneStep(r.zone, team(r, 'air').filter((p) => p.craft && !p.craft.dead).map((p) => { p.pos = p.craft.pos; return p; }), dt, Math.random,
       (p) => {
         const L = O.bundleOf(r.era, r.sideAir, p.choice), cm = MODES[r.mode].cm;
-        const spent = !!L && (L.items.some(([k, n]) => ((p.load || []).find((l) => l.key === k) || { n: 0 }).n < n) || !p.cm || p.cm.flare < cm * 0.5 || p.cm.chaff < cm * 0.5);
+        const spent = !!L && (L.items.some(([k, n]) => ((p.load || []).find((l) => l.key === k) || { n: 0 }).n < Math.min(n, p.cap?.[k] ?? n)) || !p.cm || p.cm.flare < cm * 0.5 || p.cm.chaff < cm * 0.5);
         return { fuel: (p.zFuel || 0) > 0 && (p.fuel ?? 1) < 0.9, ammo: (p.zAmmo || 0) > 0 && spent };
       },
       (p, n) => {
         if (n.fuel) { p.zFuel--; p.fuel = 1; }
-        if (n.ammo) { p.zAmmo--; const L = O.bundleOf(r.era, r.sideAir, p.choice); p.load = L.items.map(([k, q]) => ({ key: k, n: q })); p.craft.load = p.load; p.cm = { flare: MODES[r.mode].cm, chaff: MODES[r.mode].cm }; }
+        if (n.ammo) { p.zAmmo--; const L = O.bundleOf(r.era, r.sideAir, p.choice); p.load = L.items.map(([k, q]) => ({ key: k, n: Math.min(q, p.cap?.[k] ?? q) })); p.craft.load = p.load; p.cm = { flare: MODES[r.mode].cm, chaff: MODES[r.mode].cm }; }
         push(r, ['zr', p.id, n.fuel ? 1 : 0, n.ammo ? 1 : 0, p.zFuel, p.zAmmo, (p.load || []).map((l) => l.key + ':' + l.n).join(','), p.cm ? p.cm.flare : 0, p.cm ? p.cm.chaff : 0]);
         J(r, 'resupply', { who: p.name, fuel: n.fuel ? 1 : 0, ammo: n.ammo ? 1 : 0, left: [p.zFuel, p.zAmmo] });
       });
@@ -618,6 +632,13 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
         const tgt = m.tg ? r.S.units.find((u) => u.id === +m.tg) || null : null;
         r.S.release(a, l.key, { aim, target: tgt });
         J(r, 'cmd', { who: c.name, cmd: 'rel', k: l.key, left: l.n, aim: !!aim, tg: tgt ? tgt.S.short : null, laser: !!a.laser });
+        return;
+      }
+      case 'lost': { // оторвалась консоль с подвесками: только уменьшает (сколько есть и сколько пилонов — до конца вылета)
+        if (!c.craft || !Array.isArray(m.k)) return; c.cap = c.cap || {};
+        for (const q of m.k.slice(0, 12)) { if (!Array.isArray(q) || !Number.isFinite(q[1]) || !Number.isFinite(q[2])) continue;
+          const l = (c.load || []).find((x) => x.key === q[0]); if (!l) continue;
+          l.n = Math.max(0, Math.min(l.n, q[1] | 0)); c.cap[l.key] = Math.max(0, Math.min(c.cap[l.key] ?? Infinity, q[2] | 0)); }
         return;
       }
       case 'rtb': { // вылет окончен: оружия нет, ушёл за границу района — дальше смотрит за союзниками

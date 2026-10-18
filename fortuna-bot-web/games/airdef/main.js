@@ -8,32 +8,33 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { ktxInit } from './ktx.js?v=20261022d';
-import { buildCity, CITY } from './city.js?v=20261022d';
-import { buildWinter } from './map-winter.js?v=20261022d';
-import { WINTER_KEYS } from './winter-render.js?v=20261022d';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022d';
-import { createPipeline } from '../drone/post.js?v=20261022d';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022d';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022d';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022d';
-import { createStrike, MODES } from './sim/strike.js?v=20261022d';
-import { createRaid } from './sim/raid.js?v=20261022d';
-import { POD } from './sim/combined.js?v=20261022d';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022d';
-import { slotCount } from './launchers.js?v=20261022d';
-import { modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings } from './models.js?v=20261022d';
-import { createSound } from './sound.js?v=20261022d';
-import { ico, iconize } from './icons.js?v=20261022d';
-import { createAir } from './air.js?v=20261022d';
-import { createDefense } from './defense.js?v=20261022d';
-import { createDirector } from './director.js?v=20261022d';
-import { createMenuBg } from './menubg.js?v=20261022d';
-import { createOnline } from './online.js?v=20261022d';
-import { createShell } from './shell.js?v=20261022d';
-import { createTraining, LESSONS } from './training.js?v=20261022d';
-import { createPhoto } from './photo.js?v=20261022d';
-import { createMenu } from './menu.js?v=20261022d';
+import { ktxInit } from './ktx.js?v=20261022e';
+import { buildCity, CITY } from './city.js?v=20261022e';
+import { buildWinter } from './map-winter.js?v=20261022e';
+import { WINTER_KEYS } from './winter-render.js?v=20261022e';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022e';
+import { createPipeline } from '../drone/post.js?v=20261022e';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022e';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022e';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022e';
+import { createStrike, MODES } from './sim/strike.js?v=20261022e';
+import { createRaid } from './sim/raid.js?v=20261022e';
+import { POD } from './sim/combined.js?v=20261022e';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022e';
+import { slotCount } from './launchers.js?v=20261022e';
+import { modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022e';
+import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022e';
+import { createSound } from './sound.js?v=20261022e';
+import { ico, iconize } from './icons.js?v=20261022e';
+import { createAir } from './air.js?v=20261022e';
+import { createDefense } from './defense.js?v=20261022e';
+import { createDirector } from './director.js?v=20261022e';
+import { createMenuBg } from './menubg.js?v=20261022e';
+import { createOnline } from './online.js?v=20261022e';
+import { createShell } from './shell.js?v=20261022e';
+import { createTraining, LESSONS } from './training.js?v=20261022e';
+import { createPhoto } from './photo.js?v=20261022e';
+import { createMenu } from './menu.js?v=20261022e';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -206,7 +207,7 @@ C.newBattle = function (o) {
   const rnd = o.rnd || Math.random;
   const S = createStrike({ city, rnd, mode: C.MODE, night: C.NIGHT, fx: simFx, game: o.game || null, // game — перезарядка ПВО: 'air' вылеты, 'multi' «Мульти-волна»
     aircraft: () => { const a = raid ? raid.alive() : []; return C.player && !C.player.dead ? [C.player, ...a] : a; },
-    hurt: (a, dmg, by) => { if (a === C.player) { if (C.hooks.hurtPlayer) C.hooks.hurtPlayer(dmg, by); } else raid.hurt(a, dmg * (C.hooks.aiDmgK || 1)); },
+    hurt: (a, dmg, by, from) => { if (a === C.player) { if (C.hooks.hurtPlayer) C.hooks.hurtPlayer(dmg, by, from); } else raid.hurt(a, dmg * (C.hooks.aiDmgK || 1), from); },
     unitDmgK: () => C.hooks.unitDmgK ?? 1,
     laserSpot: (a) => (a === C.player ? (C.hooks.playerLaser ? C.hooks.playerLaser() : null) : raid.laserSpot(a)),
     spawnDecoy: (a, key, aim) => { const d = raid.spawnDecoy(a, key, aim); if (C.hooks.decoyOut) C.hooks.decoyOut(d); } });
@@ -225,7 +226,7 @@ function objLook(id, ruin) {
 function clearBattle() {
   for (const m of [...unitMeshes.values(), ...wpnMeshes.values(), ...samMeshes.values(), ...planeMeshes.values()]) scene.remove(m);
   for (const w of [...wrecks, ...debris]) scene.remove(w.g);
-  unitMeshes.clear(); wpnMeshes.clear(); samMeshes.clear(); planeMeshes.clear(); wrecks.length = 0; debris.length = 0;
+  unitMeshes.clear(); wpnMeshes.clear(); samMeshes.clear(); planeMeshes.clear(); wrecks.length = 0; debris.length = 0; clearDebris(scene);
   for (const g of evLaunch.values()) scene.remove(g); evLaunch.clear(); C.ev = null;
   if (C.fx) { C.fx.clearBurning(); C.fx.clearCraters(); }
   C.S = null; C.raid = null; C.player = null;
@@ -540,8 +541,14 @@ function syncWorld(dt, t) {
   // дым подбитых самолётов (ИИ и игрок): ветер — лёгкий, постоянный для боя
   if (C.fx && dt > 0) {
     const W = C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)); // ~4 м/с
-    if (C.raid) for (const a of C.raid.planes) if (!a.dead && !a.out && a.role !== 'decoy' && a.hpMax) C.fx.damageSmoke(a, dt, a.hp / a.hpMax, W);
-    if (C.player && !C.player.dead) C.fx.damageSmoke(C.player, dt, C.player.hp / (C.player.hpMax || 100), W);
+    // у самолётов с зонами повреждений (sim/damage.js) — дым и огонь из самих зон, отрыв частей (plane-damage.js); без зон — общий шлейф по прочности
+    if (C.raid) for (const a of C.raid.planes) {
+      if (a.dead || a.out || a.role === 'decoy' || !a.hpMax) continue;
+      const dv = (planeMeshes.get(a.id) || { userData: {} }).userData.dv;
+      if (dv && a.dz) { dv.sync(a); dv.update(dt, a, W); } else C.fx.damageSmoke(a, dt, a.hp / a.hpMax, W);
+    }
+    if (C.player && !C.player.dead && !C.player.dz) C.fx.damageSmoke(C.player, dt, C.player.hp / (C.player.hpMax || 100), W);
+    updateDebris(scene, dt, city.groundH, W);
   }
   const S = C.S; if (!S) return;
   for (const m of S.sams) {
@@ -602,6 +609,7 @@ function syncWorld(dt, t) {
         const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)), sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
         if (pm) {
           pm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(pm.obj);
+          g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон
           // пламя — у каждой модели своё (вдали — у простой): иначе у длинных самолётов (Су-34) факелы висели за простой моделью
           const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45), fl = attachFlames(lo, sg.nozzles, sg.nr / 0.45);
           g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load); // во внутренних отсеках — не видно

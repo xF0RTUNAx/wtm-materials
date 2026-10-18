@@ -6,21 +6,22 @@
 //   city            — город (city.js): los, raycast, topAt, objects;
 //   mode()          — параметры режима (MODES ниже),
 //   aircraft()      — массив самолётов (у каждого pos, vel, yaw/pitch/roll, speed, ab, ir, r, dead, rcs, side),
-//   hurt(a, dmg, by)— урон самолёту (корпус и гибель — логика хозяина),
+//   hurt(a, dmg, by, from)— урон самолёту (корпус и гибель — логика хозяина; from — точка подрыва, для зон),
 //   laserSpot(a)    — точка подсвета лазером самолёта a (или null),
 //   night           — 0…1 (ТВ-головки ночью не видят, расчёты ПЗРК видят хуже),
 //   rnd             — генератор случайных чисел (по умолчанию Math.random),
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261022d';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022d';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022d';
+import { AG, SAM } from '../arsenal.js?v=20261022e';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022e';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022e';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
+// ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
 export const MODES = {
-  arcade: { name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 290, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.7, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
-  real: { name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home', reloadK: { air: 0.7, multi: 0.9 } }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
+  arcade: { ind: 0.5, name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 290, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.7, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
+  real: { ind: 1, name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home', reloadK: { air: 0.7, multi: 0.9 } }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
 };
 
 const NOOP_FX = {
@@ -206,7 +207,7 @@ export function createStrike(ctx) {
       if (S.type === 'guns') { u.ammo -= dt * (G.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = u.reload0 = reloadOf(S); } } // темп — по пушкам комплекса; кончились — подвоз
       const hits = rnd() < p * dt * 8 ? 1 + Math.floor(rnd() * 3) : 0;
       fx.gunFire(u, tr, hits, dt);
-      if (hits) { hurtAny(tr, G.dmg * hits, S.short); fx.gunHit(u, tr, hits); }
+      if (hits) { hurtAny(tr, G.dmg * hits, S.short, u.pos); fx.gunHit(u, tr, hits); }
     }
     return true;
   }
@@ -225,9 +226,9 @@ export function createStrike(ctx) {
     return out;
   }
   // урон самолёту (хозяину боя) или летящему оружию (перехват)
-  function hurtAny(t, dmg, by) {
+  function hurtAny(t, dmg, by, from = null) { // from — откуда пришло (зоны повреждений самолёта)
     if (t.isMun) { t.mhp -= dmg; if (t.mhp <= 0) intercept(t); }
-    else ctx.hurt(t, dmg, by);
+    else ctx.hurt(t, dmg, by, from);
   }
   function intercept(w) {
     if (w.dead) return;
@@ -292,7 +293,7 @@ export function createStrike(ctx) {
     }
     FAR.pos.copy(u.pos).addScaledVector(u.aimDir, S.rmax);
     fx.gunFire(u, FAR, hits, dt);
-    if (hits) { hurtAny(t, S.gun.dmg * hits, S.short); fx.gunHit(u, t, hits); }
+    if (hits) { hurtAny(t, S.gun.dmg * hits, S.short, u.pos); fx.gunHit(u, t, hits); }
   }
   function launch(u) {
     const S = u.S;
@@ -496,7 +497,7 @@ export function createStrike(ctx) {
     if (near) for (const a of ctx.aircraft()) {
       if (a.dead || a.immune) continue;
       const d = Math.max(0, a.pos.distanceTo(m.pos) - a.r * 0.5);
-      if (d < m.M.blast) { ctx.hurt(a, m.M.dmg * Math.pow(1 - d / m.M.blast, 0.6), m.S.short); hit = true; }
+      if (d < m.M.blast) { ctx.hurt(a, m.M.dmg * Math.pow(1 - d / m.M.blast, 0.6), m.S.short, m.pos); hit = true; }
     }
     fx.samEnd(m, hit);
     fx.explosion(m.pos, m.M.blast, 'air');

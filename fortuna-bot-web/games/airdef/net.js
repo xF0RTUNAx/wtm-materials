@@ -5,10 +5,11 @@
 // пуск, захват, РЛС, ручное наведение, покупки) уходят серверу — их перехватывает обёртка методов зеркала (wrapMirror).
 // Чужие самолёты и боты — «зеркальные» самолёты в C.raid.planes; свой самолёт игрок ведёт сам (C.player).
 /* global THREE, CONFIG */
-import * as O from './sim/online.js?v=20261022d';
-import * as MW from './sim/online-multi.js?v=20261022d';
-import { AG, SAM } from './arsenal.js?v=20261022d';
-import { LNCH } from './launchers.js?v=20261022d';
+import * as O from './sim/online.js?v=20261022e';
+import * as MW from './sim/online-multi.js?v=20261022e';
+import { AG, SAM } from './arsenal.js?v=20261022e';
+import { dmgUnpack } from './sim/damage.js?v=20261022e';
+import { LNCH } from './launchers.js?v=20261022e';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -314,7 +315,7 @@ export function createNet(C) {
         if (N.me && e[1] === N.me.id) { N.myCraft = false; emit('meDown'); return; }
         const a = ac.get(e[1]); if (!a || a.dead) return; a.dead = true; a.pos.copy(a.sp); C.raidFx.down(a); dropAir(a); return;
       }
-      case 'hp': { if (N.me && e[1] === N.me.id) { emit('meHit', e[2], e[3]); return; } const a = ac.get(e[1]); if (a) a.hp = e[2]; return; }
+      case 'hp': { if (N.me && e[1] === N.me.id) { emit('meHit', e[2], e[3], e[4]); return; } const a = ac.get(e[1]); if (a) { a.hp = e[2]; if (e[4]) dmgUnpack(a, e[4]); } return; } // e[4] — зоны повреждений (sim/damage.js)
       case 'ua': { const [, id, k, x, z, roof, owner, yaw] = e; if (!SAM[k] || S.units.some((u) => u.id === id)) return; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.spotted = true; C.syncUnits(); emit('units'); return; } // засечён разведкой / по излучению — атакующему виден (samKnown)
       case 'ur': { const u = S.units.find((q) => q.id === e[1]); if (u) { S.removeUnit(u); C.syncUnits(); emit('units'); } return; }
       case 'um': { const u = S.units.find((q) => q.id === e[1]); if (u) { S.moveUnit(u, e[2], e[3], !!e[4]); u.cov = null; C.syncUnits(); emit('units'); } return; }
