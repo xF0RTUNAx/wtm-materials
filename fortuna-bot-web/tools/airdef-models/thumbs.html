@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Миниатюры единиц</title>
+<style>body{margin:0;background:#10140f;color:#e9e6dc;font:12px sans-serif}#g{display:flex;flex-wrap:wrap;gap:6px;padding:6px}#g figure{margin:0;width:240px}#g img{width:240px;height:135px;background:#1a2016;display:block}#g figcaption{padding:2px 0}</style></head>
+<body><div id="g"></div>
+<!-- Миниатюры для карточек прокачки (games/airdef/progress.js): модель игры как в бою (models.js / units-render.js) на прозрачном
+     фоне, 3/4 спереди. ?ids=air:su30,pvo:s400 (по умолчанию — всё дерево); window.__thumbs — { id: dataURL png }.
+     Сохраняет tools/airdef-headless/thumbs-bake.js → games/airdef/thumbs/<ветка>_<ключ>.webp -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261022i';
+import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261022i';
+import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261022i';
+import { TREE, NODE } from '../../games/airdef/progress.js?v=20261022i';
+const Q = new URLSearchParams(location.search), IDS = Q.get('ids') ? Q.get('ids').split(',') : TREE.map((n) => n.id);
+const W = 480, H = 270, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(2); r.setSize(W, H); // 960×540 — досье показывает крупно r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
+const unitMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x222222, shininess: 18 }), wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
+const BALL = { iskander: 'l_iskander', tochka: 'l_tochka', r17: 'l_scud', atacms: 'l_himars', shahed: 'd_shahed', uav_w: 'd_uav' }; // удар — его пусковая или сам дрон
+loadModels(new URL('../../games/airdef/', location.href).href, () => {});
+const wait = async (f, n = 150) => { for (let i = 0; i < n; i++) { const v = f(); if (v) return v; await new Promise((res) => setTimeout(res, 100)); } return null; };
+// комплекс — как в бою (main.js syncUnits): корпус, башни → качающиеся части → ракеты по слотам, антенна
+async function unitObj(key) {
+  wantUnit(key); const S = SAM[key], md = unitModel(key, S);
+  // ПЗРК: только пусковая труба и ракета рядом (без расчёта и ящиков)
+  if (await wait(() => launcherGlb(key), 30)) {
+    wantModel('msl_manpads'); await wait(() => unitMissileGlb(key), 60);
+    const g = new THREE.Group(), lg = launcherGlb(key), m = unitMissileGlb(key); g.add(lg);
+    if (m) { const b = new THREE.Box3().setFromObject(lg); m.missile.position.set(0, b.min.y - 0.12, 0); g.add(m.missile); }
+    return g;
+  }
+  await wait(() => unitModelGlb(key), 60); const gm = unitModelGlb(key), g = new THREE.Group();
+  const mesh = (geo, p) => p.add(new THREE.Mesh(geo, unitMat));
+  if (gm) g.add(gm.body); else if (md.body) mesh(md.body, g);
+  if (md.dish && !gm) { const d = new THREE.Mesh(md.dish, unitMat); d.position.set(md.dishXZ[0], md.dishY, md.dishXZ[1]); g.add(d); }
+  const tur = [];
+  if (md.LN) for (const Ld of md.LN.L) {
+    const tg = new THREE.Group(), cg = new THREE.Group(); tg.position.fromArray(Ld.tp); cg.position.fromArray(Ld.cp);
+    if (gm) { if (gm.turret) tg.add(gm.turret.clone()); if (gm.cradle) cg.add(gm.cradle.clone()); }
+    else { if (md.turret) mesh(md.turret, tg); const lg = launcherGlb(key); if (lg) { cg.add(lg); lg.position.set(Ld.slots[0][0], Ld.slots[0][1] - 0.06, Ld.slots[0][2]); } else if (md.cradle) mesh(md.cradle, cg); }
+    if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); q.add(gm.missile.clone()); if (gm.booster) q.add(gm.booster.clone()); q.position.fromArray(sp); cg.add(q); }
+    if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); }
+    tg.rotation.y = md.LN.yaw0 || 0; cg.rotation.x = md.LN.el ?? 0.35; tg.add(cg); g.add(tg); tur.push(tg); // как стоит в бою (sim/strike.js: lyaw, lel)
+  }
+  if (gm && gm.radar && tur.length) tur[0].add(gm.radar.clone());
+  return g;
+}
+async function objOf(n) {
+  if (n.branch === 'air') { wantModel(n.key); await wait(() => anyModel(n.key)); const pm = planeModel(n.side, 'strike', n.key); return pm && pm.obj; }
+  if (n.branch === 'pvo') return unitObj(n.key);
+  const k = n.item || n.key;
+  if (BALL[k]) { wantModel(BALL[k]); const o = await wait(() => anyModel(BALL[k])); if (o) return o; }
+  wantWeapon(k); await wait(() => !weaponPending(k), 60); const w = weaponMesh(k, AG[k], weaponGeo, wMat); setWings(w, 1); return w; // планирующие — с раскрытыми крыльями
+}
+// свет как в бою (city-render.js / drone/world.js): небо + солнце + отражения неба (PMREM), ACES с экспозицией 1,1
+r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1; r.physicallyCorrectLights = false;
+// материалы моделей — Phong (отражения неба им не нужны): мягкий «студийный» свет — небо сверху, светлая земля снизу, солнце, заполняющий и контровой
+const sc = new THREE.Scene(); sc.add(new THREE.HemisphereLight(0xe2ecff, 0x9a9584, 1.05)); const dl = new THREE.DirectionalLight(0xfff0d8, 1.9); dl.position.set(-4, 7, 5); sc.add(dl);
+{ const f = new THREE.DirectionalLight(0xdfe8ff, 0.6); f.position.set(5, 1, 3); sc.add(f); const b = new THREE.DirectionalLight(0xffffff, 0.45); b.position.set(0, 3, -6); sc.add(b); const u = new THREE.DirectionalLight(0xe8e2d0, 0.35); u.position.set(1, -4, 3); sc.add(u); }
+{ const es = new THREE.Scene(), g = new THREE.SphereGeometry(50, 32, 16), col = [], pos = g.attributes.position;
+  for (let i = 0; i < pos.count; i++) { const y = pos.getY(i) / 50, c = new THREE.Color(y > 0 ? 0x9cc2e8 : 0x5d6450).lerp(new THREE.Color(0xdfe6ea), Math.max(0, 1 - Math.abs(y) * 3)); col.push(c.r, c.g, c.b); }
+  g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); es.add(new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.BackSide })));
+  sc.environment = new THREE.PMREMGenerator(r).fromScene(es, 0.04).texture; }
+const out = {}, grid = document.getElementById('g');
+for (const id of IDS) {
+  const n = NODE[id]; if (!n) continue;
+  let o = null; try { o = await objOf(n); } catch (e) { console.warn(id, e); }
+  if (!o || !o.isObject3D) { console.warn('нет модели', id); continue; }
+  // запечённое затенение в стыках (AO) — вдвое мягче: снизу машину в карточке видно, в бою — почти нет
+  o.traverse((q) => { const c = q.isMesh && q.material && q.material.vertexColors && q.geometry.attributes.color; if (!c || c.itemSize !== 4 || q.geometry.userData.aoSoft) return; // AO моделей — байты RGBA; у фигур из кода в вершинах настоящий цвет
+    const g = q.geometry = q.geometry.clone(), a = g.attributes.color, arr = new Float32Array(a.count * a.itemSize);
+    for (let i = 0; i < a.count; i++) for (let j = 0; j < a.itemSize; j++) { const v = a.getComponent ? a.getComponent(i, j) : a.array[i * a.itemSize + j] / (a.normalized ? 255 : 1); arr[i * a.itemSize + j] = j < 3 ? 0.5 + 0.5 * v : v; }
+    g.setAttribute('color', new THREE.BufferAttribute(arr, a.itemSize)); g.userData.aoSoft = true; });
+  o.traverse((q) => { if (q.isLOD) { q.autoUpdate = false; q.levels.forEach((l, i) => { l.object.visible = i === 0; }); } }); // только подробная модель
+  if (Q.has('dbg')) { const L = []; o.traverse((q) => { if (q.isMesh) { const ms = [].concat(q.material); q.geometry.computeBoundingBox(); const bb = q.geometry.boundingBox; L.push([q.name, 'y ' + bb.min.y.toFixed(2) + '…' + bb.max.y.toFixed(2) + ' z ' + bb.min.z.toFixed(2) + '…' + bb.max.z.toFixed(2) + ' x ' + bb.min.x.toFixed(2) + '…' + bb.max.x.toFixed(2), ms.map((m) => [m.type, m.name, m.color && m.color.getHexString(), m.map ? (m.map.image ? (m.map.image.width + 'x' + m.map.image.height) : 'нет картинки') : '-', m.metalness, m.roughness, m.transparent, m.side, m.emissive && m.emissive.getHexString()].join('|')).join(' ; '), q.geometry.attributes.position.count]); } }); (window.__dbg = window.__dbg || {})[id] = L; }
+  sc.add(o); o.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(o), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3());
+  // самолёт — сверху спереди слева, машина — 3/4, оружие — почти сбоку
+  const [az, el] = n.branch === 'air' ? [0.75, 0.42] : n.branch === 'pvo' || BALL[n.item || n.key] ? [0.85, 0.28] : [1.25, 0.18];
+  const D = sz.length() * 2.15, cam = new THREE.PerspectiveCamera(24, W / H, D * 0.3, D * 3), dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
+  cam.position.copy(c).add(dir.multiplyScalar(D)); cam.lookAt(c); cam.updateMatrixWorld(true); // глубина — только вокруг модели (иначе мелкие детали «мерцают» друг сквозь друга)
+  // вписать по силуэту (вершины на экране), по центру кадра — все миниатюры одного масштаба кадра
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; const V = new THREE.Vector3();
+  o.traverse((m) => { if (!m.isMesh || !m.visible) return; const a = m.geometry.attributes.position, st = Math.max(1, Math.floor(a.count / 4000));
+    for (let i = 0; i < a.count; i += st) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld).project(cam); x0 = Math.min(x0, V.x); x1 = Math.max(x1, V.x); y0 = Math.min(y0, V.y); y1 = Math.max(y1, V.y); } });
+  const z = Math.min(1.74 / Math.max(0.01, x1 - x0), 1.64 / Math.max(0.01, y1 - y0)); cam.zoom = z; cam.updateProjectionMatrix();
+  cam.setViewOffset(W, H, (x0 + x1) / 2 * z * W / 2, -(y0 + y1) / 2 * z * H / 2, W, H);
+  r.render(sc, cam); out[id] = r.domElement.toDataURL('image/webp', 0.92); sc.remove(o);
+  const f = document.createElement('figure'); f.innerHTML = `<img src="${out[id]}"><figcaption>${n.short} · ${id}</figcaption>`; grid.appendChild(f);
+}
+window.__thumbs = out; window.__ok = 1;
+</script></body></html>

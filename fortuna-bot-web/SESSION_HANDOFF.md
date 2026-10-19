@@ -658,3 +658,50 @@
 - Берег реки: у кромки (≈12 м) вода — цвета мокрого песка, без отражения неба (голубой каёмки нет).
 - Оторванная консоль: её пилоны выбывают до конца вылета (из st и st0, n0, res) — ни перезарядки, ни пополнения в зоне и у
   точки вылета; ИИ (raid.js loseCons) теряет ~¼ груза каждого вида. Пополнение у точки вылета: цикл перезарядки — пока есть запас.
+- Прокачка (план AIRDEF_PROGRESSION.md, ещё не в игре): games/airdef/progress.js — дерево из арсенала (89 единиц, 16 стартовых),
+  линии PARENT, паритет, цены, награда за бой, игровые ТТХ карточек; стенд tools/airdef-headless/progress-stand.js;
+  миниатюры games/airdef/thumbs (thumbs-bake.js, нужен сервер 8935); макет дерева tools/airdef-ui/progress-mock.html.
+  Иконки опыта/серебра — ICON.xp / ICON.silver (game-icons: Lorc, Delapouite). Х-59МК2 — модель Х-59М (models.js w_kh59m).
+- Замены моделей 2026-10-19 (8 были из чужих игр — см. AIRDEF_PROGRESSION.md §12): e_su24 (manilov.ap, fwd + снятие подвесок
+  автора), m163 (Gorgytz: STL — perTri, группы «часть#краска», hinge/tp/cp → launchers.js), w_gbu31 / w_kh25ml / w_kh59m / w_kh58
+  (новая) / w_jassm (24 тыс.), t_kc10 (KC-135 удалён). prepare.js: groups могут вернуть «часть#краска» — цвет из cfg.colors по
+  «материал#краска». После prepare — ao.js и GLB_V в models.js. Правила (groups) — в осях ДО центровки (у M163 по длине −2,32,
+  у KC-10 по x +4,5). У оружия в игре нос — вправо на миниатюре (−Z); вид «top» из --views для оружия не годится для проверки носа.
+  models.js: META.drop / recolor / bright (Storm Shadow без пилона, Maverick, С-125 светлее).
+- Вторая партия моделей 2026-10-19 (см. AIRDEF_PROGRESSION.md §12): ПВО zsu234/strela10/avenger (сняты из NO_MODEL) + chaparral
+  (новый SAM, launchers.js, DEFENSE запад I–II); самолёты e_tornado/e_f111/e_mig23/e_mig27/e_tu22m2/e_a10/e_f15e — SPECS + flight-fit
+  (flight-stand.js), LOADOUTS, META (подвески, сопла), PLANES; w_jsow (RickSlash), w_fab500 (М-54), kh101 (AG, THREAT, MULTI восток IV).
+  Инструменты: tools/airdef-models/stl2glb.js (STL → glb, @dx,dy,dz — сдвиг детали), scratchpad sym.js — ось симметрии самолёта
+  (fwd для prepare). У самолётов manilov.ap модель повёрнута в XZ — fwd; у F-15E — 3D-поворот (axes) и разворот носа.
+  Модели для печати / без текстур — matte: true в META и свои colors. Сервер использует arsenal.js → после деплоя update.ps1.
+
+## 2026-10-19 (вечер): третья партия самолётов и камуфляж шейдером
+- 13 самолётов manilov.ap (CC BY): МиГ-21бис, МиГ-25БМ, Су-7БМК, Ту-16 (восток); F-100F, F-5E, F-117A, Jaguar, Buccaneer,
+  Harrier, Mirage 2000D, Rafale, B-2A (запад). prepare.js: шасси/подвески автора снимает `strip(ax, yF, dW, yW, smax, keep)`;
+  у F-117 и B-2 нос был развёрнут — fwd перевёрнут. META (точки подвески — лучи по треугольникам, scratchpad st3.js),
+  SPECS + flight-fit, LOADOUTS — в КОНЦЕ списков эпох (номера старых подвесок не меняются), PLANES, PAIR/PARENT.
+- progress.js: Storm Shadow теперь и оружие Rafale → узел удара `strike:storm_s` (как jassm_s); treeLayout: потомок того же
+  ранга — строкой ниже (раньше налезали). progress-stand: всё прошло, 116 единиц.
+- Камуфляж без текстур: prepare.js красит «#camo» основным цветом, узор рисует шейдер models.js (CAMO, META.camo
+  {scheme, size, tex}) — пятна по координатам точки, а не по треугольникам. tex: true — поверх зелёной краски текстуры
+  («Стрела-1», «Тунгуска», «Панцирь»; прежний CAMO3 по развёртке убран). city-render snowify сохраняет ключ программы.
+- Ждёт: ФАБ-250/ОФАБ-250/ФАБ-100 (МиГ-21 и Су-7Б пока с ФАБ-500), US Weapon Pack (GBU-24, GBU-57 для B-2), B-2 как носитель «Волны».
+
+## 2026-10-19 (ночь): четвёртая партия, новая «Шилка», УМПК без сжатия, винты Ту-95
+- Самолёты: Як-38М, Ил-28, Ту-22, Ту-95МС, Су-27СМ, Су-35С (восток); Hunter, Super Étendard, Mirage F1 (камуфляж шейдером, схема fr),
+  F/A-18C, EA-18G (запад). В дерево вошли машины из игры: Ту-22М3, Ту-160, B-52H, B-1B, Typhoon (точки подвески — в отсеках / под крылом).
+  F-16D и F/A-18E ушли из ранга I: их подвески эпохи I (те же номера) — у Mirage F1 и Hunter, эпохи II у F/A-18E — у F/A-18C; START.air: e_mirage_f1 вместо f16.
+- Оружие: ФАБ-100, ФАБ-250, ОФАБ-250, ФАБ-1000 (бомбы matte), GBU-24, GBU-57 (у B-2). Х-55 / Х-101 стали и оружием Ту-95 / Ту-160 —
+  узлы «Волны» переименованы в strike:kh55_s / kh101_s (как jassm_s, storm_s), миниатюры тоже.
+- ПВО: ЗУ-23-2 (без РЛС, оптика), «Бук» (azlan, колёсный; снят из NO_MODEL), Phalanx C-RAM (LNCH fp — только вид оператора, eye — камера у установки).
+  «Шилка» заменена на voron335 (у Scout имена материалов как в War Thunder). У Gepard (Scout) — то же, ждёт замены; хеш-имена текстур у «Тор-М1» и Renault TRM (42manako) — под вопросом.
+- УМПК: без упрощения (238 тыс.), металл — крылья, узел крепления, хвостовой модуль, бандажи.
+- Ту-95: лопасти — части prop<ступица>_<ряд> (models.js: ось по ступице, userData.spin), крутит spinProps (air.js игрок, main.js ИИ как spinRotors);
+  звук — tprop (drone/audio.js: слой E.tp* для игрока, голос 'tprop' в spatial; SPECS.prop). Регресс «Летки» совпадает.
+- glb.js: примитивы не-треугольники (линии) пропускаются.
+
+## 2026-10-20: прокачка — рабочая версия (не применена к Supabase, не задеплоена)
+- Порядок выкладки: 1) `supabase db query --linked --workdir . < sql/021_airdef_progress.sql`; 2) deploy airdef-progress,
+  airdef-solo, airdef-claim, mp-ticket (`--no-verify-jwt`); 3) пуш статики («деплой»); 4) update.ps1 на ноутбуке (game-server).
+- После правки progress.js / arsenal.js / flight*.js — `deno run -A tools/airdef-headless/sync-shared.js` (тест сверяет копии).
+- Gepard: скачан diablomj `~/Downloads/flakepanzer_gepard_model.glb` — заменить позже (у Scout имена как в War Thunder).

@@ -5,7 +5,7 @@
 // (как у процедурных: L3 L2 L1 Ф1 Ф2 R1 R2 R3; py — высота дорисованного пилона, если у модели его нет), сопла и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261022e';
+import { CREDITS } from './models/credits.js?v=20261022i';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -24,8 +24,74 @@ const META = {
     nozzles: [V(0, -0.9, 6.5)], nr: 0.55, pod: V(0.75, -1.62, -0.5) },
   // ── свой самолёт у каждой подвески (2026-10-12); lazy — грузится, когда нужен (выбран в подвеске или летит в налёте),
   // pod: null — прицельная система встроенная (контейнер не вешается); internal — оружие во внутренних отсеках (не видно до пуска)
-  e_su24: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.8, -1.39, 2.19), V(-2.1, -1.23, 0.8), V(-0.49, -2.48, 3.21), V(-0.35, -2.48, -0.4)]),
-    nozzles: [V(-0.68, -1.28, 10.1), V(0.68, -1.28, 10.1)], nr: 0.32, pod: null }, // Су-24М — 42manako («Кайра» встроена)
+  e_su24: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.8, -1.13, 3.4, 0.3), V(-2.08, -1.39, 1.87), V(-0.5, -2.1, 3.0), V(-0.4, -2.12, -0.4)]),
+    nozzles: [V(-0.6, -1.29, 9.86), V(0.6, -1.29, 9.86)], nr: 0.32, pod: null }, // Су-24М — manilov.ap («Кайра» встроена; пилоны консолей дорисованы)
+  // ── 2026-10-19: manilov.ap (Tornado, F-111, МиГ-23, МиГ-27, Ту-22М2), Immersive3D (A-10), Spark_Customs (F-15E) ──
+  e_tornado: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-5.41, -1.68, 1.59), V(-2.95, -1.88, 0.52), V(-0.75, -2.27, -1.2), V(-0.75, -2.33, 2.4)]),
+    nozzles: [V(-0.59, -1.19, 6.34), V(0.59, -1.19, 6.34)], nr: 0.25, pod: V(0, -2.35, 0.5) }, // Tornado IDS
+  e_f111: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.42, -1.43, 2.07), V(-3.03, -1.35, 1.62), V(-0.6, -1.99, -0.5), V(-0.6, -1.99, 1.5)]),
+    nozzles: [V(-0.76, -1.1, 10.12), V(0.76, -1.1, 10.12)], nr: 0.3, pod: null }, // F-111F («Пэйв Тэк» во внутреннем отсеке)
+  e_mig23: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-1.44, -0.6, 0.34), V(-0.45, -1.43, -0.6), V(-0.45, -1.28, 2.2)]),
+    nozzles: [V(0, -0.66, 7.57)], nr: 0.35, pod: null }, // МиГ-23БН
+  e_mig27: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-1.53, -0.61, 0.62), V(-0.45, -1.4, -0.6), V(-0.45, -1.46, 2.2)]),
+    nozzles: [V(0, -0.65, 7.43)], nr: 0.33, pod: null }, // МиГ-27К («Кайра» встроена)
+  e_tu22m2: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-6.34, -3.89, 5.06), V(-1.27, -2.71, -3.2), V(-1.27, -2.71, -0.5), V(-1.27, -2.71, 2.2)]),
+    nozzles: [V(-0.81, -1.24, 19.09), V(0.81, -1.24, 19.09)], nr: 0.4, pod: null }, // Ту-22М2
+  e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-6.25, -0.4, -0.09), V(-5.1, -0.52, -0.04), V(-3.8, -0.68, -0.15), V(-2.94, -0.14, -0.06)]),
+    nozzles: [V(-1.46, 1.1, 4.99), V(1.46, 1.1, 4.99)], nr: 0.25, pod: V(2.2, -0.5, -0.1) }, // A-10A
+  e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-2.93, -1.18, 0.46), V(-1.75, -1.59, -1.5), V(-1.75, -1.59, 0.3), V(-1.75, -1.05, 1.8)]),
+    nozzles: [V(-0.68, -1.12, 8.31), V(0.68, -1.12, 8.31)], nr: 0.3, pod: V(0.9, -1.9, -2.5), matte: true }, // F-15E (LANTIRN под воздухозаборником)
+  // ── 2026-10-19, третья партия manilov.ap: точки подвески — по низу крыла (лучи по треугольникам) и пилонам автора ──
+  e_mig21n: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.76, -1.14, 2.1, 0.3), V(-1.95, -1.08, 0.7), V(-0.45, -1.3, 2.2, 0.2), V(-0.3, -1.3, 0.2, 0.2)]),
+    nozzles: [V(0, -0.6, 6.03)], nr: 0.4, pod: null }, // МиГ-21бис
+  e_mig25: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-3.98, -0.95, 4.4, 0.15), V(-2.9, -0.95, 3.6, 0.15), V(-0.6, -2.0, 0.2, 0.15), V(-0.6, -2.0, 2.4, 0.15)]),
+    nozzles: [V(-0.67, -1.11, 8.34), V(0.67, -1.11, 8.34)], nr: 0.5, pod: null }, // МиГ-25БМ
+  e_su7b: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.55, -1.6, 2.4, 0.3), V(-1.89, -1.58, 1.3, 0.3), V(-0.45, -1.62, -0.6, 0.22), V(-0.45, -1.65, 1.6, 0.22)]),
+    nozzles: [V(0, -0.92, 7.11)], nr: 0.42, pod: null }, // Су-7Б
+  e_tu16: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-7.16, -3.55, 0.2, 0.35), V(-0.9, -3.9, -3.0, 0.3), V(-0.9, -3.9, -0.5, 0.3), V(-0.9, -3.9, 2.0, 0.3)]),
+    nozzles: [V(-1.15, -2.85, 5.6), V(1.15, -2.85, 5.6)], nr: 0.45, pod: null }, // Ту-16
+  e_f100: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.58, -2.02, 1.75, 0.3), V(-2.66, -2.04, 1.1, 0.3), V(-1.85, -2.05, 0.6, 0.3), V(-0.45, -2.25, 0.8, 0.2)]),
+    nozzles: [V(-0.18, -1.19, 6.44)], nr: 0.38, pod: null }, // F-100D
+  e_f5: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.6, -1.57, 2.25, 0.3), V(-1.6, -1.55, 1.6, 0.3), V(-0.35, -1.55, -0.6, 0.22), V(-0.35, -1.6, 1.4, 0.22)]),
+    nozzles: [V(-0.27, -0.95, 7.2), V(0.27, -0.95, 7.2)], nr: 0.22, pod: null }, // F-5E
+  e_f117: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.6, -1.3, -1.5), V(-0.6, -1.3, -0.3), V(-0.6, -1.3, 0.9), V(-0.6, -1.3, 2.1)]),
+    nozzles: [V(-0.9, -0.4, 6.8), V(0.9, -0.4, 6.8)], nr: 0.12, pod: null, bright: 1.3 }, // F-117A (IRADS встроена, бомбы — во внутреннем отсеке)
+  e_jaguar: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.73, -0.85, 2.85, 0.35), V(-2.03, -0.82, 2.36, 0.35), V(-0.45, -1.75, -0.5, 0.22), V(-0.45, -1.78, 1.5, 0.22)]),
+    nozzles: [V(-0.42, -0.8, 7.6), V(0.42, -0.8, 7.6)], nr: 0.3, pod: null }, // Jaguar GR.1
+  e_buccaneer: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.96, -1.5, 0.9, 0.3), V(-3.4, -1.52, 0.6, 0.3), V(-2.3, -1.55, 0.1, 0.3), V(-0.45, -2.25, 0.5, 0.15)]),
+    nozzles: [V(-0.95, -1.15, 3.6), V(0.95, -1.15, 3.6)], nr: 0.3, pod: V(0.6, -2.3, -1.0) }, // Buccaneer S.2B («Пэйв Спайк»)
+  e_harrier: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.92, -1.2, 0.75), V(-1.93, -0.95, 0.35), V(-0.3, -1.75, -1.5, 0.15), V(-0.3, -1.75, 0.5, 0.15)]),
+    nozzles: [V(-1.0, -1.2, 0.9), V(1.0, -1.2, 0.9)], nr: 0.2, pod: null }, // Harrier GR.3
+  e_mirage: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.8, -2.0, 3.1, 0.28), V(-2.08, -1.98, 2.45, 0.28), V(-0.6, -2.05, -0.5, 0.2), V(-0.6, -2.05, 2.0, 0.2)]),
+    nozzles: [V(0, -1.11, 7.18)], nr: 0.42, pod: V(0, -2.15, 0.6) }, // Mirage 2000D
+  e_rafale: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.75, -1.85, 3.6), V(-2.6, -1.85, 2.6, 0.3), V(-1.6, -1.85, 1.6, 0.3), V(-0.6, -2.15, 1.0, 0.15)]),
+    nozzles: [V(-0.72, -1.24, 6.56), V(0.72, -1.24, 6.56)], nr: 0.3, pod: V(0.6, -2.2, -1.0) }, // Rafale («Дамокл» под воздухозаборником)
+  e_b2: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-3, -1.0, -1.5), V(-3, -1.0, 0.5), V(-2, -1.0, -1.5), V(-2, -1.0, 0.5)]),
+    nozzles: [V(-3.2, 0.2, 6.0), V(3.2, 0.2, 6.0)], nr: 0.1, pod: null }, // B-2A (бомбы — во внутренних отсеках)
+  // ── 2026-10-19, четвёртая партия: manilov.ap (Як-38, Ил-28, Ту-22, Ту-95, Hunter), andertan (Су-27, Су-35), helijah (Super Étendard),
+  // Civorsky (Mirage F1), Rhine_Lab_Muelsyse (F/A-18C, EA-18G); бомбардировщики с отсеком — internal, точки — в отсеке
+  e_yak38: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.45, -1.42, 2.0, 0.3), V(-1.95, -1.4, 1.25), V(-0.45, -1.85, 0.3, 0.15), V(-0.45, -1.85, 2.3, 0.15)]),
+    nozzles: [V(-0.9, -1.1, 1.0), V(0.9, -1.1, 1.0)], nr: 0.3, pod: null }, // Як-38М (поворотные сопла по бокам)
+  e_il28: { side: 'east', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.4, -1.9, -2.5), V(-0.4, -1.9, -1.0), V(-0.4, -1.9, 0.5), V(-0.4, -1.9, 2.0)]),
+    nozzles: [V(-3.36, -1.6, 3.7), V(3.36, -1.6, 3.7)], nr: 0.35, pod: null }, // Ил-28 (бомбы — в отсеке)
+  e_tu22: { side: 'east', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.6, -2.85, -3.0), V(-0.6, -2.85, -1.0), V(-0.6, -2.85, 1.0), V(-0.6, -2.85, 3.0)]),
+    nozzles: [V(-1.0, 0.2, 19.6), V(1.0, 0.2, 19.6)], nr: 0.55, pod: null }, // Ту-22 (двигатели над хвостом)
+  e_tu95: { side: 'east', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.7, -4.6, -4.0), V(-0.7, -4.6, -2.0), V(-0.7, -4.6, 0.0), V(-0.7, -4.6, 2.0)]),
+    nozzles: [], nr: 0.1, pod: null }, // Ту-95МС (турбовинтовой — пламени нет; ракеты — в отсеке)
+  e_su27: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.06, -1.31, 3.6, 0.3), V(-3.98, -1.31, 3.0, 0.3), V(-2.89, -1.31, 2.3, 0.3), V(-0.6, -1.75, 1.0, 0.2)]),
+    nozzles: [V(-0.62, -1.15, 9.3), V(0.62, -1.15, 9.3)], nr: 0.42, pod: null }, // Су-27СМ
+  e_su35: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.27, -1.03, 3.7, 0.3), V(-4.14, -1.02, 3.05, 0.3), V(-3.01, -1.03, 2.36, 0.3), V(-0.6, -1.7, 1.0, 0.2)]),
+    nozzles: [V(-0.62, -1.1, 9.3), V(0.62, -1.1, 9.3)], nr: 0.45, pod: null }, // Су-35С
+  e_hunter: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.3, -1.42, 0.55, 0.3), V(-2.75, -1.44, -0.45), V(-0.45, -1.5, -0.5, 0.15), V(-0.45, -1.5, 1.5, 0.15)]),
+    nozzles: [V(0, -0.81, 6.76)], nr: 0.35, pod: null }, // Hunter FGA.9
+  e_etendard: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.64, -1.49, 1.85, 0.3), V(-1.92, -1.48, 1.23, 0.3), V(-0.4, -1.6, 0.0, 0.17), V(-0.4, -1.6, 1.8, 0.17)]),
+    nozzles: [V(0, -0.6, 6.9)], nr: 0.35, pod: V(0.4, -1.7, -1.0) }, // Super Étendard (ATLIS под фюзеляжем)
+  e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
+    nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
+  e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.3, -1.25, 2.7, 0.3), V(-3.42, -1.54, 1.36), V(-2.24, -1.47, 1.16), V(-0.6, -1.6, 1.0, 0.15)]),
+    nozzles: [V(-0.49, -0.98, 8.0), V(0.49, -0.98, 8.0)], nr: 0.42, pod: V(0.75, -1.6, -1.2) }, // F/A-18C (AN/AAS-38 у воздухозаборника)
+  e_ea18g: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-5.08, -0.97, 3.11), V(-4.31, -1.28, 2.46), V(-2.73, -1.05, 2.26, 0.3), V(-0.6, -1.85, 1.0, 0.15)]),
+    nozzles: [V(-0.48, -0.81, 8.18), V(0.48, -0.81, 8.18)], nr: 0.42, pod: null }, // EA-18G Growler
   e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.37, -1.11, 0.67), V(-3.59, -1.09, 0.4), V(-2.81, -1.09, 0.2), V(-2.03, -1.07, -0.04)]),
     nozzles: [V(-0.88, -1.4, 3.85), V(0.88, -1.4, 3.85)], nr: 0.2, pod: null }, // Су-25 — Immersive3D («Шквал» у Су-25Т встроен)
   e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.21, -1.51, 4.94), V(-4.63, -1.5, 3.8), V(-3.55, -1.72, 3.21), V(-1.33, -2.42, 2.5)]),
@@ -51,38 +117,48 @@ const META = {
   w_kh555: { weapon: ['kh555', 'kh55', 'kh55d'], lazy: true, stations: [] }, // Х-555 (и вид Х-55) — Jeyhun1985
   w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // «Калибр» — mmickel
   w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM — mahmadsaleem11111
-  w_storm: { weapon: 'storm', lazy: true, stations: [] }, // Storm Shadow — с Су-24 42manako
+  w_storm: { weapon: 'storm', lazy: true, stations: [], drop: ['ss_misile.002', 'ss_misile.005'] }, // Storm Shadow — с Су-24 42manako; без переходника пилона (drop)
   w_atacms: { weapon: 'atacms', lazy: true, stations: [] }, // ракета M142 HIMARS — Denis.Cherkasov1
   d_shahed: { ev: true, lazy: true, stations: [] }, // «Шахед-136» — faintastic (винт — группа prop)
   d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
-  e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.62 }, // Ту-160 — KOG_THORNS; носитель «Мульти-волны»
-  e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
-  e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [], nr: 0.4 }, // B-52H — bohmerang; носитель «Мульти-волны» (без форсажа — пламени нет)
-  e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: [], nozzles: [V(-0.54, -0.63, 8.6), V(0.54, -0.63, 8.6)], nr: 0.38 }, // Eurofighter Typhoon — andertan; носитель Storm Shadow
+  e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.62 }, // Ту-160 — KOG_THORNS (с 2026-10-19 и в «Авиации»: точки — в отсеках); носитель «Мульти-волны»
+  e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
+  e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -5.2, -3.0), V(-0.6, -5.2, -1.0), V(-0.6, -5.2, 1.0), V(-0.6, -5.2, 3.0)]), nozzles: [], nr: 0.4 }, // B-52H — bohmerang; носитель «Мульти-волны» (без форсажа — пламени нет)
+  e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-3.88, -1.93, 3.0, 0.3), V(-2.77, -1.91, 2.24, 0.3), V(-1.94, -1.85, 1.74, 0.3), V(-0.6, -2.1, 1.0, 0.15)]), nozzles: [V(-0.54, -0.63, 8.6), V(0.54, -0.63, 8.6)], nr: 0.38 }, // Eurofighter Typhoon — andertan; носитель Storm Shadow
   w_tbmdec: { lazy: true, stations: [] }, // ложная цель «Искандера» — головная часть его ракеты
   w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // «Кинжал» — ракета 9М723 с пусковой «Искандера» (42manako), 7,2 м, светло-серая
   w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM — по UGM-84 Harpoon (FeriseCAT)
-  w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW — набор NETRUNNER_pl
+  w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW — RickSlash
+  w_kh101: { weapon: 'kh101', lazy: true, stations: [] },
+  w_gbu10: { weapon: 'gbu10', stations: [] }, // GBU-10 — PhilCiborowski (Thingiverse)
+  w_ecm: { weapon: ['ecm_w', 'ecm_e'], matte: true, stations: [] }, // станция помех ELTA 8222 — Original_linny (Thingiverse); у востока пока она же // Х-101 — HappyBattleSheep (Thingiverse)
   l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» — 42manako (ракеты на старте — tbm, tbm2)
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — 42manako (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
   l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS — Denis.Cherkasov1
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II с F-16D
-  w_fab500: { weapon: 'fab500', stations: [] }, // ФАБ-500М-62 — Jeyhun1985 (модель с УМПК, комплект снят)
+  w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-54 — 4ikalka
+  w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 — 4ikalka
+  w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 — 4ikalka
+  w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 — CATholic
+  w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 — United4192
+  w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 — Rhine_Lab_Muelsyse (US Weapon Pack)
+  w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 MOP — Rhine_Lab_Muelsyse (US Weapon Pack)
   w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29 — Russian weapon pack, Rhine_Lab_Muelsyse
   w_kh31p: { weapon: 'kh31p', stations: [] },
-  w_kh59m: { weapon: 'kh59m', lazy: true, stations: [] }, // Х-59М — из «Su-30MK2 with Kh-59M», Jeyhun1985 // Х-31 — Russian weapon pack
-  w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-38МТ — Jeyhun1985 (вместо Х-25МЛ: та же схема)
-  w_agm65b: { weapon: 'agm65b', stations: [] }, // AGM-65 — набор NETRUNNER_pl
+  w_kh59m: { weapon: ['kh59m', 'kh59mk2'], lazy: true, stations: [] }, // Х-31 (L_elo) в размер Х-59М — и для Х-59МК2 (Mark 2026-10-19; прежняя — из War Thunder)
+  w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)
+  w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У — Narni_Tchereskov
+  w_agm65b: { weapon: 'agm65b', stations: [], recolor: { GREEN: 0x252912, SILVER: 0x6e6e6e, BROWN: 0x2a1a0e, BLACK: 0x0c0c0c } }, // AGM-65 — набор NETRUNNER_pl; у авторов цвета почти чёрные (recolor, линейные)
   w_mk82: { weapon: 'mk82', stations: [] }, // Mk 83 → размер Mk 82 — набор NETRUNNER_pl
   w_jassm: { weapon: 'jassm', stations: [] }, // AGM-158 JASSM
   w_agm88: { weapon: ['agm88', 'aargm'], stations: [] }, // AGM-88 HARM (с тележки) — и для AARGM
   w_mald: { weapon: ['mald', 'quail'], stations: [] }, // ADM-160 MALD («AIM-160A Screamer»)
   w_decoy_e: { weapon: 'decoy_e', stations: [] }, // Harpy — ложная цель
   w_gbu39: { weapon: ['gbu39', 'sdb'], wings: 'fold', stations: [] }, // GBU-39 SDB (и для «Мульти-волны»)
-  w_gbu31: { weapon: 'gbu31', stations: [] }, // Mk 84 с хвостом (GBU-24 с F-111 без головки) — как JDAM
+  w_gbu31: { weapon: 'gbu31', stations: [] }, // Mk 82 JDAM (FeriseCAT) в размер GBU-31
   w_pod: { pod: true, stations: [] }, // AN/AAQ-28 LITENING — прицельный контейнер
   // постройки военных объектов (целей) — расставляются по OBJ_DIMS из city.js
   obj_tanks: { obj: true, stations: [] }, obj_tank4: { obj: true, stations: [] }, obj_rtank: { obj: true, stations: [] }, obj_hangar: { obj: true, stations: [] },
@@ -105,27 +181,34 @@ const META = {
   mp_stinger: { launcher: ['redeye', 'stinger'], stations: [] },
   // зенитные комплексы: корпус / башня / пакет (оси — LNCH в launchers.js, их печатает prepare.js)
   bukm3: { units: ['bukm3'], stations: [] }, // «Бук-М3» — Jeyhun1985
+  buk: { units: ['buk'], stations: [], matte: true }, // «Бук» (колёсный) — azlan
+  zu23: { units: ['zu23'], stations: [], matte: true }, // ЗУ-23-2 — LuckySkink9661
+  phalanx: { units: ['phalanx'], stations: [] }, // Phalanx — DenisGLabrecque
   // комплексы с ракетами на направляющих: ракета модели — в слотах и в полёте (у С-75 и С-125 — с отделяемым ускорителем)
   s75: { units: ['s75'], stations: [] }, // С-75 «Двина» — manyakasia
-  s125: { units: ['s125'], stations: [] }, // С-125 «Нева» — teanid
+  s125: { units: ['s125'], stations: [], bright: 1.9 }, // С-125 «Нева» — teanid; текстура у автора очень тёмная (bright — множитель цвета)
   kub: { units: ['kub'], stations: [] }, // 2К12 «Куб» — UltraKill
   hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk — Dominik Biały
-  m163: { units: ['m163'], stations: [] }, // M163 VADS — 42manako
-  gepard: { units: ['gepard'], stations: [] },
-  roland: { units: ['roland'], stations: [] },
-  tunguska: { units: ['tunguska'], stations: [] },
+  m163: { units: ['m163'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.3 } }, // M163 VADS — Gorgytz
+  zsu234: { units: ['zsu234'], matte: true, stations: [] }, // ЗСУ-23-4М «Шилка» — voron335
+  strela10: { units: ['strela10'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Стрела-10» на МТ-ЛБ — ScurvyWoof
+  avenger: { units: ['avenger'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.1 } }, // AN/TWQ-1 Avenger — KillCaptureDestroy
+  chaparral: { units: ['chaparral'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.2 } }, // MIM-72 Chaparral — TankLord (Thingiverse)
+  gepard: { units: ['gepard'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
+  roland: { units: ['roland'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
+  tunguska: { units: ['tunguska'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5, tex: true } },
   skyguard: { units: ['skyguard'], stations: [] },
-  rapier: { units: ['rapier'], stations: [] }, // Tracked Rapier — stealth86 (перекрашен, пусковая развёрнута в рабочее положение) // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
+  rapier: { units: ['rapier'], matte: true, stations: [], camo: { scheme: 'uk', size: 1.3 } }, // Tracked Rapier — stealth86 (перекрашен, пусковая развёрнута в рабочее положение) // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
   sampt: { units: ['sampt'], stations: [] }, // SAMP/T — Chenzoss
-  khordad: { units: ['khordad'], stations: [] }, // Sevom Khordad — 42manako (перекрашен, у запада — трофейный)
+  khordad: { units: ['khordad'], matte: true, stations: [] }, // Sevom Khordad — 42manako (перекрашен, у запада — трофейный)
   msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 — по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder — ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
   nasams: { units: ['nasams'], stations: [] }, // NASAMS 1 — пусковая
   ew_e: { units: ['gpsjam'], stations: [] }, // станция РЭБ (восток) — машина с РЛС IBIS-150
   ew_w: { units: ['gpsjamw'], stations: [] }, // станция РЭБ (запад) — радарная машина Renault TRM
-  strela1: { units: ['strela1'], stations: [] }, // «Стрела-1» — 42manako
+  strela1: { units: ['strela1'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.4, tex: true } }, // «Стрела-1» — 42manako
   osa: { units: ['osa'], stations: [] }, // «Оса-АКМ» — Jeyhun1985
   tor: { units: ['tor', 'torm2'], stations: [] }, // «Тор-М1» — 42manako
-  pantsir: { units: ['pantsir'], stations: [] }, // «Панцирь-С2» — 42manako
+  pantsir: { units: ['pantsir'], stations: [], camo: { scheme: 'soviet', size: 1.6, tex: true } }, // «Панцирь-С2» — 42manako
   s400: { units: ['s400', 's300'], matte: true, stations: [] }, // пусковая С-400 — Chenzoss (и для С-300: та же схема, 4 контейнера)
   patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
 };
@@ -138,14 +221,16 @@ const TEX_CREDIT = { title: 'Текстуры земли, дорог, крыш �
 const PH_CREDIT = { title: 'Текстуры асфальта, щебня, скал и пашни; панорамы неба', author: 'Poly Haven', url: 'https://polyhaven.com', license: 'CC0', files: ['tex/p_*.jpg', 'sky/*.jpg'] };
 // взрывы и пламя (fx/*.png): огненный шар с дымом — ohyhei; вспышка с кольцом и пламя — Explosion FX Free (heyheythere)
 const FX_CREDITS = [
-  { title: 'Иконки управления', author: 'Delapouite (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },
+  { title: 'Иконки управления', author: 'Delapouite, Lorc, Skoll (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },
   { title: 'Explosion sprite sheets', author: 'ohyhei', url: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', license: 'бесплатно, с указанием автора', licenseUrl: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', files: ['fx/explosion*.png'] },
   { title: 'Explosion FX Free', author: 'heyheythere', url: 'https://heyheythere.itch.io/explosion-fx-free', license: 'CC BY 4.0', files: ['fx/blast*.png', 'fx/flame*.png'] },
 ];
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};
 // версия файла модели (сброс кэша) — у пересобранных моделей своя, остальные не перекачиваются
-const GLB_V = {}; // все модели пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
+const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'roland', 'rapier', 'rapier_lo', 'tunguska', 'tunguska_lo', 'khordad', 'strela1', 'zsu234', 'zsu234_lo', 'strela10', 'm163', 'm163_lo', 'chaparral', 'chaparral_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'l_scud', 'pantsir', 'pantsir_lo', 'w_umpk', 'w_decoy_e', 'w_kh101', 'w_jsow', 'w_fab500', 'e_tornado', 'e_f111', 'e_mig23', 'e_mig27', 'e_tu22m2', 'e_a10', 'e_f15e', 'e_su24', 'm163', 'zsu234', 'strela10', 'avenger', 'chaparral', 'w_kh59m', 'w_kh25ml', 'w_kh58', 'w_gbu31', 'w_jassm', 'w_agm65b', 't_kc10'].map((n) => [n, '20261022c']).concat(
+  ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'khordad', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_su7b', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
+  ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_tu95', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c', 'e_ea18g'].map((n) => [n, '20261022k']))); // j — четвёртая партия, новая «Шилка», УМПК без сжатия // i — ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c — замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
@@ -155,6 +240,36 @@ function parseGlb(buf) {
   const meshes = json.meshes.map((m) => { const p = m.primitives[0], at = p.attributes; return { name: m.name, mat: json.materials[p.material], pos: acc(at.POSITION), nor: acc(at.NORMAL), uv: at.TEXCOORD_0 !== undefined ? acc(at.TEXCOORD_0) : null, ao: at.COLOR_0 !== undefined ? acc(at.COLOR_0) : null, idx: acc(p.indices) }; }); // ao — затенение в стыках (tools/airdef-models/ao.js)
   const images = (json.images || []).map((im) => new Blob([slice(json.bufferViews[im.bufferView])], { type: im.mimeType }));
   return { meshes, images, textures: json.textures || [] };
+}
+// камуфляж техники без текстур (краска «#camo» из prepare.js): узор — в шейдере по координатам точки модели: крупные пятна
+// с ровными краями (шум со смещением области), не по треугольникам сетки. META.camo: { scheme, size — размер пятна, м }.
+// Цвета — линейные (вывод игры — sRGB): основной, второй (крупные пятна), третий (мелкие тёмные); k2 / k3 — порог шума (выше — меньше пятен)
+const CAMO = {
+  nato: { c: [[0.09, 0.11, 0.055], [0.085, 0.064, 0.038], [0.02, 0.02, 0.018]], k2: 0.16, k3: 0.82 }, // MERDC: зелёный, коричневый, чёрный
+  soviet: { c: [[0.085, 0.105, 0.05], [0.18, 0.14, 0.075], [0.022, 0.022, 0.02]], k2: 0.25, k3: 0.85 }, // защитный 4БО, песочный, чёрный
+  fr: { c: [[0.19, 0.22, 0.26], [0.07, 0.085, 0.11], [0.07, 0.085, 0.11]], k2: 0.05, k3: 9 }, // французский двухтонный серо-голубой (Mirage F1)
+  uk: { c: [[0.088, 0.11, 0.055], [0.045, 0.05, 0.036], [0.02, 0.02, 0.018]], k2: 0.5, k3: 9 }, // зелёный и чёрный
+};
+const CAMO_GLSL = `varying vec3 vCamoP; uniform vec3 uC1, uC2, uC3; uniform float uK2, uK3, uCS;
+float camoH(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float camoV(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(camoH(i), camoH(i + vec3(1, 0, 0)), f.x), mix(camoH(i + vec3(0, 1, 0)), camoH(i + vec3(1, 1, 0)), f.x), f.y),
+    mix(mix(camoH(i + vec3(0, 0, 1)), camoH(i + vec3(1, 0, 1)), f.x), mix(camoH(i + vec3(0, 1, 1)), camoH(i + vec3(1, 1, 1)), f.x), f.y), f.z) * 2.0 - 1.0; }
+float camoF(vec3 p) { p += 0.45 * vec3(camoV(p * 0.7 + 3.1), camoV(p * 0.7 + 5.7), camoV(p * 0.7 + 9.2)); return camoV(p) * 0.7 + camoV(p * 2.3 + 7.3) * 0.3; }
+vec3 camoCol(vec3 P) { vec3 p = P / uCS; float a = camoF(p), b = camoF(p * 3.0 + 21.7); // чёрные — мелкие и редкие (крупные выглядели провалами)
+  return mix(mix(uC1, uC2, smoothstep(uK2 - 0.02, uK2 + 0.02, a)), uC3, smoothstep(uK3 - 0.02, uK3 + 0.02, b)); }`;
+function camoMat(mat, cm) {
+  const S = CAMO[cm.scheme] || CAMO.nato; if (!cm.tex) mat.color.setRGB(1, 1, 1); mat.userData.camo = true;
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, { uC1: { value: new THREE.Vector3(...S.c[0]) }, uC2: { value: new THREE.Vector3(...S.c[1]) }, uC3: { value: new THREE.Vector3(...S.c[2]) },
+      uK2: { value: S.k2 }, uK3: { value: cm.tex ? 9 : S.k3 }, uCS: { value: cm.size || 1.4 } });
+    sh.vertexShader = 'varying vec3 vCamoP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCamoP = position;');
+    // у текстурных — без чёрных пятен (на грязи текстуры выглядели гарью), только по зелёной краске текстуры (маска: зелёный заметно больше красного и синего), с её светотенью и грязью
+    const tx = 'float cmL = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11)), cmM = smoothstep(0.004, 0.02, diffuseColor.g - max(diffuseColor.r, diffuseColor.b));\n' +
+      'diffuseColor.rgb = mix(diffuseColor.rgb, camoCol(vCamoP) * clamp(cmL / dot(uC1, vec3(0.3, 0.59, 0.11)), 0.8, 1.4), cmM);\n';
+    sh.fragmentShader = CAMO_GLSL + '\n' + sh.fragmentShader.replace('#include <color_fragment>', (cm.tex ? tx : 'diffuseColor.rgb *= camoCol(vCamoP);\n') + '#include <color_fragment>');
+  };
+  mat.customProgramCacheKey = () => (cm.tex ? 'camoT' : 'camo');
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
@@ -167,10 +282,13 @@ async function load(name, base) {
     const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true; return x;
   }));
   // меш «часть|материал»: у комплексов — body / turret / cradle, у остальных всё в body
-  const matte = !!(META[name] || META[name.replace(/_lo$/, '')] || {}).matte;
+  const MM = META[name] || META[name.replace(/_lo$/, '')] || {}, matte = !!MM.matte;
+  // drop — лишние детали источника (переходник пилона и т. п.); recolor — свой цвет детали (по имени после «|», линейный)
   const group = new THREE.Group(), parts = {};
   const partOf = (n) => { const k = n.includes('|') ? n.split('|')[0] : 'body'; if (!parts[k]) { parts[k] = new THREE.Group(); parts[k].name = k; group.add(parts[k]); } return parts[k]; };
+  const sub = (n) => (n || '').split('|').pop();
   for (const m of meshes) {
+    if (MM.drop && MM.drop.includes(sub(m.name))) continue;
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(m.pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(m.nor, 3));
     if (m.uv) g.setAttribute('uv', new THREE.BufferAttribute(m.uv, 2));
@@ -182,7 +300,19 @@ async function load(name, base) {
       ? new THREE.MeshPhongMaterial({ color: new THREE.Color(f[0], f[1], f[2]).lerp(new THREE.Color(0.2, 0.26, 0.32), f[0] + f[1] + f[2] > 1.8 ? 0.8 : 0.4), /* белое «стекло» авторов — в тонированное, своё цветное — почти как есть */ transparent: true, opacity: Math.max(0.5, f[3]), specular: 0xffffff, shininess: 120, side: THREE.DoubleSide, depthWrite: false }) // стекло заметно: не меньше 0,5
       : new THREE.MeshPhongMaterial({ map, color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
         ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '') ? { vertexColors: true } : {}) }); // ?ao=0 — без затенения (сравнение)
+    const rc = MM.recolor && MM.recolor[sub(m.name)];
+    if (MM.bright && !glass) mat.color.multiplyScalar(MM.bright);
+    if (rc != null) { mat.color.setHex(rc); mat.map = null; }
+    else if (!map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» — в нейтральный тёмный
+    if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo); // узор — шейдером (tex — по краске текстуры)
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; partOf(m.name || '').add(mesh);
+  }
+  // винты (части prop*, Ту-95): ось — вдоль самолёта через центр ступицы; соосные ряды (чётный / нечётный номер) — в разные
+  // стороны; крутит игра (spinProps). В userData — только число (клон модели копирует userData через JSON)
+  for (const part of group.children.filter((c) => /^prop/.test(c.name))) {
+    const b = new THREE.Box3().setFromObject(part), c = b.getCenter(new THREE.Vector3());
+    for (const m of part.children) m.geometry.translate(-c.x, -c.y, -c.z);
+    part.position.copy(c); part.userData.spin = Math.abs(+part.name.split('_').pop()) % 2 ? -1 : 1;
   }
   // крылья планирующих бомб (части wing*): своя ось поворота (вертикальная) — у корня по передней кромке; у цельного крыла
   // поперёк бомбы (УМПК) — посередине. wa — [угол на подвеске, угол в полёте]: сложенное лежит вдоль бомбы назад,
@@ -221,7 +351,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier']);
+const UNIT_LO = new Set(['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
@@ -294,7 +424,13 @@ export function classOf(items, AG) {
 export const classOfRole = (role) => (role === 'sead' || role === 'low' || role === 'tv' ? 'fighter' : 'strike');
 // готовая модель стороны и класса (своего класса нет — любая модель стороны; нет ничего — null, тогда процедурная)
 // name — конкретная модель (из подвески), если загрузилась
-export const planeMeta = (name) => META[name] || null; // сопла, пилоны — для зон повреждений (plane-zones.js) и проверок
+export const planeMeta = (name) => META[name] || null;
+// вращение винтов модели (части с userData.spin): ≈ 8 об/с на полной тяге — лопасти сливаются в диск
+const PROPS = new WeakMap();
+export function spinProps(obj, dt, thr = 1) {
+  let L = PROPS.get(obj); if (!L) { L = []; obj.traverse((o) => { if (o.userData.spin) L.push(o); }); PROPS.set(obj, L); }
+  for (const p of L) p.rotation.z += p.userData.spin * dt * (30 + 22 * thr);
+} // сопла, пилоны — для зон повреждений (plane-zones.js) и проверок
 export function planeModel(side, cls = 'strike', name = null) {
   if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла — пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);

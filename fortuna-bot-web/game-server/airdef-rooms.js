@@ -19,6 +19,7 @@ import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import { createMulti } from './airdef-multi.js';
+import { adProgress, realDeny, loadoutIds, samIds, quickEra } from './airdef-own.js';
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
 import { initDamage, hitZones, dmgPack, burnRate } from '../games/airdef/sim/damage.js?v=20261022d';
 import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
@@ -282,9 +283,11 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     const list = [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, kills: p.kills || 0, deaths: p.deaths || 0, score: Math.round(p.score || 0) }));
     // итог для наград (функция airdef-claim проверяет подпись MP_SECRET): g — игра, m — бой, w — победа, k — сбито/уничтожено,
     // s — очки, hm — людей больше половины (тогда награды «Реализма» полные), exp — срок
-    const hm = humans(r).length * 2 > r.players.size ? 1 : 0;
+    const hm = humans(r).length * 2 > r.players.size ? 1 : 0, deadT = Math.round((r.valueK || 0) * (r.targets || []).length); // разрушено целей (по доле ценности)
     for (const p of humans(r)) {
-      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, exp: Math.floor(Date.now() / 1000) + 3600 };
+      // ev — события для прокачки (airdef-claim → опыт и серебро): длительность боя, сбитые / уничтоженные комплексы, доля разрушенных целей команды
+      const ev = { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, ...(p.team === 'air' ? { sams: p.kills || 0, targets: Array(Math.min(10, Math.round(deadT / Math.max(1, team(r, 'air').filter((q) => !q.bot).length || 1)))).fill(1) } : { downs: p.kills || 0 }) };
+      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ev, exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', winner, valueK: r.valueK, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
     }
     J(r, 'end', { winner, valueK: r.valueK });
@@ -297,7 +300,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   function autoChoice(r, p) {
     // в пределах лимита охотников; бот берёт недостающую роль: нет штурмовика — штурмовку, нет охотника — охоту (если лимит позволяет)
     const others = othersL(r, p), nAir = team(r, 'air').length, ok = ([L]) => !O.roleDeny(L, others, nAir);
-    let list = afford(r, p).filter(ok).sort((a, b) => O.loadoutCostFor(a[0], r.lead) - O.loadoutCostFor(b[0], r.lead));
+    let list = afford(r, p).filter(ok).filter(([L]) => p.bot || !realDeny(r.mode, p, loadoutIds(L))).sort((a, b) => O.loadoutCostFor(a[0], r.lead) - O.loadoutCostFor(b[0], r.lead));
     if (p.bot && list.length) {
       const has = (role) => others.some((x) => x && loadoutRole(x) === role), want = !has('strike') ? 'strike' : !has('sead') ? 'sead' : null;
       const w = want && list.filter(([L]) => loadoutRole(L) === want); if (w && w.length) list = w;
@@ -500,8 +503,9 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       const full = per >= 6;
       if ((goAt[mode] && (now >= goAt[mode] || full)) || now - oldest > QUEUE_BOTS_T) {
         goAt[mode] = 0;
-        const r = newRoom(null, { mode, size: Math.max(O.QUEUE_MIN, per), quick: true, fill: true }); if (!r) continue;
-        const pick = [...q].sort((a, b) => a.t - b.t).slice(0, r.size * 2);
+        const pick0 = [...q].sort((a, b) => a.t - b.t).slice(0, Math.max(O.QUEUE_MIN, per) * 2), era = quickEra(mode, pick0.map((e) => e.c));
+        const r = newRoom(null, { mode, size: Math.max(O.QUEUE_MIN, per), quick: true, fill: true, ...(era ? { era } : {}) }); if (!r) continue;
+        const pick = pick0;
         for (const e of pick.filter((e) => e.role !== 'any')) joinRoom(r, e.c, e.role);
         for (const e of pick.filter((e) => e.role === 'any')) joinRoom(r, e.c, team(r, 'air').length <= team(r, 'pvo').length ? 'air' : 'pvo');
         queues[mode] = queues[mode].filter((e) => !pick.includes(e));
@@ -520,8 +524,9 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       if (q.length >= 2 && !mgoAt[mode]) { mgoAt[mode] = now + QUEUE_EXTRA_T; for (const e of q) send(e.c, { t: 'qwait', T: QUEUE_EXTRA_T, n: q.length }); }
       if ((mgoAt[mode] && (now >= mgoAt[mode] || q.length >= 12)) || now - oldest > QUEUE_BOTS_T) {
         mgoAt[mode] = 0;
-        const r = newRoom(null, { mode, size: per, quick: true, fill: true, kind: 'multi' }); if (!r) continue;
-        const pick = [...q].sort((a, b) => a.t - b.t).slice(0, r.size * 2);
+        const pick0 = [...q].sort((a, b) => a.t - b.t).slice(0, per * 2), era = quickEra(mode, pick0.map((e) => e.c), 2);
+        const r = newRoom(null, { mode, size: per, quick: true, fill: true, kind: 'multi', ...(era ? { era } : {}) }); if (!r) continue;
+        const pick = pick0;
         for (const e of pick) joinRoom(r, e.c, null);
         mqueues[mode] = mqueues[mode].filter((e) => !pick.includes(e));
         for (const t of teamsOf(r)) while (team(r, t).length < r.size) addBot(r, t);
@@ -556,7 +561,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (m.t === 'ping') return send(c, { t: 'pong', i: +m.i || 0 }); // клиент меряет задержку и потери (раз в 2 с)
     if (m.t === 'hello') {
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
-      Object.assign(c, { name: who.name, pid: who.pid }); clients.add(c);
+      Object.assign(c, { name: who.name, pid: who.pid, adP: adProgress(who.ad) }); clients.add(c); // adP — купленное в прокачке (замки «Реализма»)
       // возвращение в идущий бой тем же аккаунтом
       for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && p !== c); if (old) { takeSeat(r, old, c); return; } } // и когда старое соединение ещё не закрылось
       return send(c, { t: 'welcome', id: c.id, name: c.name, search: searching() });
@@ -590,10 +595,11 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
         const L = O.bundleOf(r.era, r.sideAir, +m.i); if (!L) return;
         const back = c.choice !== null ? (c.paid ?? O.loadoutCostFor(LOADOUTS[r.era][c.choice], r.lead)) : 0, cost = O.loadoutCostFor(L, r.lead);
         if (cost > c.budget + back) return deny(c, 'Не хватает очков на эту связку', 'buyAir');
+        { const rw = realDeny(r.mode, c, loadoutIds(L)); if (rw) return deny(c, rw, 'buyAir'); }
         const rd = O.roleDeny(L, othersL(r, c), team(r, 'air').length); if (rd) return deny(c, rd, 'buyAir');
         c.budget += back - cost; c.choice = +m.i; c.paid = cost; sendRoom(r); return;
       }
-      case 'buyUnit': { if (r.state !== 'plan' || c.team !== 'pvo') return; const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) deny(c, why, 'buyUnit ' + m.k); else J(r, 'cmd', { who: c.name, cmd: 'buyUnit', k: m.k, x: Math.round(+m.x), z: Math.round(+m.z) }); return; }
+      case 'buyUnit': { if (r.state !== 'plan' || c.team !== 'pvo') return; { const rw = realDeny(r.mode, c, samIds(String(m.k))); if (rw) return deny(c, rw, 'buyUnit ' + m.k); } const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) deny(c, why, 'buyUnit ' + m.k); else J(r, 'cmd', { who: c.name, cmd: 'buyUnit', k: m.k, x: Math.round(+m.x), z: Math.round(+m.z) }); return; }
       case 'sell': { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? O.samCost(u.key)) * 0.7); r.S.removeUnit(u); bcast(r, { t: 'ev', e: [['ur', u.id]] }); sendRoom(r); return; }
       case 'move': { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id || !Number.isFinite(+m.x) || !Number.isFinite(+m.z)) return; if (!(m.roof ? buildingAt(city, +m.x, +m.z) >= 0 : freeGround(city, +m.x, +m.z))) return deny(c, 'Место занято', 'move'); r.S.moveUnit(u, +m.x, +m.z, !!m.roof); bcast(r, { t: 'ev', e: [['um', u.id, r1(+m.x), r1(+m.z), m.roof ? 1 : 0]] }); return; }
     }

@@ -29,6 +29,19 @@
   .screen { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 30;
     padding: calc(max(16px, var(--sa-t)) + var(--tg-t)) max(16px, var(--sa-r)) max(16px, var(--sa-b)) max(16px, var(--sa-l)); }
   .screen.on { display: flex; animation: scrIn .22s ease-out; }
+  /* прокачка: закрытое в «Реализме», награда за бой, опыт и серебро в меню */
+  .opt.lock { opacity: .62; } .opt.lock b .ic, .dcard .ic { width: 1em; height: 1em; vertical-align: -0.12em; }
+  .opt .need, .hint.need { display: block; color: #f3c96f; font-size: 11.5px; margin-top: 2px; }
+  .pgRes { margin: 0 0 8px; padding: 8px 10px; background: rgba(159,211,255,.07); border: 1px solid rgba(159,211,255,.25); text-align: left; font-size: 12.5px; }
+  .pgRes .dim { color: #b3baa5; } .pgRes .ic { width: 1.1em; height: 1.1em; vertical-align: -0.17em; }
+  .pgSum { display: flex; gap: 16px; font: 600 16px 'IBM Plex Mono', monospace; margin-bottom: 4px; } .pgSum .xp { color: #9fd3ff; } .pgSum span { display: flex; align-items: center; gap: 5px; }
+  .pgLines { display: grid; grid-template-columns: 1fr auto; gap: 1px 12px; color: #c9cebd; } .pgLines b { font-weight: 500; text-align: right; }
+  .pgAuto { margin-top: 4px; color: #f3c96f; }
+  .pgBar { display: flex; gap: 12px; align-items: center; background: none; border: 0; padding: 4px 16px; color: #e9e6dc; font: 600 13px 'IBM Plex Mono', monospace; cursor: pointer; }
+  .pgBar:empty { display: none; } .pgBar .xp { color: #9fd3ff; } .pgBar span { display: flex; align-items: center; gap: 4px; } .pgBar .ic { width: 1.05em; height: 1.05em; }
+  .pgBar small { font: 500 11px 'IBM Plex Sans', sans-serif; color: #b3baa5; }
+  #mtabs .mres { color: #f3c96f; }
+  body.researchOn #menu { visibility: hidden; }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
   @keyframes cardIn { from { transform: translateY(14px) scale(.98); opacity: .4; } to { transform: none; opacity: 1; } }
@@ -606,8 +619,9 @@
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
+    <button class="pgBar" id="pgBar" title="Исследования: опыт и серебро"></button>
     <div class="modeSel" id="modeSel"></div>
-    <div class="mtabs" id="mtabs"><button data-tab="ref">Арсенал</button><button data-tab="guide">Справка</button><button data-tab="set">Настройки</button><button data-tab="misc">Об игре</button></div>
+    <div class="mtabs" id="mtabs"><button data-tab="research" class="mres">Исследования</button><button data-tab="ref">Арсенал</button><button data-tab="guide">Справка</button><button data-tab="set">Настройки</button><button data-tab="misc">Об игре</button></div>
   </nav>
   <section class="mpanel" aria-label="Задание">
     <div class="mphead"><div class="mpk" id="mpKind"></div><div class="mpt" id="mpTitle"></div><div id="lobbyStats"></div></div>
@@ -648,7 +662,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261022e"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261022e"></script>
+<script src="../config.js?v=20261022i"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261022i"></script>
 </body>
 </html>

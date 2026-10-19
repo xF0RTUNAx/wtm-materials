@@ -117,6 +117,11 @@ export function createAudio() {
       const g = gain(v); chain(o, g, E.whineG); o.start(); return { o, k };
     });
     // сверхзвук: низкий гул корпуса (владелец оценил — оставлен как был)
+    // турбовинтовой (Ту-95, s.tprop): гул соосных винтов — частота лопастей и её обертоны, «биения» двух рядов (~2 Гц)
+    E.tpG = gain(0); E.tpF = filt('lowpass', 420, 0.9); E.tpAM = gain(0.75);
+    E.tpO = [[52, 'sawtooth'], [78, 'sawtooth'], [105, 'triangle']].map(([f, type]) => { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; chain(o, E.tpF); o.start(); return o; });
+    { const l = ctx.createOscillator(), lg = gain(0.25); l.frequency.value = 2.1; chain(l, lg); lg.connect(E.tpAM.gain); l.start(); }
+    chain(E.tpF, E.tpAM, E.tpG, engBus);
     E.supG = gain(); for (const [f, type] of [[46, 'triangle'], [69.5, 'sine']]) { const o = ctx.createOscillator(); o.type = type; o.frequency.value = f; chain(o, E.supG, engBus); o.start(); }
     // обтекание: мягкий шум, медленно «дышит»; тряска на перегрузке — очень низкий гул
     E.windF = filt('lowpass', 700, 0.3); E.windG = gain(); chain(src('pink', 0.8), E.windF, filt('peaking', 420, 0.7, 4), E.windG, out);
@@ -154,7 +159,7 @@ export function createAudio() {
       voices.push({ pan, air, g, roarF, roarG, rumbG, whF, whG, crG, po, po2, pf, prG, ph: i * 1.7, o: null });
     }
   }
-  // listener — камера; cands — [{ o, kind: 'jet'|'boss'|'msl'|'prop', pos, vel, fwd?, ab? }]; lvel — скорость слушателя (prop — поршневой мотор дрона)
+  // listener — камера; cands — [{ o, kind: 'jet'|'boss'|'msl'|'prop'|'tprop', pos, vel, fwd?, ab? }]; lvel — скорость слушателя (prop — поршневой мотор дрона, tprop — турбовинтовой: Ту-95)
   function spatial(dt, camera, lvel, cands, active) {
     if (!ctx) return;
     const L = ctx.listener, cp = camera.position, e = camera.matrixWorld.elements;
@@ -167,7 +172,7 @@ export function createAudio() {
       // ближайшие источники (без сортировки и новых массивов: голосов всего 6)
       const want = spatialWant; want.length = 0;
       for (const c of cands) {
-        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : c.kind === 'prop' ? 5000 : 12000)) continue;
+        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : c.kind === 'prop' ? 5000 : c.kind === 'tprop' ? 9000 : 12000)) continue;
         c._d = d; let i = want.length; while (i > 0 && want[i - 1]._d > d) i--;
         if (i < voices.length) { want.splice(i, 0, c); if (want.length > voices.length) want.pop(); }
       }
@@ -178,7 +183,7 @@ export function createAudio() {
     for (const v of voices) {
       let c = null; if (v.o) for (const x of cands) if (x.o === v.o) { c = x; break; }
       if (!c || !active || muted) { if (v.o) set(v.g.gain, 0, 0.1); if (!c) v.o = null; set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); continue; }
-      if (c.kind !== 'prop') { set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); }
+      if (c.kind !== 'prop' && c.kind !== 'tprop') { set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); }
       const p = c.pos;
       if (v.pan.positionX) { v.pan.positionX.value = p.x; v.pan.positionY.value = p.y; v.pan.positionZ.value = p.z; } else v.pan.setPosition(p.x, p.y, p.z);
       const dx = cp.x - p.x, dy = cp.y - p.y, dz = cp.z - p.z, d = Math.hypot(dx, dy, dz) || 1;
@@ -189,6 +194,12 @@ export function createAudio() {
       if (c.kind === 'msl') { // ракетный двигатель: жёсткий шипящий рёв
         set(v.roarF.frequency, 1300 * dop); v.roarF.Q.value = 0.45; set(v.roarG.gain, 1.6); set(v.rumbG.gain, 0.3);
         set(v.whF.frequency, 4200 * dop); v.whF.Q.value = 1.2; set(v.whG.gain, 1.2); set(v.crG.gain, 0.6); set(v.g.gain, 0.55);
+      } else if (c.kind === 'tprop') { // турбовинтовой (Ту-95): низкий гул соосных винтов, издалека — «гудение», вой турбин тихий
+        const wob = 1 + 0.02 * Math.sin(performance.now() / 470 + v.ph), f = 54 * dop * wob;
+        set(v.po.frequency, f); set(v.po2.frequency, f * 1.5); set(v.pf.frequency, 380 + 600 * Math.exp(-d / 1800)); set(v.prG.gain, 0.8);
+        if (v.psG) set(v.psG.gain, 0);
+        set(v.roarF.frequency, 650 * dop); v.roarF.Q.value = 0.8; set(v.roarG.gain, 0.3); set(v.rumbG.gain, 1.0);
+        set(v.whF.frequency, 1300 * dop); v.whF.Q.value = 8; set(v.whG.gain, 0.25); set(v.crG.gain, 0); set(v.g.gain, 1.3 * (c.gain || 1));
       } else if (c.kind === 'prop') { // поршневой мотор с толкающим винтом: «мопедный» тон (генераторы) + немного шума винта
         const wob = 1 + 0.03 * Math.sin(performance.now() / 1300 + v.ph); // обороты «гуляют»
         if (v.ps) { // записанный мотор (петля): высота — по допплеру; синтез и шум — выключены
@@ -216,20 +227,22 @@ export function createAudio() {
     if (!ctx) return;
     if (!s.on || muted) { set(engBus.gain, 0, 0.08); for (const k of ['windG', 'buffG', 'rainG', 'rainDrum', 'groundG', 'gunG', 'growlG']) set(E[k].gain, 0, 0.08); E.windLfo.gain.value = 0; return; }
     rpm += (s.rpmTarget - rpm) * Math.min(1, (s.rpmTarget > rpm ? 0.8 : 1.2) * dt); // раскрутка турбины с запаздыванием
-    const r = rpm, rear = s.rear, front = 1 - rear, sup = s.sup, ab = s.ab;
+    const r = rpm, rear = s.rear, front = 1 - rear, sup = s.sup, ab = s.ab, tp = !!s.tprop;
+    set(E.tpG.gain, tp ? 0.035 + 0.06 * r : 0, 0.2);
+    if (tp) { const ff = 46 + 22 * r; set(E.tpO[0].frequency, ff, 0.2); set(E.tpO[1].frequency, ff * 1.5, 0.2); set(E.tpO[2].frequency, ff * 2.02, 0.2); }
     set(engBus.gain, s.lobby ? 3 : 4, 0.2); // слои намеренно «тихие» по отдельности — общий уровень задаёт шина
     // рёв и гул: растут с оборотами, форсаж опускает спектр и добавляет «давление»
     set(E.roarF.frequency, sup ? 190 : (ab ? 260 : 170 + 620 * r * r));
     set(E.roarG.gain, (sup ? 0.05 : 0.018 + 0.07 * r * r * r + (ab ? 0.05 : 0)) * (0.45 + 0.55 * rear), 0.12);
     set(E.rumbF.frequency, 120 + 90 * r); set(E.rumbG.gain, (0.025 + 0.05 * r * r + (ab ? 0.09 : 0)) * (sup ? 0.7 : 1));
     set(E.hissG.gain, sup ? 0.002 : (0.002 + 0.013 * Math.pow(r, 4)) * (0.3 + 0.7 * rear) * (ab ? 0.45 : 1)); // на форсаже шипение тише — главное низ
-    set(E.crackG.gain, sup ? 0 : (ab ? 0.028 : r > 0.97 ? 0.006 : 0) * (0.35 + 0.65 * rear), 0.2);
+    set(E.crackG.gain, sup || tp ? 0 : (ab ? 0.028 : r > 0.97 ? 0.006 : 0) * (0.35 + 0.65 * rear), 0.2);
     crackleT -= dt; if (crackleT <= 0) { crackleT = 0.5 + Math.random() * 0.7; set(E.crackSrc.playbackRate, 0.5 + Math.random() * 0.3, 0.3); }
     // вой турбины: частота лопаток по оборотам, спереди громче; на сверхзвуке почти не слышен
-    const f = 1700 + 2300 * r;
+    const f = tp ? 900 + 700 * r : 1700 + 2300 * r; // у турбовинтового турбина ниже и тише (главное — винты)
     set(E.wBand1.frequency, f, 0.1); set(E.wBand2.frequency, f * 1.47, 0.1);
     for (const w of E.wOsc) set(w.o.frequency, f * w.k, 0.1);
-    set(E.whineG.gain, (sup ? 0.12 : 0.28 + 0.9 * front) * (0.036 + 0.04 * r) * (ab ? 0.7 : 1));
+    set(E.whineG.gain, (sup ? 0.12 : 0.28 + 0.9 * front) * (0.036 + 0.04 * r) * (ab ? 0.7 : 1) * (tp ? 0.4 : 1));
     set(E.supG.gain, sup ? 0.035 : 0, 0.3);
     // обтекание: громче с квадратом скорости; на сверхзвуке — главный, мягко «дышит»
     const v = s.speed, m = s.mach || 0;

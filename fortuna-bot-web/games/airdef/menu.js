@@ -1,18 +1,18 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { CITY, ZONE } from './city.js?v=20261022e';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022e';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022e';
-import { MODES } from './sim/strike.js?v=20261022e';
-import { WEATHERS } from '../drone/world.js?v=20261022e';
-import { LESSONS } from './training.js?v=20261022e';
-import { MODEL_CREDITS } from './models.js?v=20261022e';
-import { openLayoutEditor } from './layout.js?v=20261022e';
+import { CITY, ZONE } from './city.js?v=20261022i';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022i';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022i';
+import { MODES } from './sim/strike.js?v=20261022i';
+import { WEATHERS } from '../drone/world.js?v=20261022i';
+import { LESSONS } from './training.js?v=20261022i';
+import { MODEL_CREDITS } from './models.js?v=20261022i';
+import { openLayoutEditor } from './layout.js?v=20261022i';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022e';
-import { photoItems } from './photo.js?v=20261022e';
-import { guideChapters } from './guide.js?v=20261022e';
-import { iconize } from './icons.js?v=20261022e';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022i';
+import { photoItems } from './photo.js?v=20261022i';
+import { guideChapters } from './guide.js?v=20261022i';
+import { iconize, ico } from './icons.js?v=20261022i';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -44,6 +44,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const stats = () => { try { return JSON.parse(ls.get('fortuna_airdef_stats') || '{}') || {}; } catch (_) { return {}; } };
   const seg = (id, cur, items) => `<div class="seg" data-seg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const tags = (k, t) => `<span class="tag ${k}">${t}</span>`;
+  const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Реализм»
 
   function renderModeSel() {
     $('modeSel').innerHTML = GAMES.map((g) => `<button data-g="${g.k}" class="${setup.game === g.k ? 'on' : ''}"><b>${g.name}</b><span>${g.desc}</span></button>`).join('');
@@ -63,7 +64,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     render();
   };
   function renderPlay() {
-    const g = setup.game, el = $('tab-play');
+    const g = setup.game, el = $('tab-play'); C.realBlock = false;
     if (g === 'online') { C.online.panel(el); return; } // онлайн — свой раздел (online.js)
     if (g === 'training' && !setup.tlist) { el.innerHTML = renderFirst(); return; } // «Первые шаги»
     if (g === 'training') {
@@ -89,15 +90,21 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       h += `<p class="hint">Комплексы: ${DEFENSE[setup.side][setup.era].map(([k]) => SAM[k].short).join(', ')}.</p><div class="cat-h">Подвеска</div>`;
       // подвески стороны, которая атакует выбранную ПВО; у каждой — свой самолёт
       const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att);
-      if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
-      const loBtn = ([L, i], attr, on) => `<button class="opt ${on ? 'on' : ''}" ${attr}="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${ROLE_NAME[loadoutRole(L)]}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}</span></div>${L.items.map(([k]) => tags(AG[k].kind, AG_KIND[AG[k].kind].split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`;
+      // «Реализм»: только подвески, у которых куплены самолёт и всё оружие (прокачка); закрытая — с замком и «нужно: …»
+      const can = ([L]) => !realLock() || C.progress.loadoutOk(L), open = mine.filter(can);
+      if (!open.some(([, i]) => i === setup.lo)) setup.lo = (open[0] || mine[0])[1];
+      const loBtn = ([L, i], attr, on) => { const miss = can([L]) ? [] : C.progress.loadoutMissing(L);
+        return `<button class="opt ${on && !miss.length ? 'on' : ''} ${miss.length ? 'lock' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `${attr}="${i}"`}><div class="nm"><b>${miss.length ? ico('lock') + ' ' : ''}${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${ROLE_NAME[loadoutRole(L)]}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}</span>${miss.length ? `<span class="need">${C.progress.needText(miss)} — открыть в «Исследованиях»</span>` : ''}</div>${L.items.map(([k]) => tags(AG[k].kind, AG_KIND[AG[k].kind].split(',')[0].split(' ')[0])).filter((v, j, a) => a.indexOf(v) === j).join(' ')}</button>`; };
+      C.realBlock = !open.length;
+      if (!open.length) h += `<p class="hint need">В «Реализме» эпохи ${ERAS[setup.era - 1].short} у вас пока нет подвески за эту сторону — купите самолёт и оружие в «Исследованиях» или играйте в «Аркаде».</p>`;
       // «Операция»: два вылета — сначала охота за ПВО, потом удар (у стороны нет охотничьей подвески — только одиночный вылет)
       const sead = mine.filter(([L]) => loadoutRole(L) === 'sead'), strike = mine.filter(([L]) => loadoutRole(L) !== 'sead');
-      const canOp = sead.length > 0 && strike.length > 0; if (!canOp) setup.op = false;
+      const seadOk = sead.filter(can), strikeOk = strike.filter(can);
+      const canOp = seadOk.length > 0 && strikeOk.length > 0; if (!canOp) setup.op = false;
       if (canOp) h += `<div class="prow"><span>Вылеты</span>${seg('op', setup.op ? 'op' : 'one', [['one', 'Один вылет'], ['op', 'Операция: 2 вылета']])}</div>`;
       if (setup.op) {
-        if (!sead.some(([, i]) => i === setup.lo1)) setup.lo1 = sead[0][1];
-        if (!strike.some(([, i]) => i === setup.lo2)) setup.lo2 = strike[0][1];
+        if (!seadOk.some(([, i]) => i === setup.lo1)) setup.lo1 = seadOk[0][1];
+        if (!strikeOk.some(([, i]) => i === setup.lo2)) setup.lo2 = strikeOk[0][1];
         h += `<p class="hint">Как в жизни: сначала подавить ПВО, потом бить по городу. Разбитое в первом вылете остаётся разбитым, уцелевшие комплексы перезарядятся. Очки — за оба вылета, +300 за два возвращения.</p>`;
         h += `<div class="cat-h">Вылет 1 — охота за ПВО</div>` + sead.map((x) => loBtn(x, 'data-lo1', x[1] === setup.lo1)).join('');
         h += `<div class="cat-h">Вылет 2 — штурмовка</div>` + strike.map((x) => loBtn(x, 'data-lo2', x[1] === setup.lo2)).join('');
@@ -112,7 +119,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (setup.cs !== false) h += `<p class="hint">${COMBINED_NAME}: разведчик и ${attS === 'east' && setup.era >= 4 ? 'ударные дроны' : 'ложные цели'}, затем крылатые ракеты с нескольких направлений на малой высоте, в конце — оперативно-тактические: ${COMBINED[attS][setup.era].filter(([k]) => AG[k].kind === 'tbm').map(([k]) => AG[k].short).join(', ') || 'нет'}. Баллистику сбивают только противоракетные комплексы (${['s300', 's400', 'patriot', 'pac3', 'bukm3'].filter((k) => SAM[k] && SAM[k].side === setup.side && SAM[k].era <= setup.era).map((k) => SAM[k].short).join(', ') || 'в этой эпохе — никто'}).</p>`;
       }
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era);
-      h += `<div class="cat-h">Комплексы в вашем распоряжении</div>` + list.map(([k, s]) => `<div class="opt"><div class="nm"><b>${s.name}</b><span>${SAM_TYPE[s.type]} · до ${(s.rmax / 1000).toFixed(1)} км, высота до ${(s.hmax / 1000).toFixed(1)} км</span></div><span class="pr">${SAM_COST[k]} очк</span></div>`).join('') +
+      h += `<div class="cat-h">Комплексы в вашем распоряжении</div>` + list.map(([k, s]) => { const lk = realLock() && !C.progress.samOk(k);
+        return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.name}</b><span>${SAM_TYPE[s.type]} · до ${(s.rmax / 1000).toFixed(1)} км, высота до ${(s.hmax / 1000).toFixed(1)} км</span>${lk ? '<span class="need">в «Реализме» — после покупки в «Исследованиях»</span>' : ''}</div><span class="pr">${SAM_COST[k]} очк</span></div>`; }).join('') +
         `<p class="hint">Перед каждой волной расставьте комплексы на карте за очки обороны, между волнами — докупка, переезд и продажа. Волн — ${C.WAVES}. Потеряно 75 % ценности военных объектов — поражение. В бою можно «сесть» в любой комплекс оператором.</p>`;
     }
     el.innerHTML = h;
@@ -204,6 +212,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('tab-play').onclick = (e) => {
     if (setup.game === 'online') { C.online.onClick(e); return; }
     const f = e.target.closest('[data-fs]'); if (f) { firstClick(f.dataset.fs); snd.click(); render(); return; }
+    const nd = e.target.closest('[data-need]'); if (nd) { snd.click(); C.research.open(nd.dataset.need); return; } // закрыто в «Реализме» — к нужной единице дерева
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
@@ -334,7 +343,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   };
   // Арсенал / Справка / Настройки / Об игре — панель поверх меню; повторное касание, ✕ или Esc — закрыть
   const SHEET = { ref: 'Арсенал', guide: 'Справка', set: 'Настройки', misc: 'Об игре' };
-  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; snd.click(); showTab(); };
+  $('mtabs').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; snd.click(); if (b.dataset.tab === 'research') { C.research.open(); return; } tab = tab === b.dataset.tab ? 'play' : b.dataset.tab; showTab(); }; // «Исследования» — свой экран (research.js)
   $('msClose').onclick = () => { tab = 'play'; snd.click(); showTab(); };
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && C.state === 'menu' && tab !== 'play') { tab = 'play'; showTab(); } });
   function showTab() {
@@ -357,8 +366,16 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function showTip(next) { if (next) tipI = (tipI + 1) % TIPS.length; const el = $('lobbyTip'); el.classList.remove('in'); void el.offsetWidth; el.classList.add('in'); el.innerHTML = `<b>Совет.</b> ${TIPS[tipI]}`; }
   $('lobbyTip').onclick = () => { tipT = 0; showTip(true); };
   setInterval(() => { if (C.state === 'menu' && (tipT += 1) > 12) { tipT = 0; showTip(true); } }, 1000);
-  $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; } C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
-  function render() { renderModeSel(); renderPlay(); renderStats(); }
+  $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; }
+    if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(); return; } // «Реализм»: нет купленной подвески — в «Исследования»
+    C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
+  // опыт и серебро над режимами (тап — «Исследования»); гость — подсказка войти
+  function renderPg() {
+    const P = C.progress && C.progress.P; if (!P) { $('pgBar').innerHTML = ''; return; }
+    $('pgBar').innerHTML = C.progress.guest ? '<small>Войдите на сайте — опыт и серебро копятся в аккаунте</small>' : `<span class="xp">${ico('xp')}${Math.round(P.xp).toLocaleString('ru-RU')}</span><span>${ico('silver')}${Math.round(P.silver).toLocaleString('ru-RU')}</span><small>Исследования ›</small>`;
+  }
+  $('pgBar').onclick = () => { snd.click(); C.research.open(); };
+  function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); }
   $('weatherChip').textContent = `${C.W.name} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);
   // подложка карт: районы и крупные дома (общая для карты вылета и тактической карты обороны)

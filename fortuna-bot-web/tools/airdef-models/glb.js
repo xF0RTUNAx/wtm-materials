@@ -49,6 +49,7 @@ export function flatten(g, { raw = false } = {}) { // raw — без матри�
   const walk = (i, M, path) => {
     const n = J.nodes[i], W = raw ? M : mul(M, trs(n)), name = [...path, n.name || `#${i}`];
     if (n.mesh !== undefined) for (const [pi, p] of J.meshes[n.mesh].primitives.entries()) {
+      if ((p.mode ?? 4) !== 4) continue; // линии и точки автора (рёбра-«проволока») — не треугольники
       const P0 = accessor(g, p.attributes.POSITION).data, N0 = p.attributes.NORMAL !== undefined ? accessor(g, p.attributes.NORMAL).data : null;
       const P = new Float32Array(P0.length), N = N0 ? new Float32Array(N0.length) : null;
       for (let v = 0; v < P0.length; v += 3) {

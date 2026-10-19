@@ -14,6 +14,10 @@ const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads`;
 const BLUE = 'gt(b(X,Y),r(X,Y)+25)*gt(b(X,Y),g(X,Y)+10)', LUM = '(0.3*r(X,Y)+0.59*g(X,Y)+0.11*b(X,Y))';
 const OLIVE = `format=gbrp,geq=r='if(${BLUE},min(255,${LUM}*1.35),r(X,Y))':g='if(${BLUE},min(255,${LUM}*1.4),g(X,Y))':b='if(${BLUE},${LUM}*0.9,b(X,Y))'`;
 const LS = (c) => { if (Deno.env.get('LS') && Math.max(...c.size) > Number(Deno.env.get('LSMIN') ?? 0.4)) console.log('  часть', c.mat, 'ц', c.ctr.map((v) => v.toFixed(2)).join(' '), 'р', c.size.map((v) => v.toFixed(2)).join(' ')); return 'body'; }; // LS=1 … --groups: список частей
+// снять шасси и подвески автора: у оси (|dx| < dW) — части с центром ниже yF, дальше — свисающие ниже yW (по низу части);
+// не больше smax; keep(c, d) — оставить (подфюзеляжные кили и т. п.). ax — x оси самолёта (до центровки)
+const strip = (ax, yF, dW, yW, smax = 6.5, keep) => (c) => { const d = Math.abs(c.ctr[0] - ax), lo = c.ctr[1] - c.size[1] / 2;
+  return Math.max(...c.size) < smax && (d < dW ? c.ctr[1] < yF : lo < yW) && !(keep && keep(c, d)) ? null : LS(c); };
 const KZ = 7.2 / 8.4; // «Кинжал» из ракеты «Искандера»: длина 7,2 м
 const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? -2.03); // верх корпуса ФАБ-500 в осях игры без центровки (см. --groups)
 // nose — куда смотрит нос модели в её осях; center — [y оси фюзеляжа] в её единицах (иначе середина габаритов)
@@ -22,6 +26,10 @@ const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? -2.03); // верх корпу
 const tiltFix = (bx, by) => { const a = Math.atan(bx), b = Math.atan(by * Math.cos(a)), ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b); return (x, y, z) => { const x1 = x * ca - z * sa, z1 = x * sa + z * ca; return [x1, y * cb - z1 * sb, y * sb + z1 * cb]; }; };
 // атлас ракет модели HIMARS: надписи автора модели на корпусе ракеты — закрашены (в игре их быть не должно)
 const NO_TAG = 'drawbox=x=iw*0.325:y=ih*0.41:w=iw*0.375:h=ih*0.09:color=0x141414:t=fill,drawbox=x=iw*0.355:y=ih*0.515:w=iw*0.09:h=ih*0.41:color=0x141414:t=fill';
+// камуфляж без текстур (cfg.camo: { scheme, skip: /имена материалов без камуфляжа/ }): краска «#camo», в файле — основной цвет
+// схемы; сам узор (схема и размер пятен — META.camo в games/airdef/models.js) рисует шейдер игры. Гусеницы, шины, стёкла,
+// стволы — свои цвета (skip или группа «часть#краска»)
+const CAMO_BASE = { nato: [0.095, 0.118, 0.056], soviet: [0.092, 0.125, 0.046], uk: [0.088, 0.11, 0.055], fr: [0.2, 0.23, 0.27] }; // линейные (как в models.js CAMO)
 const CONFIG = {
   su30: { src: `${DL}/pbr_sukhoi_su-30.glb`, raw: true, scale: 0.01, nose: '+x', centerY: 240, tex: () => 1024,
     remove: (c, i) => c.mat === 0 && i > 0 && c.min[1] < 130 && c.max[0] > -380 }, // шасси, створки и кронштейны ниш (брюшные гребни — оставить)
@@ -33,24 +41,34 @@ const CONFIG = {
     remove: (c) => (c.mat === 10 && Math.abs(c.ctr[0]) < 4.5) || [17, 6, 7, 8, 9, 12, 13, 14, 15].includes(c.mat) || ((c.mat === 5 || c.mat === 1) && c.max[1] < 1.3) },
   // оружие из моделей самолётов: pick — коробка [x0,y0,z0, x1,y1,z1] в осях модели, берутся части с центром внутри;
   // модель ставится центром габаритов в начало координат
-  w_umpk: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', groups: (c) => (c.size[0] > 2 && c.size[1] < 0.15 ? 'wing' : 'body') }, // ФАБ-500 с УМПК; wing — крыло (на подвеске сложено вдоль бомбы)
-  w_fab500: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
+  w_umpk: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, pickMesh: /./, rulesIn: 'game', colors: { '#metal': [0.28, 0.29, 0.3], '': [0.07, 0.08, 0.055] }, groups: (c) => (c.mat === 13 || (c.size[0] > 2 && c.size[1] < 0.15) ? 'wing#metal' : [7, 9, 10, 11, 12, 15, 16, 17, 18, 19].includes(c.mat) ? 'body#metal' /* узел крепления крыльев, хвостовой модуль и бандажи — металл */ : 'body') }, // ФАБ-500 с УМПК; wing — крыло (на подвеске сложено вдоль бомбы)
+  // ── четвёртая партия (2026-10-19), без упрощения: ФАБ-100 и ОФАБ-250 — 4ikalka (мм / свои единицы, без текстур — оливковые),
+  // ФАБ-250 — CATholic (текстура автора), ФАБ-1000 — United4192, GBU-24 и GBU-57 — Rhine_Lab_Muelsyse (US Weapon Pack)
+  w_fab100: { src: `${DL}/fab-100-120.glb`, scale: 0.001 * 1.07 / 1.134, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } },
+  w_ofab250: { src: `${DL}/ofab-250-270.glb`, scale: 1.48 / 21.06, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } },
+  w_fab250: { src: `${DL}/fab-250_the_soviet_aviation_bomb.glb`, scale: 1.5 / 2.25, nose: '-x', tex: () => 256, pickMesh: /./ },
+  w_fab1000: { src: `${DL}/fab-1000.glb`, scale: 3.35 / 4.58, nose: '-z', tex: () => 256, pickMesh: /./, colors: { '^Black|^Gray': [0.07, 0.08, 0.055], '^Brown': [0.12, 0.04, 0.02] } /* корпус и хвост — оливковые, поясок — тёмно-красный */ },
+  w_gbu24: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /gbu-24/ },
+  w_gbu57: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /gbu-57/ },
+  w_fab500: { src: `${DL}/fab-500_m-54_v5.glb`, scale: 2.47 / 20.68, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // ФАБ-500М-54 — 4ikalka (2026-10-19; эпоха I), УМПК — по-прежнему из ФАБ-500М-62
+  w_fab500_old: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
   w_kh29t: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /ru_kh-29/ }, // Х-29 из набора
   w_kh31p: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /w_lasm/ }, // Х-31 из набора
-  w_kh59m: { src: `${DL}/su-30mk2_with_kh-59m.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 512, target: 9000, pickMesh: /Object_4[56]$/ }, // Х-59М из «Su-30MK2 with Kh-59M» (Jeyhun1985) — правая ракета под крылом
-  w_kh25ml: { src: `${DL}/kh-38mt_air-to-ground_missile.glb`, scale: 3.7 / 4.17, nose: '+x', tex: () => 512, target: 7000, pickMesh: /./ }, // Х-38МТ — вместо Х-25МЛ (та же компоновка)
+  w_kh59m: { colors: { '': [0.24, 0.25, 0.23] }, src: `${DL}/kh31.glb`, scale: 5.69 / 189.07, axes: (x, y, z) => [x, -z, y], tex: () => 256, target: 7000, pickMesh: /./ }, // Х-31 (L_elo) в размер Х-59М (5,7 м) — и для Х-59МК2 (прежняя — из War Thunder)
+  w_kh25ml: { colors: { '': [0.3, 0.31, 0.29] }, src: `${DL}/kh-29_kedge.glb`, scale: 3.7 / 3.93, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)
+  w_kh58: { colors: { nosecone: [0.025, 0.028, 0.025], nozzle: [0.04, 0.04, 0.04], '^body$|fins|duct': [0.3, 0.31, 0.29], '': [0.12, 0.12, 0.12] }, src: `${DL}/kh-58u_anti-radiation_missile.glb`, scale: 1, nose: '-z', tex: () => 256, target: 9000, pick: [0, -1, -3, 1.2, 1, 3] }, // Х-58У (Narni_Tchereskov) — 4,8 м; у автора две ракеты — правая
   w_agm65b: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM65 Maverick/ },
   w_mk82: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 2.22 / 2.9, nose: '-x', tex: () => 256, pickMesh: /Mk83 bomb/ }, // Mk 83 → размер Mk 82
   // ── ещё оружие (2026-10-08)
-  w_jassm: { src: `${DL}/agm-158_-_wings_extended.glb`, scale: 4.27 / 173, nose: '-x', tex: () => 256, target: 7000, pickMesh: /./ },
+  w_jassm: { src: `${DL}/agm-158_-_wings_extended.glb`, scale: 4.27 / 173, nose: '-x', tex: () => 256, target: 24000, simpErr: 0.02, pickMesh: /./ }, // 296 тыс. треугольников: при 7 тыс. — «обрубок», 24 тыс. — форма цела
   w_agm88: { src: `${DL}/agm-88_harm_transport_cart.glb`, scale: 1, nose: '+x', tex: () => 512, target: 7000, pick: [-2, 0.95, 0, 2.5, 1.7, 1] }, // одна HARM с тележки (и для AARGM)
   w_agm65b: { src: `${DL}/agm_65_maverick.glb`, scale: 2.49 / 1.31, axes: (x, y, z) => [x, z, -y], tex: () => 256, target: 7000, minPart: 0.03, pick: [-0.08, -1, -0.73, 0.23, 2, -0.42] }, // одна из трёх, стояла вертикально
   w_mald: { src: `${DL}/aim-160a_screamer.glb`, scale: 2.84 / 2, nose: '-x', tex: () => 256, target: 7000, pickMesh: /./ },
-  w_decoy_e: { src: `${DL}/harpy_drone.glb`, scale: 0.1, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Harpy — ложная цель
+  w_decoy_e: { colors: { '': [0.14, 0.16, 0.12] }, src: `${DL}/harpy_drone.glb`, scale: 0.1, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Harpy — ложная цель
   w_pod: { src: `${DL}/anaaq-28v_lightning_fbx.glb`, scale: 1, nose: '+z', tex: () => 256, target: 9000, simpErr: 0.3, cluster: true, minPart: 0.03, pickMesh: /./ }, // LITENING — прицельный контейнер
-  w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, nose: '+z', tex: () => 256, pickMesh: /./,
+  w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, axes: (x, y, z) => [x, -y, -z], /* нос из +Z в −Z и переворот: у автора крылья снизу — у настоящей SDB на спине */ tex: () => 512, pickMesh: /./,
     groups: (c) => (Math.abs(c.ctr[0]) > 3 && c.size[1] < 1 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') }, // крылья — свои части (на подвеске сложены)
-  w_gbu31: { src: `${DL}/f-111f_aardvark_with_gbu-24_mk.84.glb`, scale: 1, nose: '+z', tex: () => 256, target: 7000, pick: [-3.4, -1.2, -3, -2.6, -0.02, 1.75] }, // GBU-24 с F-111 без головки и рулей → Mk 84 с хвостом (как JDAM)
+  w_gbu31: { src: `${DL}/mk82_jdam.glb`, scale: 3.88 / 15.69, nose: '-z', tex: () => 256, target: 9000, pickMesh: /./ }, // Mk 82 JDAM (FeriseCAT) в размер GBU-31 (3,9 м) (прежняя GBU-24 — из War Thunder)
   mp_stinger: { src: `${DL}/fim-92_stinger.glb`, scale: 7.6, nose: '+x', tex: () => 256, pickMesh: /./, remove: (c) => c.ctr[0] < -0.05 }, // труба Stinger (ракета — отдельно)
   mp_verba: { src: `${DL}/manpads_model_9k333_verba.glb`, scale: 0.0774, nose: '+x', tex: () => 256, target: 7000, pickMesh: /PZRC|battery|pen_|trigger|nab_|button|switch/ }, // труба «Вербы»
   msl_manpads: { src: `${DL}/manpads_model_9k333_verba.glb`, scale: 0.0774, nose: '-x', tex: () => 256, pickMesh: /Rocket_low|_stab/ }, // ракета «Вербы» — для всех ПЗРК и Avenger
@@ -85,7 +103,61 @@ const CONFIG = {
   e_su57: { src: `${DL}/sukhoi_su-57_felon.glb`, scale: 7.42, nose: '-x', rulesIn: 'game', tex: () => 512, glass: /^Darkness\.001$/, groups: () => 'body' },
   e_tu22m3: { src: `${DL}/tupolev_tu-22m3.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 512, groups: () => 'body' }, // вблизи — без упрощения: тонкие крылья и закрылки от него рвутся (дальняя копия _lo — упрощённая)
   // ── «Воздушное превосходство»: свой самолёт у каждой подвески (2026-10-12)
-  e_su24: { src: `${DL}/russian_su-24.glb`, scale: 0.0543, nose: '-z', rulesIn: 'game', tex: () => 512, // крыло — в развёрнутом положении
+  // Су-24М — manilov.ap (CC BY; прежняя модель 42manako была из мода Battlefield 2): лежит повёрнутой в плоскости XZ (fwd — нос)
+  e_su24: { src: `${DL}/su24.glb`, scale: 0.903, fwd: [-0.8024, -0.5968], rulesIn: 'game', tex: () => 512, centerX: true,
+    // без подвесок автора: бак под фюзеляжем (длинный, ниже оси) и ракеты с оперением под крыльями (дальше 4 м от оси); ось у автора — x 0,87 (в масштабе)
+    groups: (c) => ((c.size[2] > 4.5 && c.size[0] < 1.2 && c.ctr[1] < 0) || (Math.abs(c.ctr[0] - 0.87) > 3.6 && c.ctr[1] < 0.55) ||
+      (Math.max(...c.size) < 1 && Math.abs(Math.abs(c.ctr[0] - 0.87) - 2.45) < 0.3 && c.ctr[1] < 0.2) /* оперение снятых баков и их подвесы */ ? null : LS(c)) },
+  // ── новые самолёты 2026-10-19 (manilov.ap, CC BY; как Су-24 — лежат повёрнутыми в XZ: fwd — нос по оси симметрии, tools: sym.js) ──
+  e_tornado: { src: `${DL}/tornado.glb`, scale: 16.72 / 16.5, fwd: [-0.7339, 0.6793], rulesIn: 'game', tex: () => 512, centerX: true, /* ливрея автора — как есть (Mark 2026-10-19) */ // ось — x 4,16: без баков и контейнеров под крылом (пилоны — оставить)
+    groups: (c) => (Math.abs(c.ctr[0] - 4.16) > 2.5 && c.ctr[1] < 1.9 ? null : 'body') },
+  e_f111: { src: `${DL}/f111.glb`, scale: 22.4 / 40.2, fwd: [-0.7716, 0.6361], rulesIn: 'game', tex: () => 512, centerX: true, // ось — x 3,97: без выпущенных шасси и створок
+    groups: (c) => (c.ctr[1] < -1.9 && Math.abs(c.ctr[0] - 3.97) < 2.2 ? null : 'body') },
+  e_mig23: { src: `${DL}/mig23.glb`, scale: 16.7 / 17.71, fwd: [-0.8192, 0.5736], rulesIn: 'game', tex: () => 512, centerX: true, // ось — x 3,77: без подфюзеляжного бака и ракет (подфюзеляжный киль — оставить)
+    groups: (c) => ((c.size[2] > 4 && c.size[0] < 0.7 && Math.abs(c.ctr[0] - 3.77) < 0.3 && c.ctr[1] < 2.1) || (Math.abs(Math.abs(c.ctr[0] - 3.77) - 0.4) < 0.15 && c.ctr[1] < 2.3) ||
+      (Math.abs(Math.abs(c.ctr[0] - 3.77) - 1.44) < 0.3 && c.ctr[1] < 3.2 && Math.max(...c.size) < 4.5) /* ракеты под крылом */ ? null : 'body') },
+  e_mig27: { src: `${DL}/mig27.glb`, scale: 17.08 / 17.04, fwd: [-0.7193, 0.6947], rulesIn: 'game', tex: () => 512, centerX: true, // ось — x 3,0: без бака и блоков под фюзеляжем (киль — оставить)
+    groups: (c) => ((c.size[2] > 4 && c.size[0] < 0.7 && Math.abs(c.ctr[0] - 3.0) < 0.3 && c.ctr[1] < 2.2) || (Math.abs(c.ctr[0] - 3.0) > 0.5 && Math.abs(c.ctr[0] - 3.0) < 1.4 && c.ctr[1] < 2.75) ||
+      (Math.abs(Math.abs(c.ctr[0] - 3.0) - 1.53) < 0.3 && c.ctr[1] < 3.45) /* бомбы под наплывом */ ? null : 'body') },
+  e_tu22m2: { src: `${DL}/tu26.glb`, scale: 42.46 / 42.9, fwd: [-0.8746, -0.4848], rulesIn: 'game', tex: () => 512, centerX: true, // без выпущенных шасси
+    groups: (c) => { const dx = Math.abs(c.ctr[0] + 0.47); // ось — x −0,47
+      return (c.max[1] < -2.3 && Math.max(...c.size) < 3) || (c.ctr[1] < -1.95 && c.ctr[2] > -11 && c.ctr[2] < -6.5 && dx < 1) /* носовая стойка и створки */ ||
+        (c.ctr[1] < -1.6 && dx > 0.9 && dx < 6.2 && c.ctr[2] > 1 && c.ctr[2] < 9 && Math.max(...c.size) < 4) /* основные стойки и открытые створки */ ? null : 'body'; } },
+  e_a10: { src: `${DL}/pbr_a-10_thunderbolt.glb`, scale: 16.26 / 21.06, nose: '-z', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.max[1] < 1.05 || (c.ctr[1] < 1.3 && Math.max(...c.size) < 1.4) ? null : 'body') }, // A-10 — Immersive3D: без колёс и стоек (гондолы шасси — как в полёте)
+  e_f15e: { src: `${DL}/mcdonnell_douglas_f-15e_strike_eagle.glb`, scale: 0.1044, axes: (x, y, z) => [-(0.9211 * x - 0.3894 * z), -0.1329 * x + 0.9399 * y - 0.3145 * z, -(0.366 * x + 0.3414 * y + 0.8657 * z)], /* у автора в полёте: курс 67°, тангаж 20° — главная ось (pca3.js); нос — в −Z */ rulesIn: 'game', tex: () => 256, target: 60000, simpErr: 0.02, centerX: true, // F-15E — Spark_Customs: без текстур — «ганшип грей»
+    colors: { '': [0.1, 0.105, 0.115] }, perTri: true, // подвески автора (по треугольникам; правила до центровки: x −0,104, y −4,418, z +1,588): под крылом и под конформными баками
+    groups: (c) => { const X = Math.abs(c.ctr[0] - 0.104), Y = c.ctr[1] - 4.418;
+      return (X > 1.95 && X < 4.6 && Y < -0.97 && c.ctr[2] + 1.588 < 5.2) /* не стабилизаторы (хвост — дальше 5,5 м) */ || (X > 1.0 && X < 1.95 && Y < -1.75) ? null : 'body'; } }, // крыло снизу — около −0,8 м
+  // ── третья партия 2026-10-19 (manilov.ap, CC BY): fwd — по оси симметрии (sym.js; у F-117 и B-2 нет киля-подсказки — нос проверен по виду сбоку); без упрощения;
+  // шасси и подвески автора — долой (strip): x оси, низ фюзеляжа и крыла — по LS=1 --groups и видам --views ──
+  e_mig21n: { src: `${DL}/mig21.glb`, scale: 0.99190, fwd: [-0.8359, 0.5488], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.26, 1.48, 1.0, 1.3, 2.0, (c, d) => d < 0.3 && c.size[2] > 3) /* подфюзеляжный киль — оставить */ },
+  e_mig25: { src: `${DL}/mig25.glb`, scale: 0.80415, fwd: [-0.7934, 0.6088], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.47, 1.25, 1.8, 2.05, 6.5, (c, d) => c.size[0] > 1.5 || (d < 1.6 && c.ctr[2] > 4.5)) /* ракеты Р-40 под крылом; стабилизатор и кили — оставить */ },
+  e_su7b: { src: `${DL}/su7b.glb`, scale: 0.87774, fwd: [0.8361, 0.5486], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.38, 1.2, 1.2, 1.42) /* баки под фюзеляжем и крылом */ },
+  e_tu16: { src: `${DL}/tu16.glb`, scale: 0.94283, fwd: [-0.9304, -0.3665], rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
+  e_f100: { src: `${DL}/f100.glb`, scale: 0.98446, fwd: [-0.5332, 0.8460], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.75, -1.1, 0.9, -0.5, 6.5, (c) => c.size[0] > 2) /* четыре бака (консоль крыла — оставить) */ },
+  e_f5: { src: `${DL}/8089d66a8a8748b2a4b049b3c06f6a02.glb`, scale: 0.43199, fwd: [-0.8547, 0.5191], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-1.1, 1.2, 1.0, 1.25) /* подфюзеляжный бак */ },
+  e_f117: { src: `${DL}/f117.glb`, scale: 0.98432, fwd: [-0.6820, 0.7314], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < 1.55 && Math.max(...c.size) < 2.5) || (c.ctr[1] - c.size[1] / 2 < 1.35 && Math.max(...c.size) < 1.2) ? null : LS(c)) /* створки отсеков */ },
+  e_jaguar: { src: `${DL}/jaguar.glb`, scale: 1.03125, fwd: [-0.8090, 0.5878], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < 1.6 || c.ctr[1] - c.size[1] / 2 < 1.45) && Math.max(...c.size) < 1.4 && c.ctr[2] < 2.2 ? null : LS(c)) /* подфюзеляжные кили (z 3) — оставить */ },
+  e_buccaneer: { src: `${DL}/buccaneer.glb`, scale: 0.99897, fwd: [-0.7320, 0.6813], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(-0.14, -1.15, 1.0, -1.0, 2.0) },
+  e_harrier: { src: `${DL}/harrier.glb`, scale: 1.01656, fwd: [-0.7400, 0.6726], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(0, 1.3, 1.3, 1.6, 3.5) /* баки под крылом и стойки на концах крыла (обтекатели — оставить) */ },
+  e_mirage: { src: `${DL}/mirage2000.glb`, scale: 0.99722, fwd: [-0.7765, 0.6301], rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
+  e_rafale: { src: `${DL}/rafale.glb`, scale: 1.00659, fwd: [-0.8290, -0.5592], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -0.45 || c.ctr[1] - c.size[1] / 2 < -0.7) && Math.max(...c.size) < 1.7 ? null : LS(c)) },
+  e_b2: { src: `${DL}/a9be2ca923aa44809194613209810d06.glb`, scale: 2.20126, fwd: [-0.9591, -0.2831], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.max[1] < 1.15 || (c.ctr[1] < 1.1 && Math.max(...c.size) < 2.2) || (c.ctr[1] - c.size[1] / 2 < 0 && Math.max(...c.size) < 3) ? null : LS(c)) /* и открытый бомбоотсек */ },
+  // ── четвёртая партия 2026-10-19 (CC BY; без упрощения): manilov.ap — fwd по оси симметрии (sym.js), остальные — по осям автора ──
+  e_yak38: { src: `${DL}/yak-38.glb`, scale: 16.37 / 16.6, fwd: [-0.8090, -0.5878], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => { const d = Math.abs(c.ctr[0] + 0.13), m = Math.max(...c.size); return (d < 1.2 ? c.ctr[1] < -0.5 && m < 2.0 : (c.size[0] < 0.12 && c.size[1] < 0.12 && c.size[2] > 1.2 && c.ctr[1] < -0.15) || (c.ctr[1] - c.size[1] / 2 < -0.45 && m < 4.5)) ? null : LS(c); } /* шасси и трубы блоков НАР под крылом */ },
+  e_il28: { src: `${DL}/il28.glb`, scale: 21.45 / 21.43, fwd: [-0.8829, 0.4695], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.ctr[1] < 1.5 && Math.max(...c.size) < 3 ? null : LS(c)) /* шасси */ },
+  e_tu22: { src: `${DL}/tu22.glb`, scale: 23.17 / 24.06, fwd: [-0.7826, -0.6225], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.ctr[1] < -1.25 && Math.max(...c.size) < 4 ? null : LS(c)) /* шасси */ },
+  e_tu95: { src: `${DL}/tu95.glb`, scale: 50.04 / 49.93, fwd: [-0.7771, 0.6293], rulesIn: 'game', tex: () => 512, centerX: true, colors: { '^Cylinder68': [0.05, 0.05, 0.05] }, /* лопасти у автора целиком жёлтые — тёмный металл */
+    groups: (c) => (c.mat === 11 ? `prop${[-11.52, -5.72, 7.14, 12.94].reduce((b, h, i, H) => (Math.abs(c.ctr[0] - h) < Math.abs(c.ctr[0] - H[b]) ? i : b), 0)}_${Math.round(c.ctr[2] * 2)}` /* по ближайшей ступице (x ступиц — до центровки) */ /* лопасти: часть на каждый винт (соосные — два ряда), крутит игра; диск «размытия» (VINT) — неподвижный */
+      : c.ctr[1] < -1.9 && Math.max(...c.size) < 5 ? null : LS(c)) },
+  e_hunter: { src: `${DL}/hunter.glb`, scale: 10.26 / 10.29, fwd: [-0.7160, 0.6981], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(0.36, 0.9, 1.0, 1.0, 4.0) },
+  e_su27: { src: `${DL}/sukhoi_su-27_flanker.glb`, scale: 21.9 / 30.61, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
+  e_su35: { src: `${DL}/sukhoi_su-35_flanker-e__-35.glb`, scale: 21.9 / 10.15, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
+  e_etendard: { src: `${DL}/super-etendard.glb`, scale: 14.31 / 14.29, nose: '-x', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.15 || (c.ctr[1] < -0.8 && Math.abs(Math.abs(c.ctr[0]) - 1.7) < 0.2)) && Math.max(...c.size) < 3 ? null : LS(c)) /* шасси и его стойки */ },
+  e_mirage_f1: { src: `${DL}/dassault_mirage_f1.glb`, scale: 15.3 / 12.18, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, camo: { scheme: 'fr', skip: /^(?!material_0$|Material\.198$)/ }, /* у автора корпус и крылья без цвета (белые) — двухтонный серо-голубой камуфляж (шейдер игры) */ groups: strip(0, -1.42, 1.2, -0.85, 4.5) /* шасси, баки, блоки НАР */ },
+  e_f18c: { src: `${DL}/mcdonnell_douglas_fa-18c_hornet.glb`, scale: 17.07 / 16.95, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.3 && Math.max(...c.size) < 5) || (Math.abs(c.ctr[0]) < 1.5 && c.ctr[1] < -0.85 && Math.max(...c.size) < 1.6) ? null : LS(c)) /* шасси (и стойки) и подфюзеляжный бак */ },
+  e_ea18g: { src: `${DL}/mcdonnell_douglas_fa-18eboeing_ea-18g_growler.glb`, scale: 18.31 / 18.29, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => { const d = Math.abs(c.ctr[0]); return (d < 1.4 ? (c.ctr[1] < -0.2 && Math.max(...c.size) < 5.5) || (c.ctr[1] < 0.05 && Math.max(...c.size) < 1.6) : c.ctr[1] - c.size[1] / 2 < 0.4 && Math.max(...c.size) < 5) ? null : LS(c); } /* шасси, бак и контейнеры помех (пилоны — оставить) */ },
+  e_su24_old: { src: `${DL}/russian_su-24.glb`, scale: 0.0543, nose: '-z', rulesIn: 'game', tex: () => 512, // (42manako — не использовать: из мода BF2)
     groups: (c) => (c.ctr[1] < -0.4 && Math.abs(c.ctr[0]) < 2.2 && Math.max(...c.size) < 1.9 && !(c.size[2] > 1.5 && c.size[1] < 0.3) && ((c.ctr[2] > 1.6 && c.ctr[2] < 4.7) || (c.ctr[2] > -5.7 && c.ctr[2] < -3.2)) ? null : LS(c)) }, // шасси и створки (пилоны под фюзеляжем — оставить)
   e_su25: { src: `${DL}/pbr_sukhoi_su-25.glb`, scale: 0.483, nose: '-z', rulesIn: 'game', tex: () => 512,
     groups: (c) => (c.ctr[1] < 1.35 && Math.abs(c.ctr[0]) < 1.5 && c.ctr[2] > -3.2 && c.ctr[2] < 1.8 ? null : LS(c)) }, // шасси
@@ -101,6 +173,13 @@ const CONFIG = {
       return LS(c); } },
   // ── «Мульти-волна» (2026-10-13): крылатые ракеты, дроны, носители, пусковые оперативно-тактических ракет
   w_tomahawk: { src: `${DL}/tomahawk.glb`, scale: 1.44, nose: '-z', rulesIn: 'game', tex: () => 256, groups: LS }, // BGM-109 — 5,56 м
+  // Х-101 — HappyBattleSheep, Thingiverse (CC BY): STL в мм, Z вверх; stl2glb.js → Downloads/stl-glb/kh101.glb
+  // GBU-10 — PhilCiborowski, Thingiverse (CC BY; 1/72, мм): снизу «пенёк» для печати — долой
+  w_gbu10: { src: `${DL}/stl-glb/gbu10.glb`, scale: 4.32 / 45.53, axes: (x, y, z) => [y, z, x], rulesIn: 'game', tex: () => 256, pickMesh: /./, crease: 35, perTri: true,
+    colors: { '': [0.11, 0.125, 0.08] }, groups: () => 'body' },
+  // станция помех ELTA 8222 — Original_linny, Thingiverse (CC BY; 1/48, мм): и для запада, и пока вместо «Сорбции» (Mark 2026-10-19)
+  w_ecm: { src: `${DL}/stl-glb/elta8222.glb`, scale: 0.048, axes: (x, y, z) => [x, z, -y], tex: () => 256, pickMesh: /./, crease: 35, colors: { '': [0.2, 0.21, 0.2] } },
+  w_kh101: { src: `${DL}/stl-glb/kh101.glb`, scale: 0.001, axes: (x, y, z) => [y, z, x], tex: () => 256, pickMesh: /./, colors: { '': [0.08, 0.085, 0.09] } },
   w_kh555: { src: `${DL}/kh-555_cruise_missile_high_poly_fbx.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, target: 120000, simpErr: 0.004, /* 768 тыс. треугольников — почти без потерь */ groups: LS }, // Х-555 (и вид Х-55 / Х-101) — 6,04 м
   w_kalibr: { src: `${DL}/sizzler_ss-n-27_kalibr_3m-54.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, groups: LS }, // «Калибр» — 6,2 м
   w_agm86: { src: `${DL}/agm-86.glb`, scale: 0.1454, nose: '-z', rulesIn: 'game', tex: () => 256, centerX: true, groups: LS }, // AGM-86 ALCM — 6,32 м
@@ -114,7 +193,10 @@ const CONFIG = {
   e_typhoon: { src: `${DL}/eurofighter_typhoon_ef-2000.glb`, scale: 15.96 / 18.72, nose: '+x', rulesIn: 'game', tex: () => 512, target: 20000, pickMesh: /Eurofighter typhoon/,
     groups: (c) => (c.ctr[1] < -0.8 && Math.abs(c.ctr[0]) > 0.4 && !(c.size[0] < 0.12 && c.size[1] > 0.3) ? null : LS(c)) }, // подвеска модели (ракеты, баки) — долой, пилоны остаются // Eurofighter Typhoon — 16 м; носитель Storm Shadow
   w_slam: { src: `${DL}/ugm-84_harpoon_free.glb`, scale: 4.49 / 7.3, nose: '+x', tex: () => 256, target: 5000, pickMesh: /./ }, // AGM-84E SLAM (по Harpoon) — 4,49 м
-  w_jsow: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM-154 JSOW/, groups: (c) => (c.size[1] < 0.05 && c.ctr[1] > 2.9 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // AGM-154 JSOW — 4,1 м; крылья в модели сложены — раскрываются после сброса
+  // AGM-154 JSOW — RickSlash (CC BY, с текстурами; 2026-10-19 вместо набора NETRUNNER_pl): 2 → 4,1 м, крылья — две пластины сверху (сложены)
+  w_jsow: { src: `${DL}/agm-154_jsow_missile.glb`, scale: 2.05, nose: '+z', rulesIn: 'game', tex: () => 512, pickMesh: /./,
+    groups: (c) => (c.size[1] < 0.06 && c.ctr[1] > 0.12 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') },
+  w_jsow_old: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM-154 JSOW/, groups: (c) => (c.size[1] < 0.05 && c.ctr[1] > 2.9 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // AGM-154 JSOW — 4,1 м; крылья в модели сложены — раскрываются после сброса
   // «Кинжал» — ракета 9М723 с пусковой «Искандера» (Х-47М2 сделан на её основе; решение Mark 2026-10-12): на старте она стоит
   // вертикально — поворот носом в −Z; правила частей — как у l_iskander (в её осях); светло-серая, как на фото
   w_kinzhal: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027 * KZ, centerX: true, /* 7,2 м (у автора 8,4); ракета стоит в стороне от оси пусковой */ axes: (x, y, z) => { const [a, b, c] = AX['-x'](x, y, z); return [a, c, -b]; }, rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, tex: () => 256,
@@ -133,7 +215,7 @@ const CONFIG = {
     groups: (c) => { const [x, y, z] = c.ctr, thin = c.size[0] < 1.15 && c.size[2] < 1.15 && !(Math.max(c.size[0], c.size[2]) < 0.3 && c.size[1] > 2); /* не направляющие пусковой (длинные и тонкие; стабилизаторы — короткие) */ const fin = c.size[0] < 0.3 && c.size[2] < 0.3 && c.size[1] > 1 && c.size[1] < 1.3; /* нижние рули ниже порога 6,3 — тоже ракета (как у w_kinzhal) */ if ((z > 6.3 || (z > 6 && fin)) && y > 2.2 && thin) { if (Math.abs(x - 2.75) < 0.62) return 'tbm'; if (Math.abs(x - 4.06) < 0.62) return 'tbm2'; } return 'body'; } },
   l_tochka: { src: `${DL}/ukrainian_otr-21_tochka-u.glb`, scale: 0.0284, nose: '+z', rulesIn: 'game', dedupe: true, renorm: true, texVf: "curves=all='0/0 0.5/0.42 1/0.68'", /* светлые пятна камуфляжа на солнце выгорали в белое */ colors: { '^(White|material_1)$': [0.07, 0.085, 0.05], '^0059_DarkOliveGreen': [0.06, 0.08, 0.035], '^material$': [0.1, 0.11, 0.08] }, /* цвета — линейные (0,06 ≈ 27 % яркости на экране); у автора белые без текстуры — под цвет машины */ dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П129 — 11,8 м, ракета на старте в корме
     groups: (c) => ((Math.abs(c.ctr[0] + 3.98) < 0.4 && c.ctr[2] > 13.2 && c.ctr[1] > 2.4 && c.size[0] < 0.8) || (Math.abs(c.ctr[0] + 3.98) < 0.45 && c.ctr[2] > 12.9 && c.ctr[1] > 2.4 && c.ctr[1] < 2.7 && c.size[1] < 0.1) ? 'tbm' : 'body') }, /* второе условие — два нижних решётчатых руля (плоские, у хвоста) */
-  l_scud: { src: `${DL}/scud__ballistic_missile.glb`, scale: 3.13, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, // Р-17 на МАЗ-543 — 13,4 м, ракета на старте
+  l_scud: { src: `${DL}/scud__ballistic_missile.glb`, scale: 3.13, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, texVf: 'eq=gamma=1.7:brightness=0.04:saturation=0.9', /* текстура у автора очень тёмная */ // Р-17 на МАЗ-543 — 13,4 м, ракета на старте
     groups: (c) => (Math.abs(c.ctr[0]) < 0.75 && c.ctr[2] > 4.6 && c.ctr[1] > 2.2 && c.size[0] < 1.4 && !(c.size[1] > 2 && c.size[0] < 0.6 && c.size[2] > 0.6) ? 'tbm' : 'body') }, /* без наклонной стойки пусковой (высокая и тонкая) */ // tbm — ракета на старте: при пуске прячется, улетает её копия
   l_himars: { src: `${DL}/m142_himars__free_model__animation.glb`, scale: 0.43, nose: '-z', rulesIn: 'game', texVf: (src) => "curves=all='0/0 0.5/0.4 1/0.78'" + (src === 0 ? ',' + NO_TAG : '') /* атлас ракет (картинка 0) — без надписей автора */, colors: { '^Material_147$': [0.3, 0.25, 0.16] }, /* песочная окраска — чуть темнее, иначе на солнце белая */ unit: true, tex: () => 512, // M142 HIMARS — 7 м
     pickMesh: /^(?!.*(_dam\/|Default_2))/, groups: (c) => (c.mat === 3 && c.ctr[2] > -0.7 && c.ctr[1] > -0.6 ? 'pod' : LS(c)) }, /* pod — пакет с ракетами (узел misc_a, материал 3; без колпаков колёс того же материала и мелочи у кабины): поднимается перед пуском */ // без «повреждённых» дублей дверей и капота и без ракеты, лежащей рядом
@@ -152,7 +234,7 @@ const CONFIG = {
   m_loco: { src: `${DL}/train__locomotive_low-poly_locomotive.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 256, target: 6000, groups: () => 'body' }, // тепловоз
   m_loco2: { src: `${DL}/train__locomotive_sd40-2.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, target: 6000, groups: () => 'body' }, // тепловоз SD40-2
   t_il78: { src: `${DL}/il78.glb`, scale: 1, nose: '-z', rulesIn: 'game', glass: /^Sphere01/, tex: () => 1024, target: 14000, groups: (c) => (Math.abs(c.ctr[0]) < 6 && c.max[1] < -1 && Math.max(...c.size) < 3 ? null : 'body') }, // без шасси // Ил-78 — танкер «Летки» (восток)
-  t_kc135: { src: `${DL}/boeing_kc-135r_stratotanker.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 1024, target: 14000, groups: (c) => (Math.abs(c.ctr[0]) < 5 && c.max[1] < 2.3 ? null : 'body') }, // без шасси // KC-135R — танкер (запад)
+  t_kc10: { src: `${DL}/mcdonnell_douglas_kc-10_extender.glb`, scale: 55.35 / 226.4, nose: '-x', rulesIn: 'game', tex: () => 512, target: 40000, perTri: true, groups: (c) => (c.ctr[1] < 2.8 && Math.abs(c.ctr[0] - 4.5) < 7 ? null : 'body') }, // KC-10 — Spark_Customs (CC BY), без шасси (по треугольникам: колёса срослись с сеткой; ось у автора — x 4,5); западный танкер про запас (KC-135 из MS Flight Simulator — удалён)
   // ── ракеты «воздух–воздух» из новых наборов (2026-10-11)
   aam_aim7: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /us_aim-7\// }, // AIM-7 (E и M)
   aam_aim9x: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /us_aim-9x/ }, // AIM-9X
@@ -169,7 +251,7 @@ const CONFIG = {
   tor: { src: `${DL}/9k331_tor-m1.glb`, scale: 1, fwd: [0.767, 0.641], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, target: 55000,
     radarRaise: { hinge: [-9.33, 1.04, 10.3], angle: 1.85 }, tpFix: [0.01, 2.29, -0.19], /* ось башни — как в launchers.js (кромка сложенной решётки лежала у основания и сдвигала расчёт) */ // антенна в модели сложена назад на вилке; шарнир — верх тумбы (центр x −9,33, z 10,3): вилку с решёткой и запросчиком — в боевое положение
     groups: (c) => (c.min[1] > -0.13 && c.ctr[2] > 5.8 && c.ctr[2] < 12.8 ? ((c.ctr[2] > 10.5 && Math.abs(c.ctr[0] + 9.33) < (c.ctr[2] > 11.0 ? 1.15 : 1.0)) || (c.ctr[2] > 10.1 && c.ctr[1] > 0.98 && Math.abs(c.ctr[0] + 9.33) < 0.65) ? 'radar' : 'turret') : 'body') }, // башня сшита с корпусом одной сеткой — по треугольникам; radar — антенна обзора (в модели сложена назад)
-  pantsir: { src: `${DL}/96k6_pantsir-s2.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 55000, minPart: 0.04, hinge: [0, 3.35, -0.6], tube: [0.12, 0.35],
+  pantsir: { src: `${DL}/96k6_pantsir-s2.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, /* у автора — сплошной ярко-зелёный */ target: 55000, minPart: 0.04, hinge: [0, 3.35, -0.6], tube: [0.12, 0.35],
     groups: (c) => {
       if (c.min[1] < 2.4 || c.ctr[2] < -3.2 || c.ctr[2] > 2.4) return 'body';
       if (Math.abs(c.ctr[0]) < 0.72 && c.min[1] > 3.1 && c.ctr[2] > 0.9 && c.ctr[2] < 2.4 && (Math.abs(c.ctr[0]) < 0.4 || c.min[1] > 3.6)) return 'radar'; // РЛС обнаружения на крыше башни (блок 1,33 м — с боковыми деталями) — крутится
@@ -178,15 +260,15 @@ const CONFIG = {
   s400: { src: `${DL}/s-400_triumf_missile_launcher_truck.glb`, scale: 13.5 / 1.9, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 2048, target: 120000, /* скан: текстура 2048 — 1024 смазывала (2026-10-13) */ hinge: [0, -1.53, 5.44], tube: [0.6, 1.4], // скан: весь тягач — одна сетка, делим по треугольникам
     groups: (c) => (c.ctr[1] > -1.45 && axis(c, [5.44, -1.53], [-0.604, 0.797], 1.75, -1.8, 9.5) ? 'cradle' : 'body') },
   // «Стрела-1» (БРДМ-2): пусковая в модели развёрнута на ~43° влево — turretYaw; одна ракета «летит» отдельно — долой
-  strela1: { src: `${DL}/9k31_strela-1_sam.glb`, scale: 0.295, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 55000, turretYaw: -0.75, hinge: [0.55, 2.87, 0.24], absorb: 0,
+  strela1: { src: `${DL}/9k31_strela-1_sam.glb`, scale: 0.295, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, turretYaw: -0.75, hinge: [0.55, 2.87, 0.24], absorb: 0,
     groups: (c) => {
       if (c.mat === 1) return c.ctr[0] < -1.4 ? null : 'missile'; // ракеты 9М31 на направляющих (и одна «в полёте»)
       if (c.min[1] > 2.75) return 'cradle';
       return c.min[1] > 1.88 ? 'turret' : 'body';
     } },
   // Roland 2 на Marder — ScurvyWoof: без текстур, цвета авторов «мятные» — перекраска в бронзово-зелёный бундесвера (RAL 6031)
-  roland: { src: `${DL}/marder_roland_low-poly.glb`, scale: 2.3, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 30000, hinge: [0, 2.74, 0.5], tube: [0.25, 0.4],
-    colors: { '^Material$': [0.07, 0.084, 0.04], '^Material\\.001$': [0.045, 0.054, 0.03], '^Material\\.002$': [0.05, 0.06, 0.065], '^Material\\.003$': [0.07, 0.084, 0.04] },
+  roland: { src: `${DL}/marder_roland_low-poly.glb`, scale: 2.3, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, camo: { scheme: 'nato', skip: /^(material_0|Material\.0(0[2-9]|1))/  }, hinge: [0, 2.74, 0.5], tube: [0.25, 0.4],
+    colors: { '^Material\\.002': [0.05, 0.06, 0.065], '^Material\\.003': [0.025, 0.025, 0.024], '^Material\\.008': [0.035, 0.035, 0.032], '^Material\\.011': [0.03, 0.03, 0.028] }, // гусеницы и катки — тёмные (у автора белые и светло-серые)
     groups: (c) => {
       if (c.min[1] < 2.0 || c.ctr[2] < -1.2 || c.ctr[2] > 1.9) return 'body';
       if (Math.abs(c.ctr[0]) < 0.6 && c.min[1] > 3.15 && c.ctr[2] > 0.9) return 'radar'; // РЛС обзора на мачте — крутится
@@ -194,7 +276,7 @@ const CONFIG = {
     } },
   // 2К22 «Тунгуска» — usedm: башня с РЛС сопровождения спереди и обзора сзади (крутится); по бокам — спарки 2А38 и по 4 ТПК 9М311,
   // они качаются вместе (общая цапфа)
-  tunguska: { src: `${DL}/2k22_tunguska.glb`, scale: 10, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 40000, hinge: [0, 2.2, 0.1], tube: [0.18, 0.3],
+  tunguska: { src: `${DL}/2k22_tunguska.glb`, scale: 10, nose: '+z', rulesIn: 'game', unit: true, tex: () => 1024, /* без упрощения (37 тыс.) */ hinge: [0, 2.2, 0.1], tube: [0.18, 0.3],
     groups: (c) => {
       if (c.min[1] < 1.5 || Math.abs(c.ctr[2]) > 2.7) return 'body';
       if (Math.abs(c.ctr[0]) < 0.5 && c.min[1] > 3.05 && c.ctr[2] > 1.3) return 'radar';
@@ -204,7 +286,7 @@ const CONFIG = {
   // в игре он поднимается вертикально (u.lel = 90°) вокруг оси у кормы
   sampt: { src: `${DL}/samp-t_air_defense_system.glb`, scale: 5.5, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 1024, target: 60000, hinge: [0, 0.45, 4.3],
     groups: (c) => (c.ctr[1] > 0.4 && c.ctr[2] > -0.8 && c.ctr[2] < 4.35 && Math.abs(c.ctr[0]) < 1.7 ? 'cradle' : 'body') }, // пакет: два ряда контейнеров, y 0,5–1,75 (под ним — пустой промежуток до рамы)
-  khordad: { src: `${DL}/iranian_sevom_khordad_sam.glb`, scale: 100, nose: '-x', texVf: "hue=h=48:s=0.85,curves=all='0/0 0.5/0.3 1/0.58'", rulesIn: 'game', unit: true, tex: () => 512, target: 30000, hinge: [0, 3.0, 3.7],
+  khordad: { src: `${DL}/iranian_sevom_khordad_sam.glb`, scale: 100, nose: '-x', texVf: "hue=h=44:s=0.75,eq=brightness=-0.06", rulesIn: 'game', unit: true, tex: () => 512, /* без «кривой» (затемняла колёса в сплошной чёрный) и упрощения */ hinge: [0, 3.0, 3.7],
     groups: (c) => (c.size[2] > 5 && c.size[0] < 0.5 && c.min[1] > 3.3 ? 'missile' : c.min[1] > 2.95 && c.ctr[2] > 0.5 && c.ctr[2] < 4.2 && c.size[0] < 2 ? 'cradle' : 'body') }, // Sevom Khordad — 42manako: пустынный камуфляж → оливковый (у запада — трофейный); пусковая с 3 ракетами — без башни, ось у кормы
   // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221): одна из двух пушек (сцена в мм, пушка — в половину размера → ×0,002);
   // станок поворачивается, спарка со стволами и коробами — качается на цапфах; подложка, кабели, радар и вторая пушка — долой
@@ -218,9 +300,9 @@ const CONFIG = {
     } },
   // Tracked Rapier — stealth86: пусковая на корме стоит ракетами назад — turretYaw разворачивает её в рабочее положение;
   // по бокам — балки с 8 ракетами (качаются), сзади — малая тарелка РЛС (крутится). Цвет авторов — жёлтый хаки → тёмно-зелёный
-  rapier: { src: `${DL}/tracked_rapier.glb`, scale: 0.001373, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, texVf: "hue=h=48:s=0.75,curves=all='0/0 0.5/0.33 1/0.62'", target: 40000, simpErr: 0.002,
+  rapier: { src: `${DL}/tracked_rapier.glb`, scale: 0.001373, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, texVf: "hue=h=48:s=0.75,curves=all='0/0 0.5/0.4 1/0.75'", simpErr: 0.002, camo: { scheme: 'uk', skip: /missile|metal|wire|rubber|Tracks|socket/ }, /* без упрощения (447 тыс.; вдали — rapier_lo) */
     hinge: [0, 0.21, 1.45], turretYaw: Math.PI, pack0: 0, instR: 0.12, absorb: 0.13, tplNear: [0.83, 0.02],
-    colors: { '^(Base|Base\\.001|Cylinder\\.009__0)$': [0.05, 0.066, 0.032], '^missile$': [0.55, 0.55, 0.52] },
+    colors: { '^missile$': [0.55, 0.55, 0.52], '^Tracks': [0.03, 0.03, 0.028], rubber: [0.02, 0.02, 0.02] },
     groups: (c) => {
       if (c.min[1] < -0.25 || c.ctr[2] < 0.6) return 'body';
       if (c.mat === 15) return 'missile';
@@ -270,12 +352,47 @@ const CONFIG = {
       if (c.min[1] > 1.55 && axis(c, [-0.19, 1.77], [-0.985, 0.175], 1.3, -3.2, 3.6)) return 'cradle';
       return c.min[1] > 1.15 && c.ctr[2] > -0.7 && c.ctr[2] < 0.5 ? 'turret' : 'body';
     } },
-  m163: { src: `${DL}/m163_vads.glb`, scale: 0.393, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, hinge: [0, 3.44, -1.29],
+  // M163 VADS — Gorgytz (CC BY; прежняя 42manako — из Lock On): сетка из STL без текстур и деталей — части по связности, краска своя
+  m163: { src: `${DL}/m163.glb`, scale: 4.86 / 136.9, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, target: 320000, simpErr: 0.005, perTri: true, crease: 35, camo: { scheme: 'nato' }, /* 616 тыс. → 320 тыс. (вдали — m163_lo) */
+    hinge: [-0.3, 2.3, -0.4 - 2.32], // цапфы пушки (оси игры, м; правила — до центровки: по длине −2,32): стволы — слева от оси башни, на высоте 2,3 м
+    colors: { '#track': [0.03, 0.03, 0.028], '#gun': [0.035, 0.036, 0.034] }, // олива; гусеницы и пушка — тёмные
+    groups: (c) => { // по треугольникам (сетка из STL — связных частей тысячи): пушка качается, башня с РЛС крутится, антенны — на корпусе
+      const x = c.ctr[0], y = c.ctr[1], z = c.ctr[2] + 2.32; // z — от середины корпуса
+      if (y > 2.02 && z < -0.3 && x < 0.5 && x > -1.0) return 'cradle#gun';
+      if (y > 2.02 && Math.hypot(x, z - 0.15) < 1.45 && !(z > 0.95 && Math.abs(x) < 0.45)) return 'turret';
+      return y < 0.75 && Math.abs(x) > 0.85 ? 'body#track' : 'body';
+    } },
+  m163_old: { src: `${DL}/m163_vads.glb`, scale: 0.393, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, hinge: [0, 3.44, -1.29],
     groups: (c) => {
       if (c.min[1] < 2.85 || c.ctr[2] > 0.15 || c.ctr[2] < -3.3) return 'body';
       return c.min[1] > 3.25 && c.ctr[2] < -1.35 ? 'cradle' : 'turret';
     } },
-  gepard: { src: `${DL}/flakpanzer_gepard__high-quality_model.glb`, scale: 0.024, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 142000, hinge: [0, 2.31, 0.06], // без кластеризации: она рвала сетку
+  // ЗСУ-23-4М «Шилка» — voron335 (CC BY; прежняя от Scout снята 2026-10-19: имена материалов — как в War Thunder, похоже на выгрузку из игры)
+  zsu234: { src: `${DL}/zsu-23-4m.glb`, scale: 1.55, nose: '+x', unit: true, tex: () => 512, /* без упрощения (656 тыс.; вдали — zsu234_lo) */ // правила — в осях автора (y вверх, нос +x, ось z 5,37)
+    hinge: [0.9, 6.92, 5.37], // цапфы автоматов — у лобового листа башни
+    groups: (c) => (c.mat === 14 || c.mat === 15 ? null /* кормовые фонари без кронштейнов — висели в воздухе */ : c.min[1] > 7.0 && c.max[1] > 7.3 && c.ctr[0] < -0.3 && c.size[1] < 1 ? 'radar' /* антенна РЛС на корме башни — крутится */
+      : c.min[1] > 6.7 && c.ctr[0] > 0.75 && Math.abs(c.ctr[2] - 5.37) < 0.42 && c.size[2] < 0.7 ? 'cradle' /* четыре автомата и маска */
+      : c.min[1] > 6.7 && c.ctr[0] > -1.1 ? 'turret' : 'body') },
+  // 9К35 «Стрела-10» на МТ-ЛБ — ScurvyWoof (CC BY; его же Roland): части не подписаны — по треугольникам: тумба пусковой крутится,
+  // всё выше неё (контейнеры, блок датчиков) качается; цвета у автора — свои (оставляем)
+  strela10: { src: `${DL}/mtlb_strela-10_low-poly.glb`, scale: 1.2, nose: '+z', rulesIn: 'game', unit: true, tex: () => 256, perTri: true, hinge: [0, 2.1, 0.91],
+    camo: { scheme: 'soviet', skip: /Material\.00[45]$/ }, colors: { 'Material\\.00[45]$': [0.035, 0.035, 0.032] }, // у автора — ярко-зелёный «игрушечный»: камуфляж; гусеницы и катки тёмные
+    groups: (c) => (c.ctr[1] > 2.08 ? 'cradle' : c.ctr[1] > 1.85 && Math.hypot(c.ctr[0], c.ctr[2] - 0.91) < 0.32 ? 'turret' : 'body') },
+  // AN/TWQ-1 Avenger — KillCaptureDestroy (CC BY): 1,7 млн треугольников (шины — 0,4 млн) → 140 тыс.; материалы у автора белые — свои цвета.
+  // Турель — на кузове сзади (центр x −1,92 в осях правил — по краям пакетов), пакеты «Стингеров» по бокам выше 2 м — качаются
+  avenger: { src: `${DL}/antwq-1a1_avenger.glb`, scale: 9.34, nose: '+z', rulesIn: 'game', unit: true, crease: 35, /* пусковые были «смазаны» — сглаженные нормали через острые рёбра */ tex: () => 256, target: 450000, simpErr: 0.005, hinge: [-1.92, 2.38, 1.63], perTri: true, camo: { scheme: 'nato', skip: /tire|chrome|steel|glass|head_lights|paint_black/ }, /* 1,7 млн → 450 тыс. (вдали — avenger_lo) */
+    colors: { tire: [0.02, 0.02, 0.02], paint_black: [0.015, 0.015, 0.015], 'chrome|steel': [0.22, 0.22, 0.21], head_lights: [0.6, 0.6, 0.55] },
+    groups: (c) => { const X = c.ctr[0] + 1.92, Y = c.ctr[1], Z = c.ctr[2];
+      if (Y > 2.05 && Math.abs(X) > 0.4 && Z > 0.7 && Z < 2.5) return 'cradle';
+      return Y > 1.25 && Math.hypot(X, Z - 1.63) < 0.85 ? 'turret' : 'body'; } },
+  // MIM-72 Chaparral (M730) — TankLord, Thingiverse (CC BY), модель для печати 1/100 (мм → ×0,1 м), Z вверх; пусковая поставлена в гнездо
+  // шасси при переводе (stl2glb.js …Launcher.stl@0.31,-26.73,1.35). Шип пусковой внутри корпуса — выбросить; тумба над палубой крутится,
+  // блок с четырьмя ракетами качается
+  chaparral: { src: `${DL}/stl-glb/chaparral.glb`, scale: 0.1, axes: (x, y, z) => [-x, z, y], rulesIn: 'game', unit: true, tex: () => 256, perTri: true, crease: 35, camo: { scheme: 'nato', size: 1.1 }, /* без упрощения (270 тыс.; вдали — chaparral_lo); STL — сварка и сглаживание до 35° */
+    hinge: [-0.035, 2.33, 0.075], turretYaw: Math.PI, colors: { '#msl': [0.55, 0.55, 0.52] }, // пусковая у автора смотрит назад; ракеты — белые
+    groups: (c) => { if (c.mat === 0) return 'body'; if (c.ctr[1] < 1.36) return null; if (c.ctr[1] < 1.6) return 'turret';
+      const ax = Math.abs(c.ctr[0]), y = c.ctr[1]; return ax > 0.72 && ax < 1.18 && ((y > 1.82 && y < 2.22) || (y > 2.42 && y < 2.82)) ? 'cradle#msl' : 'cradle'; } }, // ракеты — по двум рядам направляющих
+  gepard: { src: `${DL}/flakpanzer_gepard__high-quality_model.glb`, scale: 0.024, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, hinge: [0, 2.31, 0.06], camo: { scheme: 'nato', skip: /glass|gun|track|net/ }, // без упрощения (142 тыс.); камуфляж Бундесвера
     // у модели нет текстур, цвета материалов — розовые и фиолетовые: красим в оливковый Бундесвера (RAL 6031), гусеницы и стволы — тёмные
     colors: { body: [0.065, 0.08, 0.042], turret: [0.065, 0.08, 0.042], gun: [0.04, 0.042, 0.04], net: [0.08, 0.09, 0.06], track: [0.06, 0.06, 0.055], glass: [0.35, 0.38, 0.4] },
     groups: (c) => {
@@ -359,6 +476,18 @@ const CONFIG = {
   pr_wbins: { src: `${DL}/garbage_bin.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 3000, groups: () => 'body' }, // баки у дома
   // ── зенитные комплексы: unit — земля в y = 0, центр по корпусу; groups — корпус / башня (азимут) / пакет (угол места);
   // hinge — ось качания пакета в осях модели; simplify — доля треугольников после упрощения (meshoptimizer)
+  // 9К37 «Бук» (колёсный, на шасси МЗКТ) — azlan (CC BY; 2026-10-19): одна текстура на всё; пусковая у автора поднята и смотрит назад
+  buk: { src: `${DL}/buk_missile_system.glb`, scale: 1, nose: '-z', unit: true, tex: () => 1024, hinge: [0, 4.0, 4.7], // правила — в осях автора (кабина в −z, палуба y 3,4)
+    groups: (c) => ((c.size[0] < 0.5 && c.size[1] > 4 && c.size[2] > 4.5) || (c.size[0] < 0.25 && c.ctr[1] > 4.5 && c.ctr[2] > 3.4 && Math.max(...c.size) < 2) ? 'missile' /* четыре 9М38 с крыльями */
+      : c.min[1] > 3.5 && c.ctr[1] > 4.4 && c.ctr[2] > 1.5 && (c.size[0] > 2.5 || Math.abs(Math.abs(c.ctr[0]) - 1.5) < 0.1) ? 'cradle' /* пусковая рама и её цапфы */ : 'body') },
+  // ЗУ-23-2 — LuckySkink9661 (CC BY; 2026-10-19), в боевом положении (колёса подняты); без упрощения (256 тыс.); правила — в осях автора
+  // (стволы — в +x, платформа y 0,26–0,38): верхний станок с сиденьями крутится, качающаяся часть — спарка с магазинами на цапфах y 1,05
+  zu23: { src: `${DL}/fdae5a37901941fea3a02578506072a3.glb`, scale: 1, nose: '+x', unit: true, tex: () => 512, hinge: [0.02, 1.05, 0],
+    groups: (c) => (c.min[1] > 0.6 && c.ctr[0] > -0.45 && Math.abs(c.ctr[2]) < 0.45 ? 'cradle' : c.min[1] > 0.42 && Math.abs(c.ctr[2]) < 1.0 && c.ctr[0] > -2.0 ? 'turret' : 'body') },
+  // Phalanx (наземный C-RAM «Центурион») — DenisGLabrecque (CC BY; 2026-10-19): тумба — корпус, вилка — башня, качается всё между
+  // её щёк: пушка, магазин и купол РЛС (как у настоящего). Правила — в осях автора (стволы в +z, цапфы y 2,39)
+  phalanx: { src: `${DL}/phalanx_ciws_close-in_weapons_system.glb`, scale: 1.15, nose: '+z', unit: true, tex: () => 256, hinge: [0, 2.39, 0], pack0: 0, /* стволы у автора горизонтальны (ось пакета по куполу считалась бы вертикальной) */
+    groups: (c) => (Math.abs(c.ctr[0]) < 0.45 && c.ctr[1] > 1.6 ? 'cradle' /* с барабаном магазина под пушкой */ : c.min[1] > 1.0 ? 'turret' : 'body') },
   bukm3: { src: `${DL}/buk-m3_9k317_sam.glb`, scale: 1, nose: '+z', unit: true, tex: () => 512, minPart: 0.06, absorb: 0, hinge: [0, 2.6, -3.85],
     copyParts: [{ sel: (c) => c.mat === 12 && Math.abs(c.ctr[0] + 0.66) < 0.05 && Math.abs(c.ctr[1] - 4.6) < 0.05 && c.size[0] > 0.5, offs: [[0.6, 0, 0], [1.2, 0, 0]] }], // два недостающих нижних ТПК
     groups: (c) => {
@@ -369,7 +498,7 @@ const CONFIG = {
     } },
 };
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256 };
 // С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)
 CONFIG.s400_lo = { ...CONFIG.s400, target: 45000, simpErr: 0.02, tex: () => 512 };
@@ -469,7 +598,7 @@ async function prepare(name, views) {
         for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k] * 3; for (let d = 0; d < 3; d++) { c.min[d] = Math.min(c.min[d], p.P[v + d]); c.max[d] = Math.max(c.max[d], p.P[v + d]); } }
         c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; gs.push(small.has(-1 - t) ? null : cfg.groups(c));
       }
-      p.group = (t) => gs[t]; p.comp = Int32Array.from(gs, (g2) => (g2 === 'cradle' ? 1 : 0)); keep = (t) => !!gs[t];
+      p.group = (t) => gs[t]; p.comp = Int32Array.from(gs, (g2) => (String(g2).split('#')[0] === 'cradle' ? 1 : 0)); keep = (t) => !!gs[t];
     } else if (cfg.groups) {
       const { comp, list } = components(p.P, p.I, 0.001), gid = new Map();
       // мелочь (болты, заклёпки, ручки) меньше minPart — долой: на упрощение она почти не поддаётся
@@ -482,13 +611,18 @@ async function prepare(name, views) {
       list.forEach((c, i) => { c.size = c.max.map((v, k) => v - c.min[k]); c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.mat = p.material; if (cfg.remove(c, i)) drop.add(c.id); });
       keep = (t) => !drop.has(comp[t]);
     }
+    // камуфляж: краска «#camo» — узор рисует игра (models.js, шейдер по координатам точки: пятна с ровными краями, не по
+    // треугольникам сетки); в файле — основной цвет схемы. Части с краской «#…» и материалы из skip — без камуфляжа
+    if (cfg.camo) { const g0 = p.group || (() => 'body'), mn = ((J.materials || [])[p.material] || {}).name || '', sk = cfg.camo.skip && cfg.camo.skip.test(mn);
+      p.group = (t) => { const g = g0(t); return !g || sk || String(g).includes('#') ? g : g + '#camo'; }; }
     // cutZ: [z0, z1] — оставить треугольники с центром в этих пределах по длине (оси правил): головная часть ракеты и т. п.
     if (cfg.cutZ) { const k0 = keep, [z0, z1] = cfg.cutZ; keep = (t) => { if (k0 && !k0(t)) return false; for (let k = 0; k < 3; k++) { const z = p.P[p.I[t * 3 + k] * 3 + 2]; if (z < z0 || z > z1) return false; } return true; }; } // все три вершины внутри: длинные грани корпуса не торчат «иглами»
     const remaps = new Map();
     for (let t = 0; t < p.I.length / 3; t++) {
       if ((keep && !keep(t)) || (dup.has(pi) && dup.get(pi).has(t))) { removed++; continue; }
-      const fg = !!(p.glassT && p.glassT(t)), grp = p.group ? p.group(t) : 'body', key = `${grp}|${p.material}${fg ? '|g' : ''}`;
-      let M = byMat.get(key); if (!M) byMat.set(key, M = { group: grp, mat: p.material, forceGlass: fg, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: !!p.UV });
+      // группа «часть#краска» (groups у моделей без текстур): своя краска части — цвет из cfg.colors по имени «материал#краска»
+      const fg = !!(p.glassT && p.glassT(t)), g0 = p.group ? p.group(t) : 'body', [grp, paint] = String(g0).split('#'), key = `${g0}|${p.material}${fg ? '|g' : ''}`;
+      let M = byMat.get(key); if (!M) byMat.set(key, M = { group: grp, paint, mat: p.material, forceGlass: fg, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: !!p.UV });
       let remap = remaps.get(key); if (!remap) remaps.set(key, remap = new Int32Array(p.P.length / 3).fill(-1));
       if (p.comp) M.tc.push(`${p.node}.${p.prim}:${p.comp[t]}`);
       for (let k = 0; k < 3; k++) {
@@ -514,6 +648,31 @@ async function prepare(name, views) {
       for (const k of [a, b, c]) { N[k] += nx; N[k + 1] += ny; N[k + 2] += nz; }
     }
     for (let i = 0; i < N.length; i += 3) { const l = Math.hypot(N[i], N[i + 1], N[i + 2]) || 1; m.nor[i] = N[i] / l; m.nor[i + 1] = N[i + 1] / l; m.nor[i + 2] = N[i + 2] / l; }
+  }
+  // crease: N° — у моделей из STL каждая вершина у треугольника своя (грани «плоские», файл огромный): сварить совпадающие
+  // вершины и сгладить нормали между гранями с углом меньше N° (острые рёбра остаются острыми)
+  if (cfg.crease) for (const m of byMat.values()) {
+    const cosA = Math.cos(cfg.crease * Math.PI / 180), P = m.pos, I = m.idx, nT = I.length / 3, FN = new Float64Array(nT * 3);
+    for (let t = 0; t < nT; t++) {
+      const a = I[t * 3] * 3, b = I[t * 3 + 1] * 3, c = I[t * 3 + 2] * 3;
+      const ux = P[b] - P[a], uy = P[b + 1] - P[a + 1], uz = P[b + 2] - P[a + 2], vx = P[c] - P[a], vy = P[c + 1] - P[a + 1], vz = P[c + 2] - P[a + 2];
+      let nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx; const l = Math.hypot(nx, ny, nz) || 1; FN[t * 3] = nx / l; FN[t * 3 + 1] = ny / l; FN[t * 3 + 2] = nz / l;
+    }
+    const q = 1e4, pk = new Map(), pid = new Int32Array(P.length / 3);
+    for (let i = 0; i < pid.length; i++) { const k = Math.round(P[i * 3] * q) + ',' + Math.round(P[i * 3 + 1] * q) + ',' + Math.round(P[i * 3 + 2] * q); let id = pk.get(k); if (id === undefined) pk.set(k, id = pk.size); pid[i] = id; }
+    const faces = Array.from({ length: pk.size }, () => []);
+    for (let t = 0; t < nT; t++) for (let j = 0; j < 3; j++) faces[pid[I[t * 3 + j]]].push(t);
+    const pos = [], nor = [], uv = [], idx = [], vm = new Map();
+    for (let t = 0; t < nT; t++) for (let j = 0; j < 3; j++) {
+      const v = I[t * 3 + j], p = pid[v]; let nx = 0, ny = 0, nz = 0;
+      for (const f of faces[p]) if (FN[f * 3] * FN[t * 3] + FN[f * 3 + 1] * FN[t * 3 + 1] + FN[f * 3 + 2] * FN[t * 3 + 2] >= cosA) { nx += FN[f * 3]; ny += FN[f * 3 + 1]; nz += FN[f * 3 + 2]; }
+      const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+      const k = p + ':' + Math.round(nx * 64) + ',' + Math.round(ny * 64) + ',' + Math.round(nz * 64) + (m.hasUv ? ':' + Math.round(m.uv[v * 2] * 4096) + ',' + Math.round(m.uv[v * 2 + 1] * 4096) : '');
+      let o = vm.get(k);
+      if (o === undefined) { vm.set(k, o = pos.length / 3); pos.push(P[v * 3], P[v * 3 + 1], P[v * 3 + 2]); nor.push(nx, ny, nz); if (m.hasUv) uv.push(m.uv[v * 2], m.uv[v * 2 + 1]); }
+      idx.push(o);
+    }
+    m.pos = pos; m.nor = nor; m.uv = uv; m.idx = idx;
   }
   // центр: по длине — середина, по высоте — ось фюзеляжа (centerY) или середина габаритов; у комплексов — земля y = 0,
   // центр по корпусу
@@ -565,8 +724,10 @@ async function prepare(name, views) {
     const glass = m.forceGlass || !!(cfg.glassAny && cfg.glassAny.test(nm)) || (blend && !solid && !cfg.cutout && (GLASS.test(nm) || !!(cfg.glass && cfg.glass.test(nm))));
     const cut = blend && !solid && !glass; // остальное полупрозрачное — вырезкой по альфе: заборы и наклейки сохраняют дыры, корпуса — текстуру
     // colors — свои цвета материалов по имени (у модели без текстур цвета бывают «служебные»)
-    const own = cfg.colors && Object.entries(cfg.colors).find(([re]) => new RegExp(re).test(src.name || ''));
-    const mat = { name: src.name, doubleSided: true, pbrMetallicRoughness: { baseColorFactor: own ? [...own[1], 1] : pbr.baseColorFactor || [1, 1, 1, 1], metallicFactor: 0.3, roughnessFactor: 0.6 } };
+    const nmP = (src.name || '') + (m.paint ? '#' + m.paint : '');
+    const CL = cfg.camo ? { '#camo$': CAMO_BASE[cfg.camo.scheme], ...(cfg.colors || {}) } : cfg.colors;
+    const own = CL && Object.entries(CL).find(([re]) => new RegExp(re).test(nmP));
+    const mat = { name: nmP, doubleSided: true, pbrMetallicRoughness: { baseColorFactor: own ? [...own[1], 1] : pbr.baseColorFactor || [1, 1, 1, 1], metallicFactor: 0.3, roughnessFactor: 0.6 } };
     if (glass) mat.alphaMode = 'BLEND';
     if (m.forceGlass) mat.pbrMetallicRoughness.baseColorFactor = [0.3, 0.36, 0.42, 0.35]; // своё стекло — тонированное, полупрозрачное
     // стекло без своего цвета (белое непрозрачное по умолчанию) — тонированное; glassColor — свой цвет стекла модели (у F-35 — золотистый)
@@ -581,7 +742,7 @@ async function prepare(name, views) {
     if (mat.pbrMetallicRoughness.baseColorTexture) { accs.push({ bufferView: add(new Float32Array(m.uv), 34962), componentType: 5126, count: n, type: 'VEC2' }); attrs.TEXCOORD_0 = accs.length - 1; }
     const ix = n < 65536 ? Uint16Array.from(m.idx) : Uint32Array.from(m.idx);
     accs.push({ bufferView: add(ix, 34963), componentType: n < 65536 ? 5123 : 5125, count: m.idx.length, type: 'SCALAR' });
-    meshes.push({ name: `${m.group || 'body'}|${glass ? 'glass' : src.name}`, primitives: [{ attributes: attrs, indices: accs.length - 1, material: materials.length - 1 }] });
+    meshes.push({ name: `${m.group || 'body'}|${glass ? 'glass' : nmP}`, primitives: [{ attributes: attrs, indices: accs.length - 1, material: materials.length - 1 }] });
     nodes.push({ name: meshes[meshes.length - 1].name, mesh: meshes.length - 1 });
     tris += m.idx.length / 3;
   }
@@ -762,7 +923,7 @@ if (Deno.args[0] === '--credits') {
   }
   const list = [...bySrc.values()];
   Deno.writeTextFileSync(`${dir}credits.js`, `// Создано tools/airdef-models/prepare.js --credits — не править руками\nexport const CREDITS = ${JSON.stringify(list, null, 1)};\n`);
-  Deno.writeTextFileSync(`${dir}CREDITS.md`, `# 3D-модели «Воздушного превосходства»\n\nВсе — с Sketchfab, лицензии указаны. Для игры изменены (tools/airdef-models/prepare.js): убраны лишние части, упрощены\nсетки, переведены в метры и развёрнуты, разделены на корпус / башню / пакет, текстуры уменьшены и пересжаты в JPEG.\n\n` +
+  Deno.writeTextFileSync(`${dir}CREDITS.md`, `# 3D-модели «Воздушного превосходства»\n\nВсе — с Sketchfab и Thingiverse (модели для печати — tools/airdef-models/stl2glb.js), лицензии указаны. Для игры изменены (tools/airdef-models/prepare.js): убраны лишние части, упрощены\nсетки, переведены в метры и развёрнуты, разделены на корпус / башню / пакет, текстуры уменьшены и пересжаты в JPEG.\n\n` +
     list.map((c) => `- "${c.title}" (${c.url}) by ${c.author} — ${c.license} — ${c.files.map((f) => '`' + f + '.glb`').join(', ')}`).join('\n') + '\n');
   console.log(`авторов ${list.length}, файлов ${list.reduce((n, c) => n + c.files.length, 0)}`);
   Deno.exit(0);

@@ -14,6 +14,7 @@ import { AG, SAM, SAM_COST, DEFENSE, COMBINED, THREAT, multiItems } from '../gam
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
 import { dmgPack } from '../games/airdef/sim/damage.js?v=20261022d';
+import { realDeny, samIds, strikeIds } from './airdef-own.js';
 
 const r1 = (v) => Math.round(v * 10) / 10;
 const opp = (s) => (s === 'east' ? 'west' : 'east');
@@ -87,7 +88,9 @@ export function createMulti(ctx) {
     const hm = humans(r).length * 2 > r.players.size ? 1 : 0;
     for (const p of humans(r)) {
       // итог для наград — как у обычного онлайна (airdef-claim): team — роль первого раунда игрока, w — победа команды
-      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, exp: Math.floor(Date.now() / 1000) + 3600 };
+      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm,
+        ev: { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, mwInt: (p.kills || 0) * 3, mwObj: Math.min(300, Math.round((p.score || 0) / 40)) }, // для прокачки (airdef-claim)
+        exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', kind: 'multi', winner, scores: { east: Math.round(e), west: Math.round(w) }, v0: r.v0, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
     }
     J(r, 'end', { winner, scores: r.scores });
@@ -280,6 +283,7 @@ export function createMulti(ctx) {
       let raw; try { raw = JSON.parse(m.json); } catch (_) { return; }
       const ids = new Set(r.S.objects.filter((o) => !o.noTarget).map((o) => o.id));
       const plan = M.cleanPlan(raw, r.atk, r.era, ids, CITY.HALF); if (!plan) return;
+      { const rw = realDeny(r.mode, c, strikeIds(plan.n)); if (rw) return send(c, { t: 'deny', msg: rw }); } // «Реализм» — только купленные удары
       const cost = M.planCost(plan.n);
       if (cost > c.budget) return send(c, { t: 'deny', msg: 'Не хватает очков угрозы' });
       { const others = M.sumN(...atkTeam(r).filter((p) => p !== c).map((p) => p.plan && p.plan.n)), old = (c.plan && c.plan.n) || {};
@@ -304,7 +308,7 @@ export function createMulti(ctx) {
       return;
     }
     // ПВО: покупка, продажа, перенос (подготовка)
-    if (m.t === 'buyUnit') { if (r.state !== 'plan' || isAtk(r, c)) return; const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) send(c, { t: 'deny', msg: why }); return; }
+    if (m.t === 'buyUnit') { if (r.state !== 'plan' || isAtk(r, c)) return; { const rw = realDeny(r.mode, c, samIds(String(m.k))); if (rw) return send(c, { t: 'deny', msg: rw }); } const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) send(c, { t: 'deny', msg: why }); return; }
     if (m.t === 'sell') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? SAM_COST[u.key]) * 0.7); r.S.removeUnit(u); pushTo(r, 'def', ['ur', u.id]); flush(r); sendRoom(r); return; }
     if (m.t === 'move') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id || !Number.isFinite(+m.x) || !Number.isFinite(+m.z)) return; if (!(m.roof ? buildingAt(city, +m.x, +m.z) >= 0 : freeGround(city, +m.x, +m.z))) return send(c, { t: 'deny', msg: 'Место занято' }); r.S.moveUnit(u, +m.x, +m.z, !!m.roof); pushTo(r, 'def', ['um', u.id, r1(+m.x), r1(+m.z), m.roof ? 1 : 0]); flush(r); return; }
     if (r.state !== 'play' || isAtk(r, c)) return;

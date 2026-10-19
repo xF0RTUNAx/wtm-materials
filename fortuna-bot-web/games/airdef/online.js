@@ -3,12 +3,12 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { createNet } from './net.js?v=20261022e';
-import * as O from './sim/online.js?v=20261022e';
-import * as MW from './sim/online-multi.js?v=20261022e';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261022e';
-import { MODES } from './sim/strike.js?v=20261022e';
-import { ICON } from './icons.js?v=20261022e';
+import { createNet } from './net.js?v=20261022i';
+import * as O from './sim/online.js?v=20261022i';
+import * as MW from './sim/online-multi.js?v=20261022i';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261022i';
+import { MODES } from './sim/strike.js?v=20261022i';
+import { ICON } from './icons.js?v=20261022i';
 
 const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
 const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
@@ -146,8 +146,8 @@ export function createOnline(C, ctrls) {
       <div class="dim">Охотников за ПВО в команде: ${hunters + (me.choice !== null && loadoutRole(LOADOUTS[B.era][me.choice]) === 'sead' ? 1 : 0)}/${O.huntCap(nAir)} · после ${O.SUPPRESS_T} с каждая уничтоженная РЛС замедляет перезарядку ПВО${r.lead === 'air' ? ' · вы ведёте — связки на 10 % дороже' : ''}</div>
       ${allies.length ? `<div class="cat-h">Союзники</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${esc(p.name)}</b> — ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : 'выбирает…'}${p.ready ? ' <span class="okc">✓</span>' : ''}</div>`; }).join('')}` : ''}
       <div class="cat-h">Связки</div>` + list.map(([L, i]) => {
-      const cost = O.loadoutCostFor(L, r.lead), back = me.choice !== null ? O.loadoutCostFor(LOADOUTS[B.era][me.choice], r.lead) : 0, deny = O.roleDeny(L, others, nAir), no = cost > me.budget + back || !!deny;
-      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}${deny ? ' · <b class="warnc">лимит охотников</b>' : ''}</span></div><span class="pr">${cost}</span></button>`;
+      const cost = O.loadoutCostFor(L, r.lead), back = me.choice !== null ? O.loadoutCostFor(LOADOUTS[B.era][me.choice], r.lead) : 0, deny = O.roleDeny(L, others, nAir), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(L) : [], no = cost > me.budget + back || !!deny || miss.length > 0; // «Реализм»: только купленное
+      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}${deny ? ' · <b class="warnc">лимит охотников</b>' : ''}${miss.length ? ` · <b class="warnc">${C.progress.needText(miss)}</b>` : ''}</span></div><span class="pr">${cost}</span></button>`;
     }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
   }
   planEl.onclick = (e) => {
@@ -351,6 +351,7 @@ export function createOnline(C, ctrls) {
       const parts = []; if (d.details) parts.push(`+${d.details} деталей`); if (d.keys) parts.push(`+${d.keys} 🔑`); if (d.ticket) parts.push(d.ticket === 'ticket' ? '+1 билет' : '+1 🔑');
       const note = res.ok ? (parts.length ? `Награда: ${parts.join(', ')}` : d.online_rewards_left === 0 ? 'Наградные бои на сегодня закончились — результат засчитан' : 'Результат засчитан') : (d.error || 'Не удалось засчитать бой');
       const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + el.innerHTML;
+      if (d.progress && C.progress) { if (el) el.insertAdjacentHTML('afterbegin', `<div class="pgRes">${C.progress.rewardHtml(d.progress)}</div>`); C.progress.refresh(); } // прокачка: опыт и серебро за бой
       N.clog('claim', { ok: res.ok, d });
     } catch (e) { N.clog('claim_fail', String(e)); }
   };

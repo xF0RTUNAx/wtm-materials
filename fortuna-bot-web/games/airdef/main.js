@@ -8,33 +8,35 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { ktxInit } from './ktx.js?v=20261022e';
-import { buildCity, CITY } from './city.js?v=20261022e';
-import { buildWinter } from './map-winter.js?v=20261022e';
-import { WINTER_KEYS } from './winter-render.js?v=20261022e';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022e';
-import { createPipeline } from '../drone/post.js?v=20261022e';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022e';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022e';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022e';
-import { createStrike, MODES } from './sim/strike.js?v=20261022e';
-import { createRaid } from './sim/raid.js?v=20261022e';
-import { POD } from './sim/combined.js?v=20261022e';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022e';
-import { slotCount } from './launchers.js?v=20261022e';
-import { modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022e';
-import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022e';
-import { createSound } from './sound.js?v=20261022e';
-import { ico, iconize } from './icons.js?v=20261022e';
-import { createAir } from './air.js?v=20261022e';
-import { createDefense } from './defense.js?v=20261022e';
-import { createDirector } from './director.js?v=20261022e';
-import { createMenuBg } from './menubg.js?v=20261022e';
-import { createOnline } from './online.js?v=20261022e';
-import { createShell } from './shell.js?v=20261022e';
-import { createTraining, LESSONS } from './training.js?v=20261022e';
-import { createPhoto } from './photo.js?v=20261022e';
-import { createMenu } from './menu.js?v=20261022e';
+import { ktxInit } from './ktx.js?v=20261022i';
+import { buildCity, CITY } from './city.js?v=20261022i';
+import { buildWinter } from './map-winter.js?v=20261022i';
+import { WINTER_KEYS } from './winter-render.js?v=20261022i';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022i';
+import { createPipeline } from '../drone/post.js?v=20261022i';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022i';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022i';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022i';
+import { createStrike, MODES } from './sim/strike.js?v=20261022i';
+import { createRaid } from './sim/raid.js?v=20261022i';
+import { POD } from './sim/combined.js?v=20261022i';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022i';
+import { slotCount } from './launchers.js?v=20261022i';
+import { spinProps as spinRotors, modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022i';
+import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022i';
+import { createSound } from './sound.js?v=20261022i';
+import { ico, iconize } from './icons.js?v=20261022i';
+import { createAir } from './air.js?v=20261022i';
+import { createDefense } from './defense.js?v=20261022i';
+import { createDirector } from './director.js?v=20261022i';
+import { createMenuBg } from './menubg.js?v=20261022i';
+import { createOnline } from './online.js?v=20261022i';
+import { createProgress } from './progress-net.js?v=20261022i';
+import { createResearch } from './research.js?v=20261022i';
+import { createShell } from './shell.js?v=20261022i';
+import { createTraining, LESSONS } from './training.js?v=20261022i';
+import { createPhoto } from './photo.js?v=20261022i';
+import { createMenu } from './menu.js?v=20261022i';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -620,6 +622,7 @@ function syncWorld(dt, t) {
     }
     g.position.copy(a.pos); g.rotation.set(a.pitch, a.yaw, a.roll);
     g.userData.flames.update(a.thr, a.ab);
+    spinRotors(g, dt, a.thr); // винты (Ту-95)
     const L = g.userData.lod, near = !L || camera.position.distanceToSquared(a.pos) < LOD_D * LOD_D;
     if (L) { L.hi.visible = near; L.lo.visible = !near; }
     if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k;
@@ -640,11 +643,11 @@ function updateSound(dt) {
   const pl = C.player, on = C.state === 'play' || C.state === 'menu';
   if (pl && !pl.dead && C.state === 'play' && !C.paused) {
     fwdOf(pl, LP); const rear = clamp((LP.dot(camera.getWorldDirection(new THREE.Vector3())) + 1) / 2, 0, 1);
-    snd.frame(dt, { on: true, rpmTarget: pl.ab ? 1 : 0.6 + 0.4 * clamp((pl.thr - 0.55) / 0.45, 0, 1), ab: pl.ab, speed: pl.speed, mach: pl.speed / 330, sup: pl.speed > 340, n: pl.n || 1, rear, agl: pl.pos.y - city.groundH(pl.pos.x, pl.pos.z), rain: 0 });
+    snd.frame(dt, { on: true, rpmTarget: pl.ab ? 1 : 0.6 + 0.4 * clamp((pl.thr - 0.55) / 0.45, 0, 1), ab: pl.ab, speed: pl.speed, mach: pl.speed / 330, sup: pl.speed > 340, n: pl.n || 1, rear, tprop: !!(pl.fm && pl.fm.s.prop), agl: pl.pos.y - city.groundH(pl.pos.x, pl.pos.z), rain: 0 });
   } else snd.frame(dt, { on: false });
   sndCands.length = 0;
   const cand = (o, kind, pos, vel, fwd, ab, gain) => { let c = sndPool[sndCands.length]; if (!c) sndPool.push(c = {}); Object.assign(c, { o, kind, pos, vel, fwd, ab, gain }); sndCands.push(c); };
-  if (C.raid) for (const a of C.raid.planes) if (!a.dead && !a.out && a.phase !== 'wait') { a.sfwd = fwdOf(a, a.sfwd || new THREE.Vector3()); cand(a, 'jet', a.pos, a.vel, a.sfwd, a.ab, 1.1); }
+  if (C.raid) for (const a of C.raid.planes) if (!a.dead && !a.out && a.phase !== 'wait') { a.sfwd = fwdOf(a, a.sfwd || new THREE.Vector3()); cand(a, a.fm && a.fm.s.prop ? 'tprop' : 'jet', a.pos, a.vel, a.sfwd, a.ab, 1.1); }
   if (C.S) {
     for (const m of C.S.sams) if (!m.dead && m.tb >= 0 && m.tb < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) { m.svel = (m.svel || new THREE.Vector3()).copy(m.dir).multiplyScalar(m.speed); cand(m, 'msl', m.pos, m.svel, null, false, 1); }
     for (const w of C.S.wpns) if (!w.dead && w.W.burn && w.t < w.W.burn) cand(w, 'msl', w.pos, w.vel, null, false, 0.8);
@@ -699,6 +702,7 @@ C.start = function (game) {
   document.body.classList.remove('menuing'); document.body.classList.add('playing');
   C.state = 'play'; C.camera.clearViewOffset(); C.shell.play(true);
   C.ctrl = ctrls[game]; C.ctrl.start();
+  if (C.progress) C.progress.runStart(game === 'multi' ? 'multi' : game, C.setup.diff === 'real' ? 'real' : 'arcade', C.setup.era); // опыт за бой (обучение, съёмка — без)
   resize();
 };
 C.toMenu = function () {
@@ -895,8 +899,10 @@ setInterval(() => {
   ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
   ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
+  C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
+  C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» — по купленному
   resize();
   C.buildMs = Math.round(performance.now() - t0);
   await ldStep('Готовим графику (шейдеры)…', 0.85);

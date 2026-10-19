@@ -11,7 +11,10 @@ const vmaxAt = (s, f, h, m = s.mNorm, ab = true) => { // наибольшая с
   return lo;
 };
 // типичное вредное сопротивление по классу (чистый самолёт): истребители ~0,02, штурмовик — больше, тяжёлые — меньше
-const CD0 = { e_su25: 0.03, e_b52: 0.017, e_b1b: 0.017, e_tu160: 0.016, e_tu22m3: 0.018, e_su24: 0.024, e_su17: 0.022, e_f4: 0.023 };
+const CD0 = { e_su25: 0.03, e_b52: 0.017, e_b1b: 0.017, e_tu160: 0.016, e_tu22m3: 0.018, e_su24: 0.024, e_su17: 0.022, e_f4: 0.023,
+  e_tu22m2: 0.018, e_a10: 0.032, e_f111: 0.022, e_tornado: 0.022, e_mig23: 0.022, e_mig27: 0.024, e_f15e: 0.021,
+  e_mig21n: 0.021, e_mig25: 0.022, e_su7b: 0.022, e_tu16: 0.019, e_f100: 0.022, e_f117: 0.024, e_buccaneer: 0.022, e_harrier: 0.026, e_b2: 0.012,
+  e_yak38: 0.026, e_il28: 0.022, e_tu22: 0.018, e_tu95: 0.02, e_hunter: 0.02, e_etendard: 0.022 };
 function fit(s, k) {
   const tSL = SPEED_K * s.vSL / KMH, tAlt = SPEED_K * s.vAlt / KMH, hAlt = 11000;
   const f = { cd0: CD0[k] || 0.02, aw: 1.5, ex: 0.75, vq: 0 };

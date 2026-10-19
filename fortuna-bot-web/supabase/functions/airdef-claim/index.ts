@@ -1,11 +1,13 @@
 // airdef-claim — итог онлайн-боя «Воздушного превосходства»: результат в свою таблицу (airdef_mp_results, сводка airdef_mp_stats)
-// и награда по правилам онлайна «Летки» (детали, ключи, билет; не больше ONLINE_REWARDS_PER_DAY наградных боёв в сутки, отдельно от «Летки»).
+// и награда по правилам онлайна «Летки»; плюс опыт и серебро прокачки (airdef_progress — без дневного предела, «Реализм» ×1,5) (детали, ключи, билет; не больше ONLINE_REWARDS_PER_DAY наградных боёв в сутки, отдельно от «Летки»).
 //   { player_id, token } — итог, подписанный игровым сервером секретом MP_SECRET (game-server/airdef-rooms.js → endBattle).
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { logFeedEvent } from "../_shared/game.ts";
 import { mskDayStartIso } from "../_shared/msk.ts";
 import { ONLINE_REWARDS_PER_DAY, onlineReward, verifySigned, type Reward } from "../_shared/drone.ts";
+import { mskToday } from "../_shared/msk.ts";
+import { cleanEvents, credit, mutate, view, type Extra } from "../_shared/airdef-progress.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -39,7 +41,19 @@ Deno.serve(async (req) => {
         await logFeedEvent(db, player_id, "drone_reward", { game: "airdef", online: true, mode, team, win, details: r.details, keys: r.keys + (ticket === "key" ? 1 : 0), ticket: ticket === "ticket" });
       }
     }
-    return jsonResponse({ details: r.details, keys: r.keys, ticket, rewarded: r.success, online_rewards_left: Math.max(0, left - (r.success ? 1 : 0)), stats: st.data });
+    // прокачка: события боя — из подписанного итога (ev от игрового сервера; у старого сервера — только k: сбитые / уничтоженные)
+    let progress = null;
+    try {
+      const today = mskToday(), e = (p.ev && typeof p.ev === "object" ? p.ev : {}) as Record<string, unknown>;
+      const ev = cleanEvents({ ...e, win, ...(p.ev ? {} : team === "air" ? { sams: kills } : { downs: kills }) }, Math.max(1, Math.min(60, Number(e.min) > 0 ? Number(e.min) : 8)));
+      let res: ReturnType<typeof credit> | null = null, x1: Extra | null = null;
+      const out = await mutate(db, player_id, (P, x) => { res = credit(P, x, ev, { real: mode === "real", online: true, today }); x1 = res.extra; return { ok: true, extra: res.extra }; });
+      if (out.ok && res) {
+        const c = res as ReturnType<typeof credit>;
+        progress = { xp: c.reward.xp, silver: c.reward.silver, lines: c.reward.lines, mult: c.reward.mult, auto: c.auto, state: view(out.P!, x1!, today) };
+      }
+    } catch (e) { console.error("airdef-claim progress", e); } // награда сайта уже выдана — прокачку не роняем вместе с ней
+    return jsonResponse({ details: r.details, keys: r.keys, ticket, rewarded: r.success, online_rewards_left: Math.max(0, left - (r.success ? 1 : 0)), stats: st.data, progress });
   } catch (e) {
     console.error("airdef-claim", e);
     return jsonResponse({ error: "Внутренняя ошибка сервера" }, 500);

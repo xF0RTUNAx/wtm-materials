@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022e';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261022e';
-import { LNCH } from './launchers.js?v=20261022e';
-import { createBook } from './flipbook.js?v=20261022e';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022i';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022i';
+import { LNCH } from './launchers.js?v=20261022i';
+import { createBook } from './flipbook.js?v=20261022i';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -110,7 +110,7 @@ export function unitModel(key, S) {
       T.push(part(new THREE.BoxGeometry(2.6, 1.0, 3), C, M(0, 0.5, 0)));
       for (const [x, y] of [[-0.25, -0.12], [0.25, -0.12], [-0.25, 0.16], [0.25, 0.16]]) K.push(part(new THREE.CylinderGeometry(0.06, 0.08, 2.4, 6), DARK, M(x, y, -1.3, Math.PI / 2)));
       dish = dishGeo(0.8, C); dishY = 3.4; break;
-    case 'gepard': case 'skyguard':
+    case 'gepard': case 'skyguard': case 'zu23': case 'phalanx':
       hull(P, 7.5, 3.3, 1.5, C);
       T.push(part(new THREE.BoxGeometry(2.8, 1.4, 3), C, M(0, 0.7, 0)), part(new THREE.BoxGeometry(1.4, 0.8, 0.3), C, M(0, 0.6, -1.65)));
       for (const s of [-1, 1]) K.push(part(new THREE.BoxGeometry(0.5, 0.7, 1.6), C, M(s * 1.6, 0, 0)), part(new THREE.CylinderGeometry(0.09, 0.12, 4, 8), DARK, M(s * 1.6, 0, -2.4, Math.PI / 2)));
@@ -125,7 +125,7 @@ export function unitModel(key, S) {
       T.push(part(new THREE.BoxGeometry(1.6, 1.0, 1.8), C, M(0, 0.5, 0)));
       canBoxes(K, LN.box, sl, C);
       dish = dishGeo(0.9, C); dishY = 3.6; break;
-    case 'strela1': case 'strela10':
+    case 'strela1': case 'strela10': case 'chaparral': // (Chaparral — запасная фигура, пока грузится модель)
       hull(P, 6.5, 2.9, 1.3, C);
       T.push(part(new THREE.BoxGeometry(1.4, 0.8, 1.4), C, M(0, 0.4, 0)));
       canBoxes(K, LN.box, sl, C);

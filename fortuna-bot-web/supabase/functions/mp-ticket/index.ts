@@ -1,5 +1,5 @@
 // mp-ticket — билет для входа в онлайн-бой «Симулятора Летки» (игровой сервер — fortuna-bot-web/game-server).
-// Вход: { player_id }. Выход: { ticket } — base64url(JSON {pid, login, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
+// Вход: { player_id }. Выход: { ticket } — base64url(JSON {pid, login, u, a, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
 // Билет живёт 10 минут: игра берёт новый при каждом подключении. Игровой сервер проверяет подпись тем же
 // секретом (server.js → checkTicket) и берёт ник из билета — подделать чужой ник без секрета нельзя.
 // Секрет: `supabase secrets set MP_SECRET=...` (тот же — в переменной окружения MP_SECRET игрового сервера).
@@ -40,7 +40,10 @@ Deno.serve(async (req) => {
     // u — купленные ракеты (в «Реализме» онлайн можно подвешивать только их и базовые — проверяет игровой сервер)
     const owned = await db.from("drone_missiles").select("missile").eq("player_id", player.id);
     const u = owned.error ? [] : (owned.data ?? []).map((r: { missile: string }) => r.missile);
-    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: player.login, u, exp: Math.floor(Date.now() / 1000) + TTL })));
+    // a — купленное в прокачке «Воздушного превосходства» (в «Реализме» онлайн — только оно и стартовое; проверяет игровой сервер)
+    const ad = await db.from("airdef_progress").select("own").eq("player_id", player.id).maybeSingle();
+    const a = ad.error ? [] : ((ad.data?.own ?? []) as string[]);
+    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: player.login, u, a, exp: Math.floor(Date.now() / 1000) + TTL })));
     const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const sig = b64u(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(body))));
     return jsonResponse({ ticket: `${body}.${sig}` });

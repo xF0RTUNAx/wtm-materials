@@ -43,12 +43,16 @@ export const AG = {
   agm45: { name: 'AGM-45 Shrike', short: 'Shrike', side: 'west', era: 1, kind: 'arm', mass: 177, acc: 95, burn: 4, kd: 1.4, g: 12, life: 60, fov: 25, rmax: 14000, mem: false, dmg: 45, blast: 25,
     guide: 'Первая массовая американская противорадиолокационная ракета (Вьетнам). Летит на излучение РЛС; памяти нет — если расчёт выключил станцию, ракета теряет цель.',
     specs: [['Страна', 'США'], ['Масса', '≈ 177 кг'], ['Дальность', '≈ 16 км'], ['ГСН', 'пассивная радиолокационная, без памяти']],
-    vis: { L: 3.05, r: 0.1, kind: 'missile', color: 0xdedede } },
+    vis: { L: 3.05, r: 0.1, kind: 'missile', color: 0x9a9c96 } },
   kh28: { name: 'Х-28', short: 'Х-28', side: 'east', era: 1, kind: 'arm', mass: 690, acc: 70, burn: 12, kd: 1.1, g: 10, life: 80, fov: 20, rmax: 30000, mem: false, dmg: 70, blast: 34,
     guide: 'Первая советская противорадиолокационная ракета с жидкостным двигателем. Без памяти: выключенная РЛС — промах.',
     specs: [['Страна', 'СССР'], ['Масса', '≈ 690 кг'], ['Дальность', '≈ 70 км (в игре меньше)'], ['ГСН', 'пассивная радиолокационная']],
-    vis: { L: 5.97, r: 0.215, kind: 'missile', color: 0xd8d8d0 } },
+    vis: { L: 5.97, r: 0.215, kind: 'missile', color: 0x8c908a } },
   // ─────────────── Эпоха II ───────────────
+  gbu10: { name: 'GBU-10 Paveway I', short: 'GBU-10', side: 'west', era: 1, kind: 'lgb', mass: 945, kd: 1.0, g: 2.0, fov: 30, life: 120, rmax: 12000, dmg: 230, blast: 62,
+    guide: 'Первая серийная лазерная бомба: Mk 84 (900 кг) с головкой «Пэйвуэй». Подсвет — контейнером до попадания; рули простые, «рыскает» к пятну — промах больше, чем у поздних бомб, зато разрушения огромные.',
+    specs: [['Страна', 'США'], ['Масса', '≈ 945 кг'], ['Точность', '≈ 5–10 м при подсвете'], ['Дальность', 'до ≈ 12 км с большой высоты']],
+    vis: { L: 4.32, r: 0.23, kind: 'lgb', color: 0x5e6b4f, band: 0xe8c21c } },
   gbu12: { name: 'GBU-12 Paveway II', short: 'GBU-12', side: 'west', era: 2, kind: 'lgb', mass: 230, kd: 0.95, g: 2.5, fov: 30, life: 120, rmax: 14000, dmg: 85, blast: 38,
     guide: 'Mk 82 с лазерной ГСН и рулями. Наводится на пятно лазера: подсвечивать цель контейнером нужно до самого попадания. Потерял подсвет (развернулся, цель закрыло здание) — бомба падает как обычная.',
     specs: [['Страна', 'США'], ['Масса', '≈ 230 кг'], ['Точность', '≈ 1–5 м при подсвете'], ['Дальность', 'до ≈ 14 км с большой высоты']],
@@ -56,11 +60,11 @@ export const AG = {
   kab500l: { name: 'КАБ-500Л', short: 'КАБ-500Л', side: 'east', era: 2, kind: 'lgb', mass: 525, kd: 1.0, g: 2.2, fov: 30, life: 110, rmax: 10000, dmg: 140, blast: 46,
     guide: 'Корректируемая авиабомба с лазерной полуактивной ГСН. Цель подсвечивает контейнер самолёта до попадания.',
     specs: [['Страна', 'СССР'], ['Масса', '≈ 525 кг'], ['Точность', '≈ 7 м'], ['Высота сброса', '0,5–5 км']],
-    vis: { L: 3.05, r: 0.2, kind: 'lgb', color: 0x8a8f86 } },
+    vis: { L: 3.05, r: 0.2, kind: 'lgb', color: 0x5a614c } },
   kab500kr: { name: 'КАБ-500Кр', short: 'КАБ-500Кр', side: 'east', era: 2, kind: 'tvb', mass: 520, kd: 1.0, g: 2.4, fov: 25, life: 120, rmax: 12000, dmg: 140, blast: 46, tv: true,
     guide: 'Бомба с телевизионно-корреляционной ГСН: перед сбросом лётчик захватывает изображение цели, дальше бомба наводится сама («сбросил и забыл»). Ночью ТВ-головка цель не видит.',
     specs: [['Страна', 'СССР'], ['Масса', '≈ 520 кг'], ['Точность', '≈ 4–7 м'], ['Высота сброса', '0,5–5 км']],
-    vis: { L: 3.05, r: 0.2, kind: 'tvb', color: 0x8a8f86 } },
+    vis: { L: 3.05, r: 0.2, kind: 'tvb', color: 0x5d6352 } },
   agm65b: { name: 'AGM-65B Maverick', short: 'AGM-65B', side: 'west', era: 2, kind: 'agm', seeker: 'tv', mass: 210, acc: 75, burn: 4, kd: 1.3, g: 12, life: 60, fov: 25, rmax: 12000, dmg: 60, blast: 27, tv: true,
     guide: 'Ракета «воздух–поверхность» с телевизионной ГСН. Захват цели контейнером до пуска, после пуска самолёт свободен. Ночью ТВ-головка не работает.',
     specs: [['Страна', 'США'], ['Масса', '≈ 210 кг'], ['БЧ', '≈ 57 кг, кумулятивная'], ['Дальность', '≈ 3–12 км']],
@@ -72,7 +76,7 @@ export const AG = {
   kh25ml: { name: 'Х-25МЛ', short: 'Х-25МЛ', side: 'east', era: 2, kind: 'agm', seeker: 'laser', mass: 300, acc: 85, burn: 5, kd: 1.3, g: 12, life: 50, fov: 25, rmax: 10000, dmg: 55, blast: 27,
     guide: 'Ракета с лазерной полуактивной ГСН: цель подсвечивает контейнер самолёта до попадания.',
     specs: [['Страна', 'СССР'], ['Масса', '≈ 300 кг'], ['БЧ', '≈ 90 кг'], ['Дальность', '≈ 2,5–10 км']],
-    vis: { L: 3.7, r: 0.137, kind: 'missile', color: 0xd8d8d0 } },
+    vis: { L: 3.7, r: 0.137, kind: 'missile', color: 0x9a9d97 } },
   agm88: { name: 'AGM-88 HARM', short: 'HARM', side: 'west', era: 2, kind: 'arm', mass: 355, acc: 140, burn: 6, kd: 1.1, g: 16, life: 70, fov: 40, rmax: 35000, mem: true, dmg: 50, blast: 23,
     guide: 'Скоростная противорадиолокационная ракета с широкополосной ГСН. Запоминает место РЛС: если станцию выключили, летит в последнюю точку — уехавший комплекс уцелеет.',
     specs: [['Страна', 'США'], ['Масса', '≈ 355 кг'], ['Скорость', '≈ 2 М'], ['Дальность', 'до ≈ 100 км (в игре меньше)']],
@@ -80,7 +84,7 @@ export const AG = {
   kh58: { name: 'Х-58У', short: 'Х-58У', side: 'east', era: 2, kind: 'arm', mass: 640, acc: 95, burn: 10, kd: 1.0, g: 12, life: 80, fov: 30, rmax: 40000, mem: true, dmg: 70, blast: 34,
     guide: 'Противорадиолокационная ракета с запоминанием координат РЛС: выключение станции её уже не спасает, если комплекс не сменил позицию.',
     specs: [['Страна', 'СССР'], ['Масса', '≈ 640 кг'], ['Дальность', 'до ≈ 120 км (в игре меньше)'], ['Скорость', '≈ 3,6 М']],
-    vis: { L: 4.8, r: 0.19, kind: 'missile', color: 0xd8d8d0 } },
+    vis: { L: 4.8, r: 0.19, kind: 'missile', color: 0x9a9d97 } },
 };
 
 export const SAM_TYPE = { command: 'радиокомандное', sarh: 'полуактивное (подсвет цели)', ir: 'тепловая ГСН', saclos: 'по линии визирования', guns: 'зенитная артиллерия' };
@@ -174,7 +178,12 @@ export const DEFENSE = {
 // подвески вылета: side — чья авиация (показываются подвески стороны, атакующей выбранную ПВО), plane — модель самолёта
 // (у каждой подвески — свой реальный носитель этого оружия и эпохи), pod — прицельный контейнер (у кого он встроен — не вешается)
 export const PLANES = { su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
-  e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A', e_f22: 'F-22A Raptor' };
+  e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A', e_f22: 'F-22A Raptor',
+  e_tornado: 'Tornado IDS', e_f111: 'F-111F', e_mig23: 'МиГ-23БН', e_mig27: 'МиГ-27К', e_tu22m2: 'Ту-22М2', e_a10: 'A-10A', e_f15e: 'F-15E',
+  e_mig21n: 'МиГ-21бис', e_mig25: 'МиГ-25БМ', e_su7b: 'Су-7БМК', e_tu16: 'Ту-16', e_f100: 'F-100F', e_f5: 'F-5E', e_f117: 'F-117A', e_jaguar: 'Jaguar GR.1',
+  e_buccaneer: 'Buccaneer S.2B', e_harrier: 'Harrier GR.3', e_mirage: 'Mirage 2000D', e_rafale: 'Rafale', e_b2: 'B-2A',
+  e_yak38: 'Як-38М', e_il28: 'Ил-28', e_tu22: 'Ту-22', e_tu95: 'Ту-95МС', e_su27: 'Су-27СМ', e_su35: 'Су-35С', e_hunter: 'Hunter FGA.9', e_etendard: 'Super Étendard',
+  e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_ea18g: 'EA-18G', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon' };
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },
@@ -188,19 +197,42 @@ export const LOADOUTS = {
     { side: 'east', plane: 'e_su25', name: 'Бомбы ФАБ-500', items: [['fab500', 6]] },
     { side: 'east', plane: 'e_su17', name: 'ФАБ-500 + Х-28', items: [['fab500', 4], ['kh28', 2]] },
     { side: 'east', plane: 'e_su24', name: 'Охота за ПВО: Х-28', items: [['kh28', 2], ['fab500', 2]] },
-    { side: 'west', plane: 'f16', name: 'Бомбы Mk 82', items: [['mk82', 8]] },
-    { side: 'west', plane: 'f18', name: 'Mk 82 + Shrike', items: [['mk82', 6], ['agm45', 2]] },
+    { side: 'east', plane: 'e_mig23', name: 'МиГ-23БН: ФАБ-500 ×4', items: [['fab500', 4]] },
+    { side: 'east', plane: 'e_tu22m2', name: 'Ту-22М2: ФАБ-500 ×8', items: [['fab500', 8]] },
+    { side: 'west', plane: 'e_mirage_f1', name: 'Mirage F1: Mk 82 ×6', items: [['mk82', 6]] }, // до 2026-10-19 — F-16D (F-16 — с ранга II)
+    { side: 'west', plane: 'e_hunter', name: 'Hunter FGA.9: Mk 82 ×4', items: [['mk82', 4]] }, // до 2026-10-19 — F/A-18E
     { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: Shrike', items: [['agm45', 4], ['mk82', 2]] },
+    { side: 'west', plane: 'e_f4', name: 'Лазерные GBU-10 ×4 («Пэйв Найф»)', items: [['gbu10', 4]], pod: true },
+    // третья партия (2026-10-19) — в конце списка: номера прежних подвесок не меняются
+    { side: 'east', plane: 'e_mig21n', name: 'МиГ-21бис: ФАБ-250 ×2 + ОФАБ-250 ×2', items: [['fab250', 2], ['ofab250', 2]] },
+    { side: 'east', plane: 'e_su7b', name: 'Су-7БМК: ФАБ-250 ×4 + ФАБ-100 ×4', items: [['fab250', 4], ['fab100', 4]] },
+    { side: 'east', plane: 'e_tu16', name: 'Ту-16: ФАБ-1000 ×4 + ФАБ-500 ×4', items: [['fab1000', 4], ['fab500', 4]] },
+    // четвёртая партия (2026-10-19)
+    { side: 'east', plane: 'e_il28', name: 'Ил-28: ФАБ-250 ×8 (в отсеке)', items: [['fab250', 8]] },
+    { side: 'east', plane: 'e_tu22', name: 'Ту-22: ФАБ-1000 ×4 (в отсеке)', items: [['fab1000', 4]] },
+    { side: 'west', plane: 'e_f100', name: 'F-100F «Дикая ласка»: Shrike ×2 + Mk 82 ×4', items: [['agm45', 2], ['mk82', 4]] },
+    { side: 'west', plane: 'e_f5', name: 'F-5E: Mk 82 ×4', items: [['mk82', 4]] },
   ],
   2: [
     { side: 'east', plane: 'e_su24', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
     { side: 'east', plane: 'su30', name: 'ТВ-бомбы КАБ-500Кр + ФАБ-500', items: [['kab500kr', 2], ['fab500', 4]], pod: true },
     { side: 'east', plane: 'e_su25', name: 'Ракеты: Х-29Т + Х-25МЛ', items: [['kh29t', 2], ['kh25ml', 2]], pod: true },
     { side: 'east', plane: 'e_su17', name: 'Охота за ПВО: Х-58 + Х-25МЛ', items: [['kh58', 2], ['kh25ml', 2]], pod: true },
-    { side: 'west', plane: 'f18', name: 'GBU-12 + HARM', items: [['gbu12', 4], ['agm88', 2]], pod: true },
-    { side: 'west', plane: 'f18', name: 'Бомбы Mk 82 + HARM', items: [['mk82', 6], ['agm88', 2]] },
+    { side: 'east', plane: 'e_mig27', name: 'МиГ-27К: Х-29Т + КАБ-500Л', items: [['kh29t', 2], ['kab500l', 2]], pod: true },
+    { side: 'west', plane: 'e_f18c', name: 'F/A-18C: GBU-12 ×4 + HARM ×2', items: [['gbu12', 4], ['agm88', 2]], pod: true }, // до 2026-10-19 — F/A-18E
+    { side: 'west', plane: 'e_f18c', name: 'F/A-18C: GBU-24 ×2 + HARM ×2', items: [['gbu24', 2], ['agm88', 2]], pod: true }, // до 2026-10-19 — F/A-18E с Mk 82
     { side: 'west', plane: 'f16', name: 'Ракеты: Maverick + HARM', items: [['agm65b', 4], ['agm88', 2]], pod: true },
     { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: HARM ×4', items: [['agm88', 4], ['gbu12', 2]], pod: true },
+    { side: 'west', plane: 'e_tornado', name: 'Tornado: GBU-12 ×4 + HARM ×2', items: [['gbu12', 4], ['agm88', 2]], pod: true },
+    { side: 'west', plane: 'e_f111', name: 'F-111F: GBU-12 ×4 + Mk 82 ×4', items: [['gbu12', 4], ['mk82', 4]], pod: true },
+    { side: 'west', plane: 'e_a10', name: 'A-10A: Maverick ×4 + Mk 82 ×4', items: [['agm65b', 4], ['mk82', 4]], pod: true },
+    { side: 'east', plane: 'e_mig25', name: 'МиГ-25БМ: охота за ПВО — Х-58У ×4', items: [['kh58', 4]] },
+    { side: 'west', plane: 'e_buccaneer', name: 'Buccaneer: GBU-10 ×2 + Mk 82 ×4 («Пэйв Спайк»)', items: [['gbu10', 2], ['mk82', 4]], pod: true },
+    { side: 'west', plane: 'e_jaguar', name: 'Jaguar GR.1: GBU-12 ×2 + Mk 82 ×4', items: [['gbu12', 2], ['mk82', 4]], pod: true },
+    { side: 'west', plane: 'e_harrier', name: 'Harrier GR.3: Mk 82 ×4', items: [['mk82', 4]] },
+    { side: 'east', plane: 'e_yak38', name: 'Як-38М: ОФАБ-250 ×4', items: [['ofab250', 4]] },
+    { side: 'east', plane: 'e_su27', name: 'Су-27СМ: ФАБ-500 ×4 + ФАБ-250 ×2', items: [['fab500', 4], ['fab250', 2]] },
+    { side: 'west', plane: 'e_etendard', name: 'Super Étendard: GBU-12 ×2 + Mk 82 ×2 (ATLIS)', items: [['gbu12', 2], ['mk82', 2]], pod: true },
   ],
 };
 
@@ -346,7 +378,7 @@ Object.assign(AG, {
   kab500s: { name: 'КАБ-500С', short: 'КАБ-500С', side: 'east', era: 3, kind: 'gps', mass: 560, kd: 1.0, g: 2.4, life: 110, rmax: 16000, dmg: 140, blast: 46, rcs: 0.15,
     guide: 'Корректируемая бомба со спутниковой навигацией ГЛОНАСС: «сбросил и забыл» по координатам, ночью и в облаках.',
     specs: [['Страна', 'Россия'], ['Масса', '≈ 560 кг'], ['Точность', '≈ 5–10 м'], ['Высота сброса', '0,5–10 км']],
-    vis: { L: 3.0, r: 0.2, kind: 'tvb', color: 0x8a8f86 } },
+    vis: { L: 3.0, r: 0.2, kind: 'tvb', color: 0x63675a } },
   kh31p: { name: 'Х-31П', short: 'Х-31П', side: 'east', era: 3, kind: 'arm', mass: 600, acc: 160, burn: 10, kd: 0.8, g: 15, life: 60, fov: 35, rmax: 40000, mem: true, dmg: 70, blast: 27, rcs: 0.3,
     guide: 'Скоростная (≈ 3,5 М) противорадиолокационная ракета с прямоточным двигателем и памятью координат РЛС.',
     specs: [['Страна', 'Россия'], ['Масса', '≈ 600 кг'], ['Скорость', '≈ 3,5 М'], ['Дальность', 'до ≈ 110 км (в игре меньше)']],
@@ -392,6 +424,34 @@ Object.assign(AG, {
     specs: [['Назначение', 'ложная цель'], ['Масса', '≈ 120 кг']],
     vis: { L: 2.8, r: 0.16, kind: 'cruise', color: 0x8a8f86 } },
 });
+// ── четвёртая партия (2026-10-19): советские бомбы разного калибра, GBU-24 и GBU-57 (модели — 4ikalka, CATholic, United4192,
+// Rhine_Lab_Muelsyse US Weapon Pack); урон и радиус — по массе взрывчатки, как у ФАБ-500 и Mk 82
+Object.assign(AG, {
+  fab100: { name: 'ФАБ-100М-80', short: 'ФАБ-100', side: 'east', era: 1, kind: 'bomb', mass: 100, kd: 0.9, dmg: 45, blast: 24,
+    guide: 'Лёгкая фугасная бомба: много штук на одном самолёте — серия по колонне или позиции ПВО. Одна бомба — только по лёгкой цели.',
+    specs: [['Страна', 'СССР'], ['Масса', '≈ 100 кг'], ['Взрывчатка', '≈ 40 кг'], ['Длина', '1,1 м']],
+    vis: { L: 1.07, r: 0.137, kind: 'bomb', color: 0x5d6650 } },
+  fab250: { name: 'ФАБ-250М-54', short: 'ФАБ-250', side: 'east', era: 1, kind: 'bomb', mass: 250, kd: 0.95, dmg: 90, blast: 38,
+    guide: 'Основная фугасная бомба фронтовой авиации: вдвое легче ФАБ-500 — на самолёт помещается больше, разрушает здание средней величины.',
+    specs: [['Страна', 'СССР'], ['Масса', '≈ 250 кг'], ['Взрывчатка', '≈ 100 кг'], ['Длина', '1,5 м']],
+    vis: { L: 1.5, r: 0.162, kind: 'bomb', color: 0x5d6650 } },
+  ofab250: { name: 'ОФАБ-250-270', short: 'ОФАБ-250', side: 'east', era: 1, kind: 'bomb', mass: 266, kd: 0.95, dmg: 75, blast: 48,
+    guide: 'Осколочно-фугасная: фугасное действие слабее ФАБ-250, зато осколки разлетаются дальше — против техники и позиций ПВО на открытом месте.',
+    specs: [['Страна', 'СССР'], ['Масса', '≈ 266 кг'], ['Взрывчатка', '≈ 92 кг'], ['Длина', '1,5 м']],
+    vis: { L: 1.48, r: 0.163, kind: 'bomb', color: 0x5d6650 } },
+  fab1000: { name: 'ФАБ-1000М-54', short: 'ФАБ-1000', side: 'east', era: 1, kind: 'bomb', mass: 1000, kd: 1.05, dmg: 260, blast: 68,
+    guide: 'Тяжёлая фугасная бомба дальних и фронтовых бомбардировщиков: рушит крупное здание целиком. Сбрасывают с горизонтального полёта, серией.',
+    specs: [['Страна', 'СССР'], ['Масса', '≈ 1000 кг'], ['Взрывчатка', '≈ 430 кг'], ['Длина', '3,4 м']],
+    vis: { L: 3.35, r: 0.315, kind: 'bomb', color: 0x5d6650 } },
+  gbu24: { name: 'GBU-24 Paveway III', short: 'GBU-24', side: 'west', era: 2, kind: 'lgb', mass: 1050, kd: 0.95, g: 3.0, fov: 40, life: 140, rmax: 18000, dmg: 240, blast: 64,
+    guide: 'Mk 84 с головкой третьего поколения: пропорциональное наведение и большие крылья — можно сбрасывать с малой высоты и издалека, промах меньше, чем у GBU-10. Подсвет нужен до попадания.',
+    specs: [['Страна', 'США'], ['Масса', '≈ 1050 кг'], ['Точность', '≈ 1–3 м при подсвете'], ['Дальность', 'до ≈ 18 км']],
+    vis: { L: 4.38, r: 0.23, kind: 'lgb', color: 0x5e6b4f, band: 0xe8c21c } },
+  gbu57: { name: 'GBU-57 MOP', short: 'GBU-57', side: 'west', era: 4, kind: 'gps', mass: 13600, kd: 1.1, g: 1.5, life: 140, rmax: 15000, dmg: 600, blast: 52, rcs: 0.4,
+    guide: 'Сверхтяжёлая проникающая бомба (13,6 т) только для B-2: уходит глубоко под землю и разрушает укреплённую цель целиком. Наводится по GPS — помехи навигации сбивают её так же, как JDAM.',
+    specs: [['Страна', 'США'], ['Масса', '≈ 13 600 кг'], ['Длина', '6,2 м'], ['Носитель', 'B-2A']],
+    vis: { L: 6.31, r: 0.4, kind: 'tvb', color: 0x5a5e58 } },
+});
 // ── «Мульти-волна» (2026-10-13): оперативно-тактические (tbm) с пусковых, крылатые — с носителей (CARRIERS) у края района, дроны.
 // Только то, у чего есть модель и носитель в игре (флота нет). Пускаются sim/combined.js, не с самолёта игрока. tbm: H — высота апогея, T — время полёта (в игре сжато),
 // cep — круговое отклонение, man — манёвр на конечном участке (сбить труднее), dec — ложные цели, отделяемые на спуске.
@@ -430,6 +490,9 @@ Object.assign(AG, {
   kh55: { name: 'Х-55', short: 'Х-55', side: 'east', era: 2, kind: 'cruise', ev: true, mass: 1185, speed: 220, alt: 60, life: 420, rmax: 90000, dmg: 200, blast: 54, rcs: 0.1,
     guide: 'Стратегическая крылатая ракета с Ту-95МС и Ту-160: дозвуковая, на малой высоте с облётом рельефа.', specs: [['Страна', 'СССР'], ['Дальность', '≈ 2500 км']],
     vis: { L: 6.04, r: 0.31, kind: 'cruise', color: 0x8d9184, nz: [0, -0.48, 2.66] /* сопло — у выдвижного двигателя под хвостом, не в торце корпуса */ } },
+  kh101: { name: 'Х-101', short: 'Х-101', side: 'east', era: 4, kind: 'cruise', ev: true, mass: 2400, speed: 200, alt: 40, life: 600, rmax: 90000, dmg: 300, blast: 58, rcs: 0.01,
+    guide: 'Малозаметная стратегическая крылатая ракета с Ту-160 и Ту-95МС: гранёный корпус, на малой высоте с облётом рельефа — РЛС видят её поздно и ненадолго.',
+    specs: [['Страна', 'Россия'], ['Дальность', '≈ 5500 км']], vis: { L: 7.45, r: 0.37, kind: 'cruise', color: 0x6d7175, nz: [0, -0.55, 3.0] /* двигатель — под хвостом */ } },
   kh555: { name: 'Х-555', short: 'Х-555', side: 'east', era: 3, kind: 'cruise', ev: true, mass: 1280, speed: 220, alt: 50, life: 420, rmax: 90000, dmg: 260, blast: 54, rcs: 0.1,
     guide: 'Х-55 с обычной боевой частью и точнее — с Ту-160 и Ту-95МС, пуск далеко за пределами досягаемости ПВО.', specs: [['Страна', 'Россия'], ['Дальность', '≈ 2000 км']],
     vis: { L: 6.04, r: 0.31, kind: 'cruise', color: 0x8d9184, nz: [0, -0.48, 2.66] /* сопло — у выдвижного двигателя под хвостом, не в торце корпуса */ } },
@@ -491,12 +554,12 @@ export const COMBINED = {
     4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 6, 2, 'f16'], ['sdb', 6, 2, 'f16'], ['tomahawk', 3, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b52'], ['storm', 2, 2, 'e_typhoon'], ['atacms', 2, 3]] },
 };
 // очки угрозы: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 5, с манёвром и ложными целями — 7
-export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, sdb: 1, kh55: 3, kh555: 3, kalibr: 3, tomahawk: 3, agm86: 3, slam: 3, jsow: 2, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, iskander: 7, kinzhal: 9 };
+export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, sdb: 1, kh55: 3, kh555: 3, kh101: 4, kalibr: 3, tomahawk: 3, agm86: 3, slam: 3, jsow: 2, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, iskander: 7, kinzhal: 9 };
 export const threatOf = (comp) => comp.reduce((n, [k, c]) => n + (THREAT[k] ?? 3) * c, 0);
 // отдельный режим «Мульти-волна»: что можно заказать за удар (ключ, носитель или null — пусковая / своим ходом, с какой эпохи),
 // бюджет удара в очках угрозы (у запада ×1,15) и очки обороны на расстановку под одну волну
 export const MULTI = {
-  items: { east: [['shahed', null, 4], ['kh55d', 'e_tu160', 2], ['kh55', 'e_tu160', 2], ['kh555', 'e_tu160', 3], ['kalibr', 'e_tu160', 4], ['r17', null, 1], ['tochka', null, 2], ['iskander', null, 4], ['kinzhal', 'e_mig31', 4]],
+  items: { east: [['shahed', null, 4], ['kh55d', 'e_tu160', 2], ['kh55', 'e_tu160', 2], ['kh555', 'e_tu160', 3], ['kh101', 'e_tu160', 4], ['kalibr', 'e_tu160', 4], ['r17', null, 1], ['tochka', null, 2], ['iskander', null, 4], ['kinzhal', 'e_mig31', 4]],
     west: [['uav_w', null, 3], ['quail', 'f16', 4], ['sdb', 'f16', 4], ['agm86', 'e_b52', 2], ['slam', 'f18', 3], ['jsow', 'f18', 3], ['tomahawk', 'e_b1b', 3], ['jassm', 'e_b52', 4], ['storm', 'e_typhoon', 4], ['atacms', null, 3]] },
   // у запада во II эпохе нет баллистики и ложных целей — очков больше; с III (SLAM, JSOW, SDB) — почти поровну (пересчёт 2026-10-12)
   budget: { 1: 15, 2: 33, 3: 42, 4: 60 }, westK: { 1: 1, 2: 1.15, 3: 1.05, 4: 1 },
@@ -518,6 +581,13 @@ LOADOUTS[3] = [
   { side: 'west', plane: 'e_gripen', name: 'Лазерные GBU-12 + JDAM', items: [['gbu12', 4], ['gbu31', 2]], pod: true },
   { side: 'west', plane: 'f16', name: 'Ракеты: Maverick + HARM + помехи', items: [['agm65b', 4], ['agm88', 2], ['ecm_w', 1]], pod: true },
   { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: HARM ×4 + помехи', items: [['agm88', 4], ['ecm_w', 1]] },
+  { side: 'west', plane: 'e_f15e', name: 'F-15E: JDAM ×2 + GBU-12 ×4 + помехи', items: [['gbu31', 2], ['gbu12', 4], ['ecm_w', 1]], pod: true },
+  { side: 'west', plane: 'e_f117', name: 'F-117A: GBU-10 ×2 (в отсеке)', items: [['gbu10', 2]], pod: true },
+  { side: 'west', plane: 'e_mirage', name: 'Mirage 2000D: GBU-12 ×2 + JDAM ×2 + помехи', items: [['gbu12', 2], ['gbu31', 2], ['ecm_w', 1]], pod: true },
+  { side: 'east', plane: 'e_tu22m3', name: 'Ту-22М3: ФАБ-1000 ×6 (в отсеке и под крылом)', items: [['fab1000', 6]] },
+  { side: 'east', plane: 'e_tu95', name: 'Ту-95МС: крылатые Х-55 ×6', items: [['kh55', 6]] },
+  { side: 'west', plane: 'e_b52', name: 'B-52H: JDAM ×8 (в отсеке)', items: [['gbu31', 8]] },
+  { side: 'west', plane: 'e_b1b', name: 'B-1B: JDAM ×4 + Mk 82 ×4 (в отсеках)', items: [['gbu31', 4], ['mk82', 4]] },
 ];
 LOADOUTS[4] = [
   { side: 'east', plane: 'e_su34', name: 'УМПК + Х-59М + Х-31П + помехи', items: [['umpk', 2], ['kh59m', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },
@@ -528,6 +598,12 @@ LOADOUTS[4] = [
   { side: 'west', plane: 'e_f22', name: 'Малозаметный: JDAM ×2 + SDB ×4', items: [['gbu31', 2], ['gbu39', 4], ['ecm_w', 1]] }, // всё — в отсеках, цели по координатам (контейнера у F-22 нет)
   { side: 'west', plane: 'f18', name: 'AARGM + JDAM (охота за ПВО)', items: [['aargm', 4], ['gbu31', 2], ['ecm_w', 1]], pod: true, role: 'sead' },
   { side: 'west', plane: 'f16', name: 'Крылатые JASSM ×2 + MALD', items: [['jassm', 2], ['mald', 2], ['agm88', 2]], pod: true },
+  { side: 'west', plane: 'e_rafale', name: 'Rafale: Storm Shadow (SCALP) ×2 + GBU-12 ×2 + помехи', items: [['storm', 2], ['gbu12', 2], ['ecm_w', 1]], pod: true },
+  { side: 'west', plane: 'e_b2', name: 'B-2A: GBU-57 ×2 (в отсеках)', items: [['gbu57', 2]] },
+  { side: 'east', plane: 'e_su35', name: 'Су-35С: Х-59МК2 ×2 + КАБ-500С ×2', items: [['kh59mk2', 2], ['kab500s', 2]], pod: true },
+  { side: 'east', plane: 'e_tu160', name: 'Ту-160: крылатые Х-101 ×6 (в отсеках)', items: [['kh101', 6]] },
+  { side: 'west', plane: 'e_ea18g', name: 'EA-18G: AARGM ×2 + помехи', items: [['aargm', 2], ['ecm_w', 1]], role: 'sead' },
+  { side: 'west', plane: 'e_typhoon', name: 'Typhoon: Storm Shadow ×2 + GBU-12 ×2', items: [['storm', 2], ['gbu12', 2]], pod: true },
 ];
 // роль подвески: 'sead' — охота за ПВО (противорадиолокационных ракет по массе не меньше, чем остального ударного), иначе 'strike' —
 // штурмовка; помехи и ложные цели не считаются; L.role — задана явно (где по массе спорно)
@@ -541,5 +617,29 @@ export const ROLE_NAME = { sead: 'охота за ПВО', strike: 'штурмо
 // индексы подвесок стороны и первая подходящая (если выбранная — чужой стороны)
 export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, khordad: 320, skyguard: 120, rapier: 170 });
 // комплексы без готовых моделей — выведены из игры (вернутся, если найдутся модели; их описание и пусковые остались)
-export const NO_MODEL = ['zsu234', 'strela10', 'buk', 'avenger', 'iris', 'skynex'];
+// MIM-72 Chaparral (модель TankLord, 2026-10-19): Sidewinder на гусеничном M730 — запад, эпоха I
+Object.assign(SAM, { chaparral: { name: 'MIM-72 Chaparral', short: 'Chaparral', side: 'west', era: 1, type: 'ir', rwr: null, hp: 28, optical: 8000,
+  rmin: 500, rmax: 5000, hmin: 15, hmax: 3000, react: 5, salvo: 1, ammo: 4, reload: 50, irccm: 0.25, aspect: 90,
+  msl: { acc: 170, burn: 2.2, kd: 1.9, g: 18, vmin: 230, life: 14, blast: 7, dmg: 55, L: 2.9, r: 0.064, color: 0xd8d8d0 },
+  guide: 'Четыре ракеты MIM-72 (наземный «Сайдвиндер») на поворотной пусковой гусеничного M730. Тепловая ГСН ранних серий ловит сопло — бьёт вдогон, на встречных курсах слабее; РЛС нет — на СПО не виден.',
+  specs: [['Страна', 'США'], ['Шасси', 'M730'], ['Наведение', 'тепловая ГСН'], ['Дальность', '0,5–9 км'], ['Высота', 'до 3 км'], ['Ракет на пусковой', '4']] } });
+SAM_COST.chaparral = 110;
+DEFENSE.east[1].push(['zsu234', 2]); DEFENSE.east[2].push(['strela10', 1]); DEFENSE.west[1].push(['chaparral', 1]); DEFENSE.west[2].push(['chaparral', 1]); DEFENSE.west[3].push(['avenger', 1]);
+// «Шилка», «Стрела-10», Avenger — модели есть с 2026-10-19
+// ── четвёртая партия (2026-10-19): ЗУ-23-2 (восток I), Phalanx в наземном варианте C-RAM (запад IV); «Бук-М1» получил модель
+Object.assign(SAM, {
+  zu23: { name: 'ЗУ-23-2', short: 'ЗУ-23', side: 'east', era: 1, type: 'guns', rwr: null, hp: 18, optical: 4500,
+    rmin: 50, rmax: 2000, hmin: 0, hmax: 1500, react: 5, ammo: 100, reload: 12, eccm: 0,
+    gun: { burst: 0.6, pause: 1.2, hitK: 0.3, dmg: 5, v: 970, rof: 33 },
+    guide: 'Спаренная 23-мм буксируемая установка: без радара, наводчик целится глазами через коллиматорный прицел. Не излучает — СПО её не видит; два магазина по 50 выстрелов, потом перезарядка.',
+    specs: [['Страна', 'СССР'], ['Вооружение', '2 × 23 мм'], ['Дальность огня', '≈ 2 км'], ['Высота', 'до 1,5 км']] },
+  phalanx: { name: 'Phalanx C-RAM (LPWS)', short: 'Phalanx', side: 'west', era: 4, type: 'guns', rwr: 'PH', hp: 28, antiMun: true,
+    radar: { range: 6000, acq: 1.5, doppler: true, clutter: 0, mast: 3, band: 'Ku' }, rmin: 50, rmax: 1500, hmin: 0, hmax: 1500, react: 2, ammo: 1550, reload: 40, eccm: 0.5,
+    gun: { burst: 1.2, pause: 0.8, hitK: 0.55, dmg: 4, v: 1100, rof: 75 },
+    guide: 'Шестиствольная 20-мм пушка со своим радаром поиска и сопровождения — сухопутный вариант корабельного «Фаланкса». Сбивает в упор бомбы, ракеты и дроны, подлетевшие к объекту; по самолётам — только вблизи.',
+    specs: [['Страна', 'США'], ['Вооружение', '20 мм, ≈ 4500 выстр./мин'], ['Дальность огня', '≈ 1,5 км'], ['Цели', 'ракеты, бомбы, дроны']] },
+});
+Object.assign(SAM_COST, { zu23: 50, phalanx: 140 });
+DEFENSE.east[1].push(['zu23', 2]); DEFENSE.east[3].push(['buk', 1]); DEFENSE.west[4].push(['phalanx', 1]);
+export const NO_MODEL = ['iris', 'skynex']; // «Бук» — модель azlan с 2026-10-19
 for (const k of NO_MODEL) { delete SAM[k]; delete SAM_COST[k]; }

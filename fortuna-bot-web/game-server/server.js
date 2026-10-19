@@ -34,7 +34,7 @@ async function checkTicket(ticket) {
   if (!(await crypto.subtle.verify('HMAC', hmacKey, b64u(sig), new TextEncoder().encode(body)))) return null;
   const p = JSON.parse(new TextDecoder().decode(b64u(body)));
   if (!p.pid || !p.login || !(p.exp * 1000 > Date.now())) return null;
-  return { pid: String(p.pid), name: String(p.login).slice(0, 24), owned: Array.isArray(p.u) ? p.u.map(String) : [] };
+  return { pid: String(p.pid), name: String(p.login).slice(0, 24), owned: Array.isArray(p.u) ? p.u.map(String) : [], ad: Array.isArray(p.a) ? p.a.map(String) : [] }; // a — купленное в прокачке «Воздушного превосходства»
 }
 // Итог боя для наград (edge-функция drone-claim проверяет той же подписью): base64url(JSON) + '.' + base64url(HMAC)
 const b64uEnc = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -49,7 +49,7 @@ const cleanName = (s) => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim(
 async function auth(m) {
   if (SECRET) { try { return await checkTicket(m.ticket); } catch (_) { return null; } }
   const name = cleanName(m.name);
-  return name ? { pid: String(m.pid || ''), name, owned: null } : null; // owned null — в разработке ограничений Реализма нет
+  return name ? { pid: String(m.pid || ''), name, owned: null, ad: null } : null; // owned / ad null — в разработке ограничений Реализма нет
 }
 
 const MAX_CLIENTS = +(Deno.env.get('MAX_CLIENTS') || 400);

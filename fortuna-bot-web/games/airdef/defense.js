@@ -9,16 +9,17 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261022e';
-import { weaponHasModel } from './models.js?v=20261022e';
-import { ico } from './icons.js?v=20261022e';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261022e';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261022e';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261022e';
+import { CITY, mulberry32 } from './city.js?v=20261022i';
+import { weaponHasModel } from './models.js?v=20261022i';
+import { LNCH, lnchToWorld } from './launchers.js?v=20261022i';
+import { ico } from './icons.js?v=20261022i';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261022i';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261022i';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261022i';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261022e';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261022e';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261022e';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261022i';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261022i';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261022i';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -35,6 +36,11 @@ export function createDefense(C) {
   const atk = () => st.multi === 'atk';
   // цена комплекса: в онлайне ведущая ПВО платит за дальние больше (sim/online.js LEAD_K)
   const costOf = (k) => (st.net ? samCostFor(k, st.net.room && st.net.room.lead) : samCost(k));
+  // прокачка: в «Реализме» (одиночном и онлайн) — только купленное в «Исследованиях»; аркада и уроки — всё
+  const realMode = () => !(st.opts || {}).allow && !(st.opts || {}).items && (st.net ? !!(st.net.room && st.net.room.mode === 'real') : C.setup.diff === 'real');
+  const lockedSam = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.samOk(k);
+  const lockedStrike = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.strikeOk(k);
+  const LOCK_SAY = 'В «Реализме» — только купленное в «Исследованиях»';
   const seen = new Map(); // самолёт → время, когда его последний раз видела сеть ПВО
   const tm = $('tmap'), tx = tm.getContext('2d');
   const view = { cx: 500, cz: -300, k: 0.05 }; // центр карты (м) и масштаб (px на м)
@@ -464,8 +470,8 @@ export function createDefense(C) {
       const side = B.sideAir === 'east' ? 'west' : 'east';
       for (const [k, s] of Object.entries(SAM)) {
         if (s.side !== side || s.era > B.era) continue;
-        const c = costOf(k), lim = netLeft(k), no = c > st.budget || (lim !== null && lim <= 0);
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${s.short}</b><span>${CLS_NAME[samClass(k)]} · ${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км${lim !== null ? ` · можно ещё ${Math.max(0, lim)}` : ''}</span></div><span class="pr">${c}</span></div>`;
+        const c = costOf(k), lim = netLeft(k), lk = lockedSam(k), no = c > st.budget || (lim !== null && lim <= 0) || lk;
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${CLS_NAME[samClass(k)]} · ${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км${lim !== null ? ` · можно ещё ${Math.max(0, lim)}` : ''}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? (IS_TOUCH ? 'Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.' : 'Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.') : 'Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса на карте — перенос (новое место и «Подтвердить») или продажа.'}</p>`;
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
@@ -531,6 +537,7 @@ export function createDefense(C) {
     if (add) mine[add] = (mine[add] || 0) + 1;
     const all = sumN(other, mine); return { rule: TBM_RULE(n), other: tbmOf(other), used: tbmOf(all), kinzhal: all.kinzhal || 0, iskander: all.iskander || 0, deny: add ? tbmCheck(all, n) : null }; }
   function addTo(key, k) {
+    if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return false; }
     const free = idxOf(k, null).filter((i) => !launchedU(k, i));
     if (free.length) { setTkey(k, free[0], key); return true; }
     if (AG[k].kind === 'tbm') { const b = tbmRoom(k); if (b.deny) { say(`${b.deny} ${st.net ? 'на команду' : 'на волну'}${b.other ? ` (у союзников уже ${b.other})` : ''}`, 3); snd.deny(); return false; } }
@@ -575,7 +582,7 @@ export function createDefense(C) {
     else h += '<p class="hint">Засечённый комплекс ПВО: назначенные сюда бьют именно по нему (уничтожен — по другим засечённым).</p>';
     for (const [k, via] of multiItems(attSide(), C.setup.era).filter(([q]) => !st.opts.items || st.opts.items.has(q) || idxOf(q, key).length)) { // урок — только нужные типы
       const W = AG[k], here = idxOf(k, key), done = here.filter((i) => launchedU(k, i)).length, free = idxOf(k, null).filter((i) => !launchedU(k, i)).length, c = THREAT[k] ?? 3, tbFull = W.kind === 'tbm' && !free && !!tbmRoom(k).deny;
-      h += `<div class="dcard ${here.length ? 'on' : ''}"><div class="nm"><b>${W.short} ×${here.length}</b><span>${via ? CARRIERS[via].name : W.kind === 'tbm' ? 'пусковая' : 'своим ходом'}${W.decoyMun ? ' · ложная' : ''}${done ? ` · пущено ${done}` : ''}${free ? ` · без цели: ${free}` : ''}</span></div>
+      h += `<div class="dcard ${here.length ? 'on' : ''} ${lockedStrike(k) ? 'no' : ''}"><div class="nm"><b>${lockedStrike(k) ? ico('lock') + ' ' : ''}${W.short} ×${here.length}</b><span>${via ? CARRIERS[via].name : W.kind === 'tbm' ? 'пусковая' : 'своим ходом'}${W.decoyMun ? ' · ложная' : ''}${done ? ` · пущено ${done}` : ''}${free ? ` · без цели: ${free}` : ''}</span></div>
         <span class="pr">${free ? '' : c}</span><button class="btn alt mini" data-a="tdec" data-k="${k}">−</button><button class="btn alt mini ${(!free && c > left) || tbFull ? 'no' : ''}" data-a="tinc" data-k="${k}">+</button></div>`;
       if (here.length) { // единицы на этой цели: номер и время пуска; касание — её маршрут, высота, время
         const D = DD[k], tOf = (i) => (wave && C.ev ? C.ev.unitInfo(k, i).t : D ? D.units[i].t : 0);
@@ -671,8 +678,8 @@ export function createDefense(C) {
       if (al) cat.sort(([a], [b]) => al.has(b) - al.has(a)); // урок: нужное — сверху
       for (const [k, s] of cat) {
         if (s.side !== dside() || s.era > C.setup.era) continue;
-        const c = SAM_COST[k], shut = st.opts.allow && !st.opts.allow.has(k); // урок: покупать только то, о чём он
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${s.short}</b><span>${shut ? 'не в этом уроке' : `${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км / ${(s.hmax / 1000).toFixed(1)} км`}</span></div><span class="pr">${c}</span></div>`;
+        const c = SAM_COST[k], shut = st.opts.allow && !st.opts.allow.has(k), lk = lockedSam(k); // урок: покупать только то, о чём он
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${shut ? 'не в этом уроке' : `${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км / ${(s.hmax / 1000).toFixed(1)} км`}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? (IS_TOUCH ? 'Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.' : 'Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.') : 'Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса — тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») и продажа.'}</p>`;
       h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>В БОЙ — ${st.multi ? 'Мульти-волна' : `волна ${st.wave + 1}`}</button>`;
@@ -698,6 +705,7 @@ export function createDefense(C) {
   side.onclick = (e) => {
     const b = e.target.closest('[data-a]'), buy = e.target.closest('[data-buy]');
     if (b && (b.dataset.a === 'pok' || b.dataset.a === 'pno')) { if (b.dataset.a === 'pok') confirmDraft(); else cancelDraft(); return; }
+    if (buy && lockedSam(buy.dataset.buy)) { say(LOCK_SAY); snd.deny(); return; }
     if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (costOf(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? 'Лимит первой волны для этого класса' : 'Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
     if (b && st.net && !(st.multi === 'atk' && b.dataset.a !== 'ready')) {
       const u = st.sel, a = b.dataset.a;
@@ -716,11 +724,12 @@ export function createDefense(C) {
     if (!b) return;
     const u = st.sel, a = b.dataset.a;
     if (a === 'winc') { // докупка во время волны: копится 1,5 с (пачка — на одном носителе), потом — в расписание
-      const k = b.dataset.k; if (planCost() + (THREAT[k] ?? 3) > st.budget) { say('Не хватает очков угрозы'); snd.deny(); return; }
+      const k = b.dataset.k; if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; } if (planCost() + (THREAT[k] ?? 3) > st.budget) { say('Не хватает очков угрозы'); snd.deny(); return; }
       st.plan.n[k] = (st.plan.n[k] || 0) + 1; st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 1.5; snd.click(); renderSide(); return;
     }
     if (a === 'inc' || a === 'dec') { // состав удара
       const k = b.dataset.k, n = st.plan.n[k] || 0;
+      if (a === 'inc' && lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; }
       if (a === 'inc' && planCost() + (THREAT[k] ?? 3) > st.budget) { say('Не хватает очков угрозы'); snd.deny(); return; }
       st.plan.n[k] = Math.max(0, n + (a === 'inc' ? 1 : -1)); snd.click(); renderSide(); return;
     }
@@ -834,6 +843,10 @@ export function createDefense(C) {
     st.phase = 'debrief'; st.sel = null; renderSide(); snd.good();
   }
   // «Мульти-волна»: итог по целям удара — разрушено половина ценности и больше — удар удался, иначе — ПВО отстояла
+  // прокачка: комплексы, на которых играли, и заказанные удары → airdef-solo (длительность меряет сервер)
+  const usedSams = () => (C.progress ? C.progress.usedSams(C.S.units.filter((u) => u.S && u.S.side === dside()).map((u) => u.key)) : []);
+  const usedStrikes = () => (C.progress && st.plan ? C.progress.usedStrikes(Object.keys(st.plan.n || {}).filter((k) => st.plan.n[k] > 0)) : []);
+  const claim = (ev, used) => { if (C.progress) setTimeout(() => C.progress.runClaim(ev, used), 950); };
   function finishMulti() {
     if (st.over) return; st.over = true; C.ev = null;
     const dmg = 1 - targetsValue(), r = st.mres, real = C.setup.diff === 'real' ? 1.5 : 1;
@@ -844,14 +857,14 @@ export function createDefense(C) {
       C.showEnd({ title: win ? 'Волна прорвалась' : 'Волна отражена', reason: `Цели разрушены на ${Math.round(dmg * 100)} % (нужно 50 %)`, win,
         stats: [[r.launched, 'пущено'], [r.down, 'сбито ПВО'], [`${Math.round(dmg * 100)}%`, 'цели разрушены'], [score, 'очков']],
         note: `Уничтожено комплексов ПВО: ${st.lostUnits}. Носителей потеряно: ${r.carriers}. ${real > 1 ? 'Реализм — очки ×1,5.' : ''}` });
-      C.menu.record('multi', score, {}); return;
+      C.menu.record('multi', score, {}); claim({ mwObj: Math.round(dmg * 50), mwSam: st.lostUnits, win }, usedStrikes()); return;
     }
     st.lostUnits = C.S.units.filter((u) => u.dead).length;
     const win = dmg < 0.5, score = Math.round(((1 - dmg) * 1000 + st.downs * 40) * real);
     C.showEnd({ title: win ? 'Волна отражена' : 'Волна прорвалась', reason: `Цели разрушены на ${Math.round(dmg * 100)} % (поражение — от 50 %)`, win,
       stats: [[st.downs, 'сбито'], [`${Math.round((1 - dmg) * 100)}%`, 'цели целы'], [st.lostUnits, 'потеряно ЗРК'], [score, 'очков']],
       note: real > 1 ? 'Реализм — очки ×1,5.' : '' });
-    C.menu.record('multi', score, {});
+    C.menu.record('multi', score, {}); claim({ mwInt: st.downs * 3, win }, usedSams()); // перехват: ≈ 3 очка угрозы на цель
   }
   function finish(why, win) {
     if (st.over) return; st.over = true; st.win = win;
@@ -861,6 +874,7 @@ export function createDefense(C) {
       stats: [[st.downs, 'самолётов сбито'], [`${st.wave}/${st.waves}`, 'волн'], [`${Math.round(cityValue() * 100)}%`, 'объекты целы'], [st.score, 'очков']],
       note: `Потеряно комплексов: ${st.lostUnits}. ${C.setup.diff === 'real' ? 'Реализм — очки ×1,5.' : ''}` });
     C.menu.record('defense', st.score, { waves: win ? st.waves : st.wave - 1 });
+    const held = win ? st.waves : st.wave - 1; claim({ downs: st.downs, waves: Array.from({ length: Math.max(0, held) }, (_, i) => i + 1), win: !!win }, usedSams());
   }
 
   // ═════════════ Оператор ═════════════
@@ -880,7 +894,7 @@ export function createDefense(C) {
   }
   function binoOff(msg) { if (!op.bino) return; op.bino = false; op.cam = op.binoCam || 'op'; $('opBino').classList.remove('on'); $('opCam').classList.toggle('on', op.cam !== 'op'); if (msg) opSay(msg); }
   const binoLen = (a) => (a.W ? (a.W.vis ? a.W.vis.L : 5) : a.M ? a.M.L : a.len || 17);
-  function cycleCam() { if (op.bino) binoOff(); op.cam = op.cam === 'op' ? (manpads(st.op) ? 'chase' : 'ext') : op.cam === 'ext' ? 'chase' : 'op'; op.orbit = false; op.od = 1; opSay('Камера: ' + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
+  function cycleCam() { const LF = st.op && LNCH[st.op.key]; if (LF && LF.fp) { opSay('У этой установки — только вид оператора'); snd.deny(); return; } if (op.bino) binoOff(); op.cam = op.cam === 'op' ? (manpads(st.op) ? 'chase' : 'ext') : op.cam === 'ext' ? 'chase' : 'op'; op.orbit = false; op.od = 1; opSay('Камера: ' + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
   const DIR = V3(), TMP = V3(), LEAD = V3(), EYE = V3();
   function enterOp(u) {
     if (st.op) leaveOp();
@@ -1139,6 +1153,7 @@ export function createDefense(C) {
     DIR.set(-Math.sin(op.yaw) * Math.cos(op.pitch), Math.sin(op.pitch), -Math.cos(op.yaw) * Math.cos(op.pitch));
     u.aimDir.copy(DIR);
     EYE.copy(u.pos); EYE.y += u.S.hp <= 15 ? 1.7 : 3.2;
+    const LNe = LNCH[u.key]; if (LNe && LNe.eye) { const L0 = LNe.L[0]; lnchToWorld({ ...u, lel: 0 }, L0, [LNe.eye[0] - L0.cp[0], LNe.eye[1] - L0.cp[1], LNe.eye[2] - L0.cp[2]], EYE); } // eye — точка оператора в башне (Phalanx): вид от установки, поворачивается с ней
     if (op.bino) {
       const tg = u.track;
       if (!tg || tg.dead || tg !== op.binoT) binoOff('Захват потерян — бинокль выключен, нужен новый захват');
@@ -1148,7 +1163,7 @@ export function createDefense(C) {
         camera.position.copy(EYE); camera.up.set(0, 1, 0); camera.lookAt(tg.pos); C.setFov(op.bf); return;
       }
     }
-    if (op.cam !== 'op') { extCamera(dt, u); return; }
+    if (op.cam !== 'op' && !(LNe && LNe.fp)) { extCamera(dt, u); return; }
     camera.position.copy(EYE); camera.up.set(0, 1, 0); camera.lookAt(TMP.copy(EYE).add(DIR));
     C.setFov(op.fov);
   }
@@ -1427,7 +1442,7 @@ export function createDefense(C) {
       if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км</span></div></div><div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">Продать +${Math.round(samCost(u.key) * 0.7)}</button>${st.moving ? '' : '<button class="btn alt" data-a="desel">Готово</button>'}</div>${moveHint()}`; }
       else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>союзника</span></div></div>`;
       h += placeCard() + '<div class="cat-h">Купить</div>';
-      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || sm.era > B.era) continue; const c = costOf(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}</b><span>${SAM_TYPE[sm.type]} · ${(sm.rmax / 1000).toFixed(1)} км${sm.abm ? ' · сбивает баллистику' : ''}</span></div><span class="pr">${c}</span></div>`; }
+      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || sm.era > B.era) continue; const c = costOf(k), lk = lockedSam(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}</b><span>${SAM_TYPE[sm.type]} · ${(sm.rmax / 1000).toFixed(1)} км${sm.abm ? ' · сбивает баллистику' : ''}</span></div><span class="pr">${c}</span></div>`; }
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
     } else if (st.phase === 'wave') {
       h += `<h3>Раунд ${B.round}/${B.rounds} · оборона</h3><div>Разрушено: <b>${Math.round(100 * (B.V || 0) / (B.v0 || 1))}%</b> ценности объектов</div>`;

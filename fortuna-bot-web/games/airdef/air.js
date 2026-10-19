@@ -2,20 +2,20 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022e';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261022e';
-import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta } from './models.js?v=20261022e';
-import { ico } from './icons.js?v=20261022e';
-import { applyLayout } from './layout.js?v=20261022e';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022e';
-import { DRONE } from '../drone/sim/modes.js?v=20261022e';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022e';
-import { predictBomb } from './sim/strike.js?v=20261022e';
-import { flightModel, loadOf } from './sim/flight.js?v=20261022e';
-import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022e';
-import { planeDamageVis } from './plane-damage.js?v=20261022e';
-import { placeDefense, pickTargets } from './mission.js?v=20261022e';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022e';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022i';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261022i';
+import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta, spinProps } from './models.js?v=20261022i';
+import { ico } from './icons.js?v=20261022i';
+import { applyLayout } from './layout.js?v=20261022i';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022i';
+import { DRONE } from '../drone/sim/modes.js?v=20261022i';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022i';
+import { predictBomb } from './sim/strike.js?v=20261022i';
+import { flightModel, loadOf } from './sim/flight.js?v=20261022i';
+import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022i';
+import { planeDamageVis } from './plane-damage.js?v=20261022i';
+import { placeDefense, pickTargets } from './mission.js?v=20261022i';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022i';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -768,6 +768,7 @@ export function createAir(C) {
     const att = opts.side || (setup.side === 'east' ? 'west' : 'east');
     if (!opts.items && LOADOUTS[setup.era][setup.lo].side !== att) setup.lo = loadoutsOf(setup.era, att)[0][1];
     const L = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
+    game.used = ['air:' + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» — должно быть куплено)
     hasPod = !!L.pod;
     const order = [3, 4, 2, 5, 1, 6, 0, 7]; let oi = 0;
     // запас на борт (ошибки, промахи): «Аркада» — ещё 2 полных комплекта (пополняются сами), «Реализм» — 1 пополнение на точке вылета;
@@ -841,9 +842,12 @@ export function createAir(C) {
     if (game.over) return; game.over = true;
     if (game.opts.noEnd) return;
     const dead = game.targets.filter((o) => o.dead).length, real = C.setup.diff === 'real';
+    // прокачка: что сделано за вылет → airdef-solo (длительность меряет сервер); цели — по одной, комплексы, вернулся ли
+    const claim = () => C.progress && C.progress.runClaim({ targets: Array(dead).fill(1), sams: game.kills, back: !craft.dead, win: !!game.done && !craft.dead }, game.used);
     if (C.op && C.op.stage === 1) { // операция: итоги первого вылета — дальше удар
       C.op.s1 = { score: game.score, kills: game.kills, hunt: game.hunt, alive: !craft.dead }; C.op.next = true;
       const h = game.hunt || { n: 0, need: 0 };
+      setTimeout(claim, 950);
       C.showEnd({ title: 'Вылет 1 из 2 завершён', reason: why, win: craft.dead ? false : game.done ? true : null, again: 'Вылет 2: удар →',
         stats: [[`${Math.min(h.n, h.need)}/${h.need}`, 'РЛС уничтожено'], [game.kills, 'комплексов ПВО'], [game.score, 'очков'], [craft.dead ? 'сбит' : 'вернулся', 'самолёт']],
         note: `Уничтоженное остаётся уничтоженным; уцелевшие комплексы перезарядятся и снова включат РЛС. ${h.n >= h.need ? 'ПВО подавлена — удару будет легче.' : 'ПВО подавлена не полностью — удар будет опаснее.'}` });
@@ -854,12 +858,12 @@ export function createAir(C) {
       C.showEnd({ title: 'Операция завершена', reason: why, win: game.done ? true : craft.dead ? false : null, again: 'Новая операция',
         stats: [[s1.hunt ? `${Math.min(s1.hunt.n, s1.hunt.need)}/${s1.hunt.need}` : '—', 'РЛС (вылет 1)'], [`${dead}/${game.targets.length}`, 'целей (вылет 2)'], [s1.kills + game.kills, 'комплексов ПВО'], [total, 'очков']],
         note: `Очки: ${s1.score} + ${game.score}${bonus ? ` + ${bonus} за два возвращения` : ''}. ${real ? 'Реализм' : 'Аркада'}, эпоха ${ERAS[C.setup.era - 1].short}.` });
-      C.op = null; C.menu.record('air', total); return;
+      C.op = null; C.menu.record('air', total); setTimeout(claim, 950); return;
     }
     C.showEnd({ title: craft.dead ? 'Самолёт потерян' : 'Вылет завершён', reason: why, win: craft.dead ? false : game.done ? true : null,
       stats: [game.hunt ? [`${Math.min(game.hunt.n, game.hunt.need)}/${game.hunt.need}`, 'РЛС уничтожено'] : [`${dead}/${game.targets.length}`, 'целей уничтожено'], [game.kills, 'комплексов ПВО'], [game.score, 'очков'], [real ? 'Реализм' : 'Аркада', `эпоха ${ERAS[C.setup.era - 1].short}`]],
       note: game.done ? 'Задание выполнено.' : '' });
-    C.menu.record('air', game.score);
+    C.menu.record('air', game.score); setTimeout(claim, 950); // итоги появляются через 0,9 с
   }
 
   // ═════════════ Кадр ═════════════
@@ -1033,6 +1037,7 @@ export function createAir(C) {
   function hud(dt, t) {
     ship.visible = !craft.dead && camMode !== 2;
     flames.update(craft.thr, craft.ab);
+    if (shipModel) spinProps(shipModel, dt, craft.thr); // винты (Ту-95)
     if (game.opts.photo) return; // «Съёмка»: без прицелов и панелей — свой интерфейс (photo.js)
     if (game.over && craft.dead) return;
     const sp = !!(game.net && craft.dead); if (sp !== document.body.classList.contains('spect')) document.body.classList.toggle('spect', sp); // «КАМ.» — следующий союзник

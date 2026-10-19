@@ -35,7 +35,63 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/fab-500-m62-9f49025bbd8d487cb3c245e40a07ab57",
   "license": "CC-BY-4.0",
   "files": [
-   "w_umpk",
+   "w_umpk"
+  ]
+ },
+ {
+  "title": "FAB-100-120",
+  "author": "4ikalka",
+  "url": "https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_fab100"
+  ]
+ },
+ {
+  "title": "OFAB-250-270",
+  "author": "4ikalka",
+  "url": "https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_ofab250"
+  ]
+ },
+ {
+  "title": "Fab-250| The soviet aviation bomb",
+  "author": "CATholic",
+  "url": "https://sketchfab.com/3d-models/fab-250-the-soviet-aviation-bomb-a85096c0d7594e5e9cc4551fcd59fdfd",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_fab250"
+  ]
+ },
+ {
+  "title": "FAB-1000",
+  "author": "United4192",
+  "url": "https://sketchfab.com/3d-models/fab-1000-c4db2a615b35417ca4f620af8658d97f",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_fab1000"
+  ]
+ },
+ {
+  "title": "US Weapon Pack",
+  "author": "Rhine_Lab_Muelsyse",
+  "url": "https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_gbu24",
+   "w_gbu57",
+   "aam_aim7",
+   "aam_aim9x"
+  ]
+ },
+ {
+  "title": "FAB-500 M-54 V5",
+  "author": "4ikalka",
+  "url": "https://sketchfab.com/3d-models/fab-500-m-54-v5-87e064b28f6f4d7ba1fde7e79d621b8d",
+  "license": "CC-BY-4.0",
+  "files": [
    "w_fab500"
   ]
  },
@@ -54,21 +110,30 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Su-30MK2 with Kh-59M",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/su-30mk2-with-kh-59m-d7dd73091bd3499ca0f6a1d079074bf2",
+  "title": "Kh31",
+  "author": "lelo",
+  "url": "https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045",
   "license": "CC-BY-4.0",
   "files": [
    "w_kh59m"
   ]
  },
  {
-  "title": "Kh-38MT air-to-ground missile",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/kh-38mt-air-to-ground-missile-559e695e8ade454eb575745cc1213ab9",
+  "title": "Kh-29 \"Kedge\"",
+  "author": "Novia556",
+  "url": "https://sketchfab.com/3d-models/kh-29-kedge-7f0372b7f79a4d3599d4e39f05a2ac4a",
   "license": "CC-BY-4.0",
   "files": [
    "w_kh25ml"
+  ]
+ },
+ {
+  "title": "KH-58/U Anti-Radiation Missile",
+  "author": "Narni_Tchereskov",
+  "url": "https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_kh58"
   ]
  },
  {
@@ -88,8 +153,7 @@ export const CREDITS = [
   "files": [
    "w_mk82",
    "aam_aim9",
-   "aam_aim54",
-   "w_jsow"
+   "aam_aim54"
   ]
  },
  {
@@ -147,9 +211,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "F-111F Aardvark with GBU-24 Mk.84",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/f-111f-aardvark-with-gbu-24-mk84-61b374227e474c3f9ab225e35998c6c0",
+  "title": "Mk82 (JDAM)",
+  "author": "FeriseCAT",
+  "url": "https://sketchfab.com/3d-models/mk82-jdam-b17b76a5e8be474d9cfc400efe27cf7b",
   "license": "CC-BY-4.0",
   "files": [
    "w_gbu31"
@@ -283,12 +347,291 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Russian Su-24",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/russian-su-24-17ca351ca78149d09393b3926db66454",
+  "title": "Su24",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c",
   "license": "CC-BY-4.0",
   "files": [
    "e_su24"
+  ]
+ },
+ {
+  "title": "Tornado",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tornado"
+  ]
+ },
+ {
+  "title": "F111",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/f111-00e9e6b9dbc34dc1ae691529688ab000",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f111"
+  ]
+ },
+ {
+  "title": "Mig23",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mig23-cfd1f4a833434061b9f25f718fe0667a",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig23"
+  ]
+ },
+ {
+  "title": "Mig27",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig27"
+  ]
+ },
+ {
+  "title": "TU26",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tu22m2"
+  ]
+ },
+ {
+  "title": "[PBR] A-10 Thunderbolt",
+  "author": "Immersive3D",
+  "url": "https://sketchfab.com/3d-models/pbr-a-10-thunderbolt-e933acb3809e43bf8f47104795f10474",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_a10"
+  ]
+ },
+ {
+  "title": "McDonnell Douglas F-15E Strike Eagle",
+  "author": "Spark_Customs",
+  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-f-15e-strike-eagle-4b8a5abf87a34373af4b0c8adaf18b11",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f15e"
+  ]
+ },
+ {
+  "title": "Mig21",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mig21-4e2b33b33fcb43948c78783867e3b166",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig21n"
+  ]
+ },
+ {
+  "title": "Mig25",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig25"
+  ]
+ },
+ {
+  "title": "Su7b",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/su7b-faaf874e2c344f889a66451c4b93fa6b",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su7b"
+  ]
+ },
+ {
+  "title": "Tu16",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tu16-9c4ee54ca28e44d7a4604be112acab9f",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tu16"
+  ]
+ },
+ {
+  "title": "F100",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/f100-a9ea47d5af0f4833a50f76350bd99417",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f100"
+  ]
+ },
+ {
+  "title": "F5",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/f5-8089d66a8a8748b2a4b049b3c06f6a02",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f5"
+  ]
+ },
+ {
+  "title": "F117",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/f117-dfdd7ac4c75a4ac0802c9e1c05aa5338",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f117"
+  ]
+ },
+ {
+  "title": "Jaguar",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/jaguar-b09a0ee965bb424aaf14ebd06b698f96",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_jaguar"
+  ]
+ },
+ {
+  "title": "Buccaneer",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/buccaneer-db82ad0e1f5644ccaee1b25b77566dc7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_buccaneer"
+  ]
+ },
+ {
+  "title": "Harrier",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/harrier-9ccfd6758680413bb19d656db4f46185",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_harrier"
+  ]
+ },
+ {
+  "title": "Mirage2000",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mirage2000-3efefc5b6230418eb5d39a4afcb95657",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mirage"
+  ]
+ },
+ {
+  "title": "Rafale",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/rafale-225c7fba25d54b4b98b1de1e38921f9d",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_rafale"
+  ]
+ },
+ {
+  "title": "B2",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/b2-a9be2ca923aa44809194613209810d06",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_b2"
+  ]
+ },
+ {
+  "title": "Yak-38",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/yak-38-7cf4151540e748b49015700e9ac3499a",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_yak38"
+  ]
+ },
+ {
+  "title": "Il28",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/il28-20bb9aa23d4b48978be1d0ee5e1890ca",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_il28"
+  ]
+ },
+ {
+  "title": "Tu22",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tu22"
+  ]
+ },
+ {
+  "title": "Tu95",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_tu95"
+  ]
+ },
+ {
+  "title": "Hunter",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/hunter-0bdd0fc7a68e4d0b8306f4ddb2846a26",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_hunter"
+  ]
+ },
+ {
+  "title": "Sukhoi Su-27 \"Flanker\"",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su27"
+  ]
+ },
+ {
+  "title": "Sukhoi Su-35 Flanker-E (Сухой Су-35)",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su35"
+  ]
+ },
+ {
+  "title": "super-etendard",
+  "author": "helijah",
+  "url": "https://sketchfab.com/3d-models/super-etendard-3589004316f54dba90ed7f34455eeeb2",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_etendard"
+  ]
+ },
+ {
+  "title": "Dassault Mirage F1",
+  "author": "Civorsky",
+  "url": "https://sketchfab.com/3d-models/dassault-mirage-f1-9f7ea1b8ca934986833ab8f265f4b661",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mirage_f1"
+  ]
+ },
+ {
+  "title": "McDonnell Douglas F/A-18C Hornet",
+  "author": "Rhine_Lab_Muelsyse",
+  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-fa-18c-hornet-c68c8417c8e84864b2a5e0c35c178fd9",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_f18c"
+  ]
+ },
+ {
+  "title": "McDonnell Douglas F/A-18E+Boeing EA-18G Growler",
+  "author": "Rhine_Lab_Muelsyse",
+  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-fa-18eboeing-ea-18g-growler-d69153c8e91744cab2bad239a2cb5d98",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_ea18g"
   ]
  },
  {
@@ -334,6 +677,33 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_tomahawk"
+  ]
+ },
+ {
+  "title": "GBU-10 Laser Guided Bomb",
+  "author": "PhilCiborowski",
+  "url": "https://www.thingiverse.com/thing:5383701",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_gbu10"
+  ]
+ },
+ {
+  "title": "ELTA 8222 ECM POD 1/48",
+  "author": "Original_linny",
+  "url": "https://www.thingiverse.com/thing:5360259",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_ecm"
+  ]
+ },
+ {
+  "title": "Kh-101 Cruise Missile",
+  "author": "HappyBattleSheep",
+  "url": "https://www.thingiverse.com/thing:6720723",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_kh101"
   ]
  },
  {
@@ -433,6 +803,15 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_slam"
+  ]
+ },
+ {
+  "title": "AGM-154 JSOW missile",
+  "author": "RickSlash",
+  "url": "https://sketchfab.com/3d-models/agm-154-jsow-missile-03148c5054e54a1c99980aff68952c0f",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_jsow"
   ]
  },
  {
@@ -574,22 +953,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Boeing KC-135R Stratotanker",
-  "author": "Muhamad Mirza Arrafi",
-  "url": "https://sketchfab.com/3d-models/boeing-kc-135r-stratotanker-86f1e11310e546db9bf323fa1a62f069",
+  "title": "McDonnell Douglas KC-10 Extender",
+  "author": "Spark_Customs",
+  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-kc-10-extender-b13585efd6814861970d1a61cf510308",
   "license": "CC-BY-4.0",
   "files": [
-   "t_kc135"
-  ]
- },
- {
-  "title": "US Weapon Pack",
-  "author": "Rhine_Lab_Muelsyse",
-  "url": "https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745",
-  "license": "CC-BY-4.0",
-  "files": [
-   "aam_aim7",
-   "aam_aim9x"
+   "t_kc10"
   ]
  },
  {
@@ -783,12 +1152,52 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "M163 VADS",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/m163-vads-66a6f08ad2d945ccb6e72267e55bc685",
+  "title": "M163",
+  "author": "Gorgytz",
+  "url": "https://sketchfab.com/3d-models/m163-54bf2317be68403d9b5a1d7e75e68d4d",
   "license": "CC-BY-4.0",
   "files": [
-   "m163"
+   "m163",
+   "m163_lo"
+  ]
+ },
+ {
+  "title": "ZSU-23-4M",
+  "author": "voron",
+  "url": "https://sketchfab.com/3d-models/zsu-23-4m-e9e3ca1a5ee7455f90886de220519e42",
+  "license": "CC-BY-4.0",
+  "files": [
+   "zsu234",
+   "zsu234_lo"
+  ]
+ },
+ {
+  "title": "MTLB Strela-10 (low-poly)",
+  "author": "ScurvyWoof",
+  "url": "https://sketchfab.com/3d-models/mtlb-strela-10-low-poly-bbc5ef74a6024739aa89d7e5bbd53f21",
+  "license": "CC-BY-4.0",
+  "files": [
+   "strela10"
+  ]
+ },
+ {
+  "title": "AN/TWQ-1A1 Avenger",
+  "author": "KillCaptureDestroy",
+  "url": "https://sketchfab.com/3d-models/antwq-1a1-avenger-5069a439f0c1460b95ccbf6b775de240",
+  "license": "CC-BY-4.0",
+  "files": [
+   "avenger",
+   "avenger_lo"
+  ]
+ },
+ {
+  "title": "MIM-72 Chaparral 1/100 Scale",
+  "author": "TankLord",
+  "url": "https://www.thingiverse.com/thing:3058287",
+  "license": "CC-BY-4.0",
+  "files": [
+   "chaparral",
+   "chaparral_lo"
   ]
  },
  {
@@ -1248,6 +1657,33 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "pr_wbins"
+  ]
+ },
+ {
+  "title": "BUK Missile System",
+  "author": "azlan",
+  "url": "https://sketchfab.com/3d-models/buk-missile-system-7663f9fca2ce485da8c0fafcf2d40d10",
+  "license": "CC-BY-4.0",
+  "files": [
+   "buk"
+  ]
+ },
+ {
+  "title": "ZU - 23, зенитная установка, ЗУ-23, зенитка",
+  "author": "LuckySkink9661",
+  "url": "https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "zu23"
+  ]
+ },
+ {
+  "title": "Phalanx CIWS (Close-in Weapons System)",
+  "author": "DenisGLabrecque",
+  "url": "https://sketchfab.com/3d-models/phalanx-ciws-close-in-weapons-system-6c038d4e66634fc4832be5b2d8697a0d",
+  "license": "CC-BY-4.0",
+  "files": [
+   "phalanx"
   ]
  },
  {

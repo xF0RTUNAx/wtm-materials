@@ -9,7 +9,7 @@
 // Подключение: craft.fm = flightModel(ключ модели, { arcade }) — ядро (drone/sim/core.js flyStep/pilotStep) берёт из fm
 // перегрузку, сваливание и ускорение; без fm — прежняя лётная модель («Летка» не меняется).
 // Чистая математика: импортируют клиент, сервер и стенд.
-import { FIT } from './flight-fit.js?v=20261022e';
+import { FIT } from './flight-fit.js?v=20261022i';
 
 export const SPEED_K = 0.8; // скорости игры — доля реальных
 const G = 9.81, RHO0 = 1.225;
@@ -32,7 +32,25 @@ export const SPECS = {
   e_mig31: { name: 'МиГ-31БМ', side: 'east', n: 2, dry: 93.2, ab: 152, empty: 21820, fuel: 16350, mNorm: 41000, S: 61.6, vSL: 1500, vAlt: 2500, g: 5, roll: 90, K: 0.13, clMax: 1.05, ceil: 20600 }, // 3000 — на 17 км; на 11 км упирается в прочность
   e_tu22m3: { name: 'Ту-22М3', side: 'east', n: 2, dry: 140, ab: 245, empty: 58000, fuel: 50000, mNorm: 112000, S: 175.8, vSL: 1050, vAlt: 1800, g: 2.5, roll: 40, K: 0.1, clMax: 1.0, ceil: 13300 }, // 2000 — выше 12 км
   e_tu160: { name: 'Ту-160', side: 'east', n: 4, dry: 137, ab: 245, empty: 110000, fuel: 148000, mNorm: 267600, S: 293, vSL: 1030, vAlt: 1800, g: 2, roll: 30, K: 0.08, clMax: 1.0, ceil: 15000 }, // 2220 — выше 12 км, с малой массой
+  e_mig23: { name: 'МиГ-23БН', side: 'east', n: 1, dry: 78.5, ab: 112.8, empty: 10970, fuel: 4300, mNorm: 16700, S: 37.35, vSL: 1350, vAlt: 1800, g: 7, roll: 160, K: 0.12, clMax: 1.3, ceil: 16800 },
+  e_mig27: { name: 'МиГ-27К', side: 'east', n: 1, dry: 78.5, ab: 112.8, empty: 11908, fuel: 4560, mNorm: 18100, S: 37.35, vSL: 1350, vAlt: 1885, g: 7, roll: 150, K: 0.12, clMax: 1.3, ceil: 14000 },
+  e_tu22m2: { name: 'Ту-22М2', side: 'east', n: 2, dry: 127, ab: 215, empty: 54000, fuel: 46000, mNorm: 103000, S: 183.6, vSL: 1000, vAlt: 1800, g: 2.5, roll: 40, K: 0.1, clMax: 1.0, ceil: 13300 },
+  // третья партия (2026-10-19): МиГ-25 — на 11 км упирается в M 2,6 (предел 2,83 — выше)
+  e_yak38: { name: 'Як-38М', side: 'east', n: 1, dry: 66.7, ab: 0, empty: 7385, fuel: 2900, mNorm: 11300, S: 18.5, vSL: 1050, vAlt: 1080, g: 5, roll: 120, K: 0.11, clMax: 1.1, ceil: 11000 },
+  e_il28: { name: 'Ил-28', side: 'east', n: 2, dry: 26.5, ab: 0, empty: 12890, fuel: 6600, mNorm: 18400, S: 60.8, vSL: 800, vAlt: 900, g: 3, roll: 60, K: 0.05, clMax: 1.3, ceil: 12300 },
+  e_tu22: { name: 'Ту-22', side: 'east', n: 2, dry: 107.9, ab: 161.9, empty: 38000, fuel: 42000, mNorm: 85000, S: 162, vSL: 890, vAlt: 1510, g: 2.5, roll: 40, K: 0.09, clMax: 1.0, ceil: 13300 },
+  e_tu95: { name: 'Ту-95МС', prop: true, side: 'east', n: 4, dry: 100, ab: 0, empty: 90000, fuel: 84000, mNorm: 171000, S: 310, vSL: 650, vAlt: 830, g: 2, roll: 30, K: 0.05, clMax: 1.1, ceil: 12000 }, // турбовинтовой: тяга — эквивалентная
+  e_su27: { name: 'Су-27СМ', side: 'east', n: 2, dry: 74.5, ab: 122.6, empty: 16380, fuel: 9400, mNorm: 23430, S: 62, vSL: 1400, vAlt: 2500, g: 9, roll: 270, K: 0.11, clMax: 1.6, ceil: 18500 },
+  e_su35: { name: 'Су-35С', side: 'east', n: 2, dry: 86.3, ab: 142.2, empty: 18400, fuel: 11500, mNorm: 25300, S: 62, vSL: 1400, vAlt: 2400, g: 9, roll: 280, K: 0.11, clMax: 1.6, ceil: 18000 },
+  e_mig21n: { name: 'МиГ-21бис', side: 'east', n: 1, dry: 40.2, ab: 69.6, empty: 5460, fuel: 2390, mNorm: 8725, S: 23, vSL: 1300, vAlt: 2175, g: 8.5, roll: 180, K: 0.17, clMax: 1.2, ceil: 17800 },
+  e_mig25: { name: 'МиГ-25БМ', side: 'east', n: 2, dry: 73.5, ab: 109.8, empty: 20000, fuel: 14570, mNorm: 36700, S: 61.4, vSL: 1200, vAlt: 2800, g: 4.5, roll: 90, K: 0.13, clMax: 1.0, ceil: 20700 },
+  e_su7b: { name: 'Су-7БМК', side: 'east', n: 1, dry: 66.6, ab: 94.1, empty: 8370, fuel: 2760, mNorm: 12000, S: 34, vSL: 1350, vAlt: 2150, g: 7, roll: 120, K: 0.14, clMax: 1.1, ceil: 17600 },
+  e_tu16: { name: 'Ту-16', side: 'east', n: 2, dry: 93.2, ab: 0, empty: 37200, fuel: 34360, mNorm: 72000, S: 164.65, vSL: 850, vAlt: 1000, g: 2.5, roll: 40, K: 0.057, clMax: 1.1, ceil: 12800 },
   // ── Запад ──
+  e_tornado: { name: 'Tornado IDS', side: 'west', n: 2, dry: 43.8, ab: 76.8, empty: 13890, fuel: 4660, mNorm: 20400, S: 26.6, vSL: 1480, vAlt: 2400, g: 7.5, roll: 180, K: 0.11, clMax: 1.5, ceil: 15240 },
+  e_f111: { name: 'F-111F', side: 'west', n: 2, dry: 79.6, ab: 111.7, empty: 21400, fuel: 15000, mNorm: 37600, S: 61.07, vSL: 1470, vAlt: 2650, g: 7.33, roll: 120, K: 0.1, clMax: 1.6, ceil: 20100 },
+  e_a10: { name: 'A-10A', side: 'west', n: 2, dry: 40.3, ab: 0, empty: 11321, fuel: 4853, mNorm: 14865, S: 47, vSL: 706, vAlt: 706, g: 7.33, roll: 100, K: 0.06, clMax: 1.6, ceil: 13700 },
+  e_f15e: { name: 'F-15E', side: 'west', n: 2, dry: 79.2, ab: 129.4, empty: 14300, fuel: 10200, mNorm: 25000, S: 56.5, vSL: 1480, vAlt: 2650, g: 9, roll: 240, K: 0.1, clMax: 1.4, ceil: 18200 },
   f16: { name: 'F-16D', side: 'west', n: 1, dry: 76.3, ab: 131, empty: 9000, fuel: 2800, mNorm: 12000, S: 27.87, vSL: 1470, vAlt: 2120, g: 9, roll: 270, K: 0.12, clMax: 1.6, ceil: 15240 },
   f18: { name: 'F/A-18E', side: 'west', n: 2, dry: 62.3, ab: 98, empty: 14552, fuel: 6780, mNorm: 21320, S: 46.5, vSL: 1300, vAlt: 1915, g: 7.5, roll: 180, K: 0.11, clMax: 1.6, ceil: 15000 },
   e_f4: { name: 'F-4E Phantom II', side: 'west', n: 2, dry: 52.8, ab: 79.6, empty: 13757, fuel: 6000, mNorm: 18825, S: 49.2, vSL: 1390, vAlt: 2370, g: 7.33, roll: 150, K: 0.14, clMax: 1.2, ceil: 18300 },
@@ -41,6 +59,20 @@ export const SPECS = {
   e_f22: { name: 'F-22A Raptor', side: 'west', n: 2, dry: 116, ab: 156, empty: 19700, fuel: 8200, mNorm: 29410, S: 78, vSL: 1500, vAlt: 2410, g: 9, roll: 270, K: 0.1, clMax: 1.6, ceil: 19800 },
   e_typhoon: { name: 'Eurofighter Typhoon', side: 'west', n: 2, dry: 60, ab: 90, empty: 11000, fuel: 5000, mNorm: 16000, S: 51.2, vSL: 1390, vAlt: 2495, g: 9, roll: 250, K: 0.11, clMax: 1.5, ceil: 19810 },
   e_b1b: { name: 'B-1B Lancer', side: 'west', n: 4, dry: 75.6, ab: 136.9, empty: 87100, fuel: 88450, mNorm: 148000, S: 181, vSL: 1120, vAlt: 1335, g: 3, roll: 40, K: 0.08, clMax: 1.0, ceil: 18000 },
+  e_hunter: { name: 'Hunter FGA.9', side: 'west', n: 1, dry: 45.1, ab: 0, empty: 6400, fuel: 2400, mNorm: 8500, S: 32.4, vSL: 1030, vAlt: 1000, g: 7, roll: 180, K: 0.1, clMax: 1.2, ceil: 15700 },
+  e_etendard: { name: 'Super Étendard', side: 'west', n: 1, dry: 49, ab: 0, empty: 6500, fuel: 2600, mNorm: 9450, S: 28.4, vSL: 1080, vAlt: 1100, g: 6.5, roll: 180, K: 0.11, clMax: 1.2, ceil: 13700 },
+  e_mirage_f1: { name: 'Mirage F1', side: 'west', n: 1, dry: 49.2, ab: 70.6, empty: 7400, fuel: 3400, mNorm: 10900, S: 25, vSL: 1400, vAlt: 2338, g: 7, roll: 200, K: 0.12, clMax: 1.3, ceil: 20000 },
+  e_f18c: { name: 'F/A-18C Hornet', side: 'west', n: 2, dry: 48.9, ab: 79.2, empty: 10455, fuel: 4900, mNorm: 16770, S: 37.16, vSL: 1300, vAlt: 1915, g: 7.5, roll: 220, K: 0.12, clMax: 1.6, ceil: 15240 },
+  e_ea18g: { name: 'EA-18G Growler', side: 'west', n: 2, dry: 62.3, ab: 98, empty: 15011, fuel: 6780, mNorm: 21772, S: 46.5, vSL: 1250, vAlt: 1900, g: 7.5, roll: 180, K: 0.11, clMax: 1.6, ceil: 15000 },
+  e_f100: { name: 'F-100F Super Sabre', side: 'west', n: 1, dry: 45.4, ab: 75.2, empty: 9500, fuel: 3600, mNorm: 13500, S: 35.8, vSL: 1220, vAlt: 1390, g: 7.33, roll: 150, K: 0.11, clMax: 1.1, ceil: 15000 },
+  e_f5: { name: 'F-5E Tiger II', side: 'west', n: 2, dry: 15.5, ab: 22.2, empty: 4350, fuel: 2000, mNorm: 7000, S: 17.3, vSL: 1300, vAlt: 1700, g: 7.33, roll: 220, K: 0.1, clMax: 1.4, ceil: 15800 },
+  e_f117: { name: 'F-117A Nighthawk', side: 'west', n: 2, dry: 48, ab: 0, empty: 13380, fuel: 8000, mNorm: 21000, S: 84.8, vSL: 950, vAlt: 1000, g: 6, roll: 120, K: 0.2, clMax: 1.1, ceil: 13700 },
+  e_jaguar: { name: 'Jaguar GR.1', side: 'west', n: 2, dry: 23.7, ab: 35.8, empty: 7000, fuel: 3340, mNorm: 11000, S: 24.18, vSL: 1350, vAlt: 1700, g: 8.6, roll: 180, K: 0.12, clMax: 1.2, ceil: 14000 },
+  e_buccaneer: { name: 'Buccaneer S.2B', side: 'west', n: 2, dry: 49.4, ab: 0, empty: 13600, fuel: 7000, mNorm: 23000, S: 47.8, vSL: 1074, vAlt: 950, g: 6, roll: 120, K: 0.1, clMax: 1.3, ceil: 12200 },
+  e_harrier: { name: 'Harrier GR.3', side: 'west', n: 1, dry: 95.6, ab: 0, empty: 5580, fuel: 2290, mNorm: 8000, S: 18.7, vSL: 1176, vAlt: 1050, g: 7.8, roll: 150, K: 0.1, clMax: 1.3, ceil: 15600 },
+  e_mirage: { name: 'Mirage 2000D', side: 'west', n: 1, dry: 64.3, ab: 95.1, empty: 7600, fuel: 3160, mNorm: 12000, S: 41, vSL: 1470, vAlt: 2300, g: 9, roll: 270, K: 0.16, clMax: 1.4, ceil: 17000 },
+  e_rafale: { name: 'Rafale', side: 'west', n: 2, dry: 50, ab: 75, empty: 10300, fuel: 4700, mNorm: 15000, S: 45.7, vSL: 1390, vAlt: 1912, g: 9, roll: 270, K: 0.12, clMax: 1.5, ceil: 15835 },
+  e_b2: { name: 'B-2A Spirit', side: 'west', n: 4, dry: 77, ab: 0, empty: 71700, fuel: 75750, mNorm: 152600, S: 478, vSL: 900, vAlt: 1010, g: 2.5, roll: 35, K: 0.07, clMax: 1.0, ceil: 15200 },
   e_b52: { name: 'B-52H', side: 'west', n: 8, dry: 76, ab: 0, empty: 83250, fuel: 141000, mNorm: 180000, S: 370, vSL: 650, vAlt: 1000, g: 2, roll: 25, K: 0.045, clMax: 1.1, ceil: 15000 },
 };
 
