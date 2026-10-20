@@ -45,7 +45,8 @@ export function createAudio() {
   }
   // записанные петли в объёмных голосах (по желанию игры, у «Летки» нет): kind → [имена петель]; heli — [малые, большие обороты],
   // jet — [спереди (свист компрессора), сзади (рёв струи)]. Пока записи нет — голос звучит синтезом
-  let voiceLoops = {};
+  let voiceLoops = {}, engLoops = null; // engLoops — записи своего двигателя { idle, ab } (по желанию игры; «Летка» — синтез)
+  const EL = {}; // их источники и громкость в шине двигателя
   function vLoop(v, name) {
     v.lp = v.lp || {}; if (v.lp[name]) return v.lp[name];
     const S0 = SAMPLES[name]; if (!S0 || !S0.buf || ctx.eco) return null; // экономный звук — без записей в голосах (синтез)
@@ -262,15 +263,20 @@ export function createAudio() {
   // Каждый кадр: s = { on, rpmTarget, ab, speed, mach, sup, n, rear (0 — камера спереди, 1 — сзади), agl, rain, lobby }
   function frame(dt, s) {
     if (!ctx) return;
-    if (!s.on || muted) { set(engBus.gain, 0, 0.08); for (const k of ['windG', 'buffG', 'rainG', 'rainDrum', 'groundG', 'gunG', 'growlG']) set(E[k].gain, 0, 0.08); E.windLfo.gain.value = 0; return; }
+    if (!s.on || muted) { set(engBus.gain, 0, 0.08); for (const k in EL) set(EL[k].g.gain, 0, 0.08); for (const k of ['windG', 'buffG', 'rainG', 'rainDrum', 'groundG', 'gunG', 'growlG']) set(E[k].gain, 0, 0.08); E.windLfo.gain.value = 0; return; }
     rpm += (s.rpmTarget - rpm) * Math.min(1, (s.rpmTarget > rpm ? 0.8 : 1.2) * dt); // раскрутка турбины с запаздыванием
     const r = rpm, rear = s.rear, front = 1 - rear, sup = s.sup, ab = s.ab, tp = !!s.tprop;
+    // записи двигателя (малый газ — тон растёт с оборотами; форсаж — свой рёв поверх): синтез при них тише
+    let rec = false;
+    if (engLoops && !tp) for (const k of ['idle', 'ab']) { if (!EL[k] && SAMPLES[engLoops[k]] && SAMPLES[engLoops[k]].buf) { const s0 = ctx.createBufferSource(); s0.buffer = SAMPLES[engLoops[k]].buf; s0.loop = true; const g = gain(0); chain(s0, g, engBus); s0.start(0, Math.random() * s0.buffer.duration); EL[k] = { s0, g }; } }
+    if (EL.idle) { rec = true; const k = clamp((r - 0.55) / 0.45, 0, 1); set(EL.idle.g.gain, tp ? 0 : (0.05 + 0.06 * k) * (ab ? 0.55 : 1) * (0.75 + 0.25 * front), 0.15); set(EL.idle.s0.playbackRate, 0.86 + 0.42 * k, 0.25); }
+    if (EL.ab) set(EL.ab.g.gain, ab && !tp && !sup ? 0.13 * (0.6 + 0.4 * rear) : 0, ab ? 0.12 : 0.3);
     set(E.tpG.gain, tp ? 0.035 + 0.06 * r : 0, 0.2);
     if (tp) { const ff = 46 + 22 * r; set(E.tpO[0].frequency, ff, 0.2); set(E.tpO[1].frequency, ff * 1.5, 0.2); set(E.tpO[2].frequency, ff * 2.02, 0.2); }
     set(engBus.gain, s.lobby ? 3 : 4, 0.2); // слои намеренно «тихие» по отдельности — общий уровень задаёт шина
     // рёв и гул: растут с оборотами, форсаж опускает спектр и добавляет «давление»
     set(E.roarF.frequency, sup ? 190 : (ab ? 260 : 170 + 620 * r * r));
-    set(E.roarG.gain, (sup ? 0.05 : 0.018 + 0.07 * r * r * r + (ab ? 0.05 : 0)) * (0.45 + 0.55 * rear), 0.12);
+    set(E.roarG.gain, (sup ? 0.05 : 0.018 + 0.07 * r * r * r + (ab ? 0.05 : 0)) * (0.45 + 0.55 * rear) * (rec ? 0.55 : 1), 0.12);
     set(E.rumbF.frequency, 120 + 90 * r); set(E.rumbG.gain, (0.025 + 0.05 * r * r + (ab ? 0.09 : 0)) * (sup ? 0.7 : 1));
     set(E.hissG.gain, sup ? 0.002 : (0.002 + 0.013 * Math.pow(r, 4)) * (0.3 + 0.7 * rear) * (ab ? 0.45 : 1)); // на форсаже шипение тише — главное низ
     set(E.crackG.gain, sup || tp ? 0 : (ab ? 0.028 : r > 0.97 ? 0.006 : 0) * (0.35 + 0.65 * rear), 0.2);
@@ -279,7 +285,7 @@ export function createAudio() {
     const f = tp ? 900 + 700 * r : 1700 + 2300 * r; // у турбовинтового турбина ниже и тише (главное — винты)
     set(E.wBand1.frequency, f, 0.1); set(E.wBand2.frequency, f * 1.47, 0.1);
     for (const w of E.wOsc) set(w.o.frequency, f * w.k, 0.1);
-    set(E.whineG.gain, (sup ? 0.12 : 0.28 + 0.9 * front) * (0.036 + 0.04 * r) * (ab ? 0.7 : 1) * (tp ? 0.4 : 1));
+    set(E.whineG.gain, (sup ? 0.12 : 0.28 + 0.9 * front) * (0.036 + 0.04 * r) * (ab ? 0.7 : 1) * (tp ? 0.4 : 1) * (rec ? 0.35 : 1));
     set(E.supG.gain, sup ? 0.035 : 0, 0.3);
     // обтекание: громче с квадратом скорости; на сверхзвуке — главный, мягко «дышит»
     const v = s.speed, m = s.mach || 0;
@@ -384,7 +390,7 @@ export function createAudio() {
       const s = src(buf, rate), f = filt(type, freq, q), g = gain(0); chain(s, f, g, out);
       return { f, set(v, tc = 1) { set(g.gain, muted ? 0 : v, tc); }, stop() { set(g.gain, 0, 0.3); setTimeout(() => { try { s.stop(); s.disconnect(); g.disconnect(); } catch (_) { /* уже */ } }, 2000); } };
     },
-    loadSample, setPropSample(name) { propSample = name; if (ctx) attachProp(); }, setVoiceLoops(map) { voiceLoops = map || {}; },
+    loadSample, setPropSample(name) { propSample = name; if (ctx) attachProp(); }, setVoiceLoops(map) { voiceLoops = map || {}; }, setEngineLoops(m) { engLoops = m || null; },
     // петля записи (свой винт, очередь пушки): set(громкость, сглаж.), rate(скорость), cut(срез верха Гц), stop(затухание с, когда с)
     loop(name, vol = 0, when = 0, rate = 1, cut = 20000, wet = 0) {
       const S0 = SAMPLES[name]; if (!ctx || !S0 || !S0.buf) return null;

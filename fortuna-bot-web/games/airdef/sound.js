@@ -22,6 +22,9 @@ export function createSound() {
   // вторая партия (tools/airdef-sounds/mk2.py): вертолёт вдали — Benboncan «Military Helicopter» (CC BY 4.0); гул ракеты в небе —
   //   qubodup «Far Away Rocket Launch» (CC0); перехват — Invadium «cruise missiles interception» (CC0); из роликов YouTube (решение Mark
   //   2026-10-21): далёкий взрыв, винты Ту-95, пуск Patriot, пуск и взрыв «Искандера»
+  // третья партия (mk3.py; лицензия не подтверждена — файлов может не быть, тогда синтез): двигатель F-16 и форсаж, тоны ГСН AIM-9, отстрел ЛТЦ
+  for (const [k, f] of [['engIdle', 'eng_idle.wav'], ['engAB', 'eng_ab.wav'], ['abOn', 'ab_on.mp3'], ['seekSearch', 'seek_search.wav'], ['seekTone', 'seek_tone.wav'], ['seekLock', 'seek_lock.wav'], ['flareRec', 'flare.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261022q`);
+  A.setEngineLoops({ idle: 'engIdle', ab: 'engAB' });
   A.setVoiceLoops({ heli: ['heliLo', 'heliHi', 'heliFar'], jet: ['jetFront', 'jetRear'], tprop: ['tu95'], tbm: ['rocketFar'] });
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
@@ -37,8 +40,18 @@ export function createSound() {
     unlock() { A.init(); A.resume(); },
     setMuted(m) { muted = m; A.setMuted(m); ls.set('fortuna_airdef_mute', m ? '1' : '0'); },
     setVolume(v) { vol = v; A.setVolume(v); ls.set('fortuna_airdef_vol', String(v)); },
-    frame: A.frame, spatial: A.spatial, growl: A.growl,
-    silence() { A.silence(); heliOff(); for (const g of guns.values()) g.h.stop(0.05); guns.clear(); }, // пауза и скрытая вкладка: петли винта и очередей — тоже (кадров нет — сами не погаснут)
+    frame: A.frame, spatial: A.spatial,
+    // тон ИК-ГСН у оператора: запись AIM-9 — поиск (низкое «рычание»), цель в поле (ровный тон), захват (высокая трель); нет записи — синтез
+    growl(level, freq) {
+      const on = level > 0 && !muted, st = !on ? '' : freq >= 850 ? 'seekLock' : freq >= 520 ? 'seekTone' : 'seekSearch';
+      if (!A.sampleDur('seekLock')) { A.growl(level, freq); return; }
+      A.growl(0, freq);
+      for (const k of ['seekSearch', 'seekTone', 'seekLock']) {
+        if (k === st && !sk[k]) sk[k] = A.loop(k, 0, 0, 1, 9000);
+        if (sk[k]) sk[k].set(k === st ? Math.min(0.5, level * 7) : 0, 0.04);
+      }
+    },
+    silence() { A.silence(); heliOff(); for (const k in sk) { sk[k].stop(0.05); delete sk[k]; } for (const g of guns.values()) g.h.stop(0.05); guns.clear(); }, // пауза и скрытая вкладка: петли винта и очередей — тоже (кадров нет — сами не погаснут)
     // взрыв на земле: резкий «хлопок» ударной волны, глубокий толчок (инфранизкий тон), тело взрыва (низкий шум с быстрой
     // атакой), раскат с эхом от домов, треск обломков вблизи. Вдали — позже (скорость звука) и глуше (верх съедает воздух)
     explosion(d, size = 1, kind) {
@@ -118,7 +131,8 @@ export function createSound() {
       A.tone('sine', 55, 28, 1.4, 0.35 * k, dl + 0.45, 0.5);
       if (d < 2500) A.noise('crackle', 1.6, 0.35 * k, 'bandpass', 1500, 0.6, dl + 0.2);
     },
-    hit() { A.hit(); }, flare() { A.flare(); }, chaff() { A.chaff(); }, afterburner() { A.afterburner(); },
+    hit() { A.hit(); }, flare() { if (!A.sample('flareRec', 0.55, 0, 0.95 + Math.random() * 0.1, 12000, 0.15)) A.flare(); }, chaff() { if (!A.sample('flareRec', 0.35, 0, 0.78 + Math.random() * 0.06, 6000, 0.1)) A.chaff(); }, // отстрел: запись (диполи — ниже и глуше)
+    afterburner() { if (!A.sample('abOn', 0.6, 0, 1, 16000, 0.12)) A.afterburner(); },
     // старт зенитной ракеты: хлопок и рёв ускорителя (у больших — долгий и низкий), слышно с задержкой
     samLaunch(d, big, key) {
       const k = near(d, big ? 1500 : 700), w = delayOf(d), wet = 0.3 + 0.5 * (1 - k);
@@ -236,6 +250,7 @@ export function createSound() {
   const PATRIOT_LIKE = new Set(['patriot', 'pac3', 'nasams', 'hawk', 'khordad']); let bc = 0; // горячий старт из контейнера/направляющей — запись Patriot
   const GUN_RATE = { phalanx: 1, m163: 0.93 }; // M61 20 мм — как в записи (у «Шилки» звук другой — синтез aaa)
   let aaaAcc = 0;
+  const sk = {}; // петли тонов ГСН
   const guns = new Map(), he = { lo: null, hi: null, beds: null, pw: 0.6 }, mamb = { t: 10 };
   function heliOff() { for (const h of [he.lo, he.hi]) if (h) h.stop(0.35); if (he.beds) for (const b of he.beds) if (b) b.stop(); he.lo = he.hi = he.beds = null; }
   const amb = { on: false, timer: 0, beds: null, next: 0, gust: 0, gustT: 0, mood: 'air', last: '' };
