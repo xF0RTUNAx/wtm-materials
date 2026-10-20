@@ -9,9 +9,10 @@ import { ico } from './icons.js?v=20261022l';
 import { applyLayout } from './layout.js?v=20261022l';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022l';
 import { DRONE } from '../drone/sim/modes.js?v=20261022l';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022l';
-import { predictBomb } from './sim/strike.js?v=20261022l';
+import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022l';
+import { predictBomb, predictRocket } from './sim/strike.js?v=20261022l';
 import { flightModel, loadOf } from './sim/flight.js?v=20261022l';
+import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261022l';
 import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022l';
 import { planeDamageVis } from './plane-damage.js?v=20261022l';
 import { placeDefense, pickTargets } from './mission.js?v=20261022l';
@@ -27,6 +28,8 @@ export function createAir(C) {
   const loadout = [];
   let sel = 0, hasPod = false, flashT = 0, laserSpot = null;
   const home = new THREE.Vector3(); let homeT = 0, homeLeft = 1; // точка вылета (пополнение в «Реализме») и время над ней
+  // вертолёт вместо самолёта подвески — для проверки (?heli=h_mi24 …), пока у вертолётов нет своих подвесок
+  const HELI_Q = typeof location !== 'undefined' ? new URLSearchParams(location.search).get('heli') : null;
 
   // ── модель самолёта и подвеска ──
   // самолёт игрока: многоцелевой ударный самолёт стороны атакующих (как в превью меню), подвеска — на его пилонах
@@ -43,17 +46,32 @@ export function createAir(C) {
     if (shipModel) ship.remove(shipModel);
     shipSide = side; shipCls = cls; shipName = name; shipReal = exact; shipInternal = !!(pm && pm.internal);
     if (pm) {
-      shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = pm.stations; podPos = pm.pod; // pod: null — встроенная прицельная система
+      shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = craft.heli ? heliStations(pm.stations) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null — встроенная прицельная система (у вертолёта — всегда)
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
       flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry);
       craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
     } else {
       craft.dmgVis = null;
-      const sg = strikerGeo(side, true); stations = sg.stations; podPos = new THREE.Vector3(0, -1.6, -3.5);
+      const sg = strikerGeo(side, true); stations = craft.heli ? heliStations(sg.stations) : sg.stations; podPos = craft.heli ? null : new THREE.Vector3(0, -1.6, -3.5);
       shipModel = new THREE.Group(); const m = new THREE.Mesh(sg.geo, shipMat); m.castShadow = !!P.shadows; shipModel.add(m);
       flames = attachFlames(shipModel, sg.nozzles, sg.nr / 0.45, true);
     }
     ship.add(shipModel);
+    if (craft.heli) { // высота центра над землёй, стоя на шасси — по низу модели (без подвесок: они не в shipModel)
+      const r0 = ship.rotation.clone(); ship.rotation.set(0, 0, 0); ship.updateMatrixWorld(true);
+      const b = new THREE.Box3().setFromObject(shipModel); craft.gearH = Math.max(0.8, ship.position.y - b.min.y);
+      ship.rotation.copy(r0); ship.updateMatrixWorld(true);
+    }
+  }
+  // слоты вертолёта по точкам подвески модели (mirror: слева от внешней к внутренней, справа — обратно): 0–3 — рама ПТУР 2×2 на
+  // левом внешнем пилоне, 4 — левый внутренний (блок НАР), 5 — правый внутренний, 6–9 — рама на правом внешнем. Одна точка на
+  // борт (UH-1) — рама и блок на одной
+  function heliStations(S) {
+    const k = Math.max(1, S.length >> 1), L = S.slice(0, k), R = S.slice(k).reverse(), out = [];
+    const rack = (p) => { for (let i = 0; i < 4; i++) out.push(Object.assign(new THREE.Vector3(p.x + (i % 2 ? 0.17 : -0.17), p.y - (i >> 1) * 0.3, p.z), { py: p.py || 0 })); };
+    rack(L[0]); const pl = L[k - 1], pr = R[k - 1], ro = R[0];
+    out.push(pl, pr); rack(ro);
+    return out;
   }
   ship.visible = false; scene.add(ship);
   const pylonMeshes = [];
@@ -175,7 +193,7 @@ export function createAir(C) {
     if (pod.tgt && !pod.lock && (pod.chkT -= dt) <= 0) {
       pod.chkT = 0.1; tgtPos(pod.tgt, TP);
       const d = pod.pos.distanceTo(TP), h = craft.pos.y - city.groundH(craft.pos.x, craft.pos.z);
-      pod.why = d > POD_R[1] ? `далеко — ближе ${POD_R[1] / 1000} км` : d < POD_R[0] ? 'слишком близко' : h < POD_H ? `низко — выше ${POD_H} м` : pod.masked ? 'закрыта корпусом' :
+      pod.why = d > POD_R[1] ? `далеко — ближе ${POD_R[1] / 1000} км` : d < POD_R[0] ? 'слишком близко' : h < POD_H && !craft.heli ? `низко — выше ${POD_H} м` /* прицел вертолёта — в носу, работает и у земли */ : pod.masked ? 'закрыта корпусом' :
         !city.los(pod.pos.x, pod.pos.y, pod.pos.z, TP.x, TP.y + 2, TP.z, 4) ? 'закрыта домами' : '';
       if (pod.why) pod.acq = 0;
       else if ((pod.acq += 0.1) >= POD_ACQ) { pod.lock = TP.clone(); pod.acq = 0; snd.lock(); }
@@ -224,6 +242,9 @@ export function createAir(C) {
 
   // ═════════════ Оружие ═════════════
   const usable = (l) => l && l.n > 0 && AG[l.key].kind !== 'ecm'; // станция помех не сбрасывается — работает весь вылет
+  const NV = V3(), noseV = () => (craft.heli ? fwdOf(craft, NV) : craft.vel); // куда смотрит ГСН при пуске: у вертолёта — по оси (скорость бывает нулевой)
+  // НАР (kind 'rocket'): l.n — блоков с ракетами, l.rs — залпов осталось в текущем блоке; всего ракет — для панели
+  const rocketsOf = (l) => { const W = AG[l.key], per = Math.ceil(W.load / W.salvo); return l.n > 0 ? ((l.n - 1) * per + (l.rs ?? per)) * W.salvo : 0; };
   const curW = () => (usable(loadout[sel]) ? loadout[sel] : null);
   function nextWeapon() { for (let i = 1; i <= loadout.length; i++) { const k = (sel + i) % loadout.length; if (usable(loadout[k])) { sel = k; snd.click(); break; } } }
   // координаты для спутникового оружия и крылатых ракет: захват контейнера или ближайшая цель задания впереди
@@ -255,7 +276,7 @@ export function createAir(C) {
     if (Wp.tv) {
       if (!pod.lock) return no('Нужен захват контейнером (ТВ-ГСН)');
       if (NIGHT >= 0.5) return no('Ночь: ТВ-головка не видит цель');
-      if (angleBetween(craft.vel, LP.copy(pod.lock).sub(craft.pos)) > (Wp.kind === 'tvb' ? 50 : Wp.fov) * D2R) return no('Цель вне поля ГСН — доверните на неё');
+      if (angleBetween(noseV(), LP.copy(pod.lock).sub(craft.pos)) > (Wp.kind === 'tvb' ? 50 : Wp.fov) * D2R) return no('Цель вне поля ГСН — доверните на неё');
       if (craft.pos.distanceTo(pod.lock) > Wp.rmax * 1.25) return no('Далеко для ГСН');
       opts.aim = pod.lock;
     } else if (Wp.kind === 'arm') {
@@ -268,6 +289,14 @@ export function createAir(C) {
     } else if (Wp.kind === 'decoy') opts.aim = coordAim(30000);
     // бомбу с держателя не сбросить при крене больше 60° или вверх ногами (отделится в самолёт); ракеты сходят с направляющих в любом положении
     if (BOMBK.has(Wp.kind) && !levelOk()) return no('Сброс невозможен: крен больше 60° или самолёт перевёрнут');
+    if (Wp.kind === 'rocket') { // залп НАР: блок остаётся на пилоне; пустой — следующий
+      const per = Math.ceil(Wp.load / Wp.salvo); l.rs = (l.rs ?? per) - 1;
+      for (let i = 0; i < Wp.salvo; i++) C.S.release(craft, l.key, opts);
+      if (l.rs <= 0) { l.st.pop(); l.n--; l.rs = per; }
+      if (C.hooks.trainFire) C.hooks.trainFire(l.key);
+      if (l.n <= 0) nextWeapon();
+      return;
+    }
     const st = l.st.pop(); l.n--;
     const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = false;
     C.S.release(craft, l.key, opts);
@@ -294,7 +323,7 @@ export function createAir(C) {
   function autoReady(l) {
     const Wp = AG[l.key];
     if (Wp.kind === 'arm') return !!armTarget(Wp);
-    if (Wp.kind === 'ecm') return false;
+    if (Wp.kind === 'ecm' || Wp.kind === 'rocket') return false; // НАР — только вручную
     if (Wp.kind === 'cruise' || Wp.kind === 'decoy') { const a = coordAim(Wp.kind === 'cruise' ? 22000 : 16000); return !!a && craft.pos.distanceTo(a) > 5000; }
     if (Wp.kind === 'gps') { const a = coordAim(Wp.rmax * 1.2); if (!a) return false; const t = predictBomb(city, Wp, craft.pos, craft.vel, a, PT); return t > 0 && PT.distanceTo(a) < 20; }
     if (Wp.kind === 'bomb') {
@@ -304,7 +333,7 @@ export function createAir(C) {
     if (!pod.lock || C.S.wpns.some((w) => w.owner === craft && !w.dead && w.W.kind !== 'arm')) return false; // по одной на точку
     const d = craft.pos.distanceTo(pod.lock);
     if (Wp.kind === 'lgb' || Wp.kind === 'tvb') { const t = predictBomb(city, Wp, craft.pos, craft.vel, pod.lock, PT); return t > 0 && PT.distanceTo(pod.lock) < Math.max(12, Wp.blast * 0.4) && (!Wp.tv || NIGHT < 0.5); }
-    return d < Wp.rmax * 0.85 && angleBetween(craft.vel, LQ.copy(pod.lock).sub(craft.pos)) < Wp.fov * 0.8 * D2R && (!Wp.tv || NIGHT < 0.5);
+    return d < Wp.rmax * 0.85 && angleBetween(noseV(), LQ.copy(pod.lock).sub(craft.pos)) < Wp.fov * 0.8 * D2R && (!Wp.tv || NIGHT < 0.5);
   }
   function autoAssist(dt) {
     AU.acc = (AU.acc || 0) + dt; if (AU.acc < 0.1) return; dt = AU.acc; AU.acc = 0; // 10 раз в секунду хватает
@@ -334,9 +363,9 @@ export function createAir(C) {
       case 'KeyB': if (game.net && craft.dead) { spec.i++; spec.init = false; } break;
       case 'KeyR': podNext(); break;
       case 'KeyG': podView(); break;
-      case 'KeyW': setThr(thrI + 1); break;
-      case 'KeyS': setThr(thrI - 1); break;
-      case 'ShiftLeft': case 'ShiftRight': setThr(thrI === AB_I ? 3 : AB_I); break;
+      case 'KeyW': if (!craft.heli) setThr(thrI + 1); break; // у вертолёта W/S — ручка, Shift / Ctrl — высота (heliFly)
+      case 'KeyS': if (!craft.heli) setThr(thrI - 1); break;
+      case 'ShiftLeft': case 'ShiftRight': if (!craft.heli) setThr(thrI === AB_I ? 3 : AB_I); break;
       case 'KeyZ': pod.zi = (pod.zi + 1) % ZOOMS.length; snd.click(); break;
       case 'KeyO': pod.laserMan = pod.laserMan === null ? !pod.laser : pod.laserMan ? false : null; say(`Лазер: ${pod.laserMan === null ? 'авто' : pod.laserMan ? 'вкл' : 'выкл'}`, 1.2); break;
       case 'KeyH': if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); break;
@@ -380,7 +409,9 @@ export function createAir(C) {
     const place = () => { const k = $('stickKnob'); k.style.left = (stick.x0 + stick.x * 70 - 28) + 'px'; k.style.top = (stick.y0 + stick.y * 70 - 28) + 'px'; };
     zone.addEventListener('pointerdown', (e) => {
       if (free.on) { if (free.id === null) { free.id = e.pointerId; free.x = e.clientX; free.y = e.clientY; zone.setPointerCapture(e.pointerId); } return; } // обзор — палец водит камеру
-      if (aimOn()) { if (aim.id === null) { aim.id = e.pointerId; aim.x = e.clientX; aim.y = e.clientY; zone.setPointerCapture(e.pointerId); } return; }
+      const heliStick = craft.heli && e.clientX < innerWidth * 0.45; // вертолёт: левая часть экрана — ручка, правая — взгляд
+      if (aimOn() && !heliStick) { if (aim.id === null) { aim.id = e.pointerId; aim.x = e.clientX; aim.y = e.clientY; zone.setPointerCapture(e.pointerId); } return; }
+      if (craft.heli && stick.id !== null) return; // второй палец слева ручку не перехватывает
       stick.id = e.pointerId; stick.x0 = e.clientX; stick.y0 = e.clientY; stick.x = stick.y = 0; zone.setPointerCapture(e.pointerId); $('stickKnob').style.display = 'block'; place();
     });
     zone.addEventListener('pointermove', (e) => {
@@ -491,6 +522,10 @@ export function createAir(C) {
         const miss = CCIP.distanceTo(aim);
         larText = miss < Math.max(12, Wp.blast * 0.4) ? `В ЗОНЕ · ${t.toFixed(0)} с до попадания` : (CCIP.distanceTo(craft.pos) < aim.distanceTo(craft.pos) ? 'ДАЛЕКО — ближе или выше' : 'БЛИЗКО — проскочили');
       } else if (t > 0) larText = Wp.kind === 'bomb' ? `падение через ${t.toFixed(0)} с` : 'нужен захват контейнером';
+    } else if (Wp.kind === 'rocket') { // НАР: точка падения по оси вертолёта
+      fwdOf(craft, NV); const t = predictRocket(city, Wp, LP.copy(craft.pos).addScaledVector(UPW, -2.5), NV, Math.max(0, craft.vel.dot(NV)), CCIP);
+      ccipOk = t > 0; const d = ccipOk ? CCIP.distanceTo(craft.pos) : 0;
+      larText = !ccipOk ? 'НАР: опустите нос — точка падения дальше 4 км' : d > Wp.rmax ? `далеко · ${(d / 1000).toFixed(1)} км` : `НАР · ${(d / 1000).toFixed(1)} км · ${t.toFixed(1)} с`;
     } else if (Wp.kind === 'arm') {
       const u = armTarget(Wp); larText = u ? `РЛС ${u.S.rwr || u.S.short} · ${(craft.pos.distanceTo(u.pos) / 1000).toFixed(1)} км — ПУСК` : 'нет РЛС впереди';
     } else if (pod.lock) {
@@ -581,7 +616,7 @@ export function createAir(C) {
     }
     const dead = game.targets.filter((o) => o.dead).length, fuel = Math.round((craft.fuel ?? 1) * 100);
     $('wpn').innerHTML = `<div class="fl"><b>${Math.round(craft.speed * 3.6)}</b> км/ч <b>${Math.round(craft.pos.y - g)}</b> м <span class="${craft.fuel < 0.2 ? 'warnc' : 'dim'}">${ico('fuel', 'ii')}${fuel}%</span>${craft.ab ? ' <b class="ab">Ф</b>' : ''}</div>` +
-      `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' ●' : ' ×' + l.n}${AG[l.key].kind !== 'ecm' && Number.isFinite(l.res) && !game.net ? ` <span class="dim">+${l.res}</span>` : ''}${l.rt > 0 ? ` <span class="dim">↻${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
+      `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' ●' : ' ×' + (AG[l.key].kind === 'rocket' ? rocketsOf(l) : l.n)}${AG[l.key].kind !== 'ecm' && Number.isFinite(l.res) && !game.net ? ` <span class="dim">+${AG[l.key].kind === 'rocket' ? l.res * AG[l.key].load : l.res}</span>` : ''}${l.rt > 0 ? ` <span class="dim">↻${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
       `<div class="st">${msgT > 0 ? msgText : larText}${inAir ? ` <span class="fly">· в полёте ${inAir}</span>` : ''}</div>` + tgl +
       `<div class="cm">ловушки ${Math.max(craft.cmFlare, craft.cmChaff)}${game.hunt ? ` · РЛС ${game.hunt.n}/${game.hunt.need}` : game.targets.length ? ` · цели ${dead}/${game.targets.length}` : ''}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ' · <b style="color:#86efac">АВТО</b>' : ''}${hasPod && pod.laserMan !== null ? ` · лазер ${pod.laserMan ? 'вкл' : 'выкл'}` : ''}${homeT > 0 ? ` · <b style="color:#86efac">пополнение ${Math.ceil(12 - homeT)} с</b>` : ''}</div>`;
     const lk = rw.find((e) => e.state === 'launch'), tr = rw.find((e) => e.state === 'track'), wn = $('warn');
@@ -674,11 +709,12 @@ export function createAir(C) {
       // сглаживается смещение камеры относительно самолёта, а не её место в мире: при скорости 250 м/с сглаживание
       // абсолютной позиции даёт отставание, которое «дышит» от длительности кадра
       // наведение камерой: камера — по взгляду (aim), горизонт ровный; самолёт догоняет взгляд сам
-      const am = aimOn(), d = am ? aimDir(AIMD) : fw;
-      camPos.copy(d).multiplyScalar(-40).addScaledVector(am ? UPW : up, 8.5);
+      // вертолёт без наведения камерой — за курсом, горизонт ровный (на скорости нос опущен на ~25°: за носом камера «клюёт»)
+      const am = aimOn(), hl = craft.heli && !am, d = am ? aimDir(AIMD) : hl ? AIMD.set(-Math.sin(craft.yaw), -0.18, -Math.cos(craft.yaw)).normalize() : fw;
+      camPos.copy(d).multiplyScalar(-40).addScaledVector(am || hl ? UPW : up, 8.5);
       if (!camInit || camOff.distanceTo(camPos) > 300) { camOff.copy(camPos); camInit = true; } else camOff.lerp(camPos, 1 - Math.exp(-dt * (am ? 12 : 8)));
       camera.position.copy(craft.pos).add(camOff);
-      camera.up.lerp(am ? UPW : up, 1 - Math.exp(-dt * 6)).normalize();
+      camera.up.lerp(am || hl ? UPW : up, 1 - Math.exp(-dt * 6)).normalize();
       camLook.copy(craft.pos).addScaledVector(d, am ? 120 : 80); camera.lookAt(camLook);
     } else if (camMode === 1) {
       const a = t * 0.15; camera.position.set(craft.pos.x + Math.sin(a) * 90, craft.pos.y + 25, craft.pos.z + Math.cos(a) * 90);
@@ -749,10 +785,14 @@ export function createAir(C) {
       if (radars) game.hunt = { n: 0, need: Math.max(1, Math.min(4, Math.ceil(radars * 0.5))), total: radars };
     }
     const z0 = opts.photo && C.MAP === 'city' ? 9000 : 14000; // «Съёмка» в городе — ближе: с 14 км в кадре край карты
-    const sp = opts.spawn || { x: riverX(z0) + 1500, y: opts.photo && C.MAP === 'city' ? 1800 : 3200, z: z0, yaw: 0 };
+    // вертолёт — ближе к целям (9 км) и низко: 120 м над землёй, 25 м/с вперёд
+    const hz = 9000, hx = riverX(hz) + 1500;
+    const sp = opts.spawn || (craft.heli ? { x: hx, y: city.groundH(hx, hz) + 120, z: hz, yaw: 0 } : { x: riverX(z0) + 1500, y: opts.photo && C.MAP === 'city' ? 1800 : 3200, z: z0, yaw: 0 });
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
-    craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
+    craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
+    if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); }
+    document.body.classList.toggle('heli', !!craft.heli);
     updLoad();
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize(); // окно на телефоне — по «ТВ»
     Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0 });
@@ -769,14 +809,25 @@ export function createAir(C) {
     // подвеска своей стороны (выбранная — чужой: первая своя); самолёт — из подвески
     const att = opts.side || (setup.side === 'east' ? 'west' : 'east');
     if (!opts.items && LOADOUTS[setup.era][setup.lo].side !== att) setup.lo = loadoutsOf(setup.era, att)[0][1];
-    const L = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
+    const L0 = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
+    const L = !opts.items && isHeli(HELI_Q) ? HELI_LOADOUTS.find((q) => q.plane === HELI_Q) || { ...L0, plane: HELI_Q, side: heliModel(HELI_Q).s.side } : L0;
+    // вертолёт (sim/heli.js): своя лётная модель; «Реализм» — честное управление, остальное — «Аркада»
+    craft.hm = isHeli(L.plane) ? heliModel(L.plane, { arcade: setup.diff !== 'real' }) : null; craft.heli = !!craft.hm;
+    if (craft.irBase === undefined) craft.irBase = craft.ir;
+    craft.ir = craft.heli ? craft.irBase * 0.55 : craft.irBase; // вертолёт: турбовальные двигатели с экранами выхлопа — тепловым ГСН труднее
     game.used = ['air:' + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» — должно быть куплено)
     hasPod = !!L.pod; for (const [k] of L.items) wantWeapon(k); // модели подвески (оружие «Мульти-волны» и новое — грузятся по запросу)
     const order = [3, 4, 2, 5, 1, 6, 0, 7]; let oi = 0;
     // запас на борт (ошибки, промахи): «Аркада» — ещё 2 полных комплекта (пополняются сами), «Реализм» — 1 пополнение на точке вылета;
     // обучение (opts.reload) — без ограничений
     const sets = opts.reload ? Infinity : (C.MODE().rearms ?? 1); homeLeft = sets;
-    for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) { const st = []; for (let i = 0; i < n && oi < 8; i++) st.push(order[oi++]); loadout.push({ key, n: st.length, n0: st.length, st, st0: st.slice(), rt: 0, res: st.length * sets }); }
+    // вертолёт: ПТУР — в рамы внешних пилонов (по 4, слева-справа по очереди), блоки НАР — на внутренние (heliStations)
+    const hOrd = { rack: [0, 6, 1, 7, 2, 8, 3, 9], pod: [4, 5] }, hi = { rack: 0, pod: 0 };
+    for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
+      const st = [], h = AG[key].kind === 'rocket' ? 'pod' : 'rack';
+      for (let i = 0; i < n; i++) { if (craft.heli) { if (hi[h] < hOrd[h].length) st.push(hOrd[h][hi[h]++]); } else if (oi < 8) st.push(order[oi++]); }
+      loadout.push({ key, n: st.length, n0: st.length, st, st0: st.slice(), rt: 0, res: st.length * sets });
+    }
     sel = 0;
     buildShip(L.side || att, classOf(L.items, AG), L.plane || null); // модель самолёта — из подвески
     craft.cmFlare = craft.cmChaff = C.MODE().cm;
@@ -784,7 +835,7 @@ export function createAir(C) {
     craft.jam = Math.max(0, ...loadout.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
     if (!usable(loadout[sel])) nextWeapon();
     // свои ТТХ самолёта (sim/flight.js): модель — из подвески; режим (Аркада/Реализм) — мягкость виража
-    craft.fm = flightModel(L.plane || (att === 'east' ? 'su30' : 'f16'), { ind: (C.MODE() || {}).ind });
+    craft.fm = craft.heli ? null : flightModel(L.plane || (att === 'east' ? 'su30' : 'f16'), { ind: (C.MODE() || {}).ind });
     updLoad();
   }
   // скорость на старте — не быстрее, чем самолёт может (Су-25, B-52)
@@ -969,7 +1020,8 @@ export function createAir(C) {
       }
       return;
     }
-    const near = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z) < 2500 && craft.pos.y - city.groundH(craft.pos.x, craft.pos.z) < 1500;
+    const dh = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z);
+    const near = craft.heli ? craft.landed && dh < 800 : dh < 2500 && craft.pos.y - city.groundH(craft.pos.x, craft.pos.z) < 1500; // вертолёт — сесть у точки вылета
     const need = homeLeft > 0 && (needsRearm() || craft.cmFlare < C.MODE().cm * 0.5 || craft.fuel < 0.6);
     if (!near || !need) { homeT = 0; return; }
     homeT += dt;
@@ -978,64 +1030,106 @@ export function createAir(C) {
     craft.cmFlare = craft.cmChaff = C.MODE().cm; craft.fuel = 1; fuelWarn = 0; homeT = 0; homeLeft--;
     say(`Пополнение: подвеска, ловушки и топливо${Number.isFinite(homeLeft) ? ` · осталось пополнений: ${homeLeft}` : ''}`, 3); snd.good();
   }
+  // повреждения (течь бака, пожар) и топливо — у самолёта и вертолёта одинаково
+  function systems(dt) {
+    // повреждения: течь бака, пожар ест корпус (онлайн — урон считает сервер)
+    if (craft.dz && !game.opts.invuln) {
+      if (craft.leak && craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - craft.leak * dt);
+      const br = burnRate(craft); if (br && !game.net) { craft.hp -= br * dt; if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0); finish(craft.det.tailAll ? 'Потеря управления: хвост разрушен' : 'Сгорел: пожар на борту', false); } }
+    }
+    if (craft.dmgVis) craft.dmgVis.update(dt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
+    // топливо: расход по газу, форсаж — втрое; кончилось — двигатель встал, самолёт планирует (в обучении не тратится)
+    if (!game.opts.invuln) {
+      if (craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - (0.35 + 0.65 * craft.thr) * (craft.ab ? 3 : 1) / (C.MODE().fuelS || 240) * dt);
+      if (craft.fuel < 0.2 && fuelWarn < 1) { fuelWarn = 1; say('Мало топлива — 20 %', 3); snd.alarm(); }
+      if (craft.fuel <= 0) { craft.thr = 0; craft.ab = false; if (fuelWarn < 2) { fuelWarn = 2; say('Топливо кончилось — двигатель встал, планируйте', 4); snd.alarm(); } }
+    }
+    if (craft.ab && !abWas) snd.afterburner(); abWas = craft.ab;
+  }
+  // самолёт: ручка / крестовина / наведение камерой → pilotStep; ниже крыш и земли — авария
+  function planeFly(dt) {
+    const keysOf = (...k) => k.some((c) => keys.has(c));
+    let rx = 0, ry = 0;
+    if (keysOf('KeyA', 'ArrowLeft')) rx -= 1; if (keysOf('KeyD', 'ArrowRight')) rx += 1;
+    // вверх — нос вверх (инверсия «как в авиасимуляторах» — в настройках); крестовина — тангаж и крен кнопками, слабее ручки
+    const inv = C.sens.invert ? -1 : 1;
+    if (keys.has('ArrowUp')) ry += inv; if (keys.has('ArrowDown')) ry -= inv;
+    if (pad.x || pad.y) { rx += pad.x * C.sens.padK; ry += pad.y * C.sens.padK * inv; }
+    if (craft.fuel > 0) craft.thr = THR_STEPS[thrI];
+    const tt = craft.fuel <= 0 ? 'двиг. ✕' : thrI === AB_I ? (craft.fm && !(craft.fm.s.ab > 0) ? 'макс.' : 'форсаж') : `${Math.round(craft.thr * 100)}%`, tb = $('tThr');
+    if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = 'Газ'; tb.classList.toggle('ab', thrI === AB_I); } // спидометр и газ
+    if (stick.id !== null) { rx += stick.x; ry -= stick.y * inv; }
+    let rz = 0;
+    if (demo) { // показ в обучении: автопилот на высоте demo.alt к точке demo.pt, оружие применяет «АВТО»
+      // высота — не ниже рельефа впереди (горы, дома): смотрим по курсу и по пути к точке на ~14 с полёта вперёд
+      const look = clamp(craft.speed * 14, 1500, 4500), fy = Math.atan2(demo.pt.x - craft.pos.x, demo.pt.z - craft.pos.z), clr = Math.max(90, demo.alt * 0.35);
+      let floor = -1e9, near = -1e9;
+      for (let d = 0; d <= look; d += 120) for (const yw of [Math.atan2(-Math.sin(craft.yaw), -Math.cos(craft.yaw)), fy]) {
+        const x = craft.pos.x + Math.sin(yw) * d, z = craft.pos.z + Math.cos(yw) * d, h = Math.max(city.groundH(x, z), city.topAt(x, z)) + clr;
+        floor = Math.max(floor, h); if (d < look * 0.4) near = Math.max(near, h);
+      }
+      const wantY = Math.max(city.groundH(demo.pt.x, demo.pt.z) + demo.alt, floor);
+      DP.set(demo.pt.x, wantY, demo.pt.z).sub(craft.pos);
+      // оружие в полёте — плавный отворот ~70° и горизонт: цель сбоку, контейнер держит подсвет (над целью её закрыл бы корпус)
+      if (C.S.wpns.some((w) => w.owner === craft && !w.dead)) { if (demo.relYaw === undefined) demo.relYaw = craft.yaw + 1.2; DP.set(-Math.sin(demo.relYaw), (Math.max(demo.alt + city.groundH(craft.pos.x, craft.pos.z), floor) - craft.pos.y) / 4000, -Math.cos(demo.relYaw)); }
+      else { demo.relYaw = undefined; if (Math.hypot(DP.x, DP.z) < 400) DP.set(-Math.sin(craft.yaw), 0, -Math.cos(craft.yaw)); } // над точкой — прямо
+      DP.normalize(); aim.yaw = Math.atan2(-DP.x, -DP.z); aim.pitch = clamp(Math.asin(DP.y), near > craft.pos.y - 40 ? -0.05 : -0.35, near > craft.pos.y ? 0.75 : 0.35); // гора близко — круче вверх и не снижаться
+      const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2];
+    } else if (aimOn()) { if (rx || ry) aimSync(); else { const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2]; } } // крестовина нажата — взгляд за носом
+    craft.ab = thrI === AB_I && craft.fuel > 0 && !(craft.fm && !(craft.fm.s.ab > 0))&& !craft.noAB; // без форсажа (Су-25) — верхняя ступень = 100 %
+    systems(dt);
+    if (!aimOn()) { rx *= C.sens.stick; ry *= C.sens.stick; }
+    pilotStep(craft, rx, ry, dt, craft.pos.y > CITY.CEIL ? 0.3 : 0, 0.8, rz);
+    const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), CITY.WATER_Y);
+    if (craft.pos.y < top + 1.5) {
+      if (game.opts.invuln) { craft.pos.y = top + 150; craft.pitch = 0.2; craft.q = null; say('Учебный вылет: высоту вернули — не прижимайтесь так низко', 2.5); }
+      else if (game.net) { game.net.selfCrash(); netDown(city.bldAt(craft.pos.x, craft.pos.z) > 0 ? 'Врезались в здание' : 'Столкновение с землёй'); }
+      else { craft.dead = true; C.fx.explosion(craft.pos, 25, 'ground'); snd.explosion(0, 3); finish(city.bldAt(craft.pos.x, craft.pos.z) > 0 ? 'Врезались в здание' : 'Столкновение с землёй', false); }
+    }
+  }
+  // вертолёт (sim/heli.js): ручка — палец на левой половине экрана / WASD (вперёд — скорость, вбок — смещение, на скорости —
+  // вираж), правая половина — взгляд (нос за ним), ▲▼ крестовины / ↑↓ / Shift–Ctrl — высота, ⟲⟳ / ←→ — педали. Касание земли:
+  // мягкое — посадка (у точки вылета — пополнение), жёсткое — урон, сильное — авария; вода — авария
+  const HU = { cx: 0, cy: 0, col: 0, yaw: 0, yawTo: undefined, pitchTo: undefined };
+  function heliCrash(why) {
+    if (game.net) { game.net.selfCrash(); netDown(why); return; }
+    craft.dead = true; C.fx.explosion(craft.pos, 22, 'ground'); snd.explosion(0, 3); finish(why, false);
+  }
+  function heliFly(dt) {
+    const k = (...c) => (c.some((q) => keys.has(q)) ? 1 : 0), st = stick.id !== null;
+    HU.cx = clamp(k('KeyD') - k('KeyA') + (st ? stick.x : 0), -1, 1);
+    HU.cy = clamp(k('KeyW') - k('KeyS') - (st ? stick.y : 0), -1, 1);
+    HU.col = clamp(k('ArrowUp', 'ShiftLeft', 'ShiftRight') - k('ArrowDown', 'ControlLeft', 'ControlRight') + pad.y, -1, 1);
+    HU.yaw = clamp(k('ArrowRight') - k('ArrowLeft') + pad.x, -1, 1);
+    if (aimOn() && HU.yaw) aim.yaw = craft.yaw; // педали — взгляд за носом
+    HU.yawTo = aimOn() && !HU.yaw ? aim.yaw : undefined; HU.pitchTo = aimOn() ? aim.pitch : undefined;
+    const tb = $('tThr'), tt = craft.fuel <= 0 ? 'двиг. ✕' : `шаг ${Math.round((craft.col || 0) * 100)}%`;
+    if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = 'Шаг винта'; tb.classList.remove('ab'); }
+    craft.ab = false; systems(dt);
+    const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), CITY.WATER_Y);
+    const tk = craft.thrK; if (craft.fuel <= 0) craft.thrK = (tk ?? 1) * 0.62; // двигатели встали — авторотация: снижение, у земли — подрыв шага
+    const ev = heliStep(craft, craft.hm, HU, dt, { groundY: top, gear: craft.gearH || 2 });
+    craft.thrK = tk; craft.thr = craft.landed ? 0.3 : craft.col; // винт на земле — малый шаг
+    if (ev === 'lift') say('Взлёт', 1);
+    if (!ev || ev === 'lift') return;
+    const water = city.groundH(craft.pos.x, craft.pos.z) < CITY.WATER_Y - 0.5 && top <= CITY.WATER_Y + 0.1;
+    const v = water ? 'crash' : touchVerdict(ev);
+    if (game.opts.invuln && v !== 'land') { craft.pos.y = top + 60; craft.vel.set(0, 0, 0); say('Учебный вылет: высоту вернули — садитесь мягче', 2.5); return; }
+    if (v === 'crash') { heliCrash(water ? 'Упали в воду' : city.bldAt(craft.pos.x, craft.pos.z) > 0 ? 'Разбились о здание' : `Удар о землю — ${Math.round(ev.vy)} м/с`); return; }
+    heliLand(craft);
+    if (v === 'hard') { say('Жёсткая посадка — повреждения', 2.5); hurt(18, 'жёсткая посадка'); }
+    else say(Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z) < 800 ? 'Посадка на площадке — пополнение' : 'Посадка', 1.6);
+  }
   function update(dt) {
     game.t += dt;
     reloadStep(dt); zoneUpdate(dt);
     if (!craft.dead && !game.over) {
-      const keysOf = (...k) => k.some((c) => keys.has(c));
-      let rx = 0, ry = 0;
-      if (keysOf('KeyA', 'ArrowLeft')) rx -= 1; if (keysOf('KeyD', 'ArrowRight')) rx += 1;
-      // вверх — нос вверх (инверсия «как в авиасимуляторах» — в настройках); крестовина — тангаж и крен кнопками, слабее ручки
-      const inv = C.sens.invert ? -1 : 1;
-      if (keys.has('ArrowUp')) ry += inv; if (keys.has('ArrowDown')) ry -= inv;
-      if (pad.x || pad.y) { rx += pad.x * C.sens.padK; ry += pad.y * C.sens.padK * inv; }
-      if (craft.fuel > 0) craft.thr = THR_STEPS[thrI];
-      const tt = craft.fuel <= 0 ? 'двиг. ✕' : thrI === AB_I ? (craft.fm && !(craft.fm.s.ab > 0) ? 'макс.' : 'форсаж') : `${Math.round(craft.thr * 100)}%`, tb = $('tThr');
-      if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = 'Газ'; tb.classList.toggle('ab', thrI === AB_I); } // спидометр и газ
-      if (stick.id !== null) { rx += stick.x; ry -= stick.y * inv; }
-      let rz = 0;
-      if (demo) { // показ в обучении: автопилот на высоте demo.alt к точке demo.pt, оружие применяет «АВТО»
-        // высота — не ниже рельефа впереди (горы, дома): смотрим по курсу и по пути к точке на ~14 с полёта вперёд
-        const look = clamp(craft.speed * 14, 1500, 4500), fy = Math.atan2(demo.pt.x - craft.pos.x, demo.pt.z - craft.pos.z), clr = Math.max(90, demo.alt * 0.35);
-        let floor = -1e9, near = -1e9;
-        for (let d = 0; d <= look; d += 120) for (const yw of [Math.atan2(-Math.sin(craft.yaw), -Math.cos(craft.yaw)), fy]) {
-          const x = craft.pos.x + Math.sin(yw) * d, z = craft.pos.z + Math.cos(yw) * d, h = Math.max(city.groundH(x, z), city.topAt(x, z)) + clr;
-          floor = Math.max(floor, h); if (d < look * 0.4) near = Math.max(near, h);
-        }
-        const wantY = Math.max(city.groundH(demo.pt.x, demo.pt.z) + demo.alt, floor);
-        DP.set(demo.pt.x, wantY, demo.pt.z).sub(craft.pos);
-        // оружие в полёте — плавный отворот ~70° и горизонт: цель сбоку, контейнер держит подсвет (над целью её закрыл бы корпус)
-        if (C.S.wpns.some((w) => w.owner === craft && !w.dead)) { if (demo.relYaw === undefined) demo.relYaw = craft.yaw + 1.2; DP.set(-Math.sin(demo.relYaw), (Math.max(demo.alt + city.groundH(craft.pos.x, craft.pos.z), floor) - craft.pos.y) / 4000, -Math.cos(demo.relYaw)); }
-        else { demo.relYaw = undefined; if (Math.hypot(DP.x, DP.z) < 400) DP.set(-Math.sin(craft.yaw), 0, -Math.cos(craft.yaw)); } // над точкой — прямо
-        DP.normalize(); aim.yaw = Math.atan2(-DP.x, -DP.z); aim.pitch = clamp(Math.asin(DP.y), near > craft.pos.y - 40 ? -0.05 : -0.35, near > craft.pos.y ? 0.75 : 0.35); // гора близко — круче вверх и не снижаться
-        const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2];
-      } else if (aimOn()) { if (rx || ry) aimSync(); else { const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2]; } } // крестовина нажата — взгляд за носом
-      craft.ab = thrI === AB_I && craft.fuel > 0 && !(craft.fm && !(craft.fm.s.ab > 0))&& !craft.noAB; // без форсажа (Су-25) — верхняя ступень = 100 %
-      // повреждения: течь бака, пожар ест корпус (онлайн — урон считает сервер)
-      if (craft.dz && !game.opts.invuln) {
-        if (craft.leak && craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - craft.leak * dt);
-        const br = burnRate(craft); if (br && !game.net) { craft.hp -= br * dt; if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0); finish(craft.det.tailAll ? 'Потеря управления: хвост разрушен' : 'Сгорел: пожар на борту', false); } }
-      }
-      if (craft.dmgVis) craft.dmgVis.update(dt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
-      // топливо: расход по газу, форсаж — втрое; кончилось — двигатель встал, самолёт планирует (в обучении не тратится)
-      if (!game.opts.invuln) {
-        if (craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - (0.35 + 0.65 * craft.thr) * (craft.ab ? 3 : 1) / (C.MODE().fuelS || 240) * dt);
-        if (craft.fuel < 0.2 && fuelWarn < 1) { fuelWarn = 1; say('Мало топлива — 20 %', 3); snd.alarm(); }
-        if (craft.fuel <= 0) { craft.thr = 0; craft.ab = false; if (fuelWarn < 2) { fuelWarn = 2; say('Топливо кончилось — двигатель встал, планируйте', 4); snd.alarm(); } }
-      }
-      if (craft.ab && !abWas) snd.afterburner(); abWas = craft.ab;
-      if (!aimOn()) { rx *= C.sens.stick; ry *= C.sens.stick; }
-      pilotStep(craft, rx, ry, dt, craft.pos.y > CITY.CEIL ? 0.3 : 0, 0.8, rz);
-      const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), CITY.WATER_Y);
-      if (craft.pos.y < top + 1.5) {
-        if (game.opts.invuln) { craft.pos.y = top + 150; craft.pitch = 0.2; craft.q = null; say('Учебный вылет: высоту вернули — не прижимайтесь так низко', 2.5); }
-        else if (game.net) { game.net.selfCrash(); netDown(city.bldAt(craft.pos.x, craft.pos.z) > 0 ? 'Врезались в здание' : 'Столкновение с землёй'); }
-        else { craft.dead = true; C.fx.explosion(craft.pos, 25, 'ground'); snd.explosion(0, 3); finish(city.bldAt(craft.pos.x, craft.pos.z) > 0 ? 'Врезались в здание' : 'Столкновение с землёй', false); }
-      }
+      if (craft.heli) heliFly(dt);
+      else planeFly(dt);
       if (Math.abs(craft.pos.x) > CITY.HALF - 300 || Math.abs(craft.pos.z) > CITY.HALF - 300) {
         if (game.net && !loadout.some((l) => l.n > 0 && AG[l.key].kind !== 'ecm')) { game.net.send({ t: 'rtb' }); craft.dead = true; spec.why = 'Вылет завершён — оружие израсходовано'; spec.t = 0; say(spec.why, 4); }
         else if (game.done && !game.opts.noEnd) finish('Вышли из района целей', true);
-        else { craft.yaw += Math.PI; craft.q = null; craft.pos.x = clamp(craft.pos.x, -CITY.HALF + 400, CITY.HALF - 400); craft.pos.z = clamp(craft.pos.z, -CITY.HALF + 400, CITY.HALF - 400); say('Граница района — разворот', 2); }
+        else { craft.yaw += Math.PI; craft.q = null; if (craft.heli) { craft.vel.x *= -1; craft.vel.z *= -1; } craft.pos.x = clamp(craft.pos.x, -CITY.HALF + 400, CITY.HALF - 400); craft.pos.z = clamp(craft.pos.z, -CITY.HALF + 400, CITY.HALF - 400); say('Граница района — разворот', 2); }
       }
     }
     shipQ.setFromEuler(E.set(craft.pitch, craft.yaw, craft.roll));
@@ -1047,7 +1141,7 @@ export function createAir(C) {
   function hud(dt, t) {
     ship.visible = !craft.dead && camMode !== 2;
     flames.update(craft.thr, craft.ab);
-    if (shipModel) spinProps(shipModel, dt, craft.thr); // винты (Ту-95)
+    if (shipModel) spinProps(shipModel, dt, craft.thr); // винты (Ту-95; у вертолёта thr — шаг несущего)
     if (game.opts.photo) return; // «Съёмка»: без прицелов и панелей — свой интерфейс (photo.js)
     if (game.over && craft.dead) return;
     const sp = !!(game.net && craft.dead); if (sp !== document.body.classList.contains('spect')) document.body.classList.toggle('spect', sp); // «КАМ.» — следующий союзник

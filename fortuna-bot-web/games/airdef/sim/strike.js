@@ -94,7 +94,7 @@ export function createStrike(ctx) {
     if (h < R.clutter) return false;
     const horizon = 4120 * (Math.sqrt(Math.max(1, u.ant.y - city.groundH(u.ant.x, u.ant.z))) + Math.sqrt(Math.max(1, h)));
     if (d > horizon) return false;
-    if (R.doppler && h < 1500 && radial(u, t) < 32) return false;
+    if (R.doppler && h < 1500 && radial(u, t) < 32 && !t.heli) return false; // вертолёт: лопасти дают доплер и на висении — прятаться только рельефом и высотой
     return city.los(u.ant.x, u.ant.y, u.ant.z, t.pos.x, t.pos.y, t.pos.z, 25);
   }
   function radial(u, t) { TMP.copy(t.pos).sub(u.ant).normalize(); return Math.abs(t.vel.dot(TMP)); }
@@ -546,6 +546,9 @@ export function createStrike(ctx) {
     const w = { id: mid++, key, W, owner: a, pos: a.pos.clone().addScaledVector(TMP.set(0, -1, 0), 2.5), vel: a.vel.clone(), dir: a.vel.clone().normalize(),
       speed: a.speed, t: 0, flown: 0, dead: false, aim: opts.aim ? opts.aim.clone() : null, target: opts.target || null, mem: null, lost: false, homing: false, trailT: 0 };
     if (W.kind === 'arm' && w.target) w.mem = w.target.pos.clone();
+    // с вертолёта (скорость бывает и нулевой, нос — не по скорости) ракеты и НАР сходят по оси корпуса; бомбы — со скоростью
+    if (a.heli && W.kind !== 'bomb') { w.dir.set(-Math.sin(a.yaw) * Math.cos(a.pitch), Math.sin(a.pitch), -Math.cos(a.yaw) * Math.cos(a.pitch)); w.speed = Math.max(0, a.vel.dot(w.dir)); }
+    if (W.kind === 'rocket') { w.dir.x += (rnd() - 0.5) * 2 * W.disp; w.dir.y += (rnd() - 0.5) * 2 * W.disp; w.dir.z += (rnd() - 0.5) * 2 * W.disp; w.dir.normalize(); w.pos.addScaledVector(w.dir, 3); } // разброс залпа
     // летящее оружие — цель для «Тора», «Панциря», C-RAM: размер, ЭПР, тепло, «прочность»
     Object.assign(w, { isMun: true, r: 1.2, rcs: W.rcs ?? 0.12, ir: W.kind === 'cruise' ? 0.35 : 0.15, mhp: W.kind === 'cruise' ? 18 : 10, yaw: 0, pitch: 0, ab: false });
     if (W.kind === 'decoy') { if (ctx.spawnDecoy) ctx.spawnDecoy(a, key, w.aim); return null; } // ложная цель — как самолёт (у хозяина боя)
@@ -861,6 +864,19 @@ export function predictBomb(city, W, p, v, aim, out) {
       PV.copy(PD).multiplyScalar(s2);
     }
     PP.addScaledVector(PV, dt);
+    if (PP.y <= Math.max(city.topAt(PP.x, PP.z), -4)) { out.copy(PP); return t; }
+  }
+  return -1;
+}
+// НАР из точки p по оси dir (скорость вдоль оси v0): куда упадёт без разброса — та же кинематика, что у flyMissile без
+// наведения (разгон burn, сопротивление, нос клонится под тяжестью). Время до падения или −1 (дальше life)
+export function predictRocket(city, W, p, dir, v0, out) {
+  PP.copy(p).addScaledVector(dir, 3); PD.copy(dir); let sp = Math.max(0, v0);
+  const dt = 0.05;
+  for (let t = dt; t < (W.life || 12); t += dt) {
+    if (PD.y > -0.95) turnToward(PD, PA.copy(PD).setY(PD.y - 0.3).normalize(), G0 / Math.max(120, sp) * dt * 0.6);
+    sp = Math.max(30, sp + ((t < W.burn ? W.acc : 0) - (W.kd || 1) * 1e-4 * rhoAt(PP.y) * sp * sp - G0 * PD.y) * dt);
+    PP.addScaledVector(PD, sp * dt);
     if (PP.y <= Math.max(city.topAt(PP.x, PP.z), -4)) { out.copy(PP); return t; }
   }
   return -1;
