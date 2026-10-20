@@ -13,14 +13,15 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { AG, SAM } from '../arsenal.js?v=20261022i';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022i';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022i';
+import { AG, SAM } from '../arsenal.js?v=20261022k';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022k';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022k';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
 export const MODES = {
-  arcade: { ind: 0.5, name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.55, reactK: 1.4, samSkill: 0.7, cmK: 1.3, cm: 290, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.7, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
+  // Аркада с 2026-10-20 строже: урон по игроку 0,75 (было 0,55), реакция ×1,2 (1,4), расчёты 0,85 (0,7), ловушек 200 (290), пушки 0,85 (0,7)
+  arcade: { ind: 0.5, name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.75, reactK: 1.2, samSkill: 0.85, cmK: 1.15, cm: 200, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.85, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
   real: { ind: 1, name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home', reloadK: { air: 0.7, multi: 0.9 } }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
 };
 

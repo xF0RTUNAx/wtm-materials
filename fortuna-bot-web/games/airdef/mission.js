@@ -1,6 +1,6 @@
 // Задания и расстановка ПВО: общие для вылета (ИИ-ПВО против игрока), фона меню и обучения.
-import { CITY, KIND, riverX } from './city.js?v=20261022i';
-import { SAM, DEFENSE } from './arsenal.js?v=20261022i';
+import { CITY, KIND, riverX } from './city.js?v=20261022k';
+import { SAM, DEFENSE } from './arsenal.js?v=20261022k';
 
 // свободное место на земле: без зданий рядом и не в реке (в горах — не на крутом склоне)
 export function freeGround(city, x, z, r = 9) {
@@ -42,7 +42,8 @@ export function pickTargets(S, rnd, n = 3, pool = ['tpp', 'oil', 'tv', 'gov', 'p
   return out;
 }
 // ИИ-ПВО по набору эпохи и стороны: дальние — кольцом вокруг центра, ближние и пушки — у целей, ПЗРК — на крышах
-export function placeDefense(S, city, rnd, side, era, targets, k = 1) {
+// o — поправки сложности (difficulty.js): ambush — доля засад, skill — прибавка к опыту расчётов
+export function placeDefense(S, city, rnd, side, era, targets, k = 1, o = {}) {
   let ti = 0;
   for (const [key, n0] of DEFENSE[side][era]) for (let i = 0; i < Math.round(n0 * k); i++) {
     const Sx = SAM[key], tgt = targets[ti++ % targets.length];
@@ -50,6 +51,6 @@ export function placeDefense(S, city, rnd, side, era, targets, k = 1) {
     if (Sx.rmax >= 15000) { const a = rnd() * Math.PI * 2, r = 2500 + rnd() * 4000; xz = spotNear(city, rnd, 500 + Math.cos(a) * r, -300 + Math.sin(a) * r, 0, 900, false); }
     else if (Sx.type === 'ir' && Sx.hp <= 15) xz = spotNear(city, rnd, tgt.x, tgt.z, 250, 1600, true);
     else xz = spotNear(city, rnd, tgt.x, tgt.z, 250, 1400, false);
-    S.addUnit(key, xz[0], xz[1], { roof: xz[2], ambush: !!Sx.radar && Sx.type !== 'guns' && rnd() < 0.3, skill: 0.5 + rnd() * 0.45, yaw: rnd() * 6.28 });
+    S.addUnit(key, xz[0], xz[1], { roof: xz[2], ambush: !!Sx.radar && Sx.type !== 'guns' && rnd() < (o.ambush ?? 0.3), skill: Math.min(1, Math.max(0.35, 0.5 + rnd() * 0.45 + (o.skill || 0))), yaw: rnd() * 6.28 });
   }
 }

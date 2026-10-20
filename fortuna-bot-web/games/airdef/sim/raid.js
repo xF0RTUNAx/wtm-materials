@@ -5,12 +5,12 @@
 // carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { AG, raidPlane } from '../arsenal.js?v=20261022i';
-import { flightModel, loadOf } from './flight.js?v=20261022i';
-import { initDamage, hitZones, burnRate } from './damage.js?v=20261022i';
-import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022i';
-import { predictBomb } from './strike.js?v=20261022i';
-import { CITY } from '../city.js?v=20261022i';
+import { AG, raidPlane } from '../arsenal.js?v=20261022k';
+import { flightModel, loadOf } from './flight.js?v=20261022k';
+import { initDamage, hitZones, burnRate } from './damage.js?v=20261022k';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022k';
+import { predictBomb } from './strike.js?v=20261022k';
+import { CITY } from '../city.js?v=20261022k';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -37,6 +37,8 @@ export function createRaid(S, city, rnd, opts = {}) {
   const planes = [];
   let pid = 1000;
   const fx = opts.fx || {};
+  // сложность одиночной обороны (difficulty.js, ставит игра): skill — прибавка к умению пилотов, early — ПРР и ложные цели с 1-й волны
+  const H = { skill: 0, early: false };
   // волна: n самолётов, роли по номеру волны; подходят группами с разных направлений
   function spawnWave(n, wave, targets, R) {
     const loads = RAID_LOADS[side][era], groups = Math.min(3, 1 + Math.floor(n / 3));
@@ -44,8 +46,8 @@ export function createRaid(S, city, rnd, opts = {}) {
     for (let i = 0; i < n; i++) {
       const g = i % groups;
       let role = 'bomber';
-      if (wave >= 2 && i % 4 === 1) role = 'sead';
-      else if (loads.decoyer && wave >= 2 && i % 5 === 3) role = 'decoyer';
+      if ((wave >= 2 || H.early) && i % 4 === 1) role = 'sead';
+      else if (loads.decoyer && (wave >= 2 || H.early) && i % 5 === 3) role = 'decoyer';
       else if (loads.cruise && i % 4 === 2) role = 'cruise';
       else if (wave >= 3 && i % 4 === 2) role = 'low';
       else if (loads.tv && i % 3 === 2) role = 'tv';
@@ -59,7 +61,7 @@ export function createRaid(S, city, rnd, opts = {}) {
     const ST = STRIKERS[side], load = o.load || (RAID_LOADS[side][era][role] || RAID_LOADS[side][era].bomber).map(([k, c]) => ({ key: k, n: c }));
     const R = R0 || CITY.HALF - 600;
     const a = makeCraft({ ...ST, id: pid++, ai: true, role, side, load, tgt, hp: ST.hp, hpMax: ST.hp, cmFlare: 30, cmChaff: 30, speed: 230, thr: 0.9, delay, phase: delay > 0 ? 'wait' : 'ingress',
-      cruise: role === 'low' ? 110 : role === 'sead' ? 4500 + rnd() * 1500 : 3000 + rnd() * 2500, skill: 0.4 + rnd() * 0.5, laser: null, lockPt: null, evadeT: 0, cmT: 0, relT: 0, t: 0, out: false,
+      cruise: role === 'low' ? 110 : role === 'sead' ? 4500 + rnd() * 1500 : 3000 + rnd() * 2500, skill: Math.min(1, 0.4 + rnd() * 0.5 + H.skill), laser: null, lockPt: null, evadeT: 0, cmT: 0, relT: 0, t: 0, out: false,
       rcs: ST.rcs, massK: 1.15 });
     if (o.cruise) Object.assign(a, o, { hpMax: o.hp || a.hpMax, t: 0 });
     a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
@@ -255,5 +257,5 @@ export function createRaid(S, city, rnd, opts = {}) {
       if (a.pos.y < city.topAt(a.pos.x, a.pos.z) + 3) { a.dead = true; a.laser = null; if (fx.down) fx.down(a); }
     }
   }
-  return { planes, spawn, spawnWave, spawnDecoy, step, hurt, alive, laserSpot: (a) => a.laser };
+  return { planes, spawn, spawnWave, spawnDecoy, step, hurt, alive, laserSpot: (a) => a.laser, setHard(o) { H.skill = o.raidSkill || 0; H.early = !!o.early; } };
 }

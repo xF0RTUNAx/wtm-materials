@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022i';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261022i';
-import { LNCH } from './launchers.js?v=20261022i';
-import { createBook } from './flipbook.js?v=20261022i';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022k';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022k';
+import { LNCH } from './launchers.js?v=20261022k';
+import { createBook } from './flipbook.js?v=20261022k';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -271,8 +271,10 @@ const flameMat = new THREE.MeshBasicMaterial({ color: lin2(0xff9a3c).multiplySca
 const flameCore = new THREE.MeshBasicMaterial({ color: lin2(0xcfe6ff).multiplyScalar(4), transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
 const flameGeo = new THREE.ConeGeometry(0.5, 1, 16, 1, true); flameGeo.rotateX(Math.PI / 2); flameGeo.translate(0, 0, 0.5);
 const diamondGeo = new THREE.SphereGeometry(0.26, 10, 8);
-export function attachFlames(group, nozzles, r = 1, own = false) {
-  const mat = own ? flameMat.clone() : flameMat;
+// dry — двигатель без форсажа (Ту-16, A-10, Harrier…): днём выхлоп почти не виден — короткое слабое свечение, форсажа нет
+const flameDry = new THREE.MeshBasicMaterial({ color: lin2(0xff9a3c).multiplyScalar(2), transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
+export function attachFlames(group, nozzles, r = 1, own = false, dry = false) {
+  const mat = dry ? flameDry : own ? flameMat.clone() : flameMat;
   const set = nozzles.map((nz) => {
     // пламя не пишет глубину — рисуется после облаков и дыма (renderOrder), иначе облако позади самолёта его закрашивает
     const outer = new THREE.Mesh(flameGeo, mat), core = new THREE.Mesh(flameGeo, flameCore);
@@ -282,6 +284,10 @@ export function attachFlames(group, nozzles, r = 1, own = false) {
   });
   return {
     update(thr, ab) {
+      if (dry) { // короткий тусклый конус, без ядра и «бриллиантов»
+        for (const f of set) { f.outer.scale.set(0.7 * r, 0.7 * r, (0.2 + 0.5 * thr) * r * (0.9 + Math.random() * 0.2)); f.core.visible = false; for (const d of f.dia) d.visible = false; }
+        return;
+      }
       const fw = (ab ? 1.25 : 0.5 + 0.45 * thr) * r;
       for (const f of set) {
         f.outer.scale.set(fw, fw, (ab ? 6 : 0.25 + 1.2 * thr) * r * (0.9 + Math.random() * 0.2));
@@ -439,7 +445,7 @@ export function createFx(scene, P) {
   let api = null; // сам объект эффектов (explosion вызывают и через обёртки — без this)
   return api = {
     mats: [smoke.mat, fire.mat], // хозяин выставляет uniforms.scale по высоте кадра
-    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); }, // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
+    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); for (const b of books) b.mesh.layers.set(addL); }, // раскадровки взрывов — поверх облаков и дыма (облака — фон) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) — частицами
@@ -449,9 +455,10 @@ export function createFx(scene, P) {
       }
       const air = kind === 'air', tbm = kind === 'tbm', bomb = kind === 'bomb' || tbm, heavy = !air && (tbm || R >= 45);
       const h = air ? Math.max(14, R * 4.2) : tbm ? R * 7 : heavy ? R * 5.6 : bomb ? R * 4.2 : R * 3.6, fps = air ? 26 : tbm ? 15 : bomb ? 18 : 22;
-      V.set(p.x, p.y + (air ? 0 : h * 0.33), p.z); EX.add(V, h, fps);
+      V.set(p.x, p.y + (air ? 0 : h * 0.33), p.z); EX.add(V, h, fps, { t0: air ? 0 : 3 / fps }); // у земли — сразу с 4-го кадра: шар растёт, пока вспышка внизу ещё горит
       if (air) return;
-      if (bomb) { V.set(p.x, p.y + R * 0.3, p.z); BL.add(V, R * (tbm ? 6 : heavy ? 4.2 : 2.6), tbm ? 18 : 24); }
+      // вспышка у земли — медленнее (~1,6–2 с): гаснет, когда огненный шар над ней уже раскрылся (прежние 0,7 с — пропадала раньше)
+      if (bomb) { V.set(p.x, p.y + R * 0.3, p.z); BL.add(V, R * (tbm ? 6 : heavy ? 4.2 : 2.6), tbm ? 8 : 10); }
       if (heavy) api.heavyBlast(p, R, tbm);
       // пыль от земли — низким кольцом; тёмный дым остаётся висеть после огненного шара
       const k = bomb ? 1 : 0.6, nd = Math.round((10 + R * 0.3) * k);

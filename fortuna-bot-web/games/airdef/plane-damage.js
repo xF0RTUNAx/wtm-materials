@@ -2,7 +2,7 @@
 // отлетевшая консоль или хвост прячутся на самолёте и падают отдельным обломком (кувыркаются, дымят), из повреждённых зон
 // тянется след: серый дым (повреждено), чёрный (сильно), огонь (горит двигатель или бак). Один объект на модель самолёта.
 /* global THREE */
-import { splitPlane } from './plane-zones.js?v=20261022i';
+import { splitPlane } from './plane-zones.js?v=20261022k';
 const W = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3();
 const debris = []; // общие для всех самолётов обломки: { g, v, w, t }
 // пробоины — в шейдере обшивки (у каждого самолёта — свои копии материалов): в точке попадания обшивка вырезается по рваному
@@ -27,7 +27,7 @@ function dmgMaterial(src, U, toRoot, zid) {
     sh.uniforms.uHole = U.uHole; sh.uniforms.uHoleN = U.uHoleN; sh.uniforms.uMark = U.uMark; sh.uniforms.uScor = U.uScor; sh.uniforms.uHZ = U.uHZ; sh.uniforms.uMZ = U.uMZ; sh.uniforms.uZid = { value: zid }; sh.uniforms.uToRoot = { value: toRoot };
     sh.vertexShader = 'uniform mat4 uToRoot; varying vec3 vMP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMP = (uToRoot * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = DMG_GLSL + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
-  if (!gl_FrontFacing) { bool nh = false; for (int i = 0; i < ${NH}; i++) { vec4 h = uHole[i]; if (h.w > 0.0 && length(vMP - h.xyz) < h.w * 3.0) nh = true; } if (!nh) discard; } // изнанку рисуем только у дыр
+  bool inHole = false; if (!gl_FrontFacing) for (int i = 0; i < ${NH}; i++) { vec4 h = uHole[i]; if (h.w > 0.0 && length(vMP - h.xyz) < h.w * 3.0) inHole = true; } // изнанка у дыры — тёмное нутро; в остальном изнанка — как у исходного (двусторонние поверхности моделей: крыло одним листом, у Су-35 и B-2 видно снизу)
   { float burn = 0.0, hot = 0.0;
     for (int i = 0; i < ${NH}; i++) { vec4 h = uHole[i]; if (h.w <= 0.0 || abs(uHZ[i] - uZid) > 0.5) continue;
       vec3 d = vMP - h.xyz, ax = uHoleN[i].xyz; float along = dot(d, ax);       // цилиндр поперёк обшивки
@@ -45,7 +45,7 @@ function dmgMaterial(src, U, toRoot, zid) {
       float r = length(vMP - s.xyz) / s.w * (0.65 + 0.7 * dn3(vMP * (2.5 / s.w))); burn = max(burn, (1.0 - smoothstep(0.1, 1.0, r)) * 0.92); }
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.035, 0.03, 0.025), burn); // копоть, обгоревший край
     diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.24, 0.22, 0.2), hot * 0.55);
-    if (!gl_FrontFacing) diffuseColor.rgb = vec3(0.05, 0.045, 0.04); } // изнанка обшивки (видна только сквозь пробоину) — тёмное нутро`);
+    if (inHole) diffuseColor.rgb = vec3(0.05, 0.045, 0.04); } // изнанка обшивки у пробоины — тёмное нутро`);
   };
   m.customProgramCacheKey = () => (prev ? String(prev) : '') + 'dmgholes';
   return m;

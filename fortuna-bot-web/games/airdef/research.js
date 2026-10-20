@@ -2,36 +2,37 @@
 // ветки сверху, стороны слева (нейтрально), колонки — ранги I–IV, линии — от предыдущей единицы к следующей, карточка —
 // модель, название, ранг, цена; строка паритета над колонкой. Тап — досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
-import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from './progress.js?v=20261022i';
-import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261022i';
-import { ico } from './icons.js?v=20261022i';
-import { XP, SV } from './progress-net.js?v=20261022i';
+import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from './progress.js?v=20261022k';
+import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261022k';
+import { ico } from './icons.js?v=20261022k';
+import { XP, SV } from './progress-net.js?v=20261022k';
 
 const CSS = `
 #research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'IBM Plex Sans', -apple-system, sans-serif; overflow: hidden;
-  --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
+  --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 58px; --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
 #research.on { display: block; }
 #research .ic { width: 1.15em; height: 1.15em; vertical-align: -0.17em; flex: none; }
 #research .rbg { position: absolute; inset: 0; background: url(airdef/shots/s400-unit.webp) center/cover; filter: blur(14px) brightness(.32) saturate(.7); transform: scale(1.06); }
-#research .top { position: absolute; left: 0; right: 0; top: 0; height: 58px; display: flex; align-items: center; gap: 14px; padding: 0 18px; padding-left: max(18px, env(safe-area-inset-left)); background: linear-gradient(#0b0e0a, rgba(11,14,10,.86)); z-index: 5; }
+#research .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 14px; padding: 0 18px; padding-left: max(18px, var(--sa-l, 0px)); background: linear-gradient(#0b0e0a, rgba(11,14,10,.86)); z-index: 5; }
+#research::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: #0b0e0a; z-index: 5; }
 #research .back { font: 400 22px 'Russo One'; color: #e9e6dc; border: 0; background: none; width: 34px; cursor: pointer; }
 #research .top h1 { margin: 0; font: 400 19px 'Russo One'; letter-spacing: .02em; }
 #research .btabs { display: flex; margin-left: 10px; } #research .btabs button { border: 1px solid transparent; background: none; color: var(--dim); padding: 7px 13px; font: 500 14px 'IBM Plex Sans'; cursor: pointer; }
 #research .btabs button.on { color: #e9e6dc; border-color: #e9e6dc; } #research .btabs button i { font-style: normal; color: var(--dim2); font: 600 10.5px 'IBM Plex Mono', monospace; margin-left: 5px; }
-#research .cur { display: flex; gap: 18px; margin-left: auto; font: 600 16px 'IBM Plex Mono', monospace; padding-right: env(safe-area-inset-right); } #research .cur span { display: flex; align-items: center; gap: 6px; } #research .cur .xp { color: var(--xp); }
-#research .sides { position: absolute; left: 0; top: 58px; bottom: 0; width: 122px; padding: 22px 0 0 14px; padding-left: max(14px, env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
+#research .cur { display: flex; gap: 18px; margin-left: auto; font: 600 16px 'IBM Plex Mono', monospace; padding-right: var(--sa-r, 0px); } #research .cur span { display: flex; align-items: center; gap: 6px; } #research .cur .xp { color: var(--xp); }
+#research .sides { position: absolute; left: 0; top: calc(var(--rt) + var(--hh)); bottom: 0; width: 122px; padding: 22px 0 0 14px; padding-left: max(14px, var(--sa-l, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
 #research .sides button { border: 0; background: rgba(16,20,15,.88); color: var(--dim); height: 74px; text-align: left; padding: 0 12px; font: 400 15px 'Russo One'; border-left: 3px solid transparent; cursor: pointer; }
 #research .sides button small { display: block; font: 500 11px 'IBM Plex Sans'; color: var(--dim2); margin-top: 3px; } #research .sides button.on { background: rgba(233,230,220,.12); color: #e9e6dc; border-left-color: #e9e6dc; }
 #research .note { position: absolute; left: 18px; bottom: 14px; width: 114px; font-size: 11px; color: var(--dim2); line-height: 1.35; z-index: 4; }
 #research .note b { color: var(--ac2); font-weight: 600; }
-#research .wrap { position: absolute; left: 128px; top: 58px; right: 290px; bottom: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
+#research .wrap { position: absolute; left: 128px; top: calc(var(--rt) + var(--hh)); right: 290px; bottom: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 #research .tree { position: relative; padding: 0 30px 40px 6px; }
-#research .ranks { position: sticky; top: 0; z-index: 3; display: flex; gap: var(--gx); padding: 12px 0 10px 6px; background: linear-gradient(rgba(16,20,15,.95) 70%, rgba(16,20,15,0)); }
+#research .ranks { position: sticky; top: 0; z-index: 3; display: flex; gap: var(--gx); padding: 12px 0 10px 18px; background: linear-gradient(rgba(16,20,15,.95) 70%, rgba(16,20,15,0)); }
 #research .rh { width: var(--cw); flex: none; } #research .rh b { font: 400 17px 'Russo One'; } #research .rh span { color: var(--dim); font-size: 12px; margin-left: 6px; }
 #research .rh .par { font-size: 11.5px; color: var(--dim); margin-top: 2px; } #research .rh .par b { font: 600 11.5px 'IBM Plex Sans'; color: var(--ac2); } #research .rh .par.okk { color: var(--ok); }
-#research svg.links { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; } #research svg.links path { fill: none; stroke: #8d9585; stroke-width: 2; } #research svg.links path.lock { stroke: #4a5243; }
+#research svg.links { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; } #research svg.links path { fill: none; stroke: #8d9585; stroke-width: 2; } #research svg.links path.lock { stroke: #69725f; }
 #research .shade { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, rgba(0,0,0,.18) 0 12px, rgba(0,0,0,.08) 12px 24px); pointer-events: none; }
-#research .card { position: absolute; width: var(--cw); height: var(--ch); background: linear-gradient(160deg, #39403a 0, #22271f 55%, #151a12 100%); border: 1px solid #0a0c09; cursor: pointer; overflow: hidden; }
+#research .card { position: absolute; border-radius: 0; padding: 0; box-shadow: none; max-height: none; animation: none; width: var(--cw); height: var(--ch); background: linear-gradient(160deg, #39403a 0, #22271f 55%, #151a12 100%); border: 1px solid #0a0c09; cursor: pointer; overflow: hidden; }
 #research .card img { position: absolute; left: -6px; top: 6px; width: 74%; height: 92%; object-fit: contain; object-position: left center; }
 #research .card .nm { position: absolute; right: 7px; top: 4px; font: 400 13.5px 'Russo One'; text-shadow: 0 1px 3px #000; max-width: 62%; text-align: right; }
 #research .card .rk { position: absolute; right: 7px; bottom: 2px; font: 400 18px 'Russo One'; color: #d9d6cb; text-shadow: 0 1px 3px #000; }
@@ -44,7 +45,7 @@ const CSS = `
 #research .card.can { box-shadow: 0 0 0 2px var(--ac) inset; }
 #research .card.lock img { filter: grayscale(1) brightness(.55); } #research .card.lock .nm, #research .card.lock .rk { color: #8d9585; } #research .card.lock { background: linear-gradient(160deg, #2a2f28 0, #191d16 100%); }
 #research .card.sel { outline: 2px solid #e9e6dc; outline-offset: 2px; } #research .card.pair { outline: 2px dashed var(--ac2); outline-offset: 2px; }
-#research .dos { position: absolute; top: 58px; right: 0; bottom: 0; width: 290px; background: rgba(13,16,12,.96); border-left: 1px solid var(--line); display: flex; flex-direction: column; z-index: 4; padding-right: env(safe-area-inset-right); }
+#research .dos { position: absolute; top: calc(var(--rt) + var(--hh)); right: 0; bottom: 0; width: 290px; background: rgba(13,16,12,.96); border-left: 1px solid var(--line); display: flex; flex-direction: column; z-index: 4; padding-right: var(--sa-r, 0px); }
 #research .dos .sc { flex: 1; overflow: auto; padding: 0 14px 10px; } #research .dos .hero { margin: 0 -14px 8px; height: 150px; background: radial-gradient(ellipse at 50% 80%, #39403a 0, #151a12 75%); display: flex; }
 #research .dos .hero img { width: 100%; height: 100%; object-fit: contain; }
 #research .mk { font: 600 10.5px 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
@@ -56,20 +57,20 @@ const CSS = `
 #research .rbtn { border: 0; background: var(--ac); color: #17190f; font: 400 14px 'Russo One'; letter-spacing: .05em; padding: 11px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; }
 #research .rbtn.alt { background: none; border: 1px solid #4a5443; color: #e9e6dc; font: 500 13px 'IBM Plex Sans'; letter-spacing: 0; } #research .rbtn:disabled { background: #2c3426; color: var(--dim2); cursor: default; }
 #research .why { font-size: 11.5px; color: var(--dim); text-align: center; } #research .why.err { color: #f0a08c; }
-#research .guest { position: absolute; left: 50%; top: 66px; transform: translateX(-50%); z-index: 6; background: rgba(13,16,12,.94); border: 1px solid var(--line); padding: 7px 14px; font-size: 12.5px; color: #e9e6dc; white-space: nowrap; }
+#research .guest { position: absolute; left: 50%; top: calc(var(--rt) + var(--hh) + 8px); transform: translateX(-50%); z-index: 6; background: rgba(13,16,12,.94); border: 1px solid var(--line); padding: 7px 14px; font-size: 12.5px; color: #e9e6dc; white-space: nowrap; }
 #research .veil { display: none; }
 @media (max-height: 460px), (max-width: 720px) {
   #research { --cw: 196px; --ch: 80px; --gx: 40px; --gy: 12px; }
-  #research .top { height: 46px; padding: 0 10px; padding-left: max(10px, env(safe-area-inset-left)); gap: 8px; } #research .top h1 { display: none; } #research .btabs { margin-left: 0; } #research .btabs button { padding: 5px 8px; font-size: 12.5px; } #research .btabs button i { display: none; } #research .cur { font-size: 13px; gap: 10px; }
-  #research .sides { top: 46px; width: 92px; padding: 10px 0 0 8px; padding-left: max(8px, env(safe-area-inset-left)); } #research .sides button { height: 52px; font-size: 13px; padding: 0 8px; } #research .sides button small, #research .note { display: none; }
-  #research .wrap { left: calc(96px + env(safe-area-inset-left)); top: 46px; right: 0; } #research .dos { display: none; } #research.open .dos { display: flex; top: 46px; width: min(320px, 70vw); }
-  #research.open .veil { display: block; position: absolute; inset: 46px 0 0 0; background: rgba(0,0,0,.45); z-index: 3; }
+  #research { --hh: 46px; } #research .top { padding: 0 10px; padding-left: max(10px, var(--sa-l, 0px)); gap: 8px; } #research .top h1 { display: none; } #research .btabs { margin-left: 0; } #research .btabs button { padding: 5px 8px; font-size: 12.5px; } #research .btabs button i { display: none; } #research .cur { font-size: 13px; gap: 10px; }
+  #research .sides { top: calc(var(--rt) + var(--hh)); width: 92px; padding: 10px 0 0 8px; padding-left: max(8px, var(--sa-l, 0px)); } #research .sides button { height: 52px; font-size: 13px; padding: 0 8px; } #research .sides button small, #research .note { display: none; }
+  #research .wrap { left: calc(96px + var(--sa-l, 0px)); top: calc(var(--rt) + var(--hh)); right: 0; } #research .dos { display: none; } #research.open .dos { display: flex; top: calc(var(--rt) + var(--hh)); width: min(320px, 70vw); }
+  #research.open .veil { display: block; position: absolute; inset: calc(var(--rt) + var(--hh)) 0 0 0; background: rgba(0,0,0,.45); z-index: 3; }
   #research .card .nm { font-size: 12.5px; } #research .card .rk { font-size: 16px; } #research .card .pr { font-size: 12.5px; }
-  #research .rh b { font-size: 14px; } #research .rh span { display: none; } #research .dos .hero { height: 110px; } #research .guest { top: 52px; font-size: 11.5px; }
+  #research .rh b { font-size: 14px; } #research .rh span { display: none; } #research .dos .hero { height: 110px; } #research .guest { font-size: 11.5px; }
 }`;
 
 const n2 = (v) => Math.round(v).toLocaleString('ru-RU');
-const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261022i`;
+const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261022k`;
 const era = (r) => (ERAS[r - 1] ? ERAS[r - 1].name.split('— ')[1] || '' : '');
 const guide = (n) => (n.branch === 'pvo' ? SAM[n.key]?.guide : n.branch === 'air' ? `Подвески: ${RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => L.name)).join(' · ')}.` : AG[n.item || n.key]?.guide) || '';
 
@@ -106,11 +107,12 @@ export function createResearch(C, PG) {
   function tree() {
     const cs = getComputedStyle(root), px = (v) => parseFloat(cs.getPropertyValue(v)), ph = phone();
     const cw = px('--cw'), gx = px('--gx'), gy = px('--gy'), ch = px('--ch'), top = ph ? 76 : 72; // ниже шапки рангов (строка паритета — до двух строк)
-    const L = treeLayout(S.B, S.side), pos = {}; for (const c of L.cells) pos[c.n.id] = [c.col * (cw + gx) + 6, top + c.row * (ch + gy)];
-    const H = top + L.rows * (ch + gy) + 20, W = 4 * (cw + gx) + 6, p = P();
+    const L = treeLayout(S.B, S.side), pos = {}; for (const c of L.cells) pos[c.n.id] = [c.col * (cw + gx) + 18, top + c.row * (ch + gy)];
+    const H = top + L.rows * (ch + gy) + 20, W = 4 * (cw + gx) + 18, p = P();
     const links = L.links.map(([a, b]) => { const [x1, y1] = pos[a], [x2, y2] = pos[b], xa = x1 + cw, ya = y1 + ch / 2, yb = y2 + ch / 2, xm = x2 - gx / 2;
+      if (x2 <= x1) return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${x1} ${ya} H${x1 - 11} V${yb} H${x2}"/>`; // тот же ранг (Ил-28 → Ту-16 → Ту-22): скобкой слева от колонки
       return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${xa} ${ya} H${xm} V${yb} H${x2}"/>`; }).join('');
-    const shade = RANKS.filter((r) => !rankOpen(p, S.B, r)).map((r) => `<div class="shade" style="left:${(r - 1) * (cw + gx) + 6 - gx / 2}px;width:${cw + gx}px"></div>`).join('');
+    const shade = RANKS.filter((r) => !rankOpen(p, S.B, r)).map((r) => `<div class="shade" style="left:${(r - 1) * (cw + gx) + 18 - gx / 2}px;width:${cw + gx}px"></div>`).join('');
     return `<div class="tree" style="width:${W + 30}px;height:${H}px"><div class="ranks">${RANKS.map((r) => `<div class="rh"><b>Ранг ${RANK_NAME[r]}</b><span>${era(r)}</span>${parity(r)}</div>`).join('')}</div>
       ${shade}<svg class="links" width="${W}" height="${H}">${links}</svg>${L.cells.map((c) => card(c, ...pos[c.n.id])).join('')}</div>`;
   }

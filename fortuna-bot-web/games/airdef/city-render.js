@@ -11,15 +11,15 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261022i';
-import { part, mergeParts, M } from '../drone/models.js?v=20261022i';
-import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022i';
-import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022i';
-import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022i';
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261022k';
+import { part, mergeParts, M } from '../drone/models.js?v=20261022k';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022k';
+import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022k';
+import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022k';
 Object.assign(WEATHERS, winterWeathers(WEATHERS)); // зимние погоды — только в «Воздушном превосходстве»
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt;
-import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022i'; // MIT, meshoptimizer 0.21
+import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022k'; // MIT, meshoptimizer 0.21
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -75,7 +75,7 @@ function loadCityTextures(aniso) {
     jpg(u, f, t);
   }
   function jpg(u, f, t) {
-    fetch(new URL(`./tex/${f}.jpg?v=20261022i`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+    fetch(new URL(`./tex/${f}.jpg?v=20261022k`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
       .then((b) => createImageBitmap(b)).then((bmp) => { if (u === 'tGGn' || u === 'tGDn') packNormalsFrom(u, bmp); else { TEX[u].value = t; t.image = bmp; t.needsUpdate = true; } const av = TEX['uAvg' + u.slice(1)]; if (av && !viaKtx) av.value.copy(avgColor(bmp)); done(); })
       .catch((e) => { texStats.done++; console.warn('текстура не загрузилась:', e.message); });
   }
@@ -1049,7 +1049,7 @@ function cloudTex(f, done) { // → uniform { value }: KTX2, иначе WebP
   if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') return U;
   texStats.req++;
   webp(); return U; // облака — WebP: в KTX2 светотень в кадре выходила площе (данные те же — разница в выборке мипов; не разобрались)
-  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022i`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
+  function webp() { fetch(new URL(`./tex/${f}.webp?v=20261022k`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f))))
     .then((b) => createImageBitmap(b, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' })).then((bmp) => { t.image = bmp; t.needsUpdate = true; texStats.done++; done(); })
     .catch((e) => { texStats.done++; console.warn('облака не загрузились:', e.message); }); }
 }
@@ -1123,7 +1123,7 @@ function buildClouds(scene, count, seed, W, hi, SU) {
       }`,
     transparent: true, depthWrite: false, fog: false, extensions: { shaderTextureLOD: true },
   });
-  const mesh = new THREE.Mesh(g, mat); mesh.frustumCulled = false; mesh.renderOrder = 2; scene.add(mesh);
+  const mesh = new THREE.Mesh(g, mat); mesh.frustumCulled = false; mesh.renderOrder = 0.5; scene.add(mesh); // облака — фон: раньше дыма (1) и взрывов (3), иначе дальнее облако ложилось поверх них
   return mesh;
 }
 
@@ -1366,20 +1366,33 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     const f = new THREE.Group(); f.visible = false; f.userData.left = new Set(g.userData.left); scene.add(f); G.objFar[o.id] = f; } // вдали — упрощённые копии тех же построек
   }
   // модель постройки загрузилась: копии во все места, где она стоит; все модели объекта на месте — заглушка прячется
+  // постройки с частями своего цвета (prepare.js: группа «#имя»): на каждой карте — свои цвета (линейные); pad — подложка у земли:
+  // чуть выше рельефа и со сдвигом глубины (иначе издали мерцает с землёй), снега на ней нет (расчищена)
+  const OBJ_TINT = { obj_hangar: { city: { pad: [0.07, 0.07, 0.065], shed: [0.1, 0.11, 0.08] }, winter: { pad: [0.25, 0.26, 0.28], shed: [0.3, 0.32, 0.34] } } };
+  const objTint = (name, root) => {
+    const T = OBJ_TINT[name] && OBJ_TINT[name][G.winter ? 'winter' : 'city']; if (!T) return;
+    root.traverse((c) => {
+      if (!c.isMesh) return; const part = (c.name || '').split('#')[1]; if (!part) return;
+      if (part === 'pad') { c.position.y = 0.3; c.userData.noSnow = true; }
+      const m = c.material; if (m.userData.tinted) return; m.userData.tinted = true;
+      if (T[part]) m.color.setRGB(...T[part]);
+      if (part === 'pad') { m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -6; }
+    });
+  };
   G.attachObjModel = (name, make) => {
     if (name === 'br_seg') { attachBridgeSegs(G, scene, make(), P); return; }
     if (name === 'af_appr' || name === 'af_fuel') { attachAirfield(G, scene, name, make(), city, P); return; }
     for (const o of city.objects) {
       const g = G.objGroup[o.id]; if (!g || !g.userData.left.has(name)) continue;
       for (const q of o.models) if (q.m === name) {
-        const m = make(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s);
-        m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; if (G.winter) snowify(c.material); } }); g.add(m);
+        const m = make(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); objTint(name, m);
+        m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows && !c.userData.noSnow; c.receiveShadow = !!P.shadows; if (G.winter && !c.userData.noSnow) snowify(c.material); } }); g.add(m);
       }
       g.userData.left.delete(name);
       if (!g.userData.left.size && G.objBox[o.id]) G.objBox[o.id].visible = false;
     }
     // дальняя копия постройки (одна на модель): те же меши с сильно упрощённой сеткой — вместо коробки вдали (main.js objLod)
-    const tmpl0 = make();
+    const tmpl0 = make(); objTint(name, tmpl0);
     (FARC[name] = FARC[name] || (async () => {
       const t = tmpl0, ms = []; t.traverse((c) => { if (c.isMesh) ms.push(c); });
       let tri = 0; for (const m of ms) tri += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3;

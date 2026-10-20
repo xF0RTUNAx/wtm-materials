@@ -1,18 +1,19 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { CITY, ZONE } from './city.js?v=20261022i';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022i';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022i';
-import { MODES } from './sim/strike.js?v=20261022i';
-import { WEATHERS } from '../drone/world.js?v=20261022i';
-import { LESSONS } from './training.js?v=20261022i';
-import { MODEL_CREDITS } from './models.js?v=20261022i';
-import { openLayoutEditor } from './layout.js?v=20261022i';
+import { CITY, ZONE } from './city.js?v=20261022k';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022k';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022k';
+import { MODES } from './sim/strike.js?v=20261022k';
+import { WEATHERS } from '../drone/world.js?v=20261022k';
+import { WINTER_KEYS } from './winter-render.js?v=20261022k';
+import { LESSONS } from './training.js?v=20261022k';
+import { MODEL_CREDITS } from './models.js?v=20261022k';
+import { openLayoutEditor } from './layout.js?v=20261022k';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022i';
-import { photoItems } from './photo.js?v=20261022i';
-import { guideChapters } from './guide.js?v=20261022i';
-import { iconize, ico } from './icons.js?v=20261022i';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022k';
+import { photoItems } from './photo.js?v=20261022k';
+import { guideChapters } from './guide.js?v=20261022k';
+import { iconize, ico } from './icons.js?v=20261022k';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },
@@ -57,7 +58,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
   $('modeSel').onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save();
-    if (C.wantMap(setup.game) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
+    if (C.wantMap(setup.game, setup.pmap) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
     if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
     if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
@@ -130,7 +131,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const ps = setup.pside || 'air', att = setup.side === 'east' ? 'west' : 'east';
     let h = `<div class="prow"><span>Снимаем</span>${seg('pside', ps, [['air', 'Самолёт'], ['def', 'ПВО'], ['multi', 'Мульти-волна']])}</div>
       <div class="prow"><span>Эпоха</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.name]))}</div>
-      <div class="prow"><span>${ps === 'def' ? 'Сторона ПВО' : 'ПВО города'}</span>${seg('side', setup.side, [['east', 'Советская'], ['west', 'Западная']])}</div>`;
+      <div class="prow"><span>${ps === 'def' ? 'Сторона ПВО' : 'ПВО города'}</span>${seg('side', setup.side, [['east', 'Советская'], ['west', 'Западная']])}</div>
+      <div class="prow"><span>Карта</span>${seg('pmap', C.MAP, [['winter', 'Северный рубеж'], ['city', 'Город']])}</div>
+      <div class="prow"><span>Погода</span>${seg('pwx', C.MAP === 'winter' ? (WINTER_KEYS.includes(C.weatherKey) ? C.weatherKey : 'random') : (WEATHER_KEYS.includes(C.weatherKey) ? C.weatherKey : 'random'),
+        [['random', 'Случайная'], ...(C.MAP === 'winter' ? WINTER_KEYS : WEATHER_KEYS).map((k) => [k, WEATHERS[k].name])])}</div>
+      <p class="hint">Сейчас: ${C.W.name}. Карта и погода строятся при загрузке — смена перезапускает страницу.</p>`;
     if (ps === 'air') {
       const mine = loadoutsOf(setup.era, att);
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
@@ -216,6 +221,10 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const b = e.target.closest('[data-v]'), lo = e.target.closest('[data-lo]'), lo1 = e.target.closest('[data-lo1]'), lo2 = e.target.closest('[data-lo2]'), tl = e.target.closest('[data-tl]');
     if (b) {
       const id = b.parentNode.dataset.seg, v = b.dataset.v;
+      if (id === 'pmap' || id === 'pwx') { // карта и погода «Съёмки» — перезапуск страницы (строятся при загрузке)
+        if (id === 'pmap') setup.pmap = v; else setup.pwx = { ...(setup.pwx || {}), [C.MAP]: v };
+        save(); const u = new URL(location.href); u.searchParams.delete('weather'); u.searchParams.delete('map'); location.replace(u.href); return;
+      }
       if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
     } else if (e.target.closest('[data-psam]')) setup.psam = e.target.closest('[data-psam]').dataset.psam; else if (e.target.closest('[data-pmun]')) setup.pmun = e.target.closest('[data-pmun]').dataset.pmun;
     else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
@@ -372,9 +381,10 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // опыт и серебро над режимами (тап — «Исследования»); гость — подсказка войти
   function renderPg() {
     const P = C.progress && C.progress.P; if (!P) { $('pgBar').innerHTML = ''; return; }
-    $('pgBar').innerHTML = C.progress.guest ? '<small>Войдите на сайте — опыт и серебро копятся в аккаунте</small>' : `<span class="xp">${ico('xp')}${Math.round(P.xp).toLocaleString('ru-RU')}</span><span>${ico('silver')}${Math.round(P.silver).toLocaleString('ru-RU')}</span><small>Исследования ›</small>`;
+    $('pgBar').innerHTML = C.progress.guest ? '<small>Войдите на сайте — опыт и серебро копятся в аккаунте</small>' : `<span class="xp">${ico('xp')}${Math.round(P.xp).toLocaleString('ru-RU')}</span><span>${ico('silver')}${Math.round(P.silver).toLocaleString('ru-RU')}</span>`; // «Исследования» — кнопкой в углу фона (место в колонке — режимам)
   }
   $('pgBar').onclick = () => { snd.click(); C.research.open(); };
+  $('resIco').innerHTML = ico('research'); $('resBtn').onclick = () => { snd.click(); C.research.open(); }; // кнопка в углу фона меню
   function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); }
   $('weatherChip').textContent = `${C.W.name} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);

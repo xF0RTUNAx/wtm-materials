@@ -67,11 +67,11 @@ export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boole
   const realOk = o.real && used.every((id) => owned(P, id));
   const firstWin = x.first_win_day !== o.today;
   const soloToday = x.solo_day === o.today ? x.solo_xp : 0;
-  const r = battleReward(ev, { training: o.training, real: realOk, firstWin, online: o.online, soloToday });
+  const r = battleReward(ev, { training: o.training, real: realOk, arcade: !realOk, firstWin, online: o.online, dayXp: soloToday }); // solo_xp — опыт за день по всем боям (дневной предел — и для онлайна)
   P.xp += r.xp; P.silver += r.silver;
   const nx: Extra = { ...x };
   if (firstWin && ev.win && r.xp > 0) nx.first_win_day = o.today;
-  if (!o.online) { nx.solo_day = o.today; nx.solo_xp = soloToday + r.xp; }
+  nx.solo_day = o.today; nx.solo_xp = soloToday + r.xp;
   const auto: string[] = [];
   for (const b of Object.keys(P.goal)) { const id = P.goal[b]; if (canResearch(P, id).ok) { research(P, id); auto.push(id); delete P.goal[b]; } }
   return { reward: r, P, extra: nx, auto, realOk, realAsked: o.real, soloLeft: Math.max(0, SOLO_DAY - (nx.solo_day === o.today ? nx.solo_xp : 0)) };

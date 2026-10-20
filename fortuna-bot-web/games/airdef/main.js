@@ -8,35 +8,36 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { ktxInit } from './ktx.js?v=20261022i';
-import { buildCity, CITY } from './city.js?v=20261022i';
-import { buildWinter } from './map-winter.js?v=20261022i';
-import { WINTER_KEYS } from './winter-render.js?v=20261022i';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022i';
-import { createPipeline } from '../drone/post.js?v=20261022i';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022i';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022i';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022i';
-import { createStrike, MODES } from './sim/strike.js?v=20261022i';
-import { createRaid } from './sim/raid.js?v=20261022i';
-import { POD } from './sim/combined.js?v=20261022i';
-import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022i';
-import { slotCount } from './launchers.js?v=20261022i';
-import { spinProps as spinRotors, modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022i';
-import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022i';
-import { createSound } from './sound.js?v=20261022i';
-import { ico, iconize } from './icons.js?v=20261022i';
-import { createAir } from './air.js?v=20261022i';
-import { createDefense } from './defense.js?v=20261022i';
-import { createDirector } from './director.js?v=20261022i';
-import { createMenuBg } from './menubg.js?v=20261022i';
-import { createOnline } from './online.js?v=20261022i';
-import { createProgress } from './progress-net.js?v=20261022i';
-import { createResearch } from './research.js?v=20261022i';
-import { createShell } from './shell.js?v=20261022i';
-import { createTraining, LESSONS } from './training.js?v=20261022i';
-import { createPhoto } from './photo.js?v=20261022i';
-import { createMenu } from './menu.js?v=20261022i';
+import { ktxInit } from './ktx.js?v=20261022k';
+import { buildCity, CITY } from './city.js?v=20261022k';
+import { buildWinter } from './map-winter.js?v=20261022k';
+import { WINTER_KEYS } from './winter-render.js?v=20261022k';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022k';
+import { createPipeline } from '../drone/post.js?v=20261022k';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022k';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261022k';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022k';
+import { createStrike, MODES } from './sim/strike.js?v=20261022k';
+import { createRaid } from './sim/raid.js?v=20261022k';
+import { POD } from './sim/combined.js?v=20261022k';
+import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022k';
+import { slotCount } from './launchers.js?v=20261022k';
+import { spinProps as spinRotors, modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022k';
+import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022k';
+import { createSound } from './sound.js?v=20261022k';
+import { ico, iconize } from './icons.js?v=20261022k';
+import { createAir } from './air.js?v=20261022k';
+import { createDefense } from './defense.js?v=20261022k';
+import { createDirector } from './director.js?v=20261022k';
+import { createMenuBg } from './menubg.js?v=20261022k';
+import { createOnline } from './online.js?v=20261022k';
+import { createProgress } from './progress-net.js?v=20261022k';
+import { createDifficulty } from './difficulty.js?v=20261022k';
+import { createResearch } from './research.js?v=20261022k';
+import { createShell } from './shell.js?v=20261022k';
+import { createTraining, LESSONS } from './training.js?v=20261022k';
+import { createPhoto } from './photo.js?v=20261022k';
+import { createMenu } from './menu.js?v=20261022k';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -126,13 +127,17 @@ const P = CINEMA ? Object.assign(P0, { name: 'Кино', lodObj: 1e9, draw: 2600
 if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 — без дальних копий моделей
 // карта: «Мульти-волна» (и в онлайне) и «Кино» — только зимняя долина «Северный рубеж», вылеты, задания и уроки — город
 // (?map=winter|city — принудительно); у зимы — свои погоды. Карта строится при загрузке: смена — перезагрузкой страницы
-function wantMap(game) {
+// «Съёмка» — карта на выбор (pmap: 'winter' | 'city', по умолчанию зимняя) и своя погода для каждой карты (pwx: { city, winter })
+function wantMap(game, pmap) {
   if (Q.get('map') === 'winter' || Q.get('map') === 'city') return Q.get('map');
+  if (game === 'photo') return pmap === 'city' ? 'city' : 'winter';
   const online = game === 'online' || Q.get('ad') || Q.get('mp') === '1';
-  return ['multi', 'photo'].includes(game) || (online && ls.get('fortuna_ad_kind') === 'multi') ? 'winter' : 'city';
+  return game === 'multi' || (online && ls.get('fortuna_ad_kind') === 'multi') ? 'winter' : 'city';
 }
-const MAP = wantMap((() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}').game; } catch (_) { return null; } })());
-const weatherKey = Q.get('weather') || ls.get('fortuna_airdef_weather') || 'random';
+const SETUP0 = (() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}') || {}; } catch (_) { return {}; } })();
+const MAP = wantMap(SETUP0.game, SETUP0.pmap);
+// погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
+const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
 const W_KEY = MAP === 'winter' ? (WINTER_KEYS.includes(weatherKey) ? weatherKey : WINTER_KEYS[Math.floor(Math.random() * WINTER_KEYS.length)])
   : WEATHER_KEYS.includes(weatherKey) && !(weatherKey === 'night' && (Q.get('mp') === '1' || Q.get('ad'))) ? weatherKey : RND_KEYS[Math.floor(Math.random() * RND_KEYS.length)];
@@ -214,6 +219,7 @@ C.newBattle = function (o) {
     laserSpot: (a) => (a === C.player ? (C.hooks.playerLaser ? C.hooks.playerLaser() : null) : raid.laserSpot(a)),
     spawnDecoy: (a, key, aim) => { const d = raid.spawnDecoy(a, key, aim); if (C.hooks.decoyOut) C.hooks.decoyOut(d); } });
   const raid = createRaid(S, city, rnd, { side: o.defSide === 'east' ? 'west' : 'east', era: o.era, fx: raidFx });
+  if (C.diff && (setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk'))) raid.setHard(C.diff.knobs(setup.game, setup.diff)); // сложность: налёт против игрока за ПВО
   C.S = S; C.raid = raid; C.player = o.player || null; C.raidEra = o.era || 2;
   for (const ob of S.objects) objLook(ob.id, false);
   return S;
@@ -382,11 +388,7 @@ const simFx = {
   samEnd(m, hit) { const g = samMeshes.get(m.id); if (g) { scene.remove(g); samMeshes.delete(m.id); } if (C.hooks.samEnd) C.hooks.samEnd(m, hit); },
   wpnIgnite(w) { snd.tbmLaunch(dist(w.pos)); C.fx.ignite(w.pos, w.dir, true); }, // «Кинжал» сошёл с пилона — двигатель
   wpnRelease(w) {
-    const g = w.ev ? evMesh(w) : weaponMesh(w.key, w.W, weaponGeo, wMat); scene.add(g); wpnMeshes.set(w.id, g);
-    if (!w.ev && (w.W.kind === 'agm' || w.W.kind === 'arm' || w.W.kind === 'cruise')) { // ракета с двигателем: факел и след — из сопла
-      const nz = w.nzL = NZC[w.key] || nozzleOf(g, w.W.vis.r, w.W.vis.nzAx); if (!g.isMesh) NZC[w.key] = nz; // запоминаем только по готовой модели (не по временной)
-      g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = w.W.kind === 'cruise' ? 'jet' : 'rocket';
-    }
+    const g = relMesh(w); scene.add(g); wpnMeshes.set(w.id, g);
     // «Мульти-волна»: старт баллистики с пусковой — рёв; крылатая с носителя — хлопок и запуск двигателя
     if (w.ev && !w.decoy && w.W.kind === 'tbm' && w.phase !== 'drop') snd.tbmLaunch(dist(w.pos)); // воздушный пуск — рёв при зажигании (wpnIgnite)
     else if (w.ev && w.owner && w.owner.role === 'carrier') snd.cruiseLaunch(dist(w.pos));
@@ -426,7 +428,7 @@ const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], LOD_D = 2500; // дальше LOD_D �
 function hangLoad(g, stations, load) {
   const out = []; let oi = 0;
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
-    const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = weaponMesh(l.key, W, weaponGeo, wMat);
+    const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = weaponMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла — самолёты пересоберутся
     m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» — под фюзеляжем по оси
   }
   return out;
@@ -491,6 +493,17 @@ function decoyMesh() {
   const b = new THREE.Box3().setFromObject(m), r = (b.max.x - b.min.x) / 2;
   const cap = new THREE.Mesh(new THREE.CircleGeometry(r * 0.97, 16), new THREE.MeshLambertMaterial({ color: 0x3a3c3e })); cap.position.set((b.max.x + b.min.x) / 2, (b.max.y + b.min.y) / 2, b.max.z - 0.01); m.add(cap);
   m.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); return m;
+}
+// сброшенное оружие самолёта: готовая модель или временная фигура (модель ещё грузится — потом подменяется, см. «подменить
+// временную»); у ракет с двигателем — факел из среза сопла
+function relMesh(w) {
+  if (w.ev) return evMesh(w);
+  const g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (weaponPending(w.key)) { g.userData.stub = true; wantWeapon(w.key); }
+  if (w.W.kind === 'agm' || w.W.kind === 'arm' || w.W.kind === 'cruise') {
+    const nz = w.nzL = NZC[w.key] || nozzleOf(g, w.W.vis.r, w.W.vis.nzAx); if (!g.isMesh) NZC[w.key] = nz; // запоминаем только по готовой модели (не по временной)
+    g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = w.W.kind === 'cruise' ? 'jet' : 'rocket';
+  }
+  return g;
 }
 function evMesh(w) {
   const M = w.W.model;
@@ -570,7 +583,7 @@ function syncWorld(dt, t) {
   }
   for (const w of S.wpns) {
     let g = wpnMeshes.get(w.id);
-    if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = evMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла — подменить временную
+    if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = relMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла — подменить временную
     if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) flameOf(g, w);
       if (g.userData.wings) { const k = ((g.userData.wingT = (g.userData.wingT || 0) + dt) - 0.3) / 0.8; setWings(g, Math.min(1, Math.max(0, k))); } } } // крылья раскрываются через 0,3 с после сброса
   syncEv();
@@ -613,7 +626,7 @@ function syncWorld(dt, t) {
           pm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(pm.obj);
           g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон
           // пламя — у каждой модели своё (вдали — у простой): иначе у длинных самолётов (Су-34) факелы висели за простой моделью
-          const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45), fl = attachFlames(lo, sg.nozzles, sg.nr / 0.45);
+          const fh = attachFlames(pm.obj, pm.nozzles, pm.nr / 0.45, false, pm.dry), fl = attachFlames(lo, pm.nozzles.length ? sg.nozzles : [], sg.nr / 0.45, false, pm.dry); // вдали — так же: нет пламени у B-2 и F-117, слабое — без форсажа
           g.userData.flames = { update(t, ab) { fh.update(t, ab); fl.update(t, ab); } }; g.userData.hung = pm.internal ? [] : hangLoad(g, pm.stations, a.load); // во внутренних отсеках — не видно
           if (a.role === 'carrier') lo.visible = false; else g.userData.lod = { hi: pm.obj, lo }; // носитель велик — модель видна и издали
         } else g.userData.flames = attachFlames(g, sg.nozzles, sg.nr / 0.45);
@@ -899,6 +912,7 @@ setInterval(() => {
   ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
   ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
+  C.diff = createDifficulty(ls); // сложность: режим + скрытая подстройка под игрока (difficulty.js)
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });

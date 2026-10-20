@@ -4,16 +4,17 @@
 //   «ПВО» — выбранный комплекс у цели (неуязвим, быстрая перезарядка) отражает бесконечные налёты: самолёты или «Мульти-волну»;
 //   «Мульти-волна» — выбранное оружие (дрон, крылатая ракета с носителем, баллистика с пусковой) снова и снова идёт на город с ИИ-ПВО.
 // Камера: «объект» (самолёт, каждое оружие на подвеске — до пуска и в полёте до разрыва, ракета ПВО, комплекс, цель…) ×
-// «ракурс» (сзади, сбоку, спереди, снизу, сверху, облёт, пролёт / издалека). Ракурс подстраивается: тянуть по экрану — вокруг
+// «ракурс» (сзади, сбоку, спереди, снизу, сверху, облёт, пролёт / издалека, «Борт» — камера на самом объекте, «Центр» — объект
+// неподвижно в центре кадра). Ракурс подстраивается: тянуть по экрану — вокруг
 // объекта (по горизонтали и вертикали), щипок, колесо и ＋/－ — ближе или дальше, «зум» — угол поля зрения.
 // ◎ прячет весь интерфейс (тап по экрану — вернуть); скорость ×1 / ×½ / ×¼ / стоп-кадр (камеру можно крутить и на стопе).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261022i';
-import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261022i';
-import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261022i';
-import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261022i';
-import { fwdOf } from '../drone/sim/core.js?v=20261022i';
-import { weaponHasModel } from './models.js?v=20261022i';
+import { mulberry32 } from './city.js?v=20261022k';
+import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261022k';
+import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261022k';
+import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261022k';
+import { fwdOf } from '../drone/sim/core.js?v=20261022k';
+import { weaponHasModel } from './models.js?v=20261022k';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]
@@ -26,7 +27,25 @@ const ANG = [
   { k: 'top', n: 'Сверху', mv: [PI - 0.4, 1.2, 2.8, 12], st: [0.6, 1.1, 3, 14], py: [PI - 0.5, 0.9, 1.6, 3] },
   { k: 'orbit', n: 'Облёт', mv: [0, 0.2, 2.8, 12], st: [0, 0.22, 2.6, 6], py: [0, 0.1, 1.3, 1.5], spin: 0.35 },
   { k: 'far', n: 'Пролёт', fixed: true }, // у стоящего — «Издалека» (длинный фокус)
+  // «Борт» — камера закреплена на самом самолёте (ракете): у края крыла, у сопла, над передней кромкой; смотрит вдоль корпуса,
+  // голова на стабилизаторе (догоняет повороты с запаздыванием), тряска — от манёвров и скорости. Повторный тап — другое место
+  { k: 'mount', n: 'Борт', mount: true },
+  // «Центр» — камера жёстко за объектом в его осях: самолёт стоит в центре кадра при любых манёврах, крутится мир (удобно для монтажа)
+  { k: 'lock', n: 'Центр', lock: true },
 ];
+// места камеры «Борт»: off — точка крепления, at — куда смотрит; у самолёта — в долях полуразмаха W и длины L (оси модели: x — правое
+// крыло, y — верх, z — к хвосту), у ракеты и бомбы — в радиусах корпуса r и длинах L. Половина — зеркально (левое / правое крыло)
+const MOUNTS = {
+  plane: [
+    { n: 'край крыла → корпус и сопла', off: [-0.86, 0.0, 0.02], at: [0, 0, 0.22], up: 0.25 },
+    { n: 'у сопла → вперёд', off: [-0.42, 0.06, 0.56], at: [0, 0.01, -0.4], up: 0.45 },
+    { n: 'передняя кромка → назад', off: [-0.5, 0.07, -0.2], at: [-0.08, 0, 0.55], up: 0.4 },
+  ],
+  wpn: [
+    { n: 'у хвоста → вперёд', off: [-2.6, 1.3, 0.42], at: [0, 0, -0.55] },
+    { n: 'у носа → назад', off: [-2.6, 1.3, -0.42], at: [0, 0, 0.6] },
+  ],
+};
 const SPD = [1, 0.5, 0.25, 0], SPD_N = ['×1', '×½', '×¼', '❚❚'];
 const FOVS = [0, 40, 28, 18, 11]; // 0 — по ракурсу
 export const PH_ALT = { low: 250, mid: 1500, high: 4000 };
@@ -40,7 +59,7 @@ export function createPhoto(C, ctrls) {
   const V3 = () => new THREE.Vector3();
   const st = { br: 'air', subs: [], subj: 0, ang: 0, adj: { az: 0, el: 0, k: 1 }, fi: 0, spd: 0, clean: false, simT: 0, spin: 0, snap: true,
     hero: null, targets: [], wave: 1, endT: 0, evNext: false, mk: null, via: null, att: 'west', era: 2, rel: new Map(), prevSt: new Map(), fol: {},
-    fb: { p: null, s: -1 }, airTgt: null, cmT: 0, auT: 0, kind: 'mv', capT: 0, shipL: 16 };
+    fb: { p: null, s: -1 }, mount: 0, shW: 0, shT: 0, shipW: 6, airTgt: null, cmT: 0, auT: 0, kind: 'mv', capT: 0, shipL: 16 };
   let rnd = Math.random, sayKeep = null;
   const sizeOf = new Map(), BX = new THREE.Box3(), TMP = V3(), TMP2 = V3(), UP = new THREE.Vector3(0, 1, 0);
   function unitR(u) {
@@ -55,12 +74,17 @@ export function createPhoto(C, ctrls) {
   const hTxt = (p) => { const h = agl(p); return h > 9999 ? `${(h / 1000).toFixed(0)} км` : `${h} м`; };
 
   // ── объект в кадре: R — точка привязки, курс F, длина L ──
-  const R = { kind: 'mv', pos: V3(), F: V3(), U: V3(), L: 10, side: 1, v: 0, cap: '', look: V3() };
+  const R = { kind: 'mv', pos: V3(), F: V3(), U: V3(), L: 10, side: 1, v: 0, cap: '', look: V3(), Q: new THREE.Quaternion(), plane: false, W: 0, r: 0.2 };
+  const EU = new THREE.Euler(), M4 = new THREE.Matrix4(), ZERO = new THREE.Vector3();
   function setMv(o, cap) {
     R.kind = 'mv'; R.pos.copy(o.pos); R.L = lenOf(o); R.side = 1; R.cap = cap; R.v = o.speed || (o.vel ? o.vel.length() : 0);
-    if (!o.W && !o.M && o.yaw !== undefined) fwdOf(o, R.F); // самолёт — по носу
-    else if (o.vel && o.vel.lengthSq() > 4) R.F.copy(o.vel).normalize(); else if (o.dir) R.F.copy(o.dir).normalize(); else R.F.set(0, 0, -1);
+    R.plane = !o.W && !o.M && o.yaw !== undefined; R.W = R.plane ? (o === (ctrls.air && ctrls.air.craft) ? st.shipW : R.L * 0.45) : 0;
+    R.r = o.W && o.W.vis ? o.W.vis.r : o.M && o.M.r ? o.M.r : Math.max(0.12, R.L * 0.035);
+    if (R.plane) { fwdOf(o, R.F); R.Q.setFromEuler(EU.set(o.pitch, o.yaw, o.roll || 0, 'YXZ')); } // самолёт — по носу, с креном
+    else { if (o.vel && o.vel.lengthSq() > 4) R.F.copy(o.vel).normalize(); else if (o.dir) R.F.copy(o.dir).normalize(); else R.F.set(0, 0, -1); qLook(R.F, UP); }
   }
+  // ориентация «нос в −Z» по направлению f и верху u (у ракет и бомб — без крена)
+  function qLook(f, u) { M4.lookAt(ZERO, f, u); R.Q.setFromRotationMatrix(M4); }
   function setSt(pos, fx, fz, L, cap) { R.kind = 'st'; R.pos.copy(pos); R.F.set(fx, 0, fz); if (R.F.lengthSq() < 1e-6) R.F.set(0, 0, -1); R.F.normalize(); R.L = L; R.side = 1; R.v = 0; R.cap = cap; }
   function setUnit(u, cap) { const r = unitR(u), tr = u.track && !u.track.dead ? u.track.pos : null; setSt(TMP2.copy(u.pos).setY(u.pos.y + r * 0.3), tr ? tr.x - u.pos.x : Math.sin(u.yaw), tr ? tr.z - u.pos.z : Math.cos(u.yaw), r * 2, cap); }
   function setObj(o, from, cap) { const g = city.groundH(o.x, o.z), top = city.topAt(o.x, o.z); setSt(TMP2.set(o.x, (g + top) / 2 + 4, o.z), from ? from.x - o.x : 1, from ? from.z - o.z : 0.3, clamp(Math.max(o.w || 40, o.d || 40) * 0.6, 30, 220), cap); }
@@ -92,8 +116,8 @@ export function createPhoto(C, ctrls) {
         A.poseShip();
         const m = A.pylons().find((q) => q.userData.st === sub.st);
         if (!m) { ship(); R.L = st.shipL; R.fb = true; return; }
-        R.kind = 'py'; m.getWorldPosition(R.pos); R.F.set(0, 0, -1).applyQuaternion(A.ship.quaternion); R.U.set(0, 1, 0).applyQuaternion(A.ship.quaternion);
-        R.L = AG[sub.key].vis ? AG[sub.key].vis.L : 4; R.side = m.position.x < 0 ? -1 : 1; R.v = cr.speed;
+        R.kind = 'py'; m.getWorldPosition(R.pos); R.F.set(0, 0, -1).applyQuaternion(A.ship.quaternion); R.U.set(0, 1, 0).applyQuaternion(A.ship.quaternion); R.Q.copy(A.ship.quaternion); R.plane = false;
+        R.L = AG[sub.key].vis ? AG[sub.key].vis.L : 4; R.r = AG[sub.key].vis ? AG[sub.key].vis.r : 0.2; R.side = m.position.x < 0 ? -1 : 1; R.v = cr.speed;
         R.cap = `${AG[sub.key].name} · ${m.visible ? 'на подвеске' : A.loadout.some((l) => l.st.includes(sub.st)) ? 'во внутреннем отсеке' : 'пилон пуст — ждём пополнения'}`;
         return;
       }
@@ -145,23 +169,29 @@ export function createPhoto(C, ctrls) {
     resolve();
     const A = ANG[st.ang];
     if (R.kind !== st.kind) { st.kind = R.kind; farName(); }
-    const fov = (shot && shot.f) || FOVS[st.fi] || (A.fixed ? (R.kind === 'st' ? 11 : 32) : 55);
-    if (Math.abs(camera.fov - fov) > 0.01) C.setFov(fov);
+    const fov = (shot && shot.f) || FOVS[st.fi] || (A.fixed ? (R.kind === 'st' ? 11 : 32) : A.mount ? 70 : 55); // «Борт» — широкий угол, как экшн-камера
+    if (Math.abs(camera.fov - fov) > 0.01 && !(A.fixed && R.kind !== 'st' && st.fb.t > 0 && !FOVS[st.fi] && !(shot && shot.f))) C.setFov(fov); // пролёт: провожаем — фокус свой (ниже)
     if (shot && shot.cam) { const q = shot.cam; camera.position.set(q[0], q[1], q[2]); camera.up.set(0, 1, 0); camera.lookAt(q[3], q[4], q[5]); return; } // проверка: камера в точке [x, y, z, куда x, y, z]
     if (R.kind === 'hold') { lookS.lerp(R.look, 1 - Math.exp(-dt * 4)); camera.up.set(0, 1, 0); camera.lookAt(lookS); return; }
     const snap = st.snap || !hadPos || prevPos.distanceToSquared(R.pos) > 400 * 400; st.snap = false; prevPos.copy(R.pos); hadPos = true;
     if (snap || R.kind === 'py') Fs.copy(R.F); else Fs.lerp(R.F, 1 - Math.exp(-dt * 5)).normalize();
     Rv.crossVectors(Fs, R.kind === 'py' ? R.U : UP); if (Rv.lengthSq() < 1e-4) Rv.set(1, 0, 0); Rv.normalize(); Uv.crossVectors(Rv, Fs).normalize();
     if (A.fixed && R.kind !== 'st') { // пролёт: точка впереди по курсу, объект проходит мимо; прошёл — новая точка
+      // прошёл мимо — ещё 5,5 с провожаем его сзади (камера стоит, поле зрения сужается вслед), потом — новая точка
       const fb = st.fb, ahead = fb.p ? TMP.copy(R.pos).sub(fb.p).dot(Fs) : 0;
-      if (snap || !fb.p || fb.s !== st.subj || ahead > R.L * 6 + 40 || R.pos.distanceTo(fb.p) > 6000) {
+      if (fb.p && ahead > R.L * 6 + 40) fb.t = (fb.t || 0) + dt; else if (fb.p) fb.t = 0;
+      if (snap || !fb.p || fb.s !== st.subj || fb.t > 5.5 || R.pos.distanceTo(fb.p) > 9000) {
+        fb.t = 0;
         const lead = clamp(R.v * 3.2, 80, 1600), sd = Math.sin(st.adj.az) < -0.01 ? -1 : 1;
         fb.p = (fb.p || V3()).copy(R.pos).addScaledVector(Fs, lead).addScaledVector(Rv, (R.L * 2.5 + 18) * st.adj.k * sd).addScaledVector(UP, R.L * 0.3 + st.adj.el * 80);
         fb.p.y = Math.max(fb.p.y, city.topAt(fb.p.x, fb.p.z) + 1.5); fb.s = st.subj; lookS.copy(R.pos);
       }
       camera.position.copy(fb.p); lookS.lerp(R.pos, 1 - Math.exp(-dt * 12)); camera.up.set(0, 1, 0); camera.lookAt(lookS);
-      curDist = camera.position.distanceTo(R.pos); return;
+      curDist = camera.position.distanceTo(R.pos);
+      if (fb.t > 0 && !FOVS[st.fi] && !(shot && shot.f)) { const want = clamp(2 * Math.atan(R.L * 1.6 / curDist) * 180 / PI, 6, fov); C.setFov(camera.fov + (want - camera.fov) * (1 - Math.exp(-dt * 2))); } // уходит — «длинный фокус»: самолёт не тает в точку
+      return;
     }
+    if ((A.mount || A.lock) && R.kind !== 'st') { mountCam(A, dt, snap); return; }
     let az, el, dist;
     if (A.fixed) { az = 0.9 + st.adj.az; el = clamp(0.08 + st.adj.el, -0.25, 1.4); dist = (R.L * 30 + 250) * st.adj.k; } // издалека, длинным фокусом
     else {
@@ -178,6 +208,40 @@ export function createPhoto(C, ctrls) {
     camera.up.copy(R.kind === 'py' ? Uv : UP); lookS.copy(R.pos).add(LOFF); camera.lookAt(lookS);
     curDist = OFF.length();
   }
+
+  // «Борт» и «Центр»: Q — ориентация объекта, Qs — головы камеры (стабилизатор догоняет), тряска — от скорости поворота и скорости
+  const Qs = new THREE.Quaternion(), Qp = new THREE.Quaternion(), QT = new THREE.Quaternion(), OFFL = V3(), ATL = V3(), UPL = V3(), MAT = new THREE.Matrix4();
+  const wob = (t, a) => Math.sin(t * 7.3 + a) * 0.5 + Math.sin(t * 13.1 + a * 2.1) * 0.3 + Math.sin(t * 23.7 + a * 3.7) * 0.2; // «шум» из синусов
+  function mountCam(A, dt, snap) {
+    const run = SPD[st.spd]; st.shT += dt * run;
+    const rate = snap ? 0 : 2 * Math.acos(Math.min(1, Math.abs(Qp.dot(R.Q)))) / Math.max(dt * run, 1e-3); Qp.copy(R.Q);
+    st.shW += ((Math.min(rate, 2.5) * 0.9 + Math.min(R.v, 400) / 400 * 0.35) - st.shW) * (1 - Math.exp(-dt * 3)); // сила тряски, сглаженная
+    if (A.lock) { // жёстко в осях объекта, без запаздывания
+      const az = 0.35 + st.adj.az, el = clamp(0.2 + st.adj.el, -1.4, 1.4), d = (R.L * 1.5 + 4) * st.adj.k;
+      OFFL.set(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el)).multiplyScalar(d).applyQuaternion(R.Q);
+      camera.position.copy(R.pos).add(OFFL); camera.up.set(0, 1, 0).applyQuaternion(R.Q); camera.lookAt(R.pos);
+      curDist = d; R.cap2 = ''; return;
+    }
+    const set = R.plane ? MOUNTS.plane : MOUNTS.wpn, i = st.mount % (set.length * 2), m = set[i % set.length], sd = i >= set.length ? -1 : 1;
+    const W = R.plane ? R.W : 0, L = R.L, r = R.r;
+    if (R.plane) { OFFL.set(m.off[0] * W * sd, m.off[1] * L + m.up, m.off[2] * L); ATL.set(m.at[0] * W * sd, m.at[1] * L, m.at[2] * L); }
+    else { // на пилоне — под ракетой с наружной стороны (сверху крыло и соседние пилоны)
+      const py = R.kind === 'py', s2 = py ? (R.side < 0 ? 1 : -1) : sd, up = py ? -1 : 1;
+      OFFL.set(m.off[0] * r * s2 - 0.15 * s2, (m.off[1] * r + 0.06) * up, m.off[2] * L); ATL.set(m.at[0], m.at[1], m.at[2] * L);
+    }
+    // голова: направление в осях объекта (+ подстройка пальцем) → мировое; стабилизатор догоняет поворот самолёта
+    MAT.lookAt(OFFL, ATL, UPL.set(0, 1, 0)); QT.setFromRotationMatrix(MAT);
+    QT.multiply(TQ.setFromEuler(EU.set(clamp(st.adj.el, -1, 1) * 0.6, -st.adj.az * 0.6, 0, 'YXZ')));
+    QT.premultiply(R.Q);
+    if (snap) Qs.copy(QT); else Qs.slerp(QT, 1 - Math.exp(-dt * 9));
+    // тряска: мелкое дрожание головы и точки крепления
+    const a = st.shW * 0.006 + 0.0008, t = st.shT;
+    Qs.multiply(TQ.setFromEuler(EU.set(wob(t, 0.3) * a, wob(t, 1.7) * a, wob(t, 4.1) * a * 0.6, 'YXZ')));
+    camera.position.copy(OFFL).applyQuaternion(R.Q).add(R.pos).addScaledVector(Uv, wob(t * 1.3, 2.9) * st.shW * 0.05);
+    camera.quaternion.copy(Qs); camera.up.set(0, 1, 0).applyQuaternion(Qs);
+    curDist = Math.max(1.6, OFFL.length() * 0.5); R.cap2 = m.n;
+  }
+  const TQ = new THREE.Quaternion();
 
   // ── автобой ──
   function airTick(dt) {
@@ -246,7 +310,7 @@ export function createPhoto(C, ctrls) {
       A.pod.show = false; A.game.opts.photo = true;
       for (const l of A.loadout) for (const s of l.st) st.prevSt.set(s, l.key);
       { const L = LOADOUTS[setup.era][setup.lo]; st.planeName = (L && PLANES[L.plane]) || 'Самолёт'; } // модель может ещё грузиться — имя из подвески
-      { const b = BX.setFromObject(A.ship).getSize(TMP); st.shipL = clamp(Math.max(b.x, b.z), 8, 40) || 16; }
+      { const b = BX.setFromObject(A.ship).getSize(TMP); st.shipL = clamp(Math.max(b.x, b.z), 8, 40) || 16; st.shipW = clamp(b.x / 2, 3, 30) || 6; }
       st.subs = subsAir();
     } else if (st.br === 'def') {
       const key = SAM[setup.psam] && SAM[setup.psam].side === setup.side && SAM[setup.psam].era <= setup.era ? setup.psam : Object.keys(SAM).find((k) => SAM[k].side === setup.side && SAM[k].era <= setup.era);
@@ -304,7 +368,7 @@ export function createPhoto(C, ctrls) {
   ui.addEventListener('click', (e) => {
     const s = e.target.closest('[data-s]'), a = e.target.closest('[data-a]'), b = e.target.closest('[data-ph]');
     if (s) { st.subj = +s.dataset.s; st.snap = true; st.fb.p = null; st.spin = 0; renderUi(); C.snd.click(); }
-    else if (a) { st.ang = +a.dataset.a; resetAdj(); st.snap = true; st.spin = 0; renderUi(); C.snd.click(); }
+    else if (a) { if (+a.dataset.a === st.ang && ANG[st.ang].mount) st.mount++; st.ang = +a.dataset.a; resetAdj(); st.snap = true; st.spin = 0; renderUi(); C.snd.click(); } // «Борт» ещё раз — следующее место крепления
     else if (b) act(b.dataset.ph);
   });
   // тянуть — вокруг объекта, два пальца — ближе/дальше, короткий тап при скрытом интерфейсе — вернуть его
@@ -337,7 +401,7 @@ export function createPhoto(C, ctrls) {
     if (!shot) return;
     const i = st.subs.findIndex((x) => x.id === shot.s || x.key === shot.s); if (i >= 0) st.subj = i;
     const j = ANG.findIndex((x) => x.k === shot.a); if (j >= 0) st.ang = j;
-    st.adj.az = shot.az || 0; st.adj.el = shot.el || 0; st.adj.k = shot.k || 1; st.snap = true; setClean(true); window.__shot = 'wait'; st.shotT = -1;
+    st.mount = shot.m || 0; st.adj.az = shot.az || 0; st.adj.el = shot.el || 0; st.adj.k = shot.k || 1; st.snap = true; setClean(true); window.__shot = 'wait'; st.shotT = -1;
   }
   function shotTick(dt) {
     if (!shot || window.__shot === 'ready' || window.__shot === 'timeout') return;
@@ -367,7 +431,7 @@ export function createPhoto(C, ctrls) {
     camera(dt) { cameraUpdate(dt); shotTick(dt); },
     hud(dt, t) {
       if (st.br === 'air') ctrls.air.hud(dt, t); // пламя форсажа и видимость модели
-      if (!st.clean && (st.capT -= dt) <= 0) { st.capT = 0.2; $('phCap').textContent = R.cap; }
+      if (!st.clean && (st.capT -= dt) <= 0) { st.capT = 0.2; $('phCap').textContent = R.cap + (ANG[st.ang].mount && R.cap2 ? ` · камера: ${R.cap2} (тап по «Борт» — другое место)` : ''); }
     },
     onKey(e, down) {
       if (!down) return;

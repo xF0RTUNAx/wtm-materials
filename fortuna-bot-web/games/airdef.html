@@ -37,11 +37,16 @@
   .pgSum { display: flex; gap: 16px; font: 600 16px 'IBM Plex Mono', monospace; margin-bottom: 4px; } .pgSum .xp { color: #9fd3ff; } .pgSum span { display: flex; align-items: center; gap: 5px; }
   .pgLines { display: grid; grid-template-columns: 1fr auto; gap: 1px 12px; color: #c9cebd; } .pgLines b { font-weight: 500; text-align: right; }
   .pgAuto { margin-top: 4px; color: #f3c96f; }
-  .pgBar { display: flex; gap: 12px; align-items: center; background: none; border: 0; padding: 4px 16px; color: #e9e6dc; font: 600 13px 'IBM Plex Mono', monospace; cursor: pointer; }
+  .pgBar { display: flex; flex-wrap: wrap; gap: 2px 10px; align-items: center; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 0; padding: 4px 16px; color: #e9e6dc; font: 600 12.5px 'IBM Plex Mono', monospace; cursor: pointer; } /* в узкой колонке меню — переносом, не вылезая вправо */
   .pgBar:empty { display: none; } .pgBar .xp { color: #9fd3ff; } .pgBar span { display: flex; align-items: center; gap: 4px; } .pgBar .ic { width: 1.05em; height: 1.05em; }
-  .pgBar small { font: 500 11px 'IBM Plex Sans', sans-serif; color: #b3baa5; }
+  .pgBar small { flex-basis: 100%; font: 500 11px 'IBM Plex Sans', sans-serif; color: #b3baa5; }
   #mtabs .mres { color: #f3c96f; }
   body.researchOn #menu { visibility: hidden; }
+  /* кнопка «Исследования» в левом нижнем углу фона меню (Mark 2026-10-20) */
+  #resBtn { position: absolute; z-index: 2; left: calc(188px + var(--sa-l)); bottom: max(14px, var(--sa-b)); display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px;
+    background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 400 15px 'Russo One', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
+  #resBtn:hover { background: #232a1c; } #resBtn .ic { width: 30px; height: 30px; }
+  @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
   @keyframes cardIn { from { transform: translateY(14px) scale(.98); opacity: .4; } to { transform: none; opacity: 1; } }
@@ -617,11 +622,12 @@
 <div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план">◀</button><button data-nav="1" aria-label="Следующий план">▶</button></div>
 <div class="screen on" id="menu">
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
+  <button id="resBtn" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
     <button class="pgBar" id="pgBar" title="Исследования: опыт и серебро"></button>
     <div class="modeSel" id="modeSel"></div>
-    <div class="mtabs" id="mtabs"><button data-tab="research" class="mres">Исследования</button><button data-tab="ref">Арсенал</button><button data-tab="guide">Справка</button><button data-tab="set">Настройки</button><button data-tab="misc">Об игре</button></div>
+    <div class="mtabs" id="mtabs"><button data-tab="ref">Арсенал</button><button data-tab="guide">Справка</button><button data-tab="set">Настройки</button><button data-tab="misc">Об игре</button></div>
   </nav>
   <section class="mpanel" aria-label="Задание">
     <div class="mphead"><div class="mpk" id="mpKind"></div><div class="mpt" id="mpTitle"></div><div id="lobbyStats"></div></div>
@@ -662,7 +668,7 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261022i"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
-<script type="module" src="airdef/main.js?v=20261022i"></script>
+<script src="../config.js?v=20261022k"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script type="module" src="airdef/main.js?v=20261022k"></script>
 </body>
 </html>

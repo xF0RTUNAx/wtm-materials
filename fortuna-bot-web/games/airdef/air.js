@@ -2,20 +2,20 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022i';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261022i';
-import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta, spinProps } from './models.js?v=20261022i';
-import { ico } from './icons.js?v=20261022i';
-import { applyLayout } from './layout.js?v=20261022i';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022i';
-import { DRONE } from '../drone/sim/modes.js?v=20261022i';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022i';
-import { predictBomb } from './sim/strike.js?v=20261022i';
-import { flightModel, loadOf } from './sim/flight.js?v=20261022i';
-import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022i';
-import { planeDamageVis } from './plane-damage.js?v=20261022i';
-import { placeDefense, pickTargets } from './mission.js?v=20261022i';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022i';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022k';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261022k';
+import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261022k';
+import { ico } from './icons.js?v=20261022k';
+import { applyLayout } from './layout.js?v=20261022k';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022k';
+import { DRONE } from '../drone/sim/modes.js?v=20261022k';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022k';
+import { predictBomb } from './sim/strike.js?v=20261022k';
+import { flightModel, loadOf } from './sim/flight.js?v=20261022k';
+import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022k';
+import { planeDamageVis } from './plane-damage.js?v=20261022k';
+import { placeDefense, pickTargets } from './mission.js?v=20261022k';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022k';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
@@ -45,7 +45,7 @@ export function createAir(C) {
     if (pm) {
       shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = pm.stations; podPos = pm.pod; // pod: null — встроенная прицельная система
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
-      flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true);
+      flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry);
       craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
     } else {
       craft.dmgVis = null;
@@ -735,7 +735,8 @@ export function createAir(C) {
     if (cont) game.targets = C.op.targets;
     else {
       game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd);
-      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets);
+      const kn = setup.game === 'air' && C.diff ? C.diff.knobs('air', setup.diff) : null; // сложность: режим + скрытая подстройка (не в обучении и «Съёмке»)
+      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets, kn ? kn.density : 1, kn || {});
       if (C.op) C.op.targets = game.targets;
     }
     C.syncUnits();
@@ -747,7 +748,8 @@ export function createAir(C) {
       const radars = S.units.filter((u) => u.S.radar).length;
       if (radars) game.hunt = { n: 0, need: Math.max(1, Math.min(4, Math.ceil(radars * 0.5))), total: radars };
     }
-    const sp = opts.spawn || { x: riverX(14000) + 1500, y: 3200, z: 14000, yaw: 0 };
+    const z0 = opts.photo && C.MAP === 'city' ? 9000 : 14000; // «Съёмка» в городе — ближе: с 14 км в кадре край карты
+    const sp = opts.spawn || { x: riverX(z0) + 1500, y: opts.photo && C.MAP === 'city' ? 1800 : 3200, z: z0, yaw: 0 };
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
@@ -769,7 +771,7 @@ export function createAir(C) {
     if (!opts.items && LOADOUTS[setup.era][setup.lo].side !== att) setup.lo = loadoutsOf(setup.era, att)[0][1];
     const L = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
     game.used = ['air:' + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» — должно быть куплено)
-    hasPod = !!L.pod;
+    hasPod = !!L.pod; for (const [k] of L.items) wantWeapon(k); // модели подвески (оружие «Мульти-волны» и новое — грузятся по запросу)
     const order = [3, 4, 2, 5, 1, 6, 0, 7]; let oi = 0;
     // запас на борт (ошибки, промахи): «Аркада» — ещё 2 полных комплекта (пополняются сами), «Реализм» — 1 пополнение на точке вылета;
     // обучение (opts.reload) — без ограничений
@@ -993,11 +995,19 @@ export function createAir(C) {
       if (stick.id !== null) { rx += stick.x; ry -= stick.y * inv; }
       let rz = 0;
       if (demo) { // показ в обучении: автопилот на высоте demo.alt к точке demo.pt, оружие применяет «АВТО»
-        DP.set(demo.pt.x, city.groundH(demo.pt.x, demo.pt.z) + demo.alt, demo.pt.z).sub(craft.pos);
+        // высота — не ниже рельефа впереди (горы, дома): смотрим по курсу и по пути к точке на ~14 с полёта вперёд
+        const look = clamp(craft.speed * 14, 1500, 4500), fy = Math.atan2(demo.pt.x - craft.pos.x, demo.pt.z - craft.pos.z), clr = Math.max(90, demo.alt * 0.35);
+        let floor = -1e9, near = -1e9;
+        for (let d = 0; d <= look; d += 120) for (const yw of [Math.atan2(-Math.sin(craft.yaw), -Math.cos(craft.yaw)), fy]) {
+          const x = craft.pos.x + Math.sin(yw) * d, z = craft.pos.z + Math.cos(yw) * d, h = Math.max(city.groundH(x, z), city.topAt(x, z)) + clr;
+          floor = Math.max(floor, h); if (d < look * 0.4) near = Math.max(near, h);
+        }
+        const wantY = Math.max(city.groundH(demo.pt.x, demo.pt.z) + demo.alt, floor);
+        DP.set(demo.pt.x, wantY, demo.pt.z).sub(craft.pos);
         // оружие в полёте — плавный отворот ~70° и горизонт: цель сбоку, контейнер держит подсвет (над целью её закрыл бы корпус)
-        if (C.S.wpns.some((w) => w.owner === craft && !w.dead)) { if (demo.relYaw === undefined) demo.relYaw = craft.yaw + 1.2; DP.set(-Math.sin(demo.relYaw), (demo.alt + city.groundH(craft.pos.x, craft.pos.z) - craft.pos.y) / 4000, -Math.cos(demo.relYaw)); }
+        if (C.S.wpns.some((w) => w.owner === craft && !w.dead)) { if (demo.relYaw === undefined) demo.relYaw = craft.yaw + 1.2; DP.set(-Math.sin(demo.relYaw), (Math.max(demo.alt + city.groundH(craft.pos.x, craft.pos.z), floor) - craft.pos.y) / 4000, -Math.cos(demo.relYaw)); }
         else { demo.relYaw = undefined; if (Math.hypot(DP.x, DP.z) < 400) DP.set(-Math.sin(craft.yaw), 0, -Math.cos(craft.yaw)); } // над точкой — прямо
-        DP.normalize(); aim.yaw = Math.atan2(-DP.x, -DP.z); aim.pitch = clamp(Math.asin(DP.y), -0.35, 0.35);
+        DP.normalize(); aim.yaw = Math.atan2(-DP.x, -DP.z); aim.pitch = clamp(Math.asin(DP.y), near > craft.pos.y - 40 ? -0.05 : -0.35, near > craft.pos.y ? 0.75 : 0.35); // гора близко — круче вверх и не снижаться
         const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2];
       } else if (aimOn()) { if (rx || ry) aimSync(); else { const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2]; } } // крестовина нажата — взгляд за носом
       craft.ab = thrI === AB_I && craft.fuel > 0 && !(craft.fm && !(craft.fm.s.ab > 0))&& !craft.noAB; // без форсажа (Су-25) — верхняя ступень = 100 %

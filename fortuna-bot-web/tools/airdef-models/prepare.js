@@ -57,14 +57,13 @@ const CONFIG = {
   w_kh59m: { colors: { '': [0.24, 0.25, 0.23] }, src: `${DL}/kh31.glb`, scale: 5.69 / 189.07, axes: (x, y, z) => [x, -z, y], tex: () => 256, target: 7000, pickMesh: /./ }, // Х-31 (L_elo) в размер Х-59М (5,7 м) — и для Х-59МК2 (прежняя — из War Thunder)
   w_kh25ml: { colors: { '': [0.3, 0.31, 0.29] }, src: `${DL}/kh-29_kedge.glb`, scale: 3.7 / 3.93, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)
   w_kh58: { colors: { nosecone: [0.025, 0.028, 0.025], nozzle: [0.04, 0.04, 0.04], '^body$|fins|duct': [0.3, 0.31, 0.29], '': [0.12, 0.12, 0.12] }, src: `${DL}/kh-58u_anti-radiation_missile.glb`, scale: 1, nose: '-z', tex: () => 256, target: 9000, pick: [0, -1, -3, 1.2, 1, 3] }, // Х-58У (Narni_Tchereskov) — 4,8 м; у автора две ракеты — правая
-  w_agm65b: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM65 Maverick/ },
   w_mk82: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 2.22 / 2.9, nose: '-x', tex: () => 256, pickMesh: /Mk83 bomb/ }, // Mk 83 → размер Mk 82
   // ── ещё оружие (2026-10-08)
   w_jassm: { src: `${DL}/agm-158_-_wings_extended.glb`, scale: 4.27 / 173, nose: '-x', tex: () => 256, target: 24000, simpErr: 0.02, pickMesh: /./ }, // 296 тыс. треугольников: при 7 тыс. — «обрубок», 24 тыс. — форма цела
   w_agm88: { src: `${DL}/agm-88_harm_transport_cart.glb`, scale: 1, nose: '+x', tex: () => 512, target: 7000, pick: [-2, 0.95, 0, 2.5, 1.7, 1] }, // одна HARM с тележки (и для AARGM)
-  w_agm65b: { src: `${DL}/agm_65_maverick.glb`, scale: 2.49 / 1.31, axes: (x, y, z) => [x, z, -y], tex: () => 256, target: 7000, minPart: 0.03, pick: [-0.08, -1, -0.73, 0.23, 2, -0.42] }, // одна из трёх, стояла вертикально
+  w_agm65b: { src: `${DL}/agm_65_maverick.glb`, scale: 2.49 / 1.31, axes: (x, y, z) => [x, z, -y], tex: () => 256, target: 60000, simpErr: 0.004, minPart: 0.012, pick: [-0.08, -1, -0.73, 0.23, 2, -0.42] }, // одна из трёх, стояла вертикально; у одной ~200 тыс. треугольников — до 60 тыс. с малой ошибкой (прежние 7000 — ломаная форма)
   w_mald: { src: `${DL}/aim-160a_screamer.glb`, scale: 2.84 / 2, nose: '-x', tex: () => 256, target: 7000, pickMesh: /./ },
-  w_decoy_e: { colors: { '': [0.14, 0.16, 0.12] }, src: `${DL}/harpy_drone.glb`, scale: 0.1, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Harpy — ложная цель
+  w_decoy_e: { colors: { '': [0.14, 0.16, 0.12] }, src: `${DL}/harpy_drone.glb`, scale: 0.1, nose: '+z', tex: () => 256, pickMesh: /./ }, // Harpy — ложная цель (без упрощения: у источника всего ~21 тыс. треугольников)
   w_pod: { src: `${DL}/anaaq-28v_lightning_fbx.glb`, scale: 1, nose: '+z', tex: () => 256, target: 9000, simpErr: 0.3, cluster: true, minPart: 0.03, pickMesh: /./ }, // LITENING — прицельный контейнер
   w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, axes: (x, y, z) => [x, -y, -z], /* нос из +Z в −Z и переворот: у автора крылья снизу — у настоящей SDB на спине */ tex: () => 512, pickMesh: /./,
     groups: (c) => (Math.abs(c.ctr[0]) > 3 && c.size[1] < 1 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') }, // крылья — свои части (на подвеске сложены)
@@ -148,7 +147,7 @@ const CONFIG = {
   e_il28: { src: `${DL}/il28.glb`, scale: 21.45 / 21.43, fwd: [-0.8829, 0.4695], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.ctr[1] < 1.5 && Math.max(...c.size) < 3 ? null : LS(c)) /* шасси */ },
   e_tu22: { src: `${DL}/tu22.glb`, scale: 23.17 / 24.06, fwd: [-0.7826, -0.6225], rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.ctr[1] < -1.25 && Math.max(...c.size) < 4 ? null : LS(c)) /* шасси */ },
   e_tu95: { src: `${DL}/tu95.glb`, scale: 50.04 / 49.93, fwd: [-0.7771, 0.6293], rulesIn: 'game', tex: () => 512, centerX: true, colors: { '^Cylinder68': [0.05, 0.05, 0.05] }, /* лопасти у автора целиком жёлтые — тёмный металл */
-    groups: (c) => (c.mat === 11 ? `prop${[-11.52, -5.72, 7.14, 12.94].reduce((b, h, i, H) => (Math.abs(c.ctr[0] - h) < Math.abs(c.ctr[0] - H[b]) ? i : b), 0)}_${Math.round(c.ctr[2] * 2)}` /* по ближайшей ступице (x ступиц — до центровки) */ /* лопасти: часть на каждый винт (соосные — два ряда), крутит игра; диск «размытия» (VINT) — неподвижный */
+    groups: (c) => (c.mat === 10 ? null /* нарисованные автором неподвижные диски винтов («блины» с жёлтым ободом) — размытый диск рисует игра (models.js, spinProps) */ : c.mat === 11 ? `prop${[-11.52, -5.72, 7.14, 12.94].reduce((b, h, i, H) => (Math.abs(c.ctr[0] - h) < Math.abs(c.ctr[0] - H[b]) ? i : b), 0)}_${Math.round(c.ctr[2] * 2)}` /* по ближайшей ступице (x ступиц — до центровки) */ /* лопасти: часть на каждый винт (соосные — два ряда), крутит игра; диск «размытия» (VINT) — неподвижный */
       : c.ctr[1] < -1.9 && Math.max(...c.size) < 5 ? null : LS(c)) },
   e_hunter: { src: `${DL}/hunter.glb`, scale: 10.26 / 10.29, fwd: [-0.7160, 0.6981], rulesIn: 'game', tex: () => 512, centerX: true, groups: strip(0.36, 0.9, 1.0, 1.0, 4.0) },
   e_su27: { src: `${DL}/sukhoi_su-27_flanker.glb`, scale: 21.9 / 30.61, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
@@ -415,7 +414,8 @@ const CONFIG = {
   obj_tanks: { src: `${DL}/large_industrial_storage_tanks.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // резервуар и газгольдеры
   obj_tank4: { src: `${DL}/low_poly_fuel_tank_4-x__pipe.glb`, scale: 4.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 40000, groups: () => 'body' },
   obj_rtank: { src: `${DL}/rusty_airbase_fuel_tank.glb`, scale: 5, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
-  obj_hangar: { src: `${DL}/hangar.glb`, scale: 1.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
+  obj_hangar: { src: `${DL}/hangar.glb`, scale: 1.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, colors: { '#pad': [0.2, 0.2, 0.19], '#shed': [0.1, 0.11, 0.08] }, // у автора всё белое: подложка (бетон) и навес — свои цвета; на каждой карте — свои (city-render.js, objTint)
+    groups: (c) => (c.size[1] < 0.05 && c.size[0] > 40 ? 'body#pad' : 'body#shed') },
   obj_jhangar: { src: `${DL}/j_type_hanger.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
   obj_cont: { src: `${DL}/modular_containers_and_barrells_pack_game_ready.glb`, scale: 1.18, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
   obj_milbase: { src: `${DL}/small_military_base.glb`, scale: 1.5, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, target: 40000, minPart: 0.15, groups: () => 'body' },

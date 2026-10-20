@@ -2,9 +2,9 @@
 // одиночного боя и его итог (airdef-solo), строки награды на экране итогов. Тратит и начисляет только сервер — здесь
 // только запросы и показ. Без входа на сайте (нет fortuna_web_player) — как у новичка: в «Реализме» только стартовый набор,
 // опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
-import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261022i';
-import { LOADOUTS } from './arsenal.js?v=20261022i';
-import { ico } from './icons.js?v=20261022i';
+import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261022k';
+import { LOADOUTS } from './arsenal.js?v=20261022k';
+import { ico } from './icons.js?v=20261022k';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 — тестовый прогресс в памяти (без сервера)
 export function account() {
@@ -28,7 +28,7 @@ export function createProgress(C) {
 
   // ── тестовый режим (без сервера): правила те же, состояние — в памяти ──
   async function local(action, id, branch) {
-    const M = await import('./progress.js?v=20261022i');
+    const M = await import('./progress.js?v=20261022k');
     if (!G.P) G.P = { ...newProgress(), xp: 20000, silver: 20000 };
     const r = action === 'research' ? M.research(G.P, id) : action === 'buy' ? M.buy(G.P, id) : (G.P.goal[branch] = id, { ok: true });
     if (!r.ok) throw new Error(r.why);
@@ -79,6 +79,7 @@ export function createProgress(C) {
     // итог боя: ev — что сделано, used — узлы, на которых играли. Показывает строки награды в итогах (#endNote)
     async runClaim(ev, used) {
       const run = G.run; G.run = null;
+      if (C.diff && C.setup && ev) C.diff.result(C.setup.game === 'multi' && C.setup.mrole === 'atk' ? 'multi_atk' : C.setup.game, !!ev.win); // скрытая подстройка сложности
       const el = () => document.getElementById('endNote');
       // свой блок — между метками (повторный показ заменяет его, остальной текст итогов не трогаем)
       const show = (h) => { const e = el(); if (e) e.innerHTML = `<!--pg--><div class="pgRes">${h}</div><!--/pg-->` + String(e.innerHTML || '').replace(/<!--pg-->[\s\S]*?<!--\/pg-->/, ''); };

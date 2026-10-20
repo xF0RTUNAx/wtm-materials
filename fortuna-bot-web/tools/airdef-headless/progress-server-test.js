@@ -57,8 +57,8 @@ o = await mutate(db, PID, (P, x) => { const c = credit(P, x, ev, { real: false, 
 ok('вторая победа — без ×2', !globalThis.c2.reward.mult.some(([n]) => /Первая победа/.test(n)) && globalThis.c2.reward.xp < globalThis.c1.reward.xp);
 // 5. «Реализм» на некупленном самолёте — множителя нет
 { const P = toProgress(db.T.airdef_progress[0]), x = extraOf(db.T.airdef_progress[0]);
-  const a = credit(structuredClone(P), x, ev, { real: true, online: false, today: DAY, used: ['air:e_su17'] });
-  const b = credit(structuredClone(P), x, ev, { real: true, online: false, today: DAY, used: ['air:e_su24', 'wpn:fab500'] });
+  const a = credit(structuredClone(P), x, ev, { real: true, online: false, today: DAY, used: ['air:e_su24'] });
+  const b = credit(structuredClone(P), x, ev, { real: true, online: false, today: DAY, used: ['air:e_su17', 'wpn:fab500'] });
   ok('Реализм на некупленном — как Аркада', !a.realOk && !a.reward.mult.some(([n]) => n === 'Реализм'));
   ok('Реализм на стартовом — ×1,5', b.realOk && b.reward.mult.some(([n]) => n === 'Реализм') && b.reward.xp > a.reward.xp); }
 // 6. исследовать и купить; паритет покупки
@@ -74,12 +74,12 @@ o = await mutate(db, PID, (P) => act(P, 'research', 'air:nope')); ok('нет т�
   o = await mutate(db, PID, (P) => act(P, 'goal', g, 'air')); ok('цель чужой ветки — нельзя', !o.ok);
   o = await mutate(db, PID, (P, x) => { const c = credit(P, x, cleanEvents({ targets: [2, 2, 2], sams: 3 }, 15), { real: false, online: true, today: DAY }); globalThis.c3 = c; return { ok: true, extra: c.extra }; });
   ok('цель исследована за бой', globalThis.c3.auto.includes(g) && o.P.res.includes(g) && !o.P.goal.wpn); }
-// 8. предел одиночной игры за сутки: после SOLO_DAY — вдвое меньше
+// 8. дневной предел (все бои): после SOLO_DAY (= DAY_FULL) — ×0,3
 { const P = toProgress(null), x = { first_win_day: DAY, solo_day: DAY, solo_xp: SOLO_DAY };
   const big = cleanEvents({ targets: Array(30).fill(2), sams: 30, samsLong: 10 }, 15);
   const a = credit(structuredClone(P), x, big, { real: false, online: false, today: DAY });
   const b = credit(structuredClone(P), { ...x, solo_xp: 0 }, big, { real: false, online: false, today: DAY });
-  ok('после суточного предела — ×0,5', a.reward.xp < b.reward.xp && a.reward.xp > 0, `${a.reward.xp} против ${b.reward.xp}`);
+  ok('после суточного предела — ×0,3', a.reward.xp < b.reward.xp && a.reward.xp > 0, `${a.reward.xp} против ${b.reward.xp}`);
   const c = credit(structuredClone(P), x, big, { real: false, online: false, today: '2026-10-21' }); ok('новые сутки — предел сброшен', c.reward.xp >= b.reward.xp); }
 // 9. события — в пределах; короткий бой — мало опыта
 { const e = cleanEvents({ targets: Array(100).fill(9), sams: 1e9, kills: -5, waves: [99] }, 0.5);
@@ -101,7 +101,7 @@ const v = view(toProgress(db.T.airdef_progress[0]), extraOf(db.T.airdef_progress
 { const { adProgress, adRank, realDeny, loadoutIds, samIds, strikeIds, quickEra } = await import('../../game-server/airdef-own.js');
   const { LOADOUTS } = await import('../../games/airdef/arsenal.js');
   const newbie = { adP: adProgress([]) }, dev = { adP: adProgress(null) };
-  const L1 = LOADOUTS[1].find((L) => L.plane === 'e_su24'), L2 = LOADOUTS[2].find((L) => L.plane === 'e_su24');
+  const L1 = LOADOUTS[1].find((L) => L.plane === 'e_su17'), L2 = LOADOUTS[2].find((L) => L.plane === 'e_su24');
   ok('новичок: стартовая подвеска — можно', !realDeny('real', newbie, loadoutIds(L1)));
   ok('новичок: подвеска II — нельзя', !!realDeny('real', newbie, loadoutIds(L2)), realDeny('real', newbie, loadoutIds(L2)));
   ok('аркада — без замков', !realDeny('arcade', newbie, loadoutIds(L2)));

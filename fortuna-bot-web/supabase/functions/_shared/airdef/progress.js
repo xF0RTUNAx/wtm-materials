@@ -19,7 +19,7 @@ export const RANK_NAME = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' };
 
 // старт (Mark 2026-10-19): всё для «Операции» эпохи I (охота за ПВО + удар) у обеих сторон и минимальная оборона
 export const START = {
-  air: ['e_su24', 'e_su25', 'e_f4', 'e_mirage_f1'], // F-16D с 2026-10-19 — в ранге II; его подвеска эпохи I — у Mirage F1
+  air: ['e_su17', 'e_mig23', 'e_f4', 'e_mirage_f1'], // ветки 2026-10-20: Су-24М и Су-25 — в ранге II; у Востока старт — Су-17М4 (охота за ПВО: Х-28) и МиГ-23БН
   wpn: ['kh28', 'fab500', 'agm45', 'mk82'],
   pvo: ['s75', 'zsu234', 'strela2', 'hawk', 'm163', 'redeye'],
   strike: ['r17', 'agm86'],
@@ -48,16 +48,23 @@ export const PAIR = {
 // линии дерева (Mark 2026-10-19: как в дереве исследований WTM): ключ → предыдущая единица линии; исследовать можно, когда
 // предыдущая исследована. Без предыдущей — начало линии (открыта, когда открыт её ранг). Развилка — у одной предыдущей несколько
 export const PARENT = {
-  // авиация
-  e_su34: 'e_su24', e_mig31: 'e_su34', su30: 'e_su25', e_su57: 'su30', mig29: 'e_su17', e_mig27: 'e_mig23',
-  e_mig25: 'e_mig21n', e_su17: 'e_su7b', e_tu16: 'e_il28', e_tu22: 'e_tu16', e_tu22m2: 'e_tu22', e_tu22m3: 'e_tu22m2', e_tu95: 'e_tu22m3', e_tu160: 'e_tu95',
-  e_su27: 'e_mig23', e_su35: 'e_su27', e_yak38: 'e_su25',
-  e_harrier: 'e_hunter', e_mirage_f1: 'e_f100', e_etendard: 'e_mirage_f1', e_f18c: 'e_f4', f18: 'e_f18c', e_ea18g: 'f18', e_b52: 'e_f111', e_b1b: 'e_b52', e_typhoon: 'e_tornado',
-  e_jaguar: 'e_f5', e_buccaneer: 'e_f100', e_f117: 'e_f111', e_mirage: 'e_mirage_f1', e_rafale: 'e_mirage', e_b2: 'e_f117',
-  e_gripen: 'f16', e_f35: 'e_gripen', e_f22: 'f18', e_tornado: 'e_jaguar', e_a10: 'f16', e_f111: 'e_f4', e_f15e: 'e_f111',
+  // авиация (Mark 2026-10-20: линии по преемственности, каждая — до ранга III–IV)
+  // Восток: МиГ-23БН★ → МиГ-27К → МиГ-29 · Су-17М4★ → Су-24М → Су-34 → Су-57 · Су-7Б → Су-25 → Як-38М ·
+  // МиГ-21бис → МиГ-25БМ → МиГ-31, развилка МиГ-25БМ → Су-27СМ → Су-30 → Су-35С · Ил-28 → Ту-16 → Ту-22 → Ту-22М2 → Ту-22М3 → Ту-95МС → Ту-160
+  e_mig27: 'e_mig23', mig29: 'e_mig27', e_su24: 'e_su17', e_su34: 'e_su24', e_su57: 'e_su34', e_su25: 'e_su7b', e_yak38: 'e_su25',
+  e_mig25: 'e_mig21n', e_mig31: 'e_mig25', e_su27: 'e_mig25', su30: 'e_su27', e_su35: 'su30',
+  e_tu16: 'e_il28', e_tu22: 'e_tu16', e_tu22m2: 'e_tu22', e_tu22m3: 'e_tu22m2', e_tu95: 'e_tu22m3', e_tu160: 'e_tu95',
+  // Запад: F-5E → F-16 → Gripen → F-35, развилка F-16 → A-10 · F-4★ → F/A-18C → F/A-18E → EA-18G ·
+  // F-100D → F-111 → F-15E → F-22, развилки F-111 → F-117 → B-2 и F-111 → B-52 → B-1B · Hunter → Buccaneer → Tornado → Typhoon,
+  // развилки Hunter → Jaguar и Hunter → Harrier · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale
+  f16: 'e_f5', e_gripen: 'f16', e_f35: 'e_gripen', e_a10: 'f16', e_f18c: 'e_f4', f18: 'e_f18c', e_ea18g: 'f18',
+  e_f111: 'e_f100', e_f15e: 'e_f111', e_f22: 'e_f15e', e_f117: 'e_f111', e_b2: 'e_f117', e_b52: 'e_f111', e_b1b: 'e_b52',
+  e_buccaneer: 'e_hunter', e_tornado: 'e_buccaneer', e_typhoon: 'e_tornado', e_jaguar: 'e_hunter', e_harrier: 'e_hunter',
+  e_etendard: 'e_mirage_f1', e_mirage: 'e_etendard', e_rafale: 'e_mirage',
   // вооружение
-  kab500l: 'fab500', kab500kr: 'fab500', kab500s: 'kab500l', umpk: 'kab500s', kh58: 'kh28', kh31p: 'kh58', kh29t: 'kh28', kh25ml: 'kh28', kh59m: 'kh29t', kh59mk2: 'kh59m', decoy_e: 'ecm_e',
-  fab100: 'fab500', fab250: 'fab500', ofab250: 'fab250', fab1000: 'fab500', gbu24: 'gbu10', gbu57: 'gbu31', kh55: 'kh29t', kh101: 'kh59m',
+  kab500l: 'fab1000', kab500kr: 'fab500', // ФАБ-500★ → ФАБ-1000 → КАБ-500Л → КАБ-500С → УМПК; развилки ФАБ-500★ → ФАБ-250 → ФАБ-100 / ОФАБ-250 и → КАБ-500Кр
+  kab500s: 'kab500l', umpk: 'kab500s', kh58: 'kh28', kh31p: 'kh58', kh29t: 'kh28', kh25ml: 'kh28', kh59m: 'kh29t', kh59mk2: 'kh59m', decoy_e: 'ecm_e',
+  fab100: 'fab250', fab250: 'fab500', ofab250: 'fab250', fab1000: 'fab500', gbu24: 'gbu10', gbu57: 'gbu31', kh55: 'kh29t', kh101: 'kh59m',
   gbu10: 'mk82', gbu12: 'mk82', gbu31: 'gbu12', gbu39: 'gbu31', agm88: 'agm45', aargm: 'agm88', agm65b: 'agm45', jassm: 'agm65b', mald: 'ecm_w',
   // ПВО
   s300: 's75', s400: 's300', kub: 's125', buk: 'kub', bukm3: 'buk', zu23: 'zsu234', phalanx: 'm163', osa: 'strela1', tor: 'osa', torm2: 'tor', tunguska: 'zsu234', pantsir: 'tunguska', strela10: 'strela1', igla: 'strela2', iglas: 'igla', verba: 'iglas',
@@ -68,6 +75,9 @@ export const PARENT = {
 };
 // цена (опыт на исследование = серебро на покупку): «крупное» — самолёт, дальний/средний комплекс; остальное — «малое»
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };
+// множитель цены ветки (Mark 2026-10-20: каждая ветка до ранга IV — около недели): ПВО и «Волна» почти целиком из «малых» единиц;
+// вооружение — ×1 (его качают вместе с самолётами: самолёт с оружием — ≈ 9–10 дней)
+export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5 };
 
 // ── дерево ──
 const node = (branch, key, side, rank, name, short, tier) => ({ id: branch + ':' + key, branch, key, side, rank, name, short, tier, start: START[branch].includes(key) });
@@ -81,7 +91,7 @@ function buildTree() {
   for (const k in SAM) { const u = SAM[k]; add(node('pvo', k, u.side, u.era, u.name, u.short, (SAM_COST[k] || 0) >= 200 ? 'big' : 'small')); }
   // удары: JASSM и Storm Shadow — и оружие самолёта, и заказ «Мульти-волны» — у удара свой ключ узла (jassm_s), ключ оружия — item
   for (const s of SIDES) for (const [k, car, e] of MULTI.items[s]) { const w = AG[k] || {}; const n = node('strike', DUAL.has(k) ? k + '_s' : k, s, e, w.name || k, w.short || k, 'small'); n.item = k; n.carrier = car; add(n); }
-  for (const n of T) { n.cost = n.start ? 0 : COST[n.tier][n.rank - 1]; const pk = PARENT[n.key]; n.parent = pk && T.find((q) => q.branch === n.branch && q.key === pk) ? n.branch + ':' + pk : null; }
+  for (const n of T) { n.cost = n.start ? 0 : Math.round(COST[n.tier][n.rank - 1] * (BRANCH_K[n.branch] || 1) / 100) * 100; const pk = PARENT[n.key]; n.parent = pk && T.find((q) => q.branch === n.branch && q.key === pk) ? n.branch + ':' + pk : null; }
   return T;
 }
 export const TREE = buildTree();
@@ -200,9 +210,12 @@ export function cardStats(n) {
 // ── награда за бой ──
 // ev: { min — минут в бою, targets: [ценность 0,5…2], sams, samsLong, back, downs, kills (перехваты), waves: [номера],
 //   mwObj (очки угрозы разрушенного), mwSam, mwInt (очки угрозы перехваченного), win }
-// o: { real, online, training, firstWin, soloToday — опыт за сегодня в одиночной (для предела) }
-export const BASE_MIN = 20, BASE_MAX_MIN = 15, REAL_K = 1.5, FIRST_WIN_K = 2;
-export const SOLO_DAY = 6000, SOLO_MIN_CAP = 400, SOLO_BATTLE_CAP = 6000;
+// o: { real, arcade, online, training, firstWin, dayXp — опыт за сегодня (все бои, для дневного предела) }
+// Темп (Mark 2026-10-20): линия I→IV вместе с паритетом (≈ 62 500) — около недели. «Реализм» ≈ 4300 опыта в час, «Аркада» — вдвое
+// меньше; за день полным темпом — до DAY_FULL, дальше — ×DAY_OVER (неделя — и для того, кто играет весь день)
+export const BASE_MIN = 20, BASE_MAX_MIN = 15, REAL_K = 1.5, FIRST_WIN_K = 1.5, ARCADE_K = 0.5;
+export const DAY_FULL = 9000, DAY_OVER = 0.3, SOLO_MIN_CAP = 400, SOLO_BATTLE_CAP = 6000;
+export const SOLO_DAY = DAY_FULL; // прежнее имя (функции Supabase, клиент)
 export function battleReward(ev, o = {}) {
   if (o.training) return { xp: 0, silver: 0, lines: [['Обучение — без наград', 0]] };
   const L = [], add = (t, v) => { v = Math.round(v); if (v > 0) L.push([t, v]); };
@@ -210,20 +223,18 @@ export function battleReward(ev, o = {}) {
   add(`Время в бою (${Math.min(BASE_MAX_MIN, Math.round(min))} мин)`, BASE_MIN * Math.min(BASE_MAX_MIN, min));
   add('Цели задания', (ev.targets || []).reduce((s, v) => s + 60 * Math.max(0.5, Math.min(2, v)), 0));
   add('Комплексы ПВО', 80 * (ev.sams || 0) + 120 * (ev.samsLong || 0));
-  add('Сбитые самолёты', 40 * (ev.downs || 0));
+  add('Сбитые самолёты', 25 * (ev.downs || 0)); // оборона давала вдвое больше вылета за то же время — выровнено (было 40 и 60 × волна)
   add('Перехваты', 15 * (ev.kills || 0));
-  add('Волны', (ev.waves || []).reduce((s, w) => s + 60 * w, 0));
+  add('Волны', (ev.waves || []).reduce((s, w) => s + 35 * w, 0));
   add('Удар: разрушено', 10 * (ev.mwObj || 0)); add('Удар: комплексы', 80 * (ev.mwSam || 0)); add('Перехват ударов', 3 * (ev.mwInt || 0));
   if (o.online && ev.win) add('Победа команды', 200);
   let xp = L.reduce((s, [, v]) => s + v, 0);
   if (ev.back) { add('Вернулся живым +20 %', xp * 0.2); xp *= 1.2; }
-  const K = []; if (o.real) K.push(['Реализм', REAL_K]); if (o.firstWin && ev.win) K.push(['Первая победа дня', FIRST_WIN_K]);
+  const K = []; if (o.real) K.push(['Реализм', REAL_K]); else if (o.arcade) K.push(['Аркада', ARCADE_K]); if (o.firstWin && ev.win) K.push(['Первая победа дня', FIRST_WIN_K]);
   for (const [, k] of K) xp *= k;
-  if (!o.online) { // одиночная: браузеру верим в пределах разумного
-    xp = Math.min(xp, SOLO_BATTLE_CAP, SOLO_MIN_CAP * Math.max(1, min) * (o.real ? REAL_K : 1) * (o.firstWin ? FIRST_WIN_K : 1));
-    const over = Math.max(0, (o.soloToday || 0) + xp - SOLO_DAY), under = xp - Math.min(xp, over);
-    if (over > 0) { xp = under + Math.min(over, xp) * 0.5; K.push(['После 6000 за день', 0.5]); }
-  }
+  if (!o.online) xp = Math.min(xp, SOLO_BATTLE_CAP, SOLO_MIN_CAP * Math.max(1, min) * (o.real ? REAL_K : 1) * (o.firstWin ? FIRST_WIN_K : 1)); // одиночная: браузеру верим в пределах разумного
+  const today = o.dayXp ?? o.soloToday ?? 0, over = Math.max(0, today + xp - DAY_FULL);
+  if (over > 0) { const full = xp - Math.min(xp, over); xp = full + Math.min(over, xp) * DAY_OVER; K.push([`После ${DAY_FULL} за день`, DAY_OVER]); }
   xp = Math.round(xp);
   return { xp, silver: xp, lines: L, mult: K };
 }

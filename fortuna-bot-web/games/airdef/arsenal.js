@@ -194,11 +194,11 @@ export const RAID_PLANES = {
 export const raidPlane = (side, era, role) => { const t = (RAID_PLANES[side] || {})[era] || {}; return t[role] || t.bomber || null; };
 export const LOADOUTS = {
   1: [
-    { side: 'east', plane: 'e_su25', name: 'Бомбы ФАБ-500', items: [['fab500', 6]] },
+    { side: 'east', plane: 'e_mig21n', name: 'МиГ-21бис: ФАБ-500 ×2', items: [['fab500', 2]] }, // ветки 2026-10-20: Су-25 — с ранга II (эта подвеска — у него в эпохе II)
     { side: 'east', plane: 'e_su17', name: 'ФАБ-500 + Х-28', items: [['fab500', 4], ['kh28', 2]] },
-    { side: 'east', plane: 'e_su24', name: 'Охота за ПВО: Х-28', items: [['kh28', 2], ['fab500', 2]] },
+    { side: 'east', plane: 'e_il28', name: 'Ил-28: ФАБ-500 ×4 (в отсеке)', items: [['fab500', 4]] }, // Су-24М — с ранга II; охота за ПВО эпохи I — у Су-17М4
     { side: 'east', plane: 'e_mig23', name: 'МиГ-23БН: ФАБ-500 ×4', items: [['fab500', 4]] },
-    { side: 'east', plane: 'e_tu22m2', name: 'Ту-22М2: ФАБ-500 ×8', items: [['fab500', 8]] },
+    { side: 'east', plane: 'e_su7b', name: 'Су-7БМК: ФАБ-500 ×2 + ФАБ-250 ×2', items: [['fab500', 2], ['fab250', 2]] }, // Ту-22М2 — с ранга II
     { side: 'west', plane: 'e_mirage_f1', name: 'Mirage F1: Mk 82 ×6', items: [['mk82', 6]] }, // до 2026-10-19 — F-16D (F-16 — с ранга II)
     { side: 'west', plane: 'e_hunter', name: 'Hunter FGA.9: Mk 82 ×4', items: [['mk82', 4]] }, // до 2026-10-19 — F/A-18E
     { side: 'west', plane: 'e_f4', name: 'Охота за ПВО: Shrike', items: [['agm45', 4], ['mk82', 2]] },
@@ -212,10 +212,13 @@ export const LOADOUTS = {
     { side: 'east', plane: 'e_tu22', name: 'Ту-22: ФАБ-1000 ×4 (в отсеке)', items: [['fab1000', 4]] },
     { side: 'west', plane: 'e_f100', name: 'F-100F «Дикая ласка»: Shrike ×2 + Mk 82 ×4', items: [['agm45', 2], ['mk82', 4]] },
     { side: 'west', plane: 'e_f5', name: 'F-5E: Mk 82 ×4', items: [['mk82', 4]] },
+    // ветки 2026-10-20: Buccaneer и Jaguar — с ранга I (их лазерные подвески — в эпохе II)
+    { side: 'west', plane: 'e_buccaneer', name: 'Buccaneer S.2B: Mk 82 ×6', items: [['mk82', 6]] },
+    { side: 'west', plane: 'e_jaguar', name: 'Jaguar GR.1: Mk 82 ×4', items: [['mk82', 4]] },
   ],
   2: [
     { side: 'east', plane: 'e_su24', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
-    { side: 'east', plane: 'su30', name: 'ТВ-бомбы КАБ-500Кр + ФАБ-500', items: [['kab500kr', 2], ['fab500', 4]], pod: true },
+    { side: 'east', plane: 'e_tu22m2', name: 'Ту-22М2: ФАБ-500 ×8', items: [['fab500', 8]] }, // ветки 2026-10-20: Су-30 — с ранга III (эта подвеска — у него в эпохе III)
     { side: 'east', plane: 'e_su25', name: 'Ракеты: Х-29Т + Х-25МЛ', items: [['kh29t', 2], ['kh25ml', 2]], pod: true },
     { side: 'east', plane: 'e_su17', name: 'Охота за ПВО: Х-58 + Х-25МЛ', items: [['kh58', 2], ['kh25ml', 2]], pod: true },
     { side: 'east', plane: 'e_mig27', name: 'МиГ-27К: Х-29Т + КАБ-500Л', items: [['kh29t', 2], ['kab500l', 2]], pod: true },
@@ -231,7 +234,7 @@ export const LOADOUTS = {
     { side: 'west', plane: 'e_jaguar', name: 'Jaguar GR.1: GBU-12 ×2 + Mk 82 ×4', items: [['gbu12', 2], ['mk82', 4]], pod: true },
     { side: 'west', plane: 'e_harrier', name: 'Harrier GR.3: Mk 82 ×4', items: [['mk82', 4]] },
     { side: 'east', plane: 'e_yak38', name: 'Як-38М: ОФАБ-250 ×4', items: [['ofab250', 4]] },
-    { side: 'east', plane: 'e_su27', name: 'Су-27СМ: ФАБ-500 ×4 + ФАБ-250 ×2', items: [['fab500', 4], ['fab250', 2]] },
+    { side: 'east', plane: 'e_su25', name: 'Су-25: ФАБ-500 ×6', items: [['fab500', 6]] }, // Су-27СМ — с ранга III
     { side: 'west', plane: 'e_etendard', name: 'Super Étendard: GBU-12 ×2 + Mk 82 ×2 (ATLIS)', items: [['gbu12', 2], ['mk82', 2]], pod: true },
   ],
 };
@@ -588,6 +591,9 @@ LOADOUTS[3] = [
   { side: 'east', plane: 'e_tu95', name: 'Ту-95МС: крылатые Х-55 ×6', items: [['kh55', 6]] },
   { side: 'west', plane: 'e_b52', name: 'B-52H: JDAM ×8 (в отсеке)', items: [['gbu31', 8]] },
   { side: 'west', plane: 'e_b1b', name: 'B-1B: JDAM ×4 + Mk 82 ×4 (в отсеках)', items: [['gbu31', 4], ['mk82', 4]] },
+  // ветки 2026-10-20: Су-27СМ и Су-30 — с ранга III (прежние подвески эпохи II)
+  { side: 'east', plane: 'e_su27', name: 'Су-27СМ: ФАБ-500 ×4 + ФАБ-250 ×2', items: [['fab500', 4], ['fab250', 2]] },
+  { side: 'east', plane: 'su30', name: 'ТВ-бомбы КАБ-500Кр + ФАБ-500', items: [['kab500kr', 2], ['fab500', 4]], pod: true },
 ];
 LOADOUTS[4] = [
   { side: 'east', plane: 'e_su34', name: 'УМПК + Х-59М + Х-31П + помехи', items: [['umpk', 2], ['kh59m', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },

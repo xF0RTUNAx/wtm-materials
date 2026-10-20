@@ -9,17 +9,17 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { CITY, mulberry32 } from './city.js?v=20261022i';
-import { weaponHasModel } from './models.js?v=20261022i';
-import { LNCH, lnchToWorld } from './launchers.js?v=20261022i';
-import { ico } from './icons.js?v=20261022i';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261022i';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261022i';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261022i';
+import { CITY, mulberry32 } from './city.js?v=20261022k';
+import { weaponHasModel } from './models.js?v=20261022k';
+import { LNCH, lnchToWorld } from './launchers.js?v=20261022k';
+import { ico } from './icons.js?v=20261022k';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261022k';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261022k';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261022k';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261022i';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261022i';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261022i';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261022k';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261022k';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261022k';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -815,7 +815,7 @@ export function createDefense(C) {
       C.ev = createCombined(C.S, city, st.rnd, { side: att, era: C.setup.era, raid: C.raid, ...o }); C.ev.start(st.targets);
       if (C.evReady) C.evReady(C.ev); // модели ракет, дронов и пусковых — загрузить
     } else if (st.opts.wave) st.opts.wave(C.raid, st.rnd, st.wave, st.targets);
-    else C.raid.spawnWave(WAVE_N[Math.min(st.wave, WAVE_N.length) - 1], st.wave, st.targets);
+    else { const kn = C.diff ? C.diff.knobs('defense', C.setup.diff) : null; C.raid.spawnWave(Math.max(2, Math.round(WAVE_N[Math.min(st.wave, WAVE_N.length) - 1] * (kn ? kn.wave : 1))), st.wave, st.targets); } // сложность: размер волны
     for (const u of C.S.units) u.cov = null;
     snd.alarm();
     say(atk() ? `Волна пошла: разведчик над городом, остальное — по вашему расписанию («Ход волны» слева). Цели: ${st.targets.map((o) => o.name).join(', ')}` : C.ev ? `Волна ${st.wave}: ${COMBINED_NAME.toLowerCase()} — разведка и дроны, затем крылатые ракеты, в конце баллистика. Цели: ${st.targets.map((o) => o.name).join(', ')}` : `Волна ${st.wave}: цели — ${st.targets.map((o) => o.name).join(', ')}`, 6);
@@ -1352,7 +1352,8 @@ export function createDefense(C) {
     st.value0 = C.S.objects.reduce((s, o) => s + (o.noTarget ? 0 : o.value), 0);
     for (const [k, x, z, roof] of opts.units || []) { const u = C.S.addUnit(k, x, z, { roof, skill: 0.75 }); u.paid = SAM_COST[k]; }
     if (atk()) { // ПВО противника — ИИ, как в «Вылете»; где она — заранее неизвестно (засекают разведчик, излучение РЛС, пуски)
-      st.targets = pickTargets(C.S, st.rnd, 3); placeDefense(C.S, city, st.rnd, dside(), C.setup.era, st.targets);
+      const kn = C.diff && !st.opts.prep ? C.diff.knobs('multi_atk', C.setup.diff) : null; // сложность ИИ-ПВО (не в уроке)
+      st.targets = pickTargets(C.S, st.rnd, 3); placeDefense(C.S, city, st.rnd, dside(), C.setup.era, st.targets, kn ? kn.density : 1, kn || {});
       st.plan = { n: {}, cfg: {} }; st.edKey = null; st.tsel = null; st.pick = null; // готового состава нет: игрок сам собирает наряд под каждую цель
     }
     if (opts.prep) opts.prep(st, api); // урок: свои цели, готовый наряд, ИИ-ПВО
