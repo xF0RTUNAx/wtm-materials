@@ -469,7 +469,7 @@ function treeImpMat(set, hi, hemi, sunL, a2c = false) {
   const I = TREE_IMP[set], sfx = hi ? '' : '_lo', atl = I.atlas || set;
   const sp = I.sp.map(([R, cy, H]) => new THREE.Vector4(R / H, cy / H, 0, 0)); // в долях высоты: экземпляр масштабирован под высоту модели
   const mat = new THREE.ShaderMaterial({
-    uniforms: { ...THREE.UniformsLib.fog, uCam: ENV.uCam, uHide: ENV.uHide, uMdl: ENV.uMdl, uSun: ENV.uSun,
+    uniforms: { ...THREE.UniformsLib.fog, atmoSunDir: { value: ATMO.sunDir }, atmoSunCol: { value: ATMO.sunCol }, atmoP: { value: ATMO.p }, /* воздушная перспектива как у земли (world.js): без них высота тумана = 0 → туман ×2,2 — деревья вдали белые */ uCam: ENV.uCam, uHide: ENV.uHide, uMdl: ENV.uMdl, uSun: ENV.uSun,
       tA: treeImpTex(`tr_${atl}_a${sfx}`), tN: treeImpTex(`tr_${atl}_n${sfx}`), uSp: { value: sp }, uRec: { value: I.recolor || 0 },
       uHS: { value: hemi.color.clone().multiplyScalar(hemi.intensity) }, uHG: { value: hemi.groundColor.clone().multiplyScalar(hemi.intensity) },
       uSL: { value: sunL.color.clone().multiplyScalar(sunL.intensity) }, uTint: { value: new THREE.Vector3(...I.tint) }, uSnow: { value: I.snow } },
@@ -514,7 +514,8 @@ function treeImpMat(set, hi, hemi, sunL, a2c = false) {
         vec3 alb = pow(A.rgb / max(A.a, 0.05), vec3(2.2)) * (0.85 + 3.0 * vTint); // атлас — sRGB; тон — от цвета экземпляра
         alb *= uTint * mix(1.0, 0.85, clamp(lod / 4.0, 0.0, 1.0)); // крона в тени самой себя: темнее и зеленее, вдали — как у моделей
         float cl = dot(vCol, vec3(0.3, 0.59, 0.11)); // осень: тон листвы — цвет экземпляра (яркость — от атласа); сосна — без перекраски
-        alb = mix(alb, vec3(dot(alb, vec3(0.3, 0.59, 0.11))) * vCol / max(cl, 1e-3) * 1.25, uRec * (1.0 - step(abs(vSp - 2.0), 0.5)));
+        float gy = clamp(dot(alb, vec3(0.3, 0.59, 0.11)), 0.012, 0.11) * mix(1.0, 0.75, lk); // яркость листвы — с потолком: у края кроны и на мелких мипах цвет/прозрачность взлетает (неоновые ободки вблизи, белёсые пятна вдали)
+        alb = mix(alb, gy * vCol / max(cl, 1e-3), uRec * (1.0 - step(abs(vSp - 2.0), 0.5)));
         vec3 nl = normalize(Nn.rgb / max(A.a, 0.05) * 2.0 - 1.0), n = normalize(vAx * nl.x + vec3(0.0, nl.y, 0.0) + vAz * nl.z);
         float ao = clamp(Nn.a / max(A.a, 0.05), 0.0, 1.0);
         float ny0 = n.y; n = normalize(mix(n, vec3(0.0, 0.6, 0.0) + normalize(uSun) * 0.25, lk * 0.6)); // вдали мелкий рельеф кроны не виден — свет ровнее (без искр)

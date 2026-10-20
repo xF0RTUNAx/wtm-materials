@@ -128,6 +128,8 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
 // и сухостой (бурые); куртинами по району «лес», плотность — как у зимы
 export function autumnTrees(city, P, rnd, gh = city.groundH) {
   const tl = [], want = Math.round((P.trees || 0) * 10), H = 15500, c = new THREE.Color();
+  // листва конца октября в сумерках — приглушённая: охра и ржавчина (насыщенность ≤ 0,45), четверть — ещё оливковые, редко — багряные
+  const leaf = () => { const r = rnd(); if (r < 0.25) c.setHSL(0.16 + rnd() * 0.07, 0.2 + rnd() * 0.12, 0.15 + rnd() * 0.05); else if (r < 0.33) c.setHSL(0.01 + rnd() * 0.02, 0.32 + rnd() * 0.12, 0.17 + rnd() * 0.05); else c.setHSL(0.05 + rnd() * 0.07, 0.25 + rnd() * 0.2, 0.17 + rnd() * 0.08); };
   for (let t = 0; t < want * 3 && tl.length < want; t++) {
     const cx = (rnd() * 2 - 1) * H, cz = (rnd() * 2 - 1) * H;
     if (city.zoneAt(cx, cz) !== ZONE.PARK) continue;
@@ -139,7 +141,7 @@ export function autumnTrees(city, P, rnd, gh = city.groundH) {
       const dead = v !== 2 && rnd() < 0.14;
       if (v === 2) c.setHSL(0.28, 0.35, 0.2); // сосна — своя хвоя (перекраски нет)
       else if (dead) c.setHSL(0.07, 0.15, 0.17); // сухостой — серо-бурый
-      else c.setHSL(0.035 + rnd() * 0.11, 0.42 + rnd() * 0.3, 0.2 + rnd() * 0.13); // от рыжего до жёлтого, местами багряные
+      else leaf(); // охра, ржавчина, бурый, местами ещё оливково-зелёные
       c.convertSRGBToLinear();
       const ht = (v === 3 ? 5 : 10) + rnd() * (v === 3 ? 3 : 10);
       tl.push({ x, z, y: gh(x, z) - 0.4, sy: ht, v, color: c.clone(), ry: rnd() * 6.283 });
@@ -153,7 +155,7 @@ export function autumnTrees(city, P, rnd, gh = city.groundH) {
       const off = (rnd() < 0.5 ? -1 : 1) * (12 + rnd() * 110), al = rnd(), x = x0 + (x1 - x0) * al + nx * off, z = z0 + (z1 - z0) * al + nz * off;
       if (city.zoneAt(x, z) !== ZONE.PARK) continue;
       const v = rnd() < 0.45 ? 0 : rnd() < 0.75 ? 1 : 3;
-      if (rnd() < 0.12) c.setHSL(0.07, 0.15, 0.17); else c.setHSL(0.035 + rnd() * 0.11, 0.42 + rnd() * 0.3, 0.2 + rnd() * 0.13);
+      if (rnd() < 0.12) c.setHSL(0.07, 0.15, 0.17); else leaf();
       c.convertSRGBToLinear();
       tl.push({ x, z, y: gh(x, z) - 0.4, sy: (v === 3 ? 5 : 11) + rnd() * 9, v, color: c.clone(), ry: rnd() * 6.283 });
     }
