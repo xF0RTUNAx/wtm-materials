@@ -55,18 +55,18 @@ export const PAIR = {
 // линии дерева (Mark 2026-10-19: как в дереве исследований WTM): ключ → предыдущая единица линии; исследовать можно, когда
 // предыдущая исследована. Без предыдущей — начало линии (открыта, когда открыт её ранг). Развилка — у одной предыдущей несколько
 export const PARENT = {
-  // авиация (Mark 2026-10-20: линии по преемственности, каждая — до ранга III–IV)
-  // Восток: МиГ-23БН★ → МиГ-27К → МиГ-29 · Су-17М4★ → Су-24М → Су-34 → Су-57 · Су-7Б → Су-25 → Як-38М ·
-  // МиГ-21бис → МиГ-25БМ → МиГ-31, развилка МиГ-25БМ → Су-27СМ → Су-30 → Су-35С · Ил-28 → Ту-16 → Ту-22 → Ту-22М2 → Ту-22М3 → Ту-95МС → Ту-160
-  e_mig27: 'e_mig23', mig29: 'e_mig27', e_su24: 'e_su17', e_su34: 'e_su24', e_su57: 'e_su34', e_su25: 'e_su7b', e_yak38: 'e_su25',
-  e_mig25: 'e_mig21n', e_mig31: 'e_mig25', e_su27: 'e_mig25', su30: 'e_su27', e_su35: 'su30',
-  e_tu16: 'e_il28', e_tu22: 'e_tu16', e_tu22m2: 'e_tu22', e_tu22m3: 'e_tu22m2', e_tu95: 'e_tu22m3', e_tu160: 'e_tu95',
-  // Запад: F-5E → F-16 → F-35, развилка F-16 → A-10; шведская ветка F-5E → Draken → Viggen → Gripen · F-4★ → F/A-18C → F/A-18E → EA-18G ·
-  // F-100D → F-111 → F-15E → F-22, развилки F-111 → F-117 → B-2 и F-111 → B-52 → B-1B · Hunter → Buccaneer → Tornado → Typhoon,
-  // развилки Hunter → Jaguar, Hunter → Harrier и Hunter → Vulcan · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale
-  f16: 'e_f5', e_draken: 'e_f5', e_viggen: 'e_draken', e_gripen: 'e_viggen', e_f35: 'f16', e_a10: 'f16', e_f18c: 'e_f4', f18: 'e_f18c', e_ea18g: 'f18',
-  e_f111: 'e_f100', e_f15e: 'e_f111', e_f22: 'e_f15e', e_f117: 'e_f111', e_b2: 'e_f117', e_b52: 'e_f111', e_b1b: 'e_b52',
-  e_buccaneer: 'e_hunter', e_tornado: 'e_buccaneer', e_typhoon: 'e_tornado', e_jaguar: 'e_hunter', e_harrier: 'e_hunter', e_vulcan: 'e_hunter',
+  // авиация (Mark 2026-10-21 — схема без скачков рангов и цепочек одного ранга; родитель — предшественник по КБ или роли):
+  // Восток: Су-17М4★ → Су-25 → Су-30СМ · МиГ-23БН★ → МиГ-27К → МиГ-29 → МиГ-31БМ · МиГ-21бис → МиГ-25БМ → Су-27СМ → Су-35С ·
+  // Ил-28 → Су-24М → Су-34 → Су-57 (Су-24 сменил Ил-28) · Су-7БМК → Як-38М · Ту-22 → Ту-22М2 → Ту-22М3 → Ту-160, развилка Ту-22М2 → Ту-95МС · Ту-16
+  e_mig27: 'e_mig23', mig29: 'e_mig27', e_su24: 'e_il28', e_su34: 'e_su24', e_su57: 'e_su34', e_su25: 'e_su17', e_yak38: 'e_su7b',
+  e_mig25: 'e_mig21n', e_mig31: 'mig29', e_su27: 'e_mig25', su30: 'e_su25', e_su35: 'e_su27',
+  e_tu22m2: 'e_tu22', e_tu22m3: 'e_tu22m2', e_tu95: 'e_tu22m2', e_tu160: 'e_tu22m3',
+  // Запад: F-4E★ → F/A-18C → F/A-18E → EA-18G · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale ·
+  // F-100F → F-111F → F-15E → F-22A, развилки F-111F → F-117A → B-2A / F-35A (Lockheed) и F-111F → B-1B, F-100F → A-10A ·
+  // Draken → Viggen → Gripen → Typhoon · F-5E → F-16D · Hunter → Harrier, Hunter → Vulcan → B-52H · Buccaneer → Tornado · Jaguar
+  f16: 'e_f5', e_viggen: 'e_draken', e_gripen: 'e_viggen', e_f35: 'e_f117', e_a10: 'e_f100', e_f18c: 'e_f4', f18: 'e_f18c', e_ea18g: 'f18',
+  e_f111: 'e_f100', e_f15e: 'e_f111', e_f22: 'e_f15e', e_f117: 'e_f111', e_b2: 'e_f117', e_b52: 'e_vulcan', e_b1b: 'e_f111',
+  e_tornado: 'e_buccaneer', e_typhoon: 'e_gripen', e_harrier: 'e_hunter', e_vulcan: 'e_hunter',
   e_etendard: 'e_mirage_f1', e_mirage: 'e_etendard', e_rafale: 'e_mirage',
   // вооружение
   kab500l: 'fab1000', kab500kr: 'fab500', // ФАБ-500★ → ФАБ-1000 → КАБ-500Л → КАБ-500С → УМПК; развилки ФАБ-500★ → ФАБ-250 → ФАБ-100 / ОФАБ-250 и → КАБ-500Кр
@@ -76,10 +76,10 @@ export const PARENT = {
   // ПВО
   s300: 's75', s400: 's300', kub: 's125', buk: 'kub', bukm3: 'buk', zu23: 'zsu234', phalanx: 'm163', osa: 'strela1', tor: 'osa', torm2: 'tor', tunguska: 'zsu234', pantsir: 'tunguska', strela10: 'strela1', igla: 'strela2', iglas: 'igla', verba: 'iglas',
   patriot: 'hawk', pac3: 'patriot', sampt: 'patriot', rapier: 'hawk', nasams: 'rapier', khordad: 'rapier', gepard: 'm163', skyguard: 'm163', roland: 'chaparral', stinger: 'redeye', avenger: 'stinger',
-  // вертолёты (Mark 2026-10-20 — по веткам; 2026-10-21 — Ка-50, Ми-8МТВ, UH-60, RAH-66): Восток — Ми-24В★ → Ка-50 (III) → Ка-52 (IV) (Камов) и
-  // Ми-24В★ → Ми-8МТВ (II) → Ми-28Н (III) (Миль); Запад — UH-1H★ → UH-60 (II) → RAH-66 (IV), развилки UH-1H★ → AH-1W (Bell) и UH-1H★ → AH-64D.
+  // вертолёты (Mark 2026-10-21 — без скачков рангов): Восток — Ми-24В★ → Ми-8МТВ (II) → Ка-50 (III) → Ка-52 (IV), развилка Ми-8МТВ → Ми-28Н (III);
+  // Запад — UH-1H★ → AH-1W (II) → AH-64D (III) → RAH-66 (IV) (Cobra → Apache → Comanche), развилка UH-1H★ → UH-60 (II).
   // Их оружие: «Штурм»★ → «Атака», Hydra★ → Hellfire
-  h_ka50: 'h_mi24', h_ka52: 'h_ka50', h_mi8: 'h_mi24', h_mi28: 'h_mi8', h_uh60: 'h_uh1', h_rah66: 'h_uh60', h_ah1: 'h_uh1', h_ah64: 'h_uh1', ataka: 'shturm', hellfire: 'hydra',
+  h_ka50: 'h_mi8', h_ka52: 'h_ka50', h_mi8: 'h_mi24', h_mi28: 'h_mi8', h_uh60: 'h_uh1', h_rah66: 'h_ah64', h_ah1: 'h_uh1', h_ah64: 'h_ah1', ataka: 'shturm', hellfire: 'hydra',
   // удары
   tochka: 'r17', iskander: 'tochka', kinzhal: 'tochka', kh555: 'kh55_s', kalibr: 'kh555', kh101_s: 'kh555', shahed: 'kh55d',
   tomahawk: 'agm86', slam: 'agm86', jsow: 'agm86', jassm_s: 'tomahawk', storm_s: 'slam', storm: 'agm65b', sdb: 'jsow', quail: 'uav_w',
