@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Стенд шлейфов: оружие и ракеты ЗРК</title>
+<style>body{margin:0;background:#111;font:12px sans-serif}#sheet{position:relative;display:inline-block}canvas{display:block}
+.c{position:absolute;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000;pointer-events:none}.t{left:4px;top:3px;font-size:12px}.b{left:4px;bottom:3px;font-size:11px;opacity:.9}
+.bar{position:absolute;height:5px;border:1px solid #fff;border-top:0;box-shadow:0 0 2px #000}.bl{position:absolute;color:#fff;font-size:11px;text-shadow:0 0 3px #000}</style></head>
+<body><div id="sheet"></div>
+<!-- Стенд шлейфов оружия и ракет ЗРК «как в игре»: настоящие модели (models.js), факел (rocketFlame / mountWpnFlame / samMissileMesh из units-render.js,
+     те же, что зовёт main.js) и дымная лента (createFx → wpnTrail / samTrail), полёт со своим разгоном (двигатель, сопротивление, тяжесть, без наведения).
+     Камера сбоку, перспектива с узким полем зрения (≈ ортогональная), в момент t1 (≈0,3 с) и t2 (≈1,5 с) после пуска: «крупно» — вокруг ракеты и
+     среза сопла, «шире» — от точки пуска до ракеты. Красная точка — срез сопла (откуда берётся факел и точка ленты), голубые — точки следа (?dots=0 — без них);
+     линейка — масштаб. Листы по 4 оружия: Chrome-драйвер tools/airdef-fx/weapons-plume-shots.js (нужен сервер без кэша :8937).
+     ?only=s8,hydra,sam:s300 — только эти (оружие AG — по ключу, ЗРК — sam:<ключ>), ?t=0.3,1.5, ?rows=4, ?sky=dusk, ?alt=300 (высота пуска оружия, м). -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+const Q = new URLSearchParams(location.search), VER = '?v=20261022q', BASE = '../../games/airdef/';
+const TT = (Q.get('t') || '0.3,1.5').split(',').map(Number), ROWS = +(Q.get('rows') || 4), DOTS = Q.get('dots') !== '0', dusk = Q.get('sky') === 'dusk', ALT = +(Q.get('alt') || 300);
+const CW = +(Q.get('cw') || 440), CH = +(Q.get('ch') || 310), COLS = TT.length * 2, FOV = 20;
+const [{ AG, SAM }, { LNCH }, M, UR, { motorOf, MOTOR }, { FOG_U }] = await Promise.all([import(BASE + 'arsenal.js' + VER), import(BASE + 'launchers.js' + VER), import(BASE + 'models.js' + VER), import(BASE + 'units-render.js' + VER), import(BASE + 'plume.js' + VER), import('../../games/drone/world.js' + VER)]);
+FOG_U.value = 0; // без тумана: дым виден на любом расстоянии камеры
+M.loadModels(BASE, () => {});
+for (const n of ['msl_manpads', 'msl_aim120', 'msl_aster']) M.wantModel(n);
+
+// ── что показывать ──
+const E = [];
+for (const [k, W] of Object.entries(AG)) {
+  const kind = W.kind;
+  if (kind === 'rocket' || kind === 'agm' || kind === 'arm' || kind === 'tbm' || (kind === 'cruise' && !W.glide && !W.uav && !W.recon)) E.push({ id: k, type: 'wpn', key: k, W });
+}
+for (const [k, S] of Object.entries(SAM)) if (S.msl) E.push({ id: 'sam:' + k, type: 'sam', key: k, S });
+const only = Q.get('only') ? Q.get('only').split(',') : null, LIST = only ? only.map((id) => E.find((e) => e.id === id)).filter(Boolean) : E;
+const SHEETS = Math.ceil(LIST.length / ROWS);
+
+// ── сцена ──
+const W_ = CW * COLS, H_ = CH * ROWS;
+const r = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W_, H_); r.setScissorTest(true);
+r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; document.getElementById('sheet').appendChild(r.domElement);
+const sc = new THREE.Scene(), skyC = dusk ? 0x6c6474 : 0x7fa6d4; sc.background = new THREE.Color(skyC);
+sc.add(new THREE.HemisphereLight(dusk ? 0x8a7f99 : 0xcfe0f5, 0x6b6250, dusk ? 0.8 : 1.1)); const sun = new THREE.DirectionalLight(dusk ? 0xffb27a : 0xffffff, dusk ? 0.6 : 1.2); sun.position.set(-1, 2, 1); sc.add(sun);
+const fx = UR.createFx(sc, { particles: 3000 });
+const hide = Q.get('hide'); // ?hide=ribbon — без дымной ленты (только частицы), ?hide=particles — без частиц
+sc.traverse((o) => { if (o.material && o.material.uniforms && o.material.uniforms.uWind && hide === 'ribbon') o.visible = false; if (o.isPoints && hide === 'particles') o.visible = false; });
+const wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
+const cam = new THREE.PerspectiveCamera(FOV, CW / CH, 0.05, 200000);
+const dotsG = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0x33ddff, size: 4, sizeAttenuation: false, depthTest: false, transparent: true })); dotsG.renderOrder = 9; dotsG.frustumCulled = false; sc.add(dotsG);
+const nzG = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0xff2020, size: 7, sizeAttenuation: false, depthTest: false })); nzG.renderOrder = 10; nzG.frustumCulled = false; sc.add(nzG);
+const UP = new THREE.Vector3(0, 1, 0), G0 = 9.8, rho = (y) => Math.exp(-Math.max(0, y) / 8500);
+const wait = (fn, ms = 40000) => new Promise((ok) => { const t0 = performance.now(), t = setInterval(() => { const v = fn(); if (v || performance.now() - t0 > ms) { clearInterval(t); ok(v); } }, 50); });
+const turn = (a, b, mx) => { const c = Math.min(1, Math.max(-1, a.dot(b))), ang = Math.acos(c); if (ang < 1e-6) return; a.lerp(b, Math.min(1, mx / ang)).normalize(); };
+// ракета с пусковой «Мульти-волны»: часть модели пусковой, центр — в середину, нос в −Z (копия evPart из main.js)
+function evPart(glb, part) {
+  const m = M.anyModel(glb); if (!m) return null; const p = m.children.find((c) => c.name === part); if (!p) return null;
+  const g = new THREE.Group(), inner = p.clone(), B = new THREE.Box3().setFromObject(inner), C = B.getCenter(new THREE.Vector3()); inner.position.sub(C);
+  const tilt = new THREE.Group(); tilt.rotation.x = -Math.PI / 2; tilt.add(inner); g.add(tilt); return g;
+}
+const fmt = (x, n = 2) => (+x).toFixed(n).replace('.', ',');
+
+// ── один прогон: оружие или ракета ЗРК. Возвращает { step(dt), g, state } ──
+async function makeWpn(e, spread = 0) {
+  const W = e.W, key = e.key, ev = !!W.ev || W.kind === 'tbm', heli = !!W.heli;
+  const pitch = W.kind === 'tbm' ? 1.2 : W.kind === 'cruise' ? 0 : -0.05, dir = new THREE.Vector3(Math.cos(pitch), Math.sin(pitch), 0).normalize();
+  if (spread) { dir.x += (Math.random() - 0.5) * 2 * W.disp; dir.y += (Math.random() - 0.5) * 2 * W.disp; dir.z += (Math.random() - 0.5) * 2 * W.disp; dir.normalize(); } // разброс залпа (sim/strike.js release)
+  const w = { id: 1, key, W, ev, owner: null, pos: new THREE.Vector3(0, ALT, 0), vel: new THREE.Vector3(), dir, speed: W.kind === 'cruise' ? 200 : W.kind === 'tbm' ? 3 : heli ? 30 : 220, t: 0, flown: 0, trailT: 0, phase: 'boost' };
+  if (W.kind === 'rocket') w.pos.addScaledVector(dir, 3); // разброс и вынос из блока — как в sim/strike.js release()
+  let g = null, note = 'модель игры';
+  const Mo = W.model;
+  if (Mo) { M.wantModel(Mo.glb); await wait(() => M.anyModel(Mo.glb)); g = Mo.part ? evPart(Mo.glb, Mo.part) : M.anyModel(Mo.glb); }
+  if (!g && W.kind === 'rocket') { g = UR.narMesh(key, W, wMat); note = 'одна ракета (НАР)'; } // как relMesh в main.js: в полёте — ракета, а не блок
+  if (!g) { M.wantWeapon(key); await wait(() => !M.weaponPending(key)); const pend = M.weaponPending(key); g = M.weaponMesh(key, W, UR.weaponGeo, wMat); if (pend || g.isMesh) note = 'временная фигура'; if (pend) g.userData.stub = true; }
+  g.traverse((q) => { if (q.isMesh) q.castShadow = false; });
+  const bb = new THREE.Box3().setFromObject(g); UR.mountWpnFlame(w, g, ev); sc.add(g);
+  const TP = new THREE.Vector3(), tp = [];
+  const trail = () => { if (w.nzL) { UR.wpnNozzle(w, TP); fx.wpnTrail(w, TP); tp.push(TP.x, TP.y, TP.z); } else { fx.wpnTrail(w); tp.push(w.pos.x - w.dir.x * 2, w.pos.y - w.dir.y * 2, w.pos.z - w.dir.z * 2); } };
+  const nozzleWorld = (out) => (w.nzL ? UR.wpnNozzle(w, out) : out.copy(w.pos).addScaledVector(w.dir, -(W.vis.L / 2)));
+  const L = W.vis.L, p0 = w.pos.clone(), tb = W.boostT || 8;
+  function step(dt) {
+    w.t += dt;
+    if (W.kind === 'tbm') { // разгон 0 → ~1 км/с за boostT, круто вверх и заваливается к 45° (sim/strike.js updateTbm: s растёт как t²/(2·tb))
+      const k = Math.min(1, w.t / tb), a = Math.PI / 2 - 0.5 * k; w.dir.set(Math.cos(a), Math.sin(a), 0); w.speed = 1000 * k; w.pos.addScaledVector(w.dir, w.speed * dt); w.phase = 'boost';
+      w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.04; trail(); }
+    } else if (W.kind === 'cruise') {
+      w.speed += (W.speed - w.speed) * Math.min(1, dt * 0.5); w.pos.addScaledVector(w.dir, w.speed * dt);
+      w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.08; trail(); }
+    } else { // ракета: разгон burn, сопротивление, нос клонится под тяжестью (flyMissile без наведения)
+      const acc = w.t < W.burn ? W.acc : 0;
+      if (w.dir.y > -0.95) turn(w.dir, new THREE.Vector3().copy(w.dir).setY(w.dir.y - 0.3).normalize(), G0 / Math.max(120, w.speed) * dt * 0.6);
+      w.speed += (acc - (W.kd || 1) * 1e-4 * rho(w.pos.y) * w.speed * w.speed - G0 * w.dir.y) * dt; w.speed = Math.max(w.speed, 30);
+      w.pos.addScaledVector(w.dir, w.speed * dt);
+      w.trailT -= dt; if (w.t < W.burn && w.trailT <= 0) { w.trailT = 0.04; trail(); }
+    }
+    w.vel.copy(w.dir).multiplyScalar(w.speed); w.flown += w.speed * dt;
+    g.position.copy(w.pos); g.lookAt(new THREE.Vector3().copy(w.pos).sub(w.vel)); if (g.userData.flame) UR.flameOf(g, w);
+  }
+  return { step, g, tp, nozzleWorld, dir: w.dir, pos: w.pos, p0, L, r: W.vis.r, speed: () => w.speed, t: () => w.t, flown: () => w.flown, remove: () => sc.remove(g), ws: w,
+    info: () => `${W.short || key} · ${W.kind} · ${motorKey(motorOf(key, W.kind, false))} · burn ${W.burn || '—'} · L ${fmt(L, 1)} r ${fmt(W.vis.r, 3)} · ${note} · модель z ${fmt(bb.min.z)}…${fmt(bb.max.z)}, ширина ${fmt(bb.max.x - bb.min.x)} × ${fmt(bb.max.y - bb.min.y)}, сопло (${w.nzL ? [w.nzL.x, w.nzL.y, w.nzL.z].map((v) => fmt(v)).join('; ') : '—'})` };
+}
+async function makeSam(e) {
+  const key = e.key, S = e.S, M_ = S.msl, ln = LNCH[key], unit = { key, pos: new THREE.Vector3() };
+  const el = ln && (ln.mode === 'cold' || ln.mode === 'vhot') ? 1.45 : 1.0, dir = new THREE.Vector3(Math.cos(el), Math.sin(el), 0).normalize();
+  const m = { id: 1, M: M_, S, unit, ln, pos: new THREE.Vector3(0, 3, 0), dir, speed: ln && ln.ej ? ln.ej.v : 15, t: 0, tb: 0, flown: 0, trailT: 0, lit: true, started: true, visIgn: undefined };
+  M.wantUnit(key); const unitM = () => M.unitMissileGlb(key); await wait(() => unitM() || M.unitModelGlb(key), 45000); const gm = unitM() || null; // модель комплекса загрузилась; есть ли в ней ракета — как в игре (нет — процедурная)
+  const g = UR.samMissileMesh(m, gm, wMat); sc.add(g); const bb = new THREE.Box3(); for (const c of g.children) if (c.renderOrder !== 5) bb.expandByObject(c); const fm = g.children.find((c) => c.renderOrder === 5), fp = fm ? fm.position : new THREE.Vector3(); // размер модели и положение факела — в осях ракеты
+  const L = M_.L, big = L > 5, mode = ln ? ln.mode : 'rail', LP = new THREE.Vector3(); const tp = [];
+  g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
+  if (mode === 'cold') fx.launchCold(LP.copy(m.pos).addScaledVector(m.dir, L / 2), m.dir, big); else if (mode === 'tube') fx.launchTube(m.pos, m.dir); else fx.launchHot(m.pos, m.dir, big, new THREE.Vector3(0, 0, 0));
+  fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -L / 2), m.dir, big);
+  function step(dt) {
+    m.t += dt; m.tb = m.t;
+    const acc = m.tb < M_.burn ? M_.acc : (M_.sustain && m.tb < M_.burn + M_.sustain.t ? M_.sustain.acc : 0);
+    if (m.dir.y > -0.95 && m.tb > 0.4) turn(m.dir, new THREE.Vector3().copy(m.dir).setY(m.dir.y - 0.3).normalize(), G0 / Math.max(120, m.speed) * dt * 0.6);
+    m.speed += (acc - (M_.kd || 1) * 1e-4 * rho(m.pos.y) * m.speed * m.speed - G0 * m.dir.y) * dt; m.speed = Math.max(m.speed, 30);
+    m.pos.addScaledVector(m.dir, m.speed * dt); m.flown += m.speed * dt;
+    if (ln && ln.stage && !m.staged && m.tb >= M_.burn) { m.staged = true; // ускоритель отваливается, факел переходит на срез маршевой ступени (simFx.samStage)
+      const b = g.userData.booster; if (b) { g.remove(b); g.userData.booster = null; } if (g.userData.nzM) { const n = g.userData.nzM; g.userData.flame.at(n.x, n.y, n.z); } else g.userData.flame.move(-L / 2 + L * ln.stage); }
+    m.trailT -= dt; if (acc > 0 && m.trailT <= 0) { m.trailT = L > 5 ? 0.03 : 0.04; fx.samTrail(m); const nw = nzw(new THREE.Vector3()); tp.push(nw.x, nw.y, nw.z); }
+    // как в цикле отрисовки main.js
+    g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
+    const on = (m.tb >= 0) && (m.tb < M_.burn || (M_.sustain && m.tb < M_.burn + M_.sustain.t));
+    if (m.tb >= M_.burn && !m.susM) { m.susM = true; g.userData.flame.motor(motorOf(key, 'sam', true)); }
+    g.userData.flame.set(on ? (m.tb < M_.burn && (L > 2.5 || g.userData.booster) ? 2 : 1) : 0, g.userData.booster ? M_.r * ln.stageR : M_.r, m.pos.y);
+  }
+  // срез сопла в мире — по положению факела (mesh.position в осях модели)
+  const nzw = (out) => { const f = g.children.filter((c) => c.renderOrder === 5)[0]; g.updateMatrixWorld(true); return f ? out.copy(f.position).applyMatrix4(g.matrixWorld) : out.copy(m.pos); };
+  return { step, g, tp, nozzleWorld: nzw, dir: m.dir, pos: m.pos, p0: m.pos.clone(), L, r: M_.r, speed: () => m.speed, t: () => m.t, flown: () => m.flown, remove: () => sc.remove(g), ws: m,
+    info: () => `${key} (ЗРК) · ${motorKey(motorOf(key, 'sam', false))}${ln && ln.stage ? '+ускор.' : ''} · burn ${M_.burn}${M_.sustain ? '+' + M_.sustain.t : ''} · L ${fmt(L, 1)} r ${fmt(M_.r, 3)} · ${gm ? 'модель игры' : 'процедурная'} · z ${fmt(bb.min.z)}…${fmt(bb.max.z)}, ширина ${fmt(bb.max.x - bb.min.x)}, факел (${[fp.x, fp.y, fp.z].map((v) => fmt(v)).join('; ')})` };
+}
+const motorKey = (mo) => Object.keys(MOTOR).find((k) => MOTOR[k] === mo) || '?';
+
+// ── камера и отрисовка ячейки ──
+const CA = new THREE.Vector3(), CB = new THREE.Vector3(), CAMP = new THREE.Vector3(), CT = new THREE.Vector3(), SD = new THREE.Vector3(), NW = new THREE.Vector3();
+function cell(R, row, col, close, tt) {
+  const d = R.dir, L = R.L, nz = R.nozzleWorld(NW);
+  let center, width;
+  if (close) { width = Math.max(6, L * 3.0); center = CT.copy(nz).addScaledVector(d, L * 0.5 - width * 0.2); }
+  else { // от первой точки следа до ракеты (кончился двигатель — до последней точки): виден весь шлейф; нет точек — от места пуска
+    const t = R.tp, A0 = t.length ? CA.set(t[0], t[1], t[2]) : R.p0, Z1 = t.length ? CB.set(t[t.length - 3], t[t.length - 2], t[t.length - 1]) : R.pos;
+    const E = R.pos.distanceTo(Z1) < 40 ? R.pos : Z1, D = Math.max(1, A0.distanceTo(E));
+    width = Math.max(30, D * 1.25, L * 8); center = CT.copy(A0).add(E).multiplyScalar(0.5);
+  }
+  SD.copy(d).cross(UP); if (SD.lengthSq() < 1e-4) SD.set(0, 0, 1); SD.normalize();
+  const dist = (width / 2) / Math.tan(FOV / 2 * Math.PI / 180);
+  cam.position.copy(CAMP.copy(center).addScaledVector(SD, dist)); cam.up.copy(UP); cam.lookAt(center);
+  cam.updateMatrixWorld();
+  const x = col * CW, y = (ROWS - 1 - row) * CH;
+  r.setViewport(x, y, CW, CH); r.setScissor(x, y, CW, CH);
+  for (const m of fx.mats) m.uniforms.scale.value = CH / (2 * Math.tan(FOV / 2 * Math.PI / 180));
+  // метки: срез сопла и точки следа
+  nzG.geometry.setAttribute('position', new THREE.Float32BufferAttribute([nz.x, nz.y, nz.z], 3));
+  dotsG.visible = DOTS; if (DOTS) dotsG.geometry.setAttribute('position', new THREE.Float32BufferAttribute(R.tp.length ? R.tp : [0, -1e5, 0], 3));
+  r.render(sc, cam);
+  // подпись и линейка (DOM поверх)
+  const pxm = CW / width, nice = [0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000].filter((v) => v * pxm <= CW * 0.34).pop() || 0.1;
+  const host = document.getElementById('sheet'), mk = (cls, html, css) => { const el = document.createElement('div'); el.className = cls; el.innerHTML = html; Object.assign(el.style, css); host.appendChild(el); };
+  mk('c t', `${close ? 'крупно' : 'шире'} · t = ${fmt(tt, 2)} с · v = ${Math.round(R.speed())} м/с · пройдено ${Math.round(R.flown())} м`, { left: x + 4 + 'px', top: (row * CH + 3) + 'px' });
+  mk('bar', '', { left: x + 8 + 'px', top: (row * CH + CH - 22) + 'px', width: nice * pxm + 'px' });
+  mk('bl', `${nice < 1 ? fmt(nice, 1) : nice} м`, { left: x + 12 + nice * pxm + 'px', top: (row * CH + CH - 29) + 'px' });
+}
+const IDLE = 700; // после каждого оружия — выдержка (дымовые частицы прошлого уходят)
+async function runRow(e, row) {
+  const R = e.type === 'wpn' ? await makeWpn(e) : await makeSam(e), host = document.getElementById('sheet');
+  const SALVO = e.type === 'wpn' && e.W.kind === 'rocket' ? +(Q.get('salvo') || 1) : 1, extra = [];
+  for (let i = 1; i < SALVO; i++) extra.push(await makeWpn(e, 1)); // залп: остальные ракеты — с разбросом
+  const lab = document.createElement('div'); lab.className = 'c b'; lab.textContent = R.info() + (SALVO > 1 ? ` · залп ${SALVO}` : ''); (window.__labels = window.__labels || []).push(e.id + ' | ' + lab.textContent); Object.assign(lab.style, { left: '4px', top: (row * CH + CH - 18) + 'px', bottom: 'auto', width: CW * COLS - 8 + 'px', background: 'rgba(0,0,0,.45)', padding: '1px 3px' }); host.appendChild(lab);
+  const dt = 1 / 60; let ti = 0, T = 0;
+  while (ti < TT.length) {
+    R.step(dt); for (const x of extra) x.step(dt); T += dt; fx.update(dt);
+    if (T >= TT[ti] - 1e-6) { cell(R, row, ti * 2, true, T); cell(R, row, ti * 2 + 1, false, T); ti++; }
+  }
+  R.remove(); for (const x of extra) x.remove(); fx.clearBurning(); R.tp.length = 0;
+  for (let i = 0; i < IDLE; i++) fx.update(dt);
+}
+window.sheets = SHEETS; window.names = LIST.map((e) => e.id);
+window.renderSheet = async (i) => {
+  const host = document.getElementById('sheet'); for (const el of [...host.querySelectorAll('div')]) el.remove();
+  r.setScissor(0, 0, W_, H_); r.setViewport(0, 0, W_, H_); r.setClearColor(0x111111); r.clear(); r.setClearColor(0x000000, 1);
+  for (let k = 0; k < ROWS; k++) { const e = LIST[i * ROWS + k]; if (e) await runRow(e, k); }
+  window.__done = i; return true;
+};
+window.__ready = true;
+if (Q.get('sheet') !== null) window.renderSheet(+Q.get('sheet') || 0);
+</script></body></html>

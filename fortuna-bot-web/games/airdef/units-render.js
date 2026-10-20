@@ -303,6 +303,85 @@ export function attachFlames(group, nozzles, r = 1, own = false, dry = false) {
 // факел ракетного двигателя: z — срез сопла (хвост — +Z), r — радиус сопла
 // факел ракеты — запечённая раскадровка вдоль оси (plume.js); motor — тип двигателя (MOTOR), по умолчанию смесевое твёрдое
 export function rocketFlame(group, z, r, motor) { return makeFlame(group, z, r, motor); }
+// срез сопла: ось — медиана вершин корпуса в средней трети (стабилизаторы её не сдвигают), срез — 97-й процентиль по +Z среди вершин
+// у оси (не выступающие провода и кромки); центр факела — на оси, чуть внутри среза
+const NV = new THREE.Vector3();
+export function nozzleOf(g, r, ax) { // ax — ось сопла [x, y], если медиана врёт (крыло сверху у Storm Shadow)
+  g.updateMatrixWorld(true); const P = [];
+  g.traverse((m) => { if (!m.isMesh) return; const p = m.geometry.attributes.position; for (let i = 0; i < p.count; i++) { NV.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); P.push(NV.x, NV.y, NV.z); } });
+  let z0 = 1e9, z1 = -1e9; for (let i = 2; i < P.length; i += 3) { z0 = Math.min(z0, P[i]); z1 = Math.max(z1, P[i]); }
+  const L = z1 - z0, xs = [], ys = [];
+  for (let i = 0; i < P.length; i += 3) if (P[i + 2] > z0 + L / 3 && P[i + 2] < z1 - L / 3) { xs.push(P[i]); ys.push(P[i + 1]); }
+  const med = (a) => { a.sort((u, v) => u - v); return a.length ? a[a.length >> 1] : 0; };
+  // ось — по самому хвосту (последние ~3 % длины, середина габаритов): там только корпус и сопло; медиана средней трети — запас
+  let tx0 = 1e9, tx1 = -1e9, ty0 = 1e9, ty1 = -1e9, tn = 0; const zt = z1 - Math.max(0.03 * L, 0.04);
+  for (let i = 0; i < P.length; i += 3) if (P[i + 2] > zt) { tx0 = Math.min(tx0, P[i]); tx1 = Math.max(tx1, P[i]); ty0 = Math.min(ty0, P[i + 1]); ty1 = Math.max(ty1, P[i + 1]); tn++; }
+  const tail = tn >= 6 && tx1 - tx0 < r * 3 && ty1 - ty0 < r * 3 && tx1 - tx0 > r && Math.abs((tx1 - tx0) - (ty1 - ty0)) < 0.2 * Math.max(tx1 - tx0, ty1 - ty0); // в срезе — только корпус (не стабилизаторы во всю ширину)
+  const cx = ax ? ax[0] : tail ? (tx0 + tx1) / 2 : med(xs), cy = ax ? ax[1] : tail ? (ty0 + ty1) / 2 : med(ys);
+  // радиус корпуса по модели (нижняя четверть расстояний вершин средней трети от оси): паспортный r бывает меньше — у Х-25МЛ и «Бука» в круг r·0,95 не попадал хвост и срез сопла находился на носу
+  const ds = xs.map((x, i) => Math.hypot(x - cx, ys[i] - cy)).sort((u, v) => u - v), rb = ds.length ? ds[Math.floor(ds.length * 0.25)] : r, lim = Math.max(r * 0.95, Math.min(rb * 1.2, r * 3));
+  const zs = []; for (let i = 0; i < P.length; i += 3) if (Math.hypot(P[i] - cx, P[i + 1] - cy) < lim) zs.push(P[i + 2]);
+  zs.sort((u, v) => u - v);
+  return { x: cx, y: cy, z: (zs.length ? zs[Math.floor(zs.length * 0.97)] : z1) - 0.05 };
+}
+
+// НАР в полёте — одна ракета, а не блок (W.vis у С-8 и Hydra — блок на пилоне: 2 м и 0,5 м в поперечнике): калибр 80 / 70 мм, длина ракеты
+const NAR = { s8: { L: 1.5, r: 0.04 }, hydra: { L: 1.45, r: 0.035 } };
+export const narVis = (key, W) => ({ kind: 'missile', color: W.vis.color, ...(NAR[key] || { L: 1.4, r: 0.04 }) });
+export const narMesh = (key, W, mat) => new THREE.Mesh(weaponGeo('nar:' + key, { vis: narVis(key, W) }), mat);
+// ── факел и дым летящего оружия самолёта (relMesh / evMesh в main.js и стенд tools/airdef-fx/weapons-plume.html) ──
+const NZC = {}; // сопло по ключу оружия — считаем один раз по готовой модели
+// факел оружия w на модели g: срез сопла (w.nzL — в осях модели, +Z к хвосту) и факел по типу двигателя; ev — оружие «Мульти-волны» (evMesh)
+export function mountWpnFlame(w, g, ev) {
+  const W = w.W, v = W.vis, stub = !!g.userData.stub;
+  if (!ev) {
+    if (W.kind === 'rocket') { // НАР: факел из среза сопла одной ракеты (калибр 70–80 мм), след — из той же точки (wpnTrail)
+      const f = narVis(w.key, W), nz = w.nzL = { x: 0, y: 0, z: f.L / 2 - 0.02 };
+      g.userData.flame = rocketFlame(g, nz.z, f.r, motorOf(w.key, 'rocket', false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = 'rocket'; g.userData.fr = f.r; g.userData.flame.owner = w;
+      return;
+    }
+    if (W.kind !== 'agm' && W.kind !== 'arm' && W.kind !== 'cruise') return;
+    const nz = w.nzL = NZC[w.key] || nozzleOf(g, v.r, v.nzAx); if (!g.isMesh) NZC[w.key] = nz; // запоминаем только по готовой модели (не по временной)
+    g.userData.flame = rocketFlame(g, nz.z, v.r, motorOf(w.key, W.kind, false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = W.kind === 'cruise' ? 'jet' : 'rocket'; g.userData.flame.owner = w;
+    return;
+  }
+  // баллистическая: факел двигателя на разгоне (у сопла — корма, +Z)
+  if (W.kind === 'tbm') { const nz = nozzleOf(g, v.r); w.nzL = nz; g.userData.flame = rocketFlame(g, nz.z, v.r, motorOf(w.key, 'tbm', false)); g.userData.flame.move(nz.z); g.children.filter((c) => c.renderOrder === 5).forEach((c) => { c.position.x = nz.x; c.position.y = nz.y; }); g.userData.flame.owner = w; } // факел — из среза сопла
+  if (W.kind === 'cruise' && !W.uav && !W.recon && !W.glide) { // крылатая (планирующая бомба — без двигателя): факел из среза сопла — ускоритель на старте, потом маршевый (слабый)
+    const nz = w.nzL = v.nz && !stub ? { x: v.nz[0], y: v.nz[1], z: v.nz[2] } : NZC[w.key] || nozzleOf(g, v.r, v.nzAx); if (!stub) NZC[w.key] = nz; // nz — сопло задано в модели вручную; по временной модели не запоминаем
+    g.userData.flame = rocketFlame(g, nz.z, v.r, motorOf(w.key, 'cruise', false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = 'jet'; g.userData.flame.owner = w; // пуск с самолёта: запуск двигателя, потом маршевый
+  }
+}
+// ракета ЗРК в полёте: модель комплекса gm ({ missile, booster }) или процедурная; ускоритель — отдельной частью (отвалится в полёте); факел у среза сопла
+export function samMissileMesh(m, gm, wMat) {
+  const g = new THREE.Group(), L = m.M.L, r = m.M.r;
+  let hasBoost = false;
+  if (gm) { g.add(gm.missile); if (gm.booster && m.ln && m.ln.stage) { g.add(gm.booster); g.userData.booster = gm.booster; hasBoost = true; } }
+  else {
+    const geos = samGeos(m.S, m.ln), main = new THREE.Mesh(geos.main, wMat); main.position.z = geos.mainZ; g.add(main);
+    if (geos.booster) { const b = new THREE.Mesh(geos.booster, wMat); b.position.z = geos.boosterZ; g.add(b); g.userData.booster = b; hasBoost = true; }
+  }
+  g.userData.flame = rocketFlame(g, L / 2, hasBoost ? r * m.ln.stageR : r, motorOf(m.unit.key, 'sam', false)); g.userData.flame.owner = m; // факел — по типу двигателя (plume.js); конец ленты дыма — в его сопле
+  if (gm) { // готовая модель: сопло ищем по самой модели (один раз на комплекс), а не по паспортной длине
+    const key = m.unit.key, nm = NZC['sam:' + key] || (NZC['sam:' + key] = nozzleOf(gm.missile, r));
+    const nb = hasBoost ? NZC['samb:' + key] || (NZC['samb:' + key] = nozzleOf(gm.booster, r * m.ln.stageR)) : null;
+    g.userData.nzM = nm; const n0 = nb || nm; g.userData.flame.at(n0.x, n0.y, n0.z);
+  }
+  return g;
+}
+// факел оружия: баллистика — на разгоне; крылатая (турбореактивный) — вспышка запуска 1,5 с, потом маленький; ракета — пока горит двигатель
+export function flameOf(g, w) {
+  const f = g.userData.flame, r = w.W.vis.r, k = g.userData.fl;
+  if (k === 'jet') f.set(1, r * (w.t < 1.5 ? 0.6 : 0.3));
+  else if (k === 'rocket') f.set(w.t < (w.W.burn || 3) ? 1 : 0, g.userData.fr || r * 0.85);
+  else f.set(w.phase === 'boost' ? 2 : 0);
+}
+// срез сопла в мире: w.pos + оси модели после lookAt (+Z — назад по скорости), w.nzL — сопло в осях модели
+const TZ = new THREE.Vector3(), TX = new THREE.Vector3(), TY = new THREE.Vector3();
+export function wpnNozzle(w, out) {
+  TZ.copy(w.dir).negate(); TX.set(0, 1, 0).cross(TZ).normalize(); TY.copy(TZ).cross(TX);
+  return out.copy(w.pos).addScaledVector(TZ, w.nzL.z).addScaledVector(TX, w.nzL.x).addScaledVector(TY, w.nzL.y);
+}
 
 // ═════════════ Бомбы и ракеты ═════════════
 function bombGeo(v) {
@@ -578,10 +657,10 @@ export function createFx(scene, P) {
       }
     },
     wpnTrail(w, p) { // p — срез сопла (если известен), иначе 2 м за центром
-      const x = p ? p.x : w.pos.x - w.dir.x * 2, y = p ? p.y : w.pos.y - w.dir.y * 2, z = p ? p.z : w.pos.z - w.dir.z * 2, k = p && w.W.vis ? Math.min(1, w.W.vis.r * 2.5) : 1;
-      const W = w.W, kind = W.kind === 'tbm' ? 'tbm' : W.kind, mo = motorOf(w.key, kind, false), r = W.vis ? W.vis.r : 0.15;
+      const x = p ? p.x : w.pos.x - w.dir.x * 2, y = p ? p.y : w.pos.y - w.dir.y * 2, z = p ? p.z : w.pos.z - w.dir.z * 2, k = p && w.W.vis ? Math.min(1, (w.W.kind === 'rocket' ? narVis(w.key, w.W).r : w.W.vis.r) * 2.5) : 1;
+      const W = w.W, kind = W.kind === 'tbm' ? 'tbm' : W.kind, mo = motorOf(w.key, kind, false), r = kind === 'rocket' ? narVis(w.key, W).r : W.vis ? W.vis.r : 0.15; // у НАР — калибр ракеты, а не блока
       PL.add(w, x, y, z, mo, r);
-      if (mo.a > 0.1) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6), 3 * k, 3, 4, 0.3, 0.2);
+      if (mo.a > 0.1) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.5 : 1), 3 * k, kind === 'rocket' ? 1.2 : 3, 4, 0.3, 0.2); // НАР — мелкие клубы (залп 4–20 ракет: большие шары закрывали вертолёт)
     },
     // ЛТЦ — каждый кадр, пока горит: слепящее ядро, узкий огненный хвост (частицы живут доли секунды — хвост вытягивается
     // по траектории и укорачивается, когда ловушка тормозит), белый дымный след; с выгоранием всё тускнеет и сужается

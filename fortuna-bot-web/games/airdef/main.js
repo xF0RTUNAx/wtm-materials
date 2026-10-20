@@ -22,7 +22,7 @@ import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022q'
 import { createStrike, MODES } from './sim/strike.js?v=20261022q';
 import { createRaid } from './sim/raid.js?v=20261022q';
 import { POD } from './sim/combined.js?v=20261022q';
-import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022q';
+import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022q';
 import { slotCount } from './launchers.js?v=20261022q';
 import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022q';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022q';
@@ -474,6 +474,7 @@ function decoyMesh() {
 // временную»); у ракет с двигателем — факел из среза сопла
 function relMesh(w) {
   if (w.ev) return evMesh(w);
+  if (w.W.kind === 'rocket') { const g = narMesh(w.key, w.W, wMat); mountWpnFlame(w, g, false); return g; } // НАР — одна ракета (калибр 70–80 мм), а не блок с пилона
   const g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (weaponPending(w.key)) { g.userData.stub = true; wantWeapon(w.key); }
   mountWpnFlame(w, g, false);
   return g;

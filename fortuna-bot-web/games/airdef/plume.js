@@ -25,7 +25,7 @@ export const MOTOR = { // ширина у сопла и рост — по сни
   solid: { a: 0.8, c: [0.9, 0.9, 0.88], w: 15, g: [1.2, 12], life: [10, 80], fl: [1, 0.78, 0.5], br: 1.0, len: [26, 13] },
   lowsmoke: { a: 0.32, c: [0.93, 0.93, 0.93], w: 11, g: [0.9, 9], life: [6, 36], fl: [1, 0.86, 0.68], br: 1.0, len: [22, 12] },
   manpads: { a: 0.75, c: [0.82, 0.82, 0.8], w: 24, g: [0.7, 14], life: [7, 50], fl: [1, 0.92, 0.8], br: 1.1, len: [20, 14] },
-  rocket: { a: 0.75, c: [0.9, 0.9, 0.88], w: 22, g: [0.8, 16], life: [5, 50], fl: [1, 0.86, 0.6], br: 1.0, len: [18, 18] },
+  rocket: { a: 0.75, c: [0.9, 0.9, 0.88], w: 10, g: [0.8, 16], life: [5, 50], fl: [1, 0.86, 0.6], br: 1.0, len: [18, 18] }, // НАР 70–80 мм (r ≈ 0,04): у сопла ≈ 0,4 м, за 2 с — до 2–3 м; факел ≈ 1 м
   atgm: { a: 0.42, c: [0.8, 0.8, 0.78], w: 14, g: [0.5, 9], life: [4, 35], fl: [1, 0.8, 0.55], br: 0.9, len: [12, 12] },
   liquid: { a: 0.16, c: [0.7, 0.54, 0.42], w: 9, g: [0.8, 7], life: [6, 24], fl: [1, 0.62, 0.38], br: 0.8, len: [20, 16] },
   ramjet: { a: 0.05, c: [0.86, 0.86, 0.86], w: 6, g: [0.5, 4], life: [3, 12], fl: [0.6, 0.72, 1], br: 0.35, len: [8, 8] },
@@ -86,7 +86,8 @@ function flameMat(m) {
 let glowTex = null; // свечение у сопла — создаётся при первом факеле (в браузере; стенды Deno без canvas)
 const mkGlow = () => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
   g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,230,180,.55)'); g.addColorStop(1, 'rgba(255,160,60,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); };
-let frameT = 0, flameLayer = 0;
+let frameT = 0, flameLayer = 0, live = null; // live — дымные ленты (createPlumes): свежий конец ленты привязывается к срезу сопла каждый кадр
+const WP = new THREE.Vector3();
 // слой факела: при дыме в половине разрешения — проход огня (рисуется после дыма — дым у сопла не закрывает факел)
 export function setFlameLayer(l) { flameLayer = l; }
 export function flameTick(dt) { frameT += dt * 30; for (const M of flameMats.values()) M.uniforms.frame.value = frameT; } // 30 кадров/с, у каждой ракеты свой сдвиг — в uv нет, поэтому сдвиг — масштабом мерцания
@@ -99,10 +100,13 @@ export function makeFlame(group, z, r, motor = MOTOR.solid) {
   let mot = motor;
   return {
     // k: 0 — двигатель не работает, 1 — маршевый, 2 — стартовый; rr — радиус сопла; y — высота (на высоте струя шире и длиннее)
+    owner: null, // ключ дымной ленты (ракета ЗРК / оружие): пока факел горит, конец ленты — в срезе сопла, а не в последней точке следа (на 600 м/с точки — через 24 м)
     set(k, rr = r, y = 0) {
-      mesh.visible = glow.visible = k > 0; if (!k) return;
+      const was = mesh.visible; mesh.visible = glow.visible = k > 0;
+      if (!k) { if (was && this.owner && live) live.finish(this.owner); return; }
       const e = 1 - air(y), f = 0.9 + Math.random() * 0.2, w = rr * (k > 1 ? 3.2 : 2.4) * (1 + 1.6 * e), L = rr * mot.len[k > 1 ? 0 : 1] * 1.5 * (1 + 0.8 * e) * f;
       mesh.scale.set(w, 1, L); glow.scale.setScalar(rr * (k > 1 ? 5 : 3.6) * (1 + e) * (0.9 + Math.random() * 0.2)); glow.material.opacity = Math.min(0.8, 0.4 * mot.br + 0.1);
+      if (this.owner && live) { group.updateMatrixWorld(true); mesh.getWorldPosition(WP); live.tip(this.owner, WP.x, WP.y, WP.z); }
     },
     motor(m) { if (m === mot) return; mot = m; mesh.material = flameMat(m); glow.material.color.setRGB(...m.fl); },
     move(z2) { mesh.position.z = glow.position.z = z2; },
@@ -113,7 +117,7 @@ export function makeFlame(group, z, r, motor = MOTOR.solid) {
 // ═════════════ Дымная лента ═════════════
 const SM_V = `#include <common>
   #include <logdepthbuf_pars_vertex>
-  attribute vec3 aTan; attribute vec4 aA; attribute vec4 aB; attribute vec3 aCol; attribute float aSeed;
+  attribute vec3 aTan; attribute vec4 aA; attribute vec4 aB; attribute vec3 aCol; attribute float aSeed, aRamp;
   uniform float uTime; uniform vec3 uWind, uSun; uniform float fogDensity;
   varying vec2 vUv; varying float vAl, vF, vAge, vSh; varying vec3 vCol;
   void main() {
@@ -128,9 +132,10 @@ const SM_V = `#include <common>
     p += sn * aA.y * w * 0.5; vSh = dot(sn * aA.y, uSun);                 // край ленты к солнцу — освещённый
     vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv;
     float d = -mv.z; vF = 1.0 - exp(-fogDensity * fogDensity * d * d);
-    // у сопла дым появляется не сразу (горячие газы прозрачны), к концу жизни тает; лента «ребром» к камере — бледнее (клубы-частицы её дополняют)
-    vAl = aA.w * smoothstep(0.0, 0.035, age) * pow(1.0 - f, 1.4) * mix(0.35, 1.0, smoothstep(0.08, 0.5, sl));
-    vUv = vec2(u / max(w, 0.6) * 0.42 + aSeed * 7.0, aA.y * 0.5 + 0.5); vAge = age; vCol = aCol;
+    // у сопла дым появляется не сразу (горячие газы прозрачны: aRamp — время, за которое ракета уходит от факела), к концу жизни тает; лента «ребром» к камере — бледнее (клубы-частицы её дополняют)
+    vAl = aA.w * smoothstep(0.0, aRamp, age) * pow(1.0 - f, 1.4) * mix(0.35, 1.0, smoothstep(0.08, 0.5, sl));
+    float wt = aA.z + aB.x * sqrt(max(age, 0.15));                            // масштаб узора по длине: у сопла не растёт (иначе u·dw/w² при больших u рвёт текстуру в гребёнку)
+    vUv = vec2(u / max(wt, 0.6) * 0.42 + aSeed * 7.0, aA.y * 0.5 + 0.5); vAge = age; vCol = aCol;
     #include <logdepthbuf_vertex>
   }`;
 const SM_F = `#include <common>
@@ -160,7 +165,7 @@ export function createPlumes(scene, P = {}) {
   const pos = new Float32Array(MAXV * 3), tan = new Float32Array(MAXV * 3), A = new Float32Array(MAXV * 4), B = new Float32Array(MAXV * 4), C = new Float32Array(MAXV * 3);
   const idx = new Uint32Array(MAXV * 3);
   const at = (n, a, s) => { const b = new THREE.BufferAttribute(a, s); b.setUsage(THREE.DynamicDrawUsage); geo.setAttribute(n, b); return b; };
-  const SD = new Float32Array(MAXV); const aPos = at('position', pos, 3), aTan = at('aTan', tan, 3), aA = at('aA', A, 4), aB = at('aB', B, 4), aC = at('aCol', C, 3), aS = at('aSeed', SD, 1);
+  const SD = new Float32Array(MAXV), RP = new Float32Array(MAXV); const aPos = at('position', pos, 3), aTan = at('aTan', tan, 3), aA = at('aA', A, 4), aB = at('aB', B, 4), aC = at('aCol', C, 3), aS = at('aSeed', SD, 1), aR = at('aRamp', RP, 1);
   geo.setIndex(new THREE.BufferAttribute(idx, 1)); geo.index.setUsage(THREE.DynamicDrawUsage); geo.setDrawRange(0, 0);
   const mat = new THREE.ShaderMaterial({
     uniforms: { map: { value: smokeTex }, uTime: { value: 0 }, uWind: { value: new THREE.Vector3(2, 0, 1) }, uLight: { value: new THREE.Vector3(0.9, 0.9, 0.9) }, uSun: { value: new THREE.Vector3(0.4, 0.8, 0.4).normalize() }, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, ...FXU },
@@ -168,20 +173,34 @@ export function createPlumes(scene, P = {}) {
   });
   const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 2; scene.add(mesh);
   const trails = new Map(); let time = 0;
-  return {
+  const NUM = ['x', 'y', 'z', 't', 'w', 'g', 'life', 'a', 'rise', 'u', 'ramp'], TMP = {}; // поля точки, что между точками считаются линейно
+  const api = {
     mesh, mat,
     // точка следа у среза сопла: obj — ракета (ключ ленты), m — MOTOR.*, r — радиус корпуса, y — высота
     add(obj, x, y, z, m, r) {
       if (!m || m.a < 0.02) return;
       let T = trails.get(obj);
-      if (!T) { T = { pts: [], end: 0, seed: Math.random() }; trails.set(obj, T); }
+      if (!T) { T = { pts: [], end: 0, seed: Math.random(), tip: null }; trails.set(obj, T); }
       const L = T.pts[T.pts.length - 1];
       if (L && time - L.t < 0.02) return;
-      const e = 1 - air(y), rr = Math.max(0.03, r);
-      const p = { x, y, z, t: time, w: Math.max(0.6, rr * m.w) * (1 + 1.2 * e), g: (m.g[0] + rr * m.g[1]) * (1 + 0.6 * e), life: (m.life[0] + rr * m.life[1]) * (0.7 + 0.3 * (1 - e)),
-        a: Math.min(1, m.a * Math.min(1.2, 0.8 + rr * 2)) * (1 - 0.45 * e), rise: 0.25 + rr * 1.5, c: m.c, u: L ? L.u + Math.hypot(x - L.x, y - L.y, z - L.z) : 0 };
-      T.pts.push(p); T.end = Math.max(T.end, time + p.life);
+      const e = 1 - air(y), rr = Math.max(0.03, r), dt = L ? time - L.t : 0, sp = L && dt > 1e-3 ? Math.hypot(x - L.x, y - L.y, z - L.z) / dt : 0;
+      // дым начинается сразу за факелом: время, за которое ракета проходит длину факела (на 600 м/с — десятки мм, на 100 м/с — до 0,035 с)
+      const ramp = sp > 5 ? Math.min(0.035, Math.max(0.004, rr * m.len[0] * 1.2 / sp)) : 0.035;
+      const p = { x, y, z, t: time, w: Math.max(0.3, rr * m.w) * (1 + 1.2 * e), g: (m.g[0] + rr * m.g[1]) * (1 + 0.6 * e), life: (m.life[0] + rr * m.life[1]) * (0.7 + 0.3 * (1 - e)),
+        a: Math.min(1, m.a * Math.min(1.2, 0.8 + rr * 2)) * (1 - 0.45 * e), rise: 0.25 + rr * 1.5, c: m.c, u: L ? L.u + Math.hypot(x - L.x, y - L.y, z - L.z) : 0, ramp };
+      T.pts.push(p); T.end = Math.max(T.end, time + p.life); T.tip = null;
       if (T.pts.length > MAXP) { const o = T.pts; T.pts = o.filter((q, i) => i >= o.length / 2 || i % 2 === 0); } // длинная лента — старая половина реже
+    },
+    // свежий конец ленты — в срезе сопла прямо сейчас (зовёт факел каждый кадр); между точками следа (до 24 м при 600 м/с) лента тянется к нему
+    tip(obj, x, y, z) {
+      const T = trails.get(obj); if (!T || !T.pts.length) return;
+      if (!T.tip) T.tip = { x, y, z, t: time }; else { T.tip.x = x; T.tip.y = y; T.tip.z = z; T.tip.t = time; }
+    },
+    // двигатель выгорел: последний конец ленты — постоянная точка (лента кончается у сопла в момент выгорания)
+    finish(obj) {
+      const T = trails.get(obj); if (!T || !T.tip) return;
+      const L = T.pts[T.pts.length - 1], k = T.tip; T.tip = null; if (!L) return;
+      T.pts.push({ ...L, x: k.x, y: k.y, z: k.z, t: k.t, u: L.u + Math.hypot(k.x - L.x, k.y - L.y, k.z - L.z) });
     },
     clear() { trails.clear(); geo.setDrawRange(0, 0); },
     update(dt, light, wind, sun) {
@@ -190,22 +209,41 @@ export function createPlumes(scene, P = {}) {
       for (const [k, T] of trails) {
         if (time > T.end) { trails.delete(k); continue; }
         const p = T.pts; while (p.length > 2 && time - p[0].t > p[0].life && time - p[1].t > p[1].life) p.shift();
-        if (p.length < 2 || v + p.length * 2 > MAXV) continue;
-        const v0 = v;
-        for (let i = 0; i < p.length; i++) {
-          const q = p[i], a = p[Math.max(0, i - 1)], b = p[Math.min(p.length - 1, i + 1)];
-          let tx = b.x - a.x, ty = b.y - a.y, tz = b.z - a.z; if (tx * tx + ty * ty + tz * tz < 1e-8) { tx = 0; ty = 0; tz = 1; }
-          const fade = i === p.length - 1 ? 0 : 1; // свежий конец — тонкий хвост у сопла
+        if (T.tip && time - T.tip.t > 0.1) T.tip = null; // факел погас без finish (ракета сбита, пропала)
+        const L = p[p.length - 1]; if (!L) continue;
+        const tipQ = T.tip ? { ...L, x: T.tip.x, y: T.tip.y, z: T.tip.z, t: time, u: L.u + Math.hypot(T.tip.x - L.x, T.tip.y - L.y, T.tip.z - L.z) } : null;
+        const list = tipQ ? p.concat([tipQ]) : p, nl = list.length; if (nl < 2) continue;
+        // точки следа редкие (0,03–0,08 с: на 600 м/с — 24 м) — между ними лента режется на короткие звенья (узор клубов и изгиб считаются по вершинам)
+        const seg = (a, b) => { const D = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z); return D > 1e-4 ? Math.min(40, Math.ceil(D / Math.min(10, Math.max(1.5, 1.5 * a.w)))) : 1; };
+        let cnt = 1; for (let i = 0; i < nl - 1; i++) cnt += seg(list[i], list[i + 1]);
+        if (v + cnt * 2 > MAXV) continue;
+        const v0 = v; let j = 0;
+        const put = (q, fade) => {
           for (const s of [-1, 1]) {
-            const j = v * 3, j4 = v * 4;
-            pos[j] = q.x; pos[j + 1] = q.y; pos[j + 2] = q.z; tan[j] = tx; tan[j + 1] = ty; tan[j + 2] = tz; C[j] = q.c[0]; C[j + 1] = q.c[1]; C[j + 2] = q.c[2];
-            SD[v] = T.seed; A[j4] = q.t; A[j4 + 1] = s; A[j4 + 2] = q.w; A[j4 + 3] = q.a * fade; B[j4] = q.g; B[j4 + 1] = q.life; B[j4 + 2] = q.u; B[j4 + 3] = q.rise; v++;
+            const o = v * 3, o4 = v * 4;
+            pos[o] = q.x; pos[o + 1] = q.y; pos[o + 2] = q.z; C[o] = q.c[0]; C[o + 1] = q.c[1]; C[o + 2] = q.c[2];
+            SD[v] = T.seed; RP[v] = q.ramp; A[o4] = q.t; A[o4 + 1] = s; A[o4 + 2] = q.w; A[o4 + 3] = q.a * fade; B[o4] = q.g; B[o4 + 1] = q.life; B[o4 + 2] = q.u; B[o4 + 3] = q.rise; v++;
           }
+          j++;
+        };
+        for (let i = 0; i < nl - 1; i++) {
+          const a = list[i], b = list[i + 1], n = seg(a, b);
+          put(a, 1);
+          for (let k2 = 1; k2 < n; k2++) { const f = k2 / n; for (const key of NUM) TMP[key] = a[key] + (b[key] - a[key]) * f; TMP.c = a.c; put(TMP, 1); }
         }
-        for (let i = 0; i < p.length - 1; i++) { const a = v0 + i * 2; idx[ii++] = a; idx[ii++] = a + 1; idx[ii++] = a + 2; idx[ii++] = a + 1; idx[ii++] = a + 3; idx[ii++] = a + 2; }
+        put(list[nl - 1], 0); // свежий конец — тонкий хвост у сопла
+        // касательные — по соседним точкам (после того как все вершины ленты записаны)
+        for (let i = 0; i < j; i++) {
+          const a = v0 + Math.max(0, i - 1) * 2, b = v0 + Math.min(j - 1, i + 1) * 2;
+          let tx = pos[b * 3] - pos[a * 3], ty = pos[b * 3 + 1] - pos[a * 3 + 1], tz = pos[b * 3 + 2] - pos[a * 3 + 2]; if (tx * tx + ty * ty + tz * tz < 1e-8) { tx = 0; ty = 0; tz = 1; }
+          for (let s = 0; s < 2; s++) { const o = (v0 + i * 2 + s) * 3; tan[o] = tx; tan[o + 1] = ty; tan[o + 2] = tz; }
+        }
+        for (let i = 0; i < j - 1; i++) { const a = v0 + i * 2; idx[ii++] = a; idx[ii++] = a + 1; idx[ii++] = a + 2; idx[ii++] = a + 1; idx[ii++] = a + 3; idx[ii++] = a + 2; }
       }
-      for (const b of [aPos, aTan, aA, aB, aC, aS]) { b.updateRange.offset = 0; b.updateRange.count = v * b.itemSize; b.needsUpdate = true; }
+      for (const b of [aPos, aTan, aA, aB, aC, aS, aR]) { b.updateRange.offset = 0; b.updateRange.count = v * b.itemSize; b.needsUpdate = true; }
       geo.index.updateRange.offset = 0; geo.index.updateRange.count = ii; geo.index.needsUpdate = true; geo.setDrawRange(0, ii);
     },
   };
+  live = api;
+  return api;
 }
