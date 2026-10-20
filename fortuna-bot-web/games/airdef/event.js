@@ -29,6 +29,7 @@ body.eventOn #menu { visibility: hidden; }
 #event::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: var(--pn); z-index: 5; }
 #event .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 18px; padding: 0 max(14px, var(--sa-r, 0px)) 0 max(14px, var(--sa-l, 0px)); background: var(--pn); border-bottom: 1px solid var(--ln); z-index: 4; }
 #event .top h1 { margin: 0; font: 400 20px 'Russo One', sans-serif; letter-spacing: .02em; white-space: nowrap; }
+#event .top h1 .pk { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.25em; color: #ff9a3c; margin-right: 4px; }
 #event .top .tm { font-weight: 600; font-size: 13px; color: var(--ev2); white-space: nowrap; }
 #event .tabs { display: flex; margin-left: 8px; align-self: stretch; }
 #event .tabs button { border: 0; border-bottom: 3px solid transparent; background: none; color: var(--dim); padding: 0 16px; font: 600 14px 'IBM Plex Sans', sans-serif; cursor: pointer; white-space: nowrap; }
@@ -137,7 +138,7 @@ export function createEvent(C) {
     if (!root.classList.contains('on')) return;
     const sc = root.querySelector('.pl'), st = sc ? sc.scrollTop : 0;
     root.innerHTML = `<div class="bg"></div><div class="fog"></div>
-      <div class="top"><h1>🎃 Туманная топь</h1><span class="tm" id="evTm">${leftTxt()}</span>
+      <div class="top"><h1>${ico('pumpkin', 'pk')} Туманная топь</h1><span class="tm" id="evTm">${leftTxt()}</span>
         <div class="tabs"><button data-tab="fly" class="${S.tab === 'fly' ? 'on' : ''}">Вылет на вертолёте</button><button data-tab="def" class="${S.tab === 'def' ? 'on' : ''}" ${DEF_READY ? '' : 'disabled'}>Оборона от вертолётов${DEF_READY ? '' : ' · скоро'}</button></div>
         <button class="x" data-close="1" aria-label="Закрыть">✕</button></div>
       <div class="body">${S.tab === 'def' && DEF_READY ? def() : fly()}</div>`;
@@ -192,6 +193,7 @@ export function createEvent(C) {
   };
   // кнопка входа на фоне меню рядом с «Исследованиями»; после конца события скрыта
   const btn = $('evtBtn');
+  if ($('evtIco')) $('evtIco').innerHTML = ico('pumpkin'); // pumpkin-lantern — Lorc (game-icons.net, CC BY 3.0)
   if (btn) { btn.style.display = eventOn() ? 'flex' : 'none'; if ($('evtLeft')) $('evtLeft').textContent = `событие · ${eventLeft() >= 864e5 ? `ещё ${Math.floor(eventLeft() / 864e5)} дн.` : leftTxt()}`; btn.onclick = () => { snd.click(); api.open(); }; }
   return api;
 }
