@@ -13,6 +13,7 @@ import { mulberry32 } from './city.js?v=20261022q';
 import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261022q';
 import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261022q';
 import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261022q';
+import { RAID_HELI } from './sim/raid.js?v=20261022q';
 import { fwdOf } from '../drone/sim/core.js?v=20261022q';
 import { weaponHasModel } from './models.js?v=20261022q';
 
@@ -140,6 +141,7 @@ export function createPhoto(C, ctrls) {
       if (sub.id === 'msl') { if (!showF(follow('msl', () => newest(S.sams, (m) => m.unit === u)), samCap)) { unit('ждём пуска'); R.fb = true; } return; }
       if (sub.id === 'trk') { const t = u.track && !u.track.dead && (!u.track.W || weaponHasModel(u.track.key, u.track.W)) ? u.track : null; if (t) setMv(t, `Цель ${u.S.short}: ${t.W ? munCap(t, false) : `${t.carrierName || 'самолёт'} · ${kmh(t)} км/ч · ${hTxt(t.pos)}`}`); else { unit('целей нет'); R.fb = true; } return; }
       if (sub.id === 'plane') { if (!showF(follow('plane', () => { const ps = C.raid.alive().filter((a) => a.role !== 'decoy'); return ps.length ? ps[Math.floor(rnd() * ps.length)] : null; }), (a, dead) => `${a.carrierName || 'Ударник налёта'}${dead ? ' — сбит' : ` · ${kmh(a)} км/ч · ${hTxt(a.pos)}`}`)) { unit('ждём налёта'); R.fb = true; } return; }
+      if (sub.id === 'heli') { if (!showF(follow('heli', () => { const hs = C.raid.alive().filter((a) => a.heli); return hs.length ? hs[Math.floor(rnd() * hs.length)] : null; }), (a, dead) => `Вертолёт налёта${dead ? ' — сбит' : ` · ${kmh(a)} км/ч · ${hTxt(a.pos)}`}`)) { unit('ждём вертолёта'); R.fb = true; } return; }
       if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(S.wpns, (w) => w.ev && !w.W.recon && weaponHasModel(w.key, w.W))), munCap)) { unit('ждём волну'); R.fb = true; } return; }
       const o = st.targets[0]; setObj(o, u.pos, `${o.name} — прикрывает ${u.S.short}`); return;
     }
@@ -162,6 +164,7 @@ export function createPhoto(C, ctrls) {
   }
 
   // ── камера ──
+  const gAt = (x, z) => Math.max(city.groundH(x, z), city.autumn ? city.autumn.WY : -1e9); // земля или вода болота
   const Fs = V3(), Rv = V3(), Uv = V3(), DIR = V3(), WANT = V3(), LW = V3(), OFF = V3(), LOFF = V3(), prevPos = V3(), lookS = V3();
   let curDist = 30, hadPos = false;
   function cameraUpdate(dt) {
@@ -171,7 +174,7 @@ export function createPhoto(C, ctrls) {
     if (R.kind !== st.kind) { st.kind = R.kind; farName(); }
     const fov = (shot && shot.f) || FOVS[st.fi] || (A.fixed ? (R.kind === 'st' ? 11 : 32) : A.mount ? 70 : 55); // «Борт» — широкий угол, как экшн-камера
     if (Math.abs(camera.fov - fov) > 0.01 && !(A.fixed && R.kind !== 'st' && st.fb.t > 0 && !FOVS[st.fi] && !(shot && shot.f))) C.setFov(fov); // пролёт: провожаем — фокус свой (ниже)
-    if (shot && shot.cam) { const q = shot.cam; camera.position.set(q[0], q[1], q[2]); camera.up.set(0, 1, 0); camera.lookAt(q[3], q[4], q[5]); return; } // проверка: камера в точке [x, y, z, куда x, y, z]
+    if (shot && shot.cam) { const q = shot.cam, g = shot.cg; camera.position.set(q[0], q[1] + (g ? gAt(q[0], q[2]) : 0), q[2]); camera.up.set(0, 1, 0); camera.lookAt(q[3], q[4] + (g ? gAt(q[3], q[5]) : 0), q[5]); return; } // камера в точке [x, y, z, куда x, y, z]; cg — высоты (y) над землёй, а не абсолютные
     if (R.kind === 'hold') { lookS.lerp(R.look, 1 - Math.exp(-dt * 4)); camera.up.set(0, 1, 0); camera.lookAt(lookS); return; }
     const snap = st.snap || !hadPos || prevPos.distanceToSquared(R.pos) > 400 * 400; st.snap = false; prevPos.copy(R.pos); hadPos = true;
     if (snap || R.kind === 'py') Fs.copy(R.F); else Fs.lerp(R.F, 1 - Math.exp(-dt * 5)).normalize();
@@ -324,7 +327,7 @@ export function createPhoto(C, ctrls) {
       st.hero = S.addUnit(key, xz[0], xz[1], { roof: xz[2], skill: 0.95, yaw: rnd() * 6.28 });
       C.syncUnits();
       if (st.vsMulti) startEvDef(); else C.raid.spawnWave(4, 2, st.targets, 7000);
-      st.subs = [{ id: 'unit', n: Sx.short }, { id: 'msl', n: 'Его ракета' }, { id: 'trk', n: 'Его цель' }, st.vsMulti ? { id: 'mun', n: 'Ракеты и дроны' } : { id: 'plane', n: 'Самолёт налёта' }, { id: 'tgt', n: 'Объект' }];
+      st.subs = [{ id: 'unit', n: Sx.short }, { id: 'msl', n: 'Его ракета' }, { id: 'trk', n: 'Его цель' }, st.vsMulti ? { id: 'mun', n: 'Ракеты и дроны' } : { id: 'plane', n: 'Самолёт налёта' }, ...(!st.vsMulti && RAID_HELI[st.att] && RAID_HELI[st.att][st.era] ? [{ id: 'heli', n: 'Вертолёт налёта' }] : []), { id: 'tgt', n: 'Объект' }];
     } else {
       st.att = setup.side === 'east' ? 'west' : 'east';
       const items = photoItems(st.att, st.era), it = items.find(([k]) => k === setup.pmun) || items[0];
@@ -394,7 +397,7 @@ export function createPhoto(C, ctrls) {
   zone.addEventListener('wheel', (e) => { st.adj.k = clamp(st.adj.k * (e.deltaY > 0 ? 1.1 : 0.9), 0.3, 4); e.preventDefault(); }, { passive: false });
 
   // съёмка кадров для фона меню (tools/airdef-shots/capture.js): ?shot={s: объект (id или key подвески), a: ракурс, az/el/k —
-  // подстройка, f — поле зрения, t — не раньше стольких секунд боя, max — предел}. До t время ×4; объект на месте (не запасной) —
+  // подстройка, ox/oy — сдвиг объекта в кадре (рад), f — поле зрения, t — не раньше стольких секунд боя, max — предел}. До t время ×4; объект на месте (не запасной) —
   // стоп-кадр, через ~1,2 с window.__shot = 'ready' (не дождались к max — 'timeout')
   let shot = null; try { const q = C.Q.get('shot'); if (q) shot = JSON.parse(q); } catch (_) { shot = null; }
   function shotApply() {
@@ -431,7 +434,7 @@ export function createPhoto(C, ctrls) {
       if (st.br === 'air') { ctrls.air.update(dt); airTick(dt); } else if (st.br === 'def') defTick(dt); else evTick(dt, startEvMulti);
     },
     dtK: () => SPD[st.spd],
-    camera(dt) { cameraUpdate(dt); shotTick(dt); },
+    camera(dt) { cameraUpdate(dt); if (shot && (shot.ox || shot.oy)) { camera.rotateY(shot.ox || 0); camera.rotateX(-(shot.oy || 0)); } shotTick(dt); }, // ox, oy — сдвиг объекта в кадре, рад (вправо / вверх): композиция не по центру
     hud(dt, t) {
       if (st.br === 'air') ctrls.air.hud(dt, t); // пламя форсажа и видимость модели
       if (!st.clean && (st.capT -= dt) <= 0) { st.capT = 0.2; $('phCap').textContent = R.cap + (ANG[st.ang].mount && R.cap2 ? ` · камера: ${R.cap2} (тап по «Борт» — другое место)` : ''); }
