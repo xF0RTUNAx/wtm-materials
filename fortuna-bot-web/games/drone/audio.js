@@ -53,7 +53,7 @@ export function createAudio() {
     return (v.lp[name] = { s: s0, g, r: 0.97 + Math.random() * 0.06 });
   }
   // ненужные петли голоса — тише и стоп (не крутить вхолостую: до 24 источников); понадобятся — создадутся снова
-  const vLoopsOff = (v, keep) => { if (v.lp) for (const k in v.lp) if (k !== keep[0] && k !== keep[1]) { const L = v.lp[k]; set(L.g.gain, 0, 0.1); try { L.s.stop(now() + 0.6); } catch (_) { /* уже */ } L.s.onended = () => { try { L.g.disconnect(); } catch (_) { /* уже */ } }; delete v.lp[k]; } };
+  const vLoopsOff = (v, keep) => { if (v.lp) for (const k in v.lp) if (!keep.includes(k)) { const L = v.lp[k]; set(L.g.gain, 0, 0.1); try { L.s.stop(now() + 0.6); } catch (_) { /* уже */ } L.s.onended = () => { try { L.g.disconnect(); } catch (_) { /* уже */ } }; delete v.lp[k]; } };
   let rpm = 0.55, crackleT = 0, spatialT = 0;
   const spatialWant = [];
   const now = () => ctx.currentTime;
@@ -183,7 +183,7 @@ export function createAudio() {
       // ближайшие источники (без сортировки и новых массивов: голосов всего 6)
       const want = spatialWant; want.length = 0;
       for (const c of cands) {
-        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : c.kind === 'prop' ? 5000 : c.kind === 'heli' ? 7000 : c.kind === 'tprop' ? 9000 : 12000)) continue;
+        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : c.kind === 'tbm' ? 25000 : c.kind === 'prop' ? 5000 : c.kind === 'heli' ? 7000 : c.kind === 'tprop' ? 9000 : 12000)) continue;
         c._d = d; let i = want.length; while (i > 0 && want[i - 1]._d > d) i--;
         if (i < voices.length) { want.splice(i, 0, c); if (want.length > voices.length) want.pop(); }
       }
@@ -210,12 +210,22 @@ export function createAudio() {
         const wob = 1 + 0.02 * Math.sin(performance.now() / 470 + v.ph), f = 54 * dop * wob;
         set(v.po.frequency, f); set(v.po2.frequency, f * 1.5); set(v.pf.frequency, 380 + 600 * Math.exp(-d / 1800)); set(v.prG.gain, 0.8);
         if (v.psG) set(v.psG.gain, 0);
-        set(v.roarF.frequency, 650 * dop); v.roarF.Q.value = 0.8; set(v.roarG.gain, 0.3); set(v.rumbG.gain, 1.0);
+        const tl = VL && vLoop(v, VL[0]); // запись винтов (Ту-95) — синтез тише
+        if (tl) { set(tl.g.gain, 1.6); set(tl.s.playbackRate, tl.r * dop * wob); set(v.prG.gain, 0.15); }
+        set(v.roarF.frequency, 650 * dop); v.roarF.Q.value = 0.8; set(v.roarG.gain, 0.3); set(v.rumbG.gain, tl ? 0.4 : 1.0);
         set(v.whF.frequency, 1300 * dop); v.whF.Q.value = 8; set(v.whG.gain, 0.25); set(v.crG.gain, 0); set(v.g.gain, 1.3 * (c.gain || 1));
+      } else if (c.kind === 'tbm') { // баллистика: разгон — рёв двигателя (синтез) + гул в небе (запись), после выгорания — только гул вдали,
+        // на спуске двигателя нет — свист и шум воздуха (раньше на спуске снова звучал «двигатель»)
+        const rl = VL && vLoop(v, VL[0]), eng = c.pw || 0, air = c.air || 0;
+        if (rl) { set(rl.g.gain, 1.5 * (1 - air) * (0.5 + 0.5 * eng)); set(rl.s.playbackRate, rl.r * clamp(dop, 0.7, 1.4)); }
+        set(v.roarF.frequency, (air ? 2200 : 1300) * dop); v.roarF.Q.value = air ? 1.4 : 0.45; set(v.roarG.gain, 1.6 * eng + 0.5 * air); set(v.rumbG.gain, 0.3 * eng);
+        set(v.whF.frequency, 4200 * dop); v.whF.Q.value = 1.2; set(v.whG.gain, 1.2 * eng + 0.9 * air); set(v.crG.gain, 0.6 * eng); set(v.g.gain, 0.6 * (c.gain || 1));
       } else if (c.kind === 'heli') { // вертолёт: записанный гул винта — малые и большие обороты по нагрузке (c.pw 0…1); нет записи — глухие хлопки синтезом
         const lo = VL && vLoop(v, VL[0]), hi = VL && vLoop(v, VL[1]), pw = clamp(c.pw ?? 0.6, 0, 1), k = c.rate || 1;
+        const far = VL && VL[2] && vLoop(v, VL[2]), fk = far ? clamp((d - 700) / 1800, 0, 1) : 0; // вдали — запись дальнего вертолёта (глухие хлопки, эхо)
+        if (far) { set(far.g.gain, 1.7 * fk); set(far.s.playbackRate, far.r * k * dop); }
         if (lo && hi) {
-          set(lo.g.gain, 1.5 * Math.cos(pw * Math.PI / 2)); set(hi.g.gain, 1.5 * Math.sin(pw * Math.PI / 2));
+          set(lo.g.gain, 1.5 * Math.cos(pw * Math.PI / 2) * (1 - fk)); set(hi.g.gain, 1.5 * Math.sin(pw * Math.PI / 2) * (1 - fk));
           set(lo.s.playbackRate, lo.r * k * dop * (0.95 + 0.04 * pw)); set(hi.s.playbackRate, hi.r * k * dop * (0.98 + 0.04 * pw));
           set(v.roarG.gain, 0); set(v.rumbG.gain, 0.25); set(v.whG.gain, 0);
         } else { set(v.roarF.frequency, 260 * dop); v.roarF.Q.value = 1; set(v.roarG.gain, 0.5); set(v.rumbG.gain, 1.1); set(v.whF.frequency, 5200 * dop); v.whF.Q.value = 14; set(v.whG.gain, 0.15); }

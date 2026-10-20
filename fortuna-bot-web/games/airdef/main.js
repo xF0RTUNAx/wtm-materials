@@ -233,7 +233,7 @@ C.newBattle = function (o) {
     unitDmgK: () => C.hooks.unitDmgK ?? 1,
     laserSpot: (a) => (a === C.player ? (C.hooks.playerLaser ? C.hooks.playerLaser() : null) : raid.laserSpot(a)),
     spawnDecoy: (a, key, aim) => { const d = raid.spawnDecoy(a, key, aim); if (C.hooks.decoyOut) C.hooks.decoyOut(d); } });
-  const raid = createRaid(S, city, rnd, { side: o.defSide === 'east' ? 'west' : 'east', era: o.era, fx: raidFx });
+  const raid = createRaid(S, city, rnd, { side: o.defSide === 'east' ? 'west' : 'east', era: o.era, fx: raidFx, helis: city.kind === 'autumn' }); // ИИ-вертолёты — только на «Туманной топи» (Mark 2026-10-21)
   if (C.diff && (setup.game === 'defense' || (setup.game === 'multi' && setup.mrole !== 'atk'))) raid.setHard(C.diff.knobs(setup.game, setup.diff)); // сложность: налёт против игрока за ПВО
   C.S = S; C.raid = raid; C.player = o.player || null; C.raidEra = o.era || 2;
   for (const ob of S.objects) objLook(ob.id, false);
@@ -384,10 +384,10 @@ const simFx = {
     if (mode === 'cold') { C.fx.launchCold(LP.copy(m.pos).addScaledVector(m.dir, L / 2), m.dir, big); const rec = snd.coldLaunch(d, !big); m.coldRec = !!rec; // С-300 / С-400 / «Тор»: запись старта
       if (rec) m.visIgn = rec.gap; } // только видимое: вспышка и факел — когда в записи начинается рёв; полёт (зажигание в расчёте) — прежний
     else if (mode === 'tube') { C.fx.launchTube(m.pos, m.dir); snd.eject(d, false); }
-    else { C.fx.launchHot(m.pos, m.dir, big, m.unit.pos.clone().setY(city.groundH(m.unit.pos.x, m.unit.pos.z))); snd.samLaunch(d, big); }
+    else { C.fx.launchHot(m.pos, m.dir, big, m.unit.pos.clone().setY(city.groundH(m.unit.pos.x, m.unit.pos.z))); snd.samLaunch(d, big, m.unit.key); }
     if (C.hooks.samLaunch) C.hooks.samLaunch(m);
   },
-  samIgnite(m) { if (m.visIgn !== undefined) return; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), m.dir, m.M.L > 5); if (!m.coldRec) snd.samLaunch(dist(m.pos), m.M.L > 5); }, // под запись — вспышка в отрисовке
+  samIgnite(m) { if (m.visIgn !== undefined) return; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), m.dir, m.M.L > 5); if (!m.coldRec) snd.samLaunch(dist(m.pos), m.M.L > 5, m.unit.key); }, // под запись — вспышка в отрисовке
   samJet(m) { C.fx.jet(m.pos, m.dir); },
   samStage(m) {
     const g = samMeshes.get(m.id), b = g && g.userData.booster; if (!b) return;
@@ -416,7 +416,7 @@ const simFx = {
     C.fx.wpnTrail(w, TP.copy(w.pos).addScaledVector(TZ, w.nzL.z).addScaledVector(TX, w.nzL.x).addScaledVector(TY, w.nzL.y));
   },
   wpnEnd(w, res) { const g = wpnMeshes.get(w.id); if (g) { scene.remove(g); wpnMeshes.delete(w.id); } if (C.hooks.wpnEnd) C.hooks.wpnEnd(w, res); },
-  explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20)); }, // в воздухе — подрыв ЗУР / перехват
+  explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20), kind); }, // в воздухе — подрыв ЗУР / перехват
   gunFire(u, t, hits, dt) {
     C.fx.gunFire(u.pos, t.pos, hits, dt);
     if (snd.gunLoop(u.id, dist(u.pos), u.key)) return; // многоствольные — записанная очередь
@@ -686,7 +686,7 @@ function updateSound(dt) {
   if (live && pl.heli) { fwdOf(pl, LP); snd.heli(dt, { on: true, pw: heliPw(pl), rate: HELI_SND[pl.hm && pl.hm.key] || 1, speed: pl.vel.length(), rear: clamp((LP.dot(camera.getWorldDirection(new THREE.Vector3())) + 1) / 2, 0, 1) }); } else snd.heli(dt, null);
   snd.gunTick(); snd.mapAmb(dt, live, city.kind);
   sndCands.length = 0;
-  const cand = (o, kind, pos, vel, fwd, ab, gain) => { let c = sndPool[sndCands.length]; if (!c) sndPool.push(c = {}); Object.assign(c, { o, kind, pos, vel, fwd, ab, gain, pw: undefined, rate: undefined }); sndCands.push(c); return c; };
+  const cand = (o, kind, pos, vel, fwd, ab, gain) => { let c = sndPool[sndCands.length]; if (!c) sndPool.push(c = {}); Object.assign(c, { o, kind, pos, vel, fwd, ab, gain, pw: undefined, rate: undefined, air: undefined }); sndCands.push(c); return c; };
   const lv = pl && C.state === 'play' ? pl.vel : null, cp = camera.position;
   if (C.raid) for (const a of C.raid.planes) if (!a.dead && !a.out && a.phase !== 'wait') {
     a.sfwd = fwdOf(a, a.sfwd || new THREE.Vector3());
@@ -707,7 +707,7 @@ function updateSound(dt) {
     // «Мульти-волна»: крылатые — маленький турбовентилятор, дроны — поршневой мотор, баллистика — рёв на разгоне и свист на спуске
     for (const w of C.S.wpns) {
       if (w.dead || !w.ev) continue;
-      if (w.W.kind === 'tbm') { if (w.phase !== 'mid') cand(w, 'msl', w.pos, w.vel, null, false, w.phase === 'boost' ? 1.5 : 0.7); }
+      if (w.W.kind === 'tbm') { const c = cand(w, 'tbm', w.pos, w.vel, null, false, w.phase === 'boost' ? 1.5 : 0.9); c.pw = w.phase === 'boost' ? 1 : 0; c.air = w.phase === 'term' ? 1 : 0; } // разгон — двигатель, в небе — гул вдали, спуск — воздух (без «двигателя»)
       else if (w.W.uav) cand(w, 'prop', w.pos, w.vel, w.dir, false, 0.9);
       else cand(w, 'jet', w.pos, w.vel, w.dir, false, 0.55);
     }

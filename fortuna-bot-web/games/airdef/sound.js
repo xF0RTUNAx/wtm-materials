@@ -17,8 +17,12 @@ export function createSound() {
   //   винт — «UH-1 Helicopter» by Rmutt (CC0): малые обороты 0:54, большие 1:03–1:07; самолёт — «Jet Plane Flyby» by qubodup (CC0):
   //   подлёт (свист), уход (рёв), пролёт целиком; очередь — «Navy Mk 15 Phalanx CIWS Fast Burst» by qubodup (CC0), запись
   //   перегружена — верх смягчён и тише; вороны — «Flock of Crows» by Fenodyrie (CC0), с 0:24
-  for (const [k, f] of [['heliLo', 'heli_lo.wav'], ['heliHi', 'heli_hi.wav'], ['jetFront', 'jet_front.wav'], ['jetRear', 'jet_rear.wav'], ['jetPass', 'jet_pass.mp3'], ['ciws', 'ciws_loop.wav'], ['ciwsTail', 'ciws_tail.mp3'], ['crows', 'crows.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261022q`);
-  A.setVoiceLoops({ heli: ['heliLo', 'heliHi'], jet: ['jetFront', 'jetRear'] });
+  for (const [k, f] of [['heliLo', 'heli_lo.wav'], ['heliHi', 'heli_hi.wav'], ['jetFront', 'jet_front.wav'], ['jetRear', 'jet_rear.wav'], ['jetPass', 'jet_pass.mp3'], ['ciws', 'ciws_loop.wav'], ['ciwsTail', 'ciws_tail.mp3'], ['crows', 'crows.mp3'], ['heliFar', 'heli_far.wav'], ['rocketFar', 'rocket_far.wav'], ['intercept', 'intercept.mp3'], ['boomAir', 'boom_air.mp3'],
+    ['tu95', 'tu95_loop.wav'], ['patriot', 'patriot_launch.mp3'], ['iskLaunch', 'isk_launch.mp3'], ['iskBoom', 'isk_boom.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261022q`);
+  // вторая партия (tools/airdef-sounds/mk2.py): вертолёт вдали — Benboncan «Military Helicopter» (CC BY 4.0); гул ракеты в небе —
+  //   qubodup «Far Away Rocket Launch» (CC0); перехват — Invadium «cruise missiles interception» (CC0); из роликов YouTube (решение Mark
+  //   2026-10-21): далёкий взрыв, винты Ту-95, пуск Patriot, пуск и взрыв «Искандера»
+  A.setVoiceLoops({ heli: ['heliLo', 'heliHi', 'heliFar'], jet: ['jetFront', 'jetRear'], tprop: ['tu95'], tbm: ['rocketFar'] });
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
   // записи вертикального старта: [хлопок выброса, начало рёва двигателя], с (по огибающей громкости)
@@ -37,7 +41,8 @@ export function createSound() {
     silence() { A.silence(); heliOff(); for (const g of guns.values()) g.h.stop(0.05); guns.clear(); }, // пауза и скрытая вкладка: петли винта и очередей — тоже (кадров нет — сами не погаснут)
     // взрыв на земле: резкий «хлопок» ударной волны, глубокий толчок (инфранизкий тон), тело взрыва (низкий шум с быстрой
     // атакой), раскат с эхом от домов, треск обломков вблизи. Вдали — позже (скорость звука) и глуше (верх съедает воздух)
-    explosion(d, size = 1) {
+    explosion(d, size = 1, kind) {
+      if (kind === 'tbm' && d < 3000 && A.sample('iskBoom', 1.1 * near(d, 1500), Math.min(4, d / 343), 0.96 + Math.random() * 0.06, 600 + 12000 * Math.exp(-d / 1500), 0.3)) { A.tone('sine', 45, 20, 1.6, 0.7 * near(d, 1500), Math.min(4, d / 343), 0.3); return; } // взрыв «Искандера» (запись)
       const dl0 = Math.min(4, d / 343), far = Math.min(1, Math.max(0, (d - 600) / 1800)); // вдали — записанный раскат, вблизи — синтез
       const fs = Math.min(1.8, 0.6 + size * 0.22), sv = Math.min(1.3, 2600 / (d + 1400)) * fs * (0.25 + 0.75 * far);
       const played = A.sample('boomFar', sv, dl0, 1.08 - Math.min(0.3, size * 0.04) + Math.random() * 0.06, 400 + 6000 * Math.exp(-d / 2500), 0.35);
@@ -63,6 +68,7 @@ export function createSound() {
     // старт баллистической ракеты: глухой удар зажигания, долгий рёв с «треском» факела, уходит вверх — глуше
     tbmLaunch(d) {
       const k = near(d, 2500), w = delayOf(d), wet = 0.4 + 0.5 * (1 - k);
+      if (A.sample('iskLaunch', 1.0 * k, w, 0.97 + Math.random() * 0.06, 400 + 9000 * Math.exp(-d / 3000), wet * 0.6)) { A.tone('sine', 48, 24, 1.2, 0.5 * k, w, 0.3); return; } // запись старта «Искандера»; инфранизкий толчок — синтез
       A.tone('sine', 48, 24, 1.2, 0.9 * k, w, 0.3);
       A.noise('brown', 7, 0.95 * k, 'lowpass', 140, 0.7, w, wet, false, 0.15);
       const f = A.noise('pink', 7.5, 0.5 * k, 'bandpass', 520, 0.5, w + 0.05, wet, false, 0.3); if (f) f.frequency.exponentialRampToValueAtTime(160, f.context.currentTime + w + 7.5);
@@ -87,6 +93,10 @@ export function createSound() {
     // подрыв боевой части ЗУР в воздухе: резкий хлопок (ударная волна), раскат и эхо от города; в воздухе слышно далеко
     samBurst(d, size = 1) {
       const dl = Math.min(3, d / 343), k = Math.max(0.04, near(d, 1500)) * Math.min(1.4, 0.7 + size * 0.3), wet = 0.3 + 0.5 * (1 - k), cut = 350 + 2500 * Math.exp(-d / 1500);
+      { // запись подрыва (перехват / далёкий взрыв) — по очереди, у крупных ниже и тяжелее; вдали — только запись, ближе — с синтезом хлопка
+        const rec = (bc++ & 1) ? 'intercept' : 'boomAir', rk = Math.min(1.2, 2200 / (d + 900)) * Math.min(1.5, 0.6 + size * 0.35);
+        if (A.sample(rec, rk, dl, 1.06 - Math.min(0.25, size * 0.08) + Math.random() * 0.06, 500 + 9000 * Math.exp(-d / 2500), 0.35 + 0.4 * (1 - k)) && d > 900) return;
+      }
       if (d < 4000) A.noise('white', 0.05, 0.5 * k, 'highpass', 1800, 0.7, dl);
       A.noise('brown', 0.8 + 0.3 * size, 0.6 * k, 'lowpass', cut, 0.6, dl, wet);
       A.tone('sine', 72, 30, 1.2, 0.4 * k, dl, 0.4);
@@ -103,8 +113,9 @@ export function createSound() {
     },
     hit() { A.hit(); }, flare() { A.flare(); }, chaff() { A.chaff(); }, afterburner() { A.afterburner(); },
     // старт зенитной ракеты: хлопок и рёв ускорителя (у больших — долгий и низкий), слышно с задержкой
-    samLaunch(d, big) {
+    samLaunch(d, big, key) {
       const k = near(d, big ? 1500 : 700), w = delayOf(d), wet = 0.3 + 0.5 * (1 - k);
+      if (PATRIOT_LIKE.has(key) && A.sample('patriot', 0.9 * k, w, 0.96 + Math.random() * 0.08, 500 + 9000 * Math.exp(-d / 2500), wet * 0.6)) return; // горячий старт из контейнера — запись
       A.noise('brown', big ? 2.6 : 1.1, 0.5 * k, 'lowpass', big ? 160 : 260, 0.7, w, wet, false, 0.02);
       const f = A.noise('pink', big ? 3.4 : 1.5, 0.34 * k, 'bandpass', big ? 700 : 1300, 0.5, w + 0.02, wet, false, 0.06);
       if (f) f.frequency.exponentialRampToValueAtTime(big ? 300 : 600, f.context.currentTime + w + (big ? 3.4 : 1.5)); // ракета уходит — рёв глуше
@@ -215,6 +226,7 @@ export function createSound() {
     // за горизонтом, птицы в затишье. mood — выбранный режим ('air' — чаще самолёты, 'defense' — пуски, 'multi' — раскаты)
     ambient(on, mood) { amb.mood = mood || amb.mood; if (on === amb.on) return; amb.on = on; clearInterval(amb.timer); amb.timer = 0; if (on) { amb.next = 3 + Math.random() * 3; amb.timer = setInterval(ambTick, 250); } else if (amb.beds) { for (const b of amb.beds) b.stop(); amb.beds = null; } },
   };
+  const PATRIOT_LIKE = new Set(['patriot', 'pac3', 'nasams', 'hawk', 'khordad']); let bc = 0; // горячий старт из контейнера/направляющей — запись Patriot
   const GUN_RATE = { phalanx: 1, m163: 0.93 }; // M61 20 мм — как в записи (у «Шилки» звук другой — синтез aaa)
   let aaaAcc = 0;
   const guns = new Map(), he = { lo: null, hi: null, beds: null, pw: 0.6 }, mamb = { t: 10 };
@@ -228,6 +240,7 @@ export function createSound() {
       A.noise('brown', dur, 0.12, 'lowpass', 140, 0.7, 0.3, 0.6, false, dur * 0.5);
       const w = A.noise('white', dur * 0.8, 0.02, 'bandpass', 2600, 3, 0.4, 0.5, false, dur * 0.35); if (w) w.frequency.linearRampToValueAtTime(1500, t + dur);
     }],
+    heli: [{ air: 2, defense: 1, multi: 1 }, () => A.clip('heliFar', { vol: rnd(0.08, 0.15), rate: rnd(0.95, 1.05), cut: rnd(1200, 2600), wet: 0.6, offset: rnd(0, 3), dur: rnd(6.5, 9.5), fin: 2.5, fout: 3, pan: rnd(-0.9, 0.9) })], // патрульный вертолёт вдали (запись Benboncan)
     boom: [{ air: 1, defense: 2, multi: 4 }, () => { if (!A.sample('boomFar', rnd(0.12, 0.22), 0, rnd(0.8, 0.95), 900, 0.7)) A.noise('brown', 3, 0.25, 'lowpass', 120, 0.7, 0, 0.8, false, 0.05); A.tone('sine', 50, 24, 1.6, 0.12, 0, 0.6); }],
     sam: [{ air: 1, defense: 3, multi: 2 }, () => S.samLaunch(rnd(4000, 6500), Math.random() < 0.5)],
     birds: [{ air: 2, defense: 2, multi: 1 }, () => { const n = 2 + Math.floor(Math.random() * 4), f0 = rnd(2800, 3800); for (let i = 0; i < n; i++) { const w = i * rnd(0.12, 0.3); A.tone('sine', f0 * rnd(0.95, 1.08), f0 * rnd(1.15, 1.35), 0.07, 0.012, w, 0.4); A.tone('sine', f0 * 1.2, f0 * 0.9, 0.05, 0.008, w + 0.08, 0.4); } }],
