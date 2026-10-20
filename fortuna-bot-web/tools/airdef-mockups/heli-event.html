@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Событие «Вертолёты» — макеты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Russo+One&display=swap">
+<!-- Макеты размещения игры на вертолётах отдельным событием (2026-10-20, для выбора Mark). Не игра — статичные кадры
+     16:9 в стиле меню airdef.html; размеры в cqw — кадр одинаков на телефоне и на большом экране. -->
+<style>
+:root { --bg: #10140f; --pn: rgba(17,21,15,.94); --ln: #3a4334; --tx: #e9e6dc; --dim: #a9b19c; --ac: #e8b04a; --ev: #e2762c; --ev2: #ff9a3c; --evd: rgba(226,118,44,.16); }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--tx); font: 15px/1.45 'IBM Plex Sans', -apple-system, sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font: 26px 'Russo One', sans-serif; margin: 6px 0 4px; letter-spacing: .02em; }
+.lead { color: var(--dim); margin: 0 0 22px; max-width: 900px; }
+h2 { font: 20px 'Russo One', sans-serif; margin: 34px 0 6px; } h2 b { color: var(--ev2); font-weight: 400; }
+.note { color: var(--dim); margin: 0 0 12px; max-width: 980px; } .note b { color: var(--tx); }
+.pc { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; margin: 10px 0 0; font-size: 14px; color: var(--dim); max-width: 980px; }
+.pc div::before { content: '+ '; color: #7bd88f; font-weight: 600; } .pc div.m::before { content: '− '; color: #ff8a7a; }
+@media (max-width: 700px) { .pc { grid-template-columns: 1fr; } }
+/* кадр 16:9: всё внутри — в cqw (1cqw = 1 % ширины кадра) */
+.fr { position: relative; aspect-ratio: 16/9; container-type: inline-size; overflow: hidden; border: 1px solid var(--ln); background: #222 center/cover no-repeat; font-size: 1.15cqw; }
+.fr .bg { position: absolute; inset: 0; background: center/cover no-repeat; }
+.fr .fog { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,14,22,.0) 40%, rgba(40,28,36,.55)); pointer-events: none; }
+.pnl { position: absolute; background: var(--pn); border: .08cqw solid var(--ln); }
+.rus { font-family: 'Russo One', sans-serif; letter-spacing: .02em; }
+.cap { font-size: .8cqw; color: var(--dim); text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+.btn { display: inline-flex; align-items: center; justify-content: center; border: .08cqw solid var(--ln); padding: .45cqw .9cqw; font-weight: 600; font-size: 1cqw; }
+.btn.on { background: #e9e6dc; color: #141812; } .btn.ev { background: var(--ev); color: #1a0f08; border-color: var(--ev); }
+.go { position: absolute; display: flex; align-items: center; justify-content: center; background: var(--ac); color: #1a1a12; font: 1.7cqw 'Russo One', sans-serif; letter-spacing: .06em; }
+.go.ev { background: var(--ev); }
+.side { left: 0; top: 0; bottom: 0; width: 13.8cqw; padding: 1.4cqw 0; border-width: 0 .08cqw 0 0; }
+.side .t { padding: 0 1.4cqw; font: 1.35cqw/1.1 'Russo One', sans-serif; }
+.side .s { padding: .6cqw 1.4cqw 1cqw; font-size: .85cqw; color: var(--dim); }
+.side .it { padding: .85cqw 1.4cqw; font-weight: 600; font-size: 1.05cqw; }
+.side .it.on { background: var(--ac); color: #141812; }
+.side .it.ev { background: linear-gradient(90deg, var(--ev), #b6501c); color: #1a0f08; display: flex; flex-direction: column; gap: .15cqw; }
+.side .it.ev small { font-weight: 500; font-size: .78cqw; opacity: .85; }
+.side .sep { margin: .6cqw 1.4cqw; border-top: .08cqw solid var(--ln); }
+.side .bot { position: absolute; left: 1.4cqw; bottom: 1.3cqw; font-size: .85cqw; color: var(--ac); display: grid; grid-template-columns: auto auto; gap: .5cqw 1.6cqw; }
+.right { right: 0; top: 0; bottom: 0; width: 30cqw; padding: 1.4cqw 1.4cqw 6cqw; }
+.right h3 { margin: .3cqw 0 .6cqw; font: 1.75cqw/1.15 'Russo One', sans-serif; }
+.row { display: flex; align-items: center; justify-content: space-between; margin: .7cqw 0; font-size: 1cqw; }
+.row .g { display: flex; gap: .3cqw; }
+.cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .5cqw; margin-top: .6cqw; }
+.card { border: .08cqw solid var(--ln); background: #171c14; padding: .3cqw; font-size: .8cqw; position: relative; }
+.card img { width: 100%; aspect-ratio: 16/9; object-fit: cover; display: block; background: #1a2016; }
+.card b { display: block; font-size: .85cqw; margin-top: .2cqw; }
+.card.sel { border-color: var(--ev2); box-shadow: 0 0 0 .1cqw var(--ev2) inset; }
+.card.lk::after { content: '🔒'; position: absolute; right: .4cqw; top: .3cqw; font-size: .9cqw; }
+.card.lk img { filter: grayscale(.8) brightness(.55); }
+.tag { display: inline-block; font-size: .72cqw; padding: .1cqw .4cqw; border-radius: .2cqw; background: var(--evd); color: var(--ev2); font-weight: 600; }
+.timer { font-family: 'IBM Plex Sans'; font-weight: 600; color: var(--ev2); }
+.res { position: absolute; left: 15.2cqw; bottom: 1.4cqw; padding: .8cqw 1.2cqw; font: 1.05cqw 'Russo One', sans-serif; display: flex; gap: .6cqw; align-items: center; }
+.track { display: flex; gap: .35cqw; margin: .5cqw 0; } .track i { flex: 1; height: .55cqw; background: #2a3125; } .track i.d { background: var(--ev); }
+.rew { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4cqw; } .rew div { border: .08cqw solid var(--ln); padding: .5cqw .3cqw; text-align: center; font-size: .78cqw; background: #171c14; } .rew div.d { border-color: var(--ev); color: var(--ev2); } .rew em { display: block; font-style: normal; font-size: 1.5cqw; }
+.map { background: center/cover no-repeat; border: .08cqw solid var(--ln); }
+.pill { position: absolute; padding: .3cqw .7cqw; font-size: .85cqw; background: rgba(10,12,10,.7); border: .08cqw solid var(--ln); }
+.tabs { display: flex; gap: .2cqw; } .tabs span { padding: .6cqw 1.3cqw; font-weight: 600; font-size: 1.05cqw; border-bottom: .25cqw solid transparent; color: var(--dim); } .tabs span.on { color: var(--tx); border-color: var(--ev); }
+.seg { display: flex; margin: 0 1.4cqw 1cqw; border: .08cqw solid var(--ln); } .seg span { flex: 1; text-align: center; padding: .55cqw 0; font-weight: 600; font-size: .95cqw; } .seg span.on { background: var(--ev); color: #1a0f08; }
+.lbl { position: absolute; font-size: .78cqw; color: #fff; background: rgba(226,118,44,.9); color: #1a0f08; padding: .15cqw .5cqw; font-weight: 600; }
+.anno { position: absolute; border: .15cqw dashed #7bd88f; border-radius: .4cqw; pointer-events: none; }
+.anno span { position: absolute; top: -1.7cqw; left: 0; white-space: nowrap; font-size: .85cqw; color: #7bd88f; font-weight: 600; text-shadow: 0 0 .3cqw #000; }
+.rec { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 3px; background: rgba(123,216,143,.15); color: #7bd88f; font-weight: 600; margin-left: 8px; vertical-align: middle; font-family: 'IBM Plex Sans'; }
+</style></head>
+<body><div class="wrap">
+<h1>Вертолёты — отдельным событием</h1>
+<p class="lead">Четыре способа вынести игру на вертолётах из общего списка самолётов. Кадры статичные, в стиле нынешнего меню, с настоящими миниатюрами и кадром из игры. Пунктиром обведено то, что меняется. Ниже каждого макета — плюсы и минусы. Можно взять один вариант целиком или собрать из частей: например, баннер из Б и экран события из В.</p>
+
+<!-- ── А ── -->
+<h2>А. <b>Событие</b> — отдельный пункт в списке режимов</h2>
+<p class="note">Над обычными режимами — выделенный оранжевым пункт события с таймером. Справа — своя панель: сторона, сетка вертолётов (заблокированные — с замком, открываются в «Исследованиях»), задания события, кнопка «Взлёт» в цвете события. В «Вылете» вертолётов больше нет.</p>
+<div class="fr" id="fA">
+  <div class="bg" style="background-image:url(ev_bg.jpg)"></div><div class="fog"></div>
+  <div class="pnl side">
+    <div class="t">AIR<br>SUPERIORITY</div><div class="s">опыт и серебро копятся в аккаунте</div>
+    <div class="it ev">🎃 Туманная топь<small>событие · ещё 11 дн.</small></div>
+    <div class="sep"></div>
+    <div class="it">Вылет</div><div class="it">Оборона</div><div class="it">Мульти-волна</div><div class="it">Обучение</div><div class="it">Онлайн</div>
+    <div class="bot"><span>Арсенал</span><span>Справка</span><span>Настройки</span><span>Об игре</span></div>
+  </div>
+  <div class="pnl res">⌘ Исследования</div>
+  <div class="pnl right">
+    <div class="cap" style="color:var(--ev2)">Событие · до 3 ноября</div>
+    <h3>Туманная топь: вертолёты над болотом</h3>
+    <div class="row">Режим <span class="g"><span class="btn on">Аркада</span><span class="btn">Реализм</span></span></div>
+    <div class="row">Сторона <span class="g"><span class="btn on">Восток</span><span class="btn">Запад</span></span></div>
+    <div class="cap" style="margin-top:1cqw">Вертолёт</div>
+    <div class="cards">
+      <div class="card sel"><img src="../../games/airdef/thumbs/heli_h_mi24.webp" alt=""><b>Ми-24В</b><span class="tag">«Штурм» · С-8</span></div>
+      <div class="card"><img src="../../games/airdef/thumbs/heli_h_mi28.webp" alt=""><b>Ми-28Н</b><span class="tag">«Атака»</span></div>
+      <div class="card lk"><img src="../../games/airdef/thumbs/heli_h_ka52.webp" alt=""><b>Ка-52</b>исследовать</div>
+    </div>
+    <div class="cap" style="margin-top:1.1cqw">Задания события · 2 из 5</div>
+    <div class="track"><i class="d"></i><i class="d"></i><i></i><i></i><i></i></div>
+    <div style="font-size:.85cqw;color:var(--dim)">Следующее: уничтожить РЛС «Лысая гора» на бреющем (ниже 30 м)</div>
+  </div>
+  <div class="go ev" style="right:0;bottom:0;width:30cqw;height:5cqw">ВЗЛЁТ</div>
+  <div class="anno" style="left:.4cqw;top:7.6cqw;width:13cqw;height:4.6cqw"><span style="top:auto;bottom:-1.7cqw">новый пункт</span></div>
+  <div class="anno" style="right:.4cqw;top:.6cqw;width:29.2cqw;height:49cqw"><span style="left:auto;right:0">своя панель события</span></div>
+</div>
+<div class="pc"><div>Привычно: всё в том же меню, одно нажатие — и в бою.</div><div class="m">В списке режимов шестой пункт, на телефоне тесновато.</div>
+<div>Мало работы: та же панель, что у «Вылета», с другими данными.</div><div class="m">Событие выглядит как ещё один режим, «праздника» мало.</div></div>
+
+<!-- ── Б ── -->
+<h2>Б. <b>Баннер</b> на фоне главного меню</h2>
+<p class="note">Само меню не меняется, в «Вылете» снова только самолёты. На фоне — крупная карточка события: кадр «Топи», название, таймер и кнопка «Открыть». Нажатие ведёт на экран события (вариант В) или сразу к выбору вертолёта.</p>
+<div class="fr" id="fB">
+  <div class="bg" style="background-image:url(ev_bg.jpg)"></div><div class="fog"></div>
+  <div class="pnl side">
+    <div class="t">AIR<br>SUPERIORITY</div><div class="s">опыт и серебро копятся в аккаунте</div>
+    <div class="it on">Вылет</div><div class="it">Оборона</div><div class="it">Мульти-волна</div><div class="it">Обучение</div><div class="it">Онлайн</div><div class="it">Режим съёмки</div>
+    <div class="bot"><span>Арсенал</span><span>Справка</span><span>Настройки</span><span>Об игре</span></div>
+  </div>
+  <div class="pnl" style="left:16cqw;top:24cqw;width:30cqw;padding:0;border-color:var(--ev);overflow:hidden">
+    <div style="height:9cqw;background:url(ev_bg.jpg) 50% 60%/cover"></div>
+    <div style="padding:1cqw 1.2cqw 1.1cqw">
+      <div class="cap" style="color:var(--ev2)">Хеллоуин · событие · <span class="timer">11 д 04 ч</span></div>
+      <div class="rus" style="font-size:1.9cqw;margin:.3cqw 0 .4cqw">Туманная топь</div>
+      <div style="font-size:.95cqw;color:var(--dim)">Ми-24, Ми-28, Ка-52 против AH-64, AH-1 и UH-1. Сумерки, туман и болото — летайте ниже радаров.</div>
+      <div style="display:flex;gap:.5cqw;margin-top:.9cqw"><span class="btn ev">Открыть событие</span><span class="btn">Подробнее</span></div>
+    </div>
+  </div>
+  <div class="pnl res">⌘ Исследования</div>
+  <div class="pnl right" style="opacity:.92">
+    <div class="cap">Вылет</div><h3>За самолёт: прорвать ПВО и уничтожить цели</h3>
+    <div class="row">Режим <span class="g"><span class="btn on">Аркада</span><span class="btn">Реализм</span></span></div>
+    <div class="row">Эпоха <span class="g"><span class="btn">I</span><span class="btn on">II</span><span class="btn">III</span><span class="btn">IV</span></span></div>
+    <div class="row">ПВО города <span class="g"><span class="btn on">Советская</span><span class="btn">Западная</span></span></div>
+    <div class="cap" style="margin-top:1cqw">Подвеска</div>
+    <div class="card" style="padding:.7cqw;margin-top:.4cqw"><b>F/A-18C · GBU-12 ×4 + HARM ×2</b><span class="tag" style="background:rgba(232,176,74,.15);color:var(--ac)">штурмовка</span></div>
+  </div>
+  <div class="go" style="right:0;bottom:0;width:30cqw;height:5cqw">ВЗЛЁТ</div>
+  <div class="anno" style="left:15.6cqw;top:23.6cqw;width:30.8cqw;height:26cqw"><span>баннер события</span></div>
+</div>
+<div class="pc"><div>Заметно, но обычное меню не трогает: после праздника баннер просто убирается.</div><div class="m">Закрывает часть фона, на узком телефоне его придётся сделать компактнее.</div>
+<div>Удобно для следующих событий: та же карточка, другой кадр и текст.</div><div class="m">Лишнее нажатие до боя.</div></div>
+
+<!-- ── В ── -->
+<h2>В. <b>Экран события</b> — свой «хаб», как «Исследования»<span class="rec">рекомендую вместе с Б</span></h2>
+<p class="note">Отдельный экран на весь кадр. Слева — карта «Топи» и погода (вечер, сумерки, туман). В центре — крупно выбранный вертолёт, под ним лента остальных. Справа — награды события: полоса этапов за очки (окраска «Ночная», эмблема, серебро, ускоренное исследование вертолётов). Сверху — вкладки: «Вылет на вертолёте», «Оборона от вертолётов» (ПВО против налёта вертолётов) и «Награды».</p>
+<div class="fr" id="fC" style="background:#0e110d">
+  <div class="bg" style="background-image:url(ev_bg.jpg);opacity:.35;filter:blur(.3cqw)"></div><div class="fog"></div>
+  <div class="pnl" style="left:0;right:0;top:0;height:5cqw;display:flex;align-items:center;gap:2cqw;padding:0 1.4cqw;border-width:0 0 .08cqw">
+    <span class="rus" style="font-size:1.6cqw">🎃 Туманная топь</span><span class="timer" style="font-size:1cqw">ещё 11 д 04 ч</span>
+    <div class="tabs" style="margin-left:2cqw"><span class="on">Вылет на вертолёте</span><span>Оборона от вертолётов</span><span>Награды</span></div>
+    <span style="margin-left:auto;font-size:1.2cqw;color:var(--dim)">✕</span>
+  </div>
+  <div class="pnl" style="left:1.2cqw;top:6.2cqw;width:21cqw;bottom:1.2cqw;padding:1cqw">
+    <div class="cap">Карта</div>
+    <div class="map" style="height:17cqw;margin:.5cqw 0 .8cqw;background-image:url(ev_map.jpg)"></div>
+    <div class="cap">Погода</div>
+    <div style="display:flex;gap:.3cqw;margin:.5cqw 0 .8cqw"><span class="btn">Вечер</span><span class="btn on">Сумерки</span><span class="btn">Туман</span></div>
+    <div class="cap">Сторона</div>
+    <div style="display:flex;gap:.3cqw;margin-top:.5cqw"><span class="btn on">Восток</span><span class="btn">Запад</span></div>
+  </div>
+  <div style="position:absolute;left:23.6cqw;right:27.4cqw;top:6.2cqw;bottom:1.2cqw">
+    <img src="../../games/airdef/thumbs/heli_h_mi28.webp" alt="" style="width:100%;height:27cqw;object-fit:contain;display:block">
+    <div style="text-align:center"><span class="rus" style="font-size:2cqw">Ми-28Н</span> <span class="tag">«Атака» ×8 · С-8 ×2</span></div>
+    <div style="display:flex;gap:.5cqw;justify-content:center;margin-top:.8cqw">
+      <div class="card" style="width:8.5cqw"><img src="../../games/airdef/thumbs/heli_h_mi24.webp" alt=""><b>Ми-24В</b></div>
+      <div class="card sel" style="width:8.5cqw"><img src="../../games/airdef/thumbs/heli_h_mi28.webp" alt=""><b>Ми-28Н</b></div>
+      <div class="card lk" style="width:8.5cqw"><img src="../../games/airdef/thumbs/heli_h_ka52.webp" alt=""><b>Ка-52</b></div>
+    </div>
+    <div class="go ev" style="left:12cqw;right:12cqw;bottom:0;height:4.4cqw">ВЗЛЁТ</div>
+  </div>
+  <div class="pnl" style="right:1.2cqw;top:6.2cqw;width:25cqw;bottom:1.2cqw;padding:1cqw">
+    <div class="cap">Награды события · 640 / 1500 очков</div>
+    <div class="track"><i class="d"></i><i class="d"></i><i class="d"></i><i></i><i></i></div>
+    <div class="rew"><div class="d"><em>🦇</em>эмблема</div><div class="d"><em>🪙</em>2000 серебра</div><div><em>🎨</em>окраска «Ночная»</div><div><em>⚡</em>×2 опыт вертолётов</div><div><em>🎃</em>значок «Топь»</div></div>
+    <div class="cap" style="margin-top:1.2cqw">Задания</div>
+    <div style="font-size:.9cqw;line-height:1.7">✓ Уничтожить 3 цели за вылет<br>✓ Пройти 5 км ниже 30 м<br>○ Поразить РЛС «Лысая гора» ПТУР<br>○ Сбить 2 вертолёта из ПВО<br>○ Вернуться на площадку с повреждением хвоста</div>
+  </div>
+  <div class="anno" style="left:.4cqw;top:.4cqw;width:99cqw;height:55.4cqw;border-color:rgba(123,216,143,.6)"><span style="top:auto;bottom:.4cqw;left:.6cqw">весь экран — отдельный</span></div>
+</div>
+<div class="pc"><div>Ощущается как праздник: своя атмосфера, награды, задания.</div><div class="m">Больше всего работы: экран, задания, награды, хранение очков события.</div>
+<div>Сюда же ложится будущий отдельный режим вертолётов, без перестройки меню.</div><div class="m">Награды нужно согласовать с экономикой (серебро, ускорение исследований).</div></div>
+
+<!-- ── Г ── -->
+<h2>Г. <b>Переключатель</b> «Самолёты ⇄ Вертолёты» над режимами</h2>
+<p class="note">Сверху левой колонки — переключатель. На «Вертолётах» меню перекрашивается в цвета события, а список режимов становится вертолётным: «Охота» (вылет на цели), «Засада» (ПВО против налёта вертолётов), позже «Конвой». Фон и музыка меню — «Топь».</p>
+<div class="fr" id="fD">
+  <div class="bg" style="background-image:url(ev_bg.jpg)"></div><div class="fog" style="background:linear-gradient(180deg,rgba(60,24,6,.25),rgba(40,20,30,.55))"></div>
+  <div class="pnl side" style="background:rgba(22,15,11,.95)">
+    <div class="t">AIR<br>SUPERIORITY</div><div class="s">опыт и серебро копятся в аккаунте</div>
+    <div class="seg" style="margin:0 1cqw 1cqw"><span>Самолёты</span><span class="on">Вертолёты 🎃</span></div>
+    <div class="it ev">Охота<small>вылет на цели «Топи»</small></div><div class="it">Засада<small style="display:block;font-weight:500;font-size:.78cqw;color:var(--dim)">ПВО против вертолётов</small></div><div class="it" style="color:var(--dim)">Конвой · скоро</div>
+    <div class="bot"><span>Арсенал</span><span>Справка</span><span>Настройки</span><span>Об игре</span></div>
+  </div>
+  <div class="pnl res" style="border-color:var(--ev)">⌘ Исследования · вертолёты</div>
+  <div class="pnl right" style="background:rgba(22,15,11,.95)">
+    <div class="cap" style="color:var(--ev2)">Охота · событие до 3 ноября</div>
+    <h3>Найти и уничтожить цели в тумане</h3>
+    <div class="row">Режим <span class="g"><span class="btn on">Аркада</span><span class="btn">Реализм</span></span></div>
+    <div class="row">Погода <span class="g"><span class="btn">Вечер</span><span class="btn on">Сумерки</span><span class="btn">Туман</span></span></div>
+    <div class="cap" style="margin-top:1cqw">Запад</div>
+    <div class="cards">
+      <div class="card"><img src="../../games/airdef/thumbs/heli_h_uh1.webp" alt=""><b>UH-1H</b><span class="tag">Hydra</span></div>
+      <div class="card sel"><img src="../../games/airdef/thumbs/heli_h_ah64.webp" alt=""><b>AH-64D</b><span class="tag">Hellfire ×8</span></div>
+      <div class="card lk"><img src="../../games/airdef/thumbs/heli_h_ah1.webp" alt=""><b>AH-1W</b>исследовать</div>
+    </div>
+  </div>
+  <div class="go ev" style="right:0;bottom:0;width:30cqw;height:5cqw">ВЗЛЁТ</div>
+  <div class="anno" style="left:.4cqw;top:7.4cqw;width:13cqw;height:3.6cqw"><span>переключатель</span></div>
+</div>
+<div class="pc"><div>Вертолёты становятся «второй игрой» в той же оболочке — задел на отдельный режим после праздника.</div><div class="m">Переключатель легко не заметить, нужна подсказка при первом входе.</div>
+<div>Список режимов не растёт: у каждой половины свои 2–3 режима.</div><div class="m">Перекраска меню и свои режимы — средний объём работы.</div></div>
+
+<p class="note" style="margin-top:34px">Кадр фона снят в игре: Ми-24 над «Туманной топью» в сумерках. Миниатюры — из «Исследований». Цвет события — тыквенно-оранжевый #e2762c, остальное — цвета нынешнего меню.</p>
+</div></body></html>
