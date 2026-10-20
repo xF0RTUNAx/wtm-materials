@@ -124,12 +124,12 @@ const META = {
   d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
   // ── вертолёты (2026-10-20): грузятся по запросу (heliModel / wantModel); винты — части rotor, rotor2 (соосный нижний), trotor — крутит spinProps;
   // stations — две точки на борт (внешняя, внутренняя) на консолях, оси модели (нос в −Z); nozzles пусто — пламени нет; в planeModel / PLANE_META не попадают (heli)
-  h_mi24: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-3.22, -1.64, -1.43), V(-2.28, -1.33, -1.22)]), nozzles: [], nr: 0.3, pod: null }, // Ми-24 — manilov.ap (на концах консолей — направляющие для ПТУР, под консолями — пилоны)
+  h_mi24: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-3.22, -1.64, -1.43), V(-2.28, -1.33, -1.22)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ми-24 — manilov.ap (на концах консолей — направляющие для ПТУР, под консолями — пилоны)
   h_mi28: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.47, -1.35, -2.3), V(-1.78, -1.35, -2.38)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ми-28Н — Rukh3D
-  h_ka52: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.57, -1.1, -1.7), V(-1.9, -1.1, -1.7)]), nozzles: [], nr: 0.3, pod: null }, // Ка-52 — Immersive3D (соосные винты rotor / rotor2, рулевого нет)
+  h_ka52: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.57, -1.1, -1.7), V(-1.9, -1.1, -1.7)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ка-52 — Immersive3D (соосные винты rotor / rotor2, рулевого нет)
   h_ah64: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.38, -1.36, -2.78), V(-1.65, -1.36, -2.78)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // AH-64 — manilov.ap
-  h_ah1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.35, -1.04, -2.2, 0.3), V(-0.75, -1.04, -2.2, 0.3)]), nozzles: [], nr: 0.3, pod: null }, // AH-1 SuperCobra — drcrazzie (у модели нет пилонов — дорисованы)
-  h_uh1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.5, -1.5, -2.1)]), nozzles: [], nr: 0.3, pod: null }, // UH-1 — manilov.ap (по одной точке на борт — на боковых фермах)
+  h_ah1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.35, -1.04, -2.2, 0.3), V(-0.75, -1.04, -2.2, 0.3)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // AH-1 SuperCobra — drcrazzie (у модели нет пилонов — дорисованы)
+  h_uh1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.5, -1.5, -2.1)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // UH-1 — manilov.ap (по одной точке на борт — на боковых фермах)
   // вертолётное оружие (heliModel / weaponMesh): подвес сверху, нос в −Z, центр габаритов в нуле
   w_shturm: { weapon: ['shturm', 'ataka'], lazy: true, stations: [] }, // «Штурм» 9М114 — ТПК, timurwolf (и вид «Атаки»: контейнер почти тот же)
   w_b8: { weapon: 's8', lazy: true, stations: [] }, // блок НАР Б-8В20 (20 труб) — timurwolf
