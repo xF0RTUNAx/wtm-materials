@@ -509,7 +509,7 @@ const CONFIG = {
       if (/\/ah59[ab]-FACES/.test(p)) return 'trotor'; // лопасти рулевого винта (две пары крестом)
       if (/\/(ah12a\d*|ah13[ab]|ah14[ab]|ah15[A-Z]+|ah16[A-Z]+|ah70r\d*|ah71r\d*|ah86b\d*|ah89b\d*)-FACES/.test(p)) return null; // свой «Хеллфайр» (8), блоки НАР и ракеты на законцовках — оружие из игры
       return 'body'; } },
-  h_uh1: { src: `${DL}/uh1.glb`, scale: 1.09, nose: '+z', rulesIn: 'game', tex: () => 512, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 3.8, 0], trotor: [-0.44, 3.28, 7.97] }, // UH-1 — manilov.ap: Ø несущего 13,41 → 14,63 (×1,09); рулевой винт слева
+  h_uh1: { src: `${DL}/uh1.glb`, scale: 1.09, nose: '+z', rulesIn: 'game', tex: () => 1024, texVf: 'hue=s=0.48' /* без сдвига тона (иначе оранжевые законцовки и надписи — розовые): сочно-зелёный → приглушённый армейский */, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 3.8, 0], trotor: [-0.44, 3.28, 7.97] }, // UH-1 — manilov.ap: Ø несущего 13,41 → 14,63 (×1,09); рулевой винт слева
     groups: (c) => { const [x, y, z] = c.ctr;
       if (y > 3.5 && Math.hypot(x, z) < 7) return 'rotor'; // 2 лопасти, стабилизирующая штанга с грузами и головка
       if (z > 6.7 && y > 2.6 && x < -0.3 && x > -0.62) return 'trotor'; // рулевой винт: 2 лопасти и ступица
