@@ -280,7 +280,7 @@ export const LOADOUTS = {
     { side: 'west', plane: 'e_viggen', name: 'Saab AJ 37 Viggen: Maverick ×2 + Mk 82 ×4', items: [['agm65b', 2], ['mk82', 4]] }, // шведы применяли AGM-65 как Rb 75
     { side: 'west', plane: 'e_viggen', name: 'Saab AJ 37 Viggen: Hydra ×4 + Mk 82 ×2', items: [['hydra', 4], ['mk82', 2]] },
     // вертолёты 2026-10-21 (manilov.ap): Ми-8МТВ — блоки С-8 на фермах (в игре на вертолёте 2 точки НАР — внутренние пилоны), UH-60 — вооружённый, Hellfire на внешних пилонах ESSS
-    { side: 'east', plane: 'h_mi8', heli: true, name: 'Ми-8МТВ: С-8 ×2 блока', items: [['s8', 2]] },
+    { side: 'east', plane: 'h_mi8', heli: true, name: 'Ми-8МТВ: С-8 ×4 блока', items: [['s8', 4]] },
     { side: 'west', plane: 'h_uh60', heli: true, name: 'UH-60 DAP: Hellfire ×4 + Hydra ×2 блока', items: [['hellfire', 4], ['hydra', 2]], pod: true },
   ],
 };

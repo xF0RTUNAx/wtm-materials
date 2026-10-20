@@ -31,8 +31,13 @@ export const RAID_LOADS = {
 };
 // вертолёты налёта (Хеллоуин 2026) по стороне и эпохе: модель и подвеска — как у игрока (arsenal.js, подвески heli)
 export const RAID_HELI = {
-  east: { 1: ['h_mi24', [['shturm', 4], ['s8', 2]]], 2: ['h_mi8', [['s8', 2]]], 3: ['h_ka50', [['ataka', 8], ['s8', 2]]], 4: ['h_ka52', [['ataka', 8], ['s8', 2]]] },
+  east: { 1: ['h_mi24', [['shturm', 4], ['s8', 2]]], 2: ['h_mi8', [['s8', 4]]], 3: ['h_ka50', [['ataka', 8], ['s8', 2]]], 4: ['h_ka52', [['ataka', 8], ['s8', 2]]] },
   west: { 1: ['h_uh1', [['hydra', 2]]], 2: ['h_uh60', [['hellfire', 4], ['hydra', 2]]], 3: ['h_ah64', [['hellfire', 8], ['hydra', 2]]], 4: ['h_rah66', [['hellfire', 6], ['hydra', 2]]] },
+};
+// вторые вертолёты эпохи (Mark 2026-10-21 — вернуть в налёты вместе с новыми): в налёте вертолёты чередуются
+export const RAID_HELI2 = {
+  east: { 3: ['h_mi28', [['ataka', 8], ['s8', 2]]] },
+  west: { 2: ['h_ah1', [['hellfire', 8], ['hydra', 2]]] },
 };
 const V = () => new THREE.Vector3();
 const TMP = V(), TMP2 = V(), DIR = V(), PI = V(), PR = V(); // PR — точка падения НАР (не PI: там точка прицеливания — была одна на двоих, промах всегда 0)
@@ -89,7 +94,7 @@ export function createRaid(S, city, rnd, opts = {}) {
   }
   // вертолёт: своя лётная модель (sim/heli.js, «Аркада» — ИИ ведёт скоростью), низко над рельефом, тепла меньше
   function spawnHeli(a, bearing, R) {
-    const [model, load] = RAID_HELI[side][era];
+    const alt = RAID_HELI2[side] && RAID_HELI2[side][era], [model, load] = alt && (a.id % 2) ? alt : RAID_HELI[side][era]; // чётный/нечётный — разные вертолёты эпохи
     a.plane = a.model = model; a.heli = true; a.hm = heliModel(model, { arcade: true }); a.fm = null; a.load = load.map(([k, c]) => ({ key: k, n: c }));
     a.hp = a.hpMax = 45; a.ir = 0.6; a.rcs = 6; a.cmFlare = 40; a.cmChaff = 10; a.jam = 0; a.u = { cx: 0, cy: 0, col: 0, yaw: 0, yawTo: undefined, pitchTo: undefined, pitchHold: false };
     const x = Math.sin(bearing) * R, z = Math.cos(bearing) * R; a.home = new THREE.Vector3(x * 1.6, 0, z * 1.6);

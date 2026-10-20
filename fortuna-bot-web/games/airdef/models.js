@@ -139,7 +139,7 @@ const META = {
   h_uh1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.5, -1.5, -2.1)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // UH-1 — manilov.ap (по одной точке на борт — на боковых фермах)
   // ── 2026-10-21: четыре вертолёта manilov.ap (CC BY 4.0) ──
   h_ka50: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.8, -0.75, 0.9), V(-1.87, -0.95, 1.5)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ка-50 «Чёрная акула» (перекрашен в чёрный; соосные винты rotor / rotor2, рулевого нет)
-  h_mi8: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.6, -0.65, -4.0), V(-2.3, -0.65, -4.0, 0.3)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ми-8МТВ
+  h_mi8: { side: 'east', cls: 'heli', heli: true, lazy: true, pods4: true, /* 4 блока НАР: по два на ферме (внутренняя и внешняя точки) */ stations: mirror([V(-2.6, -0.65, -4.0), V(-2.3, -0.65, -4.0, 0.3)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ми-8МТВ
   h_uh60: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-3.1, -0.91, -2.4, 0.3), V(-2.0, -0.91, -2.4, 0.3)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // UH-60 (вооружённый, фермы ESSS)
   h_rah66: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.35, -0.75, -0.5, 0.25), V(-1.55, -0.75, -0.5, 0.25)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // RAH-66 Comanche (фенестрон — trotor)
   // вертолётное оружие (heliModel / weaponMesh): подвес сверху, нос в −Z, центр габаритов в нуле
@@ -527,7 +527,7 @@ export function planeModel(side, cls = 'strike', name = null) {
   const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name) && (!m.heli || n === name)).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
   const [n, m] = pick;
-  return { obj: LOADED[n].clone(), stations: m.stations, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name: n, cls: m.cls, internal: !!m.internal }; // dry — без форсажа (только слабое свечение)
+  return { obj: LOADED[n].clone(), stations: m.stations, pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name: n, cls: m.cls, internal: !!m.internal }; // dry — без форсажа (только слабое свечение)
 }
 // вертолёт: готовая модель (копия) и точки подвески на консолях; нет модели (или ещё грузится — запрос послан) — null, подмены самолётом нет
 export function heliModel(name) {

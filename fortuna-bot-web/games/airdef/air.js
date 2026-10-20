@@ -46,7 +46,7 @@ export function createAir(C) {
     if (shipModel) ship.remove(shipModel);
     shipSide = side; shipCls = cls; shipName = name; shipReal = exact; shipInternal = !!(pm && pm.internal);
     if (pm) {
-      shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = craft.heli ? heliStations(pm.stations) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null — встроенная прицельная система (у вертолёта — всегда)
+      shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = craft.heli ? heliStations(pm.stations, pm.pods4) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null — встроенная прицельная система (у вертолёта — всегда)
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
       flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry, pm.name);
       craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
@@ -66,11 +66,14 @@ export function createAir(C) {
   // слоты вертолёта по точкам подвески модели (mirror: слева от внешней к внутренней, справа — обратно): 0–3 — рама ПТУР 2×2 на
   // левом внешнем пилоне, 4 — левый внутренний (блок НАР), 5 — правый внутренний, 6–9 — рама на правом внешнем. Одна точка на
   // борт (UH-1) — рама и блок на одной
-  function heliStations(S) {
+  // точки подвески вертолёта: 0–3 и 6–9 — пакеты ПТУР на внешних точках, 4/5 — блоки НАР на внутренних;
+  // pods4 (Ми-8МТВ) — ещё 10/11: блоки НАР и на внешних точках (по два блока на ферме)
+  function heliStations(S, pods4) {
     const k = Math.max(1, S.length >> 1), L = S.slice(0, k), R = S.slice(k).reverse(), out = [];
     const rack = (p) => { for (let i = 0; i < 4; i++) out.push(Object.assign(new THREE.Vector3(p.x + (i % 2 ? 0.17 : -0.17), p.y - (i >> 1) * 0.3, p.z), { py: p.py || 0 })); };
     rack(L[0]); const pl = L[k - 1], pr = R[k - 1], ro = R[0];
     out.push(pl, pr); rack(ro);
+    if (pods4) out.push(L[0], R[0]);
     return out;
   }
   ship.visible = false; scene.add(ship);
@@ -851,7 +854,7 @@ export function createAir(C) {
     // обучение (opts.reload) — без ограничений
     const sets = opts.reload ? Infinity : (C.MODE().rearms ?? 1); homeLeft = sets;
     // вертолёт: ПТУР — в рамы внешних пилонов (по 4, слева-справа по очереди), блоки НАР — на внутренние (heliStations)
-    const hOrd = { rack: [0, 6, 1, 7, 2, 8, 3, 9], pod: [4, 5] }, hi = { rack: 0, pod: 0 };
+    const hOrd = { rack: [0, 6, 1, 7, 2, 8, 3, 9], pod: stations.length > 10 ? [4, 5, 10, 11] : [4, 5] }, hi = { rack: 0, pod: 0 }; // Ми-8МТВ — 4 блока НАР
     for (const [key, n] of L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass)) {
       const st = [], h = AG[key].kind === 'rocket' ? 'pod' : 'rack';
       for (let i = 0; i < n; i++) { if (craft.heli) { if (hi[h] < hOrd[h].length) st.push(hOrd[h][hi[h]++]); } else if (oi < 8) st.push(order[oi++]); }
