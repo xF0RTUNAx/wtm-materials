@@ -71,16 +71,34 @@ const REVIEW = [
   { f: 'mig27-dusk', m: 'autumn', w: 'a_dusk', cap: 'МиГ-27К сумерки', setup: { pside: 'air', era: 2, side: 'west', lo: 4, palt: 'low' }, shot: { s: 'ship', a: 'chase', az: 0.3, el: 0.1, k: 0.9, t: 50 } },
   { f: 'a10-eve', m: 'autumn', w: 'a_eve', cap: 'A-10 Maverick', setup: { pside: 'air', era: 2, side: 'east', lo: 11, palt: 'low' }, shot: { s: 'agm65b', a: 'chase', az: 0.3, el: 0.08, k: 1.2, t: 30, max: 200 } },
   { f: 'torm2-dusk', m: 'autumn', w: 'a_dusk', cap: 'Тор-М2 пуск', setup: { pside: 'def', era: 4, side: 'east', psam: 'torm2', pvs: 'air' }, shot: { s: 'msl', a: 'side', az: 0.2, el: 0.15, k: 1.6, t: 4, max: 200 } },
+  { f: 'shilka-fog', m: 'autumn', w: 'a_fog', cap: 'Шилка в тумане', setup: { pside: 'def', era: 1, side: 'east', psam: 'zsu234', pvs: 'air' }, shot: { s: 'unit', a: 'front', az: 0.3, el: 0.04, k: 0.55, t: 45, ox: 0.15 } },
   { f: 'shahed-dusk', m: 'autumn', w: 'a_dusk', cap: 'Дрон, сумерки', setup: { pside: 'multi', era: 4, side: 'west', pmun: 'shahed' }, shot: { s: 'mun', a: 'side', az: 0.3, el: 0.1, k: 0.6, t: 20, max: 200, ox: -0.12 } },
-  { f: 'church-dusk', m: 'autumn', w: 'a_dusk', cap: 'Монастырь на острове', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 38, cg: 1, cam: [170, 14, 330, 620, 20, 160] } },
+  { f: 'church-dusk', m: 'autumn', w: 'a_dusk', cap: 'Монастырь на острове', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 38, cg: 1, cam: [480, 8, 213, 620, 18, 160] } },
   { f: 'pumpkins-eve', m: 'autumn', w: 'a_eve', cap: 'Тыквенное поле', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 45, cg: 1, cam: [-7013, 1.5, -192, -7193, 3, -222] } },
-  { f: 'mill-dusk', m: 'autumn', w: 'a_dusk', cap: 'Мельница и РЛС на Лысой горе', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 45, cg: 1, cam: [7334, 3, -6875, 7534, 22, -7055] } },
+  { f: 'mill-dusk', m: 'autumn', w: 'a_dusk', cap: 'Мельница и РЛС на Лысой горе', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 45, cg: 1, cam: [7437, 3, -6968, 7534, 16, -7055] } },
   { f: 'cemetery-fog', m: 'autumn', w: 'a_fog', cap: 'Кладбище у деревни', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 50, cg: 1, cam: [-611, 1.7, 5011, -666, 1.5, 4976] } },
+];
+
+// ── второй проход (v2): слабые кадры первого — объект крупнее (k меньше), светлее погода, фон — небо (el ≤ 0: камера ниже объекта) ──
+// n — номер исходного кадра; имя файла — «NN-имя-v2»; на страницу идут вместе с первыми
+const REVIEW2 = [
+  { n: 8, f: 'tu95-far-v2', m: 'city', w: 'morning', cap: 'Ту-95МС сбоку, крупно, утро', setup: { pside: 'air', era: 3, side: 'west', lo: 12, palt: 'low' }, shot: { s: 'ship', a: 'side', az: 0.35, el: -0.03, k: 1.0, t: 35 } },
+  { n: 9, f: 'su57-front-v2', m: 'city', w: 'morning', cap: 'Су-57 спереди, утро', setup: { pside: 'air', era: 4, side: 'west', lo: 3, palt: 'low' }, shot: { s: 'ship', a: 'front', az: 0.5, el: -0.1, k: 0.4, t: 30, ox: 0.1 } },
+  { n: 12, f: 'shahed-city-v2', m: 'city', w: 'day', cap: 'Дрон над городом, крупно', setup: { pside: 'multi', era: 4, side: 'west', pmun: 'shahed' }, shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.35, t: 20, max: 200, ox: -0.1 } },
+  { n: 15, f: 'f117-low-v2', m: 'winter', w: 'w_frost', cap: 'F-117A над заснеженной равниной, крупнее', setup: { pside: 'air', era: 3, side: 'east', lo: 9, palt: 'low' }, shot: { s: 'ship', a: 'side', az: 0.35, el: 0.05, k: 0.5, t: 50, ox: 0.1 } },
+  { n: 26, f: 'mi24-dusk-v2', m: 'autumn', w: 'a_dusk', cap: 'Ми-24 ближе, на фоне неба', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'heli', a: 'side', az: 0.3, el: -0.12, k: 0.6, t: 110, max: 400 } },
+  { n: 27, f: 'ah64-fog-v2', m: 'autumn', w: 'a_fog', cap: 'AH-64 ближе, светлый туман', setup: { pside: 'def', era: 3, side: 'east', psam: 'tor', pvs: 'air' }, shot: { s: 'heli', a: 'side', az: 0.3, el: -0.12, k: 0.55, t: 130, max: 400 } },
+  { n: 28, f: 'mi28-eve-v2', m: 'autumn', w: 'a_eve', cap: 'Ми-28Н спереди, ближе', setup: { pside: 'def', era: 3, side: 'west', psam: 'avenger', pvs: 'air' }, shot: { s: 'heli', a: 'front', az: 0.3, el: -0.1, k: 0.4, t: 110, max: 400 } },
+  { n: 30, f: 'ah1-eve-v2', m: 'autumn', w: 'a_eve', cap: 'AH-1W сбоку, на фоне неба', setup: { pside: 'def', era: 2, side: 'east', psam: 'osa', pvs: 'air' }, shot: { s: 'heli', a: 'side', az: 0.3, el: -0.1, k: 0.6, t: 110, max: 400 } },
+  { n: 31, f: 'uh1-fog-v2', m: 'autumn', w: 'a_fog', cap: 'UH-1H ближе, туман', setup: { pside: 'def', era: 1, side: 'east', psam: 'zsu234', pvs: 'air' }, shot: { s: 'heli', a: 'side', az: 0.3, el: -0.05, k: 0.4, t: 110, max: 400 } },
+  { n: 34, f: 'a10-eve-v2', m: 'autumn', w: 'a_eve', cap: 'A-10 над топью, вечер, сбоку', setup: { pside: 'air', era: 2, side: 'east', lo: 11, palt: 'low' }, shot: { s: 'ship', a: 'side', az: 0.4, el: -0.05, k: 0.9, t: 50 } },
+  { n: 36, f: 'shilka-fog-v2', m: 'autumn', w: 'a_fog', cap: 'Шилка в тумане, крупно', setup: { pside: 'def', era: 1, side: 'east', psam: 'zsu234', pvs: 'air' }, shot: { s: 'unit', a: 'front', az: 0.5, el: 0.08, k: 0.4, t: 45, ox: -0.05, oy: 0.1 } },
+  { n: 37, f: 'shahed-dusk-v2', m: 'autumn', w: 'a_eve', cap: 'Дрон над топью, вечер, крупно', setup: { pside: 'multi', era: 4, side: 'west', pmun: 'shahed' }, shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.35, t: 20, max: 200, ox: 0.12 } },
 ];
 
 const args = Deno.args.filter((a) => !a.startsWith('--'));
 const want = new Set(args);
-const LIST = REVIEW_MODE ? REVIEW.map((r, i) => ({ ...r, n: i + 1, f: `${String(i + 1).padStart(2, '0')}-${r.f}` })) : SHOTS;
+const LIST = REVIEW_MODE ? [...REVIEW.map((r, i) => ({ ...r, n: i + 1, f: `${String(i + 1).padStart(2, '0')}-${r.f}` })), ...REVIEW2.map((r) => ({ ...r, f: `${String(r.n).padStart(2, '0')}-${r.f}` }))] : SHOTS;
 const pick = (s) => !want.size || want.has(s.f) || (REVIEW_MODE && (want.has(String(s.n)) || want.has(s.f.slice(3))));
 const server = Deno.serve({ port: PORT, hostname: '127.0.0.1', onListen() {} }, (req) => serveDir(req, { fsRoot: ROOT, quiet: true }));
 // каждой странице — свой Chrome: фоновая вкладка засыпает (игра ставит паузу, кадры по 1 в секунду) — так нельзя снимать по несколько сразу
@@ -138,7 +156,12 @@ else {
 function writeReviewPage() {
   const MAPN = { city: 'Город', winter: 'Северный рубеж', autumn: 'Туманная топь' };
   const have = LIST.filter((s) => { try { Deno.statSync(`${OUT}${s.f}.webp`); return true; } catch (_) { return false; } });
-  const data = have.map((s) => ({ n: s.n, f: `${s.f}.webp`, cap: s.cap || '', map: MAPN[s.m] || '' }));
+  // страница копит кадры: прежние записи (в том числе кадры прежней нумерации, которых нет в LIST) остаются, снятые сейчас — перезаписываются
+  const prev = (() => { try { const m = Deno.readTextFileSync(`${OUT}index.html`).match(/const D=(\[.*?\]);\n/); return m ? JSON.parse(m[1]) : []; } catch (_) { return []; } })()
+    .filter((d) => { try { Deno.statSync(OUT + d.f); return true; } catch (_) { return false; } });
+  const fresh = (have.filter((s) => done.includes(s)).length ? have.filter((s) => done.includes(s)) : have).map((s) => ({ n: s.n, f: `${s.f}.webp`, cap: s.cap || '', map: MAPN[s.m] || '' }));
+  const data = [...prev.filter((d) => !fresh.some((q) => q.f === d.f)), ...fresh, ...have.filter((s) => !prev.some((d) => d.f === `${s.f}.webp`) && !fresh.some((q) => q.f === `${s.f}.webp`)).map((s) => ({ n: s.n, f: `${s.f}.webp`, cap: s.cap || '', map: MAPN[s.m] || '' }))]
+    .sort((a, b) => a.n - b.n || a.f.localeCompare(b.f));
   const html = `<!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Воздушное превосходство — кадры для фона меню (на утверждение)</title>
@@ -160,7 +183,7 @@ figcaption p{margin:4px 0 0}
 #lb small{color:var(--mut);display:block;margin-top:2px}
 @media(max-width:560px){.grid{grid-template-columns:1fr;padding:8px 12px 40px;gap:12px}header{padding:16px 12px 6px}h1{font-size:19px}.bar{padding:8px 12px}}
 </style></head><body>
-<header><h1>Кадры для фона главного меню — на утверждение</h1><p>${data.length} кадров, 1920×1080. Нажмите на кадр — на весь экран (стрелки и свайп — следующий, Esc — закрыть). Запишите номера, которые войдут в игру.</p></header>
+<header><h1>Кадры для фона главного меню — на утверждение</h1><p>${data.length} кадров, 1920×1080; «-v2» — переснятые слабые. Нажмите на кадр — на весь экран (стрелки и свайп — следующий, Esc — закрыть). Запишите номера, которые войдут в игру.</p></header>
 <div class="bar" id="bar"></div><div class="grid" id="g"></div>
 <div id="lb"><img id="li" alt=""><div id="lc"></div></div>
 <script>
