@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Постройки и реквизит осенней карты</title>
+<style>body{margin:0;background:#9fb3c8;font:12px sans-serif}canvas{display:block}.l{position:absolute;color:#000;background:rgba(255,255,255,.75);padding:1px 4px}</style></head>
+<body>
+<!-- Проверка моделей построек и реквизита осенней карты (obj_*, pr_*, c_vaz) тем же загрузчиком, что в игре (models.js): ?p=obj_church,pr_well —
+     по строке на модель: спереди (+Z), сбоку (+X), сверху, ¾. Земля y = 0 — тёмный диск; у крупных (больше 2,5 м) красная палка рядом — человек 1,75 м (для масштаба).
+     Подпись: габариты Д × Ш × В (по Z, X, Y), м. &w=ширина кадра (по умолчанию 360), &tile=шаг — разместить 10 копий подряд вдоль X (проверка ограды), &spin=сек — крылья мельницы (sail) после столького вращения.
+     Нужен сервер :8935 (корень — wtm-materials). Снимок — Chrome без окна (puppeteer, как в tools/airdef-headless/thumbs-bake.js) → tools/airdef-models/shots-autumn/. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'obj_church').split(',');
+const M = await import('../../games/airdef/models.js?v=' + Date.now());
+M.loadModels('../../games/airdef/', () => {});
+const CW = +(Q.get('w') || 360), CH = Math.round(CW * 0.78), W = CW * 4, H = CH * names.length;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
+const wait = (n) => new Promise((ok) => { M.wantModel(n); M.wantBuildings([n]); const t = setInterval(() => { const o = M.objModel(n) || M.anyModel(n) || (M.bldModel(n) && M.bldModel(n).clone()); if (o) { clearInterval(t); ok(o); } }, 50); });
+const SPIN = (Q.get('spin') || '').split(',').map(Number);
+for (let i = 0; i < names.length; i++) {
+  const n = names[i], obj = await wait(n);
+  if (SPIN[i] > 0) for (let f = 0; f < SPIN[i] * 60; f++) M.spinSails(obj, 1 / 60);
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fb3c8);
+  sc.add(new THREE.HemisphereLight(0xffffff, 0x556655, 0.95)); const dl = new THREE.DirectionalLight(0xffffff, 0.85); dl.position.set(3, 6, 4); sc.add(dl);
+  sc.add(obj);
+  if (Q.get('tile')) { const g = new THREE.Group(), st = +Q.get('tile'); for (let k = 0; k < 10; k++) { const o = k ? M.objModel(n) || M.anyModel(n) || M.bldModel(n).clone() : obj; o.position.x = k * st; g.add(o); } sc.remove(obj); sc.add(g); g.updateMatrixWorld(true); }
+  obj.updateMatrixWorld(true);
+  const bb = new THREE.Box3().setFromObject(sc.children.find((q) => q.isGroup) || obj), sz = bb.getSize(new THREE.Vector3()), c = bb.getCenter(new THREE.Vector3()), m = Math.max(sz.x, sz.y, sz.z), S = m * 0.62 + 0.15;
+  const gr = new THREE.Mesh(new THREE.CircleGeometry(m * 1.6 + 2, 40), new THREE.MeshBasicMaterial({ color: 0x3c4a34, side: THREE.DoubleSide })); gr.rotation.x = -Math.PI / 2; gr.position.y = -0.004; sc.add(gr);
+  { const sl = new THREE.Mesh(new THREE.BoxGeometry(m * 3, 0.03, m * 3), new THREE.MeshBasicMaterial({ color: 0x20281c })); sl.position.y = -0.016; sc.add(sl); } // тонкая плита: в видах сбоку — линия земли y = 0
+  if (m > 2.5) { const man = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.75, 8), new THREE.MeshBasicMaterial({ color: 0xff2020 })); man.position.set(bb.max.x + 0.4 + m * 0.05, 0.875, bb.max.z + 0.4 + m * 0.05); sc.add(man); } // человек — только у крупного
+  const ort = (up) => { const a = CW / CH, cam = new THREE.OrthographicCamera(-S * a, S * a, S, -S, 0.01, 800); cam.up.copy(up); return cam; };
+  const V = [[ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x, c.y, c.z + 200)], [ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x + 200, c.y, c.z)], [ort(new THREE.Vector3(0, 0, -1)), new THREE.Vector3(c.x, c.y + 200, c.z)],
+    [new THREE.PerspectiveCamera(32, CW / CH, 0.05, 800), c.clone().add(new THREE.Vector3(1.0, 0.45, 1.25).normalize().multiplyScalar(m * 2.0 + 1))]];
+  V.forEach(([cam, pos], k) => { cam.position.copy(pos); cam.lookAt(c); const y = H - (i + 1) * CH; r.setViewport(k * CW, y, CW, CH); r.setScissor(k * CW, y, CW, CH); r.render(sc, cam); });
+  let tri = 0; obj.traverse((o) => { if (o.isMesh) tri += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; });
+  const l = document.createElement('div'); l.className = 'l'; l.style.left = '2px'; l.style.top = i * CH + 'px'; l.textContent = `${n} · ${sz.z.toFixed(2)} × ${sz.x.toFixed(2)} × ${sz.y.toFixed(2)} м (Д × Ш × В) · низ ${bb.min.y.toFixed(2)} · ${tri} тр.`; document.body.appendChild(l);
+}
+window.__ok = 1;
+</script></body></html>

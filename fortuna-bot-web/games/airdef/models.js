@@ -133,6 +133,7 @@ const META = {
   // вертолётное оружие (heliModel / weaponMesh): подвес сверху, нос в −Z, центр габаритов в нуле
   w_shturm: { weapon: ['shturm', 'ataka'], lazy: true, stations: [] }, // «Штурм» 9М114 — ТПК, timurwolf (и вид «Атаки»: контейнер почти тот же)
   w_b8: { weapon: 's8', lazy: true, stations: [] }, // блок НАР Б-8В20 (20 труб) — timurwolf
+  w_lau61: { weapon: 'hydra', lazy: true, stations: [] }, // блок Hydra 70 LAU-61 (19 труб) — сетка блока Б-8 timurwolf, 1,7 × 0,4 м, олив NATO
   w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — из MH-60R (touka1212)
   aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух–воздух» для вертолётов — GoldbergR
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.62 }, // Ту-160 — KOG_THORNS (с 2026-10-19 и в «Авиации»: точки — в отсеках); носитель «Мульти-волны»
@@ -184,6 +185,10 @@ const META = {
   pr_vend: { bld: true, stations: [] }, pr_vend2: { bld: true, stations: [] }, pr_booth: { bld: true, stations: [] }, pr_bin: { bld: true, stations: [] }, pr_wbins: { bld: true, stations: [] }, // уличные мелочи
   pr_bstop: { bld: true, stations: [] }, pr_rstop: { bld: true, stations: [] }, sg_main: { bld: true, stations: [] }, sg_yield: { bld: true, stations: [] }, // остановки и знаки
   v_barn: { bld: true, stations: [] }, v_wtower: { bld: true, stations: [] }, v_combine: { bld: true, stations: [] }, v_tractor: { bld: true, stations: [] }, v_picket: { bld: true, stations: [] }, m_5g: { bld: true, stations: [] }, // село
+  // Хеллоуин, осенняя карта «Туманная топь» (2026-10-20): постройки-цели — lazy (грузятся по wantModel, когда на карте есть); реквизит — bld (грузится по wantBuildings(G.bldNames), ставится G.addNear)
+  obj_church: { matte: true, obj: true, lazy: true, stations: [] }, obj_mill: { matte: true, obj: true, lazy: true, stations: [] }, obj_barn: { matte: true, obj: true, lazy: true, stations: [] }, // церковь — reramil, мельница (крылья — часть sail, spinSails) — Tim0, сарай — narighillya
+  pr_hay: { matte: true, bld: true, stations: [] }, pr_well: { matte: true, bld: true, stations: [] }, pr_pumpkin: { bld: true, stations: [] }, pr_grave1: { matte: true, bld: true, stations: [] }, pr_grave2: { matte: true, bld: true, stations: [] }, pr_grave3: { matte: true, bld: true, stations: [] }, pr_grave4: { matte: true, bld: true, stations: [] },
+  pr_fence: { bld: true, stations: [] }, pr_fpost: { bld: true, stations: [] }, pr_deadtree: { matte: true, bld: true, stations: [] }, pr_oldtree: { matte: true, bld: true, stations: [] }, c_vaz: { bld: true, stations: [] }, // сено, колодец, тыква, надгробия, ограда, сухое и старое дерево, ржавый ВАЗ
   br_seg: { obj: true, stations: [] }, // пролёт моста — VectorMan (city-render.js attachBridgeSegs)
   af_atc: { obj: true, stations: [] }, af_fuel: { obj: true, stations: [] }, af_appr: { obj: true, stations: [] }, // аэродром: вышка КДП, топливозаправщики, огни приближения (city-render.js attachAirfield)
     obj_jhangar: { obj: true, stations: [] }, obj_cont: { obj: true, stations: [] }, obj_milbase: { obj: true, stations: [] }, obj_oldind: { obj: true, stations: [] }, obj_factory: { obj: true, stations: [] }, // цех — и цель, и склады города вблизи
@@ -244,7 +249,7 @@ const LOADED = {};
 // версия файла модели (сброс кэша) — у пересобранных моделей своя, остальные не перекачиваются
 const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'roland', 'rapier', 'rapier_lo', 'tunguska', 'tunguska_lo', 'khordad', 'strela1', 'zsu234', 'zsu234_lo', 'strela10', 'm163', 'm163_lo', 'chaparral', 'chaparral_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'l_scud', 'pantsir', 'pantsir_lo', 'w_umpk', 'w_decoy_e', 'w_kh101', 'w_jsow', 'w_fab500', 'e_tornado', 'e_f111', 'e_mig23', 'e_mig27', 'e_tu22m2', 'e_a10', 'e_f15e', 'e_su24', 'm163', 'zsu234', 'strela10', 'avenger', 'chaparral', 'w_kh59m', 'w_kh25ml', 'w_kh58', 'w_gbu31', 'w_jassm', 'w_agm65b', 't_kc10'].map((n) => [n, '20261022c']).concat(
   ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'khordad', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_su7b', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
-  ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c', 'e_ea18g'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l'], ['obj_hangar', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']]))); // l — 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l — Ту-95 без нарисованных дисков винтов (2026-10-20) // j — четвёртая партия, новая «Шилка», УМПК без сжатия // i — ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c — замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
+  ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c', 'e_ea18g'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l'], ['obj_hangar', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['w_lau61', 'obj_church', 'obj_mill', 'obj_barn', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o']))); // l — 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l — Ту-95 без нарисованных дисков винтов (2026-10-20) // j — четвёртая партия, новая «Шилка», УМПК без сжатия // i — ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c — замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
@@ -335,6 +340,12 @@ async function load(name, base) {
     for (const m of part.children) m.geometry.translate(-c.x, -c.y, -c.z);
     part.position.copy(c); part.userData.axis = tail ? 'x' : 'y'; part.userData.nodisc = part.name === 'rotor2' ? 1 : 0; // у соосной пары диск — один (от верхнего)
     part.userData.spin = tail ? 1 : (MM.side === 'west' ? 1 : -1) * (part.name === 'rotor2' ? -1 : 1);
+  }
+  // крылья мельницы (часть sail, obj_mill): ось Z (горизонтальная, вперёд) через ступицу — hub из prepare.js; лопасти остаются непрозрачными (без призраков и диска), крутит spinSails
+  for (const part of group.children.filter((c) => c.name === 'sail')) {
+    const c = part.userData.hub ? new THREE.Vector3(...part.userData.hub) : new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3());
+    for (const m of part.children) m.geometry.translate(-c.x, -c.y, -c.z);
+    part.position.copy(c); part.userData.sail = 1;
   }
   // крылья планирующих бомб (части wing*): своя ось поворота (вертикальная) — у корня по передней кромке; у цельного крыла
   // поперёк бомбы (УМПК) — посередине. wa — [угол на подвеске, угол в полёте]: сложенное лежит вдоль бомбы назад,
@@ -487,6 +498,8 @@ function propSetup(obj) {
   }
   return L;
 }
+// крылья мельницы: w — рад/с (по умолчанию ≈ 1 оборот за 18 с); вызывать для группы постройки (obj_mill) — крутятся все части sail внутри
+export function spinSails(obj, dt, w = 0.35) { obj.traverse((o) => { if (o.userData.sail) o.rotation.z -= dt * w; }); }
 // thr — газ 0…1 (у вертолёта винт крутится и на малом газу); рулевой винт — вдвое быстрее несущего
 export function spinProps(obj, dt, thr = 1) {
   let L = PROPS.get(obj); if (!L) { L = propSetup(obj); PROPS.set(obj, L); }

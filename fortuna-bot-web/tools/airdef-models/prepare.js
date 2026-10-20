@@ -5,7 +5,7 @@
 // (как модели игры), ставит центр, оставляет POSITION / NORMAL / TEXCOORD_0, склеивает примитивы по материалам,
 // текстуры цвета ужимает в JPEG (sips); остальные карты выбрасывает — в игре материалы Phong.
 // Пишет games/airdef/models/<имя>.glb, печатает размеры. --views — виды готовой модели (PPM во временной папке).
-import { readGlb, flatten, components, bbox } from './glb.js';
+import { readGlb, flatten, components, bbox, accessor } from './glb.js';
 import { render, writePpm } from './raster.js';
 import { MeshoptSimplifier } from 'npm:meshoptimizer@0.21.0';
 
@@ -536,6 +536,7 @@ const CONFIG = {
   // ── вертолётное оружие (2026-10-20); центр габаритов в начале координат, нос в −Z, подвес — сверху ──
   w_shturm: { src: `${DL}/42c7dd424a064efebf3e63ebd423afbb.glb`, scale: 1.83 / 67.65, axes: (x, y, z) => [z, -y, x], tex: () => 256, pickMesh: /./, perTri: true, colors: { '': [0.09, 0.1, 0.075] }, groups: (c) => (Math.hypot(c.ctr[1] - 8.51, c.ctr[2] + 97.49) < 3.4 ? 'body' : null) }, // «Штурм» 9М114: ОДИН ТПК (труба; вторая и балка автора убраны), 1,83 м, перевёрнут — timurwolf
   w_b8: { src: `${DL}/2905fcb5f5fd4c7284adc362bcdc39d1.glb`, scale: 2.0 / 63.38, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // блок НАР Б-8В20 (20 труб Ø 80 мм — по снимку именно Б-8, не Б-13) — timurwolf, 2,0 м
+  w_lau61: { src: `${DL}/2905fcb5f5fd4c7284adc362bcdc39d1.glb`, scale: 1.7 / 63.38, axes: (x, y, z) => [-z * 0.82, y * 0.738, x], tex: () => 256, pickMesh: /./, colors: { '': [0.095, 0.118, 0.056] }, credit: 'адаптация под LAU-61' }, // блок Hydra 70 LAU-61 (19 труб Ø 70 мм) на сетке блока Б-8 (timurwolf): по осям отдельно — длина 1,7 м, сечение 0,4 × 0,4 м; олив NATO, надписей у автора нет (нет и текстур)
   w_hellfire: { src: `${DL}/sh60b_obj.glb`, scale: 1.63 / 59.28, nose: '-z', tex: () => 256, centerX: true, /* одна из четырёх AGM-114 на левой ЕССШ MH-60R — touka1212: тело, обтекатель, сопло, оперение и пояски; направляющая, замки и пилон не берутся */
     colors: { '#nose$': [0.03, 0.03, 0.03], '#yellow$': [0.55, 0.42, 0.02], '#brown$': [0.12, 0.06, 0.02], '': [0.095, 0.118, 0.056] },
     groups: (c) => { const [x, y, z] = c.ctr; if (!(x > -88 && x < -82.5 && y > 27 && y < 33.5 && z > -185 && z < -100)) return null; if (c.mat === 3 && y > 32.5) return null; // коробка одной ракеты; замки и полозки на спине — долой
@@ -543,6 +544,24 @@ const CONFIG = {
       if (c.size[2] < 0.5 && c.mat === 2) { if (Math.abs(z + 155.41) < 0.5) return 'body#yellow'; if (Math.abs(z + 128.5) < 0.5) return 'body#brown'; } // три пояска из плоских накладок: у БЧ — жёлтый, у двигателя — коричневый
       return 'body'; } },
   aam_stinger: { src: `${DL}/fim-92_stinger_low-poly.glb`, scale: 1.1875, nose: '+z', tex: () => 256, pickMesh: /./, dropMat: /^FIM-92_Stinger_1_Material/ }, // ракета FIM-92 Stinger (без трубы) — GoldbergR
+  // ── Хеллоуин, осенняя карта «Туманная топь» (2026-10-20): постройки-цели obj_*, реквизит pr_* / c_vaz (все CC BY 4.0, Sketchfab); unit — земля y = 0, центр по корпусу.
+  // skin — скинированные лопасти мельницы; ground — высота «земли» модели (м, после масштаба), если ниже подошвы уходит корень или основание
+  obj_church: { src: `${DL}/church_-_abandoned.glb`, scale: 0.0367, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /\/(Cube|Cylinder)_Material/, groups: () => 'body' }, // заброшенная церковь — reramil (рельеф-подложка автора убран)
+  obj_mill: { src: `${DL}/windmill.glb`, scale: 0.0079, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, skin: true, pickMesh: /Cylinder011|Object_7$/, hubs: { sail: [0.022, 10.45, 4.26] }, // мельница — Tim0 (у автора две; взята первая), крылья на костях — свои части sail (вращение вокруг оси Z через ступицу hubs)
+    groups: (c) => (/Object_7$/.test(c.path) ? 'sail' : 'body') },
+  obj_barn: { src: `${DL}/old_wooden_barn_house_4.glb`, scale: 1.8, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // сарай — narighillya (Blenderust)
+  pr_hay: { src: `${DL}/hay_bales.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // тюки сена — zbrojmistrz
+  pr_well: { src: `${DL}/the_wishing_well.glb`, scale: 0.7, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // колодец — jadenmercado57
+  pr_pumpkin: { src: `${DL}/pumpkin.glb`, scale: 0.0293, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /./, groups: () => 'body' }, // тыква Ø 0,6 м — FantasyDragon
+  pr_grave1: { src: `${DL}/grave_stone_collection.glb`, scale: 0.01, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /\/Grave2\//, groups: () => 'body' }, // надгробия — Kigha (единицы автора — см)
+  pr_grave2: { src: `${DL}/grave_stone_collection.glb`, scale: 0.01, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /\/Grave3\//, groups: () => 'body' },
+  pr_grave3: { src: `${DL}/grave_stone_collection.glb`, scale: 0.01, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /\/Grave1\//, groups: () => 'body' },
+  pr_grave4: { src: `${DL}/grave_stone_collection.glb`, scale: 0.01, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /\/Grave4\//, groups: () => 'body' },
+  pr_fence: { src: `${DL}/cemetery_fence.glb`, scale: 0.2658, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /Part_Open/, groups: () => 'body' }, // секция чугунной ограды (высокий и низкий прут + три перекладины) — CollinPatrick
+  pr_fpost: { src: `${DL}/cemetery_fence.glb`, scale: 0.2658, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /poll_Tall/, groups: () => 'body' }, // высокий прут — замыкает ряд секций
+  pr_deadtree: { src: `${DL}/dead_tree.glb`, scale: 10.1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // сухое дерево — MaX3Dd
+  pr_oldtree: { src: `${DL}/old_tree.glb`, scale: 1.62, nose: '-z', rulesIn: 'game', unit: true, ground: -0.08, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // старое дерево — evolveduk (корни у автора ниже земли — зарыты)
+  c_vaz: { src: `${DL}/vaz-2104_free.glb`, scale: 4.1 / 278.7, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // ВАЗ-2104 — sMoKi (SevKa)
 };
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
@@ -560,8 +579,31 @@ const AX = { '+x': (x, y, z) => [z, y, -x], '+z': (x, y, z) => [-x, y, -z], '-z'
 
 // нос задан вектором [fx, fz] в осях модели (модель лежит повёрнутой): вперёд → −Z, вправо → +X
 const axFwd = ([fx, fz]) => { const l = Math.hypot(fx, fz); fx /= l; fz /= l; const rx = -fz, rz = fx; return (x, y, z) => [x * rx + z * rz, y, -(x * fx + z * fz)]; };
+// cfg.skin — скинированные меши (лопасти мельницы на костях): позиции и нормали по позе покоя, как велит glTF (мировая матрица кости × обратная bind-матрица)
+const m4mul = (a, b) => { const o = new Array(16).fill(0); for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) for (let k = 0; k < 4; k++) o[c * 4 + r] += a[k * 4 + r] * b[c * 4 + k]; return o; };
+const m4trs = (n) => { if (n.matrix) return n.matrix.slice(); const [x, y, z, w] = n.rotation || [0, 0, 0, 1], [sx, sy, sz] = n.scale || [1, 1, 1], [tx, ty, tz] = n.translation || [0, 0, 0];
+  return [(1 - 2 * (y * y + z * z)) * sx, 2 * (x * y + z * w) * sx, 2 * (x * z - y * w) * sx, 0, 2 * (x * y - z * w) * sy, (1 - 2 * (x * x + z * z)) * sy, 2 * (y * z + x * w) * sy, 0, 2 * (x * z + y * w) * sz, 2 * (y * z - x * w) * sz, (1 - 2 * (x * x + y * y)) * sz, 0, tx, ty, tz, 1]; };
+function skinPrims(g, prims) {
+  const J = g.json, W = {}, walk = (i, M) => { const w = m4mul(M, m4trs(J.nodes[i])); W[i] = w; (J.nodes[i].children || []).forEach((c) => walk(c, w)); };
+  J.scenes[J.scene || 0].nodes.forEach((r) => walk(r, [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]));
+  for (const p of prims) {
+    const n = J.nodes[p.node]; if (n.skin === undefined) continue;
+    const sk = J.skins[n.skin], ia = J.accessors[sk.inverseBindMatrices], ib = J.bufferViews[ia.bufferView], o0 = g.bin.byteOffset + (ib.byteOffset || 0) + (ia.byteOffset || 0);
+    const ibm = new Float32Array(g.bin.buffer.slice(o0, o0 + ia.count * 64)), jm = sk.joints.map((j, k) => m4mul(W[j], Array.from(ibm.subarray(k * 16, k * 16 + 16))));
+    const at = J.meshes[n.mesh].primitives[p.prim].attributes, JT = accessor(g, at.JOINTS_0).data, WT = accessor(g, at.WEIGHTS_0).data, P0 = accessor(g, at.POSITION).data, N0 = at.NORMAL !== undefined ? accessor(g, at.NORMAL).data : null;
+    for (let v = 0; v < P0.length / 3; v++) {
+      let x = 0, y = 0, z = 0, nx = 0, ny = 0, nz = 0;
+      for (let c = 0; c < 4; c++) { const w = WT[v * 4 + c]; if (!w) continue; const M = jm[JT[v * 4 + c]], a = P0[v * 3], b = P0[v * 3 + 1], d = P0[v * 3 + 2];
+        x += w * (M[0] * a + M[4] * b + M[8] * d + M[12]); y += w * (M[1] * a + M[5] * b + M[9] * d + M[13]); z += w * (M[2] * a + M[6] * b + M[10] * d + M[14]);
+        if (N0) { const A = N0[v * 3], B = N0[v * 3 + 1], C = N0[v * 3 + 2]; nx += w * (M[0] * A + M[4] * B + M[8] * C); ny += w * (M[1] * A + M[5] * B + M[9] * C); nz += w * (M[2] * A + M[6] * B + M[10] * C); } }
+      p.P[v * 3] = x; p.P[v * 3 + 1] = y; p.P[v * 3 + 2] = z;
+      if (N0) { const l = Math.hypot(nx, ny, nz) || 1; p.N[v * 3] = nx / l; p.N[v * 3 + 1] = ny / l; p.N[v * 3 + 2] = nz / l; }
+    }
+  }
+}
 async function prepare(name, views) {
   const cfg = CONFIG[name], g = readGlb(Deno.readFileSync(cfg.src)), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => (!cfg.pickMesh || cfg.pickMesh.test(p.path)) && !(cfg.dropMat && cfg.dropMat.test(((J.materials || [])[p.material] || {}).name || ''))) /* dropMat — материалы долой (линии рёбер SketchUp) */, ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
+  if (cfg.skin) skinPrims(g, prims);
   // rulesIn: 'game' — правила частей (groups / remove), hinge и просмотр — в осях игры (метры, нос в −Z, без центровки)
   if (cfg.rulesIn === 'game') for (const p of prims) {
     for (let i = 0; i < p.P.length; i += 3) { const v = ax(p.P[i], p.P[i + 1], p.P[i + 2]); p.P[i] = v[0] * cfg.scale; p.P[i + 1] = v[1] * cfg.scale; p.P[i + 2] = v[2] * cfg.scale; }
@@ -733,7 +775,7 @@ async function prepare(name, views) {
   const all = bbox(Float32Array.from([...byMat.values()].flatMap((m) => m.pos)));
   // centerBody (вертолёты): центр — по корпусу без винтов (части, чьи имена не подходят под шаблон), по высоте тоже; axisX — x оси фюзеляжа (в осях правил)
   const bodyB = cfg.unit ? bbox(Float32Array.from([...byMat.values()].filter((m) => m.group === 'body').flatMap((m) => m.pos))) : cfg.centerBody ? bbox(Float32Array.from([...byMat.values()].filter((m) => !cfg.centerBody.test(m.group)).flatMap((m) => m.pos))) : all;
-  const dz = (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? all.mn[1] : cfg.centerBody ? (bodyB.mn[1] + bodyB.mx[1]) / 2 : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.axisX !== undefined ? cfg.axisX : cfg.pick || cfg.pickMesh || cfg.unit || cfg.centerX ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
+  const dz = (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? (cfg.ground !== undefined ? cfg.ground : all.mn[1]) : cfg.centerBody ? (bodyB.mn[1] + bodyB.mx[1]) / 2 : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.axisX !== undefined ? cfg.axisX : cfg.pick || cfg.pickMesh || cfg.unit || cfg.centerX ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
   for (const m of byMat.values()) for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= dx; m.pos[i + 1] -= dy; m.pos[i + 2] -= dz; }
   if (cfg.centerBody) {
     console.log(`  центровка: сдвиг ${[dx, dy, dz].map((v) => v.toFixed(3)).join(' ')} (из осей правил: точка − сдвиг = точка в модели)`);
@@ -979,8 +1021,9 @@ if (Deno.args[0] === '--credits') {
   const bySrc = new Map(), dir = new URL('../../games/airdef/models/', import.meta.url).pathname;
   for (const [name, cfg] of Object.entries(CONFIG)) {
     try { Deno.statSync(`${dir}${name}.glb`); } catch { continue; } // в игре только собранные
-    let e = bySrc.get(cfg.src);
-    if (!e) { const J = readGlb(Deno.readFileSync(cfg.src)).json, x = (J.asset && J.asset.extras) || {}; bySrc.set(cfg.src, e = { title: x.title || '', author: (x.author || '').replace(/ \(.*$/, ''), url: x.source || '', license: (x.license || '').replace(/ \(.*$/, ''), files: [] }); }
+    const ck = cfg.src + (cfg.credit ? '|' + cfg.credit : ''); // credit — пометка об адаптации: отдельная запись титров (menu.js выводит её в названии)
+    let e = bySrc.get(ck);
+    if (!e) { const J = readGlb(Deno.readFileSync(cfg.src)).json, x = (J.asset && J.asset.extras) || {}; bySrc.set(ck, e = { title: (x.title || '') + (cfg.credit ? ` (${cfg.credit})` : ''), author: (x.author || '').replace(/ \(.*$/, ''), url: x.source || '', license: (x.license || '').replace(/ \(.*$/, ''), files: [] }); }
     e.files.push(name);
   }
   const list = [...bySrc.values()];

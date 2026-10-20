@@ -118,7 +118,8 @@ export function createRaid(S, city, rnd, opts = {}) {
         const see = city.los(a.pos.x, a.pos.y - 1.5, a.pos.z, aim.x, aim.y, aim.z, 3);
         a.pop = clamp((a.pop || alt) + (see ? 0 : 14 * dt), alt, 180); alt = a.pop;
         a.blindT = see || a.pop < 179 ? 0 : (a.blindT || 0) + dt; if (a.blindT > 4) { a.stand = Math.max(1200, stand - 700); a.blindT = 0; a.pop = alt; } // и на 180 м не видно — ближе
-        const face = Math.abs(Math.atan2(Math.sin(u.yawTo - a.yaw), Math.cos(u.yawTo - a.yaw))) < 0.08;
+        const face = Math.abs(Math.atan2(Math.sin(u.yawTo - a.yaw), Math.cos(u.yawTo - a.yaw))) < 0.08, steady = a.speed < 12 && Math.abs(a.pitch) < 0.12; // пуск — с висения, нос почти в горизонт
+        if (a.phase === 'lase') u.cy = 0; // подсвет: висит на месте (сдвинется — цель закроет рельеф)
         a.relT -= dt;
         if (a.phase === 'lase') { a.laser = see ? aim.clone() : null; if (!S.wpns.some((w) => w.owner === a && !w.dead)) { a.laser = null; a.phase = 'ingress'; a.relT = 1.5 + rnd(); } }
         else if (W && W.kind === 'rocket') {
@@ -127,7 +128,7 @@ export function createRaid(S, city, rnd, opts = {}) {
           fwdOf(a, DIR); const t = predictRocket(city, W, TMP2.copy(a.pos).add(TMP.set(0, -2.5, 0)), DIR, Math.max(0, a.vel.dot(DIR)), PI);
           if (t > 0) { const err = Math.hypot(PI.x - aim.x, PI.z - aim.z) * (Math.hypot(PI.x - a.pos.x, PI.z - a.pos.z) < d ? 1 : -1); a.rk = clamp((a.rk || 0) + err * 0.00002 * dt * 60, -0.15, 0.12); if (Math.abs(err) < 30 && face && see && a.relT <= 0) { for (let k = 0; k < W.salvo; k++) S.release(a, L.key, {}); if ((L.rs = (L.rs ?? Math.ceil(W.load / W.salvo)) - 1) <= 0) { L.n--; L.rs = undefined; } a.relT = 2.5 + (1 - a.skill) * 2; if (fx.release) fx.release(a, L.key); } }
           else a.rk = clamp((a.rk || 0) - 0.003 * dt * 60, -0.15, 0.12); // перелёт дальше дальности расчёта — нос ниже
-        } else if (W && see && face && a.relT <= 0 && d < W.rmax * 0.9) { L.n--; S.release(a, L.key, { aim }); a.relT = 2; if (fx.release) fx.release(a, L.key); if (W.seeker === 'laser') { a.laser = aim.clone(); a.phase = 'lase'; } }
+        } else if (W && see && face && steady && a.relT <= 0 && d < W.rmax * 0.9) { L.n--; S.release(a, L.key, { aim }); a.relT = 2; if (fx.release) fx.release(a, L.key); if (W.seeker === 'laser') { a.laser = aim.clone(); a.phase = 'lase'; } }
       }
     }
     // высота: не ниже рельефа впереди (100–600 м по курсу), газ — к нужной

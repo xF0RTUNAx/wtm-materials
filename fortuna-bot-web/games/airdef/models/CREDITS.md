@@ -192,5 +192,17 @@
 - "Mi-28N Havoc" (https://sketchfab.com/3d-models/mi-28n-havoc-3e80c95bbadf46abbafba9d9a08afc68) by Rukh3D — CC-BY-4.0 — `h_mi28.glb`
 - "9М114 Штурм- Кокон" (https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb) by timurwolf — CC-BY-4.0 — `w_shturm.glb`
 - "Блок НАР Б8И20  версия 1" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_b8.glb`
+- "Блок НАР Б8И20  версия 1 (адаптация под LAU-61)" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_lau61.glb`
 - "SH60B OBJ" (https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c) by touka1212 — CC-BY-4.0 — `w_hellfire.glb`
 - "FIM-92 Stinger (Low-Poly)" (https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7) by GoldbergR — CC-BY-4.0 — `aam_stinger.glb`
+- "Church - Abandoned" (https://sketchfab.com/3d-models/church-abandoned-c95d57412b5c45218b244626830ad877) by reramil — CC-BY-4.0 — `obj_church.glb`
+- "Windmill" (https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954) by Yury Misiyuk — CC-BY-4.0 — `obj_mill.glb`
+- "Old Wooden Barn (House 4)" (https://sketchfab.com/3d-models/old-wooden-barn-house-4-3366ee69c2dd4908a99f386e07faa1d6) by Blenderust — CC-BY-4.0 — `obj_barn.glb`
+- "Hay bales" (https://sketchfab.com/3d-models/hay-bales-d6e087f9a2a9416c94918f0503943c17) by Zbrojmistrz — CC-BY-4.0 — `pr_hay.glb`
+- "The Wishing Well" (https://sketchfab.com/3d-models/the-wishing-well-91d46451916745debcaa7d01d89446dc) by jadenmercado57 — CC-BY-4.0 — `pr_well.glb`
+- "Pumpkin" (https://sketchfab.com/3d-models/pumpkin-a0798c531d0e497299671c2969a3b2e0) by FantasyDragon — CC-BY-4.0 — `pr_pumpkin.glb`
+- "Grave Stone Collection" (https://sketchfab.com/3d-models/grave-stone-collection-216711532d5a4078b9c0d5020af01eb1) by Kigha — CC-BY-4.0 — `pr_grave1.glb`, `pr_grave2.glb`, `pr_grave3.glb`, `pr_grave4.glb`
+- "Cemetery Fence" (https://sketchfab.com/3d-models/cemetery-fence-59f01ec5f6ad4f5fa9452addd7f58a1b) by CollinPatrick — CC-BY-4.0 — `pr_fence.glb`, `pr_fpost.glb`
+- "Dead Tree" (https://sketchfab.com/3d-models/dead-tree-33ccce6111604656a4b5709483670ec3) by MaX3Dd — CC-BY-4.0 — `pr_deadtree.glb`
+- "Old tree" (https://sketchfab.com/3d-models/old-tree-3cb4d59eb4844dc4802480e9ee53785e) by evolveduk — CC-BY-4.0 — `pr_oldtree.glb`
+- "VAZ-2104 FREE" (https://sketchfab.com/3d-models/vaz-2104-free-ba563a31b4754a66a5f0e7f893145922) by sMoKi — CC-BY-4.0 — `c_vaz.glb`

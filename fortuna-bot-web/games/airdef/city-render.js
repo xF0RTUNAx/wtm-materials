@@ -16,7 +16,7 @@ import { part, mergeParts, M } from '../drone/models.js?v=20261022l';
 import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022l';
 import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022l';
 import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022l';
-import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask } from './autumn-render.js?v=20261022l';
+import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask, autumnProps } from './autumn-render.js?v=20261022l';
 Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // зимние и осенние погоды — только в «Воздушном превосходстве»
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt;
@@ -1339,7 +1339,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   // частные дома (их больше половины) вдали — в пиксель-два, только рябят: дальность как у их крыш
   if (small.length) G.tiles.push(...tiled(scene, small, boxGeo(), bMat, sh, 0.55));
   nearHouses(G, scene, B, near, P, sh);
-  if (G.addNear && P.props !== false && !HILLS) streetProps(G, city, B, P); // «Детали улиц» можно выключить (тонкая настройка)
+  if (G.addNear && P.props !== false && !HILLS) streetProps(G, city, B, P);
+  if (G.addNear && P.props !== false && AUT) autumnProps(G, city, P, GH); // «Туманная топь»: тыквы, кладбище, сено, сухостой, брошенные машины // «Детали улиц» можно выключить (тонкая настройка)
   if (roofs.length) G.tiles.push(...tiled(scene, roofs, roofGeo(), bMat, sh, 0.55));
   if (extras.length) G.tiles.push(...tiled(scene, extras, boxGeo(), bMat, { cast: false, receive: P.shadows }, 0.45));
 

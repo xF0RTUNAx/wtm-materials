@@ -1769,6 +1769,15 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Блок НАР Б8И20  версия 1 (адаптация под LAU-61)",
+  "author": "timurwolf",
+  "url": "https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_lau61"
+  ]
+ },
+ {
   "title": "SH60B OBJ",
   "author": "touka1212",
   "url": "https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c",
@@ -1784,6 +1793,109 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "aam_stinger"
+  ]
+ },
+ {
+  "title": "Church - Abandoned",
+  "author": "reramil",
+  "url": "https://sketchfab.com/3d-models/church-abandoned-c95d57412b5c45218b244626830ad877",
+  "license": "CC-BY-4.0",
+  "files": [
+   "obj_church"
+  ]
+ },
+ {
+  "title": "Windmill",
+  "author": "Yury Misiyuk",
+  "url": "https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954",
+  "license": "CC-BY-4.0",
+  "files": [
+   "obj_mill"
+  ]
+ },
+ {
+  "title": "Old Wooden Barn (House 4)",
+  "author": "Blenderust",
+  "url": "https://sketchfab.com/3d-models/old-wooden-barn-house-4-3366ee69c2dd4908a99f386e07faa1d6",
+  "license": "CC-BY-4.0",
+  "files": [
+   "obj_barn"
+  ]
+ },
+ {
+  "title": "Hay bales",
+  "author": "Zbrojmistrz",
+  "url": "https://sketchfab.com/3d-models/hay-bales-d6e087f9a2a9416c94918f0503943c17",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_hay"
+  ]
+ },
+ {
+  "title": "The Wishing Well",
+  "author": "jadenmercado57",
+  "url": "https://sketchfab.com/3d-models/the-wishing-well-91d46451916745debcaa7d01d89446dc",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_well"
+  ]
+ },
+ {
+  "title": "Pumpkin",
+  "author": "FantasyDragon",
+  "url": "https://sketchfab.com/3d-models/pumpkin-a0798c531d0e497299671c2969a3b2e0",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_pumpkin"
+  ]
+ },
+ {
+  "title": "Grave Stone Collection",
+  "author": "Kigha",
+  "url": "https://sketchfab.com/3d-models/grave-stone-collection-216711532d5a4078b9c0d5020af01eb1",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_grave1",
+   "pr_grave2",
+   "pr_grave3",
+   "pr_grave4"
+  ]
+ },
+ {
+  "title": "Cemetery Fence",
+  "author": "CollinPatrick",
+  "url": "https://sketchfab.com/3d-models/cemetery-fence-59f01ec5f6ad4f5fa9452addd7f58a1b",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_fence",
+   "pr_fpost"
+  ]
+ },
+ {
+  "title": "Dead Tree",
+  "author": "MaX3Dd",
+  "url": "https://sketchfab.com/3d-models/dead-tree-33ccce6111604656a4b5709483670ec3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_deadtree"
+  ]
+ },
+ {
+  "title": "Old tree",
+  "author": "evolveduk",
+  "url": "https://sketchfab.com/3d-models/old-tree-3cb4d59eb4844dc4802480e9ee53785e",
+  "license": "CC-BY-4.0",
+  "files": [
+   "pr_oldtree"
+  ]
+ },
+ {
+  "title": "VAZ-2104 FREE",
+  "author": "sMoKi",
+  "url": "https://sketchfab.com/3d-models/vaz-2104-free-ba563a31b4754a66a5f0e7f893145922",
+  "license": "CC-BY-4.0",
+  "files": [
+   "c_vaz"
   ]
  }
 ];

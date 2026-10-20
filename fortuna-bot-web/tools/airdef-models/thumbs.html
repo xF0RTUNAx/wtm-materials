@@ -45,6 +45,7 @@ async function unitObj(key) {
 }
 async function objOf(n) {
   if (n.branch === 'air') { wantModel(n.key); await wait(() => anyModel(n.key)); const pm = planeModel(n.side, 'strike', n.key); return pm && pm.obj; }
+  if (n.branch === 'heli') { wantModel(n.key); return wait(() => anyModel(n.key)); } // вертолёт — лопасти неподвижные (spinProps не вызываем: без призраков и диска)
   if (n.branch === 'pvo') return unitObj(n.key);
   const k = n.item || n.key;
   if (BALL[k]) { wantModel(BALL[k]); const o = await wait(() => anyModel(BALL[k])); if (o) return o; }
@@ -74,7 +75,7 @@ for (const id of IDS) {
   sc.add(o); o.updateMatrixWorld(true);
   const bb = new THREE.Box3().setFromObject(o), c = bb.getCenter(new THREE.Vector3()), sz = bb.getSize(new THREE.Vector3());
   // самолёт — сверху спереди слева, машина — 3/4, оружие — почти сбоку
-  const [az, el] = n.branch === 'air' ? [0.75, 0.42] : n.branch === 'pvo' || BALL[n.item || n.key] ? [0.85, 0.28] : [1.25, 0.18];
+  const [az, el] = n.branch === 'heli' ? [0.75, 0.3] : n.branch === 'air' ? [0.75, 0.42] : n.branch === 'pvo' || BALL[n.item || n.key] ? [0.85, 0.28] : [1.25, 0.18];
   const D = sz.length() * 2.15, cam = new THREE.PerspectiveCamera(24, W / H, D * 0.3, D * 3), dir = new THREE.Vector3(Math.sin(az) * Math.cos(el), Math.sin(el), Math.cos(az) * Math.cos(el));
   cam.position.copy(c).add(dir.multiplyScalar(D)); cam.lookAt(c); cam.updateMatrixWorld(true); // глубина — только вокруг модели (иначе мелкие детали «мерцают» друг сквозь друга)
   // вписать по силуэту (вершины на экране), по центру кадра — все миниатюры одного масштаба кадра

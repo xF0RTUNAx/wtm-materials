@@ -205,3 +205,19 @@ export function autumnWaterMask(city) {
   const t = new THREE.DataTexture(a, S, S, THREE.RGBAFormat); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.flipY = false; t.needsUpdate = true;
   return { tex: t, rect: new THREE.Vector4(x0, z0, w, d) };
 }
+// реквизит (map-autumn.js city.props: имя → [x, z, поворот, масштаб, …]): тыквы, надгробия, ограда, сено, колодцы, сухостой,
+// брошенные машины — моделями вблизи камеры (G.addNear, как детали улиц города); радиус — по размеру предмета
+const PROP_R = { pr_pumpkin: 0.35, pr_grave1: 0.4, pr_grave2: 0.45, pr_grave3: 0.45, pr_grave4: 0.3, pr_fence: 0.45, pr_fpost: 0.45, pr_hay: 0.5, pr_well: 0.5, pr_deadtree: 1.4, pr_oldtree: 1.4, c_vaz: 0.6 };
+export function autumnProps(G, city, P, gh = city.groundH) {
+  const R = P.bldNear || 0; if (!R || !G.addNear || !city.props) return;
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), sc = new THREE.Vector3();
+  for (const [name, arr] of Object.entries(city.props)) {
+    const n = arr.length / 4, xz = new Float32Array(n * 2), mats = new Float32Array(n * 16), wy = AUTUMN.WY - 0.4; // в болоте сухостой стоит в воде
+    for (let k = 0; k < n; k++) {
+      const x = arr[k * 4], z = arr[k * 4 + 1]; xz[k * 2] = x; xz[k * 2 + 1] = z;
+      const y = Math.max(gh(x, z), name === 'pr_deadtree' || name === 'pr_oldtree' ? wy : -1e9);
+      m4.compose(p.set(x, y, z), q.setFromAxisAngle(Y, arr[k * 4 + 2]), sc.setScalar(arr[k * 4 + 3])).toArray(mats, k * 16);
+    }
+    G.addNear(name, 0, name, Math.round(R * (PROP_R[name] || 0.4)), xz, mats);
+  }
+}

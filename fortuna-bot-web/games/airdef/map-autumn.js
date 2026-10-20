@@ -243,12 +243,11 @@ export function buildAutumn(seed = 1) {
   // ── объекты-цели (модели построек — общие с городом; осенние модели — потом) ──
   const O = [];
   const add = (o) => { O.push(Object.assign({ id: O.length, value: 100, hp: 100 }, o)); };
-  { const p = PK.mon, M = [mp('obj_milbase', p.x - 60, p.z + 50), mp('obj_cont', p.x + 80, p.z + 70, 1)]; // монастырь: храм с колокольней, кельи, КП
-    add({ key: 'a_mon', name: 'КП в монастыре', x: p.x, z: p.z, w: 300, d: 260, value: 180, hp: 260, models: M,
-      parts: [...M.map(mbox), { t: 'box', x: p.x + 20, z: p.z - 40, w: 22, d: 42, h: 16 }, { t: 'cyl', x: p.x + 20, z: p.z - 75, r: 5, h: 38 }, { t: 'box', x: p.x - 90, z: p.z - 70, w: 60, d: 12, h: 7 }] }); }
+  { const p = PK.mon, M = [mp('obj_church', p.x + 20, p.z - 40), mp('obj_milbase', p.x - 70, p.z + 60), mp('obj_cont', p.x + 85, p.z + 70, 1)]; // монастырь: заброшенный храм с колокольней (reramil), КП в кельях
+    add({ key: 'a_mon', name: 'КП в монастыре', x: p.x, z: p.z, w: 300, d: 260, value: 180, hp: 260, models: M, parts: M.map(mbox) }); }
   { const p = PK.vil, x = p.x + 260, z = p.z - 120, M = [mp('obj_milbase', x, z), mp('obj_milbase', x + 70, z + 40, 1), mp('obj_cont', x - 60, z + 60)]; // гарнизон в деревне
     add({ key: 'a_vil', name: 'Гарнизон в деревне', x, z: z + 20, w: 240, d: 200, value: 120, hp: 170, models: M, parts: M.map(mbox) }); }
-  { const p = PK.farm, M = [mp('obj_hangar', p.x - 90, p.z, 0, 0.7), mp('obj_hangar', p.x + 90, p.z, 0, 0.7), mp('obj_oldind', p.x, p.z + 150, 1)]; // склад на ферме
+  { const p = PK.farm, M = [mp('obj_barn', p.x - 100, p.z, 0, 1.4), mp('obj_barn', p.x, p.z, 0, 1.4), mp('obj_barn', p.x + 100, p.z, 0, 1.4), mp('obj_oldind', p.x, p.z + 150, 1)]; // склад на ферме: сараи (narighillya), ×1,4 — коровники
     for (let k = 0; k < 3; k++) M.push(mp('obj_cont', p.x - 100 + k * 100, p.z - 140));
     add({ key: 'a_farm', name: 'Склад на ферме', x: p.x, z: p.z, w: 420, d: 360, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.wreck, M = [mp('obj_hangar', p.x, p.z - 80, 0, 0.8), mp('obj_milbase', p.x + 120, p.z + 60), mp('obj_oldind', p.x - 140, p.z + 40, 1)]; // ремонтная база на кладбище техники
@@ -264,8 +263,9 @@ export function buildAutumn(seed = 1) {
     const [ci, cj] = node(bx, bz), y = bh - 6;
     for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(70, 300, d)); }
     BA.top = { x: bx, z: bz, y };
-    add({ key: 'a_radar', name: 'РЛС на Лысой горе', x: bx, z: bz, w: 120, d: 100, value: 150, hp: 160, peak: true,
-      parts: [{ t: 'cyl', x: bx, z: bz, r: 9, h: 18 }, { t: 'cyl', x: bx + 40, z: bz + 10, r: 7, h: 14 }, { t: 'box', x: bx - 35, z: bz - 20, w: 24, d: 12, h: 6 }, { t: 'cyl', x: bx - 10, z: bz + 35, r: 1.2, h: 40 }] }); }
+    const MM = [mp('obj_mill', bx - 70, bz + 45)]; // старая мельница на вершине (Tim0) — рядом с антеннами
+    add({ key: 'a_radar', name: 'РЛС на Лысой горе', x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM,
+      parts: [...MM.map(mbox), { t: 'cyl', x: bx, z: bz, r: 9, h: 18 }, { t: 'cyl', x: bx + 40, z: bz + 10, r: 7, h: 14 }, { t: 'box', x: bx - 35, z: bz - 20, w: 24, d: 12, h: 6 }, { t: 'cyl', x: bx - 10, z: bz + 35, r: 1.2, h: 40 }] }); }
   const objects = O;
   const keep = [...objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 })),
     ...[PK.home].map((p) => ({ x0: p.x - p.hx, x1: p.x + p.hx, z0: p.z - p.hz, z1: p.z + p.hz }))];
@@ -295,6 +295,34 @@ export function buildAutumn(seed = 1) {
     if (waterAt(x, z) || slopeAt(x, z) > 0.12 || blocked(x, z, 160)) continue;
     FIELDS.push({ x, z, w: 180 + rnd() * 200, d: 120 + rnd() * 160, a: rnd() * Math.PI, pumpkin: rnd() < 0.45 });
   }
+  // ── реквизит (не цели, много копий; отрисовка — autumn-render.js autumnProps): имя → [x, z, поворот, масштаб, …] ──
+  const PROPS = {}, prop = (name, x, z, rot = 0, sc = 1) => (PROPS[name] = PROPS[name] || []).push(x, z, rot, sc);
+  const onBld = (x, z, r = 4) => { for (let i = 0; i < n; i++) if (Math.abs(x - BX[i]) < BW[i] / 2 + r && Math.abs(z - BZ[i]) < BD[i] / 2 + r) return true; return false; };
+  { // кладбище у деревни: ровное место рядом, надгробия рядами (кресты, плиты, склепы), кованая ограда с воротами, старые деревья
+    const v = PK.vil; let best = null, bs = 1e9;
+    for (let a = 0; a < 6.283; a += 0.35) for (const r of [v.hx + 180, v.hx + 320]) { const x = v.x + Math.cos(a) * r, z = v.z + Math.sin(a) * r * 0.8, sl = slopeAt(x, z) + (waterAt(x, z) || blocked(x, z, 90) ? 9 : 0); if (sl < bs) { bs = sl; best = [x, z]; } }
+    const [cx, cz] = best, W = 110, D = 70; FIELDS.cem = { x: cx, z: cz, w: W, d: D };
+    for (let x = cx - W / 2 + 4; x < cx + W / 2 - 3; x += 2.4) for (let z = cz - D / 2 + 4; z < cz + D / 2 - 3; z += 3.3) {
+      if (rnd() < 0.18 || Math.abs(x - cx) < 3) continue; // проход посередине
+      const r = rnd(), g = r < 0.38 ? 'pr_grave1' : r < 0.72 ? 'pr_grave2' : r < 0.94 ? 'pr_grave4' : 'pr_grave3';
+      prop(g, x + (rnd() - 0.5) * 0.6, z + (rnd() - 0.5) * 0.5, (rnd() < 0.85 ? 0 : Math.PI) + (rnd() - 0.5) * 0.25, 0.9 + rnd() * 0.25); // покосившиеся
+    }
+    const SEC = 0.5316, fence = (x0, z0, x1, z1, gate) => { const L = Math.hypot(x1 - x0, z1 - z0), a = Math.atan2(-(z1 - z0), x1 - x0);
+      for (let t = 0; t < L; t += SEC) { const m = t / L; if (gate && Math.abs(t - L / 2) < 3) continue; prop('pr_fence', x0 + (x1 - x0) * (t + SEC / 2) / L, z0 + (z1 - z0) * (t + SEC / 2) / L, a); if (Math.round(t / SEC) % 19 === 0) prop('pr_fpost', x0 + (x1 - x0) * m, z0 + (z1 - z0) * m, a); } };
+    fence(cx - W / 2, cz - D / 2, cx + W / 2, cz - D / 2, true); fence(cx - W / 2, cz + D / 2, cx + W / 2, cz + D / 2, false);
+    fence(cx - W / 2, cz - D / 2, cx - W / 2, cz + D / 2, false); fence(cx + W / 2, cz - D / 2, cx + W / 2, cz + D / 2, false);
+    for (let k = 0; k < 6; k++) prop(k < 3 ? 'pr_oldtree' : 'pr_deadtree', cx + (rnd() - 0.5) * W * 0.9, cz + (rnd() - 0.5) * D * 0.9, rnd() * 6.28, 0.85 + rnd() * 0.3);
+  }
+  { const p = PK.mon; for (let k = 0; k < 26; k++) prop(rnd() < 0.6 ? 'pr_grave2' : 'pr_grave1', p.x - 120 + (k % 9) * 2.6, p.z - 95 + Math.floor(k / 9) * 3.2, (rnd() - 0.5) * 0.3, 0.95); } // монастырский погост
+  for (const f of FIELDS) { // тыквенные поля — рядами; на пашне — тюки сена
+    const c = Math.cos(f.a), s0 = Math.sin(f.a), at = (u, v) => [f.x + u * c - v * s0, f.z + u * s0 + v * c];
+    if (f.pumpkin) { for (let u = -f.w / 2 + 3; u < f.w / 2 - 3; u += 2.4) for (let v = -f.d / 2 + 3; v < f.d / 2 - 3; v += 2.0) if (rnd() < 0.42) { const [x, z] = at(u + (rnd() - 0.5), v + (rnd() - 0.5) * 0.8); prop('pr_pumpkin', x, z, rnd() * 6.28, 0.75 + rnd() * 0.6); } }
+    else for (let k = 0; k < 14; k++) { const [x, z] = at((rnd() - 0.5) * f.w * 0.8, (rnd() - 0.5) * f.d * 0.8); prop('pr_hay', x, z, f.a + (rnd() - 0.5) * 0.4, 1.4); }
+  }
+  for (let k = 0; k < 24; k++) { const p = PK.farm, x = p.x + (rnd() - 0.5) * 600, z = p.z + 220 + rnd() * 160; if (!onBld(x, z) && !blocked(x, z, 4)) prop('pr_hay', x, z, rnd() * 6.28, 1.4); } // сено у фермы
+  for (let k = 0; k < 7; k++) { const v = PK.vil, a = rnd() * 6.28, r = rnd() * 550, x = v.x + Math.cos(a) * r, z = v.z + Math.sin(a) * r * 0.7; if (!onBld(x, z, 3) && !waterAt(x, z) && !blocked(x, z, 4)) prop('pr_well', x, z, rnd() * 6.28, 0.9); } // колодцы
+  for (let k = 0; k < 900; k++) { const x = B0.x + (rnd() - 0.5) * B0.rx * 2, z = B0.z + (rnd() - 0.5) * B0.rz * 2, bd = basinD(x, z); if (bd > 0.97 || blocked(x, z, 8)) continue; prop(rnd() < 0.8 ? 'pr_deadtree' : 'pr_oldtree', x, z, rnd() * 6.28, 0.6 + rnd() * 0.7); } // сухостой в болоте (и в воде)
+  { const p = PK.wreck; for (let r = 0; r < 5; r++) for (let k = 0; k < 11; k++) { if (rnd() < 0.15) continue; const x = p.x - 150 + k * 7 + (rnd() - 0.5) * 2, z = p.z + p.hz - 30 - r * 6; prop('c_vaz', x, z, Math.PI / 2 + (rnd() - 0.5) * 0.5 + (rnd() < 0.2 ? Math.PI : 0), 1); } } // кладбище техники: ряды брошенных машин
   const inField = (x, z) => { for (const f of FIELDS) { const c = Math.cos(f.a), s = Math.sin(f.a), dx = x - f.x, dz = z - f.z, u = dx * c + dz * s, v = -dx * s + dz * c; if (Math.abs(u) < f.w / 2 && Math.abs(v) < f.d / 2) return f; } return null; };
 
   // ── районы: вода, площадки (наша и чужая — «аэродром»), деревня, объекты, лес, луг ──
@@ -316,7 +344,7 @@ export function buildAutumn(seed = 1) {
   };
   const rt = mapRuntime(seed, B, objects, groundH, -1e9, cellMax);
   const HP = PK.heli, HO = PK.home;
-  return { ...rt, zoneAt, kind: 'autumn', autumn: A, waterAt, slopeAt, basinD, fields: FIELDS, inField, ravines: RAV.lines, ravineAt,
+  return { ...rt, zoneAt, kind: 'autumn', autumn: A, waterAt, slopeAt, basinD, fields: FIELDS, inField, ravines: RAV.lines, ravineAt, props: PROPS,
     home: { x: HO.x, z: HO.z, y: HO.y }, airport: { x: HP.x, z: HP.z, w: HP.hx * 2, d: HP.hz * 2, rwyL: 0, rwyW: 0, alongZ: true },
     HM, HN: N, HRES: RES, pads: P, roads: ROADS, RX: new Uint8Array(0), RZ: new Uint8Array(0), roadT: () => 0, onRoad: () => false };
 }

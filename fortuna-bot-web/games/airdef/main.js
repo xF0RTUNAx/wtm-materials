@@ -24,7 +24,7 @@ import { createRaid } from './sim/raid.js?v=20261022l';
 import { POD } from './sim/combined.js?v=20261022l';
 import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022l';
 import { slotCount } from './launchers.js?v=20261022l';
-import { spinProps as spinRotors, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022l';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022l';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022l';
 import { createSound } from './sound.js?v=20261022l';
 import { ico, iconize } from './icons.js?v=20261022l';
@@ -166,6 +166,7 @@ if (!['air', 'defense', 'multi', 'training', 'online', 'photo'].includes(setup.g
 
 // ═════════════ Город и рендер ═════════════
 const city = MAP === 'winter' ? buildWinter(1) : MAP === 'autumn' ? buildAutumn(1) : buildCity(1);
+const MILLS = city.objects.filter((o) => (o.models || []).some((m) => m.m === 'obj_mill')).map((o) => o.id); // объекты с мельницей — крутить крылья
 setGround(city.groundH);
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
@@ -621,6 +622,7 @@ function syncWorld(dt, t) {
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;
   }
+  if (MILLS.length && C.G && C.G.objGroup) for (const id of MILLS) { const g = C.G.objGroup[id]; if (g && !g.userData.ruin) spinSails(g, dt); } // крылья мельницы (пока цела)
   if (C.raid) for (const a of C.raid.planes) {
     if (a.dead || a.out || a.phase === 'wait') continue;
     let g = planeMeshes.get(a.id);
@@ -917,6 +919,7 @@ setInterval(() => {
   await ldStep('Строим улицы, дома и реку…', 0.15);
   const t0 = performance.now();
   C.G = buildCityScene(scene, city, P, renderer, W_KEY);
+  if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill', 'obj_barn']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
   await ldStep('Деревья, вода, облака и эффекты…', 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует

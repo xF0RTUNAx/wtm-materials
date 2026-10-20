@@ -695,6 +695,7 @@ export function createStrike(ctx) {
       w.vel.copy(w.dir).multiplyScalar(w.speed);
       w.trailT -= dt; if (w.t < W.burn && w.trailT <= 0) { w.trailT = 0.04; fx.wpnTrail(w); }
       if (W.kind === 'arm' && aim && w.pos.distanceTo(aim) < 14) { wpnDetonate(w); return; }
+      if (W.kind === 'agm' && aim && w.pos.distanceTo(aim) < Math.max(5, W.blast * 0.35)) { wpnDetonate(w); return; } // пологий пуск (вертолёт): над точкой подсвета — подрыв, а не мимо над крышей
     }
     if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > (W.life || 150)) wpnDetonate(w);
   }
