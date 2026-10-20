@@ -48,11 +48,12 @@ export function createAudio() {
   let voiceLoops = {};
   function vLoop(v, name) {
     v.lp = v.lp || {}; if (v.lp[name]) return v.lp[name];
-    const S0 = SAMPLES[name]; if (!S0 || !S0.buf) return null;
+    const S0 = SAMPLES[name]; if (!S0 || !S0.buf || ctx.eco) return null; // экономный звук — без записей в голосах (синтез)
     const s0 = ctx.createBufferSource(); s0.buffer = S0.buf; s0.loop = true; const g = gain(0); chain(s0, g, v.air); s0.start(0, Math.random() * S0.buf.duration);
     return (v.lp[name] = { s: s0, g, r: 0.97 + Math.random() * 0.06 });
   }
-  const vLoopsOff = (v, keep) => { if (v.lp) for (const k in v.lp) if (k !== keep[0] && k !== keep[1]) set(v.lp[k].g.gain, 0, 0.1); };
+  // ненужные петли голоса — тише и стоп (не крутить вхолостую: до 24 источников); понадобятся — создадутся снова
+  const vLoopsOff = (v, keep) => { if (v.lp) for (const k in v.lp) if (k !== keep[0] && k !== keep[1]) { const L = v.lp[k]; set(L.g.gain, 0, 0.1); try { L.s.stop(now() + 0.6); } catch (_) { /* уже */ } L.s.onended = () => { try { L.g.disconnect(); } catch (_) { /* уже */ } }; delete v.lp[k]; } };
   let rpm = 0.55, crackleT = 0, spatialT = 0;
   const spatialWant = [];
   const now = () => ctx.currentTime;

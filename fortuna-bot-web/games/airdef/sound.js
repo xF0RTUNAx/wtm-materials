@@ -33,7 +33,8 @@ export function createSound() {
     unlock() { A.init(); A.resume(); },
     setMuted(m) { muted = m; A.setMuted(m); ls.set('fortuna_airdef_mute', m ? '1' : '0'); },
     setVolume(v) { vol = v; A.setVolume(v); ls.set('fortuna_airdef_vol', String(v)); },
-    frame: A.frame, spatial: A.spatial, silence: A.silence, growl: A.growl,
+    frame: A.frame, spatial: A.spatial, growl: A.growl,
+    silence() { A.silence(); heliOff(); for (const g of guns.values()) g.h.stop(0.05); guns.clear(); }, // пауза и скрытая вкладка: петли винта и очередей — тоже (кадров нет — сами не погаснут)
     // взрыв на земле: резкий «хлопок» ударной волны, глубокий толчок (инфранизкий тон), тело взрыва (низкий шум с быстрой
     // атакой), раскат с эхом от домов, треск обломков вблизи. Вдали — позже (скорость звука) и глуше (верх съедает воздух)
     explosion(d, size = 1) {

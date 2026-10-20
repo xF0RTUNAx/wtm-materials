@@ -624,7 +624,7 @@ export function createFx(scene, P) {
       }
       burning.push({ pos: pos.clone(), r, t: 0, fl });
     },
-    clearBurning() { burning.length = 0; FL.clear(); },
+    clearBurning() { burning.length = 0; FL.clear(); PL.clear(); }, // новый бой — без пожаров и дымных лент прошлого
     // след взрыва у земли или на крыше: gh — высота земли (city.groundH), bh — высота здания (city.bldAt); kind 'bomb' — яма с
     // бруствером, 'ground' (ракета, снаряд) — ямка поменьше; на крыше — только копоть. Размер — от радиуса поражения R (≈ ∛ массы ВВ).
     // Земля за городом — с холмами: пятно чуть приподнято (на склоне край уходит в грунт)

@@ -972,6 +972,9 @@ setInterval(() => {
   $('loading').remove();
   C.toMenu();
   requestAnimationFrame(frame);
+  // go / hlo / weather — одноразовые (старт события, перезагрузка под карту): убрать из адреса, иначе следующая перезагрузка из меню
+  // (смена режима, карты) снова запустит вылет на вертолёте или не тот режим
+  { const u = new URL(location.href); let ch = false; for (const k of ['go', 'hlo', 'weather']) if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } if (ch) try { history.replaceState(history.state, '', u.href); } catch (_) { /* нет */ } }
   const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.start(go); }
 })();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)
