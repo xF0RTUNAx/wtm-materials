@@ -626,7 +626,7 @@ function syncWorld(dt, t) {
 // звук: двигатель игрока, объёмные голоса самолётов и ракет
 const sndCands = [], sndPool = [];
 // вертолёты: одна запись винта (UH-1) на всех — скорость по типу (тяжёлые Ми ниже), нагрузка — по общему шагу
-const HELI_SND = { h_uh1: 1, h_ah1: 1.04, h_ah64: 1.06, h_mi24: 0.88, h_mi28: 0.9, h_ka52: 0.93 };
+const HELI_SND = { h_uh1: 1, h_ah1: 1.04, h_ah64: 1.06, h_mi24: 0.88, h_mi28: 0.9, h_ka52: 0.93, h_ka50: 0.93, h_mi8: 0.82, h_uh60: 0.97, h_rah66: 1.08 };
 const heliPw = (a) => clamp(((a.col ?? 0.75) - 0.45) / 0.5, 0, 1);
 function updateSound(dt) {
   if (!snd.A.ready) return;

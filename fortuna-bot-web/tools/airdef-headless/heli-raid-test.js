@@ -35,5 +35,14 @@ const r2 = run('Восток I, без ПВО (Ми-24: «Штурм» и С-8)'
 if (!r2.st.fired) { bad++; console.log('!! Ми-24 не стрелял'); }
 const r3 = run("Запад I, без ПВО (UH-1: только НАР)", "west", 1, [], 600);
 if (!r3.st.fired) { bad++; console.log('!! UH-1 не стрелял НАР'); }
+// 2026-10-21: новые вертолёты налёта по стороне и эпохе (RAID_HELI): Восток II — Ми-8МТВ (С-8), III — Ка-50, Запад II — UH-60 (Hellfire + Hydra), IV — RAH-66
+const r4 = run('Восток II, без ПВО (Ми-8МТВ: только С-8)', 'east', 2, [], 600);
+if (r4.a.plane !== 'h_mi8' || !r4.st.fired) { bad++; console.log('!! Ми-8МТВ не вылетел или не стрелял'); }
+const r5 = run('Восток III, без ПВО (Ка-50: «Атака» и С-8)', 'east', 3);
+if (r5.a.plane !== 'h_ka50' || !r5.st.fired) { bad++; console.log('!! Ка-50 не вылетел или не стрелял'); }
+const r6 = run('Запад II, без ПВО (UH-60: Hellfire и Hydra)', 'west', 2);
+if (r6.a.plane !== 'h_uh60' || !r6.st.fired) { bad++; console.log('!! UH-60 не вылетел или не стрелял'); }
+const r7 = run('Запад IV, без ПВО (RAH-66: Hellfire и Hydra)', 'west', 4);
+if (r7.a.plane !== 'h_rah66' || !r7.st.fired) { bad++; console.log('!! RAH-66 не вылетел или не стрелял'); }
 run('Запад III против «Тунгуски» и «Иглы-С» у цели', 'west', 3, [['tunguska', 300, 200], ['iglas', -250, 150]]);
 console.log(bad ? `\nОШИБОК: ${bad}` : '\nошибок нет');

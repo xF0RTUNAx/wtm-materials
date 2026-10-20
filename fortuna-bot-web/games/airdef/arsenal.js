@@ -207,7 +207,7 @@ export const DEFENSE = {
 // Готовые подвески «Изделия» для удара (по эпохе и стороне вооружения самолёта); pod — прицельный контейнер
 // подвески вылета: side — чья авиация (показываются подвески стороны, атакующей выбранную ПВО), plane — модель самолёта
 // (у каждой подвески — свой реальный носитель этого оружия и эпохи), pod — прицельный контейнер (у кого он встроен — не вешается)
-export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-52', h_ah64: 'AH-64D', h_ah1: 'AH-1W', h_uh1: 'UH-1H', /* вертолёты */ su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
+export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-52', h_ka50: 'Ка-50', h_mi8: 'Ми-8МТВ', h_uh60: 'UH-60 DAP', h_rah66: 'RAH-66', h_ah64: 'AH-64D', h_ah1: 'AH-1W', h_uh1: 'UH-1H', /* вертолёты */ su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
   e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A', e_f22: 'F-22A Raptor',
   e_tornado: 'Tornado IDS', e_f111: 'F-111F', e_mig23: 'МиГ-23БН', e_mig27: 'МиГ-27К', e_tu22m2: 'Ту-22М2', e_a10: 'A-10A', e_f15e: 'F-15E',
   e_mig21n: 'МиГ-21бис', e_mig25: 'МиГ-25БМ', e_su7b: 'Су-7БМК', e_tu16: 'Ту-16', e_f100: 'F-100F', e_f5: 'F-5E', e_f117: 'F-117A', e_jaguar: 'Jaguar GR.1',
@@ -279,6 +279,9 @@ export const LOADOUTS = {
     { side: 'west', plane: 'e_vulcan', name: 'Vulcan B.2: 1000 lb ×8 (в отсеке)', items: [['bomb1000', 8]] },
     { side: 'west', plane: 'e_viggen', name: 'Saab AJ 37 Viggen: Maverick ×2 + Mk 82 ×4', items: [['agm65b', 2], ['mk82', 4]] }, // шведы применяли AGM-65 как Rb 75
     { side: 'west', plane: 'e_viggen', name: 'Saab AJ 37 Viggen: Hydra ×4 + Mk 82 ×2', items: [['hydra', 4], ['mk82', 2]] },
+    // вертолёты 2026-10-21 (manilov.ap): Ми-8МТВ — блоки С-8 на фермах (в игре на вертолёте 2 точки НАР — внутренние пилоны), UH-60 — вооружённый, Hellfire на внешних пилонах ESSS
+    { side: 'east', plane: 'h_mi8', heli: true, name: 'Ми-8МТВ: С-8 ×2 блока', items: [['s8', 2]] },
+    { side: 'west', plane: 'h_uh60', heli: true, name: 'UH-60 DAP: Hellfire ×4 + Hydra ×2 блока', items: [['hellfire', 4], ['hydra', 2]], pod: true },
   ],
 };
 
@@ -640,6 +643,7 @@ LOADOUTS[3] = [
   // вертолёты (Хеллоуин 2026)
   { side: 'east', plane: 'h_mi28', heli: true, name: 'Ми-28Н: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
   { side: 'west', plane: 'h_ah64', heli: true, name: 'AH-64D: Hellfire ×8 + Hydra ×2 блока', items: [['hellfire', 8], ['hydra', 2]], pod: true },
+  { side: 'east', plane: 'h_ka50', heli: true, name: 'Ка-50: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
 ];
 LOADOUTS[4] = [
   { side: 'east', plane: 'e_su34', name: 'УМПК + Х-59М + Х-31П + помехи', items: [['umpk', 2], ['kh59m', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },
@@ -658,6 +662,7 @@ LOADOUTS[4] = [
   { side: 'west', plane: 'e_typhoon', name: 'Typhoon: Storm Shadow ×2 + GBU-12 ×2', items: [['storm', 2], ['gbu12', 2]], pod: true },
   // вертолёты (Хеллоуин 2026)
   { side: 'east', plane: 'h_ka52', heli: true, name: 'Ка-52: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
+  { side: 'west', plane: 'h_rah66', heli: true, name: 'RAH-66: Hellfire ×6 + Hydra ×2 блока', items: [['hellfire', 6], ['hydra', 2]], pod: true },
 ];
 // вертолётные подвески всех эпох (era — эпоха = ранг в ветке «Вертолёты»): проверка ?heli=…, выбор в меню
 export const HELI_LOADOUTS = [1, 2, 3, 4].flatMap((e) => LOADOUTS[e].map((L, i) => ({ ...L, era: e, i })).filter((L) => L.heli));

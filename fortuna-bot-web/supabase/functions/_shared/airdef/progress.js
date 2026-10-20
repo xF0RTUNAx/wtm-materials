@@ -46,7 +46,8 @@ export const PAIR = {
   zu23: 'm163', buk: 'patriot', phalanx: 'pantsir',
   hawk: 's75', m163: 'zsu234', chaparral: 'strela1', avenger: 'strela10', redeye: 'strela2', roland: 'osa', gepard: 'tunguska', stinger: 'igla', rapier: 'osa', skyguard: 'pantsir',
   patriot: 's300', gpsjamw: 'gpsjam', pac3: 's400', nasams: 'bukm3', sampt: 's400', khordad: 'bukm3',
-  h_mi24: 'h_uh1', h_uh1: 'h_mi24', h_mi28: 'h_ah64', h_ah64: 'h_mi28', h_ka52: 'h_ah64', h_ah1: 'h_mi24', // вертолёты
+  h_mi24: 'h_uh1', h_uh1: 'h_mi24', h_mi28: 'h_ah64', h_ah64: 'h_mi28', h_ka52: 'h_rah66', h_ah1: 'h_mi24', // вертолёты
+  h_mi8: 'h_uh60', h_uh60: 'h_mi8', h_ka50: 'h_ah64', h_rah66: 'h_ka52', // 2026-10-21: Ми-8МТВ ↔ UH-60 (транспортно-боевые), Ка-50 → AH-64D (одноместные штурмовые), RAH-66 ↔ Ка-52 (ранг IV)
   shturm: 'hellfire', ataka: 'hellfire', hellfire: 'ataka', s8: 'hydra', hydra: 's8',
   r17: 'atacms', kh55d: 'quail', kh55_s: 'agm86', kh55: 'jassm', tochka: 'atacms', kh555: 'agm86', kh101_s: 'jassm_s', kh101: 'jassm', shahed: 'uav_w', kalibr: 'tomahawk', iskander: 'atacms', kinzhal: 'atacms',
   agm86: 'kh55_s', uav_w: 'shahed', slam: 'kh555', jsow: 'kh555', tomahawk: 'kalibr', atacms: 'iskander', quail: 'kh55d', sdb: 'kh55d', jassm_s: 'kh555', storm_s: 'kh555', storm: 'kh59mk2',
@@ -75,9 +76,10 @@ export const PARENT = {
   // ПВО
   s300: 's75', s400: 's300', kub: 's125', buk: 'kub', bukm3: 'buk', zu23: 'zsu234', phalanx: 'm163', osa: 'strela1', tor: 'osa', torm2: 'tor', tunguska: 'zsu234', pantsir: 'tunguska', strela10: 'strela1', igla: 'strela2', iglas: 'igla', verba: 'iglas',
   patriot: 'hawk', pac3: 'patriot', sampt: 'patriot', rapier: 'hawk', nasams: 'rapier', khordad: 'rapier', gepard: 'm163', skyguard: 'm163', roland: 'chaparral', stinger: 'redeye', avenger: 'stinger',
-  // вертолёты (Mark 2026-10-20 — по веткам): Восток — Ми-24В★ → Ми-28Н (Миль), развилка Ми-24В★ → Ка-52 (Камов);
-  // Запад — UH-1H★ → AH-1W (Bell), развилка UH-1H★ → AH-64D. Их оружие: «Штурм»★ → «Атака», Hydra★ → Hellfire
-  h_mi28: 'h_mi24', h_ka52: 'h_mi24', h_ah1: 'h_uh1', h_ah64: 'h_uh1', ataka: 'shturm', hellfire: 'hydra',
+  // вертолёты (Mark 2026-10-20 — по веткам; 2026-10-21 — Ка-50, Ми-8МТВ, UH-60, RAH-66): Восток — Ми-24В★ → Ка-50 (III) → Ка-52 (IV) (Камов) и
+  // Ми-24В★ → Ми-8МТВ (II) → Ми-28Н (III) (Миль); Запад — UH-1H★ → UH-60 (II) → RAH-66 (IV), развилки UH-1H★ → AH-1W (Bell) и UH-1H★ → AH-64D.
+  // Их оружие: «Штурм»★ → «Атака», Hydra★ → Hellfire
+  h_ka50: 'h_mi24', h_ka52: 'h_ka50', h_mi8: 'h_mi24', h_mi28: 'h_mi8', h_uh60: 'h_uh1', h_rah66: 'h_uh60', h_ah1: 'h_uh1', h_ah64: 'h_uh1', ataka: 'shturm', hellfire: 'hydra',
   // удары
   tochka: 'r17', iskander: 'tochka', kinzhal: 'tochka', kh555: 'kh55_s', kalibr: 'kh555', kh101_s: 'kh555', shahed: 'kh55d',
   tomahawk: 'agm86', slam: 'agm86', jsow: 'agm86', jassm_s: 'tomahawk', storm_s: 'slam', storm: 'agm65b', sdb: 'jsow', quail: 'uav_w',
@@ -86,7 +88,7 @@ export const PARENT = {
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };
 // множитель цены ветки (Mark 2026-10-20: каждая ветка до ранга IV — около недели): ПВО и «Волна» почти целиком из «малых» единиц;
 // вооружение — ×1 (его качают вместе с самолётами: самолёт с оружием — ≈ 9–10 дней)
-export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5, heli: 1 };
+export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5, heli: 0.57 }; // heli: 8 → 12 вертолётов (2026-10-21) — множитель 1 → 0,57, чтобы путь до ранга IV остался ≈ 1,6 дня (Mark: «пусть так остаётся»)
 
 // ── дерево ──
 const node = (branch, key, side, rank, name, short, tier) => ({ id: branch + ':' + key, branch, key, side, rank, name, short, tier, start: START[branch].includes(key) });
@@ -181,7 +183,7 @@ const kmh = (v) => `${Math.round(v)} км/ч`;
 const loadoutsOfPlane = (key) => RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === key));
 // одной строкой под названием: роль самолёта по его подвескам, у остального — тип наведения / вид оружия
 export function unitType(n) {
-  if (n.branch === 'heli') return n.key === 'h_uh1' ? 'многоцелевой вертолёт' : 'ударный вертолёт';
+  if (n.branch === 'heli') return /^h_(uh1|uh60|mi8)$/.test(n.key) ? 'многоцелевой вертолёт' : 'ударный вертолёт';
   if (n.branch === 'air') { const r = new Set(loadoutsOfPlane(n.key).map(loadoutRole)); return r.has('sead') && r.size > 1 ? 'ударный и охотник за ПВО' : r.has('sead') ? 'охотник за ПВО' : 'ударный'; }
   const src = n.branch === 'pvo' ? SAM[n.key] : AG[n.item || n.key]; return (src && (n.branch === 'pvo' ? SAM_TYPE[src.type] : AG_KIND[src.kind])) || '';
 }

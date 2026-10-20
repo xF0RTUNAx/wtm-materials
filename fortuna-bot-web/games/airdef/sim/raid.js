@@ -31,8 +31,8 @@ export const RAID_LOADS = {
 };
 // вертолёты налёта (Хеллоуин 2026) по стороне и эпохе: модель и подвеска — как у игрока (arsenal.js, подвески heli)
 export const RAID_HELI = {
-  east: { 1: ['h_mi24', [['shturm', 4], ['s8', 2]]], 2: ['h_mi24', [['shturm', 4], ['s8', 2]]], 3: ['h_mi28', [['ataka', 8], ['s8', 2]]], 4: ['h_ka52', [['ataka', 8], ['s8', 2]]] },
-  west: { 1: ['h_uh1', [['hydra', 2]]], 2: ['h_ah1', [['hellfire', 8], ['hydra', 2]]], 3: ['h_ah64', [['hellfire', 8], ['hydra', 2]]], 4: ['h_ah64', [['hellfire', 8], ['hydra', 2]]] },
+  east: { 1: ['h_mi24', [['shturm', 4], ['s8', 2]]], 2: ['h_mi8', [['s8', 2]]], 3: ['h_ka50', [['ataka', 8], ['s8', 2]]], 4: ['h_ka52', [['ataka', 8], ['s8', 2]]] },
+  west: { 1: ['h_uh1', [['hydra', 2]]], 2: ['h_uh60', [['hellfire', 4], ['hydra', 2]]], 3: ['h_ah64', [['hellfire', 8], ['hydra', 2]]], 4: ['h_rah66', [['hellfire', 6], ['hydra', 2]]] },
 };
 const V = () => new THREE.Vector3();
 const TMP = V(), TMP2 = V(), DIR = V(), PI = V(), PR = V(); // PR — точка падения НАР (не PI: там точка прицеливания — была одна на двоих, промах всегда 0)

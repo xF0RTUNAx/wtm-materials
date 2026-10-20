@@ -1787,6 +1787,42 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Ka50",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/ka50-71676cdc60b647eaa1ebb2f33a8b0246",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_ka50"
+  ]
+ },
+ {
+  "title": "Uh60",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/uh60-47b4230a324c4390a105f656ff1210b9",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_uh60"
+  ]
+ },
+ {
+  "title": "Mi8",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mi8-1bc2f674ad8345648710f16df847599a",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_mi8"
+  ]
+ },
+ {
+  "title": "Rah66",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/rah66-f9f7a920d24b42c19d87a2d569e27436",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_rah66"
+  ]
+ },
+ {
   "title": "9М114 Штурм- Кокон",
   "author": "timurwolf",
   "url": "https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb",

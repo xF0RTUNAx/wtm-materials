@@ -194,6 +194,10 @@
 - "Bell AH-1 SuperCobra" (https://sketchfab.com/3d-models/bell-ah-1-supercobra-6ee99382b2764fa6a3d761c3d4caec43) by drcrazzie — CC-BY-4.0 — `h_ah1.glb`
 - "[PBR] Kamov Ka-52" (https://sketchfab.com/3d-models/pbr-kamov-ka-52-6f29175ef23940fcb4c5364240e169f7) by Immersive3D — CC-BY-4.0 — `h_ka52.glb`
 - "Mi-28N Havoc" (https://sketchfab.com/3d-models/mi-28n-havoc-3e80c95bbadf46abbafba9d9a08afc68) by Rukh3D — CC-BY-4.0 — `h_mi28.glb`
+- "Ka50" (https://sketchfab.com/3d-models/ka50-71676cdc60b647eaa1ebb2f33a8b0246) by manilov.ap — CC-BY-4.0 — `h_ka50.glb`
+- "Uh60" (https://sketchfab.com/3d-models/uh60-47b4230a324c4390a105f656ff1210b9) by manilov.ap — CC-BY-4.0 — `h_uh60.glb`
+- "Mi8" (https://sketchfab.com/3d-models/mi8-1bc2f674ad8345648710f16df847599a) by manilov.ap — CC-BY-4.0 — `h_mi8.glb`
+- "Rah66" (https://sketchfab.com/3d-models/rah66-f9f7a920d24b42c19d87a2d569e27436) by manilov.ap — CC-BY-4.0 — `h_rah66.glb`
 - "9М114 Штурм- Кокон" (https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb) by timurwolf — CC-BY-4.0 — `w_shturm.glb`
 - "Блок НАР Б8И20  версия 1" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_b8.glb`
 - "Блок НАР Б8И20  версия 1 (адаптация под LAU-61)" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_lau61.glb`

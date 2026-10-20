@@ -541,6 +541,35 @@ const CONFIG = {
       if (/\/Object_18$/.test(p)) return 'trotor'; // рулевой винт (4 лопасти крестом)
       if (x > 0.55 && x < 1.05 && y > 0.35 && y < 0.65 && z > 0.3 && z < 0.9 && Math.max(...c.size) * k < 0.75) return null; // трубы и корпуса блоков НАР, малые направляющие под консолями — оружие из игры
       return 'body'; } },
+  // ── 2026-10-21, четыре вертолёта manilov.ap (CC BY 4.0): Ка-50, Ми-8МТВ, UH-60, RAH-66; без упрощения, оружие автора убрано (своё — из игры) ──
+  h_ka50: { src: `${DL}/ka50.glb`, scale: 0.84, nose: '-z', rulesIn: 'game', tex: () => 1024, axisX: 0.025, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.025, 0.5, 3.46], rotor2: [0.025, -0.78, 3.46] }, // Ка-50 — manilov.ap: Ø несущих 14,5 → ×0,84; соосные: rotor — верхний, rotor2 — нижний; рулевого нет
+    glassAny: /^hokufusg-FACES_7$/, glassColor: [0.05, 0.07, 0.08, 0.5],
+    colors: { '^hokufusg-FACES_(9|16)$': [0.018, 0.018, 0.018], '^hokufusg-FACES_(6|10)$': [0.055, 0.055, 0.058], '^hokufusg-FACES_15$': [1, 0, 0], '^hokufusg-FACES(_\\d+)?$': [0.036, 0.037, 0.039],
+      '^cmj(plvjean|torshrt|[lr](calf|thigh|bicep|shold|shstrp|forarm))-': [0.045, 0.05, 0.04] },
+    groups: (c) => { const k = 1 / 0.84, x = c.ctr[0] * k, y = c.ctr[1] * k, z = c.ctr[2] * k, sz = c.size.map((v) => v * k);
+      if (c.mat === 11) return y > 0 ? 'rotor' : 'rotor2'; // 6 лопастей (3 + 3)
+      if (c.mat === 7 && Math.hypot(x - 0.03, z - 4.12) < 1.8) { if (y > -0.45) return 'rotor'; if (y > -1.45) return 'rotor2'; } // втулки, тяги и вал
+      if (c.mat === 0 && sz[2] > 3 && sz[2] < 4 && Math.abs(x) > 2.9) return null; // направляющие ПТУР («Вихрь») и балки под крыльями — оружие из игры
+      if (c.mat === 7 && y < -3.4 && Math.abs(x) > 1.9) return null; // блоки НАР и их поперечины
+      return 'body'; } },
+  h_uh60: { src: `${DL}/uh60.glb`, scale: 1, fwd: [-0.9349, -0.355], rulesIn: 'game', tex: () => 1024, texVf: 'hue=s=0.55,eq=brightness=-0.03' /* без сдвига тона: сочно-зелёный с голубыми пятнами → приглушённый армейский */, glassAny: /^(fuzelag-FACES_0|kabina01-FACES_0)$/, glassColor: [0.05, 0.07, 0.08, 0.5], addBoxes: [{ c: [2.25, -0.55, -2.4], s: [2.2, 0.12, 1.5], mirror: true, paint: 'esss' }] /* крылья ESSS (у автора подвески нет) — под них пилоны и оружие из игры */, colors: { '#esss$': [0.05, 0.055, 0.04], '^kabina01-FACES$': [0.05, 0.055, 0.04], '^(Cylinder08-FACES_0|Sphere05-FACES)$': [0.3, 0.3, 0.3], '^Cylinder04-FACES$': [0.2, 0.2, 0.2] }, axisX: -0.1, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [-0.083, 3.5, -1.627], trotor: [0.274, 3.65, 8.186] }, // UH-60 — manilov.ap (1 : 1: Ø несущего 16,4; фюзеляж по оси — 15,3 м); ось фюзеляжа повёрнута к осям автора на ≈ 21°
+    groups: (c) => { const [x, y, z] = c.ctr, hr = Math.hypot(x + 0.083, z + 1.627);
+      if (c.mat === 5 && Math.max(...c.size) > 3) return 'rotor'; // 4 лопасти
+      if (y > 3.3 && y < 4.5 && hr < 1.7) return 'rotor'; // головка: рукава, тяги, втулка
+      if ([5, 8, 14, 16, 26].includes(c.mat) && z > 6.4 && y > 1.9 && Math.hypot(x - 0.274, y - 3.65, z - 8.186) < 1.7) return 'trotor'; // рулевой винт: 4 лопасти и ступица
+      return 'body'; } },
+  h_mi8: { src: `${DL}/mi8.glb`, scale: 1, fwd: [-0.8334, 0.5526], rulesIn: 'game', tex: () => 1024, texVf: (i) => (i === 7 ? 'drawbox=x=402:y=82:w=52:h=52:color=0x335e55:t=fill,drawbox=x=404:y=166:w=56:h=26:color=0x335e55:t=fill,drawbox=x=402:y=585:w=52:h=52:color=0x335e55:t=fill,drawbox=x=404:y=528:w=56:h=26:color=0x335e55:t=fill,' : '') + 'hue=s=0.7' /* без сдвига тона: сочный бирюзовый камуфляж → приглушённый; чужие кокарды и бортовой номер автора закрашены */, glassAny: /steclo/, glassColor: [0.05, 0.07, 0.08, 0.5], addBoxes: [{ c: [2.05, -0.3, -4.0], s: [1.7, 0.1, 0.8], mirror: true, paint: 'truss' }] /* балка подвески МТВ (у автора её нет) */, colors: { '#truss$': [0.05, 0.065, 0.055], '^kabina-FACES$': [0.05, 0.055, 0.04] },
+    axisX: -1.415, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [-1.412, 2.7, -2.196], trotor: [-2.151, 2.75, 10.536] }, // Ми-8МТВ — manilov.ap (1 : 1: Ø несущего 21,4, длина по оси ≈ 18,5); ось повёрнута к осям автора на ≈ 34°; рулевой винт — слева от киля, 3 лопасти
+    groups: (c) => { const [x, y, z] = c.ctr, hr = Math.hypot(x + 1.412, z + 2.196);
+      if (c.mat >= 77 && c.mat <= 81) return 'rotor'; // 5 лопастей
+      if (c.mat >= 55 && c.mat <= 76 && y > 2.2 && hr < 3.3) return 'rotor'; // втулка, рукава, тяги
+      if (Math.hypot(x + 2.151, y - 2.75, z - 10.536) < 2.1 && z > 8) return 'trotor'; // рулевой винт: 3 лопасти и ступица
+      return 'body'; } },
+  h_rah66: { src: `${DL}/rah66.glb`, scale: 0.31, fwd: [-0.7178, 0.6962], rulesIn: 'game', tex: () => 1024, addBoxes: [{ c: [1.75, -0.5, -0.5], s: [1.7, 0.1, 1.3], mirror: true, paint: 'wing' }] /* крылышки EFAMS (в модели автора их нет) */, colors: { '#wing$': [0.05, 0.052, 0.055] }, glassAny: /^(fuzelag-FACES_0|kabuna_vnutr-FACES_0)$/, glassColor: [0.04, 0.05, 0.055, 0.55],
+    centerBody: /^(rotor2?|trotor)$/, centerX: true, hubs: { rotor: [1.234, 3.317, -0.471], trotor: [1.284, 1.767, 6.514] }, // RAH-66 Comanche — manilov.ap (единицы автора ×0,31 по Ø несущего 11,9); ось фюзеляжа повёрнута к осям автора на ≈ 44°; рулевой винт — фенестрон (8 лопастей, поперечная ось)
+    groups: (c) => { if (c.mat >= 66 && c.mat <= 71) return 'rotor'; // 5 лопастей и втулка
+      if (c.mat >= 5 && c.mat <= 13) return 'trotor'; // лопасти и ступица фенестрона (направляющие — неподвижные, остаются в корпусе)
+      return 'body'; } },
   // ── вертолётное оружие (2026-10-20); центр габаритов в начале координат, нос в −Z, подвес — сверху ──
   w_shturm: { src: `${DL}/42c7dd424a064efebf3e63ebd423afbb.glb`, scale: 1.83 / 67.65, axes: (x, y, z) => [z, -y, x], tex: () => 256, pickMesh: /./, perTri: true, colors: { '': [0.09, 0.1, 0.075] }, groups: (c) => (Math.hypot(c.ctr[1] - 8.51, c.ctr[2] + 97.49) < 3.4 ? 'body' : null) }, // «Штурм» 9М114: ОДИН ТПК (труба; вторая и балка автора убраны), 1,83 м, перевёрнут — timurwolf
   w_b8: { src: `${DL}/2905fcb5f5fd4c7284adc362bcdc39d1.glb`, scale: 2.0 / 63.38, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // блок НАР Б-8В20 (20 труб Ø 80 мм — по снимку именно Б-8, не Б-13) — timurwolf, 2,0 м
@@ -789,6 +818,17 @@ async function prepare(name, views) {
     console.log(`  центровка: сдвиг ${[dx, dy, dz].map((v) => v.toFixed(3)).join(' ')} (из осей правил: точка − сдвиг = точка в модели)`);
     console.log(`  корпус без винтов: длина ${(bodyB.mx[2] - bodyB.mn[2]).toFixed(2)} м, ширина ${(bodyB.mx[0] - bodyB.mn[0]).toFixed(2)} м, высота ${(bodyB.mx[1] - bodyB.mn[1]).toFixed(2)} м`);
     for (const [g, h] of Object.entries(cfg.hubs || {})) { let R = 0; for (const m of byMat.values()) if (m.group === g) for (let i = 0; i < m.pos.length; i += 3) { const a = m.pos[i] - (h[0] - dx), b = m.pos[i + 1] - (h[1] - dy), c = m.pos[i + 2] - (h[2] - dz); R = Math.max(R, g === 'trotor' ? Math.hypot(b, c) : Math.hypot(a, c)); } if (R) console.log(`  винт ${g}: радиус ${R.toFixed(2)} м, Ø ${(2 * R).toFixed(2)} м`); }
+  }
+  // addBoxes (вертолёты без подвесок у автора): свои прямоугольные детали — крылышки, балки — в осях модели ПОСЛЕ центровки, метры:
+  // { c: [x, y, z], s: [длина по x, толщина по y, хорда по z], mirror: true — и зеркально (−x), paint — краска (cfg.colors['#paint']) }
+  if (cfg.addBoxes) for (const [bi, b] of cfg.addBoxes.entries()) for (const sg of b.mirror ? [1, -1] : [1]) {
+    const M = { group: 'body', paint: b.paint || 'box', mat: -1, forceGlass: false, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: false }, [hx, hy, hz] = b.s.map((v) => v / 2);
+    for (const [nx, ny, nz] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
+      const u = nx ? [0, 1, 0] : [1, 0, 0], v = nx ? [0, 0, 1] : ny ? [0, 0, 1] : [0, 1, 0], h = [hx, hy, hz], base = M.pos.length / 3;
+      for (const [a, c2] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const q = [0, 1, 2].map((d) => (nx ? [nx, 0, 0] : ny ? [0, ny, 0] : [0, 0, nz])[d] * h[d] + u[d] * a * h[d] + v[d] * c2 * h[d]); M.pos.push(sg * q[0] + b.c[0] * sg, q[1] + b.c[1], q[2] + b.c[2]); M.nor.push(sg * nx, ny, nz); }
+      M.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+    }
+    byMat.set(`box${bi}${sg}`, M);
   }
   if (cfg.groups && cfg.unit) articulate(cfg, byMat, [dx, dy, dz], cfg.rulesIn === 'game' ? (x, y, z) => [x / cfg.scale, y / cfg.scale, z / cfg.scale] : ax);
   SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster;

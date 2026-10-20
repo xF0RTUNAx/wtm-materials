@@ -24,6 +24,12 @@ export const HSPECS = {
   h_mi24: { name: 'Ми-24В', side: 'east', m: 11200, tw: 1.3, vmax: 320, vc: 12.5, ceil: 4500, roll: 70, pitch: 40, yaw: 45, tilt: 26 },
   h_mi28: { name: 'Ми-28Н', side: 'east', m: 11200, tw: 1.35, vmax: 300, vc: 13.6, ceil: 5600, roll: 80, pitch: 45, yaw: 60, tilt: 28 },
   h_ka52: { name: 'Ка-52', side: 'east', m: 10400, tw: 1.38, vmax: 300, vc: 10, ceil: 5500, roll: 90, pitch: 45, yaw: 90, tilt: 28, coax: true },
+  // 2026-10-21: четыре вертолёта (открытые данные). Ка-50 — легче и быстрее Ка-52 (одноместный, без второго члена экипажа и РЛС); Ми-8МТВ — тяжёлый транспортно-боевой,
+  // медленнее Ми-24 (чаще «качает»: меньший наклон диска, вяло по крену); UH-60 — вооружённый (DAP): средний, мощный; RAH-66 — лёгкий и манёвренный
+  h_ka50: { name: 'Ка-50', side: 'east', m: 9800, tw: 1.4, vmax: 315, vc: 10, ceil: 5500, roll: 90, pitch: 45, yaw: 95, tilt: 28, coax: true },
+  h_mi8: { name: 'Ми-8МТВ', side: 'east', m: 12000, tw: 1.22, vmax: 250, vc: 9, ceil: 4500, roll: 55, pitch: 32, yaw: 45, tilt: 21 },
+  h_uh60: { name: 'UH-60 DAP', side: 'west', m: 8500, tw: 1.34, vmax: 296, vc: 8.5, ceil: 5700, roll: 85, pitch: 45, yaw: 65, tilt: 26 },
+  h_rah66: { name: 'RAH-66 Comanche', side: 'west', m: 5800, tw: 1.5, vmax: 324, vc: 10, ceil: 4600, roll: 120, pitch: 55, yaw: 85, tilt: 32 },
   h_ah64: { name: 'AH-64D Apache', side: 'west', m: 8000, tw: 1.4, vmax: 280, vc: 12.7, ceil: 6400, roll: 100, pitch: 50, yaw: 70, tilt: 30 },
   h_ah1: { name: 'AH-1W SuperCobra', side: 'west', m: 6690, tw: 1.32, vmax: 282, vc: 8.2, ceil: 5500, roll: 110, pitch: 50, yaw: 70, tilt: 30 },
   h_uh1: { name: 'UH-1H', side: 'west', m: 4100, tw: 1.25, vmax: 205, vc: 8.2, ceil: 3800, roll: 80, pitch: 40, yaw: 60, tilt: 24 },

@@ -74,7 +74,8 @@ click({ v: 'east' }, { dataset: { seg: 'hside' } });
   const pg = C.progress, saved = [pg.ready, pg.loadoutOk, pg.loadoutMissing], opened = [], ro = C.research.open;
   pg.ready = () => true; pg.loadoutOk = (L) => L.plane === 'h_mi24'; pg.loadoutMissing = (L) => (L.plane === 'h_mi24' ? [] : [{ id: 'heli:' + L.plane }]); C.research.open = (id) => opened.push(id);
   C.setup.diff = 'real'; click({ v: 'real' }, { dataset: { seg: 'diff' } }); // перерисовать
-  check('событие, «Реализм»: закрытые карточки с замком и «исследовать»', (root.innerHTML.match(/class="ec [^"]*lk/g) || []).length === 2 && root.innerHTML.includes('исследовать'));
+  // у Востока 5 вертолётов (Ми-24В, Ми-8МТВ, Ка-50, Ми-28Н, Ка-52): открыт только Ми-24В — закрытых 4
+  check('событие, «Реализм»: закрытые карточки с замком и «исследовать»', (root.innerHTML.match(/class="ec [^"]*lk/g) || []).length === 4 && root.innerHTML.includes('исследовать'));
   click({ need: 'heli:h_mi28' }); check(`событие, «Реализм»: нажатие на закрытую — «Исследования» на узле (${opened[0]})`, opened[0] === 'heli:h_mi28');
   [pg.ready, pg.loadoutOk, pg.loadoutMissing] = saved; C.research.open = ro; C.setup.diff = 'arcade'; click({ v: 'arcade' }, { dataset: { seg: 'diff' } });
 }

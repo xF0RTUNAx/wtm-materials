@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Вертолёты с подвеской</title><style>body{margin:0;background:#9fb3c8}canvas{display:block}</style></head><body>
+<!-- Вертолёт с подвеской из arsenal.js (HELI_LOADOUTS) на точках META.stations — как в бою (heliStations, порядок слотов air.js): ?p=h_ka50,h_mi8 [&w=ширина кадра &z=крупнее &at=x,y,z] —
+     по строке на вертолёт: сбоку, снизу, спереди, ¾. Нужен сервер :8935 (корень — wtm-materials); снимок — через puppeteer (canvas) или вручную. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'h_ka50').split(',');
+const M = await import('../../games/airdef/models.js?v=' + Date.now());
+const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261022q');
+const { AG, HELI_LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022q');
+M.loadModels(new URL('../../games/airdef/', location.href).href, () => {});
+const CW = +(Q.get('w') || 640), CH = Math.round(CW * 0.7), W = CW * 4, H = CH * names.length;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
+const wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
+const wait = (f, n = 200) => new Promise((ok) => { let i = 0; const t = setInterval(() => { const v = f(); if (v || ++i > n) { clearInterval(t); ok(v); } }, 50); });
+function heliStations(S) { const k = Math.max(1, S.length >> 1), L = S.slice(0, k), R = S.slice(k).reverse(), out = [];
+  const rack = (p) => { for (let i = 0; i < 4; i++) out.push(Object.assign(new THREE.Vector3(p.x + (i % 2 ? 0.17 : -0.17), p.y - (i >> 1) * 0.3, p.z), { py: p.py || 0 })); };
+  rack(L[0]); const pl = L[k - 1], pr = R[k - 1], ro = R[0]; out.push(pl, pr); rack(ro); return out; }
+for (let i = 0; i < names.length; i++) {
+  const n = names[i]; M.wantModel(n); const hm = await wait(() => M.heliModel(n));
+  const L = HELI_LOADOUTS.find((q) => q.plane === n), st = heliStations(hm.stations), hOrd = { rack: [0, 6, 1, 7, 2, 8, 3, 9], pod: [4, 5] }, hi = { rack: 0, pod: 0 };
+  const obj = hm.obj; const items = L.items.slice().sort((a, b) => AG[b[0]].mass - AG[a[0]].mass);
+  for (const [key] of items) { M.wantWeapon(key); await wait(() => !M.weaponPending(key)); }
+  for (const [key, c] of items) { const h = AG[key].kind === 'rocket' ? 'pod' : 'rack';
+    for (let j = 0; j < c; j++) { if (hi[h] >= hOrd[h].length) break; const p = st[hOrd[h][hi[h]++]]; const m = M.weaponMesh(key, AG[key], weaponGeo, wMat), W0 = AG[key].vis; m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); obj.add(m); } }
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fb3c8); sc.add(new THREE.HemisphereLight(0xffffff, 0x556655, 0.9)); const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(3, 6, 2); sc.add(dl); sc.add(obj);
+  M.spinProps(obj, 0, 0.5);
+  const bb = new THREE.Box3().setFromObject(obj), sz = bb.getSize(new THREE.Vector3()), c = Q.get('at') ? new THREE.Vector3(...Q.get('at').split(',').map(Number)) : bb.getCenter(new THREE.Vector3()), S = (Math.max(sz.x, sz.y, sz.z) * 0.52 + 0.1) / +(Q.get('z') || 1);
+  const ort = (up) => { const a = CW / CH, cam = new THREE.OrthographicCamera(-S * a, S * a, S, -S, 0.01, 500); cam.up.copy(up); return cam; };
+  const V = [[ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x + 80, c.y, c.z)], [ort(new THREE.Vector3(0, 0, -1)), new THREE.Vector3(c.x, c.y - 80, c.z)], [ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x, c.y, c.z - 80)],
+    [new THREE.PerspectiveCamera(32, CW / CH, 0.05, 500), c.clone().add(new THREE.Vector3(1.0, -0.2, -1.25).normalize().multiplyScalar(Math.max(sz.x, sz.y, sz.z) * 1.0 / +(Q.get('z') || 1) * 1.9))]];
+  V.forEach(([cam, pos], k) => { cam.position.copy(pos); cam.lookAt(c); const y = H - (i + 1) * CH; r.setViewport(k * CW, y, CW, CH); r.setScissor(k * CW, y, CW, CH); r.render(sc, cam); });
+  const l = document.createElement('div'); l.className = 'l'; document.body.appendChild(l);
+}
+window.__done = 1;
+</script></body></html>
