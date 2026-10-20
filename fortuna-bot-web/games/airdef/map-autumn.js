@@ -246,17 +246,17 @@ export function buildAutumn(seed = 1) {
   { const p = PK.mon, M = [mp('obj_church', p.x + 20, p.z - 40), mp('obj_milbase', p.x - 70, p.z + 60), mp('obj_cont', p.x + 85, p.z + 70, 1)]; // монастырь: заброшенный храм с колокольней (reramil), КП в кельях
     add({ key: 'a_mon', name: 'КП «Погост»', x: p.x, z: p.z, w: 300, d: 260, value: 180, hp: 260, models: M, parts: M.map(mbox) }); }
   { const p = PK.vil, x = p.x + 260, z = p.z - 120, M = [mp('obj_milbase', x, z), mp('obj_milbase', x + 70, z + 40, 1), mp('obj_cont', x - 60, z + 60)]; // гарнизон в деревне
-    add({ key: 'a_vil', name: 'Гарнизон «Вороньё»', x, z: z + 20, w: 240, d: 200, value: 120, hp: 170, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_vil', name: 'Гарнизон «Пугало»', x, z: z + 20, w: 240, d: 200, value: 120, hp: 170, models: M, parts: M.map(mbox) }); }
   { const p = PK.farm, M = [mp('obj_barn', p.x - 100, p.z, 0, 1.4), mp('obj_barn', p.x, p.z, 0, 1.4), mp('obj_barn', p.x + 100, p.z, 0, 1.4), mp('obj_oldind', p.x, p.z + 150, 1)]; // склад на ферме: сараи (narighillya), ×1,4 — коровники
     for (let k = 0; k < 3; k++) M.push(mp('obj_cont', p.x - 100 + k * 100, p.z - 140));
-    add({ key: 'a_farm', name: 'Склад «Тыквенный»', x: p.x, z: p.z, w: 420, d: 360, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_farm', name: 'Склад «Фонарь Джека»', x: p.x, z: p.z, w: 420, d: 360, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.wreck, M = [mp('obj_hangar', p.x, p.z - 80, 0, 0.8), mp('obj_milbase', p.x + 120, p.z + 60), mp('obj_oldind', p.x - 140, p.z + 40, 1)]; // ремонтная база на кладбище техники
     add({ key: 'a_wreck', name: 'Рембаза «Костяной овраг»', x: p.x, z: p.z, w: 400, d: 320, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.heli, M = [mp('obj_rtank', p.x + 200, p.z - 150), mp('obj_rtank', p.x + 215, p.z - 150), mp('obj_milbase', p.x - 200, p.z + 180), mp('obj_cont', p.x + 180, p.z + 200)]; // вертолётная площадка
-    add({ key: 'a_heli', name: 'Вертолётная площадка «Шабаш»', x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, models: M,
+    add({ key: 'a_heli', name: 'Вертолётная площадка «Ведьмина поляна»', x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, models: M,
       parts: [...M.map(mbox), ...[[-110, -110], [110, -110], [-110, 110], [110, 110]].map(([dx, dz]) => ({ t: 'box', x: p.x + dx, z: p.z + dz, w: 30, d: 30, h: 0.5 }))] }); }
   { const p = PK.peat, M = [mp('obj_tanks', p.x - 120, p.z - 60), mp('obj_tanks', p.x - 120, p.z + 60), mp('obj_oldind', p.x + 120, p.z, 1), mp('obj_rtank', p.x + 220, p.z - 120)]; // ГСМ на торфоразработках
-    add({ key: 'a_peat', name: 'Склад ГСМ «Гиблая топь»', x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_peat', name: 'Склад ГСМ «Болотный огонь»', x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
   { // РЛС на Лысой горе: вершина (самая высокая точка в круге), площадка срезана на 6 м
     const BA = A.BALD; let bx = BA.x, bz = BA.z, bh = -1e9;
     for (let a = 0; a < 1600; a += 100) for (let t = 0; t < 6.283; t += 0.25) { const x = BA.x + Math.cos(t) * a, z = BA.z + Math.sin(t) * a, h = groundH(x, z); if (h > bh) { bh = h; bx = x; bz = z; } }

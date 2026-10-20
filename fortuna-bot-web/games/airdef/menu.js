@@ -515,12 +515,12 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       if (sub) { x.font = `italic ${Math.round(fpx * 0.8)}px Georgia, serif`; x.strokeText(sub, X, Y + fpx); x.fillText(sub, X, Y + fpx); }
     }
     const BA = A.BASIN || {}; label('Гиблая топь', (BA.x ?? 600) - 900, (BA.z ?? 600) + 1700, 1.25);
-    label('Мёртвая старица', A.OXBOW.x - A.OXBOW.r * 0.2, A.OXBOW.z - A.OXBOW.r - 250, 0.85);
-    { // овраги: тот, где кладбище техники, — «Костяной»; два самых длинных из остальных — свои имена
+    label('Чёрная вода', A.OXBOW.x - A.OXBOW.r * 0.2, A.OXBOW.z - A.OXBOW.r - 250, 0.85);
+    { // овраги: тот, где кладбище техники, — «Костяной»; самый длинный из остальных — «Совиный яр»
       const wr = city.objects.find((o) => o.key === 'a_wreck'), dTo = (l) => (wr ? Math.min(...l.pts.map((p) => Math.hypot(p[0] - wr.x, p[1] - wr.z))) : 0);
       const rm = (city.ravines || []).filter((l) => l.main), first = rm.slice().sort((p, q) => dTo(p) - dTo(q))[0];
-      const rest = rm.filter((l) => l !== first).sort((p, q) => q.pts.length - p.pts.length), names = ['Костяной овраг', 'Волчья балка', 'Глухой лог'];
-      [first, ...rest.slice(0, 2)].forEach((l, n) => { if (!l) return; const p = n || !wr ? l.pts[Math.floor(l.pts.length * 0.55)] : l.pts.reduce((m, q) => (Math.hypot(q[0] - wr.x, q[1] - wr.z) < Math.hypot(m[0] - wr.x, m[1] - wr.z) ? q : m)); label(names[n], p[0], p[1] + (n ? -220 : 520), 0.8); }); }
+      const rest = rm.filter((l) => l !== first).sort((p, q) => q.pts.length - p.pts.length), names = ['Костяной овраг', 'Совиный яр'];
+      [first, ...rest.slice(0, 1)].forEach((l, n) => { if (!l) return; const p = n || !wr ? l.pts[Math.floor(l.pts.length * 0.55)] : l.pts.reduce((m, q) => (Math.hypot(q[0] - wr.x, q[1] - wr.z) < Math.hypot(m[0] - wr.x, m[1] - wr.z) ? q : m)); label(names[n], p[0], p[1] + (n ? -220 : 520), 0.8); }); }
     return c;
   }
   return {

@@ -116,16 +116,21 @@ export function createSound() {
       A.noise('brown', big ? 0.5 : 0.18, 0.45 * k, 'lowpass', big ? 240 : 500, 0.7, w, 0.5);
       A.noise('white', big ? 0.7 : 0.25, 0.08 * k, 'bandpass', 3000, 0.8, w + 0.03, 0.4);
     },
-    // очередь зенитной пушки (вызывать раз в ~0,15 с, пока идёт очередь): частый «треск» + гул
-    // очередь — глухие частые удары (низкий «тук» на выстрел + раскат), у 35 мм ниже и тяжелее, вдали — гулкое эхо
-    aaa(d, cal) {
-      const k = near(d, 700), w = delayOf(d), big = cal > 30, n = big ? 3 : 4, step = 0.16 / n;
-      for (let i = 0; i < n; i++) A.tone('sine', big ? 72 : 95, big ? 34 : 45, 0.13, 0.32 * k, w + i * step, 0.45);
-      A.noise('brown', 0.24, 0.55 * k, 'lowpass', big ? 110 : 150, 0.8, w, 0.6);
-      A.noise('crackle', 0.16, 0.35 * k, 'bandpass', big ? 420 : 600, 0.6, w, 0.5);
-      A.noise('pink', 0.2, 0.12 * k, 'lowpass', 380, 0.7, w + 0.04, 0.7);
+    // очередь зенитной пушки (вызывать раз в 0,16 с, пока идёт очередь): отдельные выстрелы с настоящим темпом rof (выстр./с) —
+    // у каждого резкий «щелчок» дульной волны (вдали пропадает первым) и глухой удар; стволы не синхронны — выстрелы вразнобой
+    // («Шилка»: 4 × 23 мм ≈ 56/с — тяжёлая дробь, а не ровный гул шестистволки); у 35 мм ниже, реже и тяжелее; под очередью — раскат
+    aaa(d, cal, rof) {
+      const k = near(d, 700), kc = near(d, 300), w = delayOf(d), big = cal > 30, r = rof || (big ? 18 : 25);
+      aaaAcc += r * 0.16; const n = Math.min(12, Math.floor(aaaAcc)); aaaAcc -= n;
+      for (let i = 0; i < n; i++) {
+        const t = w + (i + Math.random() * 0.8) * 0.16 / Math.max(1, n), f = (big ? 85 : 120) * (0.9 + Math.random() * 0.2);
+        A.tone('sine', f, f * 0.42, big ? 0.14 : 0.1, (big ? 0.3 : 0.24) * k, t, 0.4);
+        A.noise('white', 0.025, (big ? 0.16 : 0.2) * kc, 'bandpass', (big ? 900 : 1300) * (0.85 + Math.random() * 0.3), 1.1, t, 0.25, false, 0.001);
+      }
+      A.noise('brown', 0.24, 0.5 * k, 'lowpass', big ? 110 : 150, 0.8, w, 0.6);
+      A.noise('pink', 0.2, 0.1 * k, 'lowpass', 380, 0.7, w + 0.04, 0.7);
     },
-    // многоствольные зенитки (Phalanx, Vulcan, «Шилка»): записанная очередь петлёй, пока стреляет (зовётся каждый кадр огня),
+    // шестиствольные 20 мм (Phalanx, Vulcan): записанная очередь петлёй, пока стреляет (зовётся каждый кадр огня),
     // по окончании — эхо очереди. Нет записи — false (звучит синтез aaa)
     gunLoop(id, d, key) {
       const R = GUN_RATE[key]; if (!R || muted) return false;
@@ -209,7 +214,8 @@ export function createSound() {
     // за горизонтом, птицы в затишье. mood — выбранный режим ('air' — чаще самолёты, 'defense' — пуски, 'multi' — раскаты)
     ambient(on, mood) { amb.mood = mood || amb.mood; if (on === amb.on) return; amb.on = on; clearInterval(amb.timer); amb.timer = 0; if (on) { amb.next = 3 + Math.random() * 3; amb.timer = setInterval(ambTick, 250); } else if (amb.beds) { for (const b of amb.beds) b.stop(); amb.beds = null; } },
   };
-  const GUN_RATE = { phalanx: 1, m163: 0.93, zsu234: 0.8 }; // 20-мм M61 — как в записи; «Шилка» (23 мм, 4 ствола) — ниже и тяжелее
+  const GUN_RATE = { phalanx: 1, m163: 0.93 }; // M61 20 мм — как в записи (у «Шилки» звук другой — синтез aaa)
+  let aaaAcc = 0;
   const guns = new Map(), he = { lo: null, hi: null, beds: null, pw: 0.6 }, mamb = { t: 10 };
   function heliOff() { for (const h of [he.lo, he.hi]) if (h) h.stop(0.35); if (he.beds) for (const b of he.beds) if (b) b.stop(); he.lo = he.hi = he.beds = null; }
   const amb = { on: false, timer: 0, beds: null, next: 0, gust: 0, gustT: 0, mood: 'air', last: '' };
