@@ -545,7 +545,7 @@ export function createAir(C) {
       if (ccipOk && F >= 3) { let best = 1e9; const tol = Math.max(25, (Wp.blast || 10) * 0.9);
         for (const o of game.targets) { if (o.dead) continue; const e = Math.hypot(o.x - CCIP.x, o.z - CCIP.z) - Math.max(o.w || 0, o.d || 0) * 0.35; if (e < best) { best = e; rkOn = e < tol ? o : null; } }
         for (const u of C.S.units) { if (u.dead || !u.known) continue; const e = Math.hypot(u.pos.x - CCIP.x, u.pos.z - CCIP.z); if (e < tol && e < best) { best = e; rkOn = u; } } }
-      larText = F === 1 ? 'НАР · механический прицел: центр кольца — по оси, упреждение — на глаз'
+      larText = F === 1 ? 'НАР · механический прицел (кольцо)'
         : !ccipOk ? 'НАР: опустите нос — точка падения дальше 4 км' : d > Wp.rmax ? `далеко · ${(d / 1000).toFixed(1)} км`
         : F >= 3 ? `${rkOn ? 'ПУСК' : 'НАР'} · дальность ${(d / 1000).toFixed(2)} км · ${t.toFixed(1)} с${rkHold > 0 ? ' · залп ждёт цель' : ''}` : `НАР · ${(d / 1000).toFixed(1)} км · ${t.toFixed(1)} с`;
       if (rkHold > 0 && rkOn && d <= Wp.rmax) { rkHold = 0; fire(true); } // цифровой прицел: залп сам — крест на цели
@@ -817,6 +817,7 @@ export function createAir(C) {
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
+    { const ha = craft.heli && craft.hm.arcade; if (padArms.l) { padArms.l.innerHTML = ha ? '◀' : ico('rollL'); padArms.r.innerHTML = ha ? '▶' : ico('rollR'); } } // крестовина: вертолёт («Аркада») — шаг вбок, самолёт — крен
     if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); hSpd = 0.25;
       if (craft.hm.arcade && !opts.photo) setTimeout(() => say(C.IS_TOUCH ? 'Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот · ▲▼ — высота · «газ» — ступени'
         : 'W / S — разгон и торможение · A / D — поворот · ↑ / ↓ — высота · ← / → — вбок · мышь — прицел', 7), 600); } // как управлять — сразу при взлёте
