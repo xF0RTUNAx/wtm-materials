@@ -96,6 +96,7 @@ export function makeFlame(group, z, r, motor = MOTOR.solid) {
   const mesh = new THREE.Mesh(flameGeo, flameMat(motor)); mesh.position.z = z; mesh.renderOrder = 5; mesh.frustumCulled = false; mesh.userData.fx = true;
   const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex || (glowTex = WEB ? mkGlow() : null), color: new THREE.Color(...motor.fl), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
   glow.position.z = z; glow.renderOrder = 5; glow.userData.fx = true; group.add(mesh); group.add(glow);
+  mesh.visible = glow.visible = false; // до запуска двигателя не видно (ракета на пилоне — без свечения)
   if (flameLayer) { mesh.layers.set(flameLayer); glow.layers.set(flameLayer); }
   let mot = motor;
   return {
@@ -149,7 +150,7 @@ const SM_F = `#include <common>
     vec4 t = texture2D(map, vec2(vUv.x - vAge * 0.015, vUv.y * 0.55 + vAge * 0.01));
     vec4 t2 = texture2D(map, vec2(vUv.x * 2.3 + 0.37, vUv.y * 0.9 - vAge * 0.02));
     float dens = t.a * 0.65 + t2.a * 0.35;
-    float edge = exp(-pow(v * 1.25, 2.0));
+    float edge = exp(-v * v * 1.5625); // не pow(v·1,25, 2): от отрицательного — NaN на части видеокарт
     float cl = smoothstep(0.1, 0.7, dens * (0.55 + 0.75 * edge) + 0.25 * edge - 0.1);   // рваный силуэт клубов
     float a = vAl * cl * (0.55 + 0.45 * edge) * fxSoft(6.0);
     if (a < 0.004) discard;

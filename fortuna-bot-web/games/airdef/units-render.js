@@ -301,8 +301,9 @@ function flameGradMat(kind) { // градиент вдоль факела (z 0 �
       uniform vec3 c0, c1, c2; uniform float uOp; varying float vZ, vRim;
       void main() {
         #include <logdepthbuf_fragment>
-        vec3 c = vZ < 0.35 ? mix(c0, c1, vZ / 0.35) : mix(c1, c2, (vZ - 0.35) / 0.65);
-        float a = uOp * pow(vRim, 1.3) * pow(1.0 - vZ, 0.7);
+        float z = clamp(vZ, 0.0, 1.0); // кончик конуса: z чуть больше 1 → pow от отрицательного = NaN, свечение (bloom) растягивало его в чёрный квадрат
+        vec3 c = z < 0.35 ? mix(c0, c1, z / 0.35) : mix(c1, c2, (z - 0.35) / 0.65);
+        float a = uOp * pow(clamp(vRim, 0.0, 1.0), 1.3) * pow(1.0 - z, 0.7);
         gl_FragColor = vec4(c * 1.7 * a, a);
         #include <tonemapping_fragment>
         #include <encodings_fragment>
