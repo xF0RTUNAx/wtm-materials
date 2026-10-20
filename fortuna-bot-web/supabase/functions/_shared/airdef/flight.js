@@ -74,6 +74,11 @@ export const SPECS = {
   e_mirage: { name: 'Mirage 2000D', side: 'west', n: 1, dry: 64.3, ab: 95.1, empty: 7600, fuel: 3160, mNorm: 12000, S: 41, vSL: 1470, vAlt: 2300, g: 9, roll: 270, K: 0.16, clMax: 1.4, ceil: 17000 },
   e_rafale: { name: 'Rafale', side: 'west', n: 2, dry: 50, ab: 75, empty: 10300, fuel: 4700, mNorm: 15000, S: 45.7, vSL: 1390, vAlt: 1912, g: 9, roll: 270, K: 0.12, clMax: 1.5, ceil: 15835 },
   e_b2: { name: 'B-2A Spirit', side: 'west', n: 4, dry: 77, ab: 0, empty: 71700, fuel: 75750, mNorm: 152600, S: 478, vSL: 900, vAlt: 1010, g: 2.5, roll: 35, K: 0.07, clMax: 1.0, ceil: 15200 },
+  // пятая партия (2026-10-21): Vulcan B.2 — дозвуковой (M 0,96 на высоте, M ≈ 0,85 у земли), четыре «Олимпа» 301 без форсажа, дельта 368 м²; Draken J35F — RM6C, M 2 на высоте;
+  // Viggen AJ 37 — RM8A (тяга на форсаже ≈ 0,8 веса), «утка» с дельтой: большой clMax и короткий разбег
+  e_vulcan: { name: 'Vulcan B.2', side: 'west', n: 4, dry: 89, ab: 0, empty: 37100, fuel: 37000, mNorm: 78000, S: 368, vSL: 1000, vAlt: 1040, g: 2.5, roll: 35, K: 0.12, clMax: 1.1, ceil: 17000 },
+  e_draken: { name: 'Saab 35 Draken (J35F)', side: 'west', n: 1, dry: 56, ab: 78.4, empty: 7865, fuel: 2800, mNorm: 11400, S: 49.2, vSL: 1300, vAlt: 2120, g: 7, roll: 200, K: 0.18, clMax: 1.2, ceil: 20000 },
+  e_viggen: { name: 'Saab AJ 37 Viggen', side: 'west', n: 1, dry: 65.6, ab: 125, empty: 11800, fuel: 4500, mNorm: 16000, S: 46, vSL: 1400, vAlt: 2150, g: 7, roll: 200, K: 0.16, clMax: 1.5, ceil: 18000 },
   e_b52: { name: 'B-52H', side: 'west', n: 8, dry: 76, ab: 0, empty: 83250, fuel: 141000, mNorm: 180000, S: 370, vSL: 650, vAlt: 1000, g: 2, roll: 25, K: 0.045, clMax: 1.1, ceil: 15000 },
 };
 

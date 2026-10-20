@@ -32,13 +32,13 @@ export const PAIR = {
   e_su25: 'f16', e_su24: 'e_f4', e_su17: 'f18', su30: 'f18', e_su34: 'e_f15e', mig29: 'e_gripen', e_mig31: 'f18', e_su57: 'e_f35',
   e_mig23: 'e_f4', e_mig27: 'e_a10', e_tu22m2: 'e_f111', e_tornado: 'e_mig27', e_a10: 'e_mig27', e_f111: 'e_tu22m2', e_f15e: 'e_su34',
   e_mig21n: 'e_f5', e_su7b: 'e_f100', e_tu16: 'e_buccaneer', e_mig25: 'e_f4', e_f5: 'e_mig21n', e_f100: 'e_su7b', e_buccaneer: 'e_tu16', e_jaguar: 'e_mig27',
-  e_harrier: 'e_yak38', e_f117: 'e_su57', e_mirage: 'e_su24', e_rafale: 'su30', e_b2: 'e_tu22m2',
+  e_harrier: 'e_yak38', e_vulcan: 'e_tu22m2', e_draken: 'e_mig21n', e_viggen: 'e_mig27', e_f117: 'e_su57', e_mirage: 'e_su24', e_rafale: 'su30', e_b2: 'e_tu22m2',
   e_yak38: 'e_harrier', e_il28: 'e_hunter', e_tu22: 'e_buccaneer', e_tu95: 'e_b52', e_su27: 'e_f18c', e_su35: 'e_typhoon', e_tu22m3: 'e_b1b', e_tu160: 'e_b2',
   e_hunter: 'e_il28', e_etendard: 'e_su17', e_mirage_f1: 'e_mig21n', e_f18c: 'e_su27', e_ea18g: 'e_mig31', e_b52: 'e_tu95', e_b1b: 'e_tu22m3', e_typhoon: 'e_su35',
   f16: 'e_su25', e_f4: 'e_su24', f18: 'e_su17', e_gripen: 'mig29', e_f35: 'e_su57', e_f22: 'e_su57',
   fab500: 'mk82', kh28: 'agm45', kab500l: 'gbu12', kh58: 'agm88', kab500kr: 'agm65b', kh29t: 'agm65b', kh25ml: 'agm65b', kab500s: 'gbu31',
   kh31p: 'agm88', ecm_e: 'ecm_w', kh59m: 'jassm', umpk: 'gbu39', decoy_e: 'mald', kh59mk2: 'jassm',
-  mk82: 'fab500', agm45: 'kh28', gbu10: 'kab500l', gbu12: 'kab500l', agm88: 'kh58', agm65b: 'kh29t', gbu31: 'kab500s', ecm_w: 'ecm_e', gbu39: 'umpk',
+  mk82: 'fab500', bomb1000: 'fab500', agm45: 'kh28', gbu10: 'kab500l', gbu12: 'kab500l', agm88: 'kh58', agm65b: 'kh29t', gbu31: 'kab500s', ecm_w: 'ecm_e', gbu39: 'umpk',
   jassm: 'kh59mk2', mald: 'decoy_e', aargm: 'kh31p', fab100: 'mk82', fab250: 'mk82', ofab250: 'mk82', fab1000: 'gbu10', gbu24: 'kab500l', gbu57: 'kab500s',
   s75: 'hawk', s125: 'hawk', strela1: 'chaparral', zsu234: 'm163', strela10: 'chaparral', strela2: 'redeye', kub: 'hawk', osa: 'roland', igla: 'stinger', s300: 'patriot', tor: 'roland',
   iglas: 'stinger', tunguska: 'gepard', gpsjam: 'gpsjamw', s400: 'pac3', bukm3: 'nasams', torm2: 'roland', pantsir: 'skyguard', verba: 'stinger',
@@ -59,18 +59,18 @@ export const PARENT = {
   e_mig27: 'e_mig23', mig29: 'e_mig27', e_su24: 'e_su17', e_su34: 'e_su24', e_su57: 'e_su34', e_su25: 'e_su7b', e_yak38: 'e_su25',
   e_mig25: 'e_mig21n', e_mig31: 'e_mig25', e_su27: 'e_mig25', su30: 'e_su27', e_su35: 'su30',
   e_tu16: 'e_il28', e_tu22: 'e_tu16', e_tu22m2: 'e_tu22', e_tu22m3: 'e_tu22m2', e_tu95: 'e_tu22m3', e_tu160: 'e_tu95',
-  // Запад: F-5E → F-16 → Gripen → F-35, развилка F-16 → A-10 · F-4★ → F/A-18C → F/A-18E → EA-18G ·
+  // Запад: F-5E → F-16 → F-35, развилка F-16 → A-10; шведская ветка F-5E → Draken → Viggen → Gripen · F-4★ → F/A-18C → F/A-18E → EA-18G ·
   // F-100D → F-111 → F-15E → F-22, развилки F-111 → F-117 → B-2 и F-111 → B-52 → B-1B · Hunter → Buccaneer → Tornado → Typhoon,
-  // развилки Hunter → Jaguar и Hunter → Harrier · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale
-  f16: 'e_f5', e_gripen: 'f16', e_f35: 'e_gripen', e_a10: 'f16', e_f18c: 'e_f4', f18: 'e_f18c', e_ea18g: 'f18',
+  // развилки Hunter → Jaguar, Hunter → Harrier и Hunter → Vulcan · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale
+  f16: 'e_f5', e_draken: 'e_f5', e_viggen: 'e_draken', e_gripen: 'e_viggen', e_f35: 'f16', e_a10: 'f16', e_f18c: 'e_f4', f18: 'e_f18c', e_ea18g: 'f18',
   e_f111: 'e_f100', e_f15e: 'e_f111', e_f22: 'e_f15e', e_f117: 'e_f111', e_b2: 'e_f117', e_b52: 'e_f111', e_b1b: 'e_b52',
-  e_buccaneer: 'e_hunter', e_tornado: 'e_buccaneer', e_typhoon: 'e_tornado', e_jaguar: 'e_hunter', e_harrier: 'e_hunter',
+  e_buccaneer: 'e_hunter', e_tornado: 'e_buccaneer', e_typhoon: 'e_tornado', e_jaguar: 'e_hunter', e_harrier: 'e_hunter', e_vulcan: 'e_hunter',
   e_etendard: 'e_mirage_f1', e_mirage: 'e_etendard', e_rafale: 'e_mirage',
   // вооружение
   kab500l: 'fab1000', kab500kr: 'fab500', // ФАБ-500★ → ФАБ-1000 → КАБ-500Л → КАБ-500С → УМПК; развилки ФАБ-500★ → ФАБ-250 → ФАБ-100 / ОФАБ-250 и → КАБ-500Кр
   kab500s: 'kab500l', umpk: 'kab500s', kh58: 'kh28', kh31p: 'kh58', kh29t: 'kh28', kh25ml: 'kh28', kh59m: 'kh29t', kh59mk2: 'kh59m', decoy_e: 'ecm_e',
   fab100: 'fab250', fab250: 'fab500', ofab250: 'fab250', fab1000: 'fab500', gbu24: 'gbu10', gbu57: 'gbu31', kh55: 'kh29t', kh101: 'kh59m',
-  gbu10: 'mk82', gbu12: 'mk82', gbu31: 'gbu12', gbu39: 'gbu31', agm88: 'agm45', aargm: 'agm88', agm65b: 'agm45', jassm: 'agm65b', mald: 'ecm_w',
+  bomb1000: 'mk82', gbu10: 'mk82', gbu12: 'mk82', gbu31: 'gbu12', gbu39: 'gbu31', agm88: 'agm45', aargm: 'agm88', agm65b: 'agm45', jassm: 'agm65b', mald: 'ecm_w',
   // ПВО
   s300: 's75', s400: 's300', kub: 's125', buk: 'kub', bukm3: 'buk', zu23: 'zsu234', phalanx: 'm163', osa: 'strela1', tor: 'osa', torm2: 'tor', tunguska: 'zsu234', pantsir: 'tunguska', strela10: 'strela1', igla: 'strela2', iglas: 'igla', verba: 'iglas',
   patriot: 'hawk', pac3: 'patriot', sampt: 'patriot', rapier: 'hawk', nasams: 'rapier', khordad: 'rapier', gepard: 'm163', skyguard: 'm163', roland: 'chaparral', stinger: 'redeye', avenger: 'stinger',

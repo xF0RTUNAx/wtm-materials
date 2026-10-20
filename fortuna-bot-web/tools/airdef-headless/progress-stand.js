@@ -53,7 +53,7 @@ ok('старт: ранг II закрыт там, где в ранге I есть
   for (const id of ['pvo:kub', 'pvo:osa', 'pvo:igla']) research(T, id); buy(T, 'pvo:kub'); buy(T, 'pvo:osa'); const r = buy(T, 'pvo:igla');
   ok(`паритет внутри ранга: 3-я восточная без западных — нельзя («${r.why}»)`, !r.ok);
 }
-{ const T = { ...newProgress(), xp: 1e6, silver: 1e6, own: ['wpn:gbu10', 'wpn:fab250', 'wpn:fab100', 'wpn:kh58', 'wpn:kh29t', 'wpn:gbu12', 'wpn:agm88'] }; const r = research(T, 'wpn:kab500s'); ok(`линия: КАБ-500С без КАБ-500Л нельзя («${r.why}»)`, !r.ok && rankOpen(T, 'wpn', 3)); }
+{ const T = { ...newProgress(), xp: 1e6, silver: 1e6, own: ['wpn:gbu10', 'wpn:bomb1000', 'wpn:fab250', 'wpn:fab100', 'wpn:kh58', 'wpn:kh29t', 'wpn:gbu12', 'wpn:agm88'] }; const r = research(T, 'wpn:kab500s'); ok(`линия: КАБ-500С без КАБ-500Л нельзя («${r.why}»)`, !r.ok && rankOpen(T, 'wpn', 3)); }
 ok('линии: предыдущая — та же ветка и сторона, ранг не выше', TREE.every((n) => !n.parent || (NODE[n.parent].side === n.side && NODE[n.parent].rank <= n.rank)));
 ok('раскладка: каждая единица в дереве ровно один раз', BRANCHES.every((b) => SIDES.every((s) => { const L = treeLayout(b.id, s); return L.cells.length === nodesOf(b.id, s).length && new Set(L.cells.map((c) => c.row + ':' + c.col)).size === L.cells.length; })));
 ok('у каждой единицы есть аналог другой стороны', TREE.every((n) => { const p = pairOf(n); return p && p.side !== n.side; }));

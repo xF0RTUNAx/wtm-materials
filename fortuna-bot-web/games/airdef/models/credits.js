@@ -581,6 +581,42 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Avro698",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/avro698-5259b4b3852a4cb4ad4b1745913ed039",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_vulcan"
+  ]
+ },
+ {
+  "title": "J35",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/j35-3d6ddbf606dc4047a15d37f4d5ac56ca",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_draken"
+  ]
+ },
+ {
+  "title": "Ja37",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/ja37-de85a256699d44d486ea3560f47ce3a1",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_viggen"
+  ]
+ },
+ {
+  "title": "AN-M65A1",
+  "author": "United4192",
+  "url": "https://sketchfab.com/3d-models/an-m65a1-11ece2bb4a4f4716bc02402d616ffc19",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_bomb1000"
+  ]
+ },
+ {
   "title": "Sukhoi Su-27 \"Flanker\"",
   "author": "andertan",
   "url": "https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750",

@@ -41,6 +41,11 @@ export const AG = {
     guide: 'Американская 500-фунтовая бомба общего назначения. Основа для GBU-12 и JDAM.',
     specs: [['Страна', 'США'], ['Масса', '≈ 241 кг'], ['Взрывчатка', '≈ 87 кг'], ['Длина', '2,2 м']],
     vis: { L: 2.21, r: 0.137, kind: 'bomb', color: 0x5e6b4f, band: 0xe8c21c } },
+  // AN-M65A1 (United4192): 1000 фунтов, ≈ 240 кг взрывчатки → радиус по правилу подобия ≈ 50 м (между Mk 82 и Mk 84), урон между ними
+  bomb1000: { name: 'AN-M65A1 1000 lb', short: '1000 lb', side: 'west', era: 1, kind: 'bomb', mass: 454, kd: 0.95, dmg: 165, blast: 50,
+    guide: 'Американская 1000-фунтовая бомба общего назначения. Вдвое тяжелее Mk 82: крупнее воронка и сильнее удар по прочным целям. Точность — только по прицелу: точка падения (CCIP) на индикаторе.',
+    specs: [['Страна', 'США'], ['Масса', '≈ 454 кг'], ['Взрывчатка', '≈ 240 кг'], ['Длина', '1,9 м']],
+    vis: { L: 1.87, r: 0.24, kind: 'bomb', color: 0x5e6b4f, band: 0xe8c21c } },
   agm45: { name: 'AGM-45 Shrike', short: 'Shrike', side: 'west', era: 1, kind: 'arm', mass: 177, acc: 95, burn: 4, kd: 1.4, g: 12, life: 60, fov: 25, rmax: 14000, mem: false, dmg: 45, blast: 25,
     guide: 'Первая массовая американская противорадиолокационная ракета (Вьетнам). Летит на излучение РЛС; памяти нет — если расчёт выключил станцию, ракета теряет цель.',
     specs: [['Страна', 'США'], ['Масса', '≈ 177 кг'], ['Дальность', '≈ 16 км'], ['ГСН', 'пассивная радиолокационная, без памяти']],
@@ -209,7 +214,8 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
   e_mig21n: 'МиГ-21бис', e_mig25: 'МиГ-25БМ', e_su7b: 'Су-7БМК', e_tu16: 'Ту-16', e_f100: 'F-100F', e_f5: 'F-5E', e_f117: 'F-117A', e_jaguar: 'Jaguar GR.1',
   e_buccaneer: 'Buccaneer S.2B', e_harrier: 'Harrier GR.3', e_mirage: 'Mirage 2000D', e_rafale: 'Rafale', e_b2: 'B-2A',
   e_yak38: 'Як-38М', e_il28: 'Ил-28', e_tu22: 'Ту-22', e_tu95: 'Ту-95МС', e_su27: 'Су-27СМ', e_su35: 'Су-35С', e_hunter: 'Hunter FGA.9', e_etendard: 'Super Étendard',
-  e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_ea18g: 'EA-18G', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon' };
+  e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_ea18g: 'EA-18G', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon',
+  e_vulcan: 'Vulcan B.2', e_draken: 'Saab 35 Draken', e_viggen: 'Saab AJ 37 Viggen' };
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },
@@ -244,6 +250,8 @@ export const LOADOUTS = {
   // вертолёты (Хеллоуин 2026, heli: true — ветка «Вертолёты», в онлайне пока нет; слоты: ПТУР — рамы на внешних пилонах, НАР — внутренние)
   { side: 'east', plane: 'h_mi24', heli: true, name: 'Ми-24В: «Штурм» ×4 + С-8 ×2 блока', items: [['shturm', 4], ['s8', 2]], pod: true },
   { side: 'west', plane: 'h_uh1', heli: true, name: 'UH-1H: Hydra 70 ×2 блока', items: [['hydra', 2]] },
+    // пятая партия (2026-10-21) — в самом конце: номера прежних подвесок (и вертолётных) не меняются
+    { side: 'west', plane: 'e_draken', name: 'Saab 35 Draken: Mk 82 ×4 + Hydra ×2', items: [['mk82', 4], ['hydra', 2]] },
   ],
   2: [
     { side: 'east', plane: 'e_su24', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
@@ -267,6 +275,11 @@ export const LOADOUTS = {
     { side: 'west', plane: 'e_etendard', name: 'Super Étendard: GBU-12 ×2 + Mk 82 ×2 (ATLIS)', items: [['gbu12', 2], ['mk82', 2]], pod: true },
   // вертолёты (Хеллоуин 2026)
   { side: 'west', plane: 'h_ah1', heli: true, name: 'AH-1W: Hellfire ×8 + Hydra ×2 блока', items: [['hellfire', 8], ['hydra', 2]], pod: true },
+    // пятая партия (2026-10-21): Vulcan — эпоха II (Фолкленды 1982; ранг II по решению Mark); в отсеке 21 бомба — в игре до 8 точек подвески
+    { side: 'west', plane: 'e_vulcan', name: 'Vulcan B.2 «Black Buck»: Shrike ×4', items: [['agm45', 4]] },
+    { side: 'west', plane: 'e_vulcan', name: 'Vulcan B.2: 1000 lb ×8 (в отсеке)', items: [['bomb1000', 8]] },
+    { side: 'west', plane: 'e_viggen', name: 'Saab AJ 37 Viggen: Maverick ×2 + Mk 82 ×4', items: [['agm65b', 2], ['mk82', 4]] }, // шведы применяли AGM-65 как Rb 75
+    { side: 'west', plane: 'e_viggen', name: 'Saab AJ 37 Viggen: Hydra ×4 + Mk 82 ×2', items: [['hydra', 4], ['mk82', 2]] },
   ],
 };
 

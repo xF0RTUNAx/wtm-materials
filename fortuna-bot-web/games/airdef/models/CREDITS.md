@@ -63,6 +63,10 @@
 - "Tu22" (https://sketchfab.com/3d-models/tu22-189799dc11b149a9a9d404904c97173d) by manilov.ap — CC-BY-4.0 — `e_tu22.glb`
 - "Tu95" (https://sketchfab.com/3d-models/tu95-1eac97ec49ed4f1da8b7deb1e1b2cc7a) by manilov.ap — CC-BY-4.0 — `e_tu95.glb`
 - "Hunter" (https://sketchfab.com/3d-models/hunter-0bdd0fc7a68e4d0b8306f4ddb2846a26) by manilov.ap — CC-BY-4.0 — `e_hunter.glb`
+- "Avro698" (https://sketchfab.com/3d-models/avro698-5259b4b3852a4cb4ad4b1745913ed039) by manilov.ap — CC-BY-4.0 — `e_vulcan.glb`
+- "J35" (https://sketchfab.com/3d-models/j35-3d6ddbf606dc4047a15d37f4d5ac56ca) by manilov.ap — CC-BY-4.0 — `e_draken.glb`
+- "Ja37" (https://sketchfab.com/3d-models/ja37-de85a256699d44d486ea3560f47ce3a1) by manilov.ap — CC-BY-4.0 — `e_viggen.glb`
+- "AN-M65A1" (https://sketchfab.com/3d-models/an-m65a1-11ece2bb4a4f4716bc02402d616ffc19) by United4192 — CC-BY-4.0 — `w_bomb1000.glb`
 - "Sukhoi Su-27 "Flanker"" (https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750) by andertan — CC-BY-4.0 — `e_su27.glb`
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan — CC-BY-4.0 — `e_su35.glb`
 - "super-etendard" (https://sketchfab.com/3d-models/super-etendard-3589004316f54dba90ed7f34455eeeb2) by helijah — CC-BY-4.0 — `e_etendard.glb`
