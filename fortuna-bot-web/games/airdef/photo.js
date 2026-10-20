@@ -407,7 +407,10 @@ export function createPhoto(C, ctrls) {
     if (!shot || window.__shot === 'ready' || window.__shot === 'timeout') return;
     if (st.shotT >= 0) { if ((st.shotT += dt) > 1.2) window.__shot = 'ready'; return; }
     if (st.simT > (shot.max || 240)) { window.__shot = 'timeout'; return; }
-    if (st.simT >= (shot.t || 0) && !R.fb && R.kind !== 'hold') { st.spd = 3; st.shotT = 0; } // стоп-кадр, камера доезжает
+    if (st.simT >= (shot.t || 0) && !R.fb && R.kind !== 'hold') { // объект в кадре; d — ещё столько секунд полёта (ракета успевает оставить след)
+      if (st.seenT === undefined) st.seenT = st.simT;
+      if (st.simT - st.seenT >= (shot.d || 0)) { st.spd = 3; st.shotT = 0; } // стоп-кадр, камера доезжает
+    } else st.seenT = undefined;
   }
   const api = {
     timeK: () => (shot && st.shotT < 0 && st.simT < (shot.t || 0) ? 4 : 1),

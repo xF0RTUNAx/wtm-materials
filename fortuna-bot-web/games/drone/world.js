@@ -21,7 +21,7 @@ export const FOG_U = { value: FOG_D };           // плотность тума�
 // конвейером (post.js) в половине разрешения. Глубины там нет — сравниваем с глубиной кадра сами и мягко гасим на стыке.
 export const FX_LAYER = 4, FX_ADD_LAYER = 5; // 5 — огонь и вспышки: рисуются после наложения дыма
 export const FXU = { tDepth: { value: null }, fxOn: { value: 0 }, fxK: { value: 0.5 }, fxSize: { value: new THREE.Vector2(1, 1) }, camNF: { value: new THREE.Vector2(3, 60000) } };
-const SOFT_GLSL = `uniform sampler2D tDepth; uniform float fxOn; uniform vec2 fxSize, camNF;
+export const SOFT_GLSL = `uniform sampler2D tDepth; uniform float fxOn; uniform vec2 fxSize, camNF;
   float fxLinZ(float d) { float z = d * 2.0 - 1.0; return 2.0 * camNF.x * camNF.y / (camNF.y + camNF.x - z * (camNF.y - camNF.x)); }
   float fxSoft(float range) { if (fxOn < 0.5) return 1.0; float sz = texture2D(tDepth, gl_FragCoord.xy / fxSize).r;
     return clamp((fxLinZ(sz) - fxLinZ(gl_FragCoord.z)) / range, 0.0, 1.0); }`;

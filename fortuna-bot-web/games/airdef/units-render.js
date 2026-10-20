@@ -3,6 +3,7 @@
 /* global THREE */
 import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022q';
 import { makeParticles, radialTex } from '../drone/world.js?v=20261022q';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022q';
 import { LNCH } from './launchers.js?v=20261022q';
 import { createBook } from './flipbook.js?v=20261022q';
 
@@ -300,20 +301,8 @@ export function attachFlames(group, nozzles, r = 1, own = false, dry = false) {
 }
 
 // факел ракетного двигателя: z — срез сопла (хвост — +Z), r — радиус сопла
-export function rocketFlame(group, z, r) {
-  const outer = new THREE.Mesh(flameGeo, flameMat), core = new THREE.Mesh(flameGeo, flameCore);
-  outer.position.z = core.position.z = z; outer.renderOrder = core.renderOrder = 5; group.add(outer); group.add(core);
-  return {
-    // k: 0 — двигатель не работает, 1 — маршевый режим, 2 — стартовый (ускоритель): длинный и широкий факел
-    set(k, rr = r) {
-      outer.visible = core.visible = k > 0; if (!k) return;
-      const f = 0.85 + Math.random() * 0.3, w = rr * (k > 1 ? 1.7 : 1.4); // ширина у среза — по соплу: 0,85 радиуса корпуса на старте, 0,7 — маршевый
-      outer.scale.set(w, w, rr * (k > 1 ? 26 : 12) * f); core.scale.set(w * 0.5, w * 0.5, rr * (k > 1 ? 11 : 5) * f);
-    },
-    move(z2) { outer.position.z = core.position.z = z2; },
-    at(x, y, z) { outer.position.set(x, y, z); core.position.set(x, y, z); }, // срез сопла модели (не на оси)
-  };
-}
+// факел ракеты — запечённая раскадровка вдоль оси (plume.js); motor — тип двигателя (MOTOR), по умолчанию смесевое твёрдое
+export function rocketFlame(group, z, r, motor) { return makeFlame(group, z, r, motor); }
 
 // ═════════════ Бомбы и ракеты ═════════════
 function bombGeo(v) {
@@ -439,13 +428,14 @@ export function createFx(scene, P) {
   const FL = createBook(scene, { url: FXU_('flame'), cols: 8, rows: 3, frames: 24, cell: [0.5, 1], anchor: [0.5, 0.92], up: true, loop: true, gain: 2.4 }, 96);
   const books = [EX, BL, FL], LT = new THREE.Vector3();
   const CR = makeCraters(scene, P.craters || 150);
+  const PL = createPlumes(scene, P); // дымные ленты ракет (plume.js)
   let hemi = null, sunL = null;
   const clouds = [];  // облака диполей: блёстки ещё 3 с
   const V = new THREE.Vector3();
   let api = null; // сам объект эффектов (explosion вызывают и через обёртки — без this)
   return api = {
     mats: [smoke.mat, fire.mat], // хозяин выставляет uniforms.scale по высоте кадра
-    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
+    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) — частицами
@@ -509,8 +499,9 @@ export function createFx(scene, P) {
       const big = m.M.L > 5, LN = m.ln, sus = LN && (LN.stage || LN.ramjet) && m.tb >= m.M.burn;
       const s = (big ? 9 : m.M.L > 2.5 ? 5 : 2.5) * (sus ? 0.45 : 1), back = sus && LN.stage ? m.M.L * (LN.stage - 0.5) + 0.3 : m.M.L * 0.6;
       const x = m.pos.x - m.dir.x * back, y = m.pos.y - m.dir.y * back, z = m.pos.z - m.dir.z * back;
-      smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, 0.86, 0.86, 0.84, (big ? 0.55 : 0.4) * (sus ? 0.45 : 1), s, s * 0.9, big ? 9 : 5, 0.3, 0.3);
-      fire.emit(x, y, z, 0, 0, 0, 1, 0.75, 0.4, 0.9, s * 0.45, 0, 0.06, 0, 0);
+      const mo = motorOf(m.unit && m.unit.key, 'sam', m.tb >= m.M.burn), rr = LN && LN.stage && !sus ? m.M.r * (LN.stageR || 1) : m.M.r;
+      PL.add(m, x, y, z, mo, rr); // сплошная лента дыма по траектории; клубы-частицы ниже — объём (видны и вдоль ленты)
+      smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, mo.c[0], mo.c[1], mo.c[2], (big ? 0.4 : 0.28) * (sus ? 0.45 : 1) * Math.min(1, mo.a / 0.6), s, s * 0.9, big ? 9 : 5, 0.3, 0.3);
     },
     // ── старт ЗУР ──
     // горячий старт: вспышка у хвоста, струя назад, облако пыли и дыма у пусковой, которое долго висит
@@ -588,8 +579,9 @@ export function createFx(scene, P) {
     },
     wpnTrail(w, p) { // p — срез сопла (если известен), иначе 2 м за центром
       const x = p ? p.x : w.pos.x - w.dir.x * 2, y = p ? p.y : w.pos.y - w.dir.y * 2, z = p ? p.z : w.pos.z - w.dir.z * 2, k = p && w.W.vis ? Math.min(1, w.W.vis.r * 2.5) : 1;
-      smoke.emit(x, y, z, 0, 0.5, 0, 0.8, 0.8, 0.78, 0.35, 3, 3, 4, 0.3, 0.2);
-      fire.emit(x, y, z, 0, 0, 0, 1, 0.7, 0.35, 0.9, 1.6 * k, 0, 0.05, 0, 0);
+      const W = w.W, kind = W.kind === 'tbm' ? 'tbm' : W.kind, mo = motorOf(w.key, kind, false), r = W.vis ? W.vis.r : 0.15;
+      PL.add(w, x, y, z, mo, r);
+      if (mo.a > 0.1) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6), 3 * k, 3, 4, 0.3, 0.2);
     },
     // ЛТЦ — каждый кадр, пока горит: слепящее ядро, узкий огненный хвост (частицы живут доли секунды — хвост вытягивается
     // по траектории и укорачивается, когда ловушка тормозит), белый дымный след; с выгоранием всё тускнеет и сужается
@@ -648,12 +640,13 @@ export function createFx(scene, P) {
     clearCraters() { CR.clear(); },
     wreckSmoke(p) { smoke.emit(p.x, p.y, p.z, 0, 2, 0, 0.15, 0.14, 0.13, 0.6, 6, 7, 5, 0.2, 0.5); fire.emit(p.x, p.y, p.z, 0, 0, 0, 1, 0.5, 0.15, 0.8, 4, 1, 0.3, 0, 0); },
     update(dt) {
-      smoke.update(dt); fire.update(dt);
+      smoke.update(dt); fire.update(dt); flameTick(dt);
       // раскадровки: освещение дыма — небо и солнце сцены
       if (!hemi) for (const o of scene.children) { if (o.isHemisphereLight) hemi = o; else if (o.isDirectionalLight && !sunL) sunL = o; }
       LT.set(0.6, 0.6, 0.6); if (hemi) LT.set(hemi.color.r, hemi.color.g, hemi.color.b).multiplyScalar(hemi.intensity * 0.55);
       if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
       for (const b of books) b.update(dt, LT, scene.fog);
+      PL.update(dt, LT, null, sunL ? V.copy(sunL.position).sub(sunL.target.position).normalize() : null);
       CR.mat.uniforms.uLight.value.copy(LT).multiplyScalar(0.8); if (sunL) CR.mat.uniforms.uSun.value.copy(sunL.position).sub(sunL.target.position).normalize(); // свет ходит за камерой
       if (scene.fog) { CR.mat.uniforms.uFog.value.copy(scene.fog.color); CR.mat.uniforms.uFogD.value = scene.fog.density || 0; }
       for (let i = 0; i < NT; i++) {
