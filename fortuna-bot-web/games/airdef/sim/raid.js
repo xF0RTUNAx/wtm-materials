@@ -35,7 +35,7 @@ export const RAID_HELI = {
   west: { 1: ['h_uh1', [['hydra', 2]]], 2: ['h_ah1', [['hellfire', 8], ['hydra', 2]]], 3: ['h_ah64', [['hellfire', 8], ['hydra', 2]]], 4: ['h_ah64', [['hellfire', 8], ['hydra', 2]]] },
 };
 const V = () => new THREE.Vector3();
-const TMP = V(), TMP2 = V(), DIR = V(), PI = V();
+const TMP = V(), TMP2 = V(), DIR = V(), PI = V(), PR = V(); // PR — точка падения НАР (не PI: там точка прицеливания — была одна на двоих, промах всегда 0)
 
 export function createRaid(S, city, rnd, opts = {}) {
   setGround(city.groundH); // рельеф города — в той же копии core.js, что у налёта (сервер и проверки грузят её по другому адресу)
@@ -125,9 +125,10 @@ export function createRaid(S, city, rnd, opts = {}) {
         if (a.phase === 'lase') { a.laser = see ? aim.clone() : null; if (!S.wpns.some((w) => w.owner === a && !w.dead)) { a.laser = null; a.phase = 'ingress'; a.relT = 1.5 + rnd(); } }
         else if (W && W.kind === 'rocket') {
           // НАР: нос — на точку цели (с поправкой на снижение ракеты), залп — когда точка падения ближе 30 м
+          a.pop = Math.max(a.pop || alt, 90); alt = a.pop; // залп НАР — с подскока ~90 м (нос вниз у самой земли — разбивался)
           const el = Math.atan2(aim.y - a.pos.y, d); u.pitchTo = el + (a.rk || 0); u.pitchHold = true; u.cy = 0;
-          fwdOf(a, DIR); const t = predictRocket(city, W, TMP2.copy(a.pos).add(TMP.set(0, -2.5, 0)), DIR, Math.max(0, a.vel.dot(DIR)), PI);
-          if (t > 0) { const err = Math.hypot(PI.x - aim.x, PI.z - aim.z) * (Math.hypot(PI.x - a.pos.x, PI.z - a.pos.z) < d ? 1 : -1); a.rk = clamp((a.rk || 0) + err * 0.00002 * dt * 60, -0.15, 0.12); if (Math.abs(err) < 30 && face && see && a.relT <= 0) { for (let k = 0; k < W.salvo; k++) S.release(a, L.key, {}); if ((L.rs = (L.rs ?? Math.ceil(W.load / W.salvo)) - 1) <= 0) { L.n--; L.rs = undefined; } a.relT = 2.5 + (1 - a.skill) * 2; if (fx.release) fx.release(a, L.key); } }
+          fwdOf(a, DIR); const t = predictRocket(city, W, TMP2.copy(a.pos).add(TMP.set(0, -2.5, 0)), DIR, Math.max(0, a.vel.dot(DIR)), PR);
+          if (t > 0) { const err = Math.hypot(PR.x - aim.x, PR.z - aim.z) * (Math.hypot(PR.x - a.pos.x, PR.z - a.pos.z) < d ? 1 : -1); a.rk = clamp((a.rk || 0) + err * 0.00002 * dt * 60, -0.15, 0.12); if (Math.abs(err) < 30 && face && see && a.relT <= 0) { for (let k = 0; k < W.salvo; k++) S.release(a, L.key, {}); if ((L.rs = (L.rs ?? Math.ceil(W.load / W.salvo)) - 1) <= 0) { L.n--; L.rs = undefined; } a.relT = 2.5 + (1 - a.skill) * 2; if (fx.release) fx.release(a, L.key); } }
           else a.rk = clamp((a.rk || 0) - 0.003 * dt * 60, -0.15, 0.12); // перелёт дальше дальности расчёта — нос ниже
         } else if (W && see && face && steady && a.relT <= 0 && d < W.rmax * 0.9) { L.n--; S.release(a, L.key, { aim }); a.relT = 2; if (fx.release) fx.release(a, L.key); if (W.seeker === 'laser') { a.laser = aim.clone(); a.phase = 'lase'; } }
       }

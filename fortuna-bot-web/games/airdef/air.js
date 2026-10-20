@@ -270,8 +270,14 @@ export function createAir(C) {
   // самолёт «почти ровно»: верх смотрит вверх (крен и тангаж вместе — не больше 60° от вертикали)
   const levelOk = () => UPQ.set(0, 1, 0).applyQuaternion(craft.q || shipQ).y > 0.5;
   let fireAt = 0; // онлайн: не чаще раза в 0,3 с (сервер принимает сброс с запасом на 2 подряд — бомба не пропадёт с пилона зря)
-  function fire() {
+  // прицел НАР по поколению вертолёта (Mark 2026-10-21): 1 — механический (кольцо по оси, без расчёта), 2 — вычислитель (крест точки
+  // падения), 3 — с дальномером (дальность до цели под крестом, «ПУСК»), 4 — цифровой: нажали раньше — залп уйдёт сам, когда крест на цели
+  const FCS = { h_uh1: 1, h_mi24: 2, h_ah1: 2, h_mi28: 3, h_ah64: 3, h_ka52: 4 };
+  const fcs = () => (craft.heli ? FCS[craft.hm.key] || 2 : 2);
+  let rkHold = 0, rkOn = null; // отложенный залп (ц4): секунд ожидания; цель под крестом (ц3+)
+  function fire(auto) {
     const l = curW(); if (!l || game.over || craft.dead) return;
+    if (auto !== true && AG[l.key].kind === 'rocket' && fcs() >= 4 && !rkOn) { rkHold = 4; say('Залп — когда прицел придёт на цель', 1.5); snd.click(); return; } // цифровой прицел: пуск отложен
     if (game.net) { const now = performance.now(); if (now - fireAt < 300) return; fireAt = now; }
     const Wp = AG[l.key], opts = {};
     const no = (t) => { say(t); snd.deny(); };
@@ -345,7 +351,7 @@ export function createAir(C) {
     if (i < 0) { AU.relT = 0; return; }
     AU.relT += dt;
     if (AU.relT < (AG[loadout[i].key].kind === 'arm' ? 0.9 : 0.25) + Math.random() * 0.04 * 10) return; // реакция «расчёта»
-    sel = i; fire(); AU.relT = 0; AU.cd = AG[loadout[i].key].kind === 'bomb' ? 0.35 : 1.6;
+    sel = i; fire(true); AU.relT = 0; AU.cd = AG[loadout[i].key].kind === 'bomb' ? 0.35 : 1.6;
   }
 
   // ═════════════ Управление ═════════════
@@ -354,7 +360,11 @@ export function createAir(C) {
   // газ ступенями, после 100 % — форсаж (одна кнопка «ГАЗ» на всех устройствах; на ПК — W/S по ступеням)
   const THR_STEPS = [0.4, 0.6, 0.8, 1, 1], AB_I = 4;
   function setThr(i) { thrI = clamp(i, 0, AB_I); craft.thr = THR_STEPS[thrI]; snd.click(); }
-  function thrStep() { setThr(thrI === AB_I ? 0 : thrI + 1); }
+  function thrStep() { if (craft.heli && craft.hm && craft.hm.arcade) { heliSpd(hSpdI() + 1 >= H_SPD.length ? 1 : hSpdI() + 1); return; } setThr(thrI === AB_I ? 0 : thrI + 1); }
+  // вертолёт («Аркада»): заданная скорость — доля наибольшей (назад, висение, ¼ … полная); кнопка «газ» листает по кругу
+  const H_SPD = [-0.2, 0, 0.25, 0.5, 0.75, 1]; let hSpd = 0.25;
+  const hSpdI = () => H_SPD.reduce((b, v, i) => (Math.abs(v - hSpd) < Math.abs(H_SPD[b] - hSpd) ? i : b), 0);
+  function heliSpd(i) { hSpd = H_SPD[clamp(i, 0, H_SPD.length - 1)]; snd.click(); }
   function onKey(e, down) {
     if (!down) { keys.delete(e.code); return; }
     if (e.repeat) return;
@@ -365,7 +375,7 @@ export function createAir(C) {
       case 'KeyB': if (game.net && craft.dead) { spec.i++; spec.init = false; } break;
       case 'KeyR': podNext(); break;
       case 'KeyG': podView(); break;
-      case 'KeyW': if (!craft.heli) setThr(thrI + 1); break; // у вертолёта W/S — ручка, Shift / Ctrl — высота (heliFly)
+      case 'KeyW': if (!craft.heli) setThr(thrI + 1); break; // вертолёт: W/S держать — разгон и торможение, как ручка на телефоне (heliFly)
       case 'KeyS': if (!craft.heli) setThr(thrI - 1); break;
       case 'ShiftLeft': case 'ShiftRight': if (!craft.heli) setThr(thrI === AB_I ? 3 : AB_I); break;
       case 'KeyZ': pod.zi = (pod.zi + 1) % ZOOMS.length; snd.click(); break;
@@ -514,6 +524,7 @@ export function createAir(C) {
   const rc = $('rwr'), rx2 = rc.getContext('2d'), CCIP = V3();
   let ccipOk = false, larText = '', larT = 0, hudT = 0;
   function updateLar(dt) {
+    if (rkHold > 0) rkHold -= dt;
     larT -= dt; if (larT > 0) return; larT = 0.15;
     const l = curW(); larText = ''; ccipOk = false;
     if (!l || craft.dead) return;
@@ -529,8 +540,15 @@ export function createAir(C) {
       } else if (t > 0) larText = Wp.kind === 'bomb' ? `падение через ${t.toFixed(0)} с` : 'нужен захват контейнером';
     } else if (Wp.kind === 'rocket') { // НАР: точка падения по оси вертолёта
       fwdOf(craft, NV); const t = predictRocket(city, Wp, LP.copy(craft.pos).addScaledVector(UPW, -2.5), NV, Math.max(0, craft.vel.dot(NV)), CCIP);
-      ccipOk = t > 0; const d = ccipOk ? CCIP.distanceTo(craft.pos) : 0;
-      larText = !ccipOk ? 'НАР: опустите нос — точка падения дальше 4 км' : d > Wp.rmax ? `далеко · ${(d / 1000).toFixed(1)} км` : `НАР · ${(d / 1000).toFixed(1)} км · ${t.toFixed(1)} с`;
+      ccipOk = t > 0; const d = ccipOk ? CCIP.distanceTo(craft.pos) : 0, F = fcs();
+      rkOn = null;
+      if (ccipOk && F >= 3) { let best = 1e9; const tol = Math.max(25, (Wp.blast || 10) * 0.9);
+        for (const o of game.targets) { if (o.dead) continue; const e = Math.hypot(o.x - CCIP.x, o.z - CCIP.z) - Math.max(o.w || 0, o.d || 0) * 0.35; if (e < best) { best = e; rkOn = e < tol ? o : null; } }
+        for (const u of C.S.units) { if (u.dead || !u.known) continue; const e = Math.hypot(u.pos.x - CCIP.x, u.pos.z - CCIP.z); if (e < tol && e < best) { best = e; rkOn = u; } } }
+      larText = F === 1 ? 'НАР · механический прицел: центр кольца — по оси, упреждение — на глаз'
+        : !ccipOk ? 'НАР: опустите нос — точка падения дальше 4 км' : d > Wp.rmax ? `далеко · ${(d / 1000).toFixed(1)} км`
+        : F >= 3 ? `${rkOn ? 'ПУСК' : 'НАР'} · дальность ${(d / 1000).toFixed(2)} км · ${t.toFixed(1)} с${rkHold > 0 ? ' · залп ждёт цель' : ''}` : `НАР · ${(d / 1000).toFixed(1)} км · ${t.toFixed(1)} с`;
+      if (rkHold > 0 && rkOn && d <= Wp.rmax) { rkHold = 0; fire(true); } // цифровой прицел: залп сам — крест на цели
     } else if (Wp.kind === 'arm') {
       const u = armTarget(Wp); larText = u ? `РЛС ${u.S.rwr || u.S.short} · ${(craft.pos.distanceTo(u.pos) / 1000).toFixed(1)} км — ПУСК` : 'нет РЛС впереди';
     } else if (pod.lock) {
@@ -575,11 +593,14 @@ export function createAir(C) {
     }
     if (pod.lock) { const p = proj(pod.lock); if (p) { hx.strokeStyle = pod.laser ? '#fb7185' : '#fde047'; hx.strokeRect(p[0] - 10, p[1] - 10, 20, 20); if (pod.laser) { hx.fillStyle = '#fb7185'; hx.fillText('L', p[0] + 16, p[1] - 10); } } }
     const l = curW();
-    if (l && ccipOk && AG[l.key].kind !== 'agm' && AG[l.key].kind !== 'arm') {
+    if (l && AG[l.key].kind === 'rocket' && fcs() === 1) { // механический прицел: неподвижное кольцо по оси на 1,5 км
+      fwdOf(craft, NV); const p = proj(LP.copy(craft.pos).addScaledVector(NV, 1500));
+      if (p) { hx.strokeStyle = 'rgba(255,214,120,.95)'; hx.lineWidth = 1.6; hx.beginPath(); hx.arc(p[0], p[1], 18, 0, 7); hx.moveTo(p[0] - 26, p[1]); hx.lineTo(p[0] - 18, p[1]); hx.moveTo(p[0] + 18, p[1]); hx.lineTo(p[0] + 26, p[1]); hx.stroke(); hx.lineWidth = 1; }
+    } else if (l && ccipOk && AG[l.key].kind !== 'agm' && AG[l.key].kind !== 'arm') {
       const p = proj(CCIP);
       // прицел бомбы: круг на земле — радиус поражения (разлёт), перекрестие — точка падения; при большом крене — красный («сброс невозможен»)
       if (p) {
-        const Wb = AG[l.key], R = Math.max(8, Wb.blast || 20), ok = levelOk(), col = ok ? '#9fffb8' : '#f87171';
+        const Wb = AG[l.key], R = Math.max(8, Wb.blast || 20), ok = levelOk(), col = !ok ? '#f87171' : Wb.kind === 'rocket' && rkOn ? '#4ade80' : Wb.kind === 'rocket' && fcs() >= 3 ? '#fde68a' : '#9fffb8'; // НАР с дальномером: крест на цели — зелёный
         hx.strokeStyle = col; hx.lineWidth = 2.2; hx.beginPath(); let first = true, span = 0;
         const ring = []; for (let i = 0; i <= 32; i++) { const a2 = i / 32 * Math.PI * 2, q = proj(TMP0.set(CCIP.x + Math.cos(a2) * R, CCIP.y + 0.5, CCIP.z + Math.sin(a2) * R)); ring.push(q); if (q) span = Math.max(span, Math.hypot(q[0] - p[0], q[1] - p[1])); }
         // круг поражения на земле; если вдали он меньше 14 px — рисуем не меньше (иначе не разглядеть)
@@ -796,7 +817,9 @@ export function createAir(C) {
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
-    if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); }
+    if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); hSpd = 0.25;
+      if (craft.hm.arcade && !opts.photo) setTimeout(() => say(C.IS_TOUCH ? 'Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот · ▲▼ — высота · «газ» — ступени'
+        : 'W / S — разгон и торможение · A / D — поворот · ↑ / ↓ — высота · ← / → — вбок · мышь — прицел', 7), 600); } // как управлять — сразу при взлёте
     document.body.classList.toggle('heli', !!craft.heli); padReset(); // фиксированные кнопки крестовины — выключены
     updLoad();
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize(); // окно на телефоне — по «ТВ»
@@ -1101,16 +1124,27 @@ export function createAir(C) {
     if (game.net) { game.net.selfCrash(); netDown(why); return; }
     craft.dead = true; C.fx.explosion(craft.pos, 22, 'ground'); snd.explosion(0, 3); finish(why, false);
   }
+  // «Аркада» (Mark 2026-10-21 — «как набирать скорость?»; одинаково на телефоне и ПК): заданная скорость держится сама — ручка или W/S
+  // вперёд/назад плавно меняют её, кнопка «газ» листает ступени, A/D и ручка вбок — поворот (на скорости — вираж с креном), ↑/↓ и кнопки — высота,
+  // ←/→ и кнопки вбок — шаг в сторону. «Реализм» — как раньше: ручка — наклон диска, педали, шаг винта
   function heliFly(dt) {
-    const k = (...c) => (c.some((q) => keys.has(q)) ? 1 : 0), st = stick.id !== null;
-    HU.cx = clamp(k('KeyD') - k('KeyA') + (st ? stick.x : 0), -1, 1);
-    HU.cy = clamp(k('KeyW') - k('KeyS') - (st ? stick.y : 0), -1, 1);
+    const k = (...c) => (c.some((q) => keys.has(q)) ? 1 : 0), st = stick.id !== null, arc = craft.hm.arcade;
+    const vh = Math.hypot(craft.vel.x, craft.vel.z), fast = clamp((vh - 15) / 20, 0, 1);
     HU.col = clamp(k('ArrowUp', 'ShiftLeft', 'ShiftRight') - k('ArrowDown', 'ControlLeft', 'ControlRight') + pad.y, -1, 1);
-    HU.yaw = clamp(k('ArrowRight') - k('ArrowLeft') + pad.x, -1, 1);
-    if (aimOn() && HU.yaw) aim.yaw = craft.yaw; // педали — взгляд за носом
+    if (arc) {
+      const acc = k('KeyW') - k('KeyS') - (st ? stick.y : 0); // ручка или W/S: вперёд — разгон, назад — торможение; отпустили — скорость держится
+      if (acc) hSpd = clamp(hSpd + clamp(acc, -1, 1) * 0.45 * dt, H_SPD[0], 1);
+      const turn = clamp(k('KeyD') - k('KeyA') + (st ? stick.x : 0), -1, 1), side = clamp(k('ArrowRight') - k('ArrowLeft') + pad.x, -1, 1);
+      HU.cy = hSpd; HU.yaw = turn; HU.cx = clamp(turn * fast + side * (1 - fast), -1, 1);
+    } else {
+      HU.cx = clamp(k('KeyD') - k('KeyA') + (st ? stick.x : 0), -1, 1);
+      HU.cy = clamp(k('KeyW') - k('KeyS') - (st ? stick.y : 0), -1, 1);
+      HU.yaw = clamp(k('ArrowRight') - k('ArrowLeft') + pad.x, -1, 1);
+    }
+    if (aimOn() && HU.yaw) aim.yaw = craft.yaw; // поворот — взгляд за носом
     HU.yawTo = aimOn() && !HU.yaw ? aim.yaw : undefined; HU.pitchTo = aimOn() ? aim.pitch : undefined;
-    const tb = $('tThr'), tt = craft.fuel <= 0 ? 'двиг. ✕' : `шаг ${Math.round((craft.col || 0) * 100)}%`;
-    if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = 'Шаг винта'; tb.classList.remove('ab'); }
+    const tb = $('tThr'), tt = craft.fuel <= 0 ? 'двиг. ✕' : arc ? (hSpd < -0.01 ? 'назад' : hSpd < 0.02 ? 'висение' : `${Math.round(hSpd * craft.hm.vmax * 3.6 / 10) * 10} км/ч`) : `шаг ${Math.round((craft.col || 0) * 100)}%`;
+    if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = arc ? 'Скорость: ступени (W/S)' : 'Шаг винта'; tb.classList.remove('ab'); }
     craft.ab = false; systems(dt);
     const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), city.waterAt ? city.autumn.WY : CITY.WATER_Y); // болото «Туманной топи» — своя отметка воды
     const tk = craft.thrK; if (craft.fuel <= 0) craft.thrK = (tk ?? 1) * 0.62; // двигатели встали — авторотация: снижение, у земли — подрыв шага
