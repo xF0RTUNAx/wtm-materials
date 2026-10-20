@@ -66,8 +66,15 @@ export function createSound() {
       A.noise('white', 1.8, 0.1 * k, 'highpass', 3500, 0.6, w + 0.7, wet, false, 0.2);
     },
     // старт баллистической ракеты: глухой удар зажигания, долгий рёв с «треском» факела, уходит вверх — глуше
-    tbmLaunch(d) {
+    // air — запуск двигателя в воздухе после схода с носителя («Кинжал» с МиГ-31): без наземного удара и толчка, с середины записи
+    // (рёв маршевого участка), чуть выше (скорость и высота), тише, больше эха (открытое небо); синтез — без инфранизкого удара
+    tbmLaunch(d, air) {
       const k = near(d, 2500), w = delayOf(d), wet = 0.4 + 0.5 * (1 - k);
+      if (air) {
+        if (A.sample('iskLaunch', 0.7 * k, w, 1.08 + Math.random() * 0.05, 300 + 7000 * Math.exp(-d / 3500), 0.55 + 0.35 * (1 - k), 1.6)) return;
+        const f = A.noise('pink', 4, 0.4 * k, 'bandpass', 700, 0.5, w, 0.7, false, 0.15); if (f) f.frequency.exponentialRampToValueAtTime(250, f.context.currentTime + w + 4);
+        A.noise('crackle', 3, 0.3 * k, 'bandpass', 1100, 0.6, w + 0.1, 0.6, false, 0.2); return;
+      }
       if (A.sample('iskLaunch', 1.0 * k, w, 0.97 + Math.random() * 0.06, 400 + 9000 * Math.exp(-d / 3000), wet * 0.6)) { A.tone('sine', 48, 24, 1.2, 0.5 * k, w, 0.3); return; } // запись старта «Искандера»; инфранизкий толчок — синтез
       A.tone('sine', 48, 24, 1.2, 0.9 * k, w, 0.3);
       A.noise('brown', 7, 0.95 * k, 'lowpass', 140, 0.7, w, wet, false, 0.15);
