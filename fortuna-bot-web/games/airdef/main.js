@@ -12,6 +12,8 @@ import { ktxInit } from './ktx.js?v=20261022l';
 import { buildCity, CITY } from './city.js?v=20261022l';
 import { buildWinter } from './map-winter.js?v=20261022l';
 import { WINTER_KEYS } from './winter-render.js?v=20261022l';
+import { buildAutumn } from './map-autumn.js?v=20261022l';
+import { AUTUMN_KEYS } from './autumn-render.js?v=20261022l';
 import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261022l';
 import { createPipeline } from '../drone/post.js?v=20261022l';
 import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261022l';
@@ -128,9 +130,12 @@ if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeF
 // карта: «Мульти-волна» (и в онлайне) и «Кино» — только зимняя долина «Северный рубеж», вылеты, задания и уроки — город
 // (?map=winter|city — принудительно); у зимы — свои погоды. Карта строится при загрузке: смена — перезагрузкой страницы
 // «Съёмка» — карта на выбор (pmap: 'winter' | 'city', по умолчанию зимняя) и своя погода для каждой карты (pwx: { city, winter })
+// Осенняя «Туманная топь» (Хеллоуин) — ?map=autumn, «Съёмка» (pmap 'autumn') и проверка вертолёта ?heli=…
+const MAPS = ['winter', 'city', 'autumn'];
 function wantMap(game, pmap) {
-  if (Q.get('map') === 'winter' || Q.get('map') === 'city') return Q.get('map');
-  if (game === 'photo') return pmap === 'city' ? 'city' : 'winter';
+  if (MAPS.includes(Q.get('map'))) return Q.get('map');
+  if (game === 'photo') return pmap === 'city' || pmap === 'autumn' ? pmap : 'winter';
+  if (Q.get('heli')) return 'autumn';
   const online = game === 'online' || Q.get('ad') || Q.get('mp') === '1';
   return game === 'multi' || (online && ls.get('fortuna_ad_kind') === 'multi') ? 'winter' : 'city';
 }
@@ -139,7 +144,8 @@ const MAP = wantMap(SETUP0.game, SETUP0.pmap);
 // погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
 const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
-const W_KEY = MAP === 'winter' ? (WINTER_KEYS.includes(weatherKey) ? weatherKey : WINTER_KEYS[Math.floor(Math.random() * WINTER_KEYS.length)])
+const MAP_KEYS = MAP === 'winter' ? WINTER_KEYS : MAP === 'autumn' ? AUTUMN_KEYS : null; // у зимы и осени — свои погоды
+const W_KEY = MAP_KEYS ? (MAP_KEYS.includes(weatherKey) ? weatherKey : MAP_KEYS[Math.floor(Math.random() * MAP_KEYS.length)])
   : WEATHER_KEYS.includes(weatherKey) && !(weatherKey === 'night' && (Q.get('mp') === '1' || Q.get('ad'))) ? weatherKey : RND_KEYS[Math.floor(Math.random() * RND_KEYS.length)];
 const W = WEATHERS[W_KEY];
 if (CINEMA) { W.hazeK = (W.hazeK || 0) * 0.45; W.fogD = (W.fogD || 0) * 0.55; } // ролик: даль чище — высотки Сити не тонут в дымке
@@ -157,7 +163,7 @@ if (!DEFENSE[setup.side]) setup.side = 'east';
 if (!['air', 'defense', 'multi', 'training', 'online', 'photo'].includes(setup.game)) setup.game = 'air';
 
 // ═════════════ Город и рендер ═════════════
-const city = MAP === 'winter' ? buildWinter(1) : buildCity(1);
+const city = MAP === 'winter' ? buildWinter(1) : MAP === 'autumn' ? buildAutumn(1) : buildCity(1);
 setGround(city.groundH);
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });

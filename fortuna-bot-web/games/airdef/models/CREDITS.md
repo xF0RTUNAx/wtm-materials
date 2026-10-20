@@ -17,10 +17,10 @@
 - "Kh31" (https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045) by lelo — CC-BY-4.0 — `w_kh59m.glb`
 - "Kh-29 "Kedge"" (https://sketchfab.com/3d-models/kh-29-kedge-7f0372b7f79a4d3599d4e39f05a2ac4a) by Novia556 — CC-BY-4.0 — `w_kh25ml.glb`
 - "KH-58/U Anti-Radiation Missile" (https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da) by Narni_Tchereskov — CC-BY-4.0 — `w_kh58.glb`
-- "AGM 65 MAVERICK" (https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a) by HEAVYCLOUD — CC-BY-4.0 — `w_agm65b.glb`
 - "300 followers - free aircraft missile set" (https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e) by NETRUNNER_pl — CC-BY-4.0 — `w_mk82.glb`, `aam_aim9.glb`, `aam_aim54.glb`
 - "Agm-158 - wings extended" (https://sketchfab.com/3d-models/agm-158-wings-extended-1b1f0f509249401297057ee97b511ee0) by samadsamadi — CC-BY-4.0 — `w_jassm.glb`
 - "AGM-88 HARM transport cart" (https://sketchfab.com/3d-models/agm-88-harm-transport-cart-2c60dcae416e4af1a3d69914ff72a198) by Tiltow — CC-BY-4.0 — `w_agm88.glb`
+- "AGM 65 MAVERICK" (https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a) by HEAVYCLOUD — CC-BY-4.0 — `w_agm65b.glb`
 - "AIM-160A "Screamer"" (https://sketchfab.com/3d-models/aim-160a-screamer-5342783592684eaaa98238acae57fb0c) by Peter Primini — CC-BY-4.0 — `w_mald.glb`
 - "Harpy Drone" (https://sketchfab.com/3d-models/harpy-drone-84d8d2dc8ca14d64ac05b19e3c88b385) by KillCaptureDestroy — CC-BY-4.0 — `w_decoy_e.glb`
 - "AN/AAQ-28(V) Lightning (FBX)" (https://sketchfab.com/3d-models/anaaq-28v-lightning-fbx-e86fe5084f09463b8e3abb0a4cb1a04f) by Jeyhun1985 — CC-BY-4.0 — `w_pod.glb`
@@ -184,3 +184,13 @@
 - "ZU - 23, зенитная установка, ЗУ-23, зенитка" (https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3) by LuckySkink9661 — CC-BY-4.0 — `zu23.glb`
 - "Phalanx CIWS (Close-in Weapons System)" (https://sketchfab.com/3d-models/phalanx-ciws-close-in-weapons-system-6c038d4e66634fc4832be5b2d8697a0d) by DenisGLabrecque — CC-BY-4.0 — `phalanx.glb`
 - "Buk-M3 9K317 SAM" (https://sketchfab.com/3d-models/buk-m3-9k317-sam-923878eda87a4b28bae10799023086c5) by Jeyhun1985 — CC-BY-4.0 — `bukm3.glb`, `bukm3_lo.glb`
+- "Mi24" (https://sketchfab.com/3d-models/mi24-5d0b5d8dc985401685f217a775deadad) by manilov.ap — CC-BY-4.0 — `h_mi24.glb`
+- "Ah64" (https://sketchfab.com/3d-models/ah64-3bc9b90cc97a40a6bfc13237329ce51b) by manilov.ap — CC-BY-4.0 — `h_ah64.glb`
+- "Uh1" (https://sketchfab.com/3d-models/uh1-3131460d00184d90855e4988c7d54101) by manilov.ap — CC-BY-4.0 — `h_uh1.glb`
+- "Bell AH-1 SuperCobra" (https://sketchfab.com/3d-models/bell-ah-1-supercobra-6ee99382b2764fa6a3d761c3d4caec43) by drcrazzie — CC-BY-4.0 — `h_ah1.glb`
+- "[PBR] Kamov Ka-52" (https://sketchfab.com/3d-models/pbr-kamov-ka-52-6f29175ef23940fcb4c5364240e169f7) by Immersive3D — CC-BY-4.0 — `h_ka52.glb`
+- "Mi-28N Havoc" (https://sketchfab.com/3d-models/mi-28n-havoc-3e80c95bbadf46abbafba9d9a08afc68) by Rukh3D — CC-BY-4.0 — `h_mi28.glb`
+- "9М114 Штурм- Кокон" (https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb) by timurwolf — CC-BY-4.0 — `w_shturm.glb`
+- "Блок НАР Б8И20  версия 1" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_b8.glb`
+- "SH60B OBJ" (https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c) by touka1212 — CC-BY-4.0 — `w_hellfire.glb`
+- "FIM-92 Stinger (Low-Poly)" (https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7) by GoldbergR — CC-BY-4.0 — `aam_stinger.glb`

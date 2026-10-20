@@ -122,6 +122,19 @@ const META = {
   w_atacms: { weapon: 'atacms', lazy: true, stations: [] }, // ракета M142 HIMARS — Denis.Cherkasov1
   d_shahed: { ev: true, lazy: true, stations: [] }, // «Шахед-136» — faintastic (винт — группа prop)
   d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
+  // ── вертолёты (2026-10-20): грузятся по запросу (heliModel / wantModel); винты — части rotor, rotor2 (соосный нижний), trotor — крутит spinProps;
+  // stations — две точки на борт (внешняя, внутренняя) на консолях, оси модели (нос в −Z); nozzles пусто — пламени нет; в planeModel / PLANE_META не попадают (heli)
+  h_mi24: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-3.22, -1.64, -1.43), V(-2.28, -1.33, -1.22)]), nozzles: [], nr: 0.3, pod: null }, // Ми-24 — manilov.ap (на концах консолей — направляющие для ПТУР, под консолями — пилоны)
+  h_mi28: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.47, -1.35, -2.3), V(-1.78, -1.35, -2.38)]), nozzles: [], nr: 0.3, pod: null }, // Ми-28Н — Rukh3D
+  h_ka52: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.57, -1.1, -1.7), V(-1.9, -1.1, -1.7)]), nozzles: [], nr: 0.3, pod: null }, // Ка-52 — Immersive3D (соосные винты rotor / rotor2, рулевого нет)
+  h_ah64: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.38, -1.36, -2.78), V(-1.65, -1.36, -2.78)]), nozzles: [], nr: 0.3, pod: null }, // AH-64 — manilov.ap
+  h_ah1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.35, -1.04, -2.2, 0.3), V(-0.75, -1.04, -2.2, 0.3)]), nozzles: [], nr: 0.3, pod: null }, // AH-1 SuperCobra — drcrazzie (у модели нет пилонов — дорисованы)
+  h_uh1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.5, -1.5, -2.1)]), nozzles: [], nr: 0.3, pod: null }, // UH-1 — manilov.ap (по одной точке на борт — на боковых фермах)
+  // вертолётное оружие (heliModel / weaponMesh): подвес сверху, нос в −Z, центр габаритов в нуле
+  w_shturm: { weapon: ['shturm', 'ataka'], lazy: true, stations: [] }, // «Штурм» 9М114 — ТПК, timurwolf (и вид «Атаки»: контейнер почти тот же)
+  w_b8: { weapon: 's8', lazy: true, stations: [] }, // блок НАР Б-8В20 (20 труб) — timurwolf
+  w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — из MH-60R (touka1212)
+  aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух–воздух» для вертолётов — GoldbergR
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.62 }, // Ту-160 — KOG_THORNS (с 2026-10-19 и в «Авиации»: точки — в отсеках); носитель «Мульти-волны»
   e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
   e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -5.2, -3.0), V(-0.6, -5.2, -1.0), V(-0.6, -5.2, 1.0), V(-0.6, -5.2, 3.0)]), nozzles: [], nr: 0.4 }, // B-52H — bohmerang; носитель «Мульти-волны» (без форсажа — пламени нет)
@@ -214,7 +227,7 @@ const META = {
   patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
 };
 // самолёты — и для «Симулятора Летки» (выбор самолёта игрока; точки подвески — те же 8, что у его «Изделия»)
-export const PLANE_META = Object.fromEntries(Object.entries(META).filter(([, m]) => m.side));
+export const PLANE_META = Object.fromEntries(Object.entries(META).filter(([, m]) => m.side && !m.heli)); // вертолёты (heli) — не самолёты «Летки»
 // авторы и лицензии — из исходных файлов (tools/airdef-models/prepare.js --credits)
 // текстуры города (tex/*.jpg) — ambientCG: Grass004, PavingStones151, Concrete042A, RoofingTiles006, Facade002/017/018A;
 // Poly Haven (tex/p_*.jpg): asphalt_02, road_damaged_2, gravel, rocky_terrain_03, brown_mud_03
@@ -231,14 +244,14 @@ const LOADED = {};
 // версия файла модели (сброс кэша) — у пересобранных моделей своя, остальные не перекачиваются
 const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'roland', 'rapier', 'rapier_lo', 'tunguska', 'tunguska_lo', 'khordad', 'strela1', 'zsu234', 'zsu234_lo', 'strela10', 'm163', 'm163_lo', 'chaparral', 'chaparral_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'l_scud', 'pantsir', 'pantsir_lo', 'w_umpk', 'w_decoy_e', 'w_kh101', 'w_jsow', 'w_fab500', 'e_tornado', 'e_f111', 'e_mig23', 'e_mig27', 'e_tu22m2', 'e_a10', 'e_f15e', 'e_su24', 'm163', 'zsu234', 'strela10', 'avenger', 'chaparral', 'w_kh59m', 'w_kh25ml', 'w_kh58', 'w_gbu31', 'w_jassm', 'w_agm65b', 't_kc10'].map((n) => [n, '20261022c']).concat(
   ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'khordad', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_su7b', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
-  ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c', 'e_ea18g'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l'], ['obj_hangar', '20261022l']])); // l — 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l — Ту-95 без нарисованных дисков винтов (2026-10-20) // j — четвёртая партия, новая «Шилка», УМПК без сжатия // i — ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c — замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
+  ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c', 'e_ea18g'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l'], ['obj_hangar', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']]))); // l — 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l — Ту-95 без нарисованных дисков винтов (2026-10-20) // j — четвёртая партия, новая «Шилка», УМПК без сжатия // i — ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c — замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
   const dv = new DataView(buf), jl = dv.getUint32(12, true), json = JSON.parse(new TextDecoder().decode(new Uint8Array(buf, 20, jl)));
   const binOff = 28 + jl, T = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array, 5121: Uint8Array };
   const slice = (bv, extra = 0, len = bv.byteLength) => buf.slice(binOff + (bv.byteOffset || 0) + extra, binOff + (bv.byteOffset || 0) + extra + len);
   const acc = (i) => { const a = json.accessors[i], bv = json.bufferViews[a.bufferView], C = T[a.componentType], n = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[a.type]; return new C(slice(bv, a.byteOffset || 0, a.count * n * C.BYTES_PER_ELEMENT)); };
-  const meshes = json.meshes.map((m) => { const p = m.primitives[0], at = p.attributes; return { name: m.name, mat: json.materials[p.material], pos: acc(at.POSITION), nor: acc(at.NORMAL), uv: at.TEXCOORD_0 !== undefined ? acc(at.TEXCOORD_0) : null, ao: at.COLOR_0 !== undefined ? acc(at.COLOR_0) : null, idx: acc(p.indices) }; }); // ao — затенение в стыках (tools/airdef-models/ao.js)
+  const meshes = json.meshes.map((m) => { const p = m.primitives[0], at = p.attributes; return { name: m.name, mat: json.materials[p.material], pos: acc(at.POSITION), nor: acc(at.NORMAL), uv: at.TEXCOORD_0 !== undefined ? acc(at.TEXCOORD_0) : null, ao: at.COLOR_0 !== undefined ? acc(at.COLOR_0) : null, idx: acc(p.indices), hub: m.extras && m.extras.hub }; }); // hub — центр втулки винта вертолёта (prepare.js); ao — затенение в стыках (tools/airdef-models/ao.js)
   const images = (json.images || []).map((im) => new Blob([slice(json.bufferViews[im.bufferView])], { type: im.mimeType }));
   return { meshes, images, textures: json.textures || [] };
 }
@@ -306,14 +319,22 @@ async function load(name, base) {
     if (rc != null) { mat.color.setHex(rc); mat.map = null; }
     else if (!map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» — в нейтральный тёмный
     if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo); // узор — шейдером (tex — по краске текстуры)
-    const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; partOf(m.name || '').add(mesh);
+    const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
   }
   // винты (части prop*, Ту-95): ось — вдоль самолёта через центр ступицы; соосные ряды (чётный / нечётный номер) — в разные
   // стороны; крутит игра (spinProps). В userData — только число (клон модели копирует userData через JSON)
   for (const part of group.children.filter((c) => /^prop/.test(c.name))) {
     const b = new THREE.Box3().setFromObject(part), c = b.getCenter(new THREE.Vector3());
     for (const m of part.children) m.geometry.translate(-c.x, -c.y, -c.z);
-    part.position.copy(c); part.userData.spin = Math.abs(+part.name.split('_').pop()) % 2 ? -1 : 1;
+    part.position.copy(c); part.userData.spin = Math.abs(+part.name.split('_').pop()) % 2 ? -1 : 1; part.userData.nodisc = part.userData.spin < 0 ? 1 : 0; // диск — один на пару соосных рядов
+  }
+  // винты вертолётов: rotor / rotor2 (соосный нижний, крутится в другую сторону) — несущие, ось вертикальная (Y); trotor — рулевой, ось поперечная (X).
+  // Ось — через центр втулки (hub из prepare.js; нет — центр габаритов), лопасти не «болтаются». Несущий у запада — против часовой (сверху), у востока — по часовой
+  for (const part of group.children.filter((c) => /^(rotor2?|trotor)$/.test(c.name))) {
+    const tail = part.name === 'trotor', c = part.userData.hub ? new THREE.Vector3(...part.userData.hub) : new THREE.Box3().setFromObject(part).getCenter(new THREE.Vector3());
+    for (const m of part.children) m.geometry.translate(-c.x, -c.y, -c.z);
+    part.position.copy(c); part.userData.axis = tail ? 'x' : 'y'; part.userData.nodisc = part.name === 'rotor2' ? 1 : 0; // у соосной пары диск — один (от верхнего)
+    part.userData.spin = tail ? 1 : (MM.side === 'west' ? 1 : -1) * (part.name === 'rotor2' ? -1 : 1);
   }
   // крылья планирующих бомб (части wing*): своя ось поворота (вертикальная) — у корня по передней кромке; у цельного крыла
   // поперёк бомбы (УМПК) — посередине. wa — [угол на подвеске, угол в полёте]: сложенное лежит вдоль бомбы назад,
@@ -445,30 +466,46 @@ function discTex() {
   g.putImageData(im, 0, 0); DISC_TEX = new THREE.CanvasTexture(cv); DISC_TEX.encoding = THREE.sRGBEncoding; return DISC_TEX;
 }
 function propSetup(obj) {
-  const L = []; let ghost = null;
+  const L = []; let ghost = null; const ghosts = new Map(); // у вертолётных винтов призрачный материал — свой на каждый исходный (цвет лопастей), у пропеллеров — общий
   obj.traverse((o) => { if (o.userData.spin) L.push(o); });
   for (const p of L.slice()) {
-    let R = 0; for (const m of p.children) { if (!m.geometry) continue; m.geometry.computeBoundingBox(); const b = m.geometry.boundingBox; R = Math.max(R, -b.min.x, b.max.x, -b.min.y, b.max.y); }
-    for (const m of p.children) if (m.isMesh) { if (!ghost) { ghost = m.material.clone(); ghost.transparent = true; ghost.opacity = 0.35; ghost.depthWrite = false; } m.material = ghost; }
-    const tex = discTex(); if (!tex || !R || p.userData.spin < 0) continue; // соосные ряды — один диск на пару
-    const d = new THREE.Mesh(new THREE.CircleGeometry(R, 64), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
+    const ax = p.userData.axis || 'z'; let R = 0;
+    for (const m of p.children) {
+      if (!m.geometry) continue;
+      if (ax === 'z') { m.geometry.computeBoundingBox(); const b = m.geometry.boundingBox; R = Math.max(R, -b.min.x, b.max.x, -b.min.y, b.max.y); continue; }
+      const P = m.geometry.attributes.position; for (let i = 0; i < P.count; i++) R = Math.max(R, ax === 'y' ? Math.hypot(P.getX(i), P.getZ(i)) : Math.hypot(P.getY(i), P.getZ(i))); // радиус по концам лопастей (от втулки)
+    }
+    for (const m of p.children) if (m.isMesh) {
+      if (p.userData.axis) { let gm = ghosts.get(m.material); if (!gm) { gm = m.material.clone(); gm.transparent = true; gm.opacity = 0.35; gm.depthWrite = false; ghosts.set(m.material, gm); } m.material = gm; continue; }
+      if (!ghost) { ghost = m.material.clone(); ghost.transparent = true; ghost.opacity = 0.35; ghost.depthWrite = false; } m.material = ghost;
+    }
+    const tex = discTex(); if (!tex || !R || p.userData.nodisc) continue; // соосные ряды — один диск на пару
+    const geo = new THREE.CircleGeometry(R, 64); if (ax === 'y') geo.rotateX(-Math.PI / 2); else if (ax === 'x') geo.rotateY(Math.PI / 2); // несущий — горизонтальный круг, рулевой — вертикальный (плоскость YZ)
+    const d = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, side: THREE.DoubleSide }));
     d.position.copy(p.position); d.renderOrder = 4; d.userData.fx = true; p.parent.add(d);
-    L.push({ disc: d, spin: p.userData.spin });
+    L.push({ disc: d, spin: p.userData.spin, axis: ax });
   }
   return L;
 }
+// thr — газ 0…1 (у вертолёта винт крутится и на малом газу); рулевой винт — вдвое быстрее несущего
 export function spinProps(obj, dt, thr = 1) {
   let L = PROPS.get(obj); if (!L) { L = propSetup(obj); PROPS.set(obj, L); }
   for (const p of L) {
-    if (p.disc) p.disc.rotation.z += p.spin * dt * (4 + 3 * thr); // следы лопастей на диске
-    else p.rotation.z += p.userData.spin * dt * (9 + 7 * thr); // лопасти ≈ 2,5 об/с: быстро, но ещё без «стробоскопа» (4 лопасти — до ≈ 45° за кадр)
+    if (p.disc) p.disc.rotation[p.axis] += p.spin * dt * (4 + 3 * thr); // следы лопастей на диске
+    else { const ax = p.userData.axis || 'z'; p.rotation[ax] += p.userData.spin * dt * (9 + 7 * thr) * (ax === 'x' ? 2 : 1); } // лопасти ≈ 2,5 об/с: быстро, но ещё без «стробоскопа» (4 лопасти — до ≈ 45° за кадр)
   }
 } // сопла, пилоны — для зон повреждений (plane-zones.js) и проверок
 export function planeModel(side, cls = 'strike', name = null) {
   if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла — пока подходящая из загруженных
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);
-  const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name)).sort((a, b) => rank(a) - rank(b))[0];
+  const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name) && (!m.heli || n === name)).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
   const [n, m] = pick;
   return { obj: LOADED[n].clone(), stations: m.stations, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name: n, cls: m.cls, internal: !!m.internal }; // dry — без форсажа (только слабое свечение)
+}
+// вертолёт: готовая модель (копия) и точки подвески на консолях; нет модели (или ещё грузится — запрос послан) — null, подмены самолётом нет
+export function heliModel(name) {
+  const m = META[name]; if (!m || !m.heli) return null;
+  if (!LOADED[name]) { if (BASE) start(name); return null; }
+  return { obj: LOADED[name].clone(), stations: m.stations, name, side: m.side };
 }

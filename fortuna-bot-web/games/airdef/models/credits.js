@@ -137,15 +137,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "AGM 65 MAVERICK",
-  "author": "HEAVYCLOUD",
-  "url": "https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_agm65b"
-  ]
- },
- {
   "title": "300 followers - free aircraft missile set",
   "author": "NETRUNNER_pl",
   "url": "https://sketchfab.com/3d-models/300-followers-free-aircraft-missile-set-2e70bc2ea0824897b2ccaea378809c9e",
@@ -172,6 +163,15 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_agm88"
+  ]
+ },
+ {
+  "title": "AGM 65 MAVERICK",
+  "author": "HEAVYCLOUD",
+  "url": "https://sketchfab.com/3d-models/agm-65-maverick-5447a415b21840568fbfa01cf6dd166a",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_agm65b"
   ]
  },
  {
@@ -1694,6 +1694,96 @@ export const CREDITS = [
   "files": [
    "bukm3",
    "bukm3_lo"
+  ]
+ },
+ {
+  "title": "Mi24",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mi24-5d0b5d8dc985401685f217a775deadad",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_mi24"
+  ]
+ },
+ {
+  "title": "Ah64",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/ah64-3bc9b90cc97a40a6bfc13237329ce51b",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_ah64"
+  ]
+ },
+ {
+  "title": "Uh1",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/uh1-3131460d00184d90855e4988c7d54101",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_uh1"
+  ]
+ },
+ {
+  "title": "Bell AH-1 SuperCobra",
+  "author": "drcrazzie",
+  "url": "https://sketchfab.com/3d-models/bell-ah-1-supercobra-6ee99382b2764fa6a3d761c3d4caec43",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_ah1"
+  ]
+ },
+ {
+  "title": "[PBR] Kamov Ka-52",
+  "author": "Immersive3D",
+  "url": "https://sketchfab.com/3d-models/pbr-kamov-ka-52-6f29175ef23940fcb4c5364240e169f7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_ka52"
+  ]
+ },
+ {
+  "title": "Mi-28N Havoc",
+  "author": "Rukh3D",
+  "url": "https://sketchfab.com/3d-models/mi-28n-havoc-3e80c95bbadf46abbafba9d9a08afc68",
+  "license": "CC-BY-4.0",
+  "files": [
+   "h_mi28"
+  ]
+ },
+ {
+  "title": "9М114 Штурм- Кокон",
+  "author": "timurwolf",
+  "url": "https://sketchfab.com/3d-models/9114-42c7dd424a064efebf3e63ebd423afbb",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_shturm"
+  ]
+ },
+ {
+  "title": "Блок НАР Б8И20  версия 1",
+  "author": "timurwolf",
+  "url": "https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_b8"
+  ]
+ },
+ {
+  "title": "SH60B OBJ",
+  "author": "touka1212",
+  "url": "https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_hellfire"
+  ]
+ },
+ {
+  "title": "FIM-92 Stinger (Low-Poly)",
+  "author": "GoldbergR",
+  "url": "https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7",
+  "license": "CC-BY-4.0",
+  "files": [
+   "aam_stinger"
   ]
  }
 ];

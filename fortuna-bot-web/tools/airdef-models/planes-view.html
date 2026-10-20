@@ -4,17 +4,35 @@
 <body>
 <!-- Проверка готовых моделей самолётов тем же загрузчиком, что в игре (models.js): ?p=e_tu16,e_su35 — по строке на самолёт:
      сзади-сверху с пламенем форсажа, строго сзади, сбоку (хвост), снизу. Красные точки — сопла из META (поверх модели).
-     &nz=x,y,z;x,y,z — проверить другие сопла (для первого самолёта). Нужен сервер :8935 (корень — wtm-materials). -->
+     &nz=x,y,z;x,y,z — проверить другие сопла (для первого самолёта). Нужен сервер :8935 (корень — wtm-materials).
+     ВЕРТОЛЁТЫ и оружие: &heli=1 — по строке на модель: сбоку (нос вправо), сверху (нос вверх), спереди, ¾; красные точки — подвески (META.stations).
+     &spin=-1,0,0.11,0.23 — через сколько секунд вращения винтов (spinProps, 60 к/с) снимать строку (по порядку имён; −1 — без вращения; &thr=0.5 — газ);
+     &save=имя — отправить PNG на локальный приёмник :8936 (маленький http-сервер, пишет в tools/airdef-models/shots-heli/имя.png), &w=ширина кадра. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
 const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'e_tu16').split(',');
 const M = await import('../../games/airdef/models.js?v=' + Date.now());
 const { attachFlames } = await import('../../games/airdef/units-render.js?v=20261022l');
 M.loadModels('../../games/airdef/', () => {});
-const CW = +(Q.get("w") || 200), CH = Math.round(CW * 0.7), W = CW * 4, H = CH * names.length;
+const CW = +(Q.get("w") || (Q.get('heli') ? 480 : 200)), CH = Math.round(CW * 0.7), W = CW * 4, H = CH * names.length;
 const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
 const wait = (n) => new Promise((ok) => { M.wantModel(n); const t = setInterval(() => { const o = M.anyModel(n); if (o) { clearInterval(t); ok(o); } }, 50); });
+const HELI = !!Q.get('heli'), SPIN = (Q.get('spin') || '').split(',').map(Number), THR = +(Q.get('thr') || 0.5);
 for (let i = 0; i < names.length; i++) {
+  if (HELI) { // вертолёт или оружие: четыре ортогональных вида, винты — после spin секунд вращения
+    const n = names[i], obj = await wait(n), meta = M.planeMeta(n) || { stations: [] };
+    const sc = new THREE.Scene(); sc.background = new THREE.Color(Q.get('bg') ? +('0x' + Q.get('bg')) : 0x9fb3c8);
+    sc.add(new THREE.HemisphereLight(0xffffff, 0x556655, 0.9)); const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(3, 6, 2); sc.add(dl);
+    sc.add(obj); if (!(SPIN[i] < 0)) { for (let f = 0; f < (SPIN[i] || 0) * 60; f++) M.spinProps(obj, 1 / 60, THR); M.spinProps(obj, 0, THR); } // -1 — модель как есть (без вращения); 0 — винты настроены (призраки, диск), но не крутились
+    for (const p of meta.stations) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 8), new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false })); d.renderOrder = 9; d.position.copy(p); sc.add(d); }
+    const bb = new THREE.Box3().setFromObject(obj), sz = bb.getSize(new THREE.Vector3()), c = Q.get('at') ? new THREE.Vector3(...Q.get('at').split(',').map(Number)) : bb.getCenter(new THREE.Vector3()), S = (Math.max(sz.x, sz.y, sz.z) * 0.52 + 0.1) / +(Q.get('z') || 1); // &z=2 — крупнее, &at=x,y,z — центр кадра, &sx=-1 — сбоку слева
+    const ort = (up) => { const a = CW / CH, cam = new THREE.OrthographicCamera(-S * a, S * a, S, -S, 0.01, 500); cam.up.copy(up); return cam; };
+    const V = [[ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x + 80 * (+Q.get('sx') || 1), c.y, c.z)], [ort(new THREE.Vector3(0, 0, -1)), new THREE.Vector3(c.x, c.y + 80, c.z)], [ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x, c.y, c.z - 80)],
+      [new THREE.PerspectiveCamera(32, CW / CH, 0.05, 500), c.clone().add(new THREE.Vector3(1.0, 0.55, -1.25).normalize().multiplyScalar(Math.max(sz.x, sz.y, sz.z) * 1.9))]];
+    V.forEach(([cam, pos], k) => { cam.position.copy(pos); cam.lookAt(c); const y = H - (i + 1) * CH; r.setViewport(k * CW, y, CW, CH); r.setScissor(k * CW, y, CW, CH); r.render(sc, cam); });
+    const l = document.createElement('div'); l.className = 'l'; l.style.left = '2px'; l.style.top = i * CH + 'px'; l.textContent = `${n} · ${sz.z.toFixed(2)} × ${sz.x.toFixed(2)} × ${sz.y.toFixed(2)} м (Д × Ш × В) · винты ${SPIN[i] || 0} с`; document.body.appendChild(l);
+    continue;
+  }
   const n = names[i], obj = await wait(n), meta = M.planeMeta(n);
   const nzs = i === 0 && Q.get('nz') ? Q.get('nz').split(';').map((s) => new THREE.Vector3(...s.split(',').map(Number))) : meta.nozzles;
   const sc = new THREE.Scene(); sc.background = new THREE.Color(Q.get("bg") ? +("0x" + Q.get("bg")) : 0x9fb3c8);
@@ -48,4 +66,5 @@ for (let i = 0; i < names.length; i++) {
   const l = document.createElement('div'); l.className = 'l'; l.style.left = '2px'; l.style.top = i * CH + 'px'; l.textContent = n + ' · ' + nzs.map((p) => p.toArray().map((v) => +v.toFixed(2)).join(',')).join(' ; '); document.body.appendChild(l);
 }
 window.__ok = 1;
+if (Q.get('save')) r.domElement.toBlob((b) => fetch('http://localhost:8936/save?name=' + encodeURIComponent(Q.get('save')), { method: 'POST', body: b }).then(() => { window.__saved = 1; }).catch((e) => { window.__saved = String(e); }), 'image/png');
 </script></body></html>

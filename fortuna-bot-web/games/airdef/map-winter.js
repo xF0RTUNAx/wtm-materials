@@ -16,16 +16,16 @@ export const floorY = (z) => 150 - z * 0.004;
 // градиентный шум (Перлин) — без квадратных следов, как у шума по значению; таблица перестановок — постоянная
 const PERM = (() => { const p = Array.from({ length: 256 }, (_, i) => i), r = mulberry32(1234567); for (let i = 255; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } return Uint8Array.from([...p, ...p]); })();
 const GR = [[1, 1], [-1, 1], [1, -1], [-1, -1], [1, 0], [-1, 0], [0, 1], [0, -1]];
-function perlin(x, z) {
+export function perlin(x, z) {
   const i = Math.floor(x), j = Math.floor(z), fx = x - i, fz = z - j, ii = i & 255, jj = j & 255;
   const u = fx * fx * fx * (fx * (fx * 6 - 15) + 10), v = fz * fz * fz * (fz * (fz * 6 - 15) + 10);
   const g = (a, b, dx, dz) => { const h = GR[PERM[PERM[a] + b] & 7]; return h[0] * dx + h[1] * dz; };
   const n00 = g(ii, jj, fx, fz), n10 = g(ii + 1, jj, fx - 1, fz), n01 = g(ii, jj + 1, fx, fz - 1), n11 = g(ii + 1, jj + 1, fx - 1, fz - 1);
   return (n00 + (n10 - n00) * u) * (1 - v) + (n01 + (n11 - n01) * u) * v; // ≈ −0,7…0,7
 }
-const fbm = (x, z, oct = 4) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < oct; i++) { s += a * perlin(x * f + i * 7.3, z * f - i * 3.1); f *= 2.03; a *= 0.5; } return 0.5 + s; };
+export const fbm = (x, z, oct = 4) => { let s = 0, a = 0.5, f = 1; for (let i = 0; i < oct; i++) { s += a * perlin(x * f + i * 7.3, z * f - i * 3.1); f *= 2.03; a *= 0.5; } return 0.5 + s; };
 // хребты: острые гребни (1 − |шум|), мелкие октавы слабее на склонах — как размытые эрозией
-const ridged = (x, z, oct = 6) => { let s = 0, a = 0.5, f = 1, w = 1, tot = 0; for (let i = 0; i < oct; i++) { let n = 1 - Math.abs(perlin(x * f + i * 11.7, z * f + i * 5.9) * 1.4); n = n * n * w; w = clamp(n * 1.8, 0, 1); s += a * n; tot += a; f *= 2.07; a *= 0.5; } return s / tot; };
+export const ridged = (x, z, oct = 6) => { let s = 0, a = 0.5, f = 1, w = 1, tot = 0; for (let i = 0; i < oct; i++) { let n = 1 - Math.abs(perlin(x * f + i * 11.7, z * f + i * 5.9) * 1.4); n = n * n * w; w = clamp(n * 1.8, 0, 1); s += a * n; tot += a; f *= 2.07; a *= 0.5; } return s / tot; };
 
 // высота «природы» без площадок (горы, долина, ущелье); координаты гор — с искажением (хребты извилистые)
 function natural(x, z) {
@@ -59,7 +59,7 @@ function pads() {
   ];
 }
 // двоичная куча для поиска пути (A*)
-function heap() {
+export function heap() {
   const k = [], v = [];
   return { get size() { return k.length; },
     push(key, val) { let i = k.length; k.push(key); v.push(val); while (i) { const p = (i - 1) >> 1; if (k[p] <= key) break; k[i] = k[p]; v[i] = v[p]; i = p; } k[i] = key; v[i] = val; },

@@ -7,6 +7,7 @@ export function freeGround(city, x, z, r = 9) {
   for (const [dx, dz] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) if (city.bldAt(x + dx, z + dz) > 0) return false;
   if (Math.abs(x) >= CITY.HALF - 1200 || Math.abs(z) >= CITY.HALF - 1200) return false;
   if (city.kind === 'winter') return city.slopeAt(x, z) <= 0.32; // горы: не на крутом склоне (лёд — можно)
+  if (city.kind === 'autumn') return city.slopeAt(x, z) <= 0.32 && !city.waterAt(x, z); // холмы: не на круче и не в болото
   return Math.abs(x - riverX(z)) > CITY.RIVER_W / 2 + 15;
 }
 // крыша, на которую можно поставить ПЗРК (не стеклянная башня, не частный дом, не выше 90 м)

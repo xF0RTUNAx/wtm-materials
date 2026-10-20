@@ -496,6 +496,53 @@ const CONFIG = {
       const H = [-3.85, 2.6], A = [0.66, 0.75], dz = c.ctr[2] - H[0], dy = c.ctr[1] - H[1], along = dz * A[0] + dy * A[1], across = Math.abs(dz * A[1] - dy * A[0]);
       return across < 0.95 && along > 0.3 && along < 6.6 ? 'cradle' : 'turret';
     } },
+  // ── вертолёты и вертолётное оружие (2026-10-20): лопасти — свои части rotor / rotor2 (несущий; вертикальная ось) и trotor (рулевой; поперечная ось), крутит models.js ──
+  h_mi24: { src: `${DL}/mi24.glb`, scale: 1.018, fwd: [-0.5678, 0.8231], rulesIn: 'game', tex: () => 512, axisX: 1.16, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [1.16, 4.17, -0.24], trotor: [0.53, 4.34, 10.56] }, // Ми-24 — manilov.ap: ось фюзеляжа x 1,16; Ø несущего 17,3
+    groups: (c) => { const dx = c.ctr[0] - 1.17, dz = c.ctr[2] + 0.27, y = c.ctr[1];
+      if (y > 3.6 && Math.hypot(dx, dz) < 9) return 'rotor'; // 5 лопастей, втулка и шарниры (оси — x 1,17, z −0,27, верх 4,17)
+      if (y > 3 && c.ctr[2] > 9 && c.size[0] < 0.15) return 'trotor'; // рулевой винт (3 лопасти)
+      if (Math.abs(dx) > 1.5 && y < 1.5 && ((c.size[2] > 1.3 && c.size[2] < 1.4 && c.size[0] < 0.6) || (c.size[0] < 0.1 && c.size[2] > 0.25 && c.size[2] < 0.3))) return null; // блоки НАР под консолями и их трубы (оружие — из игры)
+      return 'body'; } },
+  h_ah64: { src: `${DL}/ah64.glb`, scale: 1, minPart: 0.08, target: 75000, simpErr: 0.02, nose: '-x', rulesIn: 'game', tex: () => 512, axisX: 0.02, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.02, 4.42, 0], trotor: [-1.0, 4.16, 8.84] }, // AH-64 — manilov.ap (1 : 1: Ø несущего 14,68, фюзеляж 14,96); хвостовой винт слева, 4 лопасти крестом
+    groups: (c) => { const p = c.path;
+      if (/\/ah62[1-4]-FACES|\/ah63-FACES/.test(p)) return 'rotor'; // 4 лопасти и головка
+      if (/\/ah59[ab]-FACES/.test(p)) return 'trotor'; // лопасти рулевого винта (две пары крестом)
+      if (/\/(ah12a\d*|ah13[ab]|ah14[ab]|ah15[A-Z]+|ah16[A-Z]+|ah70r\d*|ah71r\d*|ah86b\d*|ah89b\d*)-FACES/.test(p)) return null; // свой «Хеллфайр» (8), блоки НАР и ракеты на законцовках — оружие из игры
+      return 'body'; } },
+  h_uh1: { src: `${DL}/uh1.glb`, scale: 1.09, nose: '+z', rulesIn: 'game', tex: () => 512, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 3.8, 0], trotor: [-0.44, 3.28, 7.97] }, // UH-1 — manilov.ap: Ø несущего 13,41 → 14,63 (×1,09); рулевой винт слева
+    groups: (c) => { const [x, y, z] = c.ctr;
+      if (y > 3.5 && Math.hypot(x, z) < 7) return 'rotor'; // 2 лопасти, стабилизирующая штанга с грузами и головка
+      if (z > 6.7 && y > 2.6 && x < -0.3 && x > -0.62) return 'trotor'; // рулевой винт: 2 лопасти и ступица
+      return 'body'; } },
+  h_ah1: { src: `${DL}/bell_ah-1_supercobra.glb`, scale: 0.01026, nose: '+z', rulesIn: 'game', tex: () => 512, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.0, 4.5, -1.87], trotor: [0.44, 3.35, 7.12] }, // AH-1 SuperCobra — drcrazzie (единицы автора ×0,01026: Ø несущего 14,6, фюзеляж 13,8)
+    groups: (c) => { const p = c.path;
+      if (/CobraRotorMain(Blade|BladeRod|BladeMount|Parts)_Low/.test(p)) return 'rotor'; // 2 лопасти, тяги и втулка
+      if (/CobraRotorTail(Blade|BladeRod|BladeParts|BladeMount)_Low/.test(p)) return 'trotor'; // рулевой винт (2 лопасти) с ярмом
+      if (/CobraRocket_Low/.test(p)) return null; // блоки НАР под консолями — оружие из игры
+      return 'body'; } },
+  h_ka52: { src: `${DL}/pbr_kamov_ka-52.glb`, scale: 0.5052, nose: '-z', rulesIn: 'game', tex: () => 512, axisX: 0.0354, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.0354, 4.522, 0], rotor2: [0.0354, 3.284, 0.025] }, // Ка-52 — Immersive3D (две кабины рядом — именно Ка-52; единицы автора ×0,5052 по Ø несущих 14,5); соосные винты: rotor — верхний, rotor2 — нижний; рулевого нет
+    glassAny: /^Material\.012$/, glassColor: [0.3, 0.36, 0.42, 0.4],
+    groups: (c) => { const k = 1 / 0.5052, p = c.path;
+      if (/LOD0\.00[23]_/.test(p)) return null; // свои блоки НАР и 12 «Вихрей» с направляющими — оружие из игры (пилоны остаются)
+      if (Math.hypot(c.ctr[0] * k - 0.07, c.ctr[2] * k) < 9.5 && c.size[1] * k < 3) { const y = c.ctr[1] * k; if (y > 7.8) return 'rotor'; if (y > 5.9) return 'rotor2'; } // верхний (y 8–10) и нижний (y 6–7,8) винты: по 3 лопасти и втулка
+      return 'body'; } },
+  h_mi28: { src: `${DL}/mi-28n_havoc.glb`, scale: 2.549, axes: (x, y, z) => [-x, -z, -y], rulesIn: 'game', tex: () => 512, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 4.0, 0.41], trotor: [0.79, 3.04, 11.02] }, // Ми-28Н — Rukh3D (скинированный; оси автора: ось фюзеляжа Y, верх −Z; единицы автора ×2,549 по Ø несущего 17,2 — фюзеляж тогда 17,0 м); рулевой винт справа, 4 лопасти крестом
+    glassAny: /^mirror$/,
+    groups: (c) => { const p = c.path, k = 1 / 2.549, x = Math.abs(c.ctr[0]) * k, y = c.ctr[1] * k, z = c.ctr[2] * k;
+      if (/\/Object_16$/.test(p)) return y > 1.78 ? 'body' : 'rotor'; // 5 лопастей и втулка (обтекатель РЛС над втулкой — неподвижный)
+      if (/\/Object_18$/.test(p)) return 'trotor'; // рулевой винт (4 лопасти крестом)
+      if (x > 0.55 && x < 1.05 && y > 0.35 && y < 0.65 && z > 0.3 && z < 0.9 && Math.max(...c.size) * k < 0.75) return null; // трубы и корпуса блоков НАР, малые направляющие под консолями — оружие из игры
+      return 'body'; } },
+  // ── вертолётное оружие (2026-10-20); центр габаритов в начале координат, нос в −Z, подвес — сверху ──
+  w_shturm: { src: `${DL}/42c7dd424a064efebf3e63ebd423afbb.glb`, scale: 1.83 / 67.65, axes: (x, y, z) => [z, -y, x], tex: () => 256, pickMesh: /./, perTri: true, colors: { '': [0.09, 0.1, 0.075] }, groups: (c) => (Math.hypot(c.ctr[1] - 8.51, c.ctr[2] + 97.49) < 3.4 ? 'body' : null) }, // «Штурм» 9М114: ОДИН ТПК (труба; вторая и балка автора убраны), 1,83 м, перевёрнут — timurwolf
+  w_b8: { src: `${DL}/2905fcb5f5fd4c7284adc362bcdc39d1.glb`, scale: 2.0 / 63.38, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // блок НАР Б-8В20 (20 труб Ø 80 мм — по снимку именно Б-8, не Б-13) — timurwolf, 2,0 м
+  w_hellfire: { src: `${DL}/sh60b_obj.glb`, scale: 1.63 / 59.28, nose: '-z', tex: () => 256, centerX: true, /* одна из четырёх AGM-114 на левой ЕССШ MH-60R — touka1212: тело, обтекатель, сопло, оперение и пояски; направляющая, замки и пилон не берутся */
+    colors: { '#nose$': [0.03, 0.03, 0.03], '#yellow$': [0.55, 0.42, 0.02], '#brown$': [0.12, 0.06, 0.02], '': [0.095, 0.118, 0.056] },
+    groups: (c) => { const [x, y, z] = c.ctr; if (!(x > -88 && x < -82.5 && y > 27 && y < 33.5 && z > -185 && z < -100)) return null; if (c.mat === 3 && y > 32.5) return null; // коробка одной ракеты; замки и полозки на спине — долой
+      if (z < -166.5) return 'body#nose'; // носовой обтекатель головки
+      if (c.size[2] < 0.5 && c.mat === 2) { if (Math.abs(z + 155.41) < 0.5) return 'body#yellow'; if (Math.abs(z + 128.5) < 0.5) return 'body#brown'; } // три пояска из плоских накладок: у БЧ — жёлтый, у двигателя — коричневый
+      return 'body'; } },
+  aam_stinger: { src: `${DL}/fim-92_stinger_low-poly.glb`, scale: 1.1875, nose: '+z', tex: () => 256, pickMesh: /./, dropMat: /^FIM-92_Stinger_1_Material/ }, // ракета FIM-92 Stinger (без трубы) — GoldbergR
 };
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
@@ -525,7 +572,7 @@ async function prepare(name, views) {
   // (у «Бука-М3» в двух колонках нет нижнего ТПК — копия нижнего из первой колонки со сдвигом)
   if (cfg.copyParts) for (const p of prims) {
     const { comp, list } = components(p.P, p.I, 0.001), want = new Map();
-    for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; for (const cp of cfg.copyParts) if (cp.sel(c)) want.set(c.id, cp.offs); }
+    for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; c.path = p.path; for (const cp of cfg.copyParts) if (cp.sel(c)) want.set(c.id, cp.offs); }
     if (!want.size) continue;
     const P = [...p.P], N = p.N ? [...p.N] : null, UV = p.UV ? [...p.UV] : null, I = [...p.I];
     for (const [id, offs] of want) for (const o of offs) {
@@ -540,11 +587,11 @@ async function prepare(name, views) {
     const P = [], I = [], C = []; let b = 0, cnt = {};
     for (const p of prims) {
       const { comp, list } = components(p.P, p.I, 0.001), gid = new Map();
-      for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; gid.set(c.id, Math.max(...c.size) * tsc < (cfg.minPart || 0) ? null : cfg.groups ? cfg.groups(c) : 'body'); }
+      for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; c.path = p.path; gid.set(c.id, Math.max(...c.size) * tsc < (cfg.minPart || 0) ? null : cfg.groups ? cfg.groups(c) : 'body'); }
       if (Deno.env.get('LSALL')) for (const c of list) if (Math.max(...c.size) * tsc > +(Deno.env.get('LSALL') || 0.3) && c.min[1] > +(Deno.env.get('LSY') || -1e9)) console.log('  деталь', gid.get(c.id), 'мат', c.mat, 'ц', c.ctr.map((v) => v.toFixed(2)).join(' '), 'р', c.size.map((v) => v.toFixed(2)).join(' ')); // LSALL=0.3 LSY=2 — детали крупнее 0,3 м выше y=2
       for (const x of p.P) P.push(x);
       const triG = (t) => { if (!cfg.perTri) return gid.get(comp[t]); const c = { min: [1e9, 1e9, 1e9], max: [-1e9, -1e9, -1e9] }; for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k] * 3; for (let d = 0; d < 3; d++) { c.min[d] = Math.min(c.min[d], p.P[v + d]); c.max[d] = Math.max(c.max[d], p.P[v + d]); } } c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); return cfg.groups(c); };
-      for (let t = 0; t < p.I.length / 3; t++) { const gname = triG(t); if (!gname) continue; cnt[gname] = (cnt[gname] || 0) + 1; I.push(p.I[t * 3] + b, p.I[t * 3 + 1] + b, p.I[t * 3 + 2] + b); C.push({ body: [175, 175, 180], turret: [215, 95, 85], cradle: [80, 105, 220], missile: [60, 190, 90] , radar: [235, 205, 40]}[gname]); }
+      for (let t = 0; t < p.I.length / 3; t++) { const gname = triG(t); if (!gname) continue; cnt[gname] = (cnt[gname] || 0) + 1; I.push(p.I[t * 3] + b, p.I[t * 3 + 1] + b, p.I[t * 3 + 2] + b); C.push({ body: [175, 175, 180], turret: [215, 95, 85], cradle: [80, 105, 220], missile: [60, 190, 90] , radar: [235, 205, 40], rotor: [215, 95, 85], rotor2: [230, 150, 60], trotor: [80, 105, 220], mark: [235, 205, 40] }[String(gname).split('#')[0]]); }
       b += p.P.length / 3;
     }
     // RADROT=1.57 — антенну обзора повернуть вокруг её оси (как в игре: центр нижних 15 % по высоте) — видно, что не поехало с ней
@@ -596,19 +643,19 @@ async function prepare(name, views) {
       for (let t = 0; t < p.I.length / 3; t++) {
         const c = { min: [1e9, 1e9, 1e9], max: [-1e9, -1e9, -1e9] };
         for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k] * 3; for (let d = 0; d < 3; d++) { c.min[d] = Math.min(c.min[d], p.P[v + d]); c.max[d] = Math.max(c.max[d], p.P[v + d]); } }
-        c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; gs.push(small.has(-1 - t) ? null : cfg.groups(c));
+        c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; c.path = p.path; gs.push(small.has(-1 - t) ? null : cfg.groups(c));
       }
       p.group = (t) => gs[t]; p.comp = Int32Array.from(gs, (g2) => (String(g2).split('#')[0] === 'cradle' ? 1 : 0)); keep = (t) => !!gs[t];
     } else if (cfg.groups) {
       const { comp, list } = components(p.P, p.I, 0.001), gid = new Map();
       // мелочь (болты, заклёпки, ручки) меньше minPart — долой: на упрощение она почти не поддаётся
-      for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; gid.set(c.id, Math.max(...c.size) * tsc < (cfg.minPart || 0) ? null : cfg.groups(c)); }
+      for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; c.path = p.path; gid.set(c.id, Math.max(...c.size) * tsc < (cfg.minPart || 0) ? null : cfg.groups(c)); }
       p.group = (t) => gid.get(comp[t]); p.comp = comp; keep = (t) => !!gid.get(comp[t]);
       // glassPart(c) — эта часть — стекло, хоть материал у неё общий с другими (у Gripen «Glass» — и фонарь, и огни на крыле)
       if (cfg.glassPart) { const gs = new Set(list.filter((c) => cfg.glassPart(c)).map((c) => c.id)); p.glassT = (t) => gs.has(comp[t]); }
     } else if (cfg.remove) {
       const { comp, list } = components(p.P, p.I, cfg.scale < 0.1 ? 0.5 : 0.001), drop = new Set();
-      list.forEach((c, i) => { c.size = c.max.map((v, k) => v - c.min[k]); c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.mat = p.material; if (cfg.remove(c, i)) drop.add(c.id); });
+      list.forEach((c, i) => { c.size = c.max.map((v, k) => v - c.min[k]); c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.mat = p.material; c.path = p.path; if (cfg.remove(c, i)) drop.add(c.id); });
       keep = (t) => !drop.has(comp[t]);
     }
     // камуфляж: краска «#camo» — узор рисует игра (models.js, шейдер по координатам точки: пятна с ровными краями, не по
@@ -674,12 +721,25 @@ async function prepare(name, views) {
     }
     m.pos = pos; m.nor = nor; m.uv = uv; m.idx = idx;
   }
+  // rotorR: { rotor: R } — лопасти растянуть по радиусу до реального Ø (у модели авторская ошибка: винт короче фюзеляжа); от ступицы (cfg.hubs, оси правил, метры):
+  // втулка (10 % радиуса) не трогается, дальше длина растёт линейно, хорда — пропорционально (только x и z), высота лопастей и нормали — как были
+  if (cfg.rotorR) for (const [g, R1] of Object.entries(cfg.rotorR)) {
+    const h = cfg.hubs[g]; let R0 = 0; for (const m of byMat.values()) if (m.group === g) for (let i = 0; i < m.pos.length; i += 3) R0 = Math.max(R0, Math.hypot(m.pos[i] - h[0], m.pos[i + 2] - h[2]));
+    const r0 = R0 * 0.1, k = (R1 - r0) / (R0 - r0); console.log(`  винт ${g}: радиус ${R0.toFixed(2)} → ${R1} м (растяжка ×${k.toFixed(3)})`);
+    for (const m of byMat.values()) if (m.group === g) for (let i = 0; i < m.pos.length; i += 3) { const a = m.pos[i] - h[0], b = m.pos[i + 2] - h[2], r = Math.hypot(a, b); if (r <= r0) continue; const f = (r0 + (r - r0) * k) / r; m.pos[i] = h[0] + a * f; m.pos[i + 2] = h[2] + b * f; }
+  }
   // центр: по длине — середина, по высоте — ось фюзеляжа (centerY) или середина габаритов; у комплексов — земля y = 0,
   // центр по корпусу
   const all = bbox(Float32Array.from([...byMat.values()].flatMap((m) => m.pos)));
-  const bodyB = cfg.unit ? bbox(Float32Array.from([...byMat.values()].filter((m) => m.group === 'body').flatMap((m) => m.pos))) : all;
-  const dz = (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? all.mn[1] : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.pick || cfg.pickMesh || cfg.unit || cfg.centerX ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
+  // centerBody (вертолёты): центр — по корпусу без винтов (части, чьи имена не подходят под шаблон), по высоте тоже; axisX — x оси фюзеляжа (в осях правил)
+  const bodyB = cfg.unit ? bbox(Float32Array.from([...byMat.values()].filter((m) => m.group === 'body').flatMap((m) => m.pos))) : cfg.centerBody ? bbox(Float32Array.from([...byMat.values()].filter((m) => !cfg.centerBody.test(m.group)).flatMap((m) => m.pos))) : all;
+  const dz = (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? all.mn[1] : cfg.centerBody ? (bodyB.mn[1] + bodyB.mx[1]) / 2 : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.axisX !== undefined ? cfg.axisX : cfg.pick || cfg.pickMesh || cfg.unit || cfg.centerX ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
   for (const m of byMat.values()) for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= dx; m.pos[i + 1] -= dy; m.pos[i + 2] -= dz; }
+  if (cfg.centerBody) {
+    console.log(`  центровка: сдвиг ${[dx, dy, dz].map((v) => v.toFixed(3)).join(' ')} (из осей правил: точка − сдвиг = точка в модели)`);
+    console.log(`  корпус без винтов: длина ${(bodyB.mx[2] - bodyB.mn[2]).toFixed(2)} м, ширина ${(bodyB.mx[0] - bodyB.mn[0]).toFixed(2)} м, высота ${(bodyB.mx[1] - bodyB.mn[1]).toFixed(2)} м`);
+    for (const [g, h] of Object.entries(cfg.hubs || {})) { let R = 0; for (const m of byMat.values()) if (m.group === g) for (let i = 0; i < m.pos.length; i += 3) { const a = m.pos[i] - (h[0] - dx), b = m.pos[i + 1] - (h[1] - dy), c = m.pos[i + 2] - (h[2] - dz); R = Math.max(R, g === 'trotor' ? Math.hypot(b, c) : Math.hypot(a, c)); } if (R) console.log(`  винт ${g}: радиус ${R.toFixed(2)} м, Ø ${(2 * R).toFixed(2)} м`); }
+  }
   if (cfg.groups && cfg.unit) articulate(cfg, byMat, [dx, dy, dz], cfg.rulesIn === 'game' ? (x, y, z) => [x / cfg.scale, y / cfg.scale, z / cfg.scale] : ax);
   SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster;
   // target — бюджет треугольников (упрощение до него, но не дальше допустимой ошибки SIMP_ERR — форма не мнётся); simplify — доля
@@ -742,7 +802,9 @@ async function prepare(name, views) {
     if (mat.pbrMetallicRoughness.baseColorTexture) { accs.push({ bufferView: add(new Float32Array(m.uv), 34962), componentType: 5126, count: n, type: 'VEC2' }); attrs.TEXCOORD_0 = accs.length - 1; }
     const ix = n < 65536 ? Uint16Array.from(m.idx) : Uint32Array.from(m.idx);
     accs.push({ bufferView: add(ix, 34963), componentType: n < 65536 ? 5123 : 5125, count: m.idx.length, type: 'SCALAR' });
-    meshes.push({ name: `${m.group || 'body'}|${glass ? 'glass' : nmP}`, primitives: [{ attributes: attrs, indices: accs.length - 1, material: materials.length - 1 }] });
+    // hubs: { rotor: [x, y, z], … } — центр втулки винта (в осях правил, до центровки): в extras меша — models.js вращает вокруг неё
+    const hub = cfg.hubs && cfg.hubs[m.group];
+    meshes.push({ name: `${m.group || 'body'}|${glass ? 'glass' : nmP}`, primitives: [{ attributes: attrs, indices: accs.length - 1, material: materials.length - 1 }], ...(hub ? { extras: { hub: hub.map((v, d) => +(v - [dx, dy, dz][d]).toFixed(4)) } } : {}) });
     nodes.push({ name: meshes[meshes.length - 1].name, mesh: meshes.length - 1 });
     tris += m.idx.length / 3;
   }

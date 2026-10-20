@@ -17,6 +17,9 @@ const SKIES = {
   w_field: { src: 'snow_field', k: 1.0, rs: 4 },
   w_horn: { src: 'horn-koppe_snow', k: 1.0, rs: 4 },
   w_pass: { src: 'passendorf_snow', k: 1.0, rs: 0 },
+  // осень, Хеллоуин (Poly Haven, CC0): вечернее поле (голый лес у горизонта), закат под облаками
+  a_field: { src: 'evening_field', k: 0.8, rs: 3 },
+  a_belf: { src: 'belfast_sunset', k: 0.6, rs: 3 },
 };
 const run = async (args) => { const p = new Deno.Command('ffmpeg', { args: ['-loglevel', 'error', '-y', ...args], stdout: 'piped' }).outputSync(); if (!p.success) throw new Error('ffmpeg ' + args.join(' ')); return p.stdout; };
 for (const name of Deno.args.length ? Deno.args : Object.keys(SKIES)) {

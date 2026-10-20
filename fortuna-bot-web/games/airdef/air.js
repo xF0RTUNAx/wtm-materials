@@ -785,8 +785,8 @@ export function createAir(C) {
       if (radars) game.hunt = { n: 0, need: Math.max(1, Math.min(4, Math.ceil(radars * 0.5))), total: radars };
     }
     const z0 = opts.photo && C.MAP === 'city' ? 9000 : 14000; // «Съёмка» в городе — ближе: с 14 км в кадре край карты
-    // вертолёт — ближе к целям (9 км) и низко: 120 м над землёй, 25 м/с вперёд
-    const hz = 9000, hx = riverX(hz) + 1500;
+    // вертолёт — ближе к целям (9 км; на «Туманной топи» — наша площадка city.home) и низко: 120 м над землёй, 25 м/с вперёд
+    const hz = city.home ? city.home.z : 9000, hx = city.home ? city.home.x : riverX(hz) + 1500;
     const sp = opts.spawn || (craft.heli ? { x: hx, y: city.groundH(hx, hz) + 120, z: hz, yaw: 0 } : { x: riverX(z0) + 1500, y: opts.photo && C.MAP === 'city' ? 1800 : 3200, z: z0, yaw: 0 });
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
@@ -1106,13 +1106,13 @@ export function createAir(C) {
     const tb = $('tThr'), tt = craft.fuel <= 0 ? 'двиг. ✕' : `шаг ${Math.round((craft.col || 0) * 100)}%`;
     if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = 'Шаг винта'; tb.classList.remove('ab'); }
     craft.ab = false; systems(dt);
-    const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), CITY.WATER_Y);
+    const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), city.waterAt ? city.autumn.WY : CITY.WATER_Y); // болото «Туманной топи» — своя отметка воды
     const tk = craft.thrK; if (craft.fuel <= 0) craft.thrK = (tk ?? 1) * 0.62; // двигатели встали — авторотация: снижение, у земли — подрыв шага
     const ev = heliStep(craft, craft.hm, HU, dt, { groundY: top, gear: craft.gearH || 2 });
     craft.thrK = tk; craft.thr = craft.landed ? 0.3 : craft.col; // винт на земле — малый шаг
     if (ev === 'lift') say('Взлёт', 1);
     if (!ev || ev === 'lift') return;
-    const water = city.groundH(craft.pos.x, craft.pos.z) < CITY.WATER_Y - 0.5 && top <= CITY.WATER_Y + 0.1;
+    const water = city.waterAt ? city.waterAt(craft.pos.x, craft.pos.z) : city.groundH(craft.pos.x, craft.pos.z) < CITY.WATER_Y - 0.5 && top <= CITY.WATER_Y + 0.1;
     const v = water ? 'crash' : touchVerdict(ev);
     if (game.opts.invuln && v !== 'land') { craft.pos.y = top + 60; craft.vel.set(0, 0, 0); say('Учебный вылет: высоту вернули — садитесь мягче', 2.5); return; }
     if (v === 'crash') { heliCrash(water ? 'Упали в воду' : city.bldAt(craft.pos.x, craft.pos.z) > 0 ? 'Разбились о здание' : `Удар о землю — ${Math.round(ev.vy)} м/с`); return; }

@@ -16,7 +16,8 @@ import { part, mergeParts, M } from '../drone/models.js?v=20261022l';
 import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261022l';
 import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261022l';
 import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261022l';
-Object.assign(WEATHERS, winterWeathers(WEATHERS)); // зимние погоды — только в «Воздушном превосходстве»
+import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask } from './autumn-render.js?v=20261022l';
+Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // зимние и осенние погоды — только в «Воздушном превосходстве»
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt;
 import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022l'; // MIT, meshoptimizer 0.21
@@ -450,6 +451,8 @@ function roofGeo() {
 export const TREE_IMP = {
   city: { G: 6, tint: [0.1, 0.14, 0.085], snow: 0, sp: [[6.446, 5.18, 10.36], [6.812, 4.759, 9.519], [6.905, 6.353, 12.706], [4.679, 3.56, 7.12]] },
   winter: { G: 6, tint: [0.1, 0.13, 0.095], snow: 0.7, sp: [[5.907, 4.654, 9.309], [5.189, 4.048, 8.096], [10.073, 8.444, 16.887], [11.48, 9.808, 19.617]] },
+  // осень: городской атлас, листва перекрашена цветом экземпляра (рыжие, жёлтые, багряные, сухостой), сосна (вид 2) — своя хвоя
+  autumn: { G: 6, atlas: 'city', recolor: 1, tint: [0.12, 0.12, 0.1], snow: 0, sp: [[6.446, 5.18, 10.36], [6.812, 4.759, 9.519], [6.905, 6.353, 12.706], [4.679, 3.56, 7.12]] },
 };
 function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
   const t = new THREE.Texture(); t.flipY = false; t.minFilter = THREE.LinearMipmapLinearFilter; t.magFilter = THREE.LinearFilter;
@@ -463,15 +466,15 @@ function treeImpTex(f) { // → uniform { value }: KTX2, иначе WebP
     .catch((e) => { texStats.done++; console.warn('деревья не загрузились:', e.message); }); }
 }
 function treeImpMat(set, hi, hemi, sunL, a2c = false) {
-  const I = TREE_IMP[set], sfx = hi ? '' : '_lo';
+  const I = TREE_IMP[set], sfx = hi ? '' : '_lo', atl = I.atlas || set;
   const sp = I.sp.map(([R, cy, H]) => new THREE.Vector4(R / H, cy / H, 0, 0)); // в долях высоты: экземпляр масштабирован под высоту модели
   const mat = new THREE.ShaderMaterial({
     uniforms: { ...THREE.UniformsLib.fog, uCam: ENV.uCam, uHide: ENV.uHide, uMdl: ENV.uMdl, uSun: ENV.uSun,
-      tA: treeImpTex(`tr_${set}_a${sfx}`), tN: treeImpTex(`tr_${set}_n${sfx}`), uSp: { value: sp },
+      tA: treeImpTex(`tr_${atl}_a${sfx}`), tN: treeImpTex(`tr_${atl}_n${sfx}`), uSp: { value: sp }, uRec: { value: I.recolor || 0 },
       uHS: { value: hemi.color.clone().multiplyScalar(hemi.intensity) }, uHG: { value: hemi.groundColor.clone().multiplyScalar(hemi.intensity) },
       uSL: { value: sunL.color.clone().multiplyScalar(sunL.intensity) }, uTint: { value: new THREE.Vector3(...I.tint) }, uSnow: { value: I.snow } },
     vertexShader: `attribute float aKind, aMdl; uniform vec3 uCam, uHide; uniform float uMdl[24]; uniform vec4 uSp[4];
-      varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz; varying float vSp, vTint, vVar;
+      varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz, vCol; varying float vSp, vTint, vVar;
       #include <fog_pars_vertex>
       void main() {
         vSp = aKind; vec4 S = uSp[int(aKind + 0.5)];
@@ -487,14 +490,14 @@ function treeImpMat(set, hi, hemi, sunL, a2c = false) {
         vec4 mvPosition = viewMatrix * vec4(ctr + (Rw * position.x + Uw * position.y) * 2.0 * R, 1.0); gl_Position = projectionMatrix * mvPosition;
         if (aMdl > 0.5 && distance(base.xz, uHide.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // вблизи — модели
         #ifdef USE_INSTANCING_COLOR
-          vTint = dot(instanceColor, vec3(0.3, 0.59, 0.11));
+          vTint = dot(instanceColor, vec3(0.3, 0.59, 0.11)); vCol = instanceColor;
         #else
-          vTint = 0.05;
+          vTint = 0.05; vCol = vec3(0.05);
         #endif
         #include <fog_vertex>
       }`,
-    fragmentShader: `uniform sampler2D tA, tN; uniform vec3 uHS, uHG, uSL, uSun, uTint; uniform float uSnow;
-      varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz; varying float vSp, vTint, vVar;
+    fragmentShader: `uniform sampler2D tA, tN; uniform vec3 uHS, uHG, uSL, uSun, uTint; uniform float uSnow, uRec;
+      varying vec2 vUv, vG0, vG1, vF; varying vec3 vAx, vAz, vCol; varying float vSp, vTint, vVar;
       #include <fog_pars_fragment>
       vec2 at(vec2 c) { float s = floor(vSp + 0.5); vec2 o = vec2(mod(s, 2.0), floor(s / 2.0)) * ${I.G.toFixed(1)};
         vec2 q = (o + c + clamp(vUv, 0.01, 0.99)) / ${(I.G * 2).toFixed(1)}; return vec2(q.x, 1.0 - q.y); }
@@ -510,6 +513,8 @@ function treeImpMat(set, hi, hemi, sunL, a2c = false) {
         vec4 Nn = texture2D(tN, a0) * w0 + texture2D(tN, a1) * w1 + texture2D(tN, a2) * w2 + texture2D(tN, a3) * w3;
         vec3 alb = pow(A.rgb / max(A.a, 0.05), vec3(2.2)) * (0.85 + 3.0 * vTint); // атлас — sRGB; тон — от цвета экземпляра
         alb *= uTint * mix(1.0, 0.85, clamp(lod / 4.0, 0.0, 1.0)); // крона в тени самой себя: темнее и зеленее, вдали — как у моделей
+        float cl = dot(vCol, vec3(0.3, 0.59, 0.11)); // осень: тон листвы — цвет экземпляра (яркость — от атласа); сосна — без перекраски
+        alb = mix(alb, vec3(dot(alb, vec3(0.3, 0.59, 0.11))) * vCol / max(cl, 1e-3) * 1.25, uRec * (1.0 - step(abs(vSp - 2.0), 0.5)));
         vec3 nl = normalize(Nn.rgb / max(A.a, 0.05) * 2.0 - 1.0), n = normalize(vAx * nl.x + vec3(0.0, nl.y, 0.0) + vAz * nl.z);
         float ao = clamp(Nn.a / max(A.a, 0.05), 0.0, 1.0);
         float ny0 = n.y; n = normalize(mix(n, vec3(0.0, 0.6, 0.0) + normalize(uSun) * 0.25, lk * 0.6)); // вдали мелкий рельеф кроны не виден — свет ровнее (без искр)
@@ -1200,6 +1205,7 @@ function attachBridgeSegs(G, scene, model, P) {
 // ═════════════ Сборка сцены ═════════════
 export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   GH = city.groundH; ZA = city.zoneAt; const WINT = city.kind === 'winter'; ENV.uSnowK.value = WINT ? 1 : 0; // зимняя карта: своя земля и лес, без реки-воды и улиц
+  const AUT = city.kind === 'autumn', HILLS = WINT || AUT; // осенняя «Туманная топь»: своя земля, лес, дороги и вода болота (без снега)
   const W = WEATHERS[weatherKey] || WEATHERS.day;
   const G = { tiles: [], W, renderer, winter: WINT }; // renderer — снимки моделей для дальних копий домов (makeImpostor)
   if (P.roofDetail) loadCityTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1); // на «Низком» — без текстур
@@ -1236,7 +1242,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const sh = { cast: P.shadows, receive: P.shadows };
 
   // земля
-  const seg = WINT ? Math.min(640, Math.round(P.groundSeg * 1.6)) : P.groundSeg; // горы — сетка гуще
+  const seg = HILLS ? Math.min(640, Math.round(P.groundSeg * 1.6)) : P.groundSeg; // горы и холмы — сетка гуще
   const gg = new THREE.PlaneGeometry(2 * CITY.HALF, 2 * CITY.HALF, seg, seg); gg.rotateX(-Math.PI / 2);
   const pa = gg.attributes.position, uv = gg.attributes.uv;
   for (let i = 0; i < pa.count; i++) {
@@ -1244,11 +1250,12 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     uv.setXY(i, (pa.getX(i) + CITY.HALF) / (2 * CITY.HALF), (pa.getZ(i) + CITY.HALF) / (2 * CITY.HALF));
   }
   gg.computeVertexNormals();
-  const zt = WINT ? null : zoneTexture(P.zoneTex || 1024); if (zt) zt.flipY = false;
+  const zt = HILLS ? null : zoneTexture(P.zoneTex || 1024); if (zt) zt.flipY = false;
   if (renderer && zt) zt.anisotropy = Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy());
-  const ground = new THREE.Mesh(gg, WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
+  const aniso = renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1;
+  const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
-  if (WINT) { // дальше всё ставится по высоте самой сетки земли (треугольники через 2·HALF/seg м), а не по точной высоте карты:
+  if (HILLS) { // дальше всё ставится по высоте самой сетки земли (треугольники через 2·HALF/seg м), а не по точной высоте карты:
     // на выпуклом склоне сетка выше на метры — дороги и дома «тонули» бы
     const st = 2 * CITY.HALF / seg, gH = city.groundH, n1 = seg + 1, hv = new Float32Array(n1 * n1);
     for (let j = 0; j < n1; j++) for (let i = 0; i < n1; i++) hv[j * n1 + i] = gH(-CITY.HALF + i * st, -CITY.HALF + j * st);
@@ -1257,27 +1264,29 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       const a = hv[j * n1 + i], b = hv[(j + 1) * n1 + i], c = hv[(j + 1) * n1 + i + 1], d = hv[j * n1 + i + 1]; // как PlaneGeometry: (a, b, d) и (b, c, d)
       return u + v <= 1 ? a + (d - a) * u + (b - a) * v : c + (b - c) * (1 - u) + (d - c) * (1 - v);
     };
-    G.meshH = GH; G.roads = winterRoads(scene, city, ground.material.userData.WT || {}, P, GH);
+    G.meshH = GH; G.roads = AUT ? autumnRoads(scene, city, ground.material.userData.AT || {}, P, GH) : winterRoads(scene, city, ground.material.userData.WT || {}, P, GH);
   }
 
   // река: тёмная вода, волны, отражение неба, блик солнца
-  const wm = new THREE.MeshPhongMaterial({ color: lin(0x1a2e3a), specular: lin(W.sun).multiplyScalar(W.sunVis ? 1.2 : 0.2), shininess: 260 });
+  const WM = AUT ? autumnWaterMask(city) : null; // осень: вода болота — по маске (где вода), а не вдоль реки
+  const wm = new THREE.MeshPhongMaterial({ color: lin(AUT ? 0x141710 : 0x1a2e3a), specular: lin(W.sun).multiplyScalar(W.sunVis ? 1.2 : 0.2), shininess: 260 });
   wm.onBeforeCompile = (s) => {
-    Object.assign(s.uniforms, ENV, { tWN: TEX.tWN, uTexOn: TEX.uTexOn });
+    Object.assign(s.uniforms, ENV, { tWN: TEX.tWN, uTexOn: TEX.uTexOn }, WM ? { tWM: { value: WM.tex }, uWM: { value: WM.rect } } : {});
     s.vertexShader = 'varying vec3 vWp;\n' + s.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    s.fragmentShader = 'varying vec3 vWp;\nvec3 wEmis = vec3(0.0); uniform sampler2D tWN; uniform float uTexOn;\nfloat riverX(float z) { return 1300.0 * sin(z * 0.00019 + 0.6) + 450.0 * sin(z * 0.00052 + 2.1) - 300.0; }\n' + GLSL_COMMON + s.fragmentShader
+    s.fragmentShader = 'varying vec3 vWp;\nvec3 wEmis = vec3(0.0); uniform sampler2D tWN; uniform float uTexOn;\n' + (WM ? 'uniform sampler2D tWM; uniform vec4 uWM;\n' : '') + 'float riverX(float z) { return 1300.0 * sin(z * 0.00019 + 0.6) + 450.0 * sin(z * 0.00052 + 2.1) - 300.0; }\n' + GLSL_COMMON + s.fragmentShader
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   float t = uTime; vec2 q = vWp.xz;
   vec2 gw = vec2(cos(q.x * 0.11 + t * 1.3) + 0.6 * cos(q.x * 0.27 + q.y * 0.19 + t * 1.9), sin(q.y * 0.13 + t * 1.1) + 0.6 * sin(q.y * 0.31 - q.x * 0.17 + t * 2.3));
   gw += (vec2(vns(q * 0.35 + t * 0.4), vns(q.yx * 0.35 - t * 0.4)) - 0.5) * 1.6;
   vec3 nW = normalize(vec3(gw.x * 0.05, 1.0, gw.y * 0.05));
-  float wd = length(vWp - uCam), wpx = wd * uPx, rimD = ${(CITY.RIVER_W / 2).toFixed(1)} - abs(vWp.x - riverX(vWp.z)); // до берега, м
+  float wd = length(vWp - uCam), wpx = wd * uPx, rimD = ${WM ? '(texture2D(tWM, (vWp.xz - uWM.xy) / uWM.zw).r - 0.5) * 110.0' : `${(CITY.RIVER_W / 2).toFixed(1)} - abs(vWp.x - riverX(vWp.z))`}; // до берега, м (болото — по размытой маске воды)
   if (rimD < -1.5) discard; // полоса воды шире реки (закрыть урез) — за линией берега её нет: там, где земля ниже уровня, иначе вылезала голубым
   if (uTexOn > 0.5) { // рябь (three.js waternormals): два слоя навстречу по течению, вдали — спокойнее
     vec3 a = texture2D(tWN, q / 21.0 + vec2(0.012, 0.031) * t).rgb * 2.0 - 1.0, b = texture2D(tWN, q / 53.0 - vec2(0.021, 0.017) * t).rgb * 2.0 - 1.0;
-    vec2 rp = (a.xy + b.xy) * (0.22 * (1.0 - smoothstep(1.0, 12.0, wpx)) + 0.05);
+    vec2 rp = (a.xy + b.xy) * (0.22 * (1.0 - smoothstep(1.0, 12.0, wpx)) + 0.05)${WM ? ' * 0.25' : ''}; // болото — стоячая вода, рябь слабая
     nW = normalize(nW + vec3(rp.x, 0.0, rp.y));
   }
+  ${WM ? 'nW = normalize(vec3(nW.x * 0.2, 1.0, nW.z * 0.2)); // болото: без волн — гладь' : ''}
   normal = normalize((viewMatrix * vec4(nW, 0.0)).xyz);
   vec3 Vw = normalize(uCam - vWp), Rf = reflect(-Vw, nW);
   float fres = 0.03 + 0.97 * pow(1.0 - max(dot(nW, Vw), 0.0), 5.0);
@@ -1287,7 +1296,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   // у самой кромки (≈ 12 м) вода — цвета мокрого песка под ней, без отражения неба: никакой голубой каёмки у берега
   float edge = 1.0 - smoothstep(0.0, 12.0 + 6.0 * vns(q * 0.05), rimD);
   diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.085, 0.075, 0.055), edge);
-  wEmis *= 1.0 - edge;`)
+  wEmis *= 1.0 - edge;${WM ? `\n  wEmis *= 0.5; // торфяная вода болота — тёмная, отражает слабее
+  float sc = smoothstep(0.5, 0.78, vns(q * 0.012) * 0.6 + vns(q * 0.07) * 0.4); // ряска и тина пятнами — матовые, без отражения
+  diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.045, 0.055, 0.018), sc * 0.85); wEmis *= 1.0 - sc * 0.85;` : ''}`)
       .replace('#include <emissivemap_fragment>', '#include <emissivemap_fragment>\n totalEmissiveRadiance += wEmis;');
   };
   // вода — только полосой вдоль реки: сплошная плоскость в 4–10 м под землёй «мерцала» с большой высоты (не хватало точности глубины)
@@ -1296,9 +1307,10 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     const x = riverX(z); wv.push(x - half, 0, z, x + half, 0, z);
     if (i) wi.push((i - 1) * 2, i * 2, (i - 1) * 2 + 1, (i - 1) * 2 + 1, i * 2, i * 2 + 1);
   }
-  const wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.Float32BufferAttribute(wv, 3)); wg.setIndex(wi); wg.computeVertexNormals();
+  const wg = WM ? new THREE.PlaneGeometry(WM.rect.z, WM.rect.w, 8, 8).rotateX(-Math.PI / 2).translate(WM.rect.x + WM.rect.z / 2, 0, WM.rect.y + WM.rect.w / 2) : new THREE.BufferGeometry();
+  if (!WM) { wg.setAttribute('position', new THREE.Float32BufferAttribute(wv, 3)); wg.setIndex(wi); wg.computeVertexNormals(); }
   const water = new THREE.Mesh(wg, wm);
-  water.position.y = CITY.WATER_Y; water.receiveShadow = !!P.shadows; if (!WINT) scene.add(water); // зимой реки и озёра — лёд в земле
+  water.position.y = AUT ? city.autumn.WY : CITY.WATER_Y; water.receiveShadow = !!P.shadows; if (!WINT) scene.add(water); // зимой реки и озёра — лёд в земле
 
   // здания, надстройки и скатные крыши
   const B = city.B, list = [], small = [], roofs = [], extras = [], col = new THREE.Color(), near = BLD.map(() => []);
@@ -1327,7 +1339,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   // частные дома (их больше половины) вдали — в пиксель-два, только рябят: дальность как у их крыш
   if (small.length) G.tiles.push(...tiled(scene, small, boxGeo(), bMat, sh, 0.55));
   nearHouses(G, scene, B, near, P, sh);
-  if (G.addNear && P.props !== false && !WINT) streetProps(G, city, B, P); // «Детали улиц» можно выключить (тонкая настройка)
+  if (G.addNear && P.props !== false && !HILLS) streetProps(G, city, B, P); // «Детали улиц» можно выключить (тонкая настройка)
   if (roofs.length) G.tiles.push(...tiled(scene, roofs, roofGeo(), bMat, sh, 0.55));
   if (extras.length) G.tiles.push(...tiled(scene, extras, boxGeo(), bMat, { cast: false, receive: P.shadows }, 0.45));
 
@@ -1423,6 +1435,10 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     }
     const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y + 0.3, sx: 1.3 * t.sy, sy: 1.3 * t.sy, sz: 1.3 * t.sy, kind: t.v, color: t.color, ry: t.ry, mdl: t.mdl || 0 }));
     G.tiles.push(...tiled(scene, li, q, treeImpMat('winter', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8));
+  } else if (P.trees > 0 && AUT) { // осенняя карта: лес по району «лес» (склоны оврагов, холмы, кочки в болоте) — импосторы, листва перекрашена
+    const tl = autumnTrees(city, P, mulberry32(city.seed * 7 + 3), GH), q = new THREE.PlaneGeometry(1, 1);
+    const li = tl.map((t) => ({ x: t.x, z: t.z, y: t.y + 0.3, sx: t.sy, sy: t.sy, sz: t.sy, kind: t.v, color: t.color, ry: t.ry, mdl: 0 }));
+    G.tiles.push(...tiled(scene, li, q, treeImpMat('autumn', P.trees >= 14000, hemi, sunL, !!P.perf && P.perf.aa === 'msaa'), { cast: false, receive: false }, 0.8));
   } else if (P.trees > 0) {
     const rnd = mulberry32(city.seed * 7 + 3), tl = [], tc = new THREE.Color();
     const tree = (x, z, s) => {

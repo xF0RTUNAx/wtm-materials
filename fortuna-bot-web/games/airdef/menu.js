@@ -393,7 +393,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function mapBase(S2) {
     if (baseCache[S2]) return baseCache[S2];
     const c = document.createElement('canvas'); c.width = c.height = S2; const x = c.getContext('2d'), city = C.city;
-    if (city.kind === 'winter') return (baseCache[S2] = winterMapBase(c, x, city, S2));
+    if (city.kind === 'winter' || city.kind === 'autumn') return (baseCache[S2] = winterMapBase(c, x, city, S2)); // осень — та же топография, свои цвета
     const ZC = ['#56603e', '#6f7262', '#7d7f78', '#8f9093', '#7a7569', '#3c5a2e', '#2d5574', '#6d7858', '#77746c'];
     const st = Math.max(2, Math.round(S2 / 400)), step = 2 * CITY.HALF / S2;
     for (let j = 0; j < S2; j += st) for (let i = 0; i < S2; i += st) { x.fillStyle = ZC[city.zoneAt(-CITY.HALF + i * step, -CITY.HALF + j * step)]; x.fillRect(i, j, st, st); }
@@ -405,11 +405,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // зимняя карта — как топографическая: мягкая отмывка (свет с северо-запада + рассеянный), цвет по высоте, горизонтали
   // (сглаженные, толщина — по крутизне), утолщённые — через 500 м; лес — размытой плотностью, лёд — по уровню берега
   function winterMapBase(c, x, city, S2) {
-    const H = CITY.HALF, step = 2 * H / S2, img = x.createImageData(S2, S2), d = img.data, gh = city.groundH, e = Math.max(25, step * 0.75);
+    const H = CITY.HALF, step = 2 * H / S2, img = x.createImageData(S2, S2), d = img.data, gh = city.groundH, e = Math.max(25, step * 0.75), AUT = city.kind === 'autumn';
     const CI = S2 >= 1200 ? 100 : 200, IX = S2 >= 1200 ? 500 : 1000; // шаг горизонталей и утолщённых
     // плотность леса и лёд — по сетке 100 м, потом билинейно (края мягкие)
     const FG = 321, fs = 2 * H / (FG - 1), FD = new Float32Array(FG * FG), ID = new Float32Array(FG * FG);
-    for (let j = 0; j < FG; j++) for (let i = 0; i < FG; i++) { const wx = -H + i * fs, wz = -H + j * fs; FD[j * FG + i] = city.zoneAt(wx, wz) === ZONE.PARK ? 1 : 0; ID[j * FG + i] = city.iceAt(wx, wz) ? 1 : 0; }
+    for (let j = 0; j < FG; j++) for (let i = 0; i < FG; i++) { const wx = -H + i * fs, wz = -H + j * fs; FD[j * FG + i] = city.zoneAt(wx, wz) === ZONE.PARK ? 1 : 0; ID[j * FG + i] = (AUT ? city.waterAt(wx, wz) : city.iceAt(wx, wz)) ? 1 : 0; }
     const blur = (A) => { const T = A.slice(); for (let j = 1; j < FG - 1; j++) for (let i = 1; i < FG - 1; i++) { const q = j * FG + i; A[q] = (4 * T[q] + T[q - 1] + T[q + 1] + T[q - FG] + T[q + FG]) / 8; } };
     blur(FD); blur(FD); blur(ID);
     const bil = (A, wx, wz) => { const fx = Math.min(FG - 1.001, Math.max(0, (wx + H) / fs)), fz = Math.min(FG - 1.001, Math.max(0, (wz + H) / fs)), i = fx | 0, j = fz | 0, u = fx - i, v = fz - j, q = j * FG + i;
@@ -423,13 +423,13 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       const sh = 0.8 * ((-hx * L[0] + L[1] - hz * L[2]) / nl - L[1]) + 0.2 * (1 / nl - 1); // 0 на равнине
       const f = Math.max(0.7, Math.min(1.12, 1 + sh * 0.6));
       // цвет по высоте: дно долины — светлый снег, к вершинам — серо-голубой; на крутых склонах — камень
-      const t = sm(100, 1700, h);
-      let r = 214 - 52 * t, gg = 220 - 46 * t, b = 228 - 36 * t;
+      const t = AUT ? sm(60, 750, h) : sm(100, 1700, h); // осень: низины — охра, холмы — бурее
+      let r = AUT ? 196 - 40 * t : 214 - 52 * t, gg = AUT ? 184 - 44 * t : 220 - 46 * t, b = AUT ? 140 - 30 * t : 228 - 36 * t;
       const rk = sm(0.75, 1.15, g); r += (138 - r) * rk * 0.6; gg += (134 - gg) * rk * 0.6; b += (132 - b) * rk * 0.6;
-      const fo = sm(0.2, 0.8, bil(FD, wx, wz)) * 0.5; r += (120 - r) * fo; gg += (150 - gg) * fo; b += (124 - b) * fo; // лес — бледно-зелёный, рельеф под ним виден
+      const fo = sm(0.2, 0.8, bil(FD, wx, wz)) * 0.5, FC = AUT ? [170, 118, 72] : [120, 150, 124]; r += (FC[0] - r) * fo; gg += (FC[1] - gg) * fo; b += (FC[2] - b) * fo; // лес: зимой бледно-зелёный, осенью рыжий // лес — бледно-зелёный, рельеф под ним виден
       // лёд: у льда на сетке, а берег — по высоте над уровнем льда
-      const iy = wz < damZ ? lakeN : Math.max(lakeS, 144 - wz * 0.004), ik = bil(ID, wx, wz) > 0.05 ? 1 - sm(0.4, 2.5, h - iy) : 0;
-      r += (156 - r) * ik; gg += (192 - gg) * ik; b += (214 - b) * ik;
+      const iy = AUT ? city.autumn.WY : wz < damZ ? lakeN : Math.max(lakeS, 144 - wz * 0.004), ik = bil(ID, wx, wz) > 0.05 ? 1 - sm(0.4, 2.5, h - iy) : 0;
+      const IC = AUT ? [92, 112, 110] : [156, 192, 214]; r += (IC[0] - r) * ik; gg += (IC[1] - gg) * ik; b += (IC[2] - b) * ik; // лёд / вода болота
       // горизонтали: расстояние до ближайшей в пикселях (по крутизне), сглаженная линия
       const dh = Math.abs(h - Math.round(h / CI) * CI), px = dh / (g * step + 1e-6), idx = Math.abs(h - Math.round(h / IX) * IX) < CI / 2;
       const clF = sm(1.5, 3.5, CI / (g * step + 1e-6)); // на кручах горизонтали сливаются — там бледнее
@@ -444,7 +444,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const k = S2 / (2 * H);
     x.strokeStyle = 'rgba(40,36,32,.85)'; x.lineCap = 'round';
     for (const r of city.roads || []) { x.lineWidth = Math.max(1, r.w * k * 1.6); x.beginPath(); r.pts.forEach(([px, pz], q) => { const X = (px + H) * k, Y = (pz + H) * k; if (q) x.lineTo(X, Y); else x.moveTo(X, Y); }); x.stroke(); }
-    const a = city.airport; x.fillStyle = 'rgba(30,30,34,.9)'; x.fillRect((a.x - a.rwyW / 2 + H) * k - 1, (a.z - a.rwyL / 2 + H) * k, Math.max(2, a.rwyW * k + 2), a.rwyL * k); // ВПП
+    const a = city.airport; x.fillStyle = 'rgba(30,30,34,.9)'; if (a.rwyL) x.fillRect((a.x - a.rwyW / 2 + H) * k - 1, (a.z - a.rwyL / 2 + H) * k, Math.max(2, a.rwyW * k + 2), a.rwyL * k); // ВПП
     const B = city.B; x.fillStyle = 'rgba(30,30,36,.75)';
     for (let i = 0; i < B.n; i++) x.fillRect((B.x[i] - B.w[i] / 2 + H) * k, (B.z[i] - B.d[i] / 2 + H) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
     return c;
