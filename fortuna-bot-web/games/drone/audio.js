@@ -43,6 +43,16 @@ export function createAudio() {
       v.psG = gain(0); chain(s0, v.psG, v.air); s0.start(0, Math.random() * S0.buf.duration); v.ps = s0;
     }
   }
+  // записанные петли в объёмных голосах (по желанию игры, у «Летки» нет): kind → [имена петель]; heli — [малые, большие обороты],
+  // jet — [спереди (свист компрессора), сзади (рёв струи)]. Пока записи нет — голос звучит синтезом
+  let voiceLoops = {};
+  function vLoop(v, name) {
+    v.lp = v.lp || {}; if (v.lp[name]) return v.lp[name];
+    const S0 = SAMPLES[name]; if (!S0 || !S0.buf) return null;
+    const s0 = ctx.createBufferSource(); s0.buffer = S0.buf; s0.loop = true; const g = gain(0); chain(s0, g, v.air); s0.start(0, Math.random() * S0.buf.duration);
+    return (v.lp[name] = { s: s0, g, r: 0.97 + Math.random() * 0.06 });
+  }
+  const vLoopsOff = (v, keep) => { if (v.lp) for (const k in v.lp) if (k !== keep[0] && k !== keep[1]) set(v.lp[k].g.gain, 0, 0.1); };
   let rpm = 0.55, crackleT = 0, spatialT = 0;
   const spatialWant = [];
   const now = () => ctx.currentTime;
@@ -172,7 +182,7 @@ export function createAudio() {
       // ближайшие источники (без сортировки и новых массивов: голосов всего 6)
       const want = spatialWant; want.length = 0;
       for (const c of cands) {
-        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : c.kind === 'prop' ? 5000 : c.kind === 'tprop' ? 9000 : 12000)) continue;
+        const d = c.pos.distanceTo(cp); if (d > (c.kind === 'msl' ? 4000 : c.kind === 'prop' ? 5000 : c.kind === 'heli' ? 7000 : c.kind === 'tprop' ? 9000 : 12000)) continue;
         c._d = d; let i = want.length; while (i > 0 && want[i - 1]._d > d) i--;
         if (i < voices.length) { want.splice(i, 0, c); if (want.length > voices.length) want.pop(); }
       }
@@ -182,8 +192,9 @@ export function createAudio() {
     }
     for (const v of voices) {
       let c = null; if (v.o) for (const x of cands) if (x.o === v.o) { c = x; break; }
-      if (!c || !active || muted) { if (v.o) set(v.g.gain, 0, 0.1); if (!c) v.o = null; set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); continue; }
+      if (!c || !active || muted) { if (v.o) set(v.g.gain, 0, 0.1); if (!c) v.o = null; set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); vLoopsOff(v, []); continue; }
       if (c.kind !== 'prop' && c.kind !== 'tprop') { set(v.prG.gain, 0, 0.1); if (v.psG) set(v.psG.gain, 0, 0.1); }
+      const VL = voiceLoops[c.kind]; vLoopsOff(v, VL || []);
       const p = c.pos;
       if (v.pan.positionX) { v.pan.positionX.value = p.x; v.pan.positionY.value = p.y; v.pan.positionZ.value = p.z; } else v.pan.setPosition(p.x, p.y, p.z);
       const dx = cp.x - p.x, dy = cp.y - p.y, dz = cp.z - p.z, d = Math.hypot(dx, dy, dz) || 1;
@@ -200,6 +211,14 @@ export function createAudio() {
         if (v.psG) set(v.psG.gain, 0);
         set(v.roarF.frequency, 650 * dop); v.roarF.Q.value = 0.8; set(v.roarG.gain, 0.3); set(v.rumbG.gain, 1.0);
         set(v.whF.frequency, 1300 * dop); v.whF.Q.value = 8; set(v.whG.gain, 0.25); set(v.crG.gain, 0); set(v.g.gain, 1.3 * (c.gain || 1));
+      } else if (c.kind === 'heli') { // вертолёт: записанный гул винта — малые и большие обороты по нагрузке (c.pw 0…1); нет записи — глухие хлопки синтезом
+        const lo = VL && vLoop(v, VL[0]), hi = VL && vLoop(v, VL[1]), pw = clamp(c.pw ?? 0.6, 0, 1), k = c.rate || 1;
+        if (lo && hi) {
+          set(lo.g.gain, 1.5 * Math.cos(pw * Math.PI / 2)); set(hi.g.gain, 1.5 * Math.sin(pw * Math.PI / 2));
+          set(lo.s.playbackRate, lo.r * k * dop * (0.95 + 0.04 * pw)); set(hi.s.playbackRate, hi.r * k * dop * (0.98 + 0.04 * pw));
+          set(v.roarG.gain, 0); set(v.rumbG.gain, 0.25); set(v.whG.gain, 0);
+        } else { set(v.roarF.frequency, 260 * dop); v.roarF.Q.value = 1; set(v.roarG.gain, 0.5); set(v.rumbG.gain, 1.1); set(v.whF.frequency, 5200 * dop); v.whF.Q.value = 14; set(v.whG.gain, 0.15); }
+        set(v.crG.gain, 0); set(v.g.gain, 1.1 * (c.gain || 1));
       } else if (c.kind === 'prop') { // поршневой мотор с толкающим винтом: «мопедный» тон (генераторы) + немного шума винта
         const wob = 1 + 0.03 * Math.sin(performance.now() / 1300 + v.ph); // обороты «гуляют»
         if (v.ps) { // записанный мотор (петля): высота — по допплеру; синтез и шум — выключены
@@ -218,6 +237,13 @@ export function createAudio() {
         set(v.roarG.gain, (0.7 + 0.6 * (1 - front)) * (c.ab ? 1.6 : 1)); set(v.rumbG.gain, big ? 1.4 : 0.8 + (c.ab ? 0.6 : 0));
         set(v.whF.frequency, (big ? 1900 : 2700) * dop); v.whF.Q.value = 12; set(v.whG.gain, 1.8 * front * front + 0.2);
         set(v.crG.gain, c.ab ? 0.45 * (1 - front) : 0); set(v.g.gain, (big ? 1.3 : 0.9) * (c.gain || 1));
+        // записи пролёта: спереди — свист, сзади — рёв; синтез остаётся тише — даёт форсаж и «тело» большого
+        const fr = VL && vLoop(v, VL[0]), rr = VL && vLoop(v, VL[1]);
+        if (fr && rr) {
+          set(fr.g.gain, 1.6 * Math.sin(front * Math.PI / 2)); set(rr.g.gain, 1.7 * Math.cos(front * Math.PI / 2) * (c.ab ? 1.3 : 1));
+          set(fr.s.playbackRate, fr.r * dop * (big ? 0.85 : 1)); set(rr.s.playbackRate, rr.r * dop * (big ? 0.8 : 1));
+          set(v.roarG.gain, (0.25 + 0.3 * (1 - front)) * (c.ab ? 1.6 : 1)); set(v.whG.gain, 0.5 * front * front + 0.05);
+        }
       }
     }
   }
@@ -347,7 +373,25 @@ export function createAudio() {
       const s = src(buf, rate), f = filt(type, freq, q), g = gain(0); chain(s, f, g, out);
       return { f, set(v, tc = 1) { set(g.gain, muted ? 0 : v, tc); }, stop() { set(g.gain, 0, 0.3); setTimeout(() => { try { s.stop(); s.disconnect(); g.disconnect(); } catch (_) { /* уже */ } }, 2000); } };
     },
-    loadSample, setPropSample(name) { propSample = name; if (ctx) attachProp(); },
+    loadSample, setPropSample(name) { propSample = name; if (ctx) attachProp(); }, setVoiceLoops(map) { voiceLoops = map || {}; },
+    // петля записи (свой винт, очередь пушки): set(громкость, сглаж.), rate(скорость), cut(срез верха Гц), stop(затухание с, когда с)
+    loop(name, vol = 0, when = 0, rate = 1, cut = 20000, wet = 0) {
+      const S0 = SAMPLES[name]; if (!ctx || !S0 || !S0.buf) return null;
+      const t0 = now() + when, s0 = ctx.createBufferSource(), g = gain(0), f = filt('lowpass', cut, 0.6); s0.buffer = S0.buf; s0.loop = true; s0.playbackRate.value = rate;
+      chain(s0, f, g, out); let w = null; if (wet) { w = gain(wet); g.connect(w); w.connect(reverbIn); }
+      g.gain.setValueAtTime(0, t0); g.gain.setTargetAtTime(muted ? 0 : vol, t0, 0.02); s0.start(t0, Math.random() * S0.buf.duration);
+      let dead = false;
+      return {
+        set(v, tc = 0.08) { if (!dead) g.gain.setTargetAtTime(muted ? 0 : v, Math.max(now(), t0), tc); },
+        rate(r, tc = 0.1) { if (!dead) s0.playbackRate.setTargetAtTime(r, now(), tc); },
+        cut(fq, tc = 0.2) { if (!dead) f.frequency.setTargetAtTime(fq, now(), tc); },
+        stop(fade = 0.08, when2 = 0) {
+          if (dead) return; dead = true; const t = Math.max(now() + when2, t0);
+          g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, fade / 3);
+          try { s0.stop(t + fade * 2 + 0.05); } catch (_) { /* уже */ } s0.onended = () => { try { g.disconnect(); if (w) w.disconnect(); } catch (_) { /* уже */ } };
+        },
+      };
+    },
     sampleDur(name) { const S0 = SAMPLES[name]; return S0 && S0.buf ? S0.buf.duration : 0; },
     time() { return ctx ? ctx.currentTime : 0; },
     // разовый записанный звук: громкость, задержка, скорость (ниже — «тяжелее»), срез верха, доля в реверберации
@@ -355,6 +399,16 @@ export function createAudio() {
       const S0 = SAMPLES[name]; if (!ctx || muted || !S0 || !S0.buf) return false;
       const t0 = now() + when, s0 = ctx.createBufferSource(), g = gain(vol), f = filt('lowpass', cut, 0.6); s0.buffer = S0.buf; s0.playbackRate.value = rate;
       chain(s0, f, g, out); if (wet) { const w = gain(wet); g.connect(w); w.connect(reverbIn); } s0.start(t0, offset); s0.vol = g; return s0; // голос — чтобы можно было погасить (vol — его громкость)
+    },
+    // кусок записи с плавным входом и выходом, со своей стороны (pan −1…1): фон — вороны вдали и т. п.
+    clip(name, { vol = 0.2, when = 0, rate = 1, cut = 20000, wet = 0, offset = 0, dur = 0, fin = 0.5, fout = 1, pan = 0 } = {}) {
+      const S0 = SAMPLES[name]; if (!ctx || muted || !S0 || !S0.buf) return false;
+      const len = Math.min(dur || 1e9, (S0.buf.duration - offset) / rate), t0 = now() + when, s0 = ctx.createBufferSource(), g = gain(0), f = filt('lowpass', cut, 0.6);
+      s0.buffer = S0.buf; s0.playbackRate.value = rate; let node = g;
+      if (pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = clamp(pan, -1, 1); chain(g, p); node = p; }
+      chain(s0, f, g); node.connect(out); if (wet) { const w = gain(wet); node.connect(w); w.connect(reverbIn); }
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(vol, t0 + fin); g.gain.setValueAtTime(vol, t0 + Math.max(fin, len - fout)); g.gain.linearRampToValueAtTime(0, t0 + len);
+      s0.start(t0, offset); s0.stop(t0 + len + 0.05); return s0;
     },
   };
   return A;

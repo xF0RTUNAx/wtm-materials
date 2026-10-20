@@ -13,6 +13,12 @@ export function createSound() {
   // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
   A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261022l'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261022l');
   for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261022l`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261022l'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261022l'); A.setPropSample('prop');
+  // нарезка и петли — tools/airdef-sounds/mkloops.py (огибающая пролёта выровнена, стык петли — по ритму хлопков/выстрелов):
+  //   винт — «UH-1 Helicopter» by Rmutt (CC0): малые обороты 0:54, большие 1:03–1:07; самолёт — «Jet Plane Flyby» by qubodup (CC0):
+  //   подлёт (свист), уход (рёв), пролёт целиком; очередь — «Navy Mk 15 Phalanx CIWS Fast Burst» by qubodup (CC0), запись
+  //   перегружена — верх смягчён и тише; вороны — «Flock of Crows» by Fenodyrie (CC0), с 0:24
+  for (const [k, f] of [['heliLo', 'heli_lo.wav'], ['heliHi', 'heli_hi.wav'], ['jetFront', 'jet_front.wav'], ['jetRear', 'jet_rear.wav'], ['jetPass', 'jet_pass.mp3'], ['ciws', 'ciws_loop.wav'], ['ciwsTail', 'ciws_tail.mp3'], ['crows', 'crows.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261022l`);
+  A.setVoiceLoops({ heli: ['heliLo', 'heliHi'], jet: ['jetFront', 'jetRear'] });
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
   // записи вертикального старта: [хлопок выброса, начало рёва двигателя], с (по огибающей громкости)
@@ -119,6 +125,50 @@ export function createSound() {
       A.noise('crackle', 0.16, 0.35 * k, 'bandpass', big ? 420 : 600, 0.6, w, 0.5);
       A.noise('pink', 0.2, 0.12 * k, 'lowpass', 380, 0.7, w + 0.04, 0.7);
     },
+    // многоствольные зенитки (Phalanx, Vulcan, «Шилка»): записанная очередь петлёй, пока стреляет (зовётся каждый кадр огня),
+    // по окончании — эхо очереди. Нет записи — false (звучит синтез aaa)
+    gunLoop(id, d, key) {
+      const R = GUN_RATE[key]; if (!R || muted) return false;
+      const k = near(d, 450), cut = 700 + 9000 * Math.exp(-d / 1600), wet = 0.2 + 0.5 * (1 - k);
+      let g = guns.get(id);
+      if (!g) { const h = A.loop('ciws', 0, delayOf(d), R * (0.98 + Math.random() * 0.04), cut, wet); if (!h) return false; guns.set(id, g = { h, R, d }); }
+      g.last = A.time(); g.d = d; g.h.set(0.5 * k, 0.03); g.h.cut(cut);
+      return true;
+    },
+    // каждый кадр: смолкшие очереди — гасим петлю (с задержкой звука), играем эхо
+    gunTick() {
+      const t = A.time();
+      for (const [id, g] of guns) {
+        if (t - g.last < 0.2) continue;
+        const dl = delayOf(g.d), k = near(g.d, 450); g.h.stop(0.06, dl); guns.delete(id);
+        A.clip('ciwsTail', { vol: 0.55 * k, when: dl + 0.03, rate: g.R, cut: 500 + 6000 * Math.exp(-g.d / 1500), wet: 0.3 + 0.4 * (1 - k), fin: 0.02, fout: 1 });
+      }
+    },
+    // свой вертолёт: s = { on, pw — нагрузка винта 0…1, rate — тип (тяжёлый ниже), speed, rear — камера сзади 0…1 }.
+    // Две петли винта — малые и большие обороты — перетекают по нагрузке; вой турбин и низкий «толчок» винта — синтез
+    heli(dt, s) {
+      if (!s || !s.on || muted || !A.ready) { if (he.lo || he.beds) heliOff(); return; }
+      if (!he.lo) he.lo = A.loop('heliLo', 0, 0, 1, 12000, 0.08); if (!he.hi) he.hi = A.loop('heliHi', 0, 0, 1, 12000, 0.08);
+      if (!he.beds) he.beds = [A.bed('white', 1, 'bandpass', 5400, 14), A.bed('brown', 1, 'lowpass', 85, 0.8), A.bed('pink', 0.9, 'lowpass', 600, 0.4)];
+      he.pw += ((s.pw ?? 0.6) - he.pw) * Math.min(1, dt * 2.5); const pw = Math.max(0, Math.min(1, he.pw)), r = s.rate || 1, v = Math.min(1, (s.speed || 0) / 80);
+      if (he.lo) { he.lo.set(0.42 * Math.cos(pw * Math.PI / 2) + 0.03, 0.1); he.lo.rate(r * (0.94 + 0.05 * pw)); }
+      if (he.hi) { he.hi.set(0.42 * Math.sin(pw * Math.PI / 2), 0.1); he.hi.rate(r * (0.97 + 0.05 * pw)); }
+      const [whine, thump, wind] = he.beds;
+      if (whine) { whine.set(0.006 + 0.006 * pw + 0.004 * (1 - (s.rear ?? 0.5)), 0.3); whine.f.frequency.setTargetAtTime(5000 + 900 * pw, A.time(), 0.5); }
+      if (thump) thump.set(0.03 + 0.05 * pw, 0.2); if (wind) wind.set(0.004 + 0.03 * v * v, 0.4); // петли ещё грузятся — пока звучит синтез
+    },
+    // близкий пролёт самолёта: запись пролёта целиком (в ней «над головой» — на 2,6 с); d — промах, м
+    jetPass(d, big) {
+      const k = Math.min(1, 160 / (d + 60));
+      return !!A.clip('jetPass', { vol: 0.75 * k, rate: (big ? 0.85 : 1) * (0.96 + Math.random() * 0.08), cut: 2500 + 12000 * Math.exp(-d / 400), wet: 0.25, fin: 0.3, fout: 2.5 });
+    },
+    // фон карты в бою: «Туманная топь» — вороны вдали, с разных сторон, с затуханием
+    mapAmb(dt, on, kind) {
+      if (!on || kind !== 'autumn' || muted || document.hidden) return;
+      if ((mamb.t -= dt) > 0) return; mamb.t = rnd(14, 38);
+      const dur = rnd(5, 10);
+      A.clip('crows', { vol: rnd(0.12, 0.26), rate: rnd(0.94, 1.04), cut: rnd(2400, 4500), wet: rnd(0.45, 0.7), offset: rnd(0, 22.5 - dur * 1.05), dur, fin: rnd(1, 2.2), fout: rnd(2, 3.5), pan: rnd(-0.85, 0.85) });
+    },
     // своё оружие: «клац» замка держателя, у ракет — запись пуска (нет записи — синтез)
     release(missile) { A.noise('brown', 0.12, 0.3, 'lowpass', 220); A.noise('white', 0.05, 0.12, 'bandpass', 2500, 1.2); if (missile && !S.airLaunch(0)) A.launch(); },
     // пуск ракеты с самолёта (ПРР, ракеты «воздух — земля»): запись, с задержкой и глуше вдали
@@ -159,6 +209,9 @@ export function createSound() {
     // за горизонтом, птицы в затишье. mood — выбранный режим ('air' — чаще самолёты, 'defense' — пуски, 'multi' — раскаты)
     ambient(on, mood) { amb.mood = mood || amb.mood; if (on === amb.on) return; amb.on = on; clearInterval(amb.timer); amb.timer = 0; if (on) { amb.next = 3 + Math.random() * 3; amb.timer = setInterval(ambTick, 250); } else if (amb.beds) { for (const b of amb.beds) b.stop(); amb.beds = null; } },
   };
+  const GUN_RATE = { phalanx: 1, m163: 0.93, zsu234: 0.8 }; // 20-мм M61 — как в записи; «Шилка» (23 мм, 4 ствола) — ниже и тяжелее
+  const guns = new Map(), he = { lo: null, hi: null, beds: null, pw: 0.6 }, mamb = { t: 10 };
+  function heliOff() { for (const h of [he.lo, he.hi]) if (h) h.stop(0.35); if (he.beds) for (const b of he.beds) if (b) b.stop(); he.lo = he.hi = he.beds = null; }
   const amb = { on: false, timer: 0, beds: null, next: 0, gust: 0, gustT: 0, mood: 'air', last: '' };
   const rnd = (a, b) => a + Math.random() * (b - a);
   const AMB = { // события: вес по режиму, звук

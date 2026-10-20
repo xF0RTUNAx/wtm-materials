@@ -413,6 +413,7 @@ const simFx = {
   explosion(p, R, kind) { C.fx.explosion(p, R, kind); C.fx.crater(p, R, kind, city.groundH(p.x, p.z), city.bldAt(p.x, p.z)); if (kind === 'air') snd.samBurst(dist(p), R / 12); else snd.explosion(dist(p), R / (kind === 'tbm' ? 13 : R >= 45 ? 16 : 20)); }, // в воздухе — подрыв ЗУР / перехват
   gunFire(u, t, hits, dt) {
     C.fx.gunFire(u.pos, t.pos, hits, dt);
+    if (snd.gunLoop(u.id, dist(u.pos), u.key)) return; // многоствольные — записанная очередь
     const k = (aaaT.get(u.id) || 0) - dt; if (k <= 0) { snd.aaa(dist(u.pos), u.key === 'gepard' ? 35 : 23); aaaT.set(u.id, 0.16); } else aaaT.set(u.id, k);
   },
   objectHit(o, amount, p) { if (C.hooks.objectHit) C.hooks.objectHit(o, amount, p); },
@@ -664,16 +665,35 @@ function syncWorld(dt, t) {
 }
 // звук: двигатель игрока, объёмные голоса самолётов и ракет
 const sndCands = [], sndPool = [];
+// вертолёты: одна запись винта (UH-1) на всех — скорость по типу (тяжёлые Ми ниже), нагрузка — по общему шагу
+const HELI_SND = { h_uh1: 1, h_ah1: 1.04, h_ah64: 1.06, h_mi24: 0.88, h_mi28: 0.9, h_ka52: 0.93 };
+const heliPw = (a) => clamp(((a.col ?? 0.75) - 0.45) / 0.5, 0, 1);
 function updateSound(dt) {
   if (!snd.A.ready) return;
   const pl = C.player, on = C.state === 'play' || C.state === 'menu';
-  if (pl && !pl.dead && C.state === 'play' && !C.paused) {
+  const live = pl && !pl.dead && C.state === 'play' && !C.paused;
+  if (live && !pl.heli) {
     fwdOf(pl, LP); const rear = clamp((LP.dot(camera.getWorldDirection(new THREE.Vector3())) + 1) / 2, 0, 1);
     snd.frame(dt, { on: true, rpmTarget: pl.ab ? 1 : 0.6 + 0.4 * clamp((pl.thr - 0.55) / 0.45, 0, 1), ab: pl.ab, speed: pl.speed, mach: pl.speed / 330, sup: pl.speed > 340, n: pl.n || 1, rear, tprop: !!(pl.fm && pl.fm.s.prop), agl: pl.pos.y - city.groundH(pl.pos.x, pl.pos.z), rain: 0 });
   } else snd.frame(dt, { on: false });
+  if (live && pl.heli) { fwdOf(pl, LP); snd.heli(dt, { on: true, pw: heliPw(pl), rate: HELI_SND[pl.hm && pl.hm.key] || 1, speed: pl.vel.length(), rear: clamp((LP.dot(camera.getWorldDirection(new THREE.Vector3())) + 1) / 2, 0, 1) }); } else snd.heli(dt, null);
+  snd.gunTick(); snd.mapAmb(dt, live, city.kind);
   sndCands.length = 0;
-  const cand = (o, kind, pos, vel, fwd, ab, gain) => { let c = sndPool[sndCands.length]; if (!c) sndPool.push(c = {}); Object.assign(c, { o, kind, pos, vel, fwd, ab, gain }); sndCands.push(c); };
-  if (C.raid) for (const a of C.raid.planes) if (!a.dead && !a.out && a.phase !== 'wait') { a.sfwd = fwdOf(a, a.sfwd || new THREE.Vector3()); cand(a, a.fm && a.fm.s.prop ? 'tprop' : 'jet', a.pos, a.vel, a.sfwd, a.ab, 1.1); }
+  const cand = (o, kind, pos, vel, fwd, ab, gain) => { let c = sndPool[sndCands.length]; if (!c) sndPool.push(c = {}); Object.assign(c, { o, kind, pos, vel, fwd, ab, gain, pw: undefined, rate: undefined }); sndCands.push(c); return c; };
+  const lv = pl && C.state === 'play' ? pl.vel : null, cp = camera.position;
+  if (C.raid) for (const a of C.raid.planes) if (!a.dead && !a.out && a.phase !== 'wait') {
+    a.sfwd = fwdOf(a, a.sfwd || new THREE.Vector3());
+    if (a.heli) { const c = cand(a, 'heli', a.pos, a.vel, a.sfwd, false, 1.2); c.pw = heliPw(a); c.rate = HELI_SND[a.plane] || 1; continue; }
+    // близкий пролёт: за 2,6 с до точки наибольшего сближения (промах < 300 м) — запись пролёта целиком, свой голос тише
+    const rx = a.pos.x - cp.x, ry = a.pos.y - cp.y, rz = a.pos.z - cp.z, vx = a.vel.x - (lv ? lv.x : 0), vy = a.vel.y - (lv ? lv.y : 0), vz = a.vel.z - (lv ? lv.z : 0), vv = vx * vx + vy * vy + vz * vz;
+    const tca = vv > 1 ? -(rx * vx + ry * vy + rz * vz) / vv : -1, now = performance.now() / 1000;
+    if (tca > 0 && tca <= 2.6 && (a.stca ?? 9) > 2.6 && vv > 120 * 120 && !(now < (a.passT || 0) + 8)) {
+      const miss = Math.hypot(rx + vx * tca, ry + vy * tca, rz + vz * tca);
+      if (miss < 300 && snd.jetPass(miss, a.role === 'carrier')) a.passT = now;
+    }
+    a.stca = tca;
+    cand(a, a.fm && a.fm.s.prop ? 'tprop' : 'jet', a.pos, a.vel, a.sfwd, a.ab, 1.1 * (now < (a.passT || 0) + 6 ? 0.35 : 1));
+  }
   if (C.S) {
     for (const m of C.S.sams) if (!m.dead && m.tb >= 0 && m.tb < m.M.burn + (m.M.sustain ? m.M.sustain.t : 0)) { m.svel = (m.svel || new THREE.Vector3()).copy(m.dir).multiplyScalar(m.speed); cand(m, 'msl', m.pos, m.svel, null, false, 1); }
     for (const w of C.S.wpns) if (!w.dead && w.W.burn && w.t < w.W.burn) cand(w, 'msl', w.pos, w.vel, null, false, 0.8);

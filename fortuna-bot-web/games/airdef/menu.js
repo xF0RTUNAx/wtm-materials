@@ -393,7 +393,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   function mapBase(S2) {
     if (baseCache[S2]) return baseCache[S2];
     const c = document.createElement('canvas'); c.width = c.height = S2; const x = c.getContext('2d'), city = C.city;
-    if (city.kind === 'winter' || city.kind === 'autumn') return (baseCache[S2] = winterMapBase(c, x, city, S2)); // осень — та же топография, свои цвета
+    if (city.kind === 'autumn') return (baseCache[S2] = autumnMapBase(c, x, city, S2));
+    if (city.kind === 'winter') return (baseCache[S2] = winterMapBase(c, x, city, S2));
     const ZC = ['#56603e', '#6f7262', '#7d7f78', '#8f9093', '#7a7569', '#3c5a2e', '#2d5574', '#6d7858', '#77746c'];
     const st = Math.max(2, Math.round(S2 / 400)), step = 2 * CITY.HALF / S2;
     for (let j = 0; j < S2; j += st) for (let i = 0; i < S2; i += st) { x.fillStyle = ZC[city.zoneAt(-CITY.HALF + i * step, -CITY.HALF + j * step)]; x.fillRect(i, j, st, st); }
@@ -447,6 +448,79 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const a = city.airport; x.fillStyle = 'rgba(30,30,34,.9)'; if (a.rwyL) x.fillRect((a.x - a.rwyW / 2 + H) * k - 1, (a.z - a.rwyL / 2 + H) * k, Math.max(2, a.rwyW * k + 2), a.rwyL * k); // ВПП
     const B = city.B; x.fillStyle = 'rgba(30,30,36,.75)';
     for (let i = 0; i < B.n; i++) x.fillRect((B.x[i] - B.w[i] / 2 + H) * k, (B.z[i] - B.d[i] / 2 + H) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
+    return c;
+  }
+  // «Туманная топь» — карта, по которой читается рельеф: послойная окраска (низина болота — зеленовато-серая, склоны — охра,
+  // вершины — светлее), сильная отмывка, горизонтали через 25 м (утолщённые — 100 м), лес — тёмно-оливковый с «крапом»,
+  // болото — штриховкой (знак топокарты), овраги — линиями тальвегов, гать — пунктиром, узкоколейка — «шпалами»; подписи местности
+  function autumnMapBase(c, x, city, S2) {
+    const H = CITY.HALF, step = 2 * H / S2, img = x.createImageData(S2, S2), d = img.data, gh = city.groundH, e = Math.max(25, step * 0.75), A = city.autumn, WY = A.WY;
+    const CI = 25, IX = 100;
+    const FG = 321, fs = 2 * H / (FG - 1), FD = new Float32Array(FG * FG), ID = new Float32Array(FG * FG), BG = new Float32Array(FG * FG), RV = new Float32Array(FG * FG);
+    for (let j = 0; j < FG; j++) for (let i = 0; i < FG; i++) {
+      const wx = -H + i * fs, wz = -H + j * fs, q = j * FG + i, w = city.waterAt(wx, wz);
+      FD[q] = city.zoneAt(wx, wz) === ZONE.PARK ? 1 : 0; ID[q] = w ? 1 : 0; RV[q] = Math.min(1, city.ravineAt(wx, wz) / 18);
+      BG[q] = !w && city.basinD(wx, wz) <= 1.1 && gh(wx, wz) < WY + 4 ? 1 : 0; // заболоченная низина у воды
+    }
+    const blur = (M) => { const T = M.slice(); for (let j = 1; j < FG - 1; j++) for (let i = 1; i < FG - 1; i++) { const q = j * FG + i; M[q] = (4 * T[q] + T[q - 1] + T[q + 1] + T[q - FG] + T[q + FG]) / 8; } };
+    blur(FD); blur(FD); blur(ID); blur(BG); blur(RV);
+    const bil = (M, wx, wz) => { const fx = Math.min(FG - 1.001, Math.max(0, (wx + H) / fs)), fz = Math.min(FG - 1.001, Math.max(0, (wz + H) / fs)), i = fx | 0, j = fz | 0, u = fx - i, v = fz - j, q = j * FG + i;
+      return (M[q] * (1 - u) + M[q + 1] * u) * (1 - v) + (M[q + FG] * (1 - u) + M[q + FG + 1] * u) * v; };
+    const L = [-0.55, 0.7, -0.45], ll = Math.hypot(...L); L[0] /= ll; L[1] /= ll; L[2] /= ll;
+    const sm = (a, b, t) => { t = Math.min(1, Math.max(0, (t - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const mix = (C1, C2, t) => [C1[0] + (C2[0] - C1[0]) * t, C1[1] + (C2[1] - C1[1]) * t, C1[2] + (C2[2] - C1[2]) * t];
+    // шкала высот: низина → склон → холм → вершина (над уровнем воды)
+    const HY = [[0, [150, 160, 128]], [30, [176, 170, 128]], [120, [190, 166, 116]], [260, [178, 140, 96]], [420, [204, 186, 160]]];
+    const hyp = (h) => { const a = h - WY; for (let k = 1; k < HY.length; k++) if (a < HY[k][0]) return mix(HY[k - 1][1], HY[k][1], sm(0, 1, (a - HY[k - 1][0]) / (HY[k][0] - HY[k - 1][0]))); return HY[HY.length - 1][1]; };
+    const sp = Math.max(5, Math.round(S2 / 180)); // шаг значков (штриховка болота, крап леса), пикс.
+    for (let j = 0; j < S2; j++) for (let i = 0; i < S2; i++) {
+      const wx = -H + (i + 0.5) * step, wz = -H + (j + 0.5) * step, h = gh(wx, wz);
+      const hx = (gh(wx + e, wz) - gh(wx - e, wz)) / (2 * e), hz = (gh(wx, wz + e) - gh(wx, wz - e)) / (2 * e), g = Math.hypot(hx, hz), nl = Math.hypot(hx, 1, hz);
+      const sh = 0.8 * ((-hx * L[0] + L[1] - hz * L[2]) / nl - L[1]) + 0.2 * (1 / nl - 1);
+      const f = Math.max(0.55, Math.min(1.2, 1 + sh * 1.1)); // отмывка сильнее, чем на зимней: холмы и овраги объёмные
+      let [r, gg, b] = hyp(h);
+      const rv = sm(0.15, 0.7, bil(RV, wx, wz)); r += (120 - r) * rv * 0.3; gg += (92 - gg) * rv * 0.3; b += (66 - b) * rv * 0.3; // дно и склоны оврагов — бурее
+      const fo = sm(0.3, 0.8, bil(FD, wx, wz)); r += (112 - r) * fo * 0.36; gg += (118 - gg) * fo * 0.36; b += (80 - b) * fo * 0.36; // лес — тёмно-оливковый
+      if (fo > 0.6 && (i % sp === ((j / sp | 0) % 2 ? sp >> 1 : 0)) && j % sp === 0) { r *= 0.8; gg *= 0.82; b *= 0.8; } // крап — «деревья»
+      const ik = bil(ID, wx, wz) > 0.05 ? 1 - sm(0.3, 2.2, h - WY) : 0; [r, gg, b] = mix([r, gg, b], [78, 104, 112], ik); // вода
+      const bg = sm(0.3, 0.7, bil(BG, wx, wz)) * (1 - ik);
+      if (bg > 0) { [r, gg, b] = mix([r, gg, b], [138, 152, 136], bg * 0.6); if (j % sp === 0 && (i + (j / sp | 0) * 3) % sp < sp * 0.55) [r, gg, b] = mix([r, gg, b], [58, 92, 118], bg * 0.85); } // болото: штриховка
+      const dh = Math.abs(h - Math.round(h / CI) * CI), px = dh / (g * step + 1e-6), idx = Math.abs(h - Math.round(h / IX) * IX) < CI / 2;
+      const clF = sm(1.2, 3, CI / (g * step + 1e-6));
+      const cl = (1 - sm(idx ? 0.5 : 0.3, idx ? 1.2 : 0.9, px)) * (idx ? 0.55 : 0.22) * (1 - ik) * (idx ? 0.5 + 0.5 * clF : clF);
+      const q = (j * S2 + i) * 4, k = f * 0.9;
+      d[q] = r * k * (1 - cl) + 110 * cl; d[q + 1] = gg * k * (1 - cl) + 78 * cl; d[q + 2] = b * k * (1 - cl) + 50 * cl; d[q + 3] = 255; // горизонтали — коричневые
+    }
+    x.putImageData(img, 0, 0);
+    const k = S2 / (2 * H), P = (px, pz) => [(px + H) * k, (pz + H) * k], lw = Math.max(1, S2 / 700);
+    const line = (pts) => { x.beginPath(); pts.forEach(([px, pz], q) => { const [X, Y] = P(px, pz); if (q) x.lineTo(X, Y); else x.moveTo(X, Y); }); x.stroke(); };
+    x.lineCap = x.lineJoin = 'round';
+    for (const rv of city.ravines || []) { x.strokeStyle = rv.main ? 'rgba(84,52,30,.75)' : 'rgba(84,52,30,.45)'; x.lineWidth = (rv.main ? 1.6 : 0.9) * lw; line(rv.pts); } // тальвеги оврагов
+    for (const r of city.roads || []) {
+      x.setLineDash(r.gat ? [3 * lw, 2.5 * lw] : []); x.strokeStyle = 'rgba(52,40,30,.9)'; x.lineWidth = Math.max(1.2, r.w * k * 1.6) * (r.rail ? 0.8 : 1); line(r.pts);
+      if (r.rail) { x.setLineDash([3 * lw, 3 * lw]); x.strokeStyle = 'rgba(235,228,210,.9)'; x.lineWidth = Math.max(0.8, r.w * k * 0.7); line(r.pts); }
+    }
+    x.setLineDash([]);
+    const a = city.airport; x.fillStyle = 'rgba(30,30,34,.9)'; if (a.rwyL) x.fillRect((a.x - a.rwyW / 2 + H) * k - 1, (a.z - a.rwyL / 2 + H) * k, Math.max(2, a.rwyW * k + 2), a.rwyL * k);
+    const B = city.B; x.fillStyle = 'rgba(40,32,28,.8)';
+    for (let i = 0; i < B.n; i++) x.fillRect((B.x[i] - B.w[i] / 2 + H) * k, (B.z[i] - B.d[i] / 2 + H) * k, Math.max(1, B.w[i] * k), Math.max(1, B.d[i] * k));
+    // вершина Лысой горы — треугольник с отметкой; подписи местности — курсивом, как на топокарте
+    { let bx = A.BALD.x, bz = A.BALD.z, bh = -1e9; for (let dz = -900; dz <= 900; dz += 60) for (let dx = -900; dx <= 900; dx += 60) { const hh = gh(A.BALD.x + dx, A.BALD.z + dz); if (hh > bh) { bh = hh; bx = A.BALD.x + dx; bz = A.BALD.z + dz; } }
+      const [X, Y] = P(bx, bz), s = 4 * lw; x.fillStyle = 'rgba(60,40,26,.95)'; x.beginPath(); x.moveTo(X, Y - s); x.lineTo(X + s, Y + s * 0.7); x.lineTo(X - s, Y + s * 0.7); x.closePath(); x.fill();
+      label('Лысая гора', bx, bz + 260, 1, Math.round(bh - WY) + ' м'); }
+    function label(t, wx, wz, sz = 1, sub = '') {
+      const [X, Y] = P(wx, wz), fpx = Math.max(10, Math.round(S2 / 60 * sz));
+      x.font = `italic 600 ${fpx}px Georgia, 'Times New Roman', serif`; x.textAlign = 'center'; x.lineWidth = Math.max(2, fpx / 4); x.strokeStyle = 'rgba(236,228,206,.75)'; x.fillStyle = 'rgba(58,40,28,.92)';
+      x.strokeText(t, X, Y); x.fillText(t, X, Y);
+      if (sub) { x.font = `italic ${Math.round(fpx * 0.8)}px Georgia, serif`; x.strokeText(sub, X, Y + fpx); x.fillText(sub, X, Y + fpx); }
+    }
+    const BA = A.BASIN || {}; label('Гиблая топь', (BA.x ?? 600) - 900, (BA.z ?? 600) + 1700, 1.25);
+    label('Мёртвая старица', A.OXBOW.x - A.OXBOW.r * 0.2, A.OXBOW.z - A.OXBOW.r - 250, 0.85);
+    { // овраги: тот, где кладбище техники, — «Костяной»; два самых длинных из остальных — свои имена
+      const wr = city.objects.find((o) => o.key === 'a_wreck'), dTo = (l) => (wr ? Math.min(...l.pts.map((p) => Math.hypot(p[0] - wr.x, p[1] - wr.z))) : 0);
+      const rm = (city.ravines || []).filter((l) => l.main), first = rm.slice().sort((p, q) => dTo(p) - dTo(q))[0];
+      const rest = rm.filter((l) => l !== first).sort((p, q) => q.pts.length - p.pts.length), names = ['Костяной овраг', 'Волчья балка', 'Глухой лог'];
+      [first, ...rest.slice(0, 2)].forEach((l, n) => { if (!l) return; const p = n || !wr ? l.pts[Math.floor(l.pts.length * 0.55)] : l.pts.reduce((m, q) => (Math.hypot(q[0] - wr.x, q[1] - wr.z) < Math.hypot(m[0] - wr.x, m[1] - wr.z) ? q : m)); label(names[n], p[0], p[1] + (n ? -220 : 520), 0.8); }); }
     return c;
   }
   return {

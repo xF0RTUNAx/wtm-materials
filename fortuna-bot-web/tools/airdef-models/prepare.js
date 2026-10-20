@@ -503,7 +503,7 @@ const CONFIG = {
       if (y > 3 && c.ctr[2] > 9 && c.size[0] < 0.15) return 'trotor'; // рулевой винт (3 лопасти)
       if (Math.abs(dx) > 1.5 && y < 1.5 && ((c.size[2] > 1.3 && c.size[2] < 1.4 && c.size[0] < 0.6) || (c.size[0] < 0.1 && c.size[2] > 0.25 && c.size[2] < 0.3))) return null; // блоки НАР под консолями и их трубы (оружие — из игры)
       return 'body'; } },
-  h_ah64: { src: `${DL}/ah64.glb`, scale: 1, minPart: 0.08, target: 75000, simpErr: 0.02, nose: '-x', rulesIn: 'game', tex: () => 512, axisX: 0.02, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.02, 4.42, 0], trotor: [-1.0, 4.16, 8.84] }, // AH-64 — manilov.ap (1 : 1: Ø несущего 14,68, фюзеляж 14,96); хвостовой винт слева, 4 лопасти крестом
+  h_ah64: { src: `${DL}/ah64.glb`, scale: 1, minPart: 0.08, nose: '-x', rulesIn: 'game', tex: () => 1024, /* без упрощения (127 тыс.) и ужатия текстур — Mark 2026-10-20 */ texVf: 'hue=h=-30:s=0.5' /* у автора сочно-зелёный — в приглушённый оливковый армейский */, colors: { '^(ah2_2|ah05)-FACES(_0)?$': [0.06, 0.067, 0.045] }, axisX: 0.02, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.02, 4.42, 0], trotor: [-1.0, 4.16, 8.84] }, // AH-64 — manilov.ap (1 : 1: Ø несущего 14,68, фюзеляж 14,96); хвостовой винт слева, 4 лопасти крестом
     groups: (c) => { const p = c.path;
       if (/\/ah62[1-4]-FACES|\/ah63-FACES/.test(p)) return 'rotor'; // 4 лопасти и головка
       if (/\/ah59[ab]-FACES/.test(p)) return 'trotor'; // лопасти рулевого винта (две пары крестом)
@@ -526,7 +526,7 @@ const CONFIG = {
       if (/LOD0\.00[23]_/.test(p)) return null; // свои блоки НАР и 12 «Вихрей» с направляющими — оружие из игры (пилоны остаются)
       if (Math.hypot(c.ctr[0] * k - 0.07, c.ctr[2] * k) < 9.5 && c.size[1] * k < 3) { const y = c.ctr[1] * k; if (y > 7.8) return 'rotor'; if (y > 5.9) return 'rotor2'; } // верхний (y 8–10) и нижний (y 6–7,8) винты: по 3 лопасти и втулка
       return 'body'; } },
-  h_mi28: { src: `${DL}/mi-28n_havoc.glb`, scale: 2.549, axes: (x, y, z) => [-x, -z, -y], rulesIn: 'game', tex: () => 512, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 4.0, 0.41], trotor: [0.79, 3.04, 11.02] }, // Ми-28Н — Rukh3D (скинированный; оси автора: ось фюзеляжа Y, верх −Z; единицы автора ×2,549 по Ø несущего 17,2 — фюзеляж тогда 17,0 м); рулевой винт справа, 4 лопасти крестом
+  h_mi28: { src: `${DL}/mi-28n_havoc.glb`, scale: 2.549, axes: (x, y, z) => [-x, -z, -y], rulesIn: 'game', tex: () => 2048, /* текстура автора 2048 — не ужимать (512 мылила камуфляж) */ texVf: 'eq=gamma=1.3' /* у автора очень тёмная */, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 4.0, 0.41], trotor: [0.79, 3.04, 11.02] }, // Ми-28Н — Rukh3D (скинированный; оси автора: ось фюзеляжа Y, верх −Z; единицы автора ×2,549 по Ø несущего 17,2 — фюзеляж тогда 17,0 м); рулевой винт справа, 4 лопасти крестом
     glassAny: /^mirror$/,
     groups: (c) => { const p = c.path, k = 1 / 2.549, x = Math.abs(c.ctr[0]) * k, y = c.ctr[1] * k, z = c.ctr[2] * k;
       if (/\/Object_16$/.test(p)) return y > 1.78 ? 'body' : 'rotor'; // 5 лопастей и втулка (обтекатель РЛС над втулкой — неподвижный)
