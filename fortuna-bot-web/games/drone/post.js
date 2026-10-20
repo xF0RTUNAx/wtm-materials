@@ -35,7 +35,7 @@ export function createPipeline(renderer, cfg) {
   const fxOn = !!cfg.fx && gl2;
   const hazeOn = !!cfg.haze && gl2 && !ldr;
   if (fxOn || taaOn || hazeOn) { const dt = new THREE.DepthTexture(1, 1, THREE.UnsignedInt248Type); dt.format = THREE.DepthStencilFormat; sceneRT.depthTexture = dt; }
-  const fxRT = fxOn ? new THREE.WebGLRenderTarget(1, 1, { type: hdr, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false }) : null;
+  const fxRT = fxOn ? new THREE.WebGLRenderTarget(1, 1, { type: hdr, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true }) : null; // глубина — для раскадровок огня (дым позади пламени его не закрывает)
   if (fxRT && ldr) fxRT.texture.encoding = THREE.sRGBEncoding;
   const bloomOn = !ldr && (cfg.bloom || 0) > 0, raysOn = !ldr && !!cfg.rays;
   const hA = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr }), hB = new THREE.WebGLRenderTarget(1, 1, { ...lin, type: hdr });

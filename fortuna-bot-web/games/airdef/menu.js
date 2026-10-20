@@ -1,19 +1,19 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { CITY, ZONE } from './city.js?v=20261022k';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022k';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022k';
-import { MODES } from './sim/strike.js?v=20261022k';
-import { WEATHERS } from '../drone/world.js?v=20261022k';
-import { WINTER_KEYS } from './winter-render.js?v=20261022k';
-import { LESSONS } from './training.js?v=20261022k';
-import { MODEL_CREDITS } from './models.js?v=20261022k';
-import { openLayoutEditor } from './layout.js?v=20261022k';
+import { CITY, ZONE } from './city.js?v=20261022l';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022l';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022l';
+import { MODES } from './sim/strike.js?v=20261022l';
+import { WEATHERS } from '../drone/world.js?v=20261022l';
+import { WINTER_KEYS } from './winter-render.js?v=20261022l';
+import { LESSONS } from './training.js?v=20261022l';
+import { MODEL_CREDITS } from './models.js?v=20261022l';
+import { openLayoutEditor } from './layout.js?v=20261022l';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022k';
-import { photoItems } from './photo.js?v=20261022k';
-import { guideChapters } from './guide.js?v=20261022k';
-import { iconize, ico } from './icons.js?v=20261022k';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022l';
+import { photoItems } from './photo.js?v=20261022l';
+import { guideChapters } from './guide.js?v=20261022l';
+import { iconize, ico } from './icons.js?v=20261022l';
 
 const GAMES = [
   { k: 'air', name: 'Вылет', desc: 'за самолёт: прорвать ПВО и уничтожить цели' },

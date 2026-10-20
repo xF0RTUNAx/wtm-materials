@@ -2,20 +2,20 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022k';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261022k';
-import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261022k';
-import { ico } from './icons.js?v=20261022k';
-import { applyLayout } from './layout.js?v=20261022k';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022k';
-import { DRONE } from '../drone/sim/modes.js?v=20261022k';
-import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022k';
-import { predictBomb } from './sim/strike.js?v=20261022k';
-import { flightModel, loadOf } from './sim/flight.js?v=20261022k';
-import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022k';
-import { planeDamageVis } from './plane-damage.js?v=20261022k';
-import { placeDefense, pickTargets } from './mission.js?v=20261022k';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022k';
+import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022l';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261022l';
+import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261022l';
+import { ico } from './icons.js?v=20261022l';
+import { applyLayout } from './layout.js?v=20261022l';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022l';
+import { DRONE } from '../drone/sim/modes.js?v=20261022l';
+import { AG, SAM, ERAS, LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261022l';
+import { predictBomb } from './sim/strike.js?v=20261022l';
+import { flightModel, loadOf } from './sim/flight.js?v=20261022l';
+import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022l';
+import { planeDamageVis } from './plane-damage.js?v=20261022l';
+import { placeDefense, pickTargets } from './mission.js?v=20261022l';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261022l';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;

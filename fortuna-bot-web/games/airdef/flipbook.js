@@ -3,6 +3,7 @@
 // «стоячие» (пламя) поворачиваются только вокруг вертикали, но при крутом взгляде сверху (окно ТВ) — тоже лицом к камере,
 // иначе превращаются в полоску. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
 /* global THREE */
+import { FXU } from '../drone/world.js?v=20261022l';
 const VS = `attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iF;
 uniform vec2 uAnchor; uniform float uUp;
 varying vec2 vUv; varying vec3 vF; varying float vA, vD;
@@ -15,7 +16,10 @@ void main() {
   vec2 q = (position.xy + vec2(0.5 - uAnchor.x, uAnchor.y - 0.5)) * iSize;
   vec4 mv = viewMatrix * vec4(iPos + R * q.x + U * q.y, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv;
 }`;
+// в проходе дыма и облаков (половинное разрешение, своей глубины сцены нет) — мягкая проверка по глубине кадра: за домом не видно
 const FS = `uniform sampler2D map; uniform vec2 uGrid; uniform float uGain, uFogD; uniform vec3 uLight, uFog;
+uniform sampler2D tDepth; uniform float fxOn; uniform vec2 fxSize, camNF;
+float fxLinZ(float d) { float z = d * 2.0 - 1.0; return 2.0 * camNF.x * camNF.y / (camNF.y + camNF.x - z * (camNF.y - camNF.x)); }
 varying vec2 vUv; varying vec3 vF; varying float vA, vD;
 vec2 cell(float f) { float c = mod(f, uGrid.x), r = floor(f / uGrid.x); return (vec2(c, uGrid.y - 1.0 - r) + vUv) / uGrid; }
 void main() {
@@ -25,7 +29,11 @@ void main() {
   float hot = smoothstep(0.25, 0.75, t.r - t.b * 0.7);
   vec3 col = c * mix(uLight, vec3(uGain), hot);
   float fog = 1.0 - exp(-vD * vD * uFogD * uFogD);
-  gl_FragColor = vec4(mix(col, uFog, fog * (1.0 - hot * 0.6)), t.a * vA);
+  float soft = 1.0; if (fxOn > 0.5) soft = clamp((fxLinZ(texture2D(tDepth, gl_FragCoord.xy / fxSize).r) - vD) / 4.0, 0.0, 1.0);
+#ifdef DEPTH_PRE
+  if (t.a * vA * soft < 0.93) discard; gl_FragColor = vec4(0.0); return; // только глубина плотной части
+#endif
+  gl_FragColor = vec4(mix(col, uFog, fog * (1.0 - hot * 0.6)), t.a * vA * soft);
 }`;
 // cfg: url, cols, rows, frames, cell [w, h] (пропорции кадра), anchor [x, y] от левого верхнего угла, up — стоячий, loop, gain
 export function createBook(scene, cfg, max = 64) {
@@ -37,11 +45,14 @@ export function createBook(scene, cfg, max = 64) {
   geo.setAttribute('iPos', aPos); geo.setAttribute('iSize', aSize); geo.setAttribute('iF', aF); geo.instanceCount = 0;
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false,
     uniforms: { map: { value: tex }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uAnchor: { value: new THREE.Vector2(...cfg.anchor) }, uUp: { value: cfg.up ? 1 : 0 },
-      uGain: { value: cfg.gain || 2.2 }, uFogD: { value: 0 }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() } } });
-  const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 3; scene.add(mesh);
+      ...FXU, uGain: { value: cfg.gain || 2.2 }, uFogD: { value: 0 }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() } } });
+  const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 0.8; scene.add(mesh); // после облаков (0,5), до дыма (1)
+  // глубина плотной части (непрозрачный проход — раньше всего прозрачного): дым позади огня не закрывает его, дым спереди — закрывает
+  const pre = new THREE.Mesh(geo, new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, uniforms: mat.uniforms, defines: { DEPTH_PRE: 1 }, colorWrite: false, depthWrite: true }));
+  pre.frustumCulled = false; scene.add(pre); mesh.userData.pre = pre;
   const live = [], asp = cfg.cell[0] / cfg.cell[1], n = cfg.frames;
   return {
-    mesh, mat, live,
+    mesh, pre, mat, live,
     // h — высота кадра в метрах; fps — скорость; t0 < 0 — задержка; a — прозрачность (меняет хозяин, напр. у затухающего пожара)
     add(p, h, fps, o = {}) {
       if (live.length >= max) live.shift(); // переполнение — старейший уходит
@@ -59,7 +70,7 @@ export function createBook(scene, cfg, max = 64) {
         const f0 = Math.floor(f), f1 = cfg.loop ? (f0 + 1) % n : Math.min(n - 1, f0 + 1), a = it.a * (cfg.loop ? Math.min(1, it.t * 2) : 1);
         aPos.setXYZ(c, it.x, it.y, it.z); aSize.setXY(c, it.w, it.h); aF.setXYZW(c, f0, f1, f - f0, a); c++;
       }
-      geo.instanceCount = c; mesh.visible = c > 0;
+      geo.instanceCount = c; mesh.visible = pre.visible = c > 0;
       if (c) { aPos.needsUpdate = aSize.needsUpdate = aF.needsUpdate = true; }
       mat.uniforms.uLight.value.copy(light);
       if (fog) { mat.uniforms.uFog.value.copy(fog.color); mat.uniforms.uFogD.value = fog.density || 0; }

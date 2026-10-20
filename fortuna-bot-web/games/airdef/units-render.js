@@ -1,10 +1,10 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022k';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261022k';
-import { LNCH } from './launchers.js?v=20261022k';
-import { createBook } from './flipbook.js?v=20261022k';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022l';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022l';
+import { LNCH } from './launchers.js?v=20261022l';
+import { createBook } from './flipbook.js?v=20261022l';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -445,7 +445,7 @@ export function createFx(scene, P) {
   let api = null; // сам объект эффектов (explosion вызывают и через обёртки — без this)
   return api = {
     mats: [smoke.mat, fire.mat], // хозяин выставляет uniforms.scale по высоте кадра
-    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); for (const b of books) b.mesh.layers.set(addL); }, // раскадровки взрывов — поверх облаков и дыма (облака — фон) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
+    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) — частицами
@@ -457,8 +457,8 @@ export function createFx(scene, P) {
       const h = air ? Math.max(14, R * 4.2) : tbm ? R * 7 : heavy ? R * 5.6 : bomb ? R * 4.2 : R * 3.6, fps = air ? 26 : tbm ? 15 : bomb ? 18 : 22;
       V.set(p.x, p.y + (air ? 0 : h * 0.33), p.z); EX.add(V, h, fps, { t0: air ? 0 : 3 / fps }); // у земли — сразу с 4-го кадра: шар растёт, пока вспышка внизу ещё горит
       if (air) return;
-      // вспышка у земли — медленнее (~1,6–2 с): гаснет, когда огненный шар над ней уже раскрылся (прежние 0,7 с — пропадала раньше)
-      if (bomb) { V.set(p.x, p.y + R * 0.3, p.z); BL.add(V, R * (tbm ? 6 : heavy ? 4.2 : 2.6), tbm ? 8 : 10); }
+      // вспышка у земли ≈ 0,95–1,2 с (было 0,7 — пропадала раньше шара; 1,6–2 — слишком долго)
+      if (bomb) { V.set(p.x, p.y + R * 0.3, p.z); BL.add(V, R * (tbm ? 6 : heavy ? 4.2 : 2.6), tbm ? 13 : 17); }
       if (heavy) api.heavyBlast(p, R, tbm);
       // пыль от земли — низким кольцом; тёмный дым остаётся висеть после огненного шара
       const k = bomb ? 1 : 0.6, nd = Math.round((10 + R * 0.3) * k);

@@ -2,10 +2,10 @@
 // ветки сверху, стороны слева (нейтрально), колонки — ранги I–IV, линии — от предыдущей единицы к следующей, карточка —
 // модель, название, ранг, цена; строка паритета над колонкой. Тап — досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
-import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from './progress.js?v=20261022k';
-import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261022k';
-import { ico } from './icons.js?v=20261022k';
-import { XP, SV } from './progress-net.js?v=20261022k';
+import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from './progress.js?v=20261022l';
+import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261022l';
+import { ico } from './icons.js?v=20261022l';
+import { XP, SV } from './progress-net.js?v=20261022l';
 
 const CSS = `
 #research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'IBM Plex Sans', -apple-system, sans-serif; overflow: hidden;
@@ -70,7 +70,7 @@ const CSS = `
 }`;
 
 const n2 = (v) => Math.round(v).toLocaleString('ru-RU');
-const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261022k`;
+const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261022l`;
 const era = (r) => (ERAS[r - 1] ? ERAS[r - 1].name.split('— ')[1] || '' : '');
 const guide = (n) => (n.branch === 'pvo' ? SAM[n.key]?.guide : n.branch === 'air' ? `Подвески: ${RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => L.name)).join(' · ')}.` : AG[n.item || n.key]?.guide) || '';
 

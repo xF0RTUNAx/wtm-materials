@@ -6,7 +6,7 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry — двигатель без форсажа: только слабое свечение; нет сопел — пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { CREDITS } from './models/credits.js?v=20261022k';
+import { CREDITS } from './models/credits.js?v=20261022l';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -460,8 +460,8 @@ function propSetup(obj) {
 export function spinProps(obj, dt, thr = 1) {
   let L = PROPS.get(obj); if (!L) { L = propSetup(obj); PROPS.set(obj, L); }
   for (const p of L) {
-    if (p.disc) p.disc.rotation.z += p.spin * dt * (1.2 + thr); // следы лопастей на диске — медленно, как на видео
-    else p.rotation.z += p.userData.spin * dt * (2 + 1.5 * thr); // сами лопасти (полупрозрачные) — тоже медленно
+    if (p.disc) p.disc.rotation.z += p.spin * dt * (4 + 3 * thr); // следы лопастей на диске
+    else p.rotation.z += p.userData.spin * dt * (9 + 7 * thr); // лопасти ≈ 2,5 об/с: быстро, но ещё без «стробоскопа» (4 лопасти — до ≈ 45° за кадр)
   }
 } // сопла, пилоны — для зон повреждений (plane-zones.js) и проверок
 export function planeModel(side, cls = 'strike', name = null) {

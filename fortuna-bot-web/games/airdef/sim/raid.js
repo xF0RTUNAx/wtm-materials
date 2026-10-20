@@ -5,12 +5,12 @@
 // carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { AG, raidPlane } from '../arsenal.js?v=20261022k';
-import { flightModel, loadOf } from './flight.js?v=20261022k';
-import { initDamage, hitZones, burnRate } from './damage.js?v=20261022k';
-import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022k';
-import { predictBomb } from './strike.js?v=20261022k';
-import { CITY } from '../city.js?v=20261022k';
+import { AG, raidPlane } from '../arsenal.js?v=20261022l';
+import { flightModel, loadOf } from './flight.js?v=20261022l';
+import { initDamage, hitZones, burnRate } from './damage.js?v=20261022l';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022l';
+import { predictBomb } from './strike.js?v=20261022l';
+import { CITY } from '../city.js?v=20261022l';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
