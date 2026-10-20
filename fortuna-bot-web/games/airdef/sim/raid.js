@@ -107,7 +107,7 @@ export function createRaid(S, city, rnd, opts = {}) {
     if (!L && a.phase !== 'lase') a.phase = 'egress';
     if (a.dz === undefined && a.hp < a.hpMax * 0.4 && a.phase !== 'egress') a.phase = 'egress';
     let alt = a.alt, p = aim;
-    if (a.phase === 'egress') { p = a.home; u.cy = 1; if (Math.hypot(a.pos.x, a.pos.z) > CITY.HALF - 400) { a.out = true; if (fx.out) fx.out(a); return; } }
+    if (a.phase === 'egress') { const hh = Math.hypot(a.home.x, a.home.z) || 1; p = TMP2.set(a.home.x / hh * (CITY.HALF + 2000), 0, a.home.z / hh * (CITY.HALF + 2000)); u.cy = 1; /* уходит за край карты (точка прихода в обороне — внутри карты: долетал и кружил) */ if (Math.hypot(a.pos.x, a.pos.z) > CITY.HALF - 400) { a.out = true; if (fx.out) fx.out(a); return; } }
     TMP.set(p.x - a.pos.x, 0, p.z - a.pos.z); const d = TMP.length() || 1; u.yawTo = Math.atan2(-TMP.x, -TMP.z);
     if (a.evadeT > 0) { a.evadeT -= dt; alt = 12; u.cx = a.id % 2 ? 1 : -1; u.cy = 0.6; u.yawTo = undefined; }
     else if (a.phase === 'ingress' || a.phase === 'lase') {
@@ -117,7 +117,8 @@ export function createRaid(S, city, rnd, opts = {}) {
         // у цели: подскок, пока цель закрыта рельефом или домами (до 180 м), иначе — висение на этой высоте
         const see = city.los(a.pos.x, a.pos.y - 1.5, a.pos.z, aim.x, aim.y, aim.z, 3);
         a.pop = clamp((a.pop || alt) + (see ? 0 : 14 * dt), alt, 180); alt = a.pop;
-        a.blindT = see || a.pop < 179 ? 0 : (a.blindT || 0) + dt; if (a.blindT > 4) { a.stand = Math.max(1200, stand - 700); a.blindT = 0; a.pop = alt; } // и на 180 м не видно — ближе
+        a.blindT = see || a.pop < 179 ? 0 : (a.blindT || 0) + dt;
+        if (a.blindT > 4) { a.blindT = 0; a.pop = alt; if (stand <= 600) a.phase = 'egress'; else a.stand = stand <= 1200 ? 600 : Math.max(1200, stand - 700); } // и на 180 м не видно — ближе; вплотную не видно (дно оврага) — уходит
         const face = Math.abs(Math.atan2(Math.sin(u.yawTo - a.yaw), Math.cos(u.yawTo - a.yaw))) < 0.08, steady = a.speed < 12 && Math.abs(a.pitch) < 0.12; // пуск — с висения, нос почти в горизонт
         if (a.phase === 'lase') u.cy = 0; // подсвет: висит на месте (сдвинется — цель закроет рельеф)
         a.relT -= dt;

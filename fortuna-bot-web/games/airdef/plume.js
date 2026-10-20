@@ -11,10 +11,13 @@
 //    Густота и ширина дыма — от площади сечения (расход топлива ∝ r²), время жизни — от размера ракеты.
 import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261022q';
 
-const TEX = new THREE.TextureLoader();
 const url = (f) => new URL(`./fx/${f}`, import.meta.url).href;
-const flameTex = TEX.load(url('plume_flame.png')), smokeTex = TEX.load(url('plume_smoke.png'));
-smokeTex.wrapS = smokeTex.wrapT = THREE.RepeatWrapping; smokeTex.anisotropy = 4;
+const WEB = typeof document !== 'undefined' && !!document.createElement && typeof Image !== 'undefined'; // стенды Deno — без картинок
+let flameTex = null, smokeTex = null;
+function texs() { // текстуры — при первом факеле или ленте (не при импорте модуля)
+  if (flameTex || !WEB) return; const L = new THREE.TextureLoader();
+  flameTex = L.load(url('plume_flame.png')); smokeTex = L.load(url('plume_smoke.png')); smokeTex.wrapS = smokeTex.wrapT = THREE.RepeatWrapping; smokeTex.anisotropy = 4;
+}
 
 // a — плотность дыма у сопла, c — цвет дыма, w — ширина у сопла (× радиус), g — рост ширины (м/√с на 1 м радиуса + база),
 // life — жизнь (с) = base + k·r, fl — факел: [r, g, b] оттенок, br — яркость, len — длина (× радиус) стартового / маршевого
@@ -75,12 +78,14 @@ const FL_F = `#include <common>
 const flameMats = new Map();
 function flameMat(m) {
   let M = flameMats.get(m); if (M) return M;
+  texs();
   M = new THREE.ShaderMaterial({ uniforms: { map: { value: flameTex }, tint: { value: new THREE.Color(...m.fl) }, br: { value: m.br }, frame: { value: 0 } },
     vertexShader: FL_V, fragmentShader: FL_F, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false });
   flameMats.set(m, M); return M;
 }
-const glowTex = (() => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
-  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,230,180,.55)'); g.addColorStop(1, 'rgba(255,160,60,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); })();
+let glowTex = null; // свечение у сопла — создаётся при первом факеле (в браузере; стенды Deno без canvas)
+const mkGlow = () => { const c = document.createElement('canvas'); c.width = c.height = 64; const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.25, 'rgba(255,230,180,.55)'); g.addColorStop(1, 'rgba(255,160,60,0)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); return new THREE.CanvasTexture(c); };
 let frameT = 0, flameLayer = 0;
 // слой факела: при дыме в половине разрешения — проход огня (рисуется после дыма — дым у сопла не закрывает факел)
 export function setFlameLayer(l) { flameLayer = l; }
@@ -88,7 +93,7 @@ export function flameTick(dt) { frameT += dt * 30; for (const M of flameMats.val
 // факел на ракете: group — модель (+Z к хвосту), z — срез сопла, r — радиус корпуса, motor — MOTOR.*
 export function makeFlame(group, z, r, motor = MOTOR.solid) {
   const mesh = new THREE.Mesh(flameGeo, flameMat(motor)); mesh.position.z = z; mesh.renderOrder = 5; mesh.frustumCulled = false; mesh.userData.fx = true;
-  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: new THREE.Color(...motor.fl), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex || (glowTex = WEB ? mkGlow() : null), color: new THREE.Color(...motor.fl), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, fog: false }));
   glow.position.z = z; glow.renderOrder = 5; glow.userData.fx = true; group.add(mesh); group.add(glow);
   if (flameLayer) { mesh.layers.set(flameLayer); glow.layers.set(flameLayer); }
   let mot = motor;
@@ -149,6 +154,7 @@ const SM_F = `#include <common>
     #include <encodings_fragment>
   }`;
 export function createPlumes(scene, P = {}) {
+  texs();
   const MAXV = P.fxLo ? 8000 : 20000, MAXP = 260;
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(MAXV * 3), tan = new Float32Array(MAXV * 3), A = new Float32Array(MAXV * 4), B = new Float32Array(MAXV * 4), C = new Float32Array(MAXV * 3);

@@ -303,6 +303,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sAim" ${C.sens.aim !== false ? 'checked' : ''}> наведение камерой: ведите пальцем по экрану — самолёт летит туда, куда смотрит камера (выкл — ручка в левой половине)</label>` : ''}
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sPadOn" ${C.sens.pad ? 'checked' : ''}> крестовина: тангаж и крен кнопками (точные манёвры)</label>
       <label class="chk">сила крестовины <input type="range" id="sPadK" min="0.15" max="1" step="0.05" value="${C.sens.padK}"> <b id="vPadK">${Math.round(C.sens.padK * 100)}%</b></label>` : ''}
+      ${C.IS_TOUCH ? '' : `<label class="chk"><input type="checkbox" id="sKeys" ${C.sens.keys ? 'checked' : ''}> подсказки клавиш в бою — панель слева внизу (F1 — включить и выключить в бою)</label>`}
       <label class="chk">поворот обзора оператора ЗРК <input type="range" id="sLook" min="0.3" max="2.5" step="0.05" value="${C.sens.look}"> <b id="vLook">×${C.sens.look.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sAuto" ${C.auto ? 'checked' : ''}> «АВТО» — помощь в бою (кнопка «АВТО» / клавиша T прямо в бою)</label>
       <p class="hint">«АВТО» в вылете сбрасывает бомбы и пускает ракеты, у оператора ЗРК — назначает цель, пускает и наводит пушку. Помогает, но не идеально: реагирует с задержкой и ошибается — пилотирование, уклонение и выбор момента остаются за вами.</p>
@@ -345,6 +346,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sFull') { C.GO.fullRes = e.target.checked; ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); }
     if (e.target.id === 'sInv') { C.sens.invert = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sAim') { C.sens.aim = e.target.checked; C.saveSens(); }
+    if (e.target.id === 'sKeys') { C.sens.keys = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sPadOn') { C.sens.pad = e.target.checked; C.saveSens(); document.body.classList.toggle('nopad', !C.sens.pad); }
     if (e.target.id === 'sPadK') { C.sens.padK = +e.target.value; $('vPadK').textContent = Math.round(C.sens.padK * 100) + '%'; C.saveSens(); }
     if (e.target.id === 'sFs') C.shell.setFs(e.target.checked);

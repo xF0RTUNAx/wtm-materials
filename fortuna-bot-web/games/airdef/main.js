@@ -37,6 +37,8 @@ import { createProgress } from './progress-net.js?v=20261022q';
 import { createDifficulty } from './difficulty.js?v=20261022q';
 import { createResearch } from './research.js?v=20261022q';
 import { createEvent } from './event.js?v=20261022q';
+import { createHints } from './hints.js?v=20261022q';
+import { motorOf } from './plume.js?v=20261022q';
 import { createShell } from './shell.js?v=20261022q';
 import { createTraining, LESSONS } from './training.js?v=20261022q';
 import { createPhoto } from './photo.js?v=20261022q';
@@ -370,7 +372,7 @@ const simFx = {
       const geos = samGeos(m.S, m.ln), main = new THREE.Mesh(geos.main, wMat); main.position.z = geos.mainZ; g.add(main);
       if (geos.booster) { const b = new THREE.Mesh(geos.booster, wMat); b.position.z = geos.boosterZ; g.add(b); g.userData.booster = b; hasBoost = true; }
     }
-    g.userData.flame = rocketFlame(g, L / 2, hasBoost ? r * m.ln.stageR : r);
+    g.userData.flame = rocketFlame(g, L / 2, hasBoost ? r * m.ln.stageR : r, motorOf(m.unit.key, 'sam', false)); // факел — по типу двигателя (plume.js)
     if (gm) { // готовая модель: сопло ищем по самой модели (один раз на комплекс), а не по паспортной длине
       const key = m.unit.key, nm = NZC['sam:' + key] || (NZC['sam:' + key] = nozzleOf(gm.missile, r));
       const nb = hasBoost ? NZC['samb:' + key] || (NZC['samb:' + key] = nozzleOf(gm.booster, r * m.ln.stageR)) : null;
@@ -515,7 +517,7 @@ function relMesh(w) {
   const g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (weaponPending(w.key)) { g.userData.stub = true; wantWeapon(w.key); }
   if (w.W.kind === 'agm' || w.W.kind === 'arm' || w.W.kind === 'cruise') {
     const nz = w.nzL = NZC[w.key] || nozzleOf(g, w.W.vis.r, w.W.vis.nzAx); if (!g.isMesh) NZC[w.key] = nz; // запоминаем только по готовой модели (не по временной)
-    g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = w.W.kind === 'cruise' ? 'jet' : 'rocket';
+    g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r, motorOf(w.key, w.W.kind, false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = w.W.kind === 'cruise' ? 'jet' : 'rocket';
   }
   return g;
 }
@@ -526,11 +528,11 @@ function evMesh(w) {
   if (!g) { g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (M || weaponPending(w.key)) { g.userData.stub = true; if (!M) wantWeapon(w.key); } } // модель ещё грузится — временная (онлайн: ракета пущена раньше, чем пришла модель, — «Томагавк» оставался фигурой)
   g.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; });
   // баллистическая: факел двигателя на разгоне (у сопла — корма, +Z)
-  if (w.W.kind === 'tbm') { const nz = nozzleOf(g, w.W.vis.r); w.nzL = nz; g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.move(nz.z); g.children.filter((c) => c.renderOrder === 5).forEach((c) => { c.position.x = nz.x; c.position.y = nz.y; }); } // факел — из среза сопла
+  if (w.W.kind === 'tbm') { const nz = nozzleOf(g, w.W.vis.r); w.nzL = nz; g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r, motorOf(w.key, 'tbm', false)); g.userData.flame.move(nz.z); g.children.filter((c) => c.renderOrder === 5).forEach((c) => { c.position.x = nz.x; c.position.y = nz.y; }); } // факел — из среза сопла
   if (g.children.some((c) => /^prop/.test(c.name))) g.userData.props = true;
   if (w.W.kind === 'cruise' && !w.W.uav && !w.W.recon && !w.W.glide) { // крылатая (планирующая бомба — без двигателя): факел из среза сопла — ускоритель на старте, потом маршевый (слабый)
     const v = w.W.vis, nz = w.nzL = v.nz && !g.userData.stub ? { x: v.nz[0], y: v.nz[1], z: v.nz[2] } : NZC[w.key] || nozzleOf(g, v.r, v.nzAx); if (!g.userData.stub) NZC[w.key] = nz; // nz — сопло задано в модели вручную; по временной модели не запоминаем
-    g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = 'jet'; // пуск с самолёта: запуск двигателя, потом маршевый
+    g.userData.flame = rocketFlame(g, nz.z, w.W.vis.r, motorOf(w.key, 'cruise', false)); g.userData.flame.at(nz.x, nz.y, nz.z); g.userData.fl = 'jet'; // пуск с самолёта: запуск двигателя, потом маршевый
   }
   return g;
 }
@@ -586,7 +588,8 @@ function syncWorld(dt, t) {
     // под запись старта: факел и вспышка — с момента рёва в записи (m.visIgn), раньше расчётного зажигания; дальше — как в расчёте
     if (m.visIgn !== undefined && !m.visLit && m.t >= m.visIgn) { m.visLit = true; C.fx.ignite(LP.copy(m.pos).addScaledVector(m.dir, -m.M.L / 2), m.dir, m.M.L > 5); }
     const on = (m.tb >= 0 || m.visLit) && (m.tb < m.M.burn || (m.M.sustain && m.tb < m.M.burn + m.M.sustain.t));
-    g.userData.flame.set(on ? (m.tb < m.M.burn && (m.M.L > 2.5 || g.userData.booster) ? 2 : 1) : 0, g.userData.booster ? m.M.r * m.ln.stageR : m.M.r);
+    if (m.tb >= m.M.burn && !m.susM) { m.susM = true; g.userData.flame.motor(motorOf(m.unit.key, 'sam', true)); } // маршевый двигатель (С-75 — жидкостный, «Куб» — прямоточный)
+    g.userData.flame.set(on ? (m.tb < m.M.burn && (m.M.L > 2.5 || g.userData.booster) ? 2 : 1) : 0, g.userData.booster ? m.M.r * m.ln.stageR : m.M.r, m.pos.y); // на высоте факел шире (plume.js)
   }
   // отделившиеся ускорители: падают, кувыркаются, первые секунды дымят
   for (let i = debris.length - 1; i >= 0; i--) {
@@ -956,6 +959,7 @@ setInterval(() => {
   ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
   C.diff = createDifficulty(ls); // сложность: режим + скрытая подстройка под игрока (difficulty.js)
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
+  createHints(C, ctrls); // подсказки клавиш в бою (ПК): «Настройки» или F1
   C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню — #evtBtn)
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
