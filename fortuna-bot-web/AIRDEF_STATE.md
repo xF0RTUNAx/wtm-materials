@@ -141,6 +141,13 @@ Mark работает с **Opus на высоком усилии** — он ру
     подвески дорисованы в prepare.js (addBoxes). Паритет (PAIR): Ми-8МТВ ↔ UH-60, Ка-50 → AH-64D (AH-64D по-прежнему → Ми-28Н), RAH-66 ↔ Ка-52. ИИ налётов (RAID_HELI): Восток II — Ми-8МТВ,
     III — Ка-50; Запад II — UH-60, IV — RAH-66 (AH-1W и Ми-28Н в налётах больше не летают, остались в ветке игрока). Цена ветки: BRANCH_K.heli = 0,57 — путь до ранга IV остался ≈ 1,6 дня (было 14500, стало 14400).
     Снимки — tools/airdef-models/shots-heli2/ (heli-hang.html — вертолёт с подвеской).
+  - **Звуки с YouTube — источники (история 4K Video Downloader, ~/Library/Application Support/4kdownload.com/…/5284-3ba9-b669-06cc.sqlite:
+    media_item_description + media_item_metadata):** Sound Effect Database (ПЛАТНО, $1,99 за звук, условий на сайте нет — /license 404):
+    «F16 Fighter Jet Engine Idle And Shut Down» (eng_idle.wav) и «Flares Sound Effect» (flare.mp3) — в games/airdef/sounds/.gitignore, в игре
+    синтез, пока Mark не купит лицензию и не подтвердит условия (enquiry@soundeffectdatabase.com: браузерная игра, бессрочно, открытый репозиторий,
+    атрибуция). Остальные (решение Mark — использовать): «Free Sound Effect» (далёкий взрыв, винт Ту-95), Sound Treasures (Patriot), WarLeaks
+    («Искандер»), «SOUND Effects Public Domain» (форсаж), Booyadee (ГСН AIM-9), zagros aim (Шахед), «Sounds» (сирена), mrkerk12 и Friendly Free
+    Sounds (пуски). Новые скачанные звуки — проверять канал по этой базе.
   - НАР в полёте — простая модель (цилиндр с оперением): готовых С-8/Hydra под CC0/CC BY нет (рип WT отброшен). Mark: «пока оставим,
     потом подумаем» — варианты: своя модель по чертежам (glb) или платная.
   - Вопросы к Mark из ревью деплоя: (1) ИИ-вертолёты сейчас во всех «Обороне»/фоне меню/«Съёмке» со 2-й волны (raid.js spawnWave) —
