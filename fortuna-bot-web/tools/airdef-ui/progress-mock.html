@@ -75,14 +75,14 @@
 </style></head>
 <body><div id="bgimg"></div><div id="app"></div>
 <script type="module">
-import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from '../../games/airdef/progress.js?v=20261022l';
-import { ico } from '../../games/airdef/icons.js?v=20261022l';
-import { SAM, AG, ERAS, LOADOUTS } from '../../games/airdef/arsenal.js?v=20261022l';
+import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from '../../games/airdef/progress.js?v=20261022q';
+import { ico } from '../../games/airdef/icons.js?v=20261022q';
+import { SAM, AG, ERAS, LOADOUTS } from '../../games/airdef/arsenal.js?v=20261022q';
 const Q = new URLSearchParams(location.search), V = Q.get('v') || '1';
 let RESET = false, B = Q.get('b') || 'pvo', S = Q.get('s') || 'east', SEL = Q.get('sel') || 'pvo:kub', OPEN = Q.has('open') || (V === '1' && innerHeight >= 460);
 const P = { xp: 3400, silver: 2100, res: ['pvo:kub', 'pvo:igla', 'pvo:stinger', 'air:su30', 'wpn:kab500kr'], goal: { pvo: 'pvo:tunguska' },
   own: ['air:e_su17', 'air:f18', 'pvo:s125', 'pvo:osa', 'pvo:roland', 'pvo:gepard', 'wpn:kab500l', 'wpn:gbu12', 'wpn:kh58', 'wpn:agm88', 'strike:kh55_s', 'strike:tochka'] };
-const n2 = (v) => v.toLocaleString('ru-RU'), thumb = (n) => `../../games/airdef/thumbs/${n.branch}_${n.key}.webp?v=20261022l`;
+const n2 = (v) => v.toLocaleString('ru-RU'), thumb = (n) => `../../games/airdef/thumbs/${n.branch}_${n.key}.webp?v=20261022q`;
 const XP = (v) => `${ico('xp')}${n2(v)}`, SV = (v) => `${ico('silver')}${n2(v)}`;
 const era = (r) => ERAS[r - 1].name.split('— ')[1];
 const ROLE = (n) => { const t = unitType(n); return /охотник|радиолок|подсвет|командн|ракету|активная|подавлен/.test(t) ? 'radar' : /тепловая|визир/.test(t) ? 'bino' : /артилл/.test(t) ? 'fire' : 'target'; };

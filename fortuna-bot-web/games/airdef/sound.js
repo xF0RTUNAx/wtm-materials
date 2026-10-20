@@ -1,7 +1,7 @@
 // Звук «Воздушного превосходства»: движок и синтез — из «Летки» (drone/audio.js: двигатель, объёмные голоса самолётов
 // и ракет, взрывы с задержкой по скорости звука, «гарнитура» для бортовых сигналов). Здесь — звуки этой игры из тех же
 // кирпичей (A.noise / A.tone): старт ЗУР, очереди зениток, сброс бомб, тоны СПО и датчика пуска, пульт оператора ПВО.
-import { createAudio } from '../drone/audio.js?v=20261022l';
+import { createAudio } from '../drone/audio.js?v=20261022q';
 
 export function createSound() {
   const A = createAudio();
@@ -11,13 +11,13 @@ export function createSound() {
   A.setVolume(vol); A.setMuted(muted);
   // записанные звуки (games/airdef/sounds): мотор «Шахеда» — петля для голосов дронов; далёкий взрыв —
   // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
-  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261022l'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261022l');
-  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261022l`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261022l'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261022l'); A.setPropSample('prop');
+  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261022q'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261022q');
+  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261022q`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261022q'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261022q'); A.setPropSample('prop');
   // нарезка и петли — tools/airdef-sounds/mkloops.py (огибающая пролёта выровнена, стык петли — по ритму хлопков/выстрелов):
   //   винт — «UH-1 Helicopter» by Rmutt (CC0): малые обороты 0:54, большие 1:03–1:07; самолёт — «Jet Plane Flyby» by qubodup (CC0):
   //   подлёт (свист), уход (рёв), пролёт целиком; очередь — «Navy Mk 15 Phalanx CIWS Fast Burst» by qubodup (CC0), запись
   //   перегружена — верх смягчён и тише; вороны — «Flock of Crows» by Fenodyrie (CC0), с 0:24
-  for (const [k, f] of [['heliLo', 'heli_lo.wav'], ['heliHi', 'heli_hi.wav'], ['jetFront', 'jet_front.wav'], ['jetRear', 'jet_rear.wav'], ['jetPass', 'jet_pass.mp3'], ['ciws', 'ciws_loop.wav'], ['ciwsTail', 'ciws_tail.mp3'], ['crows', 'crows.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261022l`);
+  for (const [k, f] of [['heliLo', 'heli_lo.wav'], ['heliHi', 'heli_hi.wav'], ['jetFront', 'jet_front.wav'], ['jetRear', 'jet_rear.wav'], ['jetPass', 'jet_pass.mp3'], ['ciws', 'ciws_loop.wav'], ['ciwsTail', 'ciws_tail.mp3'], ['crows', 'crows.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261022q`);
   A.setVoiceLoops({ heli: ['heliLo', 'heliHi'], jet: ['jetFront', 'jetRear'] });
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
