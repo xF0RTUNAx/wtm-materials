@@ -995,7 +995,8 @@ export function createAir(C) {
     if (!IS_TOUCH || (fbT -= dt) > 0) return; fbT = 0.12;
     const b = $('tFire'), l = loadout[sel]; if (!b) return;
     const W = l && AG[l.key], reloading = !!(l && l.rt > 0 && l.n < l.n0), p = reloading ? Math.max(0, Math.min(1, 1 - l.rt / relT(l))) : l && l.n > 0 ? 1 : 0;
-    const txt = !l ? '' : reloading ? `${l.n}×${Math.ceil(l.rt)}с` : `×${l.n}`, key = `${txt}|${Math.round(p * 60)}|${W ? W.short : ''}`;
+    const cnt = l && W.kind === 'rocket' ? rocketsOf(l) : l && l.n; // НАР — ракет, а не блоков
+    const txt = !l ? '' : reloading ? `${cnt}×${Math.ceil(l.rt)}с` : `×${cnt}`, key = `${txt}|${Math.round(p * 60)}|${W ? W.short : ''}`;
     if (key === fbS) return; fbS = key;
     b.innerHTML = `<span>${ico('fire')}<small>${W ? W.short : ''}</small><em>${txt}</em></span>`; b.title = 'Пуск / сброс';
     if (b.style.setProperty) b.style.setProperty('--fb', `${Math.round(p * 360)}deg`);
