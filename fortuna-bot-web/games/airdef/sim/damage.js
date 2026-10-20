@@ -62,6 +62,13 @@ export function applyDamage(a) {
   a.thrK = D.eng.reduce((s, e) => s + Math.max(0, Math.min(1, (e - 0.15) / 0.55)), 0) / D.eng.length;
   a.noAB = D.eng.some((e) => e < 0.5);
   a.leak = D.fuel < 0.7 ? (0.7 - D.fuel) * 0.012 : 0;
+  // вертолёт (sim/heli.js): крылья — консоли с пилонами (сопротивление), хвост — балка и рулевой винт: повреждён — реактивный
+  // момент закручивает (trotK), разрушен — неуправляемое вращение; у соосного (Ка-52) рулевого нет — хвост бьёт по управлению
+  if (a.heli) {
+    const coax = a.hm && a.hm.s.coax;
+    a.trotK = coax ? 1 : T.tailAll ? 0 : T.tailL || T.tailR ? 0.35 : Math.min(1, 0.4 + 0.6 * t);
+    a.ctrlK = T.tailAll ? (coax ? 0.4 : 0.6) : 0.6 + 0.4 * t; a.rollBias = 0; a.clK = 1;
+  }
 }
 // сколько корпуса в секунду съедают пожар и разрушенный хвост (неуправляемый самолёт — падает)
 export const burnRate = (a) => (a.dz ? (a.fire ? 1.4 : 0) + (a.det.tailAll ? 6 : 0) : 0);
@@ -84,9 +91,11 @@ export const hullState = (hp) => HULL.find(([v]) => hp >= v) || HULL[HULL.length
 export function dmgBrief(a) {
   const D = a.dz; if (!D) return '';
   const T = a.det, out = [];
-  if (T.consL) out.push('нет законцовки Л'); else if (D.wingL < 0.6) out.push('крыло Л');
-  if (T.consR) out.push('нет законцовки П'); else if (D.wingR < 0.6) out.push('крыло П');
-  if (T.tailAll) out.push('нет хвоста'); else if (T.tailL || T.tailR) out.push('пол-хвоста'); else if (D.tail < 0.6) out.push('хвост');
+  const cw = a.heli ? 'пилон' : 'крыло', cc = a.heli ? 'нет пилона' : 'нет законцовки';
+  if (T.consL) out.push(cc + ' Л'); else if (D.wingL < 0.6) out.push(cw + ' Л');
+  if (T.consR) out.push(cc + ' П'); else if (D.wingR < 0.6) out.push(cw + ' П');
+  if (a.heli) { if (T.tailAll) out.push('нет хвостовой балки'); else if (T.tailL || T.tailR || D.tail < 0.6) out.push(a.hm && a.hm.s.coax ? 'хвост' : 'рулевой винт'); }
+  else if (T.tailAll) out.push('нет хвоста'); else if (T.tailL || T.tailR) out.push('пол-хвоста'); else if (D.tail < 0.6) out.push('хвост');
   if (D.eng.some((e) => e < 0.6)) out.push(D.eng.length > 1 && D.eng.every((e) => e < 0.6) ? 'оба двигателя' : 'двигатель');
   if (a.fire) out.push('ПОЖАР'); else if (D.fuel < 0.7) out.push('течь');
   return out.join(', ');

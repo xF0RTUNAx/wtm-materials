@@ -94,6 +94,8 @@ export function createAir(C) {
   }
   // повреждения зон (sim/damage.js): что случилось — словами и звуком, отлетевшее — с самолёта (plane-damage.js)
   const ZNAME = { consL: 'Оторвало законцовку левого крыла — тянет влево, держите ручку', consR: 'Оторвало законцовку правого крыла — тянет вправо, держите ручку', tailL: 'Разбит хвост слева — управление хуже, уводит', tailR: 'Разбит хвост справа — управление хуже, уводит', tailAll: 'Хвост разрушен — самолёт неуправляем!', fire: 'Пожар на борту!' };
+  // вертолёт: те же зоны — пилоны, хвостовая балка с рулевым винтом (sim/damage.js applyDamage)
+  const ZNAME_H = { consL: 'Разбит левый пилон — подвеска на нём потеряна', consR: 'Разбит правый пилон — подвеска на нём потеряна', tailL: 'Повреждён рулевой винт — разворачивает, держите педали и сбросьте шаг', tailR: 'Повреждён рулевой винт — разворачивает, держите педали и сбросьте шаг', tailAll: 'Хвостовая балка разрушена — вращение! Садитесь', fire: 'Пожар на борту!' };
   function dmgEvents(ev, by) {
     if (craft.dmgVis) craft.dmgVis.sync(craft);
     // с оторванной консолью уходят и подвески на ней
@@ -106,7 +108,7 @@ export function createAir(C) {
       updLoad(); if (!usable(loadout[sel])) nextWeapon();
       if (game.net) game.net.send({ t: 'lost', k: loadout.map((l) => [l.key, l.n, l.n0]) }); // и серверу: сколько осталось и сколько теперь пилонов
     }
-    if (ev.length) { const e2 = ev.includes('tailAll') ? ev.filter((e) => e !== 'tailL' && e !== 'tailR') : ev; say(e2.map((e) => ZNAME[e]).filter(Boolean).join(' · '), 4); snd.alarm(); return; }
+    if (ev.length) { const e2 = ev.includes('tailAll') ? ev.filter((e) => e !== 'tailL' && e !== 'tailR') : ev, ZN = craft.heli ? ZNAME_H : ZNAME; say(e2.map((e) => ZN[e]).filter(Boolean).join(' · '), 4); snd.alarm(); return; }
     const D = craft.dz; if (!D || !by) return; // без источника (пожар раз в секунду) — молча
     const bad = [D.wingL < 0.6 && 'левое крыло', D.wingR < 0.6 && 'правое крыло', D.tail < 0.6 && 'хвост', D.eng.some((e) => e < 0.6) && (D.eng.length > 1 ? (D.eng[0] < 0.6 && D.eng[1] < 0.6 ? 'оба двигателя' : D.eng[0] < 0.6 ? 'левый двигатель' : 'правый двигатель') : 'двигатель'), D.fuel < 0.7 && 'бак — течь'].filter(Boolean);
     if (bad.length) say(`Попадание${by ? `: ${by}` : ''} · повреждено: ${bad.join(', ')}`, 2.5);
