@@ -438,18 +438,21 @@ export function createAir(C) {
     AO[2] = (1 - big) * clamp(-lx * 9, -1, 1);
     return AO;
   }
-  // крестовина: ▲▼ — тангаж, ◀▶ — крен; палец можно вести по блоку, не отрывая (угол — крен и тангаж сразу)
+  // крестовина: ▲▼ — тангаж (у вертолёта — высота), ◀▶ — крен (педали). Кнопки — с фиксацией (Mark 2026-10-20: в вебе
+  // держать палец неудобно): тап — включена и держится, ещё тап (или противоположная) — выключена; по осям независимо,
+  // тап в середину — всё выключить. Новый вылет — всё выключено (padReset)
   const pad = { x: 0, y: 0, id: null };
-  {
-    const el = $('tPad'), arms = { u: el.querySelector('.pu'), d: el.querySelector('.pd'), l: el.querySelector('.pl'), r: el.querySelector('.pr') };
-    const at = (e) => { const b = el.getBoundingClientRect(), dx = (e.clientX - b.left) / b.width - 0.5, dy = (e.clientY - b.top) / b.height - 0.5;
-      pad.x = dx > 0.12 ? 1 : dx < -0.12 ? -1 : 0; pad.y = dy < -0.12 ? 1 : dy > 0.12 ? -1 : 0;
-      arms.r.classList.toggle('on', pad.x > 0); arms.l.classList.toggle('on', pad.x < 0); arms.u.classList.toggle('on', pad.y > 0); arms.d.classList.toggle('on', pad.y < 0); };
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (pad.id !== null) return; pad.id = e.pointerId; try { el.setPointerCapture(pad.id); } catch (_) { /* нет */ } at(e); });
-    el.addEventListener('pointermove', (e) => { if (e.pointerId === pad.id) at(e); });
-    const end = (e) => { if (e.pointerId !== pad.id) return; pad.id = null; pad.x = pad.y = 0; for (const a of Object.values(arms)) a.classList.remove('on'); };
-    el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
-  }
+  const padArms = (() => { const el = $('tPad'); return { el, u: el.querySelector('.pu'), d: el.querySelector('.pd'), l: el.querySelector('.pl'), r: el.querySelector('.pr') }; })();
+  const padShow = () => { const A = padArms; A.r.classList.toggle('on', pad.x > 0); A.l.classList.toggle('on', pad.x < 0); A.u.classList.toggle('on', pad.y > 0); A.d.classList.toggle('on', pad.y < 0); };
+  function padReset() { pad.x = pad.y = 0; padShow(); }
+  padArms.el.addEventListener('pointerdown', (e) => {
+    e.preventDefault(); e.stopPropagation();
+    const b = padArms.el.getBoundingClientRect(), dx = (e.clientX - b.left) / b.width - 0.5, dy = (e.clientY - b.top) / b.height - 0.5;
+    if (Math.abs(dx) < 0.17 && Math.abs(dy) < 0.17) padReset();
+    else if (Math.abs(dx) > Math.abs(dy)) { const v = dx > 0 ? 1 : -1; pad.x = pad.x === v ? 0 : v; }
+    else { const v = dy < 0 ? 1 : -1; pad.y = pad.y === v ? 0 : v; }
+    padShow(); if (snd.click) snd.click();
+  });
   const mine = () => C.ctrl === api || (C.ctrl && C.ctrl.inner === api); // в обучении управляет урок, а самолёт — внутри него
   const tap = (id, fn) => $(id).addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) fn(); });
   tap('tFire', fire); tap('tLock', podNext); tap('tFlare', cm); tap('tThr', thrStep);
@@ -792,7 +795,7 @@ export function createAir(C) {
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
     if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); }
-    document.body.classList.toggle('heli', !!craft.heli);
+    document.body.classList.toggle('heli', !!craft.heli); padReset(); // фиксированные кнопки крестовины — выключены
     updLoad();
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize(); // окно на телефоне — по «ТВ»
     Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0 });
@@ -815,7 +818,7 @@ export function createAir(C) {
     craft.hm = isHeli(L.plane) ? heliModel(L.plane, { arcade: setup.diff !== 'real' }) : null; craft.heli = !!craft.hm;
     if (craft.irBase === undefined) craft.irBase = craft.ir;
     craft.ir = craft.heli ? craft.irBase * 0.55 : craft.irBase; // вертолёт: турбовальные двигатели с экранами выхлопа — тепловым ГСН труднее
-    game.used = ['air:' + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» — должно быть куплено)
+    game.used = [(L.heli || craft.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» — должно быть куплено)
     hasPod = !!L.pod; for (const [k] of L.items) wantWeapon(k); // модели подвески (оружие «Мульти-волны» и новое — грузятся по запросу)
     const order = [3, 4, 2, 5, 1, 6, 0, 7]; let oi = 0;
     // запас на борт (ошибки, промахи): «Аркада» — ещё 2 полных комплекта (пополняются сами), «Реализм» — 1 пополнение на точке вылета;

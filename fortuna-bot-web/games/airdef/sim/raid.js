@@ -9,7 +9,8 @@ import { AG, raidPlane } from '../arsenal.js?v=20261022l';
 import { flightModel, loadOf } from './flight.js?v=20261022l';
 import { initDamage, hitZones, burnRate } from './damage.js?v=20261022l';
 import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022l';
-import { predictBomb } from './strike.js?v=20261022l';
+import { predictBomb, predictRocket } from './strike.js?v=20261022l';
+import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261022l';
 import { CITY } from '../city.js?v=20261022l';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
@@ -27,6 +28,11 @@ export const RAID_LOADS = {
     2: { bomber: [['kab500l', 2], ['kab500kr', 2]], tv: [['kh29t', 2], ['kh25ml', 2]], sead: [['kh58', 2]], low: [['fab500', 4]] },
     3: { bomber: [['kab500s', 3], ['ecm_e', 1]], tv: [['kh29t', 2]], sead: [['kh31p', 2], ['ecm_e', 1]], low: [['fab500', 4]] },
     4: { bomber: [['umpk', 2], ['ecm_e', 1]], cruise: [['kh59mk2', 2]], sead: [['kh31p', 2], ['ecm_e', 1]], decoyer: [['decoy_e', 4]], low: [['fab500', 4]] } },
+};
+// вертолёты налёта (Хеллоуин 2026) по стороне и эпохе: модель и подвеска — как у игрока (arsenal.js, подвески heli)
+export const RAID_HELI = {
+  east: { 1: ['h_mi24', [['shturm', 4], ['s8', 2]]], 2: ['h_mi24', [['shturm', 4], ['s8', 2]]], 3: ['h_mi28', [['ataka', 8], ['s8', 2]]], 4: ['h_ka52', [['ataka', 8], ['s8', 2]]] },
+  west: { 1: ['h_uh1', [['hydra', 2]]], 2: ['h_ah1', [['hellfire', 8], ['hydra', 2]]], 3: ['h_ah64', [['hellfire', 8], ['hydra', 2]]], 4: ['h_ah64', [['hellfire', 8], ['hydra', 2]]] },
 };
 const V = () => new THREE.Vector3();
 const TMP = V(), TMP2 = V(), DIR = V(), PI = V();
@@ -55,6 +61,8 @@ export function createRaid(S, city, rnd, opts = {}) {
       const br = bearing0 + g * (Math.PI * 2 / groups) + (rnd() - 0.5) * 0.4;
       spawn(role, tgt, br, g * 25 + rnd() * 8, R);
     }
+    // вертолёты — со 2-й волны (с 4-й — пара): подходят по рельефу с 9 км, прячась за холмами
+    if (wave >= 2 && RAID_HELI[side] && RAID_HELI[side][era] && opts.helis !== false) for (let k = 0; k < (wave >= 4 ? 2 : 1); k++) spawn('heli', targets[(k + wave) % targets.length], bearing0 + Math.PI + (k - 0.5) * 0.6, 10 + k * 12 + rnd() * 10, Math.min(R || 9000, 9000));
   }
   // o — поправки для особых ролей (носитель «Мульти-волны»: plane, load, cruise, hp, rcs, salvo)
   function spawn(role, tgt, bearing, delay = 0, R0, o = {}) {
@@ -66,6 +74,7 @@ export function createRaid(S, city, rnd, opts = {}) {
     if (o.cruise) Object.assign(a, o, { hpMax: o.hp || a.hpMax, t: 0 });
     a.jam = Math.max(0, ...load.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
     // свои ТТХ самолёта (sim/flight.js): модель — как в отрисовке (носитель — o.plane); ИИ — честная лётная модель
+    if (role === 'heli') return spawnHeli(a, bearing, R0 || 9000);
     a.model = o.plane || raidPlane(side, era, role); a.fm = flightModel(a.model) || null;
     if (a.fm) { a.fuel = 0.8; setLoad(a); a.speed = Math.min(a.speed, a.fm.s.vSL / 3.6 * 0.7); initDamage(a); }
     a.pos.set(Math.sin(bearing) * R, a.cruise + (role === 'low' ? 300 : 0), Math.cos(bearing) * R);
@@ -77,6 +86,57 @@ export function createRaid(S, city, rnd, opts = {}) {
     fwdOf(a, a.vel).multiplyScalar(a.speed);
     planes.push(a);
     return a;
+  }
+  // вертолёт: своя лётная модель (sim/heli.js, «Аркада» — ИИ ведёт скоростью), низко над рельефом, тепла меньше
+  function spawnHeli(a, bearing, R) {
+    const [model, load] = RAID_HELI[side][era];
+    a.plane = a.model = model; a.heli = true; a.hm = heliModel(model, { arcade: true }); a.fm = null; a.load = load.map(([k, c]) => ({ key: k, n: c }));
+    a.hp = a.hpMax = 45; a.ir = 0.6; a.rcs = 6; a.cmFlare = 40; a.cmChaff = 10; a.jam = 0; a.u = { cx: 0, cy: 0, col: 0, yaw: 0, yawTo: undefined, pitchTo: undefined, pitchHold: false };
+    const x = Math.sin(bearing) * R, z = Math.cos(bearing) * R; a.home = new THREE.Vector3(x * 1.6, 0, z * 1.6);
+    a.pos.set(x, groundOf(x, z) + 40, z); const to = TMP.set(a.tgt.x - x, 0, a.tgt.z - z); a.yaw = Math.atan2(-to.x, -to.z); a.pitch = a.roll = 0;
+    a.vel.set(-Math.sin(a.yaw) * 30, 0, -Math.cos(a.yaw) * 30); a.speed = 30; heliInit(a); a.alt = 30 + rnd() * 15; a.phase = a.delay > 0 ? 'wait' : 'ingress';
+    planes.push(a); return a;
+  }
+  const groundOf = (x, z) => Math.max(city.topAt(x, z), city.waterAt ? city.autumn.WY : CITY.WATER_Y);
+  // ИИ вертолёта: заход на 30–45 м над рельефом (смотрит вперёд), у цели — подскок до прямой видимости, висение носом на цель:
+  // ПТУР — пуск и подсвет до попадания (как лазерные у самолётов), НАР — нос на прицел, залп, когда точка падения у цели;
+  // угроза — ловушки (выше), бросок вниз до 12 м и вбок; без оружия или подбит — уходит низко туда, откуда пришёл
+  function heliAI(a, dt) {
+    const u = a.u, L = curLoad(a), aim = aimPointOf(a), W = L && AG[L.key];
+    u.cx = 0; u.cy = 0; u.col = 0; u.yaw = 0; u.pitchTo = undefined; u.pitchHold = false;
+    if (!L && a.phase !== 'lase') a.phase = 'egress';
+    if (a.dz === undefined && a.hp < a.hpMax * 0.4 && a.phase !== 'egress') a.phase = 'egress';
+    let alt = a.alt, p = aim;
+    if (a.phase === 'egress') { p = a.home; u.cy = 1; if (Math.hypot(a.pos.x, a.pos.z) > CITY.HALF - 400) { a.out = true; if (fx.out) fx.out(a); return; } }
+    TMP.set(p.x - a.pos.x, 0, p.z - a.pos.z); const d = TMP.length() || 1; u.yawTo = Math.atan2(-TMP.x, -TMP.z);
+    if (a.evadeT > 0) { a.evadeT -= dt; alt = 12; u.cx = a.id % 2 ? 1 : -1; u.cy = 0.6; u.yawTo = undefined; }
+    else if (a.phase === 'ingress' || a.phase === 'lase') {
+      const stand = Math.min(a.stand || 1e9, W && W.kind === 'rocket' ? 2200 : W ? Math.min(W.rmax * 0.7, 5000) : 3000); // a.stand — подполз ближе (цель за холмами)
+      u.cy = clamp((d - stand) / 1500, -0.2, 1);
+      if (d < stand * 1.4) {
+        // у цели: подскок, пока цель закрыта рельефом или домами (до 180 м), иначе — висение на этой высоте
+        const see = city.los(a.pos.x, a.pos.y - 1.5, a.pos.z, aim.x, aim.y, aim.z, 3);
+        a.pop = clamp((a.pop || alt) + (see ? 0 : 14 * dt), alt, 180); alt = a.pop;
+        a.blindT = see || a.pop < 179 ? 0 : (a.blindT || 0) + dt; if (a.blindT > 4) { a.stand = Math.max(1200, stand - 700); a.blindT = 0; a.pop = alt; } // и на 180 м не видно — ближе
+        const face = Math.abs(Math.atan2(Math.sin(u.yawTo - a.yaw), Math.cos(u.yawTo - a.yaw))) < 0.08;
+        a.relT -= dt;
+        if (a.phase === 'lase') { a.laser = see ? aim.clone() : null; if (!S.wpns.some((w) => w.owner === a && !w.dead)) { a.laser = null; a.phase = 'ingress'; a.relT = 1.5 + rnd(); } }
+        else if (W && W.kind === 'rocket') {
+          // НАР: нос — на точку цели (с поправкой на снижение ракеты), залп — когда точка падения ближе 30 м
+          const el = Math.atan2(aim.y - a.pos.y, d); u.pitchTo = el + (a.rk || 0); u.pitchHold = true; u.cy = 0;
+          fwdOf(a, DIR); const t = predictRocket(city, W, TMP2.copy(a.pos).add(TMP.set(0, -2.5, 0)), DIR, Math.max(0, a.vel.dot(DIR)), PI);
+          if (t > 0) { const err = Math.hypot(PI.x - aim.x, PI.z - aim.z) * (Math.hypot(PI.x - a.pos.x, PI.z - a.pos.z) < d ? 1 : -1); a.rk = clamp((a.rk || 0) + err * 0.00002 * dt * 60, -0.15, 0.12); if (Math.abs(err) < 30 && face && see && a.relT <= 0) { for (let k = 0; k < W.salvo; k++) S.release(a, L.key, {}); if ((L.rs = (L.rs ?? Math.ceil(W.load / W.salvo)) - 1) <= 0) { L.n--; L.rs = undefined; } a.relT = 2.5 + (1 - a.skill) * 2; if (fx.release) fx.release(a, L.key); } }
+          else a.rk = clamp((a.rk || 0) - 0.003 * dt * 60, -0.15, 0.12); // перелёт дальше дальности расчёта — нос ниже
+        } else if (W && see && face && a.relT <= 0 && d < W.rmax * 0.9) { L.n--; S.release(a, L.key, { aim }); a.relT = 2; if (fx.release) fx.release(a, L.key); if (W.seeker === 'laser') { a.laser = aim.clone(); a.phase = 'lase'; } }
+      }
+    }
+    // высота: не ниже рельефа впереди (100–600 м по курсу), газ — к нужной
+    let floor = groundOf(a.pos.x, a.pos.z); fwdOf(a, DIR); const hx = Math.hypot(DIR.x, DIR.z) || 1;
+    for (const s of [80, 200, 400, 650]) floor = Math.max(floor, groundOf(a.pos.x + DIR.x / hx * s, a.pos.z + DIR.z / hx * s) - s * 0.04);
+    u.col = clamp((floor + alt - a.pos.y) / 12 - a.vel.y * 0.12, -1, 1);
+    const ev = heliStep(a, a.hm, u, dt, { groundY: groundOf(a.pos.x, a.pos.z), gear: 2 }); a.thr = a.col;
+    if (ev && ev.touch !== undefined && touchVerdict(ev) === 'crash') { a.dead = true; a.laser = null; if (fx.down) fx.down(a); }
+    else if (ev && ev.touch !== undefined) { a.vel.y = Math.abs(a.vel.y) * 0.3; a.pos.y += 0.5; }
   }
   // оторвало консоль: подвески на ней (внешние пилоны — примерно четверть груза под крылом) уходят вместе с ней
   function loseCons(a) { for (const l of a.load) { const k = AG[l.key]; if (!k || k.kind === 'ecm' || l.n < 2) continue; l.n -= Math.max(1, Math.floor(l.n / 4)); } setLoad(a); }
@@ -138,7 +198,7 @@ export function createRaid(S, city, rnd, opts = {}) {
         else if (a.pos.y < city.topAt(a.pos.x, a.pos.z) + 3) { a.dead = true; if (fx.down) fx.down(a); }
         continue;
       }
-      a.ab = false; a.thr = 0.92;
+      a.ab = false; if (!a.heli) a.thr = 0.92;
       // угрозы: пуск по нам (СПО «пуск» или датчик пуска) — ловушки, диполи и отворот
       const rw = S.rwr(a), mw = S.mws(a), launch = rw.find((e) => e.state === 'launch'), track = rw.find((e) => e.state === 'track');
       a.cmT -= dt;
@@ -148,6 +208,7 @@ export function createRaid(S, city, rnd, opts = {}) {
         if (a.cmChaff > 0 && launch) { a.cmChaff--; S.dropCM(a, 'chaff'); }
         if (rnd() < a.skill) a.evadeT = 3 + rnd() * 3;
       }
+      if (a.heli) { heliAI(a, dt); continue; }
       if (a.role === 'carrier') {
         // носитель «Мульти-волны»: идёт прямо к рубежу a.R (за краем района — ПВО не достаёт), там ходит по дуге и пускает
         // каждую ракету в её время (q.t — от начала боя, a.t — тоже), по своему курсу (ракета сама разворачивается к цели);

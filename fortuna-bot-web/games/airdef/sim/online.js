@@ -52,7 +52,7 @@ export const reloadKOf = (t, radarKills) => (t < SUPPRESS_T ? 1 : 1 + Math.min(S
 export const LEAD_K = { air: 1.1, pvo: 1.15 };
 export const loadoutCostFor = (L, lead) => Math.round(loadoutCost(L) * (lead === 'air' ? LEAD_K.air : 1));
 export const samCostFor = (k, lead) => Math.round(samCost(k) * (lead === 'pvo' && samClass(k) === 'top' ? LEAD_K.pvo : 1));
-export const bundleOf = (era, side, i) => { const L = LOADOUTS[era][i]; return L && L.side === side ? L : null; };
+export const bundleOf = (era, side, i) => { const L = LOADOUTS[era][i]; return L && L.side === side && !L.heli ? L : null; }; // вертолёты — пока только одиночная игра
 export const bundleName = (L) => `${PLANES[L.plane] || L.plane} · ${L.name}`;
 
 // бюджеты: первая волна — поровну; дальше — база + за результат волны, проигрывающей стороне +20 %

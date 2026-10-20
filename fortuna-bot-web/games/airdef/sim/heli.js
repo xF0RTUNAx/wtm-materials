@@ -77,6 +77,7 @@ export function heliStep(a, hm, u, dt, env = {}) {
     // взгляд вниз круче ~7° (наведение камерой) — нос за ним, до 1,3 наибольшего наклона: прицеливание НАР и ПТУР по земле
     // (вертолёт при этом разгоняется — как на пологом пикировании)
     if (u.pitchTo !== undefined && u.pitchTo < -0.12) pd = Math.min(pd, Math.max(u.pitchTo, -hm.tilt * 1.3));
+    if (u.pitchHold && u.pitchTo !== undefined) pd = clamp(u.pitchTo, -hm.tilt * 1.3, hm.tilt); // ИИ: нос точно по прицелу (залп НАР)
     const bank = smooth(15, 35, vf);
     const rd = (1 - bank) * -clamp(ff(wantR) + clamp((wantR - vr) / 9, -1, 1) * hm.tilt, -hm.tilt, hm.tilt) + bank * -clamp(u.cx, -1, 1) * 0.8;
     a.wp = clamp((pd - a.pitch) * 3, -hm.pitchR, hm.pitchR) * ctrl;

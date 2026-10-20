@@ -24,7 +24,7 @@ import { createRaid } from './sim/raid.js?v=20261022l';
 import { POD } from './sim/combined.js?v=20261022l';
 import { unitModel, weaponGeo, samGeos, rocketFlame, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022l';
 import { slotCount } from './launchers.js?v=20261022l';
-import { spinProps as spinRotors, modelStats, loadModels, planeModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022l';
+import { spinProps as spinRotors, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022l';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022l';
 import { createSound } from './sound.js?v=20261022l';
 import { ico, iconize } from './icons.js?v=20261022l';
@@ -132,15 +132,17 @@ if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeF
 // «Съёмка» — карта на выбор (pmap: 'winter' | 'city', по умолчанию зимняя) и своя погода для каждой карты (pwx: { city, winter })
 // Осенняя «Туманная топь» (Хеллоуин) — ?map=autumn, «Съёмка» (pmap 'autumn') и проверка вертолёта ?heli=…
 const MAPS = ['winter', 'city', 'autumn'];
-function wantMap(game, pmap) {
+// вылет на вертолёте (подвеска heli) — тоже на «Туманной топи»
+function wantMap(game, pmap, era, lo) {
   if (MAPS.includes(Q.get('map'))) return Q.get('map');
+  if (game === 'air' && LOADOUTS[era] && LOADOUTS[era][lo] && LOADOUTS[era][lo].heli) return 'autumn';
   if (game === 'photo') return pmap === 'city' || pmap === 'autumn' ? pmap : 'winter';
   if (Q.get('heli')) return 'autumn';
   const online = game === 'online' || Q.get('ad') || Q.get('mp') === '1';
   return game === 'multi' || (online && ls.get('fortuna_ad_kind') === 'multi') ? 'winter' : 'city';
 }
 const SETUP0 = (() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}') || {}; } catch (_) { return {}; } })();
-const MAP = wantMap(SETUP0.game, SETUP0.pmap);
+const MAP = wantMap(SETUP0.game, SETUP0.pmap, SETUP0.era, SETUP0.lo);
 // погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
 const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
@@ -625,7 +627,10 @@ function syncWorld(dt, t) {
     if (!g) {
       g = new THREE.Group(); g.rotation.order = 'YXZ';
       if (a.role === 'decoy') { g.add(weaponMesh(a.decoyKey, AG[a.decoyKey], weaponGeo, wMat)); g.userData.flames = { update() {} }; }
-      else {
+      else if (a.heli) { // вертолёт налёта: ждём свою модель (пока грузится — не рисуем: иначе встал бы самолёт стороны), подвески — без отрисовки
+        const hm = heliModel(a.plane); if (!hm) continue;
+        hm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(hm.obj); g.userData.flames = { update() {} };
+      } else {
         // вблизи — готовая модель (подвеска отдельными моделями на пилонах, сброшенное пропадает), вдали — простая
         const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)), sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
         if (pm) {
@@ -714,6 +719,10 @@ document.body.classList.toggle('nopad', !C.sens.pad); // крестовина в
 const ctrls = {};
 C.start = function (game) {
   if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
+  // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
+  if (game === 'air' && !Q.get('map') && wantMap('air', C.setup.pmap, C.setup.era, C.setup.lo) !== MAP) {
+    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', 'air'); u.searchParams.delete('heli'); location.replace(u.href); return;
+  }
   snd.unlock();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
   C.hooks = {}; C.paused = false; C.hint(''); C.say('');

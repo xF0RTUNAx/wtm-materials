@@ -294,7 +294,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   }
 
   // ═════════════ Боты: расстановка и выбор связки ═════════════
-  const afford = (r, p) => LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && O.loadoutCostFor(L, r.lead) <= p.budget);
+  const afford = (r, p) => LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && !L.heli && O.loadoutCostFor(L, r.lead) <= p.budget); // вертолёты — пока не в онлайне
   // подвески остальных лётчиков команды (для лимита охотников)
   const othersL = (r, p) => team(r, 'air').filter((q) => q !== p).map((q) => (q.choice !== null && q.choice !== undefined ? LOADOUTS[r.era][q.choice] : null));
   function autoChoice(r, p) {
@@ -306,8 +306,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       const w = want && list.filter(([L]) => loadoutRole(L) === want); if (w && w.length) list = w;
     }
     const pick = p.bot && list.length ? list[Math.floor(Math.random() * list.length)] : list[0];
-    const all = LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir).filter(ok).sort((a, b) => O.loadoutCost(a[0]) - O.loadoutCost(b[0]));
-    const [L, i] = pick || all[0] || LOADOUTS[r.era].map((q, j) => [q, j]).find(([q]) => q.side === r.sideAir);
+    const all = LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && !L.heli).filter(ok).sort((a, b) => O.loadoutCost(a[0]) - O.loadoutCost(b[0]));
+    const [L, i] = pick || all[0] || LOADOUTS[r.era].map((q, j) => [q, j]).find(([q]) => q.side === r.sideAir && !q.heli);
     p.choice = i; p.paid = O.loadoutCostFor(L, r.lead); p.budget = Math.max(0, p.budget - p.paid);
   }
   function botPlan(r, p) {

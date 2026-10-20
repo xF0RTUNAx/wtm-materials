@@ -90,7 +90,7 @@ export const AG = {
   // три — по захвату прицельной системы вертолёта с подсветом до попадания (seeker 'laser'). «Атака» — на модели «Штурма»
   // (транспортно-пусковой контейнер почти тот же). НАР — kind 'rocket': залп salvo ракет из блока (load в блоке), без
   // наведения, прицел — точка падения по оси вертолёта (predictRocket); блок после залпов остаётся на пилоне
-  shturm: { name: '9М114 «Штурм-В»', short: 'Штурм', side: 'east', era: 2, kind: 'agm', seeker: 'laser', heli: true, mass: 46, acc: 230, burn: 1.6, kd: 1.6, g: 10, life: 20, fov: 30, rmax: 5000, dmg: 30, blast: 13,
+  shturm: { name: '9М114 «Штурм-В»', short: 'Штурм', side: 'east', era: 1, kind: 'agm', seeker: 'laser', heli: true, mass: 46, acc: 230, burn: 1.6, kd: 1.6, g: 10, life: 20, fov: 30, rmax: 5000, dmg: 30, blast: 13,
     guide: 'Противотанковая ракета Ми-24 по радиокомандам: оператор держит прицел на цели до попадания. Отвернули или цель закрыло — ракета уходит мимо.',
     specs: [['Страна', 'СССР'], ['Масса', '≈ 46 кг в контейнере'], ['Дальность', 'до ≈ 5 км'], ['Наведение', 'радиокомандное, по прицелу']],
     vis: { L: 1.83, r: 0.065, kind: 'missile', color: 0x5d6650 } },
@@ -106,6 +106,10 @@ export const AG = {
     guide: 'Неуправляемые 80-мм ракеты: 20 в блоке, залп по 4. Прицел — точка падения на земле по оси вертолёта: наведите её на цель и пускайте; лучше всего — на пологом снижении с 1,5–3 км.',
     specs: [['Страна', 'СССР'], ['Калибр', '80 мм'], ['В блоке', '20 ракет'], ['Дальность', '≈ 1,3–4 км']],
     vis: { L: 2.0, r: 0.26, kind: 'missile', color: 0x5d6650 } },
+  hydra: { name: 'Hydra 70 (блок LAU-61)', short: 'Hydra', side: 'west', era: 1, kind: 'rocket', heli: true, mass: 280, load: 19, salvo: 4, disp: 0.009, acc: 700, burn: 1.0, kd: 2.2, life: 12, rmax: 4500, dmg: 12, blast: 11,
+    guide: 'Неуправляемые 70-мм ракеты: 19 в блоке, залп по 4. Прицел — точка падения на земле по оси вертолёта; бить лучше с пологого снижения с 1,5–3 км.',
+    specs: [['Страна', 'США'], ['Калибр', '70 мм'], ['В блоке', '19 ракет'], ['Дальность', '≈ 1–4,5 км']],
+    vis: { L: 1.7, r: 0.2, kind: 'missile', color: 0x4e5a3a } },
 };
 
 export const SAM_TYPE = { command: 'радиокомандное', sarh: 'полуактивное (подсвет цели)', ir: 'тепловая ГСН', saclos: 'по линии визирования', guns: 'зенитная артиллерия' };
@@ -198,7 +202,7 @@ export const DEFENSE = {
 // Готовые подвески «Изделия» для удара (по эпохе и стороне вооружения самолёта); pod — прицельный контейнер
 // подвески вылета: side — чья авиация (показываются подвески стороны, атакующей выбранную ПВО), plane — модель самолёта
 // (у каждой подвески — свой реальный носитель этого оружия и эпохи), pod — прицельный контейнер (у кого он встроен — не вешается)
-export const PLANES = { su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
+export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-52', h_ah64: 'AH-64D', h_ah1: 'AH-1W', h_uh1: 'UH-1H', /* вертолёты */ su30: 'Су-30', mig29: 'МиГ-29', f18: 'F/A-18E', f16: 'F-16D', e_su24: 'Су-24М', e_su25: 'Су-25', e_su34: 'Су-34', e_su17: 'Су-17М4',
   e_su57: 'Су-57', e_mig31: 'МиГ-31БМ', e_tu22m3: 'Ту-22М3', e_f4: 'F-4 Phantom II', e_gripen: 'JAS 39 Gripen', e_f35: 'F-35A', e_f22: 'F-22A Raptor',
   e_tornado: 'Tornado IDS', e_f111: 'F-111F', e_mig23: 'МиГ-23БН', e_mig27: 'МиГ-27К', e_tu22m2: 'Ту-22М2', e_a10: 'A-10A', e_f15e: 'F-15E',
   e_mig21n: 'МиГ-21бис', e_mig25: 'МиГ-25БМ', e_su7b: 'Су-7БМК', e_tu16: 'Ту-16', e_f100: 'F-100F', e_f5: 'F-5E', e_f117: 'F-117A', e_jaguar: 'Jaguar GR.1',
@@ -236,6 +240,9 @@ export const LOADOUTS = {
     // ветки 2026-10-20: Buccaneer и Jaguar — с ранга I (их лазерные подвески — в эпохе II)
     { side: 'west', plane: 'e_buccaneer', name: 'Buccaneer S.2B: Mk 82 ×6', items: [['mk82', 6]] },
     { side: 'west', plane: 'e_jaguar', name: 'Jaguar GR.1: Mk 82 ×4', items: [['mk82', 4]] },
+  // вертолёты (Хеллоуин 2026, heli: true — ветка «Вертолёты», в онлайне пока нет; слоты: ПТУР — рамы на внешних пилонах, НАР — внутренние)
+  { side: 'east', plane: 'h_mi24', heli: true, name: 'Ми-24В: «Штурм» ×4 + С-8 ×2 блока', items: [['shturm', 4], ['s8', 2]], pod: true },
+  { side: 'west', plane: 'h_uh1', heli: true, name: 'UH-1H: Hydra 70 ×2 блока', items: [['hydra', 2]] },
   ],
   2: [
     { side: 'east', plane: 'e_su24', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
@@ -257,17 +264,10 @@ export const LOADOUTS = {
     { side: 'east', plane: 'e_yak38', name: 'Як-38М: ОФАБ-250 ×4', items: [['ofab250', 4]] },
     { side: 'east', plane: 'e_su25', name: 'Су-25: ФАБ-500 ×6', items: [['fab500', 6]] }, // Су-27СМ — с ранга III
     { side: 'west', plane: 'e_etendard', name: 'Super Étendard: GBU-12 ×2 + Mk 82 ×2 (ATLIS)', items: [['gbu12', 2], ['mk82', 2]], pod: true },
+  // вертолёты (Хеллоуин 2026)
+  { side: 'west', plane: 'h_ah1', heli: true, name: 'AH-1W: Hellfire ×8 + Hydra ×2 блока', items: [['hellfire', 8], ['hydra', 2]], pod: true },
   ],
 };
-// Вертолёты (Хеллоуин 2026, sim/heli.js): пока отдельно от LOADOUTS — в прокачку и меню не входят; в «Вылете» — ?heli=ключ.
-// Слоты (air.js heliSlots): ПТУР — рамы по 4 на внешних пилонах, блоки НАР — на внутренних
-export const HELI_LOADOUTS = [
-  { side: 'east', plane: 'h_mi24', era: 2, name: 'Ми-24В: «Штурм» ×4 + С-8 ×2 блока', items: [['shturm', 4], ['s8', 2]], pod: true },
-  { side: 'east', plane: 'h_mi28', era: 3, name: 'Ми-28Н: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
-  { side: 'east', plane: 'h_ka52', era: 3, name: 'Ка-52: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
-  { side: 'west', plane: 'h_ah64', era: 2, name: 'AH-64: Hellfire ×8', items: [['hellfire', 8]], pod: true },
-  { side: 'west', plane: 'h_ah1', era: 2, name: 'AH-1W: Hellfire ×8', items: [['hellfire', 8]], pod: true },
-];
 
 // Оборона города: цена комплекса в очках обороны (между волнами — докупка; продажа возвращает 70 %)
 export const SAM_COST = { strela1: 100, s75: 320, s125: 240, hawk: 280, kub: 300, osa: 190, roland: 170, zsu234: 90, gepard: 130, m163: 70, strela10: 110, strela2: 40, redeye: 40, igla: 55, stinger: 60 };
@@ -624,6 +624,9 @@ LOADOUTS[3] = [
   // ветки 2026-10-20: Су-27СМ и Су-30 — с ранга III (прежние подвески эпохи II)
   { side: 'east', plane: 'e_su27', name: 'Су-27СМ: ФАБ-500 ×4 + ФАБ-250 ×2', items: [['fab500', 4], ['fab250', 2]] },
   { side: 'east', plane: 'su30', name: 'ТВ-бомбы КАБ-500Кр + ФАБ-500', items: [['kab500kr', 2], ['fab500', 4]], pod: true },
+  // вертолёты (Хеллоуин 2026)
+  { side: 'east', plane: 'h_mi28', heli: true, name: 'Ми-28Н: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
+  { side: 'west', plane: 'h_ah64', heli: true, name: 'AH-64D: Hellfire ×8 + Hydra ×2 блока', items: [['hellfire', 8], ['hydra', 2]], pod: true },
 ];
 LOADOUTS[4] = [
   { side: 'east', plane: 'e_su34', name: 'УМПК + Х-59М + Х-31П + помехи', items: [['umpk', 2], ['kh59m', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },
@@ -640,7 +643,11 @@ LOADOUTS[4] = [
   { side: 'east', plane: 'e_tu160', name: 'Ту-160: крылатые Х-101 ×6 (в отсеках)', items: [['kh101', 6]] },
   { side: 'west', plane: 'e_ea18g', name: 'EA-18G: AARGM ×2 + помехи', items: [['aargm', 2], ['ecm_w', 1]], role: 'sead' },
   { side: 'west', plane: 'e_typhoon', name: 'Typhoon: Storm Shadow ×2 + GBU-12 ×2', items: [['storm', 2], ['gbu12', 2]], pod: true },
+  // вертолёты (Хеллоуин 2026)
+  { side: 'east', plane: 'h_ka52', heli: true, name: 'Ка-52: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
 ];
+// вертолётные подвески всех эпох (era — эпоха = ранг в ветке «Вертолёты»): проверка ?heli=…, выбор в меню
+export const HELI_LOADOUTS = [1, 2, 3, 4].flatMap((e) => LOADOUTS[e].map((L, i) => ({ ...L, era: e, i })).filter((L) => L.heli));
 // роль подвески: 'sead' — охота за ПВО (противорадиолокационных ракет по массе не меньше, чем остального ударного), иначе 'strike' —
 // штурмовка; помехи и ложные цели не считаются; L.role — задана явно (где по массе спорно)
 export function loadoutRole(L) {

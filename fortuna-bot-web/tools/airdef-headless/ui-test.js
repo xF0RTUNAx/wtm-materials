@@ -117,6 +117,7 @@ air.finish('тест', true); frames(5);
 { const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022l');
   const planes = new Set(); let used = 0, total = 0;
   for (const era of [1, 2, 3, 4]) for (const [lo, L] of LOADOUTS[era].entries()) {
+    if (L.heli) continue; // вертолёты — на своей карте (перезагрузка страницы): их проверяют heli-stand.js и heli-raid-test.js
     C.toMenu(); frames(3); C.setup.era = era; C.setup.side = L.side === 'east' ? 'west' : 'east'; C.setup.lo = lo; C.setup.game = 'air'; C.start('air'); C.setAuto(true);
     const a4 = C.ctrl, n0 = a4.loadout.reduce((s2, l) => s2 + l.n, 0);
     for (let i = 0; i < 40 && a4.plane !== L.plane; i++) { await new Promise((r) => setTimeout(r, 100)); frames(1); } // своя модель подвески грузится по требованию

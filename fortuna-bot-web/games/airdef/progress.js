@@ -4,12 +4,15 @@
 // для «Реализма». Ветки: air — самолёты вылета, wpn — оружие подвесок, pvo — комплексы, strike — удары «Мульти-волны».
 import { AG, SAM, LOADOUTS, MULTI, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js?v=20261022l';
 import { SPECS, SPEED_K } from './sim/flight.js?v=20261022l';
+import { HSPECS } from './sim/heli.js?v=20261022l';
 
 export const BRANCHES = [
   { id: 'air', name: 'Авиация', hint: 'самолёты для вылета' },
   { id: 'wpn', name: 'Вооружение', hint: 'бомбы и ракеты подвесок' },
   { id: 'pvo', name: 'ПВО', hint: 'комплексы для обороны' },
   { id: 'strike', name: 'Волна', hint: 'дроны, крылатые и баллистика «Мульти-волны»' },
+  // вертолёты (Mark 2026-10-20): своя ветка (паритет, цели, цены — свои), в «Исследованиях» — внутри «Авиации» рядом с Востоком и Западом (sub)
+  { id: 'heli', name: 'Вертолёты', hint: 'вертолёты для вылета', sub: 'air' },
 ];
 export const SIDES = ['east', 'west'];
 export const SIDE_NAME = { east: 'Восток', west: 'Запад' };
@@ -19,9 +22,10 @@ export const RANK_NAME = { 1: 'I', 2: 'II', 3: 'III', 4: 'IV' };
 // старт (Mark 2026-10-19): всё для «Операции» эпохи I (охота за ПВО + удар) у обеих сторон и минимальная оборона
 export const START = {
   air: ['e_su17', 'e_mig23', 'e_f4', 'e_mirage_f1'], // ветки 2026-10-20: Су-24М и Су-25 — в ранге II; у Востока старт — Су-17М4 (охота за ПВО: Х-28) и МиГ-23БН
-  wpn: ['kh28', 'fab500', 'agm45', 'mk82'],
+  wpn: ['kh28', 'fab500', 'agm45', 'mk82', 'shturm', 's8', 'hydra'],
   pvo: ['s75', 'zsu234', 'strela2', 'hawk', 'm163', 'redeye'],
   strike: ['r17', 'agm86'],
+  heli: ['h_mi24', 'h_uh1'], // вертолёты: Ми-24В и UH-1H с их оружием («Штурм», С-8, Hydra — в «Вооружении», стартовые)
 };
 // аналог у другой стороны (по роли): подсказка «что купить за другую сторону» и подбор в онлайне
 export const PAIR = {
@@ -41,6 +45,8 @@ export const PAIR = {
   zu23: 'm163', buk: 'patriot', phalanx: 'pantsir',
   hawk: 's75', m163: 'zsu234', chaparral: 'strela1', avenger: 'strela10', redeye: 'strela2', roland: 'osa', gepard: 'tunguska', stinger: 'igla', rapier: 'osa', skyguard: 'pantsir',
   patriot: 's300', gpsjamw: 'gpsjam', pac3: 's400', nasams: 'bukm3', sampt: 's400', khordad: 'bukm3',
+  h_mi24: 'h_uh1', h_uh1: 'h_mi24', h_mi28: 'h_ah64', h_ah64: 'h_mi28', h_ka52: 'h_ah64', h_ah1: 'h_mi24', // вертолёты
+  shturm: 'hellfire', ataka: 'hellfire', hellfire: 'ataka', s8: 'hydra', hydra: 's8',
   r17: 'atacms', kh55d: 'quail', kh55_s: 'agm86', kh55: 'jassm', tochka: 'atacms', kh555: 'agm86', kh101_s: 'jassm_s', kh101: 'jassm', shahed: 'uav_w', kalibr: 'tomahawk', iskander: 'atacms', kinzhal: 'atacms',
   agm86: 'kh55_s', uav_w: 'shahed', slam: 'kh555', jsow: 'kh555', tomahawk: 'kalibr', atacms: 'iskander', quail: 'kh55d', sdb: 'kh55d', jassm_s: 'kh555', storm_s: 'kh555', storm: 'kh59mk2',
 };
@@ -68,6 +74,9 @@ export const PARENT = {
   // ПВО
   s300: 's75', s400: 's300', kub: 's125', buk: 'kub', bukm3: 'buk', zu23: 'zsu234', phalanx: 'm163', osa: 'strela1', tor: 'osa', torm2: 'tor', tunguska: 'zsu234', pantsir: 'tunguska', strela10: 'strela1', igla: 'strela2', iglas: 'igla', verba: 'iglas',
   patriot: 'hawk', pac3: 'patriot', sampt: 'patriot', rapier: 'hawk', nasams: 'rapier', khordad: 'rapier', gepard: 'm163', skyguard: 'm163', roland: 'chaparral', stinger: 'redeye', avenger: 'stinger',
+  // вертолёты (Mark 2026-10-20 — по веткам): Восток — Ми-24В★ → Ми-28Н (Миль), развилка Ми-24В★ → Ка-52 (Камов);
+  // Запад — UH-1H★ → AH-1W (Bell), развилка UH-1H★ → AH-64D. Их оружие: «Штурм»★ → «Атака», Hydra★ → Hellfire
+  h_mi28: 'h_mi24', h_ka52: 'h_mi24', h_ah1: 'h_uh1', h_ah64: 'h_uh1', ataka: 'shturm', hellfire: 'hydra',
   // удары
   tochka: 'r17', iskander: 'tochka', kinzhal: 'tochka', kh555: 'kh55_s', kalibr: 'kh555', kh101_s: 'kh555', shahed: 'kh55d',
   tomahawk: 'agm86', slam: 'agm86', jsow: 'agm86', jassm_s: 'tomahawk', storm_s: 'slam', storm: 'agm65b', sdb: 'jsow', quail: 'uav_w',
@@ -76,7 +85,7 @@ export const PARENT = {
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };
 // множитель цены ветки (Mark 2026-10-20: каждая ветка до ранга IV — около недели): ПВО и «Волна» почти целиком из «малых» единиц;
 // вооружение — ×1 (его качают вместе с самолётами: самолёт с оружием — ≈ 9–10 дней)
-export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5 };
+export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5, heli: 1 };
 
 // ── дерево ──
 const node = (branch, key, side, rank, name, short, tier) => ({ id: branch + ':' + key, branch, key, side, rank, name, short, tier, start: START[branch].includes(key) });
@@ -84,7 +93,7 @@ const DUAL = new Set(['jassm', 'storm', 'kh55', 'kh101']); // и оружие с
 function buildTree() {
   const T = [], seen = new Set(), add = (n) => { if (!seen.has(n.id)) { seen.add(n.id); T.push(n); } };
   for (const e of RANKS) for (const L of LOADOUTS[e] || []) {
-    const s = SPECS[L.plane]; add(node('air', L.plane, L.side, e, s ? s.name : PLANES[L.plane], PLANES[L.plane] || L.plane, 'big'));
+    const s = L.heli ? HSPECS[L.plane] : SPECS[L.plane]; add(node(L.heli ? 'heli' : 'air', L.plane, L.side, e, s ? s.name : PLANES[L.plane], PLANES[L.plane] || L.plane, 'big'));
     for (const [k] of L.items) { const w = AG[k]; if (w) add(node('wpn', k, w.side, w.era, w.name, w.short, 'small')); }
   }
   for (const k in SAM) { const u = SAM[k]; add(node('pvo', k, u.side, u.era, u.name, u.short, (SAM_COST[k] || 0) >= 200 ? 'big' : 'small')); }
@@ -145,9 +154,10 @@ export function buy(P, id) { const c = canBuy(P, id); if (!c.ok) return c; P.sil
 
 // доступность в «Реализме»: подвеска — самолёт и всё её оружие куплены; что не хватает — список узлов
 export function loadoutMissing(P, L) {
-  const need = ['air:' + L.plane, ...L.items.map(([k]) => 'wpn:' + k)];
+  const need = [craftId(L), ...L.items.map(([k]) => 'wpn:' + k)];
   return need.filter((id) => NODE[id] && !owned(P, id)).map((id) => NODE[id]);
 }
+export const craftId = (L) => (L.heli ? 'heli:' : 'air:') + L.plane; // узел машины подвески: самолёт или вертолёт
 export const samOk = (P, key) => owned(P, 'pvo:' + key);
 export const strikeId = (item) => 'strike:' + (DUAL.has(item) ? item + '_s' : item); // узел удара «Мульти-волны» по ключу оружия
 export const strikeOk = (P, item) => owned(P, strikeId(item));
@@ -170,6 +180,7 @@ const kmh = (v) => `${Math.round(v)} км/ч`;
 const loadoutsOfPlane = (key) => RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === key));
 // одной строкой под названием: роль самолёта по его подвескам, у остального — тип наведения / вид оружия
 export function unitType(n) {
+  if (n.branch === 'heli') return n.key === 'h_uh1' ? 'многоцелевой вертолёт' : 'ударный вертолёт';
   if (n.branch === 'air') { const r = new Set(loadoutsOfPlane(n.key).map(loadoutRole)); return r.has('sead') && r.size > 1 ? 'ударный и охотник за ПВО' : r.has('sead') ? 'охотник за ПВО' : 'ударный'; }
   const src = n.branch === 'pvo' ? SAM[n.key] : AG[n.item || n.key]; return (src && (n.branch === 'pvo' ? SAM_TYPE[src.type] : AG_KIND[src.kind])) || '';
 }
@@ -181,6 +192,11 @@ export function cardStats(n) {
     const s = SPECS[n.key]; if (!s) return [];
     return [['Скорость', kmh(SPEED_K * s.vAlt)], ['У земли', kmh(SPEED_K * s.vSL)], ['Перегрузка', `${s.g} g`], ['Крен', `${s.roll}°/с`],
       ['Форсаж', s.ab ? 'есть' : 'нет'], ['Подвесок', String(loadoutsOfPlane(n.key).length)]];
+  }
+  if (n.branch === 'heli') {
+    const s = HSPECS[n.key]; if (!s) return [];
+    return [['Скорость', kmh(SPEED_K * s.vmax)], ['Подъём', `${(SPEED_K * s.vc).toFixed(1).replace('.', ',')} м/с`], ['Потолок', km(s.ceil)], ['Масса', `${(s.m / 1000).toFixed(1).replace('.', ',')} т`],
+      ['Винт', s.coax ? 'соосный' : 'с рулевым'], ['Подвесок', String(loadoutsOfPlane(n.key).length)]];
   }
   if (n.branch === 'pvo') {
     const u = SAM[n.key]; if (!u) return []; const o = [];

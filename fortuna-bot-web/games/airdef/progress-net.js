@@ -104,7 +104,7 @@ export function createProgress(C) {
         + (auto.length ? `<div class="pgAuto">Исследовано: <b>${auto.join(', ')}</b> — купить в «Исследованиях».</div>` : '');
     },
     // узлы, на которых играли: самолёт и оружие подвески / комплексы / удары
-    usedLoadout: (era, i) => { const L = LOADOUTS[era] && LOADOUTS[era][i]; return L ? ['air:' + L.plane, ...L.items.map(([k]) => 'wpn:' + k)] : []; },
+    usedLoadout: (era, i) => { const L = LOADOUTS[era] && LOADOUTS[era][i]; return L ? [(L.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)] : []; },
     usedSams: (keys) => [...new Set(keys)].map((k) => 'pvo:' + k).filter((id) => NODE[id]),
     usedStrikes: (items) => [...new Set(items)].map((k) => strikeId(k)).filter((id) => NODE[id]),
     owned: (id) => !!G.P && owned(G.P, id),

@@ -8,7 +8,7 @@ import { NODE, newProgress, owned, branchRank, strikeId } from '../games/airdef/
 export const adProgress = (list) => (Array.isArray(list) ? { ...newProgress(), own: list.filter((id) => NODE[id]) } : null);
 // наибольший ранг, который открыт и в «Авиации», и в «ПВО» (игрока могут поставить за любую команду)
 export const adRank = (P) => (P ? Math.min(branchRank(P, 'air'), branchRank(P, 'pvo')) : 4);
-export const loadoutIds = (L) => ['air:' + L.plane, ...L.items.map(([k]) => 'wpn:' + k)];
+export const loadoutIds = (L) => [(L.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)];
 export const samIds = (k) => ['pvo:' + k];
 export const strikeIds = (n) => Object.keys(n || {}).filter((k) => n[k] > 0).map(strikeId);
 // отказ (текст) или null; mode — режим комнаты, c — игрок (c.adP из билета)

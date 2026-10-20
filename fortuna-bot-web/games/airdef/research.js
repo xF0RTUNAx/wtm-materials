@@ -59,6 +59,7 @@ const CSS = `
 #research .why { font-size: 11.5px; color: var(--dim); text-align: center; } #research .why.err { color: #f0a08c; }
 #research .guest { position: absolute; left: 50%; top: calc(var(--rt) + var(--hh) + 8px); transform: translateX(-50%); z-index: 6; background: rgba(13,16,12,.94); border: 1px solid var(--line); padding: 7px 14px; font-size: 12.5px; color: #e9e6dc; white-space: nowrap; }
 #research .veil { display: none; }
+#research .grp { position: absolute; left: 18px; font: 400 13px 'Russo One'; color: var(--dim); letter-spacing: .04em; } /* «Вертолёты»: подпись стороны над её линиями */
 @media (max-height: 460px), (max-width: 720px) {
   #research { --cw: 196px; --ch: 80px; --gx: 40px; --gy: 12px; }
   #research { --hh: 46px; } #research .top { padding: 0 10px; padding-left: max(10px, var(--sa-l, 0px)); gap: 8px; } #research .top h1 { display: none; } #research .btabs { margin-left: 0; } #research .btabs button { padding: 5px 8px; font-size: 12.5px; } #research .btabs button i { display: none; } #research .cur { font-size: 13px; gap: 10px; }
@@ -72,7 +73,7 @@ const CSS = `
 const n2 = (v) => Math.round(v).toLocaleString('ru-RU');
 const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261022l`;
 const era = (r) => (ERAS[r - 1] ? ERAS[r - 1].name.split('— ')[1] || '' : '');
-const guide = (n) => (n.branch === 'pvo' ? SAM[n.key]?.guide : n.branch === 'air' ? `Подвески: ${RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => L.name)).join(' · ')}.` : AG[n.item || n.key]?.guide) || '';
+const guide = (n) => (n.branch === 'pvo' ? SAM[n.key]?.guide : n.branch === 'air' || n.branch === 'heli' ? `Подвески: ${RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => L.name)).join(' · ')}.` : AG[n.item || n.key]?.guide) || '';
 
 export function createResearch(C, PG) {
   const style = document.createElement('style'); style.textContent = CSS; if (document.head) document.head.appendChild(style); // (заглушка DOM стенда — без head/body)
@@ -81,6 +82,8 @@ export function createResearch(C, PG) {
   const P0 = { xp: 0, silver: 0, res: [], own: [], goal: {} };
   const P = () => PG.P || P0;
   const phone = () => innerHeight < 460 || innerWidth < 720;
+  // «Вертолёты» — своя ветка прокачки, но на экране — внутри «Авиации», третьей кнопкой слева (обе стороны в одном дереве)
+  const EB = () => (S.B === 'air' && S.side === 'heli' ? 'heli' : S.B), sideOf = () => (S.side === 'heli' ? null : S.side);
 
   function st(n) {
     const p = P();
@@ -100,21 +103,24 @@ export function createResearch(C, PG) {
   function parity(r) {
     const p = P();
     if (r === 1) return '<div class="par okk">открыт</div>';
-    if (rankOpen(p, S.B, r)) return `<div class="par okk">паритет ранга ${RANK_NAME[r - 1]} есть</div>`;
-    if (!rankOpen(p, S.B, r - 1)) return `<div class="par">сначала ранг ${RANK_NAME[r - 1]}</div>`;
-    return `<div class="par">купить в ранге ${RANK_NAME[r - 1]}: ${rankBlock(p, S.B, r).map((x) => `<b>${SIDE_NAME[x.side]} ${x.got}/${x.need}</b>`).join(', ')}</div>`;
+    if (rankOpen(p, EB(), r)) return `<div class="par okk">паритет ранга ${RANK_NAME[r - 1]} есть</div>`;
+    if (!rankOpen(p, EB(), r - 1)) return `<div class="par">сначала ранг ${RANK_NAME[r - 1]}</div>`;
+    return `<div class="par">купить в ранге ${RANK_NAME[r - 1]}: ${rankBlock(p, EB(), r).map((x) => `<b>${SIDE_NAME[x.side]} ${x.got}/${x.need}</b>`).join(', ')}</div>`;
   }
   function tree() {
     const cs = getComputedStyle(root), px = (v) => parseFloat(cs.getPropertyValue(v)), ph = phone();
     const cw = px('--cw'), gx = px('--gx'), gy = px('--gy'), ch = px('--ch'), top = ph ? 76 : 72; // ниже шапки рангов (строка паритета — до двух строк)
-    const L = treeLayout(S.B, S.side), pos = {}; for (const c of L.cells) pos[c.n.id] = [c.col * (cw + gx) + 18, top + c.row * (ch + gy)];
-    const H = top + L.rows * (ch + gy) + 20, W = 4 * (cw + gx) + 18, p = P();
+    // вертолёты: линии Востока, под ними — Запада, над каждой группой — подпись стороны
+    const hl = EB() === 'heli', LS = hl ? SIDES.map((sd) => [sd, treeLayout('heli', sd)]) : [[S.side, treeLayout(S.B, S.side)]], pos = {}, grp = [], L = { cells: [], links: [] };
+    let y0 = top;
+    for (const [sd, l] of LS) { if (hl) { grp.push(`<div class="grp" style="top:${y0 + 2}px">${SIDE_NAME[sd]}</div>`); y0 += 22; } for (const c of l.cells) pos[c.n.id] = [c.col * (cw + gx) + 18, y0 + c.row * (ch + gy)]; L.cells.push(...l.cells); L.links.push(...l.links); y0 += l.rows * (ch + gy) + (hl ? 8 : 0); }
+    const H = y0 + 20, W = 4 * (cw + gx) + 18, p = P();
     const links = L.links.map(([a, b]) => { const [x1, y1] = pos[a], [x2, y2] = pos[b], xa = x1 + cw, ya = y1 + ch / 2, yb = y2 + ch / 2, xm = x2 - gx / 2;
       if (x2 <= x1) return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${x1} ${ya} H${x1 - 11} V${yb} H${x2}"/>`; // тот же ранг (Ил-28 → Ту-16 → Ту-22): скобкой слева от колонки
       return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${xa} ${ya} H${xm} V${yb} H${x2}"/>`; }).join('');
-    const shade = RANKS.filter((r) => !rankOpen(p, S.B, r)).map((r) => `<div class="shade" style="left:${(r - 1) * (cw + gx) + 18 - gx / 2}px;width:${cw + gx}px"></div>`).join('');
+    const shade = RANKS.filter((r) => !rankOpen(p, EB(), r)).map((r) => `<div class="shade" style="left:${(r - 1) * (cw + gx) + 18 - gx / 2}px;width:${cw + gx}px"></div>`).join('');
     return `<div class="tree" style="width:${W + 30}px;height:${H}px"><div class="ranks">${RANKS.map((r) => `<div class="rh"><b>Ранг ${RANK_NAME[r]}</b><span>${era(r)}</span>${parity(r)}</div>`).join('')}</div>
-      ${shade}<svg class="links" width="${W}" height="${H}">${links}</svg>${L.cells.map((c) => card(c, ...pos[c.n.id])).join('')}</div>`;
+      ${shade}${grp.join('')}<svg class="links" width="${W}" height="${H}">${links}</svg>${L.cells.map((c) => card(c, ...pos[c.n.id])).join('')}</div>`;
   }
   function dossier() {
     if (!S.sel || !NODE[S.sel]) return '';
@@ -134,11 +140,11 @@ export function createResearch(C, PG) {
   function draw() {
     if (!root.classList.contains('on')) return;
     const p = P(), scroll = root.querySelector('.wrap') ? [root.querySelector('.wrap').scrollLeft, root.querySelector('.wrap').scrollTop] : null;
-    if (!phone() && !S.sel) S.sel = (nodesOf(S.B, S.side, 2)[0] || nodesOf(S.B, S.side)[0]).id;
+    if (!phone() && !S.sel) S.sel = (nodesOf(EB(), sideOf(), 2)[0] || nodesOf(EB(), sideOf())[0]).id;
     root.classList.toggle('open', S.open);
-    root.innerHTML = `<div class="rbg"></div><div class="top"><button class="back" data-close-all="1" aria-label="Назад">«</button><h1>Исследования</h1><div class="btabs">${BRANCHES.map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${b.name}<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i></button>`).join('')}</div>
+    root.innerHTML = `<div class="rbg"></div><div class="top"><button class="back" data-close-all="1" aria-label="Назад">«</button><h1>Исследования</h1><div class="btabs">${BRANCHES.filter((b) => !b.sub).map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${b.name}<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i></button>`).join('')}</div>
       <div class="cur"><span class="xp" title="Опыт — исследовать">${XP(p.xp)}</span><span title="Серебро — покупать">${SV(p.silver)}</span></div></div>
-      <div class="sides">${SIDES.map((s) => `<button data-s="${s}" class="${s === S.side ? 'on' : ''}">${SIDE_NAME[s]}<small>куплено ${nodesOf(S.B, s).filter((n) => owned(p, n.id)).length} из ${nodesOf(S.B, s).length}</small></button>`).join('')}</div>
+      <div class="sides">${SIDES.map((s) => `<button data-s="${s}" class="${s === S.side ? 'on' : ''}">${SIDE_NAME[s]}<small>куплено ${nodesOf(S.B, s).filter((n) => owned(p, n.id)).length} из ${nodesOf(S.B, s).length}</small></button>`).join('')}${S.B === 'air' ? `<button data-s="heli" class="${S.side === 'heli' ? 'on' : ''}">Вертолёты<small>куплено ${nodesOf('heli').filter((n) => owned(p, n.id)).length} из ${nodesOf('heli').length}</small></button>` : ''}</div>
       <div class="note">Только для <b>«Реализма»</b>. Аркада и обучение — всё открыто.</div>
       ${PG.guest ? '<div class="guest">Вы не вошли на сайте — показан стартовый набор. Опыт и серебро копятся в аккаунте.</div>' : PG.err ? `<div class="guest">Нет связи с сайтом: ${PG.err}</div>` : ''}
       <div class="wrap">${tree()}</div>${S.open || !phone() ? dossier() : ''}`;
@@ -157,8 +163,8 @@ export function createResearch(C, PG) {
       S.msgErr = !r.ok; if (r.ok && C.snd) C.snd.click && C.snd.click();
       draw(); return;
     }
-    if (t.dataset.id) { if (t.dataset.side && t.dataset.side !== S.side) S.side = t.dataset.side; S.sel = t.dataset.id; S.open = true; S.msg = ''; draw(); return; }
-    if (t.dataset.b || t.dataset.s) { S.reset = true; if (t.dataset.b) S.B = t.dataset.b; if (t.dataset.s) S.side = t.dataset.s; S.sel = null; S.open = false; S.msg = ''; draw(); }
+    if (t.dataset.id) { if (t.dataset.side && t.dataset.side !== S.side && EB() !== 'heli') S.side = t.dataset.side; S.sel = t.dataset.id; S.open = true; S.msg = ''; draw(); return; }
+    if (t.dataset.b || t.dataset.s) { S.reset = true; if (t.dataset.b) { S.B = t.dataset.b; if (S.side === 'heli' && S.B !== 'air') S.side = 'east'; } if (t.dataset.s) S.side = t.dataset.s; S.sel = null; S.open = false; S.msg = ''; draw(); }
   });
   PG.on(draw);
   addEventListener('resize', draw);
@@ -166,7 +172,7 @@ export function createResearch(C, PG) {
     // открыть экран (по желанию — сразу на узле: из замка подвески «нужно: …»)
     open(id) {
       root.classList.add('on'); document.body.classList.add('researchOn');
-      if (id && NODE[id]) { S.B = NODE[id].branch; S.side = NODE[id].side; S.sel = id; S.open = true; }
+      if (id && NODE[id]) { const h = NODE[id].branch === 'heli'; S.B = h ? 'air' : NODE[id].branch; S.side = h ? 'heli' : NODE[id].side; S.sel = id; S.open = true; }
       S.msg = ''; draw(); PG.refresh();
     },
     close() { root.classList.remove('on'); document.body.classList.remove('researchOn'); S.open = false; if (C.menu) C.menu.render(); },
