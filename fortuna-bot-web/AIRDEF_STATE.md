@@ -143,8 +143,8 @@ Mark работает с **Opus на высоком усилии** — он ру
     Снимки — tools/airdef-models/shots-heli2/ (heli-hang.html — вертолёт с подвеской).
   - **Звуки с YouTube — источники (история 4K Video Downloader, ~/Library/Application Support/4kdownload.com/…/5284-3ba9-b669-06cc.sqlite:
     media_item_description + media_item_metadata):** Sound Effect Database (ПЛАТНО, $1,99 за звук, условий на сайте нет — /license 404):
-    «F16 Fighter Jet Engine Idle And Shut Down» (eng_idle.wav) и «Flares Sound Effect» (flare.mp3) — в games/airdef/sounds/.gitignore, в игре
-    синтез, пока Mark не купит лицензию и не подтвердит условия (enquiry@soundeffectdatabase.com: браузерная игра, бессрочно, открытый репозиторий,
+    «F16 Fighter Jet Engine Idle And Shut Down» (eng_idle.wav) и «Flares Sound Effect» (flare.mp3) — Mark КУПИЛ две Single License 2026-10-21 (квитанции Stripe
+    у него; привязку к роликам kAVnPGU8CYw и 8VIxcncNPVA — подтвердить письмом) — файлы в игре. Условия уточнить (enquiry@soundeffectdatabase.com: браузерная игра, бессрочно, открытый репозиторий,
     атрибуция). Остальные (решение Mark — использовать): «Free Sound Effect» (далёкий взрыв, винт Ту-95), Sound Treasures (Patriot), WarLeaks
     («Искандер»), «SOUND Effects Public Domain» (форсаж), Booyadee (ГСН AIM-9), zagros aim (Шахед), «Sounds» (сирена), mrkerk12 и Friendly Free
     Sounds (пуски). Новые скачанные звуки — проверять канал по этой базе.

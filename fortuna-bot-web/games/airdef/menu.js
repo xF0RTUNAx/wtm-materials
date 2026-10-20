@@ -321,7 +321,28 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <p class="hint">Игра не пропагандирует войну и насилие и не выражает политических позиций. Названия и модели образцов техники используются только для узнаваемости и реалистичности; права на товарные знаки принадлежат их владельцам. Игра не связана с производителями техники, военными ведомствами и игровыми компаниями и не одобрена ими.</p>
       <div class="cat-h">Отдельное спасибо за помощь</div>
       <p class="hint">3D-модели (для игры упрощены, разделены на части, текстуры уменьшены): ${MODEL_CREDITS.map((m) => `${A(m.url, `«${m.title}»`)} — ${m.author} (${A(m.licenseUrl, m.license)})`).join(' · ')}.</p>
-      <p class="hint">Звук далёкого взрыва: ${A('https://freesound.org/people/puniho/sounds/116677/', '«Stretched Canvas Bass Drum Granulated»')} — Puniho (${A('https://creativecommons.org/licenses/by/3.0/', 'CC BY 3.0')}), обрезан и сведён в моно.</p>
+      <p class="hint">Звуки (обрезаны, обработаны, сведены в моно): ${[
+        ['https://freesound.org/people/puniho/sounds/116677/', 'Stretched Canvas Bass Drum Granulated', 'Puniho', 'CC BY 3.0'],
+        ['https://freesound.org/people/Benboncan/sounds/74242/', 'Military Helicopter', 'Benboncan', 'CC BY 4.0'],
+        ['https://freesound.org/people/Rmutt/sounds/156906/', 'UH-1 Helicopter', 'Rmutt', 'CC0'],
+        ['https://freesound.org/people/qubodup/sounds/189446/', 'Jet Plane Flyby', 'qubodup', 'CC0'],
+        ['https://freesound.org/people/qubodup/sounds/163119/', 'Navy Mk 15 Phalanx CIWS Fast Burst', 'qubodup', 'CC0'],
+        ['https://freesound.org/people/qubodup/sounds/211617/', 'Far Away Rocket Launch', 'qubodup', 'CC0'],
+        ['https://freesound.org/people/Fenodyrie/sounds/565911/', 'Flock of Crows', 'Fenodyrie', 'CC0'],
+        ['https://freesound.org/people/invadium/sounds/824805/', 'Cruise missiles interception and fly-by', 'Invadium', 'CC0'],
+        ['https://www.youtube.com/watch?v=kAVnPGU8CYw', 'F16 Fighter Jet Engine Idle', 'Sound Effect Database', 'лицензия куплена'],
+        ['https://www.youtube.com/watch?v=8VIxcncNPVA', 'Flares Sound Effect', 'Sound Effect Database', 'лицензия куплена'],
+        ['https://www.youtube.com/watch?v=PCRW2ZQbNxA', 'Bomb distant explosion', 'Free Sound Effect', 'YouTube'],
+        ['https://www.youtube.com/watch?v=lKmJKFGzwyc', 'Propeller engine loop', 'Free Sound Effect', 'YouTube'],
+        ['https://www.youtube.com/watch?v=V4j2Df-S10k', 'Patriot Missile Launch', 'Sound Treasures', 'YouTube'],
+        ['https://www.youtube.com/watch?v=zLjGbjdmoOo', '9K720 Iskander-M', 'WarLeaks — Military Blog', 'YouTube'],
+        ['https://www.youtube.com/watch?v=bi2AB18biz4', 'Afterburner Sound', 'SOUND Effects Public Domain', 'YouTube'],
+        ['https://www.youtube.com/watch?v=zJvVsHkSs_g', 'AIM-9 Sidewinder', 'Booyadee', 'YouTube'],
+        ['https://www.youtube.com/watch?v=A76J507nxtE', 'Shahed 136', 'zagros aim', 'YouTube'],
+        ['https://www.youtube.com/watch?v=cnzLJ6bco0U', 'Air Raid Siren', 'Sounds', 'YouTube'],
+        ['https://www.youtube.com/watch?v=1qUN59Oebe0', 'Missile launch', 'mrkerk12', 'YouTube'],
+        ['https://www.youtube.com/watch?v=dw6AvjAyFKs', 'Missile Launch Sound Effects', 'Friendly Free Sounds', 'YouTube'],
+      ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} — ${a} (${l})`).join(' · ')}.</p>
       <p class="hint">Остальное в игре реализовано процедурным способом.</p>`;
   }
   $('tab-set').onclick = (e) => {

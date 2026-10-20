@@ -1,7 +1,7 @@
 # Третья партия (2026-10-21, ролики YouTube — Mark, «4K Video Downloader+»): двигатель F-16 (малый газ), форсаж, тоны ГСН AIM-9, отстрел ЛТЦ.
 # Источники (история 4K Video Downloader): форсаж — bi2AB18biz4, канал «SOUND Effects Public Domain (No Copyrights)»; ГСН AIM-9 —
 # zJvVsHkSs_g, канал Booyadee (YouTube — решение Mark 2026-10-21). Двигатель F-16 (kAVnPGU8CYw) и ЛТЦ (8VIxcncNPVA) — канал Sound Effect
-# Database, ПЛАТНО ($1,99 за звук): файлы eng_idle.wav и flare.mp3 — в games/airdef/sounds/.gitignore (без них — синтез), пока нет лицензии.
+# Database — куплены Single License $1,99 × 2 (Mark, 2026-10-21, квитанции Stripe у Mark): eng_idle.wav и flare.mp3.
 #   v/bin/python -I tools/airdef-sounds/mk3.py games/airdef/sounds/
 import sys, numpy as np, subprocess
 sys.path.insert(0, __file__.rsplit('/', 1)[0])
