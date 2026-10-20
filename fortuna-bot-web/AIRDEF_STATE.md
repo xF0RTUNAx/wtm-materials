@@ -131,8 +131,8 @@ Mark работает с **Opus на высоком усилии** — он ру
   - **Новые самолёты Запада — сделано 2026-10-21 (не задеплоено):** e_vulcan (Vulcan B.2, manilov.ap, эпоха II / ранг II — Фолкленды 1982; Hunter → Vulcan),
     e_draken (J35F, эпоха I; F-5E → Draken → Viggen → Gripen), e_viggen (AJ 37, эпоха II; F-35 теперь ← F-16), бомба bomb1000 (AN-M65A1, United4192, CC BY, эпоха I,
     ≈ 240 кг ВВ → 165 урона / 50 м). Подвески — в конце списков LOADOUTS (после вертолётных): Draken Mk 82 ×4 + Hydra ×2 (эп. I); Vulcan «Black Buck» Shrike ×4 и
-    1000 lb ×8 в отсеке (в коде не больше 8 точек подвески вместо 21), Viggen Maverick ×2 + Mk 82 ×4 и Hydra ×4 + Mk 82 ×2 (эп. II). Осталось Mark: решить ранг Vulcan
-    (сейчас II = эпоха II; если нужен ранг I — перенести две подвески в LOADOUTS[1]), версия модулей и деплой, сервер на ноутбуке (update.ps1). Снимки — tools/airdef-models/shots-new/.
+    1000 lb ×8 в отсеке (в коде не больше 8 точек подвески вместо 21), Viggen Maverick ×2 + Mk 82 ×4 и Hydra ×4 + Mk 82 ×2 (эп. II). Mark 2026-10-21: Vulcan — ранг II, бомб 8
+    (так и оставлено). Осталось: окраска Draken (у автора ярко-бирюзовая), версия модулей и деплой, сервер на ноутбуке (update.ps1). Снимки — tools/airdef-models/shots-new/.
     Отложено (воздушный бой): Lightning, Javelin, Su-15, T-45, Avro 707 (manilov.ap, CC BY; у Lightning/Javelin свои ракеты). Шведского оружия, Blue Steel, Bullpup под CC нет.
   - **Вертолёты (решение Mark 2026-10-21) — сделано 2026-10-21 (не задеплоено):** h_ka50 (Ка-50, перекрашен в «Чёрную акулу»), h_mi8 (Ми-8МТВ), h_uh60 (UH-60 DAP), h_rah66 (RAH-66 Comanche) —
     manilov.ap, CC BY 4.0, без упрощения, текстуры ≤ 1024 (prepare.js, затем ao.js; GLB_V 20261023c). Ветки: Ми-24В★ → Ка-50 (III) → Ка-52 (IV) и Ми-24В★ → Ми-8МТВ (II) → Ми-28Н (III);
