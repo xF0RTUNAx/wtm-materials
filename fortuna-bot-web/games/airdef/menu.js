@@ -57,8 +57,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
   $('modeSel').onclick = (e) => {
-    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; save();
-    if (C.wantMap(setup.game, setup.pmap, setup.era, setup.lo) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
+    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; setup.evd = false; save(); // evd — оборона события на осенней карте (event.js): обычное меню её сбрасывает
+    if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
     if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
     if (setup.game === 'online' && C.W_KEY === 'night') { const u = new URL(location.href); u.searchParams.set('weather', 'evening'); u.searchParams.set('mp', '1'); location.href = u.href; return; }
@@ -90,7 +90,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (g === 'air') {
       h += `<p class="hint">Комплексы: ${DEFENSE[setup.side][setup.era].map(([k]) => SAM[k].short).join(', ')}.</p><div class="cat-h">Подвеска</div>`;
       // подвески стороны, которая атакует выбранную ПВО; у каждой — свой самолёт
-      const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att);
+      const att = setup.side === 'east' ? 'west' : 'east', mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты — в событии «Туманная топь» (event.js)
       // «Реализм»: только подвески, у которых куплены самолёт и всё оружие (прокачка); закрытая — с замком и «нужно: …»
       const can = ([L]) => !realLock() || C.progress.loadoutOk(L), open = mine.filter(can);
       if (!open.some(([, i]) => i === setup.lo)) setup.lo = (open[0] || mine[0])[1];
@@ -137,7 +137,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         [['random', 'Случайная'], ...(C.MAP === 'winter' ? WINTER_KEYS : WEATHER_KEYS).map((k) => [k, WEATHERS[k].name])])}</div>
       <p class="hint">Сейчас: ${C.W.name}. Карта и погода строятся при загрузке — смена перезапускает страницу.</p>`;
     if (ps === 'air') {
-      const mine = loadoutsOf(setup.era, att);
+      const mine = loadoutsOf(setup.era, att).filter(([L]) => !L.heli); // вертолёты — в событии «Туманная топь»
       if (!mine.some(([, i]) => i === setup.lo)) setup.lo = mine[0][1];
       h += `<div class="prow"><span>Высота</span>${seg('palt', setup.palt || 'mid', [['low', '250 м'], ['mid', '1,5 км'], ['high', '4 км']])}</div><div class="cat-h">Самолёт и подвеска</div>` +
         mine.map(([L, i]) => `<button class="opt ${i === setup.lo ? 'on' : ''}" data-lo="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}</span></div></button>`).join('') +
@@ -377,7 +377,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   setInterval(() => { if (C.state === 'menu' && (tipT += 1) > 12) { tipT = 0; showTip(true); } }, 1000);
   $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; }
     if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(); return; } // «Реализм»: нет купленной подвески — в «Исследования»
-    C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
+    setup.evd = false; C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
   // опыт и серебро над режимами (тап — «Исследования»); гость — подсказка войти
   function renderPg() {
     const P = C.progress && C.progress.P; if (!P) { $('pgBar').innerHTML = ''; return; }

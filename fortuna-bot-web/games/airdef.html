@@ -43,10 +43,15 @@
   #mtabs .mres { color: #f3c96f; }
   body.researchOn #menu { visibility: hidden; }
   /* кнопка «Исследования» в левом нижнем углу фона меню (Mark 2026-10-20) */
-  #resBtn { position: absolute; z-index: 2; left: calc(188px + var(--sa-l)); bottom: max(14px, var(--sa-b)); display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px;
+  #mbtns { position: absolute; z-index: 2; left: calc(188px + var(--sa-l)); bottom: max(14px, var(--sa-b)); display: flex; align-items: stretch; gap: 10px; }
+  #resBtn { display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px;
     background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 400 15px 'Russo One', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #resBtn:hover { background: #232a1c; } #resBtn .ic { width: 30px; height: 30px; }
-  @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } }
+  /* событие «Туманная топь» (event.js): оранжевая кнопка рядом с «Исследованиями», после конца события скрыта */
+  #evtBtn { display: none; flex-direction: column; justify-content: center; text-align: left; padding: 6px 16px; background: rgba(28,17,10,.9); border: 1px solid #e2762c; color: #ff9a3c; font: 400 15px 'Russo One', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
+  #evtBtn small { font: 600 11.5px 'IBM Plex Sans', sans-serif; letter-spacing: 0; color: #e9c9a8; margin-top: 2px; } #evtBtn:hover { background: #3a2210; }
+  @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } } /* узкий экран: справа панель задания — кнопка события над «Исследованиями» */
+  @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #evtBtn { padding: 4px 11px; font-size: 13px; } #evtBtn small { font-size: 10.5px; } }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
   @keyframes cardIn { from { transform: translateY(14px) scale(.98); opacity: .4; } to { transform: none; opacity: 1; } }
@@ -622,7 +627,8 @@
 <div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план">◀</button><button data-nav="1" aria-label="Следующий план">▶</button></div>
 <div class="screen on" id="menu">
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
-  <button id="resBtn" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
+  <div id="mbtns"><button id="resBtn" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
+    <button id="evtBtn" title="Событие: вертолёты над «Туманной топью»"><b>🎃 Туманная топь</b><small id="evtLeft"></small></button></div>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
     <button class="pgBar" id="pgBar" title="Исследования: опыт и серебро"></button>

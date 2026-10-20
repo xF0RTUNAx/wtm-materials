@@ -1506,6 +1506,12 @@ export function createDefense(C) {
     if (st.watchNextAt && C.t >= st.watchNextAt.at) { const w = st.watchNextAt.w; st.watchNextAt = null; if (!w.dead) watch(w); } // пусковая выстрелила — камера за её ракетой
     if (st.cue && C.ev && C.ev.t >= st.cue.at) { const o = st.cue.obj; st.cue = null; st.timeK = 1; if (o && !o.dead && !o.out) watch(o); renderEv(true); } // «ждать» — событие наступает
     if (st.watch && (st.watch.dead || st.watch.out)) { st.watchEnd = st.watchEnd || C.t; if (C.t - st.watchEnd > 2.5) { st.watchEnd = 0; const nx = watchList()[0]; if (nx) watch(nx); else unwatch(); } }
+    // ИИ вертолёта (sim/raid.js) на «Туманной топи» иногда зависает: в заходе — висит, не видя цель из-за рельефа; в отходе — ходит кругами у гребня котловины.
+    // Волна не должна висеть вечно: вертолёт живёт дольше 600 с — уходит (отход), в отходе дольше 300 с — считается ушедшим
+    for (const a of C.raid.planes) if (a.heli && !a.dead && !a.out && a.phase !== 'wait') {
+      a.hT = (a.hT || 0) + dt;
+      if (a.phase === 'egress') { if ((a.egT = (a.egT || 0) + dt) > 300) a.out = true; } else if (a.hT > 600) a.phase = 'egress';
+    }
     const busy = C.raid.planes.some((a) => !a.dead && !a.out) || C.S.wpns.some((w) => !w.dead && !(w.ev && w.W.recon)) || (C.ev && C.ev.pending()); // разведчик мульти-волны волну не держит
     if (!busy && !st.net && !st.opts.hold) endWave(); // онлайн: конец волны решает сервер; уроки (hold) — сами подают цели
     if (st.opts.onTick) st.opts.onTick(dt);

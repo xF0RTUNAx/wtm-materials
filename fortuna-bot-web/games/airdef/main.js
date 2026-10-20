@@ -36,6 +36,7 @@ import { createOnline } from './online.js?v=20261022q';
 import { createProgress } from './progress-net.js?v=20261022q';
 import { createDifficulty } from './difficulty.js?v=20261022q';
 import { createResearch } from './research.js?v=20261022q';
+import { createEvent } from './event.js?v=20261022q';
 import { createShell } from './shell.js?v=20261022q';
 import { createTraining, LESSONS } from './training.js?v=20261022q';
 import { createPhoto } from './photo.js?v=20261022q';
@@ -133,16 +134,19 @@ if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeF
 // Осенняя «Туманная топь» (Хеллоуин) — ?map=autumn, «Съёмка» (pmap 'autumn') и проверка вертолёта ?heli=…
 const MAPS = ['winter', 'city', 'autumn'];
 // вылет на вертолёте (подвеска heli) — тоже на «Туманной топи»
-function wantMap(game, pmap, era, lo) {
+function wantMap(game, pmap, era, lo, evd) {
   if (MAPS.includes(Q.get('map'))) return Q.get('map');
   if (game === 'air' && LOADOUTS[era] && LOADOUTS[era][lo] && LOADOUTS[era][lo].heli) return 'autumn';
+  if (game === 'defense' && evd) return 'autumn'; // оборона события «Туманная топь» (event.js)
   if (game === 'photo') return pmap === 'city' || pmap === 'autumn' ? pmap : 'winter';
   if (Q.get('heli')) return 'autumn';
   const online = game === 'online' || Q.get('ad') || Q.get('mp') === '1';
   return game === 'multi' || (online && ls.get('fortuna_ad_kind') === 'multi') ? 'winter' : 'city';
 }
 const SETUP0 = (() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}') || {}; } catch (_) { return {}; } })();
-const MAP = wantMap(SETUP0.game, SETUP0.pmap, SETUP0.era, SETUP0.lo);
+// вертолёт и оборона события — только при запуске из события (event.js: go=air&hlo=<подвеска в эпохе setup.era> / go=defense и setup.evd): сохранённая вертолётная подвеска обычный «Вылет» на осеннюю карту не уводит
+const HLO = Q.get('hlo') !== null ? +Q.get('hlo') : -1;
+const MAP = wantMap(SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd);
 // погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
 const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
@@ -742,8 +746,8 @@ const ctrls = {};
 C.start = function (game) {
   if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
   // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
-  if (game === 'air' && !Q.get('map') && wantMap('air', C.setup.pmap, C.setup.era, C.setup.lo) !== MAP) {
-    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', 'air'); u.searchParams.delete('heli'); location.replace(u.href); return;
+  if ((game === 'air' || game === 'defense') && !Q.get('map') && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd) !== MAP) {
+    ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }
   snd.unlock();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
@@ -952,6 +956,7 @@ setInterval(() => {
   ctrls.director = createDirector(C); ctrls.menuBg = createMenuBg(C); ctrls.training = createTraining(C, ctrls); ctrls.photo = createPhoto(C, ctrls);
   C.diff = createDifficulty(ls); // сложность: режим + скрытая подстройка под игрока (difficulty.js)
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
+  C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню — #evtBtn)
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
   C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» — по купленному
@@ -963,6 +968,6 @@ setInterval(() => {
   $('loading').remove();
   C.toMenu();
   requestAnimationFrame(frame);
-  const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; C.lastGame = go; C.start(go); }
+  const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.start(go); }
 })();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)
