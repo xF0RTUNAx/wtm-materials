@@ -48,7 +48,7 @@ export function createAir(C) {
     if (pm) {
       shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = craft.heli ? heliStations(pm.stations) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null — встроенная прицельная система (у вертолёта — всегда)
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
-      flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry);
+      flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry, pm.name);
       craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
     } else {
       craft.dmgVis = null;

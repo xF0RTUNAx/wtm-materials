@@ -274,13 +274,53 @@ const flameGeo = new THREE.ConeGeometry(0.5, 1, 16, 1, true); flameGeo.rotateX(M
 const diamondGeo = new THREE.SphereGeometry(0.26, 10, 8);
 // dry — двигатель без форсажа (Ту-16, A-10, Harrier…): днём выхлоп почти не виден — короткое слабое свечение, форсажа нет
 const flameDry = new THREE.MeshBasicMaterial({ color: lin2(0xff9a3c).multiplyScalar(2), transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false, fog: false });
-export function attachFlames(group, nozzles, r = 1, own = false, dry = false) {
-  const mat = dry ? flameDry : own ? flameMat.clone() : flameMat;
+// цвет форсажа по двигателю (Mark 2026-10-21; фото и видео — разведчик): blue — чистое бедное горение, светятся газы: голубое ядро,
+// сине-фиолетовая середина, розовато-красный конец (НК-25 Ту-22М3, НК-32 Ту-160, АЛ-31Ф/117С семейства Су-27, F100-229 F-15E, F135 F-35);
+// sooty — старые двигатели, богатая смесь, светится сажа: жёлто-оранжевый, короткие ромбы; neutral — бело-жёлтое ядро, оранжевый факел
+const FLAME_KIND = { e_tu22m3: 'blue', e_tu22m2: 'blue', e_tu22: 'blue', e_tu160: 'blue', e_su27: 'blue', su30: 'blue', e_su34: 'blue', e_su35: 'blue', e_su57: 'blue', e_f15e: 'blue', e_f35: 'blue',
+  e_mig21n: 'sooty', e_mig23: 'sooty', e_mig27: 'sooty', e_mig25: 'sooty', e_mig31: 'sooty', mig29: 'sooty', e_su7b: 'sooty', e_su17: 'sooty', e_su24: 'sooty', e_f4: 'sooty', e_f111: 'sooty', e_f100: 'sooty', e_f5: 'sooty', e_jaguar: 'sooty', e_mirage_f1: 'sooty', e_tornado: 'sooty' };
+const FLAME_COL = { // [ядро, середина, конец] (линейные, ×яркость), ромбы
+  blue: [[0.7, 0.85, 1.0], [0.32, 0.42, 1.0], [0.85, 0.3, 0.5], [0.75, 0.88, 1.0]],
+  neutral: [[1.0, 0.9, 0.7], [1.0, 0.52, 0.18], [0.8, 0.22, 0.08], [1.0, 0.95, 0.85]],
+  sooty: [[1.0, 0.82, 0.45], [1.0, 0.45, 0.1], [0.55, 0.15, 0.05], [1.0, 0.85, 0.6]],
+};
+const flameGrad = {};
+function flameGradMat(kind) { // градиент вдоль факела (z 0 — срез сопла, 1 — конец) и мягкие края (по углу к взгляду)
+  const C = FLAME_COL[kind] || FLAME_COL.neutral;
+  return new THREE.ShaderMaterial({
+    uniforms: { c0: { value: new THREE.Vector3(...C[0]) }, c1: { value: new THREE.Vector3(...C[1]) }, c2: { value: new THREE.Vector3(...C[2]) }, uOp: { value: 0.85 } },
+    vertexShader: `#include <common>
+      #include <logdepthbuf_pars_vertex>
+      varying float vZ, vRim;
+      void main() { vZ = position.z; vec4 mv = modelViewMatrix * vec4(position, 1.0); vRim = abs(dot(normalize(normalMatrix * normal), normalize(-mv.xyz)));
+        gl_Position = projectionMatrix * mv;
+        #include <logdepthbuf_vertex>
+      }`,
+    fragmentShader: `#include <common>
+      #include <logdepthbuf_pars_fragment>
+      uniform vec3 c0, c1, c2; uniform float uOp; varying float vZ, vRim;
+      void main() {
+        #include <logdepthbuf_fragment>
+        vec3 c = vZ < 0.35 ? mix(c0, c1, vZ / 0.35) : mix(c1, c2, (vZ - 0.35) / 0.65);
+        float a = uOp * pow(vRim, 1.3) * pow(1.0 - vZ, 0.7);
+        gl_FragColor = vec4(c * 1.7 * a, a);
+        #include <tonemapping_fragment>
+        #include <encodings_fragment>
+      }`,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide,
+  });
+}
+const diaMat = {}, coreMat = {};
+export function attachFlames(group, nozzles, r = 1, own = false, dry = false, key = '') {
+  const kind = FLAME_KIND[key] || 'neutral';
+  const mat = dry ? flameDry : own ? flameGradMat(kind) : (flameGrad[kind] || (flameGrad[kind] = flameGradMat(kind)));
+  const dMat = diaMat[kind] || (diaMat[kind] = new THREE.MeshBasicMaterial({ color: new THREE.Color(...FLAME_COL[kind][3]).multiplyScalar(1.6), transparent: true, opacity: kind === 'blue' ? 0.5 : 0.35, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
+  const cMat = coreMat[kind] || (coreMat[kind] = new THREE.MeshBasicMaterial({ color: new THREE.Color(...FLAME_COL[kind][0]).multiplyScalar(2.2), transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); // ядро — в цвет двигателя
   const set = nozzles.map((nz) => {
     // пламя не пишет глубину — рисуется после облаков и дыма (renderOrder), иначе облако позади самолёта его закрашивает
-    const outer = new THREE.Mesh(flameGeo, mat), core = new THREE.Mesh(flameGeo, flameCore);
+    const outer = new THREE.Mesh(flameGeo, mat), core = new THREE.Mesh(flameGeo, dry ? flameCore : cMat);
     outer.position.copy(nz); core.position.copy(nz); outer.renderOrder = core.renderOrder = 5; outer.userData.fx = core.userData.fx = true; group.add(outer); group.add(core); // fx — не часть модели (зоны повреждений их не режут)
-    const dia = [0, 1, 2, 3].map((k) => { const d = new THREE.Mesh(diamondGeo, flameCore); d.position.copy(nz); d.position.z += (0.85 + k * 1.15) * r; d.renderOrder = 5; d.userData.fx = true; group.add(d); return d; });
+    const dia = [0, 1, 2, 3].map((k) => { const d = new THREE.Mesh(diamondGeo, dMat); d.position.copy(nz); d.position.z += (0.85 + k * 1.15) * r; d.renderOrder = 5; d.userData.fx = true; group.add(d); return d; });
     return { outer, core, dia };
   });
   return {
@@ -293,9 +333,10 @@ export function attachFlames(group, nozzles, r = 1, own = false, dry = false) {
       for (const f of set) {
         f.outer.scale.set(fw, fw, (ab ? 6 : 0.25 + 1.2 * thr) * r * (0.9 + Math.random() * 0.2));
         f.core.scale.set(0.6 * r, 0.6 * r, (ab ? 3.2 : 0.15 + 0.65 * thr) * r * (0.9 + Math.random() * 0.2));
-        for (const d of f.dia) { d.visible = ab; d.scale.setScalar((0.8 + Math.random() * 0.3) * r); }
+        for (const d of f.dia) { d.visible = ab; d.scale.set((0.5 + Math.random() * 0.15) * r, (0.5 + Math.random() * 0.15) * r, (0.75 + Math.random() * 0.2) * r); } // ромб Маха — вытянутый вдоль струи, полупрозрачный
       }
-      if (own) mat.opacity = ab ? 0.9 : 0.12 + 0.45 * thr;
+      if (own) mat.uniforms.uOp.value = ab ? 0.9 : 0.12 + 0.45 * thr;
+      if (kind === 'sooty') for (const f of set) f.dia.forEach((d, k) => { if (k > 1) d.visible = false; }); // старые двигатели — ромбы короче (два)
     },
   };
 }
