@@ -251,6 +251,9 @@ export function createRaid(S, city, rnd, opts = {}) {
         if (!a.salvo.length) a.phase = 'egress';
         continue;
       }
+      // страховка: на отходе тихоходный штурмовик (Су-25 с ракетами) под пусками ЗУР уворачивается без конца и не доходит до края — волна
+      // висела (ui-test, сторона запад, эпоха II; было и на сайте): через 60 с отхода — «ушёл»
+      if (a.phase === 'egress' && (a.egT = (a.egT || 0) + dt) > 60) { a.out = true; if (fx.out) fx.out(a); continue; }
       if (a.evadeT > 0 && a.phase !== 'lase') { a.evadeT -= dt; evade(a, dt, (launch && launch.u.pos) || (mw[0] && mw[0].m.pos) || a.pos); a.ab = true; continue; }
       const L = curLoad(a);
       if (!L && a.phase !== 'lase') a.phase = 'egress';
