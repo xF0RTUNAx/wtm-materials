@@ -49,7 +49,12 @@ async function objOf(n) {
   if (n.branch === 'pvo') return unitObj(n.key);
   const k = n.item || n.key;
   if (BALL[k]) { wantModel(BALL[k]); const o = await wait(() => anyModel(BALL[k])); if (o) return o; }
-  wantWeapon(k); await wait(() => !weaponPending(k), 60); const w = weaponMesh(k, AG[k], weaponGeo, wMat); setWings(w, 1); return w; // планирующие — с раскрытыми крыльями
+  wantWeapon(k); await wait(() => !weaponPending(k), 60); const w = weaponMesh(k, AG[k], weaponGeo, wMat); setWings(w, 1); // планирующие — с раскрытыми крыльями
+  // НАР со своей моделью ракеты (w_nar_<ключ>): блок и ракета под ним — как ПЗРК: труба и ракета рядом
+  if (AG[k] && AG[k].kind === 'rocket') { wantModel('w_nar_' + k); const rk = await wait(() => anyModel('w_nar_' + k), 40);
+    if (rk) { const g = new THREE.Group(); g.add(w); w.updateMatrixWorld(true); const b = new THREE.Box3().setFromObject(w), rb = new THREE.Box3().setFromObject(rk);
+      rk.position.set((b.min.x + b.max.x) / 2 - (rb.min.x + rb.max.x) / 2, b.min.y - 0.12 - rb.max.y, (b.min.z + b.max.z) / 2 - (rb.min.z + rb.max.z) / 2); g.add(rk); return g; } }
+  return w;
 }
 // свет как в бою (city-render.js / drone/world.js): небо + солнце + отражения неба (PMREM), ACES с экспозицией 1,1
 r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1; r.physicallyCorrectLights = false;
