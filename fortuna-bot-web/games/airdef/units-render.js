@@ -4,7 +4,7 @@
 import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022r';
 import { makeParticles, radialTex } from '../drone/world.js?v=20261022r';
 import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022r';
-import { FLAME_KIND } from './jetflame.js?v=20261022r';
+import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261022r';
 import { createCmFx } from './cmfx.js?v=20261022r';
 import { LNCH } from './launchers.js?v=20261022r';
 import { createBook } from './flipbook.js?v=20261022r';
@@ -313,7 +313,18 @@ function flameGradMat(kind) { // градиент вдоль факела (z 0 �
   });
 }
 const diaMat = {}, coreMat = {};
+// пламя реактивных двигателей — запечённое (jetflame.js: раскал сопла, факел сбоку и в торец, вспышка розжига); API прежний: update(thr, ab),
+// dt считаем здесь по часам (≤ 0,1 с). dry — без форсажа, key — ключ самолёта (цвет и особые сопла), own — свой самолёт
 export function attachFlames(group, nozzles, r = 1, own = false, dry = false, key = '') {
+  const jf = makeJetFlame(group, nozzles, r, key, { dry, own });
+  let t0 = 0;
+  return {
+    update(thr, ab) { const t = performance.now(); const dt = t0 ? Math.min(0.1, Math.max(0, (t - t0) / 1000)) : 1 / 60; t0 = t; jf.update(thr, ab, dt); },
+    dispose: () => jf.dispose(),
+  };
+}
+// прежнее пламя — конус, ядро и ромбы (оставлено для стенда «было / стало» tools/airdef-fx/jet-view.html?cmp=)
+export function attachFlamesOld(group, nozzles, r = 1, own = false, dry = false, key = '') {
   const kind = FLAME_KIND[key] || 'neutral';
   const mat = dry ? flameDry : own ? flameGradMat(kind) : (flameGrad[kind] || (flameGrad[kind] = flameGradMat(kind)));
   const dMat = diaMat[kind] || (diaMat[kind] = new THREE.MeshBasicMaterial({ color: new THREE.Color(...FLAME_COL[kind][3]).multiplyScalar(1.6), transparent: true, opacity: kind === 'blue' ? 0.5 : 0.35, blending: THREE.AdditiveBlending, depthWrite: false, fog: false }));
@@ -557,7 +568,7 @@ export function createFx(scene, P) {
   let api = null; // сам объект эффектов (explosion вызывают и через обёртки — без this)
   return api = {
     mats: [smoke.mat, fire.mat, ...CMF.mats], // хозяин выставляет uniforms.scale по высоте кадра
-    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
+    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); setJetLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) — частицами

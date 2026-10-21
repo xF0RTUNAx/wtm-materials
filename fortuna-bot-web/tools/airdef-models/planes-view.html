@@ -37,7 +37,7 @@ for (let i = 0; i < names.length; i++) {
   const nzs = i === 0 && Q.get('nz') ? Q.get('nz').split(';').map((s) => new THREE.Vector3(...s.split(',').map(Number))) : meta.nozzles;
   const sc = new THREE.Scene(); sc.background = new THREE.Color(Q.get("bg") ? +("0x" + Q.get("bg")) : 0x9fb3c8);
   sc.add(new THREE.HemisphereLight(0xffffff, 0x556655, 0.9)); const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(3, 6, 2); sc.add(dl);
-  sc.add(obj); const DRY = !!meta.dry && Q.get('dry') !== '0', fl = attachFlames(obj, nzs, meta.nr / 0.45, true, DRY, n); fl.update(Q.get('ab') === '1' ? 1 : 0.4, Q.get('ab') === '1' && !DRY); // dry — как в игре: без форсажа (&dry=0 — показать как с форсажем)
+  sc.add(obj); const DRY = !!meta.dry && Q.get('dry') !== '0', fl = attachFlames(obj, nzs, meta.nr / 0.45, true, DRY, n); for (let k = 0; k < 150; k++) fl.update(Q.get('ab') === '1' ? 1 : 0.4, Q.get('ab') === '1' && !DRY); // запечённое пламя разгорается ~1 с — прогоняем кадры // dry — как в игре: без форсажа (&dry=0 — показать как с форсажем)
   for (const p of nzs) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 8), new THREE.MeshBasicMaterial({ color: 0xff0000, depthTest: false })); d.renderOrder = 9; d.position.copy(p); sc.add(d); }
   const b = new THREE.Box3().setFromObject(obj), c = b.getCenter(new THREE.Vector3()), L = b.max.z - b.min.z, S = Math.max(L, b.max.x - b.min.x);
   // крупно — у сопел (середина точек), размер кадра — по их разносу

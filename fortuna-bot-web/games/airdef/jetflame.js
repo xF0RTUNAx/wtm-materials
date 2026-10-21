@@ -161,8 +161,9 @@ const GLOW_F = `#include <common>
 const addMat = (o) => new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false, ...o });
 
 // слой огня (после дыма; как setFlameLayer в plume.js)
+// живые факелы — слабыми ссылками: самолёты налёта приходят и уходят, жёсткая ссылка держала бы их модели в памяти
 let layer = 0; const live = new Set();
-export function setJetLayer(l) { layer = l; for (const f of live) f.layer(l); }
+export function setJetLayer(l) { layer = l; for (const w of live) { const f = w.deref(); if (f) f.layer(l); else live.delete(w); } }
 
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 
@@ -193,7 +194,7 @@ export function makeJetFlame(group, nozzles, r = 1, key = '', opts = {}) {
     layer(l) { for (const n of nz) for (const m of [n.side, n.disc, n.glow]) m.layers.set(l); },
     state: () => ({ heat, abv, flash }),
     parts: () => nz.flatMap((n) => [{ type: 'side', mesh: n.side }, { type: 'disc', mesh: n.disc }, { type: 'glow', mesh: n.glow }]),   // стенд: показать / скрыть по слоям
-    dispose() { live.delete(api); for (const n of nz) { group.remove(n.root); for (const m of [n.side, n.disc, n.glow]) m.material.dispose(); } },
+    dispose() { live.delete(ref); for (const n of nz) { group.remove(n.root); for (const m of [n.side, n.disc, n.glow]) m.material.dispose(); } },
     update(thr = 0.85, ab = false, dt = 1 / 60) {
       if (!nz.length) return;
       T += dt; thr = clamp(thr);
@@ -237,6 +238,7 @@ export function makeJetFlame(group, nozzles, r = 1, key = '', opts = {}) {
     },
   };
   api.layer(opts.layer != null ? opts.layer : layer || 0);
-  live.add(api);
+  if (live.size > 64) for (const w of live) if (!w.deref()) live.delete(w);
+  const ref = new WeakRef(api); live.add(ref);
   return api;
 }

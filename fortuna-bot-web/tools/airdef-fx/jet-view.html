@@ -104,7 +104,7 @@ async function runAll() {
 }
 async function runCmp(i) {
   const key = KEYS[i], obj = await wait(key), meta = M.planeMeta(key); sc.add(obj); sky('day');
-  const dry = !!meta.dry, old = UR.attachFlames(obj, meta.nozzles, meta.nr / 0.45, true, dry, key); old.update(1, !dry);
+  const dry = !!meta.dry, old = UR.attachFlamesOld(obj, meta.nozzles, meta.nr / 0.45, true, dry, key); old.update(1, !dry);
   for (const [vi, [vk, vn]] of VIEWS.entries()) { setDots(meta, false); shoot(vi, i * 2, vk, aim(vk, key, meta, obj), `было · ${key} · ${vn}`); }
   // убрать старое пламя: всё, что attachFlames добавил в obj (меши с userData.fx)
   for (const o of obj.children.filter((c) => c.userData && c.userData.fx)) obj.remove(o);
