@@ -2,7 +2,7 @@
 // следует на сервере — в комнатах «Реализма» подвеска, комплекс и удар должны быть куплены (стартовое — всегда); быстрый
 // поиск «Реализма» подбирает эпоху не выше самого «младшего» ранга людей в очереди. Аркада — без ограничений.
 // Правила — те же, что у игры и функций Supabase (games/airdef/progress.js).
-import { NODE, newProgress, owned, branchRank, strikeId } from '../games/airdef/progress.js?v=20261022q';
+import { NODE, newProgress, owned, branchRank, strikeId } from '../games/airdef/progress.js?v=20261022r';
 
 // билет → состояние для проверок (null — разработка без MP_SECRET или тестовый вход: ограничений нет)
 export const adProgress = (list) => (Array.isArray(list) ? { ...newProgress(), own: list.filter((id) => NODE[id]) } : null);

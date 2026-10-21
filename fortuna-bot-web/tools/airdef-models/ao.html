@@ -6,7 +6,7 @@
      ?m=s400 — имя модели, &az=0.8 — угол обзора (рад), &el=0.25 — высота взгляда, &k=1 — дальность -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { loadModels, wantModel, anyModel } from '../../games/airdef/models.js?v=20261022q';
+import { loadModels, wantModel, anyModel } from '../../games/airdef/models.js?v=20261022r';
 const Q = new URLSearchParams(location.search), M = Q.get('m') || 's400', AZ = +(Q.get('az') || 0.8), EL = +(Q.get('el') || 0.25), K = +(Q.get('k') || 1);
 const W = 1400, H = 560, r = new THREE.WebGLRenderer({ antialias: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
 loadModels(new URL('../../games/airdef/', location.href).href, () => {}); wantModel(M);

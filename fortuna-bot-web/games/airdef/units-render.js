@@ -1,11 +1,11 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022q';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261022q';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022q';
-import { LNCH } from './launchers.js?v=20261022q';
-import { createBook } from './flipbook.js?v=20261022q';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022r';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022r';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022r';
+import { LNCH } from './launchers.js?v=20261022r';
+import { createBook } from './flipbook.js?v=20261022r';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 

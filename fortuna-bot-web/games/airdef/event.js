@@ -3,11 +3,11 @@
 // подвеска, «ВЗЛЁТ») и «Оборона от вертолётов» (обычная оборона на осенней карте: сторона ПВО, эпоха). Вертолётов в обычном
 // «Вылете» и «Съёмке» нет (menu.js) — только здесь. Карта и погода строятся при загрузке страницы: смена — перезагрузкой
 // (main.js: wantMap — вертолётная подвеска или setup.evd при go=air / go=defense).
-import { AG, PLANES, ERAS, HELI_LOADOUTS } from './arsenal.js?v=20261022q';
-import { MODES } from './sim/strike.js?v=20261022q';
-import { RAID_HELI } from './sim/raid.js?v=20261022q';
-import { AUTUMN_KEYS } from './autumn-render.js?v=20261022q';
-import { ico } from './icons.js?v=20261022q';
+import { AG, PLANES, ERAS, HELI_LOADOUTS } from './arsenal.js?v=20261022r';
+import { MODES } from './sim/strike.js?v=20261022r';
+import { RAID_HELI } from './sim/raid.js?v=20261022r';
+import { AUTUMN_KEYS } from './autumn-render.js?v=20261022r';
+import { ico } from './icons.js?v=20261022r';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 // решение Mark 2026-10-20: событие идёт 2 месяца; после конца кнопка входа скрыта
@@ -99,7 +99,7 @@ export function createEvent(C) {
   const seg = (id, cur, items) => `<div class="sg" data-seg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const realLock = () => setup.diff === 'real' && C.progress && C.progress.ready(); // прокачка ограничивает только «Реализм»
   const open0 = (L) => !realLock() || C.progress.loadoutOk(L);
-  const thumb = (L) => `airdef/thumbs/heli_${L.plane}.webp?v=20261022q`;
+  const thumb = (L) => `airdef/thumbs/heli_${L.plane}.webp?v=20261022r`;
   const idOf = (L) => `${L.era}:${L.i}`;
   const list = () => HELI_LOADOUTS.filter((L) => L.side === S.hside);
   const cur = () => { const l = list(); return l.find((L) => idOf(L) === S.sel) || l[0]; };
@@ -109,7 +109,7 @@ export function createEvent(C) {
 
   const left = () => eventLeft();
   const leftTxt = () => { const ms = left(), d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5); return d > 0 ? `ещё ${d} д ${String(h).padStart(2, '0')} ч` : `ещё ${h} ч`; };
-  const mapPane = () => `<div class="cap">Карта</div><img class="map" src="airdef/ui/ev_map.jpg?v=20261022q" alt="Туманная топь">
+  const mapPane = () => `<div class="cap">Карта</div><img class="map" src="airdef/ui/ev_map.jpg?v=20261022r" alt="Туманная топь">
     <div class="cap">Погода</div>${seg('wx', S.wx, AUTUMN_KEYS.map((k) => [k, WX[k]]))}`;
   const modePane = () => `<div class="cap">Режим</div>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, m.name]))}`;
 
@@ -126,7 +126,7 @@ export function createEvent(C) {
   function def() {
     const att = S.dside === 'east' ? 'west' : 'east', rh = RAID_HELI[att] && RAID_HELI[att][S.dera], hp = rh && rh[0];
     return `<div class="pl">${mapPane()}${modePane()}</div>
-      <div class="pc"><div class="hero">${hp ? `<img src="airdef/thumbs/heli_${hp}.webp?v=20261022q" alt="">` : ''}</div>
+      <div class="pc"><div class="hero">${hp ? `<img src="airdef/thumbs/heli_${hp}.webp?v=20261022r" alt="">` : ''}</div>
         <div class="dh"><h2>Оборона от вертолётов</h2>
           <p><b>Угроза${hp ? ': ' + PLANES[hp] : ''}.</b> Налёт идёт самолётами, со 2-й волны к ним присоединяется вертолёт, с 4-й — пара. Они подходят низко, по оврагам, и прячутся за холмами.</p>
           <p class="lng">Ниже ~30 м за рельефом РЛС вертолёт не видит: берегите ближние комплексы — пушки, ЗРК ближнего действия, ПЗРК. Потеряно 75 % ценности военных объектов — поражение. Волн — ${C.WAVES}.</p></div>
