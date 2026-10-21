@@ -9,6 +9,7 @@ const RU = Deno.args.includes('--ru');
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 globalThis.location = { search: RU ? '?lang=ru' : '?lang=en' };
+globalThis.document = globalThis.document || {}; // i18n.js без document считает себя онлайн-сервером и держит русский — изображаем страницу
 const A = '../../games/airdef/';
 const LATE = Deno.args.includes('--late'); // дерево прокачки построено ДО локализации (проверка localizeTree)
 if (LATE) await import(A + 'progress.js?v=20261022r');
