@@ -3,6 +3,7 @@
 // листва в лесу и рыжая крона издали, грязь на дне оврагов и в болоте, пашня и тыквенные поля, скалы Лысой горы; туман
 // стелется в низинах (над болотом и в оврагах) — гуще в сумерках. Нормали — из сетки высот (50 м).
 /* global THREE */
+import { tr } from './i18n.js?v=20261022r';
 import { ZONE } from './city.js?v=20261022r';
 import { AUTUMN } from './map-autumn.js?v=20261022r';
 
@@ -11,11 +12,11 @@ import { AUTUMN } from './map-autumn.js?v=20261022r';
 export function autumnWeathers(W) {
   const D = W.day, O = W.overcast;
   return {
-    a_eve: { ...D, name: 'Осенний вечер', el: 9.8, az: 245, sun: 0xffc890, sunI: 0.95, sky: 0x9aa6b8, gnd: 0x6a5a48, hemiI: 0.7, zenith: 0x5a74a0, horizon: 0xe8cdb0,
+    a_eve: { ...D, name: tr('Осенний вечер'), el: 9.8, az: 245, sun: 0xffc890, sunI: 0.95, sky: 0x9aa6b8, gnd: 0x6a5a48, hemiI: 0.7, zenith: 0x5a74a0, horizon: 0xe8cdb0,
       haze: 0xffb878, hazeK: 0.35, fog: 0xc8b8a8, fogD: 0.00007, clouds: 0.3, cloudLit: 0xffe0c0, cloudDark: 0x8a8090, hdri: { f: 'a_field', u: 0.6097, k: 1, h0: 0.02 }, autumn: 1, lowFog: 0.55 },
-    a_dusk: { ...D, name: 'Сумерки', el: 4, az: 250, sun: 0xff9a5a, sunI: 0.7, sky: 0x8a8aa8, gnd: 0x5a5058, hemiI: 1.05, zenith: 0x3c4670, horizon: 0xe0a080,
+    a_dusk: { ...D, name: tr('Сумерки'), el: 4, az: 250, sun: 0xff9a5a, sunI: 0.7, sky: 0x8a8aa8, gnd: 0x5a5058, hemiI: 1.05, zenith: 0x3c4670, horizon: 0xe0a080,
       haze: 0xff8a50, hazeK: 0.45, fog: 0x6c6474, fogD: 0.00011, clouds: 0.45, cloudLit: 0xffb890, cloudDark: 0x5a5468, hdri: { f: 'a_belf', u: 0.6047, k: 0.75, h0: 0.01 }, autumn: 1, lowFog: 0.85 },
-    a_fog: { ...O, name: 'Туман', sun: 0xd8d0c8, sunI: 0.35, sky: 0x9c9a98, gnd: 0x5c5650, hemiI: 1.0, zenith: 0x8a8886, horizon: 0xaaa6a0,
+    a_fog: { ...O, name: tr('Туман'), sun: 0xd8d0c8, sunI: 0.35, sky: 0x9c9a98, gnd: 0x5c5650, hemiI: 1.0, zenith: 0x8a8886, horizon: 0xaaa6a0,
       fog: 0xa8a49e, fogD: 0.00024, clouds: 0.6, cloudLit: 0xc8c4be, cloudDark: 0x7c7874, autumn: 1, lowFog: 1 },
   };
 }

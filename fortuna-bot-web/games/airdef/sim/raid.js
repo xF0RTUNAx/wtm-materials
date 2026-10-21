@@ -5,6 +5,7 @@
 // carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
+import { tr } from '../i18n.js?v=20261022r';
 import { AG, raidPlane } from '../arsenal.js?v=20261022r';
 import { flightModel, loadOf } from './flight.js?v=20261022r';
 import { initDamage, hitZones, burnRate } from './damage.js?v=20261022r';
@@ -16,8 +17,8 @@ import { CITY } from '../city.js?v=20261022r';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
-  east: { name: 'Фронтовой бомбардировщик', model: 'east', hp: 70, rcs: 8, ir: 1.2, r: 11, gmax: 6.5, wCap: 0.42, agil: 4, milAcc: 13, abAcc: 24, cd0: 1.45e-4, vStall: 80, bleed: 1, rollK: 4 },
-  west: { name: 'Ударный истребитель', model: 'west', hp: 60, rcs: 6, ir: 1.1, r: 10, gmax: 7.5, wCap: 0.5, agil: 4.5, milAcc: 14, abAcc: 26, cd0: 1.4e-4, vStall: 75, bleed: 1, rollK: 4.5 },
+  east: { name: tr('Фронтовой бомбардировщик'), model: 'east', hp: 70, rcs: 8, ir: 1.2, r: 11, gmax: 6.5, wCap: 0.42, agil: 4, milAcc: 13, abAcc: 24, cd0: 1.45e-4, vStall: 80, bleed: 1, rollK: 4 },
+  west: { name: tr('Ударный истребитель'), model: 'west', hp: 60, rcs: 6, ir: 1.1, r: 10, gmax: 7.5, wCap: 0.5, agil: 4.5, milAcc: 14, abAcc: 26, cd0: 1.4e-4, vStall: 75, bleed: 1, rollK: 4.5 },
 };
 // подвески ИИ по стороне атакующих и эпохе: роль → [[оружие, сколько]]
 export const RAID_LOADS = {

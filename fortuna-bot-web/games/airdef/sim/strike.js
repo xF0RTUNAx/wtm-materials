@@ -13,6 +13,7 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
+import { tr } from '../i18n.js?v=20261022r';
 import { AG, SAM } from '../arsenal.js?v=20261022r';
 import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022r';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022r';
@@ -22,8 +23,8 @@ import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261022r';
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
 export const MODES = {
   // Аркада с 2026-10-20 строже: урон по игроку 0,75 (было 0,55), реакция ×1,2 (1,4), расчёты 0,85 (0,7), ловушек 200 (290), пушки 0,85 (0,7)
-  arcade: { ind: 0.5, name: 'Аркада', desc: 'больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам', dmgTaken: 0.75, reactK: 1.2, samSkill: 0.85, cmK: 1.15, cm: 200, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.85, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
-  real: { ind: 1, name: 'Реализм', desc: 'только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета', dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home', reloadK: { air: 0.7, multi: 0.9 } }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
+  arcade: { ind: 0.5, name: tr('Аркада'), desc: tr('больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам'), dmgTaken: 0.75, reactK: 1.2, samSkill: 0.85, cmK: 1.15, cm: 200, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.85, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
+  real: { ind: 1, name: tr('Реализм'), desc: tr('только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета'), dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home', reloadK: { air: 0.7, multi: 0.9 } }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
 };
 
 const NOOP_FX = {
@@ -299,23 +300,23 @@ export function createStrike(ctx) {
   }
   function launch(u) {
     const S = u.S;
-    if (u.dead) return 'комплекс уничтожен';
+    if (u.dead) return tr('комплекс уничтожен');
     if (S.type === 'guns') return null;
-    if (u.reloadT > 0) return `перезарядка ${Math.ceil(u.reloadT)} с`;
-    if (u.ammo <= 0) return 'нет ракет';
-    if (u.cool > 0) return 'пусковая не готова';
+    if (u.reloadT > 0) return tr('перезарядка {0} с', [Math.ceil(u.reloadT)]);
+    if (u.ammo <= 0) return tr('нет ракет');
+    if (u.cool > 0) return tr('пусковая не готова');
     const t = u.track;
-    if (!t || t.dead) return S.type === 'ir' ? 'ГСН не захватила цель' : 'нет захвата цели';
-    if (S.radar && !u.emit && S.type !== 'saclos' && !S.optTrack && S.type !== 'ir') return 'РЛС выключена — ракету некому вести';
-    if (S.type === 'jammer') return 'станция РЭБ не стреляет';
+    if (!t || t.dead) return S.type === 'ir' ? tr('ГСН не захватила цель') : tr('нет захвата цели');
+    if (S.radar && !u.emit && S.type !== 'saclos' && !S.optTrack && S.type !== 'ir') return tr('РЛС выключена — ракету некому вести');
+    if (S.type === 'jammer') return tr('станция РЭБ не стреляет');
     const d = u.pos.distanceTo(t.pos), h = aglOf(t);
     if (!meetSoon(u, t)) { // баллистику можно и раньше — в упреждённую точку
-      if (d < S.rmin) return 'слишком близко';
-      if (d > S.rmax) return 'далеко — цель вне зоны';
-      if (h < S.hmin) return 'цель ниже зоны поражения';
-      if (h > S.hmax) return 'цель выше зоны поражения';
+      if (d < S.rmin) return tr('слишком близко');
+      if (d > S.rmax) return tr('далеко — цель вне зоны');
+      if (h < S.hmin) return tr('цель ниже зоны поражения');
+      if (h > S.hmax) return tr('цель выше зоны поражения');
     }
-    if (!launcherReady(u)) return 'пусковая разворачивается';
+    if (!launcherReady(u)) return tr('пусковая разворачивается');
     launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
   }

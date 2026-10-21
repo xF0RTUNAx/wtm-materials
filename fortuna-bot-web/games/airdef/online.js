@@ -3,6 +3,8 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
+import { tr, trIf } from './i18n.js?v=20261022r';
+import { trFmt } from './i18n-fmt.js?v=20261022r';
 import { createNet } from './net.js?v=20261022r';
 import * as O from './sim/online.js?v=20261022r';
 import * as MW from './sim/online-multi.js?v=20261022r';
@@ -10,8 +12,9 @@ import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsena
 import { MODES } from './sim/strike.js?v=20261022r';
 import { ICON } from './icons.js?v=20261022r';
 
-const ROLES = [['air', 'Авиация'], ['pvo', 'ПВО'], ['any', 'Любая']];
-const SIDES = [['random', 'Случайно'], ['west', 'Запад'], ['east', 'Восток']];
+const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
+const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
+const SIDES = [['random', tr('Случайно')], ['west', tr('Запад')], ['east', tr('Восток')]];
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 export function createOnline(C, ctrls) {
@@ -28,48 +31,48 @@ export function createOnline(C, ctrls) {
   function panel(el) {
     if (N.conn !== 'on') {
       if (N.conn === 'off' || N.conn === 'error') N.connect();
-      el.innerHTML = `<div class="cat-h">Онлайн</div><p class="hint">${N.conn === 'noacc' ? 'Онлайн — для игроков с аккаунтом сайта: откройте игру с fortunawtm.com/play и войдите.'
-        : N.conn === 'error' ? 'Сервер онлайна сейчас недоступен. Попробуйте позже.' : 'Подключаемся к серверу…'}</p>${N.conn === 'error' ? '<button class="btn alt" data-oa="retry">Повторить</button>' : ''}`;
+      el.innerHTML = `<div class="cat-h">${tr('Онлайн')}</div><p class="hint">${N.conn === 'noacc' ? tr('Онлайн — для игроков с аккаунтом сайта: откройте игру с fortunawtm.com/play и войдите.')
+        : N.conn === 'error' ? tr('Сервер онлайна сейчас недоступен. Попробуйте позже.') : tr('Подключаемся к серверу…')}</p>${N.conn === 'error' ? `<button class="btn alt" data-oa="retry">${tr('Повторить')}</button>` : ''}`;
       return;
     }
     const r = N.room;
     if (r && r.state === 'lobby') return lobby(el, r);
-    if (N.queued) { el.innerHTML = `<div class="cat-h">Поиск боя</div><p class="hint">${waitText()}</p>`; return; }
+    if (N.queued) { el.innerHTML = `<div class="cat-h">${tr('Поиск боя')}</div><p class="hint">${waitText()}</p>`; return; }
     const mw = ui.kind === 'multi', srch = N.search || {};
-    el.innerHTML = `<div class="prow"><span>Игра</span>${seg('kind', ui.kind, [['air', 'Вылет и оборона'], ['multi', 'Мульти-волна']])}</div>
-      <div class="cat-h">Быстрый бой</div>
-      <div class="prow"><span>Режим</span>${seg('mode', ui.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>
-      ${mw ? '' : `<div class="prow"><span>Роль</span>${seg('role', ui.role, ROLES)}</div>`}
-      <p class="hint">${mw ? `Команда против команды, два раунда: в одном ваша команда собирает волну (дроны, крылатые, баллистика — наряд на цели), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка — ${MW.PREP_T} с, на ней — чат команды.${N.search ? ` Сейчас ищут: аркада ${srch.marcade || 0}, реализм ${srch.mreal || 0}.` : ''}`
-        : `Авиация против ПВО города, три волны. Ждём минимум 2 на 2, потом ещё 15 с — вдруг наберётся больше. Людей долго нет — добавим ботов.${N.search ? ` Сейчас ищут: аркада ${srch.arcade}, реализм ${srch.real}.` : ''}`}</p>
-      <div class="cat-h">Своя комната</div>
-      <div class="prow"><span>Формат</span>${seg('size', ui.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>
-      <div class="prow"><span>Эпоха</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id] && (!mw || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
-      ${mw ? '' : `<div class="prow"><span>Авиация</span>${seg('side', ui.sideAir, SIDES)}</div>`}
-      <div class="prow"><span>Пустые места</span>${seg('fill', ui.fill ? 1 : 0, [[1, 'Боты'], [0, 'Без ботов']])}</div>
-      <button class="btn alt" data-oa="create">Создать комнату</button>
-      <div class="cat-h">Войти по коду</div>
-      <div class="prow"><input id="adCode" maxlength="4" placeholder="КОД" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">Войти</button></div>`;
+    el.innerHTML = `<div class="prow"><span>${tr('Игра')}</span>${seg('kind', ui.kind, [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div>
+      <div class="cat-h">${tr('Быстрый бой')}</div>
+      <div class="prow"><span>${tr('Режим')}</span>${seg('mode', ui.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>
+      ${mw ? '' : `<div class="prow"><span>${tr('Роль')}</span>${seg('role', ui.role, ROLES)}</div>`}
+      <p class="hint">${mw ? tr('Команда против команды, два раунда: в одном ваша команда собирает волну (дроны, крылатые, баллистика — наряд на цели), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка — {0} с, на ней — чат команды.{1}', [MW.PREP_T, N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.marcade || 0, srch.mreal || 0]) : ''])
+        : tr('Авиация против ПВО города, три волны. Ждём минимум 2 на 2, потом ещё 15 с — вдруг наберётся больше. Людей долго нет — добавим ботов.{0}', [N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.arcade, srch.real]) : ''])}</p>
+      <div class="cat-h">${tr('Своя комната')}</div>
+      <div class="prow"><span>${tr('Формат')}</span>${seg('size', ui.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>
+      <div class="prow"><span>${tr('Эпоха')}</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id] && (!mw || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
+      ${mw ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('side', ui.sideAir, SIDES)}</div>`}
+      <div class="prow"><span>${tr('Пустые места')}</span>${seg('fill', ui.fill ? 1 : 0, [[1, tr('Боты')], [0, tr('Без ботов')]])}</div>
+      <button class="btn alt" data-oa="create">${tr('Создать комнату')}</button>
+      <div class="cat-h">${tr('Войти по коду')}</div>
+      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('КОД')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${tr('Войти')}</button></div>`;
   }
   function lobby(el, r) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
     const TN = r.kind === 'multi' ? MW.TEAM_NAME : O.ROLE_NAMES, TT = r.kind === 'multi' ? MW.TEAMS : ['air', 'pvo'];
     const col = (t) => `<div class="adteam"><div class="cat-h">${TN[t]} · ${r.players.filter((p) => p.team === t).length}/${r.size}</div>` +
-      r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}"><b>${esc(p.name)}</b>${p.bot ? ' <span class="dim">бот</span>' : ''}${p.ready ? ' <span class="okc">✓</span>' : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
-      (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">Перейти сюда</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">+ бот</button>` : '') + '</div>';
-    el.innerHTML = `<div class="cat-h">Комната <b class="adcode">${r.code}</b> <button class="mini" data-oa="invite">Пригласить</button> <button class="mini" data-oa="leave">Выйти</button></div>
-      <p class="hint">${r.kind === 'multi' ? 'Мульти-волна · два раунда со сменой сторон' : ''}${r.kind === 'multi' ? ' · ' : ''}${MODES[r.mode].name} · ${r.size}×${r.size} · эпоха ${ERAS[r.era - 1].short || r.era}${r.kind === 'multi' ? '' : ` · авиация — ${r.sideAir === 'east' ? 'восток' : 'запад'}`}${r.fill ? ' · пустые места — боты' : ''}</p>
-      ${afterBattle ? '<p class="hint"><b>Бой окончен — вы снова в комнате.</b> Хост может сменить игру, режим, формат, эпоху и сторону; затем все — «Готов».</p>' : ''}
-      ${host ? `<div class="prow"><span>Игра</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', 'Вылет и оборона'], ['multi', 'Мульти-волна']])}</div><div class="prow"><span>Формат</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div><div class="prow"><span>Эпоха</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id] && (r.kind !== 'multi' || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
-        ${r.kind === 'multi' ? '' : `<div class="prow"><span>Авиация</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>Режим</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
+      r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}"><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : ''}${p.ready ? ' <span class="okc">✓</span>' : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
+      (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">${tr('Перейти сюда')}</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">${tr('+ бот')}</button>` : '') + '</div>';
+    el.innerHTML = `<div class="cat-h">${tr('Комната <b class="adcode">{0}</b>', [r.code])} <button class="mini" data-oa="invite">${tr('Пригласить')}</button> <button class="mini" data-oa="leave">${tr('Выйти')}</button></div>
+      <p class="hint">${tr('{0}{1}{2} · {3}×{4} · эпоха {5}{6}{7}', [r.kind === 'multi' ? tr('Мульти-волна · два раунда со сменой сторон') : '', r.kind === 'multi' ? ' · ' : '', MODES[r.mode].name, r.size, r.size, ERAS[r.era - 1].short || r.era, r.kind === 'multi' ? '' : tr(' · авиация — {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')]), r.fill ? tr(' · пустые места — боты') : ''])}</p>
+      ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен — вы снова в комнате.</b> Хост может сменить игру, режим, формат, эпоху и сторону; затем все — «Готов».')}</p>` : ''}
+      ${host ? `<div class="prow"><span>${tr('Игра')}</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div><div class="prow"><span>${tr('Формат')}</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div><div class="prow"><span>${tr('Эпоха')}</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id] && (r.kind !== 'multi' || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
+        ${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>${tr('Режим')}</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
       <div class="adteams">${TT.map(col).join('')}</div>
-      <p class="hint">Бой начнётся, когда все нажмут «Готов».</p>`;
+      <p class="hint">${tr('Бой начнётся, когда все нажмут «Готов».')}</p>`;
   }
   // кнопка внизу карточки меню
   function primaryText() {
-    if (N.conn !== 'on') return 'ОНЛАЙН';
-    if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); return me && me.ready ? 'ГОТОВ ✓ — СНЯТЬ' : 'ГОТОВ'; }
-    return N.queued ? 'ОТМЕНИТЬ ПОИСК' : 'НАЙТИ БОЙ';
+    if (N.conn !== 'on') return tr('ОНЛАЙН');
+    if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); return me && me.ready ? tr('ГОТОВ ✓ — СНЯТЬ') : tr('ГОТОВ'); }
+    return N.queued ? tr('ОТМЕНИТЬ ПОИСК') : tr('НАЙТИ БОЙ');
   }
   function primary() {
     if (N.conn !== 'on') { N.connect(); return; }
@@ -99,10 +102,10 @@ export function createOnline(C, ctrls) {
     }
   }
   function invite() {
-    const url = `https://fortunawtm.com/fortuna-bot-web/games/airdef.html?ad=${N.room.code}`, text = `Бой «Air Superiority Online»: комната ${N.room.code}`;
+    const url = `https://fortunawtm.com/fortuna-bot-web/games/airdef.html?ad=${N.room.code}`, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
     try { const tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.openTelegramLink) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`); return; } } catch (_) { /* не Telegram */ }
     if (navigator.share) { navigator.share({ title: text, url }).catch(() => {}); return; }
-    try { navigator.clipboard.writeText(url); C.say('Ссылка скопирована', 2); } catch (_) { C.say(`Код комнаты: ${N.room.code}`, 3); }
+    try { navigator.clipboard.writeText(url); C.say(tr('Ссылка скопирована'), 2); } catch (_) { C.say(tr('Код комнаты: {0}', [N.room.code]), 3); }
   }
 
   // ═════════════ Ожидание поиска — поверх живого фона меню ═════════════
@@ -110,7 +113,7 @@ export function createOnline(C, ctrls) {
   function waitText() {
     const q = N.queued; if (!q) return '';
     const sec = Math.floor((performance.now() - q.t) / 1000), w = N.qwait ? Math.max(0, Math.ceil((N.qwait - performance.now()) / 1000)) : 0;
-    return `${q.kind === 'multi' ? 'Мульти-волна · ' : ''}${MODES[q.mode].name}${q.kind === 'multi' ? '' : ` · роль: ${ROLES.find((r) => r[0] === ui.role)[1]}`} · ищем ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}${w ? ` · набралось 2 на 2 — старт через ${w} с` : ''}`;
+    return tr('{0}{1}{2} · ищем {3}:{4}{5}', [q.kind === 'multi' ? tr('Мульти-волна · ') : '', MODES[q.mode].name, q.kind === 'multi' ? '' : tr(' · роль: {0}', [ROLES.find((r) => r[0] === ui.role)[1]]), Math.floor(sec / 60), String(sec % 60).padStart(2, '0'), w ? tr(' · набралось 2 на 2 — старт через {0} с', [w]) : '']);
   }
   function renderWait() {
     const on = !!N.queued && C.state === 'menu';
@@ -142,13 +145,13 @@ export function createOnline(C, ctrls) {
     const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir && O.netOk(L)); // вертолёты и НАР — пока только одиночная игра
     const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LOADOUTS[B.era][p.choice] : null));
     const nAir = allies.length + 1, hunters = others.filter((x) => x && loadoutRole(x) === 'sead').length;
-    planEl.innerHTML = `<h3>Волна ${r.wave}/${O.WAVES} · выбор связки · ${r.left ?? ''} с</h3><div>Очки: <b style="color:#fde68a">${me.budget}</b> · вылетов на волну: ${me.lives ?? O.RESPAWNS[r.wave - 1] + 1}${r.lead === 'pvo' ? ' (+1: команда отстаёт)' : ''}</div>
-      <div class="dim">Охотников за ПВО в команде: ${hunters + (me.choice !== null && loadoutRole(LOADOUTS[B.era][me.choice]) === 'sead' ? 1 : 0)}/${O.huntCap(nAir)} · после ${O.SUPPRESS_T} с каждая уничтоженная РЛС замедляет перезарядку ПВО${r.lead === 'air' ? ' · вы ведёте — связки на 10 % дороже' : ''}</div>
-      ${allies.length ? `<div class="cat-h">Союзники</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${esc(p.name)}</b> — ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : 'выбирает…'}${p.ready ? ' <span class="okc">✓</span>' : ''}</div>`; }).join('')}` : ''}
-      <div class="cat-h">Связки</div>` + list.map(([L, i]) => {
+    planEl.innerHTML = `<h3>${tr('Волна {0}/{1} · выбор связки · {2} с', [r.wave, O.WAVES, r.left ?? ''])}</h3><div>${tr('Очки: <b style="color:#fde68a">{0}</b> · вылетов на волну: {1}{2}', [me.budget, me.lives ?? O.RESPAWNS[r.wave - 1] + 1, r.lead === 'pvo' ? tr(' (+1: команда отстаёт)') : ''])}</div>
+      <div class="dim">${tr('Охотников за ПВО в команде: {0}/{1} · после {2} с каждая уничтоженная РЛС замедляет перезарядку ПВО{3}', [hunters + (me.choice !== null && loadoutRole(LOADOUTS[B.era][me.choice]) === 'sead' ? 1 : 0), O.huntCap(nAir), O.SUPPRESS_T, r.lead === 'air' ? tr(' · вы ведёте — связки на 10 % дороже') : ''])}</div>
+      ${allies.length ? `<div class="cat-h">${tr('Союзники')}</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${pnm(p)}</b> — ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : tr('выбирает…')}${p.ready ? ' <span class="okc">✓</span>' : ''}</div>`; }).join('')}` : ''}
+      <div class="cat-h">${tr('Связки')}</div>` + list.map(([L, i]) => {
       const cost = O.loadoutCostFor(L, r.lead), back = me.choice !== null ? O.loadoutCostFor(LOADOUTS[B.era][me.choice], r.lead) : 0, deny = O.roleDeny(L, others, nAir), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(L) : [], no = cost > me.budget + back || !!deny || miss.length > 0; // «Реализм»: только купленное
-      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? ' · контейнер' : ''}${deny ? ' · <b class="warnc">лимит охотников</b>' : ''}${miss.length ? ` · <b class="warnc">${C.progress.needText(miss)}</b>` : ''}</span></div><span class="pr">${cost}</span></button>`;
-    }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
+      return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}${deny ? ` ${tr('· <b class="warnc">лимит охотников</b>')}` : ''}${miss.length ? ` · <b class="warnc">${C.progress.needText(miss)}</b>` : ''}</span></div><span class="pr">${cost}</span></button>`;
+    }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? tr('Готов ✓ (снять)') : tr('ГОТОВ')}</button>`;
   }
   planEl.onclick = (e) => {
     const b = e.target.closest('[data-bi]'), a = e.target.closest('[data-oa]');
@@ -159,8 +162,8 @@ export function createOnline(C, ctrls) {
   // ═════════════ События сети ═════════════
   N.on('conn', rerender);
   N.on('queue', rerender);
-  N.on('err', (m) => { C.say(m, 3); rerender(); });
-  N.on('deny', (m) => { N.clog('deny', m); C.say(m, 2.5); snd.deny(); if (ctrls.defense.st.net) ctrls.defense.st.msg = m; });
+  N.on('err', (m) => { C.say(trFmt(m), 3); rerender(); }); // сообщения сервера — по-русски: переводим на клиенте
+  N.on('deny', (m) => { N.clog('deny', m); const t = trFmt(m); C.say(t, 2.5); snd.deny(); if (ctrls.defense.st.net) ctrls.defense.st.msg = t; });
   // карта комнаты: «Мульти-волна» — «Северный рубеж», «Вылет и оборона» — город. Карта строится при загрузке страницы: не та —
   // перезагружаемся под неё; сервер держит место (в лобби — 30 с, в бою — как при обрыве) и тот же аккаунт возвращает в комнату
   let mapGo = false;
@@ -169,7 +172,7 @@ export function createOnline(C, ctrls) {
     const k = kind === 'multi' ? 'multi' : 'air'; ls.set('fortuna_ad_kind', k);
     if (C.wantMap('online') === C.MAP) return false;
     mapGo = true; N.quit = true; // уходящая страница не переподключается (иначе две вкладки одного аккаунта отнимают место друг у друга)
-    N.clog('map_reload', k); C.say('Загружаем карту комнаты…', 5);
+    N.clog('map_reload', k); C.say(tr('Загружаем карту комнаты…'), 5);
     const u = new URL(location.href); u.searchParams.delete('ad'); u.searchParams.set('mp', '1'); location.replace(u.href);
     return true;
   }
@@ -181,25 +184,25 @@ export function createOnline(C, ctrls) {
     if (C.state !== 'play') enterBattle();
     if (team() === 'pvo' || N.battle.kind === 'multi') ctrls.defense.netSync();
     renderPlan();
-    if (was !== r.state && r.state === 'play' && N.battle.kind !== 'multi') { C.say(`Волна ${r.wave}!`, 2.5); snd.alarm(); }
+    if (was !== r.state && r.state === 'play' && N.battle.kind !== 'multi') { C.say(tr('Волна {0}!', [r.wave]), 2.5); snd.alarm(); }
   });
   // бой кончился, комната снова в лобби: с итогов «В КОМНАТУ» (или сразу, если итоги уже закрыли)
   N.on('lobby', () => { afterBattle = true; document.body.classList.remove('netOn', 'plOpen'); if (C.state === 'play' && !C.ended) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; } if (inMenu()) C.menu.render(); });
   N.on('resupply', (e) => { if (team() === 'air') ctrls.air.netResupply(e); });
   N.on('spawn', (m) => { N.clog('spawn', { lives: m.lives, plane: m.plane, load: m.load.map((l) => l.key + ':' + l.n).join(',') }); if (team() === 'air') ctrls.air.netSpawn(m); });
   N.on('meHit', (hp, by, pk) => ctrls.air.netHit(hp, by, pk));
-  N.on('meDown', () => { N.clog('down', { hp: C.player && C.player.hp, pos: C.player && C.player.pos.toArray().map(Math.round) }); ctrls.air.netDown('Самолёт сбит'); });
+  N.on('meDown', () => { N.clog('down', { hp: C.player && C.player.hp, pos: C.player && C.player.pos.toArray().map(Math.round) }); ctrls.air.netDown(tr('Самолёт сбит')); });
   N.on('meAI', () => { N.clog('to_ai', { hidden: document.visibilityState }); ctrls.air.netAI(); });
   // журнал сбитий: своя команда — синим, противник — красным; под ником — техника, которой он управлял в этот момент
   const vehName = (v) => { const [k, key] = String(v || '').split(':'); return !key ? '' : k === 'p' ? (PLANES[key] || (CARRIERS[key] && CARRIERS[key].name) || key) : k === 'u' ? (SAM[key] ? SAM[key].short : key) : (AG[key] ? AG[key].short : key); };
-  N.on('kill', (who, whom, by, wt, mt, wv, mv) => { feed.push({ t: performance.now(), who, whom, by, wt, mt, wv: vehName(wv), mv: vehName(mv) }); if (feed.length > 6) feed.shift(); });
-  N.on('help', (m) => { feed.push({ t: performance.now(), s: `${m.name}: Мне нужна помощь!`, help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); if (snd.help) snd.help(); else snd.alarm(); });
+  N.on('kill', (who, whom, by, wt, mt, wv, mv) => { feed.push({ t: performance.now(), who: trIf(who), whom: trIf(whom), by: trIf(by), wt, mt, wv: vehName(wv), mv: vehName(mv) }); if (feed.length > 6) feed.shift(); });
+  N.on('help', (m) => { feed.push({ t: performance.now(), s: tr('{0}: Мне нужна помощь!', [m.name]), help: true }); helps.push({ t: performance.now(), name: m.name, p: m.p }); if (snd.help) snd.help(); else snd.alarm(); });
   // «Нужна помощь»: не чаще раза в HELP_CD с; p — [x, z] (самолёт, свой комплекс или место на карте)
   let helpAt = -1e9;
   C.askHelp = (p) => {
     const left = O.HELP_CD - (performance.now() - helpAt) / 1000;
-    if (left > 0) { C.say(`Просить помощи снова можно через ${Math.ceil(left)} с`, 2); snd.deny(); return false; }
-    helpAt = performance.now(); N.help(p); C.say('Союзникам: «Нужна помощь!» — знак на их карте', 2); snd.click(); return true;
+    if (left > 0) { C.say(tr('Просить помощи снова можно через {0} с', [Math.ceil(left)]), 2); snd.deny(); return false; }
+    helpAt = performance.now(); N.help(p); C.say(tr('Союзникам: «Нужна помощь!» — знак на их карте'), 2); snd.click(); return true;
   };
   // знак «внимание»: жёлтый треугольник с чёрным ободком и чёрным «!» (s — половина стороны, px)
   // метка «Нужна помощь» на картах — значок «hazard-sign» (icons.js): жёлтый на тёмной подложке
@@ -215,40 +218,40 @@ export function createOnline(C, ctrls) {
   function renderPl() {
     const r = N.room; if (!r || !document.body.classList.contains('plOpen')) return;
     const multi = r.kind === 'multi', TN = multi ? MW.TEAM_NAME : O.ROLE_NAMES, TT = multi ? MW.TEAMS : ['air', 'pvo'], me = N.me && N.me.id, myT = N.myTeam();
-    const ph = { plan: multi ? 'подготовка' : 'расстановка', play: 'бой', debrief: 'итоги', end: 'итоги боя' }[r.state] || '', ready = r.state === 'plan';
-    plEl.innerHTML = `<div class="plh"><b>Комната ${r.code}</b> · ${MODES[r.mode].name} · ${ph}${r.left != null ? ` · ${r.left} с` : ''}<button data-pl="x" aria-label="Закрыть">✕</button></div>` +
-      TT.map((t) => `<div class="plt" style="color:${t === myT ? '#93c5fd' : '#fca5a5'}">${TN[t]}${multi && r.atk ? (r.atk === t ? ' · волна' : ' · ПВО') : ''}</div>` + r.players.filter((p) => p.team === t).map((p) =>
-        `<div class="plr${p.id === me ? ' me' : ''}"><i class="pld ${p.bot ? 'bot' : p.away ? 'off' : 'on'}"></i><b>${esc(p.name)}</b>${p.bot ? ' <span class="dim">бот</span>' : p.away ? ' <span class="dim">нет связи</span>' : ''}<span class="plx">${p.lives != null ? `вылетов ${p.lives} · ` : ''}${p.kills || 0} · ${p.score || 0} оч.${ready ? (p.ready ? ' <b class="okc">✓</b>' : ' <span class="dim">…</span>') : ''}</span></div>`).join('')).join('') +
-      `<div class="dim pll">● в сети · ○ нет связи · ◆ бот${ready ? ' · ✓ готов' : ''} · число — сбито / уничтожено</div>`;
+    const ph = { plan: multi ? tr('подготовка') : tr('расстановка'), play: tr('бой'), debrief: tr('итоги'), end: tr('итоги боя') }[r.state] || '', ready = r.state === 'plan';
+    plEl.innerHTML = `<div class="plh">${tr('<b>Комната {0}</b> · {1} · {2}{3}', [r.code, MODES[r.mode].name, ph, r.left != null ? tr(' · {0} с', [r.left]) : ''])}<button data-pl="x" aria-label="${tr('Закрыть')}">✕</button></div>` +
+      TT.map((t) => `<div class="plt" style="color:${t === myT ? '#93c5fd' : '#fca5a5'}">${TN[t]}${multi && r.atk ? (r.atk === t ? tr(' · волна') : tr(' · ПВО')) : ''}</div>` + r.players.filter((p) => p.team === t).map((p) =>
+        `<div class="plr${p.id === me ? ' me' : ''}"><i class="pld ${p.bot ? 'bot' : p.away ? 'off' : 'on'}"></i><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : p.away ? ` <span class="dim">${tr('нет связи')}</span>` : ''}<span class="plx">${tr('{0}{1} · {2} оч.{3}', [p.lives != null ? tr('вылетов {0} · ', [p.lives]) : '', p.kills || 0, p.score || 0, ready ? (p.ready ? ' <b class="okc">✓</b>' : ' <span class="dim">…</span>') : ''])}</span></div>`).join('')).join('') +
+      `<div class="dim pll">${tr('● в сети · ○ нет связи · ◆ бот{0} · число — сбито / уничтожено', [ready ? tr(' · ✓ готов') : ''])}</div>`;
   }
   plBtn.onclick = (e) => { e.stopPropagation(); document.body.classList.toggle('plOpen'); snd.click(); renderPl(); };
   plEl.addEventListener('pointerdown', (e) => e.stopPropagation());
   plEl.onclick = (e) => { if (e.target.closest('[data-pl="x"]')) { document.body.classList.remove('plOpen'); snd.click(); } };
   N.on('room', renderPl);
   N.on('chat', () => ctrls.defense.chatSync());
-  N.on('roundEnd', (m) => { ctrls.defense.setNetRes(m); C.say(`Раунд ${m.round}: ${MW.TEAM_NAME[m.atk]} разрушил ${Math.round(m.k * 100)}% ценности объектов${m.last ? '' : ' · стороны меняются'}`, 6); });
+  N.on('roundEnd', (m) => { ctrls.defense.setNetRes(m); C.say(tr('Раунд {0}: {1} разрушил {2}% ценности объектов{3}', [m.round, MW.TEAM_NAME[m.atk], Math.round(m.k * 100), m.last ? '' : tr(' · стороны меняются')]), 6); });
   N.on('waveEnd', (m) => {
     // итоги волны: вклад каждой роли — цели, подавленные РЛС, сбитые охотники и ударники
-    const det = `РЛС уничтожено: ${m.radarKills || 0} · сбито охотников за ПВО: ${m.downsSead || 0}, ударников: ${Math.max(0, (m.downs || 0) - (m.downsSead || 0))}`;
-    C.say(m.last ? `${m.totalK >= O.WIN_K ? 'Авиация уничтожила цели' : 'Последняя волна отбита'} · ${det}` : `Волна ${m.wave} окончена · уничтожено ${Math.round(m.totalK * 100)}% ценности целей · ${det}${m.lead ? ` · ведёт ${m.lead === 'air' ? 'авиация' : 'ПВО'}` : ''}`, 7);
+    const det = tr('РЛС уничтожено: {0} · сбито охотников за ПВО: {1}, ударников: {2}', [m.radarKills || 0, m.downsSead || 0, Math.max(0, (m.downs || 0) - (m.downsSead || 0))]);
+    C.say(m.last ? `${m.totalK >= O.WIN_K ? tr('Авиация уничтожила цели') : tr('Последняя волна отбита')} · ${det}` : tr('Волна {0} окончена · уничтожено {1}% ценности целей · {2}{3}', [m.wave, Math.round(m.totalK * 100), det, m.lead ? tr(' · ведёт {0}', [m.lead === 'air' ? tr('авиация') : tr('ПВО')]) : '']), 7);
     if (team() === 'pvo') ctrls.defense.setNetRes(m);
   });
   N.on('end', (m) => {
     if (m.kind === 'multi') {
       const me = N.myPlayer(), v0 = m.v0 || 1, list = m.players.slice().sort((a, b) => b.score - a.score), win = m.winner ? me && m.winner === me.team : null;
-      C.showEnd({ again: 'В КОМНАТУ', title: win ? 'Победа' : win === false ? 'Поражение' : 'Ничья', win, reason: `Волна Востока разрушила ${Math.round(100 * m.scores.east / v0)}%, Запада — ${Math.round(100 * m.scores.west / v0)}% ценности объектов`,
-        stats: [[`${Math.round(100 * m.scores.east / v0)}%`, 'Восток'], [`${Math.round(100 * m.scores.west / v0)}%`, 'Запад'], [me ? Math.round(me.score || 0) : 0, 'очков']],
-        note: list.map((p) => `${esc(p.name)}${p.bot ? ' (бот)' : ''} — ${MW.TEAM_NAME[p.team]}: ${p.kills} перехв./уничт., ${p.score} очков`).join('<br>') });
+      C.showEnd({ again: tr('В КОМНАТУ'), title: win ? tr('Победа') : win === false ? tr('Поражение') : tr('Ничья'), win, reason: tr('Волна Востока разрушила {0}%, Запада — {1}% ценности объектов', [Math.round(100 * m.scores.east / v0), Math.round(100 * m.scores.west / v0)]),
+        stats: [[`${Math.round(100 * m.scores.east / v0)}%`, tr('Восток')], [`${Math.round(100 * m.scores.west / v0)}%`, tr('Запад')], [me ? Math.round(me.score || 0) : 0, tr('очков')]],
+        note: list.map((p) => tr('{0}{1} — {2}: {3} перехв./уничт., {4} очков', [pnm(p), p.bot ? tr(' (бот)') : '', MW.TEAM_NAME[p.team], p.kills, p.score])).join('<br>') });
       if (m.result && C.claimOnline) C.claimOnline(m.result);
       return;
     }
     const me = N.myPlayer(), win = me && m.winner === me.team, list = m.players.slice().sort((a, b) => b.score - a.score);
-    C.showEnd({ again: 'В КОМНАТУ', title: win ? 'Победа' : 'Поражение', win, reason: m.winner === 'air' ? `Авиация уничтожила ${Math.round(m.valueK * 100)}% ценности целей` : `ПВО отстояла город: уничтожено ${Math.round(m.valueK * 100)}% ценности целей`,
-      stats: [[me ? me.kills || 0 : 0, me && me.team === 'air' ? 'комплексов уничтожено' : 'самолётов сбито'], [me ? Math.round(me.score || 0) : 0, 'очков'], [m.winner === 'air' ? 'Авиация' : 'ПВО', 'победила']],
-      note: list.map((p) => `${esc(p.name)}${p.bot ? ' (бот)' : ''} — ${O.ROLE_NAMES[p.team]}: ${p.kills}/${p.deaths}, ${p.score} очков`).join('<br>') });
+    C.showEnd({ again: tr('В КОМНАТУ'), title: win ? tr('Победа') : tr('Поражение'), win, reason: m.winner === 'air' ? tr('Авиация уничтожила {0}% ценности целей', [Math.round(m.valueK * 100)]) : tr('ПВО отстояла город: уничтожено {0}% ценности целей', [Math.round(m.valueK * 100)]),
+      stats: [[me ? me.kills || 0 : 0, me && me.team === 'air' ? tr('комплексов уничтожено') : tr('самолётов сбито')], [me ? Math.round(me.score || 0) : 0, tr('очков')], [m.winner === 'air' ? tr('Авиация') : tr('ПВО'), tr('победила')]],
+      note: list.map((p) => tr('{0}{1} — {2}: {3}/{4}, {5} очков', [pnm(p), p.bot ? tr(' (бот)') : '', O.ROLE_NAMES[p.team], p.kills, p.deaths, p.score])).join('<br>') });
     if (m.result && C.claimOnline) C.claimOnline(m.result);
   });
-  N.on('lost', () => { hideModal(); if (C.state === 'play' && C.lastGame === 'online' && !C.ended) C.showEnd({ title: 'Связь потеряна', reason: 'Не удалось вернуться в бой: комната закрыта или сервер недоступен', win: null, stats: [] }); });
+  N.on('lost', () => { hideModal(); if (C.state === 'play' && C.lastGame === 'online' && !C.ended) C.showEnd({ title: tr('Связь потеряна'), reason: tr('Не удалось вернуться в бой: комната закрыта или сервер недоступен'), win: null, stats: [] }); });
 
   // ═════════════ Окна поверх игры: переподключение, возвращение в комнату, «покинуть комнату?» ═════════════
   const md = $('netModal');
@@ -264,8 +267,8 @@ export function createOnline(C, ctrls) {
   function renderRe() {
     if (!N.re) { hideModal('re'); return; }
     const s = Math.round((performance.now() - N.re.t0) / 1000);
-    showModal('re', 'Связь потеряна', `Переподключаемся${N.re.n > 1 ? ` · попытка ${N.re.n}` : ''}… ${s} с<br><span class="dim">Ваше место в команде сохранено${N.battle ? ', бой продолжается (самолёт пока ведёт ИИ)' : ''}.</span>`,
-      [['Выйти в меню', () => { N.stopRe(); hideModal(); keepRoom = false; if (C.state === 'play') C.toMenu(); }, true]], true);
+    showModal('re', tr('Связь потеряна'), `${tr('Переподключаемся{0}… {1} с<br>', [N.re.n > 1 ? tr(' · попытка {0}', [N.re.n]) : '', s])}<span class="dim">${tr('Ваше место в команде сохранено{0}.', [N.battle ? tr(', бой продолжается (самолёт пока ведёт ИИ)') : ''])}</span>`,
+      [[tr('Выйти в меню'), () => { N.stopRe(); hideModal(); keepRoom = false; if (C.state === 'play') C.toMenu(); }, true]], true);
   }
   N.on('re', renderRe); setInterval(() => { if (N.re) renderRe(); }, 1000);
   // «В КОМНАТУ» после итогов: комната вернётся в лобби, когда все нажмут (или кончится показ итогов) — до тех пор это окно
@@ -274,15 +277,15 @@ export function createOnline(C, ctrls) {
     const r = N.room;
     if (!backWait || !r || r.state !== 'end') { if (backWait && (!r || r.state === 'lobby')) backWait = false; hideModal('back'); return; }
     const hs = r.players.filter((p) => !p.bot && !p.away);
-    showModal('back', `Возвращаемся в комнату ${r.code}`, `Ждём остальных игроков${r.left ? `, не дольше ${r.left} с` : ''}…<br><span class="dim">Людей в комнате: ${hs.length}</span>`,
-      [['Выйти из комнаты', () => { backWait = false; hideModal(); N.leave(); afterBattle = false; C.menu.render(); }, true]], true);
+    showModal('back', tr('Возвращаемся в комнату {0}', [r.code]), `${tr('Ждём остальных игроков{0}…<br>', [r.left ? tr(', не дольше {0} с', [r.left]) : ''])}<span class="dim">${tr('Людей в комнате: {0}', [hs.length])}</span>`,
+      [[tr('Выйти из комнаты'), () => { backWait = false; hideModal(); N.leave(); afterBattle = false; C.menu.render(); }, true]], true);
   }
   N.on('room', renderBack);
   // уйти из комнаты (итоги, пауза) — переспросить: комнату с друзьями потерять легко, вернуться — только по коду
   function confirmLeave(go, inBattle) {
     if (!N.room || N.conn !== 'on') { go(); return; }
-    showModal('leave', inBattle ? 'Покинуть бой?' : 'Покинуть комнату?', inBattle ? 'Вы действительно хотите покинуть бой и текущую комнату? Ваш самолёт или комплексы дальше поведёт ИИ.' : 'Вы действительно хотите покинуть текущую комнату? Вернуться можно будет только по коду.',
-      [['Покинуть', () => { hideModal(); go(); }], ['Остаться', () => hideModal(), true]]);
+    showModal('leave', inBattle ? tr('Покинуть бой?') : tr('Покинуть комнату?'), inBattle ? tr('Вы действительно хотите покинуть бой и текущую комнату? Ваш самолёт или комплексы дальше поведёт ИИ.') : tr('Вы действительно хотите покинуть текущую комнату? Вернуться можно будет только по коду.'),
+      [[tr('Покинуть'), () => { hideModal(); go(); }], [tr('Остаться'), () => hideModal(), true]]);
   }
   const close0 = $('closeBtn').onclick, pexit0 = $('pauseExit').onclick;
   $('closeBtn').onclick = () => (C.lastGame === 'online' ? confirmLeave(close0) : close0());
@@ -335,7 +338,7 @@ export function createOnline(C, ctrls) {
     if (glow) {
       const h = helps[helps.length - 1];
       if (r && r.width) C.drawWarn(hx, r.left - 16, r.top + r.height / 2, 10);
-      else { const y = 64; C.drawWarn(hx, C.VW / 2, y, 11); hx.textAlign = 'center'; hx.font = '700 12px -apple-system, Segoe UI, sans-serif'; hx.fillStyle = '#fde047'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillText(`${h.name}: нужна помощь — ${air ? 'M' : 'Q'}: карта`, C.VW / 2, y + 26); hx.shadowBlur = 0; }
+      else { const y = 64; C.drawWarn(hx, C.VW / 2, y, 11); hx.textAlign = 'center'; hx.font = '700 12px -apple-system, Segoe UI, sans-serif'; hx.fillStyle = '#fde047'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillText(tr('{0}: нужна помощь — {1}: карта', [h.name, air ? 'M' : 'Q']), C.VW / 2, y + 26); hx.shadowBlur = 0; }
     }
   };
   C.netHelps = () => helps; // для тактической карты ПВО
@@ -348,8 +351,8 @@ export function createOnline(C, ctrls) {
       const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
       const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/airdef-claim', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, token }) });
       const d = await res.json().catch(() => ({}));
-      const parts = []; if (d.details) parts.push(`+${d.details} деталей`); if (d.keys) parts.push(`+${d.keys} 🔑`); if (d.ticket) parts.push(d.ticket === 'ticket' ? '+1 билет' : '+1 🔑');
-      const note = res.ok ? (parts.length ? `Награда: ${parts.join(', ')}` : d.online_rewards_left === 0 ? 'Наградные бои на сегодня закончились — результат засчитан' : 'Результат засчитан') : (d.error || 'Не удалось засчитать бой');
+      const parts = []; if (d.details) parts.push(tr('+{0} деталей', [d.details])); if (d.keys) parts.push(`+${d.keys} 🔑`); if (d.ticket) parts.push(d.ticket === 'ticket' ? tr('+1 билет') : '+1 🔑');
+      const note = res.ok ? (parts.length ? tr('Награда: {0}', [parts.join(', ')]) : d.online_rewards_left === 0 ? tr('Наградные бои на сегодня закончились — результат засчитан') : tr('Результат засчитан')) : (d.error || tr('Не удалось засчитать бой'));
       const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + el.innerHTML;
       if (d.progress && C.progress) { if (el) el.insertAdjacentHTML('afterbegin', `<div class="pgRes">${C.progress.rewardHtml(d.progress)}</div>`); C.progress.refresh(); } // прокачка: опыт и серебро за бой
       N.clog('claim', { ok: res.ok, d });

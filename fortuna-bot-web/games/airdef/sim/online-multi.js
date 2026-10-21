@@ -2,6 +2,7 @@
 // (game-server/airdef-multi.js) и клиента. Две команды — восток и запад, два раунда со сменой сторон: в каждом одна команда
 // собирает волну (наряд на цели, как в одиночной «За волну»), другая ставит ПВО. Победа — по сумме: чья волна разрушила больше
 // ценности военных объектов. Подготовка — одновременная, общий таймер; атака не видит ПВО до обнаружения, оборона — план волны.
+import { tr } from '../i18n.js?v=20261022r';
 import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261022r';
 import { LIM_ON } from './combined.js?v=20261022r';
 
@@ -15,7 +16,7 @@ export const QUIET_R = 4000;             // «пусто»: ни одной ра
 export const LIM = LIM_ON;               // пределы расписания онлайна: носитель ≤ 3 мин, дроны ≤ 5, баллистика ≤ 6
 export const SIZES = [1, 2, 3, 4, 5, 6];
 export const TEAMS = ['east', 'west'];
-export const TEAM_NAME = { east: 'Восток', west: 'Запад' };
+export const TEAM_NAME = { east: tr('Восток'), west: tr('Запад') };
 // бюджет на игрока: команда из n — у каждого base × (0,5 + 0,5/n): вдвоём — по 75 %, вшестером — по 58 % (на команду 3,5 × base)
 export const share = (n) => (n <= 1 ? 1 : 0.5 + 0.5 / n);
 export const atkBudget = (side, era, n) => Math.round(multiBudget(side, era) * share(n));
@@ -41,11 +42,11 @@ export const tbmOf = (n) => Object.entries(n || {}).reduce((s, [k, v]) => s + (A
 // суммарный состав баллистики команды (планы союзников и свой) → текст запрета или null
 export function tbmCheck(n, players) {
   const r = TBM_RULE(players), K = n.kinzhal || 0, I = n.iskander || 0, A = tbmOf(n);
-  if (K && A > K) return '«Кинжал» — только без другой баллистики';
-  if (I && A > I) return '«Искандер» — только без другой баллистики';
-  if (K > r.kinzhal) return `«Кинжал» — не больше ${r.kinzhal}`;
-  if (I > r.iskander) return `«Искандер» — не больше ${r.iskander}`;
-  if (A > r.total) return `Баллистика — не больше ${r.total}`;
+  if (K && A > K) return tr('«Кинжал» — только без другой баллистики');
+  if (I && A > I) return tr('«Искандер» — только без другой баллистики');
+  if (K > r.kinzhal) return tr('«Кинжал» — не больше {0}', [r.kinzhal]);
+  if (I > r.iskander) return tr('«Искандер» — не больше {0}', [r.iskander]);
+  if (A > r.total) return tr('Баллистика — не больше {0}', [r.total]);
   return null;
 }
 // сложить составы (план игрока и союзников): { ключ: n }

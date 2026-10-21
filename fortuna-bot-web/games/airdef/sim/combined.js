@@ -9,6 +9,7 @@
 // дроны и носители в зоне станции) и пуск ЗУР. По ПВО бьют только по засечённым — цель выбирается в момент пуска;
 // по комплексу, которого разведчик не видел сам (засечён по излучению или пуску), баллистика ложится с тройным промахом.
 /* global THREE */
+import { tr } from '../i18n.js?v=20261022r';
 import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261022r';
 import { CITY } from '../city.js?v=20261022r';
 
@@ -124,7 +125,7 @@ export function createCombined(S, city, rnd, opts = {}) {
       for (let l = 0; l < nL; l++) {
         const b = dirs[(ci + l) % 2] + (rnd() - 0.5) * 0.5, p = ground(edge(b, CITY.HALF - 3800 + rnd() * 1200)), c = Math.min(per, m - l * per);
         // HIMARS — кабиной к городу (пакет стреляет поверх кабины); остальные — кормой с ракетой к городу
-        const L = { id: launchers.length + 1, key: W.launcher, wkey: k, pos: p, yaw: Math.atan2(p.x, p.z) + (POD[W.launcher] ? 0 : Math.PI), left: c, n0: c, fired: 0, isLauncher: true, name: `${W.short}: пусковая ${launchers.length + 1}`, podEl: 0, lastFire: -1e9 };
+        const L = { id: launchers.length + 1, key: W.launcher, wkey: k, pos: p, yaw: Math.atan2(p.x, p.z) + (POD[W.launcher] ? 0 : Math.PI), left: c, n0: c, fired: 0, isLauncher: true, name: tr('{0}: пусковая {1}', [W.short, launchers.length + 1]), podEl: 0, lastFire: -1e9 };
         launchers.push(L);
         for (let j = 0; j < c; j++) { const i = i0 + l * per + j, u = U(i); queue.push({ t: u.tL + (mine ? 0 : rnd() * 4), key: k, k, i, oi, L, aimFn: aimFn(u.toSam, oi++, u.tgt, u.sid) }); }
       }
@@ -263,26 +264,26 @@ export function createCombined(S, city, rnd, opts = {}) {
   function events() {
     const out = [];
     const recon = S.wpns.find((w) => w.ev && w.W.recon && !w.dead && mineW(w)), rq = queue.find((q) => AG[q.key].recon);
-    if (recon || rq) out.push({ g: 'Разведка', label: AG[(recon || rq).key].short, sub: recon ? `в воздухе · засечено ПВО: ${S.units.filter((u) => samKnown(u)).length}` : 'вылет', obj: recon || null, eta: rq ? rq.t - t : null });
+    if (recon || rq) out.push({ g: 'Разведка', label: AG[(recon || rq).key].short, sub: recon ? tr('в воздухе · засечено ПВО: {0}', [S.units.filter((u) => samKnown(u)).length]) : tr('вылет'), obj: recon || null, eta: rq ? rq.t - t : null });
     for (const [k, tot] of comp) { // дроны — группой по типу
       const W = AG[k]; if (!W.uav || W.recon) continue;
       const fly = S.wpns.filter((w) => w.key === k && !w.dead && mineW(w)), wait = queue.filter((q) => q.key === k), gone = log.filter((e) => e.key === k).length - fly.length;
-      out.push({ g: 'Дроны', label: `${W.short} ×${tot}`, sub: `в воздухе ${fly.length}${wait.length ? ` · ещё вылетят ${wait.length}` : ''}${gone ? ` · закончили полёт ${gone}` : ''}`, obj: fly[0] || null, eta: wait.length ? wait[0].t - t : null });
+      out.push({ g: 'Дроны', label: `${W.short} ×${tot}`, sub: tr('в воздухе {0}{1}{2}', [fly.length, wait.length ? tr(' · ещё вылетят {0}', [wait.length]) : '', gone ? tr(' · закончили полёт {0}', [gone]) : '']), obj: fly[0] || null, eta: wait.length ? wait[0].t - t : null });
     }
     for (const a of carriers) {
-      const done = a.n0 - a.salvo.length, st = a.dead ? `сбит${a.salvo.length ? ` — не пущено ${a.salvo.length}` : ''}` : a.out ? 'ушёл' : a.phase === 'wait' ? 'вылет {eta}' : a.inbound ? `к рубежу пуска · высота ${Math.round(a.pos.y / 100) * 100} м` : a.salvo.length ? `пуск ${done}/${a.n0}` : 'уходит';
+      const done = a.n0 - a.salvo.length, st = a.dead ? tr('сбит{0}', [a.salvo.length ? tr(' — не пущено {0}', [a.salvo.length]) : '']) : a.out ? tr('ушёл') : a.phase === 'wait' ? tr('вылет {eta}') : a.inbound ? tr('к рубежу пуска · высота {0} м', [Math.round(a.pos.y / 100) * 100]) : a.salvo.length ? tr('пуск {0}/{1}', [done, a.n0]) : tr('уходит');
       const eta = a.dead || a.out ? null : a.phase === 'wait' ? a.launchAt - t : a.inbound ? (Math.hypot(a.pos.x, a.pos.z) - a.R) / Math.max(150, a.speed) : null;
       out.push({ g: 'Носители', label: `${a.carrierName}: ${a.load.map((l) => AG[l.key].short).join(', ')}`, sub: st, obj: a.dead || a.out || a.phase === 'wait' ? null : a, eta, cue: eta !== null ? a : null });
     }
     for (const L of launchers) {
       const next = queue.find((q) => q.L === L);
-      out.push({ g: 'Пусковые', label: L.name, sub: next ? `пуск {eta} · пущено ${L.fired}/${L.n0}` : `пущено ${L.fired}/${L.n0}`, obj: L, eta: next ? next.t - t : null, cue: next ? L : null });
+      out.push({ g: 'Пусковые', label: L.name, sub: next ? tr('пуск {eta} · пущено {0}/{1}', [L.fired, L.n0]) : tr('пущено {0}/{1}', [L.fired, L.n0]), obj: L, eta: next ? next.t - t : null, cue: next ? L : null });
     }
     for (const w of S.wpns) {
       if (!w.ev || w.dead || w.W.uav || w.W.recon || !mineW(w)) continue;
       const tb = w.W.kind === 'tbm', h = Math.round(w.pos.y - city.groundH(w.pos.x, w.pos.z));
       const { t: eta, d } = S.etaOf(w); // с учётом маршрута, разворотов и разгона
-      out.push({ g: tb ? 'Баллистика в полёте' : 'Крылатые в полёте', label: `${w.W.short}${w.decoy ? ' (ложная)' : ''}`, sub: `${h > 9999 ? (h / 1000).toFixed(0) + ' км' : h + ' м'} · ${Math.round(w.speed * 3.6)} км/ч · до цели ${(d / 1000).toFixed(1)} км · ${Math.max(0, Math.ceil(eta))} с`, obj: w, eta: null });
+      out.push({ g: tb ? 'Баллистика в полёте' : 'Крылатые в полёте', label: `${w.W.short}${w.decoy ? tr(' (ложная)') : ''}`, sub: tr('{0} · {1} км/ч · до цели {2} км · {3} с', [h > 9999 ? (h / 1000).toFixed(0) + tr(' км') : h + tr(' м'), Math.round(w.speed * 3.6), (d / 1000).toFixed(1), Math.max(0, Math.ceil(eta))]), obj: w, eta: null });
     }
     return out;
   }

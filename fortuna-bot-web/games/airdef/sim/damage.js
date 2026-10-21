@@ -10,6 +10,7 @@
 //   двигатель: меньше тяги (thrK), < 0,5 — нет форсажа, < 0,3 — горит; бак: < 0,7 — течь (leak, доля в с), < 0,3 — пожар.
 // Пожар (fire) и весь оторванный хвост медленно (быстро) съедают корпус — burnRate. События отрыва и пожара — из hitZones.
 /* global THREE */
+import { tr } from '../i18n.js?v=20261022r';
 export const DETACH = 0.15;
 const Q = new THREE.Quaternion(), E = new THREE.Euler(), R = new THREE.Vector3();
 export const DET_KEYS = ['consL', 'consR', 'tailL', 'tailR', 'tailAll'];
@@ -85,18 +86,18 @@ export function dmgUnpack(a, p) {
   return ev;
 }
 // состояние корпуса словами (вместо процентов): [от прочности, название, цвет]
-export const HULL = [[90, 'Исправен', '#86efac'], [70, 'Лёгкие повреждения', '#d9f99d'], [45, 'Повреждён', '#fde047'], [25, 'Тяжёлые повреждения', '#fb923c'], [10, 'Критично', '#f87171'], [0, 'Разваливается', '#ef4444']];
+export const HULL = [[90, tr('Исправен'), '#86efac'], [70, tr('Лёгкие повреждения'), '#d9f99d'], [45, tr('Повреждён'), '#fde047'], [25, tr('Тяжёлые повреждения'), '#fb923c'], [10, tr('Критично'), '#f87171'], [0, tr('Разваливается'), '#ef4444']];
 export const hullState = (hp) => HULL.find(([v]) => hp >= v) || HULL[HULL.length - 1];
 // что повреждено — коротко (для строки состояния)
 export function dmgBrief(a) {
   const D = a.dz; if (!D) return '';
   const T = a.det, out = [];
-  const cw = a.heli ? 'пилон' : 'крыло', cc = a.heli ? 'нет пилона' : 'нет законцовки';
-  if (T.consL) out.push(cc + ' Л'); else if (D.wingL < 0.6) out.push(cw + ' Л');
-  if (T.consR) out.push(cc + ' П'); else if (D.wingR < 0.6) out.push(cw + ' П');
-  if (a.heli) { if (T.tailAll) out.push('нет хвостовой балки'); else if (T.tailL || T.tailR || D.tail < 0.6) out.push(a.hm && a.hm.s.coax ? 'хвост' : 'рулевой винт'); }
-  else if (T.tailAll) out.push('нет хвоста'); else if (T.tailL || T.tailR) out.push('пол-хвоста'); else if (D.tail < 0.6) out.push('хвост');
-  if (D.eng.some((e) => e < 0.6)) out.push(D.eng.length > 1 && D.eng.every((e) => e < 0.6) ? 'оба двигателя' : 'двигатель');
-  if (a.fire) out.push('ПОЖАР'); else if (D.fuel < 0.7) out.push('течь');
+  const cw = a.heli ? tr('пилон') : tr('крыло'), cc = a.heli ? tr('нет пилона') : tr('нет законцовки');
+  if (T.consL) out.push(cc + tr(' Л')); else if (D.wingL < 0.6) out.push(cw + tr(' Л'));
+  if (T.consR) out.push(cc + tr(' П')); else if (D.wingR < 0.6) out.push(cw + tr(' П'));
+  if (a.heli) { if (T.tailAll) out.push(tr('нет хвостовой балки')); else if (T.tailL || T.tailR || D.tail < 0.6) out.push(a.hm && a.hm.s.coax ? tr('хвост') : tr('рулевой винт')); }
+  else if (T.tailAll) out.push(tr('нет хвоста')); else if (T.tailL || T.tailR) out.push(tr('пол-хвоста')); else if (D.tail < 0.6) out.push(tr('хвост'));
+  if (D.eng.some((e) => e < 0.6)) out.push(D.eng.length > 1 && D.eng.every((e) => e < 0.6) ? tr('оба двигателя') : tr('двигатель'));
+  if (a.fire) out.push(tr('ПОЖАР')); else if (D.fuel < 0.7) out.push(tr('течь'));
   return out.join(', ');
 }

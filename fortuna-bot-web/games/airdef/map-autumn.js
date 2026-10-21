@@ -6,6 +6,7 @@
 // ГСМ на торфоразработках. Наша площадка — на юго-востоке (вылет и пополнение вертолётов).
 // Детерминированный генератор с интерфейсом buildCity / buildWinter (симуляция и сервер): сетка высот 50 м, groundH —
 // билинейно; вода — одна отметка (уровень болота AUTUMN.WY), waterAt — где она. Оси как в city.js: −Z — север.
+import { tr } from './i18n.js?v=20261022r';
 import { CITY, ZONE, KIND, mulberry32, clamp, smooth, mp, mbox, mapRuntime } from './city.js?v=20261022r';
 import { perlin, fbm, ridged, heap } from './map-winter.js?v=20261022r';
 
@@ -244,19 +245,19 @@ export function buildAutumn(seed = 1) {
   const O = [];
   const add = (o) => { O.push(Object.assign({ id: O.length, value: 100, hp: 100 }, o)); };
   { const p = PK.mon, M = [mp('obj_church', p.x + 20, p.z - 40), mp('obj_milbase', p.x - 70, p.z + 60), mp('obj_cont', p.x + 85, p.z + 70, 1)]; // монастырь: заброшенный храм с колокольней (reramil), КП в кельях
-    add({ key: 'a_mon', name: 'КП «Погост»', x: p.x, z: p.z, w: 300, d: 260, value: 180, hp: 260, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_mon', name: tr('КП «Погост»'), x: p.x, z: p.z, w: 300, d: 260, value: 180, hp: 260, models: M, parts: M.map(mbox) }); }
   { const p = PK.vil, x = p.x + 260, z = p.z - 120, M = [mp('obj_milbase', x, z), mp('obj_milbase', x + 70, z + 40, 1), mp('obj_cont', x - 60, z + 60)]; // гарнизон в деревне
-    add({ key: 'a_vil', name: 'Гарнизон «Пугало»', x, z: z + 20, w: 240, d: 200, value: 120, hp: 170, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_vil', name: tr('Гарнизон «Пугало»'), x, z: z + 20, w: 240, d: 200, value: 120, hp: 170, models: M, parts: M.map(mbox) }); }
   { const p = PK.farm, M = [mp('obj_barn', p.x - 100, p.z, 0, 1.4), mp('obj_barn', p.x, p.z, 0, 1.4), mp('obj_barn', p.x + 100, p.z, 0, 1.4), mp('obj_oldind', p.x, p.z + 150, 1)]; // склад на ферме: сараи (narighillya), ×1,4 — коровники
     for (let k = 0; k < 3; k++) M.push(mp('obj_cont', p.x - 100 + k * 100, p.z - 140));
-    add({ key: 'a_farm', name: 'Склад «Фонарь Джека»', x: p.x, z: p.z, w: 420, d: 360, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_farm', name: tr('Склад «Фонарь Джека»'), x: p.x, z: p.z, w: 420, d: 360, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.wreck, M = [mp('obj_hangar', p.x, p.z - 80, 0, 0.8), mp('obj_milbase', p.x + 120, p.z + 60), mp('obj_oldind', p.x - 140, p.z + 40, 1)]; // ремонтная база на кладбище техники
-    add({ key: 'a_wreck', name: 'Рембаза «Костяной овраг»', x: p.x, z: p.z, w: 400, d: 320, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 400, d: 320, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.heli, M = [mp('obj_rtank', p.x + 200, p.z - 150), mp('obj_rtank', p.x + 215, p.z - 150), mp('obj_milbase', p.x - 200, p.z + 180), mp('obj_cont', p.x + 180, p.z + 200)]; // вертолётная площадка
-    add({ key: 'a_heli', name: 'Вертолётная площадка «Ведьмина поляна»', x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, models: M,
+    add({ key: 'a_heli', name: tr('Вертолётная площадка «Ведьмина поляна»'), x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, models: M,
       parts: [...M.map(mbox), ...[[-110, -110], [110, -110], [-110, 110], [110, 110]].map(([dx, dz]) => ({ t: 'box', x: p.x + dx, z: p.z + dz, w: 30, d: 30, h: 0.5 }))] }); }
   { const p = PK.peat, M = [mp('obj_tanks', p.x - 120, p.z - 60), mp('obj_tanks', p.x - 120, p.z + 60), mp('obj_oldind', p.x + 120, p.z, 1), mp('obj_rtank', p.x + 220, p.z - 120)]; // ГСМ на торфоразработках
-    add({ key: 'a_peat', name: 'Склад ГСМ «Болотный огонь»', x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
+    add({ key: 'a_peat', name: tr('Склад ГСМ «Болотный огонь»'), x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
   { // РЛС на Лысой горе: вершина (самая высокая точка в круге), площадка срезана на 6 м
     const BA = A.BALD; let bx = BA.x, bz = BA.z, bh = -1e9;
     for (let a = 0; a < 1600; a += 100) for (let t = 0; t < 6.283; t += 0.25) { const x = BA.x + Math.cos(t) * a, z = BA.z + Math.sin(t) * a, h = groundH(x, z); if (h > bh) { bh = h; bx = x; bz = z; } }
@@ -264,7 +265,7 @@ export function buildAutumn(seed = 1) {
     for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(70, 300, d)); }
     BA.top = { x: bx, z: bz, y };
     const MM = [mp('obj_mill', bx - 70, bz + 45)]; // старая мельница на вершине (Tim0) — рядом с антеннами
-    add({ key: 'a_radar', name: 'РЛС «Лысая гора»', x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM,
+    add({ key: 'a_radar', name: tr('РЛС «Лысая гора»'), x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM,
       parts: [...MM.map(mbox), { t: 'cyl', x: bx, z: bz, r: 9, h: 18 }, { t: 'cyl', x: bx + 40, z: bz + 10, r: 7, h: 14 }, { t: 'box', x: bx - 35, z: bz - 20, w: 24, d: 12, h: 6 }, { t: 'cyl', x: bx - 10, z: bz + 35, r: 1.2, h: 40 }] }); }
   const objects = O;
   const keep = [...objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 })),

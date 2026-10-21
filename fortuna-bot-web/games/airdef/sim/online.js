@@ -2,6 +2,7 @@
 // Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
+import { tr } from '../i18n.js?v=20261022r';
 import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261022r';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
@@ -41,7 +42,7 @@ export const huntCap = (nAir) => (nAir <= 2 ? 1 : Math.floor(nAir / 2));
 export function roleDeny(L, others, nAir) {
   if (loadoutRole(L) !== 'sead') return null;
   const h = others.filter((x) => x && loadoutRole(x) === 'sead').length, cap = huntCap(nAir);
-  return h >= cap ? `Охотников за ПВО в команде уже ${h} (лимит ${cap}) — возьмите штурмовку` : null;
+  return h >= cap ? tr('Охотников за ПВО в команде уже {0} (лимит {1}) — возьмите штурмовку', [h, cap]) : null;
 }
 // две фазы волны: первые SUPPRESS_T с у ПВО полная готовность, дальше каждый уничтоженный в этой волне комплекс с РЛС
 // замедляет перезарядку уцелевших на SUPPRESS_PER (не больше SUPPRESS_MAX) — охотник помогает ударникам, даже не разбив ни одной цели
@@ -91,7 +92,7 @@ export function validState(s, half = 16000) {
 const CODE_ABC = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 export const makeCode = (taken) => { for (;;) { let c = ''; for (let i = 0; i < 4; i++) c += CODE_ABC[Math.floor(Math.random() * CODE_ABC.length)]; if (!taken.has(c)) return c; } };
 export const cleanCode = (s) => String(s || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
-export const ROLE_NAMES = { air: 'Авиация', pvo: 'ПВО' };
+export const ROLE_NAMES = { air: tr('Авиация'), pvo: tr('ПВО') };
 export const samOk = (k, era, side) => !!SAM[k] && SAM[k].era <= era && SAM[k].side === side;
 
 // ── зона пополнения (решение Mark 2026-10-12): круг радиусом R над землёй; лётчик пробыл в нём STAY с — пополнение: топливо

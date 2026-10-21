@@ -3,6 +3,7 @@
 // и гребнях, лёд с наметёнными пятнами снега, хвойная крона издали (лес читается лесом между редкими импосторами),
 // укатанный снег и асфальт у базы, ВПП. Нормали — из сетки высот (50 м): склоны освещены точнее, чем грубая сетка земли.
 /* global THREE */
+import { tr } from './i18n.js?v=20261022r';
 import { ZONE } from './city.js?v=20261022r';
 import { WINTER } from './map-winter.js?v=20261022r';
 
@@ -10,11 +11,11 @@ import { WINTER } from './map-winter.js?v=20261022r';
 export function winterWeathers(W) {
   const D = W.day, O = W.overcast;
   return {
-    w_clear: { ...D, name: 'Мороз, ясно', el: 17.8, az: 140, sun: 0xffeedd, sunI: 1.15, sky: 0x8eaad0, gnd: 0x7c8898, hemiI: 0.8, zenith: 0x3c64a8, horizon: 0xc4d6ea,
+    w_clear: { ...D, name: tr('Мороз, ясно'), el: 17.8, az: 140, sun: 0xffeedd, sunI: 1.15, sky: 0x8eaad0, gnd: 0x7c8898, hemiI: 0.8, zenith: 0x3c64a8, horizon: 0xc4d6ea,
       haze: 0xffe2c0, hazeK: 0.18, fog: 0xc4d4e4, fogD: 0.000048, clouds: 0.35, cloudLit: 0xfffaf4, cloudDark: 0x9eacbe, hdri: { f: 'w_pass', u: 0.6003, k: 1, h0: 0.12 }, winter: 1 },
-    w_frost: { ...D, name: 'Морозная дымка', el: 28.2, az: 200, sun: 0xfff2e2, sunI: 1.05, sky: 0x9cb0cc, gnd: 0x808a98, hemiI: 0.85, zenith: 0x48618c, horizon: 0xc8d4e2,
+    w_frost: { ...D, name: tr('Морозная дымка'), el: 28.2, az: 200, sun: 0xfff2e2, sunI: 1.05, sky: 0x9cb0cc, gnd: 0x808a98, hemiI: 0.85, zenith: 0x48618c, horizon: 0xc8d4e2,
       haze: 0xfff0e0, hazeK: 0.25, fog: 0xc8d2de, fogD: 0.00008, clouds: 0.2, cloudLit: 0xffffff, cloudDark: 0xa4b0c0, hdri: { f: 'w_horn', u: 0.5999, k: 1, h0: 0.11 }, winter: 1 },
-    w_snow: { ...O, name: 'Снегопад', sun: 0xe4eaf2, sunI: 0.45, sky: 0xb4bdc8, gnd: 0x8c949e, hemiI: 1.0, zenith: 0x8a96a4, horizon: 0xc6ced6,
+    w_snow: { ...O, name: tr('Снегопад'), sun: 0xe4eaf2, sunI: 0.45, sky: 0xb4bdc8, gnd: 0x8c949e, hemiI: 1.0, zenith: 0x8a96a4, horizon: 0xc6ced6,
       fog: 0xc2cad4, fogD: 0.00012, clouds: 0.5, cloudLit: 0xe2e6ea, cloudDark: 0x8c96a2, hdri: { f: 'w_field', u: 0.6189, k: 1, h0: 0.04 }, winter: 1, snow: 1 },
   };
 }

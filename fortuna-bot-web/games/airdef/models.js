@@ -6,6 +6,7 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry — двигатель без форсажа: только слабое свечение; нет сопел — пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
+import { tr } from './i18n.js?v=20261022r';
 import { CREDITS } from './models/credits.js?v=20261022r';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
@@ -18,7 +19,7 @@ const META = {
     nozzles: [V(-0.97, -1.35, 7.6), V(0.97, -1.35, 7.6)], nr: 0.45, pod: V(0, -1.55, 2.0) },
   // Boeing F/A-18E/F Super Hornet — andertan: запад, ударные загрузки (на концах крыльев — свои «Сайдуайндеры»)
   f18: { side: 'west', cls: 'strike', stations: mirror([V(-4.70, -1.43, 2.04), V(-3.72, -1.44, 1.87), V(-2.6, -1.24, 1.9, 0.4), V(-1.48, -1.05, -0.3, 0.22)]),
-    nozzles: [V(-0.49, -0.94, 8.2), V(0.49, -0.94, 8.2)], nr: 0.45, pod: V(0, -1.96, 1.0) },
+    nozzles: [V(-0.49, -0.94, 8.2), V(0.49, -0.94, 8.2)], nr: 0.4, pod: V(0, -1.96, 1.0) },
   // General Dynamics F-16D Block 60 — Muhamad Mirza Arrafi: запад, ракетные загрузки
   // (на законцовках крыльев — свои AIM-120, пилоны под крылом дорисованы)
   f16: { side: 'west', cls: 'fighter', stations: mirror([V(-3.9, -1.34, 2.4, 0.36), V(-3.0, -1.38, 2.2, 0.38), V(-2.15, -1.39, 2.0, 0.38), V(-0.75, -1.6, 1.0, 0.22)]),
@@ -37,9 +38,9 @@ const META = {
   e_mig27: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-1.53, -0.61, 0.62), V(-0.45, -1.4, -0.6), V(-0.45, -1.46, 2.2)]),
     nozzles: [V(0, -0.65, 7.43)], nr: 0.33, pod: null }, // МиГ-27К («Кайра» встроена)
   e_tu22m2: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-6.34, -3.89, 5.06), V(-1.27, -2.71, -3.2), V(-1.27, -2.71, -0.5), V(-1.27, -2.71, 2.2)]),
-    nozzles: [V(-0.81, -1.24, 19.09), V(0.81, -1.24, 19.09)], nr: 0.4, pod: null }, // Ту-22М2
+    nozzles: [V(-0.96, -2.67, 18.75), V(0.96, -2.67, 18.75)], nr: 0.72, pod: null }, // Ту-22М2 (сопла по срезу стволов: были выше на 1,4 м, радиус 0,4 → 0,72)
   e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-6.25, -0.4, -0.09), V(-5.1, -0.52, -0.04), V(-3.8, -0.68, -0.15), V(-2.94, -0.14, -0.06)]),
-    nozzles: [V(-1.46, 1.1, 4.99), V(1.46, 1.1, 4.99)], nr: 0.25, pod: V(2.2, -0.5, -0.1), dry: true }, // A-10A
+    nozzles: [V(-1.46, 0.32, 4.99), V(1.46, 0.32, 4.99)], nr: 0.25, pod: V(2.2, -0.5, -0.1), dry: true }, // A-10A (сопла по срезу гондол: y 1,1 → 0,32)
   e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-2.93, -1.18, 0.46), V(-1.75, -1.59, -1.5), V(-1.75, -1.59, 0.3), V(-1.75, -1.05, 1.8)]),
     nozzles: [V(-0.68, -1.12, 8.31), V(0.68, -1.12, 8.31)], nr: 0.3, pod: V(0.9, -1.9, -2.5), matte: true }, // F-15E (LANTIRN под воздухозаборником)
   // ── 2026-10-19, третья партия manilov.ap: точки подвески — по низу крыла (лучи по треугольникам) и пилонам автора ──
@@ -84,7 +85,7 @@ const META = {
   e_su35: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.27, -1.03, 3.7, 0.3), V(-4.14, -1.02, 3.05, 0.3), V(-3.01, -1.03, 2.36, 0.3), V(-0.6, -1.7, 1.0, 0.2)]),
     nozzles: [V(-1.29, -1.39, 9.02), V(1.29, -1.39, 9.02)], nr: 0.45, pod: null }, // Су-35С
   e_hunter: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.3, -1.42, 0.55, 0.3), V(-2.75, -1.44, -0.45), V(-0.45, -1.5, -0.5, 0.15), V(-0.45, -1.5, 1.5, 0.15)]),
-    nozzles: [V(0, -0.81, 6.76)], nr: 0.35, pod: null, dry: true }, // Hunter FGA.9
+    nozzles: [V(0, -0.81, 6.76)], nr: 0.3, pod: null, dry: true }, // Hunter FGA.9
   // ── 2026-10-21, пятая партия: manilov.ap (Vulcan, Draken, Viggen — без оружия в моделях; подвески по виду снизу / сбоку planes-view.html?ortho=1) ──
   e_vulcan: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.5, -2.5, -3.6), V(-0.5, -2.5, -1.4), V(-0.5, -2.5, 0.8), V(-0.5, -2.5, 3.0)]),
     nozzles: [V(-3.47, -2.36, 11.87), V(-2.22, -2.36, 11.87), V(2.22, -2.36, 11.87), V(3.47, -2.36, 11.87)], nr: 0.42, pod: null, dry: true }, // Vulcan B.2 (бомбы — в отсеке; четыре «Олимпа» в корне крыла, без форсажа)
@@ -104,7 +105,7 @@ const META = {
   e_mig29k: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.0, -1.12, 2.9, 0.2), V(-4.2, -1.13, 2.3, 0.2), V(-3.3, -1.08, 1.8, 0.25), V(-2.4, -1.03, 1.5, 0.25)]), // все узлы — под крылом (Ф1 / Ф2 — внутренние)
     nozzles: [V(-0.82, -0.87, 7.17), V(0.82, -0.87, 7.17)], nr: 0.3, pod: V(0, -1.45, 1.0), matte: true }, // МиГ-29К — KoreanNavy (matte: гладкая сетка после subdivision блестела волнами на скользящем свете)
   e_t4: { side: 'east', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.4, -1.5, -4.0), V(-0.4, -1.5, -1.5), V(-0.4, -1.5, 1.0), V(-0.4, -1.5, 3.5)]),
-    nozzles: [V(-2.04, -3.17, 16.1), V(-0.68, -3.17, 16.1), V(0.68, -3.17, 16.1), V(2.04, -3.17, 16.1)], nr: 0.55, pod: null }, // Т-4 «Сотка» (бомбы — в отсеке; четыре РД-36-41 в пакете под фюзеляжем)
+    nozzles: [V(-2.04, -3.17, 16.1), V(-0.68, -3.17, 16.1), V(0.68, -3.17, 16.1), V(2.04, -3.17, 16.1)], nr: 0.62, pod: null }, // Т-4 «Сотка» (бомбы — в отсеке; четыре РД-36-41 в пакете под фюзеляжем)
   e_etendard: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.64, -1.49, 1.85, 0.3), V(-1.92, -1.48, 1.23, 0.3), V(-0.4, -1.6, 0.0, 0.17), V(-0.4, -1.6, 1.8, 0.17)]),
     nozzles: [V(0, -0.57, 6.3)], nr: 0.35, pod: V(0.4, -1.7, -1.0), dry: true }, // Super Étendard (ATLIS под фюзеляжем)
   e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
@@ -114,7 +115,7 @@ const META = {
   e_ea18g: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-5.08, -0.97, 3.11), V(-4.31, -1.28, 2.46), V(-2.73, -1.05, 2.26, 0.3), V(-0.6, -1.85, 1.0, 0.15)]),
     nozzles: [V(-0.48, -0.81, 8.18), V(0.48, -0.81, 8.18)], nr: 0.42, pod: null }, // EA-18G Growler
   e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.37, -1.11, 0.67), V(-3.59, -1.09, 0.4), V(-2.81, -1.09, 0.2), V(-2.03, -1.07, -0.04)]),
-    nozzles: [V(-0.88, -1.4, 3.85), V(0.88, -1.4, 3.85)], nr: 0.2, pod: null, dry: true }, // Су-25 — Immersive3D («Шквал» у Су-25Т встроен)
+    nozzles: [V(-0.88, -1.4, 3.85), V(0.88, -1.4, 3.85)], nr: 0.25, pod: null, dry: true }, // Су-25 — Immersive3D («Шквал» у Су-25Т встроен)
   e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.21, -1.51, 4.94), V(-4.63, -1.5, 3.8), V(-3.55, -1.72, 3.21), V(-1.33, -2.42, 2.5)]),
     nozzles: [V(-1.18, -1.5, 9.4), V(1.18, -1.5, 9.4)], nr: 0.22, pod: null }, // Су-34 (Су-32ФН) — 42manako («Платан» встроен)
   e_su17: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.56, -1.33, 2.63), V(-1.72, -1.41, 0.51), V(-1.25, -1.68, -1.4), V(-0.37, -2.07, -0.25)]),
@@ -124,9 +125,9 @@ const META = {
   e_mig31: { side: 'east', cls: 'fighter', lazy: true, stations: mirror([V(-5.6, -0.95, 5.4, 0.3), V(-4.62, -1.24, 4.4), V(-1.55, -1.55, 7.5), V(-1.19, -1.92, -1.5)]),
     nozzles: [V(-0.78, -1.09, 11.1), V(0.78, -1.09, 11.1)], nr: 0.37, pod: null }, // МиГ-31БМ
   e_tu22m3: { side: 'east', cls: 'heavy', lazy: true, stations: mirror([V(-11, -3.35, 7.6, 0.35), V(-8, -3.4, 6.8, 0.35), V(-5.07, -3.79, 5.15), V(-1.83, -3.53, 3.58)]),
-    nozzles: [V(-0.93, -2.17, 19.05), V(0.93, -2.17, 19.05)], nr: 0.35, pod: null }, // Ту-22М3 — только в налётах ИИ
+    nozzles: [V(-0.93, -2.17, 19.05), V(0.93, -2.17, 19.05)], nr: 0.68, pod: null }, // Ту-22М3 — только в налётах ИИ
   e_f4: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-3.7, -1.78, 1.69), V(-2.29, -2.46, -0.5), V(-1.26, -1.46, -0.6), V(-1.26, -1.46, 2.4)]),
-    nozzles: [V(-0.72, -0.99, 3.45), V(0.72, -0.99, 3.45)], nr: 0.25, pod: V(0, -1.55, 1.0) }, // F-4 Phantom II — andertan («Пэйв Тэк» под фюзеляжем)
+    nozzles: [V(-0.72, -0.99, 5.6), V(0.72, -0.99, 5.6)], nr: 0.42, pod: V(0, -1.55, 1.0) }, // F-4 Phantom II — andertan («Пэйв Тэк» под фюзеляжем); срез сопел z 5,6 (был 3,45 — факел начинался внутри трубы) Phantom II — andertan («Пэйв Тэк» под фюзеляжем)
   e_gripen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.18, -1.06, 3.77), V(-2.92, -1.4, 3.03), V(-1.95, -1.41, 1.77), V(-0.45, -1.62, 0.2, 0.1)]),
     nozzles: [V(0, -0.94, 7.3)], nr: 0.24, pod: V(0.75, -1.5, -1.6) }, // JAS 39 Gripen (LITENING на подфюзеляжной точке)
   e_f22: { side: 'west', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-1.3, -1.3, -1.5), V(-0.75, -1.7, 0.2), V(-0.45, -1.75, 1.0), V(-0.2, -1.8, 2.2)]),
@@ -161,7 +162,7 @@ const META = {
   w_lau61: { weapon: 'hydra', lazy: true, stations: [] }, // блок Hydra 70 LAU-61 (19 труб) — сетка блока Б-8 timurwolf, 1,7 × 0,4 м, олив NATO
   w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — из MH-60R (touka1212)
   aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух–воздух» для вертолётов — GoldbergR
-  e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.62 }, // Ту-160 — KOG_THORNS (с 2026-10-19 и в «Авиации»: точки — в отсеках); носитель «Мульти-волны»
+  e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.9 }, // Ту-160 — KOG_THORNS (с 2026-10-19 и в «Авиации»: точки — в отсеках); носитель «Мульти-волны»
   e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
   e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -5.2, -3.0), V(-0.6, -5.2, -1.0), V(-0.6, -5.2, 1.0), V(-0.6, -5.2, 3.0)]), nozzles: [], nr: 0.4 }, // B-52H — bohmerang; носитель «Мульти-волны» (без форсажа — пламени нет)
   e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-3.88, -1.93, 3.0, 0.3), V(-2.77, -1.91, 2.24, 0.3), V(-1.94, -1.85, 1.74, 0.3), V(-0.6, -2.1, 1.0, 0.15)]), nozzles: [V(-0.54, -0.63, 8.6), V(0.54, -0.63, 8.6)], nr: 0.38 }, // Eurofighter Typhoon — andertan; носитель Storm Shadow
@@ -262,12 +263,12 @@ export const PLANE_META = Object.fromEntries(Object.entries(META).filter(([, m])
 // авторы и лицензии — из исходных файлов (tools/airdef-models/prepare.js --credits)
 // текстуры города (tex/*.jpg) — ambientCG: Grass004, PavingStones151, Concrete042A, RoofingTiles006, Facade002/017/018A;
 // Poly Haven (tex/p_*.jpg): asphalt_02, road_damaged_2, gravel, rocky_terrain_03, brown_mud_03
-const TEX_CREDIT = { title: 'Текстуры земли, дорог, крыш и фасадов', author: 'ambientCG', url: 'https://ambientcg.com', license: 'CC0', files: ['tex/*.jpg'] };
-const PH_CREDIT = { title: 'Текстуры асфальта, щебня, скал и пашни; панорамы неба', author: 'Poly Haven', url: 'https://polyhaven.com', license: 'CC0', files: ['tex/p_*.jpg', 'sky/*.jpg'] };
+const TEX_CREDIT = { title: tr('Текстуры земли, дорог, крыш и фасадов'), author: 'ambientCG', url: 'https://ambientcg.com', license: 'CC0', files: ['tex/*.jpg'] };
+const PH_CREDIT = { title: tr('Текстуры асфальта, щебня, скал и пашни; панорамы неба'), author: 'Poly Haven', url: 'https://polyhaven.com', license: 'CC0', files: ['tex/p_*.jpg', 'sky/*.jpg'] };
 // взрывы и пламя (fx/*.png): огненный шар с дымом — ohyhei; вспышка с кольцом и пламя — Explosion FX Free (heyheythere)
 const FX_CREDITS = [
-  { title: 'Иконки управления', author: 'Delapouite, Lorc, Skoll (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },
-  { title: 'Explosion sprite sheets', author: 'ohyhei', url: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', license: 'бесплатно, с указанием автора', licenseUrl: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', files: ['fx/explosion*.png'] },
+  { title: tr('Иконки управления'), author: 'Delapouite, Lorc, Skoll (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },
+  { title: 'Explosion sprite sheets', author: 'ohyhei', url: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', license: tr('бесплатно, с указанием автора'), licenseUrl: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', files: ['fx/explosion*.png'] },
   { title: 'Explosion FX Free', author: 'heyheythere', url: 'https://heyheythere.itch.io/explosion-fx-free', license: 'CC BY 4.0', files: ['fx/blast*.png', 'fx/flame*.png'] },
 ];
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));

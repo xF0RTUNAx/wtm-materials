@@ -3,6 +3,7 @@
 // (по ней — прямая видимость радаров, лазера и телевизора контейнера, столкновения самолётов со зданиями).
 // Оси как в «Летке»: −Z — север (нос при yaw = 0), +X — восток; метры.
 
+import { tr } from './i18n.js?v=20261022r';
 export const CITY = {
   HALF: 16000,   // карта ±16 км
   R: 10500,      // радиус застройки
@@ -16,7 +17,7 @@ export const CITY = {
   CC: 160,       // ячейка грубой сетки (максимум высоты) для быстрых лучей
 };
 export const ZONE = { FIELD: 0, LOW: 1, MID: 2, CBD: 3, IND: 4, PARK: 5, WATER: 6, AIR: 7, PORT: 8 };
-export const ZONE_NAME = ['Пригород', 'Частный сектор', 'Спальный район', 'Сити', 'Промзона', 'Парк', 'Река', 'Аэродром', 'Военно-морская база'];
+export const ZONE_NAME = [tr('Пригород'), tr('Частный сектор'), tr('Спальный район'), tr('Сити'), tr('Промзона'), tr('Парк'), tr('Река'), tr('Аэродром'), tr('Военно-морская база')];
 // виды зданий (окна и цвет считаются в шейдере по виду)
 export const KIND = { HOUSE: 0, PANEL: 1, OFFICE: 2, GLASS: 3, WAREHOUSE: 4, PLAIN: 5 };
 
@@ -101,37 +102,37 @@ function makeObjects() {
   // (models: имя, место, поворот на 90°·rot, масштаб); их габариты (OBJ_DIMS) дают коробки для урона и сетки высот.
   // узел связи: радиорелейные мачты, огороженный городок, аппаратные в контейнерах
   { const x = 2700, z = -2900, M = [mp('obj_milbase', x - 45, z - 30), mp('obj_cont', x + 45, z - 40), mp('obj_cont', x + 45, z - 25)];
-    add({ key: 'tv', name: 'Узел связи', x, z, w: 140, d: 90, value: 120, hp: 140, models: M,
+    add({ key: 'tv', name: tr('Узел связи'), x, z, w: 140, d: 90, value: 120, hp: 140, models: M,
       parts: [{ t: 'cyl', x, z, r: 4, h: 160 }, { t: 'cyl', x, z, r: 2, h: 210 }, { t: 'cyl', x: x + 30, z: z + 20, r: 2.5, h: 90 }, ...M.map(mbox)] }); }
   // командный пункт: укреплённый городок, штабные корпуса, антенны
   { const x = 1150, z = 300, M = [mp('obj_milbase', x, z, 0, 2), mp('obj_oldind', x - 60, z + 10, 1), mp('obj_oldind', x + 60, z - 10, 1), mp('obj_cont', x, z + 45)];
-    add({ key: 'gov', name: 'Командный пункт', x, z, w: 170, d: 120, value: 160, hp: 260, models: M,
+    add({ key: 'gov', name: tr('Командный пункт'), x, z, w: 170, d: 120, value: 160, hp: 260, models: M,
       parts: [...M.map(mbox), { t: 'cyl', x: x - 30, z: z - 40, r: 1, h: 45 }, { t: 'cyl', x: x + 35, z: z - 42, r: 1, h: 38 }] }); }
   // склад боеприпасов: хранилища-ангары, ряды контейнеров, огороженный въезд
   { const x = 5900, z = 1500, M = [mp('obj_hangar', x, z, 0, 1), mp('obj_hangar', x - 130, z + 10, 0, 0.8), mp('obj_hangar', x + 130, z + 10, 0, 0.8), mp('obj_milbase', x, z - 115)];
     for (let i = 0; i < 4; i++) M.push(mp('obj_cont', x - 150 + i * 100, z + 105), mp('obj_cont', x - 150 + i * 100, z + 125));
-    add({ key: 'tpp', name: 'Склад боеприпасов', x, z, w: 420, d: 300, value: 180, hp: 220, models: M, parts: M.map(mbox) }); }
+    add({ key: 'tpp', name: tr('Склад боеприпасов'), x, z, w: 420, d: 300, value: 180, hp: 220, models: M, parts: M.map(mbox) }); }
   // склад горючего: резервуары, резервуарная площадка, цистерны
   { const x = 7700, z = -1300, M = [];
     for (let i = -1; i <= 1; i++) for (const j of [-1, 1]) M.push(mp('obj_tanks', x + i * 75, z + j * 58));
     M.push(mp('obj_tank4', x, z, 1), mp('obj_tank4', x + 150, z, 1), mp('obj_rtank', x - 160, z - 20), mp('obj_rtank', x - 160, z), mp('obj_rtank', x - 160, z + 20)); // в центре — площадка
-    add({ key: 'oil', name: 'Склад горючего', x, z, w: 520, d: 400, value: 170, hp: 200, models: M, parts: M.map(mbox) }); }
+    add({ key: 'oil', name: tr('Склад горючего'), x, z, w: 520, d: 400, value: 170, hp: 200, models: M, parts: M.map(mbox) }); }
   // парк бронетехники: навесы-ангары для машин, городок, контейнеры с имуществом
   { const x = -3300, z = 2700, M = [mp('obj_hangar', x - 70, z - 40, 0, 0.9), mp('obj_hangar', x + 0, z - 40, 0, 0.9), mp('obj_hangar', x + 70, z - 40, 0, 0.9),
       mp('obj_milbase', x - 60, z + 60), mp('obj_cont', x + 50, z + 50), mp('obj_cont', x + 50, z + 70)];
     // центр — средний навес (ИИ и задания целятся в центр объекта)
     M.push(mp('obj_hangar', x, z + 10, 0, 0.6));
-    add({ key: 'stad', name: 'Парк бронетехники', x, z, w: 300, d: 230, value: 90, hp: 140, models: M, parts: M.map(mbox) }); }
+    add({ key: 'stad', name: tr('Парк бронетехники'), x, z, w: 300, d: 230, value: 90, hp: 140, models: M, parts: M.map(mbox) }); }
   // военный аэродром: большие ангары, арочные укрытия, вышка, цистерны (ВПП рисуется на земле)
   { const { x, z } = AIRPORT, M = [mp('obj_jhangar', x, z + 540, 1), mp('obj_jhangar', x + 230, z + 545, 1),
       mp('obj_hangar', x - 260, z + 540, 0, 0.7), mp('obj_hangar', x - 330, z + 540, 0, 0.7), mp('obj_hangar', x - 400, z + 540, 0, 0.7),
       mp('obj_rtank', x + 400, z + 540), mp('obj_rtank', x + 420, z + 540)];
-    add({ key: 'air', name: 'Военный аэродром', x, z: z + 500, w: 900, d: 260, value: 150, hp: 220, models: M,
+    add({ key: 'air', name: tr('Военный аэродром'), x, z: z + 500, w: 900, d: 260, value: 150, hp: 220, models: M,
       parts: [...M.map(mbox), { t: 'cyl', x: x - 150, z: z + 520, r: 6, h: 30 }, { t: 'box', x: x - 150, z: z + 535, w: 20, d: 14, h: 8 }] }); }
   // мосты через реку — по проспектам
   for (const zb of BRIDGE_Z) {
     const xr = riverX(zb), L = CITY.RIVER_W + 80;
-    add({ key: 'bridge', name: 'Мост', x: xr, z: zb, w: L, d: 34, value: 90, hp: 160, bridge: true, noTarget: true, // не цель: просто часть города
+    add({ key: 'bridge', name: tr('Мост'), x: xr, z: zb, w: L, d: 34, value: 90, hp: 160, bridge: true, noTarget: true, // не цель: просто часть города
       parts: [{ t: 'box', x: xr, z: zb, w: L, d: 30, h: 4, y0: 10 }, { t: 'box', x: xr - 60, z: zb, w: 8, d: 24, h: 10, y0: CITY.WATER_Y },
         { t: 'box', x: xr + 60, z: zb, w: 8, d: 24, h: 10, y0: CITY.WATER_Y }] });
   }
@@ -143,7 +144,7 @@ function makeObjects() {
     const bx = cx / 6 + 60, bz = cz / 6, M = [mp('obj_jhangar', bx + 40, bz, 0), mp('obj_oldind', bx + 40, bz - 160), mp('obj_oldind', bx + 40, bz + 160)];
     for (let i = 0; i < 6; i++) M.push(mp('obj_cont', bx - 10, bz - 500 + i * 200, 1));
     P.push(...M.map(mbox));
-    add({ key: 'port', name: 'Военно-морская база', x: cx / 6, z: cz / 6, w: 260, d: 2700, value: 110, hp: 180, models: M, parts: P }); }
+    add({ key: 'port', name: tr('Военно-морская база'), x: cx / 6, z: cz / 6, w: 260, d: 2700, value: 110, hp: 180, models: M, parts: P }); }
   return O;
 }
 

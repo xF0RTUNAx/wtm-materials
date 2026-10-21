@@ -9,6 +9,8 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
+import { tr, trIf } from './i18n.js?v=20261022r';
+import { trFmt } from './i18n-fmt.js?v=20261022r';
 import { CITY, mulberry32 } from './city.js?v=20261022r';
 import { weaponHasModel } from './models.js?v=20261022r';
 import { LNCH, lnchToWorld } from './launchers.js?v=20261022r';
@@ -40,7 +42,7 @@ export function createDefense(C) {
   const realMode = () => !(st.opts || {}).allow && !(st.opts || {}).items && (st.net ? !!(st.net.room && st.net.room.mode === 'real') : C.setup.diff === 'real');
   const lockedSam = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.samOk(k);
   const lockedStrike = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.strikeOk(k);
-  const LOCK_SAY = 'В «Реализме» — только купленное в «Исследованиях»';
+  const LOCK_SAY = tr('В «Реализме» — только купленное в «Исследованиях»');
   const seen = new Map(); // самолёт → время, когда его последний раз видела сеть ПВО
   const tm = $('tmap'), tx = tm.getContext('2d');
   const view = { cx: 500, cz: -300, k: 0.05 }; // центр карты (м) и масштаб (px на м)
@@ -114,11 +116,11 @@ export function createDefense(C) {
       if (u.manual) { tx.strokeStyle = '#fb923c'; tx.beginPath(); tx.arc(px, py, 11, 0, 7); tx.stroke(); }
       if (st.net && !mine(u) && !u.dead) { // союзник: его комплексы — голубой ободок, тот, за пультом которого он сейчас, — пульсирует с именем
         const al = allyName(u.owner);
-        if (u.manual) { const a = 0.55 + 0.45 * Math.sin(performance.now() / 220); tx.strokeStyle = `rgba(56,189,248,${a})`; tx.lineWidth = 3; tx.beginPath(); tx.arc(px, py, 16, 0, 7); tx.stroke(); tx.fillStyle = '#7dd3fc'; tx.fillText(`${al} — за пультом`, px, py - 20); }
+        if (u.manual) { const a = 0.55 + 0.45 * Math.sin(performance.now() / 220); tx.strokeStyle = `rgba(56,189,248,${a})`; tx.lineWidth = 3; tx.beginPath(); tx.arc(px, py, 16, 0, 7); tx.stroke(); tx.fillStyle = '#7dd3fc'; tx.fillText(tr('{0} — за пультом', [al]), px, py - 20); }
         else { tx.strokeStyle = 'rgba(56,189,248,.55)'; tx.lineWidth = 1.5; tx.beginPath(); tx.arc(px, py, 12, 0, 7); tx.stroke(); }
       }
       tx.fillStyle = '#e2e8f0'; tx.fillText(u.S.rwr || u.S.short, px, py + 18);
-      if (u.reloadT > 0) { tx.fillStyle = '#fdba74'; tx.fillText(`${Math.ceil(u.reloadT)}с`, px + 18, py - 4); }
+      if (u.reloadT > 0) { tx.fillStyle = '#fdba74'; tx.fillText(tr('{0}с', [Math.ceil(u.reloadT)]), px + 18, py - 4); }
     }
     // цели, которые видит сеть ПВО (Аркада — все)
     if (C.raid) for (const a of C.raid.planes) {
@@ -130,7 +132,7 @@ export function createDefense(C) {
       tx.fillStyle = '#fecaca'; tx.fillText(`${Math.round((a.pos.y - city.groundH(a.pos.x, a.pos.z)) / 10) * 10}`, px, py - 12);
     }
     // онлайн: «нужна помощь» союзников — метка на карте (8 с)
-    if (st.net && C.netHelps && C.drawWarn) for (const h of C.netHelps()) { if (!h.p) continue; const [hx, hy] = w2s(h.p[0], h.p[1]); C.drawWarn(tx, hx, hy, 12); tx.fillStyle = '#fde047'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.font = '700 11px -apple-system, Segoe UI, sans-serif'; tx.strokeText(`${h.name}: помощь`, hx, hy - 18); tx.fillText(`${h.name}: помощь`, hx, hy - 18); } // союзник просит помощи — знак у места
+    if (st.net && C.netHelps && C.drawWarn) for (const h of C.netHelps()) { if (!h.p) continue; const [hx, hy] = w2s(h.p[0], h.p[1]); C.drawWarn(tx, hx, hy, 12); tx.fillStyle = '#fde047'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.font = '700 11px -apple-system, Segoe UI, sans-serif'; tx.strokeText(tr('{0}: помощь', [h.name]), hx, hy - 18); tx.fillText(tr('{0}: помощь', [h.name]), hx, hy - 18); } // союзник просит помощи — знак у места
     tx.font = '600 11px -apple-system, Segoe UI, sans-serif';
     // ракеты: свои — белые, чужое оружие — оранжевое
     for (const m of C.S.sams) { if (m.dead) continue; const [px, py] = w2s(m.pos.x, m.pos.z); tx.fillStyle = '#fff'; tx.fillRect(px - 1.5, py - 1.5, 3, 3); }
@@ -162,7 +164,7 @@ export function createDefense(C) {
       if (st.moving) { const [ux, uy] = w2s(st.sel.pos.x, st.sel.pos.z); tx.strokeStyle = 'rgba(253,230,138,.85)'; tx.lineWidth = 1.5; tx.setLineDash([3, 4]); tx.beginPath(); tx.moveTo(ux, uy); tx.lineTo(dx, dy); tx.stroke(); }
       tx.strokeStyle = 'rgba(253,230,138,.95)'; tx.lineWidth = 2; tx.setLineDash([6, 4]); tx.beginPath(); tx.arc(dx, dy, Math.max(10, S.rmax * view.k), 0, 7); tx.stroke(); tx.setLineDash([]);
       tx.fillStyle = 'rgba(253,230,138,.95)'; tx.beginPath(); tx.arc(dx, dy, 7, 0, 7); tx.fill(); tx.strokeStyle = 'rgba(0,0,0,.7)'; tx.lineWidth = 1.5; tx.stroke();
-      tx.font = '700 12px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; tx.lineWidth = 3; const lb = `${S.short} — «Подтвердить»`; tx.strokeText(lb, dx, dy - 12); tx.fillText(lb, dx, dy - 12); tx.textAlign = 'left';
+      tx.font = '700 12px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; tx.lineWidth = 3; const lb = tr('{0} — «Подтвердить»', [S.short]); tx.strokeText(lb, dx, dy - 12); tx.fillText(lb, dx, dy - 12); tx.textAlign = 'left';
     }
     drawMsg();
   }
@@ -185,7 +187,7 @@ export function createDefense(C) {
       tx.strokeStyle = 'rgba(239,68,68,.35)'; tx.beginPath(); tx.moveTo(px, py); tx.lineTo(ix, iy); tx.stroke();
     }
     tx.fillStyle = w.decoy && (arcade || atk()) ? '#9ca3af' : '#ef4444'; tx.beginPath(); tx.moveTo(px, py - 7); tx.lineTo(px + 6, py); tx.lineTo(px, py + 7); tx.lineTo(px - 6, py); tx.closePath(); tx.fill();
-    tx.fillStyle = '#fecaca'; tx.fillText(`${Math.round(w.pos.y / 1000)} км · ${left} с`, px, py - 11);
+    tx.fillStyle = '#fecaca'; tx.fillText(tr('{0} км · {1} с', [Math.round(w.pos.y / 1000), left]), px, py - 11);
   }
   // за удар: комплексы противника — какие известны (аркада — все; в реализме — дальние и средние по разведке до удара,
   // засечённые разведчиком и выдавшие себя пуском); свои ракеты, дроны и носители — все
@@ -194,8 +196,8 @@ export function createDefense(C) {
     for (const u of C.S.units) {
       if (!samKnown(u) && !u.dead) continue;
       const [px, py] = w2s(u.pos.x, u.pos.z);
-      if (!u.dead && u.S.radar && u.emit) { tx.strokeStyle = `rgba(250,204,21,${0.35 + 0.5 * pulse})`; tx.lineWidth = 2; tx.beginPath(); tx.arc(px, py, 13 + 4 * pulse, 0, 7); tx.stroke(); tx.fillStyle = '#fde047'; tx.fillText('РЛС', px + 22, py - 6); } // излучает
-      const fl = st.flash.get(u); if (fl && C.t - fl < 3 && C.t >= fl) { tx.strokeStyle = '#fff'; tx.lineWidth = 2.5; tx.beginPath(); tx.arc(px, py, 10 + (C.t - fl) * 12, 0, 7); tx.stroke(); tx.fillStyle = '#fff'; tx.fillText('ПУСК', px, py - 16); } // пуск ЗУР
+      if (!u.dead && u.S.radar && u.emit) { tx.strokeStyle = `rgba(250,204,21,${0.35 + 0.5 * pulse})`; tx.lineWidth = 2; tx.beginPath(); tx.arc(px, py, 13 + 4 * pulse, 0, 7); tx.stroke(); tx.fillStyle = '#fde047'; tx.fillText(tr('РЛС'), px + 22, py - 6); } // излучает
+      const fl = st.flash.get(u); if (fl && C.t - fl < 3 && C.t >= fl) { tx.strokeStyle = '#fff'; tx.lineWidth = 2.5; tx.beginPath(); tx.arc(px, py, 10 + (C.t - fl) * 12, 0, 7); tx.stroke(); tx.fillStyle = '#fff'; tx.fillText(tr('ПУСК'), px, py - 16); } // пуск ЗУР
       if (!u.dead && u.S.type !== 'jammer') { tx.strokeStyle = 'rgba(248,113,113,.35)'; tx.lineWidth = 1; tx.setLineDash([5, 5]); tx.beginPath(); tx.arc(px, py, u.S.rmax * view.k, 0, 7); tx.stroke(); tx.setLineDash([]); }
       tx.fillStyle = u.dead ? '#555' : u.S.abm ? '#f43f5e' : '#f87171'; tx.strokeStyle = 'rgba(0,0,0,.6)'; tx.lineWidth = 1.5;
       tx.beginPath(); if (u.S.type === 'guns') tx.rect(px - 6, py - 6, 12, 12); else if (u.S.hp <= 15) tx.arc(px, py, 5, 0, 7); else { tx.moveTo(px, py - 8); tx.lineTo(px + 7, py + 6); tx.lineTo(px - 7, py + 6); tx.closePath(); }
@@ -213,10 +215,10 @@ export function createDefense(C) {
     const W = AG[st.edKey], via = (multiItems(attSide(), C.setup.era).find(([q]) => q === st.edKey) || [])[1], [cx, cy] = w2s(0, 0);
     const ring = (R, col, dash, label, ang = -0.6) => { tx.strokeStyle = col; tx.lineWidth = 2; tx.setLineDash(dash); tx.beginPath(); tx.arc(cx, cy, R * view.k, 0, 7); tx.stroke(); tx.setLineDash([]);
       if (label) { const [lx, ly] = w2s(Math.sin(ang) * R, -Math.cos(ang) * R); tx.textAlign = Math.sin(ang) > 0 ? 'right' : 'left'; /* у левого / правого края — кольца там видны */ tx.font = '700 12px -apple-system, Segoe UI, sans-serif'; tx.fillStyle = col; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.strokeText(label, lx + (Math.sin(ang) > 0 ? -8 : 8), ly - 6); tx.fillText(label, lx + (Math.sin(ang) > 0 ? -8 : 8), ly - 6); tx.textAlign = 'center'; } };
-    if (W.kind === 'tbm') { ring(CITY.HALF - 3800, 'rgba(248,113,113,.8)', [6, 6], 'район пусковых', 1.45); ring(CITY.HALF - 2600, 'rgba(248,113,113,.5)', [6, 6], ''); return; }
-    ring(CITY.HALF - 300, 'rgba(255,255,255,.85)', [5, 5], 'точки маршрута — внутри', -1.62);
-    if (W.uav) ring(CITY.HALF - 500, 'rgba(56,189,248,.9)', [10, 6], 'вход дронов — край района', -1.45);
-    else ring(LAUNCH_R, 'rgba(251,146,60,.95)', [10, 6], `рубеж пуска: ${via ? CARRIERS[via].name : 'носитель'}`, 1.62);
+    if (W.kind === 'tbm') { ring(CITY.HALF - 3800, 'rgba(248,113,113,.8)', [6, 6], tr('район пусковых'), 1.45); ring(CITY.HALF - 2600, 'rgba(248,113,113,.5)', [6, 6], ''); return; }
+    ring(CITY.HALF - 300, 'rgba(255,255,255,.85)', [5, 5], tr('точки маршрута — внутри'), -1.62);
+    if (W.uav) ring(CITY.HALF - 500, 'rgba(56,189,248,.9)', [10, 6], tr('вход дронов — край района'), -1.45);
+    else ring(LAUNCH_R, 'rgba(251,146,60,.95)', [10, 6], tr('рубеж пуска: {0}', [via ? CARRIERS[via].name : tr('носитель')]), 1.62);
   }
   // наряд на карте: от края (у дронов — край района, у носителей — рубеж пуска) к цели — линия «тип ×N · пуск»
   // (у единиц со своим маршрутом — его рисует drawRoutes); у целей — кружок прогноза «×N ≈ 85 %»
@@ -237,7 +239,7 @@ export function createDefense(C) {
       const b = Math.atan2(p[0], p[1]), [ax, ay] = w2s(Math.sin(b) * LAUNCH_R, Math.cos(b) * LAUNCH_R), [bx, by] = w2s(p[0], p[1]), cur = st.tsel === key;
       tx.globalAlpha = cur || !st.tsel ? 0.9 : 0.35; tx.strokeStyle = '#e2e8f0'; tx.lineWidth = cur ? 3 : 1.8; tx.setLineDash([12, 6]); tx.beginPath(); tx.moveTo(ax, ay); tx.lineTo(bx, by); tx.stroke(); tx.setLineDash([]);
       const rows = Object.entries(grp).sort((q, r) => q[1].t - r[1].t), mx = ax + (bx - ax) * 0.55, my = ay + (by - ay) * 0.55 - (rows.length - 1) * 7;
-      rows.forEach(([k, g], j) => { const lab = `${AG[k].short} ${numTxt(g.ix)} · пуск ${fmtT(g.t)}${AG[k].kind === 'tbm' ? ' · баллистика' : ''}` /* номера — те же, что в карточке цели */, col = AG[k].kind === 'tbm' ? '#f87171' : RCOL[items.findIndex(([q]) => q === k) % RCOL.length]; // баллистика — красным
+      rows.forEach(([k, g], j) => { const lab = tr('{0} {1} · пуск {2}{3}', [AG[k].short, numTxt(g.ix), fmtT(g.t), AG[k].kind === 'tbm' ? tr(' · баллистика') : '']) /* номера — те же, что в карточке цели */, col = AG[k].kind === 'tbm' ? '#f87171' : RCOL[items.findIndex(([q]) => q === k) % RCOL.length]; // баллистика — красным
         tx.strokeStyle = 'rgba(0,0,0,.85)'; tx.lineWidth = 3; tx.strokeText(lab, mx, my + j * 14); tx.fillStyle = col; tx.fillText(lab, mx, my + j * 14); });
       tx.globalAlpha = 1;
     }
@@ -255,8 +257,8 @@ export function createDefense(C) {
     const items = multiItems(attSide(), C.setup.era);
     const D = planDefaults(planComp(), st.targets, st.plan.cfg, st.net ? LIM_ON : undefined), ev = st.phase === 'wave' && C.ev;
     const when = (k, i) => { // время пуска для подписи: тип — первая единица; единица — своё (в бою — из расписания, пущенная — «пущена»)
-      if (i >= 0 && ev) { const f = ev.unitInfo(k, i); if (f.launched) return 'пущена'; return 'пуск ' + fmtT(f.t); }
-      const d = D[k]; if (!d) return ''; return 'пуск ' + fmtT(i >= 0 ? d.units[i].t : d.t);
+      if (i >= 0 && ev) { const f = ev.unitInfo(k, i); if (f.launched) return tr('пущена'); return tr('пуск ') + fmtT(f.t); }
+      const d = D[k]; if (!d) return ''; return tr('пуск ') + fmtT(i >= 0 ? d.units[i].t : d.t);
     };
     for (const [k, r] of Object.entries(st.plan.cfg)) {
       const col = RCOL[items.findIndex(([kk]) => kk === k) % RCOL.length], n = st.plan.n[k] || 0;
@@ -276,7 +278,7 @@ export function createDefense(C) {
         for (const o of tg) { const [a, c] = w2s(o.x, o.z); tx.beginPath(); tx.moveTo(lx, lz); tx.lineTo(a, c); tx.stroke(); }
         tx.setLineDash([]);
         pts0.forEach(([x, z], j) => { const [a, c] = w2s(x, z); tx.fillStyle = col; tx.beginPath(); tx.arc(a, c, cur ? 7 : 5, 0, 7); tx.fill(); tx.fillStyle = '#0b1218'; tx.fillText(String(j + 1), a, c + 4); });
-        const [ax, az] = w2s(...pts0[0]), lab = (i >= 0 ? `${AG[k].short} ${numTxt(ix)}` : AG[k].short) + ` · ${alt ? (alt >= 1000 ? alt / 1000 + ' км' : alt + ' м') : 'своя высота'} · ${when(k, i)}`;
+        const [ax, az] = w2s(...pts0[0]), lab = (i >= 0 ? `${AG[k].short} ${numTxt(ix)}` : AG[k].short) + ` · ${alt ? (alt >= 1000 ? alt / 1000 + tr(' км') : alt + tr(' м')) : tr('своя высота')} · ${when(k, i)}`;
         tx.font = '700 11.5px -apple-system, Segoe UI, sans-serif'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.strokeText(lab, ax, az - 12); tx.fillStyle = col; tx.fillText(lab, ax, az - 12);
         tx.globalAlpha = 1;
       }
@@ -364,8 +366,8 @@ export function createDefense(C) {
     const [wx, wz] = s2w(px, py);
     if (!st.pick && atk() && st.phase === 'wave' && st.edKey && AG[st.edKey].kind !== 'tbm') { // бой идёт, окно типа открыто — точка маршрута
       const r = scopeCfg(); if (!r.pts) r.pts = [];
-      if (r.pts.length >= 3) { say('Не больше 3 точек маршрута'); snd.deny(); return; }
-      if (Math.hypot(wx, wz) > CITY.HALF - 300) { say('Точка — внутри района'); snd.deny(); return; }
+      if (r.pts.length >= 3) { say(tr('Не больше 3 точек маршрута')); snd.deny(); return; }
+      if (Math.hypot(wx, wz) > CITY.HALF - 300) { say(tr('Точка — внутри района')); snd.deny(); return; }
       const np = [...r.pts, [wx, wz]]; if (st.edUnit === null && !edGrp()) r.pts = np; else scopeSet((q) => { q.pts = np.map((p) => [...p]); }); snd.click(); afterEdit(); return;
     }
     if (st.multi && st.phase === 'wave' && !st.pick) { // касание своей ракеты / носителя (за ПВО — видимой цели) — смотреть за ней
@@ -375,22 +377,22 @@ export function createDefense(C) {
     }
     if (!st.pick && atk() && st.phase === 'plan' && st.edKey && AG[st.edKey].kind !== 'tbm') { // правка маршрута: точка по касанию (до 3)
       const r = scopeCfg(); if (!r.pts) r.pts = [];
-      if (r.pts.length >= 3) { say('Не больше 3 точек маршрута — «Сбросить», чтобы начать заново'); snd.deny(); return; }
-      if (Math.hypot(wx, wz) > CITY.HALF - 300) { say('Точка — внутри района'); snd.deny(); return; }
+      if (r.pts.length >= 3) { say(tr('Не больше 3 точек маршрута — «Сбросить», чтобы начать заново')); snd.deny(); return; }
+      if (Math.hypot(wx, wz) > CITY.HALF - 300) { say(tr('Точка — внутри района')); snd.deny(); return; }
       const np = [...r.pts, [wx, wz]]; if (st.edUnit === null && !edGrp()) r.pts = np; else scopeSet((q) => { q.pts = np.map((p) => [...p]); }); snd.click(); afterEdit(); return;
     }
     if (atk()) { // цель под пальцем: объект или засечённый ЗРК → смена цели единицы (st.pick) или карточка наряда
       let best = null, bd = IS_TOUCH ? 26 : 16;
       for (const o of C.S.objects) { if (o.dead || o.noTarget) continue; const [x, y] = w2s(o.x, o.z), d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = 'o' + o.id; } }
       for (const u of C.S.units) { if (u.dead || !samKnown(u) || !u.S.radar) continue; const [x, y] = w2s(u.pos.x, u.pos.z), d = Math.hypot(x - px, y - py); if (d < bd) { bd = d; best = 'u' + u.id; } }
-      if (st.pick) { if (!best) { say('Коснитесь цели: объект или засечённый ЗРК'); snd.deny(); return; } setTkey(st.pick.k, st.pick.i, best); st.pick = null; st.tsel = best; say(`${uName(st.edKey, st.edUnit)} → «${tName(best)}»`, 2); snd.click(); afterEdit(); return; } // окно — уже новой цели
+      if (st.pick) { if (!best) { say(tr('Коснитесь цели: объект или засечённый ЗРК')); snd.deny(); return; } setTkey(st.pick.k, st.pick.i, best); st.pick = null; st.tsel = best; say(`${uName(st.edKey, st.edUnit)} → «${tName(best)}»`, 2); snd.click(); afterEdit(); return; } // окно — уже новой цели
       st.tsel = best; if (best) st.edKey = null; snd.click(); renderSide(); return;
     }
     // размещение и перенос: каждое касание — новое место («призрак» с зоной), купить или переехать — «Подтвердить»
     if (st.phase === 'plan' && (st.placing || st.moving)) {
       if (st.moving && !st.draft) { const o = unitAt(px, py); if (o && o !== st.sel) { st.sel = o; st.moving = mine(o); snd.click(); renderSide(); return; } } // место ещё не выбрано — касание другого комплекса выбирает его
       const S = st.placing ? SAM[st.placing] : st.sel.S;
-      if (!placeOk(S, wx, wz)) { say(S.hp <= 15 ? 'Здесь нельзя: нужна земля или плоская крыша' : city.kind === 'winter' ? 'Здесь нельзя: крутой склон, постройка или край карты' : 'Здесь нельзя: дом, река или край карты'); snd.deny(); return; }
+      if (!placeOk(S, wx, wz)) { say(S.hp <= 15 ? tr('Здесь нельзя: нужна земля или плоская крыша') : city.kind === 'winter' ? tr('Здесь нельзя: крутой склон, постройка или край карты') : tr('Здесь нельзя: дом, река или край карты')); snd.deny(); return; }
       st.draft = { x: wx, z: wz, roof: buildingAt(city, wx, wz) >= 0 }; snd.click(); renderSide(); return;
     }
     // выбор комплекса под пальцем; в расстановке свой — сразу перенос (место — касанием карты, затем «Подтвердить»)
@@ -404,7 +406,7 @@ export function createDefense(C) {
   }
   // «Подтвердить»: покупка на выбранном месте или переезд; «Отмена» — без покупки / комплекс остаётся где был
   function confirmDraft() {
-    const d = st.draft; if (!d) { say('Сначала коснитесь карты — место'); snd.deny(); return; }
+    const d = st.draft; if (!d) { say(tr('Сначала коснитесь карты — место')); snd.deny(); return; }
     if (st.moving && st.sel) {
       if (st.net) st.net.move(st.sel.id, d.x, d.z, d.roof); // онлайн: переезд проверяет и делает сервер
       else { C.S.moveUnit(st.sel, d.x, d.z, d.roof); st.sel.cov = null; C.syncUnits(); }
@@ -412,8 +414,8 @@ export function createDefense(C) {
     }
     const k = st.placing; if (!k) return;
     const cost = st.net ? costOf(k) : SAM_COST[k], lim = netLeft(k);
-    if (cost > st.budget) { say('Не хватает очков обороны'); snd.deny(); return; }
-    if (lim !== null && lim <= 0) { say('Лимит первой волны для этого класса'); snd.deny(); return; }
+    if (cost > st.budget) { say(tr('Не хватает очков обороны')); snd.deny(); return; }
+    if (lim !== null && lim <= 0) { say(tr('Лимит первой волны для этого класса')); snd.deny(); return; }
     if (st.net) st.net.buyUnit(k, d.x, d.z, d.roof); // онлайн: комплекс придёт событием
     else { st.budget -= cost; const u = C.S.addUnit(k, d.x, d.z, { roof: d.roof, skill: 0.75, yaw: st.rnd() * 6.28 }); u.paid = cost; C.syncUnits(); st.sel = u; on('place', u); }
     st.placing = null; st.draft = null; snd.click(); renderSide();
@@ -423,11 +425,11 @@ export function createDefense(C) {
   function placeCard() {
     if (!st.placing) return '';
     const S = SAM[st.placing], c = costOf(st.placing);
-    return `<div class="dcard on"><div class="nm"><b>${S.name} — размещение</b><span>${st.draft ? 'место выбрано — коснитесь карты, чтобы сдвинуть' : 'коснитесь карты — место'}${S.hp <= 15 ? ' · можно на плоскую крышу' : ''}${IS_TOUCH ? '' : ' · Enter — подтвердить, Esc или правая кнопка — отмена'}</span></div><span class="pr">${c}</span></div>
-      <div class="dact"><button class="btn" data-a="pok" ${st.draft ? '' : 'disabled'}>Подтвердить −${c}</button><button class="btn alt" data-a="pno">Отмена</button></div>`;
+    return `<div class="dcard on"><div class="nm"><b>${tr('{0} — размещение', [S.name])}</b><span>${st.draft ? tr('место выбрано — коснитесь карты, чтобы сдвинуть') : tr('коснитесь карты — место')}${S.hp <= 15 ? tr(' · можно на плоскую крышу') : ''}${IS_TOUCH ? '' : tr(' · Enter — подтвердить, Esc или правая кнопка — отмена')}</span></div><span class="pr">${c}</span></div>
+      <div class="dact"><button class="btn" data-a="pok" ${st.draft ? '' : 'disabled'}>${tr('Подтвердить −{0}', [c])}</button><button class="btn alt" data-a="pno">${tr('Отмена')}</button></div>`;
   }
-  const moveBtns = (u) => (st.moving ? `${st.draft ? '<button class="btn" data-a="pok">Подтвердить перенос</button>' : ''}<button class="btn alt" data-a="pno">${st.draft ? 'Отмена' : 'Не переносить'}</button>` : '<button class="btn alt" data-a="move">Переместить</button>');
-  const moveHint = () => (st.moving ? `<p class="hint">${st.draft ? 'Новое место выбрано — «Подтвердить перенос» или коснитесь карты ещё раз.' : IS_TOUCH ? 'Коснитесь карты — новое место комплекса.' : 'Наведите мышь — тень зоны с нового места, щелчок — выбрать место.'} Зелёная тень — что будет перекрыто на 300 м, серая — нынешняя зона.${IS_TOUCH ? '' : ' Enter — подтвердить, Esc или правая кнопка — отмена.'}</p>` : '');
+  const moveBtns = (u) => (st.moving ? `${st.draft ? `<button class="btn" data-a="pok">${tr('Подтвердить перенос')}</button>` : ''}<button class="btn alt" data-a="pno">${st.draft ? tr('Отмена') : tr('Не переносить')}</button>` : `<button class="btn alt" data-a="move">${tr('Переместить')}</button>`);
+  const moveHint = () => (st.moving ? `<p class="hint">${tr('{0} Зелёная тень — что будет перекрыто на 300 м, серая — нынешняя зона.{1}', [st.draft ? tr('Новое место выбрано — «Подтвердить перенос» или коснитесь карты ещё раз.') : IS_TOUCH ? tr('Коснитесь карты — новое место комплекса.') : tr('Наведите мышь — тень зоны с нового места, щелчок — выбрать место.'), IS_TOUCH ? '' : tr(' Enter — подтвердить, Esc или правая кнопка — отмена.')])}</p>` : '');
 
   // ═════════════ Боковая панель ═════════════
   const side = $('dside');
@@ -438,57 +440,57 @@ export function createDefense(C) {
   side.addEventListener('pointerdown', holdOn); addEventListener('pointerup', holdOff, true); addEventListener('pointercancel', holdOff, true);
   const setSide = (h) => { if (h !== sideHtml) { sideHtml = h; side.innerHTML = h; } };
   function unitStatus(u) {
-    if (u.dead) return 'уничтожен';
-    if (u.S.type === 'jammer') return `подавляет спутниковую навигацию в радиусе ${(u.S.jamR / 1000).toFixed(0)} км`;
+    if (u.dead) return tr('уничтожен');
+    if (u.S.type === 'jammer') return tr('подавляет спутниковую навигацию в радиусе {0} км', [(u.S.jamR / 1000).toFixed(0)]);
     const a = [];
-    if (u.S.radar) a.push(u.emit ? 'РЛС излучает' : u.ambush ? 'засада: РЛС молчит' : 'РЛС выключена');
-    if (u.track) a.push('<b style="color:#fde047">захват цели</b>');
-    if (u.S.type !== 'guns') a.push(u.reloadT > 0 ? `перезарядка ${Math.ceil(u.reloadT)} с` : `ракет ${u.ammo}/${u.S.ammo}`);
-    if (u.hold) a.push('огонь по команде');
+    if (u.S.radar) a.push(u.emit ? tr('РЛС излучает') : u.ambush ? tr('засада: РЛС молчит') : tr('РЛС выключена'));
+    if (u.track) a.push(`<b style="color:#fde047">${tr('захват цели')}</b>`);
+    if (u.S.type !== 'guns') a.push(u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('ракет {0}/{1}', [u.ammo, u.S.ammo]));
+    if (u.hold) a.push(tr('огонь по команде'));
     return a.join(' · ');
   }
   // онлайн: мои комплексы, лимит первой волны по классам, сторона ПВО и эпоха — из боя
   const mine = (u) => !st.net || u.owner === (st.net.me && st.net.me.id);
-  const allyName = (id) => { const p = st.net && st.net.room && (st.net.room.players || []).find((q) => q.id === id); return p ? `${p.name}${p.bot ? ' (бот)' : ''}` : 'союзник'; };
-  const CLS_NAME = { top: 'дальний', mid: 'средний', near: 'ближний' };
+  const allyName = (id) => { const p = st.net && st.net.room && (st.net.room.players || []).find((q) => q.id === id); return p ? `${p.name}${p.bot ? tr(' (бот)') : ''}` : tr('союзник'); };
+  const CLS_NAME = { top: tr('дальний'), mid: tr('средний'), near: tr('ближний') };
   function netLeft(k) { // сколько ещё можно купить этого класса на первой волне (null — без лимита)
     if (!st.net || st.multi || st.wave !== 1) return null; const cls = samClass(k); if (cls === 'near') return null;
     return LIMIT1[cls] - C.S.units.filter((u) => mine(u) && !u.dead && samClass(u.key) === cls).length;
   }
   function renderNet() {
     const S = C.S, N = st.net, B = N.battle; let h = '';
-    const left = N.room && N.room.left !== null ? ` · ${N.room.left} с` : '';
+    const left = N.room && N.room.left !== null ? tr(' · {0} с', [N.room.left]) : '';
     if (st.phase === 'plan') {
-      h += `<h3>Расстановка · волна ${st.wave}/${st.waves}${left}</h3><div>Очки обороны: <b style="color:#fde68a">${st.budget}</b></div>`;
-      if (st.wave === 1) h += '<p class="hint">Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние — за очки.</p>';
+      h += `<h3>${tr('Расстановка · волна {0}/{1}{2}', [st.wave, st.waves, left])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>`;
+      if (st.wave === 1) h += `<p class="hint">${tr('Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние — за очки.')}</p>`;
       if (st.sel && !st.sel.dead && mine(st.sel)) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км</span></div></div>
-          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">Продать +${Math.round(samCost(u.key) * 0.7)}</button>${st.moving ? '' : '<button class="btn alt" data-a="desel">Готово</button>'}</div>${moveHint()}`;
-      } else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>союзника</span></div></div>`;
-      h += placeCard() + '<div class="cat-h">Купить</div>';
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>
+          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(samCost(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
+      } else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
+      h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
       const side = B.sideAir === 'east' ? 'west' : 'east';
       for (const [k, s] of Object.entries(SAM)) {
         if (s.side !== side || s.era > B.era) continue;
         const c = costOf(k), lim = netLeft(k), lk = lockedSam(k), no = c > st.budget || (lim !== null && lim <= 0) || lk;
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${CLS_NAME[samClass(k)]} · ${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км${lim !== null ? ` · можно ещё ${Math.max(0, lim)}` : ''}</span></div><span class="pr">${c}</span></div>`;
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${tr('{0} · {1} · {2} км{3}', [CLS_NAME[samClass(k)], SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), lim !== null ? tr(' · можно ещё {0}', [Math.max(0, lim)]) : ''])}</span></div><span class="pr">${c}</span></div>`;
       }
-      h += `<p class="hint">${st.placing ? (IS_TOUCH ? 'Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.' : 'Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.') : 'Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса на карте — перенос (новое место и «Подтвердить») или продажа.'}</p>`;
-      h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
+      h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.') : tr('Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса на карте — перенос (новое место и «Подтвердить») или продажа.')}</p>`;
+      h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? tr('Готов ✓ (снять)') : tr('ГОТОВ')}</button>`;
     } else if (st.phase === 'wave') {
       const air = C.raid.planes.filter((a) => !a.dead && !a.out && a.role !== 'decoy').length;
-      h += `<h3>Волна ${st.wave}/${st.waves}${left}</h3><div>В воздухе: <b>${air}</b> · объекты целы <b>${Math.round((1 - (B.valueK || 0)) * 100)}%</b></div>`;
+      h += `<h3>${tr('Волна {0}/{1}{2}', [st.wave, st.waves, left])}</h3><div>${tr('В воздухе: <b>{0}</b> · объекты целы <b>{1}%</b>', [air, Math.round((1 - (B.valueK || 0)) * 100)])}</div>`;
       if (st.sel && !st.sel.dead && mine(st.sel)) {
         const u = st.sel;
         h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${unitStatus(u)}</span></div></div><div class="dact">
-          ${u.S.type === 'jammer' ? '' : '<button class="btn" data-a="op">Управлять</button>'}
-          ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? 'РЛС: выключить' : 'РЛС: включить'}</button>` : ''}<button class="btn alt" data-a="desel">Снять выбор</button></div>`;
-      } else h += '<p class="hint">Коснитесь своего комплекса: «Управлять» — сесть оператором. Остальными стреляют расчёты. Красные треугольники — цели, которые видит сеть РЛС.</p>';
-      h += '<button class="btn alt" data-a="help">Мне нужна помощь!</button>';
+          ${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}
+          ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`;
+      } else h += `<p class="hint">${tr('Коснитесь своего комплекса: «Управлять» — сесть оператором. Остальными стреляют расчёты. Красные треугольники — цели, которые видит сеть РЛС.')}</p>`;
+      h += `<button class="btn alt" data-a="help">${tr('Мне нужна помощь!')}</button>`;
     } else if (st.phase === 'debrief') {
       const r = st.netRes || {};
-      h += `<h3>Волна ${st.wave} — итоги</h3><div class="stats" style="margin:6px 0"><div class="stt"><b>${r.downs ?? '–'}</b><span>сбито</span></div><div class="stt"><b>${r.unitKills ?? '–'}</b><span>потеряно ЗРК</span></div>
-        <div class="stt"><b>${Math.round((1 - (r.totalK || 0)) * 100)}%</b><span>объекты целы</span></div></div><p class="hint">${r.last ? 'Бой окончен — итоги…' : 'Скоро расстановка следующей волны.'}</p>`;
+      h += `<h3>${tr('Волна {0} — итоги', [st.wave])}</h3><div class="stats" style="margin:6px 0"><div class="stt"><b>${r.downs ?? '–'}</b><span>${tr('сбито')}</span></div><div class="stt"><b>${r.unitKills ?? '–'}</b><span>${tr('потеряно ЗРК')}</span></div>
+        <div class="stt"><b>${Math.round((1 - (r.totalK || 0)) * 100)}%</b><span>${tr('объекты целы')}</span></div></div><p class="hint">${r.last ? tr('Бой окончен — итоги…') : tr('Скоро расстановка следующей волны.')}</p>`;
     }
     side.innerHTML = h;
   }
@@ -510,9 +512,9 @@ export function createDefense(C) {
   // номера единиц: «Калибр 1, 2», «Shahed-136 1–4» — сквозные по типу, те же на карте и в карточках целей
   const numTxt = (idx) => { const r = []; for (let j = 0; j < idx.length; j++) { let e = j; while (e + 1 < idx.length && idx[e + 1] === idx[e] + 1) e++; r.push(e - j >= 2 ? `${idx[j] + 1}–${idx[e] + 1}` : e > j ? `${idx[j] + 1}, ${idx[e] + 1}` : `${idx[j] + 1}`); j = e; } return r.join(', '); };
   const uName = (k, i) => `${AG[k].short} ${i + 1}`;
-  const fmtT = (t) => (t >= 60 ? `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}` : `${Math.round(t)} с`);
+  const fmtT = (t) => (t >= 60 ? `${Math.floor(t / 60)}:${String(Math.round(t % 60)).padStart(2, '0')}` : tr('{0} с', [Math.round(t)]));
   const segH = (a, cur, items) => `<div class="seg">${items.map(([v, l]) => `<button data-a="${a}" data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
-  const ALTS = [['', 'своя'], [300, '300 м'], [3000, '3 км']], STEPS = [-30, -15, -5, 5, 15, 30];
+  const ALTS = [['', tr('своя')], [300, tr('300 м')], [3000, tr('3 км')]], STEPS = [-30, -15, -5, 5, 15, 30];
   // ── наряд на цели: у каждой единицы своя цель — объект ('o' + id), «ПВО противника» ('sam': засечённые к моменту пуска)
   // или конкретный засечённый ЗРК ('u' + id); без цели (null) — поровну по целям. Покупка и назначение — одно действие («+» в карточке цели)
   const tkeyOf = (k, i) => { const u = unitCfg(st.plan.cfg, k, i); return u.sam ? (u.sid != null ? 'u' + u.sid : 'sam') : u.tgt != null ? 'o' + u.tgt : null; };
@@ -520,7 +522,7 @@ export function createDefense(C) {
   const launchedU = (k, i) => st.phase === 'wave' && C.ev && C.ev.unitInfo(k, i).launched;
   const idxOf = (k, key) => { const out = []; for (let i = 0; i < (st.plan.n[k] || 0); i++) if (tkeyOf(k, i) === key) out.push(i); return out; };
   const tgtObjs = () => { const ids = new Set(); for (const [k] of planComp()) for (let i = 0; i < (st.plan.n[k] || 0); i++) { const t = tkeyOf(k, i); if (t && t[0] === 'o') ids.add(+t.slice(1)); } return C.S.objects.filter((o) => ids.has(o.id)); };
-  const tName = (key) => { if (key === 'sam') return 'ПВО противника'; const o = key[0] === 'o' ? C.S.objects.find((q) => q.id === +key.slice(1)) : null; if (o) return o.name; const u = C.S.units.find((q) => q.id === +key.slice(1)); return u ? `${u.S.short} (засечён)` : '?'; };
+  const tName = (key) => { if (key === 'sam') return tr('ПВО противника'); const o = key[0] === 'o' ? C.S.objects.find((q) => q.id === +key.slice(1)) : null; if (o) return o.name; const u = C.S.units.find((q) => q.id === +key.slice(1)); return u ? tr('{0} (засечён)', [u.S.short]) : '?'; };
   // прогноз: ожидаемый урон наряда (боевая часть × доля долетевших) против оставшейся прочности объекта
   const pSurv = (W) => (W.decoyMun || !W.dmg ? 0 : W.uav ? 0.45 : W.kind === 'tbm' ? (W.man ? 0.9 : 0.85) : (W.rcs ?? 1) <= 0.06 ? 0.7 : 0.6);
   function forecast(key) {
@@ -540,8 +542,8 @@ export function createDefense(C) {
     if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return false; }
     const free = idxOf(k, null).filter((i) => !launchedU(k, i));
     if (free.length) { setTkey(k, free[0], key); return true; }
-    if (AG[k].kind === 'tbm') { const b = tbmRoom(k); if (b.deny) { say(`${b.deny} ${st.net ? 'на команду' : 'на волну'}${b.other ? ` (у союзников уже ${b.other})` : ''}`, 3); snd.deny(); return false; } }
-    if (planCost() + (THREAT[k] ?? 3) > st.budget) { say('Не хватает очков угрозы'); snd.deny(); return false; }
+    if (AG[k].kind === 'tbm') { const b = tbmRoom(k); if (b.deny) { say(`${b.deny} ${st.net ? tr('на команду') : tr('на волну')}${b.other ? tr(' (у союзников уже {0})', [b.other]) : ''}`, 3); snd.deny(); return false; } }
+    if (planCost() + (THREAT[k] ?? 3) > st.budget) { say(tr('Не хватает очков угрозы')); snd.deny(); return false; }
     const i = st.plan.n[k] = (st.plan.n[k] || 0) + 1; setTkey(k, i - 1, key);
     if (st.phase === 'wave') { st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 1.5; }
     return true;
@@ -562,35 +564,35 @@ export function createDefense(C) {
   };
   const allocTxt = (key) => planComp().filter(([k]) => !AG[k].recon).map(([k]) => [k, idxOf(k, key)]).filter(([, ix]) => ix.length).map(([k, ix]) => `${AG[k].short} ${numTxt(ix)}`).join(' · ');
   function targetRows() {
-    let h = '<div class="cat-h">Цели — коснитесь объекта на карте</div>';
+    let h = `<div class="cat-h">${tr('Цели — коснитесь объекта на карте')}</div>`;
     for (const key of [...tKeys().filter((q) => q !== 'sam'), 'sam']) {
       const f = forecast(key), a = allocTxt(key);
-      h += `<div class="dcard ${a ? 'on' : ''}" data-a="tsel" data-v="${key}"><div class="nm"><b>${tName(key)}${f ? ` · <span style="color:${fcCol(f.k)}">≈ ${Math.round(f.k * 100)} %${f.over >= 1.5 ? ` (запас ×${f.over.toFixed(1).replace('.', ',')})` : ''}</span>` : ''}</b><span>${a || (key === 'sam' ? 'ничего — коснитесь, чтобы назначить' : 'наряд пуст')}</span></div><span class="pr">›</span></div>`;
+      h += `<div class="dcard ${a ? 'on' : ''}" data-a="tsel" data-v="${key}"><div class="nm"><b>${tName(key)}${f ? ` · <span style="color:${fcCol(f.k)}">≈ ${Math.round(f.k * 100)} %${f.over >= 1.5 ? tr(' (запас ×{0})', [f.over.toFixed(1).replace('.', ',')]) : ''}</span>` : ''}</b><span>${a || (key === 'sam' ? tr('ничего — коснитесь, чтобы назначить') : tr('наряд пуст'))}</span></div><span class="pr">›</span></div>`;
     }
     const free = planComp().filter(([k]) => !AG[k].recon).map(([k]) => [k, idxOf(k, null).filter((i) => !launchedU(k, i)).length]).filter(([, n]) => n);
-    if (free.length) h += `<div class="dcard" style="border-color:#f59e0b"><div class="nm"><b>Без цели</b><span>${free.map(([k, n]) => `${AG[k].short} ×${n}`).join(', ')} — пойдут поровну по целям</span></div><button class="btn alt mini2" data-a="spread">Раздать поровну</button></div>`;
+    if (free.length) h += `<div class="dcard" style="border-color:#f59e0b"><div class="nm"><b>${tr('Без цели')}</b><span>${tr('{0} — пойдут поровну по целям', [free.map(([k, n]) => `${AG[k].short} ×${n}`).join(', ')])}</span></div><button class="btn alt mini2" data-a="spread">${tr('Раздать поровну')}</button></div>`;
     return h;
   }
   // карточка цели: прочность и прогноз, по каждому типу — сколько здесь, «−» / «+»
   function renderTgtCard() {
     const key = st.tsel, f = forecast(key), left = st.budget - planCost(), wave = st.phase === 'wave', DD = planDefaults(planComp(), st.targets, st.plan.cfg, st.net ? LIM_ON : undefined);
     const tb = tbmRoom();
-    let h = `<h3>Наряд на «${tName(key)}»</h3><div>Очки угрозы: <b style="color:#fde68a">${left}</b> · баллистика <b>${tb.used}/${tb.kinzhal ? tb.rule.kinzhal : tb.iskander ? tb.rule.iskander : tb.rule.total}</b>${tb.kinzhal ? ' («Кинжал» — без другой)' : tb.iskander ? ' («Искандер» — без другой)' : ' («Кинжал» и «Искандер» — только без другой)'}${st.net ? ' на команду' : ''}</div>`;
+    let h = `<h3>${tr('Наряд на «{0}»', [tName(key)])}</h3><div>${tr('Очки угрозы: <b style="color:#fde68a">{0}</b> · баллистика <b>{1}/{2}</b>{3}{4}', [left, tb.used, tb.kinzhal ? tb.rule.kinzhal : tb.iskander ? tb.rule.iskander : tb.rule.total, tb.kinzhal ? tr(' («Кинжал» — без другой)') : tb.iskander ? tr(' («Искандер» — без другой)') : tr(' («Кинжал» и «Искандер» — только без другой)'), st.net ? tr(' на команду') : ''])}</div>`;
     if (f) h += `<div style="margin:6px 0"><div style="height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:${Math.round(100 * f.hp / f.hpMax)}%;background:#94a3b8"></div></div>
-      <div style="margin-top:4px">Прочность ${Math.round(f.hp)}/${f.hpMax} · наряд разрушит <b style="color:${fcCol(f.k)}">≈ ${Math.round(f.k * 100)} %</b>${f.over >= 1.5 ? ` · запас ×${f.over.toFixed(1).replace('.', ',')} — часть можно перенести на другие цели` : ''}</div><p class="hint">Оценка: часть собьют (дроны чаще, баллистику реже), ложные цели урона не наносят.${f.k < 1 ? ' Мало — добавьте ещё.' : ''}</p></div>`;
-    else if (key === 'sam') h += '<p class="hint">Где ПВО — заранее неизвестно. Назначенные сюда бьют по комплексам, засечённым к моменту пуска (разведчик, излучение РЛС, пуски ЗУР); никого не нашли — по целям наряда. По тем, кого разведчик сам не видел, баллистика промахивается сильнее. Ложные цели — лучше сюда: ПВО тратит на них ракеты.</p>';
-    else h += '<p class="hint">Засечённый комплекс ПВО: назначенные сюда бьют именно по нему (уничтожен — по другим засечённым).</p>';
+      <div style="margin-top:4px">${tr('Прочность {0}/{1} · наряд разрушит', [Math.round(f.hp), f.hpMax])} <b style="color:${fcCol(f.k)}">≈ ${Math.round(f.k * 100)} %</b>${f.over >= 1.5 ? tr(' · запас ×{0} — часть можно перенести на другие цели', [f.over.toFixed(1).replace('.', ',')]) : ''}</div><p class="hint">${tr('Оценка: часть собьют (дроны чаще, баллистику реже), ложные цели урона не наносят.{0}', [f.k < 1 ? tr(' Мало — добавьте ещё.') : ''])}</p></div>`;
+    else if (key === 'sam') h += `<p class="hint">${tr('Где ПВО — заранее неизвестно. Назначенные сюда бьют по комплексам, засечённым к моменту пуска (разведчик, излучение РЛС, пуски ЗУР); никого не нашли — по целям наряда. По тем, кого разведчик сам не видел, баллистика промахивается сильнее. Ложные цели — лучше сюда: ПВО тратит на них ракеты.')}</p>`;
+    else h += `<p class="hint">${tr('Засечённый комплекс ПВО: назначенные сюда бьют именно по нему (уничтожен — по другим засечённым).')}</p>`;
     for (const [k, via] of multiItems(attSide(), C.setup.era).filter(([q]) => !st.opts.items || st.opts.items.has(q) || idxOf(q, key).length)) { // урок — только нужные типы
       const W = AG[k], here = idxOf(k, key), done = here.filter((i) => launchedU(k, i)).length, free = idxOf(k, null).filter((i) => !launchedU(k, i)).length, c = THREAT[k] ?? 3, tbFull = W.kind === 'tbm' && !free && !!tbmRoom(k).deny;
-      h += `<div class="dcard ${here.length ? 'on' : ''} ${lockedStrike(k) ? 'no' : ''}"><div class="nm"><b>${lockedStrike(k) ? ico('lock') + ' ' : ''}${W.short} ×${here.length}</b><span>${via ? CARRIERS[via].name : W.kind === 'tbm' ? 'пусковая' : 'своим ходом'}${W.decoyMun ? ' · ложная' : ''}${done ? ` · пущено ${done}` : ''}${free ? ` · без цели: ${free}` : ''}</span></div>
+      h += `<div class="dcard ${here.length ? 'on' : ''} ${lockedStrike(k) ? 'no' : ''}"><div class="nm"><b>${lockedStrike(k) ? ico('lock') + ' ' : ''}${W.short} ×${here.length}</b><span>${via ? CARRIERS[via].name : W.kind === 'tbm' ? tr('пусковая') : tr('своим ходом')}${W.decoyMun ? tr(' · ложная') : ''}${done ? tr(' · пущено {0}', [done]) : ''}${free ? tr(' · без цели: {0}', [free]) : ''}</span></div>
         <span class="pr">${free ? '' : c}</span><button class="btn alt mini" data-a="tdec" data-k="${k}">−</button><button class="btn alt mini ${(!free && c > left) || tbFull ? 'no' : ''}" data-a="tinc" data-k="${k}">+</button></div>`;
       if (here.length) { // единицы на этой цели: номер и время пуска; касание — её маршрут, высота, время
         const D = DD[k], tOf = (i) => (wave && C.ev ? C.ev.unitInfo(k, i).t : D ? D.units[i].t : 0);
-        h += `<div class="useg">${here.map((i) => launchedU(k, i) ? `<span class="uchip done">${uName(k, i)} ✓</span>` : `<button class="uchip" data-a="ued" data-k="${k}" data-i="${i}">${uName(k, i)} · ${fmtT(tOf(i))}${unitCfg(st.plan.cfg, k, i).pts ? ' · м' : ''}</button>`).join('')}${here.length - done > 1 ? `<button class="uchip all" data-a="ged" data-k="${k}">⚙ все ${here.length - done}</button>` : ''}</div>`;
+        h += `<div class="useg">${here.map((i) => launchedU(k, i) ? `<span class="uchip done">${uName(k, i)} ✓</span>` : `<button class="uchip" data-a="ued" data-k="${k}" data-i="${i}">${uName(k, i)} · ${fmtT(tOf(i))}${unitCfg(st.plan.cfg, k, i).pts ? tr(' · м') : ''}</button>`).join('')}${here.length - done > 1 ? `<button class="uchip all" data-a="ged" data-k="${k}">${tr('⚙ все {0}', [here.length - done])}</button>` : ''}</div>`;
       }
     }
-    h += `<p class="hint">«+» — сначала берётся единица без цели, нет — покупается (${wave ? 'в бою — пуск через 30 с после заказа' : 'за очки угрозы'}). «−» — ${wave ? 'снять с цели (ещё не пущенную)' : 'убрать и вернуть очки'}. Коснитесь единицы — её маршрут, высота и время пуска («м» — свой маршрут); «⚙ все» — сразу для всех этого типа здесь.</p>
-      <div class="dact"><button class="btn" data-a="tclose">Готово</button></div>`;
+    h += `<p class="hint">${tr('«+» — сначала берётся единица без цели, нет — покупается ({0}). «−» — {1}. Коснитесь единицы — её маршрут, высота и время пуска («м» — свой маршрут); «⚙ все» — сразу для всех этого типа здесь.', [wave ? tr('в бою — пуск через 30 с после заказа') : tr('за очки угрозы'), wave ? tr('снять с цели (ещё не пущенную)') : tr('убрать и вернуть очки')])}</p>
+      <div class="dact"><button class="btn" data-a="tclose">${tr('Готово')}</button></div>`;
     setSide(h);
   }
   // окно правки (из карточки цели): «Все здесь» — единицы этого типа на этой цели, или одна единица («Калибр 3»);
@@ -605,20 +607,20 @@ export function createDefense(C) {
     const i0 = one ? st.edUnit : grp[0], u = unitCfg(st.plan.cfg, k, i0), sc = scopeCfg();
     const tOf = (i) => (wave && !info(i).launched ? info(i).t : D.units[i] ? D.units[i].t : 0), arrOf = (i) => (D.units[i] ? D.units[i].arrive : 0);
     const ts = (one ? [i0] : grp).map(tOf), t0 = Math.min(...ts), t1 = Math.max(...ts);
-    let h = `<h3>${one ? uName(k, i0) : `${W.short} ${numTxt(grp)}`}${st.tsel ? ` → «${tName(st.tsel)}»` : ''}${wave ? ' · бой идёт' : ''}</h3>`;
-    if (all.length > 1) h += segH('unit', one ? st.edUnit : -1, [[-1, `Все здесь (${grp.length})`], ...all.map((i) => [i, `${i + 1}${info(i).launched ? '✓' : c.units[i] && (c.units[i].pts || c.units[i].t != null || c.units[i].alt != null) ? '•' : ''}`])]);
-    if (one && info(i0).launched) { setSide(h + `<p class="hint">${uName(k, i0)} уже пущена — её не изменить. «✓» — пущенные.</p><div class="dact"><button class="btn" data-a="rdone">Готово</button></div>`); return; }
-    if (wave) h += '<p class="hint">Бой идёт: меняется только то, что ещё не пущено. Время — не раньше «сейчас» и прилёта носителя на рубеж.</p>';
-    if (!one && grp.length > 1) h += `<p class="hint">Настройки — сразу для ${grp.length} единиц (${W.short} ${numTxt(grp)}). Одну — во вкладке с её номером («•» — есть свои).</p>`;
-    else if (one && via) h += `<p class="hint">${uName(k, i0)} · носитель ${carrierOf(n, via, i0) + 1}</p>`;
-    if (!tb) h += `<div class="cat-h">Маршрут</div><p class="hint">${W.uav ? 'Дроны входят с края района (голубой круг)' : `Ракеты пускаются с рубежа ${via ? CARRIERS[via].name : 'носителя'} за краем района (оранжевый круг)`}; точки маршрута — внутри района (белый круг). Коснитесь карты — точки (до 3), от края к цели. Точек: <b>${sc.pts ? sc.pts.length : u.pts ? u.pts.length : 0}</b>. Без маршрута — прямо к цели со своей стороны.</p>
-      <div class="cat-h">Высота полёта</div>${segH('alt', sc.alt ?? '', ALTS)}
-      <p class="hint">Своя — ${W.alt} м${W.uav ? '' : ', огибая дома'}: РЛС видят поздно, но над городом — пушки и ПЗРК. 3 км — дальние ЗРК видят издалека, зато не достают пушки и ПЗРК.</p>`;
-    h += `<div class="cat-h">Время пуска</div><div>Пуск: <b style="color:#fde68a">${t0 === t1 ? fmtT(t0) : `${fmtT(t0)}–${fmtT(t1)}`}</b> от начала боя${wave ? '' : ` · у цели ≈ <b>${fmtT(Math.max(...(one ? [i0] : grp).map(arrOf)))}</b>`}</div>
-      <div class="seg">${STEPS.map((d) => `<button data-a="tstep" data-v="${d}">${d > 0 ? '+' : '−'}${Math.abs(d)} с</button>`).join('')}${wave ? '<button data-a="now">Пуск сейчас</button>' : ''}</div>
-      <p class="hint">${tb ? 'Баллистике ждать не страшно: пусковая за городом, пуск — в любой момент до 15 мин.' : W.uav ? 'Дроны можно выпустить в любой момент до 10 мин.' : `Носителю нужно ${fmtT(D.tmin)}, чтобы долететь до рубежа пуска; долго ходить у района ему нельзя: пуск не позже ${fmtT(D.tmax)}, а от первого его пуска до последнего — не больше ${fmtT(CARRIER_WAIT)}.`}${!one && grp.length > 1 ? ' Сдвиг — для всех сразу, порядок сохраняется.' : ''}</p>`;
-    if (one) h += `<div class="cat-h">Цель</div><div>${tkeyOf(k, i0) ? `«${tName(tkeyOf(k, i0))}»` : 'без цели (поровну по целям)'}</div><div class="dact"><button class="btn alt" data-a="repick">Перенести на другую цель</button></div>${st.pick ? '<p class="hint"><b>Коснитесь новой цели на карте</b> (объект или засечённый ЗРК) или «ПВО противника»: <button class="btn alt mini2" data-a="pickSam">ПВО противника</button></p>' : ''}`;
-    h += `<div class="dact">${tb ? '' : '<button class="btn alt" data-a="rclear">Сбросить маршрут</button>'}${one && all.length > 1 ? '<button class="btn alt" data-a="ureset">Как у всех здесь</button>' : ''}<button class="btn" data-a="rdone">Готово</button></div>`;
+    let h = `<h3>${one ? uName(k, i0) : `${W.short} ${numTxt(grp)}`}${st.tsel ? ` → «${tName(st.tsel)}»` : ''}${wave ? tr(' · бой идёт') : ''}</h3>`;
+    if (all.length > 1) h += segH('unit', one ? st.edUnit : -1, [[-1, tr('Все здесь ({0})', [grp.length])], ...all.map((i) => [i, `${i + 1}${info(i).launched ? '✓' : c.units[i] && (c.units[i].pts || c.units[i].t != null || c.units[i].alt != null) ? '•' : ''}`])]);
+    if (one && info(i0).launched) { setSide(h + `<p class="hint">${tr('{0} уже пущена — её не изменить. «✓» — пущенные.', [uName(k, i0)])}</p><div class="dact"><button class="btn" data-a="rdone">${tr('Готово')}</button></div>`); return; }
+    if (wave) h += `<p class="hint">${tr('Бой идёт: меняется только то, что ещё не пущено. Время — не раньше «сейчас» и прилёта носителя на рубеж.')}</p>`;
+    if (!one && grp.length > 1) h += `<p class="hint">${tr('Настройки — сразу для {0} единиц ({1} {2}). Одну — во вкладке с её номером («•» — есть свои).', [grp.length, W.short, numTxt(grp)])}</p>`;
+    else if (one && via) h += `<p class="hint">${tr('{0} · носитель {1}', [uName(k, i0), carrierOf(n, via, i0) + 1])}</p>`;
+    if (!tb) h += `<div class="cat-h">${tr('Маршрут')}</div><p class="hint">${tr('{0}; точки маршрута — внутри района (белый круг). Коснитесь карты — точки (до 3), от края к цели. Точек: <b>{1}</b>. Без маршрута — прямо к цели со своей стороны.', [W.uav ? tr('Дроны входят с края района (голубой круг)') : tr('Ракеты пускаются с рубежа {0} за краем района (оранжевый круг)', [via ? CARRIERS[via].name : tr('носителя')]), sc.pts ? sc.pts.length : u.pts ? u.pts.length : 0])}</p>
+      <div class="cat-h">${tr('Высота полёта')}</div>${segH('alt', sc.alt ?? '', ALTS)}
+      <p class="hint">${tr('Своя — {0} м{1}: РЛС видят поздно, но над городом — пушки и ПЗРК. 3 км — дальние ЗРК видят издалека, зато не достают пушки и ПЗРК.', [W.alt, W.uav ? '' : tr(', огибая дома')])}</p>`;
+    h += `<div class="cat-h">${tr('Время пуска')}</div><div>${tr('Пуск: <b style="color:#fde68a">{0}</b> от начала боя{1}', [t0 === t1 ? fmtT(t0) : `${fmtT(t0)}–${fmtT(t1)}`, wave ? '' : ` ${tr('· у цели ≈ <b>{0}</b>', [fmtT(Math.max(...(one ? [i0] : grp).map(arrOf)))])}`])}</div>
+      <div class="seg">${STEPS.map((d) => `<button data-a="tstep" data-v="${d}">${tr('{0}{1} с', [d > 0 ? '+' : '−', Math.abs(d)])}</button>`).join('')}${wave ? `<button data-a="now">${tr('Пуск сейчас')}</button>` : ''}</div>
+      <p class="hint">${tb ? tr('Баллистике ждать не страшно: пусковая за городом, пуск — в любой момент до 15 мин.') : W.uav ? tr('Дроны можно выпустить в любой момент до 10 мин.') : tr('Носителю нужно {0}, чтобы долететь до рубежа пуска; долго ходить у района ему нельзя: пуск не позже {1}, а от первого его пуска до последнего — не больше {2}.', [fmtT(D.tmin), fmtT(D.tmax), fmtT(CARRIER_WAIT)])}${!one && grp.length > 1 ? tr(' Сдвиг — для всех сразу, порядок сохраняется.') : ''}</p>`;
+    if (one) h += `<div class="cat-h">${tr('Цель')}</div><div>${tkeyOf(k, i0) ? `«${tName(tkeyOf(k, i0))}»` : tr('без цели (поровну по целям)')}</div><div class="dact"><button class="btn alt" data-a="repick">${tr('Перенести на другую цель')}</button></div>${st.pick ? `<p class="hint">${tr('<b>Коснитесь новой цели на карте</b> (объект или засечённый ЗРК) или «ПВО противника»:')} <button class="btn alt mini2" data-a="pickSam">${tr('ПВО противника')}</button></p>` : ''}`;
+    h += `<div class="dact">${tb ? '' : `<button class="btn alt" data-a="rclear">${tr('Сбросить маршрут')}</button>`}${one && all.length > 1 ? `<button class="btn alt" data-a="ureset">${tr('Как у всех здесь')}</button>` : ''}<button class="btn" data-a="rdone">${tr('Готово')}</button></div>`;
     setSide(h);
   }
   function renderAtkPlan() {
@@ -626,27 +628,27 @@ export function createDefense(C) {
     if (st.edKey) return renderTypeEd();
     if (st.tsel) return renderTgtCard();
     const left = st.budget - planCost(), sk = attSide() === 'east' ? 'scout_e' : 'scout';
-    let h = `<h3>План волны${st.net ? ` · раунд ${st.net.battle.round}/${st.net.battle.rounds}${st.net.room && st.net.room.left != null ? ` · ${st.net.room.left} с` : ''}` : ''}</h3><div>Очки угрозы: <b style="color:#fde68a">${left}</b> из ${st.budget}</div>`;
-    h += `<div class="dcard"><div class="nm"><b>${AG[sk].short} ×1</b><span>разведчик: без боевой части, бесплатно — засекает ПВО, летит сам с начала боя</span></div></div>`;
+    let h = `<h3>${tr('План волны{0}', [st.net ? tr(' · раунд {0}/{1}{2}', [st.net.battle.round, st.net.battle.rounds, st.net.room && st.net.room.left != null ? tr(' · {0} с', [st.net.room.left]) : '']) : ''])}</h3><div>${tr('Очки угрозы: <b style="color:#fde68a">{0}</b> из {1}', [left, st.budget])}</div>`;
+    h += `<div class="dcard"><div class="nm"><b>${AG[sk].short} ×1</b><span>${tr('разведчик: без боевой части, бесплатно — засекает ПВО, летит сам с начала боя')}</span></div></div>`;
     h += targetRows();
-    h += `<p class="hint">${planCost() ? '' : '<b>Соберите волну сами:</b> '}коснитесь объекта на карте — откроется его наряд: «+» покупает единицу сразу на эту цель, там же у каждой единицы — маршрут, высота и время пуска. Номера единиц («Калибр 3») — те же на карте. Где ПВО противника — заранее неизвестно.</p>
-      ${st.net ? netAllies() + `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button><p class="hint">Волна стартует, когда все готовы или кончится время подготовки. Пустой план — волны от вас не будет.</p>`
-        : `<button class="btn" data-a="go" ${planCost() > 0 && left >= 0 && tKeys().length ? '' : 'disabled'}>ПУСК</button>`}`;
+    h += `<p class="hint">${tr('{0}коснитесь объекта на карте — откроется его наряд: «+» покупает единицу сразу на эту цель, там же у каждой единицы — маршрут, высота и время пуска. Номера единиц («Калибр 3») — те же на карте. Где ПВО противника — заранее неизвестно.', [planCost() ? '' : `<b>${tr('Соберите волну сами:')}</b> `])}</p>
+      ${st.net ? netAllies() + `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? tr('Готов ✓ (снять)') : tr('ГОТОВ')}</button><p class="hint">${tr('Волна стартует, когда все готовы или кончится время подготовки. Пустой план — волны от вас не будет.')}</p>`
+        : `<button class="btn" data-a="go" ${planCost() > 0 && left >= 0 && tKeys().length ? '' : 'disabled'}>${tr('ПУСК')}</button>`}`;
     setSide(h);
   }
   function multiDefHint() {
     const comp = st.opts.comp || COMBINED[attSide()][C.setup.era] || [], tbm = comp.filter(([k]) => AG[k].kind === 'tbm'), abm = Object.entries(SAM).filter(([, s]) => s.abm && s.side === dside() && s.era <= C.setup.era);
-    return `<p class="hint">Ожидается: ${comp.filter(([k]) => !AG[k].recon).map(([k, n, , v]) => `${AG[k].short} ×${n}${v ? ` (${CARRIERS[v].name})` : ''}`).join(', ')}.</p>` +
-      (tbm.length ? `<p class="hint"><b>Баллистика</b> приходит последней. Её сбивают только ${abm.length ? abm.map(([, s]) => s.short).join(', ') : '— в вашей эпохе нечем'} — и только на снижении, в своей зоне. Сохраните им ракеты: не тратьте на дроны и ложные цели.</p>` : '');
+    return `<p class="hint">${tr('Ожидается: {0}.', [comp.filter(([k]) => !AG[k].recon).map(([k, n, , v]) => `${AG[k].short} ×${n}${v ? ` (${CARRIERS[v].name})` : ''}`).join(', ')])}</p>` +
+      (tbm.length ? `<p class="hint">${tr('<b>Баллистика</b> приходит последней. Её сбивают только {0} — и только на снижении, в своей зоне. Сохраните им ракеты: не тратьте на дроны и ложные цели.', [abm.length ? abm.map(([, s]) => s.short).join(', ') : tr('— в вашей эпохе нечем')])}</p>` : '');
   }
   function tbmPanel() { // в волне: летящая баллистика и кто её может перехватить
     const tb = C.S.wpns.filter((w) => w.ev && !w.dead && w.W.kind === 'tbm' && (!w.decoy || C.MODE().markers));
     if (!tb.length) return '';
     const abm = C.S.units.filter((u) => !u.dead && u.S.abm);
-    return `<div class="dcard on" style="border-color:#ef4444"><div class="nm"><b style="color:#fca5a5">Баллистика: ${tb.length}</b><span>до падения ${Math.min(...tb.map((w) => Math.ceil(w.T - w.t)))} с · сбить можно только на снижении</span></div></div>` +
-      (atk() ? '' : `<p class="hint">${abm.length ? abm.map((u) => `${u.S.short}: ${!u.emit ? 'РЛС выключена!' : u.reloadT > 0 ? `перезарядка ${Math.ceil(u.reloadT)} с` : `ракет ${u.ammo}`}`).join(' · ') : 'Противоракетных комплексов нет — баллистику не сбить.'}</p>`);
+    return `<div class="dcard on" style="border-color:#ef4444"><div class="nm"><b style="color:#fca5a5">${tr('Баллистика: {0}', [tb.length])}</b><span>${tr('до падения {0} с · сбить можно только на снижении', [Math.min(...tb.map((w) => Math.ceil(w.T - w.t)))])}</span></div></div>` +
+      (atk() ? '' : `<p class="hint">${abm.length ? abm.map((u) => `${u.S.short}: ${!u.emit ? tr('РЛС выключена!') : u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('ракет {0}', [u.ammo])}`).join(' · ') : tr('Противоракетных комплексов нет — баллистику не сбить.')}</p>`);
   }
-  function watchBtns() { return `<div class="dact"><button class="btn alt" data-a="watch">Смотреть ▶</button>${st.net ? '' : `<button class="btn alt" data-a="speed">Время ×${st.timeK === 1 ? 4 : 1}</button>`}</div>`; }
+  function watchBtns() { return `<div class="dact"><button class="btn alt" data-a="watch">${tr('Смотреть ▶')}</button>${st.net ? '' : `<button class="btn alt" data-a="speed">${tr('Время ×{0}', [st.timeK === 1 ? 4 : 1])}</button>`}</div>`; }
   function renderSide() {
     const S = C.S; if (!S) return;
     if (st.net && st.multi && st.phase === 'debrief') return renderNetRes();
@@ -658,47 +660,47 @@ export function createDefense(C) {
     if (atk() && st.phase === 'wave' && st.tsel) return renderTgtCard();
     if (atk() && st.phase === 'wave') {
       const ev = C.ev, r = st.mres;
-      h += `<h3>Волна идёт</h3><div>Пущено <b>${r.launched}</b> · сбито <b>${r.down}</b> · попаданий <b>${r.hits}</b></div><div>Цели разрушены на <b>${Math.round((1 - targetsValue()) * 100)}%</b></div>`;
-      if (ev) for (const a of ev.carriers) h += `<div class="dcard"><div class="nm"><b>${a.carrierName}</b><span>${a.dead ? 'сбит' : a.out ? 'ушёл' : a.phase === 'wait' ? 'на подлёте к рубежу пуска' : a.salvo.length ? `пуск: осталось ${a.salvo.length}` : 'уходит'}</span></div></div>`;
-      if (ev) h += `<div class="cat-h">Наряд (можно менять) · очки угрозы: ${st.budget - planCost()}</div>` + targetRows() + '<p class="hint">Коснитесь цели (объекта или засечённого ЗРК) — её наряд: докупить, перенацелить; у ещё не пущенных единиц — время («Пуск сейчас»), маршрут, высота.</p>';
-      h += tbmPanel() + watchBtns() + '<p class="hint">«Ход волны» слева — что летит, что будет и когда; «Смотреть» и «Ждать» — камера к событию. Коснитесь ракеты или носителя на карте — камера за ним. Синие — ваши' + (st.net ? ', фиолетовые — союзников' : '') + ', красные — засечённые комплексы ПВО (жёлтый круг — РЛС излучает, «ПУСК» — стреляет).</p>';
+      h += `<h3>${tr('Волна идёт')}</h3><div>${tr('Пущено <b>{0}</b> · сбито <b>{1}</b> · попаданий <b>{2}</b>', [r.launched, r.down, r.hits])}</div><div>${tr('Цели разрушены на <b>{0}%</b>', [Math.round((1 - targetsValue()) * 100)])}</div>`;
+      if (ev) for (const a of ev.carriers) h += `<div class="dcard"><div class="nm"><b>${a.carrierName}</b><span>${a.dead ? tr('сбит') : a.out ? tr('ушёл') : a.phase === 'wait' ? tr('на подлёте к рубежу пуска') : a.salvo.length ? tr('пуск: осталось {0}', [a.salvo.length]) : tr('уходит')}</span></div></div>`;
+      if (ev) h += `<div class="cat-h">${tr('Наряд (можно менять) · очки угрозы: {0}', [st.budget - planCost()])}</div>` + targetRows() + `<p class="hint">${tr('Коснитесь цели (объекта или засечённого ЗРК) — её наряд: докупить, перенацелить; у ещё не пущенных единиц — время («Пуск сейчас»), маршрут, высота.')}</p>`;
+      h += tbmPanel() + watchBtns() + `<p class="hint">${tr('«Ход волны» слева — что летит, что будет и когда; «Смотреть» и «Ждать» — камера к событию. Коснитесь ракеты или носителя на карте — камера за ним. Синие — ваши')}` + (st.net ? tr(', фиолетовые — союзников') : '') + `${tr(', красные — засечённые комплексы ПВО (жёлтый круг — РЛС излучает, «ПУСК» — стреляет).')}</p>`;
       setSide(h); return;
     }
     if (st.phase === 'plan') {
-      h += `<h3>Расстановка · ${st.multi ? 'Мульти-волна' : `волна ${st.wave + 1}/${st.waves}`}</h3><div>Очки обороны: <b style="color:#fde68a">${st.budget}</b></div>`;
+      h += `<h3>${tr('Расстановка · {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}/{1}', [st.wave + 1, st.waves])])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>`;
       if (st.multi) h += multiDefHint();
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км · ${unitStatus(u)}</span></div></div>
-          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">Продать +${Math.round((u.paid || SAM_COST[u.key]) * 0.7)}</button>
-          ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? 'Засада: вкл' : 'Засада: выкл'}</button>` : ''}${st.moving ? '' : '<button class="btn alt" data-a="desel">Готово</button>'}</div>${moveHint()}`;
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>
+          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round((u.paid || SAM_COST[u.key]) * 0.7)])}</button>
+          ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? tr('Засада: вкл') : tr('Засада: выкл')}</button>` : ''}${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
       }
-      h += placeCard() + '<div class="cat-h">Купить</div>';
+      h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
       const al = st.opts.allow, cat = Object.entries(SAM);
       if (al) cat.sort(([a], [b]) => al.has(b) - al.has(a)); // урок: нужное — сверху
       for (const [k, s] of cat) {
         if (s.side !== dside() || s.era > C.setup.era) continue;
         const c = SAM_COST[k], shut = st.opts.allow && !st.opts.allow.has(k), lk = lockedSam(k); // урок: покупать только то, о чём он
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${shut ? 'не в этом уроке' : `${SAM_TYPE[s.type]} · ${(s.rmax / 1000).toFixed(1)} км / ${(s.hmax / 1000).toFixed(1)} км`}</span></div><span class="pr">${c}</span></div>`;
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span></div><span class="pr">${c}</span></div>`;
       }
-      h += `<p class="hint">${st.placing ? (IS_TOUCH ? 'Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.' : 'Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.') : 'Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса — тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») и продажа.'}</p>`;
-      h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>В БОЙ — ${st.multi ? 'Мульти-волна' : `волна ${st.wave + 1}`}</button>`;
+      h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.') : tr('Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса — тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») и продажа.')}</p>`;
+      h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>${tr('В БОЙ — {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}', [st.wave + 1])])}</button>`;
     } else if (st.phase === 'wave') {
       const air = C.raid.planes.filter((a) => !a.dead && !a.out).length + C.S.wpns.filter((w) => w.ev && !w.dead && (C.MODE().markers || seen.has(w))).length; // и ракеты / дроны Мульти-волны, которые видит сеть
-      h += `<h3>Волна ${st.wave}/${st.waves}</h3><div>В воздухе: <b>${air}</b> · сбито: <b>${st.waveDowns}</b></div>`;
+      h += `<h3>${tr('Волна {0}/{1}', [st.wave, st.waves])}</h3><div>${tr('В воздухе: <b>{0}</b> · сбито: <b>{1}</b>', [air, st.waveDowns])}</div>`;
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
         h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${unitStatus(u)}</span></div></div><div class="dact">
-          ${u.S.type === 'jammer' ? '' : '<button class="btn" data-a="op">Управлять</button>'}
-          ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? 'РЛС: выключить' : 'РЛС: включить'}</button>` : ''}
-          ${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? 'Огонь: свободный' : 'Огонь: по команде'}</button>`}<button class="btn alt" data-a="desel">Снять выбор</button></div>`;
-      } else h += '<p class="hint">Коснитесь комплекса: приказы и «Управлять» — сесть оператором. Красные треугольники — цели, которые видит сеть РЛС (высота над землёй, м).</p>';
+          ${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}
+          ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}
+          ${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? tr('Огонь: свободный') : tr('Огонь: по команде')}</button>`}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`;
+      } else h += `<p class="hint">${tr('Коснитесь комплекса: приказы и «Управлять» — сесть оператором. Красные треугольники — цели, которые видит сеть РЛС (высота над землёй, м).')}</p>`;
       if (C.ev) h += tbmPanel() + watchBtns();
     } else if (st.phase === 'debrief') {
       const r = st.res;
-      h += `<h3>Волна ${st.wave} отбита</h3><div class="stats" style="margin:6px 0"><div class="stt"><b>${r.downs}</b><span>сбито</span></div><div class="stt"><b>${r.leak}</b><span>ушли</span></div>
-        <div class="stt"><b>${r.lost}</b><span>потеряно ЗРК</span></div><div class="stt"><b>${Math.round(r.value * 100)}%</b><span>объекты целы</span></div></div>
-        <div>+${r.reward} очков обороны · всего очков ${st.score}</div><button class="btn" data-a="next">К расстановке — волна ${st.wave + 1}</button>`;
+      h += `<h3>${tr('Волна {0} отбита', [st.wave])}</h3><div class="stats" style="margin:6px 0"><div class="stt"><b>${r.downs}</b><span>${tr('сбито')}</span></div><div class="stt"><b>${r.leak}</b><span>${tr('ушли')}</span></div>
+        <div class="stt"><b>${r.lost}</b><span>${tr('потеряно ЗРК')}</span></div><div class="stt"><b>${Math.round(r.value * 100)}%</b><span>${tr('объекты целы')}</span></div></div>
+        <div>${tr('+{0} очков обороны · всего очков {1}', [r.reward, st.score])}</div><button class="btn" data-a="next">${tr('К расстановке — волна {0}', [st.wave + 1])}</button>`;
     }
     setSide(h);
   }
@@ -706,7 +708,7 @@ export function createDefense(C) {
     const b = e.target.closest('[data-a]'), buy = e.target.closest('[data-buy]');
     if (b && (b.dataset.a === 'pok' || b.dataset.a === 'pno')) { if (b.dataset.a === 'pok') confirmDraft(); else cancelDraft(); return; }
     if (buy && lockedSam(buy.dataset.buy)) { say(LOCK_SAY); snd.deny(); return; }
-    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (costOf(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? 'Лимит первой волны для этого класса' : 'Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
+    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (costOf(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? tr('Лимит первой волны для этого класса') : tr('Не хватает очков обороны')); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
     if (b && st.net && !(st.multi === 'atk' && b.dataset.a !== 'ready')) {
       const u = st.sel, a = b.dataset.a;
       if (a === 'ready') { st.ready = !st.ready; st.net.ready(st.ready); }
@@ -719,18 +721,18 @@ export function createDefense(C) {
       else if (a === 'hold' && u && mine(u)) { u.hold = !u.hold; st.net.send({ t: 'hold', id: u.id, on: u.hold }); }
       snd.click(); renderSide(); return;
     }
-    if (buy && st.opts.allow && !st.opts.allow.has(buy.dataset.buy)) { say(`В этом уроке — ${[...st.opts.allow].filter((k) => SAM[k] && SAM[k].side === C.setup.side).map((k) => `«${SAM[k].short}»`).join(' или ')}`, 3); snd.deny(); return; }
-    if (buy) { const k = buy.dataset.buy; if (SAM_COST[k] > st.budget) { say('Не хватает очков обороны'); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
+    if (buy && st.opts.allow && !st.opts.allow.has(buy.dataset.buy)) { say(tr('В этом уроке — {0}', [[...st.opts.allow].filter((k) => SAM[k] && SAM[k].side === C.setup.side).map((k) => `«${SAM[k].short}»`).join(tr(' или '))]), 3); snd.deny(); return; }
+    if (buy) { const k = buy.dataset.buy; if (SAM_COST[k] > st.budget) { say(tr('Не хватает очков обороны')); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
     if (!b) return;
     const u = st.sel, a = b.dataset.a;
     if (a === 'winc') { // докупка во время волны: копится 1,5 с (пачка — на одном носителе), потом — в расписание
-      const k = b.dataset.k; if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; } if (planCost() + (THREAT[k] ?? 3) > st.budget) { say('Не хватает очков угрозы'); snd.deny(); return; }
+      const k = b.dataset.k; if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; } if (planCost() + (THREAT[k] ?? 3) > st.budget) { say(tr('Не хватает очков угрозы')); snd.deny(); return; }
       st.plan.n[k] = (st.plan.n[k] || 0) + 1; st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 1.5; snd.click(); renderSide(); return;
     }
     if (a === 'inc' || a === 'dec') { // состав удара
       const k = b.dataset.k, n = st.plan.n[k] || 0;
       if (a === 'inc' && lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; }
-      if (a === 'inc' && planCost() + (THREAT[k] ?? 3) > st.budget) { say('Не хватает очков угрозы'); snd.deny(); return; }
+      if (a === 'inc' && planCost() + (THREAT[k] ?? 3) > st.budget) { say(tr('Не хватает очков угрозы')); snd.deny(); return; }
       st.plan.n[k] = Math.max(0, n + (a === 'inc' ? 1 : -1)); snd.click(); renderSide(); return;
     }
     if (a === 'ed') { st.edKey = b.dataset.k; st.edUnit = null; st.tsel = null; st.pick = null; cfgOf(st.edKey); snd.click(); renderSide(); return; }
@@ -739,7 +741,7 @@ export function createDefense(C) {
     if (a === 'tclose') { st.tsel = null; snd.click(); renderSide(); return; }
     if (a === 'tinc' || a === 'tdec') { const k = b.dataset.k, ok = a === 'tinc' ? addTo(st.tsel, k) : removeFrom(st.tsel, k); if (ok) { snd.click(); afterEdit(); } else if (a === 'tdec') snd.deny(); return; }
     if (a === 'spread') { spread(); snd.click(); afterEdit(); return; }
-    if (a === 'repick') { st.pick = { k: st.edKey, i: st.edUnit }; say('Коснитесь новой цели на карте или «ПВО противника»', 3); snd.click(); renderSide(); return; }
+    if (a === 'repick') { st.pick = { k: st.edKey, i: st.edUnit }; say(tr('Коснитесь новой цели на карте или «ПВО противника»'), 3); snd.click(); renderSide(); return; }
     if (a === 'pickSam' && st.pick) { setTkey(st.pick.k, st.pick.i, 'sam'); st.pick = null; st.tsel = 'sam'; snd.click(); afterEdit(); return; }
     if (a === 'unit') { st.edUnit = +b.dataset.v < 0 ? null : +b.dataset.v; snd.click(); renderSide(); return; }
     if (a === 'alt') { const v = b.dataset.v ? +b.dataset.v : null; scopeSet((q) => { q.alt = v; }); snd.click(); afterEdit(); return; }
@@ -752,7 +754,7 @@ export function createDefense(C) {
       const k = st.edKey, n = st.plan.n[k], c = cfgOf(k), ev = C.ev; if (!ev) return;
       const idx = st.edUnit !== null ? [st.edUnit] : edGrp() || Array.from({ length: n }, (_, i) => i);
       let j = 0; for (const i of idx) { const f = ev.unitInfo(k, i); if (f.launched) continue; c.units[i] = c.units[i] || {}; c.units[i].t = Math.ceil(f.earliest + j++ * (AG[k].kind === 'tbm' ? 3 : 2)); }
-      afterEdit(); snd.click(); say('Пуск — как только сможет', 2); return;
+      afterEdit(); snd.click(); say(tr('Пуск — как только сможет'), 2); return;
     }
     if (a === 'tstep') { // время пуска: от текущего, в пределах типа; у носителя — окно его пусков не шире CARRIER_WAIT
       const k = st.edKey, D = planDefaults(planComp(), st.targets, st.plan.cfg, st.net ? LIM_ON : undefined)[k]; if (!D) return;
@@ -767,7 +769,7 @@ export function createDefense(C) {
           L.push([i, lo, hi, cur]);
         }
         let dd = d; for (const [, lo, hi, cur] of L) dd = d > 0 ? Math.min(dd, hi - cur) : Math.max(dd, lo - cur);
-        if (!L.length || (d > 0 ? dd <= 0 : dd >= 0)) { say(d > 0 ? 'Позже нельзя: носитель не ждёт, а у дронов и баллистики — свой предел' : 'Раньше нельзя', 3); snd.deny(); return; }
+        if (!L.length || (d > 0 ? dd <= 0 : dd >= 0)) { say(d > 0 ? tr('Позже нельзя: носитель не ждёт, а у дронов и баллистики — свой предел') : tr('Раньше нельзя'), 3); snd.deny(); return; }
         const c = cfgOf(k); for (const [i, , , cur] of L) (c.units[i] = c.units[i] || {}).t = cur + dd;
         snd.click(); afterEdit(); return;
       }
@@ -775,10 +777,10 @@ export function createDefense(C) {
       if (st.phase === 'wave' && C.ev) { const f = st.edUnit !== null ? C.ev.unitInfo(k, st.edUnit) : null; lo = Math.max(lo, Math.ceil(f && !f.launched ? f.earliest : C.ev.t + 1)); if (f && !f.launched) D.units[st.edUnit].t = Math.round(f.t); }
       if (st.edUnit !== null && via && CARRIERS[via]) { // остальные ракеты этого носителя
         const j = carrierOf(n, via, st.edUnit), oth = D.units.filter((q, i) => i !== st.edUnit && q.carrier === j).map((q) => q.t);
-        if (oth.length) { lo = Math.max(lo, Math.max(...oth) - CARRIER_WAIT); hi = Math.min(hi, Math.min(...oth) + CARRIER_WAIT); why = ` — носитель не ждёт у района больше ${fmtT(CARRIER_WAIT)}`; }
+        if (oth.length) { lo = Math.max(lo, Math.max(...oth) - CARRIER_WAIT); hi = Math.min(hi, Math.min(...oth) + CARRIER_WAIT); why = tr(' — носитель не ждёт у района больше {0}', [fmtT(CARRIER_WAIT)]); }
       }
       const cur = st.edUnit === null ? D.tType : D.units[st.edUnit].t, t = Math.min(hi, Math.max(lo, cur + d));
-      if (t === cur) { say(d > 0 ? `Позже нельзя: не позже ${fmtT(hi)}${hi < D.tmax ? why : ''}` : `Раньше нельзя: не раньше ${fmtT(lo)}${lo > D.tmin ? why : ''}`, 3); snd.deny(); return; }
+      if (t === cur) { say(d > 0 ? tr('Позже нельзя: не позже {0}{1}', [fmtT(hi), hi < D.tmax ? why : '']) : tr('Раньше нельзя: не раньше {0}{1}', [fmtT(lo), lo > D.tmin ? why : '']), 3); snd.deny(); return; }
       scopeCfg().t = t; snd.click(); afterEdit(); return;
     }
     if (a === 'rclear') { if (st.edUnit === null && !edGrp()) scopeCfg().pts = []; else scopeSet((q) => { q.pts = undefined; }); snd.click(); afterEdit(); return; }
@@ -818,7 +820,7 @@ export function createDefense(C) {
     else { const kn = C.diff ? C.diff.knobs('defense', C.setup.diff) : null; C.raid.spawnWave(Math.max(2, Math.round(WAVE_N[Math.min(st.wave, WAVE_N.length) - 1] * (kn ? kn.wave : 1))), st.wave, st.targets); } // сложность: размер волны
     for (const u of C.S.units) u.cov = null;
     snd.alarm();
-    say(atk() ? `Волна пошла: разведчик над городом, остальное — по вашему расписанию («Ход волны» слева). Цели: ${st.targets.map((o) => o.name).join(', ')}` : C.ev ? `Волна ${st.wave}: ${COMBINED_NAME.toLowerCase()} — разведка и дроны, затем крылатые ракеты, в конце баллистика. Цели: ${st.targets.map((o) => o.name).join(', ')}` : `Волна ${st.wave}: цели — ${st.targets.map((o) => o.name).join(', ')}`, 6);
+    say(atk() ? tr('Волна пошла: разведчик над городом, остальное — по вашему расписанию («Ход волны» слева). Цели: {0}', [st.targets.map((o) => o.name).join(', ')]) : C.ev ? tr('Волна {0}: {1} — разведка и дроны, затем крылатые ракеты, в конце баллистика. Цели: {2}', [st.wave, COMBINED_NAME.toLowerCase(), st.targets.map((o) => o.name).join(', ')]) : tr('Волна {0}: цели — {1}', [st.wave, st.targets.map((o) => o.name).join(', ')]), 6);
     on('waveStart', st.wave); renderSide();
   }
   // ценность целей удара, что осталась (0…1)
@@ -838,8 +840,8 @@ export function createDefense(C) {
     st.score += Math.round((st.waveDowns * 150 + value * 300) * (C.setup.diff === 'real' ? 1.5 : 1));
     st.res = { downs: st.waveDowns, leak: st.waveLeak, lost: lost.length, value, reward };
     on('waveEnd', st.wave, st.res);
-    if (value <= 0.25) return finish('Потеряно 75 % ценности военных объектов и больше', false);
-    if (st.wave >= st.waves) return finish(`Все ${st.waves} волн отбиты`, true);
+    if (value <= 0.25) return finish(tr('Потеряно 75 % ценности военных объектов и больше'), false);
+    if (st.wave >= st.waves) return finish(tr('Все {0} волн отбиты', [st.waves]), true);
     st.phase = 'debrief'; st.sel = null; renderSide(); snd.good();
   }
   // «Мульти-волна»: итог по целям удара — разрушено половина ценности и больше — удар удался, иначе — ПВО отстояла
@@ -854,25 +856,25 @@ export function createDefense(C) {
     if (st.opts.noEnd) return;
     if (atk()) {
       const win = dmg >= 0.5, score = Math.round((dmg * 1000 + st.lostUnits * 60) * real);
-      C.showEnd({ title: win ? 'Волна прорвалась' : 'Волна отражена', reason: `Цели разрушены на ${Math.round(dmg * 100)} % (нужно 50 %)`, win,
-        stats: [[r.launched, 'пущено'], [r.down, 'сбито ПВО'], [`${Math.round(dmg * 100)}%`, 'цели разрушены'], [score, 'очков']],
-        note: `Уничтожено комплексов ПВО: ${st.lostUnits}. Носителей потеряно: ${r.carriers}. ${real > 1 ? 'Реализм — очки ×1,5.' : ''}` });
+      C.showEnd({ title: win ? tr('Волна прорвалась') : tr('Волна отражена'), reason: tr('Цели разрушены на {0} % (нужно 50 %)', [Math.round(dmg * 100)]), win,
+        stats: [[r.launched, tr('пущено')], [r.down, tr('сбито ПВО')], [`${Math.round(dmg * 100)}%`, tr('цели разрушены')], [score, tr('очков')]],
+        note: tr('Уничтожено комплексов ПВО: {0}. Носителей потеряно: {1}. {2}', [st.lostUnits, r.carriers, real > 1 ? tr('Реализм — очки ×1,5.') : '']) });
       C.menu.record('multi', score, {}); claim({ mwObj: Math.round(dmg * 50), mwSam: st.lostUnits, win }, usedStrikes()); return;
     }
     st.lostUnits = C.S.units.filter((u) => u.dead).length;
     const win = dmg < 0.5, score = Math.round(((1 - dmg) * 1000 + st.downs * 40) * real);
-    C.showEnd({ title: win ? 'Волна отражена' : 'Волна прорвалась', reason: `Цели разрушены на ${Math.round(dmg * 100)} % (поражение — от 50 %)`, win,
-      stats: [[st.downs, 'сбито'], [`${Math.round((1 - dmg) * 100)}%`, 'цели целы'], [st.lostUnits, 'потеряно ЗРК'], [score, 'очков']],
-      note: real > 1 ? 'Реализм — очки ×1,5.' : '' });
+    C.showEnd({ title: win ? tr('Волна отражена') : tr('Волна прорвалась'), reason: tr('Цели разрушены на {0} % (поражение — от 50 %)', [Math.round(dmg * 100)]), win,
+      stats: [[st.downs, tr('сбито')], [`${Math.round((1 - dmg) * 100)}%`, tr('цели целы')], [st.lostUnits, tr('потеряно ЗРК')], [score, tr('очков')]],
+      note: real > 1 ? tr('Реализм — очки ×1,5.') : '' });
     C.menu.record('multi', score, {}); claim({ mwInt: st.downs * 3, win }, usedSams()); // перехват: ≈ 3 очка угрозы на цель
   }
   function finish(why, win) {
     if (st.over) return; st.over = true; st.win = win;
     if (st.view === 'op') leaveOp();
     if (st.opts.noEnd) return;
-    C.showEnd({ title: win ? 'Город отстоял' : win === false ? 'Оборона прорвана' : 'Бой завершён', reason: why, win,
-      stats: [[st.downs, 'самолётов сбито'], [`${st.wave}/${st.waves}`, 'волн'], [`${Math.round(cityValue() * 100)}%`, 'объекты целы'], [st.score, 'очков']],
-      note: `Потеряно комплексов: ${st.lostUnits}. ${C.setup.diff === 'real' ? 'Реализм — очки ×1,5.' : ''}` });
+    C.showEnd({ title: win ? tr('Город отстоял') : win === false ? tr('Оборона прорвана') : tr('Бой завершён'), reason: why, win,
+      stats: [[st.downs, tr('самолётов сбито')], [`${st.wave}/${st.waves}`, tr('волн')], [`${Math.round(cityValue() * 100)}%`, tr('объекты целы')], [st.score, tr('очков')]],
+      note: tr('Потеряно комплексов: {0}. {1}', [st.lostUnits, C.setup.diff === 'real' ? tr('Реализм — очки ×1,5.') : '']) });
     C.menu.record('defense', st.score, { waves: win ? st.waves : st.wave - 1 });
     const held = win ? st.waves : st.wave - 1; claim({ downs: st.downs, waves: Array.from({ length: Math.max(0, held) }, (_, i) => i + 1), win: !!win }, usedSams());
   }
@@ -881,20 +883,20 @@ export function createDefense(C) {
   const ppi = $('ppi'), pc = ppi.getContext('2d');
   const op = { yaw: 0, pitch: 0.1, fov: 60, dragging: null, msg: '', msgT: 0, follow: true, fireHeld: false,
     cam: 'op', oy: 0, op: 0.3, od: 1, orbit: false, R: 12, m: null, mEnd: 0, mLast: new THREE.Vector3() }; // камеры: оператор / снаружи / за ракетой
-  const CAMS = { op: 'вид оператора', ext: 'снаружи — пусковая от третьего лица', chase: 'за ракетой' };
+  const CAMS = { op: tr('вид оператора'), ext: tr('снаружи — пусковая от третьего лица'), chase: tr('за ракетой') };
   // у ПЗРК вида снаружи нет (модели стрелка нет): оператор ↔ за ракетой
   const manpads = (u) => !!(u && u.S.type === 'ir' && u.S.hp <= 15);
   // «БИНОКЛЬ»: только при захвате — камера с сильным увеличением прямо на захваченную цель (видно, какой стороной она к вам
   // и как маневрирует — важно для тепловой ГСН). Захват сорвался или цель сменилась — сам выключается, нужен новый захват
   function binoToggle() {
     const u = st.op; if (!u) return;
-    if (op.bino) { binoOff('Бинокль выключен'); snd.click(); return; }
-    if (!u.track || u.track.dead) { opSay('Бинокль — только когда цель захвачена'); snd.deny(); return; }
+    if (op.bino) { binoOff(tr('Бинокль выключен')); snd.click(); return; }
+    if (!u.track || u.track.dead) { opSay(tr('Бинокль — только когда цель захвачена')); snd.deny(); return; }
     op.bino = true; op.binoT = u.track; op.binoCam = op.cam; op.cam = 'op'; op.bf = 0; op.bDir = null; $('opBino').classList.add('on'); $('opCam').classList.remove('on'); snd.click(); on('bino', u);
   }
   function binoOff(msg) { if (!op.bino) return; op.bino = false; op.cam = op.binoCam || 'op'; $('opBino').classList.remove('on'); $('opCam').classList.toggle('on', op.cam !== 'op'); if (msg) opSay(msg); }
   const binoLen = (a) => (a.W ? (a.W.vis ? a.W.vis.L : 5) : a.M ? a.M.L : a.len || 17);
-  function cycleCam() { const LF = st.op && LNCH[st.op.key]; if (LF && LF.fp) { opSay('У этой установки — только вид оператора'); snd.deny(); return; } if (op.bino) binoOff(); op.cam = op.cam === 'op' ? (manpads(st.op) ? 'chase' : 'ext') : op.cam === 'ext' ? 'chase' : 'op'; op.orbit = false; op.od = 1; opSay('Камера: ' + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
+  function cycleCam() { const LF = st.op && LNCH[st.op.key]; if (LF && LF.fp) { opSay(tr('У этой установки — только вид оператора')); snd.deny(); return; } if (op.bino) binoOff(); op.cam = op.cam === 'op' ? (manpads(st.op) ? 'chase' : 'ext') : op.cam === 'ext' ? 'chase' : 'op'; op.orbit = false; op.od = 1; opSay(tr('Камера: ') + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
   const DIR = V3(), TMP = V3(), LEAD = V3(), EYE = V3();
   function enterOp(u) {
     if (st.op) leaveOp();
@@ -907,7 +909,7 @@ export function createDefense(C) {
     document.body.classList.remove('dmap'); document.body.classList.add('oper');
     $('opMethod').style.display = u.S.type === 'command' ? 'flex' : 'none';
     $('opRadar').style.display = u.S.radar ? 'flex' : 'none';
-    $('opFire').title = u.S.type === 'guns' ? 'Огонь' : 'Пуск'; ofb.s = ''; ofb.cool = 0; ofb.ammo = u.ammo;
+    $('opFire').title = u.S.type === 'guns' ? tr('Огонь') : tr('Пуск'); ofb.s = ''; ofb.cool = 0; ofb.ammo = u.ammo;
     on('op', u); snd.click();
   }
   function leaveOp() {
@@ -926,8 +928,8 @@ export function createDefense(C) {
   // класс отметки по траектории, скорости и ЭПР: «Аркада» — сразу, «Реализм» — после ~2,5 с наблюдения (до этого «?»).
   // Ложная цель для РЛС — самолёт (в этом её смысл); летящее оружие вообще видят только комплексы с antiMun
   const obs = new Map(); // цель → секунд под наблюдением оператора
-  const CLS = { bomb: 'БОМБА', lgb: 'БОМБА', tvb: 'БОМБА', gps: 'БОМБА', agm: 'УР', arm: 'ПРР', cruise: 'КР' };
-  const clsOf = (a) => (a.isMun ? CLS[a.W.kind] || 'ОРУЖИЕ' : 'САМОЛЁТ');
+  const CLS = { bomb: tr('БОМБА'), lgb: tr('БОМБА'), tvb: tr('БОМБА'), gps: tr('БОМБА'), agm: tr('УР'), arm: tr('ПРР'), cruise: tr('КР') };
+  const clsOf = (a) => (a.isMun ? CLS[a.W.kind] || tr('ОРУЖИЕ') : tr('САМОЛЁТ'));
   const clsKnown = (a) => C.MODE().markers || (obs.get(a) || 0) > 2.5;
   function nearestTarget(u) { let b = null, bd = 1e12; for (const a of opT(st.op)) { const d = a.pos.distanceToSquared(u.pos); if (d < bd) { bd = d; b = a; } } return b; }
   // кого видит этот комплекс (РЛС — если излучает; иначе глаз/оптика)
@@ -935,7 +937,7 @@ export function createDefense(C) {
   function cycleTarget() {
     const u = st.op; if (!u) return;
     const list = opT(st.op).filter((a) => sees(u, a)).sort((a, b) => a.pos.distanceTo(u.pos) - b.pos.distanceTo(u.pos));
-    if (!list.length) { opSay('Нет целей в обзоре'); return; }
+    if (!list.length) { opSay(tr('Нет целей в обзоре')); return; }
     const i = list.indexOf(u.desig); designate(list[(i + 1) % list.length]);
   }
   function designate(a) {
@@ -949,7 +951,7 @@ export function createDefense(C) {
     if (u.S.type === 'guns') { op.fireHeld = down; u.gunFire = down; return; }
     if (!down) return;
     const why = C.S.launch(u);
-    if (why) { opSay(why); snd.deny(); } else { opSay('ПУСК!'); on('launch', u); }
+    if (why) { opSay(why); snd.deny(); } else { opSay(tr('ПУСК!')); on('launch', u); }
   }
   // касание и перетаскивание в 3D-виде: тянуть — поворот, касание отметки цели — назначить
   {
@@ -984,7 +986,7 @@ export function createDefense(C) {
         const dx = (a.pos.x - u.pos.x) / R * r.width / 2, dz = (a.pos.z - u.pos.z) / R * r.width / 2, dd = Math.hypot(cx + dx - e.clientX, cy + dz - e.clientY);
         if (dd < bd) { bd = dd; best = a; }
       }
-      if (best) designate(best); else opSay('Коснитесь отметки цели');
+      if (best) designate(best); else opSay(tr('Коснитесь отметки цели'));
     });
     const btn = (id, fn) => $(id).addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
     btn('opMap', () => leaveOp());
@@ -992,7 +994,7 @@ export function createDefense(C) {
     btn('opCam', () => cycleCam());
     btn('opBino', () => binoToggle());
     btn('opRadar', () => { const u = st.op; if (u && u.S.radar) { C.S.setEmit(u, !u.emit); snd.click(); on('radar', u); } });
-    btn('opMethod', () => { const u = st.op; if (u) { u.method = u.method === 'half' ? '3t' : 'half'; snd.click(); opSay(u.method === 'half' ? 'Метод: половинное спрямление' : 'Метод: три точки'); } });
+    btn('opMethod', () => { const u = st.op; if (u) { u.method = u.method === 'half' ? '3t' : 'half'; snd.click(); opSay(u.method === 'half' ? tr('Метод: половинное спрямление') : tr('Метод: три точки')); } });
     $('opFire').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); opFire(true); });
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('opFire').addEventListener(ev, () => opFire(false));
   }
@@ -1036,7 +1038,7 @@ export function createDefense(C) {
     if (u.reloadT > (u.reload0 || 0)) u.reload0 = u.reloadT; // онлайн: полное время — по наибольшему увиденному
     const cool = Math.max(u.cool || 0, ofb.cool), acq = (S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1);
     let p, c, txt;
-    if (u.reloadT > 0) { p = 1 - u.reloadT / Math.max(1, u.reload0 || u.reloadT); c = 'rgba(232,176,74,.32)'; txt = `${Math.ceil(u.reloadT)}с`; }
+    if (u.reloadT > 0) { p = 1 - u.reloadT / Math.max(1, u.reload0 || u.reloadT); c = 'rgba(232,176,74,.32)'; txt = tr('{0}с', [Math.ceil(u.reloadT)]); }
     else {
       txt = guns ? `${Math.round(100 * u.ammo / S.ammo)}%` : `${Math.round(u.ammo)}/${S.ammo}`;
       if (cool > 0 && !guns) { p = 1 - cool / 1.6; c = 'rgba(239,68,68,.6)'; }
@@ -1048,7 +1050,7 @@ export function createDefense(C) {
   }
   function opHud(dt, t) {
     const u = st.op, hx = C.hx, VW = C.VW, VH = C.VH, S = u.S;
-    if (u.dead) { opSay('Комплекс уничтожен'); leaveOp(); return; }
+    if (u.dead) { opSay(tr('Комплекс уничтожен')); leaveOp(); return; }
     hx.lineWidth = 1.5; hx.font = '600 11px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center';
     // перекрестие (в виде оператора и снаружи, когда наводят камерой)
     if (op.cam === 'op' || op.extAim) hx.strokeStyle = 'rgba(255,255,255,.75)'; else hx.strokeStyle = 'rgba(0,0,0,0)'; hx.beginPath(); hx.moveTo(VW / 2 - 22, VH / 2); hx.lineTo(VW / 2 - 6, VH / 2); hx.moveTo(VW / 2 + 6, VH / 2); hx.lineTo(VW / 2 + 22, VH / 2); hx.moveTo(VW / 2, VH / 2 - 22); hx.lineTo(VW / 2, VH / 2 - 6); hx.moveTo(VW / 2, VH / 2 + 6); hx.lineTo(VW / 2, VH / 2 + 22); hx.stroke();
@@ -1063,12 +1065,12 @@ export function createDefense(C) {
       const col = a === u.track ? '#ff4d4d' : a === u.desig ? '#fde047' : mun ? '#fb923c' : vis ? '#9fffb8' : 'rgba(159,255,184,.4)';
       hx.strokeStyle = col; hx.fillStyle = col;
       const s = a === u.track ? 16 : a.isMun ? 8 : 11; hx.strokeRect(p[0] - s, p[1] - s, s * 2, s * 2);
-      if (a === u.track) hx.fillText('ЗАХВАТ', p[0], p[1] - s - 5);
+      if (a === u.track) hx.fillText(tr('ЗАХВАТ'), p[0], p[1] - s - 5);
       const name = known ? clsOf(a) : '?', key = a === u.track || a === u.desig; // назначенная — всегда своей подписью
       const g = !key && labs.find((q) => !q.key && q.name === name && Math.hypot(q.x - p[0], q.y - p[1]) < 28);
       if (g) g.n++; else labs.push({ a, name, key, x: p[0], y: p[1], s, col, n: 1 });
     }
-    for (const q of labs) { hx.fillStyle = q.col; hx.fillText(`${q.name}${q.n > 1 ? ' ×' + q.n : ''} · ${(q.a.pos.distanceTo(u.pos) / 1000).toFixed(1)} км · ${Math.round(q.a.pos.y - city.groundH(q.a.pos.x, q.a.pos.z))} м`, q.x, q.y + q.s + 12); }
+    for (const q of labs) { hx.fillStyle = q.col; hx.fillText(tr('{0}{1} · {2} км · {3} м', [q.name, q.n > 1 ? ' ×' + q.n : '', (q.a.pos.distanceTo(u.pos) / 1000).toFixed(1), Math.round(q.a.pos.y - city.groundH(q.a.pos.x, q.a.pos.z))]), q.x, q.y + q.s + 12); }
     // пушка: кружок упреждения для цели в секторе ствола
     if (S.type === 'guns' && u.gunTgt) {
       C.S.gunLead(u, u.gunTgt, LEAD); const p = C.proj(LEAD);
@@ -1079,19 +1081,19 @@ export function createDefense(C) {
       if (q === u || q.dead || mine(q) || !q.manual) continue;
       const p = C.proj(TMP.copy(q.pos).setY(q.pos.y + 7)); if (!p) continue;
       hx.strokeStyle = '#38bdf8'; hx.fillStyle = '#7dd3fc'; hx.beginPath(); hx.moveTo(p[0], p[1] + 8); hx.lineTo(p[0] - 7, p[1] - 4); hx.lineTo(p[0] + 7, p[1] - 4); hx.closePath(); hx.stroke();
-      hx.fillText(`${allyName(q.owner)} · ${q.S.short} · ${(q.pos.distanceTo(u.pos) / 1000).toFixed(1)} км`, p[0], p[1] - 10);
+      hx.fillText(tr('{0} · {1} · {2} км', [allyName(q.owner), q.S.short, (q.pos.distanceTo(u.pos) / 1000).toFixed(1)]), p[0], p[1] - 10);
     }
     // свои ракеты
     for (const m of C.S.sams) { if (m.dead || m.unit !== u) continue; const p = C.proj(m.pos); if (p) { hx.fillStyle = '#fff'; hx.beginPath(); hx.arc(p[0], p[1], 3, 0, 7); hx.fill(); } }
     // ПРР летит в этот комплекс — предупреждение
     const arm = C.S.wpns.find((w) => !w.dead && w.W.kind === 'arm' && w.target === u);
     // строка состояния
-    const tr = u.track || u.desig, d = tr ? tr.pos.distanceTo(u.pos) : 0, h = tr ? tr.pos.y - city.groundH(tr.pos.x, tr.pos.z) : 0;
-    const zone = !tr ? '' : tr.W && tr.W.kind === 'tbm' && C.S.inZone(u, tr) && (d > S.rmax || h > S.hmax) ? 'ПУСК В УПРЕЖДЕНИЕ' : d > S.rmax ? 'ДАЛЕКО' : d < S.rmin ? 'БЛИЗКО' : h > S.hmax ? 'ВЫСОКО' : h < S.hmin ? 'НИЗКО' : 'В ЗОНЕ';
-    $('opInfo').innerHTML = `${clock()}${C.auto ? '<b style="color:#86efac">АВТО</b> · ' : ''}<b>${S.name}</b> · ${SAM_TYPE[S.type]}<br>${unitStatus(u)}${S.type === 'command' ? ` · метод: ${u.method === 'half' ? 'половинное спрямление' : 'три точки'}` : ''}` +
-      (tr ? `<br>цель: ${(d / 1000).toFixed(1)} км, ${Math.round(h)} м — <b>${zone}</b>${!u.track && u.desig ? ` · захват ${Math.round(clamp(u.seeT / ((S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1)), 0, 1) * 100)}%` : ''}` : S.type === 'ir' ? '<br>наведите перекрестие на самолёт — ГСН «зарычит» и захватит' : S.type === 'guns' ? '<br>ведите ствол в жёлтый кружок упреждения и держите «ОГОНЬ»' : '<br>коснитесь отметки цели на экране или на круговом обзоре')
-      + (arm ? '<br><span class="st">⚠ ПРР ЛЕТИТ В ВАС — выключите РЛС!</span>' : '') + (op.msgT > 0 ? `<br><span class="st">${op.msg}</span>` : '');
-    $('opRadar').classList.toggle('on', !!u.emit); $('opRadar').title = u.emit ? 'РЛС включена — выключить' : 'РЛС выключена — включить'; // иконка закрашена — излучает
+    const trk = u.track || u.desig, d = trk ? trk.pos.distanceTo(u.pos) : 0, h = trk ? trk.pos.y - city.groundH(trk.pos.x, trk.pos.z) : 0;
+    const zone = !trk ? '' : trk.W && trk.W.kind === 'tbm' && C.S.inZone(u, trk) && (d > S.rmax || h > S.hmax) ? tr('ПУСК В УПРЕЖДЕНИЕ') : d > S.rmax ? tr('ДАЛЕКО') : d < S.rmin ? tr('БЛИЗКО') : h > S.hmax ? tr('ВЫСОКО') : h < S.hmin ? tr('НИЗКО') : tr('В ЗОНЕ');
+    $('opInfo').innerHTML = `${clock()}${C.auto ? `${tr('<b style="color:#86efac">АВТО</b> ·')} ` : ''}<b>${S.name}</b> · ${SAM_TYPE[S.type]}<br>${unitStatus(u)}${S.type === 'command' ? tr(' · метод: {0}', [u.method === 'half' ? tr('половинное спрямление') : tr('три точки')]) : ''}` +
+      (trk ? tr('<br>цель: {0} км, {1} м — <b>{2}</b>{3}', [(d / 1000).toFixed(1), Math.round(h), zone, !u.track && u.desig ? tr(' · захват {0}%', [Math.round(clamp(u.seeT / ((S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1)), 0, 1) * 100)]) : '']) : S.type === 'ir' ? tr('<br>наведите перекрестие на самолёт — ГСН «зарычит» и захватит') : S.type === 'guns' ? tr('<br>ведите ствол в жёлтый кружок упреждения и держите «ОГОНЬ»') : tr('<br>коснитесь отметки цели на экране или на круговом обзоре'))
+      + (arm ? `<br><span class="st">${tr('⚠ ПРР ЛЕТИТ В ВАС — выключите РЛС!')}</span>` : '') + (op.msgT > 0 ? `<br><span class="st">${op.msg}</span>` : '');
+    $('opRadar').classList.toggle('on', !!u.emit); $('opRadar').title = u.emit ? tr('РЛС включена — выключить') : tr('РЛС выключена — включить'); // иконка закрашена — излучает
     opFireBtn(u, dt);
     $('opBino').classList.toggle('off', !op.bino && !(u.track && !u.track.dead)); // без захвата — недоступен
     if (op.bino && u.track) { // ракурс и манёвр цели
@@ -1099,14 +1101,14 @@ export function createDefense(C) {
       let asp = '', man = '';
       if (v) {
         const c = v.dot(LEAD.copy(u.pos).sub(tg.pos).normalize());
-        asp = c > 0.7 ? 'идёт на вас — нос к вам' : c < -0.7 ? 'уходит — хвост к вам' : 'проходит боком';
+        asp = c > 0.7 ? tr('идёт на вас — нос к вам') : c < -0.7 ? tr('уходит — хвост к вам') : tr('проходит боком');
         const yaw = Math.atan2(v.x, v.z); if (op.bDir !== null && op.bDir !== undefined && dt > 0) { let dy = yaw - op.bDir; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; op.bTurn = (op.bTurn || 0) * 0.9 + (dy / dt) * 0.1; } op.bDir = yaw;
-        man = Math.abs(op.bTurn || 0) > 0.12 ? ' · разворот' : v.y > 0.25 ? ' · набирает высоту' : v.y < -0.25 ? ' · снижается' : '';
+        man = Math.abs(op.bTurn || 0) > 0.12 ? tr(' · разворот') : v.y > 0.25 ? tr(' · набирает высоту') : v.y < -0.25 ? tr(' · снижается') : '';
       }
       hx.font = '700 13px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.fillStyle = '#fde68a'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
-      hx.fillText(`БИНОКЛЬ ×${Math.max(2, Math.round(55 / (op.bf || 55)))} · ${asp}${man}`, VW / 2, Math.max(60, VH * 0.14)); hx.shadowBlur = 0;
+      hx.fillText(tr('БИНОКЛЬ ×{0} · {1}{2}', [Math.max(2, Math.round(55 / (op.bf || 55))), asp, man]), VW / 2, Math.max(60, VH * 0.14)); hx.shadowBlur = 0;
     }
-    $('opMethod').textContent = u.method === 'half' ? 'МЕТОД ½' : 'МЕТОД 3Т';
+    $('opMethod').textContent = u.method === 'half' ? tr('МЕТОД ½') : tr('МЕТОД 3Т');
     if (arm && !op.armWarned) { op.armWarned = true; snd.alarm(); on('arm', u, arm); } else if (!arm) op.armWarned = false;
     drawPpi(t);
     // звук: тон ГСН у ИК, тон захвата
@@ -1135,7 +1137,7 @@ export function createDefense(C) {
     if (tgt && (!u.desig || u.desig.dead || !vis.includes(u.desig))) designate(tgt);
     if (u.track) {
       const inAir = C.S.sams.filter((m) => !m.dead && m.unit === u && m.target === u.track).length;
-      if (inAir < 1 && (AO.launchT += dt) > 0.6) { const why = C.S.launch(u); if (!why) { opSay('АВТО: пуск'); on('launch', u); } AO.launchT = why ? 0.3 : 0; }
+      if (inAir < 1 && (AO.launchT += dt) > 0.6) { const why = C.S.launch(u); if (!why) { opSay(tr('АВТО: пуск')); on('launch', u); } AO.launchT = why ? 0.3 : 0; }
     } else AO.launchT = 0;
   }
   function opCamera(dt) {
@@ -1156,7 +1158,7 @@ export function createDefense(C) {
     const LNe = LNCH[u.key]; if (LNe && LNe.eye) { const L0 = LNe.L[0]; lnchToWorld({ ...u, lel: 0 }, L0, [LNe.eye[0] - L0.cp[0], LNe.eye[1] - L0.cp[1], LNe.eye[2] - L0.cp[2]], EYE); } // eye — точка оператора в башне (Phalanx): вид от установки, поворачивается с ней
     if (op.bino) {
       const tg = u.track;
-      if (!tg || tg.dead || tg !== op.binoT) binoOff('Захват потерян — бинокль выключен, нужен новый захват');
+      if (!tg || tg.dead || tg !== op.binoT) binoOff(tr('Захват потерян — бинокль выключен, нужен новый захват'));
       else { // цель — примерно четверть высоты кадра; поле зрения меняем ступенями (смена — пересчёт кадра)
         const d = Math.max(60, tg.pos.distanceTo(EYE)), f = clamp(2 * Math.atan(binoLen(tg) * 2.2 / d) / D2R, 0.3, 14);
         if (!op.bf || Math.abs(f - op.bf) / op.bf > 0.12) op.bf = f;
@@ -1233,23 +1235,23 @@ export function createDefense(C) {
   addEventListener('pointerup', evUp, true); addEventListener('pointercancel', evUp, true);
   function renderEv(force) {
     if (!evOpen || !C.ev || (evHold && !force)) return;
-    evList = C.ev.events(); let h = '<h3>Ход волны</h3>', g = null;
+    evList = C.ev.events(); let h = `<h3>${tr('Ход волны')}</h3>`, g = null;
     evList.forEach((e, i) => {
       const gk = e.ally ? `${e.ally}·${e.g}` : e.g;
-      if (gk !== g) { g = gk; h += e.ally ? `<div class="cat-h ally">Союзник ${esc(e.ally)} · ${e.g}</div>` : `<div class="cat-h">${e.g}</div>`; }
-      const eta = e.eta !== null && e.eta > 0 ? ` · через ${Math.ceil(e.eta)} с` : '', cue = st.cue && st.cue.obj === e.cue, inT = e.eta !== null && e.eta > 0.5 ? `через ${Math.ceil(e.eta)} с` : 'вот-вот';
-      const sub = e.sub.includes('{eta}') ? e.sub.replace('{eta}', inT) : e.sub + (e.g === 'Носители' || e.g === 'Пусковые' ? '' : eta); // {eta} — время считаем здесь: не уходит в минус и не отстаёт
-      h += `<div class="evr${e.obj && e.obj === st.watch ? ' on' : ''}"><div class="nm"><b>${e.label}</b><span>${sub}</span></div>
-        ${e.obj && canWatch(e.obj) ? `<button class="btn alt mini2" data-i="${i}" data-a="see">Смотреть</button>` : ''}${e.cue && e.eta > 6 ? `<button class="btn alt mini2 ${cue ? 'on' : ''}" data-i="${i}" data-a="wait">${cue ? 'Ждём…' : 'Ждать'}</button>` : ''}</div>`;
+      if (gk !== g) { g = gk; h += e.ally ? `<div class="cat-h ally">${tr('Союзник {0} · {1}', [esc(e.ally), trIf(e.g)])}</div>` : `<div class="cat-h">${trIf(e.g)}</div>`; }
+      const eta = e.eta !== null && e.eta > 0 ? tr(' · через {0} с', [Math.ceil(e.eta)]) : '', cue = st.cue && st.cue.obj === e.cue, inT = e.eta !== null && e.eta > 0.5 ? tr('через {0} с', [Math.ceil(e.eta)]) : tr('вот-вот');
+      const es = trFmt(e.sub), sub = es.includes('{eta}') ? es.replace('{eta}', inT) : es + (e.g === 'Носители' || e.g === 'Пусковые' ? '' : eta); // {eta} — время считаем здесь: не уходит в минус и не отстаёт
+      h += `<div class="evr${e.obj && e.obj === st.watch ? ' on' : ''}"><div class="nm"><b>${trFmt(e.label)}</b><span>${sub}</span></div>
+        ${e.obj && canWatch(e.obj) ? `<button class="btn alt mini2" data-i="${i}" data-a="see">${tr('Смотреть')}</button>` : ''}${e.cue && e.eta > 6 ? `<button class="btn alt mini2 ${cue ? 'on' : ''}" data-i="${i}" data-a="wait">${cue ? tr('Ждём…') : tr('Ждать')}</button>` : ''}</div>`;
     });
-    if (st.cue) h += `<p class="hint">Ждём события: время ×4, за 4 с — камера к нему.</p>`;
+    if (st.cue) h += `<p class="hint">${tr('Ждём события: время ×4, за 4 с — камера к нему.')}</p>`;
     if (h !== evHtml) { evHtml = h; evp.innerHTML = h; }
   }
   evp.onclick = (e) => {
     const b = e.target.closest('[data-a]'); if (!b) return;
     const ev = evList[+b.dataset.i]; if (!ev) return;
     if (b.dataset.a === 'see' && ev.obj) { st.cue = null; watch(ev.obj); }
-    else if (b.dataset.a === 'wait' && ev.cue) { st.cue = { obj: ev.cue, at: C.ev.t + ev.eta - 4 }; st.timeK = 4; say('Ждём события — время ×4', 2); snd.click(); }
+    else if (b.dataset.a === 'wait' && ev.cue) { st.cue = { obj: ev.cue, at: C.ev.t + ev.eta - 4 }; st.timeK = 4; say(tr('Ждём события — время ×4'), 2); snd.click(); }
     renderEv(true);
   };
   // ═════════════ «Мульти-волна»: камера за ракетой, хуки удара ═════════════
@@ -1263,8 +1265,8 @@ export function createDefense(C) {
   // камера — только к оружию с готовой моделью (процедурную фигуру вблизи не показываем); носители и пусковые — всегда
   const canWatch = (o) => !o || !o.isMun || !o.W || weaponHasModel(o.key, o.W);
   function watch(o) {
-    if (o && !canWatch(o)) { say('Для этого оружия нет модели — следите по карте'); snd.deny(); return; }
-    const L = watchList(); if (!L.length) { say('Сейчас в воздухе смотреть не на что'); snd.deny(); return; }
+    if (o && !canWatch(o)) { say(tr('Для этого оружия нет модели — следите по карте')); snd.deny(); return; }
+    const L = watchList(); if (!L.length) { say(tr('Сейчас в воздухе смотреть не на что')); snd.deny(); return; }
     if (!o) { const i = L.indexOf(st.watch); o = L[(i + 1) % L.length]; }
     st.watch = o; st.watchEnd = 0; st.view = 'watch'; WCAM.init = false; WCAM.at = null; document.body.classList.remove('dmap'); document.body.classList.add('watch'); snd.click();
   }
@@ -1288,10 +1290,10 @@ export function createDefense(C) {
   }
   function watchHud() {
     const o = st.watch; if (!o) return;
-    if (o.isLauncher) { const ev = C.ev && C.ev.events().find((e) => e.obj === o); $('wInfo').textContent = `${o.name} · ${ev ? ev.sub.replace('{eta}', ev.eta > 0.5 ? `через ${Math.ceil(ev.eta)} с` : 'вот-вот') : ''}`; setWSpeed(); return; }
-    const name = o.W ? `${o.W.short}${o.decoy && (atk() || C.MODE().markers) ? ' (ложная)' : ''}` : o.carrierName, h = Math.round(o.pos.y - city.groundH(o.pos.x, o.pos.z));
-    const sp = Math.round((o.vel ? o.vel.length() : o.speed || 0) * 3.6), left = o.W && o.W.kind === 'tbm' ? ` · до падения ${Math.max(0, Math.ceil(o.T - o.t))} с` : o.isMun && o.ev && o.aim && !o.W.recon ? ` · до цели ${Math.ceil(C.S.etaOf(o).t)} с` : '';
-    $('wInfo').textContent = `${name}${o.salvo && o.salvo.length && !o.inbound ? ` · пуск ${o.n0 - o.salvo.length}/${o.n0}` : ''} · высота ${h > 9999 ? (h / 1000).toFixed(0) + ' км' : h + ' м'} · ${sp} км/ч${left}${o.dead ? ' · поражена' : ''}`;
+    if (o.isLauncher) { const ev = C.ev && C.ev.events().find((e) => e.obj === o); $('wInfo').textContent = `${trFmt(o.name)} · ${ev ? trFmt(ev.sub).replace('{eta}', ev.eta > 0.5 ? tr('через {0} с', [Math.ceil(ev.eta)]) : tr('вот-вот')) : ''}`; setWSpeed(); return; }
+    const name = o.W ? `${o.W.short}${o.decoy && (atk() || C.MODE().markers) ? tr(' (ложная)') : ''}` : o.carrierName, h = Math.round(o.pos.y - city.groundH(o.pos.x, o.pos.z));
+    const sp = Math.round((o.vel ? o.vel.length() : o.speed || 0) * 3.6), left = o.W && o.W.kind === 'tbm' ? tr(' · до падения {0} с', [Math.max(0, Math.ceil(o.T - o.t))]) : o.isMun && o.ev && o.aim && !o.W.recon ? tr(' · до цели {0} с', [Math.ceil(C.S.etaOf(o).t)]) : '';
+    $('wInfo').textContent = tr('{0}{1} · высота {2} · {3} км/ч{4}{5}', [name, o.salvo && o.salvo.length && !o.inbound ? tr(' · пуск {0}/{1}', [o.n0 - o.salvo.length, o.n0]) : '', h > 9999 ? (h / 1000).toFixed(0) + tr(' км') : h + tr(' м'), sp, left, o.dead ? tr(' · поражена') : '']);
     setWSpeed();
   }
   function setWSpeed() { const t = `×${st.timeK === 1 ? 4 : 1}`, e = $('wSpeed'); if (e.textContent !== t) e.textContent = t; }
@@ -1302,40 +1304,40 @@ export function createDefense(C) {
     // «Кинжал» — своя тревога (и в реализме: о пуске с МиГ-31К объявляют отдельно), каждый пуск
     if (w.W.kind === 'tbm' && w.W.air) {
       snd.siren('tbm', true); st.sirenT = true;
-      st.alert = `Пуск «Кинжала» с МиГ-31К — у цели через ≈ ${Math.max(10, Math.round((w.T || 70) / 10) * 10)} с`; st.alertTb = true; st.alertT = Math.max(st.alertT || 0, 8);
+      st.alert = tr('Пуск «Кинжала» с МиГ-31К — у цели через ≈ {0} с', [Math.max(10, Math.round((w.T || 70) / 10) * 10)]); st.alertTb = true; st.alertT = Math.max(st.alertT || 0, 8);
       return;
     }
     const tb = w.W.kind === 'tbm', arc = C.MODE().markers; if (tb ? st.sirenT : st.sirenC) return;
     if (tb) st.sirenT = true; else st.sirenC = true;
     if (!arc) { snd.siren(tb ? 'tbm' : 'cruise', tb); return; }
     const left = snd.siren(tb ? 'tbm' : 'cruise') || 6; // сирена уже звучит — доигрывает, меняется только надпись
-    if (tb || !(st.alertT > 0 && st.alertTb)) { st.alert = tb ? 'Угроза баллистических ракет' : 'Угроза крылатых ракет'; st.alertTb = tb; } // баллистику крылатые не перебивают
+    if (tb || !(st.alertT > 0 && st.alertTb)) { st.alert = tb ? tr('Угроза баллистических ракет') : tr('Угроза крылатых ракет'); st.alertTb = tb; } // баллистику крылатые не перебивают
     st.alertT = Math.max(st.alertT || 0, 6, left); // плашка — пока звучит сирена
   }
   function followLaunch(w) { if (w.launcher && st.watch === w.launcher && !w.decoy) st.watchNextAt = { w, at: C.t + 1.5 }; }
   // предупреждение о пуске баллистики (за ПВО): тревога, сколько до падения
   function tbmAlert(w) {
     if (!w || !w.ev || w.W.kind !== 'tbm' || w.decoy) return;
-    say(`Пуск баллистической ракеты «${w.W.short}»! До падения ≈ ${Math.round(w.T)} с — готовьте ${Object.values(SAM).some((s) => s.abm && s.side === dside()) ? 'противоракетные ЗРК' : 'укрытие'}`, 5); snd.alarm();
+    say(tr('Пуск баллистической ракеты «{0}»! До падения ≈ {1} с — готовьте {2}', [w.W.short, Math.round(w.T), Object.values(SAM).some((s) => s.abm && s.side === dside()) ? tr('противоракетные ЗРК') : tr('укрытие')]), 5); snd.alarm();
   }
   function atkHooks() {
     return {
       aiDmgK: 1,
-      planeDown(a) { if (a.role === 'carrier') { st.mres.carriers++; say(`Сбит носитель ${a.carrierName}${a.salvo.length ? ` — не пущено ракет: ${a.salvo.length}` : ''}`, 4); snd.alarm(); } },
-      wpnRelease(w) { followLaunch(w); if (w.ev && !w.W.recon && !w.decoy && w.W.kind !== 'tbm') st.mres.launched++; if (w.ev && w.W.kind === 'tbm' && !w.decoy) { st.mres.launched++; say(`Пуск: ${w.W.short}, до цели ≈ ${Math.round(w.T)} с`, 3); } },
-      wpnEnd(w, res) { if (!w.ev) return; if (res.intercepted) { if (!w.decoy) st.mres.down++; say(`ПВО сбила: ${w.W.short}${w.decoy ? ' (ложная цель)' : ''}`, 2); } else if (res.objects.length || res.units.length) st.mres.hits++; },
-      objectDestroyed(o) { say(`Цель поражена: ${o.name}`, 3); snd.good(); },
-      unitDestroyed(u) { st.lostUnits++; say(`Уничтожен комплекс ПВО: ${u.S.short}`, 3); snd.good(); },
+      planeDown(a) { if (a.role === 'carrier') { st.mres.carriers++; say(tr('Сбит носитель {0}{1}', [a.carrierName, a.salvo.length ? tr(' — не пущено ракет: {0}', [a.salvo.length]) : '']), 4); snd.alarm(); } },
+      wpnRelease(w) { followLaunch(w); if (w.ev && !w.W.recon && !w.decoy && w.W.kind !== 'tbm') st.mres.launched++; if (w.ev && w.W.kind === 'tbm' && !w.decoy) { st.mres.launched++; say(tr('Пуск: {0}, до цели ≈ {1} с', [w.W.short, Math.round(w.T)]), 3); } },
+      wpnEnd(w, res) { if (!w.ev) return; if (res.intercepted) { if (!w.decoy) st.mres.down++; say(tr('ПВО сбила: {0}{1}', [w.W.short, w.decoy ? tr(' (ложная цель)') : '']), 2); } else if (res.objects.length || res.units.length) st.mres.hits++; },
+      objectDestroyed(o) { say(tr('Цель поражена: {0}', [o.name]), 3); snd.good(); },
+      unitDestroyed(u) { st.lostUnits++; say(tr('Уничтожен комплекс ПВО: {0}', [u.S.short]), 3); snd.good(); },
     };
   }
   function defHooks() {
     return {
       aiDmgK: C.setup.diff === 'arcade' ? 1.25 : 1,
-      planeDown(a) { if (a.role === 'decoy') { say('Сбита ложная цель — ракеты потрачены впустую', 2); return; } st.downs++; st.waveDowns++; say(`Сбит ${a.role === 'carrier' ? `носитель ${a.carrierName}${a.salvo.length ? ` — не пущено ракет: ${a.salvo.length}` : ''}` : a.role === 'sead' ? 'охотник за РЛС' : 'ударник'}!`, 3); snd.good(); on('planeDown', a); },
-      wpnEnd(w, res) { if (res.intercepted) { say(`Перехвачено: ${w.W.short}${w.decoy ? ' (ложная цель)' : ''}`, 2); if (w.ev && !w.decoy && !w.W.recon) { st.downs++; st.waveDowns++; } } },
+      planeDown(a) { if (a.role === 'decoy') { say(tr('Сбита ложная цель — ракеты потрачены впустую'), 2); return; } st.downs++; st.waveDowns++; say(tr('Сбит {0}!', [a.role === 'carrier' ? tr('носитель {0}{1}', [a.carrierName, a.salvo.length ? tr(' — не пущено ракет: {0}', [a.salvo.length]) : '']) : a.role === 'sead' ? tr('охотник за РЛС') : tr('ударник')]), 3); snd.good(); on('planeDown', a); },
+      wpnEnd(w, res) { if (res.intercepted) { say(tr('Перехвачено: {0}{1}', [w.W.short, w.decoy ? tr(' (ложная цель)') : '']), 2); if (w.ev && !w.decoy && !w.W.recon) { st.downs++; st.waveDowns++; } } },
       planeOut(a) { st.leaked++; st.waveLeak++; },
-      objectDestroyed(o) { say(`Разрушен: ${o.name}`, 3); snd.alarm(); },
-      unitDestroyed(u) { say(`Потерян комплекс: ${u.S.short}`, 3); },
+      objectDestroyed(o) { say(tr('Разрушен: {0}', [o.name]), 3); snd.alarm(); },
+      unitDestroyed(u) { say(tr('Потерян комплекс: {0}', [u.S.short]), 3); },
       wpnRelease(w) { if (w.W.kind === 'arm' && w.target) on('armLaunch', w); tbmAlert(w); followLaunch(w); siren(w); },
     };
   }
@@ -1372,10 +1374,10 @@ export function createDefense(C) {
   function startNet(N) {
     st.net = N; st.opts = { noEnd: true }; C.ended = false; C.lastGame = 'online';
     C.hooks = {
-      planeDown(a) { if (a.role === 'decoy') { say('Сбита ложная цель', 2); return; } say('Самолёт сбит!', 2); snd.good(); },
-      wpnEnd(w, res) { if (res.intercepted) say(`Перехвачено: ${w.W.short}`, 2); },
-      objectDestroyed(o) { say(`Разрушен: ${o.name}`, 3); snd.alarm(); },
-      unitDestroyed(u) { say(`Потерян комплекс: ${u.S.short}`, 3); },
+      planeDown(a) { if (a.role === 'decoy') { say(tr('Сбита ложная цель'), 2); return; } say(tr('Самолёт сбит!'), 2); snd.good(); },
+      wpnEnd(w, res) { if (res.intercepted) say(tr('Перехвачено: {0}', [w.W.short]), 2); },
+      objectDestroyed(o) { say(tr('Разрушен: {0}', [o.name]), 3); snd.alarm(); },
+      unitDestroyed(u) { say(tr('Потерян комплекс: {0}', [u.S.short]), 3); },
     };
     Object.assign(st, { phase: 'plan', wave: N.battle.wave || 1, waves: N.battle.waves, budget: 0, score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, ready: false, netRes: null });
     st.targets = N.battle.targets.map((id) => C.S.objects.find((o) => o.id === id)).filter(Boolean);
@@ -1394,7 +1396,7 @@ export function createDefense(C) {
       if (st.view === 'watch' && ph !== 'wave') unwatch();
       st.phase = ph; st.placing = null; st.moving = false; st.draft = null;
       if (ph === 'wave' && st.multi) netWaveStart();
-      else if (ph === 'wave') { snd.alarm(); say(`Волна ${st.wave}: налёт!`, 3); }
+      else if (ph === 'wave') { snd.alarm(); say(tr('Волна {0}: налёт!', [st.wave]), 3); }
       if (ph !== 'wave') document.body.classList.remove('evon', 'evopen');
       for (const u of C.S.units) u.cov = null;
     }
@@ -1418,7 +1420,7 @@ export function createDefense(C) {
     C.syncUnits(); seen.clear();
     document.body.classList.add('defense', 'dmap'); document.body.classList.toggle('matk', role === 'atk'); document.body.classList.remove('evon', 'evopen');
     sizeMap(); fit(); netSync();
-    say(role === 'atk' ? `Раунд ${B.round}: ваша команда собирает волну — коснитесь целей на карте` : `Раунд ${B.round}: вы — ПВО. Ставьте комплексы: что и куда полетит, неизвестно`, 5);
+    say(role === 'atk' ? tr('Раунд {0}: ваша команда собирает волну — коснитесь целей на карте', [B.round]) : tr('Раунд {0}: вы — ПВО. Ставьте комплексы: что и куда полетит, неизвестно', [B.round]), 5);
   }
   function netWaveStart() {
     const military = C.S.objects.filter((o) => !o.noTarget && !o.dead);
@@ -1426,39 +1428,39 @@ export function createDefense(C) {
     else st.targets = military;
     st.tv0 = st.targets.reduce((q, o) => q + o.value * Math.max(0, o.hp / o.hpMax), 0) || 1;
     st.mres = { launched: 0, down: 0, hits: 0, carriers: 0 }; st.sirenC = st.sirenT = false;
-    snd.alarm(); say(atk() ? 'Волна пошла: разведчик над городом, остальное — по вашему расписанию («Ход волны» слева)' : 'Волна пошла! Красные треугольники — что видит ваша сеть РЛС', 5);
+    snd.alarm(); say(atk() ? tr('Волна пошла: разведчик над городом, остальное — по вашему расписанию («Ход волны» слева)') : tr('Волна пошла! Красные треугольники — что видит ваша сеть РЛС'), 5);
   }
   // союзники по атаке: сколько очков потратили и куда бьют (сводка сервера)
   function netAllies() {
     const N = st.net, al = (N.room && N.room.allies || []).filter((p) => p.id !== (N.me && N.me.id));
     if (!al.length) return '';
-    return '<div class="cat-h">Союзники</div>' + al.map((p) => `<div class="dcard"><div class="nm"><b>${esc(p.name)} · ${p.cost} очк.</b><span>${Object.entries(p.tg).map(([k, t]) => `${k === 'free' ? 'без цели' : tName(k)}: ${t}`).join(' · ') || 'ещё собирает'}</span></div></div>`).join('');
+    return `<div class="cat-h">${tr('Союзники')}</div>` + al.map((p) => `<div class="dcard"><div class="nm"><b>${tr('{0} · {1} очк.', [esc(p.name), p.cost])}</b><span>${Object.entries(p.tg).map(([k, t]) => `${k === 'free' ? tr('без цели') : tName(k)}: ${t}`).join(' · ') || tr('ещё собирает')}</span></div></div>`).join('');
   }
   function renderNetDef() {
     const N = st.net, B = N.battle; let h = '';
-    const left = N.room && N.room.left != null ? ` · ${N.room.left} с` : '', who = TEAM_NAME[B.atk];
+    const left = N.room && N.room.left != null ? tr(' · {0} с', [N.room.left]) : '', who = TEAM_NAME[B.atk];
     if (st.phase === 'plan') {
-      h += `<h3>Раунд ${B.round}/${B.rounds} · расстановка ПВО${left}</h3><div>Очки обороны: <b style="color:#fde68a">${st.budget}</b></div>
-        <p class="hint">Волну собирает ${who}: дроны, крылатые ракеты, баллистика — что и по каким объектам, неизвестно. Пушки и ПЗРК — у объектов, противоракетные — у самых ценных.</p>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${SAM_TYPE[u.S.type]} · до ${(u.S.rmax / 1000).toFixed(1)} км</span></div></div><div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">Продать +${Math.round(samCost(u.key) * 0.7)}</button>${st.moving ? '' : '<button class="btn alt" data-a="desel">Готово</button>'}</div>${moveHint()}`; }
-      else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>союзника</span></div></div>`;
-      h += placeCard() + '<div class="cat-h">Купить</div>';
-      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || sm.era > B.era) continue; const c = costOf(k), lk = lockedSam(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}</b><span>${SAM_TYPE[sm.type]} · ${(sm.rmax / 1000).toFixed(1)} км${sm.abm ? ' · сбивает баллистику' : ''}</span></div><span class="pr">${c}</span></div>`; }
-      h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? 'Готов ✓ (снять)' : 'ГОТОВ'}</button>`;
+      h += `<h3>${tr('Раунд {0}/{1} · расстановка ПВО{2}', [B.round, B.rounds, left])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>
+        <p class="hint">${tr('Волну собирает {0}: дроны, крылатые ракеты, баллистика — что и по каким объектам, неизвестно. Пушки и ПЗРК — у объектов, противоракетные — у самых ценных.', [who])}</p>`;
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div><div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(samCost(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`; }
+      else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
+      h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
+      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || sm.era > B.era) continue; const c = costOf(k), lk = lockedSam(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}</b><span>${tr('{0} · {1} км{2}', [SAM_TYPE[sm.type], (sm.rmax / 1000).toFixed(1), sm.abm ? tr(' · сбивает баллистику') : ''])}</span></div><span class="pr">${c}</span></div>`; }
+      h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? tr('Готов ✓ (снять)') : tr('ГОТОВ')}</button>`;
     } else if (st.phase === 'wave') {
-      h += `<h3>Раунд ${B.round}/${B.rounds} · оборона</h3><div>Разрушено: <b>${Math.round(100 * (B.V || 0) / (B.v0 || 1))}%</b> ценности объектов</div>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${unitStatus(u)}</span></div></div><div class="dact">${u.S.type === 'jammer' ? '' : '<button class="btn" data-a="op">Управлять</button>'}${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? 'РЛС: выключить' : 'РЛС: включить'}</button>` : ''}${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? 'Огонь: свободный' : 'Огонь: по команде'}</button>`}<button class="btn alt" data-a="desel">Снять выбор</button></div>`; }
-      else h += '<p class="hint">Коснитесь своего комплекса: «Управлять» — сесть оператором, «Огонь: по команде» — беречь ракеты. Остальными стреляют расчёты.</p>';
-      h += tbmPanel() + watchBtns() + '<button class="btn alt" data-a="help">Нужна помощь — метка союзникам</button>';
+      h += `<h3>${tr('Раунд {0}/{1} · оборона', [B.round, B.rounds])}</h3><div>${tr('Разрушено: <b>{0}%</b> ценности объектов', [Math.round(100 * (B.V || 0) / (B.v0 || 1))])}</div>`;
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${unitStatus(u)}</span></div></div><div class="dact">${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? tr('Огонь: свободный') : tr('Огонь: по команде')}</button>`}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`; }
+      else h += `<p class="hint">${tr('Коснитесь своего комплекса: «Управлять» — сесть оператором, «Огонь: по команде» — беречь ракеты. Остальными стреляют расчёты.')}</p>`;
+      h += tbmPanel() + watchBtns() + `<button class="btn alt" data-a="help">${tr('Нужна помощь — метка союзникам')}</button>`;
     }
     side.innerHTML = h;
   }
   // итоги раунда (и боя): кто сколько разрушил
   function renderNetRes() {
     const N = st.net, B = N.battle, r = st.netRes || B.res || {}, sc = r.scores || B.scores || { east: 0, west: 0 }, v0 = r.v0 || B.v0 || 1;
-    side.innerHTML = `<h3>Раунд ${r.round || B.round} — итоги</h3><div>${TEAM_NAME[r.atk || B.atk]} в атаке: разрушено <b>${Math.round(100 * (r.k || 0))}%</b> ценности</div>
-      <div class="stats" style="margin:6px 0"><div class="stt"><b>${Math.round(100 * sc.east / v0)}%</b><span>Восток</span></div><div class="stt"><b>${Math.round(100 * sc.west / v0)}%</b><span>Запад</span></div><div class="stt"><b>${r.downs ?? '–'}</b><span>сбито ПВО</span></div></div>
-      <p class="hint">${r.last ? 'Бой окончен — итоги…' : 'Следующий раунд — стороны меняются: кто атаковал, теперь обороняется.'}</p>`;
+    side.innerHTML = `<h3>${tr('Раунд {0} — итоги', [r.round || B.round])}</h3><div>${tr('{0} в атаке: разрушено <b>{1}%</b> ценности', [TEAM_NAME[r.atk || B.atk], Math.round(100 * (r.k || 0))])}</div>
+      <div class="stats" style="margin:6px 0"><div class="stt"><b>${Math.round(100 * sc.east / v0)}%</b><span>${tr('Восток')}</span></div><div class="stt"><b>${Math.round(100 * sc.west / v0)}%</b><span>${tr('Запад')}</span></div><div class="stt"><b>${r.downs ?? '–'}</b><span>${tr('сбито ПВО')}</span></div></div>
+      <p class="hint">${r.last ? tr('Бой окончен — итоги…') : tr('Следующий раунд — стороны меняются: кто атаковал, теперь обороняется.')}</p>`;
   }
   // чат команды на подготовке: отдельное окно (не перерисовывается с панелью); касание имени — заглушить
   let chatEl = null;
@@ -1466,14 +1468,14 @@ export function createDefense(C) {
     const N = st.net, on = !!(N && st.multi && st.phase === 'plan' && document.body.classList.contains('defense'));
     if (!chatEl) {
       chatEl = document.createElement('div'); chatEl.id = 'netChat';
-      chatEl.innerHTML = '<div class="log"></div><form class="row"><input maxlength="120" placeholder="Сообщение команде" enterkeyhint="send"><button>➤</button></form>';
+      chatEl.innerHTML = `<div class="log"></div><form class="row"><input maxlength="120" placeholder="${tr('Сообщение команде')}" enterkeyhint="send"><button>➤</button></form>`;
       document.body.appendChild(chatEl);
       chatEl.querySelector('form').onsubmit = (e) => { e.preventDefault(); const i = chatEl.querySelector('input'), t = i.value.trim(); if (t && st.net) { st.net.say(t); i.value = ''; } };
-      chatEl.querySelector('.log').onclick = (e) => { const b = e.target.closest('[data-mute]'); if (!b || !st.net) return; const id = +b.dataset.mute; if (st.net.me && id === st.net.me.id) return; st.net.mutes.add(id); st.net.chat = st.net.chat.filter((m) => m.id !== id); say('Игрок заглушён — его сообщений больше не видно', 2); chatSync(); };
+      chatEl.querySelector('.log').onclick = (e) => { const b = e.target.closest('[data-mute]'); if (!b || !st.net) return; const id = +b.dataset.mute; if (st.net.me && id === st.net.me.id) return; st.net.mutes.add(id); st.net.chat = st.net.chat.filter((m) => m.id !== id); say(tr('Игрок заглушён — его сообщений больше не видно'), 2); chatSync(); };
     }
     chatEl.style.display = on ? 'block' : 'none'; if (!on) return;
     const me = N.me && N.me.id;
-    chatEl.querySelector('.log').innerHTML = N.chat.slice(-7).map((m) => `<div><b data-mute="${m.id}" class="${m.id === me ? 'me' : ''}">${esc(m.name)}</b>: ${esc(m.text)}</div>`).join('') || '<div class="dim">Чат команды — договоритесь, кто что бьёт или прикрывает. Касание имени — заглушить.</div>';
+    chatEl.querySelector('.log').innerHTML = N.chat.slice(-7).map((m) => `<div><b data-mute="${m.id}" class="${m.id === me ? 'me' : ''}">${esc(m.name)}</b>: ${esc(m.text)}</div>`).join('') || `<div class="dim">${tr('Чат команды — договоритесь, кто что бьёт или прикрывает. Касание имени — заглушить.')}</div>`;
   }
   function stop() {
     if (st.op) leaveOp();
@@ -1498,7 +1500,7 @@ export function createDefense(C) {
       for (const [k, add] of Object.entries(st.addQ)) {
         if (!add) continue; const c = cfgOf(k), n = st.plan.n[k], via = (multiItems(attSide(), C.setup.era).find(([q]) => q === k) || [])[1];
         for (let i = n - add; i < n; i++) { c.units[i] = c.units[i] || {}; if (c.units[i].t == null) c.units[i].t = Math.ceil(C.ev.t + 30 + (i - n + add) * 2); }
-        C.ev.extend(k, add, via, st.plan.cfg); say(`Заказано: ${AG[k].short} ×${add}`, 2);
+        C.ev.extend(k, add, via, st.plan.cfg); say(tr('Заказано: {0} ×{1}', [AG[k].short, add]), 2);
       }
       st.addQ = {}; if (st.net && atk()) st.net.sendPlan(st.plan); renderSide();
     }
@@ -1520,15 +1522,15 @@ export function createDefense(C) {
   // часы волны: с начала боя (мульти-волна — и за удар, и за оборону; видны и на карте, и в 3D, и за пультом)
   const clock = () => { if (!st.multi || st.phase !== 'wave' || !C.ev) return ''; const t = Math.max(0, C.ev.t); return `<b>${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}</b> · `; };
   function hud(dt, t) {
-    if (st.net && st.multi) { const N = st.net, B = N.battle, left = N.room && N.room.left != null ? ` · <b>${N.room.left} с</b>` : '', rr = `Раунд ${B.round}/${B.rounds}`;
-      $('dtop').innerHTML = st.phase === 'plan' ? `${rr} · ${atk() ? 'план волны' : 'расстановка ПВО'}${left} · очки <b>${atk() ? st.budget - planCost() : st.budget}</b>`
-        : st.phase === 'wave' ? `${clock()}${rr} · ${atk() ? 'ваша волна' : 'оборона'} · разрушено <b>${Math.round(100 * (B.V || 0) / (B.v0 || 1))}%</b>${B.k > 1 ? ' · <b>время ×3</b> (пусто)' : ''}` : `${rr} · итоги`;
-    } else if (st.net) { const N = st.net, left = N.room && N.room.left !== null ? ` · ${N.room.left} с` : '';
-      $('dtop').innerHTML = st.phase === 'plan' ? `Расстановка · волна ${st.wave}/${st.waves}${left} · очки <b>${st.budget}</b>` : `Волна <b>${st.wave}/${st.waves}</b>${left} · объекты целы <b>${Math.round((1 - ((N.battle && N.battle.valueK) || 0)) * 100)}%</b>`; }
-    else if (atk()) $('dtop').innerHTML = st.phase === 'plan' ? `План волны · очки угрозы <b>${st.budget - planCost()}</b>` : `${clock()}Волна · цели разрушены <b>${Math.round((1 - targetsValue()) * 100)}%</b>${st.timeK > 1 ? ` · время ×${st.timeK}` : ''}`;
-    else if (st.multi && st.phase === 'wave') $('dtop').innerHTML = `${clock()}Мульти-волна · сбито <b>${st.downs}</b> · цели целы <b>${Math.round(targetsValue() * 100)}%</b>${st.timeK > 1 ? ` · время ×${st.timeK}` : ''}`;
-    else $('dtop').innerHTML = st.phase === 'plan' ? `Расстановка · очки обороны <b>${st.budget}</b>` :
-      `Волна <b>${st.wave}/${st.waves}</b> · сбито <b>${st.downs}</b> · объекты целы <b>${Math.round(cityValue() * 100)}%</b> · очки ${st.score}`;
+    if (st.net && st.multi) { const N = st.net, B = N.battle, left = N.room && N.room.left != null ? ` ${tr('· <b>{0} с</b>', [N.room.left])}` : '', rr = tr('Раунд {0}/{1}', [B.round, B.rounds]);
+      $('dtop').innerHTML = st.phase === 'plan' ? tr('{0} · {1}{2} · очки <b>{3}</b>', [rr, atk() ? tr('план волны') : tr('расстановка ПВО'), left, atk() ? st.budget - planCost() : st.budget])
+        : st.phase === 'wave' ? tr('{0}{1} · {2} · разрушено <b>{3}%</b>{4}', [clock(), rr, atk() ? tr('ваша волна') : tr('оборона'), Math.round(100 * (B.V || 0) / (B.v0 || 1)), B.k > 1 ? ` ${tr('· <b>время ×3</b> (пусто)')}` : '']) : tr('{0} · итоги', [rr]);
+    } else if (st.net) { const N = st.net, left = N.room && N.room.left !== null ? tr(' · {0} с', [N.room.left]) : '';
+      $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · волна {0}/{1}{2} · очки <b>{3}</b>', [st.wave, st.waves, left, st.budget]) : tr('Волна <b>{0}/{1}</b>{2} · объекты целы <b>{3}%</b>', [st.wave, st.waves, left, Math.round((1 - ((N.battle && N.battle.valueK) || 0)) * 100)]); }
+    else if (atk()) $('dtop').innerHTML = st.phase === 'plan' ? tr('План волны · очки угрозы <b>{0}</b>', [st.budget - planCost()]) : tr('{0}Волна · цели разрушены <b>{1}%</b>{2}', [clock(), Math.round((1 - targetsValue()) * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']);
+    else if (st.multi && st.phase === 'wave') $('dtop').innerHTML = tr('{0}Мульти-волна · сбито <b>{1}</b> · цели целы <b>{2}%</b>{3}', [clock(), st.downs, Math.round(targetsValue() * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']);
+    else $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · очки обороны <b>{0}</b>', [st.budget]) :
+      tr('Волна <b>{0}/{1}</b> · сбито <b>{2}</b> · объекты целы <b>{3}%</b> · очки {4}', [st.wave, st.waves, st.downs, Math.round(cityValue() * 100), st.score]);
     if (st.view === 'op' && st.op) opHud(dt, t); else if (st.view === 'watch') watchHud(); else drawMap(t);
     if (st.view !== 'map' && st.alertT > 0) { const x = C.hx; x.font = '800 18px -apple-system, Segoe UI, sans-serif'; x.textAlign = 'center'; const w = x.measureText(st.alert).width + 28, y = IS_TOUCH ? 52 : 64; // плашка тревоги — и в 3D
       x.fillStyle = `rgba(185,28,28,${0.75 + 0.2 * Math.sin(performance.now() / 300)})`; x.fillRect(C.VW / 2 - w / 2, y - 22, w, 32); x.fillStyle = '#fff'; x.fillText(st.alert, C.VW / 2, y); x.textAlign = 'left'; }
@@ -1560,8 +1562,8 @@ export function createDefense(C) {
     timeK: () => (st.phase === 'wave' && !st.over && !st.net ? st.timeK : 1),
     resize() { sizeMap(); },
     finish: (why) => finish(why, null),
-    pauseHelp: () => (IS_TOUCH ? 'Карта: тянуть — сдвиг, щипок — масштаб, касание — выбор. Оператор: тянуть — поворот, касание отметки или ИКО — назначить цель. «КАМ.» — вид снаружи и за ракетой (тянуть — облёт).'
-      : 'Карта: тянуть — сдвиг, колесо — масштаб, щелчок — выбор и постановка, Пробел — начать волну.<br>Оператор: тянуть мышью или стрелки/WASD — поворот, колесо или Z — увеличение, щелчок по отметке — цель, Tab — следующая цель,<br>Пробел/F — пуск (у пушек — держать), E — РЛС, M — метод, V — камера (оператор / снаружи / за ракетой), Q — на карту, Esc — пауза.'),
+    pauseHelp: () => (IS_TOUCH ? tr('Карта: тянуть — сдвиг, щипок — масштаб, касание — выбор. Оператор: тянуть — поворот, касание отметки или ИКО — назначить цель. «КАМ.» — вид снаружи и за ракетой (тянуть — облёт).')
+      : tr('Карта: тянуть — сдвиг, колесо — масштаб, щелчок — выбор и постановка, Пробел — начать волну.<br>Оператор: тянуть мышью или стрелки/WASD — поворот, колесо или Z — увеличение, щелчок по отметке — цель, Tab — следующая цель,<br>Пробел/F — пуск (у пушек — держать), E — РЛС, M — метод, V — камера (оператор / снаружи / за ракетой), Q — на карту, Esc — пауза.')),
   };
   return api;
 }

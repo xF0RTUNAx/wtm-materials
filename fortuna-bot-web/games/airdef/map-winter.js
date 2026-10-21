@@ -3,6 +3,7 @@
 // objects, B…). Рельеф — сеткой высот 50 м (горы до ~1,6 км; groundH — билинейно, быстро для лучей и ракет).
 // Долина с севера на юг: водохранилище за плотиной ГЭС на севере, замёрзшая река, авиабаза посередине, посёлок и
 // военный городок, ж/д узел, арсенал в восточном ущелье, РЛС на вершине хребта, озеро на юге. Оси как в city.js: −Z — север.
+import { tr } from './i18n.js?v=20261022r';
 import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, mp, mbox, mapRuntime } from './city.js?v=20261022r';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1; // узлов по стороне
@@ -194,17 +195,17 @@ export function buildWinter(seed = 1) {
     const x = rwx + 260, z = R.z, M = [];
     for (let k = -2; k <= 2; k++) M.push(mp('obj_hangar', x, z + k * 260, 1, 0.75));
     M.push(mp('obj_jhangar', x + 70, z - 800, 0), mp('obj_jhangar', x + 70, z + 820, 0), mp('obj_rtank', x + 160, z + 1200), mp('obj_rtank', x + 180, z + 1200), mp('obj_milbase', x + 150, z - 1250));
-    add({ key: 'w_air', name: 'Авиабаза', x, z, w: 420, d: 2700, value: 170, hp: 240, models: M, parts: [...M.map(mbox), { t: 'cyl', x: x + 120, z: z + 40, r: 6, h: 32 }] });
+    add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 420, d: 2700, value: 170, hp: 240, models: M, parts: [...M.map(mbox), { t: 'cyl', x: x + 120, z: z + 40, r: 6, h: 32 }] });
   }
   { const p = P[4], M = []; // склад ГСМ
     for (let a = -1; a <= 1; a++) for (const b of [-1, 1]) M.push(mp('obj_tanks', p.x + a * 75, p.z + b * 60));
     M.push(mp('obj_tank4', p.x + 190, p.z, 1), mp('obj_rtank', p.x - 190, p.z - 20), mp('obj_rtank', p.x - 190, p.z + 20));
-    add({ key: 'w_fuel', name: 'Склад ГСМ', x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
+    add({ key: 'w_fuel', name: tr('Склад ГСМ'), x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = P[3], M = [mp('obj_hangar', p.x - 160, p.z, 0, 0.8), mp('obj_hangar', p.x, p.z, 0, 0.8), mp('obj_hangar', p.x + 160, p.z, 0, 0.8), mp('obj_milbase', p.x, p.z + 150)]; // арсенал
     for (let k = 0; k < 4; k++) M.push(mp('obj_cont', p.x - 150 + k * 100, p.z - 140));
-    add({ key: 'w_ammo', name: 'Арсенал в ущелье', x: p.x, z: p.z, w: 520, d: 380, value: 180, hp: 220, models: M, parts: M.map(mbox) }); }
+    add({ key: 'w_ammo', name: tr('Арсенал в ущелье'), x: p.x, z: p.z, w: 520, d: 380, value: 180, hp: 220, models: M, parts: M.map(mbox) }); }
   { const p = P[5], M = [mp('obj_milbase', p.x, p.z, 0, 2), mp('obj_oldind', p.x - 70, p.z + 20, 1), mp('obj_cont', p.x + 70, p.z + 40)]; // командный пункт
-    add({ key: 'w_cp', name: 'Командный пункт', x: p.x, z: p.z, w: 260, d: 200, value: 160, hp: 260, models: M,
+    add({ key: 'w_cp', name: tr('Командный пункт'), x: p.x, z: p.z, w: 260, d: 200, value: 160, hp: 260, models: M,
       parts: [...M.map(mbox), { t: 'cyl', x: p.x - 40, z: p.z - 60, r: 1, h: 45 }, { t: 'cyl', x: p.x + 45, z: p.z - 60, r: 1, h: 38 }] }); }
   { // РЛС на вершине восточного хребта: самая высокая точка в круге
     let bx = 0, bz = 0, bh = -1e9; const cx = valleyX(-6500) + 6200, cz = -6500; // северо-восточный хребет
@@ -213,21 +214,21 @@ export function buildWinter(seed = 1) {
       const [ci, cj] = node(bx, bz), y = bh - 8; bh = y;
       for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(80, 300, d)); }
     }
-    add({ key: 'w_radar', name: 'РЛС на вершине', x: bx, z: bz, w: 120, d: 100, value: 150, hp: 160, peak: true,
+    add({ key: 'w_radar', name: tr('РЛС на вершине'), x: bx, z: bz, w: 120, d: 100, value: 150, hp: 160, peak: true,
       parts: [{ t: 'cyl', x: bx, z: bz, r: 9, h: 18 }, { t: 'cyl', x: bx + 40, z: bz + 10, r: 7, h: 14 }, { t: 'box', x: bx - 35, z: bz - 20, w: 24, d: 12, h: 6 }, { t: 'cyl', x: bx - 10, z: bz + 35, r: 1.2, h: 40 }] }); }
   { // ГЭС: стена плотины поперёк долины и машинный зал ниже
     const z = WINTER.DAM_Z, vx = valleyX(z); let l = 0, r = 0;
     while (l < 6000 && groundH(vx - l, z + 40) < lakeNY + 4) l += 25; while (r < 6000 && groundH(vx + r, z + 40) < lakeNY + 4) r += 25; // стена — от склона до склона
     const x0 = vx - l, x1 = vx + r, cx = (x0 + x1) / 2, top = lakeNY + 5, base = floorY(z) - 6;
     const M = [mp('obj_factory', valleyX(z + 260), z + 260, 0, 0.9)];
-    add({ key: 'w_dam', name: 'ГЭС на плотине', x: cx, z: z + 100, w: x1 - x0 + 40, d: 360, value: 190, hp: 300, dam: true, models: M,
+    add({ key: 'w_dam', name: tr('ГЭС на плотине'), x: cx, z: z + 100, w: x1 - x0 + 40, d: 360, value: 190, hp: 300, dam: true, models: M,
       parts: [{ t: 'box', x: cx, z, w: x1 - x0 + 40, d: 34, h: top - base, y0: base }, ...M.map(mbox)] }); }
   { const p = P[2], M = []; // ж/д узел: склады и ряды вагонов-контейнеров
     for (let k = -3; k <= 3; k++) M.push(mp('obj_cont', p.x - 40, p.z + k * 260, 1), mp('obj_cont', p.x + 40, p.z + k * 260 + 120, 1));
     M.push(mp('obj_oldind', p.x, p.z - 1200), mp('obj_oldind', p.x, p.z + 1250));
-    add({ key: 'w_rail', name: 'Железнодорожный узел', x: p.x, z: p.z, w: 220, d: 3000, value: 120, hp: 180, models: M, parts: M.map(mbox) }); }
+    add({ key: 'w_rail', name: tr('Железнодорожный узел'), x: p.x, z: p.z, w: 220, d: 3000, value: 120, hp: 180, models: M, parts: M.map(mbox) }); }
   { const p = P[1], x = p.x + 520, z = p.z + 380, M = [mp('obj_milbase', x, z), mp('obj_milbase', x + 70, z + 60), mp('obj_milbase', x - 70, z + 60), mp('obj_cont', x, z + 120)]; // военный городок
-    add({ key: 'w_garr', name: 'Военный городок', x, z: z + 50, w: 260, d: 240, value: 110, hp: 160, models: M, parts: M.map(mbox) }); }
+    add({ key: 'w_garr', name: tr('Военный городок'), x, z: z + 50, w: 260, d: 240, value: 110, hp: 160, models: M, parts: M.map(mbox) }); }
   const objects = O;
   const keep = objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 }));
   const blocked = (x, z, r) => keep.some((k) => x + r > k.x0 && x - r < k.x1 && z + r > k.z0 && z - r < k.z1);
