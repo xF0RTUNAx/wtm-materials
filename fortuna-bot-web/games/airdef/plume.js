@@ -128,8 +128,11 @@ const SM_V = `#include <common>
   void main() {
     float age = max(0.0, uTime - aA.x), life = aB.y, f = clamp(age / life, 0.0, 1.0);
     vec3 p = position + uWind * age + vec3(0.0, aB.w * age, 0.0);          // снос ветром и всплытие тёплого дыма
-    float u = aB.z, sg = aSeed * 6.283, grow = smoothstep(0.0, 2.5, age);
-    float w = aA.z + aB.x * sqrt(age);                                       // турбулентная диффузия: ширина ∝ √t
+    // grow — клубы и изгиб: немного с первых мгновений (иначе молодая лента — ровная полоса с прямыми краями, Mark 2026-10-22)
+    float u = aB.z, sg = aSeed * 6.283, grow = 0.3 + 0.7 * smoothstep(0.0, 2.5, age);
+    // начало следа (точка пуска / отстрела) — не квадратный срез: первые ≈ 5 ширин лента сужается и проявляется
+    float st = smoothstep(0.0, max(aA.z * 5.0, 3.0), u);
+    float w = (aA.z + aB.x * sqrt(age)) * (0.35 + 0.65 * st);                // турбулентная диффузия: ширина ∝ √t
     w *= 1.0 + grow * (0.28 * sin(u * 0.9 / max(aA.z, 0.5) + sg) + 0.18 * sin(u * 0.37 / max(aA.z, 0.5) + 2.0 * sg)); // «клубы» по длине
     vec3 vd = normalize(cameraPosition - p), sd = cross(normalize(aTan), vd); float sl = length(sd);
     vec3 sn = sl > 1e-4 ? sd / sl : vec3(0.0, 1.0, 0.0);
@@ -140,7 +143,7 @@ const SM_V = `#include <common>
     // у сопла дым появляется не сразу (горячие газы прозрачны: aRamp — время, за которое ракета уходит от факела), к концу жизни тает; лента «ребром» к камере — бледнее (клубы-частицы её дополняют)
     // расплываясь, дым редеет: после первой секунды плотность ∝ (ширина в 1 с / ширина сейчас)^0,6 — дальние участки следа тают постепенно
     float dil = pow(clamp((aA.z + aB.x) / (aA.z + aB.x * sqrt(max(age, 1.0))), 0.0, 1.0), 0.6);
-    vAl = aA.w * smoothstep(0.0, aRamp, age) * pow(1.0 - f, 1.4) * dil * mix(0.35, 1.0, smoothstep(0.08, 0.5, sl));
+    vAl = aA.w * smoothstep(0.0, aRamp, age) * pow(1.0 - f, 1.4) * dil * st * mix(0.35, 1.0, smoothstep(0.08, 0.5, sl));
     float wt = aA.z + aB.x * sqrt(max(age, 0.15));                            // масштаб узора по длине: у сопла не растёт (иначе u·dw/w² при больших u рвёт текстуру в гребёнку)
     vUv = vec2(u / max(wt, 0.6) * 0.42 + aSeed * 7.0, aA.y * 0.5 + 0.5); vAge = age; vCol = aCol;
     #include <logdepthbuf_vertex>
