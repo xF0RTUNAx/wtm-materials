@@ -1143,7 +1143,7 @@ export function createAir(C) {
     } else {
       HU.cx = clamp(k('KeyD') - k('KeyA') + (st ? stick.x : 0), -1, 1);
       HU.cy = clamp(k('KeyW') - k('KeyS') - (st ? stick.y : 0), -1, 1);
-      HU.yaw = clamp(k('ArrowRight') - k('ArrowLeft') + pad.x, -1, 1);
+      HU.yaw = clamp(k('ArrowRight') - k('ArrowLeft') + pad.x, -1, 1); HU.stab = true; // мягкая стабилизация (Mark 2026-10-21)
     }
     if (aimOn() && HU.yaw) aim.yaw = craft.yaw; // поворот — взгляд за носом
     HU.yawTo = aimOn() && !HU.yaw ? aim.yaw : undefined; HU.pitchTo = aimOn() ? aim.pitch : undefined;

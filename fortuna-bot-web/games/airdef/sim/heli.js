@@ -89,9 +89,14 @@ export function heliStep(a, hm, u, dt, env = {}) {
     a.wp = clamp((pd - a.pitch) * 3, -hm.pitchR, hm.pitchR) * ctrl;
     a.wr = clamp((rd - a.roll) * 3.5, -hm.rollR, hm.rollR) * ctrl;
   } else {
-    // ручка — угловая скорость (с лёгким демпфированием); ориентация держится сама — как у вертолёта с триммером
-    a.wp += (u.cy * -hm.pitchR * 0.8 * ctrl - a.wp) * Math.min(1, 6 * dt);
-    a.wr += (u.cx * -hm.rollR * 0.8 * ctrl - a.wr) * Math.min(1, 6 * dt);
+    // ручка — угловая скорость (с лёгким демпфированием); ориентация держится сама — как у вертолёта с триммером.
+    // u.stab — мягкая стабилизация (Mark 2026-10-21, «Реализм» игрока): ручку отпустили — сам плавно выходит в горизонт,
+    // на малой скорости ещё и гасит снос (лёгкий наклон против скорости), как автопилот-«помощник» настоящих вертолётов
+    const slow = 1 - smooth(10, 25, vh), freeP = u.stab && Math.abs(u.cy) < 0.05, freeR = u.stab && Math.abs(u.cx) < 0.05;
+    const tp = freeP ? clamp((clamp(vf * 0.015, -0.12, 0.12) * slow - a.pitch) * 1.2, -hm.pitchR * 0.4, hm.pitchR * 0.4) : u.cy * -hm.pitchR * 0.8;
+    const tr = freeR ? clamp((clamp(vr * 0.015, -0.15, 0.15) * slow - a.roll) * 1.4, -hm.rollR * 0.4, hm.rollR * 0.4) : u.cx * -hm.rollR * 0.8;
+    a.wp += (tp * ctrl - a.wp) * Math.min(1, 6 * dt);
+    a.wr += (tr * ctrl - a.wr) * Math.min(1, 6 * dt);
   }
   a.pitch = clamp(a.pitch + a.wp * dt, -1.0, 1.0); a.roll = clamp(a.roll + a.wr * dt, -1.2, 1.2);
   // ── курс: педали / взгляд; на скорости — флюгер (киль) и согласованный вираж по крену ──
