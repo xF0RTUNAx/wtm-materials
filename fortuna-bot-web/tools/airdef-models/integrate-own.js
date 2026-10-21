@@ -1,5 +1,5 @@
 // Подмена модели в игре на готовую свою — механические шаги, ничего проверять и разбирать не нужно.
-//   deno run -A tools/airdef-models/integrate-own.js "<папка модели с ПАСПОРТ.json>" [--dry] [--no-thumb]
+//   deno run -A tools/airdef-models/integrate-own.js "<папка модели с ПАСПОРТ.json>" [--dry] [--no-thumb] [--commit [--push]]
 // Папка модели — ~/Downloads/Воздушное превосходство/Модели/Свои/<название>/ (там ПАСПОРТ.json и файлы модели). Читается только ПАСПОРТ.json:
 // ключ, название, ревизия, имена файлов. Скрипт:
 //  1. копирует файлы модели в tools/airdef-models/own/ (скрипты сборки и паспорт — в own/<база>-build/);
@@ -8,8 +8,9 @@
 //  4. models.js: версия файла в блоке GLB_V_OWN (+1 к последней букве, только если файл игры изменился) и комментарий строки ключа в META;
 //  5. убирает файл ключа из списка авторов чужого набора (models/credits.js и CREDITS.md);
 //  6. снимает миниатюру (нужен сервер :8935; --no-thumb — пропустить).
-// С --dry ничего не пишет. Всё читается и разбирается до первой записи.
-const A = Deno.args, DRY = A.includes('--dry'), NOTHUMB = A.includes('--no-thumb'), DIRARG = A.find((a) => !a.startsWith('--'));
+// С --dry ничего не пишет. Всё читается и разбирается до первой записи. С --commit (только перечисленные пути) делает коммит с нейтральным сообщением, с --push — ещё и пуш в online-dev:
+// так Mark может подменить модель сам в терминале, без чата.
+const A = Deno.args, DRY = A.includes('--dry'), NOTHUMB = A.includes('--no-thumb'), COMMIT = A.includes('--commit') || A.includes('--push'), PUSH = A.includes('--push'), DIRARG = A.find((a) => !a.startsWith('--'));
 const fail = (m) => { console.log('✕ ' + m); Deno.exit(1); };
 if (!DIRARG) fail('использование: deno run -A integrate-own.js "<папка модели с ПАСПОРТ.json>" [--dry] [--no-thumb]');
 const WEB = new URL('../../', import.meta.url).pathname, OWN = WEB + 'tools/airdef-models/own/';
@@ -91,6 +92,29 @@ const up = async () => { try { return (await fetch('http://localhost:8935/fortun
 if (NOTHUMB || DRY) console.log('6. миниатюра пропущена');
 else if (!(await up())) console.log(`6. сервер :8935 не запущен — миниатюру позже: deno run -A tools/airdef-headless/thumbs-bake.js wpn:${P.weapon}`);
 else { const r = new Deno.Command(Deno.execPath(), { args: ['run', '-A', WEB + 'tools/airdef-headless/thumbs-bake.js', `wpn:${P.weapon}`], stdout: 'piped', stderr: 'piped' }).outputSync(); console.log('6. миниатюра ' + (r.success ? 'снята' : 'не снялась')); }
+
+// ── 7. коммит (только по --commit) ──
+const gitPaths = ['tools/airdef-models/prepare.js', `tools/airdef-models/own/${base}.glb`, `tools/airdef-models/own/${base}.blend`, `tools/airdef-models/own/${base}-build`, 'games/airdef/models.js',
+  `games/airdef/models/${KEY}.glb`, 'games/airdef/models/credits.js', 'games/airdef/models/CREDITS.md', `games/airdef/thumbs/wpn_${P.weapon}.webp`].filter((x) => exists(WEB + x));
+if (COMMIT) {
+  if (DRY) console.log('7. [dry] коммит только путей: ' + gitPaths.join(', '));
+  else {
+    const git = (...args) => new Deno.Command('git', { args: ['-C', WEB, ...args], stdout: 'piped', stderr: 'piped' }).outputSync(), out = (r) => new TextDecoder().decode(r.stdout).trim();
+    const staged = out(git('diff', '--cached', '--name-only')).split('\n').filter(Boolean);
+    const foreign = staged.filter((f) => !gitPaths.some((x) => f === 'fortuna-bot-web/' + x || f.startsWith('fortuna-bot-web/' + x + '/')));
+    if (foreign.length) fail('в индексе уже есть посторонние файлы (' + foreign.slice(0, 3).join(', ') + '…) — коммит не делаю, разберись с индексом');
+    git('add', '--', ...gitPaths);
+    if (!out(git('diff', '--cached', '--name-only'))) console.log('7. коммитить нечего: всё уже в репозитории');
+    else {
+      const r = git('commit', '-m', `airdef: своя модель ${P.name} вместо прежней (ревизия ${P.rev || 1})`, '-m', 'Подмена выполнена скриптом tools/airdef-models/integrate-own.js.');
+      console.log('7. коммит: ' + (r.success ? out(git('log', '--oneline', '-1')) : '✕ не получился: ' + new TextDecoder().decode(r.stderr).trim().split('\n')[0]));
+      if (r.success && PUSH) {
+        if (out(git('rev-parse', '--abbrev-ref', 'HEAD')) !== 'online-dev') console.log('   пуш пропущен: текущая ветка не online-dev');
+        else { const pr = git('push', 'origin', 'online-dev'); console.log('   пуш в online-dev: ' + (pr.success ? 'готово' : '✕ ' + new TextDecoder().decode(pr.stderr).trim().split('\n')[0])); }
+      }
+    }
+  }
+}
 
 console.log(`
 Готово. В коммит — только: tools/airdef-models/prepare.js, tools/airdef-models/own/${base}.* и own/${base}-build/, games/airdef/models.js, games/airdef/models/${KEY}.glb, games/airdef/models/credits.js, games/airdef/models/CREDITS.md, games/airdef/thumbs/wpn_${P.weapon}.webp.
