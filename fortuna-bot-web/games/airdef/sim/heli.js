@@ -63,8 +63,8 @@ export function heliInit(a) { a.col = a.col ?? 0.75; a.landed = !!a.landed; a.wy
 
 // Шаг. u — команды: cx (вправо +), cy (вперёд +), col (газ −1…1: вниз / вверх), yaw (педали −1…1: вправо +) или yawTo (курс,
 // рад — наведение камерой: нос за взглядом), pitchTo (угол взгляда, рад; «Аркада»: вниз — нос за ним). env — { groundY: высота земли под вертолётом, gear: высота центра над землёй
-// стоя на шасси }. Возвращает null или событие: { touch: скорость удара (м/с) } — коснулись земли (решает вызывающий: посадка
-// или авария), 'lift' — оторвались.
+// стоя на шасси, groundAhead: «Аркада» — самая высокая земля на пути за ближайшие ≈ 2,5 с }. Возвращает null или событие: { touch: скорость удара (м/с) } —
+// коснулись земли (решает вызывающий: посадка или авария), 'lift' — оторвались.
 const UP = {};
 export function heliStep(a, hm, u, dt, env = {}) {
   const s = hm.s, ctrl = a.ctrlK ?? 1;
@@ -73,19 +73,27 @@ export function heliStep(a, hm, u, dt, env = {}) {
   const vf = -a.vel.x * sY - a.vel.z * cY, vr = a.vel.x * cY - a.vel.z * sY, vh = Math.hypot(a.vel.x, a.vel.z);
   const agl = env.groundY !== undefined ? a.pos.y - env.groundY - (env.gear ?? 2) : 1e9;
   const tA = tmaxAcc(hm, a.pos.y, vh, a.thrK ?? 1);
+  // «Аркада» (2026-10-22: врезались в склон на полной скорости — склон рос быстрее набора): нужный набор, чтобы пройти землю впереди
+  // за 2,5 с с той же высотой над ней (не ниже 4 м, запас не больше 10 м — полёт «на брюхе» за рельефом не мешает); не успеваем — сбавляем
+  // скорость вперёд. Только на скорости (висение и посадка — как было)
+  const climb = hm.arcade && env.groundAhead !== undefined && agl < 1e8
+    ? (env.groundAhead + (env.gear ?? 2) + Math.max(4, Math.min(agl, 10)) - a.pos.y) / 2.5 * smooth(8, 18, vh) : 0;
   // ── ориентация ──
   if (hm.arcade) {
     // ручка — желаемая скорость: вперёд до наибольшей (наклон с упреждением — сколько нужно, чтобы держать эту скорость, плюс
     // поправка по ошибке), вбок на висении — до 18 м/с; на скорости ручка вбок — крен до ~45° (вираж); отпустили — тормозит
-    const wantF = clamp(u.cy, -0.35, 1) * hm.vmax, wantR = clamp(u.cx, -1, 1) * 18;
+    const wantF = clamp(u.cy, -0.35, 1) * hm.vmax * (climb > 0.6 * hm.vc ? clamp(0.6 * hm.vc / climb, 0.3, 1) : 1), wantR = clamp(u.cx, -1, 1) * 18;
     const ff = (v) => Math.sign(v) * Math.atan(hm.kd * v * v / G);
     let pd = -clamp(ff(wantF) + clamp((wantF - vf) / 14, -1, 1) * hm.tilt, -hm.tilt * 1.15, hm.tilt * 1.15);
     // взгляд вниз круче ~7° (наведение камерой) — нос за ним, до 1,3 наибольшего наклона: прицеливание НАР и ПТУР по земле
     // (вертолёт при этом разгоняется — как на пологом пикировании)
     if (u.pitchTo !== undefined && u.pitchTo < -0.12) pd = Math.min(pd, Math.max(u.pitchTo, -hm.tilt * 1.3));
     if (u.pitchHold && u.pitchTo !== undefined) pd = clamp(u.pitchTo, -hm.tilt * 1.3, hm.tilt); // ИИ: нос точно по прицелу (залп НАР)
+    // у земли нос вниз — не круче, чем успеваем выйти (2026-10-22: пикирование на цель с носом −35° на 4 м — тяги на выход не хватало)
+    if (agl < 60) pd = Math.max(pd, -hm.tilt * 1.3 * clamp(agl / 60, 0.35, 1));
     const bank = smooth(15, 35, vf);
-    const rd = (1 - bank) * -clamp(ff(wantR) + clamp((wantR - vr) / 9, -1, 1) * hm.tilt, -hm.tilt, hm.tilt) + bank * -clamp(u.cx, -1, 1) * 0.8;
+    // у земли (ниже 30 м) крен меньше: в вираже 45° вертикальной тяги не хватало — проседал на 1,5–3,5 м/с и касался земли
+    const rd = ((1 - bank) * -clamp(ff(wantR) + clamp((wantR - vr) / 9, -1, 1) * hm.tilt, -hm.tilt, hm.tilt) + bank * -clamp(u.cx, -1, 1) * 0.8) * clamp(agl / 30, 0.4, 1);
     a.wp = clamp((pd - a.pitch) * 3, -hm.pitchR, hm.pitchR) * ctrl;
     a.wr = clamp((rd - a.roll) * 3.5, -hm.rollR, hm.rollR) * ctrl;
   } else {
@@ -114,6 +122,7 @@ export function heliStep(a, hm, u, dt, env = {}) {
     // газ — вертикальная скорость; отпустили — держит высоту; у земли снижение не быстрее ~половины высоты в секунду
     let vyc = clamp(u.col || 0, -1, 1) * (u.col > 0 ? hm.vc : 1.3 * hm.vc);
     if (agl < 40) vyc = Math.max(vyc, -Math.max(1.2, agl * 0.45));
+    if (climb > 0) vyc = Math.max(vyc, Math.min(climb * 1.6, 1.3 * hm.vc)); // облёт рельефа: земля впереди выше — набор сам
     const need = G + (vyc - a.vel.y) * 1.8 + hm.kv * a.vel.y * Math.abs(a.vel.y);
     a.col = clamp(need / Math.max(UP.y, 0.3) / tA, 0, 1);
   } else {

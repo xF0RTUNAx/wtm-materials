@@ -345,14 +345,25 @@ function wearMat(mat) {
   mat.customProgramCacheKey = () => 'wear';
 }
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
+// телефон (2026-10-22: Telegram закрывал вкладку в вертолётном режиме по памяти — у AH-64 18 текстур 1024 ≈ 100 МБ видеопамяти):
+// текстуры вертолётов — не больше 512, остальных моделей — не больше 1024; распакованная картинка закрывается после загрузки на видеокарту
+// (иначе держит ещё столько же обычной памяти). На ПК и в стендах (свои рендереры) — как было
+const TOUCH = typeof matchMedia === 'function' && typeof location !== 'undefined' && (/[?&]touch=1/.test(location.search) || matchMedia('(pointer: coarse)').matches);
 async function load(name, base) {
   const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
   const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
+  const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0;
   const tex = await Promise.all(textures.map(async (t) => {
     if (typeof createImageBitmap !== 'function') return null;
     let bmp; try { bmp = await createImageBitmap(images[t.source]); } catch (_) { return null; } // битая картинка — модель без этой текстуры
+    if (tmax && Math.max(bmp.width, bmp.height) > tmax) { // уменьшить (с сохранением пропорций); не вышло — оставить как есть
+      const k = tmax / Math.max(bmp.width, bmp.height);
+      try { const sm = await createImageBitmap(bmp, { resizeWidth: Math.max(1, Math.round(bmp.width * k)), resizeHeight: Math.max(1, Math.round(bmp.height * k)), resizeQuality: 'high' }); bmp.close(); bmp = sm; } catch (_) { /* браузер без resize */ }
+    }
     // UV glTF — без переворота
-    const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true; return x;
+    const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
+    if (TOUCH) x.onUpdate = () => { if (x.image && x.image.close) x.image.close(); }; // на видеокарте — копия в памяти больше не нужна (рендерер в игре один)
+    return x;
   }));
   // меш «часть|материал»: у комплексов — body / turret / cradle, у остальных всё в body
   const MM = META[name] || META[name.replace(/_lo$/, '')] || {}, matte = !!MM.matte;

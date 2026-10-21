@@ -179,6 +179,8 @@ export default {
   'Удар о землю — {0} м/с': 'Ground impact at {0} m/s',
   'Жёсткая посадка — повреждения': 'Hard landing: damaged',
   'жёсткая посадка': 'hard landing',
+  'Задели землю — повреждения': 'Scraped the ground: damaged',
+  'удар о землю': 'ground strike',
   'Посадка на площадке — пополнение': 'Landed on the pad: rearming',
   'Посадка': 'Landing',
   'Вылет завершён — оружие израсходовано': 'Sortie complete: ordnance expended',

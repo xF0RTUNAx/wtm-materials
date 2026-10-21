@@ -1163,14 +1163,22 @@ export function createAir(C) {
     craft.ab = false; systems(dt);
     const top = Math.max(city.topAt(craft.pos.x, craft.pos.z), city.waterAt ? city.autumn.WY : CITY.WATER_Y); // болото «Туманной топи» — своя отметка воды
     const tk = craft.thrK; if (craft.fuel <= 0) craft.thrK = (tk ?? 1) * 0.62; // двигатели встали — авторотация: снижение, у земли — подрыв шага
-    const ev = heliStep(craft, craft.hm, HU, dt, { groundY: top, gear: craft.gearH || 2 });
+    // «Аркада»: самая высокая земля на пути за 0,8 / 1,6 / 2,5 с — лётная модель сама наберёт высоту перед склоном (sim/heli.js climb)
+    const arcH = !!craft.hm.arcade; let gA;
+    if (arcH) { const wy = city.waterAt ? city.autumn.WY : CITY.WATER_Y; gA = top; for (const t of [0.8, 1.6, 2.5]) { const x = craft.pos.x + craft.vel.x * t, z = craft.pos.z + craft.vel.z * t; gA = Math.max(gA, city.topAt(x, z), wy); } }
+    const ev = heliStep(craft, craft.hm, HU, dt, { groundY: top, gear: craft.gearH || 2, groundAhead: gA });
     craft.thrK = tk; craft.thr = craft.landed ? 0.3 : craft.col; // винт на земле — малый шаг
     if (ev === 'lift') say(tr('Взлёт'), 1);
     if (!ev || ev === 'lift') return;
     const water = city.waterAt ? city.waterAt(craft.pos.x, craft.pos.z) : city.groundH(craft.pos.x, craft.pos.z) < CITY.WATER_Y - 0.5 && top <= CITY.WATER_Y + 0.1;
     const v = water ? 'crash' : touchVerdict(ev);
     if (game.opts.invuln && v !== 'land') { craft.pos.y = top + 60; craft.vel.set(0, 0, 0); say(tr('Учебный вылет: высоту вернули — садитесь мягче'), 2.5); return; }
-    if (v === 'crash') { heliCrash(water ? tr('Упали в воду') : city.bldAt(craft.pos.x, craft.pos.z) > 0 ? tr('Разбились о здание') : tr('Удар о землю — {0} м/с', [Math.round(ev.vy)])); return; }
+    // «Аркада»: касание вскользь (снижение < 3,5 м/с, наклон < 26°, скорость < 30 м/с) — не авария: отскок, торможение, урон (2026-10-22)
+    if (v === 'crash' && arcH && !water && !(city.bldAt(craft.pos.x, craft.pos.z) > 0) && ev.vy < 3.5 && ev.tilt < 0.45 && ev.vh < 30) {
+      craft.vel.x *= 0.6; craft.vel.z *= 0.6; craft.vel.y = 2.5; craft.pos.y = top + (craft.gearH || 2) + 0.3;
+      say(tr('Задели землю — повреждения'), 2.5); hurt(10, tr('удар о землю')); return;
+    }
+    if (v === 'crash') { heliCrash(water ? tr('Упали в воду') : city.bldAt(craft.pos.x, craft.pos.z) > 0 ? tr('Разбились о здание') : tr('Удар о землю — {0} м/с', [Math.round(ev.touch)])); return; }
     heliLand(craft);
     if (v === 'hard') { say(tr('Жёсткая посадка — повреждения'), 2.5); hurt(18, tr('жёсткая посадка')); }
     else say(Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z) < 800 ? tr('Посадка на площадке — пополнение') : tr('Посадка'), 1.6);
