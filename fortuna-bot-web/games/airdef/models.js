@@ -189,7 +189,7 @@ const META = {
   w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 — Rhine_Lab_Muelsyse (US Weapon Pack)
   w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 MOP — Rhine_Lab_Muelsyse (US Weapon Pack)
   w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
-  w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т — собственная модель (Blender по картинкам Mark, tools/airdef-models/own/kh29t)
+  w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т — собственная модель (tools/airdef-models/own/kh29t)
   w_kh31p: { weapon: 'kh31p', stations: [] },
   w_kh59m: { weapon: ['kh59m', 'kh59mk2'], lazy: true, stations: [] }, // Х-31 (L_elo) в размер Х-59М — и для Х-59МК2 (Mark 2026-10-19; прежняя — из War Thunder)
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)

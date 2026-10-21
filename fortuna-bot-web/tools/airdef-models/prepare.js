@@ -161,7 +161,7 @@ const CONFIG = {
     groups: (c) => (c.ctr[1] < -0.7 && Math.abs(c.ctr[0] + 0.9) < 1.0 && c.ctr[2] > -2.4 && c.ctr[2] < -0.9 && Math.max(...c.size) > 2.0 ? null : LS(c)) },
   // собственные модели (Blender, Mark и Claude 2026-10-21) — исходники в tools/airdef-models/own (.blend и .glb), нос в −Z, метры
   w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
-  w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender по картинкам Mark, own/kh29t.glb), 3.895 м, 4.7 тыс. тр., материалов 4
+  w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
   w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
   // ── шестая партия 2026-10-21 (CC BY 4.0, Восток): andertan — Су-33, manilov.ap — М-4, МиГ-17 и Т-4, Tom Zimmermann — МиГ-19; без упрощения, текстуры 1024 ──

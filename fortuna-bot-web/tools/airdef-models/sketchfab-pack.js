@@ -1,22 +1,21 @@
-// Пакет для выкладки модели на Sketchfab (делает интегратор; Mark выкладывает сам): папка «<name_en> — Sketchfab» рядом с папкой модели —
-// glb и blend, превью, «ТЕКСТ ДЛЯ SKETCHFAB.txt» (название, описание, теги, переключатели — в том же виде, что у Hydra 70 и С-8).
-//   deno run -A tools/airdef-models/sketchfab-pack.js "<папка модели с ПАСПОРТ.json>"
-// Текст собирается ТОЛЬКО из паспорта (поля sketchfab.title / lead / parts / tags / dimensions и числа модели): без справок об изделии, их не искать
-// и не добавлять — описание про форму, масштаб и сборку модели.
+// Пакет для выкладки модели на Sketchfab (делает СБОРЩИК после того, как Mark принял модель; Mark выкладывает сам): папка «<name_en> — Sketchfab» рядом с
+// папкой модели — glb и blend, превью, «ТЕКСТ ДЛЯ SKETCHFAB.txt» (название, описание, теги, переключатели — в том же виде, что у Hydra 70 и С-8).
+//   deno run -A tools/airdef-models/sketchfab-pack.js "<папка модели с ПАСПОРТ.json и ОТЧЁТ.json>"
+// Текст собирается из отчёта (поля sketchfab.title / lead / parts / tags / dimensions и числа модели). Основной чат (Fable / Opus) этот файл и пакет не трогает.
 const fail = (m) => { console.log('✕ ' + m); Deno.exit(1); };
 const ARG = Deno.args.find((a) => !a.startsWith('--'));
-if (!ARG) fail('использование: deno run -A sketchfab-pack.js "<папка модели с ПАСПОРТ.json>"');
+if (!ARG) fail('использование: deno run -A sketchfab-pack.js "<папка модели с ПАСПОРТ.json и ОТЧЁТ.json>"');
 const DIR = await Deno.realPath(ARG).catch(() => fail(`нет папки ${ARG}`));
-let P; try { P = JSON.parse(Deno.readTextFileSync(`${DIR}/ПАСПОРТ.json`)); } catch (e) { fail('нет читаемого ПАСПОРТ.json: ' + e.message); }
-const S = P.sketchfab || {};
-if (!P.files || !P.files.glb || !P.files.blend || !P.model) fail('в паспорте нет files.glb / files.blend / model');
-for (const f of ['title', 'lead', 'parts', 'tags']) if (!S[f] || (Array.isArray(S[f]) && !S[f].length)) fail(`в паспорте нет sketchfab.${f}`);
-const files = [P.files.glb, P.files.blend, ...(P.files.previews || [])];
+const read = (f) => { try { return JSON.parse(Deno.readTextFileSync(`${DIR}/${f}`)); } catch (e) { return fail(`нет читаемого ${f}: ${e.message}`); } };
+const P = read('ПАСПОРТ.json'), R = read('ОТЧЁТ.json'), S = R.sketchfab || {};
+if (!P.files || !P.files.glb || !P.files.blend || !R.model) fail('в паспорте нет files.glb / files.blend или в отчёте нет model');
+for (const f of ['title', 'lead', 'parts', 'tags']) if (!S[f] || (Array.isArray(S[f]) && !S[f].length)) fail(`в отчёте нет sketchfab.${f}`);
+const previews = R.previews || [], files = [P.files.glb, P.files.blend, ...previews];
 for (const f of files) try { Deno.statSync(`${DIR}/${f}`); } catch { fail(`нет файла ${f} в папке модели`); }
-const out = `${DIR.replace(/\/[^/]*$/, '')}/${P.name_en || P.name} — Sketchfab`;
+const out = `${DIR.replace(/\/[^/]*$/, '')}/${R.name_en || P.name} — Sketchfab`;
 Deno.mkdirSync(out, { recursive: true });
 for (const f of files) Deno.copyFileSync(`${DIR}/${f}`, `${out}/${f}`);
-const k = (P.model.tris / 1000).toFixed(1), dims = S.dimensions || `length ${P.model.length_m} m, span ${P.model.span_m} m`;
+const k = (R.model.tris / 1000).toFixed(1), dims = S.dimensions || `length ${R.model.length_m} m, span ${R.model.span_m} m`;
 const text = `=== Что вставить в поля Sketchfab ===
 Загружать: ${P.files.glb}
 
@@ -48,7 +47,7 @@ Download: Free → лицензия: только Attribution (CC BY) → Select
 
 ПРИМЕЧАНИЕ ДЛЯ MARK: картинки-источники (чертежи, схемы окраски) найдены в интернете, их авторы и лицензии не фиксировались; в описании сказано
 просто «public reference drawings». Если автор или ограничение известны — допиши в описание строку «Reference: …» или реши, выкладывать ли на CC BY.
-Превью — по порядку: ${(P.files.previews || []).join(', ')}.
+Превью — по порядку: ${previews.join(', ')}.
 `;
 Deno.writeTextFileSync(`${out}/ТЕКСТ ДЛЯ SKETCHFAB.txt`, text);
 console.log(`пакет готов: ${out}\n  файлы: ${files.join(', ')}, ТЕКСТ ДЛЯ SKETCHFAB.txt`);

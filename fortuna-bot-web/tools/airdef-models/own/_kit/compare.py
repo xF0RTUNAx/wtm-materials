@@ -1,12 +1,12 @@
 """Наложение силуэта модели на чертёж и IoU (уровень 1 проверок).
 
-  /usr/bin/python3 -I compare.py <чертёж.png> <рендер_модели.png> <выход.png> [масштаб_вывода] [сдвиг dx,dy] [--passport ПАСПОРТ.json --view <имя вида>]
+  /usr/bin/python3 -I compare.py <чертёж.png> <рендер_модели.png> <выход.png> [масштаб_вывода] [сдвиг dx,dy] [--report ОТЧЁТ.json --view <имя вида>]
 
 Нужны Pillow и numpy (путь к пользовательским пакетам скрипт добавляет сам, поэтому работает и под -I).
 Силуэт чертежа — всё, что недостижимо заливкой от краёв по светлым пикселям (линии внутри контура не мешают); силуэт модели — альфа рендера
 (modelkit.silhouette_side / silhouette_end). На картинке: красный контур — модель, синий — чертёж. Ориентир: бок не ниже 0,95, вид сзади и спереди не ниже 0,85.
 Для фотографий (с перспективой) IoU не годится — только для ортогональных чертежей; по фото сверяют пропорции на глаз.
-С --passport число записывается в checks.silhouette_iou.<имя вида> паспорта.
+С --report число записывается в checks.silhouette_iou.<имя вида> отчёта (ОТЧЁТ.json в папке модели; --passport — то же самое, для старых команд).
 """
 import sys, site, json
 sys.path.append(site.getusersitepackages())
@@ -49,12 +49,12 @@ def run(ref, mod, out, zoom=1, shift=(0, 0)):
 if __name__ == '__main__':
     a, opts, pos, i = sys.argv[1:], {}, [], 0
     while i < len(a):
-        if a[i] in ('--passport', '--view') and i + 1 < len(a): opts[a[i][2:]] = a[i + 1]; i += 2
+        if a[i] in ('--report', '--passport', '--view') and i + 1 < len(a): opts['report' if a[i] != '--view' else 'view'] = a[i + 1]; i += 2
         else: pos.append(a[i]); i += 1
     if len(pos) < 3: print(__doc__); sys.exit(1)
     iou = run(pos[0], pos[1], pos[2], int(pos[3]) if len(pos) > 3 else 1, tuple(int(v) for v in pos[4].split(',')) if len(pos) > 4 else (0, 0))
-    if iou is not None and 'passport' in opts and 'view' in opts:
-        P = json.load(open(opts['passport'], encoding='utf-8'))
+    if iou is not None and 'report' in opts and 'view' in opts:
+        P = json.load(open(opts['report'], encoding='utf-8'))
         P.setdefault('checks', {}).setdefault('silhouette_iou', {})[opts['view']] = round(float(iou), 3)
-        with open(opts['passport'], 'w', encoding='utf-8') as f: json.dump(P, f, ensure_ascii=False, indent=1)
-        print(f'  записано в паспорт: checks.silhouette_iou.{opts["view"]} = {round(float(iou), 3)}')
+        with open(opts['report'], 'w', encoding='utf-8') as f: json.dump(P, f, ensure_ascii=False, indent=1)
+        print(f'  записано в отчёт: checks.silhouette_iou.{opts["view"]} = {round(float(iou), 3)}')

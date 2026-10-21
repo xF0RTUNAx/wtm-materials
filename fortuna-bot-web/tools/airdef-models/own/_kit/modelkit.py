@@ -302,26 +302,32 @@ def previews(outdir, size=(1920, 1080), views=None, bg=(0.62, 0.64, 0.66)):
 
 
 def passport(path, key, weapon, name, name_en, glb, blend, rev=None, build=(), previews_=(), checks=None, sketchfab=None, notes='', reset_iou=True):
-    """ПАСПОРТ.json для интегратора: числа берёт из сцены (stats), остальное — из аргументов. Файлы — имена внутри папки модели.
-    sketchfab = {'title': …, 'lead': …, 'parts': […], 'tags': […], 'dimensions': …} — для текста карточки (только форма и сборка модели, без справок об изделии);
+    """Два файла рядом. ПАСПОРТ.json (path) — минимум для основного чата: ключ, оружие, название, ревизия, имена файлов; больше в нём ничего нет.
+    ОТЧЁТ.json (там же) — всё остальное, только для сборщика и Mark: числа модели из сцены, материалы, превью, проверки, блок sketchfab, заметки.
+    sketchfab = {'title': …, 'lead': …, 'parts': […], 'tags': […], 'dimensions': …} — для текста карточки (только форма и сборка модели);
     dimensions по умолчанию считается из модели (длина, диаметр корпуса 2·rb, размах по X) — проверь, что «размах» уместен (у бомб поправь).
-    Если паспорт уже есть, то rev, checks, sketchfab и notes берутся из старого, пока не переданы новые (checks.game остаётся); IoU (checks.silhouette_iou)
-    сбрасывается при reset_iou — рендеры новые, compare.py запишет заново."""
-    old = {}
-    if os.path.exists(path):
-        try: old = json.load(open(path, encoding='utf-8'))
-        except Exception: old = {}
+    Если файлы уже есть, rev, checks, sketchfab и notes берутся из старых, пока не переданы новые (checks.game остаётся); IoU (checks.silhouette_iou)
+    сбрасывается при reset_iou — рендеры новые, compare.py запишет заново. Прежний полный паспорт (с checks, sketchfab, notes внутри) подхватывается как отчёт.
+    Возвращает отчёт."""
+    rpath = os.path.join(os.path.dirname(os.path.abspath(path)), 'ОТЧЁТ.json')
+    load = lambda f: (json.load(open(f, encoding='utf-8')) if os.path.exists(f) else {})
+    try: oldp = load(path)
+    except Exception: oldp = {}
+    try: oldr = load(rpath)
+    except Exception: oldr = {}
     st = stats(False); mats = {}
     for m in MATS:
         b = next(n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'); mats[m.name] = [round(v, 4) for v in b.inputs['Base Color'].default_value[:3]]
-    ch = dict(old.get('checks') or {}); ch.update(checks or {})
+    ch = dict(oldr.get('checks') or oldp.get('checks') or {}); ch.update(checks or {})
     if reset_iou and not (checks and 'silhouette_iou' in checks): ch['silhouette_iou'] = {}
     ch.setdefault('game', 'заполнить после preview-candidate.js: что видно в миниатюре, полёте и на подвеске')
-    sf = dict(old.get('sketchfab') or {}); sf.update(sketchfab or {})
+    sf = dict(oldr.get('sketchfab') or oldp.get('sketchfab') or {}); sf.update(sketchfab or {})
     if sf and 'dimensions' not in sf: sf['dimensions'] = f"length {st['length_m']:.1f} m, body diameter {2 * RB * S:.2f} m, wing span {st['span_m']:.2f} m"
-    P = dict(key=key, weapon=weapon, name=name, name_en=name_en, rev=rev if rev is not None else old.get('rev', 1),
-             files=dict(glb=glb, blend=blend, build=list(build), previews=list(previews_)),
+    rev = rev if rev is not None else oldp.get('rev', 1)
+    P = dict(key=key, weapon=weapon, name=name, rev=rev, files=dict(glb=glb, blend=blend, build=list(build)))
+    R = dict(name_en=name_en, rev=rev, previews=list(previews_),
              model=dict(length_m=st['length_m'], span_m=st['span_m'], height_m=st['height_m'], tris=st['tris'], materials=mats),
-             checks=ch, sketchfab=sf, notes=notes or old.get('notes', ''))
-    with open(path, 'w', encoding='utf-8') as f: json.dump(P, f, ensure_ascii=False, indent=1)
-    return P
+             checks=ch, sketchfab=sf, notes=notes or oldr.get('notes') or oldp.get('notes') or '')
+    for f, d in ((path, P), (rpath, R)):
+        with open(f, 'w', encoding='utf-8') as fh: json.dump(d, fh, ensure_ascii=False, indent=1)
+    return R

@@ -4,16 +4,18 @@
 #   K29_OUT="<папка модели>" /Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup \
 #       --python <папка>/build.py --python <папка>/deliver.py
 # (в живом Blender через blender-mcp: os.environ['K29_OUT'] = '<папка модели>', затем по очереди exec(compile(open(p, encoding='utf-8').read(), p, 'exec')) для build.py и deliver.py.)
+# Паспорт пишется двумя файлами: ПАСПОРТ.json (минимум для основного чата: ключ, название, ревизия, имена файлов) и ОТЧЁТ.json (всё остальное — только для сборщика и Mark).
 # Для другой модели скопировать этот файл и поменять: имя переменной окружения (по желанию), номера картинок и кадры чертежей, ключ, оружие, названия, блок sketchfab.
 # Дальше — в терминале (системный Python с Pillow), результат сравнения сам запишется в паспорт (номера картинок ниже — у Х-29Т: 4 — бок, 1 — сзади, 3 — спереди):
 #   K=/Users/mark./wtm-materials/fortuna-bot-web/tools/airdef-models/own/_kit ; F="<папка модели>"
-#   /usr/bin/python3 -I $K/compare.py "$F/4.png" "$F/проверка-чертежей/m_бок.png"   "$F/проверка-чертежей/наложение_бок.png"    --passport "$F/ПАСПОРТ.json" --view бок
-#   /usr/bin/python3 -I $K/compare.py "$F/1.png" "$F/проверка-чертежей/m_сзади.png"  "$F/проверка-чертежей/наложение_сзади.png" 3 --passport "$F/ПАСПОРТ.json" --view сзади
-#   /usr/bin/python3 -I $K/compare.py "$F/3.png" "$F/проверка-чертежей/m_спереди.png" "$F/проверка-чертежей/наложение_спереди.png" 3 --passport "$F/ПАСПОРТ.json" --view спереди
+#   /usr/bin/python3 -I $K/compare.py "$F/4.png" "$F/проверка-чертежей/m_бок.png"   "$F/проверка-чертежей/наложение_бок.png"    --report "$F/ОТЧЁТ.json" --view бок
+#   /usr/bin/python3 -I $K/compare.py "$F/1.png" "$F/проверка-чертежей/m_сзади.png"  "$F/проверка-чертежей/наложение_сзади.png" 3 --report "$F/ОТЧЁТ.json" --view сзади
+#   /usr/bin/python3 -I $K/compare.py "$F/3.png" "$F/проверка-чертежей/m_спереди.png" "$F/проверка-чертежей/наложение_спереди.png" 3 --report "$F/ОТЧЁТ.json" --view спереди
 # Уровень 2 (игра) — ПОСЛЕ этого скрипта (нужен экспортированный glb); итог словами — в паспорт:
 #   deno run -A /Users/mark./wtm-materials/fortuna-bot-web/tools/airdef-models/preview-candidate.js w_kh29t "$F/kh29t.glb" --out "$F/превью-игра"
-#   /usr/bin/python3 -I $K/passport_set.py "$F/ПАСПОРТ.json" checks.game "<что видно в миниатюре, полёте и на подвеске>"
-# Повторный запуск паспорт не затирает: rev, checks.game, sketchfab и notes остаются, IoU сбрасывается (рендеры новые — запусти compare.py заново).
+#   /usr/bin/python3 -I $K/passport_set.py "$F/ОТЧЁТ.json" checks.game "<что видно в миниатюре, полёте и на подвеске>"
+# Повторный запуск файлы не затирает: rev, checks.game, sketchfab и notes остаются, IoU сбрасывается (рендеры новые — запусти compare.py заново).
+# Последний шаг, после «принимаю» от Mark: deno run -A /Users/mark./wtm-materials/fortuna-bot-web/tools/airdef-models/sketchfab-pack.js "$F"  — пакет для Sketchfab рядом с папкой модели.
 import os, sys
 sys.dont_write_bytecode = True
 import modelkit as mk                                   # build.py уже подключил библиотеку и построил модель
