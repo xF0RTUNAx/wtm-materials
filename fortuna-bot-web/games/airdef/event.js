@@ -8,7 +8,7 @@ import { MODES } from './sim/strike.js?v=20261022r';
 import { RAID_HELI } from './sim/raid.js?v=20261022r';
 import { AUTUMN_KEYS } from './autumn-render.js?v=20261022r';
 import { ico } from './icons.js?v=20261022r';
-import { tr, trIf } from './i18n.js?v=20261022r';
+import { tr, trIf, LANG } from './i18n.js?v=20261022r';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 // решение Mark 2026-10-20: событие идёт 2 месяца; после конца кнопка входа скрыта
@@ -110,7 +110,7 @@ export function createEvent(C) {
 
   const left = () => eventLeft();
   const leftTxt = () => { const ms = left(), d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5); return d > 0 ? tr('ещё {0} д {1} ч', [d, String(h).padStart(2, '0')]) : tr('ещё {0} ч', [h]); };
-  const mapPane = () => `<div class="cap">${tr('Карта')}</div><img class="map" src="airdef/ui/ev_map.jpg?v=20261022r" alt="${tr('Туманная топь')}">
+  const mapPane = () => `<div class="cap">${tr('Карта')}</div><img class="map" src="airdef/ui/${LANG === 'en' ? 'ev_map_en' : 'ev_map'}.jpg?v=20261022r" alt="${tr('Туманная топь')}">
     <div class="cap">${tr('Погода')}</div>${seg('wx', S.wx, AUTUMN_KEYS.map((k) => [k, WX[k]]))}`;
   const modePane = () => `<div class="cap">${tr('Режим')}</div>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}`;
 
