@@ -136,8 +136,9 @@ if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeF
 // Осенняя «Туманная топь» (Хеллоуин) — ?map=autumn, «Съёмка» (pmap 'autumn') и проверка вертолёта ?heli=…
 const MAPS = ['winter', 'city', 'autumn'];
 // вылет на вертолёте (подвеска heli) — тоже на «Туманной топи»
-function wantMap(game, pmap, era, lo, evd) {
+function wantMap(game, pmap, era, lo, evd, tside) {
   if (MAPS.includes(Q.get('map'))) return Q.get('map');
+  if (game === 'training') return tside === 'heli' ? 'autumn' : 'city'; // обучение «за вертолёт» — на «Туманной топи» (Mark 2026-10-21)
   if (game === 'air' && LOADOUTS[era] && LOADOUTS[era][lo] && LOADOUTS[era][lo].heli) return 'autumn';
   if (game === 'defense' && evd) return 'autumn'; // оборона события «Туманная топь» (event.js)
   if (game === 'photo') return pmap === 'city' || pmap === 'autumn' ? pmap : 'winter';
@@ -148,7 +149,7 @@ function wantMap(game, pmap, era, lo, evd) {
 const SETUP0 = (() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}') || {}; } catch (_) { return {}; } })();
 // вертолёт и оборона события — только при запуске из события (event.js: go=air&hlo=<подвеска в эпохе setup.era> / go=defense и setup.evd): сохранённая вертолётная подвеска обычный «Вылет» на осеннюю карту не уводит
 const HLO = Q.get('hlo') !== null ? +Q.get('hlo') : -1;
-const MAP = wantMap(SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd);
+const MAP = wantMap(SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd, SETUP0.tside);
 // погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
 const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
@@ -702,7 +703,7 @@ const ctrls = {};
 C.start = function (game) {
   if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
   // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
-  if ((game === 'air' || game === 'defense') && !Q.get('map') && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd) !== MAP) {
+  if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
     ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }
   snd.unlock();

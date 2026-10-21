@@ -1228,7 +1228,7 @@ export function createAir(C) {
     craft, pod, game, loadout, fire, podNext, podView, nextWeapon, cm, say, rearm, setThr, aim, aimSync, netResupply,
     // обучение: показ автопилотом, перенос самолёта, смена целей задания, камера (0 — за самолётом, 3 — за оружием)
     demo(d) { demo = d || null; if (!demo) aimSync(); },
-    place(sp) { craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw || 0; craft.pitch = craft.roll = 0; craft.q = null; craft.speed = Math.max(craft.speed, 220); craft.wp = craft.wr = craft.wz = 0; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); camInit = false; },
+    place(sp) { craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw || 0; craft.pitch = craft.roll = 0; craft.q = null; craft.speed = craft.heli ? 20 : Math.max(craft.speed, 220); craft.wp = craft.wr = craft.wz = 0; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); camInit = false; },
     retarget(list) { game.targets = list; podSet(null); },
     setCam(m) { if (camMode !== m) { camMode = m; wc.obj = null; wc.init = false; } },
     // «Съёмка»: модель самолёта и подвеска (пилоны — userData.st), поставить модель в точку самолёта до кадра
