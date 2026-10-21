@@ -542,7 +542,7 @@ const CONFIG = {
       if (x > 0.55 && x < 1.05 && y > 0.35 && y < 0.65 && z > 0.3 && z < 0.9 && Math.max(...c.size) * k < 0.75) return null; // трубы и корпуса блоков НАР, малые направляющие под консолями — оружие из игры
       return 'body'; } },
   // ── 2026-10-21, четыре вертолёта manilov.ap (CC BY 4.0): Ка-50, Ми-8МТВ, UH-60, RAH-66; без упрощения, оружие автора убрано (своё — из игры) ──
-  h_ka50: { src: `${DL}/ka50.glb`, scale: 0.84, nose: '-z', rulesIn: 'game', tex: () => 1024, axisX: 0.025, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.025, 0.5, 3.46], rotor2: [0.025, -0.78, 3.46] }, // Ка-50 — manilov.ap: Ø несущих 14,5 → ×0,84; соосные: rotor — верхний, rotor2 — нижний; рулевого нет
+  h_ka50: { src: `${DL}/ka50.glb`, scale: 0.84, nose: '+z' /* Mark 2026-10-21: с '-z' в карточке и в бою летел хвостом вперёд */, rulesIn: 'game', tex: () => 1024, axisX: -0.025, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [-0.025, 0.5, -3.46], rotor2: [-0.025, -0.78, -3.46] }, // Ка-50 — manilov.ap: Ø несущих 14,5 → ×0,84; соосные: rotor — верхний, rotor2 — нижний; рулевого нет
     glassAny: /^hokufusg-FACES_7$/, glassColor: [0.05, 0.07, 0.08, 0.5],
     colors: { '^hokufusg-FACES_(9|16)$': [0.018, 0.018, 0.018], '^hokufusg-FACES_(6|10)$': [0.055, 0.055, 0.058], '^hokufusg-FACES_15$': [1, 0, 0], '^hokufusg-FACES(_\\d+)?$': [0.036, 0.037, 0.039],
       '^cmj(plvjean|torshrt|[lr](calf|thigh|bicep|shold|shstrp|forarm))-': [0.045, 0.05, 0.04] },
