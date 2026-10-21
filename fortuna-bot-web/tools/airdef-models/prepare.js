@@ -157,7 +157,7 @@ const CONFIG = {
   e_draken: { src: `${DL}/j35.glb`, scale: 1.006, fwd: [-0.7632, 0.6461], rulesIn: 'game', tex: () => 1024, texVf: 'hue=s=0.8' /* Mark 2026-10-21: бирюзовый камуфляж автора — «чуть-чуть убавь насыщенность» */, centerX: true, groups: () => 'body' }, // J35F: чистая модель (шасси убрано автором), длина 15,35 м
   e_viggen: { src: `${DL}/ja37.glb`, scale: 1.0, fwd: [-0.6659, 0.7461], rulesIn: 'game', tex: () => 1024, centerX: true, // ось — x −0,9 (до центровки): подфюзеляжный бак и его пилоны — долой
     groups: (c) => (c.ctr[1] < -0.7 && Math.abs(c.ctr[0] + 0.9) < 1.0 && c.ctr[2] > -2.4 && c.ctr[2] < -0.9 && Math.max(...c.size) > 2.0 ? null : LS(c)) },
-  w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '+z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
+  w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
   e_su27: { src: `${DL}/sukhoi_su-27_flanker.glb`, scale: 21.9 / 30.61, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
   e_su35: { src: `${DL}/sukhoi_su-35_flanker-e__-35.glb`, scale: 21.9 / 10.15, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
   e_etendard: { src: `${DL}/super-etendard.glb`, scale: 14.31 / 14.29, nose: '-x', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.15 || (c.ctr[1] < -0.8 && Math.abs(Math.abs(c.ctr[0]) - 1.7) < 0.2)) && Math.max(...c.size) < 3 ? null : LS(c)) /* шасси и его стойки */ },

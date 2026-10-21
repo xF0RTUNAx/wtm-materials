@@ -91,7 +91,7 @@ export const PARENT = {
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };
 // множитель цены ветки (Mark 2026-10-20: каждая ветка до ранга IV — около недели): ПВО и «Волна» почти целиком из «малых» единиц;
 // вооружение — ×1 (его качают вместе с самолётами: самолёт с оружием — ≈ 9–10 дней)
-export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5, heli: 0.57 }; // heli: 8 → 12 вертолётов (2026-10-21) — множитель 1 → 0,57, чтобы путь до ранга IV остался ≈ 1,6 дня (Mark: «пусть так остаётся»)
+export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5, heli: 1 }; // heli: Mark 2026-10-21 — «время прокачки для вертолётов такое же, как у других юнитов»: вертолёт стоит как самолёт того же ранга (было 0,57)
 
 // ── дерево ──
 const node = (branch, key, side, rank, name, short, tier) => ({ id: branch + ':' + key, branch, key, side, rank, name, short, tier, start: START[branch].includes(key) });
