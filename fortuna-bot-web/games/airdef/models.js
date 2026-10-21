@@ -63,7 +63,7 @@ const META = {
   e_buccaneer: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.96, -1.5, 0.9, 0.3), V(-3.4, -1.52, 0.6, 0.3), V(-2.3, -1.55, 0.1, 0.3), V(-0.45, -2.25, 0.5, 0.15)]),
     nozzles: [V(-1.28, -1.15, 3.5), V(1.28, -1.15, 3.5)], nr: 0.3, pod: V(0.6, -2.3, -1.0), dry: true }, // Buccaneer S.2B («Пэйв Спайк»)
   e_harrier: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.92, -1.2, 0.75), V(-1.93, -0.95, 0.35), V(-0.3, -1.75, -1.5, 0.15), V(-0.3, -1.75, 0.5, 0.15)]),
-    nozzles: [V(-1.0, -0.9, 0.9), V(1.0, -0.9, 0.9)], nr: 0.2, pod: null, dry: true }, // Harrier GR.3
+    nozzles: [V(-1.0, -0.95, 1.2), V(1.0, -0.95, 1.2)], nr: 0.22, pod: null, dry: true }, // Harrier GR.3 (два задних «горячих» поворотных сопла за крылом, срез z 1,2)
   e_mirage: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.8, -2.0, 3.1, 0.28), V(-2.08, -1.98, 2.45, 0.28), V(-0.6, -2.05, -0.5, 0.2), V(-0.6, -2.05, 2.0, 0.2)]),
     nozzles: [V(0, -1.11, 7.18)], nr: 0.42, pod: V(0, -2.15, 0.6) }, // Mirage 2000D
   e_rafale: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.75, -1.85, 3.6), V(-2.6, -1.85, 2.6, 0.3), V(-1.6, -1.85, 1.6, 0.3), V(-0.6, -2.15, 1.0, 0.15)]),
@@ -73,7 +73,7 @@ const META = {
   // ── 2026-10-19, четвёртая партия: manilov.ap (Як-38, Ил-28, Ту-22, Ту-95, Hunter), andertan (Су-27, Су-35), helijah (Super Étendard),
   // Civorsky (Mirage F1), Rhine_Lab_Muelsyse (F/A-18C, EA-18G); бомбардировщики с отсеком — internal, точки — в отсеке
   e_yak38: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.45, -1.42, 2.0, 0.3), V(-1.95, -1.4, 1.25), V(-0.45, -1.85, 0.3, 0.15), V(-0.45, -1.85, 2.3, 0.15)]),
-    nozzles: [V(-0.6, -1.35, 1.6), V(0.6, -1.35, 1.6)], nr: 0.3, pod: null, dry: true }, // Як-38М (поворотные сопла по бокам)
+    nozzles: [V(-0.45, -1.38, 3.89), V(0.45, -1.38, 3.89)], nr: 0.24, pod: null, dry: true }, // Як-38М (два боковых поворотных сопла за крылом, срез по корпусу Cylinder02: было z 1,6 внутри фюзеляжа)
   e_il28: { side: 'east', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.4, -1.9, -2.5), V(-0.4, -1.9, -1.0), V(-0.4, -1.9, 0.5), V(-0.4, -1.9, 2.0)]),
     nozzles: [V(-3.38, -1.63, 3.3), V(3.38, -1.63, 3.3)], nr: 0.35, pod: null, dry: true }, // Ил-28 (бомбы — в отсеке)
   e_tu22: { side: 'east', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.6, -2.85, -3.0), V(-0.6, -2.85, -1.0), V(-0.6, -2.85, 1.0), V(-0.6, -2.85, 3.0)]),
@@ -85,10 +85,10 @@ const META = {
   e_su35: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-5.27, -1.03, 3.7, 0.3), V(-4.14, -1.02, 3.05, 0.3), V(-3.01, -1.03, 2.36, 0.3), V(-0.6, -1.7, 1.0, 0.2)]),
     nozzles: [V(-1.29, -1.39, 9.02), V(1.29, -1.39, 9.02)], nr: 0.45, pod: null }, // Су-35С
   e_hunter: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.3, -1.42, 0.55, 0.3), V(-2.75, -1.44, -0.45), V(-0.45, -1.5, -0.5, 0.15), V(-0.45, -1.5, 1.5, 0.15)]),
-    nozzles: [V(0, -0.81, 6.76)], nr: 0.3, pod: null, dry: true }, // Hunter FGA.9
+    nozzles: [V(0, -0.61, 6.74)], nr: 0.3, pod: null, dry: true }, // Hunter FGA.9 (сопло по срезу: y −0,81 → −0,61)
   // ── 2026-10-21, пятая партия: manilov.ap (Vulcan, Draken, Viggen — без оружия в моделях; подвески по виду снизу / сбоку planes-view.html?ortho=1) ──
   e_vulcan: { side: 'west', cls: 'bomber', lazy: true, internal: true, stations: mirror([V(-0.5, -2.5, -3.6), V(-0.5, -2.5, -1.4), V(-0.5, -2.5, 0.8), V(-0.5, -2.5, 3.0)]),
-    nozzles: [V(-3.47, -2.36, 11.87), V(-2.22, -2.36, 11.87), V(2.22, -2.36, 11.87), V(3.47, -2.36, 11.87)], nr: 0.42, pod: null, dry: true }, // Vulcan B.2 (бомбы — в отсеке; четыре «Олимпа» в корне крыла, без форсажа)
+    nozzles: [V(-3.47, -2.6, 11.85), V(-2.22, -2.6, 11.85), V(2.22, -2.6, 11.85), V(3.47, -2.6, 11.85)], nr: 0.42, pod: null, dry: true }, // Vulcan B.2 (сопла по срезу: y −2,36 → −2,6) (бомбы — в отсеке; четыре «Олимпа» в корне крыла, без форсажа)
   e_draken: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-3.4, -1.36, 4.0, 0.3), V(-2.6, -1.38, 3.3, 0.3), V(-1.6, -1.5, 1.8, 0.3), V(-0.5, -1.47, 0.0, 0.15)]),
     nozzles: [V(0, -0.56, 7.67)], nr: 0.35, pod: null }, // Saab 35 Draken (J35F)
   e_viggen: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-1.8, -1.98, 3.2, 0.3), V(-4.11, -1.78, 4.7), V(-2.9, -1.82, 4.4), V(-1.1, -1.95, 2.4, 0.2)]), // подвески: внутренние под крылом (L1/R1) и внешние (L2/R2) — на пилонах автора (балки 3,9 м и 2,1 м), бока фюзеляжа (Ф) — пилон дорисован
@@ -107,7 +107,7 @@ const META = {
   e_t4: { side: 'east', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.4, -1.5, -4.0), V(-0.4, -1.5, -1.5), V(-0.4, -1.5, 1.0), V(-0.4, -1.5, 3.5)]),
     nozzles: [V(-2.04, -3.17, 16.1), V(-0.68, -3.17, 16.1), V(0.68, -3.17, 16.1), V(2.04, -3.17, 16.1)], nr: 0.62, pod: null }, // Т-4 «Сотка» (бомбы — в отсеке; четыре РД-36-41 в пакете под фюзеляжем)
   e_etendard: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.64, -1.49, 1.85, 0.3), V(-1.92, -1.48, 1.23, 0.3), V(-0.4, -1.6, 0.0, 0.17), V(-0.4, -1.6, 1.8, 0.17)]),
-    nozzles: [V(0, -0.57, 6.3)], nr: 0.35, pod: V(0.4, -1.7, -1.0), dry: true }, // Super Étendard (ATLIS под фюзеляжем)
+    nozzles: [V(0, -0.82, 6.2)], nr: 0.35, pod: V(0.4, -1.7, -1.0), dry: true }, // Super Étendard (ATLIS под фюзеляжем; сопло по срезу: y −0,57 → −0,82, z 6,3 → 6,2)
   e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
     nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
   e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.3, -1.25, 2.7, 0.3), V(-3.42, -1.54, 1.36), V(-2.24, -1.47, 1.16), V(-0.6, -1.6, 1.0, 0.15)]),
@@ -165,7 +165,7 @@ const META = {
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.9 }, // Ту-160 — KOG_THORNS (с 2026-10-19 и в «Авиации»: точки — в отсеках); носитель «Мульти-волны»
   e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
   e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -5.2, -3.0), V(-0.6, -5.2, -1.0), V(-0.6, -5.2, 1.0), V(-0.6, -5.2, 3.0)]), nozzles: [], nr: 0.4 }, // B-52H — bohmerang; носитель «Мульти-волны» (без форсажа — пламени нет)
-  e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-3.88, -1.93, 3.0, 0.3), V(-2.77, -1.91, 2.24, 0.3), V(-1.94, -1.85, 1.74, 0.3), V(-0.6, -2.1, 1.0, 0.15)]), nozzles: [V(-0.54, -0.63, 8.6), V(0.54, -0.63, 8.6)], nr: 0.38 }, // Eurofighter Typhoon — andertan; носитель Storm Shadow
+  e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-3.88, -1.93, 3.0, 0.3), V(-2.77, -1.91, 2.24, 0.3), V(-1.94, -1.85, 1.74, 0.3), V(-0.6, -2.1, 1.0, 0.15)]), nozzles: [V(-0.54, -1.46, 6.68), V(0.54, -1.46, 6.68)], nr: 0.42 }, // Eurofighter Typhoon — andertan; носитель Storm Shadow
   w_tbmdec: { lazy: true, stations: [] }, // ложная цель «Искандера» — головная часть его ракеты
   w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // «Кинжал» — ракета 9М723 с пусковой «Искандера» (42manako), 7,2 м, светло-серая
   w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM — по UGM-84 Harpoon (FeriseCAT)

@@ -8,7 +8,7 @@
      ?p=e_su27 (или список через запятую — лист на самолёт): столбцы — кадры «малый газ», «максимал», «розжиг форсажа 0,15 с», «0,4 с», «полный форсаж»,
        строки — день и сумерки × виды: сбоку, сзади, ¾ сзади, крупно у сопла. Красные точки — сопла из META (?dots=0 — убрать).
      ?p=e_su27&thr=1&ab=1&t=0.4 — один кадр: газ, форсаж, t — секунд после включения форсажа (до этого 3 с на том же газе без форсажа).
-     ?view=side|rear|q34|close — только этот вид; ?sky=day|dusk — только это небо; ?cw=&ch= — размер кадра.
+     ?view=side,close — только эти виды (side | rear | q34 | close); ?st=1,4 — только эти кадры; ?sky=day|dusk — только это небо; ?cw=&ch= — размер кадра.
      ?all=1 — лист «все самолёты на форсаже, ¾ сзади, крупно у сопел» (подписи: ключ, nr, число сопел; ?cols=8; ?dots=1 по умолчанию — точки сопел).
      ?cmp=e_su27,f16 — «было / стало»: прежний attachFlames (units-render.js) и jetflame.js, форсаж, четыре вида.
      Драйвер снимков — tools/airdef-fx/jet-shots.js (window.renderSheet(i), window.sheets, window.names). -->
@@ -29,9 +29,10 @@ const FOV = 28, DOTS = Q.has('dots') ? Q.get('dots') !== '0' : MODE === 'all';
 const fmt = (x, n = 2) => (+x).toFixed(n).replace('.', ',');
 
 // ── кадры и виды ──
-const STATES = Q.has('thr') || Q.has('ab') ? [{ n: `газ ${Q.get('thr') || 1}${Q.get('ab') === '1' ? ' · форсаж ' + (Q.get('t') || 2.5) + ' с' : ''}`, thr: +(Q.get('thr') || 1), ab: Q.get('ab') === '1', t: +(Q.get('t') || 2.5) }] : [
+const STATES0 = Q.has('thr') || Q.has('ab') ? [{ n: `газ ${Q.get('thr') || 1}${Q.get('ab') === '1' ? ' · форсаж ' + (Q.get('t') || 2.5) + ' с' : ''}`, thr: +(Q.get('thr') || 1), ab: Q.get('ab') === '1', t: +(Q.get('t') || 2.5) }] : [
   { n: 'малый газ', thr: 0.4, ab: false, t: 0 }, { n: 'максимал', thr: 1, ab: false, t: 0 }, { n: 'розжиг 0,15 с', thr: 1, ab: true, t: 0.15 }, { n: 'розжиг 0,4 с', thr: 1, ab: true, t: 0.4 }, { n: 'полный форсаж', thr: 1, ab: true, t: 2.5 }];
-const VIEWS = [['side', 'сбоку'], ['rear', 'сзади'], ['q34', '¾ сзади'], ['close', 'крупно']].filter(([k]) => !Q.get('view') || Q.get('view') === k);
+const STATES = Q.get('st') ? Q.get('st').split(',').map((k) => STATES0[+k]) : STATES0;   // ?st=1,4 — только эти кадры (0 малый газ, 1 максимал, 4 полный форсаж)
+const VIEWS = [['side', 'сбоку'], ['rear', 'сзади'], ['q34', '¾ сзади'], ['close', 'крупно']].filter(([k]) => !Q.get('view') || Q.get('view').split(',').includes(k));
 const SKIES = ['day', 'dusk'].filter((k) => !Q.get('sky') || Q.get('sky') === k);
 const CW = +(Q.get('cw') || (MODE === 'all' ? 288 : 300)), CH = +(Q.get('ch') || (MODE === 'all' ? 216 : 210));
 const COLS = MODE === 'all' ? +(Q.get('cols') || 8) : MODE === 'cmp' ? VIEWS.length : STATES.length;
