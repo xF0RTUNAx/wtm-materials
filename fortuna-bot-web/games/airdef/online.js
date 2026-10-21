@@ -139,7 +139,7 @@ export function createOnline(C, ctrls) {
   function renderPlan() {
     const r = N.room, show = N.battle && N.battle.kind !== 'multi' && r && r.state === 'plan' && team() === 'air';
     planEl.style.display = show ? 'block' : 'none'; if (!show) return;
-    const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir && !L.heli); // вертолёты — пока только одиночная игра
+    const B = N.battle, me = N.myPlayer(), list = LOADOUTS[B.era].map((L, i) => [L, i]).filter(([L]) => L.side === B.sideAir && O.netOk(L)); // вертолёты и НАР — пока только одиночная игра
     const allies = r.players.filter((p) => p.team === 'air' && p.id !== me.id), others = allies.map((p) => (p.choice !== null ? LOADOUTS[B.era][p.choice] : null));
     const nAir = allies.length + 1, hunters = others.filter((x) => x && loadoutRole(x) === 'sead').length;
     planEl.innerHTML = `<h3>Волна ${r.wave}/${O.WAVES} · выбор связки · ${r.left ?? ''} с</h3><div>Очки: <b style="color:#fde68a">${me.budget}</b> · вылетов на волну: ${me.lives ?? O.RESPAWNS[r.wave - 1] + 1}${r.lead === 'pvo' ? ' (+1: команда отстаёт)' : ''}</div>

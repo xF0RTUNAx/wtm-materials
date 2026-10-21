@@ -52,7 +52,9 @@ export const reloadKOf = (t, radarKills) => (t < SUPPRESS_T ? 1 : 1 + Math.min(S
 export const LEAD_K = { air: 1.1, pvo: 1.15 };
 export const loadoutCostFor = (L, lead) => Math.round(loadoutCost(L) * (lead === 'air' ? LEAD_K.air : 1));
 export const samCostFor = (k, lead) => Math.round(samCost(k) * (lead === 'pvo' && samClass(k) === 'top' ? LEAD_K.pvo : 1));
-export const bundleOf = (era, side, i) => { const L = LOADOUTS[era][i]; return L && L.side === side && !L.heli ? L : null; }; // вертолёты — пока только одиночная игра
+// в онлайн — без вертолётов и без подвесок с НАР (сервер пока не умеет залп НАР одним сообщением: 4 сброса подряд → «Слишком часто»)
+export const netOk = (L) => !L.heli && !L.items.some(([k]) => (AG[k] || {}).kind === 'rocket');
+export const bundleOf = (era, side, i) => { const L = LOADOUTS[era][i]; return L && L.side === side && netOk(L) ? L : null; };
 export const bundleName = (L) => `${PLANES[L.plane] || L.plane} · ${L.name}`;
 
 // бюджеты: первая волна — поровну; дальше — база + за результат волны, проигрывающей стороне +20 %

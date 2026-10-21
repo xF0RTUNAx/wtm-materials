@@ -40,12 +40,14 @@ export function createSound() {
     unlock() { A.init(); A.resume(); },
     setMuted(m) { muted = m; A.setMuted(m); ls.set('fortuna_airdef_mute', m ? '1' : '0'); },
     setVolume(v) { vol = v; A.setVolume(v); ls.set('fortuna_airdef_vol', String(v)); },
-    frame: A.frame, spatial: A.spatial,
+    // тон ГСН (записанные петли sk) звучит, только пока growl() зовут каждый кадр (вид оператора ИК-комплекса): не звали — гасим
+    frame(dt, o) { if (skN > 0 && --skN === 0) for (const k in sk) { sk[k].stop(0.05); delete sk[k]; } A.frame(dt, o); },
+    spatial: A.spatial,
     // тон ИК-ГСН у оператора: запись AIM-9 — поиск (низкое «рычание»), цель в поле (ровный тон), захват (высокая трель); нет записи — синтез
     growl(level, freq) {
       const on = level > 0 && !muted, st = !on ? '' : freq >= 850 ? 'seekLock' : freq >= 520 ? 'seekTone' : 'seekSearch';
       if (!A.sampleDur('seekLock')) { A.growl(level, freq); return; }
-      A.growl(0, freq);
+      A.growl(0, freq); skN = 3;
       for (const k of ['seekSearch', 'seekTone', 'seekLock']) {
         if (k === st && !sk[k]) sk[k] = A.loop(k, 0, 0, 1, 9000);
         if (sk[k]) sk[k].set(k === st ? Math.min(0.5, level * 7) : 0, 0.04);
@@ -250,7 +252,7 @@ export function createSound() {
   const PATRIOT_LIKE = new Set(['patriot', 'pac3', 'nasams', 'hawk', 'khordad']); let bc = 0; // горячий старт из контейнера/направляющей — запись Patriot
   const GUN_RATE = { phalanx: 1, m163: 0.93 }; // M61 20 мм — как в записи (у «Шилки» звук другой — синтез aaa)
   let aaaAcc = 0;
-  const sk = {}; // петли тонов ГСН
+  const sk = {}; let skN = 0; // петли тонов ГСН; skN — сколько кадров ещё звучать без нового вызова growl()
   const guns = new Map(), he = { lo: null, hi: null, beds: null, pw: 0.6 }, mamb = { t: 10 };
   function heliOff() { for (const h of [he.lo, he.hi]) if (h) h.stop(0.35); if (he.beds) for (const b of he.beds) if (b) b.stop(); he.lo = he.hi = he.beds = null; }
   const amb = { on: false, timer: 0, beds: null, next: 0, gust: 0, gustT: 0, mood: 'air', last: '' };
