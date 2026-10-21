@@ -73,13 +73,14 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       // учебник: уроки по разделам («Основы», «Системы», «Бомбы»… / «Оборона», «Комплексы»…), номер — сквозной
       const mw = setup.tside === 'matk' || setup.tside === 'mdef'; // учебник «Мульти-волны» — свои две ветки
       let h = `<p class="hint"><button class="fsl" data-fs="wiz">‹ Первые шаги — подобрать урок по ответам</button></p><div class="prow"><span>Учебник</span>${seg('tbook', mw ? 'multi' : 'base', [['base', 'Вылет и оборона'], ['multi', 'Мульти-волна']])}</div>
-        <div class="prow"><span>Сторона</span>${seg('tside', setup.tside, mw ? [['matk', 'За волну'], ['mdef', 'За ПВО']] : [['air', 'За самолёт'], ['def', 'За ПВО']])}</div>`, sec = null;
+        <div class="prow"><span>Сторона</span>${seg('tside', setup.tside, mw ? [['matk', 'За волну'], ['mdef', 'За ПВО']] : [['air', 'За самолёт'], ['def', 'За ПВО']])}</div>${mw ? '' : `
+        <div class="prow"><span>Чьей техникой</span>${seg('tnat', setup.tside === 'air' ? (setup.side === 'east' ? 'west' : 'east') : setup.side, [['east', 'Восток'], ['west', 'Запад']])}</div>`}`, sec = null;
       list.forEach((l, i) => {
         if (l.sec !== sec) { sec = l.sec; const n = list.filter((q) => q.sec === sec).length, k = list.filter((q) => q.sec === sec && done[q.id]).length; h += `<div class="cat-h">${sec} <span class="dim">${k}/${n}</span></div>`; }
         h += `<button class="opt ${i === setup.tl ? 'on' : ''} ${done[l.id] ? 'done' : ''}" data-tl="${i}"><div class="nm"><b>${i + 1}. ${l.name}${done[l.id] ? ' ✓' : ''}</b><span>${l.desc}</span></div></button>`;
       });
-      el.innerHTML = h + (mw ? '<p class="hint">Каждый урок: как это работает и типичные ошибки → шаги с подсказками внизу экрана (что нажать и почему). Уроки идут по порядку: от карты и первой покупки до контрольной волны.</p>'
-        : '<p class="hint">Каждый урок: как это работает в игре и типичные ошибки → показ (самолёт всё делает сам) → вы. Проиграть нельзя: урон отключён, боеприпасы пополняются. Кнопка «?» ставит игру на паузу и объясняет оружие или комплекс.</p>');
+      el.innerHTML = h + (mw ? '<p class="hint">Каждый урок: как это работает и типичные ошибки → шаги с подсказками в панели «Урок» (кнопка вверху справа; пока она открыта — пауза): что нажать и почему. Уроки идут по порядку: от карты и первой покупки до контрольной волны.</p>'
+        : '<p class="hint">Каждый урок: как это работает в игре и типичные ошибки → показ (самолёт всё делает сам) → вы. Проиграть нельзя: урон отключён, боеприпасы пополняются. Подсказка шага — в панели «Урок» вверху справа (пока она открыта — пауза); кнопка «?» объясняет оружие или комплекс.</p>');
       return;
     }
     if (g === 'multi') { el.innerHTML = renderMulti(); return; }
@@ -225,7 +226,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         if (id === 'pmap') setup.pmap = v; else setup.pwx = { ...(setup.pwx || {}), [C.MAP]: v };
         save(); const u = new URL(location.href); u.searchParams.delete('weather'); u.searchParams.delete('map'); location.replace(u.href); return;
       }
-      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
+      if (id === 'pside') setup.pside = v; else if (id === 'palt') setup.palt = v; else if (id === 'pvs') setup.pvs = v; else if (id === 'op') setup.op = v === 'op'; else if (id === 'mrole') setup.mrole = v; else if (id === 'cs') setup.cs = v === 'on'; else if (id === 'diff') setup.diff = v; else if (id === 'era') { setup.era = +v; setup.lo = 0; } else if (id === 'side') setup.side = v; else if (id === 'tnat') setup.side = setup.tside === 'air' ? (v === 'east' ? 'west' : 'east') : v; /* обучение: своя техника; setup.side — сторона ПВО */ else if (id === 'tside') { setup.tside = v; setup.tl = 0; } else if (id === 'tbook') { setup.tside = v === 'multi' ? 'matk' : 'air'; setup.tl = 0; }
     } else if (e.target.closest('[data-psam]')) setup.psam = e.target.closest('[data-psam]').dataset.psam; else if (e.target.closest('[data-pmun]')) setup.pmun = e.target.closest('[data-pmun]').dataset.pmun;
     else if (lo) setup.lo = +lo.dataset.lo; else if (lo1) setup.lo1 = +lo1.dataset.lo1; else if (lo2) setup.lo2 = +lo2.dataset.lo2; else if (tl) setup.tl = +tl.dataset.tl; else return;
     save(); render();

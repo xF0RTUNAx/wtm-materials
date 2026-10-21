@@ -72,6 +72,10 @@
   .btn { display: block; width: 100%; padding: 13px 14px; border-radius: 12px; border: 0; font-size: 15px; font-weight: 800; cursor: pointer;
     background: linear-gradient(180deg, #fb923c, #ea580c); color: #fff; margin-top: 8px; }
   .btn.alt { background: rgba(255,255,255,.1); font-weight: 600; }
+  /* окно урока (Mark 2026-10-21): кнопка всегда видна внизу (длинное окно на телефоне — без прокрутки до неё), ✕ и касание мимо окна закрывают */
+  #lesson .card { position: relative; } #lesson .lbtns { position: sticky; bottom: -1px; display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 0 2px; background: inherit; }
+  #lesson .lbtns .btn { flex: 1 1 140px; } #lesson .lbtns .btn[hidden] { display: none; }
+  #lessonX { position: sticky; top: 0; float: right; margin: -4px -4px 0 8px; width: 34px; height: 34px; border: 0; background: rgba(255,255,255,.08); color: inherit; font-size: 16px; cursor: pointer; z-index: 1; }
   .btn.sm { padding: 9px 10px; font-size: 13px; }
   .btn:disabled { opacity: .45; cursor: not-allowed; }
   #startBtn { position: sticky; bottom: -16px; box-shadow: 0 -10px 18px rgba(15,23,34,.95); }
@@ -656,10 +660,11 @@
 </div>
 <div class="screen" id="lesson">
   <div class="card">
+    <button id="lessonX" aria-label="Закрыть">✕</button>
     <h1 id="lessonTitle"></h1>
     <div class="sub" id="lessonSub">Обучение · игра на паузе</div>
     <div id="lessonBody"></div>
-    <button class="btn" id="lessonClose">ПОНЯТНО — ПРОДОЛЖИТЬ</button>
+    <div class="lbtns"><button class="btn" id="lessonClose">ПОНЯТНО — ПРОДОЛЖИТЬ</button><button class="btn alt" id="lessonAgain" hidden>Ещё раз</button><button class="btn alt" id="lessonMenu" hidden>В меню</button></div>
   </div>
 </div>
 <div class="screen" id="end">

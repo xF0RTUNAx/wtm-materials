@@ -778,7 +778,13 @@ export function createTraining(C, ctrls) {
     $('lsnName').textContent = L.name; renderNow();
     $('lsnBody').innerHTML = iconize(T.introCard ? T.introCard.body : `<p>${L.desc}</p>`);
   }
-  function lsnShow(on) { lsnOpen = on; document.body.classList.toggle('lsnOpen', on); $('lsnBtn').classList.remove('new'); if (on) renderLsn(); }
+  // панель урока: открыта — игра на паузе (Mark 2026-10-21: подсказка шага — только в панели; читать спокойно, кнопки под ней не нужны)
+  let lsnPaused = false;
+  function lsnShow(on) {
+    lsnOpen = on; document.body.classList.toggle('lsnOpen', on); $('lsnBtn').classList.remove('new'); if (on) renderLsn();
+    if (on && C.state === 'play' && !C.paused) { C.paused = true; lsnPaused = true; if (C.snd.silence) C.snd.silence(); }
+    else if (!on && lsnPaused) { lsnPaused = false; if (!$('lesson').classList.contains('on') && !$('pauseScr').classList.contains('on')) C.paused = false; }
+  }
   function lsnFlash() { const b = $('lsnBtn'); b.classList.remove('new'); void b.offsetWidth; b.classList.add('new'); }
   $('lsnBtn').addEventListener('click', (e) => { e.stopPropagation(); lsnShow(!lsnOpen); C.snd.click(); });
   $('lsnX').addEventListener('click', (e) => { e.stopPropagation(); lsnShow(false); });
@@ -793,15 +799,27 @@ export function createTraining(C, ctrls) {
   // ok === false — урок не засчитан (контрольная волна провалена): «Ещё раз» — тот же урок
   T.done = (ok = true) => {
     if (T.finished) return; T.finished = true;
-    if (!ok) { C.onLessonClose = () => run(); C.openLesson(`Урок не пройден: ${L.name}`, `<p>${T.result || ''}</p>`, 'Обучение'); $('lessonClose').textContent = 'ЕЩЁ РАЗ'; return; }
+    if (!ok) { C.onLessonClose = () => run(); C.openLesson(`Урок не пройден: ${L.name}`, `<p>${T.result || ''}</p>`, 'Обучение'); $('lessonClose').textContent = 'ЕЩЁ РАЗ'; extraBtns(false, true); return; }
     C.menu.lessonDone(L.id || side + idx);
     const nextL = LESSONS[side][idx + 1];
     // сторона, эпоха и режим урока — временные: вернуть игроку до сохранения (иначе «Реализм» после урока «Мульти-волны» тихо становился «Аркадой»)
     C.onLessonClose = () => { if (nextL) { idx++; restore(); setup.tl = idx; C.saveSetup(); run(); } else C.toMenu(); };
     C.openLesson(`Урок пройден: ${L.name}`, `<p>${T.result ? T.result + ' ' : ''}${nextL ? `Следующий урок — <b>${nextL.name}</b>: ${nextL.desc}.` : 'Это был последний урок этой ветки. Попробуйте обучение за другую сторону или настоящий бой.'}</p>`, `Обучение · ${TSIDES[side]}`);
-    $('lessonClose').textContent = nextL ? 'СЛЕДУЮЩИЙ УРОК' : 'В МЕНЮ';
+    $('lessonClose').textContent = nextL ? 'СЛЕДУЮЩИЙ УРОК' : 'В МЕНЮ'; extraBtns(true, !!nextL);
   };
   $('askBtn').addEventListener('click', () => { if (T.card && C.ctrl === api) { $('ask').style.display = 'none'; C.openLesson(T.card.title, T.card.body); } });
+  // окно урока: ✕ и касание мимо окна — как главная кнопка; «Урок пройден» — ещё и «Ещё раз» / «В меню» (Mark 2026-10-21)
+  const extraBtns = (again, menu) => { $('lessonAgain').hidden = !again; $('lessonMenu').hidden = !menu; };
+  $('lessonX').addEventListener('click', () => C.closeLesson());
+  $('lesson').addEventListener('click', (e) => { if (e.target === $('lesson')) C.closeLesson(); });
+  $('lessonAgain').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); run(); });
+  $('lessonMenu').addEventListener('click', () => { C.onLessonClose = null; extraBtns(false, false); C.closeLesson(); C.toMenu(); });
+  // свернули вкладку / повернули телефон — пауза; в уроке (проиграть нельзя) её снимает первое касание мимо кнопок
+  document.addEventListener('pointerdown', (e) => {
+    if (C.ctrl !== api || !C.paused || C.ended || !$('pauseScr').classList.contains('on') || $('lesson').classList.contains('on') || document.body.classList.contains('portrait')) return;
+    if (e.target.closest && e.target.closest('button, a, input, .seg')) return;
+    C.togglePause();
+  });
   function run() {
     if (inner && inner.stop) inner.stop();
     restore();
@@ -811,7 +829,7 @@ export function createTraining(C, ctrls) {
     if (L.side) { sideSave = setup.side; setup.side = L.side; } // урок про конкретный комплекс — его сторона
     if (L.diff) { diffSave = setup.diff; setup.diff = L.diff; } // мульти-волна: аркада — с подсказками и плашками
     Object.assign(T, { t: 0, s: 0, st: 0, d: {}, finished: false, card: null, introShown: false, result: '', cur: '', lastS: -1, introCard: null });
-    $('ask').style.display = 'none'; $('lessonClose').textContent = 'ПОНЯТНО — ПРОДОЛЖИТЬ';
+    $('ask').style.display = 'none'; $('lessonClose').textContent = 'ПОНЯТНО — ПРОДОЛЖИТЬ'; extraBtns(false, false);
     inner = side === 'air' ? ctrls.air : ctrls.defense;
     api.inner = inner;
     const extra = L.hooks ? L.hooks(T) : {};
