@@ -114,10 +114,12 @@ export function createSound() {
     },
     // подрыв боевой части ЗУР в воздухе: резкий хлопок (ударная волна), раскат и эхо от города; в воздухе слышно далеко
     samBurst(d, size = 1) {
-      const dl = Math.min(3, d / 343), k = Math.max(0.04, near(d, 1500)) * Math.min(1.4, 0.7 + size * 0.3), wet = 0.3 + 0.5 * (1 - k), cut = 350 + 2500 * Math.exp(-d / 1500);
-      { // запись подрыва (перехват / далёкий взрыв) — по очереди, у крупных ниже и тяжелее; вдали — только запись, ближе — с синтезом хлопка
-        const rec = (bc++ & 1) ? 'intercept' : 'boomAir', rk = Math.min(1.2, 2200 / (d + 900)) * Math.min(1.5, 0.6 + size * 0.35);
-        if (A.sample(rec, rk, dl, 1.06 - Math.min(0.25, size * 0.08) + Math.random() * 0.06, 500 + 9000 * Math.exp(-d / 2500), 0.35 + 0.4 * (1 - k)) && d > 900) return;
+      // рядом (до 1200 м) — только синтез: резкий хлопок сразу (задержка звука ужата — Mark 2026-10-21: должен совпадать со вспышкой);
+      // дальше — запись подрыва (перехват / далёкий взрыв) по очереди, с места удара (без тихого начала записи), у крупных ниже и тяжелее
+      const dl = d < 1200 ? d / 1000 : Math.min(3, d / 343), k = Math.max(0.04, near(d, 1500)) * Math.min(1.4, 0.7 + size * 0.3), wet = 0.3 + 0.5 * (1 - k), cut = 350 + 2500 * Math.exp(-d / 1500);
+      if (d >= 1200) {
+        const ic = bc++ & 1, rec = ic ? 'intercept' : 'boomAir', rk = Math.min(1.2, 2200 / (d + 900)) * Math.min(1.5, 0.6 + size * 0.35);
+        if (A.sample(rec, rk, dl, 1.06 - Math.min(0.25, size * 0.08) + Math.random() * 0.06, 500 + 9000 * Math.exp(-d / 2500), 0.35 + 0.4 * (1 - k), ic ? 0.36 : 0.17)) return;
       }
       if (d < 4000) A.noise('white', 0.05, 0.5 * k, 'highpass', 1800, 0.7, dl);
       A.noise('brown', 0.8 + 0.3 * size, 0.6 * k, 'lowpass', cut, 0.6, dl, wet);
@@ -133,12 +135,13 @@ export function createSound() {
       A.tone('sine', 55, 28, 1.4, 0.35 * k, dl + 0.45, 0.5);
       if (d < 2500) A.noise('crackle', 1.6, 0.35 * k, 'bandpass', 1500, 0.6, dl + 0.2);
     },
-    hit() { A.hit(); }, flare() { if (!A.sample('flareRec', 0.55, 0, 0.95 + Math.random() * 0.1, 12000, 0.15)) A.flare(); }, chaff() { if (!A.sample('flareRec', 0.35, 0, 0.78 + Math.random() * 0.06, 6000, 0.1)) A.chaff(); }, // отстрел: запись (диполи — ниже и глуше)
+    // отстрел ЛТЦ / диполей: запись как есть — без сдвига высоты, фильтра и эха (Mark 2026-10-21: обработка звучала искусственно)
+    hit() { A.hit(); }, flare() { if (!A.sample('flareRec', 0.55, 0, 1, 20000, 0)) A.flare(); }, chaff() { if (!A.sample('flareRec', 0.4, 0, 1, 20000, 0)) A.chaff(); },
     afterburner() { if (!A.sample('abOn', 0.6, 0, 1, 16000, 0.12)) A.afterburner(); },
     // старт зенитной ракеты: хлопок и рёв ускорителя (у больших — долгий и низкий), слышно с задержкой
     samLaunch(d, big, key) {
       const k = near(d, big ? 1500 : 700), w = delayOf(d), wet = 0.3 + 0.5 * (1 - k);
-      if (PATRIOT_LIKE.has(key) && A.sample('patriot', 0.9 * k, w, 0.96 + Math.random() * 0.08, 500 + 9000 * Math.exp(-d / 2500), wet * 0.6)) return; // горячий старт из контейнера — запись
+      if (PATRIOT_LIKE.has(key) && A.sample('patriot', 0.9 * k, w, 0.96 + Math.random() * 0.08, 500 + 9000 * Math.exp(-d / 2500), wet * 0.6, 0.42)) return; // горячий старт из контейнера — запись (с 0,42 с: до этого — тихий подход, звук отставал от пуска)
       A.noise('brown', big ? 2.6 : 1.1, 0.5 * k, 'lowpass', big ? 160 : 260, 0.7, w, wet, false, 0.02);
       const f = A.noise('pink', big ? 3.4 : 1.5, 0.34 * k, 'bandpass', big ? 700 : 1300, 0.5, w + 0.02, wet, false, 0.06);
       if (f) f.frequency.exponentialRampToValueAtTime(big ? 300 : 600, f.context.currentTime + w + (big ? 3.4 : 1.5)); // ракета уходит — рёв глуше

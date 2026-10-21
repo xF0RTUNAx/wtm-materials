@@ -801,7 +801,7 @@ export function createAir(C) {
     else {
       game.targets = opts.targets ? opts.targets.map((k) => S.objects.find((o) => o.key === k)).filter(Boolean) : pickTargets(S, rnd);
       const kn = setup.game === 'air' && C.diff ? C.diff.knobs('air', setup.diff) : null; // сложность: режим + скрытая подстройка (не в обучении и «Съёмке»)
-      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets, kn ? kn.density : 1, kn || {});
+      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets, (kn ? kn.density : 1) * (!opts.items && (isHeli(HELI_Q) || (LOADOUTS[setup.era][setup.lo] || {}).heli) ? 0.6 : 1), kn || {}); // против вертолёта — реже (Mark 2026-10-21: прятался без конца; craft.heli тут ещё от прошлого вылета)
       if (C.op) C.op.targets = game.targets;
     }
     C.syncUnits();
@@ -820,7 +820,7 @@ export function createAir(C) {
     home.set(sp.x, city.groundH(sp.x, sp.z), sp.z); homeT = 0;
     craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw; craft.pitch = 0; craft.roll = 0; craft.speed = craft.heli ? 25 : startV(240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0;
     craft.q = null; craft.wp = craft.wr = craft.wz = 0; craft.hp = 100; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); aim.id = null;
-    { const ha = craft.heli && craft.hm.arcade; if (padArms.l) { padArms.l.innerHTML = ha ? '◀' : ico('rollL'); padArms.r.innerHTML = ha ? '▶' : ico('rollR'); } } // крестовина: вертолёт («Аркада») — шаг вбок, самолёт — крен
+    { const ha = craft.heli && craft.hm.arcade; if (padArms.l) { padArms.l.innerHTML = ico(ha ? 'sideL' : 'rollL'); padArms.r.innerHTML = ico(ha ? 'sideR' : 'rollR'); } } // крестовина: вертолёт («Аркада») — шаг вбок, самолёт — крен
     if (craft.heli) { craft.landed = false; craft.col = null; heliInit(craft); craft.col = 9.81 / tmaxAcc(craft.hm, craft.pos.y, 25); hSpd = 0.25;
       if (craft.hm.arcade && !opts.photo) setTimeout(() => say(C.IS_TOUCH ? 'Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот · ▲▼ — высота · «газ» — ступени'
         : 'W / S — разгон и торможение · A / D — поворот · ↑ / ↓ — высота · ← / → — вбок · мышь — прицел', 7), 600); } // как управлять — сразу при взлёте
@@ -1073,7 +1073,7 @@ export function createAir(C) {
     if (craft.dmgVis) craft.dmgVis.update(dt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
     // топливо: расход по газу, форсаж — втрое; кончилось — двигатель встал, самолёт планирует (в обучении не тратится)
     if (!game.opts.invuln) {
-      if (craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - (0.35 + 0.65 * craft.thr) * (craft.ab ? 3 : 1) / (C.MODE().fuelS || 240) * dt);
+      if (craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - (0.35 + 0.65 * craft.thr) * (craft.ab ? 3 : 1) / (C.MODE().fuelS || 240) * (craft.heli ? 1 / 3 : 1) * dt); // вертолёт держится втрое дольше (Mark 2026-10-21: не успевал долететь и навестись)
       if (craft.fuel < 0.2 && fuelWarn < 1) { fuelWarn = 1; say('Мало топлива — 20 %', 3); snd.alarm(); }
       if (craft.fuel <= 0) { craft.thr = 0; craft.ab = false; if (fuelWarn < 2) { fuelWarn = 2; say('Топливо кончилось — двигатель встал, планируйте', 4); snd.alarm(); } }
     }
