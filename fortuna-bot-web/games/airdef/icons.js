@@ -30,14 +30,19 @@ export const ICON = {
   "sideL": "M32 256 200 92v104h280v120H200v104z", "sideR": "M480 256 312 92v104H32v120h280v104z", // шаг вбок вертолёта («Аркада») — свои стрелки
   };
 export const ico = (n, cls = '') => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="${ICON[n]}"/></svg>`;
+import { tr } from './i18n.js?v=20261022r';
 // упоминание кнопки в тексте (обучение, руководство, пауза, подсказки) — со значком: «ЛОВУШКИ» → [значок] «ЛОВУШКИ»
 const TOK = { '«ЛОВУШКИ»': 'flares', '«КАРТА»': 'map', '«ЦЕЛЬ»': 'target', '«АВТО»': 'auto', '«ГАЗ»': 'throttle', '«ОБЗОР»': 'camera', '«КАМ.»': 'camera', '«ПУСК»': 'fire', '«ОГОНЬ»': 'fire',
-  '«БИНОКЛЬ»': 'bino', '«РЛС»': 'radar', '«?»': 'lesson', '«Игроки»': 'players', '«ПОМОЩЬ»': 'help', '⛽': 'fuel', '👥': 'players' }; // эмодзи — заменяются значком целиком
+  '«БИНОКЛЬ»': 'bino', '«РЛС»': 'radar', '«?»': 'lesson', '«Игроки»': 'players', '«ПОМОЩЬ»': 'help', '⛽': 'fuel', '👥': 'players',
+}; // эмодзи — заменяются значком целиком
+// те же кнопки в английском тексте — в «…» и в "…" (переводчики пишут по-разному): "COUNTERMEASURES", "MAP", "TARGET", "AUTO", "THROTTLE", "LOOK", "CAM.", "FIRE" / "LAUNCH", "BINOCULARS", "RADAR", "HELP", "Players"
+for (const [icon, names] of Object.entries({ flares: ['FLARES', 'COUNTERMEASURES', 'CMs'], map: ['MAP'], target: ['TARGET'], auto: ['AUTO'], throttle: ['THROTTLE'], camera: ['LOOK', 'CAM.', 'CAMERA'], fire: ['FIRE', 'LAUNCH'], bino: ['BINOS', 'BINOCULARS'], radar: ['RADAR'], help: ['HELP'], players: ['Players', 'PLAYERS'], lesson: ['?'] }))
+  for (const n of names) { TOK['«' + n + '»'] = icon; TOK['"' + n + '"'] = icon; }
 const TRE = new RegExp(Object.keys(TOK).map((k) => k.replace(/[.?]/g, '\\$&')).join('|'), 'g');
-export const iconize = (h) => String(h ?? '').replace(TRE, (m) => `<span class="bi">${ico(TOK[m], 'ii')}${m.startsWith('«') ? m : ''}</span>`);
+export const iconize = (h) => String(h ?? '').replace(TRE, (m) => `<span class="bi">${ico(TOK[m], 'ii')}${/^[«"]/.test(m) ? m : ''}</span>`);
 // легенда значков — для руководства
-export const ICON_LEGEND = [['fire', 'Пуск / сброс выбранного оружия; у ПВО — пуск ракеты'], ['flares', 'Ловушки: ЛТЦ и диполи разом'], ['target', 'Цель: следующая цель контейнера'],
-  ['map', 'Карта'], ['throttle', 'Газ ступенями, после 100 % — форсаж'], ['auto', 'АВТО: помощник (за самолёт — захват и сброс, за ПВО — расчёт ведёт комплекс сам)'],
-  ['camera', 'Обзор: свободная камера (самолёт держит курс); у ПВО — вид камеры, онлайн — следующий союзник'], ['radar', 'РЛС ПВО: закрашена — излучает, пустая — молчит'],
-  ['bino', 'Бинокль оператора (только при захвате)'], ['help', 'Нужна помощь — союзникам (онлайн)'], ['players', 'Игроки онлайна: кто в сети и кто готов'],
-  ['lesson', 'Урок и объяснения: задание, подсказки, справка о технике'], ['pause', 'Пауза'], ['soundOn', 'Звук (зачёркнут — выключен)']];
+export const ICON_LEGEND = [['fire', tr('Пуск / сброс выбранного оружия; у ПВО — пуск ракеты')], ['flares', tr('Ловушки: ЛТЦ и диполи разом')], ['target', tr('Цель: следующая цель контейнера')],
+  ['map', tr('Карта')], ['throttle', tr('Газ ступенями, после 100 % — форсаж')], ['auto', tr('АВТО: помощник (за самолёт — захват и сброс, за ПВО — расчёт ведёт комплекс сам)')],
+  ['camera', tr('Обзор: свободная камера (самолёт держит курс); у ПВО — вид камеры, онлайн — следующий союзник')], ['radar', tr('РЛС ПВО: закрашена — излучает, пустая — молчит')],
+  ['bino', tr('Бинокль оператора (только при захвате)')], ['help', tr('Нужна помощь — союзникам (онлайн)')], ['players', tr('Игроки онлайна: кто в сети и кто готов')],
+  ['lesson', tr('Урок и объяснения: задание, подсказки, справка о технике')], ['pause', tr('Пауза')], ['soundOn', tr('Звук (зачёркнут — выключен)')]];

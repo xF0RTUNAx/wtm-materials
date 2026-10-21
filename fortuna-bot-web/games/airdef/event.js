@@ -8,6 +8,7 @@ import { MODES } from './sim/strike.js?v=20261022r';
 import { RAID_HELI } from './sim/raid.js?v=20261022r';
 import { AUTUMN_KEYS } from './autumn-render.js?v=20261022r';
 import { ico } from './icons.js?v=20261022r';
+import { tr, trIf } from './i18n.js?v=20261022r';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 // решение Mark 2026-10-20: событие идёт 2 месяца; после конца кнопка входа скрыта
@@ -16,7 +17,7 @@ export const eventLeft = () => Math.max(0, EVENT_END.getTime() - Date.now());
 export const eventOn = () => eventLeft() > 0;
 // вкладка «Оборона от вертолётов»: false — видна с пометкой «скоро» и неактивна (проверено 2026-10-20: все 6 волн доходят до конца, см. defense.js, сторожок вертолётов)
 const DEF_READY = true;
-const WX = { a_eve: 'Вечер', a_dusk: 'Сумерки', a_fog: 'Туман' };
+const WX = { a_eve: tr('Вечер'), a_dusk: tr('Сумерки'), a_fog: tr('Туман') };
 
 const CSS = `
 #event { position: fixed; inset: 0; z-index: 39; display: none; background: #0e110d; color: var(--th-tx, #e9e6dc); font: 13px 'IBM Plex Sans', -apple-system, sans-serif; overflow: hidden;
@@ -103,44 +104,44 @@ export function createEvent(C) {
   const idOf = (L) => `${L.era}:${L.i}`;
   const list = () => HELI_LOADOUTS.filter((L) => L.side === S.hside);
   const cur = () => { const l = list(); return l.find((L) => idOf(L) === S.sel) || l[0]; };
-  const tagsOf = (L) => L.items.map(([k, n]) => `<span class="tg">${AG[k].short} ×${n}</span>`).join('');
+  const tagsOf = (L) => L.items.map(([k, n]) => `<span class="tg">${trIf(AG[k].short)} ×${n}</span>`).join('');
   // выбранный вертолёт — всегда открытый, если такой есть (в «Реализме» закрытые выбрать нельзя)
   function fixSel() { const l = list(), L = cur(); if (L && !open0(L)) { const o = l.find(open0); if (o) S.sel = idOf(o); } else if (L) S.sel = idOf(L); }
 
   const left = () => eventLeft();
-  const leftTxt = () => { const ms = left(), d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5); return d > 0 ? `ещё ${d} д ${String(h).padStart(2, '0')} ч` : `ещё ${h} ч`; };
-  const mapPane = () => `<div class="cap">Карта</div><img class="map" src="airdef/ui/ev_map.jpg?v=20261022r" alt="Туманная топь">
-    <div class="cap">Погода</div>${seg('wx', S.wx, AUTUMN_KEYS.map((k) => [k, WX[k]]))}`;
-  const modePane = () => `<div class="cap">Режим</div>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, m.name]))}`;
+  const leftTxt = () => { const ms = left(), d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5); return d > 0 ? tr('ещё {0} д {1} ч', [d, String(h).padStart(2, '0')]) : tr('ещё {0} ч', [h]); };
+  const mapPane = () => `<div class="cap">${tr('Карта')}</div><img class="map" src="airdef/ui/ev_map.jpg?v=20261022r" alt="${tr('Туманная топь')}">
+    <div class="cap">${tr('Погода')}</div>${seg('wx', S.wx, AUTUMN_KEYS.map((k) => [k, WX[k]]))}`;
+  const modePane = () => `<div class="cap">${tr('Режим')}</div>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}`;
 
   function fly() {
     fixSel(); const L = cur(), lk = (X) => !open0(X);
-    const sub = L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ');
-    return `<div class="pl">${mapPane()}<div class="cap">Сторона</div>${seg('hside', S.hside, [['east', 'Восток'], ['west', 'Запад']])}${modePane()}</div>
+    const sub = L.items.map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(' · ');
+    return `<div class="pl">${mapPane()}<div class="cap">${tr('Сторона')}</div>${seg('hside', S.hside, [['east', tr('Восток')], ['west', tr('Запад')]])}${modePane()}</div>
       <div class="pc"><div class="hero"><img src="${thumb(L)}" alt=""></div>
-        <div class="nm"><b>${PLANES[L.plane]}</b>${tagsOf(L)}</div>
+        <div class="nm"><b>${trIf(PLANES[L.plane])}</b>${tagsOf(L)}</div>
         <div class="rib">${list().map((X) => { const miss = lk(X) ? C.progress.loadoutMissing(X) : [];
-          return `<button class="ec ${idOf(X) === idOf(L) ? 'sel' : ''} ${miss.length ? 'lk' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `data-sel="${idOf(X)}"`}><img src="${thumb(X)}" alt="" loading="lazy"><b>${PLANES[X.plane]}</b><small>${miss.length ? 'исследовать' : ERAS[X.era - 1].short + ' · ' + X.items.map(([k]) => AG[k].short).join(', ')}</small>${miss.length ? `<span class="lc">${ico('lock')}</span>` : ''}</button>`; }).join('')}</div>
-        <button class="go" data-go="fly" title="${sub}">ВЗЛЁТ</button></div>`;
+          return `<button class="ec ${idOf(X) === idOf(L) ? 'sel' : ''} ${miss.length ? 'lk' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `data-sel="${idOf(X)}"`}><img src="${thumb(X)}" alt="" loading="lazy"><b>${trIf(PLANES[X.plane])}</b><small>${miss.length ? tr('исследовать') : ERAS[X.era - 1].short + ' · ' + X.items.map(([k]) => trIf(AG[k].short)).join(', ')}</small>${miss.length ? `<span class="lc">${ico('lock')}</span>` : ''}</button>`; }).join('')}</div>
+        <button class="go" data-go="fly" title="${sub}">${tr('ВЗЛЁТ')}</button></div>`;
   }
   function def() {
     const att = S.dside === 'east' ? 'west' : 'east', rh = RAID_HELI[att] && RAID_HELI[att][S.dera], hp = rh && rh[0];
     return `<div class="pl">${mapPane()}${modePane()}</div>
       <div class="pc"><div class="hero">${hp ? `<img src="airdef/thumbs/heli_${hp}.webp?v=20261022r" alt="">` : ''}</div>
-        <div class="dh"><h2>Оборона от вертолётов</h2>
-          <p><b>Угроза${hp ? ': ' + PLANES[hp] : ''}.</b> Налёт идёт самолётами, со 2-й волны к ним присоединяется вертолёт, с 4-й — пара. Они подходят низко, по оврагам, и прячутся за холмами.</p>
-          <p class="lng">Ниже ~30 м за рельефом РЛС вертолёт не видит: берегите ближние комплексы — пушки, ЗРК ближнего действия, ПЗРК. Потеряно 75 % ценности военных объектов — поражение. Волн — ${C.WAVES}.</p></div>
-        <div class="row"><span class="cap">Ваша ПВО</span>${seg('dside', S.dside, [['east', 'Советская'], ['west', 'Западная']])}</div>
-        <div class="row"><span class="cap">Эпоха</span>${seg('dera', S.dera, ERAS.map((e) => [e.id, e.short]))}</div>
-        <button class="go" data-go="def">К РАССТАНОВКЕ</button></div>`;
+        <div class="dh"><h2>${tr('Оборона от вертолётов')}</h2>
+          <p>${tr('<b>Угроза{0}.</b> Налёт идёт самолётами, со 2-й волны к ним присоединяется вертолёт, с 4-й — пара. Они подходят низко, по оврагам, и прячутся за холмами.', [hp ? ': ' + trIf(PLANES[hp]) : ''])}</p>
+          <p class="lng">${tr('Ниже ~30 м за рельефом РЛС вертолёт не видит: берегите ближние комплексы — пушки, ЗРК ближнего действия, ПЗРК. Потеряно 75 % ценности военных объектов — поражение. Волн — {0}.', [C.WAVES])}</p></div>
+        <div class="row"><span class="cap">${tr('Ваша ПВО')}</span>${seg('dside', S.dside, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>
+        <div class="row"><span class="cap">${tr('Эпоха')}</span>${seg('dera', S.dera, ERAS.map((e) => [e.id, e.short]))}</div>
+        <button class="go" data-go="def">${tr('К РАССТАНОВКЕ')}</button></div>`;
   }
   function draw() {
     if (!root.classList.contains('on')) return;
     const sc = root.querySelector('.pl'), st = sc ? sc.scrollTop : 0;
     root.innerHTML = `<div class="bg"></div><div class="fog"></div>
-      <div class="top"><h1>${ico('pumpkin', 'pk')} Туманная топь</h1><span class="tm" id="evTm">${leftTxt()}</span>
-        <div class="tabs"><button data-tab="fly" class="${S.tab === 'fly' ? 'on' : ''}">Вылет на вертолёте</button><button data-tab="def" class="${S.tab === 'def' ? 'on' : ''}" ${DEF_READY ? '' : 'disabled'}>Оборона от вертолётов${DEF_READY ? '' : ' · скоро'}</button></div>
-        <button class="x" data-close="1" aria-label="Закрыть">✕</button></div>
+      <div class="top"><h1>${ico('pumpkin', 'pk')} ${tr('Туманная топь')}</h1><span class="tm" id="evTm">${leftTxt()}</span>
+        <div class="tabs"><button data-tab="fly" class="${S.tab === 'fly' ? 'on' : ''}">${tr('Вылет на вертолёте')}</button><button data-tab="def" class="${S.tab === 'def' ? 'on' : ''}" ${DEF_READY ? '' : 'disabled'}>${tr('Оборона от вертолётов')}${DEF_READY ? '' : tr(' · скоро')}</button></div>
+        <button class="x" data-close="1" aria-label="${tr('Закрыть')}">✕</button></div>
       <div class="body">${S.tab === 'def' && DEF_READY ? def() : fly()}</div>`;
     const p = root.querySelector('.pl'); if (p) p.scrollTop = st;
   }
@@ -194,6 +195,6 @@ export function createEvent(C) {
   // кнопка входа на фоне меню рядом с «Исследованиями»; после конца события скрыта
   const btn = $('evtBtn');
   if ($('evtIco')) $('evtIco').innerHTML = ico('pumpkin'); // pumpkin-lantern — Lorc (game-icons.net, CC BY 3.0)
-  if (btn) { btn.style.display = eventOn() ? 'flex' : 'none'; if ($('evtLeft')) $('evtLeft').textContent = `событие · ${eventLeft() >= 864e5 ? `ещё ${Math.floor(eventLeft() / 864e5)} дн.` : leftTxt()}`; btn.onclick = () => { snd.click(); api.open(); }; }
+  if (btn) { btn.style.display = eventOn() ? 'flex' : 'none'; if ($('evtLeft')) $('evtLeft').textContent = tr('событие · {0}', [eventLeft() >= 864e5 ? tr('ещё {0} дн.', [Math.floor(eventLeft() / 864e5)]) : leftTxt()]); btn.onclick = () => { snd.click(); api.open(); }; }
   return api;
 }

@@ -1,11 +1,16 @@
 // Расположение сенсорных кнопок (как в «Летке»): свои места, размер и прозрачность каждой кнопки — отдельно для вылета
 // и для оператора ЗРК. Хранится в долях экрана, отдельно для горизонтального и вертикального положения телефона,
 // поверх мест по умолчанию (air.js — layoutTouch, airdef.html — #opBtns). Открывается из «Настроек».
+import { tr, LANG } from './i18n.js?v=20261022r';
 const $ = (id) => document.getElementById(id);
+// подпись зоны ручки в редакторе — в CSS страницы (airdef.html: #stickZone::after); на другом языке подменяем правилом
+if (LANG !== 'ru' && typeof document !== 'undefined' && document.head) {
+  const zs = document.createElement('style'); zs.textContent = `body.layoutEdit #stickZone::after { content: ${JSON.stringify(tr('зона ручки — палец в любом месте слева'))}; }`; document.head.appendChild(zs);
+}
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const LAYOUT_SETS = {
-  air: { name: 'Вылет', btns: { tFire: 'ПУСК', tThr: 'ГАЗ / ФОРСАЖ', tFlare: 'ЛОВУШКИ', tLock: 'ЦЕЛЬ', tMap: 'КАРТА', tAuto: 'АВТО', tLook: 'ОБЗОР', tPad: 'КРЕСТОВИНА' } },
-  op: { name: 'Оператор ЗРК', btns: { opFire: 'ПУСК', opRadar: 'РЛС', opMethod: 'МЕТОД', opCam: 'КАМ.', opAuto: 'АВТО', opMap: 'КАРТА' } },
+  air: { name: tr('Вылет'), btns: { tFire: tr('ПУСК'), tThr: tr('ГАЗ / ФОРСАЖ'), tFlare: tr('ЛОВУШКИ'), tLock: tr('ЦЕЛЬ'), tMap: tr('КАРТА'), tAuto: tr('АВТО'), tLook: tr('ОБЗОР'), tPad: tr('КРЕСТОВИНА') } },
+  op: { name: tr('Оператор ЗРК'), btns: { opFire: tr('ПУСК'), opRadar: tr('РЛС'), opMethod: tr('МЕТОД'), opCam: tr('КАМ.'), opAuto: tr('АВТО'), opMap: tr('КАРТА') } },
 };
 const ALL = Object.assign({}, LAYOUT_SETS.air.btns, LAYOUT_SETS.op.btns);
 const KEY = 'fortuna_airdef_layout2'; // 2 — после объединения кнопок (газ+форсаж, ЛТЦ+диполи; без «ОРУЖ.», «КОНТ.») старые места не подходят
@@ -56,12 +61,12 @@ export function openLayoutEditor(onClose) {
   if (led) return;
   const bar = document.createElement('div'); bar.id = 'ledBar';
   bar.innerHTML = `<div class="ledTop"><span class="seg">${Object.entries(LAYOUT_SETS).map(([k, s]) => `<button data-set="${k}">${s.name}</button>`).join('')}</span>
-      <span class="ledHelp">Перетащите кнопку пальцем, нажмите — размер и прозрачность.</span></div>
+      <span class="ledHelp">${tr('Перетащите кнопку пальцем, нажмите — размер и прозрачность.')}</span></div>
     <div id="ledCtl"><b id="ledSel"></b>
-      <label>Размер <input type="range" id="ledS" min="0.6" max="1.8" step="0.05"></label>
-      <label>Прозрачность <input type="range" id="ledO" min="0.2" max="1" step="0.05"></label>
-      <button class="btn alt sm" id="ledReset1">Вернуть кнопку</button></div>
-    <div class="ledBtns"><button class="btn alt sm" id="ledResetAll">Всё по умолчанию</button><button class="btn sm" id="ledDone">Готово</button></div>`;
+      <label>${tr('Размер')} <input type="range" id="ledS" min="0.6" max="1.8" step="0.05"></label>
+      <label>${tr('Прозрачность')} <input type="range" id="ledO" min="0.2" max="1" step="0.05"></label>
+      <button class="btn alt sm" id="ledReset1">${tr('Вернуть кнопку')}</button></div>
+    <div class="ledBtns"><button class="btn alt sm" id="ledResetAll">${tr('Всё по умолчанию')}</button><button class="btn sm" id="ledDone">${tr('Готово')}</button></div>`;
   document.body.appendChild(bar); document.body.classList.add('layoutEdit');
   led = { bar, set: 'air', sel: null, drag: null, onClose }; showSet('air'); applyLayout();
   bar.addEventListener('input', (e) => {

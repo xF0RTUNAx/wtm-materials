@@ -5,23 +5,42 @@
 import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261022r';
 import { LOADOUTS } from './arsenal.js?v=20261022r';
 import { ico } from './icons.js?v=20261022r';
+import { tr, trIf, LANG } from './i18n.js?v=20261022r';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 — тестовый прогресс в памяти (без сервера)
 export function account() {
   try { const p = JSON.parse(localStorage.getItem('fortuna_web_player') || 'null'); return p && p.id && p.login ? p : null; } catch (_) { return null; }
 }
-const n2 = (v) => Math.round(v).toLocaleString('ru-RU');
+const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU');
+// сообщение «нельзя» — с сервера (функции Supabase) или из progress.js (причины покупки): на выбранном языке; фразы с подстановкой — по образцу
+const WHY = [[/^Ранг (\S+) закрыт — нужен паритет в ранге (\S+)$/, (a) => tr('Ранг {0} закрыт — нужен паритет в ранге {1}', a)], [/^Сначала исследуйте (.+)$/, (a) => tr('Сначала исследуйте {0}', a)],
+  [/^Не хватает опыта: (\d+)$/, (a) => tr('Не хватает опыта: {0}', a)], [/^Не хватает серебра: (\d+)$/, (a) => tr('Не хватает серебра: {0}', a)]];
+export function trMsg(m) {
+  if (LANG !== 'en' || typeof m !== 'string') return m;
+  const s = trIf(m); if (s !== m) return s;
+  for (const [re, f] of WHY) { const x = re.exec(m); if (x) return f(x.slice(1).map(trIf)); }
+  const p = /^Паритет: сначала купите единицу ранга (\S+) за (\S+?)(?: — например, (.+))?$/.exec(m);
+  if (p) return tr('Паритет: сначала купите единицу ранга {0} за {1}{2}', [p[1], trIf(p[2]), p[3] ? tr(' — например, {0}', [trIf(p[3])]) : '']);
+  return m;
+}
+// строка награды из progress.js (battleReward): «Время в бою (N мин)» и «После N за день» — с числом
+export function trLine(t) {
+  if (LANG !== 'en') return t;
+  const a = /^Время в бою \((\d+) мин\)$/.exec(t); if (a) return tr('Время в бою ({0} мин)', [a[1]]);
+  const b = /^После (\d+) за день$/.exec(t); if (b) return tr('После {0} за день', [b[1]]);
+  return trIf(t);
+}
 export const XP = (v) => `${ico('xp')}${n2(v)}`, SV = (v) => `${ico('silver')}${n2(v)}`;
 
 export function createProgress(C) {
   const G = { P: null, info: null, err: '', busy: false, run: null, guest: false, listeners: [] };
   const changed = () => { for (const f of G.listeners) try { f(); } catch (e) { console.warn('progress', e); } };
   async function call(fn, body) {
-    if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) throw new Error('Нет связи с сайтом');
+    if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) throw new Error(tr('Нет связи с сайтом'));
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
     const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/' + fn, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify(body) });
     const d = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(d.error || 'Ошибка сервера'), { status: res.status });
+    if (!res.ok) throw Object.assign(new Error(d.error || tr('Ошибка сервера')), { status: res.status });
     return d;
   }
   const set = (v) => { G.guest = false; G.P = { xp: v.xp, silver: v.silver, res: v.res || [], own: v.own || [], goal: v.goal || {} }; G.info = v; G.err = ''; changed(); };
@@ -37,7 +56,7 @@ export function createProgress(C) {
 
   const api = {
     get P() { return G.P; }, get info() { return G.info; }, get err() { return G.err; }, get busy() { return G.busy; }, get guest() { return G.guest; },
-    account: () => (TEST ? { id: 'test', login: 'тест' } : account()),
+    account: () => (TEST ? { id: 'test', login: tr('тест') } : account()),
     on(f) { G.listeners.push(f); },
     // прогресс известен (с сервера или гостевой стартовый); пока не ответил — замков нет
     ready: () => !!G.P,
@@ -50,11 +69,11 @@ export function createProgress(C) {
     },
     // исследовать / купить / цель ветки (id: null — снять)
     async act(action, id, branch) {
-      if (G.busy) return { ok: false, why: 'Подождите…' };
+      if (G.busy) return { ok: false, why: tr('Подождите…') };
       G.busy = true; changed();
       try {
         if (TEST) { await local(action, id, branch); return { ok: true }; }
-        const acc = account(); if (!acc) return { ok: false, why: 'Войдите на сайте' };
+        const acc = account(); if (!acc) return { ok: false, why: tr('Войдите на сайте') };
         const d = await call('airdef-progress', { player_id: acc.id, action, id, branch }); set(d.progress); return { ok: true };
       } catch (e) { return { ok: false, why: e.message }; }
       finally { G.busy = false; changed(); }
@@ -66,7 +85,7 @@ export function createProgress(C) {
     samOk: (key) => !G.P || !NODE['pvo:' + key] || samOk(G.P, key),
     strikeOk: (item) => !G.P || !NODE[strikeId(item)] || strikeOk(G.P, item),
     // подпись «нужно: КАБ-500Л (Вооружение, II)»
-    needText: (nodes) => 'нужно: ' + nodes.map((n) => `${n.short} (${{ air: 'Авиация', wpn: 'Вооружение', pvo: 'ПВО', strike: 'Волна' }[n.branch]}, ${RANK_NAME[n.rank]})`).join(', '),
+    needText: (nodes) => tr('нужно: ') + nodes.map((n) => `${trIf(n.short)} (${{ air: tr('Авиация'), wpn: tr('Вооружение'), pvo: tr('ПВО'), strike: tr('Волна') }[n.branch]}, ${RANK_NAME[n.rank]})`).join(', '),
 
     // ── одиночный бой: номер перед боем, итог после ──
     async runStart(game, mode, era) {
@@ -83,25 +102,25 @@ export function createProgress(C) {
       const el = () => document.getElementById('endNote');
       // свой блок — между метками (повторный показ заменяет его, остальной текст итогов не трогаем)
       const show = (h) => { const e = el(); if (e) e.innerHTML = `<!--pg--><div class="pgRes">${h}</div><!--/pg-->` + String(e.innerHTML || '').replace(/<!--pg-->[\s\S]*?<!--\/pg-->/, ''); };
-      if (!account() && !TEST) { show('<span class="dim">Опыт и серебро копятся, когда вы вошли на сайте.</span>'); return; }
+      if (!account() && !TEST) { show('<span class="dim">' + tr('Опыт и серебро копятся, когда вы вошли на сайте.') + '</span>'); return; }
       if (!run) return;
-      show('<span class="dim">Начисляем опыт…</span>');
+      show('<span class="dim">' + tr('Начисляем опыт…') + '</span>');
       try {
-        await run.p; if (!run.id) throw new Error(run.err || 'Бой не зарегистрирован');
+        await run.p; if (!run.id) throw new Error(run.err || tr('Бой не зарегистрирован'));
         const d = await call('airdef-solo', { player_id: account().id, action: 'claim', run_id: run.id, ev, used });
         set(d.progress);
         show(api.rewardHtml(d));
-      } catch (e) { show(`<span class="dim">Опыт не начислен: ${e.message}</span>`); }
+      } catch (e) { show('<span class="dim">' + tr('Опыт не начислен: {0}', [trMsg(e.message)]) + '</span>'); }
     },
     // строки «за что сколько» и множители (одиночный и онлайн — одинаково)
     rewardHtml(d) {
-      if (!d || !d.xp) return '<span class="dim">За этот бой опыта нет.</span>';
-      const lines = (d.lines || []).map(([t, v]) => `<span>${t}</span><b>+${n2(v)}</b>`).join('');
-      const mult = (d.mult || []).map(([t, k]) => `<span>${t}</span><b>×${String(k).replace('.', ',')}</b>`).join('');
-      const auto = (d.auto || []).map((id) => NODE[id] ? NODE[id].short : id);
+      if (!d || !d.xp) return '<span class="dim">' + tr('За этот бой опыта нет.') + '</span>';
+      const lines = (d.lines || []).map(([t, v]) => `<span>${trLine(t)}</span><b>+${n2(v)}</b>`).join('');
+      const mult = (d.mult || []).map(([t, k]) => `<span>${trLine(t)}</span><b>×${String(k).replace('.', LANG === 'en' ? '.' : ',')}</b>`).join('');
+      const auto = (d.auto || []).map((id) => NODE[id] ? trIf(NODE[id].short) : id);
       return `<div class="pgSum"><span class="xp">${XP(d.xp)}</span><span class="sv">${SV(d.silver)}</span></div><div class="pgLines">${lines}${mult}</div>`
-        + (d.real === false && d.real_asked ? '<div class="dim">«Реализм» на некупленной технике — засчитано как «Аркада».</div>' : '')
-        + (auto.length ? `<div class="pgAuto">Исследовано: <b>${auto.join(', ')}</b> — купить в «Исследованиях».</div>` : '');
+        + (d.real === false && d.real_asked ? '<div class="dim">' + tr('«Реализм» на некупленной технике — засчитано как «Аркада».') + '</div>' : '')
+        + (auto.length ? '<div class="pgAuto">' + tr('Исследовано: <b>{0}</b> — купить в «Исследованиях».', [auto.join(', ')]) + '</div>' : '');
     },
     // узлы, на которых играли: самолёт и оружие подвески / комплексы / удары
     usedLoadout: (era, i) => { const L = LOADOUTS[era] && LOADOUTS[era][i]; return L ? [(L.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)] : []; },

@@ -15,6 +15,7 @@ import { planeModel, classOfRole } from './models.js?v=20261022r';
 import { fwdOf } from '../drone/sim/core.js?v=20261022r';
 import { placeDefense, pickTargets } from './mission.js?v=20261022r';
 import { LNCH, trainable } from './launchers.js?v=20261022r';
+import { tr, trIf } from './i18n.js?v=20261022r';
 
 export function createDirector(C) {
   const { camera, city } = C;
@@ -54,17 +55,17 @@ export function createDirector(C) {
   }
   function panShot() {
     const o = aliveTargets()[0] || C.S.objects[0], a0 = rnd() * 6.28, R = 1400 + rnd() * 1200, h = 250 + rnd() * 500;
-    return { kind: 'pan', dur: 10, cap: `${o.name} · ${side === 'east' ? 'советская/российская' : 'западная'} ПВО, эпоха ${['I', 'II', 'III', 'IV'][era - 1]}`,
+    return { kind: 'pan', dur: 10, cap: tr('{0} · {1} ПВО, эпоха {2}', [trIf(o.name), side === 'east' ? tr('советская/российская') : tr('западная'), ['I', 'II', 'III', 'IV'][era - 1]]),
       cam(dt, t) { const a = a0 + t * 0.05; camPos.set(o.x + Math.sin(a) * R, groundAt(o.x, o.z) + h, o.z + Math.cos(a) * R); look.set(o.x, groundAt(o.x, o.z) + 40, o.z); return true; } };
   }
   function planeShot(chase) {
     const ps = C.raid.alive(); if (!ps.length) return panShot();
     const a = ps[Math.floor(rnd() * ps.length)];
-    if (chase) return { kind: 'chase', dur: 8, cap: `Ударная группа · ${roleName(a)}`, cam() { if (a.dead || a.out) return false; fwdOf(a, F); camPos.copy(a.pos).addScaledVector(F, -70).y += 14; look.copy(a.pos).addScaledVector(F, 120); shot.follow = a; return true; } };
+    if (chase) return { kind: 'chase', dur: 8, cap: tr('Ударная группа · {0}', [roleName(a)]), cam() { if (a.dead || a.out) return false; fwdOf(a, F); camPos.copy(a.pos).addScaledVector(F, -70).y += 14; look.copy(a.pos).addScaledVector(F, 120); shot.follow = a; return true; } };
     // пролёт: камера впереди по курсу, над крышами, самолёт проходит мимо
     fwdOf(a, F); const p = a.pos.clone().addScaledVector(F, 900).add(TMP.set(-F.z, 0, F.x).multiplyScalar(90 * (rnd() < 0.5 ? 1 : -1)));
     p.y = Math.max(city.topAt(p.x, p.z) + 25, a.pos.y - 40 + rnd() * 30);
-    return { kind: 'flyby', dur: 7.5, cap: `Пролёт · ${roleName(a)}`, cam() { if (a.dead) return false; camPos.copy(p); look.copy(a.pos); return true; } };
+    return { kind: 'flyby', dur: 7.5, cap: tr('Пролёт · {0}', [roleName(a)]), cam() { if (a.dead) return false; camPos.copy(p); look.copy(a.pos); return true; } };
   }
   // вид с улицы: камера на тротуаре впереди по курсу самолёта, он проходит над крышами
   function streetShot() {
@@ -74,7 +75,7 @@ export function createDirector(C) {
     let p = null;
     for (let k = 0; k < 24 && !p; k++) { const x = ahead.x + (rnd() - 0.5) * 300, z = ahead.z + (rnd() - 0.5) * 300; if (city.bldAt(x, z) <= 0) p = new THREE.Vector3(x, groundAt(x, z) + 1.8, z); }
     if (!p) return null;
-    return { kind: 'street', dur: 8, cap: `Вид с улицы · ${roleName(a)}`, cam() { if (a.dead || a.out) return false; camPos.copy(p); look.copy(a.pos); return true; } };
+    return { kind: 'street', dur: 8, cap: tr('Вид с улицы · {0}', [roleName(a)]), cam() { if (a.dead || a.out) return false; camPos.copy(p); look.copy(a.pos); return true; } };
   }
   // пусковая разворачивается на цель (до пуска): крупно на ¾ спереди
   function trackShot(u) {
@@ -82,7 +83,7 @@ export function createDirector(C) {
     const R = unitR(u), a0 = (u.track ? Math.atan2(u.track.pos.x - u.pos.x, u.track.pos.z - u.pos.z) : u.yaw) + (rnd() < 0.5 ? 0.9 : -0.9);
     const D = R * 2.2 + 5, p = new THREE.Vector3(u.pos.x + Math.sin(a0) * D, u.pos.y + R * 0.45 + 1, u.pos.z + Math.cos(a0) * D);
     p.y = Math.max(p.y, city.topAt(p.x, p.z) + 2);
-    return { kind: 'track', dur: 6, cap: `${u.S.name} · цель захвачена — пусковая разворачивается`,
+    return { kind: 'track', dur: 6, cap: tr('{0} · цель захвачена — пусковая разворачивается', [trIf(u.S.name)]),
       cam() { if (u.dead) return false; camPos.copy(p); look.copy(u.pos).y += R * 0.25; return true; } };
   }
   // пуск ЗУР: сначала у пусковой (сбоку / сзади / снизу), потом за ракетой, на подлёте — у цели
@@ -96,11 +97,11 @@ export function createDirector(C) {
     else if (variant === 'rear') { const D = R * 2.2 + L + 8; p.set(u.pos.x - sx * D + sz * R * 0.8 * sd, u.pos.y + R * 0.6 + 3, u.pos.z - sz * D - sx * R * 0.8 * sd); } // за пусковой, на цель
     else { const D = R * 1.4 + 6; p.set(u.pos.x + sz * D * sd - sx * D * 0.5, u.pos.y - 0.6, u.pos.z - sx * D * sd - sz * D * 0.5); } // снизу у земли
     p.y = Math.max(p.y, city.topAt(p.x, p.z) + 1.2);
-    const how = { cold: ' · «холодный» старт', tube: ' · вышибной заряд', vhot: ' · вертикальный старт', box: ' · из наклонного контейнера' }[m.ln && m.ln.mode] || '';
+    const how = { cold: tr(' · «холодный» старт'), tube: tr(' · вышибной заряд'), vhot: tr(' · вертикальный старт'), box: tr(' · из наклонного контейнера') }[m.ln && m.ln.mode] || '';
     const tube = m.ln && m.ln.mode === 'tube'; // ПЗРК: стрелка не показываем — сразу за ракетой
     const hold = tube ? 0 : 2.6 + (m.ign || 0) + (variant === 'side' ? 1.2 : 0);
     let near = null, endT = 0;
-    return { kind: 'sam', dur: 18, cap: `Пуск: ${u.S.name} · ${SAM_TYPE[u.S.type]}${how}`,
+    return { kind: 'sam', dur: 18, cap: tr('Пуск: {0} · {1}{2}', [trIf(u.S.name), trIf(SAM_TYPE[u.S.type]), how]),
       cam(dt, t) {
         shot.follow = null;
         if (m.dead) { endT = endT || t; look.copy(m.pos); return t - endT < 2.5; } // подрыв — пара секунд на разрыв
@@ -109,7 +110,7 @@ export function createDirector(C) {
         const tg = m.target && !m.target.dead ? m.target : null;
         if (tg && !near && m.pos.distanceTo(tg.pos) < Math.max(400, m.speed * 2.5)) {
           near = tg.pos.clone().add(TMP.copy(m.dir).cross(F.set(0, 1, 0)).normalize().multiplyScalar(60 + rnd() * 40)); near.y += 15;
-          shot.snap = true; caption = `${u.S.short}: встреча с целью`; capT = 0;
+          shot.snap = true; caption = tr('{0}: встреча с целью', [trIf(u.S.short)]); capT = 0;
         }
         if (near) { if (tg) near.addScaledVector(tg.vel, dt); camPos.copy(near); look.copy(m.pos).lerp(tg ? tg.pos : m.pos, 0.5); return true; }
         camPos.copy(m.pos).addScaledVector(m.dir, -(L * 3 + 16 + (tube ? 25 : 0))).y += L * 0.5 + 3;
@@ -119,7 +120,7 @@ export function createDirector(C) {
   }
   function bombShot(w) {
     let impact = null;
-    return { kind: 'bomb', dur: 16, cap: `${AG[w.key].name} · ${{ lgb: 'наводится на пятно лазера', arm: 'летит на излучение РЛС', gps: 'летит по спутниковой навигации', cruise: 'крылатая ракета на малой высоте' }[w.W.kind] || (w.W.tv ? 'ТВ-головка, «выстрелил и забыл»' : 'свободное падение')}`,
+    return { kind: 'bomb', dur: 16, cap: `${trIf(AG[w.key].name)} · ${{ lgb: tr('наводится на пятно лазера'), arm: tr('летит на излучение РЛС'), gps: tr('летит по спутниковой навигации'), cruise: tr('крылатая ракета на малой высоте') }[w.W.kind] || (w.W.tv ? tr('ТВ-головка, «выстрелил и забыл»') : tr('свободное падение'))}`,
       cam(dt, t) {
         shot.follow = null;
         if (!w.dead) { TMP.copy(w.vel).normalize(); camPos.copy(w.pos).addScaledVector(TMP, -30).add(F.set(-TMP.z, 0, TMP.x).multiplyScalar(14)).y += 6; look.copy(w.pos).addScaledVector(TMP, 60); impact = w.pos.clone(); shot.follow = w; return true; }
@@ -129,15 +130,15 @@ export function createDirector(C) {
   }
   function aaaShot() {
     const u = C.S.units.find((q) => q.gunOn && !q.dead && q.track); if (!u) return null;
-    return { kind: 'aaa', dur: 6, cap: `${u.S.name} · заградительный огонь`, cam() { if (!u.track || u.dead) return false; TMP.copy(u.track.pos).sub(u.pos).normalize(); camPos.copy(u.pos).addScaledVector(TMP, -18).y += 6; look.copy(u.track.pos); return true; } };
+    return { kind: 'aaa', dur: 6, cap: tr('{0} · заградительный огонь', [trIf(u.S.name)]), cam() { if (!u.track || u.dead) return false; TMP.copy(u.track.pos).sub(u.pos).normalize(); camPos.copy(u.pos).addScaledVector(TMP, -18).y += 6; look.copy(u.track.pos); return true; } };
   }
-  const planeName = (a) => { const pm = planeModel(a.side, classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)); return pm ? PLANES[pm.name] : a.side === 'east' ? 'Ударник' : 'Strike'; };
+  const planeName = (a) => { const pm = planeModel(a.side, classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)); return pm ? trIf(PLANES[pm.name]) : a.side === 'east' ? tr('Ударник') : 'Strike'; };
   const fighters = () => C.raid.alive().filter((a) => a.role !== 'decoy');
   // рядом с самолётом: v — wing (ведомый сбоку), close (из-за плеча), under (подвеска снизу спереди), orbit (облёт)
   function planeClose(v) {
     const ps = fighters(); if (!ps.length) return null;
     const a = ps[Math.floor(rnd() * ps.length)], sd = rnd() < 0.5 ? 1 : -1, a0 = rnd() * 6.28;
-    const name = { wing: 'рядом с ведущим', close: 'из-за плеча', under: 'подвеска', orbit: 'облёт' }[v];
+    const name = { wing: tr('рядом с ведущим'), close: tr('из-за плеча'), under: tr('подвеска'), orbit: tr('облёт') }[v];
     return { kind: 'p_' + v, dur: 8, near: 4, cap: `${planeName(a)} · ${name} · ${roleName(a)}`,
       cam(dt, t) {
         if (a.dead || a.out) return false;
@@ -155,14 +156,14 @@ export function createDirector(C) {
   function unitShot() {
     const us = C.S.units.filter((u) => !u.dead && !(LNCH[u.key] && LNCH[u.key].mode === 'tube')); if (!us.length) return null;
     const u = us[Math.floor(rnd() * us.length)], R = unitR(u), a0 = rnd() * 6.28, D = R * 2.6 + 6, sd = rnd() < 0.5 ? 1 : -1;
-    return { kind: 'unit', dur: 9, near: 1, cap: `${u.S.name} · ${SAM_TYPE[u.S.type]}`,
+    return { kind: 'unit', dur: 9, near: 1, cap: `${trIf(u.S.name)} · ${trIf(SAM_TYPE[u.S.type])}`,
       cam(dt, t) { if (u.dead) return false; const g = a0 + t * 0.12 * sd; camPos.set(u.pos.x + Math.sin(g) * D, u.pos.y + R * 0.5 + 1.5, u.pos.z + Math.cos(g) * D); look.copy(u.pos).y += R * 0.3; return true; } };
   }
   // объект-цель вблизи: облёт на малой высоте
   function objShot() {
     const os = aliveTargets(); if (!os.length) return null;
     const o = os[Math.floor(rnd() * os.length)], a0 = rnd() * 6.28, D = Math.max(o.w, o.d) * 0.55 + 70, sd = rnd() < 0.5 ? 1 : -1;
-    return { kind: 'obj', dur: 9, cap: `${o.name} вблизи`,
+    return { kind: 'obj', dur: 9, cap: tr('{0} вблизи', [trIf(o.name)]),
       cam(dt, t) { const g = a0 + t * 0.07 * sd, gy = groundAt(o.x, o.z); camPos.set(o.x + Math.sin(g) * D, gy + 38, o.z + Math.cos(g) * D); look.set(o.x, gy + 8, o.z); return true; } };
   }
   // улица города: камера медленно едет вдоль панельного дома на высоте 3–4 этажа
@@ -173,7 +174,7 @@ export function createDirector(C) {
       const lx = B.w[i] > B.d[i], L = Math.max(B.w[i], B.d[i]), S = Math.min(B.w[i], B.d[i]), sd = rnd() < 0.5 ? 1 : -1, h = B.h[i];
       const ax = lx ? 1 : 0, az = lx ? 0 : 1, off = S / 2 + 24, x0 = B.x[i] + (lx ? 0 : off * sd), z0 = B.z[i] + (lx ? off * sd : 0);
       if (city.bldAt(x0, z0) > 0) continue;
-      return { kind: 'city', dur: 9, near: 1, cap: 'Город вблизи',
+      return { kind: 'city', dur: 9, near: 1, cap: tr('Город вблизи'),
         cam(dt, t) { const s = -L * 0.6 + t * 7, gy = groundAt(x0, z0); camPos.set(x0 + ax * s, gy + 11, z0 + az * s); look.set(B.x[i] + ax * (s + 40), gy + h * 0.45, B.z[i] + az * (s + 40)); return true; } };
     }
     return null;
@@ -200,7 +201,7 @@ export function createDirector(C) {
       if (s) { s.manual = true; s.dur *= 1.6; pending = null; cut(() => { caption = s.cap; capT = 0; return s; }); return; }
     }
   }
-  const roleName = (a) => ({ bomber: 'бомбардировщик', tv: 'носитель ТВ-ракет', sead: 'охотник за РЛС', low: 'прорыв на малой высоте', cruise: 'носитель крылатых ракет', decoyer: 'носитель ложных целей', decoy: 'ложная цель' })[a.role] || 'ударник';
+  const roleName = (a) => ({ bomber: tr('бомбардировщик'), tv: tr('носитель ТВ-ракет'), sead: tr('охотник за РЛС'), low: tr('прорыв на малой высоте'), cruise: tr('носитель крылатых ракет'), decoyer: tr('носитель ложных целей'), decoy: tr('ложная цель') })[a.role] || tr('ударник');
   function pickShot() {
     const now = C.t; events = events.filter((e) => now - e.t < 1.5);
     // события боя — чаще всего, но не всегда: остальное время — самолёты и город крупно

@@ -8,7 +8,7 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { trDom, tr, trIf } from './i18n.js?v=20261022r';
+import { trDom, tr, trIf, LANG } from './i18n.js?v=20261022r';
 import { ktxInit } from './ktx.js?v=20261022r';
 import { buildCity, CITY } from './city.js?v=20261022r';
 import { buildWinter } from './map-winter.js?v=20261022r';
@@ -49,6 +49,8 @@ import { orientGate } from '../orient-warn.js?v=20261011a';
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
 trDom(document.body); // язык: статичный HTML страницы — до того, как меню и бой допишут свой текст (i18n.js)
+// окна общих модулей (предупреждение о повороте телефона — orient-warn.js, «Летка» делит его с игрой), которые сами добавляют русский текст прямо в body
+if (LANG === 'en' && typeof MutationObserver !== 'undefined') new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) trDom(n); }).observe(document.body, { childList: true });
 if (Q.get('test') === '1') addEventListener('error', (e) => (window.__errs = window.__errs || []).push(e.error ? e.error.stack : e.message)); // для проверки: стеки ошибок
 const IS_TOUCH = Q.get('touch') === '1' || matchMedia('(pointer: coarse)').matches;
 document.body.classList.toggle('coarse', IS_TOUCH);
@@ -56,19 +58,19 @@ const ls = { get(k) { try { return localStorage.getItem(k); } catch (_) { return
 
 // ═════════════ Пресеты графики ═════════════
 export const PRESETS = {
-  low: { name: 'Низкий', skyOnly: true, fxLo: true, lodObj: 3500, desc: 'слабые телефоны', prCap: 1.25, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
+  low: { name: tr('Низкий'), skyOnly: true, fxLo: true, lodObj: 3500, desc: tr('слабые телефоны'), prCap: 1.25, prMul: 0.8, draw: 8000, houseK: 0.5, bldNear: 0, groundSeg: 160, zoneTex: 512, trees: 0, clouds: 0, roofDetail: false, shadows: false, particles: 1500,
     perf: { scale: 1, min: 0.75, aa: 'off', up: 'off' } },
-  medium: { name: 'Средний', skyOnly: true, fxLo: true, lodObj: 4500, desc: 'большинство телефонов', prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, bldFar: 1600, treeFar: 450, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
+  medium: { name: tr('Средний'), skyOnly: true, fxLo: true, lodObj: 4500, desc: tr('большинство телефонов'), prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, bldFar: 1600, treeFar: 450, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
     perf: { scale: 1, min: 0.7, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
   // «Кастомный»: всё настраивается (Настройки → «Кастомный»). Основа — техника, ракеты, бомбы, самолёты и эффекты как на
   // «Высоком» (тени вблизи, свечение, сглаживание), город проще
-  custom: { name: 'Кастомный', lodObj: 5000, desc: 'свои настройки: разрешение, тени, город, эффекты', prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
+  custom: { name: tr('Кастомный'), lodObj: 5000, desc: tr('свои настройки: разрешение, тени, город, эффекты'), prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 450, aniso: 4, props: false,
     perf: { scale: 1, min: 0.6, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
-  high: { name: 'Высокий', lodObj: 6000, desc: 'мощные телефоны и ПК: тени, свечение', prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, bldFar: 2600, treeFar: 700, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
+  high: { name: tr('Высокий'), lodObj: 6000, desc: tr('мощные телефоны и ПК: тени, свечение'), prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, bldFar: 2600, treeFar: 700, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 600, aniso: 4,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
-  ultra: { name: 'Ультра', lodObj: 8000, desc: 'тени 4K, тени деревьев, дальняя прорисовка', prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, bldFar: 3600, treeFar: 1000, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
+  ultra: { name: tr('Ультра'), lodObj: 8000, desc: tr('тени 4K, тени деревьев, дальняя прорисовка'), prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, bldFar: 3600, treeFar: 1000, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
     shadows: true, treeShadows: true, shadowMap: 4096, shadowBox: 800, aniso: 8,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'fsr', sharp: 0.35 }, post: { bloom: 0.6, vignette: 0.18, grade: 0.3, exposure: 0.95 } },
 };
@@ -129,7 +131,7 @@ function touchGfx(P, custom) {
 // окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
 for (const k in PRESETS) if (PRESETS[k].podHalf === undefined) PRESETS[k].podHalf = IS_TOUCH || k === 'low' || k === 'medium';
 const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGfx(PRESETS[gfxKey], { fullRes: GO.fullRes }), gfxKey === 'custom'); // свои настройки — только у «Кастомного»
-const P = CINEMA ? Object.assign(P0, { name: 'Кино', lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
+const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
 if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 — без дальних копий моделей
 // карта: «Мульти-волна» (и в онлайне) и «Кино» — только зимняя долина «Северный рубеж», вылеты, задания и уроки — город
@@ -212,7 +214,7 @@ const C = {
   saveSens: () => ls.set('fortuna_airdef_sens', JSON.stringify(C.sens)),
   // «АВТО» — помощь в бою (вылет и оператор ЗРК)
   auto: ls.get('fortuna_airdef_auto') === '1',
-  setAuto(on) { C.auto = !!on; ls.set('fortuna_airdef_auto', on ? '1' : '0'); for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); C.say(on ? 'АВТО включено: захват, сброс и пуск — сами (не идеально)' : 'АВТО выключено', 2); snd.click(); },
+  setAuto(on) { C.auto = !!on; ls.set('fortuna_airdef_auto', on ? '1' : '0'); for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); C.say(on ? tr('АВТО включено: захват, сброс и пуск — сами (не идеально)') : tr('АВТО выключено'), 2); snd.click(); },
   saveSetup: () => ls.set('fortuna_airdef_setup', JSON.stringify(setup)),
 };
 
@@ -739,7 +741,7 @@ C.togglePause = function () {
 };
 // итоги: title, reason, stats [[число, подпись]], note, win (true/false/null)
 C.showEnd = function ({ title, reason, stats, note, win, again }) {
-  C.ended = true; $('againBtn').textContent = again || 'Ещё раз'; // «Операция»: «Вылет 2: удар →»
+  C.ended = true; $('againBtn').textContent = again || tr('Ещё раз'); // «Операция»: «Вылет 2: удар →»
   $('endTitle').textContent = title; $('endTitle').className = win === true ? 'win' : win === false ? 'lose' : '';
   $('endReason').textContent = reason || '';
   $('endStats').innerHTML = (stats || []).map(([v, l]) => `<div class="stt"><b>${v}</b><span>${l}</span></div>`).join('');
@@ -749,25 +751,25 @@ C.showEnd = function ({ title, reason, stats, note, win, again }) {
 // объяснение на паузе (обучение и «?»)
 C.openLesson = function (title, body, sub) {
   C.paused = true; snd.silence();
-  $('lessonTitle').innerHTML = title; $('lessonBody').innerHTML = iconize(body); $('lessonSub').textContent = sub || 'Объяснение · игра на паузе';
+  $('lessonTitle').innerHTML = title; $('lessonBody').innerHTML = iconize(body); $('lessonSub').textContent = sub || tr('Объяснение · игра на паузе');
   $('lesson').classList.add('on');
 };
 C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = false; if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
 $('lessonClose').onclick = () => C.closeLesson();
 $('resumeBtn').onclick = () => C.togglePause();
 $('pauseExit').onclick = () => C.toMenu();
-$('pauseEnd').onclick = () => { C.togglePause(); if (C.ctrl.finish) C.ctrl.finish('Бой завершён досрочно'); };
+$('pauseEnd').onclick = () => { C.togglePause(); if (C.ctrl.finish) C.ctrl.finish(tr('Бой завершён досрочно')); };
 $('pause').onclick = () => C.togglePause();
 $('againBtn').onclick = () => orientGate(() => { C.ended = false; C.start(C.lastGame || 'air'); }, IS_TOUCH);
 $('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
 $('exit').onclick = () => C.toMenu();
 // кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
-const ICO = { tFlare: ['flares', 'Ловушки'], tMap: ['map', 'Карта'], tLock: ['target', 'Цель'], tAuto: ['auto', 'АВТО — помощник'], tLook: ['camera', 'Обзор — свободная камера'], tCam: ['camera', 'Камера: следующий союзник'],
-  tHelp: ['help', 'Нужна помощь'], opMap: ['map', 'Карта'], opAuto: ['auto', 'АВТО — расчёт сам'], opCam: ['camera', 'Камера'], opBino: ['bino', 'Бинокль'], opRadar: ['radar', 'РЛС: включить / выключить'],
-  pause: ['pause', 'Пауза'], plBtn: ['players', 'Игроки'], lsnBtn: ['lesson', 'Урок: задание и подсказки'], askBtn: ['lesson', 'Объяснение'], wMap: ['map', 'Карта'] };
+const ICO = { tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('АВТО — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
+  tHelp: ['help', tr('Нужна помощь')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('АВТО — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
+  pause: ['pause', tr('Пауза')], plBtn: ['players', tr('Игроки')], lsnBtn: ['lesson', tr('Урок: задание и подсказки')], askBtn: ['lesson', tr('Объяснение')], wMap: ['map', tr('Карта')] };
 for (const [id, [n, t]] of Object.entries(ICO)) { const e = $(id); if (!e) continue; e.innerHTML = ico(n); e.title = t; if (e.setAttribute) e.setAttribute('aria-label', t); e.classList.add('icb'); }
 { const pd = $('tPad'); if (pd && pd.querySelector) { const l = pd.querySelector('.pl'), r = pd.querySelector('.pr'); if (l) l.innerHTML = ico('rollL'); if (r) r.innerHTML = ico('rollR'); } } // крен — стрелки вращения
-const muteIco = C.muteIco = () => { $('mute').innerHTML = ico(snd.muted ? 'soundOff' : 'soundOn'); $('mute').title = snd.muted ? 'Звук выключен' : 'Звук'; };
+const muteIco = C.muteIco = () => { $('mute').innerHTML = ico(snd.muted ? 'soundOff' : 'soundOn'); $('mute').title = snd.muted ? tr('Звук выключен') : tr('Звук'); };
 $('mute').onclick = () => { snd.unlock(); snd.setMuted(!snd.muted); muteIco();
 for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); };
 muteIco();
@@ -866,12 +868,12 @@ function frame(now) {
   if (C.state === 'play' && !view && ms < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(ms); // на карте 3D не рисуется — мерить нечего
   const sc = Math.round((pipe ? pipe.scale : dr.scale) * 100);
   // онлайн: задержка до сервера и потери (net.js) — мелко, в той же строке внизу
-  const NN = C.online && C.online.N, netTxt = NN && NN.conn === 'on' && NN.battle && NN.ping ? ` · ${Math.round(NN.ping)} мс · PL ${NN.pl}%` : '';
+  const NN = C.online && C.online.N, netTxt = NN && NN.conn === 'on' && NN.battle && NN.ping ? tr(' · {0} мс · PL {1}%', [Math.round(NN.ping), NN.pl]) : '';
   if (C.perfHud && renderer.info) { // подробно: кадр, ЦП (подготовка кадра в JS), ГП ≈ остаток кадра, вызовы, треугольники, память
     if (pf.n >= 20) { pf.cpuS = pf.cpu / pf.n; pf.cpu = pf.n = 0; }
-    const frameMs = fps ? 1000 / fps : 0, mem = performance.memory ? ` · JS ${Math.round(performance.memory.usedJSHeapSize / 1048576)} МБ` : '', gm = renderer.info.memory;
-    $('perf').textContent = `${P.name} · ${fps} к/с · кадр ${frameMs.toFixed(1)} мс · ЦП ${pf.cpuS.toFixed(1)} мс · ГП и ожидание ≈${Math.max(0, frameMs - pf.cpuS).toFixed(1)} мс · ${pf.calls} выз. · ${(pf.tris / 1e6).toFixed(2)} млн тр. · ${sc}% · геом. ${gm.geometries}, текст. ${gm.textures}${mem}${netTxt}`;
-  } else $('perf').textContent = C.state === 'play' ? `${P.name} · ${fps} к/с · ${sc}%${netTxt}` : '';
+    const frameMs = fps ? 1000 / fps : 0, mem = performance.memory ? tr(' · JS {0} МБ', [Math.round(performance.memory.usedJSHeapSize / 1048576)]) : '', gm = renderer.info.memory;
+    $('perf').textContent = tr('{0} · {1} к/с · кадр {2} мс · ЦП {3} мс · ГП и ожидание ≈{4} мс · {5} выз. · {6} млн тр. · {7}% · геом. {8}, текст. {9}{10}{11}', [P.name, fps, frameMs.toFixed(1), pf.cpuS.toFixed(1), Math.max(0, frameMs - pf.cpuS).toFixed(1), pf.calls, (pf.tris / 1e6).toFixed(2), sc, gm.geometries, gm.textures, mem, netTxt]);
+  } else $('perf').textContent = C.state === 'play' ? tr('{0} · {1} к/с · {2}%{3}', [P.name, fps, sc, netTxt]) : '';
 }
 
 // ═════════════ Запуск ═════════════
@@ -894,21 +896,21 @@ setInterval(() => {
   const left = need - got;
   if (left > 0 && C.state !== 'loading') {
     alShown = true; e.classList.add('on');
-    $('alTxt').textContent = `Загружаем город: модели ${m.done} из ${m.req}${t.req ? `, текстуры ${t.done} из ${t.req}` : ''}`;
+    $('alTxt').textContent = tr('Загружаем город: модели {0} из {1}{2}', [m.done, m.req, t.req ? tr(', текстуры {0} из {1}', [t.done, t.req]) : '']);
     $('alBar').style.width = Math.round(100 * got / need) + '%';
-  } else if (alShown && left <= 0) { alShown = false; $('alTxt').textContent = 'Город загружен'; $('alBar').style.width = '100%'; setTimeout(() => { if (!alShown) e.classList.remove('on'); }, 1500); }
+  } else if (alShown && left <= 0) { alShown = false; $('alTxt').textContent = tr('Город загружен'); $('alBar').style.width = '100%'; setTimeout(() => { if (!alShown) e.classList.remove('on'); }, 1500); }
 }, 400);
 (async () => {
-  await ldStep('Строим улицы, дома и реку…', 0.15);
+  await ldStep(tr('Строим улицы, дома и реку…'), 0.15);
   const t0 = performance.now();
   C.G = buildCityScene(scene, city, P, renderer, W_KEY);
   if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill', 'obj_barn']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
-  await ldStep('Деревья, вода, облака и эффекты…', 0.55);
+  await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует
   C.fx = createFx(scene, P);
   if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым — в половине разрешения
-  await ldStep('Режимы игры: вылет, оборона, обучение…', 0.7);
+  await ldStep(tr('Режимы игры: вылет, оборона, обучение…'), 0.7);
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);
   ctrls.multi = Object.assign(Object.create(ctrls.defense), { start: () => ctrls.defense.start({ multi: setup.mrole === 'atk' ? 'atk' : 'def', lastGame: 'multi' }) }); // «Мульти-волна» — та же карта обороны
   $('wNext').onclick = () => C.watchNext(); $('wMap').onclick = () => C.watchMap(); $('wSpeed').onclick = () => C.watchSpeed();
@@ -922,9 +924,9 @@ setInterval(() => {
   C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» — по купленному
   resize();
   C.buildMs = Math.round(performance.now() - t0);
-  await ldStep('Готовим графику (шейдеры)…', 0.85);
+  await ldStep(tr('Готовим графику (шейдеры)…'), 0.85);
   try { renderer.compile(scene, camera); } catch (_) { /* не критично */ }
-  await ldStep('Готово', 1);
+  await ldStep(tr('Готово'), 1);
   $('loading').remove();
   C.toMenu();
   requestAnimationFrame(frame);

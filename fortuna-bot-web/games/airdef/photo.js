@@ -16,35 +16,36 @@ import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=2
 import { RAID_HELI } from './sim/raid.js?v=20261022r';
 import { fwdOf } from '../drone/sim/core.js?v=20261022r';
 import { weaponHasModel } from './models.js?v=20261022r';
+import { tr, trIf } from './i18n.js?v=20261022r';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]
 // mv — у летящего, st — у стоящего (комплекс, пусковая, объект), py — у оружия на пилоне (в осях самолёта, снаружи от пилона)
 const ANG = [
-  { k: 'chase', n: 'Сзади', mv: [PI - 0.12, 0.13, 3, 10], st: [PI - 0.35, 0.22, 2.4, 8], py: [PI - 0.3, -0.05, 1.1, 1.2] },
-  { k: 'side', n: 'Сбоку', mv: [PI / 2, 0.05, 2.3, 8], st: [PI / 2, 0.1, 2.6, 6], py: [PI / 2 + 0.2, -0.12, 0.9, 1.2] },
-  { k: 'front', n: 'Спереди', mv: [0.3, 0.06, 2.8, 12], st: [0.8, 0.16, 2.3, 6], py: [0.5, -0.1, 1.1, 1.4] },
-  { k: 'below', n: 'Снизу', mv: [2.4, -0.5, 1.6, 6], st: [1.1, -0.02, 1.5, 4], py: [2.6, -0.75, 0.8, 1] },
-  { k: 'top', n: 'Сверху', mv: [PI - 0.4, 1.2, 2.8, 12], st: [0.6, 1.1, 3, 14], py: [PI - 0.5, 0.9, 1.6, 3] },
-  { k: 'orbit', n: 'Облёт', mv: [0, 0.2, 2.8, 12], st: [0, 0.22, 2.6, 6], py: [0, 0.1, 1.3, 1.5], spin: 0.35 },
-  { k: 'far', n: 'Пролёт', fixed: true }, // у стоящего — «Издалека» (длинный фокус)
+  { k: 'chase', n: tr('Сзади'), mv: [PI - 0.12, 0.13, 3, 10], st: [PI - 0.35, 0.22, 2.4, 8], py: [PI - 0.3, -0.05, 1.1, 1.2] },
+  { k: 'side', n: tr('Сбоку'), mv: [PI / 2, 0.05, 2.3, 8], st: [PI / 2, 0.1, 2.6, 6], py: [PI / 2 + 0.2, -0.12, 0.9, 1.2] },
+  { k: 'front', n: tr('Спереди'), mv: [0.3, 0.06, 2.8, 12], st: [0.8, 0.16, 2.3, 6], py: [0.5, -0.1, 1.1, 1.4] },
+  { k: 'below', n: tr('Снизу'), mv: [2.4, -0.5, 1.6, 6], st: [1.1, -0.02, 1.5, 4], py: [2.6, -0.75, 0.8, 1] },
+  { k: 'top', n: tr('Сверху'), mv: [PI - 0.4, 1.2, 2.8, 12], st: [0.6, 1.1, 3, 14], py: [PI - 0.5, 0.9, 1.6, 3] },
+  { k: 'orbit', n: tr('Облёт'), mv: [0, 0.2, 2.8, 12], st: [0, 0.22, 2.6, 6], py: [0, 0.1, 1.3, 1.5], spin: 0.35 },
+  { k: 'far', n: tr('Пролёт'), fixed: true }, // у стоящего — «Издалека» (длинный фокус)
   // «Борт» — камера закреплена на самом самолёте (ракете): у края крыла, у сопла, над передней кромкой; смотрит вдоль корпуса,
   // голова на стабилизаторе (догоняет повороты с запаздыванием), тряска — от манёвров и скорости. Повторный тап — другое место
-  { k: 'mount', n: 'Борт', mount: true },
+  { k: 'mount', n: tr('Борт'), mount: true },
   // «Центр» — камера жёстко за объектом в его осях: самолёт стоит в центре кадра при любых манёврах, крутится мир (удобно для монтажа)
-  { k: 'lock', n: 'Центр', lock: true },
+  { k: 'lock', n: tr('Центр'), lock: true },
 ];
 // места камеры «Борт»: off — точка крепления, at — куда смотрит; у самолёта — в долях полуразмаха W и длины L (оси модели: x — правое
 // крыло, y — верх, z — к хвосту), у ракеты и бомбы — в радиусах корпуса r и длинах L. Половина — зеркально (левое / правое крыло)
 const MOUNTS = {
   plane: [
-    { n: 'край крыла → корпус и сопла', off: [-0.86, 0.0, 0.02], at: [0, 0, 0.22], up: 0.25 },
-    { n: 'у сопла → вперёд', off: [-0.42, 0.06, 0.56], at: [0, 0.01, -0.4], up: 0.45 },
-    { n: 'передняя кромка → назад', off: [-0.5, 0.07, -0.2], at: [-0.08, 0, 0.55], up: 0.4 },
+    { n: tr('край крыла → корпус и сопла'), off: [-0.86, 0.0, 0.02], at: [0, 0, 0.22], up: 0.25 },
+    { n: tr('у сопла → вперёд'), off: [-0.42, 0.06, 0.56], at: [0, 0.01, -0.4], up: 0.45 },
+    { n: tr('передняя кромка → назад'), off: [-0.5, 0.07, -0.2], at: [-0.08, 0, 0.55], up: 0.4 },
   ],
   wpn: [
-    { n: 'у хвоста → вперёд', off: [-2.6, 1.3, 0.42], at: [0, 0, -0.55] },
-    { n: 'у носа → назад', off: [-2.6, 1.3, -0.42], at: [0, 0, 0.6] },
+    { n: tr('у хвоста → вперёд'), off: [-2.6, 1.3, 0.42], at: [0, 0, -0.55] },
+    { n: tr('у носа → назад'), off: [-2.6, 1.3, -0.42], at: [0, 0, 0.6] },
   ],
 };
 const SPD = [1, 0.5, 0.25, 0], SPD_N = ['×1', '×½', '×¼', '❚❚'];
@@ -72,7 +73,7 @@ export function createPhoto(C, ctrls) {
   const lenOf = (o) => (o.W ? (o.W.vis ? o.W.vis.L : 5) : o.M ? o.M.L : o.len || 17);
   const kmh = (o) => Math.round((o.speed || (o.vel ? o.vel.length() : 0)) * 3.6);
   const agl = (p) => Math.round(p.y - city.groundH(p.x, p.z));
-  const hTxt = (p) => { const h = agl(p); return h > 9999 ? `${(h / 1000).toFixed(0)} км` : `${h} м`; };
+  const hTxt = (p) => { const h = agl(p); return h > 9999 ? tr('{0} км', [(h / 1000).toFixed(0)]) : tr('{0} м', [h]); };
 
   // ── объект в кадре: R — точка привязки, курс F, длина L ──
   const R = { kind: 'mv', pos: V3(), F: V3(), U: V3(), L: 10, side: 1, v: 0, cap: '', look: V3(), Q: new THREE.Quaternion(), plane: false, W: 0, r: 0.2 };
@@ -87,7 +88,7 @@ export function createPhoto(C, ctrls) {
   // ориентация «нос в −Z» по направлению f и верху u (у ракет и бомб — без крена)
   function qLook(f, u) { M4.lookAt(ZERO, f, u); R.Q.setFromRotationMatrix(M4); }
   function setSt(pos, fx, fz, L, cap) { R.kind = 'st'; R.pos.copy(pos); R.F.set(fx, 0, fz); if (R.F.lengthSq() < 1e-6) R.F.set(0, 0, -1); R.F.normalize(); R.L = L; R.side = 1; R.v = 0; R.cap = cap; }
-  function setUnit(u, cap) { const r = unitR(u), tr = u.track && !u.track.dead ? u.track.pos : null; setSt(TMP2.copy(u.pos).setY(u.pos.y + r * 0.3), tr ? tr.x - u.pos.x : Math.sin(u.yaw), tr ? tr.z - u.pos.z : Math.cos(u.yaw), r * 2, cap); }
+  function setUnit(u, cap) { const r = unitR(u), tp = u.track && !u.track.dead ? u.track.pos : null; setSt(TMP2.copy(u.pos).setY(u.pos.y + r * 0.3), tp ? tp.x - u.pos.x : Math.sin(u.yaw), tp ? tp.z - u.pos.z : Math.cos(u.yaw), r * 2, cap); }
   function setObj(o, from, cap) { const g = city.groundH(o.x, o.z), top = city.topAt(o.x, o.z); setSt(TMP2.set(o.x, (g + top) / 2 + 4, o.z), from ? from.x - o.x : 1, from ? from.z - o.z : 0.3, clamp(Math.max(o.w || 40, o.d || 40) * 0.6, 30, 220), cap); }
   function hold(p, cap) { R.kind = 'hold'; R.look.copy(p); R.cap = cap; }
   // ведём объект до разрыва и ещё 2,5 с смотрим на место (камера стоит), потом — следующий
@@ -99,13 +100,13 @@ export function createPhoto(C, ctrls) {
     return f;
   }
   function showF(f, capFn) { if (!f.o) return false; if (f.deadT >= 0) hold(f.p, capFn(f.o, true)); else setMv(f.o, capFn(f.o, false)); return true; }
-  const munCap = (w, dead) => `${w.W.name}${w.decoy ? ' (ложная цель)' : ''}${dead ? ' — разрыв' : ` · ${kmh(w)} км/ч · ${hTxt(w.pos)}`}`;
-  const samCap = (m, dead) => `Ракета ${m.S.short}${dead ? ' — подрыв' : ` · ${kmh(m)} км/ч · до цели ${m.target ? (m.pos.distanceTo(m.target.pos) / 1000).toFixed(1) : '—'} км`}`;
+  const munCap = (w, dead) => `${trIf(w.W.name)}${w.decoy ? tr(' (ложная цель)') : ''}${dead ? tr(' — разрыв') : tr(' · {0} км/ч · {1}', [kmh(w), hTxt(w.pos)])}`;
+  const samCap = (m, dead) => tr('Ракета {0}{1}', [trIf(m.S.short), dead ? tr(' — подрыв') : tr(' · {0} км/ч · до цели {1} км', [kmh(m), m.target ? (m.pos.distanceTo(m.target.pos) / 1000).toFixed(1) : '—'])]);
 
   function resolve() {
     const S = C.S, sub = st.subs[st.subj] || st.subs[0]; R.fb = false;
     if (st.br === 'air') {
-      const A = ctrls.air, cr = A.craft, ship = () => setMv(cr, `${st.planeName} · ${kmh(cr)} км/ч · ${hTxt(cr.pos)}`);
+      const A = ctrls.air, cr = A.craft, ship = () => setMv(cr, tr('{0} · {1} км/ч · {2}', [st.planeName, kmh(cr), hTxt(cr.pos)]));
       if (sub.id === 'ship') { ship(); R.L = st.shipL; return; }
       if (sub.id === 'st') { // оружие на пилоне; сброшено — летим за ним до разрыва, потом — снова пилон (подвеску пополнят)
         const r = st.rel.get(sub.st);
@@ -119,47 +120,47 @@ export function createPhoto(C, ctrls) {
         if (!m) { ship(); R.L = st.shipL; R.fb = true; return; }
         R.kind = 'py'; m.getWorldPosition(R.pos); R.F.set(0, 0, -1).applyQuaternion(A.ship.quaternion); R.U.set(0, 1, 0).applyQuaternion(A.ship.quaternion); R.Q.copy(A.ship.quaternion); R.plane = false;
         R.L = AG[sub.key].vis ? AG[sub.key].vis.L : 4; R.r = AG[sub.key].vis ? AG[sub.key].vis.r : 0.2; R.side = m.position.x < 0 ? -1 : 1; R.v = cr.speed;
-        R.cap = `${AG[sub.key].name} · ${m.visible ? 'на подвеске' : A.loadout.some((l) => l.st.includes(sub.st)) ? 'во внутреннем отсеке' : 'пилон пуст — ждём пополнения'}`;
+        R.cap = `${trIf(AG[sub.key].name)} · ${m.visible ? tr('на подвеске') : A.loadout.some((l) => l.st.includes(sub.st)) ? tr('во внутреннем отсеке') : tr('пилон пуст — ждём пополнения')}`;
         return;
       }
-      if (sub.id === 'sam') { if (!showF(follow('sam', () => newest(S.sams, (m) => m.target === cr)), samCap)) { ship(); R.L = st.shipL; R.cap = 'Ракета ПВО: пока не пускали — пока самолёт'; R.fb = true; } return; }
+      if (sub.id === 'sam') { if (!showF(follow('sam', () => newest(S.sams, (m) => m.target === cr)), samCap)) { ship(); R.L = st.shipL; R.cap = tr('Ракета ПВО: пока не пускали — пока самолёт'); R.fb = true; } return; }
       if (sub.id === 'pvo') { // комплекс: который ведёт самолёт, иначе ближайший
         const f = st.fol.pvo || (st.fol.pvo = { o: null });
-        const tr = S.units.find((u) => !u.dead && u.track === cr && u.S.type !== 'jammer');
-        if (tr) f.o = tr; else if (!f.o || f.o.dead) { let bd = 1e12; f.o = null; for (const u of S.units) { if (u.dead || u.S.type === 'jammer') continue; const d = u.pos.distanceToSquared(cr.pos); if (d < bd) { bd = d; f.o = u; } } }
-        if (f.o) { setUnit(f.o, `${f.o.S.name}${f.o.track === cr ? ' · ведёт самолёт' : ''}`); return; }
+        const trk = S.units.find((u) => !u.dead && u.track === cr && u.S.type !== 'jammer');
+        if (trk) f.o = trk; else if (!f.o || f.o.dead) { let bd = 1e12; f.o = null; for (const u of S.units) { if (u.dead || u.S.type === 'jammer') continue; const d = u.pos.distanceToSquared(cr.pos); if (d < bd) { bd = d; f.o = u; } } }
+        if (f.o) { setUnit(f.o, `${trIf(f.o.S.name)}${f.o.track === cr ? tr(' · ведёт самолёт') : ''}`); return; }
         ship(); R.L = st.shipL; R.fb = true; return;
       }
-      const o = st.airTgt || A.game.targets[0]; if (o) { setObj(o, cr.pos, `${o.name}${o.dead ? ' — уничтожен' : ''}`); return; }
+      const o = st.airTgt || A.game.targets[0]; if (o) { setObj(o, cr.pos, `${trIf(o.name)}${o.dead ? tr(' — уничтожен') : ''}`); return; }
       ship(); R.L = st.shipL; return;
     }
     if (st.br === 'def') {
       const u = st.hero;
-      const unit = (why) => setUnit(u, `${u.S.name}${why ? ' · ' + why : ''}`);
+      const unit = (why) => setUnit(u, `${trIf(u.S.name)}${why ? ' · ' + why : ''}`);
       if (!u) { R.kind = 'hold'; R.look.set(0, 200, 0); R.cap = ''; return; }
-      if (sub.id === 'unit') { unit(u.track ? 'цель на сопровождении' : u.reloadT > 0 ? `перезарядка ${Math.ceil(u.reloadT)} с` : 'поиск'); return; }
-      if (sub.id === 'msl') { if (!showF(follow('msl', () => newest(S.sams, (m) => m.unit === u)), samCap)) { unit('ждём пуска'); R.fb = true; } return; }
-      if (sub.id === 'trk') { const t = u.track && !u.track.dead && (!u.track.W || weaponHasModel(u.track.key, u.track.W)) ? u.track : null; if (t) setMv(t, `Цель ${u.S.short}: ${t.W ? munCap(t, false) : `${t.carrierName || 'самолёт'} · ${kmh(t)} км/ч · ${hTxt(t.pos)}`}`); else { unit('целей нет'); R.fb = true; } return; }
-      if (sub.id === 'plane') { if (!showF(follow('plane', () => { const ps = C.raid.alive().filter((a) => a.role !== 'decoy'); return ps.length ? ps[Math.floor(rnd() * ps.length)] : null; }), (a, dead) => `${a.carrierName || 'Ударник налёта'}${dead ? ' — сбит' : ` · ${kmh(a)} км/ч · ${hTxt(a.pos)}`}`)) { unit('ждём налёта'); R.fb = true; } return; }
-      if (sub.id === 'heli') { if (!showF(follow('heli', () => { const hs = C.raid.alive().filter((a) => a.heli); return hs.length ? hs[Math.floor(rnd() * hs.length)] : null; }), (a, dead) => `Вертолёт налёта${dead ? ' — сбит' : ` · ${kmh(a)} км/ч · ${hTxt(a.pos)}`}`)) { unit('ждём вертолёта'); R.fb = true; } return; }
-      if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(S.wpns, (w) => w.ev && !w.W.recon && weaponHasModel(w.key, w.W))), munCap)) { unit('ждём волну'); R.fb = true; } return; }
-      const o = st.targets[0]; setObj(o, u.pos, `${o.name} — прикрывает ${u.S.short}`); return;
+      if (sub.id === 'unit') { unit(u.track ? tr('цель на сопровождении') : u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('поиск')); return; }
+      if (sub.id === 'msl') { if (!showF(follow('msl', () => newest(S.sams, (m) => m.unit === u)), samCap)) { unit(tr('ждём пуска')); R.fb = true; } return; }
+      if (sub.id === 'trk') { const t = u.track && !u.track.dead && (!u.track.W || weaponHasModel(u.track.key, u.track.W)) ? u.track : null; if (t) setMv(t, tr('Цель {0}: {1}', [trIf(u.S.short), t.W ? munCap(t, false) : tr('{0} · {1} км/ч · {2}', [t.carrierName ? trIf(t.carrierName) : tr('самолёт'), kmh(t), hTxt(t.pos)])])); else { unit(tr('целей нет')); R.fb = true; } return; }
+      if (sub.id === 'plane') { if (!showF(follow('plane', () => { const ps = C.raid.alive().filter((a) => a.role !== 'decoy'); return ps.length ? ps[Math.floor(rnd() * ps.length)] : null; }), (a, dead) => `${a.carrierName ? trIf(a.carrierName) : tr('Ударник налёта')}${dead ? tr(' — сбит') : tr(' · {0} км/ч · {1}', [kmh(a), hTxt(a.pos)])}`)) { unit(tr('ждём налёта')); R.fb = true; } return; }
+      if (sub.id === 'heli') { if (!showF(follow('heli', () => { const hs = C.raid.alive().filter((a) => a.heli); return hs.length ? hs[Math.floor(rnd() * hs.length)] : null; }), (a, dead) => tr('Вертолёт налёта{0}', [dead ? tr(' — сбит') : tr(' · {0} км/ч · {1}', [kmh(a), hTxt(a.pos)])]))) { unit(tr('ждём вертолёта')); R.fb = true; } return; }
+      if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(S.wpns, (w) => w.ev && !w.W.recon && weaponHasModel(w.key, w.W))), munCap)) { unit(tr('ждём волну')); R.fb = true; } return; }
+      const o = st.targets[0]; setObj(o, u.pos, tr('{0} — прикрывает {1}', [trIf(o.name), trIf(u.S.short)])); return;
     }
     // «Мульти-волна»
     const ev = C.ev, W = AG[st.mk];
     const src = () => {
       if (!ev) return false;
       const a = ev.carriers.find((q) => !q.dead && !q.out && q.phase !== 'wait');
-      if (a) { setMv(a, `${a.carrierName} · ${a.salvo.length ? `пуск ${a.n0 - a.salvo.length}/${a.n0}` : 'уходит'} · ${hTxt(a.pos)}`); R.L = a.len || 20; return true; }
+      if (a) { setMv(a, `${trIf(a.carrierName)} · ${a.salvo.length ? tr('пуск {0}/{1}', [a.n0 - a.salvo.length, a.n0]) : tr('уходит')} · ${hTxt(a.pos)}`); R.L = a.len || 20; return true; }
       const L = ev.launchers[0];
-      if (L) { setSt(TMP2.copy(L.pos).setY(L.pos.y + 3), Math.sin(L.yaw), Math.cos(L.yaw), 13, `${L.name} · пущено ${L.fired}/${L.n0}`); return true; }
+      if (L) { setSt(TMP2.copy(L.pos).setY(L.pos.y + 3), Math.sin(L.yaw), Math.cos(L.yaw), 13, tr('{0} · пущено {1}/{2}', [trIf(L.name), L.fired, L.n0])); return true; }
       return false;
     };
-    const tgt = (cap) => { const w = st.fol.mun && st.fol.mun.o, aim = w && w.aim ? w.aim : null; const o = st.targets[0]; if (aim) setSt(TMP2.copy(aim).setY(aim.y + 6), w.pos.x - aim.x, w.pos.z - aim.z, 60, cap || 'Точка прицеливания'); else setObj(o, null, cap || o.name); };
-    const wait = () => { const a = ev && ev.carriers.find((q) => !q.dead && !q.out); return a && a.phase === 'wait' ? `носитель вылетит через ${Math.ceil(a.delay)} с` : 'ждём пуска'; };
-    if (sub.id === 'src') { if (!src()) { tgt(`${W.short}: ${wait()}`); R.fb = true; } return; }
-    if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk && !w.decoy) || newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap)) { R.fb = true; if (!src()) tgt(`${W.short}: ${wait()}`); } return; }
-    if (sub.id === 'isam') { if (!showF(follow('isam', () => newest(C.S.sams, (m) => m.target && m.target.ev)), samCap)) { if (!(weaponHasModel(st.mk, AG[st.mk]) && showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap))) tgt('ПВО: пока не стреляли'); R.fb = true; } return; }
+    const tgt = (cap) => { const w = st.fol.mun && st.fol.mun.o, aim = w && w.aim ? w.aim : null; const o = st.targets[0]; if (aim) setSt(TMP2.copy(aim).setY(aim.y + 6), w.pos.x - aim.x, w.pos.z - aim.z, 60, cap || tr('Точка прицеливания')); else setObj(o, null, cap || trIf(o.name)); };
+    const wait = () => { const a = ev && ev.carriers.find((q) => !q.dead && !q.out); return a && a.phase === 'wait' ? tr('носитель вылетит через {0} с', [Math.ceil(a.delay)]) : tr('ждём пуска'); };
+    if (sub.id === 'src') { if (!src()) { tgt(`${trIf(W.short)}: ${wait()}`); R.fb = true; } return; }
+    if (sub.id === 'mun') { if (!showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk && !w.decoy) || newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap)) { R.fb = true; if (!src()) tgt(`${trIf(W.short)}: ${wait()}`); } return; }
+    if (sub.id === 'isam') { if (!showF(follow('isam', () => newest(C.S.sams, (m) => m.target && m.target.ev)), samCap)) { if (!(weaponHasModel(st.mk, AG[st.mk]) && showF(follow('mun', () => newest(C.S.wpns, (w) => w.ev && w.key === st.mk)), munCap))) tgt(tr('ПВО: пока не стреляли')); R.fb = true; } return; }
     tgt();
   }
 
@@ -300,8 +301,8 @@ export function createPhoto(C, ctrls) {
   // ── бой ──
   const subsAir = () => {
     const A = ctrls.air, out = [{ id: 'ship', n: st.planeName }];
-    for (const l of A.loadout) { if (AG[l.key].kind === 'ecm' || !weaponHasModel(l.key, AG[l.key])) continue; /* без готовой модели — камеру не подводим */ l.st0.forEach((s, j) => out.push({ id: 'st', st: s, key: l.key, n: `${AG[l.key].short}${l.st0.length > 1 ? ' ' + (j + 1) : ''}` })); }
-    return [...out, { id: 'sam', n: 'Ракета ПВО' }, { id: 'pvo', n: 'Комплекс ПВО' }, { id: 'tgt', n: 'Цель' }];
+    for (const l of A.loadout) { if (AG[l.key].kind === 'ecm' || !weaponHasModel(l.key, AG[l.key])) continue; /* без готовой модели — камеру не подводим */ l.st0.forEach((s, j) => out.push({ id: 'st', st: s, key: l.key, n: `${trIf(AG[l.key].short)}${l.st0.length > 1 ? ' ' + (j + 1) : ''}` })); }
+    return [...out, { id: 'sam', n: tr('Ракета ПВО') }, { id: 'pvo', n: tr('Комплекс ПВО') }, { id: 'tgt', n: tr('Цель') }];
   };
   function newBattle() {
     { const sd = new URLSearchParams(location.search).get('seed'); rnd = mulberry32(sd ? +sd : (Date.now() & 0xfffff) ^ 0x7a11); } // ?seed= — тот же бой (сравнение кадров)
@@ -312,7 +313,7 @@ export function createPhoto(C, ctrls) {
       A.start({ invuln: true, noEnd: true, noIntro: true, reload: true, photo: true, lastGame: 'photo' });
       A.pod.show = false; A.game.opts.photo = true;
       for (const l of A.loadout) for (const s of l.st) st.prevSt.set(s, l.key);
-      { const L = LOADOUTS[setup.era][setup.lo]; st.planeName = (L && PLANES[L.plane]) || 'Самолёт'; } // модель может ещё грузиться — имя из подвески
+      { const L = LOADOUTS[setup.era][setup.lo]; st.planeName = (L && trIf(PLANES[L.plane])) || tr('Самолёт'); } // модель может ещё грузиться — имя из подвески
       { const b = BX.setFromObject(A.ship).getSize(TMP); st.shipL = clamp(Math.max(b.x, b.z), 8, 40) || 16; st.shipW = clamp(b.x / 2, 3, 30) || 6; }
       st.subs = subsAir();
     } else if (st.br === 'def') {
@@ -327,7 +328,7 @@ export function createPhoto(C, ctrls) {
       st.hero = S.addUnit(key, xz[0], xz[1], { roof: xz[2], skill: 0.95, yaw: rnd() * 6.28 });
       C.syncUnits();
       if (st.vsMulti) startEvDef(); else C.raid.spawnWave(4, 2, st.targets, 7000);
-      st.subs = [{ id: 'unit', n: Sx.short }, { id: 'msl', n: 'Его ракета' }, { id: 'trk', n: 'Его цель' }, st.vsMulti ? { id: 'mun', n: 'Ракеты и дроны' } : { id: 'plane', n: 'Самолёт налёта' }, ...(!st.vsMulti && RAID_HELI[st.att] && RAID_HELI[st.att][st.era] ? [{ id: 'heli', n: 'Вертолёт налёта' }] : []), { id: 'tgt', n: 'Объект' }];
+      st.subs = [{ id: 'unit', n: trIf(Sx.short) }, { id: 'msl', n: tr('Его ракета') }, { id: 'trk', n: tr('Его цель') }, st.vsMulti ? { id: 'mun', n: tr('Ракеты и дроны') } : { id: 'plane', n: tr('Самолёт налёта') }, ...(!st.vsMulti && RAID_HELI[st.att] && RAID_HELI[st.att][st.era] ? [{ id: 'heli', n: tr('Вертолёт налёта') }] : []), { id: 'tgt', n: tr('Объект') }];
     } else {
       st.att = setup.side === 'east' ? 'west' : 'east';
       const items = photoItems(st.att, st.era), it = items.find(([k]) => k === setup.pmun) || items[0];
@@ -339,7 +340,7 @@ export function createPhoto(C, ctrls) {
       st.mk = it ? it[0] : null; st.via = it ? it[1] : null;
       if (st.mk) startEvMulti();
       const W = AG[st.mk] || { short: '—' };
-      st.subs = [...(st.via || (W.kind === 'tbm' && !W.air) ? [{ id: 'src', n: st.via ? CARRIERS[st.via].name : 'Пусковая' }] : []), ...(st.mk && weaponHasModel(st.mk, W) ? [{ id: 'mun', n: W.short }] : []), { id: 'isam', n: 'Ракета ПВО' }, { id: 'tgt', n: 'Цель' }];
+      st.subs = [...(st.via || (W.kind === 'tbm' && !W.air) ? [{ id: 'src', n: st.via ? trIf(CARRIERS[st.via].name) : tr('Пусковая') }] : []), ...(st.mk && weaponHasModel(st.mk, W) ? [{ id: 'mun', n: trIf(W.short) }] : []), { id: 'isam', n: tr('Ракета ПВО') }, { id: 'tgt', n: tr('Цель') }];
     }
     if (st.subj >= st.subs.length) st.subj = 0;
     renderUi();
@@ -347,13 +348,13 @@ export function createPhoto(C, ctrls) {
 
   // ── интерфейс ──
   const ui = $('photoUi'), zone = $('photoZone');
-  function farName() { const b = $('phAng').querySelector('[data-a="6"]'); if (b) b.textContent = st.kind === 'st' ? 'Издалека' : 'Пролёт'; }
+  function farName() { const b = $('phAng').querySelector('[data-a="6"]'); if (b) b.textContent = st.kind === 'st' ? tr('Издалека') : tr('Пролёт'); }
   function renderUi() {
     $('phSubj').innerHTML = st.subs.map((s, i) => `<button data-s="${i}" class="${i === st.subj ? 'on' : ''}">${s.n}</button>`).join('');
     $('phAng').innerHTML = ANG.map((a, i) => `<button data-a="${i}" class="${i === st.ang ? 'on' : ''}">${a.n}</button>`).join('');
     farName(); sideTxt();
   }
-  function sideTxt() { $('phSpd').textContent = SPD_N[st.spd]; $('phZoom').textContent = FOVS[st.fi] ? `${FOVS[st.fi]}°` : 'ЗУМ'; }
+  function sideTxt() { $('phSpd').textContent = SPD_N[st.spd]; $('phZoom').textContent = FOVS[st.fi] ? `${FOVS[st.fi]}°` : tr('ЗУМ'); }
   const resetAdj = () => { st.adj.az = 0; st.adj.el = 0; st.adj.k = 1; st.fb.p = null; };
   function setClean(on) { st.clean = on; document.body.classList.toggle('clean', on); }
   const pick = (dir, list) => (dir + list.length) % list.length;
@@ -437,7 +438,7 @@ export function createPhoto(C, ctrls) {
     camera(dt) { cameraUpdate(dt); if (shot && (shot.ox || shot.oy)) { camera.rotateY(shot.ox || 0); camera.rotateX(-(shot.oy || 0)); } shotTick(dt); }, // ox, oy — сдвиг объекта в кадре, рад (вправо / вверх): композиция не по центру
     hud(dt, t) {
       if (st.br === 'air') ctrls.air.hud(dt, t); // пламя форсажа и видимость модели
-      if (!st.clean && (st.capT -= dt) <= 0) { st.capT = 0.2; $('phCap').textContent = R.cap + (ANG[st.ang].mount && R.cap2 ? ` · камера: ${R.cap2} (тап по «Борт» — другое место)` : ''); }
+      if (!st.clean && (st.capT -= dt) <= 0) { st.capT = 0.2; $('phCap').textContent = R.cap + (ANG[st.ang].mount && R.cap2 ? tr(' · камера: {0} (тап по «Борт» — другое место)', [R.cap2]) : ''); }
     },
     onKey(e, down) {
       if (!down) return;
@@ -458,8 +459,8 @@ export function createPhoto(C, ctrls) {
     near: () => clamp(curDist * 0.15, 0.25, 3),
     resize() {},
     finish: () => C.toMenu(),
-    pauseHelp: () => (C.IS_TOUCH ? 'Тяните по экрану — камера вокруг объекта, два пальца — ближе или дальше. Внизу — что снимать и ракурс, справа — ＋/－, зум, скорость (×½, ×¼, стоп-кадр), ⟲ — ракурс по умолчанию, ↻ — новый бой, ◎ — спрятать интерфейс (тап по экрану — вернуть).'
-      : 'Мышь: тянуть — камера вокруг объекта, колесо — ближе/дальше · ←/→ — ракурс · ↑/↓ — объект · +/− — дальность · Z — зум · 1/2/3 — скорость ×1/×½/×¼ · Пробел — стоп-кадр · R — ракурс по умолчанию · N — новый бой · H — спрятать интерфейс'),
+    pauseHelp: () => (C.IS_TOUCH ? tr('Тяните по экрану — камера вокруг объекта, два пальца — ближе или дальше. Внизу — что снимать и ракурс, справа — ＋/－, зум, скорость (×½, ×¼, стоп-кадр), ⟲ — ракурс по умолчанию, ↻ — новый бой, ◎ — спрятать интерфейс (тап по экрану — вернуть).')
+      : tr('Мышь: тянуть — камера вокруг объекта, колесо — ближе/дальше · ←/→ — ракурс · ↑/↓ — объект · +/− — дальность · Z — зум · 1/2/3 — скорость ×1/×½/×¼ · Пробел — стоп-кадр · R — ракурс по умолчанию · N — новый бой · H — спрятать интерфейс')),
   };
   return api;
 }
