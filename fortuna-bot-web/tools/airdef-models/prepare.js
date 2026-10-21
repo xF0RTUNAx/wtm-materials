@@ -161,7 +161,7 @@ const CONFIG = {
     groups: (c) => (c.ctr[1] < -0.7 && Math.abs(c.ctr[0] + 0.9) < 1.0 && c.ctr[2] > -2.4 && c.ctr[2] < -0.9 && Math.max(...c.size) > 2.0 ? null : LS(c)) },
   // собственные модели (Blender, Mark и Claude 2026-10-21) — исходники в tools/airdef-models/own (.blend и .glb), нос в −Z, метры
   w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
-  w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender по картинкам Mark из папки «Свои/Х-29Т»), 3,9 м, Ø 0,39 м, оперение крестом ×, купол ТВ-головки, проушины сверху, кожух снизу; 4,7 тыс. тр., 4 материала
+  w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender по картинкам Mark, own/kh29t.glb), 3.895 м, 4.7 тыс. тр., материалов 4
   w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
   // ── шестая партия 2026-10-21 (CC BY 4.0, Восток): andertan — Су-33, manilov.ap — М-4, МиГ-17 и Т-4, Tom Zimmermann — МиГ-19; без упрощения, текстуры 1024 ──
@@ -926,7 +926,8 @@ async function prepare(name, views) {
   dv.setUint32(12, js.length, true); dv.setUint32(16, 0x4e4f534a, true); glb.set(js, 20);
   let o = 20 + js.length; dv.setUint32(o, off, true); dv.setUint32(o + 4, 0x004e4942, true); o += 8;
   for (const c of chunks) { glb.set(c, o); o += c.length; }
-  const dir = new URL('../../games/airdef/models/', import.meta.url).pathname; await Deno.mkdir(dir, { recursive: true });
+  // PREPARE_OUT — папка для готового файла вместо games/airdef/models/ (превью кандидата: tools/airdef-models/preview-candidate.js)
+  const dir = Deno.env.get('PREPARE_OUT') ? Deno.env.get('PREPARE_OUT').replace(/\/?$/, '/') : new URL('../../games/airdef/models/', import.meta.url).pathname; await Deno.mkdir(dir, { recursive: true });
   Deno.writeFileSync(`${dir}${name}.glb`, glb);
   console.log(`→ models/${name}.glb: ${(total / 1024).toFixed(0)} КБ (текстуры ${(texBytes / 1024).toFixed(0)} КБ, ${textures.length} шт.), материалов ${materials.length}, треугольников ${tris}`);
   if (views) {
@@ -1089,6 +1090,7 @@ if (Deno.args[0] === '--credits') {
   const bySrc = new Map(), dir = new URL('../../games/airdef/models/', import.meta.url).pathname;
   for (const [name, cfg] of Object.entries(CONFIG)) {
     try { Deno.statSync(`${dir}${name}.glb`); } catch { continue; } // в игре только собранные
+    if (cfg.own) continue; // собственные модели (own: true) — своя работа, титров чужих авторов нет
     const ck = cfg.src + (cfg.credit ? '|' + cfg.credit : ''); // credit — пометка об адаптации: отдельная запись титров (menu.js выводит её в названии)
     let e = bySrc.get(ck);
     if (!e) { const J = readGlb(Deno.readFileSync(srcOf(cfg.src))).json, x = (J.asset && J.asset.extras) || {}; bySrc.set(ck, e = { title: (x.title || '') + (cfg.credit ? ` (${cfg.credit})` : ''), author: (x.author || '').replace(/ \(.*$/, ''), url: x.source || '', license: (x.license || '').replace(/ \(.*$/, ''), files: [] }); }
@@ -1101,6 +1103,8 @@ if (Deno.args[0] === '--credits') {
   console.log(`авторов ${list.length}, файлов ${list.reduce((n, c) => n + c.files.length, 0)}`);
   Deno.exit(0);
 }
+// PREPARE_SRC — файл-кандидат (экспорт из Blender) вместо исходника ключа: конфиг своей модели (нос −Z, метры, материалы как есть); ключ может быть и новым
+if (Deno.env.get('PREPARE_SRC') && Deno.args[0] && Deno.args[0] !== 'all' && !Deno.args[0].startsWith('--')) CONFIG[Deno.args[0]] = { src: Deno.env.get('PREPARE_SRC'), scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true };
 const names = Deno.args[0] === 'all' ? Object.keys(CONFIG) : [Deno.args[0]];
 if (!CONFIG[names[0]]) { console.log('модели:', Object.keys(CONFIG).join(', '), '| all'); Deno.exit(1); }
 for (const n of names) await prepare(n, Deno.args.includes('--views'));

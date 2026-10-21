@@ -1,0 +1,88 @@
+{
+ "key": "w_kh29t",
+ "weapon": "kh29t",
+ "name": "Х-29Т",
+ "name_en": "Kh-29T",
+ "rev": 1,
+ "files": {
+  "glb": "kh29t.glb",
+  "blend": "kh29t.blend",
+  "build": [
+   "build.py",
+   "deliver.py"
+  ],
+  "previews": [
+   "превью_1_общий.png",
+   "превью_2_сбоку.png",
+   "превью_3_хвост.png",
+   "превью_4_голова.png"
+  ]
+ },
+ "model": {
+  "length_m": 3.895,
+  "span_m": 0.786,
+  "height_m": 0.786,
+  "tris": 4716,
+  "materials": {
+   "K29_body": [
+    0.5,
+    0.51,
+    0.49
+   ],
+   "K29_wing": [
+    0.4,
+    0.41,
+    0.4
+   ],
+   "K29_ctrl": [
+    0.22,
+    0.23,
+    0.23
+   ],
+   "K29_dark": [
+    0.035,
+    0.036,
+    0.04
+   ]
+  }
+ },
+ "checks": {
+  "silhouette_iou": {
+   "бок": 0.962,
+   "сзади": 0.875,
+   "спереди": 0.87
+  },
+  "game": "миниатюра, полёт с факелом и подвеска под Су-25 (бок, спереди, сзади): кандидат подхвачен игрой, ошибок страницы нет; светлее соседнего оружия, сидит на пилоне ровно (превью-игра/)",
+  "note_front": "у чертежа вида спереди центр оси смещён на (118, 123) — учтено в deliver.py"
+ },
+ "sketchfab": {
+  "title": "Kh-29T Air-to-Surface Missile — Low Poly",
+  "lead": "Kh-29T — Soviet/Russian air-to-surface missile with a seeker dome, four forward fins and four cruciform wings with control surfaces, modelled as a clean exterior shell.",
+  "parts": [
+   "seeker dome",
+   "body of revolution with panel seams",
+   "access hatches and sockets",
+   "four forward fins with pivot plates",
+   "four cruciform wings with elevons",
+   "suspension lugs",
+   "underside raceway",
+   "nozzle bowl"
+  ],
+  "tags": [
+   "kh-29",
+   "kh29",
+   "missile",
+   "air-to-surface",
+   "soviet",
+   "russian",
+   "military",
+   "weapon",
+   "aircraft",
+   "lowpoly",
+   "game-ready",
+   "blender"
+  ],
+  "dimensions": "length 3.9 m, body diameter 0.39 m, wing span 0.79 m"
+ },
+ "notes": "Цвет светлый серо-белый (как прежняя миниатюра и верхний образец на картинке 7); красная схема с картинок 6–7 — по слову Mark. Оперение крестом ×, проушины сверху, кожух снизу, нос в −Z осей glTF."
+}
