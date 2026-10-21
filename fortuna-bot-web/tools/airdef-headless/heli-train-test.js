@@ -52,6 +52,36 @@ const check = (name, ok) => { console.log(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if
 
 
 check(`карта «Туманная топь»`, C.MAP === 'autumn');
+if (Deno.env.get('PEAT')) {
+  const city = C.city, o = city.objects.find((q) => q.key === 'a_peat'), WY = city.autumn.WY, wet = (x, z) => city.waterAt ? city.waterAt(x, z) : false;
+  let w = 0; for (let i = -4; i <= 4; i++) for (let j = -4; j <= 4; j++) { const x = o.x + i * 420 / 4, z = o.z + j * 300 / 4; if (wet(x, z)) w++; }
+  console.log('склад', o.x, o.z, 'земля', city.groundH(o.x, o.z).toFixed(1), 'воды на площадке', w, '/81');
+  const r = (x, z) => `(${Math.round(x)}, ${Math.round(z)}) ${wet(x, z) ? 'вода' : 'суша'} ${city.groundH(x, z).toFixed(0)} м`;
+  console.log(' узкоколейка:', [[4500 - 420, 1100], [4500 - 420 - 1500, 1100 - 300], [4500 - 420 - 2600, 1100 - 900]].map(([x, z]) => r(x, z)).join(' → '));
+  const I = city.autumn.ISLE; console.log(' остров', I.x, I.z, 'до склада', Math.round(Math.hypot(I.x - o.x, I.z - o.z)));
+  Deno.exit(0);
+}
+if (Deno.env.get('LOS3')) {
+  const city = C.city, o = city.objects.find((q) => q.key === 'a_peat'), WY = city.autumn ? city.autumn.WY : 0, out = [];
+  for (let dx = -2000; dx <= 1500; dx += 250) for (let dz = -1500; dz <= 2000; dz += 250) {
+    const cx = o.x + dx, cz = o.z + dz, g = city.groundH(cx, cz); if (g < WY + 1.5) continue;
+    let flat = 0; for (const [ax, az] of [[-200, 0], [200, 0], [0, -150], [0, 150]]) flat = Math.max(flat, Math.abs(city.groundH(cx + ax, cz + az) - g)); if (flat > 12) continue;
+    let ok = 0; for (let b = 0; b < 360; b += 15) { const r = b * Math.PI / 180; for (const d of [3000]) { const x = cx + Math.sin(r) * d, z = cz + Math.cos(r) * d; if (Math.abs(x) > 14000 || Math.abs(z) > 14000) continue; if (city.los(x, city.groundH(x, z) + 70, z, cx, g + 14, cz, 4)) ok++; } }
+    out.push([ok, dx, dz, g.toFixed(0), flat.toFixed(0)]);
+  }
+  out.sort((a, b) => b[0] - a[0]); console.log('WY', WY); for (const r of out.slice(0, 12)) console.log(' видно', r[0] + '/24', 'сдвиг', r[1], r[2], 'земля', r[3], 'перепад', r[4]);
+  Deno.exit(0);
+}
+if (Deno.env.get('LOS2')) {
+  const city = C.city, o = city.objects.find((q) => q.key === 'a_peat'); let HP = null;
+  { const w = (o.w || 120) * 0.45, dd = (o.d || 120) * 0.45; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { const x = o.x + (i / 2) * w, z = o.z + (j / 2) * dd, y = city.topAt(x, z); if (!HP || y > HP[1]) HP = [x, y, z]; } }
+  console.log('peat', o.x, o.z, 'ground', city.groundH(o.x, o.z).toFixed(1), 'top', city.topAt(o.x, o.z).toFixed(1), 'HP', HP.map((v) => v.toFixed(1)).join(','), 'w', o.w, 'd', o.d);
+  for (const b of [0, 29, 60, 90, 180, 240, 300]) { const r = b * Math.PI / 180, d = 3000, x = o.x + Math.sin(r) * d, z = o.z + Math.cos(r) * d, y = city.groundH(x, z) + 70;
+    const tx = HP[0], ty = HP[1] + 2, tz = HP[2]; let first = null;
+    for (let k = 1; k < 300; k++) { const t = k / 300, px = x + (tx - x) * t, pz = z + (tz - z) * t, py = y + (ty - y) * t, g = city.groundH(px, pz), tp = city.topAt(px, pz); if (py < tp) { first = { dist: Math.round(Math.hypot(tx - px, tz - pz)), py: py.toFixed(1), ground: g.toFixed(1), bld: (tp - g).toFixed(1) }; break; } }
+    console.log(' пеленг', b, 'вертолёт', y.toFixed(0), 'м · первое препятствие:', JSON.stringify(first)); }
+  Deno.exit(0);
+}
 if (Deno.env.get('LOS')) {
   const city = C.city;
   for (const key of ['a_peat', 'a_vil', 'a_farm', 'a_wreck', 'a_heli', 'a_mon']) {
