@@ -790,7 +790,7 @@ function orient() {
 addEventListener('resize', orient); addEventListener('orientationchange', () => setTimeout(orient, 120)); orient();
 
 // ═════════════ Кадр ═════════════
-let last = performance.now(), lastDraw = 0, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0;
+let last = performance.now(), lastDraw = 0, last3D = 0, ms3D = 0, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0;
 const msWin = [], dr = { scale: perf.scale, calm: 0, prev: 0, before: 0, hold: 0, miss: 0 };
 const pf = { cpu: 0, n: 0, cpuS: 0, calls: 0, tris: 0 };
 C.perfHud = ls.get('fortuna_airdef_perfhud') === '1';
@@ -823,9 +823,13 @@ function frame(now) {
   // медленная, а нагрев и расход батареи вдвое меньше). Свой предел из «Кастомного» — главнее
   const cc = C.ctrl, fly = !!(cc && (cc.craft || cc.fps60 || (cc.inner && cc.inner.craft))); // «Съёмка» — тоже 60
   const idle = !!(cc && cc.idle && cc.idle()); // фон меню — готовые кадры: 3D не рисуется
-  const capMs = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / (fly ? 60 : 30) : 0;
+  // Mark 2026-10-21: на телефоне вне полёта ограничение 30 к/с — только для 3D (нагрев и батарея — от видеочипа), а бой, экран боя и
+  // кнопки (перезарядка, таймеры) — каждый кадр, без рывков
+  const capMs = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : 0;
+  const cap3D = !capMs && IS_TOUCH && !fly ? 1000 / 30 : 0;
   if (capMs && now - lastDraw < capMs - 2) return;
   const ms = now - lastDraw; lastDraw = now;
+  const draw3D = !cap3D || now - last3D >= cap3D - 2; if (draw3D) { ms3D = now - last3D; last3D = now; }
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр
   const dt = clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным
   C.t = t;
@@ -851,12 +855,12 @@ function frame(now) {
     if (ctrl && ctrl.near && ctrl.near()) nearW = Math.min(nearW, ctrl.near()); // крупный план у самолёта — ближе
     if (Math.abs(camera.near - nearW) > camera.near * 0.15) { camera.near = nearW; camera.updateProjectionMatrix(); } }
   syncWorld(C.paused ? 0 : dts, t);
-  objLod(camera.position, P.lodObj);
-  updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t); // окно ТВ — свой набор моделей вблизи (C.podPass)
+  if (draw3D) objLod(camera.position, P.lodObj);
+  if (draw3D) updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t); // окно ТВ — свой набор моделей вблизи (C.podPass)
   // тактическая карта обороны закрывает весь экран — 3D-кадр не рисуем (телефон не греется)
   // «Тени через кадр»: карта теней перерисовывается раз в P.shEvery кадров (город стоит, тени техники чуть запаздывают)
-  if (P.shEvery > 1 && renderer.shadowMap.enabled) { renderer.shadowMap.autoUpdate = false; if (++shN >= P.shEvery) { shN = 0; renderer.shadowMap.needsUpdate = true; } }
-  if (!(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t); else renderer.render(scene, camera); }
+  if (draw3D && P.shEvery > 1 && renderer.shadowMap.enabled) { renderer.shadowMap.autoUpdate = false; if (++shN >= P.shEvery) { shN = 0; renderer.shadowMap.needsUpdate = true; } }
+  if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t); else renderer.render(scene, camera); }
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
   if (ctrl && ctrl.afterRender) ctrl.afterRender();
   hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH);
@@ -865,7 +869,7 @@ function frame(now) {
   updateSound(dt);
   if (msgT > 0 && (msgT -= dt) <= 0) C.say('');
   fpsAcc += ms; fpsN++; if (fpsAcc > 500) { fps = Math.round(1000 * fpsN / fpsAcc); fpsAcc = fpsN = 0; }
-  if (C.state === 'play' && !view && ms < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(ms); // на карте 3D не рисуется — мерить нечего
+  if (draw3D && C.state === 'play' && !view && ms3D < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(cap3D ? ms3D / 2 : ms3D); // 3D через кадр — время кадра на пару кадров интерфейса // на карте 3D не рисуется — мерить нечего
   const sc = Math.round((pipe ? pipe.scale : dr.scale) * 100);
   // онлайн: задержка до сервера и потери (net.js) — мелко, в той же строке внизу
   const NN = C.online && C.online.N, netTxt = NN && NN.conn === 'on' && NN.battle && NN.ping ? tr(' · {0} мс · PL {1}%', [Math.round(NN.ping), NN.pl]) : '';
