@@ -68,10 +68,10 @@
 - "Ja37" (https://sketchfab.com/3d-models/ja37-de85a256699d44d486ea3560f47ce3a1) by manilov.ap — CC-BY-4.0 — `e_viggen.glb`
 - "AN-M65A1" (https://sketchfab.com/3d-models/an-m65a1-11ece2bb4a4f4716bc02402d616ffc19) by United4192 — CC-BY-4.0 — `w_bomb1000.glb`
 - "Sukhoi Su-33 Сухой Су-33" (https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4) by andertan — CC-BY-4.0 — `e_su33.glb`
-- "Vietnam People Air Forces - Yak-130" (https://sketchfab.com/3d-models/vietnam-people-air-forces-yak-130-e94ec7950d4b4d378dbde1ae988f0914) by thientrung2004pr — CC-BY-4.0 — `e_yak130.glb`
 - "M4" (https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6) by manilov.ap — CC-BY-4.0 — `e_m4.glb`
 - "Mikoyan-Gurevich MiG-19" (https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3) by Tom Zimmermann — CC-BY-4.0 — `e_mig19.glb`
 - "Mig17" (https://sketchfab.com/3d-models/mig17-672ef502523b4cbe9aced1e4252c0cca) by manilov.ap — CC-BY-4.0 — `e_mig17.glb`
+- "Mig-29K" (https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb) by KoreanNavy — CC-BY-4.0 — `e_mig29k.glb`
 - "T4" (https://sketchfab.com/3d-models/t4-1b9171a6210b427fb2493af3947b1c26) by manilov.ap — CC-BY-4.0 — `e_t4.glb`
 - "Sukhoi Su-27 "Flanker"" (https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750) by andertan — CC-BY-4.0 — `e_su27.glb`
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan — CC-BY-4.0 — `e_su35.glb`

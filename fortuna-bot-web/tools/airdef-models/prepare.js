@@ -158,9 +158,8 @@ const CONFIG = {
   e_viggen: { src: `${DL}/ja37.glb`, scale: 1.0, fwd: [-0.6659, 0.7461], rulesIn: 'game', tex: () => 1024, centerX: true, // ось — x −0,9 (до центровки): подфюзеляжный бак и его пилоны — долой
     groups: (c) => (c.ctr[1] < -0.7 && Math.abs(c.ctr[0] + 0.9) < 1.0 && c.ctr[2] > -2.4 && c.ctr[2] < -0.9 && Math.max(...c.size) > 2.0 ? null : LS(c)) },
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
-  // ── шестая партия 2026-10-21 (CC BY 4.0, Восток): andertan — Су-33, U.SSCIFI — Як-130, manilov.ap — М-4, МиГ-17 и Т-4, Tom Zimmermann — МиГ-19; без упрощения, текстуры 1024 ──
+  // ── шестая партия 2026-10-21 (CC BY 4.0, Восток): andertan — Су-33, manilov.ap — М-4, МиГ-17 и Т-4, Tom Zimmermann — МиГ-19; без упрощения, текстуры 1024 ──
   e_su33: { src: `${DL}/d80603a8a13b49bda90f19d80cac61d4.glb`, scale: 1.45, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true, groups: LS },
-  e_yak130: { src: `${DL}/vietnam_people_air_forces_-_yak-130.glb`, scale: 10.1, nose: '-z', rulesIn: 'game', tex: () => 1024, centerX: true, texVf: 'delogo=x=240:y=20:w=80:h=44,delogo=x=411:y=20:w=80:h=44,delogo=x=713:y=45:w=52:h=64,delogo=x=358:y=420:w=54:h=70,delogo=x=713:y=520:w=52:h=64,delogo=x=358:y=876:w=54:h=70' /* вьетнамские кокарды (шесть: фюзеляж/киль, крыло сверху и снизу) закрашены по окружению, как логотип */, pickMesh: /^(?!.*(attach_|pylons_))/, groups: LS },
   e_m4: { src: `${DL}/65059c25184c48c5b6a1b9ac27d34db6.glb`, scale: 0.95, fwd: [-0.7009, 0.7133], rulesIn: 'game', tex: () => 1024, centerX: true, // ось — x 1,32 (с масштабом): без шасси (тележки, стойки, створки ниш — по оси; стойки и колёса на концах крыла; обтекатели концов — оставить)
     groups: (c) => { const d = Math.abs(c.ctr[0] - 1.32), m = Math.max(...c.size); return m < 2.5 && ((d < 1.3 && c.ctr[1] < -0.65 && c.ctr[2] > -9 && c.ctr[2] < 11) || (d > 20 && c.ctr[1] < -1.6)) || (d < 1.3 && c.ctr[1] < -1.5 && m < 6 && Math.abs(c.ctr[2]) > 6 && Math.abs(c.ctr[2]) < 12) ? null : LS(c); },
     addBoxes: [{ c: [0, -5.04, 7.6], s: [1.8, 0.1, 5.1] }, { c: [0, -5.04, -8.9], s: [1.8, 0.1, 4.8] }].map((b) => ({ ...b, paint: 'well' })) /* ниши шасси в брюхе (чёрные провалы) закрыты заглушками */, colors: { '#well$': [0.5, 0.53, 0.48] } },
@@ -168,6 +167,7 @@ const CONFIG = {
   e_mig17: { src: `${DL}/mig17.glb`, scale: 1.01, fwd: [-0.7314, 0.6820], rulesIn: 'game', tex: () => 1024, centerX: true, dropMat: /^cmj/, // МиГ-17 — manilov.ap; пилот (cmj*) долой; ось — x −1,0: без шасси (материалы 4, 5, 24–26: стойки, колёса, створки) и подкрыльевых баков (20–22; пушки в носу — оставить)
     groups: (c) => ([4, 5, 24, 25, 26].includes(c.mat) || ([20, 21, 22].includes(c.mat) && Math.abs(c.ctr[0] + 1.0) > 1.4) ? null : LS(c)),
     addBoxes: [{ c: [1.5, -0.88, -1.9], s: [1.4, 0.08, 1.0], mirror: true, paint: 'well' }] /* ниши основных стоек в крыле (после шасси — чёрные провалы): заглушки в цвет низа крыла */, colors: { '#well$': [0.42, 0.45, 0.42] } },
+  e_mig29k: { src: `${DL}/mig-29k.glb`, scale: 4.05, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true, target: 60000, simpErr: 0.004, groups: () => 'body' }, // МиГ-29К — KoreanNavy (Blender, 247 тыс. треугольников после subdivision)
   e_t4: { src: `${DL}/1b9171a6210b427fb2493af3947b1c26.glb`, scale: 0.97, nose: '-x', rulesIn: 'game', tex: () => 1024, centerX: true, groups: LS },
   e_su27: { src: `${DL}/sukhoi_su-27_flanker.glb`, scale: 21.9 / 30.61, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
   e_su35: { src: `${DL}/sukhoi_su-35_flanker-e__-35.glb`, scale: 21.9 / 10.15, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },

@@ -626,15 +626,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Vietnam People Air Forces - Yak-130",
-  "author": "thientrung2004pr",
-  "url": "https://sketchfab.com/3d-models/vietnam-people-air-forces-yak-130-e94ec7950d4b4d378dbde1ae988f0914",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_yak130"
-  ]
- },
- {
   "title": "M4",
   "author": "manilov.ap",
   "url": "https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6",
@@ -659,6 +650,15 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "e_mig17"
+  ]
+ },
+ {
+  "title": "Mig-29K",
+  "author": "KoreanNavy",
+  "url": "https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig29k"
   ]
  },
  {

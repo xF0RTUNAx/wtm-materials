@@ -134,7 +134,7 @@ air.finish('тест', true); frames(5);
   }
   check(`подвески: расходуют оружие ${used} из ${total}; самолёты: ${[...planes].filter((p) => p !== 'cam').join(', ')}`, used > total / 2);
 }
-C.setup.era = 2; C.setup.lo = 0;
+C.setup.era = 2; C.setup.lo = 0; C.setup.side = 'east'; // сторона обороны задана явно: после цикла подвесок она зависела от стороны последней подвески (у МиГ-29К — запад, и волна обороны не заканчивалась за 240 с)
 // 3. оборона: расстановка, волна, оператор
 C.toMenu(); frames(10);
 C.setup.game = 'defense'; C.start('defense');

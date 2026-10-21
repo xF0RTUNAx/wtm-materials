@@ -215,7 +215,7 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
   e_yak38: 'Як-38М', e_il28: 'Ил-28', e_tu22: 'Ту-22', e_tu95: 'Ту-95МС', e_su27: 'Су-27СМ', e_su35: 'Су-35С', e_hunter: 'Hunter FGA.9', e_etendard: 'Super Étendard',
   e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_ea18g: 'EA-18G', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon',
   e_vulcan: 'Vulcan B.2', e_draken: 'Saab 35 Draken', e_viggen: 'Saab AJ 37 Viggen',
-  e_su33: 'Су-33', e_yak130: 'Як-130', e_m4: 'М-4', e_mig19: 'МиГ-19', e_mig17: 'МиГ-17', e_t4: 'Т-4' };
+  e_su33: 'Су-33', e_m4: 'М-4', e_mig19: 'МиГ-19', e_mig17: 'МиГ-17', e_t4: 'Т-4', e_mig29k: 'МиГ-29К' };
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },
@@ -654,11 +654,9 @@ LOADOUTS[3] = [
   { side: 'east', plane: 'h_mi28', heli: true, name: 'Ми-28Н: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
   { side: 'west', plane: 'h_ah64', heli: true, name: 'AH-64D: Hellfire ×8 + Hydra ×2 блока', items: [['hellfire', 8], ['hydra', 2]], pod: true },
   { side: 'east', plane: 'h_ka50', heli: true, name: 'Ка-50: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
-  // шестая партия (2026-10-21): палубный Су-33 и учебно-боевой Як-130
+  // шестая партия (2026-10-21): палубный Су-33
   { side: 'east', plane: 'e_su33', name: 'Су-33: ФАБ-500 ×6', items: [['fab500', 6]] },
   { side: 'east', plane: 'e_su33', name: 'Су-33: ОФАБ-250 ×4 + С-8 ×2', items: [['ofab250', 4], ['s8', 2]] },
-  { side: 'east', plane: 'e_yak130', name: 'Як-130: ФАБ-500 ×2 + С-8 ×2', items: [['fab500', 2], ['s8', 2]] },
-  { side: 'east', plane: 'e_yak130', name: 'Як-130: КАБ-500Кр ×2', items: [['kab500kr', 2]], pod: true },
 ];
 LOADOUTS[4] = [
   { side: 'east', plane: 'e_su34', name: 'УМПК + Х-59М + Х-31П + помехи', items: [['umpk', 2], ['kh59m', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },
@@ -678,6 +676,9 @@ LOADOUTS[4] = [
   // вертолёты (Хеллоуин 2026)
   { side: 'east', plane: 'h_ka52', heli: true, name: 'Ка-52: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
   { side: 'west', plane: 'h_rah66', heli: true, name: 'RAH-66: Hellfire ×6 + Hydra ×2 блока', items: [['hellfire', 6], ['hydra', 2]], pod: true },
+  // шестая партия (2026-10-21): палубный МиГ-29К (родитель — Су-33)
+  { side: 'east', plane: 'e_mig29k', name: 'МиГ-29К: Х-31П ×2 + КАБ-500Кр ×2', items: [['kh31p', 2], ['kab500kr', 2]], pod: true },
+  { side: 'east', plane: 'e_mig29k', name: 'МиГ-29К: Х-29Т ×2 + ФАБ-500 ×4', items: [['kh29t', 2], ['fab500', 4]], pod: true },
 ];
 // вертолётные подвески всех эпох (era — эпоха = ранг в ветке «Вертолёты»): проверка ?heli=…, выбор в меню
 export const HELI_LOADOUTS = [1, 2, 3, 4].flatMap((e) => LOADOUTS[e].map((L, i) => ({ ...L, era: e, i })).filter((L) => L.heli));
