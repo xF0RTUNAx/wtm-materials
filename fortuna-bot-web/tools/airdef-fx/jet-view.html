@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Стенд пламени реактивных двигателей</title>
+<style>body{margin:0;background:#111;font:12px sans-serif}#sheet{position:relative;display:inline-block}canvas{display:block}
+.c{position:absolute;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000;pointer-events:none;white-space:nowrap}.t{font-size:11px}.k{font-size:13px;font-weight:bold}</style></head>
+<body><div id="sheet"></div>
+<!-- Стенд запечённого пламени реактивных двигателей (games/airdef/jetflame.js; текстуры fx/jet_flame.png, jet_glow.png из tools/airdef-fx/jet-bake.py).
+     Настоящая модель самолёта (models.js), сопла и радиус — META.nozzles / nr. Нужен сервер :8935 (корень — wtm-materials), Google Chrome.
+     ?p=e_su27 (или список через запятую — лист на самолёт): столбцы — кадры «малый газ», «максимал», «розжиг форсажа 0,15 с», «0,4 с», «полный форсаж»,
+       строки — день и сумерки × виды: сбоку, сзади, ¾ сзади, крупно у сопла. Красные точки — сопла из META (?dots=0 — убрать).
+     ?p=e_su27&thr=1&ab=1&t=0.4 — один кадр: газ, форсаж, t — секунд после включения форсажа (до этого 3 с на том же газе без форсажа).
+     ?view=side|rear|q34|close — только этот вид; ?sky=day|dusk — только это небо; ?cw=&ch= — размер кадра.
+     ?all=1 — лист «все самолёты на форсаже, ¾ сзади, крупно у сопел» (подписи: ключ, nr, число сопел; ?cols=8; ?dots=1 по умолчанию — точки сопел).
+     ?cmp=e_su27,f16 — «было / стало»: прежний attachFlames (units-render.js) и jetflame.js, форсаж, четыре вида.
+     Драйвер снимков — tools/airdef-fx/jet-shots.js (window.renderSheet(i), window.sheets, window.names). -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+// воспроизводимость: случайные фазы кадров и мерцание — от фиксированного зерна
+let seed = 12345; Math.random = () => { seed |= 0; seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+const Q = new URLSearchParams(location.search), BASE = '../../games/airdef/', VER = '?v=20261022r', NOW = Date.now();
+const [M, JF, UR] = await Promise.all([import(BASE + 'models.js' + VER), import(BASE + 'jetflame.js?v=' + NOW), import(BASE + 'units-render.js' + VER)]);
+M.loadModels(BASE, () => {}); await JF.jetReady();
+const wait = (n) => new Promise((ok) => { M.wantModel(n); const t = setInterval(() => { const o = M.anyModel(n); if (o) { clearInterval(t); ok(o); } }, 50); });
+const ALL = Object.keys(M.PLANE_META);
+const MODE = Q.get('all') ? 'all' : Q.get('cmp') ? 'cmp' : 'states';
+const KEYS = MODE === 'all' ? ALL : (Q.get('cmp') || Q.get('p') || 'e_su27').split(',');
+if (Q.get('gain')) JF.setJetGain(+Q.get('gain'));
+const HIDE = (Q.get('hide') || '').split(',');   // ?hide=disc,glow,side — убрать слои (для разбора)
+const FOV = 28, DOTS = Q.has('dots') ? Q.get('dots') !== '0' : MODE === 'all';
+const fmt = (x, n = 2) => (+x).toFixed(n).replace('.', ',');
+
+// ── кадры и виды ──
+const STATES = Q.has('thr') || Q.has('ab') ? [{ n: `газ ${Q.get('thr') || 1}${Q.get('ab') === '1' ? ' · форсаж ' + (Q.get('t') || 2.5) + ' с' : ''}`, thr: +(Q.get('thr') || 1), ab: Q.get('ab') === '1', t: +(Q.get('t') || 2.5) }] : [
+  { n: 'малый газ', thr: 0.4, ab: false, t: 0 }, { n: 'максимал', thr: 1, ab: false, t: 0 }, { n: 'розжиг 0,15 с', thr: 1, ab: true, t: 0.15 }, { n: 'розжиг 0,4 с', thr: 1, ab: true, t: 0.4 }, { n: 'полный форсаж', thr: 1, ab: true, t: 2.5 }];
+const VIEWS = [['side', 'сбоку'], ['rear', 'сзади'], ['q34', '¾ сзади'], ['close', 'крупно']].filter(([k]) => !Q.get('view') || Q.get('view') === k);
+const SKIES = ['day', 'dusk'].filter((k) => !Q.get('sky') || Q.get('sky') === k);
+const CW = +(Q.get('cw') || (MODE === 'all' ? 288 : 300)), CH = +(Q.get('ch') || (MODE === 'all' ? 216 : 210));
+const COLS = MODE === 'all' ? +(Q.get('cols') || 8) : MODE === 'cmp' ? VIEWS.length : STATES.length;
+const ROWS = MODE === 'all' ? Math.ceil(KEYS.length / COLS) : MODE === 'cmp' ? 2 * KEYS.length : SKIES.length * VIEWS.length;
+const W_ = CW * COLS, H_ = CH * ROWS;
+
+const r = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W_, H_); r.setScissorTest(true);
+r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.1; document.getElementById('sheet').appendChild(r.domElement);
+const sc = new THREE.Scene(), hemi = new THREE.HemisphereLight(0xcfe0f5, 0x6b6250, 1.1), sun = new THREE.DirectionalLight(0xffffff, 1.2); sun.position.set(-1, 2, 1); sc.add(hemi, sun);
+function sky(k) { if (k === 'dusk') { sc.background = new THREE.Color(0x2c2a3a); hemi.color.set(0x6c6488); hemi.groundColor.set(0x3a3030); hemi.intensity = 0.55; sun.color.set(0xff9a5a); sun.intensity = 0.35; } else { sc.background = new THREE.Color(0x6f9bd0); hemi.color.set(0xcfe0f5); hemi.groundColor.set(0x6b6250); hemi.intensity = 1.1; sun.color.set(0xffffff); sun.intensity = 1.2; } }
+const cam = new THREE.PerspectiveCamera(FOV, CW / CH, 0.05, 2000);
+const dotsG = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0xff2020, size: 3, sizeAttenuation: false, depthTest: false })); dotsG.renderOrder = 10; dotsG.frustumCulled = false; sc.add(dotsG);
+const host = document.getElementById('sheet');
+const label = (txt, x, y, cls = 't') => { const el = document.createElement('div'); el.className = 'c ' + cls; el.textContent = txt; Object.assign(el.style, { left: x + 'px', top: y + 'px' }); host.appendChild(el); };
+
+// положение камеры по виду: сопла (центр), диаметр сопла, длина факела
+function aim(view, key, meta, obj) {
+  const nzs = meta.nozzles.length ? meta.nozzles : [new THREE.Vector3(0, 0, new THREE.Box3().setFromObject(obj).max.z)];
+  const tail = nzs.reduce((a, p) => a.add(p), new THREE.Vector3()).divideScalar(nzs.length), dm = Math.max(0.2, 2 * meta.nr), Lp = 8.4 * dm;
+  const span = Math.max(0, ...nzs.map((p) => Math.abs(p.x - tail.x))) * 2, asp = CW / CH;
+  let dir, tgt = tail.clone(), R;
+  if (view === 'side') { dir = new THREE.Vector3(-1, 0.06, 0.0); tgt.z += Lp * 0.40; R = Math.max(Lp * 0.75, 1.6 * dm + 1.3); }
+  else if (view === 'rear') { dir = new THREE.Vector3(0.0, 0.05, 1); R = Math.max(span * 0.5 + 3.5 * dm, 2.2 * dm + 1); tgt.z += 0.3 * dm; }
+  else if (view === 'q34') { dir = new THREE.Vector3(0.75, 0.30, 1.0).normalize(); tgt.z += Lp * 0.40; R = Math.max(span * 0.5 + 2.6 * dm, Lp * 0.62, 2); }
+  else { dir = new THREE.Vector3(0.62, 0.28, 1.0).normalize(); tgt.z += dm * 1.6; R = Math.max(span * 0.5 + 3.6 * dm, 1.8); }
+  const dist = R / (Math.tan(FOV / 2 * Math.PI / 180) * asp);   // R — половина ширины кадра на цели
+  return { pos: tgt.clone().addScaledVector(dir.normalize(), Math.max(dist, 1.2)), tgt, tail, dm, Lp };
+}
+function shoot(col, row, view, a, info) {
+  cam.position.copy(a.pos); cam.up.set(0, 1, 0); cam.lookAt(a.tgt); cam.updateMatrixWorld();
+  const x = col * CW, y = H_ - (row + 1) * CH; r.setViewport(x, y, CW, CH); r.setScissor(x, y, CW, CH); r.render(sc, cam);
+  if (info) label(info, x + 4, row * CH + 3);
+}
+function setDots(meta, on) { if (!on || !meta.nozzles.length) { dotsG.visible = false; return; } dotsG.geometry.setAttribute('position', new THREE.Float32BufferAttribute(meta.nozzles.flatMap((p) => [p.x, p.y, p.z]), 3)); dotsG.visible = true; }
+
+const nzInfo = (meta) => `${meta.nozzles.length} сопл${meta.nozzles.length === 1 ? 'о' : meta.nozzles.length < 5 ? 'а' : ''} · nr ${fmt(meta.nr)}${meta.dry ? ' · dry' : ''}`;
+function drive(fl, thr, ab, t) {   // как в игре: газ держится 3 с, потом форсаж ab (t секунд)
+  const dt = 1 / 60; for (let i = 0; i < 180; i++) fl.update(thr, false, dt);
+  if (ab) for (let i = 0; i < Math.round(t * 60); i++) fl.update(thr, true, dt);
+}
+
+async function runKey(key) {
+  const obj = await wait(key), meta = M.planeMeta(key); sc.add(obj);
+  const dry = !!meta.dry && Q.get('dry') !== '0', rr = meta.nr / 0.45;
+  let row0 = 0;
+  window.__labels = (window.__labels || []).concat([`${key} · ${nzInfo(meta)}`]);
+  for (let si = 0; si < STATES.length; si++) {
+    const S = STATES[si], fl = JF.makeJetFlame(obj, meta.nozzles, rr, key, { dry });
+    drive(fl, S.thr, S.ab, S.t); for (const p of fl.parts()) if (HIDE.includes(p.type)) p.mesh.visible = false;
+    let row = 0;
+    for (const sk of SKIES) { sky(sk); for (const [vk, vn] of VIEWS) {
+      setDots(meta, DOTS); shoot(si, row, vk, aim(vk, key, meta, obj), `${S.n} · ${vn}${sk === 'dusk' ? ' · сумерки' : ''}`); row++; } }
+    fl.dispose();
+  }
+  label(`${key} · ${nzInfo(meta)} · ${JF.flameKindOf(key)}`, 4, H_ - 18, 'k');
+  sc.remove(obj);
+}
+async function runAll() {
+  sky('day'); r.setScissor(0, 0, W_, H_); r.setViewport(0, 0, W_, H_); r.setClearColor(0x111111); r.clear();
+  const bad = [];
+  for (let i = 0; i < KEYS.length; i++) {
+    const key = KEYS[i], obj = await wait(key), meta = M.planeMeta(key); sc.add(obj);
+    const dry = !!meta.dry, fl = JF.makeJetFlame(obj, meta.nozzles, meta.nr / 0.45, key, { dry }); drive(fl, 1, true, 2.5);
+    sky('day'); setDots(meta, DOTS);
+    shoot(i % COLS, Math.floor(i / COLS), 'q34', aim('q34', key, meta, obj), `${key}${dry ? ' (dry)' : ''}`);
+    label(nzInfo(meta), (i % COLS) * CW + 4, Math.floor(i / COLS) * CH + CH - 16);
+    fl.dispose(); sc.remove(obj);
+  }
+  return bad;
+}
+async function runCmp(i) {
+  const key = KEYS[i], obj = await wait(key), meta = M.planeMeta(key); sc.add(obj); sky('day');
+  const dry = !!meta.dry, old = UR.attachFlames(obj, meta.nozzles, meta.nr / 0.45, true, dry, key); old.update(1, !dry);
+  for (const [vi, [vk, vn]] of VIEWS.entries()) { setDots(meta, false); shoot(vi, i * 2, vk, aim(vk, key, meta, obj), `было · ${key} · ${vn}`); }
+  // убрать старое пламя: всё, что attachFlames добавил в obj (меши с userData.fx)
+  for (const o of obj.children.filter((c) => c.userData && c.userData.fx)) obj.remove(o);
+  const fl = JF.makeJetFlame(obj, meta.nozzles, meta.nr / 0.45, key, { dry }); drive(fl, 1, !dry, 2.5);
+  for (const [vi, [vk, vn]] of VIEWS.entries()) { setDots(meta, false); shoot(vi, i * 2 + 1, vk, aim(vk, key, meta, obj), `стало · ${key} · ${vn}`); }
+  fl.dispose(); sc.remove(obj);
+}
+
+// проверка сопел по геометрии модели (?audit=1 → window.__audit): для каждого сопла — вершины модели за срезом внутри струи (мешают факелу),
+// радиус «кромки» (ближние к оси вершины у среза) против nr, смещение центра кромки от точки сопла, расстояние от среза до заднего края модели
+async function audit() {
+  const out = [];
+  for (const key of ALL) {
+    const obj = await wait(key), meta = M.planeMeta(key); obj.updateMatrixWorld(true);
+    const P = []; obj.traverse((m) => { if (!m.isMesh) return; const a = m.geometry.attributes.position, v = new THREE.Vector3(); for (let i = 0; i < a.count; i++) { v.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld); P.push(v.x, v.y, v.z); } });
+    let zmax = -1e9; for (let i = 2; i < P.length; i += 3) zmax = Math.max(zmax, P[i]);
+    const nz = meta.nozzles.map((n) => {
+      let behind = 0, ring = [], near = 1e9;
+      for (let i = 0; i < P.length; i += 3) {
+        const dx = P[i] - n.x, dy = P[i + 1] - n.y, dz = P[i + 2] - n.z, rr = Math.hypot(dx, dy);
+        if (dz > 0.12 && rr < 0.8 * meta.nr) behind++;
+        if (Math.abs(dz) < 0.25 && rr > 0.2 * meta.nr && rr < 3 * meta.nr) ring.push([rr, dx, dy]);
+        near = Math.min(near, Math.hypot(dx, dy, dz));
+      }
+      ring.sort((a, b) => a[0] - b[0]); const lo = ring.slice(0, Math.max(3, Math.floor(ring.length * 0.15)));
+      const rim = lo.length ? lo.reduce((a, q) => a + q[0], 0) / lo.length : null, cx = lo.length ? lo.reduce((a, q) => a + q[1], 0) / lo.length : 0, cy = lo.length ? lo.reduce((a, q) => a + q[2], 0) / lo.length : 0;
+      return { n: n.toArray().map((x) => +x.toFixed(2)), behind, rim: rim && +rim.toFixed(2), off: +Math.hypot(cx, cy).toFixed(2), near: +near.toFixed(2), toEnd: +(zmax - n.z).toFixed(2) };
+    });
+    out.push({ key, nr: meta.nr, dry: !!meta.dry, nz });
+  }
+  window.__audit = out; return out;
+}
+window.audit = audit;
+window.names = KEYS; window.sheets = MODE === 'states' ? KEYS.length : 1;
+window.renderSheet = async (i) => {
+  for (const el of [...host.querySelectorAll('div')]) el.remove();
+  r.setScissor(0, 0, W_, H_); r.setViewport(0, 0, W_, H_); r.setClearColor(0x111111); r.clear();
+  if (MODE === 'all') await runAll(); else if (MODE === 'cmp') for (let k = 0; k < KEYS.length; k++) await runCmp(k); else await runKey(KEYS[i]);
+  window.__done = i; return true;
+};
+window.__ready = true;
+if (Q.get('sheet') !== null) window.renderSheet(+Q.get('sheet') || 0);
+</script></body></html>

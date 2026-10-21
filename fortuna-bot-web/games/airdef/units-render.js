@@ -4,6 +4,7 @@
 import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022r';
 import { makeParticles, radialTex } from '../drone/world.js?v=20261022r';
 import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022r';
+import { FLAME_KIND } from './jetflame.js?v=20261022r';
 import { createCmFx } from './cmfx.js?v=20261022r';
 import { LNCH } from './launchers.js?v=20261022r';
 import { createBook } from './flipbook.js?v=20261022r';
@@ -278,8 +279,7 @@ const flameDry = new THREE.MeshBasicMaterial({ color: lin2(0xff9a3c).multiplySca
 // цвет форсажа по двигателю (Mark 2026-10-21; фото и видео — разведчик): blue — чистое бедное горение, светятся газы: голубое ядро,
 // сине-фиолетовая середина, розовато-красный конец (НК-25 Ту-22М3, НК-32 Ту-160, АЛ-31Ф/117С семейства Су-27, F100-229 F-15E, F135 F-35);
 // sooty — старые двигатели, богатая смесь, светится сажа: жёлто-оранжевый, короткие ромбы; neutral — бело-жёлтое ядро, оранжевый факел
-const FLAME_KIND = { e_tu22m3: 'blue', e_tu22m2: 'blue', e_tu22: 'blue', e_tu160: 'blue', e_su27: 'blue', su30: 'blue', e_su34: 'blue', e_su35: 'blue', e_su57: 'blue', e_f15e: 'blue', e_f35: 'blue', e_su33: 'blue',
-  e_mig21n: 'sooty', e_mig23: 'sooty', e_mig27: 'sooty', e_mig25: 'sooty', e_mig31: 'sooty', mig29: 'sooty', e_su7b: 'sooty', e_su17: 'sooty', e_su24: 'sooty', e_f4: 'sooty', e_f111: 'sooty', e_f100: 'sooty', e_f5: 'sooty', e_jaguar: 'sooty', e_mirage_f1: 'sooty', e_tornado: 'sooty', e_mig19: 'sooty', e_mig17: 'sooty', e_t4: 'sooty', e_mig29k: 'sooty' };
+// FLAME_KIND (ключ самолёта → blue / sooty / neutral) — в jetflame.js (общая таблица прежнего attachFlames и запечённого пламени)
 const FLAME_COL = { // [ядро, середина, конец] (линейные, ×яркость), ромбы
   blue: [[0.7, 0.85, 1.0], [0.32, 0.42, 1.0], [0.85, 0.3, 0.5], [0.75, 0.88, 1.0]],
   neutral: [[1.0, 0.9, 0.7], [1.0, 0.52, 0.18], [0.8, 0.22, 0.08], [1.0, 0.95, 0.85]],
