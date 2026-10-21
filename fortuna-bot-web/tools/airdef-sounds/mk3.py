@@ -16,5 +16,6 @@ s = fade(a[int(6.4 * sr):int(8.0 * sr)], sr, 0.05, 0.6); mp3(OUT + 'ab_on.mp3', 
 g = hp(load(MV + 'AIM-9 Sidewinder missile sound effect.m4a', sr), sr, 200)
 for nm, t0, t1, L in [('seek_search.wav', 0.4, 2.8, 2.1), ('seek_tone.wav', 7.4, 11.6, 3.5), ('seek_lock.wav', 12.6, 15.8, 2.5)]:
     wav(OUT + nm, soft(rms(loop(g[int(t0 * sr):int(t1 * sr)], sr, L, 0.12), -20)), sr)                               # тоны ГСН: поиск, цель видна, захват
-# отстрел ЛТЦ / диполей — без обработки (Mark 2026-10-21): ffmpeg -ss 0.02 -t 1.48 -i '<MV>Flares Sound Effect.m4a' -af afade=t=out:st=0.98:d=0.5 -ar 44100 -b:a 160k flare.mp3
+# отстрел ЛТЦ / диполей (Mark 2026-10-21 — вариант A: плотнее, с басом): orig.wav = ffmpeg -ss 0.02 -t 1.48 -i '<MV>Flares Sound Effect.m4a' -af afade=t=out:st=0.98:d=0.5 -ar 44100;
+# flare.mp3 = ffmpeg -i orig.wav -af 'equalizer=f=90:width_type=o:width=1.4:g=8,equalizer=f=220:width_type=o:width=1:g=3,equalizer=f=3500:width_type=o:width=2:g=-2,acompressor=threshold=-20dB:ratio=4:attack=1:release=150:makeup=2,alimiter=limit=0.95' -b:a 160k (варианты — flare-try/)
 print('ok')
