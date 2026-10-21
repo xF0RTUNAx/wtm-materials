@@ -7,7 +7,7 @@ import sys, importlib, math
 sys.dont_write_bytecode = True                              # без __pycache__ в репозитории (папка набора — только для чтения)
 sys.path.insert(0, '/Users/mark./wtm-materials/fortuna-bot-web/tools/airdef-models/own/_kit')
 import modelkit as mk; importlib.reload(mk)
-from modelkit import B, Vector, circ, profile, panel, prism, rrect, ell, decal, Y, PR_WING, PR_PLATE, PR_FLAP
+from modelkit import B, Vector, circ, profile, panel, prism, trap, rrect, ell, decal, Y, PR_WING, PR_PLATE, PR_FLAP
 
 S = 3.896 / 1093.0          # метров на пиксель: длина как у прежней модели в игре (3,896 м)
 mk.configure('KH29T', S, x0=604.0, yc=118.8, rb=54.0, nose='left')   # середина длины x=604, ось y=118,8, радиус корпуса 54 пикс., нос на чертеже слева
@@ -69,9 +69,6 @@ for sd in (1, -1):
 b.finish('K29_slots')
 
 # ───────────────────────── низ и верх корпуса ─────────────────────────
-def trap(hw_top, z_top, hw_bot, z_bot):          # сечение кожуха: трапеция (вбок, высота), пикс.
-    return [(-hw_top, z_top), (hw_top, z_top), (hw_bot, z_bot), (-hw_bot, z_bot)]
-
 b = B()   # нижний кожух (трапеция) и три площадки на нём
 prism(b, 315.0, 752.0, trap(14.5, -50.0, 8.5, -64.5), M_CTRL)
 for x in (445.0, 548.0, 650.0):

@@ -3,11 +3,13 @@
 Вложения из чата сохраняются в журнале этого чата: ~/.claude/projects/<папка проекта>/<id чата>.jsonl (картинки — base64 в сообщениях пользователя).
 Скрипт берёт журнал самого свежего чата в проекте, где он запущен (папка проекта выводится из текущей папки), и пишет картинки файлами.
 
-  /usr/bin/python3 -I chat_images.py <папка_вывода> [--last-message | --all] [--list] [--start N] [--session <id или путь .jsonl>] [--project <имя папки>]
+  /usr/bin/python3 -I chat_images.py <папка_вывода> [--last-message | --all] [--start N] [--session <id или путь .jsonl>] [--project <имя папки>]
+  /usr/bin/python3 -I chat_images.py --list [--all] [--session …]        (только перечислить, папка не нужна)
 
---last-message (по умолчанию) — картинки из последнего сообщения Mark, в котором они есть; --all — все картинки пользователя в чате;
---list — только перечислить; --start N — с какого номера называть файлы (1.png, 2.jpg … без перезаписи существующих).
-Читает только блоки-картинки из сообщений пользователя, остальное в журнале не трогает. Если Mark уже скачал файлы в ~/Downloads — проще взять их оттуда.
+--last-message (по умолчанию) — картинки из последнего сообщения Mark, в котором они есть; --all — все картинки пользователя в чате; --start N — с какого номера
+называть файлы (1.png, 2.jpg … без перезаписи существующих). Порядок файлов = порядок вложений в чате (№ в перечне). Какой вид на какой картинке — определи по содержимому
+(открой файл) и при необходимости переименуй. Читает только блоки-картинки из сообщений пользователя, остальное в журнале не трогает.
+Если Mark уже скачал файлы в ~/Downloads — проще взять их оттуда.
 """
 import sys, os, json, base64, hashlib, glob, re, time
 
@@ -15,15 +17,21 @@ EXT = {'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif
 
 
 def enc(p):
-    return re.sub(r'[^A-Za-z0-9]', '-', p)          # так Claude Code называет папку проекта: каждый небуквенный символ — «-»
+    return re.sub(r'[^A-Za-z0-9]', '-', p)          # так Claude Code называет папку проекта: каждый небуквенно-цифровой символ — «-»
 
 
 def find_transcript(session=None, project=None):
     root = os.path.expanduser('~/.claude/projects')
     if session and os.path.isfile(session): return session
     pdir = os.path.join(root, project) if project else os.path.join(root, enc(os.getcwd()))
+    if not os.path.isdir(pdir) and not project:   # не нашлась — берём свежайшую рядом, в Downloads
+        near = [d for d in glob.glob(os.path.join(root, enc(os.path.expanduser('~/Downloads')) + '*')) if glob.glob(d + '/*.jsonl')]
+        if near:
+            pdir = max(near, key=lambda d: max(os.path.getmtime(f) for f in glob.glob(d + '/*.jsonl')))
+            print('папка проекта по правилу не найдена, взята свежайшая в Downloads:', os.path.basename(pdir))
     if not os.path.isdir(pdir):
-        raise SystemExit(f'нет папки проекта {pdir}: запусти скрипт из папки чата или укажи --project <имя из ~/.claude/projects>')
+        recent = sorted(glob.glob(root + '/*/'), key=os.path.getmtime, reverse=True)[:5]
+        raise SystemExit(f'нет папки проекта {pdir}: запусти скрипт из папки чата или укажи --project <имя из ~/.claude/projects>; свежие: ' + ', '.join(os.path.basename(d.rstrip('/')) for d in recent))
     files = [f for f in glob.glob(pdir + '/*.jsonl') if not session or os.path.basename(f).startswith(session)]
     if not files: raise SystemExit('нет журналов чата в ' + pdir)
     return max(files, key=os.path.getmtime)
@@ -61,9 +69,10 @@ def size_of(data):
 
 
 if __name__ == '__main__':
-    a = sys.argv[1:]
-    if not a or a[0].startswith('--'): print(__doc__); sys.exit(1)
-    out = a[0]; opt = lambda n, d=None: a[a.index('--' + n) + 1] if '--' + n in a and a.index('--' + n) + 1 < len(a) else d
+    a = sys.argv[1:]; listing = '--list' in a
+    if not a or (a[0].startswith('--') and not listing): print(__doc__); sys.exit(1)
+    out = None if a[0].startswith('--') else a[0]
+    opt = lambda n, d=None: a[a.index('--' + n) + 1] if '--' + n in a and a.index('--' + n) + 1 < len(a) else d
     tr = find_transcript(opt('session'), opt('project'))
     imgs = user_images(tr)
     if not imgs and time.time() - os.path.getmtime(tr) < 30:       # журнал пишется с небольшой задержкой — одна повторная попытка
@@ -72,12 +81,13 @@ if __name__ == '__main__':
     if '--all' not in a:
         last = max(i for i, _, _ in imgs); imgs = [x for x in imgs if x[0] == last]
     print(f'журнал {os.path.basename(tr)}: картинок {len(imgs)}')
-    if '--list' in a:
-        for n, (i, mt, d) in enumerate(imgs, 1): print(f'  сообщение {i}: {mt}, {len(d) // 1024} КБ, {size_of(d)}')
+    if listing:
+        for n, (i, mt, d) in enumerate(imgs, 1): print(f'  №{n} (сообщение {i}): {mt}, {len(d) // 1024} КБ, {size_of(d)}')
         sys.exit(0)
+    if out is None: raise SystemExit('нужна папка вывода (или --list)')
     os.makedirs(out, exist_ok=True)
     k = int(opt('start', 1))
-    for i, mt, d in imgs:
+    for n, (i, mt, d) in enumerate(imgs, 1):
         ext = EXT.get(mt, 'png')
         while os.path.exists(os.path.join(out, f'{k}.{ext}')): k += 1
-        p = os.path.join(out, f'{k}.{ext}'); open(p, 'wb').write(d); print(f'  {p}  ({len(d) // 1024} КБ, {size_of(d)})'); k += 1
+        p = os.path.join(out, f'{k}.{ext}'); open(p, 'wb').write(d); print(f'  №{n} → {p}  ({len(d) // 1024} КБ, {size_of(d)})'); k += 1
