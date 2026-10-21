@@ -138,7 +138,7 @@ const MAPS = ['winter', 'city', 'autumn'];
 // вылет на вертолёте (подвеска heli) — тоже на «Туманной топи»
 function wantMap(game, pmap, era, lo, evd, tside) {
   if (MAPS.includes(Q.get('map'))) return Q.get('map');
-  if (game === 'training') return tside === 'heli' ? 'autumn' : 'city'; // обучение «за вертолёт» — на «Туманной топи» (Mark 2026-10-21)
+  if (game === 'training') return tside === 'heli' ? 'autumn' : tside === 'matk' || tside === 'mdef' ? 'winter' : 'city'; // обучение: вертолёт — «Туманная топь», «Мульти-волна» — «Северный рубеж», как сами режимы (Mark 2026-10-21)
   if (game === 'air' && LOADOUTS[era] && LOADOUTS[era][lo] && LOADOUTS[era][lo].heli) return 'autumn';
   if (game === 'defense' && evd) return 'autumn'; // оборона события «Туманная топь» (event.js)
   if (game === 'photo') return pmap === 'city' || pmap === 'autumn' ? pmap : 'winter';

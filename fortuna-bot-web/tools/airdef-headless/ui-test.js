@@ -236,7 +236,7 @@ C.setup.era = 2; C.setup.game = 'defense';
 
 // 4. обучение — все уроки обеих веток и обеих сторон (сторона ПВО — из прошлого режима: аудит 2026-10-21 — за запад падал урок
 // с удалённым IRIS-T): каждый запускается и идёт 25 с (за запад — 12 с) без ошибок
-for (const ps of ['east', 'west']) for (const side of ['air', 'def', 'matk', 'mdef']) {
+for (const ps of ['east', 'west']) for (const side of ['air', 'def']) { // «Мульти-волна» — multi-train-test.js (зимняя карта)
   const n = C.lessons[side].length;
   for (let i = 0; i < n; i++) {
     C.toMenu(); frames(3);
@@ -276,30 +276,8 @@ runLesson('air', LI('air', 'mun'), (A) => { const T = C.ctrl.T; if (!T.d.bot) { 
 runLesson('def', LI('def', 'd_arm'), (D) => { const u = C.S.units[0]; if (u && C.S.wpns.some((w) => w.W.kind === 'arm' && !w.dead) && u.emit) C.S.setEmit(u, false); }, 200);
 // пушки: ствол в точку упреждения, огонь
 const LEAD = new THREE.Vector3();
-runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || !u.aimDir) return; const a = C.raid.alive()[0]; if (!a) return; C.S.gunLead(u, a, LEAD); u.aimDir.copy(LEAD).sub(u.pos).normalize(); if (D.st.op) D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, a.pos.distanceTo(u.pos) < u.S.rmax); }, 200);
-// «Мульти-волна»: бот делает то, что просит подсказка, — через состояние режима (как кнопки окна цели и настроек)
-{
-  const tg = (st, i = 0) => 'o' + st.targets[Math.min(i, st.targets.length - 1)].id;
-  const add = (D, k, n, key) => { const st = D.st; for (let j = 0; j < n; j++) { const i = (st.plan.n[k] = (st.plan.n[k] || 0) + 1) - 1; D.setTkey(k, i, key); if (st.phase === 'wave') { st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 0.05; } } };
-  const once = (T, tag, f) => { if (T.d['b' + tag]) return; T.d['b' + tag] = 1; f(); };
-  const go = (D) => { if (D.st.phase === 'plan') { D.st.edKey = null; D.st.tsel = null; D.startWave(); } D.st.timeK = 4; };
-  const B = {
-    m_scout: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) once(T, 1, () => add(D, 'shahed', 3, st.tsel)); else go(D); },
-    m_alloc: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) { once(T, 1, () => add(D, 'shahed', 2, st.tsel)); if (!T.d.k || T.d.k < T.t) { T.d.k = T.t + 0.2; add(D, 'kh555', 1, st.tsel); } } else if (T.s === 2) once(T, 2, () => { st.plan.n.shahed--; }); else if (T.s === 3) once(T, 3, () => { const o = C.S.objects.find((q) => !q.noTarget && !q.dead && 'o' + q.id !== st.tsel); st.tsel = 'o' + o.id; add(D, 'shahed', 2, st.tsel); }); },
-    m_unit: (D, T) => { const st = D.st, u = (i) => (st.plan.cfg.kalibr.units[i] = st.plan.cfg.kalibr.units[i] || {}); if (T.s === 0) st.tsel = tg(st); else if (T.s === 1) { st.edKey = 'kalibr'; st.edUnit = 0; } else if (T.s === 2) u(0).pts = [[4000, 3000], [2000, 5000]]; else if (T.s === 3) u(0).alt = 300; else if (T.s === 4) u(0).t = 280; else if (T.s === 5) st.edUnit = null; else if (T.s === 6) u(1).t = 290; },
-    m_carrier: (D, T) => { go(D); document.body.classList.add('evopen'); },
-    m_tbm: (D, T) => { const st = D.st; if (T.s === 0) once(T, 0, () => { st.tsel = tg(st); add(D, 'iskander', 1, st.tsel); }); else if (T.s === 1) st.edKey = 'iskander'; else if (T.s === 2) (st.plan.cfg.iskander.units[0] = st.plan.cfg.iskander.units[0] || {}).t = 60; else go(D); },
-    m_sam: (D, T) => { const st = D.st; if (T.s === 0) st.tsel = 'sam'; else if (T.s === 1) once(T, 1, () => add(D, 'kh55d', 3, 'sam')); else if (T.s === 2) once(T, 2, () => add(D, 'kh555', 3, tg(st))); else go(D); },
-    m_live: (D, T) => { const st = D.st; if (T.s === 0) go(D); else if (T.s === 1) once(T, 1, () => add(D, 'shahed', 1, tg(st))); else if (T.s === 2) once(T, 2, () => { st.plan.cfg.iskander.units[0].t = Math.ceil(C.ev.t + 1); C.ev.applyPlan(st.plan.cfg); });
-      else if (T.s === 3) { const u = C.S.units.find((q) => !q.dead && samKnown(q) && q.S.radar); if (u) once(T, 3, () => add(D, 'shahed', 1, 'u' + u.id)); } },
-    m_final: (D, T) => { const st = D.st; if (st.phase === 'plan') once(T, 0, () => { add(D, 'shahed', 8, tg(st)); add(D, 'kh55d', 2, 'sam'); add(D, 'kalibr', 3, tg(st, 1)); add(D, 'iskander', 1, tg(st, 2)); go(D); }); else st.timeK = 4; },
-    md_alarm: (D) => go(D),
-    md_drones: (D, T) => { if (D.st.phase === 'plan') once(T, 0, () => { for (const [k, key, dx] of [['gepard', 'tpp', 300], ['stinger', 'tpp', -300], ['gepard', 'oil', 300], ['stinger', 'oil', -300], ['gepard', 'tpp', 900], ['stinger', 'oil', 900]]) { const o = C.S.objects.find((q) => q.key === key); C.S.addUnit(k, o.x + dx, o.z + 200, {}); } C.syncUnits(); go(D); }); else D.st.timeK = 4; },
-    md_cruise: (D, T) => { if (D.st.phase === 'plan') once(T, 0, () => { const o = C.S.objects.find((q) => q.key === 'oil'); C.S.addUnit('gepard', o.x + 300, o.z + 200, {}); C.syncUnits(); go(D); }); else D.st.timeK = 4; },
-    md_tbm: (D, T) => { const st = D.st, u = C.S.units.find((q) => q.key === 'pac3'); if (T.s === 0) go(D); else if (T.s === 1) D.enterOp(u); else { st.timeK = 4; const w = C.S.wpns.find((q) => !q.dead && q.ev && q.W.kind === 'tbm' && q.vel.y < 0); if (w && st.op && u.desig !== w) D.designate(w); if (st.op && u.track) C.S.launch(u); } },
-    md_final: (D, T) => { if (D.st.phase === 'plan') once(T, 0, () => { for (const [k, key, dx] of [['pac3', 'tpp', 1500], ['nasams', 'oil', 900], ['gepard', 'tpp', 300], ['gepard', 'oil', 300], ['stinger', 'air', 300]]) { const o = C.S.objects.find((q) => q.key === key); if (o) C.S.addUnit(k, o.x + dx, o.z + 200, {}); } C.syncUnits(); go(D); }); else D.st.timeK = 4; },
-  };
-  for (const side of ['matk', 'mdef']) C.lessons[side].forEach((l, i) => runLesson(side, i, (D) => B[l.id](D, C.ctrl.T), 1800)); // поздние дроны (пуск до 5 мин) — волна идёт дольше
+runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || !u.aimDir) return; const a = C.raid.alive()[0]; if (!a) return; C.S.gunLead(u, a, LEAD); u.aimDir.copy(LEAD).sub(u.pos).normalize(); if (D.st.op) D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, a.pos.d// «Мульти-волна» — уроки на зимней карте: multi-train-test.js
+ (пуск до 5 мин) — волна идёт дольше
 }
 // «Съёмка»: самолёт (автопилот, пуски, камера у пилона и за оружием), ПВО против самолётов и «Мульти-волны», оружие волны
 { const key = (code) => C.ctrl.onKey({ code, repeat: false, preventDefault: noop }, true);
