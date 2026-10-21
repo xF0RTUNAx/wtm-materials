@@ -617,6 +617,60 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Sukhoi Su-33 Сухой Су-33",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/sukhoi-su-33-33-d80603a8a13b49bda90f19d80cac61d4",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_su33"
+  ]
+ },
+ {
+  "title": "Vietnam People Air Forces - Yak-130",
+  "author": "thientrung2004pr",
+  "url": "https://sketchfab.com/3d-models/vietnam-people-air-forces-yak-130-e94ec7950d4b4d378dbde1ae988f0914",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_yak130"
+  ]
+ },
+ {
+  "title": "M4",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_m4"
+  ]
+ },
+ {
+  "title": "Mikoyan-Gurevich MiG-19",
+  "author": "Tom Zimmermann",
+  "url": "https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig19"
+  ]
+ },
+ {
+  "title": "Mig17",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/mig17-672ef502523b4cbe9aced1e4252c0cca",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_mig17"
+  ]
+ },
+ {
+  "title": "T4",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/t4-1b9171a6210b427fb2493af3947b1c26",
+  "license": "CC-BY-4.0",
+  "files": [
+   "e_t4"
+  ]
+ },
+ {
   "title": "Sukhoi Su-27 \"Flanker\"",
   "author": "andertan",
   "url": "https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750",

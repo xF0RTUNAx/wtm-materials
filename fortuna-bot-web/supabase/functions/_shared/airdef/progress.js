@@ -33,6 +33,7 @@ export const PAIR = {
   e_su25: 'f16', e_su24: 'e_f4', e_su17: 'f18', su30: 'f18', e_su34: 'e_f15e', mig29: 'e_gripen', e_mig31: 'f18', e_su57: 'e_f35',
   e_mig23: 'e_f4', e_mig27: 'e_a10', e_tu22m2: 'e_f111', e_tornado: 'e_mig27', e_a10: 'e_mig27', e_f111: 'e_tu22m2', e_f15e: 'e_su34',
   e_mig21n: 'e_f5', e_su7b: 'e_f100', e_tu16: 'e_buccaneer', e_mig25: 'e_f4', e_f5: 'e_mig21n', e_f100: 'e_su7b', e_buccaneer: 'e_tu16', e_jaguar: 'e_mig27',
+  e_su33: 'f18', e_yak130: 'e_gripen', e_m4: 'e_vulcan', e_mig19: 'e_f100', e_mig17: 'e_hunter', e_t4: 'e_f111',
   e_harrier: 'e_yak38', e_vulcan: 'e_tu22m2', e_draken: 'e_mig21n', e_viggen: 'e_mig27', e_f117: 'e_su57', e_mirage: 'e_su24', e_rafale: 'su30', e_b2: 'e_tu22m2',
   e_yak38: 'e_harrier', e_il28: 'e_hunter', e_tu22: 'e_buccaneer', e_tu95: 'e_b52', e_su27: 'e_f18c', e_su35: 'e_typhoon', e_tu22m3: 'e_b1b', e_tu160: 'e_b2',
   e_hunter: 'e_il28', e_etendard: 'e_su17', e_mirage_f1: 'e_mig21n', e_f18c: 'e_su27', e_ea18g: 'e_mig31', e_b52: 'e_tu95', e_b1b: 'e_tu22m3', e_typhoon: 'e_su35',
@@ -56,9 +57,9 @@ export const PAIR = {
 // предыдущая исследована. Без предыдущей — начало линии (открыта, когда открыт её ранг). Развилка — у одной предыдущей несколько
 export const PARENT = {
   // авиация (Mark 2026-10-21 — схема без скачков рангов и цепочек одного ранга; родитель — предшественник по КБ или роли):
-  // Восток: Су-17М4★ → Су-25 → Су-30СМ · МиГ-23БН★ → МиГ-27К → МиГ-29 → МиГ-31БМ · МиГ-21бис → МиГ-25БМ → Су-27СМ → Су-35С ·
-  // Ил-28 → Су-24М → Су-34 → Су-57 (Су-24 сменил Ил-28) · Су-7БМК → Як-38М · Ту-22 → Ту-22М2 → Ту-22М3 → Ту-160, развилка Ту-22М2 → Ту-95МС · Ту-16
-  e_mig27: 'e_mig23', mig29: 'e_mig27', e_su24: 'e_il28', e_su34: 'e_su24', e_su57: 'e_su34', e_su25: 'e_su17', e_yak38: 'e_su7b',
+  // Восток: Су-17М4★ → Су-25 → Су-30СМ, развилка Су-25 → Як-130 · МиГ-23БН★ → МиГ-27К → МиГ-29 → МиГ-31БМ · МиГ-21бис → МиГ-25БМ → Су-27СМ → Су-35С ·
+  // Ил-28 → Су-24М → Су-34 → Су-57 (Су-24 сменил Ил-28) · Су-7БМК → Як-38М → Су-33, развилка Су-7БМК → Т-4 · Ту-22 → Ту-22М2 → Ту-22М3 → Ту-160, развилка Ту-22М2 → Ту-95МС · Ту-16, М-4, МиГ-19, МиГ-17 — отдельные начала линий (ранг I)
+  e_mig27: 'e_mig23', mig29: 'e_mig27', e_su24: 'e_il28', e_su34: 'e_su24', e_su57: 'e_su34', e_su25: 'e_su17', e_yak38: 'e_su7b', e_su33: 'e_yak38', e_yak130: 'e_su25', e_t4: 'e_su7b',
   e_mig25: 'e_mig21n', e_mig31: 'mig29', e_su27: 'e_mig25', su30: 'e_su25', e_su35: 'e_su27',
   e_tu22m2: 'e_tu22', e_tu22m3: 'e_tu22m2', e_tu95: 'e_tu22m2', e_tu160: 'e_tu22m3',
   // Запад: F-4E★ → F/A-18C → F/A-18E → EA-18G · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale ·

@@ -215,7 +215,8 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
   e_buccaneer: 'Buccaneer S.2B', e_harrier: 'Harrier GR.3', e_mirage: 'Mirage 2000D', e_rafale: 'Rafale', e_b2: 'B-2A',
   e_yak38: 'Як-38М', e_il28: 'Ил-28', e_tu22: 'Ту-22', e_tu95: 'Ту-95МС', e_su27: 'Су-27СМ', e_su35: 'Су-35С', e_hunter: 'Hunter FGA.9', e_etendard: 'Super Étendard',
   e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_ea18g: 'EA-18G', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon',
-  e_vulcan: 'Vulcan B.2', e_draken: 'Saab 35 Draken', e_viggen: 'Saab AJ 37 Viggen' };
+  e_vulcan: 'Vulcan B.2', e_draken: 'Saab 35 Draken', e_viggen: 'Saab AJ 37 Viggen',
+  e_su33: 'Су-33', e_yak130: 'Як-130', e_m4: 'М-4', e_mig19: 'МиГ-19', e_mig17: 'МиГ-17', e_t4: 'Т-4' };
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },
@@ -252,6 +253,13 @@ export const LOADOUTS = {
   { side: 'west', plane: 'h_uh1', heli: true, name: 'UH-1H: Hydra 70 ×2 блока', items: [['hydra', 2]] },
     // пятая партия (2026-10-21) — в самом конце: номера прежних подвесок (и вертолётных) не меняются
     { side: 'west', plane: 'e_draken', name: 'Saab 35 Draken: Mk 82 ×4 + Hydra ×2', items: [['mk82', 4], ['hydra', 2]] },
+    // шестая партия (2026-10-21, Восток) — снова в самом конце: М-4 (бомбы в отсеке, как у Ил-28), МиГ-19 и МиГ-17 (два подкрыльевых узла)
+    { side: 'east', plane: 'e_m4', name: 'М-4: ФАБ-1000 ×4 + ФАБ-500 ×4 (в отсеке)', items: [['fab1000', 4], ['fab500', 4]] },
+    { side: 'east', plane: 'e_m4', name: 'М-4: ФАБ-500 ×8 (в отсеке)', items: [['fab500', 8]] },
+    { side: 'east', plane: 'e_mig19', name: 'МиГ-19: ФАБ-250 ×2', items: [['fab250', 2]] },
+    { side: 'east', plane: 'e_mig19', name: 'МиГ-19: ОФАБ-250 ×2', items: [['ofab250', 2]] },
+    { side: 'east', plane: 'e_mig17', name: 'МиГ-17: ФАБ-250 ×2', items: [['fab250', 2]] },
+    { side: 'east', plane: 'e_mig17', name: 'МиГ-17: ОФАБ-250 ×2', items: [['ofab250', 2]] },
   ],
   2: [
     { side: 'east', plane: 'e_su24', name: 'Лазерные: КАБ-500Л + Х-58', items: [['kab500l', 4], ['kh58', 2]], pod: true },
@@ -283,6 +291,8 @@ export const LOADOUTS = {
     // вертолёты 2026-10-21 (manilov.ap): Ми-8МТВ — блоки С-8 на фермах (в игре на вертолёте 2 точки НАР — внутренние пилоны), UH-60 — вооружённый, Hellfire на внешних пилонах ESSS
     { side: 'east', plane: 'h_mi8', heli: true, name: 'Ми-8МТВ: С-8 ×4 блока', items: [['s8', 4]] },
     { side: 'west', plane: 'h_uh60', heli: true, name: 'UH-60 DAP: Hellfire ×4 + Hydra ×2 блока', items: [['hellfire', 4], ['hydra', 2]], pod: true },
+    // шестая партия (2026-10-21): Т-4 «Сотка» — бомбы в отсеке (в проекте несла ракеты Х-45; в игре — свободнопадающие)
+    { side: 'east', plane: 'e_t4', name: 'Т-4: ФАБ-1000 ×2 + ФАБ-500 ×2 (в отсеке)', items: [['fab1000', 2], ['fab500', 2]] },
   ],
 };
 
@@ -645,6 +655,11 @@ LOADOUTS[3] = [
   { side: 'east', plane: 'h_mi28', heli: true, name: 'Ми-28Н: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
   { side: 'west', plane: 'h_ah64', heli: true, name: 'AH-64D: Hellfire ×8 + Hydra ×2 блока', items: [['hellfire', 8], ['hydra', 2]], pod: true },
   { side: 'east', plane: 'h_ka50', heli: true, name: 'Ка-50: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
+  // шестая партия (2026-10-21): палубный Су-33 и учебно-боевой Як-130
+  { side: 'east', plane: 'e_su33', name: 'Су-33: ФАБ-500 ×6', items: [['fab500', 6]] },
+  { side: 'east', plane: 'e_su33', name: 'Су-33: ОФАБ-250 ×4 + С-8 ×2', items: [['ofab250', 4], ['s8', 2]] },
+  { side: 'east', plane: 'e_yak130', name: 'Як-130: ФАБ-500 ×2 + С-8 ×2', items: [['fab500', 2], ['s8', 2]] },
+  { side: 'east', plane: 'e_yak130', name: 'Як-130: КАБ-500Кр ×2', items: [['kab500kr', 2]], pod: true },
 ];
 LOADOUTS[4] = [
   { side: 'east', plane: 'e_su34', name: 'УМПК + Х-59М + Х-31П + помехи', items: [['umpk', 2], ['kh59m', 1], ['kh31p', 2], ['ecm_e', 1], ['decoy_e', 1]], pod: true },

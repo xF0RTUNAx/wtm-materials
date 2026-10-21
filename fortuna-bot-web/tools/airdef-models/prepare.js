@@ -158,6 +158,17 @@ const CONFIG = {
   e_viggen: { src: `${DL}/ja37.glb`, scale: 1.0, fwd: [-0.6659, 0.7461], rulesIn: 'game', tex: () => 1024, centerX: true, // ось — x −0,9 (до центровки): подфюзеляжный бак и его пилоны — долой
     groups: (c) => (c.ctr[1] < -0.7 && Math.abs(c.ctr[0] + 0.9) < 1.0 && c.ctr[2] > -2.4 && c.ctr[2] < -0.9 && Math.max(...c.size) > 2.0 ? null : LS(c)) },
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
+  // ── шестая партия 2026-10-21 (CC BY 4.0, Восток): andertan — Су-33, U.SSCIFI — Як-130, manilov.ap — М-4, МиГ-17 и Т-4, Tom Zimmermann — МиГ-19; без упрощения, текстуры 1024 ──
+  e_su33: { src: `${DL}/d80603a8a13b49bda90f19d80cac61d4.glb`, scale: 1.45, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true, groups: LS },
+  e_yak130: { src: `${DL}/vietnam_people_air_forces_-_yak-130.glb`, scale: 10.1, nose: '-z', rulesIn: 'game', tex: () => 1024, centerX: true, texVf: 'delogo=x=240:y=20:w=80:h=44,delogo=x=411:y=20:w=80:h=44,delogo=x=713:y=45:w=52:h=64,delogo=x=358:y=420:w=54:h=70,delogo=x=713:y=520:w=52:h=64,delogo=x=358:y=876:w=54:h=70' /* вьетнамские кокарды (шесть: фюзеляж/киль, крыло сверху и снизу) закрашены по окружению, как логотип */, pickMesh: /^(?!.*(attach_|pylons_))/, groups: LS },
+  e_m4: { src: `${DL}/65059c25184c48c5b6a1b9ac27d34db6.glb`, scale: 0.95, fwd: [-0.7009, 0.7133], rulesIn: 'game', tex: () => 1024, centerX: true, // ось — x 1,32 (с масштабом): без шасси (тележки, стойки, створки ниш — по оси; стойки и колёса на концах крыла; обтекатели концов — оставить)
+    groups: (c) => { const d = Math.abs(c.ctr[0] - 1.32), m = Math.max(...c.size); return m < 2.5 && ((d < 1.3 && c.ctr[1] < -0.65 && c.ctr[2] > -9 && c.ctr[2] < 11) || (d > 20 && c.ctr[1] < -1.6)) || (d < 1.3 && c.ctr[1] < -1.5 && m < 6 && Math.abs(c.ctr[2]) > 6 && Math.abs(c.ctr[2]) < 12) ? null : LS(c); },
+    addBoxes: [{ c: [0, -5.04, 7.6], s: [1.8, 0.1, 5.1] }, { c: [0, -5.04, -8.9], s: [1.8, 0.1, 4.8] }].map((b) => ({ ...b, paint: 'well' })) /* ниши шасси в брюхе (чёрные провалы) закрыты заглушками */, colors: { '#well$': [0.5, 0.53, 0.48] } },
+  e_mig19: { src: `${DL}/mikoyan-gurevich_mig-19.glb`, scale: 0.4514, nose: '-z', rulesIn: 'game', tex: () => 1024, centerX: true, dropMat: /^aams$/, groups: LS },
+  e_mig17: { src: `${DL}/mig17.glb`, scale: 1.01, fwd: [-0.7314, 0.6820], rulesIn: 'game', tex: () => 1024, centerX: true, dropMat: /^cmj/, // МиГ-17 — manilov.ap; пилот (cmj*) долой; ось — x −1,0: без шасси (материалы 4, 5, 24–26: стойки, колёса, створки) и подкрыльевых баков (20–22; пушки в носу — оставить)
+    groups: (c) => ([4, 5, 24, 25, 26].includes(c.mat) || ([20, 21, 22].includes(c.mat) && Math.abs(c.ctr[0] + 1.0) > 1.4) ? null : LS(c)),
+    addBoxes: [{ c: [1.5, -0.88, -1.9], s: [1.4, 0.08, 1.0], mirror: true, paint: 'well' }] /* ниши основных стоек в крыле (после шасси — чёрные провалы): заглушки в цвет низа крыла */, colors: { '#well$': [0.42, 0.45, 0.42] } },
+  e_t4: { src: `${DL}/1b9171a6210b427fb2493af3947b1c26.glb`, scale: 0.97, nose: '-x', rulesIn: 'game', tex: () => 1024, centerX: true, groups: LS },
   e_su27: { src: `${DL}/sukhoi_su-27_flanker.glb`, scale: 21.9 / 30.61, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
   e_su35: { src: `${DL}/sukhoi_su-35_flanker-e__-35.glb`, scale: 21.9 / 10.15, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
   e_etendard: { src: `${DL}/super-etendard.glb`, scale: 14.31 / 14.29, nose: '-x', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.15 || (c.ctr[1] < -0.8 && Math.abs(Math.abs(c.ctr[0]) - 1.7) < 0.2)) && Math.max(...c.size) < 3 ? null : LS(c)) /* шасси и его стойки */ },
@@ -826,7 +837,10 @@ async function prepare(name, views) {
     for (const [nx, ny, nz] of [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]]) {
       const u = nx ? [0, 1, 0] : [1, 0, 0], v = nx ? [0, 0, 1] : ny ? [0, 0, 1] : [0, 1, 0], h = [hx, hy, hz], base = M.pos.length / 3;
       for (const [a, c2] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) { const q = [0, 1, 2].map((d) => (nx ? [nx, 0, 0] : ny ? [0, ny, 0] : [0, 0, nz])[d] * h[d] + u[d] * a * h[d] + v[d] * c2 * h[d]); M.pos.push(sg * q[0] + b.c[0] * sg, q[1] + b.c[1], q[2] + b.c[2]); M.nor.push(sg * nx, ny, nz); }
-      M.idx.push(base, base + 1, base + 2, base, base + 2, base + 3);
+      // обход вершин — против часовой стрелки, если смотреть снаружи (у «зеркальной» половины и у граней −x / +y он выходил наоборот: коробка выглядела вывернутой)
+      const P0 = (k) => M.pos.slice((base + k) * 3, (base + k) * 3 + 3), A = P0(0), B = P0(1), Cc = P0(2), e1 = B.map((v, d) => v - A[d]), e2 = Cc.map((v, d) => v - A[d]);
+      const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]], fl = cr[0] * sg * nx + cr[1] * ny + cr[2] * nz < 0;
+      M.idx.push(...(fl ? [base, base + 2, base + 1, base, base + 3, base + 2] : [base, base + 1, base + 2, base, base + 2, base + 3]));
     }
     byMat.set(`box${bi}${sg}`, M);
   }
