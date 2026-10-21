@@ -234,16 +234,18 @@ for (const role of ['atk', 'def']) {
 }
 C.setup.era = 2; C.setup.game = 'defense';
 
-// 4. обучение — все уроки обеих сторон: каждый запускается и идёт 25 с без ошибок
-for (const side of ['air', 'def', 'matk', 'mdef']) {
+// 4. обучение — все уроки обеих веток и обеих сторон (сторона ПВО — из прошлого режима: аудит 2026-10-21 — за запад падал урок
+// с удалённым IRIS-T): каждый запускается и идёт 25 с (за запад — 12 с) без ошибок
+for (const ps of ['east', 'west']) for (const side of ['air', 'def', 'matk', 'mdef']) {
   const n = C.lessons[side].length;
   for (let i = 0; i < n; i++) {
     C.toMenu(); frames(3);
-    C.setup.game = 'training'; C.setup.tside = side; C.setup.tl = i; C.start('training');
-    const ok = frames(30 * 25);
-    check(`урок ${side} ${i + 1}: ${(C.hint && document.getElementById('hint').innerHTML || '').replace(/<[^>]+>/g, '').slice(0, 70)}`, ok);
+    C.setup.side = ps; C.setup.game = 'training'; C.setup.tside = side; C.setup.tl = i; C.start('training');
+    const ok = frames(30 * (ps === 'east' ? 25 : 12));
+    check(`урок ${side} ${i + 1} (ПВО ${ps}): ${(C.hint && document.getElementById('hint').innerHTML || '').replace(/<[^>]+>/g, '').slice(0, 70)}`, ok);
   }
 }
+C.setup.side = 'east';
 // 5. уроки проходятся: «бот» делает то, что просит подсказка
 const passed = (side, i) => (C.ctrl && C.ctrl.T && C.ctrl.T.finished) || (JSON.parse(store.fortuna_airdef_stats || '{}').lessons || {})[C.lessons[side][i].id] === 1;
 function runLesson(side, i, bot, sec) {
