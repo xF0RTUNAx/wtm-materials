@@ -714,7 +714,7 @@ export function createFx(scene, P) {
       const x = p ? p.x : w.pos.x - w.dir.x * 2, y = p ? p.y : w.pos.y - w.dir.y * 2, z = p ? p.z : w.pos.z - w.dir.z * 2, k = p && w.W.vis ? Math.min(1, (w.W.kind === 'rocket' ? narVis(w.key, w.W).r : w.W.vis.r) * 2.5) : 1;
       const W = w.W, kind = W.kind === 'tbm' ? 'tbm' : W.kind, mo = motorOf(w.key, kind, false), r = kind === 'rocket' ? narVis(w.key, W).r : W.vis ? W.vis.r : 0.15; // у НАР — калибр ракеты, а не блока
       PL.add(w, x, y, z, mo, r);
-      if (mo.a > 0.1) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.5 : 1), 3 * k, kind === 'rocket' ? 1.2 : 3, 4, 0.3, 0.2); // НАР — мелкие клубы (залп 4–20 ракет: большие шары закрывали вертолёт)
+      if (mo.a > 0.1) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.4 : 1), 3 * k, kind === 'rocket' ? 0.4 : 3, kind === 'rocket' ? 3 : 4, 0.3, 0.2); // НАР — мелкие клубы, ≤ 1,5 м (залп 4–20 ракет: большие шары закрывали вертолёт; Mark 2026-10-22 — всё ещё велики)
     },
     // ЛТЦ — каждый кадр, пока горит (спрайт с мерцанием и дымная лента — cmfx.js); пул — самые свежие 64 (32 на слабых)
     flareTick(f, dt) { CMF.tick(f, dt); },

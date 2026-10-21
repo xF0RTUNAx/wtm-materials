@@ -21,16 +21,17 @@ function texs() { // текстуры — при первом факеле ил�
 
 // a — плотность дыма у сопла, c — цвет дыма, w — ширина у сопла (× радиус), g — рост ширины (м/√с на 1 м радиуса + база),
 // life — жизнь (с) = base + k·r, fl — факел: [r, g, b] оттенок, br — яркость, len — длина (× радиус) стартового / маршевого
+// Жизнь ленты (Mark 2026-10-22): короче полёта ракеты — дальние участки следа тают, пока ракета летит; плотность падает и по мере расплывания (шейдер)
 export const MOTOR = { // ширина у сопла и рост — по снимкам пусков: след С-300 сразу ≈ 4 м, через 10 с — 15–20 м; ПЗРК ≈ 1 м → 5 м
-  solid: { a: 0.8, c: [0.9, 0.9, 0.88], w: 15, g: [1.2, 12], life: [10, 80], fl: [1, 0.78, 0.5], br: 1.0, len: [26, 13] },
-  lowsmoke: { a: 0.32, c: [0.93, 0.93, 0.93], w: 11, g: [0.9, 9], life: [6, 36], fl: [1, 0.86, 0.68], br: 1.0, len: [22, 12] },
-  manpads: { a: 0.75, c: [0.82, 0.82, 0.8], w: 24, g: [0.7, 14], life: [7, 50], fl: [1, 0.92, 0.8], br: 1.1, len: [20, 14] },
-  rocket: { a: 0.62, c: [0.9, 0.9, 0.88], w: 6, g: [0.35, 9], life: [4, 40], fl: [1, 0.86, 0.6], br: 1.0, len: [18, 18] }, // НАР 70–80 мм (r ≈ 0,04): у сопла ≈ 0,2 м, за 2 с — ≈ 1 м (Mark 2026-10-21: след был велик для такой ракеты); факел ≈ 1 м
-  atgm: { a: 0.42, c: [0.8, 0.8, 0.78], w: 14, g: [0.5, 9], life: [4, 35], fl: [1, 0.8, 0.55], br: 0.9, len: [12, 12] },
-  liquid: { a: 0.16, c: [0.7, 0.54, 0.42], w: 9, g: [0.8, 7], life: [6, 24], fl: [1, 0.62, 0.38], br: 0.8, len: [20, 16] },
-  ramjet: { a: 0.05, c: [0.86, 0.86, 0.86], w: 6, g: [0.5, 4], life: [3, 12], fl: [0.6, 0.72, 1], br: 0.35, len: [8, 8] },
-  jet: { a: 0.05, c: [0.62, 0.62, 0.62], w: 5, g: [0.3, 3], life: [2, 10], fl: [1, 0.7, 0.45], br: 0.35, len: [5, 5] },
-  flare: { a: 0.5, c: [0.96, 0.96, 0.95], w: 1.5, g: [0.35, 0], life: [3, 0], fl: [1, 0.9, 0.7], br: 0.5, len: [1, 1] }, // ЛТЦ (магний): густой белый дым, лента ≈ 1 м, живёт ≈ 3 с (cmfx.js; r = 0,5)
+  solid: { a: 0.8, c: [0.9, 0.9, 0.88], w: 15, g: [1.2, 12], life: [6, 45], fl: [1, 0.78, 0.5], br: 1.0, len: [26, 13] },
+  lowsmoke: { a: 0.32, c: [0.93, 0.93, 0.93], w: 11, g: [0.9, 9], life: [4, 22], fl: [1, 0.86, 0.68], br: 1.0, len: [22, 12] },
+  manpads: { a: 0.75, c: [0.82, 0.82, 0.8], w: 24, g: [0.7, 14], life: [5, 30], fl: [1, 0.92, 0.8], br: 1.1, len: [20, 14] },
+  rocket: { a: 0.55, c: [0.9, 0.9, 0.88], w: 5, g: [0.2, 6], life: [3, 25], fl: [1, 0.86, 0.6], br: 1.0, len: [14, 14] }, // НАР 70–80 мм (r ≈ 0,04): у сопла ≈ 0,2 м, за 2 с — ≈ 0,8 м (Mark 2026-10-22: всё ещё велик); факел ≈ 0,8 м
+  atgm: { a: 0.42, c: [0.8, 0.8, 0.78], w: 14, g: [0.5, 9], life: [3, 20], fl: [1, 0.8, 0.55], br: 0.9, len: [12, 12] },
+  liquid: { a: 0.16, c: [0.7, 0.54, 0.42], w: 9, g: [0.8, 7], life: [4, 14], fl: [1, 0.62, 0.38], br: 0.8, len: [20, 16] },
+  ramjet: { a: 0.05, c: [0.86, 0.86, 0.86], w: 6, g: [0.5, 4], life: [2, 8], fl: [0.6, 0.72, 1], br: 0.35, len: [8, 8] },
+  jet: { a: 0.05, c: [0.62, 0.62, 0.62], w: 5, g: [0.3, 3], life: [2, 6], fl: [1, 0.7, 0.45], br: 0.35, len: [5, 5] },
+  flare: { a: 0.5, c: [0.96, 0.96, 0.95], w: 1.2, g: [0.45, 0], life: [3.5, 0], fl: [1, 0.9, 0.7], br: 0.5, len: [1, 1], ramp: 0.1 }, // ЛТЦ (магний): густой белый дым, лента ≈ 1 м, живёт ≈ 3,5 с, густеет за 0,1 с — под гаснущим хвостом пламени (0,4 с давали разрыв в десятки метров — Mark) (cmfx.js; r = 0,5)
 };
 // по ключу комплекса / оружия (что не указано — по виду: ракета ЗРК и УР «воздух — земля» — смесевое твёрдое)
 const BY_KEY = {
@@ -99,15 +100,17 @@ export function makeFlame(group, z, r, motor = MOTOR.solid) {
   glow.position.z = z; glow.renderOrder = 5; glow.userData.fx = true; group.add(mesh); group.add(glow);
   mesh.visible = glow.visible = false; // до запуска двигателя не видно (ракета на пилоне — без свечения)
   if (flameLayer) { mesh.layers.set(flameLayer); glow.layers.set(flameLayer); }
-  let mot = motor;
+  let mot = motor, t0 = 0;
   return {
     // k: 0 — двигатель не работает, 1 — маршевый, 2 — стартовый; rr — радиус сопла; y — высота (на высоте струя шире и длиннее)
     owner: null, // ключ дымной ленты (ракета ЗРК / оружие): пока факел горит, конец ленты — в срезе сопла, а не в последней точке следа (на 600 м/с точки — через 24 м)
     set(k, rr = r, y = 0) {
       const was = mesh.visible; mesh.visible = glow.visible = k > 0;
       if (!k) { if (was && this.owner && live) live.finish(this.owner); return; }
-      const e = 1 - air(y), f = 0.9 + Math.random() * 0.2, w = rr * (k > 1 ? 3.2 : 2.4) * (1 + 1.6 * e), L = rr * mot.len[k > 1 ? 0 : 1] * 1.5 * (1 + 0.8 * e) * f;
-      mesh.scale.set(w, 1, L); glow.scale.setScalar(rr * (k > 1 ? 5 : 3.6) * (1 + e) * (0.9 + Math.random() * 0.2)); glow.material.opacity = Math.min(0.8, 0.4 * mot.br + 0.1);
+      // розжиг (Mark 2026-10-22): струя не сразу во всю длину — за ≈ 0,35 с (быстро в начале), свечение у сопла — с первого кадра, но меньше
+      if (!was) t0 = frameT; const x = Math.min(1, (frameT - t0) / 30 / 0.35), ig = 1 - (1 - x) * (1 - x);
+      const e = 1 - air(y), f = 0.9 + Math.random() * 0.2, w = rr * (k > 1 ? 3.2 : 2.4) * (1 + 1.6 * e) * (0.45 + 0.55 * ig), L = rr * mot.len[k > 1 ? 0 : 1] * 1.5 * (1 + 0.8 * e) * f * (0.12 + 0.88 * ig);
+      mesh.scale.set(w, 1, L); glow.scale.setScalar(rr * (k > 1 ? 5 : 3.6) * (1 + e) * (0.9 + Math.random() * 0.2) * (0.5 + 0.5 * ig)); glow.material.opacity = Math.min(0.8, 0.4 * mot.br + 0.1) * (0.6 + 0.4 * ig);
       if (this.owner && live) { group.updateMatrixWorld(true); mesh.getWorldPosition(WP); live.tip(this.owner, WP.x, WP.y, WP.z); }
     },
     motor(m) { if (m === mot) return; mot = m; mesh.material = flameMat(m); glow.material.color.setRGB(...m.fl); },
@@ -135,7 +138,9 @@ const SM_V = `#include <common>
     vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv;
     float d = -mv.z; vF = 1.0 - exp(-fogDensity * fogDensity * d * d);
     // у сопла дым появляется не сразу (горячие газы прозрачны: aRamp — время, за которое ракета уходит от факела), к концу жизни тает; лента «ребром» к камере — бледнее (клубы-частицы её дополняют)
-    vAl = aA.w * smoothstep(0.0, aRamp, age) * pow(1.0 - f, 1.4) * mix(0.35, 1.0, smoothstep(0.08, 0.5, sl));
+    // расплываясь, дым редеет: после первой секунды плотность ∝ (ширина в 1 с / ширина сейчас)^0,6 — дальние участки следа тают постепенно
+    float dil = pow(clamp((aA.z + aB.x) / (aA.z + aB.x * sqrt(max(age, 1.0))), 0.0, 1.0), 0.6);
+    vAl = aA.w * smoothstep(0.0, aRamp, age) * pow(1.0 - f, 1.4) * dil * mix(0.35, 1.0, smoothstep(0.08, 0.5, sl));
     float wt = aA.z + aB.x * sqrt(max(age, 0.15));                            // масштаб узора по длине: у сопла не растёт (иначе u·dw/w² при больших u рвёт текстуру в гребёнку)
     vUv = vec2(u / max(wt, 0.6) * 0.42 + aSeed * 7.0, aA.y * 0.5 + 0.5); vAge = age; vCol = aCol;
     #include <logdepthbuf_vertex>
@@ -187,7 +192,7 @@ export function createPlumes(scene, P = {}) {
       if (L && time - L.t < 0.02) return;
       const e = 1 - air(y), rr = Math.max(0.03, r), dt = L ? time - L.t : 0, sp = L && dt > 1e-3 ? Math.hypot(x - L.x, y - L.y, z - L.z) / dt : 0;
       // дым начинается сразу за факелом: время, за которое ракета проходит длину факела (на 600 м/с — десятки мм, на 100 м/с — до 0,035 с)
-      const ramp = sp > 5 ? Math.min(0.035, Math.max(0.004, rr * m.len[0] * 1.2 / sp)) : 0.035;
+      const ramp = m.ramp || (sp > 5 ? Math.min(0.035, Math.max(0.004, rr * m.len[0] * 1.2 / sp)) : 0.035); // m.ramp — свой набор плотности (ЛТЦ: дым густеет за хвостом пламени)
       const p = { x, y, z, t: time, w: Math.max(0.15, rr * m.w) * (1 + 1.2 * e), g: (m.g[0] + rr * m.g[1]) * (1 + 0.6 * e), life: (m.life[0] + rr * m.life[1]) * (0.7 + 0.3 * (1 - e)),
         a: Math.min(1, m.a * Math.min(1.2, 0.8 + rr * 2)) * (1 - 0.45 * e), rise: 0.25 + rr * 1.5, c: m.c, u: L ? L.u + Math.hypot(x - L.x, y - L.y, z - L.z) : 0, ramp };
       T.pts.push(p); T.end = Math.max(T.end, time + p.life); T.tip = null;

@@ -24,7 +24,7 @@ export function createSound() {
   //   2026-10-21): далёкий взрыв, винты Ту-95, пуск Patriot, пуск и взрыв «Искандера»
   // третья партия (mk3.py; лицензия не подтверждена — файлов может не быть, тогда синтез): двигатель F-16 и форсаж, тоны ГСН AIM-9, отстрел ЛТЦ
   for (const [k, f] of [['engIdle', 'eng_idle.wav'], ['engAB', 'eng_ab.wav'], ['abOn', 'ab_on.mp3'], ['seekSearch', 'seek_search.wav'], ['seekTone', 'seek_tone.wav'], ['seekLock', 'seek_lock.wav'], ['flareRec', 'flare.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261022s`);
-  A.setEngineLoops({ idle: 'engIdle', ab: 'engAB' });
+  A.setEngineLoops({ idle: 'engIdle', ab: 'engAB', tprop: 'tu95' }); // tprop — свой Ту-95: та же запись винтов, что у голосов
   A.setVoiceLoops({ heli: ['heliLo', 'heliHi', 'heliFar'], jet: ['jetFront', 'jetRear'], tprop: ['tu95'], tbm: ['rocketFar'] });
   const delayOf = (d) => Math.min(2.5, d / 343);
   let sirenEnd = 0, sirenV = null; // до какого времени звучит сирена воздушной тревоги
@@ -59,14 +59,17 @@ export function createSound() {
     explosion(d, size = 1, kind) {
       if (kind === 'tbm' && d < 3000 && A.sample('iskBoom', 1.1 * near(d, 1500), Math.min(4, d / 343), 0.96 + Math.random() * 0.06, 600 + 12000 * Math.exp(-d / 1500), 0.3)) { A.tone('sine', 45, 20, 1.6, 0.7 * near(d, 1500), Math.min(4, d / 343), 0.3); return; } // взрыв «Искандера» (запись)
       const dl0 = Math.min(4, d / 343), far = Math.min(1, Math.max(0, (d - 600) / 1800)); // вдали — записанный раскат, вблизи — синтез
+      // малый заряд (НАР: 2–4 кг ВВ, R = 11 → size 0,55; ложные цели) — без глубокого дальнего раската и инфранизкого толчка (Mark 2026-10-22)
+      const small = size < 0.6;
       const fs = Math.min(1.8, 0.6 + size * 0.22), sv = Math.min(1.3, 2600 / (d + 1400)) * fs * (0.25 + 0.75 * far);
-      const played = A.sample('boomFar', sv, dl0, 1.08 - Math.min(0.3, size * 0.04) + Math.random() * 0.06, 400 + 6000 * Math.exp(-d / 2500), 0.35);
+      const played = !small && A.sample('boomFar', sv, dl0, 1.08 - Math.min(0.3, size * 0.04) + Math.random() * 0.06, 400 + 6000 * Math.exp(-d / 2500), 0.35);
       const dl = dl0, k = Math.max(0.03, near(d, 1200)) * fs * (played ? 1 - 0.7 * far : 1), wet = 0.35 + 0.5 * (1 - k), cut = 300 + 4500 * Math.exp(-d / 1100), big = Math.min(2.5, size / 2);
       if (d < 3000) A.noise('white', 0.035, 0.6 * k, 'highpass', 900, 0.6, dl, 0, false, 0.002);
-      A.tone('sine', 62, 18, 0.7 + big * 0.4, 0.95 * k, dl, 0.2);
-      A.tone('triangle', 95, 30, 0.35, 0.4 * k, dl, 0.1);
-      A.noise('brown', 1.6 + big * 0.9, 0.85 * k, 'lowpass', Math.min(cut, 700), 0.6, dl, wet, false, 0.004);
+      if (!small) A.tone('sine', 62, 18, 0.7 + big * 0.4, 0.95 * k, dl, 0.2);
+      A.tone('triangle', small ? 140 : 95, small ? 60 : 30, small ? 0.18 : 0.35, 0.4 * k, dl, 0.1);
+      A.noise('brown', small ? 0.6 : 1.6 + big * 0.9, 0.85 * k, 'lowpass', Math.min(cut, small ? 1400 : 700), 0.6, dl, wet, false, 0.004);
       A.noise('pink', 1.1 + big * 0.5, 0.42 * k, 'lowpass', cut, 0.5, dl + 0.01, wet, false, 0.006);
+      if (small) return; // эхо и раскат — только у больших
       A.noise('brown', 3.5 + big * 1.5, 0.4 * k, 'lowpass', 110, 0.7, dl + 0.15, 0.9, false, 0.35); // раскат
       A.noise('pink', 1.4, 0.13 * k, 'lowpass', 380, 0.5, dl + 0.45 + d / 4000, 1); // эхо от домов
       A.noise('pink', 1.8, 0.08 * k, 'lowpass', 260, 0.5, dl + 1.1 + d / 3000, 1);

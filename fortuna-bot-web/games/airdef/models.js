@@ -39,8 +39,8 @@ const META = {
     nozzles: [V(0, -0.65, 7.43)], nr: 0.33, pod: null }, // МиГ-27К («Кайра» встроена)
   e_tu22m2: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-6.34, -3.89, 5.06), V(-1.27, -2.71, -3.2), V(-1.27, -2.71, -0.5), V(-1.27, -2.71, 2.2)]),
     nozzles: [V(-0.96, -2.67, 18.75), V(0.96, -2.67, 18.75)], nr: 0.72, pod: null }, // Ту-22М2 (сопла по срезу стволов: были выше на 1,4 м, радиус 0,4 → 0,72)
-  e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-6.25, -0.86, -0.09), V(-5.1, -0.99, -0.04), V(-3.8, -1.15, -0.15), V(-2.94, -0.61, -0.06)]), // по низу пилонов модели (были на 0,45 м выше — в крыле)
-    nozzles: [V(-1.46, 0.32, 4.99), V(1.46, 0.32, 4.99)], nr: 0.25, pod: V(1.68, -1.59, -0.3), dry: true }, // A-10A (сопла по срезу гондол: y 1,1 → 0,32; контейнер — на пилоне у корня крыла, был в крыле)
+  e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-6.25, -0.86, -0.09), V(-5.1, -0.99, -0.04), V(-3.8, -1.15, -0.15), V(-1.68, -1.28, -0.3)]), // по низу пилонов модели (были на 0,45 м выше — в крыле; внутренняя была в гондоле шасси x 2,94)
+    nozzles: [V(-1.46, 0.32, 4.99), V(1.46, 0.32, 4.99)], nr: 0.25, pod: V(-0.57, -1.63, -0.14), dry: true }, // A-10A (сопла по срезу гондол: y 1,1 → 0,32; контейнер — на подфюзеляжном пилоне, был в крыле)
   e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-2.93, -1.18, 0.46), V(-1.75, -1.59, -1.5), V(-1.75, -1.59, 0.3), V(-1.75, -1.05, 1.8)]),
     nozzles: [V(-0.68, -1.12, 8.31), V(0.68, -1.12, 8.31)], nr: 0.3, pod: V(0.9, -1.9, -2.5), matte: true }, // F-15E (LANTIRN под воздухозаборником)
   // ── 2026-10-19, третья партия manilov.ap: точки подвески — по низу крыла (лучи по треугольникам) и пилонам автора ──
@@ -325,6 +325,25 @@ function camoMat(mat, cm) {
   };
   mat.customProgramCacheKey = () => (cm.tex ? 'camoT' : 'camo');
 }
+// оружие (Mark 2026-10-22: свои модели выглядели глянцевым пластиком): краска «в эксплуатации» — шейдером по координатам точки модели
+// (м): пятна разного масштаба, потёки вдоль корпуса (ось z модели), блик по краске неровный; глянец — как у полуматовой эмали
+const WEAR_GLSL = `varying vec3 vWearP;
+float wearH(vec3 p) { p = fract(p * 0.3183099 + 0.1); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float wearV(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(mix(wearH(i), wearH(i + vec3(1, 0, 0)), f.x), mix(wearH(i + vec3(0, 1, 0)), wearH(i + vec3(1, 1, 0)), f.x), f.y),
+    mix(mix(wearH(i + vec3(0, 0, 1)), wearH(i + vec3(1, 0, 1)), f.x), mix(wearH(i + vec3(0, 1, 1)), wearH(i + vec3(1, 1, 1)), f.x), f.y), f.z); }`;
+function wearMat(mat) {
+  mat.onBeforeCompile = (sh) => {
+    sh.vertexShader = 'varying vec3 vWearP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvWearP = position;');
+    sh.fragmentShader = WEAR_GLSL + '\n' + sh.fragmentShader
+      .replace('#include <color_fragment>', '#include <color_fragment>\n' +
+        'float wM = wearV(vWearP * 7.0) * 0.5 + wearV(vWearP * 19.0) * 0.3 + wearV(vWearP * 53.0) * 0.2;\n' + // пятна краски
+        'float wS = wearV(vec3(vWearP.x * 37.0, vWearP.y * 37.0, vWearP.z * 2.2));\n' + // потёки вдоль корпуса
+        'diffuseColor.rgb *= 0.88 + 0.22 * wM - 0.1 * smoothstep(0.6, 0.92, wS);\n')
+      .replace('#include <specularmap_fragment>', '#include <specularmap_fragment>\nspecularStrength *= 0.35 + 0.9 * wearV(vWearP * 11.0 + 3.1);\n');
+  };
+  mat.customProgramCacheKey = () => 'wear';
+}
 const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x222222, shininess: 20 });
 async function load(name, base) {
   const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
@@ -359,6 +378,7 @@ async function load(name, base) {
     if (rc != null) { mat.color.setHex(rc); mat.map = null; }
     else if (!map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» — в нейтральный тёмный
     if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo); // узор — шейдером (tex — по краске текстуры)
+    else if ((MM.weapon || MM.samMissile || /^w_nar_/.test(name)) && !glass) { wearMat(mat); if (!matte) { mat.specular.setHex(0x262626); mat.shininess = 24; } } // оружие — краска с потёртостями, полуматовая
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
   }
   // винты (части prop*, Ту-95): ось — вдоль самолёта через центр ступицы; соосные ряды (чётный / нечётный номер) — в разные

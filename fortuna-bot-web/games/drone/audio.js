@@ -268,10 +268,12 @@ export function createAudio() {
     const r = rpm, rear = s.rear, front = 1 - rear, sup = s.sup, ab = s.ab, tp = !!s.tprop;
     // записи двигателя (малый газ — тон растёт с оборотами; форсаж — свой рёв поверх): синтез при них тише
     let rec = false;
-    if (engLoops && !tp) for (const k of ['idle', 'ab']) { if (!EL[k] && SAMPLES[engLoops[k]] && SAMPLES[engLoops[k]].buf) { const s0 = ctx.createBufferSource(); s0.buffer = SAMPLES[engLoops[k]].buf; s0.loop = true; const g = gain(0); chain(s0, g, engBus); s0.start(0, Math.random() * s0.buffer.duration); EL[k] = { s0, g }; } }
+    // турбовинтовой (tprop) — своя запись винтов (та же, что у голосов Ту-95), синтез соосных винтов под ней тише
+    if (engLoops) for (const k of tp ? ['tprop'] : ['idle', 'ab']) { if (!EL[k] && SAMPLES[engLoops[k]] && SAMPLES[engLoops[k]].buf) { const s0 = ctx.createBufferSource(); s0.buffer = SAMPLES[engLoops[k]].buf; s0.loop = true; const g = gain(0); chain(s0, g, engBus); s0.start(0, Math.random() * s0.buffer.duration); EL[k] = { s0, g }; } }
     if (EL.idle) { rec = true; const k = clamp((r - 0.55) / 0.45, 0, 1); set(EL.idle.g.gain, tp ? 0 : (0.05 + 0.06 * k) * (ab ? 0.55 : 1) * (0.75 + 0.25 * front), 0.15); set(EL.idle.s0.playbackRate, 0.86 + 0.42 * k, 0.25); }
     if (EL.ab) set(EL.ab.g.gain, ab && !tp && !sup ? 0.13 * (0.6 + 0.4 * rear) : 0, ab ? 0.12 : 0.3);
-    set(E.tpG.gain, tp ? 0.035 + 0.06 * r : 0, 0.2);
+    if (EL.tprop) { set(EL.tprop.g.gain, tp ? (0.1 + 0.08 * r) * (0.8 + 0.2 * front) : 0, 0.2); set(EL.tprop.s0.playbackRate, 0.88 + 0.2 * r, 0.3); }
+    set(E.tpG.gain, tp ? (0.035 + 0.06 * r) * (EL.tprop ? 0.3 : 1) : 0, 0.2);
     if (tp) { const ff = 46 + 22 * r; set(E.tpO[0].frequency, ff, 0.2); set(E.tpO[1].frequency, ff * 1.5, 0.2); set(E.tpO[2].frequency, ff * 2.02, 0.2); }
     set(engBus.gain, s.lobby ? 3 : 4, 0.2); // слои намеренно «тихие» по отдельности — общий уровень задаёт шина
     // рёв и гул: растут с оборотами, форсаж опускает спектр и добавляет «давление»
