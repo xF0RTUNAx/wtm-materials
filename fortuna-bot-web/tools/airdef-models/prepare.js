@@ -9,7 +9,10 @@ import { readGlb, flatten, components, bbox, accessor } from './glb.js';
 import { render, writePpm } from './raster.js';
 import { MeshoptSimplifier } from 'npm:meshoptimizer@0.21.0';
 
-const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads`;
+// исходники моделей — ~/Downloads/Воздушное превосходство/Модели (Mark 2026-10-21: порядок в загрузках); свежескачанные, ещё не
+// разложенные, ищутся прямо в ~/Downloads под тем же именем
+const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads/Воздушное превосходство/Модели`;
+const srcOf = (p) => { try { Deno.statSync(p); return p; } catch { const q = p.replace(DL, `${HOME}/Downloads`); try { Deno.statSync(q); return q; } catch { return p; } } };
 // перекраска: синие пиксели (синий заметно больше красного и зелёного) → оливковый той же яркости, остальное как было
 const BLUE = 'gt(b(X,Y),r(X,Y)+25)*gt(b(X,Y),g(X,Y)+10)', LUM = '(0.3*r(X,Y)+0.59*g(X,Y)+0.11*b(X,Y))';
 const OLIVE = `format=gbrp,geq=r='if(${BLUE},min(255,${LUM}*1.35),r(X,Y))':g='if(${BLUE},min(255,${LUM}*1.4),g(X,Y))':b='if(${BLUE},${LUM}*0.9,b(X,Y))'`;
@@ -650,7 +653,7 @@ function skinPrims(g, prims) {
   }
 }
 async function prepare(name, views) {
-  const cfg = CONFIG[name], g = readGlb(Deno.readFileSync(cfg.src)), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => (!cfg.pickMesh || cfg.pickMesh.test(p.path)) && !(cfg.dropMat && cfg.dropMat.test(((J.materials || [])[p.material] || {}).name || ''))) /* dropMat — материалы долой (линии рёбер SketchUp) */, ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
+  const cfg = CONFIG[name], g = readGlb(Deno.readFileSync(srcOf(cfg.src))), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => (!cfg.pickMesh || cfg.pickMesh.test(p.path)) && !(cfg.dropMat && cfg.dropMat.test(((J.materials || [])[p.material] || {}).name || ''))) /* dropMat — материалы долой (линии рёбер SketchUp) */, ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
   if (cfg.skin) skinPrims(g, prims);
   // rulesIn: 'game' — правила частей (groups / remove), hinge и просмотр — в осях игры (метры, нос в −Z, без центровки)
   if (cfg.rulesIn === 'game') for (const p of prims) {
@@ -1085,7 +1088,7 @@ if (Deno.args[0] === '--credits') {
     try { Deno.statSync(`${dir}${name}.glb`); } catch { continue; } // в игре только собранные
     const ck = cfg.src + (cfg.credit ? '|' + cfg.credit : ''); // credit — пометка об адаптации: отдельная запись титров (menu.js выводит её в названии)
     let e = bySrc.get(ck);
-    if (!e) { const J = readGlb(Deno.readFileSync(cfg.src)).json, x = (J.asset && J.asset.extras) || {}; bySrc.set(ck, e = { title: (x.title || '') + (cfg.credit ? ` (${cfg.credit})` : ''), author: (x.author || '').replace(/ \(.*$/, ''), url: x.source || '', license: (x.license || '').replace(/ \(.*$/, ''), files: [] }); }
+    if (!e) { const J = readGlb(Deno.readFileSync(srcOf(cfg.src))).json, x = (J.asset && J.asset.extras) || {}; bySrc.set(ck, e = { title: (x.title || '') + (cfg.credit ? ` (${cfg.credit})` : ''), author: (x.author || '').replace(/ \(.*$/, ''), url: x.source || '', license: (x.license || '').replace(/ \(.*$/, ''), files: [] }); }
     e.files.push(name);
   }
   const list = [...bySrc.values()];
