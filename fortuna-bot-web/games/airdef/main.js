@@ -8,6 +8,7 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
+import { trDom, tr, trIf } from './i18n.js?v=20261022r';
 import { ktxInit } from './ktx.js?v=20261022r';
 import { buildCity, CITY } from './city.js?v=20261022r';
 import { buildWinter } from './map-winter.js?v=20261022r';
@@ -47,6 +48,7 @@ import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
+trDom(document.body); // язык: статичный HTML страницы — до того, как меню и бой допишут свой текст (i18n.js)
 if (Q.get('test') === '1') addEventListener('error', (e) => (window.__errs = window.__errs || []).push(e.error ? e.error.stack : e.message)); // для проверки: стеки ошибок
 const IS_TOUCH = Q.get('touch') === '1' || matchMedia('(pointer: coarse)').matches;
 document.body.classList.toggle('coarse', IS_TOUCH);

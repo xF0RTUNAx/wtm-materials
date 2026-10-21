@@ -1,5 +1,6 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
+import { LANG, LANGS, setLang, tr } from './i18n.js?v=20261022r';
 import { CITY, ZONE } from './city.js?v=20261022r';
 import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022r';
 import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022r';
@@ -291,7 +292,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <button class="btn" id="sApplyGfx">Применить (перезапуск)</button></div></details>`;
   }
   function renderSet() {
-    $('tab-set').innerHTML = `<div class="cat-h">Графика</div><div class="gfx-row">${Object.entries(PRESETS).map(([k, p]) => `<button class="gfx ${k === C.gfxKey ? 'on' : ''}" data-gfx="${k}"><b>${p.name}</b></button>`).join('')}</div>
+    $('tab-set').innerHTML = `<div class="cat-h">Язык · Language</div><div class="seg" data-seg="lang">${LANGS.map(([k, l]) => `<button data-v="${k}" class="${k === LANG ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <div class="cat-h">Графика</div><div class="gfx-row">${Object.entries(PRESETS).map(([k, p]) => `<button class="gfx ${k === C.gfxKey ? 'on' : ''}" data-gfx="${k}"><b>${p.name}</b></button>`).join('')}</div>
       ${C.gfxKey === 'custom' ? customPanel() : ''}
       <label class="chk"><input type="checkbox" id="sPerf" ${C.perfHud ? 'checked' : ''}> счётчик производительности в бою</label>
       <p class="hint">Видеочип: ${C.gpuName}</p>
@@ -354,6 +356,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       C.GO[k] = k === 'dyn' || k === 'fx' || k === 'props' ? num === 1 : Number.isFinite(num) ? num : v;
       ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); renderSet(); return;
     }
+    const lg = e.target.closest('[data-seg="lang"] [data-v]'); if (lg) { if (lg.dataset.v !== LANG) { setLang(lg.dataset.v); const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.href; } return; } // язык — перезагрузка (Mark 2026-10-21)
     if (e.target.id === 'sApplyGfx') { location.reload(); return; }
     if (g) { ls.set('fortuna_airdef_gfx', g.dataset.gfx); const u = new URL(location.href); u.searchParams.delete('gfx'); location.href = u.href; }
     if (e.target.id === 'sLayout') openLayoutEditor();
