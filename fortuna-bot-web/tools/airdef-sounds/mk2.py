@@ -7,7 +7,7 @@
 import numpy as np, subprocess, sys, wave
 from scipy.signal import butter, sosfiltfilt
 OUT, PEND = sys.argv[1], sys.argv[2]
-DL = '/Users/mark./Downloads/'; MV = '/Users/mark./Movies/4K Video Downloader+/'
+DL = '/Users/mark./Downloads/Воздушное превосходство/Звуки/'; MV = '/Users/mark./Movies/4K Video Downloader+/'
 def load(fn, sr):
     r = subprocess.run(['ffmpeg', '-v', 'error', '-i', fn, '-ac', '2', '-ar', str(sr), '-f', 'f32le', '-'], capture_output=True, check=True)
     return np.frombuffer(r.stdout, np.float32).reshape(-1, 2).mean(1).astype(np.float64)

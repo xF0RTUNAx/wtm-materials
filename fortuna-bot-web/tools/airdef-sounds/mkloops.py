@@ -2,7 +2,7 @@
 # (длина кратна периоду хлопков/выстрелов, конец перетекает в начало), нормировка громкости
 import numpy as np, subprocess, sys, wave
 from scipy.signal import butter, sosfiltfilt
-DL = '/Users/mark./Downloads/'; OUT = sys.argv[1]
+DL = '/Users/mark./Downloads/Воздушное превосходство/Звуки/'; OUT = sys.argv[1]
 def load(fn, sr):
     r = subprocess.run(['ffmpeg', '-v', 'error', '-i', DL + fn, '-ac', '2', '-ar', str(sr), '-f', 'f32le', '-'], capture_output=True, check=True)
     x = np.frombuffer(r.stdout, np.float32).reshape(-1, 2); return x.mean(1).astype(np.float64)

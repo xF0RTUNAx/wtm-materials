@@ -1,9 +1,9 @@
 // Панорамы неба (Poly Haven, CC0) → games/airdef/sky/<имя>.jpg (и <имя>_hi.jpg): только верхняя полусфера (низ — земля),
 // солнце заменено средним кольца вокруг (диск и ореол рисует шейдер неба), мягкое сжатие ярких мест, гамма 2,2.
 //   deno run -A tools/airdef-models/sky.js [имя…]      (без имён — все)
-// Исходники — ~/Downloads/<панорама>_<разрешение>.hdr (берётся самое большое из 8k / 4k / 2k). Печатает u солнца (доля
+// Исходники — ~/Downloads/Воздушное превосходство/Небо (HDRI)/<панорама>_<разрешение>.hdr (берётся самое большое из 8k / 4k / 2k). Печатает u солнца (доля
 // ширины) и его высоту: u — в WEATHERS[…].hdri.u (drone/world.js), высота — для el погоды.
-const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads`, OUT = new URL('../../games/airdef/sky/', import.meta.url).pathname;
+const HOME = Deno.env.get('HOME'), DL = `${HOME}/Downloads/Воздушное превосходство/Небо (HDRI)`, OUT = new URL('../../games/airdef/sky/', import.meta.url).pathname;
 // k — экспозиция, rs — радиус «вычищаемого» солнца, ° (0 — не трогать: луна и звёзды остаются)
 const SKIES = {
   day: { src: 'kloofendal_48d_partly_cloudy_puresky', k: 1.6, rs: 4 },
