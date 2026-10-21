@@ -483,7 +483,10 @@ function decoyMesh() {
 // временную»); у ракет с двигателем — факел из среза сопла
 function relMesh(w) {
   if (w.ev) return evMesh(w);
-  if (w.W.kind === 'rocket') { const g = narMesh(w.key, w.W, wMat); mountWpnFlame(w, g, false); return g; } // НАР — одна ракета (калибр 70–80 мм), а не блок с пилона
+  if (w.W.kind === 'rocket') { // НАР — одна ракета (калибр 70–80 мм), а не блок с пилона: своя модель из Blender (w_nar_<ключ>), пока грузится — простая фигура
+    const own = anyModel('w_nar_' + w.key); if (!own) wantModel('w_nar_' + w.key);
+    const g = own || narMesh(w.key, w.W, wMat); mountWpnFlame(w, g, false); return g;
+  }
   const g = weaponMesh(w.key, w.W, weaponGeo, wMat); if (weaponPending(w.key)) { g.userData.stub = true; wantWeapon(w.key); }
   mountWpnFlame(w, g, false);
   return g;
@@ -795,7 +798,7 @@ function orient() {
 addEventListener('resize', orient); addEventListener('orientationchange', () => setTimeout(orient, 120)); orient();
 
 // ═════════════ Кадр ═════════════
-let last = performance.now(), lastDraw = 0, last3D = 0, ms3D = 0, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0;
+let last = performance.now(), lastDraw = 0, last3D = 0, ms3D = 0, lastRaf = 0, rafEma = 16.7, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0;
 const msWin = [], dr = { scale: perf.scale, calm: 0, prev: 0, before: 0, hold: 0, miss: 0 };
 const pf = { cpu: 0, n: 0, cpuS: 0, calls: 0, tris: 0 };
 C.perfHud = ls.get('fortuna_airdef_perfhud') === '1';
@@ -830,8 +833,12 @@ function frame(now) {
   const idle = !!(cc && cc.idle && cc.idle()); // фон меню — готовые кадры: 3D не рисуется
   // Mark 2026-10-21: на телефоне вне полёта ограничение 30 к/с — только для 3D (нагрев и батарея — от видеочипа), а бой, экран боя и
   // кнопки (перезарядка, таймеры) — каждый кадр, без рывков
-  const capMs = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / 60 : 0; // телефон — не больше 60 (экраны 90/120 Гц)
-  const cap3D = !capMs && IS_TOUCH && !fly ? 1000 / 30 : 0;
+  // частота экрана (сглаженный интервал requestAnimationFrame): предел 60 к/с — только на экранах ≥ 100 Гц (на 90 Гц порог «кадр не
+  // раньше 14,7 мс» пропускал каждый второй кадр — 45 к/с); 3D вне полёта — 30 к/с независимо от предела интерфейса (ревью 2026-10-21)
+  const rd = now - lastRaf; lastRaf = now; if (rd > 0 && rd < 100) rafEma += (rd - rafEma) * 0.05;
+  const capUI = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : 0;
+  const capMs = capUI || (IS_TOUCH && rafEma < 10 ? 1000 / 60 : 0);
+  const cap3D = !capUI && IS_TOUCH && !fly ? 1000 / 30 : 0;
   if (capMs && now - lastDraw < capMs - 2) return;
   const ms = now - lastDraw; lastDraw = now;
   const draw3D = !cap3D || now - last3D >= cap3D - 2; if (draw3D) { ms3D = now - last3D; last3D = now; }

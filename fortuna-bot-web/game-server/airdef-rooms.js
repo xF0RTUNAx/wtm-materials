@@ -187,7 +187,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
   function nextWave(r) {
     r.wave++; r.state = 'plan'; r.t = 0; r.phaseT = PLAN_T; r.waveRes = { downs: 0, downsSead: 0, unitKills: 0, radarKills: 0, value0K: r.valueK };
     for (const p of r.players.values()) {
-      p.ready = !!p.bot; p.choice = null; p.paid = null; p.craft = null; p.plane = null; p.lives = p.team === 'air' ? O.RESPAWNS[r.wave - 1] + 1 + (r.lead === 'pvo' ? 1 : 0) : null; // отстающей авиации — +1 вылет p.out = false; p.respT = 0;
+      p.ready = !!p.bot; p.choice = null; p.paid = null; p.craft = null; p.plane = null; p.lives = p.team === 'air' ? O.RESPAWNS[r.wave - 1] + 1 + (r.lead === 'pvo' ? 1 : 0) : null; p.out = false; p.respT = 0; // отстающей авиации — +1 вылет; out/respT — заново каждую волну (комментарий раньше съедал этот код: ушедший за край не возрождался)
       p.limit = r.wave === 1 && p.team === 'pvo' ? { top: O.LIMIT1.top, mid: O.LIMIT1.mid } : null;
     }
     // ПВО между волнами: уничтоженные комплексы убираем, живые перезаряжаются
@@ -215,7 +215,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       const tgt = r.targets[p.id % r.targets.length] || r.targets[0];
       const role = L.items.some(([k]) => AG[k].kind === 'arm') ? 'sead' : L.items.some(([k]) => AG[k].kind === 'cruise') ? 'cruise' : L.items.some(([k]) => AG[k].kind === 'agm' || AG[k].kind === 'tvb') ? 'tv' : 'bomber';
       const a = r.raid.spawn(role, tgt, p.bearing, 0, R);
-      a.load = L.items.map(([k, n]) => ({ key: k, n })); a.owner = p.id; a.plane = L.plane;
+      a.load = L.items.map(([k, n]) => ({ key: k, n })); a.owner = p.id; a.plane = L.plane; a.cmFlare = cmOf(a.plane, r.sideAir).flare ? a.cmFlare || 30 : 0; // ЛТЦ — по машине бота (cmKey берёт plane), а не по raidPlane
       p.plane = a; announce(r, a);
       return;
     }

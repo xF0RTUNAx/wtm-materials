@@ -64,7 +64,7 @@ async function makeWpn(e, spread = 0) {
   let g = null, note = 'модель игры';
   const Mo = W.model;
   if (Mo) { M.wantModel(Mo.glb); await wait(() => M.anyModel(Mo.glb)); g = Mo.part ? evPart(Mo.glb, Mo.part) : M.anyModel(Mo.glb); }
-  if (!g && W.kind === 'rocket') { g = UR.narMesh(key, W, wMat); note = 'одна ракета (НАР)'; } // как relMesh в main.js: в полёте — ракета, а не блок
+  if (!g && W.kind === 'rocket') { M.wantModel('w_nar_' + key); await wait(() => M.anyModel('w_nar_' + key), 4000); g = M.anyModel('w_nar_' + key); note = g ? 'одна ракета (НАР) — своя модель' : 'одна ракета (НАР)'; if (!g) g = UR.narMesh(key, W, wMat); } // как relMesh в main.js
   if (!g) { M.wantWeapon(key); await wait(() => !M.weaponPending(key)); const pend = M.weaponPending(key); g = M.weaponMesh(key, W, UR.weaponGeo, wMat); if (pend || g.isMesh) note = 'временная фигура'; if (pend) g.userData.stub = true; }
   g.traverse((q) => { if (q.isMesh) q.castShadow = false; });
   const bb = new THREE.Box3().setFromObject(g); UR.mountWpnFlame(w, g, ev); sc.add(g);

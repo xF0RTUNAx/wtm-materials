@@ -813,5 +813,4 @@ export default {
   'ЗЕМЛЯ': 'GROUND', 'Земля': 'Ground', 'Самолёт': 'Aircraft', 'пожар': 'fire',
   'Разведка': 'Recon', 'Дроны': 'Drones', 'Носители': 'Carriers', 'Пусковые': 'Launchers',
   'Баллистика в полёте': 'Ballistic in flight', 'Крылатые в полёте': 'Cruise missiles in flight',
-  'Мульти-волна': 'Multi-Wave',
 };

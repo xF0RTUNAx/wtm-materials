@@ -67,7 +67,7 @@ const SIDE_V = `#include <common>
     vec3 base = (M * vec4(0.0, 0.0, position.z, 1.0)).xyz;
     float wid = length((M * vec4(1.0, 0.0, 0.0, 0.0)).xyz);
     vec3 vd = normalize(-base), an = normalize(ax);
-    vec3 side = normalize(cross(an, vd));                                 // поперёк оси и луча зрения
+    vec3 cr = cross(an, vd), side = cr / max(length(cr), 1e-5);          // поперёк оси и луча зрения (строго по оси — без NaN, билборд и так погашен)
     float ca = abs(dot(an, vd));
     vFace = 1.0 - smoothstep(0.90, 0.995, ca);                           // вдоль оси билборд вырождается — гаснет, светит торцевой спрайт
     vec3 X = normalize(M[0].xyz), Y = normalize(M[1].xyz);
@@ -182,7 +182,7 @@ export function makeJetFlame(group, nozzles, r = 1, key = '', opts = {}) {
     const side = new THREE.Mesh(sideGeo, addMat({ vertexShader: SIDE_V, fragmentShader: SIDE_F, uniforms: { map: U(flameTex), uFlat: U(new THREE.Vector2(flat[0], flat[1])), uA: U(new THREE.Vector4()), uB: U(new THREE.Vector4()), uWA: U(0), uWB: U(0), uFr: U(0), uBr: U(1), uMaxW: U(1), uLen: U(1), uTint: U(new THREE.Vector3(...tint)) } }));
     const disc = new THREE.Mesh(quadGeo, addMat({ vertexShader: DISC_V, fragmentShader: DISC_F, uniforms: { map: U(glowTex), uRow: U(row), uLv: U(0), uBr: U(1), uTint: U(new THREE.Vector3(1, 1, 1)) } }));
     const glow = new THREE.Mesh(quadGeo, addMat({ vertexShader: GLOW_V, fragmentShader: GLOW_F, uniforms: { map: U(glowTex), uRow: U(3 + row), uFr: U(0), uRear: U(0), uFlash: U(0), uSize: U(1), uTint: U(new THREE.Vector3(...tint)) } }));
-    for (const m of [side, disc, glow]) { m.renderOrder = 5; m.frustumCulled = false; m.userData.fx = true; m.visible = false; root.add(m); }
+    for (const m of [side, disc, glow]) { m.renderOrder = 5; m.frustumCulled = m !== glow; m.userData.fx = true; m.visible = false; root.add(m); }   // раскал и факел — с отсечением по сфере (ширина билборда ≤ масштаба сетки), торцевой спрайт растягивается в шейдере — без
     disc.position.z = -0.14 * Dm; disc.scale.set(3 * Rn * flat[0], 3 * Rn * flat[1], 1);  // охват ячейки — ±1,5 радиуса, чуть внутри среза
     glow.position.z = 0.28 * Dm;
     group.add(root);
@@ -194,7 +194,7 @@ export function makeJetFlame(group, nozzles, r = 1, key = '', opts = {}) {
     layer(l) { for (const n of nz) for (const m of [n.side, n.disc, n.glow]) m.layers.set(l); },
     state: () => ({ heat, abv, flash }),
     parts: () => nz.flatMap((n) => [{ type: 'side', mesh: n.side }, { type: 'disc', mesh: n.disc }, { type: 'glow', mesh: n.glow }]),   // стенд: показать / скрыть по слоям
-    dispose() { live.delete(ref); for (const n of nz) { group.remove(n.root); for (const m of [n.side, n.disc, n.glow]) m.material.dispose(); } },
+    dispose() { if (ref) live.delete(ref); for (const n of nz) { group.remove(n.root); for (const m of [n.side, n.disc, n.glow]) m.material.dispose(); } },
     update(thr = 0.85, ab = false, dt = 1 / 60) {
       if (!nz.length) return;
       T += dt; thr = clamp(thr);
@@ -239,6 +239,6 @@ export function makeJetFlame(group, nozzles, r = 1, key = '', opts = {}) {
   };
   api.layer(opts.layer != null ? opts.layer : layer || 0);
   if (live.size > 64) for (const w of live) if (!w.deref()) live.delete(w);
-  const ref = new WeakRef(api); live.add(ref);
+  const ref = typeof WeakRef === 'function' ? new WeakRef(api) : null; if (ref) live.add(ref);   // старые браузеры без WeakRef: пламя живёт, setJetLayer его не видит
   return api;
 }

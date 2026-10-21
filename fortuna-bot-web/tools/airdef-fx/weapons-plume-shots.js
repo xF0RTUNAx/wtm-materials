@@ -10,7 +10,7 @@ const p = await b.newPage(); await p.setViewport({ width: 1900, height: 1300 });
 p.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warn') console.log('  [страница]', m.text()); });
 p.on('response', (x) => { if (x.status() >= 400) console.log('  [404]', x.url()); });
 p.on('pageerror', (e) => console.log('  [ошибка]', e.message));
-await p.goto(`http://localhost:8937/fortuna-bot-web/tools/airdef-fx/weapons-plume.html?${q}`, { waitUntil: 'load' });
+await p.goto(`http://localhost:${Deno.env.get("PORT") || 8935}/fortuna-bot-web/tools/airdef-fx/weapons-plume.html?${q}`, { waitUntil: 'load' });
 await p.waitForFunction(() => window.__ready, { timeout: 120000, polling: 300 });
 const n = await p.evaluate(() => window.sheets), names = await p.evaluate(() => window.names);
 console.log(`листов: ${n}, оружия: ${names.length}`);
