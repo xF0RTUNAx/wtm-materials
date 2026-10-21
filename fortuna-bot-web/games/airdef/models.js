@@ -107,7 +107,7 @@ const META = {
   e_t4: { side: 'east', cls: 'strike', lazy: true, internal: true, stations: mirror([V(-0.4, -1.5, -4.0), V(-0.4, -1.5, -1.5), V(-0.4, -1.5, 1.0), V(-0.4, -1.5, 3.5)]),
     nozzles: [V(-2.04, -3.17, 16.1), V(-0.68, -3.17, 16.1), V(0.68, -3.17, 16.1), V(2.04, -3.17, 16.1)], nr: 0.62, pod: null }, // Т-4 «Сотка» (бомбы — в отсеке; четыре РД-36-41 в пакете под фюзеляжем)
   e_etendard: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.64, -1.49, 1.85, 0.3), V(-1.92, -1.48, 1.23, 0.3), V(-0.4, -1.6, 0.0, 0.17), V(-0.4, -1.6, 1.8, 0.17)]),
-    nozzles: [V(0, -0.82, 6.2)], nr: 0.35, pod: V(0.4, -1.7, -1.0), dry: true }, // Super Étendard (ATLIS под фюзеляжем; сопло по срезу: y −0,57 → −0,82, z 6,3 → 6,2)
+    nozzles: [V(0, -0.9, 6.2)], nr: 0.32, pod: V(0.4, -1.7, -1.0), dry: true }, // Super Étendard (ATLIS под фюзеляжем; сопло по срезу: y −0,57 → −0,82, z 6,3 → 6,2)
   e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
     nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
   e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.3, -1.25, 2.7, 0.3), V(-3.42, -1.54, 1.36), V(-2.24, -1.47, 1.16), V(-0.6, -1.6, 1.0, 0.15)]),
