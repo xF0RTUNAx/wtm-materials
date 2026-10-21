@@ -123,9 +123,13 @@ export const researched = (P, id) => !!NODE[id] && (NODE[id].start || P.res.incl
 // паритет: ранг N+1 ветки открыт обеим сторонам, когда у каждой стороны куплено ≥ 2 единиц ранга N сверх стартовых
 // (если столько нет — все); внутри ранга одна сторона обгоняет другую не больше чем на GAP купленных
 export const NEED = 2, GAP = 2;
+// единицы, добавленные после деплоя 2026-10-20 (Mark 2026-10-21, вариант «Б»): в требовании «сколько купить» не считаются — у игроков
+// уже открытые ранги не закрываются; купленные новинки в счёт идут. Новые единицы впредь дописывать сюда же
+const LATE = new Set(['air:e_vulcan', 'air:e_draken', 'air:e_viggen', 'wpn:bomb1000', 'heli:h_mi8', 'heli:h_uh60', 'heli:h_ka50', 'heli:h_rah66',
+  'air:e_su33', 'air:e_m4', 'air:e_mig19', 'air:e_mig17', 'air:e_t4', 'air:e_mig29k']);
 function rankNeed(P, branch, side, rank) {
   const extra = nodesOf(branch, side, rank).filter((n) => !n.start);
-  const need = Math.min(NEED, extra.length), got = extra.filter((n) => P.own.includes(n.id)).length;
+  const need = Math.min(NEED, extra.filter((n) => !LATE.has(n.id)).length), got = extra.filter((n) => P.own.includes(n.id)).length;
   return { need, got, left: extra.filter((n) => !P.own.includes(n.id)) };
 }
 export function rankOpen(P, branch, rank) {
