@@ -69,10 +69,14 @@ export const PARENT = {
   e_tornado: 'e_buccaneer', e_typhoon: 'e_gripen', e_harrier: 'e_hunter', e_vulcan: 'e_hunter',
   e_etendard: 'e_mirage_f1', e_mirage: 'e_etendard', e_rafale: 'e_mirage',
   // вооружение
-  kab500l: 'fab1000', kab500kr: 'fab500', // ФАБ-500★ → ФАБ-1000 → КАБ-500Л → КАБ-500С → УМПК; развилки ФАБ-500★ → ФАБ-250 → ФАБ-100 / ОФАБ-250 и → КАБ-500Кр
-  kab500s: 'kab500l', umpk: 'kab500s', kh58: 'kh28', kh31p: 'kh58', kh29t: 'kh28', kh25ml: 'kh28', kh59m: 'kh29t', kh59mk2: 'kh59m', decoy_e: 'ecm_e',
-  fab100: 'fab250', fab250: 'fab500', ofab250: 'fab250', fab1000: 'fab500', gbu24: 'gbu10', gbu57: 'gbu31', kh55: 'kh29t', kh101: 'kh59m',
-  bomb1000: 'mk82', gbu10: 'mk82', gbu12: 'mk82', gbu31: 'gbu12', gbu39: 'gbu31', agm88: 'agm45', aargm: 'agm88', agm65b: 'agm45', jassm: 'agm65b', mald: 'ecm_w',
+  // (Mark 2026-10-21 — линии по ролям, как в авиации; калибр растёт по линии): Восток — ФАБ-500★ → ФАБ-1000 → КАБ-500Л → КАБ-500С → УМПК и ФАБ-500★ → КАБ-500Кр;
+  // малые калибры ФАБ-100 → ФАБ-250 → ОФАБ-250 (ранг I); охота за ПВО Х-28★ → Х-58 → Х-31П и Х-58 → РЭБ → ложная цель; Х-28★ → Х-29Т → Х-59М → Х-59МК2 / Х-101,
+  // Х-28★ → Х-25МЛ, Х-28★ → Х-55. Запад — Mk 82★ → 1000 lb, → GBU-10 → GBU-24, → GBU-12 → GBU-31 → GBU-39 / GBU-57; AGM-45★ → HARM → РЭБ → AARGM / MALD;
+  // AGM-45★ → AGM-65B → Storm Shadow → JASSM
+  kab500l: 'fab1000', kab500kr: 'fab500',
+  kab500s: 'kab500l', umpk: 'kab500s', kh58: 'kh28', kh31p: 'kh58', kh29t: 'kh28', kh25ml: 'kh28', kh59m: 'kh29t', kh59mk2: 'kh59m', ecm_e: 'kh58', decoy_e: 'ecm_e',
+  fab250: 'fab100', ofab250: 'fab250', fab1000: 'fab500', gbu24: 'gbu10', gbu57: 'gbu31', kh55: 'kh28', kh101: 'kh59m',
+  bomb1000: 'mk82', gbu10: 'mk82', gbu12: 'mk82', gbu31: 'gbu12', gbu39: 'gbu31', agm88: 'agm45', ecm_w: 'agm88', aargm: 'ecm_w', agm65b: 'agm45', jassm: 'storm', mald: 'ecm_w',
   // ПВО
   s300: 's75', s400: 's300', kub: 's125', buk: 'kub', bukm3: 'buk', zu23: 'zsu234', phalanx: 'm163', osa: 'strela1', tor: 'osa', torm2: 'tor', tunguska: 'zsu234', pantsir: 'tunguska', strela10: 'strela1', igla: 'strela2', iglas: 'igla', verba: 'iglas',
   patriot: 'hawk', pac3: 'patriot', sampt: 'patriot', rapier: 'hawk', nasams: 'rapier', khordad: 'rapier', gepard: 'm163', skyguard: 'm163', roland: 'chaparral', stinger: 'redeye', avenger: 'stinger',

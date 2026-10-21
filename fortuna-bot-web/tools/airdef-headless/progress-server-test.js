@@ -69,7 +69,7 @@ o = await mutate(db, PID, (P) => act(P, 'buy', r1)); ok('второй раз н�
 o = await mutate(db, PID, (P) => act(P, 'research', 'air:e_su34')); ok('ранг III без паритета — нельзя', !o.ok && /паритет/.test(o.why), o.why);
 o = await mutate(db, PID, (P) => act(P, 'research', 'air:nope')); ok('нет такой единицы', !o.ok);
 // 7. цель ветки: исследуется сама, когда хватает опыта
-{ const g = 'wpn:fab250'; db.T.airdef_progress[0].xp = 0;
+{ const g = 'wpn:fab100'; db.T.airdef_progress[0].xp = 0;
   o = await mutate(db, PID, (P) => act(P, 'goal', g, 'wpn')); ok('цель выбрана', o.ok && o.P.goal.wpn === g);
   o = await mutate(db, PID, (P) => act(P, 'goal', g, 'air')); ok('цель чужой ветки — нельзя', !o.ok);
   o = await mutate(db, PID, (P, x) => { const c = credit(P, x, cleanEvents({ targets: [2, 2, 2], sams: 3 }, 15), { real: false, online: true, today: DAY }); globalThis.c3 = c; return { ok: true, extra: c.extra }; });

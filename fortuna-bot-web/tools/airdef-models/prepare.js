@@ -154,7 +154,7 @@ const CONFIG = {
   // United4192 — бомба 1000 lb. Без упрощения, текстуры 1024; шасси и подвески автора — долой
   e_vulcan: { src: `${DL}/avro698.glb`, scale: 0.93, nose: '-z', rulesIn: 'game', tex: () => 1024, centerX: true,
     groups: (c) => ((c.ctr[1] < -1.15 && Math.max(...c.size) < 2.0) || (c.ctr[1] < -1.1 && Math.min(...c.size) < 0.2 && Math.max(...c.size) < 4) ? null : LS(c)) }, // шасси выпущено: стойки, тележки, створки ниш — долой (гондолы двигателей в корне крыла и обтекатели — оставить)
-  e_draken: { src: `${DL}/j35.glb`, scale: 1.006, fwd: [-0.7632, 0.6461], rulesIn: 'game', tex: () => 1024, centerX: true, groups: () => 'body' }, // J35F: чистая модель (шасси убрано автором), длина 15,35 м
+  e_draken: { src: `${DL}/j35.glb`, scale: 1.006, fwd: [-0.7632, 0.6461], rulesIn: 'game', tex: () => 1024, texVf: 'hue=s=0.8' /* Mark 2026-10-21: бирюзовый камуфляж автора — «чуть-чуть убавь насыщенность» */, centerX: true, groups: () => 'body' }, // J35F: чистая модель (шасси убрано автором), длина 15,35 м
   e_viggen: { src: `${DL}/ja37.glb`, scale: 1.0, fwd: [-0.6659, 0.7461], rulesIn: 'game', tex: () => 1024, centerX: true, // ось — x −0,9 (до центровки): подфюзеляжный бак и его пилоны — долой
     groups: (c) => (c.ctr[1] < -0.7 && Math.abs(c.ctr[0] + 0.9) < 1.0 && c.ctr[2] > -2.4 && c.ctr[2] < -0.9 && Math.max(...c.size) > 2.0 ? null : LS(c)) },
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '+z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
