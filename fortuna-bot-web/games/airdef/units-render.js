@@ -4,6 +4,7 @@
 import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022r';
 import { makeParticles, radialTex } from '../drone/world.js?v=20261022r';
 import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022r';
+import { createCmFx } from './cmfx.js?v=20261022r';
 import { LNCH } from './launchers.js?v=20261022r';
 import { createBook } from './flipbook.js?v=20261022r';
 
@@ -550,13 +551,13 @@ export function createFx(scene, P) {
   const books = [EX, BL, FL], LT = new THREE.Vector3();
   const CR = makeCraters(scene, P.craters || 150);
   const PL = createPlumes(scene, P); // дымные ленты ракет (plume.js)
+  const CMF = createCmFx(scene, P, PL); // ЛТЦ и облака диполей — запечённые спрайты (cmfx.js)
   let hemi = null, sunL = null;
-  const clouds = [];  // облака диполей: блёстки ещё 3 с
   const V = new THREE.Vector3();
   let api = null; // сам объект эффектов (explosion вызывают и через обёртки — без this)
   return api = {
-    mats: [smoke.mat, fire.mat], // хозяин выставляет uniforms.scale по высоте кадра
-    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
+    mats: [smoke.mat, fire.mat, ...CMF.mats], // хозяин выставляет uniforms.scale по высоте кадра
+    setLayers(fxL, addL) { smoke.points.layers.set(fxL); fire.points.layers.set(addL); PL.mesh.layers.set(fxL); setFlameLayer(addL); CMF.setLayers(fxL, addL); for (const b of books) { b.mesh.layers.set(fxL); b.pre.layers.set(fxL); } }, // раскадровки огня и взрывов — в проходе дыма: после облаков (фон), до дыма (он закрывает огонь) // дым — в половине разрешения, огонь — поверх (post.js); раскадровки — в основном проходе (там глубина кадра: дома их загораживают)
     // kind: 'air' — в воздухе (подрыв ЗУР, сбитый самолёт), 'ground' — ракета, падение; 'bomb' — бомба (крупнее, вспышка с кольцом, пыль)
     explosion(p, R, kind) {
       if (R < 6) { // мелочь (обломки) — частицами
@@ -704,23 +705,12 @@ export function createFx(scene, P) {
       PL.add(w, x, y, z, mo, r);
       if (mo.a > 0.1) smoke.emit(x, y, z, 0, 0.5, 0, mo.c[0], mo.c[1], mo.c[2], 0.25 * Math.min(1, mo.a / 0.6) * (kind === 'rocket' ? 0.5 : 1), 3 * k, kind === 'rocket' ? 1.2 : 3, 4, 0.3, 0.2); // НАР — мелкие клубы (залп 4–20 ракет: большие шары закрывали вертолёт)
     },
-    // ЛТЦ — каждый кадр, пока горит: слепящее ядро, узкий огненный хвост (частицы живут доли секунды — хвост вытягивается
-    // по траектории и укорачивается, когда ловушка тормозит), белый дымный след; с выгоранием всё тускнеет и сужается
-    flareTick(f, dt) {
-      const k = Math.max(0, Math.min(1, f.life / (f.max || 3.5))), p = f.pos, v = f.vel;
-      fire.emit(p.x, p.y, p.z, v.x * 0.2, v.y * 0.2, v.z * 0.2, 1, 0.97, 0.85, k, 0.8 + 3.2 * k, -2, 0.06, 0, 0);
-      fire.emit(p.x, p.y, p.z, 0, 0, 0, 1, 0.72 + 0.2 * k, 0.32, 0.85 * k, 0.4 + 1.6 * k, -1, 0.06 + 0.22 * k, 0, 0);
-      f.smT = (f.smT || 0) - dt;
-      if (f.smT <= 0) { f.smT = 0.035; smoke.emit(p.x, p.y, p.z, (Math.random() - 0.5) * 0.6, 0.4, (Math.random() - 0.5) * 0.6, 0.94, 0.94, 0.93, 0.55 * k + 0.1, 1.2, 3.2, 3.5 + Math.random(), 0.25, 0.25); }
-    },
-    flareFlash(p) { fire.emit(p.x, p.y, p.z, 0, 0, 0, 1, 0.9, 0.7, 1, 7, 6, 0.1, 0, 0); },
-    // диполи: пачка разлетается серебристым облаком, медленно оседает и поблёскивает
-    chaffBurst(p, v) {
-      for (let i = 0; i < 46; i++) {
-        const a = Math.random() * 6.283, e = (Math.random() - 0.5) * 2, sp = 6 + Math.random() * 16;
-        smoke.emit(p.x, p.y, p.z, v.x * 0.25 + Math.cos(a) * sp, v.y * 0.25 + e * sp * 0.5, v.z * 0.25 + Math.sin(a) * sp, 0.72, 0.75, 0.8, 0.42, 0.35 + Math.random() * 0.4, 0.15, 4 + Math.random() * 3, 1.4, -1.2);
-      }
-      clouds.push({ p: p.clone(), v: v.clone().multiplyScalar(0.25), t: 0 });
+    // ЛТЦ — каждый кадр, пока горит (спрайт с мерцанием и дымная лента — cmfx.js); пул — самые свежие 64 (32 на слабых)
+    flareTick(f, dt) { CMF.tick(f, dt); },
+    // выброс ловушек: made — ЛТЦ боя (sim/strike.js; их рисует flareTick), нет — онлайн-клиент: ЛТЦ-«картинки» из тех же точек отстрела;
+    // диполи — облако из середины точек отстрела
+    cmDrop(a, type, made) {
+      if (type === 'flare') { if (made) CMF.arm(made); else CMF.cosFlares(a); } else CMF.cloud(a);
     },
     // очередь: несколько трасс от комплекса к цели с разбросом (попадания — ближе к цели)
     gunFire(from, to, hits, dt) {
@@ -745,7 +735,7 @@ export function createFx(scene, P) {
       }
       burning.push({ pos: pos.clone(), r, t: 0, fl });
     },
-    clearBurning() { burning.length = 0; FL.clear(); PL.clear(); }, // новый бой — без пожаров и дымных лент прошлого
+    clearBurning() { burning.length = 0; FL.clear(); PL.clear(); CMF.clear(); }, // новый бой — без пожаров и дымных лент прошлого
     // след взрыва у земли или на крыше: gh — высота земли (city.groundH), bh — высота здания (city.bldAt); kind 'bomb' — яма с
     // бруствером, 'ground' (ракета, снаряд) — ямка поменьше; на крыше — только копоть. Размер — от радиуса поражения R (≈ ∛ массы ВВ).
     // Земля за городом — с холмами: пятно чуть приподнято (на склоне край уходит в грунт)
@@ -768,6 +758,7 @@ export function createFx(scene, P) {
       if (sunL) LT.x += sunL.color.r * sunL.intensity * 0.35, LT.y += sunL.color.g * sunL.intensity * 0.35, LT.z += sunL.color.b * sunL.intensity * 0.35;
       for (const b of books) b.update(dt, LT, scene.fog);
       PL.update(dt, LT, null, sunL ? V.copy(sunL.position).sub(sunL.target.position).normalize() : null);
+      CMF.update(dt, LT);
       CR.mat.uniforms.uLight.value.copy(LT).multiplyScalar(0.8); if (sunL) CR.mat.uniforms.uSun.value.copy(sunL.position).sub(sunL.target.position).normalize(); // свет ходит за камерой
       if (scene.fog) { CR.mat.uniforms.uFog.value.copy(scene.fog.color); CR.mat.uniforms.uFogD.value = scene.fog.density || 0; }
       for (let i = 0; i < NT; i++) {
@@ -777,12 +768,6 @@ export function createFx(scene, P) {
         for (let k = 0; k < 6; k += 3) { tPos[i6 + k] += tVel[i3] * dt; tPos[i6 + k + 1] += tVel[i3 + 1] * dt - 9.8 * dt * 0.5; tPos[i6 + k + 2] += tVel[i3 + 2] * dt; }
       }
       tGeo.attributes.position.needsUpdate = true;
-      for (let i = clouds.length - 1; i >= 0; i--) {
-        const c = clouds[i]; c.t += dt; c.v.multiplyScalar(1 - 1.4 * dt); c.v.y -= 1.2 * dt; c.p.addScaledVector(c.v, dt);
-        const R = 4 + c.t * 9;
-        if (Math.random() < dt * 40) fire.emit(c.p.x + (Math.random() - 0.5) * R, c.p.y + (Math.random() - 0.5) * R * 0.6, c.p.z + (Math.random() - 0.5) * R, 0, -1, 0, 0.85, 0.9, 1, 0.9, 0.5, 0, 0.12, 0, 0);
-        if (c.t > 3.5) clouds.splice(i, 1);
-      }
       // пожары: огонь и столб дыма, со временем слабее
       for (const b of burning) {
         b.t += dt; const k = Math.max(0.25, 1 - b.t / 240);

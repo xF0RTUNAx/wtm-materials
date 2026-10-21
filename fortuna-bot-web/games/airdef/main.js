@@ -422,7 +422,7 @@ const simFx = {
     if (C.hooks.unitDestroyed) C.hooks.unitDestroyed(u, by);
   },
   radarState(u) { if (C.hooks.radarState) C.hooks.radarState(u); },
-  cmDrop(a, type) { if (type === 'flare') C.fx.flareFlash(a.pos); else C.fx.chaffBurst(a.pos, a.vel); if (a === C.player) { if (type === 'flare') snd.flare(); else snd.chaff(); } },
+  cmDrop(a, type, made) { C.fx.cmDrop(a, type, made); if (a === C.player) { if (type === 'flare') snd.flare(); else snd.chaff(); } },
   decoyed(m, f) { if (C.hooks.decoyed) C.hooks.decoyed(m, f); },
   trackBroken(u, a) { if (C.hooks.trackBroken) C.hooks.trackBroken(u, a); },
 };

@@ -10,6 +10,7 @@ import * as MW from './sim/online-multi.js?v=20261022r';
 import { AG, SAM } from './arsenal.js?v=20261022r';
 import { dmgUnpack } from './sim/damage.js?v=20261022r';
 import { LNCH } from './launchers.js?v=20261022r';
+import { cmOf, cmKey } from './sim/cm.js?v=20261022r';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -210,7 +211,7 @@ export function createNet(C) {
   function wrapMirror(S) {
     const o = { designate: S.designate, setManual: S.setManual, setEmit: S.setEmit };
     S.release = (a, key, opts = {}) => { const p = opts.aim; N.send({ t: 'rel', k: key, aim: p ? [p.x, p.y, p.z] : null, tg: opts.target ? opts.target.id : 0 }); return null; };
-    S.dropCM = (a, type) => { N.send({ t: 'cm', type }); if (C.simFx.cmDrop) for (const k of type === 'both' ? ['flare', 'chaff'] : [type]) C.simFx.cmDrop(a, k); }; // 'both' — пачка ЛТЦ и диполей
+    S.dropCM = (a, type) => { N.send({ t: 'cm', type }); if (C.simFx.cmDrop) for (const k of type === 'both' ? ['flare', 'chaff'] : [type]) if (k !== 'flare' || cmOf(cmKey(a), a.cmSide).flare) C.simFx.cmDrop(a, k); }; // 'both' — пачка ЛТЦ и диполей (машина без ЛТЦ — одни диполи)
     S.launch = (u) => { N.send({ t: 'launch', id: u.id }); return null; };
     S.designate = (u, t) => { o.designate(u, t); N.send({ t: 'desig', id: u.id, tg: t ? (t.isMun ? -t.id : t.id) : 0 }); };
     S.setEmit = (u, on) => { u.emit = !!on; N.send({ t: 'emit', id: u.id, on: !!on }); };

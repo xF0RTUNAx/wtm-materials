@@ -8,6 +8,7 @@
 import { AG, raidPlane } from '../arsenal.js?v=20261022r';
 import { flightModel, loadOf } from './flight.js?v=20261022r';
 import { initDamage, hitZones, burnRate } from './damage.js?v=20261022r';
+import { cmOf } from './cm.js?v=20261022r';
 import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022r';
 import { predictBomb, predictRocket } from './strike.js?v=20261022r';
 import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261022r';
@@ -81,6 +82,7 @@ export function createRaid(S, city, rnd, opts = {}) {
     // свои ТТХ самолёта (sim/flight.js): модель — как в отрисовке (носитель — o.plane); ИИ — честная лётная модель
     if (role === 'heli') return spawnHeli(a, bearing, R0 || 9000);
     a.model = o.plane || raidPlane(side, era, role); a.fm = flightModel(a.model) || null;
+    if (!cmOf(a.model, side).flare) a.cmFlare = 0; // старые машины — без ЛТЦ: только диполи (sim/cm.js)
     if (a.fm) { a.fuel = 0.8; setLoad(a); a.speed = Math.min(a.speed, a.fm.s.vSL / 3.6 * 0.7); initDamage(a); }
     a.pos.set(Math.sin(bearing) * R, a.cruise + (role === 'low' ? 300 : 0), Math.cos(bearing) * R);
     const to = TMP.set(tgt.x, 0, tgt.z).sub(a.pos); a.yaw = Math.atan2(-to.x, -to.z); a.pitch = 0;

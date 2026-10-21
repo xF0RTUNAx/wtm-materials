@@ -16,6 +16,7 @@
 import { AG, SAM } from '../arsenal.js?v=20261022r';
 import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022r';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022r';
+import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261022r';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
@@ -505,23 +506,36 @@ export function createStrike(ctx) {
   }
 
   // ═════════════ Ловушки и диполи самолёта ═════════════
+  // Точки отстрела и залп — у каждой машины свои (sim/cm.js): ЛТЦ сходят из этих точек по ориентации самолёта, скорость — 0,6 от
+  // скорости машины + 25 м/с вдоль выброса + разброс; машина без ЛТЦ (flare: false) на кнопку выбрасывает одни диполи.
+  // Уводит ГСН первая ЛТЦ залпа; больше залп — выше шанс (×1 + 0,1·(залп − 2), не больше ×1,4)
+  const CMP = [0, 0, 0], CMD = [0, 0, 0], MAXF = 64; // MAXF — ЛТЦ одновременно (залпы бомбардировщиков не копятся)
   function dropCM(a, type) {
-    const M = ctx.mode();
-    fx.cmDrop(a, type);
+    const M = ctx.mode(), cm = cmOf(cmKey(a), a.cmSide || a.mside || a.side);
     if (type === 'flare') {
-      // залп из двух ловушек в стороны-вниз; уводит первая
-      const mk = (side) => { const g = { pos: a.pos.clone(), vel: a.vel.clone().multiplyScalar(0.6).add(TMP.set((rnd() - 0.5) * 20 + side * 14, -18 - rnd() * 8, (rnd() - 0.5) * 20)), life: 3.5, max: 3.5, owner: a }; flares.push(g); return g; };
-      const f = mk(-1); mk(1);
+      if (!cm.flare) return;
+      const made = [];
+      for (let i = 0; i < cm.salvo; i++) {
+        cmWorld(a, cm, i, CMP, CMD);
+        const rd = Math.floor(i / cm.at.length), ek = 25 * (1 + 0.45 * rd), sc = 8 + 4 * rd; // залп больше числа точек — следующие «выстрелы» из тех же точек летят быстрее и шире (веером)
+        const g = { pos: new THREE.Vector3(CMP[0] + (rnd() - 0.5) * 0.3, CMP[1] + (rnd() - 0.5) * 0.2, CMP[2] + (rnd() - 0.5) * 0.3),
+          vel: a.vel.clone().multiplyScalar(0.6).add(TMP.set(CMD[0] * ek + (rnd() - 0.5) * sc, CMD[1] * ek + (rnd() - 0.5) * sc, CMD[2] * ek + (rnd() - 0.5) * sc)), life: 3.5, max: 3.5, owner: a };
+        flares.push(g); made.push(g);
+      }
+      while (flares.length > MAXF) flares.shift();
+      fx.cmDrop(a, type, made);
+      const f = made[0], boost = cmBoost(cm.salvo);
       for (const m of sams) {
         if (m.dead || m.decoy || m.lost || m.S.type !== 'ir' || m.target !== a) continue;
         if (m.pos.distanceTo(a.pos) > 7000 || angleBetween(m.dir, TMP.copy(a.pos).sub(m.pos)) > 25 * D2R) continue;
         // ранние ГСН уводятся почти всегда; ракурс «в лоб» ловушке помогает меньше
         const head = offTailDeg(a, m.pos) > 90 ? 0.6 : 1;
-        if (rnd() < (1 - (m.S.irccm || 0)) * 0.75 * head * M.cmK) { m.decoy = f; fx.decoyed(m, f); }
+        if (rnd() < (1 - (m.S.irccm || 0)) * 0.75 * head * M.cmK * boost) { m.decoy = f; fx.decoyed(m, f); }
       }
     } else {
       // диполи: РЛС сопровождения может «перескочить» на облако. Когерентная (доплеровская) РЛС неподвижное облако
       // отсекает — сработает, только если цель идёт «траверзом»; частый сброс подряд почти ничего не добавляет
+      fx.cmDrop(a, type, null);
       const spam = a.chaffT !== undefined && a.chaffT > 0 ? 0.35 : 1; a.chaffT = 3;
       for (const u of units) {
         if (u.dead || u.track !== a || !u.S.radar) continue;

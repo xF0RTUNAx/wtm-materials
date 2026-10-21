@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Стенд ловушек: залп ЛТЦ и диполей</title>
+<style>body{margin:0;background:#111;font:12px sans-serif}#sheet{position:relative;display:inline-block}canvas{display:block}
+.c{position:absolute;color:#fff;text-shadow:0 0 3px #000,0 0 3px #000;pointer-events:none}.t{left:4px;top:3px;font-size:12px}.b{left:4px;bottom:3px;font-size:11px;opacity:.9}
+.bar{position:absolute;height:5px;border:1px solid #fff;border-top:0;box-shadow:0 0 2px #000}.bl{position:absolute;color:#fff;font-size:11px;text-shadow:0 0 3px #000}</style></head>
+<body><div id="sheet"></div>
+<!-- Стенд ловушек «как в игре»: настоящая модель самолёта (models.js), залп через настоящий sim/strike.js (dropCM → ЛТЦ боя, точки отстрела
+     из sim/cm.js), отрисовка — units-render createFx (flareTick, cmDrop: спрайты fx/flare.png, fx/chaff.png, дымная лента plume.js).
+     Самолёт летит прямо со скоростью ?v= (м/с, по умолчанию 200) на высоте ?alt= (м), залп — в момент 0; кадры на ?t=0.3,1.5 с после залпа:
+     в каждом — «сзади-сверху» и «сбоку»; на первом — крупно у хвоста, на остальных — шире (самолёт и ЛТЦ). Красные точки — at из cm.js (?dots=0 — убрать).
+     ?p=e_su25 (или список через запятую — по листу на самолёт), ?sky=dusk, ?mode=real|arcade, ?cw=&ch= (размер кадра).
+     Снимки — драйвер tools/airdef-fx/cm-shots.js (нужен сервер без кэша: python3 fortuna-bot-web/tools/dev/nocache-server.py 8937). -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+const Q = new URLSearchParams(location.search), VER = '?v=20261022r', BASE = '../../games/airdef/';
+const KEYS = (Q.get('p') || 'e_su25').split(','), TT = (Q.get('t') || '0.3,1.5').split(',').map(Number), V0 = +(Q.get('v') || 200), ALT = +(Q.get('alt') || 600);
+const CW = +(Q.get('cw') || 440), CH = +(Q.get('ch') || 330), COLS = TT.length * 2, FOV = 24, DOTS = Q.get('dots') !== '0', dusk = Q.get('sky') === 'dusk';
+const [M, UR, { createStrike, MODES }, { cmOf, cmKey, cmWorld }, { FOG_U }] = await Promise.all([import(BASE + 'models.js' + VER), import(BASE + 'units-render.js' + VER), import(BASE + 'sim/strike.js' + VER), import(BASE + 'sim/cm.js' + VER), import('../../games/drone/world.js' + VER)]);
+FOG_U.value = 0;
+M.loadModels(BASE, () => {});
+const wait = (fn, ms = 40000) => new Promise((ok) => { const t0 = performance.now(), t = setInterval(() => { const v = fn(); if (v || performance.now() - t0 > ms) { clearInterval(t); ok(v); } }, 50); });
+
+const W_ = CW * COLS, H_ = CH;
+const r = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(W_, H_); r.setScissorTest(true);
+r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; document.getElementById('sheet').appendChild(r.domElement);
+const sc = new THREE.Scene(); sc.background = new THREE.Color(dusk ? 0x6c6474 : 0x6f9bd0);
+sc.add(new THREE.HemisphereLight(dusk ? 0x8a7f99 : 0xcfe0f5, 0x6b6250, dusk ? 0.8 : 1.1)); const sun = new THREE.DirectionalLight(dusk ? 0xffb27a : 0xffffff, dusk ? 0.6 : 1.2); sun.position.set(-1, 2, 1); sc.add(sun);
+const fx = UR.createFx(sc, { particles: 3000, fxLo: Q.get('lo') === '1' });
+const cam = new THREE.PerspectiveCamera(FOV, CW / CH, 0.05, 200000);
+const dotsG = new THREE.Points(new THREE.BufferGeometry(), new THREE.PointsMaterial({ color: 0xff2020, size: 4, sizeAttenuation: false, depthTest: false })); dotsG.renderOrder = 10; dotsG.frustumCulled = false; sc.add(dotsG);
+const UP = new THREE.Vector3(0, 1, 0);
+const fmt = (x, n = 1) => (+x).toFixed(n).replace('.', ',');
+
+// настоящий бой без комплексов: только самолёт и ловушки
+const city = { objects: [], topAt: () => 0, groundH: () => 0, los: () => true };
+let AIR = null;
+const S = createStrike({ city, mode: () => MODES[Q.get('mode') || 'real'], aircraft: () => (AIR ? [AIR] : []), hurt() {}, laserSpot: () => null, night: 0, fx: { cmDrop: (a, t, made) => fx.cmDrop(a, t, made) } });
+
+const NW = new THREE.Vector3(), C0 = new THREE.Vector3(), CP = new THREE.Vector3(), SD = new THREE.Vector3(), CAMP = new THREE.Vector3();
+async function runKey(key) {
+  const obj = await wait(() => { M.wantModel(key); return M.anyModel(key); });
+  const meta = M.planeMeta(key), cmk = cmOf(key, meta && meta.side);
+  const a = { id: 1, model: key, plane: key, side: meta && meta.side, pos: new THREE.Vector3(0, ALT, 0), vel: new THREE.Vector3(0, 0, -V0), yaw: 0, pitch: 0, roll: 0, speed: V0, dead: false, r: 8 };
+  AIR = a; sc.add(obj); obj.position.copy(a.pos);
+  const bb = new THREE.Box3().setFromObject(obj), size = bb.getSize(new THREE.Vector3()), Lm = Math.max(size.x, size.z);
+  const info = `${key} · ${cmk.flare ? 'ЛТЦ ×' + cmk.salvo : 'только диполи'} · точек ${cmk.at.length} · ${fmt(size.z)} × ${fmt(size.x)} м · ${V0} м/с`;
+  const dt = 1 / 60; let T = 0, ti = 0; const host = document.getElementById('sheet');
+  const lab = document.createElement('div'); lab.className = 'c b'; lab.textContent = info; host.appendChild(lab); Object.assign(lab.style, { left: '4px', top: (CH - 18) + 'px', bottom: 'auto' });
+  (window.__labels = window.__labels || []).push(info);
+  S.dropCM(a, 'flare'); S.dropCM(a, 'chaff'); // как кнопка «ловушки»: у машины без ЛТЦ flare ничего не делает
+  const cells = (tt, k) => {
+    // кадр охватывает самолёт (хвост) и все ЛТЦ / облако диполей: центр и ширина — по их положению
+    const pts = [CP.set(a.pos.x, a.pos.y, a.pos.z + size.z * 0.42).clone()];
+    for (const f of S.flares) pts.push(f.pos.clone());
+    if (!cmk.flare || k >= 0) pts.push(new THREE.Vector3(a.pos.x, a.pos.y, a.pos.z + size.z * 0.42 + (V0 * tt - 0.25 * V0 * (1 - Math.exp(-1.4 * tt)) / 1.4))); // облако диполей — отстаёт так же
+    const center = new THREE.Vector3(); for (const p of pts) center.add(p); center.divideScalar(pts.length);
+    let rad = 0; for (const p of pts) rad = Math.max(rad, p.distanceTo(center));
+    const width = Math.max(k === 0 ? 14 : 18, Lm * 1.3, rad * 2.5);
+    for (let v = 0; v < 2; v++) {
+      const dist = (width / 2) / Math.tan(FOV / 2 * Math.PI / 180);
+      if (v === 0) CAMP.copy(center).add(SD.set(0.55, 0.45, 0.7).normalize().multiplyScalar(dist)); else CAMP.copy(center).add(SD.set(1, 0.03, 0).multiplyScalar(dist)); // сзади-сверху, сбоку
+      cam.position.copy(CAMP); cam.up.copy(UP); cam.lookAt(center); cam.updateMatrixWorld();
+      const x = (ti * 2 + v) * CW;
+      r.setViewport(x, 0, CW, CH); r.setScissor(x, 0, CW, CH);
+      for (const m of fx.mats) m.uniforms.scale.value = CH / (2 * Math.tan(FOV / 2 * Math.PI / 180));
+      if (DOTS) { const pts = []; for (let i = 0; i < cmk.at.length; i++) { const P = [0, 0, 0], D = [0, 0, 0]; cmWorld(a, cmk, i, P, D); pts.push(...P); } dotsG.geometry.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); dotsG.visible = true; } else dotsG.visible = false;
+      r.render(sc, cam);
+      const pxm = CW / width, nice = [0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500].filter((q) => q * pxm <= CW * 0.34).pop() || 0.5;
+      const mk = (cls, html, css) => { const el = document.createElement('div'); el.className = cls; el.innerHTML = html; Object.assign(el.style, css); host.appendChild(el); };
+      mk('c t', `${v ? 'сбоку' : 'сзади-сверху'} · t = ${fmt(tt, 1)} с · ЛТЦ в кадре: ${S.flares.length}`, { left: x + 4 + 'px', top: '3px' });
+      mk('bar', '', { left: x + 8 + 'px', top: (CH - 38) + 'px', width: nice * pxm + 'px' });
+      mk('bl', `${nice} м`, { left: x + 12 + nice * pxm + 'px', top: (CH - 45) + 'px' });
+    }
+  };
+  while (ti < TT.length) {
+    T += dt; a.pos.addScaledVector(a.vel, dt); obj.position.copy(a.pos);
+    S.step(dt); for (const f of S.flares) fx.flareTick(f, dt); fx.update(dt);
+    if (T >= TT[ti] - 1e-6) { cells(T, ti === 0 ? 0 : 1); ti++; }
+  }
+  sc.remove(obj); fx.clearBurning(); S.flares.length = 0; AIR = null;
+  for (let i = 0; i < 600; i++) fx.update(dt);
+}
+window.sheets = KEYS.length; window.names = KEYS;
+window.renderSheet = async (i) => {
+  const host = document.getElementById('sheet'); for (const el of [...host.querySelectorAll('div')]) el.remove();
+  r.setScissor(0, 0, W_, H_); r.setViewport(0, 0, W_, H_); r.setClearColor(0x111111); r.clear(); r.setClearColor(0x000000, 1);
+  await runKey(KEYS[i]); window.__done = i; return true;
+};
+window.__ready = true;
+if (Q.get('sheet') !== null) window.renderSheet(+Q.get('sheet') || 0);
+</script></body></html>

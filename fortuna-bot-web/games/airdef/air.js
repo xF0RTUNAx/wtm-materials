@@ -13,6 +13,7 @@ import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole } from 
 import { predictBomb, predictRocket } from './sim/strike.js?v=20261022r';
 import { flightModel, loadOf } from './sim/flight.js?v=20261022r';
 import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261022r';
+import { cmOf, cmKey } from './sim/cm.js?v=20261022r';
 import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261022r';
 import { planeDamageVis } from './plane-damage.js?v=20261022r';
 import { placeDefense, pickTargets } from './mission.js?v=20261022r';
@@ -315,10 +316,12 @@ export function createAir(C) {
     if (C.hooks.trainFire) C.hooks.trainFire(l.key);
     if (l.n <= 0) nextWeapon();
   }
-  // ловушки — одной кнопкой (одинаково на всех устройствах): пачка ЛТЦ и диполей разом
+  // ловушки — одной кнопкой (одинаково на всех устройствах): пачка ЛТЦ и диполей разом; у каждой машины свои точки и залп (sim/cm.js)
+  const cmInfo = () => cmOf(cmKey(craft), craft.cmSide); // ловушки машины игрока
+  const cmLow = (k) => (cmInfo().flare ? craft.cmFlare : craft.cmChaff) < C.MODE().cm * k; // запас ловушек ниже доли k (у машины без ЛТЦ — по диполям)
   function cm() {
     if (game.over || craft.dead) return;
-    const f = craft.cmFlare > 0, c = craft.cmChaff > 0;
+    const f = cmInfo().flare && craft.cmFlare > 0, c = craft.cmChaff > 0; // машина без ЛТЦ — только диполи
     if (!f && !c) { say('Ловушки кончились', 1.2); return; }
     if (f) craft.cmFlare--; if (c) craft.cmChaff--;
     if (game.net) C.S.dropCM(craft, 'both'); // онлайн: одна команда серверу
@@ -574,7 +577,7 @@ export function createAir(C) {
     }
     const M = C.MODE();
     // «Реализм»: подвеска пуста (или мало ловушек/топлива) — метка точки вылета, где пополняются
-    if (M.reload === 'home' && reloadable() && homeLeft > 0 && (needsRearm() || craft.cmFlare < M.cm * 0.5 || craft.fuel < 0.6)) {
+    if (M.reload === 'home' && reloadable() && homeLeft > 0 && (needsRearm() || cmLow(0.5) || craft.fuel < 0.6)) {
       const p = proj(LP.set(home.x, home.y + 30, home.z));
       const dh = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z), z0 = game.net ? game.net.zone : zn.Z;
       if (!z0 || (!zn.fuel && !zn.ammo)) edgeArrow(LP.set(home.x, home.y + 30, home.z), `вылет ${(dh / 1000).toFixed(1)} км`, '#86efac'); // зоны нет (или кончилась) — пополнение у точки вылета
@@ -647,7 +650,7 @@ export function createAir(C) {
     $('wpn').innerHTML = `<div class="fl"><b>${Math.round(craft.speed * 3.6)}</b> км/ч <b>${Math.round(craft.pos.y - g)}</b> м <span class="${craft.fuel < 0.2 ? 'warnc' : 'dim'}">${ico('fuel', 'ii')}${fuel}%</span>${craft.ab ? ' <b class="ab">Ф</b>' : ''}</div>` +
       `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' ●' : ' ×' + (AG[l.key].kind === 'rocket' ? rocketsOf(l) : l.n)}${AG[l.key].kind !== 'ecm' && Number.isFinite(l.res) && !game.net ? ` <span class="dim">+${AG[l.key].kind === 'rocket' ? l.res * AG[l.key].load : l.res}</span>` : ''}${l.rt > 0 ? ` <span class="dim">↻${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
       `<div class="st">${msgT > 0 ? msgText : larText}${inAir ? ` <span class="fly">· в полёте ${inAir}</span>` : ''}</div>` + tgl +
-      `<div class="cm">ловушки ${Math.max(craft.cmFlare, craft.cmChaff)}${game.hunt ? ` · РЛС ${game.hunt.n}/${game.hunt.need}` : game.targets.length ? ` · цели ${dead}/${game.targets.length}` : ''}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ' · <b style="color:#86efac">АВТО</b>' : ''}${hasPod && pod.laserMan !== null ? ` · лазер ${pod.laserMan ? 'вкл' : 'выкл'}` : ''}${homeT > 0 ? ` · <b style="color:#86efac">пополнение ${Math.ceil(12 - homeT)} с</b>` : ''}</div>`;
+      `<div class="cm">ловушки ${cmInfo().flare ? Math.max(craft.cmFlare, craft.cmChaff) : craft.cmChaff + ' <span class="dim">(диполи)</span>'}${game.hunt ? ` · РЛС ${game.hunt.n}/${game.hunt.need}` : game.targets.length ? ` · цели ${dead}/${game.targets.length}` : ''}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ' · <b style="color:#86efac">АВТО</b>' : ''}${hasPod && pod.laserMan !== null ? ` · лазер ${pod.laserMan ? 'вкл' : 'выкл'}` : ''}${homeT > 0 ? ` · <b style="color:#86efac">пополнение ${Math.ceil(12 - homeT)} с</b>` : ''}</div>`;
     const lk = rw.find((e) => e.state === 'launch'), tr = rw.find((e) => e.state === 'track'), wn = $('warn');
     if (mw.length || lk) { wn.textContent = `ПУСК РАКЕТЫ${lk ? ' — ' + (lk.u.S.rwr || lk.u.S.short) : ''}`; wn.style.display = 'block'; }
     else if (tr) { wn.textContent = `ЗАХВАТ — ${tr.u.S.rwr || tr.u.S.short}`; wn.style.display = 'block'; }
@@ -867,6 +870,7 @@ export function createAir(C) {
     craft.jam = Math.max(0, ...loadout.map((l) => AG[l.key].jam || 0)); // станция помех на подвеске
     if (!usable(loadout[sel])) nextWeapon();
     // свои ТТХ самолёта (sim/flight.js): модель — из подвески; режим (Аркада/Реализм) — мягкость виража
+    craft.model = L.plane || (att === 'east' ? 'su30' : 'f16'); craft.cmSide = att; // ключ модели — точки ловушек (sim/cm.js)
     craft.fm = craft.heli ? null : flightModel(L.plane || (att === 'east' ? 'su30' : 'f16'), { ind: (C.MODE() || {}).ind });
     updLoad();
   }
@@ -970,7 +974,7 @@ export function createAir(C) {
     for (const l of loadout) for (const st of l.st0) if (!l.st.includes(st)) { l.st.push(st); l.n++; const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal; }
     craft.cmFlare = craft.cmChaff = C.MODE().cm;
   };
-  const zoneNeed = () => ({ fuel: zn.fuel > 0 && (craft.fuel ?? 1) < 0.9, ammo: zn.ammo > 0 && (loadout.some((l) => AG[l.key].kind !== 'ecm' && l.n < l.n0) || craft.cmFlare < C.MODE().cm * 0.5 || craft.cmChaff < C.MODE().cm * 0.5) });
+  const zoneNeed = () => ({ fuel: zn.fuel > 0 && (craft.fuel ?? 1) < 0.9, ammo: zn.ammo > 0 && (loadout.some((l) => AG[l.key].kind !== 'ecm' && l.n < l.n0) || cmLow(0.5) || craft.cmChaff < C.MODE().cm * 0.5) });
   const zoneSay = (f, a) => { say(`Пополнение: ${[f ? 'топливо' : '', a ? 'боекомплект и ловушки' : ''].filter(Boolean).join(', ')} · осталось: топливо ${zn.fuel}, БК ${zn.ammo}`, 3.5); snd.good(); };
   function zoneReset() { zn.fuel = ZONE.FUEL; zn.ammo = ZONE.AMMO; zn.it.zT = 0; zn.it.pos = craft.pos; }
   function zoneUpdate(dt) {
@@ -1055,7 +1059,7 @@ export function createAir(C) {
     }
     const dh = Math.hypot(craft.pos.x - home.x, craft.pos.z - home.z);
     const near = craft.heli ? craft.landed && dh < 800 : dh < 2500 && craft.pos.y - city.groundH(craft.pos.x, craft.pos.z) < 1500; // вертолёт — сесть у точки вылета
-    const need = homeLeft > 0 && (needsRearm() || craft.cmFlare < C.MODE().cm * 0.5 || craft.fuel < 0.6);
+    const need = homeLeft > 0 && (needsRearm() || cmLow(0.5) || craft.fuel < 0.6);
     if (!near || !need) { homeT = 0; return; }
     homeT += dt;
     if (homeT < 12) return;

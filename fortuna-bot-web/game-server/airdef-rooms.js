@@ -18,6 +18,7 @@ import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/
 import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal.js?v=20260930m';
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
+import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261022r';
 import { createMulti } from './airdef-multi.js';
 import { adProgress, realDeny, loadoutIds, samIds, quickEra } from './airdef-own.js';
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
@@ -653,7 +654,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       }
       case 'laser': { const a = c.craft; if (a) a.laser = Array.isArray(m.p) && m.p.every(Number.isFinite) ? new THREE.Vector3(m.p[0], m.p[1], m.p[2]) : null; return; }
       case 'cm': { // 'both' — пачка ЛТЦ и диполей одной кнопкой (клиенты с версии 2026-10); 'flare' / 'chaff' — по одной
-        const a = c.craft, types = m.type === 'both' ? ['flare', 'chaff'] : [m.type === 'chaff' ? 'chaff' : 'flare'];
+        const a = c.craft, types = (m.type === 'both' ? ['flare', 'chaff'] : [m.type === 'chaff' ? 'chaff' : 'flare']).filter((k) => k !== 'flare' || !a || cmOf(cmKey(a), a.side).flare); // машина без ЛТЦ (sim/cm.js) — только диполи
         if (a && c.cm) J(r, 'cmd', { who: c.name, cmd: 'cm', type: m.type, left: Math.max(c.cm.flare, c.cm.chaff) });
         if (!a || a.dead || r.t - (c.cmT || 0) < CM_CD || !types.some((k) => c.cm[k] > 0)) return;
         c.cmT = r.t; for (const k of types) if (c.cm[k] > 0) { c.cm[k]--; r.S.dropCM(a, k); }
