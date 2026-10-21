@@ -3,8 +3,8 @@
 // objects, B…). Рельеф — сеткой высот 50 м (горы до ~1,6 км; groundH — билинейно, быстро для лучей и ракет).
 // Долина с севера на юг: водохранилище за плотиной ГЭС на севере, замёрзшая река, авиабаза посередине, посёлок и
 // военный городок, ж/д узел, арсенал в восточном ущелье, РЛС на вершине хребта, озеро на юге. Оси как в city.js: −Z — север.
-import { tr } from './i18n.js?v=20261022r';
-import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, mp, mbox, mapRuntime } from './city.js?v=20261022r';
+import { tr } from './i18n.js?v=20261022s';
+import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, mp, mbox, mapRuntime } from './city.js?v=20261022s';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1; // узлов по стороне
 export const WINTER = {

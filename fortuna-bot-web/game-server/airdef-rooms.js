@@ -18,7 +18,7 @@ import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/
 import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal.js?v=20260930m';
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
-import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261022r';
+import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261022s';
 import { createMulti } from './airdef-multi.js';
 import { adProgress, realDeny, loadoutIds, samIds, quickEra } from './airdef-own.js';
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';

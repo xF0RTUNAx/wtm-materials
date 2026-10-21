@@ -30,7 +30,7 @@ export const ICON = {
   "sideL": "M32 256 200 92v104h280v120H200v104z", "sideR": "M480 256 312 92v104H32v120h280v104z", // шаг вбок вертолёта («Аркада») — свои стрелки
   };
 export const ico = (n, cls = '') => `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 512 512" aria-hidden="true"><path fill="currentColor" d="${ICON[n]}"/></svg>`;
-import { tr } from './i18n.js?v=20261022r';
+import { tr } from './i18n.js?v=20261022s';
 // упоминание кнопки в тексте (обучение, руководство, пауза, подсказки) — со значком: «ЛОВУШКИ» → [значок] «ЛОВУШКИ»
 const TOK = { '«ЛОВУШКИ»': 'flares', '«КАРТА»': 'map', '«ЦЕЛЬ»': 'target', '«АВТО»': 'auto', '«ГАЗ»': 'throttle', '«ОБЗОР»': 'camera', '«КАМ.»': 'camera', '«ПУСК»': 'fire', '«ОГОНЬ»': 'fire',
   '«БИНОКЛЬ»': 'bino', '«РЛС»': 'radar', '«?»': 'lesson', '«Игроки»': 'players', '«ПОМОЩЬ»': 'help', '⛽': 'fuel', '👥': 'players',
