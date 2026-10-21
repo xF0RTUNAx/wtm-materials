@@ -8,6 +8,8 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
+import { localizeTree } from './lang/data.js?v=20261022r'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
+import { TREE, BRANCHES } from './progress.js?v=20261022r';
 import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261022r';
 import { ktxInit } from './ktx.js?v=20261022r';
 import { buildCity, CITY } from './city.js?v=20261022r';
@@ -48,6 +50,7 @@ import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
+localizeTree(TREE, BRANCHES); // страховка: узлы прокачки — по уже переведённым данным (если progress.js построил дерево раньше)
 trDom(document.body); // язык: статичный HTML страницы — до того, как меню и бой допишут свой текст (i18n.js)
 askLang(); // первый вход: язык ещё не выбран — спросить (угаданный по устройству / Telegram выделен)
 // окна общих модулей (предупреждение о повороте телефона — orient-warn.js, «Летка» делит его с игрой), которые сами добавляют русский текст прямо в body
