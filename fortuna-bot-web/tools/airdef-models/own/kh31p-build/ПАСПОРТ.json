@@ -1,0 +1,14 @@
+{
+ "key": "w_kh31p",
+ "weapon": "kh31p",
+ "name": "Х-31П",
+ "rev": 1,
+ "files": {
+  "glb": "kh31p.glb",
+  "blend": "kh31p.blend",
+  "build": [
+   "build.py",
+   "deliver.py"
+  ]
+ }
+}

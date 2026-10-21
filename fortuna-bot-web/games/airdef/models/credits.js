@@ -101,7 +101,6 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a",
   "license": "CC-BY-4.0",
   "files": [
-   "w_kh31p",
    "aam_r73",
    "aam_r77",
    "aam_r27",

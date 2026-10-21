@@ -56,7 +56,10 @@ const newMd = md.includes(tok) ? md.split('\n').flatMap((ln) => { if (!ln.includ
 
 // ── 1. файлы ──
 cp(`${DIR}/${P.files.glb}`, `${OWN}${base}.glb`); cp(`${DIR}/${P.files.blend}`, `${OWN}${base}.blend`);
-for (const f of [...(P.files.build || []), 'ПАСПОРТ.json']) if (exists(`${DIR}/${f}`)) cp(`${DIR}/${f}`, `${OWN}${base}-build/${f}`);
+for (const f of (P.files.build || [])) if (exists(`${DIR}/${f}`)) cp(`${DIR}/${f}`, `${OWN}${base}-build/${f}`);
+// в репозиторий — только минимальный паспорт (ключ, оружие, название, ревизия, имена файлов), даже если в папке модели паспорт полнее
+if (!DRY) Deno.mkdirSync(`${OWN}${base}-build`, { recursive: true });
+wr(`${OWN}${base}-build/ПАСПОРТ.json`, JSON.stringify({ key: KEY, weapon: P.weapon, name: P.name, rev: P.rev || 1, files: { glb: P.files.glb, blend: P.files.blend, build: P.files.build || [] } }, null, 1) + '\n');
 console.log('1. файлы модели скопированы');
 
 // ── 2. prepare.js ──

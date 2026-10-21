@@ -39,8 +39,8 @@ const META = {
     nozzles: [V(0, -0.65, 7.43)], nr: 0.33, pod: null }, // МиГ-27К («Кайра» встроена)
   e_tu22m2: { side: 'east', cls: 'bomber', lazy: true, stations: mirror([V(-6.34, -3.89, 5.06), V(-1.27, -2.71, -3.2), V(-1.27, -2.71, -0.5), V(-1.27, -2.71, 2.2)]),
     nozzles: [V(-0.96, -2.67, 18.75), V(0.96, -2.67, 18.75)], nr: 0.72, pod: null }, // Ту-22М2 (сопла по срезу стволов: были выше на 1,4 м, радиус 0,4 → 0,72)
-  e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-6.25, -0.4, -0.09), V(-5.1, -0.52, -0.04), V(-3.8, -0.68, -0.15), V(-2.94, -0.14, -0.06)]),
-    nozzles: [V(-1.46, 0.32, 4.99), V(1.46, 0.32, 4.99)], nr: 0.25, pod: V(2.2, -0.5, -0.1), dry: true }, // A-10A (сопла по срезу гондол: y 1,1 → 0,32)
+  e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-6.25, -0.86, -0.09), V(-5.1, -0.99, -0.04), V(-3.8, -1.15, -0.15), V(-2.94, -0.61, -0.06)]), // по низу пилонов модели (были на 0,45 м выше — в крыле)
+    nozzles: [V(-1.46, 0.32, 4.99), V(1.46, 0.32, 4.99)], nr: 0.25, pod: V(1.68, -1.59, -0.3), dry: true }, // A-10A (сопла по срезу гондол: y 1,1 → 0,32; контейнер — на пилоне у корня крыла, был в крыле)
   e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-2.93, -1.18, 0.46), V(-1.75, -1.59, -1.5), V(-1.75, -1.59, 0.3), V(-1.75, -1.05, 1.8)]),
     nozzles: [V(-0.68, -1.12, 8.31), V(0.68, -1.12, 8.31)], nr: 0.3, pod: V(0.9, -1.9, -2.5), matte: true }, // F-15E (LANTIRN под воздухозаборником)
   // ── 2026-10-19, третья партия manilov.ap: точки подвески — по низу крыла (лучи по треугольникам) и пилонам автора ──
@@ -190,7 +190,7 @@ const META = {
   w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 MOP — Rhine_Lab_Muelsyse (US Weapon Pack)
   w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т — собственная модель (tools/airdef-models/own/kh29t)
-  w_kh31p: { weapon: 'kh31p', stations: [] },
+  w_kh31p: { weapon: 'kh31p', stations: [] }, // Х-31П — собственная модель (tools/airdef-models/own/kh31p)
   w_kh59m: { weapon: ['kh59m', 'kh59mk2'], lazy: true, stations: [] }, // Х-31 (L_elo) в размер Х-59М — и для Х-59МК2 (Mark 2026-10-19; прежняя — из War Thunder)
   w_kh25ml: { weapon: 'kh25ml', stations: [] }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)
   w_kh58: { weapon: 'kh58', stations: [] }, // Х-58У — Narni_Tchereskov
@@ -282,6 +282,7 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
   w_kh29t: '20261024b',
+  w_kh31p: '20261024c',
 };
 Object.assign(GLB_V, GLB_V_OWN);
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур

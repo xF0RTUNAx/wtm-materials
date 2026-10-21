@@ -13,7 +13,7 @@
 - "FAB-1000" (https://sketchfab.com/3d-models/fab-1000-c4db2a615b35417ca4f620af8658d97f) by United4192 — CC-BY-4.0 — `w_fab1000.glb`
 - "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_gbu24.glb`, `w_gbu57.glb`, `aam_aim7.glb`, `aam_aim9x.glb`
 - "FAB-500 M-54 V5" (https://sketchfab.com/3d-models/fab-500-m-54-v5-87e064b28f6f4d7ba1fde7e79d621b8d) by 4ikalka — CC-BY-4.0 — `w_fab500.glb`
-- "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_kh31p.glb`, `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
+- "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
 - "Kh31" (https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045) by lelo — CC-BY-4.0 — `w_kh59m.glb`
 - "Kh-29 "Kedge"" (https://sketchfab.com/3d-models/kh-29-kedge-7f0372b7f79a4d3599d4e39f05a2ac4a) by Novia556 — CC-BY-4.0 — `w_kh25ml.glb`
 - "KH-58/U Anti-Radiation Missile" (https://sketchfab.com/3d-models/kh-58u-anti-radiation-missile-765d0250b6a0434b97d6e0434032f4da) by Narni_Tchereskov — CC-BY-4.0 — `w_kh58.glb`
