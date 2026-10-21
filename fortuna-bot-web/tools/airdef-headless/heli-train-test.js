@@ -52,13 +52,22 @@ const check = (name, ok) => { console.log(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if
 
 
 check(`карта «Туманная топь»`, C.MAP === 'autumn');
+if (Deno.env.get('LOS')) {
+  const city = C.city;
+  for (const key of ['a_peat', 'a_vil', 'a_farm', 'a_wreck', 'a_heli', 'a_mon']) {
+    const o = city.objects.find((q) => q.key === key), ty = city.groundH(o.x, o.z), res = []; let HP = null; { const w = (o.w || 120) * 0.45, dd = (o.d || 120) * 0.45; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { const x = o.x + (i / 2) * w, z = o.z + (j / 2) * dd, y = city.topAt(x, z); if (!HP || y > HP[1]) HP = [x, y, z]; } }
+    for (const d of [2500, 3500, 4500]) for (const agl of [40, 70, 110]) { let ok = 0, best = []; for (let b = 0; b < 360; b += 15) { const r = b * Math.PI / 180, x = o.x + Math.sin(r) * d, z = o.z + Math.cos(r) * d; if (Math.abs(x) > 14000 || Math.abs(z) > 14000) continue; const hy = city.groundH(x, z) + agl; if (city.los(x, hy, z, o.x, city.topAt(o.x, o.z) + 2, o.z, 4) || city.los(x, hy, z, HP[0], HP[1] + 2, HP[2], 4)) { ok++; best.push(b); } } res.push(`${d / 1000}км/${agl}м: ${ok}/24 [${best.join(',')}]`); }
+    console.log(key, o.name, '·', `к дому ${Math.round(Math.atan2(9800 - o.x, 11200 - o.z) * 180 / Math.PI)}°`); for (const r of res) console.log('   ', r);
+  }
+  Deno.exit(0);
+}
 const LS = C.lessons.heli;
 const passed = (i) => (C.ctrl && C.ctrl.T && C.ctrl.T.finished);
 function start(i, ps) {
   C.toMenu(); frames(3); C.setup.side = ps; C.setup.game = 'training'; C.setup.tside = 'heli'; C.setup.tl = i; C.start('training'); frames(2);
   if (byId('lesson')._cls.has('on')) C.closeLesson();
 }
-for (const ps of ['east', 'west']) for (let i = 0; i < LS.length; i++) {
+if (!Deno.env.get('BOTS')) for (const ps of ['east', 'west']) for (let i = 0; i < LS.length; i++) {
   start(i, ps); const ok = frames(30 * 20);
   const T = C.ctrl.T, cr = C.ctrl.inner.craft;
   check(`урок heli ${i + 1} «${LS[i].name}» (ПВО ${ps}): шаг ${T.s}${LS[i].air ? `, ${cr.heli ? 'вертолёт ' + cr.hm.key : 'НЕ вертолёт'}` : ''}`, ok && (!LS[i].air || cr.heli));
@@ -73,6 +82,24 @@ for (const ps of ['east', 'west']) for (let i = 0; i < LS.length; i++) {
     frames(1);
   }
   check(`урок «${LS[0].name}» пройден ботом (шаг ${T.s})`, passed());
+}
+// посадка ботом не проверяется (бот не держит висение над площадкой) — урок проверен руками
+const keyOf = () => (code, on) => C.ctrl.inner.onKey({ code, repeat: false, preventDefault: () => {} }, on);
+const steer = (K, cr, x, z) => { let e = Math.atan2(-(x - cr.pos.x), -(z - cr.pos.z)) - cr.yaw; while (e > Math.PI) e -= 6.283; while (e < -Math.PI) e += 6.283; K('KeyA', e > 0.08); K('KeyD', e < -0.08); return e; };
+// бот: НАР и ПТУР — нос на цель, «АВТО» стреляет сам
+for (const id of ['h_atgm']) { // НАР бот не умеет (нужен наклон носа по прицелу) — проверяется руками
+  const i = LS.findIndex((l) => l.id === id); start(i, 'east'); const K = keyOf(), T = C.ctrl.T; C.setAuto(true);
+  { const prev = C.hooks.wpnEnd; C.hooks.wpnEnd = (w, res) => { if (prev) prev(w, res); if (Deno.env.get('V')) console.log('   конец ракеты', w.key, JSON.stringify({ t: +w.t.toFixed(1), homing: w.homing, lost: !!w.lost, seeker: w.W.seeker, gap: +(w.pos.y - C.city.topAt(w.pos.x, w.pos.z)).toFixed(1), y: Math.round(w.pos.y), d: Math.round(w.pos.distanceTo(new THREE.Vector3(C.ctrl.inner.game.targets[0].x, w.pos.y, C.ctrl.inner.game.targets[0].z))) })); }; }
+  for (let k = 0; k < 30 * 480 && !passed(); k++) {
+    const cr = C.ctrl.inner.craft, o = C.ctrl.inner.game.targets[0], d = Math.hypot(o.x - cr.pos.x, o.z - cr.pos.z), sp = Math.hypot(cr.vel.x, cr.vel.z);
+    for (const c of ['KeyW', 'KeyS', 'KeyA', 'KeyD']) K(c, false);
+    const e = steer(K, cr, o.x, o.z); K('KeyW', d > 3000 && sp < 30); K('KeyS', d < 3000 && sp > 3);
+    if (d < 3200 && Math.abs(e) < 0.15 && k % 45 === 0) { K('KeyR', true); K('KeyR', false); K('Space', true); K('Space', false); }
+    frames(1);
+  }
+  { const cr = C.ctrl.inner.craft, o = C.ctrl.inner.game.targets[0]; console.log('  ', id, 'd', Math.round(Math.hypot(o.x - cr.pos.x, o.z - cr.pos.z)), 'v', Math.hypot(cr.vel.x, cr.vel.z).toFixed(1), 'agl', Math.round(cr.pos.y - C.city.groundH(cr.pos.x, cr.pos.z)), 'груз', JSON.stringify(C.ctrl.inner.loadout.map((l) => [l.key, l.n])), 'hp', Math.round(o.hp), '/', o.hpMax, 'пусков', C.S.wpns.length, 'pod', JSON.stringify({ lock: !!C.ctrl.inner.pod.lock, why: C.ctrl.inner.pod.why, tgt: C.ctrl.inner.pod.tgt && C.ctrl.inner.pod.tgt.key }), 'say', document.getElementById('say') && document.getElementById('say').textContent); }
+  C.setAuto(false);
+  check(`урок «${LS[i].name}» пройден ботом (шаг ${T.s})`, passed());
 }
 console.log(errors.length ? `\nошибок: ${errors.length}\n${errors.slice(0, 8).join('\n')}` : '\nошибок нет');
 Deno.exit(errors.length ? 1 : 0);

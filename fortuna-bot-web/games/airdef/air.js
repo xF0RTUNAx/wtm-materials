@@ -160,6 +160,12 @@ export function createAir(C) {
   // цели контейнера: цели задания, затем замеченные комплексы ПВО (метки на экране)
   const tgtName = (t) => (t.S ? t.S.rwr || t.S.short : t.name);
   const tgtPos = (t, out) => (t.S ? out.copy(t.pos) : out.set(t.x, city.topAt(t.x, t.z), t.z));
+  // самая высокая точка объекта (крыша корпуса) — для прицела вертолёта: с малой высоты центр объекта у земли закрыт его же
+  // постройками и деревьями (2026-10-21: с 2,5–4,5 км на 40–110 м склад ГСМ и «Фонарь Джека» не захватывались ни с одного направления)
+  function hiPoint(t, out) {
+    if (!t._hp) { const w = (t.w || 120) * 0.45, d = (t.d || 120) * 0.45; let best = null; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { const x = t.x + (i / 2) * w, z = t.z + (j / 2) * d, y = city.topAt(x, z); if (!best || y > best[1]) best = [x, y, z]; } t._hp = best; }
+    return out.set(t._hp[0], t._hp[1], t._hp[2]);
+  }
   function podCands() {
     const M = C.MODE(), out = game.targets.filter((o) => !o.dead);
     for (const u of C.S.units) if (!u.dead && (u.known || (M.markers && u.S.radar && u.emit))) out.push(u);
@@ -200,9 +206,9 @@ export function createAir(C) {
       pod.chkT = 0.1; tgtPos(pod.tgt, TP);
       const d = pod.pos.distanceTo(TP), h = craft.pos.y - city.groundH(craft.pos.x, craft.pos.z);
       pod.why = d > POD_R[1] ? `далеко — ближе ${POD_R[1] / 1000} км` : d < POD_R[0] ? 'слишком близко' : h < POD_H && !craft.heli ? `низко — выше ${POD_H} м` /* прицел вертолёта — в носу, работает и у земли */ : pod.masked ? 'закрыта корпусом' :
-        !city.los(pod.pos.x, pod.pos.y, pod.pos.z, TP.x, TP.y + 2, TP.z, 4) ? 'закрыта домами' : '';
+        !(city.los(pod.pos.x, pod.pos.y, pod.pos.z, TP.x, TP.y + 2, TP.z, 4) || (craft.heli && !pod.tgt.S && city.los(pod.pos.x, pod.pos.y, pod.pos.z, ...hiPoint(pod.tgt, TP).toArray().map((v, k) => (k === 1 ? v + 2 : v)), 4))) ? 'закрыта домами' : '';
       if (pod.why) pod.acq = 0;
-      else if ((pod.acq += 0.1) >= POD_ACQ) { pod.lock = TP.clone(); pod.acq = 0; snd.lock(); }
+      else if ((pod.acq += 0.1) >= POD_ACQ) { pod.lock = TP.clone(); if (craft.heli) pod.lock.y += 2; /* вертолёт: точка — на 2 м выше поверхности, как при проверке видимости: иначе пологий луч подсвета упирался в ту же крышу, и Hellfire шли без наведения */ pod.acq = 0; snd.lock(); }
     }
     const need = C.S.wpns.some((w) => w.owner === craft && (w.W.kind === 'lgb' || w.W.seeker === 'laser'));
     const want = pod.laserMan !== null ? pod.laserMan : need;
