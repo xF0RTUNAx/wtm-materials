@@ -276,9 +276,8 @@ runLesson('air', LI('air', 'mun'), (A) => { const T = C.ctrl.T; if (!T.d.bot) { 
 runLesson('def', LI('def', 'd_arm'), (D) => { const u = C.S.units[0]; if (u && C.S.wpns.some((w) => w.W.kind === 'arm' && !w.dead) && u.emit) C.S.setEmit(u, false); }, 200);
 // пушки: ствол в точку упреждения, огонь
 const LEAD = new THREE.Vector3();
-runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || !u.aimDir) return; const a = C.raid.alive()[0]; if (!a) return; C.S.gunLead(u, a, LEAD); u.aimDir.copy(LEAD).sub(u.pos).normalize(); if (D.st.op) D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, a.pos.d// «Мульти-волна» — уроки на зимней карте: multi-train-test.js
- (пуск до 5 мин) — волна идёт дольше
-}
+runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || !u.aimDir) return; const a = C.raid.alive()[0]; if (!a) return; C.S.gunLead(u, a, LEAD); u.aimDir.copy(LEAD).sub(u.pos).normalize(); if (D.st.op) D.onKey({ code: 'Space', repeat: false, preventDefault: noop }, a.pos.distanceTo(u.pos) < u.S.rmax); }, 200);
+// «Мульти-волна» — уроки на зимней карте: multi-train-test.js
 // «Съёмка»: самолёт (автопилот, пуски, камера у пилона и за оружием), ПВО против самолётов и «Мульти-волны», оружие волны
 { const key = (code) => C.ctrl.onKey({ code, repeat: false, preventDefault: noop }, true);
   const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022r');
