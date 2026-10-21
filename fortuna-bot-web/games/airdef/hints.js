@@ -27,8 +27,9 @@ body.msheetOn #keyHints{display:none}`;
   let last = '';
   function which() {
     if (C.state !== 'play' || !C.ctrl || C.paused) return '';
-    if (C.ctrl === ctrls.air) { const p = C.player; return p && !p.dead ? (p.heli ? (p.hm && !p.hm.arcade ? 'heliR' : 'heli') : 'plane') : ''; }
-    if (C.ctrl === ctrls.defense || C.ctrl === ctrls.multi) { const s = ctrls.defense.st; return s && s.view === 'op' ? 'op' : s && s.view === 'map' ? 'map' : ''; }
+    const cur = C.ctrl && C.ctrl.inner ? C.ctrl.inner : C.ctrl; // в уроке обучения режимом управляет обёртка урока (training.js)
+    if (cur === ctrls.air) { const p = C.player; return p && !p.dead ? (p.heli ? (p.hm && !p.hm.arcade ? 'heliR' : 'heli') : 'plane') : ''; }
+    if (cur === ctrls.defense || cur === ctrls.multi) { const s = ctrls.defense.st; return s && s.view === 'op' ? 'op' : s && s.view === 'map' ? 'map' : ''; }
     return '';
   }
   function refresh() {
