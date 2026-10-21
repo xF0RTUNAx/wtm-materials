@@ -737,6 +737,7 @@ C.toMenu = function () {
 };
 C.togglePause = function () {
   if (C.state !== 'play' || C.ended) return;
+  if (document.body.classList.contains('lsnOpen') && C.ctrl && C.ctrl.lsnClose) { C.ctrl.lsnClose(); return; } // открыта панель «Урок» (она и есть пауза) — Esc / пауза её закрывают
   if ($('lesson').classList.contains('on')) { C.closeLesson(); return; }
   C.paused = !C.paused;
   $('pauseScr').classList.toggle('on', C.paused);
@@ -758,7 +759,7 @@ C.openLesson = function (title, body, sub) {
   $('lessonTitle').innerHTML = title; $('lessonBody').innerHTML = iconize(body); $('lessonSub').textContent = sub || tr('Объяснение · игра на паузе');
   $('lesson').classList.add('on');
 };
-C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = false; if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
+C.closeLesson = function () { $('lesson').classList.remove('on'); C.paused = document.body.classList.contains('lsnOpen'); /* панель «Урок» открыта — пауза остаётся */ if (C.onLessonClose) { const f = C.onLessonClose; C.onLessonClose = null; f(); } };
 $('lessonClose').onclick = () => C.closeLesson();
 $('resumeBtn').onclick = () => C.togglePause();
 $('pauseExit').onclick = () => C.toMenu();
@@ -829,7 +830,7 @@ function frame(now) {
   const idle = !!(cc && cc.idle && cc.idle()); // фон меню — готовые кадры: 3D не рисуется
   // Mark 2026-10-21: на телефоне вне полёта ограничение 30 к/с — только для 3D (нагрев и батарея — от видеочипа), а бой, экран боя и
   // кнопки (перезарядка, таймеры) — каждый кадр, без рывков
-  const capMs = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : 0;
+  const capMs = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : IS_TOUCH ? 1000 / 60 : 0; // телефон — не больше 60 (экраны 90/120 Гц)
   const cap3D = !capMs && IS_TOUCH && !fly ? 1000 / 30 : 0;
   if (capMs && now - lastDraw < capMs - 2) return;
   const ms = now - lastDraw; lastDraw = now;

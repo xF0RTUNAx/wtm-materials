@@ -4,6 +4,7 @@
 // data, guide — первыми: при совпадении ключа побеждают ui и battle (этап 1).
 import data from './en-data.js?v=20261022r';
 import guide from './en-guide.js?v=20261022r';
+import training from './en-training.js?v=20261022r';
 import ui from './en-ui.js?v=20261022r';
 import battle from './en-battle.js?v=20261022r';
-export default { ...data, ...guide, ...ui, ...battle };
+export default { ...training, ...data, ...guide, ...ui, ...battle }; // одинаковый ключ — побеждает интерфейс и бой (этап 1)

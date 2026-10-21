@@ -159,8 +159,9 @@ const DEF = {
 export const cmOf = (key, side = 'east') => CM[key] || (/^h_/.test(key || '') ? DEF.heli : side === 'west' ? DEF.west : DEF.east);
 // чем больше залп, тем чаще ловушки уводят ГСН: ×(1 + 0,1·(залп − 2)), не больше ×1,4
 export const cmBoost = (salvo) => Math.min(1.4, 1 + 0.1 * Math.max(0, salvo - 2));
-// ключ модели машины: у ИИ-налёта — model, у самолёта игрока и онлайн-лётчика — plane
-export const cmKey = (a) => a.model || a.plane || '';
+// ключ модели машины: у самолёта игрока и онлайн-лётчика — plane (на сервере у лётчика model — сторона 'east'/'west' из STRIKERS:
+// ревью 2026-10-21 — МиГ-17 в онлайне получал ЛТЦ), у ИИ-налёта — model
+export const cmKey = (a) => a.plane || a.model || '';
 // поворот вектора из осей модели в мир: крен → тангаж → курс (порядок YXZ — как у моделей и в fwdOf)
 function rot(a, v, o) {
   const sy = Math.sin(a.yaw), cy = Math.cos(a.yaw), sp = Math.sin(a.pitch), cp = Math.cos(a.pitch), sr = Math.sin(a.roll || 0), cr = Math.cos(a.roll || 0);

@@ -523,7 +523,7 @@ export function createStrike(ctx) {
           vel: a.vel.clone().multiplyScalar(0.6).add(TMP.set(CMD[0] * ek + (rnd() - 0.5) * sc, CMD[1] * ek + (rnd() - 0.5) * sc, CMD[2] * ek + (rnd() - 0.5) * sc)), life: 3.5, max: 3.5, owner: a };
         flares.push(g); made.push(g);
       }
-      while (flares.length > MAXF) flares.shift();
+      while (flares.length > MAXF) flares.shift().life = 0; // выброшенная из пула ЛТЦ — «выгорела»: уведённая на неё ракета теряет цель, а не летит в застывшую точку
       fx.cmDrop(a, type, made);
       const f = made[0], boost = cmBoost(cm.salvo);
       for (const m of sams) {

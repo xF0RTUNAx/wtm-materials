@@ -82,7 +82,7 @@ export function createCmFx(scene, P, PL) {
   FLS.mat.uniforms.minPx.value = 6; CHS.mat.uniforms.minPx.value = 12;
   const tick = [], cos = [], clouds = []; // tick — ЛТЦ боя за этот кадр; cos — «картинки» онлайн-клиента; clouds — облака диполей
   const CP = [0, 0, 0], CD = [0, 0, 0];
-  let live = [];
+  let live = [], idleT = 0;
   // ЛТЦ в кадр: f — { pos, vel, life, max, rb } (боя или картинка); ленточный дым — раз в 0,05 с (на слабых — реже и не у всех)
   function drawFlare(f, dt) {
     if (f.cs === undefined) f.cs = Math.random();
@@ -124,11 +124,14 @@ export function createCmFx(scene, P, PL) {
           const f = cos[i]; f.life -= dt; f.vel.multiplyScalar(Math.max(0, 1 - 0.9 * dt)); f.vel.y -= 9.8 * dt; f.pos.addScaledVector(f.vel, dt);
           if (f.life <= 0) cos.splice(i, 1);
         }
-        live = [];
-        for (const [f, d] of tick) drawFlare(f, d);
-        tick.length = 0;
-        for (const f of cos) drawFlare(f, dt);
-        FLS.begin(); for (const s of live.slice(-MAXF)) FLS.put(s.x, s.y, s.z, s.size, s.rot, s.f0, s.f1, s.mix, s.a); FLS.end(); // самые свежие
+        // «Время ×4»: update зовут несколько раз за кадр, а ЛТЦ боя приходят (flareTick) раз в кадр — без новых не стирать (ревью 2026-10-21)
+        if (tick.length || cos.length) {
+          idleT = 0; live = [];
+          for (const [f, d] of tick) drawFlare(f, d);
+          tick.length = 0;
+          for (const f of cos) drawFlare(f, dt);
+          FLS.begin(); for (const s of live.slice(-MAXF)) FLS.put(s.x, s.y, s.z, s.size, s.rot, s.f0, s.f1, s.mix, s.a); FLS.end(); // самые свежие
+        } else if ((idleT += dt) > 0.15 && live.length) { live = []; FLS.begin(); FLS.end(); }
         CHS.begin();
         for (let i = clouds.length - 1; i >= 0; i--) {
           const c = clouds[i]; c.t += dt; c.v.multiplyScalar(Math.max(0, 1 - 1.4 * dt)); c.v.y -= 1.2 * dt; c.p.addScaledVector(c.v, dt);

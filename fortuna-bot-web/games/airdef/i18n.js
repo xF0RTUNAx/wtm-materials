@@ -17,6 +17,7 @@ export function sysLang() {
 }
 let saved = null;
 function detect() {
+  if (typeof document === 'undefined') return 'ru'; // онлайн-сервер (Deno 1.x: window есть, navigator.language — en-US) — сообщения по-русски, их переводит клиент
   try { const Q = typeof location !== 'undefined' && location.search ? new URLSearchParams(location.search) : null, q = Q && Q.get('lang'); if (q === 'en' || q === 'ru') return q; if (Q && Q.get('test')) return 'ru'; /* стенды (Deno: navigator.language — en-US) — русский, если не ?lang= */ } catch (_) { /* нет location */ }
   try { const s = globalThis.localStorage && globalThis.localStorage.getItem(LS_KEY); if (s === 'en' || s === 'ru') { saved = s; return s; } } catch (_) { /* приватный режим */ }
   return typeof window === 'undefined' ? 'ru' : sysLang();
