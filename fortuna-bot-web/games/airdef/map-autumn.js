@@ -34,7 +34,7 @@ function natural(x, z) {
   return Math.max(h, Y0 + 0.5 * rim); // овраги — по стоку воды (ravines), после сетки высот
 }
 // Овраги: ветвистая сеть, сходящаяся к болоту. От края котловины расходятся 11 главных оврагов (извиваются, 7–11,5 км), от них —
-// отвершки (1,5–3,5 км), от отвершков — промоины. Дно: глубина у устья ~45–55 м, к верховью сходит на ~8 м, и ниже по
+// отвершки (1,5–3,5 км), от отвершков — промоины. Дно: глубина у устья ~70–80 м (2026-10-22, Mark: «больше перепад высот» — было ~50), к верховью сходит на ~16 м, и ниже по
 // течению всегда не выше, чем выше (вода стекает к болоту); склоны — V-профиль, ширина по верху ~ 4 глубины. Возвращает
 // линии оврагов (для отрисовки: мокрое дно, густой лес на склонах)
 function ravines(HM, N, rnd) {
@@ -58,20 +58,20 @@ function ravines(HM, N, rnd) {
     // устье — на краю котловины (basinD ≈ 1,0) по лучу t
     let r = 0.5; while (r < 3 && Math.hypot(Math.cos(t) * r, Math.sin(t) * r) < 9 && basinD(B0.x + Math.cos(t) * B0.rx * r, B0.z + Math.sin(t) * B0.rz * r) < 1.0) r += 0.02;
     const x0 = B0.x + Math.cos(t) * B0.rx * r, z0 = B0.z + Math.sin(t) * B0.rz * r;
-    const main = walk(x0, z0, Math.atan2(Math.sin(t) * B0.rz, Math.cos(t) * B0.rx), 7000 + rnd() * 4500, 1, 50); main.d0 = 52; lines.push(main);
+    const main = walk(x0, z0, Math.atan2(Math.sin(t) * B0.rz, Math.cos(t) * B0.rx), 7000 + rnd() * 4500, 1, 50); main.d0 = 78; lines.push(main);
     const nb = 3 + Math.floor(rnd() * 3);
     for (let b = 0; b < nb; b++) {
       const k = Math.floor((0.2 + 0.7 * rnd()) * (main.pts.length - 2)) + 1, [bx, bz] = main.pts[k], [px, pz] = main.pts[k - 1], ma = Math.atan2(bz - pz, bx - px);
-      const br = walk(bx, bz, ma + (rnd() < 0.5 ? -1 : 1) * (0.6 + rnd() * 0.5), 1500 + rnd() * 2000, 1.3); br.parent = main; br.at = k; br.d0 = 34; lines.push(br);
+      const br = walk(bx, bz, ma + (rnd() < 0.5 ? -1 : 1) * (0.6 + rnd() * 0.5), 1500 + rnd() * 2000, 1.3); br.parent = main; br.at = k; br.d0 = 50; lines.push(br);
       if (rnd() < 0.6) { const k2 = Math.floor((0.3 + 0.5 * rnd()) * (br.pts.length - 2)) + 1, [cx, cz] = br.pts[k2], [qx, qz] = br.pts[k2 - 1], ba = Math.atan2(cz - qz, cx - qx);
-        const tw = walk(cx, cz, ba + (rnd() < 0.5 ? -1 : 1) * (0.7 + rnd() * 0.5), 700 + rnd() * 1100, 1.6); tw.parent = br; tw.at = k2; tw.d0 = 20; lines.push(tw); }
+        const tw = walk(cx, cz, ba + (rnd() < 0.5 ? -1 : 1) * (0.7 + rnd() * 0.5), 700 + rnd() * 1100, 1.6); tw.parent = br; tw.at = k2; tw.d0 = 30; lines.push(tw); }
     }
   }
   // дно: «сырой» профиль — земля минус глубина (у устья d0, к верховью ~8 м), потом от верховья вниз — не выше, чем выше;
   // у отвершка дно в месте впадения — дно родителя там же
   for (const l of lines) {
     const n = l.pts.length; l.bot = new Float32Array(n);
-    for (let k = 0; k < n; k++) { const f = k / Math.max(1, n - 1); l.bot[k] = hAt(l.pts[k][0], l.pts[k][1]) - (12 + (l.d0 - 12) * Math.pow(1 - f, 0.35)); }
+    for (let k = 0; k < n; k++) { const f = k / Math.max(1, n - 1); l.bot[k] = hAt(l.pts[k][0], l.pts[k][1]) - (16 + (l.d0 - 16) * Math.pow(1 - f, 0.35)); }
     for (let k = n - 2; k >= 0; k--) l.bot[k] = Math.min(l.bot[k], l.bot[k + 1]);
     if (l.parent) { const pb = l.parent.bot[l.at]; for (let k = 0; k < n && l.bot[k] < pb + 0.5; k++) l.bot[k] = pb + 0.5 + k * 0.05; }
     else for (let k = 0; k < n; k++) l.bot[k] = Math.max(l.bot[k], AUTUMN.Y0 - 0.5 + k * 0.04);
@@ -80,6 +80,7 @@ function ravines(HM, N, rnd) {
   const NEW = Float32Array.from(HM);
   for (const l of lines) for (let k = 0; k < l.pts.length; k++) {
     const [x, z] = l.pts[k], d = hAt(x, z) - l.bot[k]; if (d <= 0) continue;
+    if (d > 42 && k % 2 && k < l.pts.length - 1) continue; // широкий склон (> 200 м) — по каждой второй точке (через 80 м): форма та же, вдвое быстрее
     const W = 30 + 4 * Math.max(d, 8), i0 = Math.max(0, Math.floor((x - W + H) / RES)), i1 = Math.min(N - 1, Math.ceil((x + W + H) / RES)), j0 = Math.max(0, Math.floor((z - W + H) / RES)), j1 = Math.min(N - 1, Math.ceil((z + W + H) / RES));
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
       const q = j * N + i, r = Math.hypot(-H + i * RES - x, -H + j * RES - z); if (r >= W) continue;
@@ -90,6 +91,40 @@ function ravines(HM, N, rnd) {
   const CV = new Float32Array(HM.length); for (let q = 0; q < HM.length; q++) CV[q] = HM[q] - NEW[q]; // насколько врезан овраг
   HM.set(NEW);
   return { CV, lines: lines.map((l) => ({ pts: l.pts, bot: Array.from(l.bot), main: !l.parent })) };
+}
+// Гривы (2026-10-22, Mark: «больше перепад высот, чтобы прятаться от рельефа»): на ровных подходах к целям через котловину — вытянутые
+// сухие гряды 32–46 м поперёк подхода — три кольца по 5 в 1,5–3,4 км от цели (из-за них — подскок на пуск ПТУР), у монастыря — двумя кольцами. Только в
+// котловине (на холмах укрытий и так хватает), над водой — суша; случайных чисел не берут (остальная карта не меняется)
+const RIDGES = (() => {
+  const out = [], C0 = AUTUMN.BASIN, I = AUTUMN.ISLE;
+  // разброс — от хэша номера гряды (длина, поворот, сдвиг, высота): иначе ровный «пунктир» по кругу
+  const hs = (k) => { const v = Math.sin(k * 12.9898 + 78.233) * 43758.5453; return v - Math.floor(v); };
+  const add = (x, z, a, L, h) => { const k = out.length; a += (hs(k) - 0.5) * 0.7; L *= 0.7 + 0.7 * hs(k + 0.3); h *= 0.85 + 0.3 * hs(k + 0.6); x += (hs(k + 0.1) - 0.5) * 500; z += (hs(k + 0.2) - 0.5) * 500;
+    out.push({ x, z, ax: Math.cos(a), az: Math.sin(a), L, h, W: 170 + h * 2, r: Math.hypot(L, 170 + h * 2) }); };
+  // [x, z, на склоне]: цели на склоне (деревня, ферма) смотрят на болото сверху — их гряды ближе (выше нельзя: закрывали и подскок)
+  for (const [px, pz, up] of [[-1300, 5400, 1], [-7000, 300, 1], [4500, 1100, 0]]) { // деревня, ферма, торфяник
+    const d0 = Math.atan2(C0.z - pz, C0.x - px);
+    for (const [ring, D] of [[0, up ? 1500 : 1800], [1, up ? 2200 : 2600], [2, up ? 2900 : 3400]]) for (let k = 0; k < 5; k++) {
+      const a = d0 + (k - 2) * 0.62 + (ring % 2) * 0.31; add(px + Math.cos(a) * D, pz + Math.sin(a) * D, a + Math.PI / 2, 520, 32 + ((k + ring) % 3) * 4);
+    }
+  }
+  for (const [D, n, h] of [[1900, 6, 30], [2900, 7, 34]]) for (let k = 0; k < n; k++) { const a = 0.4 + (k + D / 1000) * 6.283 / n; add(I.x + Math.cos(a) * D, I.z + Math.sin(a) * D, a + Math.PI / 2, 520, h + (k % 2) * 6); } // монастырь
+  return out;
+})();
+// высоты гряд на сетке (наибольшая из перекрытых), м: по клеткам рамки каждой гряды — не по всей карте
+function ridgeGrid(N) {
+  const RG = new Float32Array(N * N);
+  for (const r of RIDGES) {
+    const i0 = Math.max(0, Math.floor((r.x - r.r + H) / RES)), i1 = Math.min(N - 1, Math.ceil((r.x + r.r + H) / RES)), j0 = Math.max(0, Math.floor((r.z - r.r + H) / RES)), j1 = Math.min(N - 1, Math.ceil((r.z + r.r + H) / RES));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const x = -H + i * RES, z = -H + j * RES, dx = x - r.x, dz = z - r.z, along = dx * r.ax + dz * r.az, across = dx * -r.az + dz * r.ax;
+      const u = Math.abs(along) / r.L; if (u >= 1) continue;
+      const v = Math.abs(across + 40 * perlin(x * 0.002 + r.x * 1e-3, z * 0.002)) / r.W; if (v >= 1) continue; // ось чуть извилиста
+      const h = r.h * Math.cos(v * Math.PI / 2) ** 2 * (1 - smooth(0.55, 1, u)) * (0.85 + 0.3 * perlin(x * 0.004 + 3.1, z * 0.004)), q = j * N + i;
+      if (h > RG[q]) RG[q] = h;
+    }
+  }
+  return RG;
 }
 // площадки: [центр, полуразмеры, откос m]; y — своя (остров, площадки у воды) или средняя по площадке
 function pads() {
@@ -130,6 +165,13 @@ export function buildAutumn(seed = 1) {
     HM[q] = h; WET[q] = wet;
   }
   const RAV = ravines(HM, N, rnd);
+  // гривы — поверх котловины (до 1,25 basinD, к краю сходят на нет); над водой — суша, а у монастыря вода рва остаётся
+  { const RG = ridgeGrid(N); for (let q = 0; q < N * N; q++) {
+    if (RG[q] <= 0.3) continue; const i = q % N, j = (q - i) / N, x = -H + i * RES, z = -H + j * RES, bd = basinD(x, z); if (bd > 1.45) continue;
+    if (Math.hypot(x - IS.x, z - IS.z) < IS.moat + 250) continue;
+    const r = RG[q] * (1 - smooth(1.2, 1.45, bd)); if (r <= 0.3) continue;
+    if (WET[q]) { if (r > 2) { HM[q] = WY + 0.6 + r; WET[q] = 0; } } else HM[q] += r;
+  } }
   // сглаживание крутых мест (уклон > ~35°); вода не трогается
   { const T = new Float32Array(N * N);
     for (let it = 0; it < 3; it++) {

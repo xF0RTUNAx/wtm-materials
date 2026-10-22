@@ -161,6 +161,7 @@ export default {
   "<b>Подскок одной кнопкой</b> — {0}: вертолёт сам поднимется, пока цель не покажется, захватит её, пустит ПТУР, доведёт и опустится обратно.": "<b>One-button pop-up</b>, {0}: the helicopter climbs until the target shows, locks it, fires the ATGM, guides it in and drops back down.",
   "{0} — подсказка, на сколько метров подняться, чтобы цель показалась.": "{0}: tells you how many metres to climb for the target to show.",
   "«ПОДСКОК»": "“POP-UP”",
+  "В болоте у целей — сухие <b>гривы</b> высотой 30–45 м: за ними висят на 15–20 м, а на пуск выскакивают.": "In the bog near the targets there are dry <b>ridges</b> 30–45 m high: hover behind them at 15–20 m and pop up to fire.",
   "Комплекс, открывший по вам огонь, появляется на карте с зоной поражения — обходите её.": "Any system that fires at you appears on the map with its kill zone: go around it.",
   "Низкий вертолёт (ниже 60 м) комплекс берёт на сопровождение примерно на 3 с дольше — ставьте пушки и ПЗРК так, чтобы видеть выходы из оврагов заранее.": "A low helicopter (below 60 m) takes a system about 3 s longer to lock: place guns and MANPADS where they can watch the ravine exits in advance.",
   "Пускать с 5 км — ракеты рассыпаются по полю.": "Firing from 5 km: the rockets scatter all over the field.",
