@@ -301,8 +301,10 @@ function parseGlb(buf) {
   const slice = (bv, extra = 0, len = bv.byteLength) => buf.slice(binOff + (bv.byteOffset || 0) + extra, binOff + (bv.byteOffset || 0) + extra + len);
   const acc = (i) => { const a = json.accessors[i], bv = json.bufferViews[a.bufferView], C = T[a.componentType], n = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[a.type]; return new C(slice(bv, a.byteOffset || 0, a.count * n * C.BYTES_PER_ELEMENT)); };
   const meshes = json.meshes.map((m) => { const p = m.primitives[0], at = p.attributes; return { name: m.name, mat: json.materials[p.material], pos: acc(at.POSITION), nor: acc(at.NORMAL), uv: at.TEXCOORD_0 !== undefined ? acc(at.TEXCOORD_0) : null, ao: at.COLOR_0 !== undefined ? acc(at.COLOR_0) : null, idx: acc(p.indices), hub: m.extras && m.extras.hub }; }); // hub — центр втулки винта вертолёта (prepare.js); ao — затенение в стыках (tools/airdef-models/ao.js)
-  const images = (json.images || []).map((im) => new Blob([slice(json.bufferViews[im.bufferView])], { type: im.mimeType }));
-  return { meshes, images, textures: json.textures || [], nrm: new Set((json.materials || []).filter((m) => m.normalTexture).map((m) => m.normalTexture.index)) }; // nrm — номера карт нормалей (данные, не цвет)
+  // hash — отпечаток байтов картинки (FNV-1a + длина): одинаковые картинки внутри файла и между файлами (у «Шилки» 65 текстур, разных 22;
+  // у её дальней копии — те же) грузятся на видеокарту один раз (load: TEXC)
+  const hashes = [], images = (json.images || []).map((im) => { const ab = slice(json.bufferViews[im.bufferView]), u8 = new Uint8Array(ab); let h = 0x811c9dc5; for (let i = 0; i < u8.length; i++) h = Math.imul(h ^ u8[i], 0x01000193); hashes.push(`${(h >>> 0).toString(36)}.${u8.length}`); return new Blob([ab], { type: im.mimeType }); });
+  return { meshes, images, hashes, textures: json.textures || [], nrm: new Set((json.materials || []).filter((m) => m.normalTexture).map((m) => m.normalTexture.index)) }; // nrm — номера карт нормалей (данные, не цвет)
 }
 // камуфляж техники без текстур (краска «#camo» из prepare.js): узор — в шейдере по координатам точки модели: крупные пятна
 // с ровными краями (шум со смещением области), не по треугольникам сетки. META.camo: { scheme, size — размер пятна, м }.
@@ -378,12 +380,19 @@ const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x2222
 // текстуры вертолётов — не больше 512, остальных моделей — не больше 1024; распакованная картинка закрывается после загрузки на видеокарту
 // (иначе держит ещё столько же обычной памяти). На ПК и в стендах (свои рендереры) — как было
 const TOUCH = typeof matchMedia === 'function' && typeof location !== 'undefined' && (/[?&]touch=1/.test(location.search) || matchMedia('(pointer: coarse)').matches);
+const TEXC = new Map(); // общие текстуры моделей: отпечаток картинки | карта нормалей | предел размера → Promise<THREE.Texture>
 async function load(name, base) {
   const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
-  const { meshes, images, textures, nrm } = parseGlb(await r.arrayBuffer());
+  const { meshes, images, hashes, textures, nrm } = parseGlb(await r.arrayBuffer());
   const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = META[name] || META[name.replace(/_lo$/, '')] || {};
-  const tex = await Promise.all(textures.map(async (t, ti) => {
+  const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
+    if (MM0.bld) return mkTex(t, isN, tm); // у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
+    const k = `${hashes[t.source]}|${isN ? 1 : 0}|${tm}`; // та же картинка, тот же вид и предел размера — одна текстура на все модели
+    if (!TEXC.has(k)) TEXC.set(k, mkTex(t, isN, tm));
+    return TEXC.get(k);
+  }));
+  async function mkTex(t, isN, tm) {
     if (typeof createImageBitmap !== 'function') return null;
     let bmp; try { bmp = await createImageBitmap(images[t.source]); } catch (_) { return null; } // битая картинка — модель без этой текстуры
     if (tm && Math.max(bmp.width, bmp.height) > tm) { // уменьшить (с сохранением пропорций); не вышло — оставить как есть
@@ -400,7 +409,7 @@ async function load(name, base) {
     // у зданий картинку читает дальняя «коробка» (city-render modelColor) — не закрываем
     if (TOUCH && !MM0.bld) x.onUpdate = () => { if (x.image && x.image.close) x.image.close(); };
     return x;
-  }));
+  }
   // меш «часть|материал»: у комплексов — body / turret / cradle, у остальных всё в body
   const MM = META[name] || META[name.replace(/_lo$/, '')] || {}, matte = !!MM.matte;
   // drop — лишние детали источника (переходник пилона и т. п.); recolor — свой цвет детали (по имени после «|», линейный)
@@ -501,7 +510,8 @@ export function unitModelGlb(key) {
 // ракета комплекса из его модели (маршевая ступень + ускоритель) или null
 export function unitMissileGlb(key) {
   const sm = SAMMSL[key]; if (sm && LOADED[sm]) return { missile: LOADED[sm].clone(), booster: null };
-  const n = UMODEL[key], G = n && LOADED[n]; if (!G) return null;
+  const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); // телефон: подробная модель ещё не грузилась — ракеты из неё со следующего пуска
+  const G = n && (LOADED[n] || LOADED[n + '_lo']); if (!G) return null;
   const m = G.children.find((c) => c.name === 'missile'); if (!m) return null;
   const b = G.children.find((c) => c.name === 'booster');
   return { missile: m.clone(), booster: b ? b.clone() : null };
@@ -526,7 +536,11 @@ export function loadModels(base, onReady) {
 // модели «Мульти-волны» и прочие lazy: начать загрузку / копия загруженной (или null)
 export function wantModel(name) { if (META[name] && BASE) start(name); }
 export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
-export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); start(n); } } // сначала лёгкая дальняя копия
+// телефон (2026-10-22, вылеты самолётных боёв): у тяжёлых комплексов подробная модель — только когда камера подлетела ближе 1,5 км
+// (wantUnitNear из main.js; LOD переключает на неё с 400 м) или комплекс пустил ракету (unitMissileGlb): «Шилка» — 656 тыс. треугольников
+// и 31 МБ геометрии (в памяти дважды: массив и видеокарта), а в самолётном бою камера к машинам ПВО обычно не подлетает. Вблизи модель та же
+export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !UNIT_LO.has(n)) start(n); } } // сначала лёгкая дальняя копия
+export function wantUnitNear(key) { const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); }
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
 export function wantBuildings(names) { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld && (!names || names.includes(n))) start(n); } // names — только модели этой карты (зимний лес городу не нужен и наоборот)
 export const bldModel = (name) => (META[name] && (META[name].bld || META[name].obj) && LOADED[name]) || null;

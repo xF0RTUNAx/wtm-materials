@@ -27,7 +27,7 @@ import { createRaid } from './sim/raid.js?v=20261022u';
 import { POD } from './sim/combined.js?v=20261022u';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022u';
 import { slotCount } from './launchers.js?v=20261022u';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022u';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022u';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022u';
 import { createSound } from './sound.js?v=20261022u';
 import { ico, iconize } from './icons.js?v=20261022u';
@@ -187,8 +187,8 @@ const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
 ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рендерер — какие форматы есть у устройства
 // телефон: текстуры моделей после загрузки на видеокарту освобождаются (models.js) — восстановить потерянный контекст WebGL нечем, только перезагрузкой
-// в онлайн-бою — не выбрасывать игрока: бой доигрывается (модели могут остаться без текстур), перезагрузка — при выходе в меню
-canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if (C.net && C.net.battle) C.reloadAfterBattle = true; else location.reload(); });
+// в бою (онлайн и одиночном) — не выбрасывать игрока: бой доигрывается (модели могут остаться без текстур), перезагрузка — при выходе в меню
+canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') C.reloadAfterBattle = true; else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление — iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
@@ -579,6 +579,7 @@ function syncWorld(dt, t) {
     // машина на экране меньше ~1,5 пикселя — не рисуем (детальные модели тяжёлые, а вдали их не видно)
     if (g.userData.R === undefined) g.userData.R = Math.max(2, new THREE.Box3().setFromObject(g).getSize(LP).length() * 0.5);
     g.visible = g.userData.R * pxK > 1.5 * camera.position.distanceTo(u.pos);
+    if (g.visible && camera.position.distanceTo(u.pos) < 1500) wantUnitNear(u.key); // телефон: подробная модель — когда камера подлетела (models.js), до того — дальняя копия
     // подробная модель или дальняя копия (models.js: THREE.LOD по частям) — по расстоянию с поправкой на поле зрения
     // (у узкого окна ТВ и прицела оператора «ближе»); конвейер кадра сам LOD не переключает
     if (g.visible) {
@@ -718,6 +719,8 @@ const ctrls = {};
 C.start = function (game) {
   if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
   // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
+  // «Ещё раз» после потери контекста WebGL (текстуры моделей не вернуть): новый бой — с перезагрузкой, адрес страницы тот же (карта, вертолёт — как были)
+  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); location.replace(u.href); return; }
   if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
     ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }
