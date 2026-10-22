@@ -1233,7 +1233,8 @@ export function createAir(C) {
     // наклон прицела нельзя — вертолёт перестаёт разгоняться и не подлетает (урок «Управление» стоял в 4 км от цели)
     const lw = curW(), narW = arc && nar.has && !HU.yaw && !!lw && AG[lw.key].kind === 'rocket' && usable(lw);
     nar.slow = Math.abs(HU.cy) < 0.12 && vh < 25; nar.on = narW && nar.slow;
-    if (lw && !hintSeen.has(lw.key) && !craft.landed && game.t > 3) { hintSeen.add(lw.key); const h = weaponHint(lw.key); if (h) C.say(h, 8); }
+    // подсказка к оружию — при первом выборе в вылете; в уроках оружие объясняет карточка урока
+    if (lw && !hintSeen.has(lw.key) && !craft.landed && game.t > 3 && C.setup.game !== 'training') { hintSeen.add(lw.key); const h = weaponHint(lw.key); if (h) C.say(h, 8); }
     if (narW) {
       const dx = nar.pt.x - craft.pos.x, dz = nar.pt.z - craft.pos.z;
       HU.yawTo = Math.atan2(-dx, -dz); if (nar.on) HU.pitchTo = nar.pitch; // наклон — подобран по расчёту точки падения (updateLar)
