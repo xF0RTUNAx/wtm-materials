@@ -228,7 +228,8 @@ const META = {
   mp_verba: { launcher: ['strela2', 'igla', 'iglas', 'verba'], stations: [] },
   mp_stinger: { launcher: ['redeye', 'stinger'], stations: [] },
   // зенитные комплексы: корпус / башня / пакет (оси — LNCH в launchers.js, их печатает prepare.js)
-  bukm3: { units: ['bukm3'], stations: [] }, // «Бук-М3» — Jeyhun1985
+  bukm3: { units: ['bukm3'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Бук-М3» — Valera121 (CC BY; без текстур — камуфляж шейдером, колёса и ракеты в ТПК — свои цвета; гусеницы звеньями — prepare.js tracks)
+  msl_bukm3: { samMissile: ['bukm3'], matte: true, stations: [] }, // ракета 9М317М — из той же модели (Missile_1), светлая
   buk: { units: ['buk'], stations: [], matte: true }, // «Бук» (колёсный) — azlan
   zu23: { units: ['zu23'], stations: [], matte: true }, // ЗУ-23-2 — LuckySkink9661
   phalanx: { units: ['phalanx'], stations: [] }, // Phalanx — DenisGLabrecque
@@ -287,8 +288,9 @@ const GLB_V_OWN = {
   gepard_lo: '20261024d',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
-// «Оса-М» ЗИФ-122 (KoreanNavy) вместо модели Jeyhun1985 (2026-10-22): новые файлы
+// «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
+Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
 Object.assign(GLB_V, GLB_V_OWN);
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
@@ -483,7 +485,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger']);
+const UNIT_LO = new Set(['bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);

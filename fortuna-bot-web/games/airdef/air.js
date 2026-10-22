@@ -1045,6 +1045,7 @@ export function createAir(C) {
     const o = game.opts, L = { items: m.load.map((l) => [l.key, l.n]), plane: m.plane };
     o.items = L.items; o.plane = m.plane; o.pod = !!(m.choice !== undefined && LOADOUTS[game.net.battle.era][m.choice] && LOADOUTS[game.net.battle.era][m.choice].pod);
     rearm(); if (!m.back || !craft.dz) { initDamage(craft); if (craft.dmgVis) craft.dmgVis.sync(craft); }
+    for (const l of loadout) { const s = m.load.find((q) => q.key === l.key); if (s && s.rs !== undefined) l.rs = s.rs; } // начатый блок НАР (ИИ-двойник давал залпы) — как у сервера
     craft.cmFlare = m.cm.flare; craft.cmChaff = m.cm.chaff;
     const [x, y, z, yaw] = m.s;
     craft.dead = false; craft.pos.set(x, y, z); craft.yaw = yaw; craft.pitch = 0; craft.roll = 0; craft.speed = m.back ? (m.v || 240) : startV(m.v || 240); thrI = 2; craft.thr = THR_STEPS[thrI]; craft.ab = false; craft.fuel = 1; fuelWarn = 0; zoneReset();

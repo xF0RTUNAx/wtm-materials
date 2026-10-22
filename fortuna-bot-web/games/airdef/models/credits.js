@@ -652,7 +652,7 @@ export const CREDITS = [
  },
  {
   "title": "Mig-29K",
-  "author": "KoreanNavy",
+  "author": "Art Blender (KoreanNavy)",
   "url": "https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb",
   "license": "CC-BY-4.0",
   "files": [
@@ -1185,7 +1185,7 @@ export const CREDITS = [
  },
  {
   "title": "ZIF-122 & 4K33 Osa-M Missile",
-  "author": "KoreanNavy",
+  "author": "Art Blender (KoreanNavy)",
   "url": "https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43",
   "license": "CC-BY-4.0",
   "files": [
@@ -1765,12 +1765,13 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Buk-M3 9K317 SAM",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/buk-m3-9k317-sam-923878eda87a4b28bae10799023086c5",
+  "title": "Buk-M3",
+  "author": "Valera121",
+  "url": "https://sketchfab.com/3d-models/buk-m3-45c5b29bbdd24177911df65eb825eb28",
   "license": "CC-BY-4.0",
   "files": [
    "bukm3",
+   "msl_bukm3",
    "bukm3_lo"
   ]
  },

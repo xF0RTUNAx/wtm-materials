@@ -18,7 +18,7 @@ const CW = +(Q.get('cw') || 440), CH = +(Q.get('ch') || 310), COLS = TT.length *
 const [{ AG, SAM }, { LNCH }, M, UR, { motorOf, MOTOR }, { FOG_U }] = await Promise.all([import(BASE + 'arsenal.js' + VER), import(BASE + 'launchers.js' + VER), import(BASE + 'models.js' + VER), import(BASE + 'units-render.js' + VER), import(BASE + 'plume.js' + VER), import('../../games/drone/world.js' + VER)]);
 FOG_U.value = 0; // без тумана: дым виден на любом расстоянии камеры
 M.loadModels(BASE, () => {});
-for (const n of ['msl_manpads', 'msl_aim120', 'msl_aster']) M.wantModel(n);
+for (const n of ['msl_manpads', 'msl_aim120', 'msl_aster', 'msl_bukm3']) M.wantModel(n);
 
 // ── что показывать ──
 const E = [];

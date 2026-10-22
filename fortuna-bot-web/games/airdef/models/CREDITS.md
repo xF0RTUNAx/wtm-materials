@@ -71,7 +71,7 @@
 - "M4" (https://sketchfab.com/3d-models/m4-65059c25184c48c5b6a1b9ac27d34db6) by manilov.ap — CC-BY-4.0 — `e_m4.glb`
 - "Mikoyan-Gurevich MiG-19" (https://sketchfab.com/3d-models/mikoyan-gurevich-mig-19-9204188bf7114b90904c35f64a110ed3) by Tom Zimmermann — CC-BY-4.0 — `e_mig19.glb`
 - "Mig17" (https://sketchfab.com/3d-models/mig17-672ef502523b4cbe9aced1e4252c0cca) by manilov.ap — CC-BY-4.0 — `e_mig17.glb`
-- "Mig-29K" (https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb) by KoreanNavy — CC-BY-4.0 — `e_mig29k.glb`
+- "Mig-29K" (https://sketchfab.com/3d-models/mig-29k-23a0d3531b8f4f58b428835754a9fbdb) by Art Blender (KoreanNavy) — CC-BY-4.0 — `e_mig29k.glb`
 - "T4" (https://sketchfab.com/3d-models/t4-1b9171a6210b427fb2493af3947b1c26) by manilov.ap — CC-BY-4.0 — `e_t4.glb`
 - "Sukhoi Su-27 "Flanker"" (https://sketchfab.com/3d-models/sukhoi-su-27-flanker-2541c1dbc6c1499cb7b38b5bf1314750) by andertan — CC-BY-4.0 — `e_su27.glb`
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan — CC-BY-4.0 — `e_su35.glb`
@@ -129,7 +129,7 @@
 - "Iranian Sevom Khordad SAM" (https://sketchfab.com/3d-models/iranian-sevom-khordad-sam-ca18f97aeb6a4aaf992a973d513de306) by 42manako — CC-BY-4.0 — `khordad.glb`
 - "OERLIKON 35MM SKYGUARD RADAR" (https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d) by lm9241221 — CC-BY-4.0 — `skyguard.glb`, `skyguard_lo.glb`
 - "Tracked Rapier" (https://sketchfab.com/3d-models/tracked-rapier-23db0462ce604a64af5ea282b5df59b9) by stealth86 — CC-BY-4.0 — `rapier.glb`, `rapier_lo.glb`
-- "ZIF-122 & 4K33 Osa-M Missile" (https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43) by KoreanNavy — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
+- "ZIF-122 & 4K33 Osa-M Missile" (https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43) by Art Blender (KoreanNavy) — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
 - "MIM-104 Patriot Surface-To-Air Missile (SAM)" (https://sketchfab.com/3d-models/mim-104-patriot-surface-to-air-missile-sam-7a64d0af78514a159877edab1ab2bccb) by Muhamad Mirza Arrafi — CC-BY-4.0 — `patriot.glb`
 - "SAM S-75 "Dvina"" (https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4) by manyakasia — CC-BY-4.0 — `s75.glb`
 - "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid — CC-BY-4.0 — `s125.glb`, `s125_lo.glb`
@@ -192,7 +192,7 @@
 - "BUK Missile System" (https://sketchfab.com/3d-models/buk-missile-system-7663f9fca2ce485da8c0fafcf2d40d10) by azlan — CC-BY-4.0 — `buk.glb`
 - "ZU - 23, зенитная установка, ЗУ-23, зенитка" (https://sketchfab.com/3d-models/zu-23-23-fdae5a37901941fea3a02578506072a3) by LuckySkink9661 — CC-BY-4.0 — `zu23.glb`
 - "Phalanx CIWS (Close-in Weapons System)" (https://sketchfab.com/3d-models/phalanx-ciws-close-in-weapons-system-6c038d4e66634fc4832be5b2d8697a0d) by DenisGLabrecque — CC-BY-4.0 — `phalanx.glb`
-- "Buk-M3 9K317 SAM" (https://sketchfab.com/3d-models/buk-m3-9k317-sam-923878eda87a4b28bae10799023086c5) by Jeyhun1985 — CC-BY-4.0 — `bukm3.glb`, `bukm3_lo.glb`
+- "Buk-M3" (https://sketchfab.com/3d-models/buk-m3-45c5b29bbdd24177911df65eb825eb28) by Valera121 — CC-BY-4.0 — `bukm3.glb`, `msl_bukm3.glb`, `bukm3_lo.glb`
 - "Mi24" (https://sketchfab.com/3d-models/mi24-5d0b5d8dc985401685f217a775deadad) by manilov.ap — CC-BY-4.0 — `h_mi24.glb`
 - "Ah64" (https://sketchfab.com/3d-models/ah64-3bc9b90cc97a40a6bfc13237329ce51b) by manilov.ap — CC-BY-4.0 — `h_ah64.glb`
 - "Uh1" (https://sketchfab.com/3d-models/uh1-3131460d00184d90855e4988c7d54101) by manilov.ap — CC-BY-4.0 — `h_uh1.glb`

@@ -508,14 +508,23 @@ const CONFIG = {
   // её щёк: пушка, магазин и купол РЛС (как у настоящего). Правила — в осях автора (стволы в +z, цапфы y 2,39)
   phalanx: { src: `${DL}/phalanx_ciws_close-in_weapons_system.glb`, scale: 1.15, nose: '+z', unit: true, tex: () => 256, hinge: [0, 2.39, 0], pack0: 0, /* стволы у автора горизонтальны (ось пакета по куполу считалась бы вертикальной) */
     groups: (c) => (Math.abs(c.ctr[0]) < 0.45 && c.ctr[1] > 1.6 ? 'cradle' /* с барабаном магазина под пушкой */ : c.min[1] > 1.0 ? 'turret' : 'body') },
-  bukm3: { src: `${DL}/buk-m3_9k317_sam.glb`, scale: 1, nose: '+z', unit: true, tex: () => 512, minPart: 0.06, absorb: 0, hinge: [0, 2.6, -3.85],
-    copyParts: [{ sel: (c) => c.mat === 12 && Math.abs(c.ctr[0] + 0.66) < 0.05 && Math.abs(c.ctr[1] - 4.6) < 0.05 && c.size[0] > 0.5, offs: [[0.6, 0, 0], [1.2, 0, 0]] }], // два недостающих нижних ТПК
+  // 9К317М «Бук-М3» — Valera121 (CC BY 4.0; без текстур — один цвет; прежняя модель Jeyhun1985 — с признаками рипа): в файле лежат подложка (Plane) и две ракеты (Missile_1 — модель 9М317М: msl_bukm3 ниже).
+  // Вся верхняя часть (кабина, палуба, пакет 2×3 ТПК) повёрнута на −32° вокруг оси поворота (0; −0,94) и поднята на 26°: правила — в осях игры, turretYaw выравнивает башню, hinge — в исходных осях (до выравнивания),
+  // tpFix — ось башни в осях после центровки (земля — низ гусеницы, ground −0,56). Внутри ТПК — по две цилиндрические вставки (104 и 184 треугольника) — это 9М317М (группа missile, по ним считаются слоты);
+  // колёса — тёмные, остальное — камуфляж (шейдер игры). У автора гусениц нет (колёса 6 на борт: ведущее сзади z 2,0, четыре катка, переднее z −4,5; над ними — полка корпуса y 0,33–0,63): лента звеньями строится tracks
+  // (замкнутая оболочка окружностей по осевой линии, верх прижат под полку; bukm3_lo — гладкая лента без звеньев). Без отсева мелочи: все треугольники автора, кроме подложки и лежащих ракет
+  bukm3: { src: `${DL}/buk-m3_valera121.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /Buk M3/, absorb: 0, ground: -0.56, hinge: [2.09, 2.94, 2.4], turretYaw: -0.5585, tpFix: [0, 1.92, 0.055], camo: { scheme: 'soviet' },
+    colors: { '#rubber$': [0.02, 0.02, 0.02], '#msl$': [0.55, 0.55, 0.5], '#track$': [0.10, 0.10, 0.09] },
+    tracks: { xc: 1.38, w: 0.54, t: 0.07, pitch: 0.16, top: 0.55, links: true, circles: [[2.0, 0.25, 0.6], [0.5, 0, 0.525], [-0.75, 0, 0.525], [-2.0, 0, 0.525], [-3.25, 0, 0.525], [-4.5, 0.25, 0.525]] },
     groups: (c) => {
-      if (c.min[1] < 1.9) return 'body';
-      if (c.size[0] > 0.27 && c.size[0] < 0.34 && c.size[1] > 3) return 'missile'; // 9М317 внутри контейнеров (сечение тоньше ТПК)
-      const H = [-3.85, 2.6], A = [0.66, 0.75], dz = c.ctr[2] - H[0], dy = c.ctr[1] - H[1], along = dz * A[0] + dy * A[1], across = Math.abs(dz * A[1] - dy * A[0]);
-      return across < 0.95 && along > 0.3 && along < 6.6 ? 'cradle' : 'turret';
+      if (c.min[1] < 1.3) return c.size[0] > 0.3 && c.size[0] < 0.5 && c.size[1] > 0.9 && c.size[1] < 1.3 && c.size[2] > 0.9 && c.size[2] < 1.3 && c.min[1] < 0.6 ? 'body#rubber' : 'body'; // колёса
+      const Y = -0.5585, cy = Math.cos(Y), sy = Math.sin(Y), dx = c.ctr[0], dz = c.ctr[2] + 0.94, u = dx * cy + dz * sy, w = -0.94 - dx * sy + dz * cy, y = c.ctr[1]; // центр части в выровненных осях
+      const dw = w - 3.0, dy = y - 2.94, along = -0.899 * dw + 0.438 * dy, up = 0.438 * dw + 0.899 * dy;
+      if (!(Math.abs(u) < 1.18 && along > -0.8 && along < 5.5 && up > -0.85 && up < 1.0)) return 'turret';
+      return (c.tris === 104 || c.tris === 184) && Math.abs(u) < 1.0 && up > -0.7 && up < 0.8 && along > -0.1 && along < 5.3 ? 'missile#msl' : 'cradle';
     } },
+  // ракета 9М317М для «Бука-М3» — Missile_1 из той же модели (Valera121): в размер msl.L = 5,2 м, светлая окраска
+  msl_bukm3: { src: `${DL}/buk-m3_valera121.glb`, scale: 5.2 / 5.25, nose: '-x', tex: () => 256, pickMesh: /Missile_1\//, colors: { '': [0.72, 0.72, 0.66] } },
   // ── вертолёты и вертолётное оружие (2026-10-20): лопасти — свои части rotor / rotor2 (несущий; вертикальная ось) и trotor (рулевой; поперечная ось), крутит models.js ──
   h_mi24: { src: `${DL}/mi24.glb`, scale: 1.018, fwd: [-0.5678, 0.8231], rulesIn: 'game', tex: () => 512, axisX: 1.16, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [1.16, 4.17, -0.24], trotor: [0.53, 4.34, 10.56] }, // Ми-24 — manilov.ap: ось фюзеляжа x 1,16; Ø несущего 17,3
     groups: (c) => { const dx = c.ctr[0] - 1.17, dz = c.ctr[2] + 0.27, y = c.ctr[1];
@@ -615,6 +624,7 @@ const CONFIG = {
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256 };
+CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард (своя модель, 23 тыс.): дальняя копия — 8 тыс. треугольников, цвет 256, без карты нормалей
 CONFIG.gepard_lo = { ...CONFIG.gepard, target: 8000, simpErr: 0.05, tex: () => 256, nTex: null };
 // С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)
@@ -651,6 +661,46 @@ function skinPrims(g, prims) {
       if (N0) { const l = Math.hypot(nx, ny, nz) || 1; p.N[v * 3] = nx / l; p.N[v * 3 + 1] = ny / l; p.N[v * 3 + 2] = nz / l; }
     }
   }
+}
+// ── гусеницы: замкнутая лента по осевой линии — выпуклая оболочка окружностей колёс (circles: [z, y, радиус осевой линии]), сверху срезана на y = top ──
+// (верх прячется под полкой корпуса); звенья с шагом pitch: плита t × w, два грунтозацепа снаружи; links: false — гладкая лента из длинных плит (дальняя копия)
+function orientedBox(M, c, ax, h) {
+  for (let i = 0; i < 3; i++) for (const sgn of [1, -1]) {
+    const j = (i + 1) % 3, k = (i + 2) % 3, nrm = ax[i].map((v) => v * sgn), base = M.pos.length / 3;
+    for (const [a, b] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) M.pos.push(...[0, 1, 2].map((d) => c[d] + nrm[d] * h[i] + ax[j][d] * a * h[j] + ax[k][d] * b * h[k])), M.nor.push(...nrm);
+    const P0 = (q) => M.pos.slice((base + q) * 3, (base + q) * 3 + 3), A = P0(0), B = P0(1), C = P0(2), e1 = B.map((v, d) => v - A[d]), e2 = C.map((v, d) => v - A[d]);
+    const cr = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]], fl = cr[0] * nrm[0] + cr[1] * nrm[1] + cr[2] * nrm[2] < 0;
+    M.idx.push(...(fl ? [base, base + 2, base + 1, base, base + 3, base + 2] : [base, base + 1, base + 2, base, base + 2, base + 3]));
+  }
+}
+function buildTracks(T) {
+  const pts = [];
+  for (const [z, y, r] of T.circles) for (let q = 0; q < 72; q++) { const a = q / 72 * 2 * Math.PI; pts.push([z + r * Math.cos(a), y + r * Math.sin(a)]); }
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+  for (const q of pts) { while (lo.length > 1 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); }
+  for (const q of [...pts].reverse()) { while (up.length > 1 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); }
+  let hull = [...lo.slice(0, -1), ...up.slice(0, -1)]; // против часовой стрелки в осях (z, y)
+  // срез сверху: Сазерленд — Ходжман по y ≤ top
+  const clip = []; for (let q = 0; q < hull.length; q++) { const a = hull[q], b = hull[(q + 1) % hull.length], ia = a[1] <= T.top, ib = b[1] <= T.top;
+    if (ia) clip.push(a); if (ia !== ib) { const f = (T.top - a[1]) / (b[1] - a[1]); clip.push([a[0] + (b[0] - a[0]) * f, T.top]); } }
+  hull = clip;
+  const edges = hull.map((a, q) => { const b = hull[(q + 1) % hull.length]; return { a, b, l: Math.hypot(b[0] - a[0], b[1] - a[1]) }; }), L = edges.reduce((n, e) => n + e.l, 0);
+  const at = (s) => { s = ((s % L) + L) % L; for (const e of edges) { if (s <= e.l) return [e.a[0] + (e.b[0] - e.a[0]) * s / e.l, e.a[1] + (e.b[1] - e.a[1]) * s / e.l]; s -= e.l; } return hull[0]; };
+  const n = Math.max(8, Math.round(L / (T.links ? T.pitch : 0.3))), p = L / n, out = [];
+  for (const sg of [1, -1]) {
+    const M = { group: 'body', paint: 'track', mat: -1, keep: true, forceGlass: false, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: false };
+    for (let i = 0; i < n; i++) {
+      const c = at((i + 0.5) * p), a = at(i * p), b = at((i + 1) * p), tl = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, tz = (b[0] - a[0]) / tl, ty = (b[1] - a[1]) / tl;
+      const et = [0, ty, tz], en = [0, -tz, ty], ex = [1, 0, 0], C0 = [sg * T.xc, c[1], c[0]]; // наружу — (n_z, n_y) = (ty, −tz)
+      const half = T.links ? p * 0.47 : tl * 0.53;
+      orientedBox(M, C0, [ex, et, en], [T.w / 2, half, T.t / 2]);
+      if (T.links) for (const o of [-0.26, 0.26]) orientedBox(M, [C0[0], C0[1] + et[1] * p * o + en[1] * (T.t / 2 + 0.0175), C0[2] + et[2] * p * o + en[2] * (T.t / 2 + 0.0175)], [ex, et, en], [T.w * 0.46, p * 0.06, 0.0175]);
+    }
+    out.push(M);
+  }
+  console.log(`  гусеницы: лента ${L.toFixed(2)} м, звеньев ${n} на борт${T.links ? '' : ' (гладкая)'}, ${out.reduce((q, m) => q + m.idx.length / 3, 0)} треугольников`);
+  return out;
 }
 async function prepare(name, views) {
   const cfg = CONFIG[name], g = readGlb(Deno.readFileSync(srcOf(cfg.src))), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => (!cfg.pickMesh || cfg.pickMesh.test(p.path)) && !(cfg.dropMat && cfg.dropMat.test(((J.materials || [])[p.material] || {}).name || ''))) /* dropMat — материалы долой (линии рёбер SketchUp) */, ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
@@ -847,11 +897,13 @@ async function prepare(name, views) {
     }
     byMat.set(`box${bi}${sg}`, M);
   }
+  // tracks — гусеницы комплекса (у автора нет): по бортам x = ±xc, лента звеньями (links) или гладкая; тёмная краска #track, часть body (в осях правил, затем центровка)
+  if (cfg.tracks) buildTracks(cfg.tracks).forEach((M, i) => { for (let k = 0; k < M.pos.length; k += 3) { M.pos[k] -= dx; M.pos[k + 1] -= dy; M.pos[k + 2] -= dz; } byMat.set(`track${i}`, M); });
   if (cfg.groups && cfg.unit) articulate(cfg, byMat, [dx, dy, dz], cfg.rulesIn === 'game' ? (x, y, z) => [x / cfg.scale, y / cfg.scale, z / cfg.scale] : ax);
   SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster;
   // target — бюджет треугольников (упрощение до него, но не дальше допустимой ошибки SIMP_ERR — форма не мнётся); simplify — доля
   if (cfg.target || cfg.simplify) {
-    let total = 0; for (const m of byMat.values()) total += m.idx.length / 3;
+    let total = 0; for (const m of byMat.values()) if (!m.keep) total += m.idx.length / 3;
     const ratio = cfg.target ? Math.min(1, cfg.target / total) : cfg.simplify;
     if (ratio < 0.98) await simplifyAll(byMat, ratio);
   }
@@ -1049,7 +1101,7 @@ async function simplifyAll(byMat, ratio) {
   await MeshoptSimplifier.ready;
   let before = 0, after = 0;
   for (const m of byMat.values()) {
-    if (m.idx.length < 30) continue; // крошки не упрощаем
+    if (m.idx.length < 30 || m.keep) continue; // крошки и готовые детали (keep — гусеницы) не упрощаем
     const nv = m.pos.length / 3, wid = new Uint32Array(nv), key = new Map(), wpos = [], cand = [];
     for (let v = 0; v < nv; v++) {
       const k = `${Math.round(m.pos[v * 3] / WELD)},${Math.round(m.pos[v * 3 + 1] / WELD)},${Math.round(m.pos[v * 3 + 2] / WELD)}`;
