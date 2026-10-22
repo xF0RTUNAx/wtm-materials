@@ -333,12 +333,14 @@ const CONFIG = {
       if (c.ctr[2] > 2.85 && Math.abs(c.ctr[0]) < 0.35 && c.ctr[1] > -0.1) return 'radar';
       return Math.abs(c.ctr[0]) > 0.6 ? 'cradle' : 'turret';
     } },
-  osa: { src: `${DL}/osa-akm_sam_system.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 110000, minPart: 0.06, absorb: 0, tplNear: [0.91, 0.14], hinge: [0, 3.06, 1.32], tube: [0.15, 0.5],
+  // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY 4.0; прежняя модель «Оса-АКМ» Jeyhun1985 — с признаками рипа): двухбалочная корабельная пусковая на тумбе с диском (диск — бетонная площадка-основание),
+  // две ракеты 4К33 висят под балками (длина по модели ≈ 2,64 → 3,16 м, как msl.L; масштаб 1,2). Лежит носом в +X, балки подняты на ≈10° (pack0 — угол ракет и балок, 10,2°); ось качания — цапфа (x 0, y 1,815 в единицах автора)
+  osa: { src: `${DL}/zif-122_osa-m_koreannavy.glb`, scale: 1.2, nose: '+x', rulesIn: 'game', unit: true, tex: () => 256, absorb: 0, hinge: [0, 2.178, 0], pack0: 0.178, colors: { '^Material\\.004#msl$': [0.25, 0.26, 0.24], '#msl$': [0.72, 0.72, 0.66], '#steel$': [0.17, 0.19, 0.16], '#conc$': [0.34, 0.33, 0.31] },
     groups: (c) => {
-      if (c.min[1] < 2.05 || c.ctr[2] < -2.2 || c.ctr[2] > 3.4) return 'body';
-      if (Math.abs(c.ctr[0]) > 0.75 && Math.abs(c.size[0] - 0.21) < 0.05 && c.size[2] > 2.4) return 'missile'; // 9М33 в решётчатых контейнерах
-      { const r = Math.hypot(c.ctr[0], c.ctr[2] - 1.1); if ((c.min[1] > 4.1 && r < 1.3) || (c.min[1] > 4.0 && r < 0.6) || (c.min[1] > 3.95 && r < 0.3)) return 'radar'; } // антенна обзора, запросчик над ней и верх мачты — крутятся, пока РЛС работает
-      return Math.abs(c.ctr[0]) > 0.75 && axis(c, [1.32, 3.06], [-0.906, 0.423], 0.55, -2.4, 2.8) ? 'cradle' : 'turret';
+      if (/Cylinder\.001/.test(c.path)) return 'missile#msl'; // 4К33 на балках
+      if (/Cube\.00[12]/.test(c.path)) return 'cradle#steel'; // балки и проушины подвеса
+      if (c.max[1] < 1.3 * 1.2) return 'body#conc'; // диск, болты и тумба
+      return c.mat === 1 ? 'turret' : 'turret#steel'; // башня с осью-цапфой
     } },
   patriot: { src: `${DL}/mim-104_patriot_surface-to-air_missile_sam.glb`, scale: 1, nose: '+x', rulesIn: 'game', unit: true, tex: () => 1024, hinge: [0, 3.95, 12.81], tube: [0.5, 1.2],
     groups: (c) => {
@@ -1029,7 +1031,7 @@ function extractMissile(cfg, byMat) {
     }
     for (const [grp, tris] of [['missile', keepT], ['booster', boost]]) {
       if (!tris.length) continue;
-      const M = { group: grp, mat: m.mat, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: m.hasUv }, map = new Map();
+      const M = { group: grp, paint: grp === 'missile' ? m.paint : undefined, mat: m.mat, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: m.hasUv }, map = new Map();
       for (const t of tris) for (let k = 0; k < 3; k++) { const v = m.idx[t * 3 + k]; if (!map.has(v)) { map.set(v, M.pos.length / 3); M.pos.push(m.pos[v * 3] - tpl.c[0], m.pos[v * 3 + 1] - tpl.c[1], m.pos[v * 3 + 2] - tpl.c[2]); M.nor.push(m.nor[v * 3], m.nor[v * 3 + 1], m.nor[v * 3 + 2]); if (m.hasUv) M.uv.push(m.uv[v * 2], m.uv[v * 2 + 1]); } M.idx.push(map.get(v)); M.tc.push(m.tc[t]); }
       out.push(M);
     }

@@ -1184,9 +1184,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Osa-AKM SAM system",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/osa-akm-sam-system-485a4207e55545188e93bef5f1e2413f",
+  "title": "ZIF-122 & 4K33 Osa-M Missile",
+  "author": "KoreanNavy",
+  "url": "https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43",
   "license": "CC-BY-4.0",
   "files": [
    "osa",

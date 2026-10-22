@@ -129,7 +129,7 @@
 - "Iranian Sevom Khordad SAM" (https://sketchfab.com/3d-models/iranian-sevom-khordad-sam-ca18f97aeb6a4aaf992a973d513de306) by 42manako — CC-BY-4.0 — `khordad.glb`
 - "OERLIKON 35MM SKYGUARD RADAR" (https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d) by lm9241221 — CC-BY-4.0 — `skyguard.glb`, `skyguard_lo.glb`
 - "Tracked Rapier" (https://sketchfab.com/3d-models/tracked-rapier-23db0462ce604a64af5ea282b5df59b9) by stealth86 — CC-BY-4.0 — `rapier.glb`, `rapier_lo.glb`
-- "Osa-AKM SAM system" (https://sketchfab.com/3d-models/osa-akm-sam-system-485a4207e55545188e93bef5f1e2413f) by Jeyhun1985 — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
+- "ZIF-122 & 4K33 Osa-M Missile" (https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43) by KoreanNavy — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`
 - "MIM-104 Patriot Surface-To-Air Missile (SAM)" (https://sketchfab.com/3d-models/mim-104-patriot-surface-to-air-missile-sam-7a64d0af78514a159877edab1ab2bccb) by Muhamad Mirza Arrafi — CC-BY-4.0 — `patriot.glb`
 - "SAM S-75 "Dvina"" (https://sketchfab.com/3d-models/sam-s-75-dvina-ed7d4831832d499482a6aa9620a858e4) by manyakasia — CC-BY-4.0 — `s75.glb`
 - "ЗРК С-125 «Нева / SAM S-125 "Neva"" (https://sketchfab.com/3d-models/125-sam-s-125-neva-4482f05be23b49099c2cf553a2f38dcd) by teanid — CC-BY-4.0 — `s125.glb`, `s125_lo.glb`

@@ -103,11 +103,12 @@ export function unitModel(key, S) {
       T.push(part(new THREE.CylinderGeometry(1.2, 1.2, 0.5, 12), C, M(0, 0.15, 0)));
       K.push(part(new THREE.BoxGeometry(2.4, 0.15, 2.6), STEEL, M(0, 0, 0.1)));
       dish = plateGeo(2.2, 1.6, C); dishY = 3.8; break;
-    case 'osa':
-      hull(P, 9, 2.8, 1.8, C, false);
-      T.push(part(new THREE.BoxGeometry(2, 1.2, 2.2), C, M(0, 0.6, 0)));
-      canBoxes(K, LN.box, sl, C);
-      dish = plateGeo(2, 0.9, C); dishY = 4.4; break;
+    case 'osa': // ЗИФ-122 на береговой площадке (пока не пришла модель): диск, тумба, башня и две балки; ракеты — slotGeo
+      P.push(part(new THREE.CylinderGeometry(1.9, 1.9, 0.16, 20), 0x77756c, M(0, 0.08, 0)));
+      P.push(part(new THREE.CylinderGeometry(0.24, 0.24, 1.4, 10), C, M(0, 0.8, 0)));
+      T.push(part(new THREE.BoxGeometry(0.6, 0.9, 0.7), C, M(0, 0.3, 0)));
+      for (const [x] of sl) K.push(part(new THREE.BoxGeometry(0.14, 0.18, 2.3), STEEL, M(x, 0.08, -0.15)));
+      break;
     case 'zsu234':
       hull(P, 6.5, 3, 1.3, C);
       T.push(part(new THREE.BoxGeometry(2.6, 1.0, 3), C, M(0, 0.5, 0)));

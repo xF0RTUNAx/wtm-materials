@@ -42,7 +42,7 @@ const META = {
   e_a10: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-6.25, -0.86, -0.09), V(-5.1, -0.99, -0.04), V(-3.8, -1.15, -0.15), V(-1.68, -1.28, -0.3)]), // по низу пилонов модели (были на 0,45 м выше — в крыле; внутренняя была в гондоле шасси x 2,94)
     nozzles: [V(-1.46, 0.32, 4.99), V(1.46, 0.32, 4.99)], nr: 0.25, pod: V(-0.57, -1.63, -0.14), dry: true }, // A-10A (сопла по срезу гондол: y 1,1 → 0,32; контейнер — на подфюзеляжном пилоне, был в крыле)
   e_f15e: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-2.93, -1.18, 0.46), V(-1.75, -1.59, -1.5), V(-1.75, -1.59, 0.3), V(-1.75, -1.05, 1.8)]),
-    nozzles: [V(-0.68, -1.12, 8.31), V(0.68, -1.12, 8.31)], nr: 0.3, pod: V(0.9, -1.9, -2.5), matte: true }, // F-15E (LANTIRN под воздухозаборником)
+    nozzles: [V(-0.71, -1.35, 8.31), V(0.71, -1.35, 8.31)], nr: 0.3, pod: V(0.9, -1.9, -2.5), matte: true }, // F-15E (LANTIRN под воздухозаборником); сопла — по срезу модели (кольцо x 0,27–1,15, y −1,8…−0,91; было y −1,12 — огонь выше сопла, Mark 2026-10-22)
   // ── 2026-10-19, третья партия manilov.ap: точки подвески — по низу крыла (лучи по треугольникам) и пилонам автора ──
   e_mig21n: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.76, -1.14, 2.1, 0.3), V(-1.95, -1.08, 0.7), V(-0.45, -1.3, 2.2, 0.2), V(-0.3, -1.3, 0.2, 0.2)]),
     nozzles: [V(0, -0.6, 6.03)], nr: 0.4, pod: null }, // МиГ-21бис
@@ -254,7 +254,7 @@ const META = {
   ew_e: { units: ['gpsjam'], stations: [] }, // станция РЭБ (восток) — машина с РЛС IBIS-150
   ew_w: { units: ['gpsjamw'], stations: [] }, // станция РЭБ (запад) — радарная машина Renault TRM
   strela1: { units: ['strela1'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.4, tex: true } }, // «Стрела-1» — 42manako
-  osa: { units: ['osa'], stations: [] }, // «Оса-АКМ» — Jeyhun1985
+  osa: { units: ['osa'], matte: true, stations: [] }, // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY)
   tor: { units: ['tor', 'torm2'], stations: [] }, // «Тор-М1» — 42manako
   pantsir: { units: ['pantsir'], stations: [], camo: { scheme: 'soviet', size: 1.6, tex: true } }, // «Панцирь-С2» — 42manako
   s400: { units: ['s400', 's300'], matte: true, stations: [] }, // пусковая С-400 — Chenzoss (и для С-300: та же схема, 4 контейнера)
@@ -286,6 +286,8 @@ const GLB_V_OWN = {
   gepard: '20261024d',
   gepard_lo: '20261024d',
 };
+// «Оса-М» ЗИФ-122 (KoreanNavy) вместо модели Jeyhun1985 (2026-10-22): новые файлы
+Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '20261024e'])));
 Object.assign(GLB_V, GLB_V_OWN);
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
