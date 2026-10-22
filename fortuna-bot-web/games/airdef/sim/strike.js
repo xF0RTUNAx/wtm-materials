@@ -13,11 +13,11 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { tr } from '../i18n.js?v=20261022s';
-import { AG, SAM } from '../arsenal.js?v=20261022s';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022s';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022s';
-import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261022s';
+import { tr } from '../i18n.js?v=20261022t';
+import { AG, SAM } from '../arsenal.js?v=20261022t';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022t';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022t';
+import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261022t';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
