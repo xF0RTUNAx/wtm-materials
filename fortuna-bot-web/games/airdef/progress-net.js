@@ -38,7 +38,7 @@ export function createProgress(C) {
   async function call(fn, body) {
     if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) throw new Error(tr('Нет связи с сайтом'));
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
-    const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/' + fn, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify(body) });
+    const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/' + fn, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify(body), keepalive: true }); // keepalive — итог боя дойдёт, даже если страницу сразу перезагрузили (после потери графики)
     const d = await res.json().catch(() => ({}));
     if (!res.ok) throw Object.assign(new Error(d.error || tr('Ошибка сервера')), { status: res.status });
     return d;

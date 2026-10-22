@@ -90,7 +90,7 @@
 - "Kh-555 Cruise missile (High poly FBX)" (https://sketchfab.com/3d-models/kh-555-cruise-missile-high-poly-fbx-406db6e7ffdf4b0fbb1f842e9850a65d) by Jeyhun1985 — CC-BY-4.0 — `w_kh555.glb`
 - "Sizzler SS-N-27 Kalibr 3M-54" (https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c) by mmickel — CC-BY-4.0 — `w_kalibr.glb`
 - "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 — CC-BY-4.0 — `w_agm86.glb`
-- "Ukrainian Su-24 with Storm Shadow AGMs" (https://sketchfab.com/3d-models/ukrainian-su-24-with-storm-shadow-agms-277154c4744c4313baab1d4011e3b872) by 42manako — CC-BY-4.0 — `w_storm.glb`
+- "Storm Shadow Ukraine (декали убраны)" (https://sketchfab.com/3d-models/storm-shadow-ukraine-d1ad04ce964f46dd9cbac6a64cd19b1b) by Viktor_ — CC-BY-4.0 — `w_storm.glb`
 - "Shahed 136" (https://sketchfab.com/3d-models/shahed-136-bc8754128c9d48c48baadeff1db8f0c7) by faintastic — CC-BY-4.0 — `d_shahed.glb`
 - "UAV" (https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5) by Artem Goyko — CC-BY-4.0 — `d_uav.glb`
 - "Tupolev TU-160" (https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40) by KOG_THORNS — CC-BY-4.0 — `e_tu160.glb`
@@ -120,11 +120,11 @@
 - "Low Poly Missiles and Torpedos" (https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35) by sakigakefuruzawa — CC-BY-4.0 — `aam_mica.glb`
 - "MiG 29" (https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3) by Uxman — CC-BY-4.0 — `mig29.glb`
 - "9K331 Tor-M1" (https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db) by 42manako — CC-BY-4.0 — `tor.glb`, `tor_lo.glb`
-- "96K6 Pantsir-S2" (https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b) by 42manako — CC-BY-4.0 — `pantsir.glb`, `pantsir_lo.glb`
+- "Pantsir-S1 (окраска и запекание текстур)" (https://sketchfab.com/3d-models/pantsir-s1-3cb67b0bae10418190e7ce32142231e4) by SanderWolf — CC-BY-4.0 — `pantsir.glb`, `pantsir_lo.glb`
 - "S-400 Triumf missile launcher truck" (https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f) by Chenzoss — CC-BY-4.0 — `s400.glb`, `s400_lo.glb`
 - "9K31 Strela-1 SAM" (https://sketchfab.com/3d-models/9k31-strela-1-sam-bf3bf22d2a684d0d883e03d533a52a36) by 42manako — CC-BY-4.0 — `strela1.glb`
 - "Marder Roland (low-poly)" (https://sketchfab.com/3d-models/marder-roland-low-poly-2f30452b85ec461db2de4bc118b7448e) by ScurvyWoof — CC-BY-4.0 — `roland.glb`
-- "2K22 Tunguska" (https://sketchfab.com/3d-models/2k22-tunguska-54ff4d655755473d99eab1ccc7eb6bfc) by usedm — CC-BY-4.0 — `tunguska.glb`, `tunguska_lo.glb`
+- "Low poly 2k22 Tunguska (окраска и запекание текстур)" (https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b) by SIpriv — CC-BY-4.0 — `tunguska.glb`, `tunguska_lo.glb`, `msl_9m311.glb`
 - "samp-t air defense system" (https://sketchfab.com/3d-models/samp-t-air-defense-system-096f1bd31fc646b9908d5f1d9b7e0d34) by Chenzoss — CC-BY-4.0 — `sampt.glb`, `sampt_lo.glb`
 - "Iranian Sevom Khordad SAM" (https://sketchfab.com/3d-models/iranian-sevom-khordad-sam-ca18f97aeb6a4aaf992a973d513de306) by 42manako — CC-BY-4.0 — `khordad.glb`
 - "OERLIKON 35MM SKYGUARD RADAR" (https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d) by lm9241221 — CC-BY-4.0 — `skyguard.glb`, `skyguard_lo.glb`
@@ -197,7 +197,7 @@
 - "Ah64" (https://sketchfab.com/3d-models/ah64-3bc9b90cc97a40a6bfc13237329ce51b) by manilov.ap — CC-BY-4.0 — `h_ah64.glb`
 - "Uh1" (https://sketchfab.com/3d-models/uh1-3131460d00184d90855e4988c7d54101) by manilov.ap — CC-BY-4.0 — `h_uh1.glb`
 - "Bell AH-1 SuperCobra" (https://sketchfab.com/3d-models/bell-ah-1-supercobra-6ee99382b2764fa6a3d761c3d4caec43) by drcrazzie — CC-BY-4.0 — `h_ah1.glb`
-- "[PBR] Kamov Ka-52" (https://sketchfab.com/3d-models/pbr-kamov-ka-52-6f29175ef23940fcb4c5364240e169f7) by Immersive3D — CC-BY-4.0 — `h_ka52.glb`
+- "Ka-52 (корпус, кабина и хвост перестроены, окраска запечена)" (https://sketchfab.com/3d-models/ka-52-a7f227659c1a42ec92ea7329ab1d90d6) by maddex88 — CC-BY-4.0 — `h_ka52.glb`
 - "Mi-28N Havoc" (https://sketchfab.com/3d-models/mi-28n-havoc-3e80c95bbadf46abbafba9d9a08afc68) by Rukh3D — CC-BY-4.0 — `h_mi28.glb`
 - "Ka50" (https://sketchfab.com/3d-models/ka50-71676cdc60b647eaa1ebb2f33a8b0246) by manilov.ap — CC-BY-4.0 — `h_ka50.glb`
 - "Uh60" (https://sketchfab.com/3d-models/uh60-47b4230a324c4390a105f656ff1210b9) by manilov.ap — CC-BY-4.0 — `h_uh60.glb`

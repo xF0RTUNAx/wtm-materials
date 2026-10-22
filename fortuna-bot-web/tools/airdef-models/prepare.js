@@ -222,7 +222,8 @@ const CONFIG = {
   w_kh555: { src: `${DL}/kh-555_cruise_missile_high_poly_fbx.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, target: 120000, simpErr: 0.004, /* 768 тыс. треугольников — почти без потерь */ groups: LS }, // Х-555 (и вид Х-55 / Х-101) — 6,04 м
   w_kalibr: { src: `${DL}/sizzler_ss-n-27_kalibr_3m-54.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, groups: LS }, // «Калибр» — 6,2 м
   w_agm86: { src: `${DL}/agm-86.glb`, scale: 0.1454, nose: '-z', rulesIn: 'game', tex: () => 256, centerX: true, groups: LS }, // AGM-86 ALCM — 6,32 м
-  w_storm: { src: `${DL}/ukrainian_su-24_with_storm_shadow_agms.glb`, scale: 2.48, nose: '+z', rulesIn: 'game', tex: () => 256, pickMesh: /ss_misile/, pick: [0.3, -99, -99, 99, 99, 99], groups: LS }, // Storm Shadow — 5,1 м, одна из двух с Су-24
+  w_storm: { src: `${DL}/Свои/Storm Shadow/storm_shadow_game.glb`, scale: 5.1 / 5.185, nose: '+x', tex: () => 512, pickMesh: /./, credit: 'декали убраны',
+    groups: (c) => (c.size[2] > 1 && c.size[1] < 0.05 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // консоли крыла (0,96 × 1,14 м, на спине) — свои части: на подвеске сложены (META wings: 'fold'); Storm Shadow — Viktor_ (CC BY 4.0, Storm Shadow Ukraine; декали убраны в текстуре — Свои/Storm Shadow, README.md; storm_shadow_game.glb = storm_shadow_clean.glb + asset.extras оригинала), 5,1 м, 12,5 тыс. треугольников без упрощения
   d_shahed: { src: `${DL}/shahed_136.glb`, scale: 1.45, nose: '+z', rulesIn: 'game', tex: () => 256, groups: (c) => (c.ctr[2] > 0.25 && Math.hypot(c.ctr[0], c.ctr[1] - 0.25) < 0.5 && c.size[2] < 0.3 ? 'prop' : LS(c)) }, // «Шахед-136» — 3,5 м; винт сзади — своя группа (крутится)
   d_uav: { src: `${DL}/uav.glb`, scale: 6, nose: '-z', rulesIn: 'game', tex: () => 256, // винты — свои группы (крутятся каждый вокруг своей оси); без шасси
     groups: (c) => { const [x, y, z] = c.ctr, ax = Math.abs(x); if (y < -0.55 && Math.max(...c.size) < 5) return null; if (ax > 0.9 && ax < 1.85 && z > 3.1 && z < 3.45 && Math.abs(y) < 0.5) return x > 0 ? 'prop' : 'prop2'; return LS(c); } }, // разведывательно-ударный БПЛА — размах 12 м; два толкающих винта
@@ -290,12 +291,12 @@ const CONFIG = {
   tor: { src: `${DL}/9k331_tor-m1.glb`, scale: 1, fwd: [0.767, 0.641], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, target: 55000,
     radarRaise: { hinge: [-9.33, 1.04, 10.3], angle: 1.85 }, tpFix: [0.01, 2.29, -0.19], /* ось башни — как в launchers.js (кромка сложенной решётки лежала у основания и сдвигала расчёт) */ // антенна в модели сложена назад на вилке; шарнир — верх тумбы (центр x −9,33, z 10,3): вилку с решёткой и запросчиком — в боевое положение
     groups: (c) => (c.min[1] > -0.13 && c.ctr[2] > 5.8 && c.ctr[2] < 12.8 ? ((c.ctr[2] > 10.5 && Math.abs(c.ctr[0] + 9.33) < (c.ctr[2] > 11.0 ? 1.15 : 1.0)) || (c.ctr[2] > 10.1 && c.ctr[1] > 0.98 && Math.abs(c.ctr[0] + 9.33) < 0.65) ? 'radar' : 'turret') : 'body') }, // башня сшита с корпусом одной сеткой — по треугольникам; radar — антенна обзора (в модели сложена назад)
-  pantsir: { src: `${DL}/96k6_pantsir-s2.glb`, scale: 1, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, /* у автора — сплошной ярко-зелёный */ target: 55000, minPart: 0.04, hinge: [0, 3.35, -0.6], tube: [0.12, 0.35],
-    groups: (c) => {
-      if (c.min[1] < 2.4 || c.ctr[2] < -3.2 || c.ctr[2] > 2.4) return 'body';
-      if (Math.abs(c.ctr[0]) < 0.72 && c.min[1] > 3.1 && c.ctr[2] > 0.9 && c.ctr[2] < 2.4 && (Math.abs(c.ctr[0]) < 0.4 || c.min[1] > 3.6)) return 'radar'; // РЛС обнаружения на крыше башни (блок 1,33 м — с боковыми деталями) — крутится
-      return c.min[1] > 2.7 && c.max[1] < 3.95 && c.ctr[2] < 0.6 && (c.size[2] > 0.8 || Math.abs(c.ctr[0]) > 0.75) ? 'cradle' : 'turret';
-    } },
+  // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь, README.md): цвет и карта нормалей запечены в 2048 (материал PS_paint), 87 тыс. треугольников — без упрощения вблизи (pantsir_lo — дальняя);
+  // pantsir_game.glb = pantsir_baked.glb + asset.extras оригинала (для титров; python3 -I glb_extras.py). Метры, нос −Z, начало — ось симметрии, середина длины, низ колёс y = 0; части — по именам объектов:
+  // body — шасси и кунг, turret — башня (погон: ось x 0, y 2,805, z 2,218), cradle — две 2А38М и рамы люлек, missile — 12 ТПК 57Э6 (6 на борт: две колонки × 3 ряда; в игре — часть cradle: контейнеры остаются на месте после пуска, ракета вылетает из них, а «missile» у игры — модель самой ракеты), radar — антенна обзора на мачте (ось 0; 2,878; 3,419);
+  // цапфа люльки — (0; 3,472; 2,350), ось ТПК горизонтальна (pack0 0). Нижний безопасный угол возвышения ≈ 0…+5° (при −5° ТПК входят в кунг) — launchers.js elMin
+  pantsir: { src: `${DL}/Свои/Панцирь/pantsir_game.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 1024, pickMesh: /./, axisX: 0, ground: 0, hinge: [0, 3.472, 2.35], tpFix: [0, 2.805, 2.218], pack0: 0, tube: [0.15, 0.3], credit: 'окраска и запекание текстур',
+    groups: (c) => (/(^|\/)(cradle|missile)/.test(c.path) ? 'cradle' : /(^|\/)radar/.test(c.path) ? 'radar' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
   s400: { src: `${DL}/s-400_triumf_missile_launcher_truck.glb`, scale: 13.5 / 1.9, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 2048, target: 120000, /* скан: текстура 2048 — 1024 смазывала (2026-10-13) */ hinge: [0, -1.53, 5.44], tube: [0.6, 1.4], // скан: весь тягач — одна сетка, делим по треугольникам
     groups: (c) => (c.ctr[1] > -1.45 && axis(c, [5.44, -1.53], [-0.604, 0.797], 1.75, -1.8, 9.5) ? 'cradle' : 'body') },
   // «Стрела-1» (БРДМ-2): пусковая в модели развёрнута на ~43° влево — turretYaw; одна ракета «летит» отдельно — долой
@@ -313,14 +314,14 @@ const CONFIG = {
       if (Math.abs(c.ctr[0]) < 0.6 && c.min[1] > 3.15 && c.ctr[2] > 0.9) return 'radar'; // РЛС обзора на мачте — крутится
       return Math.abs(c.ctr[0]) > 0.65 && c.min[1] > 2.12 ? 'cradle' : 'turret'; // контейнеры с ракетами и их рычаги — качаются
     } },
-  // 2К22 «Тунгуска» — usedm: башня с РЛС сопровождения спереди и обзора сзади (крутится); по бокам — спарки 2А38 и по 4 ТПК 9М311,
-  // они качаются вместе (общая цапфа)
-  tunguska: { src: `${DL}/2k22_tunguska.glb`, scale: 10, nose: '+z', rulesIn: 'game', unit: true, tex: () => 1024, /* без упрощения (37 тыс.) */ hinge: [0, 2.2, 0.1], tube: [0.18, 0.3],
-    groups: (c) => {
-      if (c.min[1] < 1.5 || Math.abs(c.ctr[2]) > 2.7) return 'body';
-      if (Math.abs(c.ctr[0]) < 0.5 && c.min[1] > 3.05 && c.ctr[2] > 1.3) return 'radar';
-      return Math.abs(c.ctr[0]) > 0.74 && c.min[1] > 1.65 && c.ctr[2] < 1.3 ? 'cradle' : 'turret';
-    } },
+  // 2К22 «Тунгуска» — SIpriv (CC BY 4.0, Low poly 2k22 Tunguska), переделана в Blender (Свои/Тунгуска, README.md): цвет и карта нормалей запечены в 2048 (материал TG_paint); без упрощения (28,8 тыс. треугольников; tunguska_lo — дальняя);
+  // tunguska_game.glb = tunguska_baked.glb + asset.extras оригинала (для титров). Метры, нос −Z, начало — ось симметрии, середина длины корпуса, низ гусениц y = 0; части — по именам объектов:
+  // body — шасси, turret — башня с РЛС сопровождения (погон: ось x 0, y 1,674, z −0,439), cradle — 2×2 пушки 2А38 и рамы люлек, missile — 8 ТПК 9М311 (по 4 на борт; в игре — часть cradle: контейнеры остаются на месте после пуска, ракета вылетает из них, а «missile» у игры — модель самой ракеты), radar — антенна обзора сзади (ось 0; 2,681; 1,485);
+  // цапфа люльки — (0; 2,294; +0,360); ТПК лежат горизонтально (pack0 0)
+  tunguska: { src: `${DL}/Свои/Тунгуска/tunguska_game.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 1024, pickMesh: /./, axisX: 0, ground: 0, hinge: [0, 2.294, 0.36], tpFix: [0, 1.674, -0.4435], pack0: 0, tube: [0.15, 0.3], credit: 'окраска и запекание текстур',
+    groups: (c) => (/(^|\/)(cradle|missile)/.test(c.path) ? 'cradle' : /(^|\/)radar/.test(c.path) ? 'radar' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
+  // ракета 9М311 «Тунгуски» — своя (Свои/Тунгуска/msl_9m311.glb, тот же автор SIpriv): 2,56 м, нос −Z, материал TG_msl; для полёта и ракет в слотах
+  msl_9m311: { src: `${DL}/Свои/Тунгуска/msl_9m311_game.glb`, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, credit: 'окраска и запекание текстур' },
   // SAMP/T — Chenzoss: скан, вся машина — одна сетка; пакет из 8 контейнеров Aster лежит по-походному — делим по треугольникам,
   // в игре он поднимается вертикально (u.lel = 90°) вокруг оси у кормы
   sampt: { src: `${DL}/samp-t_air_defense_system.glb`, scale: 5.5, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 1024, target: 60000, hinge: [0, 0.45, 4.3],
@@ -563,12 +564,11 @@ const CONFIG = {
       if (/CobraRotorTail(Blade|BladeRod|BladeParts|BladeMount)_Low/.test(p)) return 'trotor'; // рулевой винт (2 лопасти) с ярмом
       if (/CobraRocket_Low/.test(p)) return null; // блоки НАР под консолями — оружие из игры
       return 'body'; } },
-  h_ka52: { src: `${DL}/pbr_kamov_ka-52.glb`, scale: 0.5052, nose: '-z', rulesIn: 'game', tex: () => 512, axisX: 0.0354, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0.0354, 4.522, 0], rotor2: [0.0354, 3.284, 0.025] }, // Ка-52 — Immersive3D (две кабины рядом — именно Ка-52; единицы автора ×0,5052 по Ø несущих 14,5); соосные винты: rotor — верхний, rotor2 — нижний; рулевого нет
-    glassAny: /^Material\.012$/, glassColor: [0.3, 0.36, 0.42, 0.4],
-    groups: (c) => { const k = 1 / 0.5052, p = c.path;
-      if (/LOD0\.00[23]_/.test(p)) return null; // свои блоки НАР и 12 «Вихрей» с направляющими — оружие из игры (пилоны остаются)
-      if (Math.hypot(c.ctr[0] * k - 0.07, c.ctr[2] * k) < 9.5 && c.size[1] * k < 3) { const y = c.ctr[1] * k; if (y > 7.8) return 'rotor'; if (y > 5.9) return 'rotor2'; } // верхний (y 8–10) и нижний (y 6–7,8) винты: по 3 лопасти и втулка
-      return 'body'; } },
+  h_ka52: { src: `${DL}/Свои/Ка-52/ka52_game.glb`, scale: 1, nose: '-z', rulesIn: 'game', tex: () => 1024, nTex: () => 1024, pickMesh: /./, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 5.193, -1.943], rotor2: [0, 3.752, -1.943] }, credit: 'корпус, кабина и хвост перестроены, окраска запечена',
+    // Ка-52 — maddex88 (CC BY 4.0), переделан в Blender (Свои/Ка-52, README.md): метры, нос −Z, цвет и карта нормалей запечены в 2048; ka52_game.glb = ka52_baked.glb + asset.extras оригинала (для титров);
+    // подвесные баки сняты (игра вешает своё оружие на 4 пилона); соосные винты: KA52_rotor — верхний, KA52_rotor2 — нижний; рулевого нет
+    glassAny: /^KA52_glass$/, glassColor: [0.3, 0.36, 0.42, 0.4],
+    groups: (c) => (/(^|\/)KA52_rotor2/.test(c.path) ? 'rotor2' : /(^|\/)KA52_rotor($|\/)/.test(c.path) ? 'rotor' : 'body') },
   h_mi28: { src: `${DL}/mi-28n_havoc.glb`, scale: 2.549, axes: (x, y, z) => [-x, -z, -y], rulesIn: 'game', tex: () => 2048, /* текстура автора 2048 — не ужимать (512 мылила камуфляж) */ texVf: 'eq=gamma=1.3' /* у автора очень тёмная */, axisX: 0, centerBody: /^(rotor2?|trotor)$/, hubs: { rotor: [0, 4.0, 0.41], trotor: [0.79, 3.04, 11.02] }, // Ми-28Н — Rukh3D (скинированный; оси автора: ось фюзеляжа Y, верх −Z; единицы автора ×2,549 по Ø несущего 17,2 — фюзеляж тогда 17,0 м); рулевой винт справа, 4 лопасти крестом
     glassAny: /^mirror$/,
     groups: (c) => { const p = c.path, k = 1 / 2.549, x = Math.abs(c.ctr[0]) * k, y = c.ctr[1] * k, z = c.ctr[2] * k;
@@ -637,7 +637,7 @@ const CONFIG = {
 };
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
-for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256 };
+for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард (своя модель, 23 тыс.): дальняя копия — 8 тыс. треугольников, цвет 256, без карты нормалей
 CONFIG.gepard_lo = { ...CONFIG.gepard, target: 8000, simpErr: 0.05, tex: () => 256, nTex: null };

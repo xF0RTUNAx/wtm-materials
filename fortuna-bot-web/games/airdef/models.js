@@ -139,7 +139,7 @@ const META = {
   w_kh555: { weapon: ['kh555', 'kh55', 'kh55d'], lazy: true, stations: [] }, // Х-555 (и вид Х-55) — Jeyhun1985
   w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // «Калибр» — mmickel
   w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM — mahmadsaleem11111
-  w_storm: { weapon: 'storm', lazy: true, stations: [], drop: ['ss_misile.002', 'ss_misile.005'] }, // Storm Shadow — с Су-24 42manako; без переходника пилона (drop)
+  w_storm: { weapon: 'storm', lazy: true, wings: 'fold', stations: [] }, // Storm Shadow — Viktor_ (CC BY 4.0), декали в текстуре стёрты (Свои/Storm Shadow); 5,1 м; у модели крылья раскрыты — на подвеске складываются вдоль корпуса, раскрываются после сброса
   w_atacms: { weapon: 'atacms', lazy: true, stations: [] }, // ракета M142 HIMARS — Denis.Cherkasov1
   d_shahed: { ev: true, lazy: true, stations: [] }, // «Шахед-136» — faintastic (винт — группа prop)
   d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
@@ -147,7 +147,7 @@ const META = {
   // stations — две точки на борт (внешняя, внутренняя) на консолях, оси модели (нос в −Z); nozzles пусто — пламени нет; в planeModel / PLANE_META не попадают (heli)
   h_mi24: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-3.22, -1.64, -1.43), V(-2.28, -1.33, -1.22)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ми-24 — manilov.ap (на концах консолей — направляющие для ПТУР, под консолями — пилоны)
   h_mi28: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.47, -1.35, -2.3), V(-1.78, -1.35, -2.38)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ми-28Н — Rukh3D
-  h_ka52: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.57, -1.1, -1.7), V(-1.9, -1.1, -1.7)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ка-52 — Immersive3D (соосные винты rotor / rotor2, рулевого нет)
+  h_ka52: { side: 'east', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.9, -0.79, -1.54), V(-2.1, -0.93, -1.26)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // Ка-52 — maddex88, переделан (Свои/Ка-52): соосные винты rotor / rotor2, рулевого нет; станции — низ внешнего и внутреннего пилонов
   h_ah64: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-2.38, -1.36, -2.78), V(-1.65, -1.36, -2.78)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // AH-64 — manilov.ap
   h_ah1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.35, -1.04, -2.2, 0.3), V(-0.75, -1.04, -2.2, 0.3)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // AH-1 SuperCobra — drcrazzie (у модели нет пилонов — дорисованы)
   h_uh1: { side: 'west', cls: 'heli', heli: true, lazy: true, stations: mirror([V(-1.5, -1.5, -2.1)]), nozzles: [], nr: 0.3, pod: null, matte: true }, // UH-1 — manilov.ap (по одной точке на борт — на боковых фермах)
@@ -245,7 +245,8 @@ const META = {
   chaparral: { units: ['chaparral'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.2 } }, // MIM-72 Chaparral — TankLord (Thingiverse)
   gepard: { units: ['gepard'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4, tex: true, detail: true } }, // Flakpanzer Gepard — собственная модель (tools/airdef-models/own/gepard): камуфляж — по зелёной краске текстуры
   roland: { units: ['roland'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
-  tunguska: { units: ['tunguska'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5, tex: true } },
+  tunguska: { units: ['tunguska'], matte: true, stations: [] }, // 2К22 «Тунгуска» — SIpriv (CC BY 4.0), переделана в Blender (Свои/Тунгуска): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
+  msl_9m311: { samMissile: ['tunguska'], matte: true, stations: [] }, // ракета 9М311 — своя (Свои/Тунгуска), 2,56 м, нос −Z
   skyguard: { units: ['skyguard'], stations: [] },
   rapier: { units: ['rapier'], matte: true, stations: [], camo: { scheme: 'uk', size: 1.3 } }, // Tracked Rapier — stealth86 (перекрашен, пусковая развёрнута в рабочее положение) // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
   sampt: { units: ['sampt'], stations: [] }, // SAMP/T — Chenzoss
@@ -257,7 +258,7 @@ const META = {
   strela1: { units: ['strela1'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.4, tex: true } }, // «Стрела-1» — 42manako
   osa: { units: ['osa'], matte: true, stations: [] }, // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY)
   tor: { units: ['tor', 'torm2'], stations: [] }, // «Тор-М1» — 42manako
-  pantsir: { units: ['pantsir'], stations: [], camo: { scheme: 'soviet', size: 1.6, tex: true } }, // «Панцирь-С2» — 42manako
+  pantsir: { units: ['pantsir'], matte: true, stations: [] }, // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
   s400: { units: ['s400', 's300'], matte: true, stations: [] }, // пусковая С-400 — Chenzoss (и для С-300: та же схема, 4 контейнера)
   patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
 };
@@ -295,6 +296,10 @@ Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '202610
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
 // F-35A (andertan), A-10 (AIRMAN Magazine) и Ту-22М3 (Real Slim Shady) вместо моделей shangus930 / Immersive3D / Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['e_f35', 'e_f35_lo', 'e_a10', 'e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
+GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан и запечён вместо Immersive3D (2026-10-22)
+// «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) — свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
+Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
+GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла — свои части (сложены на подвеске)
 Object.assign(GLB_V, GLB_V_OWN);
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {
@@ -391,7 +396,7 @@ async function load(name, base) {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
     if (MM0.bld) return mkTex(t, isN, tm); // у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
     const k = `${hashes[t.source]}|${isN ? 1 : 0}|${tm}`; // та же картинка, тот же вид и предел размера — одна текстура на все модели
-    if (!TEXC.has(k)) TEXC.set(k, mkTex(t, isN, tm));
+    if (!TEXC.has(k)) TEXC.set(k, mkTex(t, isN, tm).then((x) => { if (!x) TEXC.delete(k); return x; })); // не вышло (нехватка памяти) — следующая модель попробует заново
     return TEXC.get(k);
   }));
   async function mkTex(t, isN, tm) {

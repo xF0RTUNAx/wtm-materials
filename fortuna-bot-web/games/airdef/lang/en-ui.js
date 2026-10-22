@@ -82,6 +82,7 @@ export default {
   "Карта": "Map",
   "Северный рубеж": "Northern Frontier",
   "Город": "City",
+  "Речной узел": "River Junction",
   "Погода": "Weather",
   "Случайная": "Random",
   "Сейчас: {0}. Карта и погода строятся при загрузке — смена перезапускает страницу.": "Current: {0}. Map and weather are generated on load, so changing them reloads the page.",

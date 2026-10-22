@@ -720,7 +720,7 @@ C.start = function (game) {
   if (game === 'online') { C.online.again(); return; } // «Ещё раз» после онлайн-боя — снова в поиск
   // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
   // «Ещё раз» после потери контекста WebGL (текстуры моделей не вернуть): новый бой — с перезагрузкой, адрес страницы тот же (карта, вертолёт — как были)
-  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); location.replace(u.href); return; }
+  if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны — вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
   if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
     ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }

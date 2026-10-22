@@ -562,7 +562,8 @@ export function createStrike(ctx) {
   // ═════════════ Оружие самолёта ═════════════
   // opts: { aim — точка захвата (ТВ, лазер — для расчёта), target — комплекс (ПРР) }
   function release(a, key, opts = {}) {
-    const W = AG[key];
+    let W = AG[key];
+    if (W.planeDmg && !a.heli) W = { ...W, dmg: W.planeDmg, blast: W.planeBlast || W.blast }; // НАР с самолёта — свой урон (усиление — только вертолётам)
     const w = { id: mid++, key, W, owner: a, pos: a.pos.clone().addScaledVector(TMP.set(0, -1, 0), 2.5), vel: a.vel.clone(), dir: a.vel.clone().normalize(),
       speed: a.speed, t: 0, flown: 0, dead: false, aim: opts.aim ? opts.aim.clone() : null, target: opts.target || null, mem: null, lost: false, homing: false, trailT: 0 };
     if (W.kind === 'arm' && w.target) w.mem = w.target.pos.clone();

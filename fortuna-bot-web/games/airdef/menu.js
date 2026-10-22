@@ -135,7 +135,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     let h = `<div class="prow"><span>${tr('Снимаем')}</span>${seg('pside', ps, [['air', tr('Самолёт')], ['def', tr('ПВО')], ['multi', tr('Мульти-волна')]])}</div>
       <div class="prow"><span>${tr('Эпоха')}</span>${seg('era', setup.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, trIf(e.name)]))}</div>
       <div class="prow"><span>${ps === 'def' ? tr('Сторона ПВО') : tr('ПВО города')}</span>${seg('side', setup.side, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>
-      <div class="prow"><span>${tr('Карта')}</span>${seg('pmap', C.MAP, [['winter', tr('Северный рубеж')], ['city', tr('Город')]])}</div>
+      <div class="prow"><span>${tr('Карта')}</span>${seg('pmap', C.MAP, [['winter', tr('Северный рубеж')], ['city', tr('Речной узел')]])}</div>
       <div class="prow"><span>${tr('Погода')}</span>${seg('pwx', C.MAP === 'winter' ? (WINTER_KEYS.includes(C.weatherKey) ? C.weatherKey : 'random') : (WEATHER_KEYS.includes(C.weatherKey) ? C.weatherKey : 'random'),
         [['random', tr('Случайная')], ...(C.MAP === 'winter' ? WINTER_KEYS : WEATHER_KEYS).map((k) => [k, trIf(WEATHERS[k].name)])])}</div>
       <p class="hint">${tr('Сейчас: {0}. Карта и погода строятся при загрузке — смена перезапускает страницу.', [trIf(C.W.name)])}</p>`;

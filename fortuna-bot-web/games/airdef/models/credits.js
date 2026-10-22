@@ -822,9 +822,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Ukrainian Su-24 with Storm Shadow AGMs",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/ukrainian-su-24-with-storm-shadow-agms-277154c4744c4313baab1d4011e3b872",
+  "title": "Storm Shadow Ukraine (декали убраны)",
+  "author": "Viktor_",
+  "url": "https://sketchfab.com/3d-models/storm-shadow-ukraine-d1ad04ce964f46dd9cbac6a64cd19b1b",
   "license": "CC-BY-4.0",
   "files": [
    "w_storm"
@@ -1097,9 +1097,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "96K6 Pantsir-S2",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/96k6-pantsir-s2-758055e673b543bd9ec3f504c8d60e8b",
+  "title": "Pantsir-S1 (окраска и запекание текстур)",
+  "author": "SanderWolf",
+  "url": "https://sketchfab.com/3d-models/pantsir-s1-3cb67b0bae10418190e7ce32142231e4",
   "license": "CC-BY-4.0",
   "files": [
    "pantsir",
@@ -1135,13 +1135,14 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "2K22 Tunguska",
-  "author": "usedm",
-  "url": "https://sketchfab.com/3d-models/2k22-tunguska-54ff4d655755473d99eab1ccc7eb6bfc",
+  "title": "Low poly 2k22 Tunguska (окраска и запекание текстур)",
+  "author": "SIpriv",
+  "url": "https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b",
   "license": "CC-BY-4.0",
   "files": [
    "tunguska",
-   "tunguska_lo"
+   "tunguska_lo",
+   "msl_9m311"
   ]
  },
  {
@@ -1812,9 +1813,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "[PBR] Kamov Ka-52",
-  "author": "Immersive3D",
-  "url": "https://sketchfab.com/3d-models/pbr-kamov-ka-52-6f29175ef23940fcb4c5364240e169f7",
+  "title": "Ka-52 (корпус, кабина и хвост перестроены, окраска запечена)",
+  "author": "maddex88",
+  "url": "https://sketchfab.com/3d-models/ka-52-a7f227659c1a42ec92ea7329ab1d90d6",
   "license": "CC-BY-4.0",
   "files": [
    "h_ka52"
