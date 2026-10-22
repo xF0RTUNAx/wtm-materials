@@ -1,0 +1,15 @@
+{
+ "key": "w_nar_s8",
+ "weapon": "s8",
+ "name": "С-8КОМ",
+ "rev": 2,
+ "files": {
+  "glb": "s8.glb",
+  "blend": "s8.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

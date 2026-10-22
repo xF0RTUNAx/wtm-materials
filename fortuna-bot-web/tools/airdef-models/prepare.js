@@ -55,7 +55,7 @@ const CONFIG = {
   w_gbu57: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /gbu-57/ },
   w_fab500: { src: `${DL}/fab-500_m-54_v5.glb`, scale: 2.47 / 20.68, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // ФАБ-500М-54 — 4ikalka (2026-10-19; эпоха I), УМПК — по-прежнему из ФАБ-500М-62
   w_fab500_old: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
-  w_kh31p: { src: new URL('./own/kh31p.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // Х-31П: своя модель (Blender, own/kh31p.glb)
+  w_kh31p: { src: new URL('./own/kh31p.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-31П: своя модель (Blender, own/kh31p.glb)
   w_kh59m: { colors: { '': [0.24, 0.25, 0.23] }, src: `${DL}/kh31.glb`, scale: 5.69 / 189.07, axes: (x, y, z) => [x, -z, y], tex: () => 256, target: 7000, pickMesh: /./ }, // Х-31 (L_elo) в размер Х-59М (5,7 м) — и для Х-59МК2 (прежняя — из War Thunder)
   w_kh25ml: { colors: { '': [0.3, 0.31, 0.29] }, src: `${DL}/kh-29_kedge.glb`, scale: 3.7 / 3.93, nose: '+z', tex: () => 256, target: 7000, pickMesh: /./ }, // Х-29 (Novia556) в размер Х-25МЛ (прежняя Х-38 — из War Thunder)
   w_kh58: { colors: { nosecone: [0.025, 0.028, 0.025], nozzle: [0.04, 0.04, 0.04], '^body$|fins|duct': [0.3, 0.31, 0.29], '': [0.12, 0.12, 0.12] }, src: `${DL}/kh-58u_anti-radiation_missile.glb`, scale: 1, nose: '-z', tex: () => 256, target: 9000, pick: [0, -1, -3, 1.2, 1, 3] }, // Х-58У (Narni_Tchereskov) — 4,8 м; у автора две ракеты — правая
@@ -161,9 +161,9 @@ const CONFIG = {
   e_viggen: { src: `${DL}/ja37.glb`, scale: 1.0, fwd: [-0.6659, 0.7461], rulesIn: 'game', tex: () => 1024, centerX: true, // ось — x −0,9 (до центровки): подфюзеляжный бак и его пилоны — долой
     groups: (c) => (c.ctr[1] < -0.7 && Math.abs(c.ctr[0] + 0.9) < 1.0 && c.ctr[2] > -2.4 && c.ctr[2] < -0.9 && Math.max(...c.size) > 2.0 ? null : LS(c)) },
   // собственные модели (Blender, Mark и Claude 2026-10-21) — исходники в tools/airdef-models/own (.blend и .glb), нос в −Z, метры
-  w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
-  w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
-  w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
+  w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
+  w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
+  w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
   // ── шестая партия 2026-10-21 (CC BY 4.0, Восток): andertan — Су-33, manilov.ap — М-4, МиГ-17 и Т-4, Tom Zimmermann — МиГ-19; без упрощения, текстуры 1024 ──
   e_su33: { src: `${DL}/d80603a8a13b49bda90f19d80cac61d4.glb`, scale: 1.45, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true, groups: LS },

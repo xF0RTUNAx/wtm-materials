@@ -1,0 +1,15 @@
+{
+ "key": "w_nar_hydra",
+ "weapon": "hydra",
+ "name": "Hydra 70",
+ "rev": 2,
+ "files": {
+  "glb": "hydra70.glb",
+  "blend": "hydra70.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

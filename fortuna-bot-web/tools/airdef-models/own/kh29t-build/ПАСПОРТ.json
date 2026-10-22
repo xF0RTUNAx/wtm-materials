@@ -2,12 +2,13 @@
  "key": "w_kh29t",
  "weapon": "kh29t",
  "name": "Х-29Т",
- "rev": 1,
+ "rev": 2,
  "files": {
   "glb": "kh29t.glb",
   "blend": "kh29t.blend",
   "build": [
    "build.py",
+   "bake.py",
    "deliver.py"
   ]
  }
