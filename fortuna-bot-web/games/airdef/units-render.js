@@ -1,13 +1,13 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022x';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261022x';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022x';
-import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261022x';
-import { createCmFx } from './cmfx.js?v=20261022x';
-import { LNCH } from './launchers.js?v=20261022x';
-import { createBook } from './flipbook.js?v=20261022x';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261022y';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261022y';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261022y';
+import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261022y';
+import { createCmFx } from './cmfx.js?v=20261022y';
+import { LNCH } from './launchers.js?v=20261022y';
+import { createBook } from './flipbook.js?v=20261022y';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 

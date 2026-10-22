@@ -12,7 +12,7 @@
      Снимки — драйвер tools/airdef-fx/cm-shots.js (нужен сервер без кэша: python3 fortuna-bot-web/tools/dev/nocache-server.py 8937). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-const Q = new URLSearchParams(location.search), VER = '?v=20261022x', BASE = '../../games/airdef/';
+const Q = new URLSearchParams(location.search), VER = '?v=20261022y', BASE = '../../games/airdef/';
 const KEYS = (Q.get('p') || 'e_su25').split(','), TT = (Q.get('t') || '0.3,1.5').split(',').map(Number), V0 = +(Q.get('v') || 200), ALT = +(Q.get('alt') || 600);
 const CW = +(Q.get('cw') || 440), CH = +(Q.get('ch') || 330), COLS = TT.length * 2, FOV = 24, DOTS = Q.get('dots') !== '0', dusk = Q.get('sky') === 'dusk';
 const [M, UR, { createStrike, MODES }, { cmOf, cmKey, cmWorld }, { FOG_U }] = await Promise.all([import(BASE + 'models.js' + VER), import(BASE + 'units-render.js' + VER), import(BASE + 'sim/strike.js' + VER), import(BASE + 'sim/cm.js' + VER), import('../../games/drone/world.js' + VER)]);
