@@ -9,19 +9,19 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { tr, trIf } from './i18n.js?v=20261022t';
-import { trFmt } from './i18n-fmt.js?v=20261022t';
-import { CITY, mulberry32 } from './city.js?v=20261022t';
-import { weaponHasModel } from './models.js?v=20261022t';
-import { LNCH, lnchToWorld } from './launchers.js?v=20261022t';
-import { ico } from './icons.js?v=20261022t';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261022t';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261022t';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261022t';
+import { tr, trIf } from './i18n.js?v=20261022u';
+import { trFmt } from './i18n-fmt.js?v=20261022u';
+import { CITY, mulberry32 } from './city.js?v=20261022u';
+import { weaponHasModel } from './models.js?v=20261022u';
+import { LNCH, lnchToWorld } from './launchers.js?v=20261022u';
+import { ico } from './icons.js?v=20261022u';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261022u';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261022u';
+import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261022u';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261022t';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261022t';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261022t';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261022u';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261022u';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261022u';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];

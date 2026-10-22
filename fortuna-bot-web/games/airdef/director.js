@@ -9,13 +9,13 @@
 // вертикальном), чтобы ракета и пусковая не прятались под ней. Внизу справа — подпись, что сейчас в кадре.
 // Раз в несколько минут бой начинается заново (город восстанавливается).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261022t';
-import { SAM_TYPE, AG, PLANES, raidPlane } from './arsenal.js?v=20261022t';
-import { planeModel, classOfRole } from './models.js?v=20261022t';
-import { fwdOf } from '../drone/sim/core.js?v=20261022t';
-import { placeDefense, pickTargets } from './mission.js?v=20261022t';
-import { LNCH, trainable } from './launchers.js?v=20261022t';
-import { tr, trIf } from './i18n.js?v=20261022t';
+import { mulberry32 } from './city.js?v=20261022u';
+import { SAM_TYPE, AG, PLANES, raidPlane } from './arsenal.js?v=20261022u';
+import { planeModel, classOfRole } from './models.js?v=20261022u';
+import { fwdOf } from '../drone/sim/core.js?v=20261022u';
+import { placeDefense, pickTargets } from './mission.js?v=20261022u';
+import { LNCH, trainable } from './launchers.js?v=20261022u';
+import { tr, trIf } from './i18n.js?v=20261022u';
 
 export function createDirector(C) {
   const { camera, city } = C;

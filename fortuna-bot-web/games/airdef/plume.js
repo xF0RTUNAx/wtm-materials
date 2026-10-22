@@ -9,7 +9,7 @@
 //    НАР — плотный короткий; жидкостный (С-75, «Скад») — прозрачный рыжеватый (окислитель на азотной кислоте), факел
 //    оранжевый; прямоточный («Куб», Х-31) — почти без дыма, факел слабый голубоватый; турбореактивный (крылатые) — дымки нет.
 //    Густота и ширина дыма — от площади сечения (расход топлива ∝ r²), время жизни — от размера ракеты.
-import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261022t';
+import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261022u';
 
 const url = (f) => new URL(`./fx/${f}`, import.meta.url).href;
 const WEB = typeof document !== 'undefined' && !!document.createElement && typeof Image !== 'undefined'; // стенды Deno — без картинок
