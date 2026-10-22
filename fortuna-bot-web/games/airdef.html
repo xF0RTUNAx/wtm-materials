@@ -380,6 +380,8 @@
   #plPanel .plx { margin-left: auto; white-space: nowrap; opacity: .85; } #plPanel .pll { margin-top: 6px; font-size: 10.5px; }
   #plPanel .pld { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; } .pld.on { background: #4ade80; } .pld.off { border: 1.5px solid #94a3b8; } .pld.bot { background: #94a3b8; border-radius: 1px; transform: rotate(45deg) scale(.8); }
   #tHelp { display: none; } body.netOn #tHelp { display: flex; }
+  #tPop { display: none; font-size: 10px; } body.heli #tPop, body.layoutEdit #tPop { display: flex; } /* подскок — только у вертолёта */
+  #tPop.on { background: rgba(34,140,70,.6); border-color: #86efac; }
   .helpGlow { box-shadow: 0 0 0 3px #facc15, 0 0 16px #facc15 !important; animation: helpGlow .5s ease-in-out infinite alternate; }
   @keyframes helpGlow { from { box-shadow: 0 0 0 2px #facc15, 0 0 6px #facc15; } to { box-shadow: 0 0 0 4px #facc15, 0 0 18px #facc15; } }
   /* ── главное меню (решение Mark 2026-10-13, макет «А2»): слева — режимы, справа — «папка задания», фон — готовые кадры
@@ -610,6 +612,7 @@
   <div class="tb" id="tAuto">АВТО</div>
   <div class="tb" id="tLook">ОБЗОР</div>
   <div class="tb" id="tHelp">ПОМОЩЬ</div>
+  <div class="tb" id="tPop">ПОДСКОК</div>
   <div class="tb" id="tThr">ГАЗ 80%</div>
   <div class="tb pad" id="tPad"><i class="pu">▲</i><i class="pl">⟲</i><i class="pr">⟳</i><i class="pd">▼</i></div>
 </div>

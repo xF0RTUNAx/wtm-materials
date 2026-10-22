@@ -298,10 +298,66 @@ export function createAir(C) {
       ? tr('НАР: круг на земле — куда лягут ракеты. Цель впереди — нос сам доворачивает на неё, а на висении доводит и круг; «в зоне — залп» — жмите {0}. Дальность до {1} км.', [fireK, km])
       : tr('НАР: опускайте нос, пока круг на земле не ляжет на цель, и залп — {0}. Круг ближе цели — нос выше, дальше — ниже. Дальность до {1} км.', [fireK, km]))
       + (F === 1 ? ' ' + tr('Прицел механический: кольцо — точка попадания на 1,5 км.') : F >= 4 ? ' ' + tr('Можно нажать пуск заранее — залп уйдёт сам.') : '') + ' ' + tr('С высоты 100–200 м ракеты падают круче и ложатся кучнее.');
-    if (W.kind === 'agm') return tr('ПТУР: контейнер сам захватывает цель впереди ({0} — следующая). Пуск — {1}, затем держите цель в рамке до попадания. Приём: из-за укрытия подскок, пуск и снова вниз — у земли ПВО берёт вас не сразу (≈ 3 с).', [nextK, fireK]);
+    if (W.kind === 'agm') return tr('ПТУР: контейнер сам захватывает цель впереди ({0} — следующая). Пуск — {1}, затем держите цель в рамке до попадания. Приём: из-за укрытия подскок, пуск и снова вниз — у земли ПВО берёт вас не сразу (≈ 3 с).', [nextK, fireK])
+      + ' ' + (craft.hm.arcade ? tr('{0} — подскок сам: вверх, пуск и вниз.', [IS_TOUCH ? tr('«ПОДСКОК»') : 'E']) : tr('{0} — на сколько подняться до цели.', [IS_TOUCH ? tr('«ПОДСКОК»') : 'E']));
     return '';
   }
+
+  // ═════════════ Подскок (вертолёт; Mark 2026-10-22) ═════════════
+  // E / «ПОДСКОК»: «Аркада» — сам вверх, пока контейнер не увидит цель, захват, пуск ПТУР (НАР — когда круг на цели), висит, пока
+  // ПТУР летит (его ведут до попадания), и вниз на прежнюю высоту; взялись за высоту или поворот — управление у игрока.
+  // «Реализм» — только подсказка: на сколько подняться, чтобы цель показалась. st: 0 — нет, 1 — вверх, 2 — захват и пуск, 3 — ведёт ПТУР, 4 — вниз
+  const pop = { st: 0, t: 0, agl0: 0, fired: false, tgt: null, seeT: 0 };
+  const aglNow = () => craft.pos.y - city.topAt(craft.pos.x, craft.pos.z);
+  // цель подскока: ближайшая впереди (±40°) в досягаемости выбранного оружия — цели задания и замеченные комплексы (как у контейнера)
+  function popPick() {
+    const l = curW(), R = l ? AG[l.key].rmax * 1.1 : 6000, fx = -Math.sin(craft.yaw), fz = -Math.cos(craft.yaw); let best = null, bd = 1e9;
+    for (const t of podCands()) { tgtPos(t, TP); const dx = TP.x - craft.pos.x, dz = TP.z - craft.pos.z, d = Math.hypot(dx, dz); if (d < 300 || d > R || (dx * fx + dz * fz) / d < 0.75) continue; if (d < bd) { bd = d; best = t; } }
+    return best;
+  }
+  // видна ли цель с высоты dh над нынешней: луч из носа на высшую точку объекта (у вертолёта центр объекта закрыт его же постройками)
+  function popSees(t, dh = 0) { const P = t.S ? tgtPos(t, TP) : hiPoint(t, TP); return city.los(craft.pos.x, craft.pos.y - 1.5 + dh, craft.pos.z, P.x, P.y + 2, P.z, 4); }
+  function popNeed() { // «Реализм»: сколько метров вверх до видимости цели
+    const t = popPick(); if (!t) return tr('Подскок: нет цели впереди в досягаемости — доверните на цель');
+    for (let dh = 0; dh <= 80; dh += 5) if (popSees(t, dh)) return dh ? tr('Подскок: поднимитесь на +{0} м — {1} покажется; пуск — и вниз', [dh, tgtName(t)]) : tr('{0} видна — пуск, затем вниз', [tgtName(t)]);
+    return tr('Цель не покажется и с +80 м — смените позицию');
+  }
+  function popToggle() {
+    if (!craft.heli || craft.dead || craft.landed) return;
+    if (!craft.hm.arcade) { say(popNeed(), 3); snd.click(); return; }
+    if (pop.st) { pop.st = 4; pop.t = 0; say(tr('Подскок отменён — вниз'), 1.5); return; }
+    const t = popPick(); if (!t) { say(tr('Подскок: нет цели впереди в досягаемости — доверните на цель'), 2); snd.deny(); return; }
+    pop.tgt = t; pop.seeT = 0; if (hasPod && pod.tgt !== t) podSet(t); // контейнер — на ту же цель
+    pop.agl0 = aglNow(); pop.st = 1; pop.t = 0; pop.fired = false; snd.click(); say(tr('Подскок: вверх, пока цель не покажется'), 1.8);
+  }
+  function popStep(dt) {
+    if (!pop.st) return;
+    if (!craft.hm.arcade || craft.dead || game.over) { pop.st = 0; return; }
+    if (HU.col || HU.yaw) { pop.st = 0; say(tr('Подскок: управление у вас'), 1.2); return; } // сами взялись за высоту или поворот
+    pop.t += dt; HU.cy = 0; // на подскоке — висение
+    const l = curW(), W = l && AG[l.key], agl = aglNow(), T = pop.tgt;
+    if (pop.st < 4 && (!T || T.dead)) { pop.st = 4; pop.t = 0; }
+    if (T && pop.st < 4) { tgtPos(T, TP); HU.yawTo = Math.atan2(-(TP.x - craft.pos.x), -(TP.z - craft.pos.z)); } // нос — на цель
+    if (pop.st === 1) {
+      // видна с запасом 3 м — хватит; с НАР — не ниже 50 м (с малой высоты ракеты идут почти вдоль земли и ложатся вразброс)
+      if ((pop.seeT -= dt) <= 0) { pop.seeT = 0.15; if (popSees(T, 3) && (!W || W.kind !== 'rocket' || agl >= 50)) { pop.st = 2; pop.t = 0; HU.col = 0; return; } }
+      HU.col = 1;
+      if (agl - pop.agl0 > 70 || pop.t > 12) { pop.st = 4; pop.t = 0; say(tr('Подскок: цель не показалась — смените позицию'), 2.5); }
+    } else if (pop.st === 2) {
+      HU.col = popSees(T) ? 0 : 0.5; // чуть выше, если цель снова скрылась
+      const ready = W && usable(l) && (W.kind === 'agm' ? !!pod.lock && pod.tgt === T && craft.pos.distanceTo(pod.lock) < W.rmax : W.kind === 'rocket' && nar.hint === tr('в зоне — залп'));
+      if (ready) { fire(); pop.fired = true; pop.t = 0; pop.st = W.kind === 'agm' ? 3 : 4; }
+      else if (pop.t > 6) { pop.st = 4; pop.t = 0; say(W && (W.kind === 'agm' || W.kind === 'rocket') ? tr('Подскок: нет захвата — вниз') : tr('Подскок: выберите ПТУР или НАР'), 2.5); }
+    } else if (pop.st === 3) { // ПТУР ведут до попадания: висим, нос на цели
+      HU.col = 0;
+      if (!C.S.wpns.some((w) => w.owner === craft && !w.dead && w.W.kind === 'agm') || pop.t > 25) { pop.st = 4; pop.t = 0; }
+    } else { // вниз на прежнюю высоту
+      HU.col = -1;
+      if (agl <= pop.agl0 + 2 || pop.t > 10) { pop.st = 0; HU.col = 0; say(tr('Подскок завершён'), 1.2); }
+    }
+  }
   function narTarget(Wp) {
+    if (pop.st && pop.tgt && !pop.tgt.dead) { const P = pop.tgt.S ? tgtPos(pop.tgt, TP) : hiPoint(pop.tgt, TP); return [P.x, P.y + 1, P.z, pop.tgt]; } // подскок: цель — его
     const fx = -Math.sin(craft.yaw), fz = -Math.cos(craft.yaw);
     const ok = (x, z) => { const dx = x - craft.pos.x, dz = z - craft.pos.z, d = Math.hypot(dx, dz); return d > 300 && d < Wp.rmax * 1.15 && (dx * fx + dz * fz) / d > 0.82 ? d : 0; };
     if (pod.lock && ok(pod.lock.x, pod.lock.z)) return [pod.lock.x, pod.lock.y, pod.lock.z, 'pod'];
@@ -427,6 +483,7 @@ export function createAir(C) {
       case 'KeyL': freeLook(!free.on); break; // обзор: камера — мышью, самолёт держит курс
       case 'KeyM': toggleMap(); break;
       case 'KeyT': C.setAuto(!C.auto); break;
+      case 'KeyE': popToggle(); break; // вертолёт: подскок
     }
   }
   function podView() { if (!hasPod) { say(tr('Нет прицельного контейнера в этой подвеске')); return; } pod.show = !pod.show; snd.click(); }
@@ -510,7 +567,7 @@ export function createAir(C) {
   tap('tFire', fire); tap('tLock', podNext); tap('tFlare', cm); tap('tThr', thrStep);
   tap('tHelp', () => { if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); });
   tap('tLook', () => freeLook(!free.on));
-  tap('tMap', () => toggleMap()); tap('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
+  tap('tPop', popToggle); tap('tMap', () => toggleMap()); tap('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
   // панель: тап по строке оружия — выбрать его, «ЦЕЛЬ …» — следующая цель, «ТВ» — окно контейнера
   $('wpn').addEventListener('pointerdown', (e) => {
     e.stopPropagation(); if (!mine()) return;
@@ -523,7 +580,7 @@ export function createAir(C) {
   function layoutTouch() {
     if (!IS_TOUCH) return;
     const R = (id, right, bottom) => { const e = $(id); e.dataset.r = `calc(${right}px + var(--sa-r))`; e.dataset.b = bottom + 'px'; };
-    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tLook', 12, 216); R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136); R('tHelp', 102, 196);
+    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tLook', 12, 216); R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136); R('tHelp', 102, 196); R('tPop', 102, 196); // «ПОДСКОК» — только у вертолёта, «ПОМОЩЬ» — только в онлайне (вертолётов в онлайне нет)
     const cam = $('tCam'); cam.style.right = 'calc(172px + var(--sa-r))'; cam.style.bottom = '16px';
     applyLayout(); // свои места кнопок игрока (Настройки → «Расположение кнопок»)
   }
@@ -886,7 +943,7 @@ export function createAir(C) {
     C.syncUnits();
     // подвеска: тяжёлое — ближе к фюзеляжу
     rearm(); initDamage(craft); if (craft.dmgVis) craft.dmgVis.sync(craft); // новый вылет — самолёт целый
-    hintSeen.clear(); nar.key = null; nar.has = nar.on = false; // подсказки к оружию — снова в каждом вылете
+    hintSeen.clear(); nar.key = null; nar.has = nar.on = false; pop.st = 0; // подсказки к оружию — снова в каждом вылете; подскока нет
     // задача по подвеске: «охота за ПВО» — половина комплексов с РЛС (1…4), «штурмовка» — объекты города
     game.hunt = null;
     if (!opts.items && !opts.targets && loadoutRole(LOADOUTS[setup.era][setup.lo]) === 'sead') {
@@ -1229,6 +1286,7 @@ export function createAir(C) {
     if (aimOn() && HU.yaw) aim.yaw = craft.yaw; // поворот — взгляд за носом
     HU.yawTo = aimOn() && !HU.yaw ? aim.yaw : undefined; HU.pitchTo = aimOn() ? aim.pitch : undefined;
     // «Аркада» + НАР: цель впереди — нос сам на неё (курс и наклон: угол на цель + поправка по промаху круга); повернули сами — помощь отпускает
+    popStep(dt); { const pb = $('tPop'); if (pb && pb._on !== !!pop.st) { pb._on = !!pop.st; pb.classList.toggle('on', pb._on); } } // подскок «Аркады» — поверх ручки (висение, высота, нос на цель)
     // курс на цель — всегда; наклон — только почти на висении (заданная скорость ≈ 0 и < 25 м/с): на крейсерском полёте к цели держать
     // наклон прицела нельзя — вертолёт перестаёт разгоняться и не подлетает (урок «Управление» стоял в 4 км от цели)
     const lw = curW(), narW = arc && nar.has && !HU.yaw && !!lw && AG[lw.key].kind === 'rocket' && usable(lw);
@@ -1333,6 +1391,7 @@ export function createAir(C) {
     get hasPod() { return hasPod; }, get sel() { return sel; }, get mapOn() { return mapOn; }, curW,
     start, stop, update, hud, onKey, finish, camera: updateCamera, startNet, netSpawn, netHit, netDown, netAI, focus: () => craft.pos, afterRender: renderPod, extraCam: () => (pod.show && hasPod && craft && !craft.dead ? podCam : null),
     resize() { layoutTouch(); layoutPod(); },
+    pop, podState: () => ({ tgt: pod.tgt && tgtName(pod.tgt), why: pod.why, lock: !!pod.lock, lockD: pod.lock ? Math.round(craft.pos.distanceTo(pod.lock)) : -1 }), // подскок и прицел — для стендов
     pauseHelp: () => (IS_TOUCH ? tr('{0} «ГАЗ» — ступени, после 100 % — форсаж. «ЛОВУШКИ» — ЛТЦ и диполи разом. Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно контейнера (тап по окну — увеличение). Контейнер захватывает цель сам: 1–18 км, высота от 400 м, цель не закрыта домами.', [aimOn() ? tr('Ведите пальцем по экрану — камера поворачивается, самолёт летит туда, куда она смотрит (белый кружок). Крестовина — точные крен и тангаж.') : tr('Левая половина экрана — ручка.')])
       : tr('Стрелки — тангаж и крен · A/D — крен · W/S — газ ступенями (после 100 % — форсаж) · Shift — форсаж вкл/выкл · Пробел/F — сброс · Q — оружие · V — камера · N — камера за оружием · L — обзор (камера мышью, самолёт держит курс)<br>Контейнер захватывает цель сам (1–18 км, высота от 400 м, цель не закрыта домами) · R — следующая цель · G — окно контейнера · Z — увеличение · O — лазер<br>X — ловушки (ЛТЦ и диполи) · M — карта · Esc — пауза')),
   };

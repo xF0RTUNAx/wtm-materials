@@ -9,7 +9,7 @@ if (LANG !== 'ru' && typeof document !== 'undefined' && document.head) {
 }
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 export const LAYOUT_SETS = {
-  air: { name: tr('Вылет'), btns: { tFire: tr('ПУСК'), tThr: tr('ГАЗ / ФОРСАЖ'), tFlare: tr('ЛОВУШКИ'), tLock: tr('ЦЕЛЬ'), tMap: tr('КАРТА'), tAuto: tr('АВТО'), tLook: tr('ОБЗОР'), tPad: tr('КРЕСТОВИНА') } },
+  air: { name: tr('Вылет'), btns: { tFire: tr('ПУСК'), tThr: tr('ГАЗ / ФОРСАЖ'), tFlare: tr('ЛОВУШКИ'), tLock: tr('ЦЕЛЬ'), tMap: tr('КАРТА'), tAuto: tr('АВТО'), tLook: tr('ОБЗОР'), tPop: tr('ПОДСКОК'), tPad: tr('КРЕСТОВИНА') } },
   op: { name: tr('Оператор ЗРК'), btns: { opFire: tr('ПУСК'), opRadar: tr('РЛС'), opMethod: tr('МЕТОД'), opCam: tr('КАМ.'), opAuto: tr('АВТО'), opMap: tr('КАРТА') } },
 };
 const ALL = Object.assign({}, LAYOUT_SETS.air.btns, LAYOUT_SETS.op.btns);
