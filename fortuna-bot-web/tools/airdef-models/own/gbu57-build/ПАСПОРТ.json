@@ -1,0 +1,15 @@
+{
+ "key": "w_gbu57",
+ "weapon": "gbu57",
+ "name": "GBU-57",
+ "rev": 1,
+ "files": {
+  "glb": "gbu57.glb",
+  "blend": "gbu57.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

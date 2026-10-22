@@ -11,7 +11,7 @@
 - "OFAB-250-270" (https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2) by 4ikalka — CC-BY-4.0 — `w_ofab250.glb`
 - "Fab-250| The soviet aviation bomb" (https://sketchfab.com/3d-models/fab-250-the-soviet-aviation-bomb-a85096c0d7594e5e9cc4551fcd59fdfd) by CATholic — CC-BY-4.0 — `w_fab250.glb`
 - "FAB-1000" (https://sketchfab.com/3d-models/fab-1000-c4db2a615b35417ca4f620af8658d97f) by United4192 — CC-BY-4.0 — `w_fab1000.glb`
-- "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_gbu24.glb`, `w_gbu57.glb`, `aam_aim7.glb`, `aam_aim9x.glb`
+- "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_gbu24.glb`, `aam_aim7.glb`, `aam_aim9x.glb`
 - "FAB-500 M-54 V5" (https://sketchfab.com/3d-models/fab-500-m-54-v5-87e064b28f6f4d7ba1fde7e79d621b8d) by 4ikalka — CC-BY-4.0 — `w_fab500.glb`
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
 - "Kh31" (https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045) by lelo — CC-BY-4.0 — `w_kh59m.glb`

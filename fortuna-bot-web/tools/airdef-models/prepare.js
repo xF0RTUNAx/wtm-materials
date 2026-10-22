@@ -60,7 +60,7 @@ const CONFIG = {
   w_fab250: { src: `${DL}/fab-250_the_soviet_aviation_bomb.glb`, scale: 1.5 / 2.25, nose: '-x', tex: () => 256, pickMesh: /./ },
   w_fab1000: { src: `${DL}/fab-1000.glb`, scale: 3.35 / 4.58, nose: '-z', tex: () => 256, pickMesh: /./, colors: { '^Black|^Gray': [0.07, 0.08, 0.055], '^Brown': [0.12, 0.04, 0.02] } /* корпус и хвост — оливковые, поясок — тёмно-красный */ },
   w_gbu24: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /gbu-24/ },
-  w_gbu57: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /gbu-57/ },
+  w_gbu57: { src: new URL('./own/gbu57.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-57: своя модель (Blender, own/gbu57.glb)
   w_fab500: { src: `${DL}/fab-500_m-54_v5.glb`, scale: 2.47 / 20.68, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // ФАБ-500М-54 — 4ikalka (2026-10-19; эпоха I), УМПК — по-прежнему из ФАБ-500М-62
   w_fab500_old: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
   w_kh31p: { src: new URL('./own/kh31p.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-31П: своя модель (Blender, own/kh31p.glb)

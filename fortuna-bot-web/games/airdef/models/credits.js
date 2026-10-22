@@ -81,7 +81,6 @@ export const CREDITS = [
   "license": "CC-BY-4.0",
   "files": [
    "w_gbu24",
-   "w_gbu57",
    "aam_aim7",
    "aam_aim9x"
   ]

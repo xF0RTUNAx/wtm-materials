@@ -187,7 +187,7 @@ const META = {
   w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 — CATholic
   w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 — United4192
   w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 — Rhine_Lab_Muelsyse (US Weapon Pack)
-  w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 MOP — Rhine_Lab_Muelsyse (US Weapon Pack)
+  w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 — собственная модель (tools/airdef-models/own/gbu57)
   w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т — собственная модель (tools/airdef-models/own/kh29t)
   w_kh31p: { weapon: 'kh31p', stations: [] }, // Х-31П — собственная модель (tools/airdef-models/own/kh31p)
@@ -289,6 +289,7 @@ const GLB_V_OWN = {
   gepard_lo: '20261024d',
   w_nar_s8: '20261024e',
   w_nar_hydra: '20261024f',
+  w_gbu57: '20261024g',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
