@@ -402,7 +402,8 @@ export function createAir(C) {
       // «Аркада», помощь навела нос (ошибка < 2°): залп — точно по рассчитанному направлению (как прицельный вычислитель). Почти по
       // касательной к земле 1° наклона — ≈ 600 м по дальности, а нос висящего вертолёта держит угол не точнее ~1° (Mark 2026-10-22)
       if (nar.on && !game.net) { const cp = Math.cos(nar.pitch); NAR_D.set(-Math.sin(nar.yaw) * cp, Math.sin(nar.pitch), -Math.cos(nar.yaw) * cp); fwdOf(craft, NV); if (NV.angleTo(NAR_D) < 0.035) opts.dir = NAR_D.clone(); }
-      for (let i = 0; i < Wp.salvo; i++) C.S.release(craft, l.key, opts);
+      if (game.net) C.S.release(craft, l.key, { ...opts, salvo: Wp.salvo }); // онлайн: залп — одно сообщение (сервер пускает все ракеты и сам ведёт счёт в блоке)
+      else for (let i = 0; i < Wp.salvo; i++) C.S.release(craft, l.key, opts);
       if (l.rs <= 0) { l.st.pop(); l.n--; l.rs = per; }
       if (C.hooks.trainFire) C.hooks.trainFire(l.key);
       if (l.n <= 0) nextWeapon();
@@ -1114,10 +1115,10 @@ export function createAir(C) {
     const col = new THREE.Mesh(new THREE.CylinderGeometry(ZONE.R, ZONE.R, 4000, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.07, side: THREE.DoubleSide, depthWrite: false }));
     col.position.y = 2000; zoneG.add(col); }
   const zoneRearm = () => { // весь боекомплект по связке (из «зоны» — без расхода запаса), ловушки — полные
-    for (const l of loadout) for (const st of l.st0) if (!l.st.includes(st)) { l.st.push(st); l.n++; const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal; }
+    for (const l of loadout) { l.rs = undefined; for (const st of l.st0) if (!l.st.includes(st)) { l.st.push(st); l.n++; const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = !shipInternal; } } // и блок НАР — полный
     craft.cmFlare = craft.cmChaff = C.MODE().cm;
   };
-  const zoneNeed = () => ({ fuel: zn.fuel > 0 && (craft.fuel ?? 1) < 0.9, ammo: zn.ammo > 0 && (loadout.some((l) => AG[l.key].kind !== 'ecm' && l.n < l.n0) || cmLow(0.5) || craft.cmChaff < C.MODE().cm * 0.5) });
+  const zoneNeed = () => ({ fuel: zn.fuel > 0 && (craft.fuel ?? 1) < 0.9, ammo: zn.ammo > 0 && (loadout.some((l) => AG[l.key].kind !== 'ecm' && (l.n < l.n0 || (l.rs !== undefined && l.rs < Math.ceil(AG[l.key].load / AG[l.key].salvo)))) || cmLow(0.5) || craft.cmChaff < C.MODE().cm * 0.5) });
   const zoneSay = (f, a) => { say(tr('Пополнение: {0} · осталось: топливо {1}, БК {2}', [[f ? tr('топливо') : '', a ? tr('боекомплект и ловушки') : ''].filter(Boolean).join(', '), zn.fuel, zn.ammo]), 3.5); snd.good(); };
   function zoneReset() { zn.fuel = ZONE.FUEL; zn.ammo = ZONE.AMMO; zn.it.zT = 0; zn.it.pos = craft.pos; }
   function zoneUpdate(dt) {

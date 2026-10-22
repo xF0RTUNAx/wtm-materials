@@ -436,7 +436,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     O.zoneStep(r.zone, team(r, 'air').filter((p) => p.craft && !p.craft.dead).map((p) => { p.pos = p.craft.pos; return p; }), dt, Math.random,
       (p) => {
         const L = O.bundleOf(r.era, r.sideAir, p.choice), cm = MODES[r.mode].cm;
-        const spent = !!L && (L.items.some(([k, n]) => ((p.load || []).find((l) => l.key === k) || { n: 0 }).n < Math.min(n, p.cap?.[k] ?? n)) || !p.cm || p.cm.flare < cm * 0.5 || p.cm.chaff < cm * 0.5);
+        const part = (l) => AG[l.key].kind === 'rocket' && l.rs !== undefined && l.rs < Math.ceil(AG[l.key].load / AG[l.key].salvo); // начатый блок НАР
+        const spent = !!L && (L.items.some(([k, n]) => { const l = (p.load || []).find((q) => q.key === k) || { key: k, n: 0 }; return l.n < Math.min(n, p.cap?.[k] ?? n) || part(l); }) || !p.cm || p.cm.flare < cm * 0.5 || p.cm.chaff < cm * 0.5);
         return { fuel: (p.zFuel || 0) > 0 && (p.fuel ?? 1) < 0.9, ammo: (p.zAmmo || 0) > 0 && spent };
       },
       (p, n) => {
@@ -634,7 +635,15 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
         c.relTok = Math.min(2, (c.relTok ?? 2) + (r.t - (c.relT || 0)) / REL_CD); c.relT = r.t;
         if (c.relTok < 1) return deny(c, 'Слишком часто — сброс не прошёл', 'rel ' + m.k);
         const l = (c.load || []).find((q) => q.key === m.k && q.n > 0); if (!l) return deny(c, 'Нет такого оружия', 'rel ' + m.k);
-        c.relTok -= 1; l.n--;
+        c.relTok -= 1;
+        const W = AG[l.key];
+        if (W.kind === 'rocket') { // залп НАР (2026-10-22): одним сообщением — W.salvo ракет; блок пустеет через load/salvo залпов (как у клиента в air.js)
+          const per = Math.ceil(W.load / W.salvo); l.rs = (l.rs ?? per) - 1; if (l.rs <= 0) { l.n--; l.rs = per; }
+          for (let i = 0; i < W.salvo; i++) r.S.release(a, l.key, {});
+          J(r, 'cmd', { who: c.name, cmd: 'rel', k: l.key, left: l.n, aim: false, tg: null, laser: !!a.laser });
+          return;
+        }
+        l.n--;
         const aim = Array.isArray(m.aim) && m.aim.every(Number.isFinite) ? new THREE.Vector3(m.aim[0], m.aim[1], m.aim[2]) : null;
         const tgt = m.tg ? r.S.units.find((u) => u.id === +m.tg) || null : null;
         r.S.release(a, l.key, { aim, target: tgt });
