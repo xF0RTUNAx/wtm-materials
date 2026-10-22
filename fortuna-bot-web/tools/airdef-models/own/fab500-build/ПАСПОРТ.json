@@ -1,0 +1,16 @@
+{
+ "key": "w_fab500",
+ "weapon": "fab500",
+ "name": "ФАБ-500М-62",
+ "rev": 1,
+ "files": {
+  "glb": "fab500.glb",
+  "blend": "fab500.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py",
+   "fab_bomb.py"
+  ]
+ }
+}

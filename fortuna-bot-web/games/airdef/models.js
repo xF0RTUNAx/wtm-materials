@@ -179,14 +179,14 @@ const META = {
   l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS — Denis.Cherkasov1
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II с F-16D
-  w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-54 — 4ikalka
+  w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-62 — собственная модель (tools/airdef-models/own/fab500)
   w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 — 4ikalka
   w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 — 4ikalka
   w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 — CATholic
   w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 — United4192
   w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 Paveway III — AnirudhRao, своя окраска и запекание (Свои/GBU-24)
   w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 — собственная модель (tools/airdef-models/own/gbu57)
-  w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
+  w_umpk: { weapon: 'umpk', wings: 'fold', flip: true, stations: [] }, // ФАБ-500 с УМПК — собственная модель (tools/airdef-models/own/umpk)
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т — собственная модель (tools/airdef-models/own/kh29t)
   w_kh31p: { weapon: 'kh31p', stations: [] }, // Х-31П — собственная модель (tools/airdef-models/own/kh31p)
   w_kh59m: { weapon: ['kh59m', 'kh59mk2'], lazy: true, stations: [] }, // Х-31 (L_elo) в размер Х-59М — и для Х-59МК2 (Mark 2026-10-19; прежняя — из War Thunder)
@@ -287,6 +287,8 @@ const GLB_V_OWN = {
   w_nar_s8: '20261024e',
   w_nar_hydra: '20261024f',
   w_gbu57: '20261024g',
+  w_fab500: '20261024h',
+  w_umpk: '20261024i',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
@@ -494,7 +496,7 @@ async function load(name, base) {
     const ang = (x, z) => Math.atan2(x, z), d = c.clone().sub(pv), wrap = (a) => Math.atan2(Math.sin(a), Math.cos(a));
     if (WM === 'fold') piv.userData.wa = [wrap(ang(0, 1) - ang(d.x, d.z)), 0]; // вдоль бомбы, назад
     else { const sx = Math.sign(d.x) || (part.name === 'wingA' ? 1 : -1); piv.userData.wa = [0, wrap(ang(sx * 0.98, 0.17) - ang(d.x, d.z))]; } // в сторону, со стреловидностью ~10°
-    group.userData.wings = true;
+    group.userData.wings = true; if ((META[name] || {}).flip) group.userData.flip = true; // висит крыльями вниз (УМПК): после сброса переворачивается на 180° (glideWings)
   }
   // дорисованные пилоны там, где у модели их нет
   for (const p of (META[name] || META[name.replace(/_lo$/, "")] || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo — по описанию основной */ const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); group.add(pm); }
@@ -563,6 +565,14 @@ export function podModel() { const n = Object.keys(META).find((k) => META[k].pod
 export function launcherGlb(key) { const n = LAUNCHER[key]; return n && LOADED[n] ? LOADED[n].clone() : null; }
 // крылья планирующей бомбы: k = 0 — сложены (на подвеске), 1 — раскрыты (в полёте)
 export function setWings(obj, k) { if (obj.userData.wings) obj.traverse((n) => { const a = n.userData.wa; if (a) n.rotation.y = a[0] + (a[1] - a[0]) * k; }); }
+// планирующая бомба в полёте, вызывать после lookAt (aimed — lookAt был в этом кадре); dt — секунд кадра. Крылья раскрываются через 0,3 с за 0,8 с; у бомб с flip (УМПК висит крыльями вниз) —
+// сперва переворот на 180° вокруг оси (0,3…1,6 с), крылья — когда она уже вверх крыльями (1,3…2,1 с)
+export function glideWings(obj, dt, aimed = true) {
+  const u = obj.userData; if (!u.wings) return;
+  const T = (u.wingT = (u.wingT || 0) + dt), c01 = (x) => Math.min(1, Math.max(0, x));
+  setWings(obj, c01((T - (u.flip ? 1.3 : 0.3)) / 0.8));
+  if (u.flip && aimed) { const r = c01((T - 0.3) / 1.3); obj.rotateZ(Math.PI * r * r * (3 - 2 * r)); }
+}
 // у оружия есть готовая модель, но она ещё грузится (временную фигуру потом подменить)
 // у оружия есть настоящая модель (а не процедурная фигура): только к такому подводим камеру (ЗУР — всегда, это не про них)
 export const weaponHasModel = (key, W) => !!(WMODEL[key] || (W && W.model));

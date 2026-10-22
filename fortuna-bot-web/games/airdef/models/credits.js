@@ -30,15 +30,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "FAB-500 M62",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/fab-500-m62-9f49025bbd8d487cb3c245e40a07ab57",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_umpk"
-  ]
- },
- {
   "title": "FAB-100-120",
   "author": "4ikalka",
   "url": "https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd",
@@ -91,15 +82,6 @@ export const CREDITS = [
   "files": [
    "aam_aim7",
    "aam_aim9x"
-  ]
- },
- {
-  "title": "FAB-500 M-54 V5",
-  "author": "4ikalka",
-  "url": "https://sketchfab.com/3d-models/fab-500-m-54-v5-87e064b28f6f4d7ba1fde7e79d621b8d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_fab500"
   ]
  },
  {

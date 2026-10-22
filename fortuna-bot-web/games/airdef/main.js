@@ -27,7 +27,7 @@ import { createRaid } from './sim/raid.js?v=20261022w';
 import { POD } from './sim/combined.js?v=20261022w';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022w';
 import { slotCount } from './launchers.js?v=20261022w';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, planeMeta } from './models.js?v=20261022w';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261022w';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022w';
 import { createSound } from './sound.js?v=20261022w';
 import { ico, iconize } from './icons.js?v=20261022w';
@@ -571,7 +571,7 @@ function syncWorld(dt, t) {
     let g = wpnMeshes.get(w.id);
     if (g && g.userData.stub && (w.stubT = (w.stubT || 0) - dt) <= 0) { w.stubT = 1; const g2 = relMesh(w); if (!g2.userData.stub) { scene.remove(g); scene.add(g2); wpnMeshes.set(w.id, g2); g = g2; } } // модель пришла — подменить временную
     if (g) { g.position.copy(w.pos); if (w.vel.lengthSq() > 1e-4) g.lookAt(LP.copy(w.pos).sub(w.vel)); if (g.userData.props) spinProps(g, dt); if (g.userData.flame) flameOf(g, w);
-      if (g.userData.wings) { const k = ((g.userData.wingT = (g.userData.wingT || 0) + dt) - 0.3) / 0.8; setWings(g, Math.min(1, Math.max(0, k))); } } } // крылья раскрываются через 0,3 с после сброса
+      if (g.userData.wings) glideWings(g, dt, w.vel.lengthSq() > 1e-4); } } // крылья раскрываются через 0,3 с после сброса (УМПК: сперва переворот на 180°, см. models.js)
   syncEv();
   const pxK = VH / 2 / Math.tan(camera.fov * D2R / 2); // пикселей на метр на расстоянии 1 м
   for (const u of S.units) {

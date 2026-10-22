@@ -1,0 +1,18 @@
+{
+ "key": "w_umpk",
+ "weapon": "umpk",
+ "name": "ФАБ-500 с УМПК",
+ "rev": 1,
+ "files": {
+  "glb": "umpk.glb",
+  "blend": "umpk.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py",
+   "animate.py",
+   "fab_bomb.py",
+   "umpk_kit.py"
+  ]
+ }
+}
