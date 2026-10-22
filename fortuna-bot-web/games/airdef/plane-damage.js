@@ -195,4 +195,4 @@ export function updateDebris(scene, dt, groundAt, wind) {
     if (d.t > 14 || d.g.position.y < groundAt(d.g.position.x, d.g.position.z)) { scene.remove(d.g); debris.splice(i, 1); }
   }
 }
-export function clearDebris(scene) { for (const d of debris) scene.remove(d.g); debris.length = 0; }
+export function clearDebris(scene) { for (const d of debris) scene.remove(d.g); debris.length = 0; SAMPS.clear(); } // и точки обшивки (≈ 3–4 МБ на тип) — новый бой строит заново при первой пробоине

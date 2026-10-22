@@ -187,7 +187,8 @@ const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
 ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рендерер — какие форматы есть у устройства
 // телефон: текстуры моделей после загрузки на видеокарту освобождаются (models.js) — восстановить потерянный контекст WebGL нечем, только перезагрузкой
-canvas.addEventListener('webglcontextrestored', () => { if (IS_TOUCH) location.reload(); });
+// в онлайн-бою — не выбрасывать игрока: бой доигрывается (модели могут остаться без текстур), перезагрузка — при выходе в меню
+canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if (C.net && C.net.battle) C.reloadAfterBattle = true; else location.reload(); });
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
@@ -730,6 +731,7 @@ C.start = function (game) {
   resize();
 };
 C.toMenu = function () {
+  if (C.reloadAfterBattle) { location.reload(); return; } // контекст WebGL терялся в онлайн-бою — текстуры моделей вернёт только перезагрузка
   C.op = null; // «Операция» прервана
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
   C.hooks = {}; C.paused = false; C.hint(''); C.say(''); $('ask').style.display = 'none'; $('warn').style.display = 'none';

@@ -96,7 +96,7 @@ export function heliStep(a, hm, u, dt, env = {}) {
     const bank = smooth(15, 35, vf);
     // у земли (ниже 40 м) крен — не больше, чем держит тяга (вертикальной составляющей хватает на вес с запасом 15 %): в вираже 45°
     // проседал на 1,5–3,5 м/с и касался земли; выше и при запасе тяги — вираж как был
-    const bmax = agl < 40 ? Math.acos(Math.min(1, G * 1.15 / Math.max(tA * Math.cos(a.pitch), G * 1.15))) : 9; // и наклон носа на скорости съедает вертикальную тягу
+    const bmax = agl < 40 ? Math.max(0.15, Math.acos(Math.min(1, G * 1.15 / Math.max(tA * Math.cos(a.pitch), G * 1.15)))) : 9; // и наклон носа на скорости съедает вертикальную тягу; не меньше 0,15 — подбитый (тяги нет) всё же доворачивает
     const rd = clamp((1 - bank) * -clamp(ff(wantR) + clamp((wantR - vr) / 9, -1, 1) * hm.tilt, -hm.tilt, hm.tilt) + bank * -clamp(u.cx, -1, 1) * 0.8, -bmax, bmax);
     a.wp = clamp((pd - a.pitch) * 3, -hm.pitchR, hm.pitchR) * ctrl;
     a.wr = clamp((rd - a.roll) * 3.5, -hm.rollR, hm.rollR) * ctrl;
