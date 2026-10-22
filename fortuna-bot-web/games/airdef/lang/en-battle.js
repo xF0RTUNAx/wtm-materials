@@ -208,6 +208,7 @@ export default {
   'Подскок: управление у вас': 'Pop-up: you have control',
   'Подскок: цель не показалась — смените позицию': 'Pop-up: target never showed, change position',
   'Подскок: нет захвата — вниз': 'Pop-up: no lock, descending',
+  'Подскок: круг не лёг на цель — вниз': 'Pop-up: aim circle never settled on the target, descending',
   'Подскок: выберите ПТУР или НАР': 'Pop-up: select ATGM or rockets',
   'Подскок завершён': 'Pop-up complete',
   'Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот. ▲▼ — высота, ◀▶ — шаг вбок, «ГАЗ» — ступени скорости. «ПОДСКОК» — сам вверх до цели, пуск и вниз. «ЛОВУШКИ» — ЛТЦ и диполи. Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно прицела. Прицел вертолёта захватывает цель сам, и у земли тоже.': 'Left stick: forward speeds up, back brakes, sideways turns. ▲▼ altitude, ◀▶ sidestep, “THROTTLE” speed steps. “POP-UP” climbs to the target, fires and drops by itself. “COUNTERMEASURES” fires flares and chaff. Left panel: tap a weapon to select it, the target line for the next target, “TV” for the sight view. The helicopter sight locks targets by itself, even near the ground.',

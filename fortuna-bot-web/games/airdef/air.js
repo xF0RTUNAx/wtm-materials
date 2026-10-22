@@ -3,7 +3,7 @@
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
 import { tr } from './i18n.js?v=20261022x';
-import { CITY, ZONE_NAME, mulberry32, riverX } from './city.js?v=20261022x';
+import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261022x';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261022x';
 import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261022x';
 import { ico } from './icons.js?v=20261022x';
@@ -160,11 +160,19 @@ export function createAir(C) {
   }
   // цели контейнера: цели задания, затем замеченные комплексы ПВО (метки на экране)
   const tgtName = (t) => (t.S ? t.S.rwr || t.S.short : t.name);
-  const tgtPos = (t, out) => (t.S ? out.copy(t.pos) : out.set(t.x, city.topAt(t.x, t.z), t.z));
+  // объект — его главная точка прицела (city.js objAimXZ: постройка, а не центр — у порта, «Ведьминой поляны», ГЭС центр — пустая земля)
+  const AXZ = { x: 0, z: 0 }, aimXZ = (o) => objAimXZ(o, -1, 0, 0, AXZ);
+  const tgtPos = (t, out) => { if (t.S) return out.copy(t.pos); const a = aimXZ(t); return out.set(a.x, city.topAt(a.x, a.z), a.z); };
   // самая высокая точка объекта (крыша корпуса) — для прицела вертолёта: с малой высоты центр объекта у земли закрыт его же
   // постройками и деревьями (2026-10-21: с 2,5–4,5 км на 40–110 м склад ГСМ и «Фонарь Джека» не захватывались ни с одного направления)
+  // (2026-10-22: по постройкам объекта — city.js aims; сетка 5 × 5 по рамке объекта попадала и в пустую землю между ними)
   function hiPoint(t, out) {
-    if (!t._hp) { const w = (t.w || 120) * 0.45, d = (t.d || 120) * 0.45; let best = null; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { const x = t.x + (i / 2) * w, z = t.z + (j / 2) * d, y = city.topAt(x, z); if (!best || y > best[1]) best = [x, y, z]; } t._hp = best; }
+    if (!t._hp) {
+      let best = null;
+      if (t.aims && t.aims.length) for (const q of t.aims) { const y = city.topAt(q.x, q.z); if (!best || y > best[1]) best = [q.x, y, q.z]; }
+      else { const w = (t.w || 120) * 0.45, d = (t.d || 120) * 0.45; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { const x = t.x + (i / 2) * w, z = t.z + (j / 2) * d, y = city.topAt(x, z); if (!best || y > best[1]) best = [x, y, z]; } }
+      t._hp = best;
+    }
     return out.set(t._hp[0], t._hp[1], t._hp[2]);
   }
   function podCands() {
@@ -201,7 +209,9 @@ export function createAir(C) {
     else { fwdOf(craft, pod.dir); pod.dir.y -= 0.45; pod.dir.normalize(); }
     invQ.copy(shipQ).invert(); LQ.copy(pod.dir).applyQuaternion(invQ);
     const el = Math.asin(clamp(LQ.y, -1, 1)), az = Math.atan2(LQ.x, -LQ.z);
-    pod.masked = el > 0.17 || Math.abs(az) > 2.8;
+    // подвесной контейнер самолёта вверх не смотрит (> 10° — «закрыта корпусом»); прицел вертолёта — в носу: +30° / −60°, ±120° по курсу
+    // (2026-10-22: вертолёт на подскоке клевал носом — цель на уровне вертолёта «пряталась за корпус», ПТУР не пускался)
+    pod.masked = craft.heli ? el > 0.52 || el < -1.05 || Math.abs(az) > 2.1 : el > 0.17 || Math.abs(az) > 2.8;
     // захват: условия проверяются 10 раз в секунду; выполнены POD_ACQ с подряд — точка захвачена
     if (pod.tgt && !pod.lock && (pod.chkT -= dt) <= 0) {
       pod.chkT = 0.1; tgtPos(pod.tgt, TP);
@@ -215,7 +225,7 @@ export function createAir(C) {
     const want = pod.laserMan !== null ? pod.laserMan : need;
     const was = pod.laser;
     pod.laser = !!(hasPod && want && pod.lock && !pod.masked && !craft.dead && pod.pos.distanceTo(pod.lock) < 25000
-      && city.los(pod.pos.x, pod.pos.y, pod.pos.z, pod.lock.x, pod.lock.y, pod.lock.z, 3));
+      && city.los(pod.pos.x, pod.pos.y, pod.pos.z, pod.lock.x, pod.lock.y, pod.lock.z, 4)); // 4 м у концов — как при захвате (было 3: захват есть, а подсвет на грани видимости не включался)
     if (pod.laser !== was) snd.laser(pod.laser);
     laserSpot = pod.laser ? pod.lock : null;
   }
@@ -265,8 +275,8 @@ export function createAir(C) {
   function coordAim(maxR) {
     if (pod.lock) return pod.lock;
     fwdOf(craft, LQ); let best = null, bd = maxR;
-    for (const o of game.targets) { if (o.dead) continue; CO.set(o.x, city.topAt(o.x, o.z), o.z); const d = CO.distanceTo(craft.pos); if (d < bd && angleBetween(LQ, TMP0.copy(CO).sub(craft.pos)) < 80 * D2R) { bd = d; best = o; } }
-    return best ? CO.set(best.x, city.topAt(best.x, best.z), best.z) : null;
+    for (const o of game.targets) { if (o.dead) continue; tgtPos(o, CO); const d = CO.distanceTo(craft.pos); if (d < bd && angleBetween(LQ, TMP0.copy(CO).sub(craft.pos)) < 80 * D2R) { bd = d; best = o; } }
+    return best ? tgtPos(best, CO) : null;
   }
   const TMP0 = V3();
   let msgText = '', msgT = 0;
@@ -290,6 +300,9 @@ export function createAir(C) {
   // и в досягаемости) — подпись у круга («опустите нос» / «в зоне — залп»…); в «Аркаде» нос сам ведёт круг точки падения на неё
   // (pitch — наклон, при котором расчётная точка падения на дальности цели), остаётся дать залп. pt — точка цели, on — помощь ведёт нос в этом кадре
   const nar = { pt: new THREE.Vector3(), has: false, key: null, pitch: 0, yaw: 0, on: false, assist: false, slow: false, hint: '' }, NAR_D = new THREE.Vector3(), NAR_P = new THREE.Vector3();
+  const NAR_TOL_U = 15; // «в зоне» / «ПУСК» по машине ПВО — точка падения ближе 15 м (урон по машине — до ~18 м: blast, R 14 + 4)
+  // помощь «Аркады» довела нос до расчётного направления (< 2°): залп пойдёт точно по нему (fire: opts.dir)
+  const narAligned = () => { if (!nar.on) return false; const cp = Math.cos(nar.pitch); NAR_D.set(-Math.sin(nar.yaw) * cp, Math.sin(nar.pitch), -Math.cos(nar.yaw) * cp); return fwdOf(craft, NV).angleTo(NAR_D) < 0.035; };
   // подсказка к оружию вертолёта — при первом выборе в вылете (Mark 2026-10-22: «непонятно, как пускать НАР и ПТУР»); hintSeen — за вылет
   const hintSeen = new Set();
   function weaponHint(key) {
@@ -309,12 +322,19 @@ export function createAir(C) {
   // «Реализм» — только подсказка: на сколько подняться, чтобы цель показалась. st: 0 — нет, 1 — вверх, 2 — захват и пуск, 3 — ведёт ПТУР, 4 — вниз
   const pop = { st: 0, t: 0, agl0: 0, fired: false, tgt: null, seeT: 0 };
   const aglNow = () => craft.pos.y - city.topAt(craft.pos.x, craft.pos.z);
-  // цель подскока: ближайшая впереди (±40°) в досягаемости выбранного оружия — цели задания и замеченные комплексы (как у контейнера)
+  // цель подскока: цель контейнера (выбранная R / «ЦЕЛЬ»), если она впереди (±40°) и в досягаемости выбранного оружия, иначе ближайшая
+  // такая — цели задания и замеченные комплексы (как у контейнера). Mark 2026-10-22: подскок брал ближайшую и переводил на неё контейнер —
+  // выбранный ЗРК подменялся КП или соседним комплексом (на стенде — в 4 пусках из 10), ПТУР уходил не туда
   function popPick() {
     const l = curW(), R = l ? AG[l.key].rmax * 1.1 : 6000, fx = -Math.sin(craft.yaw), fz = -Math.cos(craft.yaw); let best = null, bd = 1e9;
-    for (const t of podCands()) { tgtPos(t, TP); const dx = TP.x - craft.pos.x, dz = TP.z - craft.pos.z, d = Math.hypot(dx, dz); if (d < 300 || d > R || (dx * fx + dz * fz) / d < 0.75) continue; if (d < bd) { bd = d; best = t; } }
+    const dOk = (t) => { tgtPos(t, TP); const dx = TP.x - craft.pos.x, dz = TP.z - craft.pos.z, d = Math.hypot(dx, dz); return d < 300 || d > R || (dx * fx + dz * fz) / d < 0.75 ? 0 : d; };
+    const cands = podCands();
+    if (hasPod && pod.tgt && cands.includes(pod.tgt) && dOk(pod.tgt)) return pod.tgt;
+    for (const t of cands) { const d = dOk(t); if (d && d < bd) { bd = d; best = t; } }
     return best;
   }
+  // нос смотрит на точку p не дальше deg градусов (ПТУР сходит по оси носа: цель вне поля ГСН — ракета её не увидит)
+  const noseOn = (p, deg) => angleBetween(fwdOf(craft, NV), LP.copy(p).sub(craft.pos)) < deg * D2R;
   // видна ли цель с высоты dh над нынешней: луч из носа на высшую точку объекта (у вертолёта центр объекта закрыт его же постройками)
   function popSees(t, dh = 0) { const P = t.S ? tgtPos(t, TP) : hiPoint(t, TP); return city.los(craft.pos.x, craft.pos.y - 1.5 + dh, craft.pos.z, P.x, P.y + 2, P.z, 4); }
   function popNeed() { // «Реализм»: сколько метров вверх до видимости цели
@@ -348,17 +368,22 @@ export function createAir(C) {
     if (pop.st < 4 && (!T || T.dead)) { pop.st = 4; pop.t = 0; }
     if (T && pop.st < 4) { tgtPos(T, TP); HU.yawTo = Math.atan2(-(TP.x - craft.pos.x), -(TP.z - craft.pos.z)); } // нос — на цель
     if (pop.st === 1) {
-      // видна с запасом 3 м — хватит; с НАР — не ниже 50 м (с малой высоты ракеты идут почти вдоль земли и ложатся вразброс)
-      if ((pop.seeT -= dt) <= 0) { pop.seeT = 0.15; if (popSees(T, 3) && (!W || W.kind !== 'rocket' || agl >= 50)) { pop.st = 2; pop.t = 0; HU.col = 0; return; } }
+      // видна с запасом 3 м — хватит; с НАР — не ниже 80 м, как у ИИ (с малой высоты ракеты идут почти вдоль земли: 1 м по высоте — 30 м по дальности)
+      if ((pop.seeT -= dt) <= 0) { pop.seeT = 0.15; if (popSees(T, 3) && (!W || W.kind !== 'rocket' || agl >= 80)) { pop.st = 2; pop.t = 0; HU.col = 0; return; } }
       HU.col = 1;
-      if (agl - pop.agl0 > 70 || pop.t > 12) { pop.st = 4; pop.t = 0; say(tr('Подскок: цель не показалась — смените позицию'), 2.5); }
+      if (agl - pop.agl0 > (W && W.kind === 'rocket' ? 100 : 70) || pop.t > 14) { pop.st = 4; pop.t = 0; say(tr('Подскок: цель не показалась — смените позицию'), 2.5); }
     } else if (pop.st === 2) {
-      HU.col = popSees(T) ? 0 : 0.5; // чуть выше, если цель снова скрылась
-      const ready = W && usable(l) && (W.kind === 'agm' ? !!pod.lock && pod.tgt === T && craft.pos.distanceTo(pod.lock) < W.rmax : W.kind === 'rocket' && nar.hint === tr('в зоне — залп'));
+      HU.col = popSees(T, -1.5) ? 0 : 0.5; // чуть выше, если цель снова скрылась (с запасом 1,5 м: на грани видимости вертолёт проседал — подсвет гас)
+      // ПТУР — когда нос довёрнут на цель (≤ 12°): пуск сразу по захвату, пока вертолёт ещё поворачивал, уводил ракету из поля ГСН; и цель
+      // видна с запасом (иначе подсвет гаснет сразу после пуска и ракета падает неуправляемой)
+      // НАР — когда помощь довела нос до расчёта (< 2°: залп уйдёт точно по нему — fire, opts.dir) или круг по носу «в зоне». Круг по носу
+      // с висения у земли гуляет на десятки метров (1° наклона — сотни метров по дальности): ждать «в зоне» вместе с расчётом — залпа не было
+      const ready = W && usable(l) && (W.kind === 'agm' ? !!pod.lock && pod.tgt === T && craft.pos.distanceTo(pod.lock) < W.rmax && noseOn(pod.lock, 12) && popSees(T, -1.5)
+        : W.kind === 'rocket' && nar.has && nar.hint !== tr('далеко — ближе к цели') && (narAligned() || nar.hint === tr('в зоне — залп')));
       if (ready) { fire(true); pop.fired = true; pop.t = 0; pop.st = W.kind === 'agm' ? 3 : 4; }
-      else if (pop.t > 6) { pop.st = 4; pop.t = 0; say(W && (W.kind === 'agm' || W.kind === 'rocket') ? tr('Подскок: нет захвата — вниз') : tr('Подскок: выберите ПТУР или НАР'), 2.5); }
-    } else if (pop.st === 3) { // ПТУР ведут до попадания: висим, нос на цели
-      HU.col = 0;
+      else if (pop.t > 6) { pop.st = 4; pop.t = 0; say(W && W.kind === 'agm' ? tr('Подскок: нет захвата — вниз') : W && W.kind === 'rocket' ? tr('Подскок: круг не лёг на цель — вниз') : tr('Подскок: выберите ПТУР или НАР'), 2.5); }
+    } else if (pop.st === 3) { // ПТУР ведут до попадания: висим, нос на цели; цель закрывается (просели) — вверх, иначе подсвет гаснет (не выше +100 м — не в зону ПВО)
+      HU.col = !popSees(T, -1) && agl - pop.agl0 < 100 ? 1 : 0;
       if (!C.S.wpns.some((w) => w.owner === craft && !w.dead && w.W.kind === 'agm') || pop.t > 25) { pop.st = 4; pop.t = 0; }
     } else { // вниз на прежнюю высоту
       HU.col = -1;
@@ -371,7 +396,7 @@ export function createAir(C) {
     const ok = (x, z) => { const dx = x - craft.pos.x, dz = z - craft.pos.z, d = Math.hypot(dx, dz); return d > 300 && d < Wp.rmax * 1.15 && (dx * fx + dz * fz) / d > 0.82 ? d : 0; };
     if (pod.lock && ok(pod.lock.x, pod.lock.z)) return [pod.lock.x, pod.lock.y, pod.lock.z, 'pod'];
     let best = null, bd = 1e9;
-    for (const o of game.targets) { if (o.dead) continue; const d = ok(o.x, o.z); if (d && d < bd) { bd = d; best = [o.x, city.groundH(o.x, o.z) + 3, o.z, o]; } }
+    for (const o of game.targets) { if (o.dead) continue; const a = aimXZ(o), d = ok(a.x, a.z); if (d && d < bd) { bd = d; best = [a.x, city.groundH(a.x, a.z) + 3, a.z, o]; } }
     for (const u of C.S.units) { if (u.dead || !u.known) continue; const d = ok(u.pos.x, u.pos.z); if (d && d < bd) { bd = d; best = [u.pos.x, u.pos.y + 1, u.pos.z, u]; } }
     return best;
   }
@@ -391,6 +416,11 @@ export function createAir(C) {
       const u = armTarget(Wp); if (!u) return no(tr('Нет включённой РЛС впереди в поле ГСН'));
       opts.target = u;
     } else if (Wp.kind === 'agm' && Wp.seeker === 'laser' && !pod.lock) return no(tr('Нужен захват контейнером (лазер)'));
+    else if (Wp.kind === 'agm' && Wp.seeker === 'laser' && craft.heli) {
+      // ПТУР с вертолёта (2026-10-22): цель вне поля ГСН — ракета ушла бы мимо неуправляемой; в поле — сходит на линию прицела
+      if (!noseOn(pod.lock, Wp.fov)) return no(tr('Цель вне поля ГСН — доверните на неё'));
+      opts.dir = LP.copy(pod.lock).sub(craft.pos).normalize().clone(); opts.aim = pod.lock; // aim — первая «память» пятна (strike.js release)
+    }
     else if (Wp.kind === 'gps' || Wp.kind === 'cruise') {
       const a = coordAim(Wp.rmax * 1.2); if (!a) return no(tr('Нет координат: захватите точку контейнером или доверните на цель задания'));
       opts.aim = a;
@@ -652,8 +682,8 @@ export function createAir(C) {
       ccipOk = t > 0; const d = ccipOk ? CCIP.distanceTo(craft.pos) : 0, F = fcs();
       rkOn = null;
       if (ccipOk && F >= 3) { let best = 1e9; const tol = Math.max(25, (Wp.blast || 10) * 0.9);
-        for (const o of game.targets) { if (o.dead) continue; const e = Math.hypot(o.x - CCIP.x, o.z - CCIP.z) - Math.max(o.w || 0, o.d || 0) * 0.35; if (e < best) { best = e; rkOn = e < tol ? o : null; } }
-        for (const u of C.S.units) { if (u.dead || !u.known) continue; const e = Math.hypot(u.pos.x - CCIP.x, u.pos.z - CCIP.z); if (e < tol && e < best) { best = e; rkOn = u; } } }
+        for (const o of game.targets) { if (o.dead) continue; const e = objDist(o, CCIP.x, CCIP.z); if (e < best) { best = e; rkOn = e < tol ? o : null; } } // до ближайшей постройки (было: до центра минус треть размера — у порта «ПУСК» за ~900 м от причала)
+        for (const u of C.S.units) { if (u.dead || !u.known) continue; const e = Math.hypot(u.pos.x - CCIP.x, u.pos.z - CCIP.z); if (e < NAR_TOL_U && e < best) { best = e; rkOn = u; } } }
       larText = F === 1 ? tr('НАР · механический прицел (кольцо)')
         : !ccipOk ? tr('НАР: опустите нос — точка падения дальше 4 км') : d > Wp.rmax ? tr('далеко · {0} км', [(d / 1000).toFixed(1)])
         : F >= 3 ? tr('{0} · дальность {1} км · {2} с{3}', [rkOn ? tr('ПУСК') : tr('НАР'), (d / 1000).toFixed(2), t.toFixed(1), rkHold > 0 ? tr(' · залп ждёт цель') : '']) : tr('НАР · {0} км · {1} с', [(d / 1000).toFixed(1), t.toFixed(1)]);
@@ -663,12 +693,13 @@ export function createAir(C) {
       if (tg) {
         nar.key = tg[3]; nar.pt.set(tg[0], tg[1], tg[2]);
         const dT = Math.hypot(tg[0] - craft.pos.x, tg[2] - craft.pos.z), dC = ccipOk ? Math.hypot(CCIP.x - craft.pos.x, CCIP.z - craft.pos.z) : 1e9;
-        const miss = Math.hypot(CCIP.x - tg[0], CCIP.z - tg[2]), tol = Math.max(25, (Wp.blast || 10) * 0.9);
+        // «в зоне»: по машине ПВО — 15 м (25 м, как по зданиям, — уже промах: радиус НАР 14 м, а машина — точка), по объекту — 25 м
+        const tk = tg[3] === 'pod' ? pod.tgt : tg[3], miss = Math.hypot(CCIP.x - tg[0], CCIP.z - tg[2]), tol = tk && tk.S ? NAR_TOL_U : Math.max(25, (Wp.blast || 10) * 0.9);
         // наклон для «Аркады»: подбор делением пополам — при каком наклоне по курсу на цель расчётная точка падения на её дальности
-        // (поправка «по промаху» раскачивала нос до 15°)
+        // (поправка «по промаху» раскачивала нос до 15°). 14 шагов (было 9: шаг 0,1° — с висения на 50 м это до ±30 м по дальности)
         const yw = Math.atan2(-(tg[0] - craft.pos.x), -(tg[2] - craft.pos.z)), P0 = LP.copy(craft.pos).addScaledVector(UPW, -2.5);
         let lo = -0.6, hi = 0.35;
-        for (let it = 0; it < 9; it++) {
+        for (let it = 0; it < 14; it++) {
           const a = (lo + hi) / 2; NAR_D.set(-Math.sin(yw) * Math.cos(a), Math.sin(a), -Math.cos(yw) * Math.cos(a));
           const tt = predictRocket(city, Wp, P0, NAR_D, Math.max(0, craft.vel.dot(NAR_D)), NAR_P), dd = tt > 0 ? Math.hypot(NAR_P.x - craft.pos.x, NAR_P.z - craft.pos.z) : 1e9;
           if (dd > dT) hi = a; else lo = a;
@@ -690,7 +721,7 @@ export function createAir(C) {
     if (aimOn()) { const ap = proj(LP.copy(craft.pos).addScaledVector(aimDir(AIMD), 2000)); if (ap) { hx.strokeStyle = 'rgba(255,255,255,.85)'; hx.beginPath(); hx.arc(ap[0], ap[1], 11, 0, 7); hx.moveTo(ap[0] - 3, ap[1]); hx.lineTo(ap[0] + 3, ap[1]); hx.stroke(); } } // куда смотрит камера — туда летит самолёт
     if (fp) { hx.strokeStyle = '#9fffb8'; hx.beginPath(); hx.arc(fp[0], fp[1], 7, 0, 7); hx.moveTo(fp[0] - 16, fp[1]); hx.lineTo(fp[0] - 7, fp[1]); hx.moveTo(fp[0] + 7, fp[1]); hx.lineTo(fp[0] + 16, fp[1]); hx.moveTo(fp[0], fp[1] - 7); hx.lineTo(fp[0], fp[1] - 13); hx.stroke(); }
     for (const o of game.targets) {
-      const p = proj(LP.set(o.x, city.groundH(o.x, o.z) + 20, o.z)); if (!p) continue;
+      const a = aimXZ(o), p = proj(LP.set(a.x, city.groundH(a.x, a.z) + 20, a.z)); if (!p) continue; // метка — над главной постройкой (куда целиться)
       const d = craft.pos.distanceTo(LP);
       hx.strokeStyle = o.dead ? 'rgba(200,200,200,.6)' : '#fde047'; hx.fillStyle = hx.strokeStyle;
       hx.beginPath(); hx.moveTo(p[0], p[1] - 9); hx.lineTo(p[0] + 9, p[1]); hx.lineTo(p[0], p[1] + 9); hx.lineTo(p[0] - 9, p[1]); hx.closePath(); hx.stroke();

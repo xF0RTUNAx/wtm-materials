@@ -11,7 +11,7 @@
 /* global THREE */
 import { tr } from '../i18n.js?v=20261022x';
 import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261022x';
-import { CITY } from '../city.js?v=20261022x';
+import { CITY, objAimXZ } from '../city.js?v=20261022x';
 
 export const COMBINED_NAME = 'Мульти-волна';
 export const combinedOk = (side, era) => !!(COMBINED[side] && COMBINED[side][era]);
@@ -94,7 +94,14 @@ export function createCombined(S, city, rnd, opts = {}) {
   const toSamN = (i, f) => Math.floor((i + 1) * f) > Math.floor(i * f);
 
   let objs = [];
-  const objAim = (i, id) => { let o = id != null ? objs.find((q) => q.id === id && !q.dead) : null; if (!o) o = objs[i % objs.length]; return V(o.x, city.topAt(o.x, o.z), o.z); };
+  // по объекту — по его постройкам вразлёт (Mark 2026-10-22: били все в одну точку — центр, а он у части объектов — пустая земля):
+  // каждая следующая единица по тому же объекту — в следующую постройку (city.js objAimXZ; крупные — чаще), место на крыше — случайное
+  const hitN = new Map();
+  const objAim = (i, id) => {
+    let o = id != null ? objs.find((q) => q.id === id && !q.dead) : null; if (!o) o = objs[i % objs.length];
+    const n = hitN.get(o.id) || 0; hitN.set(o.id, n + 1);
+    const p = objAimXZ(o, n, rnd() - 0.5, rnd() - 0.5); return V(p.x, city.topAt(p.x, p.z), p.z);
+  };
   // цель — в момент пуска: по ПВО — случайный из засечённых комплексов с РЛС (никого не знаем — по объекту)
   const aimFn = (toSam, i, id, sid) => () => {
     if (toSam && sid != null) { const u = S.units.find((q) => q.id === sid && !q.dead); if (u) return { p: u.pos.clone(), u }; } // по выбранному ЗРК (если ещё цел)

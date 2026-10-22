@@ -16,8 +16,8 @@ def wav(path, y, sr):
     print(path.split('/')[-1], f'{len(y)/sr:.2f} s rms {20*np.log10(np.sqrt((y**2).mean())):.1f} dB peak {20*np.log10(np.abs(y).max()):.1f} dB')
 def mp3(path, y, sr, br='96k'):
     t = path + '.tmp.wav'; wav(t, y, sr); subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', t, '-b:a', br, path], check=True); subprocess.run(['rm', t])
-def flat(s, sr, win):
-    e = np.sqrt(sosfiltfilt(butter(2, 1 / win, 'low', fs=sr, output='sos'), s * s).clip(1e-12)); return s / e * e.mean()
+def flat(s, sr, win):  # края — зеркалом, огибающая снизу — 0,1 RMS (см. mk2lib.py)
+    e = np.sqrt(sosfiltfilt(butter(2, 1 / win, 'low', fs=sr, output='sos'), s * s, padtype='even', padlen=min(len(s) - 1, int(2 * win * sr))).clip((s * s).mean() * 0.01)); return s / e * e.mean()
 def hp(y, sr, f): return sosfiltfilt(butter(2, f, 'high', fs=sr, output='sos'), y)
 def lp(y, sr, f): return sosfiltfilt(butter(2, f, 'low', fs=sr, output='sos'), y)
 def soft(y, c=0.89): return np.tanh(y / c) * c

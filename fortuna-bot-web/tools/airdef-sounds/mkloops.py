@@ -10,7 +10,7 @@ def wav(name, y, sr):
     y = np.clip(y, -1, 1); w = wave.open(OUT + name, 'wb'); w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
     w.writeframes((y * 32767).astype('<i2').tobytes()); w.close(); print(name, f'{len(y)/sr:.2f} s', f'rms {20*np.log10(np.sqrt((y**2).mean())):.1f} dB', f'peak {20*np.log10(np.abs(y).max()):.1f} dB')
 def flatten(s, sr, win):  # убрать медленное нарастание/спад (приближение пролёта), оставить хлопки
-    e = np.sqrt(sosfiltfilt(butter(2, 1 / win, 'low', fs=sr, output='sos'), s * s).clip(1e-12)); return s / e * e.mean()
+    e = np.sqrt(sosfiltfilt(butter(2, 1 / win, 'low', fs=sr, output='sos'), s * s, padtype='even', padlen=min(len(s) - 1, int(2 * win * sr))).clip((s * s).mean() * 0.01)); return s / e * e.mean()  # края — зеркалом, снизу — 0,1 RMS (см. mk2lib.py)
 def soft(y, ceil=0.89): return np.tanh(y / ceil) * ceil
 def loop(s, sr, L, X, period):
     # длина петли: около L, кратна периоду; из окрестности — где конец лучше всего похож на начало

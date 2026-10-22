@@ -13,7 +13,7 @@ import { cmOf } from './cm.js?v=20261022x';
 import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261022x';
 import { predictBomb, predictRocket } from './strike.js?v=20261022x';
 import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261022x';
-import { CITY } from '../city.js?v=20261022x';
+import { CITY, objAimXZ } from '../city.js?v=20261022x';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -173,7 +173,10 @@ export function createRaid(S, city, rnd, opts = {}) {
     planes.push(d);
     return d;
   }
-  function aimPointOf(a) { const t = a.tgt; return PI.set(t.x + (a.id % 3 - 1) * 15, city.topAt(t.x, t.z) + 2, t.z + ((a.id >> 2) % 3 - 1) * 15); }
+  // точка прицеливания: у каждого самолёта — своя постройка объекта (по номеру, city.js objAimXZ) и своё место на её крыше; раньше все
+  // били в центр ±15 м, а у порта, ГЭС, «Ведьминой поляны» и др. центр — пустая земля в 30–134 м от построек (Mark 2026-10-22)
+  const PA = { x: 0, z: 0 };
+  function aimPointOf(a) { const p = objAimXZ(a.tgt, a.id, ((a.id * 0.37) % 1) - 0.5, ((a.id * 0.71) % 1) - 0.5, PA); return PI.set(p.x, city.topAt(p.x, p.z) + 2, p.z); }
   // полёт к точке на высоте h с облётом крыш (смотрим вперёд на 300 и 700 м)
   function fly(a, dir, dt, k = 2.2) { const [rx, ry] = steerTo(a, dir, k); flyStep(a, rx, ry, dt); } // полёт носом по направлению dir
   function steerToward(a, p, h, dt) {

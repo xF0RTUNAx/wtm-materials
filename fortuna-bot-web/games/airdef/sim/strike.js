@@ -18,6 +18,7 @@ import { AG, SAM } from '../arsenal.js?v=20261022x';
 import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261022x';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261022x';
 import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261022x';
+import { partDist } from '../city.js?v=20261022x';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
@@ -38,7 +39,7 @@ const NOOP_FX = {
   cmDrop() {}, decoyed() {}, trackBroken() {},
 };
 
-const TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), AIM = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0);
+const TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), AIM = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0), LOFT = new THREE.Vector3(), PREV = new THREE.Vector3();
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 export function createStrike(ctx) {
@@ -567,11 +568,13 @@ export function createStrike(ctx) {
     const w = { id: mid++, key, W, owner: a, pos: a.pos.clone().addScaledVector(TMP.set(0, -1, 0), 2.5), vel: a.vel.clone(), dir: a.vel.clone().normalize(),
       speed: a.speed, t: 0, flown: 0, dead: false, aim: opts.aim ? opts.aim.clone() : null, target: opts.target || null, mem: null, lost: false, homing: false, trailT: 0 };
     if (W.kind === 'arm' && w.target) w.mem = w.target.pos.clone();
+    if (W.kind === 'agm' && W.seeker === 'laser' && w.aim) { w.mem = w.aim.clone(); w.memT = 0; } // лазерная с точкой захвата: подсвет включается уже после пуска — до него летит туда
     // с вертолёта (скорость бывает и нулевой, нос — не по скорости) ракеты и НАР сходят по оси корпуса; бомбы — со скоростью
-    if (a.heli && W.kind !== 'bomb') { if (opts.dir) w.dir.copy(opts.dir); else w.dir.set(-Math.sin(a.yaw) * Math.cos(a.pitch), Math.sin(a.pitch), -Math.cos(a.yaw) * Math.cos(a.pitch)); w.speed = Math.max(0, a.vel.dot(w.dir)); } // opts.dir — НАР «Аркады» по прицельному расчёту (air.js nar)
-    // разброс залпа; «Аркада» с прицельной помощью (opts.dir) — вдвое кучнее, по вертикали ещё вчетверо: с висения на 60 м ракеты идут почти
-    // по касательной к земле, и ±0,5° давали ±0,5–1,5 км по дальности (Mark 2026-10-22: «вертолёты слишком сложные»)
-    if (W.kind === 'rocket') { const dk = opts.dir ? 0.5 : 1; w.dir.x += (rnd() - 0.5) * 2 * W.disp * dk; w.dir.y += (rnd() - 0.5) * 2 * W.disp * dk * (opts.dir ? 0.25 : 1); w.dir.z += (rnd() - 0.5) * 2 * W.disp * dk; w.dir.normalize(); w.pos.addScaledVector(w.dir, 3); w.speed = Math.max(30, w.speed); } // сход с 30 м/с — как в predictRocket (иначе нижний предел 30 м/с на первом шаге давал разную дальность при 30 и 60 к/с)
+    if (a.heli && W.kind !== 'bomb') { if (opts.dir) w.dir.copy(opts.dir); else w.dir.set(-Math.sin(a.yaw) * Math.cos(a.pitch), Math.sin(a.pitch), -Math.cos(a.yaw) * Math.cos(a.pitch)); w.speed = Math.max(0, a.vel.dot(w.dir)); } // opts.dir — НАР «Аркады» по прицельному расчёту (air.js nar), ПТУР — на линию прицела
+    // разброс залпа; «Аркада» с прицельной помощью (opts.dir) — вдвое кучнее, по вертикали ещё вдесятеро: с висения ракеты идут к земле под
+    // 2–3°, и 1 м по высоте — 20–30 м по дальности (Mark 2026-10-22: «вертолёты слишком сложные», «НАР промахиваются»; было ×0,25 — залп
+    // ложился в 20–60 м от машины ПВО)
+    if (W.kind === 'rocket') { const dk = opts.dir ? 0.5 : 1; w.dir.x += (rnd() - 0.5) * 2 * W.disp * dk; w.dir.y += (rnd() - 0.5) * 2 * W.disp * dk * (opts.dir ? 0.1 : 1); w.dir.z += (rnd() - 0.5) * 2 * W.disp * dk; w.dir.normalize(); w.pos.addScaledVector(w.dir, 3); w.speed = Math.max(30, w.speed); } // сход с 30 м/с — как в predictRocket (иначе нижний предел 30 м/с на первом шаге давал разную дальность при 30 и 60 к/с)
     // летящее оружие — цель для «Тора», «Панциря», C-RAM: размер, ЭПР, тепло, «прочность»
     Object.assign(w, { isMun: true, r: 1.2, rcs: W.rcs ?? 0.12, ir: W.kind === 'cruise' ? 0.35 : 0.15, mhp: W.kind === 'cruise' ? 18 : 10, yaw: 0, pitch: 0, ab: false });
     if (W.kind === 'decoy') { if (ctx.spawnDecoy) ctx.spawnDecoy(a, key, w.aim); return null; } // ложная цель — как самолёт (у хозяина боя)
@@ -704,7 +707,13 @@ export function createStrike(ctx) {
           if (w.aim && angleBetween(w.dir, TMP.copy(w.aim).sub(w.pos)) < W.fov * 2 * D2R) aim = w.aim; else w.lost = true;
         } else if (W.kind === 'agm' && W.seeker === 'laser') {
           const spot = ctx.laserSpot(w.owner);
-          if (spot && angleBetween(w.dir, TMP.copy(spot).sub(w.pos)) < W.fov * D2R && city.los(w.pos.x, w.pos.y, w.pos.z, spot.x, spot.y, spot.z, 4)) aim = spot;
+          // ПТУР вертолёта ведёт прицел носителя («Штурм» и «Атака» — по радиокомандам, Hellfire — по подсвету того же прицела): своя прямая
+          // видимость не нужна — пятно есть, пока его видит прицел (ракета сходит на 1 м ниже прицела и за бугром его не видела — летела
+          // неуправляемой, 2026-10-22). У самолётных лазерных — своя ГСН: пятно должно быть видно ей
+          if (spot && angleBetween(w.dir, TMP.copy(spot).sub(w.pos)) < W.fov * D2R && (W.heli || city.los(w.pos.x, w.pos.y, w.pos.z, spot.x, spot.y, spot.z, 4))) { aim = spot; (w.mem = w.mem || new THREE.Vector3()).copy(spot); w.memT = 0; }
+          // пятно на миг пропало (у земли его закрыл бугор, подсвет мигнул) — до 1,5 с в последнюю точку (2026-10-22: ПТУР вертолёта на
+          // подлёте теряли пятно в 40 м от ЗРК, пролетали мимо и рвались в 100 м за ним)
+          else if (w.mem && (w.memT = (w.memT || 0) + dt) < 1.5) aim = w.mem;
         } else if (W.kind === 'arm' && w.target) {
           const u = w.target, emitting = !u.dead && u.emit;
           if (emitting && angleBetween(w.dir, TMP.copy(u.ant).sub(w.pos)) < W.fov * D2R) { w.mem = w.mem || new THREE.Vector3(); w.mem.copy(u.ant); aim = u.ant; }
@@ -714,11 +723,21 @@ export function createStrike(ctx) {
         }
       }
       w.homing = !!aim;
-      flyMissile(w, W, dt, aim, null, 0);
+      PREV.copy(w.pos);
+      // ПТУР вертолёта — горкой над линией прицела (до 25 м, к цели сходит на нет): прямо на пятно у земли ракета шла на 2–5 м над
+      // рельефом, задевала бугры и теряла пятно
+      if (aim && W.heli && W.kind === 'agm') { LOFT.copy(aim); LOFT.y += Math.min(25, 0.012 * w.pos.distanceTo(aim)); flyMissile(w, W, dt, LOFT, null, 0); }
+      else flyMissile(w, W, dt, aim, null, 0);
       w.vel.copy(w.dir).multiplyScalar(w.speed);
       w.trailT -= dt; if (w.t < W.burn && w.trailT <= 0) { w.trailT = 0.04; fx.wpnTrail(w); }
       if (W.kind === 'arm' && aim && w.pos.distanceTo(aim) < 14) { wpnDetonate(w); return; }
-      if (W.kind === 'agm' && aim && w.pos.distanceTo(aim) < Math.max(5, W.blast * 0.35)) { wpnDetonate(w); return; } // пологий пуск (вертолёт): над точкой подсвета — подрыв, а не мимо над крышей
+      // у точки подсвета — подрыв (пологий пуск с вертолёта: а не мимо над крышей). Ближайшее сближение — на всём отрезке за шаг: на 350 м/с
+      // ракета за кадр пролетает ~12 м и проскакивала окно «ближе 5 м» — рвалась в 30–40 м за целью (2026-10-22)
+      if (W.kind === 'agm' && aim) {
+        const R = Math.max(5, W.blast * 0.35); TMP.copy(w.pos).sub(PREV); const L2 = TMP.lengthSq();
+        const k = L2 > 1e-6 ? clamp(TMP2.copy(aim).sub(PREV).dot(TMP) / L2, 0, 1) : 1; TMP2.copy(PREV).addScaledVector(TMP, k);
+        if (TMP2.distanceTo(aim) < R) { w.pos.copy(TMP2); wpnDetonate(w); return; }
+      }
     }
     if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > (W.life || 150)) wpnDetonate(w);
   }
@@ -797,12 +816,16 @@ export function createStrike(ctx) {
     const res = { objects: [], units: [] };
     for (const o of objects) {
       if (o.dead) continue;
-      // части — постройки; zones — площади только для урона (ВПП аэродрома), со своим весом q.k
+      // части — постройки; zones — площади только для урона (ВПП аэродрома, площадка объекта — city.js objTargets), со своим весом q.k;
+      // площадка (q.yard) — до q.pad м от построек на земле, земля — в точке разрыва (на склоне и в овраге она на десятки метров выше или
+      // ниже, чем у построек); разрыв в воде — река, болото — площадкой не считается
       let best = 0;
       for (const L of o.zones ? [o.parts, o.zones] : [o.parts]) for (const q of L) {
-        const base = q.y0 !== undefined ? q.y0 : city.groundH(q.x, q.z), top = base + q.h;
+        if (q.yard && (city.waterAt || city.wetAt || (() => false))(p.x, p.z)) continue;
+        const base = q.y0 !== undefined ? q.y0 : q.yard ? city.groundH(p.x, p.z) : city.groundH(q.x, q.z), top = base + q.h;
         let dh;
-        if (q.t === 'box') dh = Math.hypot(Math.max(0, Math.abs(p.x - q.x) - q.w / 2), Math.max(0, Math.abs(p.z - q.z) - q.d / 2));
+        if (q.yard) { let m = 1e9; for (const g of q.parts) m = Math.min(m, partDist(g, p.x, p.z)); dh = Math.max(0, m - q.pad); }
+        else if (q.t === 'box') dh = Math.hypot(Math.max(0, Math.abs(p.x - q.x) - q.w / 2), Math.max(0, Math.abs(p.z - q.z) - q.d / 2));
         else dh = Math.max(0, Math.hypot(p.x - q.x, p.z - q.z) - q.r);
         const dv = p.y > top ? p.y - top : p.y < base ? base - p.y : 0, d = Math.hypot(dh, dv);
         if (d < R) best = Math.max(best, (d < 2 ? 1.25 : Math.pow(1 - d / R, 0.6)) * (q.k ?? 1));

@@ -93,6 +93,40 @@ export const OBJ_DIMS = { obj_tanks: [28.42, 14.38, 33.45], obj_tank4: [30.27, 9
 // постройка: модель m в точке (x, z), поворот на 90°·rot, масштаб s; mbox — её коробка для урона и сетки высот
 export const mp = (m, x, z, rot = 0, s = 1) => ({ m, x, z, rot, s });
 export const mbox = (q) => { const [w, h, d] = OBJ_DIMS[q.m], sw = (q.rot % 2 ? d : w) * q.s, sd = (q.rot % 2 ? w : d) * q.s; return { t: 'box', x: q.x, z: q.z, w: sw, d: sd, h: h * q.s, model: true }; };
+
+// ═════════════ Куда целиться и область поражения объекта ═════════════
+// Mark 2026-10-22: прицел (контейнер, НАР, крылатые по координатам), ИИ налётов и «Мульти-волна» били в центр объекта, а у порта, ГЭС,
+// «Ведьминой поляны» и ещё семи объектов центр — пустая земля в 30–134 м от построек: точное попадание — «мимо», ПТУР и НАР — без урона.
+// aims — постройки, в которые целиться: части от 60 м² (без мачт и антенн) и не поднятые над землёй (без стрел кранов), вес — √площади;
+// aim — главная точка: центр объекта, если он на постройке, иначе крупная и высокая постройка ближе к центру.
+// Площадка (зона yard) — до 25 м от построек на земле (gparts): разрыв рядом с постройкой — YARD_K урона (осколки по технике и складам,
+// а не по корпусам; sim/strike.js blast). Не общая рамка: у порта, ж/д узла, авиабазы и ГЭС в ней были сотни метров пустого поля
+export const YARD_K = 0.4, YARD_PAD = 25;
+const partArea = (q) => (q.t === 'box' ? q.w * q.d : Math.PI * q.r * q.r);
+// расстояние по горизонтали от точки до части (внутри — 0)
+export const partDist = (q, x, z) => (q.t === 'box' ? Math.hypot(Math.max(0, Math.abs(x - q.x) - q.w / 2), Math.max(0, Math.abs(z - q.z) - q.d / 2)) : Math.max(0, Math.hypot(x - q.x, z - q.z) - q.r));
+function objTargets(o, gH) {
+  const A = [], up = (q) => q.y0 !== undefined && q.y0 > gH(q.x, q.z) + 3;
+  for (const q of o.parts) if (partArea(q) >= 60 && !up(q)) A.push({ x: q.x, z: q.z, w: q.t === 'box' ? q.w : q.r * 1.4, d: q.t === 'box' ? q.d : q.r * 1.4, h: q.h, wt: Math.sqrt(partArea(q)) });
+  let m = o.parts.some((q) => partDist(q, o.x, o.z) <= 3) ? { x: o.x, z: o.z } : null, bs = -1;
+  if (!m) for (const q of A) { const s = q.wt * (1 + Math.min(30, q.h) / 10) / (60 + Math.hypot(q.x - o.x, q.z - o.z)); if (s > bs) { bs = s; m = { x: q.x, z: q.z }; } }
+  o.aims = A; o.aimW = A.reduce((s, q) => s + q.wt, 0); o.aim = m || { x: o.x, z: o.z };
+  const G = o.parts.filter((q) => !up(q)); o.gparts = G;
+  let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; // рамка ореолов — для отрисовки и проверок; урон — по расстоянию до построек (pad)
+  for (const q of G) { const hw = q.t === 'box' ? q.w / 2 : q.r, hd = q.t === 'box' ? q.d / 2 : q.r; x0 = Math.min(x0, q.x - hw); x1 = Math.max(x1, q.x + hw); z0 = Math.min(z0, q.z - hd); z1 = Math.max(z1, q.z + hd); }
+  if (G.length) o.zones = [...(o.zones || []), { t: 'yard', x: (x0 + x1) / 2, z: (z0 + z1) / 2, w: x1 - x0 + 2 * YARD_PAD, d: z1 - z0 + 2 * YARD_PAD, h: 3, k: YARD_K, yard: true, pad: YARD_PAD, parts: G }];
+}
+// точка прицела по объекту (out — {x, z}): n < 0 — главная; иначе n-я по очереди постройка (золотое сечение по весам — разлёт по всем,
+// крупные чаще), u, v ∈ −0,5…0,5 — сдвиг по крыше в долях её размера. Объект без построек (или просто точка {x, z}) — сама точка
+export function objAimXZ(o, n = -1, u = 0, v = 0, out = { x: 0, z: 0 }) {
+  if (!o.aims || !o.aims.length) { out.x = o.x; out.z = o.z; return out; }
+  if (n < 0) { out.x = o.aim.x; out.z = o.aim.z; return out; }
+  let s = ((0.5 + n * 0.6180339887) % 1) * o.aimW, q = o.aims[0];
+  for (const a of o.aims) { q = a; if ((s -= a.wt) <= 0) break; }
+  out.x = q.x + u * 0.6 * q.w; out.z = q.z + v * 0.6 * q.d; return out;
+}
+// по горизонтали от точки до ближайшей постройки объекта на земле (0 — над ней; стрелы кранов над рекой не в счёт)
+export const objDist = (o, x, z) => (o.gparts || o.parts).reduce((m, q) => Math.min(m, partDist(q, x, z)), 1e9);
 // parts — простые тела для отрисовки и сетки высот: box {x,z,w,d,h,y0}, cyl {x,z,r,h,y0}, cone (градирня) {x,z,r,h}
 // value — «ценность» для счёта, hp — прочность (кг тротила-эквивалента условно: сколько урона выдерживает)
 function makeObjects() {
@@ -309,20 +343,28 @@ export function buildCity(seed = 1) {
 // cellMax(x0, z0, x1, z1) — наибольшая высота земли в ячейке грубой сетки (горы: иначе луч «пролетает» вершину); нет — по 5 точкам
 export function mapRuntime(seed, B, objects, gH, waterY = CITY.WATER_Y, cellMax = null) {
   const groundH = gH, n = B.n;
+  for (const o of objects) if (!o.bridge && !o.aims) objTargets(o, gH); // точки прицела и площадка (выше)
 
   // ── сетка высот застройки (над землёй, м) и грубая сетка максимумов (с землёй) ──
   const CELL = CITY.CELL, GN = Math.round(2 * CITY.GH / CELL), grid = new Uint16Array(GN * GN);
-  const stamp = (x0, x1, z0, z1, top) => {
+  // abs — top — абсолютная высота (часть с y0 — основанием от уровня моря): в ячейку — её превышение над землёй ячейки
+  const stamp = (x0, x1, z0, z1, top, abs = false) => {
     const i0 = clamp(Math.floor((x0 + CITY.GH) / CELL), 0, GN - 1), i1 = clamp(Math.floor((x1 + CITY.GH) / CELL), 0, GN - 1);
     const j0 = clamp(Math.floor((z0 + CITY.GH) / CELL), 0, GN - 1), j1 = clamp(Math.floor((z1 + CITY.GH) / CELL), 0, GN - 1);
-    const t = Math.min(65535, Math.ceil(top));
-    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { const q = j * GN + i; if (grid[q] < t) grid[q] = t; }
+    const t0 = Math.min(65535, Math.ceil(top));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) {
+      const t = abs ? Math.min(65535, Math.ceil(top - groundH(-CITY.GH + (i + 0.5) * CELL, -CITY.GH + (j + 0.5) * CELL))) : t0, q = j * GN + i;
+      if (grid[q] < t) grid[q] = t;
+    }
   };
   for (let q = 0; q < n; q++) stamp(B.x[q] - B.w[q] / 2, B.x[q] + B.w[q] / 2, B.z[q] - B.d[q] / 2, B.z[q] + B.d[q] / 2, B.y0[q] + B.h[q]);
+  // части с y0 (стена ГЭС, стрелы кранов) — по абсолютной высоте: стена плотины (верх 247 м над морем) ложилась в сетку 248 м НАД землёй —
+  // невидимая стена до ~440 м: оружие рвалось в ~190 м над плотиной (ГЭС не повредить), самолёты бились о воздух (2026-10-22). Мосты — как были
+  // (настил по сетке ниже настоящего: пролёт под мостом не превращать в столкновение)
   for (const o of objects) for (const p of o.parts) {
-    const top = (p.y0 || 0) + p.h - (o.bridge ? 0 : 0);
-    if (p.t === 'box') stamp(p.x - p.w / 2, p.x + p.w / 2, p.z - p.d / 2, p.z + p.d / 2, top);
-    else stamp(p.x - p.r * 0.85, p.x + p.r * 0.85, p.z - p.r * 0.85, p.z + p.r * 0.85, top);
+    const abs = p.y0 !== undefined && !o.bridge, top = (p.y0 || 0) + p.h;
+    if (p.t === 'box') stamp(p.x - p.w / 2, p.x + p.w / 2, p.z - p.d / 2, p.z + p.d / 2, top, abs);
+    else stamp(p.x - p.r * 0.85, p.x + p.r * 0.85, p.z - p.r * 0.85, p.z + p.r * 0.85, top, abs);
   }
   const CC = CITY.CC, CN = Math.round(2 * CITY.HALF / CC), coarse = new Float32Array(CN * CN), ratio = CC / CELL;
   for (let j = 0; j < CN; j++) for (let i = 0; i < CN; i++) {
@@ -378,5 +420,7 @@ export function mapRuntime(seed, B, objects, gH, waterY = CITY.WATER_Y, cellMax 
     }
     return null;
   }
-  return { seed, B, objects, grid, GN, coarse, CN, bldAt, topAt, los, raycast, groundH };
+  // вода (река города; у «Топи» болото — её waterAt): разрыв в воде площадкой объекта не засчитывается (strike.js blast)
+  const wetAt = (x, z) => groundH(x, z) < waterY - 0.5;
+  return { seed, B, objects, grid, GN, coarse, CN, bldAt, topAt, los, raycast, groundH, wetAt };
 }
