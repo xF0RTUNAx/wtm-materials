@@ -9,9 +9,9 @@
 // дроны и носители в зоне станции) и пуск ЗУР. По ПВО бьют только по засечённым — цель выбирается в момент пуска;
 // по комплексу, которого разведчик не видел сам (засечён по излучению или пуску), баллистика ложится с тройным промахом.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261022w';
-import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261022w';
-import { CITY } from '../city.js?v=20261022w';
+import { tr } from '../i18n.js?v=20261022x';
+import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261022x';
+import { CITY } from '../city.js?v=20261022x';
 
 export const COMBINED_NAME = 'Мульти-волна';
 export const combinedOk = (side, era) => !!(COMBINED[side] && COMBINED[side][era]);

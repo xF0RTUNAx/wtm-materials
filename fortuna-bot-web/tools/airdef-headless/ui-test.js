@@ -42,7 +42,7 @@ THREE.WebGLRenderer = FakeRenderer;
 const errors = [];
 const origErr = console.error; console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
-const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261022w');
+const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261022x');
 for (let i = 0; i < 300 && !(globalThis.__a && globalThis.__a.state === 'menu'); i++) await new Promise((r) => setTimeout(r, 100)); // запуск по этапам (экран загрузки)
 const C = globalThis.__a;
 let now = 1000;
@@ -51,7 +51,7 @@ const check = (name, ok) => { console.log(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if
 
 // 1. меню и живой фон
 check('меню открыто', C.state === 'menu');
-{ const { SHOTS } = await import('../../games/airdef/shots/shots.js?v=20261022w');
+{ const { SHOTS } = await import('../../games/airdef/shots/shots.js?v=20261022x');
   check(`меню: фон — готовые кадры (${SHOTS.length}), без 3D и боя`, SHOTS.length > 0 && C.ctrl && C.ctrl.idle && C.ctrl.idle() && C.ctrl.sim === false);
   frames(30 * 3);
   C.ctrl.stop(); C.ctrl = C.ctrls.director; C.ctrl.start(); } // запасной фон (кадров нет) — живой бой: проверяем и его
@@ -62,20 +62,20 @@ console.log(`     фон за 40 с: пусков ЗУР ${C.S.sams.length}, с�
   console.log(`     планы фона за 150 с: ${Object.entries(kinds).map(([k, v]) => `${k} ${Math.round(v)} с`).join(', ')}`);
   check('фон: кадр по свободной части экрана', C.camera.view && C.camera.view.enabled && C.camera.view.fullWidth < C.VW); }
 
-{ const { planeModel } = await import('../../games/airdef/models.js?v=20261022w');
+{ const { planeModel } = await import('../../games/airdef/models.js?v=20261022x');
   for (const [side, cls] of [['east', 'strike'], ['east', 'fighter'], ['west', 'strike'], ['west', 'fighter']]) {
     const pm = planeModel(side, cls); let tris = 0, tex = 0; if (pm) pm.obj.traverse((o) => { if (o.isMesh) { tris += o.geometry.index ? o.geometry.index.count / 3 : 0; if (o.material.map) tex++; } });
     check(`готовая модель ${side}/${cls}: ${pm ? `${pm.name}, ${tris} треуг., мешей с текстурой ${tex}` : 'нет'}`, pm && pm.cls === cls);
   } }
-{ const { unitModelGlb, wantUnit } = await import('../../games/airdef/models.js?v=20261022w');
+{ const { unitModelGlb, wantUnit } = await import('../../games/airdef/models.js?v=20261022x');
   const keys = ['bukm3', 'osa', 'tor', 'torm2', 'pantsir', 's400', 's300', 'patriot', 'pac3', 's75', 's125', 'kub', 'hawk', 'm163', 'gepard', 'nasams', 'gpsjam', 'gpsjamw']; for (const k of keys) wantUnit(k);
   await new Promise((r) => setTimeout(r, 1500));
   for (const k of keys) { const m = unitModelGlb(k); let n = 0; if (m) for (const q of ['body', 'turret', 'cradle']) if (m[q]) m[q].traverse((o) => { if (o.isMesh) n += o.geometry.index.count / 3; });
     check(`готовая модель комплекса ${k}: ${m ? `${n} треуг., башня ${m.turret ? 'да' : 'нет'}, пакет ${m.cradle ? 'да' : 'нет'}` : 'нет'}`, !!m); }
-  { const { weaponMesh } = await import('../../games/airdef/models.js?v=20261022w'); const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261022w'); const { AG } = await import('../../games/airdef/arsenal.js?v=20261022w');
+  { const { weaponMesh } = await import('../../games/airdef/models.js?v=20261022x'); const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261022x'); const { AG } = await import('../../games/airdef/arsenal.js?v=20261022x');
     const want = ['fab500', 'umpk', 'kh29t', 'kh31p', 'kh25ml', 'agm65b', 'mk82', 'gbu12', 'jassm', 'agm88', 'aargm', 'mald', 'decoy_e', 'gbu39', 'gbu31'], got = want.filter((k) => !weaponMesh(k, AG[k], weaponGeo, null).isMesh);
     check(`готовые модели оружия (${got.length}/${want.length}): ${want.filter((k) => !got.includes(k)).join(', ') || 'все'}`, got.length === want.length);
-    const { podModel, launcherGlb, unitMissileGlb } = await import('../../games/airdef/models.js?v=20261022w');
+    const { podModel, launcherGlb, unitMissileGlb } = await import('../../games/airdef/models.js?v=20261022x');
     for (let i = 0; i < 30 && !(podModel() && launcherGlb('igla') && launcherGlb('stinger')); i++) await new Promise((r) => setTimeout(r, 200));
     check(`контейнер LITENING, трубы ПЗРК, ракеты ПЗРК и NASAMS: ${!!podModel()} ${!!launcherGlb('igla')} ${!!launcherGlb('stinger')} ${!!unitMissileGlb('verba')} ${!!unitMissileGlb('nasams')}`, podModel() && launcherGlb('igla') && launcherGlb('stinger') && unitMissileGlb('verba') && unitMissileGlb('nasams')); }
   const gm = unitModelGlb('bukm3'); let n = 0; if (gm) for (const k of ['body', 'turret', 'cradle']) gm[k].traverse((o) => { if (o.isMesh) n += o.geometry.index.count / 3; });
@@ -114,7 +114,7 @@ C.setAuto(false);
 air.finish('тест', true); frames(5);
 
 // 2б. все подвески всех эпох обеих сторон под «АВТО»: свой самолёт, оружие расходуется (эпоха IV, F/A-18 — ещё камера за оружием)
-{ const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022w');
+{ const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022x');
   const planes = new Set(); let used = 0, total = 0;
   for (const era of [1, 2, 3, 4]) for (const [lo, L] of LOADOUTS[era].entries()) {
     if (L.heli) continue; // вертолёты — на своей карте (перезагрузка страницы): их проверяют heli-stand.js и heli-raid-test.js
@@ -142,7 +142,7 @@ const D = C.ctrl;
 check('оборона: расстановка', D.st.phase === 'plan');
 const t = C.S.objects.find((o) => o.key === 'tpp');
 { // расстановка: место — касаниями (сколько угодно), «Подтвердить» — купить, «Отмена» — не покупать; касание своего — перенос с подтверждением
-  const { freeGround } = await import('../../games/airdef/mission.js?v=20261022w');
+  const { freeGround } = await import('../../games/airdef/mission.js?v=20261022x');
   const spot = (r) => { for (let k = 0; k < 400; k++) { const a = k * 2.4, x = t.x + Math.cos(a) * r, z = t.z + Math.sin(a) * r; if (freeGround(C.city, x, z)) return [x, z]; } return [t.x + r, t.z]; };
   const b0 = D.st.budget, n0 = C.S.units.length, [x1, z1] = spot(600), [x2, z2] = spot(1000);
   D.st.placing = 'osa'; D.tapAt(x1, z1); D.tapAt(x2, z2);
@@ -280,7 +280,7 @@ runLesson('def', LI('def', 'd_gun'), (D) => { const u = C.S.units[0]; if (!u || 
 // «Мульти-волна» — уроки на зимней карте: multi-train-test.js
 // «Съёмка»: самолёт (автопилот, пуски, камера у пилона и за оружием), ПВО против самолётов и «Мульти-волны», оружие волны
 { const key = (code) => C.ctrl.onKey({ code, repeat: false, preventDefault: noop }, true);
-  const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022w');
+  const { LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022x');
   C.toMenu(); frames(3); Object.assign(C.setup, { game: 'photo', pside: 'air', era: 4, side: 'east', palt: 'mid' }); C.setup.lo = LOADOUTS[4].findIndex((L) => L.side === 'west'); C.start('photo');
   frames(30 * 3); check(`съёмка: самолёт в кадре (камера в ${Math.round(C.camera.position.distanceTo(C.player.pos))} м)`, C.camera.position.distanceTo(C.player.pos) < 150);
   key('ArrowDown'); frames(10); const dPy = Math.min(C.camera.position.distanceTo(C.player.pos), ...C.S.wpns.filter((w) => !w.dead && w.owner === C.player).map((w) => C.camera.position.distanceTo(w.pos))); check(`съёмка: камера у пилона или у сошедшего с него оружия (${dPy.toFixed(1)} м)`, dPy < 30);
