@@ -382,8 +382,8 @@ async function load(name, base) {
     if (tm && Math.max(bmp.width, bmp.height) > tm) { // уменьшить (с сохранением пропорций); не вышло — оставить как есть
       const k = tm / Math.max(bmp.width, bmp.height);
       const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
-      try { const sm = await createImageBitmap(bmp, { resizeWidth: w, resizeHeight: h, resizeQuality: 'high' }); if (sm.width <= tmax && sm.height <= tmax) { bmp.close(); bmp = sm; } else sm.close(); } catch (_) { /* браузер без resize */ }
-      if (Math.max(bmp.width, bmp.height) > tmax && typeof document !== 'undefined') try { // resize не поддержан (бывает в Safari: молча отдаёт прежний размер) — через canvas
+      try { const sm = await createImageBitmap(bmp, { resizeWidth: w, resizeHeight: h, resizeQuality: 'high' }); if (sm.width <= tm && sm.height <= tm) { bmp.close(); bmp = sm; } else sm.close(); } catch (_) { /* браузер без resize */ }
+      if (Math.max(bmp.width, bmp.height) > tm && typeof document !== 'undefined') try { // resize не поддержан (бывает в Safari: молча отдаёт прежний размер) — через canvas
         const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(bmp, 0, 0, w, h); const sm = await createImageBitmap(cv); bmp.close(); bmp = sm;
       } catch (_) { /* оставить как есть */ }
     }
