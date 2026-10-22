@@ -63,7 +63,6 @@ export const SPECS = {
   e_etendard: { name: 'Super Étendard', side: 'west', n: 1, dry: 49, ab: 0, empty: 6500, fuel: 2600, mNorm: 9450, S: 28.4, vSL: 1080, vAlt: 1100, g: 6.5, roll: 180, K: 0.11, clMax: 1.2, ceil: 13700 },
   e_mirage_f1: { name: 'Mirage F1', side: 'west', n: 1, dry: 49.2, ab: 70.6, empty: 7400, fuel: 3400, mNorm: 10900, S: 25, vSL: 1400, vAlt: 2338, g: 7, roll: 200, K: 0.12, clMax: 1.3, ceil: 20000 },
   e_f18c: { name: 'F/A-18C Hornet', side: 'west', n: 2, dry: 48.9, ab: 79.2, empty: 10455, fuel: 4900, mNorm: 16770, S: 37.16, vSL: 1300, vAlt: 1915, g: 7.5, roll: 220, K: 0.12, clMax: 1.6, ceil: 15240 },
-  e_ea18g: { name: 'EA-18G Growler', side: 'west', n: 2, dry: 62.3, ab: 98, empty: 15011, fuel: 6780, mNorm: 21772, S: 46.5, vSL: 1250, vAlt: 1900, g: 7.5, roll: 180, K: 0.11, clMax: 1.6, ceil: 15000 },
   e_f100: { name: 'F-100F Super Sabre', side: 'west', n: 1, dry: 45.4, ab: 75.2, empty: 9500, fuel: 3600, mNorm: 13500, S: 35.8, vSL: 1220, vAlt: 1390, g: 7.33, roll: 150, K: 0.11, clMax: 1.1, ceil: 15000 },
   e_f5: { name: 'F-5E Tiger II', side: 'west', n: 2, dry: 15.5, ab: 22.2, empty: 4350, fuel: 2000, mNorm: 7000, S: 17.3, vSL: 1300, vAlt: 1700, g: 7.33, roll: 220, K: 0.1, clMax: 1.4, ceil: 15800 },
   e_f117: { name: 'F-117A Nighthawk', side: 'west', n: 2, dry: 48, ab: 0, empty: 13380, fuel: 8000, mNorm: 21000, S: 84.8, vSL: 950, vAlt: 1000, g: 6, roll: 120, K: 0.2, clMax: 1.1, ceil: 13700 },

@@ -213,7 +213,7 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
   e_mig21n: 'МиГ-21бис', e_mig25: 'МиГ-25БМ', e_su7b: 'Су-7БМК', e_tu16: 'Ту-16', e_f100: 'F-100F', e_f5: 'F-5E', e_f117: 'F-117A', e_jaguar: 'Jaguar GR.1',
   e_buccaneer: 'Buccaneer S.2B', e_harrier: 'Harrier GR.3', e_mirage: 'Mirage 2000D', e_rafale: 'Rafale', e_b2: 'B-2A',
   e_yak38: 'Як-38М', e_il28: 'Ил-28', e_tu22: 'Ту-22', e_tu95: 'Ту-95МС', e_su27: 'Су-27СМ', e_su35: 'Су-35С', e_hunter: 'Hunter FGA.9', e_etendard: 'Super Étendard',
-  e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_ea18g: 'EA-18G', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon',
+  e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon',
   e_vulcan: 'Vulcan B.2', e_draken: 'Saab 35 Draken', e_viggen: 'Saab AJ 37 Viggen',
   e_su33: 'Су-33', e_m4: 'М-4', e_mig19: 'МиГ-19', e_mig17: 'МиГ-17', e_t4: 'Т-4', e_mig29k: 'МиГ-29К' };
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
@@ -402,11 +402,13 @@ Object.assign(SAM, {
     msl: { acc: 260, burn: 4, sustain: { acc: 22, t: 8 }, kd: 0.75, g: 45, vmin: 320, life: 45, blast: 15, dmg: 140, L: 4.9, r: 0.18, color: 0xeeeeea },
     guide: 'Франко-итальянский комплекс: восемь ракет Aster 30 стартуют вертикально, на конце — активная ГСН и газодинамическое управление (резкий манёвр у цели). Может перехватывать баллистические ракеты.',
     specs: [['Страна', 'Франция / Италия'], ['Наведение', 'инерциальное + активное'], ['Дальность', 'до 100 км (в игре меньше)'], ['Высота', 'до 20 км']] },
-  khordad: { name: 'Sevom Khordad (трофейный)', short: 'Khordad', side: 'west', era: 4, type: 'sarh', rwr: 'KHD', hp: 45, channels: 2,
-    radar: { range: 40000, acq: 3, doppler: true, clutter: 15, mast: 5, band: 'H' }, rmin: 3000, rmax: 30000, hmin: 20, hmax: 22000, react: 5, salvo: 2, ammo: 3, reload: 60, eccm: 0.6,
-    msl: { acc: 140, burn: 5, sustain: { acc: 28, t: 12 }, kd: 0.8, g: 20, vmin: 280, life: 45, blast: 28, dmg: 110, L: 5.8, r: 0.2, color: 0xdcdcd0 },
-    guide: 'Трофейный комплекс средней дальности: самоходная пусковая с тремя ракетами и своей РЛС на шасси. Полуактивная ГСН — цель нужно подсвечивать до попадания.',
-    specs: [['Страна', 'Иран'], ['В игре', 'трофейный, у запада'], ['Ракеты', 'Taer-2'], ['Дальность', 'до ≈ 50 км (в игре меньше)']] },
+  // Hawk XXI (2026-10-22 вместо Sevom Khordad — модель 42manako «не своя»): модернизация Hawk — ракеты MIM-23K, РЛС обнаружения Sentinel,
+  // цифровое управление; модель — пусковая Hawk (Dominik Biały), место в дереве и балансе — как у «Хордада»
+  hawk21: { name: 'Hawk XXI', short: 'Hawk XXI', side: 'west', era: 4, type: 'sarh', rwr: 'H21', hp: 45, channels: 2,
+    radar: { range: 40000, acq: 3, doppler: true, clutter: 15, mast: 5, band: 'J' }, rmin: 2500, rmax: 30000, hmin: 30, hmax: 18000, react: 5, salvo: 2, ammo: 3, reload: 50, eccm: 0.65,
+    msl: { acc: 110, burn: 5, sustain: { acc: 18, t: 18 }, kd: 0.9, g: 18, vmin: 260, life: 45, blast: 30, dmg: 105, L: 5.1, r: 0.18, color: 0xe6e6e6 },
+    guide: 'Модернизированный Hawk: те же три ракеты на пусковой, но новые MIM-23K, РЛС Sentinel и цифровое управление — два канала, лучше против помех и низколетящих целей. Полуактивная ГСН — цель нужно подсвечивать до попадания.',
+    specs: [['Страна', 'США / Норвегия'], ['Наведение', 'полуактивное, непрерывный подсвет'], ['Ракеты', 'MIM-23K'], ['Дальность', 'до ≈ 45 км (в игре меньше)']] },
   tunguska: { name: '2К22 «Тунгуска»', short: 'Тунгуска', side: 'east', era: 3, type: 'command', rwr: 'ТНГ', hp: 45, channels: 1, optTrack: 8000,
     radar: { range: 18000, acq: 2.5, doppler: true, clutter: 5, mast: 4, band: 'E' }, rmin: 2500, rmax: 8000, hmin: 15, hmax: 3500, react: 6, salvo: 1, ammo: 8, reload: 60, eccm: 0.55,
     msl: { acc: 250, burn: 2.6, kd: 1.3, g: 18, vmin: 300, life: 16, blast: 9, dmg: 55, L: 2.56, r: 0.085, color: 0xd8d8d0 },
@@ -630,7 +632,7 @@ export const multiItems = (side, era) => (MULTI.items[side] || []).filter(([, , 
 DEFENSE.east[3] = [['s300', 1], ['kub', 2], ['tor', 2], ['osa', 1], ['tunguska', 1], ['strela1', 1], ['iglas', 4], ['gpsjam', 1]];
 DEFENSE.east[4] = [['s400', 1], ['bukm3', 2], ['torm2', 2], ['pantsir', 1], ['tunguska', 1], ['verba', 4], ['gpsjam', 1]];
 DEFENSE.west[3] = [['patriot', 1], ['hawk', 2], ['nasams', 1], ['roland', 1], ['rapier', 1], ['gepard', 1], ['skyguard', 1], ['stinger', 4], ['gpsjamw', 1]];
-DEFENSE.west[4] = [['pac3', 1], ['sampt', 1], ['khordad', 1], ['nasams', 1], ['roland', 1], ['gepard', 2], ['stinger', 4], ['gpsjamw', 1]];
+DEFENSE.west[4] = [['pac3', 1], ['sampt', 1], ['hawk21', 1], ['nasams', 1], ['roland', 1], ['gepard', 2], ['stinger', 4], ['gpsjamw', 1]];
 LOADOUTS[3] = [
   { side: 'east', plane: 'e_su34', name: 'КАБ-500С + Х-31П + «Сорбция»', items: [['kab500s', 3], ['kh31p', 2], ['ecm_e', 1]], pod: true },
   { side: 'east', plane: 'su30', name: 'Лазерные и ТВ: КАБ-500Л + КАБ-500Кр', items: [['kab500l', 2], ['kab500kr', 2], ['ecm_e', 1]], pod: true },
@@ -671,7 +673,6 @@ LOADOUTS[4] = [
   { side: 'west', plane: 'e_b2', name: 'B-2A: GBU-57 ×2 (в отсеках)', items: [['gbu57', 2]] },
   { side: 'east', plane: 'e_su35', name: 'Су-35С: Х-59МК2 ×2 + КАБ-500С ×2', items: [['kh59mk2', 2], ['kab500s', 2]], pod: true },
   { side: 'east', plane: 'e_tu160', name: 'Ту-160: крылатые Х-101 ×6 (в отсеках)', items: [['kh101', 6]] },
-  { side: 'west', plane: 'e_ea18g', name: 'EA-18G: AARGM ×2 + помехи', items: [['aargm', 2], ['ecm_w', 1]], role: 'sead' },
   { side: 'west', plane: 'e_typhoon', name: 'Typhoon: Storm Shadow ×2 + GBU-12 ×2', items: [['storm', 2], ['gbu12', 2]], pod: true },
   // вертолёты (Хеллоуин 2026)
   { side: 'east', plane: 'h_ka52', heli: true, name: 'Ка-52: «Атака» ×8 + С-8 ×2 блока', items: [['ataka', 8], ['s8', 2]], pod: true },
@@ -692,7 +693,7 @@ export function loadoutRole(L) {
 }
 export const ROLE_NAME = { sead: 'охота за ПВО', strike: 'штурмовка' };
 // индексы подвесок стороны и первая подходящая (если выбранная — чужой стороны)
-export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, khordad: 320, skyguard: 120, rapier: 170 });
+export const loadoutsOf = (era, side) => LOADOUTS[era].map((L, i) => [L, i]).filter(([L]) => L.side === side);Object.assign(SAM_COST, { s300: 420, buk: 300, tor: 230, iglas: 65, patriot: 420, avenger: 120, s400: 480, bukm3: 340, torm2: 260, pantsir: 280, verba: 75, pac3: 460, nasams: 320, iris: 330, skynex: 180, gpsjam: 150, gpsjamw: 150 , tunguska: 230, sampt: 470, hawk21: 320, skyguard: 120, rapier: 170 });
 // комплексы без готовых моделей — выведены из игры (вернутся, если найдутся модели; их описание и пусковые остались)
 // MIM-72 Chaparral (модель TankLord, 2026-10-19): Sidewinder на гусеничном M730 — запад, эпоха I
 Object.assign(SAM, { chaparral: { name: 'MIM-72 Chaparral', short: 'Chaparral', side: 'west', era: 1, type: 'ir', rwr: null, hp: 28, optical: 8000,

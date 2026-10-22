@@ -112,12 +112,10 @@ const META = {
     nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
   e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.3, -1.25, 2.7, 0.3), V(-3.42, -1.54, 1.36), V(-2.24, -1.47, 1.16), V(-0.6, -1.6, 1.0, 0.15)]),
     nozzles: [V(-0.49, -0.98, 8.0), V(0.49, -0.98, 8.0)], nr: 0.42, pod: V(0.75, -1.6, -1.2) }, // F/A-18C (AN/AAS-38 у воздухозаборника)
-  e_ea18g: { side: 'west', cls: 'fighter', lazy: true, stations: mirror([V(-5.08, -0.97, 3.11), V(-4.31, -1.28, 2.46), V(-2.73, -1.05, 2.26, 0.3), V(-0.6, -1.85, 1.0, 0.15)]),
-    nozzles: [V(-0.48, -0.81, 8.18), V(0.48, -0.81, 8.18)], nr: 0.42, pod: null }, // EA-18G Growler
   e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.37, -1.11, 0.67), V(-3.59, -1.09, 0.4), V(-2.81, -1.09, 0.2), V(-2.03, -1.07, -0.04)]),
     nozzles: [V(-0.88, -1.4, 3.85), V(0.88, -1.4, 3.85)], nr: 0.25, pod: null, dry: true }, // Су-25 — Immersive3D («Шквал» у Су-25Т встроен)
-  e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.21, -1.51, 4.94), V(-4.63, -1.5, 3.8), V(-3.55, -1.72, 3.21), V(-1.33, -2.42, 2.5)]),
-    nozzles: [V(-1.18, -1.5, 9.4), V(1.18, -1.5, 9.4)], nr: 0.22, pod: null }, // Су-34 (Су-32ФН) — 42manako («Платан» встроен)
+  e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.01, -1.56, 5.59), V(-4.7, -1.6, 4.57), V(-3.4, -1.56, 4.0), V(-1.2, -2.66, 3.0, 0.2)]),
+    nozzles: [V(-1.235, -1.67, 9.95), V(1.235, -1.67, 9.95)], nr: 0.44, pod: null }, // Су-34 — manilov.ap («Платан» встроен); под крылом пилоны модели, под гондолой (дно −2,46) пилон дорисован
   e_su17: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.56, -1.33, 2.63), V(-1.72, -1.41, 0.51), V(-1.25, -1.68, -1.4), V(-0.37, -2.07, -0.25)]),
     nozzles: [V(0, -1.02, 8.21)], nr: 0.3, pod: V(0, -2.3, 1.8) }, // Су-17М4 — manilov.ap
   e_su57: { side: 'east', cls: 'fighter', lazy: true, internal: true, stations: mirror([V(-1.9, -0.95, 1.5), V(-1.6, -1.0, 0.0), V(-0.35, -1.2, 0.5), V(-0.3, -1.2, 2.6)]),
@@ -186,7 +184,7 @@ const META = {
   w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 — 4ikalka
   w_fab250: { weapon: 'fab250', stations: [], matte: true }, // ФАБ-250 — CATholic
   w_fab1000: { weapon: 'fab1000', stations: [], matte: true }, // ФАБ-1000 — United4192
-  w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 — Rhine_Lab_Muelsyse (US Weapon Pack)
+  w_gbu24: { weapon: 'gbu24', stations: [] }, // GBU-24 Paveway III — AnirudhRao, своя окраска и запекание (Свои/GBU-24)
   w_gbu57: { weapon: 'gbu57', stations: [] }, // GBU-57 — собственная модель (tools/airdef-models/own/gbu57)
   w_umpk: { weapon: 'umpk', wings: 'fold', stations: [] }, // ФАБ-500 с УМПК — Jeyhun1985
   w_kh29t: { weapon: 'kh29t', stations: [] }, // Х-29Т — собственная модель (tools/airdef-models/own/kh29t)
@@ -237,7 +235,7 @@ const META = {
   s75: { units: ['s75'], stations: [] }, // С-75 «Двина» — manyakasia
   s125: { units: ['s125'], stations: [], bright: 1.9 }, // С-125 «Нева» — teanid; текстура у автора очень тёмная (bright — множитель цвета)
   kub: { units: ['kub'], stations: [] }, // 2К12 «Куб» — UltraKill
-  hawk: { units: ['hawk'], stations: [] }, // MIM-23 Hawk — Dominik Biały
+  hawk: { units: ['hawk', 'hawk21'], stations: [] }, // MIM-23 Hawk — Dominik Biały; Hawk XXI — та же пусковая (вместо Sevom Khordad, 2026-10-22)
   m163: { units: ['m163'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.3 } }, // M163 VADS — Gorgytz
   zsu234: { units: ['zsu234'], matte: true, stations: [] }, // ЗСУ-23-4М «Шилка» — voron335
   strela10: { units: ['strela10'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Стрела-10» на МТ-ЛБ — ScurvyWoof
@@ -250,7 +248,6 @@ const META = {
   skyguard: { units: ['skyguard'], stations: [] },
   rapier: { units: ['rapier'], matte: true, stations: [], camo: { scheme: 'uk', size: 1.3 } }, // Tracked Rapier — stealth86 (перекрашен, пусковая развёрнута в рабочее положение) // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
   sampt: { units: ['sampt'], stations: [] }, // SAMP/T — Chenzoss
-  khordad: { units: ['khordad'], matte: true, stations: [] }, // Sevom Khordad — 42manako (перекрашен, у запада — трофейный)
   msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 — по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder — ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
   nasams: { units: ['nasams'], stations: [] }, // NASAMS 1 — пусковая
   ew_e: { units: ['gpsjam'], stations: [] }, // станция РЭБ (восток) — машина с РЛС IBIS-150
@@ -278,9 +275,9 @@ const FX_CREDITS = [
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};
 // версия файла модели (сброс кэша) — у пересобранных моделей своя, остальные не перекачиваются
-const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'roland', 'rapier', 'rapier_lo', 'tunguska', 'tunguska_lo', 'khordad', 'strela1', 'zsu234', 'zsu234_lo', 'strela10', 'm163', 'm163_lo', 'chaparral', 'chaparral_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'l_scud', 'pantsir', 'pantsir_lo', 'w_umpk', 'w_decoy_e', 'w_kh101', 'w_jsow', 'w_fab500', 'e_tornado', 'e_f111', 'e_mig23', 'e_mig27', 'e_tu22m2', 'e_a10', 'e_f15e', 'e_su24', 'm163', 'zsu234', 'strela10', 'avenger', 'chaparral', 'w_kh59m', 'w_kh25ml', 'w_kh58', 'w_gbu31', 'w_jassm', 'w_agm65b', 't_kc10'].map((n) => [n, '20261022c']).concat(
-  ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'khordad', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_su7b', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
-  ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c', 'e_ea18g'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l'], ['obj_hangar', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_church', 'obj_mill', 'obj_barn', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_t4', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e — шестая партия: Су-33, М-4, МиГ-19, МиГ-17, Т-4 (2026-10-21) // 20261023c — четыре вертолёта manilov.ap (2026-10-21) // 20261023b — Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l — 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l — Ту-95 без нарисованных дисков винтов (2026-10-20) // j — четвёртая партия, новая «Шилка», УМПК без сжатия // i — ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c — замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
+const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'roland', 'rapier', 'rapier_lo', 'tunguska', 'tunguska_lo', 'strela1', 'zsu234', 'zsu234_lo', 'strela10', 'm163', 'm163_lo', 'chaparral', 'chaparral_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'l_scud', 'pantsir', 'pantsir_lo', 'w_umpk', 'w_decoy_e', 'w_kh101', 'w_jsow', 'w_fab500', 'e_tornado', 'e_f111', 'e_mig23', 'e_mig27', 'e_tu22m2', 'e_a10', 'e_f15e', 'e_su24', 'm163', 'zsu234', 'strela10', 'avenger', 'chaparral', 'w_kh59m', 'w_kh25ml', 'w_kh58', 'w_gbu31', 'w_jassm', 'w_agm65b', 't_kc10'].map((n) => [n, '20261022c']).concat(
+  ['roland', 'strela10', 'zsu234', 'zsu234_lo', 'strela1', 'tunguska', 'tunguska_lo', 'gepard', 'gepard_lo', 'chaparral', 'chaparral_lo', 'm163', 'm163_lo', 'rapier', 'rapier_lo', 'avenger', 'avenger_lo', 'w_gbu39', 'pantsir', 'pantsir_lo', 'w_gbu10', 'w_ecm', 'e_mig21n', 'e_mig25', 'e_su7b', 'e_tu16', 'e_f100', 'e_f5', 'e_f117', 'e_jaguar', 'e_buccaneer', 'e_harrier', 'e_mirage', 'e_rafale', 'e_b2'].map((n) => [n, '20261022i'])).concat(
+  ['zsu234', 'zsu234_lo', 'zu23', 'buk', 'phalanx', 'w_fab100', 'w_ofab250', 'w_fab250', 'w_fab1000', 'w_gbu24', 'w_gbu57', 'w_umpk', 'e_yak38', 'e_il28', 'e_tu22', 'e_hunter', 'e_su27', 'e_su35', 'e_etendard', 'e_mirage_f1', 'e_f18c'].map((n) => [n, '20261022k'])).concat([['e_tu95', '20261022l'], ['w_agm65b', '20261022l'], ['w_decoy_e', '20261022l'], ['obj_hangar', '20261022l']].concat(['h_mi24', 'h_mi28', 'h_ka52', 'h_ah64', 'h_ah1', 'h_uh1', 'w_shturm', 'w_b8', 'w_hellfire', 'aam_stinger'].map((n) => [n, '20261022m'])).concat([['w_shturm', '20261022n']])).concat(['h_ah64', 'h_mi28'].map((n) => [n, '20261022p'])).concat([['h_uh1', '20261022r']]).concat(['w_lau61', 'obj_church', 'obj_mill', 'obj_barn', 'pr_hay', 'pr_well', 'pr_pumpkin', 'pr_grave1', 'pr_grave2', 'pr_grave3', 'pr_grave4', 'pr_fence', 'pr_fpost', 'pr_deadtree', 'pr_oldtree', 'c_vaz'].map((n) => [n, '20261022o'])).concat(['e_vulcan', 'e_draken', 'e_viggen', 'w_bomb1000'].map((n) => [n, '20261023b'])).concat(['h_ka50', 'h_mi8', 'h_uh60', 'h_rah66'].map((n) => [n, '20261023c'])).concat([['w_nar_hydra', '20261024a'], ['w_nar_s8', '20261024a'], ['e_draken', '20261023d'], ['w_bomb1000', '20261023d'], ['h_ka50', '20261023d']]).concat(['e_su33', 'e_m4', 'e_mig19', 'e_mig17', 'e_t4', 'e_mig29k'].map((n) => [n, '20261023e']))); // 20261023e — шестая партия: Су-33, М-4, МиГ-19, МиГ-17, Т-4 (2026-10-21) // 20261023c — четыре вертолёта manilov.ap (2026-10-21) // 20261023b — Vulcan, Draken, Viggen, бомба 1000 lb (2026-10-21) // l — 2026-10-20: Ту-95 без нарисованных дисков, Maverick и Harpy без сильного упрощения // l — Ту-95 без нарисованных дисков винтов (2026-10-20) // j — четвёртая партия, новая «Шилка», УМПК без сжатия // i — ЗРК без упрощения, камуфляж шейдером, третья партия самолётов (2026-10-19); c — замены моделей 2026-10-19; остальные пересобраны 2026-10-18 (затенение в стыках) — общая версия ниже
 // версии файлов собственных моделей (Blender, tools/airdef-models/own): по строке на ключ; поднимает tools/airdef-models/integrate-own.js при каждом встраивании
 const GLB_V_OWN = {
   w_kh29t: '20261024c',
@@ -301,6 +298,8 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) — свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла — свои части (сложены на подвеске)
+GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
+Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 — AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
 function parseGlb(buf) {

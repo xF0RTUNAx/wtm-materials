@@ -24,7 +24,7 @@ export const MAX_HP = 100;
 
 // классы ПВО для лимита первой волны (на игрока): 1 топовый и 1 средний; ближние (пушки, ПЗРК, «Стрела-1») — только за очки
 export const TOP = new Set(['s75', 's300', 's400', 'patriot', 'pac3', 'hawk', 'sampt']);
-export const MID = new Set(['s125', 'kub', 'bukm3', 'osa', 'tor', 'torm2', 'pantsir', 'nasams', 'roland', 'rapier', 'tunguska', 'khordad']);
+export const MID = new Set(['s125', 'kub', 'bukm3', 'osa', 'tor', 'torm2', 'pantsir', 'nasams', 'roland', 'rapier', 'tunguska', 'hawk21']);
 export const samClass = (k) => (TOP.has(k) ? 'top' : MID.has(k) ? 'mid' : 'near');
 export const LIMIT1 = { top: 1, mid: 1 }; // первая волна: на игрока ПВО — 1 дальний и 1 средний комплекс
 export const samCost = (k) => SAM_COST[k] || 100;

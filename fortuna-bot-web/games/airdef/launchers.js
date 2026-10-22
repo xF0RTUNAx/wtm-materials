@@ -54,8 +54,6 @@ export const LNCH = {
   tunguska: { mode: 'rail', L: [{ tp: [0, 1.67, -0.44], cp: [0, 0.62, 0.8], slots: [[-1.14, -0.27, -0.81], [1.14, -0.27, -0.81], [-1.36, -0.27, -0.81], [1.36, -0.27, -0.81], [-1.14, -0.05, -0.81], [1.14, -0.05, -0.81], [-1.36, -0.05, -0.81], [1.36, -0.05, -0.81]] }], box: { len: 2.46, r: 0.1 }, guns: [[-0.89, 0.3], [0.89, 0.3]], elMin: -0.08, elMax: 1.4, slewY: 1.6, slewE: 1.0 }, // без stage: ракета — целая модель msl_9m311 (отделяемого ускорителя в ней нет; было процедурное — со ступенью)
   // SAMP/T: пакет из 8 контейнеров Aster 30 поднимается вертикально (ось у кормы), «горячий» вертикальный старт
   sampt: { mode: 'vhot', L: [{ tp: [0, 2.5, 4.3], cp: [0, 0, 0], slots: grid(4, 2, 0.62, 0.6, -2.5, 0, 0.35) }], box: { len: 5.0, r: 0.27 }, el: V90, slewY: 0, gd: 2.6, gdT: 1.2 },
-  // Sevom Khordad (трофейный): пусковая с тремя ракетами на направляющих — поворот и подъём вокруг оси у кормы (башни нет)
-  khordad: { mode: 'rail', L: [{ tp: [0, 3, 3.43], cp: [0, 0, 0], slots: [[-0.8, 0.55, -2.57], [0, 0.55, -2.57], [0.8, 0.55, -2.57]] }], box: { len: 6, r: 0.2 }, elMin: 0.1, elMax: 1.2, slewY: 0.7, slewE: 0.45 },
   iris: { mode: 'vhot', L: [{ tp: [0, 2.2, 1.5], cp: [0, 0, 0], slots: grid(4, 2, 0.46, 0.46, -1.6, 0, -0.23) }], box: { len: 3.2, r: 0.2 }, el: V90, slewY: 0, gd: 2.6, gdT: 1.2, dish: [-10, 0] },
   avenger: { mode: 'tube', L: [{ tp: [0.17, 1.24, 1.55], cp: [-0.26, 1.14, 0.15], slots: [-1, 1].flatMap((s) => grid(2, 2, 0.2, 0.2, 0, s * 0.79, -0.1)) }], box: { len: 1.7, r: 0.14, sq: true }, elMin: -0.1, elMax: 1.3, slewY: 2.0, slewE: 1.5, ej: { v: 28, t: 0.3 } }, // модель KillCaptureDestroy: пакеты ±0,79 м
   strela2: MANPADS, redeye: MANPADS, igla: MANPADS, stinger: MANPADS, iglas: MANPADS, verba: MANPADS,
@@ -70,6 +68,7 @@ export const LNCH = {
   skyguard: { mode: 'gun', L: [{ tp: [0.04, 0.89, 0.42], cp: [-0.03, 0.6, -0.19], slots: [] }], elMin: -0.05, elMax: 1.45, slewY: 1.6, slewE: 1.1 }, /* Oerlikon GDF по модели lm9241221 */
   skynex: { mode: 'gun', L: [{ tp: [0, 1.2, 0.2], cp: [0, 0.9, 0], slots: [] }], elMin: -0.1, elMax: 1.5, slewY: 2.0, slewE: 1.4 },
 };
+LNCH.hawk21 = LNCH.hawk; // Hawk XXI — та же пусковая M192 (модель Hawk)
 export const lnchOf = (key) => LNCH[key] || null;
 export const trainable = (LN) => !!LN && LN.slewY > 0;
 

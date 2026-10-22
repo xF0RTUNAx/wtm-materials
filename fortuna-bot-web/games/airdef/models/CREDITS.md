@@ -11,7 +11,8 @@
 - "OFAB-250-270" (https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2) by 4ikalka — CC-BY-4.0 — `w_ofab250.glb`
 - "Fab-250| The soviet aviation bomb" (https://sketchfab.com/3d-models/fab-250-the-soviet-aviation-bomb-a85096c0d7594e5e9cc4551fcd59fdfd) by CATholic — CC-BY-4.0 — `w_fab250.glb`
 - "FAB-1000" (https://sketchfab.com/3d-models/fab-1000-c4db2a615b35417ca4f620af8658d97f) by United4192 — CC-BY-4.0 — `w_fab1000.glb`
-- "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `w_gbu24.glb`, `aam_aim7.glb`, `aam_aim9x.glb`
+- "Low Poly GBU-24 laser guided bomb (окраска и запекание)" (https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82) by AnirudhRao — CC-BY-4.0 — `w_gbu24.glb`
+- "US Weapon Pack" (https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_aim7.glb`, `aam_aim9x.glb`
 - "FAB-500 M-54 V5" (https://sketchfab.com/3d-models/fab-500-m-54-v5-87e064b28f6f4d7ba1fde7e79d621b8d) by 4ikalka — CC-BY-4.0 — `w_fab500.glb`
 - "Russian weapon pack" (https://sketchfab.com/3d-models/russian-weapon-pack-af00b7135a184ecfb2812a0e54458a8a) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `aam_r73.glb`, `aam_r77.glb`, `aam_r27.glb`, `aam_r33.glb`
 - "Kh31" (https://sketchfab.com/3d-models/kh31-b5d1f9d341984926a04f70018b389045) by lelo — CC-BY-4.0 — `w_kh59m.glb`
@@ -78,9 +79,8 @@
 - "super-etendard" (https://sketchfab.com/3d-models/super-etendard-3589004316f54dba90ed7f34455eeeb2) by helijah — CC-BY-4.0 — `e_etendard.glb`
 - "Dassault Mirage F1" (https://sketchfab.com/3d-models/dassault-mirage-f1-9f7ea1b8ca934986833ab8f265f4b661) by Civorsky — CC-BY-4.0 — `e_mirage_f1.glb`
 - "McDonnell Douglas F/A-18C Hornet" (https://sketchfab.com/3d-models/mcdonnell-douglas-fa-18c-hornet-c68c8417c8e84864b2a5e0c35c178fd9) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `e_f18c.glb`
-- "McDonnell Douglas F/A-18E+Boeing EA-18G Growler" (https://sketchfab.com/3d-models/mcdonnell-douglas-fa-18eboeing-ea-18g-growler-d69153c8e91744cab2bad239a2cb5d98) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `e_ea18g.glb`
 - "[PBR] Sukhoi Su-25" (https://sketchfab.com/3d-models/pbr-sukhoi-su-25-956d0cb0bbe54fa8ad72e8c3e224fd2d) by Immersive3D — CC-BY-4.0 — `e_su25.glb`
-- "Su-34 prototype (Su-32FN)" (https://sketchfab.com/3d-models/su-34-prototype-su-32fn-d621b381bf734545b047e7e19972780c) by 42manako — CC-BY-4.0 — `e_su34.glb`
+- "Su34" (https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7) by manilov.ap — CC-BY-4.0 — `e_su34.glb`
 - "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — `e_su17.glb`
 - "McDonnell Douglas F-4 Phantom II" (https://sketchfab.com/3d-models/mcdonnell-douglas-f-4-phantom-ii-1ea38a66a59048529d27b24a570c5e07) by andertan — CC-BY-4.0 — `e_f4.glb`
 - "TOMAHAWK" (https://sketchfab.com/3d-models/tomahawk-7f2cda9c50864d8ab136a63659ca0658) by Pan_Ar4ik — CC-BY-4.0 — `w_tomahawk.glb`
@@ -126,7 +126,6 @@
 - "Marder Roland (low-poly)" (https://sketchfab.com/3d-models/marder-roland-low-poly-2f30452b85ec461db2de4bc118b7448e) by ScurvyWoof — CC-BY-4.0 — `roland.glb`
 - "Low poly 2k22 Tunguska (окраска и запекание текстур)" (https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b) by SIpriv — CC-BY-4.0 — `tunguska.glb`, `tunguska_lo.glb`, `msl_9m311.glb`
 - "samp-t air defense system" (https://sketchfab.com/3d-models/samp-t-air-defense-system-096f1bd31fc646b9908d5f1d9b7e0d34) by Chenzoss — CC-BY-4.0 — `sampt.glb`, `sampt_lo.glb`
-- "Iranian Sevom Khordad SAM" (https://sketchfab.com/3d-models/iranian-sevom-khordad-sam-ca18f97aeb6a4aaf992a973d513de306) by 42manako — CC-BY-4.0 — `khordad.glb`
 - "OERLIKON 35MM SKYGUARD RADAR" (https://sketchfab.com/3d-models/oerlikon-35mm-skyguard-radar-a136b501ae9847258249d51c769b779d) by lm9241221 — CC-BY-4.0 — `skyguard.glb`, `skyguard_lo.glb`
 - "Tracked Rapier" (https://sketchfab.com/3d-models/tracked-rapier-23db0462ce604a64af5ea282b5df59b9) by stealth86 — CC-BY-4.0 — `rapier.glb`, `rapier_lo.glb`
 - "ZIF-122 & 4K33 Osa-M Missile" (https://sketchfab.com/3d-models/zif-122-4k33-osa-m-missile-5cd6b3ec8b9d4e798f662dd9aefefb43) by Art Blender (KoreanNavy) — CC-BY-4.0 — `osa.glb`, `osa_lo.glb`

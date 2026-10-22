@@ -75,12 +75,20 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Low Poly GBU-24 laser guided bomb (окраска и запекание)",
+  "author": "AnirudhRao",
+  "url": "https://sketchfab.com/3d-models/low-poly-gbu-24-laser-guided-bomb-8dcd4a634e924a52ab05d4e90b3e3e82",
+  "license": "CC-BY-4.0",
+  "files": [
+   "w_gbu24"
+  ]
+ },
+ {
   "title": "US Weapon Pack",
   "author": "Rhine_Lab_Muelsyse",
   "url": "https://sketchfab.com/3d-models/us-weapon-pack-c0783151b0024554a97d8ed6e5082745",
   "license": "CC-BY-4.0",
   "files": [
-   "w_gbu24",
    "aam_aim7",
    "aam_aim9x"
   ]
@@ -713,15 +721,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "McDonnell Douglas F/A-18E+Boeing EA-18G Growler",
-  "author": "Rhine_Lab_Muelsyse",
-  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-fa-18eboeing-ea-18g-growler-d69153c8e91744cab2bad239a2cb5d98",
-  "license": "CC-BY-4.0",
-  "files": [
-   "e_ea18g"
-  ]
- },
- {
   "title": "[PBR] Sukhoi Su-25",
   "author": "Immersive3D",
   "url": "https://sketchfab.com/3d-models/pbr-sukhoi-su-25-956d0cb0bbe54fa8ad72e8c3e224fd2d",
@@ -731,9 +730,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Su-34 prototype (Su-32FN)",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/su-34-prototype-su-32fn-d621b381bf734545b047e7e19972780c",
+  "title": "Su34",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7",
   "license": "CC-BY-4.0",
   "files": [
    "e_su34"
@@ -1152,15 +1151,6 @@ export const CREDITS = [
   "files": [
    "sampt",
    "sampt_lo"
-  ]
- },
- {
-  "title": "Iranian Sevom Khordad SAM",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/iranian-sevom-khordad-sam-ca18f97aeb6a4aaf992a973d513de306",
-  "license": "CC-BY-4.0",
-  "files": [
-   "khordad"
   ]
  },
  {

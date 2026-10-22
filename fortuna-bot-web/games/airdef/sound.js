@@ -255,7 +255,7 @@ export function createSound() {
     // за горизонтом, птицы в затишье. mood — выбранный режим ('air' — чаще самолёты, 'defense' — пуски, 'multi' — раскаты)
     ambient(on, mood) { amb.mood = mood || amb.mood; if (on === amb.on) return; amb.on = on; clearInterval(amb.timer); amb.timer = 0; if (on) { amb.next = 3 + Math.random() * 3; amb.timer = setInterval(ambTick, 250); } else if (amb.beds) { for (const b of amb.beds) b.stop(); amb.beds = null; } },
   };
-  const PATRIOT_LIKE = new Set(['patriot', 'pac3', 'nasams', 'hawk', 'khordad']); let bc = 0; // горячий старт из контейнера/направляющей — запись Patriot
+  const PATRIOT_LIKE = new Set(['patriot', 'pac3', 'nasams', 'hawk', 'hawk21']); let bc = 0; // горячий старт из контейнера/направляющей — запись Patriot
   const GUN_RATE = { phalanx: 1, m163: 0.93 }; // M61 20 мм — как в записи (у «Шилки» звук другой — синтез aaa)
   let aaaAcc = 0;
   const sk = {}; let skN = 0; // петли тонов ГСН; skN — сколько кадров ещё звучать без нового вызова growl()

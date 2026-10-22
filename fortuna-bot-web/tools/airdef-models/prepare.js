@@ -59,7 +59,7 @@ const CONFIG = {
   w_ofab250: { src: `${DL}/ofab-250-270.glb`, scale: 1.48 / 21.06, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } },
   w_fab250: { src: `${DL}/fab-250_the_soviet_aviation_bomb.glb`, scale: 1.5 / 2.25, nose: '-x', tex: () => 256, pickMesh: /./ },
   w_fab1000: { src: `${DL}/fab-1000.glb`, scale: 3.35 / 4.58, nose: '-z', tex: () => 256, pickMesh: /./, colors: { '^Black|^Gray': [0.07, 0.08, 0.055], '^Brown': [0.12, 0.04, 0.02] } /* корпус и хвост — оливковые, поясок — тёмно-красный */ },
-  w_gbu24: { src: `${DL}/us_weapon_pack.glb`, scale: 1, nose: '-z', tex: () => 256, pickMesh: /gbu-24/ },
+  w_gbu24: { src: `${DL}/Свои/GBU-24/gbu24_game.glb`, scale: 1, nose: '-z', tex: () => 512, pickMesh: /./, credit: 'окраска и запекание' }, /* без карты нормалей: сетка частая (24 тыс. мелких граней), three.js строит касательные по пикселям — на хвосте шли полосы */ // GBU-24 Paveway III — AnirudhRao (CC BY 4.0; Свои/GBU-24: 4,39 м, БЧ оливковая с жёлтым пояском, блок наведения и хвост серые — запечено 1024; прежняя — Rhine_Lab US Weapon Pack)
   w_gbu57: { src: new URL('./own/gbu57.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 1024, nTex: () => 512, pickMesh: /./, own: true }, // GBU-57: своя модель (Blender, own/gbu57.glb)
   w_fab500: { src: `${DL}/fab-500_m-54_v5.glb`, scale: 2.47 / 20.68, nose: '-x', tex: () => 256, pickMesh: /./, colors: { '': [0.07, 0.08, 0.055] } }, // ФАБ-500М-54 — 4ikalka (2026-10-19; эпоха I), УМПК — по-прежнему из ФАБ-500М-62
   w_fab500_old: { src: `${DL}/fab-500_m62.glb`, scale: 17.6, nose: '+x', tex: () => 512, target: 8000, simpErr: 0.15, minPart: 0.15, pickMesh: /./, rulesIn: 'game', perTri: true, groups: (c) => (c.min[1] > FAB_TOP ? null : 'body') }, // без УМПК: всё выше корпуса долой
@@ -195,13 +195,14 @@ const CONFIG = {
   e_etendard: { src: `${DL}/super-etendard.glb`, scale: 14.31 / 14.29, nose: '-x', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.15 || (c.ctr[1] < -0.8 && Math.abs(Math.abs(c.ctr[0]) - 1.7) < 0.2)) && Math.max(...c.size) < 3 ? null : LS(c)) /* шасси и его стойки */ },
   e_mirage_f1: { src: `${DL}/dassault_mirage_f1.glb`, scale: 15.3 / 12.18, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, camo: { scheme: 'fr', skip: /^(?!material_0$|Material\.198$)/ }, /* у автора корпус и крылья без цвета (белые) — двухтонный серо-голубой камуфляж (шейдер игры) */ groups: strip(0, -1.42, 1.2, -0.85, 4.5) /* шасси, баки, блоки НАР */ },
   e_f18c: { src: `${DL}/mcdonnell_douglas_fa-18c_hornet.glb`, scale: 17.07 / 16.95, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.3 && Math.max(...c.size) < 5) || (Math.abs(c.ctr[0]) < 1.5 && c.ctr[1] < -0.85 && Math.max(...c.size) < 1.6) ? null : LS(c)) /* шасси (и стойки) и подфюзеляжный бак */ },
-  e_ea18g: { src: `${DL}/mcdonnell_douglas_fa-18eboeing_ea-18g_growler.glb`, scale: 18.31 / 18.29, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => { const d = Math.abs(c.ctr[0]); return (d < 1.4 ? (c.ctr[1] < -0.2 && Math.max(...c.size) < 5.5) || (c.ctr[1] < 0.05 && Math.max(...c.size) < 1.6) : c.ctr[1] - c.size[1] / 2 < 0.4 && Math.max(...c.size) < 5) ? null : LS(c); } /* шасси, бак и контейнеры помех (пилоны — оставить) */ },
   e_su24_old: { src: `${DL}/russian_su-24.glb`, scale: 0.0543, nose: '-z', rulesIn: 'game', tex: () => 512, // (42manako — не использовать: из мода BF2)
     groups: (c) => (c.ctr[1] < -0.4 && Math.abs(c.ctr[0]) < 2.2 && Math.max(...c.size) < 1.9 && !(c.size[2] > 1.5 && c.size[1] < 0.3) && ((c.ctr[2] > 1.6 && c.ctr[2] < 4.7) || (c.ctr[2] > -5.7 && c.ctr[2] < -3.2)) ? null : LS(c)) }, // шасси и створки (пилоны под фюзеляжем — оставить)
   e_su25: { src: `${DL}/pbr_sukhoi_su-25.glb`, scale: 0.483, nose: '-z', rulesIn: 'game', tex: () => 512,
     groups: (c) => (c.ctr[1] < 1.35 && Math.abs(c.ctr[0]) < 1.5 && c.ctr[2] > -3.2 && c.ctr[2] < 1.8 ? null : LS(c)) }, // шасси
-  e_su34: { src: `${DL}/su-34_prototype_su-32fn.glb`, scale: 0.98, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, texVf: 'hue=h=152:s=0.32,eq=brightness=-0.04', // меши подписаны: без шасси, створок, лестницы и своего оружия
-    pickMesh: /^(?!.*(Wheel|Strut|Ladder|Step|TaxiLight|R-73|R-27|Kh-31|AB-500|Tank|Door))/, groups: LS },
+  // Су-34 — manilov.ap (CC BY 4.0, 2026-10-24; прежняя модель 42manako — «Not my original model»): оси самолёта совпадают с осями файла (нос +z), без упрощения (57 тыс.);
+  // длина 23,34 м по оси (с штангой ПВД). Без шасси (по материалам стоек и колёс; створки и мелочь ниже оси — мельче 2,2 м; гондолы двигателей — крупные, остаются); рельсы под крылом — оставлены как пилоны
+  e_su34: { src: `${DL}/su34_manilov.glb`, scale: 23.34 / 24.02, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true,
+    groups: (c) => ([13, 15, 16].includes(c.mat) /* стойки, колёса, тяги шасси */ || (c.ctr[1] < -0.35 && Math.max(...c.size) < 2.2) ? null : LS(c)) },
   e_su17: { src: `${DL}/su17.glb`, scale: 1, fwd: [-0.6933, 0.7207], rulesIn: 'game', tex: () => 512, centerX: true, // лежит повёрнутой в плоскости XZ, ось — x −0,4
     groups: (c) => { const dx = Math.abs(c.ctr[0] + 0.4), [, y, z] = c.ctr; return (y < 1.45 && dx > 1.6 && dx < 2.9 && z > 0.2 && z < 2.0) || (y < 1.15 && dx < 0.45 && z > -5.6 && z < -4.0) ? null : LS(c); } }, // шасси и створки
   e_f4: { src: `${DL}/mcdonnell_douglas_f-4_phantom_ii.glb`, scale: 0.93, nose: '+x', rulesIn: 'game', tex: () => 512, // «полная подвеска» в одном меше — снимаем: баки, бомбы на МБД, «Спарроу»; без выхлопа
@@ -326,8 +327,6 @@ const CONFIG = {
   // в игре он поднимается вертикально (u.lel = 90°) вокруг оси у кормы
   sampt: { src: `${DL}/samp-t_air_defense_system.glb`, scale: 5.5, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 1024, target: 60000, hinge: [0, 0.45, 4.3],
     groups: (c) => (c.ctr[1] > 0.4 && c.ctr[2] > -0.8 && c.ctr[2] < 4.35 && Math.abs(c.ctr[0]) < 1.7 ? 'cradle' : 'body') }, // пакет: два ряда контейнеров, y 0,5–1,75 (под ним — пустой промежуток до рамы)
-  khordad: { src: `${DL}/iranian_sevom_khordad_sam.glb`, scale: 100, nose: '-x', texVf: "hue=h=44:s=0.75,eq=brightness=-0.06", rulesIn: 'game', unit: true, tex: () => 512, /* без «кривой» (затемняла колёса в сплошной чёрный) и упрощения */ hinge: [0, 3.0, 3.7],
-    groups: (c) => (c.size[2] > 5 && c.size[0] < 0.5 && c.min[1] > 3.3 ? 'missile' : c.min[1] > 2.95 && c.ctr[2] > 0.5 && c.ctr[2] < 4.2 && c.size[0] < 2 ? 'cradle' : 'body') }, // Sevom Khordad — 42manako: пустынный камуфляж → оливковый (у запада — трофейный); пусковая с 3 ракетами — без башни, ось у кормы
   // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221): одна из двух пушек (сцена в мм, пушка — в половину размера → ×0,002);
   // станок поворачивается, спарка со стволами и коробами — качается на цапфах; подложка, кабели, радар и вторая пушка — долой
   skyguard: { src: `${DL}/oerlikon_35mm_skyguard_radar.glb`, scale: 0.002, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 80000, simpErr: 0.002, minPart: 0.06, hinge: [19.62, 1.45, -8.1],
@@ -388,7 +387,7 @@ const CONFIG = {
       if (c.min[1] > 2.0 && axis(c, [1.05, 2.41], [-0.844, 0.536], 1.0, -0.6, 6)) return 'cradle';
       return c.min[1] > 1.8 && c.ctr[2] > -0.9 && c.ctr[2] < 2.0 && c.max[1] < 3 ? 'turret' : 'body';
     } },
-  hawk: { src: `${DL}/mim-23_hawk_sam_air_defence_system_game-ready.glb`, scale: 0.012, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 55000, hinge: [0, 1.77, -0.19],
+  hawk: { src: `${DL}/mim-23_hawk_sam_air_defence_system_game-ready.glb`, scale: 0.012, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, target: 55000, hinge: [0, 1.77, -0.19], absorb: 0, /* рули ракеты — уже в её детали; с «прилипанием» 0,9 м к ракете цеплялись 115 деталей пусковой (Mark 2026-10-22) */
     groups: (c) => {
       if (c.size[2] > 3.8 && axis(c, [-0.19, 1.77], [-0.985, 0.175], 1.2, -3.2, 3.6)) return 'missile';
       if (c.min[1] > 1.55 && axis(c, [-0.19, 1.77], [-0.985, 0.175], 1.3, -3.2, 3.6)) return 'cradle';

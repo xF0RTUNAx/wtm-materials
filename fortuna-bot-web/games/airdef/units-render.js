@@ -93,7 +93,7 @@ export function unitModel(key, S) {
       T.push(part(new THREE.BoxGeometry(2.2, 1.6, 1.6), C, M(0, 0.9, 0)));
       for (const x of [-0.72, 0.72]) K.push(part(new THREE.BoxGeometry(0.22, 0.24, 5), STEEL, M(x, 0, -0.6)));
       dish = plateGeo(3, 1.6, C); dishY = 3.6; break;
-    case 'hawk': // пусковая M192 на лафете — три ракеты на одной балке
+    case 'hawk': case 'hawk21': // пусковая M192 на лафете — три ракеты на одной балке
       P.push(part(new THREE.BoxGeometry(2.4, 1, 4), C, M(0, 0.9, 0)), part(new THREE.BoxGeometry(2.2, 2, 4.5), C, M(10, 1.2, 4)));
       T.push(part(new THREE.BoxGeometry(1.4, 1.0, 1.2), C, M(0, 0.5, 0)));
       K.push(part(new THREE.BoxGeometry(2.6, 0.2, 2.2), STEEL, M(0, 0, -0.4)));
@@ -146,7 +146,7 @@ export function unitModel(key, S) {
       canBoxes(K, LN.box, sl, 0xc8c4b0);
       P.push(part(new THREE.BoxGeometry(2.8, 2.6, 6), SAND, M(-14, 1.6, 5)), part(new THREE.BoxGeometry(3.4, 3.2, 0.4), 0x8c8a74, M(-14, 3.6, 2, -0.35)));
       break;
-    case 'buk': case 'bukm3': case 'khordad':
+    case 'buk': case 'bukm3':
       hull(P, 7.5, 3.2, 1.5, C);
       T.push(part(new THREE.BoxGeometry(2.4, 1.0, 3), C, M(0, 0.5, 0)));
       if (key === 'bukm3') canBoxes(K, LN.box, sl, C);

@@ -35,7 +35,7 @@ export const PAIR = {
   e_su33: 'f18', e_mig29k: 'e_rafale', e_m4: 'e_vulcan', e_mig19: 'e_f100', e_mig17: 'e_hunter', e_t4: 'e_f111',
   e_harrier: 'e_yak38', e_vulcan: 'e_tu22m2', e_draken: 'e_mig21n', e_viggen: 'e_mig27', e_f117: 'e_su57', e_mirage: 'e_su24', e_rafale: 'su30', e_b2: 'e_tu22m2',
   e_yak38: 'e_harrier', e_il28: 'e_hunter', e_tu22: 'e_buccaneer', e_tu95: 'e_b52', e_su27: 'e_f18c', e_su35: 'e_typhoon', e_tu22m3: 'e_b1b', e_tu160: 'e_b2',
-  e_hunter: 'e_il28', e_etendard: 'e_su17', e_mirage_f1: 'e_mig21n', e_f18c: 'e_su27', e_ea18g: 'e_mig31', e_b52: 'e_tu95', e_b1b: 'e_tu22m3', e_typhoon: 'e_su35',
+  e_hunter: 'e_il28', e_etendard: 'e_su17', e_mirage_f1: 'e_mig21n', e_f18c: 'e_su27', e_b52: 'e_tu95', e_b1b: 'e_tu22m3', e_typhoon: 'e_su35',
   f16: 'e_su25', e_f4: 'e_su24', f18: 'e_su17', e_gripen: 'mig29', e_f35: 'e_su57', e_f22: 'e_su57',
   fab500: 'mk82', kh28: 'agm45', kab500l: 'gbu12', kh58: 'agm88', kab500kr: 'agm65b', kh29t: 'agm65b', kh25ml: 'agm65b', kab500s: 'gbu31',
   kh31p: 'agm88', ecm_e: 'ecm_w', kh59m: 'jassm', umpk: 'gbu39', decoy_e: 'mald', kh59mk2: 'jassm',
@@ -45,7 +45,7 @@ export const PAIR = {
   iglas: 'stinger', tunguska: 'gepard', gpsjam: 'gpsjamw', s400: 'pac3', bukm3: 'nasams', torm2: 'roland', pantsir: 'skyguard', verba: 'stinger',
   zu23: 'm163', buk: 'patriot', phalanx: 'pantsir',
   hawk: 's75', m163: 'zsu234', chaparral: 'strela1', avenger: 'strela10', redeye: 'strela2', roland: 'osa', gepard: 'tunguska', stinger: 'igla', rapier: 'osa', skyguard: 'pantsir',
-  patriot: 's300', gpsjamw: 'gpsjam', pac3: 's400', nasams: 'bukm3', sampt: 's400', khordad: 'bukm3',
+  patriot: 's300', gpsjamw: 'gpsjam', pac3: 's400', nasams: 'bukm3', sampt: 's400', hawk21: 'bukm3',
   h_mi24: 'h_uh1', h_uh1: 'h_mi24', h_mi28: 'h_ah64', h_ah64: 'h_mi28', h_ka52: 'h_rah66', h_ah1: 'h_mi24', // вертолёты
   h_mi8: 'h_uh60', h_uh60: 'h_mi8', h_ka50: 'h_ah64', h_rah66: 'h_ka52', // 2026-10-21: Ми-8МТВ ↔ UH-60 (транспортно-боевые), Ка-50 → AH-64D (одноместные штурмовые), RAH-66 ↔ Ка-52 (ранг IV)
   shturm: 'hellfire', ataka: 'hellfire', hellfire: 'ataka', s8: 'hydra', hydra: 's8',
@@ -61,10 +61,10 @@ export const PARENT = {
   e_mig27: 'e_mig23', mig29: 'e_mig27', e_su24: 'e_il28', e_su34: 'e_su24', e_su57: 'e_su34', e_su25: 'e_su17', e_yak38: 'e_su7b', e_su33: 'e_yak38', e_mig29k: 'e_su33', e_t4: 'e_su7b',
   e_mig25: 'e_mig21n', e_mig31: 'mig29', e_su27: 'e_mig25', su30: 'e_su25', e_su35: 'e_su27',
   e_tu22m2: 'e_tu22', e_tu22m3: 'e_tu22m2', e_tu95: 'e_tu22m2', e_tu160: 'e_tu22m3',
-  // Запад: F-4E★ → F/A-18C → F/A-18E → EA-18G · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale ·
+  // Запад: F-4E★ → F/A-18C → F/A-18E (EA-18G выведен 2026-10-22: та же модель, что у F/A-18E, — по 29 самолётов у сторон) · Mirage F1★ → Super Étendard → Mirage 2000D → Rafale ·
   // F-100F → F-111F → F-15E → F-22A, развилки F-111F → F-117A → B-2A / F-35A (Lockheed) и F-111F → B-1B, F-100F → A-10A ·
   // Draken → Viggen → Gripen → Typhoon · F-5E → F-16D · Hunter → Harrier, Hunter → Vulcan → B-52H · Buccaneer → Tornado · Jaguar
-  f16: 'e_f5', e_viggen: 'e_draken', e_gripen: 'e_viggen', e_f35: 'e_f117', e_a10: 'e_f100', e_f18c: 'e_f4', f18: 'e_f18c', e_ea18g: 'f18',
+  f16: 'e_f5', e_viggen: 'e_draken', e_gripen: 'e_viggen', e_f35: 'e_f117', e_a10: 'e_f100', e_f18c: 'e_f4', f18: 'e_f18c',
   e_f111: 'e_f100', e_f15e: 'e_f111', e_f22: 'e_f15e', e_f117: 'e_f111', e_b2: 'e_f117', e_b52: 'e_vulcan', e_b1b: 'e_f111',
   e_tornado: 'e_buccaneer', e_typhoon: 'e_gripen', e_harrier: 'e_hunter', e_vulcan: 'e_hunter',
   e_etendard: 'e_mirage_f1', e_mirage: 'e_etendard', e_rafale: 'e_mirage',
@@ -79,7 +79,7 @@ export const PARENT = {
   bomb1000: 'mk82', gbu10: 'mk82', gbu12: 'mk82', gbu31: 'gbu12', gbu39: 'gbu31', agm88: 'agm45', ecm_w: 'agm88', aargm: 'ecm_w', agm65b: 'agm45', jassm: 'storm', mald: 'ecm_w',
   // ПВО
   s300: 's75', s400: 's300', kub: 's125', buk: 'kub', bukm3: 'buk', zu23: 'zsu234', phalanx: 'm163', osa: 'strela1', tor: 'osa', torm2: 'tor', tunguska: 'zsu234', pantsir: 'tunguska', strela10: 'strela1', igla: 'strela2', iglas: 'igla', verba: 'iglas',
-  patriot: 'hawk', pac3: 'patriot', sampt: 'patriot', rapier: 'hawk', nasams: 'rapier', khordad: 'rapier', gepard: 'm163', skyguard: 'm163', roland: 'chaparral', stinger: 'redeye', avenger: 'stinger',
+  patriot: 'hawk', pac3: 'patriot', sampt: 'patriot', rapier: 'hawk', nasams: 'rapier', hawk21: 'rapier', gepard: 'm163', skyguard: 'm163', roland: 'chaparral', stinger: 'redeye', avenger: 'stinger',
   // вертолёты (Mark 2026-10-21 — без скачков рангов): Восток — Ми-24В★ → Ми-8МТВ (II) → Ка-50 (III) → Ка-52 (IV), развилка Ми-8МТВ → Ми-28Н (III);
   // Запад — UH-1H★ → AH-1W (II) → AH-64D (III) → RAH-66 (IV) (Cobra → Apache → Comanche), развилка UH-1H★ → UH-60 (II).
   // Их оружие: «Штурм»★ → «Атака», Hydra★ → Hellfire
