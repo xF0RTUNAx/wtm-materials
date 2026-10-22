@@ -6,7 +6,7 @@
      до стоп-кадра (window.__ok), ?sky=dusk — сумерки, ?cam=chase — камера за первой ракетой, ?alt=9000 — пуск на высоте. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { createPlumes, makeFlame, flameTick, MOTOR } from '../../games/airdef/plume.js?v=20261022u';
+import { createPlumes, makeFlame, flameTick, MOTOR } from '../../games/airdef/plume.js?v=20261022v';
 const Q = new URLSearchParams(location.search), T = +(Q.get('t') || 8), dusk = Q.get('sky') === 'dusk', ALT = +(Q.get('alt') || 0);
 const r = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true }); r.setPixelRatio(1); r.setSize(innerWidth, innerHeight);
 r.outputEncoding = THREE.sRGBEncoding; r.toneMapping = THREE.ACESFilmicToneMapping; document.body.appendChild(r.domElement);

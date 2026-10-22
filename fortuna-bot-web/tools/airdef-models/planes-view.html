@@ -12,7 +12,7 @@
 <script type="module">
 const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'e_tu16').split(',');
 const M = await import('../../games/airdef/models.js?v=' + Date.now());
-const { attachFlames } = await import('../../games/airdef/units-render.js?v=20261022u');
+const { attachFlames } = await import('../../games/airdef/units-render.js?v=20261022v');
 M.loadModels('../../games/airdef/', () => {});
 const CW = +(Q.get("w") || (Q.get('heli') ? 480 : 200)), CH = Math.round(CW * 0.7), W = CW * 4, H = CH * names.length;
 const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
