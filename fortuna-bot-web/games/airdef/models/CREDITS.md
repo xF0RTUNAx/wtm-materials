@@ -32,18 +32,18 @@
 - "Low Poly Car" (https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85) by Roma — CC-BY-4.0 — `c_police.glb`, `c_police_lo.glb`
 - "Saab JAS-39С Gripen fighter jet" (https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7) by Lanko Mykhailo — CC-BY-4.0 — `e_gripen.glb`, `e_gripen_lo.glb`
 - "Lockheed Martin F-22 "Raptor"" (https://sketchfab.com/3d-models/lockheed-martin-f-22-raptor-7e7b3c372e374dda98e70208d09cfdcf) by andertan — CC-BY-4.0 — `e_f22.glb`, `e_f22_lo.glb`
-- "F-35A Lightning II" (https://sketchfab.com/3d-models/f-35a-lightning-ii-a06d6113cfb44a0aa7b8f17106aca9c4) by shangus930 — CC-BY-4.0 — `e_f35.glb`, `e_f35_lo.glb`
+- "Lockheed Martin F35 Lightning II" (https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6) by andertan — CC-BY-4.0 — `e_f35.glb`, `e_f35_lo.glb`
 - "MiG-21 Chibi" (https://sketchfab.com/3d-models/mig-21-chibi-8a46e5b9d03d41a6b7611c1b5d6aacb6) by Oleh — CC-BY-4.0 — `e_mig21.glb`, `e_mig21_lo.glb`
 - "Миг - 31" (https://sketchfab.com/3d-models/31-b168fbca1f6c4ad0ad4e45b7a22f52bc) by mamont nikita — CC-BY-4.0 — `e_mig31.glb`, `e_mig31_lo.glb`
 - "Sukhoi Su-57 "Felon"" (https://sketchfab.com/3d-models/sukhoi-su-57-felon-09d546b4355c4fa6882ca46e05069bee) by andertan — CC-BY-4.0 — `e_su57.glb`, `e_su57_lo.glb`
-- "Tupolev Tu-22M3" (https://sketchfab.com/3d-models/tupolev-tu-22m3-6b398ad795fc40f6955ce345d4baeaf8) by Jeyhun1985 — CC-BY-4.0 — `e_tu22m3.glb`, `e_tu22m3_lo.glb`
+- "TU-22M3 Backfire C 3D Model" (https://sketchfab.com/3d-models/tu-22m3-backfire-c-3d-model-2ef7b08564ed4d05ba5a42b77cb7f5fd) by Real Slim Shady — CC-BY-4.0 — `e_tu22m3.glb`, `e_tu22m3_lo.glb`
 - "Su24" (https://sketchfab.com/3d-models/su24-3439ae4000df438894a44127ebda538c) by manilov.ap — CC-BY-4.0 — `e_su24.glb`
 - "Tornado" (https://sketchfab.com/3d-models/tornado-9fd925dabddc4c1998b7c3df5ac47bf8) by manilov.ap — CC-BY-4.0 — `e_tornado.glb`
 - "F111" (https://sketchfab.com/3d-models/f111-00e9e6b9dbc34dc1ae691529688ab000) by manilov.ap — CC-BY-4.0 — `e_f111.glb`
 - "Mig23" (https://sketchfab.com/3d-models/mig23-cfd1f4a833434061b9f25f718fe0667a) by manilov.ap — CC-BY-4.0 — `e_mig23.glb`
 - "Mig27" (https://sketchfab.com/3d-models/mig27-a9d22acdb582444a91c2adc8b123d674) by manilov.ap — CC-BY-4.0 — `e_mig27.glb`
 - "TU26" (https://sketchfab.com/3d-models/tu26-52e40c8b03224f1bbba836965520a362) by manilov.ap — CC-BY-4.0 — `e_tu22m2.glb`
-- "[PBR] A-10 Thunderbolt" (https://sketchfab.com/3d-models/pbr-a-10-thunderbolt-e933acb3809e43bf8f47104795f10474) by Immersive3D — CC-BY-4.0 — `e_a10.glb`
+- "A-10 Thunderbolt II" (https://sketchfab.com/3d-models/a-10-thunderbolt-ii-9521ff6ba5d448958ea45a89e94ab23d) by AIRMAN Magazine — CC-BY-4.0 — `e_a10.glb`
 - "McDonnell Douglas F-15E Strike Eagle" (https://sketchfab.com/3d-models/mcdonnell-douglas-f-15e-strike-eagle-4b8a5abf87a34373af4b0c8adaf18b11) by Spark_Customs — CC-BY-4.0 — `e_f15e.glb`
 - "Mig21" (https://sketchfab.com/3d-models/mig21-4e2b33b33fcb43948c78783867e3b166) by manilov.ap — CC-BY-4.0 — `e_mig21n.glb`
 - "Mig25" (https://sketchfab.com/3d-models/mig25-afe67617c5294dce9056106a22f640ff) by manilov.ap — CC-BY-4.0 — `e_mig25.glb`

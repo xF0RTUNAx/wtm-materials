@@ -295,9 +295,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "F-35A Lightning II",
-  "author": "shangus930",
-  "url": "https://sketchfab.com/3d-models/f-35a-lightning-ii-a06d6113cfb44a0aa7b8f17106aca9c4",
+  "title": "Lockheed Martin F35 Lightning II",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/lockheed-martin-f35-lightning-ii-db911de503c74285a8d506951df786d6",
   "license": "CC-BY-4.0",
   "files": [
    "e_f35",
@@ -335,9 +335,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Tupolev Tu-22M3",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/tupolev-tu-22m3-6b398ad795fc40f6955ce345d4baeaf8",
+  "title": "TU-22M3 Backfire C 3D Model",
+  "author": "Real Slim Shady",
+  "url": "https://sketchfab.com/3d-models/tu-22m3-backfire-c-3d-model-2ef7b08564ed4d05ba5a42b77cb7f5fd",
   "license": "CC-BY-4.0",
   "files": [
    "e_tu22m3",
@@ -399,9 +399,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "[PBR] A-10 Thunderbolt",
-  "author": "Immersive3D",
-  "url": "https://sketchfab.com/3d-models/pbr-a-10-thunderbolt-e933acb3809e43bf8f47104795f10474",
+  "title": "A-10 Thunderbolt II",
+  "author": "AIRMAN Magazine",
+  "url": "https://sketchfab.com/3d-models/a-10-thunderbolt-ii-9521ff6ba5d448958ea45a89e94ab23d",
   "license": "CC-BY-4.0",
   "files": [
    "e_a10"

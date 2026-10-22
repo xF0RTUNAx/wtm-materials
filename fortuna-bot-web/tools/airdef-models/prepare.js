@@ -33,6 +33,14 @@ const NO_TAG = 'drawbox=x=iw*0.325:y=ih*0.41:w=iw*0.375:h=ih*0.09:color=0x141414
 // схемы; сам узор (схема и размер пятен — META.camo в games/airdef/models.js) рисует шейдер игры. Гусеницы, шины, стёкла,
 // стволы — свои цвета (skip или группа «часть#краска»)
 const CAMO_BASE = { nato: [0.095, 0.118, 0.056], soviet: [0.092, 0.125, 0.046], uk: [0.088, 0.11, 0.055], fr: [0.2, 0.23, 0.27] }; // линейные (как в models.js CAMO)
+const F35_GEAR = (c) => { const ax = Math.abs(c.ctr[0]), y = c.ctr[1], z = c.ctr[2];
+  return (ax > 1.6 && ax < 2.8 && z > 4.4 && z < 6.2 && y < 3.3 && Math.max(...c.size) < 2.5) || (ax < 0.6 && z > -2.5 && z < -0.5 && y < 2.4); };
+const A10_STORE = (c) => (c.mat === 16 && c.ctr[2] > -7.5) /* подвеска автора: бомбы, ракеты, контейнеры (дуло пушки впереди z < −7,5 — оставить) */ ||
+  (Math.abs(c.ctr[0]) > 5.4 && c.ctr[1] < -0.3 && c.size[2] > 0.8) /* пластина-адаптер «Мейверика» на внешних пилонах */ ||
+  (Math.abs(Math.abs(c.ctr[0]) - 3.62) < 0.1 && c.ctr[1] < -0.55 && c.size[2] > 0.5) /* рельсы под пилонами 3,6 м */ ||
+  (Math.abs(c.ctr[0]) > 5 && c.ctr[0] !== 0 && c.mat !== 1 && Math.max(...c.size) < 0.5 && c.ctr[1] < -0.15 && ((c.ctr[2] > -2.2 && c.ctr[2] < -1.8) || (c.ctr[2] > 0.2 && c.ctr[2] < 0.45) || (Math.abs(Math.abs(c.ctr[0]) - 5.1) < 0.1 && c.ctr[2] > 0.6 && c.ctr[1] < -0.3))) /* остатки «Мейверика» на внешних пилонах */ ||
+  (Math.abs(c.ctr[0]) > 3 && c.mat <= 1 && Math.max(...c.size) < 0.12 && c.ctr[1] < -0.5) /* крошки под пилонами */ ||
+  (c.mat === 1 && c.ctr[2] > -6 && c.ctr[2] < -5.2 && Math.abs(c.ctr[0]) > 0.5 && c.ctr[1] - c.size[1] / 2 < -0.75); // передняя стойка шасси (выпущена у автора)
 const CONFIG = {
   su30: { src: `${DL}/pbr_sukhoi_su-30.glb`, raw: true, scale: 0.01, nose: '+x', centerY: 240, tex: () => 1024,
     remove: (c, i) => c.mat === 0 && i > 0 && c.min[1] < 130 && c.max[0] > -380 }, // шасси, створки и кронштейны ниш (брюшные гребни — оставить)
@@ -95,14 +103,20 @@ const CONFIG = {
   // ── Gripen, F-22, F-35A (2026-10-12): нос в −Z, метры; без своих ракет, шасси и открытых створок
   e_gripen: { src: `${DL}/saab_jas-39_gripen_fighter_jet.glb`, scale: 1, nose: '+x', rulesIn: 'game', tex: () => 512, opaque: /^(Camo|material|White|Jet_m)$/, cutout: true, groups: (c) => (Math.abs(c.ctr[0]) > 1.5 && [1, 4, 5].includes(c.mat) ? null : 'body'), glassPart: (c) => c.mat === 3 && Math.abs(c.ctr[0]) < 0.6 && c.ctr[2] < -3 }, // свои ракеты и баки — долой, пилоны и направляющие — оставить
   e_f22: { src: `${DL}/lockheed_martin_f-22_raptor.glb`, scale: 18.92 / 12.11, nose: '-x', rulesIn: 'game', tex: () => 512, glassAny: /^glass$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* у автора фонарь непрозрачный; у F-22 — золотистый */ groups: (c) => ([16, 17].includes(c.mat) ? null : 'body') }, // без встроенного выхлопа (plumes): пламя рисует игра
-  e_f35: { src: `${DL}/f-35a_lightning_ii.glb`, scale: 0.56, nose: '+z', rulesIn: 'game', tex: () => 512, glass: /^mat_1[45]$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь и стекло ИЛС — золотистые */ groups: (c) => (Math.abs(c.ctr[0]) > 5.9 ? null : LS(c)) }, // модель ×1,8 — к 15,7 м; летающие створки — долой
+  e_f35: { src: `${DL}/lockheed_martin_f35_lightning_ii.glb`, scale: 4.94, nose: '+z', rulesIn: 'game', tex: () => 512, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь — золотистый */
+    // фото-текстуры автора (самолёт на фоне неба, на полу с сеткой) дают хромированный блеск и знаки — не берём; планер — матовое радиопоглощающее покрытие (FS 36170, линейный цвет ≈ 0,09 / 0,10 / 0,105), кромки и люки чуть светлее / темнее
+    noTex: /^(Darkness|Darker_back|F35_up_text|f35_tail|F35_back|F135_engine)$/, /* F135_engine у автора — оперение (фото с «70 YEARS») */ colors: { '^F135_engine$': [0.088, 0.095, 0.1], '^Darkness$': [0.09, 0.10, 0.105], '^Darker_back$': [0.075, 0.082, 0.088], '^F35_up_text$': [0.105, 0.115, 0.12], '^f35_tail$': [0.085, 0.092, 0.097], '^F35_back$': [0.098, 0.108, 0.113] }, groups: (c) => (F35_GEAR(c) ? null : 'body'),
+    glassPart: (c) => c.mat === 5 && c.ctr[1] > 2.4 && c.ctr[2] < 0 && c.size[1] > 0.5 }, // F-35A — andertan (CC BY 4.0; прежняя модель shangus930 — рип из мода DCS): без шасси, створок и их тяг; фонарь — стекло
   // ── противник «Летки» (2026-10-11): нос в −Z, метры; без шасси и подставки
   e_mig21: { src: `${DL}/mig-21_chibi.glb`, scale: 0.07, rulesIn: 'game', tex: () => 512, opaque: /mig21/, // «чиби»: стоял на подставке с креном ~10° — выравниваем
     axes: (x, y, z) => { const c = Math.cos(-0.174), s = Math.sin(-0.174); return [-x * c - y * s, -x * s + y * c, -z]; },
     groups: (c) => (c.size[2] > 14 || c.mat !== 2 ? null : c.ctr[1] < 0.98 && Math.max(...c.size) < 4.9 ? null : LS(c)) }, // длина 14,5 м // подставка, шасси и бак
   e_mig31: { src: `${DL}/b168fbca1f6c4ad0ad4e45b7a22f52bc.glb`, scale: 9.95, nose: '+x', rulesIn: 'game', tex: () => 512, glassColor: [0.3, 0.36, 0.42, 0.4], /* у автора почти чёрное и прозрачное на 90 % */ groups: (c) => (c.min[1] < -1.25 && Math.max(...c.size) < 2.5 ? null : 'body') }, // без шасси
   e_su57: { src: `${DL}/sukhoi_su-57_felon.glb`, scale: 7.42, nose: '-x', rulesIn: 'game', tex: () => 512, glass: /^Darkness\.001$/, groups: () => 'body' },
-  e_tu22m3: { src: `${DL}/tupolev_tu-22m3.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 512, groups: () => 'body' }, // вблизи — без упрощения: тонкие крылья и закрылки от него рвутся (дальняя копия _lo — упрощённая)
+  e_tu22m3: { src: `${DL}/tu-22m3_backfire_c_3d_model.glb`, scale: 1.03 /* 41,3 → 42,5 м */, fwd: [-0.1236, 0.9923] /* модель повёрнута на ~7° вокруг вертикали: ось — по носовой и основным стойкам и оперению */, rulesIn: 'game', tex: () => 1024, centerX: true,
+    // крыло у автора — сложено на 65° (передняя кромка ≈ 58°); консоли (мат. 4) поворачиваем вокруг шарнира вперёд до 30° (Mark): шарнир — 4,3 м от оси, z = 14,94 (оси правил, до центровки); размах 29,7 м — как у настоящего при 30°
+    swing: { mat: 4, axisX: 0.89, pivot: [4.3, 14.94], ang: 28 * Math.PI / 180 },
+    groups: (c) => ([6, 9, 31].includes(c.mat) || (c.mat === 30 && c.ctr[1] < -0.3) ? null : 'body') }, // Ту-22М3 — Real Slim Shady (CC BY 4.0; прежняя модель Jeyhun1985): шасси выпущено у автора — стойки, колёса и створки долой
   // ── «Воздушное превосходство»: свой самолёт у каждой подвески (2026-10-12)
   // Су-24М — manilov.ap (CC BY; прежняя модель 42manako была из мода Battlefield 2): лежит повёрнутой в плоскости XZ (fwd — нос)
   e_su24: { src: `${DL}/su24.glb`, scale: 0.903, fwd: [-0.8024, -0.5968], rulesIn: 'game', tex: () => 512, centerX: true,
@@ -124,7 +138,7 @@ const CONFIG = {
     groups: (c) => { const dx = Math.abs(c.ctr[0] + 0.47); // ось — x −0,47
       return (c.max[1] < -2.3 && Math.max(...c.size) < 3) || (c.ctr[1] < -1.95 && c.ctr[2] > -11 && c.ctr[2] < -6.5 && dx < 1) /* носовая стойка и створки */ ||
         (c.ctr[1] < -1.6 && dx > 0.9 && dx < 6.2 && c.ctr[2] > 1 && c.ctr[2] < 9 && Math.max(...c.size) < 4) /* основные стойки и открытые створки */ ? null : 'body'; } },
-  e_a10: { src: `${DL}/pbr_a-10_thunderbolt.glb`, scale: 16.26 / 21.06, nose: '-z', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => (c.max[1] < 1.05 || (c.ctr[1] < 1.3 && Math.max(...c.size) < 1.4) ? null : 'body') }, // A-10 — Immersive3D: без колёс и стоек (гондолы шасси — как в полёте)
+  e_a10: { src: `${DL}/a-10_thunderbolt_ii.glb`, scale: 1.22, nose: '-z', rulesIn: 'game', tex: () => 1024, centerX: true, crease: 35, groups: (c) => (A10_STORE(c) ? (Deno.env.get('MARK') ? 'mark' : null) : 'body') }, // A-10 — AIRMAN Magazine (Alfredo Tirado), заготовка
   e_f15e: { src: `${DL}/mcdonnell_douglas_f-15e_strike_eagle.glb`, scale: 0.1044, axes: (x, y, z) => [-(0.9211 * x - 0.3894 * z), -0.1329 * x + 0.9399 * y - 0.3145 * z, -(0.366 * x + 0.3414 * y + 0.8657 * z)], /* у автора в полёте: курс 67°, тангаж 20° — главная ось (pca3.js); нос — в −Z */ rulesIn: 'game', tex: () => 256, target: 60000, simpErr: 0.02, centerX: true, // F-15E — Spark_Customs: без текстур — «ганшип грей»
     colors: { '#soot': [0.03, 0.028, 0.026], '': [0.1, 0.105, 0.115] } /* первое совпадение — его цвет: '' — последним */, perTri: true, // подвески автора (по треугольникам; правила до центровки: x −0,104, y −4,418, z +1,588): под крылом и под конформными баками
     groups: (c) => { const X = Math.abs(c.ctr[0] - 0.104), Y = c.ctr[1] - 4.418;
@@ -632,7 +646,7 @@ CONFIG.s400_lo = { ...CONFIG.s400, target: 45000, simpErr: 0.02, tex: () => 512 
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше
-for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 14000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256 };
+for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256 };
 // часть лежит вдоль оси пакета: H — петля (z, y), A — направление оси (z, y), across — полутолщина, along — от и до
 function axis(c, H, A, across, a0, a1) { const dz = c.ctr[2] - H[0], dy = c.ctr[1] - H[1], al = dz * A[0] + dy * A[1]; return Math.abs(dz * A[1] - dy * A[0]) < across && al > a0 && al < a1; }
 // оси модели → оси игры (x вправо, y вверх, нос в −Z)
@@ -827,6 +841,13 @@ async function prepare(name, views) {
         M.idx.push(remap[v]);
       }
     }
+  }
+  // swing — консоли крыла (материал cfg.swing.mat) поворачиваются вокруг вертикальных шарниров на ±pivot[0] от оси axisX, z = pivot[1], на угол ang: передняя кромка идёт вперёд (меньше стреловидность)
+  if (cfg.swing) { const { mat, axisX: a0, pivot: [pd, pz], ang } = cfg.swing, co = Math.cos(ang), si = Math.sin(ang);
+    for (const m of byMat.values()) if (m.mat === mat) {
+      for (let i = 0; i < m.pos.length; i += 3) { const sg = m.pos[i] > a0 ? 1 : -1, px = a0 + sg * pd, dx = m.pos[i] - px, dz = m.pos[i + 2] - pz;
+        m.pos[i] = px + dx * co + sg * dz * si; m.pos[i + 2] = pz - sg * dx * si + dz * co;
+        const nx = m.nor[i], nz = m.nor[i + 2]; m.nor[i] = nx * co + sg * nz * si; m.nor[i + 2] = -sg * nx * si + nz * co; } }
   }
   // renorm — нормали заново по треугольникам (у вывернутых граней SketchUp нормаль смотрит против обхода вершин — грань пересвечена)
   if (cfg.renorm) for (const m of byMat.values()) {
