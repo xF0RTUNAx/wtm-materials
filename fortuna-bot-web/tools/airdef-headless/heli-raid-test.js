@@ -10,7 +10,7 @@ const { setGround } = await import('../../games/drone/sim/core.js');
 
 const city = buildAutumn(1); setGround(city.groundH);
 let bad = 0;
-function run(name, side, era, sams = [], T = 360) {
+function run(name, side, era, sams = [], T = 360, plane = null) {
   let seed = 11; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const log = [], tgt = city.objects.find((o) => o.key === 'a_farm');
   let R = null; const st = { fired: 0, hits: 0, minAgl: 1e9, maxAgl: 0, down: 0, out: 0, near: 1e9 };
@@ -19,7 +19,8 @@ function run(name, side, era, sams = [], T = 360) {
     fx: { wpnEnd: (w, r) => { if (r.objects.length || r.units.length) st.hits++; }, samLaunch: (m) => log.push(`  пуск ${m.S.short}`), unitDestroyed: (u) => log.push(`  уничтожен ${u.S.short}`) } });
   for (const [k, dx, dz] of sams) S.addUnit(k, tgt.x + dx, tgt.z + dz);
   R = createRaid(S, city, rnd, { side, era, fx: { release: () => st.fired++, down: () => st.down++, out: () => st.out++ } });
-  const a = R.spawn('heli', tgt, 2.2, 0, 9000);
+  const a = plane ? R.spawn('bomber', tgt, 2.2, 0, 14000, { plane: plane[0], load: plane[1].map(([key, n]) => ({ key, n })) }) : R.spawn('heli', tgt, 2.2, 0, 9000);
+  if (plane) a.plane = a.model;
   const dt = 1 / 30;
   for (let t = 0; t < T; t += dt) {
     R.step(dt); S.step(dt);
@@ -45,4 +46,11 @@ if (r6.a.plane !== 'h_uh60' || !r6.st.fired) { bad++; console.log('!! UH-60 не
 const r7 = run('Запад IV, без ПВО (RAH-66: Hellfire и Hydra)', 'west', 4);
 if (r7.a.plane !== 'h_rah66' || !r7.st.fired) { bad++; console.log('!! RAH-66 не вылетел или не стрелял'); }
 run('Запад III против «Тунгуски» и «Иглы-С» у цели', 'west', 3, [['tunguska', 300, 200], ['iglas', -250, 150]]);
+// 2026-10-22: самолёт с НАР (Viggen, Су-33, Draken) — заход с пикированием и залпы (раньше ветка ракет ждала W.fov — у НАР его нет, не стрелял)
+for (const [nm, sd, era, pl] of [['Запад, Viggen: Hydra ×4', 'west', 2, ['e_viggen', [['hydra', 4]]]], ['Восток, Су-33: С-8 ×2', 'east', 3, ['e_su33', [['s8', 2]]]],
+  ['Запад, Draken: Mk 82 ×4 + Hydra ×2', 'west', 2, ['e_draken', [['mk82', 4], ['hydra', 2]]]]]) {
+  const r = run(nm, sd, era, [], 420, pl), bombs = pl[1][0][0] === 'mk82';
+  // Draken: сначала Mk 82 — парами (вторая без нового прогноза) с повторным заходом, потом залпы Hydra (≥ 5 событий); раньше одна бомба и круги над целью до сваливания
+  if (r.st.fired < (bombs ? 5 : 10) || !r.st.hits || r.a.dead) { bad++; console.log(`!! ${pl[0]}: ${bombs ? 'бомбы и потом НАР' : 'НАР'} не сброшены/не пущены, мимо или разбился`); }
+}
 console.log(bad ? `\nОШИБОК: ${bad}` : '\nошибок нет');

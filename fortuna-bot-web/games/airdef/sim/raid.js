@@ -115,6 +115,8 @@ export function createRaid(S, city, rnd, opts = {}) {
     if (!L && a.phase !== 'lase') a.phase = 'egress';
     if (a.dz === undefined && a.hp < a.hpMax * 0.4 && a.phase !== 'egress') a.phase = 'egress';
     let alt = a.alt, p = aim;
+    // страховка: 4 минуты отхода — «ушёл» (подбитый без тяги пятился перед хребтом и не долетал до края — волна висела бы; ревью 2026-10-22)
+    if (a.phase === 'egress' && (a.egT = (a.egT || 0) + dt) > 240) { a.out = true; if (fx.out) fx.out(a); return; }
     if (a.phase === 'egress') { const hh = Math.hypot(a.home.x, a.home.z) || 1; p = TMP2.set(a.home.x / hh * (CITY.HALF + 2000), 0, a.home.z / hh * (CITY.HALF + 2000)); u.cy = 1; /* уходит за край карты (точка прихода в обороне — внутри карты: долетал и кружил) */ if (Math.hypot(a.pos.x, a.pos.z) > CITY.HALF - 400) { a.out = true; if (fx.out) fx.out(a); return; } }
     TMP.set(p.x - a.pos.x, 0, p.z - a.pos.z); const d = TMP.length() || 1; u.yawTo = Math.atan2(-TMP.x, -TMP.z);
     if (a.evadeT > 0) { a.evadeT -= dt; alt = 12; u.cx = a.id % 2 ? 1 : -1; u.cy = 0.6; u.yawTo = undefined; }
@@ -143,7 +145,9 @@ export function createRaid(S, city, rnd, opts = {}) {
     }
     // высота: не ниже рельефа впереди (100–600 м по курсу), газ — к нужной
     let floor = groundOf(a.pos.x, a.pos.z); fwdOf(a, DIR); const hx = Math.hypot(DIR.x, DIR.z) || 1;
-    for (const s of [80, 200, 400, 650]) floor = Math.max(floor, groundOf(a.pos.x + DIR.x / hx * s, a.pos.z + DIR.z / hx * s) - s * 0.04);
+    for (const s of [80, 200, 400, 650, 1000]) floor = Math.max(floor, groundOf(a.pos.x + DIR.x / hx * s, a.pos.z + DIR.z / hx * s) - s * 0.04);
+    // склон впереди круче, чем набирает машина (Ми-8 на отходе через хребет «Туманной топи» — ~7 м/с при 57 м/с вперёд): ручку на себя, сбросить скорость
+    const need = floor + alt - a.pos.y; if (need > 15) u.cy = Math.min(u.cy, clamp(1 - (need - 15) / 30, -0.5, 1));
     u.col = clamp((floor + alt - a.pos.y) / 12 - a.vel.y * 0.12, -1, 1);
     const ev = heliStep(a, a.hm, u, dt, { groundY: groundOf(a.pos.x, a.pos.z), gear: 2 }); a.thr = a.col;
     if (ev && ev.touch !== undefined && touchVerdict(ev) === 'crash') { a.dead = true; a.laser = null; if (fx.down) fx.down(a); }
@@ -180,6 +184,21 @@ export function createRaid(S, city, rnd, opts = {}) {
     DIR.copy(TMP); DIR.y = clamp((want - a.pos.y) / 900, -0.3, 0.35); DIR.normalize();
     const [rx, ry] = steerTo(a, DIR, 2.2);
     flyStep(a, rx, ry, dt);
+  }
+  // цель впереди (>0) или позади (<0) по горизонту
+  function ahead(a, p) { fwdOf(a, TMP); return TMP.x * (p.x - a.pos.x) + TMP.z * (p.z - a.pos.z); }
+  // повторный заход после проскока (a.sOut: 1 — дальше по курсу, пока не отойдём на ext м; 2 — разворот на цель), до 230 м/с — на форсаже;
+  // у края карты разворот сразу. false — заход не идёт, летит ветка оружия
+  function reattack(a, aim, d, h, ext, dt) {
+    if (a.sOut === true) a.sOut = 1; // остался от захода ПРР
+    if (!a.sOut) return false;
+    fwdOf(a, TMP); TMP.y = 0; TMP.normalize(); TMP2.set(aim.x - a.pos.x, 0, aim.z - a.pos.z).normalize();
+    const off = Math.acos(clamp(TMP.dot(TMP2), -1, 1)); // угол носа от цели по горизонту
+    if (a.sOut === 1 && (d > ext && off > 1.5 || Math.max(Math.abs(a.pos.x), Math.abs(a.pos.z)) > CITY.HALF - 1500)) a.sOut = 2;
+    if (a.sOut === 2 && off < 0.4) { a.sOut = 0; return false; }
+    a.ab = a.speed < 230;
+    steerToward(a, a.sOut === 1 ? TMP2.copy(a.pos).addScaledVector(TMP, 2000) : aim, h, dt);
+    return true;
   }
   function evade(a, dt, threatPos) {
     // отворот: угроза на 3 или 9 часов, со снижением (до 150 м над крышами)
@@ -257,7 +276,7 @@ export function createRaid(S, city, rnd, opts = {}) {
       // страховка: на отходе тихоходный штурмовик (Су-25 с ракетами) под пусками ЗУР уворачивается без конца и не доходит до края — волна
       // висела (ui-test, сторона запад, эпоха II; было и на сайте): через 60 с отхода — «ушёл»
       if (a.phase === 'egress' && (a.egT = (a.egT || 0) + dt) > 60) { a.out = true; if (fx.out) fx.out(a); continue; }
-      if (a.evadeT > 0 && a.phase !== 'lase') { a.evadeT -= dt; evade(a, dt, (launch && launch.u.pos) || (mw[0] && mw[0].m.pos) || a.pos); a.ab = true; continue; }
+      if (a.evadeT > 0 && a.phase !== 'lase') { a.ser = false; a.evadeT -= dt; evade(a, dt, (launch && launch.u.pos) || (mw[0] && mw[0].m.pos) || a.pos); a.ab = true; continue; }
       const L = curLoad(a);
       if (!L && a.phase !== 'lase') a.phase = 'egress';
       if (a.phase === 'egress') {
@@ -278,6 +297,8 @@ export function createRaid(S, city, rnd, opts = {}) {
         continue;
       }
       const W = AG[L.key], aim = aimPointOf(a);
+      // время на оружие (a.tW): у следующего вида подвески (Draken: Mk 82, потом Hydra) — свой отсчёт, с зачётом минуты на подход
+      if (a.lk !== L.key) { a.tW = a.lk ? a.t - 60 : 0; a.lk = L.key; }
       if (W.kind === 'arm') {
         // ПРР: ищем излучающую РЛС впереди в поле ГСН; если нет — к центру ПВО
         let best = null, ba = 1e9; fwdOf(a, DIR);
@@ -293,7 +314,7 @@ export function createRaid(S, city, rnd, opts = {}) {
           const [rx, ry] = steerTo(a, DIR, 2); flyStep(a, rx, ry, dt);
           if (hd < 2500 || a.pos.y < city.topAt(a.pos.x, a.pos.z) + 600) a.sOut = true;
         } else steerToward(a, em, a.cruise, dt);
-        if (a.t > 200) a.phase = 'egress';
+        if (a.t - a.tW > 200) a.phase = 'egress';
         continue;
       }
       a.relT -= dt;
@@ -305,20 +326,51 @@ export function createRaid(S, city, rnd, opts = {}) {
           L.n--; setLoad(a); S.release(a, L.key, { aim }); a.relT = W.kind === 'decoy' ? 1.2 : 2.5; if (fx.release) fx.release(a, L.key);
         }
         steerToward(a, aim, a.cruise, dt);
-        if (a.t > 220) a.phase = 'egress';
+        if (a.t - a.tW > 220) a.phase = 'egress';
       } else if (W.kind === 'bomb' || W.kind === 'lgb' || W.kind === 'tvb' || W.kind === 'gps') {
         // бомба: прогноз падения; сброс, когда точка падения у цели (у управляемых — когда достанет)
-        const guided = W.kind !== 'bomb';
-        const tImp = a.relT <= 0 && d < 16000 ? predictBomb(city, W, a.pos, a.vel, guided ? aim : null, TMP2) : -1;
-        const miss = tImp > 0 ? TMP2.distanceTo(aim) : 1e9;
-        if (miss < (guided ? 14 : Math.max(18, W.blast * 0.5))) {
-          L.n--; setLoad(a); S.release(a, L.key, guided ? { aim } : {}); a.relT = guided ? 1.2 : 0.25; if (fx.release) fx.release(a, L.key);
+        // серия по две: вторая — через 0,25 с после первой без нового прогноза (раньше ждала прогноза, а он за 0,25 с уходил за допуск —
+        // вторая не падала, самолёт кружил над целью и терял скорость до сваливания); проскочили цель — повторный заход (reattack)
+        const guided = W.kind !== 'bomb', ser = a.ser && a.relT <= 0;
+        const tImp = a.relT <= 0 && d < 16000 && !ser ? predictBomb(city, W, a.pos, a.vel, guided ? aim : null, TMP2) : -1;
+        const miss = tImp > 0 ? TMP2.distanceTo(aim) : 1e9, tol = guided ? 14 : Math.max(18, W.blast * 0.5);
+        // свободная бомба: точка падения за кадр уходит на ~25 м (больше допуска) — сброс и по переходу точки падения через цель
+        // (продольная ошибка al — из «недолёта» в «перелёт»), если вбок не дальше допуска (ревью 2026-10-22: Draken проходил мимо без сброса)
+        let al = null, cr = 1e9;
+        if (!guided && tImp > 0) { const vh = Math.hypot(a.vel.x, a.vel.z) || 1, ex = TMP2.x - aim.x, ez = TMP2.z - aim.z; al = (ex * a.vel.x + ez * a.vel.z) / vh; cr = Math.abs(ex * a.vel.z - ez * a.vel.x) / vh; }
+        const cross = al !== null && a.pa !== null && a.pa !== undefined && a.pa < 0 && al >= 0 && cr < tol; a.pa = al;
+        if (ser || miss < tol || cross) {
+          a.ser = false; L.n--; setLoad(a); S.release(a, L.key, guided ? { aim } : {}); a.relT = guided ? 1.2 : 0.25; if (fx.release) fx.release(a, L.key);
           if (W.kind === 'lgb') { a.lockPt = aim.clone(); a.phase = 'lase'; }
-          else if (!guided && L.n % 2 === 1 && L.n > 0) a.relT = 0.25; // серия по две
+          else if (!guided && !ser && L.n > 0) a.ser = true;
         }
-        steerToward(a, aim, a.cruise, dt);
-        if (d < 600 && tImp < 0) { a.relT = 0; }
-        if (a.t > 220) a.phase = 'egress';
+        if (!a.sOut && d < 3000 && ahead(a, aim) < 0) a.sOut = 1;
+        if (!reattack(a, aim, d, a.cruise, guided ? 6000 : 10000, dt)) steerToward(a, aim, a.cruise, dt);
+        if (a.t - a.tW > 220) a.phase = 'egress';
+      } else if (W.kind === 'rocket') {
+        // НАР с самолёта: подход на ~900 м над целью, пологое пикирование (до 17°) носом на цель с поправкой на снижение ракет
+        // (a.rk — как у вертолёта, копится только когда нос уже на линии), залп — когда точка падения у цели; ниже 350 м над землёй
+        // или ближе 1 км — вывод на форсаже и новый заход (reattack: проскок над целью на 4,5 км, разворот)
+        const agl = a.pos.y - city.topAt(a.pos.x, a.pos.z);
+        if (reattack(a, aim, d, aim.y + 1000, 4500, dt)) { /* вывод */ }
+        else if (d < 5200) {
+          const el = clamp(Math.atan2(aim.y - a.pos.y, d) + (a.rk || 0), -0.3, 0.1);
+          DIR.set(aim.x - a.pos.x, 0, aim.z - a.pos.z).normalize().multiplyScalar(Math.cos(el)).setY(Math.sin(el));
+          const [rx, ry] = steerTo(a, DIR, 2.2); flyStep(a, rx, ry, dt);
+          TMP.copy(a.vel).normalize(); const on = angleBetween(TMP, DIR) < 4 * D2R;
+          const t = on ? predictRocket(city, W, TMP2.copy(a.pos).add(PR.set(0, -2.5, 0)), TMP, a.speed, PR) : 0;
+          if (t > 0) {
+            const err = Math.hypot(PR.x - aim.x, PR.z - aim.z) * (Math.hypot(PR.x - a.pos.x, PR.z - a.pos.z) < d ? 1 : -1);
+            a.rk = clamp((a.rk || 0) + err * 0.00002 * dt * 60, -0.12, 0.12);
+            if (Math.abs(err) < Math.max(35, W.blast * 3) && a.relT <= 0 && city.los(a.pos.x, a.pos.y - 2, a.pos.z, aim.x, aim.y, aim.z, 3)) {
+              for (let k = 0; k < W.salvo; k++) S.release(a, L.key, {});
+              if ((L.rs = (L.rs ?? Math.ceil(W.load / W.salvo)) - 1) <= 0) { L.n--; L.rs = undefined; setLoad(a); }
+              a.relT = 0.5 + (1 - a.skill) * 0.5; if (fx.release) fx.release(a, L.key);
+            }
+          } else if (t < 0) a.rk = clamp((a.rk || 0) - 0.003 * dt * 60, -0.12, 0.12);
+          if (agl < 350 || d < 1000) { a.sOut = 1; a.rk = 0; }
+        } else { a.ab = a.speed < 200; steerToward(a, aim, aim.y + 900, dt); }
+        if (a.t - a.tW > 260) a.phase = 'egress';
       } else {
         // ракета: ТВ — пуск по захваченной точке в зоне; лазерная — пуск и подсвет
         if (d < W.rmax * 0.8 && angleBetween(fwdOf(a, DIR), TMP.copy(aim).sub(a.pos)) < W.fov * 0.7 * D2R && a.relT <= 0) {
@@ -326,7 +378,7 @@ export function createRaid(S, city, rnd, opts = {}) {
           if (W.seeker === 'laser') { a.lockPt = aim.clone(); a.phase = 'lase'; }
         }
         steerToward(a, aim, Math.min(a.cruise, 2500), dt);
-        if (a.t > 220) a.phase = 'egress';
+        if (a.t - a.tW > 220) a.phase = 'egress';
       }
       // попадание в землю или дом — гибель
       if (a.pos.y < city.topAt(a.pos.x, a.pos.z) + 3) { a.dead = true; a.laser = null; if (fx.down) fx.down(a); }

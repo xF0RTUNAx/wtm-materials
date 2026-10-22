@@ -245,7 +245,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (p.craft && !p.craft.dead) { p.lastSt = clock(); sendSpawn(r, p, true); return; } // самолёт ещё у игрока (вернулся быстро) — только напомнить где он
     const b = p.plane; if (!b || b.dead || b.out || !p.ai || b.fromHuman !== p.id) return;
     p.plane = null; p.ai = false; b.out = true;
-    humanCraft(r, p, b.plane, (b.load || []).concat(b.narLoad || []).map((l) => ({ key: l.key, n: l.n })), b.pos.x, b.pos.y, b.pos.z, b.yaw, Math.max(150, b.speed), b.hp);
+    humanCraft(r, p, b.plane, (b.load || []).map((l) => ({ key: l.key, n: l.n, rs: l.rs })) /* rs — начатый блок НАР (ИИ-двойник пускал залпы) */, b.pos.x, b.pos.y, b.pos.z, b.yaw, Math.max(150, b.speed), b.hp);
     sendSpawn(r, p, true);
     J(r, 'to_human', { who: p.name });
   }
@@ -256,7 +256,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     const tgt = r.targets[0];
     const b = r.raid.spawn('bomber', tgt, 0, 0);
     b.pos.copy(a.pos); b.yaw = a.yaw; b.pitch = a.pitch; b.speed = a.speed; fwdOf(b, b.vel).multiplyScalar(b.speed); b.hp = a.hp; b.hpMax = O.MAX_HP;
-    b.load = (p.load || []).filter((l) => l.n > 0 && !isRocket(l.key)); b.narLoad = (p.load || []).filter((l) => l.n > 0 && isRocket(l.key)); b.owner = p.id; b.plane = a.plane; b.fromHuman = p.id;
+    b.load = (p.load || []).filter((l) => l.n > 0).map((l) => ({ ...l })); b.owner = p.id; b.plane = a.plane; b.fromHuman = p.id;
     p.plane = b; p.ai = true; announce(r, b);
     bcast(r, { t: 'ev', e: [['ai', p.id, b.id]] });
     J(r, 'to_ai', { who: p.name, why });
@@ -296,21 +296,19 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
 
   // ═════════════ Боты: расстановка и выбор связки ═════════════
   const afford = (r, p) => LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && O.netOk(L) && O.loadoutCostFor(L, r.lead) <= p.budget); // вертолёты — пока не в онлайне; НАР — с 2026-10-22 (залп одним сообщением 'rel' с n)
-  // НАР пускает только человек: самолётный ИИ сервера (sim/raid.js) ракет не пускает (у Hydra / С-8 нет fov) и из-за них не берётся за остальное оружие связки —
-  // поэтому боты не берут такие связки, а ИИ-двойнику человека (toAI) НАР убираются из подвески и возвращаются, когда управление вернётся к человеку
-  const isRocket = (k) => !!(AG[k] && AG[k].kind === 'rocket'), hasNar = (L) => L.items.some(([k]) => isRocket(k));
+  // НАР: с 2026-10-22 самолётный ИИ (sim/raid.js) пускает их залпами с пикирования — боты берут такие связки, ИИ-двойник человека — с ними
   // подвески остальных лётчиков команды (для лимита охотников)
   const othersL = (r, p) => team(r, 'air').filter((q) => q !== p).map((q) => (q.choice !== null && q.choice !== undefined ? LOADOUTS[r.era][q.choice] : null));
   function autoChoice(r, p) {
     // в пределах лимита охотников; бот берёт недостающую роль: нет штурмовика — штурмовку, нет охотника — охоту (если лимит позволяет)
     const others = othersL(r, p), nAir = team(r, 'air').length, ok = ([L]) => !O.roleDeny(L, others, nAir);
-    let list = afford(r, p).filter(ok).filter(([L]) => p.bot || !realDeny(r.mode, p, loadoutIds(L))).filter(([L]) => !p.bot || !hasNar(L)).sort((a, b) => O.loadoutCostFor(a[0], r.lead) - O.loadoutCostFor(b[0], r.lead));
+    let list = afford(r, p).filter(ok).filter(([L]) => p.bot || !realDeny(r.mode, p, loadoutIds(L))).sort((a, b) => O.loadoutCostFor(a[0], r.lead) - O.loadoutCostFor(b[0], r.lead));
     if (p.bot && list.length) {
       const has = (role) => others.some((x) => x && loadoutRole(x) === role), want = !has('strike') ? 'strike' : !has('sead') ? 'sead' : null;
       const w = want && list.filter(([L]) => loadoutRole(L) === want); if (w && w.length) list = w;
     }
     const pick = p.bot && list.length ? list[Math.floor(Math.random() * list.length)] : list[0];
-    const all = LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && O.netOk(L)).filter(([L]) => !p.bot || !hasNar(L)).filter(ok).sort((a, b) => O.loadoutCost(a[0]) - O.loadoutCost(b[0]));
+    const all = LOADOUTS[r.era].map((L, i) => [L, i]).filter(([L]) => L.side === r.sideAir && O.netOk(L)).filter(ok).sort((a, b) => O.loadoutCost(a[0]) - O.loadoutCost(b[0]));
     const [L, i] = pick || all[0] || LOADOUTS[r.era].map((q, j) => [q, j]).find(([q]) => q.side === r.sideAir && O.netOk(q));
     p.choice = i; p.paid = O.loadoutCostFor(L, r.lead); p.budget = Math.max(0, p.budget - p.paid);
   }

@@ -59,7 +59,8 @@ try {
   check(`блоков ${n0} × ${per} залпов × ${W.salvo} = ${n0 * per * W.salvo} ракет (как у клиента, air.js rocketsOf), пущено ${wr2}`, wr2 === n0 * per * W.salvo);
   check('пустой блок — отказ', deny >= 1);
   A.send({ t: 'leave' }); P.send({ t: 'leave' }); await sleep(400);
-  // боты авиации не берут связки с НАР: самолётный ИИ сервера (sim/raid.js) ракет не пускает; 6 комнат 3 × 3 — по два бота в воздушной команде
+  // боты авиации выбирают и связки с НАР (с 2026-10-22 самолётный ИИ sim/raid.js пускает их залпами — стенд tools/airdef-headless/heli-raid-test.js);
+  // 6 комнат 3 × 3 — по два бота в воздушной команде: выбор проходит, комнаты не падают
   let botsSeen = 0, botsNar = 0;
   for (let k = 0; k < 6; k++) {
     A.msgs.length = 0;
@@ -70,7 +71,7 @@ try {
     if (pl) for (const p of pl.players.filter((q) => q.bot && q.team === 'air' && q.choice !== null && q.choice !== undefined)) { botsSeen++; const L = LOADOUTS[2][p.choice]; if (L && L.items.some(([key]) => AG[key] && AG[key].kind === 'rocket')) botsNar++; }
     A.send({ t: 'leave' }); await sleep(400);
   }
-  check(`боты авиации не берут связки с НАР (проверено выборов: ${botsSeen}, с НАР: ${botsNar})`, botsSeen >= 4 && botsNar === 0);
+  check(`боты авиации выбирают связки, НАР не исключены (проверено выборов: ${botsSeen}, с НАР: ${botsNar})`, botsSeen >= 4);
 } catch (e) { check('без исключений: ' + (e && e.stack || e), false); }
 srv.kill();
 const bad = results.filter(([, ok]) => !ok);
