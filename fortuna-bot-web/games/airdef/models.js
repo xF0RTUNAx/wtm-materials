@@ -242,7 +242,7 @@ const META = {
   strela10: { units: ['strela10'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Стрела-10» на МТ-ЛБ — ScurvyWoof
   avenger: { units: ['avenger'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.1 } }, // AN/TWQ-1 Avenger — KillCaptureDestroy
   chaparral: { units: ['chaparral'], stations: [], matte: true, camo: { scheme: 'nato', size: 1.2 } }, // MIM-72 Chaparral — TankLord (Thingiverse)
-  gepard: { units: ['gepard'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
+  gepard: { units: ['gepard'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4, tex: true, detail: true } }, // Flakpanzer Gepard — собственная модель (tools/airdef-models/own/gepard): камуфляж — по зелёной краске текстуры
   roland: { units: ['roland'], matte: true, stations: [], camo: { scheme: 'nato', size: 1.4 } },
   tunguska: { units: ['tunguska'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5, tex: true } },
   skyguard: { units: ['skyguard'], stations: [] },
@@ -283,6 +283,8 @@ const GLB_V = Object.fromEntries(['w_gbu10', 'w_ecm', 'gepard', 'gepard_lo', 'ro
 const GLB_V_OWN = {
   w_kh29t: '20261024b',
   w_kh31p: '20261024c',
+  gepard: '20261024d',
+  gepard_lo: '20261024d',
 };
 Object.assign(GLB_V, GLB_V_OWN);
 // разбор GLB: меши (позиции, нормали, UV, индексы), материалы, картинки текстур
@@ -293,7 +295,7 @@ function parseGlb(buf) {
   const acc = (i) => { const a = json.accessors[i], bv = json.bufferViews[a.bufferView], C = T[a.componentType], n = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[a.type]; return new C(slice(bv, a.byteOffset || 0, a.count * n * C.BYTES_PER_ELEMENT)); };
   const meshes = json.meshes.map((m) => { const p = m.primitives[0], at = p.attributes; return { name: m.name, mat: json.materials[p.material], pos: acc(at.POSITION), nor: acc(at.NORMAL), uv: at.TEXCOORD_0 !== undefined ? acc(at.TEXCOORD_0) : null, ao: at.COLOR_0 !== undefined ? acc(at.COLOR_0) : null, idx: acc(p.indices), hub: m.extras && m.extras.hub }; }); // hub — центр втулки винта вертолёта (prepare.js); ao — затенение в стыках (tools/airdef-models/ao.js)
   const images = (json.images || []).map((im) => new Blob([slice(json.bufferViews[im.bufferView])], { type: im.mimeType }));
-  return { meshes, images, textures: json.textures || [] };
+  return { meshes, images, textures: json.textures || [], nrm: new Set((json.materials || []).filter((m) => m.normalTexture).map((m) => m.normalTexture.index)) }; // nrm — номера карт нормалей (данные, не цвет)
 }
 // камуфляж техники без текстур (краска «#camo» из prepare.js): узор — в шейдере по координатам точки модели: крупные пятна
 // с ровными краями (шум со смещением области), не по треугольникам сетки. META.camo: { scheme, size — размер пятна, м }.
@@ -312,18 +314,38 @@ float camoV(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * 
 float camoF(vec3 p) { p += 0.45 * vec3(camoV(p * 0.7 + 3.1), camoV(p * 0.7 + 5.7), camoV(p * 0.7 + 9.2)); return camoV(p) * 0.7 + camoV(p * 2.3 + 7.3) * 0.3; }
 vec3 camoCol(vec3 P) { vec3 p = P / uCS; float a = camoF(p), b = camoF(p * 3.0 + 21.7); // чёрные — мелкие и редкие (крупные выглядели провалами)
   return mix(mix(uC1, uC2, smoothstep(uK2 - 0.02, uK2 + 0.02, a)), uC3, smoothstep(uK3 - 0.02, uK3 + 0.02, b)); }`;
-function camoMat(mat, cm) {
+// зернистость краски (META.camo.detail): общая плиточная картинка 128×128 из значения-шума (строится кодом, ничего не качается), в шейдере — по координатам точки
+// модели с проекцией по главной оси нормали (плитка 0,33 м): мелкое зерно краски и металла на любом расстоянии, не завися от разрешения атласа текстуры
+let DETAIL_TEX = null;
+function detailTex() {
+  if (DETAIL_TEX) return DETAIL_TEX;
+  const N = 128, g = (x, y, p, s) => { x = ((x % p) + p) % p; y = ((y % p) + p) % p; let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263) + Math.imul(s, 1274126177)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967295; };
+  const vn = (u, v, p, s) => { const x0 = Math.floor(u), y0 = Math.floor(v), fx = u - x0, fy = v - y0, sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    return (g(x0, y0, p, s) * (1 - sx) + g(x0 + 1, y0, p, s) * sx) * (1 - sy) + (g(x0, y0 + 1, p, s) * (1 - sx) + g(x0 + 1, y0 + 1, p, s) * sx) * sy; };
+  const d = new Uint8Array(N * N * 4);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) { // периоды 8 / 16 / 32 клетки на 128 точек — плитка бесшовная
+    const v = vn(x / 16, y / 16, 8, 1) * 0.4 + vn(x / 8, y / 8, 16, 2) * 0.3 + vn(x / 4, y / 4, 32, 3) * 0.2 + g(x, y, N, 4) * 0.1, c = Math.max(0, Math.min(255, Math.round((0.5 + (v - 0.5) * 1.8) * 255)));
+    d[(y * N + x) * 4] = d[(y * N + x) * 4 + 1] = d[(y * N + x) * 4 + 2] = c; d[(y * N + x) * 4 + 3] = 255;
+  }
+  const t = new THREE.DataTexture(d, N, N, THREE.RGBAFormat); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true; t.anisotropy = 4; t.needsUpdate = true;
+  return (DETAIL_TEX = t);
+}
+function camoMat(mat, cm, detail) {
   const S = CAMO[cm.scheme] || CAMO.nato; if (!cm.tex) mat.color.setRGB(1, 1, 1); mat.userData.camo = true;
+  const det = !!(cm.detail && detail); // ?det=0 — без зернистости (сравнение)
   mat.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, { uC1: { value: new THREE.Vector3(...S.c[0]) }, uC2: { value: new THREE.Vector3(...S.c[1]) }, uC3: { value: new THREE.Vector3(...S.c[2]) },
       uK2: { value: S.k2 }, uK3: { value: cm.tex ? 9 : S.k3 }, uCS: { value: cm.size || 1.4 } });
-    sh.vertexShader = 'varying vec3 vCamoP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCamoP = position;');
+    if (det) sh.uniforms.uDet = { value: detailTex() };
+    sh.vertexShader = 'varying vec3 vCamoP;' + (det ? ' varying vec3 vCamoN;' : '') + '\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvCamoP = position;' + (det ? ' vCamoN = normal;' : ''));
     // у текстурных — без чёрных пятен (на грязи текстуры выглядели гарью), только по зелёной краске текстуры (маска: зелёный заметно больше красного и синего), с её светотенью и грязью
     const tx = 'float cmL = dot(diffuseColor.rgb, vec3(0.3, 0.59, 0.11)), cmM = smoothstep(0.004, 0.02, diffuseColor.g - max(diffuseColor.r, diffuseColor.b));\n' +
       'diffuseColor.rgb = mix(diffuseColor.rgb, camoCol(vCamoP) * clamp(cmL / dot(uC1, vec3(0.3, 0.59, 0.11)), 0.8, 1.4), cmM);\n';
-    sh.fragmentShader = CAMO_GLSL + '\n' + sh.fragmentShader.replace('#include <color_fragment>', (cm.tex ? tx : 'diffuseColor.rgb *= camoCol(vCamoP);\n') + '#include <color_fragment>');
+    const dt = det ? 'vec3 dA = abs(vCamoN); vec2 dUV = dA.x > max(dA.y, dA.z) ? vCamoP.zy : (dA.y > dA.z ? vCamoP.xz : vCamoP.xy);\n' +
+      'diffuseColor.rgb *= 0.82 + 0.36 * texture2D(uDet, dUV * 3.0).r;\n' : '';
+    sh.fragmentShader = CAMO_GLSL + (det ? '\nvarying vec3 vCamoN; uniform sampler2D uDet;' : '') + '\n' + sh.fragmentShader.replace('#include <color_fragment>', (cm.tex ? tx : 'diffuseColor.rgb *= camoCol(vCamoP);\n') + dt + '#include <color_fragment>');
   };
-  mat.customProgramCacheKey = () => (cm.tex ? 'camoT' : 'camo');
+  mat.customProgramCacheKey = () => (cm.tex ? 'camoT' : 'camo') + (det ? 'D' : '');
 }
 // оружие (Mark 2026-10-22: свои модели выглядели глянцевым пластиком): краска «в эксплуатации» — шейдером по координатам точки модели
 // (м): пятна разного масштаба, потёки вдоль корпуса (ось z модели), блик по краске неровный; глянец — как у полуматовой эмали
@@ -351,18 +373,25 @@ const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x2222
 const TOUCH = typeof matchMedia === 'function' && typeof location !== 'undefined' && (/[?&]touch=1/.test(location.search) || matchMedia('(pointer: coarse)').matches);
 async function load(name, base) {
   const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
-  const { meshes, images, textures } = parseGlb(await r.arrayBuffer());
-  const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0;
-  const tex = await Promise.all(textures.map(async (t) => {
+  const { meshes, images, textures, nrm } = parseGlb(await r.arrayBuffer());
+  const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = META[name] || META[name.replace(/_lo$/, '')] || {};
+  const tex = await Promise.all(textures.map(async (t, ti) => {
+    const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
     if (typeof createImageBitmap !== 'function') return null;
     let bmp; try { bmp = await createImageBitmap(images[t.source]); } catch (_) { return null; } // битая картинка — модель без этой текстуры
-    if (tmax && Math.max(bmp.width, bmp.height) > tmax) { // уменьшить (с сохранением пропорций); не вышло — оставить как есть
-      const k = tmax / Math.max(bmp.width, bmp.height);
-      try { const sm = await createImageBitmap(bmp, { resizeWidth: Math.max(1, Math.round(bmp.width * k)), resizeHeight: Math.max(1, Math.round(bmp.height * k)), resizeQuality: 'high' }); bmp.close(); bmp = sm; } catch (_) { /* браузер без resize */ }
+    if (tm && Math.max(bmp.width, bmp.height) > tm) { // уменьшить (с сохранением пропорций); не вышло — оставить как есть
+      const k = tm / Math.max(bmp.width, bmp.height);
+      const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+      try { const sm = await createImageBitmap(bmp, { resizeWidth: w, resizeHeight: h, resizeQuality: 'high' }); if (sm.width <= tmax && sm.height <= tmax) { bmp.close(); bmp = sm; } else sm.close(); } catch (_) { /* браузер без resize */ }
+      if (Math.max(bmp.width, bmp.height) > tmax && typeof document !== 'undefined') try { // resize не поддержан (бывает в Safari: молча отдаёт прежний размер) — через canvas
+        const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(bmp, 0, 0, w, h); const sm = await createImageBitmap(cv); bmp.close(); bmp = sm;
+      } catch (_) { /* оставить как есть */ }
     }
     // UV glTF — без переворота
-    const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
-    if (TOUCH) x.onUpdate = () => { if (x.image && x.image.close) x.image.close(); }; // на видеокарте — копия в памяти больше не нужна (рендерер в игре один)
+    const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = isN ? THREE.LinearEncoding : THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
+    // на видеокарте — копия в памяти больше не нужна (рендерер в игре один; потеря контекста WebGL — перезагрузка страницы, main.js);
+    // у зданий картинку читает дальняя «коробка» (city-render modelColor) — не закрываем
+    if (TOUCH && !MM0.bld) x.onUpdate = () => { if (x.image && x.image.close) x.image.close(); };
     return x;
   }));
   // меш «часть|материал»: у комплексов — body / turret / cradle, у остальных всё в body
@@ -380,15 +409,16 @@ async function load(name, base) {
     g.setIndex(new THREE.BufferAttribute(m.idx, 1)); g.computeBoundingSphere();
     const pbr = m.mat.pbrMetallicRoughness, f = pbr.baseColorFactor || [1, 1, 1, 1], glass = m.mat.alphaMode === 'BLEND';
     const map = pbr.baseColorTexture ? tex[pbr.baseColorTexture.index] : null;
+    const nmap = !glass && m.mat.normalTexture && !/[?&]nrm=0/.test(typeof location !== 'undefined' ? location.search : '') ? tex[m.mat.normalTexture.index] : null; // ?nrm=0 — без карты нормалей (сравнение)
     const mat = glass
       ? new THREE.MeshPhongMaterial({ color: new THREE.Color(f[0], f[1], f[2]).lerp(new THREE.Color(0.2, 0.26, 0.32), f[0] + f[1] + f[2] > 1.8 ? 0.8 : 0.4), /* белое «стекло» авторов — в тонированное, своё цветное — почти как есть */ transparent: true, opacity: Math.max(0.5, f[3]), specular: 0xffffff, shininess: 120, side: THREE.DoubleSide, depthWrite: false }) // стекло заметно: не меньше 0,5
-      : new THREE.MeshPhongMaterial({ map, color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
+      : new THREE.MeshPhongMaterial({ map, ...(nmap ? { normalMap: nmap } : {}), color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
         ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '') ? { vertexColors: true } : {}) }); // ?ao=0 — без затенения (сравнение)
     const rc = MM.recolor && MM.recolor[sub(m.name)];
     if (MM.bright && !glass) mat.color.multiplyScalar(MM.bright);
     if (rc != null) { mat.color.setHex(rc); mat.map = null; }
     else if (!map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» — в нейтральный тёмный
-    if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo); // узор — шейдером (tex — по краске текстуры)
+    if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo, !/_lo$/.test(name) && !/[?&]det=0/.test(typeof location !== 'undefined' ? location.search : '')); // узор — шейдером (tex — по краске текстуры; зернистость — только у ближней модели)
     else if ((MM.weapon || MM.samMissile || /^w_nar_/.test(name)) && !glass) { wearMat(mat); if (!matte) { mat.specular.setHex(0x262626); mat.shininess = 24; } } // оружие — краска с потёртостями, полуматовая
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
   }

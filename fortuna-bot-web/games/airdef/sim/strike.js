@@ -160,7 +160,7 @@ export function createStrike(ctx) {
     if (!t) { u.track = null; return; }
     const sees = S.radar ? (u.emit && radarSees(u, t)) || ((S.type === 'saclos' || S.optTrack) && eyesSee(u, t)) : eyesSee(u, t);
     if (sees) {
-      u.lostT = 0; u.seeT += dt;
+      u.lostT = 0; u.seeT += dt; u.seeTgt = t; // кого видит (интерфейс: «вас видит» — только про игрока)
       // вертолёт у земли (ниже 60 м) берут на 3 с дольше (Mark 2026-10-22): выскочил из-за складки — успевает пустить ПТУР и уйти вниз
       // (пока не видно, seeT тает вдвое быстрее — подскок снова начинает отсчёт почти с нуля)
       const acq = (S.radar ? S.radar.acq : 2) * (M.reactK || 1) + (t.heli && aglOf(t) < 60 ? 3 : 0);
@@ -265,7 +265,7 @@ export function createStrike(ctx) {
     if (!t) { if (u.track) { u.track = null; fx.radarState(u); } u.seeT = 0; return; }
     const sees = (S.radar && u.emit && radarSees(u, t)) || ((S.type === 'saclos' || S.optTrack) && eyesSee(u, t));
     if (sees) {
-      u.lostT = 0; u.seeT += dt;
+      u.lostT = 0; u.seeT += dt; u.seeTgt = t; // кого видит (интерфейс: «вас видит» — только про игрока)
       if (!u.track && u.seeT > (u.relock === t ? 0.8 : (S.radar ? S.radar.acq : 2) * (M.reactK || 1))) { u.track = t; u.relock = null; fx.radarState(u); } // перезахват той же цели после диполей — быстрее
       if (u.track && u.emit) { net.alertT = 30; net.last.copy(t.pos); }
     } else {

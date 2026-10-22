@@ -85,15 +85,18 @@ export function heliStep(a, hm, u, dt, env = {}) {
     const wantF = clamp(u.cy, -0.35, 1) * hm.vmax * (climb > 0.6 * hm.vc ? clamp(0.6 * hm.vc / climb, 0.3, 1) : 1), wantR = clamp(u.cx, -1, 1) * 18;
     const ff = (v) => Math.sign(v) * Math.atan(hm.kd * v * v / G);
     let pd = -clamp(ff(wantF) + clamp((wantF - vf) / 14, -1, 1) * hm.tilt, -hm.tilt * 1.15, hm.tilt * 1.15);
+    const pdSpd = pd; // наклон для заданной скорости — у земли не ограничивается (ограничение резало скорость ниже 30 м на 25–40 %, ревью 2026-10-22)
     // взгляд вниз круче ~7° (наведение камерой) — нос за ним, до 1,3 наибольшего наклона: прицеливание НАР и ПТУР по земле
     // (вертолёт при этом разгоняется — как на пологом пикировании)
     if (u.pitchTo !== undefined && u.pitchTo < -0.12) pd = Math.min(pd, Math.max(u.pitchTo, -hm.tilt * 1.3));
     if (u.pitchHold && u.pitchTo !== undefined) pd = clamp(u.pitchTo, -hm.tilt * 1.3, hm.tilt); // ИИ: нос точно по прицелу (залп НАР)
-    // у земли нос вниз — не круче, чем успеваем выйти (2026-10-22: пикирование на цель с носом −35° на 4 м — тяги на выход не хватало)
-    if (agl < 60) pd = Math.max(pd, -hm.tilt * 1.3 * clamp(agl / 60, 0.35, 1));
+    // у земли нос вниз за прицелом — не круче, чем успеваем выйти (2026-10-22: пикирование на цель носом −35° на 4 м — тяги на выход не хватало)
+    if (agl < 60 && pd < pdSpd) pd = Math.max(pd, Math.min(pdSpd, -hm.tilt * 1.3 * clamp(agl / 60, 0.35, 1)));
     const bank = smooth(15, 35, vf);
-    // у земли (ниже 30 м) крен меньше: в вираже 45° вертикальной тяги не хватало — проседал на 1,5–3,5 м/с и касался земли
-    const rd = ((1 - bank) * -clamp(ff(wantR) + clamp((wantR - vr) / 9, -1, 1) * hm.tilt, -hm.tilt, hm.tilt) + bank * -clamp(u.cx, -1, 1) * 0.8) * clamp(agl / 30, 0.4, 1);
+    // у земли (ниже 40 м) крен — не больше, чем держит тяга (вертикальной составляющей хватает на вес с запасом 15 %): в вираже 45°
+    // проседал на 1,5–3,5 м/с и касался земли; выше и при запасе тяги — вираж как был
+    const bmax = agl < 40 ? Math.acos(Math.min(1, G * 1.15 / Math.max(tA * Math.cos(a.pitch), G * 1.15))) : 9; // и наклон носа на скорости съедает вертикальную тягу
+    const rd = clamp((1 - bank) * -clamp(ff(wantR) + clamp((wantR - vr) / 9, -1, 1) * hm.tilt, -hm.tilt, hm.tilt) + bank * -clamp(u.cx, -1, 1) * 0.8, -bmax, bmax);
     a.wp = clamp((pd - a.pitch) * 3, -hm.pitchR, hm.pitchR) * ctrl;
     a.wr = clamp((rd - a.roll) * 3.5, -hm.rollR, hm.rollR) * ctrl;
   } else {

@@ -186,6 +186,8 @@ setGround(city.groundH);
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
 ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рендерер — какие форматы есть у устройства
+// телефон: текстуры моделей после загрузки на видеокарту освобождаются (models.js) — восстановить потерянный контекст WebGL нечем, только перезагрузкой
+canvas.addEventListener('webglcontextrestored', () => { if (IS_TOUCH) location.reload(); });
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;

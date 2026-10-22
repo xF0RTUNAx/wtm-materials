@@ -342,7 +342,7 @@ export function createAir(C) {
   function popStep(dt) {
     if (!pop.st) return;
     if (!craft.hm.arcade || craft.dead || game.over) { pop.st = 0; return; }
-    if (HU.col || HU.yaw) { pop.st = 0; say(tr('Подскок: управление у вас'), 1.2); return; } // сами взялись за высоту или поворот
+    if (Math.abs(HU.col) > 0.2 || Math.abs(HU.yaw) > 0.2) { pop.st = 0; say(tr('Подскок: управление у вас'), 1.2); return; } // сами взялись за высоту или поворот (палец, лежащий на ручке, — не в счёт)
     pop.t += dt; HU.cy = 0; // на подскоке — висение
     const l = curW(), W = l && AG[l.key], agl = aglNow(), T = pop.tgt;
     if (pop.st < 4 && (!T || T.dead)) { pop.st = 4; pop.t = 0; }
@@ -355,7 +355,7 @@ export function createAir(C) {
     } else if (pop.st === 2) {
       HU.col = popSees(T) ? 0 : 0.5; // чуть выше, если цель снова скрылась
       const ready = W && usable(l) && (W.kind === 'agm' ? !!pod.lock && pod.tgt === T && craft.pos.distanceTo(pod.lock) < W.rmax : W.kind === 'rocket' && nar.hint === tr('в зоне — залп'));
-      if (ready) { fire(); pop.fired = true; pop.t = 0; pop.st = W.kind === 'agm' ? 3 : 4; }
+      if (ready) { fire(true); pop.fired = true; pop.t = 0; pop.st = W.kind === 'agm' ? 3 : 4; }
       else if (pop.t > 6) { pop.st = 4; pop.t = 0; say(W && (W.kind === 'agm' || W.kind === 'rocket') ? tr('Подскок: нет захвата — вниз') : tr('Подскок: выберите ПТУР или НАР'), 2.5); }
     } else if (pop.st === 3) { // ПТУР ведут до попадания: висим, нос на цели
       HU.col = 0;
@@ -757,7 +757,7 @@ export function createAir(C) {
   // вниз за рельеф (Mark 2026-10-22); захват и пуск — прежние предупреждения строки #warn
   function seenBy() {
     if (!craft.heli || craft.dead) return null;
-    for (const u of C.S.units) if (!u.dead && !u.track && u.seeT > 0.15 && u.pos.distanceTo(craft.pos) < u.S.rmax * 1.3) return u;
+    for (const u of C.S.units) if (!u.dead && !u.track && u.seeT > 0.15 && u.seeTgt === craft && u.pos.distanceTo(craft.pos) < u.S.rmax * 1.3) return u; // смотрит на нас, а не на ПТУР
     return null;
   }
   function drawRwr(list, mws, t) {
@@ -1298,10 +1298,12 @@ export function createAir(C) {
     popStep(dt); { const pb = $('tPop'); if (pb && pb._on !== !!pop.st) { pb._on = !!pop.st; pb.classList.toggle('on', pb._on); } } // подскок «Аркады» — поверх ручки (висение, высота, нос на цель)
     // курс на цель — всегда; наклон — только почти на висении (заданная скорость ≈ 0 и < 25 м/с): на крейсерском полёте к цели держать
     // наклон прицела нельзя — вертолёт перестаёт разгоняться и не подлетает (урок «Управление» стоял в 4 км от цели)
-    const lw = curW(), narW = arc && nar.has && !HU.yaw && !!lw && AG[lw.key].kind === 'rocket' && usable(lw);
+    // помощь отпускает: ручка вбок (не просто палец на ней) или взгляд камерой ушёл от цели больше чем на 12° (иначе нос «прилипал» к цели)
+    const lw = curW(), wrapA = (v) => Math.atan2(Math.sin(v), Math.cos(v)), brgT = Math.atan2(-(nar.pt.x - craft.pos.x), -(nar.pt.z - craft.pos.z));
+    const narW = arc && nar.has && Math.abs(HU.yaw) < 0.2 && !(aimOn() && Math.abs(wrapA(aim.yaw - brgT)) > 0.21) && !!lw && AG[lw.key].kind === 'rocket' && usable(lw);
     nar.slow = Math.abs(HU.cy) < 0.12 && vh < 25; nar.on = narW && nar.slow;
     // подсказка к оружию — при первом выборе в вылете; в уроках оружие объясняет карточка урока
-    if (lw && !hintSeen.has(lw.key) && !craft.landed && game.t > 3 && C.setup.game !== 'training') { hintSeen.add(lw.key); const h = weaponHint(lw.key); if (h) C.say(h, 8); }
+    if (lw && !hintSeen.has(lw.key) && !craft.landed && game.t > 3 && game.opts.lastGame !== 'training') { hintSeen.add(lw.key); const h = weaponHint(lw.key); if (h) C.say(h, 8); }
     if (narW) {
       const dx = nar.pt.x - craft.pos.x, dz = nar.pt.z - craft.pos.z;
       HU.yawTo = Math.atan2(-dx, -dz); if (nar.on) HU.pitchTo = nar.pitch; // наклон — подобран по расчёту точки падения (updateLar)

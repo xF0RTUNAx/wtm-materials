@@ -94,6 +94,10 @@ const REVIEW2 = [
   { n: 34, f: 'a10-eve-v2', m: 'autumn', w: 'a_eve', cap: 'A-10 над топью, вечер, сбоку', setup: { pside: 'air', era: 2, side: 'east', lo: 11, palt: 'low' }, shot: { s: 'ship', a: 'side', az: 0.4, el: -0.05, k: 0.9, t: 50 } },
   { n: 36, f: 'shilka-fog-v2', m: 'autumn', w: 'a_fog', cap: 'Шилка в тумане, крупно', setup: { pside: 'def', era: 1, side: 'east', psam: 'zsu234', pvs: 'air' }, shot: { s: 'unit', a: 'front', az: 0.5, el: 0.08, k: 0.4, t: 45, ox: -0.05, oy: 0.1 } },
   { n: 37, f: 'shahed-dusk-v2', m: 'autumn', w: 'a_eve', cap: 'Дрон над топью, вечер, крупно', setup: { pside: 'multi', era: 4, side: 'west', pmun: 'shahed' }, shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.35, t: 20, max: 200, ox: 0.12 } },
+  // 2026-10-22: гривы и углублённые овраги «Туманной топи»
+  { n: 42, f: 'ridges-fog', m: 'autumn', w: 'a_fog', cap: 'Гривы в болоте у торфяника, туман', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 48, cg: 1, cam: [3950, 6, 1150, 2000, 22, 1000] } },
+  { n: 43, f: 'ravine-dusk', m: 'autumn', w: 'a_dusk', cap: 'Глубокий овраг, сумерки', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 55, cg: 1, cam: [-9844, 4, 1594, -9023, 25, 1032] } },
+  { n: 44, f: 'mon-ridge-eve', m: 'autumn', w: 'a_eve', cap: 'Монастырь из-за гривы, вечер', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'unit', a: 'front', t: 2, f: 40, cg: 1, cam: [2850, 34, 900, 600, 14, 200] } },
 ];
 
 const args = Deno.args.filter((a) => !a.startsWith('--'));
