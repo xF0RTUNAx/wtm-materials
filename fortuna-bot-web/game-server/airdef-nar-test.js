@@ -58,7 +58,19 @@ try {
   deny = A.msgs.filter((m) => m.t === 'deny').length;
   check(`блоков ${n0} × ${per} залпов × ${W.salvo} = ${n0 * per * W.salvo} ракет (как у клиента, air.js rocketsOf), пущено ${wr2}`, wr2 === n0 * per * W.salvo);
   check('пустой блок — отказ', deny >= 1);
-  A.send({ t: 'leave' }); P.send({ t: 'leave' });
+  A.send({ t: 'leave' }); P.send({ t: 'leave' }); await sleep(400);
+  // боты авиации не берут связки с НАР: самолётный ИИ сервера (sim/raid.js) ракет не пускает; 6 комнат 3 × 3 — по два бота в воздушной команде
+  let botsSeen = 0, botsNar = 0;
+  for (let k = 0; k < 6; k++) {
+    A.msgs.length = 0;
+    A.send({ t: 'create', mode: 'arcade', size: 3, era: 2, sideAir: 'west', team: 'air' });
+    const rm = await A.wait('room', (m) => m.code, 4000); if (!rm) continue;
+    A.send({ t: 'ready', on: true });
+    const pl = await A.wait('room', (m) => m.state === 'plan' && m.players.some((p) => p.bot && p.team === 'air' && p.choice !== null && p.choice !== undefined), 10000);
+    if (pl) for (const p of pl.players.filter((q) => q.bot && q.team === 'air' && q.choice !== null && q.choice !== undefined)) { botsSeen++; const L = LOADOUTS[2][p.choice]; if (L && L.items.some(([key]) => AG[key] && AG[key].kind === 'rocket')) botsNar++; }
+    A.send({ t: 'leave' }); await sleep(400);
+  }
+  check(`боты авиации не берут связки с НАР (проверено выборов: ${botsSeen}, с НАР: ${botsNar})`, botsSeen >= 4 && botsNar === 0);
 } catch (e) { check('без исключений: ' + (e && e.stack || e), false); }
 srv.kill();
 const bad = results.filter(([, ok]) => !ok);
