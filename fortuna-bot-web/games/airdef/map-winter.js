@@ -195,7 +195,8 @@ export function buildWinter(seed = 1) {
     const x = rwx + 260, z = R.z, M = [];
     for (let k = -2; k <= 2; k++) M.push(mp('obj_hangar', x, z + k * 260, 1, 0.75));
     M.push(mp('obj_jhangar', x + 70, z - 800, 0), mp('obj_jhangar', x + 70, z + 820, 0), mp('obj_rtank', x + 160, z + 1200), mp('obj_rtank', x + 180, z + 1200), mp('obj_milbase', x + 150, z - 1250));
-    add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 420, d: 2700, value: 170, hp: 240, models: M, parts: [...M.map(mbox), { t: 'cyl', x: x + 120, z: z + 40, r: 6, h: 32 }] });
+    add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 420, d: 2700, value: 170, hp: 240, models: M, parts: [...M.map(mbox), { t: 'cyl', x: x + 120, z: z + 40, r: 6, h: 32 }],
+      zones: [{ t: 'box', x: rwx, z: R.z, w: R.W, d: R.L, h: 1, k: 0.7 }] }); // ВПП — зона урона (sim/strike.js blast), как у городского аэродрома
   }
   { const p = P[4], M = []; // склад ГСМ
     for (let a = -1; a <= 1; a++) for (const b of [-1, 1]) M.push(mp('obj_tanks', p.x + a * 75, p.z + b * 60));

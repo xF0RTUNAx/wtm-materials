@@ -458,7 +458,8 @@ function seat(g, u) {
     g.userData.seatK = k;
     if (!g.userData.half) { const r0 = g.rotation.y, p0 = g.position.clone(); g.rotation.set(0, 0, 0); g.position.set(0, 0, 0); g.updateMatrixWorld(true); SEAT_B.setFromObject(g); g.rotation.y = r0; g.userData.half = [Math.max(0.8, (SEAT_B.max.x - SEAT_B.min.x) * 0.42), Math.max(1, (SEAT_B.max.z - SEAT_B.min.z) * 0.42)]; g.position.copy(p0); }
     const [hw, hl] = g.userData.half, c = Math.cos(u.yaw), s = Math.sin(u.yaw);
-    const h = (lx, lz) => city.groundH(u.pos.x + lx * c + lz * s, u.pos.z - lx * s + lz * c);
+    const gh = (C.G && C.G.meshH) || city.groundH; // по высоте нарисованной сетки земли (на склоне и у реки точная высота карты расходится с ней на метры — машина висела или тонула)
+    const h = (lx, lz) => gh(u.pos.x + lx * c + lz * s, u.pos.z - lx * s + lz * c);
     const hf = h(0, -hl), hb = h(0, hl), hL = h(-hw, 0), hR = h(hw, 0);
     if (C.S && C.S.unitTilt) C.S.unitTilt(u); // наклон — тот же, по которому считается старт ракеты (sim/strike.js)
     g.userData.seat = { dy: (hf + hb + hL + hR) / 4 - city.groundH(u.pos.x, u.pos.z), rx: u.tx ?? Math.atan2(hf - hb, 2 * hl), rz: u.tz ?? Math.atan2(hR - hL, 2 * hw) };

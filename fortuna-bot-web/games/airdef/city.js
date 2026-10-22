@@ -128,7 +128,9 @@ function makeObjects() {
       mp('obj_hangar', x - 260, z + 540, 0, 0.7), mp('obj_hangar', x - 330, z + 540, 0, 0.7), mp('obj_hangar', x - 400, z + 540, 0, 0.7),
       mp('obj_rtank', x + 400, z + 540), mp('obj_rtank', x + 420, z + 540)];
     add({ key: 'air', name: tr('Военный аэродром'), x, z: z + 500, w: 900, d: 260, value: 150, hp: 220, models: M,
-      parts: [...M.map(mbox), { t: 'cyl', x: x - 150, z: z + 520, r: 6, h: 30 }, { t: 'box', x: x - 150, z: z + 535, w: 20, d: 14, h: 8 }] }); }
+      parts: [...M.map(mbox), { t: 'cyl', x: x - 150, z: z + 520, r: 6, h: 30 }, { t: 'box', x: x - 150, z: z + 535, w: 20, d: 14, h: 8 }],
+      // zones — только для урона (sim/strike.js blast): ВПП в 540 м от ангаров — бомбы по полосе засчитывались «мимо» (Mark 2026-10-22); ×0,7 — воронки, не постройки
+      zones: [{ t: 'box', x, z, w: AIRPORT.rwyL, d: AIRPORT.rwyW, h: 1, k: 0.7 }] }); }
   // мосты через реку — по проспектам
   for (const zb of BRIDGE_Z) {
     const xr = riverX(zb), L = CITY.RIVER_W + 80;

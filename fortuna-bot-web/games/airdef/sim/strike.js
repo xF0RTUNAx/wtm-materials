@@ -786,27 +786,28 @@ export function createStrike(ctx) {
     if (w.dead) return;
     w.dead = true;
     if (w.decoy || !w.W.dmg) { fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); fx.explosion(w.pos, 4, 'ground'); return; } // ложная цель — без боевой части
-    const res = blast(w.pos, w.W.dmg, w.W.blast, w.W.short, w.owner);
+    const res = blast(w.pos, w.W.dmg, w.W.blast, w.W.short, w.owner, w.W.ap || 1);
     fx.wpnEnd(w, res);
     fx.explosion(w.pos, w.W.blast, w.W.kind === 'tbm' ? 'tbm' : w.W.vis && w.W.vis.kind !== 'missile' ? 'bomb' : 'ground'); // бомба — крупнее, со вспышкой и пылью; баллистика — ещё крупнее (удар сверху на 2–6 М)
   }
   // урон взрывом по объектам и комплексам; возвращает, кого задело
-  function blast(p, dmg, R, by, owner = null) { // owner — самолёт, чьё оружие (онлайн: кому засчитать)
+  // ap — бронебойность по технике (ПТУР: кумулятивная часть — прямое попадание выводит из строя любой комплекс; по зданиям — как есть)
+  function blast(p, dmg, R, by, owner = null, ap = 1) { // owner — самолёт, чьё оружие (онлайн: кому засчитать)
     const res = { objects: [], units: [] };
     for (const o of objects) {
       if (o.dead) continue;
-      let dmin = 1e9;
-      for (const q of o.parts) {
+      // части — постройки; zones — площади только для урона (ВПП аэродрома), со своим весом q.k
+      let best = 0;
+      for (const L of o.zones ? [o.parts, o.zones] : [o.parts]) for (const q of L) {
         const base = q.y0 !== undefined ? q.y0 : city.groundH(q.x, q.z), top = base + q.h;
         let dh;
         if (q.t === 'box') dh = Math.hypot(Math.max(0, Math.abs(p.x - q.x) - q.w / 2), Math.max(0, Math.abs(p.z - q.z) - q.d / 2));
         else dh = Math.max(0, Math.hypot(p.x - q.x, p.z - q.z) - q.r);
-        const dv = p.y > top ? p.y - top : p.y < base ? base - p.y : 0;
-        dmin = Math.min(dmin, Math.hypot(dh, dv));
+        const dv = p.y > top ? p.y - top : p.y < base ? base - p.y : 0, d = Math.hypot(dh, dv);
+        if (d < R) best = Math.max(best, (d < 2 ? 1.25 : Math.pow(1 - d / R, 0.6)) * (q.k ?? 1));
       }
-      if (dmin < R) {
-        const k = dmin < 2 ? 1.25 : Math.pow(1 - dmin / R, 0.6);
-        const amount = dmg * k;
+      if (best > 0) {
+        const amount = dmg * best;
         o.hp -= amount; o.dmgTaken += amount; res.objects.push(o);
         fx.objectHit(o, amount, p);
         if (o.hp <= 0) { o.dead = true; o.hp = 0; fx.objectDestroyed(o, by, owner); }
@@ -816,7 +817,7 @@ export function createStrike(ctx) {
       if (u.dead) continue;
       const d = Math.max(0, u.pos.distanceTo(p) - 4);
       if (d < R) {
-        const amount = dmg * Math.pow(1 - d / R, 0.6) * 1.2 * (ctx.unitDmgK ? ctx.unitDmgK() : 1); // уроки мульти-волны — комплексы неуязвимы
+        const amount = dmg * Math.pow(1 - d / R, 0.6) * 1.2 * ap * (ctx.unitDmgK ? ctx.unitDmgK() : 1); // уроки мульти-волны — комплексы неуязвимы
         u.hp -= amount; res.units.push(u); fx.unitHit(u, amount);
         if (u.hp <= 0) { u.dead = true; u.emit = false; u.track = null; fx.unitDestroyed(u, by, owner); fx.radarState(u); }
       }

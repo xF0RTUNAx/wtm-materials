@@ -1256,16 +1256,18 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const aniso = renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1;
   const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
-  if (HILLS) { // дальше всё ставится по высоте самой сетки земли (треугольники через 2·HALF/seg м), а не по точной высоте карты:
-    // на выпуклом склоне сетка выше на метры — дороги и дома «тонули» бы
+  { // высота самой сетки земли (треугольники через 2·HALF/seg м), а не точная высота карты: на выпуклом склоне сетка выше на метры,
+    // у берега реки в городе (спуск к воде ~60 м, клетка сетки — больше) — ниже или выше. По ней ставятся машины ПВО (main.js seat)
     const st = 2 * CITY.HALF / seg, gH = city.groundH, n1 = seg + 1, hv = new Float32Array(n1 * n1);
     for (let j = 0; j < n1; j++) for (let i = 0; i < n1; i++) hv[j * n1 + i] = gH(-CITY.HALF + i * st, -CITY.HALF + j * st);
-    GH = (x, z) => {
+    G.meshH = (x, z) => {
       const fx = Math.min(seg - 1e-4, Math.max(0, (x + CITY.HALF) / st)), fz = Math.min(seg - 1e-4, Math.max(0, (z + CITY.HALF) / st)), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j;
       const a = hv[j * n1 + i], b = hv[(j + 1) * n1 + i], c = hv[(j + 1) * n1 + i + 1], d = hv[j * n1 + i + 1]; // как PlaneGeometry: (a, b, d) и (b, c, d)
       return u + v <= 1 ? a + (d - a) * u + (b - a) * v : c + (b - c) * (1 - u) + (d - c) * (1 - v);
     };
-    G.meshH = GH; G.roads = AUT ? autumnRoads(scene, city, ground.material.userData.AT || {}, P, GH) : winterRoads(scene, city, ground.material.userData.WT || {}, P, GH);
+  }
+  if (HILLS) { // дальше всё ставится по высоте сетки, а не по точной высоте карты: дороги и дома на склоне «тонули» бы
+    GH = G.meshH; G.roads = AUT ? autumnRoads(scene, city, ground.material.userData.AT || {}, P, GH) : winterRoads(scene, city, ground.material.userData.WT || {}, P, GH);
   }
 
   // река: тёмная вода, волны, отражение неба, блик солнца

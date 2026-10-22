@@ -2,13 +2,21 @@
 import { CITY, KIND, riverX } from './city.js?v=20261022u';
 import { SAM, DEFENSE } from './arsenal.js?v=20261022u';
 
+// без резкого перегиба рельефа: земля нарисована сеткой треугольников (клетка 50–80 м), на гребне или в ложбине она расходится с точной
+// высотой карты на метры (на «Северном рубеже» — до 33 м: машина висела в воздухе или стояла под землёй, ракеты — из воздуха). Центр против
+// среднего по кресту ±40 м — оценка этого расхождения; сервер и клиент считают одинаково (без сетки)
+function flatish(city, x, z) {
+  const h = city.groundH, c = h(x, z);
+  for (const r of [25, 50, 80]) { const m = (h(x + r, z) + h(x - r, z) + h(x, z + r) + h(x, z - r) + h(x + r, z + r) + h(x - r, z - r) + h(x + r, z - r) + h(x - r, z + r)) / 8; if (Math.abs(c - m) > 0.12 * r / 25) return false; }
+  return true;
+}
 // свободное место на земле: без зданий рядом и не в реке (в горах — не на крутом склоне)
 export function freeGround(city, x, z, r = 9) {
   for (const [dx, dz] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) if (city.bldAt(x + dx, z + dz) > 0) return false;
   if (Math.abs(x) >= CITY.HALF - 1200 || Math.abs(z) >= CITY.HALF - 1200) return false;
-  if (city.kind === 'winter') return city.slopeAt(x, z) <= 0.32; // горы: не на крутом склоне (лёд — можно)
-  if (city.kind === 'autumn') return city.slopeAt(x, z) <= 0.32 && !city.waterAt(x, z); // холмы: не на круче и не в болото
-  return Math.abs(x - riverX(z)) > CITY.RIVER_W / 2 + 15;
+  if (city.kind === 'winter') return city.slopeAt(x, z) <= 0.32 && flatish(city, x, z); // горы: не на крутом склоне (лёд — можно)
+  if (city.kind === 'autumn') return city.slopeAt(x, z) <= 0.32 && !city.waterAt(x, z) && flatish(city, x, z); // холмы: не на круче и не в болото
+  return Math.abs(x - riverX(z)) > CITY.RIVER_W / 2 + 50 && flatish(city, x, z); // берег спускается к воде до +35 м от уреза (city.js groundH), машине нужно ещё ~10 м: на откосе висела над рекой
 }
 // крыша, на которую можно поставить ПЗРК (не стеклянная башня, не частный дом, не выше 90 м)
 export function roofOk(city, i) { const B = city.B; return B.h[i] >= 12 && B.h[i] <= 90 && B.y0[i] === 0 && B.k[i] !== KIND.GLASS && B.k[i] !== KIND.HOUSE; }
@@ -30,7 +38,24 @@ export function spotNear(city, rnd, cx, cz, r0, r1, roof) {
     const a = rnd() * Math.PI * 2, d = r0 + rnd() * (r1 - r0), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
     if (freeGround(city, x, z)) return [x, z, false];
   }
-  return [cx + r1, cz, false];
+  // рядом не нашлось: дальше (до трёх радиусов), а если и там нет — лучшее из просмотренного: без домов и воды, с наименьшим перегибом
+  // рельефа (раньше — точка (cx + r1, cz) без проверок: на круче «Северного рубежа» машина висела на 20–30 м или стояла в земле)
+  let best = null, bs = 1e9;
+  for (let k = 0; k < 600; k++) {
+    const a = rnd() * Math.PI * 2, d = r0 + rnd() * (r1 * 3 - r0), x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d;
+    if (freeGround(city, x, z)) return [x, z, false];
+    const sc = groundScore(city, x, z); if (sc < bs) { bs = sc; best = [x, z, false]; }
+  }
+  return best || [cx + r1, cz, false];
+}
+// чем хуже место для машины: дома и вода — нельзя, иначе перегиб рельефа и крутизна
+function groundScore(city, x, z) {
+  if (city.bldAt(x, z) > 0 || Math.abs(x) >= CITY.HALF - 1200 || Math.abs(z) >= CITY.HALF - 1200) return 1e9;
+  if (city.kind === 'autumn' && city.waterAt(x, z)) return 1e9;
+  if ((!city.kind || city.kind === 'city') && Math.abs(x - riverX(z)) < CITY.RIVER_W / 2 + 50) return 1e9;
+  const h = city.groundH, c = h(x, z); let e = 0;
+  for (const r of [25, 50, 80]) e = Math.max(e, Math.abs(c - (h(x + r, z) + h(x - r, z) + h(x, z + r) + h(x, z - r)) / 4) / r);
+  return e + (city.slopeAt ? city.slopeAt(x, z) * 0.1 : 0);
 }
 // цели: n объектов (мост — один случайный)
 // цели — только военные объекты (мосты — часть города, не цель)
