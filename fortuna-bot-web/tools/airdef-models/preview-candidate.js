@@ -1,6 +1,6 @@
 // Превью модели-кандидата в настоящей игре БЕЗ записи в репозиторий — уровень 2 проверок сборщика моделей (чат на Sonnet).
 //   deno run -A tools/airdef-models/preview-candidate.js <ключ модели> <файл.glb> [--out папка] [--scenes thumb,plume,hang]
-//        [--views side,front,rear] [--weapon ключ] [--era N --lo N]
+//        [--views side,front,rear] [--weapon ключ] [--era N --lo N] [--tex 512 --ntex 512 — размеры текстур цвета и нормалей у моделей с текстурами] [--seed N — тот же бой для сравнения «было / стало»]
 // --out по умолчанию — папка «превью-игра» рядом с glb. Игра берётся из рабочего дерева репозитория как оно сейчас: если страница не открывается,
 // вероятно, интегратор в середине правки — повторить позже. Тяжёлый прогон (Chrome с GPU): не запускать одновременно с ui-test у интегратора.
 // <ключ модели> — как в prepare.js и models.js (w_kh29t, w_gbu24, …); <файл.glb> — экспорт из Blender (метры, нос в −Z осей glTF).
@@ -32,7 +32,7 @@ console.log(`модель ${KEY}, оружие ${WEAPON}, файл ${FILE_ABS}`)
 
 // 1. файл для игры — во временную папку
 const TMP = await Deno.makeTempDir({ prefix: 'preview-' });
-const pr = await new Deno.Command(Deno.execPath(), { args: ['run', '-A', WEB + 'tools/airdef-models/prepare.js', KEY], env: { PREPARE_SRC: FILE_ABS, PREPARE_OUT: TMP }, stdout: 'piped', stderr: 'piped' }).output();
+const pr = await new Deno.Command(Deno.execPath(), { args: ['run', '-A', WEB + 'tools/airdef-models/prepare.js', KEY], env: { PREPARE_SRC: FILE_ABS, PREPARE_OUT: TMP, ...(opt('tex', '') ? { PREPARE_TEX: opt('tex', '') } : {}), ...(opt('ntex', '') ? { PREPARE_NTEX: opt('ntex', '') } : {}) }, stdout: 'piped', stderr: 'piped' }).output();
 const prText = new TextDecoder().decode(pr.stdout) + new TextDecoder().decode(pr.stderr);
 console.log(prText.trim().split('\n').slice(-3).join('\n'));
 if (!pr.success) { console.log('prepare.js не справился с файлом — превью не снимаю'); Deno.exit(1); }
@@ -92,7 +92,7 @@ try {
         if (!SH[v]) continue;
         const h0 = hits, setup = { game: 'photo', diff: 'arcade', pside: 'air', era, side: 'west', lo, palt: 'mid', pmap: 'city' }, shot = { s: WEAPON, a: 'side', ...SH[v][1], t: 8, max: 200 };
         const p = await open(1400, 800, setup);
-        await p.goto(`${BASE}games/airdef.html?go=photo&gfx=high&test=1&weather=day&shot=${encodeURIComponent(JSON.stringify(shot))}`, { waitUntil: 'load', timeout: 120000 });
+        await p.goto(`${BASE}games/airdef.html?go=photo&gfx=high&test=1&weather=day&shot=${encodeURIComponent(JSON.stringify(shot))}${opt('seed', '') ? '&seed=' + opt('seed', '') : ''}`, { waitUntil: 'load', timeout: 120000 });
         await p.waitForFunction(() => window.__shot === 'ready' || window.__shot === 'timeout', { timeout: 300000, polling: 500 });
         await sleep(4000);
         const f = `${OUT}/игра_подвеска_${SH[v][0]}.png`; await p.screenshot({ path: f });

@@ -39,6 +39,7 @@ Git — у основного чата, Blender — у сборщика. Mark м
 Техника (ЗСУ и т. п.) собирается тем же способом, но подменяется вручную (integrate-own.js — только для оружия). Образец — Flakpanzer Gepard (2026-10-22): `tools/airdef-models/own/gepard.glb` и `own/gepard-build/` (build.py, bake.py, rig.py, deliver.py),
 записи `gepard` / `gepard_lo` в prepare.js (unit, own, `nTex` — карта нормалей, hinge, groups по именам объектов; `_lo` — 8 тыс. треугольников, без нормалей), оси tp / cp в launchers.js (их печатает prepare.js), META.gepard.camo `{ tex: true, detail: true }` и версии в GLB_V_OWN (models.js).
 Карта нормалей — только у ближней модели (на телефоне ≤ 512), зернистость краски (`camo.detail`) — шейдером по координатам модели, без файлов. Для сравнения в адресе: `?nrm=0` (без нормалей), `?det=0` (без зернистости).
+Свои модели оружия с текстурой и нормалями (Х-29Т, ревизия 2 — пилот): в паспорте `tex` / `nTex` (размеры цвета и нормалей, напр. 512 / 512) — integrate-own.js пишет их в запись prepare.js; превью-кандидат: `preview-candidate.js … --tex 512 --ntex 512 [--seed N]`.
 
 ## Как начинать сессию
 1. Ветка `online-dev` (`git -C /Users/mark./wtm-materials branch --show-current`). Посмотреть `git log --oneline -10` и `git status --short`:

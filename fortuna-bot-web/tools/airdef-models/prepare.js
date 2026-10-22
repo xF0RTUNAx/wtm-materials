@@ -1100,7 +1100,7 @@ if (Deno.args[0] === '--credits') {
   Deno.exit(0);
 }
 // PREPARE_SRC — файл-кандидат (экспорт из Blender) вместо исходника ключа: конфиг своей модели (нос −Z, метры, материалы как есть); ключ может быть и новым
-if (Deno.env.get('PREPARE_SRC') && Deno.args[0] && Deno.args[0] !== 'all' && !Deno.args[0].startsWith('--')) CONFIG[Deno.args[0]] = { src: Deno.env.get('PREPARE_SRC'), scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true };
+if (Deno.env.get('PREPARE_SRC') && Deno.args[0] && Deno.args[0] !== 'all' && !Deno.args[0].startsWith('--')) CONFIG[Deno.args[0]] = { src: Deno.env.get('PREPARE_SRC'), scale: 1, nose: '-z', tex: () => Number(Deno.env.get('PREPARE_TEX') || 256), ...(Deno.env.get('PREPARE_NTEX') ? { nTex: () => Number(Deno.env.get('PREPARE_NTEX')) } : {}), pickMesh: /./, own: true };
 const names = Deno.args[0] === 'all' ? Object.keys(CONFIG) : [Deno.args[0]];
 if (!CONFIG[names[0]]) { console.log('модели:', Object.keys(CONFIG).join(', '), '| all'); Deno.exit(1); }
 for (const n of names) await prepare(n, Deno.args.includes('--views'));

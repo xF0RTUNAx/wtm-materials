@@ -31,7 +31,7 @@ const oldGamePath = WEB + `games/airdef/models/${KEY}.glb`, oldGame = exists(old
 console.log(`Подмена модели: ${P.name} (${KEY}), ревизия ${P.rev || 1}${DRY ? '  [--dry]' : ''}`);
 
 // ── тексты новых версий файлов (ничего не пишем, пока всё не разобрано) ──
-const entry = `  ${KEY}: { src: new URL('./own/${base}.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, pickMesh: /./, own: true }, // ${P.name}: своя модель (Blender, own/${base}.glb)`;
+const entry = `  ${KEY}: { src: new URL('./own/${base}.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => ${+P.tex || 256}, ${P.nTex ? `nTex: () => ${+P.nTex}, ` : ''}pickMesh: /./, own: true }, // ${P.name}: своя модель (Blender, own/${base}.glb)`;
 let pj = rd(WEB + 'tools/airdef-models/prepare.js'); const re = new RegExp(`^  ${KEY}: \\{.*$`, 'm'), pm = pj.match(re);
 if (pm) {
   if ((pm[0].match(/\{/g) || []).length !== (pm[0].match(/\}/g) || []).length) fail(`запись ${KEY} в prepare.js занимает несколько строк — замените вручную на:\n${entry}`);
@@ -73,7 +73,7 @@ if (!DRY) {
   const r = runPrepare({}); if (!r.success) fail('prepare.js не справился — дальше не иду (запись в prepare.js уже внесена, файлы скопированы)');
   gameChanged = !same(oldGame, Deno.readFileSync(oldGamePath));
 } else {   // пробная сборка во временную папку — чтобы знать, изменится ли файл игры
-  const T = Deno.makeTempDirSync({ prefix: 'integrate-' }), r = runPrepare({ PREPARE_SRC: `${DIR}/${P.files.glb}`, PREPARE_OUT: T });
+  const T = Deno.makeTempDirSync({ prefix: 'integrate-' }), r = runPrepare({ PREPARE_SRC: `${DIR}/${P.files.glb}`, PREPARE_OUT: T, ...(P.tex ? { PREPARE_TEX: String(P.tex) } : {}), ...(P.nTex ? { PREPARE_NTEX: String(P.nTex) } : {}) });
   if (r.success && oldGame) gameChanged = !same(oldGame, Deno.readFileSync(`${T}/${KEY}.glb`));
   Deno.removeSync(T, { recursive: true }); if (!r.success) fail('prepare.js не справился с файлом модели');
 }
