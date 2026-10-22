@@ -5,12 +5,14 @@
 import { splitPlane } from './plane-zones.js?v=20261022s';
 const W = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3();
 const debris = []; // общие для всех самолётов обломки: { g, v, w, t }
+const SAMPS = new Map(); // точки обшивки по зонам — по ключу модели (зависят только от геометрии)
 // пробоины — в шейдере обшивки (у каждого самолёта — свои копии материалов): в точке попадания обшивка вырезается по рваному
 // контуру (сквозная дыра: видно небо и землю, у крыла — насквозь обе обшивки), вокруг — обгоревший край и пятно копоти.
 // Точки — в осях модели (uToRoot переводит вершину меша в них; обломок с тем же материалом — дыры на нём те же)
 const NH = 12, NS = 16;
 // деталь обшивки (дыры и вмятины режут только свою: у корня крыла не прорежут борт, в киле — стабилизатор)
 const ZID = { wingL: 1, consL: 1, wingR: 2, consR: 2, tailL: 3, tailR: 4, tailC: 5, body: 6 };
+const GS = ['wingL', 'wingR', 'tailL', 'tailR', 'tailC', 'fuel', 'engL', 'engR', 'eng']; // группы пробоин (grp в planeDamageVis)
 const GID = (g) => (g === 'wingL' ? 1 : g === 'wingR' ? 2 : g === 'tailL' ? 3 : g === 'tailR' ? 4 : g === 'tailC' ? 5 : 6);
 // uHole — сквозные дыры: центр и радиус + uHoleN — ось поперёк обшивки и полглубины (крыло — насквозь, фюзеляж — нет);
 // uMark — «условные» пробоины (вмятина: тёмная середина, рваный металл); uScor — копоть
@@ -61,8 +63,12 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
   const PT = { wingL: new THREE.Vector3(-wx, wy, mid), wingR: new THREE.Vector3(wx, wy, mid), tail: new THREE.Vector3(0, P.top + 1, P.tailZ + 0.5),
     engL: side(-1) || eng0, engR: side(1) || eng0, eng: eng0, fuel: new THREE.Vector3(0, wy, P.z0 + P.L * 0.5) };
   // пробоины: точки на обшивке зон (по площади), сколько видно — по целостности зоны (больше попаданий — больше дыр)
-  const SAMP = {}, holes = {};
-  {
+  // точки обшивки для пробоин — одни на модель и только с первой пробоины (2026-10-22: у каждого самолёта налёта строились сразу ~10 тыс.
+  // треугольников клонами Vector3 — ≈ 20 МБ мусора и паузы сборщика на телефоне). Строятся до отрыва частей в том же sync — оси модели целые
+  const holes = {}; let SAMP = null;
+  const samp = () => { if (!SAMP) { SAMP = SAMPS.get(key); if (!SAMP) { SAMP = buildSamp(); SAMPS.set(key, SAMP); } } return SAMP; };
+  function buildSamp() {
+    const SAMP = {};
     const A = new THREE.Vector3(), B = new THREE.Vector3(), Cc = new THREE.Vector3(), Nn = new THREE.Vector3(), inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), mm = new THREE.Matrix4();
     const grp = (z, cx, cz) => (z === 'consL' || z === 'wingL' ? 'wingL' : z === 'consR' || z === 'wingR' ? 'wingR' : z.startsWith('tail') ? z : cz > P.z0 + P.L * 0.75 ? (cx < -0.1 ? 'engL' : cx > 0.1 ? 'engR' : 'eng') : cz > P.z0 + P.L * 0.35 ? 'fuel' : null);
     root.updateMatrixWorld(true);
@@ -77,6 +83,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
         (SAMP[g] = SAMP[g] || []).push([A.clone(), B.clone(), Cc.clone(), Nn.divideScalar(ar).clone(), ar, ctr, rr * rr]);
       }
     }
+    return SAMP;
   }
   // материалы обшивки — свои у самолёта, с пробоинами (вырез + копоть); точки пробоин — общие uniform на все меши
   const V4 = (n) => ({ value: Array.from({ length: n }, () => new THREE.Vector4()) });
@@ -96,7 +103,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
     const d00 = v0.dot(v0), d01 = v0.dot(v1), d11 = v1.dot(v1), d20 = v2.dot(v0), d21 = v2.dot(v1), den = d00 * d11 - d01 * d01; if (Math.abs(den) < 1e-12) continue;
     const v = (d11 * d20 - d01 * d21) / den, w = (d00 * d21 - d01 * d20) / den; if (v >= -0.02 && w >= -0.02 && v + w <= 1.02) return true; } return false; };
   const holeAt = (g) => {
-    const L = SAMP[g]; if (!L || !L.length) return null;
+    const L = samp()[g]; if (!L || !L.length) return null;
     let tot = 0; for (const t of L) tot += t[4];
     const small = g === 'fuel' || g.startsWith('eng');
     for (let tries = 0; tries < 24; tries++) {
@@ -135,7 +142,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
     sync(a) {
       // пробоины: по целостности зон (новый вылет — ни одной)
       let ch = false;
-      for (const g of Object.keys(SAMP)) {
+      if (SAMP || GS.some((g) => want(a, g) > 0)) for (const g of Object.keys(samp())) { // целый самолёт — точки обшивки не нужны
         const L = holes[g] || (holes[g] = []), n = want(a, g);
         while (L.length > n) { L.pop(); ch = true; }
         while (L.length < n) { const h = holeAt(g); if (!h) break; L.push(h); ch = true; }
