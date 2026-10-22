@@ -161,7 +161,9 @@ export function createStrike(ctx) {
     const sees = S.radar ? (u.emit && radarSees(u, t)) || ((S.type === 'saclos' || S.optTrack) && eyesSee(u, t)) : eyesSee(u, t);
     if (sees) {
       u.lostT = 0; u.seeT += dt;
-      const acq = (S.radar ? S.radar.acq : 2) * (M.reactK || 1);
+      // вертолёт у земли (ниже 60 м) берут на 3 с дольше (Mark 2026-10-22): выскочил из-за складки — успевает пустить ПТУР и уйти вниз
+      // (пока не видно, seeT тает вдвое быстрее — подскок снова начинает отсчёт почти с нуля)
+      const acq = (S.radar ? S.radar.acq : 2) * (M.reactK || 1) + (t.heli && aglOf(t) < 60 ? 3 : 0);
       // помехи цели иногда срывают сопровождение (у помехозащищённых — редко)
       if (u.track === t && t.jam && u.emit && rnd() < t.jam * (1 - (S.eccm || 0)) * 0.25 * dt) { u.track = null; u.seeT = -0.5; u.relock = t; fx.trackBroken(u, t); fx.radarState(u); }
       if (!u.track && u.seeT > (u.relock === t ? 0.8 : acq)) { u.track = t; u.relock = null; fx.radarState(u); }
@@ -209,6 +211,7 @@ export function createStrike(ctx) {
     if (u.gunOn) {
       if (S.type === 'guns') { u.ammo -= dt * (G.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = u.reload0 = reloadOf(S); } } // темп — по пушкам комплекса; кончились — подвоз
       const hits = rnd() < p * dt * 8 ? 1 + Math.floor(rnd() * 3) : 0;
+      if (tr.heli) u.known = true; // огонь по вертолёту выдаёт позицию — на карте с кругом дальности (Mark 2026-10-22)
       fx.gunFire(u, tr, hits, dt);
       if (hits) { hurtAny(tr, G.dmg * hits, S.short, u.pos); fx.gunHit(u, tr, hits); }
     }
@@ -373,7 +376,7 @@ export function createStrike(ctx) {
     } else { pos = u.pos.clone().add(TMP2.set(0, 3, 0)); dir = gdDir.clone(); }
     const m = { id: mid++, unit: u, S: u.S, M: M_, target: t, clearY, last: t.pos.clone(), lastV: t.vel.clone(), active: false, pos, dir, speed, t: 0, flown: 0, lost: false, lostT: 0, decoy: null, dead: false, trailT: 0,
       ln: LN || null, ign, tb: -ign, lit: ign === 0, staged: false, gdDir, slot: sl ? sl.idx : -1 };
-    u.ammo--;
+    u.ammo--; if (t.heli) u.known = true; // пуск по вертолёту выдаёт позицию (ПЗРК и ИК-комплексы иначе не «замечаются» никогда)
     sams.push(m);
     fx.samLaunch(m);
     return m;
@@ -389,7 +392,9 @@ export function createStrike(ctx) {
   // общий полёт ракеты: двигатель, сопротивление, гравитация вдоль оси, поворот с ограничением перегрузки
   function flyMissile(m, M_, dt, aim, avel, lead) {
     const tb = m.tb ?? m.t;
-    const acc = tb < 0 ? 0 : tb < M_.burn ? M_.acc : (M_.sustain && tb < M_.burn + M_.sustain.t ? M_.sustain.acc : 0);
+    // тяга — ровно burn секунд при любом шаге кадра: на шаге запуска и выгорания — доля шага (2026-10-22: при 60 к/с НАР летели на 5–10 % дальше, чем при 30)
+    const bk = clamp((Math.min(tb, M_.burn) - Math.max(tb - dt, 0)) / dt, 0, 1);
+    const acc = tb < 0 ? 0 : M_.acc * bk + (bk < 1 && tb >= M_.burn && M_.sustain && tb < M_.burn + M_.sustain.t ? M_.sustain.acc * (1 - bk) : 0);
     let lat = 0;
     if (aim) {
       // время до встречи — по скорости сближения (на встречном курсе она больше скорости ракеты)
@@ -562,8 +567,10 @@ export function createStrike(ctx) {
       speed: a.speed, t: 0, flown: 0, dead: false, aim: opts.aim ? opts.aim.clone() : null, target: opts.target || null, mem: null, lost: false, homing: false, trailT: 0 };
     if (W.kind === 'arm' && w.target) w.mem = w.target.pos.clone();
     // с вертолёта (скорость бывает и нулевой, нос — не по скорости) ракеты и НАР сходят по оси корпуса; бомбы — со скоростью
-    if (a.heli && W.kind !== 'bomb') { w.dir.set(-Math.sin(a.yaw) * Math.cos(a.pitch), Math.sin(a.pitch), -Math.cos(a.yaw) * Math.cos(a.pitch)); w.speed = Math.max(0, a.vel.dot(w.dir)); }
-    if (W.kind === 'rocket') { w.dir.x += (rnd() - 0.5) * 2 * W.disp; w.dir.y += (rnd() - 0.5) * 2 * W.disp; w.dir.z += (rnd() - 0.5) * 2 * W.disp; w.dir.normalize(); w.pos.addScaledVector(w.dir, 3); } // разброс залпа
+    if (a.heli && W.kind !== 'bomb') { if (opts.dir) w.dir.copy(opts.dir); else w.dir.set(-Math.sin(a.yaw) * Math.cos(a.pitch), Math.sin(a.pitch), -Math.cos(a.yaw) * Math.cos(a.pitch)); w.speed = Math.max(0, a.vel.dot(w.dir)); } // opts.dir — НАР «Аркады» по прицельному расчёту (air.js nar)
+    // разброс залпа; «Аркада» с прицельной помощью (opts.dir) — вдвое кучнее, по вертикали ещё вчетверо: с висения на 60 м ракеты идут почти
+    // по касательной к земле, и ±0,5° давали ±0,5–1,5 км по дальности (Mark 2026-10-22: «вертолёты слишком сложные»)
+    if (W.kind === 'rocket') { const dk = opts.dir ? 0.5 : 1; w.dir.x += (rnd() - 0.5) * 2 * W.disp * dk; w.dir.y += (rnd() - 0.5) * 2 * W.disp * dk * (opts.dir ? 0.25 : 1); w.dir.z += (rnd() - 0.5) * 2 * W.disp * dk; w.dir.normalize(); w.pos.addScaledVector(w.dir, 3); w.speed = Math.max(30, w.speed); } // сход с 30 м/с — как в predictRocket (иначе нижний предел 30 м/с на первом шаге давал разную дальность при 30 и 60 к/с)
     // летящее оружие — цель для «Тора», «Панциря», C-RAM: размер, ЭПР, тепло, «прочность»
     Object.assign(w, { isMun: true, r: 1.2, rcs: W.rcs ?? 0.12, ir: W.kind === 'cruise' ? 0.35 : 0.15, mhp: W.kind === 'cruise' ? 18 : 10, yaw: 0, pitch: 0, ab: false });
     if (W.kind === 'decoy') { if (ctx.spawnDecoy) ctx.spawnDecoy(a, key, w.aim); return null; } // ложная цель — как самолёт (у хозяина боя)
@@ -887,11 +894,12 @@ export function predictBomb(city, W, p, v, aim, out) {
 // НАР из точки p по оси dir (скорость вдоль оси v0): куда упадёт без разброса — та же кинематика, что у flyMissile без
 // наведения (разгон burn, сопротивление, нос клонится под тяжестью). Время до падения или −1 (дальше life)
 export function predictRocket(city, W, p, dir, v0, out) {
-  PP.copy(p).addScaledVector(dir, 3); PD.copy(dir); let sp = Math.max(0, v0);
-  const dt = 0.05;
+  PP.copy(p).addScaledVector(dir, 3); PD.copy(dir); let sp = Math.max(30, v0);
+  const dt = 1 / 30; // как у полёта (flyMissile): тяга — доля шага на выгорании, сход с 30 м/с; круг прицела ≈ точка падения на 30 и 60 к/с
   for (let t = dt; t < (W.life || 12); t += dt) {
     if (PD.y > -0.95) turnToward(PD, PA.copy(PD).setY(PD.y - 0.3).normalize(), G0 / Math.max(120, sp) * dt * 0.6);
-    sp = Math.max(30, sp + ((t < W.burn ? W.acc : 0) - (W.kd || 1) * 1e-4 * rhoAt(PP.y) * sp * sp - G0 * PD.y) * dt);
+    const bk = Math.min(1, Math.max(0, (Math.min(t, W.burn) - (t - dt)) / dt));
+    sp = Math.max(30, sp + (W.acc * bk - (W.kd || 1) * 1e-4 * rhoAt(PP.y) * sp * sp - G0 * PD.y) * dt);
     PP.addScaledVector(PD, sp * dt);
     if (PP.y <= Math.max(city.topAt(PP.x, PP.z), -4)) { out.copy(PP); return t; }
   }

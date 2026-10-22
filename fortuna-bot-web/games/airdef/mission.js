@@ -43,11 +43,16 @@ export function pickTargets(S, rnd, n = 3, pool = ['tpp', 'oil', 'tv', 'gov', 'p
   return out;
 }
 // ИИ-ПВО по набору эпохи и стороны: дальние — кольцом вокруг центра, ближние и пушки — у целей, ПЗРК — на крышах
-// o — поправки сложности (difficulty.js): ambush — доля засад, skill — прибавка к опыту расчётов
+// o — поправки сложности (difficulty.js): ambush — доля засад, skill — прибавка к опыту расчётов; heli — против вертолёта (Mark 2026-10-22):
+// только ближние (досягаемость ≤ 16 км: ПЗРК, пушки, «Оса» / «Тор» / Roland / Rapier…), дальних, средних и глушилок GPS нет; число — с дробной
+// частью по жребию (при малом k иначе округлялось бы в ноль), но не меньше трёх комплексов на вылет
 export function placeDefense(S, city, rnd, side, era, targets, k = 1, o = {}) {
   let ti = 0;
-  for (const [key, n0] of DEFENSE[side][era]) for (let i = 0; i < Math.round(n0 * k); i++) {
-    const Sx = SAM[key], tgt = targets[ti++ % targets.length];
+  const list = DEFENSE[side][era].filter(([key]) => !o.heli || (SAM[key].rmax <= 16000 && SAM[key].type !== 'jammer'));
+  const cnt = list.map(([, n0]) => (o.heli ? Math.floor(n0 * k + rnd()) : Math.round(n0 * k)));
+  if (o.heli && list.length) for (let i = 0; cnt.reduce((s, c) => s + c, 0) < Math.min(3, list.reduce((s, [, n0]) => s + n0, 0)); i++) cnt[i % cnt.length]++;
+  for (let j = 0; j < list.length; j++) for (let i = 0; i < cnt[j]; i++) {
+    const key = list[j][0], Sx = SAM[key], tgt = targets[ti++ % targets.length];
     let xz;
     if (Sx.rmax >= 15000) { const a = rnd() * Math.PI * 2, r = 2500 + rnd() * 4000; xz = spotNear(city, rnd, 500 + Math.cos(a) * r, -300 + Math.sin(a) * r, 0, 900, false); }
     else if (Sx.type === 'ir' && Sx.hp <= 15) xz = spotNear(city, rnd, tgt.x, tgt.z, 250, 1600, true);
