@@ -2,9 +2,9 @@
 // за бой. Чистый модуль — общий для клиента, игрового сервера и функций Supabase (тратит и начисляет только сервер).
 // Опыт — исследование, серебро — покупка. Ранг единицы = её эпоха. Аркада и обучение открывают всё — прокачка только
 // для «Реализма». Ветки: air — самолёты вылета, wpn — оружие подвесок, pvo — комплексы, strike — удары «Мульти-волны».
-import { AG, SAM, LOADOUTS, MULTI, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js?v=20261022v';
-import { SPECS, SPEED_K } from './sim/flight.js?v=20261022v';
-import { HSPECS } from './sim/heli.js?v=20261022v';
+import { AG, SAM, LOADOUTS, MULTI, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js?v=20261022w';
+import { SPECS, SPEED_K } from './sim/flight.js?v=20261022w';
+import { HSPECS } from './sim/heli.js?v=20261022w';
 
 export const BRANCHES = [
   { id: 'air', name: 'Авиация', hint: 'самолёты для вылета' },
