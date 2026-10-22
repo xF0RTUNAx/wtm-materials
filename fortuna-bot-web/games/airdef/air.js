@@ -5,7 +5,7 @@
 import { tr } from './i18n.js?v=20261022y';
 import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261022y';
 import { strikerGeo, attachFlames } from './units-render.js?v=20261022y';
-import { planeModel, classOf, weaponMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261022y';
+import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261022y';
 import { ico } from './icons.js?v=20261022y';
 import { applyLayout } from './layout.js?v=20261022y';
 import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261022y';
@@ -84,7 +84,7 @@ export function createAir(C) {
     for (const m of pylonMeshes) ship.remove(m);
     pylonMeshes.length = 0;
     for (const l of loadout) for (const st of l.st) {
-      const m = weaponMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat); const p = stations[st], W0 = AG[l.key].vis; m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang — у ракет с гондолой под корпусом
+      const m = pylonMesh(l.key, AG[l.key], C.weaponGeo, C.mats.wMat); const p = stations[st], W0 = AG[l.key].vis; m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); // hang — у ракет с гондолой под корпусом
       m.userData.st = st; m.visible = !shipInternal; ship.add(m); pylonMeshes.push(m); // во внутренних отсеках — не видно
     }
     if (hasPod && podPos) { const m = podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(podPos); ship.add(m); pylonMeshes.push(m); } // LITENING или цилиндр
@@ -345,11 +345,11 @@ export function createAir(C) {
   function heliHelp() {
     const arc = craft.hm.arcade;
     if (IS_TOUCH) return arc
-      ? tr('Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот. ▲▼ — высота, ◀▶ — шаг вбок, «ГАЗ» — ступени скорости. «ПОДСКОК» — сам вверх до цели, пуск и вниз. «ЛОВУШКИ» — ЛТЦ и диполи. Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно прицела. Прицел вертолёта захватывает цель сам, и у земли тоже.')
-      : tr('Ручка слева — наклон и крен. ▲▼ — шаг-газ (вверх / вниз), ◀▶ — педали. «ПОДСКОК» — на сколько подняться, чтобы цель показалась. «ЛОВУШКИ» — ЛТЦ и диполи. Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно прицела. Прицел вертолёта захватывает цель сам, и у земли тоже.');
+      ? tr('Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот. ▲▼ — высота, ◀▶ — шаг вбок, «ГАЗ» — ступени скорости. «ПОДСКОК» — сам вверх до цели, пуск и вниз. «ЛОВУШКИ» — ЛТЦ и диполи (зажмите — очередью). Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно прицела. Прицел вертолёта захватывает цель сам, и у земли тоже. «ПОНЯЛ» (появляется при долгом захвате) глушит писк захвата; сигнал пуска ракеты остаётся.')
+      : tr('Ручка слева — наклон и крен. ▲▼ — шаг-газ (вверх / вниз), ◀▶ — педали. «ПОДСКОК» — на сколько подняться, чтобы цель показалась. «ЛОВУШКИ» — ЛТЦ и диполи (зажмите — очередью). Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно прицела. Прицел вертолёта захватывает цель сам, и у земли тоже. «ПОНЯЛ» (появляется при долгом захвате) глушит писк захвата; сигнал пуска ракеты остаётся.');
     return arc
-      ? tr('W/S — разгон и торможение · A/D — поворот · ↑ или Shift / ↓ или Ctrl — высота · ← / → — шаг вбок · мышь — прицел и камера<br>Пробел/F — пуск ПТУР, залп НАР · Q — оружие · R — следующая цель · E — подскок (вверх, пуск, вниз) · G — окно прицела · Z — увеличение<br>X — ловушки · V — камера · M — карта · F1 — подсказки клавиш · Esc — пауза')
-      : tr('W/S — ручка вперёд / назад · A/D — крен · ↑ или Shift / ↓ или Ctrl — шаг-газ · ← / → — педали · мышь — прицел и камера<br>Пробел/F — пуск · Q — оружие · R — следующая цель · E — на сколько подняться до цели · G — окно прицела · Z — увеличение<br>X — ловушки · V — камера · M — карта · F1 — подсказки клавиш · Esc — пауза');
+      ? tr('W/S — разгон и торможение · A/D — поворот · ↑ или Shift / ↓ или Ctrl — высота · ← / → — шаг вбок · мышь — прицел и камера<br>Пробел/F — пуск ПТУР, залп НАР · Q — оружие · R — следующая цель · E — подскок (вверх, пуск, вниз) · G — окно прицела · Z — увеличение<br>X — ловушки (держать — очередью) · Y — «ПОНЯЛ»: заглушить писк захвата · V — камера · M — карта · F1 — подсказки клавиш · Esc — пауза')
+      : tr('W/S — ручка вперёд / назад · A/D — крен · ↑ или Shift / ↓ или Ctrl — шаг-газ · ← / → — педали · мышь — прицел и камера<br>Пробел/F — пуск · Q — оружие · R — следующая цель · E — на сколько подняться до цели · G — окно прицела · Z — увеличение<br>X — ловушки (держать — очередью) · Y — «ПОНЯЛ»: заглушить писк захвата · V — камера · M — карта · F1 — подсказки клавиш · Esc — пауза');
   }
   function popToggle() {
     if (!craft.heli || craft.dead || craft.landed) return;
@@ -449,14 +449,52 @@ export function createAir(C) {
   // ловушки — одной кнопкой (одинаково на всех устройствах): пачка ЛТЦ и диполей разом; у каждой машины свои точки и залп (sim/cm.js)
   const cmInfo = () => cmOf(cmKey(craft), craft.cmSide); // ловушки машины игрока
   const cmLow = (k) => (cmInfo().flare ? craft.cmFlare : craft.cmChaff) < C.MODE().cm * k; // запас ловушек ниже доли k (у машины без ЛТЦ — по диполям)
-  function cm() {
+  function cm(auto) {
     if (game.over || craft.dead) return;
     const f = cmInfo().flare && craft.cmFlare > 0, c = craft.cmChaff > 0; // машина без ЛТЦ — только диполи
-    if (!f && !c) { say(tr('Ловушки кончились'), 1.2); return; }
+    if (!f && !c) { if (!auto) say(tr('Ловушки кончились'), 1.2); return; }
     if (f) craft.cmFlare--; if (c) craft.cmChaff--;
-    if (game.net) C.S.dropCM(craft, 'both'); // онлайн: одна команда серверу
+    if (game.net) C.S.dropCM(craft, 'both'); // онлайн: одна команда серверу на каждый залп (с шагом 0,6 с автомата — нормально)
     else { if (f) C.S.dropCM(craft, 'flare'); if (c) C.S.dropCM(craft, 'chaff'); }
   }
+  // очередь ловушек (Mark 2026-10-23: «надоедает постоянно тыкать»): кнопка «ЛОВУШКИ» / X / C зажата — залп сразу и затем каждые 0,6 с;
+  // настройка C.sens.cmBurst — короткое нажатие даёт серию из 3 залпов с шагом 0,5 с. Отсчёт по dt боя (update), поэтому пауза его останавливает
+  const CM_HOLD = 0.6, CM_BURST = 0.5, cmA = { hold: new Set(), t: 0, n: 0, out: false }; // hold — что зажато ('btn', 'KeyX', 'KeyC'); n — залпов серии впереди; out — «кончились» уже сказано
+  const cmHave = () => (cmInfo().flare && craft.cmFlare > 0) || craft.cmChaff > 0;
+  const cmReset = () => { cmA.hold.clear(); cmA.t = cmA.n = 0; cmA.out = false; };
+  function cmPress(src) {
+    const had = cmHave(); cmA.hold.add(src); cmA.out = false; cm();
+    if (!had) cmA.out = true; // пусто — сообщение уже показано, автомат молчит
+    if (C.sens.cmBurst && had) { cmA.n = 2; cmA.t = CM_BURST; } else cmA.t = CM_HOLD;
+  }
+  const cmRelease = (src) => { cmA.hold.delete(src); };
+  function cmStep(dt) {
+    if (!cmA.hold.size && !cmA.n) return;
+    if (craft.dead || game.over) { cmReset(); return; }
+    if ((cmA.t -= dt) > 0) return;
+    if (!cmHave()) { cmA.n = 0; cmA.t = CM_HOLD; if (!cmA.out) { cmA.out = true; say(tr('Ловушки кончились'), 1.2); } return; } // один раз, а не на каждом шаге автомата
+    cm(true); if (cmA.n > 0) cmA.n--;
+    cmA.t = cmA.n > 0 ? CM_BURST : CM_HOLD;
+  }
+  addEventListener('blur', () => cmA.hold.clear()); // окно потеряло фокус — «keyup» мог не прийти
+
+  // вертолёт: «ПОНЯЛ» — глушит писк захвата СПО (Mark 2026-10-23: захват у вертолёта долгий, писк надоедает). Считаем, сколько секунд комплекс
+  // держит захват (state 'track' / 'launch' подряд); держит ≥ 3 с и не заглушён — появляется кнопка (клавиша Y). Нажатие глушит писк захвата у
+  // всех комплексов, что держат захват сейчас; пуск ракеты ('launch') не глушится никогда. Отпустил захват — счётчик и глушение сбрасываются
+  const RWA_T = 3, rwa = { held: new Map(), mute: new Set(), on: false }, ackBtn = $('rwrAck');
+  function rwrAckShow(on) { if (rwa.on === on) return; rwa.on = on; ackBtn.classList.toggle('on', on); }
+  function rwrAckReset() { rwa.held.clear(); rwa.mute.clear(); rwrAckShow(false); }
+  function rwrAckPress() { if (!rwa.on) return; for (const id of rwa.held.keys()) rwa.mute.add(id); rwrAckShow(false); snd.click(); }
+  // шаг раз в 0,1 с (боевое время, не на паузе): список СПО для звука — захват заглушённых комплексов как «облучение» (писка нет)
+  function rwrAckStep(rw, dt) {
+    if (!craft.heli) { if (rwa.held.size || rwa.on) rwrAckReset(); return rw; }
+    const now = new Set();
+    for (const e of rw) if (e.state === 'track' || e.state === 'launch') { now.add(e.u.id); rwa.held.set(e.u.id, (rwa.held.get(e.u.id) || 0) + dt); }
+    for (const id of [...rwa.held.keys()]) if (!now.has(id)) { rwa.held.delete(id); rwa.mute.delete(id); }
+    rwrAckShow([...rwa.held].some(([id, t]) => t >= RWA_T && !rwa.mute.has(id)));
+    return rwa.mute.size ? rw.map((e) => (e.state === 'track' && rwa.mute.has(e.u.id) ? { ...e, state: 'search' } : e)) : rw;
+  }
+  ackBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (mine()) rwrAckPress(); });
 
   // ═════════════ «АВТО» — помощь в бою ═════════════
   // Как в «Летке»: не бесполезна, но и не идеальна. Бомба уходит, когда точка падения на цели или «В ЗОНЕ», ТВ-ракета —
@@ -502,7 +540,7 @@ export function createAir(C) {
   const hSpdI = () => H_SPD.reduce((b, v, i) => (Math.abs(v - hSpd) < Math.abs(H_SPD[b] - hSpd) ? i : b), 0);
   function heliSpd(i) { hSpd = H_SPD[clamp(i, 0, H_SPD.length - 1)]; snd.click(); }
   function onKey(e, down) {
-    if (!down) { keys.delete(e.code); return; }
+    if (!down) { keys.delete(e.code); if (e.code === 'KeyX' || e.code === 'KeyC') cmRelease(e.code); return; }
     if (e.repeat) return;
     keys.add(e.code);
     switch (e.code) {
@@ -517,7 +555,8 @@ export function createAir(C) {
       case 'KeyZ': pod.zi = (pod.zi + 1) % ZOOMS.length; snd.click(); break;
       case 'KeyO': pod.laserMan = pod.laserMan === null ? !pod.laser : pod.laserMan ? false : null; say(tr('Лазер: {0}', [pod.laserMan === null ? tr('авто') : pod.laserMan ? tr('вкл') : tr('выкл')]), 1.2); break;
       case 'KeyH': if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); break;
-      case 'KeyX': case 'KeyC': cm(); break;
+      case 'KeyX': case 'KeyC': cmPress(e.code); break; // зажать — очередью
+      case 'KeyY': rwrAckPress(); break; // вертолёт: «ПОНЯЛ» на писк захвата
       case 'KeyV': nextCam(); break;
       case 'KeyN': nextCam(camMode === 3 ? 0 : 3); break;
       case 'KeyL': freeLook(!free.on); break; // обзор: камера — мышью, самолёт держит курс
@@ -604,7 +643,8 @@ export function createAir(C) {
   });
   const mine = () => C.ctrl === api || (C.ctrl && C.ctrl.inner === api); // в обучении управляет урок, а самолёт — внутри него
   const tap = (id, fn) => $(id).addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) fn(); });
-  tap('tFire', fire); tap('tLock', podNext); tap('tFlare', cm); tap('tThr', thrStep);
+  tap('tFire', fire); tap('tLock', podNext); tap('tThr', thrStep);
+  { const b = $('tFlare'); b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) cmPress('btn'); }); for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => cmRelease('btn')); } // зажата — ловушки очередью
   tap('tHelp', () => { if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); });
   tap('tLook', () => freeLook(!free.on));
   tap('tPop', popToggle); tap('tMap', () => toggleMap()); tap('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
@@ -616,14 +656,27 @@ export function createAir(C) {
     else if (r) { const i = +r.dataset.w; if (usable(loadout[i]) && i !== sel) { sel = i; snd.click(); } }
     else nextWeapon();
   });
-  // места по умолчанию: справа два столбца у края; «КАМ.» на сенсорных — только в онлайне, пока смотрите за союзником
+  // места по умолчанию: справа два столбца у края; «КАМ.» на сенсорных — только в онлайне, пока смотрите за союзником.
+  // Низкий экран (телефон ~850×360 с кнопками Telegram, Mark 2026-10-23): верх столбцов налезал на «паузу» и «звук» — места по умолчанию
+  // сжимаются: отступы и размер кнопок ×k (k = место под верхним рядом / высота столбца, не меньше 0,6); свои места игрока не трогаем
+  const COL_H = 268; // самый высокий столбец — «ОБЗОР»: 216 от низа + 52 высоты кнопки
+  let topProbe = null; // скрытый пробный элемент с теми же top и высотой, что у «паузы» / «звука» / «Игроков» (видны не всегда)
+  function touchK() {
+    try {
+      if (!topProbe) { topProbe = document.createElement('div'); topProbe.style.cssText = 'position:fixed;top:var(--top);left:0;width:1px;height:36px;visibility:hidden;pointer-events:none'; document.body.appendChild(topProbe); }
+      const room = innerHeight - topProbe.getBoundingClientRect().bottom - 8; // 8 px запаса
+      return room > 0 ? +clamp(room / COL_H, 0.6, 1).toFixed(2) : 1;
+    } catch (_) { return 1; }
+  }
   function layoutTouch() {
     if (!IS_TOUCH) return;
-    const R = (id, right, bottom) => { const e = $(id); e.dataset.r = `calc(${right}px + var(--sa-r))`; e.dataset.b = bottom + 'px'; };
+    const k = touchK(), px = (v) => Math.round(v * k);
+    const R = (id, right, bottom) => { const e = $(id); e.dataset.r = `calc(${px(right)}px + var(--sa-r))`; e.dataset.b = px(bottom) + 'px'; e.dataset.k = k < 1 ? String(k) : ''; };
     R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tLook', 12, 216); R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136); R('tHelp', 102, 196); R('tPop', 102, 196); // «ПОДСКОК» — только у вертолёта, «ПОМОЩЬ» — только в онлайне (вертолётов в онлайне нет)
-    const cam = $('tCam'); cam.style.right = 'calc(172px + var(--sa-r))'; cam.style.bottom = '16px';
+    const cam = $('tCam'); cam.style.right = `calc(${px(172)}px + var(--sa-r))`; cam.style.bottom = px(16) + 'px'; cam.style.transform = k < 1 ? `scale(${k})` : ''; cam.style.transformOrigin = 'right bottom';
     applyLayout(); // свои места кнопок игрока (Настройки → «Расположение кнопок»)
   }
+  addEventListener('airdef-safearea', () => layoutTouch()); // вырез / кнопки Telegram изменились (shell.js)
   layoutTouch(); // места по умолчанию — сразу (редактор кнопок открывается и до первого вылета)
 
   // ═════════════ Карта ═════════════
@@ -1006,7 +1059,7 @@ export function createAir(C) {
     updLoad();
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize(); // окно на телефоне — по «ТВ»
     Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0 });
-    ship.visible = true; camMode = 0; camInit = false; snd.resetRwr();
+    ship.visible = true; camMode = 0; camInit = false; snd.resetRwr(); cmReset(); rwrAckReset();
     $('hud').style.display = 'block'; document.body.classList.add('flying'); document.body.classList.toggle('aimmode', aimOn());
     layoutTouch(); layoutPod();
     if (C.op) { const left = S.units.filter((u) => !u.dead && u.S.radar).length; say(cont ? tr('Вылет 2 из 2 — удар: {0}. Комплексов с РЛС осталось: {1}', [game.targets.filter((o) => !o.dead).map((o) => o.name).join(', '), left]) : tr('Операция, вылет 1 из 2 — охота за ПВО: уничтожьте {0} комплекса с РЛС. Вторым вылетом — удар по целям города.', [game.hunt ? game.hunt.need : 1]), 7); }
@@ -1070,7 +1123,7 @@ export function createAir(C) {
     };
     game.targets = N.battle.targets.map((id) => C.S.objects.find((o) => o.id === id)).filter(Boolean);
     Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0 });
-    $('hud').style.display = 'block'; document.body.classList.add('flying'); document.body.classList.toggle('aimmode', aimOn()); layoutTouch(); layoutPod(); snd.resetRwr();
+    $('hud').style.display = 'block'; document.body.classList.add('flying'); document.body.classList.toggle('aimmode', aimOn()); layoutTouch(); layoutPod(); snd.resetRwr(); cmReset(); rwrAckReset();
   }
   function netSpawn(m) {
     const o = game.opts, L = { items: m.load.map((l) => [l.key, l.n]), plane: m.plane };
@@ -1369,7 +1422,7 @@ export function createAir(C) {
   }
   function update(dt) {
     game.t += dt;
-    reloadStep(dt); zoneUpdate(dt);
+    reloadStep(dt); zoneUpdate(dt); cmStep(dt);
     if (!craft.dead && !game.over) {
       if (craft.heli) heliFly(dt);
       else planeFly(dt);
@@ -1387,6 +1440,7 @@ export function createAir(C) {
   }
   function hud(dt, t) {
     ship.visible = !craft.dead && camMode !== 2;
+    if (rwa.on && (craft.dead || game.over)) rwrAckReset();
     flames.update(craft.thr, craft.ab);
     if (shipModel) spinProps(shipModel, dt, craft.thr); // винты (Ту-95; у вертолёта thr — шаг несущего)
     if (game.opts.photo) return; // «Съёмка»: без прицелов и панелей — свой интерфейс (photo.js)
@@ -1417,7 +1471,7 @@ export function createAir(C) {
       hx.font = '700 12px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.fillStyle = wc.kind === 'm' ? '#ff8a8a' : '#fde047';
       hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillText(txt, C.VW / 2, Math.max(64, C.VH * 0.16)); hx.shadowBlur = 0;
     }
-    if ((hudT -= dt) <= 0) { hudT = 0.1; const rw = C.S.rwr(craft), mw = C.S.mws(craft); hudText(rw, mw); drawRwr(rw, mw, t); if (!C.paused && !game.over) snd.rwrTick(0.1, rw, mw); }
+    if ((hudT -= dt) <= 0) { hudT = 0.1; const rw = C.S.rwr(craft), mw = C.S.mws(craft); hudText(rw, mw); drawRwr(rw, mw, t); if (!C.paused && !game.over) snd.rwrTick(0.1, rwrAckStep(rw, 0.1), mw); }
     if (mapOn) drawMap();
     if (flashT > 0) { flashT -= dt; document.body.style.boxShadow = `inset 0 0 120px rgba(255,40,40,${Math.max(0, flashT)})`; } else document.body.style.boxShadow = '';
   }
@@ -1437,8 +1491,8 @@ export function createAir(C) {
     resize() { layoutTouch(); layoutPod(); },
     pop, podState: () => ({ tgt: pod.tgt && tgtName(pod.tgt), why: pod.why, lock: !!pod.lock, lockD: pod.lock ? Math.round(craft.pos.distanceTo(pod.lock)) : -1 }), // подскок и прицел — для стендов
     // вертолёт — своё управление (2026-10-22: в паузе были клавиши самолёта: тангаж, форсаж)
-    pauseHelp: () => (craft.heli ? heliHelp() : IS_TOUCH ? tr('{0} «ГАЗ» — ступени, после 100 % — форсаж. «ЛОВУШКИ» — ЛТЦ и диполи разом. Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно контейнера (тап по окну — увеличение). Контейнер захватывает цель сам: 1–18 км, высота от 400 м, цель не закрыта домами.', [aimOn() ? tr('Ведите пальцем по экрану — камера поворачивается, самолёт летит туда, куда она смотрит (белый кружок). Крестовина — точные крен и тангаж.') : tr('Левая половина экрана — ручка.')])
-      : tr('Стрелки — тангаж и крен · A/D — крен · W/S — газ ступенями (после 100 % — форсаж) · Shift — форсаж вкл/выкл · Пробел/F — сброс · Q — оружие · V — камера · N — камера за оружием · L — обзор (камера мышью, самолёт держит курс)<br>Контейнер захватывает цель сам (1–18 км, высота от 400 м, цель не закрыта домами) · R — следующая цель · G — окно контейнера · Z — увеличение · O — лазер<br>X — ловушки (ЛТЦ и диполи) · M — карта · Esc — пауза')),
+    pauseHelp: () => (craft.heli ? heliHelp() : IS_TOUCH ? tr('{0} «ГАЗ» — ступени, после 100 % — форсаж. «ЛОВУШКИ» — ЛТЦ и диполи разом (зажмите — очередью). Панель слева: тап по оружию — выбор, по строке цели — следующая цель, «ТВ» — окно контейнера (тап по окну — увеличение). Контейнер захватывает цель сам: 1–18 км, высота от 400 м, цель не закрыта домами.', [aimOn() ? tr('Ведите пальцем по экрану — камера поворачивается, самолёт летит туда, куда она смотрит (белый кружок). Крестовина — точные крен и тангаж.') : tr('Левая половина экрана — ручка.')])
+      : tr('Стрелки — тангаж и крен · A/D — крен · W/S — газ ступенями (после 100 % — форсаж) · Shift — форсаж вкл/выкл · Пробел/F — сброс · Q — оружие · V — камера · N — камера за оружием · L — обзор (камера мышью, самолёт держит курс)<br>Контейнер захватывает цель сам (1–18 км, высота от 400 м, цель не закрыта домами) · R — следующая цель · G — окно контейнера · Z — увеличение · O — лазер<br>X — ловушки (ЛТЦ и диполи; зажать — очередью) · M — карта · Esc — пауза')),
   };
   return api;
 }

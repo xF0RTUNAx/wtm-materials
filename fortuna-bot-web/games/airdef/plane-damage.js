@@ -3,6 +3,7 @@
 // тянется след: серый дым (повреждено), чёрный (сильно), огонь (горит двигатель или бак). Один объект на модель самолёта.
 /* global THREE */
 import { splitPlane } from './plane-zones.js?v=20261022y';
+import { mergeLocal } from './merge.js?v=20261022y';
 const W = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3();
 const debris = []; // общие для всех самолётов обломки: { g, v, w, t }
 const SAMPS = new Map(); // точки обшивки по зонам — по ключу модели (зависят только от геометрии)
@@ -28,7 +29,7 @@ function dmgMaterial(src, U, toRoot, zid) {
     if (prev) prev(sh, r);
     sh.uniforms.uHole = U.uHole; sh.uniforms.uHoleN = U.uHoleN; sh.uniforms.uMark = U.uMark; sh.uniforms.uScor = U.uScor; sh.uniforms.uHZ = U.uHZ; sh.uniforms.uMZ = U.uMZ; sh.uniforms.uZid = { value: zid }; sh.uniforms.uToRoot = { value: toRoot };
     sh.vertexShader = 'uniform mat4 uToRoot; varying vec3 vMP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vMP = (uToRoot * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = DMG_GLSL + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+    sh.fragmentShader = DMG_GLSL + sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
   bool inHole = false; if (!gl_FrontFacing) for (int i = 0; i < ${NH}; i++) { vec4 h = uHole[i]; if (h.w > 0.0 && length(vMP - h.xyz) < h.w * 3.0) inHole = true; } // изнанка у дыры — тёмное нутро; в остальном изнанка — как у исходного (двусторонние поверхности моделей: крыло одним листом, у Су-35 и B-2 видно снизу)
   { float burn = 0.0, hot = 0.0;
     for (int i = 0; i < ${NH}; i++) { vec4 h = uHole[i]; if (h.w <= 0.0 || abs(uHZ[i] - uZid) > 0.5) continue;
@@ -53,9 +54,37 @@ function dmgMaterial(src, U, toRoot, zid) {
   return m;
 }
 
+// куски зон — в одну сетку (2026-10-23, нагрев телефонов): splitPlane режет каждую деталь модели на куски по зонам — у F/A-18 выходило
+// 104 сетки, то есть 104 вызова отрисовки и ещё 83 в тенях. Куски одной зоны с одним материалом, видимостью и тенью сливаются в одну сетку
+// в осях модели (только использованные вершины); выглядит так же. Не трогаем: стекло, прозрачное, вращающиеся и двигающиеся части
+// (винты, крылья), эффекты. Слитая геометрия — общая для всех самолётов той же модели (MERGED)
+const MERGED = new Map(), MM4 = new THREE.Matrix4();
+function mergeZones(root, parts, key) {
+  root.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
+  const moving = (o) => { for (let p = o.parent; p && p !== root; p = p.parent) if (p.userData.spin || p.userData.wa || p.userData.fx || p.userData.wings) return true; return false; };
+  for (const z of Object.keys(parts)) {
+    const by = new Map(), keep = [];
+    for (const q of parts[z]) {
+      if (q.userData.glass || q.userData.fx || moving(q) || !q.material || Array.isArray(q.material) || q.material.transparent) { keep.push(q); continue; }
+      const k = `${q.material.uuid}|${q.visible ? 1 : 0}${q.castShadow ? 1 : 0}${q.receiveShadow ? 1 : 0}|${q.renderOrder}|${q.userData.cut ? 1 : 0}${q.userData.scar ? 1 : 0}`;
+      (by.get(k) || by.set(k, []).get(k)).push(q);
+    }
+    for (const L of by.values()) {
+      if (L.length < 2) { keep.push(...L); continue; }
+      const ck = key + '|' + z + '|' + L.map((q) => q.geometry.uuid).join(','); let g = MERGED.get(ck);
+      if (!g) { g = mergeLocal(L.map((q) => ({ g: q.geometry, m: MM4.multiplyMatrices(inv, q.matrixWorld).clone() }))); MERGED.set(ck, g); }
+      const s = L[0], mm = new THREE.Mesh(g, s.material);
+      mm.castShadow = s.castShadow; mm.receiveShadow = s.receiveShadow; mm.renderOrder = s.renderOrder; mm.visible = s.visible; mm.userData = { ...s.userData }; mm.name = 'zone:' + z;
+      root.add(mm); for (const q of L) if (q.parent) q.parent.remove(q); keep.push(mm);
+    }
+    parts[z] = keep;
+  }
+}
+
 export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эффекты боя (или функция, которая их вернёт: создаются позже модели)
   const FX = () => (typeof fxOf === 'function' ? fxOf() : fxOf);
   const { P, parts } = splitPlane(root, key, meta);
+  mergeZones(root, parts, key);
   const mid = P.z0 + P.L * 0.55, wy = P.top - 0.4, wx = (P.fus + P.xm) / 2;
   // точки следа (оси модели): крылья — середина полуразмаха, хвост, двигатели (сопла по бортам), бак — центр
   const nz = (meta && meta.nozzles) || [], side = (s) => { const L = nz.filter((n) => Math.sign(n.x || 0.0001) === s); return L.length ? L.reduce((p, n) => p.add(n), new THREE.Vector3()).divideScalar(L.length) : null; };

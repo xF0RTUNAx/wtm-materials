@@ -21,7 +21,9 @@
   /* догрузка моделей и текстур после старта (меню уже на экране): статус внизу, исчезает, когда всё пришло */
   #assetLoad { position: fixed; z-index: 2147482000; left: 50%; transform: translateX(-50%); bottom: max(8px, var(--sa-b)); width: min(340px, 70vw); display: none; flex-direction: column; gap: 4px;
     background: rgba(16,20,15,.82); border: 1px solid #3a4334; padding: 6px 10px; color: #c9cebd; font: 500 11.5px 'IBM Plex Sans', sans-serif; text-align: center; pointer-events: none; }
-  #assetLoad.on { display: flex; } body.playing #assetLoad { bottom: auto; top: calc(var(--top) + 46px); width: min(260px, 50vw); opacity: .85; }
+  /* в бою — без надписи: тонкая полоска у нижнего края экрана (Mark 2026-10-23: подпись посреди экрана мешала) */
+  #assetLoad.on { display: flex; } body.playing #assetLoad { left: 0; right: 0; bottom: 0; transform: none; width: auto; padding: 0; border: 0; background: none; opacity: .55; }
+  body.playing #alTxt { display: none; } body.playing #assetLoad .ldbar { height: 3px; background: rgba(0,0,0,.25); }
   button { font: inherit; }
   kbd { display: inline-block; font-family: ui-monospace, Menlo, monospace; font-size: .92em; padding: 0 5px; border-radius: 5px; border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.1); color: #fff; }
 
@@ -203,6 +205,10 @@
   #tThr.ab { background: rgba(160,70,10,.65); border-color: #fb923c; }
   body.coarse #tCam { display: none; } body.coarse.spect #tCam { display: flex; }
   #rwr { position: absolute; right: max(14px, var(--sa-r)); bottom: 14px; width: 150px; height: 150px; }
+  /* вертолёт: «ПОНЯЛ» глушит писк захвата СПО (air.js rwrAck*); ПК — слева от СПО (справа внизу; над ней окно контейнера), телефон — справа от СПО вверху */
+  #rwrAck { position: absolute; display: none; pointer-events: auto; right: calc(max(14px, var(--sa-r)) + 162px); bottom: 68px; padding: 7px 14px; border-radius: 8px; border: 1.5px solid #fca5a5; background: rgba(127,29,29,.78); color: #fff;
+    font: 700 12px -apple-system, Segoe UI, sans-serif; letter-spacing: .06em; cursor: pointer; touch-action: none; text-shadow: none; }
+  #rwrAck.on { display: block; } body.coarse #rwrAck { right: auto; bottom: auto; left: calc(50% + 54px); top: var(--top); padding: 6px 10px; font-size: 11px; }
   #warn { position: fixed; top: 24%; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 900; color: #ff5b5b; display: none; letter-spacing: .06em; text-align: center; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #msg { position: fixed; top: 31%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; color: #fde68a; display: none; text-align: center; max-width: 80vw; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #podBox { position: absolute; display: none; pointer-events: auto; border: 1.5px solid rgba(160,255,190,.55); border-radius: 4px; overflow: hidden; cursor: crosshair; touch-action: none;
@@ -569,6 +575,7 @@
   <div id="mission"></div>
   <div id="wpn"></div>
   <canvas id="rwr" width="300" height="300"></canvas>
+  <button id="rwrAck" aria-label="Понял: заглушить писк захвата">ПОНЯЛ</button>
   <div id="podBox"><div class="x"></div><div class="info"></div><div class="info2"></div><div class="zoom">×1</div><div class="mask">МАСКИРОВКА</div></div>
 </div>
 <div id="warn"></div><div id="msg"></div><div id="perf"></div>
@@ -683,6 +690,9 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="../config.js?v=20261022y"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script> // сервис-воркер: файлы игры — в кэше устройства (games/airdef-sw.js, airdef/offline.js); только на сайте или с ?sw=1. Версия — как у модулей: поднимается при деплое
+  if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261022y', { scope: './airdef' }).catch(() => {});
+</script>
 <script type="module" src="airdef/main.js?v=20261022y"></script>
 </body>
 </html>

@@ -8,6 +8,8 @@
 /* global THREE */
 import { tr } from './i18n.js?v=20261022y';
 import { CREDITS } from './models/credits.js?v=20261022y';
+import { mergeLocal } from './merge.js?v=20261022y';
+import { cachedFetch } from './offline.js?v=20261022y';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -390,9 +392,48 @@ const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x2222
 // (иначе держит ещё столько же обычной памяти). На ПК и в стендах (свои рендереры) — как было
 const TOUCH = typeof matchMedia === 'function' && typeof location !== 'undefined' && (/[?&]touch=1/.test(location.search) || matchMedia('(pointer: coarse)').matches);
 const TEXC = new Map(); // общие текстуры моделей: отпечаток картинки | карта нормалей | предел размера → Promise<THREE.Texture>
+// детали с одинаковым материалом — одна сетка (2026-10-23, нагрев телефонов): в файлах моделей у каждой детали свой материал, даже у
+// одинаковых — у F/A-18 28 деталей = 28 вызовов отрисовки (после разрезки на зоны повреждений — 104), у «Шилки» 77, у построек объектов —
+// десятки (и столько же у их дальних копий). Сливаются детали одной части (body / turret / cradle / prop* / wingA… — части двигаются) и одной
+// метки «#…» (свой цвет постройки) с той же текстурой, картой нормалей, прозрачностью и камуфляжем; цвет детали (с перекраской и яркостью
+// модели) уходит в цвет вершин вместе с затенением в стыках — свет считается так же (цвет вершины × текстура). Стекло и камуфляж — только
+// одинаковые; жилые дома (по цвету их материала считается дальняя «коробка») — без переноса цвета. ?merge=0 — как было
+const PINK = (f) => f[0] === 1 && f[1] === 0 && f[2] === 1;
+function mergeSame(meshes, MM) {
+  if (typeof location !== 'undefined' && /[?&]merge=0/.test(location.search)) return meshes;
+  const sub = (n) => (n || '').split('|').pop(), groups = new Map(), noAO = typeof location !== 'undefined' && /[?&]ao=0/.test(location.search), HC = new THREE.Color();
+  const info = (m) => { const n = m.name || '', pbr = m.mat.pbrMetallicRoughness || {}, f = pbr.baseColorFactor || [1, 1, 1, 1], rc = MM.recolor ? MM.recolor[sub(n)] : null, glass = m.mat.alphaMode === 'BLEND';
+    const camo = !!MM.camo && !glass, tex = rc != null || !pbr.baseColorTexture ? -1 : pbr.baseColorTexture.index, fold = !glass && !camo && !MM.bld;
+    const k = MM.bright && !glass ? MM.bright : 1; // яркость — только к цвету материала: перекраска и «нет текстуры» — как есть (так было до слияния)
+    const c = rc != null ? HC.setHex(rc).toArray() : tex < 0 && PINK(f) ? HC.setHex(0x2e3128).toArray() : [f[0] * k, f[1] * k, f[2] * k];
+    return { n, pbr, f, glass, tex, fold, c };
+  };
+  for (const m of meshes) {
+    const I = info(m), drop = MM.drop && MM.drop.includes(sub(I.n));
+    const k = [I.n.includes('|') ? I.n.split('|')[0] : 'body', I.n.split('#')[1] || '', m.mat.alphaMode || '', m.mat.alphaCutoff ?? '', I.fold ? 'fold' : I.f.join(',') + '|' + (MM.recolor && MM.recolor[sub(I.n)] != null ? MM.recolor[sub(I.n)] : ''),
+      I.tex, m.mat.normalTexture ? m.mat.normalTexture.index : -1, /#camo$/.test(m.mat.name || '') ? 1 : 0, I.tex >= 0 && m.uv ? 1 : 0, I.fold ? '' : m.ao ? m.ao.constructor.name : '', drop ? 'drop' + I.n : '', m.hub ? m.hub.join(',') : ''].join('|');
+    (groups.get(k) || groups.set(k, []).get(k)).push([m, I]);
+  }
+  if (groups.size === meshes.length) return meshes;
+  const cat = (L, f) => { const A = L.map(f), C = A[0].constructor, out = new C(A.reduce((s, a) => s + a.length, 0)); let o = 0; for (const a of A) { out.set(a, o); o += a.length; } return out; };
+  return [...groups.values()].map((G) => {
+    const L = G.map((x) => x[0]); if (L.length === 1) return L[0];
+    const nv = L.reduce((s, m) => s + m.pos.length / 3, 0), idx = new (nv > 65535 ? Uint32Array : Uint16Array)(L.reduce((s, m) => s + m.idx.length, 0));
+    let io = 0, vo = 0; for (const m of L) { for (let i = 0; i < m.idx.length; i++) idx[io++] = m.idx[i] + vo; vo += m.pos.length / 3; }
+    const out = { ...L[0], pos: cat(L, (m) => m.pos), nor: cat(L, (m) => m.nor), uv: L[0].uv && G[0][1].tex >= 0 ? cat(L, (m) => m.uv) : L[0].uv && L.every((m) => m.uv) ? cat(L, (m) => m.uv) : null, ao: !G[0][1].fold && L[0].ao ? cat(L, (m) => m.ao) : null, idx };
+    if (G[0][1].fold) { // цвет детали × затенение — в цвет вершин
+      const vc = new Float32Array(nv * 3); let o = 0;
+      for (const [m, I] of G) { const n = m.pos.length / 3, A = !noAO && m.ao, as = A ? A.length / n : 0, ak = A ? (A instanceof Uint8Array ? 1 / 255 : A instanceof Uint16Array ? 1 / 65535 : 1) : 0;
+        for (let v = 0; v < n; v++) for (let c = 0; c < 3; c++) vc[o++] = I.c[c] * (A ? A[v * as + c] * ak : 1); }
+      Object.assign(out, { vc, fold: true, texIdx: G[0][1].tex });
+    }
+    return out;
+  });
+}
 async function load(name, base) {
-  const r = await fetch(`${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`); if (!r.ok) throw new Error(`${name}: ${r.status}`);
-  const { meshes, images, hashes, textures, nrm } = parseGlb(await r.arrayBuffer());
+  const r = await cachedFetch(modelUrl(base, name)); if (!r.ok) throw new Error(`${name}: ${r.status}`); // с кэша устройства, если модель уже скачана (offline.js)
+  const pg = parseGlb(await r.arrayBuffer()), { images, hashes, textures, nrm } = pg;
+  const meshes = mergeSame(pg.meshes, META[name] || META[name.replace(/_lo$/, '')] || {});
   const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = META[name] || META[name.replace(/_lo$/, '')] || {};
   const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
@@ -430,19 +471,19 @@ async function load(name, base) {
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(m.pos, 3)); g.setAttribute('normal', new THREE.BufferAttribute(m.nor, 3));
     if (m.uv) g.setAttribute('uv', new THREE.BufferAttribute(m.uv, 2));
-    if (m.ao) g.setAttribute('color', new THREE.BufferAttribute(m.ao, 4, true));
+    if (m.vc) g.setAttribute('color', new THREE.BufferAttribute(m.vc, 3)); else if (m.ao) g.setAttribute('color', new THREE.BufferAttribute(m.ao, 4, true));
     g.setIndex(new THREE.BufferAttribute(m.idx, 1)); g.computeBoundingSphere();
     const pbr = m.mat.pbrMetallicRoughness, f = pbr.baseColorFactor || [1, 1, 1, 1], glass = m.mat.alphaMode === 'BLEND';
-    const map = pbr.baseColorTexture ? tex[pbr.baseColorTexture.index] : null;
+    const map = m.fold ? (m.texIdx >= 0 ? tex[m.texIdx] : null) : pbr.baseColorTexture ? tex[pbr.baseColorTexture.index] : null; // m.fold — слитые детали: цвет — в вершинах (mergeSame)
     const nmap = !glass && m.mat.normalTexture && !/[?&]nrm=0/.test(typeof location !== 'undefined' ? location.search : '') ? tex[m.mat.normalTexture.index] : null; // ?nrm=0 — без карты нормалей (сравнение)
     const mat = glass
       ? new THREE.MeshPhongMaterial({ color: new THREE.Color(f[0], f[1], f[2]).lerp(new THREE.Color(0.2, 0.26, 0.32), f[0] + f[1] + f[2] > 1.8 ? 0.8 : 0.4), /* белое «стекло» авторов — в тонированное, своё цветное — почти как есть */ transparent: true, opacity: Math.max(0.5, f[3]), specular: 0xffffff, shininess: 120, side: THREE.DoubleSide, depthWrite: false }) // стекло заметно: не меньше 0,5
-      : new THREE.MeshPhongMaterial({ map, ...(nmap ? { normalMap: nmap, normalScale: new THREE.Vector2(1, -1) /* текстуры glTF не перевёрнуты (flipY = false), тангенсов у мешей нет — зелёный канал в three r128 надо инвертировать (как делает GLTFLoader) */ } : {}), color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
-        ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '') ? { vertexColors: true } : {}) }); // ?ao=0 — без затенения (сравнение)
-    const rc = MM.recolor && MM.recolor[sub(m.name)];
-    if (MM.bright && !glass) mat.color.multiplyScalar(MM.bright);
+      : new THREE.MeshPhongMaterial({ map, ...(nmap ? { normalMap: nmap, normalScale: new THREE.Vector2(1, -1) /* текстуры glTF не перевёрнуты (flipY = false), тангенсов у мешей нет — зелёный канал в three r128 надо инвертировать (как делает GLTFLoader) */ } : {}), color: m.fold ? new THREE.Color(1, 1, 1) : new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
+        ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.vc || (m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '')) ? { vertexColors: true } : {}) }); // ?ao=0 — без затенения (сравнение)
+    const rc = m.fold ? null : MM.recolor && MM.recolor[sub(m.name)]; // у слитых перекраска и яркость — уже в цвете вершин
+    if (MM.bright && !glass && !m.fold) mat.color.multiplyScalar(MM.bright);
     if (rc != null) { mat.color.setHex(rc); mat.map = null; }
-    else if (!map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» — в нейтральный тёмный
+    else if (!m.fold && !map && !glass && f[0] === 1 && f[1] === 0 && f[2] === 1) mat.color.setHex(0x2e3128); // пурпурная «нет текстуры» — в нейтральный тёмный
     if (MM.camo && !glass && (MM.camo.tex ? map : /#camo$/.test(m.mat.name || ''))) camoMat(mat, MM.camo, !/_lo$/.test(name) && !/[?&]det=0/.test(typeof location !== 'undefined' ? location.search : '')); // узор — шейдером (tex — по краске текстуры; зернистость — только у ближней модели)
     else if ((MM.weapon || MM.samMissile || /^w_nar_/.test(name)) && !glass) { wearMat(mat); if (!matte) { mat.specular.setHex(0x262626); mat.shininess = 24; } } // оружие — краска с потёртостями, полуматовая
     const mesh = new THREE.Mesh(g, mat); mesh.name = m.name; mesh.userData.glass = glass; const pt = partOf(m.name || ''); pt.add(mesh); if (m.hub) pt.userData.hub = m.hub;
@@ -538,6 +579,9 @@ function start(name) {
   if (LOADING.has(name)) return; LOADING.add(name); LSTAT.req++;
   load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; if (READY) READY(name); }).catch((e) => { LSTAT.done++; console.warn('модель не загрузилась:', e.message); });
 }
+const modelUrl = (base, name) => `${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`;
+// все модели игры — для «Скачать всё заранее» (Настройки, offline.js prefetchAll): самолёты, оружие, техника и её дальние копии, постройки
+export function modelUrls(base = BASE) { const N = new Set([...Object.keys(META), ...Object.keys(GLB_V)]); for (const n of UNIT_LO) N.add(n + '_lo'); return [...N].map((n) => modelUrl(base, n)); }
 export function loadModels(base, onReady) {
   BASE = base; READY = onReady;
   for (const [name, m] of Object.entries(META)) if (!m.units && !m.bld && !m.lazy) start(name); // самолёты (кроме lazy), оружие, ракеты ПЗРК — сразу
@@ -581,6 +625,26 @@ export function weaponMesh(key, W, geoFn, mat) {
   const n = WMODEL[key];
   if (n && LOADED[n]) { const o = LOADED[n].clone(); o.traverse((q) => { if (q.isMesh) q.castShadow = true; }); setWings(o, 0); return o; } // крылья — сложены (на подвеске)
   return new THREE.Mesh(geoFn(key, W), mat);
+}
+// оружие на пилоне (своём и ИИ): та же модель, слитая — одна сетка на материал (2026-10-23, нагрев телефонов: у самолёта игрока подвески
+// давали ~100 вызовов отрисовки и столько же в тенях — каждая деталь бомбы отдельно). Крылья сложены, частей не двигаем — на пилоне не нужно;
+// в полёте — weaponMesh (там крылья раскрываются)
+const PYLON = new Map(), PI4 = new THREE.Matrix4();
+export function pylonMesh(key, W, geoFn, mat) {
+  const n = WMODEL[key]; if (!n || !LOADED[n]) return weaponMesh(key, W, geoFn, mat);
+  let P = PYLON.get(n);
+  if (!P) {
+    const src = LOADED[n].clone(); setWings(src, 0); src.updateMatrixWorld(true); PI4.copy(src.matrixWorld).invert();
+    const by = new Map(); let ok = true;
+    src.traverse((q) => { if (!q.isMesh) return; if (q.isSkinnedMesh || q.morphTargetInfluences || Array.isArray(q.material)) ok = false; let v = true; for (let p = q; p && p !== src; p = p.parent) if (!p.visible) v = false; if (!v) return;
+      (by.get(q.material) || by.set(q.material, []).get(q.material)).push({ g: q.geometry, m: new THREE.Matrix4().multiplyMatrices(PI4, q.matrixWorld) }); });
+    P = ok && by.size ? { q: src.quaternion.clone(), s: src.scale.clone(), parts: [...by].map(([m, gs]) => ({ m, g: mergeLocal(gs) })) } : 'orig';
+    PYLON.set(n, P);
+  }
+  if (P === 'orig') return weaponMesh(key, W, geoFn, mat); // особая модель (кости, морфы, несколько материалов на сетке) — как есть
+  const o = new THREE.Group(); o.quaternion.copy(P.q); o.scale.copy(P.s);
+  for (const p of P.parts) { const m = new THREE.Mesh(p.g, p.m); m.castShadow = true; o.add(m); }
+  return o;
 }
 // класс машины по подвеске: бомбы (в том числе управляемые) — ударный, иначе — ракетный
 const BOMB = new Set(['bomb', 'lgb', 'tvb', 'gps']);

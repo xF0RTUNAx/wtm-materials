@@ -14,6 +14,8 @@ export function createShell(C, { IS_TOUCH, ls }) {
     } catch (_) { return { W: null, proxy: false }; }
   })();
   const tgv = (v) => { try { return !!(TG.W && TG.W.isVersionAtLeast && TG.W.isVersionAtLeast(v)); } catch (_) { return false; } };
+  // проверка (только ?test=1): insets=t,r,b,l,tg — эмуляция выреза и кнопок Telegram на ПК (как в «Летке»)
+  const TEST_INSETS = (() => { try { const Q = new URLSearchParams(location.search); return Q.get('test') === '1' && Q.get('insets') ? Q.get('insets').split(',').map((v) => +v || 0) : null; } catch (_) { return null; } })();
   const S = { fsPref: (ls.get('fortuna_airdef_fs') ?? '1') === '1', playing: false, wake: null, tgFs: false };
 
   // ── безопасные зоны ──
@@ -34,11 +36,13 @@ export function createShell(C, { IS_TOUCH, ls }) {
       ins[0] = Math.max(ins[0], a.top || 0); ins[1] = Math.max(ins[1], a.right || 0); ins[2] = Math.max(ins[2], a.bottom || 0); ins[3] = Math.max(ins[3], a.left || 0);
       tg = c.top || (TG.W.isFullscreen ? 46 : 0);
     } else if (TG.proxy && IS_TOUCH && Math.abs(window.innerHeight - (screen.height < screen.width === window.innerHeight < window.innerWidth ? screen.height : screen.width)) < 4) tg = 46;
+    if (TEST_INSETS) { for (let i = 0; i < 4; i++) ins[i] = TEST_INSETS[i] || 0; tg = TEST_INSETS[4] || 0; }
     try {
       const st = document.documentElement.style;
       ['t', 'r', 'b', 'l'].forEach((k, i) => st.setProperty('--sa-' + k, Math.round(ins[i]) + 'px'));
       st.setProperty('--tg-t', Math.round(tg) + 'px');
       document.body.classList.toggle('tgfs', tg > 0);
+      dispatchEvent(new Event('airdef-safearea')); // верх экрана сдвинулся — сенсорные кнопки вылета пересчитывают места (air.js layoutTouch)
     } catch (_) { /* без DOM (проверки) */ }
   }
   applySafeArea();

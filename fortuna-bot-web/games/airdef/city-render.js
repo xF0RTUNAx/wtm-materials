@@ -21,6 +21,7 @@ Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // 
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt;
 import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261022y'; // MIT, meshoptimizer 0.21
+import { bakeGroup } from './merge.js?v=20261022y';
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -644,8 +645,10 @@ export async function farIndex(geo, k = 0.04, min = 16, err = 0.08) {
 export async function farGeo(geo, big, o = {}) {
   const ix = await farIndex(geo, o.k ?? (big ? 0.05 : 0.04), o.min ?? (big ? 48 : 16), o.err ?? (big ? 0.005 : 0.08)); if (!ix) return geo; // крупные — по ошибке 0,5 % (силуэт), а не по доле: сколько треугольников останется, столько и будет
   const P = geo.attributes.position, U = geo.attributes.uv, N0 = geo.attributes.normal, n = ix.count, pos = new Float32Array(n * 3), uv = U ? new Float32Array(n * 2) : null, on = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) { const v = ix.getX(i); pos[i * 3] = P.getX(v); pos[i * 3 + 1] = P.getY(v); pos[i * 3 + 2] = P.getZ(v); if (uv) { uv[i * 2] = U.getX(v); uv[i * 2 + 1] = U.getY(v); } if (N0) { on[i * 3] = N0.getX(v); on[i * 3 + 1] = N0.getY(v); on[i * 3 + 2] = N0.getZ(v); } }
-  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (uv) g.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  // цвет вершин — тоже (2026-10-23: у слитых деталей моделей в нём цвет детали, models.js mergeSame; раньше терялось только затенение)
+  const Cc = geo.attributes.color, cs = Cc ? Cc.itemSize : 0, col = Cc ? new Float32Array(n * cs) : null, ck = Cc && Cc.normalized ? (Cc.array instanceof Uint8Array ? 1 / 255 : Cc.array instanceof Uint16Array ? 1 / 65535 : 1) : 1;
+  for (let i = 0; i < n; i++) { const v = ix.getX(i); pos[i * 3] = P.getX(v); pos[i * 3 + 1] = P.getY(v); pos[i * 3 + 2] = P.getZ(v); if (uv) { uv[i * 2] = U.getX(v); uv[i * 2 + 1] = U.getY(v); } if (N0) { on[i * 3] = N0.getX(v); on[i * 3 + 1] = N0.getY(v); on[i * 3 + 2] = N0.getZ(v); } if (col) for (let c = 0; c < cs; c++) col[i * cs + c] = Cc.array[v * cs + c] * ck; }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); if (uv) g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); if (col) g.setAttribute('color', new THREE.BufferAttribute(col, cs));
   g.computeVertexNormals(); const F = Float32Array.from(g.attributes.normal.array); creaseNormals(g, 0.72);
   // нормаль модели — где она совпадает с гранью (ровные стены коробчатых домов), развёрнутая по обходу грани (тонкие двусторонние крыши
   // склеились верхом и низом — иначе чёрные скаты); иначе — сглаженная
@@ -1420,6 +1423,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
         const f = G.objFar[o.id]; if (!f || !f.userData.left.has(name)) continue;
         for (const q of o.models) if (q.m === name) { const m = t.clone(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); f.add(m); }
         f.userData.left.delete(name); f.userData.ready = !f.userData.left.size;
+        if (f.userData.ready && !f.userData.ruin) bakeGroup(f); // все дальние копии на месте — одной сеткой на материал (было: 9 построек порта × детали — десятки вызовов отрисовки); ближние — не запекаем: видны редко, а копия — лишняя память
       }
     }).catch(() => { /* без дальней копии — коробка */ });
   };

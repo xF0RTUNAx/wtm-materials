@@ -31,7 +31,8 @@ export function applyLayout() {
     if (moved) { el.style.left = (clamp(c.x, 0, 1) * 100).toFixed(2) + '%'; el.style.top = (clamp(c.y, 0, 1) * 100).toFixed(2) + '%'; el.style.right = el.style.bottom = 'auto'; }
     else if (op) el.style.left = el.style.top = el.style.right = el.style.bottom = '';
     else { el.style.left = el.style.top = ''; el.style.right = el.dataset.r || ''; el.style.bottom = el.dataset.b || ''; } // места вылета по умолчанию — из air.js (layoutTouch)
-    el.style.transform = moved ? `translate(-50%,-50%) scale(${sc})` : sc !== 1 ? `scale(${sc})` : '';
+    const kd = !moved && +el.dataset.k > 0 ? +el.dataset.k : 1, sk = sc * kd; // kd — сжатие мест по умолчанию на низком экране (air.js layoutTouch); свои места не сжимаются
+    el.style.transform = moved ? `translate(-50%,-50%) scale(${sc})` : sk !== 1 ? `scale(${+sk.toFixed(3)})` : '';
     el.style.transformOrigin = moved ? '' : 'right bottom';
     el.style.opacity = c && Number.isFinite(c.o) ? String(clamp(c.o, 0.15, 1)) : '';
   }

@@ -8,7 +8,8 @@ import { MODES } from './sim/strike.js?v=20261022y';
 import { WEATHERS } from '../drone/world.js?v=20261022y';
 import { WINTER_KEYS } from './winter-render.js?v=20261022y';
 import { LESSONS } from './training.js?v=20261022y';
-import { MODEL_CREDITS } from './models.js?v=20261022y';
+import { MODEL_CREDITS, modelUrls } from './models.js?v=20261022y';
+import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261022y';
 import { openLayoutEditor } from './layout.js?v=20261022y';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022y';
@@ -287,11 +288,30 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <p class="hint">${tr('Тяжелее всего: разрешение, тени, эффекты кадра, город «Полный» и окно контейнера. Слабому устройству: «Предел кадров 30», «Контейнер 30 к/с», «Тени через кадр» или без теней, разрешение 60–70%. Техника, ракеты, бомбы и самолёты — одинаково подробные при любых настройках. «Детали улиц» — при городе «Средний» или «Полный».')}</p>
       <button class="btn" id="sApplyGfx">${tr('Применить (перезапуск)')}</button></div></details>`;
   }
+  // «Скачать всё заранее» (offline.js): модели, текстуры, звуки — в кэш устройства; идёт и при уходе с вкладки «Настройки»
+  const pf = { run: false, done: false, k: 0, txt: '', stop: null };
+  const pfShow = () => { const b = $('pfBar'), f = $('pfFill'), t = $('pfTxt'), btn = $('sPrefetch'); if (f) f.style.width = (pf.k * 100).toFixed(1) + '%'; if (b) b.style.display = pf.run || pf.done ? '' : 'none'; if (t) t.textContent = pf.txt; if (btn) btn.textContent = pf.run ? tr('Остановить') : tr('Скачать всё заранее (≈ 385 МБ, лучше по Wi-Fi)'); };
+  function offInfo() { storageInfo().then((s) => { const e = $('offInfo'); if (!e) return; e.textContent = !s.ok ? tr('Хранилище на этом устройстве недоступно — ресурсы грузятся при каждом запуске.') : tr('Модели, текстуры и звуки, скачанные один раз, хранятся на устройстве — в бою и при следующих запусках не догружаются.') + (s.used != null ? ' ' + tr('Занято: {0} МБ.', [Math.round(s.used)]) : ''); }); }
+  async function prefetch() {
+    if (pf.run) { pf.stop.stop = true; return; }
+    if (!offlineOk()) { pf.txt = tr('Хранилище на этом устройстве недоступно.'); pfShow(); return; }
+    pf.run = true; pf.done = false; pf.stop = { stop: false }; pf.k = 0; pf.txt = tr('Скачиваем…'); pfShow();
+    const r = await prefetchAll(modelUrls(), (d, n, b, tot) => { pf.k = tot ? b / tot : d / n; pf.txt = tr('Скачано {0} из {1} МБ (файлов {2} из {3})', [Math.round(b / 1048576), Math.round(tot / 1048576), d, n]); pfShow(); }, pf.stop);
+    pf.run = false; pf.done = true; pf.txt = pf.stop.stop ? tr('Остановлено: скачанное сохранено, остальное — по ходу игры.') : r.fail ? tr('Готово, не скачалось файлов: {0} — догрузятся по ходу игры.', [r.fail]) : tr('Готово: всё на устройстве, в бою ничего не догружается.'); pfShow(); offInfo();
+  }
   function renderSet() {
+    setTimeout(offInfo, 0); // «На устройстве»: занято, доступно ли хранилище
     $('tab-set').innerHTML = `<div class="cat-h">${tr('Язык · Language')}</div><div class="seg" data-seg="lang">${LANGS.map(([k, l]) => `<button data-v="${k}" class="${k === LANG ? 'on' : ''}">${l}</button>`).join('')}</div>
       <div class="cat-h">${tr('Графика')}</div><div class="gfx-row">${Object.entries(PRESETS).map(([k, p]) => `<button class="gfx ${k === C.gfxKey ? 'on' : ''}" data-gfx="${k}"><b>${p.name}</b></button>`).join('')}</div>
-      ${C.gfxKey === 'custom' ? customPanel() : ''}
+      ${C.gfxKey === 'custom' ? customPanel() : `<div class="prow"><span>${tr('Предел кадров')}</span>${seg('fpsCap', C.fpsCap, [['auto', C.IS_TOUCH ? tr('Авто (60)') : tr('Авто')], [30, '30'], [45, '45'], [60, '60'], ...(C.IS_TOUCH ? [] : [[0, tr('Нет')]])])}</div>
+      <p class="hint">${tr('Картинка та же, меньше кадров — меньше нагрев и расход батареи. Телефону с экраном 90–120 Гц: 60 или 45.')}</p>
+      ${C.IS_TOUCH ? `<div class="prow"><span>${tr('Чёткость')}</span>${seg('sharp', C.SHARP, [['auto', tr('Обычная')], ['high', tr('Высокая')], ['native', tr('Как у экрана')]])}</div>
+      <p class="hint">${tr('Высокая и «как у экрана» — чётче картинка, но больше нагрузка на видеочип и нагрев. Применяется перезапуском.')}</p>` : ''}`}
       <label class="chk"><input type="checkbox" id="sPerf" ${C.perfHud ? 'checked' : ''}> ${tr('счётчик производительности в бою')}</label>
+      <div class="cat-h">${tr('На устройстве')}</div>
+      <p class="hint" id="offInfo">${tr('Модели, текстуры и звуки, скачанные один раз, хранятся на устройстве — в бою и при следующих запусках не догружаются.')}</p>
+      <button class="btn alt" id="sPrefetch">${pf.run ? tr('Остановить') : tr('Скачать всё заранее (≈ 385 МБ, лучше по Wi-Fi)')}</button>
+      <div class="ldbar" id="pfBar" style="margin-top:6px;${pf.run || pf.done ? '' : 'display:none'}"><i id="pfFill" style="width:${pf.k * 100}%"></i></div><p class="hint" id="pfTxt">${pf.txt}</p>
       <p class="hint">${tr('Видеочип: {0}', [C.gpuName])}</p>
       <div class="cat-h">${tr('Время и погода')}</div>${seg('wx', C.weatherKey, [['random', tr('Случайная')], ...WEATHER_KEYS.map((k) => [k, trIf(WEATHERS[k].name)])])}
       <div class="cat-h">${tr('Управление')}</div>
@@ -302,6 +322,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sAim" ${C.sens.aim !== false ? 'checked' : ''}> ${tr('наведение камерой: ведите пальцем по экрану — самолёт летит туда, куда смотрит камера (выкл — ручка в левой половине)')}</label>` : ''}
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sPadOn" ${C.sens.pad ? 'checked' : ''}> ${tr('крестовина: тангаж и крен кнопками (точные манёвры)')}</label>
       <label class="chk">${tr('сила крестовины')} <input type="range" id="sPadK" min="0.15" max="1" step="0.05" value="${C.sens.padK}"> <b id="vPadK">${Math.round(C.sens.padK * 100)}%</b></label>` : ''}
+      <label class="chk"><input type="checkbox" id="sCmBurst" ${C.sens.cmBurst ? 'checked' : ''}> ${tr('ловушки по нажатию: серия из 3 залпов (выкл — один залп; удержание кнопки или X / C — очередью)')}</label>
       ${C.IS_TOUCH ? '' : `<label class="chk"><input type="checkbox" id="sKeys" ${C.sens.keys ? 'checked' : ''}> ${tr('подсказки клавиш в бою — панель слева внизу (F1 — включить и выключить в бою)')}</label>`}
       <label class="chk">${tr('поворот обзора оператора ЗРК')} <input type="range" id="sLook" min="0.3" max="2.5" step="0.05" value="${C.sens.look}"> <b id="vLook">×${C.sens.look.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sAuto" ${C.auto ? 'checked' : ''}> ${tr('«АВТО» — помощь в бою (кнопка «АВТО» / клавиша T прямо в бою)')}</label>
@@ -353,8 +374,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       C.GO[k] = k === 'dyn' || k === 'fx' || k === 'props' ? num === 1 : Number.isFinite(num) ? num : v;
       ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); renderSet(); return;
     }
+    const fc = e.target.closest('[data-seg="fpsCap"] [data-v]'); if (fc) { C.setFpsCap(fc.dataset.v); renderSet(); return; } // предел кадров — сразу, без перезапуска
+    const sp = e.target.closest('[data-seg="sharp"] [data-v]'); if (sp) { if (sp.dataset.v !== C.SHARP) { ls.set('fortuna_airdef_sharp', sp.dataset.v); location.reload(); } return; } // чёткость — перезапуск
     const lg = e.target.closest('[data-seg="lang"] [data-v]'); if (lg) { if (lg.dataset.v !== LANG) { setLang(lg.dataset.v); const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.href; } return; } // язык — перезагрузка (Mark 2026-10-21)
     if (e.target.id === 'sApplyGfx') { location.reload(); return; }
+    if (e.target.id === 'sPrefetch') { prefetch(); return; }
     if (g) { ls.set('fortuna_airdef_gfx', g.dataset.gfx); const u = new URL(location.href); u.searchParams.delete('gfx'); location.href = u.href; }
     if (e.target.id === 'sLayout') openLayoutEditor();
     if (w) { ls.set('fortuna_airdef_weather', w.dataset.v); const u = new URL(location.href); u.searchParams.delete('weather'); location.href = u.href; }
@@ -368,6 +392,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sFull') { C.GO.fullRes = e.target.checked; ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); }
     if (e.target.id === 'sInv') { C.sens.invert = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sAim') { C.sens.aim = e.target.checked; C.saveSens(); }
+    if (e.target.id === 'sCmBurst') { C.sens.cmBurst = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sKeys') { C.sens.keys = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sPadOn') { C.sens.pad = e.target.checked; C.saveSens(); document.body.classList.toggle('nopad', !C.sens.pad); }
     if (e.target.id === 'sPadK') { C.sens.padK = +e.target.value; $('vPadK').textContent = Math.round(C.sens.padK * 100) + '%'; C.saveSens(); }

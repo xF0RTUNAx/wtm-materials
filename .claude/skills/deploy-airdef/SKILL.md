@@ -23,6 +23,8 @@ description: Деплой «Воздушного превосходства» (f
 поднять последнюю букву `?v=2026MMDDx` во всех файлах:
 `grep -rl "?v=СТАРАЯ" games game-server tools | xargs sed -i '' 's/?v=СТАРАЯ/?v=НОВАЯ/g'` (в `fortuna-bot-web`), проверить, что старой не осталось.
 Версии файлов моделей (`GLB_V` в models.js) — отдельные, их меняют только при пересборке модели.
+Версия модулей — она же версия кэша устройства (сервис-воркер `games/airdef-sw.js?v=…`): без её подъёма игроки останутся на старых файлах.
+Список файлов для «Скачать всё заранее»: `deno run -A tools/airdef-headless/assets-manifest.js` (пишет `games/airdef/assets.json`; коммитить вместе с деплоем).
 
 ## 4. Supabase (только если менялись `supabase/` или `progress.js` / `arsenal.js` / `sim/flight.js`)
 - `deno run -A tools/airdef-headless/sync-shared.js`, затем `progress-server-test.js`.

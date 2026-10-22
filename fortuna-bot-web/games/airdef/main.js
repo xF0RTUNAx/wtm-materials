@@ -27,7 +27,7 @@ import { createRaid } from './sim/raid.js?v=20261022y';
 import { POD } from './sim/combined.js?v=20261022y';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022y';
 import { slotCount } from './launchers.js?v=20261022y';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261022y';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261022y';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261022y';
 import { createSound } from './sound.js?v=20261022y';
 import { ico, iconize } from './icons.js?v=20261022y';
@@ -46,6 +46,7 @@ import { createShell } from './shell.js?v=20261022y';
 import { createTraining, LESSONS } from './training.js?v=20261022y';
 import { createPhoto } from './photo.js?v=20261022y';
 import { createMenu } from './menu.js?v=20261022y';
+import { registerSW } from './offline.js?v=20261022y';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -66,17 +67,17 @@ export const PRESETS = {
     perf: { scale: 1, min: 0.75, aa: 'off', up: 'off' } },
   medium: { name: tr('Средний'), skyOnly: true, fxLo: true, lodObj: 4500, desc: tr('большинство телефонов'), prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, bldFar: 1600, treeFar: 450, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
     perf: { scale: 1, min: 0.7, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
-  // «Кастомный»: всё настраивается (Настройки → «Кастомный»). Основа — техника, ракеты, бомбы, самолёты и эффекты как на
-  // «Высоком» (тени вблизи, свечение, сглаживание), город проще
-  custom: { name: tr('Кастомный'), lodObj: 5000, desc: tr('свои настройки: разрешение, тени, город, эффекты'), prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
-    shadows: true, shadowMap: 2048, shadowBox: 450, aniso: 4, props: false,
-    perf: { scale: 1, min: 0.6, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
   high: { name: tr('Высокий'), lodObj: 6000, desc: tr('мощные телефоны и ПК: тени, свечение'), prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, bldFar: 2600, treeFar: 700, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
     shadows: true, shadowMap: 2048, shadowBox: 600, aniso: 4,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
   ultra: { name: tr('Ультра'), lodObj: 8000, desc: tr('тени 4K, тени деревьев, дальняя прорисовка'), prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, bldFar: 3600, treeFar: 1000, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
     shadows: true, treeShadows: true, shadowMap: 4096, shadowBox: 800, aniso: 8,
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'fsr', sharp: 0.35 }, post: { bloom: 0.6, vignette: 0.18, grade: 0.3, exposure: 0.95 } },
+  // «Кастомный» — последним, после «Ультра» (Mark 2026-10-23): всё настраивается (Настройки → «Кастомный»). Основа — техника, ракеты, бомбы, самолёты и эффекты как на
+  // «Высоком» (тени вблизи, свечение, сглаживание), город проще
+  custom: { name: tr('Кастомный'), lodObj: 5000, desc: tr('свои настройки: разрешение, тени, город, эффекты'), prCap: 1.5, prMul: 1, draw: 12000, houseK: 0.8, bldNear: 0, treeNear: 0, groundSeg: 256, zoneTex: 1024, trees: 5000, clouds: 300, roofDetail: true, particles: 4000,
+    shadows: true, shadowMap: 2048, shadowBox: 450, aniso: 4, props: false,
+    perf: { scale: 1, min: 0.6, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
 };
 export const WEATHER_KEYS = ['day', 'morning', 'evening', 'sunset', 'overcast']; // ночь временно убрана (Mark, 2026-10-18): вернуть 'night' — и она снова в настройках
 // цветокоррекция по погоде (post.js): gGain — оттенок светов, gLift — теней, gSat — насыщенность, gCon — контраст; сдержанно
@@ -93,6 +94,11 @@ if (!PRESETS[gfxKey]) gfxKey = 'medium';
 // свои настройки пресета «Кастомный» (Настройки; применяются перезапуском): разрешение, динамическое
 // разрешение и его цель, тени, город, детали улиц, эффекты кадра, сглаживание, дальность; на сенсорных — без ×2 (если не «полное»)
 const GO = (() => { try { return JSON.parse(ls.get('fortuna_airdef_gfxo') || '{}') || {}; } catch (_) { return {}; } })();
+// предел кадров для всех пресетов, кроме «Кастомного» (у него свой): 'auto' — на телефоне 60, на ПК без предела; 30 / 45 / 60; 0 — нет (ПК)
+// чёткость на телефоне для всех пресетов, кроме «Кастомного» (Mark 2026-10-23: «мыльно»; после снижения нагрузки на процессор — можно чётче):
+// 'auto' — как было (×1,25 у «Низкого» и «Среднего», ×1,5 у «Высокого» и «Ультра»), 'high' — ×1,75 / ×2, 'native' — как у экрана. Применяется перезапуском
+const SHARP = (() => { const v = ls.get('fortuna_airdef_sharp'); return v === 'high' || v === 'native' ? v : 'auto'; })();
+let fpsCap = (() => { const v = ls.get('fortuna_airdef_fps'); return v === null || v === 'auto' || !Number.isFinite(+v) ? 'auto' : +v; })();
 function applyGfx(base, o) {
   const P = { ...base, perf: { ...base.perf }, post: base.post ? { ...base.post } : null };
   if (IS_TOUCH && !o.fullRes) P.prCap = Math.min(P.prCap, 1.5);
@@ -129,7 +135,8 @@ function touchGfx(P, custom) {
   if (P.shadowMap > 2048) Object.assign(P, { shadowMap: 2048, shadowBox: Math.min(P.shadowBox, 600) });
   if (!custom && P.perf.aa === 'msaa') P.perf.aa = 'fxaa';
   P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
-  if (!custom) P.prCap = Math.min(P.prCap, P.prCap > 1.5 ? 1.5 : 1.25); // телефон и планшет: экран и так плотный — меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
+  const b = PRESETS[gfxKey].prCap; // по пресету, а не по P: applyGfx уже срезал до 1,5 — «Высокий» и «Ультра» выходили ×1,25 (ревью 2026-10-23)
+  if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? (b > 1.5 ? 2 : 1.75) : Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25); // телефон и планшет: экран и так плотный — меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
   return P;
 }
 // окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
@@ -212,6 +219,7 @@ const snd = createSound();
 const C = {
   $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
+  SHARP, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,
   hooks: {}, // события боя для текущего режима
   MODE: () => (C.net && C.net.battle ? MODES[C.net.battle.mode] : MODES[setup.diff]), // онлайн — режим комнаты
@@ -443,7 +451,7 @@ const ST_ORDER = [3, 4, 2, 5, 1, 6, 0, 7], LOD_D = 2500; // дальше LOD_D �
 function hangLoad(g, stations, load) {
   const out = []; let oi = 0;
   for (const l of [...load].sort((x, y) => AG[y.key].mass - AG[x.key].mass)) for (let k = 0; k < l.n && oi < 8; k++) {
-    const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = weaponMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла — самолёты пересоберутся
+    const W = AG[l.key], p = stations[ST_ORDER[oi++]], m = pylonMesh(l.key, W, weaponGeo, wMat); if (weaponPending(l.key)) wantWeapon(l.key); // пришла — самолёты пересоберутся
     m.position.set(W.kind === 'tbm' ? 0 : p.x, p.y - (W.vis.hang ?? W.vis.r) - 0.05, p.z); g.add(m); out.push({ m, l, k }); // «Кинжал» — под фюзеляжем по оси
   }
   return out;
@@ -806,7 +814,7 @@ function orient() {
 addEventListener('resize', orient); addEventListener('orientationchange', () => setTimeout(orient, 120)); orient();
 
 // ═════════════ Кадр ═════════════
-let last = performance.now(), lastDraw = 0, last3D = 0, ms3D = 0, lastRaf = 0, rafEma = 16.7, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0;
+let last = performance.now(), lastDraw = 0, last3D = 0, ms3D = 0, lastRaf = 0, rafEma = 16.7, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0, capAcc = 0;
 const msWin = [], dr = { scale: perf.scale, calm: 0, prev: 0, before: 0, hold: 0, miss: 0 };
 const pf = { cpu: 0, n: 0, cpuS: 0, calls: 0, tris: 0 };
 C.perfHud = ls.get('fortuna_airdef_perfhud') === '1';
@@ -841,13 +849,16 @@ function frame(now) {
   const idle = !!(cc && cc.idle && cc.idle()); // фон меню — готовые кадры: 3D не рисуется
   // Mark 2026-10-21: на телефоне вне полёта ограничение 30 к/с — только для 3D (нагрев и батарея — от видеочипа), а бой, экран боя и
   // кнопки (перезарядка, таймеры) — каждый кадр, без рывков
-  // частота экрана (сглаженный интервал requestAnimationFrame): предел 60 к/с — только на экранах ≥ 100 Гц (на 90 Гц порог «кадр не
-  // раньше 14,7 мс» пропускал каждый второй кадр — 45 к/с); 3D вне полёта — 30 к/с независимо от предела интерфейса (ревью 2026-10-21)
+  // предел — накопителем времени (Mark 2026-10-23: телефоны с экраном 90 Гц грелись, игра шла 75–90 к/с): кадр рисуется, когда набралось
+  // 1000/предел мс, остаток переносится — на 90 Гц предел 60 даёт ровно 60 (два кадра из трёх), а не 45, как порог «не раньше 14,7 мс»;
+  // на телефоне 60 к/с по умолчанию при любой частоте экрана; 3D вне полёта — 30 к/с независимо от предела интерфейса (ревью 2026-10-21)
   const rd = now - lastRaf; lastRaf = now; if (rd > 0 && rd < 100) rafEma += (rd - rafEma) * 0.05;
-  const capUI = idle ? 1000 / 8 : C.state === 'menu' || C.paused ? 1000 / 30 : P.cap ? 1000 / P.cap : 0;
-  const capMs = capUI || (IS_TOUCH && rafEma < 10 ? 1000 / 60 : 0);
-  const cap3D = !capUI && IS_TOUCH && !fly ? 1000 / 30 : 0;
-  if (capMs && now - lastDraw < capMs - 2) return;
+  const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 — нет)
+  const menu = idle || C.state === 'menu' || C.paused; // меню и пауза — 30 к/с всему (и 3D, и интерфейсу)
+  const capUI = idle ? 1000 / 8 : menu ? 1000 / 30 : uc ? 1000 / uc : 0;
+  const capMs = capUI || (IS_TOUCH && uc !== 0 ? 1000 / 60 : 0);
+  const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) — не отменяет 30 для 3D вне полёта
+  if (capMs) { capAcc = Math.min(capAcc + Math.max(0, rd), capMs * 2); if (capAcc < capMs - 1.5) return; capAcc = Math.max(0, capAcc - capMs); } else capAcc = 0;
   const ms = now - lastDraw; lastDraw = now;
   const draw3D = !cap3D || now - last3D >= cap3D - 2; if (draw3D) { ms3D = now - last3D; last3D = now; }
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр
@@ -903,6 +914,7 @@ function frame(now) {
 // ═════════════ Запуск ═════════════
 // готовые модели — в фоне; загрузилась — самолёты пересобираются уже с ней (постройки — ставятся, когда город собран)
 const pendingObj = [];
+registerSW(); // файлы игры — из кэша устройства (только на сайте; offline.js)
 loadModels(new URL('./', import.meta.url).href, (name) => {
   if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха — та же модель, что у целей)
   if (isObjModel(name)) { if (C.G) C.G.attachObjModel(name, () => objModel(name)); else pendingObj.push(name); return; } // постройки целей
