@@ -10,14 +10,16 @@ const read = (f) => { try { return JSON.parse(Deno.readTextFileSync(`${DIR}/${f}
 const P = read('ПАСПОРТ.json'), R = read('ОТЧЁТ.json'), S = R.sketchfab || {};
 if (!P.files || !P.files.glb || !P.files.blend || !R.model) fail('в паспорте нет files.glb / files.blend или в отчёте нет model');
 for (const f of ['title', 'lead', 'parts', 'tags']) if (!S[f] || (Array.isArray(S[f]) && !S[f].length)) fail(`в отчёте нет sketchfab.${f}`);
-const previews = R.previews || [], files = [P.files.glb, P.files.blend, ...previews];
+const upload = S.glb || P.files.glb; // файл для Sketchfab: у моделей с текстурами и анимацией — свой (sketchfab.glb в отчёте), иначе игровой
+const previews = R.previews || [], files = [...new Set([upload, P.files.blend, ...previews])];
 for (const f of files) try { Deno.statSync(`${DIR}/${f}`); } catch { fail(`нет файла ${f} в папке модели`); }
 const out = `${DIR.replace(/\/[^/]*$/, '')}/${R.name_en || P.name} — Sketchfab`;
 Deno.mkdirSync(out, { recursive: true });
 for (const f of files) Deno.copyFileSync(`${DIR}/${f}`, `${out}/${f}`);
+const GAME = 'https://fortunawtm.com/fortuna-bot-web/games/airdef.html'; // ссылка на игру — в каждом описании модели (Mark 2026-10-22)
 const k = (R.model.tris / 1000).toFixed(1), dims = S.dimensions || `length ${R.model.length_m} m, span ${R.model.span_m} m`;
 const text = `=== Что вставить в поля Sketchfab ===
-Загружать: ${P.files.glb}
+Загружать: ${upload}
 
 NAME (Название):
 ${S.title}
@@ -29,9 +31,10 @@ ${S.lead} Built from scratch in Blender from public reference drawings.
 - ~${k}k triangles, game-ready
 - Real-world scale (${dims})
 - Separate parts: ${S.parts.join(', ')}
-- Simple PBR materials, no textures
+- ${S.textures ? 'PBR materials with ' + S.textures : 'Simple PBR materials, no textures'}${S.animation ? '\n- Animation: ' + S.animation : ''}
 
 Made for the mobile game "Air Superiority" by xFORTUNAx.
+Play the game in your browser: ${GAME}
 
 YouTube: https://youtube.com/@xf0rtunax
 ----------------------------------------

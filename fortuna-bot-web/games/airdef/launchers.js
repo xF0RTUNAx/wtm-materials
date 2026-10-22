@@ -61,7 +61,7 @@ export const LNCH = {
   zu23: { mode: 'gun', L: [{ tp: [0, 0.43, 0.34], cp: [0, 0.62, -1], slots: [] }], elMin: -0.05, elMax: 1.5, slewY: 1.4, slewE: 1.0 }, /* ЗУ-23-2 — LuckySkink9661 */
   phalanx: { mode: 'gun', L: [{ tp: [-0.03, 1.17, 0.02], cp: [0, 1.59, 0], slots: [] }], elMin: -0.1, elMax: 1.45, slewY: 2.0, slewE: 1.6, fp: true, eye: [0.5, 2.0, -0.2] }, /* Phalanx — DenisGLabrecque: только вид оператора (тумба — корабельная) */
   zsu234: { mode: 'gun', L: [{ tp: [-0.04, 1.61, -0.21], cp: [0, 0.31, -1.21], slots: [] }], elMin: -0.05, elMax: 1.5, slewY: 1.6, slewE: 1.1 },
-  gepard: { mode: 'gun', L: [{ tp: [0, 1.52, -0.6], cp: [0, 0.81, 0.29], slots: [] }], elMin: -0.05, elMax: 1.4, slewY: 1.6, slewE: 1.1 }, // по готовой модели
+  gepard: { mode: 'gun', L: [{ tp: [0, 1.57, -0.43], cp: [0, 0.76, 0.14], slots: [] }], elMin: -0.05, elMax: 1.4, slewY: 1.6, slewE: 1.1 }, // собственная модель (tools/airdef-models/own/gepard): оси — из prepare.js
   m163: { mode: 'gun', L: [{ tp: [0.2, 1.91, 0.19], cp: [-0.48, 0.42, -0.59], slots: [] }], elMin: -0.05, elMax: 1.4, slewY: 1.8, slewE: 1.2 },
   // Tracked Rapier: пусковая на корме развёрнута в рабочее положение; по бокам — балки по 4 ракеты (по модели stealth86)
   rapier: { mode: 'rail', L: [{ tp: [0, 1.04, 1.78], cp: [0, 0.41, 0.34], slots: [[0.83, 0.19, -0.52], [0.83, -0.19, -0.76], [1.12, 0.19, -0.52], [1.12, -0.19, -0.76], [-0.83, 0.19, -0.52], [-0.83, -0.19, -0.76], [-1.12, 0.19, -0.52], [-1.12, -0.19, -0.76]] }], box: { len: 1.9, r: 0.1 }, elMin: 0.05, elMax: 1.1, slewY: 1.5, slewE: 0.9 },

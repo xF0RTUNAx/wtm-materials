@@ -1289,16 +1289,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Flakpanzer Gepard | High-Quality model",
-  "author": "Scout",
-  "url": "https://sketchfab.com/3d-models/flakpanzer-gepard-high-quality-model-43746c9ec4a64f8d9a30db81b82843bd",
-  "license": "CC-BY-4.0",
-  "files": [
-   "gepard",
-   "gepard_lo"
-  ]
- },
- {
   "title": "Nasams 1 Surface-to-Air Missile System",
   "author": "Muhamad Mirza Arrafi",
   "url": "https://sketchfab.com/3d-models/nasams-1-surface-to-air-missile-system-5fb34fab137c430988fd5642a3b87db3",

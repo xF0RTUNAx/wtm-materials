@@ -412,7 +412,7 @@ async function load(name, base) {
     const nmap = !glass && m.mat.normalTexture && !/[?&]nrm=0/.test(typeof location !== 'undefined' ? location.search : '') ? tex[m.mat.normalTexture.index] : null; // ?nrm=0 — без карты нормалей (сравнение)
     const mat = glass
       ? new THREE.MeshPhongMaterial({ color: new THREE.Color(f[0], f[1], f[2]).lerp(new THREE.Color(0.2, 0.26, 0.32), f[0] + f[1] + f[2] > 1.8 ? 0.8 : 0.4), /* белое «стекло» авторов — в тонированное, своё цветное — почти как есть */ transparent: true, opacity: Math.max(0.5, f[3]), specular: 0xffffff, shininess: 120, side: THREE.DoubleSide, depthWrite: false }) // стекло заметно: не меньше 0,5
-      : new THREE.MeshPhongMaterial({ map, ...(nmap ? { normalMap: nmap } : {}), color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
+      : new THREE.MeshPhongMaterial({ map, ...(nmap ? { normalMap: nmap, normalScale: new THREE.Vector2(1, -1) /* текстуры glTF не перевёрнуты (flipY = false), тангенсов у мешей нет — зелёный канал в three r128 надо инвертировать (как делает GLTFLoader) */ } : {}), color: new THREE.Color(f[0], f[1], f[2]), specular: matte ? 0x0c0c0c : 0x3a3a3a, shininess: matte ? 10 : 38, side: THREE.DoubleSide, /* matte — краска техники без блеска */
         ...(m.mat.alphaMode === 'MASK' ? { alphaTest: m.mat.alphaCutoff ?? 0.5 } : {}), ...(m.ao && !/[?&]ao=0/.test(typeof location !== 'undefined' ? location.search : '') ? { vertexColors: true } : {}) }); // ?ao=0 — без затенения (сравнение)
     const rc = MM.recolor && MM.recolor[sub(m.name)];
     if (MM.bright && !glass) mat.color.multiplyScalar(MM.bright);

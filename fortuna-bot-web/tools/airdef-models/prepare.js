@@ -416,17 +416,9 @@ const CONFIG = {
     hinge: [-0.035, 2.33, 0.075], turretYaw: Math.PI, colors: { '#msl': [0.55, 0.55, 0.52] }, // пусковая у автора смотрит назад; ракеты — белые
     groups: (c) => { if (c.mat === 0) return 'body'; if (c.ctr[1] < 1.36) return null; if (c.ctr[1] < 1.6) return 'turret';
       const ax = Math.abs(c.ctr[0]), y = c.ctr[1]; return ax > 0.72 && ax < 1.18 && ((y > 1.82 && y < 2.22) || (y > 2.42 && y < 2.82)) ? 'cradle#msl' : 'cradle'; } }, // ракеты — по двум рядам направляющих
-  gepard: { src: `${DL}/flakpanzer_gepard__high-quality_model.glb`, scale: 0.024, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, hinge: [0, 2.31, 0.06], camo: { scheme: 'nato', skip: /glass|gun|track|net/ }, // без упрощения (142 тыс.); камуфляж Бундесвера
-    // у модели нет текстур, цвета материалов — розовые и фиолетовые: красим в оливковый Бундесвера (RAL 6031), гусеницы и стволы — тёмные
-    colors: { body: [0.065, 0.08, 0.042], turret: [0.065, 0.08, 0.042], gun: [0.04, 0.042, 0.04], net: [0.08, 0.09, 0.06], track: [0.06, 0.06, 0.055], glass: [0.35, 0.38, 0.4] },
-    groups: (c) => {
-      if (c.min[1] < 1.5 || c.ctr[2] < -3.9 || c.ctr[2] > 2.2 || Math.abs(c.ctr[0]) > 1.45 || (c.ctr[2] > 1.4 && Math.abs(c.ctr[0]) > 1.0)) return 'body'; // ящики на бортах корпуса — не башня
-      // пушки (корпуса и стволы) по бортам башни качаются
-      const gunX = Math.abs(c.ctr[0]) > 0.7 && Math.abs(c.ctr[0]) < 1.45 && c.ctr[1] > 1.95 && c.ctr[1] < 2.7;
-      // пушка целиком (и мелкие детали ствола впереди цапф — дульные тормоза, кожухи) качается вместе
-      if (c.min[1] > 2.82 && c.ctr[2] > 1.2 && Math.abs(c.ctr[0]) < 0.8) return 'radar'; // РЛС обзора сзади на башне — крутится (передняя — сопровождения, с башней)
-      return gunX && (c.size[2] > 1.0 || c.ctr[2] < -0.3) ? 'cradle' : 'turret';
-    } },
+  gepard: { src: new URL('./own/gepard.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 1024, pickMesh: /./, hinge: [0, 2.316, 0.0077], pack0: 0,
+    // Flakpanzer Gepard: своя модель (Blender, own/gepard.glb): цвет (краска, песок, сколы, затенение) и карта нормалей (скруглённые рёбра, зерно) запечены в 1024; части — по именам объектов
+    groups: (c) => (/(^|\/)cradle/.test(c.path) ? 'cradle' : /(^|\/)radar/.test(c.path) ? 'radar' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
   nasams: { src: `${DL}/nasams_1_surface-to-air_missile_system.glb`, scale: 0.4, fwd: [0.174, 0.985], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, hinge: [0, 1.16, 1.42], tube: [0.3, 0.9],
     groups: (c) => {
       if (axis(c, [1.42, 1.16], [-0.903, 0.43], 2.0, -1.6, 6) && (c.min[1] > 0.55 || (c.ctr[1] > 0.45 && Math.abs(c.ctr[0]) < 1.4)) && !(c.size[1] > 2 && c.size[2] < 0.3)) return 'cradle'; // и большие грани контейнеров, уходящие ниже 0,55 м (были «корпусом» — при повороте пакета застывали)
@@ -620,6 +612,8 @@ const CONFIG = {
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256 };
+// Гепард (своя модель, 23 тыс.): дальняя копия — 8 тыс. треугольников, цвет 256, без карты нормалей
+CONFIG.gepard_lo = { ...CONFIG.gepard, target: 8000, simpErr: 0.05, tex: () => 256, nTex: null };
 // С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)
 CONFIG.s400_lo = { ...CONFIG.s400, target: 45000, simpErr: 0.02, tex: () => 512 };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
@@ -866,7 +860,7 @@ async function prepare(name, views) {
   const add = (arr, target) => { const b = arr instanceof Uint8Array ? arr : new Uint8Array(arr.buffer, arr.byteOffset, arr.byteLength); chunks.push(b); const pad = (4 - (b.length % 4)) % 4; if (pad) chunks.push(new Uint8Array(pad)); views_.push({ buffer: 0, byteOffset: off, byteLength: b.length, ...(target ? { target } : {}) }); off += b.length + pad; return views_.length - 1; };
   const texCache = new Map(); let texBytes = 0;
   async function texture(ti, size, png = false) { // png — с прозрачностью (листья, вырезка по альфе)
-    const key = `${ti}:${size}:${png}`; if (texCache.has(key)) return texCache.get(key);
+    const key = `${J.textures[ti].source}:${size}:${png}`; if (texCache.has(key)) return texCache.get(key); // одна картинка у нескольких текстур (материалов) — один файл
     const im = J.images[J.textures[ti].source], bv = J.bufferViews[im.bufferView];
     const ext = im.mimeType === 'image/jpeg' ? 'jpg' : 'png';
     Deno.writeFileSync(`${tmp}/t.${ext}`, g.bin.subarray(bv.byteOffset || 0, (bv.byteOffset || 0) + bv.byteLength));
@@ -905,11 +899,13 @@ async function prepare(name, views) {
     else if (glass && !m.forceGlass && !pbr.baseColorFactor) mat.pbrMetallicRoughness.baseColorFactor = [0.3, 0.36, 0.42, 0.35];
     if (src.alphaMode === 'MASK' || cut) { mat.alphaMode = 'MASK'; mat.alphaCutoff = cfg.cutoff ?? src.alphaCutoff ?? 0.5; } // cutoff — свой порог (тонкая хвоя: ниже, чтобы не «облезала»)
     if (pbr.baseColorTexture && m.hasUv && !glass && !(cfg.noTex && cfg.noTex.test(nm))) /* noTex — без текстуры (растянутая по торцам выгорает) */ mat.pbrMetallicRoughness.baseColorTexture = { index: await texture(pbr.baseColorTexture.index, cfg.tex(src), mat.alphaMode === 'MASK') };
+    // карта нормалей (у своих моделей запечена в Blender): PNG без потерь, размер cfg.nTex; у дальних копий (nTex: null) её нет
+    if (src.normalTexture && m.hasUv && !glass && cfg.nTex) mat.normalTexture = { index: await texture(src.normalTexture.index, cfg.nTex(src), true), scale: src.normalTexture.scale ?? 1 };
     materials.push(mat);
     const pos = new Float32Array(m.pos), b = bbox(pos), n = pos.length / 3, attrs = {};
     accs.push({ bufferView: add(pos, 34962), componentType: 5126, count: n, type: 'VEC3', min: b.mn, max: b.mx }); attrs.POSITION = accs.length - 1;
     accs.push({ bufferView: add(new Float32Array(m.nor), 34962), componentType: 5126, count: n, type: 'VEC3' }); attrs.NORMAL = accs.length - 1;
-    if (mat.pbrMetallicRoughness.baseColorTexture) { accs.push({ bufferView: add(new Float32Array(m.uv), 34962), componentType: 5126, count: n, type: 'VEC2' }); attrs.TEXCOORD_0 = accs.length - 1; }
+    if (mat.pbrMetallicRoughness.baseColorTexture || mat.normalTexture) { accs.push({ bufferView: add(new Float32Array(m.uv), 34962), componentType: 5126, count: n, type: 'VEC2' }); attrs.TEXCOORD_0 = accs.length - 1; }
     const ix = n < 65536 ? Uint16Array.from(m.idx) : Uint32Array.from(m.idx);
     accs.push({ bufferView: add(ix, 34963), componentType: n < 65536 ? 5123 : 5125, count: m.idx.length, type: 'SCALAR' });
     // hubs: { rotor: [x, y, z], … } — центр втулки винта (в осях правил, до центровки): в extras меша — models.js вращает вокруг неё

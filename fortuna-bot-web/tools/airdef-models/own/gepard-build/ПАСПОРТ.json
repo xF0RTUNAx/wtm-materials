@@ -1,0 +1,17 @@
+{
+ "key": "gepard",
+ "weapon": "",
+ "name": "Gepard",
+ "rev": 1,
+ "files": {
+  "glb": "gepard.glb",
+  "blend": "gepard.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "rig.py",
+   "deliver.py"
+  ]
+ },
+ "note": "gepard.glb здесь — облегчённый (текстуры 1024: цвет JPEG, нормали PNG), полный набор (2048, .blend, файл для Sketchfab с анимацией) собирается скриптами за ~2 мин: K29_OUT=<папка модели> K29_TEX=2048 Blender -b --factory-startup --python build.py --python bake.py --python deliver.py (нужны чертежи из папки модели у Mark: ~/Downloads/Воздушное превосходство/Модели/Свои/Гепард/чертежи)"
+}
