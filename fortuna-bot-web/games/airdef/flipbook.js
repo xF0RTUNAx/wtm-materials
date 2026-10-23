@@ -42,12 +42,12 @@ void main() {
 // или не загрузился — url (PNG / WebP); times — время каждого кадра, с (неравномерно: вспышка — покадрово, дальше реже), иначе — fps;
 // lit — множитель света сцены для дыма (у снятых с освещением в Blender свет уже в картинке — второй раз не затемнять);
 // push — сдвиг к камере (доля высоты кадра): у стоящих на земле низ кадра (пыль перед воронкой) не прячется в землю ровной линией;
-// soft — мягкий переход у земли и домов (доля высоты кадра; меньше 4 м не бывает); fade — сколько последних кадров растворяется, fadeT — то же
+// soft — мягкий переход у земли и домов (доля высоты кадра; меньше 4 м не бывает); onTex(t) — текстура пришла; fade — сколько последних кадров растворяется, fadeT — то же
 // в секундах съёмки, по S-кривой (облако не обрывается: его подхватывают частицы остаточного дыма)
 export function createBook(scene, cfg, max = 64) {
   const web = typeof document !== 'undefined' && document.createElementNS;
   const st = { ready: !web || !(cfg.ktx || cfg.wait) }; // ready — текстура пришла (пока нет — вызывающий берёт прежний эффект); без браузера — сразу
-  const done = () => { st.ready = true; };
+  const done = () => { st.ready = true; if (cfg.onTex) cfg.onTex(mat.uniforms.map.value); }; // onTex — сразу на видеокарту (не при первом показе)
   const tex = web ? (cfg.ktx && ktxOn() ? new THREE.Texture() : new THREE.TextureLoader().load(cfg.url, done)) : new THREE.Texture(); // без браузера (проверки) — пустая
   const geo = new THREE.InstancedBufferGeometry(), pl = new THREE.PlaneGeometry(1, 1);
   geo.setAttribute('position', pl.attributes.position); geo.setAttribute('uv', pl.attributes.uv); geo.setIndex(pl.index);

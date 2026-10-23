@@ -68,7 +68,7 @@ export const PRESETS = {
   medium: { name: tr('Средний'), skyOnly: true, fxLo: true, lodObj: 4500, desc: tr('большинство телефонов'), prCap: 1.5, prMul: 1, draw: 11000, houseK: 0.8, bldNear: 300, bldFar: 1600, treeFar: 450, treeNear: 110, groundSeg: 256, zoneTex: 1024, trees: 3500, clouds: 150, roofDetail: true, shadows: false, particles: 2500,
     perf: { scale: 1, min: 0.7, aa: 'fxaa', up: 'cas', sharp: 0.45 } },
   high: { name: tr('Высокий'), lodObj: 6000, desc: tr('мощные телефоны и ПК: тени, свечение'), prCap: 2, prMul: 1, draw: 16000, houseK: 1, bldNear: 450, bldFar: 2600, treeFar: 700, treeNear: 170, groundSeg: 320, zoneTex: 1024, trees: 14000, clouds: 500, roofDetail: true, particles: 4000,
-    shadows: true, shadowMap: 2048, shadowBox: 600, aniso: 4,
+    shadows: true, shadowMap: 2048, shadowBox: 600, aniso: 8, /* 4 → 8 (2026-10-23): земля и крыши под острым углом чётче, на телефонах почти бесплатно */
     perf: { scale: 1, min: 0.67, aa: 'msaa', up: 'cas', sharp: 0.4 }, post: { bloom: 0.35, grade: 0.18, vignette: 0.14 } },
   ultra: { name: tr('Ультра'), lodObj: 8000, desc: tr('тени 4K, тени деревьев, дальняя прорисовка'), prCap: 2, prMul: 1, draw: 20000, houseK: 1, bldNear: 650, bldFar: 3600, treeFar: 1000, treeNear: 260, groundSeg: 384, zoneTex: 2048, trees: 24000, clouds: 900, roofDetail: true, particles: 6000,
     shadows: true, treeShadows: true, shadowMap: 4096, shadowBox: 800, aniso: 8,
@@ -98,6 +98,21 @@ const GO = (() => { try { return JSON.parse(ls.get('fortuna_airdef_gfxo') || '{}
 // чёткость на телефоне для всех пресетов, кроме «Кастомного» (Mark 2026-10-23: «мыльно»; после снижения нагрузки на процессор — можно чётче):
 // 'auto' — как было (×1,25 у «Низкого» и «Среднего», ×1,5 у «Высокого» и «Ультра»), 'high' — ×1,75 / ×2, 'native' — как у экрана. Применяется перезапуском
 const SHARP = (() => { const v = ls.get('fortuna_airdef_sharp'); return v === 'high' || v === 'native' ? v : 'auto'; })();
+// класс видеокарты телефона (2026-10-23, «Обычная» чёткость — по нему): Android отдаёт модель (Adreno 740, Mali-G57 MC2), iPhone и iPad — «Apple GPU»
+// (все сильные); неизвестная — средний. ?gpu=low|mid|hi — проверить чужой класс
+const GPU_NAME = (() => { if (typeof document === 'undefined' || !document.createElement) return ''; try {
+  const c = document.createElement('canvas'), g = c.getContext('webgl'); if (!g) return '';
+  const e = g.getExtension('WEBGL_debug_renderer_info'), n = String(e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : g.getParameter(g.RENDERER) || '');
+  const l = g.getExtension('WEBGL_lose_context'); if (l) l.loseContext(); return n;
+} catch (_) { return ''; } })();
+const GPU_TIER = (() => {
+  const q = Q.get('gpu'); if (q === 'low' || q === 'mid' || q === 'hi') return q;
+  const s = GPU_NAME; if (/Apple|Xclipse/i.test(s)) return 'hi';
+  let m = s.match(/Adreno[^\d]*(\d{3})/i); if (m) return +m[1] >= 730 ? 'hi' : +m[1] >= 640 ? 'mid' : 'low'; // 610–630 — начальные, 640–725 — средние (SD 855–8+ Gen 1 ниже — 7xx), 730+ — флагманы
+  m = s.match(/Mali-?G(\d{2,3})/i); if (m) { const n = +m[1]; return n >= 100 ? (n >= 710 ? 'hi' : n >= 610 ? 'mid' : 'low') : n >= 76 ? 'mid' : 'low'; } // G52/G57/G68/G72 — начальные, G76–G78 и G610–G615 — средние, G710+ — флагманы
+  if (/PowerVR|IMG|Mali-[T4]/i.test(s)) return 'low';
+  return 'mid';
+})();
 let fpsCap = (() => { const v = ls.get('fortuna_airdef_fps'); return v === null || v === 'auto' || !Number.isFinite(+v) ? 'auto' : +v; })();
 function applyGfx(base, o) {
   const P = { ...base, perf: { ...base.perf }, post: base.post ? { ...base.post } : null };
@@ -137,7 +152,15 @@ function touchGfx(P, custom) {
   if (!custom && P.shadows && !(P.shEvery > 1)) { P.shEvery = 2; P.shAuto = true; } // тени через кадр (main.js frame: камера низко — каждый кадр)
   P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
   const b = PRESETS[gfxKey].prCap; // по пресету, а не по P: applyGfx уже срезал до 1,5 — «Высокий» и «Ультра» выходили ×1,25 (ревью 2026-10-23)
-  if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? (b > 1.5 ? 2 : 1.75) : Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25); // телефон и планшет: экран и так плотный — меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
+  // «Обычная» — по классу видеокарты (2026-10-23): начальные — как было (×1,25 / ×1,5), средние — «Средний» ×1,5, флагманы — на ступень выше всем;
+  // не тянет — динамическое разрешение само опустит (perf.min)
+  const AUTO = { low: { low: 1.25, medium: 1.25, high: 1.5, ultra: 1.5 }, mid: { low: 1.25, medium: 1.5, high: 1.5, ultra: 1.5 }, hi: { low: 1.5, medium: 1.75, high: 2, ultra: 2 } }[GPU_TIER];
+  if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? (b > 1.5 ? 2 : 1.75) : (AUTO[gfxKey] || Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25));
+  // ?fsrout=1 (проба): холст — в разрешении экрана, 3D — во внутреннем буфере той же чёткости, до экрана — FSR (края чётче, чем растяжка браузера)
+  if (!custom && /[?&]fsrout=1/.test(location.search) && P.prCap < 4) {
+    const native = (window.devicePixelRatio || 1) * (P.prMul || 1), k = Math.min(1, P.prCap / native);
+    P.prCap = 4; P.perf.scale = k; P.perf.min = Math.max(0.35, k * (P.perf.min || 0.7)); P.perf.up = 'fsr';
+  } // телефон и планшет: экран и так плотный — меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
   return P;
 }
 // окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
@@ -219,7 +242,7 @@ const snd = createSound();
 
 // ═════════════ Общий контекст режимов ═════════════
 const C = {
-  $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap,
+  $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, GPU_NAME, GPU_TIER,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
   SHARP, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,
@@ -740,7 +763,7 @@ C.start = function (game) {
   $('menu').classList.remove('on'); $('end').classList.remove('on'); $('pauseScr').classList.remove('on');
   document.body.classList.remove('menuing'); document.body.classList.add('playing');
   C.state = 'play'; C.camera.clearViewOffset(); C.shell.play(true);
-  C.ctrl = ctrls[game]; C.ctrl.start();
+  C.ctrl = ctrls[game]; C.ctrl.start(); prewarm(); // шейдеры сцены — сейчас, а не при первом взрыве или первом появлении техники
   if (C.progress) C.progress.runStart(game === 'multi' ? 'multi' : game, C.setup.diff === 'real' ? 'real' : 'arcade', C.setup.era); // опыт за бой (обучение, съёмка — без)
   resize();
 };
@@ -919,6 +942,8 @@ function frame(now) {
   } else $('perf').textContent = C.state === 'play' ? tr('{0} · {1} к/с · {2}%{3}', [P.name, fps, sc, netTxt]) : '';
 }
 
+// компиляция шейдеров всего, что есть в сцене (и скрытого — листы эффектов, дым): без неё первое появление эффекта = рывок кадра
+function prewarm() { try { if (renderer.compile) renderer.compile(scene, camera); } catch (_) { /* в проверках без WebGL — нет */ } }
 // ═════════════ Запуск ═════════════
 // готовые модели — в фоне; загрузилась — самолёты пересобираются уже с ней (постройки — ставятся, когда город собран)
 const pendingObj = [];
@@ -953,6 +978,9 @@ setInterval(() => {
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует
   C.fx = createFx(scene, P); C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев — по рельефу
+  // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек — на видеокарту, как только пришли; новые материалы — компилировать сразу
+  C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет — загрузится при первом показе */ } };
+  C.fx.onNewMats = () => prewarm();
   if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым — в половине разрешения
   await ldStep(tr('Режимы игры: вылет, оборона, обучение…'), 0.7);
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);

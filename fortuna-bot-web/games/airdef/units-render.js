@@ -560,9 +560,10 @@ export function createFx(scene, P) {
   // раскадровки: огненный шар с дымом (ohyhei), вспышка с ударным кольцом и пламя (Explosion FX Free, heyheythere);
   // на слабых пресетах — вдвое меньше (P.fxLo)
   const FXU_ = (f) => new URL(`./fx/${f}${P.fxLo ? '_lo' : ''}.png`, import.meta.url).href;
-  const EX = createBook(scene, { url: FXU_('explosion'), cols: 8, rows: 7, frames: 50, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.4 }, 48);
-  const BL = createBook(scene, { url: FXU_('blast'), cols: 8, rows: 2, frames: 16, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.6 }, 16);
-  const FL = createBook(scene, { url: FXU_('flame'), cols: 8, rows: 3, frames: 24, cell: [0.5, 1], anchor: [0.5, 0.92], up: true, loop: true, gain: 2.4 }, 96);
+  const onTex = (t) => { if (api && api.onTex) api.onTex(t); }; // текстура листа пришла — сразу на видеокарту (main.js; рывок при первом взрыве)
+  const EX = createBook(scene, { url: FXU_('explosion'), cols: 8, rows: 7, frames: 50, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.4, onTex }, 48);
+  const BL = createBook(scene, { url: FXU_('blast'), cols: 8, rows: 2, frames: 16, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.6, onTex }, 16);
+  const FL = createBook(scene, { url: FXU_('flame'), cols: 8, rows: 3, frames: 24, cell: [0.5, 1], anchor: [0.5, 0.92], up: true, loop: true, gain: 2.4, onTex }, 96);
   const books = [EX, BL, FL], LT = new THREE.Vector3();
   // взрывы по типу боевой части (2026-10-23, Mark: «пререндерить взрыв для каждой бомбы по боевой части — красиво, физически правдоподобно»):
   // свои симуляции Mantaflow в Blender (tools/airdef-fx/explode: огненный шар, тёмный дым, «гриб», волна пыли, выброс грунта и комья со шлейфами)
@@ -576,14 +577,15 @@ export function createFx(scene, P) {
       for (const [t, j] of Object.entries(J)) {
         const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261022y`, import.meta.url).href; // телефон и слабые пресеты — вдвое меньше (память)
         if (t === 'burn') { // столб дыма пожара — петля, стоит вертикально (поворот только вокруг вертикали)
-          CB = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [0.5, 1], anchor: j.anchor, up: true, loop: true, gain: 2.4, lit: 1.7, soft: 0.05 }, 32);
+          CB = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [0.5, 1], anchor: j.anchor, up: true, loop: true, gain: 2.4, lit: 1.7, soft: 0.05, onTex }, 32);
           XJ.burn = j; books.push(CB); if (LY) { CB.mesh.layers.set(LY[0]); CB.pre.layers.set(LY[0]); }
           for (const b of burning) if (!b.col) b.col = colAdd(b); // пожары, начавшиеся до прихода листа
           continue;
         }
-        const b = XB[t] = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [1, 1], anchor: j.anchor, gain: 2.4, lit: 1.7, push: t === 'air' || t === 'plane' ? 0 : 0.3, soft: 0.08, fadeT: j.times[j.frames - 1] * 0.45 }, t === 'light' || t === 'air' ? 48 : 24);
+        const b = XB[t] = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [1, 1], anchor: j.anchor, gain: 2.4, lit: 1.7, push: t === 'air' || t === 'plane' ? 0 : 0.3, soft: 0.08, fadeT: j.times[j.frames - 1] * 0.45, onTex }, t === 'light' || t === 'air' ? 48 : 24);
         XJ[t] = j; books.push(b); if (LY) { b.mesh.layers.set(LY[0]); b.pre.layers.set(LY[0]); }
       }
+      if (api && api.onNewMats) api.onNewMats(); // новые материалы листов — скомпилировать сразу
     }).catch(() => { /* нет листов — прежние раскадровки */ });
   }
   // EXK — во сколько раз крупнее физического (снято в масштабе: у ФАБ-500 шар ≈ 40 м); ?exk=1 / 2,5 — сравнить (Mark решает)
