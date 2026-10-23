@@ -10,7 +10,7 @@
 //   двигатель: меньше тяги (thrK), < 0,5 — нет форсажа, < 0,3 — горит; бак: < 0,7 — течь (leak, доля в с), < 0,3 — пожар.
 // Пожар (fire) и весь оторванный хвост медленно (быстро) съедают корпус — burnRate. События отрыва и пожара — из hitZones.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261022y';
+import { tr } from '../i18n.js?v=20261022z';
 export const DETACH = 0.15;
 const Q = new THREE.Quaternion(), E = new THREE.Euler(), R = new THREE.Vector3();
 export const DET_KEYS = ['consL', 'consR', 'tailL', 'tailR', 'tailAll'];
