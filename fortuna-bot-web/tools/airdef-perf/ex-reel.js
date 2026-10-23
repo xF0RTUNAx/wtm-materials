@@ -29,13 +29,17 @@ for (const [type, R, kind, label] of CASES) {
   }, R, kind, k++);
   const dir = `${root}/${type}`; Deno.mkdirSync(dir);
   for (let i = 0; i < SEC * FPS; i++) {
-    const url = await page.evaluate((i, FPS) => { const C = window.__a; window.__T = i / FPS - 0.5; if (i === Math.round(0.5 * FPS)) C.__boom();
+    const url = await page.evaluate((i, FPS, label) => { const C = window.__a; window.__T = i / FPS - 0.5; if (i === Math.round(0.5 * FPS)) C.__boom();
       for (let q = 0; q < 2; q++) { window.__t += 1000 / (2 * FPS); C.paused = false; window.__frame(window.__t); }
-      return C.renderer.domElement.toDataURL('image/jpeg', 0.92); }, i, FPS);
+      // подпись — прямо на кадре (в ffmpeg этой сборки нет drawtext)
+      const src = C.renderer.domElement, cv = window.__cv || (window.__cv = document.createElement('canvas')); cv.width = src.width; cv.height = src.height;
+      const g = cv.getContext('2d'); g.drawImage(src, 0, 0); const fs = Math.round(src.height * 0.042); g.font = `600 ${fs}px -apple-system, Segoe UI, sans-serif`;
+      g.lineWidth = fs * 0.16; g.strokeStyle = 'rgba(0,0,0,.65)'; g.fillStyle = '#fff'; g.strokeText(label, fs * 0.9, fs * 1.6); g.fillText(label, fs * 0.9, fs * 1.6);
+      return cv.toDataURL('image/jpeg', 0.92); }, i, FPS, label);
     Deno.writeFileSync(`${dir}/${String(i).padStart(4, '0')}.jpg`, Uint8Array.from(atob(url.split(',')[1]), (c) => c.charCodeAt(0)));
   }
-  const seg = `${root}/${type}.mp4`, font = '/System/Library/Fonts/Supplemental/Arial.ttf';
-  new Deno.Command('ffmpeg', { args: ['-v', 'error', '-y', '-framerate', String(FPS), '-i', `${dir}/%04d.jpg`, '-vf', `scale=1280:-2,drawtext=fontfile=${font}:text='${label}':x=28:y=24:fontsize=30:fontcolor=white:borderw=2:bordercolor=black@0.6`, '-c:v', 'libx264', '-crf', '18', '-pix_fmt', 'yuv420p', seg] }).outputSync();
+  const seg = `${root}/${type}.mp4`;
+  new Deno.Command('ffmpeg', { args: ['-v', 'error', '-y', '-framerate', String(FPS), '-i', `${dir}/%04d.jpg`, '-vf', 'scale=1280:-2', '-c:v', 'libx264', '-crf', '18', '-pix_fmt', 'yuv420p', seg] }).outputSync();
   parts.push(seg); console.log(type, 'готово');
 }
 Deno.writeTextFileSync(`${root}/list.txt`, parts.map((p) => `file '${p}'`).join('\n'));

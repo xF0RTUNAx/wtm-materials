@@ -586,7 +586,8 @@ export function createFx(scene, P) {
       }
     }).catch(() => { /* нет листов — прежние раскадровки */ });
   }
-  const EXK = 1.5, LATER = []; // LATER — отложенные эффекты { t — через сколько с, f }
+  // EXK — во сколько раз крупнее физического (снято в масштабе: у ФАБ-500 шар ≈ 40 м); ?exk=1 / 2,5 — сравнить (Mark решает)
+  const EXK = (typeof location !== 'undefined' && +new URLSearchParams(location.search).get('exk')) || 1.5, LATER = []; // LATER — отложенные эффекты { t — через сколько с, f }
   // 'plane' — сбитый самолёт (main.js down, air.js); 'air' — разрыв ЗУР / перехват любого размера (ревью: крупные ЗУР выглядели «сбитым»)
   const exType = (R, kind) => (kind === 'plane' ? 'plane' : kind === 'air' ? 'air' : R < 20 ? 'light' : R < 40 ? 'medium' : R < 60 ? 'heavy' : 'super');
   const CR = makeCraters(scene, P.craters || 150);
