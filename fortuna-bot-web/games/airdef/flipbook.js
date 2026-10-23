@@ -15,7 +15,8 @@ void main() {
   float s = uUp * (1.0 - smoothstep(0.55, 0.8, abs(t.y)));
   vec3 R = normalize(mix(cr, normalize(vec3(t.z, 0.0, -t.x) + vec3(1e-4, 0.0, 0.0)), s)), U = normalize(mix(cu, vec3(0.0, 1.0, 0.0), s));
   vec2 q = (position.xy + vec2(0.5 - uAnchor.x, uAnchor.y - 0.5)) * iSize;
-  vec4 mv = viewMatrix * vec4(iPos + t * (uPush * iSize.y) + R * q.x + U * q.y, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; // uPush — к камере: низ кадра не уходит в землю
+  float pd = min(uPush * iSize.y, 0.35 * length(cameraPosition - iPos)); // не больше трети расстояния: вблизи не вылезает поверх домов и не уходит за камеру
+  vec4 mv = viewMatrix * vec4(iPos + t * pd + R * q.x + U * q.y, 1.0); vD = -mv.z; gl_Position = projectionMatrix * mv; // uPush — к камере: низ кадра не уходит в землю
 }`;
 // в проходе дыма и облаков (половинное разрешение, своей глубины сцены нет) — мягкая проверка по глубине кадра: за домом не видно
 const FS = `uniform sampler2D map; uniform vec2 uGrid; uniform float uGain, uFogD, uLit, uSoft; uniform vec3 uLight, uFog;
@@ -41,11 +42,13 @@ void main() {
 // или не загрузился — url (PNG / WebP); times — время каждого кадра, с (неравномерно: вспышка — покадрово, дальше реже), иначе — fps;
 // lit — множитель света сцены для дыма (у снятых с освещением в Blender свет уже в картинке — второй раз не затемнять);
 // push — сдвиг к камере (доля высоты кадра): у стоящих на земле низ кадра (пыль перед воронкой) не прячется в землю ровной линией;
-// soft — мягкий переход у земли и домов (доля высоты кадра; меньше 4 м не бывает); fade — сколько последних кадров растворяется (облако
-// не обрывается: его подхватывают частицы остаточного дыма)
+// soft — мягкий переход у земли и домов (доля высоты кадра; меньше 4 м не бывает); fade — сколько последних кадров растворяется, fadeT — то же
+// в секундах съёмки, по S-кривой (облако не обрывается: его подхватывают частицы остаточного дыма)
 export function createBook(scene, cfg, max = 64) {
   const web = typeof document !== 'undefined' && document.createElementNS;
-  const tex = web ? (cfg.ktx && ktxOn() ? new THREE.Texture() : new THREE.TextureLoader().load(cfg.url)) : new THREE.Texture(); // без браузера (проверки) — пустая
+  const st = { ready: !web || !(cfg.ktx || cfg.wait) }; // ready — текстура пришла (пока нет — вызывающий берёт прежний эффект); без браузера — сразу
+  const done = () => { st.ready = true; };
+  const tex = web ? (cfg.ktx && ktxOn() ? new THREE.Texture() : new THREE.TextureLoader().load(cfg.url, done)) : new THREE.Texture(); // без браузера (проверки) — пустая
   const geo = new THREE.InstancedBufferGeometry(), pl = new THREE.PlaneGeometry(1, 1);
   geo.setAttribute('position', pl.attributes.position); geo.setAttribute('uv', pl.attributes.uv); geo.setIndex(pl.index);
   const aPos = new THREE.InstancedBufferAttribute(new Float32Array(max * 3), 3), aSize = new THREE.InstancedBufferAttribute(new Float32Array(max * 2), 2), aF = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4);
@@ -54,7 +57,7 @@ export function createBook(scene, cfg, max = 64) {
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false,
     uniforms: { map: { value: tex }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uAnchor: { value: new THREE.Vector2(...cfg.anchor) }, uUp: { value: cfg.up ? 1 : 0 },
       ...FXU, uGain: { value: cfg.gain || 2.2 }, uLit: { value: cfg.lit || 1 }, uPush: { value: cfg.push || 0 }, uSoft: { value: cfg.soft || 0 }, uFogD: { value: 0 }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() } } });
-  if (web && cfg.ktx && ktxOn()) ktxLoadUrl(cfg.ktx).then((t) => { mat.uniforms.map.value = t; }).catch(() => { mat.uniforms.map.value = new THREE.TextureLoader().load(cfg.url); });
+  if (web && cfg.ktx && ktxOn()) ktxLoadUrl(cfg.ktx).then((t) => { mat.uniforms.map.value = t; done(); }).catch(() => { mat.uniforms.map.value = new THREE.TextureLoader().load(cfg.url, done); });
   const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 0.8; scene.add(mesh); // после облаков (0,5), до дыма (1)
   // глубина плотной части (непрозрачный проход — раньше всего прозрачного): дым позади огня не закрывает его, дым спереди — закрывает
   const pre = new THREE.Mesh(geo, new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, uniforms: mat.uniforms, defines: { DEPTH_PRE: 1 }, colorWrite: false, depthWrite: true }));
@@ -62,9 +65,10 @@ export function createBook(scene, cfg, max = 64) {
   const live = [], asp = cfg.cell[0] / cfg.cell[1], n = cfg.frames, TM = cfg.times;
   // время съёмки → дробный номер кадра (между кадрами — смешение, как при постоянном fps)
   const LOOPT = TM ? TM[n - 1] + (TM[1] - TM[0]) : 0; // петля по времени съёмки: последний кадр → первый через один шаг
-  const frameAt = (t) => { if (t >= TM[n - 1]) return n - 1; let k = 0; while (k < n - 2 && TM[k + 1] <= t) k++; return k + (t - TM[k]) / (TM[k + 1] - TM[k]); };
+  // петля: после последнего кадра — плавно к первому (дальше f %= n)
+  const frameAt = (t) => { if (t >= TM[n - 1]) return cfg.loop ? n - 1 + (t - TM[n - 1]) / (LOOPT - TM[n - 1]) : n - 1; let k = 0; while (k < n - 2 && TM[k + 1] <= t) k++; return k + (t - TM[k]) / (TM[k + 1] - TM[k]); };
   return {
-    mesh, pre, mat, live,
+    mesh, pre, mat, live, get ready() { return st.ready; },
     // h — высота кадра в метрах; fps — скорость; t0 < 0 — задержка; a — прозрачность (меняет хозяин, напр. у затухающего пожара)
     // с times: fps — скорость против съёмки (1 — как снято; крупнее — медленнее)
     add(p, h, fps, o = {}) {
@@ -81,7 +85,9 @@ export function createBook(scene, cfg, max = 64) {
         if (!cfg.loop && f >= n - 1) { live.splice(i, 1); continue; }
         if (cfg.loop) f %= n;
         const f0 = Math.floor(f), f1 = cfg.loop ? (f0 + 1) % n : Math.min(n - 1, f0 + 1);
-        const a = it.a * (cfg.loop ? Math.min(1, it.t * 2) : cfg.fade ? Math.min(1, (n - 1 - f) / cfg.fade) : 1); // fade — последние кадры растворяются (дальше — частицы)
+        // fadeT — последние fadeT с съёмки растворяются по S-кривой (облако передаётся частицам — те появляются волнами за то же время); fade — в кадрах
+        let fa = 1; if (cfg.fadeT && TM) { const x = Math.min(1, Math.max(0, (TM[n - 1] - it.t * it.fps) / cfg.fadeT)); fa = x * x * (3 - 2 * x); } else if (cfg.fade) fa = Math.min(1, (n - 1 - f) / cfg.fade);
+        const a = it.a * (cfg.loop ? Math.min(1, it.t * 2) : fa);
         aPos.setXYZ(c, it.x, it.y, it.z); aSize.setXY(c, it.w, it.h); aF.setXYZW(c, f0, f1, f - f0, a); c++;
       }
       geo.instanceCount = c; mesh.visible = pre.visible = c > 0;

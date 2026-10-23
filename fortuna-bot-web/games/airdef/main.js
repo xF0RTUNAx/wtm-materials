@@ -378,7 +378,7 @@ C.podPass = function (cam, at, hPx) {
   };
 };
 const raidFx = {
-  down(a) { C.fx.explosion(a.pos, a.role === 'decoy' ? 8 : 22, 'air'); if (a.role === 'decoy') snd.samBurst(dist(a.pos), 0.8); else snd.planeKill(dist(a.pos)); const g = planeMeshes.get(a.id); if (g) { planeMeshes.delete(a.id); wrecks.push({ g, vel: a.vel.clone(), spin: (Math.random() - 0.5) * 3, t: 0 }); } if (C.hooks.planeDown) C.hooks.planeDown(a); },
+  down(a) { C.fx.explosion(a.pos, a.role === 'decoy' ? 8 : 22, a.role === 'decoy' ? 'air' : 'plane'); /* 'plane' — свой лист: топливо и обломки */ if (a.role === 'decoy') snd.samBurst(dist(a.pos), 0.8); else snd.planeKill(dist(a.pos)); const g = planeMeshes.get(a.id); if (g) { planeMeshes.delete(a.id); wrecks.push({ g, vel: a.vel.clone(), spin: (Math.random() - 0.5) * 3, t: 0 }); } if (C.hooks.planeDown) C.hooks.planeDown(a); },
   out(a) { const g = planeMeshes.get(a.id); if (g) { scene.remove(g); planeMeshes.delete(a.id); } if (C.hooks.planeOut) C.hooks.planeOut(a); },
   release(a, key) { const k = AG[key] && AG[key].kind; if ((k === 'agm' || k === 'arm' || k === 'cruise') && a.role !== 'carrier') snd.airLaunch(dist(a.pos)); if (C.hooks.aiRelease) C.hooks.aiRelease(a, key); }, // ракета с самолёта ИИ — запись пуска
 };
@@ -952,7 +952,7 @@ setInterval(() => {
   await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует
-  C.fx = createFx(scene, P);
+  C.fx = createFx(scene, P); C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев — по рельефу
   if (pipe && pipe.fx) { C.fx.setLayers(FX_LAYER, FX_ADD_LAYER); if (C.G.clouds) C.G.clouds.layers.set(FX_LAYER); } // облака и дым — в половине разрешения
   await ldStep(tr('Режимы игры: вылет, оборона, обучение…'), 0.7);
   ctrls.air = createAir(C); ctrls.defense = createDefense(C);

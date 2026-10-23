@@ -95,7 +95,7 @@ export function createAir(C) {
     const d = dmg * C.MODE().dmgTaken;
     craft.hp -= d; flashT = 0.35; snd.hit();
     dmgEvents(hitZones(craft, d, from), by);
-    if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0); finish(tr('Сбит: {0}', [by]), false); }
+    if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'plane'); snd.planeKill(0); finish(tr('Сбит: {0}', [by]), false); }
   }
   // повреждения зон (sim/damage.js): что случилось — словами и звуком, отлетевшее — с самолёта (plane-damage.js)
   const ZNAME = { consL: tr('Оторвало законцовку левого крыла — тянет влево, держите ручку'), consR: tr('Оторвало законцовку правого крыла — тянет вправо, держите ручку'), tailL: tr('Разбит хвост слева — управление хуже, уводит'), tailR: tr('Разбит хвост справа — управление хуже, уводит'), tailAll: tr('Хвост разрушен — самолёт неуправляем!'), fire: tr('Пожар на борту!') };
@@ -1148,7 +1148,7 @@ export function createAir(C) {
   function netHit(hp, by, pk) { if (craft.dead) return; const hurtNow = hp < craft.hp; craft.hp = hp; if (hurtNow && by) { flashT = 0.35; snd.hit(); } if (pk) dmgEvents(dmgUnpack(craft, pk), by); else if (by) say(tr('Попадание: {0}', [by]), 1.5); }
   function netDown(why) {
     if (craft.dead) return;
-    craft.dead = true; craft.hp = 0; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0);
+    craft.dead = true; craft.hp = 0; C.fx.explosion(craft.pos, 30, 'plane'); snd.planeKill(0);
     spec.why = why || tr('Самолёт сбит'); spec.t = 0; spec.init = false; say(spec.why, 4);
   }
   function stop() {
@@ -1301,7 +1301,7 @@ export function createAir(C) {
     // повреждения: течь бака, пожар ест корпус (онлайн — урон считает сервер)
     if (craft.dz && !game.opts.invuln) {
       if (craft.leak && craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - craft.leak * dt);
-      const br = burnRate(craft); if (br && !game.net) { craft.hp -= br * dt; if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'air'); snd.planeKill(0); finish(craft.det.tailAll ? tr('Потеря управления: хвост разрушен') : tr('Сгорел: пожар на борту'), false); } }
+      const br = burnRate(craft); if (br && !game.net) { craft.hp -= br * dt; if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'plane'); snd.planeKill(0); finish(craft.det.tailAll ? tr('Потеря управления: хвост разрушен') : tr('Сгорел: пожар на борту'), false); } }
     }
     if (craft.dmgVis) craft.dmgVis.update(dt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
     // топливо: расход по газу, форсаж — втрое; кончилось — двигатель встал, самолёт планирует (в обучении не тратится)
