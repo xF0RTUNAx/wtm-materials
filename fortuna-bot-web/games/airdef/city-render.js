@@ -551,7 +551,12 @@ function treeGeoLo() {
 
 // неподвижное — без пересчёта матриц каждый кадр (2026-10-23, нагрев телефонов: ≈ 700 из 1300 объектов сцены — город и постройки целей).
 // Кто потом двигает такой объект (objLook в main.js — «осел» после разрушения), зовёт его updateMatrix()
-export function freezeTree(o) { if (o) o.traverse((q) => { q.updateMatrix(); q.matrixAutoUpdate = false; }); }
+// Подвижные части (крылья мельницы — userData.sail, винты — spin / hub) и всё под ними — не замораживаются (ревью 2026-10-23: крылья встали)
+export function freezeTree(o) {
+  if (!o) return;
+  const walk = (q) => { if (q.userData.sail || q.userData.spin || q.userData.hub) return; q.updateMatrix(); q.matrixAutoUpdate = false; for (const c of q.children) walk(c); };
+  walk(o);
+}
 // инстансы по плиткам: list — [{x, z, y, sx, sy, sz, ry, color, kind}]; drawK — доля дальности прорисовки
 function tiled(scene, list, baseGeo, mat, opts, drawK = 1) {
   const tiles = new Map();
@@ -662,7 +667,7 @@ function smallLevels(L) {
 const FS3 = [0, 0, 0];
 function farFlat(m, geo, orig) {
   const mt = m.material;
-  if (!FARFLAT || Array.isArray(mt) || mt.transparent || mt.alphaTest > 0 || mt.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || !mt.isMeshPhongMaterial) return geo;
+  if (!FARFLAT || Array.isArray(mt) || mt.transparent || mt.alphaTest > 0 || mt.polygonOffset || mt.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || !mt.isMeshPhongMaterial) return geo; // polygonOffset — подложки (pad): без сдвига мерцали бы с землёй
   const small = mt.map ? mt.map.small : null; if (mt.map && !small) return geo;
   const g = geo === orig ? (geo.index ? geo.toNonIndexed() : geo.clone()) : geo.index ? geo.toNonIndexed() : geo;
   const P = g.attributes.position, U = g.attributes.uv, C0 = g.attributes.color, n = P.count, col = new Float32Array(n * 3), lv = small && smallLevels(small);

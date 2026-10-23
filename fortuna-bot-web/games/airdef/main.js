@@ -143,7 +143,8 @@ function touchGfx(P, custom) {
 // окно контейнера через кадр — по умолчанию на сенсорных (телефоны, планшеты) и на «Низком»/«Среднем»
 for (const k in PRESETS) if (PRESETS[k].podHalf === undefined) PRESETS[k].podHalf = IS_TOUCH || k === 'low' || k === 'medium';
 const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGfx(PRESETS[gfxKey], { fullRes: GO.fullRes }), gfxKey === 'custom'); // свои настройки — только у «Кастомного»
-const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, // дома и деревья готовыми моделями на километры clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900,
+const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900, // дома и деревья готовыми моделями на километры (комментарий съедал конец строки с 2026-10-09 — у «Кино» не было этих настроек)
+  shEvery: 1, shAuto: false, // «Кино» — без уступок: тени каждый кадр
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
 if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 — без дальних копий моделей
 // карта: «Мульти-волна» (и в онлайне) и «Кино» — только зимняя долина «Северный рубеж», вылеты, задания и уроки — город
@@ -897,6 +898,7 @@ function frame(now) {
     const k = P.shEvery > 1 && (!P.shAuto || camera.position.y - city.groundH(camera.position.x, camera.position.z) > 150) ? P.shEvery : 1;
     renderer.shadowMap.autoUpdate = k < 2; if (k > 1 && ++shN >= k) { shN = 0; renderer.shadowMap.needsUpdate = true; }
   }
+  if (C.fx && C.fx.setView) C.fx.setView(camera.position.y); // порядок дыма и облаков — по высоте камеры (units-render)
   if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t); else renderer.render(scene, camera); }
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
   if (ctrl && ctrl.afterRender) ctrl.afterRender();
