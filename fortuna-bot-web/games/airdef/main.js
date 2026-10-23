@@ -47,6 +47,7 @@ import { createTraining, LESSONS } from './training.js?v=20261022y';
 import { createPhoto } from './photo.js?v=20261022y';
 import { createMenu } from './menu.js?v=20261022y';
 import { registerSW } from './offline.js?v=20261022y';
+import { detectGpu, sharpFor } from './gpu.js?v=20261022y';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -98,21 +99,9 @@ const GO = (() => { try { return JSON.parse(ls.get('fortuna_airdef_gfxo') || '{}
 // чёткость на телефоне для всех пресетов, кроме «Кастомного» (Mark 2026-10-23: «мыльно»; после снижения нагрузки на процессор — можно чётче):
 // 'auto' — как было (×1,25 у «Низкого» и «Среднего», ×1,5 у «Высокого» и «Ультра»), 'high' — ×1,75 / ×2, 'native' — как у экрана. Применяется перезапуском
 const SHARP = (() => { const v = ls.get('fortuna_airdef_sharp'); return v === 'high' || v === 'native' ? v : 'auto'; })();
-// класс видеокарты телефона (2026-10-23, «Обычная» чёткость — по нему): Android отдаёт модель (Adreno 740, Mali-G57 MC2), iPhone и iPad — «Apple GPU»
-// (все сильные); неизвестная — средний. ?gpu=low|mid|hi — проверить чужой класс
-const GPU_NAME = (() => { if (typeof document === 'undefined' || !document.createElement) return ''; try {
-  const c = document.createElement('canvas'), g = c.getContext('webgl'); if (!g) return '';
-  const e = g.getExtension('WEBGL_debug_renderer_info'), n = String(e ? g.getParameter(e.UNMASKED_RENDERER_WEBGL) : g.getParameter(g.RENDERER) || '');
-  const l = g.getExtension('WEBGL_lose_context'); if (l) l.loseContext(); return n;
-} catch (_) { return ''; } })();
-const GPU_TIER = (() => {
-  const q = Q.get('gpu'); if (q === 'low' || q === 'mid' || q === 'hi') return q;
-  const s = GPU_NAME; if (/Apple|Xclipse/i.test(s)) return 'hi';
-  let m = s.match(/Adreno[^\d]*(\d{3})/i); if (m) return +m[1] >= 730 ? 'hi' : +m[1] >= 640 ? 'mid' : 'low'; // 610–630 — начальные, 640–725 — средние (SD 855–8+ Gen 1 ниже — 7xx), 730+ — флагманы
-  m = s.match(/Mali-?G(\d{2,3})/i); if (m) { const n = +m[1]; return n >= 100 ? (n >= 710 ? 'hi' : n >= 610 ? 'mid' : 'low') : n >= 76 ? 'mid' : 'low'; } // G52/G57/G68/G72 — начальные, G76–G78 и G610–G615 — средние, G710+ — флагманы
-  if (/PowerVR|IMG|Mali-[T4]/i.test(s)) return 'low';
-  return 'mid';
-})();
+// видеочип телефона и его примерные баллы (gpu.js): по ним «Обычная» чёткость; ?gpu=<баллы> — проверить другую ступень (напр. ?gpu=1500 / 12000)
+const GPU = (() => { const g = detectGpu(), q = Q.get('gpu'); if (q !== null && Number.isFinite(+q)) g.score = +q; return g; })();
+const GPU_NAME = GPU.name;
 let fpsCap = (() => { const v = ls.get('fortuna_airdef_fps'); return v === null || v === 'auto' || !Number.isFinite(+v) ? 'auto' : +v; })();
 function applyGfx(base, o) {
   const P = { ...base, perf: { ...base.perf }, post: base.post ? { ...base.post } : null };
@@ -152,9 +141,9 @@ function touchGfx(P, custom) {
   if (!custom && P.shadows && !(P.shEvery > 1)) { P.shEvery = 2; P.shAuto = true; } // тени через кадр (main.js frame: камера низко — каждый кадр)
   P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
   const b = PRESETS[gfxKey].prCap; // по пресету, а не по P: applyGfx уже срезал до 1,5 — «Высокий» и «Ультра» выходили ×1,25 (ревью 2026-10-23)
-  // «Обычная» — по классу видеокарты (2026-10-23): начальные — как было (×1,25 / ×1,5), средние — «Средний» ×1,5, флагманы — на ступень выше всем;
-  // не тянет — динамическое разрешение само опустит (perf.min)
-  const AUTO = { low: { low: 1.25, medium: 1.25, high: 1.5, ultra: 1.5 }, mid: { low: 1.25, medium: 1.5, high: 1.5, ultra: 1.5 }, hi: { low: 1.5, medium: 1.75, high: 2, ultra: 2 } }[GPU_TIER];
+  // «Обычная» — по баллам видеочипа (2026-10-23): слабые — как было (×1,25 / ×1,5), дальше ступени до ×2; не тянет — динамическое разрешение само
+  // опустит (perf.min)
+  const AUTO = sharpFor(GPU.score); // ступень по баллам видеочипа (gpu.js): ниже прежнего не опускаем
   if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? (b > 1.5 ? 2 : 1.75) : (AUTO[gfxKey] || Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25));
   // ?fsrout=1 (проба): холст — в разрешении экрана, 3D — во внутреннем буфере той же чёткости, до экрана — FSR (края чётче, чем растяжка браузера)
   if (!custom && /[?&]fsrout=1/.test(location.search) && P.prCap < 4) {
@@ -242,7 +231,7 @@ const snd = createSound();
 
 // ═════════════ Общий контекст режимов ═════════════
 const C = {
-  $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, GPU_NAME, GPU_TIER,
+  $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, GPU_NAME,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
   SHARP, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,
