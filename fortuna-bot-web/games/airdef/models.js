@@ -10,6 +10,7 @@ import { tr } from './i18n.js?v=20261022y';
 import { CREDITS } from './models/credits.js?v=20261022y';
 import { mergeLocal } from './merge.js?v=20261022y';
 import { cachedFetch } from './offline.js?v=20261022y';
+import { ktxOn, ktxParse, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261022y';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -391,7 +392,22 @@ const pylonMat = new THREE.MeshPhongMaterial({ color: 0x4a4f54, specular: 0x2222
 // текстуры вертолётов — не больше 512, остальных моделей — не больше 1024; распакованная картинка закрывается после загрузки на видеокарту
 // (иначе держит ещё столько же обычной памяти). На ПК и в стендах (свои рендереры) — как было
 const TOUCH = typeof matchMedia === 'function' && typeof location !== 'undefined' && (/[?&]touch=1/.test(location.search) || matchMedia('(pointer: coarse)').matches);
+// уменьшенная копия картинки: 32×32, линейный цвет (sRGB → ^2,2, как в шейдере) — дальние копии построек красятся по ней в цвет вершин
+// (city-render farFlat): вдали пиксель экрана — 3–6 м, рисунок текстуры там и так сливается в средний цвет. Без браузера — null
+function smallTex(bmp) {
+  if (typeof document === 'undefined' || !document.createElement) return null;
+  try {
+    const c1 = document.createElement('canvas'); c1.width = c1.height = 128; const x1 = c1.getContext('2d'); x1.imageSmoothingQuality = 'high'; x1.drawImage(bmp, 0, 0, 128, 128);
+    const c2 = document.createElement('canvas'); c2.width = c2.height = 32; const x2 = c2.getContext('2d', { willReadFrequently: true }); x2.imageSmoothingQuality = 'high'; x2.drawImage(c1, 0, 0, 32, 32);
+    const d = x2.getImageData(0, 0, 32, 32).data, L = new Float32Array(32 * 32 * 3);
+    for (let i = 0, j = 0; i < d.length; i += 4, j += 3) { L[j] = (d[i] / 255) ** 2.2; L[j + 1] = (d[i + 1] / 255) ** 2.2; L[j + 2] = (d[i + 2] / 255) ** 2.2; }
+    return L;
+  } catch (_) { return null; }
+}
 const TEXC = new Map(); // общие текстуры моделей: отпечаток картинки | карта нормалей | предел размера → Promise<THREE.Texture>
+// сжатые текстуры моделей (2026-10-23, KTX2 UASTC: в видеопамяти вчетверо меньше распакованного JPEG; файлы models/ktx, tools/airdef-models/ktx-models.js):
+// есть файл нужной версии (index.json) — берём его, нет или не разобрался — JPEG из glb, как раньше. ?ktx=0 — без сжатых (ktx.js). У зданий — всегда JPEG
+let KIDX = null; const ktxIndex = (base) => KIDX || (KIDX = cachedFetch(ktxIndexUrl(base)).then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
 // детали с одинаковым материалом — одна сетка (2026-10-23, нагрев телефонов): в файлах моделей у каждой детали свой материал, даже у
 // одинаковых — у F/A-18 28 деталей = 28 вызовов отрисовки (после разрезки на зоны повреждений — 104), у «Шилки» 77, у построек объектов —
 // десятки (и столько же у их дальних копий). Сливаются детали одной части (body / turret / cradle / prop* / wingA… — части двигаются) и одной
@@ -435,13 +451,28 @@ async function load(name, base) {
   const pg = parseGlb(await r.arrayBuffer()), { images, hashes, textures, nrm } = pg;
   const meshes = mergeSame(pg.meshes, META[name] || META[name.replace(/_lo$/, '')] || {});
   const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = META[name] || META[name.replace(/_lo$/, '')] || {};
+  const KI = ktxOn() && !MM0.bld && !MM0.obj ? await ktxIndex(base) : null; // здания и объекты: картинку читает city-render (modelColor)
   const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
     if (MM0.bld) return mkTex(t, isN, tm); // у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
+    const mk = () => (KI ? mkKtx(t, isN, tm).then((x) => x || mkTex(t, isN, tm)) : mkTex(t, isN, tm)); // сжатая; не вышло — JPEG из glb
     const k = `${hashes[t.source]}|${isN ? 1 : 0}|${tm}`; // та же картинка, тот же вид и предел размера — одна текстура на все модели
-    if (!TEXC.has(k)) TEXC.set(k, mkTex(t, isN, tm).then((x) => { if (!x) TEXC.delete(k); return x; })); // не вышло (нехватка памяти) — следующая модель попробует заново
+    if (!TEXC.has(k)) TEXC.set(k, mk().then((x) => { if (!x) TEXC.delete(k); return x; })); // не вышло (нехватка памяти) — следующая модель попробует заново
     return TEXC.get(k);
   }));
+  // сжатая текстура картинки из glb (файл models/ktx/<имя>.<номер>.ktx2): те же настройки, что у JPEG-пути; на телефоне — без верхних уровней больше предела;
+  // нет файла этой версии или любая ошибка — null (вызывающий берёт JPEG)
+  async function mkKtx(t, isN, tm) {
+    const url = ktxUrlOf(base, KI, name, t.source, glbVer); if (!url) return null;
+    try {
+      const r = await cachedFetch(url); if (!r.ok) return null;
+      const x = await ktxParse(await r.arrayBuffer(), tm);
+      x.flipY = false; x.encoding = isN ? THREE.LinearEncoding : THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
+      x.ktxBytes = (x.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0); // для замеров (mem-check)
+      if (TOUCH) x.onUpdate = () => { x.mipmaps = []; }; // на видеокарте — копия уровней в памяти больше не нужна (как close() у ImageBitmap)
+      return x;
+    } catch (e) { console.warn(`${name}: KTX2 не вышел, берём JPEG:`, e.message); return null; }
+  }
   async function mkTex(t, isN, tm) {
     if (typeof createImageBitmap !== 'function') return null;
     let bmp; try { bmp = await createImageBitmap(images[t.source]); } catch (_) { return null; } // битая картинка — модель без этой текстуры
@@ -453,8 +484,9 @@ async function load(name, base) {
         const cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(bmp, 0, 0, w, h); const sm = await createImageBitmap(cv); bmp.close(); bmp = sm;
       } catch (_) { /* оставить как есть */ }
     }
+    const small = MM0.bld || MM0.obj ? smallTex(bmp) : null; // постройки: уменьшенная копия — по ней красится дальняя копия (city-render farFlat)
     // UV glTF — без переворота
-    const x = new THREE.Texture(bmp); x.flipY = false; x.encoding = isN ? THREE.LinearEncoding : THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
+    const x = new THREE.Texture(bmp); if (small) x.small = small; /* у Texture в r128 нет userData */ x.flipY = false; x.encoding = isN ? THREE.LinearEncoding : THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
     // на видеокарте — копия в памяти больше не нужна (рендерер в игре один; потеря контекста WebGL — перезагрузка страницы, main.js);
     // у зданий картинку читает дальняя «коробка» (city-render modelColor) — не закрываем
     if (TOUCH && !MM0.bld) x.onUpdate = () => { if (x.image && x.image.close) x.image.close(); };
@@ -579,7 +611,8 @@ function start(name) {
   if (LOADING.has(name)) return; LOADING.add(name); LSTAT.req++;
   load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; if (READY) READY(name); }).catch((e) => { LSTAT.done++; console.warn('модель не загрузилась:', e.message); });
 }
-const modelUrl = (base, name) => `${base}models/${name}.glb?v=${GLB_V[name] || '20261022b'}`;
+const glbVer = (name) => GLB_V[name] || '20261022b';
+const modelUrl = (base, name) => `${base}models/${name}.glb?v=${glbVer(name)}`;
 // все модели игры — для «Скачать всё заранее» (Настройки, offline.js prefetchAll): самолёты, оружие, техника и её дальние копии, постройки
 export function modelUrls(base = BASE) { const N = new Set([...Object.keys(META), ...Object.keys(GLB_V)]); for (const n of UNIT_LO) N.add(n + '_lo'); return [...N].map((n) => modelUrl(base, n)); }
 export function loadModels(base, onReady) {

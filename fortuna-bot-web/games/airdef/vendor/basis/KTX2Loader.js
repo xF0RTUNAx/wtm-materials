@@ -123,7 +123,8 @@ class KTX2Loader extends CompressedTextureLoader {
 
 	}
 
-	parse( buffer, onLoad, onError ) {
+	// maxSize (airdef, 2026-10-23): UASTC — верхние уровни больше предела не распаковываются и не переводятся (телефон: меньше памяти и времени)
+	parse( buffer, onLoad, onError, maxSize ) {
 
 		var scope = this;
 
@@ -149,7 +150,7 @@ class KTX2Loader extends CompressedTextureLoader {
 
 		var dfd = KTX2Utils.getBasicDFD( ktx );
 
-		KTX2Utils.createLevels( ktx, this.zstd ).then( function ( levels ) {
+		KTX2Utils.createLevels( ktx, this.zstd, dfd.colorModel === KTX2Model.UASTC ? maxSize : 0 ).then( function ( levels ) {
 
 			var basisFormat = dfd.colorModel === KTX2Model.UASTC
 				? BasisTextureLoader.BasisFormat.UASTC_4x4
@@ -158,8 +159,8 @@ class KTX2Loader extends CompressedTextureLoader {
 			var parseConfig = {
 
 				levels: levels,
-				width: ktx.pixelWidth,
-				height: ktx.pixelHeight,
+				width: levels[ 0 ].width,
+				height: levels[ 0 ].height,
 				basisFormat: basisFormat,
 				hasAlpha: KTX2Utils.getAlpha( ktx ),
 
@@ -192,7 +193,7 @@ class KTX2Loader extends CompressedTextureLoader {
 
 var KTX2Utils = {
 
-	createLevels: async function ( ktx, zstd ) {
+	createLevels: async function ( ktx, zstd, maxSize ) {
 
 		if ( ktx.supercompressionScheme === KTX2SupercompressionScheme.ZSTD ) {
 
@@ -208,6 +209,8 @@ var KTX2Utils = {
 
 			var levelWidth = Math.max( 1, Math.floor( width / Math.pow( 2, levelIndex ) ) );
 			var levelHeight = Math.max( 1, Math.floor( height / Math.pow( 2, levelIndex ) ) );
+			if ( maxSize && Math.max( levelWidth, levelHeight ) > maxSize && levelIndex < ktx.levels.length - 1 ) continue;
+
 			var levelData = ktx.levels[ levelIndex ].levelData;
 
 			if ( ktx.supercompressionScheme === KTX2SupercompressionScheme.ZSTD ) {

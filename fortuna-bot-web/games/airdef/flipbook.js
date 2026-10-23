@@ -4,6 +4,7 @@
 // иначе превращаются в полоску. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
 /* global THREE */
 import { FXU } from '../drone/world.js?v=20261022y';
+import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261022y';
 const VS = `attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iF;
 uniform vec2 uAnchor; uniform float uUp;
 varying vec2 vUv; varying vec3 vF; varying float vA, vD;
@@ -35,9 +36,12 @@ void main() {
 #endif
   gl_FragColor = vec4(mix(col, uFog, fog * (1.0 - hot * 0.6)), t.a * vA * soft);
 }`;
-// cfg: url, cols, rows, frames, cell [w, h] (пропорции кадра), anchor [x, y] от левого верхнего угла, up — стоячий, loop, gain
+// cfg: url, cols, rows, frames, cell [w, h] (пропорции кадра), anchor [x, y] от левого верхнего угла, up — стоячий, loop, gain;
+// ktx — сжатый лист (KTX2, строки снизу вверх — как PNG после переворота при загрузке): в видеопамяти вчетверо меньше; нет поддержки
+// или не загрузился — url (PNG / WebP); times — время каждого кадра, с (неравномерно: вспышка — покадрово, дальше реже), иначе — fps
 export function createBook(scene, cfg, max = 64) {
-  const tex = typeof document !== 'undefined' && document.createElementNS ? new THREE.TextureLoader().load(cfg.url) : new THREE.Texture(); // без браузера (проверки) — пустая
+  const web = typeof document !== 'undefined' && document.createElementNS;
+  const tex = web ? (cfg.ktx && ktxOn() ? new THREE.Texture() : new THREE.TextureLoader().load(cfg.url)) : new THREE.Texture(); // без браузера (проверки) — пустая
   const geo = new THREE.InstancedBufferGeometry(), pl = new THREE.PlaneGeometry(1, 1);
   geo.setAttribute('position', pl.attributes.position); geo.setAttribute('uv', pl.attributes.uv); geo.setIndex(pl.index);
   const aPos = new THREE.InstancedBufferAttribute(new Float32Array(max * 3), 3), aSize = new THREE.InstancedBufferAttribute(new Float32Array(max * 2), 2), aF = new THREE.InstancedBufferAttribute(new Float32Array(max * 4), 4);
@@ -46,14 +50,18 @@ export function createBook(scene, cfg, max = 64) {
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false,
     uniforms: { map: { value: tex }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uAnchor: { value: new THREE.Vector2(...cfg.anchor) }, uUp: { value: cfg.up ? 1 : 0 },
       ...FXU, uGain: { value: cfg.gain || 2.2 }, uFogD: { value: 0 }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() } } });
+  if (web && cfg.ktx && ktxOn()) ktxLoadUrl(cfg.ktx).then((t) => { mat.uniforms.map.value = t; }).catch(() => { mat.uniforms.map.value = new THREE.TextureLoader().load(cfg.url); });
   const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 0.8; scene.add(mesh); // после облаков (0,5), до дыма (1)
   // глубина плотной части (непрозрачный проход — раньше всего прозрачного): дым позади огня не закрывает его, дым спереди — закрывает
   const pre = new THREE.Mesh(geo, new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, uniforms: mat.uniforms, defines: { DEPTH_PRE: 1 }, colorWrite: false, depthWrite: true }));
   pre.frustumCulled = false; scene.add(pre); mesh.userData.pre = pre;
-  const live = [], asp = cfg.cell[0] / cfg.cell[1], n = cfg.frames;
+  const live = [], asp = cfg.cell[0] / cfg.cell[1], n = cfg.frames, TM = cfg.times;
+  // время съёмки → дробный номер кадра (между кадрами — смешение, как при постоянном fps)
+  const frameAt = (t) => { if (t >= TM[n - 1]) return n - 1; let k = 0; while (k < n - 2 && TM[k + 1] <= t) k++; return k + (t - TM[k]) / (TM[k + 1] - TM[k]); };
   return {
     mesh, pre, mat, live,
     // h — высота кадра в метрах; fps — скорость; t0 < 0 — задержка; a — прозрачность (меняет хозяин, напр. у затухающего пожара)
+    // с times: fps — скорость против съёмки (1 — как снято; крупнее — медленнее)
     add(p, h, fps, o = {}) {
       if (live.length >= max) live.shift(); // переполнение — старейший уходит
       const it = { x: p.x, y: p.y, z: p.z, h, w: h * asp, fps, t: o.t0 || 0, a: 1 }; live.push(it); return it;
@@ -64,7 +72,7 @@ export function createBook(scene, cfg, max = 64) {
       let c = 0;
       for (let i = live.length - 1; i >= 0; i--) {
         const it = live[i]; it.t += dt; if (it.t < 0) continue;
-        let f = it.t * it.fps;
+        let f = TM ? frameAt(it.t * it.fps) : it.t * it.fps;
         if (!cfg.loop && f >= n - 1) { live.splice(i, 1); continue; }
         if (cfg.loop) f %= n;
         const f0 = Math.floor(f), f1 = cfg.loop ? (f0 + 1) % n : Math.min(n - 1, f0 + 1), a = it.a * (cfg.loop ? Math.min(1, it.t * 2) : 1);

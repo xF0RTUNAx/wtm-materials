@@ -134,6 +134,7 @@ function touchGfx(P, custom) {
   if (!IS_TOUCH) return P;
   if (P.shadowMap > 2048) Object.assign(P, { shadowMap: 2048, shadowBox: Math.min(P.shadowBox, 600) });
   if (!custom && P.perf.aa === 'msaa') P.perf.aa = 'fxaa';
+  if (!custom && P.shadows && !(P.shEvery > 1)) { P.shEvery = 2; P.shAuto = true; } // тени через кадр (main.js frame: камера низко — каждый кадр)
   P.bloomQ = true; P.halfFx = true; P.treeLoD = 1600;
   const b = PRESETS[gfxKey].prCap; // по пресету, а не по P: applyGfx уже срезал до 1,5 — «Высокий» и «Ультра» выходили ×1,25 (ревью 2026-10-23)
   if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? (b > 1.5 ? 2 : 1.75) : Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25); // телефон и планшет: экран и так плотный — меньше пикселей, меньше нагрев (iPad Air M1: «Средний» упирался в видеочип)
@@ -261,9 +262,9 @@ C.newBattle = function (o) {
 };
 // вид объекта-цели: целый или разрушенный (осел и почернел) — процедурная часть, заглушка и готовые постройки
 function objLook(id, ruin) {
-  for (const m of [C.G.objMesh[id], C.G.objBox[id]]) if (m) { m.material = ruin ? C.G.ruinMat : C.G.objMat; m.scale.y = ruin ? 0.35 : 1; }
+  for (const m of [C.G.objMesh[id], C.G.objBox[id]]) if (m) { m.material = ruin ? C.G.ruinMat : C.G.objMat; m.scale.y = ruin ? 0.35 : 1; m.updateMatrix(); } // матрицы у неподвижного — вручную (city-render freezeTree)
   for (const g of [C.G.objGroup[id], C.G.objFar && C.G.objFar[id]]) { // и дальняя копия (если она придёт позже — objFarLook)
-    if (g) { g.userData.ruin = ruin; g.scale.y = ruin ? 0.35 : 1; g.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = ruin ? C.G.ruinMat : c.userData.mat0; }); }
+    if (g) { g.userData.ruin = ruin; g.scale.y = ruin ? 0.35 : 1; g.updateMatrix(); g.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = ruin ? C.G.ruinMat : c.userData.mat0; }); }
   }
 }
 function clearBattle() {
@@ -889,8 +890,13 @@ function frame(now) {
   if (draw3D) objLod(camera.position, P.lodObj);
   if (draw3D) updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t); // окно ТВ — свой набор моделей вблизи (C.podPass)
   // тактическая карта обороны закрывает весь экран — 3D-кадр не рисуем (телефон не греется)
-  // «Тени через кадр»: карта теней перерисовывается раз в P.shEvery кадров (город стоит, тени техники чуть запаздывают)
-  if (draw3D && P.shEvery > 1 && renderer.shadowMap.enabled) { renderer.shadowMap.autoUpdate = false; if (++shN >= P.shEvery) { shN = 0; renderer.shadowMap.needsUpdate = true; } }
+  // «Тени через кадр»: карта теней перерисовывается раз в P.shEvery кадров (город стоит, тени техники чуть запаздывают). На телефоне у пресетов
+  // с тенями — по умолчанию (P.shAuto, 2026-10-23, нагрев), но камера ниже 150 м над землёй — каждый кадр: тень своего самолёта или вертолёта
+  // рядом, её запаздывание (4 м на 250 м/с) было бы видно. У «Кастомного» — как выбрано (shRate), всегда
+  if (draw3D && renderer.shadowMap.enabled) {
+    const k = P.shEvery > 1 && (!P.shAuto || camera.position.y - city.groundH(camera.position.x, camera.position.z) > 150) ? P.shEvery : 1;
+    renderer.shadowMap.autoUpdate = k < 2; if (k > 1 && ++shN >= k) { shN = 0; renderer.shadowMap.needsUpdate = true; }
+  }
   if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t); else renderer.render(scene, camera); }
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
   if (ctrl && ctrl.afterRender) ctrl.afterRender();

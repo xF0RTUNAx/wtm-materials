@@ -170,12 +170,13 @@ const SM_F = `#include <common>
   }`;
 export function createPlumes(scene, P = {}) {
   texs();
-  const MAXV = P.fxLo ? 8000 : 20000, MAXP = 260;
+  const MAXV = P.fxLo ? 8000 : 20000, MAXP = 260, NP = MAXV >> 1; // NP — пар вершин (пара = два края ленты в одной точке следа)
   const geo = new THREE.BufferGeometry();
   const pos = new Float32Array(MAXV * 3), tan = new Float32Array(MAXV * 3), A = new Float32Array(MAXV * 4), B = new Float32Array(MAXV * 4), C = new Float32Array(MAXV * 3);
   const idx = new Uint32Array(MAXV * 3);
   const at = (n, a, s) => { const b = new THREE.BufferAttribute(a, s); b.setUsage(THREE.DynamicDrawUsage); geo.setAttribute(n, b); return b; };
   const SD = new Float32Array(MAXV), RP = new Float32Array(MAXV); const aPos = at('position', pos, 3), aTan = at('aTan', tan, 3), aA = at('aA', A, 4), aB = at('aB', B, 4), aC = at('aCol', C, 3), aS = at('aSeed', SD, 1), aR = at('aRamp', RP, 1);
+  const ATTRS = [aPos, aTan, aA, aB, aC, aS, aR];
   geo.setIndex(new THREE.BufferAttribute(idx, 1)); geo.index.setUsage(THREE.DynamicDrawUsage); geo.setDrawRange(0, 0);
   const mat = new THREE.ShaderMaterial({
     uniforms: { map: { value: smokeTex }, uTime: { value: 0 }, uWind: { value: new THREE.Vector3(2, 0, 1) }, uLight: { value: new THREE.Vector3(0.9, 0.9, 0.9) }, uSun: { value: new THREE.Vector3(0.4, 0.8, 0.4).normalize() }, fogColor: { value: FOG_LIN }, fogDensity: FOG_U, ...FXU },
@@ -183,14 +184,46 @@ export function createPlumes(scene, P = {}) {
   });
   const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 2; scene.add(mesh);
   const trails = new Map(); let time = 0;
-  const NUM = ['x', 'y', 'z', 't', 'w', 'g', 'life', 'a', 'rise', 'u', 'ramp'], TMP = {}; // поля точки, что между точками считаются линейно
+  // Вершины ленты пишутся один раз (2026-10-23, нагрузка на процессор): пара вершин живёт в «слоте» общего пула (вершины 2s и 2s+1), у ленты — список слотов по порядку вдоль следа.
+  // Звено между двумя точками следа (его нарезка) пишется, когда появилась следующая точка; каждый кадр перезаписывается только хвост — от последней точки до факела.
+  // Старые точки не трогаем: шейдер старит их по uTime − t; уйдя, звено возвращает слоты в пул. На видеокарту уходит один диапазон слотов (всё, что менялось с прошлой отрисовки).
+  const freeS = new Int32Array(NP); let nFree = 0, bump = 0;
+  const take = () => nFree ? freeS[--nFree] : bump < NP ? bump++ : -1;
+  const give = (s) => { freeS[nFree++] = s; };
+  let dmin = NP, dmax = -1, amin = NP, amax = -1, prevII = 0; // d — слоты, записанные в этом кадре; a — не ушедшие на видеокарту (кадр бывает без отрисовки ленты)
+  mesh.onBeforeRender = () => { amin = NP; amax = -1; }; // после этого вызова three отправляет буферы по updateRange, выставленному в update()
+  const mark = (s) => { if (s < dmin) dmin = s; if (s > dmax) dmax = s; };
+  const TQ = { x: 0, y: 0, z: 0, t: 0, w: 0, g: 0, life: 0, a: 0, rise: 0, u: 0, ramp: 0, c: null }; // конец ленты у факела (на лету, не точка следа)
+  const SEGS = [];
+  // точки следа редкие (0,03–0,08 с: на 600 м/с — 24 м) — между ними лента режется на короткие звенья (узор клубов и изгиб считаются по вершинам)
+  const seg = (a, b) => { const D = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z); return D > 1e-4 ? Math.min(40, Math.ceil(D / Math.min(10, Math.max(1.5, 1.5 * a.w)))) : 1; };
+  const wr = (s, x, y, z, t, w, g, life, al, rise, u, ramp, c, sd) => {
+    mark(s);
+    for (let e = 0; e < 2; e++) {
+      const v = s * 2 + e, o = v * 3, o4 = v * 4;
+      pos[o] = x; pos[o + 1] = y; pos[o + 2] = z; C[o] = c[0]; C[o + 1] = c[1]; C[o + 2] = c[2];
+      SD[v] = sd; RP[v] = ramp; A[o4] = t; A[o4 + 1] = e ? 1 : -1; A[o4 + 2] = w; A[o4 + 3] = al; B[o4] = g; B[o4 + 1] = life; B[o4 + 2] = u; B[o4 + 3] = rise;
+    }
+  };
+  const put = (s, q, fade, sd) => wr(s, q.x, q.y, q.z, q.t, q.w, q.g, q.life, q.a * fade, q.rise, q.u, q.ramp, q.c, sd);
+  const putL = (s, a, b, f, sd) => // звено между точками: поля точки (x, y, z, t, w, g, life, a, rise, u, ramp) — линейно, цвет — от начала
+    wr(s, a.x + (b.x - a.x) * f, a.y + (b.y - a.y) * f, a.z + (b.z - a.z) * f, a.t + (b.t - a.t) * f, a.w + (b.w - a.w) * f, a.g + (b.g - a.g) * f,
+    a.life + (b.life - a.life) * f, a.a + (b.a - a.a) * f, a.rise + (b.rise - a.rise) * f, a.u + (b.u - a.u) * f, a.ramp + (b.ramp - a.ramp) * f, a.c, sd);
+  // касательная пары k (по порядку вдоль ленты) — по соседним парам; у краёв ленты — односторонняя
+  const tangent = (T, k, total) => {
+    const vp = T.vp, h = T.h, s = vp[h + k], a = vp[h + (k > 0 ? k - 1 : 0)] * 2, b = vp[h + (k < total - 1 ? k + 1 : total - 1)] * 2;
+    let tx = pos[b * 3] - pos[a * 3], ty = pos[b * 3 + 1] - pos[a * 3 + 1], tz = pos[b * 3 + 2] - pos[a * 3 + 2]; if (tx * tx + ty * ty + tz * tz < 1e-8) { tx = 0; ty = 0; tz = 1; }
+    mark(s); for (let e = 0; e < 2; e++) { const o = (s * 2 + e) * 3; tan[o] = tx; tan[o + 1] = ty; tan[o + 2] = tz; }
+  };
+  const emit = (T, n, ii) => { const vp = T.vp, h = T.h; for (let i = 0; i < n - 1; i++) { const a = vp[h + i] * 2, b = vp[h + i + 1] * 2; idx[ii++] = a; idx[ii++] = a + 1; idx[ii++] = b; idx[ii++] = a + 1; idx[ii++] = b + 1; idx[ii++] = b; } return ii; };
+  const freeAll = (T) => { for (let i = T.vp.length - 1; i >= T.h; i--) give(T.vp[i]); T.vp = []; T.h = 0; T.runs = []; T.rh = 0; T.built = 0; T.pl = 0; T.tot = 0; };
   const api = {
     mesh, mat,
     // точка следа у среза сопла: obj — ракета (ключ ленты), m — MOTOR.*, r — радиус корпуса, y — высота
     add(obj, x, y, z, m, r) {
       if (!m || m.a < 0.02) return;
       let T = trails.get(obj);
-      if (!T) { T = { pts: [], end: 0, seed: Math.random(), tip: null }; trails.set(obj, T); }
+      if (!T) { T = { pts: [], end: 0, seed: Math.random(), tip: null, vp: [], h: 0, runs: [], rh: 0, built: 0, pl: 0, tot: 0, rebuild: false, hfix: false }; trails.set(obj, T); } // vp — слоты пар вдоль ленты (с h), runs — число пар в звене каждой записанной точки (с rh), pl — пар в записанных звеньях, tot — пар, что можно рисовать
       const L = T.pts[T.pts.length - 1];
       if (L && time - L.t < 0.02) return;
       const e = 1 - air(y), rr = Math.max(0.03, r), dt = L ? time - L.t : 0, sp = L && dt > 1e-3 ? Math.hypot(x - L.x, y - L.y, z - L.z) / dt : 0;
@@ -199,7 +232,7 @@ export function createPlumes(scene, P = {}) {
       const p = { x, y, z, t: time, w: Math.max(0.15, rr * m.w) * (1 + 1.2 * e), g: (m.g[0] + rr * m.g[1]) * (1 + 0.6 * e), life: (m.life[0] + rr * m.life[1]) * (0.7 + 0.3 * (1 - e)),
         a: Math.min(1, m.a * Math.min(1.2, 0.8 + rr * 2)) * (1 - 0.45 * e), rise: 0.25 + rr * 1.5, c: m.c, u: L ? L.u + Math.hypot(x - L.x, y - L.y, z - L.z) : 0, ramp };
       T.pts.push(p); T.end = Math.max(T.end, time + p.life); T.tip = null;
-      if (T.pts.length > MAXP) { const o = T.pts; T.pts = o.filter((q, i) => i >= o.length / 2 || i % 2 === 0); } // длинная лента — старая половина реже
+      if (T.pts.length > MAXP) { const o = T.pts; T.pts = o.filter((q, i) => i >= o.length / 2 || i % 2 === 0); T.rebuild = true; } // длинная лента — старая половина реже (звенья перенарезаются)
     },
     // свежий конец ленты — в срезе сопла прямо сейчас (зовёт факел каждый кадр); между точками следа (до 24 м при 600 м/с) лента тянется к нему
     tip(obj, x, y, z) {
@@ -212,46 +245,50 @@ export function createPlumes(scene, P = {}) {
       const L = T.pts[T.pts.length - 1], k = T.tip; T.tip = null; if (!L) return;
       T.pts.push({ ...L, x: k.x, y: k.y, z: k.z, t: k.t, u: L.u + Math.hypot(k.x - L.x, k.y - L.y, k.z - L.z) });
     },
-    clear() { trails.clear(); geo.setDrawRange(0, 0); },
+    clear() { trails.clear(); nFree = 0; bump = 0; amin = NP; amax = -1; geo.setDrawRange(0, 0); },
     update(dt, light, wind, sun) {
       time += dt; mat.uniforms.uTime.value = time; if (light) mat.uniforms.uLight.value.copy(light); if (sun) mat.uniforms.uSun.value.copy(sun); if (wind) mat.uniforms.uWind.value.set(wind.x, 0, wind.z);
-      let v = 0, ii = 0;
+      let ii = 0; dmin = NP; dmax = -1;
       for (const [k, T] of trails) {
-        if (time > T.end) { trails.delete(k); continue; }
-        const p = T.pts; while (p.length > 2 && time - p[0].t > p[0].life && time - p[1].t > p[1].life) p.shift();
-        if (T.tip && time - T.tip.t > 0.1) T.tip = null; // факел погас без finish (ракета сбита, пропала)
-        const L = p[p.length - 1]; if (!L) continue;
-        const tipQ = T.tip ? { ...L, x: T.tip.x, y: T.tip.y, z: T.tip.z, t: time, u: L.u + Math.hypot(T.tip.x - L.x, T.tip.y - L.y, T.tip.z - L.z) } : null;
-        const list = tipQ ? p.concat([tipQ]) : p, nl = list.length; if (nl < 2) continue;
-        // точки следа редкие (0,03–0,08 с: на 600 м/с — 24 м) — между ними лента режется на короткие звенья (узор клубов и изгиб считаются по вершинам)
-        const seg = (a, b) => { const D = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z); return D > 1e-4 ? Math.min(40, Math.ceil(D / Math.min(10, Math.max(1.5, 1.5 * a.w)))) : 1; };
-        let cnt = 1; for (let i = 0; i < nl - 1; i++) cnt += seg(list[i], list[i + 1]);
-        if (v + cnt * 2 > MAXV) continue;
-        const v0 = v; let j = 0;
-        const put = (q, fade) => {
-          for (const s of [-1, 1]) {
-            const o = v * 3, o4 = v * 4;
-            pos[o] = q.x; pos[o + 1] = q.y; pos[o + 2] = q.z; C[o] = q.c[0]; C[o + 1] = q.c[1]; C[o + 2] = q.c[2];
-            SD[v] = T.seed; RP[v] = q.ramp; A[o4] = q.t; A[o4 + 1] = s; A[o4 + 2] = q.w; A[o4 + 3] = q.a * fade; B[o4] = q.g; B[o4 + 1] = q.life; B[o4 + 2] = q.u; B[o4 + 3] = q.rise; v++;
+        if (time > T.end) { freeAll(T); trails.delete(k); continue; }
+        const p = T.pts;
+        if (T.rebuild) { freeAll(T); T.rebuild = false; T.hfix = false; }
+        while (p.length > 2 && time - p[0].t > p[0].life && time - p[1].t > p[1].life) {
+          p.shift();
+          if (T.built > 0) { // звено старейшей точки ушло: слоты — в пул; новая первая пара — край ленты (касательная односторонняя)
+            const n = T.runs[T.rh++]; for (let i = n - 1; i >= 0; i--) give(T.vp[T.h + i]); T.h += n; T.pl -= n; T.tot = Math.max(0, T.tot - n); T.built--; T.hfix = true;
+            if (T.rh > 32) { T.runs.splice(0, T.rh); T.rh = 0; } if (T.h > 128) { T.vp.splice(0, T.h); T.h = 0; }
           }
-          j++;
-        };
-        for (let i = 0; i < nl - 1; i++) {
-          const a = list[i], b = list[i + 1], n = seg(a, b);
-          put(a, 1);
-          for (let k2 = 1; k2 < n; k2++) { const f = k2 / n; for (const key of NUM) TMP[key] = a[key] + (b[key] - a[key]) * f; TMP.c = a.c; put(TMP, 1); }
         }
-        put(list[nl - 1], 0); // свежий конец — тонкий хвост у сопла
-        // касательные — по соседним точкам (после того как все вершины ленты записаны)
-        for (let i = 0; i < j; i++) {
-          const a = v0 + Math.max(0, i - 1) * 2, b = v0 + Math.min(j - 1, i + 1) * 2;
-          let tx = pos[b * 3] - pos[a * 3], ty = pos[b * 3 + 1] - pos[a * 3 + 1], tz = pos[b * 3 + 2] - pos[a * 3 + 2]; if (tx * tx + ty * ty + tz * tz < 1e-8) { tx = 0; ty = 0; tz = 1; }
-          for (let s = 0; s < 2; s++) { const o = (v0 + i * 2 + s) * 3; tan[o] = tx; tan[o + 1] = ty; tan[o + 2] = tz; }
+        if (T.tip && time - T.tip.t > 0.1) T.tip = null; // факел погас без finish (ракета сбита, пропала)
+        const m = p.length, L = p[m - 1]; if (!L) continue;
+        const tip = T.tip; if (m + (tip ? 1 : 0) < 2) continue;
+        if (tip) { TQ.x = tip.x; TQ.y = tip.y; TQ.z = tip.z; TQ.t = time; TQ.w = L.w; TQ.g = L.g; TQ.life = L.life; TQ.a = L.a; TQ.rise = L.rise; TQ.ramp = L.ramp; TQ.c = L.c; TQ.u = L.u + Math.hypot(tip.x - L.x, tip.y - L.y, tip.z - L.z); }
+        // ждущие звенья: от записанных до предпоследней точки; хвост — звено последней точки до факела (или одна пара с нулевой плотностью)
+        let add = 0, nw = 0; for (let i = T.built; i < m - 1; i++) { const n = seg(p[i], p[i + 1]); SEGS[nw++] = n; add += n; }
+        const nt = tip ? seg(L, TQ) + 1 : 1, pl = T.pl, total = pl + add + nt, vp = T.vp, have = vp.length - T.h;
+        if (total > have && total - have > nFree + NP - bump) { ii = emit(T, T.tot, ii); continue; } // не хватает места в пуле: лента не растёт, рисуется как была (пока слоты не освободятся)
+        while (vp.length - T.h < total) vp.push(take());
+        while (vp.length - T.h > total) give(vp.pop());
+        const h = T.h, sd = T.seed; let q = pl;
+        for (let i = T.built, r = 0; i < m - 1; i++, r++) {
+          const a = p[i], b = p[i + 1], n = SEGS[r];
+          put(vp[h + q++], a, 1, sd);
+          for (let k2 = 1; k2 < n; k2++) putL(vp[h + q++], a, b, k2 / n, sd);
+          T.runs.push(n);
         }
-        for (let i = 0; i < j - 1; i++) { const a = v0 + i * 2; idx[ii++] = a; idx[ii++] = a + 1; idx[ii++] = a + 2; idx[ii++] = a + 1; idx[ii++] = a + 3; idx[ii++] = a + 2; }
+        T.built = m - 1; T.pl = pl + add;
+        if (tip) { const n = nt - 1; put(vp[h + q++], L, 1, sd); for (let k2 = 1; k2 < n; k2++) putL(vp[h + q++], L, TQ, k2 / n, sd); put(vp[h + q++], TQ, 0, sd); }
+        else put(vp[h + q++], L, 0, sd); // свежий конец — тонкий хвост у сопла
+        const from = add > 0 ? Math.max(0, pl - 1) : pl; // касательные — по соседним парам: меняются у записанного заново и у хвоста
+        for (let i = from; i < total; i++) tangent(T, i, total);
+        if (T.hfix) { if (from > 0) tangent(T, 0, total); T.hfix = false; }
+        T.tot = total; ii = emit(T, total, ii);
       }
-      for (const b of [aPos, aTan, aA, aB, aC, aS, aR]) { b.updateRange.offset = 0; b.updateRange.count = v * b.itemSize; b.needsUpdate = true; }
-      geo.index.updateRange.offset = 0; geo.index.updateRange.count = ii; geo.index.needsUpdate = true; geo.setDrawRange(0, ii);
+      if (dmax >= 0) { if (dmin < amin) amin = dmin; if (dmax > amax) amax = dmax; }
+      if (amax >= 0) for (const b of ATTRS) { b.updateRange.offset = amin * 2 * b.itemSize; b.updateRange.count = (amax - amin + 1) * 2 * b.itemSize; b.needsUpdate = true; }
+      if (ii || prevII) { geo.index.updateRange.offset = 0; geo.index.updateRange.count = ii; geo.index.needsUpdate = true; }
+      prevII = ii; geo.setDrawRange(0, ii);
     },
   };
   live = api;

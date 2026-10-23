@@ -7,15 +7,17 @@
      &nz=x,y,z;x,y,z — проверить другие сопла (для первого самолёта). Нужен сервер :8935 (корень — wtm-materials).
      ВЕРТОЛЁТЫ и оружие: &heli=1 — по строке на модель: сбоку (нос вправо), сверху (нос вверх), спереди, ¾; красные точки — подвески (META.stations).
      &spin=-1,0,0.11,0.23 — через сколько секунд вращения винтов (spinProps, 60 к/с) снимать строку (по порядку имён; −1 — без вращения; &thr=0.5 — газ);
+     &ktx=0 — без сжатых текстур KTX2 (сравнение), &touch=1 — как на телефоне (пределы размера текстур);
      &save=имя — отправить PNG на локальный приёмник :8936 (маленький http-сервер, пишет в tools/airdef-models/shots-heli/имя.png), &w=ширина кадра. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
 const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'e_tu16').split(',');
 const M = await import('../../games/airdef/models.js?v=' + Date.now());
 const { attachFlames } = await import('../../games/airdef/units-render.js?v=20261022y');
-M.loadModels('../../games/airdef/', () => {});
 const CW = +(Q.get("w") || (Q.get('heli') ? 480 : 200)), CH = Math.round(CW * 0.7), W = CW * 4, H = CH * names.length;
-const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+{ const { ktxInit } = await import('../../games/airdef/ktx.js?v=20261022y'); ktxInit(r); } // сжатые текстуры моделей (как в игре: main.js); &ktx=0 — JPEG из glb, &touch=1 — пределы размера телефона
+M.loadModels('../../games/airdef/', () => {}); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
 const wait = (n) => new Promise((ok) => { M.wantModel(n); const t = setInterval(() => { const o = M.anyModel(n); if (o) { clearInterval(t); ok(o); } }, 50); });
 const HELI = !!Q.get('heli'), SPIN = (Q.get('spin') || '').split(',').map(Number), THR = +(Q.get('thr') || 0.5);
 for (let i = 0; i < names.length; i++) {
@@ -65,6 +67,6 @@ for (let i = 0; i < names.length; i++) {
   });
   const l = document.createElement('div'); l.className = 'l'; l.style.left = '2px'; l.style.top = i * CH + 'px'; l.textContent = n + ' · ' + nzs.map((p) => p.toArray().map((v) => +v.toFixed(2)).join(',')).join(' ; '); document.body.appendChild(l);
 }
-window.__ok = 1;
+window.M = M; window.__ok = 1; // M — для замеров памяти текстур (headless)
 if (Q.get('save')) r.domElement.toBlob((b) => fetch('http://localhost:8936/save?name=' + encodeURIComponent(Q.get('save')), { method: 'POST', body: b }).then(() => { window.__saved = 1; }).catch((e) => { window.__saved = String(e); }), 'image/png');
 </script></body></html>

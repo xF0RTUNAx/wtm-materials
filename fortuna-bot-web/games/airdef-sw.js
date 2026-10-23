@@ -1,6 +1,7 @@
 // Сервис-воркер «Воздушного превосходства» (регистрирует сама страница airdef.html, только на сайте; область — games/airdef…): файлы игры — из кэша устройства.
 // Кэш — на версию модулей (адрес воркера ?v=…): после деплоя новый воркер, прежний кэш удаляется (файлы могли смениться без своей версии).
-// Модели (.glb) здесь не кэшируются — у них свой постоянный кэш со страницы (offline.js cachedFetch: работает и там, где воркеров нет).
+// Модели (.glb) и их сжатые текстуры (models/ktx) здесь не кэшируются — у них свой постоянный кэш со страницы (offline.js cachedFetch: работает и там, где воркеров нет);
+// из папки models воркер берёт только credits.js (код).
 // Только запросы «Воздушного превосходства» (путь или источник — games/airdef…); «Летка» и прочее — мимо, как без воркера.
 const VER = new URL(self.location.href).searchParams.get('v') || 'dev', CACHE = 'airdef-files-' + VER;
 self.addEventListener('install', () => self.skipWaiting());
@@ -10,7 +11,7 @@ self.addEventListener('activate', (e) => e.waitUntil((async () => {
 })()));
 const ours = (req) => {
   if (req.method !== 'GET' || req.mode === 'navigate' || req.headers.get('range')) return false;
-  const u = new URL(req.url); if (u.origin !== self.location.origin || /\.glb$/.test(u.pathname) || /\/airdef\.html$/.test(u.pathname) || /airdef-sw\.js$/.test(u.pathname)) return false;
+  const u = new URL(req.url); if (u.origin !== self.location.origin || /\.glb$/.test(u.pathname) || /\/models\/(?!credits\.js)/.test(u.pathname) || /\/airdef\.html$/.test(u.pathname) || /airdef-sw\.js$/.test(u.pathname)) return false;
   return u.pathname.includes('/games/airdef/') || (req.referrer || '').includes('/games/airdef');
 };
 self.addEventListener('fetch', (e) => {

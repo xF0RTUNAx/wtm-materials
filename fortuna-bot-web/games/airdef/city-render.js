@@ -549,6 +549,9 @@ function treeGeoLo() {
   ]);
 }
 
+// неподвижное — без пересчёта матриц каждый кадр (2026-10-23, нагрев телефонов: ≈ 700 из 1300 объектов сцены — город и постройки целей).
+// Кто потом двигает такой объект (objLook в main.js — «осел» после разрушения), зовёт его updateMatrix()
+export function freezeTree(o) { if (o) o.traverse((q) => { q.updateMatrix(); q.matrixAutoUpdate = false; }); }
 // инстансы по плиткам: list — [{x, z, y, sx, sy, sz, ry, color, kind}]; drawK — доля дальности прорисовки
 function tiled(scene, list, baseGeo, mat, opts, drawK = 1) {
   const tiles = new Map();
@@ -639,6 +642,46 @@ export async function farIndex(geo, k = 0.04, min = 16, err = 0.08) {
   const [out] = MeshoptSimplifier.simplify(widx, Float32Array.from(wpos), 3, tgt, err, []);
   const I = new Uint32Array(out.length); for (let i = 0; i < out.length; i++) I[i] = rep[out[i]];
   return new THREE.BufferAttribute(I, 1);
+}
+// дальняя копия — одним материалом (2026-10-23, нагрев телефонов: у копии объекта было по вызову отрисовки на материал, ≈ 13 на объект):
+// цвет текстуры запекается в цвет вершин треугольников — по уменьшенной копии картинки (models.js smallTex, линейный цвет), усреднение по 7
+// точкам треугольника на уровне, где он ≈ тексель (повтор UV — как RepeatWrapping), × цвет материала × цвет вершин (деталь, затенение в стыках).
+// Вдали (3,5–8 км) пиксель экрана — 3–6 м: рисунок окон и панелей и так сливается. Прозрачное, вырезанное по маске, со своим шейдером
+// (камуфляж, снег) и текстура без копии — как было. ?farflat=0 — как было
+const FAR_MAT = new Map(); // блеск — как у исходного материала (у построек обычно один на всех — одна сетка)
+const farMat = (mt) => { const k = mt.specular.getHex() + '|' + mt.shininess; let m = FAR_MAT.get(k); if (!m) FAR_MAT.set(k, m = new THREE.MeshPhongMaterial({ vertexColors: true, specular: mt.specular.getHex(), shininess: mt.shininess, side: THREE.DoubleSide })); return m; };
+const FARFLAT = !(typeof location !== 'undefined' && /[?&]farflat=0/.test(location.search));
+const SMALLP = new WeakMap(); // уменьшенная копия → уровни 32, 16, 8, 4, 2, 1
+function smallLevels(L) {
+  let lv = SMALLP.get(L); if (lv) return lv; lv = [L];
+  for (let w = 16; w >= 1; w >>= 1) { const a = lv[lv.length - 1], b = new Float32Array(w * w * 3), W = w * 2;
+    for (let y = 0; y < w; y++) for (let x = 0; x < w; x++) for (let c = 0; c < 3; c++) b[(y * w + x) * 3 + c] = (a[(2 * y * W + 2 * x) * 3 + c] + a[(2 * y * W + 2 * x + 1) * 3 + c] + a[((2 * y + 1) * W + 2 * x) * 3 + c] + a[((2 * y + 1) * W + 2 * x + 1) * 3 + c]) / 4;
+    lv.push(b); }
+  SMALLP.set(L, lv); return lv;
+}
+const FS3 = [0, 0, 0];
+function farFlat(m, geo, orig) {
+  const mt = m.material;
+  if (!FARFLAT || Array.isArray(mt) || mt.transparent || mt.alphaTest > 0 || mt.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || !mt.isMeshPhongMaterial) return geo;
+  const small = mt.map ? mt.map.small : null; if (mt.map && !small) return geo;
+  const g = geo === orig ? (geo.index ? geo.toNonIndexed() : geo.clone()) : geo.index ? geo.toNonIndexed() : geo;
+  const P = g.attributes.position, U = g.attributes.uv, C0 = g.attributes.color, n = P.count, col = new Float32Array(n * 3), lv = small && smallLevels(small);
+  const ck = C0 && C0.normalized ? (C0.array instanceof Uint8Array ? 1 / 255 : C0.array instanceof Uint16Array ? 1 / 65535 : 1) : 1; // байты затенения → 0…1
+  const smp = (u, v, l) => { const w = 32 >> l, a = lv[l], x = ((Math.floor(u * w) % w) + w) % w, y = ((Math.floor(v * w) % w) + w) % w, i = (y * w + x) * 3; FS3[0] += a[i]; FS3[1] += a[i + 1]; FS3[2] += a[i + 2]; };
+  for (let t = 0; t + 2 < n; t += 3) {
+    let r = mt.color.r, gg = mt.color.g, b = mt.color.b;
+    if (lv && U) {
+      const u0 = U.getX(t), v0 = U.getY(t), u1 = U.getX(t + 1), v1 = U.getY(t + 1), u2 = U.getX(t + 2), v2 = U.getY(t + 2);
+      const ext = Math.max(Math.max(u0, u1, u2) - Math.min(u0, u1, u2), Math.max(v0, v1, v2) - Math.min(v0, v1, v2));
+      const l = Math.max(0, Math.min(5, Math.ceil(Math.log2(Math.max(ext * 32 / 2, 1))))); // уровень, где треугольник ≈ 2 текселя
+      FS3[0] = FS3[1] = FS3[2] = 0;
+      smp(u0, v0, l); smp(u1, v1, l); smp(u2, v2, l); smp((u0 + u1) / 2, (v0 + v1) / 2, l); smp((u1 + u2) / 2, (v1 + v2) / 2, l); smp((u0 + u2) / 2, (v0 + v2) / 2, l); smp((u0 + u1 + u2) / 3, (v0 + v1 + v2) / 3, l);
+      r *= FS3[0] / 7; gg *= FS3[1] / 7; b *= FS3[2] / 7;
+    }
+    for (let k = 0; k < 3; k++) { const o = (t + k) * 3; col[o] = r * (C0 ? C0.getX(t + k) * ck : 1); col[o + 1] = gg * (C0 ? C0.getY(t + k) * ck : 1); col[o + 2] = b * (C0 ? C0.getZ(t + k) * ck : 1); }
+  }
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.deleteAttribute('uv'); m.material = farMat(mt);
+  return g;
 }
 // дальняя копия как отдельная геометрия: свои вершины на каждый треугольник и нормали по граням — у упрощённой сетки
 // нормали исходных вершин ложились пятнами («мятые» стены); крупные модели (big) — упрощаются до ошибки 0,5 % размера: силуэт не искажается
@@ -1405,7 +1448,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       const g = G.objGroup[o.id]; if (!g || !g.userData.left.has(name)) continue;
       for (const q of o.models) if (q.m === name) {
         const m = make(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); objTint(name, m);
-        m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows && !c.userData.noSnow; c.receiveShadow = !!P.shadows; if (G.winter && !c.userData.noSnow) snowify(c.material); } }); g.add(m);
+        m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows && !c.userData.noSnow; c.receiveShadow = !!P.shadows; if (G.winter && !c.userData.noSnow) snowify(c.material); } }); g.add(m); freezeTree(m);
       }
       g.userData.left.delete(name);
       if (!g.userData.left.size && G.objBox[o.id]) G.objBox[o.id].visible = false;
@@ -1416,14 +1459,14 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       const t = tmpl0, ms = []; t.traverse((c) => { if (c.isMesh) ms.push(c); });
       let tri = 0; for (const m of ms) tri += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3;
       const gs = await Promise.all(ms.map((m) => farGeo(m.geometry, tri >= 8000)));
-      ms.forEach((m, i) => { m.geometry = gs[i]; m.castShadow = false; m.receiveShadow = !!P.shadows; });
+      ms.forEach((m, i) => { m.geometry = farFlat(m, gs[i], m.geometry); m.castShadow = false; m.receiveShadow = !!P.shadows; }); // одним материалом (farFlat)
       return t;
     })()).then((t) => {
       for (const o of city.objects) {
         const f = G.objFar[o.id]; if (!f || !f.userData.left.has(name)) continue;
-        for (const q of o.models) if (q.m === name) { const m = t.clone(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); f.add(m); }
+        for (const q of o.models) if (q.m === name) { const m = t.clone(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); f.add(m); freezeTree(m); }
         f.userData.left.delete(name); f.userData.ready = !f.userData.left.size;
-        if (f.userData.ready && !f.userData.ruin) bakeGroup(f); // все дальние копии на месте — одной сеткой на материал (было: 9 построек порта × детали — десятки вызовов отрисовки); ближние — не запекаем: видны редко, а копия — лишняя память
+        if (f.userData.ready && !f.userData.ruin) { bakeGroup(f); freezeTree(f); } // все дальние копии на месте — одной сеткой на материал (было: 9 построек порта × детали — десятки вызовов отрисовки); ближние — не запекаем: видны редко, а копия — лишняя память
       }
     }).catch(() => { /* без дальней копии — коробка */ });
   };
@@ -1503,6 +1546,10 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
 
   if (W.snow) G.snow = makeSnowfall(scene, Math.round((P.particles || 3000) * 2), W); // снегопад (зимняя погода «Снегопад»)
   if (P.clouds > 0 && !W.rain && !(P.skyOnly && W.hdri)) G.clouds = buildClouds(scene, Math.round(P.clouds * (W.deck ? 1.8 : 1)), city.seed, W, P.clouds >= 500, SU);
+  // неподвижное — без пересчёта матриц (постройки целей, приходящие позже, — freezeTree при добавлении)
+  for (const m of G.tiles) freezeTree(m);
+  for (const k of ['objGroup', 'objFar', 'objMesh', 'objBox']) for (const id in G[k] || {}) freezeTree(G[k][id]);
+  freezeTree(G.ground);
   return G;
 }
 
