@@ -206,9 +206,11 @@
   body.coarse #tCam { display: none; } body.coarse.spect #tCam { display: flex; }
   #rwr { position: absolute; right: max(14px, var(--sa-r)); bottom: 14px; width: 150px; height: 150px; }
   /* вертолёт: «ПОНЯЛ» глушит писк захвата СПО (air.js rwrAck*); ПК — слева от СПО (справа внизу; над ней окно контейнера), телефон — справа от СПО вверху */
-  #rwrAck { position: absolute; display: none; pointer-events: auto; right: calc(max(14px, var(--sa-r)) + 162px); bottom: 68px; padding: 7px 14px; border-radius: 8px; border: 1.5px solid #fca5a5; background: rgba(127,29,29,.78); color: #fff;
+  #rwrAck { position: absolute; display: none; pointer-events: auto; right: calc(max(14px, var(--sa-r)) + 162px); bottom: 68px; padding: 7px 14px; border-radius: 2px; border: 1.5px solid #fca5a5; background: rgba(127,29,29,.78); color: #fff;
     font: 700 12px -apple-system, Segoe UI, sans-serif; letter-spacing: .06em; cursor: pointer; touch-action: none; text-shadow: none; }
-  #rwrAck.on { display: block; } body.coarse #rwrAck { right: auto; bottom: auto; left: calc(50% + 54px); top: var(--top); padding: 6px 10px; font-size: 11px; }
+  /* «ПОНЯЛ» — прямоугольная, мягко мерцает (Mark 2026-10-23): видно боковым зрением, но не дёргает */
+  @keyframes ackBlink { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(252,165,165,0); } 50% { opacity: .62; box-shadow: 0 0 10px 1px rgba(252,165,165,.55); } }
+  #rwrAck.on { display: block; animation: ackBlink 1.2s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { #rwrAck.on { animation: none; } } body.coarse #rwrAck { right: auto; bottom: auto; left: calc(50% + 54px); top: var(--top); padding: 6px 10px; font-size: 11px; }
   #warn { position: fixed; top: 24%; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 900; color: #ff5b5b; display: none; letter-spacing: .06em; text-align: center; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #msg { position: fixed; top: 31%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; color: #fde68a; display: none; text-align: center; max-width: 80vw; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #podBox { position: absolute; display: none; pointer-events: auto; border: 1.5px solid rgba(160,255,190,.55); border-radius: 4px; overflow: hidden; cursor: crosshair; touch-action: none;
@@ -551,6 +553,7 @@
   #exit .ic, #mute .ic, #pause .ic, #plBtn .ic, #lsnBtn .ic { width: 20px; height: 20px; } #askBtn .ic { width: 18px; height: 18px; margin: auto; }
   body.short .tb .ic { width: 22px; height: 22px; } body.short #opBtns .tb .ic { width: 20px; height: 20px; }
   #tPad i .ic { width: 22px; height: 22px; margin: auto; }
+  #tPop .ic { width: 36px; height: 36px; } body.short #tPop .ic { width: 30px; height: 30px; } /* вертолёт тонкий — крупнее соседних, чтобы читался так же */
   #opBtns #opRadar.on { background: var(--th-ac); border-color: var(--th-ac); color: #17190f; } /* РЛС излучает — иконка закрашена */
   #opBtns .tb.off { opacity: .45; }
   #opFire { --fb: 360deg; --fc: rgba(74,222,128,.5); background: conic-gradient(var(--fc) var(--fb), rgba(16,20,15,.5) 0); }

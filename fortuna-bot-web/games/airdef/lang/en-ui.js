@@ -333,6 +333,7 @@ export default {
   "Обзор — свободная камера": "Look: free camera",
   "Камера: следующий союзник": "Camera: next ally",
   "Нужна помощь": "Need help",
+  "Подскок": "Pop-up",
   "АВТО — расчёт сам": "AUTO: crew takes over",
   "Камера": "Camera",
   "Бинокль": "Binoculars",

@@ -791,7 +791,7 @@ $('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
 $('exit').onclick = () => C.toMenu();
 // кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
 const ICO = { tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('АВТО — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
-  tHelp: ['help', tr('Нужна помощь')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('АВТО — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
+  tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('АВТО — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
   pause: ['pause', tr('Пауза')], plBtn: ['players', tr('Игроки')], lsnBtn: ['lesson', tr('Урок: задание и подсказки')], askBtn: ['lesson', tr('Объяснение')], wMap: ['map', tr('Карта')] };
 for (const [id, [n, t]] of Object.entries(ICO)) { const e = $(id); if (!e) continue; e.innerHTML = ico(n); e.title = t; if (e.setAttribute) e.setAttribute('aria-label', t); e.classList.add('icb'); }
 { const pd = $('tPad'); if (pd && pd.querySelector) { const l = pd.querySelector('.pl'), r = pd.querySelector('.pr'); if (l) l.innerHTML = ico('rollL'); if (r) r.innerHTML = ico('rollR'); } } // крен — стрелки вращения
