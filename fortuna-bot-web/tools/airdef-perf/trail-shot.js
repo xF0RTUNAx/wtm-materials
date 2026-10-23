@@ -1,5 +1,5 @@
 // Дымы повреждений в игре: виртуальный подбитый самолёт пролетает в 260 м перед камерой (200 м/с, плавный вираж) и тянет 4 следа рядом — серый,
-// чёрный, огонь с чёрным дымом, течь бака (C.fx.zoneTrail каждые 5 м, как plane-damage.js). Прежние пятна (?puff=0) против клубов из Blender.
+// чёрный, огонь с чёрным дымом, течь бака (C.fx.zoneTrail каждые 5 м, как plane-damage.js). Прежние пятна против клубов из Blender (?puff=1; по умолчанию пока выключены).
 //   deno run -A tools/airdef-perf/trail-shot.js [папка = .] [пресет = high] [видео: 1 — ещё и ролик]
 import puppeteer from 'npm:puppeteer-core@22.15.0';
 const [out = '.', preset = 'high', vid = '0'] = Deno.args;
@@ -33,6 +33,6 @@ const shoot = async (flag, tag) => {
   if (vid === '1') new Deno.Command('ffmpeg', { args: ['-v', 'error', '-y', '-framerate', String(FPS), '-i', `${dir}/%04d.jpg`, '-vf', 'scale=1280:-2', '-c:v', 'libx264', '-crf', '18', '-pix_fmt', 'yuv420p', `${out}/trail-${tag}.mp4`] }).outputSync();
   Deno.removeSync(dir, { recursive: true }); await page.close(); return errs;
 };
-const e0 = await shoot('&puff=0', 'old'), e1 = await shoot('', 'new');
+const e0 = await shoot('', 'old'), e1 = await shoot('&puff=1', 'new');
 console.log('ошибки:', [...e0, ...e1].slice(0, 3).join(' | ') || 'нет');
 await browser.close();

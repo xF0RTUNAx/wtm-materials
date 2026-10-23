@@ -209,7 +209,7 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPrefer
 ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рендерер — какие форматы есть у устройства
 // телефон: текстуры после загрузки на видеокарту освобождаются (models.js, ktx.js) — в бою (онлайн и одиночном) не выбрасывать игрока: сжатые
 // текстуры (модели, земля, листы взрывов) грузятся заново из кэша (ktxRestore — иначе до конца боя чёрные), бой доигрывается, перезагрузка — при выходе в меню
-canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') { C.reloadAfterBattle = true; ktxRestore(); } else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление — iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
+canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') { C.reloadAfterBattle = true; ktxRestore(renderer); } else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление — iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
