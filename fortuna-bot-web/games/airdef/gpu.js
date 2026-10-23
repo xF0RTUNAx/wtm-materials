@@ -58,7 +58,7 @@ export function gpuScore(name, scr = typeof screen !== 'undefined' ? screen : nu
   const n = String(name || '');
   if (/Apple/i.test(n)) {
     if (/M\d/.test(n)) return 15000; // Mac / iPad на M-чипе (в имени бывает «Apple M1»)
-    const ios = +((ua.match(/OS (\d+)_/) || [])[1] || 0);
+    const ios = +((ua.match(/OS (\d+)_/) || ua.match(/Version\/(\d+)/) || [])[1] || 0); // iPad с iPadOS 13+ — строка как у Mac; версия Safari = версия iOS
     return scr ? appleScore(scr.width, scr.height, dpr, ios) : 8000;
   }
   let m = n.match(/Adreno[^\d]*(\d{3})/i);
@@ -75,7 +75,7 @@ export function gpuScore(name, scr = typeof screen !== 'undefined' ? screen : nu
 
 // ступень «Обычной» чёткости по баллам: pixelRatio для пресетов (ниже нынешнего не опускаем — Mark: не мылить)
 export function sharpFor(score) {
-  if (score === null || score === undefined) return { low: 1.25, medium: 1.5, high: 1.5, ultra: 1.5 }; // неизвестный — средняя ступень
+  if (!Number.isFinite(score)) return { low: 1.25, medium: 1.5, high: 1.5, ultra: 1.5 }; // неизвестный — средняя ступень
   if (score < 2000) return { low: 1.25, medium: 1.25, high: 1.5, ultra: 1.5 }; // как было
   if (score < 4500) return { low: 1.25, medium: 1.5, high: 1.5, ultra: 1.5 };
   if (score < 9000) return { low: 1.5, medium: 1.75, high: 1.75, ultra: 1.75 };

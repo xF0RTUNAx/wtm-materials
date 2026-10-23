@@ -14,16 +14,27 @@ export const ktxOn = () => !!L;
 // телефон: после загрузки на видеокарту копия уровней в памяти JS больше не нужна (как у моделей, models.js) — листы взрывов 4096 и земля
 // держали её зря (до ~140 МБ, 2026-10-23); потерю контекста WebGL на телефоне main.js лечит перезагрузкой страницы
 const TOUCH = typeof matchMedia === 'function' && typeof location !== 'undefined' && (/[?&]touch=1/.test(location.search) || matchMedia('(pointer: coarse)').matches);
-const free = (t) => { t.ktxBytes = (t.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0); if (TOUCH) t.onUpdate = () => { t.mipmaps = []; }; return t; }; // ktxBytes — для замеров
+// again() — та же текстура заново (из кэша): после потери контекста WebGL в бою three грузит текстуры на видеокарту снова — из пустых уровней
+// вышли бы чёрные земля, деревья и листы взрывов (ktxRestore возвращает уровни в тот же объект: ссылки материалов не меняются)
+const KEEP = new Set();
+export function ktxFree(t, again) { // ktxBytes — для замеров
+  t.ktxBytes = (t.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0);
+  if (TOUCH) { t.onUpdate = () => { t.mipmaps = []; }; if (again) KEEP.add({ t, again }); }
+  return t;
+}
+export function ktxRestore() {
+  for (const k of KEEP) if (!k.t.mipmaps || !k.t.mipmaps.length) k.again().then((n) => { k.t.mipmaps = n.mipmaps; k.t.needsUpdate = true; }).catch(() => { /* нет сети и кэша — останется чёрной до конца боя */ });
+}
+const raw = (url) => new Promise((ok, no) => L.load(url, (t) => { t.encoding = THREE.LinearEncoding; ok(t); }, undefined, no));
 // текстура tex/<name>.ktx2 (картинка — сверху вниз, как ImageBitmap без переворота); шейдеры игры сами переводят sRGB
 export function ktxLoad(name) {
   if (!L) return Promise.reject(new Error('KTX2 выключен'));
-  return new Promise((ok, no) => L.load(new URL(`./tex/${name}.ktx2?v=${V}`, import.meta.url).href, (t) => { t.encoding = THREE.LinearEncoding; ok(free(t)); }, undefined, no));
+  const u = new URL(`./tex/${name}.ktx2?v=${V}`, import.meta.url).href; return raw(u).then((t) => ktxFree(t, () => raw(u)));
 }
 // текстура по адресу (раскадровки эффектов, flipbook.js): как ktxLoad — сырые значения, шейдер сам переводит sRGB
 export function ktxLoadUrl(url) {
   if (!L) return Promise.reject(new Error('KTX2 выключен'));
-  return new Promise((ok, no) => L.load(url, (t) => { t.encoding = THREE.LinearEncoding; ok(free(t)); }, undefined, no));
+  return raw(url).then((t) => ktxFree(t, () => raw(url)));
 }
 // средние цвета земли (из сжатой текстуры их не прочитать)
 export const ktxMeta = () => META || (META = fetch(new URL(`./tex/ktx.json?v=${V}`, import.meta.url)).then((r) => r.json()));

@@ -10,7 +10,7 @@ import { tr } from './i18n.js?v=20261022y';
 import { CREDITS } from './models/credits.js?v=20261022y';
 import { mergeLocal } from './merge.js?v=20261022y';
 import { cachedFetch } from './offline.js?v=20261022y';
-import { ktxOn, ktxParse, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261022y';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261022y';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -406,7 +406,7 @@ function smallTex(bmp) {
 }
 const TEXC = new Map(); // общие текстуры моделей: отпечаток картинки | карта нормалей | предел размера → Promise<THREE.Texture>
 // сжатые текстуры моделей (2026-10-23, KTX2 UASTC: в видеопамяти вчетверо меньше распакованного JPEG; файлы models/ktx, tools/airdef-models/ktx-models.js):
-// есть файл нужной версии (index.json) — берём его, нет или не разобрался — JPEG из glb, как раньше. ?ktx=0 — без сжатых (ktx.js). У зданий — всегда JPEG
+// есть файл нужной версии (index.json) — берём его, нет или не разобрался — JPEG из glb, как раньше. ?ktx=0 — без сжатых (ktx.js). У зданий и объектов — тоже сжатые (цвет вдали — с уменьшенной копии JPEG, mkKtx → small)
 let KIDX = null; const ktxIndex = (base) => KIDX || (KIDX = cachedFetch(ktxIndexUrl(base)).then((r) => (r.ok ? r.json() : {})).catch(() => ({})));
 // детали с одинаковым материалом — одна сетка (2026-10-23, нагрев телефонов): в файлах моделей у каждой детали свой материал, даже у
 // одинаковых — у F/A-18 28 деталей = 28 вызовов отрисовки (после разрезки на зоны повреждений — 104), у «Шилки» 77, у построек объектов —
@@ -468,8 +468,8 @@ async function load(name, base) {
       const r = await cachedFetch(url); if (!r.ok) return null;
       const x = await ktxParse(await r.arrayBuffer(), tm);
       x.flipY = false; x.encoding = isN ? THREE.LinearEncoding : THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
-      x.ktxBytes = (x.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0); // для замеров (mem-check)
-      if (TOUCH) x.onUpdate = () => { x.mipmaps = []; }; // на видеокарте — копия уровней в памяти больше не нужна (как close() у ImageBitmap)
+      // на телефоне — копия уровней в памяти после загрузки на видеокарту не нужна (как close() у ImageBitmap); потеря контекста в бою — заново из кэша
+      ktxFree(x, () => cachedFetch(url).then((q) => q.arrayBuffer()).then((b) => ktxParse(b, tm)));
       if ((MM0.bld || MM0.obj) && !isN && typeof createImageBitmap === 'function') { // постройки: цвет вдали (modelColor, farFlat) — с уменьшенной копии JPEG из glb
         try { const b = await createImageBitmap(images[t.source], { resizeWidth: 128, resizeHeight: 128, resizeQuality: 'high' }); x.small = smallTex(b); b.close(); } catch (_) { /* без копии — дальняя копия как была */ }
       }

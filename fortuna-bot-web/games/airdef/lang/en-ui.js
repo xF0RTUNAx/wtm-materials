@@ -334,7 +334,6 @@ export default {
   "Камера: следующий союзник": "Camera: next ally",
   "Нужна помощь": "Need help",
   "Подскок": "Pop-up",
-  "Определён видеочип": "Detected GPU",
   "не определён": "not detected",
   "АВТО — расчёт сам": "AUTO: crew takes over",
   "Камера": "Camera",

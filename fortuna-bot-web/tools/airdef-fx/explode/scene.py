@@ -6,7 +6,7 @@
 # шлейфами земли; у воздушных — без земли: шар и чёрный дым (у самолёта — горящее топливо дольше и падающие обломки со шлейфами).
 # Масштаб s — от «тяжёлой» (ФАБ-500 / Mk 84): длины × s, скорости × √s, время × √s (подобие по Фруду: всплытие и падение комьев — от тяжести).
 import bpy, sys, os, math
-from mathutils import Vector
+from mathutils import Vector, Matrix
 
 T = {
     #            s     кадры  земля  столб  комья пыль  огонь (горение: больше — быстрее гаснет)  ref — радиус поражения игры, под который снято
@@ -112,7 +112,7 @@ def build(kind, path):
 # установившийся участок с бесшовной петлёй (sheet.js --loop): в игре — одна-две картинки вместо сотен частиц дыма (нагрузка)
 def build_burn(path):
     bpy.ops.wm.read_homefile(use_empty=True)
-    sc = bpy.context.scene; sc.render.fps = 24; sc.frame_start = 1; sc.frame_end = 360  # 15 с: с ~10 с столб установившийся (петля из кадров 240–358)
+    sc = bpy.context.scene; sc.render.fps = 24; sc.frame_start = 1; sc.frame_end = 540  # 22,5 с: столб растёт до ~17 с, дальше высота держится — петля из последних 5 с (кадры 422–540)
     try: sc.render.engine = 'CYCLES'
     except TypeError: pass
     try: sc.view_settings.view_transform = 'Standard'
@@ -121,26 +121,37 @@ def build_burn(path):
     # и упирался в стенки — завихрения Mantaflow считаются в клетках, а всплытие — в метрах, и в большой области всплытие слабее завихрений.
     # В игру — game_scale: кадр в метрах × 4, время × √4 (подобие по Фруду, как у взрывов — render.py)
     G = 0.25; sc['game_scale'] = 1 / G
-    bpy.ops.mesh.primitive_cylinder_add(radius=5.0 * G, depth=1.0 * G, location=(0, 0, 0.6 * G))
-    em = bpy.context.active_object; em.name = 'Очаг'
+    # очаг — груда из 7 глыб разной величины и высоты (горящие обломки): у ровного цилиндра пламя было светящимся диском его формы (Mark: «не вырезанным»)
+    import bmesh, random; random.seed(7); bm = bmesh.new()
+    for i in range(7):
+        r = random.uniform(0.22, 0.5); a = random.uniform(0, 2 * math.pi); q = random.uniform(0, 0.95)
+        m = Matrix.Translation((q * math.cos(a), q * math.sin(a), random.uniform(0.05, 0.45))) @ Matrix.Diagonal((r * random.uniform(0.8, 1.6), r * random.uniform(0.8, 1.4), r * random.uniform(0.5, 1.0), 1))
+        bmesh.ops.create_icosphere(bm, subdivisions=2, radius=1.0, matrix=m)
+    me = bpy.data.meshes.new('Очаг'); bm.to_mesh(me); bm.free()
+    em = bpy.data.objects.new('Очаг', me); sc.collection.objects.link(em); bpy.context.view_layer.objects.active = em; em.select_set(True)
     bpy.ops.object.quick_smoke(style='BOTH')
     dom = next(o for o in bpy.data.objects if o.modifiers and o.modifiers[0].type == 'FLUID' and o.modifiers[0].fluid_type == 'DOMAIN'); dom.name = 'Область'
     dom.location = (0, 0, 100 * G); dom.scale = (1, 1, 1); dom.dimensions = (128 * G, 128 * G, 200 * G); bpy.context.view_layer.update()  # шире кадра (21 м) в 1,5 раза: дым не касается стенок (прямые края)
     ds = dom.modifiers[0].domain_settings
     ds.resolution_max = 256; ds.use_noise = True; ds.noise_scale = 2; ds.noise_strength = 1.0; ds.noise_pos_scale = 2.0
-    ds.cache_type = 'ALL'; ds.cache_directory = os.path.join(os.path.dirname(path), 'cache_burn'); ds.cache_frame_start = 1; ds.cache_frame_end = 360
+    ds.cache_type = 'ALL'; ds.cache_directory = os.path.join(os.path.dirname(path), 'cache_burn'); ds.cache_frame_start = 1; ds.cache_frame_end = 540
     ds.use_adaptive_domain = True; ds.adapt_margin = 16; ds.adapt_threshold = 0.0005  # 0,004 подрезало тонкую верхушку столба
     for b in ('front', 'back', 'left', 'right', 'top'): setattr(ds, 'use_collision_border_' + b, False)
     ds.use_collision_border_bottom = True
     # всплытие: beta у Blender не больше 5 (10 молча становилось 5 — купол); добирают жар (пламя до 8, очаг 10) и всплытие по плотности дыма (alpha 1);
     # завихрения слабые — иначе столб разваливается вширь
-    ds.alpha = 1.0; ds.beta = 5.0; ds.vorticity = 0.1; ds.flame_vorticity = 0.3
-    ds.burning_rate = 0.9; ds.flame_ignition = 1.4; ds.flame_max_temp = 8.0; ds.flame_smoke = 1.8; ds.flame_smoke_color = (0.08, 0.075, 0.07)  # горит топливо — чёрный дым
-    ds.use_dissolve_smoke = True; ds.dissolve_speed = 250; ds.use_dissolve_smoke_log = True  # верх столба тает мягко (без среза), форма с 10 с не меняется
+    # пламя — языками: топливо горит медленнее (поднимается, прежде чем сгореть), колышется (flame_vorticity — только пламя, столб не разваливает)
+    ds.alpha = 1.0; ds.beta = 5.0; ds.vorticity = 0.1; ds.flame_vorticity = 1.5
+    ds.burning_rate = 0.5; ds.flame_ignition = 1.2; ds.flame_max_temp = 8.0; ds.flame_smoke = 1.8; ds.flame_smoke_color = (0.08, 0.075, 0.07)  # горит топливо — чёрный дым
+    ds.use_dissolve_smoke = True; ds.dissolve_speed = 250; ds.use_dissolve_smoke_log = True  # верх тает мягко; 400 — столб рос до конца (петля проседала), 180 — ниже
     ds.use_adaptive_timesteps = True; ds.timesteps_min = 1; ds.timesteps_max = 6
     fs = em.modifiers[0].flow_settings
-    fs.flow_type = 'BOTH'; fs.flow_behavior = 'INFLOW'; fs.fuel_amount = 1.2; fs.temperature = 10.0; fs.density = 0.8; fs.smoke_color = (0.08, 0.075, 0.07)
-    fs.use_initial_velocity = True; fs.velocity_coord = (0, 0, 12 * G); fs.velocity_factor = 1.0; fs.subframes = 1; fs.surface_distance = 1.0
+    fs.flow_type = 'BOTH'; fs.flow_behavior = 'INFLOW'; fs.fuel_amount = 2.0; fs.temperature = 10.0; fs.density = 0.8; fs.smoke_color = (0.08, 0.075, 0.07)
+    fs.use_initial_velocity = True; fs.velocity_coord = (0, 0, 20 * G); fs.velocity_factor = 1.0; fs.subframes = 1; fs.surface_distance = 1.0
+    # неровный выброс: облачный шум по очагу, сдвигается во времени — языки рвутся и перебегают
+    tx = bpy.data.textures.new('Очаг: шум', 'CLOUDS'); tx.noise_scale = 0.5; tx.noise_depth = 2; tx.contrast = 1.6
+    fs.use_texture = True; fs.noise_texture = tx; fs.texture_map_type = 'AUTO'; fs.texture_size = 0.25
+    fs.texture_offset = 0.0; fs.keyframe_insert('texture_offset', frame=1); fs.texture_offset = 21.0; fs.keyframe_insert('texture_offset', frame=540)
     em.hide_render = True
     # без ветра: столб вертикальный (ветер 120 положил пламя набок и выдул дым за край области); в игре его сносит ветер карты
     m = dom.active_material; nt = m.node_tree; pv = next(n for n in nt.nodes if n.type == 'PRINCIPLED_VOLUME')
@@ -155,8 +166,8 @@ def build_burn(path):
     w = bpy.data.worlds.new('World'); sc.world = w; w.use_nodes = True
     bg = next(n for n in w.node_tree.nodes if n.type == 'BACKGROUND'); bg.inputs[0].default_value = (0.5, 0.5, 0.5, 1); bg.inputs[1].default_value = 0.8
     cam = bpy.data.objects.new('Камера', bpy.data.cameras.new('Камера')); sc.collection.objects.link(cam); sc.camera = cam
-    cam.data.type = 'ORTHO'; cam.data.ortho_scale = 160 * G; cam.data.clip_end = 2000  # столб с верхушкой ≈ 30 м (× 4 в игре) — в кадре с запасом
-    tgt = Vector((0, 0, 76 * G)); el = math.radians(15); d = 400 * G
+    cam.data.type = 'ORTHO'; cam.data.ortho_scale = 144 * G; cam.data.clip_end = 2000  # установившийся столб ≈ 28 м (× 4 в игре) — верхушка не заходит в растворение края листа (6 %)
+    tgt = Vector((0, 0, 66 * G)); el = math.radians(15); d = 400 * G
     cam.location = tgt + Vector((0, -d * math.cos(el), d * math.sin(el))); cam.rotation_euler = (tgt - cam.location).to_track_quat('-Z', 'Y').to_euler()
     sc.render.film_transparent = True; sc.render.resolution_x = 256; sc.render.resolution_y = 512
     sc.cycles.samples = 96; sc.cycles.use_denoising = True; sc.cycles.volume_bounces = 1; sc.cycles.max_bounces = 4; sc.cycles.sample_clamp_indirect = 0.5

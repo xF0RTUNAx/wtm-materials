@@ -209,7 +209,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
       const z = (v, pt, burn) => { if (v < 0.75) emit(pt, 1 - v, burn ? 2 : v < 0.35 ? 1 : 0); };
       z(D.wingL, PT.wingL); z(D.wingR, PT.wingR); z(D.tail, PT.tail);
       if (D.eng.length > 1) { z(D.eng[0], PT.engL, a.fire === 1 && D.eng[0] < 0.3); z(D.eng[1], PT.engR, a.fire === 1 && D.eng[1] < 0.3); } else z(D.eng[0], PT.eng, a.fire === 1);
-      if (a.fire === 2 || D.fuel < 0.7) emit(PT.fuel, 1 - D.fuel, a.fire === 2 ? 2 : 0); // течь бака — белёсый шлейф, пожар — огонь
+      if (a.fire === 2 || D.fuel < 0.7) emit(PT.fuel, 1 - D.fuel, a.fire === 2 ? 2 : 3); // течь бака — белёсый шлейф (3; было тем же серым дымом), пожар — огонь
     },
   };
   return api;

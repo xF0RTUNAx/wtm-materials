@@ -306,14 +306,13 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       ${C.gfxKey === 'custom' ? customPanel() : `<div class="prow"><span>${tr('Предел кадров')}</span>${seg('fpsCap', C.fpsCap, [['auto', C.IS_TOUCH ? tr('Авто (60)') : tr('Авто')], [30, '30'], [45, '45'], [60, '60'], ...(C.IS_TOUCH ? [] : [[0, tr('Нет')]])])}</div>
       <p class="hint">${tr('Картинка та же, меньше кадров — меньше нагрев и расход батареи. Телефону с экраном 90–120 Гц: 60 или 45.')}</p>
       ${C.IS_TOUCH ? `<div class="prow"><span>${tr('Чёткость')}</span>${seg('sharp', C.SHARP, [['auto', tr('Обычная')], ['high', tr('Высокая')], ['native', tr('Как у экрана')]])}</div>
-      <p class="hint">${tr('Высокая и «как у экрана» — чётче картинка, но больше нагрузка на видеочип и нагрев. Применяется перезапуском.')}
-      ${tr('Определён видеочип')}: ${(C.GPU_NAME || tr('не определён')).replace(/[<>&]/g, '').slice(0, 70)}</p>` : ''}`}
+      <p class="hint">${tr('Высокая и «как у экрана» — чётче картинка, но больше нагрузка на видеочип и нагрев. Применяется перезапуском.')}</p>` : ''}`}
       <label class="chk"><input type="checkbox" id="sPerf" ${C.perfHud ? 'checked' : ''}> ${tr('счётчик производительности в бою')}</label>
       <div class="cat-h">${tr('На устройстве')}</div>
       <p class="hint" id="offInfo">${tr('Модели, текстуры и звуки, скачанные один раз, хранятся на устройстве — в бою и при следующих запусках не догружаются.')}</p>
       <button class="btn alt" id="sPrefetch">${pf.run ? tr('Остановить') : tr('Скачать всё заранее (≈ 385 МБ, лучше по Wi-Fi)')}</button>
       <div class="ldbar" id="pfBar" style="margin-top:6px;${pf.run || pf.done ? '' : 'display:none'}"><i id="pfFill" style="width:${pf.k * 100}%"></i></div><p class="hint" id="pfTxt">${pf.txt}</p>
-      <p class="hint">${tr('Видеочип: {0}', [C.gpuName])}</p>
+      <p class="hint">${tr('Видеочип: {0}', [String(C.gpuName || '—').replace(/[<>&]/g, '').slice(0, 70)])}</p>
       <div class="cat-h">${tr('Время и погода')}</div>${seg('wx', C.weatherKey, [['random', tr('Случайная')], ...WEATHER_KEYS.map((k) => [k, trIf(WEATHERS[k].name)])])}
       <div class="cat-h">${tr('Управление')}</div>
       ${C.IS_TOUCH ? `<button class="btn alt" id="sLayout">${tr('Расположение и размер кнопок…')}</button>` : ''}

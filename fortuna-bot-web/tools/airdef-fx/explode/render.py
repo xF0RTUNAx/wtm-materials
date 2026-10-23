@@ -22,15 +22,17 @@ if nt and not any(n.label == 'Пламя: кривая' for n in nt.nodes):
     cr = next(n for n in nt.nodes if n.label == 'Пламя: цвет').color_ramp
     while len(cr.elements) > 1: cr.elements.remove(cr.elements[-1])
     cr.elements[0].position = 0.0; cr.elements[0].color = (0.14, 0.05, 0.012, 1)
-    for pos, col in ((0.25, (0.72, 0.26, 0.05)), (0.55, (1.0, 0.6, 0.16)), (1.0, (1.0, 0.94, 0.74))): e = cr.elements.new(pos); e.color = (*col, 1)
+    # пожар — горящее топливо: верх шкалы оранжево-жёлтый (белый — накал взрыва; у пожара ядро светилось белым диском)
+    top = ((0.25, (0.75, 0.28, 0.05)), (0.6, (1.0, 0.55, 0.14)), (1.0, (1.0, 0.8, 0.42))) if burn else ((0.25, (0.72, 0.26, 0.05)), (0.55, (1.0, 0.6, 0.16)), (1.0, (1.0, 0.94, 0.74)))
+    for pos, col in top: e = cr.elements.new(pos); e.color = (*col, 1)
     at = next(n for n in nt.nodes if n.label == 'Пламя'); mul = next(n for n in nt.nodes if n.label == 'Пламя: сила')
     pw = nt.nodes.new('ShaderNodeMath'); pw.operation = 'POWER'; pw.inputs[1].default_value = 1.3; pw.label = 'Пламя: кривая'
     for l in list(nt.links):
         if l.to_node == mul: nt.links.remove(l)
-    nt.links.new(at.outputs['Fac'], pw.inputs[0]); nt.links.new(pw.outputs['Value'], mul.inputs[0]); mul.inputs[1].default_value = 12.0 if 'Очаг' in bpy.data.objects else 30.0  # пожар — оранжевое пламя, не раскалённая вспышка
+    nt.links.new(at.outputs['Fac'], pw.inputs[0]); nt.links.new(pw.outputs['Value'], mul.inputs[0]); mul.inputs[1].default_value = 9.0 if burn else 30.0  # пожар — оранжевое пламя, не раскалённая вспышка
 sc.cycles.sample_clamp_indirect = 0.5  # белые точки («светлячки») в дыме
-# взрыв: первые 8 кадров — каждый (вспышка), до 3 с — через один, дальше — через три (облако движется медленно; в игре кадры смешиваются)
-frames = list(range(240, 360, 2)) if burn else list(range(1, 9)) + list(range(10, min(73, sc.frame_end + 1), 2)) + list(range(76, sc.frame_end + 1, 4))
+# взрыв: первые 8 кадров — каждый (вспышка), до 3 с — через один, дальше — через три (облако движется медленно; в игре кадры смешиваются); пожар — последние 5 с (установившийся столб — петля)
+frames = list(range(sc.frame_end - 118, sc.frame_end + 1, 2)) if burn else list(range(1, 9)) + list(range(10, min(73, sc.frame_end + 1), 2)) + list(range(76, sc.frame_end + 1, 4))
 os.makedirs(out, exist_ok=True)
 p = world_to_camera_view(sc, cam, Vector((0, 0, 0)))
 gs = float(sc.get('game_scale', 1))  # сцена меньше игровой (пожар, scene.py): кадр в метрах × gs, время × √gs (подобие по Фруду)

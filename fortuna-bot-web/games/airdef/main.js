@@ -11,7 +11,7 @@
 import { localizeTree } from './lang/data.js?v=20261022y'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
 import { TREE, BRANCHES } from './progress.js?v=20261022y';
 import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261022y';
-import { ktxInit } from './ktx.js?v=20261022y';
+import { ktxInit, ktxRestore } from './ktx.js?v=20261022y';
 import { buildCity, CITY } from './city.js?v=20261022y';
 import { buildWinter } from './map-winter.js?v=20261022y';
 import { WINTER_KEYS } from './winter-render.js?v=20261022y';
@@ -100,7 +100,7 @@ const GO = (() => { try { return JSON.parse(ls.get('fortuna_airdef_gfxo') || '{}
 // 'auto' — как было (×1,25 у «Низкого» и «Среднего», ×1,5 у «Высокого» и «Ультра»), 'high' — ×1,75 / ×2, 'native' — как у экрана. Применяется перезапуском
 const SHARP = (() => { const v = ls.get('fortuna_airdef_sharp'); return v === 'high' || v === 'native' ? v : 'auto'; })();
 // видеочип телефона и его примерные баллы (gpu.js): по ним «Обычная» чёткость; ?gpu=<баллы> — проверить другую ступень (напр. ?gpu=1500 / 12000)
-const GPU = (() => { const g = detectGpu(), q = Q.get('gpu'); if (q !== null && Number.isFinite(+q)) g.score = +q; return g; })();
+const GPU = (() => { const g = detectGpu(), q = Q.get('gpu'); if (q && Number.isFinite(+q)) g.score = +q; return g; })();
 const GPU_NAME = GPU.name;
 let fpsCap = (() => { const v = ls.get('fortuna_airdef_fps'); return v === null || v === 'auto' || !Number.isFinite(+v) ? 'auto' : +v; })();
 function applyGfx(base, o) {
@@ -144,7 +144,7 @@ function touchGfx(P, custom) {
   // «Обычная» — по баллам видеочипа (2026-10-23): слабые — как было (×1,25 / ×1,5), дальше ступени до ×2; не тянет — динамическое разрешение само
   // опустит (perf.min)
   const AUTO = sharpFor(GPU.score); // ступень по баллам видеочипа (gpu.js): ниже прежнего не опускаем
-  if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? (b > 1.5 ? 2 : 1.75) : (AUTO[gfxKey] || Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25));
+  if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? Math.max(AUTO[gfxKey] || 0, b > 1.5 ? 2 : 1.75) : (AUTO[gfxKey] || Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25));
   // ?fsrout=1 (проба): холст — в разрешении экрана, 3D — во внутреннем буфере той же чёткости, до экрана — FSR (края чётче, чем растяжка браузера)
   if (!custom && /[?&]fsrout=1/.test(location.search) && P.prCap < 4) {
     const native = (window.devicePixelRatio || 1) * (P.prMul || 1), k = Math.min(1, P.prCap / native);
@@ -207,9 +207,9 @@ setGround(city.groundH);
 const canvas = $('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance', preserveDrawingBuffer: false });
 ktxInit(renderer); // сжатые текстуры (ktx.js): нужен рендерер — какие форматы есть у устройства
-// телефон: текстуры моделей после загрузки на видеокарту освобождаются (models.js) — восстановить потерянный контекст WebGL нечем, только перезагрузкой
-// в бою (онлайн и одиночном) — не выбрасывать игрока: бой доигрывается (модели могут остаться без текстур), перезагрузка — при выходе в меню
-canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') C.reloadAfterBattle = true; else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление — iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
+// телефон: текстуры после загрузки на видеокарту освобождаются (models.js, ktx.js) — в бою (онлайн и одиночном) не выбрасывать игрока: сжатые
+// текстуры (модели, земля, листы взрывов) грузятся заново из кэша (ktxRestore — иначе до конца боя чёрные), бой доигрывается, перезагрузка — при выходе в меню
+canvas.addEventListener('webglcontextrestored', () => { if (!IS_TOUCH) return; if ((C.net && C.net.battle) || C.state === 'play') { C.reloadAfterBattle = true; ktxRestore(); } else location.reload(); }); // и в одиночном бою (2026-10-22, «бои изредка вылетают»): свернул Telegram / пришло уведомление — iOS отбирает контекст WebGL, раньше страница сразу перезагружалась и бой пропадал
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMappingExposure = ((P.post && P.post.exposure) || 1.1) * (W.exposure || 1);
 renderer.shadowMap.enabled = !!P.shadows; renderer.shadowMap.type = IS_TOUCH ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;

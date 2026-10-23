@@ -28,7 +28,7 @@ for (const [type, R, kind, label] of CASES) {
     C.__boom = () => { if (kind === 'burn') C.fx.burn(p, R); else { C.fx.explosion(p, R, kind); if (kind !== 'air') C.fx.crater(p, R, kind, gy, 0); } };
   }, R, kind, k++);
   const dir = `${root}/${type}`; Deno.mkdirSync(dir);
-  for (let i = 0; i < SEC * FPS; i++) {
+  for (let i = 0, N = (kind === 'burn' ? 2.5 : 1) * SEC * FPS; i < N; i++) { // пожар — дольше: видно, что петля без шва
     const url = await page.evaluate((i, FPS, label) => { const C = window.__a; window.__T = i / FPS - 0.5; if (i === Math.round(0.5 * FPS)) C.__boom();
       for (let q = 0; q < 2; q++) { window.__t += 1000 / (2 * FPS); C.paused = false; window.__frame(window.__t); }
       // подпись — прямо на кадре (в ffmpeg этой сборки нет drawtext)
