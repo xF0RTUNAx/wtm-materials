@@ -33,7 +33,8 @@ sc.cycles.sample_clamp_indirect = 0.5  # белые точки («светляч
 frames = list(range(240, 360, 2)) if burn else list(range(1, 9)) + list(range(10, min(73, sc.frame_end + 1), 2)) + list(range(76, sc.frame_end + 1, 4))
 os.makedirs(out, exist_ok=True)
 p = world_to_camera_view(sc, cam, Vector((0, 0, 0)))
-json.dump({'fps': sc.render.fps, 'ortho': cam.data.ortho_scale, 'anchor': [round(p.x, 4), round(1 - p.y, 4)], 'ref': ref, 'frames': frames, 'loop': 12 if burn else 0, 'aspect': 0.5 if burn else 1}, open(os.path.join(out, 'info.json'), 'w'))
+gs = float(sc.get('game_scale', 1))  # сцена меньше игровой (пожар, scene.py): кадр в метрах × gs, время × √gs (подобие по Фруду)
+json.dump({'fps': sc.render.fps / gs ** 0.5, 'ortho': cam.data.ortho_scale * gs, 'anchor': [round(p.x, 4), round(1 - p.y, 4)], 'ref': ref, 'frames': frames, 'loop': 12 if burn else 0, 'aspect': 0.5 if burn else 1}, open(os.path.join(out, 'info.json'), 'w'))
 for f in frames:
     fn = os.path.join(out, f'{f:03d}.png')
     if os.path.exists(fn): continue  # дорендер после остановки
