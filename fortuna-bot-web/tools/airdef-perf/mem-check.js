@@ -8,7 +8,7 @@ try {
   await page.setViewport({ width: 915, height: 412, deviceScaleFactor: 2.625, isMobile: true, hasTouch: true, isLandscape: true });
   await page.evaluateOnNewDocument(() => { if (typeof ImageBitmap !== 'undefined') ImageBitmap.prototype.close = function () {}; }); // замер: размеры картинок не пропадают
   await page.evaluateOnNewDocument((p) => { localStorage.setItem('fortuna_airdef_setup', JSON.stringify({ game: 'air', diff: 'arcade', era: 3, side: 'east' })); localStorage.setItem('fortuna_airdef_gfx', p); }, preset);
-  await page.goto(`http://127.0.0.1:8937/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=${map}&weather=day&go=air`, { waitUntil: 'load', timeout: 120000 });
+  await page.goto(`http://127.0.0.1:8937/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=${map}&weather=day&go=air${Deno.env.get('Q') || ''}`, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction(() => window.__a && window.__a.state === 'play', { timeout: 180000, polling: 500 });
   for (let i = 0; i < 150; i++) { const l = await page.evaluate(() => { const e = document.getElementById('assetLoad'); return e && e.classList.contains('on'); }); if (!l && i > 8) break; await new Promise((r) => setTimeout(r, 1000)); }
   await page.evaluate(() => { const C = window.__a; if (C.setAuto) C.setAuto(true); });
@@ -18,7 +18,7 @@ try {
     const addT = (t, where) => { if (!t || !t.isTexture || tex.has(t)) return; const im = t.image || {}; const w = im.width || 0, h = im.height || 0;
       const mip = t.generateMipmaps !== false && t.minFilter !== THREE.LinearFilter && t.minFilter !== THREE.NearestFilter;
       let src = (im.src || im.currentSrc || '').split('/').slice(-2).join('/').split('?')[0];
-      if (t.isCompressedTexture) { const b = (t.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0); tex.set(t, { w, h, mb: b / 1048576, where, src: 'KTX2 (сжатая)' }); return; }
+      if (t.isCompressedTexture) { const b = t.ktxBytes || (t.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0); /* ktxBytes — models.js: на телефоне уровни освобождаются после загрузки */ tex.set(t, { w, h, mb: b / 1048576, where, src: 'KTX2 (сжатая)' }); return; }
       if (!src) src = t.flipY === false && t.anisotropy === 4 && typeof ImageBitmap !== 'undefined' && im instanceof ImageBitmap ? 'models/' : t.isDataTexture ? 'data' : im.getContext ? 'canvas' : im instanceof ImageBitmap ? 'bitmap (земля, город)' : '?';
       tex.set(t, { w, h, mb: w * h * 4 * (mip ? 4 / 3 : 1) / 1048576, where, src }); };
     const walkMat = (m, where) => { for (const k in m) { const v = m[k]; if (v && v.isTexture) addT(v, where); } if (m.uniforms) for (const k in m.uniforms) { const v = m.uniforms[k] && m.uniforms[k].value; if (v && v.isTexture) addT(v, where); if (Array.isArray(v)) v.forEach((x) => x && x.isTexture && addT(x, where)); } };

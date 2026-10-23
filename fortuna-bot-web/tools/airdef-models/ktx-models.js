@@ -3,7 +3,7 @@
 //   { "<имя>": { v: версия glb (GLB_V[имя] || '20261022b'), r: ревизия кодирования, img: [номера картинок со сжатым файлом],
 //                alias: { "<номер>": "<имя>.<номер>" } — та же картинка уже закодирована в другом файле этого прогона } }
 // Игра (models.js) берёт ktx, только если версия в index.json совпала с версией glb (пересобрали glb — снова JPEG, пока не перекодируют).
-// Цвет — sRGB; карты нормалей (materials[].normalTexture) — линейные, -normal_map, -mip_renorm. Здания и объекты (META bld / obj)
+// Цвет — sRGB; карты нормалей (materials[].normalTexture) — линейные, -normal_map, -mip_renorm. Здания и объекты (META bld / obj) — с 2026-10-23 тоже (см. ниже); раньше
 // пропускаются: их картинку читает city-render (modelColor). Картинка, нужная и как цвет, и как нормали, — тоже (остаётся JPEG).
 //   deno run -A tools/airdef-models/ktx-models.js [имя …] [--rdo=1.0] [--out=папка] [--jobs=N] [--stat] [--force]
 // Без имён — все модели (index.json пишется заново, лишние файлы убираются); с именами — только они (index.json дополняется).
@@ -22,11 +22,15 @@ const a0 = mj.indexOf('const GLB_V = '), a1 = mj.indexOf('Object.assign(GLB_V, G
 if (a0 < 0 || a1 < 0) throw new Error('в models.js не нашёл блок GLB_V');
 const GLB_V = new Function(mj.slice(a0, a1 + 'Object.assign(GLB_V, GLB_V_OWN);'.length) + '\nreturn GLB_V;')();
 const verOf = (n) => GLB_V[n] || '20261022b';
-const skipSet = new Set([...mj.matchAll(/(\w+):\s*\{[^{}]*\b(?:bld|obj):\s*true/g)].map((m) => m[1]));
-const isSkip = (n) => skipSet.has(n) || skipSet.has(n.replace(/_lo$/, ''));
+// здания и объекты (META bld / obj) — тоже (2026-10-23): цвет «коробки» и дальней копии игра берёт с уменьшенной копии JPEG из glb (models.js smallTex),
+// на видеокарту идёт сжатая. --bld — только они (дополнить index.json)
+const bldSet = new Set([...mj.matchAll(/(\w+):\s*\{[^{}]*\b(?:bld|obj):\s*true/g)].map((m) => m[1]));
+const isBld = (n) => bldSet.has(n) || bldSet.has(n.replace(/_lo$/, ''));
+const isSkip = () => false;
 
 const all = [...Deno.readDirSync(MD)].filter((e) => e.name.endsWith('.glb')).map((e) => e.name.slice(0, -4)).sort();
-const todo = names.length ? names : all.filter((n) => !isSkip(n));
+const ONLY_BLD = args.includes('--bld');
+const todo = names.length ? names : ONLY_BLD ? all.filter(isBld) : all.filter((n) => !isSkip(n));
 for (const n of todo) if (!all.includes(n)) throw new Error(`нет модели ${n}`);
 if (names.length) for (const n of names) if (isSkip(n)) console.log(`${n}: здание / объект — пропускаю (картинку читает city-render)`);
 
@@ -95,9 +99,10 @@ await Promise.all(Array.from({ length: JOBS }, async () => {
 }));
 // index.json: с именами — дополняем, без — заново (и убираем лишние файлы)
 const idxFile = OUT + 'index.json'; let old = {}; try { old = JSON.parse(Deno.readTextFileSync(idxFile)); } catch (_) { /* нет */ }
-const fin = names.length ? { ...old, ...index } : index;
+const APPEND = names.length || ONLY_BLD; // дополнить index.json (не переписывать, лишние файлы не трогать)
+const fin = APPEND ? { ...old, ...index } : index;
 if (names.length) for (const n of names) for (const e of Deno.readDirSync(OUT)) if (e.name.startsWith(n + '.') && /^\d+\.ktx2$/.test(e.name.slice(n.length + 1)) && !plan.some((p) => p.stem + '.ktx2' === e.name)) Deno.removeSync(OUT + e.name);
-if (!names.length) for (const e of Deno.readDirSync(OUT)) if (e.name.endsWith('.ktx2') && !plan.some((p) => p.stem + '.ktx2' === e.name)) Deno.removeSync(OUT + e.name);
+if (!APPEND) for (const e of Deno.readDirSync(OUT)) if (e.name.endsWith('.ktx2') && !plan.some((p) => p.stem + '.ktx2' === e.name)) Deno.removeSync(OUT + e.name);
 Deno.writeTextFileSync(idxFile, JSON.stringify(Object.fromEntries(Object.entries(fin).sort(([a], [b]) => a.localeCompare(b)))) + '\n');
 const ok = rows.filter((r) => !r.fail), ms = ok.reduce((s, r) => s + r.ms, 0);
 console.log(`готово за ${Math.round((performance.now() - t0) / 1000)} с (кодирование ${(ms / 1000).toFixed(0)} с суммарно, ${(ms / Math.max(1, ok.length)).toFixed(0)} мс на картинку), файлов ${ok.length}, сбоев ${rows.length - ok.length}`);

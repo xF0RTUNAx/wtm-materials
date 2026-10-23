@@ -451,10 +451,10 @@ async function load(name, base) {
   const pg = parseGlb(await r.arrayBuffer()), { images, hashes, textures, nrm } = pg;
   const meshes = mergeSame(pg.meshes, META[name] || META[name.replace(/_lo$/, '')] || {});
   const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = META[name] || META[name.replace(/_lo$/, '')] || {};
-  const KI = ktxOn() && !MM0.bld && !MM0.obj ? await ktxIndex(base) : null; // здания и объекты: картинку читает city-render (modelColor)
+  const KI = ktxOn() ? await ktxIndex(base) : null; // здания и объекты — тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small)
   const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
-    if (MM0.bld) return mkTex(t, isN, tm); // у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
+    if (MM0.bld && !KI) return mkTex(t, isN, tm); // без сжатых: у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
     const mk = () => (KI ? mkKtx(t, isN, tm).then((x) => x || mkTex(t, isN, tm)) : mkTex(t, isN, tm)); // сжатая; не вышло — JPEG из glb
     const k = `${hashes[t.source]}|${isN ? 1 : 0}|${tm}`; // та же картинка, тот же вид и предел размера — одна текстура на все модели
     if (!TEXC.has(k)) TEXC.set(k, mk().then((x) => { if (!x) TEXC.delete(k); return x; })); // не вышло (нехватка памяти) — следующая модель попробует заново
@@ -470,6 +470,9 @@ async function load(name, base) {
       x.flipY = false; x.encoding = isN ? THREE.LinearEncoding : THREE.sRGBEncoding; x.anisotropy = 4; x.wrapS = x.wrapT = THREE.RepeatWrapping; x.needsUpdate = true;
       x.ktxBytes = (x.mipmaps || []).reduce((s, m) => s + (m.data ? m.data.byteLength : 0), 0); // для замеров (mem-check)
       if (TOUCH) x.onUpdate = () => { x.mipmaps = []; }; // на видеокарте — копия уровней в памяти больше не нужна (как close() у ImageBitmap)
+      if ((MM0.bld || MM0.obj) && !isN && typeof createImageBitmap === 'function') { // постройки: цвет вдали (modelColor, farFlat) — с уменьшенной копии JPEG из glb
+        try { const b = await createImageBitmap(images[t.source], { resizeWidth: 128, resizeHeight: 128, resizeQuality: 'high' }); x.small = smallTex(b); b.close(); } catch (_) { /* без копии — дальняя копия как была */ }
+      }
       return x;
     } catch (e) { console.warn(`${name}: KTX2 не вышел, берём JPEG:`, e.message); return null; }
   }
