@@ -9,7 +9,7 @@
 // Подключение: craft.fm = flightModel(ключ модели, { arcade }) — ядро (drone/sim/core.js flyStep/pilotStep) берёт из fm
 // перегрузку, сваливание и ускорение; без fm — прежняя лётная модель («Летка» не меняется).
 // Чистая математика: импортируют клиент, сервер и стенд.
-import { FIT } from './flight-fit.js?v=20261022z';
+import { FIT } from './flight-fit.js?v=20261024t';
 
 export const SPEED_K = 0.8; // скорости игры — доля реальных
 const G = 9.81, RHO0 = 1.225;

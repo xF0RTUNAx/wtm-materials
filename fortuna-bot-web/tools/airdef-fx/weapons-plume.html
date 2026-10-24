@@ -12,7 +12,7 @@
      ?only=s8,hydra,sam:s300 — только эти (оружие AG — по ключу, ЗРК — sam:<ключ>), ?t=0.3,1.5, ?rows=4, ?sky=dusk, ?alt=300 (высота пуска оружия, м). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-const Q = new URLSearchParams(location.search), VER = '?v=20261022z', BASE = '../../games/airdef/';
+const Q = new URLSearchParams(location.search), VER = '?v=20261024t', BASE = '../../games/airdef/';
 const TT = (Q.get('t') || '0.3,1.5').split(',').map(Number), ROWS = +(Q.get('rows') || 4), DOTS = Q.get('dots') !== '0', dusk = Q.get('sky') === 'dusk', ALT = +(Q.get('alt') || 300);
 const CW = +(Q.get('cw') || 440), CH = +(Q.get('ch') || 310), COLS = TT.length * 2, FOV = 20;
 const [{ AG, SAM }, { LNCH }, M, UR, { motorOf, MOTOR }, { FOG_U }] = await Promise.all([import(BASE + 'arsenal.js' + VER), import(BASE + 'launchers.js' + VER), import(BASE + 'models.js' + VER), import(BASE + 'units-render.js' + VER), import(BASE + 'plume.js' + VER), import('../../games/drone/world.js' + VER)]);

@@ -1,21 +1,21 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261022z';
-import { CITY, ZONE } from './city.js?v=20261022z';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261022z';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261022z';
-import { MODES } from './sim/strike.js?v=20261022z';
-import { WEATHERS } from '../drone/world.js?v=20261022z';
-import { WINTER_KEYS } from './winter-render.js?v=20261022z';
-import { LESSONS } from './training.js?v=20261022z';
-import { MODEL_CREDITS, modelUrls } from './models.js?v=20261022z';
-import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261022z';
-import { openLayoutEditor } from './layout.js?v=20261022z';
+import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261024t';
+import { CITY, ZONE } from './city.js?v=20261024t';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261024t';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261024t';
+import { MODES } from './sim/strike.js?v=20261024t';
+import { WEATHERS } from '../drone/world.js?v=20261024t';
+import { WINTER_KEYS } from './winter-render.js?v=20261024t';
+import { LESSONS } from './training.js?v=20261024t';
+import { MODEL_CREDITS, modelUrls } from './models.js?v=20261024t';
+import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261024t';
+import { openLayoutEditor } from './layout.js?v=20261024t';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261022z';
-import { photoItems } from './photo.js?v=20261022z';
-import { guideChapters } from './guide.js?v=20261022z';
-import { iconize, ico } from './icons.js?v=20261022z';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261024t';
+import { photoItems } from './photo.js?v=20261024t';
+import { guideChapters } from './guide.js?v=20261024t';
+import { iconize, ico } from './icons.js?v=20261024t';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
