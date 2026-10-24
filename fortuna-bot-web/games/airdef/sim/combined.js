@@ -32,7 +32,8 @@ export function podPose(L, pos, dir) {
 }
 // «Искандер» (dofash_76): две ракеты стоят на пусковой вертикально (направляющая у автора под 56,8° поднята до вертикали в prepare.js, raiseSel) — центры
 // (оси модели l_iskander, y — от земли) и ось ракеты (вверх). Пуск — из центра ракеты вдоль её оси (первые секунды, как у пакета HIMARS); ракеты уходят по очереди: tbm, tbm2
-export const RAIL = { l_iskander: { c: [[0.58, 5.36, 5.121], [-0.58, 5.36, 5.121]], a: [0, 1, 0] } };
+// «Точка-У» (своя, боевое положение): ракета 9М79 стоит вертикально в корме (центр — по готовому l_tochka.glb: prepare.js центрует машину по длине); раньше — 6 м над центром машины
+export const RAIL = { l_iskander: { c: [[0.58, 5.36, 5.121], [-0.58, 5.36, 5.121]], a: [0, 1, 0] }, l_tochka: { c: [[0, 5.753, 4.464]], a: [0, 1, 0] } };
 export function railPose(L, j, pos, dir) {
   const R = RAIL[L.key], c = R.c[Math.min(j, R.c.length - 1)], cy = Math.cos(L.yaw), sy = Math.sin(L.yaw);
   pos.set(L.pos.x + c[0] * cy + c[2] * sy, L.pos.y + c[1], L.pos.z - c[0] * sy + c[2] * cy);

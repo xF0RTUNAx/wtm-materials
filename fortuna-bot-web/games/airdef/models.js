@@ -181,7 +181,7 @@ const META = {
   w_ecm_w: { weapon: [], lazy: true, matte: true, stations: [] }, // AN/ALQ-131 — собственная модель (tools/airdef-models/own/alq131); как «Сорбция» ниже — только значок в «Исследованиях» (Mark 2026-10-24: в бою остаётся ELTA — она с разрешённой лицензией, лишней работы не делаем)
   w_ecm_e: { weapon: [], lazy: true, matte: true, stations: [] }, // «Сорбция» (контейнер Су-27) — собственная модель (tools/airdef-models/own/sorbtsiya); пока только значок в «Исследованиях» (thumbs.html, ICON), поэтому weapon: [] — материал как у оружия, но ключу ecm_e не назначена: в бою у него по-прежнему w_ecm. Физически (на законцовки, 4,2 м) — отдельной задачей, AIRDEF_STATE «Открытые задачи»
   l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» — dofash_76 (две ракеты стоят вертикально — tbm, tbm2)
-  l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — 42manako (tbm)
+  l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — своя (сборщик, Свои/Точка-У), боевое положение: ракета 9М79 вертикально (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
   l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS — Denis.Cherkasov1
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
@@ -308,6 +308,7 @@ const GLB_V_OWN = {
   strela1: '20261024v', // «Стрела-1» — своя пусковая и ракета на основе БРДМ-2 zhek вместо 42manako (2026-10-24)
   strela1_lo: '20261024v',
   msl_strela1: '20261024v',
+  l_tochka: '20261024w', // «Точка-У» — своя модель в боевом положении вместо 42manako (2026-10-24)
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы

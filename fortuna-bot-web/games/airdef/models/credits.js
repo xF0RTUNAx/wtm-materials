@@ -893,15 +893,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Ukrainian OTR-21 Tochka-U",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/ukrainian-otr-21-tochka-u-3b41c4e2d03d4bbb9a4acc339fc495bc",
-  "license": "CC-BY-4.0",
-  "files": [
-   "l_tochka"
-  ]
- },
- {
   "title": "Scud ( Ballistic missile )",
   "author": "AlexDang",
   "url": "https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0",
