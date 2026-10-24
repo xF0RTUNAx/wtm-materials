@@ -30,9 +30,9 @@ export function podPose(L, pos, dir) {
   dir.set(-Math.cos(a) * sy, Math.sin(a), -Math.cos(a) * cy); // ось пакета вперёд (−Z) с подъёмом a
   return pos;
 }
-// «Искандер» (dofash_76): две ракеты на поднятых направляющих — центры (оси модели l_iskander, y — от земли) и ось ракеты вперёд (−Z, к кабине)
-// с подъёмом 56,8°. Пуск — из центра ракеты вдоль её оси (первые секунды, как у пакета HIMARS); машина стоит кабиной к городу; ракеты уходят по очереди: tbm, tbm2
-export const RAIL = { l_iskander: { c: [[0.58, 4.729, 3.567], [-0.58, 4.729, 3.567]], a: [0, 0.837, -0.5472] } };
+// «Искандер» (dofash_76): две ракеты стоят на пусковой вертикально (направляющая у автора под 56,8° поднята до вертикали в prepare.js, raiseSel) — центры
+// (оси модели l_iskander, y — от земли) и ось ракеты (вверх). Пуск — из центра ракеты вдоль её оси (первые секунды, как у пакета HIMARS); ракеты уходят по очереди: tbm, tbm2
+export const RAIL = { l_iskander: { c: [[0.58, 5.36, 5.121], [-0.58, 5.36, 5.121]], a: [0, 1, 0] } };
 export function railPose(L, j, pos, dir) {
   const R = RAIL[L.key], c = R.c[Math.min(j, R.c.length - 1)], cy = Math.cos(L.yaw), sy = Math.sin(L.yaw);
   pos.set(L.pos.x + c[0] * cy + c[2] * sy, L.pos.y + c[1], L.pos.z - c[0] * sy + c[2] * cy);
@@ -140,8 +140,8 @@ export function createCombined(S, city, rnd, opts = {}) {
       const per = k === 'iskander' ? 2 : 1, nL = Math.ceil(m / per);
       for (let l = 0; l < nL; l++) {
         const b = dirs[(ci + l) % 2] + (rnd() - 0.5) * 0.5, p = ground(edge(b, CITY.HALF - 3800 + rnd() * 1200)), c = Math.min(per, m - l * per);
-        // HIMARS и «Искандер» — кабиной к городу (пакет стреляет поверх кабины, ракеты «Искандера» смотрят в её сторону); остальные — кормой с ракетой к городу
-        const L = { id: launchers.length + 1, key: W.launcher, wkey: k, pos: p, yaw: Math.atan2(p.x, p.z) + (POD[W.launcher] || RAIL[W.launcher] ? 0 : Math.PI), left: c, n0: c, fired: 0, isLauncher: true, name: tr('{0}: пусковая {1}', [W.short, launchers.length + 1]), podEl: 0, lastFire: -1e9 };
+        // HIMARS — кабиной к городу (пакет стреляет поверх кабины); остальные — кормой с ракетой к городу
+        const L = { id: launchers.length + 1, key: W.launcher, wkey: k, pos: p, yaw: Math.atan2(p.x, p.z) + (POD[W.launcher] ? 0 : Math.PI), left: c, n0: c, fired: 0, isLauncher: true, name: tr('{0}: пусковая {1}', [W.short, launchers.length + 1]), podEl: 0, lastFire: -1e9 };
         launchers.push(L);
         for (let j = 0; j < c; j++) { const i = i0 + l * per + j, u = U(i); queue.push({ t: u.tL + (mine ? 0 : rnd() * 4), key: k, k, i, oi, L, aimFn: aimFn(u.toSam, oi++, u.tgt, u.sid) }); }
       }

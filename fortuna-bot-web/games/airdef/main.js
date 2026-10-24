@@ -496,7 +496,7 @@ function evPart(glb, part) {
   const p = m.children.find((c) => c.name === part); if (!p) return null;
   const g = new THREE.Group(), inner = p.clone(); EVB.setFromObject(inner); EVB.getCenter(EVC); inner.position.sub(EVC);
   const tilt = new THREE.Group(); tilt.add(inner); g.add(tilt);
-  const R = RAIL[glb]; if (R) tilt.quaternion.setFromUnitVectors(new THREE.Vector3(...R.a), new THREE.Vector3(0, 0, -1)); // на наклонной направляющей («Искандер») — ось ракеты (RAIL.a) в −Z
+  const R = RAIL[glb]; if (R) tilt.quaternion.setFromUnitVectors(new THREE.Vector3(...R.a), new THREE.Vector3(0, 0, -1)); // ось ракеты на направляющей (RAIL.a; у «Искандера» — вверх, тот же поворот −90° вокруг X) в −Z
   else tilt.rotation.x = -Math.PI / 2; // стоит вертикально — нос в −Z
   return g;
 }

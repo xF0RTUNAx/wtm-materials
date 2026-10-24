@@ -24,6 +24,7 @@ const strip = (ax, yF, dW, yW, smax = 6.5, keep) => (c) => { const d = Math.abs(
 // «Искандер» dofash_76: ракета на поднятой направляющей (ось в плоскости x–y исходника: от центра хвостовой заглушки (2,535; 3,05) к носу (0,77; 5,75), длина 3,2256 ед.);
 // ISK_FLAT кладёт её вдоль −Z (нос вперёд) без крена, ISK_KZ — масштаб под 7,2 м («Кинжал»), ISK_CUT — граница головной части (~2 м) в осях правил
 const ISK_N = [-1.765 / 3.2256, 2.70 / 3.2256], ISK_KZ = 7.2 / 3.2256;
+const ISK_HY = 3.05 * 1.96, ISK_HZ = 2.535 * 1.96, ISK_UP = Math.atan2(-ISK_N[0], ISK_N[1]); // шарнир подъёма (хвост ракеты на направляющей, оси игры до центровки) и угол до вертикали (33,2°)
 const ISK_FLAT = (x, y, z) => [-z, x * ISK_N[1] - y * ISK_N[0], -(x * ISK_N[0] + y * ISK_N[1])], ISK_CUT = -(0.77 * ISK_N[0] + 5.75 * ISK_N[1]) * ISK_KZ + 2.25;
 const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? -2.03); // верх корпуса ФАБ-500 в осях игры без центровки (см. --groups)
 // nose — куда смотрит нос модели в её осях; center — [y оси фюзеляжа] в её единицах (иначе середина габаритов)
@@ -262,6 +263,7 @@ const CONFIG = {
   // (у автора), вторая — её копия рядом (на настоящей 9П78 их две; пуск — по одной, tbm и tbm2 прячутся по очереди); ракета выходит из закрытого кузова
   l_iskander: { src: `${DL}/iskander_dofash76.glb`, scale: 1.96, nose: '-x', rulesIn: 'game', unit: true, tex: () => 512,
     copyParts: [{ sel: (c) => /\/Null_5\//.test(c.path), offs: [[-1.16, 0, 0]] }], /* вся поднятая сборка (направляющая и ракета) — копия по другую сторону оси машины (x 0,58 → −0,58 м) */
+    raiseSel: { sel: (c) => /\/Null_5\//.test(c.path), hinge: [ISK_HY, ISK_HZ], angle: ISK_UP }, /* у автора сборка стоит под 56,8° (положение направляющей) — поднята до вертикали вокруг заднего конца ракеты */
     groups: (c) => (/\/Loft\//.test(c.path) ? (c.ctr[0] > 0 ? 'tbm' : 'tbm2') : 'body') },
   l_tochka: { src: `${DL}/ukrainian_otr-21_tochka-u.glb`, scale: 0.0284, nose: '+z', rulesIn: 'game', dedupe: true, renorm: true, texVf: "curves=all='0/0 0.5/0.42 1/0.68'", /* светлые пятна камуфляжа на солнце выгорали в белое */ colors: { '^(White|material_1)$': [0.07, 0.085, 0.05], '^0059_DarkOliveGreen': [0.06, 0.08, 0.035], '^material$': [0.1, 0.11, 0.08] }, /* цвета — линейные (0,06 ≈ 27 % яркости на экране); у автора белые без текстуры — под цвет машины */ dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П129 — 11,8 м, ракета на старте в корме
     groups: (c) => ((Math.abs(c.ctr[0] + 3.98) < 0.4 && c.ctr[2] > 13.2 && c.ctr[1] > 2.4 && c.size[0] < 0.8) || (Math.abs(c.ctr[0] + 3.98) < 0.45 && c.ctr[2] > 12.9 && c.ctr[1] > 2.4 && c.ctr[1] < 2.7 && c.size[1] < 0.1) ? 'tbm' : 'body') }, /* второе условие — два нижних решётчатых руля (плоские, у хвоста) */
@@ -746,6 +748,16 @@ async function prepare(name, views) {
         for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k]; if (!map.has(v)) { map.set(v, P.length / 3); P.push(p.P[v * 3] + o[0], p.P[v * 3 + 1] + o[1], p.P[v * 3 + 2] + o[2]); if (N) N.push(p.N[v * 3], p.N[v * 3 + 1], p.N[v * 3 + 2]); if (UV) UV.push(p.UV[v * 2], p.UV[v * 2 + 1]); } I.push(map.get(v)); } }
     }
     p.P = Float32Array.from(P); if (N) p.N = Float32Array.from(N); if (UV) p.UV = Float32Array.from(UV); p.I = Uint32Array.from(I);
+  }
+  // raiseSel — поднятая сборка (направляющая с ракетой у «Искандера») поворачивается вокруг шарнира: { sel(c) — какие части (c: ctr, size, path — в осях правил, после copyParts),
+  // hinge: [y, z] — ось шарнира вдоль X через эту точку (оси правил, метры, до центровки), angle — рад: (y, z) → (y·cos − z·sin, y·sin + z·cos) }
+  if (cfg.raiseSel) for (const p of prims) {
+    const { comp, list } = components(p.P, p.I, 0.001), want = new Set(), { sel, hinge: [hy, hz], angle } = cfg.raiseSel, co = Math.cos(angle), si = Math.sin(angle);
+    for (const c of list) { c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; c.path = p.path; if (sel(c)) want.add(c.id); }
+    if (!want.size) continue;
+    const vs = new Set(); for (let t = 0; t < comp.length; t++) if (want.has(comp[t])) for (let k = 0; k < 3; k++) vs.add(p.I[t * 3 + k]);
+    for (const v of vs) { const y = p.P[v * 3 + 1] - hy, z = p.P[v * 3 + 2] - hz; p.P[v * 3 + 1] = hy + y * co - z * si; p.P[v * 3 + 2] = hz + y * si + z * co;
+      if (p.N) { const ny = p.N[v * 3 + 1], nz = p.N[v * 3 + 2]; p.N[v * 3 + 1] = ny * co - nz * si; p.N[v * 3 + 2] = ny * si + nz * co; } }
   }
   // --groups: только осмотр разбивки (в осях модели): корпус серый, башня красная, пакет синий, убранное не рисуется
   if (Deno.args.includes('--groups')) {

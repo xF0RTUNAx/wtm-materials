@@ -180,7 +180,7 @@ const META = {
   w_ecm: { weapon: ['ecm_w', 'ecm_e'], matte: true, stations: [] }, // станция помех ELTA 8222 — Original_linny (Thingiverse); у востока пока она же // Х-101 — HappyBattleSheep (Thingiverse)
   w_ecm_w: { weapon: [], lazy: true, matte: true, stations: [] }, // AN/ALQ-131 — собственная модель (tools/airdef-models/own/alq131); как «Сорбция» ниже — только значок в «Исследованиях» (Mark 2026-10-24: в бою остаётся ELTA — она с разрешённой лицензией, лишней работы не делаем)
   w_ecm_e: { weapon: [], lazy: true, matte: true, stations: [] }, // «Сорбция» (контейнер Су-27) — собственная модель (tools/airdef-models/own/sorbtsiya); пока только значок в «Исследованиях» (thumbs.html, ICON), поэтому weapon: [] — материал как у оружия, но ключу ecm_e не назначена: в бою у него по-прежнему w_ecm. Физически (на законцовки, 4,2 м) — отдельной задачей, AIRDEF_STATE «Открытые задачи»
-  l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» — dofash_76 (ракета на поднятой направляющей — tbm)
+  l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» — dofash_76 (две ракеты стоят вертикально — tbm, tbm2)
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — 42manako (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
   l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS — Denis.Cherkasov1
@@ -313,7 +313,7 @@ Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', '
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла — свои части (сложены на подвеске)
 Object.assign(GLB_V, { su30: '20261024p', f16: '20261024p' }); // Су-30МКИ и F-16E/F — andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D — рипы Unreal) (2026-10-24)
 Object.assign(GLB_V, { e_b1b: '20261024q', e_f18c: '20261024q', e_su25: '20261024q' }); // B-1B и F/A-18C — manilov.ap, Су-25 — mamont nikita (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
-Object.assign(GLB_V, { l_iskander: '20261024r', w_kinzhal: '20261024r', w_tbmdec: '20261024r' }); // «Искандер», «Кинжал» и ложная цель — dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse — лицензия недействительна) (2026-10-24)
+Object.assign(GLB_V, { l_iskander: '20261024s', w_kinzhal: '20261024r', w_tbmdec: '20261024r' }); // «Искандер», «Кинжал» и ложная цель — dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse — лицензия недействительна) (2026-10-24)
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 — AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
