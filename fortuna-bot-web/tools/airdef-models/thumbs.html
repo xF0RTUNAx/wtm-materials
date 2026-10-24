@@ -15,6 +15,7 @@ const Q = new URLSearchParams(location.search), IDS = Q.get('ids') ? Q.get('ids'
 const W = 480, H = 270, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(2); r.setSize(W, H); // 960×540 — досье показывает крупно r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
 const unitMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x222222, shininess: 18 }), wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
 const BALL = { iskander: 'l_iskander', tochka: 'l_tochka', r17: 'l_scud', atacms: 'l_himars', shahed: 'd_shahed', uav_w: 'd_uav' }; // удар — его пусковая или сам дрон
+const ICON = { ecm_e: 'w_ecm_e' }; // значок оружия — своя модель, которой в бою пока нет: «Сорбция» (в бою у ecm_e пока w_ecm; станции на законцовках — отдельной задачей)
 loadModels(new URL('../../games/airdef/', location.href).href, () => {});
 const wait = async (f, n = 150) => { for (let i = 0; i < n; i++) { const v = f(); if (v) return v; await new Promise((res) => setTimeout(res, 100)); } return null; };
 // комплекс — как в бою (main.js syncUnits): корпус, башни → качающиеся части → ракеты по слотам, антенна
@@ -49,6 +50,7 @@ async function objOf(n) {
   if (n.branch === 'pvo') return unitObj(n.key);
   const k = n.item || n.key;
   if (BALL[k]) { wantModel(BALL[k]); const o = await wait(() => anyModel(BALL[k])); if (o) return o; }
+  if (ICON[k]) { wantModel(ICON[k]); const o = await wait(() => anyModel(ICON[k])); if (o) return o; }
   wantWeapon(k); await wait(() => !weaponPending(k), 60); const w = weaponMesh(k, AG[k], weaponGeo, wMat); setWings(w, 1); // планирующие — с раскрытыми крыльями
   // НАР со своей моделью ракеты (w_nar_<ключ>): блок и ракета под ним — как ПЗРК: труба и ракета рядом
   if (AG[k] && AG[k].kind === 'rocket') { wantModel('w_nar_' + k); const rk = await wait(() => anyModel('w_nar_' + k), 40);

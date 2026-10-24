@@ -178,6 +178,7 @@ const CONFIG = {
   w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
   w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
   w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
+  w_ecm_e: { src: new URL('./own/sorbtsiya.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Станция помех «Сорбция»: своя модель (Blender, own/sorbtsiya.glb)
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
   // ── шестая партия 2026-10-21 (CC BY 4.0, Восток): andertan — Су-33, manilov.ap — М-4, МиГ-17 и Т-4, Tom Zimmermann — МиГ-19; без упрощения, текстуры 1024 ──
   e_su33: { src: `${DL}/d80603a8a13b49bda90f19d80cac61d4.glb`, scale: 1.45, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true, groups: LS },

@@ -176,6 +176,7 @@ const META = {
   w_kh101: { weapon: 'kh101', lazy: true, stations: [] },
   w_gbu10: { weapon: 'gbu10', stations: [] }, // GBU-10 — PhilCiborowski (Thingiverse)
   w_ecm: { weapon: ['ecm_w', 'ecm_e'], matte: true, stations: [] }, // станция помех ELTA 8222 — Original_linny (Thingiverse); у востока пока она же // Х-101 — HappyBattleSheep (Thingiverse)
+  w_ecm_e: { weapon: [], lazy: true, matte: true, stations: [] }, // «Сорбция» (контейнер Су-27) — собственная модель (tools/airdef-models/own/sorbtsiya); пока только значок в «Исследованиях» (thumbs.html, ICON), поэтому weapon: [] — материал как у оружия, но ключу ecm_e не назначена: в бою у него по-прежнему w_ecm. Физически (на законцовки, 4,2 м) — отдельной задачей, AIRDEF_STATE «Открытые задачи»
   l_iskander: { ev: true, lazy: true, matte: true, stations: [] }, // 9П78 «Искандер» — 42manako (ракеты на старте — tbm, tbm2)
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — 42manako (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
@@ -292,6 +293,7 @@ const GLB_V_OWN = {
   w_gbu57: '20261024g',
   w_fab500: '20261024h',
   w_umpk: '20261024i',
+  w_ecm_e: '20261024j',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
