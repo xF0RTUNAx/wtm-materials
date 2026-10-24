@@ -882,9 +882,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Chinese 9K720 Iskander TELAR",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/chinese-9k720-iskander-telar-1fff10b191114e638a1a261e70480fb1",
+  "title": "ISKANDER",
+  "author": "dofash_76",
+  "url": "https://sketchfab.com/3d-models/iskander-244b511ee2ca4f3794d118b872ee229c",
   "license": "CC-BY-4.0",
   "files": [
    "w_kinzhal",

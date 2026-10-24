@@ -21,7 +21,10 @@ const LS = (c) => { if (Deno.env.get('LS') && Math.max(...c.size) > Number(Deno.
 // не больше smax; keep(c, d) — оставить (подфюзеляжные кили и т. п.). ax — x оси самолёта (до центровки)
 const strip = (ax, yF, dW, yW, smax = 6.5, keep) => (c) => { const d = Math.abs(c.ctr[0] - ax), lo = c.ctr[1] - c.size[1] / 2;
   return Math.max(...c.size) < smax && (d < dW ? c.ctr[1] < yF : lo < yW) && !(keep && keep(c, d)) ? null : LS(c); };
-const KZ = 7.2 / 8.4; // «Кинжал» из ракеты «Искандера»: длина 7,2 м
+// «Искандер» dofash_76: ракета на поднятой направляющей (ось в плоскости x–y исходника: от центра хвостовой заглушки (2,535; 3,05) к носу (0,77; 5,75), длина 3,2256 ед.);
+// ISK_FLAT кладёт её вдоль −Z (нос вперёд) без крена, ISK_KZ — масштаб под 7,2 м («Кинжал»), ISK_CUT — граница головной части (~2 м) в осях правил
+const ISK_N = [-1.765 / 3.2256, 2.70 / 3.2256], ISK_KZ = 7.2 / 3.2256;
+const ISK_FLAT = (x, y, z) => [-z, x * ISK_N[1] - y * ISK_N[0], -(x * ISK_N[0] + y * ISK_N[1])], ISK_CUT = -(0.77 * ISK_N[0] + 5.75 * ISK_N[1]) * ISK_KZ + 2.25;
 const FAB_TOP = Number(Deno.env.get('FAB_TOP') ?? -2.03); // верх корпуса ФАБ-500 в осях игры без центровки (см. --groups)
 // nose — куда смотрит нос модели в её осях; center — [y оси фюзеляжа] в её единицах (иначе середина габаритов)
 // remove(c, i) — c: часть меша { min, max, ctr, size, tris, mat }, i — номер по размеру в своём примитиве
@@ -249,22 +252,17 @@ const CONFIG = {
   w_jsow: { src: `${DL}/agm-154_jsow_missile.glb`, scale: 2.05, nose: '+z', rulesIn: 'game', tex: () => 512, pickMesh: /./,
     groups: (c) => (c.size[1] < 0.06 && c.ctr[1] > 0.12 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') },
   w_jsow_old: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM-154 JSOW/, groups: (c) => (c.size[1] < 0.05 && c.ctr[1] > 2.9 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // AGM-154 JSOW — 4,1 м; крылья в модели сложены — раскрываются после сброса
-  // «Кинжал» — ракета 9М723 с пусковой «Искандера» (Х-47М2 сделан на её основе; решение Mark 2026-10-12): на старте она стоит
-  // вертикально — поворот носом в −Z; правила частей — как у l_iskander (в её осях); светло-серая, как на фото
-  w_kinzhal: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027 * KZ, centerX: true, /* 7,2 м (у автора 8,4); ракета стоит в стороне от оси пусковой */ axes: (x, y, z) => { const [a, b, c] = AX['-x'](x, y, z); return [a, c, -b]; }, rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, tex: () => 256,
-    texVf: 'hue=s=0,eq=brightness=0.22:contrast=0.45,colorchannelmixer=rr=0.97:bb=1.03',
-    groups: (c) => { const x = c.ctr[0] / KZ, y = -c.ctr[2] / KZ, z = c.ctr[1] / KZ, sx = c.size[0] / KZ, sy = c.size[2] / KZ, sz = c.size[1] / KZ; // обратно в оси и масштаб пусковой (правила l_iskander)
-      const thin = sx < 1.15 && sz < 1.15 && !(Math.max(sx, sz) < 0.3 && sy > 2);
-      const fin = sx < 0.3 && sz < 0.3 && sy > 1 && sy < 1.3; // рули (4 «косым крестом»): нижние — у l_iskander отрезаны порогом z > 6,3 (ось ракеты — z 6,53)
-      return (z > 6.3 || (z > 6 && fin)) && y > 2.2 && thin && Math.abs(x - 2.75) < 0.62 ? 'body' : null; } },
+  // «Кинжал» — ракета 9М723 с пусковой «Искандера» (Х-47М2 сделан на её основе; решение Mark 2026-10-12): у автора (dofash_76, CC BY 4.0) она стоит на
+  // поднятой направляющей — ось наклонена (нос в сторону кабины, 56,8° над горизонтом): axes кладёт её вдоль −Z; светло-серая, как на фото
+  w_kinzhal: { src: `${DL}/iskander_dofash76.glb`, scale: ISK_KZ, axes: ISK_FLAT, rulesIn: 'game', pickMesh: /\/Loft\//, tex: () => 256,
+    texVf: 'hue=s=0,eq=brightness=0.25:contrast=0.15,colorchannelmixer=rr=0.97:bb=1.03' /* камуфляж автора сглажен до ровного светло-серого */, groups: () => 'body' }, // 7,2 м (у автора 3,23 ед.); без рулей — у автора ракета гладкая
   // ложная цель «Искандера» — отделяемая головная часть той же ракеты (обычного цвета ракеты, без перекраски)
-  w_tbmdec: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027 * KZ, centerX: true, /* 7,2 м (у автора 8,4); ракета стоит в стороне от оси пусковой */ axes: (x, y, z) => { const [a, b, c] = AX['-x'](x, y, z); return [a, c, -b]; }, rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, tex: () => 256, cutZ: [-99, -6.85], /* только головная часть: обтекатель и боевая часть (нос — z ≈ −8,9), ~2 м */
-    groups: (c) => { const x = c.ctr[0] / KZ, y = -c.ctr[2] / KZ, z = c.ctr[1] / KZ, sx = c.size[0] / KZ, sy = c.size[2] / KZ, sz = c.size[1] / KZ; // обратно в оси и масштаб пусковой (правила l_iskander)
-      const thin = sx < 1.15 && sz < 1.15 && !(Math.max(sx, sz) < 0.3 && sy > 2);
-      const fin = sx < 0.3 && sz < 0.3 && sy > 1 && sy < 1.3; // рули (4 «косым крестом»): нижние — у l_iskander отрезаны порогом z > 6,3 (ось ракеты — z 6,53)
-      return (z > 6.3 || (z > 6 && fin)) && y > 2.2 && thin && Math.abs(x - 2.75) < 0.62 ? 'body' : null; } },
-  l_iskander: { src: `${DL}/chinese_9k720_iskander_telar.glb`, scale: 0.027, nose: '-x', rulesIn: 'game', dedupe: true, renorm: true, dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П78 — 13 м, две ракеты стоят на старте в корме
-    groups: (c) => { const [x, y, z] = c.ctr, thin = c.size[0] < 1.15 && c.size[2] < 1.15 && !(Math.max(c.size[0], c.size[2]) < 0.3 && c.size[1] > 2); /* не направляющие пусковой (длинные и тонкие; стабилизаторы — короткие) */ const fin = c.size[0] < 0.3 && c.size[2] < 0.3 && c.size[1] > 1 && c.size[1] < 1.3; /* нижние рули ниже порога 6,3 — тоже ракета (как у w_kinzhal) */ if ((z > 6.3 || (z > 6 && fin)) && y > 2.2 && thin) { if (Math.abs(x - 2.75) < 0.62) return 'tbm'; if (Math.abs(x - 4.06) < 0.62) return 'tbm2'; } return 'body'; } },
+  w_tbmdec: { src: `${DL}/iskander_dofash76.glb`, scale: ISK_KZ, axes: ISK_FLAT, rulesIn: 'game', pickMesh: /\/Loft\//, tex: () => 256, cutZ: [-99, ISK_CUT], /* только головная часть: обтекатель и боевая часть, ~2 м от носа */ groups: () => 'body' },
+  // 9П78 «Искандер» — dofash_76 (CC BY 4.0; прежняя — 42manako, перезалив 3D Warehouse): 13,0 м (у автора 6,64 ед.), нос машины — к −Z; на поднятой направляющей одна ракета
+  // (у автора), вторая — её копия рядом (на настоящей 9П78 их две; пуск — по одной, tbm и tbm2 прячутся по очереди); ракета выходит из закрытого кузова
+  l_iskander: { src: `${DL}/iskander_dofash76.glb`, scale: 1.96, nose: '-x', rulesIn: 'game', unit: true, tex: () => 512,
+    copyParts: [{ sel: (c) => /\/Null_5\//.test(c.path), offs: [[-1.16, 0, 0]] }], /* вся поднятая сборка (направляющая и ракета) — копия по другую сторону оси машины (x 0,58 → −0,58 м) */
+    groups: (c) => (/\/Loft\//.test(c.path) ? (c.ctr[0] > 0 ? 'tbm' : 'tbm2') : 'body') },
   l_tochka: { src: `${DL}/ukrainian_otr-21_tochka-u.glb`, scale: 0.0284, nose: '+z', rulesIn: 'game', dedupe: true, renorm: true, texVf: "curves=all='0/0 0.5/0.42 1/0.68'", /* светлые пятна камуфляжа на солнце выгорали в белое */ colors: { '^(White|material_1)$': [0.07, 0.085, 0.05], '^0059_DarkOliveGreen': [0.06, 0.08, 0.035], '^material$': [0.1, 0.11, 0.08] }, /* цвета — линейные (0,06 ≈ 27 % яркости на экране); у автора белые без текстуры — под цвет машины */ dropMat: /^edge_color/, unit: true, tex: () => 512, // 9П129 — 11,8 м, ракета на старте в корме
     groups: (c) => ((Math.abs(c.ctr[0] + 3.98) < 0.4 && c.ctr[2] > 13.2 && c.ctr[1] > 2.4 && c.size[0] < 0.8) || (Math.abs(c.ctr[0] + 3.98) < 0.45 && c.ctr[2] > 12.9 && c.ctr[1] > 2.4 && c.ctr[1] < 2.7 && c.size[1] < 0.1) ? 'tbm' : 'body') }, /* второе условие — два нижних решётчатых руля (плоские, у хвоста) */
   l_scud: { src: `${DL}/scud__ballistic_missile.glb`, scale: 3.13, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, texVf: 'eq=gamma=1.7:brightness=0.04:saturation=0.9', /* текстура у автора очень тёмная */ // Р-17 на МАЗ-543 — 13,4 м, ракета на старте

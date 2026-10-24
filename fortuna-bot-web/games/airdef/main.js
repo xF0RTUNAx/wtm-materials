@@ -24,7 +24,7 @@ import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261
 import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261022z';
 import { createStrike, MODES } from './sim/strike.js?v=20261022z';
 import { createRaid } from './sim/raid.js?v=20261022z';
-import { POD } from './sim/combined.js?v=20261022z';
+import { POD, RAIL } from './sim/combined.js?v=20261022z';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261022z';
 import { slotCount } from './launchers.js?v=20261022z';
 import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261022z';
@@ -495,7 +495,9 @@ function evPart(glb, part) {
   const m = anyModel(glb); if (!m) return null;
   const p = m.children.find((c) => c.name === part); if (!p) return null;
   const g = new THREE.Group(), inner = p.clone(); EVB.setFromObject(inner); EVB.getCenter(EVC); inner.position.sub(EVC);
-  const tilt = new THREE.Group(); tilt.rotation.x = -Math.PI / 2; tilt.add(inner); g.add(tilt); // стоит вертикально — нос в −Z
+  const tilt = new THREE.Group(); tilt.add(inner); g.add(tilt);
+  const R = RAIL[glb]; if (R) tilt.quaternion.setFromUnitVectors(new THREE.Vector3(...R.a), new THREE.Vector3(0, 0, -1)); // на наклонной направляющей («Искандер») — ось ракеты (RAIL.a) в −Z
+  else tilt.rotation.x = -Math.PI / 2; // стоит вертикально — нос в −Z
   return g;
 }
 // ложная цель баллистической ракеты — отделившаяся головная часть (w_tbmdec), сзади закрыта диском; двигателя у неё нет
