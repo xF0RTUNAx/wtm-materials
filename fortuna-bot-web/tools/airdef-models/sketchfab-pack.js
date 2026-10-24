@@ -53,5 +53,9 @@ Download: Free → лицензия: только Attribution (CC BY) → Select
 просто «public reference drawings». Если автор или ограничение известны — допиши в описание строку «Reference: …» или реши, выкладывать ли на CC BY.
 Превью — по порядку: ${previews.join(', ')}.
 `;
+// Sketchfab не берёт название длиннее 48 знаков и описание длиннее 1024 (Mark 2026-10-24); переводы строк считаем по 2 — с запасом
+const desc = text.split('-'.repeat(40) + '\n')[1].split('\n' + '-'.repeat(40))[0], dLen = desc.length + desc.split('\n').length - 1;
+console.log(`название ${S.title.length} из 48, описание ${dLen} из 1024`);
+if (S.title.length > 48 || dLen > 1024) fail('текст не влезет в Sketchfab — укоротить sketchfab.title / lead / based / parts / textures / animation в отчёте');
 Deno.writeTextFileSync(`${out}/ТЕКСТ ДЛЯ SKETCHFAB.txt`, text);
 console.log(`пакет готов: ${out}\n  файлы: ${files.join(', ')}, ТЕКСТ ДЛЯ SKETCHFAB.txt`);
