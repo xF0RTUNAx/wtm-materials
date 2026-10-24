@@ -551,7 +551,7 @@ function syncEv() {
     let g = evLaunch.get(L.id);
     if (!g) { const m = anyModel(L.key); if (!m) continue; g = m; g.traverse((q) => { if (q.isMesh) q.castShadow = !!P.shadows; }); scene.add(g); evLaunch.set(L.id, g); g.position.copy(L.pos); seat(g, { pos: L.pos, yaw: L.yaw, roof: false }, 0); } // по рельефу, как ЗРК
     const parts = g.children.filter((c) => /^tbm/.test(c.name));
-    parts.forEach((c, i) => { c.visible = i >= L.fired; });
+    parts.forEach((c, i) => { c.visible = i >= L.fired && i < (L.n0 ?? parts.length); }); // n0 — сколько ракет заряжено (у последней пусковой при нечётном числе — одна: вторая не стоит весь бой)
     const PO = POD[L.key];
     if (PO) { // пакет HIMARS: поворот вокруг оси у кормы (своя «петля», один раз), подъём — по L.podEl
       if (!g.userData.podPivot) { const pod = g.children.find((c) => /^pod/.test(c.name)); if (pod) { const pv = new THREE.Group(); pv.position.set(...PO.hinge); g.add(pv); pod.position.sub(pv.position); pv.add(pod); g.userData.podPivot = pv; } }
