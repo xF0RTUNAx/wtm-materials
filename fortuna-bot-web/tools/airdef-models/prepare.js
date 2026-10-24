@@ -318,13 +318,17 @@ const CONFIG = {
     groups: (c) => (/(^|\/)(cradle|missile)/.test(c.path) ? 'cradle' : /(^|\/)radar/.test(c.path) ? 'radar' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
   s400: { src: `${DL}/s-400_triumf_missile_launcher_truck.glb`, scale: 13.5 / 1.9, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 2048, target: 120000, /* скан: текстура 2048 — 1024 смазывала (2026-10-13) */ hinge: [0, -1.53, 5.44], tube: [0.6, 1.4], // скан: весь тягач — одна сетка, делим по треугольникам
     groups: (c) => (c.ctr[1] > -1.45 && axis(c, [5.44, -1.53], [-0.604, 0.797], 1.75, -1.8, 9.5) ? 'cradle' : 'body') },
-  // «Стрела-1» (БРДМ-2): пусковая в модели развёрнута на ~43° влево — turretYaw; одна ракета «летит» отдельно — долой
-  strela1: { src: `${DL}/9k31_strela-1_sam.glb`, scale: 0.295, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, turretYaw: -0.75, hinge: [0.55, 2.87, 0.24], absorb: 0,
-    groups: (c) => {
-      if (c.mat === 1) return c.ctr[0] < -1.4 ? null : 'missile'; // ракеты 9М31 на направляющих (и одна «в полёте»)
-      if (c.min[1] > 2.75) return 'cradle';
-      return c.min[1] > 1.88 ? 'turret' : 'body';
-    } },
+  // «Стрела-1» (9П31 на БРДМ-2) — основной чат по просьбе Mark 2026-10-24 (Свои/Стрела-1: build.py, bake.py, deliver.py): основа — БРДМ-2 zhek
+  // (CC BY 4.0, масштаб до 5,75 м, пулемётная башенка снята), пусковая и ракета 9М31 — свои (окраска запечена в атлас 1024, нормали — Bevel).
+  // Метры, нос −Z, земля y = 0; части — по первому слову имени объекта: body_*, turret_* (основание, окно оператора, стойка), cradle_* (ось и
+  // четыре решётчатых контейнера), missile*_* (ракеты в контейнерах; образец — одна, места остальных — слоты). Ось башни — центр погона на крыше,
+  // ось качания — на 1,04 м выше крыши (build.py TRUN); пакет в модели — угол места 0 (pack0). absorb 0 — поперечины контейнеров к ракетам не липнут,
+  // instR 0,12 — ракеты в 0,31 м друг от друга, а стабилизаторы соседей — в 0,16 м (при 0,2 соседние ракеты склеивались парами). Титры — автор основы (файл выгружен из Blender, asset.extras в нём нет — orig).
+  strela1: { src: `${DL}/Свои/Стрела-1/strela1.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 512, pickMesh: /./, /* нормали 512: у основы их 4 карты — файл легче на ~3 МБ */
+    tpFix: [0, 1.98, 0.308], hinge: [0, 3.02, 0.308], pack0: 0, absorb: 0, instR: 0.12, credit: 'пусковая 9П31 и ракета 9М31 — свои',
+    orig: { title: 'BRDM 2 armored reconnaissance vehicle', author: 'zhek', source: 'https://sketchfab.com/3d-models/brdm-2-armored-reconnaissance-vehicle-065dc054914f40fdbfb25ad62d6696b7', license: 'CC-BY-4.0' },
+    groups: (c) => (/(^|\/)missile/.test(c.path) ? 'missile' : /(^|\/)cradle/.test(c.path) ? 'cradle' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
+  msl_strela1: { src: new URL('./own/msl_strela1.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // ракета 9М31 — своя, 1,8 м
   // Roland 2 на Marder — ScurvyWoof: без текстур, цвета авторов «мятные» — перекраска в бронзово-зелёный бундесвера (RAL 6031)
   roland: { src: `${DL}/marder_roland_low-poly.glb`, scale: 2.3, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, camo: { scheme: 'nato', skip: /^(material_0|Material\.0(0[2-9]|1))/  }, hinge: [0, 2.74, 0.5], tube: [0.25, 0.4],
     colors: { '^Material\\.002': [0.05, 0.06, 0.065], '^Material\\.003': [0.025, 0.025, 0.024], '^Material\\.008': [0.035, 0.035, 0.032], '^Material\\.011': [0.03, 0.03, 0.028] }, // гусеницы и катки — тёмные (у автора белые и светло-серые)
@@ -678,6 +682,8 @@ for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' 
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард (своя модель, 23 тыс.): дальняя копия — 8 тыс. треугольников, цвет 256, без карты нормалей
 CONFIG.gepard_lo = { ...CONFIG.gepard, target: 8000, simpErr: 0.05, tex: () => 256, nTex: null };
+// «Стрела-1» (основа 130 тыс., почти всё — колёса): дальняя копия — 15 тыс., цвет 512, без нормалей
+CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
 // «Тор-М1» (своя, 68 тыс.): дальняя копия — 12 тыс., цвет 512 (камуфляж — в цвете), без нормалей, тарелка и крышки — в башне
 CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
 // С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)

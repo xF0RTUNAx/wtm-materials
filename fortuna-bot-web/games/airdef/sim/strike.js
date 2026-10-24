@@ -145,8 +145,10 @@ export function createStrike(ctx) {
       // засада: РЛС молчит, пока сеть не сообщит о цели в зоне
       if (u.ambush && !u.emit && u.shutT <= 0 && net.alertT > 0 && net.last.distanceTo(u.pos) < S.rmax * 0.85) { u.emit = true; u.ambush = false; fx.radarState(u); }
     }
-    // выбор и сопровождение цели
-    let t = u.track && !u.track.dead ? u.track : null;
+    // выбор и сопровождение цели; сбитая цель снимается с захвата — новую берут заново, с временем захвата и реакции
+    // (2026-10-24: сбитая оставалась в u.track — комплекс пускал ракеты по обломкам, в sim-test востока эпохи 1 — 20 из 49 пусков)
+    if (u.track && u.track.dead) { u.track = null; u.reactT = 0; u.seeT = 0; fx.radarState(u); }
+    let t = u.track;
     if (!t) {
       // многоканальный комплекс сначала берёт цели, по которым ещё не летят его ракеты
       let best = null, bd = 1e12;
@@ -351,7 +353,7 @@ export function createStrike(ctx) {
     let dx, dy, dz;
     if (t && !t.dead) { dx = t.pos.x - u.pos.x; dy = t.pos.y - u.pos.y; dz = t.pos.z - u.pos.z; }
     else if (u.manual && u.aimDir) { dx = u.aimDir.x; dy = u.aimDir.y; dz = u.aimDir.z; }
-    else return;
+    else { u.lnErr = 9; return; } // цели нет — пусковая не наведена (иначе в кадр захвата пуск шёл с прежней ошибкой 0 — до разворота; стенд sam-launch.js)
     const hd = Math.hypot(dx, dz) || 1, yawT = Math.atan2(-dx, -dz) - u.yaw;
     let elT = Math.atan2(dy, hd);
     if (LN.mode === 'rail' && S.msl) { if ((u.lnT -= dt) <= 0 || u.lnEl === null) { u.lnT = 0.3; u.lnEl = launchEl(u, dx / hd, dz / hd, elT); } elT = u.lnEl; }

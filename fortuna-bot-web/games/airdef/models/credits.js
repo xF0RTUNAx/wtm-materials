@@ -1086,12 +1086,13 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "9K31 Strela-1 SAM",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/9k31-strela-1-sam-bf3bf22d2a684d0d883e03d533a52a36",
+  "title": "BRDM 2 armored reconnaissance vehicle (пусковая 9П31 и ракета 9М31 — свои)",
+  "author": "zhek",
+  "url": "https://sketchfab.com/3d-models/brdm-2-armored-reconnaissance-vehicle-065dc054914f40fdbfb25ad62d6696b7",
   "license": "CC-BY-4.0",
   "files": [
-   "strela1"
+   "strela1",
+   "strela1_lo"
   ]
  },
  {
