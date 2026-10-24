@@ -1083,11 +1083,11 @@ export function createAir(C) {
         game.score += Math.round(o.value * (isT ? 10 : 4) * (setup.diff === 'real' ? 1.5 : 1));
         say(tr('УНИЧТОЖЕН: {0}{1}', [o.name, isT ? tr(' — цель задания') : '']), 3);
         if (isT) snd.good();
-        if (!game.done && !game.hunt && game.targets.length && game.targets.every((q) => q.dead)) { game.done = true; say(tr('ЗАДАЧА ВЫПОЛНЕНА — уходите за границу района или охотьтесь на ПВО'), 5); }
+        if (!game.done && !game.hunt && game.targets.length && game.targets.every((q) => q.dead)) missionDone(tr('ЗАДАЧА ВЫПОЛНЕНА — уходите за границу района или охотьтесь на ПВО'));
       },
       unitDestroyed(u) {
         // охота за ПВО: задача — уничтожить hunt.need комплексов с РЛС
-        if (game.hunt && u.S.radar && ++game.hunt.n >= game.hunt.need && !game.done) { game.done = true; say(tr('ЗАДАЧА ВЫПОЛНЕНА — ПВО подавлена: уходите за границу района или продолжайте охоту'), 5); }
+        if (game.hunt && u.S.radar && ++game.hunt.n >= game.hunt.need && !game.done) missionDone(tr('ЗАДАЧА ВЫПОЛНЕНА — ПВО подавлена: уходите за границу района или продолжайте охоту'));
         game.kills++; game.score += Math.round((u.S.radar ? 400 : 200) * (setup.diff === 'real' ? 1.5 : 1)); say(tr('Уничтожен комплекс: {0}', [u.S.name]), 2.5); snd.good(); if (opts.onUnitDestroyed) opts.onUnitDestroyed(u); },
       samLaunch(m) { if (opts.onSamLaunch) opts.onSamLaunch(m); },
       samEnd(m, hit) { if (opts.onSamEnd) opts.onSamEnd(m, hit); },
@@ -1125,7 +1125,7 @@ export function createAir(C) {
     document.body.classList.toggle('heli', !!craft.heli); padReset(); // фиксированные кнопки крестовины — выключены
     updLoad();
     podSet(null); pod.show = hasPod && !IS_TOUCH; pod.laserMan = null; pod.pickT = 0; pod.dir.set(0, -0.45, -1).normalize(); // окно на телефоне — по «ТВ»
-    Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0 });
+    Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0, endT: 0 });
     ship.visible = true; camMode = 0; camInit = false; snd.resetRwr(); cmReset(); rwrAckReset();
     $('hud').style.display = 'block'; document.body.classList.add('flying'); document.body.classList.toggle('aimmode', aimOn());
     layoutTouch(); layoutPod();
@@ -1189,7 +1189,7 @@ export function createAir(C) {
       unitDestroyed(u) { say(tr('Уничтожен комплекс: {0}', [u.S.name]), 2.5); snd.good(); },
     };
     game.targets = N.battle.targets.map((id) => C.S.objects.find((o) => o.id === id)).filter(Boolean);
-    Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0 });
+    Object.assign(game, { score: 0, kills: 0, done: false, over: false, t: 0, endT: 0 });
     $('hud').style.display = 'block'; document.body.classList.add('flying'); document.body.classList.toggle('aimmode', aimOn()); layoutTouch(); layoutPod(); snd.resetRwr(); cmReset(); rwrAckReset();
   }
   function netSpawn(m) {
@@ -1222,6 +1222,14 @@ export function createAir(C) {
     game.net = null; free.on = false; free.id = null; $("tLook").classList.remove("on"); zn.Z = null; zoneG.visible = false;
     ship.visible = false; $('hud').style.display = 'none'; $('podBox').style.display = 'none'; document.body.classList.remove('flying');
     mapOn = false; mapC.style.display = 'none'; $('warn').style.display = 'none'; keys.clear(); laserSpot = null; document.body.classList.remove('spect');
+  }
+  // задача выполнена: самолёт уходит за границу района (≈ минута), вертолёту до неё 3–4 минуты над пустым районом — вылет кончается сам
+  // через HELI_END с (Mark 2026-10-24: «после победы над всеми целями бой не заканчивается, и по сути ничего не происходит»)
+  const HELI_END = 10;
+  function missionDone(msg) {
+    game.done = true;
+    if (craft.heli && !game.net && !game.opts.noEnd) { game.endT = HELI_END; say(tr('ЗАДАЧА ВЫПОЛНЕНА — вылет завершится через {0} с', [HELI_END]), 5); }
+    else say(msg, 5);
   }
   function finish(why, ok) {
     if (game.over) return; game.over = true;
@@ -1497,6 +1505,11 @@ export function createAir(C) {
         if (game.net && !loadout.some((l) => l.n > 0 && AG[l.key].kind !== 'ecm')) { game.net.send({ t: 'rtb' }); craft.dead = true; spec.why = tr('Вылет завершён — оружие израсходовано'); spec.t = 0; say(spec.why, 4); }
         else if (game.done && !game.opts.noEnd) finish(tr('Вышли из района целей'), true);
         else { craft.yaw += Math.PI; craft.q = null; if (craft.heli) { craft.vel.x *= -1; craft.vel.z *= -1; } craft.pos.x = clamp(craft.pos.x, -CITY.HALF + 400, CITY.HALF - 400); craft.pos.z = clamp(craft.pos.z, -CITY.HALF + 400, CITY.HALF - 400); say(tr('Граница района — разворот'), 2); }
+      }
+      if (game.endT > 0) { // отсчёт — каждую секунду (подсказки к оружию иначе перекрывают надпись)
+        const s0 = Math.ceil(game.endT); game.endT -= dt;
+        if (game.endT <= 0) finish(tr('Задание выполнено — вертолёт уходит на площадку'), true);
+        else if (Math.ceil(game.endT) !== s0) say(tr('ЗАДАЧА ВЫПОЛНЕНА — вылет завершится через {0} с', [Math.ceil(game.endT)]), 1.5);
       }
     }
     shipQ.setFromEuler(E.set(craft.pitch, craft.yaw, craft.roll));

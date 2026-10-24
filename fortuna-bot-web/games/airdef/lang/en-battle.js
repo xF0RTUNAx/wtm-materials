@@ -105,6 +105,8 @@ export default {
   ' — цель задания': ' (mission target)',
   'ЗАДАЧА ВЫПОЛНЕНА — уходите за границу района или охотьтесь на ПВО': 'MISSION COMPLETE: leave the area or hunt air defenses',
   'ЗАДАЧА ВЫПОЛНЕНА — ПВО подавлена: уходите за границу района или продолжайте охоту': 'MISSION COMPLETE, air defenses suppressed: leave the area or keep hunting',
+  'ЗАДАЧА ВЫПОЛНЕНА — вылет завершится через {0} с': 'MISSION COMPLETE: sortie ends in {0} s',
+  'Задание выполнено — вертолёт уходит на площадку': 'Mission complete: the helicopter heads back to base',
   'Уничтожен комплекс: {0}': 'SAM site destroyed: {0}',
   'Ручка слева: вперёд — разгон, назад — тормоз, вбок — поворот · ▲▼ — высота · «газ» — ступени': 'Left stick: forward to accelerate, back to brake, sideways to turn · ▲▼ altitude · "THROTTLE" in steps',
   'W / S — разгон и торможение · A / D — поворот · ↑ / ↓ — высота · ← / → — вбок · мышь — прицел': 'W / S: accelerate, brake · A / D: turn · ↑ / ↓: altitude · ← / →: sidestep · mouse: aim',
