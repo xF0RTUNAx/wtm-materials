@@ -58,7 +58,7 @@ const REVIEW = [
   { f: 'pantsir-snow', m: 'winter', w: 'w_snow', cap: 'Панцирь, снег', setup: { pside: 'def', era: 4, side: 'east', psam: 'pantsir', pvs: 'air' }, shot: { s: 'unit', a: 'front', az: 0.3, el: 0.12, k: 1.25, t: 3 } },
   { f: 'pac3-frost', m: 'winter', w: 'w_frost', cap: 'PAC-3, пуск', setup: { pside: 'def', era: 4, side: 'west', psam: 'pac3', pvs: 'air' }, shot: { s: 'msl', a: 'side', az: 0.3, el: 0.12, k: 2.0, t: 4, max: 200 } },
   { f: 'kinzhal-chase', m: 'winter', w: 'w_clear', cap: 'МиГ-31К с «Кинжалом»', setup: { pside: 'multi', era: 4, side: 'west', pmun: 'kinzhal' }, shot: { s: 'src', a: 'chase', az: 0.3, el: 0.1, k: 1.0, t: 25, max: 200, ox: -0.1 } },
-  { f: 'harrier-frost', m: 'winter', w: 'w_frost', cap: 'Harrier GR.3 над снегом', setup: { pside: 'air', era: 2, side: 'east', lo: 15, palt: 'low' }, shot: { s: 'ship', a: 'front', az: 0.3, el: 0.1, k: 0.7, t: 50 } },
+  // harrier-frost (Harrier GR.3 над снегом) убран из фона меню — Mark 2026-10-24: под крылом чёрный квадрат
   { f: 'su25-mount', m: 'winter', w: 'w_clear', cap: 'Су-25, камера на крыле', setup: { pside: 'air', era: 2, side: 'west', lo: 17, palt: 'low' }, shot: { s: 'ship', a: 'mount', t: 50 } },
   // ── Туманная топь ──
   { f: 'mi24-dusk', m: 'autumn', w: 'a_dusk', cap: 'Ми-24', setup: { pside: 'def', era: 2, side: 'west', psam: 'gepard', pvs: 'air' }, shot: { s: 'heli', a: 'side', az: 0.3, el: 0.1, k: 1.0, t: 110, max: 400 } },

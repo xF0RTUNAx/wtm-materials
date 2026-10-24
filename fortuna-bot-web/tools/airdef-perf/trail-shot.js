@@ -1,5 +1,5 @@
 // Дымы повреждений в игре: виртуальный подбитый самолёт пролетает в 260 м перед камерой (200 м/с, плавный вираж) и тянет 4 следа рядом — серый,
-// чёрный, огонь с чёрным дымом, течь бака (C.fx.zoneTrail каждые 5 м, как plane-damage.js). Прежние пятна против клубов из Blender (?puff=1; по умолчанию пока выключены).
+// чёрный, огонь с чёрным дымом, течь бака (C.fx.zoneTrail с шагом fx.trailStep, как plane-damage.js). Прежние пятна (?puff=0) против клубов из Blender (по умолчанию с 2026-10-24).
 //   deno run -A tools/airdef-perf/trail-shot.js [папка = .] [пресет = high] [видео: 1 — ещё и ролик]
 import puppeteer from 'npm:puppeteer-core@22.15.0';
 const [out = '.', preset = 'high', vid = '0'] = Deno.args;
@@ -20,7 +20,7 @@ const shoot = async (flag, tag) => {
     C.ctrl.camera = () => { cam.position.copy(o).addScaledVector(s, 60).add(new THREE.Vector3(0, 10, 0)); cam.lookAt(c0); cam.updateMatrixWorld(); };
     window.__step = (dt) => { const T = window.__trail, W = { x: 3, y: 0, z: 1 }; T.x += 200 * dt; T.acc += 200 * dt;
       const v = T.s.clone().multiplyScalar(200).add(new THREE.Vector3(0, -20, 0));
-      while (T.acc >= 5) { T.acc -= 5; const x = T.x - T.acc;
+      const STEP = C.fx.trailStep || 5; while (T.acc >= STEP) { T.acc -= STEP; const x = T.x - T.acc; // шаг — как в игре (plane-damage.js: fx.trailStep)
         for (let k = 0; k < 4; k++) { const p = T.c0.clone().addScaledVector(T.s, x).add(new THREE.Vector3(0, 45 - k * 30 - x * 0.06 + 0.00012 * x * x, 0)).addScaledVector(T.f, k * 20); C.fx.zoneTrail(p, v, W, k, 0.8); } } }; });
   const FPS = 30, N = 9 * FPS, shots = [], dir = Deno.makeTempDirSync();
   for (let i = 0; i < N; i++) {
@@ -33,6 +33,6 @@ const shoot = async (flag, tag) => {
   if (vid === '1') new Deno.Command('ffmpeg', { args: ['-v', 'error', '-y', '-framerate', String(FPS), '-i', `${dir}/%04d.jpg`, '-vf', 'scale=1280:-2', '-c:v', 'libx264', '-crf', '18', '-pix_fmt', 'yuv420p', `${out}/trail-${tag}.mp4`] }).outputSync();
   Deno.removeSync(dir, { recursive: true }); await page.close(); return errs;
 };
-const e0 = await shoot('', 'old'), e1 = await shoot('&puff=1', 'new');
+const e0 = await shoot('&puff=0', 'old'), e1 = await shoot('', 'new'); // клубы — по умолчанию (с 2026-10-24), ?puff=0 — прежние пятна
 console.log('ошибки:', [...e0, ...e1].slice(0, 3).join(' | ') || 'нет');
 await browser.close();

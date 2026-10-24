@@ -203,9 +203,13 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
     // след из зон: a — самолёт (dz, fire, vel), wind — ветер; частицы — по пройденному пути
     update(dt, a, wind) {
       const fx = FX(); if (!a.dz || !fx || !fx.zoneTrail) return;
-      acc += (a.speed || 0) * dt; if (acc < 5) return; acc = 0;
+      // шаг — меньше молодого клуба (fx.trailStep: 2,5 м, на телефонных пресетах 3,5), остаток пути переносится; за кадр — до 4 клубов,
+      // вдоль пройденного отрезка (2026-10-24: раз в 5 м и с потерей остатка при 30 к/с выходило 6–8 м — след вдали рассыпался «бусинами»)
+      const STEP = fx.trailStep || 5; acc += (a.speed || 0) * dt; if (acc < STEP) return;
+      const n = Math.min(4, Math.floor(acc / STEP)), back = acc - STEP; acc = n === 4 ? 0 : acc - n * STEP;
       root.updateMatrixWorld(true);
-      const D = a.dz, emit = (pt, v, kind) => { W.copy(pt).applyMatrix4(root.matrixWorld); fx.zoneTrail(W, a.vel, wind, kind, v); };
+      const sp = Math.max(1, a.vel ? a.vel.length() : 0), D = a.dz;
+      const emit = (pt, v, kind) => { for (let i = 0; i < n; i++) { W.copy(pt).applyMatrix4(root.matrixWorld); if (a.vel) W.addScaledVector(a.vel, -Math.min(back, (n - 1 - i) * STEP) / sp); fx.zoneTrail(W, a.vel, wind, kind, v); } };
       const z = (v, pt, burn) => { if (v < 0.75) emit(pt, 1 - v, burn ? 2 : v < 0.35 ? 1 : 0); };
       z(D.wingL, PT.wingL); z(D.wingR, PT.wingR); z(D.tail, PT.tail);
       if (D.eng.length > 1) { z(D.eng[0], PT.engL, a.fire === 1 && D.eng[0] < 0.3); z(D.eng[1], PT.engR, a.fire === 1 && D.eng[1] < 0.3); } else z(D.eng[0], PT.eng, a.fire === 1);

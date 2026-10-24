@@ -579,10 +579,11 @@ export function createFx(scene, P) {
     fetch(new URL('./fx/explode.json?v=20261024t', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
         const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261024t`, import.meta.url).href; // телефон и слабые пресеты — вдвое меньше (память)
-        if (t === 'puff') { // клубы дыма следов подбитых (tools/airdef-fx/explode/puff.py): частиц — половина дыма, не больше 1500
-          // пока только по ?puff=1 (2026-10-24, деплой 20261022z): у листа вдали след местами «бусинами» — включить по умолчанию после перепекания
-          if (!/[?&]puff=1/.test(location.search)) continue;
-          PF = makePuffs(scene, Math.min(1500, Math.round((P.particles || 3000) * 0.5)), { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, onTex });
+        if (t === 'puff') { // клубы дыма следов подбитых (tools/airdef-fx/explode/puff.py)
+          // по умолчанию (2026-10-24: лист перепечён — клуб заполняет клетку, шаг следа fx.trailStep — «бусин» вдали нет); ?puff=0 — прежние пятна
+          if (/[?&]puff=0/.test(location.search)) continue;
+          // пул: шаг следа 2,5 м — частиц вдвое больше, чем при 5 м: на «Высоком» и выше до 3000 (быстрый сильно подбитый самолёт с 3–4 зонами не укорачивает следы), на телефонных — как было
+          PF = makePuffs(scene, P.fxLo ? Math.min(1500, Math.round((P.particles || 3000) * 0.5)) : Math.min(3000, Math.round((P.particles || 3000) * 0.6)), { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, variants: j.variants, times: j.times, onTex });
           PF.mat.uniforms.scale.value = smoke.mat.uniforms.scale.value; api.mats.push(PF.mat); PF.points.renderOrder = lo ? 1 : 0.46; if (LY) PF.points.layers.set(LY[0]);
           continue;
         }
@@ -772,6 +773,7 @@ export function createFx(scene, P) {
     },
     // след из повреждённой зоны самолёта (plane-damage.js): kind 0 — серый дым, 1 — чёрный, 2 — огонь с чёрным дымом, 3 — течь бака (белёсые
     // пряди керосина: тоньше, быстро тают — с середины клуба); v — скорость самолёта
+    trailStep: P.fxLo ? 3.5 : 2.5, // шаг клубов следа из зон (plane-damage.js), м: меньше молодого клуба — след не рвётся на «бусины»; на телефонных пресетах — реже (пул вдвое меньше)
     zoneTrail(p, v, wind, kind, k = 1) {
       // белёсый: в прежнем пуле свет сцены не учитывается — в сумерках и ночью приглушить по освещению (иначе светился бы в темноте; клубы PF — сами по uLight)
       if (kind === 3) { const c = (0.82 + Math.random() * 0.08) * (PF && PF.ready ? 1 : Math.min(1, Math.max(0.25, (LT.x + LT.y + LT.z) / 2.1))); trail(p.x, p.y, p.z, v.x * 0.15 + wind.x + (Math.random() - 0.5) * 2, v.y * 0.15, v.z * 0.15 + wind.z + (Math.random() - 0.5) * 2, c, c, c, (0.2 + 0.25 * k), 1.2 + 1.2 * k, 3 + 4 * k, 1.6 + 1.4 * k, 1.8, 0.1, 0.45); return; }
