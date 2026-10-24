@@ -15,7 +15,7 @@ const Q = new URLSearchParams(location.search), IDS = Q.get('ids') ? Q.get('ids'
 const W = 480, H = 270, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(2); r.setSize(W, H); // 960×540 — досье показывает крупно r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
 const unitMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x222222, shininess: 18 }), wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
 const BALL = { iskander: 'l_iskander', tochka: 'l_tochka', r17: 'l_scud', atacms: 'l_himars', shahed: 'd_shahed', uav_w: 'd_uav' }; // удар — его пусковая или сам дрон
-const ICON = { ecm_e: 'w_ecm_e' }; // значок оружия — своя модель, которой в бою пока нет: «Сорбция» (в бою у ecm_e пока w_ecm; станции на законцовках — отдельной задачей)
+const ICON = { ecm_e: 'w_ecm_e', ecm_w: 'w_ecm_w' }; // значок оружия — своя модель, которой в бою пока нет: «Сорбция» и AN/ALQ-131 (в бою у обоих пока w_ecm — ELTA; «Сорбция» на законцовках — отдельной задачей)
 loadModels(new URL('../../games/airdef/', location.href).href, () => {});
 const wait = async (f, n = 150) => { for (let i = 0; i < n; i++) { const v = f(); if (v) return v; await new Promise((res) => setTimeout(res, 100)); } return null; };
 // комплекс — как в бою (main.js syncUnits): корпус, башни → качающиеся части → ракеты по слотам, антенна
