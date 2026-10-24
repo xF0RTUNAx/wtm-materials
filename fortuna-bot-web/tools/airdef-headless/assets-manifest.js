@@ -21,3 +21,12 @@ files.sort((a, b) => a[0].localeCompare(b[0]));
 Deno.writeTextFileSync(root + 'assets.json', JSON.stringify(Object.keys(ktx).length ? { files, models, ktx } : { files, models }) + '\n');
 const mb = (b) => (b / 1048576).toFixed(1);
 console.log(`файлов ${files.length} (${mb(files.reduce((s, f) => s + f[1], 0))} МБ), моделей ${Object.keys(models).length} (${mb(Object.values(models).reduce((s, v) => s + v, 0))} МБ)` + (Object.keys(ktx).length ? `, сжатых текстур ${Object.keys(ktx).length - 1} (${mb(Object.values(ktx).reduce((s, v) => s + v, 0))} МБ)` : '') + ' → games/airdef/assets.json');
+// проверка перед деплоем: версия сжатых текстур (models/ktx/index.json) = версия файла модели в models.js (GLB_V, как в ktx-models.js). Расхождение —
+// у устройства в кэше остаётся старая модель (адрес с прежней версией), а сжатые текстуры не включаются (ktx.js) — так пропали 5 моделей 2026-10-24
+try {
+  const mj = Deno.readTextFileSync(root + 'models.js'), a0 = mj.indexOf('const GLB_V = '), a1 = mj.indexOf('Object.assign(GLB_V, GLB_V_OWN);');
+  const GV = new Function(mj.slice(a0, a1 + 'Object.assign(GLB_V, GLB_V_OWN);'.length) + '\nreturn GLB_V;')(), verOf = (n) => GV[n] || '20261022b';
+  const idx = JSON.parse(Deno.readTextFileSync(root + 'models/ktx/index.json')), bad = Object.entries(idx).filter(([n, e]) => e && e.v && e.v !== verOf(n));
+  if (bad.length) { console.log('✕ версии не сходятся (сжатые текстуры ≠ models.js): ' + bad.map(([n, e]) => `${n} ${e.v} ≠ ${verOf(n)}`).join(', ')); Deno.exit(1); }
+  console.log(`версии моделей и сжатых текстур сходятся (${Object.keys(idx).length})`);
+} catch (e) { if (e instanceof Deno.errors.NotFound) console.log('нет models/ktx/index.json — проверка версий пропущена'); else throw e; }

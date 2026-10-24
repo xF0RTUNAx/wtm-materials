@@ -2,8 +2,8 @@
 // отлетевшая консоль или хвост прячутся на самолёте и падают отдельным обломком (кувыркаются, дымят), из повреждённых зон
 // тянется след: серый дым (повреждено), чёрный (сильно), огонь (горит двигатель или бак). Один объект на модель самолёта.
 /* global THREE */
-import { splitPlane } from './plane-zones.js?v=20261024t';
-import { mergeLocal } from './merge.js?v=20261024t';
+import { splitPlane } from './plane-zones.js?v=20261024u';
+import { mergeLocal } from './merge.js?v=20261024u';
 const W = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3();
 const debris = []; // общие для всех самолётов обломки: { g, v, w, t }
 const SAMPS = new Map(); // точки обшивки по зонам — по ключу модели (зависят только от геометрии)
@@ -206,10 +206,11 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
       // шаг — меньше молодого клуба (fx.trailStep: 2,5 м, на телефонных пресетах 3,5), остаток пути переносится; за кадр — до 4 клубов,
       // вдоль пройденного отрезка (2026-10-24: раз в 5 м и с потерей остатка при 30 к/с выходило 6–8 м — след вдали рассыпался «бусинами»)
       const STEP = fx.trailStep || 5; acc += (a.speed || 0) * dt; if (acc < STEP) return;
-      const n = Math.min(4, Math.floor(acc / STEP)), back = acc - STEP; acc = n === 4 ? 0 : acc - n * STEP;
+      // больше 4 шагов за кадр (быстро и мало кадров) — 4 клуба на весь пройденный отрезок, а не на последние 7,5 м (ревью 2026-10-24: просветы в следе)
+      const n = Math.min(4, Math.floor(acc / STEP)), gap = n === 4 ? acc / 4 : STEP, back = acc - gap; acc = n === 4 ? 0 : acc - n * STEP;
       root.updateMatrixWorld(true);
       const sp = Math.max(1, a.vel ? a.vel.length() : 0), D = a.dz;
-      const emit = (pt, v, kind) => { for (let i = 0; i < n; i++) { W.copy(pt).applyMatrix4(root.matrixWorld); if (a.vel) W.addScaledVector(a.vel, -Math.min(back, (n - 1 - i) * STEP) / sp); fx.zoneTrail(W, a.vel, wind, kind, v); } };
+      const emit = (pt, v, kind) => { for (let i = 0; i < n; i++) { W.copy(pt).applyMatrix4(root.matrixWorld); if (a.vel) W.addScaledVector(a.vel, -Math.min(back, (n - 1 - i) * gap) / sp); fx.zoneTrail(W, a.vel, wind, kind, v); } };
       const z = (v, pt, burn) => { if (v < 0.75) emit(pt, 1 - v, burn ? 2 : v < 0.35 ? 1 : 0); };
       z(D.wingL, PT.wingL); z(D.wingR, PT.wingR); z(D.tail, PT.tail);
       if (D.eng.length > 1) { z(D.eng[0], PT.engL, a.fire === 1 && D.eng[0] < 0.3); z(D.eng[1], PT.engR, a.fire === 1 && D.eng[1] < 0.3); } else z(D.eng[0], PT.eng, a.fire === 1);

@@ -23,14 +23,14 @@ try {
   console.log('картинка в кэше:', JSON.stringify(img));
   // «Скачать всё» и перезапуск
   const t0 = Date.now();
-  const res = await page.evaluate(async () => { const M = await import('./airdef/models.js?v=20261024t'), O = await import('./airdef/offline.js?v=20261024t'); let last = ''; const r = await O.prefetchAll(M.modelUrls(), (d, n, b, tot, f) => { last = `${d}/${n} ${Math.round(b / 1048576)}/${Math.round(tot / 1048576)} МБ, ошибок ${f}`; }); return { r, last }; });
+  const res = await page.evaluate(async () => { const M = await import('./airdef/models.js?v=20261024u'), O = await import('./airdef/offline.js?v=20261024u'); let last = ''; const r = await O.prefetchAll(M.modelUrls(), (d, n, b, tot, f) => { last = `${d}/${n} ${Math.round(b / 1048576)}/${Math.round(tot / 1048576)} МБ, ошибок ${f}`; }); return { r, last }; });
   console.log('предзагрузка:', JSON.stringify(res), `за ${((Date.now() - t0) / 1000).toFixed(0)} с`);
   // сверка: битая запись (не тот размер) и убранная из игры модель
   const fake = await page.evaluate(async () => { const c = await caches.open('airdef-models-v1'), k = (await c.keys()).find((r) => /f16\.glb/.test(r.url));
     await c.put(k.url, new Response(new Uint8Array(10))); await c.put(new URL('airdef/models/zz_removed.glb?v=1', location.href).href, new Response(new Uint8Array(5))); return k.url.replace(/^.*models\//, ''); });
   let glbNet2 = 0; const onR = (r) => { if (/\.glb/.test(r.url()) && !r.fromServiceWorker()) glbNet2++; }; page.on('response', onR);
   const t1 = Date.now();
-  const res2 = await page.evaluate(async () => { const M = await import('./airdef/models.js?v=20261024t'), O = await import('./airdef/offline.js?v=20261024t'); const r = await O.prefetchAll(M.modelUrls(), () => {}); return r; });
+  const res2 = await page.evaluate(async () => { const M = await import('./airdef/models.js?v=20261024u'), O = await import('./airdef/offline.js?v=20261024u'); const r = await O.prefetchAll(M.modelUrls(), () => {}); return r; });
   page.off('response', onR);
   const after = await page.evaluate(async (f) => { const c = await caches.open('airdef-models-v1'), L = await c.keys(); const k = L.find((r) => r.url.endsWith(f)); return { f16: k ? (await (await c.match(k)).blob()).size : null, removed: L.some((r) => /zz_removed/.test(r.url)) }; }, fake);
   console.log('повтор «Скачать всё»:', JSON.stringify(res2), `за ${((Date.now() - t1) / 1000).toFixed(0)} с; моделей из сети ${glbNet2} (ждём 1 — битая), f16 теперь ${after.f16} байт, убранная модель в кэше: ${after.removed}`);

@@ -6,11 +6,11 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry — двигатель без форсажа: только слабое свечение; нет сопел — пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { tr } from './i18n.js?v=20261024t';
-import { CREDITS } from './models/credits.js?v=20261024t';
-import { mergeLocal } from './merge.js?v=20261024t';
-import { cachedFetch } from './offline.js?v=20261024t';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261024t';
+import { tr } from './i18n.js?v=20261024u';
+import { CREDITS } from './models/credits.js?v=20261024u';
+import { mergeLocal } from './merge.js?v=20261024u';
+import { cachedFetch } from './offline.js?v=20261024u';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261024u';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -302,13 +302,18 @@ const GLB_V_OWN = {
   w_ecm_w: '20261024k',
   w_kh55: '20261024l',
   w_kh555: '20261024m',
+  tor: '20261024u', // «Тор-М1» — своя модель вместо 42manako (2026-10-24): антенна сопровождения dish и крышки ячеек lid0…7 — отдельными частями
   tor_lo: '20261024u',
   msl_tor: '20261024u',
+  strela1: '20261024v', // «Стрела-1» — своя пусковая и ракета на основе БРДМ-2 zhek вместо 42manako (2026-10-24)
   strela1_lo: '20261024v',
   msl_strela1: '20261024v',
+  l_tochka: '20261024w', // «Точка-У» — своя модель в боевом положении вместо 42manako (2026-10-24)
+  ew_w: '20261024x', // AN/MPQ-64 Sentinel на «Хамви» karmy2k вместо Renault TRM (Muhamad Mirza Arrafi, помечена «сделано ИИ»), 2026-10-24
   ew_w_lo: '20261024x',
+  ew_e: '20261024y', // П-18 «Терек» на «Урале-4320» Brout вместо IBIS-150 (42manako, сделана Tripo), 2026-10-24
   ew_e_lo: '20261024y',
-  w_gbu12: '20261024z',
+  w_gbu12: '20261024z', // GBU-12 Paveway II — своя модель (основной чат, 2026-10-24) вместо выреза из F-16D
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы

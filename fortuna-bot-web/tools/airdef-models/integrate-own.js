@@ -40,7 +40,7 @@ if (pm) {
 else fail('нет ни записи ключа, ни w_nar_s8 в prepare.js — добавьте вручную:\n' + entry);
 let mj = rd(WEB + 'games/airdef/models.js'); const bm = mj.match(/const GLB_V_OWN = \{([\s\S]*?)\n\};/);
 if (!bm) fail('в models.js нет блока GLB_V_OWN');
-const ents = [...bm[1].matchAll(/^\s*([A-Za-z0-9_]+): '([^']+)',?\s*$/gm)].map((x) => [x[1], x[2]]);
+const ents = [...bm[1].matchAll(/^\s*([A-Za-z0-9_]+): '([^']+)',?(?:\s*\/\/.*)?\s*$/gm)].map((x) => [x[1], x[2]]); // строка может кончаться комментарием
 const bump = (v) => (/[a-y]$/.test(v) ? v.slice(0, -1) + String.fromCharCode(v.charCodeAt(v.length - 1) + 1) : v + 'a');
 const cur = ents.find(([k]) => k === KEY);
 const mlRe = new RegExp(`^(  ${KEY}: \\{[^\\n]*?\\},)(?: *//.*)?$`, 'm');
@@ -81,8 +81,10 @@ console.log('3. файл игры собран' + (oldGame ? (gameChanged ? ' (�
 
 // ── 4. models.js ──
 const ver = cur ? (gameChanged ? bump(cur[1]) : cur[1]) : bump(ents.map((e) => e[1]).sort().pop() || '20261024a');
-const ne = cur ? ents.map(([k, v]) => (k === KEY ? [k, ver] : [k, v])) : [...ents, [KEY, ver]];
-mj = mj.replace(bm[0], () => 'const GLB_V_OWN = {\n' + ne.map(([k, v]) => `  ${k}: '${v}',`).join('\n') + '\n};');
+// правка на месте: меняется только версия ключа (или добавляется строка в конец) — прочие строки с комментариями остаются как есть
+// (раньше блок пересобирался из разобранных строк, и строки с комментарием пропадали: Тор, «Стрела-1», «Точка-У», Sentinel, П-18 — ревью 2026-10-24)
+const blk = cur ? bm[0].replace(new RegExp(`^(\\s*${KEY}: ')[^']+(')`, 'm'), (_, a, b) => a + ver + b) : bm[0].replace(/\n\};$/, () => `\n  ${KEY}: '${ver}',\n};`);
+mj = mj.replace(bm[0], () => blk);
 wr(WEB + 'games/airdef/models.js', mj);
 console.log(`4. models.js: версия файла ${ver}` + (new RegExp(`^  ${KEY}: \\{`, 'm').test(mj) ? '' : '  ВНИМАНИЕ: строки ключа в META нет — добавьте вручную'));
 
