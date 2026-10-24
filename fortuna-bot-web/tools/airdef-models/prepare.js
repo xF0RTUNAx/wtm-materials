@@ -78,7 +78,9 @@ const CONFIG = {
   w_agm65b: { src: `${DL}/agm_65_maverick.glb`, scale: 2.49 / 1.31, axes: (x, y, z) => [x, z, -y], tex: () => 256, target: 60000, simpErr: 0.004, minPart: 0.012, pick: [-0.08, -1, -0.73, 0.23, 2, -0.42] }, // одна из трёх, стояла вертикально; у одной ~200 тыс. треугольников — до 60 тыс. с малой ошибкой (прежние 7000 — ломаная форма)
   w_mald: { src: `${DL}/aim-160a_screamer.glb`, scale: 2.84 / 2, nose: '-x', tex: () => 256, target: 7000, pickMesh: /./ },
   w_decoy_e: { colors: { '': [0.14, 0.16, 0.12] }, src: `${DL}/harpy_drone.glb`, scale: 0.1, nose: '+z', tex: () => 256, pickMesh: /./ }, // Harpy — ложная цель (без упрощения: у источника всего ~21 тыс. треугольников)
-  w_pod: { src: `${DL}/anaaq-28v_lightning_fbx.glb`, scale: 1, nose: '+z', tex: () => 256, target: 9000, simpErr: 0.3, cluster: true, minPart: 0.03, pickMesh: /./ }, // LITENING — прицельный контейнер
+  w_pod: { src: `${DL}/anaaq-28v_lightning_fbx.glb`, scale: 1, nose: '+z', tex: () => 256, target: 9000, simpErr: 0.3, cluster: true, minPart: 0.03, pickMesh: /./, // LITENING — прицельный контейнер
+    // файл — перезалив Jeyhun1985 «AN/AAQ-28(V) Lightning (FBX)»; автор модели — Vlad.Mojaev (CC BY 4.0, страница проверена 2026-10-24)
+    orig: { title: 'RAFAEL AN/AAQ-28(V) Litening', author: 'Vlad.Mojaev', source: 'https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c', license: 'CC-BY-4.0' } },
   w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, axes: (x, y, z) => [x, -y, -z], /* нос из +Z в −Z и переворот: у автора крылья снизу — у настоящей SDB на спине */ tex: () => 512, pickMesh: /./,
     groups: (c) => (Math.abs(c.ctr[0]) > 3 && c.size[1] < 1 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') }, // крылья — свои части (на подвеске сложены)
   w_gbu31: { src: `${DL}/mk82_jdam.glb`, scale: 3.88 / 15.69, nose: '-z', tex: () => 256, target: 9000, pickMesh: /./ }, // Mk 82 JDAM (FeriseCAT) в размер GBU-31 (3,9 м) (прежняя GBU-24 — из War Thunder)
@@ -1185,7 +1187,8 @@ if (Deno.args[0] === '--credits') {
     if (cfg.own) continue; // собственные модели (own: true) — своя работа, титров чужих авторов нет
     const ck = cfg.src + (cfg.credit ? '|' + cfg.credit : ''); // credit — пометка об адаптации: отдельная запись титров (menu.js выводит её в названии)
     let e = bySrc.get(ck);
-    if (!e) { const J = readGlb(Deno.readFileSync(srcOf(cfg.src))).json, x = (J.asset && J.asset.extras) || {}; bySrc.set(ck, e = { title: (x.title || '') + (cfg.credit ? ` (${cfg.credit})` : ''), author: (x.author || '').replace(/ \(.*$/, ''), url: x.source || '', license: (x.license || '').replace(/ \(.*$/, ''), files: [] }); }
+    // orig — исходник оказался перезаливом: в титрах настоящий автор и его страница (из asset.extras файла был бы тот, кто перезалил)
+    if (!e) { const J = readGlb(Deno.readFileSync(srcOf(cfg.src))).json, x = cfg.orig || (J.asset && J.asset.extras) || {}; bySrc.set(ck, e = { title: (x.title || '') + (cfg.credit ? ` (${cfg.credit})` : ''), author: (x.author || '').replace(/ \(.*$/, ''), url: x.source || '', license: (x.license || '').replace(/ \(.*$/, ''), files: [] }); }
     e.files.push(name);
   }
   const list = [...bySrc.values()];

@@ -188,9 +188,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "AN/AAQ-28(V) Lightning (FBX)",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/anaaq-28v-lightning-fbx-e86fe5084f09463b8e3abb0a4cb1a04f",
+  "title": "RAFAEL AN/AAQ-28(V) Litening",
+  "author": "Vlad.Mojaev",
+  "url": "https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c",
   "license": "CC-BY-4.0",
   "files": [
    "w_pod"
