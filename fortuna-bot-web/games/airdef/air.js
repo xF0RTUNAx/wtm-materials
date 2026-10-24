@@ -128,19 +128,61 @@ export function createAir(C) {
   const POD_R = [1000, 18000], POD_H = 400, POD_ACQ = 1;
   const pod = { show: false, dir: new THREE.Vector3(0, -0.5, -1).normalize(), zi: 1, lock: null, lockName: '', laserMan: null, laser: false, masked: false, pos: V3(), rect: { x: 0, y: 0, w: 0, h: 0 },
     tgt: null, acq: 0, why: '', chkT: 0, pickT: 0 };
-  const podCam = new THREE.PerspectiveCamera(10, 4 / 3, 5, 40000); podCam.layers.enable(4); podCam.layers.enable(5); // и облака с дымом (слои половинного разрешения)
+  // дальность — как у основной камеры (50 км): сфера неба — радиус 42 км, при 40 км её не было (вертолёт смотрит почти горизонтально — полкадра пустоты)
+  const podCam = new THREE.PerspectiveCamera(10, 4 / 3, 5, 50000); podCam.layers.enable(4); podCam.layers.enable(5); // и облака с дымом (слои половинного разрешения)
   // «Контейнер 30 к/с» (C.P.podHalf): сцена в окно контейнера — через кадр, в свою текстуру; на экран она кладётся каждый кадр
   // одним прямоугольником (второй проход сцены — самый дорогой после основного; настоящие ТВ-каналы и так 25–30 к/с)
-  // на сенсорных окно рисуется в своей текстуре в 65% разрешения (картинка «ТВ» и так зернистая) — и при «каждый кадр»
+  // на сенсорных окно рисуется в своей текстуре в 90% разрешения (картинка «ТВ» и так зернистая) — и при «каждый кадр»
   const POD_K = IS_TOUCH ? 0.9 : 1;
-  const podRT = C.P.podHalf || IS_TOUCH ? new THREE.WebGLRenderTarget(1, 1, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }) : null;
-  let podQS = null, podQC = null, podN = 0;
-  if (podRT) {
-    podRT.texture.encoding = THREE.sRGBEncoding;
-    podQS = new THREE.Scene(); podQC = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: podRT.texture, toneMapped: false, depthTest: false, depthWrite: false }));
-    q.frustumCulled = false; podQS.add(q);
-  }
+  const POD_LUM = 0.24; // освещённость сцены (podGain), ниже которой окно «ТВ» усиливается (осенний вечер 0,26 → ×1, сумерки 0,12 → ×1,5)
+  // окно всегда — в своей текстуре: серое изображение и автоуровни, как у настоящего ТВ-канала, делает шейдер вывода
+  // (2026-10-24, Telegram: был CSS backdrop-filter contrast 1.35 — небо на ×1 выбеливалось, склон на ×15 в сумерках уходил в чёрное)
+  const POD_MIP = renderer.capabilities.isWebGL2; // уровни — по уменьшенным копиям кадра; без WebGL2 — постоянные
+  // (у цели рендера в r128 уменьшенные копии по умолчанию выключены — без generateMipmaps текстура неполная и читается чёрной)
+  const podRT = new THREE.WebGLRenderTarget(1, 1, { minFilter: POD_MIP ? THREE.LinearMipmapLinearFilter : THREE.LinearFilter, magFilter: THREE.LinearFilter, generateMipmaps: POD_MIP });
+  podRT.texture.encoding = THREE.sRGBEncoding;
+  // замер: 1 пиксель — r: яркость центра кадра, g: тёмный уровень (самый тёмный из 4 × 4 участков), b: самый светлый; плавно (k), два буфера по очереди
+  // (16 бит, где можно: в 8 битах плавная подстройка застревала — шаг 1/255 больше поправки за кадр)
+  const POD_HF = POD_MIP && !!(renderer.extensions && renderer.extensions.has('EXT_color_buffer_float')); // (у заглушки рендера в тестах extensions нет)
+  const podSt = [0, 1].map(() => new THREE.WebGLRenderTarget(1, 1, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, type: POD_HF ? THREE.HalfFloatType : THREE.UnsignedByteType }));
+  let podSi = 0, podSk = 1, podST = 0, podN = 0;
+  renderer.domElement.addEventListener('webglcontextrestored', () => { podN = 0; }); // замер потерян — уровни заново по первому кадру
+  const podQC = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), V2 = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+  const podQuad = (mat) => { const S = new THREE.Scene(), q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat); q.frustumCulled = false; S.add(q); return S; };
+  const statMat = new THREE.ShaderMaterial({ uniforms: { map: { value: podRT.texture }, prev: { value: null }, lod: { value: 0 }, k: { value: 1 } }, vertexShader: V2, depthTest: false, depthWrite: false,
+    extensions: { shaderTextureLOD: true },
+    fragmentShader: `uniform sampler2D map, prev; uniform float lod, k; varying vec2 vUv;
+      float Y(float x, float y) { return dot(texture2DLodEXT(map, vec2(x, y), lod).rgb, vec3(0.2126, 0.7152, 0.0722)); }
+      void main() {
+        float lo = 1.0, hi = 0.0, c = 0.0;
+        for (int i = 0; i < 4; i++) for (int j = 0; j < 4; j++) {
+          float y = Y((float(i) + 0.5) / 4.0, (float(j) + 0.5) / 4.0); lo = min(lo, y); hi = max(hi, y);
+          if (i > 0 && i < 3 && j > 0 && j < 3) c += y * 0.25;
+        }
+        gl_FragColor = vec4(mix(texture2D(prev, vec2(0.5)).rgb, vec3(c, lo, hi), k), 1.0);
+      }` });
+  const statQS = podQuad(statMat);
+  // вывод: серое, чёрная точка — 0,6 тёмного уровня (снимает дымку), усиление — среднее (геометрическое) из общего (центр кадра —
+  // средне-серый) и местного (по размытой копии вокруг точки, как WDR у настоящих ТВ-каналов): светлое небо усиливается меньше, тёмная
+  // земля — больше, ×0,8…×4; светлое — с мягким плечом; лёгкое зерно скрывает ступеньки 8-битной картинки при сильном усилении
+  const outMat = new THREE.ShaderMaterial({ uniforms: { map: { value: podRT.texture }, st: { value: podSt[0].texture }, lodL: { value: 0 }, t: { value: 0 } }, vertexShader: V2,
+    depthTest: false, depthWrite: false, defines: { MIP: POD_MIP ? 1 : 0 }, extensions: { shaderTextureLOD: POD_MIP },
+    fragmentShader: `uniform sampler2D map, st; uniform float lodL, t; varying vec2 vUv;
+      float Y(vec3 c) { return dot(c, vec3(0.2126, 0.7152, 0.0722)); }
+      void main() {
+      #if MIP
+        vec3 s = texture2D(st, vec2(0.5)).rgb; float l = Y(texture2DLodEXT(map, vUv, lodL).rgb);
+      #else
+        vec3 s = vec3(0.5, 0.2, 0.8); float l = 0.5;
+      #endif
+        float b = s.g * 0.6, g = clamp(sqrt(0.5 / max(s.r - b, 0.03) * 0.5 / max(l - b, 0.03)), 0.8, 4.0);
+        float y = (Y(texture2D(map, vUv).rgb) - b) * g;
+        y += (fract(sin(dot(gl_FragCoord.xy + t, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) * 0.006 * g;
+        y = y < 0.6 ? y : 1.0 - 0.4 * exp((0.6 - y) / 0.4);
+        y = y > 0.1 ? y : 0.1 * exp((y - 0.1) / 0.1); // мягкий «носок»: ниже чёрной точки — не сплошной чёрный (силуэты деревьев с деталями)
+        gl_FragColor = vec4(vec3(clamp(y, 0.0, 1.0)), 1.0);
+      }` });
+  const podQS = podQuad(outMat);
   const shipQ = new THREE.Quaternion(), invQ = new THREE.Quaternion(), E = new THREE.Euler(0, 0, 0, 'YXZ');
   // окно: на сенсорных — небольшое, вверху справа (над кнопками, левее паузы и звука); на ПК — справа внизу
   function layoutPod() {
@@ -150,11 +192,18 @@ export function createAir(C) {
     const rr = ['pause', 'mute', 'plBtn'].map((id) => ($(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null)).filter((r) => r && r.width);
     const pb = rr.length ? { width: 1, left: Math.min(...rr.map((r) => r.left)), top: Math.min(...rr.map((r) => r.top)) } : { width: 0, top: 6 };
     const y = IS_TOUCH ? Math.max(6, pb.top) : VH - h - 180;
-    if (IS_TOUCH) { // не ниже верха кнопок справа («КАРТА», «АВТО»)
-      let lim = VH; for (const id of ['tMap', 'tAuto', 'tHelp']) { const r = $(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null; if (r && r.height) lim = Math.min(lim, r.top); }
-      h = Math.max(90, Math.min(h, lim - y - 6)); w = h / 0.75;
+    let x = VW - w - 14; pod.ackTop = null;
+    if (IS_TOUCH) { // не ниже верха кнопок справа («КАРТА», «АВТО», у вертолёта — «ПОДСКОК», «ОБЗОР»; свою раскладку слева не считаем)
+      let lim = VH, xl = pb.width ? pb.left : VW - 50;
+      for (const id of ['tMap', 'tAuto', 'tHelp', 'tPop', 'tLook']) { const r = $(id).getBoundingClientRect ? $(id).getBoundingClientRect() : null; if (r && r.height && r.left > VW / 2) { lim = Math.min(lim, r.top); xl = Math.min(xl, r.left); } }
+      const wl = Math.min(Math.min(VH * 0.32, 150) / 0.75, xl - 8 - (VW / 2 + 40)); // левее столбцов кнопок, но правее прицела
+      if (lim - y - 6 >= 90 || wl < 120) { h = Math.max(90, Math.min(h, lim - y - 6)); w = h / 0.75; x = pb.width ? pb.left - w - 8 : VW - w - 58; }
+      else { // над кнопками места нет (Telegram во весь экран: ряд паузы опущен под его кнопки)
+        w = wl; h = w * 0.75; x = xl - w - 8;
+        // «ПОНЯЛ» (#rwrAck, вертолёт) стоит в ряду паузы с 50% + 54 px — окно на него налезло бы: на это время кнопка уходит под окно
+        const a = $('rwrAck'), aw = a.offsetWidth || 80; if (x < VW / 2 + 54 + aw + 4) pod.ackTop = y + h + 6;
+      }
     }
-    const x = IS_TOUCH ? (pb.width ? pb.left - w - 8 : VW - w - 58) : VW - w - 14;
     Object.assign(pod.rect, { x, y, w, h });
     const b = $('podBox'); b.style.left = x + 'px'; b.style.top = y + 'px'; b.style.width = w + 'px'; b.style.height = h + 'px';
   }
@@ -232,35 +281,52 @@ export function createAir(C) {
   function renderPod() {
     if (!pod.show || !hasPod || craft.dead || game.over) { podN = 0; return; }
     const r = pod.rect, VH = C.VH;
-    if (podRT) {
-      const pr = renderer.getPixelRatio() * POD_K, pw = Math.max(1, Math.round(r.w * pr)), ph = Math.max(1, Math.round(r.h * pr));
-      if (podRT.width !== pw || podRT.height !== ph) { podRT.setSize(pw, ph); podN = 0; }
-      if (!C.P.podHalf || (podN++ & 1) === 0) drawPod(podRT, null);
-      renderer.setRenderTarget(null); renderer.setScissorTest(true); renderer.setScissor(r.x, VH - r.y - r.h, r.w, r.h); renderer.setViewport(r.x, VH - r.y - r.h, r.w, r.h);
-      renderer.autoClear = false; renderer.render(podQS, podQC);
-      renderer.autoClear = true; renderer.setScissorTest(false); renderer.setViewport(0, 0, C.VW, VH);
-      return;
+    const pr = renderer.getPixelRatio() * POD_K, pw = Math.max(1, Math.round(r.w * pr)), ph = Math.max(1, Math.round(r.h * pr));
+    if (podRT.width !== pw || podRT.height !== ph) { podRT.setSize(pw, ph); podN = 0; }
+    if (podN === 0) podSk = 1; // окно только открыли — уровни сразу по первому кадру, дальше — плавно
+    if (!C.P.podHalf || (podN++ & 1) === 0) {
+      drawPod(podRT);
+      const now = performance.now();
+      if (POD_MIP) { // замер уровней: 4 × 4 участка (уменьшенная копия ~ 1/4 окна), подстройка ~0,35 с
+        statMat.uniforms.lod.value = Math.max(0, Math.log2(Math.max(pw, ph) / 4)); outMat.uniforms.lodL.value = Math.max(0, Math.log2(Math.max(pw, ph) / 10)); // местное — ~1/10 окна
+        statMat.uniforms.k.value = podSk < 1 ? Math.max(POD_HF ? 0 : 0.2, 1 - Math.exp(-Math.min(0.2, (now - podST) / 1000) / 0.35)) : 1; // в 8 битах — не медленнее 0,2 за замер
+        statMat.uniforms.prev.value = podSt[podSi].texture; podSi ^= 1;
+        renderer.setRenderTarget(podSt[podSi]); renderer.render(statQS, podQC);
+        outMat.uniforms.st.value = podSt[podSi].texture; podSk = 0;
+      }
+      podST = now; outMat.uniforms.t.value = (now % 1000) * 0.37;
     }
-    drawPod(null, r);
+    renderer.setRenderTarget(null); renderer.setScissorTest(true); renderer.setScissor(r.x, VH - r.y - r.h, r.w, r.h); renderer.setViewport(r.x, VH - r.y - r.h, r.w, r.h);
+    renderer.autoClear = false; renderer.render(podQS, podQC);
+    renderer.autoClear = true; renderer.setScissorTest(false); renderer.setViewport(0, 0, C.VW, VH);
   }
-  function drawPod(target, r) {
-    const VH = C.VH;
+  function drawPod(target) {
     podCam.fov = ZOOMS[pod.zi]; podCam.aspect = pod.rect.w / Math.max(1, pod.rect.h); podCam.updateProjectionMatrix();
     podCam.position.copy(pod.pos); podCam.up.set(0, 1, 0); podCam.lookAt(LQ.copy(pod.pos).add(pod.dir));
     const au = renderer.shadowMap.autoUpdate, sv = ship.visible;
     renderer.shadowMap.autoUpdate = false; ship.visible = false;
     // ночью — тепловизор: дымка для ИК прозрачнее, сцена подсвечена равномерно (иначе ночной туман и темнота «съедают» всё)
     const ir = NIGHT >= 0.5, fog = scene.fog, H = C.G.hemi, ex = renderer.toneMappingExposure, keep = ir && { fd: fog.density, fc: fog.color.clone(), hi: H.intensity, hc: H.color.clone(), hg: H.groundColor.clone() };
-    if (ir) { fog.density *= 0.35; fog.color.setRGB(0.1, 0.1, 0.1); H.intensity = 1.7; H.color.setRGB(0.75, 0.75, 0.75); H.groundColor.setRGB(0.45, 0.45, 0.45); renderer.toneMappingExposure = ex * 1.6; }
+    const gain = ir ? 1.6 : podGain(); pod.gain = gain; renderer.toneMappingExposure = ex * gain;
+    if (ir) { fog.density *= 0.35; fog.color.setRGB(0.1, 0.1, 0.1); H.intensity = 1.7; H.color.setRGB(0.75, 0.75, 0.75); H.groundColor.setRGB(0.45, 0.45, 0.45); }
     renderer.setRenderTarget(target); renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    if (r) { renderer.setScissorTest(true); renderer.setScissor(r.x, VH - r.y - r.h, r.w, r.h); renderer.setViewport(r.x, VH - r.y - r.h, r.w, r.h); }
     // точка взгляда контейнера (пересечение с землёй) — вокруг неё дома и техника подробно, только на время кадра окна
     const gy = C.city.groundH(pod.pos.x, pod.pos.z), tt = pod.dir.y < -0.02 ? Math.min(30000, (pod.pos.y - gy) / -pod.dir.y) : 6000;
-    const back = C.podPass ? C.podPass(podCam, PAT.copy(pod.pos).addScaledVector(pod.dir, tt), target ? target.height : r.h * renderer.getPixelRatio()) : null;
+    const back = C.podPass ? C.podPass(podCam, PAT.copy(pod.pos).addScaledVector(pod.dir, tt), target.height) : null;
     renderer.autoClear = false; renderer.clear(); renderer.render(scene, podCam); if (back) back();
-    renderer.autoClear = true; renderer.setScissorTest(false); if (r) renderer.setViewport(0, 0, C.VW, VH);
+    renderer.autoClear = true;
     renderer.toneMapping = C.sceneTM; renderer.shadowMap.autoUpdate = au; ship.visible = sv;
-    if (ir) { fog.density = keep.fd; fog.color.copy(keep.fc); H.intensity = keep.hi; H.color.copy(keep.hc); H.groundColor.copy(keep.hg); renderer.toneMappingExposure = ex; }
+    renderer.toneMappingExposure = ex;
+    if (ir) { fog.density = keep.fd; fog.color.copy(keep.fc); H.intensity = keep.hi; H.color.copy(keep.hc); H.groundColor.copy(keep.hg); }
+  }
+  // в сумерках — ещё и выдержка (до ×1,5; больше — выбеливает небо до уровней): чем темнее сцена (небо + солнце над горизонтом), тем сильнее; уровни после неё — в шейдере вывода,
+  // а с выдержкой у тёмной картинки больше оттенков (8 бит) — меньше ступенек
+  const lumOf = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  function podGain() {
+    const H = C.G.hemi, S = C.G.sun, d = C.G.sunDir;
+    let l = H ? H.intensity * (lumOf(H.color) + lumOf(H.groundColor)) / 2 : 1;
+    if (S && d) l += S.intensity * lumOf(S.color) * Math.max(0, d.y);
+    pod.lum = l; return Math.min(1.5, Math.max(1, POD_LUM / Math.max(0.05, l)));
   }
 
   // ═════════════ Оружие ═════════════
@@ -676,7 +742,7 @@ export function createAir(C) {
     const cam = $('tCam'); cam.style.right = `calc(${px(172)}px + var(--sa-r))`; cam.style.bottom = px(16) + 'px'; cam.style.transform = k < 1 ? `scale(${k})` : ''; cam.style.transformOrigin = 'right bottom';
     applyLayout(); // свои места кнопок игрока (Настройки → «Расположение кнопок»)
   }
-  addEventListener('airdef-safearea', () => layoutTouch()); // вырез / кнопки Telegram изменились (shell.js)
+  addEventListener('airdef-safearea', () => { layoutTouch(); layoutPod(); }); // вырез / кнопки Telegram изменились (shell.js) — ряд паузы сдвинулся, окно «ТВ» за ним
   layoutTouch(); // места по умолчанию — сразу (редактор кнопок открывается и до первого вылета)
 
   // ═════════════ Карта ═════════════
@@ -880,9 +946,10 @@ export function createAir(C) {
     if (mw.length || lk) { wn.textContent = tr('ПУСК РАКЕТЫ{0}', [lk ? ' — ' + (lk.u.S.rwr || lk.u.S.short) : '']); wn.style.display = 'block'; }
     else if (trk) { wn.textContent = craft.heli ? tr('ЗАХВАТ — {0} · вниз, за рельеф!', [trk.u.S.rwr || trk.u.S.short]) : tr('ЗАХВАТ — {0}', [trk.u.S.rwr || trk.u.S.short]); wn.style.display = 'block'; }
     else { const su = seenBy(); if (su) { wn.textContent = tr('ВАС ВИДИТ {0} — снижайтесь за рельеф', [su.S.rwr || su.S.short]); wn.style.display = 'block'; } else wn.style.display = 'none'; }
-    const b = $('podBox'); b.style.display = pod.show && hasPod && !game.over && !craft.dead ? 'block' : 'none';
+    const b = $('podBox'), bOn = pod.show && hasPod && !game.over && !craft.dead; b.style.display = bOn ? 'block' : 'none';
+    const ackTop = bOn && pod.ackTop != null ? pod.ackTop + 'px' : ''; if (ackBtn.style.top !== ackTop) ackBtn.style.top = ackTop; // «ПОНЯЛ» — под окном, пока оно в его ряду
     if (pod.show) {
-      b.classList.toggle('locked', !!pod.lock); b.classList.toggle('ir', NIGHT >= 0.5);
+      b.classList.toggle('locked', !!pod.lock);
       b.querySelector('.zoom').textContent = `×${Math.round(ZOOMS[0] / ZOOMS[pod.zi] * 10) / 10}`;
       b.querySelector('.mask').style.display = pod.masked ? 'flex' : 'none';
       const rng = pod.lock ? craft.pos.distanceTo(pod.lock) : 0;

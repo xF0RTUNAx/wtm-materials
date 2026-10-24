@@ -213,9 +213,8 @@
   #rwrAck.on { display: block; animation: ackBlink 1.2s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { #rwrAck.on { animation: none; } } body.coarse #rwrAck { right: auto; bottom: auto; left: calc(50% + 54px); top: var(--top); padding: 6px 10px; font-size: 11px; }
   #warn { position: fixed; top: 24%; left: 50%; transform: translateX(-50%); font-size: 16px; font-weight: 900; color: #ff5b5b; display: none; letter-spacing: .06em; text-align: center; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
   #msg { position: fixed; top: 31%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; color: #fde68a; display: none; text-align: center; max-width: 80vw; z-index: 13; pointer-events: none; text-shadow: 0 0 5px #000; }
-  #podBox { position: absolute; display: none; pointer-events: auto; border: 1.5px solid rgba(160,255,190,.55); border-radius: 4px; overflow: hidden; cursor: crosshair; touch-action: none;
-    -webkit-backdrop-filter: grayscale(1) contrast(1.35) brightness(1.05); backdrop-filter: grayscale(1) contrast(1.35) brightness(1.05); }
-  #podBox.ir { -webkit-backdrop-filter: grayscale(1) contrast(1.15) brightness(1.2); backdrop-filter: grayscale(1) contrast(1.15) brightness(1.2); }
+  /* серое изображение и уровни окна «ТВ» — в шейдере (air.js outMat), не backdrop-filter: тот выбеливал небо и чернил тёмное */
+  #podBox { position: absolute; display: none; pointer-events: auto; border: 1.5px solid rgba(160,255,190,.55); border-radius: 4px; overflow: hidden; cursor: crosshair; touch-action: none; }
   #podBox .x { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; transform: translate(-50%,-50%); border: 1.5px solid rgba(255,255,255,.85); }
   #podBox .x::before, #podBox .x::after { content: ""; position: absolute; background: rgba(255,255,255,.85); }
   #podBox .x::before { left: 50%; top: -14px; bottom: -14px; width: 1.5px; transform: translateX(-50%); }
