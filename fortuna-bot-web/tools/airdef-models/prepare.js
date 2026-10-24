@@ -178,6 +178,7 @@ const CONFIG = {
   w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
   w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
   w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
+  w_kh55: { src: new URL('./own/kh55.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-55: своя модель (Blender, own/kh55.glb)
   w_ecm_e: { src: new URL('./own/sorbtsiya.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Станция помех «Сорбция»: своя модель (Blender, own/sorbtsiya.glb)
   w_ecm_w: { src: new URL('./own/alq131.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Станция помех AN/ALQ-131: своя модель (Blender, own/alq131.glb); пока только значок
   w_bomb1000: { src: `${DL}/an-m65a1.glb`, scale: 0.4286, nose: '-z', tex: () => 256, pickMesh: /./ }, // AN-M65A1: Ø корпуса 1,12 → 0,48 м, длина 4,36 → 1,87 м
@@ -222,7 +223,7 @@ const CONFIG = {
   // станция помех ELTA 8222 — Original_linny, Thingiverse (CC BY; 1/48, мм): и для запада, и пока вместо «Сорбции» (Mark 2026-10-19)
   w_ecm: { src: `${DL}/stl-glb/elta8222.glb`, scale: 0.048, axes: (x, y, z) => [x, z, -y], tex: () => 256, pickMesh: /./, crease: 35, colors: { '': [0.2, 0.21, 0.2] } },
   w_kh101: { src: `${DL}/stl-glb/kh101.glb`, scale: 0.001, axes: (x, y, z) => [y, z, x], tex: () => 256, pickMesh: /./, colors: { '': [0.08, 0.085, 0.09] } },
-  w_kh555: { src: `${DL}/kh-555_cruise_missile_high_poly_fbx.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, target: 120000, simpErr: 0.004, /* 768 тыс. треугольников — почти без потерь */ groups: LS }, // Х-555 (и вид Х-55 / Х-101) — 6,04 м
+  w_kh555: { src: new URL('./own/kh555.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-555: своя модель (Blender, own/kh555.glb)
   w_kalibr: { src: `${DL}/sizzler_ss-n-27_kalibr_3m-54.glb`, scale: 1, nose: '+z', rulesIn: 'game', tex: () => 256, groups: LS }, // «Калибр» — 6,2 м
   w_agm86: { src: `${DL}/agm-86.glb`, scale: 0.1454, nose: '-z', rulesIn: 'game', tex: () => 256, centerX: true, groups: LS }, // AGM-86 ALCM — 6,32 м
   w_storm: { src: `${DL}/Свои/Storm Shadow/storm_shadow_game.glb`, scale: 5.1 / 5.185, nose: '+x', tex: () => 512, pickMesh: /./, credit: 'декали убраны',

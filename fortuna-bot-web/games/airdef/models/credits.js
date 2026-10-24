@@ -775,15 +775,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Kh-555 Cruise missile (High poly FBX)",
-  "author": "Jeyhun1985",
-  "url": "https://sketchfab.com/3d-models/kh-555-cruise-missile-high-poly-fbx-406db6e7ffdf4b0fbb1f842e9850a65d",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_kh555"
-  ]
- },
- {
   "title": "Sizzler SS-N-27 Kalibr 3M-54",
   "author": "mmickel",
   "url": "https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c",

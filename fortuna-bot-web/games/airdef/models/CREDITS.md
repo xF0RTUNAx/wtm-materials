@@ -85,7 +85,6 @@
 - "GBU-10 Laser Guided Bomb" (https://www.thingiverse.com/thing:5383701) by PhilCiborowski — CC-BY-4.0 — `w_gbu10.glb`
 - "ELTA 8222 ECM POD 1/48" (https://www.thingiverse.com/thing:5360259) by Original_linny — CC-BY-4.0 — `w_ecm.glb`
 - "Kh-101 Cruise Missile" (https://www.thingiverse.com/thing:6720723) by HappyBattleSheep — CC-BY-4.0 — `w_kh101.glb`
-- "Kh-555 Cruise missile (High poly FBX)" (https://sketchfab.com/3d-models/kh-555-cruise-missile-high-poly-fbx-406db6e7ffdf4b0fbb1f842e9850a65d) by Jeyhun1985 — CC-BY-4.0 — `w_kh555.glb`
 - "Sizzler SS-N-27 Kalibr 3M-54" (https://sketchfab.com/3d-models/sizzler-ss-n-27-kalibr-3m-54-63fc0ac8032c42e3bfd3e548192d5a9c) by mmickel — CC-BY-4.0 — `w_kalibr.glb`
 - "AGM-86" (https://sketchfab.com/3d-models/agm-86-de64a3d9282249e39760a5fee425e7ae) by mahmadsaleem11111 — CC-BY-4.0 — `w_agm86.glb`
 - "Storm Shadow Ukraine (декали убраны)" (https://sketchfab.com/3d-models/storm-shadow-ukraine-d1ad04ce964f46dd9cbac6a64cd19b1b) by Viktor_ — CC-BY-4.0 — `w_storm.glb`

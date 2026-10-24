@@ -1,0 +1,16 @@
+{
+ "key": "w_kh55",
+ "weapon": "kh55",
+ "name": "Х-55",
+ "rev": 1,
+ "files": {
+  "glb": "kh55.glb",
+  "blend": "kh55.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py",
+   "kh55_geo.py"
+  ]
+ }
+}

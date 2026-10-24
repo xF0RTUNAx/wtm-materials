@@ -137,7 +137,8 @@ const META = {
     nozzles: [V(0, -0.69, 6.3)], nr: 0.42, pod: null, matte: true }, // F-35A (EOTS встроена; matte — матовое покрытие без текстур автора); andertan: сопло — по срезу лепестков (z 6,25; кольцо R 0,64, горячая часть R ≈ 0,4, центр y −0,69), модель 15,67 × 10,87 м
   // ── «Мульти-волна» (2026-10-13): грузится по требованию (lazy) — wantModel / anyModel
   w_tomahawk: { weapon: 'tomahawk', lazy: true, stations: [] }, // BGM-109 Tomahawk — Pan_Ar4ik
-  w_kh555: { weapon: ['kh555', 'kh55', 'kh55d'], lazy: true, stations: [] }, // Х-555 (и вид Х-55) — Jeyhun1985
+  w_kh555: { weapon: ['kh555'], lazy: true, stations: [] }, // Х-555 — собственная модель (tools/airdef-models/own/kh555; прежняя — перезалив CC BY-NC модели, 2026-10-24)
+  w_kh55: { weapon: ['kh55', 'kh55d'], lazy: true, stations: [] }, // Х-55 и ложная Х-55 (макетная часть — тот же корпус) — собственная модель (tools/airdef-models/own/kh55)
   w_kalibr: { weapon: 'kalibr', lazy: true, stations: [] }, // «Калибр» — mmickel
   w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM — mahmadsaleem11111
   w_storm: { weapon: 'storm', lazy: true, wings: 'fold', stations: [] }, // Storm Shadow — Viktor_ (CC BY 4.0), декали в текстуре стёрты (Свои/Storm Shadow); 5,1 м; у модели крылья раскрыты — на подвеске складываются вдоль корпуса, раскрываются после сброса
@@ -296,6 +297,8 @@ const GLB_V_OWN = {
   w_umpk: '20261024i',
   w_ecm_e: '20261024j',
   w_ecm_w: '20261024k',
+  w_kh55: '20261024l',
+  w_kh555: '20261024m',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
