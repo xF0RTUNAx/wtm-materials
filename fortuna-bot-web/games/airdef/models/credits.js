@@ -1251,12 +1251,13 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Renault TRM Radar Truck",
-  "author": "Muhamad Mirza Arrafi",
-  "url": "https://sketchfab.com/3d-models/renault-trm-radar-truck-1ad95e5724624a3bba7d36a686817efc",
+  "title": "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)",
+  "author": "karmy2k",
+  "url": "https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111",
   "license": "CC-BY-4.0",
   "files": [
-   "ew_w"
+   "ew_w",
+   "ew_w_lo"
   ]
  },
  {

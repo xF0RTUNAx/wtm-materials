@@ -258,7 +258,7 @@ const META = {
   msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 — по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder — ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
   nasams: { units: ['nasams'], stations: [] }, // NASAMS 1 — пусковая
   ew_e: { units: ['gpsjam'], stations: [] }, // станция РЭБ (восток) — машина с РЛС IBIS-150
-  ew_w: { units: ['gpsjamw'], stations: [] }, // станция РЭБ (запад) — радарная машина Renault TRM
+  ew_w: { units: ['gpsjamw'], matte: true, stations: [] }, // станция РЭБ (запад) — AN/MPQ-64 Sentinel, своя (Свои/Sentinel): «Хамви» karmy2k (CC BY 4.0) + прицеп с антенной (radar — крутится); камуфляж запечён
   strela1: { units: ['strela1'], matte: true, stations: [] }, // «Стрела-1» — своя пусковая 9П31 и ракеты на БРДМ-2 zhek (CC BY 4.0), Свои/Стрела-1; окраска — текстуры основы и запечённый атлас (без камуфляжа шейдером)
   msl_strela1: { samMissile: ['strela1'], matte: true, stations: [] }, // ракета 9М31 — своя (Свои/Стрела-1), 1,8 м, нос −Z
   osa: { units: ['osa'], matte: true, stations: [] }, // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY)
@@ -309,6 +309,8 @@ const GLB_V_OWN = {
   strela1_lo: '20261024v',
   msl_strela1: '20261024v',
   l_tochka: '20261024w', // «Точка-У» — своя модель в боевом положении вместо 42manako (2026-10-24)
+  ew_w: '20261024x', // AN/MPQ-64 Sentinel на «Хамви» karmy2k вместо Renault TRM (Muhamad Mirza Arrafi, помечена «сделано ИИ»), 2026-10-24
+  ew_w_lo: '20261024x',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
@@ -601,7 +603,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);

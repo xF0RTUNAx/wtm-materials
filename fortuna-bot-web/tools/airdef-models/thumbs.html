@@ -41,7 +41,7 @@ async function unitObj(key) {
     if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); }
     tg.rotation.y = md.LN.yaw0 || 0; cg.rotation.x = md.LN.el ?? 0.35; tg.add(cg); g.add(tg); tur.push(tg); // как стоит в бою (sim/strike.js: lyaw, lel)
   }
-  if (gm && gm.radar && tur.length) tur[0].add(gm.radar.clone());
+  if (gm && gm.radar) (tur.length ? tur[0] : g).add(gm.radar.clone()); // без башни (Sentinel) — антенна на машине
   return g;
 }
 async function objOf(n) {

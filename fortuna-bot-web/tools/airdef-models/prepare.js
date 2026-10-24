@@ -467,7 +467,12 @@ const CONFIG = {
       if (Math.abs(c.ctr[0] - 1.3) < 0.35 && Math.abs(c.ctr[2] - 0.6) < 0.4 && c.ctr[1] > 0.6) return 'turret'; // мачта с антенной стоит на поворотной части — крутится с ней (не протыкает пакет)
       return c.min[1] > -0.1 && c.ctr[2] > -1.1 && c.ctr[2] < 1.2 && Math.abs(c.ctr[0]) < 1.0 && c.max[1] < 1.7 ? 'turret' : 'body';
     } },
-  ew_w: { src: `${DL}/renault_trm_radar_truck.glb`, scale: 0.0097, nose: '+z', rulesIn: 'game', unit: true, tex: () => 256, groups: () => 'body' }, // станция РЭБ (запад)
+  // станция РЭБ (запад) — AN/MPQ-64 Sentinel, своя (основной чат по просьбе Mark, Свои/Sentinel): «Хамви» karmy2k (CC BY 4.0) с кузовом M1097 и коробом
+  // генератора, прицеп с антенной — свои. Антенна с поворотным столом (radar_*) крутится вокруг оси стола; башни нет — в осях модели (articulate не трогает).
+  ew_w: { src: `${DL}/Свои/Sentinel/sentinel.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    credit: 'кузов, прицеп и антенна AN/MPQ-64 — свои',
+    orig: { title: 'Humvee Transport', author: 'karmy2k', source: 'https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111', license: 'CC-BY-4.0' },
+    groups: (c) => (/(^|\/)radar_/.test(c.path) ? 'radar' : 'body') },
   ew_e: { src: `${DL}/ibis150_air_defense_radar.glb`, scale: 10, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 120000, minPart: 0.05, groups: () => 'body' }, // станция РЭБ (восток)
   // ── постройки для военных объектов (целей): земля y = 0, центр по габаритам
   obj_tanks: { src: `${DL}/large_industrial_storage_tanks.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // резервуар и газгольдеры
@@ -687,6 +692,8 @@ CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальн
 CONFIG.gepard_lo = { ...CONFIG.gepard, target: 8000, simpErr: 0.05, tex: () => 256, nTex: null };
 // «Стрела-1» (основа 130 тыс., почти всё — колёса): дальняя копия — 15 тыс., цвет 512, без нормалей
 CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
+// Sentinel (67 тыс., почти всё — «Хамви» основы): дальняя копия — 15 тыс., цвет 512, без нормалей
+CONFIG.ew_w_lo = { ...CONFIG.ew_w, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
 // «Тор-М1» (своя, 68 тыс.): дальняя копия — 12 тыс., цвет 512 (камуфляж — в цвете), без нормалей, тарелка и крышки — в башне
 CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
 // С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)
@@ -1084,7 +1091,8 @@ function articulate(cfg, byMat, shift, ax) {
   // ракеты на направляющих (группа missile) качаются вместе с пакетом
   // dish (тарелка «Тора») и lid0…7 (крышки его ячеек) — части башни: в её осях, игра двигает их сама
   const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || /^lid\d/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile');
-  if (!T.length && !K.length) return; // машина целиком (станция РЭБ)
+  if (!T.length && !K.length) return; // машина целиком
+  if (!K.length && T.every((m) => m.group === 'radar')) return; // только антенна обзора без башни (Sentinel): в осях модели, игра крутит её вокруг оси опоры
   // основание башни: нижние 0,5 м её вершин
   const T0 = T.filter((m) => m.group === 'turret'); // основание — по самой башне (антенна обзора ось не сдвигает)
   let y0 = 1e9; for (const m of T0) for (let i = 1; i < m.pos.length; i += 3) y0 = Math.min(y0, m.pos[i]);

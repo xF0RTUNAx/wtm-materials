@@ -339,8 +339,8 @@ C.syncUnits = function () {
           });
         }
       }
-      // антенна обзора (готовая модель): на первой башне, ось вращения — центр её опоры (нижние 15 % по высоте)
-      if (gm && gm.radar && tur.length) { const rd = gm.radar.clone(), pv = new THREE.Group(); obj(rd, pv); tur[0].tg.add(pv); const ax = radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv; }
+      // антенна обзора (готовая модель): на первой башне (без башни — на машине, Sentinel), ось вращения — центр её опоры (нижние 15 % по высоте)
+      if (gm && gm.radar) { const rd = gm.radar.clone(), pv = new THREE.Group(); obj(rd, pv); (tur.length ? tur[0].tg : g).add(pv); const ax = radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv; }
       g.userData.tur = tur; g.userData.slots = slots; g.userData.nSlots = md.LN ? slotCount(md.LN) : 0;
       if (!P.shadows) addBlob(g); // без карты теней — мягкое пятно под машиной (иначе «висит» над землёй)
       g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g);
@@ -372,7 +372,7 @@ function torDish(u, g, dt) {
   D.rotation.x += clamp(a - D.rotation.x, -DS.w * dt, DS.w * dt);
 }
 // ось антенны обзора: центр (x, z) вершин её нижней части — опоры или мачты (тарелка бывает смещена от оси)
-const RADAR_W = { gepard: 6.3, tor: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее
+const RADAR_W = { gepard: 6.3, tor: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4, gpsjamw: 3.1 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее, Sentinel — 30
 function radarAxis(o) {
   o.updateMatrixWorld(true); const V = new THREE.Vector3(), P = [];
   o.traverse((m) => { if (!m.isMesh) return; const a = m.geometry.attributes.position; for (let i = 0; i < a.count; i += 3) { V.fromBufferAttribute(a, i).applyMatrix4(m.matrixWorld); P.push(V.x, V.y, V.z); } });
@@ -655,7 +655,7 @@ function syncWorld(dt, t) {
       const rem = u.reloadT > 0 ? 0 : Math.max(0, Math.round(u.ammo)), fired = u.S.ammo - rem;
       for (let k = 0; k < sl.length; k++) sl[k].visible = (rem >= N || ((k - fired % N) + N) % N < rem) && !(u.slotT[k] > 0);
     }
-    if (g.userData.radar && u.emit) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена
+    if (g.userData.radar && (u.emit || u.S.type === 'jammer')) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена (станция РЭБ работает всегда)
     if (g.userData.lids) torLids(u, g, dt);
     if (g.userData.tdish) torDish(u, g, dt);
     const d = g.userData.dish; if (!d) continue;
