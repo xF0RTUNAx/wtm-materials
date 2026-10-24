@@ -12,11 +12,11 @@ const { SAM } = await import('../../games/airdef/arsenal.js');
 const city = buildCity(1); setGround(city.groundH);
 const KEY = Deno.args[0] || 'gepard', N = +(Deno.args[1] || 4), MODE = Deno.env.get('MODE') || 'arcade';
 const ATT = SAM[KEY].side === 'east' ? 'west' : 'east', DRONE = ATT === 'east' ? ['scout_e', 'shahed'] : ['scout', 'uav_w']; // дроны — стороны, против которой этот ЗРК
-let tot = 0, totL = 0;
+let tot = 0, totL = 0, totR = 0, totRI = 0;
 for (let run = 0; run < 5; run++) {
   let seed = 11 + run * 977; const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
-  const st = { L: 0, I: 0 };
-  const fx = { wpnRelease: (w) => { if (w.W.uav && !w.W.recon) st.L++; }, wpnEnd: (w, r) => { if (r.intercepted && w.W.uav) st.I++; } };
+  const st = { L: 0, I: 0, R: 0, RI: 0 }; // ударные дроны: пущено / сбито; разведчики — отдельно (раньше сбитый разведчик шёл в «сбито» ударных: 9 из 8)
+  const fx = { wpnRelease: (w) => { if (w.W.uav) st[w.W.recon ? 'R' : 'L']++; }, wpnEnd: (w, r) => { if (r.intercepted && w.W.uav) st[w.W.recon ? 'RI' : 'I']++; } };
   let raid = null;
   const S = createStrike({ city, rnd, mode: () => MODES[MODE], aircraft: () => raid.alive(), laserSpot: () => null, night: 0, fx, hurt: (a, d) => raid.hurt(a, d) });
   raid = createRaid(S, city, rnd, { side: ATT, era: 4, fx: {} });
@@ -26,7 +26,7 @@ for (let run = 0; run < 5; run++) {
   E.start(targets);
   const stat = new Map(S.units.map((u) => [u, { tr: 0, fire: 0 }]));
   let T = 0; while ((E.pending() || S.wpns.length) && T < 900) { E.step(0.05); raid.step(0.05); S.step(0.05); T += 0.05; for (const u of S.units) { const q = stat.get(u); if (u.track) q.tr += 0.05; if (u.gunOn) q.fire += 0.05; } }
-  tot += st.I; totL += st.L;
-  console.log(`прогон ${run + 1}: сбито ${st.I}/${st.L} за ${Math.round(T)} с · ` + [...stat.values()].map((q) => `${Math.round(q.tr)}/${Math.round(q.fire)}`).join(' '));
+  tot += st.I; totL += st.L; totR += st.R; totRI += st.RI;
+  console.log(`прогон ${run + 1}: сбито ${st.I}/${st.L}, разведчиков ${st.RI}/${st.R} за ${Math.round(T)} с · ` + [...stat.values()].map((q) => `${Math.round(q.tr)}/${Math.round(q.fire)}`).join(' '));
 }
-console.log(`${KEY} ×${N} (${MODE}): сбито ${tot} из ${totL}`);
+console.log(`${KEY} ×${N} (${MODE}): сбито ${tot} из ${totL} ударных, разведчиков ${totRI} из ${totR}`);
