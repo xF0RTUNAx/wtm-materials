@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><title>Самолёты с подвеской</title><style>body{margin:0;background:#9fb3c8}canvas{display:block}</style></head><body>
 <!-- Самолёт с подвеской из arsenal.js (LOADOUTS) на точках META.stations и контейнером на META.pod — как в бою (air.js buildPylons), с пламенем форсажа:
-     ?p=f16,su30 [&w=ширина кадра &v=0,3 (какие виды: 0 сбоку, 1 сверху, 2 спереди, 3 ¾ снизу, 4 ¾ сзади с пламенем) &z=крупнее &at=x,y,z &items=fab500:4,kab500kr:4 (своя подвеска) &lo=индекс подвески (по порядку среди этого самолёта) &ab=0 — без форсажа &save=имя — PNG на приёмник :8936] —
+     ?p=f16,su30 [&w=ширина кадра &v=0,3 (какие виды: 0 сбоку, 1 сверху, 2 спереди, 3 ¾ снизу, 4 ¾ сзади с пламенем, 5 строго сзади, 6 снизу) &z=крупнее &at=x,y,z &items=fab500:4,kab500kr:4 (своя подвеска) &lo=индекс подвески (по порядку среди этого самолёта) &ab=0 — без форсажа &save=имя — PNG на приёмник :8936] —
      по строке на самолёт: сбоку, сверху, спереди, ¾ снизу-сбоку, ¾ сзади с пламенем. Нужен сервер :8935 (корень — wtm-materials). -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
@@ -17,7 +17,7 @@ const wait = (f, n = 400) => new Promise((ok) => { let i = 0; const t = setInter
 const all = Object.values(LOADOUTS).flat();
 for (let i = 0; i < names.length; i++) {
   const n = names[i]; M.wantModel(n); M.wantModel('w_pod');
-  const meta = M.planeMeta(n), pm = await wait(() => M.planeModel(meta.side, meta.cls, n)); if (!pm || pm.name !== n) { console.log('нет модели', n); continue; }
+  const meta = M.planeMeta(n), pm = await wait(() => { const q = M.planeModel(meta.side, meta.cls, n); return q && q.name === n ? q : null; }); // lazy-самолёт: пока грузится, planeModel отдаёт запасной — ждём свой if (!pm || pm.name !== n) { console.log('нет модели', n); continue; }
   const Ls = all.filter((q) => q.plane === n), L = Q.get('items') ? { items: Q.get('items').split(',').map((s2) => [s2.split(':')[0], +s2.split(':')[1]]), pod: true } : Ls[+(Q.get('lo') || 0)] || { items: [] }, st = pm.stations, obj = pm.obj;
   const items = L.items.filter(([k]) => AG[k] && AG[k].kind !== 'ecm').sort((a, b) => AG[b[0]].mass - AG[a[0]].mass), order = [1, 6, 2, 5, 0, 7, 3, 4]; let oi = 0;
   for (const [key] of items) { M.wantWeapon(key); await wait(() => !M.weaponPending(key)); }
@@ -30,7 +30,7 @@ for (let i = 0; i < names.length; i++) {
   const ort = (up) => { const a = CW / CH, cam = new THREE.OrthographicCamera(-S * a, S * a, S, -S, 0.01, 500); cam.up.copy(up); return cam; };
   const D = Math.max(sz.x, sz.y, sz.z), per = (v) => [new THREE.PerspectiveCamera(32, CW / CH, 0.05, 500), c.clone().add(v.normalize().multiplyScalar(D * 1.9 / Z))];
   const V = [[ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x + 80, c.y, c.z)], [ort(new THREE.Vector3(0, 0, -1)), new THREE.Vector3(c.x, c.y + 80, c.z)], [ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x, c.y, c.z - 80)],
-    per(new THREE.Vector3(1.0, -0.45, -0.9)), per(new THREE.Vector3(0.8, 0.35, 1.1))];
+    per(new THREE.Vector3(1.0, -0.45, -0.9)), per(new THREE.Vector3(0.8, 0.35, 1.1)), [ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x, c.y, c.z + 80)], [ort(new THREE.Vector3(0, 0, 1)), new THREE.Vector3(c.x, c.y - 80, c.z)]];
   VS.forEach((vi, k) => { const [cam, pos] = V[vi]; cam.position.copy(pos); cam.lookAt(c); const y = H - (i + 1) * CH; r.setViewport(k * CW, y, CW, CH); r.setScissor(k * CW, y, CW, CH); r.render(sc, cam); });
 }
 window.__done = 1;

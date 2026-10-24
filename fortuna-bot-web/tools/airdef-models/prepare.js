@@ -197,11 +197,16 @@ const CONFIG = {
   e_su35: { src: `${DL}/sukhoi_su-35_flanker-e__-35.glb`, scale: 21.9 / 10.15, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true, groups: LS },
   e_etendard: { src: `${DL}/super-etendard.glb`, scale: 14.31 / 14.29, nose: '-x', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.15 || (c.ctr[1] < -0.8 && Math.abs(Math.abs(c.ctr[0]) - 1.7) < 0.2)) && Math.max(...c.size) < 3 ? null : LS(c)) /* шасси и его стойки */ },
   e_mirage_f1: { src: `${DL}/dassault_mirage_f1.glb`, scale: 15.3 / 12.18, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, camo: { scheme: 'fr', skip: /^(?!material_0$|Material\.198$)/ }, /* у автора корпус и крылья без цвета (белые) — двухтонный серо-голубой камуфляж (шейдер игры) */ groups: strip(0, -1.42, 1.2, -0.85, 4.5) /* шасси, баки, блоки НАР */ },
-  e_f18c: { src: `${DL}/mcdonnell_douglas_fa-18c_hornet.glb`, scale: 17.07 / 16.95, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true, groups: (c) => ((c.ctr[1] < -1.3 && Math.max(...c.size) < 5) || (Math.abs(c.ctr[0]) < 1.5 && c.ctr[1] < -0.85 && Math.max(...c.size) < 1.6) ? null : LS(c)) /* шасси (и стойки) и подфюзеляжный бак */ },
+  e_f18c: { src: `${DL}/f18c_manilov.glb`, scale: 17.07 / 2383.09, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true,
+    // F/A-18C — manilov.ap «F18» (CC BY 4.0; прежняя модель Rhine_Lab_Muelsyse): окраска у автора — условные белые материалы без текстур, делаем светло-серый (FS 36375) и тёмную кабину; фонарь — стекло; фигура пилота (Poser, материалы 42–54), ракеты на подфюзеляжных станциях и шасси долой (пилоны под крылом рисует игра); ракеты на законцовках — автора, оставлены
+    glassAny: /^VIFS06-FACES$/, glassColor: [0.42, 0.36, 0.2, 0.45],
+    colors: { '^VIFS(18|20|38|16|13|34|22|15|19|17|31|11|24|14|21|42)-FACES$': [0.5, 0.52, 0.54], '^VIFS(07|08)-FACES$': [0.04, 0.045, 0.05], '^VIFS(12|10|43)-FACES$': [0.16, 0.17, 0.18], '^VIFS(40|02|39|37|35|09|23|41)-FACES$': [0.45, 0.47, 0.49] },
+    groups: (c) => (c.mat >= 42 || [17, 19, 21, 23, 25].includes(c.mat) || (c.mat === 41 && c.ctr[1] < -0.3 && Math.abs(Math.abs(c.ctr[0] + 1.31) - 1.17) < 0.1) ? null : LS(c)) },
   e_su24_old: { src: `${DL}/russian_su-24.glb`, scale: 0.0543, nose: '-z', rulesIn: 'game', tex: () => 512, // (42manako — не использовать: из мода BF2)
     groups: (c) => (c.ctr[1] < -0.4 && Math.abs(c.ctr[0]) < 2.2 && Math.max(...c.size) < 1.9 && !(c.size[2] > 1.5 && c.size[1] < 0.3) && ((c.ctr[2] > 1.6 && c.ctr[2] < 4.7) || (c.ctr[2] > -5.7 && c.ctr[2] < -3.2)) ? null : LS(c)) }, // шасси и створки (пилоны под фюзеляжем — оставить)
-  e_su25: { src: `${DL}/pbr_sukhoi_su-25.glb`, scale: 0.483, nose: '-z', rulesIn: 'game', tex: () => 512,
-    groups: (c) => (c.ctr[1] < 1.35 && Math.abs(c.ctr[0]) < 1.5 && c.ctr[2] > -3.2 && c.ctr[2] < 1.8 ? null : LS(c)) }, // шасси
+  e_su25: { src: `${DL}/su25_mamontnikita.glb`, scale: 15.53 / 319.34, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true,
+    // Су-25 — mamont nikita (CC BY 4.0; прежняя модель Immersive3D): шасси выпущено у автора — стойки, колёса и створки (всё ниже y 1,15 в осях правил, по треугольникам: части между собой не разделены) долой; пилоны (5 на крыло) и подвесные контейнеры на законцовках — оставлены, подвески у автора нет
+    perTri: true, groups: (c) => (c.ctr[1] < 1.15 ? null : 'body') },
   // Су-34 — manilov.ap (CC BY 4.0, 2026-10-24; прежняя модель 42manako — «Not my original model»): оси самолёта совпадают с осями файла (нос +z), без упрощения (57 тыс.);
   // длина 23,34 м по оси (с штангой ПВД). Без шасси (по материалам стоек и колёс; створки и мелочь ниже оси — мельче 2,2 м; гондолы двигателей — крупные, остаются); рельсы под крылом — оставлены как пилоны
   e_su34: { src: `${DL}/su34_manilov.glb`, scale: 23.34 / 24.02, nose: '+z', rulesIn: 'game', tex: () => 512, centerX: true,
@@ -232,7 +237,10 @@ const CONFIG = {
   d_uav: { src: `${DL}/uav.glb`, scale: 6, nose: '-z', rulesIn: 'game', tex: () => 256, // винты — свои группы (крутятся каждый вокруг своей оси); без шасси
     groups: (c) => { const [x, y, z] = c.ctr, ax = Math.abs(x); if (y < -0.55 && Math.max(...c.size) < 5) return null; if (ax > 0.9 && ax < 1.85 && z > 3.1 && z < 3.45 && Math.abs(y) < 0.5) return x > 0 ? 'prop' : 'prop2'; return LS(c); } }, // разведывательно-ударный БПЛА — размах 12 м; два толкающих винта
   e_tu160: { src: `${DL}/tupolev_tu-160.glb`, scale: 0.235, nose: '+z', rulesIn: 'game', tex: () => 512, groups: (c) => (c.ctr[1] < 2.6 && Math.max(...c.size) < 4 && Math.abs(c.ctr[0]) < 4.5 ? null : LS(c)) } /* без шасси */, // Ту-160 — 54 м
-  e_b1b: { src: `${DL}/rockwell_b-1b_lancer.glb`, scale: 0.95, nose: '-z', rulesIn: 'game', tex: () => 512, groups: (c) => (c.ctr[1] < 2.2 && Math.max(...c.size) < 4 && Math.abs(c.ctr[0]) < 4.5 ? null : LS(c)) } /* без шасси */, // B-1B — 44,5 м
+  e_b1b: { src: `${DL}/b1b_manilov.glb`, scale: 44.5 / 45.42, nose: '-z', rulesIn: 'game', tex: () => 512, centerX: true,
+    // B-1B — manilov.ap «B1» (CC BY 4.0; прежняя модель Muhamad Mirza Arrafi, 44,5 м): у автора крыло раскрыто вперёд (стреловидность 16°, размах 40 м); консоли (мат. 11 и 13) складываем назад вокруг шарниров у передней кромки корня — как в боевом полёте (стреловидность ≈ 58°, размах ≈ 23 м)
+    swing: { mat: [11, 13], axisX: 0, pivot: [3.85, -7.24], ang: -42 * Math.PI / 180 },
+    groups: LS }, // без шасси (у автора его нет)
   e_b52: { src: `${DL}/boeing_b-52_stratofortress.glb`, scale: 1, nose: '-z', rulesIn: 'game', tex: () => 512, groups: LS }, // B-52H — 48,5 м; носитель «Мульти-волны»
   e_typhoon: { src: `${DL}/eurofighter_typhoon_ef-2000.glb`, scale: 15.96 / 18.72, nose: '+x', rulesIn: 'game', tex: () => 512, target: 20000, pickMesh: /Eurofighter typhoon/,
     groups: (c) => (c.ctr[1] < -0.8 && Math.abs(c.ctr[0]) > 0.4 && !(c.size[0] < 0.12 && c.size[1] > 0.3) ? null : LS(c)) }, // подвеска модели (ракеты, баки) — долой, пилоны остаются // Eurofighter Typhoon — 16 м; носитель Storm Shadow
@@ -845,8 +853,8 @@ async function prepare(name, views) {
     }
   }
   // swing — консоли крыла (материал cfg.swing.mat) поворачиваются вокруг вертикальных шарниров на ±pivot[0] от оси axisX, z = pivot[1], на угол ang: передняя кромка идёт вперёд (меньше стреловидность)
-  if (cfg.swing) { const { mat, axisX: a0, pivot: [pd, pz], ang } = cfg.swing, co = Math.cos(ang), si = Math.sin(ang);
-    for (const m of byMat.values()) if (m.mat === mat) {
+  if (cfg.swing) { const { mat, axisX: a0, pivot: [pd, pz], ang } = cfg.swing, co = Math.cos(ang), si = Math.sin(ang), mats = [].concat(mat); // mat — номер материала или список (у B-1B левая и правая консоли — разные материалы)
+    for (const m of byMat.values()) if (mats.includes(m.mat)) {
       for (let i = 0; i < m.pos.length; i += 3) { const sg = m.pos[i] > a0 ? 1 : -1, px = a0 + sg * pd, dx = m.pos[i] - px, dz = m.pos[i + 2] - pz;
         m.pos[i] = px + dx * co + sg * dz * si; m.pos[i + 2] = pz - sg * dx * si + dz * co;
         const nx = m.nor[i], nz = m.nor[i + 2]; m.nor[i] = nx * co + sg * nz * si; m.nor[i + 2] = -sg * nx * si + nz * co; } }

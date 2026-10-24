@@ -77,8 +77,8 @@
 - "Sukhoi Su-35 Flanker-E (Сухой Су-35)" (https://sketchfab.com/3d-models/sukhoi-su-35-flanker-e-35-c98cf9b3b3e04017a04732798a31888a) by andertan — CC-BY-4.0 — `e_su35.glb`
 - "super-etendard" (https://sketchfab.com/3d-models/super-etendard-3589004316f54dba90ed7f34455eeeb2) by helijah — CC-BY-4.0 — `e_etendard.glb`
 - "Dassault Mirage F1" (https://sketchfab.com/3d-models/dassault-mirage-f1-9f7ea1b8ca934986833ab8f265f4b661) by Civorsky — CC-BY-4.0 — `e_mirage_f1.glb`
-- "McDonnell Douglas F/A-18C Hornet" (https://sketchfab.com/3d-models/mcdonnell-douglas-fa-18c-hornet-c68c8417c8e84864b2a5e0c35c178fd9) by Rhine_Lab_Muelsyse — CC-BY-4.0 — `e_f18c.glb`
-- "[PBR] Sukhoi Su-25" (https://sketchfab.com/3d-models/pbr-sukhoi-su-25-956d0cb0bbe54fa8ad72e8c3e224fd2d) by Immersive3D — CC-BY-4.0 — `e_su25.glb`
+- "F18" (https://sketchfab.com/3d-models/f18-1078f49726f34447ba5ec116b6ee50d0) by manilov.ap — CC-BY-4.0 — `e_f18c.glb`
+- "Su-25" (https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc) by mamont nikita — CC-BY-4.0 — `e_su25.glb`
 - "Su34" (https://sketchfab.com/3d-models/su34-1c94f436be51453fa598e9eab50eb0a7) by manilov.ap — CC-BY-4.0 — `e_su34.glb`
 - "Su17" (https://sketchfab.com/3d-models/su17-a5dfc3d488c8441c8468a75ffad1ab75) by manilov.ap — CC-BY-4.0 — `e_su17.glb`
 - "McDonnell Douglas F-4 Phantom II" (https://sketchfab.com/3d-models/mcdonnell-douglas-f-4-phantom-ii-1ea38a66a59048529d27b24a570c5e07) by andertan — CC-BY-4.0 — `e_f4.glb`
@@ -92,7 +92,7 @@
 - "Shahed 136" (https://sketchfab.com/3d-models/shahed-136-bc8754128c9d48c48baadeff1db8f0c7) by faintastic — CC-BY-4.0 — `d_shahed.glb`
 - "UAV" (https://sketchfab.com/3d-models/uav-b301159b693549e5beb747e291f159b5) by Artem Goyko — CC-BY-4.0 — `d_uav.glb`
 - "Tupolev TU-160" (https://sketchfab.com/3d-models/tupolev-tu-160-d3af9e67f8024dcc9b23a3e91d492e40) by KOG_THORNS — CC-BY-4.0 — `e_tu160.glb`
-- "Rockwell B-1B Lancer" (https://sketchfab.com/3d-models/rockwell-b-1b-lancer-d32a5cbbd16f4521bdd37e8b4b1c79bc) by Muhamad Mirza Arrafi — CC-BY-4.0 — `e_b1b.glb`
+- "B1" (https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20) by manilov.ap — CC-BY-4.0 — `e_b1b.glb`
 - "Boeing B-52 Stratofortress" (https://sketchfab.com/3d-models/boeing-b-52-stratofortress-38b0c64bd552431394efa8625d7f5144) by bohmerang — CC-BY-4.0 — `e_b52.glb`
 - "Eurofighter Typhoon EF-2000" (https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865) by andertan — CC-BY-4.0 — `e_typhoon.glb`
 - "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`

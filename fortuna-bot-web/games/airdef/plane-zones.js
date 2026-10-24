@@ -15,10 +15,11 @@ const SCARS = ['scarL', 'scarR', 'cutL', 'cutR'];
 export const ZCUT = {
   e_gripen: { delta: true, canard: true }, e_typhoon: { delta: true, canard: true },
   su30: { canard: true, tailK: 0.79 }, e_su34: { canard: true }, // su30 (andertan): «перетяжку» по размаху находит у передней кромки стреловидного крыла — хвост с 56 % длины, с крылом; стабилизаторы начинаются на 79 %
+  e_f18c: { tailK: 0.77 }, // F/A-18C (manilov.ap): стабилизаторы начинаются на 76 % длины сразу за кромкой крыла — без поправки хвост выходил только с 91 %
   e_f22: { tailK: 0.8 }, e_tu160: { tailK: 0.82 }, // стабилизаторы вплотную к крылу — «перетяжки» нет
 };
 // два киля на мотогондолах (корни — ниже гаргрота): киль — любая стоячая поверхность над обшивкой в задней части
-const TWIN = new Set(['su30', 'mig29', 'e_su34', 'e_su57', 'e_mig31', 'f18', 'e_f22', 'e_f35']);
+const TWIN = new Set(['su30', 'mig29', 'e_su34', 'e_su57', 'e_mig31', 'f18', 'e_f18c', 'e_f22', 'e_f35']);
 const CACHE = new Map();
 // опалённая рваная кромка: тёмный налёт поверх обшивки у линии разрыва
 const SCAR_MAT = new THREE.MeshBasicMaterial({ color: 0x15110d, transparent: true, opacity: 0.82, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, depthWrite: false });

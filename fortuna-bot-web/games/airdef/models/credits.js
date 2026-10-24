@@ -702,18 +702,18 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "McDonnell Douglas F/A-18C Hornet",
-  "author": "Rhine_Lab_Muelsyse",
-  "url": "https://sketchfab.com/3d-models/mcdonnell-douglas-fa-18c-hornet-c68c8417c8e84864b2a5e0c35c178fd9",
+  "title": "F18",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/f18-1078f49726f34447ba5ec116b6ee50d0",
   "license": "CC-BY-4.0",
   "files": [
    "e_f18c"
   ]
  },
  {
-  "title": "[PBR] Sukhoi Su-25",
-  "author": "Immersive3D",
-  "url": "https://sketchfab.com/3d-models/pbr-sukhoi-su-25-956d0cb0bbe54fa8ad72e8c3e224fd2d",
+  "title": "Su-25",
+  "author": "mamont nikita",
+  "url": "https://sketchfab.com/3d-models/su-25-88b71eb848cf4418a95dff497c07cefc",
   "license": "CC-BY-4.0",
   "files": [
    "e_su25"
@@ -837,9 +837,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Rockwell B-1B Lancer",
-  "author": "Muhamad Mirza Arrafi",
-  "url": "https://sketchfab.com/3d-models/rockwell-b-1b-lancer-d32a5cbbd16f4521bdd37e8b4b1c79bc",
+  "title": "B1",
+  "author": "manilov.ap",
+  "url": "https://sketchfab.com/3d-models/b1-59371234237e496da0f67cfcdc3acb20",
   "license": "CC-BY-4.0",
   "files": [
    "e_b1b"

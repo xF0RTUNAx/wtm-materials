@@ -113,10 +113,11 @@ const META = {
     nozzles: [V(0, -0.9, 6.2)], nr: 0.32, pod: V(0.4, -1.7, -1.0), dry: true }, // Super Étendard (ATLIS под фюзеляжем; сопло по срезу: y −0,9, z 6,2, nr 0,32 — пламя не выше среза сбоку)
   e_mirage_f1: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-2.41, -1.13, 1.9, 0.28), V(-1.75, -1.07, 1.55, 0.28), V(-0.45, -1.9, 0.3, 0.15), V(-0.45, -1.9, 2.3, 0.15)]),
     nozzles: [V(0, -1.03, 7.63)], nr: 0.45, pod: null, camo: { scheme: 'fr', size: 2.6 } }, // Mirage F1
-  e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.3, -1.25, 2.7, 0.3), V(-3.42, -1.54, 1.36), V(-2.24, -1.47, 1.16), V(-0.6, -1.6, 1.0, 0.15)]),
-    nozzles: [V(-0.49, -0.98, 8.0), V(0.49, -0.98, 8.0)], nr: 0.42, pod: V(0.75, -1.6, -1.2) }, // F/A-18C (AN/AAS-38 у воздухозаборника)
-  e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.37, -1.11, 0.67), V(-3.59, -1.09, 0.4), V(-2.81, -1.09, 0.2), V(-2.03, -1.07, -0.04)]),
-    nozzles: [V(-0.88, -1.4, 3.85), V(0.88, -1.4, 3.85)], nr: 0.25, pod: null, dry: true }, // Су-25 — Immersive3D («Шквал» у Су-25Т встроен)
+  // F/A-18C — manilov.ap «F18» (CC BY 4.0; с 2026-10-24, прежняя — Rhine_Lab_Muelsyse; AN/AAS-38 у воздухозаборника); у автора пилонов под крылом нет — дорисованы (py 0,36), станция 3 — по низу ракетных рельсов фюзеляжа (x 1,07, низ −1,72), сопла — по срезу колец (z 8,03, R 0,46)
+  e_f18c: { side: 'west', cls: 'strike', lazy: true, stations: mirror([V(-4.45, -1.08, 2.6, 0.36), V(-3.5, -1.08, 2.35, 0.36), V(-2.55, -1.08, 2.0, 0.36), V(-1.07, -1.72, 3.0)]),
+    nozzles: [V(-0.48, -0.95, 8.03), V(0.48, -0.95, 8.03)], nr: 0.38, pod: V(0.75, -0.95, -1.2) },
+  e_su25: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.34, -1.23, 0.70), V(-3.56, -1.18, 0.45), V(-2.77, -1.14, 0.21), V(-1.97, -1.12, -0.16)]),
+    nozzles: [V(-0.78, -1.5, 3.55), V(0.78, -1.5, 3.55)], nr: 0.3, pod: null, dry: true }, // Су-25 — mamont nikita (CC BY 4.0; с 2026-10-24, прежняя — Immersive3D; «Шквал» у Су-25Т встроен); станции — по низу пилонов автора (x 4,34 / 3,56 / 2,77 / 1,97; пятый, x 5,07 — не используется), сопла — по срезу чаш двигателей (z 3,55, R ≈ 0,3, ниже сечения гондолы)
   e_su34: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-6.01, -1.56, 5.59), V(-4.7, -1.6, 4.57), V(-3.4, -1.56, 4.0), V(-1.2, -2.66, 3.0, 0.2)]),
     nozzles: [V(-1.235, -1.67, 9.95), V(1.235, -1.67, 9.95)], nr: 0.44, pod: null }, // Су-34 — manilov.ap («Платан» встроен); под крылом пилоны модели, под гондолой (дно −2,46) пилон дорисован
   e_su17: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-2.56, -1.33, 2.63), V(-1.72, -1.41, 0.51), V(-1.25, -1.68, -1.4), V(-0.37, -2.07, -0.25)]),
@@ -165,7 +166,7 @@ const META = {
   w_hellfire: { weapon: 'hellfire', lazy: true, stations: [] }, // AGM-114 Hellfire — из MH-60R (touka1212)
   aam_stinger: { weapon: 'aam_stinger', lazy: true, stations: [] }, // ракета FIM-92 Stinger «воздух–воздух» для вертолётов — GoldbergR
   e_tu160: { side: 'east', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.7, -3.8, -4.0), V(-0.7, -3.8, -1.5), V(-0.7, -3.8, 1.0), V(-0.7, -3.8, 3.5)]), nozzles: [V(-5.75, -4.31, 11.1), V(-3.97, -4.31, 11.1), V(3.97, -4.31, 11.1), V(5.75, -4.31, 11.1)], nr: 0.9 }, // Ту-160 — KOG_THORNS (с 2026-10-19 и в «Авиации»: точки — в отсеках); носитель «Мульти-волны»
-  e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.3, -3.1, 11.5), V(-2.95, -3.1, 11.5), V(2.95, -3.1, 11.5), V(4.3, -3.1, 11.5)], nr: 0.5 }, // B-1B — Muhamad Mirza Arrafi; носитель «Мульти-волны»
+  e_b1b: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -2.5, -5.0), V(-0.6, -2.5, -2.5), V(-0.6, -2.5, 0.0), V(-0.6, -2.5, 2.5)]), nozzles: [V(-4.55, -3.4, 5.86), V(-2.95, -3.4, 5.86), V(2.95, -3.4, 5.86), V(4.55, -3.4, 5.86)], nr: 0.55 }, // B-1B — manilov.ap «B1» (CC BY 4.0; с 2026-10-24, прежняя — Muhamad Mirza Arrafi); крыло сложено назад (стреловидность ≈ 58°), станции — по оси отсека, на 0,4 м выше низа фюзеляжа (y −3,1); сопла — по срезу гондол (z 5,86, пары x ±2,95 / ±4,55); носитель «Мульти-волны»
   e_b52: { side: 'west', cls: 'carrier', only: true, lazy: true, internal: true, stations: mirror([V(-0.6, -5.2, -3.0), V(-0.6, -5.2, -1.0), V(-0.6, -5.2, 1.0), V(-0.6, -5.2, 3.0)]), nozzles: [], nr: 0.4 }, // B-52H — bohmerang; носитель «Мульти-волны» (без форсажа — пламени нет)
   e_typhoon: { side: 'west', cls: 'carrier', only: true, lazy: true, stations: mirror([V(-3.88, -1.93, 3.0, 0.3), V(-2.77, -1.91, 2.24, 0.3), V(-1.94, -1.85, 1.74, 0.3), V(-0.6, -2.1, 1.0, 0.15)]), nozzles: [V(-0.54, -1.46, 6.68), V(0.54, -1.46, 6.68)], nr: 0.42 }, // Eurofighter Typhoon — andertan; носитель Storm Shadow
   w_nar_hydra: { lazy: true, stations: [], matte: true }, // НАР Hydra 70 в полёте — собственная модель (Blender, tools/airdef-models/own)
@@ -311,6 +312,7 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла — свои части (сложены на подвеске)
 Object.assign(GLB_V, { su30: '20261024p', f16: '20261024p' }); // Су-30МКИ и F-16E/F — andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D — рипы Unreal) (2026-10-24)
+Object.assign(GLB_V, { e_b1b: '20261024q', e_f18c: '20261024q', e_su25: '20261024q' }); // B-1B и F/A-18C — manilov.ap, Су-25 — mamont nikita (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 — AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);
