@@ -6,6 +6,7 @@
 import { tr } from './i18n.js?v=20261024u';
 import { ZONE } from './city.js?v=20261024u';
 import { AUTUMN } from './map-autumn.js?v=20261024u';
+import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261024u';
 
 // погода (панорамы — Poly Haven, CC0): осенний вечер (низкое солнце, голый лес у горизонта), сумерки (закат под облаками),
 // туман (пасмурно, всё в молоке). lowFog — плотность тумана в низинах (шейдер земли), 0…1
@@ -52,13 +53,13 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
   const H = 16000, BA = AUTUMN.BALD, fogC = new THREE.Color(W.fog).convertSRGBToLinear();
   const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT;
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, AT, { uCam: ENV.uCam, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt },
+    Object.assign(sh.uniforms, AT, { uCam: ENV.uCam, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null },
       uBald: { value: new THREE.Vector3(BA.x, BA.z, BA.r) }, uLow: { value: new THREE.Vector4(fogC.r, fogC.g, fogC.b, W.lowFog ?? 0.5) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam, uBald; uniform vec4 uLow; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }
+      ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум — текстурой (noise-tex.js): 24 вызова на пиксель были главной ценой земли' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN; float aLow;
 ` + sh.fragmentShader
       .replace('#include <color_fragment>', `#include <color_fragment>

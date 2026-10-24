@@ -6,6 +6,7 @@
 import { tr } from './i18n.js?v=20261024u';
 import { ZONE } from './city.js?v=20261024u';
 import { WINTER } from './map-winter.js?v=20261024u';
+import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261024u';
 
 // погода зимней карты (панорамы — Poly Haven, CC0): ясный мороз, морозная дымка, пасмурно со снегом
 export function winterWeathers(W) {
@@ -60,13 +61,13 @@ export function winterGroundMaterial(city, zt, nt, ENV, WT) {
   const a = city.airport, H = 16000;
   const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x101418, shininess: 14 }); m.userData.WT = WT;
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, WT, { uCam: ENV.uCam, tZ: { value: zt }, tNm: { value: nt }, uAir: { value: new THREE.Vector4(a.x, a.z, a.rwyL / 2, a.rwyW / 2) },
+    Object.assign(sh.uniforms, WT, { uCam: ENV.uCam, tZ: { value: zt }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(a.x, a.z, a.rwyL / 2, a.rwyW / 2) },
       uIce: { value: new THREE.Vector4(WINTER.LAKE_N_Y, WINTER.LAKE_S_Y, WINTER.DAM_Z, 0) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam; uniform vec4 uAir, uIce; uniform sampler2D tZ, tNm, wSn, wSnN, wSA, wRk, wRA, wIce, wAs;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-      float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }
+      ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум — текстурой (noise-tex.js), как у осени' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN;
 ` + sh.fragmentShader
       .replace('#include <color_fragment>', `#include <color_fragment>

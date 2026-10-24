@@ -878,7 +878,7 @@ C.GO = GO; document.body.classList.toggle('perfhud', C.perfHud);
 // динамическое разрешение: медиана 30 кадров (подгрузка моделей и сборка шейдеров не тянут вниз). Снизили — и кадр не ускорился
 // (упор не в пиксели: вызовы, ЦП, ожидание экрана) — возвращаем как было и долго не трогаем, а не «мылим» картинку зря
 function dynRes(ms) {
-  if (perf.dynOff) return;
+  if (perf.dynOff || C.probeOn) return;
   msWin.push(ms); if (msWin.length < 30) return;
   msWin.sort((a, b) => a - b); const med = msWin[15]; msWin.length = 0;
   const goal = 1000 / Math.min(perf.goal || 60, P.cap || 999); // при ограничении 30 к/с — цель не выше него
@@ -908,9 +908,9 @@ function frame(now) {
   // на телефоне 60 к/с по умолчанию при любой частоте экрана; 3D вне полёта — 30 к/с независимо от предела интерфейса (ревью 2026-10-21)
   const rd = now - lastRaf; lastRaf = now; if (rd > 0 && rd < 100) rafEma += (rd - rafEma) * 0.05;
   const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 — нет)
-  const menu = idle || C.state === 'menu' || C.paused; // меню и пауза — 30 к/с всему (и 3D, и интерфейсу)
+  const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused); // меню и пауза — 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 — без предела
   const capUI = idle ? 1000 / 8 : menu ? 1000 / 30 : uc ? 1000 / uc : 0;
-  const capMs = capUI || (IS_TOUCH && uc !== 0 ? 1000 / 60 : 0);
+  const capMs = C.probeOn ? 0 : capUI || (IS_TOUCH && uc !== 0 ? 1000 / 60 : 0);
   const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) — не отменяет 30 для 3D вне полёта
   if (capMs) { capAcc = Math.min(capAcc + Math.max(0, rd), capMs * 2); if (capAcc < capMs - 1.5) return; capAcc = Math.max(0, capAcc - capMs); } else capAcc = 0;
   const ms = now - lastDraw; lastDraw = now;
@@ -977,6 +977,8 @@ function prewarm() { try { if (renderer.compile) renderer.compile(scene, camera)
 // готовые модели — в фоне; загрузилась — самолёты пересобираются уже с ней (постройки — ставятся, когда город собран)
 const pendingObj = [];
 registerSW(); // файлы игры — из кэша устройства (только на сайте; offline.js)
+// замер частей кадра на телефоне (?probe=1): таблица мс поверх игры через 12 с боя (probe.js)
+if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261024u').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
 loadModels(new URL('./', import.meta.url).href, (name) => {
   if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха — та же модель, что у целей)
   if (isObjModel(name)) { if (C.G) C.G.attachObjModel(name, () => objModel(name)); else pendingObj.push(name); return; } // постройки целей
