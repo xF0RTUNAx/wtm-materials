@@ -1261,9 +1261,9 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "IBIS150 air defense radar",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/ibis150-air-defense-radar-ffd78c2b016943f7b60252e94d3bc8ad",
+  "title": "Ural 4320 (будка, мачта и антенна П-18 — свои)",
+  "author": "Brout",
+  "url": "https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8",
   "license": "CC-BY-4.0",
   "files": [
    "ew_e",

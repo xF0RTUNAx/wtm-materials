@@ -137,7 +137,7 @@
 - "MIM-72 Chaparral 1/100 Scale" (https://www.thingiverse.com/thing:3058287) by TankLord — CC-BY-4.0 — `chaparral.glb`, `chaparral_lo.glb`
 - "Nasams 1 Surface-to-Air Missile System" (https://sketchfab.com/3d-models/nasams-1-surface-to-air-missile-system-5fb34fab137c430988fd5642a3b87db3) by Muhamad Mirza Arrafi — CC-BY-4.0 — `nasams.glb`
 - "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)" (https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111) by karmy2k — CC-BY-4.0 — `ew_w.glb`, `ew_w_lo.glb`
-- "IBIS150 air defense radar" (https://sketchfab.com/3d-models/ibis150-air-defense-radar-ffd78c2b016943f7b60252e94d3bc8ad) by 42manako — CC-BY-4.0 — `ew_e.glb`, `ew_e_lo.glb`
+- "Ural 4320 (будка, мачта и антенна П-18 — свои)" (https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8) by Brout — CC-BY-4.0 — `ew_e.glb`, `ew_e_lo.glb`
 - "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`
 - "Low poly Fuel Tank 4-X + Pipe" (https://sketchfab.com/3d-models/low-poly-fuel-tank-4-x-pipe-59799d2419874de5a018666c500c52fd) by Aditya Graphical — CC-BY-4.0 — `obj_tank4.glb`
 - "Rusty airbase fuel tank" (https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692) by LuddePudde — CC-BY-4.0 — `obj_rtank.glb`

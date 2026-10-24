@@ -257,7 +257,7 @@ const META = {
   sampt: { units: ['sampt'], stations: [] }, // SAMP/T — Chenzoss
   msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 — по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder — ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
   nasams: { units: ['nasams'], stations: [] }, // NASAMS 1 — пусковая
-  ew_e: { units: ['gpsjam'], stations: [] }, // станция РЭБ (восток) — машина с РЛС IBIS-150
+  ew_e: { units: ['gpsjam'], matte: true, stations: [] }, // станция РЭБ (восток) — РЛС П-18 «Терек», своя (Свои/П-18): «Урал-4320» Brout (CC BY 4.0) + будка, мачта, балка с 16 антеннами (radar — крутится)
   ew_w: { units: ['gpsjamw'], matte: true, stations: [] }, // станция РЭБ (запад) — AN/MPQ-64 Sentinel, своя (Свои/Sentinel): «Хамви» karmy2k (CC BY 4.0) + прицеп с антенной (radar — крутится); камуфляж запечён
   strela1: { units: ['strela1'], matte: true, stations: [] }, // «Стрела-1» — своя пусковая 9П31 и ракеты на БРДМ-2 zhek (CC BY 4.0), Свои/Стрела-1; окраска — текстуры основы и запечённый атлас (без камуфляжа шейдером)
   msl_strela1: { samMissile: ['strela1'], matte: true, stations: [] }, // ракета 9М31 — своя (Свои/Стрела-1), 1,8 м, нос −Z
@@ -311,6 +311,8 @@ const GLB_V_OWN = {
   l_tochka: '20261024w', // «Точка-У» — своя модель в боевом положении вместо 42manako (2026-10-24)
   ew_w: '20261024x', // AN/MPQ-64 Sentinel на «Хамви» karmy2k вместо Renault TRM (Muhamad Mirza Arrafi, помечена «сделано ИИ»), 2026-10-24
   ew_w_lo: '20261024x',
+  ew_e: '20261024y', // П-18 «Терек» на «Урале-4320» Brout вместо IBIS-150 (42manako, сделана Tripo), 2026-10-24
+  ew_e_lo: '20261024y',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы

@@ -473,7 +473,12 @@ const CONFIG = {
     credit: 'кузов, прицеп и антенна AN/MPQ-64 — свои',
     orig: { title: 'Humvee Transport', author: 'karmy2k', source: 'https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111', license: 'CC-BY-4.0' },
     groups: (c) => (/(^|\/)radar_/.test(c.path) ? 'radar' : 'body') },
-  ew_e: { src: `${DL}/ibis150_air_defense_radar.glb`, scale: 10, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 120000, minPart: 0.05, groups: () => 'body' }, // станция РЭБ (восток)
+  // станция РЭБ (восток) — РЛС П-18 «Терек», своя (основной чат по просьбе Mark, Свои/П-18): «Урал-4320» Brout (CC BY 4.0) без тента, с будкой; мачта,
+  // поворотная балка с 16 антеннами «волновой канал» — свои. Поворотная часть (radar_*) крутится вокруг оси мачты (шахта внутри мачты — самая низкая её часть).
+  ew_e: { src: `${DL}/Свои/П-18/p18.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    credit: 'будка, мачта и антенна П-18 — свои',
+    orig: { title: 'Ural 4320', author: 'Brout', source: 'https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8', license: 'CC-BY-4.0' },
+    groups: (c) => (/(^|\/)radar_/.test(c.path) ? 'radar' : 'body') },
   // ── постройки для военных объектов (целей): земля y = 0, центр по габаритам
   obj_tanks: { src: `${DL}/large_industrial_storage_tanks.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // резервуар и газгольдеры
   obj_tank4: { src: `${DL}/low_poly_fuel_tank_4-x__pipe.glb`, scale: 4.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 40000, groups: () => 'body' },
