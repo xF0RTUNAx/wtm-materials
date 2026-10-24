@@ -33,9 +33,11 @@ export function startProbe(C, { renderer, scene, pipe }) {
   };
   let i = -1, t0 = 0, last = 0; const res = [], iv = [];
   const pc = pipe && pipe.cfg, aa0 = pc && pc.aa, up0 = pc && pc.upscaler;
+  // что умеет браузер (2026-10-25: решение о переходе на WebGPU — по телефонам и окну Telegram тестеров)
+  const api = `WebGPU ${typeof navigator !== 'undefined' && navigator.gpu ? 'есть' : 'нет'} · WebGL ${renderer.capabilities.isWebGL2 ? 2 : 1}`;
   const show = (head) => {
     const b = res.length ? res[0][1] : 0;
-    box.textContent = `ЗАМЕР ${C.probeMap || ''} · кадр ×${K} · ${head}\n` + res.map(([n, ms]) => `${n.padEnd(26)} ${ms.toFixed(1).padStart(5)} мс${ms && b ? '  ' + (ms - b >= 0 ? '+' : '') + (ms - b).toFixed(1) : ''}`).join('\n');
+    box.textContent = `ЗАМЕР ${C.probeMap || ''} · кадр ×${K} · ${head}\n${api}\n` + res.map(([n, ms]) => `${n.padEnd(26)} ${ms.toFixed(1).padStart(5)} мс${ms && b ? '  ' + (ms - b >= 0 ? '+' : '') + (ms - b).toFixed(1) : ''}`).join('\n');
   };
   const begin = () => { C.probeOn = true; C.paused = true; if (pipe && pipe.scale !== (C.perfScale || 1)) pipe.setScale(C.perfScale || 1); multi(true); cal = 1; t0 = performance.now(); last = 0; iv.length = 0; show('подбор… не трогайте телефон'); };
   const next = (now) => {
