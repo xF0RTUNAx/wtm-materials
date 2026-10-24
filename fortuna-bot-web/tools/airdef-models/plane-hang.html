@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Самолёты с подвеской</title><style>body{margin:0;background:#9fb3c8}canvas{display:block}</style></head><body>
+<!-- Самолёт с подвеской из arsenal.js (LOADOUTS) на точках META.stations и контейнером на META.pod — как в бою (air.js buildPylons), с пламенем форсажа:
+     ?p=f16,su30 [&w=ширина кадра &v=0,3 (какие виды: 0 сбоку, 1 сверху, 2 спереди, 3 ¾ снизу, 4 ¾ сзади с пламенем) &z=крупнее &at=x,y,z &items=fab500:4,kab500kr:4 (своя подвеска) &lo=индекс подвески (по порядку среди этого самолёта) &ab=0 — без форсажа &save=имя — PNG на приёмник :8936] —
+     по строке на самолёт: сбоку, сверху, спереди, ¾ снизу-сбоку, ¾ сзади с пламенем. Нужен сервер :8935 (корень — wtm-materials). -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
+const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'f16').split(',');
+const M = await import('../../games/airdef/models.js?v=' + Date.now());
+const { weaponGeo, attachFlames } = await import('../../games/airdef/units-render.js?v=20261022z');
+const { AG, LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261022z');
+const CW = +(Q.get('w') || 480), CH = Math.round(CW * 0.7), VS = (Q.get('v') || '0,1,2,3,4').split(',').map(Number), NV = VS.length, W = CW * NV, H = CH * names.length;
+const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
+{ const { ktxInit } = await import('../../games/airdef/ktx.js?v=20261022z'); if (Q.get('ktx') !== '0') ktxInit(r); } // сжатые текстуры, как в игре (&ktx=0 — JPEG из glb)
+M.loadModels(new URL('../../games/airdef/', location.href).href, () => {});
+const wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
+const wait = (f, n = 400) => new Promise((ok) => { let i = 0; const t = setInterval(() => { const v = f(); if (v || ++i > n) { clearInterval(t); ok(v); } }, 50); });
+const all = Object.values(LOADOUTS).flat();
+for (let i = 0; i < names.length; i++) {
+  const n = names[i]; M.wantModel(n); M.wantModel('w_pod');
+  const meta = M.planeMeta(n), pm = await wait(() => M.planeModel(meta.side, meta.cls, n)); if (!pm || pm.name !== n) { console.log('нет модели', n); continue; }
+  const Ls = all.filter((q) => q.plane === n), L = Q.get('items') ? { items: Q.get('items').split(',').map((s2) => [s2.split(':')[0], +s2.split(':')[1]]), pod: true } : Ls[+(Q.get('lo') || 0)] || { items: [] }, st = pm.stations, obj = pm.obj;
+  const items = L.items.filter(([k]) => AG[k] && AG[k].kind !== 'ecm').sort((a, b) => AG[b[0]].mass - AG[a[0]].mass), order = [1, 6, 2, 5, 0, 7, 3, 4]; let oi = 0;
+  for (const [key] of items) { M.wantWeapon(key); await wait(() => !M.weaponPending(key)); }
+  for (const [key, c] of items) for (let j = 0; j < c && oi < order.length; j++) { const p = st[order[oi++]], W0 = AG[key].vis; const m = M.pylonMesh(key, AG[key], weaponGeo, wMat); m.position.set(p.x, p.y - (W0.hang ?? W0.r) - 0.05, p.z); obj.add(m); }
+  if (L.pod && pm.pod) { await wait(() => M.podModel()); const m = M.podModel() || new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2.4, 10).rotateX(Math.PI / 2), new THREE.MeshPhongMaterial({ color: 0x5a636c })); m.position.copy(pm.pod); obj.add(m); }
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fb3c8); sc.add(new THREE.HemisphereLight(0xffffff, 0x556655, 0.9)); const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(3, 6, 2); sc.add(dl); sc.add(obj);
+  const fl = attachFlames(obj, pm.nozzles, pm.nr / 0.45, true, !!pm.dry, n); if (!i) await new Promise((ok) => setTimeout(ok, 5000)); // спрайты пламени грузятся не сразу
+  for (let k = 0; k < 150; k++) fl.update(Q.get('ab') === '0' ? 0.4 : 1, Q.get('ab') !== '0' && !pm.dry);
+  const bb = new THREE.Box3().setFromObject(obj), sz = bb.getSize(new THREE.Vector3()), c = Q.get('at') ? new THREE.Vector3(...Q.get('at').split(',').map(Number)) : bb.getCenter(new THREE.Vector3()), Z = +(Q.get('z') || 1), S = (Math.max(sz.x, sz.z) * 0.52 + 0.1) / Z;
+  const ort = (up) => { const a = CW / CH, cam = new THREE.OrthographicCamera(-S * a, S * a, S, -S, 0.01, 500); cam.up.copy(up); return cam; };
+  const D = Math.max(sz.x, sz.y, sz.z), per = (v) => [new THREE.PerspectiveCamera(32, CW / CH, 0.05, 500), c.clone().add(v.normalize().multiplyScalar(D * 1.9 / Z))];
+  const V = [[ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x + 80, c.y, c.z)], [ort(new THREE.Vector3(0, 0, -1)), new THREE.Vector3(c.x, c.y + 80, c.z)], [ort(new THREE.Vector3(0, 1, 0)), new THREE.Vector3(c.x, c.y, c.z - 80)],
+    per(new THREE.Vector3(1.0, -0.45, -0.9)), per(new THREE.Vector3(0.8, 0.35, 1.1))];
+  VS.forEach((vi, k) => { const [cam, pos] = V[vi]; cam.position.copy(pos); cam.lookAt(c); const y = H - (i + 1) * CH; r.setViewport(k * CW, y, CW, CH); r.setScissor(k * CW, y, CW, CH); r.render(sc, cam); });
+}
+window.__done = 1;
+if (Q.get('save')) await new Promise((ok) => setTimeout(ok, 800)); // без паузы первый снимок после загрузки иногда чёрный
+if (Q.get('save')) r.domElement.toBlob((b) => fetch('http://localhost:8936/save?name=' + encodeURIComponent(Q.get('save')), { method: 'POST', body: b }).then(() => { window.__saved = 1; }).catch((e) => { window.__saved = String(e); }), 'image/png');
+</script></body></html>

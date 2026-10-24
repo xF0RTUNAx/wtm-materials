@@ -14,19 +14,19 @@ import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=2026
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
-  // [PBR] Sukhoi Su-30 — Immersive3D: восток, ударные загрузки
-  su30: { side: 'east', cls: 'strike', stations: mirror([V(-6.27, -0.34, 4.9), V(-4.67, -0.35, 3.3), V(-3.39, -0.44, 2.6), V(-1.76, -0.65, 3.9)]),
-    nozzles: [V(-1.14, -0.42, 9.4), V(1.14, -0.42, 9.4)], nr: 0.55, pod: V(0, -1.25, 1.5) },
+  // Sukhoi Su-30МКИ — andertan (CC BY 4.0; с 2026-10-24, прежняя — Immersive3D): восток, ударные загрузки; у автора чистый планер — пилоны дорисованы (py), подвески — по низу крыла и мотогондол
+  su30: { side: 'east', cls: 'strike', stations: mirror([V(-5.0, -1.34, 3.3, 0.3), V(-3.95, -1.34, 2.5, 0.3), V(-2.95, -1.34, 1.6, 0.3), V(-1.28, -2.5, 2.0, 0.2)]),
+    nozzles: [V(-1.28, -1.62, 9.75), V(1.28, -1.62, 9.75)], nr: 0.45, pod: V(0, -2.0, 1.5) },
   // MiG 29 — Usman Zia: восток, ракетные загрузки
   mig29: { side: 'east', cls: 'fighter', stations: mirror([V(-4.06, -1.25, 3.41), V(-3.17, -1.24, 2.68), V(-2.23, -1.21, 1.96), V(-0.45, -1.4, 2.0, 0.26)]),
     nozzles: [V(-0.97, -1.35, 7.6), V(0.97, -1.35, 7.6)], nr: 0.45, pod: V(0, -1.55, 2.0) },
   // Boeing F/A-18E/F Super Hornet — andertan: запад, ударные загрузки (на концах крыльев — свои «Сайдуайндеры»)
   f18: { side: 'west', cls: 'strike', stations: mirror([V(-4.70, -1.43, 2.04), V(-3.72, -1.44, 1.87), V(-2.6, -1.24, 1.9, 0.4), V(-1.48, -1.05, -0.3, 0.22)]),
     nozzles: [V(-0.49, -0.94, 8.2), V(0.49, -0.94, 8.2)], nr: 0.4, pod: V(0, -1.96, 1.0) },
-  // General Dynamics F-16D Block 60 — Muhamad Mirza Arrafi: запад, ракетные загрузки
-  // (на законцовках крыльев — свои AIM-120, пилоны под крылом дорисованы)
-  f16: { side: 'west', cls: 'fighter', stations: mirror([V(-3.9, -1.34, 2.4, 0.36), V(-3.0, -1.38, 2.2, 0.38), V(-2.15, -1.39, 2.0, 0.38), V(-0.75, -1.6, 1.0, 0.22)]),
-    nozzles: [V(0, -0.9, 6.5)], nr: 0.55, pod: V(0.75, -1.62, -0.5) },
+  // Lockheed Martin F-16E/F Block 60 — andertan (CC BY 4.0; с 2026-10-24, прежняя — Muhamad Mirza Arrafi): запад, ракетные загрузки
+  // (на законцовках крыльев — свои ракеты автора, пилоны под крылом — его же, станции — по низу пилонов)
+  f16: { side: 'west', cls: 'fighter', stations: mirror([V(-3.98, -1.69, 2.04), V(-3.13, -1.69, 1.29), V(-1.94, -1.65, 1.57), V(-0.95, -1.46, 0.5, 0.22)]),
+    nozzles: [V(0, -1.19, 7.08)], nr: 0.45, pod: V(0.95, -1.55, -1.0) },
   // ── свой самолёт у каждой подвески (2026-10-12); lazy — грузится, когда нужен (выбран в подвеске или летит в налёте),
   // pod: null — прицельная система встроенная (контейнер не вешается); internal — оружие во внутренних отсеках (не видно до пуска)
   e_su24: { side: 'east', cls: 'strike', lazy: true, stations: mirror([V(-4.8, -1.13, 3.4, 0.3), V(-2.08, -1.39, 1.87), V(-0.5, -2.1, 3.0), V(-0.4, -2.12, -0.4)]),
@@ -310,6 +310,7 @@ GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан 
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) — свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла — свои части (сложены на подвеске)
+Object.assign(GLB_V, { su30: '20261024p', f16: '20261024p' }); // Су-30МКИ и F-16E/F — andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D — рипы Unreal) (2026-10-24)
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 — AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);

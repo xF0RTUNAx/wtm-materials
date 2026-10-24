@@ -1,9 +1,9 @@
 // Создано tools/airdef-models/prepare.js --credits — не править руками
 export const CREDITS = [
  {
-  "title": "[PBR] Sukhoi Su-30",
-  "author": "Immersive3D",
-  "url": "https://sketchfab.com/3d-models/pbr-sukhoi-su-30-421bd56fd97c4c7196904e778f27aef7",
+  "title": "Sukhoi Su-30 flanker c",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/sukhoi-su-30-flanker-c-92ca062c90fd45ffb6ce8144dc46004a",
   "license": "CC-BY-4.0",
   "files": [
    "su30"
@@ -20,12 +20,20 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "Lockheed Martin F-16e/f \"Fighting Falcon\"",
+  "author": "andertan",
+  "url": "https://sketchfab.com/3d-models/lockheed-martin-f-16ef-fighting-falcon-d54c72e055a647ad9173e01548e50db3",
+  "license": "CC-BY-4.0",
+  "files": [
+   "f16"
+  ]
+ },
+ {
   "title": "General Dynamics F-16D Block 60",
   "author": "Muhamad Mirza Arrafi",
   "url": "https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3",
   "license": "CC-BY-4.0",
   "files": [
-   "f16",
    "w_gbu12"
   ]
  },

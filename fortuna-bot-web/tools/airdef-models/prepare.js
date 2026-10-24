@@ -42,14 +42,14 @@ const A10_STORE = (c) => (c.mat === 16 && c.ctr[2] > -7.5) /* подвеска �
   (Math.abs(c.ctr[0]) > 3 && c.mat <= 1 && Math.max(...c.size) < 0.12 && c.ctr[1] < -0.5) /* крошки под пилонами */ ||
   (c.mat === 1 && c.ctr[2] > -6 && c.ctr[2] < -5.2 && Math.abs(c.ctr[0]) > 0.5 && c.ctr[1] - c.size[1] / 2 < -0.75); // передняя стойка шасси (выпущена у автора)
 const CONFIG = {
-  su30: { src: `${DL}/pbr_sukhoi_su-30.glb`, raw: true, scale: 0.01, nose: '+x', centerY: 240, tex: () => 1024,
-    remove: (c, i) => c.mat === 0 && i > 0 && c.min[1] < 130 && c.max[0] > -380 }, // шасси, створки и кронштейны ниш (брюшные гребни — оставить)
+  su30: { src: `${DL}/sukhoi_su-30_flanker_c.glb`, scale: 21.94 / 14.94, nose: '+x', rulesIn: 'game', tex: () => 1024, centerX: true,
+    groups: (c) => (c.mat === 16 ? null : LS(c)) }, // Су-30МКИ — andertan (CC BY 4.0; прежняя модель Immersive3D): у автора чистый планер, без шасси и подвесок (пилоны рисует игра: station py); «Plumes» — диски выхлопа в соплах — долой (пламя рисует игра)
   f18: { src: `${DL}/boeing_fa-18ef_super_hornet.glb`, scale: 1, nose: '+x', tex: () => 512, glassAny: /^glass$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь у автора непрозрачный */
     remove: (c) => c.max[1] < 0.12 && Math.abs(c.ctr[2]) > 2.5 }, // ракеты под крыльями и спарка (на концах крыльев — оставить)
-  f16: { src: `${DL}/general_dynamics_f-16d_block_60.glb`, scale: 1, nose: '-z', tex: (m) => (/^cock|^ins/.test(m.name) ? 128 : 512),
-    // подвеска (баки, бомбы, ракеты под крылом; AIM-120 на законцовках — оставить), шасси и мелкие детали кабины под фонарём
-    // (из-за них 15 текстур и ~17 тыс. треугольников)
-    remove: (c) => (c.mat === 10 && Math.abs(c.ctr[0]) < 4.5) || [17, 6, 7, 8, 9, 12, 13, 14, 15].includes(c.mat) || ((c.mat === 5 || c.mat === 1) && c.max[1] < 1.3) },
+  f16: { src: `${DL}/lockheed_martin_f-16ef_fighting_falcon.glb`, scale: 15.03 / 26.83, nose: '+x', rulesIn: 'game', tex: () => 512, centerX: true,
+    glassAny: /^(Not_so_Dark|Darker_blue_hue_glass|Material\.003)$/, glassColor: [0.42, 0.36, 0.2, 0.45], /* фонарь у автора непрозрачный; у F-16 — золотистый */
+    // F-16E/F — andertan (CC BY 4.0; прежняя модель Muhamad Mirza Arrafi): подвеска автора под крылом (баки, ракеты) долой — пилоны (материалы 14, 15) оставлены; на законцовках — свои ракеты, оставлены; шасси у автора нет
+    groups: (c) => (Math.abs(c.ctr[0]) > 1.6 && Math.abs(c.ctr[0]) < 4.7 && c.ctr[1] < 0.12 && c.mat !== 14 && c.mat !== 15 ? null : LS(c)) },
   // оружие из моделей самолётов: pick — коробка [x0,y0,z0, x1,y1,z1] в осях модели, берутся части с центром внутри;
   // модель ставится центром габаритов в начало координат
   w_umpk: { src: new URL('./own/umpk.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true, groups: (c) => (c.size[0] > 0.9 && c.size[1] < 0.06 ? (c.size[0] > 2 ? 'wingA' : 'wingB') : 'body') }, // ФАБ-500 с УМПК: своя модель (Blender, own/umpk.glb); крылья-доски (размах 2,5 и ≈ 1 м) — свои части wingA / wingB: на подвеске сложены вдоль модуля, после сброса раскрываются (models.js, META wings: 'fold')
