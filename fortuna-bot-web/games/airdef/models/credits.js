@@ -29,15 +29,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "General Dynamics F-16D Block 60",
-  "author": "Muhamad Mirza Arrafi",
-  "url": "https://sketchfab.com/3d-models/general-dynamics-f-16d-block-60-ea8edb08d79e4eafa9c794c581f88cf3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "w_gbu12"
-  ]
- },
- {
   "title": "FAB-100-120",
   "author": "4ikalka",
   "url": "https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd",

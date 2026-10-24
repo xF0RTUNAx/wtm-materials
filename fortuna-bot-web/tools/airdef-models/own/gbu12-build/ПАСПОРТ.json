@@ -1,0 +1,15 @@
+{
+ "key": "w_gbu12",
+ "weapon": "gbu12",
+ "name": "GBU-12 Paveway II",
+ "rev": 1,
+ "files": {
+  "glb": "gbu12.glb",
+  "blend": "gbu12.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

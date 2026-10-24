@@ -185,7 +185,7 @@ const META = {
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
   l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS — Denis.Cherkasov1
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
-  w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II с F-16D
+  w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II — собственная модель (tools/airdef-models/own/gbu12)
   w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-62 — собственная модель (tools/airdef-models/own/fab500)
   w_fab100: { weapon: 'fab100', stations: [], matte: true }, // ФАБ-100 — 4ikalka
   w_ofab250: { weapon: 'ofab250', stations: [], matte: true }, // ОФАБ-250-270 — 4ikalka
@@ -302,17 +302,13 @@ const GLB_V_OWN = {
   w_ecm_w: '20261024k',
   w_kh55: '20261024l',
   w_kh555: '20261024m',
-  tor: '20261024u', // «Тор-М1» — своя модель вместо 42manako (2026-10-24): антенна сопровождения dish и крышки ячеек lid0…7 — отдельными частями
   tor_lo: '20261024u',
   msl_tor: '20261024u',
-  strela1: '20261024v', // «Стрела-1» — своя пусковая и ракета на основе БРДМ-2 zhek вместо 42manako (2026-10-24)
   strela1_lo: '20261024v',
   msl_strela1: '20261024v',
-  l_tochka: '20261024w', // «Точка-У» — своя модель в боевом положении вместо 42manako (2026-10-24)
-  ew_w: '20261024x', // AN/MPQ-64 Sentinel на «Хамви» karmy2k вместо Renault TRM (Muhamad Mirza Arrafi, помечена «сделано ИИ»), 2026-10-24
   ew_w_lo: '20261024x',
-  ew_e: '20261024y', // П-18 «Терек» на «Урале-4320» Brout вместо IBIS-150 (42manako, сделана Tripo), 2026-10-24
   ew_e_lo: '20261024y',
+  w_gbu12: '20261024z',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
