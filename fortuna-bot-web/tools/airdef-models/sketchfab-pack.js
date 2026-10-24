@@ -1,7 +1,8 @@
 // Пакет для выкладки модели на Sketchfab (делает СБОРЩИК после того, как Mark принял модель; Mark выкладывает сам): папка «<name_en> — Sketchfab» рядом с
 // папкой модели — glb и blend, превью, «ТЕКСТ ДЛЯ SKETCHFAB.txt» (название, описание, теги, переключатели — в том же виде, что у Hydra 70 и С-8).
 //   deno run -A tools/airdef-models/sketchfab-pack.js "<папка модели с ПАСПОРТ.json и ОТЧЁТ.json>"
-// Текст собирается из отчёта (поля sketchfab.title / lead / parts / tags / dimensions и числа модели). Основной чат (Fable / Opus) этот файл и пакет не трогает.
+// Текст собирается из отчёта (поля sketchfab.title / lead / parts / tags / dimensions и числа модели). based — модель на чужой основе (CC BY): строка с автором и
+// ссылкой вместо «Built from scratch…» (лицензия основы требует указать автора; «с нуля» было бы неправдой) — «Стрела-1» на БРДМ-2 zhek, 2026-10-24. Основной чат (Fable / Opus) этот файл и пакет не трогает.
 const fail = (m) => { console.log('✕ ' + m); Deno.exit(1); };
 const ARG = Deno.args.find((a) => !a.startsWith('--'));
 if (!ARG) fail('использование: deno run -A sketchfab-pack.js "<папка модели с ПАСПОРТ.json и ОТЧЁТ.json>"');
@@ -26,7 +27,7 @@ ${S.title}
 
 DESCRIPTION (Описание) — скопировать блок между линиями целиком:
 ----------------------------------------
-${S.lead} Built from scratch in Blender from public reference drawings.
+${S.lead} ${S.based || 'Built from scratch in Blender from public reference drawings.'}
 
 - ~${k}k triangles, game-ready
 - Real-world scale (${dims})
