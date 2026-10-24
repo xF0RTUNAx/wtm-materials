@@ -261,7 +261,8 @@ const META = {
   ew_w: { units: ['gpsjamw'], stations: [] }, // станция РЭБ (запад) — радарная машина Renault TRM
   strela1: { units: ['strela1'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.4, tex: true } }, // «Стрела-1» — 42manako
   osa: { units: ['osa'], matte: true, stations: [] }, // ЗИФ-122 «Оса-М» на береговой позиции — KoreanNavy (CC BY)
-  tor: { units: ['tor', 'torm2'], stations: [] }, // «Тор-М1» — 42manako
+  tor: { units: ['tor', 'torm2'], matte: true, stations: [] }, // «Тор-М1» — своя модель (сборщик, Свои/Тор-М1; камуфляж запечён в цвете): обе версии «Тора» пока на ней
+  msl_tor: { samMissile: ['tor', 'torm2'], matte: true, stations: [] }, // ракета 9М331 — своя (Свои/9М331), 2,9 м, нос −Z
   pantsir: { units: ['pantsir'], matte: true, stations: [] }, // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
   s400: { units: ['s400', 's300'], matte: true, stations: [] }, // пусковая С-400 — Chenzoss (и для С-300: та же схема, 4 контейнера)
   patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
@@ -300,6 +301,9 @@ const GLB_V_OWN = {
   w_ecm_w: '20261024k',
   w_kh55: '20261024l',
   w_kh555: '20261024m',
+  tor: '20261024u', // «Тор-М1» — своя модель вместо 42manako (2026-10-24): антенна сопровождения dish и крышки ячеек lid0…7 — отдельными частями
+  tor_lo: '20261024u',
+  msl_tor: '20261024u',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
@@ -601,7 +605,11 @@ export function unitModelGlb(key) {
     const l = GL && k !== 'missile' && k !== 'booster' && find(GL, k); if (!l) return p.clone();
     const L = new THREE.LOD(); L.addLevel(p.clone(), 0); L.addLevel(l.clone(), 400); return L;
   };
-  return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar') }; // radar — антенна обзора на башне (крутится)
+  // только у подробной модели (у дальней копии они — в башне): дальше 400 м — пустое место
+  const near = (k) => { const p = find(G, k); if (!p) return null; if (!GL) return p.clone(); const L = new THREE.LOD(); L.addLevel(p.clone(), 0); L.addLevel(new THREE.Object3D(), 400); return L; };
+  const lids = []; for (let i = 0; find(G, 'lid' + i); i++) lids.push(near('lid' + i));
+  return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar'), // radar — антенна обзора на башне (крутится)
+    tdish: near('dish'), lids }; // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
 }
 // ракета комплекса из его модели (маршевая ступень + ускоритель) или null
 export function unitMissileGlb(key) {

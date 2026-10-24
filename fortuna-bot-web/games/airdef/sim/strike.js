@@ -62,7 +62,7 @@ export function createStrike(ctx) {
     const u = { id: o.id || uid++, key, S, pos: new THREE.Vector3(x, roof + 1.5, z), ant: new THREE.Vector3(x, roof + (S.radar ? S.radar.mast : 2), z), yaw: o.yaw || 0,
       hp: S.hp, dead: false, emit: !!S.radar && !o.ambush, ambush: !!o.ambush, shutT: 0, track: null, seeT: 0, lostT: 0, reactT: 0, cool: 0,
       ammo: S.ammo, reloadT: 0, salvoLeft: 0, gunT: 0, gunOn: false, skill: o.skill ?? 0.7, armSeen: new Set(), roof: !!o.roof, known: false,
-      lyaw: (LN && LN.yaw0) || 0, lel: LN ? LN.el ?? 0.35 : 0, lnEl: null, lnT: 0, lnErr: 0, slotT: {} };
+      lyaw: (LN && LN.yaw0) || 0, lel: LN ? LN.el ?? 0.35 : 0, lnEl: null, lnT: 0, lnErr: 0, slotT: {}, lid: 0 }; // lid — крышка следующей ячейки «Тора»: 0 закрыта … 1 открыта
     units.push(u);
     return u;
   }
@@ -346,6 +346,8 @@ export function createStrike(ctx) {
     const LN = LNCH[u.key]; if (!LN || u.dead || !trainable(LN)) return;
     const S = u.S, man = u.manual && (S.type === 'guns' || S.type === 'ir');
     const t = man ? null : u.manual ? (u.desig && !u.desig.dead ? u.desig : u.track) : u.track;
+    // «Тор»: крышка следующей ячейки открывается, пока цель сопровождается и есть ракеты (как по команде на пуск), иначе закрывается
+    if (LN.lids) { const want = !!(t && !t.dead && u.track === t) && u.ammo > 0 && u.reloadT <= 0; u.lid = clamp(u.lid + (want ? dt / LN.lids.tOpen : -dt / LN.lids.tClose), 0, 1); }
     let dx, dy, dz;
     if (t && !t.dead) { dx = t.pos.x - u.pos.x; dy = t.pos.y - u.pos.y; dz = t.pos.z - u.pos.z; }
     else if (u.manual && u.aimDir) { dx = u.aimDir.x; dy = u.aimDir.y; dz = u.aimDir.z; }
@@ -359,7 +361,7 @@ export function createStrike(ctx) {
     if (LN.el == null) { elT = clamp(elT, LN.elMin, LN.elMax); const ke = LN.slewE * dt; de = elT - u.lel; u.lel += clamp(de, -ke, ke); de = elT - u.lel; }
     u.lnErr = Math.max(Math.abs(wrapPi(yawT - u.lyaw)), Math.abs(de));
   }
-  function launcherReady(u) { const LN = LNCH[u.key]; return !LN || !trainable(LN) || u.lnErr < (LN.mode === 'tube' ? 0.12 : 0.09); }
+  function launcherReady(u) { const LN = LNCH[u.key]; return !LN || !trainable(LN) || (u.lnErr < (LN.mode === 'tube' ? 0.12 : 0.09) && (!LN.lids || u.lid >= 1)); } // «Тор» — и крышка ячейки открыта
   function launchSam(u, t) {
     const M_ = u.S.msl, LN = LNCH[u.key];
     TMP.copy(t.pos).sub(u.pos); const hd = Math.hypot(TMP.x, TMP.z) || 1, hx = TMP.x / hd, hz = TMP.z / hd;
@@ -371,7 +373,7 @@ export function createStrike(ctx) {
     if (sl) {
       // ракета уходит из своего слота: с направляющей / из контейнера, по оси пусковой
       unitTilt(u); pos = lnchToWorld(u, sl.Ld, sl.p, new THREE.Vector3()); dir = lnchDir(u, new THREE.Vector3());
-      u.slotT[sl.idx] = 5;
+      u.slotT[sl.idx] = 5; if (LN.lids) u.lid = 0; // «Тор»: крышка ушедшей ракеты ещё 3 с открыта и закрывается (вид — main.js torLids), следующая начинает открываться заново
       if (LN.mode === 'cold' || LN.mode === 'tube') { speed = LN.ej.v; ign = LN.ej.t + (LN.ej.tilt || 0); }
       else speed = LN.mode === 'vhot' ? 20 : 25;
     } else { pos = u.pos.clone().add(TMP2.set(0, 3, 0)); dir = gdDir.clone(); }

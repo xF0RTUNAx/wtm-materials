@@ -26,7 +26,7 @@ import { createStrike, MODES } from './sim/strike.js?v=20261024t';
 import { createRaid } from './sim/raid.js?v=20261024t';
 import { POD, RAIL } from './sim/combined.js?v=20261024t';
 import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261024t';
-import { slotCount } from './launchers.js?v=20261024t';
+import { slotCount, LNCH } from './launchers.js?v=20261024t';
 import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261024t';
 import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261024t';
 import { createSound } from './sound.js?v=20261024t';
@@ -330,6 +330,14 @@ C.syncUnits = function () {
         if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); obj(gm.missile.clone(), q); if (gm.booster) obj(gm.booster.clone(), q); q.position.fromArray(sp); cg.add(q); slots.push(q); }
         if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); slots.push(sm); }
         tg.add(cg); g.add(tg); tur.push({ tg, cg });
+        // «Тор»: антенна сопровождения — на цапфе (tdish.p), крышки ячеек — на шарнирах по верхней кромке (lids.hinge; борт — по знаку x слота)
+        if (gm && gm.tdish && md.LN.tdish) { const P = md.LN.tdish.p, pv = new THREE.Group(); obj(gm.tdish, pv); pv.position.fromArray(P); gm.tdish.position.set(-P[0], -P[1], -P[2]); tg.add(pv); g.userData.tdish = pv; }
+        if (gm && gm.lids.length && md.LN.lids) {
+          const H = md.LN.lids.hinge; g.userData.lids = gm.lids.map((lid, i) => {
+            const sp = Ld.slots[i], sx = Math.sign(sp[0]), pv = new THREE.Group(); obj(lid, pv);
+            pv.position.set(sx * H[0], H[1], sp[1]); lid.position.set(-sx * H[0], -H[1], -sp[1]); pv.userData.sx = sx; tg.add(pv); return pv;
+          });
+        }
       }
       // антенна обзора (готовая модель): на первой башне, ось вращения — центр её опоры (нижние 15 % по высоте)
       if (gm && gm.radar && tur.length) { const rd = gm.radar.clone(), pv = new THREE.Group(); obj(rd, pv); tur[0].tg.add(pv); const ax = radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv; }
@@ -340,6 +348,29 @@ C.syncUnits = function () {
     g.position.copy(u.pos); g.position.y -= 1.5; seat(g, u); // по рельефу: на склоне длинная машина не уходит в землю
   }
 };
+// «Тор»: крышки ячеек (только вид; правило — как в sim/strike.js u.lid, чтобы и в онлайне, где u.lid не приходит).
+// Следующая ячейка открывается, пока цель сопровождается и есть ракеты; ракета ушла — её крышка открыта ещё 3 с, следующая — заново с нуля.
+const sstep = (x) => x * x * (3 - 2 * x);
+function torLids(u, g, dt) {
+  const LN = LNCH[u.key], L = g.userData.lids, LD = LN.lids; if (!LD) return;
+  const nS = slotCount(LN), nf = u.S.ammo - Math.max(0, Math.round(u.ammo)), st = u.lidSt || (u.lidSt = { n: nf, v: 0, a: L.map(() => 0), hold: L.map(() => 0) }); // на машине (u), не на модели: пересборка (подгрузка подробной) не сбрасывает
+  if (nf > st.n) { for (let k = st.n; k < nf; k++) st.hold[(k % nS) % L.length] = 3; st.v = 0; }
+  st.n = nf;
+  const want = !!(u.track && !u.track.dead) && u.ammo > 0 && u.reloadT <= 0, next = (nf % nS) % L.length;
+  st.v = clamp(st.v + (want ? dt / LD.tOpen : -dt / LD.tClose), 0, 1);
+  for (let k = 0; k < L.length; k++) {
+    st.hold[k] = Math.max(0, st.hold[k] - dt);
+    const tgt = st.hold[k] > 0 ? 1 : k === next ? st.v : 0;
+    st.a[k] = k === next && !(st.hold[k] > 0) ? tgt : clamp(st.a[k] + clamp(tgt - st.a[k], -dt / LD.tClose, dt / LD.tOpen), 0, 1);
+    L[k].rotation.z = L[k].userData.sx * LD.open * sstep(st.a[k]);
+  }
+}
+// «Тор»: антенна сопровождения — по углу места цели (от положения покоя el0, в пределах lo…hi, не быстрее w рад/с); без цели — в покой
+function torDish(u, g, dt) {
+  const D = g.userData.tdish, DS = LNCH[u.key].tdish; let a = 0;
+  if (u.track && !u.track.dead && u.emit) { D.getWorldPosition(LP); const t = u.track.pos; a = clamp(Math.atan2(t.y - LP.y, Math.hypot(t.x - LP.x, t.z - LP.z)) - DS.el0, DS.lo, DS.hi); }
+  D.rotation.x += clamp(a - D.rotation.x, -DS.w * dt, DS.w * dt);
+}
 // ось антенны обзора: центр (x, z) вершин её нижней части — опоры или мачты (тарелка бывает смещена от оси)
 const RADAR_W = { gepard: 6.3, tor: 6.3, osa: 3.5, pantsir: 4.2, roland: 6.3, tunguska: 6.3, rapier: 4 }; // рад/с: Gepard и «Тор» ≈ 60 об/мин, «Оса» и «Панцирь» — медленнее
 function radarAxis(o) {
@@ -403,8 +434,13 @@ const simFx = {
     g.position.copy(m.pos); g.lookAt(LP.copy(m.pos).sub(m.dir));
     scene.add(g); samMeshes.set(m.id, g);
     const mode = m.ln ? m.ln.mode : 'rail', d = dist(m.pos);
-    if (mode === 'cold') { C.fx.launchCold(LP.copy(m.pos).addScaledVector(m.dir, L / 2), m.dir, big); const rec = snd.coldLaunch(d, !big); m.coldRec = !!rec; // С-300 / С-400 / «Тор»: запись старта
-      if (rec) m.visIgn = rec.gap; } // только видимое: вспышка и факел — когда в записи начинается рёв; полёт (зажигание в расчёте) — прежний
+    if (mode === 'cold') {
+      C.fx.launchCold(LP.copy(m.pos).addScaledVector(m.dir, L / 2), m.dir, big);
+      // «Тор» (9М331): катапульта выбрасывает ракету, газовые рули склоняют её, двигатель — только через ≈ 1 с на ≈ 20 м. В записях С-300 рёв идёт
+      // через 0,3–0,5 с после хлопка — факел загорался бы раньше двигателя. Поэтому здесь — хлопок катапульты, а вспышка, факел и рёв — в расчётный момент (samIgnite)
+      if (m.ln.ej && m.ln.ej.tilt) { snd.eject(d, false); m.coldRec = false; }
+      else { const rec = snd.coldLaunch(d, !big); m.coldRec = !!rec; if (rec) m.visIgn = rec.gap; } // С-300 / С-400: запись старта; вспышка и факел — когда в записи начинается рёв, полёт (зажигание в расчёте) — прежний
+    }
     else if (mode === 'tube') { C.fx.launchTube(m.pos, m.dir); snd.eject(d, false); }
     else { C.fx.launchHot(m.pos, m.dir, big, m.unit.pos.clone().setY(city.groundH(m.unit.pos.x, m.unit.pos.z))); snd.samLaunch(d, big, m.unit.key); }
     if (C.hooks.samLaunch) C.hooks.samLaunch(m);
@@ -620,6 +656,8 @@ function syncWorld(dt, t) {
       for (let k = 0; k < sl.length; k++) sl[k].visible = (rem >= N || ((k - fired % N) + N) % N < rem) && !(u.slotT[k] > 0);
     }
     if (g.userData.radar && u.emit) g.userData.radar.rotation.y += (RADAR_W[u.key] || 4) * Math.max(0, dt); // крутится, пока РЛС включена
+    if (g.userData.lids) torLids(u, g, dt);
+    if (g.userData.tdish) torDish(u, g, dt);
     const d = g.userData.dish; if (!d) continue;
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;

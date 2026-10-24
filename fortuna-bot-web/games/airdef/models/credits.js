@@ -1066,16 +1066,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "9K331 Tor-M1",
-  "author": "42manako",
-  "url": "https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db",
-  "license": "CC-BY-4.0",
-  "files": [
-   "tor",
-   "tor_lo"
-  ]
- },
- {
   "title": "Pantsir-S1 (окраска и запекание текстур)",
   "author": "SanderWolf",
   "url": "https://sketchfab.com/3d-models/pantsir-s1-3cb67b0bae10418190e7ce32142231e4",

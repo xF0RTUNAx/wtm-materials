@@ -302,9 +302,14 @@ const CONFIG = {
   w_gbu12: { src: `${DL}/general_dynamics_f-16d_block_60.glb`, scale: 1, nose: '-z', tex: () => 512, texVf: OLIVE, /* у автора — синяя учебная, перекрашена в оливковую боевую */ pick: [-3.0, 0.7, -1.5, -2.75, 1.1, 3] }, // GBU-12 Paveway II с F-16
   mig29: { src: `${DL}/mig_29.glb`, scale: 17.32 / 947.3, nose: '+z', tex: () => 1024 },
   // правила частей — в осях игры (без центровки): along/across — положение центра части вдоль и поперёк оси пакета
-  tor: { src: `${DL}/9k331_tor-m1.glb`, scale: 1, fwd: [0.767, 0.641], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, target: 55000,
-    radarRaise: { hinge: [-9.33, 1.04, 10.3], angle: 1.85 }, tpFix: [0.01, 2.29, -0.19], /* ось башни — как в launchers.js (кромка сложенной решётки лежала у основания и сдвигала расчёт) */ // антенна в модели сложена назад на вилке; шарнир — верх тумбы (центр x −9,33, z 10,3): вилку с решёткой и запросчиком — в боевое положение
-    groups: (c) => (c.min[1] > -0.13 && c.ctr[2] > 5.8 && c.ctr[2] < 12.8 ? ((c.ctr[2] > 10.5 && Math.abs(c.ctr[0] + 9.33) < (c.ctr[2] > 11.0 ? 1.15 : 1.0)) || (c.ctr[2] > 10.1 && c.ctr[1] > 0.98 && Math.abs(c.ctr[0] + 9.33) < 0.65) ? 'radar' : 'turret') : 'body') }, // башня сшита с корпусом одной сеткой — по треугольникам; radar — антенна обзора (в модели сложена назад)
+  // «Тор-М1» — своя модель (сборщик, Свои/Тор-М1, 2026-10-24; копия own/tor.glb): 68 тыс. треугольников, цвет 2048 + нормали 1024 запечены, камуфляж в цвете.
+  // Метры, нос −Z, земля y = 0; части — по именам объектов: body_*, turret_* (башня), radar_* (антенна обзора, крутится); dish — антенна сопровождения:
+  // детали turret_dish у центра тарелки (≤ 0,42 м — тарелка, кожух привода, шея) и крепёж на ней turret_hwd (как в Тор-М1_пакет/pack_parts.py split_dish),
+  // качается по углу места цели на цапфе (launchers.js tor.tdish), опора и цапфа остаются на башне; крышки ячеек — грани turret_main / _hw / _detail целиком в рамке ячейки
+  // (геометрия сборщика: Тор-М1_пакет/pack_geo.py cell_frame / cover_pred) → lid0…7 (L1, R1, L2, R2, … — как слоты launchers.js). Дальняя копия — без них.
+  tor: { src: new URL('./own/tor.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, perTri: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    tpFix: [0, 2.523, -0.37], perTriComp: true, groups: (c) => torPart(c, true) },
+  msl_tor: { src: new URL('./own/msl_tor.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // ракета 9М331 — своя (сборщик, Свои/9М331), корпус 2,9 м
   // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь, README.md): цвет и карта нормалей запечены в 2048 (материал PS_paint), 87 тыс. треугольников — без упрощения вблизи (pantsir_lo — дальняя);
   // pantsir_game.glb = pantsir_baked.glb + asset.extras оригинала (для титров; python3 -I glb_extras.py). Метры, нос −Z, начало — ось симметрии, середина длины, низ колёс y = 0; части — по именам объектов:
   // body — шасси и кунг, turret — башня (погон: ось x 0, y 2,805, z 2,218), cradle — две 2А38М и рамы люлек, missile — 12 ТПК 57Э6 (6 на борт: две колонки × 3 ряда; в игре — часть cradle: контейнеры остаются на месте после пуска, ракета вылетает из них, а «missile» у игры — модель самой ракеты), radar — антенна обзора на мачте (ось 0; 2,878; 3,419);
@@ -647,12 +652,34 @@ const CONFIG = {
   pr_oldtree: { src: `${DL}/old_tree.glb`, scale: 1.62, nose: '-z', rulesIn: 'game', unit: true, ground: -0.08, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // старое дерево — evolveduk (корни у автора ниже земли — зарыты)
   c_vaz: { src: `${DL}/vaz-2104_free.glb`, scale: 4.1 / 278.7, nose: '+z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // ВАЗ-2104 — sMoKi (SevKa)
 };
+// «Тор-М1»: рамка ячейки на наклонной грани башни (pack_geo.py сборщика; оси файла: x, y вверх, z = −Y Blender): центр (±MX, MY, −Y[k]),
+// n — наружу, w — вверх по скату; крышка — грани, у которых все вершины в |вдоль| ≤ 0,205, |по скату| ≤ 0,285, от грани −0,03…+0,10 м
+const TOR_CELL = (() => { const S = 8.86 / 439, ZA = (325 - 160) * S - 0.02, ZC = (325 - 130) * S, DX = 1.30 - 0.85, DZ = ZC - ZA, L = Math.hypot(DX, DZ); return { MX: (1.30 + 0.85) / 2, MY: (ZA + ZC) / 2, nx: DZ / L, ny: DX / L, Y: [0.12, -0.28, -0.68, -1.08] }; })();
+function torLid(v) {
+  const C = TOR_CELL;
+  for (const sx of [-1, 1]) for (let k = 0; k < 4; k++) {
+    const inside = v.every(([x, y, z]) => { const dx = x - sx * C.MX, dy = y - C.MY, a = z + C.Y[k], c = -sx * C.ny * dx + C.nx * dy, h = sx * C.nx * dx + C.ny * dy; return Math.abs(a) <= 0.205 && Math.abs(c) <= 0.285 && h >= -0.03 && h <= 0.1; });
+    if (inside) return k * 2 + (sx > 0 ? 1 : 0);
+  }
+  return -1;
+}
+function torPart(c, near) {
+  if (/(^|\/)radar/.test(c.path)) return 'radar';
+  if (!/(^|\/)turret/.test(c.path)) return 'body';
+  if (!near) return 'turret'; // дальняя копия: тарелка и крышки — в башне
+  if (/(^|\/)turret_hwd/.test(c.path)) return 'dish';
+  if (/(^|\/)turret_dish/.test(c.path)) return c.cc && Math.hypot(c.cc[0] - 0.45, c.cc[1] - 3.71, c.cc[2] + 2.99) < 0.42 ? 'dish' : 'turret'; // центр тарелки (0,45; 3,71; −2,99)
+  const k = /(^|\/)turret_(main|hw|detail)/.test(c.path) ? torLid(c.v) : -1;
+  return k >= 0 ? 'lid' + k : 'turret';
+}
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард (своя модель, 23 тыс.): дальняя копия — 8 тыс. треугольников, цвет 256, без карты нормалей
 CONFIG.gepard_lo = { ...CONFIG.gepard, target: 8000, simpErr: 0.05, tex: () => 256, nTex: null };
+// «Тор-М1» (своя, 68 тыс.): дальняя копия — 12 тыс., цвет 512 (камуфляж — в цвете), без нормалей, тарелка и крышки — в башне
+CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
 // С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)
 CONFIG.s400_lo = { ...CONFIG.s400, target: 45000, simpErr: 0.02, tex: () => 512 };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
@@ -819,9 +846,11 @@ async function prepare(name, views) {
     } else if (cfg.groups && cfg.perTri) {
       const gs = [], small = new Set();
       if (cfg.minPart) { const { comp, list } = components(p.P, p.I, 0.001); for (const c of list) if (Math.max(...c.max.map((v, k) => v - c.min[k])) * tsc < cfg.minPart) small.add(c.id); for (let t = 0; t < comp.length; t++) if (small.has(comp[t])) small.add(-1 - t); }
+      // perTriComp — правилу нужна и связная деталь треугольника (cc — середина её рамки): тарелка «Тора» — детали у её центра
+      const CC = cfg.perTriComp ? components(p.P, p.I, 0.001) : null, ccOf = CC && new Map(CC.list.map((q) => [q.id, q.max.map((v, k) => (v + q.min[k]) / 2)]));
       for (let t = 0; t < p.I.length / 3; t++) {
-        const c = { min: [1e9, 1e9, 1e9], max: [-1e9, -1e9, -1e9] };
-        for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k] * 3; for (let d = 0; d < 3; d++) { c.min[d] = Math.min(c.min[d], p.P[v + d]); c.max[d] = Math.max(c.max[d], p.P[v + d]); } }
+        const c = { min: [1e9, 1e9, 1e9], max: [-1e9, -1e9, -1e9], v: CC ? [] : null, cc: CC ? ccOf.get(CC.comp[t]) : null }; // v — три вершины (крышки ячеек «Тора»: грань целиком в рамке; только при perTriComp)
+        for (let k = 0; k < 3; k++) { const v = p.I[t * 3 + k] * 3; if (c.v) c.v.push([p.P[v], p.P[v + 1], p.P[v + 2]]); for (let d = 0; d < 3; d++) { c.min[d] = Math.min(c.min[d], p.P[v + d]); c.max[d] = Math.max(c.max[d], p.P[v + d]); } }
         c.ctr = c.max.map((v, k) => (v + c.min[k]) / 2); c.size = c.max.map((v, k) => v - c.min[k]); c.mat = p.material; c.path = p.path; gs.push(small.has(-1 - t) ? null : cfg.groups(c));
       }
       p.group = (t) => gs[t]; p.comp = Int32Array.from(gs, (g2) => (String(g2).split('#')[0] === 'cradle' ? 1 : 0)); keep = (t) => !!gs[t];
@@ -1044,7 +1073,8 @@ function articulate(cfg, byMat, shift, ax) {
   if (cfg.radarRaise) { const h = sub(ax(...cfg.radarRaise.hinge).map((v) => v * cfg.scale)); const o = cfg.radarRaise.offset || [0, 0, 0]; for (const m of byMat.values()) if (m.group === 'radar') { raiseX(m.pos, m.nor, h, cfg.radarRaise.angle); for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] += o[0]; m.pos[i + 1] += o[1]; m.pos[i + 2] += o[2]; } } } // и сдвиг: на крышу башни
   const hinge = cfg.hinge ? sub(ax(...cfg.hinge).map((v) => v * cfg.scale)) : null;
   // ракеты на направляющих (группа missile) качаются вместе с пакетом
-  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar'), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile');
+  // dish (тарелка «Тора») и lid0…7 (крышки его ячеек) — части башни: в её осях, игра двигает их сама
+  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || /^lid\d/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile');
   if (!T.length && !K.length) return; // машина целиком (станция РЭБ)
   // основание башни: нижние 0,5 м её вершин
   const T0 = T.filter((m) => m.group === 'turret'); // основание — по самой башне (антенна обзора ось не сдвигает)

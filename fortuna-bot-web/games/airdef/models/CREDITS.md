@@ -117,7 +117,6 @@
 - "Low poly German IRIS-T AAM" (https://sketchfab.com/3d-models/low-poly-german-iris-t-aam-f287bb3f4a7a4851b63d15673d9032c4) by Raptor9 — CC-BY-4.0 — `msl_aster.glb`, `aam_iris.glb`
 - "Low Poly Missiles and Torpedos" (https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35) by sakigakefuruzawa — CC-BY-4.0 — `aam_mica.glb`
 - "MiG 29" (https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3) by Uxman — CC-BY-4.0 — `mig29.glb`
-- "9K331 Tor-M1" (https://sketchfab.com/3d-models/9k331-tor-m1-3098265903054ae8b8bdc1536835c3db) by 42manako — CC-BY-4.0 — `tor.glb`, `tor_lo.glb`
 - "Pantsir-S1 (окраска и запекание текстур)" (https://sketchfab.com/3d-models/pantsir-s1-3cb67b0bae10418190e7ce32142231e4) by SanderWolf — CC-BY-4.0 — `pantsir.glb`, `pantsir_lo.glb`
 - "S-400 Triumf missile launcher truck" (https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f) by Chenzoss — CC-BY-4.0 — `s400.glb`, `s400_lo.glb`
 - "9K31 Strela-1 SAM" (https://sketchfab.com/3d-models/9k31-strela-1-sam-bf3bf22d2a684d0d883e03d533a52a36) by 42manako — CC-BY-4.0 — `strela1.glb`
