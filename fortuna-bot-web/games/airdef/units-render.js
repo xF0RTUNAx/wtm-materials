@@ -572,6 +572,9 @@ export function createFx(scene, P) {
   // ширине съёмки × R / ref, время — по подобию (крупнее — медленнее, √). Пока описание не пришло (или ?exnew=0) — прежние раскадровки и частицы
   const XB = {}, XJ = {}; let LY = null, CB = null, PF = null, lo = true; // PF — клубы дыма следов подбитых (puffs.js, лист ex_puff)
   // дым следа: клуб из Blender, пока лист не пришёл — прежнее пятно (тот же emit; st — с какого места клуба: 0 — свежий, 0,5 — уже рваный)
+  // дым повреждений самолётов (zoneTrail, damageSmoke): размер и рост клуба (2026-10-25, Mark: «достаточно великоват» — при росте 4–10 м/с ×2
+  // за 3–6 с жизни клуб выходил до 30–120 м, вдвое-вчетверо больше самолёта; теперь ≈ ×0,55: меньше и перерисовки на экране)
+  const DS = 0.85, DG = 0.5;
   const trail = (x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, st = 0) => { if (PF && PF.ready) PF.emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, st); else smoke.emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv); };
   // столб дыма пожара (fx/ex_burn — снят в Blender как петля): высота — по размеру очага; начинается с разной фазы
   const colAdd = (b) => CB.add(b.pos, XJ.burn.height * Math.min(1.6, Math.max(0.35, b.r / XJ.burn.ref)), 1, { t0: -Math.random() * 4 });
@@ -773,12 +776,12 @@ export function createFx(scene, P) {
     },
     // след из повреждённой зоны самолёта (plane-damage.js): kind 0 — серый дым, 1 — чёрный, 2 — огонь с чёрным дымом, 3 — течь бака (белёсые
     // пряди керосина: тоньше, быстро тают — с середины клуба); v — скорость самолёта
-    trailStep: P.fxLo ? 3.5 : 2.5, // шаг клубов следа из зон (plane-damage.js), м: меньше молодого клуба — след не рвётся на «бусины»; на телефонных пресетах — реже (пул вдвое меньше)
+    trailStep: P.fxLo ? 3 : 2.5, // шаг клубов следа из зон (plane-damage.js), м: меньше молодого клуба — след не рвётся на «бусины»; на телефонных пресетах — реже (пул вдвое меньше)
     zoneTrail(p, v, wind, kind, k = 1) {
       // белёсый: в прежнем пуле свет сцены не учитывается — в сумерках и ночью приглушить по освещению (иначе светился бы в темноте; клубы PF — сами по uLight)
-      if (kind === 3) { const c = (0.82 + Math.random() * 0.08) * (PF && PF.ready ? 1 : Math.min(1, Math.max(0.25, (LT.x + LT.y + LT.z) / 2.1))); trail(p.x, p.y, p.z, v.x * 0.15 + wind.x + (Math.random() - 0.5) * 2, v.y * 0.15, v.z * 0.15 + wind.z + (Math.random() - 0.5) * 2, c, c, c, (0.2 + 0.25 * k), 1.2 + 1.2 * k, 3 + 4 * k, 1.6 + 1.4 * k, 1.8, 0.1, 0.45); return; }
+      if (kind === 3) { const c = (0.82 + Math.random() * 0.08) * (PF && PF.ready ? 1 : Math.min(1, Math.max(0.25, (LT.x + LT.y + LT.z) / 2.1))); trail(p.x, p.y, p.z, v.x * 0.15 + wind.x + (Math.random() - 0.5) * 2, v.y * 0.15, v.z * 0.15 + wind.z + (Math.random() - 0.5) * 2, c, c, c, (0.2 + 0.25 * k), (1.2 + 1.2 * k) * DS, (3 + 4 * k) * DG, 1.6 + 1.4 * k, 1.8, 0.1, 0.45); return; }
       const c = kind ? 0.1 + Math.random() * 0.06 : 0.45 + Math.random() * 0.1;
-      trail(p.x, p.y, p.z, v.x * 0.12 + wind.x + (Math.random() - 0.5) * 2, v.y * 0.12 + 1, v.z * 0.12 + wind.z + (Math.random() - 0.5) * 2, c, c, c * 0.97, (0.35 + 0.3 * k) * (kind ? 1.1 : 0.8), 1.5 + 2 * k, 4 + 6 * k, 3 + 3 * k, 1.5, 0.7);
+      trail(p.x, p.y, p.z, v.x * 0.12 + wind.x + (Math.random() - 0.5) * 2, v.y * 0.12 + 1, v.z * 0.12 + wind.z + (Math.random() - 0.5) * 2, c, c, c * 0.97, (0.35 + 0.3 * k) * (kind ? 1.1 : 0.8), (1.5 + 2 * k) * DS, (4 + 6 * k) * DG, 3 + 3 * k, 1.5, 0.7);
       if (kind === 2) fire.emit(p.x, p.y, p.z, v.x * 0.35, v.y * 0.35, v.z * 0.35, 1, 0.55 + Math.random() * 0.2, 0.18, 0.95, 1.6 + 1.6 * k, 2.5, 0.25, 1.5, 0);
     },
     debrisSmoke(p) { trail(p.x, p.y, p.z, 0, 0.5, 0, 0.6, 0.6, 0.58, 0.35, 1.2, 2, 2.5, 0.2, 0.2); },
@@ -793,7 +796,7 @@ export function createFx(scene, P) {
       for (let i = 0; i < n; i++) {
         const o = back + sp * dt * (i / n), x = a.pos.x - fx * o, y = a.pos.y - fy * o, z = a.pos.z - fz * o, c = dark ? 0.12 + Math.random() * 0.08 : 0.42 + Math.random() * 0.12;
         trail(x, y, z, a.vel.x * 0.12 + wind.x + (Math.random() - 0.5) * 3, a.vel.y * 0.12 + 1 + Math.random(), a.vel.z * 0.12 + wind.z + (Math.random() - 0.5) * 3,
-          c, c, c * 0.97, 0.4 + 0.35 * k, 3 + k * 3, 7 + k * 9, 4 + k * 5, 1.6, 0.8);
+          c, c, c * 0.97, 0.4 + 0.35 * k, (3 + k * 3) * DS, (7 + k * 9) * DG, 4 + k * 5, 1.6, 0.8);
         if (dark && Math.random() < 0.5) fire.emit(x, y, z, a.vel.x * 0.3, a.vel.y * 0.3, a.vel.z * 0.3, 1, 0.5 + Math.random() * 0.2, 0.15, 0.9, 2.6, 3, 0.22, 2, 0);
       }
     },

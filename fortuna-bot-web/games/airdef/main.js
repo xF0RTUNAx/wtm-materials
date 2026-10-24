@@ -222,7 +222,8 @@ let pipe = null, sceneTM = THREE.ACESFilmicToneMapping;
 if (P.post || perf.aa !== 'off' || perf.up !== 'off') {
   const ldr = !P.post;
   pipe = createPipeline(renderer, { ...(P.post || {}), ...(GRADE[W_KEY] || {}), ldr, exposure: renderer.toneMappingExposure, scale: perf.scale, upscaler: perf.up, sharp: perf.sharp || 0.4, aa: perf.aa,
-    bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER }); // fx — облака и дым в половине разрешения (слои FX_*)
+    bloomQ: !!P.bloomQ, fx: !!P.halfFx, fxU: FXU, fxLayer: FX_LAYER, fxAddLayer: FX_ADD_LAYER, // fx — облака и дым в половине разрешения (слои FX_*)
+    aaCas1: Q.get('pp1') !== '0' }); // FXAA и резкость CAS — одним проходом (post.js; ?pp1=0 — двумя, как раньше)
   sceneTM = ldr ? THREE.ACESFilmicToneMapping : THREE.NoToneMapping;
   renderer.setPixelRatio(basePR);
 } else renderer.setPixelRatio(basePR * perf.scale);
@@ -598,18 +599,6 @@ function syncEv() {
 // синхронизация моделей с боем
 const LP = new THREE.Vector3();
 function syncWorld(dt, t) {
-  // дым подбитых самолётов (ИИ и игрок): ветер — лёгкий, постоянный для боя
-  if (C.fx && dt > 0) {
-    const W = C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)); // ~4 м/с
-    // у самолётов с зонами повреждений (sim/damage.js) — дым и огонь из самих зон, отрыв частей (plane-damage.js); без зон — общий шлейф по прочности
-    if (C.raid) for (const a of C.raid.planes) {
-      if (a.dead || a.out || a.role === 'decoy' || !a.hpMax) continue;
-      const dv = (planeMeshes.get(a.id) || { userData: {} }).userData.dv;
-      if (dv && a.dz) { dv.sync(a); dv.update(dt, a, W); } else C.fx.damageSmoke(a, dt, a.hp / a.hpMax, W);
-    }
-    if (C.player && !C.player.dead && !C.player.dz) C.fx.damageSmoke(C.player, dt, C.player.hp / (C.player.hpMax || 100), W);
-    updateDebris(scene, dt, city.groundH, W);
-  }
   const S = C.S; if (!S) return;
   for (const m of S.sams) {
     const g = samMeshes.get(m.id); if (!g) continue;
@@ -692,6 +681,19 @@ function syncWorld(dt, t) {
     const L = g.userData.lod, near = !L || camera.position.distanceToSquared(a.pos) < LOD_D * LOD_D;
     if (L) { L.hi.visible = near; L.lo.visible = !near; }
     if (g.userData.hung) for (const h of g.userData.hung) h.m.visible = near && h.l.n > h.k;
+  }
+  // дым подбитых самолётов (ИИ и игрок): ветер — лёгкий, постоянный для боя. После того как модели встали на место этого кадра
+  // (2026-10-25: раньше — до них, след выходил из прошлого положения: на 30 к/с в 6–10 м позади, в вираже — вбок)
+  if (C.fx && dt > 0) {
+    const W = C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)); // ~4 м/с
+    // у самолётов с зонами повреждений (sim/damage.js) — дым и огонь из самих зон, отрыв частей (plane-damage.js); без зон — общий шлейф по прочности
+    if (C.raid) for (const a of C.raid.planes) {
+      if (a.dead || a.out || a.role === 'decoy' || !a.hpMax) continue;
+      const dv = (planeMeshes.get(a.id) || { userData: {} }).userData.dv;
+      if (dv && a.dz) { dv.sync(a); dv.update(dt, a, W); } else C.fx.damageSmoke(a, dt, a.hp / a.hpMax, W);
+    }
+    if (C.player && !C.player.dead && !C.player.dz) C.fx.damageSmoke(C.player, dt, C.player.hp / (C.player.hpMax || 100), W);
+    updateDebris(scene, dt, city.groundH, W);
   }
   if (dt > 0) for (const f of S.flares) C.fx.flareTick(f, dt);
   // обломки сбитых: падают, крутятся, дымят; на земле — пожар

@@ -81,16 +81,41 @@ function mergeZones(root, parts, key) {
   }
 }
 
+// точки следа из зон — середина обшивки (по площади треугольников) крыла с консолью и хвоста; бак — между ними по оси.
+// 2026-10-25 (Mark: дым «на какой-то стороне удаленней или наоборот далеко от самолета»): были по габаритам — над крылом на высоте
+// спины, хвост — на метр выше киля, а у низкоплана и стреловидного крыла середина полуразмаха на 55 % длины — вовсе мимо крыла
+const ZPTS = new Map(); // по ключу модели
+function zonePoints(root, parts, P) {
+  root.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), mm = new THREE.Matrix4(), A = new THREE.Vector3(), B = new THREE.Vector3(), Cc = new THREE.Vector3(), N = new THREE.Vector3();
+  const mid = (zs) => {
+    const s = new THREE.Vector3(); let w = 0;
+    for (const z of zs) for (const msh of parts[z] || []) {
+      if (msh.userData.scar || msh.userData.cut) continue;
+      mm.multiplyMatrices(inv, msh.matrixWorld); const pos = msh.geometry.attributes.position, ix = msh.geometry.index ? msh.geometry.index.array : null, n = ix ? ix.length : pos.count;
+      for (let t = 0; t < n; t += 3 * Math.max(1, Math.floor(n / 30000))) {
+        A.fromBufferAttribute(pos, ix ? ix[t] : t).applyMatrix4(mm); B.fromBufferAttribute(pos, ix ? ix[t + 1] : t + 1).applyMatrix4(mm); Cc.fromBufferAttribute(pos, ix ? ix[t + 2] : t + 2).applyMatrix4(mm);
+        const cx = (A.x + B.x + Cc.x) / 3, cy = (A.y + B.y + Cc.y) / 3, cz = (A.z + B.z + Cc.z) / 3, ar = N.crossVectors(B.sub(A), Cc.sub(A)).length();
+        s.x += cx * ar; s.y += cy * ar; s.z += cz * ar; w += ar;
+      }
+    }
+    return w > 0 ? s.divideScalar(w) : null;
+  };
+  const wy = P.top - 0.4, wx = (P.fus + P.xm) / 2, zm = P.z0 + P.L * 0.55; // зоны нет (модель без крыла) — как раньше, по габаритам
+  const wingL = mid(['wingL', 'consL']) || new THREE.Vector3(-wx, wy, zm), wingR = mid(['wingR', 'consR']) || new THREE.Vector3(wx, wy, zm);
+  const tail = mid(['tailL', 'tailR', 'tailC']) || new THREE.Vector3(0, P.top, P.tailZ + 0.5);
+  return { wingL, wingR, tail, fuel: new THREE.Vector3(0, (wingL.y + wingR.y) / 2, (wingL.z + wingR.z) / 2) };
+}
+
 export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эффекты боя (или функция, которая их вернёт: создаются позже модели)
   const FX = () => (typeof fxOf === 'function' ? fxOf() : fxOf);
   const { P, parts } = splitPlane(root, key, meta);
   mergeZones(root, parts, key);
-  const mid = P.z0 + P.L * 0.55, wy = P.top - 0.4, wx = (P.fus + P.xm) / 2;
-  // точки следа (оси модели): крылья — середина полуразмаха, хвост, двигатели (сопла по бортам), бак — центр
+  // точки следа (оси модели): крылья и хвост — середина обшивки своей зоны (zonePoints), двигатели — сопла по бортам, бак — между корнями крыльев
+  const Z = ZPTS.get(key) || ZPTS.set(key, zonePoints(root, parts, P)).get(key);
   const nz = (meta && meta.nozzles) || [], side = (s) => { const L = nz.filter((n) => Math.sign(n.x || 0.0001) === s); return L.length ? L.reduce((p, n) => p.add(n), new THREE.Vector3()).divideScalar(L.length) : null; };
-  const eng0 = nz.length ? nz.reduce((p, n) => p.add(n), new THREE.Vector3()).divideScalar(nz.length) : new THREE.Vector3(0, wy, P.z1 - 1);
-  const PT = { wingL: new THREE.Vector3(-wx, wy, mid), wingR: new THREE.Vector3(wx, wy, mid), tail: new THREE.Vector3(0, P.top + 1, P.tailZ + 0.5),
-    engL: side(-1) || eng0, engR: side(1) || eng0, eng: eng0, fuel: new THREE.Vector3(0, wy, P.z0 + P.L * 0.5) };
+  const eng0 = nz.length ? nz.reduce((p, n) => p.add(n), new THREE.Vector3()).divideScalar(nz.length) : new THREE.Vector3(0, Z.fuel.y, P.z1 - 1);
+  const PT = { wingL: Z.wingL, wingR: Z.wingR, tail: Z.tail, engL: side(-1) || eng0, engR: side(1) || eng0, eng: eng0, fuel: Z.fuel };
   // пробоины: точки на обшивке зон (по площади), сколько видно — по целостности зоны (больше попаданий — больше дыр)
   // точки обшивки для пробоин — одни на модель и только с первой пробоины (2026-10-22: у каждого самолёта налёта строились сразу ~10 тыс.
   // треугольников клонами Vector3 — ≈ 20 МБ мусора и паузы сборщика на телефоне). Строятся до отрыва частей в том же sync — оси модели целые
@@ -166,7 +191,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
   const gone = (a, z) => !!(a.det && (z === 'tailC' ? a.det.tailAll : a.det[z])); // середина хвоста (одиночный киль) — только со всем хвостом
   let acc = 0;
   const api = {
-    P, parts,
+    P, parts, PT,
     // показать/спрятать отлетающие части по состоянию (новый вылет — всё на месте)
     sync(a) {
       // пробоины: по целостности зон (новый вылет — ни одной)
@@ -185,7 +210,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
     },
     detach(z, a) {
       if (!shown[z] || !parts[z].length) { shown[z] = false; return; }
-      shown[z] = false; root.updateMatrixWorld(true);
+      shown[z] = false; (root.parent || root).updateMatrixWorld(true); // с группы самолёта: в кадре её создания matrixWorld ещё единичная (ревью 2026-10-25)
       const cons = z === 'consL' || z === 'consR';
       if (cons) for (const m of parts[z === 'consL' ? 'scarL' : 'scarR']) m.visible = true; // опалённая рваная кромка на обрубке
       { const F = FX(); if (F && F.explosion) { const sg = z === 'consL' ? -1 : 1; F.explosion(root.localToWorld(cons ? new THREE.Vector3(sg * P.consX, P.top, P.z0 + P.L * 0.55) : new THREE.Vector3(z === 'tailL' ? -P.fus : z === 'tailR' ? P.fus : 0, P.top, P.tailZ)), 4, 'air'); } } // хлопок и искры в месте разрыва
@@ -208,7 +233,7 @@ export function planeDamageVis(scene, root, key, meta, fxOf) { // fxOf — эф�
       const STEP = fx.trailStep || 5; acc += (a.speed || 0) * dt; if (acc < STEP) return;
       // больше 4 шагов за кадр (быстро и мало кадров) — 4 клуба на весь пройденный отрезок, а не на последние 7,5 м (ревью 2026-10-24: просветы в следе)
       const n = Math.min(4, Math.floor(acc / STEP)), gap = n === 4 ? acc / 4 : STEP, back = acc - gap; acc = n === 4 ? 0 : acc - n * STEP;
-      root.updateMatrixWorld(true);
+      (root.parent || root).updateMatrixWorld(true); // с группы самолёта: её положение на этот кадр уже выставлено, а matrixWorld — ещё с прошлой отрисовки
       const sp = Math.max(1, a.vel ? a.vel.length() : 0), D = a.dz;
       const emit = (pt, v, kind) => { for (let i = 0; i < n; i++) { W.copy(pt).applyMatrix4(root.matrixWorld); if (a.vel) W.addScaledVector(a.vel, -Math.min(back, (n - 1 - i) * gap) / sp); fx.zoneTrail(W, a.vel, wind, kind, v); } };
       const z = (v, pt, burn) => { if (v < 0.75) emit(pt, 1 - v, burn ? 2 : v < 0.35 ? 1 : 0); };

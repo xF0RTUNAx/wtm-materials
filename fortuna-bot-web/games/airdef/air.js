@@ -1021,6 +1021,10 @@ export function createAir(C) {
     if (game.net && craft.dead) { spectate(dt, t); return; } // за союзниками — только когда сбит (решение Mark)
     // модель самолёта — до отрисовки кадра, в ту же точку, по которой ставится камера (иначе самолёт «прыгает» на кадр)
     ship.position.copy(craft.pos); ship.rotation.set(craft.pitch, craft.yaw, craft.roll, 'YXZ');
+    // дым и огонь из повреждённых зон — от модели в положении этого кадра (2026-10-25: был в systems() до шага полёта — след отставал на кадр);
+    // время — шагов полёта с прошлого кадра (камера идёт и на паузе, и в замедлении — по ним дым не копится)
+    if (craft.dmgVis && dmgDt > 0 && !craft.dead) craft.dmgVis.update(dmgDt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
+    dmgDt = 0;
     fwdOf(craft, fw); up.set(0, 1, 0).applyQuaternion(shipQ);
     if (C.camera.fov !== 62) C.setFov(62);
     if (free.on && !craft.dead) { // обзор: камера за самолётом по направлению взгляда (назад — перед самолётом, лицом к нему)
@@ -1050,6 +1054,7 @@ export function createAir(C) {
 
   // ═════════════ Начало и конец вылета ═════════════
   function start(opts = {}) {
+    dmgDt = 0; // время для дыма из зон — с нового вылета (updateCamera; в «Съёмке» и при ?view= камера своя — копилось)
     const setup = C.setup;
     game.opts = opts; C.lastGame = opts.lastGame || 'air'; C.ended = false; demo = null; if (free.on) freeLook(false);
     zoneReset(); zn.Z = opts.lastGame === 'training' ? null : newZone(Math.random); // обучение — без зоны пополнения
@@ -1372,13 +1377,14 @@ export function createAir(C) {
     say(tr('Пополнение: подвеска, ловушки и топливо{0}', [Number.isFinite(homeLeft) ? tr(' · осталось пополнений: {0}', [homeLeft]) : '']), 3); snd.good();
   }
   // повреждения (течь бака, пожар) и топливо — у самолёта и вертолёта одинаково
+  let dmgDt = 0; // время полёта для дыма из зон (updateCamera)
   function systems(dt) {
+    dmgDt += dt;
     // повреждения: течь бака, пожар ест корпус (онлайн — урон считает сервер)
     if (craft.dz && !game.opts.invuln) {
       if (craft.leak && craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - craft.leak * dt);
       const br = burnRate(craft); if (br && !game.net) { craft.hp -= br * dt; if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'plane'); snd.planeKill(0); finish(craft.det.tailAll ? tr('Потеря управления: хвост разрушен') : tr('Сгорел: пожар на борту'), false); } }
     }
-    if (craft.dmgVis) craft.dmgVis.update(dt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
     // топливо: расход по газу, форсаж — втрое; кончилось — двигатель встал, самолёт планирует (в обучении не тратится)
     if (!game.opts.invuln) {
       if (craft.fuel > 0) craft.fuel = Math.max(0, craft.fuel - (0.35 + 0.65 * craft.thr) * (craft.ab ? 3 : 1) / (C.MODE().fuelS || 240) * (craft.heli ? 1 / 3 : 1) * dt); // вертолёт держится втрое дольше (Mark 2026-10-21: не успевал долететь и навестись)

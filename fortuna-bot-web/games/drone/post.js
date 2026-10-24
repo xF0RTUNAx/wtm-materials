@@ -151,6 +151,35 @@ export function createPipeline(renderer, cfg) {
       gl_FragColor = vec4(clamp((b * w + d * w + f * w + h * w + e) / (1.0 + 4.0 * w), 0.0, 1.0), 1.0);
     }`,
   { tDiffuse: { value: null }, px: { value: new THREE.Vector2() }, sharp: { value: cfg.sharp ?? 0.5 } });
+  // FXAA и CAS одним проходом (cfg.aaCas1 — «Воздушное превосходство», 2026-10-25: на телефонах это пресет «Средний»): FXAA — как выше
+  // (диагонали и вдоль края, в пикселях кадра), резкость — крест в пикселях экрана вокруг уже сглаженной середины. Соседи креста — без
+  // сглаживания, но на резких краях (где FXAA работает) CAS почти не усиливает: amp там ≈ 0. Без промежуточного буфера — кадр не пишется
+  // и не читается лишний раз (на телефоне с плиточной видеокартой это главная цена прохода)
+  const fxcas = mat(`uniform sampler2D tDiffuse; uniform vec2 rcp, px; uniform float sharp; varying vec2 vUv;
+    float lu(vec3 c) { return dot(c, vec3(0.299, 0.587, 0.114)); }
+    void main() {
+      vec3 nw = texture2D(tDiffuse, vUv + vec2(-1.0, -1.0) * rcp).rgb, ne = texture2D(tDiffuse, vUv + vec2(1.0, -1.0) * rcp).rgb;
+      vec3 sw = texture2D(tDiffuse, vUv + vec2(-1.0, 1.0) * rcp).rgb, se = texture2D(tDiffuse, vUv + vec2(1.0, 1.0) * rcp).rgb, m = texture2D(tDiffuse, vUv).rgb;
+      float lNW = lu(nw), lNE = lu(ne), lSW = lu(sw), lSE = lu(se), lM = lu(m);
+      float lMin = min(lM, min(min(lNW, lNE), min(lSW, lSE))), lMax = max(lM, max(max(lNW, lNE), max(lSW, lSE)));
+      vec3 e = m;
+      if (lMax - lMin >= max(0.0312, lMax * 0.125)) { // край (перепад ≥ 1/8 яркости, как у FXAA 3.11) — сглаживание вдоль него; ровное место — как есть
+        vec2 dir = vec2(-((lNW + lNE) - (lSW + lSE)), (lNW + lSW) - (lNE + lSE));
+        float red = max((lNW + lNE + lSW + lSE) * 0.03125, 1.0 / 128.0);
+        dir = clamp(dir / (min(abs(dir.x), abs(dir.y)) + red), -8.0, 8.0) * rcp;
+        vec3 a = 0.5 * (texture2D(tDiffuse, vUv + dir * (1.0 / 3.0 - 0.5)).rgb + texture2D(tDiffuse, vUv + dir * (2.0 / 3.0 - 0.5)).rgb);
+        vec3 bb = a * 0.5 + 0.25 * (texture2D(tDiffuse, vUv - dir * 0.5).rgb + texture2D(tDiffuse, vUv + dir * 0.5).rgb);
+        float lB = lu(bb);
+        e = (lB < lMin || lB > lMax) ? a : bb;
+      }
+      vec3 b = texture2D(tDiffuse, vUv + vec2(0.0, -px.y)).rgb, d = texture2D(tDiffuse, vUv + vec2(-px.x, 0.0)).rgb;
+      vec3 f = texture2D(tDiffuse, vUv + vec2(px.x, 0.0)).rgb, h = texture2D(tDiffuse, vUv + vec2(0.0, px.y)).rgb;
+      vec3 mn = min(e, min(min(b, d), min(f, h))), mx = max(e, max(max(b, d), max(f, h)));
+      vec3 amp = sqrt(clamp(min(mn, 2.0 - mx) / max(mx, 1e-4), 0.0, 1.0));
+      vec3 w = amp * (-1.0 / mix(8.0, 5.0, sharp));
+      gl_FragColor = vec4(clamp((b * w + d * w + f * w + h * w + e) / (1.0 + 4.0 * w), 0.0, 1.0), 1.0);
+    }`,
+  { tDiffuse: { value: null }, rcp: { value: new THREE.Vector2() }, px: { value: new THREE.Vector2() }, sharp: { value: cfg.sharp ?? 0.5 } });
   // Lanczos-2 (4×4) с ограничением по соседним 2×2 — против ореолов, как в EASU
   const lanczos = mat(`uniform sampler2D tDiffuse; uniform vec2 srcSize; varying vec2 vUv;
     float L(float x) { x = abs(x); if (x < 1e-5) return 1.0; if (x >= 2.0) return 0.0; float px = 3.14159265 * x; return 2.0 * sin(px) * sin(px * 0.5) / (px * px); }
@@ -210,7 +239,7 @@ export function createPipeline(renderer, cfg) {
     get target() { return sceneRT; },
     get fx() { return fxOn; },
     setScale(s) { s = Math.round(Math.max(0.35, Math.min(1, s)) * 100) / 100; if (s !== scale) { scale = s; setSize(); } },
-    setSharp(v) { cas.uniforms.sharp.value = v; rcas.uniforms.sharp.value = v; },
+    setSharp(v) { cas.uniforms.sharp.value = v; rcas.uniforms.sharp.value = v; fxcas.uniforms.sharp.value = v; },
     setExposure(v) { comp.uniforms.exposure.value = v; },
     resetHistory() { taaReset = true; }, // TAA: следующий кадр — без истории (смена вида)
     render(scene, camera, t, sun) {
@@ -275,6 +304,7 @@ export function createPipeline(renderer, cfg) {
         pass(taa, hNext); taaRT.reverse(); prevVP.copy(vp); prevCam.copy(camera.position); prevDir.copy(camDir); taaReset = false; src = hNext;
         if (up === 'off') { cas.uniforms.tDiffuse.value = src.texture; cas.uniforms.px.value.set(1 / sw, 1 / sh); pass(cas, null); return; } // лёгкая резкость против «мыла»
       }
+      if (useFxaa && up === 'cas' && cfg.aaCas1) { const u = fxcas.uniforms; u.tDiffuse.value = src.texture; u.rcp.value.set(1 / sw, 1 / sh); u.px.value.set(1 / full.x, 1 / full.y); pass(fxcas, null); return; }
       if (useFxaa) { fxaa.uniforms.tDiffuse.value = src.texture; fxaa.uniforms.rcp.value.set(1 / sw, 1 / sh); if (up === 'off') { pass(fxaa, null); return; } pass(fxaa, ldrB); src = ldrB; }
       if (up === 'cas') { cas.uniforms.tDiffuse.value = src.texture; cas.uniforms.px.value.set(1 / full.x, 1 / full.y); pass(cas, null); return; }
       lanczos.uniforms.tDiffuse.value = src.texture; lanczos.uniforms.srcSize.value.set(sw, sh);
@@ -283,7 +313,7 @@ export function createPipeline(renderer, cfg) {
     },
     dispose() {
       for (const r of [sceneRT, hA, hB, qA, qB, rays, ldrA, ldrB, upRT, ...(taaRT || []), ...(hazeRT ? [hazeRT] : [])]) r.dispose(); if (fxRT) fxRT.dispose(); if (sceneRT.depthTexture) sceneRT.depthTexture.dispose();
-      for (const m of [bright, blur, radial, comp, taa, fxaa, cas, lanczos, rcas, copy, fxOver]) m.dispose();
+      for (const m of [bright, blur, radial, comp, taa, fxaa, fxcas, cas, lanczos, rcas, copy, fxOver]) m.dispose();
       quad.geometry.dispose(); black.dispose();
     },
   };

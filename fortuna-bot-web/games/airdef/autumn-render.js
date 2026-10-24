@@ -7,6 +7,7 @@ import { tr } from './i18n.js?v=20261024u';
 import { ZONE } from './city.js?v=20261024u';
 import { AUTUMN } from './map-autumn.js?v=20261024u';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261024u';
+import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261024u';
 
 // погода (панорамы — Poly Haven, CC0): осенний вечер (низкое солнце, голый лес у горизонта), сумерки (закат под облаками),
 // туман (пасмурно, всё в молоке). lowFog — плотность тумана в низинах (шейдер земли), 0…1
@@ -37,10 +38,12 @@ export function autumnZoneTex(city, size) {
 }
 // текстуры осени (tex/a_*.jpg — Poly Haven и ambientCG, CC0) и скалы — общие с зимой
 const ATEX = { aG: 'a_grass', aGN: 'a_grass_n', aGA: 'a_grassA', aL: 'a_leaves', aM: 'a_mud', aMA: 'a_mudA', aF: 'a_field', aRk: 'w_rock', aRA: 'w_rockA' };
+const ACOARSE = new Set(['aGA', 'aRA', 'aMA']); // снимки с высоты (плитка 200–1300 м) — без анизотропии: крупный рисунок не мылится, а выборка втрое дешевле (ground-far.js)
+// мелкие (трава, грязь, листва) — не больше 4: вдали они и так средним цветом (ground-far.js), а 8 против 4 на снимках не отличить (стенд 2026-10-25: −0,6 мс низко на «Высоком»)
 export function autumnTextures(aniso, stats) {
   const U = {};
   for (const [u, f] of Object.entries(ATEX)) {
-    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
+    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = ACOARSE.has(u) ? 1 : Math.min(4, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
     if (stats) stats.req++;
     fetch(new URL(`./tex/${f}.jpg?v=20261023a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f)))).then((b) => createImageBitmap(b))
@@ -51,9 +54,10 @@ export function autumnTextures(aniso, stats) {
 // материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере
 export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
   const H = 16000, BA = AUTUMN.BALD, fogC = new THREE.Color(W.fog).convertSRGBToLinear();
-  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT;
+  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.userData.farU = FAR_U;
+  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) — на WebGL 1; на WebGL 2 и так есть
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, AT, { uCam: ENV.uCam, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null },
+    Object.assign(sh.uniforms, AT, { uFar: FAR_U, uCam: ENV.uCam, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null },
       uBald: { value: new THREE.Vector3(BA.x, BA.z, BA.r) }, uLow: { value: new THREE.Vector4(fogC.r, fogC.g, fogC.b, W.lowFog ?? 0.5) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam, uBald; uniform vec4 uLow; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
@@ -61,21 +65,23 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум — текстурой (noise-tex.js): 24 вызова на пиксель были главной ценой земли' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN; float aLow;
-` + sh.fragmentShader
+      ${FAR_GLSL}
+` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
+  farInit(vWp.xz); // мелкие текстуры вдали — средним цветом (texF, ground-far.js); вблизи — только при ненулевом весе
   vec2 mp = (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)};
   vec4 Z = texture2D(tZ, mp), Z2 = texture2D(tZ2, mp); wN = normalize(texture2D(tNm, mp).xyz * 2.0 - 1.0);
   float slope = 1.0 - wN.y, hgt = vWp.y, dist = length(vWp - uCam), near = 1.0 - smoothstep(200.0, 1200.0, dist);
   // сухой луг: охра и оливковые пятна; рисунок — снимок с высоты (два масштаба) и сухая трава вблизи
   float gA = lum(texture2D(aGA, vWp.xz / 260.0).rgb), gA2 = lum(texture2D(aGA, vWp.xz / 1300.0 + 0.37).rgb);
-  vec3 dG = texture2D(aG, vWp.xz / 5.0).rgb, dG2 = texture2D(aG, vWp.xz / 31.0 + 0.21).rgb; dG = vec3(lum(dG)) * 0.6 + dG * 0.4;
+  vec3 dG = near > 0.0 ? texF(aG, vWp.xz, 5.0, vec2(0.0)).rgb : vec3(0.3), dG2 = texF(aG, vWp.xz, 31.0, vec2(0.21)).rgb; dG = vec3(lum(dG)) * 0.6 + dG * 0.4;
   vec3 grass = mix(vec3(0.15, 0.135, 0.06), vec3(0.095, 0.105, 0.045), smoothstep(0.3, 0.7, vn(vWp.xz / 420.0) * 0.7 + gA2 * 0.6 - 0.15));
   // пятна разной травы (ветошь, побуревшая, зеленоватая отава, рыжий клевер) — на 15–80 м, чтобы и с высоты луг был живой
   float pv = vn(vWp.xz / 80.0) * 0.6 + vn(vWp.xz / 17.0) * 0.4;
   grass *= pv < 0.35 ? vec3(0.85, 0.95, 0.8) : pv < 0.55 ? vec3(1.0) : pv < 0.72 ? vec3(1.18, 1.05, 0.85) : vec3(1.2, 0.85, 0.65);
   grass *= (0.55 + 0.9 * gA) * mix(0.75 + 0.9 * lum(dG2), 1.0, near * 0.5) * mix(1.0, 0.3 + 2.4 * lum(dG), 0.6 * near) * mix(vec3(1.0), dG / max(lum(dG), 0.05), 0.3 * near);
   // скалы: крутые склоны и голая Лысая гора (там же — бледная выгоревшая трава)
-  float rA = lum(texture2D(aRA, vWp.xz / 300.0).rgb), rl = lum(texture2D(aRk, vWp.xz / 24.0).rgb);
+  float rA = lum(texture2D(aRA, vWp.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(aRk, vWp.xz, 24.0, vec2(0.0)).rgb) : 0.5;
   vec3 rock = vec3(0.12, 0.11, 0.095) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
   float bald = 1.0 - smoothstep(uBald.z * 0.45, uBald.z * 0.85, distance(vWp.xz, uBald.xy) + 120.0 * (vn(vWp.xz / 90.0) - 0.5));
   grass = mix(grass, grass * vec3(1.35, 1.25, 1.0) + 0.02, bald * 0.7);
@@ -90,18 +96,18 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
   col = mix(col, bog, smoothstep(0.3, 0.8, Z2.a + 0.25 * (vn(vWp.xz / 150.0) - 0.5)) * (1.0 - smoothstep(4.0, 9.0, hgt - ${AUTUMN.WY.toFixed(1)})));
   // дно оврага: сырая грязь и палая листва (где врезка глубже, а земля ниже краёв)
   float rv = smoothstep(0.6, 0.85, Z2.r + 0.15 * (vn(vWp.xz / 40.0) - 0.5)) * (1.0 - smoothstep(0.12, 0.28, slope)); // только дно (врезка глубже ~35 м и полого)
-  vec3 mud = texture2D(aM, vWp.xz / 5.0).rgb * 0.5 * mix(1.0, 0.7 + 0.6 * mA, 1.0 - near);
+  vec3 mud = texF(aM, vWp.xz, 5.0, vec2(0.0)).rgb * 0.5 * mix(1.0, 0.7 + 0.6 * mA, 1.0 - near);
   col = mix(col, mud, rv * 0.75);
   // лес: издали — рыжая, жёлтая, бурая крона и серый сухостой пятнами (импосторы редкие), вблизи под деревьями — листва
   float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(vWp.xz / 160.0) - 0.5) + 0.3 * (vn(vWp.xz / 45.0) - 0.5)), far = smoothstep(300.0, 1600.0, dist);
   float ch = vn(vWp.xz / 38.0) * 0.65 + vn(vWp.xz / 9.0) * 0.35;
   vec3 canopy = ch < 0.3 ? vec3(0.28, 0.08, 0.015) : ch < 0.5 ? vec3(0.34, 0.17, 0.02) : ch < 0.7 ? vec3(0.3, 0.24, 0.035) : ch < 0.86 ? vec3(0.19, 0.1, 0.035) : vec3(0.12, 0.1, 0.08);
   canopy = mix(canopy, vec3(0.03, 0.05, 0.03), step(0.9, vn(vWp.xz / 260.0 + 3.1))); // кое-где ельник
-  vec3 litter = texture2D(aL, vWp.xz / 4.0).rgb * 0.6;
+  vec3 litter = far < 1.0 ? texF(aL, vWp.xz, 4.0, vec2(0.0)).rgb * 0.6 : vec3(0.0);
   col = mix(col, canopy * (0.75 + 0.5 * vn(vWp.xz / 14.0)), fr * far * 0.85);
   col = mix(col, mix(col, litter, 0.7), fr * (1.0 - far));
   // поля: пашня (бурые борозды) и тыквенные (вблизи — оранжевые точки по рядам, вдали — рыжий отлив)
-  vec3 fld = texture2D(aF, vWp.xz / 9.0).rgb * 0.55 * mix(0.9, 1.1, vn(vWp.xz / 30.0));
+  vec3 fld = texF(aF, vWp.xz, 9.0, vec2(0.0)).rgb * 0.55 * mix(0.9, 1.1, vn(vWp.xz / 30.0));
   float pf = smoothstep(0.3, 0.7, Z2.b), pl = smoothstep(0.3, 0.7, Z2.g);
   col = mix(col, fld, max(pl, pf) * 0.9);
   vec2 pc = floor(vWp.xz / 2.2); float pk = step(0.62, hs(pc)) * (1.0 - smoothstep(0.25, 0.45, length(fract(vWp.xz / 2.2) - 0.5)));
@@ -110,7 +116,7 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
   vec2 jo = (vec2(vn(vWp.xz / 70.0), vn(vWp.xz / 70.0 + 5.3)) - 0.5) * 100.0;
   float zb = smoothstep(0.3, 0.8, texture2D(tZ, (vWp.xz + jo + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).b + 0.3 * (vn(vWp.xz / 45.0) - 0.5));
   float za = smoothstep(0.1, 0.9, Z.a + 0.4 * (vn(vWp.xz / 80.0) - 0.5));
-  vec3 dirt = texture2D(aM, vWp.xz / 6.0).rgb * 0.5 * vec3(1.05, 1.0, 0.92);
+  vec3 dirt = texF(aM, vWp.xz, 6.0, vec2(0.0)).rgb * 0.5 * vec3(1.05, 1.0, 0.92);
   col = mix(col, dirt, zb * 0.85); col = mix(col, mix(col, dirt, 0.45), za * 0.6);
   // туман в низинах: над болотом и в оврагах — плотная пелена (вдали сильнее, вблизи — дымка)
   // (подмешивается после освещения — как туман, см. fog_fragment): клочьями, к дальним — плотнее
@@ -120,7 +126,8 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
   gl_FragColor.rgb = mix(gl_FragColor.rgb, uLow.rgb, clamp(aLow * uLow.w * 0.8, 0.0, 0.85));`)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   // мелкий рельеф травы и земли: нормали текстуры в двух масштабах, вблизи сильнее
-  vec2 nd = (texture2D(aGN, vWp.xz / 5.0).xy - 0.5) * 0.8 * (1.0 - smoothstep(150.0, 900.0, length(vWp - uCam))) + (texture2D(aGN, vWp.xz / 60.0 + 0.5).xy - 0.5) * 0.35;
+  float nw = 1.0 - smoothstep(150.0, 900.0, length(vWp - uCam));
+  vec2 nd = (nw > 0.0 ? (texF(aGN, vWp.xz, 5.0, vec2(0.0)).xy - 0.5) * 0.8 * nw : vec2(0.0)) + (texture2D(aGN, vWp.xz / 60.0 + 0.5).xy - 0.5) * 0.35;
   vec3 wn2 = normalize(wN + vec3(nd.x, 0.0, -nd.y));
   normal = normalize((viewMatrix * vec4(wn2, 0.0)).xyz);`);
   };

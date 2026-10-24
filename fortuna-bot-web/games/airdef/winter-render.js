@@ -7,6 +7,7 @@ import { tr } from './i18n.js?v=20261024u';
 import { ZONE } from './city.js?v=20261024u';
 import { WINTER } from './map-winter.js?v=20261024u';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261024u';
+import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261024u';
 
 // погода зимней карты (панорамы — Poly Haven, CC0): ясный мороз, морозная дымка, пасмурно со снегом
 export function winterWeathers(W) {
@@ -45,10 +46,12 @@ export function winterNormalTex(city) {
 }
 // текстуры зимы (tex/w_*.jpg): снег, снимок снега с высоты, скала, скалы с высоты, лёд, асфальт со снегом
 const WTEX = { wSn: 'w_snow', wSnN: 'w_snow_n', wSA: 'w_snowA', wRk: 'w_rock', wRA: 'w_rockA', wIce: 'w_ice', wAs: 'w_asph' };
+const WCOARSE = new Set(['wSA', 'wRA']); // снимки с высоты (плитка 300–1900 м) — без анизотропии: крупный рисунок не мылится, а выборка втрое дешевле (ground-far.js)
+// мелкие (снег, скала, лёд, асфальт) — не больше 4, как у осени: вдали они и так средним цветом
 export function winterTextures(aniso, stats) {
   const U = {};
   for (const [u, f] of Object.entries(WTEX)) {
-    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
+    const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = WCOARSE.has(u) ? 1 : Math.min(4, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
     if (stats) stats.req++;
     fetch(new URL(`./tex/${f}.jpg?v=20261021a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f)))).then((b) => createImageBitmap(b))
@@ -59,9 +62,10 @@ export function winterTextures(aniso, stats) {
 // материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере
 export function winterGroundMaterial(city, zt, nt, ENV, WT) {
   const a = city.airport, H = 16000;
-  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x101418, shininess: 14 }); m.userData.WT = WT;
+  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x101418, shininess: 14 }); m.userData.WT = WT; m.userData.AT = WT; m.userData.farU = FAR_U;
+  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) — на WebGL 1; на WebGL 2 и так есть
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, WT, { uCam: ENV.uCam, tZ: { value: zt }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(a.x, a.z, a.rwyL / 2, a.rwyW / 2) },
+    Object.assign(sh.uniforms, WT, { uFar: FAR_U, uCam: ENV.uCam, tZ: { value: zt }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(a.x, a.z, a.rwyL / 2, a.rwyW / 2) },
       uIce: { value: new THREE.Vector4(WINTER.LAKE_N_Y, WINTER.LAKE_S_Y, WINTER.DAM_Z, 0) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam; uniform vec4 uAir, uIce; uniform sampler2D tZ, tNm, wSn, wSnN, wSA, wRk, wRA, wIce, wAs;
@@ -69,17 +73,19 @@ export function winterGroundMaterial(city, zt, nt, ENV, WT) {
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум — текстурой (noise-tex.js), как у осени' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN;
-` + sh.fragmentShader
+      ${FAR_GLSL}
+` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
+  farInit(vWp.xz); // мелкие текстуры вдали — средним цветом (texF, ground-far.js); вблизи — только при ненулевом весе
   vec2 mp = (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)};
   vec4 Z = texture2D(tZ, mp); wN = normalize(texture2D(tNm, mp).xyz * 2.0 - 1.0);
   float slope = 1.0 - wN.y, hgt = vWp.y, dist = length(vWp - uCam), near = 1.0 - smoothstep(250.0, 1400.0, dist);
   // снег: снимок с высоты (крупные пятна, кусты) и мелкий рельеф вблизи; на солнце почти белый, в низинах — голубее
   vec3 sA = texture2D(wSA, vWp.xz / 420.0).rgb, sA2 = texture2D(wSA, vWp.xz / 1900.0 + 0.37).rgb;
-  float dS = lum(texture2D(wSn, vWp.xz / 7.0).rgb) / 0.82;
+  float dS = near > 0.0 ? lum(texF(wSn, vWp.xz, 7.0, vec2(0.0)).rgb) / 0.82 : 1.0;
   vec3 snow = vec3(0.8, 0.83, 0.88) * mix(1.0, dS, 0.4 * near) * mix(vec3(1.0), sA * sA / 0.62, 0.35) * mix(vec3(1.0), sA2 * sA2 / 0.62, 0.25);
   // скалы: крутые склоны и выдутые ветром гребни (рисунок — из текстур, цвет — серый камень)
-  float rA = lum(texture2D(wRA, vWp.xz / 300.0).rgb), rl = lum(texture2D(wRk, vWp.xz / 24.0).rgb);
+  float rA = lum(texture2D(wRA, vWp.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(wRk, vWp.xz, 24.0, vec2(0.0)).rgb) : 0.5;
   vec3 rock = vec3(0.13, 0.125, 0.12) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
   float rk = smoothstep(0.2, 0.36, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(vWp.xz / 60.0) - 0.5));
   rk = max(rk, smoothstep(1250.0, 1650.0, hgt) * smoothstep(0.1, 0.26, slope + 0.1 * (rA - 0.5)));
@@ -94,10 +100,10 @@ export function winterGroundMaterial(city, zt, nt, ENV, WT) {
   // берег — по высоте над уровнем льда (линия идёт по рельефу, а не по клеткам), у кромки — наметённый снег
   float iceY = vWp.z < uIce.z ? uIce.x : max(uIce.y, 144.0 - vWp.z * 0.004);
   float ik = smoothstep(0.0, 0.3, Z.g) * (1.0 - smoothstep(0.1, 1.2, hgt - iceY + 1.6 * (vn(vWp.xz / 40.0) - 0.5) + 0.6 * (vn(vWp.xz / 9.0) - 0.5)));
-  vec3 ice = mix(vec3(0.33, 0.43, 0.5) * (0.85 + 0.3 * lum(texture2D(wIce, vWp.xz / 30.0).rgb)), snow, max(ip * 0.8, 1.0 - smoothstep(0.35, 0.9, ik)));
+  vec3 ice = mix(vec3(0.33, 0.43, 0.5) * (0.85 + 0.3 * lum(texF(wIce, vWp.xz, 30.0, vec2(0.0)).rgb)), snow, max(ip * 0.8, 1.0 - smoothstep(0.35, 0.9, ik)));
   col = mix(col, ice, ik);
   // база и площадки: укатанный снег с колеями, местами асфальт; посёлок — снег серее
-  float as = lum(texture2D(wAs, vWp.xz / 6.0).rgb);
+  float as = lum(texF(wAs, vWp.xz, 6.0, vec2(0.0)).rgb);
   // площадки: край — размытый и рваный (среднее по 4 точкам вокруг, ~90 м, со сдвигом по шуму)
   vec2 jo = (vec2(vn(vWp.xz / 70.0), vn(vWp.xz / 70.0 + 5.3)) - 0.5) * 120.0;
   float zbB = 0.0; for (int k = 0; k < 4; k++) { vec2 o = vec2(k == 0 ? 90.0 : k == 1 ? -90.0 : 0.0, k == 2 ? 90.0 : k == 3 ? -90.0 : 0.0); zbB += texture2D(tZ, (vWp.xz + o + jo + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).b; }
@@ -118,7 +124,8 @@ export function winterGroundMaterial(city, zt, nt, ENV, WT) {
   diffuseColor.rgb = col;`)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   // мелкий рельеф снега (сугробы, наст): нормали текстуры в двух масштабах, вблизи сильнее; на скалах — слабее
-  vec2 nd = (texture2D(wSnN, vWp.xz / 6.0).xy - 0.5) * 0.9 * (1.0 - smoothstep(150.0, 900.0, length(vWp - uCam))) + (texture2D(wSnN, vWp.xz / 55.0 + 0.5).xy - 0.5) * 0.5;
+  float nw = 1.0 - smoothstep(150.0, 900.0, length(vWp - uCam));
+  vec2 nd = (nw > 0.0 ? (texF(wSnN, vWp.xz, 6.0, vec2(0.0)).xy - 0.5) * 0.9 * nw : vec2(0.0)) + (texture2D(wSnN, vWp.xz / 55.0 + 0.5).xy - 0.5) * 0.5;
   vec3 wn2 = normalize(wN + vec3(nd.x, 0.0, -nd.y));
   normal = normalize((viewMatrix * vec4(wn2, 0.0)).xyz);`);
   };

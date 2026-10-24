@@ -23,6 +23,7 @@ let GH = groundH, ZA = zoneAt;
 import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261024u'; // MIT, meshoptimizer 0.21
 import { bakeGroup } from './merge.js?v=20261024u';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261024u';
+import { FAR_U, groundShadowChunk } from './ground-far.js?v=20261024u';
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -71,10 +72,10 @@ function loadCityTextures(aniso) {
   if (viaKtx) { left -= 1; texStats.req = left; ktxMeta().then((m) => { for (const [u, c] of Object.entries(m.avg || {})) { const av = TEX['uAvg' + u.slice(1)]; if (av) av.value.set(c[0], c[1], c[2]); } }).catch(() => {}); }
   for (const [u, f] of Object.entries(TEX_FILES)) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping;
-    t.anisotropy = aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t };
+    t.anisotropy = u === 'tGA' ? 1 : aniso; t.minFilter = THREE.LinearMipmapLinearFilter; TEX[u] = { value: t }; // снимок с высоты (плитка 260 м) — без анизотропии (ground-far.js)
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
     if (viaKtx && (u === 'tGGn' || u === 'tGDn')) { if (u === 'tGGn') ktxLoad('g_gn').then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; TEX.tGN.value = k; done(); }).catch(() => done()); continue; }
-    if (viaKtx) { ktxLoad(f).then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.anisotropy = aniso; TEX[u].value = k; done(); }).catch(() => jpg(u, f, t)); continue; }
+    if (viaKtx) { ktxLoad(f).then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.anisotropy = t.anisotropy; TEX[u].value = k; done(); }).catch(() => jpg(u, f, t)); continue; }
     jpg(u, f, t);
   }
   function jpg(u, f, t) {
@@ -166,14 +167,14 @@ function roadTexture(city) {
   return t;
 }
 function groundMaterial(tex, ao, road) {
-  const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 });
+  const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 }); m.userData.farU = FAR_U; m.userData.AT = TEX;
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, ENV, TEX, { tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
+    Object.assign(sh.uniforms, ENV, TEX, { uFar: FAR_U, tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
     const G = CITY.GRID.toFixed(1), AV = CITY.AVE_EVERY.toFixed(1), HA = (CITY.AVENUE / 2).toFixed(1), HS = (CITY.STREET / 2).toFixed(1);
     const RNf = RN.toFixed(1), RSf = RS.toFixed(1), HR = RURAL_HW.toFixed(1);
     // шум земли — текстурой (noise-tex.js): vns() здесь — 13 вызовов на пиксель по 4 хэша; в остальных шейдерах города vns прежний
-    sh.fragmentShader = 'varying vec3 vWp; uniform sampler2D tAO, tRoad; uniform vec4 uAir;\n' + GLSL_COMMON + (NOISE_ON ? NOISE_GLSL + '#define vns vnt\n' : '') + GLSL_TEX + `
+    sh.fragmentShader = 'varying vec3 vWp; uniform sampler2D tAO, tRoad; uniform vec4 uAir; uniform float uFar;\n' + GLSL_COMMON + (NOISE_ON ? NOISE_GLSL + '#define vns vnt\n' : '') + GLSL_TEX + `
 // вид отрезка дороги: линия i (вдоль Z) между j и j+1 — .r, линия j (вдоль X) между i и i+1 — .g
 vec2 roadSeg(float i, float j) { return texture2D(tRoad, (vec2(i, j) + ${RNf} + 0.5) / ${RSf}).rg; }
 // дорога вдоль линии сетки: o — смещение от оси, hw — полуширина, ave — проспект
@@ -181,7 +182,7 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   float i = floor(p / ${G} + 0.5); o = p - i * ${G};
   ave = mod(i, ${AV}) < 0.5 ? 1.0 : 0.0; hw = ave > 0.5 ? ${HA} : ${HS};
 }
-` + sh.fragmentShader.replace('#include <map_fragment>', `#include <map_fragment>
+` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk()).replace('#include <map_fragment>', `#include <map_fragment>
   float urb = diffuseColor.a; diffuseColor.a = 1.0;
   float dist = length(vWp - uCam), px = max(0.05, dist * uPx), fine = 1.0 - smoothstep(0.4, 2.5, px);
   vec3 col = diffuseColor.rgb;
@@ -193,9 +194,11 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   float tk = 0.0, dG = 1.0, dC = 1.0, dA = 1.0, dR = 1.0, dS = 1.0, dP = 1.0;
   if (uTexOn > 0.5) {
     tk = 1.0 - smoothstep(0.12, 1.0, px);
+    if (tk > 0.0 || uFar == 0.0) { // вдали (вес 0) — без выборок (ground-far.js; ?gf=0 — как раньше)
     dG = mix(1.0, mix(dl(tGG, vWp.xz / 3.6, sqrt(dot(uAvgGG, vec3(0.3, 0.59, 0.11)))), dl(tGD, vWp.xz / 4.2, sqrt(dot(uAvgGD, vec3(0.3, 0.59, 0.11)))), smoothstep(0.55, 0.75, n2)), tk); dC = mix(1.0, dl(tConc, vWp.xz / 7.0, 0.364), tk); // трава с проплешинами сухой земли
     dA = mix(1.0, dl(tAsph, vWp.xz / 4.0, 0.351), tk); dP = mix(1.0, dl(tPave, vWp.xz / 2.5, 0.435), tk);
     dR = mix(1.0, dl(tAsph, vWp.xz / 7.0, 0.351), tk); dS = mix(1.0, dl(tGrav, vWp.xz / 2.5, 0.257), tk); // загородная трасса — латаный асфальт, обочина — щебень
+    }
   }
   float gm = clamp((col.g - col.b) * 14.0, 0.0, 1.0); // зелень (трава, поля) — иначе бетон и грунт
   // ── поля за городом (альфа зоны 0): лоскуты 300–500 м — пастбище, пашня, пшеница, всходы рядами; межи — тёмные полосы
@@ -221,11 +224,12 @@ void roadAt(float p, out float o, out float hw, out float ave) {
     float pm = smoothstep(0.07, 0.11, urb) * (1.0 - smoothstep(0.16, 0.24, urb)); // парк, перелесок — лесная подстилка
     { float pn = vns(vWp.xz / 45.0 + 17.0) * 0.7 + vns(vWp.xz / 11.0) * 0.3; // пятна: тёмная трава ↔ бурая подстилка под кронами
       col = mix(col, mix(srgb(vec3(0.24, 0.31, 0.15)), uAvgFG * 0.85, smoothstep(0.35, 0.7, pn)), pm * gm * 0.75); }
-    vec3 mid = mix(mix(mix(cr(tGG, vWp.xz / 25.0, uAvgGG), cr(tGD, vWp.xz / 31.0, uAvgGD), dryM), cr(tGF, vWp.xz / 18.0, uAvgGF), plough * fm), cr(tFG, vWp.xz / 14.0, uAvgFG), pm);
+    bool mOn = midK > 0.0 || uFar == 0.0, nOn = tk > 0.0 || uFar == 0.0; // средние и мелкие текстуры — только где их вес не 0 (вдали без выборок)
+    vec3 mid = mOn ? mix(mix(mix(cr(tGG, vWp.xz / 25.0, uAvgGG), cr(tGD, vWp.xz / 31.0, uAvgGD), dryM), cr(tGF, vWp.xz / 18.0, uAvgGF), plough * fm), cr(tFG, vWp.xz / 14.0, uAvgFG), pm) : vec3(1.0);
     col *= mix(vec3(1.0), mid, 0.45 * gm * midK);
-    vec3 mic = mix(mix(mix(cr(tGG, vWp.xz / 3.6, uAvgGG), cr(tGD, vWp.xz / 4.2, uAvgGD), dryM), cr(tGF, vWp.xz / 3.0, uAvgGF), plough * fm), cr(tFG, vWp.xz / 2.6, uAvgFG), pm);
+    vec3 mic = nOn ? mix(mix(mix(cr(tGG, vWp.xz / 3.6, uAvgGG), cr(tGD, vWp.xz / 4.2, uAvgGD), dryM), cr(tGF, vWp.xz / 3.0, uAvgGF), plough * fm), cr(tFG, vWp.xz / 2.6, uAvgFG), pm) : vec3(1.0);
     col *= mix(vec3(1.0), mic, 0.6 * gm * tk);
-    vec4 nM = texture2D(tGN, vWp.xz / 25.0), nN = texture2D(tGN, vWp.xz / 3.6); float dP2 = max(dryM, plough * fm); // пашня — рельеф сухой земли
+    vec4 nM = mOn ? texture2D(tGN, vWp.xz / 25.0) : vec4(0.5), nN = nOn ? texture2D(tGN, vWp.xz / 3.6) : vec4(0.5); float dP2 = max(dryM, plough * fm); // пашня — рельеф сухой земли
     float rM = mix(reliefN(nM.rg, uSun), reliefN(nM.ba, uSun), dP2), rN = mix(reliefN(nN.rg, uSun), reliefN(nN.ba, uSun), dP2);
     col *= mix(1.0, rM, 0.45 * gm * midK) * mix(1.0, rN, 0.55 * gm * tk);
     col *= mix(1.0, 0.82, pm * gm); // под деревьями темнее
@@ -293,7 +297,7 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   float rwy = (1.0 - smoothstep(uAir.z - px, uAir.z + px, ra.x)) * (1.0 - smoothstep(uAir.w - px, uAir.w + px, ra.y));
   float cl = step(ra.y, 0.7) * step(0.5, fract(vWp.x / 50.0)) * step(ra.x, uAir.z - 90.0);
   float keys = step(uAir.z - 60.0, ra.x) * step(ra.x, uAir.z - 10.0) * step(0.5, fract(ra.y / 3.0)) * step(ra.y, uAir.w - 4.0);
-  col = mix(col, vec3(0.1, 0.1, 0.098) * mix(1.0, dl(tConc, vWp.xz / 5.0, 0.364), tk), rwy); // ВПП — бетонные плиты
+  col = mix(col, vec3(0.1, 0.1, 0.098) * (tk > 0.0 || uFar == 0.0 ? mix(1.0, dl(tConc, vWp.xz / 5.0, 0.364), tk) : 1.0), rwy); // ВПП — бетонные плиты
   col = mix(col, vec3(0.6), min(cl + keys, 1.0) * rwy * (1.0 - smoothstep(0.6, 3.0, px)));
   // затенение у домов
   float ao = texture2D(tAO, (vWp.xz + ${CITY.GH.toFixed(1)}) / ${(2 * CITY.GH).toFixed(1)}).r;
@@ -1310,6 +1314,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const aniso = renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1;
   const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
+  // земля — последней из непрозрачного (2026-10-25): её шейдер — самый дорогой, а под лесом, домами и техникой он теперь не считается —
+  // их глубина уже в буфере (стенд: кадр за самолётом над лесом −13 % на «Высоком», −6 % на «Среднем»; картинка та же — прозрачное всё равно после)
+  if (!/[?&]gro=0/.test(typeof location !== 'undefined' ? location.search : '')) ground.renderOrder = 1;
   { // высота самой сетки земли (треугольники через 2·HALF/seg м), а не точная высота карты: на выпуклом склоне сетка выше на метры,
     // у берега реки в городе (спуск к воде ~60 м, клетка сетки — больше) — ниже или выше. По ней ставятся машины ПВО (main.js seat)
     const st = 2 * CITY.HALF / seg, gH = city.groundH, n1 = seg + 1, hv = new Float32Array(n1 * n1);
