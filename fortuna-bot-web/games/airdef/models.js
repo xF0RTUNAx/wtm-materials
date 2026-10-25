@@ -172,7 +172,7 @@ const META = {
   w_nar_hydra: { lazy: true, stations: [], matte: true }, // НАР Hydra 70 в полёте — собственная модель (Blender, tools/airdef-models/own)
   w_nar_s8: { lazy: true, stations: [], matte: true }, // НАР С-8КОМ в полёте — собственная модель (Blender, tools/airdef-models/own)
   w_tbmdec: { lazy: true, stations: [] }, // ложная цель «Искандера» — головная часть его ракеты
-  w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // «Кинжал» — ракета 9М723 с пусковой «Искандера» (dofash_76), 7,2 м, светло-серая
+  w_kinzhal: { weapon: 'kinzhal', lazy: true, stations: [] }, // Х-47М2 «Кинжал» — собственная модель (tools/airdef-models/own/kinzhal)
   w_slam: { weapon: 'slam', lazy: true, stations: [] }, // AGM-84E SLAM — по UGM-84 Harpoon (FeriseCAT)
   w_jsow: { weapon: 'jsow', lazy: true, wings: 'deploy', stations: [] }, // AGM-154 JSOW — RickSlash
   w_kh101: { weapon: 'kh101', lazy: true, stations: [] },
@@ -317,6 +317,7 @@ const GLB_V_OWN = {
   nasams: '20261025n', // NASAMS — своя пусковая (сборщик, Свои/NASAMS) вместо Muhamad Mirza Arrafi («сделано ИИ»), 2026-10-25
   nasams_lo: '20261025n',
   msl_amraam: '20261025n', // AIM-120A — своя ракета NASAMS вместо вырезки из F/A-18 andertan (msl_aim120 остаётся «Летке»)
+  w_kinzhal: '20261025o',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
@@ -330,7 +331,7 @@ Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', '
 GLB_V.w_storm = '20261024k'; // Storm Shadow: консоли крыла — свои части (сложены на подвеске)
 Object.assign(GLB_V, { su30: '20261024p', f16: '20261024p' }); // Су-30МКИ и F-16E/F — andertan (CC BY 4.0) вместо Immersive3D и Muhamad Mirza Arrafi (сомнительные права: F-16 помечен на Sketchfab как сгенерированный нейросетью, у Immersive3D — рипы Unreal) (2026-10-24)
 Object.assign(GLB_V, { e_b1b: '20261024q', e_f18c: '20261024q', e_su25: '20261024q' }); // B-1B и F/A-18C — manilov.ap, Су-25 — mamont nikita (все CC BY 4.0) вместо моделей Muhamad Mirza Arrafi, Rhine_Lab_Muelsyse и Immersive3D (сомнительные права) (2026-10-24)
-Object.assign(GLB_V, { l_iskander: '20261024s', w_kinzhal: '20261024r', w_tbmdec: '20261024r' }); // «Искандер», «Кинжал» и ложная цель — dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse — лицензия недействительна) (2026-10-24)
+Object.assign(GLB_V, { l_iskander: '20261024s', w_tbmdec: '20261024r' }); // «Искандер» и ложная цель («Кинжал» — своя модель с 2026-10-25, GLB_V_OWN) — dofash_76 «ISKANDER» (CC BY 4.0) вместо 42manako (перезалив модели из 3D Warehouse — лицензия недействительна) (2026-10-24)
 GLB_V.e_su34 = '20261024l'; // Су-34 manilov.ap (CC BY 4.0) вместо 42manako, без шасси (2026-10-22)
 Object.assign(GLB_V, { hawk: '20261024m', w_gbu24: '20261024m' }); // Hawk: ракета без деталей пусковой (absorb 0); GBU-24 — AnirudhRao, своя окраска
 Object.assign(GLB_V, GLB_V_OWN);

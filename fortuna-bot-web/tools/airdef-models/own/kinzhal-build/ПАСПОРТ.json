@@ -1,0 +1,15 @@
+{
+ "key": "w_kinzhal",
+ "weapon": "kinzhal",
+ "name": "Х-47М2 «Кинжал»",
+ "rev": 1,
+ "files": {
+  "glb": "kinzhal.glb",
+  "blend": "kinzhal.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py"
+  ]
+ }
+}

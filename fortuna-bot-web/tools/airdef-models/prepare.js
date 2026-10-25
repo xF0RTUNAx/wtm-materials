@@ -255,10 +255,8 @@ const CONFIG = {
   w_jsow: { src: `${DL}/agm-154_jsow_missile.glb`, scale: 2.05, nose: '+z', rulesIn: 'game', tex: () => 512, pickMesh: /./,
     groups: (c) => (c.size[1] < 0.06 && c.ctr[1] > 0.12 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') },
   w_jsow_old: { src: `${DL}/300_followers_-_free_aircraft_missile_set.glb`, scale: 1, nose: '-x', tex: () => 256, pickMesh: /AGM-154 JSOW/, groups: (c) => (c.size[1] < 0.05 && c.ctr[1] > 2.9 ? (c.ctr[2] > 0 ? 'wingA' : 'wingB') : 'body') }, // AGM-154 JSOW — 4,1 м; крылья в модели сложены — раскрываются после сброса
-  // «Кинжал» — ракета 9М723 с пусковой «Искандера» (Х-47М2 сделан на её основе; решение Mark 2026-10-12): у автора (dofash_76, CC BY 4.0) она стоит на
-  // поднятой направляющей — ось наклонена (нос в сторону кабины, 56,8° над горизонтом): axes кладёт её вдоль −Z; светло-серая, как на фото
-  w_kinzhal: { src: `${DL}/iskander_dofash76.glb`, scale: ISK_KZ, axes: ISK_FLAT, rulesIn: 'game', pickMesh: /\/Loft\//, tex: () => 256,
-    texVf: 'hue=s=0,eq=brightness=0.25:contrast=0.15,colorchannelmixer=rr=0.97:bb=1.03' /* камуфляж автора сглажен до ровного светло-серого */, groups: () => 'body' }, // 7,2 м (у автора 3,23 ед.); без рулей — у автора ракета гладкая
+  // «Кинжал» (до 2026-10-25 — ракета 9М723 с пусковой «Искандера», dofash_76, перекрашенная в светло-серый)
+  w_kinzhal: { src: new URL('./own/kinzhal.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-47М2 «Кинжал»: своя модель (Blender, own/kinzhal.glb)
   // ложная цель «Искандера» — отделяемая головная часть той же ракеты (обычного цвета ракеты, без перекраски)
   w_tbmdec: { src: `${DL}/iskander_dofash76.glb`, scale: ISK_KZ, axes: ISK_FLAT, rulesIn: 'game', pickMesh: /\/Loft\//, tex: () => 256, cutZ: [-99, ISK_CUT], /* только головная часть: обтекатель и боевая часть, ~2 м от носа */ groups: () => 'body' },
   // 9П78 «Искандер» — dofash_76 (CC BY 4.0; прежняя — 42manako, перезалив 3D Warehouse): 13,0 м (у автора 6,64 ед.), нос машины — к −Z; на поднятой направляющей одна ракета

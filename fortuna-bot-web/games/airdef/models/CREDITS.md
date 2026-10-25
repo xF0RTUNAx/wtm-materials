@@ -96,7 +96,7 @@
 - "Eurofighter Typhoon EF-2000" (https://sketchfab.com/3d-models/eurofighter-typhoon-ef-2000-84c33660f1824d14babc9267967af865) by andertan — CC-BY-4.0 — `e_typhoon.glb`
 - "UGM-84 Harpoon (FREE)" (https://sketchfab.com/3d-models/ugm-84-harpoon-free-d62d60fac04f4d6b86e24ad06a1f99c6) by FeriseCAT — CC-BY-4.0 — `w_slam.glb`
 - "AGM-154 JSOW missile" (https://sketchfab.com/3d-models/agm-154-jsow-missile-03148c5054e54a1c99980aff68952c0f) by RickSlash — CC-BY-4.0 — `w_jsow.glb`
-- "ISKANDER" (https://sketchfab.com/3d-models/iskander-244b511ee2ca4f3794d118b872ee229c) by dofash_76 — CC-BY-4.0 — `w_kinzhal.glb`, `w_tbmdec.glb`, `l_iskander.glb`
+- "ISKANDER" (https://sketchfab.com/3d-models/iskander-244b511ee2ca4f3794d118b872ee229c) by dofash_76 — CC-BY-4.0 — `w_tbmdec.glb`, `l_iskander.glb`
 - "Scud ( Ballistic missile )" (https://sketchfab.com/3d-models/scud-ballistic-missile-30cf91617bad4a4bb07d0856ccd55ff0) by AlexDang — CC-BY-4.0 — `l_scud.glb`
 - "M142 HIMARS | FREE MODEL | ANIMATION" (https://sketchfab.com/3d-models/m142-himars-free-model-animation-53c53a112c674d29a2afdbddbe3cecb5) by Denis.Cherkasov1 — CC-BY-4.0 — `l_himars.glb`, `w_atacms.glb`
 - "Modular Road Bridge" (https://sketchfab.com/3d-models/modular-road-bridge-f14e768fde1d4d4d9ef8886ca55cfc03) by VectorMan — CC-BY-4.0 — `br_seg.glb`

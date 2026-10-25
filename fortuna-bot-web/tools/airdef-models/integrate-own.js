@@ -93,14 +93,18 @@ if (newCredits) wr(cpath, newCredits); if (newMd) wr(mpath, newMd);
 console.log('5. авторы чужого набора: ' + (credRemoved || newMd ? 'строка убрана' : 'менять нечего'));
 
 // ── 6. миниатюра ──
+// узел прокачки: оружие самолёта (wpn:) или удар «Мульти-волны» (strike:, «Кинжал», баллистика) — у удара своя миниатюра strike_<ключ>
+// (2026-10-25: «Кинжал» снимался как wpn:kinzhal — такого узла нет, миниатюра не обновилась)
+const { NODE } = await import(WEB + 'games/airdef/progress.js');
+const TID = NODE['wpn:' + P.weapon] ? 'wpn:' + P.weapon : NODE['strike:' + P.weapon] ? 'strike:' + P.weapon : 'wpn:' + P.weapon, TFILE = `games/airdef/thumbs/${TID.replace(':', '_')}.webp`;
 const up = async () => { try { return (await fetch('http://localhost:8935/fortuna-bot-web/games/airdef.html', { method: 'HEAD' })).ok; } catch { return false; } };
 if (NOTHUMB || DRY) console.log('6. миниатюра пропущена');
-else if (!(await up())) console.log(`6. сервер :8935 не запущен — миниатюру позже: deno run -A tools/airdef-headless/thumbs-bake.js wpn:${P.weapon}`);
-else { const r = new Deno.Command(Deno.execPath(), { args: ['run', '-A', WEB + 'tools/airdef-headless/thumbs-bake.js', `wpn:${P.weapon}`], stdout: 'piped', stderr: 'piped' }).outputSync(); console.log('6. миниатюра ' + (r.success ? 'снята' : 'не снялась')); }
+else if (!(await up())) console.log(`6. сервер :8935 не запущен — миниатюру позже: deno run -A tools/airdef-headless/thumbs-bake.js ${TID}`);
+else { const r = new Deno.Command(Deno.execPath(), { args: ['run', '-A', WEB + 'tools/airdef-headless/thumbs-bake.js', TID], stdout: 'piped', stderr: 'piped' }).outputSync(); console.log('6. миниатюра ' + (r.success ? 'снята' : 'не снялась')); }
 
 // ── 7. коммит (только по --commit) ──
 const gitPaths = ['tools/airdef-models/prepare.js', `tools/airdef-models/own/${base}.glb`, `tools/airdef-models/own/${base}.blend`, `tools/airdef-models/own/${base}-build`, 'games/airdef/models.js',
-  `games/airdef/models/${KEY}.glb`, 'games/airdef/models/credits.js', 'games/airdef/models/CREDITS.md', `games/airdef/thumbs/wpn_${P.weapon}.webp`].filter((x) => exists(WEB + x));
+  `games/airdef/models/${KEY}.glb`, 'games/airdef/models/credits.js', 'games/airdef/models/CREDITS.md', TFILE].filter((x) => exists(WEB + x));
 if (COMMIT) {
   if (DRY) console.log('7. [dry] коммит только путей: ' + gitPaths.join(', '));
   else {
@@ -122,5 +126,5 @@ if (COMMIT) {
 }
 
 console.log(`
-Готово. В коммит — только: tools/airdef-models/prepare.js, tools/airdef-models/own/${base}.* и own/${base}-build/, games/airdef/models.js, games/airdef/models/${KEY}.glb, games/airdef/models/credits.js, games/airdef/models/CREDITS.md, games/airdef/thumbs/wpn_${P.weapon}.webp.
+Готово. В коммит — только: tools/airdef-models/prepare.js, tools/airdef-models/own/${base}.* и own/${base}-build/, games/airdef/models.js, games/airdef/models/${KEY}.glb, games/airdef/models/credits.js, games/airdef/models/CREDITS.md, ${TFILE}.
 Дальше — как после любой правки игры: тесты через airdef-tester, строка в журнал, коммит, пуш в online-dev.`);
