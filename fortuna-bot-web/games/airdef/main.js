@@ -42,6 +42,7 @@ import { createResearch } from './research.js?v=20261025a';
 import { createEvent } from './event.js?v=20261025a';
 import { createAccount } from './account-ui.js?v=20261025a';
 import { createRating } from './rating-ui.js?v=20261025a';
+import { createEndScreen } from './endscr.js?v=20261025a';
 import { createHints } from './hints.js?v=20261025a';
 import { motorOf } from './plume.js?v=20261025a';
 import { createShell } from './shell.js?v=20261025a';
@@ -796,6 +797,7 @@ C.start = function (game) {
   snd.unlock();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
   C.hooks = {}; C.paused = false; C.hint(''); C.say('');
+  C.endScr.reset(); C.bt = 0; C.blog = []; C.bkey = {}; // часы боя и журнал событий для «Разбора» (C.bev)
   $('menu').classList.remove('on'); $('end').classList.remove('on'); $('pauseScr').classList.remove('on');
   document.body.classList.remove('menuing'); document.body.classList.add('playing');
   C.state = 'play'; C.camera.clearViewOffset(); C.shell.play(true);
@@ -806,6 +808,7 @@ C.start = function (game) {
 C.toMenu = function () {
   if (C.reloadAfterBattle) { location.reload(); return; } // контекст WebGL терялся в онлайн-бою — текстуры моделей вернёт только перезагрузка
   C.op = null; // «Операция» прервана
+  C.endScr.reset();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
   C.hooks = {}; C.paused = false; C.hint(''); C.say(''); $('ask').style.display = 'none'; $('warn').style.display = 'none';
   for (const id of ['end', 'pauseScr', 'lesson']) $(id).classList.remove('on');
@@ -824,14 +827,19 @@ C.togglePause = function () {
   $('pauseHelp').innerHTML = iconize(C.ctrl.pauseHelp ? C.ctrl.pauseHelp() : '');
   if (C.paused) snd.silence();
 };
-// итоги: title, reason, stats [[число, подпись]], note, win (true/false/null)
-C.showEnd = function ({ title, reason, stats, note, win, again }) {
-  C.ended = true; $('againBtn').textContent = again || tr('Ещё раз'); // «Операция»: «Вылет 2: удар →»
-  $('endTitle').textContent = title; $('endTitle').className = win === true ? 'win' : win === false ? 'lose' : '';
-  $('endReason').textContent = reason || '';
-  $('endStats').innerHTML = (stats || []).map(([v, l]) => `<div class="stt"><b>${v}</b><span>${l}</span></div>`).join('');
-  $('endNote').innerHTML = note || '';
-  setTimeout(() => { $('end').classList.add('on'); document.body.classList.remove('flying'); }, 900);
+// журнал боя для «Разбора» (endscr.js): { t — секунд боя, c — 'g' сделано · 'r' по вам, потери · 'y' ловушки, баллистика · '' — вехи, l — подпись }.
+// key + gap — не чаще раза в gap секунд на один key (gap 1e9 — только первый раз)
+C.bt = 0; C.blog = [];
+C.bev = (c, l, key, gap = 0) => {
+  if (!C.blog || C.blog.length >= 300) return;
+  if (key) { const k = C.bkey || (C.bkey = {}); if (k[key] != null && C.bt - k[key] < gap) return; k[key] = C.bt; }
+  C.blog.push({ t: Math.round(C.bt * 10) / 10, c, l });
+};
+// итоги: title, reason, stats [[число, подпись]], note, win (true/false/null), again; events и dur — лента боя «Разбора» (по умолчанию C.blog и C.bt);
+// online — табло онлайн-боя (endscr.js boardOl / boardMw)
+C.showEnd = function (o) {
+  C.ended = true; $('againBtn').textContent = o.again || tr('Ещё раз'); // «Операция»: «Вылет 2: удар →»
+  C.endScr.show({ ...o, events: o.events || C.blog, dur: o.dur ?? C.bt });
 };
 // объяснение на паузе (обучение и «?»)
 C.openLesson = function (title, body, sub) {
@@ -918,7 +926,7 @@ function frame(now) {
   // на телефоне 60 к/с по умолчанию при любой частоте экрана; 3D вне полёта — 30 к/с независимо от предела интерфейса (ревью 2026-10-21)
   const rd = now - lastRaf; lastRaf = now; if (rd > 0 && rd < 100) rafEma += (rd - rafEma) * 0.05;
   const uc = gfxKey === 'custom' ? P.cap : fpsCap === 'auto' ? undefined : fpsCap; // предел игрока (0 — нет)
-  const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused); // меню и пауза — 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 — без предела
+  const menu = !C.probeOn && (idle || C.state === 'menu' || C.paused || C.endFreeze); // меню, пауза и итог одиночного боя — 30 к/с всему (и 3D, и интерфейсу); замер ?probe=1 — без предела
   const capUI = idle ? 1000 / 8 : menu ? 1000 / 30 : uc ? 1000 / uc : 0;
   const capMs = C.probeOn ? 0 : capUI || (IS_TOUCH && uc !== 0 ? 1000 / 60 : 0);
   const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) — не отменяет 30 для 3D вне полёта
@@ -926,8 +934,9 @@ function frame(now) {
   const ms = now - lastDraw; lastDraw = now;
   const draw3D = !cap3D || now - last3D >= cap3D - 2; if (draw3D) { ms3D = now - last3D; last3D = now; }
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр
-  const dt = clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным
+  const dt = C.endFreeze ? 0 : clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным; итог одиночного боя (C.endFreeze) — бой стоит
   C.t = t;
+  if (C.state === 'play' && !C.paused && !C.ended) C.bt += dt; // часы боя (лента «Разбора»): без пауз и итога
   const ctrl = C.ctrl;
   if (idle) { hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH); updateSound(dt); $('perf').textContent = ''; return; } // меню на кадрах: ни боя, ни 3D
   const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза — только меню), бой считает сервер
@@ -965,9 +974,9 @@ function frame(now) {
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
   if (ctrl && ctrl.afterRender) ctrl.afterRender();
   hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH);
-  if (ctrl && ctrl.hud) ctrl.hud(dt, t);
-  if (C.extraHud) C.extraHud(dt, t); // онлайн: журнал сбитий, метки «нужна помощь»
-  updateSound(dt);
+  if (ctrl && ctrl.hud && !C.endFreeze) ctrl.hud(dt, t);
+  if (C.extraHud && !C.endFreeze) C.extraHud(dt, t); // онлайн: журнал сбитий, метки «нужна помощь»
+  if (!C.endFreeze) updateSound(dt);
   if (msgT > 0 && (msgT -= dt) <= 0) C.say('');
   fpsAcc += ms; fpsN++; if (fpsAcc > 500) { fps = Math.round(1000 * fpsN / fpsAcc); fpsAcc = fpsN = 0; }
   if (draw3D && C.state === 'play' && !view && ms3D < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(cap3D ? ms3D / 2 : ms3D); // 3D через кадр — время кадра на пару кадров интерфейса // на карте 3D не рисуется — мерить нечего
@@ -1032,6 +1041,7 @@ setInterval(() => {
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
   createHints(C, ctrls); // подсказки клавиш в бою (ПК): «Настройки» или F1
   C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню — #evtBtn)
+  C.endScr = createEndScreen(C); // экраны итога боя (endscr.js)
   C.account = createAccount(C); C.rating = createRating(C); // аккаунт игры (строка в углу меню, окно) и рейтинг онлайна (кнопка #ratBtn, окно, «Мои бои»)
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
@@ -1047,6 +1057,7 @@ setInterval(() => {
   // go / hlo / weather — одноразовые (старт события, перезагрузка под карту): убрать из адреса, иначе следующая перезагрузка из меню
   // (смена режима, карты) снова запустит вылет на вертолёте или не тот режим
   { const u = new URL(location.href); let ch = false; for (const k of ['go', 'hlo', 'weather']) if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } if (ch) try { history.replaceState(history.state, '', u.href); } catch (_) { /* нет */ } }
+  const em = Q.get('endmock'); if (em) { C.endScr.mock(em); } // ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose — показать экран итога с примерными данными
   const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.start(go); }
 })();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)

@@ -144,7 +144,6 @@
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
   .stt { background: rgba(255,255,255,.06); border-radius: 12px; padding: 10px 6px; }
   .stt b { display: block; font-size: 22px; } .stt span { font-size: 11px; opacity: .7; }
-  #endTitle.win { color: #86efac; } #endTitle.lose { color: #fca5a5; }
   .pauseBtns { display: flex; gap: 8px; } .pauseBtns .btn { margin: 0; flex: 1; }
   #pauseHelp { text-align: left; font-size: 12px; line-height: 1.6; opacity: .8; margin-top: 10px; }
   #lessonBody { text-align: left; font-size: 13px; line-height: 1.55; }
@@ -727,14 +726,7 @@
   </div>
 </div>
 <div class="screen" id="end">
-  <div class="card">
-    <h1 id="endTitle">Бой окончен</h1>
-    <div class="sub" id="endReason"></div>
-    <div class="stats" id="endStats"></div>
-    <div id="endNote" class="sub" style="margin:0"></div>
-    <button class="btn" id="againBtn">Ещё раз</button>
-    <button class="btn alt" id="closeBtn">В меню</button>
-  </div>
+  <div class="endv"><div id="endView"></div><div id="endBtns"><button class="btn" id="againBtn">Ещё раз</button><button class="btn alt" id="closeBtn">В меню</button></div></div>
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>

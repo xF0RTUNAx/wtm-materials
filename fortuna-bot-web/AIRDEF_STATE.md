@@ -624,3 +624,8 @@ Mark работает с **Opus на высоком усилии** — он ру
   в игре масштаб 0,935 (длина 3,96); толщину (L/D 8,4 против ≈ 9,2) исправит сборщик во второй ревизии. prsm.blend 22 МБ не в репозитории. sync-shared —
   копии progress.js / arsenal.js для функций (при деплое — функции airdef-progress, airdef-solo, airdef-claim; сервер — update.ps1).
 
+- 2026-10-25 · Sonnet 5.5 · **экраны итога боя** (online-dev, не закоммичено, не задеплоено; макет endscr/tpl.html): endscr.js — «Разбор вылета» для всех одиночных боёв (кадр стоит — C.endFreeze, холст выцветает
+  по body.endCine, полосы, скошенный заголовок, плитки с отсчётом, лента боя до 10 подписей, опыт и серебро позже, когда придут), «Табло команд» (онлайн «Вылет и оборона», порог O.WIN_K, рейтинг и 7 ячеек
+  сезона через C.rating.fresh()), «Два раунда» (онлайн «Мульти-волна»); C.showEnd принимает events / dur / online; журнал боя — C.blog, C.bev(c, l, key, gap), часы C.bt; события пишут air.js и defense.js;
+  сервер airdef-multi.js: p.icp / p.samk / p.dmg и first в сообщении 'end' (**после деплоя — update.ps1**); просмотр без боя: `?endmock=solo-win|solo-lose|ol-win|ol-lose|mw-win|mw-lose`.
+  Перед деплоем: assets-manifest.js (endscr.js в assets.json).

@@ -12,6 +12,7 @@ import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsena
 import { MODES } from './sim/strike.js?v=20261025a';
 import { ICON, ico } from './icons.js?v=20261025a';
 import { activeAcc } from './account.js?v=20261025a';
+import { boardOl, boardMw } from './endscr.js?v=20261025a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
@@ -237,19 +238,16 @@ export function createOnline(C, ctrls) {
     C.say(m.last ? `${m.totalK >= O.WIN_K ? tr('Авиация уничтожила цели') : tr('Последняя волна отбита')} · ${det}` : tr('Волна {0} окончена · уничтожено {1}% ценности целей · {2}{3}', [m.wave, Math.round(m.totalK * 100), det, m.lead ? tr(' · ведёт {0}', [m.lead === 'air' ? tr('авиация') : tr('ПВО')]) : '']), 7);
     if (team() === 'pvo') ctrls.defense.setNetRes(m);
   });
+  // итог боя: «Мульти-волна» — «Два раунда», «Вылет и оборона» — «Табло команд» (endscr.js); очки рейтинга и награда доезжают из claimOnline
   N.on('end', (m) => {
+    const me = N.myPlayer();
     if (m.kind === 'multi') {
-      const me = N.myPlayer(), v0 = m.v0 || 1, list = m.players.slice().sort((a, b) => b.score - a.score), win = m.winner ? me && m.winner === me.team : null;
-      C.showEnd({ again: tr('В комнату'), title: win ? tr('Победа') : win === false ? tr('Поражение') : tr('Ничья'), win, reason: tr('Волна Востока разрушила {0}%, Запада — {1}% ценности объектов', [Math.round(100 * m.scores.east / v0), Math.round(100 * m.scores.west / v0)]),
-        stats: [[`${Math.round(100 * m.scores.east / v0)}%`, tr('Восток')], [`${Math.round(100 * m.scores.west / v0)}%`, tr('Запад')], [me ? Math.round(me.score || 0) : 0, tr('очков')]],
-        note: list.map((p) => tr('{0}{1} — {2}: {3} перехв./уничт., {4} очков', [pnm(p), p.bot ? tr(' (бот)') : '', MW.TEAM_NAME[p.team], p.kills, p.score])).join('<br>') });
-      if (m.result && C.claimOnline) C.claimOnline(m.result);
-      return;
+      const b = boardMw(m, me, pnm);
+      C.showEnd({ again: tr('В комнату'), title: b.title, win: b.win, online: b });
+    } else {
+      const b = boardOl(m, me, pnm);
+      C.showEnd({ again: tr('В комнату'), title: b.title, win: b.win, online: b });
     }
-    const me = N.myPlayer(), win = me && m.winner === me.team, list = m.players.slice().sort((a, b) => b.score - a.score);
-    C.showEnd({ again: tr('В комнату'), title: win ? tr('Победа') : tr('Поражение'), win, reason: m.winner === 'air' ? tr('Авиация уничтожила {0}% ценности целей', [Math.round(m.valueK * 100)]) : tr('ПВО отстояла город: уничтожено {0}% ценности целей', [Math.round(m.valueK * 100)]),
-      stats: [[me ? me.kills || 0 : 0, me && me.team === 'air' ? tr('комплексов уничтожено') : tr('самолётов сбито')], [me ? Math.round(me.score || 0) : 0, tr('очков')], [m.winner === 'air' ? tr('Авиация') : tr('ПВО'), tr('победила')]],
-      note: list.map((p) => tr('{0}{1} — {2}: {3}/{4}, {5} очков', [pnm(p), p.bot ? tr(' (бот)') : '', O.ROLE_NAMES[p.team], p.kills, p.deaths, p.score])).join('<br>') });
     if (m.result && C.claimOnline) C.claimOnline(m.result);
   });
   N.on('lost', () => { hideModal(); if (C.state === 'play' && C.lastGame === 'online' && !C.ended) C.showEnd({ title: tr('Связь потеряна'), reason: tr('Не удалось вернуться в бой: комната закрыта или сервер недоступен'), win: null, stats: [] }); });
@@ -362,6 +360,10 @@ export function createOnline(C, ctrls) {
       const parts = []; if (d.details) parts.push(tr('+{0} деталей', [d.details])); if (d.keys) parts.push(`+${d.keys} ${ico('key', 'ii')}`); if (d.ticket) parts.push(d.ticket === 'ticket' ? tr('+1 билет') : '+1 ' + ico('key', 'ii'));
       const note = res.ok ? (parts.length ? tr('Награда: {0}', [parts.join(', ')]) : d.online_rewards_left === 0 ? tr('Наградные бои на сегодня закончились — результат засчитан') : tr('Результат засчитан')) : (d.error || tr('Не удалось засчитать бой'));
       const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + ratingNote(d.rating, acc) + el.innerHTML;
+      if (C.endScr) { // табло: очки рейтинга, место и ячейки сезона, награда прокачки
+        const cl = { rating: d.rating, acc, note, board: null }; C.endScr.claimed(cl); if (d.progress) C.endScr.reward(d.progress);
+        if (d.rating && acc.kind === 'airdef' && C.rating) C.rating.fresh().then((b) => { if (b) { cl.board = b; C.endScr.claimed(cl); } }).catch(() => {});
+      }
       if (d.rating && C.rating) C.rating.reset(); // очки боя в таблице сезона: обновить при следующем показе
       if (d.progress && C.progress) { if (el) el.insertAdjacentHTML('afterbegin', `<div class="pgRes">${C.progress.rewardHtml(d.progress)}</div>`); C.progress.refresh(); } // прокачка: опыт и серебро за бой
       N.clog('claim', { ok: res.ok, d });

@@ -816,7 +816,7 @@ export function createDefense(C) {
   // ═════════════ Волны ═════════════
   const cityValue = () => C.S.objects.reduce((s, o) => s + (o.dead || o.noTarget ? 0 : o.value * Math.max(0, o.hp / o.hpMax)), 0) / st.value0;
   function startWave() {
-    st.phase = 'wave'; st.wave++; st.placing = null; st.moving = false; st.draft = null; st.waveDowns = 0; st.waveLeak = 0; st.waveLost = [];
+    st.phase = 'wave'; st.wave++; C.bev('', st.multi ? tr('волна пошла') : tr('волна {0}', [st.wave])); st.placing = null; st.moving = false; st.draft = null; st.waveDowns = 0; st.waveLeak = 0; st.waveLost = [];
     const alive = C.S.objects.filter((o) => !o.dead && !o.noTarget); // цели волн — только военные объекты
     if (!atk()) st.targets = st.opts.tkeys ? alive.filter((o) => st.opts.tkeys.includes(o.key)) : pickTargets({ objects: alive }, st.rnd, st.wave > 3 || st.multi ? 3 : 2, [...new Set(alive.map((o) => o.key))]); // урок — свои цели
     st.tv0 = st.targets.reduce((s, o) => s + o.value * Math.max(0, o.hp / o.hpMax), 0) || 1;
@@ -845,6 +845,7 @@ export function createDefense(C) {
     document.body.classList.remove('evon', 'evopen');
     if (st.multi) return finishMulti();
     C.ev = null;
+    if (st.waveDowns) C.bev('g', tr('сбито {0}', [st.waveDowns])); // за волну — одной меткой
     const value = cityValue(), reward = 250 + 60 * st.waveDowns + 120 * st.wave;
     const lost = C.S.units.filter((u) => u.dead);
     for (const u of lost) C.S.removeUnit(u);
@@ -866,6 +867,7 @@ export function createDefense(C) {
   function finishMulti() {
     if (st.over) return; st.over = true; C.ev = null;
     const dmg = 1 - targetsValue(), r = st.mres, real = C.setup.diff === 'real' ? 1.5 : 1;
+    C.bev(dmg >= 0.5 ? (atk() ? 'g' : 'r') : (atk() ? 'r' : 'g'), tr('разрушено {0} %', [Math.round(dmg * 100)])); // итог удара — последняя метка
     st.dmg = dmg; st.win = atk() ? dmg >= 0.5 : dmg < 0.5; // урок (noEnd) — читает итог сам
     if (st.opts.noEnd) return;
     if (atk()) {
@@ -886,6 +888,7 @@ export function createDefense(C) {
     if (st.over) return; st.over = true; st.win = win;
     if (st.view === 'op') leaveOp();
     if (st.opts.noEnd) return;
+    C.bev(win === true ? 'g' : win === false ? 'r' : '', win === true ? tr('город отстоял') : win === false ? tr('оборона прорвана') : tr('бой завершён'));
     C.showEnd({ title: win ? tr('Город отстоял') : win === false ? tr('Оборона прорвана') : tr('Бой завершён'), reason: why, win,
       stats: [[st.downs, tr('самолётов сбито')], [`${st.wave}/${st.waves}`, tr('волн')], [`${Math.round(cityValue() * 100)}%`, tr('объекты целы')], [st.score, tr('очков')]],
       note: tr('Потеряно комплексов: {0}. {1}', [st.lostUnits, C.setup.diff === 'real' ? tr('Реализм — очки ×1,5.') : '']) });
@@ -1340,21 +1343,21 @@ export function createDefense(C) {
     return {
       aiDmgK: 1,
       planeDown(a) { if (a.role === 'carrier') { st.mres.carriers++; say(tr('Сбит носитель {0}{1}', [a.carrierName, a.salvo.length ? tr(' — не пущено ракет: {0}', [a.salvo.length]) : '']), 4); snd.alarm(); } },
-      wpnRelease(w) { followLaunch(w); if (w.ev && !w.W.recon && !w.decoy && w.W.kind !== 'tbm') st.mres.launched++; if (w.ev && w.W.kind === 'tbm' && !w.decoy) { st.mres.launched++; say(tr('Пуск: {0}, до цели ≈ {1} с', [w.W.short, Math.round(w.T)]), 3); } },
-      wpnEnd(w, res) { if (!w.ev) return; if (res.intercepted) { if (!w.decoy) st.mres.down++; say(tr('ПВО сбила: {0}{1}', [w.W.short, w.decoy ? tr(' (ложная цель)') : '']), 2); } else if (res.objects.length || res.units.length) st.mres.hits++; },
-      objectDestroyed(o) { say(tr('Цель поражена: {0}', [o.name]), 3); snd.good(); },
-      unitDestroyed(u) { st.lostUnits++; say(tr('Уничтожен комплекс ПВО: {0}', [u.S.short]), 3); snd.good(); },
+      wpnRelease(w) { followLaunch(w); if (w.ev && !w.decoy && !w.W.recon) C.bev('y', w.W.kind === 'tbm' ? tr('баллистика') : tr('пуск волны'), w.W.kind === 'tbm' ? 'tbm' : 'launch', 1e9); if (w.ev && !w.W.recon && !w.decoy && w.W.kind !== 'tbm') st.mres.launched++; if (w.ev && w.W.kind === 'tbm' && !w.decoy) { st.mres.launched++; say(tr('Пуск: {0}, до цели ≈ {1} с', [w.W.short, Math.round(w.T)]), 3); } },
+      wpnEnd(w, res) { if (!w.ev) return; if (res.intercepted) { if (!w.decoy) { st.mres.down++; C.bev('r', tr('перехваты'), 'icp', 12); } say(tr('ПВО сбила: {0}{1}', [w.W.short, w.decoy ? tr(' (ложная цель)') : '']), 2); } else if (res.objects.length || res.units.length) { st.mres.hits++; C.bev('g', tr('попадание'), 'hit', 10); } },
+      objectDestroyed(o) { say(tr('Цель поражена: {0}', [o.name]), 3); C.bev('g', o.name); snd.good(); },
+      unitDestroyed(u) { st.lostUnits++; say(tr('Уничтожен комплекс ПВО: {0}', [u.S.short]), 3); C.bev('g', tr('{0} уничтожен', [u.S.short])); snd.good(); },
     };
   }
   function defHooks() {
     return {
       aiDmgK: C.setup.diff === 'arcade' ? 1.25 : 1,
       planeDown(a) { if (a.role === 'decoy') { say(tr('Сбита ложная цель — ракеты потрачены впустую'), 2); return; } st.downs++; st.waveDowns++; say(tr('Сбит {0}!', [a.role === 'carrier' ? tr('носитель {0}{1}', [a.carrierName, a.salvo.length ? tr(' — не пущено ракет: {0}', [a.salvo.length]) : '']) : a.role === 'sead' ? tr('охотник за РЛС') : tr('ударник')]), 3); snd.good(); on('planeDown', a); },
-      wpnEnd(w, res) { if (res.intercepted) { say(tr('Перехвачено: {0}{1}', [w.W.short, w.decoy ? tr(' (ложная цель)') : '']), 2); if (w.ev && !w.decoy && !w.W.recon) { st.downs++; st.waveDowns++; } } },
+      wpnEnd(w, res) { if (res.intercepted) { say(tr('Перехвачено: {0}{1}', [w.W.short, w.decoy ? tr(' (ложная цель)') : '']), 2); if (w.ev && !w.decoy && !w.W.recon) { st.downs++; st.waveDowns++; if (st.multi) C.bev('g', tr('перехваты'), 'icp', 12); } } },
       planeOut(a) { st.leaked++; st.waveLeak++; },
-      objectDestroyed(o) { say(tr('Разрушен: {0}', [o.name]), 3); snd.alarm(); },
-      unitDestroyed(u) { say(tr('Потерян комплекс: {0}', [u.S.short]), 3); },
-      wpnRelease(w) { if (w.W.kind === 'arm' && w.target) on('armLaunch', w); tbmAlert(w); followLaunch(w); siren(w); },
+      objectDestroyed(o) { say(tr('Разрушен: {0}', [o.name]), 3); C.bev('r', tr('разрушен {0}', [o.name])); snd.alarm(); },
+      unitDestroyed(u) { say(tr('Потерян комплекс: {0}', [u.S.short]), 3); C.bev('r', tr('потерян {0}', [u.S.short])); },
+      wpnRelease(w) { if (w.W.kind === 'arm' && w.target) on('armLaunch', w); if (w.ev && w.W.kind === 'tbm' && !w.decoy) C.bev('y', tr('баллистика'), 'tbm' + st.wave, 1e9); tbmAlert(w); followLaunch(w); siren(w); },
     };
   }
   // ═════════════ Режим ═════════════

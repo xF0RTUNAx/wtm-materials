@@ -110,6 +110,7 @@ export function createProgress(C) {
         const d = await call('airdef-solo', { player_id: account().id, action: 'claim', run_id: run.id, ev, used });
         set(d.progress);
         show(api.rewardHtml(d));
+        if (C.endScr) C.endScr.reward(d); // «Разбор»: опыт и серебро справа вверху
       } catch (e) { show('<span class="dim">' + tr('Опыт не начислен: {0}', [trMsg(e.message)]) + '</span>'); }
     },
     // строки «за что сколько» и множители (одиночный и онлайн — одинаково)

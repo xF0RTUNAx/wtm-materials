@@ -95,6 +95,7 @@ export function createAir(C) {
     const d = dmg * C.MODE().dmgTaken;
     craft.hp -= d; flashT = 0.35; snd.hit();
     dmgEvents(hitZones(craft, d, from), by);
+    if (craft.hp > 0) C.bev('r', tr('попадание'), 'hurt', 6);
     if (craft.hp <= 0) { craft.hp = 0; craft.dead = true; C.fx.explosion(craft.pos, 30, 'plane'); snd.planeKill(0); finish(tr('Сбит: {0}', [by]), false); }
   }
   // повреждения зон (sim/damage.js): что случилось — словами и звуком, отлетевшее — с самолёта (plane-damage.js)
@@ -371,6 +372,8 @@ export function createAir(C) {
   const narAligned = () => { if (!nar.on) return false; const cp = Math.cos(nar.pitch); NAR_D.set(-Math.sin(nar.yaw) * cp, Math.sin(nar.pitch), -Math.cos(nar.yaw) * cp); return fwdOf(craft, NV).angleTo(NAR_D) < 0.035; };
   // подсказка к оружию вертолёта — при первом выборе в вылете (Mark 2026-10-22: «непонятно, как пускать НАР и ПТУР»); hintSeen — за вылет
   const hintSeen = new Set();
+  let samMe = false; // по игроку пускали ЗУР, а ловушки ещё не бросал — лента боя («Разбор», C.bev)
+  const logFire = (key) => { const W = AG[key]; if (W && W.kind !== 'ecm') C.bev('', BOMBK.has(W.kind) ? tr('сброс {0}', [W.short]) : tr('пуск {0}', [W.short]), 'fire:' + key, 1e9); }; // первый пуск / сброс каждого вида оружия
   function weaponHint(key) {
     const W = AG[key], fireK = IS_TOUCH ? tr('«Пуск»') : tr('Пробел'), nextK = IS_TOUCH ? tr('«Цель»') : 'R', km = (W.rmax / 1000).toFixed(1), F = fcs();
     if (W.kind === 'rocket') return (craft.hm.arcade
@@ -501,6 +504,7 @@ export function createAir(C) {
       if (game.net) C.S.release(craft, l.key, { ...opts, salvo: Wp.salvo }); // онлайн: залп — одно сообщение (сервер пускает все ракеты и сам ведёт счёт в блоке)
       else for (let i = 0; i < Wp.salvo; i++) C.S.release(craft, l.key, opts);
       if (l.rs <= 0) { l.st.pop(); l.n--; l.rs = per; }
+      logFire(l.key);
       if (C.hooks.trainFire) C.hooks.trainFire(l.key);
       if (l.n <= 0) nextWeapon();
       return;
@@ -508,7 +512,7 @@ export function createAir(C) {
     const st = l.st.pop(); l.n--;
     const m = pylonMeshes.find((q) => q.userData.st === st); if (m) m.visible = false;
     C.S.release(craft, l.key, opts);
-    updLoad();
+    updLoad(); logFire(l.key);
     if (C.hooks.trainFire) C.hooks.trainFire(l.key);
     if (l.n <= 0) nextWeapon();
   }
@@ -520,6 +524,7 @@ export function createAir(C) {
     const f = cmInfo().flare && craft.cmFlare > 0, c = craft.cmChaff > 0; // машина без ЛТЦ — только диполи
     if (!f && !c) { if (!auto) say(tr('Ловушки кончились'), 1.2); return; }
     if (f) craft.cmFlare--; if (c) craft.cmChaff--;
+    if (samMe) { samMe = false; C.bev('y', tr('ловушки')); }
     if (game.net) C.S.dropCM(craft, 'both'); // онлайн: одна команда серверу на каждый залп (с шагом 0,6 с автомата — нормально)
     else { if (f) C.S.dropCM(craft, 'flare'); if (c) C.S.dropCM(craft, 'chaff'); }
   }
@@ -1076,6 +1081,7 @@ export function createAir(C) {
       for (const u of S.units) if (!u.dead) { u.ammo = u.S.ammo; u.reloadT = 0; u.salvoLeft = 0; u.track = null; u.shutT = 0; if (u.S.radar && !u.manual) u.emit = !u.ambush; }
     }
     buildShip(setup.side === 'east' ? 'west' : 'east');
+    samMe = false; C.bev('', tr('взлёт'));
     C.hooks = {
       hurtPlayer: hurt, playerLaser: () => laserSpot,
       wpnEnd(w, res) {
@@ -1088,14 +1094,15 @@ export function createAir(C) {
         const isT = game.targets.includes(o);
         game.score += Math.round(o.value * (isT ? 10 : 4) * (setup.diff === 'real' ? 1.5 : 1));
         say(tr('УНИЧТОЖЕН: {0}{1}', [o.name, isT ? tr(' — цель задания') : '']), 3);
+        if (isT) C.bev('g', o.name);
         if (isT) snd.good();
         if (!game.done && !game.hunt && game.targets.length && game.targets.every((q) => q.dead)) missionDone(tr('ЗАДАЧА ВЫПОЛНЕНА — уходите за границу района или охотьтесь на ПВО'));
       },
       unitDestroyed(u) {
         // охота за ПВО: задача — уничтожить hunt.need комплексов с РЛС
         if (game.hunt && u.S.radar && ++game.hunt.n >= game.hunt.need && !game.done) missionDone(tr('ЗАДАЧА ВЫПОЛНЕНА — ПВО подавлена: уходите за границу района или продолжайте охоту'));
-        game.kills++; game.score += Math.round((u.S.radar ? 400 : 200) * (setup.diff === 'real' ? 1.5 : 1)); say(tr('Уничтожен комплекс: {0}', [u.S.name]), 2.5); snd.good(); if (opts.onUnitDestroyed) opts.onUnitDestroyed(u); },
-      samLaunch(m) { if (opts.onSamLaunch) opts.onSamLaunch(m); },
+        game.kills++; game.score += Math.round((u.S.radar ? 400 : 200) * (setup.diff === 'real' ? 1.5 : 1)); say(tr('Уничтожен комплекс: {0}', [u.S.name]), 2.5); C.bev('g', tr('{0} уничтожен', [u.S.short || u.S.name])); snd.good(); if (opts.onUnitDestroyed) opts.onUnitDestroyed(u); },
+      samLaunch(m) { if (m.target === craft) { samMe = true; C.bev('r', tr('пуск ЗУР по вам'), 'samMe', 8); } if (opts.onSamLaunch) opts.onSamLaunch(m); },
       samEnd(m, hit) { if (opts.onSamEnd) opts.onSamEnd(m, hit); },
     };
     if (cont) game.targets = C.op.targets;
@@ -1240,6 +1247,7 @@ export function createAir(C) {
   function finish(why, ok) {
     if (game.over) return; game.over = true;
     if (game.opts.noEnd) return;
+    C.bev(craft.dead ? 'r' : '', craft.dead ? why : game.done ? (craft.heli ? tr('посадка') : tr('выход из района')) : tr('вылет окончен')); // последняя метка ленты
     const dead = game.targets.filter((o) => o.dead).length, real = C.setup.diff === 'real';
     // прокачка: что сделано за вылет → airdef-solo (длительность меряет сервер); цели — по одной, комплексы, вернулся ли
     const claim = () => C.progress && C.progress.runClaim({ targets: Array(dead).fill(1), sams: game.kills, back: !craft.dead, win: !!game.done && !craft.dead }, game.used);

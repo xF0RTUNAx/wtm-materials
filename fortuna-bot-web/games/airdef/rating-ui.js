@@ -187,6 +187,14 @@ export function createRating(C) {
     },
     close() { root.classList.remove('on'); S.q = false; },
     isOpen: () => root.classList.contains('on'),
+    // свежие данные после засчитанного боя (табло итога, endscr.js): { place, prev — место до боя, n — засчитано, counted — вошёл ли бой в 7 лучших } или null
+    async fresh() {
+      const m0 = mine(), prev = m0 ? m0.place : null;
+      for (let i = 0; i < 30 && S.busy; i++) await new Promise((r) => setTimeout(r, 100));
+      S.at = 0; await load(); const m = mine(); if (!m) return null;
+      const b0 = (m.battles || [])[0];
+      return { place: m.place, prev, n: m.n, counted: b0 ? !!b0.counted : true };
+    },
     touch, paint,
     // сменился аккаунт / засчитан бой: данные устарели
     reset() { if (S.key !== keyNow()) S.data = null; S.at = 0; paint(); if (root.classList.contains('on')) { draw(); load(); } else touch(); },
