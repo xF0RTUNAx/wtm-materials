@@ -9,12 +9,26 @@
 // дроны и носители в зоне станции) и пуск ЗУР. По ПВО бьют только по засечённым — цель выбирается в момент пуска;
 // по комплексу, которого разведчик не видел сам (засечён по излучению или пуску), баллистика ложится с тройным промахом.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261025b';
-import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261025b';
-import { CITY, objAimXZ } from '../city.js?v=20261025b';
+import { tr } from '../i18n.js?v=20261026a';
+import { AG, SAM, COMBINED, CARRIERS, MULTI, THREAT } from '../arsenal.js?v=20261026a';
+import { CITY, objAimXZ } from '../city.js?v=20261026a';
 
 export const COMBINED_NAME = 'Мульти-волна';
 export const combinedOk = (side, era) => !!(COMBINED[side] && COMBINED[side][era]);
+// ── Скрытый уровень ИИ в «Мульти-волне» (Mark 2026-10-25: эпох и рангов нет; игроку уровень не показывается — чтобы новичок со стартовым
+// оружием не встречал С-400). ИИ берёт готовые составы по уровню 1–4: ПВО — DEFENSE[сторона][уровень], волна — COMBINED[сторона][уровень].
+//  • ИИ-ПВО против игрока-атакующего: средняя ступень оружия в плане игрока (MULTI.items, 3-й элемент), взвешенная очками угрозы, округлённая;
+//  • ИИ-волна против игрока-ПВО: наибольшая эпоха (SAM.era) среди комплексов, доступных игроку (в «Реализме» — купленные);
+//  • боты онлайна: уровень комнаты (быстрый бой — по рангу людей, quickEra), наружу он не выводится;
+//  • нужного уровня нет в таблице (у запада нет I в COMBINED) — ближайший старший, иначе младший (levelIn).
+const clampLevel = (v) => Math.max(1, Math.min(4, v));
+export const levelIn = (tab, lvl) => { for (let d = 0; d < 4; d++) for (const l of [lvl + d, lvl - d]) if (tab && tab[l]) return l; return lvl; };
+export function levelOfPlan(side, n) { // n — { ключ: сколько } план игрока за сторону side
+  let w = 0, s = 0;
+  for (const [k, , step] of MULTI.items[side] || []) { const c = (n || {})[k] || 0; if (c > 0) { const t = (THREAT[k] ?? 3) * c; w += t; s += t * step; } }
+  return w ? clampLevel(Math.round(s / w)) : 1;
+}
+export const levelOfSams = (side, keys) => clampLevel(Math.max(1, ...keys.filter((k) => SAM[k] && SAM[k].side === side).map((k) => SAM[k].era || 1))); // keys — комплексы, доступные игроку-ПВО
 // комплекс ПВО засечён (видел разведчик, выдал излучением или пуском)
 export const samKnown = (u) => !!(u.spotted || u.elint || u.fired);
 

@@ -18,13 +18,13 @@ import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/
 import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal.js?v=20260930m';
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
-import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261025b';
+import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261026a';
 import { createMulti } from './airdef-multi.js';
 import { adProgress, realDeny, loadoutIds, samIds, quickEra } from './airdef-own.js';
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
 import { initDamage, hitZones, dmgPack, burnRate } from '../games/airdef/sim/damage.js?v=20261022d';
 import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
-import { battleParts } from '../games/airdef/rating.js?v=20261025b';
+import { battleParts } from '../games/airdef/rating.js?v=20261026a';
 
 const city = buildCity(1); setGround(city.groundH); // город один для всех комнат (как у клиентов: seed 1), только чтение
 const winter = buildWinter(1); // «Мульти-волна» — зимняя горная долина «Северный рубеж» (как у клиентов: seed 1)
@@ -77,9 +77,10 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
   function newRoom(host, o) {
     if (rooms.size >= ROOMS_MAX) return null;
     const code = O.makeCode(new Set(rooms.keys()));
-    const r = { code, mode: O.AD_MODES.includes(o.mode) ? o.mode : 'arcade', size: O.AD_SIZES.includes(+o.size) ? +o.size : 2, era: [1, 2, 3, 4].includes(+o.era) ? +o.era : 1 + Math.floor(Math.random() * 4),
+    const r = { code, mode: O.AD_MODES.includes(o.mode) ? o.mode : 'arcade', size: O.AD_SIZES.includes(+o.size) ? +o.size : 2, era: [1, 2, 3, 4].includes(+o.era) ? +o.era : o.kind === 'multi' ? 2 + Math.floor(Math.random() * 3) : 1 + Math.floor(Math.random() * 4), // у «Мульти-волны» era — скрытый уровень ботов (игрокам не показывается, не выбирается), не ниже II
       sideAir: o.sideAir === 'east' || o.sideAir === 'west' ? o.sideAir : Math.random() < 0.5 ? 'east' : 'west', host: host ? host.id : 0, quick: !!o.quick, fill: o.fill !== false,
       players: new Map(), state: 'lobby', t: 0, phaseT: 0, wave: 0, tick: 0, S: null, raid: null, targets: [], valueK: 0, events: [], kind: o.kind === 'multi' ? 'multi' : 'air' };
+    if (r.kind === 'multi' && r.era < 2) r.era = 2;
     rooms.set(code, r);
     J(r, 'room', { size: r.size, era: r.era });
     return r;
@@ -156,7 +157,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     if (kind === r.kind) return;
     const from = teamsOf(r); r.kind = kind; const to = teamsOf(r);
     for (const p of r.players.values()) { p.team = to[Math.max(0, from.indexOf(p.team))]; p.budget = O.BUDGET0[p.team] || 0; }
-    if (kind === 'multi' && r.era < 2) r.era = 2; // у «Мульти-волны» — с эпохи II
+    if (kind === 'multi' && r.era < 2) r.era = 2; // у «Мульти-волны» era — скрытый уровень ботов, не ниже II
   }
 
   // ── старт: все люди «Готов», в каждой команде кто-то есть (пусто — боты, если включено) ──
@@ -479,7 +480,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
   function sendState(r, only) {
     if (!r.S) return;
     const msg = { t: 'state', era: r.era, sideAir: r.sideAir, mode: r.mode, wave: r.wave, targets: r.targets.map((o) => o.id),
-      units: r.S.units.map((u) => [u.id, u.key, r1(u.pos.x), r1(u.pos.z), u.roof ? 1 : 0, u.owner || 0, Math.round(u.yaw * 1000) / 1000, u.dead ? 1 : 0]),
+      units: r.S.units.map((u) => [u.id, u.key, r1(u.pos.x), r1(u.pos.z), u.roof ? 1 : 0, u.owner || 0, Math.round(u.yaw * 1000) / 1000, u.dead ? 1 : 0, only && only.team === 'pvo' && u.tgt ? [...u.tgt] : 0]), // последнее — фильтр целей (вернувшемуся ПВО; лётчикам не выдаём)
       objects: r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0]) };
     if (only) send(only, msg); else bcast(r, msg);
   }
@@ -534,7 +535,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       if (q.length >= 2 && !mgoAt[mode]) { mgoAt[mode] = now + QUEUE_EXTRA_T; for (const e of q) send(e.c, { t: 'qwait', T: QUEUE_EXTRA_T, n: q.length }); }
       if ((mgoAt[mode] && (now >= mgoAt[mode] || q.length >= 12)) || now - oldest > QUEUE_BOTS_T) {
         mgoAt[mode] = 0;
-        const pick0 = [...q].sort((a, b) => a.t - b.t).slice(0, per * 2), era = quickEra(mode, pick0.map((e) => e.c), 2);
+        const pick0 = [...q].sort((a, b) => a.t - b.t).slice(0, per * 2), era = quickEra(mode, pick0.map((e) => e.c), 2); // уровень ботов комнаты (скрытый) — не выше открытого людям, не ниже II
         const r = newRoom(null, { mode, size: per, quick: true, fill: true, kind: 'multi', ...(era ? { era } : {}) }); if (!r) continue;
         const pick = pick0;
         for (const e of pick) joinRoom(r, e.c, null);
@@ -599,7 +600,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       case 'ready': if (r.state === 'lobby') { c.ready = !!m.on; sendRoom(r); tryStart(r); } else if (r.state === 'plan') { c.ready = !!m.on; sendRoom(r); } return;
       case 'bot': if (host && r.state === 'lobby') addBot(r, teamsOf(r).includes(m.team) ? m.team : teamsOf(r)[0]); return;
       case 'kick': { const b = r.players.get(+m.id); if (host && r.state === 'lobby' && b && b.bot) { r.players.delete(b.id); sendRoom(r); } return; }
-      case 'opts': if (host && r.state === 'lobby') { if (m.kind === 'air' || m.kind === 'multi') setKind(r, m.kind); if ([1, 2, 3, 4].includes(+m.era) && !(r.kind === 'multi' && +m.era < 2)) r.era = +m.era; if (m.sideAir === 'east' || m.sideAir === 'west') r.sideAir = m.sideAir; if (O.AD_MODES.includes(m.mode)) r.mode = m.mode; if (O.AD_SIZES.includes(+m.size)) r.size = +m.size; if (m.fill !== undefined) r.fill = !!m.fill; for (const p of r.players.values()) if (!p.bot) p.ready = false; sendRoom(r); } return;
+      case 'opts': if (host && r.state === 'lobby') { if (m.kind === 'air' || m.kind === 'multi') setKind(r, m.kind); if ([1, 2, 3, 4].includes(+m.era) && r.kind !== 'multi') r.era = +m.era; /* у «Мульти-волны» эпоху не выбирают */ if (m.sideAir === 'east' || m.sideAir === 'west') r.sideAir = m.sideAir; if (O.AD_MODES.includes(m.mode)) r.mode = m.mode; if (O.AD_SIZES.includes(+m.size)) r.size = +m.size; if (m.fill !== undefined) r.fill = !!m.fill; for (const p of r.players.values()) if (!p.bot) p.ready = false; sendRoom(r); } return;
       // ── расстановка и покупки ──
       case 'buyAir': {
         if (r.state !== 'plan' || c.team !== 'air') return;
@@ -611,6 +612,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
         c.budget += back - cost; c.choice = +m.i; c.paid = cost; sendRoom(r); return;
       }
       case 'buyUnit': { if (r.state !== 'plan' || c.team !== 'pvo') return; { const rw = realDeny(r.mode, c, samIds(String(m.k))); if (rw) return deny(c, rw, 'buyUnit ' + m.k); } const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) deny(c, why, 'buyUnit ' + m.k); else J(r, 'cmd', { who: c.name, cmd: 'buyUnit', k: m.k, x: Math.round(+m.x), z: Math.round(+m.z) }); return; }
+      case 'tgt': { const u = r.S && (r.state === 'plan' || r.state === 'play') && c.team === 'pvo' && r.S.units.find((q) => q.id === +m.id && q.owner === c.id && !q.dead); if (u) r.S.setTgt(u, m.c); return; } // фильтр целей своего комплекса: список видов, пустой — все (старый сервер пропускает)
       case 'sell': { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? O.samCost(u.key)) * 0.7); r.S.removeUnit(u); bcast(r, { t: 'ev', e: [['ur', u.id]] }); sendRoom(r); return; }
       case 'move': { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id || !Number.isFinite(+m.x) || !Number.isFinite(+m.z)) return; if (!(m.roof ? buildingAt(city, +m.x, +m.z) >= 0 : freeGround(city, +m.x, +m.z))) return deny(c, 'Место занято', 'move'); r.S.moveUnit(u, +m.x, +m.z, !!m.roof); bcast(r, { t: 'ev', e: [['um', u.id, r1(+m.x), r1(+m.z), m.roof ? 1 : 0]] }); return; }
     }

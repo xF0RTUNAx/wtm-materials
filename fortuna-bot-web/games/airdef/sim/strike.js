@@ -13,12 +13,12 @@
 //   fx: { ... }     — хуки (список — в NOOP_FX).
 // }
 /* global THREE */
-import { tr } from '../i18n.js?v=20261025b';
-import { AG, SAM } from '../arsenal.js?v=20261025b';
-import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261025b';
-import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261025b';
-import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261025b';
-import { partDist } from '../city.js?v=20261025b';
+import { tr } from '../i18n.js?v=20261026a';
+import { AG, SAM } from '../arsenal.js?v=20261026a';
+import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261026a';
+import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261026a';
+import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261026a';
+import { partDist } from '../city.js?v=20261026a';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
@@ -27,6 +27,23 @@ export const MODES = {
   arcade: { ind: 0.5, name: tr('Аркада'), desc: tr('больше ловушек, меньше урона, ПВО медленнее реагирует, все угрозы на экране; запас — 2 комплекта подвески, пополняется сам'), dmgTaken: 0.75, reactK: 1.2, samSkill: 0.85, cmK: 1.15, cm: 200, fuelS: 330, rearms: 2 /* запас: комплектов подвески («Реализм» — пополнений у точки вылета) */, markers: true, gunK: 0.85, reload: 'auto', reloadK: { air: 0.5, multi: 0.8 } },
   real: { ind: 1, name: tr('Реализм'), desc: tr('только СПО и датчик пуска, полный урон, опытные расчёты; одно пополнение у точки вылета'), dmgTaken: 1, reactK: 1, samSkill: 1, cmK: 1, cm: 145, fuelS: 240, rearms: 1, markers: false, gunK: 1, reload: 'home', reloadK: { air: 0.7, multi: 0.9 } }, // reload: 'auto' — подвеска пополняется сама, 'home' — у точки вылета; fuelS — секунд на полном газе (форсаж — втрое быстрее); cm — пачек ловушек (ЛТЦ и диполи разом, одной кнопкой)
 };
+
+// Виды целей для фильтра комплекса (Mark 2026-10-25: «все цели либо только какие-то конкретные»). Виды совпадают с цветными плашками «что сбивает»
+// (icons.js samCaps): air — самолёты и вертолёты (и ложные цели налёта, пока они летят как самолёты); drone — дроны и разведчик «Мульти-волны»;
+// bomb — бомбы и ракеты с самолётов (в том числе планирующие и крылатые, пущенные налётом — не ev); cruise — крылатые и планирующие ракеты «Мульти-волны»
+// и ложные цели (MALD); tbm — баллистика. u.tgt — null (все) или Set видов; расчёт ИИ берёт только их, оператор (u.manual) — без ограничений
+export const TGT_CATS = ['air', 'drone', 'bomb', 'cruise', 'tbm'];
+export function tgtCat(t, multi = true) { // multi — идёт «Мульти-волна» (evOn): ложная цель налёта тогда — «крылатая», в обороне от налёта — самолёт (там плашки «крылатые» нет)
+  if (!t.isMun) return t.role === 'decoy' && multi ? 'cruise' : 'air';
+  if (!t.ev) return 'bomb';
+  return t.W.kind === 'tbm' ? 'tbm' : t.W.uav ? 'drone' : 'cruise';
+}
+// из списка (с клиента, по сети) — Set видов или null («все»): незнакомые названия отбрасываются, пустой и полный набор — «все»
+export function cleanTgt(list) {
+  if (!Array.isArray(list)) return null;
+  const s = new Set(list.slice(0, 8).filter((k) => TGT_CATS.includes(k)));
+  return s.size && s.size < TGT_CATS.length ? s : null;
+}
 
 const NOOP_FX = {
   samLaunch() {}, samMotor() {}, samTrail() {}, samEnd() {},
@@ -62,7 +79,7 @@ export function createStrike(ctx) {
     if (o.id && o.id >= uid) uid = o.id + 1; // онлайн: клиент повторяет комплексы сервера с теми же номерами
     const u = { id: o.id || uid++, key, S, pos: new THREE.Vector3(x, roof + 1.5, z), ant: new THREE.Vector3(x, roof + (S.radar ? S.radar.mast : 2), z), yaw: o.yaw || 0,
       hp: S.hp, dead: false, emit: !!S.radar && !o.ambush, ambush: !!o.ambush, shutT: 0, track: null, seeT: 0, lostT: 0, reactT: 0, cool: 0,
-      ammo: S.ammo, reloadT: 0, salvoLeft: 0, gunT: 0, gunOn: false, skill: o.skill ?? 0.7, armSeen: new Set(), roof: !!o.roof, known: false,
+      ammo: S.ammo, reloadT: 0, salvoLeft: 0, gunT: 0, gunOn: false, skill: o.skill ?? 0.7, armSeen: new Set(), roof: !!o.roof, known: false, tgt: null, // tgt — фильтр видов целей (null — все)
       lyaw: (LN && LN.yaw0) || 0, lel: LN ? LN.el ?? 0.35 : 0, lnEl: null, lnT: 0, lnErr: 0, slotT: {}, lid: 0 }; // lid — крышка следующей ячейки «Тора»: 0 закрыта … 1 открыта
     units.push(u);
     return u;
@@ -132,7 +149,7 @@ export function createStrike(ctx) {
     u.cool = Math.max(0, u.cool - dt);
     if (u.reloadT > 0) { u.reloadT -= dt; if (u.reloadT <= 0) u.ammo = S.ammo; }
     if (S.type === 'jammer') return; // станция подавления навигации работает сама (см. updateWpn)
-    if (S.antiMun || evOn) targets = targetsFor(u, targets);
+    if (S.antiMun || evOn || u.tgt) targets = targetsFor(u, targets);
     if (u.manual) { manualUnit(u, dt, targets); return; }
     // ПРР в воздухе: опытный расчёт выключает РЛС («мигание»), пока ракета не упадёт
     if (S.radar) {
@@ -225,10 +242,12 @@ export function createStrike(ctx) {
   // летящее оружие как цель: «Тор», «Панцирь», C-RAM (antiMun) — любое вблизи; оружие «Мульти-волны» (ev) — крылатые
   // и дроны берут все ЗРК, баллистику (tbm) — только противоракетные (S.abm)
   function targetsFor(u, aircraft) {
-    const out = aircraft.filter((a) => !a.immune), S = u.S, // immune — носитель «Мульти-волны» за краем района (в жизни — за сотни км)
+    const f = u.manual ? null : u.tgt, // фильтр видов целей (tgtCat): у оператора — без ограничений
+      out = aircraft.filter((a) => !a.immune && (!f || f.has(tgtCat(a, evOn)))), S = u.S, // immune — носитель «Мульти-волны» за краем района (в жизни — за сотни км)
       R2 = Math.pow(S.rmax * 0.6, 2), E2 = Math.pow(S.rmax * 0.95, 2);
     for (const w of wpns) {
       if (w.dead || w.t < 1.5 || w.W.kind === 'decoy') continue;
+      if (f && !f.has(tgtCat(w))) continue;
       const d2 = w.pos.distanceToSquared(u.pos);
       if (w.ev) { if (w.W.kind === 'tbm' ? S.abm && w.vel.y < 0 && d2 < E2 * 1.6 : (S.radar || S.type === 'ir' || S.type === 'guns') && d2 < E2) out.push(w); } // баллистику — на нисходящем участке
       else if (S.antiMun && d2 < R2) out.push(w);
@@ -328,6 +347,11 @@ export function createStrike(ctx) {
     return null;
   }
   function designate(u, t) { if (u.desig !== t) { u.desig = t; u.track = null; u.seeT = 0; fx.radarState(u); } }
+  // фильтр целей комплекса (cats — список видов или null = все); сопровождаемая цель не того вида снимается, ракеты в воздухе долетают
+  function setTgt(u, cats) {
+    u.tgt = cats instanceof Set ? cleanTgt([...cats]) : cleanTgt(cats);
+    if (u.tgt && !u.manual && u.track && !u.tgt.has(tgtCat(u.track, evOn))) { u.track = null; u.reactT = 0; u.seeT = 0; fx.radarState(u); }
+  }
   function setEmit(u, on) { u.emit = !!on; u.shutT = 0; u.ambush = false; if (!on) u.track = null; fx.radarState(u); }
   function setManual(u, on) { u.manual = !!on; u.desig = null; u.gunFire = false; u.aimDir = u.aimDir || new THREE.Vector3(0, 0.2, -1).normalize(); u.method = u.method || '3t'; }
 
@@ -906,7 +930,7 @@ export function createStrike(ctx) {
   }
 
   return { units, sams, wpns, flares, objects, net, addUnit, release, spawnMun, dropCM, step, rwr, mws, radarSees, eyesSee, inZone, blast, aglOf, etaOf,
-    launch, designate, setEmit, setManual, gunLead, irSees, removeUnit, moveUnit, launcherReady, unitTilt };
+    launch, designate, setEmit, setTgt, setManual, gunLead, irSees, removeUnit, moveUnit, launcherReady, unitTilt };
 }
 
 // ═════════════ Предсказание полёта бомбы (CCIP и зона сброса) ═════════════

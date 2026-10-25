@@ -1,21 +1,21 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261025b';
-import { CITY, ZONE } from './city.js?v=20261025b';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261025b';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261025b';
-import { MODES } from './sim/strike.js?v=20261025b';
-import { WEATHERS } from '../drone/world.js?v=20261025b';
-import { WINTER_KEYS } from './winter-render.js?v=20261025b';
-import { LESSONS } from './training.js?v=20261025b';
-import { MODEL_CREDITS, modelUrls } from './models.js?v=20261025b';
-import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261025b';
-import { openLayoutEditor } from './layout.js?v=20261025b';
+import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261026a';
+import { CITY, ZONE } from './city.js?v=20261026a';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261026a';
+import { combinedOk, COMBINED_NAME, levelIn, levelOfSams } from './sim/combined.js?v=20261026a';
+import { MODES } from './sim/strike.js?v=20261026a';
+import { WEATHERS } from '../drone/world.js?v=20261026a';
+import { WINTER_KEYS } from './winter-render.js?v=20261026a';
+import { LESSONS } from './training.js?v=20261026a';
+import { MODEL_CREDITS, modelUrls } from './models.js?v=20261026a';
+import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261026a';
+import { openLayoutEditor } from './layout.js?v=20261026a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261025b';
-import { photoItems } from './photo.js?v=20261025b';
-import { guideChapters } from './guide.js?v=20261025b';
-import { iconize, ico, capsHtml } from './icons.js?v=20261025b';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261026a';
+import { photoItems } from './photo.js?v=20261026a';
+import { guideChapters } from './guide.js?v=20261026a';
+import { iconize, ico, capsHtml } from './icons.js?v=20261026a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -160,7 +160,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         list.map(([k, s]) => `<button class="opt ${k === setup.psam ? 'on' : ''}" data-psam="${k}"><div class="nm"><b>${trIf(s.name)}${capsHtml(s)}</b><span>${tr('{0} · до {1} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1)])}</span></div></button>`).join('') +
         '<p class="hint">' + tr('Комплекс стоит у цели и отражает налёт за налётом: неуязвим, быстро перезаряжается. Вокруг — ИИ-ПВО города.') + '</p>';
     } else {
-      const items = photoItems(att, setup.era);
+      const items = photoItems(att);
       if (!items.some(([k]) => k === setup.pmun) && items.length) setup.pmun = items[0][0];
       h += `<div class="cat-h">${tr('Оружие волны')}</div>` + (items.length ? items.map(([k, via]) => `<button class="opt ${k === setup.pmun ? 'on' : ''}" data-pmun="${k}"><div class="nm"><b>${trIf(AG[k].name)}</b><span>${AG[k].recon ? tr('разведчик') : AG[k].uav ? tr('дрон') : AG[k].kind === 'tbm' ? (via ? tr('аэробаллистическая') : tr('баллистическая, с пусковой')) : tr('крылатая / планирующая')}${via ? tr(' · носитель {0}', [trIf(CARRIERS[via].name)]) : ''}</span></div></button>`).join('')
         : '<p class="hint">' + tr('В этой эпохе у этой стороны нечего снять — выберите другую эпоху.') + '</p>') +
@@ -202,21 +202,21 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       setup.tside = side; setup.tl = Math.max(0, i); save();
     }
   }
-  // «Мульти-волна» отдельно: роль, сторона игрока, эпоха (есть ли у атакующих чем ударить), что ждёт
+  // «Мульти-волна» отдельно: роль, сторона игрока, что ждёт. Эпох нет (Mark 2026-10-25): берётся всё открытое, один бюджет; уровень ИИ скрытый (sim/combined.js)
   function renderMulti() {
-    const atk = setup.mrole === 'atk', me = setup.side, att = atk ? me : me === 'east' ? 'west' : 'east', def = att === 'east' ? 'west' : 'east';
-    const eras = ERAS.filter((e) => combinedOk(att, e.id));
-    if (!eras.some((e) => e.id === setup.era)) setup.era = eras[eras.length - 1].id;
+    const atk = setup.mrole === 'atk', me = setup.side, att = atk ? me : me === 'east' ? 'west' : 'east';
     let h = `<div class="prow"><span>${tr('Роль')}</span>${seg('mrole', atk ? 'atk' : 'def', [['def', tr('За ПВО')], ['atk', tr('За волну')]])}</div>
       <div class="prow"><span>${tr('Сторона')}</span>${seg('side', me, [['east', tr('Восток')], ['west', tr('Запад')]])}</div>
       <div class="prow"><span>${tr('Режим')}</span>${seg('diff', setup.diff, Object.entries(MODES).map(([k, m]) => [k, trIf(m.name)]))}</div><p class="hint">${trIf(MODES[setup.diff].desc)}</p>
-      <div class="prow"><span>${tr('Эпоха')}</span>${seg('era', setup.era, eras.map((e) => [e.id, trIf(e.name)]))}</div>
       <p class="hint">${tr('Карта «Северный рубеж»: зимняя горная долина. Объекты разнесены: авиабаза, ГЭС на плотине, РЛС на вершине, арсенал в ущелье. Хребты прикрывают от РЛС и ракет.')}</p>`;
-    const items = multiItems(att, setup.era), carriers = [...new Set(items.map(([, v]) => v).filter(Boolean))].map((v) => trIf(CARRIERS[v].name));
-    h += `<div class="cat-h">${tr('Как идёт волна')}</div><p class="hint">${tr('1. <b>Дрон разведчик</b> (без боевой части, с камерой) облетает город и засекает ПВО. 2. <b>{0} и ложные цели</b>: ПВО тратит на них ракеты и включает РЛС. 3. <b>Крылатые ракеты</b>: носители ({1}) заходят из-за края карты и пускают их с рубежа за краем района, куда ПВО не достаёт. Ракеты идут на малой высоте с 2–3 направлений. 4. <b>Баллистика</b>: с пусковых за городом, по крутой дуге с высоты 25–45 км. Расписание не ждёт: несбитые дроны долетают до целей, крылатые и баллистика приходят в свой срок.', [(att === 'east' && setup.era >= 4) || (att === 'west' && setup.era >= 3) ? tr('Ударные дроны') : tr('Дроны'), carriers.join(', ') || '—'])}</p>
+    const items = multiItems(att), carriers = [...new Set(items.map(([, v]) => v).filter(Boolean))].map((v) => trIf(CARRIERS[v].name));
+    h += `<div class="cat-h">${tr('Как идёт волна')}</div><p class="hint">${tr('1. <b>Дрон разведчик</b> (без боевой части, с камерой) облетает город и засекает ПВО. 2. <b>{0} и ложные цели</b>: ПВО тратит на них ракеты и включает РЛС. 3. <b>Крылатые ракеты</b>: носители ({1}) заходят из-за края карты и пускают их с рубежа за краем района, куда ПВО не достаёт. Ракеты идут на малой высоте с 2–3 направлений. 4. <b>Баллистика</b>: с пусковых за городом, по крутой дуге с высоты 25–45 км. Расписание не ждёт: несбитые дроны долетают до целей, крылатые и баллистика приходят в свой срок.', [tr('Дроны'), carriers.join(', ') || '—'])}</p>
       <p class="hint">${tr('<b>Баллистику</b> сбивают только противоракетные ЗРК: С-300, С-400, Patriot, PAC-3 (немного «Бук-М3»), и только на снижении, в последние ~20 с. О пуске предупреждает тревога. На карте ромб показывает высоту и время до падения, круг — район падения.')}</p>`;
-    if (atk) h += `<div class="cat-h">${tr('За волну')}</div><p class="hint">${tr('Бюджет — <b>{0}</b> очков угрозы{1}: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 4–6, «Искандер» — 7, «Кинжал» — 9, ARRW — 8. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ ({2}). Волна прорвалась, если разрушено 50 % ценности целей.', [multiBudget(att, setup.era), att === 'west' ? tr(' (у запада +15 %: моделей меньше)') : '', DEFENSE[def][setup.era].map(([k]) => trIf(SAM[k].short)).join(', ')])}</p>`;
-    else h += `<div class="cat-h">${tr('За ПВО')}</div><p class="hint">${tr('Одна большая волна по 3 целям. Расстановка — <b>{0}</b> очков обороны, докупки нет. Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» — камера за ракетой.', [Math.round(MULTI.sam[setup.era] * (setup.diff === 'arcade' ? 1.2 : 1)), (COMBINED[att][setup.era] || []).filter(([k]) => k !== 'scout').map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(', ')])}</p>`;
+    if (atk) h += `<div class="cat-h">${tr('За волну')}</div><p class="hint">${tr('Бюджет — <b>{0}</b> очков угрозы: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 4–6, «Искандер» — 7, «Кинжал» — 9, ARRW — 8. В волну идёт всё открытое оружие вместе. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ: чем мощнее оружие в наряде, тем современнее его комплексы. Волна прорвалась, если разрушено 50 % ценности целей.', [multiBudget()])}</p>`;
+    else {
+      const sams = Object.keys(SAM).filter((k) => !realLock() || C.progress.samOk(k)), comp = COMBINED[att][levelIn(COMBINED[att], levelOfSams(me, sams))] || []; // ожидаемая волна — по скрытому уровню (sim/combined.js)
+      h += `<div class="cat-h">${tr('За ПВО')}</div><p class="hint">${tr('Одна большая волна по 3 целям. Расстановка — <b>{0}</b> очков обороны, докупки нет: берите любые открытые комплексы своей стороны. Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» — камера за ракетой.', [Math.round(MULTI.sam * (setup.diff === 'arcade' ? 1.2 : 1)), comp.filter(([k]) => k !== 'scout' && k !== 'scout_e').map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(', ')])}</p>`;
+    }
     return h;
   }
   $('tab-play').onclick = (e) => {
@@ -440,6 +440,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   }
   $('pgBar').onclick = () => { snd.click(); C.research.open(); };
   $('resIco').innerHTML = ico('research'); $('resBtn').onclick = () => { snd.click(); C.research.open(); }; // кнопка в углу фона меню
+  $('shopIco').innerHTML = ico('gem'); $('shopLk').innerHTML = ico('lock'); // «Магазин» — пока закрыт (disabled): кристаллы и камуфляжи в работе
   function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); } // аккаунт игры и рейтинг — в углу меню
   $('weatherChip').textContent = `${trIf(C.W.name)} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);

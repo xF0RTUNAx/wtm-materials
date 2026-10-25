@@ -2,11 +2,11 @@
 // ветки сверху, стороны слева (нейтрально), колонки — ранги I–IV, линии — от предыдущей единицы к следующей, карточка —
 // модель, название, ранг, цена; строка паритета над колонкой. Тап — досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
-import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from './progress.js?v=20261025b';
-import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261025b';
-import { ico, capsHtml } from './icons.js?v=20261025b';
-import { XP, SV, trMsg } from './progress-net.js?v=20261025b';
-import { tr, trIf, LANG } from './i18n.js?v=20261025b';
+import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261026a';
+import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261026a';
+import { ico, capsHtml } from './icons.js?v=20261026a';
+import { XP, SV, trMsg } from './progress-net.js?v=20261026a';
+import { tr, trIf, LANG } from './i18n.js?v=20261026a';
 
 const CSS = `
 #research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;
@@ -77,7 +77,7 @@ const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU'
 // значения карточки из progress.js (cardStats): «480 км/ч», «1,5–30 км», «2,5 т», «есть» — единицы и запятая на выбранном языке
 const trVal = (v) => (LANG !== 'en' ? v : trIf(v).replace(/^none$/, 'no').replace(/(\d),(\d)/g, '$1.$2').replace(/ км\/ч/g, ' km/h').replace(/ км(?![А-Яа-я\/])/g, ' km').replace(/ м\/с/g, ' m/s').replace(/ кг/g, ' kg').replace(/ т$/g, ' t').replace(/ м$/g, ' m').replace(/ с$/g, ' s').replace(/°\/с/g, '°/s')
   .replace(/ снарядов$/, ' rounds').replace(/ · залп /, ' · salvo ').replace(/ \(оптика\)$/, ' (optical)'));
-const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261025b`;
+const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261026a`;
 const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'Цель'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь — один ключ на оба), по-английски это разные слова
 const era = (r) => (ERAS[r - 1] ? trIf(ERAS[r - 1].name).split('— ')[1] || '' : '');
 const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? tr('Подвески: {0}.', [RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => trIf(L.name))).join(' · ')]) : trIf(AG[n.item || n.key]?.guide)) || '';
@@ -105,7 +105,7 @@ export function createResearch(C, PG) {
     const price = s.k === 'buy' ? `<span class="pr ${s.can ? 'sv' : 'no'}">${SV(n.cost)}</span>` : s.k === 'res' ? `<span class="pr ${s.can ? 'xp' : 'no'}">${XP(n.cost)}</span>` : s.k === 'lock' ? `<span class="pr no">${ico('lock')}${n2(n.cost)}</span>` : '';
     const bar = s.k === 'res' && p.goal[n.branch] === n.id ? `<div class="bar"><i style="width:${Math.min(100, p.xp / n.cost * 100)}%"></i></div>` : '';
     return `<div class="card ${s.k === 'own' || s.k === 'start' ? 'own' : ''} ${s.can ? 'can' : ''} ${s.k === 'lock' ? 'lock' : ''} ${sel ? 'sel' : ''} ${pr && pr.id === n.id ? 'pair' : ''}" data-id="${n.id}" style="left:${x}px;top:${y}px">
-      <img src="${thumb(n)}" alt="" loading="lazy">${tag}<span class="nm">${trIf(n.short)}</span>${n.branch === 'pvo' ? capsHtml(SAM[n.key], '', 'mini') : ''}<span class="rk">${RANK_NAME[n.rank]}</span>${price}${bar}</div>`;
+      <img src="${thumb(n)}" alt="" loading="lazy">${tag}<span class="nm">${trIf(n.short)}</span>${n.branch === 'pvo' ? capsHtml(SAM[n.key], '', 'mini') : ''}${ranked(n.branch) ? `<span class="rk">${RANK_NAME[n.rank]}</span>` : ''}${price}${bar}</div>`;
   }
   function parity(r) {
     const p = P();
@@ -118,15 +118,20 @@ export function createResearch(C, PG) {
     const cs = getComputedStyle(root), px = (v) => parseFloat(cs.getPropertyValue(v)), ph = phone();
     const cw = px('--cw'), gx = px('--gx'), gy = px('--gy'), ch = px('--ch'), top = ph ? 76 : 72; // ниже шапки рангов (строка паритета — до двух строк)
     // вертолёты: линии Востока, под ними — Запада, над каждой группой — подпись стороны
-    const hl = EB() === 'heli', LS = hl ? SIDES.map((sd) => [sd, treeLayout('heli', sd)]) : [[S.side, treeLayout(S.B, S.side)]], pos = {}, grp = [], L = { cells: [], links: [] };
-    let y0 = top;
-    for (const [sd, l] of LS) { if (hl) { grp.push(`<div class="grp" style="top:${y0 + 2}px">${trIf(SIDE_NAME[sd])}</div>`); y0 += 22; } for (const c of l.cells) pos[c.n.id] = [c.col * (cw + gx) + 18, y0 + c.row * (ch + gy)]; L.cells.push(...l.cells); L.links.push(...l.links); y0 += l.rows * (ch + gy) + (hl ? 8 : 0); }
-    const H = y0 + 20, W = 4 * (cw + gx) + 18, p = P();
+    const hl = EB() === 'heli', rk = ranked(EB()), LS = hl ? SIDES.map((sd) => [sd, treeLayout('heli', sd)]) : [[S.side, treeLayout(S.B, S.side)]], pos = {}, grp = [], L = { cells: [], links: [] };
+    let y0 = rk ? top : 14, cols = 4;
+    for (const [sd, l] of LS) {
+      if (hl) { grp.push(`<div class="grp" style="top:${y0 + 2}px">${trIf(SIDE_NAME[sd])}</div>`); y0 += 22; }
+      if (l.labels) for (const b of l.labels) grp.push(`<div class="grp" style="top:${y0 + b.row * (ch + gy + 22) + 2}px">${trIf(b.name)}</div>`); // «Удары»: подпись ветки над её рядом, как у вертолётов
+      for (const c of l.cells) pos[c.n.id] = [c.col * (cw + gx) + 18, y0 + (l.labels ? c.row * (ch + gy + 22) + 22 : c.row * (ch + gy))];
+      L.cells.push(...l.cells); L.links.push(...l.links); cols = Math.max(cols, l.cols || 4); y0 += l.labels ? l.rows * (ch + gy + 22) : l.rows * (ch + gy) + (hl ? 8 : 0);
+    }
+    const H = y0 + 20, W = cols * (cw + gx) + 18, p = P();
     const links = L.links.map(([a, b]) => { const [x1, y1] = pos[a], [x2, y2] = pos[b], xa = x1 + cw, ya = y1 + ch / 2, yb = y2 + ch / 2, xm = x2 - gx / 2;
       if (x2 <= x1) return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${x1} ${ya} H${x1 - 11} V${yb} H${x2}"/>`; // тот же ранг (Ил-28 → Ту-16 → Ту-22): скобкой слева от колонки
       return `<path class="${st(NODE[b]).k === 'lock' ? 'lock' : ''}" d="M${xa} ${ya} H${xm} V${yb} H${x2}"/>`; }).join('');
-    const shade = RANKS.filter((r) => !rankOpen(p, EB(), r)).map((r) => `<div class="shade" style="left:${(r - 1) * (cw + gx) + 18 - gx / 2}px;width:${cw + gx}px"></div>`).join('');
-    return `<div class="tree" style="width:${W + 30}px;height:${H}px"><div class="ranks">${RANKS.map((r) => `<div class="rh"><b>${tr('Ранг {0}', [RANK_NAME[r]])}</b><span>${era(r)}</span>${parity(r)}</div>`).join('')}</div>
+    const shade = RANKS.filter((r) => rk && !rankOpen(p, EB(), r)).map((r) => `<div class="shade" style="left:${(r - 1) * (cw + gx) + 18 - gx / 2}px;width:${cw + gx}px"></div>`).join('');
+    return `<div class="tree" style="width:${W + 30}px;height:${H}px">${rk ? `<div class="ranks">${RANKS.map((r) => `<div class="rh"><b>${tr('Ранг {0}', [RANK_NAME[r]])}</b><span>${era(r)}</span>${parity(r)}</div>`).join('')}</div>` : ''}
       ${shade}${grp.join('')}<svg class="links" width="${W}" height="${H}">${links}</svg>${L.cells.map((c) => card(c, ...pos[c.n.id])).join('')}</div>`;
   }
   function dossier() {
@@ -141,7 +146,7 @@ export function createResearch(C, PG) {
     const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${trIf(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
     const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:500 13px 'Oswald'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? ico('ok', 'ii') + tr('Куплен') : sp.k === 'start' ? ico('star', 'ii') + tr('Стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
     return `<div class="veil" data-close="1"></div><div class="dos"><div class="sc"><div class="hero"><img src="${thumb(n)}" alt=""></div>
-      <span class="mk">${tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)])}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
+      <span class="mk">${ranked(n.branch) ? tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)]) : `${trIf(SIDE_NAME[n.side])} · ${trIf(n.lineName)}`}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
       ${stats}<p>${guide(n)}</p>${an}</div><div class="acts">${act}</div></div>`;
   }
   function draw() {
@@ -149,7 +154,7 @@ export function createResearch(C, PG) {
     const p = P(), scroll = root.querySelector('.wrap') ? [root.querySelector('.wrap').scrollLeft, root.querySelector('.wrap').scrollTop] : null;
     if (!phone() && !S.sel) S.sel = (nodesOf(EB(), sideOf(), 2)[0] || nodesOf(EB(), sideOf())[0]).id;
     root.classList.toggle('open', S.open);
-    root.innerHTML = `<div class="rbg"></div><div class="top"><button class="back" data-close-all="1" aria-label="${tr('Назад')}">«</button><h1>${tr('Исследования')}</h1><div class="btabs">${BRANCHES.filter((b) => !b.sub).map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${trIf(b.name)}<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i></button>`).join('')}</div>
+    root.innerHTML = `<div class="rbg"></div><div class="top"><button class="back" data-close-all="1" aria-label="${tr('Назад')}">«</button><h1>${tr('Исследования')}</h1><div class="btabs">${BRANCHES.filter((b) => !b.sub).map((b) => `<button data-b="${b.id}" class="${b.id === S.B ? 'on' : ''}">${trIf(b.name)}${ranked(b.id) ? `<i>${RANKS.filter((r) => rankOpen(p, b.id, r)).length}/4</i>` : ''}</button>`).join('')}</div>
       <div class="cur"><span class="xp" title="${tr('Опыт — исследовать')}">${XP(p.xp)}</span><span title="${tr('Серебро — покупать')}">${SV(p.silver)}</span></div></div>
       <div class="sides">${SIDES.map((s) => `<button data-s="${s}" class="${s === S.side ? 'on' : ''}">${trIf(SIDE_NAME[s])}<small>${tr('куплено {0} из {1}', [nodesOf(S.B, s).filter((n) => owned(p, n.id)).length, nodesOf(S.B, s).length])}</small></button>`).join('')}${S.B === 'air' ? `<button data-s="heli" class="${S.side === 'heli' ? 'on' : ''}">${tr('Вертолёты')}<small>${tr('куплено {0} из {1}', [nodesOf('heli').filter((n) => owned(p, n.id)).length, nodesOf('heli').length])}</small></button>` : ''}</div>
       <div class="note">${tr('Только для <b>«Реализма»</b>. Аркада и обучение — всё открыто.')}</div>

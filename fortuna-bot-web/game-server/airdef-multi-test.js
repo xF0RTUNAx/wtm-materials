@@ -105,11 +105,24 @@ try {
   const r2 = await P.wait((m) => m.t === 'room' && m.kind === 'multi'); Q.send({ t: 'join', code: r2.code, team: 'west' });
   await Q.wait((m) => m.t === 'room' && m.players.length >= 2); P.send({ t: 'ready', on: true }); Q.send({ t: 'ready', on: true });
   const s2 = await P.wait((m) => m.t === 'start' && m.kind === 'multi', 20000);
-  const atkC = s2 && s2.atk === 'east' ? P : Q, defC = atkC === P ? Q : P;
+  const atkC = s2 && s2.atk === 'east' ? P : Q; let defC = atkC === P ? Q : P;
   const view = await atkC.wait((m) => m.t === 'room' && m.allies && m.allies.some((a) => a.cost > 0), 8000);
   check(`2×2 с ботами: бот-атакующий собрал план (${view ? view.allies.map((a) => a.name + ' ' + a.cost).join(', ') : '—'})`, !!view);
   const botUnits = await defC.wait((m) => m.t === 'ev' && m.e.some((e) => e[0] === 'ua'), 8000);
   check('2×2 с ботами: бот-ПВО поставил комплексы', !!botUnits);
+  // фильтр целей комплекса: ПВО покупает, ставит фильтр (с мусором в списке); чужая команда фильтр не меняет; вернулся тем же аккаунтом — в состоянии фильтр на месте
+  {
+    let x0 = 0, z0 = 0; for (let k = 0; k < 400; k++) { const a = k * 2.399, d = 1500 + (k % 9) * 300, x = Math.cos(a) * d, z = Math.sin(a) * d; if (freeGround(city, x, z, 9)) { x0 = x; z0 = z; break; } }
+    defC.send({ t: 'buyUnit', k: s2.atk === 'east' ? 'hawk' : 's75', x: x0, z: z0 }); // стартовый комплекс (в «Реализме» купленное в исследованиях)
+    const ua = await defC.wait((m) => m.t === 'ev' && m.e.some((e) => e[0] === 'ua' && Math.abs(e[3] - x0) < 1 && Math.abs(e[4] - z0) < 1), 5000), id = ua && ua.e.find((e) => e[0] === 'ua' && Math.abs(e[3] - x0) < 1)[1];
+    if (!id) console.log('  фильтр целей: комплекс не куплен', JSON.stringify(defC.msgs.filter((m) => m.t === 'deny').slice(-2)));
+    if (id) { atkC.send({ t: 'tgt', id, c: ['bomb'] }); defC.send({ t: 'tgt', id, c: ['drone', 'zzz', 'cruise'] }); }
+    await sleep(500);
+    const defC2 = await client(defC.name, defC === P ? 3 : 4), st2 = await defC2.wait((m) => m.t === 'state' && m.kind === 'multi', 8000), row = st2 && st2.units.find((u) => u[0] === id);
+    check(`фильтр целей: после возврата у комплекса — drone, cruise (${row ? JSON.stringify(row[8]) : 'нет состояния'})`, !!row && Array.isArray(row[8]) && row[8].length === 2 && row[8].includes('drone') && row[8].includes('cruise'));
+    check('фильтр целей: у бота-комплексов фильтра нет', !!st2 && st2.units.filter((u) => u[0] !== id).every((u) => !u[8]));
+    defC.ws.close(); defC = defC2;
+  }
   atkC.send({ t: 'ready', on: true }); defC.send({ t: 'ready', on: true });
   const e2 = await atkC.wait((m) => m.t === 'roundEnd', 400000);
   check(`2×2 с ботами: раунд с волной бота прошёл (разрушено ${e2 ? e2.value : '?'})`, !!e2 && atkC.msgs.some((m) => m.t === 's' && m.W.length > 0));

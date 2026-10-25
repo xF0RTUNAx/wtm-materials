@@ -1,7 +1,7 @@
 // Звук «Воздушного превосходства»: движок и синтез — из «Летки» (drone/audio.js: двигатель, объёмные голоса самолётов
 // и ракет, взрывы с задержкой по скорости звука, «гарнитура» для бортовых сигналов). Здесь — звуки этой игры из тех же
 // кирпичей (A.noise / A.tone): старт ЗУР, очереди зениток, сброс бомб, тоны СПО и датчика пуска, пульт оператора ПВО.
-import { createAudio } from '../drone/audio.js?v=20261025b';
+import { createAudio } from '../drone/audio.js?v=20261026a';
 
 export function createSound() {
   const A = createAudio();
@@ -11,19 +11,19 @@ export function createSound() {
   A.setVolume(vol); A.setMuted(muted);
   // записанные звуки (games/airdef/sounds): мотор «Шахеда» — петля для голосов дронов; далёкий взрыв —
   // «Stretched Canvas Bass Drum Granulated» by Puniho (freesound.org, CC BY 3.0). Нет файла — остаётся синтез
-  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261025b'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261025b');
-  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261025b`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261025b'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261025b'); A.setPropSample('prop');
+  A.loadSample('siren', 'airdef/sounds/siren.mp3?v=20261026a'); A.loadSample('launchAir', 'airdef/sounds/launch_air.mp3?v=20261026a');
+  for (const i of [1, 2, 3]) A.loadSample('cold' + i, `airdef/sounds/launch_cold${i}.mp3?v=20261026a`); A.loadSample('prop', 'airdef/sounds/shahed_loop.wav?v=20261026a'); A.loadSample('boomFar', 'airdef/sounds/boom_far.mp3?v=20261026a'); A.setPropSample('prop');
   // нарезка и петли — tools/airdef-sounds/mkloops.py (огибающая пролёта выровнена, стык петли — по ритму хлопков/выстрелов):
   //   винт — «UH-1 Helicopter» by Rmutt (CC0): малые обороты 0:54, большие 1:03–1:07; самолёт — «Jet Plane Flyby» by qubodup (CC0):
   //   подлёт (свист), уход (рёв), пролёт целиком; очередь — «Navy Mk 15 Phalanx CIWS Fast Burst» by qubodup (CC0), запись
   //   перегружена — верх смягчён и тише; вороны — «Flock of Crows» by Fenodyrie (CC0), с 0:24
   for (const [k, f] of [['heliLo', 'heli_lo.wav'], ['heliHi', 'heli_hi.wav'], ['jetFront', 'jet_front.wav'], ['jetRear', 'jet_rear.wav'], ['jetPass', 'jet_pass.mp3'], ['ciws', 'ciws_loop.wav'], ['ciwsTail', 'ciws_tail.mp3'], ['crows', 'crows.mp3'], ['heliFar', 'heli_far.wav'], ['rocketFar', 'rocket_far.wav'], ['intercept', 'intercept.mp3'], ['boomAir', 'boom_air.mp3'],
-    ['tu95', 'tu95_loop.wav'], ['patriot', 'patriot_launch.mp3'], ['iskLaunch', 'isk_launch.mp3'], ['iskBoom', 'isk_boom.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261025b`);
+    ['tu95', 'tu95_loop.wav'], ['patriot', 'patriot_launch.mp3'], ['iskLaunch', 'isk_launch.mp3'], ['iskBoom', 'isk_boom.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261026a`);
   // вторая партия (tools/airdef-sounds/mk2.py): вертолёт вдали — Benboncan «Military Helicopter» (CC BY 4.0); гул ракеты в небе —
   //   qubodup «Far Away Rocket Launch» (CC0); перехват — Invadium «cruise missiles interception» (CC0); из роликов YouTube (решение Mark
   //   2026-10-21): далёкий взрыв, винты Ту-95, пуск Patriot, пуск и взрыв «Искандера»
   // третья партия (mk3.py; лицензия не подтверждена — файлов может не быть, тогда синтез): двигатель F-16 и форсаж, тоны ГСН AIM-9, отстрел ЛТЦ
-  for (const [k, f] of [['engIdle', 'eng_idle.wav'], ['engAB', 'eng_ab.wav'], ['abOn', 'ab_on.mp3'], ['seekSearch', 'seek_search.wav'], ['seekTone', 'seek_tone.wav'], ['seekLock', 'seek_lock.wav'], ['flareRec', 'flare.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261025b`);
+  for (const [k, f] of [['engIdle', 'eng_idle.wav'], ['engAB', 'eng_ab.wav'], ['abOn', 'ab_on.mp3'], ['seekSearch', 'seek_search.wav'], ['seekTone', 'seek_tone.wav'], ['seekLock', 'seek_lock.wav'], ['flareRec', 'flare.mp3']]) A.loadSample(k, `airdef/sounds/${f}?v=20261026a`);
   A.setEngineLoops({ idle: 'engIdle', ab: 'engAB', tprop: 'tu95' }); // tprop — свой Ту-95: та же запись винтов, что у голосов
   A.setVoiceLoops({ heli: ['heliLo', 'heliHi', 'heliFar'], jet: ['jetFront', 'jetRear'], tprop: ['tu95'], tbm: ['rocketFar'] });
   const delayOf = (d) => Math.min(2.5, d / 343);

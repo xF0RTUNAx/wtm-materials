@@ -3,9 +3,9 @@
 // Данные — функция get-airdef-rating (account.js; без сервера и без ?rmock=1 — «Рейтинг скоро откроется»). Формула очков — rating.js.
 // В таблице — только аккаунты игры; аккаунту сайта и гостю вместо своей карточки — вход / перенос прогресса (account-ui.js).
 /* global CONFIG */
-import { ico } from './icons.js?v=20261025b';
-import { tr, LANG } from './i18n.js?v=20261025b';
-import { activeAcc, rating as fetchRating, transferOk } from './account.js?v=20261025b';
+import { ico } from './icons.js?v=20261026a';
+import { tr, LANG } from './i18n.js?v=20261026a';
+import { activeAcc, rating as fetchRating, transferOk } from './account.js?v=20261026a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const nf = (v) => Math.round(v).toLocaleString(LOC);

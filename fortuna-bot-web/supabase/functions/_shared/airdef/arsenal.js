@@ -625,8 +625,8 @@ export const COMBINED = {
     2: [['scout_e', 1, 1], ['kh55d', 3, 2, 'e_tu160'], ['kh55', 7, 2, 'e_tu160'], ['tochka', 2, 3]],
     3: [['scout_e', 1, 1], ['kh55d', 4, 2, 'e_tu160'], ['kh555', 9, 2, 'e_tu160'], ['tochka', 2, 3]],
     4: [['scout_e', 1, 1], ['shahed', 19, 1], ['kh55d', 2, 2, 'e_tu160'], ['kh555', 5, 2, 'e_tu160'], ['kalibr', 4, 2, 'e_tu160'], ['iskander', 1, 3]] },
-  // баллистика в составах — по правилу tbmCheck (online-multi.js): «Искандер», «Кинжал» и ARRW — без другой баллистики, иначе не больше 2 ракет. У запада во II эпохе
-  // баллистика только Lance, ложных целей нет — очков чуть больше (MULTI.westK по эпохам)
+  // баллистика в составах — по правилу tbmCheck (online-multi.js): «Искандер», «Кинжал» и ARRW — без другой баллистики, иначе не больше 2 ракет.
+  // Составы по уровню 1–4 — для ИИ: последняя волна «Обороны» (по эпохе) и скрытый уровень Мульти-волны (sim/combined.js levelOfSams, боты онлайна)
   west: { 2: [['scout', 1, 1], ['agm86', 10, 2, 'e_b52'], ['lance', 2, 3]], // II: Lance ×2, AGM-86 13 → 10 — очков угрозы 38 против 39
     3: [['scout', 1, 1], ['uav_w', 4, 1], ['tomahawk', 3, 2, 'e_b1b'], ['slam', 2, 2, 'f18'], ['jsow', 2, 2, 'f18'], ['atacms', 2, 3]],
     4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 6, 2, 'f16'], ['sdb', 4, 2, 'f16'], ['tomahawk', 3, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b52'], ['storm', 2, 2, 'e_typhoon'], ['prsm', 2, 3]] }, // IV: PrSM вместо ATACMS, SDB 6 → 4 — очков угрозы столько же (16)
@@ -635,17 +635,31 @@ export const COMBINED = {
 // с манёвром и ложными целями — 7; аэробаллистика: «Кинжал» — 9, ARRW — 8 (боевая часть легче)
 export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, sdb: 1, kh55: 3, kh555: 3, kh101: 4, kalibr: 3, tomahawk: 3, agm86: 3, slam: 3, jsow: 2, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, lance: 4, prsm: 6, iskander: 7, kinzhal: 9, arrw: 8 };
 export const threatOf = (comp) => comp.reduce((n, [k, c]) => n + (THREAT[k] ?? 3) * c, 0);
-// отдельный режим «Мульти-волна»: что можно заказать за удар (ключ, носитель или null — пусковая / своим ходом, с какой эпохи),
-// бюджет удара в очках угрозы (у запада во II–III эпохе ×1,05) и очки обороны на расстановку под одну волну
-export const MULTI = {
-  items: { east: [['shahed', null, 4], ['kh55d', 'e_tu160', 2], ['kh55', 'e_tu160', 2], ['kh555', 'e_tu160', 3], ['kh101', 'e_tu160', 4], ['kalibr', 'e_tu160', 4], ['r17', null, 1], ['tochka', null, 2], ['iskander', null, 4], ['kinzhal', 'e_mig31', 4]],
-    west: [['uav_w', null, 3], ['quail', 'f16', 4], ['sdb', 'f16', 4], ['agm86', 'e_b52', 2], ['slam', 'f18', 3], ['jsow', 'f18', 3], ['tomahawk', 'e_b1b', 3], ['jassm', 'e_b52', 4], ['storm', 'e_typhoon', 4], ['lance', null, 2], ['atacms', null, 3], ['prsm', null, 4], ['arrw', 'e_b52', 4]] },
-  // у запада во II эпохе нет ложных целей — очков чуть больше (×1,05; до Lance, без баллистики, было ×1,15 — Mark 2026-10-25); с III (SLAM, JSOW, SDB) — почти поровну (пересчёт 2026-10-12)
-  budget: { 1: 15, 2: 33, 3: 42, 4: 60 }, westK: { 1: 1, 2: 1.05, 3: 1.05, 4: 1 },
-  sam: { 1: 1500, 2: 1800, 3: 2200, 4: 2500 },
+// отдельный режим «Мульти-волна» — без эпох и рангов (Mark 2026-10-25: «для каждой нации — градация импакта, от самой начальной баллистики до самой
+// современной; цена и опыт формируются из этого принципа, но напрямую не упоминаются; всё унифицировано и может использоваться вместе — главное открыть»).
+// Ветка — [id, название, [[ключ, носитель или null — пусковая / своим ходом, ступень 1–4]]] в порядке силы. Первый в ветке — стартовый (открыт и бесплатен);
+// ступень — цена и опыт исследования (progress.js), в дереве колонка — место в ветке. Эпоха волну не ограничивает: всё открытое — в один бюджет.
+export const MULTI_LINES = {
+  east: [
+    ['ballistic', 'Баллистика', [['r17', null, 1], ['tochka', null, 2], ['iskander', null, 3], ['kinzhal', 'e_mig31', 4]]],
+    ['cruise', 'Крылатые ракеты', [['kh55', 'e_tu160', 1], ['kh555', 'e_tu160', 2], ['kalibr', 'e_tu160', 3], ['kh101', 'e_tu160', 4]]],
+    ['drones', 'Дроны и ложные цели', [['kh55d', 'e_tu160', 1], ['shahed', null, 2]]],
+  ],
+  west: [
+    ['ballistic', 'Баллистика', [['lance', null, 1], ['atacms', null, 2], ['prsm', null, 3], ['arrw', 'e_b52', 4]]],
+    ['cruise', 'Крылатые ракеты', [['agm86', 'e_b52', 1], ['slam', 'f18', 2], ['tomahawk', 'e_b1b', 2], ['storm', 'e_typhoon', 3], ['jassm', 'e_b52', 4]]],
+    ['glide', 'Планирующие', [['jsow', 'f18', 1], ['sdb', 'f16', 3]]],
+    ['drones', 'Дроны и ложные цели', [['uav_w', null, 1], ['quail', 'f16', 2]]],
+  ],
 };
-export const multiBudget = (side, era) => Math.round((MULTI.budget[era] || 0) * (side === 'west' ? MULTI.westK[era] || 1 : 1));
-export const multiItems = (side, era) => (MULTI.items[side] || []).filter(([, , e]) => e <= era);
+// что можно заказать за удар: [ключ, носитель, ступень, ветка, место в ветке (0 — стартовый)]; бюджет удара — один на обе стороны и любой состав
+// (надбавки западу больше нет: у него теперь есть и баллистика, и ложные цели), очки обороны на расстановку под одну волну — одни
+export const MULTI = {
+  items: Object.fromEntries(Object.entries(MULTI_LINES).map(([side, lines]) => [side, lines.flatMap(([line, , list]) => list.map(([k, via, step], i) => [k, via, step, line, i]))])),
+  budget: 50, sam: 2500,
+};
+export const multiBudget = () => MULTI.budget;
+export const multiItems = (side) => MULTI.items[side] || [];
 
 DEFENSE.east[3] = [['s300', 1], ['kub', 2], ['tor', 2], ['osa', 1], ['tunguska', 1], ['strela1', 1], ['iglas', 4], ['gpsjam', 1]];
 DEFENSE.east[4] = [['s400', 1], ['bukm3', 2], ['torm2', 2], ['pantsir', 1], ['tunguska', 1], ['verba', 4], ['gpsjam', 1]];

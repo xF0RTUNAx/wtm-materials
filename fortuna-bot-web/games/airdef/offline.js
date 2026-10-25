@@ -6,7 +6,7 @@
 //   • остальное (код, текстуры, звуки, картинки) — сервис-воркер games/airdef-sw.js (Android, ПК), его кэш сменяется при каждом деплое.
 // Только на сайте (fortunawtm.com) или с ?sw=1: на localhost и в локальной сети файлы меняются без смены версии — кэш показывал бы старое.
 // «Скачать всё заранее» (Настройки) — prefetchAll: модели по списку models.js + файлы по games/airdef/assets.json.
-import { ktxOn, ktxIndexUrl, ktxAllUrls } from './ktx.js?v=20261025b';
+import { ktxOn, ktxIndexUrl, ktxAllUrls } from './ktx.js?v=20261026a';
 const PROD = typeof location !== 'undefined' && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search));
 const MCACHE = 'airdef-models-v1', glbName = (u) => (u.match(/models\/([^?]+)\.glb/) || [])[1], ktxName = (u) => (u.match(/models\/ktx\/([^?]+)\.(?:ktx2|json)/) || [])[1]; // сжатые текстуры моделей (models/ktx, ktx.js): имя «<модель>.<номер>», индекс — «index»
 const hasCaches = () => PROD && typeof caches !== 'undefined' && caches && typeof caches.open === 'function';
@@ -42,11 +42,11 @@ export async function storageInfo() {
 // скачать всё: urls моделей (models.js modelUrls) + файлы из assets.json; onProgress(done, total, байт) — по ходу; по 4 сразу
 export async function prefetchAll(modelUrls, onProgress, abort = { stop: false }) {
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (_) { /* нет */ }
-  const man = await fetch('airdef/assets.json?v=20261025b').then((r) => r.json()).catch(() => ({ files: [], models: {} }));
+  const man = await fetch('airdef/assets.json?v=20261026a').then((r) => r.json()).catch(() => ({ files: [], models: {} }));
   const has = Object.keys(man.models).length, nm = glbName; // в списке — только существующие файлы
   if (has) await tidyModels(man.models, man.ktx);
   const jobs = [...modelUrls.filter((u) => !has || man.models[nm(u)] !== undefined).map((u) => ({ u, m: true, b: man.models[nm(u)] || 1048576 })),
-    ...man.files.map(([p, b]) => ({ u: `airdef/${p}?v=20261025b`, m: false, b }))];
+    ...man.files.map(([p, b]) => ({ u: `airdef/${p}?v=20261026a`, m: false, b }))];
   // сжатые текстуры моделей — только если это устройство их возьмёт (ktxOn: форматы и воркеры есть, не ?ktx=0); список — из index.json (файлы нужной версии), размеры — из assets.json
   if (has && man.ktx && ktxOn()) try {
     const base = (modelUrls[0] || '').split('models/')[0], verOf = (n) => ((modelUrls.find((u) => glbName(u) === n) || '').match(/[?&]v=([^&]+)/) || [])[1];

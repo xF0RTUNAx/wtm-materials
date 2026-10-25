@@ -13,10 +13,10 @@
 <script type="module">
 const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'e_tu16').split(',');
 const M = await import('../../games/airdef/models.js?v=' + Date.now());
-const { attachFlames } = await import('../../games/airdef/units-render.js?v=20261025b');
+const { attachFlames } = await import('../../games/airdef/units-render.js?v=20261026a');
 const CW = +(Q.get("w") || (Q.get('heli') ? 480 : 200)), CH = Math.round(CW * 0.7), W = CW * 4, H = CH * names.length;
 const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-{ const { ktxInit } = await import('../../games/airdef/ktx.js?v=20261025b'); ktxInit(r); } // сжатые текстуры моделей (как в игре: main.js); &ktx=0 — JPEG из glb, &touch=1 — пределы размера телефона
+{ const { ktxInit } = await import('../../games/airdef/ktx.js?v=20261026a'); ktxInit(r); } // сжатые текстуры моделей (как в игре: main.js); &ktx=0 — JPEG из glb, &touch=1 — пределы размера телефона
 M.loadModels('../../games/airdef/', () => {}); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
 const wait = (n) => new Promise((ok) => { M.wantModel(n); const t = setInterval(() => { const o = M.anyModel(n); if (o) { clearInterval(t); ok(o); } }, 50); });
 const HELI = !!Q.get('heli'), SPIN = (Q.get('spin') || '').split(',').map(Number), THR = +(Q.get('thr') || 0.5);

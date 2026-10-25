@@ -3,7 +3,9 @@
 // за бой. Чистый модуль — общий для клиента, игрового сервера и функций Supabase (тратит и начисляет только сервер).
 // Опыт — исследование, серебро — покупка. Ранг единицы = её эпоха. Аркада и обучение открывают всё — прокачка только
 // для «Реализма». Ветки: air — самолёты вылета, wpn — оружие подвесок, pvo — комплексы, strike — удары «Мульти-волны».
-import { AG, SAM, LOADOUTS, MULTI, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js';
+// «Удары» — без рангов (Mark 2026-10-25): ветки по нации (баллистика, крылатые…) от начальной до самой современной, первый в ветке — стартовый;
+// ступень (3-е поле MULTI.items) задаёт только цену и опыт, напрямую не показывается; рангов и паритета сторон у этой ветки нет.
+import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js';
 import { SPECS, SPEED_K } from './flight.js';
 import { HSPECS } from './heli.js';
 
@@ -25,7 +27,7 @@ export const START = {
   air: ['e_su17', 'e_mig23', 'e_f4', 'e_mirage_f1'], // ветки 2026-10-20: Су-24М и Су-25 — в ранге II; у Востока старт — Су-17М4 (охота за ПВО: Х-28) и МиГ-23БН
   wpn: ['kh28', 'fab500', 'agm45', 'mk82', 'shturm', 's8', 'hydra'],
   pvo: ['s75', 'zsu234', 'strela2', 'hawk', 'm163', 'redeye'],
-  strike: ['r17', 'agm86'],
+  strike: ['r17', 'kh55_s', 'kh55d', 'lance', 'agm86', 'jsow', 'uav_w'], // первый в каждой ветке MULTI_LINES (2026-10-25: «в волне нет рангов»; stand проверяет совпадение)
   heli: ['h_mi24', 'h_uh1'], // вертолёты: Ми-24В и UH-1H с их оружием («Штурм», С-8, Hydra — в «Вооружении», стартовые)
 };
 // аналог у другой стороны (по роли): подсказка «что купить за другую сторону» и подбор в онлайне
@@ -85,12 +87,11 @@ export const PARENT = {
   // Запад — UH-1H★ → AH-1W (II) → AH-64D (III) → RAH-66 (IV) (Cobra → Apache → Comanche), развилка UH-1H★ → UH-60 (II).
   // Их оружие: «Штурм»★ → «Атака», Hydra★ → Hellfire
   h_ka50: 'h_mi8', h_ka52: 'h_ka50', h_mi8: 'h_mi24', h_mi28: 'h_mi8', h_uh60: 'h_uh1', h_rah66: 'h_ah64', h_ah1: 'h_uh1', h_ah64: 'h_ah1', ataka: 'shturm', hellfire: 'hydra',
-  // удары
-  tochka: 'r17', iskander: 'tochka', kinzhal: 'tochka', kh555: 'kh55_s', kalibr: 'kh555', kh101_s: 'kh555', shahed: 'kh55d',
-  tomahawk: 'agm86', slam: 'agm86', jsow: 'agm86', jassm_s: 'tomahawk', storm_s: 'slam', storm: 'agm65b', sdb: 'jsow', quail: 'uav_w', prsm: 'atacms',
-  atacms: 'lance', arrw: 'atacms', // 2026-10-25: Lance (II) — начало линии баллистики Запада → ATACMS (III) → PrSM / ARRW (IV, развилка, как «Кинжал» от «Точки-У» у Востока)
+  storm: 'agm65b', // оружие самолёта (wpn:storm), не удар (ревью: удалялось вместе со строками ударов)
+  // удары — цепочка по порядку в ветке MULTI_LINES строится в buildTree (здесь не задаётся)
 };
-// цена (опыт на исследование = серебро на покупку): «крупное» — самолёт, дальний/средний комплекс; остальное — «малое»
+// цена (опыт на исследование = серебро на покупку): «крупное» — самолёт, дальний/средний комплекс; остальное — «малое».
+// У «Ударов» вместо ранга — ступень 1–4 (сила импакта), цена по ней же
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };
 // множитель цены ветки (Mark 2026-10-20: каждая ветка до ранга IV — около недели): ПВО и «Волна» почти целиком из «малых» единиц;
 // вооружение — ×1 (его качают вместе с самолётами: самолёт с оружием — ≈ 9–10 дней)
@@ -98,6 +99,7 @@ export const BRANCH_K = { air: 1, wpn: 1, pvo: 2.6, strike: 5.5, heli: 1 }; // h
 
 // ── дерево ──
 const node = (branch, key, side, rank, name, short, tier) => ({ id: branch + ':' + key, branch, key, side, rank, name, short, tier, start: START[branch].includes(key) });
+export const ranked = (branch) => branch !== 'strike'; // у ветки есть ранги и паритет сторон («Удары» — нет: ступень только в цене)
 const DUAL = new Set(['jassm', 'storm', 'kh55', 'kh101']); // и оружие самолёта, и заказ «Волны» (Х-55 у Ту-95МС, Х-101 у Ту-160)
 function buildTree() {
   const T = [], seen = new Set(), add = (n) => { if (!seen.has(n.id)) { seen.add(n.id); T.push(n); } };
@@ -106,9 +108,12 @@ function buildTree() {
     for (const [k] of L.items) { const w = AG[k]; if (w) add(node('wpn', k, w.side, w.era, w.name, w.short, 'small')); }
   }
   for (const k in SAM) { const u = SAM[k]; add(node('pvo', k, u.side, u.era, u.name, u.short, (SAM_COST[k] || 0) >= 200 ? 'big' : 'small')); }
-  // удары: JASSM и Storm Shadow — и оружие самолёта, и заказ «Мульти-волны» — у удара свой ключ узла (jassm_s), ключ оружия — item
-  for (const s of SIDES) for (const [k, car, e] of MULTI.items[s]) { const w = AG[k] || {}; const n = node('strike', DUAL.has(k) ? k + '_s' : k, s, e, w.name || k, w.short || k, 'small'); n.item = k; n.carrier = car; add(n); }
-  for (const n of T) { n.cost = n.start ? 0 : Math.round(COST[n.tier][n.rank - 1] * (BRANCH_K[n.branch] || 1) / 100) * 100; const pk = PARENT[n.key]; n.parent = pk && T.find((q) => q.branch === n.branch && q.key === pk) ? n.branch + ':' + pk : null; }
+  // удары: JASSM и Storm Shadow — и оружие самолёта, и заказ «Мульти-волны» — у удара свой ключ узла (jassm_s), ключ оружия — item.
+  // rank здесь — ступень (цена и опыт), line / slot — ветка и место в ней; предыдущая в ветке — родитель (исследовать можно, когда она исследована)
+  const sid = (k) => (DUAL.has(k) ? k + '_s' : k);
+  for (const s of SIDES) { const names = Object.fromEntries(MULTI_LINES[s].map(([id, name]) => [id, name]));
+    MULTI.items[s].forEach(([k, car, e, line, i], x, list) => { const w = AG[k] || {}; const n = node('strike', sid(k), s, e, w.name || k, w.short || k, 'small'); n.item = k; n.carrier = car; n.line = line; n.lineName = names[line]; n.slot = i; n.parent = i ? 'strike:' + sid(list[x - 1][0]) : null; add(n); }); }
+  for (const n of T) { n.cost = n.start ? 0 : Math.round(COST[n.tier][n.rank - 1] * (BRANCH_K[n.branch] || 1) / 100) * 100; if (n.branch !== 'strike') { const pk = PARENT[n.key]; n.parent = pk && T.find((q) => q.branch === n.branch && q.key === pk) ? n.branch + ':' + pk : null; } }
   return T;
 }
 export const TREE = buildTree();
@@ -128,20 +133,19 @@ export const NEED = 2, GAP = 2;
 // единицы, добавленные после деплоя 2026-10-20 (Mark 2026-10-21, вариант «Б»): в требовании «сколько купить» не считаются — у игроков
 // уже открытые ранги не закрываются; купленные новинки в счёт идут. Новые единицы впредь дописывать сюда же
 const LATE = new Set(['air:e_vulcan', 'air:e_draken', 'air:e_viggen', 'wpn:bomb1000', 'heli:h_mi8', 'heli:h_uh60', 'heli:h_ka50', 'heli:h_rah66',
-  'air:e_su33', 'air:e_m4', 'air:e_mig19', 'air:e_mig17', 'air:e_t4', 'air:e_mig29k',
-  'strike:prsm', 'strike:lance', 'strike:arrw']); // 2026-10-25: Lance — первая не стартовая единица Запада в ранге II «Ударов» (без LATE закрыл бы ранги III–IV, ревью)
+  'air:e_su33', 'air:e_m4', 'air:e_mig19', 'air:e_mig17', 'air:e_t4', 'air:e_mig29k']); // («Удары» — без рангов, строки strike:* убраны 2026-10-25)
 function rankNeed(P, branch, side, rank) {
   const extra = nodesOf(branch, side, rank).filter((n) => !n.start);
   const need = Math.min(NEED, extra.filter((n) => !LATE.has(n.id)).length), got = extra.filter((n) => P.own.includes(n.id)).length;
   return { need, got, left: extra.filter((n) => !P.own.includes(n.id)) };
 }
 export function rankOpen(P, branch, rank) {
-  if (rank <= 1) return true;
+  if (rank <= 1 || !ranked(branch)) return true;
   if (!rankOpen(P, branch, rank - 1)) return false;
   return SIDES.every((s) => { const r = rankNeed(P, branch, s, rank - 1); return r.got >= r.need; });
 }
 // что мешает открыть ранг — для строки над колонкой: [{ side, need, got, left: [узлы] }]
-export const rankBlock = (P, branch, rank) => (rank <= 1 ? [] : SIDES.map((s) => ({ side: s, ...rankNeed(P, branch, s, rank - 1) })).filter((r) => r.got < r.need));
+export const rankBlock = (P, branch, rank) => (rank <= 1 || !ranked(branch) ? [] : SIDES.map((s) => ({ side: s, ...rankNeed(P, branch, s, rank - 1) })).filter((r) => r.got < r.need));
 const boughtIn = (P, branch, side, rank) => nodesOf(branch, side, rank).filter((n) => !n.start && P.own.includes(n.id)).length;
 
 // можно ли исследовать / купить: { ok, why }
@@ -159,7 +163,7 @@ export function canBuy(P, id) {
   if (!researched(P, id)) return { ok: false, why: 'Сначала исследуйте' };
   const other = n.side === 'east' ? 'west' : 'east', mine = boughtIn(P, n.branch, n.side, n.rank), theirs = boughtIn(P, n.branch, other, n.rank);
   const room = nodesOf(n.branch, other, n.rank).filter((q) => !q.start && !P.own.includes(q.id)).length; // у другой стороны нечего купить — не держим
-  if (mine + 1 - theirs > GAP && room > 0) { const p = pairOf(n); return { ok: false, why: `Паритет: сначала купите единицу ранга ${RANK_NAME[n.rank]} за ${SIDE_NAME[other]}${p && !owned(P, p.id) && p.rank === n.rank ? ` — например, ${p.short}` : ''}` }; }
+  if (ranked(n.branch) && mine + 1 - theirs > GAP && room > 0) { const p = pairOf(n); return { ok: false, why: `Паритет: сначала купите единицу ранга ${RANK_NAME[n.rank]} за ${SIDE_NAME[other]}${p && !owned(P, p.id) && p.rank === n.rank ? ` — например, ${p.short}` : ''}` }; }
   if (P.silver < n.cost) return { ok: false, why: `Не хватает серебра: ${n.cost - P.silver}` };
   return { ok: true };
 }
@@ -181,6 +185,11 @@ export const branchRank = (P, branch) => RANKS.filter((r) => rankOpen(P, branch,
 // ── раскладка дерева стороны (как в WTM): колонки — ранги, ряды — линии; первая следующая продолжает ряд, остальные
 // (развилка) — новыми рядами ниже. → { cells: [{ n, row, col }], links: [[из, в]], rows } ──
 export function treeLayout(branch, side) {
+  if (branch === 'strike') { // без рангов: ряд — ветка нации (подпись), колонка — место в ветке
+    const lines = MULTI_LINES[side] || [], ns = TREE.filter((n) => n.branch === branch && n.side === side);
+    return { cells: ns.map((n) => ({ n, row: lines.findIndex(([id]) => id === n.line), col: n.slot })), links: ns.filter((n) => n.parent).map((n) => [n.parent, n.id]), rows: lines.length,
+      labels: lines.map(([, name], row) => ({ row, name })), cols: Math.max(...ns.map((n) => n.slot)) + 1 };
+  }
   const ns = TREE.filter((n) => n.branch === branch && n.side === side), kids = (id) => ns.filter((q) => q.parent === id).sort((a, b) => a.rank - b.rank);
   const roots = ns.filter((n) => !n.parent).sort((a, b) => a.rank - b.rank || (b.start - a.start));
   const cells = [], links = []; let row = 0;

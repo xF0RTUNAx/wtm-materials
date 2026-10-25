@@ -7,9 +7,9 @@
 // ЛТЦ боя (sim/strike.js, S.flares) рисуются по тику (flareTick — каждый кадр, пока горят); онлайн-клиент своего боя не считает — у него
 // ЛТЦ-«картинки» (cosFlares): те же точки отстрела (sim/cm.js), своя простая баллистика.
 /* global THREE */
-import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261025b';
-import { MOTOR } from './plume.js?v=20261025b';
-import { cmOf, cmKey, cmWorld, cmCenter } from './sim/cm.js?v=20261025b';
+import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261026a';
+import { MOTOR } from './plume.js?v=20261026a';
+import { cmOf, cmKey, cmWorld, cmCenter } from './sim/cm.js?v=20261026a';
 
 const url = (f) => new URL(`./fx/${f}`, import.meta.url).href;
 const WEB = typeof document !== 'undefined' && !!document.createElementNS && typeof Image !== 'undefined'; // стенды Deno — без картинок

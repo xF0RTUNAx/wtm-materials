@@ -4,7 +4,7 @@
 // иначе «старый» аккаунт сайта, иначе гость: от него идут прогресс, онлайн-билет и итог боя. Рейтинг — только у аккаунта игры;
 // прогресс сайта можно один раз перенести в аккаунт игры (функция airdef-account, sql/022). Чистый модуль: хранилище, запросы, заглушка ?rmock=1.
 /* global CONFIG */
-import { tr } from './i18n.js?v=20261025b';
+import { tr } from './i18n.js?v=20261026a';
 
 const KEY_GAME = 'fortuna_airdef_acc', KEY_SITE = 'fortuna_web_player', KEY_SST = 'fortuna_airdef_site_st';
 // ?rmock=1 — заглушка: airdef-account и get-airdef-rating отвечают локально (сервер ещё не применён в боевой базе); ?rmock=empty — у «вас» нет боёв,
@@ -57,7 +57,7 @@ export async function callFn(fn, body) {
   let res; try { res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/' + fn, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify(body) }); }
   catch (_) { throw Object.assign(new Error(tr('Нет связи с сайтом')), { status: 0, offline: typeof navigator !== 'undefined' && navigator.onLine === false }); } // у ненайденной функции Supabase ответ без CORS — браузер даёт ту же ошибку, что и при обрыве
   const d = await res.json().catch(() => ({}));
-  if (!res.ok) throw Object.assign(new Error(d.error || tr('Ошибка сервера')), { status: res.status });
+  if (!res.ok) throw Object.assign(new Error(d.error || tr('Ошибка сервера')), { status: res.status, code: d.code || '' }); // code — машинный код ответа airdef-account (login_taken, nick_taken, nick_site, already_used…)
   return d;
 }
 const acct = (action, body) => callFn('airdef-account', { action, ...body });
@@ -66,6 +66,8 @@ export const accountApi = {
   login: (login, password) => acct('login', { login, password }).then((d) => d.account),
   rename: (id, password, nick) => acct('rename', { id, password, nick }).then((d) => d.account),
   transfer: (id, password, site_login, site_password) => acct('transfer', { id, password, site_login, site_password }),
+  // перенос в один шаг (у игрока нет аккаунта игры): сервер сам создаёт аккаунт игры и переносит прогресс; b: { site_login, site_password, password?, login?, nick? }
+  migrate: (b) => acct('migrate', b),
 };
 // есть ли у аккаунта сайта прогресс игры, который ещё не перенесён: { progress, transferred } — из кэша; нет кэша для этого аккаунта сайта —
 // запрос (promise; после ошибки — не чаще раза в минуту), его итог ложится в кэш и, если что-то поменялось, оповещает подписчиков
@@ -85,11 +87,24 @@ export const rating = (playerId) => callFn('get-airdef-rating', playerId ? { pla
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const MOCK = { transferred: false };
 const mockAcc = (login, nick) => ({ id: 'rmock-' + String(login).toLowerCase(), login, nick: nick || login, transferred: MOCK.transferred });
-const mockErr = (status, error) => Object.assign(new Error(error), { status });
+const mockErr = (status, error, code) => Object.assign(new Error(error), { status, code: code || '' });
 async function mockFn(fn, b) {
   await sleep(160);
   if (fn === 'airdef-account') {
-    if (b.action === 'register') { if (/^busy$/i.test(b.login)) throw mockErr(409, 'Этот логин уже занят'); return { account: mockAcc(b.login, b.nick) }; }
+    if (b.action === 'register') {
+      if (/^busy$/i.test(b.login)) throw mockErr(409, 'Этот логин уже занят', 'login_taken');
+      const s = siteAcc(); if (s && String(b.nick).toLowerCase() === s.login.toLowerCase()) throw mockErr(409, 'Этот ник — логин аккаунта сайта. Если он ваш — перенесите прогресс, ник останется за вами', 'nick_site');
+      return { account: mockAcc(b.login, b.nick) };
+    }
+    if (b.action === 'migrate') { // site_password 'wrong' — 401; site_login 'used' — already_used; логин 'busy' — занят; ник 'busy' — занят; пароль сайта 'short' без своего пароля — password_needed
+      if (b.site_password === 'wrong') throw mockErr(401, 'Неверный логин или пароль сайта');
+      if (/^used$/i.test(b.site_login)) throw mockErr(409, 'С этого аккаунта сайта прогресс уже перенесён', 'already_used');
+      if (/^busy$/i.test(b.login || b.site_login)) throw mockErr(409, 'Этот логин уже занят', 'login_taken');
+      if (/^busy$/i.test(b.nick || '')) throw mockErr(409, 'Этот ник уже занят', 'nick_taken');
+      if (b.site_password === 'short' && !b.password) throw mockErr(400, 'Пароль сайта короче 6 символов', 'password_needed');
+      MOCK.transferred = true; const lg = b.login || b.site_login;
+      return { account: mockAcc(lg, b.nick || b.site_login), moved: { progress: true, runs: 12, online: 5 } };
+    }
     if (b.action === 'login') { if (b.password === 'wrong') throw mockErr(401, 'Неверный логин или пароль'); return { account: mockAcc(b.login, (read(KEY_GAME) || {}).nick) }; }
     if (b.action === 'rename') { const g = gameAcc(); return { account: mockAcc(g ? g.login : 'player', b.nick) }; }
     if (b.action === 'transfer') { if (b.site_password === 'wrong') throw mockErr(401, 'Неверный логин или пароль сайта'); MOCK.transferred = true; const g = gameAcc(); return { moved: { progress: true, runs: 12, online: 5 }, account: mockAcc(g ? g.login : 'player', g && g.nick) }; }

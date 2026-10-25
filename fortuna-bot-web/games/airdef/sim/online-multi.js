@@ -2,9 +2,9 @@
 // (game-server/airdef-multi.js) и клиента. Две команды — восток и запад, два раунда со сменой сторон: в каждом одна команда
 // собирает волну (наряд на цели, как в одиночной «За волну»), другая ставит ПВО. Победа — по сумме: чья волна разрушила больше
 // ценности военных объектов. Подготовка — одновременная, общий таймер; атака не видит ПВО до обнаружения, оборона — план волны.
-import { tr } from '../i18n.js?v=20261025b';
-import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261025b';
-import { LIM_ON } from './combined.js?v=20261025b';
+import { tr } from '../i18n.js?v=20261026a';
+import { AG, SAM, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261026a';
+import { LIM_ON } from './combined.js?v=20261026a';
 
 export const KIND = 'multi';
 export const ROUNDS = 2;
@@ -19,8 +19,11 @@ export const TEAMS = ['east', 'west'];
 export const TEAM_NAME = { east: tr('Восток'), west: tr('Запад') };
 // бюджет на игрока: команда из n — у каждого base × (0,5 + 0,5/n): вдвоём — по 75 %, вшестером — по 58 % (на команду 3,5 × base)
 export const share = (n) => (n <= 1 ? 1 : 0.5 + 0.5 / n);
-export const atkBudget = (side, era, n) => Math.round(multiBudget(side, era) * share(n));
-export const defBudget = (era, n, mode) => Math.round(MULTI.sam[era] * (mode === 'arcade' ? 1.2 : 1) * share(n));
+// без эпох (Mark 2026-10-25): бюджет один на обе стороны и любой состав, очки обороны — одни
+export const atkBudget = (n) => Math.round(multiBudget() * share(n));
+export const defBudget = (n, mode) => Math.round(MULTI.sam * (mode === 'arcade' ? 1.2 : 1) * share(n));
+// комплекс ПВО своей стороны: эпоха не ограничивает; «Реализм» — сервер сверяет с купленным (airdef-own.js realDeny / samIds)
+export const samOk = (k, side) => !!SAM[k] && SAM[k].side === side;
 // потолки нагрузки (сервер — ноутбук, клиенты — телефоны)
 export const UNIT_CAP = 40;              // единиц одного типа у игрока
 export const INFLIGHT_CAP = 160;         // ракет и дронов в воздухе на комнату: больше — пуски ждут (по секунде)
@@ -55,17 +58,17 @@ export const sumN = (...ns) => { const o = {}; for (const n of ns) for (const [k
 // стоимость плана в очках угрозы
 export const planCost = (n) => Object.entries(n || {}).reduce((s, [k, v]) => s + (THREAT[k] ?? 3) * v, 0);
 // состав для sim/combined.js из плана игрока: [[ключ, n, эшелон, носитель]] (+ разведчик бесплатно)
-export function compOf(side, era, n) {
+export function compOf(side, n) {
   const out = [[side === 'east' ? 'scout_e' : 'scout', 1, 1]];
-  for (const [k, via] of multiItems(side, era)) { const c = (n || {})[k] || 0; if (c) out.push([k, c, AG[k].uav ? 1 : AG[k].kind === 'tbm' ? 3 : 2, via || undefined]); }
+  for (const [k, via] of multiItems(side)) { const c = (n || {})[k] || 0; if (c) out.push([k, c, AG[k].uav ? 1 : AG[k].kind === 'tbm' ? 3 : 2, via || undefined]); }
   return out;
 }
-// проверка плана от клиента: только типы стороны и эпохи, число единиц, точки маршрута в районе, высота из списка, время — число,
+// проверка плана от клиента: только типы стороны (всё, что в MULTI.items; что куплено — проверяет сервер), число единиц, точки маршрута в районе, высота из списка, время — число,
 // цель — военный объект (tgt), «ПВО противника» (sam) или засечённый комплекс (sid). Возвращает чистый план или null
 const ALTS = new Set([null, 300, 3000]);
-export function cleanPlan(raw, side, era, objIds, half) {
+export function cleanPlan(raw, side, objIds, half) {
   if (!raw || typeof raw !== 'object') return null;
-  const items = new Map(multiItems(side, era)), n = {}, cfg = {};
+  const items = new Map(multiItems(side)), n = {}, cfg = {};
   const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
   const pts = (a) => (Array.isArray(a) ? a.slice(0, 3).filter((p) => Array.isArray(p) && num(p[0]) !== null && num(p[1]) !== null && Math.hypot(p[0], p[1]) < half).map((p) => [Math.round(p[0]), Math.round(p[1])]) : undefined);
   const unit = (u) => {

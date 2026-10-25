@@ -407,7 +407,7 @@ export default {
   'Волна стартует, когда все готовы или кончится время подготовки. Пустой план — волны от вас не будет.': 'The wave starts when everyone is ready or prep time runs out. An empty plan means no wave from you.',
   'Ожидается: {0}.': 'Expected: {0}.',
   '<b>Баллистика</b> приходит последней. Её сбивают только {0}, и только на снижении, в своей зоне. Сохраните им ракеты: не тратьте их на дроны и ложные цели.': '<b>Ballistic missiles</b> come last. Only {0} can shoot them down, and only on descent within their zone. Save missiles for them: don\'t waste them on drones and decoys.',
-  '<b>Баллистика</b> приходит последней. В вашей эпохе её сбить нечем: сбивайте крылатые ракеты и носители, пока они не дошли.': '<b>Ballistic missiles</b> come last. Nothing in your era can shoot them down: kill the cruise missiles and their carriers before they arrive.',
+  '<b>Баллистика</b> приходит последней. Сбить её нечем: сбивайте крылатые ракеты и носители, пока они не дошли.': '<b>Ballistic missiles</b> come last. You have nothing that can shoot them down: kill the cruise missiles and their carriers before they arrive.',
   'Баллистика: {0}': 'Ballistic: {0}',
   'до падения {0} с · сбить можно только на снижении': '{0} s to impact · can only be shot down on descent',
   'РЛС выключена!': 'Radar off!',
@@ -653,6 +653,7 @@ export default {
   'Пригласить': 'Invite',
   '{0}{1}{2} · {3}×{4} · эпоха {5}{6}{7}': '{0}{1}{2} · {3}×{4} · era {5}{6}{7}',
   'Мульти-волна · два раунда со сменой сторон': 'Multi-Wave · two rounds, sides swap',
+  'Мульти-волна · два раунда со сменой сторон · {0} · {1}×{2}{3}': 'Multi-Wave · two rounds, sides swap · {0} · {1}×{2}{3}',
   ' · авиация — {0}': ' · aircraft: {0}',
   'восток': 'East',
   'запад': 'West',
@@ -858,5 +859,14 @@ export default {
   'В «Реализме» — только купленное в «Исследованиях»: {0}': 'In Realistic mode, only equipment bought in Research: {0}',
   'Земля': 'Ground', 'Земля': 'Ground', 'Самолёт': 'Aircraft', 'пожар': 'fire',
   'Разведка': 'Recon', 'Дроны': 'Drones', 'Носители': 'Carriers', 'Пусковые': 'Launchers',
+  // «Мульти-волна» без эпох (menu.js renderMulti, 2026-10-25)
+  'Бюджет — <b>{0}</b> очков угрозы: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 4–6, «Искандер» — 7, «Кинжал» — 9, ARRW — 8. В волну идёт всё открытое оружие вместе. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ: чем мощнее оружие в наряде, тем современнее его комплексы. Волна прорвалась, если разрушено 50 % ценности целей.':
+    'Budget: <b>{0}</b> threat points: drone or decoy 1, cruise missile 3, stealth 4, ballistic 4–6, Iskander 7, Kinzhal 9, ARRW 8. Everything you have unlocked goes into the wave together. On the map you pick 1–4 targets, the force mix, routes (up to 3 waypoints), altitude, arrival timing (staggered or all at once) and the share sent against air defense. Air defense positions are unknown at first: recon spots them, and radar emissions and launches give them away. In battle the "Wave timeline" shows what is in the air and when carriers and ballistic missiles launch; "Watch" and "Wait" jump the camera to the event at ×4 time. Enemy air defense is AI: the stronger the weapons in your order, the more modern its systems. The wave breaks through once 50% of target value is destroyed.',
+  'Одна большая волна по 3 целям. Расстановка — <b>{0}</b> очков обороны, докупки нет: берите любые открытые комплексы своей стороны. Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» — камера за ракетой.':
+    'One big wave against 3 targets. Deployment: <b>{0}</b> defense points, no buying later: take any unlocked systems of your side. Expected: {1}. The wave breaks through once 50% of target value is destroyed. In battle you can speed time up ×4; "Watch" puts the camera on a missile.',
   'Баллистика в полёте': 'Ballistic in flight', 'Крылатые в полёте': 'Cruise missiles in flight',
+  // фильтр целей комплекса (defense.js, icons.js tgtRowHtml)
+  'Все': 'All', 'все': 'all', 'самолёты': 'aircraft', 'дроны': 'drones', 'бомбы': 'bombs', 'крылатые': 'cruise',
+  'цели: {0}': 'targets: {0}', 'Самолёты и вертолёты налёта': 'Raid aircraft and helicopters',
+  'Хотя бы один вид целей должен остаться': 'At least one target type must stay on',
 };

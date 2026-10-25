@@ -1,7 +1,7 @@
 // Фон главного меню — готовые кадры (shots/shots.js, снимаются tools/airdef-shots/capture.js из «Съёмки»): смена раз в
 // ~6,5 с с плавной склейкой и медленным наездом (CSS — на видеокарте почти бесплатно). 3D-сцена в меню не рисуется и бой
 // не считается (idle) — телефон в меню не греется. Звук — эмбиент (sound.js ambient). Кадры подбираются под выбранный режим (метки t), иначе — все.
-import { SHOTS } from './shots/shots.js?v=20261025b';
+import { SHOTS } from './shots/shots.js?v=20261026a';
 
 const TAG = { air: 'air', defense: 'pvo', multi: 'multi', photo: null, training: null, online: null };
 

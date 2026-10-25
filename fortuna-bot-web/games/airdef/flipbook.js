@@ -3,8 +3,8 @@
 // «стоячие» (пламя) поворачиваются только вокруг вертикали, но при крутом взгляде сверху (окно ТВ) — тоже лицом к камере,
 // иначе превращаются в полоску. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
 /* global THREE */
-import { FXU } from '../drone/world.js?v=20261025b';
-import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261025b';
+import { FXU } from '../drone/world.js?v=20261026a';
+import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261026a';
 const VS = `attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iF;
 uniform vec2 uAnchor; uniform float uUp, uPush;
 varying vec2 vUv; varying vec3 vF; varying float vA, vD, vS;
