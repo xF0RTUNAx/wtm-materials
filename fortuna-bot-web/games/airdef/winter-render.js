@@ -8,6 +8,7 @@ import { ZONE } from './city.js?v=20261025a';
 import { WINTER } from './map-winter.js?v=20261025a';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261025a';
 import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261025a';
+import { ktxOn, ktxLoad } from './ktx.js?v=20261025a';
 
 // погода зимней карты (панорамы — Poly Haven, CC0): ясный мороз, морозная дымка, пасмурно со снегом
 export function winterWeathers(W) {
@@ -54,8 +55,12 @@ export function winterTextures(aniso, stats) {
     const t = new THREE.Texture(); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = WCOARSE.has(u) ? 1 : Math.min(4, aniso); t.minFilter = THREE.LinearMipmapLinearFilter; U[u] = { value: t };
     if (typeof createImageBitmap !== 'function' || typeof fetch !== 'function') continue;
     if (stats) stats.req++;
-    fetch(new URL(`./tex/${f}.jpg?v=20261021a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f)))).then((b) => createImageBitmap(b))
+    const jpg = () => fetch(new URL(`./tex/${f}.jpg?v=20261021a`, import.meta.url)).then((r) => (r.ok ? r.blob() : Promise.reject(new Error(f)))).then((b) => createImageBitmap(b))
       .then((bmp) => { t.image = bmp; t.needsUpdate = true; if (stats) stats.done++; }).catch((e) => { if (stats) stats.done++; console.warn('зимняя текстура не загрузилась:', e.message); });
+    // KTX2 (Mark 2026-10-25: «сжать текстуры земли без значительной потери»; tools/airdef-tex/ktx.js): в памяти видеокарты ≈ 8 бит на пиксель
+    // против 32 у JPEG; нет поддержки, ?ktx=0 или ошибка — прежний JPEG
+    if (ktxOn()) ktxLoad(f).then((k) => { k.wrapS = k.wrapT = THREE.RepeatWrapping; k.anisotropy = t.anisotropy; U[u].value = k; if (stats) stats.done++; }).catch(() => jpg());
+    else jpg();
   }
   return U;
 }
