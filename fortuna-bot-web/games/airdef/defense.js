@@ -9,19 +9,19 @@
 // start(opts) — для обучения: { budget, waves, units: [[ключ, x, z, roof]], op: индекс комплекса, plan: false, wave(raid, rnd, n),
 //   noEnd, hold (волна не кончается сама — урок подаёт цели), onTick(dt), on: { place, waveStart, waveEnd, designate, track, launch, planeDown, arm, radar } }.
 /* global THREE */
-import { tr, trIf } from './i18n.js?v=20261025a';
-import { trFmt } from './i18n-fmt.js?v=20261025a';
-import { CITY, mulberry32 } from './city.js?v=20261025a';
-import { weaponHasModel } from './models.js?v=20261025a';
-import { LNCH, lnchToWorld } from './launchers.js?v=20261025a';
-import { ico, iconize, capsHtml } from './icons.js?v=20261025a';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261025a';
-import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261025a';
-import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261025a';
+import { tr, trIf } from './i18n.js?v=20261025b';
+import { trFmt } from './i18n-fmt.js?v=20261025b';
+import { CITY, mulberry32 } from './city.js?v=20261025b';
+import { weaponHasModel } from './models.js?v=20261025b';
+import { LNCH, lnchToWorld } from './launchers.js?v=20261025b';
+import { ico, iconize, capsHtml } from './icons.js?v=20261025b';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261025b';
+import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261025b';
+import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261025b';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261025a';
-import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261025a';
-import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261025a';
+import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261025b';
+import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261025b';
+import { createCombined, combinedOk, COMBINED_NAME, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261025b';
 
 export const WAVES = 6;
 const WAVE_N = [3, 4, 6, 7, 9, 11];
@@ -551,7 +551,7 @@ export function createDefense(C) {
     const other = al ? sumN(...al.filter((p) => p.id !== me).map((p) => p.tbn || {})) : {}, mine = {};
     for (const [k, v] of Object.entries(st.plan.n)) if (AG[k] && AG[k].kind === 'tbm') mine[k] = v;
     if (add) mine[add] = (mine[add] || 0) + 1;
-    const all = sumN(other, mine); return { rule: TBM_RULE(n), other: tbmOf(other), used: tbmOf(all), kinzhal: all.kinzhal || 0, iskander: all.iskander || 0, deny: add ? tbmCheck(all, n) : null }; }
+    const all = sumN(other, mine); return { rule: TBM_RULE(n), other: tbmOf(other), used: tbmOf(all), kinzhal: all.kinzhal || 0, iskander: all.iskander || 0, arrw: all.arrw || 0, deny: add ? tbmCheck(all, n) : null }; }
   function addTo(key, k) {
     if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return false; }
     const free = idxOf(k, null).filter((i) => !launchedU(k, i));
@@ -591,7 +591,7 @@ export function createDefense(C) {
   function renderTgtCard() {
     const key = st.tsel, f = forecast(key), left = st.budget - planCost(), wave = st.phase === 'wave', DD = planDefaults(planComp(), st.targets, st.plan.cfg, st.net ? LIM_ON : undefined);
     const tb = tbmRoom();
-    let h = `<h3>${tr('Наряд на «{0}»', [tName(key)])}</h3><div>${tr('Очки угрозы: <b style="color:#fde68a">{0}</b> · баллистика <b>{1}/{2}</b>{3}{4}', [left, tb.used, tb.kinzhal ? tb.rule.kinzhal : tb.iskander ? tb.rule.iskander : tb.rule.total, tb.kinzhal ? tr(' («Кинжал» — без другой)') : tb.iskander ? tr(' («Искандер» — без другой)') : tr(' («Кинжал» и «Искандер» — только без другой)'), st.net ? tr(' на команду') : ''])}</div>`;
+    let h = `<h3>${tr('Наряд на «{0}»', [tName(key)])}</h3><div>${tr('Очки угрозы: <b style="color:#fde68a">{0}</b> · баллистика <b>{1}/{2}</b>{3}{4}', [left, tb.used, tb.rule[TBM_EXCL.find((k) => tb[k])] ?? tb.rule.total, tb.kinzhal ? tr(' («Кинжал» — без другой)') : tb.iskander ? tr(' («Искандер» — без другой)') : tb.arrw ? tr(' (ARRW — без другой)') : tr(' («Кинжал», «Искандер» и ARRW — только без другой)'), st.net ? tr(' на команду') : ''])}</div>`;
     if (f) h += `<div style="margin:6px 0"><div style="height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden"><div style="height:100%;width:${Math.round(100 * f.hp / f.hpMax)}%;background:#94a3b8"></div></div>
       <div style="margin-top:4px">${tr('Прочность {0}/{1} · наряд разрушит', [Math.round(f.hp), f.hpMax])} <b style="color:${fcCol(f.k)}">≈ ${Math.round(f.k * 100)} %</b>${f.over >= 1.5 ? tr(' · запас ×{0} — часть можно перенести на другие цели', [f.over.toFixed(1).replace('.', ',')]) : ''}</div><p class="hint">${tr('Оценка: часть собьют (дроны чаще, баллистику реже), ложные цели урона не наносят.{0}', [f.k < 1 ? tr(' Мало — добавьте ещё.') : ''])}</p></div>`;
     else if (key === 'sam') h += `<p class="hint">${tr('Где ПВО, заранее неизвестно. Назначенные сюда бьют по комплексам, засечённым к моменту пуска (разведчик, излучение РЛС, пуски ЗУР); если таких нет, то по целям наряда. По комплексам, которых разведчик не видел, баллистика промахивается сильнее. Ложные цели лучше назначать сюда: ПВО тратит на них ракеты.')}</p>`;
@@ -653,7 +653,8 @@ export function createDefense(C) {
   function multiDefHint() {
     const comp = st.opts.comp || COMBINED[attSide()][C.setup.era] || [], tbm = comp.filter(([k]) => AG[k].kind === 'tbm'), abm = Object.entries(SAM).filter(([, s]) => s.abm && s.side === dside() && s.era <= C.setup.era);
     return `<p class="hint">${tr('Ожидается: {0}.', [comp.filter(([k]) => !AG[k].recon).map(([k, n, , v]) => `${AG[k].short} ×${n}${v ? ` (${CARRIERS[v].name})` : ''}`).join(', ')])}</p>` +
-      (tbm.length ? `<p class="hint">${tr('<b>Баллистика</b> приходит последней. Её сбивают только {0}, и только на снижении, в своей зоне. Сохраните им ракеты: не тратьте их на дроны и ложные цели.', [abm.length ? abm.map(([, s]) => s.short).join(', ') : tr('— в вашей эпохе нечем')])}</p>` : '');
+      (tbm.length ? `<p class="hint">${abm.length ? tr('<b>Баллистика</b> приходит последней. Её сбивают только {0}, и только на снижении, в своей зоне. Сохраните им ракеты: не тратьте их на дроны и ложные цели.', [abm.map(([, s]) => s.short).join(', ')])
+        : tr('<b>Баллистика</b> приходит последней. В вашей эпохе её сбить нечем: сбивайте крылатые ракеты и носители, пока они не дошли.')}</p>` : ''); // у востока II эпохи против Lance противоракетных комплексов нет
   }
   function tbmPanel() { // в волне: летящая баллистика и кто её может перехватить
     const tb = C.S.wpns.filter((w) => w.ev && !w.dead && w.W.kind === 'tbm' && (!w.decoy || C.MODE().markers));
@@ -1320,10 +1321,10 @@ export function createDefense(C) {
   // Аркада: плашка «Угроза …», сирена при баллистике доигрывает; реализм: без плашек, баллистика во время тревоги — сирена заново
   function siren(w) {
     if (!w.ev || w.decoy || w.W.uav || w.W.recon) return;
-    // «Кинжал» — своя тревога (и в реализме: о пуске с МиГ-31К объявляют отдельно), каждый пуск
+    // «Кинжал» и ARRW — своя тревога (и в реализме: о пуске с носителя объявляют отдельно), каждый пуск
     if (w.W.kind === 'tbm' && w.W.air) {
       snd.siren('tbm', true); st.sirenT = true;
-      st.alert = tr('Пуск «Кинжала» с МиГ-31К — у цели через ≈ {0} с', [Math.max(10, Math.round((w.T || 70) / 10) * 10)]); st.alertTb = true; st.alertT = Math.max(st.alertT || 0, 8);
+      st.alert = (w.key === 'arrw' ? tr('Пуск ARRW с B-52H — у цели через ≈ {0} с', [Math.max(10, Math.round((w.T || 70) / 10) * 10)]) : tr('Пуск «Кинжала» с МиГ-31К — у цели через ≈ {0} с', [Math.max(10, Math.round((w.T || 70) / 10) * 10)])); st.alertTb = true; st.alertT = Math.max(st.alertT || 0, 8);
       return;
     }
     const tb = w.W.kind === 'tbm', arc = C.MODE().markers; if (tb ? st.sirenT : st.sirenC) return;

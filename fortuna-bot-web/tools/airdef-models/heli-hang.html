@@ -5,8 +5,8 @@
 <script type="module">
 const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'h_ka50').split(',');
 const M = await import('../../games/airdef/models.js?v=' + Date.now());
-const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261025a');
-const { AG, HELI_LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261025a');
+const { weaponGeo } = await import('../../games/airdef/units-render.js?v=20261025b');
+const { AG, HELI_LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261025b');
 M.loadModels(new URL('../../games/airdef/', location.href).href, () => {});
 const CW = +(Q.get('w') || 640), CH = Math.round(CW * 0.7), W = CW * 4, H = CH * names.length;
 const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);

@@ -50,8 +50,8 @@ export const PAIR = {
   h_mi24: 'h_uh1', h_uh1: 'h_mi24', h_mi28: 'h_ah64', h_ah64: 'h_mi28', h_ka52: 'h_rah66', h_ah1: 'h_mi24', // вертолёты
   h_mi8: 'h_uh60', h_uh60: 'h_mi8', h_ka50: 'h_ah64', h_rah66: 'h_ka52', // 2026-10-21: Ми-8МТВ ↔ UH-60 (транспортно-боевые), Ка-50 → AH-64D (одноместные штурмовые), RAH-66 ↔ Ка-52 (ранг IV)
   shturm: 'hellfire', ataka: 'hellfire', hellfire: 'ataka', s8: 'hydra', hydra: 's8',
-  r17: 'atacms', kh55d: 'quail', kh55_s: 'agm86', kh55: 'jassm', tochka: 'atacms', kh555: 'agm86', kh101_s: 'jassm_s', kh101: 'jassm', shahed: 'uav_w', kalibr: 'tomahawk', iskander: 'atacms', kinzhal: 'atacms',
-  agm86: 'kh55_s', uav_w: 'shahed', slam: 'kh555', jsow: 'kh555', tomahawk: 'kalibr', atacms: 'iskander', prsm: 'iskander', quail: 'kh55d', sdb: 'kh55d', jassm_s: 'kh555', storm_s: 'kh555', storm: 'kh59mk2',
+  r17: 'atacms', kh55d: 'quail', kh55_s: 'agm86', kh55: 'jassm', tochka: 'lance', kh555: 'agm86', kh101_s: 'jassm_s', kh101: 'jassm', shahed: 'uav_w', kalibr: 'tomahawk', iskander: 'atacms', kinzhal: 'arrw', // 2026-10-25: Точка-У ↔ Lance (II), Кинжал ↔ ARRW (IV)
+  agm86: 'kh55_s', uav_w: 'shahed', slam: 'kh555', jsow: 'kh555', tomahawk: 'kalibr', atacms: 'iskander', prsm: 'iskander', lance: 'tochka', arrw: 'kinzhal', quail: 'kh55d', sdb: 'kh55d', jassm_s: 'kh555', storm_s: 'kh555', storm: 'kh59mk2',
 };
 // линии дерева (Mark 2026-10-19: как в дереве исследований WTM): ключ → предыдущая единица линии; исследовать можно, когда
 // предыдущая исследована. Без предыдущей — начало линии (открыта, когда открыт её ранг). Развилка — у одной предыдущей несколько
@@ -88,6 +88,7 @@ export const PARENT = {
   // удары
   tochka: 'r17', iskander: 'tochka', kinzhal: 'tochka', kh555: 'kh55_s', kalibr: 'kh555', kh101_s: 'kh555', shahed: 'kh55d',
   tomahawk: 'agm86', slam: 'agm86', jsow: 'agm86', jassm_s: 'tomahawk', storm_s: 'slam', storm: 'agm65b', sdb: 'jsow', quail: 'uav_w', prsm: 'atacms',
+  atacms: 'lance', arrw: 'atacms', // 2026-10-25: Lance (II) — начало линии баллистики Запада → ATACMS (III) → PrSM / ARRW (IV, развилка, как «Кинжал» от «Точки-У» у Востока)
 };
 // цена (опыт на исследование = серебро на покупку): «крупное» — самолёт, дальний/средний комплекс; остальное — «малое»
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };
@@ -127,7 +128,8 @@ export const NEED = 2, GAP = 2;
 // единицы, добавленные после деплоя 2026-10-20 (Mark 2026-10-21, вариант «Б»): в требовании «сколько купить» не считаются — у игроков
 // уже открытые ранги не закрываются; купленные новинки в счёт идут. Новые единицы впредь дописывать сюда же
 const LATE = new Set(['air:e_vulcan', 'air:e_draken', 'air:e_viggen', 'wpn:bomb1000', 'heli:h_mi8', 'heli:h_uh60', 'heli:h_ka50', 'heli:h_rah66',
-  'air:e_su33', 'air:e_m4', 'air:e_mig19', 'air:e_mig17', 'air:e_t4', 'air:e_mig29k']);
+  'air:e_su33', 'air:e_m4', 'air:e_mig19', 'air:e_mig17', 'air:e_t4', 'air:e_mig29k',
+  'strike:prsm', 'strike:lance', 'strike:arrw']); // 2026-10-25: Lance — первая не стартовая единица Запада в ранге II «Ударов» (без LATE закрыл бы ранги III–IV, ревью)
 function rankNeed(P, branch, side, rank) {
   const extra = nodesOf(branch, side, rank).filter((n) => !n.start);
   const need = Math.min(NEED, extra.filter((n) => !LATE.has(n.id)).length), got = extra.filter((n) => P.own.includes(n.id)).length;

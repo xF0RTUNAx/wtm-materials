@@ -5,15 +5,15 @@
 // carrier — носитель «Мульти-волны» (sim/combined.js): у края района пускает крылатые ракеты и ложные цели и уходит.
 // Уклонение: захват или пуск на СПО, датчик пуска — ловушки и диполи, отворот «траверзом» и снижение.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261025a';
-import { AG, raidPlane } from '../arsenal.js?v=20261025a';
-import { flightModel, loadOf } from './flight.js?v=20261025a';
-import { initDamage, hitZones, burnRate } from './damage.js?v=20261025a';
-import { cmOf } from './cm.js?v=20261025a';
-import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261025a';
-import { predictBomb, predictRocket } from './strike.js?v=20261025a';
-import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261025a';
-import { CITY, objAimXZ } from '../city.js?v=20261025a';
+import { tr } from '../i18n.js?v=20261025b';
+import { AG, raidPlane } from '../arsenal.js?v=20261025b';
+import { flightModel, loadOf } from './flight.js?v=20261025b';
+import { initDamage, hitZones, burnRate } from './damage.js?v=20261025b';
+import { cmOf } from './cm.js?v=20261025b';
+import { setGround, makeCraft, flyStep, steerTo, fwdOf, clamp, angleBetween, D2R } from '../../drone/sim/core.js?v=20261025b';
+import { predictBomb, predictRocket } from './strike.js?v=20261025b';
+import { heliModel, heliStep, heliInit, touchVerdict } from './heli.js?v=20261025b';
+import { CITY, objAimXZ } from '../city.js?v=20261025b';
 
 // Ударные самолёты (обобщённые образы эпохи; без названий конкретных машин): лётные данные для flyStep
 export const STRIKERS = {
@@ -42,6 +42,8 @@ export const RAID_HELI2 = {
   west: { 2: ['h_ah1', [['hellfire', 8], ['hydra', 2]]] },
 };
 const V = () => new THREE.Vector3();
+// точка пуска аэробаллистики в осях носителя: «Кинжал» — подфюзеляжный пилон МиГ-31К; ARRW — под отсеком B-52H (его точки подвески — y −5,2, models.js)
+const AIR_DROP = { e_b52: [0, -6.2, -1.5] }, AIR_DROP0 = [0, -2.45, -1.5];
 const TMP = V(), TMP2 = V(), DIR = V(), PI = V(), PR = V(); // PR — точка падения НАР (не PI: там точка прицеливания — была одна на двоих, промах всегда 0)
 
 export function createRaid(S, city, rnd, opts = {}) {
@@ -269,7 +271,7 @@ export function createRaid(S, city, rnd, opts = {}) {
           // цель — в момент пуска (по ПВО — только по уже засечённым комплексам), маршрут и высота — по плану
           const aim = q.aimFn ? q.aimFn() : q.aim;
           const air = AG[q.key] && AG[q.key].kind === 'tbm' && AG[q.key].air;
-          if (air && a.q) TMP.set(0, -2.45, -1.5).applyQuaternion(a.q).add(a.pos); else { TMP.copy(a.pos); TMP.y -= 8; } // «Кинжал» — с подфюзеляжного пилона (как висел)
+          if (air && a.q) TMP.set(...(AIR_DROP[a.model] || AIR_DROP0)).applyQuaternion(a.q).add(a.pos); else { TMP.copy(a.pos); TMP.y -= 8; } // «Кинжал» — с подфюзеляжного пилона (как висел), ARRW — из-под отсека B-52H
           const w = S.spawnMun(q.key, TMP, aim.p || aim, { owner: a, route: q.route ? q.route.map((v) => v.clone()) : null, alt: q.alt, dir: fwdOf(a, DIR).clone(),
             ...(air ? { air: true, vel: a.vel.clone(), up: a.q ? new THREE.Vector3(0, 1, 0).applyQuaternion(a.q) : null } : {}) }); a.relT = a.every;
           if (q.done) q.done(w); if (fx.release) fx.release(a, q.key);

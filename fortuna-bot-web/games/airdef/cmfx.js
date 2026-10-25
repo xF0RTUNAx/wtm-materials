@@ -7,9 +7,9 @@
 // ЛТЦ боя (sim/strike.js, S.flares) рисуются по тику (flareTick — каждый кадр, пока горят); онлайн-клиент своего боя не считает — у него
 // ЛТЦ-«картинки» (cosFlares): те же точки отстрела (sim/cm.js), своя простая баллистика.
 /* global THREE */
-import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261025a';
-import { MOTOR } from './plume.js?v=20261025a';
-import { cmOf, cmKey, cmWorld, cmCenter } from './sim/cm.js?v=20261025a';
+import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261025b';
+import { MOTOR } from './plume.js?v=20261025b';
+import { cmOf, cmKey, cmWorld, cmCenter } from './sim/cm.js?v=20261025b';
 
 const url = (f) => new URL(`./fx/${f}`, import.meta.url).href;
 const WEB = typeof document !== 'undefined' && !!document.createElementNS && typeof Image !== 'undefined'; // стенды Deno — без картинок
@@ -118,6 +118,9 @@ export function createCmFx(scene, P, PL) {
   const tick = [], cos = [], clouds = []; // tick — ЛТЦ боя за этот кадр; cos — «картинки» онлайн-клиента; clouds — облака диполей
   const CP = [0, 0, 0], CD = [0, 0, 0];
   let live = [], idleT = 0;
+  // лента дыма у i-й ЛТЦ залпа: на слабых (P.fxLo) — у каждого третьего «выстрела» из точки отстрела, но из всех точек (раньше — каждая третья по номеру:
+  // в залпе из двух — всегда левая, у правой ленты не было; Mark 2026-10-25)
+  const ribbon = (i, cm) => !P.fxLo || Math.floor(i / Math.max(1, cm && cm.at ? cm.at.length : 1)) % 3 === 0;
   // ЛТЦ в кадр: f — { pos, vel, life, max, rb } (боя или картинка); ленточный дым — раз в 0,05 с (на слабых — реже и не у всех)
   function drawFlare(f, dt) {
     if (f.cs === undefined) f.cs = Math.random();
@@ -143,12 +146,12 @@ export function createCmFx(scene, P, PL) {
       const vx = a.vel ? a.vel.x : 0, vy = a.vel ? a.vel.y : 0, vz = a.vel ? a.vel.z : 0;
       for (let i = 0; i < cm.salvo; i++) {
         cmWorld(a, cm, i, CP, CD);
-        cos.push({ pos: new THREE.Vector3(CP[0], CP[1], CP[2]), vel: new THREE.Vector3(vx * 0.6 + CD[0] * 25 + (Math.random() - 0.5) * 8, vy * 0.6 + CD[1] * 25 + (Math.random() - 0.5) * 8, vz * 0.6 + CD[2] * 25 + (Math.random() - 0.5) * 8), life: 3.5, max: 3.5, rb: !P.fxLo || i % 3 === 0 });
+        cos.push({ pos: new THREE.Vector3(CP[0], CP[1], CP[2]), vel: new THREE.Vector3(vx * 0.6 + CD[0] * 25 + (Math.random() - 0.5) * 8, vy * 0.6 + CD[1] * 25 + (Math.random() - 0.5) * 8, vz * 0.6 + CD[2] * 25 + (Math.random() - 0.5) * 8), life: 3.5, max: 3.5, rb: ribbon(i, cm) });
       }
       while (cos.length > MAXF) cos.shift();
     },
-    // ЛТЦ боя: какие из залпа тянут ленту дыма (на слабых — каждая третья)
-    arm(made) { made.forEach((f, i) => { f.rb = !P.fxLo || i % 3 === 0; }); },
+    // ЛТЦ боя: какие из залпа тянут ленту дыма (на слабых — см. ribbon)
+    arm(made, a) { const cm = a ? cmOf(cmKey(a), a.cmSide || a.mside || a.side) : null; made.forEach((f, i) => { f.rb = ribbon(i, cm); }); },
     cloud(a, v) {
       const cm = cmOf(cmKey(a), a.cmSide || a.mside || a.side); cmCenter(a, cm, CP);
       clouds.push({ p: new THREE.Vector3(CP[0], CP[1], CP[2]), v: (v || a.vel || new THREE.Vector3()).clone().multiplyScalar(0.25), t: 0, life: 4.2, seed: Math.random() });

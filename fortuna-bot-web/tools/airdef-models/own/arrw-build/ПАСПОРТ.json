@@ -1,0 +1,16 @@
+{
+ "key": "w_arrw",
+ "weapon": "arrw",
+ "name": "ARRW (AGM-183A)",
+ "rev": 1,
+ "files": {
+  "glb": "arrw.glb",
+  "blend": "arrw.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py",
+   "_текст/make_text.py"
+  ]
+ }
+}

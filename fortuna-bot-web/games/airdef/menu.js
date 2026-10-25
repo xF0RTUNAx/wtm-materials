@@ -1,21 +1,21 @@
 // Главное меню: слева — режимы, справа — «папка задания» (настройки режима и старт), Арсенал / Справка / Настройки /
 // Об игре — панель поверх. Фон — готовые кадры (menubg.js), пока их нет — живой бой (director.js).
-import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261025a';
-import { CITY, ZONE } from './city.js?v=20261025a';
-import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261025a';
-import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261025a';
-import { MODES } from './sim/strike.js?v=20261025a';
-import { WEATHERS } from '../drone/world.js?v=20261025a';
-import { WINTER_KEYS } from './winter-render.js?v=20261025a';
-import { LESSONS } from './training.js?v=20261025a';
-import { MODEL_CREDITS, modelUrls } from './models.js?v=20261025a';
-import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261025a';
-import { openLayoutEditor } from './layout.js?v=20261025a';
+import { LANG, LANGS, setLang, tr, trIf, trDom } from './i18n.js?v=20261025b';
+import { CITY, ZONE } from './city.js?v=20261025b';
+import { AG, SAM, ERAS, LOADOUTS, DEFENSE, SAM_TYPE, AG_KIND, SAM_COST, PLANES, loadoutsOf, loadoutRole, ROLE_NAME, COMBINED, CARRIERS, MULTI, multiBudget, multiItems } from './arsenal.js?v=20261025b';
+import { combinedOk, COMBINED_NAME } from './sim/combined.js?v=20261025b';
+import { MODES } from './sim/strike.js?v=20261025b';
+import { WEATHERS } from '../drone/world.js?v=20261025b';
+import { WINTER_KEYS } from './winter-render.js?v=20261025b';
+import { LESSONS } from './training.js?v=20261025b';
+import { MODEL_CREDITS, modelUrls } from './models.js?v=20261025b';
+import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261025b';
+import { openLayoutEditor } from './layout.js?v=20261025b';
 import { orientGate } from '../orient-warn.js?v=20261011a';
-import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261025a';
-import { photoItems } from './photo.js?v=20261025a';
-import { guideChapters } from './guide.js?v=20261025a';
-import { iconize, ico, capsHtml } from './icons.js?v=20261025a';
+import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261025b';
+import { photoItems } from './photo.js?v=20261025b';
+import { guideChapters } from './guide.js?v=20261025b';
+import { iconize, ico, capsHtml } from './icons.js?v=20261025b';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -215,7 +215,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     const items = multiItems(att, setup.era), carriers = [...new Set(items.map(([, v]) => v).filter(Boolean))].map((v) => trIf(CARRIERS[v].name));
     h += `<div class="cat-h">${tr('Как идёт волна')}</div><p class="hint">${tr('1. <b>Дрон разведчик</b> (без боевой части, с камерой) облетает город и засекает ПВО. 2. <b>{0} и ложные цели</b>: ПВО тратит на них ракеты и включает РЛС. 3. <b>Крылатые ракеты</b>: носители ({1}) заходят из-за края карты и пускают их с рубежа за краем района, куда ПВО не достаёт. Ракеты идут на малой высоте с 2–3 направлений. 4. <b>Баллистика</b>: с пусковых за городом, по крутой дуге с высоты 25–45 км. Расписание не ждёт: несбитые дроны долетают до целей, крылатые и баллистика приходят в свой срок.', [(att === 'east' && setup.era >= 4) || (att === 'west' && setup.era >= 3) ? tr('Ударные дроны') : tr('Дроны'), carriers.join(', ') || '—'])}</p>
       <p class="hint">${tr('<b>Баллистику</b> сбивают только противоракетные ЗРК: С-300, С-400, Patriot, PAC-3 (немного «Бук-М3»), и только на снижении, в последние ~20 с. О пуске предупреждает тревога. На карте ромб показывает высоту и время до падения, круг — район падения.')}</p>`;
-    if (atk) h += `<div class="cat-h">${tr('За волну')}</div><p class="hint">${tr('Бюджет — <b>{0}</b> очков угрозы{1}: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 5, «Искандер» — 7. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ ({2}). Волна прорвалась, если разрушено 50 % ценности целей.', [multiBudget(att, setup.era), att === 'west' ? tr(' (у запада +15 %: моделей меньше)') : '', DEFENSE[def][setup.era].map(([k]) => trIf(SAM[k].short)).join(', ')])}</p>`;
+    if (atk) h += `<div class="cat-h">${tr('За волну')}</div><p class="hint">${tr('Бюджет — <b>{0}</b> очков угрозы{1}: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 4–6, «Искандер» — 7, «Кинжал» — 9, ARRW — 8. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ ({2}). Волна прорвалась, если разрушено 50 % ценности целей.', [multiBudget(att, setup.era), att === 'west' ? tr(' (у запада +15 %: моделей меньше)') : '', DEFENSE[def][setup.era].map(([k]) => trIf(SAM[k].short)).join(', ')])}</p>`;
     else h += `<div class="cat-h">${tr('За ПВО')}</div><p class="hint">${tr('Одна большая волна по 3 целям. Расстановка — <b>{0}</b> очков обороны, докупки нет. Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» — камера за ракетой.', [Math.round(MULTI.sam[setup.era] * (setup.diff === 'arcade' ? 1.2 : 1)), (COMBINED[att][setup.era] || []).filter(([k]) => k !== 'scout').map(([k, n]) => `${trIf(AG[k].short)} ×${n}`).join(', ')])}</p>`;
     return h;
   }

@@ -47,7 +47,7 @@ const errors = [];
 const origErr = console.error; console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
 for (let i = 0; i < 400 && !(globalThis.__a && globalThis.__a.state === 'play'); i++) await new Promise((r) => setTimeout(r, 100));
-const { spotNear } = await import('../../games/airdef/mission.js?v=20261025a');
+const { spotNear } = await import('../../games/airdef/mission.js?v=20261025b');
 const C = globalThis.__a, A = C.ctrls.air, city = C.city;
 let now = 1000;
 function frames(n, dt = 1000 / 30) { for (let i = 0; i < n; i++) { now += dt; const f = rafCb; rafCb = null; C.paused = false; try { f(now); } catch (e) { errors.push(`кадр: ${e.stack}`); return false; } } return true; }

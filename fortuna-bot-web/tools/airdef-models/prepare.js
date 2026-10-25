@@ -184,6 +184,8 @@ const CONFIG = {
   w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
   w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
   w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
+  w_lance: { src: new URL('./own/msl_lance.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // MGM-52 Lance (ракета): своя модель (Blender, own/msl_lance.glb)
+  w_arrw: { src: new URL('./own/arrw.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // ARRW (AGM-183A): своя модель (Blender, own/arrw.glb)
   // PrSM: модель сборщика 4,24 м (по фото), настоящая — 3,96 м (×0,935); толще настоящей (0,50 против 0,43 м) — исправит сборщик во второй ревизии
   w_prsm: { src: new URL('./own/prsm.glb', import.meta.url).pathname, scale: 0.935, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // PrSM: своя модель (Blender, own/prsm.glb)
   w_kh55: { src: new URL('./own/kh55.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-55: своя модель (Blender, own/kh55.glb)
@@ -267,6 +269,11 @@ const CONFIG = {
     copyParts: [{ sel: (c) => /\/Null_5\//.test(c.path), offs: [[-1.16, 0, 0]] }], /* вся поднятая сборка (направляющая и ракета) — копия по другую сторону оси машины (x 0,58 → −0,58 м) */
     raiseSel: { sel: (c) => /\/Null_5\//.test(c.path), hinge: [ISK_HY, ISK_HZ], angle: ISK_UP }, /* у автора сборка стоит под 56,8° (положение направляющей) — поднята до вертикали вокруг заднего конца ракеты */
     groups: (c) => (/\/Loft\//.test(c.path) ? (c.ctr[0] > 0 ? 'tbm' : 'tbm2') : 'body') },
+  // M752 (пусковая MGM-52 Lance) — своя модель (сборщик: Свои/M752, ревизия 2, 2026-10-25; ракета — w_lance, Свои/MGM-52). Походное положение; подвижные части —
+  // свои группы (ось петли задаёт игра, sim/combined.js POD.l_lance): pod — стрела с сёдлами (erect_*), rampA — задняя плита-трап (ramp_in, ramp_hw), rampB — наружная
+  // плита (ramp_out, сложена на rampA). Ракету на стрелу ставит игра (main.js, копия w_lance). Метры, нос −Z, 6,5 м, 40 тыс. треугольников
+  l_lance: { src: new URL('./own/l_lance.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    groups: (c) => (/(^|\/)erect_/.test(c.path) ? 'pod' : /(^|\/)ramp_out/.test(c.path) ? 'rampB' : /(^|\/)ramp_/.test(c.path) ? 'rampA' : 'body') },
   // 9П129 «Точка-У» — своя модель (сборщик: Свои/Точка-У, ракета 9М79 — Свои/9М79, пакет — Свои/Точка-У_пакет; 2026-10-24) вместо 42manako («Not my model»):
   // в игре — боевое положение, кадр клипа «Raise» пакета (Свои/Точка-У_игра/combat_export.py): створки открыты, люлька и ракета вертикально, лепестки раскрыты.
   // Метры, нос −Z, 10,9 м, 68 тыс. треугольников; ракета (tbm_*) — часть tbm: стоит до пуска, при пуске прячется, летит её копия (evPart), 6,95 м — как у сборщика

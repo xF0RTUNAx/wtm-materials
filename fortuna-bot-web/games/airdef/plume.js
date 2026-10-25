@@ -9,7 +9,7 @@
 //    НАР — плотный короткий; жидкостный (С-75, «Скад») — прозрачный рыжеватый (окислитель на азотной кислоте), факел
 //    оранжевый; прямоточный («Куб», Х-31) — почти без дыма, факел слабый голубоватый; турбореактивный (крылатые) — дымки нет.
 //    Густота и ширина дыма — от площади сечения (расход топлива ∝ r²), время жизни — от размера ракеты.
-import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261025a';
+import { FOG_LIN, FOG_U, FXU, SOFT_GLSL } from '../drone/world.js?v=20261025b';
 
 const url = (f) => new URL(`./fx/${f}`, import.meta.url).href;
 const WEB = typeof document !== 'undefined' && !!document.createElement && typeof Image !== 'undefined'; // стенды Deno — без картинок
@@ -38,7 +38,7 @@ const BY_KEY = {
   strela2: 'manpads', strela3: 'manpads', igla: 'manpads', iglas: 'manpads', verba: 'manpads', stinger: 'manpads', redeye: 'manpads', mistral: 'manpads', starstreak: 'manpads', aam_stinger: 'manpads',
   sampt: 'lowsmoke', iris: 'lowsmoke', nasams: 'lowsmoke', camm: 'lowsmoke', pac3: 'lowsmoke', bukm3: 'lowsmoke', s400: 'lowsmoke',
   w_kh31: 'ramjet', kh31: 'ramjet', kh31p: 'ramjet', agm88: 'lowsmoke', aargm: 'lowsmoke', hellfire: 'atgm', shturm: 'atgm', ataka: 'atgm', tow: 'atgm',
-  s8: 'rocket', hydra: 'rocket', s5: 'rocket', s13: 'rocket', scud: 'liquid', r17: 'liquid',
+  s8: 'rocket', hydra: 'rocket', s5: 'rocket', s13: 'rocket', scud: 'liquid', r17: 'liquid', lance: 'liquid', // Lance — жидкостный двигатель; PrSM и ARRW — твёрдое топливо (по умолчанию)
 };
 // sustain — маршевый режим после стартового: у С-75 маршевый двигатель жидкостный, у «Куба» — прямоточный
 const SUSTAIN = { s75: 'liquid', kub: 'ramjet', kvadrat: 'ramjet', w_kh31: 'ramjet', kh31: 'ramjet', kh31p: 'ramjet' };

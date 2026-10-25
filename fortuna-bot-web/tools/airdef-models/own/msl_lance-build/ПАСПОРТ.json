@@ -1,0 +1,16 @@
+{
+ "key": "w_lance",
+ "weapon": "lance",
+ "name": "MGM-52 Lance (ракета)",
+ "rev": 1,
+ "files": {
+  "glb": "msl_lance.glb",
+  "blend": "msl_lance.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py",
+   "lnc_sheet.py"
+  ]
+ }
+}

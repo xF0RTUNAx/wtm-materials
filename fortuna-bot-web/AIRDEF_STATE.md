@@ -643,3 +643,17 @@ Mark работает с **Opus на высоком усилии** — он ру
   **Деплой — по порядку:** sql/022 (затем проверочный запрос из комментария — всё false) → функции airdef-account, airdef-claim, airdef-progress, airdef-solo,
   mp-ticket, get-airdef-rating (MP_SECRET тот же, что на ноутбуке) → статика с новой версией модулей + assets-manifest → update.ps1 (server.js, airdef-rooms.js, airdef-multi.js).
   Открыто: заставлять ли «старых» игроков сайта переносить прогресс (спросил Mark).
+
+- 2026-10-25 · Opus 5.5 + Sonnet 5.5 · **Lance, ARRW, пусковая M752, шлейф ЛТЦ** (online-dev, не задеплоено). Модели сборщика: w_lance (Свои/MGM-52, ключ паспорта msl_lance → w_lance,
+  копия паспорта в scratchpad), w_arrw (Свои/ARRW), l_lance (Свои/M752 рев. 2 — вручную: own/l_lance.glb, prepare.js группы pod / rampA / rampB). Оружие: AG.lance (запад II, tbm,
+  пусковая l_lance, THREAT 5, MULTI запад, COMBINED запад II: AGM-86 13 → 10 + Lance ×2), AG.arrw (запад IV, air, носитель e_b52, THREAT 9, исключительная баллистика как «Кинжал» —
+  online-multi TBM_EXCL); прокачка: Lance → ATACMS → PrSM, развилка ARRW; PAIR tochka ↔ lance, kinzhal ↔ arrw; LATE += strike:prsm / lance / arrw (иначе ранги III–IV «Ударов» Запада
+  закрылись бы у играющих — ревью). M752: sim/combined.js POD.l_lance (ramp 0.3 — трап rampA 35,8° → 106,5°, наружная плита rampB −180°; затем стрела 70°, ≈ 24 с; срез — центр
+  ракеты), podLift; main.js syncEv — петли по группам, ракета w_lance на стреле. Проверено стендом (scratchpad m752/lance-stand.js: восток за ПВО, эпоха II, камера «Смотреть» на
+  пусковую). ARRW выходит из-под отсека B-52H (raid.js AIR_DROP). ЛТЦ (баг Mark): на fxLo лента дыма была у каждой третьей по номеру — в залпе из двух всегда только левая;
+  теперь cmfx.js ribbon — у каждой точки отстрела. Подсказка Мульти-волны для эпохи без противоракетных ЗРК. plume BY_KEY lance: 'liquid'. arrw.blend (31 МБ) не в репозитории.
+  Баланс (Mark: «перебалансируем, если влияет на игру»): westK[2] 1,15 → 1,05 (бюджет Запада II 38 → 35: баллистика теперь есть, ложных целей нет), Lance — 4 очка угрозы
+  (боевая часть легче и точность хуже, чем у «Точки-У»), ARRW — 8 (против 9 у «Кинжала»); от очков угрозы — цена в бюджете и очки ПВО за перехват (airdef-multi.js).
+  **Деплой:** функции airdef-progress / airdef-solo / airdef-claim (копии _shared: arsenal, progress) + всё из записи выше; update.ps1 (arsenal.js, sim/combined.js, sim/online-multi.js, sim/raid.js).
+  **Дальше (Mark 2026-10-25):** Кристаллы, магазин, камуфляжи — F-15E «Огненный тигр», МиГ-31БМ «Нефритовый дракон», F-35A «Цветущая слива»; задание сборщику —
+  Свои/Камуфляжи/ЗАДАНИЕ.md; три дизайна магазина в работе (scratchpad shop/A-hangar, B-album, C-showcase).

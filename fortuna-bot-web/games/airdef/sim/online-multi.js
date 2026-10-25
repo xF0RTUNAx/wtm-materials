@@ -2,9 +2,9 @@
 // (game-server/airdef-multi.js) и клиента. Две команды — восток и запад, два раунда со сменой сторон: в каждом одна команда
 // собирает волну (наряд на цели, как в одиночной «За волну»), другая ставит ПВО. Победа — по сумме: чья волна разрушила больше
 // ценности военных объектов. Подготовка — одновременная, общий таймер; атака не видит ПВО до обнаружения, оборона — план волны.
-import { tr } from '../i18n.js?v=20261025a';
-import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261025a';
-import { LIM_ON } from './combined.js?v=20261025a';
+import { tr } from '../i18n.js?v=20261025b';
+import { AG, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261025b';
+import { LIM_ON } from './combined.js?v=20261025b';
 
 export const KIND = 'multi';
 export const ROUNDS = 2;
@@ -34,18 +34,19 @@ export function cleanChat(s) {
   t = t.replace(BAD, (w) => '*'.repeat(Math.min(6, w.length)));
   return t;
 }
-// баллистика на волну (одиночная) или на атакующую команду (онлайн), решение Mark 2026-10-12/13: «Кинжал» и «Искандер» (у него
-// ложные цели) — только без другой баллистики, по 1 (у команды из 5–6 — по 2); иначе всего 2 ракеты (у 5–6 игроков — 3)
-export const TBM_RULE = (n) => (n >= 5 ? { kinzhal: 2, iskander: 2, total: 3 } : { kinzhal: 1, iskander: 1, total: 2 });
+// баллистика на волну (одиночная) или на атакующую команду (онлайн), решение Mark 2026-10-12/13: «Кинжал», ARRW (Mark 2026-10-25: пара «Кинжалу» у запада) и «Искандер»
+// (у него ложные цели) — только без другой баллистики, по 1 (у команды из 5–6 — по 2); иначе всего 2 ракеты (у 5–6 игроков — 3)
+export const TBM_EXCL = ['kinzhal', 'iskander', 'arrw']; // исключительные: берутся только без другой баллистики
+export const TBM_RULE = (n) => { const e = n >= 5 ? 2 : 1, r = { total: n >= 5 ? 3 : 2 }; for (const k of TBM_EXCL) r[k] = e; return r; };
 export const TBM_CAP = (n) => TBM_RULE(n).total;
 export const tbmOf = (n) => Object.entries(n || {}).reduce((s, [k, v]) => s + (AG[k] && AG[k].kind === 'tbm' ? v : 0), 0);
+const EXCL_ONLY = { kinzhal: () => tr('«Кинжал» — только без другой баллистики'), iskander: () => tr('«Искандер» — только без другой баллистики'), arrw: () => tr('ARRW — только без другой баллистики') };
+const EXCL_MAX = { kinzhal: (m) => tr('«Кинжал» — не больше {0}', [m]), iskander: (m) => tr('«Искандер» — не больше {0}', [m]), arrw: (m) => tr('ARRW — не больше {0}', [m]) };
 // суммарный состав баллистики команды (планы союзников и свой) → текст запрета или null
 export function tbmCheck(n, players) {
-  const r = TBM_RULE(players), K = n.kinzhal || 0, I = n.iskander || 0, A = tbmOf(n);
-  if (K && A > K) return tr('«Кинжал» — только без другой баллистики');
-  if (I && A > I) return tr('«Искандер» — только без другой баллистики');
-  if (K > r.kinzhal) return tr('«Кинжал» — не больше {0}', [r.kinzhal]);
-  if (I > r.iskander) return tr('«Искандер» — не больше {0}', [r.iskander]);
+  const r = TBM_RULE(players), A = tbmOf(n);
+  for (const k of TBM_EXCL) if (n[k] && A > n[k]) return EXCL_ONLY[k]();
+  for (const k of TBM_EXCL) if ((n[k] || 0) > r[k]) return EXCL_MAX[k](r[k]);
   if (A > r.total) return tr('Баллистика — не больше {0}', [r.total]);
   return null;
 }

@@ -6,11 +6,11 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry — двигатель без форсажа: только слабое свечение; нет сопел — пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { tr } from './i18n.js?v=20261025a';
-import { CREDITS } from './models/credits.js?v=20261025a';
-import { mergeLocal } from './merge.js?v=20261025a';
-import { cachedFetch } from './offline.js?v=20261025a';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261025a';
+import { tr } from './i18n.js?v=20261025b';
+import { CREDITS } from './models/credits.js?v=20261025b';
+import { mergeLocal } from './merge.js?v=20261025b';
+import { cachedFetch } from './offline.js?v=20261025b';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261025b';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -145,6 +145,8 @@ const META = {
   w_storm: { weapon: 'storm', lazy: true, wings: 'fold', stations: [] }, // Storm Shadow — Viktor_ (CC BY 4.0), декали в текстуре стёрты (Свои/Storm Shadow); 5,1 м; у модели крылья раскрыты — на подвеске складываются вдоль корпуса, раскрываются после сброса
   w_atacms: { weapon: 'atacms', lazy: true, stations: [] }, // ракета M142 HIMARS — Denis.Cherkasov1
   w_prsm: { weapon: 'prsm', lazy: true, stations: [] }, // PrSM — собственная модель (tools/airdef-models/own/prsm)
+  w_lance: { weapon: 'lance', lazy: true, stations: [] }, // MGM-52 Lance в полёте — собственная модель (tools/airdef-models/own/msl_lance)
+  w_arrw: { weapon: 'arrw', lazy: true, stations: [] }, // AGM-183A ARRW — собственная модель (tools/airdef-models/own/arrw)
   d_shahed: { ev: true, lazy: true, stations: [] }, // «Шахед-136» — faintastic (винт — группа prop)
   d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
   // ── вертолёты (2026-10-20): грузятся по запросу (heliModel / wantModel); винты — части rotor, rotor2 (соосный нижний), trotor — крутит spinProps;
@@ -185,6 +187,7 @@ const META = {
   l_tochka: { ev: true, lazy: true, matte: true, stations: [] }, // 9П129 «Точка-У» — своя (сборщик, Свои/Точка-У), боевое положение: ракета 9М79 вертикально (tbm)
   l_scud: { ev: true, lazy: true, matte: true, stations: [] }, // Р-17 на МАЗ-543 — AlexDang (tbm)
   l_himars: { ev: true, lazy: true, matte: true, stations: [] }, // M142 HIMARS — Denis.Cherkasov1
+  l_lance: { ev: true, lazy: true, matte: true, stations: [] }, // M752 (Lance) — своя пусковая на гусеничном ходу (сборщик, tools/airdef-models/own); ракета поднимается стрелой (tbm)
   // оружие, взятое с моделей самолётов: на пилоне и в полёте вместо процедурного
   w_gbu12: { weapon: 'gbu12', stations: [] }, // GBU-12 Paveway II — собственная модель (tools/airdef-models/own/gbu12)
   w_fab500: { weapon: 'fab500', stations: [], matte: true }, // ФАБ-500М-62 — собственная модель (tools/airdef-models/own/fab500)
@@ -320,6 +323,9 @@ const GLB_V_OWN = {
   msl_amraam: '20261025n', // AIM-120A — своя ракета NASAMS вместо вырезки из F/A-18 andertan (msl_aim120 остаётся «Летке»)
   w_kinzhal: '20261025o',
   w_prsm: '20261025p',
+  w_arrw: '20261025q',
+  w_lance: '20261025r',
+  l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы

@@ -9,9 +9,9 @@
 // дроны и носители в зоне станции) и пуск ЗУР. По ПВО бьют только по засечённым — цель выбирается в момент пуска;
 // по комплексу, которого разведчик не видел сам (засечён по излучению или пуску), баллистика ложится с тройным промахом.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261025a';
-import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261025a';
-import { CITY, objAimXZ } from '../city.js?v=20261025a';
+import { tr } from '../i18n.js?v=20261025b';
+import { AG, COMBINED, CARRIERS } from '../arsenal.js?v=20261025b';
+import { CITY, objAimXZ } from '../city.js?v=20261025b';
 
 export const COMBINED_NAME = 'Мульти-волна';
 export const combinedOk = (side, era) => !!(COMBINED[side] && COMBINED[side][era]);
@@ -20,10 +20,18 @@ export const samKnown = (u) => !!(u.spotted || u.elint || u.fired);
 
 // пакет HIMARS (ATACMS): ось подъёма (низ у кормы) и срез — передний торец (к кабине), в осях модели; в покое наклон ≈ 10°,
 // к пуску поднимается до 60° (≈ 15 с), стреляет поверх кабины; после пусков опускается
-export const POD = { l_himars: { hinge: [0.12, 1.3, 3.75], muzzle: [0.12, 2.05, 0.25], rest: 0.17, el: 1.05, rate: 1 / 15 } };
+// M752 (Lance, своя модель сборщика): сначала откидывается кормовой трап — доля ramp подъёма L.podEl (rampA от походных 35,8° до 106,5°, его наружная
+// плита rampB раскрывается на 180°), затем стрела (часть pod) с ракетой поднимается на 70° вокруг оси у кормы (≈ 24 с всего, стреляет вперёд поверх
+// кабины). Оси петель — из узлов модели сборщика (Свои/M752: стрела (0; 1,3; 2,7), трап (0; 0,65; 2,56)) со сдвигом центровки prepare.js −0,215 по z;
+// срез — центр ракеты на сёдлах (ось y 2,42, хвост z 2,785, длина 6,15 м): при пуске ракета на стреле прячется, на её месте появляется летящая
+export const POD = { l_himars: { hinge: [0.12, 1.3, 3.75], muzzle: [0.12, 2.05, 0.25], rest: 0.17, el: 1.05, rate: 1 / 15 },
+  l_lance: { hinge: [0, 1.3, 2.485], muzzle: [0, 2.42, -0.29], rest: 0, el: 1.2217, rate: 1 / 24, ramp: 0.3,
+    rampA: { hinge: [0, 0.65, 2.345], a: 1.2347 }, rampB: { hinge: [0, 1.766, 3.106], a: -Math.PI }, msl: 'w_lance' } }; // наружная плита — 180° → 0°, как в пакете сборщика (pack.py): +π прошла бы сквозь внутреннюю
+// доля подъёма самого пакета (стрелы) по L.podEl: у M752 первая часть хода — трап
+export const podLift = (P, el) => (P.ramp ? Math.max(0, (el - P.ramp) / (1 - P.ramp)) : el);
 // где срез пакета и куда он смотрит (мир): по подъёму L.podEl (0…1) и курсу L.yaw
 export function podPose(L, pos, dir) {
-  const P = POD[L.key], f = (P.el - P.rest) * (L.podEl || 0), c = Math.cos(f), s = Math.sin(f);
+  const P = POD[L.key], f = (P.el - P.rest) * podLift(P, L.podEl || 0), c = Math.cos(f), s = Math.sin(f);
   const dy = P.muzzle[1] - P.hinge[1], dz = P.muzzle[2] - P.hinge[2], lx = P.muzzle[0], ly = P.hinge[1] + dy * c - dz * s, lz = P.hinge[2] + dy * s + dz * c;
   const cy = Math.cos(L.yaw), sy = Math.sin(L.yaw), a = P.rest + f;
   pos.set(L.pos.x + lx * cy + lz * sy, L.pos.y + ly, L.pos.z - lx * sy + lz * cy);
