@@ -8,6 +8,8 @@ import { mskDayStartIso } from "../_shared/msk.ts";
 import { ONLINE_REWARDS_PER_DAY, onlineReward, verifySigned, type Reward } from "../_shared/drone.ts";
 import { mskToday } from "../_shared/msk.ts";
 import { cleanEvents, credit, mutate, view, type Extra } from "../_shared/airdef-progress.ts";
+// @ts-ignore — общий модуль игры (JS), копия tools/airdef-headless/sync-shared.js
+import { battlePoints, oppStrength, RATING } from "../_shared/airdef/rating.js";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -26,12 +28,34 @@ Deno.serve(async (req) => {
     }
     const st = await db.rpc("airdef_mp_record", { p_player_id: player_id, p_team: team, p_win: win, p_kills: kills, p_score: score });
     if (st.error) throw st.error;
+    // рейтинг (Mark 2026-10-25, sql/022, games/airdef/rating.js): части боя — от игрового сервера (подписаны), сила соперников — по их очкам
+    // сезона до этого боя. Очки пишутся у всех онлайн-боёв; в таблице сезона — только аккаунты игры (перенёс прогресс — бои сезона в счёт)
+    let rating: { points: number; season: number; parts: Record<string, number> } | null = null;
+    try {
+      const rt0 = p.rt && typeof p.rt === "object" ? p.rt as Record<string, unknown> : null;
+      if (rt0) {
+        const cl = (v: unknown, a: number, b: number) => Math.max(a, Math.min(b, Number(v) || 0));
+        const rt = { r: [0, RATING.DRAW, RATING.WIN].includes(Number(rt0.r)) ? Number(rt0.r) : 0, c: Math.round(cl(rt0.c, 0, RATING.CONTRIB_MAX)), b: cl(rt0.b, RATING.BOT_MIN, 1),
+          m: Number(rt0.m) === 1 ? 1 : RATING.ARCADE_K, k: cl(rt0.k, 1, 1.08), idle: rt0.idle ? 1 : 0 };
+        const ss = await db.rpc("airdef_season_at", { ts: new Date().toISOString() }); if (ss.error) throw ss.error;
+        const season = Number(ss.data) || 0;
+        const pts = async (id: string) => { const q = await db.rpc("airdef_rating_points", { p_player: id, p_season: season }); return q.error ? 0 : Number(q.data) || 0; };
+        const opp = (Array.isArray(p.op) ? p.op : []).filter((x: unknown) => typeof x === "string" && x !== player_id).slice(0, 12) as string[];
+        const s = oppStrength(await pts(player_id), await Promise.all(opp.map(pts))), points = battlePoints(rt, s);
+        const up = await db.from("airdef_mp_results").update({ rating: points, season, rp: { ...rt, s } }).eq("match_id", p.m).eq("player_id", player_id);
+        if (up.error) throw up.error;
+        rating = { points, season, parts: { ...rt, s } };
+      }
+    } catch (e) { console.error("airdef-claim rating", e); } // бой записан — рейтинг не роняет награду
+    // аккаунт игры (kind = airdef) отделён от сайта: награды мини-игр сайта (детали, ключи, билеты) ему не начисляются
+    const acc = await db.from("players").select("kind").eq("id", player_id).maybeSingle();
+    const gameAcc = acc.data?.kind === "airdef";
     // награда: победа — как у «Летки»; проигрыш — если лично отличился (≥ 2 сбитых / уничтоженных комплекса)
     const today = await db.from("airdef_mp_results").select("match_id", { count: "exact", head: true }).eq("player_id", player_id).eq("rewarded", true).gte("claimed_at", mskDayStartIso());
     if (today.error) throw today.error;
     const left = ONLINE_REWARDS_PER_DAY - (today.count ?? 0);
     let r: Reward = { details: 0, keys: 0, ticket: false, success: false }, ticket = "";
-    if (left > 0) {
+    if (left > 0 && !gameAcc) {
       r = onlineReward(mode, win, kills, p.hm === 1);
       if (r.success && (r.details || r.keys || r.ticket)) {
         const g = await db.rpc("drone_grant", { p_player_id: player_id, p_details: r.details, p_keys: r.keys, p_bonus_ticket: r.ticket });
@@ -53,7 +77,7 @@ Deno.serve(async (req) => {
         progress = { xp: c.reward.xp, silver: c.reward.silver, lines: c.reward.lines, mult: c.reward.mult, auto: c.auto, state: view(out.P!, x1!, today) };
       }
     } catch (e) { console.error("airdef-claim progress", e); } // награда сайта уже выдана — прокачку не роняем вместе с ней
-    return jsonResponse({ details: r.details, keys: r.keys, ticket, rewarded: r.success, online_rewards_left: Math.max(0, left - (r.success ? 1 : 0)), stats: st.data, progress });
+    return jsonResponse({ details: r.details, keys: r.keys, ticket, rewarded: r.success, online_rewards_left: gameAcc ? null : Math.max(0, left - (r.success ? 1 : 0)), stats: st.data, progress, rating });
   } catch (e) {
     console.error("airdef-claim", e);
     return jsonResponse({ error: "Внутренняя ошибка сервера" }, 500);

@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     }
 
     const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: player, error } = await db.from("players").select("id, login").eq("id", player_id).maybeSingle();
+    const { data: player, error } = await db.from("players").select("id, login, kind, full_name").eq("id", player_id).maybeSingle();
     if (error) throw error;
     if (!player) return jsonResponse({ error: "Игрок не найден — перезайдите на сайт" }, 404);
 
@@ -43,7 +43,9 @@ Deno.serve(async (req) => {
     // a — купленное в прокачке «Воздушного превосходства» (в «Реализме» онлайн — только оно и стартовое; проверяет игровой сервер)
     const ad = await db.from("airdef_progress").select("own").eq("player_id", player.id).maybeSingle();
     const a = ad.error ? [] : ((ad.data?.own ?? []) as string[]);
-    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: player.login, u, a, exp: Math.floor(Date.now() / 1000) + TTL })));
+    // имя в онлайне: у аккаунта «Воздушного превосходства» (sql/022, kind = airdef) — ник, у аккаунта сайта — логин
+    const name = player.kind === "airdef" ? (player.full_name || String(player.login).replace(/^ad:/, "")) : player.login;
+    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: name, u, a, exp: Math.floor(Date.now() / 1000) + TTL })));
     const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const sig = b64u(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(body))));
     return jsonResponse({ ticket: `${body}.${sig}` });

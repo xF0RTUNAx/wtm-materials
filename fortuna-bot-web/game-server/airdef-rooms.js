@@ -24,6 +24,7 @@ import { adProgress, realDeny, loadoutIds, samIds, quickEra } from './airdef-own
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
 import { initDamage, hitZones, dmgPack, burnRate } from '../games/airdef/sim/damage.js?v=20261022d';
 import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
+import { battleParts } from '../games/airdef/rating.js?v=20261025a';
 
 const city = buildCity(1); setGround(city.groundH); // город один для всех комнат (как у клиентов: seed 1), только чтение
 const winter = buildWinter(1); // «Мульти-волна» — зимняя горная долина «Северный рубеж» (как у клиентов: seed 1)
@@ -288,7 +289,12 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     for (const p of humans(r)) {
       // ev — события для прокачки (airdef-claim → опыт и серебро): длительность боя, сбитые / уничтоженные комплексы, доля разрушенных целей команды
       const ev = { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, ...(p.team === 'air' ? { sams: p.kills || 0, targets: Array(Math.min(10, Math.round(deadT / Math.max(1, team(r, 'air').filter((q) => !q.bot).length || 1)))).fill(1) } : { downs: p.kills || 0 }) };
-      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ev, exp: Math.floor(Date.now() / 1000) + 3600 };
+      // рейтинг (Mark 2026-10-25, games/airdef/rating.js): части боя — итог, вклад (доля очков в команде), боты у соперников, режим, ранг (эпоха);
+      // op — соперники-люди: силу соперников по таблице сезона досчитает airdef-claim
+      const opp = [...r.players.values()].filter((q) => q.team !== p.team);
+      const rt = battleParts({ win: p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: team(r, p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, era: r.era });
+      const op = opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid);
+      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ev, rt, op, exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', winner, valueK: r.valueK, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
     }
     J(r, 'end', { winner, valueK: r.valueK });

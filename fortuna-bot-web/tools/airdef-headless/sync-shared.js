@@ -4,7 +4,7 @@
 // progress-server-test.js сверяет копии с оригиналами и падает, если забыли):
 //   deno run -A tools/airdef-headless/sync-shared.js
 const ROOT = new URL('../../', import.meta.url).pathname;
-const FILES = [['games/airdef/progress.js', 'progress.js'], ['games/airdef/arsenal.js', 'arsenal.js'], ['games/airdef/sim/flight.js', 'flight.js'], ['games/airdef/sim/flight-fit.js', 'flight-fit.js'], ['games/airdef/sim/heli.js', 'heli.js']]; // heli.js — ТТХ вертолётов (ветка «Вертолёты»)
+const FILES = [['games/airdef/progress.js', 'progress.js'], ['games/airdef/arsenal.js', 'arsenal.js'], ['games/airdef/sim/flight.js', 'flight.js'], ['games/airdef/sim/flight-fit.js', 'flight-fit.js'], ['games/airdef/sim/heli.js', 'heli.js'], ['games/airdef/rating.js', 'rating.js']]; // heli.js — ТТХ вертолётов (ветка «Вертолёты»)
 const OUT = ROOT + 'supabase/functions/_shared/airdef/';
 export function shared(src) {
   // пути — плоские (всё в одной папке), версии кэша (?v=…) у локальных файлов функций не нужны

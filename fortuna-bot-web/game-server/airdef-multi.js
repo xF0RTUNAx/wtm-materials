@@ -15,6 +15,7 @@ import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
 import { dmgPack } from '../games/airdef/sim/damage.js?v=20261022d';
 import { realDeny, samIds, strikeIds } from './airdef-own.js';
+import { battleParts } from '../games/airdef/rating.js?v=20261025a';
 
 const r1 = (v) => Math.round(v * 10) / 10;
 const opp = (s) => (s === 'east' ? 'west' : 'east');
@@ -88,7 +89,11 @@ export function createMulti(ctx) {
     const hm = humans(r).length * 2 > r.players.size ? 1 : 0;
     for (const p of humans(r)) {
       // итог для наград — как у обычного онлайна (airdef-claim): team — роль первого раунда игрока, w — победа команды
-      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm,
+      // рейтинг (games/airdef/rating.js): ничья — winner null (×0,5 победы), надбавки за ранг в «Мульти-волне» нет; op — соперники-люди
+      const all = [...r.players.values()], opp = all.filter((q) => q.team !== p.team);
+      const rt = battleParts({ win: winner === null ? 0.5 : p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: all.filter((q) => q.team === p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, multi: true });
+      const op = opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid);
+      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, rt, op,
         ev: { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, mwInt: (p.kills || 0) * 3, mwObj: Math.min(300, Math.round((p.score || 0) / 40)) }, // для прокачки (airdef-claim)
         exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', kind: 'multi', winner, scores: { east: Math.round(e), west: Math.round(w) }, v0: r.v0, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
