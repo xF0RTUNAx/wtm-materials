@@ -21,7 +21,8 @@ const SLOTS = 7;
 const U = (css) => css.replace(/(-?\d*\.?\d+)u\b/g, (m, n) => `calc(var(--u) * ${n})`);
 const F = (n, min = 10) => `max(${min}px, ${n}u)`;
 const CSS = U(`
-#end .endv { position: absolute; inset: 0; container-type: size; --u: min(1cqw, 1.7778cqh); color: #e9e6dc; font-family: 'Golos Text', -apple-system, sans-serif; line-height: 1.35; }
+#end .endv { position: absolute; inset: 0; container-type: size; --u: min(1vw, 1.7778vh); color: #e9e6dc; font-family: 'Golos Text', -apple-system, sans-serif; line-height: 1.35; }
+@supports (width: 1cqw) { #end .endv { --u: min(1cqw, 1.7778cqh); } } /* iOS 15 и старше: единиц контейнера нет — окно целиком (vw / vh) */
 #end.cine { background: none; } #end.cine.on { animation: none; }
 #endView { position: absolute; inset: 0; overflow: hidden; }
 /* пока открыт итог — интерфейс боя (HUD, кнопки, подсказки, чат, метки) не поверх него */
@@ -223,8 +224,7 @@ export function createEndScreen(C) {
       line.push(b.counted === false ? tr('бой не вошёл в 7 лучших') : tr('засчитано {0} из {1}', [b.n, SLOTS]));
       if (slots) { slots.innerHTML = Array.from({ length: SLOTS }, (_, i) => `<i class="${i < b.n ? 'on' : ''}"></i>`).join(''); if (b.counted !== false && b.n > 0) later(900, () => { const s = slots.querySelectorAll('i')[b.n - 1]; if (s) { s.classList.add('new'); anim(s, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 300 }); } }); }
     }
-    if (c.note) line.unshift(c.note);
-    if (txt) txt.textContent = line.join(' · ');
+    if (txt) txt.innerHTML = [...(c.note ? [c.note] : []), ...line.map(esc)].join(' · '); // c.note — готовый HTML (в награде бывает значок ключа), остальное — текст
   }
 
   // ═════════════ Вход ═════════════
@@ -281,7 +281,7 @@ export function createEndScreen(C) {
         api.show({ title: '', win, online: boardMw(m, me, nm) });
       }
       setTimeout(() => {
-        api.claimed({ rating: { points: win ? 882 : 236, parts: {} }, acc: { kind: 'airdef' }, note: tr('Результат засчитан'), board: win ? { place: 31, prev: 37, n: 6, counted: true } : { place: 37, prev: 37, n: 5, counted: false } });
+        api.claimed({ rating: { points: win ? 882 : 236, parts: {} }, acc: { kind: 'airdef' }, note: win ? tr('Награда: {0}', [`${tr('+{0} деталей', [12])}, +1 ${ico('key', 'ii')}`]) : tr('Результат засчитан'), board: win ? { place: 31, prev: 37, n: 6, counted: true } : { place: 37, prev: 37, n: 5, counted: false } });
         api.reward(win ? { xp: 1240, silver: 620 } : { xp: 310, silver: 150 });
       }, 1200);
     }, 2500);

@@ -1,15 +1,15 @@
 // Прокачка на клиенте: состояние игрока с сервера (функция airdef-progress), действия (исследовать / купить / цель), номер
 // одиночного боя и его итог (airdef-solo), строки награды на экране итогов. Тратит и начисляет только сервер — здесь
-// только запросы и показ. Без входа (нет аккаунта игры fortuna_airdef_acc и сайта fortuna_web_player) — как у новичка: в «Реализме» только стартовый набор,
-// опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
+// только запросы и показ. Без входа (нет аккаунта игры fortuna_airdef_acc; аккаунт сайта fortuna_web_player считается, только если у него уже есть прогресс игры —
+// account.js legacySite) — как у новичка: в «Реализме» только стартовый набор, опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
 import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261025a';
 import { LOADOUTS } from './arsenal.js?v=20261025a';
 import { ico } from './icons.js?v=20261025a';
 import { tr, trIf, LANG } from './i18n.js?v=20261025a';
-import { activeAcc, isMock } from './account.js?v=20261025a';
+import { activeAcc, isMock, siteNoProgress } from './account.js?v=20261025a';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 — тестовый прогресс в памяти (без сервера)
-export function account() { return activeAcc(); } // аккаунт игры, иначе аккаунт сайта (account.js)
+export function account() { return activeAcc(); } // аккаунт игры, иначе «старый» аккаунт сайта с прогрессом (account.js)
 const LOCAL = () => !!TEST || isMock((account() || {}).id); // ?pgtest=1 и заглушка рейтинга ?rmock=1 (аккаунт rmock-…): прогресс в памяти, без сервера
 const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU');
 // сообщение «нельзя» — с сервера (функции Supabase) или из progress.js (причины покупки): на выбранном языке; фразы с подстановкой — по образцу
@@ -40,9 +40,12 @@ export function createProgress(C) {
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
     const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/' + fn, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify(body), keepalive: true }); // keepalive — итог боя дойдёт, даже если страницу сразу перезагрузили (после потери графики)
     const d = await res.json().catch(() => ({}));
-    if (!res.ok) throw Object.assign(new Error(d.error || tr('Ошибка сервера')), { status: res.status });
+    if (!res.ok) throw Object.assign(new Error(d.need_game ? tr('Создайте аккаунт игры') : d.error || tr('Ошибка сервера')), { status: res.status, need_game: !!d.need_game });
     return d;
   }
+  // сервер: 403 need_game — у аккаунта сайта нет прогресса игры, играть можно только с аккаунтом игры. Клиент считал его «старым» — записать в кэш
+  // «прогресса нет»: account.js оповестит, и игра обновится как гость (кнопки входа вместо сырой ошибки)
+  const needGame = (e) => { if (!e || !e.need_game) return false; const a = account(); if (a && a.kind === 'site') siteNoProgress(); return true; };
   const set = (v) => { G.guest = false; G.P = { xp: v.xp, silver: v.silver, res: v.res || [], own: v.own || [], goal: v.goal || {} }; G.info = v; G.err = ''; changed(); };
 
   // ── тестовый режим (без сервера): правила те же, состояние — в памяти ──
@@ -64,7 +67,7 @@ export function createProgress(C) {
       if (LOCAL()) { const lid = (account() || {}).id || ''; if (!G.P || G.guest || G.lid !== lid) { G.P = null; G.lid = lid; await local('goal', null, 'air'); } G.guest = false; return G.P; }
       const acc = account(); if (!acc) { G.P = newProgress(); G.guest = true; G.err = ''; changed(); return G.P; } // гость: стартовый набор
       try { const d = await call('airdef-progress', { player_id: acc.id, action: 'state' }); set(d.progress); }
-      catch (e) { G.err = e.message; changed(); }
+      catch (e) { if (needGame(e) && !account()) return G.P; G.err = e.message; changed(); }
       return G.P;
     },
     // исследовать / купить / цель ветки (id: null — снять)
@@ -73,9 +76,9 @@ export function createProgress(C) {
       G.busy = true; changed();
       try {
         if (LOCAL()) { await local(action, id, branch); return { ok: true }; }
-        const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры или на сайте') };
+        const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры') };
         const d = await call('airdef-progress', { player_id: acc.id, action, id, branch }); set(d.progress); return { ok: true };
-      } catch (e) { return { ok: false, why: e.message }; }
+      } catch (e) { needGame(e); return { ok: false, why: e.message }; }
       finally { G.busy = false; changed(); }
     },
 
@@ -93,7 +96,7 @@ export function createProgress(C) {
       const acc = account(); if (!acc || LOCAL() || !['air', 'defense', 'multi'].includes(game)) return;
       const run = { game, mode, era, id: null, p: null };
       G.run = run;
-      run.p = call('airdef-solo', { player_id: acc.id, action: 'start', game, mode, era }).then((d) => { run.id = d.run_id; }).catch((e) => { run.err = e.message; });
+      run.p = call('airdef-solo', { player_id: acc.id, action: 'start', game, mode, era }).then((d) => { run.id = d.run_id; }).catch((e) => { run.err = e.message; run.need = !!e.need_game; needGame(e); });
     },
     // итог боя: ev — что сделано, used — узлы, на которых играли. Показывает строки награды в итогах (#endNote)
     async runClaim(ev, used) {
@@ -102,7 +105,8 @@ export function createProgress(C) {
       const el = () => document.getElementById('endNote');
       // свой блок — между метками (повторный показ заменяет его, остальной текст итогов не трогаем)
       const show = (h) => { const e = el(); if (e) e.innerHTML = `<!--pg--><div class="pgRes">${h}</div><!--/pg-->` + String(e.innerHTML || '').replace(/<!--pg-->[\s\S]*?<!--\/pg-->/, ''); };
-      if (!account() && !TEST) { show('<span class="dim">' + tr('Опыт и серебро копятся, когда вы вошли в аккаунт игры или на сайте.') + '</span>'); return; }
+      const login = (k) => ` <button data-accopen="${k}">${tr('Войти или создать аккаунт')}</button>`; // открывает окно аккаунта (account-ui.js)
+      if (!account() && !TEST) { show('<span class="dim">' + (run && run.need ? tr('Создайте аккаунт игры — без него опыт и серебро не копятся.') : tr('Опыт и серебро копятся, когда вы вошли в аккаунт игры.')) + '</span>' + login('reg')); return; }
       if (!run) return;
       show('<span class="dim">' + tr('Начисляем опыт…') + '</span>');
       try {
@@ -111,7 +115,7 @@ export function createProgress(C) {
         set(d.progress);
         show(api.rewardHtml(d));
         if (C.endScr) C.endScr.reward(d); // «Разбор»: опыт и серебро справа вверху
-      } catch (e) { show('<span class="dim">' + tr('Опыт не начислен: {0}', [trMsg(e.message)]) + '</span>'); }
+      } catch (e) { needGame(e); show(e.need_game ? '<span class="dim">' + tr('Создайте аккаунт игры — без него опыт и серебро не копятся.') + '</span>' + login('reg') : '<span class="dim">' + tr('Опыт не начислен: {0}', [trMsg(e.message)]) + '</span>'); }
     },
     // строки «за что сколько» и множители (одиночный и онлайн — одинаково)
     rewardHtml(d) {

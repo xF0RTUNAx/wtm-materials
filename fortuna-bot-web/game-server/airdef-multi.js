@@ -20,9 +20,9 @@ import { battleParts } from '../games/airdef/rating.js?v=20261025a';
 const r1 = (v) => Math.round(v * 10) / 10;
 const opp = (s) => (s === 'east' ? 'west' : 'east');
 
-// ctx — общее с комнатами airdef-rooms.js: city, send, bcast, team, humans, J, sign, clock, closeRoom, toLobby, sendRoom, FAST
+// ctx — общее с комнатами airdef-rooms.js: city, send, bcast, team, humans, J, sign, seal, clock, closeRoom, toLobby, sendRoom, FAST
 export function createMulti(ctx) {
-  const { city, send, bcast, team, humans, J, sign, clock, sendRoom, FAST } = ctx;
+  const { city, send, bcast, team, humans, J, sign, seal = async () => null, clock, sendRoom, FAST } = ctx;
   const PREP_T = FAST ? 8 : M.PREP_T, DEBRIEF_T = FAST ? 1 : M.DEBRIEF_T, RESULTS_T = FAST ? 3 : M.RESULTS_T, WAVE_MAX = M.WAVE_MAX;
   const DT = 1 / O.TICK_HZ, SNAP_EVERY = Math.round(O.TICK_HZ / O.SNAP_HZ);
   const atkTeam = (r) => team(r, r.atk), defTeam = (r) => team(r, opp(r.atk));
@@ -89,11 +89,12 @@ export function createMulti(ctx) {
     const hm = humans(r).length * 2 > r.players.size ? 1 : 0;
     for (const p of humans(r)) {
       // итог для наград — как у обычного онлайна (airdef-claim): team — роль первого раунда игрока, w — победа команды
-      // рейтинг (games/airdef/rating.js): ничья — winner null (×0,5 победы), надбавки за ранг в «Мульти-волне» нет; op — соперники-люди
+      // рейтинг (games/airdef/rating.js): только быстрый бой (своя комната рейтинга не даёт); ничья — winner null (×0,5 победы), надбавки за ранг
+      // в «Мульти-волне» нет; ope — id соперников-людей, запечатанные (seal в server.js, расшифровывает только airdef-claim)
       const all = [...r.players.values()], opp = all.filter((q) => q.team !== p.team);
-      const rt = battleParts({ win: winner === null ? 0.5 : p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: all.filter((q) => q.team === p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, multi: true });
-      const op = opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid);
-      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, rt, op,
+      const rt = r.quick ? battleParts({ win: winner === null ? 0.5 : p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: all.filter((q) => q.team === p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, multi: true }) : null;
+      const ope = await seal(opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid));
+      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ...(rt ? { rt } : {}), ope,
         ev: { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, mwInt: (p.kills || 0) * 3, mwObj: Math.min(300, Math.round((p.score || 0) / 40)) }, // для прокачки (airdef-claim)
         exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', kind: 'multi', first: r.first, winner, scores: { east: Math.round(e), west: Math.round(w) }, v0: r.v0, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });

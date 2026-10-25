@@ -1,25 +1,53 @@
 // Аккаунты «Воздушного превосходства» (Mark 2026-10-25): отдельные аккаунты игры (логин и пароль игры, ник для рейтинга) и прежний аккаунт
-// сайта. Активный — аккаунт игры, если вошёл, иначе сайта: от него идут прогресс, онлайн-билет и итог боя. Рейтинг — только у аккаунта игры;
+// сайта. Новичкам — только аккаунт игры (Mark: «все в одной категории аккаунтов»); аккаунт сайта игра использует лишь у «старых» игроков, у кого
+// уже есть прогресс игры, ещё не перенесённый (legacySite: статус сайта из airdef-account site_status, кэш в localStorage). Активный — аккаунт игры,
+// иначе «старый» аккаунт сайта, иначе гость: от него идут прогресс, онлайн-билет и итог боя. Рейтинг — только у аккаунта игры;
 // прогресс сайта можно один раз перенести в аккаунт игры (функция airdef-account, sql/022). Чистый модуль: хранилище, запросы, заглушка ?rmock=1.
 /* global CONFIG */
 import { tr } from './i18n.js?v=20261025a';
 
-const KEY_GAME = 'fortuna_airdef_acc', KEY_SITE = 'fortuna_web_player';
+const KEY_GAME = 'fortuna_airdef_acc', KEY_SITE = 'fortuna_web_player', KEY_SST = 'fortuna_airdef_site_st';
 // ?rmock=1 — заглушка: airdef-account и get-airdef-rating отвечают локально (сервер ещё не применён в боевой базе); ?rmock=empty — у «вас» нет боёв,
-// ?rmock=idle — в «Моих боях» ещё и бой без действий
-export const RMOCK = (() => { try { return new URLSearchParams(location.search).get('rmock') || ''; } catch (_) { return ''; } })();
+// ?rmock=idle — в «Моих боях» ещё и бой без действий; ?rmock=newsite — как 1, но аккаунт сайта без прогресса игры (новичок).
+// Только на своём компьютере и в локальной сети: на боевом сайте заглушка сохраняла бы аккаунт 'rmock-…', с которым игра молча идёт без сервера
+const LOCAL_HOST = (() => { try { const h = String(location.hostname || ''); return h === 'localhost' || h === '127.0.0.1' || h === '[::1]' || /^192\.168\./.test(h) || /^10\./.test(h) || /\.local$/.test(h); } catch (_) { return false; } })();
+export const RMOCK = (() => { try { return LOCAL_HOST ? new URLSearchParams(location.search).get('rmock') || '' : ''; } catch (_) { return ''; } })();
 export const isMock = (id) => String(id || '').startsWith('rmock-');
 
 const read = (k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (_) { return null; } };
 export function gameAcc() { const a = read(KEY_GAME); return a && a.id && a.login ? a : null; }
 export function siteAcc() { const p = read(KEY_SITE); return p && p.id && p.login ? p : null; }
-// активный аккаунт: игры, иначе сайта, иначе null
-export function activeAcc() {
-  const g = gameAcc(); if (g) return { id: g.id, login: g.login, nick: g.nick || g.login, kind: 'airdef' };
-  const s = siteAcc(); return s ? { id: s.id, login: s.login, nick: s.login, kind: 'site' } : null;
-}
 export function setGameAcc(a) { try { localStorage.setItem(KEY_GAME, JSON.stringify({ id: a.id, login: a.login, nick: a.nick || a.login, transferred: !!a.transferred })); } catch (_) { /* приватный режим */ } }
 export function clearGameAcc() { try { localStorage.removeItem(KEY_GAME); } catch (_) { try { localStorage.setItem(KEY_GAME, 'null'); } catch (_2) { /* нет */ } } }
+if (!RMOCK) { const g = read(KEY_GAME); if (g && isMock(g.id)) clearGameAcc(); } // аккаунт заглушки, оставшийся от прежнего запуска ?rmock, без заглушки не нужен
+
+// ── «старый» аккаунт сайта: статус хранится в localStorage { id, progress, transferred } для текущего аккаунта сайта ──
+// (заглушка ?rmock — только в памяти: её ответ не должен попасть в настоящий кэш)
+const SS = { id: '', p: null, st: null, failAt: 0 }, subs = [];
+function stCached() {
+  const s = siteAcc(); if (!s) return null;
+  if (RMOCK) return SS.id === s.id ? SS.st : null;
+  const c = read(KEY_SST); return c && c.id === s.id ? { progress: !!c.progress, transferred: !!c.transferred } : null;
+}
+export const legacySite = () => { const c = stCached(); return !!c && c.progress && !c.transferred; }; // синхронно: аккаунт сайта с прогрессом игры, ещё не перенесённым
+// сохранить статус; если от него изменился активный аккаунт — оповестить (вход / выход / перенос — тот же повод, что у окна аккаунта)
+function stStore(st) {
+  const s = siteAcc(); if (!s) return;
+  const was = legacySite();
+  SS.id = s.id; SS.st = st;
+  if (!RMOCK) try { localStorage.setItem(KEY_SST, JSON.stringify({ id: s.id, progress: st.progress, transferred: st.transferred })); } catch (_) { /* приватный режим */ }
+  if (was !== legacySite()) for (const f of subs) try { f(); } catch (e) { console.warn('account', e); }
+}
+// вошёл на сайте, статус известен и «старым» игроком он не считается (нет прогресса игры или уже перенесён) — игре нужен отдельный аккаунт игры
+export const siteNewbie = () => !!siteAcc() && !!stCached() && !legacySite();
+export const onAccChange = (f) => { subs.push(f); }; // активный аккаунт сменился сам (пришёл статус сайта, сервер сказал «нужен аккаунт игры»)
+// активный аккаунт: игры, иначе «старый» аккаунт сайта, иначе null (гость)
+export function activeAcc() {
+  const g = gameAcc(); if (g) return { id: g.id, login: g.login, nick: g.nick || g.login, kind: 'airdef' };
+  const s = siteAcc(); return s && legacySite() ? { id: s.id, login: s.login, nick: s.login, kind: 'site' } : null;
+}
+// сервер ответил 403 need_game: у аккаунта сайта нет прогресса игры — играть только с аккаунтом игры
+export function siteNoProgress() { const s = siteAcc(); if (s && !gameAcc()) stStore({ progress: false, transferred: false }); }
 
 // ── запросы ──
 export async function callFn(fn, body) {
@@ -39,19 +67,18 @@ export const accountApi = {
   rename: (id, password, nick) => acct('rename', { id, password, nick }).then((d) => d.account),
   transfer: (id, password, site_login, site_password) => acct('transfer', { id, password, site_login, site_password }),
 };
-// есть ли у аккаунта сайта прогресс игры, который ещё не перенесён: { progress, transferred } — запрос один раз за сессию на аккаунт сайта
-// (после ошибки — не чаще раза в минуту)
-const SS = { id: '', p: null, st: null, failAt: 0 };
+// есть ли у аккаунта сайта прогресс игры, который ещё не перенесён: { progress, transferred } — из кэша; нет кэша для этого аккаунта сайта —
+// запрос (promise; после ошибки — не чаще раза в минуту), его итог ложится в кэш и, если что-то поменялось, оповещает подписчиков
 export function siteStatus() {
   const s = siteAcc(); if (!s) return null;
   if (SS.id !== s.id) { SS.id = s.id; SS.p = null; SS.st = null; SS.failAt = 0; }
-  if (SS.st) return SS.st;
-  if (!SS.p && Date.now() - SS.failAt > 60000) SS.p = acct('site_status', { site_id: s.id }).then((d) => { SS.st = { progress: !!d.progress, transferred: !!d.transferred }; SS.p = null; return SS.st; }, () => { SS.failAt = Date.now(); SS.p = null; return null; });
+  const c = stCached(); if (c) return c;
+  if (!SS.p && Date.now() - SS.failAt > 60000) SS.p = acct('site_status', { site_id: s.id }).then((d) => { SS.p = null; if (siteAcc() && siteAcc().id === s.id) stStore({ progress: !!d.progress, transferred: !!d.transferred }); return stCached(); }, () => { SS.failAt = Date.now(); SS.p = null; return null; });
   return SS.p;
 }
-export const siteStatusDone = () => { if (SS.id) SS.st = { progress: true, transferred: true }; };
+export const siteStatusDone = () => { if (siteAcc()) stStore({ progress: true, transferred: true }); };
 // «Перенести прогресс» уместно: вошёл на сайте, у аккаунта сайта есть прогресс игры, ещё не перенесён, и в аккаунт игры его ещё не переносили
-export function transferOk() { const g = gameAcc(); return !!siteAcc() && !!SS.st && SS.st.progress && !SS.st.transferred && !(g && g.transferred); }
+export function transferOk() { const g = gameAcc(); return legacySite() && !(g && g.transferred); }
 export const rating = (playerId) => callFn('get-airdef-rating', playerId ? { player_id: playerId } : {});
 
 // ── заглушка ?rmock=1: примеры из макета рейтинга ──
@@ -66,7 +93,7 @@ async function mockFn(fn, b) {
     if (b.action === 'login') { if (b.password === 'wrong') throw mockErr(401, 'Неверный логин или пароль'); return { account: mockAcc(b.login, (read(KEY_GAME) || {}).nick) }; }
     if (b.action === 'rename') { const g = gameAcc(); return { account: mockAcc(g ? g.login : 'player', b.nick) }; }
     if (b.action === 'transfer') { if (b.site_password === 'wrong') throw mockErr(401, 'Неверный логин или пароль сайта'); MOCK.transferred = true; const g = gameAcc(); return { moved: { progress: true, runs: 12, online: 5 }, account: mockAcc(g ? g.login : 'player', g && g.nick) }; }
-    if (b.action === 'site_status') return { progress: true, transferred: MOCK.transferred };
+    if (b.action === 'site_status') return { progress: RMOCK !== 'newsite', transferred: MOCK.transferred }; // ?rmock=newsite — новичок с аккаунтом сайта
     throw mockErr(400, 'Неизвестное действие');
   }
   if (fn === 'get-airdef-rating') return mockRating(b.player_id);
@@ -98,3 +125,5 @@ function mockRating(pid) {
   if (RMOCK === 'idle') battles.push({ at: ago(7, 9, 10), multi: false, mode: 'real', team: 'air', win: false, draw: false, rating: 0, rp: { r: 0, c: 0, s: 0, b: 1, m: 1, k: 1, idle: 1 }, counted: false }); // бой без действий
   return { ...base, me: { kind: 'airdef', nick, place: empty ? null : 37, points: empty ? 0 : 3940, n: empty ? 0 : 5, battles } };
 }
+
+if (siteAcc()) siteStatus(); // при старте: статуса для этого аккаунта сайта нет — спросить (в кэше есть — ничего не делает); в конце файла: заглушка использует const ниже

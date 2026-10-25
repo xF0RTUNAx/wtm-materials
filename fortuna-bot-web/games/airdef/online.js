@@ -11,7 +11,7 @@ import * as MW from './sim/online-multi.js?v=20261025a';
 import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261025a';
 import { MODES } from './sim/strike.js?v=20261025a';
 import { ICON, ico } from './icons.js?v=20261025a';
-import { activeAcc } from './account.js?v=20261025a';
+import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261025a';
 import { boardOl, boardMw } from './endscr.js?v=20261025a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
@@ -32,9 +32,11 @@ export function createOnline(C, ctrls) {
   // ═════════════ Меню: вкладка «Бой» в режиме «Онлайн» ═════════════
   function panel(el) {
     if (N.conn !== 'on') {
-      if (N.conn === 'off' || N.conn === 'error') N.connect();
-      el.innerHTML = `<div class="cat-h">${tr('Онлайн')}</div><p class="hint">${N.conn === 'noacc' ? tr('Онлайн — для игроков с аккаунтом сайта: откройте игру с fortunawtm.com/play и войдите.')
-        : N.conn === 'error' ? tr('Сервер онлайна сейчас недоступен. Попробуйте позже.') : tr('Подключаемся к серверу…')}</p>${N.conn === 'error' ? `<button class="btn alt" data-oa="retry">${tr('Повторить')}</button>` : ''}`;
+      if (N.conn === 'off' || N.conn === 'error' || (N.conn === 'noacc' && N.account())) N.connect(); // 'noacc' — аккаунт появился (вошли, пришёл статус сайта): подключаемся с ним
+      const guest = N.conn === 'noacc' || N.conn === 'needgame'; // гость: онлайн только с аккаунтом игры
+      el.innerHTML = `<div class="cat-h">${tr('Онлайн')}</div><p class="hint">${N.conn === 'noacc' ? tr('Онлайн — только с аккаунтом игры. Войдите или создайте его.')
+        : N.conn === 'needgame' ? tr('Создайте аккаунт игры — онлайн только с ним.')
+        : N.conn === 'error' ? tr('Сервер онлайна сейчас недоступен. Попробуйте позже.') : tr('Подключаемся к серверу…')}</p>${N.conn === 'error' ? `<button class="btn alt" data-oa="retry">${tr('Повторить')}</button>` : ''}${guest ? `<button class="btn alt" data-oa="acc">${tr('Войти или создать аккаунт')}</button>` : ''}`;
       return;
     }
     const r = N.room;
@@ -72,15 +74,18 @@ export function createOnline(C, ctrls) {
   }
   // кнопка внизу карточки меню
   function primaryText() {
+    if (N.conn === 'noacc' && !N.account() || N.conn === 'needgame') return tr('Войти или создать аккаунт');
     if (N.conn !== 'on') return tr('Онлайн');
     if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); return me && me.ready ? tr('Готов (снять)') : tr('Готов'); }
     return N.queued ? tr('Отменить поиск') : tr('Найти бой');
   }
   function primary() {
+    if (N.conn === 'noacc' && !N.account() || N.conn === 'needgame') { openAcc(); return; }
     if (N.conn !== 'on') { N.connect(); return; }
     if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); N.ready(!(me && me.ready)); return; }
     if (N.queued) N.unqueue(); else N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined);
   }
+  const openAcc = () => { if (C.account) C.account.open(siteAcc() ? 'reg' : 'login'); }; // у вошедшего на сайте новичка — сразу регистрация
   function onClick(e) {
     const b = e.target.closest('[data-v]'), sg = b && b.closest('[data-oseg]');
     if (sg) {
@@ -96,6 +101,7 @@ export function createOnline(C, ctrls) {
     snd.click();
     switch (a.dataset.oa) {
       case 'retry': N.conn = 'off'; N.connect(); break;
+      case 'acc': openAcc(); break;
       case 'create': N.create(ui.kind === 'multi' ? { kind: 'multi', mode: ui.mode, size: ui.size, era: Math.max(2, ui.era), fill: ui.fill } : { mode: ui.mode, size: ui.size, era: ui.era, sideAir: ui.sideAir === 'random' ? null : ui.sideAir, fill: ui.fill, team: ui.role === 'any' ? null : ui.role }); break;
       case 'join': { const v = ($('adCode') && $('adCode').value || '').toUpperCase(); ui.code = v; if (v.length === 4) N.join(v, ui.kind === 'multi' || ui.role === 'any' ? null : ui.role); break; }
       case 'leave': N.leave(); break;
@@ -163,6 +169,7 @@ export function createOnline(C, ctrls) {
 
   // ═════════════ События сети ═════════════
   N.on('conn', rerender);
+  N.on('room', () => { if (C.account && C.account.refresh) C.account.refresh(); }); // зашли в комнату / вышли — окно аккаунта открыто: кнопки смены аккаунта закрыть / открыть
   N.on('queue', rerender);
   N.on('err', (m) => { C.say(trFmt(m), 3); rerender(); }); // сообщения сервера — по-русски: переводим на клиенте
   N.on('deny', (m) => { N.clog('deny', m); const t = trFmt(m); C.say(t, 2.5); snd.deny(); if (ctrls.defense.st.net) ctrls.defense.st.msg = t; });
@@ -250,7 +257,7 @@ export function createOnline(C, ctrls) {
     }
     if (m.result && C.claimOnline) C.claimOnline(m.result);
   });
-  N.on('lost', () => { hideModal(); if (C.state === 'play' && C.lastGame === 'online' && !C.ended) C.showEnd({ title: tr('Связь потеряна'), reason: tr('Не удалось вернуться в бой: комната закрыта или сервер недоступен'), win: null, stats: [] }); });
+  N.on('lost', () => { hideModal(); if (C.state === 'play' && C.lastGame === 'online' && !C.ended) C.showEnd({ title: tr('Связь потеряна'), reason: tr('Не удалось вернуться в бой: комната закрыта или сервер недоступен'), win: null, stats: [], events: [], dur: 0 }); }); // без ленты событий: журнал этого боя на экране «Связь потеряна» не нужен
 
   // ═════════════ Окна поверх игры: переподключение, возвращение в комнату, «покинуть комнату?» ═════════════
   const md = $('netModal');
@@ -358,7 +365,9 @@ export function createOnline(C, ctrls) {
       const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/airdef-claim', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, token }) });
       const d = await res.json().catch(() => ({}));
       const parts = []; if (d.details) parts.push(tr('+{0} деталей', [d.details])); if (d.keys) parts.push(`+${d.keys} ${ico('key', 'ii')}`); if (d.ticket) parts.push(d.ticket === 'ticket' ? tr('+1 билет') : '+1 ' + ico('key', 'ii'));
-      const note = res.ok ? (parts.length ? tr('Награда: {0}', [parts.join(', ')]) : d.online_rewards_left === 0 ? tr('Наградные бои на сегодня закончились — результат засчитан') : tr('Результат засчитан')) : (d.error || tr('Не удалось засчитать бой'));
+      const needG = res.status === 403 && d.need_game; // у аккаунта сайта нет прогресса игры: дальше — как гость (account.js оповестит)
+      if (needG && acc.kind === 'site') siteNoProgress();
+      const note = res.ok ? (parts.length ? tr('Награда: {0}', [parts.join(', ')]) : d.online_rewards_left === 0 ? tr('Наградные бои на сегодня закончились — результат засчитан') : tr('Результат засчитан')) : needG ? tr('Создайте аккаунт игры — бой не засчитан') : esc(d.error || tr('Не удалось засчитать бой'));
       const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + ratingNote(d.rating, acc) + el.innerHTML;
       if (C.endScr) { // табло: очки рейтинга, место и ячейки сезона, награда прокачки
         const cl = { rating: d.rating, acc, note, board: null }; C.endScr.claimed(cl); if (d.progress) C.endScr.reward(d.progress);

@@ -7,7 +7,7 @@
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
-import { act, extraOf, load, mutate, toProgress, view } from "../_shared/airdef-progress.ts";
+import { act, extraOf, load, mutate, toProgress, view, NEED_GAME, NOT_FOUND } from "../_shared/airdef-progress.ts";
 
 const ACTIONS = new Set(["research", "buy", "goal"]);
 
@@ -18,14 +18,16 @@ Deno.serve(async (req) => {
     if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) return jsonResponse({ error: "Некорректные параметры" }, 400);
     const db = supabaseAdmin(), today = mskToday();
     if (action === "state" || action === undefined) {
-      const { row, exists } = await load(db, player_id);
-      if (!exists) return jsonResponse({ error: "Игрок не найден — войдите на сайте" }, 404);
+      const { row, exists, needGame } = await load(db, player_id);
+      if (!exists) return jsonResponse(NOT_FOUND, 404);
+      if (needGame) return jsonResponse(NEED_GAME, 403); // новичок с аккаунтом сайта — прогресс только на аккаунте игры
       return jsonResponse({ progress: view(toProgress(row), extraOf(row), today) });
     }
     if (!ACTIONS.has(action)) return jsonResponse({ error: "Неизвестное действие" }, 400);
     let x0 = null as ReturnType<typeof extraOf> | null;
     const out = await mutate(db, player_id, (P, x) => { x0 = x; return act(P, action, id, branch); });
-    if (out.notFound) return jsonResponse({ error: "Игрок не найден — войдите на сайте" }, 404);
+    if (out.notFound) return jsonResponse(NOT_FOUND, 404);
+    if (out.needGame) return jsonResponse(NEED_GAME, 403);
     if (!out.ok) return jsonResponse({ error: out.why || "Нельзя" }, 409);
     return jsonResponse({ ok: true, progress: view(out.P!, x0!, today) });
   } catch (e) {

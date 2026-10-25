@@ -1,5 +1,5 @@
 // mp-ticket — билет для входа в онлайн-бой «Симулятора Летки» (игровой сервер — fortuna-bot-web/game-server).
-// Вход: { player_id }. Выход: { ticket } — base64url(JSON {pid, login, u, a, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
+// Вход: { player_id }. Выход: { ticket } — base64url(JSON {pid, login, u, a, ng?, exp}) + "." + base64url(HMAC-SHA256(MP_SECRET, первая часть)).
 // Билет живёт 10 минут: игра берёт новый при каждом подключении. Игровой сервер проверяет подпись тем же
 // секретом (server.js → checkTicket) и берёт ник из билета — подделать чужой ник без секрета нельзя.
 // Секрет: `supabase secrets set MP_SECRET=...` (тот же — в переменной окружения MP_SECRET игрового сервера).
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
   try {
     const secret = Deno.env.get("MP_SECRET");
     if (!secret) return jsonResponse({ error: "Онлайн ещё не настроен" }, 503);
-    const { player_id } = await req.json();
+    const { player_id, game } = await req.json();
     if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) {
       return jsonResponse({ error: "Некорректные параметры" }, 400);
     }
@@ -43,9 +43,18 @@ Deno.serve(async (req) => {
     // a — купленное в прокачке «Воздушного превосходства» (в «Реализме» онлайн — только оно и стартовое; проверяет игровой сервер)
     const ad = await db.from("airdef_progress").select("own").eq("player_id", player.id).maybeSingle();
     const a = ad.error ? [] : ((ad.data?.own ?? []) as string[]);
+    // Правило Mark 2026-10-25: новым игрокам «Воздушного превосходства» — только аккаунт игры. Аккаунт сайта без прогресса игры (нет строки
+    // airdef_progress и боёв airdef_mp_results) — «новичок»: из игры (game: "airdef") — 403; для остальных (билет общий с «Леткой») билет
+    // выдаётся с пометкой ng: 1, а игровой сервер /ad такой билет не принимает.
+    let ng = false;
+    if (player.kind === "site" && !ad.error && !ad.data) {
+      const mp = await db.from("airdef_mp_results").select("match_id", { count: "exact", head: true }).eq("player_id", player.id);
+      ng = !mp.error && (mp.count ?? 0) === 0;
+    }
+    if (ng && game === "airdef") return jsonResponse({ error: "Создайте аккаунт игры — новым игрокам прогресс копится только на нём", need_game: true }, 403);
     // имя в онлайне: у аккаунта «Воздушного превосходства» (sql/022, kind = airdef) — ник, у аккаунта сайта — логин
     const name = player.kind === "airdef" ? (player.full_name || String(player.login).replace(/^ad:/, "")) : player.login;
-    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: name, u, a, exp: Math.floor(Date.now() / 1000) + TTL })));
+    const body = b64u(enc.encode(JSON.stringify({ pid: player.id, login: name, u, a, ...(ng ? { ng: 1 } : {}), exp: Math.floor(Date.now() / 1000) + TTL })));
     const key = await crypto.subtle.importKey("raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const sig = b64u(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(body))));
     return jsonResponse({ ticket: `${body}.${sig}` });

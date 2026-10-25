@@ -2,7 +2,8 @@
 // действия, начисление за бой, пределы одиночной игры, «Реализм» без купленного, гонка двух запросов (версия строки),
 // и что копия правил в _shared/airdef совпадает с игрой (sync-shared.js).
 //   deno run -A tools/airdef-headless/progress-server-test.js
-import { act, credit, cleanEvents, mutate, toProgress, extraOf, view } from '../../supabase/functions/_shared/airdef-progress.ts';
+import { act, credit, cleanEvents, mutate, load, toProgress, extraOf, view } from '../../supabase/functions/_shared/airdef-progress.ts';
+import { unseal } from '../../supabase/functions/_shared/airdef-seal.ts';
 import { NODE, TREE, START, SOLO_DAY } from '../../supabase/functions/_shared/airdef/progress.js';
 import { FILES, OUT, ROOT, shared } from './sync-shared.js';
 
@@ -13,11 +14,12 @@ const ok = (name, cond, extra = '') => { console.log(`${cond ? 'OK  ' : 'FAIL'} 
 for (const [from, to] of FILES) ok(`копия ${to} совпадает с ${from}`, Deno.readTextFileSync(OUT + to) === shared(Deno.readTextFileSync(ROOT + from)), 'запустите sync-shared.js');
 
 // поддельная база: таблицы players / airdef_progress, rpc airdef_progress_save (версия как в SQL)
-function fakeDb() {
-  const T = { players: [{ id: 'p-0000001' }], airdef_progress: [] };
+function fakeDb(extra = {}) {
+  const T = { players: [{ id: 'p-0000001' }], airdef_progress: [], airdef_mp_results: [], ...extra };
   const q = (table) => {
-    const f = []; const api = {
-      select() { return api; }, eq(k, v) { f.push([k, v]); return api; },
+    let head = false; const f = []; const api = {
+      select(_c, o) { head = !!(o && o.head); return api; }, eq(k, v) { f.push([k, v]); return api; },
+      then(res, rej) { return Promise.resolve({ data: null, error: null, count: head ? T[table].filter((x) => f.every(([k, v]) => x[k] === v)).length : null }).then(res, rej); }, // select(…, { count, head }) → { count }
       maybeSingle() { const r = T[table].find((x) => f.every(([k, v]) => x[k] === v)); return Promise.resolve({ data: r ? structuredClone(r) : null, error: null }); },
     }; return api;
   };
@@ -111,5 +113,33 @@ const v = view(toProgress(db.T.airdef_progress[0]), extraOf(db.T.airdef_progress
   ok('ранг новичка — I', adRank(newbie.adP) === 1 && adRank(null) === 4);
   ok('эпоха быстрой комнаты «Реализма» — по самому младшему', [...Array(20)].every(() => quickEra('real', [newbie, dev]) === 1) && quickEra('arcade', [newbie]) === null);
   ok('«Мульти-волна» — не ниже II', quickEra('real', [newbie], 2) === 2); }
+// 13. правило «только аккаунт игры» (Mark 2026-10-25): аккаунт сайта без прогресса игры — needGame; с прогрессом или боями — работает как раньше
+{ const ndb = fakeDb({ players: [{ id: 'p-game001', kind: 'airdef' }, { id: 'p-site-new', kind: 'site' }, { id: 'p-site-res', kind: 'site' }, { id: 'p-site-prog', kind: 'site' }],
+    airdef_mp_results: [{ player_id: 'p-site-res', match_id: 'm1' }] });
+  ndb.T.airdef_progress.push({ player_id: 'p-site-prog', xp: 100, silver: 50, res: [], own: [], goal: {}, first_win_day: null, solo_day: null, solo_xp: 0, version: 1 });
+  const l0 = await load(ndb, 'p-site-new'); ok('сайт без прогресса и без боёв — needGame', l0.exists && l0.needGame === true && l0.row === null);
+  const o0 = await mutate(ndb, 'p-site-new', (P, x) => { const c = credit(P, x, cleanEvents({ sams: 3, win: true }, 10), { real: false, online: true, today: DAY }); return { ok: true, extra: c.extra }; });
+  ok('начислить за бой новичку с аккаунтом сайта — отказ needGame, строка не создана', !o0.ok && o0.needGame === true && !ndb.T.airdef_progress.some((r) => r.player_id === 'p-site-new'));
+  const o0b = await mutate(ndb, 'p-site-new', (P) => act(P, 'goal', 'wpn:fab100', 'wpn')); ok('действие прокачки (цель) для такого — needGame', !o0b.ok && o0b.needGame === true);
+  const l1 = await load(ndb, 'p-site-res'); ok('сайт с онлайн-боями (без строки прокачки) — можно', l1.exists && !l1.needGame);
+  const o1 = await mutate(ndb, 'p-site-res', (P, x) => { const c = credit(P, x, cleanEvents({ sams: 3, win: true }, 10), { real: false, online: true, today: DAY }); return { ok: true, extra: c.extra }; });
+  ok('сайт с боями: опыт начислен, строка создана', o1.ok && o1.P.xp > 0 && ndb.T.airdef_progress.some((r) => r.player_id === 'p-site-res'));
+  const l2 = await load(ndb, 'p-site-prog'); ok('сайт со строкой прокачки — можно', l2.exists && !l2.needGame && l2.row.xp === 100);
+  const o2 = await mutate(ndb, 'p-site-prog', (P, x) => { P.xp += 5; return { ok: true }; }); ok('сайт с прогрессом: действие проходит', o2.ok && o2.P.xp === 105);
+  const l3 = await load(ndb, 'p-game001'); ok('аккаунт игры без прогресса — можно (kind = airdef)', l3.exists && !l3.needGame);
+  const o3 = await mutate(ndb, 'p-game001', (P, x) => { P.xp += 7; return { ok: true }; }); ok('аккаунт игры: действие проходит, строка создана', o3.ok && ndb.T.airdef_progress.some((r) => r.player_id === 'p-game001'));
+  const l4 = await load(ndb, 'p-nobody'); ok('несуществующий игрок — exists false', !l4.exists && !l4.needGame);
+}
+// 14. запечатанный список соперников (ope): независимая сборка по описанию формата → unseal читает; испорченное — пусто
+{ const secret = 'test-secret', enc = new TextEncoder();
+  const b64 = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const key = await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', enc.encode('airdef-op:' + secret)), { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12)), ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(['id-1', 'id-2', 5]))));
+  const sealed = b64(new Uint8Array([...iv, ...ct]));
+  ok('unseal: читает запечатанный список (нестроки отбрасываются)', JSON.stringify(await unseal(sealed, secret)) === '["id-1","id-2"]');
+  ok('unseal: чужой секрет — пусто', (await unseal(sealed, 'other')).length === 0);
+  ok('unseal: испорченное / пустое / не строка — пусто, без исключений', (await unseal(sealed.slice(0, -4) + 'AAAA', secret)).length === 0 && (await unseal('', secret)).length === 0 && (await unseal(undefined, secret)).length === 0 && (await unseal({ a: 1 }, secret)).length === 0 && (await unseal('!!!', secret)).length === 0);
+  ok('unseal: старое поле op (голый список) не читается', (await unseal(['id-1'], secret)).length === 0);
+}
 console.log(fails ? `\nИТОГ: ошибок ${fails}` : '\nИТОГ: всё прошло');
 if (fails) Deno.exit(1);

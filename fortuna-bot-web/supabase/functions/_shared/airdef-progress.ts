@@ -78,13 +78,24 @@ export function credit(P: Progress, x: Extra, ev: BattleEvents, o: { real: boole
 }
 
 // ── база ──
-export async function load(db: DB, player_id: string): Promise<{ row: Row | null; exists: boolean }> {
+// Правило Mark 2026-10-25: новым игрокам — только аккаунт игры (kind = 'airdef'). Аккаунт сайта (kind = 'site') играет, только если у него
+// УЖЕ есть прогресс игры: строка airdef_progress или бои в airdef_mp_results (то же правило, что у airdef-account → site_status).
+// Иначе load() отдаёт needGame, а функции — 403 с NEED_GAME.
+export const NEED_GAME = { error: "Создайте аккаунт игры — новым игрокам прогресс копится только на нём", need_game: true };
+export const NOT_FOUND = { error: "Игрок не найден — войдите в аккаунт игры" };
+export async function load(db: DB, player_id: string): Promise<{ row: Row | null; exists: boolean; needGame?: boolean }> {
   const r = await db.from("airdef_progress").select("*").eq("player_id", player_id).maybeSingle();
   if (r.error) throw r.error;
   if (r.data) return { row: r.data as Row, exists: true };
-  const p = await db.from("players").select("id").eq("id", player_id).maybeSingle();
+  const p = await db.from("players").select("id, kind").eq("id", player_id).maybeSingle();
   if (p.error) throw p.error;
-  return { row: null, exists: !!p.data };
+  if (!p.data) return { row: null, exists: false };
+  if (p.data.kind === "site") {
+    const m = await db.from("airdef_mp_results").select("match_id", { count: "exact", head: true }).eq("player_id", player_id);
+    if (m.error) throw m.error;
+    if (!(m.count ?? 0)) return { row: null, exists: true, needGame: true };
+  }
+  return { row: null, exists: true };
 }
 async function save(db: DB, player_id: string, version: number, P: Progress, x: Extra): Promise<number> {
   const r = await db.rpc("airdef_progress_save", {
@@ -96,10 +107,11 @@ async function save(db: DB, player_id: string, version: number, P: Progress, x: 
 }
 // прочитать → изменить → сохранить, если строку никто не изменил между делом (иначе — заново, до 5 раз)
 export async function mutate<T extends { ok: boolean }>(db: DB, player_id: string, fn: (P: Progress, x: Extra) => T & { extra?: Extra }):
-  Promise<T & { P?: Progress; version?: number; notFound?: boolean }> {
+  Promise<T & { P?: Progress; version?: number; notFound?: boolean; needGame?: boolean }> {
   for (let i = 0; i < 5; i++) {
-    const { row, exists } = await load(db, player_id);
+    const { row, exists, needGame } = await load(db, player_id);
     if (!exists) return { ok: false, notFound: true } as T & { notFound: boolean };
+    if (needGame) return { ok: false, needGame: true } as T & { needGame: boolean };
     const P = toProgress(row), x = extraOf(row), out = fn(P, x);
     if (!out.ok) return out;
     const v = await save(db, player_id, row ? row.version : 0, P, out.extra ?? x);

@@ -11,7 +11,7 @@ import { AG, SAM } from './arsenal.js?v=20261025a';
 import { dmgUnpack } from './sim/damage.js?v=20261025a';
 import { LNCH } from './launchers.js?v=20261025a';
 import { cmOf, cmKey } from './sim/cm.js?v=20261025a';
-import { activeAcc } from './account.js?v=20261025a';
+import { activeAcc, siteNoProgress } from './account.js?v=20261025a';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -24,12 +24,14 @@ function account() {
   if (TEST) return { id: 'test-' + TEST, login: TEST };
   return activeAcc(); // аккаунт игры (ник для рейтинга), иначе аккаунт сайта
 }
+// билет сервера: строка, null (нет билета / сервер не настроен) или 'need_game' (сервер: у аккаунта сайта нет прогресса игры — нужен аккаунт игры)
 async function fetchTicket(acc) {
   try {
     if (typeof CONFIG === 'undefined' || !CONFIG.MP_TICKET_URL || String(acc.id).startsWith('test-') || String(acc.id).startsWith('rmock-')) return null;
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
-    const res = await fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id }) });
+    const res = await fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, game: 'airdef' }) }); // game: 'airdef' — сервер сразу отвечает 403 need_game аккаунту сайта без прогресса
     const d = await res.json().catch(() => ({}));
+    if (res.status === 403 && d.need_game) return 'need_game';
     return res.ok && d.ticket ? d.ticket : null;
   } catch (_) { return null; }
 }
@@ -53,12 +55,31 @@ export function createNet(C) {
     N.conn = 'connecting'; emit('conn');
     try { ws = new WebSocket(adServerUrl()); } catch (_) { N.conn = 'error'; emit('conn'); return; }
     const me = ws; lastPong = performance.now();
-    ws.onopen = async () => { const ticket = await fetchTicket(acc); N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id) }); };
+    ws.onopen = async () => {
+      const ticket = await fetchTicket(acc); if (ws !== me) return; // пока шёл запрос, аккаунт сменили и соединение закрыли
+      if (ticket === 'need_game') { needGame(acc); return; }
+      N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id) });
+    };
     ws.onerror = () => { if (!N.re) { N.conn = 'error'; emit('conn'); } };
     ws.onclose = () => { if (ws === me) dropped(); };
     ws.onmessage = (e) => { if (ws !== me) return; lastPong = performance.now(); let m; try { m = JSON.parse(e.data); } catch (_) { return; } handle(m); };
   };
   N.close = () => { try { ws && ws.close(); } catch (_) { /* уже */ } };
+  N.account = account;
+  // сервер: у аккаунта сайта нет прогресса игры (403 need_game от mp-ticket или 'err' с need_game от игрового сервера) — играть только с аккаунтом игры.
+  // «Старый» аккаунт сайта → кэш «прогресса нет», дальше как гость ('noacc', account.js оповестит); иначе — состояние 'needgame'
+  function needGame(acc) {
+    if (acc && acc.kind === 'site') siteNoProgress();
+    if (N.conn !== 'noacc') { N.needGame = true; N.conn = 'needgame'; N.close(); emit('conn'); }
+  }
+  // аккаунт сменился (вход, регистрация, выход, перенос): соединение — со старым pid, итог боя потом не засчитается (403). Вне боя и комнаты соединение
+  // закрываем, при следующем показе панели «Онлайн» оно откроется с новым аккаунтом; в комнате и в бою не трогаем (окно аккаунта не даёт сменить его)
+  N.accChanged = () => {
+    if (N.room || N.battle || N.re) return false;
+    if (ws) { const old = ws; ws = null; old.onclose = old.onmessage = old.onerror = null; try { old.close(); } catch (_) { /* уже */ } }
+    clearTimeout(reTimer); N.me = null; N.queued = null; N.qwait = 0; N.search = null; N.err = ''; N.needGame = false;
+    N.conn = account() ? 'off' : 'noacc'; emit('conn'); return true;
+  };
   // ═════════════ Обрыв связи и переподключение ═════════════
   // в комнате или в бою связь пропала — переподключаемся сами (до RE_MAX с); сервер держит место (команда, комплексы, счёт,
   // самолёт ведёт ИИ) и по тому же аккаунту возвращает в бой. Не вышло — «Связь потеряна». N.re — идёт переподключение
@@ -71,7 +92,7 @@ export function createNet(C) {
       N.conn = 'connecting'; emit('conn'); emit('re'); clearTimeout(reTimer); reTimer = setTimeout(retry, N.re.n ? 2000 : 600);
       return;
     }
-    N.conn = N.conn === 'error' ? 'error' : 'off'; emit('conn');
+    N.conn = N.conn === 'error' || N.conn === 'needgame' ? N.conn : 'off'; emit('conn');
   }
   function retry() {
     if (!N.re) return;
@@ -127,7 +148,7 @@ export function createNet(C) {
         }
         emit('conn'); emit('re'); return;
       }
-      case 'err': N.err = m.msg; emit('err', m.msg); return;
+      case 'err': if (m.need_game) { needGame(account()); return; } N.err = m.msg; emit('err', m.msg); return;
       case 'deny': emit('deny', m.msg); return;
       case 'queued': N.queued = { mode: m.mode, kind: m.kind, n: m.n, t: performance.now() }; N.qwait = 0; emit('queue'); return;
       case 'unqueued': N.queued = null; N.qwait = 0; emit('queue'); return;

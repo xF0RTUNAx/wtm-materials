@@ -624,8 +624,22 @@ Mark работает с **Opus на высоком усилии** — он ру
   в игре масштаб 0,935 (длина 3,96); толщину (L/D 8,4 против ≈ 9,2) исправит сборщик во второй ревизии. prsm.blend 22 МБ не в репозитории. sync-shared —
   копии progress.js / arsenal.js для функций (при деплое — функции airdef-progress, airdef-solo, airdef-claim; сервер — update.ps1).
 
-- 2026-10-25 · Sonnet 5.5 · **экраны итога боя** (online-dev, не закоммичено, не задеплоено; макет endscr/tpl.html): endscr.js — «Разбор вылета» для всех одиночных боёв (кадр стоит — C.endFreeze, холст выцветает
+- 2026-10-25 · Sonnet 5.5 · **экраны итога боя** (online-dev, 3fd630f, не задеплоено; макет endscr/tpl.html): endscr.js — «Разбор вылета» для всех одиночных боёв (кадр стоит — C.endFreeze, холст выцветает
   по body.endCine, полосы, скошенный заголовок, плитки с отсчётом, лента боя до 10 подписей, опыт и серебро позже, когда придут), «Табло команд» (онлайн «Вылет и оборона», порог O.WIN_K, рейтинг и 7 ячеек
   сезона через C.rating.fresh()), «Два раунда» (онлайн «Мульти-волна»); C.showEnd принимает events / dur / online; журнал боя — C.blog, C.bev(c, l, key, gap), часы C.bt; события пишут air.js и defense.js;
   сервер airdef-multi.js: p.icp / p.samk / p.dmg и first в сообщении 'end' (**после деплоя — update.ps1**); просмотр без боя: `?endmock=solo-win|solo-lose|ol-win|ol-lose|mw-win|mw-lose`.
   Перед деплоем: assets-manifest.js (endscr.js в assets.json).
+
+- 2026-10-25 · Opus 5.5 + Sonnet 5.5 · **ревью аккаунтов / рейтинга / экранов итога и «только аккаунт игры»** (online-dev, не задеплоено). Ревьюер нашёл, исправлено:
+  id соперников в подписанном итоге читались клиентом (пропуск к чужому аккаунту) → поле `ope` = AES-GCM (server.js seal, _shared/airdef-seal.ts unseal, ключ
+  SHA-256("airdef-op:"+MP_SECRET)); `rt` (рейтинг) только при r.quick — своя комната не считается; airdef_transfer блокирует строки до проверок; revoke execute
+  у anon / authenticated на все функции 022; перебор паролей — airdef_auth_fail (10 неудач → 15 мин, 429); nick_season = 0 при регистрации, ник ≠ логину сайта;
+  смена аккаунта закрывает соединение онлайна (в комнате и бою — нельзя); ?rmock только на localhost / LAN; «Связь потеряна» без ленты; запасные единицы для iOS 15.
+  **Правило Mark: новичкам — только аккаунт игры.** Аккаунт сайта игра берёт лишь у «старых» игроков с прогрессом (airdef_progress или airdef_mp_results; кэш
+  fortuna_airdef_site_st); новичок с аккаунтом сайта — гость с «Войти или создать аккаунт»; сервер: _shared/airdef-progress.ts load() → needGame, 403 need_game в
+  airdef-progress / airdef-solo / airdef-claim, mp-ticket (с game:"airdef" — 403, иначе билет ng:1, который /ad не принимает — «Летку» не задевает).
+  Заглушка ?rmock=newsite. Видео утверждённых дизайнов — ~/инфографика/«Воздушное превосходство — новые дизайны 2026-10-25.mp4» (scratchpad video/rec.js:
+  окно 1280×807 без эмуляции, полный экран в записи отключён — иначе headless сжимает окно до 800×600).
+  **Деплой — по порядку:** sql/022 (затем проверочный запрос из комментария — всё false) → функции airdef-account, airdef-claim, airdef-progress, airdef-solo,
+  mp-ticket, get-airdef-rating (MP_SECRET тот же, что на ноутбуке) → статика с новой версией модулей + assets-manifest → update.ps1 (server.js, airdef-rooms.js, airdef-multi.js).
+  Открыто: заставлять ли «старых» игроков сайта переносить прогресс (спросил Mark).

@@ -34,7 +34,7 @@ async function checkTicket(ticket) {
   if (!(await crypto.subtle.verify('HMAC', hmacKey, b64u(sig), new TextEncoder().encode(body)))) return null;
   const p = JSON.parse(new TextDecoder().decode(b64u(body)));
   if (!p.pid || !p.login || !(p.exp * 1000 > Date.now())) return null;
-  return { pid: String(p.pid), name: String(p.login).slice(0, 24), owned: Array.isArray(p.u) ? p.u.map(String) : [], ad: Array.isArray(p.a) ? p.a.map(String) : [] }; // a — купленное в прокачке «Воздушного превосходства»
+  return { pid: String(p.pid), name: String(p.login).slice(0, 24), owned: Array.isArray(p.u) ? p.u.map(String) : [], ad: Array.isArray(p.a) ? p.a.map(String) : [], needGame: p.ng === 1 }; // a — купленное в прокачке «Воздушного превосходства», ng — аккаунт сайта без прогресса игры (на /ad не пускаем)
 }
 // Итог боя для наград (edge-функция drone-claim проверяет той же подписью): base64url(JSON) + '.' + base64url(HMAC)
 const b64uEnc = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
@@ -44,6 +44,18 @@ async function sign(obj) {
   signKey ||= await crypto.subtle.importKey('raw', new TextEncoder().encode(SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
   const body = b64uEnc(new TextEncoder().encode(JSON.stringify(obj)));
   return body + '.' + b64uEnc(new Uint8Array(await crypto.subtle.sign('HMAC', signKey, new TextEncoder().encode(body))));
+}
+// Запечатанный список (id соперников-людей в итоге боя): AES-GCM, ключ = SHA-256("airdef-op:" + MP_SECRET), результат base64url(iv | шифртекст).
+// Итог читает клиент (он подписан, но не зашифрован) — голые id чужих аккаунтов в нём были бы пропусками к ним; расшифровывает только
+// edge-функция airdef-claim (_shared/airdef-seal.ts, тот же секрет).
+let sealKey = null;
+async function seal(arr) {
+  if (!SECRET) return null;
+  sealKey ||= await crypto.subtle.importKey('raw', await crypto.subtle.digest('SHA-256', new TextEncoder().encode('airdef-op:' + SECRET)), { name: 'AES-GCM' }, false, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sealKey, new TextEncoder().encode(JSON.stringify(arr))));
+  const out = new Uint8Array(iv.length + ct.length); out.set(iv); out.set(ct, iv.length);
+  return b64uEnc(out);
 }
 const cleanName = (s) => String(s || '').replace(/[\u0000-\u001f<>]/g, '').trim().slice(0, 24);
 async function auth(m) {
@@ -60,7 +72,7 @@ const rooms = createRooms({ log, auth, sign, matchT: +(Deno.env.get('MATCH_T') |
 // «Воздушное превосходство» — свои комнаты на /ad. Грузится мягко: нет его файлов (на ноутбуке не скачана папка игры) или
 // ошибка в нём — «Летка» работает как раньше, /ad отвечает 503
 let adRooms = null;
-try { const { createAdRooms } = await import('./airdef-rooms.js'); adRooms = createAdRooms({ log, auth, sign, journal: journal.write }); }
+try { const { createAdRooms } = await import('./airdef-rooms.js'); adRooms = createAdRooms({ log, auth, sign, seal, journal: journal.write }); }
 catch (e) { log('«Воздушное превосходство» не загрузилось — онлайн только «Летки»: ' + (e && e.message || e)); }
 journal.write('server_start', { port: PORT, dev: SECRET ? 0 : 1 });
 const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json; charset=utf-8' };

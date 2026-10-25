@@ -1,6 +1,7 @@
 // Проверка sql/022_airdef_accounts_rating.sql без боевой базы: Postgres в WebAssembly (PGlite), поверх — таблица players (как 001) и
 // миграции игры 020, 021. Сезоны (первый 25.10–01.12.2026 МСК, дальше по 30 дней), таблица сезона (7 лучших, только аккаунты игры),
-// перенос прогресса (в пустой и в непустой аккаунт игры, повторно — нельзя, не тот вид аккаунта — нельзя).
+// перенос прогресса (в пустой и в непустой аккаунт игры, повторно — нельзя, не тот вид аккаунта — нельзя), права на функции (только
+// service_role), замки в переносе, защита от перебора паролей (airdef_auth_fail), ник новичка (nick_season = 0).
 //   deno run -A tools/airdef-headless/rating-sql-test.js
 import { PGlite } from 'npm:@electric-sql/pglite@0.2.17';
 const SQL = new URL('../../sql/', import.meta.url).pathname;
@@ -9,7 +10,7 @@ let bad = 0; const ok = (c, t) => { console.log((c ? 'OK   ' : 'ОШИБКА ') 
 const one = async (q, p = []) => (await db.query(q, p)).rows[0];
 const all = async (q, p = []) => (await db.query(q, p)).rows;
 
-await db.exec(`create role service_role; create role anon;
+await db.exec(`create role service_role; create role anon; create role authenticated;
   create table players (id uuid primary key default gen_random_uuid(), login text unique not null, password_hash text not null, full_name text,
     created_at timestamptz not null default now(), last_seen timestamptz not null default now());`);
 for (const f of ['020_airdef_online.sql', '021_airdef_progress.sql', '022_airdef_accounts_rating.sql']) await db.exec(Deno.readTextFileSync(SQL + f));
@@ -32,6 +33,39 @@ let dup = false; try { await mk('ad:alpha2', 'airdef', 'альфа'); } catch (_
 ok(dup, 'ник уникален без учёта регистра');
 let kindBad = false; try { await db.query(`insert into players (login, password_hash, kind) values ('zz', 'x', 'bot')`); } catch (_) { kindBad = true; }
 ok(kindBad, 'вид аккаунта — только site / airdef');
+
+// ── права: ни одна функция из 022 не доступна anon / authenticated, service_role — может ──
+const FN = ['airdef_season_at(timestamptz)', 'airdef_season_bounds(int)', 'airdef_rating_points(uuid, int)', 'airdef_rating_board(int)', 'airdef_transfer(uuid, uuid)', 'airdef_auth_fail_hit(text)'];
+for (const f of FN) {
+  const g = await one(`select has_function_privilege('anon', '${f}', 'execute') a, has_function_privilege('authenticated', '${f}', 'execute') u, has_function_privilege('service_role', '${f}', 'execute') s`);
+  ok(g.a === false && g.u === false && g.s === true, `${f.split('(')[0]}: anon / authenticated — нет, service_role — да`);
+}
+
+// ── ник новичка и защита от перебора ──
+ok((await one('select nick_season from airdef_accounts where player_id = $1', [A])).nick_season === 0, 'nick_season по умолчанию 0 (новичок один раз правит ник в сезоне)');
+ok(!!(await one(`select 1 from pg_class where relname = 'airdef_auth_fail' and relrowsecurity`)) && (await all(`select 1 from pg_policies where tablename = 'airdef_auth_fail'`)).length === 0, 'airdef_auth_fail: RLS включён, политик нет');
+{
+  let lockedAt = 0;
+  for (let i = 1; i <= 12; i++) { const r = await one(`select airdef_auth_fail_hit('login:alpha') u`); if (r.u && !lockedAt) lockedAt = i; }
+  const row = await one(`select n, until from airdef_auth_fail where key = 'login:alpha'`);
+  ok(lockedAt === 10, `10-я неудача подряд запирает ключ (запер на ${lockedAt}-й)`);
+  const mins = (new Date(row.until) - Date.now()) / 60000;
+  ok(mins > 14 && mins <= 15 && row.n === 12, `запрет на 15 минут (осталось ${mins.toFixed(1)}), счёт продолжается`);
+  ok((await one(`select airdef_auth_fail_hit('login:bravo') u`)).u === null, 'другой ключ не заперт');
+  await db.query(`update airdef_auth_fail set until = now() - interval '1 minute' where key = 'login:alpha'`);
+  const again = await one(`select airdef_auth_fail_hit('login:alpha') u`), row2 = await one(`select n, until from airdef_auth_fail where key = 'login:alpha'`);
+  ok(again.u === null && row2.n === 1 && row2.until === null, 'после срока запрета отсчёт идёт заново (n = 1)');
+  await db.query(`update airdef_auth_fail set at = now() - interval '2 hours' where key = 'login:alpha'`); for (let i = 0; i < 8; i++) await db.query(`select airdef_auth_fail_hit('login:alpha')`);
+  ok((await one(`select n from airdef_auth_fail where key = 'login:alpha'`)).n === 8, 'неудачи старше часа не копятся (первая после перерыва = 1, всего 8 из 8)');
+  await db.query(`delete from airdef_auth_fail where key like 'login:%'`);
+}
+// замки в переносе: airdef_transfer сначала блокирует строки, и только потом проверяет already_used / already_done (гонку двух переносов в PGlite не воспроизвести — смотрим порядок в теле)
+{
+  const src = (await one(`select pg_get_functiondef('airdef_transfer(uuid, uuid)'::regprocedure) d`)).d;
+  const lock1 = src.indexOf('from airdef_accounts where player_id = p_to for update'), lock2 = src.indexOf('from players where id = p_from for update');
+  const chk1 = src.indexOf("raise exception 'already_used'"), chk2 = src.indexOf("raise exception 'already_done'");
+  ok(lock1 > 0 && lock2 > 0 && lock1 < chk1 && lock2 < chk1 && lock1 < chk2, 'airdef_transfer: замки на обе строки взяты до проверок already_used / already_done');
+}
 
 // ── бои сезона 1: у Альфы 9 боёв (в таблицу — 7 лучших), у Браво 2, у сайта 3 (в таблице его нет, пока не перенесёт) ──
 let m = 0; const fight = async (pid, rating, season = 1) => db.query(`insert into airdef_mp_results (match_id, player_id, mode, team, win, kills, score, rating, season, rp) values ($1, $2, 'real', 'air', true, 1, 100, $3, $4, '{}')`, ['m' + (++m), pid, rating, season]);

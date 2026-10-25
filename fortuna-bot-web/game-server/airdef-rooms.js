@@ -46,7 +46,7 @@ const r1 = (v) => Math.round(v * 10) / 10;
 const V = () => new THREE.Vector3();
 const opp = (s) => (s === 'east' ? 'west' : 'east');
 
-export function createAdRooms({ log = () => {}, auth, sign = async () => null, journal = () => {} }) {
+export function createAdRooms({ log = () => {}, auth, sign = async () => null, seal = async () => null, journal = () => {} }) {
   const J = (r, ev, d = {}) => journal('ad_' + ev, r ? { room: r.code, mode: r.mode, st: r.state, wave: r.wave, ...d } : d);
   const rooms = new Map(), clients = new Set();
   const queues = { arcade: [], real: [] };   // [{ c, role, t }]
@@ -289,12 +289,13 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     for (const p of humans(r)) {
       // ev — события для прокачки (airdef-claim → опыт и серебро): длительность боя, сбитые / уничтоженные комплексы, доля разрушенных целей команды
       const ev = { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, ...(p.team === 'air' ? { sams: p.kills || 0, targets: Array(Math.min(10, Math.round(deadT / Math.max(1, team(r, 'air').filter((q) => !q.bot).length || 1)))).fill(1) } : { downs: p.kills || 0 }) };
-      // рейтинг (Mark 2026-10-25, games/airdef/rating.js): части боя — итог, вклад (доля очков в команде), боты у соперников, режим, ранг (эпоха);
-      // op — соперники-люди: силу соперников по таблице сезона досчитает airdef-claim
+      // рейтинг (Mark 2026-10-25, games/airdef/rating.js): только быстрый бой (своя комната рейтинга не даёт — решение Mark); части боя —
+      // итог, вклад (доля очков в команде), боты у соперников, режим, ранг (эпоха). ope — id соперников-людей, запечатанные (seal в server.js):
+      // клиент итог читает, а голые id чужих аккаунтов — пропуска к ним; силу соперников по таблице сезона досчитает airdef-claim
       const opp = [...r.players.values()].filter((q) => q.team !== p.team);
-      const rt = battleParts({ win: p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: team(r, p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, era: r.era });
-      const op = opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid);
-      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ev, rt, op, exp: Math.floor(Date.now() / 1000) + 3600 };
+      const rt = r.quick ? battleParts({ win: p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: team(r, p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, era: r.era }) : null;
+      const ope = await seal(opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid));
+      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ev, ...(rt ? { rt } : {}), ope, exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', winner, valueK: r.valueK, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
     }
     J(r, 'end', { winner, valueK: r.valueK });
@@ -482,7 +483,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
       objects: r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0]) };
     if (only) send(only, msg); else bcast(r, msg);
   }
-  MU = createMulti({ city: winter, send, bcast, team, humans, J, sign, clock, sendRoom, closeRoom, toLobby, FAST });
+  MU = createMulti({ city: winter, send, bcast, team, humans, J, sign, seal, clock, sendRoom, closeRoom, toLobby, FAST });
   // нагрузка: время такта всех комнат (среднее и худшее за минуту) — в /health; бюджет такта — 1000 × DT мс
   const load = { ema: 0, max: 0, maxPrev: 0, maxT: 0 };
   // мёртвые соединения (телефон ушёл из сети, приложение свернули): закрываем — место ждёт переподключения, самолёт ведёт ИИ
@@ -570,6 +571,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, j
     if (m.t === 'ping') return send(c, { t: 'pong', i: +m.i || 0 }); // клиент меряет задержку и потери (раз в 2 с)
     if (m.t === 'hello') {
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
+      if (who.needGame) return send(c, { t: 'err', msg: 'Создайте аккаунт игры — новым игрокам прогресс копится только на нём', need_game: true }); // аккаунт сайта без прогресса игры (билет с ng)
       Object.assign(c, { name: who.name, pid: who.pid, adP: adProgress(who.ad) }); clients.add(c); // adP — купленное в прокачке (замки «Реализма»)
       // возвращение в идущий бой тем же аккаунтом
       for (const r of rooms.values()) { const old = [...r.players.values()].find((p) => !p.bot && p.pid && p.pid === c.pid && p !== c); if (old) { takeSeat(r, old, c); return; } } // и когда старое соединение ещё не закрылось

@@ -78,6 +78,10 @@ $$;
 create or replace function airdef_transfer(p_from uuid, p_to uuid) returns jsonb language plpgsql security definer set search_path = public as $$
 declare a airdef_progress; b airdef_progress; n_runs int; n_res int;
 begin
+  -- сначала замки на обе строки (два одновременных переноса одного аккаунта сайта или в один аккаунт игры идут по очереди),
+  -- и только потом проверки «уже переносили»
+  perform 1 from airdef_accounts where player_id = p_to for update;
+  perform 1 from players where id = p_from for update;
   if not exists (select 1 from players where id = p_to and kind = 'airdef') then raise exception 'not_airdef'; end if;
   if not exists (select 1 from players where id = p_from and kind = 'site') then raise exception 'not_site'; end if;
   if exists (select 1 from airdef_accounts where from_player = p_from) then raise exception 'already_used'; end if;
@@ -111,13 +115,45 @@ begin
   return jsonb_build_object('progress', a.player_id is not null, 'runs', n_runs, 'online', n_res);
 end $$;
 
--- права edge-функций (как в 019–021)
-revoke all on function airdef_transfer(uuid, uuid) from public;
-revoke all on function airdef_rating_board(int) from public;
-revoke all on function airdef_rating_points(uuid, int) from public;
-grant all privileges on airdef_accounts, airdef_seasons to service_role;
+-- ── защита от перебора паролей (airdef-account: вход, перенос, смена ника) ──
+-- key: 'login:<логин игры>' / 'site:<логин сайта>' (строчными); 10 неудач подряд — until = now() + 15 минут, удачный вход строку удаляет.
+-- at — время последней неудачи: старше часа — отсчёт идёт заново. Таблица — только service_role (RLS включён, политик нет).
+create table if not exists airdef_auth_fail (
+  key   text primary key,
+  n     int  not null default 0,
+  until timestamptz,
+  at    timestamptz not null default now()
+);
+alter table airdef_auth_fail enable row level security;
+-- записать неудачу; возвращает until, если ключ теперь заперт (иначе null)
+create or replace function airdef_auth_fail_hit(p_key text) returns timestamptz language plpgsql security definer set search_path = public as $$
+declare u timestamptz;
+begin
+  insert into airdef_auth_fail as f (key, n, at) values (p_key, 1, now())
+  on conflict (key) do update set
+    n = case when (f.until is not null and f.until <= now()) or f.at < now() - interval '1 hour' then 1 else f.n + 1 end,
+    until = case when f.until is not null and f.until <= now() then null else f.until end,
+    at = now();
+  update airdef_auth_fail set until = now() + interval '15 minutes' where key = p_key and n >= 10 and until is null;
+  select until into u from airdef_auth_fail where key = p_key and until > now();
+  return u;
+end $$;
+
+-- права edge-функций (как в 019–021): ни одна функция не доступна ни public, ни anon, ни authenticated — только service_role
+-- (Supabase по умолчанию выдаёт execute новым функциям ещё и anon / authenticated — поэтому revoke явный).
+-- Проверка после применения (всё должно быть false):
+--   select p.proname, has_function_privilege('anon', p.oid, 'execute') anon, has_function_privilege('authenticated', p.oid, 'execute') auth
+--   from pg_proc p where p.proname in ('airdef_season_at','airdef_season_bounds','airdef_rating_points','airdef_rating_board','airdef_transfer','airdef_auth_fail_hit');
+revoke execute on function airdef_season_at(timestamptz) from public, anon, authenticated;
+revoke execute on function airdef_season_bounds(int) from public, anon, authenticated;
+revoke execute on function airdef_rating_points(uuid, int) from public, anon, authenticated;
+revoke execute on function airdef_rating_board(int) from public, anon, authenticated;
+revoke execute on function airdef_transfer(uuid, uuid) from public, anon, authenticated;
+revoke execute on function airdef_auth_fail_hit(text) from public, anon, authenticated;
+grant all privileges on airdef_accounts, airdef_seasons, airdef_auth_fail to service_role;
 grant execute on function airdef_season_at(timestamptz) to service_role;
 grant execute on function airdef_season_bounds(int) to service_role;
 grant execute on function airdef_rating_points(uuid, int) to service_role;
 grant execute on function airdef_rating_board(int) to service_role;
 grant execute on function airdef_transfer(uuid, uuid) to service_role;
+grant execute on function airdef_auth_fail_hit(text) to service_role;

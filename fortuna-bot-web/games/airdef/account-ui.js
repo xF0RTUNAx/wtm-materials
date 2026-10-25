@@ -1,16 +1,18 @@
 // Аккаунт игры «Воздушного превосходства» (Mark 2026-10-25): строка в левом верхнем углу меню (ник или «Войти в аккаунт игры», ниже —
 // «Перенести прогресс», только если это касается) и модальное окно: «Вход» / «Регистрация» / «Перенос прогресса»; у вошедшего — ник, смена ника
 // (раз в сезон), «Выйти». Запросы и хранилище — account.js (функция airdef-account). Без аккаунта игры в рейтинг не попасть;
-// аккаунт сайта в игре работает, но без рейтинга.
+// новичку аккаунт сайта в игре не нужен (только аккаунт игры), «старому» игроку с прогрессом он работает до переноса, но без рейтинга.
+// В комнате и в бою аккаунт сменить нельзя; вне их смена закрывает соединение онлайна (net.js accChanged).
 import { ico } from './icons.js?v=20261025a';
 import { tr, trIf } from './i18n.js?v=20261025a';
-import { gameAcc, siteAcc, setGameAcc, clearGameAcc, accountApi, siteStatus, siteStatusDone, transferOk } from './account.js?v=20261025a';
+import { gameAcc, siteAcc, setGameAcc, clearGameAcc, accountApi, siteStatus, siteStatusDone, transferOk, siteNewbie, onAccChange } from './account.js?v=20261025a';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const LOGIN_RE = /^[a-zA-Z0-9_]{3,24}$/, NICK_RE = /^[\p{L}\p{N}_\- ]{3,16}$/u;
 const cleanNick = (v) => String(v || '').trim().replace(/\s+/g, ' ');
 
 const CSS = `
+button[data-accopen] { margin: 0 0 0 6px; border: 1px solid #4a5443; border-radius: 0; background: rgba(16,20,15,.88); color: #e9e6dc; font: 500 12px 'Golos Text', -apple-system, sans-serif; padding: 3px 9px; cursor: pointer; } button[data-accopen]:hover { background: #222a1f; }
 #accWin { position: fixed; inset: 0; z-index: 71; display: none; align-items: center; justify-content: center; box-sizing: border-box; background: rgba(8,11,7,.72); color: #e9e6dc; font: 400 14px/1.45 'Golos Text', -apple-system, sans-serif;
   padding: calc(12px + var(--sa-t, 0px) + var(--tg-t, 0px)) max(12px, var(--sa-r, 0px)) max(12px, var(--sa-b, 0px)) max(12px, var(--sa-l, 0px)); --line: #2f3828; --dim: #a9b09b; --amber: #e8b04a; --amber2: #f3c96f; }
 #accWin.on { display: flex; }
@@ -32,6 +34,7 @@ const CSS = `
 #accWin .row { display: flex; gap: 8px; flex-wrap: wrap; } #accWin .row .btn { flex: 1 1 auto; }
 #accWin .amsg { min-height: 0; font-size: 13.5px; } #accWin .amsg:empty { display: none; } #accWin .amsg.err { color: #f08a7f; } #accWin .amsg.ok { color: #7fd38f; }
 #accWin p { margin: 0; color: #c9cebd; font-size: 13.5px; } #accWin .step { color: var(--amber2); font-size: 13px; }
+#accWin .lock { color: #f0b86f; } #accWin button:disabled { cursor: default; opacity: .55; }
 #accWin .me { display: grid; gap: 2px; } #accWin .me b { font: 500 22px 'Oswald', sans-serif; word-break: break-word; } #accWin .me span { color: var(--dim); font-size: 13px; }
 @media (max-height: 460px) { #accWin .whead { padding: 6px 10px; } #accWin .tabs button { padding: 6px 12px; } #accWin .body { padding: 8px 10px; gap: 8px; } #accWin .frm { grid-template-columns: 1fr 1fr; gap: 8px; } #accWin .frm .full { grid-column: 1 / -1; } }
 @media (pointer: coarse) { #accWin input { font-size: 16px; } }
@@ -45,12 +48,20 @@ export function createAccount(C) {
   const S = { tab: 'login', after: '', err: '', ok: '', done: '', busy: false, rename: false, pend: false, f: {} };
   const fv = (k) => esc(S.f[k] || '');
 
-  // ── что изменилось (вход, выход, перенос, ник): прогресс, меню, рейтинг ──
+  // в комнате и в бою аккаунт сменить нельзя: соединение онлайна держит место за прежним аккаунтом, итог боя уйдёт ему
+  const lock = () => { const N = C.netc; return !!(N && (N.room || N.battle || N.re)); };
+  const LOCK_MSG = () => tr('Выйдите из комнаты, чтобы сменить аккаунт');
+  const needFree = () => { if (lock()) throw new Error(LOCK_MSG()); };
+
+  // ── что изменилось (вход, выход, перенос, ник; статус сайта): онлайн, прогресс, меню, рейтинг ──
   function changed() {
+    if (C.netc && C.netc.accChanged) C.netc.accChanged(); // соединение онлайна — со старым аккаунтом: закрыть, панель «Онлайн» подключится заново
     if (C.progress) C.progress.refresh();
     if (C.rating) C.rating.reset();
     if (C.state === 'menu' && C.menu) C.menu.render(); else renderRail();
+    if (root.classList.contains('on')) draw();
   }
+  onAccChange(changed); // аккаунт сменился сам: пришёл статус сайта («старый» игрок или новичок), сервер ответил «нужен аккаунт игры»
 
   // ── левый верхний угол меню ──
   function renderRail() {
@@ -62,6 +73,9 @@ export function createAccount(C) {
   }
   $('accBox').onclick = (e) => { const t = e.target.closest && e.target.closest('[data-a]'); if (!t) return; if (C.snd && C.snd.click) C.snd.click(); api.open(t.dataset.a === 'xfer' ? 'xfer' : undefined); };
 
+  // кнопка «Войти или создать аккаунт» в других местах игры (итог боя, исследования): data-accopen="reg" | "login"
+  document.addEventListener('click', (e) => { const t = e.target && e.target.closest && e.target.closest('[data-accopen]'); if (!t) return; if (C.snd && C.snd.click) C.snd.click(); api.open(t.dataset.accopen); });
+
   // ── окно ──
   function tabs() {
     const g = gameAcc(), t = g ? [['acc', tr('Аккаунт')]] : [['login', tr('Вход')], ['reg', tr('Регистрация')]];
@@ -70,11 +84,12 @@ export function createAccount(C) {
   }
   const fld = (k, label, type, auto, hint, cls = '') => `<label class="fld ${cls}"><span>${label}</span><input data-f="${k}" type="${type}" autocomplete="${auto}" autocapitalize="off" autocorrect="off" spellcheck="false" value="${fv(k)}">${hint ? `<small>${hint}</small>` : ''}</label>`;
   const msg = () => `<div class="amsg${S.err ? ' err' : S.ok ? ' ok' : ''}" role="alert">${esc(S.err || S.ok)}</div>`;
+  const newbie = () => (siteNewbie() ? `<p>${tr('У игры свой аккаунт — аккаунт сайта здесь не используется.')}</p>` : '');
   const step = () => (S.after === 'xfer' ? `<p class="step">${tr('Шаг 1 из 2: войдите в аккаунт игры или создайте его — затем перенесём прогресс.')}</p>` : '');
   function body() {
     const g = gameAcc();
     if (S.tab === 'login') return `${step()}<form class="frm" data-form="login" novalidate>${fld('login', tr('Логин'), 'text', 'username', '', 'full')}${fld('pass', tr('Пароль'), 'password', 'current-password', '', 'full')}<button class="btn full" type="submit">${tr('Войти')}</button></form>${msg()}`;
-    if (S.tab === 'reg') return `${step()}<form class="frm" data-form="reg" novalidate>${fld('login', tr('Логин'), 'text', 'username', tr('3–24: латиница, цифры, _'))}${fld('pass', tr('Пароль'), 'password', 'new-password', tr('от 6 символов'))}${fld('nick', tr('Ник для рейтинга'), 'text', 'nickname', tr('3–16: буквы, цифры, пробел, _ и -'), 'full')}<button class="btn full" type="submit">${tr('Создать аккаунт')}</button></form>${msg()}`;
+    if (S.tab === 'reg') return `${step()}${newbie()}<form class="frm" data-form="reg" novalidate>${fld('login', tr('Логин'), 'text', 'username', tr('3–24: латиница, цифры, _'))}${fld('pass', tr('Пароль'), 'password', 'new-password', tr('от 6 символов'))}${fld('nick', tr('Ник для рейтинга'), 'text', 'nickname', tr('3–16: буквы, цифры, пробел, _ и -'), 'full')}<button class="btn full" type="submit">${tr('Создать аккаунт')}</button></form>${msg()}`;
     if (S.tab === 'xfer') {
       if (S.done) return `${msg()}<button class="btn" data-a="close">${tr('Готово')}</button>`;
       const intro = `<p>${tr('Перенесутся опыт, серебро, исследования, покупки и онлайн-бои «Воздушного превосходства». Мини-игры сайта останутся на аккаунте сайта. Перенос — один раз.')}</p>`;
@@ -89,10 +104,16 @@ export function createAccount(C) {
   function draw() {
     if (!tabs().some(([k]) => k === S.tab)) S.tab = gameAcc() ? 'acc' : 'login';
     root.innerHTML = `<div class="win"><div class="whead"><span class="t">${ico('players')}${tr('Аккаунт игры')}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>
-      <div class="tabs">${tabs().map(([k, l]) => `<button data-a="tab-${k}" class="${k === S.tab ? 'on' : ''}">${l}</button>`).join('')}</div><div class="body">${body()}</div></div>`;
+      <div class="tabs">${tabs().map(([k, l]) => `<button data-a="tab-${k}" class="${k === S.tab ? 'on' : ''}">${l}</button>`).join('')}</div><div class="body">${lock() && !S.rename && !S.done ? `<p class="lock">${LOCK_MSG()}</p>` : ''}${body()}</div></div>`;
+    applyLock();
+  }
+  // кнопки смены аккаунта (вход, регистрация, перенос, выход) — недоступны в комнате и в бою; смена ника остаётся
+  function applyLock() {
+    if (!lock() || !root.querySelectorAll) return;
+    root.querySelectorAll('form[data-form="login"] button, form[data-form="reg"] button, form[data-form="xfer"] button, [data-a="logout"]').forEach((b) => { b.disabled = true; b.title = LOCK_MSG(); });
   }
   const setMsg = (err, ok) => { S.err = err || ''; S.ok = ok || ''; const m = root.querySelector && root.querySelector('.amsg'); if (m) { m.className = 'amsg' + (S.err ? ' err' : S.ok ? ' ok' : ''); m.textContent = S.err || S.ok; } };
-  const busy = (on) => { S.busy = on; const b = root.querySelector && root.querySelector('button[type=submit]'); if (b) b.disabled = on; };
+  const busy = (on) => { S.busy = on; const b = root.querySelector && root.querySelector('button[type=submit]'); if (b) b.disabled = on || (lock() && b.closest && !b.closest('form[data-form="rename"]')); };
 
   // ── действия ──
   async function run(fn) {
@@ -106,8 +127,9 @@ export function createAccount(C) {
     if (S.after === 'xfer') { S.after = ''; await siteStatus(); S.tab = transferOk() ? 'xfer' : 'acc'; if (S.tab === 'acc') { api.close(); return; } draw(); } else api.close();
   }
   const submit = {
-    login: () => run(async () => { needLogin(); await entered(await accountApi.login(S.f.login.trim(), S.f.pass || ''), S.f.pass || ''); }),
+    login: () => run(async () => { needFree(); needLogin(); await entered(await accountApi.login(S.f.login.trim(), S.f.pass || ''), S.f.pass || ''); }),
     reg: () => run(async () => {
+      needFree();
       const login = (S.f.login || '').trim(), pw = S.f.pass || '', nick = cleanNick(S.f.nick);
       if (!LOGIN_RE.test(login)) throw new Error(tr('Логин: 3–24 символа — латиница, цифры, подчёркивание'));
       if (pw.length < 6) throw new Error(tr('Пароль: минимум 6 символов'));
@@ -115,6 +137,7 @@ export function createAccount(C) {
       await entered(await accountApi.register(login, pw, nick), pw);
     }),
     xfer: () => run(async () => {
+      needFree();
       const g = gameAcc(), sl = (S.f.slogin || '').trim();
       if (!g) throw new Error(tr('Для переноса нужен аккаунт игры.'));
       if (!sl || !S.f.spass) throw new Error(tr('Неверный логин или пароль сайта'));
@@ -143,7 +166,7 @@ export function createAccount(C) {
     else if (a.startsWith('tab-')) { if (S.tab === 'xfer' && !gameAcc()) S.after = 'xfer'; S.tab = a.slice(4); S.err = S.ok = ''; S.rename = false; draw(); } // из «Переноса» без аккаунта игры — вход / регистрация, потом назад к переносу
     else if (a === 'rename') { S.rename = true; S.err = S.ok = ''; draw(); }
     else if (a === 'rename-no') { S.rename = false; S.err = S.ok = ''; draw(); }
-    else if (a === 'logout') { clearGameAcc(); S.f = {}; changed(); api.close(); }
+    else if (a === 'logout') { if (lock()) return; clearGameAcc(); S.f = {}; changed(); api.close(); }
   });
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on')) { api.close(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); } }); // поверх окна рейтинга: Esc закрывает только это окно
 
@@ -160,6 +183,7 @@ export function createAccount(C) {
     },
     close() { root.classList.remove('on'); S.f.pass = S.f.gpass = S.f.spass = S.f.npass = ''; S.busy = false; },
     isOpen: () => root.classList.contains('on'),
+    refresh() { if (root.classList.contains('on')) draw(); }, // в комнату зашли или вышли — перерисовать (кнопки смены аккаунта)
     render: renderRail,
   };
   return api;

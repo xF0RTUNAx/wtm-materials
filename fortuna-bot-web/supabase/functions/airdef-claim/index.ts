@@ -7,7 +7,8 @@ import { logFeedEvent } from "../_shared/game.ts";
 import { mskDayStartIso } from "../_shared/msk.ts";
 import { ONLINE_REWARDS_PER_DAY, onlineReward, verifySigned, type Reward } from "../_shared/drone.ts";
 import { mskToday } from "../_shared/msk.ts";
-import { cleanEvents, credit, mutate, view, type Extra } from "../_shared/airdef-progress.ts";
+import { cleanEvents, credit, load, mutate, view, NEED_GAME, NOT_FOUND, type Extra } from "../_shared/airdef-progress.ts";
+import { unseal } from "../_shared/airdef-seal.ts";
 // @ts-ignore — общий модуль игры (JS), копия tools/airdef-headless/sync-shared.js
 import { battlePoints, oppStrength, RATING } from "../_shared/airdef/rating.js";
 
@@ -19,6 +20,10 @@ Deno.serve(async (req) => {
     const p = await verifySigned(token, Deno.env.get("MP_SECRET") || "").catch(() => null); // испорченный итог — 403, не 500
     if (!p || p.g !== "airdef" || p.p !== player_id || typeof p.m !== "string" || !(Number(p.exp) * 1000 > Date.now())) return jsonResponse({ error: "Итог боя не подтверждён" }, 403);
     const db = supabaseAdmin();
+    // новичок с аккаунтом сайта (без прогресса игры) бой не засчитываем — только аккаунт игры; проверка до записи боя
+    const g = await load(db, player_id);
+    if (!g.exists) return jsonResponse(NOT_FOUND, 404);
+    if (g.needGame) return jsonResponse(NEED_GAME, 403);
     const mode = p.mode === "real" ? "real" : "arcade", team = p.team === "pvo" ? "pvo" : "air", win = p.w === 1;
     const kills = Math.max(0, Math.min(99, Math.floor(Number(p.k) || 0))), score = Math.max(0, Math.min(100000, Math.floor(Number(p.s) || 0)));
     const ins = await db.from("airdef_mp_results").insert({ match_id: p.m, player_id, mode, team, win, kills, score, result: p });
@@ -29,7 +34,9 @@ Deno.serve(async (req) => {
     const st = await db.rpc("airdef_mp_record", { p_player_id: player_id, p_team: team, p_win: win, p_kills: kills, p_score: score });
     if (st.error) throw st.error;
     // рейтинг (Mark 2026-10-25, sql/022, games/airdef/rating.js): части боя — от игрового сервера (подписаны), сила соперников — по их очкам
-    // сезона до этого боя. Очки пишутся у всех онлайн-боёв; в таблице сезона — только аккаунты игры (перенёс прогресс — бои сезона в счёт)
+    // сезона до этого боя. Очки пишутся у всех онлайн-боёв; в таблице сезона — только аккаунты игры (перенёс прогресс — бои сезона в счёт).
+    // rt в итоге есть только у быстрого боя (своя комната рейтинга не даёт — решение Mark): нет rt — рейтинг не считаем. id соперников-людей
+    // приходят запечатанными (ope, _shared/airdef-seal.ts): испорченное или пустое — как будто соперников-людей нет
     let rating: { points: number; season: number; parts: Record<string, number> } | null = null;
     try {
       const rt0 = p.rt && typeof p.rt === "object" ? p.rt as Record<string, unknown> : null;
@@ -40,7 +47,7 @@ Deno.serve(async (req) => {
         const ss = await db.rpc("airdef_season_at", { ts: new Date().toISOString() }); if (ss.error) throw ss.error;
         const season = Number(ss.data) || 0;
         const pts = async (id: string) => { const q = await db.rpc("airdef_rating_points", { p_player: id, p_season: season }); return q.error ? 0 : Number(q.data) || 0; };
-        const opp = (Array.isArray(p.op) ? p.op : []).filter((x: unknown) => typeof x === "string" && x !== player_id).slice(0, 12) as string[];
+        const opp = (await unseal(p.ope, Deno.env.get("MP_SECRET") || "")).filter((x) => x !== player_id).slice(0, 12);
         const s = oppStrength(await pts(player_id), await Promise.all(opp.map(pts))), points = battlePoints(rt, s);
         const up = await db.from("airdef_mp_results").update({ rating: points, season, rp: { ...rt, s } }).eq("match_id", p.m).eq("player_id", player_id);
         if (up.error) throw up.error;

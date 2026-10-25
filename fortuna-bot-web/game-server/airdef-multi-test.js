@@ -3,24 +3,29 @@
 // Двое людей в комнате 1×1 (восток и запад), два раунда со сменой сторон: атакующий шлёт план (дроны, крылатые, баллистика по
 // объекту), обороняющийся ставит ПВО. Проверяем: раунды и смена сторон, туман войны (атака не видит не засечённые комплексы,
 // ПВО — не увиденное оружие), расписание атакующему, ускорение ×3, чат только своей команде, «Помощь», итог со счётом.
+// Сервер запущен с секретом, вход — по билетам: итоги боя подписываются, и можно проверить их состав — в итоге своей комнаты нет rt (рейтинг
+// только у быстрого боя), нигде нет поля op, есть ope (id соперников запечатаны), клиентам не уходят id чужих аккаунтов.
+import { SECRET, ticket, readResult, pidOf } from './airdef-test-util.js';
+import { unseal } from '../supabase/functions/_shared/airdef-seal.ts';
 const PORT = 8798;
 const srv = new Deno.Command('deno', { args: ['run', '--allow-net', '--allow-read', '--allow-env', new URL('./server.js', import.meta.url).pathname],
-  env: { PORT: String(PORT), HOST: '127.0.0.1', AD_FAST: '1' }, stdout: 'piped', stderr: 'piped' }).spawn();
+  env: { PORT: String(PORT), HOST: '127.0.0.1', AD_FAST: '1', MP_SECRET: SECRET }, stdout: 'piped', stderr: 'piped' }).spawn();
+const ALLP = [1, 2, 3, 4, 5, 6].map(pidOf); let leaks = 0;
 const results = []; const check = (n, ok) => { results.push([n, !!ok]); console.log((ok ? 'PASS ' : 'FAIL ') + n); };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 (0, eval)(Deno.readTextFileSync(new URL('../tools/drone-headless/three.min.js', import.meta.url).pathname));
 const { buildCity } = await import('../games/airdef/city.js');
 const { freeGround } = await import('../games/airdef/mission.js');
 const city = buildCity(1);
-async function client(name) {
+async function client(name, n) {
   for (let i = 0; i < 60; i++) {
     try {
       const ws = new WebSocket(`ws://127.0.0.1:${PORT}/ad`); const c = { ws, name, msgs: [], st: {} };
       await new Promise((ok, bad) => { ws.onopen = ok; ws.onerror = bad; });
-      ws.onmessage = (e) => { const m = JSON.parse(e.data); c.msgs.push(m); if (c.on) c.on(m); };
+      ws.onmessage = (e) => { if (ALLP.some((id) => id !== pidOf(n) && e.data.includes(id))) leaks++; const m = JSON.parse(e.data); c.msgs.push(m); if (c.on) c.on(m); };
       c.send = (m) => ws.send(JSON.stringify(m));
       c.wait = async (f, ms = 20000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { const m = c.msgs.find(f); if (m) return m; await sleep(50); } return null; };
-      c.send({ t: 'hello', name, pid: 'test-' + name });
+      c.send({ t: 'hello', ticket: await ticket(pidOf(n), name) });
       const pi = setInterval(() => { if (ws.readyState === 1) c.send({ t: 'ping', i: 1 }); else clearInterval(pi); }, 2000); // как игра: пинг раз в 2 с (молчащее соединение сервер закрывает)
       return c;
     } catch (_) { await sleep(250); }
@@ -29,7 +34,11 @@ async function client(name) {
 }
 const objs = city.objects ? city.objects : null;
 try {
-  const A = await client('восток'), B = await client('запад');
+  const A = await client('восток', 1), B = await client('запад', 2);
+  // быстрый поиск «Мульти-волны» вдвоём (идёт параллельно, игроки бездействуют): итоги — с rt
+  const Q1 = await client('быстрый1', 5), Q2 = await client('быстрый2', 6);
+  await Q1.wait((m) => m.t === 'welcome'); await Q2.wait((m) => m.t === 'welcome');
+  Q1.send({ t: 'queue', mode: 'arcade', kind: 'multi' }); Q2.send({ t: 'queue', mode: 'arcade', kind: 'multi' });
   await A.wait((m) => m.t === 'welcome'); await B.wait((m) => m.t === 'welcome');
   A.send({ t: 'create', kind: 'multi', mode: 'arcade', size: 1, era: 4, team: 'east', fill: false });
   const room = await A.wait((m) => m.t === 'room'); check('комната мульти создана', room && room.kind === 'multi');
@@ -85,8 +94,12 @@ try {
   check('смена сторон между раундами', rounds.length === 2 && rounds[0] !== rounds[1]);
   const endA = await A.wait((m) => m.t === 'end', 30000);
   check(`итог боя: счёт восток ${endA ? endA.scores.east : '?'} / запад ${endA ? endA.scores.west : '?'}, победил ${endA ? endA.winner : '?'}`, endA && endA.kind === 'multi' && endA.players.length === 2);
+  { const R = endA && endA.result ? await readResult(endA.result) : null;
+    check('итог своей комнаты: подписан, без rt, без op', !!R && R.p === pidOf(1) && R.mm === 1 && !('rt' in R) && !('op' in R));
+    const got = R && R.ope ? await unseal(R.ope, SECRET) : null;
+    check('итог своей комнаты: ope открывается в соперника-человека, не читается чужим ключом', !!got && got.length === 1 && got[0] === pidOf(2) && (await unseal(R.ope, 'чужой')).length === 0 && !JSON.stringify(R).includes(pidOf(2))); }
   // ── 2×2 с ботами: бот-атакующий собирает план (сводка союзнику), бот-ПВО ставит комплексы; их волна долетает
-  const P = await client('бот-союзник'), Q = await client('бот-соперник');
+  const P = await client('бот-союзник', 3), Q = await client('бот-соперник', 4);
   await P.wait((m) => m.t === 'welcome'); await Q.wait((m) => m.t === 'welcome');
   P.send({ t: 'create', kind: 'multi', mode: 'real', size: 2, era: 3, team: 'east', fill: true });
   const r2 = await P.wait((m) => m.t === 'room' && m.kind === 'multi'); Q.send({ t: 'join', code: r2.code, team: 'west' });
@@ -100,6 +113,12 @@ try {
   atkC.send({ t: 'ready', on: true }); defC.send({ t: 'ready', on: true });
   const e2 = await atkC.wait((m) => m.t === 'roundEnd', 400000);
   check(`2×2 с ботами: раунд с волной бота прошёл (разрушено ${e2 ? e2.value : '?'})`, !!e2 && atkC.msgs.some((m) => m.t === 's' && m.W.length > 0));
+  // итоги быстрого боя «Мульти-волны» (двое в очереди): есть rt, ope — один соперник-человек
+  const qa = await Q1.wait((m) => m.t === 'end', 300000), qb = await Q2.wait((m) => m.t === 'end', 60000);
+  const Ra = qa && qa.result ? await readResult(qa.result) : null, Rb = qb && qb.result ? await readResult(qb.result) : null;
+  check('быстрый бой «Мульти-волны»: итог пришёл обоим, с rt и без op', !!Ra && !!Rb && !!Ra.rt && !!Rb.rt && typeof Ra.rt.r === 'number' && !('op' in Ra) && !('op' in Rb));
+  check('быстрый бой «Мульти-волны»: ope открывается в соперника', !!Ra && !!Rb && JSON.stringify(await unseal(Ra.ope, SECRET)) === JSON.stringify([pidOf(6)]) && JSON.stringify(await unseal(Rb.ope, SECRET)) === JSON.stringify([pidOf(5)]));
+  check(`клиентам не уходят id чужих аккаунтов (совпадений: ${leaks})`, leaks === 0);
 } catch (e) { console.log('ОШИБКА', e && e.stack || e); check('без исключений', false); }
 srv.kill();
 const out = new TextDecoder().decode((await srv.output()).stderr).split('\n').filter((l) => /ошибка|Error/i.test(l)).slice(0, 8);
