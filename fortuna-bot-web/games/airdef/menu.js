@@ -433,14 +433,14 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('startBtn').onclick = () => orientGate(() => { if (setup.game === 'online') { C.online.primary(); return; }
     if (C.realBlock && setup.game === 'air') { snd.deny && snd.deny(); C.research.open(); return; } // «Реализм»: нет купленной подвески — в «Исследования»
     setup.evd = false; C.lastGame = setup.game; C.start(setup.game); }); // на телефоне вертикально — сначала совет повернуть
-  // опыт и серебро над режимами (тап — «Исследования»); гость — подсказка войти
+  // опыт и серебро над режимами (тап — «Исследования»); гость — пусто (вход — в строке аккаунта выше)
   function renderPg() {
     const P = C.progress && C.progress.P; if (!P) { $('pgBar').innerHTML = ''; return; }
-    $('pgBar').innerHTML = C.progress.guest ? `<small>${tr('Войдите на сайте — опыт и серебро копятся в аккаунте')}</small>` : `<span class="xp">${ico('xp')}${Math.round(P.xp).toLocaleString(LOC)}</span><span>${ico('silver')}${Math.round(P.silver).toLocaleString(LOC)}</span>`; // «Исследования» — кнопкой в углу фона (место в колонке — режимам)
+    $('pgBar').innerHTML = C.progress.guest ? '' : `<span class="xp">${ico('xp')}${Math.round(P.xp).toLocaleString(LOC)}</span><span>${ico('silver')}${Math.round(P.silver).toLocaleString(LOC)}</span>`; // «Исследования» — кнопкой в углу фона (место в колонке — режимам)
   }
   $('pgBar').onclick = () => { snd.click(); C.research.open(); };
   $('resIco').innerHTML = ico('research'); $('resBtn').onclick = () => { snd.click(); C.research.open(); }; // кнопка в углу фона меню
-  function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); }
+  function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); } // аккаунт игры и рейтинг — в углу меню
   $('weatherChip').textContent = `${trIf(C.W.name)} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);
   // подложка карт: районы и крупные дома (общая для карты вылета и тактической карты обороны)

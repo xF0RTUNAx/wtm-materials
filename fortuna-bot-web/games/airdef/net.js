@@ -11,6 +11,7 @@ import { AG, SAM } from './arsenal.js?v=20261025a';
 import { dmgUnpack } from './sim/damage.js?v=20261025a';
 import { LNCH } from './launchers.js?v=20261025a';
 import { cmOf, cmKey } from './sim/cm.js?v=20261025a';
+import { activeAcc } from './account.js?v=20261025a';
 
 const PORT = 8787;
 export function adServerUrl() {
@@ -21,11 +22,11 @@ export function adServerUrl() {
 const TEST = new URLSearchParams(location.search).get('mpname');
 function account() {
   if (TEST) return { id: 'test-' + TEST, login: TEST };
-  try { const p = JSON.parse(localStorage.getItem('fortuna_web_player') || 'null'); return p && p.id && p.login ? p : null; } catch (_) { return null; }
+  return activeAcc(); // аккаунт игры (ник для рейтинга), иначе аккаунт сайта
 }
 async function fetchTicket(acc) {
   try {
-    if (typeof CONFIG === 'undefined' || !CONFIG.MP_TICKET_URL || String(acc.id).startsWith('test-')) return null;
+    if (typeof CONFIG === 'undefined' || !CONFIG.MP_TICKET_URL || String(acc.id).startsWith('test-') || String(acc.id).startsWith('rmock-')) return null;
     const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
     const res = await fetch(CONFIG.MP_TICKET_URL, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id }) });
     const d = await res.json().catch(() => ({}));
@@ -52,7 +53,7 @@ export function createNet(C) {
     N.conn = 'connecting'; emit('conn');
     try { ws = new WebSocket(adServerUrl()); } catch (_) { N.conn = 'error'; emit('conn'); return; }
     const me = ws; lastPong = performance.now();
-    ws.onopen = async () => { const ticket = await fetchTicket(acc); N.send({ t: 'hello', ticket, name: acc.login, pid: String(acc.id) }); };
+    ws.onopen = async () => { const ticket = await fetchTicket(acc); N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id) }); };
     ws.onerror = () => { if (!N.re) { N.conn = 'error'; emit('conn'); } };
     ws.onclose = () => { if (ws === me) dropped(); };
     ws.onmessage = (e) => { if (ws !== me) return; lastPong = performance.now(); let m; try { m = JSON.parse(e.data); } catch (_) { return; } handle(m); };

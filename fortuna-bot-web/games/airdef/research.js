@@ -133,7 +133,7 @@ export function createResearch(C, PG) {
     if (!S.sel || !NODE[S.sel]) return '';
     const n = NODE[S.sel], s = st(n), p = pairOf(n), sp = p && st(p), goal = P().goal[n.branch] === n.id, busy = PG.busy, guest = PG.guest;
     const why = S.msg ? `<div class="why ${S.msgErr ? 'err' : ''}">${S.msg}</div>` : s.why ? `<div class="why">${trMsg(s.why)}</div>` : '';
-    const act = guest && s.k !== 'own' && s.k !== 'start' ? `<div class="why">${tr('Войдите на сайте — опыт и серебро копятся только в аккаунте.')}</div>`
+    const act = guest && s.k !== 'own' && s.k !== 'start' ? `<div class="why">${tr('Войдите в аккаунт игры или на сайте — опыт и серебро копятся только в аккаунте.')}</div>`
       : s.k === 'buy' ? `<button class="rbtn" data-act="buy" ${s.can && !busy ? '' : 'disabled'}>${tr('Купить')} ${SV(n.cost)}</button>${why}`
       : s.k === 'res' ? `<button class="rbtn" data-act="research" ${s.can && !busy ? '' : 'disabled'}>${tr('Исследовать')} ${XP(n.cost)}</button><button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель исследования (снять)') : tr('Сделать целью — опыт за бой пойдёт сюда')}</button>${why}`
       : s.k === 'lock' ? (n.parent && !researched(P(), n.parent) ? `<button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель (снять)') : tr('Сделать целью')}</button>` : '') + why

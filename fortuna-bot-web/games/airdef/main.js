@@ -40,6 +40,8 @@ import { createProgress } from './progress-net.js?v=20261025a';
 import { createDifficulty } from './difficulty.js?v=20261025a';
 import { createResearch } from './research.js?v=20261025a';
 import { createEvent } from './event.js?v=20261025a';
+import { createAccount } from './account-ui.js?v=20261025a';
+import { createRating } from './rating-ui.js?v=20261025a';
 import { createHints } from './hints.js?v=20261025a';
 import { motorOf } from './plume.js?v=20261025a';
 import { createShell } from './shell.js?v=20261025a';
@@ -1030,6 +1032,7 @@ setInterval(() => {
   C.progress = createProgress(C); C.research = createResearch(C, C.progress); // прокачка: состояние с сайта, экран «Исследования»
   createHints(C, ctrls); // подсказки клавиш в бою (ПК): «Настройки» или F1
   C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню — #evtBtn)
+  C.account = createAccount(C); C.rating = createRating(C); // аккаунт игры (строка в углу меню, окно) и рейтинг онлайна (кнопка #ratBtn, окно, «Мои бои»)
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
   C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» — по купленному

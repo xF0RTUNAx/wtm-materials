@@ -1,16 +1,16 @@
 // Прокачка на клиенте: состояние игрока с сервера (функция airdef-progress), действия (исследовать / купить / цель), номер
 // одиночного боя и его итог (airdef-solo), строки награды на экране итогов. Тратит и начисляет только сервер — здесь
-// только запросы и показ. Без входа на сайте (нет fortuna_web_player) — как у новичка: в «Реализме» только стартовый набор,
+// только запросы и показ. Без входа (нет аккаунта игры fortuna_airdef_acc и сайта fortuna_web_player) — как у новичка: в «Реализме» только стартовый набор,
 // опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
 import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261025a';
 import { LOADOUTS } from './arsenal.js?v=20261025a';
 import { ico } from './icons.js?v=20261025a';
 import { tr, trIf, LANG } from './i18n.js?v=20261025a';
+import { activeAcc, isMock } from './account.js?v=20261025a';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 — тестовый прогресс в памяти (без сервера)
-export function account() {
-  try { const p = JSON.parse(localStorage.getItem('fortuna_web_player') || 'null'); return p && p.id && p.login ? p : null; } catch (_) { return null; }
-}
+export function account() { return activeAcc(); } // аккаунт игры, иначе аккаунт сайта (account.js)
+const LOCAL = () => !!TEST || isMock((account() || {}).id); // ?pgtest=1 и заглушка рейтинга ?rmock=1 (аккаунт rmock-…): прогресс в памяти, без сервера
 const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU');
 // сообщение «нельзя» — с сервера (функции Supabase) или из progress.js (причины покупки): на выбранном языке; фразы с подстановкой — по образцу
 const WHY = [[/^Ранг (\S+) закрыт — нужен паритет в ранге (\S+)$/, (a) => tr('Ранг {0} закрыт — нужен паритет в ранге {1}', a)], [/^Сначала исследуйте (.+)$/, (a) => tr('Сначала исследуйте {0}', a)],
@@ -61,7 +61,7 @@ export function createProgress(C) {
     // прогресс известен (с сервера или гостевой стартовый); пока не ответил — замков нет
     ready: () => !!G.P,
     async refresh() {
-      if (TEST) { if (!G.P) await local('goal', null, 'air'); return G.P; }
+      if (LOCAL()) { const lid = (account() || {}).id || ''; if (!G.P || G.guest || G.lid !== lid) { G.P = null; G.lid = lid; await local('goal', null, 'air'); } G.guest = false; return G.P; }
       const acc = account(); if (!acc) { G.P = newProgress(); G.guest = true; G.err = ''; changed(); return G.P; } // гость: стартовый набор
       try { const d = await call('airdef-progress', { player_id: acc.id, action: 'state' }); set(d.progress); }
       catch (e) { G.err = e.message; changed(); }
@@ -72,8 +72,8 @@ export function createProgress(C) {
       if (G.busy) return { ok: false, why: tr('Подождите…') };
       G.busy = true; changed();
       try {
-        if (TEST) { await local(action, id, branch); return { ok: true }; }
-        const acc = account(); if (!acc) return { ok: false, why: tr('Войдите на сайте') };
+        if (LOCAL()) { await local(action, id, branch); return { ok: true }; }
+        const acc = account(); if (!acc) return { ok: false, why: tr('Войдите в аккаунт игры или на сайте') };
         const d = await call('airdef-progress', { player_id: acc.id, action, id, branch }); set(d.progress); return { ok: true };
       } catch (e) { return { ok: false, why: e.message }; }
       finally { G.busy = false; changed(); }
@@ -90,7 +90,7 @@ export function createProgress(C) {
     // ── одиночный бой: номер перед боем, итог после ──
     async runStart(game, mode, era) {
       G.run = null;
-      const acc = account(); if (!acc || TEST || !['air', 'defense', 'multi'].includes(game)) return;
+      const acc = account(); if (!acc || LOCAL() || !['air', 'defense', 'multi'].includes(game)) return;
       const run = { game, mode, era, id: null, p: null };
       G.run = run;
       run.p = call('airdef-solo', { player_id: acc.id, action: 'start', game, mode, era }).then((d) => { run.id = d.run_id; }).catch((e) => { run.err = e.message; });
@@ -102,7 +102,7 @@ export function createProgress(C) {
       const el = () => document.getElementById('endNote');
       // свой блок — между метками (повторный показ заменяет его, остальной текст итогов не трогаем)
       const show = (h) => { const e = el(); if (e) e.innerHTML = `<!--pg--><div class="pgRes">${h}</div><!--/pg-->` + String(e.innerHTML || '').replace(/<!--pg-->[\s\S]*?<!--\/pg-->/, ''); };
-      if (!account() && !TEST) { show('<span class="dim">' + tr('Опыт и серебро копятся, когда вы вошли на сайте.') + '</span>'); return; }
+      if (!account() && !TEST) { show('<span class="dim">' + tr('Опыт и серебро копятся, когда вы вошли в аккаунт игры или на сайте.') + '</span>'); return; }
       if (!run) return;
       show('<span class="dim">' + tr('Начисляем опыт…') + '</span>');
       try {

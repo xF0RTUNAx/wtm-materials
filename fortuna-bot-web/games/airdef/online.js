@@ -3,7 +3,7 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { tr, trIf } from './i18n.js?v=20261025a';
+import { tr, trIf, LANG } from './i18n.js?v=20261025a';
 import { trFmt } from './i18n-fmt.js?v=20261025a';
 import { createNet } from './net.js?v=20261025a';
 import * as O from './sim/online.js?v=20261025a';
@@ -11,6 +11,7 @@ import * as MW from './sim/online-multi.js?v=20261025a';
 import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261025a';
 import { MODES } from './sim/strike.js?v=20261025a';
 import { ICON, ico } from './icons.js?v=20261025a';
+import { activeAcc } from './account.js?v=20261025a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
@@ -343,17 +344,25 @@ export function createOnline(C, ctrls) {
   };
   C.netHelps = () => helps; // для тактической карты ПВО
 
+  // строка рейтинга в итогах боя: аккаунт игры — «Рейтинг: +882»; аккаунт сайта — очки лежат и засчитаются после переноса прогресса
+  const ratingNote = (r, acc) => {
+    if (!r || typeof r.points !== 'number') return '';
+    const body = acc.kind === 'airdef' ? (r.parts && r.parts.idle ? tr('Рейтинг: 0 — без действий в бою') : tr('Рейтинг: <b>+{0}</b>', [r.points.toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU')]))
+      : r.points > 0 ? tr('Очки рейтинга: <b>{0}</b> — засчитаются, когда перенесёте прогресс в аккаунт игры', [r.points.toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU')]) : '';
+    return body ? `<div class="pgRes ratLine">${ico('rating')} ${body}</div>` : '';
+  };
   // награда за онлайн-бой: подписанный сервером итог → функция airdef-claim (результат в таблицу, награда по правилам «Летки»)
   C.claimOnline = async (token) => {
     try {
       if (typeof CONFIG === 'undefined' || !CONFIG.SUPABASE_URL) return;
-      const acc = JSON.parse(localStorage.getItem('fortuna_web_player') || 'null'); if (!acc || !acc.id) return;
+      const acc = activeAcc(); if (!acc || String(acc.id).startsWith('rmock-')) return; // аккаунт игры, иначе сайта; заглушка рейтинга (?rmock=1) боёв не засчитывает
       const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
       const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/airdef-claim', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, token }) });
       const d = await res.json().catch(() => ({}));
       const parts = []; if (d.details) parts.push(tr('+{0} деталей', [d.details])); if (d.keys) parts.push(`+${d.keys} ${ico('key', 'ii')}`); if (d.ticket) parts.push(d.ticket === 'ticket' ? tr('+1 билет') : '+1 ' + ico('key', 'ii'));
       const note = res.ok ? (parts.length ? tr('Награда: {0}', [parts.join(', ')]) : d.online_rewards_left === 0 ? tr('Наградные бои на сегодня закончились — результат засчитан') : tr('Результат засчитан')) : (d.error || tr('Не удалось засчитать бой'));
-      const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + el.innerHTML;
+      const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + ratingNote(d.rating, acc) + el.innerHTML;
+      if (d.rating && C.rating) C.rating.reset(); // очки боя в таблице сезона: обновить при следующем показе
       if (d.progress && C.progress) { if (el) el.insertAdjacentHTML('afterbegin', `<div class="pgRes">${C.progress.rewardHtml(d.progress)}</div>`); C.progress.refresh(); } // прокачка: опыт и серебро за бой
       N.clog('claim', { ok: res.ok, d });
     } catch (e) { N.clog('claim_fail', String(e)); }

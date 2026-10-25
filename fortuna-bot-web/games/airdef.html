@@ -52,8 +52,19 @@
   /* событие «Туманная топь» (event.js): оранжевая кнопка рядом с «Исследованиями», после конца события скрыта */
   #evtBtn { display: none; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 16px 6px 10px; background: rgba(28,17,10,.9); border: 1px solid #e2762c; color: #ff9a3c; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #evtBtn .tx { display: flex; flex-direction: column; } #evtBtn .ic { width: 30px; height: 30px; flex: none; } #evtBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #e9c9a8; margin-top: 2px; } #evtBtn:hover { background: #3a2210; }
+  /* «Рейтинг» (rating-ui.js): верхняя в столбике, разметка как у соседних; справа — место сезона */
+  #ratBtn { display: flex; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 16px 6px 10px; background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
+  #ratBtn:hover { background: #232a1c; } #ratBtn .tx { display: flex; flex-direction: column; } #ratBtn .ic { width: 30px; height: 30px; flex: none; }
+  #ratBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #b3baa5; margin-top: 2px; white-space: nowrap; }
+  #ratBtn .pl { margin-left: auto; padding-left: 8px; font: 600 15px 'JetBrains Mono', monospace; letter-spacing: 0; color: #f3c96f; white-space: nowrap; } #ratBtn .pl:empty { display: none; }
+  /* аккаунт игры в левом верхнем углу меню (account-ui.js): ник или «Войти», ниже — «Перенести прогресс», если касается */
+  .accBox { display: flex; flex-direction: column; } .accBox:empty { display: none; }
+  .accBox button { display: flex; align-items: center; gap: 7px; width: 100%; box-sizing: border-box; text-align: left; background: none; border: 0; padding: 5px 16px; color: #e9e6dc; font: 500 13px 'Golos Text', -apple-system, sans-serif; cursor: pointer; }
+  .accBox button:hover { background: #222a1f; } .accBox .ic { width: 1.15em; height: 1.15em; flex: none; color: #e8b04a; } .accBox .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+  .accBox button.in { color: #e8b04a; } .accBox button.xf { color: #f3c96f; font-size: 12.5px; padding-top: 2px; padding-bottom: 7px; }
+  .ratLine { color: #f3c96f; } .ratLine b { font-family: 'JetBrains Mono', monospace; color: #fff; }
   @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } } /* узкий экран: справа панель задания — кнопка события над «Исследованиями» */
-  @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #evtBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #evtBtn .ic { width: 24px; height: 24px; } #evtBtn small { font-size: 10.5px; } }
+  @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #ratBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #ratBtn .ic { width: 24px; height: 24px; } #ratBtn small { font-size: 10.5px; } #ratBtn .pl { font-size: 13px; } .accBox button { padding-top: 3px; padding-bottom: 3px; } .accBox button.xf { padding-bottom: 4px; } #evtBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #evtBtn .ic { width: 24px; height: 24px; } #evtBtn small { font-size: 10.5px; } }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
   @keyframes cardIn { from { transform: translateY(14px) scale(.98); opacity: .4; } to { transform: none; opacity: 1; } }
@@ -474,7 +485,7 @@
   #promoNav { right: calc(min(330px, 42vw) + 26px + var(--sa-r)); bottom: max(16px, var(--sa-b)); }
   @media (max-aspect-ratio: 1/1) { /* вертикально: режимы — полосой сверху, задание — снизу */
     .mrail { right: 0; bottom: auto; width: auto; flex-direction: row; align-items: center; padding: calc(8px + var(--sa-t) + var(--tg-t)) 8px 8px; overflow-x: auto; }
-    .mlogo { display: none; } #menu .modeSel { flex-direction: row; overflow: visible; } #menu .modeSel button { white-space: nowrap; padding: 9px 12px; }
+    .mlogo { display: none; } .accBox { flex-direction: row; flex: none; } .accBox button { width: auto; white-space: nowrap; } #menu .modeSel { flex-direction: row; overflow: visible; } #menu .modeSel button { white-space: nowrap; padding: 9px 12px; }
     #menu .mtabs { margin: 0 0 0 8px; padding: 0; flex-wrap: nowrap; } #menu .mtabs button { white-space: nowrap; }
     .mpanel { left: 10px; right: 10px; width: auto; top: auto; height: 58vh; }
     body:not(.mpOpen) .mpanel { transform: translateY(calc(100% + 16px + var(--sa-b))); } #mpClose svg { transform: rotate(90deg); }
@@ -678,9 +689,11 @@
 <div class="screen on" id="menu">
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
   <div id="mbtns"><button id="resBtn" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
-    <button id="evtBtn" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button></div>
+    <button id="evtBtn" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
+    <button id="ratBtn" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button></div>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
+    <div class="accBox" id="accBox"></div>
     <button class="pgBar" id="pgBar" title="Исследования: опыт и серебро"></button>
     <div class="modeSel" id="modeSel"></div>
     <div class="mtabs" id="mtabs"><button data-tab="ref">Арсенал</button><button data-tab="guide">Справка</button><button data-tab="set">Настройки</button><button data-tab="misc">Об игре</button></div>
