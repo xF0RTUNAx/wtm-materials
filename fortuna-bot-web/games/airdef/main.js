@@ -333,10 +333,13 @@ C.syncUnits = function () {
         tg.add(cg); g.add(tg); tur.push({ tg, cg });
         // «Тор»: антенна сопровождения — на цапфе (tdish.p), крышки ячеек — на шарнирах по верхней кромке (lids.hinge; борт — по знаку x слота)
         if (gm && gm.tdish && md.LN.tdish) { const P = md.LN.tdish.p, pv = new THREE.Group(); obj(gm.tdish, pv); pv.position.fromArray(P); gm.tdish.position.set(-P[0], -P[1], -P[2]); tg.add(pv); g.userData.tdish = pv; }
+        // NASAMS: у каждой крышки свой шарнир (lids.piv, в осях башни; ось вдоль X — откидывается вперёд-вниз)
         if (gm && gm.lids.length && md.LN.lids) {
-          const H = md.LN.lids.hinge; g.userData.lids = gm.lids.map((lid, i) => {
-            const sp = Ld.slots[i], sx = Math.sign(sp[0]), pv = new THREE.Group(); obj(lid, pv);
-            pv.position.set(sx * H[0], H[1], sp[1]); lid.position.set(-sx * H[0], -H[1], -sp[1]); pv.userData.sx = sx; tg.add(pv); return pv;
+          const LD = md.LN.lids, H = LD.hinge; g.userData.lids = gm.lids.map((lid, i) => {
+            const sp = Ld.slots[i], pv = new THREE.Group(); obj(lid, pv);
+            if (LD.piv) { const q = LD.piv[i]; pv.position.fromArray(q); lid.position.set(-q[0], -q[1], -q[2]); }
+            else { const sx = Math.sign(sp[0]); pv.position.set(sx * H[0], H[1], sp[1]); lid.position.set(-sx * H[0], -H[1], -sp[1]); pv.userData.sx = sx; }
+            tg.add(pv); return pv;
           });
         }
       }
@@ -349,7 +352,7 @@ C.syncUnits = function () {
     g.position.copy(u.pos); g.position.y -= 1.5; seat(g, u); // по рельефу: на склоне длинная машина не уходит в землю
   }
 };
-// «Тор»: крышки ячеек (только вид; правило — как в sim/strike.js u.lid, чтобы и в онлайне, где u.lid не приходит).
+// «Тор» и NASAMS: крышки ячеек и контейнеров (только вид; правило — как в sim/strike.js u.lid, чтобы и в онлайне, где u.lid не приходит).
 // Следующая ячейка открывается, пока цель сопровождается и есть ракеты; ракета ушла — её крышка открыта ещё 3 с, следующая — заново с нуля.
 const sstep = (x) => x * x * (3 - 2 * x);
 function torLids(u, g, dt) {
@@ -363,7 +366,7 @@ function torLids(u, g, dt) {
     st.hold[k] = Math.max(0, st.hold[k] - dt);
     const tgt = st.hold[k] > 0 ? 1 : k === next ? st.v : 0;
     st.a[k] = k === next && !(st.hold[k] > 0) ? tgt : clamp(st.a[k] + clamp(tgt - st.a[k], -dt / LD.tClose, dt / LD.tOpen), 0, 1);
-    L[k].rotation.z = L[k].userData.sx * LD.open * sstep(st.a[k]);
+    if (LD.piv) L[k].rotation.x = LD.open * sstep(st.a[k]); else L[k].rotation.z = L[k].userData.sx * LD.open * sstep(st.a[k]); // NASAMS — вокруг X, «Тор» — вбок
   }
 }
 // «Тор»: антенна сопровождения — по углу места цели (от положения покоя el0, в пределах lo…hi, не быстрее w рад/с); без цели — в покой

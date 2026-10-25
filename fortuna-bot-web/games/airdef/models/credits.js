@@ -15,8 +15,7 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38",
   "license": "CC-BY-4.0",
   "files": [
-   "f18",
-   "msl_aim120"
+   "f18"
   ]
  },
  {
@@ -1230,15 +1229,6 @@ export const CREDITS = [
   "files": [
    "chaparral",
    "chaparral_lo"
-  ]
- },
- {
-  "title": "Nasams 1 Surface-to-Air Missile System",
-  "author": "Muhamad Mirza Arrafi",
-  "url": "https://sketchfab.com/3d-models/nasams-1-surface-to-air-missile-system-5fb34fab137c430988fd5642a3b87db3",
-  "license": "CC-BY-4.0",
-  "files": [
-   "nasams"
   ]
  },
  {

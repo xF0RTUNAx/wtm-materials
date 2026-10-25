@@ -1,7 +1,7 @@
 // Наведение и пуск зенитного комплекса в игре (кадр рисует сама игра): цель — самолёт игрока, его держим на дальности и высоте (уходит хвостом —
 // ИК-ГСН видит), комплекс разворачивает башню и поднимает пакет, пускает ракету. Камера: 3/4 сбоку от машины (наведение), с пуска — чуть дальше.
 // Печатает ход наведения (азимут, угол места пусковой) и пуска (высота, скорость, двигатель), пишет кадры, лист кадров и ролик <папка>/<ключ>.mp4.
-//   deno run -A tools/airdef-perf/sam-launch.js [папка = .] [ключ = strela1] [эпоха = 1] [пресет = high] [секунд после пуска = 3] [карта = autumn] [дальность, м = 3000] [высота, м = 900]
+//   [SIDE=west] [CAM=front] deno run -A tools/airdef-perf/sam-launch.js [папка = .] [ключ = strela1] [эпоха = 1] [пресет = high] [секунд после пуска = 3] [карта = autumn] [дальность, м = 3000] [высота, м = 900]
 import puppeteer from 'npm:puppeteer-core@22.15.0';
 const [out = '.', key = 'strela1', era = '1', preset = 'high', secArg = '3', map = 'autumn', distArg = '3000', hArg = '900'] = Deno.args, FPS = 30, SEC = +secArg;
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new', protocolTimeout: 900000,
@@ -10,23 +10,28 @@ try {
   const page = await browser.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
   page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push(m.text().slice(0, 300)); });
   await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 1.5 });
-  await page.evaluateOnNewDocument((p, era) => { localStorage.setItem('fortuna_airdef_setup', JSON.stringify({ game: 'air', diff: 'arcade', era: +era, side: 'east' })); localStorage.setItem('fortuna_airdef_gfx', p); }, preset, era);
+  await page.evaluateOnNewDocument((p, era, side) => { localStorage.setItem('fortuna_airdef_setup', JSON.stringify({ game: 'air', diff: 'arcade', era: +era, side })); localStorage.setItem('fortuna_airdef_gfx', p); }, preset, era, Deno.env.get('SIDE') || 'east'); // SIDE=west — западные комплексы (NASAMS, Patriot)
   await page.goto(`http://127.0.0.1:8937/fortuna-bot-web/games/airdef.html?test=1&map=${map}&weather=day&go=air`, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction(() => window.__a && window.__a.state === 'play', { timeout: 180000, polling: 500 });
   for (let i = 0; i < 150; i++) { const l = await page.evaluate(() => { const e = document.getElementById('assetLoad'); return e && e.classList.contains('on'); }); if (!l && i > 6) break; await new Promise((r) => setTimeout(r, 1000)); }
-  const found = await page.evaluate((key) => {
+  const found = await page.evaluate((key, FRONT) => {
     const C = window.__a, u = C.S.units.find((q) => q.key === key && !q.dead); if (!u) return null;
     window.requestAnimationFrame = () => 0; C.ctrl.afterRender = () => {}; C.ctrl.extraCam = () => null; window.__t = performance.now();
-    window.__u = u; window.__cam = { mode: 'aim' };
+    window.__u = u; window.__cam = { mode: 'aim' }; window.__front = FRONT;
+    if (['nasams', 'patriot', 'pac3'].includes(key)) window.__lel0 = u.lel; // постоянный угол блока (launchers.js el, режим box) — бой его не меняет, исходный и оставляем
     const R = new THREE.Vector3(Math.cos(u.yaw), 0, -Math.sin(u.yaw)), F = new THREE.Vector3(-Math.sin(u.yaw), 0, -Math.cos(u.yaw)); window.__R = R; window.__F = F;
     // цель — справа сзади-сбоку (башня разворачивается почти на 120°), камера — слева спереди, чтобы видеть и разворот, и подъём пакета
     C.ctrl.camera = () => {
+      if (window.__front) { // CAM=front — перед торцами пакета (поворачивается с башней): видно крышки контейнеров и выход ракеты
+        const cam = C.camera, p = u.pos, th = u.yaw + u.lyaw, f = new THREE.Vector3(-Math.sin(th), 0, -Math.cos(th)), r = new THREE.Vector3(-f.z, 0, f.x);
+        cam.position.set(p.x + f.x * 8 + r.x * 3.5, p.y + 4.2, p.z + f.z * 8 + r.z * 3.5); cam.lookAt(p.x + f.x * 2.2, p.y + 2.4, p.z + f.z * 2.2); cam.updateMatrixWorld(); return;
+      }
       const cam = C.camera, p = u.pos, m = window.__cam, d = m.mode === 'aim' ? 8 : 15, h = m.mode === 'aim' ? 3.2 : 5;
       cam.position.set(p.x - R.x * d * 0.8 + F.x * d * 0.6, p.y + h, p.z - R.z * d * 0.8 + F.z * d * 0.6);
       cam.lookAt(p.x, p.y + (m.mode === 'aim' ? 1.8 : 5), p.z); cam.updateMatrixWorld();
     };
     return { id: u.id, key: u.key, ammo: u.ammo, yaw: +u.yaw.toFixed(2) };
-  }, key);
+  }, key, Deno.env.get('CAM') === 'front');
   if (!found) throw new Error(`в бою нет «${key}»`);
   const step = (n, snap) => page.evaluate((n, FPS, snap) => {
     for (let q = 0; q < n; q++) { window.__t += 1000 / FPS; window.__a.paused = false; window.__frame(window.__t); }
@@ -36,7 +41,7 @@ try {
   }, n, FPS, !!snap);
   const save = (name, url) => Deno.writeFileSync(`${out}/${name}.jpg`, Uint8Array.from(atob(url.split(',')[1]), (c) => c.charCodeAt(0)));
   // в покое: цель далеко, пусковая — в походном (азимут и угол места 0), подробная модель грузится, пока камера рядом
-  const calm = () => page.evaluate(() => { const C = window.__a, u = window.__u, P = C.player; if (P) P.pos.set(u.pos.x + 60000, u.pos.y + 3000, u.pos.z); u.track = null; u.cool = 99; u.seeT = 0; u.lyaw = 0; u.lel = 0; u.lnEl = null; });
+  const calm = () => page.evaluate(() => { const C = window.__a, u = window.__u, P = C.player; if (P) P.pos.set(u.pos.x + 60000, u.pos.y + 3000, u.pos.z); u.track = null; u.cool = 99; u.seeT = 0; u.lyaw = 0; u.lel = window.__lel0 ?? 0; u.lnEl = null; });
   for (let i = 0; i < 90; i++) { await calm(); await step(1); if (i % 10 === 9) await new Promise((r) => setTimeout(r, 300)); }
   await calm(); save(`${key}-0-rest`, await step(1, true));
   // цель: справа-сзади, уходит от машины (хвост к ней), сопровождение — сразу; пуск — когда пусковая навелась

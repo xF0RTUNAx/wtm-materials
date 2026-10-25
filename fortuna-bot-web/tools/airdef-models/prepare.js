@@ -301,7 +301,7 @@ const CONFIG = {
     colors: { '^ff18aef9$': [0.35, 0.35, 0.35], '^ff9(06680|55f8d)$': [0.5, 0.5, 0.5] } },
   aam_iris: { src: `${DL}/low_poly_german_iris-t_aam.glb`, scale: 2.936 / 924.74, nose: '-x', tex: () => 256, pickMesh: /./ }, // IRIS-T
   aam_mica: { src: `${DL}/low_poly_missiles_and_torpedos.glb`, scale: 1, nose: '+z', tex: () => 256, pickMesh: /VL MICA/ }, // MICA (EM и IR — один корпус)
-  msl_aim120: { src: `${DL}/boeing_fa-18ef_super_hornet.glb`, scale: 1, nose: '+x', tex: () => 256, pick: [-6, -0.5, 4.5, -1, -0.02, 4.9] }, // AIM-120 с F/A-18 — для NASAMS
+  msl_aim120: { src: new URL('./own/msl_aim120.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // AIM-120A — своя (сборщик, Свои/AIM-120, 2026-10-24) вместо вырезки из F/A-18: 3,863 м, Ø 0,188, ракета NASAMS
   w_gbu12: { src: new URL('./own/gbu12.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // GBU-12 Paveway II: своя модель (Blender, own/gbu12.glb)
   mig29: { src: `${DL}/mig_29.glb`, scale: 17.32 / 947.3, nose: '+z', tex: () => 1024 },
   // правила частей — в осях игры (без центровки): along/across — положение центра части вдоль и поперёк оси пакета
@@ -461,12 +461,16 @@ const CONFIG = {
   gepard: { src: new URL('./own/gepard.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 1024, nTex: () => 1024, pickMesh: /./, hinge: [0, 2.316, 0.0077], pack0: 0,
     // Flakpanzer Gepard: своя модель (Blender, own/gepard.glb): цвет (краска, песок, сколы, затенение) и карта нормалей (скруглённые рёбра, зерно) запечены в 1024; части — по именам объектов
     groups: (c) => (/(^|\/)cradle/.test(c.path) ? 'cradle' : /(^|\/)radar/.test(c.path) ? 'radar' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
-  nasams: { src: `${DL}/nasams_1_surface-to-air_missile_system.glb`, scale: 0.4, fwd: [0.174, 0.985], rulesIn: 'game', unit: true, perTri: true, tex: () => 512, hinge: [0, 1.16, 1.42], tube: [0.3, 0.9],
-    groups: (c) => {
-      if (axis(c, [1.42, 1.16], [-0.903, 0.43], 2.0, -1.6, 6) && (c.min[1] > 0.55 || (c.ctr[1] > 0.45 && Math.abs(c.ctr[0]) < 1.4)) && !(c.size[1] > 2 && c.size[2] < 0.3)) return 'cradle'; // и большие грани контейнеров, уходящие ниже 0,55 м (были «корпусом» — при повороте пакета застывали)
-      if (Math.abs(c.ctr[0] - 1.3) < 0.35 && Math.abs(c.ctr[2] - 0.6) < 0.4 && c.ctr[1] > 0.6) return 'turret'; // мачта с антенной стоит на поворотной части — крутится с ней (не протыкает пакет)
-      return c.min[1] > -0.1 && c.ctr[2] > -1.1 && c.ctr[2] < 1.2 && Math.abs(c.ctr[0]) < 1.0 && c.max[1] < 1.7 ? 'turret' : 'body';
-    } },
+  // NASAMS — своя пусковая (сборщик, Свои/NASAMS, 2026-10-24; Mark 2026-10-25: «внедряй насамс, его ракету и всё, что с этим связано») вместо
+  // Muhamad Mirza Arrafi («сделано ИИ»). Метры, нос −Z, земля y = 0; части — по первому слову имени (nasamsPart): body_* — рама, опоры, пьедестал,
+  // ящики; turret_* — погон и вилка; cradle_*, missile_c* (шесть контейнеров 4,5 × 0,68 × 0,64 м — сами ракеты игра ставит из msl_aim120) — блок
+  // под постоянным углом 23,9° (pack0); lid_c11…c23 — передние крышки (lid0…5: нижний ряд слева направо, потом верхний), в осях башни — игра
+  // откидывает их к пуску (launchers.js NASAMS_LIDS). Ось погона (0; 1,39; 0) и шарнир блока (0; 1,57; 0,42) — из build.py; модель центруется
+  // по раме (сдвиг по z 0,172) — tpFix уже после центровки. Мачта антенны в бою поднята (картинка 2 Mark; сложенная мешает крышке c21):
+  // труба с куполом, хомуты и кабель (mast) поворачиваются на 66,1° вокруг заднего шарнира — вертикально (raise); кронштейны остаются на блоке.
+  nasams: { src: new URL('./own/nasams.glb', import.meta.url).pathname, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, ground: 0, tpFix: [0, 1.39, 0.172], hinge: [0, 1.57, 0.42], pack0: 23.9 * Math.PI / 180, tube: [0.55, 0.75],
+    raise: { group: 'mast', to: 'turret', hinge: [-1.12, 2.6627, 0.7999], angle: -66.1 * Math.PI / 180 }, groups: (c) => nasamsPart(c, true) },
   // станция РЭБ (запад) — AN/MPQ-64 Sentinel, своя (основной чат по просьбе Mark, Свои/Sentinel): «Хамви» karmy2k (CC BY 4.0) с кузовом M1097 и коробом
   // генератора, прицеп с антенной — свои. Антенна с поворотным столом (radar_*) крутится вокруг оси стола; башни нет — в осях модели (articulate не трогает).
   ew_w: { src: `${DL}/Свои/Sentinel/sentinel.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
@@ -689,6 +693,15 @@ function torPart(c, near) {
   const k = /(^|\/)turret_(main|hw|detail)/.test(c.path) ? torLid(c.v) : -1;
   return k >= 0 ? 'lid' + k : 'turret';
 }
+// NASAMS: части по первому слову имени узла; крышки lid_c<ряд><колонка> → lid0…5 (вблизи; в дальней копии — закрытые, в башне);
+// мачта mast_boom: три кронштейна на левой стенке блока (рамка у стенки x > −1,045 м, меньше 0,2 м) — блок, остальное — mast (поднимается, raise)
+function nasamsPart(c, near) {
+  const p = c.path, L = p.match(/(^|\/)lid_c([12])([123])/);
+  if (L) return near ? 'lid' + ((+L[2] - 1) * 3 + (+L[3] - 1)) : 'turret';
+  if (/(^|\/)mast_boom/.test(p)) return c.max[0] > -1.045 && c.size[1] < 0.2 && c.size[2] < 0.2 ? 'cradle' : 'mast';
+  if (/(^|\/)(cradle|missile)_/.test(p)) return 'cradle';
+  return /(^|\/)turret_/.test(p) ? 'turret' : 'body';
+}
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
 const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
@@ -700,6 +713,7 @@ CONFIG.strela1_lo = { ...CONFIG.strela1, target: 15000, simpErr: 0.05, tex: () =
 // Sentinel (67 тыс., почти всё — «Хамви» основы): дальняя копия — 15 тыс., цвет 512, без нормалей
 CONFIG.ew_w_lo = { ...CONFIG.ew_w, target: 15000, simpErr: 0.05, tex: () => 512, nTex: null };
 // «Тор-М1» (своя, 68 тыс.): дальняя копия — 12 тыс., цвет 512 (камуфляж — в цвете), без нормалей, тарелка и крышки — в башне
+CONFIG.nasams_lo = { ...CONFIG.nasams, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, groups: (c) => nasamsPart(c, false) }; // NASAMS: дальняя — 12 тыс., крышки закрыты
 CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
 // С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)
 CONFIG.s400_lo = { ...CONFIG.s400, target: 45000, simpErr: 0.02, tex: () => 512 };
@@ -1092,6 +1106,8 @@ function raiseX(pos, nor, h, a) {
 function articulate(cfg, byMat, shift, ax) {
   const sub = (p) => [p[0] - shift[0], p[1] - shift[1], p[2] - shift[2]];
   if (cfg.radarRaise) { const h = sub(ax(...cfg.radarRaise.hinge).map((v) => v * cfg.scale)); const o = cfg.radarRaise.offset || [0, 0, 0]; for (const m of byMat.values()) if (m.group === 'radar') { raiseX(m.pos, m.nor, h, cfg.radarRaise.angle); for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] += o[0]; m.pos[i + 1] += o[1]; m.pos[i + 2] += o[2]; } } } // и сдвиг: на крышу башни
+  // raise — часть group поворачивается вокруг оси X через hinge на angle (как radarRaise) и уходит в группу to (мачта NASAMS — поднята, в башне)
+  if (cfg.raise) { const R = cfg.raise, h = sub(ax(...R.hinge).map((v) => v * cfg.scale)); let n = 0; for (const m of byMat.values()) if (m.group === R.group) { raiseX(m.pos, m.nor, h, R.angle); m.group = R.to; n += m.idx.length / 3; } console.log(`  поднято (${R.group} → ${R.to}): ${n} треугольников`); }
   const hinge = cfg.hinge ? sub(ax(...cfg.hinge).map((v) => v * cfg.scale)) : null;
   // ракеты на направляющих (группа missile) качаются вместе с пакетом
   // dish (тарелка «Тора») и lid0…7 (крышки его ячеек) — части башни: в её осях, игра двигает их сама

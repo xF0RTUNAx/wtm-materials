@@ -228,7 +228,7 @@ const META = {
     obj_jhangar: { obj: true, stations: [] }, obj_cont: { obj: true, stations: [] }, obj_milbase: { obj: true, stations: [] }, obj_oldind: { obj: true, stations: [] }, obj_factory: { obj: true, stations: [] }, // цех — и цель, и склады города вблизи
   // зенитные ракеты без своих пусковых: ракета «Вербы» — для всех ПЗРК и Avenger, AIM-120 (с F/A-18) — для NASAMS
   msl_manpads: { samMissile: ['strela2', 'redeye', 'igla', 'stinger', 'iglas', 'verba', 'avenger'], stations: [] },
-  msl_aim120: { samMissile: ['nasams'], stations: [] },
+  msl_aim120: { samMissile: ['nasams'], matte: true, stations: [] }, // AIM-120A — своя (Свои/AIM-120, 2026-10-25) вместо вырезки из F/A-18, 3,863 м, нос −Z
   // трубы ПЗРК на плече у расчёта
   mp_verba: { launcher: ['strela2', 'igla', 'iglas', 'verba'], stations: [] },
   mp_stinger: { launcher: ['redeye', 'stinger'], stations: [] },
@@ -256,7 +256,7 @@ const META = {
   rapier: { units: ['rapier'], matte: true, stations: [], camo: { scheme: 'uk', size: 1.3 } }, // Tracked Rapier — stealth86 (перекрашен, пусковая развёрнута в рабочее положение) // Oerlikon GDF 35 мм — из сцены Skyguard (lm9241221) // 2К22 «Тунгуска» — usedm
   sampt: { units: ['sampt'], stations: [] }, // SAMP/T — Chenzoss
   msl_aster: { samMissile: ['sampt'], stations: [] }, // Aster 30 — по IRIS-T (Raptor9), увеличена и перекрашена // Roland 2 на Marder — ScurvyWoof (перекрашен) // Flakpanzer Gepard (не «War Thunder»)
-  nasams: { units: ['nasams'], stations: [] }, // NASAMS 1 — пусковая
+  nasams: { units: ['nasams'], matte: true, stations: [] }, // NASAMS — своя пусковая (Свои/NASAMS, 2026-10-25): крышки контейнеров lid0…5 откидываются к пуску, мачта поднята
   ew_e: { units: ['gpsjam'], matte: true, stations: [] }, // станция РЭБ (восток) — РЛС П-18 «Терек», своя (Свои/П-18): «Урал-4320» Brout (CC BY 4.0) + будка, мачта, балка с 16 антеннами (radar — крутится)
   ew_w: { units: ['gpsjamw'], matte: true, stations: [] }, // станция РЭБ (запад) — AN/MPQ-64 Sentinel, своя (Свои/Sentinel): «Хамви» karmy2k (CC BY 4.0) + прицеп с антенной (radar — крутится); камуфляж запечён
   strela1: { units: ['strela1'], matte: true, stations: [] }, // «Стрела-1» — своя пусковая 9П31 и ракеты на БРДМ-2 zhek (CC BY 4.0), Свои/Стрела-1; окраска — текстуры основы и запечённый атлас (без камуфляжа шейдером)
@@ -314,6 +314,9 @@ const GLB_V_OWN = {
   ew_e: '20261024y', // П-18 «Терек» на «Урале-4320» Brout вместо IBIS-150 (42manako, сделана Tripo), 2026-10-24
   ew_e_lo: '20261024y',
   w_gbu12: '20261024z', // GBU-12 Paveway II — своя модель (основной чат, 2026-10-24) вместо выреза из F-16D
+  nasams: '20261025n', // NASAMS — своя пусковая (сборщик, Свои/NASAMS) вместо Muhamad Mirza Arrafi («сделано ИИ»), 2026-10-25
+  nasams_lo: '20261025n',
+  msl_aim120: '20261025n', // AIM-120A — своя ракета NASAMS вместо вырезки из F/A-18 andertan
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы
@@ -606,7 +609,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);

@@ -4,7 +4,7 @@
 сетки, переведены в метры и развёрнуты, разделены на корпус / башню / пакет, текстуры уменьшены и пересжаты в JPEG.
 
 - "Sukhoi Su-30 flanker c" (https://sketchfab.com/3d-models/sukhoi-su-30-flanker-c-92ca062c90fd45ffb6ce8144dc46004a) by andertan — CC-BY-4.0 — `su30.glb`
-- "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `f18.glb`, `msl_aim120.glb`
+- "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `f18.glb`
 - "Lockheed Martin F-16e/f "Fighting Falcon"" (https://sketchfab.com/3d-models/lockheed-martin-f-16ef-fighting-falcon-d54c72e055a647ad9173e01548e50db3) by andertan — CC-BY-4.0 — `f16.glb`
 - "FAB-100-120" (https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd) by 4ikalka — CC-BY-4.0 — `w_fab100.glb`
 - "OFAB-250-270" (https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2) by 4ikalka — CC-BY-4.0 — `w_ofab250.glb`
@@ -134,7 +134,6 @@
 - "MTLB Strela-10 (low-poly)" (https://sketchfab.com/3d-models/mtlb-strela-10-low-poly-bbc5ef74a6024739aa89d7e5bbd53f21) by ScurvyWoof — CC-BY-4.0 — `strela10.glb`
 - "AN/TWQ-1A1 Avenger" (https://sketchfab.com/3d-models/antwq-1a1-avenger-5069a439f0c1460b95ccbf6b775de240) by KillCaptureDestroy — CC-BY-4.0 — `avenger.glb`, `avenger_lo.glb`
 - "MIM-72 Chaparral 1/100 Scale" (https://www.thingiverse.com/thing:3058287) by TankLord — CC-BY-4.0 — `chaparral.glb`, `chaparral_lo.glb`
-- "Nasams 1 Surface-to-Air Missile System" (https://sketchfab.com/3d-models/nasams-1-surface-to-air-missile-system-5fb34fab137c430988fd5642a3b87db3) by Muhamad Mirza Arrafi — CC-BY-4.0 — `nasams.glb`
 - "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)" (https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111) by karmy2k — CC-BY-4.0 — `ew_w.glb`, `ew_w_lo.glb`
 - "Ural 4320 (будка, мачта и антенна П-18 — свои)" (https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8) by Brout — CC-BY-4.0 — `ew_e.glb`, `ew_e_lo.glb`
 - "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`
