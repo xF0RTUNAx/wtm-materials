@@ -8,7 +8,7 @@
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   /* безопасные зоны: вырез/скругления (--sa-*) и кнопки Telegram (--tg-t) — выставляет main.js */
-  :root { --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px); --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px);
+  :root { --m-tri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z'/%3E%3C/svg%3E"); --m-triD: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg transform='rotate(90 256 256)'%3E%3Cpath d='M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z'/%3E%3C/g%3E%3C/svg%3E"); --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px); --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px);
     --tg-t: 0px; --top: calc(max(10px, var(--sa-t)) + var(--tg-t)); }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1016; color: #eaf6ff; overscroll-behavior: none;
     font-family: 'Golos Text', -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
@@ -114,8 +114,8 @@
   details.ref { text-align: left; background: rgba(255,255,255,.05); border-radius: 12px; margin-bottom: 6px; overflow: hidden; }
   details.ref summary { cursor: pointer; padding: 9px 12px; font-weight: 800; font-size: 13.5px; list-style: none; display: flex; align-items: center; gap: 8px; }
   details.ref summary::-webkit-details-marker { display: none; }
-  details.ref summary::after { content: "▾"; margin-left: auto; opacity: .6; }
-  details.ref[open] summary::after { content: "▴"; }
+  details.ref summary::after { content: ""; width: .8em; height: .8em; margin-left: auto; opacity: .6; background: currentColor; -webkit-mask: var(--m-triD) center / contain no-repeat; mask: var(--m-triD) center / contain no-repeat; } /* значок-треугольник (game-icons), а не символ ▾ */
+  details.ref[open] summary::after { transform: rotate(180deg); }
   details.ref .body { padding: 0 12px 10px; font-size: 12.5px; line-height: 1.55; }
   details.ref h4 { margin: 8px 0 3px; font-size: 12px; letter-spacing: 0; color: #fdba74; }
   details.ref p { margin: 0 0 6px; }
@@ -184,7 +184,7 @@
   #wpn { position: absolute; left: max(12px, var(--sa-l)); top: var(--top); width: min(44vw, 270px); font-size: 12px; line-height: 1.45;
     pointer-events: auto; cursor: pointer; background: rgba(0,20,10,.35); border: 1px solid rgba(140,255,170,.25); border-radius: 8px; padding: 5px 7px; color: #d6ffe0; }
   #wpn .r { display: flex; justify-content: space-between; gap: 6px; opacity: .55; }
-  #wpn .r.sel { opacity: 1; color: #fff; font-weight: 700; } #wpn .r.sel::before { content: "▶ "; }
+  #wpn .r.sel { opacity: 1; color: #fff; font-weight: 700; } #wpn .r.sel::before, #wpn .wl .r.sel::before { content: ""; display: inline-block; width: .75em; height: .75em; margin-right: .3em; vertical-align: -.05em; background: currentColor; -webkit-mask: var(--m-tri) center / contain no-repeat; mask: var(--m-tri) center / contain no-repeat; }
   #wpn .st { margin-top: 3px; font-weight: 700; color: #fde68a; min-height: 16px; }
   #wpn .cm { color: #fdba74; margin-top: 2px; } #wpn .fly { color: #93c5fd; }
   /* одна панель: полёт, оружие, прицел, цель контейнера, ловушки, цели задания (полёт и цели — бывшие #osd и #mission) */
@@ -193,7 +193,7 @@
   #wpn .ab { color: #fb923c; }
   /* оружие — одной строкой: выбранное ярче; тап по названию — выбор */
   #wpn .wl { display: flex; flex-wrap: wrap; gap: 1px 9px; } #wpn .wl .r { display: inline; opacity: .55; padding: 1px 0; } #wpn .wl .r.sel { opacity: 1; color: #fff; font-weight: 800; }
-  #wpn .wl .r.sel::before { content: "▸"; } #wpn .tgl .tn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  #wpn .tgl .tn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
   #wpn .tgl { display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-top: 3px; color: #e2e8f0; }
   #wpn .tgl .lk { color: #fde047; } #wpn .tgl .ls { color: #fb7185; } #wpn .tgl .lk2 { color: #fde68a; opacity: .8; }
   #wpn .tvb { flex: none; font-weight: 800; font-size: 10.5px; padding: 3px 7px; border-radius: 6px; border: 1px solid rgba(160,255,190,.6); color: #bbf7d0; }
@@ -391,6 +391,7 @@
   #plPanel .plt { font-weight: 800; margin: 6px 0 2px; font-size: 12px; letter-spacing: 0; }
   #plPanel .plr { display: flex; align-items: center; gap: 5px; padding: 2px 0; } #plPanel .plr.me b { color: #fde68a; }
   #plPanel .plx { margin-left: auto; white-space: nowrap; opacity: .85; } #plPanel .pll { margin-top: 6px; font-size: 10.5px; }
+  #plPanel .pll .pld { margin: 0 3px 0 1px; } #plPanel [data-pl="x"] .ic { width: 14px; height: 14px; }
   #plPanel .pld { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block; } .pld.on { background: #4ade80; } .pld.off { border: 1.5px solid #94a3b8; } .pld.bot { background: #94a3b8; border-radius: 1px; transform: rotate(45deg) scale(.8); }
   #tHelp { display: none; } body.netOn #tHelp { display: flex; }
   #tPop { display: none; font-size: 10px; } body.heli #tPop, body.layoutEdit #tPop { display: flex; } /* подскок — только у вертолёта */
@@ -562,14 +563,20 @@
   #ledBar { border-radius: 0; background: var(--th-bg); border: 1px solid var(--th-line); }
   /* иконки управления (icons.js): вместо надписей; подпись — мелко под иконкой, где нужна (газ, пуск) */
   .ic { width: 26px; height: 26px; display: block; flex: none; }
-  /* что сбивает комплекс (icons.js capsHtml): дроны, бомбы, крылатые, баллистика — маленькие значки после названия */
-  .caps { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: -0.14em; color: #c9cebd; } .caps > span { display: inline-flex; }
-  .caps .ic { width: 1.05em; height: 1.05em; display: inline-block; } .dcard .caps, .opt .caps { color: #e8d9a8; } .ii { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
+  /* что сбивает комплекс (icons.js capsHtml) — цветные плашки (Mark 2026-10-25): дроны — зелёная, бомбы — оранжевая, крылатые — жёлтая, баллистика — красная */
+  .caps { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: -0.24em; } .caps > span { display: inline-grid; place-items: center; width: 1.35em; height: 1.35em; }
+  .caps .ic { width: 1em; height: 1em; display: block; color: #10140f; }
+  .caps .drone { background: #6fcf7f; } .caps .bomb { background: #f0a24a; } .caps .cruise { background: #f2d15c; } .caps .tbm { background: #ef6b5e; }
+  .ii { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
+  .sd { display: inline-block; width: .62em; height: .62em; margin: 0 .14em; border-radius: 50%; background: currentColor; vertical-align: .02em; } .sd.o { background: none; border: 1.6px solid currentColor; box-sizing: border-box; } .sd.d { border-radius: 1px; transform: rotate(45deg) scale(.82); } /* точки статуса вместо ● ○ ◆: цвет — как у текста */
   .tb { flex-direction: column; gap: 2px; } .tb small { font: 600 10px 'Golos Text', sans-serif; text-transform: none; letter-spacing: 0; opacity: .9; }
   .tb.big .ic { width: 30px; height: 30px; } #tFire .ic, #opFire .ic { width: 28px; height: 28px; }
   #exit .ic, #mute .ic, #pause .ic, #plBtn .ic, #lsnBtn .ic { width: 20px; height: 20px; } #askBtn .ic { width: 18px; height: 18px; margin: auto; }
   body.short .tb .ic { width: 22px; height: 22px; } body.short #opBtns .tb .ic { width: 20px; height: 20px; }
   #tPad i .ic { width: 22px; height: 22px; margin: auto; }
+  #lessonX .ic, #lsnX .ic, #msClose .ic, #promoNav .ic, #phSide .ic { width: 1.15em; height: 1.15em; margin: auto; display: block; } #lessonX .ic, #msClose .ic { width: 16px; height: 16px; } #promoNav .ic { width: 18px; height: 18px; } #phSide .ic { width: 20px; height: 20px; }
+  #netChat button .ic { width: 16px; height: 16px; display: block; margin: auto; }
+  #evBtn .ic, #wNext .ic { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin: 0 5px 0 0; } #wNext .ic { margin: 0 0 0 5px; }
   #tPop .ic { width: 36px; height: 36px; } body.short #tPop .ic { width: 30px; height: 30px; } /* вертолёт тонкий — крупнее соседних, чтобы читался так же */
   #opBtns #opRadar.on { background: var(--th-ac); border-color: var(--th-ac); color: #17190f; } /* РЛС излучает — иконка закрашена */
   #opBtns .tb.off { opacity: .45; }
@@ -604,8 +611,8 @@
   <div id="mission"></div>
   <div id="wpn"></div>
   <canvas id="rwr" width="300" height="300"></canvas>
-  <button id="rwrAck" aria-label="Понял: заглушить писк захвата">ПОНЯЛ</button>
-  <div id="podBox"><div class="x"></div><div class="info"></div><div class="info2"></div><div class="zoom">×1</div><div class="mask">МАСКИРОВКА</div></div>
+  <button id="rwrAck" aria-label="Понял: заглушить писк захвата">Понял</button>
+  <div id="podBox"><div class="x"></div><div class="info"></div><div class="info2"></div><div class="zoom">×1</div><div class="mask">Маскировка</div></div>
 </div>
 <div id="warn"></div><div id="msg"></div><div id="perf"></div>
 <div id="netModal" role="dialog"></div>
@@ -621,43 +628,43 @@
 <div id="mapNav"><div id="mnPad" title="Сдвиг карты"><div id="mnKnob"></div></div>
   <div class="mnCol"><div class="mnZoom"><button id="mnOut" aria-label="Мельче">−</button><input type="range" id="mnZ" min="0" max="100" step="0.5" aria-label="Масштаб"><button id="mnIn" aria-label="Крупнее">+</button></div>
   <button id="mnFit">⌖ вся карта</button></div></div>
-<button id="evBtn">☰ Ход волны</button><div id="evPanel"></div>
-<div id="wBar"><div id="wInfo"></div><div class="wb"><button id="wNext">Следующая ▶</button><button id="wSpeed">×4</button><button id="wMap">КАРТА</button></div></div>
+<button id="evBtn">Ход волны</button><div id="evPanel"></div>
+<div id="wBar"><div id="wInfo"></div><div class="wb"><button id="wNext">Следующая</button><button id="wSpeed">×4</button><button id="wMap">Карта</button></div></div>
 <div id="opHud">
   <div id="opDrag"></div>
   <div id="opInfo"></div>
   <canvas id="ppi" width="420" height="420"></canvas>
   <div id="opBtns">
-    <div class="tb" id="opMap">КАРТА</div>
-    <div class="tb" id="opAuto">АВТО</div>
-    <div class="tb" id="opCam">КАМ.</div>
-    <div class="tb" id="opBino">БИНОКЛЬ</div>
-    <div class="tb" id="opMethod">МЕТОД</div>
+    <div class="tb" id="opMap">Карта</div>
+    <div class="tb" id="opAuto">Авто</div>
+    <div class="tb" id="opCam">Кам.</div>
+    <div class="tb" id="opBino">Бинокль</div>
+    <div class="tb" id="opMethod">Метод</div>
     <div class="tb" id="opRadar">РЛС</div>
-    <div class="tb big" id="opFire">ПУСК</div>
+    <div class="tb big" id="opFire">Пуск</div>
   </div>
 </div>
 
 <div id="touch">
   <div id="stickZone"></div><div id="stickKnob"></div>
-  <div class="tb big" id="tFire">ПУСК</div>
-  <div class="tb" id="tLock">ЦЕЛЬ</div>
-  <div class="tb" id="tFlare">ЛОВУШКИ</div>
-  <div class="tb" id="tMap">КАРТА</div>
-  <div class="tb" id="tCam">КАМ.</div>
-  <div class="tb" id="tAuto">АВТО</div>
-  <div class="tb" id="tLook">ОБЗОР</div>
-  <div class="tb" id="tHelp">ПОМОЩЬ</div>
-  <div class="tb" id="tPop">ПОДСКОК</div>
-  <div class="tb" id="tThr">ГАЗ 80%</div>
-  <div class="tb pad" id="tPad"><i class="pu">▲</i><i class="pl">⟲</i><i class="pr">⟳</i><i class="pd">▼</i></div>
+  <div class="tb big" id="tFire">Пуск</div>
+  <div class="tb" id="tLock">Цель</div>
+  <div class="tb" id="tFlare">Ловушки</div>
+  <div class="tb" id="tMap">Карта</div>
+  <div class="tb" id="tCam">Кам.</div>
+  <div class="tb" id="tAuto">Авто</div>
+  <div class="tb" id="tLook">Обзор</div>
+  <div class="tb" id="tHelp">Помощь</div>
+  <div class="tb" id="tPop">Подскок</div>
+  <div class="tb" id="tThr">Газ 80%</div>
+  <div class="tb pad" id="tPad"><i class="pu"></i><i class="pl"></i><i class="pr"></i><i class="pd"></i></div>
 </div>
 
-<button id="exit" aria-label="Выйти">✕</button>
+<button id="exit" aria-label="Выйти"></button>
 <button id="pause" aria-label="Пауза">II</button>
 <button id="mute" aria-label="Звук"></button>
 <button id="lsnBtn" aria-label="Урок: задание и подсказки">?</button>
-<div id="lsnPanel" role="dialog" aria-label="Урок"><div class="lph"><span id="lsnSec"></span><button id="lsnX" aria-label="Свернуть">✕</button></div><b id="lsnName"></b>
+<div id="lsnPanel" role="dialog" aria-label="Урок"><div class="lph"><span id="lsnSec"></span><button id="lsnX" aria-label="Свернуть"></button></div><b id="lsnName"></b>
   <div class="lnow"><div class="cat-h">Сейчас</div><div id="lsnNow"></div></div><div id="lsnBody"></div><button id="lsnRestart" class="btn alt">Начать урок заново</button></div>
 <button id="plBtn" aria-label="Игроки" title="Игроки: кто в сети и кто готов"></button>
 <div id="plPanel"></div>
@@ -666,8 +673,8 @@
 <div id="netPlan"></div>
 <div id="photoZone"></div>
 <div id="photoUi"><div id="phCap"></div><div class="phRow" id="phSubj"></div><div class="phRow" id="phAng"></div>
-  <div id="phSide"><button data-ph="hide" title="Спрятать интерфейс (H) — тап по экрану вернёт">◎</button><button data-ph="new" title="Новый бой (N)">↻</button><button data-ph="reset" title="Ракурс по умолчанию (R)">⟲</button><button data-ph="speed" id="phSpd" title="Скорость: ×1 / ×½ / ×¼ / стоп-кадр">×1</button><button data-ph="zoom" id="phZoom" title="Угол поля зрения (Z)">ЗУМ</button><button data-ph="far" title="Дальше (−)">－</button><button data-ph="near" title="Ближе (+)">＋</button></div></div>
-<div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план">◀</button><button data-nav="1" aria-label="Следующий план">▶</button></div>
+  <div id="phSide"><button data-ph="hide" title="Спрятать интерфейс (H) — тап по экрану вернёт"></button><button data-ph="new" title="Новый бой (N)"></button><button data-ph="reset" title="Ракурс по умолчанию (R)"></button><button data-ph="speed" id="phSpd" title="Скорость: ×1 / ×½ / ×¼ / стоп-кадр">×1</button><button data-ph="zoom" id="phZoom" title="Угол поля зрения (Z)">Зум</button><button data-ph="far" title="Дальше (−)">－</button><button data-ph="near" title="Ближе (+)">＋</button></div></div>
+<div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план"></button><button data-nav="1" aria-label="Следующий план"></button></div>
 <div class="screen on" id="menu">
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
   <div id="mbtns"><button id="resBtn" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
@@ -681,10 +688,10 @@
   <section class="mpanel" aria-label="Задание">
     <div class="mphead"><button id="mpClose" aria-label="Убрать панель" title="Убрать панель"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg></button><div class="mpk" id="mpKind"></div><div class="mpt" id="mpTitle"></div><div id="lobbyStats"></div></div>
     <div class="tabp on" id="tab-play"></div>
-    <button class="btn" id="startBtn">В БОЙ</button>
+    <button class="btn" id="startBtn">В бой</button>
   </section>
   <section class="msheet" id="msheet" aria-label="Раздел">
-    <div class="mshead"><b id="msTitle"></b><button id="msClose" aria-label="Закрыть">✕</button></div>
+    <div class="mshead"><b id="msTitle"></b><button id="msClose" aria-label="Закрыть"></button></div>
     <div class="msbody"><div class="tabp" id="tab-ref"></div><div class="tabp" id="tab-guide"></div><div class="tabp" id="tab-set"></div><div class="tabp" id="tab-misc"></div></div>
   </section>
   <div hidden><div id="weatherChip"></div><div id="lobbyTip"></div></div>
@@ -692,18 +699,18 @@
 <div class="screen" id="pauseScr">
   <div class="card">
     <h1>Пауза</h1>
-    <div class="pauseBtns"><button class="btn" id="resumeBtn">ПРОДОЛЖИТЬ</button><button class="btn alt" id="pauseExit">В меню</button></div>
+    <div class="pauseBtns"><button class="btn" id="resumeBtn">Продолжить</button><button class="btn alt" id="pauseExit">В меню</button></div>
     <button class="btn alt sm" id="pauseEnd">Завершить бой</button>
     <div id="pauseHelp"></div>
   </div>
 </div>
 <div class="screen" id="lesson">
   <div class="card">
-    <button id="lessonX" aria-label="Закрыть">✕</button>
+    <button id="lessonX" aria-label="Закрыть"></button>
     <h1 id="lessonTitle"></h1>
     <div class="sub" id="lessonSub">Обучение · игра на паузе</div>
     <div id="lessonBody"></div>
-    <div class="lbtns"><button class="btn" id="lessonClose">ПОНЯТНО — ПРОДОЛЖИТЬ</button><button class="btn alt" id="lessonAgain" hidden>Ещё раз</button><button class="btn alt" id="lessonMenu" hidden>В меню</button></div>
+    <div class="lbtns"><button class="btn" id="lessonClose">Понятно, продолжить</button><button class="btn alt" id="lessonAgain" hidden>Ещё раз</button><button class="btn alt" id="lessonMenu" hidden>В меню</button></div>
   </div>
 </div>
 <div class="screen" id="end">

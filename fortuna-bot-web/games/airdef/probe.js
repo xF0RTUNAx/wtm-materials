@@ -37,7 +37,7 @@ export function startProbe(C, { renderer, scene, pipe }) {
   const api = `WebGPU ${typeof navigator !== 'undefined' && navigator.gpu ? 'есть' : 'нет'} · WebGL ${renderer.capabilities.isWebGL2 ? 2 : 1}`;
   const show = (head) => {
     const b = res.length ? res[0][1] : 0;
-    box.textContent = `ЗАМЕР ${C.probeMap || ''} · кадр ×${K} · ${head}\n${api}\n` + res.map(([n, ms]) => `${n.padEnd(26)} ${ms.toFixed(1).padStart(5)} мс${ms && b ? '  ' + (ms - b >= 0 ? '+' : '') + (ms - b).toFixed(1) : ''}`).join('\n');
+    box.textContent = `Замер ${C.probeMap || ''} · кадр ×${K} · ${head}\n${api}\n` + res.map(([n, ms]) => `${n.padEnd(26)} ${ms.toFixed(1).padStart(5)} мс${ms && b ? '  ' + (ms - b >= 0 ? '+' : '') + (ms - b).toFixed(1) : ''}`).join('\n');
   };
   const begin = () => { C.probeOn = true; C.paused = true; if (pipe && pipe.scale !== (C.perfScale || 1)) pipe.setScale(C.perfScale || 1); multi(true); cal = 1; t0 = performance.now(); last = 0; iv.length = 0; show('подбор… не трогайте телефон'); };
   const next = (now) => {
@@ -50,7 +50,7 @@ export function startProbe(C, { renderer, scene, pipe }) {
   const tick = (now) => {
     if (i >= steps.length) return;
     requestAnimationFrame(tick);
-    if (!C.probeOn) { if (C.state === 'play' && (C.probeT = (C.probeT || 0) + 1) > 12 * 60) begin(); else if (C.state === 'play') box.textContent = 'ЗАМЕР начнётся через ' + Math.ceil(12 - C.probeT / 60) + ' с'; return; }
+    if (!C.probeOn) { if (C.state === 'play' && (C.probeT = (C.probeT || 0) + 1) > 12 * 60) begin(); else if (C.state === 'play') box.textContent = 'Замер начнётся через ' + Math.ceil(12 - C.probeT / 60) + ' с'; return; }
     if (now - t0 > WARM && last) iv.push(now - last); last = now;
     if (cal && now - t0 > WARM + 1000) { // подбор K: кадр быстрее 26 мс — повторов больше (до 24)
       const a = iv.filter((x) => x < 750), avg = a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0;

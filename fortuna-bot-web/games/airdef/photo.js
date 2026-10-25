@@ -17,6 +17,7 @@ import { RAID_HELI } from './sim/raid.js?v=20261025a';
 import { fwdOf } from '../drone/sim/core.js?v=20261025a';
 import { weaponHasModel } from './models.js?v=20261025a';
 import { tr, trIf } from './i18n.js?v=20261025a';
+import { ico } from './icons.js?v=20261025a';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]
@@ -48,7 +49,7 @@ const MOUNTS = {
     { n: tr('у носа → назад'), off: [-2.6, 1.3, -0.42], at: [0, 0, 0.6] },
   ],
 };
-const SPD = [1, 0.5, 0.25, 0], SPD_N = ['×1', '×½', '×¼', '❚❚'];
+const SPD = [1, 0.5, 0.25, 0], SPD_N = ['×1', '×½', '×¼', ico('pause')]; // стоп-кадр — значок паузы
 const FOVS = [0, 40, 28, 18, 11]; // 0 — по ракурсу
 export const PH_ALT = { low: 250, mid: 1500, high: 4000 };
 const SCOUT = { east: 'scout_e', west: 'scout' };
@@ -352,9 +353,10 @@ export function createPhoto(C, ctrls) {
   function renderUi() {
     $('phSubj').innerHTML = st.subs.map((s, i) => `<button data-s="${i}" class="${i === st.subj ? 'on' : ''}">${s.n}</button>`).join('');
     $('phAng').innerHTML = ANG.map((a, i) => `<button data-a="${i}" class="${i === st.ang ? 'on' : ''}">${a.n}</button>`).join('');
+    for (const [k, n] of [['hide', 'hideUi'], ['new', 'rotCw'], ['reset', 'rotCcw']]) { const sd = $('phSide'), b = sd && sd.querySelector && sd.querySelector(`[data-ph="${k}"]`); if (b && !b.firstChild) b.innerHTML = ico(n); } // кнопки справа — значки
     farName(); sideTxt();
   }
-  function sideTxt() { $('phSpd').textContent = SPD_N[st.spd]; $('phZoom').textContent = FOVS[st.fi] ? `${FOVS[st.fi]}°` : tr('ЗУМ'); }
+  function sideTxt() { $('phSpd').innerHTML = SPD_N[st.spd]; $('phZoom').textContent = FOVS[st.fi] ? `${FOVS[st.fi]}°` : tr('Зум'); }
   const resetAdj = () => { st.adj.az = 0; st.adj.el = 0; st.adj.k = 1; st.fb.p = null; };
   function setClean(on) { st.clean = on; document.body.classList.toggle('clean', on); }
   const pick = (dir, list) => (dir + list.length) % list.length;

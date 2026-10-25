@@ -10,7 +10,7 @@ import * as O from './sim/online.js?v=20261025a';
 import * as MW from './sim/online-multi.js?v=20261025a';
 import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261025a';
 import { MODES } from './sim/strike.js?v=20261025a';
-import { ICON } from './icons.js?v=20261025a';
+import { ICON, ico } from './icons.js?v=20261025a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];
@@ -43,8 +43,8 @@ export function createOnline(C, ctrls) {
       <div class="cat-h">${tr('Быстрый бой')}</div>
       <div class="prow"><span>${tr('Режим')}</span>${seg('mode', ui.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>
       ${mw ? '' : `<div class="prow"><span>${tr('Роль')}</span>${seg('role', ui.role, ROLES)}</div>`}
-      <p class="hint">${mw ? tr('Команда против команды, два раунда: в одном ваша команда собирает волну (дроны, крылатые, баллистика — наряд на цели), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка — {0} с, на ней — чат команды.{1}', [MW.PREP_T, N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.marcade || 0, srch.mreal || 0]) : ''])
-        : tr('Авиация против ПВО города, три волны. Ждём минимум 2 на 2, потом ещё 15 с — вдруг наберётся больше. Людей долго нет — добавим ботов.{0}', [N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.arcade, srch.real]) : ''])}</p>
+      <p class="hint">${mw ? tr('Команда против команды, два раунда. В одном ваша команда собирает волну (дроны, крылатые, баллистика), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка — {0} с, в это время работает чат команды.{1}', [MW.PREP_T, N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.marcade || 0, srch.mreal || 0]) : ''])
+        : tr('Авиация против ПВО города, три волны. Ждём минимум 2 на 2, затем ещё 15 с, вдруг подтянутся другие. Если людей долго нет, добавим ботов.{0}', [N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.arcade, srch.real]) : ''])}</p>
       <div class="cat-h">${tr('Своя комната')}</div>
       <div class="prow"><span>${tr('Формат')}</span>${seg('size', ui.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>
       <div class="prow"><span>${tr('Эпоха')}</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id] && (!mw || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
@@ -52,17 +52,17 @@ export function createOnline(C, ctrls) {
       <div class="prow"><span>${tr('Пустые места')}</span>${seg('fill', ui.fill ? 1 : 0, [[1, tr('Боты')], [0, tr('Без ботов')]])}</div>
       <button class="btn alt" data-oa="create">${tr('Создать комнату')}</button>
       <div class="cat-h">${tr('Войти по коду')}</div>
-      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('КОД')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${tr('Войти')}</button></div>`;
+      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${tr('Войти')}</button></div>`;
   }
   function lobby(el, r) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
     const TN = r.kind === 'multi' ? MW.TEAM_NAME : O.ROLE_NAMES, TT = r.kind === 'multi' ? MW.TEAMS : ['air', 'pvo'];
     const col = (t) => `<div class="adteam"><div class="cat-h">${TN[t]} · ${r.players.filter((p) => p.team === t).length}/${r.size}</div>` +
-      r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}"><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : ''}${p.ready ? ' <span class="okc">✓</span>' : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
+      r.players.filter((p) => p.team === t).map((p) => `<div class="adp ${p.id === (me && me.id) ? 'me' : ''}"><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : ''}${p.ready ? ` <span class="okc">${ico('ok', 'ii')}</span>` : ''}${host && p.bot ? ` <button class="mini" data-kick="${p.id}">×</button>` : ''}</div>`).join('') +
       (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">${tr('Перейти сюда')}</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">${tr('+ бот')}</button>` : '') + '</div>';
     el.innerHTML = `<div class="cat-h">${tr('Комната <b class="adcode">{0}</b>', [r.code])} <button class="mini" data-oa="invite">${tr('Пригласить')}</button> <button class="mini" data-oa="leave">${tr('Выйти')}</button></div>
       <p class="hint">${tr('{0}{1}{2} · {3}×{4} · эпоха {5}{6}{7}', [r.kind === 'multi' ? tr('Мульти-волна · два раунда со сменой сторон') : '', r.kind === 'multi' ? ' · ' : '', MODES[r.mode].name, r.size, r.size, ERAS[r.era - 1].short || r.era, r.kind === 'multi' ? '' : tr(' · авиация — {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')]), r.fill ? tr(' · пустые места — боты') : ''])}</p>
-      ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен — вы снова в комнате.</b> Хост может сменить игру, режим, формат, эпоху и сторону; затем все — «Готов».')}</p>` : ''}
+      ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен, вы снова в комнате.</b> Хост может сменить игру, режим, формат, эпоху и сторону; затем все нажимают «Готов».')}</p>` : ''}
       ${host ? `<div class="prow"><span>${tr('Игра')}</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div><div class="prow"><span>${tr('Формат')}</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div><div class="prow"><span>${tr('Эпоха')}</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id] && (r.kind !== 'multi' || e.id >= 2)).map((e) => [e.id, e.short || e.name]))}</div>
         ${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>${tr('Режим')}</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
       <div class="adteams">${TT.map(col).join('')}</div>
@@ -70,9 +70,9 @@ export function createOnline(C, ctrls) {
   }
   // кнопка внизу карточки меню
   function primaryText() {
-    if (N.conn !== 'on') return tr('ОНЛАЙН');
-    if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); return me && me.ready ? tr('ГОТОВ ✓ — СНЯТЬ') : tr('ГОТОВ'); }
-    return N.queued ? tr('ОТМЕНИТЬ ПОИСК') : tr('НАЙТИ БОЙ');
+    if (N.conn !== 'on') return tr('Онлайн');
+    if (N.room && N.room.state === 'lobby') { const me = N.myPlayer(); return me && me.ready ? tr('Готов (снять)') : tr('Готов'); }
+    return N.queued ? tr('Отменить поиск') : tr('Найти бой');
   }
   function primary() {
     if (N.conn !== 'on') { N.connect(); return; }
@@ -147,11 +147,11 @@ export function createOnline(C, ctrls) {
     const nAir = allies.length + 1, hunters = others.filter((x) => x && loadoutRole(x) === 'sead').length;
     planEl.innerHTML = `<h3>${tr('Волна {0}/{1} · выбор связки · {2} с', [r.wave, O.WAVES, r.left ?? ''])}</h3><div>${tr('Очки: <b style="color:#fde68a">{0}</b> · вылетов на волну: {1}{2}', [me.budget, me.lives ?? O.RESPAWNS[r.wave - 1] + 1, r.lead === 'pvo' ? tr(' (+1: команда отстаёт)') : ''])}</div>
       <div class="dim">${tr('Охотников за ПВО в команде: {0}/{1} · после {2} с каждая уничтоженная РЛС замедляет перезарядку ПВО{3}', [hunters + (me.choice !== null && loadoutRole(LOADOUTS[B.era][me.choice]) === 'sead' ? 1 : 0), O.huntCap(nAir), O.SUPPRESS_T, r.lead === 'air' ? tr(' · вы ведёте — связки на 10 % дороже') : ''])}</div>
-      ${allies.length ? `<div class="cat-h">${tr('Союзники')}</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${pnm(p)}</b> — ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : tr('выбирает…')}${p.ready ? ' <span class="okc">✓</span>' : ''}</div>`; }).join('')}` : ''}
+      ${allies.length ? `<div class="cat-h">${tr('Союзники')}</div>${allies.map((p) => { const L = p.choice !== null ? LOADOUTS[B.era][p.choice] : null; return `<div class="adp"><b>${pnm(p)}</b> — ${L ? `${PLANES[L.plane]} <span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span>` : tr('выбирает…')}${p.ready ? ` <span class="okc">${ico('ok', 'ii')}</span>` : ''}</div>`; }).join('')}` : ''}
       <div class="cat-h">${tr('Связки')}</div>` + list.map(([L, i]) => {
       const cost = O.loadoutCostFor(L, r.lead), back = me.choice !== null ? O.loadoutCostFor(LOADOUTS[B.era][me.choice], r.lead) : 0, deny = O.roleDeny(L, others, nAir), miss = r.mode === 'real' && C.progress && C.progress.ready() ? C.progress.loadoutMissing(L) : [], no = cost > me.budget + back || !!deny || miss.length > 0; // «Реализм»: только купленное
       return `<button class="opt ${me.choice === i ? 'on' : ''} ${no ? 'no' : ''}" data-bi="${i}"><div class="nm"><b>${PLANES[L.plane]} · ${L.name}</b><span class="role ${loadoutRole(L)}">${O.approachOf(L)}</span><span>${L.items.map(([k, n]) => `${AG[k].short} ×${n}`).join(' · ')}${L.pod ? tr(' · контейнер') : ''}${deny ? ` ${tr('· <b class="warnc">лимит охотников</b>')}` : ''}${miss.length ? ` · <b class="warnc">${C.progress.needText(miss)}</b>` : ''}</span></div><span class="pr">${cost}</span></button>`;
-    }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? tr('Готов ✓ (снять)') : tr('ГОТОВ')}</button>`;
+    }).join('') + `<button class="btn ${me.ready ? 'alt' : ''}" data-oa="pready">${me.ready ? tr('Готов (снять)') : tr('Готов')}</button>`;
   }
   planEl.onclick = (e) => {
     const b = e.target.closest('[data-bi]'), a = e.target.closest('[data-oa]');
@@ -219,10 +219,10 @@ export function createOnline(C, ctrls) {
     const r = N.room; if (!r || !document.body.classList.contains('plOpen')) return;
     const multi = r.kind === 'multi', TN = multi ? MW.TEAM_NAME : O.ROLE_NAMES, TT = multi ? MW.TEAMS : ['air', 'pvo'], me = N.me && N.me.id, myT = N.myTeam();
     const ph = { plan: multi ? tr('подготовка') : tr('расстановка'), play: tr('бой'), debrief: tr('итоги'), end: tr('итоги боя') }[r.state] || '', ready = r.state === 'plan';
-    plEl.innerHTML = `<div class="plh">${tr('<b>Комната {0}</b> · {1} · {2}{3}', [r.code, MODES[r.mode].name, ph, r.left != null ? tr(' · {0} с', [r.left]) : ''])}<button data-pl="x" aria-label="${tr('Закрыть')}">✕</button></div>` +
+    plEl.innerHTML = `<div class="plh">${tr('<b>Комната {0}</b> · {1} · {2}{3}', [r.code, MODES[r.mode].name, ph, r.left != null ? tr(' · {0} с', [r.left]) : ''])}<button data-pl="x" aria-label="${tr('Закрыть')}">${ico('close')}</button></div>` +
       TT.map((t) => `<div class="plt" style="color:${t === myT ? '#93c5fd' : '#fca5a5'}">${TN[t]}${multi && r.atk ? (r.atk === t ? tr(' · волна') : tr(' · ПВО')) : ''}</div>` + r.players.filter((p) => p.team === t).map((p) =>
-        `<div class="plr${p.id === me ? ' me' : ''}"><i class="pld ${p.bot ? 'bot' : p.away ? 'off' : 'on'}"></i><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : p.away ? ` <span class="dim">${tr('нет связи')}</span>` : ''}<span class="plx">${tr('{0}{1} · {2} оч.{3}', [p.lives != null ? tr('вылетов {0} · ', [p.lives]) : '', p.kills || 0, p.score || 0, ready ? (p.ready ? ' <b class="okc">✓</b>' : ' <span class="dim">…</span>') : ''])}</span></div>`).join('')).join('') +
-      `<div class="dim pll">${tr('● в сети · ○ нет связи · ◆ бот{0} · число — сбито / уничтожено', [ready ? tr(' · ✓ готов') : ''])}</div>`;
+        `<div class="plr${p.id === me ? ' me' : ''}"><i class="pld ${p.bot ? 'bot' : p.away ? 'off' : 'on'}"></i><b>${pnm(p)}</b>${p.bot ? ` <span class="dim">${tr('бот')}</span>` : p.away ? ` <span class="dim">${tr('нет связи')}</span>` : ''}<span class="plx">${tr('{0}{1} · {2} оч.{3}', [p.lives != null ? tr('вылетов {0} · ', [p.lives]) : '', p.kills || 0, p.score || 0, ready ? (p.ready ? ` <b class="okc">${ico('ok', 'ii')}</b>` : ' <span class="dim">…</span>') : ''])}</span></div>`).join('')).join('') +
+      `<div class="dim pll">${tr('{0} в сети · {1} нет связи · {2} бот{3} · число — сбито / уничтожено', ['<i class="pld on"></i>', '<i class="pld off"></i>', '<i class="pld bot"></i>', ready ? ' · ' + ico('ok', 'ii') + tr('готов') : ''])}</div>`;
   }
   plBtn.onclick = (e) => { e.stopPropagation(); document.body.classList.toggle('plOpen'); snd.click(); renderPl(); };
   plEl.addEventListener('pointerdown', (e) => e.stopPropagation());
@@ -239,14 +239,14 @@ export function createOnline(C, ctrls) {
   N.on('end', (m) => {
     if (m.kind === 'multi') {
       const me = N.myPlayer(), v0 = m.v0 || 1, list = m.players.slice().sort((a, b) => b.score - a.score), win = m.winner ? me && m.winner === me.team : null;
-      C.showEnd({ again: tr('В КОМНАТУ'), title: win ? tr('Победа') : win === false ? tr('Поражение') : tr('Ничья'), win, reason: tr('Волна Востока разрушила {0}%, Запада — {1}% ценности объектов', [Math.round(100 * m.scores.east / v0), Math.round(100 * m.scores.west / v0)]),
+      C.showEnd({ again: tr('В комнату'), title: win ? tr('Победа') : win === false ? tr('Поражение') : tr('Ничья'), win, reason: tr('Волна Востока разрушила {0}%, Запада — {1}% ценности объектов', [Math.round(100 * m.scores.east / v0), Math.round(100 * m.scores.west / v0)]),
         stats: [[`${Math.round(100 * m.scores.east / v0)}%`, tr('Восток')], [`${Math.round(100 * m.scores.west / v0)}%`, tr('Запад')], [me ? Math.round(me.score || 0) : 0, tr('очков')]],
         note: list.map((p) => tr('{0}{1} — {2}: {3} перехв./уничт., {4} очков', [pnm(p), p.bot ? tr(' (бот)') : '', MW.TEAM_NAME[p.team], p.kills, p.score])).join('<br>') });
       if (m.result && C.claimOnline) C.claimOnline(m.result);
       return;
     }
     const me = N.myPlayer(), win = me && m.winner === me.team, list = m.players.slice().sort((a, b) => b.score - a.score);
-    C.showEnd({ again: tr('В КОМНАТУ'), title: win ? tr('Победа') : tr('Поражение'), win, reason: m.winner === 'air' ? tr('Авиация уничтожила {0}% ценности целей', [Math.round(m.valueK * 100)]) : tr('ПВО отстояла город: уничтожено {0}% ценности целей', [Math.round(m.valueK * 100)]),
+    C.showEnd({ again: tr('В комнату'), title: win ? tr('Победа') : tr('Поражение'), win, reason: m.winner === 'air' ? tr('Авиация уничтожила {0}% ценности целей', [Math.round(m.valueK * 100)]) : tr('ПВО отстояла город: уничтожено {0}% ценности целей', [Math.round(m.valueK * 100)]),
       stats: [[me ? me.kills || 0 : 0, me && me.team === 'air' ? tr('комплексов уничтожено') : tr('самолётов сбито')], [me ? Math.round(me.score || 0) : 0, tr('очков')], [m.winner === 'air' ? tr('Авиация') : tr('ПВО'), tr('победила')]],
       note: list.map((p) => tr('{0}{1} — {2}: {3}/{4}, {5} очков', [pnm(p), p.bot ? tr(' (бот)') : '', O.ROLE_NAMES[p.team], p.kills, p.deaths, p.score])).join('<br>') });
     if (m.result && C.claimOnline) C.claimOnline(m.result);
@@ -351,7 +351,7 @@ export function createOnline(C, ctrls) {
       const key = String(CONFIG.SUPABASE_ANON_KEY).replace(/[^\x21-\x7E]/g, '');
       const res = await fetch(CONFIG.SUPABASE_URL + '/functions/v1/airdef-claim', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + key, apikey: key }, body: JSON.stringify({ player_id: acc.id, token }) });
       const d = await res.json().catch(() => ({}));
-      const parts = []; if (d.details) parts.push(tr('+{0} деталей', [d.details])); if (d.keys) parts.push(`+${d.keys} 🔑`); if (d.ticket) parts.push(d.ticket === 'ticket' ? tr('+1 билет') : '+1 🔑');
+      const parts = []; if (d.details) parts.push(tr('+{0} деталей', [d.details])); if (d.keys) parts.push(`+${d.keys} ${ico('key', 'ii')}`); if (d.ticket) parts.push(d.ticket === 'ticket' ? tr('+1 билет') : '+1 ' + ico('key', 'ii'));
       const note = res.ok ? (parts.length ? tr('Награда: {0}', [parts.join(', ')]) : d.online_rewards_left === 0 ? tr('Наградные бои на сегодня закончились — результат засчитан') : tr('Результат засчитан')) : (d.error || tr('Не удалось засчитать бой'));
       const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + el.innerHTML;
       if (d.progress && C.progress) { if (el) el.insertAdjacentHTML('afterbegin', `<div class="pgRes">${C.progress.rewardHtml(d.progress)}</div>`); C.progress.refresh(); } // прокачка: опыт и серебро за бой

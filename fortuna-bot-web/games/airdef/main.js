@@ -244,7 +244,7 @@ const C = {
   saveSens: () => ls.set('fortuna_airdef_sens', JSON.stringify(C.sens)),
   // «АВТО» — помощь в бою (вылет и оператор ЗРК)
   auto: ls.get('fortuna_airdef_auto') === '1',
-  setAuto(on) { C.auto = !!on; ls.set('fortuna_airdef_auto', on ? '1' : '0'); for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); C.say(on ? tr('АВТО включено: захват, сброс и пуск — сами (не идеально)') : tr('АВТО выключено'), 2); snd.click(); },
+  setAuto(on) { C.auto = !!on; ls.set('fortuna_airdef_auto', on ? '1' : '0'); for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); C.say(on ? tr('Авто включено: захват, сброс и пуск — сами (не идеально)') : tr('Авто выключено'), 2); snd.click(); },
   saveSetup: () => ls.set('fortuna_airdef_setup', JSON.stringify(setup)),
 };
 
@@ -847,11 +847,14 @@ $('againBtn').onclick = () => orientGate(() => { C.ended = false; C.start(C.last
 $('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
 $('exit').onclick = () => C.toMenu();
 // кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
-const ICO = { tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('АВТО — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
-  tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('АВТО — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
-  pause: ['pause', tr('Пауза')], plBtn: ['players', tr('Игроки')], lsnBtn: ['lesson', tr('Урок: задание и подсказки')], askBtn: ['lesson', tr('Объяснение')], wMap: ['map', tr('Карта')] };
+const ICO = { tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
+  tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('Авто — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
+  pause: ['pause', tr('Пауза')], plBtn: ['players', tr('Игроки')], lsnBtn: ['lesson', tr('Урок: задание и подсказки')], askBtn: ['lesson', tr('Объяснение')], wMap: ['map', tr('Карта')],
+  exit: ['close', tr('Выйти')], lsnX: ['close', tr('Свернуть')], msClose: ['close', tr('Закрыть')], lessonX: ['close', tr('Закрыть')] };
 for (const [id, [n, t]] of Object.entries(ICO)) { const e = $(id); if (!e) continue; e.innerHTML = ico(n); e.title = t; if (e.setAttribute) e.setAttribute('aria-label', t); e.classList.add('icb'); }
-{ const pd = $('tPad'); if (pd && pd.querySelector) { const l = pd.querySelector('.pl'), r = pd.querySelector('.pr'); if (l) l.innerHTML = ico('rollL'); if (r) r.innerHTML = ico('rollR'); } } // крен — стрелки вращения
+{ const pd = $('tPad'); if (pd && pd.querySelector) { for (const [c, n] of [['.pu', 'triU'], ['.pl', 'rollL'], ['.pr', 'rollR'], ['.pd', 'triD']]) { const e = pd.querySelector(c); if (e) e.innerHTML = ico(n); } } } // крестовина: треугольники вверх / вниз, крен — стрелки вращения
+for (const [id, n, after] of [['wNext', 'tri', true], ['evBtn', 'list', false]]) { const e = $(id); if (e) e.innerHTML = after ? e.innerHTML + ico(n, 'ii') : ico(n, 'ii') + e.innerHTML; } // подпись и значок рядом
+{ const pn = $('promoNav'); if (pn && pn.querySelector) for (const [s, n] of [['[data-nav="-1"]', 'triL'], ['[data-nav="1"]', 'tri']]) { const e = pn.querySelector(s); if (e) e.innerHTML = ico(n); } }
 const muteIco = C.muteIco = () => { $('mute').innerHTML = ico(snd.muted ? 'soundOff' : 'soundOn'); $('mute').title = snd.muted ? tr('Звук выключен') : tr('Звук'); };
 $('mute').onclick = () => { snd.unlock(); snd.setMuted(!snd.muted); muteIco();
 for (const id of ['tAuto', 'opAuto']) $(id).classList.toggle('on', C.auto); };

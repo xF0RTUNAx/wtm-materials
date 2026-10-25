@@ -76,19 +76,32 @@ export function samCaps(S, mode = '') {
   if (S.abm) out.push({ k: 'tbm', ic: 'capTbm', t: tr('Сбивает баллистические ракеты: перехват {0} %', [Math.round(Math.min(0.9, S.abm * 1.5) * 100)]) });
   return out;
 }
-export const capsHtml = (S, mode = '', cls = '') => { const c = samCaps(S, mode); return c.length ? `<span class="caps${cls ? ' ' + cls : ''}">${c.map((q) => `<span title="${q.t}">${ico(q.ic)}</span>`).join('')}</span>` : ''; };
-// упоминание кнопки в тексте (обучение, руководство, пауза, подсказки) — со значком: «ЛОВУШКИ» → [значок] «ЛОВУШКИ»
-const TOK = { '«ЛОВУШКИ»': 'flares', '«КАРТА»': 'map', '«ЦЕЛЬ»': 'target', '«АВТО»': 'auto', '«ГАЗ»': 'throttle', '«ОБЗОР»': 'camera', '«КАМ.»': 'camera', '«ПУСК»': 'fire', '«ОГОНЬ»': 'fire',
-  '«БИНОКЛЬ»': 'bino', '«РЛС»': 'radar', '«?»': 'lesson', '«Игроки»': 'players', '«ПОМОЩЬ»': 'help', '⛽': 'fuel', '👥': 'players', '«Время ×4»': 'speed',
-}; // эмодзи — заменяются значком целиком
-// те же кнопки в английском тексте — в «…» и в "…" (переводчики пишут по-разному): "COUNTERMEASURES", "MAP", "TARGET", "AUTO", "THROTTLE", "LOOK", "CAM.", "FIRE" / "LAUNCH", "BINOCULARS", "RADAR", "HELP", "Players"
-for (const [icon, names] of Object.entries({ flares: ['FLARES', 'COUNTERMEASURES', 'CMs'], map: ['MAP'], target: ['TARGET'], auto: ['AUTO'], throttle: ['THROTTLE'], camera: ['LOOK', 'CAM.', 'CAMERA'], fire: ['FIRE', 'LAUNCH'], bino: ['BINOS', 'BINOCULARS'], radar: ['RADAR'], help: ['HELP'], players: ['Players', 'PLAYERS'], lesson: ['?'] }))
+export const capsHtml = (S, mode = '', cls = '') => { const c = samCaps(S, mode); return c.length ? `<span class="caps${cls ? ' ' + cls : ''}">${c.map((q) => `<span class="${q.k}" title="${q.t}">${ico(q.ic)}</span>`).join('')}</span>` : ''; };
+// упоминание кнопки в тексте (обучение, руководство, пауза, подсказки) — со значком: «Ловушки» → [значок] «Ловушки»
+const TOK = { '«Ловушки»': 'flares', '«Карта»': 'map', '«Цель»': 'target', '«Авто»': 'auto', '«Газ»': 'throttle', '«Обзор»': 'camera', '«Кам.»': 'camera', '«Пуск»': 'fire', '«Огонь»': 'fire',
+  '«Бинокль»': 'bino', '«РЛС»': 'radar', '«?»': 'lesson', '«Игроки»': 'players', '«Помощь»': 'help', '⛽': 'fuel', '👥': 'players', '«Время ×4»': 'speed',
+  '«◎»': '', '"◎"': '', '“◎”': '', '▲▼': 'triU+triD', '◀▶': 'triL+tri', '▲': 'triU', '▼': 'triD', '◀': 'triL', '▶': 'tri', '✓': 'ok', '✕': 'close', '☰': 'list', '⚙': 'cog', '⚠': 'hazard', '➤': 'send', '🔑': 'key', '★': 'star',
+  '↻': 'rotCw', '⟳': 'rotCw', '⟲': 'rotCcw', '◎': 'hideUi', // «◎» в кавычках — строка цели контейнера в панели, не значок; ◎ без кавычек — «спрятать интерфейс»
+}; // эмодзи и символы — заменяются значком целиком
+// точки статуса: рисуются CSS (.sd в airdef.html), цвет — как у текста
+const DOT = { '●': 'sd', '○': 'sd o', '◆': 'sd d' };
+// те же кнопки в английском тексте — в «…» и в "…" (переводчики пишут по-разному): "Countermeasures", "Map", "Target", "Auto", "Throttle", "View", "Cam.", "Fire" / "Launch", "Binoculars", "Radar", "Help", "Players"
+for (const [icon, names] of Object.entries({ flares: ['Flares', 'Countermeasures', 'CMs'], map: ['Map'], target: ['Target'], auto: ['Auto'], throttle: ['Throttle'], camera: ['View', 'Look', 'Cam.', 'Camera'], fire: ['Fire', 'Launch'], bino: ['Binos', 'Binoculars'], radar: ['Radar'], help: ['Help'], players: ['Players'], lesson: ['?'] }))
   for (const n of names) { TOK['«' + n + '»'] = icon; TOK['"' + n + '"'] = icon; }
-const TRE = new RegExp(Object.keys(TOK).map((k) => k.replace(/[.?]/g, '\\$&')).join('|'), 'g');
-export const iconize = (h) => String(h ?? '').replace(TRE, (m) => `<span class="bi">${ico(TOK[m], 'ii')}${/^[«"]/.test(m) ? m : ''}</span>`);
+const TRE = new RegExp([...Object.keys(TOK), ...Object.keys(DOT)].map((k) => k.replace(/[.?]/g, '\\$&')).join('|'), 'g');
+export const iconize = (h) => String(h ?? '').replace(TRE, (m) => {
+  if (DOT[m]) return `<i class="${DOT[m]}"></i>`;
+  if (TOK[m] === '') return m;
+  return `<span class="bi">${TOK[m].split('+').map((n) => ico(n, 'ii')).join('')}${/^[«"]/.test(m) ? m : ''}</span>`;
+});
+// значок на canvas (подписи целей и т. п.): контур game-icons в квадрате size с центром (cx, cy); в Deno (без Path2D) — пропуск
+export function drawIco(c, n, cx, cy, size) {
+  const v = ICON[n]; if (!v || v[0] === '<' || typeof Path2D === 'undefined') return;
+  c.save(); c.translate(cx - size / 2, cy - size / 2); c.scale(size / 512, size / 512); c.fill(new Path2D(v)); c.restore();
+}
 // легенда значков — для руководства
 export const ICON_LEGEND = [['fire', tr('Пуск / сброс выбранного оружия; у ПВО — пуск ракеты')], ['flares', tr('Ловушки: ЛТЦ и диполи разом')], ['target', tr('Цель: следующая цель контейнера')],
-  ['map', tr('Карта')], ['throttle', tr('Газ ступенями, после 100 % — форсаж')], ['auto', tr('АВТО: помощник (за самолёт — захват и сброс, за ПВО — расчёт ведёт комплекс сам)')],
+  ['map', tr('Карта')], ['throttle', tr('Газ ступенями, после 100 % — форсаж')], ['auto', tr('Авто: помощник (за самолёт — захват и сброс, за ПВО — расчёт ведёт комплекс сам)')],
   ['camera', tr('Обзор: свободная камера (самолёт держит курс); у ПВО — вид камеры, онлайн — следующий союзник')], ['radar', tr('РЛС ПВО: закрашена — излучает, пустая — молчит')],
   ['bino', tr('Бинокль оператора (только при захвате)')], ['help', tr('Нужна помощь — союзникам (онлайн)')], ['players', tr('Игроки онлайна: кто в сети и кто готов')],
   ['lesson', tr('Урок и объяснения: задание, подсказки, справка о технике')], ['pause', tr('Пауза')], ['soundOn', tr('Звук (зачёркнут — выключен)')]];

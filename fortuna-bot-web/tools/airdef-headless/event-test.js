@@ -1,5 +1,5 @@
 // Стенд события «Туманная топь» (games/airdef/event.js): страница на осенней карте (?map=autumn) в безголовом прогоне, как ui-test.js.
-// Проверяет: меню без вертолётных подвесок, экран события (вкладки, замки «Реализма», «ВЗЛЁТ» на каждом вертолёте), оборона на осенней
+// Проверяет: меню без вертолётных подвесок, экран события (вкладки, замки «Реализма», «Взлёт» на каждом вертолёте), оборона на осенней
 // карте — все волны до конца боя (вертолёты со 2-й волны, последняя — «Мульти-волна»).
 //   deno run -A tools/airdef-headless/event-test.js
 const dir = new URL('.', import.meta.url).pathname;
@@ -66,8 +66,8 @@ check(`карта «Туманная топь», погода ${C.W_KEY}`, C.MAP
 const root = made.find((e) => e.id === 'event'), ev = C.event;
 const click = (dataset, par) => { const t = { dataset, parentNode: par || {}, closest: () => t }; root._ev.click({ target: t }); };
 Object.assign(C.setup, { game: 'air', diff: 'arcade' }); ev.open(); frames(2);
-check('событие: экран открыт, вкладка «Вылет на вертолёте», в разметке вертолёты и «ВЗЛЁТ»', ev.isOpen() && root.innerHTML.includes('Вылет на вертолёте') && root.innerHTML.includes('ВЗЛЁТ') && root.innerHTML.includes('Ми-24В'));
-click({ tab: 'def' }); check('событие: вкладка «Оборона» — «К РАССТАНОВКЕ»', root.innerHTML.includes('К РАССТАНОВКЕ')); click({ tab: 'fly' });
+check('событие: экран открыт, вкладка «Вылет на вертолёте», в разметке вертолёты и «Взлёт»', ev.isOpen() && root.innerHTML.includes('Вылет на вертолёте') && root.innerHTML.includes('Взлёт') && root.innerHTML.includes('Ми-24В'));
+click({ tab: 'def' }); check('событие: вкладка «Оборона» — «К расстановке»', root.innerHTML.includes('К расстановке')); click({ tab: 'fly' });
 click({ v: 'west' }, { dataset: { seg: 'hside' } }); check('событие: сторона «Запад» — AH-64D в ленте', root.innerHTML.includes('AH-64D') && !root.innerHTML.includes('Ми-28Н'));
 click({ v: 'east' }, { dataset: { seg: 'hside' } });
 { // «Реализм»: закрытые — с замком, нажатие ведёт в «Исследования»
@@ -79,14 +79,14 @@ click({ v: 'east' }, { dataset: { seg: 'hside' } });
   click({ need: 'heli:h_mi28' }); check(`событие, «Реализм»: нажатие на закрытую — «Исследования» на узле (${opened[0]})`, opened[0] === 'heli:h_mi28');
   [pg.ready, pg.loadoutOk, pg.loadoutMissing] = saved; C.research.open = ro; C.setup.diff = 'arcade'; click({ v: 'arcade' }, { dataset: { seg: 'diff' } });
 }
-// «ВЗЛЁТ» на каждом вертолёте: тут уже осенняя карта и нужная погода — старт сразу, без перезагрузки; своя модель и подвеска
+// «Взлёт» на каждом вертолёте: тут уже осенняя карта и нужная погода — старт сразу, без перезагрузки; своя модель и подвеска
 for (const L of HELI_LOADOUTS) {
   C.toMenu(); frames(3); ev.open(); click({ v: L.side }, { dataset: { seg: 'hside' } }); click({ sel: `${L.era}:${L.i}` });
   click({ go: 'fly' }); for (let i = 0; i < 60 && C.state !== 'play'; i++) await new Promise((r) => setTimeout(r, 50));
   frames(1); for (let i = 0; i < 40 && C.ctrl.plane !== L.plane; i++) { await new Promise((r) => setTimeout(r, 100)); frames(1); }
   const ok = C.state === 'play' && C.setup.game === 'air' && C.setup.era === L.era && C.setup.lo === L.i && C.setup.side === (L.side === 'east' ? 'west' : 'east') && C.setup.op === false && C.setup.evd === false && !ev.isOpen();
-  check(`ВЗЛЁТ: ${PLANES[L.plane]} (эпоха ${L.era}, подвеска ${L.i}): вылет на ${C.ctrl.plane}, ПВО ${C.setup.side}`, ok && C.ctrl.plane === L.plane);
-  check(`ВЗЛЁТ: ${PLANES[L.plane]} — вертолёт в воздухе или на площадке, 8 с без ошибок`, frames(30 * 8) && !!C.player.heli);
+  check(`Взлёт: ${PLANES[L.plane]} (эпоха ${L.era}, подвеска ${L.i}): вылет на ${C.ctrl.plane}, ПВО ${C.setup.side}`, ok && C.ctrl.plane === L.plane);
+  check(`Взлёт: ${PLANES[L.plane]} — вертолёт в воздухе или на площадке, 8 с без ошибок`, frames(30 * 8) && !!C.player.heli);
 }
 // 3. оборона на осенней карте — все волны
 C.toMenu(); frames(3); ev.open(); click({ tab: 'def' }); click({ v: 'east' }, { dataset: { seg: 'dside' } }); click({ v: '3' }, { dataset: { seg: 'dera' } }); click({ go: 'def' });

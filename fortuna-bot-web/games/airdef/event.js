@@ -37,7 +37,7 @@ body.eventOn #menu { visibility: hidden; }
 #event .tabs button.on { color: var(--th-tx, #e9e6dc); border-bottom-color: var(--ev); }
 #event .tabs button:disabled { opacity: .45; cursor: default; }
 #event .x { margin-left: auto; width: 40px; height: 40px; border: 0; background: none; color: var(--dim); font-size: 20px; cursor: pointer; }
-#event .x:hover { color: var(--th-tx, #e9e6dc); }
+#event .x:hover { color: var(--th-tx, #e9e6dc); } #event .x .ic { width: 20px; height: 20px; margin: auto; }
 #event .body { position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--rt) + var(--hh)); display: flex; gap: 14px; padding: 14px max(14px, var(--sa-r, 0px)) 14px max(14px, var(--sa-l, 0px)); z-index: 2; }
 #event .pl { width: 236px; flex: none; background: var(--pn); border: 1px solid var(--ln); padding: 12px; overflow: auto; -webkit-overflow-scrolling: touch; }
 #event .cap { font: 600 12.5px 'Golos Text', -apple-system, sans-serif; letter-spacing: 0; color: var(--dim); margin: 0 0 6px; }
@@ -122,18 +122,18 @@ export function createEvent(C) {
         <div class="nm"><b>${trIf(PLANES[L.plane])}</b>${tagsOf(L)}</div>
         <div class="rib">${list().map((X) => { const miss = lk(X) ? C.progress.loadoutMissing(X) : [];
           return `<button class="ec ${idOf(X) === idOf(L) ? 'sel' : ''} ${miss.length ? 'lk' : ''}" ${miss.length ? `data-need="${miss[0].id}"` : `data-sel="${idOf(X)}"`}><img src="${thumb(X)}" alt="" loading="lazy"><b>${trIf(PLANES[X.plane])}</b><small>${miss.length ? tr('исследовать') : ERAS[X.era - 1].short + ' · ' + X.items.map(([k]) => trIf(AG[k].short)).join(', ')}</small>${miss.length ? `<span class="lc">${ico('lock')}</span>` : ''}</button>`; }).join('')}</div>
-        <button class="go" data-go="fly" title="${sub}">${tr('ВЗЛЁТ')}</button></div>`;
+        <button class="go" data-go="fly" title="${sub}">${tr('Взлёт')}</button></div>`;
   }
   function def() {
     const att = S.dside === 'east' ? 'west' : 'east', rh = RAID_HELI[att] && RAID_HELI[att][S.dera], hp = rh && rh[0];
     return `<div class="pl">${mapPane()}${modePane()}</div>
       <div class="pc"><div class="hero">${hp ? `<img src="airdef/thumbs/heli_${hp}.webp?v=20261025a" alt="">` : ''}</div>
         <div class="dh"><h2>${tr('Оборона от вертолётов')}</h2>
-          <p>${tr('<b>Угроза{0}.</b> Налёт идёт самолётами, со 2-й волны к ним присоединяется вертолёт, с 4-й — пара. Они подходят низко, по оврагам, и прячутся за холмами.', [hp ? ': ' + trIf(PLANES[hp]) : ''])}</p>
-          <p class="lng">${tr('Ниже ~30 м за рельефом РЛС вертолёт не видит: берегите ближние комплексы — пушки, ЗРК ближнего действия, ПЗРК. Потеряно 75 % ценности военных объектов — поражение. Волн — {0}.', [C.WAVES])}</p></div>
+          <p>${tr('<b>Угроза{0}.</b> Налёт идёт самолётами; со 2-й волны к ним присоединяется вертолёт, с 4-й — пара. Они подходят низко, по оврагам, и прячутся за холмами.', [hp ? ': ' + trIf(PLANES[hp]) : ''])}</p>
+          <p class="lng">${tr('Ниже ~30 м за рельефом РЛС вертолёт не видит, поэтому берегите ближние комплексы: пушки, ЗРК ближнего действия, ПЗРК. Поражение — если потеряно 75 % ценности военных объектов. Волн: {0}.', [C.WAVES])}</p></div>
         <div class="row"><span class="cap">${tr('Ваша ПВО')}</span>${seg('dside', S.dside, [['east', tr('Советская')], ['west', tr('Западная')]])}</div>
         <div class="row"><span class="cap">${tr('Эпоха')}</span>${seg('dera', S.dera, ERAS.map((e) => [e.id, e.short]))}</div>
-        <button class="go" data-go="def">${tr('К РАССТАНОВКЕ')}</button></div>`;
+        <button class="go" data-go="def">${tr('К расстановке')}</button></div>`;
   }
   function draw() {
     if (!root.classList.contains('on')) return;
@@ -141,7 +141,7 @@ export function createEvent(C) {
     root.innerHTML = `<div class="bg"></div><div class="fog"></div>
       <div class="top"><h1>${ico('pumpkin', 'pk')} ${tr('Туманная топь')}</h1><span class="tm" id="evTm">${leftTxt()}</span>
         <div class="tabs"><button data-tab="fly" class="${S.tab === 'fly' ? 'on' : ''}">${tr('Вылет на вертолёте')}</button><button data-tab="def" class="${S.tab === 'def' ? 'on' : ''}" ${DEF_READY ? '' : 'disabled'}>${tr('Оборона от вертолётов')}${DEF_READY ? '' : tr(' · скоро')}</button></div>
-        <button class="x" data-close="1" aria-label="${tr('Закрыть')}">✕</button></div>
+        <button class="x" data-close="1" aria-label="${tr('Закрыть')}">${ico('close')}</button></div>
       <div class="body">${S.tab === 'def' && DEF_READY ? def() : fly()}</div>`;
     const p = root.querySelector('.pl'); if (p) p.scrollTop = st;
   }

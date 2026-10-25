@@ -36,7 +36,7 @@ const CSS = `
 #research .card { position: absolute; border-radius: 0; padding: 0; box-shadow: none; max-height: none; animation: none; width: var(--cw); height: var(--ch); background: linear-gradient(160deg, #39403a 0, #22271f 55%, #151a12 100%); border: 1px solid #0a0c09; cursor: pointer; overflow: hidden; }
 #research .card img { position: absolute; left: -6px; top: 6px; width: 74%; height: 92%; object-fit: contain; object-position: left center; }
 #research .card .nm { position: absolute; right: 7px; top: 4px; font: 500 13.5px 'Oswald'; text-shadow: 0 1px 3px #000; max-width: 62%; text-align: right; }
-#research .card .caps.mini { position: absolute; right: 6px; top: 22px; } #research .card .caps.mini .ic { width: 13px; height: 13px; }
+#research .card .caps.mini { position: absolute; right: 6px; top: 22px; gap: 2px; } #research .card .caps.mini > span { width: 16px; height: 16px; } #research .card .caps.mini .ic { width: 12px; height: 12px; }
 #research .card .rk { position: absolute; right: 7px; bottom: 2px; font: 500 18px 'Oswald'; color: #d9d6cb; text-shadow: 0 1px 3px #000; }
 #research .card .pr { position: absolute; left: 6px; bottom: 5px; display: flex; align-items: center; gap: 5px; font: 600 13.5px 'JetBrains Mono', monospace; text-shadow: 0 1px 3px #000; padding: 1px 6px 1px 3px; background: rgba(10,12,9,.62); }
 #research .card .pr.xp { color: var(--xp); } #research .card .pr.sv { color: #eceae2; } #research .card .pr.no { color: var(--dim2); }
@@ -78,7 +78,7 @@ const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU'
 const trVal = (v) => (LANG !== 'en' ? v : trIf(v).replace(/^none$/, 'no').replace(/(\d),(\d)/g, '$1.$2').replace(/ км\/ч/g, ' km/h').replace(/ км(?![А-Яа-я\/])/g, ' km').replace(/ м\/с/g, ' m/s').replace(/ кг/g, ' kg').replace(/ т$/g, ' t').replace(/ м$/g, ' m').replace(/ с$/g, ' s').replace(/°\/с/g, '°/s')
   .replace(/ снарядов$/, ' rounds').replace(/ · залп /, ' · salvo ').replace(/ \(оптика\)$/, ' (optical)'));
 const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261025a`;
-const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'ЦЕЛЬ'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь — один ключ на оба), по-английски это разные слова
+const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'Цель'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь — один ключ на оба), по-английски это разные слова
 const era = (r) => (ERAS[r - 1] ? trIf(ERAS[r - 1].name).split('— ')[1] || '' : '');
 const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? tr('Подвески: {0}.', [RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => trIf(L.name))).join(' · ')]) : trIf(AG[n.item || n.key]?.guide)) || '';
 
@@ -101,7 +101,7 @@ export function createResearch(C, PG) {
   }
   function card(c, x, y) {
     const n = c.n, s = st(n), p = P(), sel = n.id === S.sel, pr = S.sel && pairOf(NODE[S.sel]);
-    const tag = s.k === 'own' ? `<span class="tag own">${tr('✓ КУПЛЕН')}</span>` : s.k === 'start' ? `<span class="tag start">${tr('★ СТАРТ')}</span>` : p.goal[n.branch] === n.id ? `<span class="tag goal">${GOAL_TAG}</span>` : s.k === 'buy' ? `<span class="tag res">${tr('ИССЛЕДОВАН')}</span>` : '';
+    const tag = s.k === 'own' ? `<span class="tag own">${ico('ok', 'ii')}${tr('Куплен')}</span>` : s.k === 'start' ? `<span class="tag start">${ico('star', 'ii')}${tr('Старт')}</span>` : p.goal[n.branch] === n.id ? `<span class="tag goal">${GOAL_TAG}</span>` : s.k === 'buy' ? `<span class="tag res">${tr('Исследован')}</span>` : '';
     const price = s.k === 'buy' ? `<span class="pr ${s.can ? 'sv' : 'no'}">${SV(n.cost)}</span>` : s.k === 'res' ? `<span class="pr ${s.can ? 'xp' : 'no'}">${XP(n.cost)}</span>` : s.k === 'lock' ? `<span class="pr no">${ico('lock')}${n2(n.cost)}</span>` : '';
     const bar = s.k === 'res' && p.goal[n.branch] === n.id ? `<div class="bar"><i style="width:${Math.min(100, p.xp / n.cost * 100)}%"></i></div>` : '';
     return `<div class="card ${s.k === 'own' || s.k === 'start' ? 'own' : ''} ${s.can ? 'can' : ''} ${s.k === 'lock' ? 'lock' : ''} ${sel ? 'sel' : ''} ${pr && pr.id === n.id ? 'pair' : ''}" data-id="${n.id}" style="left:${x}px;top:${y}px">
@@ -134,12 +134,12 @@ export function createResearch(C, PG) {
     const n = NODE[S.sel], s = st(n), p = pairOf(n), sp = p && st(p), goal = P().goal[n.branch] === n.id, busy = PG.busy, guest = PG.guest;
     const why = S.msg ? `<div class="why ${S.msgErr ? 'err' : ''}">${S.msg}</div>` : s.why ? `<div class="why">${trMsg(s.why)}</div>` : '';
     const act = guest && s.k !== 'own' && s.k !== 'start' ? `<div class="why">${tr('Войдите на сайте — опыт и серебро копятся только в аккаунте.')}</div>`
-      : s.k === 'buy' ? `<button class="rbtn" data-act="buy" ${s.can && !busy ? '' : 'disabled'}>${tr('КУПИТЬ')} ${SV(n.cost)}</button>${why}`
-      : s.k === 'res' ? `<button class="rbtn" data-act="research" ${s.can && !busy ? '' : 'disabled'}>${tr('ИССЛЕДОВАТЬ')} ${XP(n.cost)}</button><button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? tr('Цель исследования ✓ (снять)') : tr('Сделать целью — опыт за бой пойдёт сюда')}</button>${why}`
-      : s.k === 'lock' ? (n.parent && !researched(P(), n.parent) ? `<button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? tr('Цель ✓ (снять)') : tr('Сделать целью')}</button>` : '') + why
+      : s.k === 'buy' ? `<button class="rbtn" data-act="buy" ${s.can && !busy ? '' : 'disabled'}>${tr('Купить')} ${SV(n.cost)}</button>${why}`
+      : s.k === 'res' ? `<button class="rbtn" data-act="research" ${s.can && !busy ? '' : 'disabled'}>${tr('Исследовать')} ${XP(n.cost)}</button><button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель исследования (снять)') : tr('Сделать целью — опыт за бой пойдёт сюда')}</button>${why}`
+      : s.k === 'lock' ? (n.parent && !researched(P(), n.parent) ? `<button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель (снять)') : tr('Сделать целью')}</button>` : '') + why
       : `<div class="why">${tr('Доступно в «Реализме».')}</div>`;
     const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${trIf(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
-    const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:500 13px 'Oswald'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? tr('✓ куплен') : sp.k === 'start' ? tr('★ стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
+    const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:500 13px 'Oswald'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? ico('ok', 'ii') + tr('Куплен') : sp.k === 'start' ? ico('star', 'ii') + tr('Стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
     return `<div class="veil" data-close="1"></div><div class="dos"><div class="sc"><div class="hero"><img src="${thumb(n)}" alt=""></div>
       <span class="mk">${tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)])}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
       ${stats}<p>${guide(n)}</p>${an}</div><div class="acts">${act}</div></div>`;
@@ -153,7 +153,7 @@ export function createResearch(C, PG) {
       <div class="cur"><span class="xp" title="${tr('Опыт — исследовать')}">${XP(p.xp)}</span><span title="${tr('Серебро — покупать')}">${SV(p.silver)}</span></div></div>
       <div class="sides">${SIDES.map((s) => `<button data-s="${s}" class="${s === S.side ? 'on' : ''}">${trIf(SIDE_NAME[s])}<small>${tr('куплено {0} из {1}', [nodesOf(S.B, s).filter((n) => owned(p, n.id)).length, nodesOf(S.B, s).length])}</small></button>`).join('')}${S.B === 'air' ? `<button data-s="heli" class="${S.side === 'heli' ? 'on' : ''}">${tr('Вертолёты')}<small>${tr('куплено {0} из {1}', [nodesOf('heli').filter((n) => owned(p, n.id)).length, nodesOf('heli').length])}</small></button>` : ''}</div>
       <div class="note">${tr('Только для <b>«Реализма»</b>. Аркада и обучение — всё открыто.')}</div>
-      ${PG.guest ? `<div class="guest">${tr('Вы не вошли на сайте — показан стартовый набор. Опыт и серебро копятся в аккаунте.')}</div>` : PG.err ? `<div class="guest">${tr('Нет связи с сайтом: {0}', [trMsg(PG.err)])}</div>` : ''}
+      ${PG.guest ? `<div class="guest">${tr('Вы не вошли: показан стартовый набор. Опыт и серебро копятся в аккаунте.')}</div>` : PG.err ? `<div class="guest">${tr('Нет связи с сайтом: {0}', [trMsg(PG.err)])}</div>` : ''}
       <div class="wrap">${tree()}</div>${S.open || !phone() ? dossier() : ''}`;
     if (scroll && !S.reset) { const w = root.querySelector('.wrap'); w.scrollLeft = scroll[0]; w.scrollTop = scroll[1]; } // выбор единицы, покупка — дерево стоит на месте
     const sc0 = S.dosScroll; if (sc0 != null && root.querySelector('.dos .sc')) root.querySelector('.dos .sc').scrollTop = sc0; S.reset = false; S.dosScroll = null;
