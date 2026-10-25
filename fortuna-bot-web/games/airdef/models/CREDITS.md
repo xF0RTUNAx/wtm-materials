@@ -4,7 +4,7 @@
 сетки, переведены в метры и развёрнуты, разделены на корпус / башню / пакет, текстуры уменьшены и пересжаты в JPEG.
 
 - "Sukhoi Su-30 flanker c" (https://sketchfab.com/3d-models/sukhoi-su-30-flanker-c-92ca062c90fd45ffb6ce8144dc46004a) by andertan — CC-BY-4.0 — `su30.glb`
-- "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `f18.glb`
+- "Boeing F/A-18E/F "Super Hornet"" (https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38) by andertan — CC-BY-4.0 — `f18.glb`, `msl_aim120.glb`
 - "Lockheed Martin F-16e/f "Fighting Falcon"" (https://sketchfab.com/3d-models/lockheed-martin-f-16ef-fighting-falcon-d54c72e055a647ad9173e01548e50db3) by andertan — CC-BY-4.0 — `f16.glb`
 - "FAB-100-120" (https://sketchfab.com/3d-models/fab-100-120-38f8bd043c854b9ab648e824ed812ffd) by 4ikalka — CC-BY-4.0 — `w_fab100.glb`
 - "OFAB-250-270" (https://sketchfab.com/3d-models/ofab-250-270-7276306219f5499296979764c3c50fe2) by 4ikalka — CC-BY-4.0 — `w_ofab250.glb`

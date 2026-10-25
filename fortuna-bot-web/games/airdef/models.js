@@ -6,11 +6,11 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry — двигатель без форсажа: только слабое свечение; нет сопел — пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { tr } from './i18n.js?v=20261024u';
-import { CREDITS } from './models/credits.js?v=20261024u';
-import { mergeLocal } from './merge.js?v=20261024u';
-import { cachedFetch } from './offline.js?v=20261024u';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261024u';
+import { tr } from './i18n.js?v=20261025a';
+import { CREDITS } from './models/credits.js?v=20261025a';
+import { mergeLocal } from './merge.js?v=20261025a';
+import { cachedFetch } from './offline.js?v=20261025a';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261025a';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -228,7 +228,7 @@ const META = {
     obj_jhangar: { obj: true, stations: [] }, obj_cont: { obj: true, stations: [] }, obj_milbase: { obj: true, stations: [] }, obj_oldind: { obj: true, stations: [] }, obj_factory: { obj: true, stations: [] }, // цех — и цель, и склады города вблизи
   // зенитные ракеты без своих пусковых: ракета «Вербы» — для всех ПЗРК и Avenger, AIM-120 (с F/A-18) — для NASAMS
   msl_manpads: { samMissile: ['strela2', 'redeye', 'igla', 'stinger', 'iglas', 'verba', 'avenger'], stations: [] },
-  msl_aim120: { samMissile: ['nasams'], matte: true, stations: [] }, // AIM-120A — своя (Свои/AIM-120, 2026-10-25) вместо вырезки из F/A-18, 3,863 м, нос −Z
+  msl_amraam: { samMissile: ['nasams'], matte: true, stations: [] }, // AIM-120A — своя (Свои/AIM-120, 2026-10-25) вместо вырезки из F/A-18 (msl_aim120 — её грузит «Летка»), 3,863 м, нос −Z
   // трубы ПЗРК на плече у расчёта
   mp_verba: { launcher: ['strela2', 'igla', 'iglas', 'verba'], stations: [] },
   mp_stinger: { launcher: ['redeye', 'stinger'], stations: [] },
@@ -316,7 +316,7 @@ const GLB_V_OWN = {
   w_gbu12: '20261024z', // GBU-12 Paveway II — своя модель (основной чат, 2026-10-24) вместо выреза из F-16D
   nasams: '20261025n', // NASAMS — своя пусковая (сборщик, Свои/NASAMS) вместо Muhamad Mirza Arrafi («сделано ИИ»), 2026-10-25
   nasams_lo: '20261025n',
-  msl_aim120: '20261025n', // AIM-120A — своя ракета NASAMS вместо вырезки из F/A-18 andertan
+  msl_amraam: '20261025n', // AIM-120A — своя ракета NASAMS вместо вырезки из F/A-18 andertan (msl_aim120 остаётся «Летке»)
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы

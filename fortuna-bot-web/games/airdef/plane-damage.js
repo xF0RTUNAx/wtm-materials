@@ -2,8 +2,8 @@
 // отлетевшая консоль или хвост прячутся на самолёте и падают отдельным обломком (кувыркаются, дымят), из повреждённых зон
 // тянется след: серый дым (повреждено), чёрный (сильно), огонь (горит двигатель или бак). Один объект на модель самолёта.
 /* global THREE */
-import { splitPlane } from './plane-zones.js?v=20261024u';
-import { mergeLocal } from './merge.js?v=20261024u';
+import { splitPlane } from './plane-zones.js?v=20261025a';
+import { mergeLocal } from './merge.js?v=20261025a';
 const W = new THREE.Vector3(), M4 = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3();
 const debris = []; // общие для всех самолётов обломки: { g, v, w, t }
 const SAMPS = new Map(); // точки обшивки по зонам — по ключу модели (зависят только от геометрии)

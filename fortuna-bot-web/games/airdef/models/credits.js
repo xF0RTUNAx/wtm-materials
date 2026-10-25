@@ -15,7 +15,8 @@ export const CREDITS = [
   "url": "https://sketchfab.com/3d-models/boeing-fa-18ef-super-hornet-f71e9fea01e24fea9b1b380161d21d38",
   "license": "CC-BY-4.0",
   "files": [
-   "f18"
+   "f18",
+   "msl_aim120"
   ]
  },
  {

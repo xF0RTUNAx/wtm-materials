@@ -33,7 +33,7 @@ export const ICON = {
   };
 // значение — контур (d) или готовая разметка внутри <svg> (начинается с «<»: поворот, несколько частей)
 export const ico = (n, cls = '') => { const v = ICON[n] || ''; return `<svg class="ic${cls ? ' ' + cls : ''}" viewBox="0 0 512 512" aria-hidden="true">${v[0] === '<' ? v : `<path fill="currentColor" d="${v}"/>`}</svg>`; };
-import { tr } from './i18n.js?v=20261024u';
+import { tr } from './i18n.js?v=20261025a';
 // упоминание кнопки в тексте (обучение, руководство, пауза, подсказки) — со значком: «ЛОВУШКИ» → [значок] «ЛОВУШКИ»
 const TOK = { '«ЛОВУШКИ»': 'flares', '«КАРТА»': 'map', '«ЦЕЛЬ»': 'target', '«АВТО»': 'auto', '«ГАЗ»': 'throttle', '«ОБЗОР»': 'camera', '«КАМ.»': 'camera', '«ПУСК»': 'fire', '«ОГОНЬ»': 'fire',
   '«БИНОКЛЬ»': 'bino', '«РЛС»': 'radar', '«?»': 'lesson', '«Игроки»': 'players', '«ПОМОЩЬ»': 'help', '⛽': 'fuel', '👥': 'players',

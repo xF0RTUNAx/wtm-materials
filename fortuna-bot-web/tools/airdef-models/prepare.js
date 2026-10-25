@@ -301,7 +301,8 @@ const CONFIG = {
     colors: { '^ff18aef9$': [0.35, 0.35, 0.35], '^ff9(06680|55f8d)$': [0.5, 0.5, 0.5] } },
   aam_iris: { src: `${DL}/low_poly_german_iris-t_aam.glb`, scale: 2.936 / 924.74, nose: '-x', tex: () => 256, pickMesh: /./ }, // IRIS-T
   aam_mica: { src: `${DL}/low_poly_missiles_and_torpedos.glb`, scale: 1, nose: '+z', tex: () => 256, pickMesh: /VL MICA/ }, // MICA (EM и IR — один корпус)
-  msl_aim120: { src: new URL('./own/msl_aim120.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // AIM-120A — своя (сборщик, Свои/AIM-120, 2026-10-24) вместо вырезки из F/A-18: 3,863 м, Ø 0,188, ракета NASAMS
+  msl_aim120: { src: `${DL}/boeing_fa-18ef_super_hornet.glb`, scale: 1, nose: '+x', tex: () => 256, pick: [-6, -0.5, 4.5, -1, -0.02, 4.9] }, // AIM-120 с F/A-18 — для NASAMS
+  msl_amraam: { src: new URL('./own/msl_aim120.glb', import.meta.url).pathname, scale: 1, nose: '-z', own: true, tex: () => 512, nTex: () => 512, pickMesh: /./ }, // AIM-120A — своя (сборщик, Свои/AIM-120, 2026-10-24): 3,863 м, Ø 0,188, ракета NASAMS. Своё имя: msl_aim120 (вырезка из F/A-18) грузит «Летка» (games/drone/glb.js) — её не трогаем
   w_gbu12: { src: new URL('./own/gbu12.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // GBU-12 Paveway II: своя модель (Blender, own/gbu12.glb)
   mig29: { src: `${DL}/mig_29.glb`, scale: 17.32 / 947.3, nose: '+z', tex: () => 1024 },
   // правила частей — в осях игры (без центровки): along/across — положение центра части вдоль и поперёк оси пакета
