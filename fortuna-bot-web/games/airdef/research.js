@@ -105,7 +105,7 @@ export function createResearch(C, PG) {
     const price = s.k === 'buy' ? `<span class="pr ${s.can ? 'sv' : 'no'}">${SV(n.cost)}</span>` : s.k === 'res' ? `<span class="pr ${s.can ? 'xp' : 'no'}">${XP(n.cost)}</span>` : s.k === 'lock' ? `<span class="pr no">${ico('lock')}${n2(n.cost)}</span>` : '';
     const bar = s.k === 'res' && p.goal[n.branch] === n.id ? `<div class="bar"><i style="width:${Math.min(100, p.xp / n.cost * 100)}%"></i></div>` : '';
     return `<div class="card ${s.k === 'own' || s.k === 'start' ? 'own' : ''} ${s.can ? 'can' : ''} ${s.k === 'lock' ? 'lock' : ''} ${sel ? 'sel' : ''} ${pr && pr.id === n.id ? 'pair' : ''}" data-id="${n.id}" style="left:${x}px;top:${y}px">
-      <img src="${thumb(n)}" alt="" loading="lazy">${tag}<span class="nm">${trIf(n.short)}</span>${n.branch === 'pvo' ? capsHtml(SAM[n.key], 'mini') : ''}<span class="rk">${RANK_NAME[n.rank]}</span>${price}${bar}</div>`;
+      <img src="${thumb(n)}" alt="" loading="lazy">${tag}<span class="nm">${trIf(n.short)}</span>${n.branch === 'pvo' ? capsHtml(SAM[n.key], '', 'mini') : ''}<span class="rk">${RANK_NAME[n.rank]}</span>${price}${bar}</div>`;
   }
   function parity(r) {
     const p = P();
