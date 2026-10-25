@@ -15,7 +15,7 @@ import { orientGate } from '../orient-warn.js?v=20261011a';
 import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261025a';
 import { photoItems } from './photo.js?v=20261025a';
 import { guideChapters } from './guide.js?v=20261025a';
-import { iconize, ico } from './icons.js?v=20261025a';
+import { iconize, ico, capsHtml } from './icons.js?v=20261025a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU'; // разделитель тысяч в числах
 const GAMES = [
@@ -59,8 +59,14 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // пройденные уроки по id; записи прежнего обучения («air0»… — по номеру) переносятся на те же уроки нового учебника
   const OLD = { air: ['ctl', 'bomb', 'lgb', 'agm', 'arm', 'evade'], def: ['d_plan', 'd_op', 'd_gun', 'd_ir', 'd_arm', 'd_short'] };
   function lessonsDone() { const l = stats().lessons || {}, out = { ...l }; for (const sd in OLD) OLD[sd].forEach((id, i) => { if (l[sd + i]) out[id] = 1; }); return out; }
+  // панель задания справа (Mark 2026-10-25): при запуске убрана, выезжает при выборе режима, «›» — убрать; открыта ли — на сеанс вкладки
+  // (смена режима с другой картой перезагружает страницу — панель должна остаться открытой); онлайн по ссылке — сразу открыта
+  const mpKey = 'fortuna_airdef_mpanel';
+  function panel(on) { document.body.classList.toggle('mpOpen', on); try { sessionStorage.setItem(mpKey, on ? '1' : '0'); } catch (_) { /* нет хранилища — только на эту загрузку */ } }
+  { const q = new URLSearchParams(location.search); let on = q.get('mp') === '1' || q.has('ad'); try { on = on || sessionStorage.getItem(mpKey) === '1'; } catch (_) { /* как есть */ } panel(on); }
+  $('mpClose').onclick = () => { snd.click(); panel(false); };
   $('modeSel').onclick = (e) => {
-    const b = e.target.closest('button'); if (!b) return; setup.game = b.dataset.g; setup.evd = false; save(); // evd — оборона события на осенней карте (event.js): обычное меню её сбрасывает
+    const b = e.target.closest('button'); if (!b) return; panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd — оборона события на осенней карте (event.js): обычное меню её сбрасывает
     if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
     if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
@@ -125,7 +131,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       }
       const list = Object.entries(SAM).filter(([, s]) => s.side === setup.side && s.era <= setup.era);
       h += `<div class="cat-h">${tr('Комплексы в вашем распоряжении')}</div>` + list.map(([k, s]) => { const lk = realLock() && !C.progress.samOk(k);
-        return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${trIf(s.name)}</b><span>${tr('{0} · до {1} км, высота до {2} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span>${lk ? `<span class="need">${tr('в «Реализме» — после покупки в «Исследованиях»')}</span>` : ''}</div><span class="pr">${tr('{0} очк', [SAM_COST[k]])}</span></div>`; }).join('') +
+        return `<div class="opt ${lk ? 'lock' : ''}" ${lk ? `data-need="pvo:${k}"` : ''}><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${trIf(s.name)}${capsHtml(s)}</b><span>${tr('{0} · до {1} км, высота до {2} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span>${lk ? `<span class="need">${tr('в «Реализме» — после покупки в «Исследованиях»')}</span>` : ''}</div><span class="pr">${tr('{0} очк', [SAM_COST[k]])}</span></div>`; }).join('') +
         `<p class="hint">${tr('Перед каждой волной расставьте комплексы на карте за очки обороны, между волнами — докупка, переезд и продажа. Волн — {0}. Потеряно 75 % ценности военных объектов — поражение. В бою можно «сесть» в любой комплекс оператором.', [C.WAVES])}</p>`;
     }
     el.innerHTML = h;
@@ -151,7 +157,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       if (!list.some(([k]) => k === setup.psam)) setup.psam = list[0][0];
       const canM = combinedOk(att, setup.era);
       h += `<div class="prow"><span>${tr('Против')}</span>${seg('pvs', canM && setup.pvs === 'multi' ? 'multi' : 'air', canM ? [['air', tr('Самолётов')], ['multi', trIf(COMBINED_NAME)]] : [['air', tr('Самолётов')]])}</div><div class="cat-h">${tr('Комплекс')}</div>` +
-        list.map(([k, s]) => `<button class="opt ${k === setup.psam ? 'on' : ''}" data-psam="${k}"><div class="nm"><b>${trIf(s.name)}</b><span>${tr('{0} · до {1} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1)])}</span></div></button>`).join('') +
+        list.map(([k, s]) => `<button class="opt ${k === setup.psam ? 'on' : ''}" data-psam="${k}"><div class="nm"><b>${trIf(s.name)}${capsHtml(s)}</b><span>${tr('{0} · до {1} км', [trIf(SAM_TYPE[s.type]), (s.rmax / 1000).toFixed(1)])}</span></div></button>`).join('') +
         '<p class="hint">' + tr('Комплекс стоит у цели и отражает налёт за налётом (неуязвим, перезаряжается быстро); вокруг — ИИ-ПВО города.') + '</p>';
     } else {
       const items = photoItems(att, setup.era);
@@ -251,7 +257,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     h += `<div class="cat-h">${tr('Самолёты')}</div>` + Object.entries(PL).map(([k, [n, d]]) => `<details class="ref"><summary>${trIf(n)}</summary><div class="body"><p>${trIf(d)}</p><p>${tr('Подвески: {0}.', [Object.entries(LOADOUTS).flatMap(([era, list]) => list.filter((L) => L.plane === k).map((L) => tr('{0} (эп. {1})', [trIf(L.name), ERAS[era - 1].short]))).join('; ')])}</p></div></details>`).join('');
     for (const e of ERAS.filter((x) => LOADOUTS[x.id])) {
       h += `<div class="cat-h">${tr('Зенитные комплексы · эпоха {0}', [e.short])}</div>`;
-      for (const [k, s] of Object.entries(SAM)) if (s.era === e.id) h += `<details class="ref"><summary>${tags(s.type, { guns: tr('АРТ'), ir: tr('ИК'), sarh: tr('ПАРЛ'), saclos: tr('ЛВ'), tvm: 'TVM', arh: tr('АРЛ'), jammer: tr('РЭБ'), command: tr('РК') }[s.type])} ${trIf(s.name)}</summary><div class="body">
+      for (const [k, s] of Object.entries(SAM)) if (s.era === e.id) h += `<details class="ref"><summary>${tags(s.type, { guns: tr('АРТ'), ir: tr('ИК'), sarh: tr('ПАРЛ'), saclos: tr('ЛВ'), tvm: 'TVM', arh: tr('АРЛ'), jammer: tr('РЭБ'), command: tr('РК') }[s.type])} ${trIf(s.name)}${capsHtml(s)}</summary><div class="body">
         <p>${trIf(s.guide)}</p>${specs(s)}<h4>${tr('В игре')}</h4><p>${tr('{0} · {1}–{2} км · высоты {3}–{4} м{5}{6}{7}{8}{9} · стоимость в обороне {10}', [trIf(SAM_TYPE[s.type]), (s.rmin / 1000).toFixed(1), (s.rmax / 1000).toFixed(1), s.hmin, s.hmax, s.radar ? tr(' · РЛС видит цель ЭПР 5 м² с {0} км, захват {1} с{2}', [(s.radar.range / 1000).toFixed(0), s.radar.acq, s.radar.doppler ? tr(', когерентная — есть доплеровский провал') : '']) : s.type === 'jammer' ? tr(' · радиус подавления {0} км', [(s.jamR / 1000).toFixed(0)]) : tr(' · без РЛС — на СПО не виден'), s.channels > 1 ? tr(' · целевых каналов {0}', [s.channels]) : '', s.vls ? tr(' · вертикальный старт') : '', s.antiMun ? tr(' · сбивает бомбы и ракеты') : '', s.optTrack ? tr(' · оптический канал без излучения') : '', SAM_COST[k]])}</p></div></details>`;
       h += `<div class="cat-h">${tr('Ударное оружие · эпоха {0}', [e.short])}</div>`;
       for (const [, w] of Object.entries(AG)) if (w.era === e.id) h += `<details class="ref"><summary>${tags(w.kind, { bomb: tr('ФАБ'), lgb: tr('ЛАЗ'), tvb: tr('ТВ'), arm: tr('ПРР'), gps: 'GPS', cruise: tr('КР'), decoy: tr('ЛЦ'), ecm: tr('РЭБ'), rocket: tr('НАР') }[w.kind] || (w.seeker === 'tv' ? tr('ТВ') : tr('ЛАЗ')))} ${trIf(w.name)}</summary><div class="body">
@@ -574,7 +580,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   }
   return {
     show() { render(); showTab(); $('menu').classList.add('on'); },
-    render, mapBase,
+    render, mapBase, panel,
     record(game, score, extra = {}) {
       const s = stats(), r = s[game] || { best: 0, runs: 0, waves: 0 };
       r.runs++; r.best = Math.max(r.best, score); if (extra.waves) r.waves = Math.max(r.waves, extra.waves);

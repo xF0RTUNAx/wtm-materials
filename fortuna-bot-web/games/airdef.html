@@ -412,7 +412,14 @@
   #menu .mtabs button.on { color: #fff; background: none; text-decoration: underline; }
   .mpanel { position: absolute; z-index: 2; top: calc(12px + var(--sa-t) + var(--tg-t)); bottom: max(12px, var(--sa-b)); right: max(12px, var(--sa-r)); width: min(330px, 42vw);
     box-sizing: border-box; background: #10140f; border: 1px solid #39422f; display: flex; flex-direction: column; color: #e9e6dc; }
-  .mphead { padding: 12px 16px 8px; }
+  .mphead { padding: 12px 16px 8px; position: relative; }
+  /* панель задания (Mark 2026-10-25): по умолчанию убрана, выезжает при выборе режима слева, «›» — убрать (смотреть фон); онлайн — открыта */
+  .mpanel { transition: transform .42s cubic-bezier(.22, .9, .25, 1), opacity .3s ease, visibility 0s; }
+  body:not(.mpOpen) .mpanel { transform: translateX(calc(100% + 16px + var(--sa-r))); opacity: 0; visibility: hidden; transition: transform .34s cubic-bezier(.55, 0, .7, .4), opacity .3s ease .04s, visibility 0s .34s; }
+  #mpClose { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; padding: 6px; border: 1px solid #39422f; background: #10140f; color: #e9e6dc; cursor: pointer; }
+  #mpClose svg { width: 100%; height: 100%; display: block; } #mpClose:hover { border-color: #e8b04a; color: #f3c96f; }
+  .mphead .mpk, .mphead .mpt { padding-right: 34px; }
+  body.menuing:not(.mpOpen) #promoNav { right: max(14px, var(--sa-r)); }
   .mpk { font: 600 10.5px 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .1em; color: #b3baa5; text-transform: uppercase; }
   .mpt { font: 400 19px/1.15 'Russo One', -apple-system, sans-serif; color: #f4f1e8; margin-top: 3px; }
   #menu #lobbyStats { margin-top: 5px; font-size: 12px; color: #b3baa5; } #menu #lobbyStats b { color: #f3c96f; }
@@ -463,6 +470,8 @@
     .mlogo { display: none; } #menu .modeSel { flex-direction: row; overflow: visible; } #menu .modeSel button { white-space: nowrap; padding: 9px 12px; }
     #menu .mtabs { margin: 0 0 0 8px; padding: 0; flex-wrap: nowrap; } #menu .mtabs button { white-space: nowrap; }
     .mpanel { left: 10px; right: 10px; width: auto; top: auto; height: 58vh; }
+    body:not(.mpOpen) .mpanel { transform: translateY(calc(100% + 16px + var(--sa-b))); } #mpClose svg { transform: rotate(90deg); }
+    body.menuing:not(.mpOpen) #mute { bottom: max(14px, var(--sa-b)); }
     .msheet { left: 10px; top: calc(60px + var(--sa-t) + var(--tg-t)); }
     body.menuing #mute { left: auto; right: 14px; bottom: calc(58vh + 20px); }
   }
@@ -546,7 +555,10 @@
   #plPanel .plh { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
   #ledBar { border-radius: 0; background: var(--th-bg); border: 1px solid var(--th-line); }
   /* иконки управления (icons.js): вместо надписей; подпись — мелко под иконкой, где нужна (газ, пуск) */
-  .ic { width: 26px; height: 26px; display: block; flex: none; } .ii { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
+  .ic { width: 26px; height: 26px; display: block; flex: none; }
+  /* что сбивает комплекс (icons.js capsHtml): дроны, бомбы, крылатые, баллистика — маленькие значки после названия */
+  .caps { display: inline-flex; gap: 3px; margin-left: 6px; vertical-align: -0.14em; color: #c9cebd; } .caps > span { display: inline-flex; }
+  .caps .ic { width: 1.05em; height: 1.05em; display: inline-block; } .dcard .caps, .opt .caps { color: #e8d9a8; } .ii { width: 1.05em; height: 1.05em; display: inline-block; vertical-align: -0.15em; margin-right: 2px; }
   .tb { flex-direction: column; gap: 2px; } .tb small { font: 600 10px 'IBM Plex Sans', sans-serif; text-transform: none; letter-spacing: 0; opacity: .9; }
   .tb.big .ic { width: 30px; height: 30px; } #tFire .ic, #opFire .ic { width: 28px; height: 28px; }
   #exit .ic, #mute .ic, #pause .ic, #plBtn .ic, #lsnBtn .ic { width: 20px; height: 20px; } #askBtn .ic { width: 18px; height: 18px; margin: auto; }
@@ -652,7 +664,7 @@
     <div class="mtabs" id="mtabs"><button data-tab="ref">Арсенал</button><button data-tab="guide">Справка</button><button data-tab="set">Настройки</button><button data-tab="misc">Об игре</button></div>
   </nav>
   <section class="mpanel" aria-label="Задание">
-    <div class="mphead"><div class="mpk" id="mpKind"></div><div class="mpt" id="mpTitle"></div><div id="lobbyStats"></div></div>
+    <div class="mphead"><button id="mpClose" aria-label="Убрать панель" title="Убрать панель"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square"/></svg></button><div class="mpk" id="mpKind"></div><div class="mpt" id="mpTitle"></div><div id="lobbyStats"></div></div>
     <div class="tabp on" id="tab-play"></div>
     <button class="btn" id="startBtn">В БОЙ</button>
   </section>

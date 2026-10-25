@@ -791,4 +791,10 @@ export default {
   "ударный": "strike",
   "ударный вертолёт": "attack helicopter",
   "ударный и охотник за ПВО": "strike and SEAD hunter",
+  // 2026-10-25: что сбивает комплекс (icons.js samCaps), панель задания меню
+  "Сбивает дроны": "Shoots down drones",
+  "Сбивает бомбы и ракеты, сброшенные с самолётов": "Shoots down bombs and missiles released by aircraft",
+  "Сбивает крылатые ракеты (ниже {0} м — нет)": "Shoots down cruise missiles (not below {0} m)",
+  "Сбивает баллистические ракеты: перехват {0} %": "Shoots down ballistic missiles: {0}% per intercept",
+  "Убрать панель": "Hide panel",
 };

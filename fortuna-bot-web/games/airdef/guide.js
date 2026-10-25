@@ -4,7 +4,7 @@
 // Язык (2026-10-21): текст — в tr() пофразно (словарь lang/en-guide.js), названия и описания юнитов из arsenal.js приходят уже
 // переведёнными (lang/data.js подменяет их при импорте).
 import { AG, SAM, ERAS, LOADOUTS, PLANES, CARRIERS, MULTI, SAM_TYPE } from './arsenal.js?v=20261025a';
-import { ico, ICON_LEGEND } from './icons.js?v=20261025a';
+import { ico, ICON_LEGEND, capsHtml } from './icons.js?v=20261025a';
 import { tr } from './i18n.js?v=20261025a';
 
 const era = (e) => (ERAS[e - 1] ? ERAS[e - 1].short : e);
@@ -118,7 +118,7 @@ export function guideChapters(C) {
     + `<p>${tr('<b>Как стартуют.</b> С направляющей — пусковая сначала разворачивается на цель; отделяемый ускоритель — толстая стартовая ступень отваливается; «холодный» вертикальный старт — ракету выбрасывает из контейнера, двигатель запускается в воздухе; наклонные контейнеры — пусковая поворачивается только по азимуту; ПЗРК — вышибной заряд, маршевый двигатель — уже в стороне от стрелка.')}</p>`]);
   for (const e of ERAS) {
     const list = Object.entries(SAM).filter(([, S]) => S.era === e.id); if (!list.length) continue;
-    out.push([tr('Зенитные комплексы · эпоха {0}', [e.short]), list.map(([, S]) => `<h4>${S.name}${S.rwr ? tr(' · <span class="dim">на СПО и карте: {0}</span>', [S.rwr]) : ''}</h4>
+    out.push([tr('Зенитные комплексы · эпоха {0}', [e.short]), list.map(([, S]) => `<h4>${S.name}${capsHtml(S)}${S.rwr ? tr(' · <span class="dim">на СПО и карте: {0}</span>', [S.rwr]) : ''}</h4>
       <p><span class="dim">${S.side === 'east' ? tr('Советская / российская ПВО') : tr('Западная ПВО')} · ${samClass(S)} · ${SAM_TYPE[S.type] || ''}${S.radar ? '' : tr(' · без РЛС')}${S.antiMun ? tr(' · сбивает летящее оружие') : ''}${S.abm ? tr(' · может перехватывать баллистику') : ''}</span></p>
       <p>${S.guide}</p><p><b>${tr('За самолёт:')}</b> ${FIGHT[S.type] || ''}</p><p><b>${tr('За ПВО:')}</b> ${USE[S.type] || ''}</p>`).join('')]);
   }

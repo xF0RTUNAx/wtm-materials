@@ -225,10 +225,10 @@ export function createDirector(C) {
     if (!(VW > 1 && VH > 1)) { camera.clearViewOffset(); return; } // окно ещё без размера (страница открыта в фоне) — без смещения
     const q = rail && rail.getBoundingClientRect ? rail.getBoundingClientRect() : null; // меню: слева — режимы, справа (снизу) — задание
     if (VW >= VH) {
-      const x0 = q && q.width ? q.left + q.width : VW * 0.2, x1 = r && r.width ? r.left - 8 : VW * 0.6, Wf = Math.max(VW * 0.25, x1 - x0);
+      const x0 = q && q.width ? q.left + q.width : VW * 0.2, x1 = r && r.width ? Math.min(VW, r.left - 8) : VW * 0.6, Wf = Math.max(VW * 0.25, x1 - x0);
       camera.aspect = Wf / VH; camera.setViewOffset(Wf, VH, -x0, 0, VW, VH);
     } else {
-      const y0 = q && q.height ? q.top + q.height : 0, y1 = r && r.height ? Math.max(y0 + VH * 0.2, r.top - 8) : VH * 0.6, Hf = y1 - y0;
+      const y0 = q && q.height ? q.top + q.height : 0, y1 = r && r.height ? Math.max(y0 + VH * 0.2, Math.min(VH, r.top - 8)) : VH * 0.6, Hf = y1 - y0;
       camera.aspect = VW / Hf; camera.setViewOffset(VW, Hf, 0, -y0, VW, VH);
     }
   }

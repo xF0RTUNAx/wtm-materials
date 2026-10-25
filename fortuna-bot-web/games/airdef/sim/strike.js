@@ -40,6 +40,7 @@ const NOOP_FX = {
 };
 
 const TMP = new THREE.Vector3(), TMP2 = new THREE.Vector3(), AIM = new THREE.Vector3(), UPV = new THREE.Vector3(0, 1, 0), LOFT = new THREE.Vector3(), PREV = new THREE.Vector3();
+const SF_A = new THREE.Vector3(), SF_B = new THREE.Vector3(), SF_M = new THREE.Vector3();
 const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 
 export function createStrike(ctx) {
@@ -652,7 +653,7 @@ export function createStrike(ctx) {
       w.decSpawned = true;
       for (let i = 0; i < W.dec; i++) { const d = spawnMun(w.key, w.pos, w.aim.clone().add(TMP2.set((rnd() - 0.5) * 900, 0, (rnd() - 0.5) * 900)), { decoy: true, T: w.T, p0: w.p0, t0: w.t, owner: w.owner }); d.aim.y = city.topAt(d.aim.x, d.aim.z); }
     }
-    if (s >= 1 || w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4)) { if (w.decoy) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); fx.explosion(w.pos, 4, 'ground'); } else wpnDetonate(w); }
+    if (s >= 1 || w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4)) { toSurface(w, TMP2.copy(w.pos).addScaledVector(w.vel, -dt)); if (w.decoy) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); fx.explosion(w.pos, 4, 'ground'); } else wpnDetonate(w); }
   }
   // разведчик: облёт по маршруту над городом; кого видит (прямая видимость, до 7 км) — те комплексы «разведаны»
   function updateRecon(w, dt) {
@@ -702,7 +703,7 @@ export function createStrike(ctx) {
         turnToward(w.dir, AIM, W.g * G0 / Math.max(80, sp) * dt);
         w.vel.copy(w.dir).multiplyScalar(sp);
       }
-      w.pos.addScaledVector(w.vel, dt); w.speed = w.vel.length();
+      PREV.copy(w.pos); w.pos.addScaledVector(w.vel, dt); w.speed = w.vel.length();
     } else {
       // ракета: ТВ («выстрелил и забыл» по захваченной точке), лазерная (по пятну), ПРР (по излучению или по памяти)
       let aim = null;
@@ -743,7 +744,7 @@ export function createStrike(ctx) {
         if (TMP2.distanceTo(aim) < R) { w.pos.copy(TMP2); wpnDetonate(w); return; }
       }
     }
-    if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > (W.life || 150)) wpnDetonate(w);
+    if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > (W.life || 150)) { toSurface(w, PREV); wpnDetonate(w); }
   }
   // крылатая ракета: маршевый двигатель держит скорость, полёт на малой высоте с облётом крыш (смотрит вперёд),
   // за 1,8 км до цели — пикирование в точку (на конце — оптическая/тепловизионная ГСН). w.route — точки маршрута
@@ -782,9 +783,9 @@ export function createStrike(ctx) {
       TMP.y = clamp((top + alt - w.pos.y) / 200, -0.25, hills ? 0.8 : 0.55); TMP.normalize();
     }
     turnToward(w.dir, TMP, 0.7 * dt);
-    w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed); w.homing = true;
+    PREV.copy(w.pos); w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed); w.homing = true;
     if (!W.uav && !W.glide) { w.trailT -= dt; if (w.trailT <= 0) { w.trailT = 0.08; fx.wpnTrail(w); } } // у дронов (поршневой мотор) и планирующих бомб следа нет
-    if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > W.life) wpnDetonate(w);
+    if (w.pos.y <= Math.max(city.topAt(w.pos.x, w.pos.z), -4) || w.t > W.life) { toSurface(w, PREV); wpnDetonate(w); }
   }
   // истинное время до цели: прогон той же кинематики (разгон, разворот 0,7 рад/с, маршрутные точки — снимаются за 700 м, пикирование
   // с 1,8 км) вперёд с шагом 0,25 с; пересчёт раз в 2 с, между ними — убывает ровно. Баллистика — по своему расписанию (T)
@@ -805,6 +806,16 @@ export function createStrike(ctx) {
     }
     w.etaC = { t0: w.t, v: T, d: L, route: route.length };
     return { t: T, d: L };
+  }
+  // подрыв о землю — на поверхности (Mark 2026-10-25: «на зимней карте бьют как бы под землю»): за шаг быстрый боеприпас уходил ниже
+  // рельефа или крыши на скорость × шаг (баллистика — 20–50 м, бомбы и крылатые — 5–10 м), и взрыв с уроном считались там: урон по технике
+  // зависел от частоты кадров (у сервера шаг крупнее). Теперь — назад по отрезку шага до поверхности (8 делений пополам)
+  function toSurface(w, from) {
+    const top = (p) => Math.max(city.topAt(p.x, p.z), -4);
+    if (w.pos.y > top(w.pos) || from.y <= top(from)) return; // не под землёй или шаг начался уже ниже — как есть
+    SF_A.copy(from); SF_B.copy(w.pos);
+    for (let k = 0; k < 8; k++) { SF_M.copy(SF_A).add(SF_B).multiplyScalar(0.5); if (SF_M.y > top(SF_M)) SF_A.copy(SF_M); else SF_B.copy(SF_M); }
+    w.pos.copy(SF_B);
   }
   function wpnDetonate(w) {
     if (w.dead) return;

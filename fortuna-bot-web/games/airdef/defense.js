@@ -14,7 +14,7 @@ import { trFmt } from './i18n-fmt.js?v=20261025a';
 import { CITY, mulberry32 } from './city.js?v=20261025a';
 import { weaponHasModel } from './models.js?v=20261025a';
 import { LNCH, lnchToWorld } from './launchers.js?v=20261025a';
-import { ico } from './icons.js?v=20261025a';
+import { ico, capsHtml } from './icons.js?v=20261025a';
 import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261025a';
 import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261025a';
 import { TEAM_NAME, TBM_RULE, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261025a';
@@ -465,7 +465,7 @@ export function createDefense(C) {
       if (st.wave === 1) h += `<p class="hint">${tr('Первая волна: не больше 1 дальнего и 1 среднего комплекса, ближние — за очки.')}</p>`;
       if (st.sel && !st.sel.dead && mine(st.sel)) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S)}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>
           <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(samCost(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
       } else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
       h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
@@ -473,7 +473,7 @@ export function createDefense(C) {
       for (const [k, s] of Object.entries(SAM)) {
         if (s.side !== side || s.era > B.era) continue;
         const c = costOf(k), lim = netLeft(k), lk = lockedSam(k), no = c > st.budget || (lim !== null && lim <= 0) || lk;
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${tr('{0} · {1} · {2} км{3}', [CLS_NAME[samClass(k)], SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), lim !== null ? tr(' · можно ещё {0}', [Math.max(0, lim)]) : ''])}</span></div><span class="pr">${c}</span></div>`;
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${no ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s)}</b><span>${tr('{0} · {1} · {2} км{3}', [CLS_NAME[samClass(k)], SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), lim !== null ? tr(' · можно ещё {0}', [Math.max(0, lim)]) : ''])}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.') : tr('Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса на карте — перенос (новое место и «Подтвердить») или продажа.')}</p>`;
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? tr('Готов ✓ (снять)') : tr('ГОТОВ')}</button>`;
@@ -482,7 +482,7 @@ export function createDefense(C) {
       h += `<h3>${tr('Волна {0}/{1}{2}', [st.wave, st.waves, left])}</h3><div>${tr('В воздухе: <b>{0}</b> · объекты целы <b>{1}%</b>', [air, Math.round((1 - (B.valueK || 0)) * 100)])}</div>`;
       if (st.sel && !st.sel.dead && mine(st.sel)) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${unitStatus(u)}</span></div></div><div class="dact">
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S)}</b><span>${unitStatus(u)}</span></div></div><div class="dact">
           ${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}
           ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`;
       } else h += `<p class="hint">${tr('Коснитесь своего комплекса: «Управлять» — сесть оператором. Остальными стреляют расчёты. Красные треугольники — цели, которые видит сеть РЛС.')}</p>`;
@@ -648,7 +648,7 @@ export function createDefense(C) {
     return `<div class="dcard on" style="border-color:#ef4444"><div class="nm"><b style="color:#fca5a5">${tr('Баллистика: {0}', [tb.length])}</b><span>${tr('до падения {0} с · сбить можно только на снижении', [Math.min(...tb.map((w) => Math.ceil(w.T - w.t)))])}</span></div></div>` +
       (atk() ? '' : `<p class="hint">${abm.length ? abm.map((u) => `${u.S.short}: ${!u.emit ? tr('РЛС выключена!') : u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('ракет {0}', [u.ammo])}`).join(' · ') : tr('Противоракетных комплексов нет — баллистику не сбить.')}</p>`);
   }
-  function watchBtns() { return `<div class="dact"><button class="btn alt" data-a="watch">${tr('Смотреть ▶')}</button>${st.net ? '' : `<button class="btn alt" data-a="speed">${tr('Время ×{0}', [st.timeK === 1 ? 4 : 1])}</button>`}</div>`; }
+  function watchBtns() { return `<div class="dact"><button class="btn alt" data-a="watch">${tr('Смотреть ▶')}</button>${st.net ? '' : `<button class="btn alt" data-a="speed">${ico('speed', 'ii')}${tr('Время ×{0}', [st.timeK === 1 ? 4 : 1])}</button>`}</div>`; }
   function renderSide() {
     const S = C.S; if (!S) return;
     if (st.net && st.multi && st.phase === 'debrief') return renderNetRes();
@@ -671,7 +671,7 @@ export function createDefense(C) {
       if (st.multi) h += multiDefHint();
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S)}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>
           <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round((u.paid || SAM_COST[u.key]) * 0.7)])}</button>
           ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? tr('Засада: вкл') : tr('Засада: выкл')}</button>` : ''}${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
       }
@@ -681,7 +681,7 @@ export function createDefense(C) {
       for (const [k, s] of cat) {
         if (s.side !== dside() || s.era > C.setup.era) continue;
         const c = SAM_COST[k], shut = st.opts.allow && !st.opts.allow.has(k), lk = lockedSam(k); // урок: покупать только то, о чём он
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span></div><span class="pr">${c}</span></div>`;
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s)}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». «Отмена» — не покупать. Зелёная тень на месте — что комплекс перекроет на 300 м, просветы — что закроют дома.') : tr('Ведите мышь по карте — зелёная тень показывает, что комплекс перекроет на 300 м, а что закроют дома; щелчок — выбрать место (можно сколько угодно раз), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса — тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») и продажа.')}</p>`;
       h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>${tr('В БОЙ — {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}', [st.wave + 1])])}</button>`;
@@ -690,7 +690,7 @@ export function createDefense(C) {
       h += `<h3>${tr('Волна {0}/{1}', [st.wave, st.waves])}</h3><div>${tr('В воздухе: <b>{0}</b> · сбито: <b>{1}</b>', [air, st.waveDowns])}</div>`;
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
-        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${unitStatus(u)}</span></div></div><div class="dact">
+        h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S)}</b><span>${unitStatus(u)}</span></div></div><div class="dact">
           ${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}
           ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}
           ${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? tr('Огонь: свободный') : tr('Огонь: по команде')}</button>`}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`;
@@ -1090,7 +1090,7 @@ export function createDefense(C) {
     // строка состояния
     const trk = u.track || u.desig, d = trk ? trk.pos.distanceTo(u.pos) : 0, h = trk ? trk.pos.y - city.groundH(trk.pos.x, trk.pos.z) : 0;
     const zone = !trk ? '' : trk.W && trk.W.kind === 'tbm' && C.S.inZone(u, trk) && (d > S.rmax || h > S.hmax) ? tr('ПУСК В УПРЕЖДЕНИЕ') : d > S.rmax ? tr('ДАЛЕКО') : d < S.rmin ? tr('БЛИЗКО') : h > S.hmax ? tr('ВЫСОКО') : h < S.hmin ? tr('НИЗКО') : tr('В ЗОНЕ');
-    $('opInfo').innerHTML = `${clock()}${C.auto ? `${tr('<b style="color:#86efac">АВТО</b> ·')} ` : ''}<b>${S.name}</b> · ${SAM_TYPE[S.type]}<br>${unitStatus(u)}${S.type === 'command' ? tr(' · метод: {0}', [u.method === 'half' ? tr('половинное спрямление') : tr('три точки')]) : ''}` +
+    $('opInfo').innerHTML = `${clock()}${C.auto ? `${tr('<b style="color:#86efac">АВТО</b> ·')} ` : ''}<b>${S.name}</b>${capsHtml(S)} · ${SAM_TYPE[S.type]}<br>${unitStatus(u)}${S.type === 'command' ? tr(' · метод: {0}', [u.method === 'half' ? tr('половинное спрямление') : tr('три точки')]) : ''}` +
       (trk ? tr('<br>цель: {0} км, {1} м — <b>{2}</b>{3}', [(d / 1000).toFixed(1), Math.round(h), zone, !u.track && u.desig ? tr(' · захват {0}%', [Math.round(clamp(u.seeT / ((S.radar ? S.radar.acq : 2) * (C.MODE().reactK || 1)), 0, 1) * 100)]) : '']) : S.type === 'ir' ? tr('<br>наведите перекрестие на самолёт — ГСН «зарычит» и захватит') : S.type === 'guns' ? tr('<br>ведите ствол в жёлтый кружок упреждения и держите «ОГОНЬ»') : tr('<br>коснитесь отметки цели на экране или на круговом обзоре'))
       + (arm ? `<br><span class="st">${tr('⚠ ПРР ЛЕТИТ В ВАС — выключите РЛС!')}</span>` : '') + (op.msgT > 0 ? `<br><span class="st">${op.msg}</span>` : '');
     $('opRadar').classList.toggle('on', !!u.emit); $('opRadar').title = u.emit ? tr('РЛС включена — выключить') : tr('РЛС выключена — включить'); // иконка закрашена — излучает
@@ -1296,7 +1296,7 @@ export function createDefense(C) {
     $('wInfo').textContent = tr('{0}{1} · высота {2} · {3} км/ч{4}{5}', [name, o.salvo && o.salvo.length && !o.inbound ? tr(' · пуск {0}/{1}', [o.n0 - o.salvo.length, o.n0]) : '', h > 9999 ? (h / 1000).toFixed(0) + tr(' км') : h + tr(' м'), sp, left, o.dead ? tr(' · поражена') : '']);
     setWSpeed();
   }
-  function setWSpeed() { const t = `×${st.timeK === 1 ? 4 : 1}`, e = $('wSpeed'); if (e.textContent !== t) e.textContent = t; }
+  function setWSpeed() { const k = st.timeK === 1 ? 4 : 1, e = $('wSpeed'); if (e._k !== k) { e._k = k; e.innerHTML = `${ico('speed', 'ii')}×${k}`; e.title = tr('Время ×{0}', [k]); } } // значок «перемотки» (Mark 2026-10-25)
   // за ПВО: сирена воздушной тревоги — когда пошли крылатые ракеты и ещё раз — когда пуск баллистики (раз за волну).
   // Аркада: плашка «Угроза …», сирена при баллистике доигрывает; реализм: без плашек, баллистика во время тревоги — сирена заново
   function siren(w) {
@@ -1442,14 +1442,14 @@ export function createDefense(C) {
     if (st.phase === 'plan') {
       h += `<h3>${tr('Раунд {0}/{1} · расстановка ПВО{2}', [B.round, B.rounds, left])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>
         <p class="hint">${tr('Волну собирает {0}: дроны, крылатые ракеты, баллистика — что и по каким объектам, неизвестно. Пушки и ПЗРК — у объектов, противоракетные — у самых ценных.', [who])}</p>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div><div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(samCost(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`; }
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S)}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div><div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(samCost(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`; }
       else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
       h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
-      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || sm.era > B.era) continue; const c = costOf(k), lk = lockedSam(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}</b><span>${tr('{0} · {1} км{2}', [SAM_TYPE[sm.type], (sm.rmax / 1000).toFixed(1), sm.abm ? tr(' · сбивает баллистику') : ''])}</span></div><span class="pr">${c}</span></div>`; }
+      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || sm.era > B.era) continue; const c = costOf(k), lk = lockedSam(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}${capsHtml(sm)}</b><span>${tr('{0} · {1} км{2}', [SAM_TYPE[sm.type], (sm.rmax / 1000).toFixed(1), sm.abm ? tr(' · сбивает баллистику') : ''])}</span></div><span class="pr">${c}</span></div>`; }
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? tr('Готов ✓ (снять)') : tr('ГОТОВ')}</button>`;
     } else if (st.phase === 'wave') {
       h += `<h3>${tr('Раунд {0}/{1} · оборона', [B.round, B.rounds])}</h3><div>${tr('Разрушено: <b>{0}%</b> ценности объектов', [Math.round(100 * (B.V || 0) / (B.v0 || 1))])}</div>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}</b><span>${unitStatus(u)}</span></div></div><div class="dact">${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? tr('Огонь: свободный') : tr('Огонь: по команде')}</button>`}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`; }
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S)}</b><span>${unitStatus(u)}</span></div></div><div class="dact">${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? tr('Огонь: свободный') : tr('Огонь: по команде')}</button>`}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`; }
       else h += `<p class="hint">${tr('Коснитесь своего комплекса: «Управлять» — сесть оператором, «Огонь: по команде» — беречь ракеты. Остальными стреляют расчёты.')}</p>`;
       h += tbmPanel() + watchBtns() + `<button class="btn alt" data-a="help">${tr('Нужна помощь — метка союзникам')}</button>`;
     }
@@ -1558,6 +1558,7 @@ export function createDefense(C) {
     camera(dt) { if (st.view === 'op' && st.op) opCamera(dt); else if (st.view === 'watch') watchCamera(dt); else { camera.position.set(view.cx, 9000, view.cz + 1); camera.lookAt(view.cx, 0, view.cz); } },
     focus: () => (st.op ? st.op.pos : st.watch ? st.watch.pos : camera.position),
     skip3D: () => st.view !== 'op' && st.view !== 'watch',
+    fps60: true, // оборона и «Мульти-волна» (одиночные и онлайн) — предел кадров как во всей игре (Mark 2026-10-25), без 30 к/с для 3D
     near: () => (st.view === 'watch' ? 1 : 0),
     timeK: () => (st.phase === 'wave' && !st.over && !st.net ? st.timeK : 1),
     resize() { sizeMap(); },

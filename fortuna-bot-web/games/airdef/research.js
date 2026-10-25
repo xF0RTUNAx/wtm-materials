@@ -4,7 +4,7 @@
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
 import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout } from './progress.js?v=20261025a';
 import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261025a';
-import { ico } from './icons.js?v=20261025a';
+import { ico, capsHtml } from './icons.js?v=20261025a';
 import { XP, SV, trMsg } from './progress-net.js?v=20261025a';
 import { tr, trIf, LANG } from './i18n.js?v=20261025a';
 
@@ -36,6 +36,7 @@ const CSS = `
 #research .card { position: absolute; border-radius: 0; padding: 0; box-shadow: none; max-height: none; animation: none; width: var(--cw); height: var(--ch); background: linear-gradient(160deg, #39403a 0, #22271f 55%, #151a12 100%); border: 1px solid #0a0c09; cursor: pointer; overflow: hidden; }
 #research .card img { position: absolute; left: -6px; top: 6px; width: 74%; height: 92%; object-fit: contain; object-position: left center; }
 #research .card .nm { position: absolute; right: 7px; top: 4px; font: 400 13.5px 'Russo One'; text-shadow: 0 1px 3px #000; max-width: 62%; text-align: right; }
+#research .card .caps.mini { position: absolute; right: 6px; top: 22px; } #research .card .caps.mini .ic { width: 13px; height: 13px; }
 #research .card .rk { position: absolute; right: 7px; bottom: 2px; font: 400 18px 'Russo One'; color: #d9d6cb; text-shadow: 0 1px 3px #000; }
 #research .card .pr { position: absolute; left: 6px; bottom: 5px; display: flex; align-items: center; gap: 5px; font: 600 13.5px 'IBM Plex Mono', monospace; text-shadow: 0 1px 3px #000; padding: 1px 6px 1px 3px; background: rgba(10,12,9,.62); }
 #research .card .pr.xp { color: var(--xp); } #research .card .pr.sv { color: #eceae2; } #research .card .pr.no { color: var(--dim2); }
@@ -104,7 +105,7 @@ export function createResearch(C, PG) {
     const price = s.k === 'buy' ? `<span class="pr ${s.can ? 'sv' : 'no'}">${SV(n.cost)}</span>` : s.k === 'res' ? `<span class="pr ${s.can ? 'xp' : 'no'}">${XP(n.cost)}</span>` : s.k === 'lock' ? `<span class="pr no">${ico('lock')}${n2(n.cost)}</span>` : '';
     const bar = s.k === 'res' && p.goal[n.branch] === n.id ? `<div class="bar"><i style="width:${Math.min(100, p.xp / n.cost * 100)}%"></i></div>` : '';
     return `<div class="card ${s.k === 'own' || s.k === 'start' ? 'own' : ''} ${s.can ? 'can' : ''} ${s.k === 'lock' ? 'lock' : ''} ${sel ? 'sel' : ''} ${pr && pr.id === n.id ? 'pair' : ''}" data-id="${n.id}" style="left:${x}px;top:${y}px">
-      <img src="${thumb(n)}" alt="" loading="lazy">${tag}<span class="nm">${trIf(n.short)}</span><span class="rk">${RANK_NAME[n.rank]}</span>${price}${bar}</div>`;
+      <img src="${thumb(n)}" alt="" loading="lazy">${tag}<span class="nm">${trIf(n.short)}</span>${n.branch === 'pvo' ? capsHtml(SAM[n.key], 'mini') : ''}<span class="rk">${RANK_NAME[n.rank]}</span>${price}${bar}</div>`;
   }
   function parity(r) {
     const p = P();
@@ -140,7 +141,7 @@ export function createResearch(C, PG) {
     const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${trIf(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
     const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:400 13px 'Russo One'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? tr('✓ куплен') : sp.k === 'start' ? tr('★ стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
     return `<div class="veil" data-close="1"></div><div class="dos"><div class="sc"><div class="hero"><img src="${thumb(n)}" alt=""></div>
-      <span class="mk">${tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)])}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}</div>
+      <span class="mk">${tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)])}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
       ${stats}<p>${guide(n)}</p>${an}</div><div class="acts">${act}</div></div>`;
   }
   function draw() {

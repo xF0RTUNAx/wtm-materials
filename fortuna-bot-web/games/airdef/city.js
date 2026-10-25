@@ -53,6 +53,14 @@ export function groundH(x, z) {
   if (Math.abs(x - AIRPORT.x) < AIRPORT.w / 2 + 300 && Math.abs(z - AIRPORT.z) < AIRPORT.d / 2 + 300) h = 4; // ровное поле аэропорта
   const dr = Math.abs(x - riverX(z));
   const bank = CITY.RIVER_W / 2;
+  // долина реки за городом (Mark 2026-10-25: «речка утоплена вниз очень сильно»): холмы там — до сотен метров, а русло резалось обрывом
+  // в 60 м — река шла по дну отвесной щели. Теперь у воды пойма (вода + 7 м), от неё склон ≈ 1 : 2,5 (22°), стык с холмами — плавный;
+  // в городе (r < 9 км) — как было
+  const wv = smooth(9000, 10500, r);
+  if (wv > 0) { // плавный минимум (k = 30 м), но не ниже воды + 4 м — иначе у берега сухая яма ниже уровня реки
+    const v = CITY.WATER_Y + 7 + Math.max(0, dr - bank - 35) * 0.4, k = 30, e = Math.max(0, k - Math.abs(h - v));
+    h += (Math.max(Math.min(h, v) - e * e / (4 * k), Math.min(h, CITY.WATER_Y + 4)) - h) * wv;
+  }
   return h + (CITY.WATER_Y - 7 - h) * (1 - smooth(bank - 25, bank + 35, dr));
 }
 export function inWater(x, z) { return Math.abs(x - riverX(z)) < CITY.RIVER_W / 2 - 10; }

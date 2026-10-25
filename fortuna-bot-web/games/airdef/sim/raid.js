@@ -52,9 +52,10 @@ export function createRaid(S, city, rnd, opts = {}) {
   const fx = opts.fx || {};
   // сложность одиночной обороны (difficulty.js, ставит игра): skill — прибавка к умению пилотов, early — ПРР и ложные цели с 1-й волны
   const H = { skill: 0, early: false };
-  // волна: n самолётов, роли по номеру волны; подходят группами с разных направлений
+  // волна: n самолётов, роли по номеру волны; подходят парами с разных направлений (Mark 2026-10-25: рядом — не больше двух, то же
+  // число машин рассредоточено; было — до трёх групп по 3–4 с одного направления), по времени — тремя эшелонами через 25 с, как раньше
   function spawnWave(n, wave, targets, R) {
-    const loads = RAID_LOADS[side][era], groups = Math.min(3, 1 + Math.floor(n / 3));
+    const loads = RAID_LOADS[side][era], groups = Math.ceil(n / 2), step = Math.PI * 2 / groups;
     const bearing0 = rnd() * Math.PI * 2;
     for (let i = 0; i < n; i++) {
       const g = i % groups;
@@ -65,8 +66,8 @@ export function createRaid(S, city, rnd, opts = {}) {
       else if (wave >= 3 && i % 4 === 2) role = 'low';
       else if (loads.tv && i % 3 === 2) role = 'tv';
       const tgt = targets[(i + g) % targets.length];
-      const br = bearing0 + g * (Math.PI * 2 / groups) + (rnd() - 0.5) * 0.4;
-      spawn(role, tgt, br, g * 25 + rnd() * 8, R);
+      const br = bearing0 + g * step + (rnd() - 0.5) * Math.min(0.4, step * 0.3); // разброс в паре — не дальше трети промежутка до соседней
+      spawn(role, tgt, br, (g % 3) * 25 + rnd() * 8, R);
     }
     // вертолёты — со 2-й волны (с 4-й — пара): подходят по рельефу с 9 км, прячась за холмами
     if (wave >= 2 && RAID_HELI[side] && RAID_HELI[side][era] && opts.helis !== false) for (let k = 0; k < (wave >= 4 ? 2 : 1); k++) spawn('heli', targets[(k + wave) % targets.length], bearing0 + Math.PI + (k - 0.5) * 0.6, 10 + k * 12 + rnd() * 10, Math.min(R || 9000, 9000));

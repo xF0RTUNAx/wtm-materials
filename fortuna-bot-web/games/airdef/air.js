@@ -1147,7 +1147,7 @@ export function createAir(C) {
     const L0 = opts.items ? { items: opts.items, pod: opts.pod, side: att, plane: opts.plane } : LOADOUTS[setup.era][setup.lo];
     const L = !opts.items && isHeli(HELI_Q) ? HELI_LOADOUTS.find((q) => q.plane === HELI_Q) || { ...L0, plane: HELI_Q, side: heliModel(HELI_Q).s.side } : L0;
     // вертолёт (sim/heli.js): своя лётная модель; «Реализм» — честное управление, остальное — «Аркада»
-    craft.hm = isHeli(L.plane) ? heliModel(L.plane, { arcade: setup.diff !== 'real' }) : null; craft.heli = !!craft.hm;
+    craft.hm = isHeli(L.plane) ? heliModel(L.plane, { arcade: true }) : null; craft.heli = !!craft.hm; // вертолёт — аркадное управление и в «Реализме» (Mark 2026-10-25: «чтобы не усложнять»)
     if (craft.irBase === undefined) craft.irBase = craft.ir;
     craft.ir = craft.heli ? craft.irBase * 0.55 : craft.irBase; // вертолёт: турбовальные двигатели с экранами выхлопа — тепловым ГСН труднее
     game.used = [(L.heli || craft.heli ? 'heli:' : 'air:') + L.plane, ...L.items.map(([k]) => 'wpn:' + k)]; // прокачка: на чём летали (в «Реализме» — должно быть куплено)
