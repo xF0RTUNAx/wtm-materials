@@ -184,6 +184,8 @@ const CONFIG = {
   w_nar_hydra: { src: new URL('./own/hydra70.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР Hydra 70 в полёте: Mk 66 + M151, 1,45 м, Ø 70 мм
   w_kh29t: { src: new URL('./own/kh29t.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-29Т: своя модель (Blender, own/kh29t.glb)
   w_nar_s8: { src: new URL('./own/s8.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 256, nTex: () => 256, pickMesh: /./, own: true }, // НАР С-8КОМ в полёте: своя модель (Blender по чертежу и фото Wikimedia S-8_KOM_80_mm_rocket.jpg), 1,57 м, Ø 80 / 82 мм, 6 лопастей раскрыты, размах 384 мм
+  // PrSM: модель сборщика 4,24 м (по фото), настоящая — 3,96 м (×0,935); толще настоящей (0,50 против 0,43 м) — исправит сборщик во второй ревизии
+  w_prsm: { src: new URL('./own/prsm.glb', import.meta.url).pathname, scale: 0.935, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // PrSM: своя модель (Blender, own/prsm.glb)
   w_kh55: { src: new URL('./own/kh55.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Х-55: своя модель (Blender, own/kh55.glb)
   w_ecm_e: { src: new URL('./own/sorbtsiya.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Станция помех «Сорбция»: своя модель (Blender, own/sorbtsiya.glb)
   w_ecm_w: { src: new URL('./own/alq131.glb', import.meta.url).pathname, scale: 1, nose: '-z', tex: () => 512, nTex: () => 512, pickMesh: /./, own: true }, // Станция помех AN/ALQ-131: своя модель (Blender, own/alq131.glb); пока только значок

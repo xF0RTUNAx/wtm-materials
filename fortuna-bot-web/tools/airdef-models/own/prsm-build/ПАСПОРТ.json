@@ -1,0 +1,16 @@
+{
+ "key": "w_prsm",
+ "weapon": "prsm",
+ "name": "PrSM",
+ "rev": 1,
+ "files": {
+  "glb": "prsm.glb",
+  "blend": "prsm.blend",
+  "build": [
+   "build.py",
+   "bake.py",
+   "deliver.py",
+   "_текст/make_text.py"
+  ]
+ }
+}

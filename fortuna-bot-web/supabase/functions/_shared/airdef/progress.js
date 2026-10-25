@@ -51,7 +51,7 @@ export const PAIR = {
   h_mi8: 'h_uh60', h_uh60: 'h_mi8', h_ka50: 'h_ah64', h_rah66: 'h_ka52', // 2026-10-21: Ми-8МТВ ↔ UH-60 (транспортно-боевые), Ка-50 → AH-64D (одноместные штурмовые), RAH-66 ↔ Ка-52 (ранг IV)
   shturm: 'hellfire', ataka: 'hellfire', hellfire: 'ataka', s8: 'hydra', hydra: 's8',
   r17: 'atacms', kh55d: 'quail', kh55_s: 'agm86', kh55: 'jassm', tochka: 'atacms', kh555: 'agm86', kh101_s: 'jassm_s', kh101: 'jassm', shahed: 'uav_w', kalibr: 'tomahawk', iskander: 'atacms', kinzhal: 'atacms',
-  agm86: 'kh55_s', uav_w: 'shahed', slam: 'kh555', jsow: 'kh555', tomahawk: 'kalibr', atacms: 'iskander', quail: 'kh55d', sdb: 'kh55d', jassm_s: 'kh555', storm_s: 'kh555', storm: 'kh59mk2',
+  agm86: 'kh55_s', uav_w: 'shahed', slam: 'kh555', jsow: 'kh555', tomahawk: 'kalibr', atacms: 'iskander', prsm: 'iskander', quail: 'kh55d', sdb: 'kh55d', jassm_s: 'kh555', storm_s: 'kh555', storm: 'kh59mk2',
 };
 // линии дерева (Mark 2026-10-19: как в дереве исследований WTM): ключ → предыдущая единица линии; исследовать можно, когда
 // предыдущая исследована. Без предыдущей — начало линии (открыта, когда открыт её ранг). Развилка — у одной предыдущей несколько
@@ -87,7 +87,7 @@ export const PARENT = {
   h_ka50: 'h_mi8', h_ka52: 'h_ka50', h_mi8: 'h_mi24', h_mi28: 'h_mi8', h_uh60: 'h_uh1', h_rah66: 'h_ah64', h_ah1: 'h_uh1', h_ah64: 'h_ah1', ataka: 'shturm', hellfire: 'hydra',
   // удары
   tochka: 'r17', iskander: 'tochka', kinzhal: 'tochka', kh555: 'kh55_s', kalibr: 'kh555', kh101_s: 'kh555', shahed: 'kh55d',
-  tomahawk: 'agm86', slam: 'agm86', jsow: 'agm86', jassm_s: 'tomahawk', storm_s: 'slam', storm: 'agm65b', sdb: 'jsow', quail: 'uav_w',
+  tomahawk: 'agm86', slam: 'agm86', jsow: 'agm86', jassm_s: 'tomahawk', storm_s: 'slam', storm: 'agm65b', sdb: 'jsow', quail: 'uav_w', prsm: 'atacms',
 };
 // цена (опыт на исследование = серебро на покупку): «крупное» — самолёт, дальний/средний комплекс; остальное — «малое»
 export const COST = { big: [600, 2500, 6000, 12000], small: [300, 1000, 2500, 5000] };

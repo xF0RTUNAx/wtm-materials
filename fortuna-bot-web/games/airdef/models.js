@@ -144,6 +144,7 @@ const META = {
   w_agm86: { weapon: 'agm86', lazy: true, stations: [] }, // AGM-86 ALCM — mahmadsaleem11111
   w_storm: { weapon: 'storm', lazy: true, wings: 'fold', stations: [] }, // Storm Shadow — Viktor_ (CC BY 4.0), декали в текстуре стёрты (Свои/Storm Shadow); 5,1 м; у модели крылья раскрыты — на подвеске складываются вдоль корпуса, раскрываются после сброса
   w_atacms: { weapon: 'atacms', lazy: true, stations: [] }, // ракета M142 HIMARS — Denis.Cherkasov1
+  w_prsm: { weapon: 'prsm', lazy: true, stations: [] }, // PrSM — собственная модель (tools/airdef-models/own/prsm)
   d_shahed: { ev: true, lazy: true, stations: [] }, // «Шахед-136» — faintastic (винт — группа prop)
   d_uav: { ev: true, lazy: true, stations: [] }, // БПЛА — Artem Goyko (винты — prop, prop2)
   // ── вертолёты (2026-10-20): грузятся по запросу (heliModel / wantModel); винты — части rotor, rotor2 (соосный нижний), trotor — крутит spinProps;
@@ -318,6 +319,7 @@ const GLB_V_OWN = {
   nasams_lo: '20261025n',
   msl_amraam: '20261025n', // AIM-120A — своя ракета NASAMS вместо вырезки из F/A-18 andertan (msl_aim120 остаётся «Летке»)
   w_kinzhal: '20261025o',
+  w_prsm: '20261025p',
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
 // «Оса-М» ЗИФ-122 (KoreanNavy) и «Бук-М3» (Valera121) вместо моделей Jeyhun1985 (2026-10-22): новые файлы

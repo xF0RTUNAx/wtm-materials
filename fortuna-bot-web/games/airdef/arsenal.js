@@ -534,6 +534,12 @@ Object.assign(AG, {
     launcher: 'l_himars',
     guide: 'Тактическая ракета для РСЗО M270 и HIMARS: наведение по GPS, на спуске — около 1 км/с.',
     specs: [['Страна', 'США'], ['Дальность', '≈ 300 км'], ['КВО', '≈ 10 м']], vis: { L: 3.98, r: 0.3, kind: 'missile', color: 0xc7c0a8 } },
+  // PrSM (Mark 2026-10-25: своя модель сборщика — пара «Искандеру» в баллистике Запада): та же пусковая HIMARS (по две в контейнере), квазибаллистика с
+  // манёвром на спуске, точнее и менее заметна, чем ATACMS; боевая часть легче (91 кг против 230). Длина 3,96 м, диаметр 0,43 м
+  prsm: { boostT: 10, name: 'PrSM (Precision Strike Missile)', short: 'PrSM', side: 'west', era: 4, kind: 'tbm', mass: 900, H: 50000, T: 85, cep: 5, man: 1, dec: 0, dmg: 260, blast: 32, rcs: 0.12,
+    launcher: 'l_himars',
+    guide: 'Новая тактическая ракета для HIMARS и M270 вместо ATACMS: две в контейнере, дальность больше, манёвр на спуске. Перехват — только противоракетные комплексы.',
+    specs: [['Страна', 'США'], ['Дальность', '≈ 500 км'], ['КВО', '≈ 5 м'], ['Пусковая', 'HIMARS, M270']], vis: { L: 3.96, r: 0.215, kind: 'missile', color: 0x44474c } },
   // air — баллистика воздушного пуска: с носителя (CARRIERS), дуга начинается с его высоты; разгон короткий — ракета уже на скорости
   kinzhal: { boostT: 3, air: true, name: 'Х-47М2 «Кинжал»', short: 'Кинжал', side: 'east', era: 4, kind: 'tbm', mass: 4300, H: 38000, T: 70, cep: 10, man: 1, dec: 0, dmg: 480, blast: 54, rcs: 0.15,
     guide: 'Аэробаллистическая ракета с МиГ-31К: сброс на большой высоте и скорости, разгон, полёт по высокой дуге и манёвр на спуске. Перехват — только Patriot PAC-3 / С-400, и то редко. Взят «Кинжал» — другой баллистики в волне нет.',
@@ -612,16 +618,16 @@ export const COMBINED = {
   // баллистики и ложных целей — там очков больше (MULTI.westK по эпохам)
   west: { 2: [['scout', 1, 1], ['agm86', 13, 2, 'e_b52']],
     3: [['scout', 1, 1], ['uav_w', 4, 1], ['tomahawk', 3, 2, 'e_b1b'], ['slam', 2, 2, 'f18'], ['jsow', 2, 2, 'f18'], ['atacms', 2, 3]],
-    4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 6, 2, 'f16'], ['sdb', 6, 2, 'f16'], ['tomahawk', 3, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b52'], ['storm', 2, 2, 'e_typhoon'], ['atacms', 2, 3]] },
+    4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 6, 2, 'f16'], ['sdb', 4, 2, 'f16'], ['tomahawk', 3, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b52'], ['storm', 2, 2, 'e_typhoon'], ['prsm', 2, 3]] }, // IV: PrSM вместо ATACMS, SDB 6 → 4 — очков угрозы столько же (16)
 };
 // очки угрозы: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 5, с манёвром и ложными целями — 7
-export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, sdb: 1, kh55: 3, kh555: 3, kh101: 4, kalibr: 3, tomahawk: 3, agm86: 3, slam: 3, jsow: 2, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, iskander: 7, kinzhal: 9 };
+export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, sdb: 1, kh55: 3, kh555: 3, kh101: 4, kalibr: 3, tomahawk: 3, agm86: 3, slam: 3, jsow: 2, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, prsm: 6, iskander: 7, kinzhal: 9 };
 export const threatOf = (comp) => comp.reduce((n, [k, c]) => n + (THREAT[k] ?? 3) * c, 0);
 // отдельный режим «Мульти-волна»: что можно заказать за удар (ключ, носитель или null — пусковая / своим ходом, с какой эпохи),
 // бюджет удара в очках угрозы (у запада ×1,15) и очки обороны на расстановку под одну волну
 export const MULTI = {
   items: { east: [['shahed', null, 4], ['kh55d', 'e_tu160', 2], ['kh55', 'e_tu160', 2], ['kh555', 'e_tu160', 3], ['kh101', 'e_tu160', 4], ['kalibr', 'e_tu160', 4], ['r17', null, 1], ['tochka', null, 2], ['iskander', null, 4], ['kinzhal', 'e_mig31', 4]],
-    west: [['uav_w', null, 3], ['quail', 'f16', 4], ['sdb', 'f16', 4], ['agm86', 'e_b52', 2], ['slam', 'f18', 3], ['jsow', 'f18', 3], ['tomahawk', 'e_b1b', 3], ['jassm', 'e_b52', 4], ['storm', 'e_typhoon', 4], ['atacms', null, 3]] },
+    west: [['uav_w', null, 3], ['quail', 'f16', 4], ['sdb', 'f16', 4], ['agm86', 'e_b52', 2], ['slam', 'f18', 3], ['jsow', 'f18', 3], ['tomahawk', 'e_b1b', 3], ['jassm', 'e_b52', 4], ['storm', 'e_typhoon', 4], ['atacms', null, 3], ['prsm', null, 4]] },
   // у запада во II эпохе нет баллистики и ложных целей — очков больше; с III (SLAM, JSOW, SDB) — почти поровну (пересчёт 2026-10-12)
   budget: { 1: 15, 2: 33, 3: 42, 4: 60 }, westK: { 1: 1, 2: 1.15, 3: 1.05, 4: 1 },
   sam: { 1: 1500, 2: 1800, 3: 2200, 4: 2500 },

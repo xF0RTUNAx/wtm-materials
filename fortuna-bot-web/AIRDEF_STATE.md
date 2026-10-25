@@ -618,3 +618,9 @@ Mark работает с **Opus на высоком усилии** — он ру
   в #mbtns, окно «Б» без пьедестала, «?» мерцает до первого открытия, «Мои бои»); net.js / progress-net.js / online.js читают activeAcc(); итог онлайн-боя — строка рейтинга;
   аккаунт rmock-… в progress-net работает как ?pgtest (без сервера). Ответ без CORS у ещё не задеплоенной функции = «Рейтинг скоро откроется» (404 или ошибка сети при onLine).
   Перед деплоем: assets-manifest.js (три новых модуля — в assets.json), update.ps1 не нужен (game-server не менялся этой правкой).
+- 2026-10-25 · Opus 5.5 · **PrSM — новое оружие Запада** (своя модель сборщика, Свои/PrSM): AG.prsm (era 4, tbm, пусковая HIMARS, cep 5, man 1, dmg 260,
+  rcs 0,12, H 50 км), THREAT 6, MULTI запад IV, COMBINED запад IV — PrSM ×2 вместо ATACMS, SDB 6 → 4 (угроза та же, 59), узел strike:prsm после ATACMS
+  (пара — «Искандер»), META w_prsm, GLB_V_OWN 20261025p, ktx, миниатюра strike_prsm, en-data. Модель 4,24 × 0,50 м (по фото), у настоящей ≈ 3,96 × 0,43 м —
+  в игре масштаб 0,935 (длина 3,96); толщину (L/D 8,4 против ≈ 9,2) исправит сборщик во второй ревизии. prsm.blend 22 МБ не в репозитории. sync-shared —
+  копии progress.js / arsenal.js для функций (при деплое — функции airdef-progress, airdef-solo, airdef-claim; сервер — update.ps1).
+
