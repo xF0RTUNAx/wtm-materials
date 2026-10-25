@@ -83,7 +83,7 @@ export function createDefense(C) {
     tx.fillStyle = '#10140f'; tx.fillRect(0, 0, C.VW, C.VH);
     const base = C.menu.mapBase(1600), [x0, y0] = w2s(-CITY.HALF, -CITY.HALF), sz = 2 * CITY.HALF * view.k;
     tx.globalAlpha = 0.85; tx.drawImage(base, x0, y0, sz, sz); tx.globalAlpha = 1;
-    tx.font = '600 11px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center';
+    tx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center';
     // объекты города с прочностью
     for (const o of C.S.objects) {
       if (o.key === 'bridge' && view.k < 0.06 && !st.targets?.includes(o)) continue;
@@ -132,8 +132,8 @@ export function createDefense(C) {
       tx.fillStyle = '#fecaca'; tx.fillText(`${Math.round((a.pos.y - city.groundH(a.pos.x, a.pos.z)) / 10) * 10}`, px, py - 12);
     }
     // онлайн: «нужна помощь» союзников — метка на карте (8 с)
-    if (st.net && C.netHelps && C.drawWarn) for (const h of C.netHelps()) { if (!h.p) continue; const [hx, hy] = w2s(h.p[0], h.p[1]); C.drawWarn(tx, hx, hy, 12); tx.fillStyle = '#fde047'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.font = '700 11px -apple-system, Segoe UI, sans-serif'; tx.strokeText(tr('{0}: помощь', [h.name]), hx, hy - 18); tx.fillText(tr('{0}: помощь', [h.name]), hx, hy - 18); } // союзник просит помощи — знак у места
-    tx.font = '600 11px -apple-system, Segoe UI, sans-serif';
+    if (st.net && C.netHelps && C.drawWarn) for (const h of C.netHelps()) { if (!h.p) continue; const [hx, hy] = w2s(h.p[0], h.p[1]); C.drawWarn(tx, hx, hy, 12); tx.fillStyle = '#fde047'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.font = '700 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.strokeText(tr('{0}: помощь', [h.name]), hx, hy - 18); tx.fillText(tr('{0}: помощь', [h.name]), hx, hy - 18); } // союзник просит помощи — знак у места
+    tx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif';
     // ракеты: свои — белые, чужое оружие — оранжевое
     for (const m of C.S.sams) { if (m.dead) continue; const [px, py] = w2s(m.pos.x, m.pos.z); tx.fillStyle = '#fff'; tx.fillRect(px - 1.5, py - 1.5, 3, 3); }
     for (const w of C.S.wpns) {
@@ -164,16 +164,16 @@ export function createDefense(C) {
       if (st.moving) { const [ux, uy] = w2s(st.sel.pos.x, st.sel.pos.z); tx.strokeStyle = 'rgba(253,230,138,.85)'; tx.lineWidth = 1.5; tx.setLineDash([3, 4]); tx.beginPath(); tx.moveTo(ux, uy); tx.lineTo(dx, dy); tx.stroke(); }
       tx.strokeStyle = 'rgba(253,230,138,.95)'; tx.lineWidth = 2; tx.setLineDash([6, 4]); tx.beginPath(); tx.arc(dx, dy, Math.max(10, S.rmax * view.k), 0, 7); tx.stroke(); tx.setLineDash([]);
       tx.fillStyle = 'rgba(253,230,138,.95)'; tx.beginPath(); tx.arc(dx, dy, 7, 0, 7); tx.fill(); tx.strokeStyle = 'rgba(0,0,0,.7)'; tx.lineWidth = 1.5; tx.stroke();
-      tx.font = '700 12px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; tx.lineWidth = 3; const lb = tr('{0} — «Подтвердить»', [S.short]); tx.strokeText(lb, dx, dy - 12); tx.fillText(lb, dx, dy - 12); tx.textAlign = 'left';
+      tx.font = '700 12px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; tx.lineWidth = 3; const lb = tr('{0} — «Подтвердить»', [S.short]); tx.strokeText(lb, dx, dy - 12); tx.fillText(lb, dx, dy - 12); tx.textAlign = 'left';
     }
     drawMsg();
   }
   function drawMsg() {
     if (st.alertT > 0) { // воздушная тревога: красная плашка вверху по центру
-      tx.font = '800 18px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; const w = tx.measureText(st.alert).width + 28, y = (IS_TOUCH ? 52 : 64);
+      tx.font = '800 18px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; const w = tx.measureText(st.alert).width + 28, y = (IS_TOUCH ? 52 : 64);
       tx.fillStyle = `rgba(185,28,28,${0.75 + 0.2 * Math.sin(performance.now() / 300)})`; tx.fillRect(C.VW / 2 - w / 2, y - 22, w, 32); tx.fillStyle = '#fff'; tx.fillText(st.alert, C.VW / 2, y); tx.textAlign = 'left';
     }
-    if (st.msgT > 0) { tx.font = '700 14px -apple-system, Segoe UI, sans-serif'; tx.fillStyle = '#fde68a'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 4; const yy = C.VH - (IS_TOUCH ? 16 : 30), xx = ($('mapNav').getBoundingClientRect().right || 0) + 12; tx.textAlign = 'left'; tx.strokeText(st.msg, xx, yy); tx.fillText(st.msg, xx, yy); } // правее панели перемещения
+    if (st.msgT > 0) { tx.font = '700 14px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.fillStyle = '#fde68a'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 4; const yy = C.VH - (IS_TOUCH ? 16 : 30), xx = ($('mapNav').getBoundingClientRect().right || 0) + 12; tx.textAlign = 'left'; tx.strokeText(st.msg, xx, yy); tx.fillText(st.msg, xx, yy); } // правее панели перемещения
   }
   // баллистическая цель: ромб, высота, до падения; район падения — в аркаде точно, в реализме — круг ±1,5 км (оценка СПРН)
   function drawTbmDot(w, px, py, left) { tx.fillStyle = '#ef4444'; tx.beginPath(); tx.moveTo(px, py - 7); tx.lineTo(px + 6, py); tx.lineTo(px, py + 7); tx.lineTo(px - 6, py); tx.closePath(); tx.fill(); }
@@ -214,7 +214,7 @@ export function createDefense(C) {
     if (!st.edKey) return;
     const W = AG[st.edKey], via = (multiItems(attSide(), C.setup.era).find(([q]) => q === st.edKey) || [])[1], [cx, cy] = w2s(0, 0);
     const ring = (R, col, dash, label, ang = -0.6) => { tx.strokeStyle = col; tx.lineWidth = 2; tx.setLineDash(dash); tx.beginPath(); tx.arc(cx, cy, R * view.k, 0, 7); tx.stroke(); tx.setLineDash([]);
-      if (label) { const [lx, ly] = w2s(Math.sin(ang) * R, -Math.cos(ang) * R); tx.textAlign = Math.sin(ang) > 0 ? 'right' : 'left'; /* у левого / правого края — кольца там видны */ tx.font = '700 12px -apple-system, Segoe UI, sans-serif'; tx.fillStyle = col; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.strokeText(label, lx + (Math.sin(ang) > 0 ? -8 : 8), ly - 6); tx.fillText(label, lx + (Math.sin(ang) > 0 ? -8 : 8), ly - 6); tx.textAlign = 'center'; } };
+      if (label) { const [lx, ly] = w2s(Math.sin(ang) * R, -Math.cos(ang) * R); tx.textAlign = Math.sin(ang) > 0 ? 'right' : 'left'; /* у левого / правого края — кольца там видны */ tx.font = '700 12px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.fillStyle = col; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.strokeText(label, lx + (Math.sin(ang) > 0 ? -8 : 8), ly - 6); tx.fillText(label, lx + (Math.sin(ang) > 0 ? -8 : 8), ly - 6); tx.textAlign = 'center'; } };
     if (W.kind === 'tbm') { ring(CITY.HALF - 3800, 'rgba(248,113,113,.8)', [6, 6], tr('район пусковых'), 1.45); ring(CITY.HALF - 2600, 'rgba(248,113,113,.5)', [6, 6], ''); return; }
     ring(CITY.HALF - 300, 'rgba(255,255,255,.85)', [5, 5], tr('точки маршрута — внутри'), -1.62);
     if (W.uav) ring(CITY.HALF - 500, 'rgba(56,189,248,.9)', [10, 6], tr('вход дронов — край района'), -1.45);
@@ -226,7 +226,7 @@ export function createDefense(C) {
     if (!st.plan) return;
     const items = multiItems(attSide(), C.setup.era), D = planDefaults(planComp(), st.targets, st.plan.cfg, st.net ? LIM_ON : undefined), ev = st.phase === 'wave' && C.ev;
     const posOf = (key) => { if (key[0] === 'o') { const o = C.S.objects.find((q) => q.id === +key.slice(1)); return o && [o.x, o.z]; } if (key[0] === 'u') { const u = C.S.units.find((q) => q.id === +key.slice(1)); return u && [u.pos.x, u.pos.z]; } return null; };
-    tx.font = '700 11.5px -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center';
+    tx.font = '700 11.5px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center';
     // по целям: какие типы туда идут без своего маршрута (одна линия на цель — с края района, столбик подписей «тип ×N · пуск»)
     const byT = {};
     for (const [k] of items) {
@@ -279,7 +279,7 @@ export function createDefense(C) {
         tx.setLineDash([]);
         pts0.forEach(([x, z], j) => { const [a, c] = w2s(x, z); tx.fillStyle = col; tx.beginPath(); tx.arc(a, c, cur ? 7 : 5, 0, 7); tx.fill(); tx.fillStyle = '#0b1218'; tx.fillText(String(j + 1), a, c + 4); });
         const [ax, az] = w2s(...pts0[0]), lab = (i >= 0 ? `${AG[k].short} ${numTxt(ix)}` : AG[k].short) + ` · ${alt ? (alt >= 1000 ? alt / 1000 + tr(' км') : alt + tr(' м')) : tr('своя высота')} · ${when(k, i)}`;
-        tx.font = '700 11.5px -apple-system, Segoe UI, sans-serif'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.strokeText(lab, ax, az - 12); tx.fillStyle = col; tx.fillText(lab, ax, az - 12);
+        tx.font = '700 11.5px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 3; tx.strokeText(lab, ax, az - 12); tx.fillStyle = col; tx.fillText(lab, ax, az - 12);
         tx.globalAlpha = 1;
       }
     }
@@ -1051,7 +1051,7 @@ export function createDefense(C) {
   function opHud(dt, t) {
     const u = st.op, hx = C.hx, VW = C.VW, VH = C.VH, S = u.S;
     if (u.dead) { opSay(tr('Комплекс уничтожен')); leaveOp(); return; }
-    hx.lineWidth = 1.5; hx.font = '600 11px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center';
+    hx.lineWidth = 1.5; hx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center';
     // перекрестие (в виде оператора и снаружи, когда наводят камерой)
     if (op.cam === 'op' || op.extAim) hx.strokeStyle = 'rgba(255,255,255,.75)'; else hx.strokeStyle = 'rgba(0,0,0,0)'; hx.beginPath(); hx.moveTo(VW / 2 - 22, VH / 2); hx.lineTo(VW / 2 - 6, VH / 2); hx.moveTo(VW / 2 + 6, VH / 2); hx.lineTo(VW / 2 + 22, VH / 2); hx.moveTo(VW / 2, VH / 2 - 22); hx.lineTo(VW / 2, VH / 2 - 6); hx.moveTo(VW / 2, VH / 2 + 6); hx.lineTo(VW / 2, VH / 2 + 22); hx.stroke();
     if (S.type === 'ir' && op.cam === 'op') { hx.strokeStyle = u.track ? '#ff4d4d' : u.seek > 0 ? '#fde047' : 'rgba(255,255,255,.5)'; hx.beginPath(); hx.arc(VW / 2, VH / 2, 3.5 * D2R / (op.fov * D2R) * VH, 0, 7); hx.stroke(); }
@@ -1105,7 +1105,7 @@ export function createDefense(C) {
         const yaw = Math.atan2(v.x, v.z); if (op.bDir !== null && op.bDir !== undefined && dt > 0) { let dy = yaw - op.bDir; while (dy > Math.PI) dy -= 2 * Math.PI; while (dy < -Math.PI) dy += 2 * Math.PI; op.bTurn = (op.bTurn || 0) * 0.9 + (dy / dt) * 0.1; } op.bDir = yaw;
         man = Math.abs(op.bTurn || 0) > 0.12 ? tr(' · разворот') : v.y > 0.25 ? tr(' · набирает высоту') : v.y < -0.25 ? tr(' · снижается') : '';
       }
-      hx.font = '700 13px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.fillStyle = '#fde68a'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
+      hx.font = '700 13px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.fillStyle = '#fde68a'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
       hx.fillText(tr('БИНОКЛЬ ×{0} · {1}{2}', [Math.max(2, Math.round(55 / (op.bf || 55))), asp, man]), VW / 2, Math.max(60, VH * 0.14)); hx.shadowBlur = 0;
     }
     $('opMethod').textContent = u.method === 'half' ? tr('МЕТОД ½') : tr('МЕТОД 3Т');
@@ -1532,7 +1532,7 @@ export function createDefense(C) {
     else $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · очки обороны <b>{0}</b>', [st.budget]) :
       tr('Волна <b>{0}/{1}</b> · сбито <b>{2}</b> · объекты целы <b>{3}%</b> · очки {4}', [st.wave, st.waves, st.downs, Math.round(cityValue() * 100), st.score]);
     if (st.view === 'op' && st.op) opHud(dt, t); else if (st.view === 'watch') watchHud(); else drawMap(t);
-    if (st.view !== 'map' && st.alertT > 0) { const x = C.hx; x.font = '800 18px -apple-system, Segoe UI, sans-serif'; x.textAlign = 'center'; const w = x.measureText(st.alert).width + 28, y = IS_TOUCH ? 52 : 64; // плашка тревоги — и в 3D
+    if (st.view !== 'map' && st.alertT > 0) { const x = C.hx; x.font = '800 18px "Golos Text", -apple-system, Segoe UI, sans-serif'; x.textAlign = 'center'; const w = x.measureText(st.alert).width + 28, y = IS_TOUCH ? 52 : 64; // плашка тревоги — и в 3D
       x.fillStyle = `rgba(185,28,28,${0.75 + 0.2 * Math.sin(performance.now() / 300)})`; x.fillRect(C.VW / 2 - w / 2, y - 22, w, 32); x.fillStyle = '#fff'; x.fillText(st.alert, C.VW / 2, y); x.textAlign = 'left'; }
   }
   function onKey(e, down) {

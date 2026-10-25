@@ -19,10 +19,10 @@ export function createHints(C, ctrls) {
   if (C.IS_TOUCH || typeof document === 'undefined' || !document.body || !document.body.appendChild) return off; // телефон и стенды без DOM
   const el = document.createElement('div'); el.id = 'keyHints'; document.body.appendChild(el);
   const css = document.createElement('style');
-  css.textContent = `#keyHints{position:fixed;left:12px;bottom:12px;z-index:30;pointer-events:none;display:none;max-width:290px;padding:8px 10px;background:rgba(14,17,12,.62);border:1px solid rgba(233,230,220,.12);border-radius:4px;font:12px/1.55 'IBM Plex Sans',-apple-system,sans-serif;color:#e9e6dc}
-#keyHints.on{display:block}#keyHints b{display:block;font:11px 'IBM Plex Sans';color:#a9b19c;text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+  css.textContent = `#keyHints{position:fixed;left:12px;bottom:12px;z-index:30;pointer-events:none;display:none;max-width:290px;padding:8px 10px;background:rgba(14,17,12,.62);border:1px solid rgba(233,230,220,.12);border-radius:4px;font:12px/1.55 'Golos Text',-apple-system,sans-serif;color:#e9e6dc}
+#keyHints.on{display:block}#keyHints b{display:block;font:12px 'Golos Text';color:#a9b19c;letter-spacing: 0;margin-bottom:3px}
 #keyHints div{display:flex;gap:8px;justify-content:space-between}#keyHints span{color:#c9c6bc;text-align:right}
-#keyHints kbd{display:inline-block;min-width:14px;padding:0 4px;border:1px solid rgba(233,230,220,.35);border-bottom-width:2px;border-radius:3px;font:600 11px 'IBM Plex Mono',monospace;color:#fff;text-align:center;background:rgba(255,255,255,.06)}
+#keyHints kbd{display:inline-block;min-width:14px;padding:0 4px;border:1px solid rgba(233,230,220,.35);border-bottom-width:2px;border-radius:3px;font:600 11px 'JetBrains Mono',monospace;color:#fff;text-align:center;background:rgba(255,255,255,.06)}
 body.msheetOn #keyHints{display:none}`;
   (document.head || document.body).appendChild(css);
   let last = '';

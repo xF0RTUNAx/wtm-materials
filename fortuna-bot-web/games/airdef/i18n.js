@@ -31,8 +31,8 @@ export function askLang() {
   el.innerHTML = `<div class="lcard"><b>Choose language · Выберите язык</b>${LANGS.map(([k, l]) => `<button data-l="${k}" class="${k === LANG ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const css = document.createElement('style');
   css.textContent = `#langAsk{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;background:rgba(6,9,6,.72)}
-#langAsk .lcard{display:flex;flex-direction:column;gap:10px;min-width:min(320px,86vw);padding:18px;background:rgba(16,20,15,.97);border:1px solid rgba(233,230,220,.18);color:#e9e6dc;font:400 15px 'IBM Plex Sans',sans-serif}
-#langAsk b{font:400 17px 'Russo One',sans-serif;margin-bottom:4px}#langAsk button{padding:12px;border:1px solid rgba(233,230,220,.25);background:rgba(255,255,255,.06);color:inherit;font:400 16px 'Russo One',sans-serif;cursor:pointer}
+#langAsk .lcard{display:flex;flex-direction:column;gap:10px;min-width:min(320px,86vw);padding:18px;background:rgba(16,20,15,.97);border:1px solid rgba(233,230,220,.18);color:#e9e6dc;font:400 15px 'Golos Text',sans-serif}
+#langAsk b{font:500 17px 'Oswald',sans-serif;margin-bottom:4px}#langAsk button{padding:12px;border:1px solid rgba(233,230,220,.25);background:rgba(255,255,255,.06);color:inherit;font:500 16px 'Oswald',sans-serif;cursor:pointer}
 #langAsk button.on{background:#e8b04a;color:#17190f;border-color:#e8b04a}`;
   (document.head || document.body).appendChild(css); document.body.appendChild(el);
   el.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[data-l]'); if (!b) return; setLang(b.dataset.l); if (b.dataset.l !== LANG) location.reload(); else el.remove(); });

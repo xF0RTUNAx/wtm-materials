@@ -20,7 +20,7 @@ const DEF_READY = true;
 const WX = { a_eve: tr('Вечер'), a_dusk: tr('Сумерки'), a_fog: tr('Туман') };
 
 const CSS = `
-#event { position: fixed; inset: 0; z-index: 39; display: none; background: #0e110d; color: var(--th-tx, #e9e6dc); font: 13px 'IBM Plex Sans', -apple-system, sans-serif; overflow: hidden;
+#event { position: fixed; inset: 0; z-index: 39; display: none; background: #0e110d; color: var(--th-tx, #e9e6dc); font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;
   --ev: #e2762c; --ev2: #ff9a3c; --evd: rgba(226,118,44,.16); --ln: var(--th-line, #3a4334); --dim: var(--th-dim, #a9b19c); --pn: rgba(17,21,15,.94);
   --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 56px; }
 #event.on { display: block; }
@@ -29,32 +29,32 @@ body.eventOn #menu { visibility: hidden; }
 #event .fog { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(20,14,22,0) 40%, rgba(40,28,36,.55)); pointer-events: none; }
 #event::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: var(--pn); z-index: 5; }
 #event .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 18px; padding: 0 max(14px, var(--sa-r, 0px)) 0 max(14px, var(--sa-l, 0px)); background: var(--pn); border-bottom: 1px solid var(--ln); z-index: 4; }
-#event .top h1 { margin: 0; font: 400 20px 'Russo One', sans-serif; letter-spacing: .02em; white-space: nowrap; }
+#event .top h1 { margin: 0; font: 500 20px 'Oswald', sans-serif; letter-spacing: .02em; white-space: nowrap; }
 #event .top h1 .pk { display: inline-block; width: 1.2em; height: 1.2em; vertical-align: -0.25em; color: #ff9a3c; margin-right: 4px; }
 #event .top .tm { font-weight: 600; font-size: 13px; color: var(--ev2); white-space: nowrap; }
 #event .tabs { display: flex; margin-left: 8px; align-self: stretch; }
-#event .tabs button { border: 0; border-bottom: 3px solid transparent; background: none; color: var(--dim); padding: 0 16px; font: 600 14px 'IBM Plex Sans', sans-serif; cursor: pointer; white-space: nowrap; }
+#event .tabs button { border: 0; border-bottom: 3px solid transparent; background: none; color: var(--dim); padding: 0 16px; font: 600 14px 'Golos Text', sans-serif; cursor: pointer; white-space: nowrap; }
 #event .tabs button.on { color: var(--th-tx, #e9e6dc); border-bottom-color: var(--ev); }
 #event .tabs button:disabled { opacity: .45; cursor: default; }
 #event .x { margin-left: auto; width: 40px; height: 40px; border: 0; background: none; color: var(--dim); font-size: 20px; cursor: pointer; }
 #event .x:hover { color: var(--th-tx, #e9e6dc); }
 #event .body { position: absolute; left: 0; right: 0; bottom: 0; top: calc(var(--rt) + var(--hh)); display: flex; gap: 14px; padding: 14px max(14px, var(--sa-r, 0px)) 14px max(14px, var(--sa-l, 0px)); z-index: 2; }
 #event .pl { width: 236px; flex: none; background: var(--pn); border: 1px solid var(--ln); padding: 12px; overflow: auto; -webkit-overflow-scrolling: touch; }
-#event .cap { font: 600 10.5px 'IBM Plex Mono', ui-monospace, monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); margin: 0 0 6px; }
+#event .cap { font: 600 12.5px 'Golos Text', -apple-system, sans-serif; letter-spacing: 0; color: var(--dim); margin: 0 0 6px; }
 #event .pl .cap:not(:first-child) { margin-top: 12px; }
 #event .map { display: block; width: 100%; aspect-ratio: 4/3; object-fit: cover; border: 1px solid var(--ln); background: #171c14; }
 #event .sg { display: flex; border: 1px solid var(--ln); }
-#event .sg button { flex: 1; border: 0; border-left: 1px solid var(--ln); background: none; color: var(--th-tx, #e9e6dc); padding: 7px 2px; font: 600 12.5px 'IBM Plex Sans', sans-serif; cursor: pointer; }
+#event .sg button { flex: 1; border: 0; border-left: 1px solid var(--ln); background: none; color: var(--th-tx, #e9e6dc); padding: 7px 2px; font: 600 12.5px 'Golos Text', sans-serif; cursor: pointer; }
 #event .sg button:first-child { border-left: 0; }
 #event .sg button.on { background: var(--ev); color: #1a0f08; }
 #event .pc { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
 #event .hero { flex: 1 1 0; min-height: 40px; width: 100%; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 85%, rgba(226,118,44,.14) 0, rgba(17,21,15,.0) 70%); }
 #event .hero img { max-width: 100%; max-height: 100%; object-fit: contain; }
 #event .nm { text-align: center; margin-top: 6px; }
-#event .nm b { font: 400 24px 'Russo One', sans-serif; letter-spacing: .02em; margin-right: 8px; }
+#event .nm b { font: 500 24px 'Oswald', sans-serif; letter-spacing: .02em; margin-right: 8px; }
 #event .tg { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; background: var(--evd); color: var(--ev2); margin: 2px 3px 0; }
 #event .rib { display: flex; gap: 8px; margin-top: 10px; max-width: 100%; overflow-x: auto; padding-bottom: 2px; }
-#event .ec { position: relative; flex: none; width: 128px; border: 1px solid var(--ln); background: #171c14; padding: 4px; color: var(--th-tx, #e9e6dc); text-align: left; cursor: pointer; font: 12px 'IBM Plex Sans', sans-serif; }
+#event .ec { position: relative; flex: none; width: 128px; border: 1px solid var(--ln); background: #171c14; padding: 4px; color: var(--th-tx, #e9e6dc); text-align: left; cursor: pointer; font: 12px 'Golos Text', sans-serif; }
 #event .ec img { display: block; width: 100%; aspect-ratio: 16/9; object-fit: contain; background: #1a2016; }
 #event .ec b { display: block; margin-top: 3px; font-size: 12.5px; }
 #event .ec small { display: block; font-size: 11px; color: var(--dim); }
@@ -63,10 +63,10 @@ body.eventOn #menu { visibility: hidden; }
 #event .ec.lk small { color: var(--ev2); }
 #event .ec .lc { position: absolute; right: 6px; top: 6px; color: var(--ev2); }
 #event .ec .lc .ic { width: 16px; height: 16px; display: block; }
-#event .go { margin-top: 12px; flex: none; width: min(380px, 80%); height: 50px; border: 0; background: var(--ev); color: #1a0f08; font: 400 20px 'Russo One', sans-serif; letter-spacing: .06em; cursor: pointer; }
+#event .go { margin-top: 12px; flex: none; width: min(380px, 80%); height: 50px; border: 0; background: var(--ev); color: #1a0f08; font: 500 20px 'Oswald', sans-serif; letter-spacing: .06em; cursor: pointer; }
 #event .go:hover { background: var(--ev2); }
 #event .dh { text-align: center; max-width: 560px; margin: 8px 0 0; }
-#event .dh h2 { margin: 0 0 4px; font: 400 22px 'Russo One', sans-serif; }
+#event .dh h2 { margin: 0 0 4px; font: 500 22px 'Oswald', sans-serif; }
 #event .dh p { margin: 4px 0; color: var(--dim); line-height: 1.45; font-size: 13px; }
 #event .dh p b { color: var(--th-tx, #e9e6dc); font-weight: 600; }
 #event .row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }

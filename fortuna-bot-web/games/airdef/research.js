@@ -9,39 +9,39 @@ import { XP, SV, trMsg } from './progress-net.js?v=20261025a';
 import { tr, trIf, LANG } from './i18n.js?v=20261025a';
 
 const CSS = `
-#research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'IBM Plex Sans', -apple-system, sans-serif; overflow: hidden;
+#research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;
   --rt: calc(var(--sa-t, 0px) + var(--tg-t, 0px)); --hh: 58px; --cw: 184px; --ch: 82px; --gx: 26px; --gy: 14px; --line: #39422f; --line2: #2c3426; --ac: #e8b04a; --ac2: #f3c96f; --dim: #b3baa5; --dim2: #8f9884; --ok: #86c06c; --xp: #9fd3ff; }
 #research.on { display: block; }
 #research .ic { width: 1.15em; height: 1.15em; vertical-align: -0.17em; flex: none; }
 #research .rbg { position: absolute; inset: 0; background: url(airdef/shots/s400-unit.webp) center/cover; filter: blur(14px) brightness(.32) saturate(.7); transform: scale(1.06); }
 #research .top { position: absolute; left: 0; right: 0; top: var(--rt); height: var(--hh); display: flex; align-items: center; gap: 14px; padding: 0 18px; padding-left: max(18px, var(--sa-l, 0px)); background: linear-gradient(#0b0e0a, rgba(11,14,10,.86)); z-index: 5; }
 #research::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: var(--rt); background: #0b0e0a; z-index: 5; }
-#research .back { font: 400 22px 'Russo One'; color: #e9e6dc; border: 0; background: none; width: 34px; cursor: pointer; }
-#research .top h1 { margin: 0; font: 400 19px 'Russo One'; letter-spacing: .02em; }
-#research .btabs { display: flex; margin-left: 10px; } #research .btabs button { border: 1px solid transparent; background: none; color: var(--dim); padding: 7px 13px; font: 500 14px 'IBM Plex Sans'; cursor: pointer; }
-#research .btabs button.on { color: #e9e6dc; border-color: #e9e6dc; } #research .btabs button i { font-style: normal; color: var(--dim2); font: 600 10.5px 'IBM Plex Mono', monospace; margin-left: 5px; }
-#research .cur { display: flex; gap: 18px; margin-left: auto; font: 600 16px 'IBM Plex Mono', monospace; padding-right: var(--sa-r, 0px); } #research .cur span { display: flex; align-items: center; gap: 6px; } #research .cur .xp { color: var(--xp); }
+#research .back { font: 500 22px 'Oswald'; color: #e9e6dc; border: 0; background: none; width: 34px; cursor: pointer; }
+#research .top h1 { margin: 0; font: 500 19px 'Oswald'; letter-spacing: .02em; }
+#research .btabs { display: flex; margin-left: 10px; } #research .btabs button { border: 1px solid transparent; background: none; color: var(--dim); padding: 7px 13px; font: 500 14px 'Golos Text'; cursor: pointer; }
+#research .btabs button.on { color: #e9e6dc; border-color: #e9e6dc; } #research .btabs button i { font-style: normal; color: var(--dim2); font: 600 10.5px 'JetBrains Mono', monospace; margin-left: 5px; }
+#research .cur { display: flex; gap: 18px; margin-left: auto; font: 600 16px 'JetBrains Mono', monospace; padding-right: var(--sa-r, 0px); } #research .cur span { display: flex; align-items: center; gap: 6px; } #research .cur .xp { color: var(--xp); }
 #research .sides { position: absolute; left: 0; top: calc(var(--rt) + var(--hh)); bottom: 0; width: 122px; padding: 22px 0 0 14px; padding-left: max(14px, var(--sa-l, 0px)); display: flex; flex-direction: column; gap: 10px; z-index: 4; }
-#research .sides button { border: 0; background: rgba(16,20,15,.88); color: var(--dim); height: 74px; text-align: left; padding: 0 12px; font: 400 15px 'Russo One'; border-left: 3px solid transparent; cursor: pointer; }
-#research .sides button small { display: block; font: 500 11px 'IBM Plex Sans'; color: var(--dim2); margin-top: 3px; } #research .sides button.on { background: rgba(233,230,220,.12); color: #e9e6dc; border-left-color: #e9e6dc; }
+#research .sides button { border: 0; background: rgba(16,20,15,.88); color: var(--dim); height: 74px; text-align: left; padding: 0 12px; font: 500 15px 'Oswald'; border-left: 3px solid transparent; cursor: pointer; }
+#research .sides button small { display: block; font: 500 11px 'Golos Text'; color: var(--dim2); margin-top: 3px; } #research .sides button.on { background: rgba(233,230,220,.12); color: #e9e6dc; border-left-color: #e9e6dc; }
 #research .note { position: absolute; left: 18px; bottom: 14px; width: 114px; font-size: 11px; color: var(--dim2); line-height: 1.35; z-index: 4; }
 #research .note b { color: var(--ac2); font-weight: 600; }
 #research .wrap { position: absolute; left: 128px; top: calc(var(--rt) + var(--hh)); right: 290px; bottom: 0; overflow: auto; -webkit-overflow-scrolling: touch; }
 #research .tree { position: relative; padding: 0 30px 40px 6px; }
 #research .ranks { position: sticky; top: 0; z-index: 3; display: flex; gap: var(--gx); padding: 12px 0 10px 18px; background: linear-gradient(rgba(16,20,15,.95) 70%, rgba(16,20,15,0)); }
-#research .rh { width: var(--cw); flex: none; } #research .rh b { font: 400 17px 'Russo One'; } #research .rh span { color: var(--dim); font-size: 12px; margin-left: 6px; }
-#research .rh .par { font-size: 11.5px; color: var(--dim); margin-top: 2px; } #research .rh .par b { font: 600 11.5px 'IBM Plex Sans'; color: var(--ac2); } #research .rh .par.okk { color: var(--ok); }
+#research .rh { width: var(--cw); flex: none; } #research .rh b { font: 500 17px 'Oswald'; } #research .rh span { color: var(--dim); font-size: 12px; margin-left: 6px; }
+#research .rh .par { font-size: 11.5px; color: var(--dim); margin-top: 2px; } #research .rh .par b { font: 600 11.5px 'Golos Text'; color: var(--ac2); } #research .rh .par.okk { color: var(--ok); }
 #research svg.links { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; } #research svg.links path { fill: none; stroke: #8d9585; stroke-width: 2; } #research svg.links path.lock { stroke: #69725f; }
 #research .shade { position: absolute; top: 0; bottom: 0; background: repeating-linear-gradient(135deg, rgba(0,0,0,.18) 0 12px, rgba(0,0,0,.08) 12px 24px); pointer-events: none; }
 #research .card { position: absolute; border-radius: 0; padding: 0; box-shadow: none; max-height: none; animation: none; width: var(--cw); height: var(--ch); background: linear-gradient(160deg, #39403a 0, #22271f 55%, #151a12 100%); border: 1px solid #0a0c09; cursor: pointer; overflow: hidden; }
 #research .card img { position: absolute; left: -6px; top: 6px; width: 74%; height: 92%; object-fit: contain; object-position: left center; }
-#research .card .nm { position: absolute; right: 7px; top: 4px; font: 400 13.5px 'Russo One'; text-shadow: 0 1px 3px #000; max-width: 62%; text-align: right; }
+#research .card .nm { position: absolute; right: 7px; top: 4px; font: 500 13.5px 'Oswald'; text-shadow: 0 1px 3px #000; max-width: 62%; text-align: right; }
 #research .card .caps.mini { position: absolute; right: 6px; top: 22px; } #research .card .caps.mini .ic { width: 13px; height: 13px; }
-#research .card .rk { position: absolute; right: 7px; bottom: 2px; font: 400 18px 'Russo One'; color: #d9d6cb; text-shadow: 0 1px 3px #000; }
-#research .card .pr { position: absolute; left: 6px; bottom: 5px; display: flex; align-items: center; gap: 5px; font: 600 13.5px 'IBM Plex Mono', monospace; text-shadow: 0 1px 3px #000; padding: 1px 6px 1px 3px; background: rgba(10,12,9,.62); }
+#research .card .rk { position: absolute; right: 7px; bottom: 2px; font: 500 18px 'Oswald'; color: #d9d6cb; text-shadow: 0 1px 3px #000; }
+#research .card .pr { position: absolute; left: 6px; bottom: 5px; display: flex; align-items: center; gap: 5px; font: 600 13.5px 'JetBrains Mono', monospace; text-shadow: 0 1px 3px #000; padding: 1px 6px 1px 3px; background: rgba(10,12,9,.62); }
 #research .card .pr.xp { color: var(--xp); } #research .card .pr.sv { color: #eceae2; } #research .card .pr.no { color: var(--dim2); }
 #research .card .bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: rgba(0,0,0,.4); } #research .card .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--xp); }
-#research .card .tag { position: absolute; left: 6px; top: 5px; font: 600 9.5px 'IBM Plex Mono', monospace; letter-spacing: .04em; padding: 1px 5px; background: rgba(10,12,9,.7); }
+#research .card .tag { position: absolute; left: 6px; top: 5px; font: 600 9.5px 'JetBrains Mono', monospace; letter-spacing: .04em; padding: 1px 5px; background: rgba(10,12,9,.7); }
 #research .card .tag.own { color: var(--ok); } #research .card .tag.start { color: var(--ac2); } #research .card .tag.goal { background: var(--xp); color: #0d1a24; } #research .card .tag.res { color: var(--xp); }
 #research .card.own { background: linear-gradient(160deg, #4a5246 0, #2b3127 55%, #1a1f17 100%); }
 #research .card.can { box-shadow: 0 0 0 2px var(--ac) inset; }
@@ -50,18 +50,18 @@ const CSS = `
 #research .dos { position: absolute; top: calc(var(--rt) + var(--hh)); right: 0; bottom: 0; width: 290px; background: rgba(13,16,12,.96); border-left: 1px solid var(--line); display: flex; flex-direction: column; z-index: 4; padding-right: var(--sa-r, 0px); }
 #research .dos .sc { flex: 1; overflow: auto; padding: 0 14px 10px; } #research .dos .hero { margin: 0 -14px 8px; height: 150px; background: radial-gradient(ellipse at 50% 80%, #39403a 0, #151a12 75%); display: flex; }
 #research .dos .hero img { width: 100%; height: 100%; object-fit: contain; }
-#research .mk { font: 600 10.5px 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--dim); }
-#research .dos h3 { margin: 2px 0 0; font: 400 19px/1.15 'Russo One'; } #research .dos .ty { color: var(--dim); font-size: 12px; margin: 2px 0 8px; }
+#research .mk { font: 600 12.5px 'Golos Text', sans-serif; letter-spacing: 0; color: var(--dim); }
+#research .dos h3 { margin: 2px 0 0; font: 500 19px/1.15 'Oswald'; } #research .dos .ty { color: var(--dim); font-size: 12px; margin: 2px 0 8px; }
 #research .st { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; font-size: 12.5px; } #research .st span { color: var(--dim2); } #research .st b { font-weight: 500; text-align: right; }
 #research .dos p { color: #c9cebd; font-size: 12px; line-height: 1.5; margin: 8px 0; }
 #research .an { display: flex; gap: 8px; align-items: center; border: 1px dashed var(--line); padding: 5px; margin-top: 8px; cursor: pointer; } #research .an img { width: 82px; aspect-ratio: 16/9; object-fit: contain; background: #1a1f17; }
 #research .acts { padding: 10px 14px; border-top: 1px solid var(--line2); display: flex; flex-direction: column; gap: 6px; }
-#research .rbtn { border: 0; background: var(--ac); color: #17190f; font: 400 14px 'Russo One'; letter-spacing: .05em; padding: 11px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; }
-#research .rbtn.alt { background: none; border: 1px solid #4a5443; color: #e9e6dc; font: 500 13px 'IBM Plex Sans'; letter-spacing: 0; } #research .rbtn:disabled { background: #2c3426; color: var(--dim2); cursor: default; }
+#research .rbtn { border: 0; background: var(--ac); color: #17190f; font: 500 14px 'Oswald'; letter-spacing: .05em; padding: 11px; width: 100%; display: flex; justify-content: center; align-items: center; gap: 6px; cursor: pointer; }
+#research .rbtn.alt { background: none; border: 1px solid #4a5443; color: #e9e6dc; font: 500 13px 'Golos Text'; letter-spacing: 0; } #research .rbtn:disabled { background: #2c3426; color: var(--dim2); cursor: default; }
 #research .why { font-size: 11.5px; color: var(--dim); text-align: center; } #research .why.err { color: #f0a08c; }
 #research .guest { position: absolute; left: 50%; top: calc(var(--rt) + var(--hh) + 8px); transform: translateX(-50%); z-index: 6; background: rgba(13,16,12,.94); border: 1px solid var(--line); padding: 7px 14px; font-size: 12.5px; color: #e9e6dc; white-space: nowrap; }
 #research .veil { display: none; }
-#research .grp { position: absolute; left: 18px; font: 400 13px 'Russo One'; color: var(--dim); letter-spacing: .04em; } /* «Вертолёты»: подпись стороны над её линиями */
+#research .grp { position: absolute; left: 18px; font: 500 13px 'Oswald'; color: var(--dim); letter-spacing: .04em; } /* «Вертолёты»: подпись стороны над её линиями */
 @media (max-height: 460px), (max-width: 720px) {
   #research { --cw: 196px; --ch: 80px; --gx: 40px; --gy: 12px; }
   #research { --hh: 46px; } #research .top { padding: 0 10px; padding-left: max(10px, var(--sa-l, 0px)); gap: 8px; } #research .top h1 { display: none; } #research .btabs { margin-left: 0; } #research .btabs button { padding: 5px 8px; font-size: 12.5px; } #research .btabs button i { display: none; } #research .cur { font-size: 13px; gap: 10px; }
@@ -139,7 +139,7 @@ export function createResearch(C, PG) {
       : s.k === 'lock' ? (n.parent && !researched(P(), n.parent) ? `<button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? tr('Цель ✓ (снять)') : tr('Сделать целью')}</button>` : '') + why
       : `<div class="why">${tr('Доступно в «Реализме».')}</div>`;
     const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${trIf(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
-    const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:400 13px 'Russo One'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? tr('✓ куплен') : sp.k === 'start' ? tr('★ стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
+    const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:500 13px 'Oswald'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? tr('✓ куплен') : sp.k === 'start' ? tr('★ стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
     return `<div class="veil" data-close="1"></div><div class="dos"><div class="sc"><div class="hero"><img src="${thumb(n)}" alt=""></div>
       <span class="mk">${tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)])}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>
       ${stats}<p>${guide(n)}</p>${an}</div><div class="acts">${act}</div></div>`;

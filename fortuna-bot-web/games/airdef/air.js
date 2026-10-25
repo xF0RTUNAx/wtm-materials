@@ -753,7 +753,7 @@ export function createAir(C) {
     const S2 = Math.min(C.VW, C.VH) - 40; if (mapC.width !== S2) { mapC.width = mapC.height = S2; mapBase = C.menu.mapBase(S2); }
     mx.drawImage(mapBase, 0, 0);
     const k = S2 / (2 * CITY.HALF), P2 = (x, z) => [(x + CITY.HALF) * k, (z + CITY.HALF) * k];
-    mx.font = '600 11px -apple-system, Segoe UI, sans-serif'; mx.textAlign = 'center';
+    mx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; mx.textAlign = 'center';
     for (const o of game.targets) {
       const [px, pz] = P2(o.x, o.z);
       mx.fillStyle = o.dead ? '#888' : '#ffcf4a'; mx.beginPath(); mx.moveTo(px, pz - 7); mx.lineTo(px + 7, pz); mx.lineTo(px, pz + 7); mx.lineTo(px - 7, pz); mx.closePath(); mx.fill();
@@ -834,7 +834,7 @@ export function createAir(C) {
   }
   function drawHud() {
     const hx = C.hx, proj = (p) => C.proj(p);
-    hx.font = '600 11px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.lineWidth = 1.5;
+    hx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.lineWidth = 1.5;
     if (craft.dead) return;
     const fp = proj(LP.copy(craft.pos).addScaledVector(craft.vel, 3));
     if (aimOn()) { const ap = proj(LP.copy(craft.pos).addScaledVector(aimDir(AIMD), 2000)); if (ap) { hx.strokeStyle = 'rgba(255,255,255,.85)'; hx.beginPath(); hx.arc(ap[0], ap[1], 11, 0, 7); hx.moveTo(ap[0] - 3, ap[1]); hx.lineTo(ap[0] + 3, ap[1]); hx.stroke(); } } // куда смотрит камера — туда летит самолёт
@@ -900,9 +900,9 @@ export function createAir(C) {
     hx2Text(t, p[0], p[1] + dy, ok ? '#4ade80' : '#fde68a', 13);
   }
   function hx2Text(t, x, y, col, px) {
-    const hx = C.hx; hx.font = `700 ${px}px -apple-system, Segoe UI, sans-serif`; hx.textAlign = 'center';
+    const hx = C.hx; hx.font = `700 ${px}px "Golos Text", -apple-system, Segoe UI, sans-serif`; hx.textAlign = 'center';
     hx.lineWidth = 3; hx.strokeStyle = 'rgba(0,0,0,.75)'; hx.strokeText(t, x, y); hx.fillStyle = col; hx.fillText(t, x, y);
-    hx.font = '600 11px -apple-system, Segoe UI, sans-serif'; hx.lineWidth = 1.5;
+    hx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.lineWidth = 1.5;
   }
   // вертолёт: «вас видит» — комплекс уже видит и берёт на сопровождение (у земли захват на 3 с дольше, sim/strike.js) — успеть уйти
   // вниз за рельеф (Mark 2026-10-22); захват и пуск — прежние предупреждения строки #warn
@@ -915,7 +915,7 @@ export function createAir(C) {
     const S2 = rc.width, c = S2 / 2; rx2.clearRect(0, 0, S2, S2);
     rx2.fillStyle = 'rgba(0,18,8,.55)'; rx2.beginPath(); rx2.arc(c, c, c - 2, 0, 7); rx2.fill();
     rx2.strokeStyle = 'rgba(140,255,170,.45)'; rx2.lineWidth = 2; for (const r of [0.33, 0.66, 0.98]) { rx2.beginPath(); rx2.arc(c, c, (c - 4) * r, 0, 7); rx2.stroke(); }
-    rx2.font = `700 ${Math.round(S2 * 0.09)}px -apple-system, sans-serif`; rx2.textAlign = 'center'; rx2.textBaseline = 'middle';
+    rx2.font = `700 ${Math.round(S2 * 0.09)}px "Golos Text", -apple-system, sans-serif`; rx2.textAlign = 'center'; rx2.textBaseline = 'middle';
     const brg = (p) => Math.atan2(-(p.x - craft.pos.x), -(p.z - craft.pos.z)) - craft.yaw;
     for (const e of list) {
       if (e.state === 'launch' && Math.floor(t * 6) % 2) continue;
@@ -1313,7 +1313,7 @@ export function createAir(C) {
     const hx = C.hx, lab = zn.it.zT > 0 ? tr('пополнение {0} с', [Math.ceil(ZONE.STAY - zn.it.zT)]) : tr('{0} км{1}', [(d / 1000).toFixed(1), left ? tr(' · {0} с', [left]) : '']);
     const p = C.proj(fw.set(zx, city.groundH(zx, zz) + 300, zz));
     if (p) {
-      hx.font = '700 11px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
+      hx.font = '700 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
       hx.strokeStyle = '#4ade80'; hx.lineWidth = 2; hx.beginPath(); hx.arc(p[0], p[1], 8, 0, 7); hx.stroke();
       hx.fillStyle = '#bbf7d0'; hx.fillText(lab, p[0], p[1] - 12); hx.shadowBlur = 0;
     }
@@ -1330,7 +1330,7 @@ export function createAir(C) {
     const ax = W / 2 + dx * k, ay = H / 2 + dy * k, ang = Math.atan2(dy, dx), hx = C.hx, pulse = 0.75 + 0.25 * Math.sin(performance.now() / 180);
     hx.save(); hx.translate(ax, ay); hx.rotate(ang); hx.globalAlpha = pulse; hx.fillStyle = col; hx.strokeStyle = 'rgba(0,0,0,.75)'; hx.lineWidth = 2;
     hx.beginPath(); hx.moveTo(13, 0); hx.lineTo(-8, -9); hx.lineTo(-3, 0); hx.lineTo(-8, 9); hx.closePath(); hx.stroke(); hx.fill(); hx.restore();
-    hx.font = '700 11px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillStyle = col;
+    hx.font = '700 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillStyle = col;
     hx.fillText(label, ax - Math.cos(ang) * 30, ay - Math.sin(ang) * 22 + 4); hx.shadowBlur = 0;
   }
   // кнопка «ПУСК» (телефон; сброс бомб и пуск ракет): готово сейчас × до следующей единицы (с), заливка по часовой — ход перезарядки; пусто и пополнять
@@ -1533,8 +1533,8 @@ export function createAir(C) {
     if (game.over && craft.dead) return;
     const sp = !!(game.net && craft.dead); if (sp !== document.body.classList.contains('spect')) document.body.classList.toggle('spect', sp); // «КАМ.» — следующий союзник
     if (sp) { // онлайн: наблюдение до нового вылета
-      const hx = C.hx; hx.textAlign = 'center'; hx.font = '700 15px -apple-system, Segoe UI, sans-serif'; hx.fillStyle = '#fde68a'; hx.shadowColor = 'rgba(0,0,0,.8)'; hx.shadowBlur = 4;
-      hx.fillText(spec.why, C.VW / 2, C.VH * 0.2); hx.font = '600 12px -apple-system, Segoe UI, sans-serif'; hx.fillStyle = '#fff';
+      const hx = C.hx; hx.textAlign = 'center'; hx.font = '700 15px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.fillStyle = '#fde68a'; hx.shadowColor = 'rgba(0,0,0,.8)'; hx.shadowBlur = 4;
+      hx.fillText(spec.why, C.VW / 2, C.VH * 0.2); hx.font = '600 12px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.fillStyle = '#fff';
       hx.fillText(game.net.lives > 0 ? tr('Новый вылет — через несколько секунд') : tr('Вылеты на эту волну кончились — смотрите за союзниками'), C.VW / 2, C.VH * 0.2 + 22);
       hx.fillText(IS_TOUCH ? tr('«КАМ.» — следующий союзник') : tr('B — следующий союзник'), C.VW / 2, C.VH * 0.2 + 40);
       { const al = alliesOf(); if (al.length) { hx.fillStyle = '#93c5fd'; hx.fillText(tr('Смотрите за: {0}', [allyName(al[spec.i % al.length])]), C.VW / 2, C.VH * 0.2 + 58); } } hx.shadowBlur = 0;
@@ -1542,7 +1542,7 @@ export function createAir(C) {
     }
     updateLar(dt); drawHud(); zoneHud(); fireBtn(dt);
     if (game.net) { // союзники в небе: зелёная стрелка над самолётом, имя и дальность (до 25 км)
-      const hx = C.hx; hx.font = '600 11px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center';
+      const hx = C.hx; hx.font = '600 11px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center';
       for (const a of alliesOf()) {
         const d = a.pos.distanceTo(craft.pos); if (d > 25000) continue;
         const p = C.proj(fw.copy(a.pos).setY(a.pos.y + 12)); if (!p) continue;
@@ -1554,7 +1554,7 @@ export function createAir(C) {
       const o = wc.obj, hx = C.hx; let txt = tr('КАМЕРА: ЗА ОРУЖИЕМ — нет оружия в воздухе');
       if (o && wc.kind === 'w') txt = tr('КАМЕРА: {0}{1}', [o.W.short, o.dead ? tr(' — разрыв') : tr(' · {0} км/ч · {1} м', [Math.round(o.vel.length() * 3.6), Math.round(o.pos.y - city.groundH(o.pos.x, o.pos.z))])]);
       else if (o) txt = tr('КАМЕРА: ракета {0} летит в вас{1}', [o.S.short, o.dead ? tr(' — подрыв') : tr(' · {0} км', [(o.pos.distanceTo(craft.pos) / 1000).toFixed(1)])]);
-      hx.font = '700 12px -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.fillStyle = wc.kind === 'm' ? '#ff8a8a' : '#fde047';
+      hx.font = '700 12px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.textAlign = 'center'; hx.fillStyle = wc.kind === 'm' ? '#ff8a8a' : '#fde047';
       hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4; hx.fillText(txt, C.VW / 2, Math.max(64, C.VH * 0.16)); hx.shadowBlur = 0;
     }
     if ((hudT -= dt) <= 0) { hudT = 0.1; const rw = C.S.rwr(craft), mw = C.S.mws(craft); hudText(rw, mw); drawRwr(rw, mw, t); if (!C.paused && !game.over) snd.rwrTick(0.1, rwrAckStep(rw, 0.1), mw); }
