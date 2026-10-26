@@ -4,10 +4,10 @@
 // Одиночный бой: 3D замирает (C.endFreeze), холст выцветает (CSS body.endCine), сверху и снизу — чёрные полосы, внизу — лента боя
 // (C.blog: { t, c: 'g' | 'r' | 'y' | '', l } — события, их пишут air.js и defense.js через C.bev). Онлайн — табло поверх затемнённой игры;
 // очки рейтинга и награда приходят позже (claimed / reward). Всё в единицах «u» — процент ширины экрана 16:9, вписанного по высоте.
-import { tr, LANG } from './i18n.js?v=20261026b';
-import { ico } from './icons.js?v=20261026b';
-import { WIN_K } from './sim/online.js?v=20261026b';
-import { activeAcc } from './account.js?v=20261026b';
+import { tr, LANG } from './i18n.js?v=20261026c';
+import { ico } from './icons.js?v=20261026c';
+import { WIN_K } from './sim/online.js?v=20261026c';
+import { activeAcc } from './account.js?v=20261026c';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const fmt = (v) => Math.round(v).toLocaleString(LOC);

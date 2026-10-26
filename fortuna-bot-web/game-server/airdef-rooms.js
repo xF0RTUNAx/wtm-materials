@@ -18,13 +18,13 @@ import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/
 import { AG, SAM, LOADOUTS, DEFENSE, loadoutRole } from '../games/airdef/arsenal.js?v=20260930m';
 import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
-import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261026b';
+import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261026c';
 import { createMulti } from './airdef-multi.js';
 import { adProgress, realDeny, loadoutIds, samIds, quickEra } from './airdef-own.js';
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
 import { initDamage, hitZones, dmgPack, burnRate } from '../games/airdef/sim/damage.js?v=20261022d';
 import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
-import { battleParts } from '../games/airdef/rating.js?v=20261026b';
+import { battleParts } from '../games/airdef/rating.js?v=20261026c';
 
 const city = buildCity(1); setGround(city.groundH); // город один для всех комнат (как у клиентов: seed 1), только чтение
 const winter = buildWinter(1); // «Мульти-волна» — зимняя горная долина «Северный рубеж» (как у клиентов: seed 1)

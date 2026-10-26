@@ -2,8 +2,8 @@
 // Решения Mark — AIRDEF_PLAN.md, «Онлайн — решения Mark». Команды: авиация (air) против ПВО (pvo), три волны.
 // Бой целиком считает сервер той же логикой, что одиночная игра (sim/strike.js, sim/raid.js); клиенты рисуют по снимкам.
 /* global THREE */
-import { tr } from '../i18n.js?v=20261026b';
-import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261026b';
+import { tr } from '../i18n.js?v=20261026c';
+import { AG, SAM, SAM_COST, LOADOUTS, PLANES, loadoutRole, ROLE_NAME } from '../arsenal.js?v=20261026c';
 
 export const AD_PATH = '/ad';             // адрес WebSocket на том же сервере, что «Летка» (/ws — её)
 export const AD_MODES = ['arcade', 'real'];

@@ -3,12 +3,12 @@
 // листва в лесу и рыжая крона издали, грязь на дне оврагов и в болоте, пашня и тыквенные поля, скалы Лысой горы; туман
 // стелется в низинах (над болотом и в оврагах) — гуще в сумерках. Нормали — из сетки высот (50 м).
 /* global THREE */
-import { tr } from './i18n.js?v=20261026b';
-import { ZONE } from './city.js?v=20261026b';
-import { AUTUMN } from './map-autumn.js?v=20261026b';
-import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261026b';
-import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261026b';
-import { ktxOn, ktxLoad } from './ktx.js?v=20261026b';
+import { tr } from './i18n.js?v=20261026c';
+import { ZONE } from './city.js?v=20261026c';
+import { AUTUMN } from './map-autumn.js?v=20261026c';
+import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261026c';
+import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261026c';
+import { ktxOn, ktxLoad } from './ktx.js?v=20261026c';
 
 // погода (панорамы — Poly Haven, CC0): осенний вечер (низкое солнце, голый лес у горизонта), сумерки (закат под облаками),
 // туман (пасмурно, всё в молоке). lowFog — плотность тумана в низинах (шейдер земли), 0…1

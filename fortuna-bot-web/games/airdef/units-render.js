@@ -1,14 +1,14 @@
 // Модели и эффекты «Воздушного превосходства»: зенитные комплексы (процедурные, по мотивам реальных машин),
 // бомбы и ракеты, взрывы, дымные следы ЗУР, трассы зенитных пушек, ловушки, пожары на разрушенных объектах.
 /* global THREE */
-import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261026b';
-import { makeParticles, radialTex } from '../drone/world.js?v=20261026b';
-import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261026b';
-import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261026b';
-import { createCmFx } from './cmfx.js?v=20261026b';
-import { LNCH } from './launchers.js?v=20261026b';
-import { createBook } from './flipbook.js?v=20261026b';
-import { makePuffs } from './puffs.js?v=20261026b';
+import { part, mergeParts, M, latheZ, plateXZ, plateZY, buildMissileGeo } from '../drone/models.js?v=20261026c';
+import { makeParticles, radialTex } from '../drone/world.js?v=20261026c';
+import { createPlumes, makeFlame, flameTick, motorOf, setFlameLayer } from './plume.js?v=20261026c';
+import { FLAME_KIND, makeJetFlame, setJetLayer } from './jetflame.js?v=20261026c';
+import { createCmFx } from './cmfx.js?v=20261026c';
+import { LNCH } from './launchers.js?v=20261026c';
+import { createBook } from './flipbook.js?v=20261026c';
+import { makePuffs } from './puffs.js?v=20261026c';
 
 const OLIVE = 0x4f5c3c, OLIVE_D = 0x3c4630, SAND = 0x6e6a4c, NATO = 0x3f4a35, DARK = 0x1d2024, WHITE = 0xd8d8d0, STEEL = 0x707478;
 
@@ -579,9 +579,9 @@ export function createFx(scene, P) {
   // столб дыма пожара (fx/ex_burn — снят в Blender как петля): высота — по размеру очага; начинается с разной фазы
   const colAdd = (b) => CB.add(b.pos, XJ.burn.height * Math.min(1.6, Math.max(0.35, b.r / XJ.burn.ref)), 1, { t0: -Math.random() * 4 });
   if (!(typeof location !== 'undefined' && /[?&]exnew=0/.test(location.search)) && typeof fetch === 'function' && typeof document !== 'undefined') {
-    fetch(new URL('./fx/explode.json?v=20261026b', import.meta.url)).then((r) => r.json()).then((J) => {
+    fetch(new URL('./fx/explode.json?v=20261026c', import.meta.url)).then((r) => r.json()).then((J) => {
       for (const [t, j] of Object.entries(J)) {
-        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261026b`, import.meta.url).href; // телефон и слабые пресеты — вдвое меньше (память)
+        const u = (e) => new URL(`./fx/ex_${t}${P.fxLo || P.halfFx ? '_lo' : ''}.${e}?v=20261026c`, import.meta.url).href; // телефон и слабые пресеты — вдвое меньше (память)
         if (t === 'puff') { // клубы дыма следов подбитых (tools/airdef-fx/explode/puff.py)
           // по умолчанию (2026-10-24: лист перепечён — клуб заполняет клетку, шаг следа fx.trailStep — «бусин» вдали нет); ?puff=0 — прежние пятна
           if (/[?&]puff=0/.test(location.search)) continue;

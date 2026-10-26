@@ -2,7 +2,7 @@
 // (vendor/basis, three r128) переводит в формат устройства: ASTC (iPhone, Mac), BC7/BC3 (ПК), ETC2 (Android).
 // Нет поддержки, ?ktx=0 или ошибка загрузки — вызывающий берёт прежний JPEG/WebP.
 /* global THREE */
-import { KTX2Loader } from './vendor/basis/KTX2Loader.js?v=20261026b';
+import { KTX2Loader } from './vendor/basis/KTX2Loader.js?v=20261026c';
 const V = '20261022c';
 let L = null, META = null;
 export function ktxInit(renderer) {
