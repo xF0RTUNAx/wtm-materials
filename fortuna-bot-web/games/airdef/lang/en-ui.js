@@ -985,6 +985,7 @@ export default {
   "Магазин камуфляжей — скоро": "Camouflage shop: coming soon",
   "Магазин": "Shop",
   "скоро": "coming soon",
+  "Разделы: исследования, событие, рейтинг, магазин": "Sections: research, event, rating, shop",
   // магазин «Витрина» (shop-ui.js, 2026-10-26)
   "Магазин: окраски сезона за кристаллы": "Shop: season liveries for crystals",
   "окраски сезона": "season liveries",

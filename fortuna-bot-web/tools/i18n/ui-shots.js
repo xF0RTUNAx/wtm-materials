@@ -27,7 +27,7 @@ await click('#modeSel button[data-g="online"]'); await sleep(900); await shot('m
 await click('#modeSel button[data-g="air"]');
 for (const t of ['set', 'ref', 'misc', 'guide']) { await tab(t); await sleep(600); await shot('tab-' + t); await p.evaluate(() => { const s = document.querySelector('.msbody, #msheet .msbody, #msheet'); if (s) s.scrollTop = 99999; }); if (t === 'set') await shot('tab-set-bottom'); await tab(t); }
 // исследования
-await click('#resBtn'); await sleep(1200); await shot('research'); await p.evaluate(() => { const c = document.querySelector('#research .card'); if (c) c.click(); }); await sleep(500); await shot('research-card');
+await click('#mbFold'); await sleep(600); await click('#resBtn'); await sleep(1200); await shot('research'); await p.evaluate(() => { const c = document.querySelector('#research .card'); if (c) c.click(); }); await sleep(500); await shot('research-card');
 await click('#research [data-close-all]'); await sleep(400);
 // событие
 await click('#evtBtn'); await sleep(1000); await shot('event'); await click('#event [data-tab="def"]'); await shot('event-defense'); await click('#event [data-close]'); await sleep(300);

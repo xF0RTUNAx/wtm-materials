@@ -70,8 +70,16 @@
   #shopBtn small { display: flex; align-items: center; gap: 4px; font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #a9c2b0; margin-top: 2px; white-space: nowrap; }
   #shopBtn small b { font: 600 11.5px 'JetBrains Mono', monospace; color: #bfe8cf; } #shopBtn small .ic { width: 1.1em; height: 1.1em; }
   #shopBtn .thumb { flex: none; width: 68px; height: 38px; margin-left: 4px; object-fit: cover; border: 1px solid #3e6a50; transition: filter .25s; filter: saturate(.9); } #shopBtn:hover .thumb { filter: saturate(1.15) brightness(1.08); }
+  @media (max-height: 460px) { #mbFold { width: 42px; min-height: 38px; } #mbFold .ic { width: 24px; height: 24px; } }
   @media (max-height: 460px) { #shopBtn { padding: 4px 5px 4px 8px; font-size: 13px; } #shopBtn .ic { width: 24px; height: 24px; } #shopBtn small { font-size: 10.5px; } #shopBtn .thumb { width: 56px; height: 31.5px; } }
-  @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } } /* узкий экран: справа панель задания — кнопка события над «Исследованиями» */
+  /* разделы меню (Mark 2026-10-26): при входе свёрнуты в указатель (#mbFold); нажатие — кнопки выезжают из него по очереди, ещё нажатие — складываются обратно */
+  #mbFold { flex: none; align-self: stretch; width: 52px; min-height: 44px; display: grid; place-items: center; padding: 0; background: rgba(16,20,15,.9); border: 1px solid #8a6a3a; color: #d8b07a; cursor: pointer; transition: background .2s, color .2s, border-color .2s; }
+  #mbFold:hover { background: #2a2418; color: #f0c88a; } #mbFold .ic { width: 30px; height: 30px; transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+  #mbFold[aria-expanded="true"] { background: #33281a; color: #f3c96f; border-color: #e8b04a; } #mbFold[aria-expanded="true"] .ic { transform: rotate(-10deg) scale(.92); }
+  #mbtns.open > button:not(#mbFold) { transition: opacity .28s ease calc(var(--i, 1) * 45ms), transform .42s cubic-bezier(.2,.8,.2,1) calc(var(--i, 1) * 45ms), visibility 0s linear 0s; }
+  #mbtns:not(.open) > button:not(#mbFold) { opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(calc(var(--i, 1) * -46px)) scale(.6);
+    transition: opacity .22s ease, transform .3s cubic-bezier(.5,0,.75,0), visibility 0s linear .3s; }
+  @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } #mbFold { align-self: flex-start; height: 48px; } #mbtns:not(.open) > button:not(#mbFold) { transform: translateY(calc(var(--i, 1) * 34px)) scale(.6); } } /* узкий экран: справа панель задания — кнопка события над «Исследованиями» */
   @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #ratBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #ratBtn .ic { width: 24px; height: 24px; } #ratBtn small { font-size: 10.5px; } #ratBtn .pl { font-size: 13px; } .accBox button { padding-top: 3px; padding-bottom: 3px; } .accBox button.xf { padding-bottom: 4px; } #evtBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #evtBtn .ic { width: 24px; height: 24px; } #evtBtn small { font-size: 10.5px; } }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
   .screen.on > .card { animation: cardIn .28s cubic-bezier(.2,.9,.3,1.2); }
@@ -701,10 +709,11 @@
 <div id="promoNav"><button data-nav="-1" aria-label="Предыдущий план"></button><button data-nav="1" aria-label="Следующий план"></button></div>
 <div class="screen on" id="menu">
   <div id="menuBg" aria-hidden="true"><div class="mbi"></div><div class="mbi"></div></div>
-  <div id="mbtns"><button id="resBtn" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
-    <button id="evtBtn" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
-    <button id="ratBtn" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>
-    <button id="shopBtn" title="Магазин: окраски сезона за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски сезона</small></span><img class="thumb" src="airdef/shop/e_mig31_dragon_s.webp" alt=""></button></div>
+  <div id="mbtns"><button id="mbFold" aria-expanded="false" title="Разделы: исследования, событие, рейтинг, магазин"><span id="mbFoldIco"></span></button>
+    <button id="resBtn" style="--i:1" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
+    <button id="evtBtn" style="--i:2" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
+    <button id="ratBtn" style="--i:3" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>
+    <button id="shopBtn" style="--i:4" title="Магазин: окраски сезона за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски сезона</small></span><img class="thumb" src="airdef/shop/e_mig31_dragon_s.webp" alt=""></button></div>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
     <div class="accBox" id="accBox"></div>

@@ -441,6 +441,14 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('pgBar').onclick = () => { snd.click(); C.research.open(); };
   $('resIco').innerHTML = ico('research'); $('resBtn').onclick = () => { snd.click(); C.research.open(); }; // кнопка в углу фона меню
   $('shopIco').innerHTML = ico('gem'); // «Магазин» — окно и подпись кнопки — shop-ui.js
+  // разделы (Mark 2026-10-26): при входе свёрнуты в указатель; нажатие разворачивает и складывает обратно (свёрнутые — вне фокуса клавиатуры)
+  $('mbFoldIco').innerHTML = ico('signpost');
+  const mbOpen = (open) => {
+    const mb = $('mbtns'); mb.classList.toggle('open', open); $('mbFold').setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (mb.querySelectorAll) for (const b of mb.querySelectorAll('button:not(#mbFold)')) b.inert = !open;
+  };
+  $('mbFold').onclick = () => { snd.click(); mbOpen(!$('mbtns').classList.contains('open')); };
+  mbOpen(false);
   function render() { renderModeSel(); renderPlay(); renderStats(); renderPg(); if (C.account) C.account.render(); if (C.rating) C.rating.touch(); if (C.shop) C.shop.touch(); } // аккаунт игры и рейтинг — в углу меню
   $('weatherChip').textContent = `${trIf(C.W.name)} · ${C.P.name}`;
   render(); renderRef(); renderGuide(); showTip(false);
