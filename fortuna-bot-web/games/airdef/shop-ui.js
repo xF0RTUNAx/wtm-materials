@@ -33,7 +33,7 @@ const CSS = `
 #shopWin .ic { width: 1em; height: 1em; fill: currentColor; flex: none; display: inline-block; vertical-align: -0.14em; }
 #shopWin .gem { color: var(--jade); }
 #shopWin .sky { position: absolute; inset: -3%; z-index: -3; transform: translate(calc(var(--mx, 0) * -6px), calc(var(--my, 0) * -4px)); transition: transform .3s linear; }
-#shopWin .skyi { position: absolute; inset: 0; background: center / cover no-repeat; opacity: 0; transition: opacity 1s ease; animation: shpDrift 40s ease-in-out infinite alternate; }
+#shopWin .skyi { position: absolute; inset: 0; background: 50% 28% / cover no-repeat; /* горизонт у нижнего края кадра неба: широкий экран режет низ, а не облака */ opacity: 0; transition: opacity 1s ease; animation: shpDrift 40s ease-in-out infinite alternate; }
 #shopWin .skyi.on { opacity: 1; }
 @keyframes shpDrift { from { transform: scale(1.04) translateX(0); } to { transform: scale(1.1) translateX(-1.5%); } }
 #shopWin .hero { position: absolute; z-index: 2; left: var(--hx); top: var(--hy); width: var(--hw); height: calc(var(--hw) * .5625); pointer-events: none;

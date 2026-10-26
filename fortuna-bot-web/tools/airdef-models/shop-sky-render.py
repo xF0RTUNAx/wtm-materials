@@ -4,13 +4,14 @@
 # длиннее) и небо без самолёта (объектив шире — панорама 8K остаётся чёткой); игра кладёт самолёт поверх неба.
 #   Blender -b --factory-startup --python tools/airdef-models/shop-sky-render.py -- <модель.glb> <окраска.png> <небо.hdr> <выход без расширения> [ключ=значение …]
 #   ключи: az (азимут камеры от носа к левому борту, °), el (подъём камеры, °), roll (крен к камере, °), pitch (тангаж, °), sun (солнце от камеры по азимуту, °),
-#   sky (яркость неба — свет на самолёт), fill (заполняющий свет), exp / skyexp (экспозиция слоя самолёта / неба), lens, w, h, spp
+#   sky (яркость неба — свет на самолёт), fill (заполняющий свет), exp / skyexp (экспозиция слоя самолёта / неба), skyup (насколько поднять взгляд
+#   камеры неба, °: под горизонтом у «чистого» неба только размытое отражение — Mark: «много места занимает размытая часть»), lens, w, h, spp
 import bpy, sys, math, mathutils
 import numpy as np
 
 a = sys.argv[sys.argv.index('--') + 1:]
 GLB, SKIN, HDR, OUT = a[:4]
-P = dict(az=34, el=4, roll=-38, pitch=6, sun=55, sky=1.0, fill=0.35, exp=0.0, skyexp=-1.2, lens=62, w=1920, h=1080, spp=128)
+P = dict(az=34, el=4, roll=-38, pitch=6, sun=55, sky=1.0, fill=0.35, exp=0.0, skyexp=-1.2, skyup=17, lens=62, w=1920, h=1080, spp=128)
 for kv in a[4:]:
     k, v = kv.split('='); P[k] = float(v)
 
@@ -86,6 +87,7 @@ sc.render.filepath = OUT + '_plane.png'; bpy.ops.render.render(write_still=True)
 # слой 2: небо без самолёта, шире и крупнее — фон на весь экран
 for o in meshes: o.hide_render = True
 cam.data.lens = 24
+cam.matrix_world = cam.matrix_world @ mathutils.Matrix.Rotation(math.radians(P['skyup']), 4, 'X')  # взгляд вверх: горизонт — у нижнего края, кадр — облака
 sc.render.resolution_x, sc.render.resolution_y = 2560, 1440
 sc.cycles.samples = 16; sc.render.film_transparent = False; sc.view_settings.exposure = P['skyexp']  # панорама ярче, чем её превью: без поправки небо белёсое
 sc.render.image_settings.color_mode = 'RGB'
