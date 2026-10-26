@@ -9,15 +9,15 @@
 // объекта (по горизонтали и вертикали), щипок, колесо и ＋/－ — ближе или дальше, «зум» — угол поля зрения.
 // ◎ прячет весь интерфейс (тап по экрану — вернуть); скорость ×1 / ×½ / ×¼ / стоп-кадр (камеру можно крутить и на стопе).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261026a';
-import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261026a';
-import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261026a';
-import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261026a';
-import { RAID_HELI } from './sim/raid.js?v=20261026a';
-import { fwdOf } from '../drone/sim/core.js?v=20261026a';
-import { weaponHasModel } from './models.js?v=20261026a';
-import { tr, trIf } from './i18n.js?v=20261026a';
-import { ico } from './icons.js?v=20261026a';
+import { mulberry32 } from './city.js?v=20261026b';
+import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261026b';
+import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261026b';
+import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261026b';
+import { RAID_HELI } from './sim/raid.js?v=20261026b';
+import { fwdOf } from '../drone/sim/core.js?v=20261026b';
+import { weaponHasModel } from './models.js?v=20261026b';
+import { tr, trIf } from './i18n.js?v=20261026b';
+import { ico } from './icons.js?v=20261026b';
 
 const PI = Math.PI, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 // ракурсы: [азимут от курса (0 — спереди, π — сзади), угол над горизонтом, дальность в длинах объекта, + метров]

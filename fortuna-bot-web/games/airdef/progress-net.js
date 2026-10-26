@@ -2,11 +2,11 @@
 // одиночного боя и его итог (airdef-solo), строки награды на экране итогов. Тратит и начисляет только сервер — здесь
 // только запросы и показ. Без входа (нет аккаунта игры fortuna_airdef_acc; аккаунт сайта fortuna_web_player считается, только если у него уже есть прогресс игры —
 // account.js legacySite) — как у новичка: в «Реализме» только стартовый набор, опыт не копится; «Аркада» и обучение открыты целиком (AIRDEF_PROGRESSION.md §5).
-import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261026a';
-import { LOADOUTS } from './arsenal.js?v=20261026a';
-import { ico } from './icons.js?v=20261026a';
-import { tr, trIf, LANG } from './i18n.js?v=20261026a';
-import { activeAcc, isMock, siteNoProgress } from './account.js?v=20261026a';
+import { NODE, newProgress, owned, loadoutMissing, samOk, strikeOk, strikeId, RANK_NAME } from './progress.js?v=20261026b';
+import { LOADOUTS } from './arsenal.js?v=20261026b';
+import { ico } from './icons.js?v=20261026b';
+import { tr, trIf, LANG } from './i18n.js?v=20261026b';
+import { activeAcc, isMock, siteNoProgress } from './account.js?v=20261026b';
 
 const TEST = new URLSearchParams(location.search).get('pgtest'); // ?pgtest=1 — тестовый прогресс в памяти (без сервера)
 export function account() { return activeAcc(); } // аккаунт игры, иначе «старый» аккаунт сайта с прогрессом (account.js)
@@ -50,7 +50,7 @@ export function createProgress(C) {
 
   // ── тестовый режим (без сервера): правила те же, состояние — в памяти ──
   async function local(action, id, branch) {
-    const M = await import('./progress.js?v=20261026a');
+    const M = await import('./progress.js?v=20261026b');
     if (!G.P) G.P = { ...newProgress(), xp: 20000, silver: 20000 };
     const r = action === 'research' ? M.research(G.P, id) : action === 'buy' ? M.buy(G.P, id) : (G.P.goal[branch] = id, { ok: true });
     if (!r.ok) throw new Error(r.why);

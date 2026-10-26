@@ -2,9 +2,9 @@
 // (game-server/airdef-multi.js) и клиента. Две команды — восток и запад, два раунда со сменой сторон: в каждом одна команда
 // собирает волну (наряд на цели, как в одиночной «За волну»), другая ставит ПВО. Победа — по сумме: чья волна разрушила больше
 // ценности военных объектов. Подготовка — одновременная, общий таймер; атака не видит ПВО до обнаружения, оборона — план волны.
-import { tr } from '../i18n.js?v=20261026a';
-import { AG, SAM, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261026a';
-import { LIM_ON } from './combined.js?v=20261026a';
+import { tr } from '../i18n.js?v=20261026b';
+import { AG, SAM, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261026b';
+import { LIM_ON } from './combined.js?v=20261026b';
 
 export const KIND = 'multi';
 export const ROUNDS = 2;
