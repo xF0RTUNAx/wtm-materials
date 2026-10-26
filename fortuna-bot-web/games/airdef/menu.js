@@ -444,7 +444,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   // разделы (Mark 2026-10-26): при входе свёрнуты в указатель; нажатие разворачивает и складывает обратно (свёрнутые — вне фокуса клавиатуры)
   $('mbFoldIco').innerHTML = ico('signpost');
   const mbOpen = (open) => {
-    const mb = $('mbtns'); mb.classList.toggle('open', open); $('mbFold').setAttribute('aria-expanded', open ? 'true' : 'false');
+    const mb = $('mbtns'), f = $('mbFold'); mb.classList.toggle('open', open); if (f.setAttribute) f.setAttribute('aria-expanded', open ? 'true' : 'false'); // (заглушка DOM стенда — без setAttribute)
     if (mb.querySelectorAll) for (const b of mb.querySelectorAll('button:not(#mbFold)')) b.inert = !open;
   };
   $('mbFold').onclick = () => { snd.click(); mbOpen(!$('mbtns').classList.contains('open')); };
