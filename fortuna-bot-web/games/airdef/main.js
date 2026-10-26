@@ -42,6 +42,7 @@ import { createResearch } from './research.js?v=20261026b';
 import { createEvent } from './event.js?v=20261026b';
 import { createAccount } from './account-ui.js?v=20261026b';
 import { createRating } from './rating-ui.js?v=20261026b';
+import { createShop } from './shop-ui.js?v=20261026b';
 import { createEndScreen } from './endscr.js?v=20261026b';
 import { createHints } from './hints.js?v=20261026b';
 import { motorOf } from './plume.js?v=20261026b';
@@ -1055,7 +1056,7 @@ setInterval(() => {
   createHints(C, ctrls); // подсказки клавиш в бою (ПК): «Настройки» или F1
   C.event = createEvent(C); // событие «Туманная топь»: экран вертолётов (кнопка в меню — #evtBtn)
   C.endScr = createEndScreen(C); // экраны итога боя (endscr.js)
-  C.account = createAccount(C); C.rating = createRating(C); // аккаунт игры (строка в углу меню, окно) и рейтинг онлайна (кнопка #ratBtn, окно, «Мои бои»)
+  C.account = createAccount(C); C.rating = createRating(C); C.shop = createShop(C); // аккаунт игры (строка в углу меню, окно) и рейтинг онлайна (кнопка #ratBtn, окно, «Мои бои»)
   C.online = createOnline(C, ctrls); // до меню: оно спрашивает у онлайна текст кнопки и раздел
   C.menu = createMenu(C, { PRESETS, WEATHER_KEYS });
   C.progress.on(() => { if (C.state === 'menu') C.menu.render(); }); C.progress.refresh(); // замки «Реализма» — по купленному

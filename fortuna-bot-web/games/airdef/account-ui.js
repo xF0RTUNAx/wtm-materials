@@ -64,6 +64,7 @@ export function createAccount(C) {
     if (C.netc && C.netc.accChanged) C.netc.accChanged(); // соединение онлайна — со старым аккаунтом: закрыть, панель «Онлайн» подключится заново
     if (C.progress) C.progress.refresh();
     if (C.rating) C.rating.reset();
+    if (C.shop) C.shop.reset();
     if (C.state === 'menu' && C.menu) C.menu.render(); else renderRail();
     if (root.classList.contains('on')) draw();
   }

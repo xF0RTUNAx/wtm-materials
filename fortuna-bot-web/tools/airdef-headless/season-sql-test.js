@@ -5,7 +5,8 @@
 //   deno run -A tools/airdef-headless/season-sql-test.js
 import { PGlite } from 'npm:@electric-sql/pglite@0.2.17';
 import { SEASON } from '../../games/airdef/rating.js';
-import { CAMOS, CAMO_PRICE } from '../../games/airdef/arsenal.js';
+import { CAMOS, CAMO_PRICE, camosOut } from '../../games/airdef/arsenal.js';
+const KEYS = CAMOS.map((c) => c.key); // все окраски — проверяется логика выплат; какие вышли к сезону — camosOut (ниже)
 const SQL = new URL('../../sql/', import.meta.url).pathname;
 const db = new PGlite();
 let bad = 0; const ok = (c, t) => { console.log((c ? 'OK   ' : 'ОШИБКА ') + t); if (!c) bad++; };
@@ -20,8 +21,8 @@ await db.exec(Deno.readTextFileSync(SQL + '024_airdef_season_rewards.sql')); // 
 ok(true, 'миграции 020, 021, 022, 024, 025 (и 024 повторно) применились');
 
 // правила — как передаёт airdef-progress (_shared/airdef-season.ts)
-const RULES = { per: SEASON.PER, min: SEASON.MIN, top: SEASON.TOP, price: CAMO_PRICE, camos: CAMOS };
-ok(CAMO_PRICE === 150 && SEASON.PER === 100 && SEASON.MIN === 3 && JSON.stringify(SEASON.TOP) === '["pick","random",0.75,0.5,0.25]' && CAMOS.length === 5, 'правила Mark: 150 💎 за камуфляж, 1 💎 за 100 очков, места: выбор / случайный / 75 / 50 / 25 %');
+const RULES = { per: SEASON.PER, min: SEASON.MIN, top: SEASON.TOP, price: CAMO_PRICE, camos: KEYS };
+ok(CAMO_PRICE === 150 && SEASON.PER === 100 && SEASON.MIN === 3 && JSON.stringify(SEASON.TOP) === '["pick","random",0.75,0.5,0.25]' && KEYS.length === 5 && JSON.stringify(camosOut(1)) === '["e_f15e:inferno","e_mig31:dragon"]' && camosOut(0).length === 0, 'правила Mark: 150 💎 за камуфляж, 1 💎 за 100 очков, места: выбор / случайный / 75 / 50 / 25 %; в сезоне 1 — «Инферно» и «Нефритовый дракон»');
 const settle = async (r = RULES) => (await one('select airdef_season_settle($1::jsonb) s', [JSON.stringify(r)])).s;
 const wal = async (id) => (await one('select crystals, camos, picks from airdef_wallet where player_id = $1', [id])) || null;
 const paid = async (s, id) => (await one('select place, points, n, crystals, camo, pick from airdef_season_paid where season = $1 and player_id = $2', [s, id])) || null;
@@ -61,7 +62,7 @@ const s1 = await settle();
 ok(JSON.stringify(s1) === '[1]', `рассчитан сезон 1 (${JSON.stringify(s1)})`);
 const a1 = await wal(P.A), b1 = await wal(P.B);
 ok(a1.crystals === 63 && a1.picks === 1 && a1.camos.length === 0, `1-е место: 63 💎 за 6300 очков + камуфляж на выбор (${JSON.stringify(a1)})`);
-ok(b1.crystals === 56 && b1.camos.length === 1 && CAMOS.includes(b1.camos[0]) && b1.picks === 0, `2-е место: 56 💎 + случайный камуфляж ${b1.camos[0]}`);
+ok(b1.crystals === 56 && b1.camos.length === 1 && KEYS.includes(b1.camos[0]) && b1.picks === 0, `2-е место: 56 💎 + случайный камуфляж ${b1.camos[0]}`);
 ok((await wal(P.C)).crystals === 49 + 113, '3-е место: 49 + 113 (75 % от 150, вверх) = 162 💎');
 ok((await wal(P.D)).crystals === 36 + 75, '4-е место: 36 + 75 (50 %) = 111 💎');
 ok((await wal(P.E)).crystals === 30 + 38, '5-е место: 30 + 38 (25 %, вверх) = 68 💎');
@@ -77,15 +78,15 @@ ok((await settle()).length === 0 && (await wal(P.A)).crystals === 63 && (await w
 // ── сезоны 2, 3, 4 (все закончились — рассчитываются одним вызовом) ──
 // сезон 2: E 6000 (1-е; 4 камуфляжа свои + 1 «на выбор» ждёт — выбирать нечего → цена), B 4500 (2-е; все 5 свои → цена),
 // C 4000 (3-е, но 2 боя — ничего, места не сдвигаются), D 3000 (4-е → 50 %)
-await db.query(`update airdef_wallet set camos = $2, picks = 1 where player_id = $1`, [P.E, CAMOS.slice(0, 4)]);
-await db.query(`update airdef_wallet set camos = $2 where player_id = $1`, [P.B, CAMOS]);
+await db.query(`update airdef_wallet set camos = $2, picks = 1 where player_id = $1`, [P.E, KEYS.slice(0, 4)]);
+await db.query(`update airdef_wallet set camos = $2 where player_id = $1`, [P.B, KEYS]);
 await fights(P.E, 2, 3, 2000); await fights(P.B, 2, 3, 1500); await fights(P.C, 2, 2, 2000); await fights(P.D, 2, 3, 1000);
 // сезон 3: F 6000 (1-е → на выбор), C 3000 (2-е; свои все, кроме последнего, выборов нет → достаётся именно он)
-await db.query(`update airdef_wallet set camos = $2 where player_id = $1`, [P.C, CAMOS.slice(0, 4)]);
+await db.query(`update airdef_wallet set camos = $2 where player_id = $1`, [P.C, KEYS.slice(0, 4)]);
 await fights(P.F, 3, 3, 2000); await fights(P.C, 3, 3, 1000);
 // сезон 4: D 6000 (1-е → на выбор), A 3000 (2-е; свой не хватает одного, но его ждёт невыбранный выбор с сезона 1 → цена),
 // H и I — по 3 боя без действий (0 очков, делят 3-е место) → ничего
-await db.query(`update airdef_wallet set camos = $2 where player_id = $1`, [P.A, CAMOS.slice(0, 4)]);
+await db.query(`update airdef_wallet set camos = $2 where player_id = $1`, [P.A, KEYS.slice(0, 4)]);
 await fights(P.D, 4, 3, 2000); await fights(P.A, 4, 3, 1000); await fights(P.H, 4, 3, 0); await fights(P.I, 4, 3, 0);
 await db.query(`update airdef_seasons set starts_at = now() - interval '130 days', ends_at = now() - interval '91 days' where id = 1`);
 const s23 = await settle();
@@ -99,7 +100,7 @@ const d2 = await paid(2, P.D);
 ok(d2.place === 4 && d2.crystals === 30 + 75, '4-е место за ним — 50 %, места не сдвинулись');
 const f3 = await wal(P.F), c3 = await wal(P.C);
 ok(f3.picks === 1 && f3.crystals === 28 + 60, 'сезон 3: 1-е место — на выбор');
-ok(c3.camos.length === 5 && c3.camos.includes(CAMOS[4]) && (await paid(3, P.C)).camo === CAMOS[4] && c3.crystals === 162 + 30, `сезон 3: 2-е место — единственный недостающий камуфляж (${CAMOS[4]})`);
+ok(c3.camos.length === 5 && c3.camos.includes(KEYS[4]) && (await paid(3, P.C)).camo === KEYS[4] && c3.crystals === 162 + 30, `сезон 3: 2-е место — единственный недостающий камуфляж (${KEYS[4]})`);
 const d4 = await wal(P.D), a4 = await wal(P.A);
 ok(d4.picks === 1 && d4.crystals === 216 + 60, 'сезон 4: 1-е место — на выбор');
 ok(a4.camos.length === 4 && a4.picks === 1 && !(await paid(4, P.A)).camo && a4.crystals === 63 + 30 + 150, `сезон 4: 2-е место, последний свободный камуфляж обещан выбору — 150 💎 (${a4.crystals})`);

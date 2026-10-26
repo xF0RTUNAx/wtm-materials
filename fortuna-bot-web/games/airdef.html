@@ -63,15 +63,15 @@
   .accBox button:hover { background: #222a1f; } .accBox .ic { width: 1.15em; height: 1.15em; flex: none; color: #e8b04a; } .accBox .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
   .accBox button.in { color: #e8b04a; } .accBox button.xf { color: #f3c96f; font-size: 12.5px; padding-top: 2px; padding-bottom: 7px; }
   .ratLine { color: #f3c96f; } .ratLine b { font-family: 'JetBrains Mono', monospace; color: #fff; }
-  /* «Магазин» (Mark 2026-10-25): ещё не открыт — приглушённая, перетянутая двумя полосами ленты, с замком; не нажимается */
-  #shopBtn { position: relative; display: flex; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 30px 6px 10px; background: rgba(16,20,15,.88);
-    border: 1px solid #3f4a3a; color: #7e8a7a; cursor: not-allowed; overflow: hidden; filter: saturate(.35); }
-  #shopBtn .tx { display: flex; flex-direction: column; } #shopBtn .ic { width: 30px; height: 30px; flex: none; color: #4f8f74; opacity: .7; }
-  #shopBtn small { font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #6d776a; margin-top: 2px; white-space: nowrap; }
-  #shopBtn .lk { position: absolute; right: 8px; top: 50%; width: 16px; height: 16px; margin-top: -8px; color: #9aa394; z-index: 2; } #shopBtn .lk .ic { width: 16px; height: 16px; opacity: 1; color: inherit; }
-  #shopBtn::before, #shopBtn::after { content: ""; position: absolute; left: -12%; width: 124%; height: 6px; z-index: 1; pointer-events: none;
-    background: repeating-linear-gradient(135deg, rgba(232,177,74,.6) 0 7px, rgba(20,22,18,.8) 7px 14px); box-shadow: 0 1px 2px rgba(0,0,0,.5); }
-  #shopBtn::before { top: 6%; transform: rotate(-5deg); } #shopBtn::after { bottom: 6%; transform: rotate(4deg); opacity: .85; } /* полосы — у краёв: надпись читается */
+  /* «Магазин» (Mark 2026-10-26, «Витрина» — shop-ui.js): кристаллы и окраски сезона; справа выглядывает самолёт в окраске сезона */
+  #shopBtn { position: relative; display: flex; flex-direction: row; align-items: center; gap: 9px; text-align: left; padding: 6px 62px 6px 10px; cursor: pointer;
+    background: linear-gradient(180deg, rgba(20,34,25,.94), rgba(14,22,17,.94)); border: 1px solid #3e6a50; color: #d9efe0; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; }
+  #shopBtn:hover { background: linear-gradient(180deg, rgba(26,44,32,.96), rgba(17,28,21,.96)); } #shopBtn .tx { display: flex; flex-direction: column; } #shopBtn .ic { width: 30px; height: 30px; flex: none; color: #59b884; }
+  #shopBtn small { display: flex; align-items: center; gap: 4px; font: 600 11.5px 'Golos Text', sans-serif; letter-spacing: 0; color: #a9c2b0; margin-top: 2px; white-space: nowrap; }
+  #shopBtn small b { font: 600 11.5px 'JetBrains Mono', monospace; color: #bfe8cf; } #shopBtn small .ic { width: 1.1em; height: 1.1em; }
+  #shopBtn .peek { position: absolute; right: -12px; top: -20px; width: 86px; height: auto; pointer-events: none; filter: drop-shadow(0 5px 4px rgba(0,0,0,.55)); transition: transform .35s cubic-bezier(.2,.8,.2,1); }
+  #shopBtn:hover .peek { transform: translate(3px, -3px) scale(1.06); }
+  @media (max-height: 460px) { #shopBtn { padding: 4px 52px 4px 8px; font-size: 13px; } #shopBtn .ic { width: 24px; height: 24px; } #shopBtn small { font-size: 10.5px; } #shopBtn .peek { width: 70px; top: -15px; } }
   @media (max-width: 1000px) { #mbtns { flex-direction: column-reverse; } } /* узкий экран: справа панель задания — кнопка события над «Исследованиями» */
   @media (max-height: 460px) { #resBtn { padding: 6px 12px 6px 9px; font-size: 13px; } #resBtn .ic { width: 24px; height: 24px; } #ratBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #ratBtn .ic { width: 24px; height: 24px; } #ratBtn small { font-size: 10.5px; } #ratBtn .pl { font-size: 13px; } .accBox button { padding-top: 3px; padding-bottom: 3px; } .accBox button.xf { padding-bottom: 4px; } #evtBtn { padding: 4px 11px 4px 8px; font-size: 13px; } #evtBtn .ic { width: 24px; height: 24px; } #evtBtn small { font-size: 10.5px; } }
   @keyframes scrIn { from { opacity: 0; } to { opacity: 1; } }
@@ -705,7 +705,7 @@
   <div id="mbtns"><button id="resBtn" title="Исследования: дерево техники"><span id="resIco"></span><b>Исследования</b></button>
     <button id="evtBtn" title="Событие: вертолёты над «Туманной топью»"><span id="evtIco"></span><span class="tx"><b>Туманная топь</b><small id="evtLeft"></small></span></button>
     <button id="ratBtn" title="Рейтинг: таблица сезона"><span id="ratIco"></span><span class="tx"><b>Рейтинг</b><small id="ratSub"></small></span><i class="pl" id="ratPl"></i></button>
-    <button id="shopBtn" disabled aria-disabled="true" tabindex="-1" title="Магазин камуфляжей — скоро"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small>скоро</small></span><i class="lk" id="shopLk"></i></button></div>
+    <button id="shopBtn" title="Магазин: окраски сезона за кристаллы"><span id="shopIco"></span><span class="tx"><b>Магазин</b><small id="shopSub">окраски сезона</small></span><img class="peek" id="shopPeek" src="airdef/shop/e_f15e_inferno_s.webp" alt=""></button></div>
   <nav class="mrail" aria-label="Режимы игры">
     <div class="mlogo">AIR SUPERIORITY</div>
     <div class="accBox" id="accBox"></div>

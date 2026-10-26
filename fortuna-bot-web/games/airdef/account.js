@@ -112,7 +112,21 @@ async function mockFn(fn, b) {
     throw mockErr(400, 'Неизвестное действие');
   }
   if (fn === 'get-airdef-rating') return mockRating(b.player_id);
+  if (fn === 'airdef-shop') return mockShop(b);
   throw mockErr(404, 'Not found');
+}
+// магазин (shop-ui.js): 340 кристаллов; ?shop=token — окраска на выбор, owned — обе куплены и «Инферно» надета, poor — не хватает кристаллов
+const SHOP0 = { token: { crystals: 60, camos: [], picks: 1, worn: {} }, owned: { crystals: 190, camos: ['e_f15e:inferno', 'e_mig31:dragon'], picks: 0, worn: { e_f15e: 'inferno' } },
+  poor: { crystals: 120, camos: [], picks: 0, worn: {} } };
+let MSHOP = null;
+function mockShop(b) {
+  if (!MSHOP) { let st = ''; try { st = new URLSearchParams(location.search).get('shop') || ''; } catch (_) { /* нет адреса */ } MSHOP = JSON.parse(JSON.stringify(SHOP0[st] || { crystals: 340, camos: [], picks: 0, worn: {} })); }
+  const W = MSHOP, PRICE = 150; // как CAMO_PRICE (arsenal.js)
+  if (b.action === 'buy') { if (W.camos.includes(b.key)) throw mockErr(409, tr('Эта окраска уже ваша')); if (W.crystals < PRICE) throw mockErr(409, tr('Не хватает кристаллов')); W.crystals -= PRICE; W.camos.push(b.key); }
+  else if (b.action === 'pick') { if (W.picks < 1) throw mockErr(409, tr('Окраски на выбор нет')); W.picks -= 1; W.camos.push(b.key); }
+  else if (b.action === 'wear') { if (b.key) { const [pl, id] = b.key.split(':'); W.worn[pl] = id; } else delete W.worn[b.plane]; }
+  else if (b.action !== 'state') throw mockErr(400, tr('Неизвестное действие'));
+  return { season: 1, wallet: JSON.parse(JSON.stringify(W)) };
 }
 const MOCK_TOP = [['Гром_52', 6480], ['SkyKeeper', 6215], ['Волхов', 6090], ['Tanker_Alpha', 5870], ['Беркут-7', 5655], ['Орлан', 5410], ['Strela_21', 5330], ['Ястреб', 5260], ['Nord_Fox', 5190], ['Кречет', 5120], ['Zenit', 5040], ['Дозор-3', 4980],
   ['Ghost_Rider', 4900], ['Сокол', 4860], ['Radar_K', 4790], ['Пересвет', 4720], ['MiG_Man', 4660], ['Бурый', 4590], ['Фортуна', 4530], ['Delta_9', 4470], ['Лис', 4400], ['Vector', 4350], ['Ермак', 4290], ['Patriot_7', 4230],
