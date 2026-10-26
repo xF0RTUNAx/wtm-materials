@@ -45,7 +45,7 @@
   #mtabs .mres { color: #f3c96f; }
   body.researchOn #menu { visibility: hidden; }
   /* кнопка «Исследования» в левом нижнем углу фона меню (Mark 2026-10-20) */
-  #mbtns { position: absolute; z-index: 2; left: calc(188px + var(--sa-l)); bottom: max(14px, var(--sa-b)); display: flex; align-items: stretch; gap: 10px; }
+  #mbtns { position: absolute; z-index: 2; left: calc(188px + var(--sa-l)); bottom: max(14px, var(--sa-b)); display: flex; align-items: stretch; gap: 10px; pointer-events: none; } #mbtns > button { pointer-events: auto; } /* свёрнутые разделы занимают место — пустота нажатия не ловит */
   #resBtn { display: flex; align-items: center; gap: 10px; padding: 9px 16px 9px 12px;
     background: rgba(16,20,15,.88); border: 1px solid #e8b04a; color: #f3c96f; font: 500 15px 'Oswald', -apple-system, sans-serif; letter-spacing: .03em; cursor: pointer; }
   #resBtn:hover { background: #232a1c; } #resBtn .ic { width: 30px; height: 30px; }

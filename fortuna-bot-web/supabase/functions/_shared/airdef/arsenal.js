@@ -218,10 +218,11 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
   e_vulcan: 'Vulcan B.2', e_draken: 'Saab 35 Draken', e_viggen: 'Saab AJ 37 Viggen',
   e_su33: 'Су-33', e_m4: 'М-4', e_mig19: 'МиГ-19', e_mig17: 'МиГ-17', e_t4: 'Т-4', e_mig29k: 'МиГ-29К' };
 // Камуфляжи — особые окраски (Mark 2026-10-25/26), ключ «самолёт:окраска»; season — сезон, с которого окраска в магазине (Mark: каждый сезон —
-// 2 новые; 0 — ещё не вышла): «Инферно» (была «Огненный тигр») и «Нефритовый дракон» — сезон 1; «Цветок сакуры», «Сгущёнка», «Морская цифра» — позже.
+// 2 новые; 0 — ещё не вышла, лежит про запас): «Инферно» (была «Огненный тигр») и «Нефритовый дракон» — сезон 1; «Цветок сакуры», «Сгущёнка», «Пиксель»,
+// «Космонавтика», «Арлекин» — на будущие сезоны (Mark 2026-10-26: «в игру визуально пока не добавляй»).
 // Цена — в кристаллах. Магазин — shop-ui.js; награды сезона (rating.js SEASON, sql/024) — только из вышедших к концу сезона (camosOut)
 export const CAMO_PRICE = 150;
-export const CAMOS = [['e_f15e:inferno', 1], ['e_mig31:dragon', 1], ['e_f35:sakura', 0], ['e_tu22:milk', 0], ['f16:digital', 0]].map(([key, season]) => ({ key, season }));
+export const CAMOS = [['e_f15e:inferno', 1], ['e_mig31:dragon', 1], ['e_f35:sakura', 0], ['e_tu22:milk', 0], ['f16:digital', 0], ['e_su34:cosmos', 0], ['e_typhoon:harlequin', 0]].map(([key, season]) => ({ key, season }));
 export const camosOut = (season) => CAMOS.filter((c) => c.season && c.season <= season).map((c) => c.key);
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {

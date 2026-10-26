@@ -140,6 +140,7 @@ export function createOnline(C, ctrls) {
     if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
     C.hooks = {}; C.paused = false; C.hint(''); C.say('');
     for (const id of ['menu', 'end', 'pauseScr']) $(id).classList.remove('on');
+    if (C.shop) C.shop.close(); if (C.rating) C.rating.close(); // бой нашёлся, пока открыто окно магазина или рейтинга (ревью)
     document.body.classList.remove('menuing'); document.body.classList.add('playing');
     C.state = 'play'; C.camera.clearViewOffset(); C.lastGame = 'online'; C.shell.play(true);
     if (N.battle && N.battle.kind === 'multi') { C.ctrl = ctrls.defense; ctrls.defense.startNetMulti(N); }

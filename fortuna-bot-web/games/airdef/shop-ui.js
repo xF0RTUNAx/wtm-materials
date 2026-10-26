@@ -132,7 +132,7 @@ export function createShop(C) {
     let d = null, err = '';
     if (key) {
       try { d = await callFn('airdef-shop', { player_id: key, action: 'state' }); }
-      catch (e) { err = e.status === 404 && !e.code ? 'soon' : e.message || tr('Нет связи с сайтом'); }
+      catch (e) { err = e.status === 404 && (!e.code || e.code === 'NOT_FOUND') ? 'soon' : e.message || tr('Нет связи с сайтом'); } // NOT_FOUND — функции нет на сервере (Supabase)
     }
     S.busy = false;
     if (key !== keyNow()) { S.at = 0; S.w = null; load(); return; } // пока ждали, сменили аккаунт
@@ -262,6 +262,7 @@ export function createShop(C) {
 
   // ── события ──
   root.addEventListener && root.addEventListener('click', async (e) => {
+    if (Date.now() - swipeAt < 400) return; // click сразу после свайпа — его же касание (ревью: свайп по плитке гасил сам себя)
     const b = e.target.closest('[data-a]'), tile = e.target.closest('.tile');
     if ((!b || b.dataset.a !== 'q') && S.hint && !e.target.closest('.shint')) { S.hint = false; draw(); }
     if (tile) { if (+tile.dataset.i !== S.sel) { if (C.snd && C.snd.click) C.snd.click(); select(+tile.dataset.i, true); } return; }
@@ -277,11 +278,11 @@ export function createShop(C) {
     else if (a === 'off') await act('wear', null, { plane: k.split(':')[0] });
   });
   // свайп и лёгкий параллакс от мыши (небо — против движения, самолёт — по нему)
-  let sx = null, tx = 0, ty = 0, mx = 0, my = 0, raf = 0;
+  let sx = null, tx = 0, ty = 0, mx = 0, my = 0, raf = 0, swipeAt = 0;
   root.addEventListener && root.addEventListener('pointerdown', (e) => { sx = e.clientX; });
   root.addEventListener && root.addEventListener('pointerup', (e) => {
     if (sx == null) return; const dx = e.clientX - sx, n = out().length; sx = null;
-    if (Math.abs(dx) > 50 && n > 1 && !e.target.closest('.shint')) select((S.sel + (dx < 0 ? 1 : n - 1)) % n, true);
+    if (Math.abs(dx) > 50 && n > 1 && !e.target.closest('.shint')) { swipeAt = Date.now(); select((S.sel + (dx < 0 ? 1 : n - 1)) % n, true); }
   });
   const loop = () => { mx += (tx - mx) * 0.08; my += (ty - my) * 0.08; root.style.setProperty('--mx', mx.toFixed(3)); root.style.setProperty('--my', my.toFixed(3)); raf = Math.abs(tx - mx) + Math.abs(ty - my) > 0.002 ? requestAnimationFrame(loop) : 0; };
   root.addEventListener && root.addEventListener('pointermove', (e) => {

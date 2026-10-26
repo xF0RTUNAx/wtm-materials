@@ -6,7 +6,7 @@
 import { PGlite } from 'npm:@electric-sql/pglite@0.2.17';
 import { SEASON } from '../../games/airdef/rating.js';
 import { CAMOS, CAMO_PRICE, camosOut } from '../../games/airdef/arsenal.js';
-const KEYS = CAMOS.map((c) => c.key); // все окраски — проверяется логика выплат; какие вышли к сезону — camosOut (ниже)
+const KEYS = CAMOS.map((c) => c.key).slice(0, 5); // каталог из пяти окрасок — проверяется логика выплат; какие вышли к сезону — camosOut (ниже)
 const SQL = new URL('../../sql/', import.meta.url).pathname;
 const db = new PGlite();
 let bad = 0; const ok = (c, t) => { console.log((c ? 'OK   ' : 'ОШИБКА ') + t); if (!c) bad++; };
@@ -22,7 +22,7 @@ ok(true, 'миграции 020, 021, 022, 024, 025, 027 (и 024 повторно
 
 // правила — как передаёт airdef-progress (_shared/airdef-season.ts)
 const RULES = { per: SEASON.PER, min: SEASON.MIN, top: SEASON.TOP, price: CAMO_PRICE, camos: KEYS };
-ok(CAMO_PRICE === 150 && SEASON.PER === 100 && SEASON.MIN === 3 && JSON.stringify(SEASON.TOP) === '["pick","random",0.75,0.5,0.25]' && KEYS.length === 5 && JSON.stringify(camosOut(1)) === '["e_f15e:inferno","e_mig31:dragon"]' && camosOut(0).length === 0, 'правила Mark: 150 💎 за камуфляж, 1 💎 за 100 очков, места: выбор / случайный / 75 / 50 / 25 %; в сезоне 1 — «Инферно» и «Нефритовый дракон»');
+ok(CAMO_PRICE === 150 && SEASON.PER === 100 && SEASON.MIN === 3 && JSON.stringify(SEASON.TOP) === '["pick","random",0.75,0.5,0.25]' && CAMOS.length === 7 && JSON.stringify(camosOut(1)) === '["e_f15e:inferno","e_mig31:dragon"]' && camosOut(0).length === 0, 'правила Mark: 150 💎 за камуфляж, 1 💎 за 100 очков, места: выбор / случайный / 75 / 50 / 25 %; в сезоне 1 — «Инферно» и «Нефритовый дракон»');
 const settle = async (r = RULES) => (await one('select airdef_season_settle($1::jsonb) s', [JSON.stringify(r)])).s;
 const wal = async (id) => (await one('select crystals, camos, picks from airdef_wallet where player_id = $1', [id])) || null;
 const paid = async (s, id) => (await one('select place, points, n, crystals, camo, pick from airdef_season_paid where season = $1 and player_id = $2', [s, id])) || null;

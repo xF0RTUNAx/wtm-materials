@@ -3,7 +3,7 @@
 // Пишет games/airdef/assets.json: { files: [[путь от games/airdef, байт], …], models: { имя: байт }, ktx: { 'index': байт, '<модель>.<номер>': байт } } (ktx — сжатые текстуры моделей, tools/airdef-models/ktx-models.js). Новый файл, которого нет в списке, —
 // не беда: он попадёт в кэш устройства при первом использовании. Обновлять при деплое (навык deploy-airdef).
 const root = new URL('../../games/airdef/', import.meta.url).pathname;
-const DIRS = ['tex', 'sky', 'fx', 'sounds', 'thumbs', 'ui', 'shots', 'vendor', 'lang', 'fonts'], SKIP = /\.(md|py|txt)$|^\./;
+const DIRS = ['tex', 'sky', 'fx', 'sounds', 'thumbs', 'ui', 'shots', 'vendor', 'lang', 'fonts', 'shop'], /* shop — картинки витрины магазина */ SKIP = /\.(md|py|txt)$|^\./;
 const files = [];
 function walk(rel) {
   for (const e of Deno.readDirSync(root + rel)) {
