@@ -136,5 +136,12 @@ ok(mw.r === 200 && mw.k === 1 && mw.b === 0.75 && mw.c === 250, 'Мульти-в
 ok(battleParts({ win: 1, score: 900, kills: 5, teamScores: [900, 10, 10], oppHumans: 1, oppTotal: 1, mode: 'real', era: 1 }).c === 500, 'вклад — не больше 500 (250 × 3 × 900 / 920 = 734 → 500)');
 ok(oppStrength(0, []) === 50 && oppStrength(1000, [1000, 1000]) === 50 && oppStrength(1000, [3000]) === 75 && oppStrength(1000, []) === 0, 'сила соперников: равные 50, сильнее 75, нет людей 0');
 
+// ── 026: сезон 1 на месяц длиннее (до 01.01.2027 МСК), дальше по 30 дней ──
+await db.exec(Deno.readTextFileSync(SQL + '026_airdef_season1_longer.sql'));
+ok(await S('2026-12-15 12:00:00+03') === 1 && await S('2026-12-31 23:59:00+03') === 1 && await S('2027-01-01 00:00:00+03') === 2 && await S('2027-01-31 00:00:00+03') === 3,
+  '026: сезон 1 — до 01.01.2027, сезон 2 — 01.01–31.01 (30 дней), потом 3');
+await db.exec(Deno.readTextFileSync(SQL + '026_airdef_season1_longer.sql'));
+ok(+new Date((await one('select ends_at from airdef_seasons where id = 1')).ends_at) === +new Date('2027-01-01T00:00:00+03:00'), '026 повторно — конец сезона 1 тот же');
+
 console.log(bad ? `\nИТОГ: ошибок ${bad}` : '\nИТОГ: всё прошло');
 if (bad) Deno.exit(1);

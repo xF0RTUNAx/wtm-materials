@@ -132,7 +132,7 @@ const MOCK_TOP = [['Гром_52', 6480], ['SkyKeeper', 6215], ['Волхов', 6
   ['Ghost_Rider', 4900], ['Сокол', 4860], ['Radar_K', 4790], ['Пересвет', 4720], ['MiG_Man', 4660], ['Бурый', 4590], ['Фортуна', 4530], ['Delta_9', 4470], ['Лис', 4400], ['Vector', 4350], ['Ермак', 4290], ['Patriot_7', 4230],
   ['Север', 4180], ['Hawk_Eye', 4130], ['Тополь', 4080], ['Raptor', 4040], ['Грач', 4000], ['Pilot_Q', 3990], ['Мираж', 3985], ['Alfa_Z', 3975], ['Шторм', 3970], ['Бекас', 3960], ['Iron_Sky', 3955], ['Лунь', 3950]];
 function mockRating(pid) {
-  const day = 86400000, t0 = Date.parse('2026-10-25T00:00:00+03:00'), t1 = Date.parse('2026-12-01T00:00:00+03:00'), now = Date.now();
+  const day = 86400000, t0 = Date.parse('2026-10-25T00:00:00+03:00'), t1 = Date.parse('2027-01-01T00:00:00+03:00') /* сезон 1 — до 01.01.2027, sql/026 */, now = Date.now();
   const ago = (d, h, m) => new Date(now - d * day - h * 3600000 - m * 60000).toISOString();
   const g = gameAcc(), nick = g ? g.nick || g.login : 'xFORTUNAx';
   const top = MOCK_TOP.map(([n, p], i) => ({ place: i + 1, nick: n, points: p, n: 7 }));
