@@ -8,6 +8,7 @@ import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 import { supabaseAdmin } from "../_shared/supabase-admin.ts";
 import { mskToday } from "../_shared/msk.ts";
 import { act, extraOf, load, mutate, toProgress, view, NEED_GAME, NOT_FOUND } from "../_shared/airdef-progress.ts";
+import { settleSeasons } from "../_shared/airdef-season.ts";
 
 const ACTIONS = new Set(["research", "buy", "goal"]);
 
@@ -18,6 +19,8 @@ Deno.serve(async (req) => {
     if (typeof player_id !== "string" || player_id.length < 8 || player_id.length > 64) return jsonResponse({ error: "Некорректные параметры" }, 400);
     const db = supabaseAdmin(), today = mskToday();
     if (action === "state" || action === undefined) {
+      // награды закончившегося сезона (sql/024) — молча; сбой не мешает загрузке прокачки
+      await settleSeasons(db).catch((e) => console.error("airdef-progress season", e));
       const { row, exists, needGame } = await load(db, player_id);
       if (!exists) return jsonResponse(NOT_FOUND, 404);
       if (needGame) return jsonResponse(NEED_GAME, 403); // новичок с аккаунтом сайта — прогресс только на аккаунте игры

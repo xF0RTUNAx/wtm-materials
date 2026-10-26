@@ -216,6 +216,10 @@ export const PLANES = { h_mi24: 'Ми-24В', h_mi28: 'Ми-28Н', h_ka52: 'Ка-
   e_mirage_f1: 'Mirage F1', e_f18c: 'F/A-18C', e_tu160: 'Ту-160', e_b52: 'B-52H', e_b1b: 'B-1B', e_typhoon: 'Typhoon',
   e_vulcan: 'Vulcan B.2', e_draken: 'Saab 35 Draken', e_viggen: 'Saab AJ 37 Viggen',
   e_su33: 'Су-33', e_m4: 'М-4', e_mig19: 'МиГ-19', e_mig17: 'МиГ-17', e_t4: 'Т-4', e_mig29k: 'МиГ-29К' };
+// Камуфляжи — особые окраски (Mark 2026-10-25/26), ключ «самолёт:окраска»: «Огненный тигр», «Нефритовый дракон», «Цветок сакуры», «Сгущёнка»,
+// «Морская цифра»; цена — в кристаллах. Магазин и выбор окраски — позже; пока список нужен наградам сезона (rating.js SEASON, sql/024)
+export const CAMO_PRICE = 150;
+export const CAMOS = ['e_f15e:tiger', 'e_mig31:dragon', 'e_f35:sakura', 'e_tu22:milk', 'f16:digital'];
 // самолёты ИИ-налёта (только вид): сторона → эпоха → роль; нет роли — bomber
 export const RAID_PLANES = {
   east: { 1: { bomber: 'e_tu22m3', sead: 'e_su24', low: 'e_su17' }, 2: { bomber: 'e_su24', tv: 'e_su25', sead: 'e_su17', low: 'e_su25' },

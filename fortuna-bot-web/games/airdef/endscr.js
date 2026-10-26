@@ -221,7 +221,7 @@ export function createEndScreen(C) {
     const b = c.board;
     if (b) {
       if (b.place) line.push(b.prev && b.prev !== b.place ? tr('место в сезоне {0} → {1}', [b.prev, b.place]) : tr('место в сезоне {0}', [b.place]));
-      line.push(b.counted === false ? tr('бой не вошёл в 7 лучших') : tr('засчитано {0} из {1}', [b.n, SLOTS]));
+      line.push(b.counted === false ? tr('бой не вошёл в засчитанные') : tr('засчитано {0} из {1}', [b.n, SLOTS]));
       if (slots) { slots.innerHTML = Array.from({ length: SLOTS }, (_, i) => `<i class="${i < b.n ? 'on' : ''}"></i>`).join(''); if (b.counted !== false && b.n > 0) later(900, () => { const s = slots.querySelectorAll('i')[b.n - 1]; if (s) { s.classList.add('new'); anim(s, [{ transform: 'scaleX(0)' }, { transform: 'scaleX(1)' }], { duration: 300 }); } }); }
     }
     if (txt) txt.innerHTML = [...(c.note ? [c.note] : []), ...line.map(esc)].join(' · '); // c.note — готовый HTML (в награде бывает значок ключа), остальное — текст

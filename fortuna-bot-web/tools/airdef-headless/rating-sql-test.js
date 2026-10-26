@@ -1,5 +1,6 @@
-// Проверка sql/022_airdef_accounts_rating.sql без боевой базы: Postgres в WebAssembly (PGlite), поверх — таблица players (как 001) и
-// миграции игры 020, 021. Сезоны (первый 25.10–01.12.2026 МСК, дальше по 30 дней), таблица сезона (7 лучших, только аккаунты игры),
+// Проверка sql/022_airdef_accounts_rating.sql и 025 без боевой базы: Postgres в WebAssembly (PGlite), поверх — таблица players (как 001) и
+// миграции игры 020, 021. Сезоны (первый 25.10–01.12.2026 МСК, дальше по 30 дней), таблица сезона (025: по 2 лучших в обороне, вылете и
+// «Мульти-волне» + 1 лучший из остальных; только аккаунты игры),
 // перенос прогресса (в пустой и в непустой аккаунт игры, повторно — нельзя, не тот вид аккаунта — нельзя), права на функции (только
 // service_role), замки в переносе, защита от перебора паролей (airdef_auth_fail), ник новичка (nick_season = 0).
 //   deno run -A tools/airdef-headless/rating-sql-test.js
@@ -13,9 +14,10 @@ const all = async (q, p = []) => (await db.query(q, p)).rows;
 await db.exec(`create role service_role; create role anon; create role authenticated;
   create table players (id uuid primary key default gen_random_uuid(), login text unique not null, password_hash text not null, full_name text,
     created_at timestamptz not null default now(), last_seen timestamptz not null default now());`);
-for (const f of ['020_airdef_online.sql', '021_airdef_progress.sql', '022_airdef_accounts_rating.sql']) await db.exec(Deno.readTextFileSync(SQL + f));
+for (const f of ['020_airdef_online.sql', '021_airdef_progress.sql', '022_airdef_accounts_rating.sql', '025_airdef_rating_slots.sql']) await db.exec(Deno.readTextFileSync(SQL + f));
 await db.exec(Deno.readTextFileSync(SQL + '022_airdef_accounts_rating.sql')); // повторно — без ошибок (if not exists, on conflict)
-ok(true, 'миграции 020, 021, 022 (и 022 повторно) применились');
+await db.exec(Deno.readTextFileSync(SQL + '025_airdef_rating_slots.sql')); // 025 — снова поверх (на боевой 022 уже стоит)
+ok(true, 'миграции 020, 021, 022, 025 (и 022, 025 повторно) применились');
 
 // ── сезоны ──
 const S = async (ts) => (await one('select airdef_season_at($1::timestamptz) s', [ts])).s;
@@ -35,7 +37,7 @@ let kindBad = false; try { await db.query(`insert into players (login, password_
 ok(kindBad, 'вид аккаунта — только site / airdef');
 
 // ── права: ни одна функция из 022 не доступна anon / authenticated, service_role — может ──
-const FN = ['airdef_season_at(timestamptz)', 'airdef_season_bounds(int)', 'airdef_rating_points(uuid, int)', 'airdef_rating_board(int)', 'airdef_transfer(uuid, uuid)', 'airdef_auth_fail_hit(text)'];
+const FN = ['airdef_season_at(timestamptz)', 'airdef_season_bounds(int)', 'airdef_rating_points(uuid, int)', 'airdef_rating_board(int)', 'airdef_rating_counted(int, uuid)', 'airdef_transfer(uuid, uuid)', 'airdef_auth_fail_hit(text)'];
 for (const f of FN) {
   const g = await one(`select has_function_privilege('anon', '${f}', 'execute') a, has_function_privilege('authenticated', '${f}', 'execute') u, has_function_privilege('service_role', '${f}', 'execute') s`);
   ok(g.a === false && g.u === false && g.s === true, `${f.split('(')[0]}: anon / authenticated — нет, service_role — да`);
@@ -67,16 +69,29 @@ ok(!!(await one(`select 1 from pg_class where relname = 'airdef_auth_fail' and r
   ok(lock1 > 0 && lock2 > 0 && lock1 < chk1 && lock2 < chk1 && lock1 < chk2, 'airdef_transfer: замки на обе строки взяты до проверок already_used / already_done');
 }
 
-// ── бои сезона 1: у Альфы 9 боёв (в таблицу — 7 лучших), у Браво 2, у сайта 3 (в таблице его нет, пока не перенесёт) ──
-let m = 0; const fight = async (pid, rating, season = 1) => db.query(`insert into airdef_mp_results (match_id, player_id, mode, team, win, kills, score, rating, season, rp) values ($1, $2, 'real', 'air', true, 1, 100, $3, $4, '{}')`, ['m' + (++m), pid, rating, season]);
+// ── бои сезона 1: у Альфы 9 боёв за лётчика (в таблицу — 2 лучших + 1 лучший из остальных), у Браво 2, у сайта 3 (в таблице его нет, пока не перенесёт) ──
+let m = 0; const fight = async (pid, rating, season = 1, team = 'air', mm = 0) => db.query(`insert into airdef_mp_results (match_id, player_id, mode, team, win, kills, score, rating, season, rp, result) values ($1, $2, 'real', $5, true, 1, 100, $3, $4, '{}', $6)`, ['m' + (++m), pid, rating, season, team, mm ? '{"mm":1}' : null]);
 for (const r of [900, 100, 800, 700, 600, 500, 400, 300, 200]) await fight(A, r);
 for (const r of [950, 50]) await fight(B, r);
 for (const r of [990, 980, 970]) await fight(W, r);
 await fight(A, 1000, 2); // другой сезон — не в счёт сезона 1
 const board = await all('select nick, points::int p, n, place::int pl from airdef_rating_board(1)');
-ok(board.length === 2 && board[0].nick === 'Альфа' && board[0].p === 900 + 800 + 700 + 600 + 500 + 400 + 300 && board[0].n === 7, 'Альфа: сумма 7 лучших = 4200, засчитано 7');
+ok(board.length === 2 && board[0].nick === 'Альфа' && board[0].p === 900 + 800 + 700 && board[0].n === 3, `Альфа: 9 боёв за лётчика — засчитано 3 (2 лучших + 1 из остальных) = 2400 (${board[0].p}, ${board[0].n})`);
 ok(board[1].nick === 'Браво' && board[1].p === 1000 && board[1].pl === 2, 'Браво: 2 боя, 1000 очков, 2-е место');
-ok((await one('select airdef_rating_points($1, 1) p', [A])).p === 4200, 'airdef_rating_points = сумма 7 лучших');
+ok((await one('select airdef_rating_points($1, 1) p', [A])).p === 2400, 'airdef_rating_points = сумма засчитанных');
+// Чарли: ПВО 500/400/300, лётчик 600/100, «Мульти-волна» 700/650/640 → 2 + 2 + 2 и лучший из остальных — 640 (волна), не 300
+const Ch = await mk('ad:charlie', 'airdef', 'Чарли');
+for (const r of [500, 400, 300]) await fight(Ch, r, 1, 'pvo');
+for (const r of [600, 100]) await fight(Ch, r, 1, 'air');
+for (const r of [700, 650, 640]) await fight(Ch, r, 1, 'pvo', 1);
+{
+  const c = await all('select kind, rating from airdef_rating_counted(1, $1) order by kind, rating desc', [Ch]);
+  const by = (k) => c.filter((x) => x.kind === k).map((x) => x.rating).join(',');
+  ok(c.length === 7 && by('pvo') === '500,400' && by('air') === '600,100' && by('multi') === '700,650,640', `Чарли: оборона 500+400, вылет 600+100, волна 700+650 и 640 из остальных (${JSON.stringify(c)})`);
+  const row = (await all('select nick, points::int p, n, place::int pl from airdef_rating_board(1)')).find((q) => q.nick === 'Чарли');
+  ok(row.p === 3590 && row.n === 7 && row.pl === 1, `Чарли в таблице: 3590, 7 боёв, 1-е место (${JSON.stringify(row)})`);
+  ok((await all('select 1 from airdef_rating_counted(1)')).length === 3 + 2 + 3 + 7, 'без игрока — засчитанные бои всех, и аккаунта сайта тоже (3 + 2 + 3 + 7; в таблицу сезона он не попадает)');
+}
 
 // ── перенос: сайт → Браво (у Браво уже есть прогресс — складывается) ──
 await db.query(`insert into airdef_progress (player_id, xp, silver, res, own, goal) values ($1, 500, 300, '{pvo:s125,air:e_su25}', '{pvo:s125}', '{"pvo":"pvo:kub"}')`, [W]);
@@ -95,7 +110,7 @@ ok(st.games === 2 && st.wins === 1 && st.kills === 4 && Number(st.score) === 160
 ok(!(await one('select count(*)::int c from airdef_mp_stats where player_id = $1', [W])).c, 'онлайн-сводки сайта нет');
 const board2 = await all('select nick, points::int p, n from airdef_rating_board(1)');
 const br = board2.find((q) => q.nick === 'Браво');
-ok(br && br.p === 990 + 980 + 970 + 950 + 50 && br.n === 5, 'после переноса бои сезона с сайта — в счёт Браво (5 боёв, 3940)');
+ok(br && br.p === 990 + 980 + 970 && br.n === 3, `после переноса бои сезона с сайта — в счёт Браво (5 боёв за лётчика → засчитано 3, 2940: ${br && br.p})`);
 
 // ── повторный перенос и не тот вид аккаунта ──
 const fail = async (q, p) => { try { await db.query(q, p); return null; } catch (e) { return String(e.message); } };

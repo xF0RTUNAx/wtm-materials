@@ -117,7 +117,7 @@ export function createRating(C) {
     return `<div class="whead">${back ? `<button class="back" data-a="back">${ico('triL')}${tr('Назад')}</button>` : ''}<span class="t">${inner}</span><span class="s">${sub}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>`;
   }
   const HELP = [tr('За каждый онлайн-бой: итог команды, ваш вклад и сила соперников.'), tr('Аркада — ×0,6.'), tr('Ранг боя II, III, IV — +2, +5, +8 %. В Мульти-волне надбавки нет.'),
-    tr('Чем больше ботов среди соперников, тем меньше очков.'), tr('Итог сезона — сумма 7 лучших боёв за сезон.'), tr('Своя комната не считается. Вышли из боя раньше — 0.')];
+    tr('Чем больше ботов среди соперников, тем меньше очков.'), tr('Итог сезона — 7 боёв: по 2 лучших за ПВО, за лётчика и в Мульти-волне и ещё 1 лучший из остальных.'), tr('Своя комната не считается. Вышли из боя раньше — 0.')];
   function noData() {
     const soon = S.err === 'soon';
     return `<div class="win">${head(`${ico('rating')}${tr('Рейтинг')}`, '')}<div class="msg">${S.busy || !S.err ? `<span>${tr('Загружаем…')}</span>` : soon ? `<b>${tr('Рейтинг скоро откроется')}</b><span>${tr('Таблица сезона появится, как только сервер рейтинга заработает.')}</span>`
@@ -139,7 +139,7 @@ export function createRating(C) {
     }
     return `<div class="win">${head(title, esc(seasonText(d)))}${pop}<div class="rows">${rows}</div>${card}</div>`;
   }
-  // «Мои бои»: дата, режим, роль, итог, разбор «итог + вклад + соперники», множители ≠ 1, очки, засчитан ли в 7 лучших
+  // «Мои бои»: дата, режим, роль, итог, разбор «итог + вклад + соперники», множители ≠ 1, очки, засчитан ли в сезон (2 + 2 + 2 + 1, sql/025)
   function battleRow(b) {
     const p = b.rp || {}, multi = !!b.multi;
     const mode = (multi ? tr('Мульти-волна') : tr('Вылет и оборона')) + ' · ' + (b.mode === 'real' ? tr('реализм') : tr('аркада')) + (multi ? '' : ' · ' + tr('ранг {0}', [rankOf(p.k || 1)]));
@@ -151,7 +151,7 @@ export function createRating(C) {
     if (p.b && p.b !== 1) chips.push(tr('боты ×{0}', [kf(p.b)]));
     const why = p.idle ? `<span class="break">${tr('без действий — 0')}</span>` : `<span class="break">${p.r || 0} + ${p.c || 0} + ${p.s || 0}</span>${chips.length ? '<br>' + chips.map((c) => `<span class="k">${esc(c)}</span>`).join('') : ''}`;
     return `<tr${b.counted ? '' : ' class="off"'}><td>${when(b.at)}<br><span class="note">${esc(mode)}</span></td><td class="nw">${role[0]} ${role[1]}</td><td class="nw">${res}</td><td>${why}</td><td class="n"><b>${nf(b.rating || 0)}</b></td>`
-      + `<td class="nw">${b.counted ? `<span class="ok">${ico('ok')} ${tr('засчитан')}</span>` : tr('не в лучших 7')}</td></tr>`;
+      + `<td class="nw">${b.counted ? `<span class="ok">${ico('ok')} ${tr('засчитан')}</span>` : tr('не засчитан')}</td></tr>`;
   }
   function viewMine() {
     const d = S.data, m = d.me || { battles: [], n: 0, points: 0 }, list = m.battles || [];
@@ -187,7 +187,7 @@ export function createRating(C) {
     },
     close() { root.classList.remove('on'); S.q = false; },
     isOpen: () => root.classList.contains('on'),
-    // свежие данные после засчитанного боя (табло итога, endscr.js): { place, prev — место до боя, n — засчитано, counted — вошёл ли бой в 7 лучших } или null
+    // свежие данные после засчитанного боя (табло итога, endscr.js): { place, prev — место до боя, n — засчитано, counted — засчитан ли бой в сезон } или null
     async fresh() {
       const m0 = mine(), prev = m0 ? m0.place : null;
       for (let i = 0; i < 30 && S.busy; i++) await new Promise((r) => setTimeout(r, 100));
