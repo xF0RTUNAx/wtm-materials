@@ -9,7 +9,7 @@ import { WEATHERS } from '../drone/world.js?v=20261026c';
 import { WINTER_KEYS } from './winter-render.js?v=20261026c';
 import { LESSONS } from './training.js?v=20261026c';
 import { MODEL_CREDITS, modelUrls } from './models.js?v=20261026c';
-import { storageInfo, prefetchAll, offlineOk } from './offline.js?v=20261026c';
+import { storageInfo, prefetchAll, prefetchSize, offlineOk } from './offline.js?v=20261026c';
 import { openLayoutEditor } from './layout.js?v=20261026c';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 import { ECO_SELECT, setAudioEcoMode } from '../drone/audio.js?v=20261026c';
@@ -295,8 +295,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <button class="btn" id="sApplyGfx">${tr('Применить (перезапуск)')}</button></div></details>`;
   }
   // «Скачать всё заранее» (offline.js): модели, текстуры, звуки — в кэш устройства; идёт и при уходе с вкладки «Настройки»
-  const pf = { run: false, done: false, k: 0, txt: '', stop: null };
-  const pfShow = () => { const b = $('pfBar'), f = $('pfFill'), t = $('pfTxt'), btn = $('sPrefetch'); if (f) f.style.width = (pf.k * 100).toFixed(1) + '%'; if (b) b.style.display = pf.run || pf.done ? '' : 'none'; if (t) t.textContent = pf.txt; if (btn) btn.textContent = pf.run ? tr('Остановить') : tr('Скачать всё заранее (≈ 385 МБ, лучше по Wi-Fi)'); };
+  const pf = { run: false, done: false, k: 0, txt: '', stop: null, mb: 0 };
+  // объём — посчитан для этого устройства по списку файлов (offline.js prefetchSize), до ответа — без числа; округление до 10 МБ
+  const pfLabel = () => pf.run ? tr('Остановить') : pf.mb ? tr('Скачать всё заранее (≈ {0} МБ, лучше по Wi-Fi)', [pf.mb]) : tr('Скачать всё заранее (лучше по Wi-Fi)');
+  let pfAsked = false; const pfSize = () => { if (pfAsked || !offlineOk()) return; pfAsked = true; prefetchSize(modelUrls()).then((b) => { if (!b) { pfAsked = false; return; } pf.mb = Math.round(b / 10485760) * 10; pfShow(); }).catch(() => { pfAsked = false; }); };
+  const pfShow = () => { const b = $('pfBar'), f = $('pfFill'), t = $('pfTxt'), btn = $('sPrefetch'); if (f) f.style.width = (pf.k * 100).toFixed(1) + '%'; if (b) b.style.display = pf.run || pf.done ? '' : 'none'; if (t) t.textContent = pf.txt; if (btn) btn.textContent = pfLabel(); };
   function offInfo() { storageInfo().then((s) => { const e = $('offInfo'); if (!e) return; e.textContent = !s.ok ? tr('Хранилище недоступно: ресурсы грузятся при каждом запуске.') : tr('Скачанные модели, текстуры и звуки хранятся на устройстве и не догружаются ни в бою, ни при следующих запусках.') + (s.used != null ? ' ' + tr('Занято: {0} МБ.', [Math.round(s.used)]) : ''); }); }
   async function prefetch() {
     if (pf.run) { pf.stop.stop = true; return; }
@@ -306,7 +309,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     pf.run = false; pf.done = true; pf.txt = pf.stop.stop ? tr('Остановлено. Скачанное сохранено, остальное догрузится по ходу игры.') : r.fail ? tr('Готово. Не скачалось файлов: {0}, они догрузятся по ходу игры.', [r.fail]) : tr('Готово: всё на устройстве, в бою ничего не догружается.'); pfShow(); offInfo();
   }
   function renderSet() {
-    setTimeout(offInfo, 0); // «На устройстве»: занято, доступно ли хранилище
+    setTimeout(offInfo, 0); setTimeout(pfSize, 0); // «На устройстве»: занято, доступно ли хранилище; объём «Скачать всё»
     $('tab-set').innerHTML = `<div class="cat-h">${tr('Язык · Language')}</div><div class="seg" data-seg="lang">${LANGS.map(([k, l]) => `<button data-v="${k}" class="${k === LANG ? 'on' : ''}">${l}</button>`).join('')}</div>
       <div class="cat-h">${tr('Графика')}</div><div class="gfx-row">${Object.entries(PRESETS).map(([k, p]) => `<button class="gfx ${k === C.gfxKey ? 'on' : ''}" data-gfx="${k}"><b>${p.name}</b></button>`).join('')}</div>
       ${C.gfxKey === 'custom' ? customPanel() : `<div class="prow"><span>${tr('Предел кадров')}</span>${seg('fpsCap', C.fpsCap, [['auto', C.IS_TOUCH ? tr('Авто (60)') : tr('Авто')], [30, '30'], [45, '45'], [60, '60'], ...(C.IS_TOUCH ? [] : [[0, tr('Нет')]])])}</div>
@@ -316,7 +319,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <label class="chk"><input type="checkbox" id="sPerf" ${C.perfHud ? 'checked' : ''}> ${tr('счётчик производительности в бою')}</label>
       <div class="cat-h">${tr('На устройстве')}</div>
       <p class="hint" id="offInfo">${tr('Скачанные модели, текстуры и звуки хранятся на устройстве и не догружаются ни в бою, ни при следующих запусках.')}</p>
-      <button class="btn alt" id="sPrefetch">${pf.run ? tr('Остановить') : tr('Скачать всё заранее (≈ 385 МБ, лучше по Wi-Fi)')}</button>
+      <button class="btn alt" id="sPrefetch">${pfLabel()}</button>
       <div class="ldbar" id="pfBar" style="margin-top:6px;${pf.run || pf.done ? '' : 'display:none'}"><i id="pfFill" style="width:${pf.k * 100}%"></i></div><p class="hint" id="pfTxt">${pf.txt}</p>
       <p class="hint">${tr('Видеочип: {0}', [String(C.gpuName || '—').replace(/[<>&]/g, '').slice(0, 70)])}</p>
       <div class="cat-h">${tr('Время и погода')}</div>${seg('wx', C.weatherKey, [['random', tr('Случайная')], ...WEATHER_KEYS.map((k) => [k, trIf(WEATHERS[k].name)])])}

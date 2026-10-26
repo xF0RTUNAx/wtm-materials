@@ -1,6 +1,6 @@
 // Ресурсы игры — на устройстве (Mark 2026-10-23: «пакет всех моделей и ресурсов навсегда, чтобы не догружать каждый раз, тем более в бою»).
 // Два слоя:
-//   • модели (≈ 350 МБ из ≈ 385) и их сжатые текстуры (models/ktx) — постоянный кэш прямо со страницы (Cache Storage, cachedFetch): работает и без сервис-воркера —
+//   • модели (≈ 357 МБ) и их сжатые текстуры (models/ktx, ≈ 149 МБ) — постоянный кэш прямо со страницы (Cache Storage, cachedFetch): работает и без сервис-воркера —
 //     в Telegram на iPhone (WKWebView) воркеров нет. Ключ — точный адрес с версией модели (GLB_V): новая версия файла скачивается,
 //     прежняя удаляется;
 //   • остальное (код, текстуры, звуки, картинки) — сервис-воркер games/airdef-sw.js (Android, ПК), его кэш сменяется при каждом деплое.
@@ -42,9 +42,20 @@ export async function storageInfo() {
 // скачать всё: urls моделей (models.js modelUrls) + файлы из assets.json; onProgress(done, total, байт) — по ходу; по 4 сразу
 export async function prefetchAll(modelUrls, onProgress, abort = { stop: false }) {
   try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (_) { /* нет */ }
+  const jobs = await prefetchJobs(modelUrls, true);
+  const total = jobs.reduce((s, j) => s + j.b, 0); let done = 0, bytes = 0, fail = 0, i = 0;
+  const one = async (j) => { try { const r = j.m ? await cachedFetch(j.u) : await fetch(j.u); if (r.ok) await r.arrayBuffer(); else fail++; } catch (_) { fail++; } done++; bytes += j.b; onProgress(done, jobs.length, bytes, total, fail); };
+  await Promise.all([0, 1, 2, 3].map(async () => { while (i < jobs.length && !abort.stop) await one(jobs[i++]); }));
+  return { done, total: jobs.length, fail };
+}
+// сколько скачает «Скачать всё заранее» на этом устройстве, байт (2026-10-26: в настройках было вписано «≈ 385 МБ», а с моделями, сжатыми текстурами
+// и остальными файлами выходит ≈ 570 МБ; без сжатых текстур — ≈ 420): тот же список, что у prefetchAll
+export async function prefetchSize(modelUrls) { const j = await prefetchJobs(modelUrls, false); return j.ok ? j.reduce((s, x) => s + x.b, 0) : 0; } // нет списка (сеть) — 0: без числа
+// список скачивания: { u — адрес, m — модель (постоянный кэш), b — байт }; tidy — заодно убрать из кэша устаревшее (перед скачиванием)
+async function prefetchJobs(modelUrls, tidy) {
   const man = await fetch('airdef/assets.json?v=20261026c').then((r) => r.json()).catch(() => ({ files: [], models: {} }));
   const has = Object.keys(man.models).length, nm = glbName; // в списке — только существующие файлы
-  if (has) await tidyModels(man.models, man.ktx);
+  if (has && tidy) await tidyModels(man.models, man.ktx);
   const jobs = [...modelUrls.filter((u) => !has || man.models[nm(u)] !== undefined).map((u) => ({ u, m: true, b: man.models[nm(u)] || 1048576 })),
     ...man.files.map(([p, b]) => ({ u: `airdef/${p}?v=20261026c`, m: false, b }))];
   // сжатые текстуры моделей — только если это устройство их возьмёт (ktxOn: форматы и воркеры есть, не ?ktx=0); список — из index.json (файлы нужной версии), размеры — из assets.json
@@ -55,10 +66,7 @@ export async function prefetchAll(modelUrls, onProgress, abort = { stop: false }
       for (const f of ktxAllUrls(base, idx, verOf)) if (man.ktx[f.stem] !== undefined) jobs.push({ u: f.url, m: true, b: man.ktx[f.stem] });
     }
   } catch (_) { /* без сжатых — игра возьмёт JPEG из glb */ }
-  const total = jobs.reduce((s, j) => s + j.b, 0); let done = 0, bytes = 0, fail = 0, i = 0;
-  const one = async (j) => { try { const r = j.m ? await cachedFetch(j.u) : await fetch(j.u); if (r.ok) await r.arrayBuffer(); else fail++; } catch (_) { fail++; } done++; bytes += j.b; onProgress(done, jobs.length, bytes, total, fail); };
-  await Promise.all([0, 1, 2, 3].map(async () => { while (i < jobs.length && !abort.stop) await one(jobs[i++]); }));
-  return { done, total: jobs.length, fail };
+  jobs.ok = has > 0; return jobs;
 }
 // кэш моделей против списка: убранные из игры модели — долой; размер не тот (файл сменили без версии, запись битая) — долой, скачается заново.
 // Размер — по самому файлу в кэше (заголовок content-length у сайта — сжатый размер)

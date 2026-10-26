@@ -45,7 +45,7 @@ import { createRating } from './rating-ui.js?v=20261026c';
 import { createShop } from './shop-ui.js?v=20261026c';
 import { createEndScreen } from './endscr.js?v=20261026c';
 import { createHints } from './hints.js?v=20261026c';
-import { motorOf } from './plume.js?v=20261026c';
+import { motorOf, makeFlame } from './plume.js?v=20261026c';
 import { createShell } from './shell.js?v=20261026c';
 import { createTraining, LESSONS } from './training.js?v=20261026c';
 import { createPhoto } from './photo.js?v=20261026c';
@@ -351,7 +351,7 @@ C.syncUnits = function () {
       if (gm && gm.radar) { const rd = gm.radar.clone(), pv = new THREE.Group(); obj(rd, pv); (tur.length ? tur[0].tg : g).add(pv); const ax = radarAxis(rd); pv.position.set(ax[0], 0, ax[1]); rd.position.set(-ax[0], 0, -ax[1]); g.userData.radar = pv; }
       g.userData.tur = tur; g.userData.slots = slots; g.userData.nSlots = md.LN ? slotCount(md.LN) : 0;
       if (!P.shadows) addBlob(g); // без карты теней — мягкое пятно под машиной (иначе «висит» над землёй)
-      g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g);
+      g.rotation.y = u.yaw; scene.add(g); unitMeshes.set(u.id, g); warmSoon(); // его ракета — собрать шейдеры заранее (оборона и онлайн ставят комплексы по ходу)
     }
     g.position.copy(u.pos); g.position.y -= 1.5; seat(g, u); // по рельефу: на склоне длинная машина не уходит в землю
   }
@@ -792,6 +792,19 @@ function resize() {
 }
 addEventListener('resize', resize);
 C.resize = resize;
+// проверка чёткости на телефоне (?prtest=1, Mark 2026-10-26: «подобрать такое значение, чтобы не было мыла, но и без лишнего разрешения»): кнопка
+// вверху переключает разрешение 3D на ходу — ×1,25 / ×1,5 / ×1,75 / ×2 / как у экрана; динамическое разрешение на время проверки выключено
+if (Q.get('prtest') === '1') {
+  perf.dynOff = true; if (pipe) pipe.setScale(1);
+  const dpr = window.devicePixelRatio || 1, L = [1.25, 1.5, 1.75, 2, dpr].filter((v, i, a) => v <= dpr + 0.01 && a.indexOf(v) === i);
+  const b = document.createElement('button'); b.id = 'prTest';
+  b.style.cssText = 'position:fixed;top:calc(env(safe-area-inset-top,0px) + 6px);left:50%;transform:translateX(-50%);z-index:99;font:600 14px system-ui;padding:8px 14px;border-radius:8px;border:1px solid #e8b04a;background:rgba(0,0,0,.72);color:#f3c96f';
+  let i = Math.max(0, L.findIndex((v) => Math.abs(v - renderer.getPixelRatio()) < 0.01));
+  const show = () => { const pr = renderer.getPixelRatio(); b.textContent = `×${+pr.toFixed(3)} · ${Math.round(VW * pr)}×${Math.round(VH * pr)} · ${(VW * VH * pr * pr / 1e6).toFixed(2)} MP`; };
+  b.onpointerdown = (e) => e.stopPropagation();
+  b.onclick = (e) => { e.stopPropagation(); i = (i + 1) % L.length; renderer.setPixelRatio(L[i]); resize(); show(); };
+  document.body.appendChild(b); const t0 = setInterval(() => { if (VW > 10) { show(); clearInterval(t0); } }, 300); // размер окна — после первого resize
+}
 // поле зрения камеры (оператор ЗРК меняет увеличение): частицы и сглаживание линий — по новому FOV
 C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f; resize(); };
 // Telegram: кнопки поверх страницы — отступ сверху
@@ -815,7 +828,7 @@ C.start = function (game) {
   $('menu').classList.remove('on'); $('end').classList.remove('on'); $('pauseScr').classList.remove('on');
   document.body.classList.remove('menuing'); document.body.classList.add('playing');
   C.state = 'play'; C.camera.clearViewOffset(); C.shell.play(true);
-  C.ctrl = ctrls[game]; C.ctrl.start(); prewarm(); // шейдеры сцены — сейчас, а не при первом взрыве или первом появлении техники
+  C.ctrl = ctrls[game]; C.ctrl.start(); prewarm(); warmSoon(); // шейдеры сцены — сейчас, а не при первом взрыве или первом появлении техники
   if (C.progress) C.progress.runStart(game === 'multi' ? 'multi' : game, C.setup.diff === 'real' ? 'real' : 'arcade', C.setup.era); // опыт за бой (обучение, съёмка — без)
   resize();
 };
@@ -903,6 +916,8 @@ addEventListener('resize', orient); addEventListener('orientationchange', () => 
 let last = performance.now(), lastDraw = 0, last3D = 0, ms3D = 0, lastRaf = 0, rafEma = 16.7, fpsAcc = 0, fpsN = 0, fps = 0, shN = 0, capAcc = 0;
 const msWin = [], dr = { scale: perf.scale, calm: 0, prev: 0, before: 0, hold: 0, miss: 0 };
 const pf = { cpu: 0, n: 0, cpuS: 0, calls: 0, tris: 0 };
+// строка в углу (пресет · к/с · %) — только когда текст сменился: запись каждый кадр — раскладка и отрисовка страницы 60 раз в секунду (2026-10-26)
+let perfS = null; const setPerf = (x) => { if (x !== perfS) { perfS = x; $('perf').textContent = x; } };
 C.perfHud = ls.get('fortuna_airdef_perfhud') === '1';
 if (renderer.info) renderer.info.autoReset = false; // счётчики — за весь кадр (постобработка рисует в несколько проходов); сброс — в начале кадра
 C.gpuName = (() => { try { const gl = renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); return e ? gl.getParameter(e.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER); } catch (_) { return '?'; } })();
@@ -925,6 +940,20 @@ function dynRes(ms) {
   if (Math.abs(s - dr.scale) >= 0.01) { dr.scale = s; if (pipe) pipe.setScale(s); else renderer.setPixelRatio(basePR * s); resize(); }
 }
 const view = Q.get('view') ? Q.get('view').split(',').map(Number) : null;
+// неподвижный кадр (Mark 2026-10-26, нагрев): пауза одиночного боя, урок и итог боя рисовали один и тот же кадр 30 раз в секунду — половина
+// нагрузки боя. Теперь 3D и HUD — заново, только если сдвинулась камера, сменился размер, игрок что-то нажал, двигает или поменял (+0,7 с),
+// и раз в 2 с на всякий случай; первые 6 кадров — как обычно (сглаживание и дым устоятся). ?still=0 — как раньше
+const STILL_ON = Q.get('still') !== '0', stillCam = new Float64Array(34);
+let stillN = 0, stillT = 0, stillDirty = 0, stillWas = false, stillClock = 0;
+const stillWake = () => { stillDirty = performance.now() + 700; };
+for (const ev of ['pointerdown', 'pointermove', 'pointerup', 'input', 'change', 'keydown', 'wheel', 'resize', 'pageshow']) addEventListener(ev, stillWake, true);
+document.addEventListener('visibilitychange', stillWake); canvas.addEventListener('webglcontextrestored', stillWake); // вернулся на вкладку, контекст WebGL восстановлен — кадр заново
+function stillMoved() {
+  camera.updateMatrixWorld(); const a = camera.matrixWorld.elements, b = camera.projectionMatrix.elements; let m = false;
+  for (let i = 0; i < 16; i++) { if (stillCam[i] !== a[i]) { stillCam[i] = a[i]; m = true; } if (stillCam[16 + i] !== b[i]) { stillCam[16 + i] = b[i]; m = true; } }
+  if (stillCam[32] !== VW || stillCam[33] !== VH) { stillCam[32] = VW; stillCam[33] = VH; m = true; }
+  return m;
+}
 function frame(now) {
   requestAnimationFrame(frame);
   // меню и пауза — 30 к/с (фон не должен греть телефон), бой на телефоне — не больше 60
@@ -946,13 +975,13 @@ function frame(now) {
   const cap3D = !menu && IS_TOUCH && !fly ? 1000 / 30 : 0; // предел игрока (45, 60) — не отменяет 30 для 3D вне полёта
   if (capMs) { capAcc = Math.min(capAcc + Math.max(0, rd), capMs * 2); if (capAcc < capMs - 1.5) return; capAcc = Math.max(0, capAcc - capMs); } else capAcc = 0;
   const ms = now - lastDraw; lastDraw = now;
-  const draw3D = !cap3D || now - last3D >= cap3D - 2; if (draw3D) { ms3D = now - last3D; last3D = now; }
+  let draw3D = !cap3D || now - last3D >= cap3D - 2; if (draw3D) { ms3D = now - last3D; last3D = now; }
   const t0 = performance.now(); if (renderer.info) renderer.info.reset(); // счётчик производительности: время ЦП и вызовы за кадр
   const dt = C.endFreeze ? 0 : clamp((now - last) / 1000, 0, 0.05), t = now / 1000; last = now; // время кадра не бывает отрицательным; итог одиночного боя (C.endFreeze) — бой стоит
   C.t = t;
   if (C.state === 'play' && !C.paused && !C.ended) C.bt += dt; // часы боя (лента «Разбора»): без пауз и итога
   const ctrl = C.ctrl;
-  if (idle) { hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH); updateSound(dt); $('perf').textContent = ''; return; } // меню на кадрах: ни боя, ни 3D
+  if (idle) { hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH); updateSound(dt); setPerf(''); return; } // меню на кадрах: ни боя, ни 3D
   const online = !!(C.net && C.net.battle); // онлайн: мир не встаёт на паузу (пауза — только меню), бой считает сервер
   // «Съёмка»: замедление и стоп-кадр (ctrl.dtK) — бой идёт медленнее, камера — как обычно
   const dts = dt * (ctrl && ctrl.dtK && !online ? ctrl.dtK() : 1);
@@ -972,9 +1001,13 @@ function frame(now) {
   { let nearW = clamp((camera.position.y - city.groundH(camera.position.x, camera.position.z)) * 0.006, 3, 20);
     if (ctrl && ctrl.near && ctrl.near()) nearW = Math.min(nearW, ctrl.near()); // крупный план у самолёта — ближе
     if (Math.abs(camera.near - nearW) > camera.near * 0.15) { camera.near = nearW; camera.updateProjectionMatrix(); } }
-  syncWorld(C.paused ? 0 : dts, t);
+  const still = STILL_ON && !C.probeOn && C.state === 'play' && (C.endFreeze || (C.paused && !online)); let hold = false; // неподвижный кадр — держим (см. stillMoved)
+  // часы сцены (вода, снегопад, антенны ЗРК, дрожание воздуха) на это время стоят — иначе страховочный кадр раз в 2 с прыгал бы (ревью)
+  if (still && !stillWas) stillClock = t; stillWas = still; const t3 = still ? stillClock : t;
+  syncWorld(C.paused ? 0 : dts, t3);
+  if (still && draw3D) { const mv = stillMoved(); if (mv || now < stillDirty || now - stillT > 2000 || stillN < 6) { stillT = now; stillN = mv ? 0 : stillN + 1; } else { hold = true; draw3D = false; } } else if (!still) stillN = 0;
   if (draw3D) objLod(camera.position, P.lodObj);
-  if (draw3D) updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t); // окно ТВ — свой набор моделей вблизи (C.podPass)
+  if (draw3D) updateCityScene(C.G, camera, P, ctrl && ctrl.focus ? ctrl.focus() : camera.position, t3); // окно ТВ — свой набор моделей вблизи (C.podPass)
   // тактическая карта обороны закрывает весь экран — 3D-кадр не рисуем (телефон не греется)
   // «Тени через кадр»: карта теней перерисовывается раз в P.shEvery кадров (город стоит, тени техники чуть запаздывают). На телефоне у пресетов
   // с тенями — по умолчанию (P.shAuto, 2026-10-23, нагрев), но камера ниже 150 м над землёй — каждый кадр: тень своего самолёта или вертолёта
@@ -984,28 +1017,45 @@ function frame(now) {
     renderer.shadowMap.autoUpdate = k < 2; if (k > 1 && ++shN >= k) { shN = 0; renderer.shadowMap.needsUpdate = true; }
   }
   if (C.fx && C.fx.setView) C.fx.setView(camera.position.y); // порядок дыма и облаков — по высоте камеры (units-render)
-  if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t); else renderer.render(scene, camera); }
+  if (draw3D && !(ctrl && ctrl.skip3D && ctrl.skip3D())) { if (pipe) pipe.render(scene, camera, t3); else renderer.render(scene, camera); }
   if (C.perfHud && renderer.info) { pf.cpu += performance.now() - t0; pf.n++; pf.calls = renderer.info.render.calls; pf.tris = renderer.info.render.triangles; }
-  if (ctrl && ctrl.afterRender) ctrl.afterRender();
-  hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH);
-  if (ctrl && ctrl.hud && !C.endFreeze) ctrl.hud(dt, t);
-  if (C.extraHud && !C.endFreeze) C.extraHud(dt, t); // онлайн: журнал сбитий, метки «нужна помощь»
+  if (!hold && ctrl && ctrl.afterRender) ctrl.afterRender(); // окно ТВ рисуется прямо на экран: без кадра сцены под ним экран был бы чёрным (ревью)
+  if (!hold) { // кадр держим — HUD тоже (холст не меняется — экрану нечего пересобирать)
+    hx.setTransform(C.hudK, 0, 0, C.hudK, 0, 0); hx.clearRect(0, 0, VW, VH);
+    if (ctrl && ctrl.hud && !C.endFreeze) ctrl.hud(dt, t);
+    if (C.extraHud && !C.endFreeze) C.extraHud(dt, t); // онлайн: журнал сбитий, метки «нужна помощь»
+  }
   if (!C.endFreeze) updateSound(dt);
   if (msgT > 0 && (msgT -= dt) <= 0) C.say('');
   fpsAcc += ms; fpsN++; if (fpsAcc > 500) { fps = Math.round(1000 * fpsN / fpsAcc); fpsAcc = fpsN = 0; }
-  if (draw3D && C.state === 'play' && !view && ms3D < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(cap3D ? ms3D / 2 : ms3D); // 3D через кадр — время кадра на пару кадров интерфейса // на карте 3D не рисуется — мерить нечего
+  if (draw3D && !still && C.state === 'play' && !view && ms3D < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(cap3D ? ms3D / 2 : ms3D); // 3D через кадр — время кадра на пару кадров интерфейса // на карте 3D не рисуется — мерить нечего
   const sc = Math.round((pipe ? pipe.scale : dr.scale) * 100);
   // онлайн: задержка до сервера и потери (net.js) — мелко, в той же строке внизу
   const NN = C.online && C.online.N, netTxt = NN && NN.conn === 'on' && NN.battle && NN.ping ? tr(' · {0} мс · PL {1}%', [Math.round(NN.ping), NN.pl]) : '';
   if (C.perfHud && renderer.info) { // подробно: кадр, ЦП (подготовка кадра в JS), ГП ≈ остаток кадра, вызовы, треугольники, память
     if (pf.n >= 20) { pf.cpuS = pf.cpu / pf.n; pf.cpu = pf.n = 0; }
     const frameMs = fps ? 1000 / fps : 0, mem = performance.memory ? tr(' · JS {0} МБ', [Math.round(performance.memory.usedJSHeapSize / 1048576)]) : '', gm = renderer.info.memory;
-    $('perf').textContent = tr('{0} · {1} к/с · кадр {2} мс · ЦП {3} мс · ГП и ожидание ≈{4} мс · {5} выз. · {6} млн тр. · {7}% · геом. {8}, текст. {9}{10}{11}', [P.name, fps, frameMs.toFixed(1), pf.cpuS.toFixed(1), Math.max(0, frameMs - pf.cpuS).toFixed(1), pf.calls, (pf.tris / 1e6).toFixed(2), sc, gm.geometries, gm.textures, mem, netTxt]);
-  } else $('perf').textContent = C.state === 'play' ? tr('{0} · {1} к/с · {2}%{3}', [P.name, fps, sc, netTxt]) : '';
+    setPerf(tr('{0} · {1} к/с · кадр {2} мс · ЦП {3} мс · ГП и ожидание ≈{4} мс · {5} выз. · {6} млн тр. · {7}% · геом. {8}, текст. {9}{10}{11}', [P.name, fps, frameMs.toFixed(1), pf.cpuS.toFixed(1), Math.max(0, frameMs - pf.cpuS).toFixed(1), pf.calls, (pf.tris / 1e6).toFixed(2), sc, gm.geometries, gm.textures, mem, netTxt]));
+  } else setPerf(C.state === 'play' ? tr('{0} · {1} к/с · {2}%{3}', [P.name, fps, sc, netTxt]) : '');
 }
 
 // компиляция шейдеров всего, что есть в сцене (и скрытого — листы эффектов, дым): без неё первое появление эффекта = рывок кадра
-function prewarm() { try { if (renderer.compile) renderer.compile(scene, camera); } catch (_) { /* в проверках без WebGL — нет */ } }
+// с постобработкой — в её буфер кадра (2026-10-26): кодировка цвета входит в ключ шейдера, а после кадра выбран экран (sRGB) — на «Высоком» и «Ультра»
+// (буфер HalfFloat, линейный) прогрев собирал не тот вариант, и всё собиралось второй раз при первой отрисовке
+function prewarm() {
+  if (!renderer.compile) return; const rt = renderer.getRenderTarget();
+  try { if (pipe) renderer.setRenderTarget(pipe.target); renderer.compile(scene, camera); } catch (_) { /* в проверках без WebGL — нет */ } finally { try { renderer.setRenderTarget(rt); } catch (_) { /* нет */ } }
+}
+// после прихода моделей и в начале боя — собрать шейдеры того, что ещё не рисовалось (2026-10-26: модель цели вблизи и первая ракета комплекса
+// собирались посреди боя — рывок 0,1–0,7 с); ракеты комплексов этого боя — на время сборки в сцене невидимыми. Повторно, когда всё собрано, ≈ 3 мс
+let warmT = 0, warmFl = null;
+function warmSoon() { clearTimeout(warmT); warmT = setTimeout(warmNow, 400); }
+function warmNow() {
+  const tmp = new THREE.Group(), seen = new Set(); tmp.visible = false;
+  if (C.state === 'play' && C.S && C.S.units) for (const u of C.S.units) if (u.key && !seen.has(u.key)) { seen.add(u.key); const gm = unitMissileGlb(u.key, true); if (gm) { tmp.add(gm.missile); if (gm.booster) tmp.add(gm.booster); } }
+  if (!warmFl) { warmFl = new THREE.Group(); makeFlame(warmFl, 0, 1); } tmp.add(warmFl); // факел ракеты и свечение у сопла (создаются при первом пуске) — один на всё время
+  scene.add(tmp); prewarm(); scene.remove(tmp);
+}
 // ═════════════ Запуск ═════════════
 // готовые модели — в фоне; загрузилась — самолёты пересобираются уже с ней (постройки — ставятся, когда город собран)
 const pendingObj = [];
@@ -1013,6 +1063,7 @@ registerSW(); // файлы игры — из кэша устройства (т�
 // замер частей кадра на телефоне (?probe=1): таблица мс поверх игры через 12 с боя (probe.js)
 if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261026c').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
 loadModels(new URL('./', import.meta.url).href, (name) => {
+  warmSoon(); // шейдеры пришедшей модели — сразу, а не когда она впервые попадёт в кадр
   if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха — та же модель, что у целей)
   if (isObjModel(name)) { if (C.G) C.G.attachObjModel(name, () => objModel(name)); else pendingObj.push(name); return; } // постройки целей
   if (bldModel(name)) return;

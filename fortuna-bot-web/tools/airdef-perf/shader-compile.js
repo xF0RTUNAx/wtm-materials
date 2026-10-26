@@ -19,6 +19,10 @@ try {
     const diffKey = (k) => { const h = head(k), t = tail(k); let best = null; for (const p of R.info.programs) { if (p.cacheKey === k || head(p.cacheKey) !== h) continue; const d = []; tail(p.cacheKey).forEach((v, i) => { if (v !== t[i]) d.push(PN[i] + ':' + v + '→' + t[i]); }); if (!best || d.length < best.length) best = d; } return best ? best.join(' ') : 'новый шейдер'; };
     setInterval(() => { for (const p of R.info.programs) if (!seen.has(p.cacheKey)) { seen.add(p.cacheKey); window.__np.push({ t: +((performance.now() - t0) / 1000).toFixed(1), name: p.name, key: p.cacheKey.slice(0, 160), diff: diffKey(p.cacheKey) }); } }, 100);
     if (C.setAuto) C.setAuto(true);
+    // кто вызвал сборку: обёртка renderBufferDirect — после вызова программ стало больше → имя объекта (цепочка родителей) и материала
+    const rbd = R.renderBufferDirect; window.__who = [];
+    const path = (o) => { const a = []; for (let p = o; p && a.length < 5; p = p.parent) a.push(p.name || p.userData.key || p.type); return a.join(' < '); };
+    R.renderBufferDirect = function (cam, sc, geo, mat, obj, grp) { const n = R.info.programs.length; const r = rbd.apply(this, arguments); if (R.info.programs.length > n) window.__who.push({ t: +((performance.now() - t0) / 1000).toFixed(1), mat: (mat.name || mat.type) + (mat.uniforms ? ' {' + Object.keys(mat.uniforms).slice(0, 5).join(',') + '}' : '') + (mat.map && mat.map.image ? ' map ' + (mat.map.image.width || '') : ''), obj: path(obj), layers: cam.layers.mask }); return r; };
     // материалы, у которых version растёт (needsUpdate каждый кадр → поиск программы заново)
     const ver = new Map(); window.__mv = {};
     setInterval(() => { C.scene.traverse((o) => { const ms = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []; for (const m of ms) { const v0 = ver.get(m); if (v0 !== undefined && m.version > v0) { const k = (m.name || m.type) + ' @' + (o.name || o.type) + (o.isInstancedMesh ? ' inst' : ''); window.__mv[k] = (window.__mv[k] || 0) + (m.version - v0); } ver.set(m, m.version); } }); }, 1000);
@@ -28,5 +32,7 @@ try {
   console.log('материалы с needsUpdate (рост version за всё время):', JSON.stringify(np.mv));
   console.log(`== ${preset} · ${map} · ${game}: программ всего ${np.n}, новых за ${secS} с боя: ${np.list.length}`);
   for (const p of np.list) console.log(`${String(p.t).padStart(5)} с  ${p.name}  ${p.diff}`);
+  const who = await page.evaluate(() => window.__who);
+  console.log('— при отрисовке чего собрано:'); for (const w of who) console.log(`${String(w.t).padStart(5)} с  ${w.mat}  ← ${w.obj}  (слои камеры ${w.layers})`);
   if (errs.length) console.log('ошибки:', errs.slice(0, 3));
 } finally { await browser.close(); }

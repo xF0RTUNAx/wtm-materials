@@ -1,4 +1,4 @@
-// весь кадр (сцена без постобработки) по таймеру ГП: варианты по очереди на одной странице. VARS — JSON: [{"ro":0},{"ro":1}] (порядок земли)
+// весь кадр (сцена без постобработки) по таймеру ГП: варианты по очереди на одной странице. VARS — JSON: [{"ro":0},{"ro":1}] (порядок земли), {"ro":1,"sky":2} — небо после земли
 import puppeteer from 'npm:puppeteer-core@22.15.0';
 const [map = 'autumn', preset = 'high'] = Deno.args;
 const VIEWS0 = { autumn: [[0, 9000, 80, 180, -12], [0, 9000, 1500, 180, -25], [-3000, 2000, 400, 120, -20]], winter: [[0, 6000, 80, 180, -10], [0, 6000, 1800, 180, -25], [3000, 0, 300, 220, -18]], city: [[2000, 9000, 80, 180, -10], [0, 9000, 2500, 180, -28], [-4000, 3000, 300, 120, -18]] }[map];
@@ -20,7 +20,7 @@ try {
     const cam = C.camera, target = C.pipe ? C.pipe.target : null, VAR = JSON.parse(VARS), out = VAR.map(() => VIEWS.map(() => [])), cam0 = C.ctrl.camera;
     C.paused = false; for (let i = 0; i < 30; i++) { t += 34; window.__frame(t); } C.paused = true; // самолёт в полёте
     const M = G.ground.material, FU = M.userData.farU, AT = M.userData.AT || M.userData.WT || {}, city = !M.userData.WT && !/aGA/.test(Object.keys(AT).join());
-    const apply = (v) => { G.ground.renderOrder = v.ro || 0; if (FU) FU.value = v.far ?? FU.value;
+    const apply = (v) => { G.ground.renderOrder = v.ro || 0; if (v.sky !== undefined) G.sky.renderOrder = v.sky; if (FU) FU.value = v.far ?? FU.value; // sky — порядок неба (2026-10-26)
       if (v.an) for (const [nm, u] of Object.entries(AT)) { const t = u && u.value; if (!t || !t.isTexture) continue;
         const coarse = /^(aGA|aRA|aMA|wSA|wRA|tGA)$/.test(nm), an = v.old ? v.an : coarse ? 1 : city ? v.an : Math.min(4, v.an);
         if (t.anisotropy !== an) { t.anisotropy = an; t.needsUpdate = true; } } };

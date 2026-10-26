@@ -13,7 +13,7 @@
 /* global THREE */
 import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261026c';
 import { part, mergeParts, M } from '../drone/models.js?v=20261026c';
-import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU } from '../drone/world.js?v=20261026c';
+import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261026c';
 import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261026c';
 import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterGroundMaterial, winterTrees, makeSnowfall, winterRoads } from './winter-render.js?v=20261026c';
 import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask, autumnProps } from './autumn-render.js?v=20261026c';
@@ -1279,7 +1279,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     hazeK: { value: W.hazeK }, halo: { value: W.halo }, discK: { value: W.disc }, flash: { value: 0 }, ...skyUniforms() };
   SKY.hi = !P.skyOnly && renderer.capabilities.maxTextureSize >= 8192; skyPano(SU, W); // панорама неба (Poly Haven); 8K — не на телефонных пресетах
   const sky = new THREE.Mesh(new THREE.SphereGeometry(42000, 48, 24), skyMaterial(SU, 1));
-  sky.renderOrder = -2; sky.frustumCulled = false; scene.add(sky); G.sky = sky;
+  // небо — после земли (renderOrder 1), последним из непрозрачного (2026-10-26): закрытое землёй, домами и техникой не считается; кадр ГП −1…−4 %
+  // (frame-ab.js, 3 карты × «Средний»/«Высокий»), снимки те же. ?sko=0 — первым, как раньше
+  sky.renderOrder = typeof location !== 'undefined' && /[?&]sko=0/.test(location.search) ? -2 : 2; sky.frustumCulled = false; scene.add(sky); G.sky = sky;
   // дымка: не реже, чем нужно, чтобы дальние плитки растворялись до того, как пропадут
   scene.fog = new THREE.FogExp2(lin(W.fog), Math.max(W.fogD, 1.15 / P.draw));
   ATMO.sunDir.x = sunDir.x; ATMO.sunDir.y = sunDir.y; ATMO.sunDir.z = sunDir.z;
@@ -1291,6 +1293,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const hemi = new THREE.HemisphereLight(lin(W.sky), lin(W.gnd), 0.55 * W.hemiI); scene.add(hemi);
   const sunL = new THREE.DirectionalLight(lin(W.sun), 2.0 * W.sunI * (0.35 + 0.65 * Math.min(1, sunDir.y / 0.25)));
   sunL.position.copy(sunDir).multiplyScalar(5000); scene.add(sunL); scene.add(sunL.target);
+  // свет — и на слоях облаков, дыма и огня (2026-10-26): они рисуются отдельными проходами (post.js) — без света в слоях число источников в ключе
+  // шейдера было 0, а прогрев (main.js prewarm) собирал вариант с 1 + 1 → первый взрыв собирал шейдеры заново (рывок). Сами они свет не используют
+  for (const l of [hemi, sunL]) { l.layers.enable(FX_LAYER); l.layers.enable(FX_ADD_LAYER); }
   if (P.shadows && W.shadows) {
     sunL.castShadow = true; sunL.shadow.mapSize.set(P.shadowMap || 2048, P.shadowMap || 2048);
     const b = P.shadowBox || 700, c = sunL.shadow.camera; c.left = -b; c.right = b; c.top = b; c.bottom = -b; c.near = 100; c.far = 12000; c.updateProjectionMatrix();

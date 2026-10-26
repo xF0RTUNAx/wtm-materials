@@ -633,10 +633,10 @@ export function unitModelGlb(key) {
   return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar'), // radar — антенна обзора на башне (крутится)
     tdish: near('dish'), lids }; // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
 }
-// ракета комплекса из его модели (маршевая ступень + ускоритель) или null
-export function unitMissileGlb(key) {
+// ракета комплекса из его модели (маршевая ступень + ускоритель) или null; noLoad — не заказывать подробную модель (прогрев шейдеров, main.js warmNow)
+export function unitMissileGlb(key, noLoad) {
   const sm = SAMMSL[key]; if (sm && LOADED[sm]) return { missile: LOADED[sm].clone(), booster: null };
-  const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); // телефон: подробная модель ещё не грузилась — ракеты из неё со следующего пуска
+  const n = UMODEL[key]; if (n && BASE && !LOADING.has(n) && !noLoad) start(n); // телефон: подробная модель ещё не грузилась — ракеты из неё со следующего пуска
   const G = n && (LOADED[n] || LOADED[n + '_lo']); if (!G) return null;
   const m = G.children.find((c) => c.name === 'missile'); if (!m) return null;
   const b = G.children.find((c) => c.name === 'booster');
