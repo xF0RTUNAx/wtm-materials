@@ -208,7 +208,7 @@ export function createEndScreen(C) {
     rw.innerHTML = `<span class="xp">${ico('xp')}<b data-c="xp">0</b></span><span>${ico('silver')}<b data-c="sv">0</b></span>`;
     count(rw.querySelector('[data-c="xp"]'), d.xp, 1000, '+'); count(rw.querySelector('[data-c="sv"]'), d.silver || 0, 1000, '+');
   }
-  // claim: { rating: { points, parts }, acc, note, board: { place, prev, n, counted } | null }
+  // claim: { rating: { points, parts }, acc, note, board: { place, prev, n, counted } | null, off — межсезонье (рейтинга нет) }
   function applyClaim() {
     const c = E.claim, rt = view.querySelector('.rate'); if (!c || !rt || !E.rateOn) return;
     const rp = Q(view, 'rp'), txt = Q(view, 'rtxt'), slots = Q(view, 'slots'), r = c.rating, line = [];
@@ -218,6 +218,7 @@ export function createEndScreen(C) {
       if (c.acc && c.acc.kind === 'airdef') { if (once) count(rp, r.points, 900, idle ? '' : '+'); if (idle) line.push(tr('без действий в бою')); }
       else { if (once) count(rp, r.points, 900); rp.parentNode.classList.add('off'); line.push(tr('очки засчитаются, когда перенесёте прогресс в аккаунт игры')); }
     } else if (rp && rp.parentNode) rp.parentNode.style.display = 'none';
+    if (c.off) line.push(tr('межсезонье — бой не идёт в рейтинг'));
     const b = c.board;
     if (b) {
       if (b.place) line.push(b.prev && b.prev !== b.place ? tr('место в сезоне {0} → {1}', [b.prev, b.place]) : tr('место в сезоне {0}', [b.place]));

@@ -986,6 +986,10 @@ export default {
   "Магазин": "Shop",
   "скоро": "coming soon",
   "Разделы: исследования, событие, рейтинг, магазин": "Sections: research, event, rating, shop",
+  "сезон {0} завершён": "season {0} is over",
+  "сезон {0} завершён · сезон {1} через {2} дн.": "season {0} is over · season {1} in {2} d",
+  "Между сезонами — неделя межсезонья: бои в рейтинг не идут.": "Between seasons there is a one-week off-season: battles do not count for the rating.",
+  "межсезонье — бой не идёт в рейтинг": "off-season — the battle does not count for the rating",
   // магазин «Витрина» (shop-ui.js, 2026-10-26)
   "Магазин: окраски сезона за кристаллы": "Shop: season liveries for crystals",
   "окраски сезона": "season liveries",

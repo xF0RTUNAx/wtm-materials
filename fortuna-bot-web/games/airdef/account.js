@@ -138,7 +138,8 @@ function mockRating(pid) {
   const top = MOCK_TOP.map(([n, p], i) => ({ place: i + 1, nick: n, points: p, n: 7 }));
   top.push({ place: 37, nick, points: 3940, n: 5 }); // «вы» — 37-е место; остальные ниже
   for (let i = 0; i < 12; i++) top.push({ place: 38 + i, nick: ['Кедр', 'Rook', 'Ветер', 'Bravo_4', 'Лайка', 'Orbit', 'Гюрза', 'Sparrow', 'Ратник', 'Echo_2', 'Витязь', 'Nimbus'][i], points: 3930 - i * 90, n: 4 });
-  const base = { season: 1, current: 1, starts_at: new Date(t0).toISOString(), ends_at: new Date(t1).toISOString(), total: 214, top };
+  const base = { season: 1, current: 1, live: true, starts_at: new Date(t0).toISOString(), ends_at: new Date(t1).toISOString(), next: null, total: 214, top };
+  if (RMOCK === 'break') Object.assign(base, { current: 2, live: false, ends_at: ago(2, 0, 0), next: { season: 2, starts_at: new Date(now + 5 * day).toISOString() } }); // ?rmock=break — межсезонье
   if (!pid) return { ...base, me: null };
   const isGame = g && g.id === pid, empty = RMOCK === 'empty';
   if (!isGame) return { ...base, me: { kind: 'site', nick: null, place: null, points: 0, n: 0, battles: [] } };

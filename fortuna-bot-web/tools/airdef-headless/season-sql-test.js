@@ -16,9 +16,9 @@ const all = async (q, p = []) => (await db.query(q, p)).rows;
 await db.exec(`create role service_role; create role anon; create role authenticated;
   create table players (id uuid primary key default gen_random_uuid(), login text unique not null, password_hash text not null, full_name text,
     created_at timestamptz not null default now(), last_seen timestamptz not null default now());`);
-for (const f of ['020_airdef_online.sql', '021_airdef_progress.sql', '022_airdef_accounts_rating.sql', '024_airdef_season_rewards.sql', '025_airdef_rating_slots.sql']) await db.exec(Deno.readTextFileSync(SQL + f));
+for (const f of ['020_airdef_online.sql', '021_airdef_progress.sql', '022_airdef_accounts_rating.sql', '024_airdef_season_rewards.sql', '025_airdef_rating_slots.sql', '027_airdef_offseason.sql']) await db.exec(Deno.readTextFileSync(SQL + f));
 await db.exec(Deno.readTextFileSync(SQL + '024_airdef_season_rewards.sql')); // повторно — без ошибок
-ok(true, 'миграции 020, 021, 022, 024, 025 (и 024 повторно) применились');
+ok(true, 'миграции 020, 021, 022, 024, 025, 027 (и 024 повторно) применились');
 
 // правила — как передаёт airdef-progress (_shared/airdef-season.ts)
 const RULES = { per: SEASON.PER, min: SEASON.MIN, top: SEASON.TOP, price: CAMO_PRICE, camos: KEYS };
@@ -60,6 +60,7 @@ ok(badRules, 'кривые правила (per = 0) — ошибка bad_rules')
 await db.query(`update airdef_seasons set starts_at = now() - interval '40 days', ends_at = now() - interval '1 hour' where id = 1`);
 const s1 = await settle();
 ok(JSON.stringify(s1) === '[1]', `рассчитан сезон 1 (${JSON.stringify(s1)})`);
+ok((await one('select airdef_season_live(now()) l, airdef_season_at(now()) a')).l === 0, 'сезон 1 закончился час назад — межсезонье (027), награды уже начислены');
 const a1 = await wal(P.A), b1 = await wal(P.B);
 ok(a1.crystals === 63 && a1.picks === 1 && a1.camos.length === 0, `1-е место: 63 💎 за 6300 очков + камуфляж на выбор (${JSON.stringify(a1)})`);
 ok(b1.crystals === 56 && b1.camos.length === 1 && KEYS.includes(b1.camos[0]) && b1.picks === 0, `2-е место: 56 💎 + случайный камуфляж ${b1.camos[0]}`);
@@ -75,7 +76,7 @@ const pa = await paid(1, P.A);
 ok(pa.place === 1 && pa.points === 6300 && pa.n === 7 && pa.crystals === 63 && pa.pick === 1, 'выплата записана: место, очки, бои, что дали');
 ok((await settle()).length === 0 && (await wal(P.A)).crystals === 63 && (await wal(P.B)).camos.length === 1, 'повторный расчёт ничего не начисляет');
 
-// ── сезоны 2, 3, 4 (все закончились — рассчитываются одним вызовом) ──
+// ── сезоны 2, 3, 4 (все закончились — рассчитываются одним вызовом; между ними — межсезонье, sql/027) ──
 // сезон 2: E 6000 (1-е; 4 камуфляжа свои + 1 «на выбор» ждёт — выбирать нечего → цена), B 4500 (2-е; все 5 свои → цена),
 // C 4000 (3-е, но 2 боя — ничего, места не сдвигаются), D 3000 (4-е → 50 %)
 await db.query(`update airdef_wallet set camos = $2, picks = 1 where player_id = $1`, [P.E, KEYS.slice(0, 4)]);
@@ -88,7 +89,7 @@ await fights(P.F, 3, 3, 2000); await fights(P.C, 3, 3, 1000);
 // H и I — по 3 боя без действий (0 очков, делят 3-е место) → ничего
 await db.query(`update airdef_wallet set camos = $2 where player_id = $1`, [P.A, KEYS.slice(0, 4)]);
 await fights(P.D, 4, 3, 2000); await fights(P.A, 4, 3, 1000); await fights(P.H, 4, 3, 0); await fights(P.I, 4, 3, 0);
-await db.query(`update airdef_seasons set starts_at = now() - interval '130 days', ends_at = now() - interval '91 days' where id = 1`);
+await db.query(`update airdef_seasons set starts_at = now() - interval '160 days', ends_at = now() - interval '120 days' where id = 1`); // 027: сезоны 2–4 — по 30 дней через неделю межсезонья, все закончились
 const s23 = await settle();
 ok(JSON.stringify(s23) === '[2,3,4]', `рассчитаны сезоны 2, 3, 4 (${JSON.stringify(s23)})`);
 const e2 = await wal(P.E);

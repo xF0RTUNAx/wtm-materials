@@ -371,7 +371,7 @@ export function createOnline(C, ctrls) {
       const note = res.ok ? (parts.length ? tr('Награда: {0}', [parts.join(', ')]) : d.online_rewards_left === 0 ? tr('Наградные бои на сегодня закончились — результат засчитан') : tr('Результат засчитан')) : needG ? tr('Создайте аккаунт игры — бой не засчитан') : esc(d.error || tr('Не удалось засчитать бой'));
       const el = $('endNote'); if (el) el.innerHTML = `<b>${note}</b><br>` + ratingNote(d.rating, acc) + el.innerHTML;
       if (C.endScr) { // табло: очки рейтинга, место и ячейки сезона, награда прокачки
-        const cl = { rating: d.rating, acc, note, board: null }; C.endScr.claimed(cl); if (d.progress) C.endScr.reward(d.progress);
+        const cl = { rating: d.rating, acc, note, board: null, off: !!d.offseason }; C.endScr.claimed(cl); if (d.progress) C.endScr.reward(d.progress); // off — межсезонье: бой в рейтинг не идёт
         if (d.rating && acc.kind === 'airdef' && C.rating) C.rating.fresh().then((b) => { if (b) { cl.board = b; C.endScr.claimed(cl); } }).catch(() => {});
       }
       if (d.rating && C.rating) C.rating.reset(); // очки боя в таблице сезона: обновить при следующем показе

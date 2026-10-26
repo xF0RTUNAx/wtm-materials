@@ -96,7 +96,8 @@ Deno.serve(async (req) => {
       return st === "ok" && site ? { site } : bad;
     };
     const transferErr = (e: { message?: string }) => { const code = Object.keys(ERR).find((k) => String(e.message || "").includes(k)); return code ? err(409, ERR[code], code) : null; };
-    const season = async () => { const s = await db.rpc("airdef_season_at", { ts: new Date().toISOString() }); return Number(s.data) || 0; };
+    // сезон для «смена ника — раз в сезон»; межсезонье (sql/027) — часть прошедшего сезона, как в окне рейтинга: смена в межсезонье не съедает смену следующего
+    const season = async () => { const ts = new Date().toISOString(); const [a, l] = await Promise.all([db.rpc("airdef_season_at", { ts }), db.rpc("airdef_season_live", { ts })]); return Number(l.data) || Math.max(0, (Number(a.data) || 0) - 1); };
     const view = async (id: string, login: string) => {
       const { data } = await db.from("airdef_accounts").select("nick, from_player").eq("player_id", id).maybeSingle();
       return { id, login: login.replace(/^ad:/, ""), nick: data?.nick ?? "", transferred: !!data?.from_player };

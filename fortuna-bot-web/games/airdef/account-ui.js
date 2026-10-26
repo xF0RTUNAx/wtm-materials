@@ -41,6 +41,11 @@ button[data-accopen] { margin: 0 0 0 6px; border: 1px solid #4a5443; border-radi
 #accWin .me { display: grid; gap: 2px; } #accWin .me b { font: 500 22px 'Oswald', sans-serif; word-break: break-word; } #accWin .me span { color: var(--dim); font-size: 13px; }
 @media (max-height: 460px) { #accWin .whead { padding: 6px 10px; } #accWin .tabs button { padding: 6px 12px; } #accWin .body { padding: 8px 10px; gap: 8px; } #accWin .frm { grid-template-columns: 1fr 1fr; gap: 8px; } #accWin .frm .full { grid-column: 1 / -1; } }
 @media (pointer: coarse) { #accWin input { font-size: 16px; } }
+#accWin input { -webkit-user-select: text; user-select: text; } #accWin .body { touch-action: pan-y; overscroll-behavior: contain; } /* в игре выделение и жесты выключены — полю ввода и прокрутке окна вернуть */
+/* клавиатура телефона открыта (.kb, visualViewport): окно — в видимой части над ней, у верхнего края; на время ввода видны поле, подпись и кнопка */
+#accWin.kb { align-items: flex-start; padding: 4px; }
+#accWin.kb .tabs, #accWin.kb .body > p:not(.lock), #accWin.kb .fld small, #accWin.kb .ginfo { display: none; }
+#accWin.kb .whead { padding: 4px 8px; } #accWin.kb .whead .t { font-size: 15px; } #accWin.kb .body { padding: 6px 8px; gap: 6px; } #accWin.kb .frm { gap: 6px; }
 `;
 
 export function createAccount(C) {
@@ -135,6 +140,8 @@ export function createAccount(C) {
     root.innerHTML = `<div class="win"><div class="whead"><span class="t">${ico('players')}${tr('Аккаунт игры')}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>
       ${S.done ? '' : `<div class="tabs">${tabs().map(([k, l]) => `<button data-a="tab-${k}" class="${k === S.tab ? 'on' : ''}">${l}</button>`).join('')}</div>`}<div class="body">${lock() && !S.rename && !S.done ? `<p class="lock">${LOCK_MSG()}</p>` : ''}${body()}</div></div>`;
     applyLock();
+    // клавиша ввода на телефоне: «Далее» — к следующему полю, на последнем — «Готово» (отправить форму)
+    if (root.querySelectorAll) root.querySelectorAll('form').forEach((f) => { const ins = f.querySelectorAll('input'); ins.forEach((x, i) => x.setAttribute('enterkeyhint', i < ins.length - 1 ? 'next' : 'go')); });
   }
   // кнопки смены аккаунта (вход, регистрация, перенос, выход) — недоступны в комнате и в бою; смена ника остаётся
   function applyLock() {
@@ -243,6 +250,30 @@ export function createAccount(C) {
     else if (a === 'rename-no') { S.rename = false; S.err = S.ok = ''; draw(); }
     else if (a === 'logout') { if (lock()) return; clearGameAcc(); S.f = {}; changed(); api.close(); }
   });
+  // ── клавиатура телефона (Mark 2026-10-26: «при активации клавиатуры не видно, что печатаешь… трудно двигать, всё скидывается»): окно — в видимой
+  // части над клавиатурой (visualViewport), поле — в середине видимого; перерисовка во время ввода (пришёл статус сайта, сменилась комната)
+  // откладывается до ухода с поля — иначе поле пересоздаётся и клавиатура закрывается
+  const vv = typeof visualViewport !== 'undefined' ? visualViewport : null;
+  const typing = () => { const a = document.activeElement; return !!a && a.tagName === 'INPUT' && !!root.contains && root.contains(a); };
+  let redraw = false;
+  function drawSoon() { if (typing()) redraw = true; else draw(); }
+  function fit() {
+    if (!vv || !root.classList.contains('on')) return;
+    const kb = typing() && vv.height < innerHeight * 0.85, st = root.style; // клавиатура открыта
+    root.classList.toggle('kb', kb);
+    if (kb) Object.assign(st, { top: vv.offsetTop + 'px', left: vv.offsetLeft + 'px', width: vv.width + 'px', height: vv.height + 'px', right: 'auto', bottom: 'auto' });
+    else Object.assign(st, { top: '', left: '', width: '', height: '', right: '', bottom: '' });
+    const f = kb && document.activeElement.closest && document.activeElement.closest('.fld');
+    if (f && f.scrollIntoView) try { f.scrollIntoView({ block: 'center' }); } catch (_) { /* нет */ }
+  }
+  if (vv && vv.addEventListener) { vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); }
+  root.addEventListener('focusin', () => setTimeout(fit, 60)); // клавиатура выезжает чуть позже фокуса
+  root.addEventListener('focusout', () => setTimeout(() => { if (typing()) return; fit(); if (redraw) { redraw = false; draw(); } }, 60));
+  root.addEventListener('keydown', (e) => { // Enter в поле — к следующему полю формы; в последнем — отправка (как обычно)
+    const t = e.target; if (e.key !== 'Enter' || !t || t.tagName !== 'INPUT' || !t.form) return;
+    const ins = [...t.form.querySelectorAll('input')], i = ins.indexOf(t);
+    if (i >= 0 && i < ins.length - 1) { e.preventDefault(); ins[i + 1].focus(); }
+  });
   addEventListener('keydown', (e) => { if (e.code === 'Escape' && root.classList.contains('on')) { api.close(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); } }); // поверх окна рейтинга: Esc закрывает только это окно
 
   const api = {
@@ -255,12 +286,12 @@ export function createAccount(C) {
       else S.tab = tab === 'reg' ? 'reg' : 'login';
       S.f.slogin = S.f.slogin || (siteAcc() || {}).login || '';
       root.classList.add('on'); draw();
-      const p = siteStatus(); if (p && p.then) p.then(() => { if (root.classList.contains('on')) draw(); });
+      const p = siteStatus(); if (p && p.then) p.then(() => { if (root.classList.contains('on')) drawSoon(); });
       const f = root.querySelector && root.querySelector('input'); if (f && f.focus && !(typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches)) try { f.focus(); } catch (_) { /* нет */ }
     },
-    close() { root.classList.remove('on'); S.f.pass = S.f.gpass = S.f.spass = S.f.npass = S.f.npw = ''; S.busy = false; },
+    close() { root.classList.remove('on', 'kb'); Object.assign(root.style, { top: '', left: '', width: '', height: '', right: '', bottom: '' }); redraw = false; S.f.pass = S.f.gpass = S.f.spass = S.f.npass = S.f.npw = ''; S.busy = false; },
     isOpen: () => root.classList.contains('on'),
-    refresh() { if (root.classList.contains('on')) draw(); }, // в комнату зашли или вышли — перерисовать (кнопки смены аккаунта)
+    refresh() { if (root.classList.contains('on')) drawSoon(); }, // в комнату зашли или вышли — перерисовать (кнопки смены аккаунта)
     render: renderRail,
   };
   return api;

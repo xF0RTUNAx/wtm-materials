@@ -37,21 +37,25 @@ Deno.serve(async (req) => {
     // сезона до этого боя. Очки пишутся у всех онлайн-боёв; в таблице сезона — только аккаунты игры (перенёс прогресс — бои сезона в счёт).
     // rt в итоге есть только у быстрого боя (своя комната рейтинга не даёт — решение Mark): нет rt — рейтинг не считаем. id соперников-людей
     // приходят запечатанными (ope, _shared/airdef-seal.ts): испорченное или пустое — как будто соперников-людей нет
-    let rating: { points: number; season: number; parts: Record<string, number> } | null = null;
+    let rating: { points: number; season: number; parts: Record<string, number> } | null = null, offseason = false;
     try {
       const rt0 = p.rt && typeof p.rt === "object" ? p.rt as Record<string, unknown> : null;
       if (rt0) {
         const cl = (v: unknown, a: number, b: number) => Math.max(a, Math.min(b, Number(v) || 0));
         const rt = { r: [0, RATING.DRAW, RATING.WIN].includes(Number(rt0.r)) ? Number(rt0.r) : 0, c: Math.round(cl(rt0.c, 0, RATING.CONTRIB_MAX)), b: cl(rt0.b, RATING.BOT_MIN, 1),
           m: Number(rt0.m) === 1 ? 1 : RATING.ARCADE_K, k: cl(rt0.k, 1, 1.08), idle: rt0.idle ? 1 : 0 };
-        const ss = await db.rpc("airdef_season_at", { ts: new Date().toISOString() }); if (ss.error) throw ss.error;
+        // идущий сезон; 0 — межсезонье (sql/027, неделя между сезонами): бой в рейтинг не идёт
+        const ss = await db.rpc("airdef_season_live", { ts: new Date().toISOString() }); if (ss.error) throw ss.error;
         const season = Number(ss.data) || 0;
-        const pts = async (id: string) => { const q = await db.rpc("airdef_rating_points", { p_player: id, p_season: season }); return q.error ? 0 : Number(q.data) || 0; };
-        const opp = (await unseal(p.ope, Deno.env.get("MP_SECRET") || "")).filter((x) => x !== player_id).slice(0, 12);
-        const s = oppStrength(await pts(player_id), await Promise.all(opp.map(pts))), points = battlePoints(rt, s);
-        const up = await db.from("airdef_mp_results").update({ rating: points, season, rp: { ...rt, s } }).eq("match_id", p.m).eq("player_id", player_id);
-        if (up.error) throw up.error;
-        rating = { points, season, parts: { ...rt, s } };
+        if (!season) offseason = true;
+        else {
+          const pts = async (id: string) => { const q = await db.rpc("airdef_rating_points", { p_player: id, p_season: season }); return q.error ? 0 : Number(q.data) || 0; };
+          const opp = (await unseal(p.ope, Deno.env.get("MP_SECRET") || "")).filter((x) => x !== player_id).slice(0, 12);
+          const s = oppStrength(await pts(player_id), await Promise.all(opp.map(pts))), points = battlePoints(rt, s);
+          const up = await db.from("airdef_mp_results").update({ rating: points, season, rp: { ...rt, s } }).eq("match_id", p.m).eq("player_id", player_id);
+          if (up.error) throw up.error;
+          rating = { points, season, parts: { ...rt, s } };
+        }
       }
     } catch (e) { console.error("airdef-claim rating", e); } // бой записан — рейтинг не роняет награду
     // аккаунт игры (kind = airdef) отделён от сайта: награды мини-игр сайта (детали, ключи, билеты) ему не начисляются
@@ -84,7 +88,7 @@ Deno.serve(async (req) => {
         progress = { xp: c.reward.xp, silver: c.reward.silver, lines: c.reward.lines, mult: c.reward.mult, auto: c.auto, state: view(out.P!, x1!, today) };
       }
     } catch (e) { console.error("airdef-claim progress", e); } // награда сайта уже выдана — прокачку не роняем вместе с ней
-    return jsonResponse({ details: r.details, keys: r.keys, ticket, rewarded: r.success, online_rewards_left: gameAcc ? null : Math.max(0, left - (r.success ? 1 : 0)), stats: st.data, progress, rating });
+    return jsonResponse({ details: r.details, keys: r.keys, ticket, rewarded: r.success, online_rewards_left: gameAcc ? null : Math.max(0, left - (r.success ? 1 : 0)), stats: st.data, progress, rating, offseason });
   } catch (e) {
     console.error("airdef-claim", e);
     return jsonResponse({ error: "Внутренняя ошибка сервера" }, 500);

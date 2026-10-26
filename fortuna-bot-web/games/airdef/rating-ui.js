@@ -79,7 +79,11 @@ export function createRating(C) {
   const markSeen = () => { try { localStorage.setItem(HELP_KEY, '1'); } catch (_) { /* приватный режим */ } };
 
   const daysLeft = (d) => { const e = Date.parse(d.ends_at); return isNaN(e) ? null : Math.max(1, Math.ceil((e - Date.now()) / 86400000)); };
-  const seasonText = (d) => { const n = daysLeft(d); return n == null ? tr('сезон {0}', [d.season]) : tr('сезон {0} · ещё {1} дн.', [d.season, n]); };
+  // межсезонье (sql/027, неделя между сезонами): сервер показывает итоги прошедшего сезона, next — когда начнётся следующий
+  const seasonText = (d) => {
+    if (d.next) { const s = Date.parse(d.next.starts_at), n = isNaN(s) ? null : Math.max(1, Math.ceil((s - Date.now()) / 86400000)); return n == null ? tr('сезон {0} завершён', [d.season]) : tr('сезон {0} завершён · сезон {1} через {2} дн.', [d.season, d.next.season, n]); }
+    const n = daysLeft(d); return n == null ? tr('сезон {0}', [d.season]) : tr('сезон {0} · ещё {1} дн.', [d.season, n]);
+  };
   const mine = () => { const d = S.data, a = activeAcc(); return d && d.me && d.me.kind === 'airdef' && a && a.kind === 'airdef' ? d.me : null; };
 
   // ── кнопка в меню ──
@@ -117,7 +121,7 @@ export function createRating(C) {
     return `<div class="whead">${back ? `<button class="back" data-a="back">${ico('triL')}${tr('Назад')}</button>` : ''}<span class="t">${inner}</span><span class="s">${sub}</span><button class="rx" data-a="close" aria-label="${tr('Закрыть')}" title="${tr('Закрыть')}">${ico('close')}</button></div>`;
   }
   const HELP = [tr('За каждый онлайн-бой: итог команды, ваш вклад и сила соперников.'), tr('Аркада — ×0,6.'), tr('Ранг боя II, III, IV — +2, +5, +8 %. В Мульти-волне надбавки нет.'),
-    tr('Чем больше ботов среди соперников, тем меньше очков.'), tr('Итог сезона — 7 боёв: по 2 лучших за ПВО, за лётчика и в Мульти-волне и ещё 1 лучший из остальных.'), tr('Своя комната не считается. Вышли из боя раньше — 0.')];
+    tr('Чем больше ботов среди соперников, тем меньше очков.'), tr('Итог сезона — 7 боёв: по 2 лучших за ПВО, за лётчика и в Мульти-волне и ещё 1 лучший из остальных.'), tr('Между сезонами — неделя межсезонья: бои в рейтинг не идут.'), tr('Своя комната не считается. Вышли из боя раньше — 0.')];
   function noData() {
     const soon = S.err === 'soon';
     return `<div class="win">${head(`${ico('rating')}${tr('Рейтинг')}`, '')}<div class="msg">${S.busy || !S.err ? `<span>${tr('Загружаем…')}</span>` : soon ? `<b>${tr('Рейтинг скоро откроется')}</b><span>${tr('Таблица сезона появится, как только сервер рейтинга заработает.')}</span>`

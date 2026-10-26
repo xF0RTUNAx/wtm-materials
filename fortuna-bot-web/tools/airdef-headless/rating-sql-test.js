@@ -143,5 +143,20 @@ ok(await S('2026-12-15 12:00:00+03') === 1 && await S('2026-12-31 23:59:00+03') 
 await db.exec(Deno.readTextFileSync(SQL + '026_airdef_season1_longer.sql'));
 ok(+new Date((await one('select ends_at from airdef_seasons where id = 1')).ends_at) === +new Date('2027-01-01T00:00:00+03:00'), '026 повторно — конец сезона 1 тот же');
 
+// ── 027: неделя межсезонья между сезонами; сезоны после записанного — по 30 дней ──
+await db.exec(Deno.readTextFileSync(SQL + '027_airdef_offseason.sql'));
+const LV = async (ts) => (await one('select airdef_season_live($1::timestamptz) s', [ts])).s;
+const BD = async (n) => { const b = await one('select starts_at, ends_at from airdef_season_bounds($1)', [n]); return [new Date(b.starts_at).toISOString(), new Date(b.ends_at).toISOString()]; };
+ok(await S('2026-12-31 23:59:00+03') === 1 && await LV('2026-12-31 23:59:00+03') === 1, '027: 31.12 — идёт сезон 1');
+ok(await S('2027-01-01 00:00:00+03') === 2 && await LV('2027-01-01 00:00:00+03') === 0 && await LV('2027-01-07 23:59:00+03') === 0, '027: 01.01–07.01 — межсезонье (следующий — 2, идущего нет)');
+ok(JSON.stringify(await BD(2)) === JSON.stringify(['2027-01-07T21:00:00.000Z', '2027-02-06T21:00:00.000Z']), `027: сезон 2 — 08.01–07.02.2027 МСК (${await BD(2)})`);
+ok(await LV('2027-01-08 00:00:00+03') === 2 && await LV('2027-02-06 23:59:00+03') === 2 && await S('2027-02-07 00:00:00+03') === 3 && await LV('2027-02-10 00:00:00+03') === 0, '027: сезон 2 идёт до 07.02, затем межсезонье перед сезоном 3');
+ok(JSON.stringify(await BD(3)) === JSON.stringify(['2027-02-13T21:00:00.000Z', '2027-03-15T21:00:00.000Z']), `027: сезон 3 — 14.02–16.03.2027 МСК (${await BD(3)})`);
+ok(await S('2026-10-24 23:59:00+03') === 0 && await LV('2026-10-24 23:59:00+03') === 0, '027: до первого сезона — 0');
+{
+  const g = await one(`select has_function_privilege('anon', 'airdef_season_live(timestamptz)', 'execute') a, has_function_privilege('service_role', 'airdef_season_live(timestamptz)', 'execute') s`);
+  ok(g.a === false && g.s === true, 'airdef_season_live: anon — нет, service_role — да');
+}
+
 console.log(bad ? `\nИТОГ: ошибок ${bad}` : '\nИТОГ: всё прошло');
 if (bad) Deno.exit(1);
