@@ -11,7 +11,7 @@ import numpy as np
 
 a = sys.argv[sys.argv.index('--') + 1:]
 GLB, SKIN, HDR, OUT = a[:4]
-P = dict(az=34, el=4, roll=-38, pitch=6, sun=55, sky=1.0, fill=0.35, exp=0.0, skyexp=-1.2, skyup=17, lens=62, w=1920, h=1080, spp=128)
+P = dict(az=34, el=4, roll=-38, pitch=6, sun=55, sky=1.0, fill=0.35, exp=0.0, skyexp=-1.2, skyup=29, lens=62, w=1920, h=1080, spp=128)
 for kv in a[4:]:
     k, v = kv.split('='); P[k] = float(v)
 
