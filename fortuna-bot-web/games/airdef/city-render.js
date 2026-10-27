@@ -172,6 +172,7 @@ function roadTexture(city) {
 const LAZY = { value: typeof location !== 'undefined' && /[?&]cl=0/.test(location.search) ? 0 : 1 };
 function groundMaterial(tex, ao, road) {
   const m = new THREE.MeshPhongMaterial({ map: tex, specular: 0x0a0a0a, shininess: 8 }); m.userData.farU = FAR_U; m.userData.AT = TEX; m.userData.lazyU = LAZY;
+  m.extensions = { derivatives: true, shaderTextureLOD: true }; // явные производные выборок (TXG) — на WebGL 1
   m.onBeforeCompile = (sh) => {
     Object.assign(sh.uniforms, ENV, TEX, { uFar: FAR_U, uLazy: LAZY, tAO: { value: ao }, tRoad: { value: road }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(AIRPORT.x, AIRPORT.z, AIRPORT.rwyL / 2, AIRPORT.rwyW / 2) } });
     sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
@@ -179,15 +180,26 @@ function groundMaterial(tex, ao, road) {
     const RNf = RN.toFixed(1), RSf = RS.toFixed(1), HR = RURAL_HW.toFixed(1);
     // шум земли — текстурой (noise-tex.js): vns() здесь — 13 вызовов на пиксель по 4 хэша; в остальных шейдерах города vns прежний
     sh.fragmentShader = 'varying vec3 vWp; uniform sampler2D tAO, tRoad; uniform vec4 uAir; uniform float uFar, uLazy;\n' + GLSL_COMMON + (NOISE_ON ? NOISE_GLSL + '#define vns vnt\n' : '') + GLSL_TEX + `
-// яркость текстуры вблизи (вес tk) — только где она нужна (need > 0; uLazy = 0 — всегда, как раньше)
-float dlN(sampler2D t, vec2 uv, float avg, float tk, float need) { return (tk > 0.0 || uFar == 0.0) && (need > 0.0 || uLazy < 0.5) ? mix(1.0, dl(t, uv, avg), tk) : 1.0; }
+// выборки в ленивых ветках — с явными производными (cDx, cDy — до ветвлений): у соседнего пикселя в другой ветке уровень мипмапа иначе не
+// определён (ревью 2026-10-27: крапинки по межам у горизонта); с ними картинка та же, что без пропусков
+#if __VERSION__ >= 300 || defined(GL_EXT_shader_texture_lod)
+#define TXG(t, uv, gx, gy) texture2DGradEXT(t, uv, gx, gy)
+#else
+#define TXG(t, uv, gx, gy) texture2D(t, uv)
+#endif
+vec2 cDx, cDy;
+vec3 crG(sampler2D t, vec2 p, float T, vec3 avg) { return clamp(srgb(TXG(t, p / T, cDx / T, cDy / T).rgb) / max(avg, vec3(0.004)), 0.25, 2.6); }
+float dlG(sampler2D t, vec2 p, float T, float avg) { return clamp(dot(TXG(t, p / T, cDx / T, cDy / T).rgb, vec3(0.3, 0.59, 0.11)) / avg, 0.35, 1.9); }
+// яркость текстуры (плитка T м) вблизи (вес tk) — только где она нужна (need > 0; uLazy = 0 — всегда, как раньше)
+float dlN(sampler2D t, vec2 p, float T, float avg, float tk, float need) { return (tk > 0.0 || uFar == 0.0) && (need > 0.0 || uLazy < 0.5) ? mix(1.0, dlG(t, p, T, avg), tk) : 1.0; }
 // слой травы (зелёная / сухая, пашня, подстилка; s — плитки, м): выборки — только с ненулевым весом; результат как у
-// mix(mix(mix(GG, GD, dryM), GF, pf), FG, pm)
-vec3 grassL(vec2 p, vec4 s, float dryM, float pf, float pm) {
+// mix(mix(mix(GG, GD, dryM), GF, pf), FG, pm). Пропуск — только по плавным границам (dryM, pm, fm — поля вообще): пашня pf меняется ступенькой,
+// и у соседних пикселей в разных ветках уровень мипмапа выборки не определён (ревью 2026-10-27: полоска по межам на Mali / Adreno)
+vec3 grassL(vec2 p, vec4 s, float dryM, float pf, float pm, float fm) {
   bool L = uLazy > 0.5; vec3 c = vec3(0.0);
-  if (!L || (1.0 - pf) * (1.0 - pm) > 0.0) c = mix(!L || dryM < 1.0 ? cr(tGG, p / s.x, uAvgGG) : vec3(0.0), !L || dryM > 0.0 ? cr(tGD, p / s.y, uAvgGD) : vec3(0.0), dryM);
-  if (!L || pf > 0.0) c = mix(c, cr(tGF, p / s.z, uAvgGF), pf);
-  if (!L || pm > 0.0) c = mix(c, cr(tFG, p / s.w, uAvgFG), pm);
+  if (!L || pm < 1.0) c = mix(!L || dryM < 1.0 ? crG(tGG, p, s.x, uAvgGG) : vec3(0.0), !L || dryM > 0.0 ? crG(tGD, p, s.y, uAvgGD) : vec3(0.0), dryM);
+  if (!L || fm > 0.0) c = mix(c, crG(tGF, p, s.z, uAvgGF), pf);
+  if (!L || pm > 0.0) c = mix(c, crG(tFG, p, s.w, uAvgFG), pm);
   return c;
 }
 // вид отрезка дороги: линия i (вдоль Z) между j и j+1 — .r, линия j (вдоль X) между i и i+1 — .g
@@ -198,7 +210,7 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   ave = mod(i, ${AV}) < 0.5 ? 1.0 : 0.0; hw = ave > 0.5 ? ${HA} : ${HS};
 }
 ` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk()).replace('#include <map_fragment>', `#include <map_fragment>
-  float urb = diffuseColor.a; diffuseColor.a = 1.0;
+  float urb = diffuseColor.a; diffuseColor.a = 1.0; cDx = dFdx(vWp.xz); cDy = dFdy(vWp.xz);
   float dist = length(vWp - uCam), px = max(0.05, dist * uPx), fine = 1.0 - smoothstep(0.4, 2.5, px);
   vec3 col = diffuseColor.rgb;
   // шум в двух масштабах: пятна покрытия, неровный тон
@@ -228,17 +240,17 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   //    до ~8 м на точку экрана; мелкая (3–4 м) — вблизи. Рельеф карт нормалей — на средней и мелкой
   if (uTexOn > 0.5) {
     float midK = 1.0 - smoothstep(2.0, 8.0, px), dryM = smoothstep(0.55, 0.75, n2);
-    if (gm > 0.0 || uLazy < 0.5) col *= mix(vec3(1.0), cr(tGA, vWp.xz / 260.0, uAvgGA), 0.4 * gm); // снимок с высоты — на зелени
+    if (gm > 0.0 || uLazy < 0.5) col *= mix(vec3(1.0), crG(tGA, vWp.xz, 260.0, uAvgGA), 0.4 * gm); // снимок с высоты — на зелени
     float pm = smoothstep(0.07, 0.11, urb) * (1.0 - smoothstep(0.16, 0.24, urb)); // парк, перелесок — лесная подстилка
-    if (pm * gm > 0.0 || uLazy < 0.5) { float pn = vns(vWp.xz / 45.0 + 17.0) * 0.7 + vns(vWp.xz / 11.0) * 0.3; // пятна: тёмная трава ↔ бурая подстилка под кронами
+    { float pn = vns(vWp.xz / 45.0 + 17.0) * 0.7 + vns(vWp.xz / 11.0) * 0.3; // пятна: тёмная трава ↔ бурая подстилка под кронами
       col = mix(col, mix(srgb(vec3(0.24, 0.31, 0.15)), uAvgFG * 0.85, smoothstep(0.35, 0.7, pn)), pm * gm * 0.75); }
     bool mOn = midK > 0.0 || uFar == 0.0, nOn = tk > 0.0 || uFar == 0.0; // средние и мелкие текстуры — только где их вес не 0 (вдали без выборок)
     mOn = mOn && (gm * midK > 0.0 || uLazy < 0.5); nOn = nOn && (gm * tk > 0.0 || uLazy < 0.5); // на бетоне (зелени нет) — без слоёв травы
-    vec3 mid = mOn ? grassL(vWp.xz, vec4(25.0, 31.0, 18.0, 14.0), dryM, plough * fm, pm) : vec3(1.0);
+    vec3 mid = mOn ? grassL(vWp.xz, vec4(25.0, 31.0, 18.0, 14.0), dryM, plough * fm, pm, fm) : vec3(1.0);
     col *= mix(vec3(1.0), mid, 0.45 * gm * midK);
-    vec3 mic = nOn ? grassL(vWp.xz, vec4(3.6, 4.2, 3.0, 2.6), dryM, plough * fm, pm) : vec3(1.0);
+    vec3 mic = nOn ? grassL(vWp.xz, vec4(3.6, 4.2, 3.0, 2.6), dryM, plough * fm, pm, fm) : vec3(1.0);
     col *= mix(vec3(1.0), mic, 0.6 * gm * tk);
-    vec4 nM = mOn ? texture2D(tGN, vWp.xz / 25.0) : vec4(0.5), nN = nOn ? texture2D(tGN, vWp.xz / 3.6) : vec4(0.5); float dP2 = max(dryM, plough * fm); // пашня — рельеф сухой земли
+    vec4 nM = mOn ? TXG(tGN, vWp.xz / 25.0, cDx / 25.0, cDy / 25.0) : vec4(0.5), nN = nOn ? TXG(tGN, vWp.xz / 3.6, cDx / 3.6, cDy / 3.6) : vec4(0.5); float dP2 = max(dryM, plough * fm); // пашня — рельеф сухой земли
     float rM = mix(reliefN(nM.rg, uSun), reliefN(nM.ba, uSun), dP2), rN = mix(reliefN(nN.rg, uSun), reliefN(nN.ba, uSun), dP2);
     col *= mix(1.0, rM, 0.45 * gm * midK) * mix(1.0, rN, 0.55 * gm * tk);
     col *= mix(1.0, 0.82, pm * gm); // под деревьями темнее
@@ -246,7 +258,7 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   // ── берег реки: песок и ил за городом, в городе — серая набережная; полоса ~60 м от уреза, у воды — мокрый тёмный край
   float rd = abs(vWp.x - riverX(vWp.z)) - ${(CITY.RIVER_W / 2).toFixed(1)};
   float bank = (1.0 - smoothstep(30.0, 75.0 + 0.5 * vns(vWp.xz / 40.0) * 40.0, rd)) * step(-60.0, rd);
-  float dC = dlN(tConc, vWp.xz / 7.0, 0.364, tk, (1.0 - gm) + bank); // бетон: где нет зелени и на набережной
+  float dC = dlN(tConc, vWp.xz, 7.0, 0.364, tk, (1.0 - gm) + bank); // бетон: где нет зелени и на набережной
   {
     if (bank > 0.001) {
       vec3 sand = srgb(vec3(0.6, 0.55, 0.43)) * (0.85 + 0.3 * vns(vWp.xz / 17.0)), mud = srgb(vec3(0.33, 0.29, 0.22));
@@ -262,8 +274,11 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   if (urb > 0.01) {
     // дворы: газоны в жилых кварталах, плитка и парковки в мощёных
     float yard = smoothstep(0.42, 0.62, vns(vWp.xz / 38.0 + 3.0)), wy = yard * 0.75 * smoothstep(0.1, 0.4, urb);
-    float dG = urb > 0.75 ? mix(dlN(tGG, vWp.xz / 3.6, sqrt(dot(uAvgGG, vec3(0.3, 0.59, 0.11))), tk, wy), dlN(tGD, vWp.xz / 4.2, sqrt(dot(uAvgGD, vec3(0.3, 0.59, 0.11))), tk, wy), smoothstep(0.55, 0.75, n2)) : 1.0; // газон: трава с проплешинами сухой земли
-    col = mix(col, urb > 0.75 ? vec3(0.07, 0.11, 0.04) * (0.8 + 0.4 * n1) * dG : vec3(0.16, 0.16, 0.15) * dlN(tPave, vWp.xz / 2.5, 0.435, tk, wy), wy);
+    // газон (трава с проплешинами сухой земли) или плитка — выборки обеих до выбора по urb (порог — ступенька: у соседних пикселей в разных ветках
+    // уровень мипмапа не определён); нужны, где есть двор (wy — плавно)
+    float dG = mix(dlN(tGG, vWp.xz, 3.6, sqrt(dot(uAvgGG, vec3(0.3, 0.59, 0.11))), tk, wy), dlN(tGD, vWp.xz, 4.2, sqrt(dot(uAvgGD, vec3(0.3, 0.59, 0.11))), tk, wy), smoothstep(0.55, 0.75, n2));
+    float dPy = dlN(tPave, vWp.xz, 2.5, 0.435, tk, wy);
+    col = mix(col, urb > 0.75 ? vec3(0.07, 0.11, 0.04) * (0.8 + 0.4 * n1) * dG : vec3(0.16, 0.16, 0.15) * dPy, wy);
   }
   {
     // дороги — по сетке отрезков (city.js): улица кончается на перекрёстке, за городом — узкая трасса с обочиной
@@ -281,10 +296,13 @@ void roadAt(float p, out float o, out float hw, out float ave) {
     float walk = max(swX * cX, swZ * cZ) * (1.0 - road);
     float shX = 1.0 - smoothstep(hwx + 2.0 - px, hwx + 3.5 + px, ax), shZ = 1.0 - smoothstep(hwz + 2.0 - px, hwz + 3.5 + px, az);
     float shoulder = max(shX * eX * (1.0 - cX), shZ * eZ * (1.0 - cZ)) * (1.0 - road) * (1.0 - walk);
+    // выборки асфальта, плитки, щебня — в полосе у осей сетки шире любой дороги с тротуаром и обочиной: есть ли тут отрезок и улица это или трасса —
+    // ступенька, и у соседних пикселей в разных ветках уровень мипмапа не определён (см. dG); на краю полосы веса этих текстур с обеих сторон — 0
+    float nR = step(min(ax, az), ${(Math.max(CITY.AVENUE, CITY.STREET) / 2 + Math.max(RURAL_HW, 0) + 6).toFixed(1)} + px), nW = nR, nS = nR;
     vec3 asph = vec3(0.032, 0.034, 0.038) * (0.85 + 0.3 * n1); float st = max(cX * onX, cZ * onZ);
-    asph = mix(asph * 1.35 * dlN(tAsph, vWp.xz / 7.0, 0.351, tk, road * (1.0 - st)), asph * dlN(tAsph, vWp.xz / 4.0, 0.351, tk, road * st), st); // загородный асфальт светлее, выгоревший, в заплатах
-    col = mix(col, vec3(0.15, 0.15, 0.145) * (0.9 + 0.2 * n1) * dlN(tPave, vWp.xz / 2.5, 0.435, tk, walk), walk);    // тротуар
-    col = mix(col, vec3(0.2, 0.18, 0.15) * (0.85 + 0.3 * n1) * dlN(tGrav, vWp.xz / 2.5, 0.257, tk, shoulder), shoulder * 0.8); // обочина — щебень
+    asph = mix(asph * 1.35 * dlN(tAsph, vWp.xz, 7.0, 0.351, tk, nR), asph * dlN(tAsph, vWp.xz, 4.0, 0.351, tk, nR), st); // загородный асфальт светлее, выгоревший, в заплатах
+    col = mix(col, vec3(0.15, 0.15, 0.145) * (0.9 + 0.2 * n1) * dlN(tPave, vWp.xz, 2.5, 0.435, tk, nW), walk);    // тротуар
+    col = mix(col, vec3(0.2, 0.18, 0.15) * (0.85 + 0.3 * n1) * dlN(tGrav, vWp.xz, 2.5, 0.257, tk, nS), shoulder * 0.8); // обочина — щебень
     col = mix(col, asph, road);
     // разметка (пока линия толще ~пикселя)
     float mk = (1.0 - smoothstep(0.25, 0.9, px)) * road;
@@ -310,7 +328,7 @@ void roadAt(float p, out float o, out float hw, out float ave) {
   float rwy = (1.0 - smoothstep(uAir.z - px, uAir.z + px, ra.x)) * (1.0 - smoothstep(uAir.w - px, uAir.w + px, ra.y));
   float cl = step(ra.y, 0.7) * step(0.5, fract(vWp.x / 50.0)) * step(ra.x, uAir.z - 90.0);
   float keys = step(uAir.z - 60.0, ra.x) * step(ra.x, uAir.z - 10.0) * step(0.5, fract(ra.y / 3.0)) * step(ra.y, uAir.w - 4.0);
-  col = mix(col, vec3(0.1, 0.1, 0.098) * dlN(tConc, vWp.xz / 5.0, 0.364, tk, rwy), rwy); // ВПП — бетонные плиты
+  col = mix(col, vec3(0.1, 0.1, 0.098) * dlN(tConc, vWp.xz, 5.0, 0.364, tk, rwy), rwy); // ВПП — бетонные плиты
   col = mix(col, vec3(0.6), min(cl + keys, 1.0) * rwy * (1.0 - smoothstep(0.6, 3.0, px)));
   // затенение у домов
   float ao = texture2D(tAO, (vWp.xz + ${CITY.GH.toFixed(1)}) / ${(2 * CITY.GH).toFixed(1)}).r;
