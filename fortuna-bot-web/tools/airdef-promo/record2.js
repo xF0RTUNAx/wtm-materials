@@ -17,12 +17,31 @@ const PAR = Math.max(1, +((Deno.args.find((a) => a.startsWith('--par=')) || '--p
 // сцена: m — карта, w — погода, setup — настройки «Съёмки», shot — объект и ракурс (rec: 1 — запись; sp — скорость 0 ×1, 1 ×½, 2 ×¼),
 // dur — секунд ролика, fire — на каких секундах нажать «Пуск» (F), cap — что в кадре (для списка), q — добавка к адресу (окраска: &camo=…)
 const A = (era, side, lo, palt = 'low') => ({ pside: 'air', era, side, lo, palt }), D = (era, side, psam, pvs = 'air') => ({ pside: 'def', era, side, psam, pvs }), M = (era, side, pmun) => ({ pside: 'multi', era, side, pmun });
+// сценарий (Mark 2026-10-27, к пробе: «убери финальную карточку, больше юнитов из мульти-волны, побольше геймплея, красивых кадров, пусков,
+// анимаций»): красота → геймплей → удар «Мульти-волны» (баллистика с пусковых, «Кинжал», крылатые с носителей, дроны) → ответ ПВО (пуски, крышки
+// «Тора» и NASAMS) → геймплей и вертолёты на других картах → окраски «Витрины»; без карточки в конце
 export const SCENES = [
   { id: 's400-launch', m: 'city', w: 'evening', cap: 'Пуск С-400 над городом, замедленно', setup: D(4, 'east', 's400'), shot: { s: 'msl', a: 'side', az: 0.35, el: 0.1, k: 1.5, t: 4, max: 200, sp: 1 }, dur: 5 },
-  { id: 'su34-kh59m', m: 'city', w: 'sunset', cap: 'Су-34: Х-59М на подвеске → пуск', setup: A(4, 'west', 0), shot: { s: 'ship', a: 'side', az: 0.3, el: -0.06, k: 0.7, t: 30, max: 200 }, dur: 5, fire: [2.2] }, // камера — на самолёте (на подвеске она у сопла, в пламени форсажа), пуск Х-59М виден сбоку
-  { id: 'mig31-kinzhal', m: 'winter', w: 'w_clear', cap: 'МиГ-31К с «Кинжалом» над Северным рубежом', setup: M(4, 'west', 'kinzhal'), shot: { s: 'src', a: 'chase', az: 0.35, el: 0.05, k: 0.9, t: 20, max: 200 }, dur: 5 },
   { id: 'su34-hud', m: 'city', w: 'morning', cap: 'Геймплей: Су-34 с интерфейсом боя, пуск Х-59М', setup: A(4, 'west', 0), shot: { s: 'ship', a: 'lock', t: 30, max: 200, hud: 1 }, dur: 5, fire: [1.5] },
+  { id: 'iskander-launch', m: 'winter', w: 'w_frost', cap: '«Мульти-волна»: пуск «Искандера»', setup: M(4, 'west', 'iskander'), shot: { s: 'src', a: 'side', az: 0.6, el: 0.08, k: 0.8, t: 0.5, max: 120 }, dur: 6, fire: [1.2] },
+  { id: 'scud-launch', m: 'winter', w: 'w_clear', cap: '«Мульти-волна»: пуск Р-17', setup: M(4, 'west', 'r17'), shot: { s: 'src', a: 'side', az: 0.6, el: 0.06, k: 0.6, t: 0.5, max: 120 }, seed: 5, dur: 6, fire: [1.2] },
+  { id: 'mig31-kinzhal', m: 'winter', w: 'w_clear', cap: 'МиГ-31К с «Кинжалом» над Северным рубежом', setup: M(4, 'west', 'kinzhal'), shot: { s: 'src', a: 'chase', az: 0.35, el: 0.05, k: 0.9, t: 20, max: 200 }, dur: 5 },
+  { id: 'kinzhal-flight', m: 'winter', w: 'w_frost', cap: '«Кинжал» после пуска', setup: M(4, 'west', 'kinzhal'), shot: { s: 'mun', a: 'side', az: 0.3, el: 0.02, k: 0.6, t: 30, max: 200 }, dur: 4 },
+  { id: 'atacms-launch', m: 'winter', w: 'w_clear', cap: '«Мульти-волна»: пуск ATACMS', setup: M(4, 'east', 'atacms'), shot: { s: 'src', a: 'side', az: 0.6, el: 0.08, k: 0.8, t: 0.5, max: 120 }, dur: 6, fire: [1.2] },
+  { id: 'tu160-kh101', m: 'winter', w: 'w_clear', cap: 'Ту-160 сбрасывает Х-101', setup: M(4, 'west', 'kh101'), shot: { s: 'src', a: 'below', az: 0.3, el: -0.2, k: 0.9, t: 12, max: 200 }, dur: 5, fire: [1.0] },
+  { id: 'kh101-low', m: 'winter', w: 'w_clear', cap: 'Крылатая Х-101 над горами', setup: M(4, 'west', 'kh101'), shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.8, t: 20, max: 200 }, dur: 4 },
+  { id: 'drones', m: 'autumn', w: 'a_eve', cap: 'Ударные дроны над Туманной топью', setup: M(4, 'west', 'shahed'), shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.35, t: 15, max: 200 }, dur: 4 },
+  { id: 'b52-jassm', m: 'winter', w: 'w_clear', cap: 'B-52H пускает JASSM', setup: M(4, 'east', 'jassm'), shot: { s: 'src', a: 'side', az: 0.4, el: -0.05, k: 0.9, t: 12, max: 200 }, dur: 5, fire: [1.5] },
+  { id: 'tomahawk', m: 'winter', w: 'w_frost', cap: 'Tomahawk над заснеженной долиной', setup: M(3, 'east', 'tomahawk'), shot: { s: 'mun', a: 'side', az: 0.3, el: -0.05, k: 0.6, t: 20, max: 200 }, dur: 4 }, // в городе камера ушла высоко — в кадре край карты
+  { id: 'su34-kh59m', m: 'city', w: 'sunset', cap: 'Су-34: Х-59М на подвеске → пуск', setup: A(4, 'west', 0), shot: { s: 'ship', a: 'side', az: 0.3, el: -0.06, k: 0.7, t: 30, max: 200 }, dur: 5, fire: [2.2] }, // камера — на самолёте (на подвеске она у сопла, в пламени форсажа), пуск Х-59М виден сбоку
+  { id: 'pac3-launch', m: 'city', w: 'day', cap: 'Пуск PAC-3, замедленно', setup: D(4, 'west', 'pac3'), shot: { s: 'msl', a: 'side', az: 0.3, el: 0.12, k: 1.6, t: 4, max: 200, sp: 1 }, dur: 5 }, // против «Мульти-волны» в снегу ракеты в кадре не было
+  { id: 'tor-lids', m: 'city', w: 'evening', cap: '«Тор-М1»: крышки открываются, пуск', setup: D(3, 'east', 'tor'), shot: { s: 'unit', a: 'front', az: 0.2, el: 0.1, k: 0.9, t: 3 }, dur: 6, fire: [0.8] },
+  { id: 'nasams-launch', m: 'city', w: 'morning', cap: 'NASAMS: крышки и пуск', setup: D(4, 'west', 'nasams'), shot: { s: 'unit', a: 'front', az: 0.3, el: 0.08, k: 1.0, t: 3 }, dur: 6, fire: [0.8] },
+  { id: 'pantsir-fire', m: 'winter', w: 'w_snow', cap: '«Панцирь» в снегопад: пушки и ракеты', setup: D(4, 'east', 'pantsir', 'multi'), shot: { s: 'unit', a: 'front', az: 0.25, el: 0.08, k: 0.9, t: 3 }, dur: 5, fire: [0.6, 2.4] },
+  { id: 'f16-hud', m: 'winter', w: 'w_clear', cap: 'Геймплей: F-16 над Северным рубежом, пуск JASSM', setup: A(4, 'east', 7), shot: { s: 'ship', a: 'lock', t: 30, max: 200, hud: 1 }, dur: 5, fire: [1.5] },
   { id: 'ka52-eve', m: 'autumn', w: 'a_eve', cap: 'Ка-52 над Туманной топью', setup: D(4, 'west', 'pac3'), shot: { s: 'heli', a: 'orbit', az: 0.3, el: -0.05, k: 0.6, t: 110, max: 400 }, dur: 5 },
+  { id: 'ah64-dusk', m: 'autumn', w: 'a_dusk', cap: 'AH-64 в сумерках', setup: D(3, 'east', 'tor'), shot: { s: 'heli', a: 'side', az: 0.3, el: -0.05, k: 0.5, t: 110, max: 400 }, dur: 4 },
+  { id: 'f15e-hud', m: 'autumn', w: 'a_eve', cap: 'Геймплей: F-15E над топью, сброс бомб', setup: A(3, 'east', 8), shot: { s: 'ship', a: 'lock', t: 30, max: 200, hud: 1 }, dur: 5, fire: [1.5] },
   { id: 'f15e-inferno', m: 'city', w: 'sunset', cap: 'Окраска из «Витрины»: F-15E «Инферно», облёт', q: '&camo=e_f15e:inferno', setup: A(3, 'east', 8), shot: { s: 'ship', a: 'orbit', az: 0.3, el: -0.3, k: 0.55, t: 30 }, dur: 5 }, // снизу — на фоне неба
   { id: 'mig31-dragon', m: 'winter', w: 'w_clear', cap: 'Окраска из «Витрины»: МиГ-31БМ «Нефритовый дракон» сверху', q: '&camo=e_mig31:dragon', setup: A(4, 'west', 2), shot: { s: 'ship', a: 'lock', az: 0, el: 0.95, k: 0.6, t: 30 }, seed: 3, dur: 4 },
 ];
