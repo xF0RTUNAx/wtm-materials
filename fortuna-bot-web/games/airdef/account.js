@@ -4,7 +4,7 @@
 // иначе «старый» аккаунт сайта, иначе гость: от него идут прогресс, онлайн-билет и итог боя. Рейтинг — только у аккаунта игры;
 // прогресс сайта можно один раз перенести в аккаунт игры (функция airdef-account, sql/022). Чистый модуль: хранилище, запросы, заглушка ?rmock=1.
 /* global CONFIG */
-import { tr } from './i18n.js?v=20261026c';
+import { tr } from './i18n.js?v=20261027a';
 
 const KEY_GAME = 'fortuna_airdef_acc', KEY_SITE = 'fortuna_web_player', KEY_SST = 'fortuna_airdef_site_st';
 // ?rmock=1 — заглушка: airdef-account и get-airdef-rating отвечают локально (сервер ещё не применён в боевой базе); ?rmock=empty — у «вас» нет боёв,

@@ -785,10 +785,10 @@
 </div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script> <!-- Telegram Mini App (вне Telegram — пустой объект) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="../config.js?v=20261026c"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
+<script src="../config.js?v=20261027a"></script> <!-- адрес функции mp-ticket и ключ Supabase (билет онлайна) -->
 <script> // сервис-воркер: файлы игры — в кэше устройства (games/airdef-sw.js, airdef/offline.js); только на сайте или с ?sw=1. Версия — как у модулей: поднимается при деплое
-  if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261026c', { scope: './airdef' }).catch(() => {});
+  if ('serviceWorker' in navigator && (/fortunawtm\.com$/.test(location.hostname) || /[?&]sw=1/.test(location.search))) navigator.serviceWorker.register('airdef-sw.js?v=20261027a', { scope: './airdef' }).catch(() => {});
 </script>
-<script type="module" src="airdef/main.js?v=20261026c"></script>
+<script type="module" src="airdef/main.js?v=20261027a"></script>
 </body>
 </html>

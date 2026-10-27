@@ -15,7 +15,7 @@ import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
 import { dmgPack } from '../games/airdef/sim/damage.js?v=20261022d';
 import { realDeny, samIds, strikeIds } from './airdef-own.js';
-import { battleParts } from '../games/airdef/rating.js?v=20261026c';
+import { battleParts } from '../games/airdef/rating.js?v=20261027a';
 
 const r1 = (v) => Math.round(v * 10) / 10;
 const opp = (s) => (s === 'east' ? 'west' : 'east');
