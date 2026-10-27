@@ -52,7 +52,7 @@ import { createTraining, LESSONS } from './training.js?v=20261027a';
 import { createPhoto } from './photo.js?v=20261027a';
 import { createMenu } from './menu.js?v=20261027a';
 import { registerSW } from './offline.js?v=20261027a';
-import { detectGpu, sharpFor } from './gpu.js?v=20261027a';
+import { detectGpu, sharpFor, sharpCeil } from './gpu.js?v=20261027a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -151,7 +151,8 @@ function touchGfx(P, custom) {
   const b = PRESETS[gfxKey].prCap; // по пресету, а не по P: applyGfx уже срезал до 1,5 — «Высокий» и «Ультра» выходили ×1,25 (ревью 2026-10-23)
   // «Обычная» — по баллам видеочипа (2026-10-23): слабые — как было (×1,25 / ×1,5), дальше ступени до ×2; не тянет — динамическое разрешение само
   // опустит (perf.min)
-  const AUTO = sharpFor(GPU.score); // ступень по баллам видеочипа (gpu.js): ниже прежнего не опускаем
+  const AUTO = sharpFor(GPU.score), CEIL = sharpCeil(); // ступень по баллам видеочипа (gpu.js): ниже прежнего не опускаем
+  for (const k in AUTO) AUTO[k] = Math.min(AUTO[k], CEIL); // и не выше, чем различит глаз на этом экране (телефон ×1,75, планшет ×1,5; ?prtest=1 — проверка)
   if (!custom) P.prCap = SHARP === 'native' ? 4 : SHARP === 'high' ? Math.max(AUTO[gfxKey] || 0, b > 1.5 ? 2 : 1.75) : (AUTO[gfxKey] || Math.min(P.prCap, b > 1.5 ? 1.5 : 1.25));
   // ?fsrout=1 (проба): холст — в разрешении экрана, 3D — во внутреннем буфере той же чёткости, до экрана — FSR (края чётче, чем растяжка браузера)
   if (!custom && /[?&]fsrout=1/.test(location.search) && P.prCap < 4) {

@@ -73,6 +73,11 @@ export function gpuScore(name, scr = typeof screen !== 'undefined' ? screen : nu
   return null;
 }
 
+// потолок «Обычной» чёткости по экрану (2026-10-27, Mark: «для каждого разрешения — без эффекта мыла, но и без избыточного разрешения»): глаз
+// различает ~60 точек на угловой градус (1′). Телефон в горизонтали — ~33 см от глаз; у телефонов (iPhone, Android) 150–165 точек CSS на дюйм →
+// нужно ≈ 265 пикселей на дюйм = ×1,75. Планшет (iPad, Android) — 40–45 см, 132–165 точек на дюйм → ≈ 205 = ×1,5. Выше — пиксели, которых не видно
+// (а видеочип греется). Планшет — меньшая сторона экрана от 600 точек (iPad mini — 744, телефоны — до 440)
+export function sharpCeil(scr = typeof screen !== 'undefined' ? screen : null) { return scr && Math.min(scr.width, scr.height) >= 600 ? 1.5 : 1.75; }
 // ступень «Обычной» чёткости по баллам: pixelRatio для пресетов (ниже нынешнего не опускаем — Mark: не мылить)
 export function sharpFor(score) {
   if (!Number.isFinite(score)) return { low: 1.25, medium: 1.5, high: 1.5, ultra: 1.5 }; // неизвестный — средняя ступень

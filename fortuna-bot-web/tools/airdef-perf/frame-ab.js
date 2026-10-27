@@ -25,6 +25,7 @@ try {
       if (G.bake) { const U = G.bake.U; U.uBk.value.y = v.gbd ?? 1600; U.uBk.value.z = (v.gbd ?? 1600) + 400; if (!U.uBs.base) U.uBs.base = U.uBs.value.clone(); U.uBs.value.copy(U.uBs.base).multiplyScalar(v.gbs ?? 1); } // gbd, gbs — проба: с какого расстояния и с какого пикселя
       G.ground.visible = !v.nog; // nog — без земли: сколько стоит она вся (потолок выигрыша)
       if (M.userData.lazyU) M.userData.lazyU.value = v.cl ?? 1; // cl — ленивые выборки земли города (city-render.js; 0 — как раньше)
+      C.scene.traverse((o) => { const u = o.material && o.material.userData && o.material.userData.facU; if (u) u.value = v.fac ?? 1; }); // fac — фасады вдали (0 — как раньше)
       if (v.an) for (const [nm, u] of Object.entries(AT)) { const t = u && u.value; if (!t || !t.isTexture) continue;
         const coarse = /^(aGA|aRA|aMA|wSA|wRA|tGA)$/.test(nm), an = v.old ? v.an : coarse ? 1 : city ? v.an : Math.min(4, v.an);
         if (t.anisotropy !== an) { t.anisotropy = an; t.needsUpdate = true; } } };

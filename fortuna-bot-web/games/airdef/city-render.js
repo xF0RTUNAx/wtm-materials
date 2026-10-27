@@ -335,17 +335,20 @@ export function snowify(m) {
   m.customProgramCacheKey = () => pk + 'snow';
   m.needsUpdate = true; return m;
 }
+// фасады вдали (2026-10-27, Mark: «давай попробуем с фасадом домов»): где окна мельче пикселя (far = 1), не считаются швы, балконы и отражение
+// неба (их вклад там — 0), днём — горящие окна, без полос этажей — сами полосы; картинка та же. ?fac=0 — как раньше (сравнение)
+const FAC = { value: typeof location !== 'undefined' && /[?&]fac=0/.test(location.search) ? 0 : 1 };
 function buildingMaterial() {
-  const m = new THREE.MeshPhongMaterial({ specular: 0x8a8a8a, shininess: 90 });
+  const m = new THREE.MeshPhongMaterial({ specular: 0x8a8a8a, shininess: 90 }); m.userData.facU = FAC;
   m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, ENV, TEX);
+    Object.assign(sh.uniforms, ENV, TEX, { uFac: FAC });
     sh.vertexShader = 'attribute float aKind, aMdl;\nuniform vec3 uCam, uHide; uniform float uMdl[24];\nvarying float vKind, vMdl; varying vec3 vObj, vSize, vNw, vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', `#include <project_vertex>
   // вблизи дом нарисован готовой моделью — коробку убираем за экран
   if (aMdl > 0.5 && distance(instanceMatrix[3].xz, uHide.xz) < uMdl[int(aMdl + 0.5)]) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
   vWp = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz; vKind = aKind; vMdl = aMdl; vObj = position;
   vNw = normalize(mat3(instanceMatrix) * normal);
   vSize = vec3(length(instanceMatrix[0].xyz), length(instanceMatrix[1].xyz), length(instanceMatrix[2].xyz));`);
-    sh.fragmentShader = 'varying float vKind, vMdl; varying vec3 vObj, vSize, vNw, vWp;\nuniform vec4 uMdlCol[24];\nvec3 bEmis = vec3(0.0); float bSpec = 0.0;\n' + GLSL_COMMON + GLSL_TEX +
+    sh.fragmentShader = 'varying float vKind, vMdl; varying vec3 vObj, vSize, vNw, vWp;\nuniform vec4 uMdlCol[24]; uniform float uFac;\nvec3 bEmis = vec3(0.0); float bSpec = 0.0;\n' + GLSL_COMMON + GLSL_TEX +
       sh.fragmentShader.replace('#include <color_fragment>', `#include <color_fragment>
   float raised = vKind >= 9.5 ? 1.0 : 0.0;
   float kf = mod(vKind, 10.0), kindF = floor(kf + 0.001), seed = fract(kf) / 0.9;
@@ -380,8 +383,9 @@ function buildingMaterial() {
     // переход к среднему цвету, когда окно меньше пикселя
     float far = smoothstep(0.25, 0.7, px / min(cs, fh) * 2.0);
     // фасадные детали: швы панелей, балконы, межэтажные пояса офисов, гофра складов
-    float detail = 1.0;
-    if (k == ${KIND.PANEL}) {
+    float detail = 1.0; bool nearF = far < 1.0 || uFac < 0.5; // окна ещё различимы (вдали — ровная заливка, детали не нужны)
+    if (!nearF) {}
+    else if (k == ${KIND.PANEL}) {
       float seam = max(1.0 - smoothstep(0.0, 0.06 + px * 0.2, fy * fh), 1.0 - smoothstep(0.0, 0.06 + px * 0.2, fu * colW));
       detail *= 1.0 - 0.12 * seam;
       float balc = step(0.62, hsh(vec2(col + seed * 9.0, face))) * step(0.04, fy) * step(fy, 0.22) * inside;
@@ -401,7 +405,7 @@ function buildingMaterial() {
     // издали окна уже меньше пикселя, а этажи ещё различимы — ряды окон и простенки полосами вместо ровной заливки
     // (иначе высотки Сити вдали — ровные белые и серые коробки)
     float bandK = far * (1.0 - smoothstep(0.12, 0.28, px / fh)) * step(0.01, avg) * inside; // этаж ≥ 3–4 пикс., иначе рябь
-    float rowW = smoothstep(0.45 - wh * 0.5, 0.55 - wh * 0.5, fy) * (1.0 - smoothstep(0.45 + wh * 0.5, 0.55 + wh * 0.5, fy));
+    float rowW = bandK > 0.0 || uFac < 0.5 ? smoothstep(0.45 - wh * 0.5, 0.55 - wh * 0.5, fy) * (1.0 - smoothstep(0.45 + wh * 0.5, 0.55 + wh * 0.5, fy)) : 0.0; // нужна только с весом bandK
     diffuseColor.rgb = mix(diffuseColor.rgb, mix(wallC, glassC, rowW * min(1.0, avg * 1.6)) * ao, bandK);
     // фасады-текстуры: офисы — ленточные окна, башни — стеклянные панели, частные дома — кирпич с окнами
     // (тон — от цвета дома; тайл по размеру этажей картинки; у каждого дома свой сдвиг)
@@ -416,7 +420,7 @@ function buildingMaterial() {
     // (когда сами окна уже меньше пикселя; гаснет, пока ленты не стали мельче 3–4 пикс., — без ряби)
     float fh3 = fh * 3.0, fyM = fract(y / fh3), fuM = fract((u - mg) / (colW * 3.0));
     float macroK = far * (1.0 - smoothstep(0.15, 0.45, px / fh3)) * step(0.01, avg) * inside;
-    float ribbon = smoothstep(0.04, 0.12, fyM) * (1.0 - smoothstep(0.8, 0.88, fyM)) * smoothstep(0.03, 0.09, fuM) * (1.0 - smoothstep(0.91, 0.97, fuM));
+    float ribbon = macroK > 0.0 || uFac < 0.5 ? smoothstep(0.04, 0.12, fyM) * (1.0 - smoothstep(0.8, 0.88, fyM)) * smoothstep(0.03, 0.09, fuM) * (1.0 - smoothstep(0.91, 0.97, fuM)) : 0.0; // с весом macroK
     diffuseColor.rgb = mix(diffuseColor.rgb, mix(wallC, glassC, ribbon * min(1.0, avg * 1.8)) * ao, macroK);
     // офисы и стеклянные башни — та же светлота, что у готовых моделей домов (иначе под солнцем — белые пятна среди города)
     if (k == ${KIND.OFFICE} || k == ${KIND.GLASS}) diffuseColor.rgb *= 0.78;
@@ -426,14 +430,16 @@ function buildingMaterial() {
     float rk = w * mix(0.35, 1.0, glassK) * (0.25 + 0.75 * fres);
     rk *= mix(1.0, 0.6, far) * mix(1.0, 0.45 + 0.75 * rowW, bandK) * mix(1.0, 0.35 + 0.8 * ribbon, macroK); // издали небо отражают только ряды и ленты окон — видны этажи, а не белая коробка
     // отражение неба — только вблизи и слабо: вдали высотки освещаются как готовые модели домов (солнце и небо), без своего свечения
-    bEmis += min(skyAt(R), vec3(2.5)) * rk * (0.22 + 0.28 * glassK) * (1.0 - uNight * 0.6) * (1.0 - far);
+    if (nearF) bEmis += min(skyAt(R), vec3(2.5)) * rk * (0.22 + 0.28 * glassK) * (1.0 - uNight * 0.6) * (1.0 - far);
     bSpec = w * mix(0.25, 1.0, glassK);
     // ночью — горящие окна (тёплые и холодные), витрины горят все
+    if (uNight > 0.0 || uFac < 0.5) { // днём окна не горят (вклад — 0)
     float litP = smoothstep(0.3, 0.9, uNight) * uNight * (0.6 + 0.25 * glassK); // утром окна не горят, на закате — немногие
     // вдали окна горят только настоящей ночью (в сумерках готовые модели домов окнами не светятся — коробки не должны выделяться)
     float lit = mix(step(1.0 - litP, r2) * win + gf * win * uNight, avg * litP * 0.55 * mix(1.0, rowW * 1.6, bandK) * mix(1.0, ribbon * 1.4, macroK) * smoothstep(0.75, 0.95, uNight), far);
     vec3 lc = mix(vec3(1.0, 0.72, 0.4), vec3(0.75, 0.85, 1.0), step(0.7, hsh(vec2(r2, seed))));
     bEmis += lc * lit * mix(0.8 + 0.5 * r1, 0.9, far) * 1.2;
+    }
   } else {
     // крыша: гравий/рубероид с пятнами, светлый парапет по краю; скатные крыши домов — полосами черепицы
     vec2 e2 = (0.5 - abs(vObj.xz)) * vSize.xz;
