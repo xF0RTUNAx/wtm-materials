@@ -51,9 +51,9 @@ console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
 for (let i = 0; i < 300 && !(globalThis.__a && globalThis.__a.state === 'menu'); i++) await new Promise((r) => setTimeout(r, 100));
 const C = globalThis.__a;
-const { SAM, LOADOUTS, PLANES, AG } = await import('../../games/airdef/arsenal.js?v=20261027a');
-const { combinedOk } = await import('../../games/airdef/sim/combined.js?v=20261027a');
-const { CITY } = await import('../../games/airdef/city.js?v=20261027a');
+const { SAM, LOADOUTS, PLANES, AG } = await import('../../games/airdef/arsenal.js?v=20261027b');
+const { combinedOk } = await import('../../games/airdef/sim/combined.js?v=20261027b');
+const { CITY } = await import('../../games/airdef/city.js?v=20261027b');
 let now = 1000; const DT = 1 / 30;
 function frame() { now += DT * 1000; const f = rafCb; rafCb = null; C.paused = false; try { f(now); } catch (e) { errors.push(`кадр: ${e.stack}`); return false; } return true; }
 const out = (o) => { const s = JSON.stringify(o); console.log(s); if (OUT) Deno.writeTextFileSync(OUT, s + '\n', { append: true }); };
@@ -181,7 +181,7 @@ if (MODE === 'fair') {
   }
 }
 if (MODE === 'fmulti') {
-  const { photoItems } = await import('../../games/airdef/photo.js?v=20261027a');
+  const { photoItems } = await import('../../games/airdef/photo.js?v=20261027b');
   for (const side of (ENV('SIDE', 'both') === 'both' ? ['east', 'west'] : [ENV('SIDE')])) {
     const att = side === 'east' ? 'west' : 'east';
     for (const [k, via] of photoItems(att)) {

@@ -4,9 +4,9 @@
 // для «Реализма». Ветки: air — самолёты вылета, wpn — оружие подвесок, pvo — комплексы, strike — удары «Мульти-волны».
 // «Удары» — без рангов (Mark 2026-10-25): ветки по нации (баллистика, крылатые…) от начальной до самой современной, первый в ветке — стартовый;
 // ступень (3-е поле MULTI.items) задаёт только цену и опыт, напрямую не показывается; рангов и паритета сторон у этой ветки нет.
-import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js?v=20261027a';
-import { SPECS, SPEED_K } from './sim/flight.js?v=20261027a';
-import { HSPECS } from './sim/heli.js?v=20261027a';
+import { AG, SAM, LOADOUTS, MULTI, MULTI_LINES, SAM_COST, CARRIERS, PLANES, AG_KIND, SAM_TYPE, THREAT, loadoutRole } from './arsenal.js?v=20261027b';
+import { SPECS, SPEED_K } from './sim/flight.js?v=20261027b';
+import { HSPECS } from './sim/heli.js?v=20261027b';
 
 export const BRANCHES = [
   { id: 'air', name: 'Авиация', hint: 'самолёты для вылета' },
