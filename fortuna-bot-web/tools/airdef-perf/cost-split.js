@@ -25,8 +25,11 @@ try {
       for (let w = 0; w < 80 && !gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE); w++) await new Promise((r) => setTimeout(r, 2)); if (!gl.getParameter(ext.GPU_DISJOINT_EXT)) a.push(gl.getQueryParameter(q, gl.QUERY_RESULT) / n / 1e6); gl.deleteQuery(q); }
       a.sort((x, y) => x - y); return a[Math.floor(a.length / 2)]; };
     // группы верхнего уровня: известные части города — по ссылкам G, остальное — по имени или типу
+    // подпись группы без имени — по содержимому: тип и материалы потомков (сколько сеток)
+    const sig = (o) => { const ms = new Map(); o.traverse((c) => { if (c.isMesh || c.isPoints || c.isLine) { const k = (c.isInstancedMesh ? 'Inst:' : '') + (c.material && c.material.type || c.type); ms.set(k, (ms.get(k) || 0) + 1); } });
+      return `${o.type}[${[...ms].sort((a, b) => b[1] - a[1]).slice(0, 2).map(([k, n]) => `${k}×${n}`).join(',')}]`; };
     const label = (o) => o === G.ground ? 'земля' : o === G.sky ? 'небо' : o === G.clouds ? 'облака' : o === G.roads ? 'дороги' : o === G.snow?.pts ? 'снегопад'
-      : (G.tiles || []).includes(o) ? 'кварталы и лес (плитки)' : o.isLight ? null : o.name ? o.name : `${o.type}${o.material ? ':' + (o.material.type || '') : ''}`;
+      : (G.tiles || []).includes(o) ? 'кварталы и лес (плитки)' : o.isLight ? null : o.name ? o.name : sig(o);
     const groups = new Map(); for (const o of C.scene.children) { const l = label(o); if (!l || !o.visible) continue; if (!groups.has(l)) groups.set(l, []); groups.get(l).push(o); }
     const cam0 = C.ctrl.camera, out = [];
     for (const V of VIEWS) {
@@ -35,12 +38,16 @@ try {
       const vis = new Map(); for (const [, os] of groups) for (const o of os) vis.set(o, o.visible); // как после кадра (плитки вдали скрыты)
       const sh = R.shadowMap; const shA = sh.autoUpdate;
       sh.autoUpdate = false; for (let k = 0; k < 6; k++) draw();
-      const base = await gpu(draw); sh.autoUpdate = true; const withSh = sh.enabled ? await gpu(draw) : base; sh.autoUpdate = false;
+      // разница «с / без» — по очереди, 3 раунда, медиана (частота видеокарты гуляет)
+      const med = (a) => a.slice().sort((x, y) => x - y)[Math.floor(a.length / 2)];
+      const ab = async (on, off) => { const d = []; for (let r = 0; r < 3; r++) { on(); const a = await gpu(draw, 3); off(); const b = await gpu(draw, 3); on(); d.push(a - b); } return med(d); };
+      const base = await gpu(draw);
+      const shadow = sh.enabled ? await ab(() => { sh.autoUpdate = true; }, () => { sh.autoUpdate = false; }) : 0; sh.autoUpdate = false;
       const sceneOnly = await gpu(() => { R.setRenderTarget(pipe ? pipe.target : null); R.render(C.scene, cam); });
       const parts = [];
-      for (const [l, os] of groups) { if (!os.some((o) => vis.get(o))) continue; for (const o of os) o.visible = false; const v = await gpu(draw); for (const o of os) o.visible = vis.get(o); parts.push([l, base - v]); }
+      for (const [l, os] of groups) { if (!os.some((o) => vis.get(o))) continue; parts.push([l, await ab(() => { for (const o of os) o.visible = vis.get(o); }, () => { for (const o of os) o.visible = false; })]); for (const o of os) o.visible = vis.get(o); }
       sh.autoUpdate = shA; parts.sort((a, b) => b[1] - a[1]);
-      out.push({ base, shadow: withSh - base, post: base - sceneOnly, parts: parts.filter((p) => p[1] > 0.02).slice(0, 9) });
+      out.push({ base, shadow, post: base - sceneOnly, parts: parts.filter((p) => p[1] > 0.02).slice(0, 9) });
     }
     C.ctrl.camera = cam0;
     return { out, px: [R.domElement.width, R.domElement.height], pr: R.getPixelRatio(), shadows: R.shadowMap.enabled, shEvery: C.P ? C.P.shEvery : null };

@@ -22,7 +22,9 @@ try {
     const M = G.ground.material, FU = M.userData.farU, AT = M.userData.AT || M.userData.WT || {}, city = !M.userData.WT && !/aGA/.test(Object.keys(AT).join());
     const apply = (v) => { G.ground.renderOrder = v.ro ?? 1; if (v.sky !== undefined) G.sky.renderOrder = v.sky; if (FU) FU.value = v.far ?? FU.value; // sky — порядок неба (2026-10-26)
       if (v.gb !== undefined && G.bake) G.bake.on = !!v.gb; // запечённая дальняя земля (ground-bake.js)
+      if (G.bake) { const U = G.bake.U; U.uBk.value.y = v.gbd ?? 1600; U.uBk.value.z = (v.gbd ?? 1600) + 400; if (!U.uBs.base) U.uBs.base = U.uBs.value.clone(); U.uBs.value.copy(U.uBs.base).multiplyScalar(v.gbs ?? 1); } // gbd, gbs — проба: с какого расстояния и с какого пикселя
       G.ground.visible = !v.nog; // nog — без земли: сколько стоит она вся (потолок выигрыша)
+      if (M.userData.lazyU) M.userData.lazyU.value = v.cl ?? 1; // cl — ленивые выборки земли города (city-render.js; 0 — как раньше)
       if (v.an) for (const [nm, u] of Object.entries(AT)) { const t = u && u.value; if (!t || !t.isTexture) continue;
         const coarse = /^(aGA|aRA|aMA|wSA|wRA|tGA)$/.test(nm), an = v.old ? v.an : coarse ? 1 : city ? v.an : Math.min(4, v.an);
         if (t.anisotropy !== an) { t.anisotropy = an; t.needsUpdate = true; } } };
@@ -33,6 +35,8 @@ try {
         else { const [x, z, h, yaw, pitch] = V; put = () => { cam.position.set(x, C.city.groundH(x, z) + h, z); cam.rotation.set(pitch * Math.PI / 180, yaw * Math.PI / 180, 0, 'YXZ'); cam.updateMatrixWorld(); };
           C.ctrl.camera = put; for (let i = 0; i < 3; i++) { t += 34; window.__frame(t); } put(); } // точка вида; город подстраивается (дома вблизи, деревья)
         if (G.bake) G.bake.flush(cam); // окно запечённой земли — у этой точки (вне замера)
+        const V0 = VAR[vk]; for (const k of ['clouds', 'tiles', 'sky', 'roads']) { const hid = (V0.hide || []).includes(k); for (const o of [].concat(G[k] || [])) if (o && (hid || k !== 'tiles')) o.visible = !hid; } // hide — скрыть группу (после кадров: плитки город включает сам)
+        R.shadowMap.autoUpdate = !!V0.shu; if (V0.shu) R.shadowMap.needsUpdate = true; // shu — карта теней каждый раз (иначе в замере её нет: на телефоне — через кадр)
         R.setRenderTarget(target); for (let k = 0; k < 8; k++) R.render(C.scene, cam); gl.finish();
         const a = [];
         for (let s = 0; s < 11; s++) { const q = gl.createQuery(); gl.beginQuery(ext.TIME_ELAPSED_EXT, q); for (let k = 0; k < 6; k++) R.render(C.scene, cam); gl.endQuery(ext.TIME_ELAPSED_EXT); gl.finish();
