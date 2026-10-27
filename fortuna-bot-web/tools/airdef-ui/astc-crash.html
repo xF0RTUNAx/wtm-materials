@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>ASTC: вылет Safari</title>
 <!-- Отладка вылета Safari (2026-10-26): много загрузок ASTC 4×4 подряд. ?m=img — compressedTexImage2D (как three r128), sub — texStorage2D +
-     compressedTexSubImage2D по уровням, tile — то же кусками ≤ 64 КБ. ?n= — загрузок за кадр. Ход — на приёмник :8939 (scratchpad logsrv.py) -->
+     compressedTexSubImage2D по уровням, tile — то же кусками ≤ 64 КБ. ?n= — загрузок за кадр. Ход — на приёмник :8939 (tools/airdef-perf/ios-sim/logsrv.py) -->
 <style> body { margin: 0; background: #111; color: #eee; font: 14px monospace; } canvas { width: 64px; height: 64px; } </style>
 </head>
 <body>

@@ -1,0 +1,161 @@
+<title>Обновления 26–27 октября</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Сводка для тестеров: одна колонка ~65 знаков; разделы — по выкладкам на сайт (по порядку), затем следующая выкладка, ошибки до выкладки, что проверить */
+:root {
+  --bg: #f3f5f2; --paper: #fbfcfa; --fg: #1d2420; --muted: #5d6a62; --line: #d6ddd7;
+  --accent: #b5541b; --ok: #2f6b45; --tag: #e8eee9; --soon: #2a5d86;
+  --display: "Russo One", "Arial Narrow", system-ui, sans-serif;
+  --body: "PT Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141916; --paper: #1a201c; --fg: #e3e9e4; --muted: #9aa8a0; --line: #2c3530; --accent: #e8874a; --ok: #7fc59a; --tag: #232b26; --soon: #8cc0ea; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #141916; --paper: #1a201c; --fg: #e3e9e4; --muted: #9aa8a0; --line: #2c3530; --accent: #e8874a; --ok: #7fc59a; --tag: #232b26; --soon: #8cc0ea; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); }
+.wrap { max-width: 44rem; margin: 0 auto; padding-block: 28px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: grid; gap: 6px; padding-bottom: 18px; border-bottom: 2px solid var(--fg); }
+.kicker { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 { font: 400 clamp(26px, 6vw, 36px)/1.1 var(--display); margin: 0; text-wrap: balance; }
+.lead { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.vers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.vers span { font: 600 12px/1 var(--body); font-variant-numeric: tabular-nums; background: var(--tag); border: 1px solid var(--line); border-radius: 3px; padding: 5px 7px; }
+.vers span.next { color: var(--soon); border-color: var(--soon); background: transparent; }
+section { padding-top: 26px; }
+h2 { font: 400 20px/1.25 var(--display); margin: 0 0 4px; text-wrap: balance; }
+.when { font-size: 13px; color: var(--muted); margin: 0 0 12px; font-variant-numeric: tabular-nums; }
+.when b { color: var(--accent); font-weight: 700; }
+.when b.next { color: var(--soon); }
+h3 { font: 700 13px/1.3 var(--body); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+ul { margin: 0; padding-left: 1.1em; display: grid; gap: 8px; }
+li { max-width: 65ch; }
+li::marker { color: var(--accent); }
+.fix li::marker { color: var(--ok); }
+b { font-weight: 700; }
+.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.note { margin-top: 10px; font-size: 14px; color: var(--muted); max-width: 62ch; }
+.box { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; }
+.box ul { gap: 10px; }
+.copybar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 28px; }
+button { font: 600 14px var(--body); color: var(--bg); background: var(--fg); border: 0; border-radius: 4px; padding: 9px 14px; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#copied { font-size: 13px; color: var(--muted); }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=PT+Sans:wght@400;700&family=Russo+One&display=swap">
+
+<div class="wrap">
+  <header>
+    <div class="kicker">Воздушное превосходство · для тестеров</div>
+    <h1>Обновления 26–27 октября</h1>
+    <p class="lead">Всё, что вышло после прошлой сводки (20261025b): три выкладки на сайт по порядку и большая следующая — она уже проверена, но на сайт ещё не выложена. Сейчас на сайте — 20261026c. В Telegram — закрыть и открыть мини-приложение заново.</p>
+    <div class="vers"><span>20261026a</span><span>20261026b</span><span>20261026c</span><span class="next">следующая</span></div>
+  </header>
+
+  <article id="text">
+  <section>
+    <h2>Мульти-волна без эпох, перенос аккаунта, фильтр целей ПВО</h2>
+    <p class="when">Выкладка <b>20261026a</b> · 26 октября, ночь</p>
+    <h3>Мульти-волна</h3>
+    <ul>
+      <li><b>Без эпох и рангов.</b> Оружие удара собрано в ветки по видам: баллистика, крылатые ракеты, планирующие бомбы, дроны и ложные цели — от простого к самому сильному. Первое в каждой ветке открыто сразу.</li>
+      <li>Всё открытое можно взять в одну волну. Бюджет — <span class="num">50</span> очков угрозы у обеих сторон. За ПВО доступны все свои открытые комплексы.</li>
+      <li>Сила ИИ подбирается под ваше оружие и комплексы.</li>
+      <li>Дерево «Ударов» в «Исследованиях» тоже разложено по веткам.</li>
+    </ul>
+    <h3>Аккаунт и ПВО</h3>
+    <ul>
+      <li><b>Перенос прогресса с сайта — в один шаг</b>, по паролю от сайта. Свой логин сайта можно взять ником.</li>
+      <li><b>Фильтр целей ПВО:</b> каждому комплексу можно оставить только нужные виды целей.</li>
+      <li>Внизу меню появилась кнопка «Магазин» — пока закрыта.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Какие бои идут в сезон</h2>
+    <p class="when">Выкладка <b>20261026b</b> · 26 октября, ночь</p>
+    <ul>
+      <li>В итог сезона идут <b>2 лучших боя в обороне</b> (за ПВО), <b>2 лучших в вылете</b> (за лётчика), <b>2 лучших в Мульти-волне</b> и <b>1 лучший из остальных</b> — всего до 7. Раньше считались 7 лучших любых.</li>
+      <li>В «Моих боях» видно, какие бои засчитаны по новому правилу.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Магазин «Витрина», указатель разделов, межсезонье</h2>
+    <p class="when">Выкладка <b>20261026c</b> · 26 октября, день</p>
+    <ul>
+      <li><b>Магазин «Витрина»</b> открыт: камуфляжи первого сезона — «Инферно» на F-15E и «Нефритовый дракон» на МиГ-31БМ. Пока это витрина и баланс кристаллов, покупка — в следующих обновлениях.</li>
+      <li><b>Разделы меню свёрнуты в указатель</b>: нажатие разворачивает список, повторное — складывает.</li>
+      <li><b>Сезон 1 продлён до 1 января 2027.</b> Между сезонами — неделя межсезонья, второй сезон — с 8 января по 7 февраля.</li>
+      <li>Окно аккаунта на телефоне поднимается над клавиатурой и не прячется под ней.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>В следующей выкладке</h2>
+    <p class="when"><b class="next">Проверено, на сайт ещё не выложено</b> · 26–27 октября</p>
+    <h3>Онлайн</h3>
+    <ul>
+      <li><b>Меньше рывков ракет, самолётов и дронов.</b> Сервер вёл бой на 70–80 % скорости, и каждые несколько кадров ракеты отскакивали назад. Теперь время боя идёт ровно. В Мульти-волне при ускорении ×3 ракеты и дроны больше не прыгают вперёд.</li>
+      <li><b>Значок рядом с кнопкой «Игроки»</b>: сколько осталось до конца волны или раунда, пинг и потери. Жёлтый — связь похуже, красный — плохая.</li>
+      <li><b>Волна кончилась — самолёт уходит на базу</b>, камера облетает район, пока идут итоги и выбор связки. Раньше полёт продолжался во время выбора.</li>
+      <li><b>Вкладка вылетела посреди боя</b> — бой ждёт 2 минуты (самолёт пока ведёт ИИ), а игра при следующем открытии сама возвращает на своё место. Раньше бой с ботами закрывался сразу.</li>
+      <li>Приглашение в комнату — короткой ссылкой fortunawtm.com/airsuperiority.</li>
+    </ul>
+    <h3>Экран и полный экран</h3>
+    <ul>
+      <li><b>На сайте в горизонтали iPhone</b> игра идёт до краёв экрана — без светлых полос по бокам.</li>
+      <li><b>Полный экран слетел посреди боя</b>: на Android, iPad и в Telegram появляется кнопка ⛶ в ряду верхних кнопок — нажатие возвращает полный экран. На iPhone в Safari полного экрана у сайтов нет, поэтому внизу появляется плашка «Потяните вверх для полноэкранного режима»: проведите по ней пальцем вверх, и Safari спрячет свои панели. Отключается в настройках.</li>
+      <li><b>Счётчик производительности</b> — тонкая строка у самого верхнего края. Внизу он закрывал кнопки.</li>
+    </ul>
+    <h3>Вылеты и нагрев</h3>
+    <ul>
+      <li><b>Отчёт о вылете.</b> Если игра вылетела в бою, при следующем открытии появится окно «Игра закрылась с ошибкой». Нажмите «Отправить» — так мы найдём причину.</li>
+      <li><b>Пауза, урок и итоги боя почти не нагружают телефон</b>: неподвижная картинка больше не перерисовывается 30 раз в секунду.</li>
+      <li><b>Без подтормаживаний в начале боя</b>: графика собирается сразу, а не при первом взрыве, первом пуске или подлёте к цели.</li>
+      <li>«Скачать всё заранее» показывает настоящий объём для вашего устройства — около <span class="num">550 МБ</span>.</li>
+    </ul>
+    <h3>Игра</h3>
+    <ul>
+      <li><b>Мульти-волна:</b> крылатые ракеты, дроны и разведчик на подъёме теряют скорость, в пикировании разгоняются. Например, ударный дрон: <span class="num">180 км/ч</span> в горизонте, около <span class="num">145</span> на подъёме и около <span class="num">240</span> в крутом пике.</li>
+      <li><b>Итоги боя:</b> цифры набраны другим шрифтом, подписи в карточках — по центру.</li>
+      <li><b>Режим съёмки:</b> комплексы ПВО стреляют почти всегда — налёт идёт через их зону поражения. Самолёт не врезается в землю и дома и не улетает за край карты.</li>
+      <li><b>Кнопка «Пуск» в режиме съёмки</b> (на ПК — клавиша F): комплекс ПВО или самолёт пускает сразу, без ожидания, а камера переходит на ракету или бомбу. В «Мульти-волне» — следующий пуск с пусковой или носителя.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>В работе</h2>
+    <ul>
+      <li>Покупка камуфляжей в «Витрине» и их показ в бою и в онлайне.</li>
+      <li>Чёткость картинки на iPhone и iPad — подбираем разрешение без мыла и без лишней нагрузки.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Что проверить после следующей выкладки</h2>
+    <div class="box">
+      <ul>
+        <li><b>Онлайн:</b> плавно ли летят ракеты и самолёты, особенно в Мульти-волне при ×3. Что показывает значок пинга, когда связь плохая.</li>
+        <li><b>Конец волны в «Вылете и обороне»:</b> самолёт уходит на базу, камера облетает район.</li>
+        <li><b>Возврат в бой:</b> в онлайн-бою закройте и снова откройте вкладку в течение 2 минут — вернуло ли на своё место и в свой самолёт.</li>
+        <li><b>Полный экран:</b> iPhone в Safari — появилась ли плашка и прячет ли свайп панели; Android — кнопка ⛶ после выхода из полного экрана.</li>
+        <li><b>Если игра вылетела</b> — нажмите «Отправить» в окне отчёта. На iPhone пришлите ещё файлы из «Настройки» → «Конфиденциальность и безопасность» → «Аналитика и улучшения» → «Данные аналитики», начинающиеся с WebKit или Jetsam.</li>
+        <li><b>Нагрев:</b> на паузе и на экране итогов телефон должен остывать. Плавность в начале боя — нет ли рывка при первом взрыве.</li>
+        <li><b>Режим съёмки:</b> стреляет ли выбранный комплекс, не улетает ли самолёт за карту, срабатывает ли «Пуск» сразу.</li>
+      </ul>
+    </div>
+  </section>
+  </article>
+
+  <div class="copybar"><button id="copy" type="button">Скопировать текст</button><span id="copied" aria-live="polite"></span></div>
+</div>
+<script>
+document.getElementById('copy').addEventListener('click', () => {
+  const el = document.getElementById('text'), out = document.getElementById('copied');
+  const t = 'Обновления 26–27 октября — Воздушное превосходство\n\n' + [...el.querySelectorAll('section')].map((s) => {
+    const w = s.querySelector('.when'); const head = s.querySelector('h2').textContent.trim() + (w ? ' (' + w.textContent.trim() + ')' : '');
+    return head + '\n' + [...s.querySelectorAll(':scope > ul > li, :scope > .box > ul > li')].map((l) => '• ' + l.textContent.replace(/\s+/g, ' ').trim()).join('\n');
+  }).join('\n\n');
+  const sel = () => { const r = document.createRange(); r.selectNodeContents(el); const w = getSelection(); w.removeAllRanges(); w.addRange(r); out.textContent = 'Выделено — скопируйте вручную'; };
+  try { navigator.clipboard.writeText(t).then(() => { out.textContent = 'Скопировано'; }, sel); } catch (_) { sel(); }
+});
+</script>
