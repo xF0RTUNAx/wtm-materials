@@ -10,7 +10,7 @@ try {
   const page = await browser.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(String(e).slice(0, 200)));
   await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 3, isMobile: true, hasTouch: true, isLandscape: true });
   await page.evaluateOnNewDocument((p) => { localStorage.setItem('fortuna_airdef_setup', JSON.stringify({ game: 'air', diff: 'arcade', era: 4, side: 'west' })); localStorage.setItem('fortuna_airdef_gfx', p); }, preset);
-  await page.goto(`http://127.0.0.1:8937/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=${map}&weather=day&go=air${Deno.env.get('Q') || ''}`, { waitUntil: 'load', timeout: 120000 });
+  await page.goto(`http://127.0.0.1:${Deno.env.get('PORT') || 8937}/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=${map}&weather=day&go=air${Deno.env.get('Q') || ''}`, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction(() => window.__a && window.__a.state === 'play', { timeout: 180000, polling: 500 });
   for (let i = 0; i < 150; i++) { const l = await page.evaluate(() => { const e = document.getElementById('assetLoad'); return e && e.classList.contains('on'); }); if (!l && i > 8) break; await new Promise((r) => setTimeout(r, 1000)); }
   await new Promise((r) => setTimeout(r, 3000));
@@ -20,7 +20,8 @@ try {
     const cam = C.camera, target = C.pipe ? C.pipe.target : null, VAR = JSON.parse(VARS), out = VAR.map(() => VIEWS.map(() => [])), cam0 = C.ctrl.camera;
     C.paused = false; for (let i = 0; i < 30; i++) { t += 34; window.__frame(t); } C.paused = true; // самолёт в полёте
     const M = G.ground.material, FU = M.userData.farU, AT = M.userData.AT || M.userData.WT || {}, city = !M.userData.WT && !/aGA/.test(Object.keys(AT).join());
-    const apply = (v) => { G.ground.renderOrder = v.ro || 0; if (v.sky !== undefined) G.sky.renderOrder = v.sky; if (FU) FU.value = v.far ?? FU.value; // sky — порядок неба (2026-10-26)
+    const apply = (v) => { G.ground.renderOrder = v.ro ?? 1; if (v.sky !== undefined) G.sky.renderOrder = v.sky; if (FU) FU.value = v.far ?? FU.value; // sky — порядок неба (2026-10-26)
+      if (v.gb !== undefined && G.bake) G.bake.on = !!v.gb; // запечённая дальняя земля (ground-bake.js, страница с Q=&gb=1)
       if (v.an) for (const [nm, u] of Object.entries(AT)) { const t = u && u.value; if (!t || !t.isTexture) continue;
         const coarse = /^(aGA|aRA|aMA|wSA|wRA|tGA)$/.test(nm), an = v.old ? v.an : coarse ? 1 : city ? v.an : Math.min(4, v.an);
         if (t.anisotropy !== an) { t.anisotropy = an; t.needsUpdate = true; } } };
@@ -30,6 +31,7 @@ try {
         if (!V) { C.ctrl.camera = cam0; for (let i = 0; i < 3; i++) { t += 34; window.__frame(t); } } // за самолётом — камера игры
         else { const [x, z, h, yaw, pitch] = V; put = () => { cam.position.set(x, C.city.groundH(x, z) + h, z); cam.rotation.set(pitch * Math.PI / 180, yaw * Math.PI / 180, 0, 'YXZ'); cam.updateMatrixWorld(); };
           C.ctrl.camera = put; for (let i = 0; i < 3; i++) { t += 34; window.__frame(t); } put(); } // точка вида; город подстраивается (дома вблизи, деревья)
+        if (G.bake) G.bake.flush(cam); // окно запечённой земли — у этой точки (вне замера)
         R.setRenderTarget(target); for (let k = 0; k < 8; k++) R.render(C.scene, cam); gl.finish();
         const a = [];
         for (let s = 0; s < 11; s++) { const q = gl.createQuery(); gl.beginQuery(ext.TIME_ELAPSED_EXT, q); for (let k = 0; k < 6; k++) R.render(C.scene, cam); gl.endQuery(ext.TIME_ELAPSED_EXT); gl.finish();
@@ -38,8 +40,8 @@ try {
         a.sort((u, w) => u - w); out[vk][vi].push(a[Math.floor(a.length / 2)]);
       } }
     // снимки: каждый вариант, вид «низко» и «вбок» — в экранный буфер без постобработки
-    const shots = {}; for (const [vk, v] of VAR.entries()) { apply(v); for (const vi of [1, 3]) { const [x, z, h, yaw, pitch] = VIEWS[vi], put = () => { cam.position.set(x, C.city.groundH(x, z) + h, z); cam.rotation.set(pitch * Math.PI / 180, yaw * Math.PI / 180, 0, 'YXZ'); cam.updateMatrixWorld(); };
-      C.ctrl.camera = put; for (let i = 0; i < 2; i++) { t += 34; window.__frame(t); } put(); R.setRenderTarget(null); R.render(C.scene, cam); shots[vk + '_' + vi] = R.domElement.toDataURL('image/png'); } }
+    const shots = {}; for (const [vk, v] of VAR.entries()) { apply(v); for (const vi of [1, 2, 3]) { const [x, z, h, yaw, pitch] = VIEWS[vi], put = () => { cam.position.set(x, C.city.groundH(x, z) + h, z); cam.rotation.set(pitch * Math.PI / 180, yaw * Math.PI / 180, 0, 'YXZ'); cam.updateMatrixWorld(); };
+      C.ctrl.camera = put; for (let i = 0; i < 2; i++) { t += 34; window.__frame(t); } put(); if (G.bake) G.bake.flush(cam); R.setRenderTarget(null); R.render(C.scene, cam); shots[vk + '_' + vi] = R.domElement.toDataURL('image/png'); } }
     window.__shots = shots;
     apply(VAR[0]); R.setRenderTarget(null);
     const m = (L) => L.reduce((x, y) => x + y, 0) / L.length;

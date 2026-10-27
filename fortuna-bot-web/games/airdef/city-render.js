@@ -24,6 +24,7 @@ import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261
 import { bakeGroup } from './merge.js?v=20261027a';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261027a';
 import { FAR_U, groundShadowChunk } from './ground-far.js?v=20261027a';
+import { BAKE_ON, createGroundBake } from './ground-bake.js?v=20261027a';
 
 const lin = (hex) => new THREE.Color(hex).convertSRGBToLinear();
 const TILE = 3000; // плитка инстансов: 3 км — на 20 % меньше вызовов отрисовки, чем 2 км, при почти тех же треугольниках
@@ -1317,8 +1318,10 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const zt = HILLS ? null : zoneTexture(P.zoneTex || 1024); if (zt) zt.flipY = false;
   if (renderer && zt) zt.anisotropy = Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy());
   const aniso = renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1;
-  const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
+  const bake = AUT && BAKE_ON && renderer ? createGroundBake(CITY.HALF) : null; // запечённая дальняя земля — пробная версия (ground-bake.js, ?gb=1)
+  const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W, bake) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
+  if (bake) { bake.init(renderer, gg, ground.material, aniso); G.bake = bake; }
   // земля — последней из непрозрачного (2026-10-25): её шейдер — самый дорогой, а под лесом, домами и техникой он теперь не считается —
   // их глубина уже в буфере (стенд: кадр за самолётом над лесом −13 % на «Высоком», −6 % на «Среднем»; картинка та же — прозрачное всё равно после)
   if (!/[?&]gro=0/.test(typeof location !== 'undefined' ? location.search : '')) ground.renderOrder = 1;
@@ -1579,6 +1582,7 @@ const CAM1 = [null], CAM2 = [null, null];
 // extra — вторая камера с той же сценой (контейнер): модели вблизи нужны и в её поле зрения
 export function updateCityScene(G, camera, P, focus, t, extra) {
   G.sky.position.copy(camera.position); ENV.uCam.value.copy(camera.position); ENV.uHide.value.copy(camera.position); ENV.uTime.value = t || 0;
+  if (G.bake) G.bake.update(camera);
   if (G.snow) G.snow.update(camera, t || 0, G.renderer ? G.renderer.domElement.height : 720);
   if (G.near) { camera.updateMatrixWorld(); const cs = extra ? CAM2 : CAM1; cs[0] = camera; if (extra) cs[1] = extra; G.near(camera, cs); }
   const cx = camera.position.x, cz = camera.position.z, D = P.draw + TILE;

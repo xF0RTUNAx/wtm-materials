@@ -56,77 +56,94 @@ export function autumnTextures(aniso, stats) {
   }
   return U;
 }
-// материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере
-export function autumnGroundMaterial(city, zt, nt, ENV, AT, W) {
-  const H = 16000, BA = AUTUMN.BALD, fogC = new THREE.Color(W.fog).convertSRGBToLinear();
-  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.userData.farU = FAR_U;
-  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) — на WebGL 1; на WebGL 2 и так есть
-  m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, AT, { uFar: FAR_U, uCam: ENV.uCam, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null },
-      uBald: { value: new THREE.Vector3(BA.x, BA.z, BA.r) }, uLow: { value: new THREE.Vector4(fogC.r, fogC.g, fogC.b, W.lowFog ?? 0.5) } });
-    sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam, uBald; uniform vec4 uLow; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
+// цвет земли в точке P (мир) на расстоянии dist от камеры: rgb — цвет, a — туман низин без множителя расстояния. Один код — у материала земли
+// и у запекания (ground-bake.js: dist = 1e6 — вдали цвет от камеры не зависит: near = 0, far = 1). wN — нормаль рельефа (задаёт вызывающий)
+function aGroundGLSL(H) {
+  return `vec4 aGround(vec3 P, float dist) {
+  vec2 mp = (P.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)};
+  vec4 Z = texture2D(tZ, mp), Z2 = texture2D(tZ2, mp);
+  float slope = 1.0 - wN.y, hgt = P.y, near = 1.0 - smoothstep(200.0, 1200.0, dist);
+  // сухой луг: охра и оливковые пятна; рисунок — снимок с высоты (два масштаба) и сухая трава вблизи
+  float gA = lum(texture2D(aGA, P.xz / 260.0).rgb), gA2 = lum(texture2D(aGA, P.xz / 1300.0 + 0.37).rgb);
+  vec3 dG = near > 0.0 ? texF(aG, P.xz, 5.0, vec2(0.0)).rgb : vec3(0.3), dG2 = texF(aG, P.xz, 31.0, vec2(0.21)).rgb; dG = vec3(lum(dG)) * 0.6 + dG * 0.4;
+  vec3 grass = mix(vec3(0.15, 0.135, 0.06), vec3(0.095, 0.105, 0.045), smoothstep(0.3, 0.7, vn(P.xz / 420.0) * 0.7 + gA2 * 0.6 - 0.15));
+  // пятна разной травы (ветошь, побуревшая, зеленоватая отава, рыжий клевер) — на 15–80 м, чтобы и с высоты луг был живой
+  float pv = vn(P.xz / 80.0) * 0.6 + vn(P.xz / 17.0) * 0.4;
+  grass *= pv < 0.35 ? vec3(0.85, 0.95, 0.8) : pv < 0.55 ? vec3(1.0) : pv < 0.72 ? vec3(1.18, 1.05, 0.85) : vec3(1.2, 0.85, 0.65);
+  grass *= (0.55 + 0.9 * gA) * mix(0.75 + 0.9 * lum(dG2), 1.0, near * 0.5) * mix(1.0, 0.3 + 2.4 * lum(dG), 0.6 * near) * mix(vec3(1.0), dG / max(lum(dG), 0.05), 0.3 * near);
+  // скалы: крутые склоны и голая Лысая гора (там же — бледная выгоревшая трава)
+  float rA = lum(texture2D(aRA, P.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(aRk, P.xz, 24.0, vec2(0.0)).rgb) : 0.5;
+  vec3 rock = vec3(0.12, 0.11, 0.095) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
+  float bald = 1.0 - smoothstep(uBald.z * 0.45, uBald.z * 0.85, distance(P.xz, uBald.xy) + 120.0 * (vn(P.xz / 90.0) - 0.5));
+  grass = mix(grass, grass * vec3(1.35, 1.25, 1.0) + 0.02, bald * 0.7);
+  float rk = smoothstep(0.32, 0.5, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(P.xz / 60.0) - 0.5));
+  rk = max(rk, bald * smoothstep(0.12, 0.28, slope + 0.2 * (rA - 0.5)) * 0.85);
+  vec3 col = mix(grass, rock, rk);
+  // болото (суша в котловине): мох, осока, торф — тёмные бурые и оливковые пятна; вблизи — грязь с листвой
+  float mA = lum(texture2D(aMA, P.xz / 200.0).rgb);
+  vec3 bog = mix(vec3(0.045, 0.05, 0.022), vec3(0.085, 0.08, 0.03), vn(P.xz / 70.0) * 0.7 + vn(P.xz / 13.0) * 0.3) * (0.6 + 0.8 * mA); // мох и осока
+  bog = mix(bog, vec3(0.13, 0.11, 0.05), smoothstep(0.62, 0.8, vn(P.xz / 25.0)) * 0.6); // сухая осока куртинами
+  bog = mix(bog, bog * (0.5 + 1.2 * lum(dG)) * vec3(0.95, 1.05, 0.8), 0.6 * near);
+  col = mix(col, bog, smoothstep(0.3, 0.8, Z2.a + 0.25 * (vn(P.xz / 150.0) - 0.5)) * (1.0 - smoothstep(4.0, 9.0, hgt - ${AUTUMN.WY.toFixed(1)})));
+  // дно оврага: сырая грязь и палая листва (где врезка глубже, а земля ниже краёв)
+  float rv = smoothstep(0.6, 0.85, Z2.r + 0.15 * (vn(P.xz / 40.0) - 0.5)) * (1.0 - smoothstep(0.12, 0.28, slope)); // только дно (врезка глубже ~35 м и полого)
+  vec3 mud = texF(aM, P.xz, 5.0, vec2(0.0)).rgb * 0.5 * mix(1.0, 0.7 + 0.6 * mA, 1.0 - near);
+  col = mix(col, mud, rv * 0.75);
+  // лес: издали — рыжая, жёлтая, бурая крона и серый сухостой пятнами (импосторы редкие), вблизи под деревьями — листва
+  float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(P.xz / 160.0) - 0.5) + 0.3 * (vn(P.xz / 45.0) - 0.5)), far = smoothstep(300.0, 1600.0, dist);
+  float ch = vn(P.xz / 38.0) * 0.65 + vn(P.xz / 9.0) * 0.35;
+  vec3 canopy = ch < 0.3 ? vec3(0.28, 0.08, 0.015) : ch < 0.5 ? vec3(0.34, 0.17, 0.02) : ch < 0.7 ? vec3(0.3, 0.24, 0.035) : ch < 0.86 ? vec3(0.19, 0.1, 0.035) : vec3(0.12, 0.1, 0.08);
+  canopy = mix(canopy, vec3(0.03, 0.05, 0.03), step(0.9, vn(P.xz / 260.0 + 3.1))); // кое-где ельник
+  vec3 litter = far < 1.0 ? texF(aL, P.xz, 4.0, vec2(0.0)).rgb * 0.6 : vec3(0.0);
+  col = mix(col, canopy * (0.75 + 0.5 * vn(P.xz / 14.0)), fr * far * 0.85);
+  col = mix(col, mix(col, litter, 0.7), fr * (1.0 - far));
+  // поля: пашня (бурые борозды) и тыквенные (вблизи — оранжевые точки по рядам, вдали — рыжий отлив)
+  vec3 fld = texF(aF, P.xz, 9.0, vec2(0.0)).rgb * 0.55 * mix(0.9, 1.1, vn(P.xz / 30.0));
+  float pf = smoothstep(0.3, 0.7, Z2.b), pl = smoothstep(0.3, 0.7, Z2.g);
+  col = mix(col, fld, max(pl, pf) * 0.9);
+  vec2 pc = floor(P.xz / 2.2); float pk = step(0.62, hs(pc)) * (1.0 - smoothstep(0.25, 0.45, length(fract(P.xz / 2.2) - 0.5)));
+  col = mix(col, vec3(0.55, 0.16, 0.01), pf * mix(0.18, pk, near));
+  // площадки и деревня: утоптанная земля и гравий
+  vec2 jo = (vec2(vn(P.xz / 70.0), vn(P.xz / 70.0 + 5.3)) - 0.5) * 100.0;
+  float zb = smoothstep(0.3, 0.8, texture2D(tZ, (P.xz + jo + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).b + 0.3 * (vn(P.xz / 45.0) - 0.5));
+  float za = smoothstep(0.1, 0.9, Z.a + 0.4 * (vn(P.xz / 80.0) - 0.5));
+  vec3 dirt = texF(aM, P.xz, 6.0, vec2(0.0)).rgb * 0.5 * vec3(1.05, 1.0, 0.92);
+  col = mix(col, dirt, zb * 0.85); col = mix(col, mix(col, dirt, 0.45), za * 0.6);
+  // туман в низинах: над болотом и в оврагах — плотная пелена (вдали сильнее — множитель расстояния у вызывающего, вблизи — дымка)
+  // (подмешивается после освещения — как туман, см. fog_fragment): клочьями
+  return vec4(col, (1.0 - smoothstep(6.0, 70.0 + 50.0 * vn(P.xz / 900.0), hgt - ${AUTUMN.WY.toFixed(1)} - 40.0 * Z2.r)) * (0.85 + 0.3 * vn(P.xz / 600.0)));
+}
+`;
+}
+const aHeadGLSL = () => `uniform vec3 uBald; uniform sampler2D tZ, tZ2, tNm, aG, aGN, aGA, aL, aM, aMA, aF, aRk, aRA;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум — текстурой (noise-tex.js): 24 вызова на пиксель были главной ценой земли' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN; float aLow;
       ${FAR_GLSL}
+`;
+// материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере. bake — запечённый цвет дальней земли (ground-bake.js, ?gb=1)
+export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
+  const H = 16000, BA = AUTUMN.BALD, fogC = new THREE.Color(W.fog).convertSRGBToLinear();
+  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.userData.farU = FAR_U;
+  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) — на WebGL 1; на WebGL 2 и так есть
+  const GU = { uFar: FAR_U, tZ: { value: zt[0] }, tZ2: { value: zt[1] }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uBald: { value: new THREE.Vector3(BA.x, BA.z, BA.r) } };
+  m.userData.GU = GU; m.userData.groundGLSL = () => aHeadGLSL() + aGroundGLSL(H); // для запекания — те же текстуры и код
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, AT, GU, { uCam: ENV.uCam, uLow: { value: new THREE.Vector4(fogC.r, fogC.g, fogC.b, W.lowFog ?? 0.5) } }, bake ? bake.U : {});
+    sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam; uniform vec4 uLow;
+      ${aHeadGLSL()}${aGroundGLSL(H)}${bake ? bake.GLSL : ''}
 ` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
   farInit(vWp.xz); // мелкие текстуры вдали — средним цветом (texF, ground-far.js); вблизи — только при ненулевом весе
-  vec2 mp = (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)};
-  vec4 Z = texture2D(tZ, mp), Z2 = texture2D(tZ2, mp); wN = normalize(texture2D(tNm, mp).xyz * 2.0 - 1.0);
-  float slope = 1.0 - wN.y, hgt = vWp.y, dist = length(vWp - uCam), near = 1.0 - smoothstep(200.0, 1200.0, dist);
-  // сухой луг: охра и оливковые пятна; рисунок — снимок с высоты (два масштаба) и сухая трава вблизи
-  float gA = lum(texture2D(aGA, vWp.xz / 260.0).rgb), gA2 = lum(texture2D(aGA, vWp.xz / 1300.0 + 0.37).rgb);
-  vec3 dG = near > 0.0 ? texF(aG, vWp.xz, 5.0, vec2(0.0)).rgb : vec3(0.3), dG2 = texF(aG, vWp.xz, 31.0, vec2(0.21)).rgb; dG = vec3(lum(dG)) * 0.6 + dG * 0.4;
-  vec3 grass = mix(vec3(0.15, 0.135, 0.06), vec3(0.095, 0.105, 0.045), smoothstep(0.3, 0.7, vn(vWp.xz / 420.0) * 0.7 + gA2 * 0.6 - 0.15));
-  // пятна разной травы (ветошь, побуревшая, зеленоватая отава, рыжий клевер) — на 15–80 м, чтобы и с высоты луг был живой
-  float pv = vn(vWp.xz / 80.0) * 0.6 + vn(vWp.xz / 17.0) * 0.4;
-  grass *= pv < 0.35 ? vec3(0.85, 0.95, 0.8) : pv < 0.55 ? vec3(1.0) : pv < 0.72 ? vec3(1.18, 1.05, 0.85) : vec3(1.2, 0.85, 0.65);
-  grass *= (0.55 + 0.9 * gA) * mix(0.75 + 0.9 * lum(dG2), 1.0, near * 0.5) * mix(1.0, 0.3 + 2.4 * lum(dG), 0.6 * near) * mix(vec3(1.0), dG / max(lum(dG), 0.05), 0.3 * near);
-  // скалы: крутые склоны и голая Лысая гора (там же — бледная выгоревшая трава)
-  float rA = lum(texture2D(aRA, vWp.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(aRk, vWp.xz, 24.0, vec2(0.0)).rgb) : 0.5;
-  vec3 rock = vec3(0.12, 0.11, 0.095) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
-  float bald = 1.0 - smoothstep(uBald.z * 0.45, uBald.z * 0.85, distance(vWp.xz, uBald.xy) + 120.0 * (vn(vWp.xz / 90.0) - 0.5));
-  grass = mix(grass, grass * vec3(1.35, 1.25, 1.0) + 0.02, bald * 0.7);
-  float rk = smoothstep(0.32, 0.5, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(vWp.xz / 60.0) - 0.5));
-  rk = max(rk, bald * smoothstep(0.12, 0.28, slope + 0.2 * (rA - 0.5)) * 0.85);
-  vec3 col = mix(grass, rock, rk);
-  // болото (суша в котловине): мох, осока, торф — тёмные бурые и оливковые пятна; вблизи — грязь с листвой
-  float mA = lum(texture2D(aMA, vWp.xz / 200.0).rgb);
-  vec3 bog = mix(vec3(0.045, 0.05, 0.022), vec3(0.085, 0.08, 0.03), vn(vWp.xz / 70.0) * 0.7 + vn(vWp.xz / 13.0) * 0.3) * (0.6 + 0.8 * mA); // мох и осока
-  bog = mix(bog, vec3(0.13, 0.11, 0.05), smoothstep(0.62, 0.8, vn(vWp.xz / 25.0)) * 0.6); // сухая осока куртинами
-  bog = mix(bog, bog * (0.5 + 1.2 * lum(dG)) * vec3(0.95, 1.05, 0.8), 0.6 * near);
-  col = mix(col, bog, smoothstep(0.3, 0.8, Z2.a + 0.25 * (vn(vWp.xz / 150.0) - 0.5)) * (1.0 - smoothstep(4.0, 9.0, hgt - ${AUTUMN.WY.toFixed(1)})));
-  // дно оврага: сырая грязь и палая листва (где врезка глубже, а земля ниже краёв)
-  float rv = smoothstep(0.6, 0.85, Z2.r + 0.15 * (vn(vWp.xz / 40.0) - 0.5)) * (1.0 - smoothstep(0.12, 0.28, slope)); // только дно (врезка глубже ~35 м и полого)
-  vec3 mud = texF(aM, vWp.xz, 5.0, vec2(0.0)).rgb * 0.5 * mix(1.0, 0.7 + 0.6 * mA, 1.0 - near);
-  col = mix(col, mud, rv * 0.75);
-  // лес: издали — рыжая, жёлтая, бурая крона и серый сухостой пятнами (импосторы редкие), вблизи под деревьями — листва
-  float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(vWp.xz / 160.0) - 0.5) + 0.3 * (vn(vWp.xz / 45.0) - 0.5)), far = smoothstep(300.0, 1600.0, dist);
-  float ch = vn(vWp.xz / 38.0) * 0.65 + vn(vWp.xz / 9.0) * 0.35;
-  vec3 canopy = ch < 0.3 ? vec3(0.28, 0.08, 0.015) : ch < 0.5 ? vec3(0.34, 0.17, 0.02) : ch < 0.7 ? vec3(0.3, 0.24, 0.035) : ch < 0.86 ? vec3(0.19, 0.1, 0.035) : vec3(0.12, 0.1, 0.08);
-  canopy = mix(canopy, vec3(0.03, 0.05, 0.03), step(0.9, vn(vWp.xz / 260.0 + 3.1))); // кое-где ельник
-  vec3 litter = far < 1.0 ? texF(aL, vWp.xz, 4.0, vec2(0.0)).rgb * 0.6 : vec3(0.0);
-  col = mix(col, canopy * (0.75 + 0.5 * vn(vWp.xz / 14.0)), fr * far * 0.85);
-  col = mix(col, mix(col, litter, 0.7), fr * (1.0 - far));
-  // поля: пашня (бурые борозды) и тыквенные (вблизи — оранжевые точки по рядам, вдали — рыжий отлив)
-  vec3 fld = texF(aF, vWp.xz, 9.0, vec2(0.0)).rgb * 0.55 * mix(0.9, 1.1, vn(vWp.xz / 30.0));
-  float pf = smoothstep(0.3, 0.7, Z2.b), pl = smoothstep(0.3, 0.7, Z2.g);
-  col = mix(col, fld, max(pl, pf) * 0.9);
-  vec2 pc = floor(vWp.xz / 2.2); float pk = step(0.62, hs(pc)) * (1.0 - smoothstep(0.25, 0.45, length(fract(vWp.xz / 2.2) - 0.5)));
-  col = mix(col, vec3(0.55, 0.16, 0.01), pf * mix(0.18, pk, near));
-  // площадки и деревня: утоптанная земля и гравий
-  vec2 jo = (vec2(vn(vWp.xz / 70.0), vn(vWp.xz / 70.0 + 5.3)) - 0.5) * 100.0;
-  float zb = smoothstep(0.3, 0.8, texture2D(tZ, (vWp.xz + jo + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).b + 0.3 * (vn(vWp.xz / 45.0) - 0.5));
-  float za = smoothstep(0.1, 0.9, Z.a + 0.4 * (vn(vWp.xz / 80.0) - 0.5));
-  vec3 dirt = texF(aM, vWp.xz, 6.0, vec2(0.0)).rgb * 0.5 * vec3(1.05, 1.0, 0.92);
-  col = mix(col, dirt, zb * 0.85); col = mix(col, mix(col, dirt, 0.45), za * 0.6);
-  // туман в низинах: над болотом и в оврагах — плотная пелена (вдали сильнее, вблизи — дымка)
-  // (подмешивается после освещения — как туман, см. fog_fragment): клочьями, к дальним — плотнее
-  aLow = (1.0 - smoothstep(6.0, 70.0 + 50.0 * vn(vWp.xz / 900.0), hgt - ${AUTUMN.WY.toFixed(1)} - 40.0 * Z2.r)) * mix(0.04, 1.0, smoothstep(300.0, 5000.0, dist)) * (0.85 + 0.3 * vn(vWp.xz / 600.0));
-  diffuseColor.rgb = col;`)
+  wN = normalize(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).xyz * 2.0 - 1.0);
+  float dist = length(vWp - uCam);
+  ${bake ? `float bk = bakeK(dist); vec4 gC = vec4(0.0); // дальняя земля — запечённый цвет (ground-bake.js); в полосе перехода — смесь
+  if (bk < 1.0) gC = aGround(vWp, dist);
+  if (bk > 0.0) gC = mix(gC, bakeAt(vWp.xz), bk);` : 'vec4 gC = aGround(vWp, dist);'}
+  aLow = gC.a * mix(0.04, 1.0, smoothstep(300.0, 5000.0, dist));
+  diffuseColor.rgb = gC.rgb;`)
       .replace('#include <fog_fragment>', `#include <fog_fragment>
   gl_FragColor.rgb = mix(gl_FragColor.rgb, uLow.rgb, clamp(aLow * uLow.w * 0.8, 0.0, 0.85));`)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
