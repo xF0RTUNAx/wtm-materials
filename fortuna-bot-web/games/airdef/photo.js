@@ -9,10 +9,10 @@
 // объекта (по горизонтали и вертикали), щипок, колесо и ＋/－ — ближе или дальше, «зум» — угол поля зрения.
 // ◎ прячет весь интерфейс (тап по экрану — вернуть); скорость ×1 / ×½ / ×¼ / стоп-кадр (камеру можно крутить и на стопе).
 /* global THREE */
-import { mulberry32 } from './city.js?v=20261026c';
+import { mulberry32, CITY } from './city.js?v=20261026c';
 import { AG, SAM, CARRIERS, COMBINED, PLANES, LOADOUTS, multiItems } from './arsenal.js?v=20261026c';
 import { placeDefense, pickTargets, spotNear } from './mission.js?v=20261026c';
-import { createCombined, combinedOk, LIM, LAUNCH_R } from './sim/combined.js?v=20261026c';
+import { createCombined, combinedOk, LIM, LAUNCH_R, POD } from './sim/combined.js?v=20261026c';
 import { RAID_HELI } from './sim/raid.js?v=20261026c';
 import { fwdOf } from '../drone/sim/core.js?v=20261026c';
 import { weaponHasModel } from './models.js?v=20261026c';
@@ -55,6 +55,7 @@ export const PH_ALT = { low: 250, mid: 1500, high: 4000 };
 const SCOUT = { east: 'scout_e', west: 'scout' };
 // что можно снять в «Мульти-волне» за сторону удара: разведчик, дроны, крылатые (с носителем), баллистика
 export const photoItems = (att) => [...(AG[SCOUT[att]] ? [[SCOUT[att], null]] : []), ...multiItems(att).map(([k, via]) => [k, via])]; // «Мульти-волна» без эпох: всё оружие стороны
+const FREEFALL = { west: 'mk82', east: 'fab500' }, TVMSL = { west: 'agm65b', east: 'kh29t' }; // налёт для ближних комплексов: бомбы без наведения и ТВ-ракеты (идут на цель)
 const LIMQ = { ...LIM, spawnR: LAUNCH_R + 230 * 14 }; // носитель — ближе к рубежу пуска (меньше ждать)
 
 export function createPhoto(C, ctrls) {
@@ -62,7 +63,8 @@ export function createPhoto(C, ctrls) {
   const V3 = () => new THREE.Vector3();
   const st = { br: 'air', subs: [], subj: 0, ang: 0, adj: { az: 0, el: 0, k: 1 }, fi: 0, spd: 0, clean: false, simT: 0, spin: 0, snap: true,
     hero: null, targets: [], wave: 1, endT: 0, evNext: false, mk: null, via: null, att: 'west', era: 2, rel: new Map(), prevSt: new Map(), fol: {},
-    fb: { p: null, s: -1 }, mount: 0, shW: 0, shT: 0, shipW: 6, airTgt: null, cmT: 0, auT: 0, kind: 'mv', capT: 0, shipL: 16 };
+    fb: { p: null, s: -1 }, mount: 0, shW: 0, shT: 0, shipW: 6, airTgt: null, cmT: 0, auT: 0, kind: 'mv', capT: 0, shipL: 16,
+    sc: null, lastAct: 0, fireId: -1, waveT: 0, feedT: 0, feedI: 0, feedKeys: [], fireCd: 0, evPlan: {} }; // sc — сценарий ПВО (scenOf), lastAct — когда комплекс последний раз стрелял
   let rnd = Math.random, sayKeep = null;
   const sizeOf = new Map(), BX = new THREE.Box3(), TMP = V3(), TMP2 = V3(), UP = new THREE.Vector3(0, 1, 0);
   function unitR(u) {
@@ -249,16 +251,21 @@ export function createPhoto(C, ctrls) {
   const TQ = new THREE.Quaternion();
 
   // ── автобой ──
+  // район целей: объект ближе всех к точке from и два ближайших к нему — самолёт не гоняют по всей карте (до 25 км) между разбросанными объектами
+  function airCluster(pool, from) {
+    let seed = pool[0], bd = 1e12; for (const o of pool) { const d = (o.x - from.x) ** 2 + (o.z - from.z) ** 2; if (d < bd) { bd = d; seed = o; } }
+    return [seed, ...pool.filter((o) => o !== seed).sort((a, b) => (a.x - seed.x) ** 2 + (a.z - seed.z) ** 2 - (b.x - seed.x) ** 2 - (b.z - seed.z) ** 2).slice(0, 2)];
+  }
   function airTick(dt) {
     const A = ctrls.air, cr = A.craft, S = C.S;
     let alive = A.game.targets.filter((o) => !o.dead);
-    if (!alive.length) { // цели разбиты — новые из уцелевших объектов
+    if (!alive.length) { // цели разбиты — новые из уцелевших объектов: ближайший к самолёту и два рядом с ним (район целей, а не три разных конца карты)
       const pool = S.objects.filter((o) => !o.dead && !o.noTarget); if (!pool.length) { newBattle(); return; }
-      pool.sort(() => rnd() - 0.5); alive = pool.slice(0, 3); A.retarget(alive);
+      alive = airCluster(pool, cr.pos); A.retarget(alive);
     }
     if (!st.airTgt || st.airTgt.dead || !alive.includes(st.airTgt)) {
       let bd = 1e12; for (const o of alive) { const d = (o.x - cr.pos.x) ** 2 + (o.z - cr.pos.z) ** 2; if (d < bd) { bd = d; st.airTgt = o; } }
-      A.demo({ pt: { x: st.airTgt.x, z: st.airTgt.z }, alt: PH_ALT[setup.palt] || PH_ALT.mid });
+      A.demo({ pt: { x: st.airTgt.x, z: st.airTgt.z }, alt: PH_ALT[setup.palt] || PH_ALT.mid, photo: true }); // photo — автопилот съёмки (air.js photoPilot): в пределах района цели, запас над рельефом и домами
     }
     // пуск: какой пилон опустел — за тем оружием и летит камера этого пилона
     const cur = new Map(); for (const l of A.loadout) for (const s of l.st) cur.set(s, l.key);
@@ -275,8 +282,192 @@ export function createPhoto(C, ctrls) {
   function defTick(dt) {
     const u = st.hero;
     if (u && u.reloadT > 5) u.reloadT = 5; // в кадре — почаще пуски
-    if (st.vsMulti) evTick(dt, startEvDef);
-    else if (C.raid.planes.filter((a) => !a.dead && !a.out).length < 2) { st.wave++; const al = st.targets.filter((o) => !o.dead); C.raid.spawnWave(3 + (st.wave % 3), 2 + (st.wave % 2), al.length ? al : st.targets, 7500 + rnd() * 2500); }
+    if (u) fireWatch();
+    if (st.vsMulti) { evTick(dt, startEvDef); evFeed(); return; }
+    const sc = st.sc, live = C.raid.planes.filter((a) => !a.dead && !a.out && (!sc || a.phase === 'wait' || a.pos.distanceTo(u.pos) < sc.dsp * 2.2)).length; // самолёты, ушедшие далеко от комплекса, в счёт не идут
+    // новая волна: самолётов мало или комплекс простаивает (не стрелял дольше sc.idle с) — тогда ещё одна, не чаще раза в 7 с и не больше восьми в воздухе
+    if (live < 2 || (sc && live < (sc.tail ? 3 : 8) && st.simT - st.lastAct > sc.idle && st.simT - st.waveT > 7)) raidWave();
+  }
+  // ── сценарий ПВО в кадре (Mark 2026-10-26: «у каждого юнита ПВО свои сценарии, в которых он работает, а не простаивает») ──
+  // по ТТХ комплекса (SAM): где он стоит у объекта-цели, откуда и на какой высоте идёт налёт, чем «подкармливать» бой, пока он молчит.
+  // Ближние (пушки, ПЗРК, «Фаланкс», Roland, «Стрела-10»…) — рядом с самим объектом, налёт — на их высоте и с короткого расстояния;
+  // средние и дальние — как раньше у объекта, но налёт заходит из зоны между мёртвой зоной rmin и rmax (успевает захватить и пустить)
+  function scenOf(key) {
+    const S = SAM[key], rmax = S.rmax, near = rmax <= 6500, mid = !near && rmax <= 16000, acq = S.radar ? S.radar.acq : 2;
+    const roof = S.type === 'ir' && S.hp <= 15, lo = Math.max(S.hmin + 120, 300), hi = Math.max(lo, Math.min(S.hmax * 0.6, 4500));
+    return {
+      near, mid, roof, focus: near || mid, // focus — весь налёт идёт на объект рядом с комплексом
+      r0: roof ? 150 : near ? 120 : Math.max(350, S.rmin >= 1000 ? S.rmin + 700 : 0), r1: near ? clamp(rmax * 0.3, 300, 700) : roof ? 900 : Math.max(1100, S.rmin >= 1000 ? S.rmin * 1.5 + 700 : 0), // где стоит от объекта (у дальних с мёртвой зоной — дальше неё: самолёты у объекта и «круг» над ним иначе внутри rmin)
+      alt: S.hmax >= 9000 ? 0 : (lo + hi) / 2, // высота налёта над землёй (0 — как у налёта по умолчанию: 3–5,5 км)
+      dsp: (S.aspect || 180) < 180 ? clamp(rmax * 0.6, 1800, 3000) : near ? clamp(rmax + 1500, 3500, 7000) : clamp(S.rmin + 230 * (S.react + acq + 10), 4500, Math.min(rmax * 0.85, 12000)), // откуда идёт налёт (от комплекса)
+      tail: (S.aspect || 180) < 180, // ГСН видит только хвост (Стрела-2, Redeye, Стрела-1, Chaparral): налёт идёт мимо комплекса к объекту — уходит от него хвостом
+      idle: 6, // секунд без пусков — подбросить цели
+    };
+  }
+  // открытость места: сколько из 8 направлений на ~15° над горизонтом свободны от домов и рельефа (радар и оптика видят цель только по прямой;
+  // в плотной застройке или в овраге комплекс «слепой» и простаивает). Лучшее из десятка мест у объекта
+  function openness(x, z, roof) {
+    const y = (roof ? city.topAt(x, z) : city.groundH(x, z)) + 3; let n = 0;
+    for (let k = 0; k < 8; k++) { const a = k * PI / 4; if (city.los(x, y, z, x + Math.sin(a) * 1200, y + 320, z + Math.cos(a) * 1200, 8)) n++; }
+    return n / 8;
+  }
+  function heroSpot(o, sc) {
+    let best = null, bs = -1;
+    for (let k = 0; k < 10 && bs < 0.87; k++) { const xz = spotNear(city, rnd, o.x, o.z, sc.r0, sc.r1, sc.roof), q = openness(xz[0], xz[1], xz[2]); if (q > bs) { bs = q; best = xz; } }
+    return best;
+  }
+  // пуск или очередь комплекса-героя: от этого отсчитывается простой
+  function fireWatch() {
+    const u = st.hero; let top = st.fireId; for (const m of C.S.sams) if (m.unit === u && m.id > top) top = m.id;
+    if (top > st.fireId || u.gunOn) st.lastAct = st.simT; st.fireId = top;
+  }
+  // точка на расстоянии d от комплекса по азимуту b, не ближе 1,2 км к краю карты (иначе — null)
+  const spawnAt = (u, b, d) => { const x = u.pos.x + Math.sin(b) * d, z = u.pos.z + Math.cos(b) * d; return Math.abs(x) < CITY.HALF - 1200 && Math.abs(z) < CITY.HALF - 1200 ? [x, z] : null; };
+  // азимут «с хвоста»: от объекта через комплекс и дальше — самолёт, идущий к объекту, пролетает над комплексом (ближним: цель идёт прямо на него, малая угловая
+  // скорость — очередь точнее) и уходит от него к объекту (ИК-ГСН ранних ПЗРК видит только хвост)
+  const tailB = (u, o) => (Math.hypot(u.pos.x - o.x, u.pos.z - o.z) > 60 ? Math.atan2(u.pos.x - o.x, u.pos.z - o.z) : rnd() * 6.283);
+  // самолёт волны — в точку сценария: на расстоянии sc.dsp от комплекса, на высоте sc.alt, носом на свою цель
+  function placeRaider(a) {
+    const sc = st.sc, u = st.hero; let at = null;
+    for (let k = 0; k < 16 && !at; k++) at = spawnAt(u, (sc.tail || sc.near) && k < 10 ? tailB(u, a.tgt) + (rnd() - 0.5) * (sc.tail ? 0.9 : 0.5) : rnd() * 6.283, sc.dsp * (k < 8 ? 1 : 0.6) * (0.85 + rnd() * 0.3));
+    if (!at) return;
+    if (sc.alt && a.role !== 'low') a.cruise = city.groundH(u.pos.x, u.pos.z) + sc.alt * (0.8 + rnd() * 0.4);
+    a.pos.set(at[0], Math.max(a.role === 'low' ? a.pos.y : a.cruise, city.groundH(at[0], at[1]) + 300), at[1]);
+    a.yaw = Math.atan2(-(a.tgt.x - at[0]), -(a.tgt.z - at[1])); a.pitch = 0; fwdOf(a, a.vel).multiplyScalar(a.speed);
+    if (a.delay > 0 && !st.sc.focus) a.delay *= 0.45; // эшелоны ближе друг к другу: простоя между ними нет
+  }
+  // вертолёт волны — на подходе к объекту (3,5–6 км от него: ПТУР и НАР он пускает с 2–5 км с висения), иначе ползёт с края района минуты
+  function placeHeli(a) {
+    const sc = st.sc, o = a.tgt; let at = null;
+    for (let k = 0; k < 12 && !at; k++) at = spawnAt({ pos: { x: o.x, z: o.z } }, rnd() * 6.283, clamp(sc.dsp, 3500, 6000) * (k < 6 ? 1 : 0.6));
+    if (!at) return;
+    const gy = Math.max(city.topAt(at[0], at[1]), city.waterAt ? city.autumn.WY : CITY.WATER_Y);
+    a.pos.set(at[0], gy + 40, at[1]); a.home.set(at[0] * 1.6, 0, at[1] * 1.6); a.yaw = Math.atan2(-(o.x - at[0]), -(o.z - at[1]));
+    a.vel.set(-Math.sin(a.yaw) * 30, 0, -Math.cos(a.yaw) * 30);
+  }
+  function raidWave() {
+    const sc = st.sc, al = st.targets.filter((o) => !o.dead), n0 = C.raid.planes.length, wv = ++st.wave, o = st.targets[0];
+    st.waveT = st.simT;
+    if (sc && sc.focus) { // ближние и средние: свой состав — только то, что идёт на объект и пролетает над комплексом (без ложных целей и «круга» носителя)
+      // свободнопадающие бомбы (самолёт сам идёт над объектом, а не сбрасывает управляемую с 10 км и уходит), у «tv» — ТВ-ракеты (идёт на цель и после пуска)
+      const roles = sc.near ? ['bomber', 'bomber', 'bomber', 'bomber'] : ['bomber', 'tv', 'bomber', 'tv'], n = sc.tail ? 2 : sc.near ? 3 : 4, W = st.att; // «хвостовые» ГСН — по одному-два самолёта: подлетает (берётся на сопровождение), проходит над комплексом и уходит от него — пуск; толпа у объекта держит захват на тех, кто летит в лоб // без ПРР и «низких» (ПРР выключают РЛС комплекса на 9–18 с, низкий самолёт — ближайшая цель, которую РЛС не берёт)
+      for (let i = 0; i < n; i++) {
+        const role = roles[(i + wv) % roles.length], load = role === 'bomber' || role === 'low' ? [{ key: FREEFALL[W], n: 4 }] : role === 'tv' ? [{ key: TVMSL[W], n: 4 }] : null;
+        placeRaider(C.raid.spawn(role, o, rnd() * 6.283, i * (sc.tail ? 16 : 5) + rnd() * 3, 7000, load ? { load } : {}));
+      }
+      if (city.kind === 'autumn' && RAID_HELI[st.att] && RAID_HELI[st.att][st.era]) placeHeli(C.raid.spawn('heli', o, rnd() * 6.283, 6 + rnd() * 6, 7000));
+      return;
+    }
+    // wave 1: без ПРР, ложных целей и «низких» (они гасят РЛС и перехватывают захват у дальних комплексов); вертолёты на «Топи» — отдельно
+    C.raid.spawnWave(3 + (wv % 3), sc ? 1 : 2 + (wv % 2), al.length ? al : st.targets, 7500 + rnd() * 2500);
+    if (sc && city.kind === 'autumn' && RAID_HELI[st.att] && RAID_HELI[st.att][st.era]) C.raid.spawn('heli', al.length ? al[wv % al.length] : o, rnd() * 6.283, 6 + rnd() * 6, 9000);
+    if (sc) for (const a of C.raid.planes.slice(n0)) if (!a.heli) placeRaider(a);
+  }
+  // ПВО против «Мульти-волны»: расписание волны своё (дроны летят с края карты по 5 мин, крылатые — минуту), поэтому, пока комплекс молчит,
+  // ему подбрасывают по два дрона или крылатых из того же состава — с короткого расстояния, на объект у комплекса, на высоте, где его РЛС видит цель
+  function evFeed() {
+    const sc = st.sc, u = st.hero, S = u.S;
+    if (!sc || st.simT - st.lastAct < sc.idle || st.simT - st.feedT < 5 || !st.feedKeys.length) return;
+    if (C.S.wpns.filter((w) => w.ev && w.feed && !w.dead).length > 8) return;
+    st.feedT = st.simT;
+    const slow = !(S.rmin >= 1500), nr = st.feedKeys.filter((k) => !AG[k].recon), pool = nr.filter((k) => !!AG[k].uav === slow), keys = pool.length ? pool : nr.length ? nr : st.feedKeys;
+    // с мёртвой зоной — крылатые (дрон слишком долго ползёт), без — дроны; разведчик (кружит высоко, доплеровская РЛС его не видит) — только если больше нечем
+    const o = st.targets[0];
+    for (let i = 0; i < 2; i++) {
+      const k = keys[st.feedI++ % keys.length], W = AG[k];
+      const acq = S.radar ? S.radar.acq : 2, fast = !W.uav, v = fast ? W.speed : 55; // расстояние: цель должна провести в зоне больше, чем захват + реакция + пуск (иначе дальше мёртвой зоны rmin не успеть)
+      const d = clamp(S.rmin + v * (S.react + acq + 9), fast ? 3000 : 1200, fast ? S.rmax * 0.92 : Math.min(S.rmax * 0.8, 3200)); let at = null;
+      for (let q = 0; q < 12 && !at; q++) at = spawnAt(u, sc.tail ? tailB(u, o) + (rnd() - 0.5) * 0.8 : rnd() * 6.283, d * (q < 6 ? 1 : 0.6) * (0.85 + rnd() * 0.3));
+      if (!at) continue;
+      spawnFeed(k, at, d);
+    }
+  }
+  // дрон, крылатая или разведчик из состава волны — в точку at (на расстоянии d от комплекса), курсом на объект у комплекса; высота — где его РЛС и оптика видят цель
+  function spawnFeed(k, at, d) {
+    const u = st.hero, S = u.S, W = AG[k], o = st.targets[0];
+    const alt = Math.min(S.hmax * 0.8, Math.max(W.alt || 60, (S.radar ? S.radar.clutter + 80 : 0), S.hmin + 60, d * 0.12 + 60)), from = new THREE.Vector3(at[0], city.groundH(at[0], at[1]) + alt, at[1]);
+    const aim = new THREE.Vector3(o.x + (rnd() - 0.5) * 60, city.topAt(o.x, o.z), o.z + (rnd() - 0.5) * 60), r = clamp(S.rmax * 0.5, 800, 2200), b0 = rnd() * 6.283;
+    // разведчик без маршрута тут же гаснет — кружит над комплексом (круг из шести точек: так он держится в зоне, как налёт у объекта)
+    const route = W.recon ? [0, 1, 2, 3, 4, 5].map((j) => new THREE.Vector3(u.pos.x + Math.sin(b0 + j * 1.05) * r, W.alt, u.pos.z + Math.cos(b0 + j * 1.05) * r)) : null;
+    const w = C.S.spawnMun(k, route ? from.setY(Math.min(W.alt, S.hmax * 0.8)) : from, aim, route ? { route } : { alt }); w.feed = true;
+    return w;
+  }
+  // ── кнопка «Пуск» (Mark 2026-10-27: «принудительно совершать пуск комплекса ПВО или юнита с самолёта, чтобы не ждать для красивого кадра») ──
+  // самолёт: сразу пуск / сброс (с пилона выбранного объекта, иначе выбранное оружие; пусто — пополнение), камера — на пущенное;
+  // ПВО: комплекс пускает сразу (перезарядка и башня — мгновенно); нет цели в зоне — подводим новую цель налёта прямо в зону;
+  // «Мульти-волна»: следующий пуск носителя или пусковой — сейчас. Повторное нажатие — не чаще раза в 0,7 с
+  function fireNow() {
+    if (st.fireCd > 0) return; st.fireCd = 0.7;
+    if (st.br === 'air') airFire(); else if (st.br === 'def') defFire(); else multiFire();
+  }
+  function airFire() {
+    const A = ctrls.air, sub = st.subs[st.subj];
+    const r = A.forceFire({ st: sub && sub.id === 'st' ? sub.st : undefined, tgt: st.airTgt });
+    if (!r) return;
+    if (r.rearmed) { st.prevSt = new Map(); for (const l of A.loadout) for (const s of l.st) st.prevSt.set(s, l.key); }
+    if (r.w) st.rel.set(r.st, { o: r.w, deadT: -1, p: V3() }); // камера пилона шла за ним до разрыва (resolve, 'st')
+    const i = st.subs.findIndex((x) => x.id === 'st' && x.st === r.st);
+    if (i >= 0 && r.w) { st.subj = i; st.snap = true; st.fb.p = null; renderUi(); }
+  }
+  // точка для цели в зоне комплекса: расстояние — выше мёртвой зоны, высота — над крышами (радар и оптика видят цель с земли только над ними), прямая видимость есть
+  function zonePoint(u) {
+    const S = u.S, o = st.targets[0], d = clamp(S.rmin * 1.5 + 300, 400, S.rmax * 0.55), alt = Math.min(S.hmax * 0.7, Math.max(S.hmin + 80, d * 0.15 + 60));
+    let best = null;
+    for (let k = 0; k < 16; k++) {
+      const b = st.sc && st.sc.tail && k < 10 ? tailB(u, o) + (rnd() - 0.5) * 0.8 : rnd() * 6.283, at = spawnAt(u, b, d * (0.9 + rnd() * 0.2)); if (!at) continue;
+      const y = city.groundH(at[0], at[1]) + alt, see = city.los(u.pos.x, u.pos.y + 2, u.pos.z, at[0], y, at[1], 15);
+      if (!best || see) best = { x: at[0], y, z: at[1], b, d }; if (see) break;
+    }
+    return best;
+  }
+  // цель для пуска: уже в зоне комплекса (дальность, высота, прямая видимость) — ближайшая, иначе новая в зоне: самолёт налёта или оружие «Мульти-волны»
+  function zoneTarget(u) {
+    const S = u.S, S_ = C.S; let best = null, bd = 1e12;
+    const cands = [...C.raid.alive().filter((a) => a.role !== 'decoy'), ...(st.vsMulti ? S_.wpns.filter((w) => !w.dead && w.ev && w.t >= 1.5 && !w.decoy && w.W.kind !== 'tbm') : [])];
+    for (const c of cands) {
+      const d = c.pos.distanceToSquared(u.pos); if (d >= bd || !S_.inZone(u, c)) continue;
+      if (!city.los(u.pos.x, u.pos.y + 2, u.pos.z, c.pos.x, c.pos.y, c.pos.z, 15) || (S.type === 'ir' && !S_.irSees(S, c, u.pos, null, 999))) continue;
+      bd = d; best = c;
+    }
+    if (best) return best;
+    const zp = zonePoint(u); if (!zp) return null;
+    if (st.vsMulti && st.feedKeys.length) { // оружие волны: крылатая / дрон, не разведчик, если есть другое
+      const nr = st.feedKeys.filter((k) => !AG[k].recon), slow = !(S.rmin >= 1500), pool = nr.filter((k) => !!AG[k].uav === slow), keys = pool.length ? pool : nr.length ? nr : st.feedKeys;
+      return spawnFeed(keys[st.feedI++ % keys.length], [zp.x, zp.z], zp.d);
+    }
+    const o = st.targets[0], a = C.raid.spawn('bomber', o, zp.b, 0, 7000, { load: [{ key: FREEFALL[st.att], n: 4 }] });
+    a.cruise = zp.y; a.pos.set(zp.x, zp.y, zp.z); a.pitch = 0;
+    a.yaw = st.sc && st.sc.tail ? Math.atan2(-Math.sin(zp.b), -Math.cos(zp.b)) : Math.atan2(-(o.x - zp.x), -(o.z - zp.z)); // ГСН «в хвост» — уходит от комплекса, иначе — на объект
+    fwdOf(a, a.vel).multiplyScalar(a.speed);
+    return a;
+  }
+  function defFire() {
+    const u = st.hero; if (!u || u.dead) return;
+    const t = zoneTarget(u); if (!t) return;
+    const r = C.S.forceLaunch(u, t); if (!r) return;
+    st.lastAct = st.simT; delete st.fol.msl; // следующая «Его ракета» — эта, а не прежняя, ещё летящая
+    if (r !== 'guns') st.fireId = Math.max(st.fireId, r.id);
+  }
+  // следующий пуск волны сейчас: носитель — на рубеже, пакет пусковой — поднят, время пуска единицы — «сейчас»
+  function multiFire() {
+    if (!C.ev) { if (!st.mk) return; st.evNext = false; startEvMulti(); }
+    let ev = C.ev, pick = null;
+    const next = () => { let b = null; for (const [k, n] of ev.comp) for (let i = 0; i < n; i++) { const q = ev.unitInfo(k, i); if (!q.launched && (!b || q.t < b.t)) b = { k, i, t: q.t, car: q.carrier }; } return b; };
+    pick = next();
+    if (!pick) { C.ev = null; startEvMulti(); ev = C.ev; pick = next(); if (!pick) return; } // волна кончилась — новая, и её первый пуск — сразу
+    for (const L of ev.launchers) if (POD[L.key]) L.podEl = 1; // пакет HIMARS / Lance поднят (иначе 15–24 с)
+    const a = pick.car;
+    if (a && !a.dead && !a.out) { // носитель — на рубеж пуска, сразу к пуску
+      const b = a.b, R = a.R, x = Math.sin(b) * R, z = Math.cos(b) * R, tx = Math.sin(b + 0.25) * R, tz = Math.cos(b + 0.25) * R;
+      a.phase = 'ingress'; a.delay = 0; a.inbound = false; a.relT = 0; a.t0 = (a.t0 || 0) + 2;
+      a.pos.set(x, a.cruise, z); a.yaw = Math.atan2(-(tx - x), -(tz - z)); a.pitch = 0; a.q = null; fwdOf(a, a.vel).multiplyScalar(a.speed);
+      const q = a.salvo.find((e) => e.k === pick.k && e.i === pick.i); if (q) { q.t = 0; a.salvo.sort((m, n) => m.t - n.t); a.launchAt = a.salvo[0].t; } // носитель пускает на следующем шаге (у плана носителей — минимум минута подлёта)
+    } else {
+      const P = st.evPlan[pick.k] || (st.evPlan[pick.k] = {}); (P.units || (P.units = []))[pick.i] = { t: 0 };
+      ev.applyPlan(st.evPlan);
+      ev.step(0.51); // «сейчас» у плана — через 0,5 с: этот шаг пускает ближайшего
+    }
+    delete st.fol.mun; st.endT = 0;
   }
   // волна кончилась (пусков больше не будет, всё долетело) — через 4 с новая; кадр без старых пусковых — сброс C.ev на шаг
   function evTick(dt, again) {
@@ -289,11 +480,12 @@ export function createPhoto(C, ctrls) {
   // ПВО против волны: расписание сжато для съёмки — дроны сразу, крылатые через ~15 с, баллистика через ~45 с
   function startEvDef() {
     const plan = {}; for (const [k] of COMBINED[st.att][st.era]) if (!AG[k].recon) plan[k] = { t: AG[k].uav ? 0 : AG[k].kind === 'tbm' ? 45 : 15 };
-    C.ev = createCombined(C.S, city, rnd, { side: st.att, era: st.era, raid: C.raid, lim: LIMQ, plan }); C.ev.start(st.targets); evModels();
+    C.ev = createCombined(C.S, city, rnd, { side: st.att, era: st.era, raid: C.raid, lim: LIMQ, plan }); C.ev.start(st.sc ? [st.targets[0]] : st.targets); evModels(); // вся волна — на один объект: у комплекса с мёртвой зоной (rmin) иначе дрон, зависший у другого объекта рядом, держит захват, а пустить нельзя
   }
   function startEvMulti() {
     const W = AG[st.mk], n = W.recon ? 1 : W.kind === 'tbm' ? 2 : st.via ? Math.min(4, CARRIERS[st.via].cap) : 4;
-    C.ev = createCombined(C.S, city, rnd, { side: st.att, era: st.era, raid: C.raid, lim: LIMQ, comp: [[st.mk, n, W.uav ? 1 : W.kind === 'tbm' ? 3 : 2, st.via || undefined]], plan: { [st.mk]: { t: 2 } } });
+    st.evPlan = { [st.mk]: { t: 2 } };
+    C.ev = createCombined(C.S, city, rnd, { side: st.att, era: st.era, raid: C.raid, lim: LIMQ, comp: [[st.mk, n, W.uav ? 1 : W.kind === 'tbm' ? 3 : 2, st.via || undefined]], plan: st.evPlan });
     C.ev.start(st.targets); evModels();
   }
   // готовые модели ракет, пусковых и носителей удара — загрузить (сами они грузятся по требованию)
@@ -307,12 +499,21 @@ export function createPhoto(C, ctrls) {
   };
   function newBattle() {
     { const sd = new URLSearchParams(location.search).get('seed'); rnd = mulberry32(sd ? +sd : (Date.now() & 0xfffff) ^ 0x7a11); } // ?seed= — тот же бой (сравнение кадров)
-    st.rel.clear(); st.prevSt = new Map(); st.fol = {}; st.airTgt = null; st.hero = null; st.wave = 1; st.endT = 0; st.evNext = false; sizeOf.clear(); st.snap = true; hadPos = false;
+    st.rel.clear(); st.prevSt = new Map(); st.fol = {}; st.airTgt = null; st.hero = null; st.sc = null; st.wave = 1; st.endT = 0; st.evNext = false; sizeOf.clear(); st.snap = true; hadPos = false;
     st.era = setup.era;
     if (st.br === 'air') {
       const A = ctrls.air;
       A.start({ invuln: true, noEnd: true, noIntro: true, reload: true, photo: true, lastGame: 'photo' });
       A.pod.show = false; A.game.opts.photo = true;
+      { // район целей — три рядом; самолёт — в 6–8 км от первой, носом на неё, на высоте захода (дальше — автопилот)
+        const pool = C.S.objects.filter((o) => !o.dead && !o.noTarget), seed = pool[Math.floor(rnd() * pool.length)], cl = airCluster(pool, seed);
+        A.retarget(cl);
+        for (let k = 0; k < 12; k++) {
+          const b = rnd() * 6.283, d = 6000 + rnd() * 2000, x = seed.x + Math.sin(b) * d, z = seed.z + Math.cos(b) * d;
+          if (Math.abs(x) > CITY.HALF - 2500 || Math.abs(z) > CITY.HALF - 2500) continue;
+          A.place({ x, y: Math.max(city.groundH(x, z), city.topAt(x, z)) + (PH_ALT[setup.palt] || PH_ALT.mid) + 150, z, yaw: Math.atan2(-(seed.x - x), -(seed.z - z)) }); break;
+        }
+      }
       for (const l of A.loadout) for (const s of l.st) st.prevSt.set(s, l.key);
       { const L = LOADOUTS[setup.era][setup.lo]; st.planeName = (L && trIf(PLANES[L.plane])) || tr('Самолёт'); } // модель может ещё грузиться — имя из подвески
       { const b = BX.setFromObject(A.ship).getSize(TMP); st.shipL = clamp(Math.max(b.x, b.z), 8, 40) || 16; st.shipW = clamp(b.x / 2, 3, 30) || 6; }
@@ -325,10 +526,17 @@ export function createPhoto(C, ctrls) {
       C.hooks = { unitDmgK: 0 }; // в кадре ПВО не выбивают — съёмка не обрывается
       st.targets = pickTargets(S, rnd, 3);
       placeDefense(S, city, rnd, setup.side, st.era, st.targets, 0.5);
-      const t0 = st.targets[0], roof = Sx.type === 'ir' && Sx.hp <= 15, xz = spotNear(city, rnd, t0.x, t0.z, roof ? 150 : 350, roof ? 900 : 1100, roof);
+      const sc = st.sc = scenOf(key), t0 = st.targets[0];
+      // против волны ближний комплекс стоит дальше от объекта: дроны и ракеты сходятся на объект, и у самого объекта комплекс внутри своей мёртвой зоны (rmin) —
+      // там рой кружит, держит захват и не даёт пустить; в 1,4–2 км от объекта цели идут через зону до самого объекта
+      if (st.vsMulti && sc.near) { sc.r0 = clamp(Sx.rmin * 2 + 400, sc.r0, Sx.rmax * 0.35); sc.r1 = clamp(sc.r0 + 700, sc.r1, Sx.rmax * 0.6); }
+      const xz = heroSpot(t0, sc);
+      for (const o of st.targets) { o.hp *= 6; o.hpMax *= 6; } // объекты у комплекса держатся дольше: налёт не обнуляет их за минуту, и комплексу есть что прикрывать
       st.hero = S.addUnit(key, xz[0], xz[1], { roof: xz[2], skill: 0.95, yaw: rnd() * 6.28 });
       C.syncUnits();
-      if (st.vsMulti) startEvDef(); else C.raid.spawnWave(4, 2, st.targets, 7000);
+      st.lastAct = st.simT; st.fireId = -1; st.waveT = st.simT; st.feedT = st.simT; st.feedI = 0;
+      st.feedKeys = st.vsMulti ? (COMBINED[st.att][st.era] || []).map(([k]) => k).filter((k) => AG[k].kind === 'cruise' && !AG[k].decoyMun) : []; // чем подкармливать: дроны, разведчик и крылатые состава (у I эпохи — только разведчик: баллистику ПЗРК не берёт)
+      if (st.vsMulti) startEvDef(); else raidWave();
       st.subs = [{ id: 'unit', n: trIf(Sx.short) }, { id: 'msl', n: tr('Его ракета') }, { id: 'trk', n: tr('Его цель') }, st.vsMulti ? { id: 'mun', n: tr('Ракеты и дроны') } : { id: 'plane', n: tr('Самолёт налёта') }, ...(!st.vsMulti && RAID_HELI[st.att] && RAID_HELI[st.att][st.era] ? [{ id: 'heli', n: tr('Вертолёт налёта') }] : []), { id: 'tgt', n: tr('Объект') }];
     } else {
       st.att = setup.side === 'east' ? 'west' : 'east';
@@ -355,6 +563,13 @@ export function createPhoto(C, ctrls) {
     $('phAng').innerHTML = ANG.map((a, i) => `<button data-a="${i}" class="${i === st.ang ? 'on' : ''}">${a.n}</button>`).join('');
     for (const [k, n] of [['hide', 'hideUi'], ['new', 'rotCw'], ['reset', 'rotCcw']]) { const sd = $('phSide'), b = sd && sd.querySelector && sd.querySelector(`[data-ph="${k}"]`); if (b && !b.firstChild) b.innerHTML = ico(n); } // кнопки справа — значки
     farName(); sideTxt();
+    { // кнопка «Пуск» — сверху правой колонки (разметка страницы не меняется — кнопку делаем здесь)
+      const sd = $('phSide');
+      if (sd && sd.querySelector && sd.appendChild && !sd.querySelector('[data-ph="fire"]')) {
+        const b = document.createElement('button'); b.dataset.ph = 'fire'; b.id = 'phFire'; b.textContent = tr('Пуск'); b.title = tr('Пуск сейчас (F)'); b.style.borderColor = 'rgba(255,130,90,.85)'; b.style.fontWeight = '700';
+        sd.appendChild(b);
+      }
+    }
   }
   function sideTxt() { $('phSpd').innerHTML = SPD_N[st.spd]; $('phZoom').textContent = FOVS[st.fi] ? `${FOVS[st.fi]}°` : tr('Зум'); }
   const resetAdj = () => { st.adj.az = 0; st.adj.el = 0; st.adj.k = 1; st.fb.p = null; };
@@ -366,6 +581,7 @@ export function createPhoto(C, ctrls) {
     else if (a === 'zoom') st.fi = (st.fi + 1) % FOVS.length;
     else if (a === 'speed') st.spd = (st.spd + 1) % SPD.length;
     else if (a === 'reset') { resetAdj(); st.fi = 0; st.snap = true; }
+    else if (a === 'fire') fireNow();
     else if (a === 'new') newBattle();
     else if (a === 'hide') setClean(true);
     st.fb.p = null; sideTxt(); C.snd.click();
@@ -437,7 +653,7 @@ export function createPhoto(C, ctrls) {
       if (st.br === 'air') { ctrls.air.update(dt); airTick(dt); } else if (st.br === 'def') defTick(dt); else evTick(dt, startEvMulti);
     },
     dtK: () => SPD[st.spd],
-    camera(dt) { cameraUpdate(dt); if (shot && (shot.ox || shot.oy)) { camera.rotateY(shot.ox || 0); camera.rotateX(-(shot.oy || 0)); } shotTick(dt); }, // ox, oy — сдвиг объекта в кадре, рад (вправо / вверх): композиция не по центру
+    camera(dt) { st.fireCd -= dt; cameraUpdate(dt); if (shot && (shot.ox || shot.oy)) { camera.rotateY(shot.ox || 0); camera.rotateX(-(shot.oy || 0)); } shotTick(dt); }, // ox, oy — сдвиг объекта в кадре, рад (вправо / вверх): композиция не по центру
     hud(dt, t) {
       if (st.br === 'air') ctrls.air.hud(dt, t); // пламя форсажа и видимость модели
       if (!st.clean && (st.capT -= dt) <= 0) { st.capT = 0.2; $('phCap').textContent = R.cap + (ANG[st.ang].mount && R.cap2 ? tr(' · камера: {0} (тап по «Борт» — другое место)', [R.cap2]) : ''); }
@@ -455,6 +671,7 @@ export function createPhoto(C, ctrls) {
       else if (c === 'Digit1' || c === 'Digit2' || c === 'Digit3') { st.spd = +c.slice(5) - 1; sideTxt(); }
       else if (c === 'KeyR') act('reset');
       else if (c === 'KeyN') act('new');
+      else if (c === 'KeyF') act('fire');
     },
     modelsReady() { if (st.br === 'air') { ctrls.air.modelsReady(); const b = BX.setFromObject(ctrls.air.ship).getSize(TMP); st.shipL = clamp(Math.max(b.x, b.z), 8, 40) || 16; } }, // модель самолёта догрузилась — вместо макета
     focus: () => camera.position,
@@ -462,7 +679,7 @@ export function createPhoto(C, ctrls) {
     resize() {},
     finish: () => C.toMenu(),
     pauseHelp: () => (C.IS_TOUCH ? tr('Тяните по экрану — камера вокруг объекта, два пальца — ближе или дальше. Внизу — что снимать и ракурс, справа — ＋/－, зум, скорость (×½, ×¼, стоп-кадр), ⟲ — ракурс по умолчанию, ↻ — новый бой, ◎ — спрятать интерфейс (тап по экрану — вернуть).')
-      : tr('Мышь: тянуть — камера вокруг объекта, колесо — ближе/дальше · ←/→ — ракурс · ↑/↓ — объект · +/− — дальность · Z — зум · 1/2/3 — скорость ×1/×½/×¼ · Пробел — стоп-кадр · R — ракурс по умолчанию · N — новый бой · H — спрятать интерфейс')),
+      : tr('Мышь: тянуть — камера вокруг объекта, колесо — ближе/дальше · ←/→ — ракурс · ↑/↓ — объект · +/− — дальность · Z — зум · 1/2/3 — скорость ×1/×½/×¼ · Пробел — стоп-кадр · R — ракурс по умолчанию · N — новый бой · H — спрятать интерфейс')) + ' ' + tr('«Пуск» (F) — пуск комплекса или оружия сразу.'),
   };
   return api;
 }

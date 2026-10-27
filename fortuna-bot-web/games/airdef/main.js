@@ -47,6 +47,7 @@ import { createEndScreen } from './endscr.js?v=20261026c';
 import { createHints } from './hints.js?v=20261026c';
 import { motorOf, makeFlame } from './plume.js?v=20261026c';
 import { createShell } from './shell.js?v=20261026c';
+import { createCrashRep } from './crashrep.js?v=20261026c';
 import { createTraining, LESSONS } from './training.js?v=20261026c';
 import { createPhoto } from './photo.js?v=20261026c';
 import { createMenu } from './menu.js?v=20261026c';
@@ -65,6 +66,9 @@ if (Q.get('test') === '1') addEventListener('error', (e) => (window.__errs = win
 const IS_TOUCH = Q.get('touch') === '1' || matchMedia('(pointer: coarse)').matches;
 document.body.classList.toggle('coarse', IS_TOUCH);
 const ls = { get(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (_) { /* приватный режим */ } } };
+// онлайн-бой шёл, а вкладка открылась заново (вылетела, iOS выгрузил её из памяти): запись online.js в хранилище вкладки не старше 110 с —
+// сразу онлайн, сервер держит место 2 мин и возвращает в тот же бой (2026-10-26)
+const LIVE = (() => { if (Q.get('test') === '1') return null; try { const o = JSON.parse(sessionStorage.getItem('fortuna_ad_live') || 'null'); return o && Date.now() - o.t < 110000 ? o : null; } catch (_) { return null; } })();
 
 // ═════════════ Пресеты графики ═════════════
 export const PRESETS = {
@@ -182,7 +186,7 @@ function wantMap(game, pmap, era, lo, evd, tside) {
 const SETUP0 = (() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}') || {}; } catch (_) { return {}; } })();
 // вертолёт и оборона события — только при запуске из события (event.js: go=air&hlo=<подвеска в эпохе setup.era> / go=defense и setup.evd): сохранённая вертолётная подвеска обычный «Вылет» на осеннюю карту не уводит
 const HLO = Q.get('hlo') !== null ? +Q.get('hlo') : -1;
-const MAP = wantMap(SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd, SETUP0.tside);
+const MAP = wantMap(LIVE && !Q.get('go') ? 'online' : SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd, SETUP0.tside);
 // погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
 const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
@@ -236,9 +240,9 @@ const snd = createSound();
 
 // ═════════════ Общий контекст режимов ═════════════
 const C = {
-  $, Q, IS_TOUCH, ls, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, GPU_NAME,
+  $, Q, IS_TOUCH, ls, LIVE, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, GPU_NAME,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
-  SHARP, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
+  SHARP, get fps() { return fps; }, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,
   hooks: {}, // события боя для текущего режима
   MODE: () => (C.net && C.net.battle ? MODES[C.net.battle.mode] : MODES[setup.diff]), // онлайн — режим комнаты
@@ -809,6 +813,7 @@ if (Q.get('prtest') === '1') {
 C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f; resize(); };
 // Telegram: кнопки поверх страницы — отступ сверху
 C.shell = createShell(C, { IS_TOUCH, ls });
+C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) — после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках
 
 // ═════════════ Режимы: вход, пауза, итоги ═════════════
@@ -1030,13 +1035,12 @@ function frame(now) {
   fpsAcc += ms; fpsN++; if (fpsAcc > 500) { fps = Math.round(1000 * fpsN / fpsAcc); fpsAcc = fpsN = 0; }
   if (draw3D && !still && C.state === 'play' && !view && ms3D < 250 && !(ctrl && ctrl.skip3D && ctrl.skip3D())) dynRes(cap3D ? ms3D / 2 : ms3D); // 3D через кадр — время кадра на пару кадров интерфейса // на карте 3D не рисуется — мерить нечего
   const sc = Math.round((pipe ? pipe.scale : dr.scale) * 100);
-  // онлайн: задержка до сервера и потери (net.js) — мелко, в той же строке внизу
-  const NN = C.online && C.online.N, netTxt = NN && NN.conn === 'on' && NN.battle && NN.ping ? tr(' · {0} мс · PL {1}%', [Math.round(NN.ping), NN.pl]) : '';
-  if (C.perfHud && renderer.info) { // подробно: кадр, ЦП (подготовка кадра в JS), ГП ≈ остаток кадра, вызовы, треугольники, память
+  // онлайн: задержка и потери — в значке у «Игроков» (online.js netChip, 2026-10-26), здесь — только кадр
+  if (C.perfHud && renderer.info) { // подробно: кадр, ЦП (подготовка кадра в JS), ГП ≈ остаток кадра, вызовы, треугольники, память — одна строка у верхнего края
     if (pf.n >= 20) { pf.cpuS = pf.cpu / pf.n; pf.cpu = pf.n = 0; }
     const frameMs = fps ? 1000 / fps : 0, mem = performance.memory ? tr(' · JS {0} МБ', [Math.round(performance.memory.usedJSHeapSize / 1048576)]) : '', gm = renderer.info.memory;
-    setPerf(tr('{0} · {1} к/с · кадр {2} мс · ЦП {3} мс · ГП и ожидание ≈{4} мс · {5} выз. · {6} млн тр. · {7}% · геом. {8}, текст. {9}{10}{11}', [P.name, fps, frameMs.toFixed(1), pf.cpuS.toFixed(1), Math.max(0, frameMs - pf.cpuS).toFixed(1), pf.calls, (pf.tris / 1e6).toFixed(2), sc, gm.geometries, gm.textures, mem, netTxt]));
-  } else setPerf(C.state === 'play' ? tr('{0} · {1} к/с · {2}%{3}', [P.name, fps, sc, netTxt]) : '');
+    setPerf(tr('{0} · {1} к/с · кадр {2} мс (ЦП {3} · ГП ≈{4}) · {5} выз. · {6} млн тр. · {7}% · геом. {8} · текст. {9}{10}', [P.name, fps, frameMs.toFixed(1), pf.cpuS.toFixed(1), Math.max(0, frameMs - pf.cpuS).toFixed(1), pf.calls, (pf.tris / 1e6).toFixed(2), sc, gm.geometries, gm.textures, mem]));
+  } else setPerf(C.state === 'play' ? tr('{0} · {1} к/с · {2}%', [P.name, fps, sc]) : '');
 }
 
 // компиляция шейдеров всего, что есть в сцене (и скрытого — листы эффектов, дым): без неё первое появление эффекта = рывок кадра
@@ -1124,5 +1128,6 @@ setInterval(() => {
   { const u = new URL(location.href); let ch = false; for (const k of ['go', 'hlo', 'weather']) if (u.searchParams.has(k)) { u.searchParams.delete(k); ch = true; } if (ch) try { history.replaceState(history.state, '', u.href); } catch (_) { /* нет */ } }
   const em = Q.get('endmock'); if (em) { C.endScr.mock(em); } // ?endmock=solo-win | solo-lose | ol-win | ol-lose | mw-win | mw-lose — показать экран итога с примерными данными
   const go = Q.get('go'); if (go && ctrls[go]) { setup.game = go === 'training' ? 'training' : go; if (go === 'air' && HLO >= 0) setup.lo = HLO; /* меню при показе подменило вертолётную подвеску самолётной */ C.lastGame = go; C.start(go); }
+  setTimeout(() => C.crash.offer(), 2000); // окно «Игра закрылась с ошибкой» — когда меню уже на экране
 })();
 if (Q.get('test') === '1') { window.__a = C; window.__frame = frame; C.ctrls = ctrls; C.resize = resize; C.lessons = LESSONS; } // проверка: доступ к игре и шаг кадра вручную (страница в фоне)

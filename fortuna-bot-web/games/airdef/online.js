@@ -111,7 +111,7 @@ export function createOnline(C, ctrls) {
     }
   }
   function invite() {
-    const url = `https://fortunawtm.com/fortuna-bot-web/games/airdef.html?ad=${N.room.code}`, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
+    const url = `https://fortunawtm.com/airsuperiority/?ad=${N.room.code}` /* красивая ссылка (/airsuperiority/ → игра с тем же ?ad=; со слешем — без лишнего перенаправления GitHub Pages) */, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
     try { const tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.openTelegramLink) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`); return; } } catch (_) { /* не Telegram */ }
     if (navigator.share) { navigator.share({ title: text, url }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(url); C.say(tr('Ссылка скопирована'), 2); } catch (_) { C.say(tr('Код комнаты: {0}', [N.room.code]), 3); }
@@ -246,6 +246,7 @@ export function createOnline(C, ctrls) {
     const det = tr('РЛС уничтожено: {0} · сбито охотников за ПВО: {1}, ударников: {2}', [m.radarKills || 0, m.downsSead || 0, Math.max(0, (m.downs || 0) - (m.downsSead || 0))]);
     C.say(m.last ? `${m.totalK >= O.WIN_K ? tr('Авиация уничтожила цели') : tr('Последняя волна отбита')} · ${det}` : tr('Волна {0} окончена · уничтожено {1}% ценности целей · {2}{3}', [m.wave, Math.round(m.totalK * 100), det, m.lead ? tr(' · ведёт {0}', [m.lead === 'air' ? tr('авиация') : tr('ПВО')]) : '']), 7);
     if (team() === 'pvo') ctrls.defense.setNetRes(m);
+    else { N.myCraft = false; ctrls.air.netWaveOut(); } // уцелевший самолёт — на базу: сервер его уже убрал
   });
   // итог боя: «Мульти-волна» — «Два раунда», «Вылет и оборона» — «Табло команд» (endscr.js); очки рейтинга и награда доезжают из claimOnline
   N.on('end', (m) => {
@@ -304,6 +305,26 @@ export function createOnline(C, ctrls) {
   addEventListener('error', (e) => { if (N.battle) N.clog('js_error', `${e.message} @ ${(e.filename || '').split('/').pop()}:${e.lineno}`); });
   addEventListener('unhandledrejection', (e) => { if (N.battle) N.clog('js_error', String(e.reason && e.reason.stack || e.reason).slice(0, 600)); });
   document.addEventListener('visibilitychange', () => { if (N.battle) N.clog('visibility', document.visibilityState); });
+  // идёт онлайн-бой — запись раз в 5 с (main.js LIVE): вкладка вылетит — при следующем открытии игра сама вернётся в бой, а сервер
+  // получит, что было перед вылетом (пресет, карта, память, кадры). Обычный конец боя и выход её стирают
+  // хранилище вкладки (sessionStorage): переживает перезагрузку и вылет этой вкладки, но не видно новым — иначе вторая вкладка сама отбирала
+  // место у живой, и они перехватывали его по кругу (ревью 2026-10-27)
+  const LIVE_K = 'fortuna_ad_live', ss = { set(k, v) { try { sessionStorage.setItem(k, v); } catch (_) { /* приватный режим */ } } }, liveOff = () => ss.set(LIVE_K, '');
+  setInterval(() => {
+    if (!N.battle || N.conn !== 'on' || C.state !== 'play' || C.ended) return;
+    const R = C.renderer, gm = R && R.info && R.info.memory, pm = performance.memory;
+    ss.set(LIVE_K, JSON.stringify({ t: Date.now(), kind: N.battle.kind, q: C.P.name, map: C.MAP, fps: C.fps || 0, geo: gm ? gm.geometries : 0, tex: gm ? gm.textures : 0, prog: R && R.info.programs ? R.info.programs.length : 0,
+      heap: pm ? Math.round(pm.usedJSHeapSize / 1048576) : 0, pr: R ? Math.round(R.getPixelRatio() * 100) / 100 : 0, vw: C.VW, vh: C.VH, up: Math.round(performance.now() / 1000), view: C.ctrl === ctrls.defense ? ctrls.defense.st.view : 'air' }));
+  }, 5000);
+  for (const ev of ['lobby', 'end', 'lost']) N.on(ev, liveOff);
+  if (C.LIVE && !new URLSearchParams(location.search).get('ad')) { // открылись после вылета посреди боя: подключаемся сразу; сервер вернёт на своё место (hello → takeSeat)
+    C.setup.game = 'online'; let done = false;
+    N.on('conn', () => {
+      if (done || N.conn !== 'on') return; done = true; liveOff();
+      N.clog('reload', { ...C.LIVE, ago: Math.round((Date.now() - C.LIVE.t) / 1000), resumed: N.resumed ? 1 : 0 });
+      if (!N.resumed) C.say(tr('Бой, из которого вас выбросило, уже закрыт'), 4);
+    });
+  }
   setInterval(() => {
     if (!N.battle || C.state !== 'play') return;
     const s = (performance.now() - frT) / 1000; frT = performance.now();
@@ -312,9 +333,18 @@ export function createOnline(C, ctrls) {
     fr = 0;
   }, 30000);
   // ═════════════ Журнал сбитий и метки «нужна помощь» (поверх HUD) ═════════════
+  // значок слева от «Игроков»: сколько осталось фазы (сервер шлёт раз в секунду; часы раунда «Мульти-волны» — из строки сверху
+  // перенесены сюда), задержка и потери. DOM — только при смене текста
+  const chip = $('netChip'); let chipS = null;
+  function netChip() {
+    const l = N.room && N.room.left != null ? N.room.left : null, p = Math.round(N.ping || 0), on = N.conn === 'on' && p > 0;
+    const s = (l != null ? `<b>${Math.floor(l / 60)}:${String(l % 60).padStart(2, '0')}</b>` : '') +
+      `<small class="${!on || N.pl >= 10 || p >= 300 ? 'bad' : N.pl > 0 || p >= 150 ? 'mid' : ''}">${on ? tr('{0} мс · PL {1}%', [p, N.pl]) : tr('связь…')}</small>`;
+    if (s !== chipS) { chipS = s; chip.innerHTML = s; }
+  }
   C.extraHud = () => {
     if (!N.battle || C.state !== 'play') return;
-    fr++;
+    fr++; netChip();
     const hx = C.hx, now = performance.now();
     feed = feed.filter((f) => now - f.t < 6000); helps = helps.filter((h) => now - h.t < O.HELP_T * 1000);
     hx.textAlign = 'right'; hx.font = '600 12px "Golos Text", -apple-system, Segoe UI, sans-serif'; hx.shadowColor = 'rgba(0,0,0,.85)'; hx.shadowBlur = 4;
@@ -384,11 +414,11 @@ export function createOnline(C, ctrls) {
   // после боя «В КОМНАТУ» — остаться (keepRoom: комната вернётся в лобби), «Закрыть» и выход из боя — уйти из комнаты
   const toMenu0 = C.toMenu;
   let booted = false; // первый вызов — показ меню при загрузке: комната (вернулись в неё после перезагрузки под карту) остаётся
-  C.toMenu = function () { if (booted && (N.battle || N.room) && !keepRoom) { N.leave(); afterBattle = false; } booted = true; keepRoom = false; planEl.style.display = 'none'; document.body.classList.remove('netOn', 'plOpen'); for (const id of ['tMap', 'opMap']) $(id).classList.remove('helpGlow'); toMenu0(); };
+  C.toMenu = function () { if (booted && (N.battle || N.room) && !keepRoom) { N.leave(); afterBattle = false; } if (booted) liveOff(); booted = true; keepRoom = false; planEl.style.display = 'none'; document.body.classList.remove('netOn', 'plOpen'); for (const id of ['tMap', 'opMap']) $(id).classList.remove('helpGlow'); toMenu0(); };
   // ?ad=КОД — приглашение: сразу режим «Онлайн» и вход в комнату
   const inv = new URLSearchParams(location.search).get('ad');
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }
-  else if (new URLSearchParams(location.search).get('mp') === '1') { C.setup.game = 'online'; N.connect(); } // сайт: кнопка «Онлайн-бой» — сразу раздел онлайна
+  else if (new URLSearchParams(location.search).get('mp') === '1' || C.LIVE) { C.setup.game = 'online'; N.connect(); } // сайт: кнопка «Онлайн-бой» — сразу раздел онлайна; C.LIVE — возвращение в бой после вылета
   return { N, panel, primary, primaryText, onClick, again() {
     if (N.room && (N.room.state === 'end' || N.room.state === 'lobby')) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; C.menu.panel(true); C.menu.render(); if (N.room.state === 'end') { backWait = true; N.back(); renderBack(); } return; } // в ту же комнату
     C.toMenu(); C.setup.game = 'online'; if (N.conn === 'on') N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined); C.menu.panel(true); C.menu.render();

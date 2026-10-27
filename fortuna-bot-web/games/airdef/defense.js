@@ -1570,7 +1570,7 @@ export function createDefense(C) {
   function hud(dt, t) {
     if (st.net && st.multi) { const N = st.net, B = N.battle, left = N.room && N.room.left != null ? ` ${tr('· <b>{0} с</b>', [N.room.left])}` : '', rr = tr('Раунд {0}/{1}', [B.round, B.rounds]);
       $('dtop').innerHTML = st.phase === 'plan' ? tr('{0} · {1}{2} · очки <b>{3}</b>', [rr, atk() ? tr('план волны') : tr('расстановка ПВО'), left, atk() ? st.budget - planCost() : st.budget])
-        : st.phase === 'wave' ? tr('{0}{1} · {2} · разрушено <b>{3}%</b>{4}', [clock(), rr, atk() ? tr('ваша волна') : tr('оборона'), Math.round(100 * (B.V || 0) / (B.v0 || 1)), B.k > 1 ? ` ${tr('· <b>время ×3</b> (пусто)')}` : '']) : tr('{0} · итоги', [rr]);
+        : st.phase === 'wave' ? tr('{0}{1} · {2} · разрушено <b>{3}%</b>{4}', ['', rr, atk() ? tr('ваша волна') : tr('оборона'), Math.round(100 * (B.V || 0) / (B.v0 || 1)), B.k > 1 ? ` ${tr('· <b>время ×3</b>')}` : '']) : tr('{0} · итоги', [rr]);
     } else if (st.net) { const N = st.net, left = N.room && N.room.left !== null ? tr(' · {0} с', [N.room.left]) : '';
       $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · волна {0}/{1}{2} · очки <b>{3}</b>', [st.wave, st.waves, left, st.budget]) : tr('Волна <b>{0}/{1}</b>{2} · объекты целы <b>{3}%</b>', [st.wave, st.waves, left, Math.round((1 - ((N.battle && N.battle.valueK) || 0)) * 100)]); }
     else if (atk()) $('dtop').innerHTML = st.phase === 'plan' ? tr('План волны · очки угрозы <b>{0}</b>', [st.budget - planCost()]) : tr('{0}Волна · цели разрушены <b>{1}%</b>{2}', [clock(), Math.round((1 - targetsValue()) * 100), st.timeK > 1 ? tr(' · время ×{0}', [st.timeK]) : '']);

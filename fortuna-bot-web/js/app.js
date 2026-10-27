@@ -467,6 +467,18 @@ async function openArcadeGame(gameId, ranked, extra) {
   const iframe = document.getElementById("arcade-iframe");
   iframe.src = ranked ? game.file : `${game.file}?mode=training${extra ? "&" + extra : ""}`;
   document.getElementById("arcade-overlay").hidden = false;
+  gameViewport(gameId === "airdef");
+}
+
+// «Air Superiority Online» во фрейме: на время игры страница заходит под вырез экрана (viewport-fit=cover) и чёрная — иначе в горизонтали
+// iPhone Safari по бокам оставались светлые полосы фона сайта, а игра не доходила до краёв (Mark 2026-10-26). Отступы кнопок от выреза
+// игра берёт у этой страницы (games/airdef/shell.js envInsets). Закрыли игру — как было
+function gameViewport(on) {
+  const m = document.querySelector('meta[name="viewport"]');
+  if (m) { if (m.dataset.base === undefined) m.dataset.base = m.content; m.content = on ? m.dataset.base + ", viewport-fit=cover" : m.dataset.base; }
+  document.documentElement.style.background = on ? "#000" : "";
+  document.body.style.background = on ? "#000" : "";
+  document.body.style.minHeight = on ? "calc(100vh + 200px)" : ""; // iPhone: свайп по плашке игры «Потяните вверх» прокручивает эту страницу — Safari прячет панели
 }
 
 function closeArcadeOverlay() {
@@ -478,6 +490,8 @@ function closeArcadeOverlay() {
   } catch (_) { /* нет полноэкранного режима */ }
   try { if (document.pointerLockElement) document.exitPointerLock(); } catch (_) { /* нет захвата мыши */ }
   document.getElementById("arcade-overlay").hidden = true;
+  gameViewport(false);
+  try { sessionStorage.removeItem("fortuna_ad_live"); } catch (_) { /* приватный режим */ } // закрыли игру сами — не возвращать в онлайн-бой при следующем открытии (games/airdef/online.js LIVE)
   document.getElementById("arcade-iframe").src = "about:blank";
   arcadeCurrentGame = null;
   arcadeRanked = false;

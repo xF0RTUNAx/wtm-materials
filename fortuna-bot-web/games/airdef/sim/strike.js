@@ -223,12 +223,13 @@ export function createStrike(ctx) {
     const S = u.S, G = S.gun, M = ctx.mode(), d = u.pos.distanceTo(tr.pos);
     if (!(d < rmax && aglOf(tr) < hmax && u.ammo > 0 || (S.type !== 'guns' && d < rmax))) { u.gunOn = false; return false; }
     if (!noReact) { u.reactT += dt; if (u.reactT < S.react * (M.reactK || 1)) return true; }
+    if (u.gunForce > 0) { u.gunForce -= dt; u.gunOn = true; u.gunT = Math.max(u.gunT, 0.3); } // принудительная очередь («Съёмка», forceLaunch): без перерыва и без огневой дисциплины
     u.gunT -= dt;
     if (u.gunT <= 0) { u.gunOn = !u.gunOn; u.gunT = u.gunOn ? G.burst : G.pause * (0.7 + rnd() * 0.6); }
     // огневая дисциплина: расчёт не тратит снаряды, пока шанс попасть мал (дрон за 3 км) — ждёт, сопровождая
     TMP.copy(tr.pos).sub(u.pos); const w = TMP.clone().cross(tr.vel).length() / Math.max(1, d * d); // угловая скорость, рад/с
     const p = G.hitK * M.gunK * Math.pow(1 - d / rmax, 1.4) / (1 + w * 9) * u.skill * M.samSkill * (tr.isMun ? 0.6 : 1);
-    if (p * 8 < 0.1) { u.gunOn = false; return true; }
+    if (p * 8 < 0.1 && !(u.gunForce > 0)) { u.gunOn = false; return true; }
     if (u.gunOn) {
       if (S.type === 'guns') { u.ammo -= dt * (G.rof || 30); if (u.ammo <= 0) { u.gunOn = false; u.reloadT = u.reload0 = reloadOf(S); } } // темп — по пушкам комплекса; кончились — подвоз
       const hits = rnd() < p * dt * 8 ? 1 + Math.floor(rnd() * 3) : 0;
@@ -345,6 +346,18 @@ export function createStrike(ctx) {
     if (!launcherReady(u)) return tr('пусковая разворачивается');
     launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
+  }
+  // принудительный пуск («Съёмка», кнопка «Пуск»; в бою не вызывается): захват цели t, перезарядка и пусковая (башня, крышка ячейки) — сразу, ракета уходит этим же
+  // вызовом; пушки — очередь без перерыва ~1 с. Возвращает ракету, 'guns' для очереди или null (комплекс — глушилка / убит)
+  function forceLaunch(u, t) {
+    const S = u.S; if (u.dead || !t || t.dead || S.type === 'jammer') return null;
+    u.track = t; u.seeT = Math.max(u.seeT, 9); u.lostT = 0; u.reactT = 99; u.cool = 0; u.reloadT = 0; u.hold = false; if (S.radar) u.emit = true;
+    if (S.type === 'guns') { u.ammo = Math.max(u.ammo, 200); u.gunForce = Math.max(1, (S.gun.burst || 0.6) * 1.6); u.gunOn = true; u.gunT = u.gunForce; return 'guns'; }
+    if (u.ammo <= 0) u.ammo = S.ammo;
+    if (S.gun) u.gunForce = 0.8; // «Панцирь», «Тунгуска»: пушки вместе с ракетой
+    aimLauncher(u, 30); // слежение башни за один большой шаг: наведена, крышка открыта, слоты готовы
+    const m = launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1);
+    return m;
   }
   function designate(u, t) { if (u.desig !== t) { u.desig = t; u.track = null; u.seeT = 0; fx.radarState(u); } }
   // фильтр целей комплекса (cats — список видов или null = все); сопровождаемая цель не того вида снимается, ракеты в воздухе долетают
@@ -685,7 +698,7 @@ export function createStrike(ctx) {
     if (!w.route || !w.route.length) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); return; }
     const wp = w.route[0]; TMP.set(wp.x - w.pos.x, 0, wp.z - w.pos.z); if (TMP.length() < 400) { w.route.push(w.route.shift()); }
     TMP.normalize(); TMP.y = clamp((W.alt - w.pos.y) / 400, -0.2, 0.2); TMP.normalize(); turnToward(w.dir, TMP, 0.35 * dt);
-    w.speed = W.speed; w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed);
+    climbSpeed(w, W, dt); w.pos.addScaledVector(w.dir, w.speed * dt); w.vel.copy(w.dir).multiplyScalar(w.speed);
     w.scanT = (w.scanT || 0) - dt;
     if (w.scanT <= 0) { w.scanT = 1; for (const u of units) if (!u.dead && !u.spotted && u.pos.distanceTo(w.pos) < 7000 && city.los(w.pos.x, w.pos.y, w.pos.z, u.pos.x, u.pos.y + 2, u.pos.z, 4)) { u.spotted = true; fx.unitSpotted && fx.unitSpotted(u, w); } }
     if (w.t > W.life) { w.dead = true; fx.wpnEnd(w, { objects: [], units: [], intercepted: false }); }
@@ -773,8 +786,18 @@ export function createStrike(ctx) {
   // крылатая ракета: маршевый двигатель держит скорость, полёт на малой высоте с облётом крыш (смотрит вперёд),
   // за 1,8 км до цели — пикирование в точку (на конце — оптическая/тепловизионная ГСН). w.route — точки маршрута
   // (план удара): сначала через них, потом на цель; w.alt — высота по плану
+  // скорость на подъёме и спуске: тяга тянет к маршевой W.speed, на подъёме часть её уходит в высоту, в пикировании разгоняет тяжесть
+  // (Mark 2026-10-26: «набирают высоту или пикируют, а скорость фиксированная»). Установившаяся разница — G0·sinθ / kV: дрону
+  // (винт, запаса тяги мало) kV 0,5 — на подъёме под 30° 50 м/с → 40; крылатой kV 0,25 — в пикировании под 30° 250 → 270 м/с.
+  // К ней — с прежним темпом 0,5 (как в etaOf); пределы — у цели, а не у скорости (без скачков после схода с носителя, ревью 2026-10-27);
+  // планирующие (W.glide, без двигателя) — как было, скорость своя
+  function climbSpeed(w, W, dt) {
+    if (W.glide) { w.speed += (W.speed - w.speed) * Math.min(1, dt * 0.5); return; }
+    const kV = W.uav ? 0.5 : 0.25, want = clamp(W.speed - G0 * clamp(w.dir.y, -1, 1) / kV, W.speed * 0.55, W.speed * 1.7);
+    w.speed += (want - w.speed) * Math.min(1, dt * 0.5);
+  }
   function updateCruise(w, dt) {
-    const W = w.W, alt = w.alt ?? W.alt; w.speed += (W.speed - w.speed) * Math.min(1, dt * 0.5);
+    const W = w.W, alt = w.alt ?? W.alt; climbSpeed(w, W, dt);
     if (w.route && w.route.length && Math.hypot(w.route[0].x - w.pos.x, w.route[0].z - w.pos.z) < 700) w.route.shift();
     const wp = w.route && w.route.length ? w.route[0] : null, aim = wp || w.aim;
     TMP.copy(aim || w.pos.clone().addScaledVector(w.dir, 1000)).sub(w.pos); const dh = Math.hypot(TMP.x, TMP.z);
@@ -930,7 +953,7 @@ export function createStrike(ctx) {
   }
 
   return { units, sams, wpns, flares, objects, net, addUnit, release, spawnMun, dropCM, step, rwr, mws, radarSees, eyesSee, inZone, blast, aglOf, etaOf,
-    launch, designate, setEmit, setTgt, setManual, gunLead, irSees, removeUnit, moveUnit, launcherReady, unitTilt };
+    launch, forceLaunch, designate, setEmit, setTgt, setManual, gunLead, irSees, removeUnit, moveUnit, launcherReady, unitTilt };
 }
 
 // ═════════════ Предсказание полёта бомбы (CCIP и зона сброса) ═════════════

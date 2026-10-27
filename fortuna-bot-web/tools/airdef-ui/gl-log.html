@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Журнал сжатых текстур</title>
+<!-- Отладка вылета Safari (2026-10-26): игра во фрейме, каждый вызов compressedTexImage2D уходит строкой на приёмник :8939 (scratchpad logsrv.py) -->
+<style> html, body { margin: 0; height: 100%; background: #000; } iframe { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; } </style>
+</head>
+<body>
+<iframe id="f"></iframe>
+<script>
+const q = new URLSearchParams(location.search), LOG = (s) => { new Image().src = `http://${location.hostname}:8939/l?${encodeURIComponent(s)}`; };
+LOG('start ' + navigator.userAgent.slice(0, 120));
+const f = document.getElementById('f'), FIX = q.get('fix') || '', KEEPS = []; let n = 0, patched = null;
+LOG('fix ' + FIX); setInterval(() => LOG('hb'), 5000); // ?nowrap=1 — без перехвата GL (сравнение частоты сбоев)
+const BLK = { 0x93b0: 16, 0x83f0: 8, 0x83f1: 8, 0x83f2: 16, 0x83f3: 16, 0x8e8c: 16, 0x9274: 8, 0x9278: 16, 0x8d64: 8 }; // ASTC4x4, DXT1, DXT1a, DXT3, DXT5, BC7, ETC2 RGB, ETC2 RGBA, ETC1
+function patch(W) {
+  for (const P of [W.WebGL2RenderingContext && W.WebGL2RenderingContext.prototype, W.WebGLRenderingContext && W.WebGLRenderingContext.prototype]) {
+    if (!P || P.__p) continue; P.__p = 1; const o = P.compressedTexImage2D;
+    P.compressedTexImage2D = function (t, lv, fmt, w, h, b, data) {
+      const bytes = data && data.byteLength, bs = BLK[fmt], want = bs ? Math.ceil(w / 4) * Math.ceil(h / 4) * bs : -1;
+      if (!q.get('quiet') || lv === 0) LOG(`#${++n} lv ${lv} fmt 0x${fmt.toString(16)} ${w}x${h} bytes ${bytes} want ${want}${want >= 0 && bytes !== want ? ' MISMATCH' : ''}`);
+      if (FIX === 'keep') KEEPS.push(data); // держать данные: сборщик мусора их не тронет
+      if (FIX === 'copy') return o.call(this, t, lv, fmt, w, h, b, new Uint8Array(data)); // свежая копия со смещением 0
+      return o.apply(this, arguments);
+    };
+    const gc = P.getExtension; P.getExtension = function (name) { const e = gc.call(this, name); if (/compressed/.test(name)) LOG(`ext ${name} ${e ? 'yes' : 'no'}`); return e; };
+  }
+}
+// ?auto=1 — «пилот»: высота меняется каждые 12 с (150 м ↔ 6 км — набор и пикирование), пуски и сбросы, ловушки, смена оружия, форсаж;
+// в журнал каждые 2 с — высота, скорость, кадры, оружие в воздухе, память three
+try { localStorage.setItem('fortuna_airdef_lang', 'ru'); } catch (_) {}
+if (q.get('auto') === '1') {
+  const ALTS = [150, 2500, 400, 6000, 900, 3500, 250], T0 = Date.now(); let ai = 0, tk = 0;
+  setInterval(() => {
+    try {
+      const W = f.contentWindow, C = W.__a, A = C && C.ctrl; if (!C || C.state !== 'play' || !A || !A.craft || !A.demo) return;
+      if (C.paused && C.togglePause) C.togglePause();
+      const cr = A.craft, g = A.game, tg = (g && g.targets || []).find((o) => !o.dead) || { x: 0, z: 0 }; tk++;
+      if (tk % 12 === 1) { ai++; A.demo({ pt: { x: tg.x, z: tg.z }, alt: ALTS[ai % ALTS.length] }); }
+      if (tk % 4 === 0 && A.fire) A.fire(true);
+      if (tk % 6 === 3 && A.cm) A.cm(true);
+      if (tk % 20 === 10 && A.nextWeapon) A.nextWeapon();
+      if (tk % 15 === 7 && A.setThr) A.setThr(tk % 30 === 7 ? 4 : 2);
+      if (cr.dead && tk % 10 === 0 && C.start) C.start('air'); // сбит — новый вылет
+      if (tk % 2 === 0) { const R = C.renderer, m = R.info.memory; LOG(`t ${Math.round((Date.now() - T0) / 1000)} alt ${Math.round(cr.pos.y)} v ${Math.round(cr.speed * 3.6)} hp ${Math.round(cr.hp)} fps ${C.fps} wp ${C.S ? C.S.wpns.length : 0} sam ${C.S ? C.S.sams.length : 0} geo ${m.geometries} tex ${m.textures} prog ${R.info.programs.length} dead ${cr.dead ? 1 : 0}`); }
+    } catch (e) { LOG('pilot err ' + e.message); }
+  }, 1000);
+}
+if (!q.get('nowrap')) setInterval(() => { try { const W = f.contentWindow; if (W && W !== patched && W.location.href.includes('airdef.html')) { patch(W); patched = W; } } catch (_) {} }, 0);
+f.src = '../../games/airdef.html?mode=training' + (q.get('auto') === '1' ? '&test=1' : '') + '&go=' + (q.get('go') || 'air') + (q.get('map') ? '&map=' + q.get('map') : '') + (q.get('x') ? '&' + q.get('x') : ''); // x — доп. параметры игры (ktx=0 …)
+</script>
+</body>
+</html>

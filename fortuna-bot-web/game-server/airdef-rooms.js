@@ -37,6 +37,7 @@ const PLAN_T = FAST ? 3 : O.PLAN_T, WAVE_T = FAST ? 45 : O.WAVE_T, DEBRIEF_T = F
 const MSG_MAX = 4096, MSG_RATE = 120, MSG_KILL = 600, ROOMS_MAX = 200;
 const AFK_T = 4;              // лётчик молчит дольше — его самолёт ведёт ИИ, пока игра не попросит его назад ('retake')
 const LOBBY_HOLD_T = 30;      // в лобби связь пропала (перезагрузка под карту комнаты, обрыв) — место ждёт, потом игрок выбывает
+const BATTLE_HOLD_T = 120;    // в бою не осталось людей на связи (вылет вкладки) — бой идёт с ИИ и ждёт возвращения, потом комната закрывается
 const DEAD_T = 9;             // от игры ничего (даже пинга раз в 2 с) дольше — соединение мёртвое: закрываем, место ждёт переподключения
 const EXTRAP_MAX = 0.3;       // прокси между состояниями летит по прямой не дольше, с
 const REL_CD = 0.25, CM_CD = 0.3;
@@ -65,7 +66,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
   // ── вид комнаты (выбор связок авиации видят только союзники) ──
   const view = (r, me) => ({
     t: 'room', code: r.code, mode: r.mode, size: r.size, era: r.era, sideAir: r.sideAir, host: r.host, quick: !!r.quick, state: r.state, wave: r.wave,
-    left: r.phaseT ? Math.max(0, Math.round(r.phaseT - r.t)) : null, valueK: r.valueK || 0, fill: !!r.fill, lead: r.lead || null,
+    left: r.phaseT ? Math.max(0, Math.round(r.phaseT - (r.kind === 'multi' && r.state === 'play' ? r.wt : r.t))) : null, valueK: r.valueK || 0, fill: !!r.fill, lead: r.lead || null, // left: раунд «Мульти-волны» кончается по времени боя (в затишье ×3)
     ...(r.kind === 'multi' && MU ? MU.viewExtra(r, me) : {}),
     players: [...r.players.values()].map((p) => ({ id: p.id, name: p.name, team: p.team, bot: !!p.bot, ready: !!p.ready, away: !p.bot && !p.ws, spent: !me || p.team === me.team ? p.spent || 0 : null,
       budget: !me || p.team === me.team ? p.budget : null, choice: (!me || p.team === me.team) && p.choice !== null && p.choice !== undefined ? p.choice : null,
@@ -424,7 +425,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     }
     if (r.state !== 'lobby' && Math.floor(r.t) !== r.sec) { r.sec = Math.floor(r.t); sendRoom(r); } // таймер фазы — раз в секунду
     if (r.kind === 'multi') { if (r.state !== 'lobby') MU.step(r, dt); return; }
-    if (r.state === 'plan') { if (r.t >= r.phaseT || team(r, 'air').concat(team(r, 'pvo')).every((p) => p.ready || !p.ws && !p.bot)) startWave(r); return; }
+    // никого на связи (бой держится после вылета вкладки) — план до конца срока: вернувшийся успеет выбрать связку / расставить ПВО
+    if (r.state === 'plan') { if (r.t >= r.phaseT || (!r.emptyT && team(r, 'air').concat(team(r, 'pvo')).every((p) => p.ready || !p.ws && !p.bot))) startWave(r); return; }
     if (r.state === 'debrief') { if (r.t >= r.phaseT) { if (r.last) endBattle(r); else nextWave(r); } return; }
     if (r.state === 'end') { if (r.t >= r.phaseT) toLobby(r); return; } // итоги показаны — снова лобби той же комнаты
     if (r.state !== 'play') return;
@@ -490,14 +492,23 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
   // мёртвые соединения (телефон ушёл из сети, приложение свернули): закрываем — место ждёт переподключения, самолёт ведёт ИИ
   // лобби и итоги: место без связи держим LOBBY_HOLD_T (тот же аккаунт вернётся — takeSeat), потом — долой
   setInterval(() => { const now = clock(); for (const r of [...rooms.values()]) if (r.state === 'lobby' || r.state === 'end') for (const p of humans(r)) if (!p.ws && p.goneT && now - p.goneT > LOBBY_HOLD_T) { p.goneT = 0; if (p.room === r) leaveRoom(p); else { r.players.delete(p.id); if (!humans(r).length) closeRoom(r); else sendRoom(r); } } }, 2000);
+  // бой без людей на связи: кто-то вернулся — держим дальше как обычно; никто за BATTLE_HOLD_T — закрываем
+  setInterval(() => { const now = clock(); for (const r of [...rooms.values()]) if (r.emptyT && r.state !== 'lobby' && r.state !== 'end') { if (humans(r).some((p) => p.ws)) r.emptyT = 0; else if (now - r.emptyT > BATTLE_HOLD_T) closeRoom(r); } }, 2000);
   setInterval(() => { const now = clock(); for (const c of [...clients]) if (c.room && c.ws && now - (c.lastMsg || now) > DEAD_T) { J(c.room, 'dead', { who: c.name }); try { c.ws.close(); } catch (_) { /* уже */ } c.ws.onclose && c.ws.onclose(); } }, 2000);
+  // такты — по часам, а не по таймеру: setInterval на Windows срабатывает с шагом системного таймера 15,6 мс — вместо 33 мс выходило
+  // 42–47 мс, и бой шёл на 0,7–0,8 скорости (журнал Mark 2026-10-26: 5 с боя за 6,2–7,1 с); клиенты досчитывают по скорости и на каждом
+  // снимке дёргали ракеты и самолёты назад. Теперь шагов столько, сколько прошло времени; догоняем не больше 0,25 с (после сна ноутбука)
+  let tickAcc = 0, tickLast = performance.now();
   setInterval(() => {
-    const t0 = performance.now();
-    for (const r of [...rooms.values()]) { try { step(r, DT); } catch (e) { log('ad: ошибка такта ' + (e && e.stack || e)); J(r, 'error', { msg: String(e && e.message || e) }); } }
-    queueStep(); mqueueStep();
-    const ms = performance.now() - t0, now = clock(); load.ema += (ms - load.ema) * 0.02; load.max = Math.max(load.max, ms);
-    if (now - load.maxT > 60) { load.maxPrev = load.max; load.max = 0; load.maxT = now; }
-  }, 1000 * DT);
+    const t1 = performance.now(); tickAcc = Math.min(tickAcc + (t1 - tickLast) / 1000, 0.25); tickLast = t1;
+    while (tickAcc >= DT) {
+      tickAcc -= DT; const t0 = performance.now();
+      for (const r of [...rooms.values()]) { try { step(r, DT); } catch (e) { log('ad: ошибка такта ' + (e && e.stack || e)); J(r, 'error', { msg: String(e && e.message || e) }); } }
+      queueStep(); mqueueStep();
+      const ms = performance.now() - t0, now = clock(); load.ema += (ms - load.ema) * 0.02; load.max = Math.max(load.max, ms);
+      if (now - load.maxT > 60) { load.maxPrev = load.max; load.max = 0; load.maxT = now; }
+    }
+  }, 500 * DT); // вдвое чаще такта: шаги ровнее по времени (на Windows всё равно не чаще 15,6 мс)
 
   // ═════════════ Быстрый поиск ═════════════
   // очередь по режиму: роли «авиация», «ПВО», «любая». Набралось 2 на 2 — ждём ещё QUEUE_EXTRA_T (вдруг 3 на 3 …);
@@ -565,11 +576,20 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       clients.delete(c);
       for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); }
       const r = c.room;
-      if (r) { c.ws = null; if (r.state === 'lobby' || r.state === 'end') { c.goneT = clock(); sendRoom(r); } else { if (c.craft) toAI(r, c, 'disconnect'); if (!humans(r).some((p) => p.ws)) closeRoom(r); else sendRoom(r); } }
+      // бой: ушёл последний человек на связи (вкладка вылетела, телефон без сети) — комнату не закрываем сразу, а держим BATTLE_HOLD_T:
+      // тот же аккаунт после перезагрузки попадает обратно в свой бой (hello → takeSeat). Раньше бой с ботами закрывался в тот же миг (журнал 2026-10-26)
+      if (r) { c.ws = null; if (r.state === 'lobby' || r.state === 'end') { c.goneT = clock(); sendRoom(r); } else { if (c.craft) toAI(r, c, 'disconnect'); if (!humans(r).some((p) => p.ws)) { r.emptyT = clock(); J(r, 'empty', { hold: BATTLE_HOLD_T }); } else sendRoom(r); } }
     };
   }
+  // отчёты о вылете (games/airdef/crashrep.js): без входа, один на соединение и не больше CRASH_MAX в минуту на сервер — в журнал ad_crash
+  const crashRate = { t: 0, n: 0 }, CRASH_MAX = 20;
   async function onMsg(c, m) {
     if (m.t === 'ping') return send(c, { t: 'pong', i: +m.i || 0 }); // клиент меряет задержку и потери (раз в 2 с)
+    if (m.t === 'crash') {
+      const now = clock(); if (now - crashRate.t > 60) { crashRate.t = now; crashRate.n = 0; }
+      if (!c.crashSent && ++crashRate.n <= CRASH_MAX) { c.crashSent = true; J(null, 'crash', { d: String(typeof m.d === 'string' ? m.d : JSON.stringify(m.d)).slice(0, 3000) }); }
+      return send(c, { t: 'crashOk' });
+    }
     if (m.t === 'hello') {
       const who = await auth(m); if (!who) return send(c, { t: 'err', msg: 'Не удалось войти: обновите страницу' });
       if (who.needGame) return send(c, { t: 'err', msg: 'Создайте аккаунт игры — новым игрокам прогресс копится только на нём', need_game: true }); // аккаунт сайта без прогресса игры (билет с ng)
@@ -591,6 +611,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
         queues[m.mode].push({ c, role: ['air', 'pvo'].includes(m.role) ? m.role : 'any', t: clock() }); return send(c, { t: 'queued', mode: m.mode, n: queues[m.mode].length }); }
       case 'unqueue': for (const q of [...Object.values(queues), ...Object.values(mqueues)]) { const i = q.findIndex((e) => e.c === c); if (i >= 0) q.splice(i, 1); } return send(c, { t: 'unqueued' });
     }
+    // страница открылась после вылета, а бой уже закрыт (комнаты нет) — отчёт всё равно в журнал: для поиска причин вылетов нужны и неудачные возвраты (ревью 2026-10-27)
+    if (!r && m.t === 'clog' && m.k === 'reload' && !c.reloadLogged) { c.reloadLogged = true; J(null, 'client', { who: c.name, k: 'reload', d: String(typeof m.d === 'string' ? m.d : JSON.stringify(m.d)).slice(0, 1500) }); return; }
     if (!r) return;
     const me = c, host = r.host === c.id;
     if (r.kind === 'multi' && r.state !== 'lobby' && m.t !== 'clog') { MU.onMsg(c, r, m); return; } // «Мульти-волна» — свой разбор

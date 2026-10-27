@@ -326,6 +326,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <div class="cat-h">${tr('Управление')}</div>
       ${C.IS_TOUCH ? `<button class="btn alt" id="sLayout">${tr('Расположение и размер кнопок…')}</button>` : ''}
       ${C.shell.canFs() ? `<label class="chk"><input type="checkbox" id="sFs" ${C.shell.fsPref ? 'checked' : ''}> ${tr('полный экран')}</label>` : ''}
+      ${C.shell.hintKind() ? `<label class="chk"><input type="checkbox" id="sFsHint" ${C.shell.fsHint ? 'checked' : ''}> ${C.shell.hintKind() === 'swipe' ? tr('плашка «Потяните вверх», когда панели Safari видны в бою') : tr('кнопка возврата, когда полный экран слетел в бою')}</label>` : ''}
       <label class="chk">${tr('ручка (тангаж и крен)')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх — нос вниз (как в авиасимуляторах)')}</label>
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sAim" ${C.sens.aim !== false ? 'checked' : ''}> ${tr('наведение камерой: самолёт летит туда, куда смотрит камера (выкл — ручка в левой половине экрана)')}</label>` : ''}
@@ -406,6 +407,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sPadOn') { C.sens.pad = e.target.checked; C.saveSens(); document.body.classList.toggle('nopad', !C.sens.pad); }
     if (e.target.id === 'sPadK') { C.sens.padK = +e.target.value; $('vPadK').textContent = Math.round(C.sens.padK * 100) + '%'; C.saveSens(); }
     if (e.target.id === 'sFs') C.shell.setFs(e.target.checked);
+    if (e.target.id === 'sFsHint') C.shell.setFsHint(e.target.checked); // Mark 2026-10-27: кнопку / плашку полного экрана можно убрать
     if (e.target.id === 'sMute') { snd.unlock(); snd.setMuted(!e.target.checked); C.muteIco(); }
   };
   // Арсенал / Справка / Настройки / Об игре — панель поверх меню; повторное касание, ✕ или Esc — закрыть

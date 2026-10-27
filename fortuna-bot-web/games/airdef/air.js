@@ -516,6 +516,39 @@ export function createAir(C) {
     if (C.hooks.trainFire) C.hooks.trainFire(l.key);
     if (l.n <= 0) nextWeapon();
   }
+  // принудительный пуск для «Съёмки» (кнопка «Пуск»): с пилона o.st, иначе выбранное оружие, иначе любое годное; подвеска пуста — пополнение и пуск.
+  // Бомбы — сразу (без зоны сброса и проверки крена), управляемые — по o.tgt (объект) или ближайшей цели задания, ПРР — по ближайшей РЛС (нет её — другое
+  // оружие). Возвращает { w — пущенное оружие (null у ложной цели), st — пилон, key, rearmed } или null
+  const FF = V3();
+  function forceFire(o = {}) {
+    if (craft.dead || game.over) return null;
+    const rearmed = !loadout.some(usable);
+    if (rearmed) rearm();
+    const tgt = o.tgt && !o.tgt.dead ? o.tgt : game.targets.filter((q) => !q.dead).sort((a, b) => (a.x - craft.pos.x) ** 2 + (a.z - craft.pos.z) ** 2 - (b.x - craft.pos.x) ** 2 - (b.z - craft.pos.z) ** 2)[0];
+    const P = tgt ? tgtPos(tgt, FF).clone() : fwdOf(craft, V3()).multiplyScalar(4000).add(craft.pos); // нет целей — вперёд
+    const armU = (Wp) => C.S.units.filter((u) => !u.dead && u.S.radar).sort((a, b) => a.pos.distanceToSquared(craft.pos) - b.pos.distanceToSquared(craft.pos))[0] || null;
+    const first = o.st !== undefined ? loadout.find((q) => usable(q) && q.st.includes(o.st)) : null;
+    for (const l of [first, curW(), ...loadout].filter(usable).sort((m, n) => (AG[m.key].kind === 'decoy') - (AG[n.key].kind === 'decoy'))) { // ложные цели — в последнюю очередь
+      const Wp = AG[l.key], opts = {};
+      if (Wp.kind === 'arm') { const u = armU(Wp); if (!u) continue; opts.target = u; }
+      else if (Wp.tv || Wp.kind === 'lgb' || (Wp.kind === 'agm' && Wp.seeker === 'laser')) { opts.aim = P; if (tgt && !craft.heli) { pod.tgt = tgt; pod.lock = P.clone(); pod.lockName = tgtName(tgt); } } // подсвет и ГСН — на цель
+      else if (Wp.kind === 'gps' || Wp.kind === 'cruise' || Wp.kind === 'decoy') opts.aim = P;
+      let w = null, stn;
+      if (Wp.kind === 'rocket') {
+        const per = Math.ceil(Wp.load / Wp.salvo); l.rs = (l.rs ?? per) - 1; stn = l.st[l.st.length - 1];
+        for (let i = 0; i < Wp.salvo; i++) w = C.S.release(craft, l.key, opts);
+        if (l.rs <= 0) { l.st.pop(); l.n--; l.rs = per; }
+      } else {
+        const i = o.st !== undefined ? l.st.indexOf(o.st) : -1; stn = i >= 0 ? l.st.splice(i, 1)[0] : l.st.pop(); l.n--;
+        const m = pylonMeshes.find((q) => q.userData.st === stn); if (m) m.visible = false;
+        w = C.S.release(craft, l.key, opts);
+      }
+      updLoad(); logFire(l.key);
+      if (l.n <= 0 && l === loadout[sel]) nextWeapon();
+      return { w, st: stn, key: l.key, rearmed };
+    }
+    return null;
+  }
   // ловушки — одной кнопкой (одинаково на всех устройствах): пачка ЛТЦ и диполей разом; у каждой машины свои точки и залп (sim/cm.js)
   const cmInfo = () => cmOf(cmKey(craft), craft.cmSide); // ловушки машины игрока
   const cmLow = (k) => (cmInfo().flare ? craft.cmFlare : craft.cmChaff) < C.MODE().cm * k; // запас ловушек ниже доли k (у машины без ЛТЦ — по диполям)
@@ -1231,6 +1264,13 @@ export function createAir(C) {
     craft.dead = true; craft.hp = 0; C.fx.explosion(craft.pos, 30, 'plane'); snd.planeKill(0);
     spec.why = why || tr('Самолёт сбит'); spec.t = 0; spec.init = false; say(spec.why, 4);
   }
+  // волна кончилась, а самолёт цел: сервер его уже убрал (endWave) — у игрока он тоже уходит на базу, камера облетает район,
+  // пока идут итоги и выбор связки (Mark 2026-10-26: «полёт продолжается во время выбора нового юнита»)
+  function netWaveOut() {
+    if (craft.dead) return;
+    craft.dead = true; ship.visible = false; free.on = false; $('tLook').classList.remove('on'); pod.show = false;
+    spec.why = tr('Волна окончена — самолёт вернулся на базу'); spec.t = 0; spec.init = false;
+  }
   function stop() {
     game.net = null; free.on = false; free.id = null; $("tLook").classList.remove("on"); zn.Z = null; zoneG.visible = false;
     ship.visible = false; $('hud').style.display = 'none'; $('podBox').style.display = 'none'; document.body.classList.remove('flying');
@@ -1402,6 +1442,52 @@ export function createAir(C) {
     }
     if (craft.ab && !abWas) snd.afterburner(); abWas = craft.ab;
   }
+  // автопилот «Съёмки» (demo.photo, Mark 2026-10-26: «улетает за карту и не возвращается», «всё ещё врезается в землю и препятствия»).
+  // Курс: заход на точку demo.pt → после прохода прямо ещё 2,2–3,2 км и разворот на неё же (самолёт остаётся в районе цели); оружие в воздухе —
+  // круг вокруг точки (цель сбоку, контейнер держит подсвет, самолёт не уходит за оружием); у края карты (< 3,5 км) — к центру.
+  // Высота: лучи вперёд по курсу и по желаемому повороту (±11°) на ~12 с полёта — крыши и рельеф + запас clr; нужный подъём считается как угол
+  // до самой опасной точки (с учётом того, что на выводе из снижения самолёт ещё теряет vy²/78 м), нос не ниже этого угла — выход из пикирования заранее
+  const PHF = V3();
+  function photoPilot(dt) {
+    const sp = Math.max(craft.speed, 100), p = craft.pos, pt = demo.pt, f = PHF, ve = craft.vel;
+    const hx = Math.hypot(ve.x, ve.z) > 40 ? ve.x : fwdOf(craft, f).x, hz = Math.hypot(ve.x, ve.z) > 40 ? ve.z : f.z, hl = Math.hypot(hx, hz) || 1, hdx = hx / hl, hdz = hz / hl;
+    let vx = pt.x - p.x, vz = pt.z - p.z; const d = Math.hypot(vx, vz) || 1; vx /= d; vz /= d;
+    const edge = CITY.HALF - Math.max(Math.abs(p.x), Math.abs(p.z)), wfly = C.S.wpns.some((w) => w.owner === craft && !w.dead);
+    const rt = clamp(sp * sp / (9.81 * Math.min(5, (craft.fm ? craft.fm.nMax(craft, sp) : 6) * 0.6)), 1500, 3500); // радиус виража
+    let dx = vx, dz = vz;
+    if (edge < 3500) { const r = Math.hypot(p.x, p.z) || 1; dx = -p.x / r; dz = -p.z / r; demo.ph = 'in'; demo.orb = 0; } // у края — к центру
+    else if (wfly) { // круг вокруг точки: касательная + поправка по радиусу
+      const rx = -vx, rz = -vz; // от точки к самолёту
+      if (!demo.orb) demo.orb = (-rz * hdx + rx * hdz) >= 0 ? 1 : -1;
+      const k = clamp((d - rt) / rt, -1, 1) * 1.2; dx = -rz * demo.orb - rx * k; dz = rx * demo.orb - rz * k; demo.ph = 'in';
+    } else {
+      demo.orb = 0;
+      if (demo.ph === 'out') { dx = hdx; dz = hdz; demo.phT = (demo.phT || 0) + dt; if (d > (demo.outD || 2800) || demo.phT > 30) demo.ph = 'in'; }
+      else if (d < 450 || (vx * hdx + vz * hdz < -0.2 && d < 2500)) { demo.ph = 'out'; demo.phT = 0; demo.outD = clamp(sp * 10, 2200, 3200); }
+    }
+    const dl = Math.hypot(dx, dz) || 1; dx /= dl; dz /= dl;
+    // высота: рельеф и крыши по лучам
+    const alt = demo.alt, clr = Math.max(90, alt * 0.35), look = clamp(sp * 12, 1800, 4800), vy = ve.y, yEff = p.y - (vy < 0 ? vy * vy / 78 : 0);
+    let need = -1, gnd = city.groundH(p.x, p.z);
+    for (const [ux, uz] of [[hdx, hdz], [dx, dz]]) for (const off of [-0.2, 0, 0.2]) {
+      const c = Math.cos(off), sn = Math.sin(off), rx = ux * c - uz * sn, rz = ux * sn + uz * c;
+      for (let s = 60; s <= look; s += s < 600 ? 60 : 120) {
+        const x = p.x + rx * s, z = p.z + rz * s, h = Math.max(city.groundH(x, z), city.topAt(x, z)) + clr;
+        need = Math.max(need, (h - yEff) / s);
+        if (s <= 1500) gnd = Math.max(gnd, city.groundH(x, z));
+      }
+    }
+    const here = Math.max(city.groundH(p.x, p.z), city.topAt(p.x, p.z));
+    if (p.y - here < clr * 0.6) need = Math.max(need, 0.12); // совсем низко — набирать при любом раскладе
+    const wantY = demo.ph === 'in' && !wfly && edge >= 3500 ? Math.max(city.groundH(pt.x, pt.z), gnd * 0.5 + city.groundH(pt.x, pt.z) * 0.5) + alt : gnd + alt;
+    const pw = clamp(Math.atan2(wantY - p.y, clamp(d, 800, 4000)), -0.3, 0.3), pl = need > 0 ? Math.atan(need) + 0.04 : -9;
+    // курс: не больше 63° от текущего за раз (иначе на развороте «через плечо» самолёт валится в пикирование), а чтобы виражом не терять высоту
+    // (крен ~60° — вертикальная часть подъёмной силы вдвое меньше), нос цели — выше пропорционально повороту
+    const her = Math.atan2(-dx, -dz) - craft.yaw, herr = Math.atan2(Math.sin(her), Math.cos(her));
+    aim.yaw = craft.yaw + clamp(herr, -1.1, 1.1); aim.pitch = clamp(Math.max(pw, pl) + 0.4 * Math.min(1, Math.abs(herr) / 1.1), -0.3, 0.9);
+    if (pl > 0.35 && p.y - here < clr) { aim.yaw = Math.atan2(-hdx, -hdz); } // выход вплотную к земле — крылья в горизонт, прямо
+    const o = aimSteer(); return o;
+  }
   // самолёт: ручка / крестовина / наведение камерой → pilotStep; ниже крыш и земли — авария
   function planeFly(dt) {
     const keysOf = (...k) => k.some((c) => keys.has(c));
@@ -1416,7 +1502,8 @@ export function createAir(C) {
     if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = tr('Газ'); tb.classList.toggle('ab', thrI === AB_I); } // спидометр и газ
     if (stick.id !== null) { rx += stick.x; ry -= stick.y * inv; }
     let rz = 0;
-    if (demo) { // показ в обучении: автопилот на высоте demo.alt к точке demo.pt, оружие применяет «АВТО»
+    if (demo && demo.photo) { const o = photoPilot(dt); rx = o[0]; ry = o[1]; rz = o[2]; }
+    else if (demo) { // показ в обучении: автопилот на высоте demo.alt к точке demo.pt, оружие применяет «АВТО»
       // высота — не ниже рельефа впереди (горы, дома): смотрим по курсу и по пути к точке на ~14 с полёта вперёд
       const look = clamp(craft.speed * 14, 1500, 4500), fy = Math.atan2(demo.pt.x - craft.pos.x, demo.pt.z - craft.pos.z), clr = Math.max(90, demo.alt * 0.35);
       let floor = -1e9, near = -1e9;
@@ -1577,12 +1664,13 @@ export function createAir(C) {
     // обучение: показ автопилотом, перенос самолёта, смена целей задания, камера (0 — за самолётом, 3 — за оружием)
     demo(d) { demo = d || null; if (!demo) aimSync(); },
     place(sp) { craft.pos.set(sp.x, sp.y, sp.z); craft.yaw = sp.yaw || 0; craft.pitch = craft.roll = 0; craft.q = null; craft.speed = craft.heli ? 20 : Math.max(craft.speed, 220); craft.wp = craft.wr = craft.wz = 0; fwdOf(craft, craft.vel).multiplyScalar(craft.speed); aimSync(); camInit = false; },
+    forceFire, // «Съёмка»: принудительный пуск (кнопка «Пуск»)
     retarget(list) { game.targets = list; podSet(null); },
     setCam(m) { if (camMode !== m) { camMode = m; wc.obj = null; wc.init = false; } },
     // «Съёмка»: модель самолёта и подвеска (пилоны — userData.st), поставить модель в точку самолёта до кадра
     ship, pylons: () => pylonMeshes, poseShip() { ship.position.copy(craft.pos); ship.rotation.set(craft.pitch, craft.yaw, craft.roll, 'YXZ'); ship.updateMatrixWorld(true); },
     get hasPod() { return hasPod; }, get sel() { return sel; }, get mapOn() { return mapOn; }, curW,
-    start, stop, update, hud, onKey, finish, camera: updateCamera, startNet, netSpawn, netHit, netDown, netAI, focus: () => craft.pos, afterRender: renderPod, extraCam: () => (pod.show && hasPod && craft && !craft.dead ? podCam : null),
+    start, stop, update, hud, onKey, finish, camera: updateCamera, startNet, netSpawn, netHit, netDown, netAI, netWaveOut, focus: () => craft.pos, afterRender: renderPod, extraCam: () => (pod.show && hasPod && craft && !craft.dead ? podCam : null),
     resize() { layoutTouch(); layoutPod(); },
     pop, podState: () => ({ tgt: pod.tgt && tgtName(pod.tgt), why: pod.why, lock: !!pod.lock, lockD: pod.lock ? Math.round(craft.pos.distanceTo(pod.lock)) : -1 }), // подскок и прицел — для стендов
     // вертолёт — своё управление (2026-10-22: в паузе были клавиши самолёта: тангаж, форсаж)

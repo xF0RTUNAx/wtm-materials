@@ -140,10 +140,11 @@ export function createNet(C) {
   function handle(m) {
     switch (m.t) {
       case 'welcome': {
-        N.me = { id: m.id, name: m.name }; N.conn = 'on'; N.search = m.search || null;
+        N.me = { id: m.id, name: m.name }; N.conn = 'on'; N.search = m.search || null; N.resumed = !!m.resumed;
+        if (m.resumed) N.retakeT = performance.now(); // вернулись на место (и после перезагрузки страницы, где N.re нет): самолёт, который вёл ИИ, — просим назад (ревью 2026-10-27)
         const re = N.re; N.re = null; clearTimeout(reTimer);
         if (re) {
-          N.clog('reconnect', m.resumed ? 'resumed' : 'seat_lost'); if (m.resumed) N.retakeT = performance.now(); // вернулись в бой — самолёт (если его вёл ИИ) попросим назад
+          N.clog('reconnect', m.resumed ? 'resumed' : 'seat_lost');
           if (!m.resumed) { const b = N.battle; N.room = null; endMirror(); if (b) { b.lost = true; emit('lost'); } else if (re.code) N.join(re.code, re.team); } // лобби: место уже свободно — входим снова
         }
         emit('conn'); emit('re'); return;
@@ -352,9 +353,12 @@ export function createNet(C) {
   // ═════════════ Кадр: досчёт зеркала и отправка своего ═════════════
   N.update = (dt) => {
     if (!N.battle || !C.S) return;
-    const now = performance.now() / 1000, S = C.S, kk = 1 - Math.exp(-dt * 10);
+    // «Мульти-волна» в затишье идёт ×3 (N.battle.k): скорости в снимке — боевые, досчёт — во времени боя, иначе носители, ракеты
+    // и дроны отставали от сервера втрое и прыгали вперёд на каждом снимке (Mark 2026-10-26: «прерывания юнитов в мульти-волне»)
+    const kT = N.battle.kind === 'multi' ? N.battle.k || 1 : 1;
+    const now = performance.now() / 1000, S = C.S, kk = 1 - Math.exp(-dt * 10 * kT);
     for (const a of ac.values()) {
-      const ahead = Math.min(AHEAD, now - a.st);
+      const ahead = Math.min(AHEAD, now - a.st) * kT;
       const px = a.sp.x + a.sv.x * ahead, py = a.sp.y + a.sv.y * ahead, pz = a.sp.z + a.sv.z * ahead;
       a.pos.x += (px - a.pos.x) * kk; a.pos.y += (py - a.pos.y) * kk; a.pos.z += (pz - a.pos.z) * kk;
       a.yaw += wrap(a.ty - a.yaw) * kk; a.pitch += (a.tp - a.pitch) * kk; a.roll += wrap(a.tr - a.roll) * kk; a.vel.lerp(a.sv, kk);
@@ -365,10 +369,10 @@ export function createNet(C) {
       m.trailT -= dt; if (m.lit && m.started && m.trailT <= 0) { m.trailT = m.M.L > 5 ? 0.03 : 0.04; C.fx.samTrail(m); }
     }
     for (const w of wpns.values()) {
-      const ahead = Math.min(AHEAD, now - w.st); w.pos.copy(w.sp).addScaledVector(w.vel, ahead); w.t += dt;
-      w.trailT -= dt; if (w.trailT <= 0 && !w.W.uav && !(w.W.kind === 'tbm' && w.phase !== 'boost')) { w.trailT = w.W.kind === 'tbm' ? 0.04 : 0.08; if (C.simFx.wpnTrail) C.simFx.wpnTrail(w); else C.fx.wpnTrail(w); } // дроны — без следа; баллистика — на разгоне
+      const ahead = Math.min(AHEAD, now - w.st) * kT; w.pos.copy(w.sp).addScaledVector(w.vel, ahead); w.t += dt * kT;
+      w.trailT -= dt * kT; if (w.trailT <= 0 && !w.W.uav && !(w.W.kind === 'tbm' && w.phase !== 'boost')) { w.trailT = w.W.kind === 'tbm' ? 0.04 : 0.08; if (C.simFx.wpnTrail) C.simFx.wpnTrail(w); else C.fx.wpnTrail(w); } // дроны — без следа; баллистика — на разгоне
     }
-    for (const u of S.units) if (u.slotT) for (const k in u.slotT) if (u.slotT[k] > 0) u.slotT[k] -= dt;
+    for (const u of S.units) if (u.slotT) for (const k in u.slotT) if (u.slotT[k] > 0) u.slotT[k] -= dt * kT; // след и пусковые — тоже во времени боя
     for (const u of S.units) if (u.gunOn && u.track && !u.dead) C.simFx.gunFire(u, u.track, 0, dt); // трассы зениток — по флагу из снимка
     // свой самолёт: состояние 20 Гц, подсвет лазером
     const a = C.player;

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#f5f2ec" />
+<title>Рамка игры — проверка</title>
+<!-- Проверка рамки сайта (app.html «Аркада»): ?fix=1 — как после правки 2026-10-26 (viewport-fit=cover и чёрный фон на время игры), без — как было -->
+<style>
+  body { margin: 0; min-height: 200vh; background: #f5f2ec; color: #2a2722; font: 16px -apple-system, sans-serif; }
+  .arcade-overlay { position: fixed; inset: 0; z-index: 200; background: #000; }
+  .arcade-iframe { width: 100%; height: 100%; border: none; display: block; }
+  #swipe { position: fixed; left: 0; right: 0; bottom: 0; height: 60px; z-index: 300; background: rgba(255,120,0,.6); color: #fff; display: flex; align-items: center; justify-content: center; touch-action: pan-y; font: 600 15px -apple-system, sans-serif; }
+</style>
+</head>
+<body>
+<p style="padding:20px">Страница сайта (светлый фон)</p>
+<div id="arcade-overlay" class="arcade-overlay"><iframe id="arcade-iframe" class="arcade-iframe" allow="fullscreen; screen-wake-lock; autoplay" allowfullscreen></iframe></div>
+<div id="swipe">⌃ потяните вверх</div>
+<button id="fsb" style="position:fixed;z-index:400;top:50%;left:45%;font:600 16px -apple-system;padding:10px 14px">⛶ Полный экран</button>
+<div id="dbg" style="position:fixed;top:0;left:50%;z-index:400;background:#fff;color:#000;font:12px monospace"></div>
+<script>
+setInterval(() => { const f = document.getElementById('arcade-iframe'), r = f.getBoundingClientRect(), o = document.getElementById('arcade-overlay').getBoundingClientRect(); let w = '?'; try { const W = f.contentWindow; w = W.innerWidth + '×' + W.innerHeight + ' cv ' + (W.__a ? W.__a.VW + '×' + W.__a.VH : '-'); } catch (_) {} document.getElementById('dbg').textContent = 'or ' + window.orientation + ' ang ' + (screen.orientation ? screen.orientation.angle + ' ' + screen.orientation.type : '-') + ' · ' + innerWidth + '×' + innerHeight + ' sy ' + Math.round(scrollY) + ' ov ' + Math.round(o.top) + '/' + Math.round(o.height) + ' fr ' + Math.round(r.top) + '/' + Math.round(r.height) + ' in ' + w; }, 300);
+// ?btn=1 проверка: кнопка сама прокручивает страницу — сворачивает ли Safari панели без свайпа
+if (document.getElementById('fsb')) document.getElementById('fsb').onclick = () => { const m = q.get('mode') || 'smooth'; if (m === 'inst') window.scrollTo(0, document.body.scrollHeight); else if (m === 'by') window.scrollBy({ top: 400, behavior: 'smooth' }); else window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); };
+function gameViewport(on) {
+  const m = document.querySelector('meta[name="viewport"]'), th = document.querySelector('meta[name="theme-color"]');
+  if (m) { if (m.dataset.base === undefined) m.dataset.base = m.content; m.content = on ? m.dataset.base + ", viewport-fit=cover" : m.dataset.base; }
+  if (th) { if (th.dataset.base === undefined) th.dataset.base = th.content; th.content = on ? "#000000" : th.dataset.base; }
+  document.documentElement.style.background = on ? "#000" : "";
+  document.body.style.background = on ? "#000" : "";
+}
+const q = new URLSearchParams(location.search);
+if (!q.get('strip')) { document.getElementById('swipe').remove(); document.getElementById('fsb').remove(); } // ?strip=1 — старые проверочные полоса и кнопка
+document.getElementById('arcade-iframe').src = '../../games/airdef.html?mode=training' + (q.get('go') ? '&go=' + q.get('go') : '') + (q.get('x') ? '&' + q.get('x') : '');
+if (q.get('fix') === '1') gameViewport(true);
+</script>
+</body>
+</html>

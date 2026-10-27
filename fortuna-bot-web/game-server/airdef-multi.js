@@ -222,7 +222,7 @@ export function createMulti(ctx) {
   // ═════════════ Такт ═════════════
   function step(r, dt) {
     if (r.state === 'plan') {
-      if (r.t >= r.phaseT || [...r.players.values()].every((p) => p.ready || (!p.ws && !p.bot))) startWave(r);
+      if (r.t >= r.phaseT || (!r.emptyT && [...r.players.values()].every((p) => p.ready || (!p.ws && !p.bot)))) startWave(r); // никого на связи — подготовка до конца срока (вернувшийся успеет)
       return;
     }
     if (r.state === 'debrief') { if (r.t >= r.phaseT) { if (r.last) endBattle(r); else nextRound(r); } return; }

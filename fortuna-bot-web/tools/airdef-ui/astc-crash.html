@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ASTC: вылет Safari</title>
+<!-- Отладка вылета Safari (2026-10-26): много загрузок ASTC 4×4 подряд. ?m=img — compressedTexImage2D (как three r128), sub — texStorage2D +
+     compressedTexSubImage2D по уровням, tile — то же кусками ≤ 64 КБ. ?n= — загрузок за кадр. Ход — на приёмник :8939 (scratchpad logsrv.py) -->
+<style> body { margin: 0; background: #111; color: #eee; font: 14px monospace; } canvas { width: 64px; height: 64px; } </style>
+</head>
+<body>
+<canvas id="c" width="64" height="64"></canvas><pre id="o"></pre>
+<script>
+const q = new URLSearchParams(location.search), M = q.get('m') || 'img', N = +(q.get('n') || 6);
+const LOG = (s) => { document.getElementById('o').textContent = s; new Image().src = `http://${location.hostname}:8939/l?${encodeURIComponent(M + ' ' + s)}`; };
+const gl = document.getElementById('c').getContext('webgl2'), ext = gl.getExtension('WEBGL_compressed_texture_astc'), F0 = ext.COMPRESSED_RGBA_ASTC_4x4_KHR, ETC = gl.getExtension('WEBGL_compressed_texture_etc'), F = q.get('f') === 'etc2' ? ETC.COMPRESSED_RGB8_ETC2 : F0, BB = q.get('f') === 'etc2' ? 8 : 16; // ?f=etc2 — ETC2 RGB (8 байт на блок)
+const pool = [], SIZES = [1024, 512, 512, 256, 128, 2048], NPOT = [[1792, 2016], [2048, 1536], [2048, 1792], [1024, 1536], [1792, 2016]]; // ?s=npot — размеры моделей, перед которыми падал Safari
+let n = 0, bytes = 0;
+// ?draw=1 — как в игре: текстура уже нарисована (пустой, пока данные не пришли), загрузка — в текстуру, которую видеокарта ещё использует
+const vs = gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs, '#version 300 es\nin vec2 p; out vec2 uv; void main(){ uv = p * 0.5 + 0.5; gl_Position = vec4(p, 0, 1); }'); gl.compileShader(vs);
+const fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, '#version 300 es\nprecision mediump float; uniform sampler2D t; in vec2 uv; out vec4 o; void main(){ o = texture(t, uv); }'); gl.compileShader(fs);
+const pr = gl.createProgram(); gl.attachShader(pr, vs); gl.attachShader(pr, fs); gl.linkProgram(pr); gl.useProgram(pr);
+const vb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vb); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+const draw = (t) => { gl.bindTexture(gl.TEXTURE_2D, t); gl.drawArrays(gl.TRIANGLES, 0, 3); };
+function level(w, h) { const a = new Uint8Array(Math.ceil(w / 4) * Math.ceil(h / 4) * BB); for (let i = 0; i < a.length; i += 997) a[i] = i & 255; return a; }
+function upload() {
+  const s = SIZES[n % SIZES.length], np = q.get('s') === 'npot' ? NPOT[n % NPOT.length] : null, w = np ? np[0] : s, h = np ? np[1] : n % 7 === 3 ? s / 2 : s, L = Math.floor(Math.log2(Math.max(w, h))) + 1, t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  if (q.get('draw')) { draw(t); if (pool.length) draw(pool[n % pool.length]); gl.bindTexture(gl.TEXTURE_2D, t); }
+  if (q.get('ps')) { // ?ps=1 — как в игре между загрузками: обычная текстура с переворотом, выравниванием 1 и премультипликацией, состояние остаётся
+    const t2 = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t2); gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 33, 17, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array(33 * 17 * 4)); gl.deleteTexture(t2); gl.bindTexture(gl.TEXTURE_2D, t);
+    if (q.get('ps') === '2') { gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false); gl.pixelStorei(gl.UNPACK_ALIGNMENT, 4); } // ps=2 — как three: переворот снят, выравнивание 4, премультипликация — от текстуры
+  }
+  if (M !== 'img') gl.texStorage2D(gl.TEXTURE_2D, L, F, w, h);
+  for (let l = 0; l < L; l++) {
+    const lw = Math.max(1, w >> l), lh = Math.max(1, h >> l), d = level(lw, lh); bytes += d.length;
+    if (M === 'img') gl.compressedTexImage2D(gl.TEXTURE_2D, l, F, lw, lh, 0, d);
+    else if (M === 'sub' || d.length <= 65536) gl.compressedTexSubImage2D(gl.TEXTURE_2D, l, 0, 0, lw, lh, F, d);
+    else { const rows = Math.max(4, Math.floor(65536 / (Math.ceil(lw / 4) * 16)) * 4); for (let y = 0; y < lh; y += rows) { const hh = Math.min(rows, lh - y); gl.compressedTexSubImage2D(gl.TEXTURE_2D, l, 0, y, lw, hh, F, d.subarray(Math.ceil(lw / 4) * (y / 4) * 16, Math.ceil(lw / 4) * ((y + hh) / 4) * 16)); } }
+  }
+  if (q.get('draw')) { draw(t); if (n % 5 === 0 && pool.length) { const o = pool[(n * 7) % pool.length]; draw(o); gl.bindTexture(gl.TEXTURE_2D, o); const lw = 64, d = level(lw, lw); if (M === 'img') gl.compressedTexImage2D(gl.TEXTURE_2D, 0, F, lw, lw, 0, d); draw(o); } } // ещё и переопределить уровень у уже нарисованной
+  pool.push(t); if (pool.length > (q.get('keep') ? 1e9 : 40)) gl.deleteTexture(pool.shift()); // ?keep=1 — не удалять: память растёт
+  n++;
+}
+function frame() { for (let i = 0; i < N; i++) upload(); gl.clearColor(n % 2, 0.2, 0.3, 1); gl.clear(gl.COLOR_BUFFER_BIT); if (n % 30 < N) LOG(`${n} текстур, ${(bytes / 1048576).toFixed(0)} МБ, ошибка GL ${gl.getError()}`); requestAnimationFrame(frame); }
+LOG('старт'); requestAnimationFrame(frame);
+</script>
+</body>
+</html>

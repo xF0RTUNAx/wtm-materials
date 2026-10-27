@@ -33,7 +33,7 @@ Object.defineProperty(globalThis, 'localStorage', { value: { getItem: (k) => sto
 let rafCb = null; globalThis.requestAnimationFrame = (f) => { rafCb = f; return 1; };
 // рендерер-заглушка: все вызовы WebGL — пустые
 class FakeRenderer {
-  constructor() { this.shadowMap = { enabled: false, autoUpdate: true }; this.capabilities = { isWebGL2: true, getMaxAnisotropy: () => 4 }; this.toneMapping = 0; this.outputEncoding = 0; this.toneMappingExposure = 1; this.autoClear = true; this._pr = 1; this.domElement = el('c'); }
+  constructor() { this.shadowMap = { enabled: false, autoUpdate: true }; this.capabilities = { isWebGL2: true, getMaxAnisotropy: () => 4 }; this.toneMapping = 0; this.outputEncoding = 0; this.toneMappingExposure = 1; this.autoClear = true; this._pr = 1; this.domElement = el('c'); this.info = { memory: {}, programs: [], render: { calls: 0, triangles: 0 }, reset() {} }; }
   setPixelRatio(p) { this._pr = p; } getPixelRatio() { return this._pr; } setSize() {} render() {} compile() {} setRenderTarget() {} getRenderTarget() { return null; }
   setScissor() {} setScissorTest() {} setViewport() {} clear() {} getContext() { return {}; } getClearColor(c) { return c; } getClearAlpha() { return 1; } setClearColor() {}
 }
