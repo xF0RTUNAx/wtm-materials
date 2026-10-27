@@ -519,7 +519,8 @@ export function createPhoto(C, ctrls) {
       { const b = BX.setFromObject(A.ship).getSize(TMP); st.shipL = clamp(Math.max(b.x, b.z), 8, 40) || 16; st.shipW = clamp(b.x / 2, 3, 30) || 6; }
       st.subs = subsAir();
     } else if (st.br === 'def') {
-      const key = SAM[setup.psam] && SAM[setup.psam].side === setup.side && SAM[setup.psam].era <= setup.era ? setup.psam : Object.keys(SAM).find((k) => SAM[k].side === setup.side && SAM[k].era <= setup.era);
+      const ok = (k) => SAM[k] && SAM[k].side === setup.side && SAM[k].era <= setup.era && SAM[k].type !== 'jammer'; // глушилки GPS — не в съёмке
+      const key = ok(setup.psam) ? setup.psam : Object.keys(SAM).find(ok);
       const Sx = SAM[key];
       st.att = setup.side === 'east' ? 'west' : 'east'; st.vsMulti = setup.pvs === 'multi' && combinedOk(st.att, st.era);
       const S = C.newBattle({ defSide: setup.side, era: st.era, rnd });
