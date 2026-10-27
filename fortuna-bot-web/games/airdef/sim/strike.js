@@ -347,17 +347,31 @@ export function createStrike(ctx) {
     launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
   }
-  // принудительный пуск («Съёмка», кнопка «Пуск»; в бою не вызывается): захват цели t, перезарядка и пусковая (башня, крышка ячейки) — сразу, ракета уходит этим же
-  // вызовом; пушки — очередь без перерыва ~1 с. Возвращает ракету, 'guns' для очереди или null (комплекс — глушилка / убит)
+  // принудительный пуск («Съёмка», кнопка «Пуск»; в бою не вызывается): захват цели t и перезарядка — сразу; пусковая доворачивается с настоящей скоростью
+  // (крышка ячейки «Тора» открывается), ракета уходит, как только навелась (forceStep), — без рывка башни (Mark 2026-10-27: «пуск — не продолжение
+  // процесса, а резкое перемещение»); не навелась за 6 с — как раньше, сразу. Пушки — очередь без перерыва ~1 с.
+  // Возвращает ракету (пусковая уже наведена), 'pending' (доворачивается), 'guns' или null (комплекс — глушилка / убит)
   function forceLaunch(u, t) {
     const S = u.S; if (u.dead || !t || t.dead || S.type === 'jammer') return null;
     u.track = t; u.seeT = Math.max(u.seeT, 9); u.lostT = 0; u.reactT = 99; u.cool = 0; u.reloadT = 0; u.hold = false; if (S.radar) u.emit = true;
     if (S.type === 'guns') { u.ammo = Math.max(u.ammo, 200); u.gunForce = Math.max(1, (S.gun.burst || 0.6) * 1.6); u.gunOn = true; u.gunT = u.gunForce; return 'guns'; }
     if (u.ammo <= 0) u.ammo = S.ammo;
     if (S.gun) u.gunForce = 0.8; // «Панцирь», «Тунгуска»: пушки вместе с ракетой
-    aimLauncher(u, 30); // слежение башни за один большой шаг: наведена, крышка открыта, слоты готовы
-    const m = launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1);
-    return m;
+    if (launcherReady(u)) return forcedShot(u, t);
+    u.force = { t, left: 6 }; u.cool = 99; // своим ходом комплекс не пускает, пока ждёт наводки (иначе — две ракеты)
+    return 'pending';
+  }
+  function forcedShot(u, t) { const m = launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(u.S) * (ctx.reloadK ? ctx.reloadK() : 1); return m; }
+  // ожидание наводки принудительного пуска: цель держится, пусковая доворачивается (aimLauncher — каждый шаг), пуск — когда навелась
+  // до aimLauncher: цель — принудительная (свой выбор цели комплексом в updateUnit её не сбивает)
+  function forceHold(u) { const t = u.force.t; if (!u.dead && !t.dead) { u.track = t; u.lostT = 0; u.seeT = Math.max(u.seeT, 9); u.hold = false; } }
+  function forceStep(u, dt) {
+    const f = u.force, t = f.t;
+    if (u.dead || t.dead) { u.force = null; u.cool = 0; return; }
+    const late = (f.left -= dt) <= 0;
+    if (!launcherReady(u) && !late) return;
+    if (late) aimLauncher(u, 30); // не навелась за 6 с (цель за препятствием, медленная башня) — как раньше, сразу
+    u.force = null; forcedShot(u, t);
   }
   function designate(u, t) { if (u.desig !== t) { u.desig = t; u.track = null; u.seeT = 0; fx.radarState(u); } }
   // фильтр целей комплекса (cats — список видов или null = все); сопровождаемая цель не того вида снимается, ракеты в воздухе долетают
@@ -916,7 +930,7 @@ export function createStrike(ctx) {
     net.alertT = Math.max(0, net.alertT - dt);
     const targets = ctx.aircraft();
     for (const a of targets) if (a.chaffT > 0) a.chaffT -= dt;
-    for (const u of units) { updateUnit(u, dt, targets); aimLauncher(u, dt); }
+    for (const u of units) { updateUnit(u, dt, targets); if (u.force) forceHold(u); aimLauncher(u, dt); if (u.force) forceStep(u, dt); }
     for (const m of sams) if (!m.dead) updateSam(m, dt);
     for (const w of wpns) if (!w.dead) updateWpn(w, dt);
     updateFlares(dt);

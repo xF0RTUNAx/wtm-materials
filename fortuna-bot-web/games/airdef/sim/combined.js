@@ -55,7 +55,9 @@ export function podPose(L, pos, dir) {
 // «Искандер» (dofash_76): две ракеты стоят на пусковой вертикально (направляющая у автора под 56,8° поднята до вертикали в prepare.js, raiseSel) — центры
 // (оси модели l_iskander, y — от земли) и ось ракеты (вверх). Пуск — из центра ракеты вдоль её оси (первые секунды, как у пакета HIMARS); ракеты уходят по очереди: tbm, tbm2
 // «Точка-У» (своя, боевое положение): ракета 9М79 стоит вертикально в корме (центр — по готовому l_tochka.glb: prepare.js центрует машину по длине); раньше — 6 м над центром машины
-export const RAIL = { l_iskander: { c: [[0.58, 5.36, 5.121], [-0.58, 5.36, 5.121]], a: [0, 1, 0] }, l_tochka: { c: [[0, 5.753, 4.464]], a: [0, 1, 0] } };
+// Р-17 (l_scud): ракета на поднятой стреле в корме — центр части tbm готового l_scud.glb; без записи стартовала из «центра машины + 6 м» — посреди
+// пусковой, в стороне от стоящей ракеты (Mark 2026-10-27: «телепортируется уже пущенной где-то по центру пусковой»)
+export const RAIL = { l_iskander: { c: [[0.58, 5.36, 5.121], [-0.58, 5.36, 5.121]], a: [0, 1, 0] }, l_tochka: { c: [[0, 5.753, 4.464]], a: [0, 1, 0] }, l_scud: { c: [[0, 7.213, 5.963]], a: [0, 1, 0] } };
 export function railPose(L, j, pos, dir) {
   const R = RAIL[L.key], c = R.c[Math.min(j, R.c.length - 1)], cy = Math.cos(L.yaw), sy = Math.sin(L.yaw);
   pos.set(L.pos.x + c[0] * cy + c[2] * sy, L.pos.y + c[1], L.pos.z - c[0] * sy + c[2] * cy);
@@ -278,7 +280,7 @@ export function createCombined(S, city, rnd, opts = {}) {
     for (const L of launchers) {
       const P = POD[L.key]; if (!P) continue;
       const next = queue.find((q) => q.L === L), up = next ? next.t - t < 1 / P.rate + 3 : t - L.lastFire < 4;
-      L.podEl = Math.min(1, Math.max(0, L.podEl + (up ? 1 : -1) * P.rate * dt));
+      L.podEl = Math.min(1, Math.max(0, L.podEl + (up ? 1 : -1) * P.rate * (up && L.podFast ? L.podFast : 1) * dt)); // podFast — «Пуск» в «Съёмке»: подъём быстрее, но плавно
     }
     while (queue.length && queue[0].t <= t) {
       if (opts.gate && !opts.gate()) { for (const q of queue) if (q.t <= t) q.t = t + 1; break; } // онлайн: в воздухе слишком много — пуски ждут

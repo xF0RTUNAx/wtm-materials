@@ -170,6 +170,10 @@ export function createPhoto(C, ctrls) {
   // ── камера ──
   const gAt = (x, z) => Math.max(city.groundH(x, z), city.autumn ? city.autumn.WY : -1e9); // земля или вода болота
   const Fs = V3(), Rv = V3(), Uv = V3(), DIR = V3(), WANT = V3(), LW = V3(), OFF = V3(), LOFF = V3(), prevPos = V3(), lookS = V3();
+  // плавная смена объекта при записи ролика (Mark 2026-10-27: «в кадрах пуска с самолётов плавно перенести акцент с самолёта на эти юниты»): точка, за которой
+  // идёт камера, перетекает со старого объекта на новый за TR_DUR с (st.trPend → st.tr), расстояние и взгляд догоняют медленнее обычного
+  // сначала взгляд (TR_LOOK с — новый объект уже в кадре), потом сама камера (TR_DUR с): «поворот, затем наезд» — без пустого неба посередине
+  const ANCH = V3(), AP = V3(), APL = V3(), TR_DUR = 1.8, TR_LOOK = 0.7; let anchOk = false;
   let curDist = 30, hadPos = false;
   function cameraUpdate(dt) {
     if (st.br === 'air') ctrls.air.poseShip(); // модель — в точку самолёта до кадра (иначе «прыгает»)
@@ -180,7 +184,11 @@ export function createPhoto(C, ctrls) {
     if (Math.abs(camera.fov - fov) > 0.01 && !(A.fixed && R.kind !== 'st' && st.fb.t > 0 && !FOVS[st.fi] && !(shot && shot.f))) C.setFov(fov); // пролёт: провожаем — фокус свой (ниже)
     if (shot && shot.cam) { const q = shot.cam, g = shot.cg; camera.position.set(q[0], q[1] + (g ? gAt(q[0], q[2]) : 0), q[2]); camera.up.set(0, 1, 0); camera.lookAt(q[3], q[4] + (g ? gAt(q[3], q[5]) : 0), q[5]); return; } // камера в точке [x, y, z, куда x, y, z]; cg — высоты (y) над землёй, а не абсолютные
     if (R.kind === 'hold') { lookS.lerp(R.look, 1 - Math.exp(-dt * 4)); camera.up.set(0, 1, 0); camera.lookAt(lookS); return; }
-    const snap = st.snap || !hadPos || prevPos.distanceToSquared(R.pos) > 400 * 400; st.snap = false; prevPos.copy(R.pos); hadPos = true;
+    const snap = (st.snap || !hadPos || prevPos.distanceToSquared(R.pos) > 400 * 400) && !st.trPend; st.snap = false; prevPos.copy(R.pos); hadPos = true;
+    if (st.trPend) { st.trPend = false; st.tr = anchOk ? { D: V3().copy(ANCH).sub(R.pos), t: 0 } : null; }
+    const ease = (x) => { const u = Math.min(1, x); return 1 - u * u * (3 - 2 * u); };
+    let blend = 0, blendL = 0; if (st.tr && !snap) { st.tr.t += dt; blend = ease(st.tr.t / TR_DUR); blendL = ease(st.tr.t / TR_LOOK); if (st.tr.t >= TR_DUR) st.tr = null; } else st.tr = null;
+    AP.copy(R.pos); APL.copy(R.pos); if (blend) AP.addScaledVector(st.tr.D, blend); if (blendL) APL.addScaledVector(st.tr.D, blendL);
     if (snap || R.kind === 'py') Fs.copy(R.F); else Fs.lerp(R.F, 1 - Math.exp(-dt * 5)).normalize();
     Rv.crossVectors(Fs, R.kind === 'py' ? R.U : UP); if (Rv.lengthSq() < 1e-4) Rv.set(1, 0, 0); Rv.normalize(); Uv.crossVectors(Rv, Fs).normalize();
     if (A.fixed && R.kind !== 'st') { // пролёт: точка впереди по курсу, объект проходит мимо; прошёл — новая точка
@@ -209,10 +217,10 @@ export function createPhoto(C, ctrls) {
     DIR.copy(Fs).multiplyScalar(Math.cos(el) * Math.cos(az)).addScaledVector(Rv, Math.cos(el) * Math.sin(az) * R.side).addScaledVector(Uv, Math.sin(el));
     WANT.copy(DIR).multiplyScalar(dist);
     if (R.kind === 'st') LW.copy(Uv).multiplyScalar(R.L * 0.12); else LW.copy(Fs).multiplyScalar(A.k === 'front' ? 0 : R.L * 0.5);
-    if (snap) { OFF.copy(WANT); LOFF.copy(LW); } else { const k = 1 - Math.exp(-dt * (R.kind === 'py' ? 12 : 5)); OFF.lerp(WANT, k); LOFF.lerp(LW, k); }
-    camera.position.copy(R.pos).add(OFF);
+    if (snap) { OFF.copy(WANT); LOFF.copy(LW); } else { const k = 1 - Math.exp(-dt * (R.kind === 'py' ? 12 : st.tr ? 2.2 : 5)); OFF.lerp(WANT, k); LOFF.lerp(LW, k); }
+    camera.position.copy(AP).add(OFF); ANCH.copy(AP); anchOk = true;
     const top = city.topAt(camera.position.x, camera.position.z) + 1; if (camera.position.y < top) camera.position.y = top;
-    camera.up.copy(R.kind === 'py' ? Uv : UP); lookS.copy(R.pos).add(LOFF); camera.lookAt(lookS);
+    camera.up.copy(R.kind === 'py' ? Uv : UP); lookS.copy(APL).add(LOFF); camera.lookAt(lookS);
     curDist = OFF.length();
   }
 
@@ -407,7 +415,7 @@ export function createPhoto(C, ctrls) {
     if (r.rearmed) { st.prevSt = new Map(); for (const l of A.loadout) for (const s of l.st) st.prevSt.set(s, l.key); }
     if (r.w) st.rel.set(r.st, { o: r.w, deadT: -1, p: V3() }); // камера пилона шла за ним до разрыва (resolve, 'st')
     const i = st.subs.findIndex((x) => x.id === 'st' && x.st === r.st);
-    if (i >= 0 && r.w) { st.subj = i; st.snap = true; st.fb.p = null; renderUi(); }
+    if (i >= 0 && r.w && !(shot && shot.hud)) { st.subj = i; if (shot && shot.rec) st.trPend = true; else st.snap = true; st.fb.p = null; renderUi(); } // запись ролика — переход на оружие плавный (st.trPend), с интерфейсом боя — камера у самолёта
   }
   // точка для цели в зоне комплекса: расстояние — выше мёртвой зоны, высота — над крышами (радар и оптика видят цель с земли только над ними), прямая видимость есть
   function zonePoint(u) {
@@ -446,7 +454,7 @@ export function createPhoto(C, ctrls) {
     const t = zoneTarget(u); if (!t) return;
     const r = C.S.forceLaunch(u, t); if (!r) return;
     st.lastAct = st.simT; delete st.fol.msl; // следующая «Его ракета» — эта, а не прежняя, ещё летящая
-    if (r !== 'guns') st.fireId = Math.max(st.fireId, r.id);
+    if (r !== 'guns' && r.id) st.fireId = Math.max(st.fireId, r.id); // 'pending' — пусковая доворачивается, ракета уйдёт сама (sim/strike.js forceStep)
   }
   // следующий пуск волны сейчас: носитель — на рубеже, пакет пусковой — поднят, время пуска единицы — «сейчас»
   function multiFire() {
@@ -455,12 +463,15 @@ export function createPhoto(C, ctrls) {
     const next = () => { let b = null; for (const [k, n] of ev.comp) for (let i = 0; i < n; i++) { const q = ev.unitInfo(k, i); if (!q.launched && (!b || q.t < b.t)) b = { k, i, t: q.t, car: q.carrier }; } return b; };
     pick = next();
     if (!pick) { C.ev = null; startEvMulti(); ev = C.ev; pick = next(); if (!pick) return; } // волна кончилась — новая, и её первый пуск — сразу
-    for (const L of ev.launchers) if (POD[L.key]) L.podEl = 1; // пакет HIMARS / Lance поднят (иначе 15–24 с)
+    for (const L of ev.launchers) if (POD[L.key]) L.podFast = 4; // пакет HIMARS / стрела Lance поднимаются вчетверо быстрее (~4 и ~6 с вместо 15–24), но плавно — не рывком (Mark 2026-10-27)
     const a = pick.car;
-    if (a && !a.dead && !a.out) { // носитель — на рубеж пуска, сразу к пуску
-      const b = a.b, R = a.R, x = Math.sin(b) * R, z = Math.cos(b) * R, tx = Math.sin(b + 0.25) * R, tz = Math.cos(b + 0.25) * R;
-      a.phase = 'ingress'; a.delay = 0; a.inbound = false; a.relT = 0; a.t0 = (a.t0 || 0) + 2;
-      a.pos.set(x, a.cruise, z); a.yaw = Math.atan2(-(tx - x), -(tz - z)); a.pitch = 0; a.q = null; fwdOf(a, a.vel).multiplyScalar(a.speed);
+    if (a && !a.dead && !a.out) { // носитель ещё на подлёте — на рубеж пуска сразу; уже на рубеже — пускает с места, без переноса (рывок в кадре)
+      if (a.inbound || a.phase === 'wait') {
+        const b = a.b, R = a.R, x = Math.sin(b) * R, z = Math.cos(b) * R, tx = Math.sin(b + 0.25) * R, tz = Math.cos(b + 0.25) * R;
+        a.phase = 'ingress'; a.delay = 0; a.inbound = false; a.t0 = (a.t0 || 0) + 2;
+        a.pos.set(x, a.cruise, z); a.yaw = Math.atan2(-(tx - x), -(tz - z)); a.pitch = 0; a.q = null; fwdOf(a, a.vel).multiplyScalar(a.speed);
+      }
+      a.relT = 0;
       const q = a.salvo.find((e) => e.k === pick.k && e.i === pick.i); if (q) { q.t = 0; a.salvo.sort((m, n) => m.t - n.t); a.launchAt = a.salvo[0].t; } // носитель пускает на следующем шаге (у плана носителей — минимум минута подлёта)
     } else {
       const P = st.evPlan[pick.k] || (st.evPlan[pick.k] = {}); (P.units || (P.units = []))[pick.i] = { t: 0 };
@@ -468,6 +479,7 @@ export function createPhoto(C, ctrls) {
       ev.step(0.51); // «сейчас» у плана — через 0,5 с: этот шаг пускает ближайшего
     }
     delete st.fol.mun; st.endT = 0;
+    if (a && shot && shot.rec && st.subs[st.subj] && st.subs[st.subj].id === 'src') st.munSw = 0.8; // запись ролика: носитель пустил — через 0,8 с камера плавно переходит на ракету (update)
   }
   // волна кончилась (пусков больше не будет, всё долетело) — через 4 с новая; кадр без старых пусковых — сброс C.ev на шаг
   function evTick(dt, again) {
@@ -655,6 +667,7 @@ export function createPhoto(C, ctrls) {
     },
     update(dt) {
       st.simT += dt;
+      if (st.munSw !== undefined && (st.munSw -= dt) <= 0) { st.munSw = undefined; const j = st.subs.findIndex((x) => x.id === 'mun'); if (j >= 0) { st.subj = j; delete st.fol.mun; st.trPend = true; } }
       if (st.br === 'air') { ctrls.air.update(dt); airTick(dt); } else if (st.br === 'def') defTick(dt); else evTick(dt, startEvMulti);
     },
     dtK: () => SPD[st.spd],

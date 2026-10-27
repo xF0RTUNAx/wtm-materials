@@ -148,7 +148,7 @@ if (MODE === 'fdef') {
         let top = -1; for (const m of C.S.sams) if (m.unit === hero && m.id > top) top = m.id;
         const wasGun = !!hero.gunOn; if (S0.type === 'guns') { hero.gunOn = false; hero.gunForce = 0; }
         press();
-        const w = waitFor(() => { for (const m of C.S.sams) if (m.unit === hero && m.id > top) return true; return S0.type === 'guns' && hero.gunOn; });
+        const w = waitFor(() => { for (const m of C.S.sams) if (m.unit === hero && m.id > top) return true; return S0.type === 'guns' && hero.gunOn; }, 240); // пусковая доворачивается с настоящей скоростью (≤ 6 с, sim/strike.js forceStep)
         waits.push(w === null ? null : w / 30);
         for (let f = 0; f < 90; f++) frame();
       }
@@ -193,7 +193,7 @@ if (MODE === 'fmulti') {
       for (let i = 0; i < PRESSES; i++) {
         let top = -1; for (const w of C.S.wpns) if (w.ev && w.key === k && w.id > top) top = w.id;
         press();
-        const w = waitFor(() => C.S.wpns.some((q) => q.ev && q.key === k && q.id > top), 60);
+        const w = waitFor(() => C.S.wpns.some((q) => q.ev && q.key === k && q.id > top), 300); // пакет HIMARS / Lance поднимается плавно (~4–6 с)
         waits.push(w === null ? null : w / 30);
         for (let f = 0; f < 90; f++) frame();
       }
