@@ -1,0 +1,15 @@
+{
+  "name": "Air Superiority Online",
+  "short_name": "Air Superiority",
+  "description": "Современная авиация, вооружение и комплексы ПВО прямо в браузере!",
+  "lang": "ru",
+  "start_url": "airdef.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "../img/airdef-icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "../img/airdef-icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
