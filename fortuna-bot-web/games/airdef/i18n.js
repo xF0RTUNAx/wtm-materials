@@ -3,7 +3,7 @@
 // tr('Сбито: {0}/{1}', [a, b]) — с подстановкой. trDom(root) — статичный HTML страницы (текст и title / aria-label / placeholder).
 // Выбор — «Настройки» → «Язык» (localStorage), для проверки — ?lang=en. Первый вход — язык устройства / Telegram и вопрос (askLang).
 // Без DOM при импорте: модуль годится для стендов Deno.
-import EN from './lang/en.js?v=20261027b';
+import EN from './lang/en.js?v=20261027d';
 
 const LS_KEY = 'fortuna_airdef_lang';
 // язык устройства (Mark 2026-10-21: иностранца не пугать русским интерфейсом): в Telegram — язык аккаунта, иначе — браузера;

@@ -25,8 +25,11 @@
 - "RAFAEL AN/AAQ-28(V) Litening" (https://sketchfab.com/3d-models/rafael-anaaq-28v-litening-be90b1ca86bd46f4a87a86829d1e112c) by Vlad.Mojaev — CC-BY-4.0 — `w_pod.glb`
 - "GBU-39B Small Diameter Bomb Weapon System" (https://sketchfab.com/3d-models/gbu-39b-small-diameter-bomb-weapon-system-108c5bf859cb41c5b72163b4e2758f26) by KillCaptureDestroy — CC-BY-4.0 — `w_gbu39.glb`
 - "Mk82 (JDAM)" (https://sketchfab.com/3d-models/mk82-jdam-b17b76a5e8be474d9cfc400efe27cf7b) by FeriseCAT — CC-BY-4.0 — `w_gbu31.glb`
-- "FIM-92 Stinger" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik — CC-BY-4.0 — `mp_stinger.glb`
-- "MANPADS model 9K333 Verba" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 — CC-BY-4.0 — `mp_verba.glb`, `msl_manpads.glb`
+- "FIM-92 Stinger (перекрашена, развёрнута)" (https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c) by Pan_Ar4ik — CC-BY-4.0 — `mp_stinger.glb`
+- "MANPADS model 9K333 Verba (перекрашена)" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 — CC-BY-4.0 — `mp_verba.glb`
+- "MANPADS model 9K333 Verba" (https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07) by s-k_2005 — CC-BY-4.0 — `msl_manpads.glb`
+- "Forest soldier (outdated) (расчёт ПЗРК: позы — свои)" (https://sketchfab.com/3d-models/forest-soldier-outdated-b265975196394070837366de9a0ddb7c) by buh — CC-BY-4.0 — `crew_e.glb`, `crew_w.glb`
+- "Wooden Military Crate" (https://polyhaven.com/a/wooden_military_crate) by Prabhjinder Singh — CC0 — `crew_e.glb`, `crew_w.glb` (ящик расчёта ПЗРК, перекрашен)
 - "Generic passenger car pack" (https://sketchfab.com/3d-models/generic-passenger-car-pack-20f9af9b8a404d5cb022ac6fe87f21f5) by Comrade1280 — CC-BY-4.0 — `c_compact.glb`, `c_coupe.glb`, `c_hatch.glb`, `c_van.glb`, `c_offroad.glb`, `c_pickup.glb`, `c_sedan.glb`, `c_sport.glb`, `c_suv.glb`, `c_wagon.glb`, `c_compact_lo.glb`, `c_coupe_lo.glb`, `c_hatch_lo.glb`, `c_van_lo.glb`, `c_offroad_lo.glb`, `c_pickup_lo.glb`, `c_sedan_lo.glb`, `c_sport_lo.glb`, `c_suv_lo.glb`, `c_wagon_lo.glb`
 - "Low Poly Car" (https://sketchfab.com/3d-models/low-poly-car-54c466359f8b459dbccea0168ea01c85) by Roma — CC-BY-4.0 — `c_police.glb`, `c_police_lo.glb`
 - "Saab JAS-39С Gripen fighter jet" (https://sketchfab.com/3d-models/saab-jas-39-gripen-fighter-jet-54b84f308145465187658b074baf3cb7) by Lanko Mykhailo — CC-BY-4.0 — `e_gripen.glb`, `e_gripen_lo.glb`

@@ -5,10 +5,10 @@
 // <самолёт>_<окраска>.webp (самолёт на прозрачном фоне), _sky.webp (небо), _s.webp (карточка). Данные — функция airdef-shop (кристаллы, свои окраски,
 // picks — окраски «на выбор», worn — надетые: самолёт → окраска); ?rmock=1 — заглушка account.js (?shop=token|owned|poor — её состояния для снимков).
 // Правила наград за сезон в игре не объявляются (Mark): в подсказке — только «за рейтинг, в конце сезона».
-import { ico } from './icons.js?v=20261027b';
-import { tr, trIf, LANG } from './i18n.js?v=20261027b';
-import { activeAcc, callFn } from './account.js?v=20261027b';
-import { CAMOS, CAMO_PRICE, PLANES } from './arsenal.js?v=20261027b';
+import { ico } from './icons.js?v=20261027d';
+import { tr, trIf, LANG } from './i18n.js?v=20261027d';
+import { activeAcc, callFn } from './account.js?v=20261027d';
+import { CAMOS, CAMO_PRICE, PLANES } from './arsenal.js?v=20261027d';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const nf = (v) => Math.round(v).toLocaleString(LOC);

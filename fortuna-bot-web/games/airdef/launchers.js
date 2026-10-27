@@ -29,7 +29,12 @@ const TOR_DISH = { p: [0.45, 0.977, -2.13], el0: 0.485, lo: -0.3, hi: 0.6, w: 1 
 // верхний y 2,655 z −2,340 — build.py), откидываются вперёд-вниз на 100°, открываются к пуску 0,8 с (sim/strike.js u.lid), закрываются 1 с
 const NASAMS_SLOTS = [0.815, 1.47].flatMap((y) => [-0.695, 0, 0.695].map((x) => [x, y, -1.255]));
 const NASAMS_LIDS = { n: 6, piv: NASAMS_SLOTS.map(([x, y]) => (y < 1 ? [x, 2.056, -2.605] : [x, 2.655, -2.34])), open: -100 * Math.PI / 180, tOpen: 0.8, tClose: 1.0 };
-const MANPADS = { mode: 'tube', L: [{ tp: [-0.5, 0, 0], cp: [0.12, 1.42, 0.05], slots: [[0, 0.06, -0.15]] }], el: null, elMin: -0.1, elMax: 1.45, slewY: 3, slewE: 2.4, ej: { v: 28, t: 0.3 }, tube: { len: 1.6, r: 0.045 } };
+// ПЗРК — расчёт (Свои/Расчёт ПЗРК/build.py → оси_*.json, 2026-10-27): пусковая 0 — наводчик (ось — у его ног, качание — правое плечо, слот — середина оси трубы,
+// tubeAt — центр модели трубы mp_*), пусковая 1 — второй номер без ракет (своя ось и плечо: поворачивается к цели, рука показывает); crew — углы места поз
+// наводчика и руки второго номера, град (main.js показывает ближайшую). Трубы — в настоящий размер: «Верба» 1,63 м, Stinger 1,52 м
+const MANPADS_C = (tubeAt, slot) => ({ mode: 'tube', L: [{ tp: [-0.5, 0.0, -0.0], cp: [0.107, 1.521, 0.201], slots: [slot], tubeAt }, { tp: [1.4, 0.0, 0.9], cp: [-0.223, 1.503, 0.101], slots: [] }],
+  crew: { poses: [0, 15, 30, 45, 60, 75], spot: [10, 40, 70] }, el: null, elMin: -0.1, elMax: 1.45, slewY: 3, slewE: 2.4, ej: { v: 28, t: 0.3 }, tube: { len: 1.6, r: 0.045 } });
+const MANPADS_E = MANPADS_C([0.115, 0.085, -0.753], [0.11, 0.155, -0.753]), MANPADS_W = MANPADS_C([0.075, 0.028, -0.16], [0.11, 0.115, -0.16]);
 export const LNCH = {
   // С-75, С-125, «Куб», Hawk, M163 — оси и ракеты на направляющих по готовым моделям (одна пусковая на комплекс)
   s75: { mode: 'rail', L: [{ tp: [0, 0.51, 0.01], cp: [0, 1.35, 1.42], slots: [[0, 0.39, -3.85]] }], elMin: 0.17, elMax: 1.3, slewY: 0.55, slewE: 0.35, stage: 0.64, stageR: 1.3, dish: [0, 22] },
@@ -73,7 +78,7 @@ export const LNCH = {
   sampt: { mode: 'vhot', L: [{ tp: [0, 2.5, 4.3], cp: [0, 0, 0], slots: grid(4, 2, 0.62, 0.6, -2.5, 0, 0.35) }], box: { len: 5.0, r: 0.27 }, el: V90, slewY: 0, gd: 2.6, gdT: 1.2 },
   iris: { mode: 'vhot', L: [{ tp: [0, 2.2, 1.5], cp: [0, 0, 0], slots: grid(4, 2, 0.46, 0.46, -1.6, 0, -0.23) }], box: { len: 3.2, r: 0.2 }, el: V90, slewY: 0, gd: 2.6, gdT: 1.2, dish: [-10, 0] },
   avenger: { mode: 'tube', L: [{ tp: [0.17, 1.24, 1.55], cp: [-0.26, 1.14, 0.15], slots: [-1, 1].flatMap((s) => grid(2, 2, 0.2, 0.2, 0, s * 0.79, -0.1)) }], box: { len: 1.7, r: 0.14, sq: true }, elMin: -0.1, elMax: 1.3, slewY: 2.0, slewE: 1.5, ej: { v: 28, t: 0.3 } }, // модель KillCaptureDestroy: пакеты ±0,79 м
-  strela2: MANPADS, redeye: MANPADS, igla: MANPADS, stinger: MANPADS, iglas: MANPADS, verba: MANPADS,
+  strela2: MANPADS_E, redeye: MANPADS_W, igla: MANPADS_E, stinger: MANPADS_W, iglas: MANPADS_E, verba: MANPADS_E,
   chaparral: { mode: 'rail', L: [{ tp: [-0.05, 1.09, 1.34], cp: [0, 1.24, -0.07], slots: [[-0.85, -0.25, 0], [0.85, -0.25, 0], [-0.85, 0.37, 0], [0.85, 0.37, 0]] }], box: { len: 2.9, r: 0.07 }, elMin: -0.05, elMax: 1.4, slewY: 1.5, slewE: 1.0 }, // модель TankLord
   zu23: { mode: 'gun', L: [{ tp: [0, 0.43, 0.34], cp: [0, 0.62, -1], slots: [] }], elMin: -0.05, elMax: 1.5, slewY: 1.4, slewE: 1.0 }, /* ЗУ-23-2 — LuckySkink9661 */
   phalanx: { mode: 'gun', L: [{ tp: [-0.03, 1.17, 0.02], cp: [0, 1.59, 0], slots: [] }], elMin: -0.1, elMax: 1.45, slewY: 2.0, slewE: 1.6, fp: true, eye: [0.5, 2.0, -0.2] }, /* Phalanx — DenisGLabrecque: только вид оператора (тумба — корабельная) */

@@ -6,11 +6,11 @@
 <script type="module">
 const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'f16').split(',');
 const M = await import('../../games/airdef/models.js?v=' + Date.now());
-const { weaponGeo, attachFlames } = await import('../../games/airdef/units-render.js?v=20261027b');
-const { AG, LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261027b');
+const { weaponGeo, attachFlames } = await import('../../games/airdef/units-render.js?v=20261027d');
+const { AG, LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261027d');
 const CW = +(Q.get('w') || 480), CH = Math.round(CW * 0.7), VS = (Q.get('v') || '0,1,2,3,4').split(',').map(Number), NV = VS.length, W = CW * NV, H = CH * names.length;
 const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(W, H); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
-{ const { ktxInit } = await import('../../games/airdef/ktx.js?v=20261027b'); if (Q.get('ktx') !== '0') ktxInit(r); } // сжатые текстуры, как в игре (&ktx=0 — JPEG из glb)
+{ const { ktxInit } = await import('../../games/airdef/ktx.js?v=20261027d'); if (Q.get('ktx') !== '0') ktxInit(r); } // сжатые текстуры, как в игре (&ktx=0 — JPEG из glb)
 M.loadModels(new URL('../../games/airdef/', location.href).href, () => {});
 const wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });
 const wait = (f, n = 400) => new Promise((ok) => { let i = 0; const t = setInterval(() => { const v = f(); if (v || ++i > n) { clearInterval(t); ok(v); } }, 50); });

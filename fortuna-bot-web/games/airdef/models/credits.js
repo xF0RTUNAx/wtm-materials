@@ -206,7 +206,7 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "FIM-92 Stinger",
+  "title": "FIM-92 Stinger (перекрашена, развёрнута)",
   "author": "Pan_Ar4ik",
   "url": "https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c",
   "license": "CC-BY-4.0",
@@ -215,13 +215,41 @@ export const CREDITS = [
   ]
  },
  {
+  "title": "MANPADS model 9K333 Verba (перекрашена)",
+  "author": "s-k_2005",
+  "url": "https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07",
+  "license": "CC-BY-4.0",
+  "files": [
+   "mp_verba"
+  ]
+ },
+ {
   "title": "MANPADS model 9K333 Verba",
   "author": "s-k_2005",
   "url": "https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07",
   "license": "CC-BY-4.0",
   "files": [
-   "mp_verba",
    "msl_manpads"
+  ]
+ },
+ {
+  "title": "Forest soldier (outdated) (расчёт ПЗРК: позы — свои)",
+  "author": "buh",
+  "url": "https://sketchfab.com/3d-models/forest-soldier-outdated-b265975196394070837366de9a0ddb7c",
+  "license": "CC-BY-4.0",
+  "files": [
+   "crew_e",
+   "crew_w"
+  ]
+ },
+ {
+  "title": "Wooden Military Crate",
+  "author": "Prabhjinder Singh",
+  "url": "https://polyhaven.com/a/wooden_military_crate",
+  "license": "CC0",
+  "files": [
+   "crew_e",
+   "crew_w"
   ]
  },
  {

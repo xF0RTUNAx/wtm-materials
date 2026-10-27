@@ -3,7 +3,7 @@
 // не считается (idle) — телефон в меню не греется. Звук — эмбиент (sound.js ambient).
 // Порядок (Mark 2026-10-27): все кадры вперемешку, без меток режима; показанный не выпадает снова в следующих 10 — недавние
 // хранятся в localStorage, так что и после перезапуска игры первым не придёт только что виденный.
-import { SHOTS } from './shots/shots.js?v=20261027b';
+import { SHOTS } from './shots/shots.js?v=20261027d';
 
 const RECENT = 10, LS_KEY = 'fortuna_airdef_bgrecent';
 

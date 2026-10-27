@@ -42,7 +42,7 @@ THREE.WebGLRenderer = FakeRenderer;
 const errors = [];
 const origErr = console.error; console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
-const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261027b');
+const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261027d');
 for (let i = 0; i < 300 && !(globalThis.__a && globalThis.__a.state === 'menu'); i++) await new Promise((r) => setTimeout(r, 100)); // запуск по этапам (экран загрузки)
 const C = globalThis.__a;
 let now = 1000;
@@ -50,8 +50,8 @@ function frames(n, dt = 1000 / 30) { for (let i = 0; i < n; i++) { now += dt; co
 const check = (name, ok) => { console.log(`${ok ? 'OK  ' : 'FAIL'} ${name}`); if (!ok) errors.push(name); };
 
 const C2 = C;
-const { HELI_LOADOUTS, PLANES, LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261027b');
-const { EVENT_END, eventLeft } = await import('../../games/airdef/event.js?v=20261027b');
+const { HELI_LOADOUTS, PLANES, LOADOUTS } = await import('../../games/airdef/arsenal.js?v=20261027d');
+const { EVENT_END, eventLeft } = await import('../../games/airdef/event.js?v=20261027d');
 check(`конец события — 2026-12-20 23:59:59 МСК (${EVENT_END.toISOString()}), осталось ${Math.round(eventLeft() / 864e5)} дн.`, EVENT_END.toISOString() === '2026-12-20T20:59:59.000Z');
 check(`карта «Туманная топь», погода ${C.W_KEY}`, C.MAP === 'autumn' && C.W_KEY === 'a_dusk');
 // 1. «Вылет» и «Съёмка» без вертолётных подвесок; сохранённая вертолётная подвеска заменяется самолётной
@@ -93,7 +93,7 @@ C.toMenu(); frames(3); ev.open(); click({ tab: 'def' }); click({ v: 'east' }, { 
 for (let i = 0; i < 60 && C.state !== 'play'; i++) await new Promise((r) => setTimeout(r, 50)); frames(2);
 { const errors0 = errors.length, D = C.ctrl;
   check(`оборона события: расстановка на осенней карте (${C.MAP}), игра ${C.setup.game}, evd ${C.setup.evd}, цели: ${C.S.objects.length}`, D.st.phase === 'plan' && C.setup.game === 'defense' && C.setup.evd === true && C.S.objects.length > 3);
-  const { freeGround } = await import('../../games/airdef/mission.js?v=20261027b');
+  const { freeGround } = await import('../../games/airdef/mission.js?v=20261027d');
   const tg = C.S.objects.filter((o) => !o.noTarget); let ranC = false;
   for (let w = 1; w <= C.WAVES && !D.st.over; w++) {
     if (D.st.phase === 'plan' || D.st.phase === 'debrief') {

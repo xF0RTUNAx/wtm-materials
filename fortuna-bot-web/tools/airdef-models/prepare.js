@@ -84,8 +84,19 @@ const CONFIG = {
   w_gbu39: { src: `${DL}/gbu-39b_small_diameter_bomb_weapon_system.glb`, scale: 0.0496, axes: (x, y, z) => [x, -y, -z], /* нос из +Z в −Z и переворот: у автора крылья снизу — у настоящей SDB на спине */ tex: () => 512, pickMesh: /./,
     groups: (c) => (Math.abs(c.ctr[0]) > 3 && c.size[1] < 1 ? (c.ctr[0] > 0 ? 'wingA' : 'wingB') : 'body') }, // крылья — свои части (на подвеске сложены)
   w_gbu31: { src: `${DL}/mk82_jdam.glb`, scale: 3.88 / 15.69, nose: '-z', tex: () => 256, target: 9000, pickMesh: /./ }, // Mk 82 JDAM (FeriseCAT) в размер GBU-31 (3,9 м) (прежняя GBU-24 — из War Thunder)
-  mp_stinger: { src: `${DL}/fim-92_stinger.glb`, scale: 7.6, nose: '+x', tex: () => 256, pickMesh: /./, remove: (c) => c.ctr[0] < -0.05 }, // труба Stinger (ракета — отдельно)
-  mp_verba: { src: `${DL}/manpads_model_9k333_verba.glb`, scale: 0.0774, nose: '+x', tex: () => 256, target: 7000, pickMesh: /PZRC|battery|pen_|trigger|nab_|button|switch/ }, // труба «Вербы»
+  // трубы ПЗРК — перекрашены по фото настоящих и с запечённым затенением (Свои/ПЗРК_трубы/paint.py, исходники авторов те же, CC BY):
+  // Stinger развёрнут (nose '-x'): у настоящего ложа с прицелом спереди, раструб сзади; коробка прицела перенесена на левую сторону трубы
+  mp_stinger: { src: `${DL}/Свои/ПЗРК_трубы/mp_stinger_src.glb`, scale: 7.6 * 1.52 / 0.712, nose: '-x', tex: () => 512,   /* в настоящий размер: 1,52 м (было 0,71) */ pickMesh: /./, remove: (c) => c.ctr[0] < -0.05, credit: 'перекрашена, развёрнута',
+    orig: { title: 'FIM-92 Stinger', author: 'Pan_Ar4ik', source: 'https://sketchfab.com/3d-models/fim-92-stinger-925d78a613e847fcb2e7a60d54d3404c', license: 'CC-BY-4.0' } }, // труба Stinger (ракета — отдельно)
+  mp_verba: { src: `${DL}/Свои/ПЗРК_трубы/mp_verba_src.glb`, scale: 0.0774 * 1.63 / 2.826, nose: '+x', tex: (m) => (/PZRC|trigger/.test(m.name || '') ? 512 : 256), target: 7000,   /* 1,63 м (было 2,83); 512 — труба и спусковой блок */ pickMesh: /PZRC|battery|pen_|trigger|nab_|button|switch/ , credit: 'перекрашена',
+    orig: { title: 'MANPADS model 9K333 Verba', author: 's-k_2005', source: 'https://sketchfab.com/3d-models/manpads-model-9k333-verba-d7e05be0f5384e93a96ca47d84f1da07', license: 'CC-BY-4.0' } }, // труба «Вербы»
+  // расчёт ПЗРК (Mark 2026-10-27): наводчик с трубой на плече, второй номер показывает цель, ящик — своя сборка (Свои/Расчёт ПЗРК/build.py) на солдате buh,
+  // ящик — Wooden Military Crate, Prabhjinder Singh, Poly Haven (CC0). Части уже в осях игры (без центровки): turret — тело наводчика, th0…5 — его головы,
+  // ca0…5 — руки по позам угла места через 15°; turret1 и cs0…2 — второй номер и его рука. Оси — из build.py (оси_*.json); у запада форма песочная
+  ...Object.fromEntries(['e', 'w'].map((sd) => ['crew_' + sd, { src: `${DL}/Свои/Расчёт ПЗРК/crew_${sd}.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    axisX: 0, ground: 0, axisZ: 0, tpFix: [-0.5, 0.0, -0.0], hinge: [-0.393, 1.521, 0.201], pack0: 0, tp1: [1.4, 0.0, 0.9], hinge1: [1.177, 1.503, 1.001], credit: 'расчёт ПЗРК: позы — свои',
+    orig: { title: 'Forest soldier (outdated)', author: 'buh', source: 'https://sketchfab.com/3d-models/forest-soldier-outdated-b265975196394070837366de9a0ddb7c', license: 'CC-BY-4.0' },
+    groups: (c) => { const m = /(^|\/)(body|turret1|turret|th\d+|ca\d+|cs\d+)(\.\d+)?(\/|\||$)/.exec(c.path); return m ? m[2] : 'body'; } }])),
   msl_manpads: { src: `${DL}/manpads_model_9k333_verba.glb`, scale: 0.0774, nose: '-x', tex: () => 256, pickMesh: /Rocket_low|_stab/ }, // ракета «Вербы» — для всех ПЗРК и Avenger
   // ракеты «воздух–воздух» для «Симулятора Летки» (на пилонах самолётов и в полёте вместо процедурных)
   aam_r73: { src: `${DL}/russian_weapon_pack.glb`, scale: 1, nose: '+x', tex: () => 512, pickMesh: /ru_r-73/ }, // Р-73
@@ -994,7 +1005,7 @@ async function prepare(name, views) {
   const all = bbox(Float32Array.from([...byMat.values()].flatMap((m) => m.pos)));
   // centerBody (вертолёты): центр — по корпусу без винтов (части, чьи имена не подходят под шаблон), по высоте тоже; axisX — x оси фюзеляжа (в осях правил)
   const bodyB = cfg.unit ? bbox(Float32Array.from([...byMat.values()].filter((m) => m.group === 'body').flatMap((m) => m.pos))) : cfg.centerBody ? bbox(Float32Array.from([...byMat.values()].filter((m) => !cfg.centerBody.test(m.group)).flatMap((m) => m.pos))) : all;
-  const dz = (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? (cfg.ground !== undefined ? cfg.ground : all.mn[1]) : cfg.centerBody ? (bodyB.mn[1] + bodyB.mx[1]) / 2 : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.axisX !== undefined ? cfg.axisX : cfg.pick || cfg.pickMesh || cfg.unit || cfg.centerX ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
+  const dz = cfg.axisZ !== undefined ? cfg.axisZ : (bodyB.mn[2] + bodyB.mx[2]) / 2, dy = cfg.unit ? (cfg.ground !== undefined ? cfg.ground : all.mn[1]) : cfg.centerBody ? (bodyB.mn[1] + bodyB.mx[1]) / 2 : cfg.centerY !== undefined ? 0 : (all.mn[1] + all.mx[1]) / 2, dx = cfg.axisX !== undefined ? cfg.axisX : cfg.pick || cfg.pickMesh || cfg.unit || cfg.centerX ? (bodyB.mn[0] + bodyB.mx[0]) / 2 : 0;
   for (const m of byMat.values()) for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= dx; m.pos[i + 1] -= dy; m.pos[i + 2] -= dz; }
   if (cfg.centerBody) {
     console.log(`  центровка: сдвиг ${[dx, dy, dz].map((v) => v.toFixed(3)).join(' ')} (из осей правил: точка − сдвиг = точка в модели)`);
@@ -1126,7 +1137,10 @@ function articulate(cfg, byMat, shift, ax) {
   const hinge = cfg.hinge ? sub(ax(...cfg.hinge).map((v) => v * cfg.scale)) : null;
   // ракеты на направляющих (группа missile) качаются вместе с пакетом
   // dish (тарелка «Тора») и lid0…7 (крышки его ячеек) — части башни: в её осях, игра двигает их сама
-  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || /^lid\d/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile');
+  // расчёт ПЗРК: th0…5 — головы наводчика по позам угла места (части башни), ca0…5 — его руки (части пакета, уже в осях пакета при угле 0);
+  // второй номер — своя башня turret1 (ось tp1) и рука cs0…2 (шарнир hinge1) — в осях модели, без центровки (axisX, ground, axisZ — 0)
+  if (cfg.tp1) for (const m of byMat.values()) if (m.group === 'turret1' || /^cs\d+$/.test(m.group)) { const o = m.group === 'turret1' ? cfg.tp1 : cfg.hinge1; for (let i = 0; i < m.pos.length; i += 3) { m.pos[i] -= o[0]; m.pos[i + 1] -= o[1]; m.pos[i + 2] -= o[2]; } }
+  const T = [...byMat.values()].filter((m) => m.group === 'turret' || m.group === 'radar' || m.group === 'dish' || /^lid\d/.test(m.group) || /^th\d+$/.test(m.group)), K = [...byMat.values()].filter((m) => m.group === 'cradle' || m.group === 'missile' || /^ca\d+$/.test(m.group));
   if (!T.length && !K.length) return; // машина целиком
   if (!K.length && T.every((m) => m.group === 'radar')) return; // только антенна обзора без башни (Sentinel): в осях модели, игра крутит её вокруг оси опоры
   // основание башни: нижние 0,5 м её вершин

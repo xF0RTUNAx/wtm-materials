@@ -6,11 +6,11 @@
 // tools/airdef-models/planes-view.html?ortho=1; dry — двигатель без форсажа: только слабое свечение; нет сопел — пламени не видно: B-2, F-117) и место
 // контейнера. Авторы и лицензии — MODEL_CREDITS (показываются в «Настройках»).
 /* global THREE */
-import { tr } from './i18n.js?v=20261027b';
-import { CREDITS } from './models/credits.js?v=20261027b';
-import { mergeLocal } from './merge.js?v=20261027b';
-import { cachedFetch } from './offline.js?v=20261027b';
-import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261027b';
+import { tr } from './i18n.js?v=20261027d';
+import { CREDITS } from './models/credits.js?v=20261027d';
+import { mergeLocal } from './merge.js?v=20261027d';
+import { cachedFetch } from './offline.js?v=20261027d';
+import { ktxOn, ktxParse, ktxFree, ktxIndexUrl, ktxUrlOf } from './ktx.js?v=20261027d';
 const V = (x, y, z, py = 0) => Object.assign(new THREE.Vector3(x, y, z), { py });
 const mirror = (L) => [...L, ...L.slice().reverse().map((p) => V(-p.x, p.y, p.z, p.py))]; // L3 L2 L1 Ф1 → … Ф2 R1 R2 R3
 const META = {
@@ -236,6 +236,11 @@ const META = {
   // трубы ПЗРК на плече у расчёта
   mp_verba: { launcher: ['strela2', 'igla', 'iglas', 'verba'], stations: [] },
   mp_stinger: { launcher: ['redeye', 'stinger'], stations: [] },
+  // расчёт ПЗРК (Mark 2026-10-27) — наводчик с трубой на плече, второй номер показывает цель, ящик: солдат buh (CC BY 4.0), ящик Poly Haven (CC0),
+  // позы — свои (Свои/Расчёт ПЗРК/build.py). Наводчик: позы по углу места через 15° — головы th0…5 (на башне) и руки ca0…5 (на качающейся части);
+  // второй номер — своя башня turret1 и рука cs0…2 (main.js: вторая пусковая без ракет). Труба — по-прежнему mp_verba / mp_stinger
+  crew_e: { units: ['strela2', 'igla', 'iglas', 'verba'], matte: true, stations: [] },
+  crew_w: { units: ['redeye', 'stinger'], matte: true, stations: [] },
   // зенитные комплексы: корпус / башня / пакет (оси — LNCH в launchers.js, их печатает prepare.js)
   bukm3: { units: ['bukm3'], matte: true, stations: [], camo: { scheme: 'soviet', size: 1.5 } }, // «Бук-М3» — Valera121 (CC BY; без текстур — камуфляж шейдером, колёса и ракеты в ТПК — свои цвета; гусеницы звеньями — prepare.js tracks)
   msl_bukm3: { samMissile: ['bukm3'], matte: true, stations: [] }, // ракета 9М317М — из той же модели (Missile_1), светлая
@@ -333,6 +338,8 @@ Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '202610
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
 // F-35A (andertan), A-10 (AIRMAN Magazine) и Ту-22М3 (Real Slim Shady) вместо моделей shangus930 / Immersive3D / Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['e_f35', 'e_f35_lo', 'e_a10', 'e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
+// трубы ПЗРК перекрашены, в настоящий размер, Stinger развёрнут; расчёты ПЗРК вместо процедурных солдат (2026-10-27)
+Object.assign(GLB_V, Object.fromEntries(['mp_verba', 'mp_stinger', 'crew_e', 'crew_w'].map((n) => [n, '20261027c'])));
 Object.assign(GLB_V, Object.fromEntries(['h_log', 'h_khata', 'h_mobile'].map((n) => [n, '20261027b']))); // маленькие дома заново: упрощение без дыр в крыше и тёмных фасадов (prepare.js simpKeep, lockBorder; 2026-10-27)
 GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан и запечён вместо Immersive3D (2026-10-22)
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) — свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
@@ -631,8 +638,10 @@ export function unitModelGlb(key) {
   // только у подробной модели (у дальней копии они — в башне): дальше 400 м — пустое место
   const near = (k) => { const p = find(G, k); if (!p) return null; if (!GL) return p.clone(); const L = new THREE.LOD(); L.addLevel(p.clone(), 0); L.addLevel(new THREE.Object3D(), 400); return L; };
   const lids = []; for (let i = 0; find(G, 'lid' + i); i++) lids.push(near('lid' + i));
+  const seq = (p) => { const a = []; for (let i = 0; find(G, p + i); i++) a.push(get(p + i)); return a; };
   return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar'), // radar — антенна обзора на башне (крутится)
-    tdish: near('dish'), lids }; // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
+    tdish: near('dish'), lids, // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
+    th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs') }; // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
 }
 // ракета комплекса из его модели (маршевая ступень + ускоритель) или null; noLoad — не заказывать подробную модель (прогрев шейдеров, main.js warmNow)
 export function unitMissileGlb(key, noLoad) {
@@ -673,7 +682,10 @@ export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
 // телефон (2026-10-22, вылеты самолётных боёв): у тяжёлых комплексов подробная модель — только когда камера подлетела ближе 1,5 км
 // (wantUnitNear из main.js; LOD переключает на неё с 400 м) или комплекс пустил ракету (unitMissileGlb): «Шилка» — 656 тыс. треугольников
 // и 31 МБ геометрии (в памяти дважды: массив и видеокарта), а в самолётном бою камера к машинам ПВО обычно не подлетает. Вблизи модель та же
-export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !UNIT_LO.has(n)) start(n); } } // сначала лёгкая дальняя копия
+// расчёт ПЗРК — тяжёлый (6–7 МБ, ~50 тыс. треугольников на экране; ревью 2026-10-27): на телефоне — только когда камера близко (wantUnitNear),
+// издали — процедурные солдаты (ПЗРК там почти не видно)
+const NEAR_ONLY = new Set(['crew_e', 'crew_w']);
+export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия
 export function wantUnitNear(key) { const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); }
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
 export function wantBuildings(names) { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld && (!names || names.includes(n))) start(n); } // names — только модели этой карты (зимний лес городу не нужен и наоборот)
