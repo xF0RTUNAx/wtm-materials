@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>Сравнение моделей</title>
+<style>body{margin:0;background:#9fb3c8;font:13px sans-serif}#l{position:fixed;left:8px;top:6px;background:#fffc;padding:2px 6px;white-space:pre}</style></head>
+<body><div id="l"></div>
+<!-- Сравнение двух версий модели (2026-10-27, Mark: «промежуточные версии маленьких домов — максимально похожи на оригинал, но легче»):
+     ?a=<glb исходник>&b=<glb кандидат> (адреса от этой страницы). Слева a, справа b: четыре стороны (подъём 25°), сверху, «в игре» — 180 м,
+     кадр телефона (12 точек на метр → ×0,1). Свет — как днём в игре (небо + солнце). window.__res — PSNR по видам и число треугольников. -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script>
+(async () => {
+  const Q = new URLSearchParams(location.search), CW = 380, CH = 260, VIEWS = [[0, 25], [90, 25], [180, 25], [270, 25], [45, 80], [30, 12, 'far']];
+  const r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setPixelRatio(1); r.setSize(CW * 2 + 8, (CH + 4) * VIEWS.length); r.setScissorTest(true);
+  r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
+  const load = (u) => new Promise((ok, no) => new THREE.GLTFLoader().load(u, (g) => ok(g.scene), undefined, no));
+  const [A, B] = await Promise.all([load(Q.get('a')), load(Q.get('b'))]);
+  const tris = (o) => { let n = 0; o.traverse((m) => { if (m.isMesh) n += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3; }); return n; };
+  for (const o of [A, B]) o.traverse((m) => { if (m.isMesh) { m.material.side = THREE.DoubleSide; } }); // как в игре (материалы домов — двусторонние)
+  const sc = new THREE.Scene(); sc.background = new THREE.Color(0x9fb3c8);
+  sc.add(new THREE.HemisphereLight(0xbcd0ea, 0x6a6a58, 0.75)); const sun = new THREE.DirectionalLight(0xfff2dc, 1.6); sun.position.set(0.4, 0.8, 0.45); sc.add(sun);
+  const bb = new THREE.Box3().setFromObject(A), c = bb.getCenter(new THREE.Vector3()), R0 = bb.getSize(new THREE.Vector3()).length() * 0.62;
+  const res = [];
+  VIEWS.forEach(([yaw, el, far], vi) => {
+    const y0 = (VIEWS.length - 1 - vi) * (CH + 4);
+    [A, B].forEach((G, k) => {
+      sc.children.filter((x) => x === A || x === B).forEach((x) => sc.remove(x)); sc.add(G);
+      const d = far ? 180 : R0 / Math.tan(17 * Math.PI / 180), cam = new THREE.PerspectiveCamera(far ? 3 : 34, CW / CH, 0.1, 5000);
+      const a = yaw * Math.PI / 180, e = el * Math.PI / 180; cam.position.set(c.x + d * Math.sin(a) * Math.cos(e), c.y + d * Math.sin(e), c.z + d * Math.cos(a) * Math.cos(e)); cam.lookAt(c);
+      const x0 = k * (CW + 8);
+      if (far) { // «в игре»: кадр телефона — модель ~12 точек на метр, растянута без сглаживания (видно, что заметит глаз)
+        const s = 0.1, rt = new THREE.WebGLRenderTarget(Math.round(CW * s * 3), Math.round(CH * s * 3)); cam.fov = 34 * 0.6; cam.updateProjectionMatrix();
+        r.setRenderTarget(rt); r.setViewport(0, 0, rt.width, rt.height); r.setScissor(0, 0, rt.width, rt.height); r.render(sc, cam); r.setRenderTarget(null);
+        const q = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), new THREE.MeshBasicMaterial({ map: rt.texture })); rt.texture.magFilter = THREE.NearestFilter; const s2 = new THREE.Scene(); s2.add(q);
+        r.setViewport(x0, y0, CW, CH); r.setScissor(x0, y0, CW, CH); r.render(s2, new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1));
+      } else { r.setViewport(x0, y0, CW, CH); r.setScissor(x0, y0, CW, CH); r.render(sc, cam); }
+    });
+    const gl = r.getContext(), pa = new Uint8Array(CW * CH * 4), pb = new Uint8Array(CW * CH * 4);
+    gl.readPixels(0, y0, CW, CH, gl.RGBA, gl.UNSIGNED_BYTE, pa); gl.readPixels(CW + 8, y0, CW, CH, gl.RGBA, gl.UNSIGNED_BYTE, pb);
+    let se = 0; for (let i = 0; i < pa.length; i += 4) for (let ch = 0; ch < 3; ch++) { const dd = pa[i + ch] - pb[i + ch]; se += dd * dd; }
+    const mse = se / (CW * CH * 3); res.push(+(mse ? 10 * Math.log10(255 * 255 / mse) : 99).toFixed(1));
+  });
+  window.__res = { psnr: res, trisA: tris(A), trisB: tris(B) };
+  document.getElementById('l').textContent = `слева ${Q.get('a').split('/').pop()} (${tris(A)} тр.), справа ${Q.get('b').split('/').pop()} (${tris(B)} тр.)\nPSNR по видам: ${res.join(' · ')} дБ`;
+})().catch((e) => { window.__res = { err: String(e) }; document.getElementById('l').textContent = String(e); });
+</script></body></html>

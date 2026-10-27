@@ -216,7 +216,7 @@ const META = {
   // постройки военных объектов (целей) — расставляются по OBJ_DIMS из city.js
   obj_tanks: { obj: true, stations: [] }, obj_tank4: { obj: true, stations: [] }, obj_rtank: { obj: true, stations: [] }, obj_hangar: { obj: true, stations: [] },
   bld_p5: { bld: true, stations: [] }, bld_p9: { bld: true, stations: [] }, bld_b12: { bld: true, stations: [] }, bld_st: { bld: true, stations: [] },
-  h_brick: { bld: true, stations: [] }, h_house: { bld: true, stations: [] }, h_log: { bld: true, stations: [] }, h_khata: { bld: true, stations: [] }, o_block: { bld: true, stations: [] }, h_shanty: { bld: true, stations: [] }, h_mobile: { bld: true, stations: [] }, // дома города
+  h_brick: { bld: true, stations: [] }, h_house: { bld: true, stations: [] }, h_log: { bld: true, stations: [], matte: true /* нормали черепицы автора — вбок: блик Phong делал крышу белой (2026-10-27) */ }, h_khata: { bld: true, stations: [] }, o_block: { bld: true, stations: [] }, h_shanty: { bld: true, stations: [] }, h_mobile: { bld: true, stations: [] }, // дома города
   bld_t9: { bld: true, stations: [] }, bld_a16: { bld: true, stations: [] }, o_tall: { bld: true, stations: [] }, g_amel: { bld: true, stations: [] }, g_fortune: { bld: true, stations: [] }, // башни и корпуса
   tr_oak: { bld: true, stations: [] }, tr_lime: { bld: true, stations: [] }, tr_pine: { bld: true, stations: [] }, tr_bush: { bld: true, stations: [] }, p_lamp: { bld: true, stations: [] },
   w_fir1: { bld: true, stations: [] }, w_fir3: { bld: true, stations: [] }, w_pine1: { bld: true, stations: [] }, w_pine2: { bld: true, stations: [] }, // зимний лес вблизи // деревья и фонари вблизи
@@ -333,6 +333,7 @@ Object.assign(GLB_V, Object.fromEntries(['osa', 'osa_lo'].map((n) => [n, '202610
 Object.assign(GLB_V, Object.fromEntries(['bukm3', 'bukm3_lo', 'msl_bukm3'].map((n) => [n, '20261024f'])));
 // F-35A (andertan), A-10 (AIRMAN Magazine) и Ту-22М3 (Real Slim Shady) вместо моделей shangus930 / Immersive3D / Jeyhun1985 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['e_f35', 'e_f35_lo', 'e_a10', 'e_tu22m3', 'e_tu22m3_lo'].map((n) => [n, '20261024h'])));
+Object.assign(GLB_V, Object.fromEntries(['h_log', 'h_khata', 'h_mobile'].map((n) => [n, '20261027b']))); // маленькие дома заново: упрощение без дыр в крыше и тёмных фасадов (prepare.js simpKeep, lockBorder; 2026-10-27)
 GLB_V.h_ka52 = '20261024i'; // Ка-52 maddex88 (CC BY 4.0), переделан и запечён вместо Immersive3D (2026-10-22)
 // «Тунгуска» (SIpriv) и «Панцирь-С1» (SanderWolf) — свои перекрашенные и запечённые модели вместо usedm / 42manako, ракета 9М311, Storm Shadow (Viktor_) без декалей вместо вырезанной из Су-24 (2026-10-22): новые файлы
 Object.assign(GLB_V, Object.fromEntries(['tunguska', 'tunguska_lo', 'pantsir', 'pantsir_lo', 'msl_9m311'].map((n) => [n, '20261024j'])));

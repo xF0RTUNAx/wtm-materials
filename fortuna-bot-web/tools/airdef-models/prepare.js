@@ -533,11 +533,14 @@ const CONFIG = {
   // частный сектор (вместо коробок со скатной крышей) и офис средней высоты
   h_brick: { src: `${DL}/low-poly_brick_house.glb`, scale: 2.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // кирпичный дом
   h_house: { src: `${DL}/house.glb`, scale: 0.08, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: (c) => (c.size[0] > 16 || c.size[2] > 16 ? null : 'body') }, // одноэтажный дом (без участка земли)
-  h_log: { src: `${DL}/cottage.glb`, scale: 0.12, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, simplify: 0.35, groups: () => 'body' }, // бревенчатый дом
-  h_khata: { src: `${DL}/thatched_rural_houses.glb`, scale: 6, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, simplify: 0.3, pick: [-13.5, -0.5, -9, -3.2, 7, 6], groups: () => 'body' }, // хата под соломой (левая из двух; правая — амбар)
+  // маленькие дома (2026-10-27, Mark: «промежуточные версии — максимально похожи на оригинал, но легче»; стенд tools/airdef-models/house-compare.js):
+  // упрощаются только тяжёлые и «простые» части (simpKeep — остальные как у автора), края открытых листов закреплены (lockBorder), ошибка ≤ 0,5–1 %
+  // размера — было: черепица h_log рвалась в дыры (simplify 0,35 по всей модели), у h_mobile темнел задний фасад
+  h_log: { src: `${DL}/cottage.glb`, scale: 0.12, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, simplify: 0.3, simpErr: 0.01, lockBorder: true, simpKeep: /^(?!(Palos_Barandilla|Lateral_|Pomo))/, groups: () => 'body' }, // бревенчатый дом: 14 728 → 8 962 тр., видов 37–68 дБ (перила, боковые стены, ручки; крыша, фасад с окнами, пол веранды — как у автора)
+  h_khata: { src: `${DL}/thatched_rural_houses.glb`, scale: 6, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, simplify: 0.4, simpErr: 0.005, lockBorder: true, simpKeep: /^(?!(01___Default|material|04___Default))/ /* 3 052 → 1 948 тр., 39–50 дБ */, pick: [-13.5, -0.5, -9, -3.2, 7, 6], groups: () => 'body' }, // хата под соломой (левая из двух; правая — амбар)
   o_block: { src: `${DL}/large_low_poly_building.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // офисный корпус
   h_shanty: { src: `${DL}/shanty__mansion__wooden.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // деревянный дом с верандой
-  h_mobile: { src: `${DL}/lp_americans_house_mobile.glb`, scale: 1.25, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 3000, groups: () => 'body' }, // дом-фургон
+  h_mobile: { src: `${DL}/lp_americans_house_mobile.glb`, scale: 1.25, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, simplify: 0.5, simpErr: 0.005, lockBorder: true, simpKeep: /^(?!(MHousWood$|MHouseWoodFloor$))/, groups: () => 'body' }, // дом-фургон: 6 066 → 4 482 тр., 35–50 дБ (стены и пол; окна, двери, декали — как у автора)
   // деревья вблизи (листья — вырезка по альфе) и фонарь
   tr_oak: { src: `${DL}/trees_low_poly.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, target: 1500, pickMesh: /tree4/, groups: () => 'body' },
   tr_lime: { src: `${DL}/trees_low_poly.glb`, scale: 0.012, nose: '-z', rulesIn: 'game', unit: true, cutout: true, tex: () => 512, target: 1200, pickMesh: /tree6/, groups: () => 'body' },
@@ -799,7 +802,7 @@ function buildTracks(T) {
   return out;
 }
 async function prepare(name, views) {
-  const cfg = CONFIG[name], g = readGlb(Deno.readFileSync(srcOf(cfg.src))), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => (!cfg.pickMesh || cfg.pickMesh.test(p.path)) && !(cfg.dropMat && cfg.dropMat.test(((J.materials || [])[p.material] || {}).name || ''))) /* dropMat — материалы долой (линии рёбер SketchUp) */, ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
+  let cfg = CONFIG[name], g = readGlb(Deno.readFileSync(srcOf(cfg.src))), J = g.json, prims = flatten(g, { raw: !!cfg.raw }).filter((p) => (!cfg.pickMesh || cfg.pickMesh.test(p.path)) && !(cfg.dropMat && cfg.dropMat.test(((J.materials || [])[p.material] || {}).name || ''))) /* dropMat — материалы долой (линии рёбер SketchUp) */, ax = cfg.axes || (cfg.fwd ? axFwd(cfg.fwd) : AX[cfg.nose]);
   if (cfg.skin) skinPrims(g, prims);
   // rulesIn: 'game' — правила частей (groups / remove), hinge и просмотр — в осях игры (метры, нос в −Z, без центровки)
   if (cfg.rulesIn === 'game') for (const p of prims) {
@@ -920,7 +923,7 @@ async function prepare(name, views) {
       if ((keep && !keep(t)) || (dup.has(pi) && dup.get(pi).has(t))) { removed++; continue; }
       // группа «часть#краска» (groups у моделей без текстур): своя краска части — цвет из cfg.colors по имени «материал#краска»
       const fg = !!(p.glassT && p.glassT(t)), g0 = p.group ? p.group(t) : 'body', [grp, paint] = String(g0).split('#'), key = `${g0}|${p.material}${fg ? '|g' : ''}`;
-      let M = byMat.get(key); if (!M) byMat.set(key, M = { group: grp, paint, mat: p.material, forceGlass: fg, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: !!p.UV });
+      let M = byMat.get(key); if (!M) byMat.set(key, M = { group: grp, paint, mat: p.material, mname: (J.materials && J.materials[p.material] && J.materials[p.material].name) || '', forceGlass: fg, pos: [], nor: [], uv: [], idx: [], tc: [], hasUv: !!p.UV });
       let remap = remaps.get(key); if (!remap) remaps.set(key, remap = new Int32Array(p.P.length / 3).fill(-1));
       if (p.comp) M.tc.push(`${p.node}.${p.prim}:${p.comp[t]}`);
       for (let k = 0; k < 3; k++) {
@@ -1015,7 +1018,11 @@ async function prepare(name, views) {
   // tracks — гусеницы комплекса (у автора нет): по бортам x = ±xc, лента звеньями (links) или гладкая; тёмная краска #track, часть body (в осях правил, затем центровка)
   if (cfg.tracks) buildTracks(cfg.tracks).forEach((M, i) => { for (let k = 0; k < M.pos.length; k += 3) { M.pos[k] -= dx; M.pos[k + 1] -= dy; M.pos[k + 2] -= dz; } byMat.set(`track${i}`, M); });
   if (cfg.groups && cfg.unit) articulate(cfg, byMat, [dx, dy, dz], cfg.rulesIn === 'game' ? (x, y, z) => [x / cfg.scale, y / cfg.scale, z / cfg.scale] : ax);
-  SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster;
+  SIMP_ERR = cfg.simpErr || 0.05; WELD = cfg.weld || 1e-4; CLUSTER = !!cfg.cluster; LOCK = !!cfg.lockBorder; SKEEP = cfg.simpKeep || null;
+  // PREPARE_SIMP — проба упрощения без правки конфига: 'none' — без него; 'доля:ошибка[:lock]' — своя доля, ошибка (доля размера), lock — края
+  // открытых листов закреплены (стенд tools/airdef-models/house-compare.html, 2026-10-27)
+  const PS = Deno.env.get('PREPARE_SIMP');
+  if (PS === 'none') { cfg = { ...cfg }; delete cfg.simplify; delete cfg.target; } else if (PS) { const [r, e, l, kp] = PS.split(':'); cfg = { ...cfg, simplify: +r, target: undefined }; SIMP_ERR = +e || SIMP_ERR; LOCK = l === 'lock'; SKEEP = kp ? new RegExp(kp) : SKEEP; } // 4-е поле — материалы без упрощения
   // target — бюджет треугольников (упрощение до него, но не дальше допустимой ошибки SIMP_ERR — форма не мнётся); simplify — доля
   if (cfg.target || cfg.simplify) {
     let total = 0; for (const m of byMat.values()) if (!m.keep) total += m.idx.length / 3;
@@ -1215,12 +1222,12 @@ function extractMissile(cfg, byMat) {
 }
 // упрощение сетки: вершины свариваются по положению (швы UV не держат сетку), упрощается сваренная сетка, потом каждому
 // углу треугольника возвращается исходная вершина — из той «островной» группы UV, где три угла ближе всего друг к другу
-let SIMP_ERR = 0.05, WELD = 1e-4, CLUSTER = false;
+let SIMP_ERR = 0.05, WELD = 1e-4, CLUSTER = false, LOCK = false, SKEEP = null; // SKEEP (cfg.simpKeep) — материалы, которые не упрощаются (черепица из перекрытых полос рвётся) // LOCK (cfg.lockBorder) — края открытых листов не двигаются (черепица, навесы)
 async function simplifyAll(byMat, ratio) {
   await MeshoptSimplifier.ready;
   let before = 0, after = 0;
   for (const m of byMat.values()) {
-    if (m.idx.length < 30 || m.keep) continue; // крошки и готовые детали (keep — гусеницы) не упрощаем
+    if (m.idx.length < 30 || m.keep || (SKEEP && SKEEP.test(m.mname || ''))) continue; // крошки, готовые детали (keep — гусеницы) и SKEEP не упрощаем
     const nv = m.pos.length / 3, wid = new Uint32Array(nv), key = new Map(), wpos = [], cand = [];
     for (let v = 0; v < nv; v++) {
       const k = `${Math.round(m.pos[v * 3] / WELD)},${Math.round(m.pos[v * 3 + 1] / WELD)},${Math.round(m.pos[v * 3 + 2] / WELD)}`;
@@ -1229,7 +1236,7 @@ async function simplifyAll(byMat, ratio) {
     }
     const widx = Uint32Array.from(m.idx, (v) => wid[v]); before += widx.length / 3;
     const target = Math.max(3, Math.floor(widx.length * ratio / 3) * 3);
-    let [out] = MeshoptSimplifier.simplify(widx, Float32Array.from(wpos), 3, target, SIMP_ERR);
+    let [out] = MeshoptSimplifier.simplify(widx, Float32Array.from(wpos), 3, target, SIMP_ERR, LOCK ? ['LockBorder'] : []);
     // топология не дала упростить — кластеризация по сетке: вершины одной ячейки сливаются, вырожденные треугольники долой
     if (CLUSTER && out.length > target * 1.6) {
       let lo = [1e9, 1e9, 1e9], hi = [-1e9, -1e9, -1e9]; for (let i = 0; i < wpos.length; i += 3) for (let d = 0; d < 3; d++) { lo[d] = Math.min(lo[d], wpos[i + d]); hi[d] = Math.max(hi[d], wpos[i + d]); }
