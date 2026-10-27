@@ -652,7 +652,7 @@ export function createAir(C) {
     switch (e.code) {
       case 'Space': case 'KeyF': fire(); e.preventDefault(); break;
       case 'KeyQ': case 'Tab': nextWeapon(); e.preventDefault(); break;
-      case 'KeyB': if (game.net && craft.dead) { spec.i++; spec.init = false; } break;
+      case 'KeyB': if (game.net && craft.dead) { spec.i++; spec.init = false; } else if (C.sens.bino !== false) binoTap(); break; // онлайн, сбит — следующий союзник; иначе — бинокль
       case 'KeyR': podNext(); break;
       case 'KeyG': podView(); break;
       case 'KeyW': if (!craft.heli) setThr(thrI + 1); break; // вертолёт: W/S держать — разгон и торможение, как ручка на телефоне (heliFly)
@@ -752,7 +752,7 @@ export function createAir(C) {
   tap('tFire', fire); tap('tLock', podNext); tap('tThr', thrStep);
   { const b = $('tFlare'); b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (mine()) cmPress('btn'); }); for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) b.addEventListener(ev, () => cmRelease('btn')); } // зажата — ловушки очередью
   tap('tHelp', () => { if (game.net && !craft.dead && C.askHelp) C.askHelp([craft.pos.x, craft.pos.z]); });
-  tap('tLook', () => freeLook(!free.on));
+  tap('tLook', () => freeLook(!free.on)); tap('tBino', binoTap);
   tap('tPop', popToggle); tap('tMap', () => toggleMap()); tap('tAuto', () => C.setAuto(!C.auto)); tap('tCam', () => { if (game.net && craft.dead) { spec.i++; spec.init = false; } else nextCam(); });
   // панель: тап по строке оружия — выбрать его, «ЦЕЛЬ …» — следующая цель, «ТВ» — окно контейнера
   $('wpn').addEventListener('pointerdown', (e) => {
@@ -778,7 +778,7 @@ export function createAir(C) {
     if (!IS_TOUCH) return;
     const k = touchK(), px = (v) => Math.round(v * k);
     const R = (id, right, bottom) => { const e = $(id); e.dataset.r = `calc(${px(right)}px + var(--sa-r))`; e.dataset.b = px(bottom) + 'px'; e.dataset.k = k < 1 ? String(k) : ''; };
-    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tLook', 12, 216); R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136); R('tHelp', 102, 196); R('tPop', 102, 196); // «ПОДСКОК» — только у вертолёта, «ПОМОЩЬ» — только в онлайне (вертолётов в онлайне нет)
+    R('tFire', 12, 16); R('tFlare', 12, 96); R('tMap', 12, 156); R('tLook', 12, 216); R('tBino', 172, 76); /* «Бинокль» — над «КАМ.» */ R('tThr', 102, 16); R('tLock', 102, 76); R('tAuto', 102, 136); R('tHelp', 102, 196); R('tPop', 102, 196); // «ПОДСКОК» — только у вертолёта, «ПОМОЩЬ» — только в онлайне (вертолётов в онлайне нет)
     const cam = $('tCam'); cam.style.right = `calc(${px(172)}px + var(--sa-r))`; cam.style.bottom = px(16) + 'px'; cam.style.transform = k < 1 ? `scale(${k})` : ''; cam.style.transformOrigin = 'right bottom';
     applyLayout(); // свои места кнопок игрока (Настройки → «Расположение кнопок»)
   }
@@ -988,6 +988,7 @@ export function createAir(C) {
       `<div class="st">${msgT > 0 ? msgText : larText}${inAir ? tr(' <span class="fly">· в полёте {0}</span>', [inAir]) : ''}</div>` + tgl +
       `<div class="cm">${tr('ловушки')} ${cmInfo().flare ? Math.max(craft.cmFlare, craft.cmChaff) : craft.cmChaff + ` <span class="dim">${tr('(диполи)')}</span>`}${doneTxt || (game.hunt ? tr(' · РЛС {0}/{1}', [game.hunt.n, game.hunt.need]) : game.targets.length ? tr(' · цели {0}/{1}', [dead, game.targets.length]) : '')}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ` · <b style="color:#86efac">${tr('Авто')}</b>` : ''}${hasPod && pod.laserMan !== null ? tr(' · лазер {0}', [pod.laserMan ? tr('вкл') : tr('выкл')]) : ''}${homeT > 0 ? tr(' · <b style="color:#86efac">пополнение {0} с</b>', [Math.ceil(12 - homeT)]) : ''}</div>`;
     const lk = rw.find((e) => e.state === 'launch'), trk = rw.find((e) => e.state === 'track'), wn = $('warn');
+    if (bino.on && binoThreat(mw)) binoOff(tr('Пуск ракеты по вам — бинокль выключен')); else binoHud();
     if (mw.length || lk) { wn.textContent = tr('ПУСК РАКЕТЫ{0}', [lk ? ' — ' + (lk.u.S.rwr || lk.u.S.short) : '']); wn.style.display = 'block'; }
     else if (trk) { wn.textContent = craft.heli ? tr('ЗАХВАТ — {0} · вниз, за рельеф!', [trk.u.S.rwr || trk.u.S.short]) : tr('ЗАХВАТ — {0}', [trk.u.S.rwr || trk.u.S.short]); wn.style.display = 'block'; }
     else { const su = seenBy(); if (su) { wn.textContent = tr('ВАС ВИДИТ {0} — снижайтесь за рельеф', [su.S.rwr || su.S.short]); wn.style.display = 'block'; } else wn.style.display = 'none'; }
@@ -1043,6 +1044,71 @@ export function createAir(C) {
     camera.up.set(0, 1, 0); camera.lookAt(wcLook);
     return true;
   }
+  // ═════════════ «Бинокль» (Mark 2026-10-28): вид с самолёта на захваченную цель и за своим оружием, самолёт ведёт автопилот ═════════════
+  // кнопка #tBino / B: выкл → цель → оружие (пока в полёте; за разрывом — следующее) → выкл. Цель — захват контейнера, иначе ближайшая цель задания;
+  // приближение — цель ≈ 1/6 высоты кадра (у оператора ЗРК — ¼; Mark: «чуть меньший масштаб»). Автопилот — курс и высота на момент включения, не ниже
+  // рельефа впереди + 300 м, у границы района — к центру (planeFly). Выход — кнопкой, ручкой / крестовиной / клавишами / пальцем по экрану и сам —
+  // при пуске ракеты по самолёту. Выключается в настройках («Экран и кнопки»: C.sens.bino) — тогда кнопки нет
+  const bino = { on: false, mode: 'tgt', w: null, ap: { yaw: 0, alt: 0 }, fov: 30, why: '' }, BT = V3();
+  const binoOk = () => C.sens.bino !== false && !craft.heli && !craft.dead && !game.over;
+  function binoTgt() {
+    if (pod.tgt && !pod.tgt.dead) return pod.tgt;
+    let b = null, bd = 1e12; for (const o of game.targets) { if (o.dead) continue; const d = Math.hypot(o.x - craft.pos.x, o.z - craft.pos.z); if (d < bd) { bd = d; b = o; } }
+    return b;
+  }
+  const binoWpns = () => C.S.wpns.filter((w) => !w.dead && w.owner === craft && weaponHasModel(w.key, w.W));
+  // ракета летит именно в самолёт (датчик пуска или ЗУР с целью — он): плашка «ПУСК РАКЕТЫ» бывает и от пусков по своим бомбам («Тор», «Панцирь»)
+  const binoThreat = (mw) => (mw && mw.length > 0) || C.S.sams.some((m) => !m.dead && m.target === craft);
+  function binoSet(mode) {
+    bino.mode = mode; wc.obj = null; wc.init = false; wc.endT = 0;
+    if (mode === 'wpn') { const ws = binoWpns(); bino.w = ws.find((w) => w.id > (bino.w ? bino.w.id : -1)) || ws[0] || null; wc.obj = bino.w; wc.kind = 'w'; }
+    ship.visible = mode !== 'tgt'; // вид из самолёта — без своей модели в кадре
+  }
+  function binoOn() {
+    if (!binoOk()) return;
+    const t = binoTgt(), ws = binoWpns();
+    if (binoThreat(C.S.mws ? C.S.mws(craft) : null)) { say(tr('Ракета летит в вас — бинокль недоступен'), 1.8); snd.deny(); return; }
+    if (!t && !ws.length) { say(tr('Бинокль: нет цели и оружия в полёте'), 1.8); snd.deny(); return; }
+    if (free.on) freeLook(false);
+    bino.on = true; bino.ap.yaw = craft.yaw; bino.ap.alt = craft.pos.y; bino.fov = 30;
+    binoSet(t ? 'tgt' : 'wpn'); $('tBino').classList.add('on'); document.body.classList.add('binoOn'); snd.click();
+  }
+  function binoOff(why) {
+    if (!bino.on) return;
+    bino.on = false; bino.w = null; wc.obj = null; ship.visible = !craft.dead; aimSync(); C.setFov(62);
+    $('tBino').classList.remove('on'); document.body.classList.remove('binoOn'); binoBar.style.display = 'none';
+    if (why) say(why, 2.2);
+  }
+  function binoTap() {
+    if (!bino.on) { binoOn(); return; }
+    const ws = binoWpns();
+    if (bino.mode === 'tgt' && ws.length) { binoSet('wpn'); snd.click(); return; }
+    if (bino.mode === 'wpn' && ws.some((w) => w.id > (bino.w ? bino.w.id : -1))) { binoSet('wpn'); snd.click(); return; } // следующее оружие в полёте
+    binoOff(); snd.click();
+  }
+  const binoBar = document.createElement('div'); binoBar.id = 'binoBar'; if (document.body && document.body.appendChild) document.body.appendChild(binoBar);
+  function binoCamera(dt, t) {
+    if (bino.mode === 'wpn') {
+      if (!wc.obj && bino.w && !bino.w.dead) { wc.obj = bino.w; wc.kind = 'w'; }
+      if (C.camera.fov !== 38) C.setFov(38); // за оружием — уже обычного (62°): бомба крупнее в кадре; после вида на цель — не узкое
+      if (weaponCamera(dt, t)) { if (wc.obj && wc.obj !== bino.w && wc.kind === 'w') bino.w = wc.obj; return true; } // за разрывом — следующее своё (weaponCamera)
+      if (binoTgt()) binoSet('tgt'); else { binoOff(); return false; } // оружия в полёте больше нет — к цели
+    }
+    const tg = binoTgt(); if (!tg) { binoOff(tr('Бинокль: целей больше нет')); return false; }
+    tgtPos(tg, BT); camera.position.copy(craft.pos); camera.position.y -= 2.5; camera.up.set(0, 1, 0); camera.lookAt(BT);
+    const d = Math.max(80, BT.distanceTo(camera.position)), size = tg.S ? 14 : Math.max(40, tg.r || 70), f = clamp(2 * Math.atan(size * 3 / d) / D2R, 0.6, 30);
+    if (Math.abs(f - bino.fov) / bino.fov > 0.1) bino.fov = f; // ступенями (смена поля зрения — пересчёт кадра)
+    C.setFov(bino.fov);
+    return true;
+  }
+  function binoHud() {
+    if (!bino.on) return;
+    const tg = binoTgt(), ws = binoWpns(), i = bino.w ? ws.indexOf(bino.w) : -1;
+    const what = bino.mode === 'wpn' && bino.w ? tr('{0} — {1} из {2}', [AG[bino.w.key].short, Math.max(1, i + 1), Math.max(1, ws.length)])
+      : tg ? `${tg.S ? tg.S.short : tg.name} ${(Math.hypot(tgtPos(tg, BT).x - craft.pos.x, BT.z - craft.pos.z) / 1000).toFixed(1)} ${tr('км')}` : '';
+    const h = tr('<b>Бинокль</b> · {0}', [what]);
+    if (binoBar._h !== h) { binoBar._h = h; binoBar.innerHTML = h; } binoBar.style.display = 'block';
+  }
   const camOff = V3(), UPW = new THREE.Vector3(0, 1, 0); let camInit = false;
   // онлайн: союзники — самолёты своей команды (люди и боты), кроме своего; имя — из состава комнаты
   const alliesOf = () => (game.net ? C.raid.planes.filter((a) => !a.dead && !a.out && a.role !== 'decoy' && a.role !== 'carrier' && a !== craft && !(game.net.me && a.id === game.net.me.id)) : []);
@@ -1071,6 +1137,7 @@ export function createAir(C) {
     if (craft.dmgVis && dmgDt > 0 && !craft.dead) craft.dmgVis.update(dmgDt, craft, C.windV || (C.windV = new THREE.Vector3(3.9, 0, 1.1)));
     dmgDt = 0;
     fwdOf(craft, fw); up.set(0, 1, 0).applyQuaternion(shipQ);
+    if (bino.on && !craft.dead && binoCamera(dt, t)) return; // бинокль: вид на цель или за своим оружием
     if (C.camera.fov !== 62) C.setFov(62);
     if (free.on && !craft.dead) { // обзор: камера за самолётом по направлению взгляда (назад — перед самолётом, лицом к нему)
       const d = AIMD.set(-Math.sin(free.yaw) * Math.cos(free.pitch), Math.sin(free.pitch), -Math.cos(free.yaw) * Math.cos(free.pitch));
@@ -1101,7 +1168,7 @@ export function createAir(C) {
   function start(opts = {}) {
     dmgDt = 0; // время для дыма из зон — с нового вылета (updateCamera; в «Съёмке» и при ?view= камера своя — копилось)
     const setup = C.setup;
-    game.opts = opts; C.lastGame = opts.lastGame || 'air'; C.ended = false; demo = null; if (free.on) freeLook(false);
+    game.opts = opts; C.lastGame = opts.lastGame || 'air'; C.ended = false; demo = null; if (free.on) freeLook(false); binoOff();
     zoneReset(); zn.Z = opts.lastGame === 'training' ? null : newZone(Math.random); // обучение — без зоны пополнения
     const rnd = mulberry32((Date.now() & 0xffffff) ^ 0x9e37);
     craft.dead = false;
@@ -1274,7 +1341,7 @@ export function createAir(C) {
   // пока идут итоги и выбор связки (Mark 2026-10-26: «полёт продолжается во время выбора нового юнита»)
   function netWaveOut() {
     if (craft.dead) return;
-    craft.dead = true; ship.visible = false; free.on = false; $('tLook').classList.remove('on'); pod.show = false;
+    binoOff(); craft.dead = true; ship.visible = false; free.on = false; $('tLook').classList.remove('on'); pod.show = false;
     spec.why = tr('Волна окончена — самолёт вернулся на базу'); spec.t = 0; spec.init = false;
   }
   function stop() {
@@ -1508,7 +1575,14 @@ export function createAir(C) {
     if (tb._t !== tt) { tb._t = tt; tb.innerHTML = `${ico('throttle')}<small>${tt}</small>`; tb.title = tr('Газ'); tb.classList.toggle('ab', thrI === AB_I); } // спидометр и газ
     if (stick.id !== null) { rx += stick.x; ry -= stick.y * inv; }
     let rz = 0;
-    if (demo && demo.photo) { const o = photoPilot(dt); rx = o[0]; ry = o[1]; rz = o[2]; }
+    if (bino.on && (rx || ry || stick.id !== null || aim.id != null || free.on)) binoOff(); // взялся за управление — обычный вид, самолёт твой
+    if (bino.on && !demo) { // бинокль: автопилот — курс и высота на момент включения, не ниже рельефа впереди + 300 м; у границы района — к центру
+      if (Math.max(Math.abs(craft.pos.x), Math.abs(craft.pos.z)) > CITY.HALF - 2500) bino.ap.yaw = Math.atan2(craft.pos.x, craft.pos.z);
+      const look = clamp(craft.speed * 14, 1500, 4500), sy = -Math.sin(bino.ap.yaw), cy = -Math.cos(bino.ap.yaw); let floor = -1e9, near = -1e9;
+      for (let d = 0; d <= look; d += 120) { const x = craft.pos.x + sy * d, z = craft.pos.z + cy * d, h = Math.max(city.groundH(x, z), city.topAt(x, z)) + 300; floor = Math.max(floor, h); if (d < look * 0.4) near = Math.max(near, h); }
+      aim.yaw = bino.ap.yaw; aim.pitch = clamp((Math.max(bino.ap.alt, floor) - craft.pos.y) / 1500, near > craft.pos.y - 40 ? -0.05 : -0.25, near > craft.pos.y ? 0.6 : 0.25);
+      const o = aimSteer(); rx = o[0]; ry = o[1]; rz = o[2];
+    } else if (demo && demo.photo) { const o = photoPilot(dt); rx = o[0]; ry = o[1]; rz = o[2]; }
     else if (demo) { // показ в обучении: автопилот на высоте demo.alt к точке demo.pt, оружие применяет «АВТО»
       // высота — не ниже рельефа впереди (горы, дома): смотрим по курсу и по пути к точке на ~14 с полёта вперёд
       const look = clamp(craft.speed * 14, 1500, 4500), fy = Math.atan2(demo.pt.x - craft.pos.x, demo.pt.z - craft.pos.z), clr = Math.max(90, demo.alt * 0.35);
@@ -1673,6 +1747,7 @@ export function createAir(C) {
     forceFire, // «Съёмка»: принудительный пуск (кнопка «Пуск»)
     retarget(list) { game.targets = list; podSet(null); },
     setCam(m) { if (camMode !== m) { camMode = m; wc.obj = null; wc.init = false; } },
+    bino: () => ({ on: bino.on, mode: bino.mode }), // «Бинокль» — для урока «Спутниковые бомбы» (training.js)
     // «Съёмка»: модель самолёта и подвеска (пилоны — userData.st), поставить модель в точку самолёта до кадра
     ship, pylons: () => pylonMeshes, poseShip() { ship.position.copy(craft.pos); ship.rotation.set(craft.pitch, craft.yaw, craft.roll, 'YXZ'); ship.updateMatrixWorld(true); },
     get hasPod() { return hasPod; }, get sel() { return sel; }, get mapOn() { return mapOn; }, curW,

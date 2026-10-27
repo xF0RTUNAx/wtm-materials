@@ -885,4 +885,12 @@ export default {
   "Вертолёты идут к гарнизону «Пугало» низко, по оврагу. Садитесь за пульт пушки или ПЗРК (щёлкните по комплексу) и ловите подскок. Сбито: {0}/2.": "The helicopters are heading for Garrison \"Scarecrow\", low along the gully. Take the console of a gun or MANPADS (click the site) and catch the pop-up. Shot down: {0}/2.",
   "Мышь (в обзоре L)": "Mouse (in look mode, L)",
   "осмотреться": "look around",
+  "Это <b>«Бинокль»</b>: {0} Самолёт держит курс и высоту сам. {1} — следующий вид, {2} — обратно к управлению.": "This is the <b>Binoculars</b>: {0} The aircraft holds course and altitude by itself. {1} — next view, {2} — back to flying.",
+  "камера летит за бомбой до разрыва.": "the camera follows the bomb until it explodes.",
+  "вид с самолёта на цель.": "a view of the target from the aircraft.",
+  "кнопка с биноклем": "the binoculars button",
+  "клавиши полёта": "the flight keys",
+  "ручка, крестовина или палец по экрану": "the stick, the pad or a finger on the screen",
+  "Бомба ушла и летит к цели. Посмотрите на неё в <b>«Бинокль»</b> ({0}): сначала вид на цель, ещё раз — за бомбой.": "The bomb is away and flying to the target. Watch it through the <b>Binoculars</b> ({0}): first the target, press again — follow the bomb.",
+  "кнопка с биноклем справа": "the binoculars button on the right",
 };

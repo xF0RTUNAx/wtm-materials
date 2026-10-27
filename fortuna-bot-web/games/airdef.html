@@ -239,6 +239,13 @@
   /* одна панель: полёт, оружие, прицел, цель контейнера, ловушки, цели задания (полёт и цели — бывшие #osd и #mission) */
   #osd, #mission { display: none; }
   #wpn .fl { font-size: 12px; white-space: nowrap; } #wpn .fl b { font-size: 16px; color: #fff; } #wpn .dim { font-size: inherit; } #wpn .okd { color: #86efac; }
+  /* «Бинокль» вылета (air.js): строка сверху по центру, окно «ТВ» и прицельные метки самолёта на время вида — спрятаны; кнопка — только у самолёта и если включена в настройках */
+  #binoBar { position: fixed; top: calc(var(--top) + 2px); left: 50%; transform: translateX(-50%); z-index: 14; display: none; pointer-events: none; padding: 5px 12px; background: rgba(16,20,15,.82);
+    border: 1px solid #3a4334; color: #e9e6dc; font: 500 12.5px 'Golos Text', -apple-system, sans-serif; white-space: nowrap; max-width: calc(100vw - 420px); overflow: hidden; text-overflow: ellipsis; }
+  #binoBar b { color: #f3c96f; font-weight: 700; } #binoBar span { color: #a9b19c; }
+  body.coarse #binoBar { top: auto; bottom: calc(max(8px, var(--sa-b)) + 6px); max-width: calc(100vw - 2 * max(12px, var(--sa-l)) - 420px); } /* телефон: вверху по центру — круг СПО */
+  body:not(.flying) #binoBar, body.heli #tBino, body.nobino #tBino { display: none !important; }
+  body.binoOn #podBox { display: none !important; } body.binoOn #tBino { background: rgba(232,176,74,.85); color: #17190f; }
   #wpn .ab { color: #fb923c; }
   /* оружие — одной строкой: выбранное ярче; тап по названию — выбор */
   #wpn .wl { display: flex; flex-wrap: wrap; gap: 1px 9px; } #wpn .wl .r { display: inline; opacity: .55; padding: 1px 0; } #wpn .wl .r.sel { opacity: 1; color: #fff; font-weight: 800; }
@@ -745,6 +752,7 @@
   <div class="tb" id="tCam">Кам.</div>
   <div class="tb" id="tAuto">Авто</div>
   <div class="tb" id="tLook">Обзор</div>
+  <div class="tb" id="tBino">Бинокль</div>
   <div class="tb" id="tHelp">Помощь</div>
   <div class="tb" id="tPop">Подскок</div>
   <div class="tb" id="tThr">Газ 80%</div>

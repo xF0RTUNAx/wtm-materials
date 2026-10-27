@@ -324,10 +324,11 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       <p class="hint">${tr('Видеочип: {0}', [String(C.gpuName || '—').replace(/[<>&]/g, '').slice(0, 70)])}</p>
       <div class="cat-h">${tr('Время и погода')}</div>${seg('wx', C.weatherKey, [['random', tr('Случайная')], ...WEATHER_KEYS.map((k) => [k, trIf(WEATHERS[k].name)])])}
       <div class="cat-h">${tr('Управление')}</div>
-      ${C.IS_TOUCH || C.shell.canFs() || C.shell.hintKind() ? `<div class="sub">${tr('Экран и кнопки')}</div>` : ''}
+      <div class="sub">${tr('Экран и кнопки')}</div>
       ${C.IS_TOUCH ? `<button class="btn alt" id="sLayout">${tr('Расположение и размер кнопок…')}</button>` : ''}
       ${C.shell.canFs() ? `<label class="chk"><input type="checkbox" id="sFs" ${C.shell.fsPref ? 'checked' : ''}> ${tr('полный экран')}</label>` : ''}
       ${C.shell.hintKind() ? `<label class="chk"><input type="checkbox" id="sFsHint" ${C.shell.fsHint ? 'checked' : ''}> ${C.shell.hintKind() === 'swipe' ? tr('плашка «Потяните вверх», когда панели Safari видны в бою') : tr('кнопка возврата, когда полный экран слетел в бою')}</label>` : ''}
+      <label class="chk"><input type="checkbox" id="sBino" ${C.sens.bino !== false ? 'checked' : ''}> ${tr('кнопка «Бинокль» в вылете (B): вид на цель и на своё оружие, самолёт держит курс')}</label>
       <div class="sub">${tr('Самолёт')}</div>
       <label class="chk">${tr('ручка (тангаж и крен)')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх — нос вниз (как в авиасимуляторах)')}</label>
@@ -405,6 +406,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sPerf') { C.perfHud = e.target.checked; ls.set('fortuna_airdef_perfhud', C.perfHud ? '1' : '0'); document.body.classList.toggle('perfhud', C.perfHud); }
     if (e.target.id === 'sFull') { C.GO.fullRes = e.target.checked; ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); }
     if (e.target.id === 'sInv') { C.sens.invert = e.target.checked; C.saveSens(); }
+    if (e.target.id === 'sBino') { C.sens.bino = e.target.checked; C.saveSens(); document.body.classList.toggle('nobino', !e.target.checked); }
     if (e.target.id === 'sAim') { C.sens.aim = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sCmBurst') { C.sens.cmBurst = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sKeys') { C.sens.keys = e.target.checked; C.saveSens(); }

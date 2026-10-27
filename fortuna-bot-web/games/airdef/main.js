@@ -850,6 +850,7 @@ C.setFov = (f) => { if (Math.abs(camera.fov - f) < 0.01) return; camera.fov = f;
 C.shell = createShell(C, { IS_TOUCH, ls });
 C.crash = createCrashRep(C); // прошлый бой оборвался без выхода (вылет вкладки) — после меню предложим отправить отчёт
 document.body.classList.toggle('nopad', !C.sens.pad); // крестовина выключена в настройках
+document.body.classList.toggle('nobino', C.sens.bino === false); // «Бинокль» вылета выключен в настройках
 
 // ═════════════ Режимы: вход, пауза, итоги ═════════════
 const ctrls = {};
@@ -928,7 +929,7 @@ $('againBtn').onclick = () => orientGate(() => { C.ended = false; C.start(C.last
 $('closeBtn').onclick = () => { C.ended = false; C.toMenu(); };
 $('exit').onclick = () => C.toMenu();
 // кнопки-иконки (games/airdef/icons.js): прежняя надпись — во всплывающей подсказке и для экранного диктора
-const ICO = { tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
+const ICO = { tBino: ['bino', tr('Бинокль: цель и своё оружие (B)')], tFlare: ['flares', tr('Ловушки')], tMap: ['map', tr('Карта')], tLock: ['target', tr('Цель')], tAuto: ['auto', tr('Авто — помощник')], tLook: ['camera', tr('Обзор — свободная камера')], tCam: ['camera', tr('Камера: следующий союзник')],
   tHelp: ['help', tr('Нужна помощь')], tPop: ['popUp', tr('Подскок')], opMap: ['map', tr('Карта')], opAuto: ['auto', tr('Авто — расчёт сам')], opCam: ['camera', tr('Камера')], opBino: ['bino', tr('Бинокль')], opRadar: ['radar', tr('РЛС: включить / выключить')],
   pause: ['pause', tr('Пауза')], plBtn: ['players', tr('Игроки')], lsnBtn: ['lesson', tr('Урок: задание и подсказки')], askBtn: ['lesson', tr('Объяснение')], wMap: ['map', tr('Карта')],
   exit: ['close', tr('Выйти')], lsnX: ['close', tr('Свернуть')], msClose: ['close', tr('Закрыть')], lessonX: ['close', tr('Закрыть')] };
