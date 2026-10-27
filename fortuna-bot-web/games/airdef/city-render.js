@@ -864,10 +864,13 @@ function nearHouses(G, scene, B, near, P, sh) {
     const n = xz.length / 2; if (!n) return;
     const im = new THREE.InstancedBufferAttribute(new Float32Array(n * 16), 16); im.setUsage(THREE.DynamicDrawUsage);
     // сетка ячеек GC × GC м: отбор перебирает только ячейки в радиусе, а не все экземпляры города
-    const cells = new Map();
-    for (let j = 0; j < n; j++) { const k = gkey(Math.floor(xz[j * 2] / GC), Math.floor(xz[j * 2 + 1] / GC)); let c = cells.get(k); if (!c) cells.set(k, c = []); c.push(j); }
+    const cells = new Map(), gb = [1e9, -1e9, 1e9, -1e9]; // gb — занятые ячейки (радиус на всю карту, ?full=1, не перебирает пустые)
+    for (let j = 0; j < n; j++) {
+      const ix = Math.floor(xz[j * 2] / GC), iz = Math.floor(xz[j * 2 + 1] / GC), k = gkey(ix, iz); let c = cells.get(k); if (!c) cells.set(k, c = []); c.push(j);
+      gb[0] = Math.min(gb[0], ix); gb[1] = Math.max(gb[1], ix); gb[2] = Math.min(gb[2], iz); gb[3] = Math.max(gb[3], iz);
+    }
     const grid = new Map(); for (const [k, c] of cells) grid.set(k, Int32Array.from(c));
-    sets.set(key, { slot, name, xz, mats, im, n, meshes: [], R: Rs, grid });
+    sets.set(key, { slot, name, xz, mats, im, n, meshes: [], R: Rs, grid, gb });
   };
   for (let v = 1; v < BLD.length; v++) {
     if (!BLD[v] || !near[v].length) continue;
@@ -889,7 +892,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       xz[j * 2] = B.x[i]; xz[j * 2 + 1] = B.z[i];
     });
     // мелких частных домов много — их радиус меньше; офисный корпус издали светлый и плоский — дальше коробки с фасадом
-    G.addNear('b' + v, v, BLD[v][0], house ? R * 0.6 : BLD[v][0] === 'o_block' ? Math.min(R, 700) : R, xz, mats);
+    G.addNear('b' + v, v, BLD[v][0], P.full ? R : house ? R * 0.6 : BLD[v][0] === 'o_block' ? Math.min(R, 700) : R, xz, mats); // ?full=1 — все полными моделями
   }
   // модель пришла: по мешу на материал, общая матрица инстансов; коробки этого вида вблизи прячутся
   G.attachBld = (name, group) => {
@@ -964,7 +967,7 @@ function nearHouses(G, scene, B, near, P, sh) {
       if (!S.meshes.length) continue;
       const a = S.im.array, R2 = S.R * S.R, C3 = S.cxyz, al = S.lo ? S.imLo.array : null, R12 = al ? S.R1 * S.R1 : R2; let c = 0, cl = 0, cf = 0;
       const af = S.far ? S.imFar.array : null, RM = af ? S.Rf : S.R, RM2 = RM * RM; // вдали — упрощённая копия (до Rf)
-      const ix0 = Math.floor((p.x - RM) / GC), ix1 = Math.floor((p.x + RM) / GC), iz0 = Math.floor((p.z - RM) / GC), iz1 = Math.floor((p.z + RM) / GC);
+      const g = S.gb, ix0 = Math.max(g[0], Math.floor((p.x - RM) / GC)), ix1 = Math.min(g[1], Math.floor((p.x + RM) / GC)), iz0 = Math.max(g[2], Math.floor((p.z - RM) / GC)), iz1 = Math.min(g[3], Math.floor((p.z + RM) / GC));
       for (let ix = ix0; ix <= ix1; ix++) for (let iz = iz0; iz <= iz1; iz++) {
       const cell = S.grid.get(gkey(ix, iz)); if (!cell) continue;
       for (let q = 0; q < cell.length; q++) {
@@ -1023,7 +1026,7 @@ function nearHouses(G, scene, B, near, P, sh) {
 // Фонарь (p_lamp): столб 6,9 м, консоль вдоль +Z; провода крепятся у вершины столба на консоли.
 const WIRE_AT = [-1.4, -0.95, -0.25, 0.3], WIRE_Y = 6.1, WIRE_SAG = 0.7;
 function streetProps(G, city, B, P) {
-  const R = P.bldNear || 0, rnd = mulberry32(city.seed * 31 + 7), GR = CITY.GRID, n0 = Math.ceil(CITY.R / GR);
+  const R = P.propNear || P.bldNear || 0, rnd = mulberry32(city.seed * 31 + 7), GR = CITY.GRID, n0 = Math.ceil(CITY.R / GR); // propNear — ?full=1 (main.js)
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), X = new THREE.Vector3(1, 0, 0), p = new THREE.Vector3(), sc = new THREE.Vector3(), a3 = new THREE.Vector3(), b3 = new THREE.Vector3();
   const sets = {}; const put = (name, x, z, rot, s = 1, y = GH(x, z)) => { (sets[name] = sets[name] || []).push(x, z, ...m4.compose(p.set(x, y, z), q.setFromAxisAngle(Y, rot), sc.setScalar(s)).elements); };
   const wire = [], seg = (A, Bp) => { const d = b3.copy(Bp).sub(A), L = d.length(); q.setFromUnitVectors(X, d.normalize()); wire.push((A.x + Bp.x) / 2, (A.z + Bp.z) / 2, ...m4.compose(p.copy(A).add(Bp).multiplyScalar(0.5), q, sc.set(L, 1, 1)).elements); };

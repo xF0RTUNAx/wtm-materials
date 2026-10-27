@@ -405,6 +405,7 @@
   body.photo #photoZone, body.photo #photoUi { display: block; }
   body.photo #hud, body.photo #touch, body.photo #warn, body.photo #msg, body.photo #hint, body.photo #podBox, body.photo #map, body.photo #ask { display: none !important; }
   body.photo.clean #photoUi, body.photo.clean #pause, body.photo.clean #mute, body.photo.clean #exit, body.photo.clean #perf { display: none !important; }
+  body.photo.phud #hud { display: block !important; } /* запись ролика с интерфейсом боя (photo.js shot.hud) */
   .phRow { position: fixed; z-index: 14; left: max(10px, var(--sa-l)); right: calc(max(10px, var(--sa-r)) + 52px); display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
   .phRow::-webkit-scrollbar { display: none; }
   #phSubj { bottom: calc(max(8px, var(--sa-b)) + 40px); } #phAng { bottom: max(8px, var(--sa-b)); }

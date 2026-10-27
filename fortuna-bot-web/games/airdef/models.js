@@ -489,7 +489,7 @@ async function load(name, base) {
   const pg = parseGlb(await r.arrayBuffer()), { images, hashes, textures, nrm } = pg;
   const meshes = mergeSame(pg.meshes, META[name] || META[name.replace(/_lo$/, '')] || {});
   const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = META[name] || META[name.replace(/_lo$/, '')] || {};
-  const KI = ktxOn() ? await ktxIndex(base) : null; // здания и объекты — тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small)
+  const KI = ktxOn() && !CAMO_R[name] ? await ktxIndex(base) : null; // здания и объекты — тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small); модель с окраской — картинки из своего glb
   const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
     if (MM0.bld && !KI) return mkTex(t, isN, tm); // без сжатых: у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
@@ -657,7 +657,10 @@ function start(name) {
   load(name, BASE).then((g) => { LOADED[name] = g; LSTAT.done++; if (READY) READY(name); }).catch((e) => { LSTAT.done++; console.warn('модель не загрузилась:', e.message); });
 }
 const glbVer = (name) => GLB_V[name] || '20261022b';
-const modelUrl = (base, name) => `${base}models/${name}.glb?v=${glbVer(name)}`;
+// окраска для съёмки кадров меню и ролика (?test=1&camo=e_f15e:inferno,e_mig31:dragon): модель сборщика с новой развёрткой и картинкой окраски
+// (tools/airdef-shots/camo-glb.js) вместо игровой. Игрокам окраски в бою пока не показываются — этап 2 магазина
+const CAMO_R = (() => { try { const q = new URLSearchParams(location.search); return q.get('test') === '1' && q.get('camo') ? Object.fromEntries(q.get('camo').split(',').map((c) => c.split(':'))) : {}; } catch (_) { return {}; } })();
+const modelUrl = (base, name) => (CAMO_R[name] ? `${base}../../tools/airdef-shots/camo/${name}.${CAMO_R[name]}.glb` : `${base}models/${name}.glb?v=${glbVer(name)}`);
 // все модели игры — для «Скачать всё заранее» (Настройки, offline.js prefetchAll): самолёты, оружие, техника и её дальние копии, постройки
 export function modelUrls(base = BASE) { const N = new Set([...Object.keys(META), ...Object.keys(GLB_V)]); for (const n of UNIT_LO) N.add(n + '_lo'); return [...N].map((n) => modelUrl(base, n)); }
 export function loadModels(base, onReady) {

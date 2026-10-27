@@ -1625,7 +1625,7 @@ export function createAir(C) {
     if (rwa.on && (craft.dead || game.over)) rwrAckReset();
     flames.update(craft.thr, craft.ab);
     if (shipModel) spinProps(shipModel, dt, craft.thr); // винты (Ту-95; у вертолёта thr — шаг несущего)
-    if (game.opts.photo) return; // «Съёмка»: без прицелов и панелей — свой интерфейс (photo.js)
+    if (game.opts.photo && !game.opts.phud) return; // «Съёмка»: без прицелов и панелей — свой интерфейс (photo.js); phud — запись ролика с интерфейсом боя (shot.hud)
     if (game.over && craft.dead) return;
     const sp = !!(game.net && craft.dead); if (sp !== document.body.classList.contains('spect')) document.body.classList.toggle('spect', sp); // «КАМ.» — следующий союзник
     if (sp) { // онлайн: наблюдение до нового вылета

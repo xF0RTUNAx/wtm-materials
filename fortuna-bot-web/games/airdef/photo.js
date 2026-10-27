@@ -625,6 +625,7 @@ export function createPhoto(C, ctrls) {
     const i = st.subs.findIndex((x) => x.id === shot.s || x.key === shot.s); if (i >= 0) st.subj = i;
     const j = ANG.findIndex((x) => x.k === shot.a); if (j >= 0) st.ang = j;
     st.mount = shot.m || 0; st.adj.az = shot.az || 0; st.adj.el = shot.el || 0; st.adj.k = shot.k || 1; st.snap = true; setClean(true); window.__shot = 'wait'; st.shotT = -1;
+    if (shot.hud && st.br === 'air') { ctrls.air.game.opts.phud = true; document.body.classList.add('phud'); } // ролик: интерфейс боя поверх (прицел, оружие, СПО) — автопилот «Съёмки» ведёт самолёт
   }
   function shotTick(dt) {
     if (!shot || window.__shot === 'ready' || window.__shot === 'timeout') return;
@@ -632,11 +633,14 @@ export function createPhoto(C, ctrls) {
     if (st.simT > (shot.max || 240)) { window.__shot = 'timeout'; return; }
     if (st.simT >= (shot.t || 0) && !R.fb && R.kind !== 'hold') { // объект в кадре; d — ещё столько секунд полёта (ракета успевает оставить след)
       if (st.seenT === undefined) st.seenT = st.simT;
-      if (st.simT - st.seenT >= (shot.d || 0)) { st.spd = 3; st.shotT = 0; } // стоп-кадр, камера доезжает
+      // rec — запись ролика (tools/airdef-promo/record2.js): стоп-кадр сразу, стенд дожидается моделей и пускает время recGo() (скорость sp: 0 — ×1, 1 — ×½, 2 — ×¼), кадры шагает сам
+      if (st.simT - st.seenT >= (shot.d || 0)) { st.spd = 3; if (shot.rec) { window.__shot = 'ready'; return; } st.shotT = 0; } // стоп-кадр, камера доезжает
     } else st.seenT = undefined;
   }
   const api = {
     timeK: () => (shot && st.shotT < 0 && st.simT < (shot.t || 0) ? 4 : 1),
+    recGo: () => { st.spd = (shot && shot.sp) || 0; }, // запись ролика: время пошло (см. shotTick)
+    skip3D: () => !!(shot && st.shotT < 0 && window.__shot === 'wait' && st.simT < (shot.t || 0)), // кадр меню / ролик: пока бой перематывается до t — без 3D (?full=1 рисует кадр по секунде)
     get craft() { return st.br === 'air' ? ctrls.air.craft : null; }, fps60: true, // на телефоне — 60 к/с (плавные кадры)
     start() {
       st.br = setup.pside === 'def' || setup.pside === 'multi' ? setup.pside : 'air';
@@ -647,7 +651,7 @@ export function createPhoto(C, ctrls) {
     stop() {
       if (st.br === 'air') ctrls.air.stop();
       if (sayKeep) { C.say = sayKeep; sayKeep = null; }
-      C.ev = null; document.body.classList.remove('photo', 'clean'); camera.up.set(0, 1, 0);
+      C.ev = null; document.body.classList.remove('photo', 'clean', 'phud'); camera.up.set(0, 1, 0);
     },
     update(dt) {
       st.simT += dt;

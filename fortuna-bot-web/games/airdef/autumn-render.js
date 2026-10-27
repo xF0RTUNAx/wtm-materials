@@ -242,7 +242,7 @@ export function autumnWaterMask(city) {
 // брошенные машины — моделями вблизи камеры (G.addNear, как детали улиц города); радиус — по размеру предмета
 const PROP_R = { pr_pumpkin: 0.35, pr_grave1: 0.4, pr_grave2: 0.45, pr_grave3: 0.45, pr_grave4: 0.3, pr_fence: 0.45, pr_fpost: 0.45, pr_hay: 0.5, pr_well: 0.5, pr_deadtree: 1.4, pr_oldtree: 1.4, c_vaz: 0.6 };
 export function autumnProps(G, city, P, gh = city.groundH) {
-  const R = P.bldNear || 0; if (!R || !G.addNear || !city.props) return;
+  const R = P.propNear || P.bldNear || 0; if (!R || !G.addNear || !city.props) return; // propNear — ?full=1 (main.js)
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), Y = new THREE.Vector3(0, 1, 0), p = new THREE.Vector3(), sc = new THREE.Vector3();
   for (const [name, arr] of Object.entries(city.props)) {
     const n = arr.length / 4, xz = new Float32Array(n * 2), mats = new Float32Array(n * 16), wy = AUTUMN.WY - 0.4; // в болоте сухостой стоит в воде

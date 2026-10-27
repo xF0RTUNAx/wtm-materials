@@ -2,3 +2,5 @@
 .env.*
 *.session
 .DS_Store
+fortuna-bot-web/tools/airdef-shots/camo/
+fortuna-bot-web/tools/airdef-promo/__pycache__/

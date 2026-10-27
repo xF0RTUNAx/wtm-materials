@@ -47,7 +47,6 @@ const GAME_ADS = {
     promo: "media/airdef_promo", v: "20261009c", badges: ["НОВАЯ ИГРА", "ОНЛАЙН"], title: "Air Superiority Online", sub: "Авиация, вооружение и ПВО — прямо в браузере",
     // описание — как в превью ссылки fortunawtm.com/airsuperiority (Mark 2026-10-27)
     text: "Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!",
-    tags: ["Авиация и ПВО", "Мульти-волна", "Онлайн 1×1…6×6", "Рейтинг", "Камуфляжи", "Аркада и Реализм"],
     how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Air Superiority Online»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Air Superiority Online»</b>: вылет, оборона, мульти-волна, обучение или <b>«Онлайн-бой»</b> с наградой. Лучше всего — на телефоне в горизонтальном положении." },
     btn: "Играть",
   },
@@ -70,7 +69,7 @@ function gameAdHTML(where, id = "airdef") {
       </div>
       <div class="game-ad-body">
         <div class="game-ad-text">${A.text}</div>
-        <div class="game-ad-tags">${A.tags.map((t) => `<span>${t}</span>`).join("")}</div>
+        ${A.tags ? `<div class="game-ad-tags">${A.tags.map((t) => `<span>${t}</span>`).join("")}</div>` : ""}
         <div class="game-ad-how">${A.how[where]}</div>
         <button class="${where === "auth" ? "btn-primary" : "btn-secondary"} game-ad-btn" data-game-ad="${id}">${where === "auth" ? "Регистрируйся и пробуй!" : A.btn}</button>
       </div>
@@ -91,7 +90,7 @@ function renderAuth(mode = "login") {
   document.getElementById("hero-title").textContent = "Добро пожаловать в мини-игры сообщества xFORTUNAx";
   const invite = pendingMpInvite();
   root.innerHTML = `
-    ${invite ? `<div class="result-box result-ok">Вас пригласили в онлайн-бой «Fighter Jet Online» (комната <b>${invite}</b>). Войдите или зарегистрируйтесь — игра откроется сама.</div>` : ""}
+    ${invite && !droneHidden() ? `<div class="result-box result-ok">Вас пригласили в онлайн-бой «Fighter Jet Online» (комната <b>${invite}</b>). Войдите или зарегистрируйтесь — игра откроется сама.</div>` : ""}
     ${gameAdHTML("auth", "airdef")}
     <div class="auth-card">
       <div class="tabs">
@@ -105,7 +104,7 @@ function renderAuth(mode = "login") {
         <div id="auth-error" class="error-text"></div>
       </form>
     </div>
-    ${gameAdHTML("auth", "drone")}
+    ${droneHidden() ? "" : gameAdHTML("auth", "drone")}
   `;
   bindGameAd(root);
   root.querySelectorAll(".tab").forEach((btn) => {
@@ -339,7 +338,7 @@ const ARCADE_GAMES = [
   { id: "strat", name: "Стратег", icon: "cardRandom", file: "games/strat.html" },
   { id: "sea", name: "Морской бой", icon: "battleship", file: "games/sea.html" },
   {
-    id: "drone", name: "Fighter Jet Online", icon: "jetFighter", file: "games/drone.html", perSortie: true,
+    id: "drone", name: "Fighter Jet Online", icon: "jetFighter", file: "games/drone.html", perSortie: true, hidden: true, // скрыт с сайта (Mark 2026-10-27): ни карточки, ни рекламы, ни приглашений, ни кнопки операции
     note: "«Изделие Фортуна-1» против ИИ-истребителей «Подстилки улитки»: 22 ракеты, радар, СПО, ловушки, дозаправка. Онлайн-бой 1×1…4×4 с друзьями, быстрым поиском или против ботов. За успешный вылет — детали (в «Реализме» ×3, шанс ключа и билета), ракеты для «Реализма» открываются за детали. Все сбитые идут в операцию «Истребительная угроза» (вкладка «Рейд»)",
     online: true,
   },
@@ -348,7 +347,7 @@ const ARCADE_GAMES = [
 function renderArcadeSection() {
   const hasTickets = ticketsLeft() > 0;
   const featured = ARCADE_GAMES.find((g) => g.featured);
-  const cards = ARCADE_GAMES.filter((g) => !g.featured).map((g) => {
+  const cards = ARCADE_GAMES.filter((g) => !g.featured && !g.hidden).map((g) => {
     return `
       <div class="container-card">
         <div class="container-card-name">${icon(g.icon)} ${g.name}</div>
@@ -430,7 +429,9 @@ async function showMpLive(el, gameId = "drone") {
   } catch (_) { el.hidden = true; }
 }
 // приглашение в комнату: fortunawtm.com/play#mp=КОД → после входа сразу игра с этой комнатой
+function droneHidden() { return !!ARCADE_GAMES.find((g) => g.id === "drone")?.hidden; }
 function stashMpInvite() {
+  if (droneHidden()) return; // приглашения #mp= — только в «Fighter Jet Online», он скрыт
   const m = /[#&]mp=([A-Za-z0-9]{4})/.exec(location.hash);
   if (!m) return;
   try { sessionStorage.setItem("mp_invite", m[1].toUpperCase()); } catch (_) {}
@@ -448,7 +449,7 @@ let arcadeRunId = null;
 
 async function openArcadeGame(gameId, ranked, extra) {
   const game = ARCADE_GAMES.find((g) => g.id === gameId);
-  if (!game) return;
+  if (!game || game.hidden) return;
   if (game.perSortie) { // «Fighter Jet Online»: билет тратит сама игра на каждый вылет (drone-start); ranked — включён ли «вылет на награду»
     if (!extra) extra = `ranked=${ranked ? 1 : 0}`;
     ranked = false;
@@ -669,7 +670,7 @@ function operationHTML(st, admin) {
         После финала топ-${tb.length} по вкладу — ${tb.join(" / ")} деталей и столько же ключей. Награды — всем с вкладом от ${o.min_contrib} очков.</details>
       <div class="section-label">Лидеры операции</div>
       <div class="shop-list">${top}</div>
-      <button class="btn-secondary btn-sm op-play" data-op-play>Играть в «Fighter Jet Online»</button>
+      ${droneHidden() ? "" : `<button class="btn-secondary btn-sm op-play" data-op-play>Играть в «Fighter Jet Online»</button>`}
       ${adminForm}
     </div>`;
 }

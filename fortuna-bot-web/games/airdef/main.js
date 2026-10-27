@@ -167,6 +167,9 @@ const P0 = touchGfx(gfxKey === 'custom' ? applyGfx(PRESETS.custom, GO) : applyGf
 const P = CINEMA ? Object.assign(P0, { name: tr('Кино'), lodObj: 1e9, draw: 26000, bldNear: 5000, treeNear: 3000, bldFar: 9000, treeFar: 5000, trees: 32000, clouds: 1100, particles: 9000, props: true, shadowMap: 4096, shadowBox: 900, // дома и деревья готовыми моделями на километры (комментарий съедал конец строки с 2026-10-09 — у «Кино» не было этих настроек)
   shEvery: 1, shAuto: false, // «Кино» — без уступок: тени каждый кадр
   treeShadows: true, aniso: 16, zoneTex: 2048, prCap: 2, podHalf: false, perf: { ...P0.perf, scale: 1, dynOff: true, aa: 'msaa', up: 'off' }, post: { ...P0.post, bloom: 0.5 } }) : P0;
+// ?full=1 вместе с «Кино» — для кадров меню и ролика (Mark 2026-10-27: «в полном качестве даже на таком расстоянии»): дома, деревья, реквизит
+// улиц — полными моделями на всю карту (±16 км), без упрощённых копий, импосторов и коробок; кадр медленный — только для записи
+if (CINEMA && Q.get('full') === '1') Object.assign(P, { bldNear: 24000, treeNear: 24000, bldFar: 0, treeFar: 0, bldLo: false, full: true, propNear: 5000, prCap: 3 }); // мелочь улиц (фонари, провода, надгробия) — в 5 км: дальше она тоньше пикселя и мерцает «крупой»; ×3 — сглаживание мелких моделей вдали
 if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeFar: +Q.get('bldfar') * 0.3 }); // проверка: ?bldfar=0 — без дальних копий моделей
 // карта: «Мульти-волна» (и в онлайне) и «Кино» — только зимняя долина «Северный рубеж», вылеты, задания и уроки — город
 // (?map=winter|city — принудительно); у зимы — свои погоды. Карта строится при загрузке: смена — перезагрузкой страницы
