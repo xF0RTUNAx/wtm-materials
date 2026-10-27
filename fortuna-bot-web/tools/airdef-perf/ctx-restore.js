@@ -1,6 +1,6 @@
 // Потеря контекста WebGL в бою на телефоне (свернул Telegram, уведомление): после возврата сжатые текстуры (земля, деревья, листы взрывов,
 // модели) должны вернуться (ktx.js ktxRestore), а не стать чёрными. Снимки до / после и счёт пустых текстур KTX2.
-//   deno run -A tools/airdef-perf/ctx-restore.js [выход-папка = .]
+//   [MAP=autumn W=a_eve] deno run -A tools/airdef-perf/ctx-restore.js [выход-папка = .]
 import puppeteer from 'npm:puppeteer-core@22.15.0';
 const [out = '.'] = Deno.args;
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new', protocolTimeout: 300000,
@@ -9,7 +9,7 @@ try {
   const page = await browser.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(String(e).slice(0, 160)));
   await page.setViewport({ width: 915, height: 412, deviceScaleFactor: 2, isMobile: true, hasTouch: true, isLandscape: true });
   await page.evaluateOnNewDocument(() => { localStorage.setItem('fortuna_airdef_setup', JSON.stringify({ game: 'air', diff: 'arcade', era: 3, side: 'east' })); localStorage.setItem('fortuna_airdef_gfx', 'high'); });
-  await page.goto('http://127.0.0.1:8937/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=city&weather=day&go=air', { waitUntil: 'load', timeout: 120000 });
+  await page.goto(`http://127.0.0.1:8937/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=${Deno.env.get('MAP') || 'city'}&weather=${Deno.env.get('W') || 'day'}&go=air`, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction(() => window.__a && window.__a.state === 'play', { timeout: 180000, polling: 500 });
   for (let i = 0; i < 150; i++) { const l = await page.evaluate(() => { const e = document.getElementById('assetLoad'); return e && e.classList.contains('on'); }); if (!l && i > 6) break; await new Promise((r) => setTimeout(r, 1000)); }
   await new Promise((r) => setTimeout(r, 4000));
@@ -27,6 +27,6 @@ try {
   await new Promise((r) => setTimeout(r, 6000)); // заново из кэша
   await boom(); await new Promise((r) => setTimeout(r, 1500));
   const after = await count(); Deno.writeFileSync(`${out}/ctx-after.png`, await page.screenshot({ type: 'png' }));
-  const st = await page.evaluate(() => ({ state: window.__a.state, reload: !!window.__a.reloadAfterBattle }));
+  const st = await page.evaluate(() => { const B = window.__a.G.bake; return { state: window.__a.state, reload: !!window.__a.reloadAfterBattle, bake: B ? { ready: B.ready, on: B.U.uBk.value.x } : null }; }); // запечённая земля (ground-bake.js) — заново после возврата текстур
   console.log(JSON.stringify({ before, after, ...st, errs }));
 } finally { await browser.close(); }

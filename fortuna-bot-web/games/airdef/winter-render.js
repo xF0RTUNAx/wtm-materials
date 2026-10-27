@@ -64,69 +64,85 @@ export function winterTextures(aniso, stats) {
   }
   return U;
 }
-// материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере
-export function winterGroundMaterial(city, zt, nt, ENV, WT) {
-  const a = city.airport, H = 16000;
-  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x101418, shininess: 14 }); m.userData.WT = WT; m.userData.AT = WT; m.userData.farU = FAR_U;
-  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) — на WebGL 1; на WebGL 2 и так есть
-  m.onBeforeCompile = (sh) => {
-    Object.assign(sh.uniforms, WT, { uFar: FAR_U, uCam: ENV.uCam, tZ: { value: zt }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(a.x, a.z, a.rwyL / 2, a.rwyW / 2) },
-      uIce: { value: new THREE.Vector4(WINTER.LAKE_N_Y, WINTER.LAKE_S_Y, WINTER.DAM_Z, 0) } });
-    sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
-    sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam; uniform vec4 uAir, uIce; uniform sampler2D tZ, tNm, wSn, wSnN, wSA, wRk, wRA, wIce, wAs;
+// цвет земли в точке P (мир) на расстоянии dist: rgb — цвет, a — морозная дымка низин без множителя расстояния. Один код — у материала и у
+// запекания (ground-bake.js: dist = 1e6 — дальше 1,6 км цвет от камеры не зависит). wN — нормаль рельефа (задаёт вызывающий)
+function wGroundGLSL(H) {
+  return `vec4 aGround(vec3 P, float dist) {
+  vec2 mp = (P.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)};
+  vec4 Z = texture2D(tZ, mp);
+  float slope = 1.0 - wN.y, hgt = P.y, near = 1.0 - smoothstep(250.0, 1400.0, dist);
+  // снег: снимок с высоты (крупные пятна, кусты) и мелкий рельеф вблизи; на солнце почти белый, в низинах — голубее
+  vec3 sA = texture2D(wSA, P.xz / 420.0).rgb, sA2 = texture2D(wSA, P.xz / 1900.0 + 0.37).rgb;
+  float dS = near > 0.0 ? lum(texF(wSn, P.xz, 7.0, vec2(0.0)).rgb) / 0.82 : 1.0;
+  vec3 snow = vec3(0.8, 0.83, 0.88) * mix(1.0, dS, 0.4 * near) * mix(vec3(1.0), sA * sA / 0.62, 0.35) * mix(vec3(1.0), sA2 * sA2 / 0.62, 0.25);
+  // скалы: крутые склоны и выдутые ветром гребни (рисунок — из текстур, цвет — серый камень)
+  float rA = lum(texture2D(wRA, P.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(wRk, P.xz, 24.0, vec2(0.0)).rgb) : 0.5;
+  vec3 rock = vec3(0.13, 0.125, 0.12) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
+  float rk = smoothstep(0.2, 0.36, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(P.xz / 60.0) - 0.5));
+  rk = max(rk, smoothstep(1250.0, 1650.0, hgt) * smoothstep(0.1, 0.26, slope + 0.1 * (rA - 0.5)));
+  vec3 col = mix(snow, rock, rk);
+  // лес: издали — хвойная крона со снегом (импосторы редкие), вблизи под деревьями — притоптанный снег
+  // край леса — рваный (шум двух масштабов), внутри — куртины и прогалины
+  float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(P.xz / 160.0) - 0.5) + 0.3 * (vn(P.xz / 45.0) - 0.5)), far = smoothstep(300.0, 1600.0, dist);
+  vec3 canopy = mix(vec3(0.04, 0.06, 0.047), vec3(0.6, 0.63, 0.67), 0.12 + 0.2 * vn(P.xz / 35.0) + 0.12 * vn(P.xz / 7.0)); // хвоя со снегом
+  col = mix(col, canopy, fr * far * (0.6 + 0.3 * vn(P.xz / 22.0))); col *= mix(1.0, 0.88, fr * (1.0 - far));
+  // лёд: голубовато-серый с наметёнными полосами снега
+  float ip = smoothstep(0.35, 0.7, vn(P.xz / 140.0) * 0.7 + vn(P.xz / 23.0) * 0.3);
+  // берег — по высоте над уровнем льда (линия идёт по рельефу, а не по клеткам), у кромки — наметённый снег
+  float iceY = P.z < uIce.z ? uIce.x : max(uIce.y, 144.0 - P.z * 0.004);
+  float ik = smoothstep(0.0, 0.3, Z.g) * (1.0 - smoothstep(0.1, 1.2, hgt - iceY + 1.6 * (vn(P.xz / 40.0) - 0.5) + 0.6 * (vn(P.xz / 9.0) - 0.5)));
+  vec3 ice = mix(vec3(0.33, 0.43, 0.5) * (0.85 + 0.3 * lum(texF(wIce, P.xz, 30.0, vec2(0.0)).rgb)), snow, max(ip * 0.8, 1.0 - smoothstep(0.35, 0.9, ik)));
+  col = mix(col, ice, ik);
+  // база и площадки: укатанный снег с колеями, местами асфальт; посёлок — снег серее
+  float as = lum(texF(wAs, P.xz, 6.0, vec2(0.0)).rgb);
+  // площадки: край — размытый и рваный (среднее по 4 точкам вокруг, ~90 м, со сдвигом по шуму)
+  vec2 jo = (vec2(vn(P.xz / 70.0), vn(P.xz / 70.0 + 5.3)) - 0.5) * 120.0;
+  float zbB = 0.0; for (int k = 0; k < 4; k++) { vec2 o = vec2(k == 0 ? 90.0 : k == 1 ? -90.0 : 0.0, k == 2 ? 90.0 : k == 3 ? -90.0 : 0.0); zbB += texture2D(tZ, (P.xz + o + jo + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).b; }
+  float zb = smoothstep(0.25, 0.85, 0.4 * Z.b + 0.15 * zbB + 0.3 * (vn(P.xz / 45.0) - 0.5)), za = smoothstep(0.1, 0.9, Z.a + 0.4 * (vn(P.xz / 80.0) - 0.5));
+  col = mix(col, mix(col * 0.8, vec3(0.3, 0.31, 0.32) * (0.7 + 0.6 * as), 0.3 + 0.25 * vn(P.xz / 40.0)), zb * 0.85);
+  col = mix(col, col * vec3(0.82, 0.83, 0.85), za * 0.7);
+  // ВПП (вдоль Z): расчищенный асфальт, осевая, снежные кромки
+  vec2 rp = vec2(abs(P.x - uAir.x), abs(P.z - uAir.y));
+  if (rp.y < uAir.z && rp.x < uAir.w + 12.0) {
+    float edge = smoothstep(uAir.w - 4.0, uAir.w + 8.0, rp.x + 6.0 * vn(P.xz / 9.0));
+    vec3 rw = vec3(0.16, 0.165, 0.17) * (0.75 + 0.5 * as);
+    rw = mix(rw, vec3(0.85), step(rp.x, 0.5) * step(0.5, fract(P.z / 60.0)) * (1.0 - edge));
+    col = mix(rw, col, edge);
+  }
+  // морозная дымка в низинах (вдали над дном долины — белёсая пелена, вершины над ней): множитель расстояния — у вызывающего
+  return vec4(col, 1.0 - smoothstep(60.0, 520.0, hgt - 140.0));
+}
+`;
+}
+const wHeadGLSL = () => `uniform vec4 uAir, uIce; uniform sampler2D tZ, tNm, wSn, wSnN, wSA, wRk, wRA, wIce, wAs;
       float lum(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
       float hs(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
       ${NOISE_ON ? NOISE_GLSL + 'float vn(vec2 p) { return vnt(p); } // шум — текстурой (noise-tex.js), как у осени' : 'float vn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(hs(i), hs(i + vec2(1, 0)), f.x), mix(hs(i + vec2(0, 1)), hs(i + vec2(1, 1)), f.x), f.y); }'}
       vec3 wN;
       ${FAR_GLSL}
+`;
+// материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере. bake — запечённый цвет дальней земли (ground-bake.js)
+export function winterGroundMaterial(city, zt, nt, ENV, WT, bake) {
+  const a = city.airport, H = 16000;
+  const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x101418, shininess: 14 }); m.userData.WT = WT; m.userData.AT = WT; m.userData.farU = FAR_U;
+  m.extensions = { derivatives: true, shaderTextureLOD: true }; // земля вдали (ground-far.js) — на WebGL 1; на WebGL 2 и так есть
+  const GU = { uFar: FAR_U, tZ: { value: zt }, tNm: { value: nt }, tNoise: { value: NOISE_ON ? noiseTex() : null }, uAir: { value: new THREE.Vector4(a.x, a.z, a.rwyL / 2, a.rwyW / 2) },
+    uIce: { value: new THREE.Vector4(WINTER.LAKE_N_Y, WINTER.LAKE_S_Y, WINTER.DAM_Z, 0) } };
+  m.userData.GU = GU; m.userData.groundGLSL = () => wHeadGLSL() + wGroundGLSL(H); // для запекания — те же текстуры и код
+  m.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, WT, GU, { uCam: ENV.uCam }, bake ? bake.U : {});
+    sh.vertexShader = 'varying vec3 vWp;\n' + sh.vertexShader.replace('#include <project_vertex>', '#include <project_vertex>\n vWp = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+    sh.fragmentShader = `varying vec3 vWp; uniform vec3 uCam;
+      ${wHeadGLSL()}${wGroundGLSL(H)}${bake ? bake.GLSL : ''}
 ` + sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', groundShadowChunk())
       .replace('#include <color_fragment>', `#include <color_fragment>
   farInit(vWp.xz); // мелкие текстуры вдали — средним цветом (texF, ground-far.js); вблизи — только при ненулевом весе
-  vec2 mp = (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)};
-  vec4 Z = texture2D(tZ, mp); wN = normalize(texture2D(tNm, mp).xyz * 2.0 - 1.0);
-  float slope = 1.0 - wN.y, hgt = vWp.y, dist = length(vWp - uCam), near = 1.0 - smoothstep(250.0, 1400.0, dist);
-  // снег: снимок с высоты (крупные пятна, кусты) и мелкий рельеф вблизи; на солнце почти белый, в низинах — голубее
-  vec3 sA = texture2D(wSA, vWp.xz / 420.0).rgb, sA2 = texture2D(wSA, vWp.xz / 1900.0 + 0.37).rgb;
-  float dS = near > 0.0 ? lum(texF(wSn, vWp.xz, 7.0, vec2(0.0)).rgb) / 0.82 : 1.0;
-  vec3 snow = vec3(0.8, 0.83, 0.88) * mix(1.0, dS, 0.4 * near) * mix(vec3(1.0), sA * sA / 0.62, 0.35) * mix(vec3(1.0), sA2 * sA2 / 0.62, 0.25);
-  // скалы: крутые склоны и выдутые ветром гребни (рисунок — из текстур, цвет — серый камень)
-  float rA = lum(texture2D(wRA, vWp.xz / 300.0).rgb), rl = near > 0.0 ? lum(texF(wRk, vWp.xz, 24.0, vec2(0.0)).rgb) : 0.5;
-  vec3 rock = vec3(0.13, 0.125, 0.12) * (0.55 + 0.9 * rA) * mix(1.0, 0.6 + 0.8 * rl, near);
-  float rk = smoothstep(0.2, 0.36, slope + 0.14 * (rA - 0.5) + 0.1 * (vn(vWp.xz / 60.0) - 0.5));
-  rk = max(rk, smoothstep(1250.0, 1650.0, hgt) * smoothstep(0.1, 0.26, slope + 0.1 * (rA - 0.5)));
-  vec3 col = mix(snow, rock, rk);
-  // лес: издали — хвойная крона со снегом (импосторы редкие), вблизи под деревьями — притоптанный снег
-  // край леса — рваный (шум двух масштабов), внутри — куртины и прогалины
-  float fr = smoothstep(0.2, 0.8, Z.r + 0.5 * (vn(vWp.xz / 160.0) - 0.5) + 0.3 * (vn(vWp.xz / 45.0) - 0.5)), far = smoothstep(300.0, 1600.0, dist);
-  vec3 canopy = mix(vec3(0.04, 0.06, 0.047), vec3(0.6, 0.63, 0.67), 0.12 + 0.2 * vn(vWp.xz / 35.0) + 0.12 * vn(vWp.xz / 7.0)); // хвоя со снегом
-  col = mix(col, canopy, fr * far * (0.6 + 0.3 * vn(vWp.xz / 22.0))); col *= mix(1.0, 0.88, fr * (1.0 - far));
-  // лёд: голубовато-серый с наметёнными полосами снега
-  float ip = smoothstep(0.35, 0.7, vn(vWp.xz / 140.0) * 0.7 + vn(vWp.xz / 23.0) * 0.3);
-  // берег — по высоте над уровнем льда (линия идёт по рельефу, а не по клеткам), у кромки — наметённый снег
-  float iceY = vWp.z < uIce.z ? uIce.x : max(uIce.y, 144.0 - vWp.z * 0.004);
-  float ik = smoothstep(0.0, 0.3, Z.g) * (1.0 - smoothstep(0.1, 1.2, hgt - iceY + 1.6 * (vn(vWp.xz / 40.0) - 0.5) + 0.6 * (vn(vWp.xz / 9.0) - 0.5)));
-  vec3 ice = mix(vec3(0.33, 0.43, 0.5) * (0.85 + 0.3 * lum(texF(wIce, vWp.xz, 30.0, vec2(0.0)).rgb)), snow, max(ip * 0.8, 1.0 - smoothstep(0.35, 0.9, ik)));
-  col = mix(col, ice, ik);
-  // база и площадки: укатанный снег с колеями, местами асфальт; посёлок — снег серее
-  float as = lum(texF(wAs, vWp.xz, 6.0, vec2(0.0)).rgb);
-  // площадки: край — размытый и рваный (среднее по 4 точкам вокруг, ~90 м, со сдвигом по шуму)
-  vec2 jo = (vec2(vn(vWp.xz / 70.0), vn(vWp.xz / 70.0 + 5.3)) - 0.5) * 120.0;
-  float zbB = 0.0; for (int k = 0; k < 4; k++) { vec2 o = vec2(k == 0 ? 90.0 : k == 1 ? -90.0 : 0.0, k == 2 ? 90.0 : k == 3 ? -90.0 : 0.0); zbB += texture2D(tZ, (vWp.xz + o + jo + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).b; }
-  float zb = smoothstep(0.25, 0.85, 0.4 * Z.b + 0.15 * zbB + 0.3 * (vn(vWp.xz / 45.0) - 0.5)), za = smoothstep(0.1, 0.9, Z.a + 0.4 * (vn(vWp.xz / 80.0) - 0.5));
-  col = mix(col, mix(col * 0.8, vec3(0.3, 0.31, 0.32) * (0.7 + 0.6 * as), 0.3 + 0.25 * vn(vWp.xz / 40.0)), zb * 0.85);
-  col = mix(col, col * vec3(0.82, 0.83, 0.85), za * 0.7);
-  // ВПП (вдоль Z): расчищенный асфальт, осевая, снежные кромки
-  vec2 rp = vec2(abs(vWp.x - uAir.x), abs(vWp.z - uAir.y));
-  if (rp.y < uAir.z && rp.x < uAir.w + 12.0) {
-    float edge = smoothstep(uAir.w - 4.0, uAir.w + 8.0, rp.x + 6.0 * vn(vWp.xz / 9.0));
-    vec3 rw = vec3(0.16, 0.165, 0.17) * (0.75 + 0.5 * as);
-    rw = mix(rw, vec3(0.85), step(rp.x, 0.5) * step(0.5, fract(vWp.z / 60.0)) * (1.0 - edge));
-    col = mix(rw, col, edge);
-  }
-  // морозная дымка в низинах: вдали над дном долины — белёсая пелена (вершины над ней)
-  float vh = (1.0 - smoothstep(60.0, 520.0, hgt - 140.0)) * smoothstep(1500.0, 9000.0, dist);
-  col = mix(col, vec3(0.8, 0.84, 0.9), vh * 0.55);
-  diffuseColor.rgb = col;`)
+  wN = normalize(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).xyz * 2.0 - 1.0);
+  float dist = length(vWp - uCam);
+  ${bake ? `float bk = bakeK(dist, vWp.xz); vec4 gC = vec4(0.0); // дальняя земля — запечённый цвет (ground-bake.js); в полосе перехода — смесь
+  if (bk < 1.0) gC = aGround(vWp, dist);
+  if (bk > 0.0) gC = mix(gC, bakeAt(vWp.xz), bk);` : 'vec4 gC = aGround(vWp, dist);'}
+  diffuseColor.rgb = mix(gC.rgb, vec3(0.8, 0.84, 0.9), gC.a * smoothstep(1500.0, 9000.0, dist) * 0.55);`)
       .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
   // мелкий рельеф снега (сугробы, наст): нормали текстуры в двух масштабах, вблизи сильнее; на скалах — слабее
   float nw = 1.0 - smoothstep(150.0, 900.0, length(vWp - uCam));

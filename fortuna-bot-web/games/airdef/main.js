@@ -11,7 +11,7 @@
 import { localizeTree } from './lang/data.js?v=20261027a'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
 import { TREE, BRANCHES } from './progress.js?v=20261027a';
 import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261027a';
-import { ktxInit, ktxRestore } from './ktx.js?v=20261027a';
+import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261027a';
 import { buildCity, CITY } from './city.js?v=20261027a';
 import { buildWinter } from './map-winter.js?v=20261027a';
 import { WINTER_KEYS } from './winter-render.js?v=20261027a';
@@ -1084,8 +1084,9 @@ const ldStep = (txt, k) => new Promise((r) => { const t = $('ldTxt'), b = $('ldB
 // догрузка после старта: модели техники и домов, текстуры — статус внизу, пока не придёт всё
 let alShown = false;
 setInterval(() => {
-  const m = modelStats(), t = texStats, need = m.req + t.req, got = m.done + t.done, e = $('assetLoad'); if (!e || !need) return;
-  const left = need - got;
+  const m = modelStats(), t = texStats, need = m.req + t.req, got = m.done + t.done, e = $('assetLoad');
+  const left = need - got; C.assetsDone = left <= 0;
+  if (!e || !need) return;
   if (left > 0 && C.state !== 'loading') {
     alShown = true; e.classList.add('on');
     $('alTxt').textContent = tr('Загружаем город: модели {0} из {1}{2}', [m.done, m.req, t.req ? tr(', текстуры {0} из {1}', [t.done, t.req]) : '']);
@@ -1096,6 +1097,9 @@ setInterval(() => {
   await ldStep(tr('Строим улицы, дома и реку…'), 0.15);
   const t0 = performance.now();
   C.G = buildCityScene(scene, city, P, renderer, W_KEY);
+  // запечённая земля — после загрузки моделей и текстур и возврата их после потери контекста: в разгар загрузки сжатых текстур графический процесс
+  // Safari в симуляторе iPhone падал 3 раза из 4 (с ожиданием — 0 из 3, 2026-10-27)
+  if (C.G.bake) C.G.bake.gate = () => C.assetsDone === true && !ktxBusy();
   if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill', 'obj_barn']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
   await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));

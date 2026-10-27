@@ -1318,8 +1318,8 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
   const zt = HILLS ? null : zoneTexture(P.zoneTex || 1024); if (zt) zt.flipY = false;
   if (renderer && zt) zt.anisotropy = Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy());
   const aniso = renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1;
-  const bake = AUT && BAKE_ON && renderer ? createGroundBake(CITY.HALF) : null; // запечённая дальняя земля — пробная версия (ground-bake.js, ?gb=1)
-  const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W, bake) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats)) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
+  const bake = HILLS && BAKE_ON && renderer ? createGroundBake(CITY.HALF) : null; // запечённый цвет дальней земли осени и зимы (ground-bake.js; ?gb=0 — без него)
+  const ground = new THREE.Mesh(gg, AUT ? autumnGroundMaterial(city, autumnZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, autumnTextures(aniso, texStats), W, bake) : WINT ? winterGroundMaterial(city, winterZoneTex(city, P.zoneTex || 1024), winterNormalTex(city), ENV, winterTextures(renderer ? Math.min(P.aniso || 4, renderer.capabilities.getMaxAnisotropy()) : 1, texStats), bake) : groundMaterial(zt, aoTexture(city), roadTexture(city)));
   ground.receiveShadow = !!P.shadows; scene.add(ground); G.ground = ground;
   if (bake) { bake.init(renderer, gg, ground.material, aniso); G.bake = bake; }
   // земля — последней из непрозрачного (2026-10-25): её шейдер — самый дорогой, а под лесом, домами и техникой он теперь не считается —

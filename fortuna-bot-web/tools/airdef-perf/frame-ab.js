@@ -10,7 +10,7 @@ try {
   const page = await browser.newPage(); const errs = []; page.on('pageerror', (e) => errs.push(String(e).slice(0, 200)));
   await page.setViewport({ width: 844, height: 390, deviceScaleFactor: 3, isMobile: true, hasTouch: true, isLandscape: true });
   await page.evaluateOnNewDocument((p) => { localStorage.setItem('fortuna_airdef_setup', JSON.stringify({ game: 'air', diff: 'arcade', era: 4, side: 'west' })); localStorage.setItem('fortuna_airdef_gfx', p); }, preset);
-  await page.goto(`http://127.0.0.1:${Deno.env.get('PORT') || 8937}/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=${map}&weather=day&go=air${Deno.env.get('Q') || ''}`, { waitUntil: 'load', timeout: 120000 });
+  await page.goto(`http://127.0.0.1:${Deno.env.get('PORT') || 8937}/fortuna-bot-web/games/airdef.html?test=1&touch=1&map=${map}${/weather=/.test(Deno.env.get('Q') || '') ? '' : '&weather=day'}&go=air${Deno.env.get('Q') || ''}`, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction(() => window.__a && window.__a.state === 'play', { timeout: 180000, polling: 500 });
   for (let i = 0; i < 150; i++) { const l = await page.evaluate(() => { const e = document.getElementById('assetLoad'); return e && e.classList.contains('on'); }); if (!l && i > 8) break; await new Promise((r) => setTimeout(r, 1000)); }
   await new Promise((r) => setTimeout(r, 3000));
@@ -21,7 +21,8 @@ try {
     C.paused = false; for (let i = 0; i < 30; i++) { t += 34; window.__frame(t); } C.paused = true; // самолёт в полёте
     const M = G.ground.material, FU = M.userData.farU, AT = M.userData.AT || M.userData.WT || {}, city = !M.userData.WT && !/aGA/.test(Object.keys(AT).join());
     const apply = (v) => { G.ground.renderOrder = v.ro ?? 1; if (v.sky !== undefined) G.sky.renderOrder = v.sky; if (FU) FU.value = v.far ?? FU.value; // sky — порядок неба (2026-10-26)
-      if (v.gb !== undefined && G.bake) G.bake.on = !!v.gb; // запечённая дальняя земля (ground-bake.js, страница с Q=&gb=1)
+      if (v.gb !== undefined && G.bake) G.bake.on = !!v.gb; // запечённая дальняя земля (ground-bake.js)
+      G.ground.visible = !v.nog; // nog — без земли: сколько стоит она вся (потолок выигрыша)
       if (v.an) for (const [nm, u] of Object.entries(AT)) { const t = u && u.value; if (!t || !t.isTexture) continue;
         const coarse = /^(aGA|aRA|aMA|wSA|wRA|tGA)$/.test(nm), an = v.old ? v.an : coarse ? 1 : city ? v.an : Math.min(4, v.an);
         if (t.anisotropy !== an) { t.anisotropy = an; t.needsUpdate = true; } } };

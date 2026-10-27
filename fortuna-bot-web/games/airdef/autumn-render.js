@@ -122,7 +122,7 @@ const aHeadGLSL = () => `uniform vec3 uBald; uniform sampler2D tZ, tZ2, tNm, aG,
       vec3 wN; float aLow;
       ${FAR_GLSL}
 `;
-// материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере. bake — запечённый цвет дальней земли (ground-bake.js, ?gb=1)
+// материал земли: Phong (свет, тени, туман — как у остального), цвет и нормаль — в шейдере. bake — запечённый цвет дальней земли (ground-bake.js)
 export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   const H = 16000, BA = AUTUMN.BALD, fogC = new THREE.Color(W.fog).convertSRGBToLinear();
   const m = new THREE.MeshPhongMaterial({ color: 0xffffff, specular: 0x0c0c0a, shininess: 10 }); m.userData.AT = AT; m.userData.farU = FAR_U;
@@ -139,7 +139,7 @@ export function autumnGroundMaterial(city, zt, nt, ENV, AT, W, bake) {
   farInit(vWp.xz); // мелкие текстуры вдали — средним цветом (texF, ground-far.js); вблизи — только при ненулевом весе
   wN = normalize(texture2D(tNm, (vWp.xz + ${H.toFixed(1)}) / ${(2 * H).toFixed(1)}).xyz * 2.0 - 1.0);
   float dist = length(vWp - uCam);
-  ${bake ? `float bk = bakeK(dist); vec4 gC = vec4(0.0); // дальняя земля — запечённый цвет (ground-bake.js); в полосе перехода — смесь
+  ${bake ? `float bk = bakeK(dist, vWp.xz); vec4 gC = vec4(0.0); // дальняя земля — запечённый цвет (ground-bake.js); в полосе перехода — смесь
   if (bk < 1.0) gC = aGround(vWp, dist);
   if (bk > 0.0) gC = mix(gC, bakeAt(vWp.xz), bk);` : 'vec4 gC = aGround(vWp, dist);'}
   aLow = gC.a * mix(0.04, 1.0, smoothstep(300.0, 5000.0, dist));

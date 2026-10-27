@@ -8,7 +8,7 @@ import { LIM_ON } from './combined.js?v=20261027a';
 
 export const KIND = 'multi';
 export const ROUNDS = 2;
-export const PREP_T = 130;               // подготовка раунда, с (все «Готов» — раньше; Mark 2026-10-18: +30 с)
+export const PREP_T = 160;               // подготовка раунда, с (все «Готов» — раньше; Mark 2026-10-18: +30 с, 2026-10-27: ещё +30 с)
 export const WAVE_MAX = 720;             // волна не дольше, с времени боя (дроны — пуск до 5 мин и ≈ 6 мин над районом; пустые отрезки — ×3)
 export const DEBRIEF_T = 12, RESULTS_T = 25;
 export const QUIET_K = 3;                // над районом пусто и никто не за пультом — сервер считает ×3

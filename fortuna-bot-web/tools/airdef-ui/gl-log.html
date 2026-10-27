@@ -44,7 +44,7 @@ if (q.get('auto') === '1') {
       if (tk % 20 === 10 && A.nextWeapon) A.nextWeapon();
       if (tk % 15 === 7 && A.setThr) A.setThr(tk % 30 === 7 ? 4 : 2);
       if (cr.dead && tk % 10 === 0 && C.start) C.start('air'); // сбит — новый вылет
-      if (tk % 2 === 0) { const R = C.renderer, m = R.info.memory; LOG(`t ${Math.round((Date.now() - T0) / 1000)} alt ${Math.round(cr.pos.y)} v ${Math.round(cr.speed * 3.6)} hp ${Math.round(cr.hp)} fps ${C.fps} wp ${C.S ? C.S.wpns.length : 0} sam ${C.S ? C.S.sams.length : 0} geo ${m.geometries} tex ${m.textures} prog ${R.info.programs.length} dead ${cr.dead ? 1 : 0}`); }
+      if (tk % 2 === 0) { const R = C.renderer, m = R.info.memory; LOG(`t ${Math.round((Date.now() - T0) / 1000)} alt ${Math.round(cr.pos.y)} v ${Math.round(cr.speed * 3.6)} hp ${Math.round(cr.hp)} fps ${C.fps} wp ${C.S ? C.S.wpns.length : 0} sam ${C.S ? C.S.sams.length : 0} geo ${m.geometries} tex ${m.textures} prog ${R.info.programs.length} dead ${cr.dead ? 1 : 0} gb ${C.G && C.G.bake ? (C.G.bake.ready ? 'ok' : 'wait') + C.G.bake.pending : '-'}`); } // gb — запечённая земля (ground-bake.js): готова / ждёт, плиток в очереди
     } catch (e) { LOG('pilot err ' + e.message); }
   }, 1000);
 }

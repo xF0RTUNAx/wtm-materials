@@ -26,6 +26,7 @@ export function ktxFree(t, again) { // ktxBytes — для замеров
 // контекст, а уровни текстур, не нужных в этом бою, висели бы до конца боя. Возвращаются только бывшие на видеокарте (уровни пусты); повторный вызов,
 // пока очередь идёт, — не удваивает её
 let restoring = false, rerun = false;
+export const ktxBusy = () => restoring || rerun; // идёт возврат текстур после потери контекста (запечённая земля ждёт, ground-bake.js)
 export async function ktxRestore(renderer) {
   if (restoring) { rerun = true; return; } restoring = true; // контекст потерян ещё раз, пока шла очередь, — пройти её снова после
   try {
