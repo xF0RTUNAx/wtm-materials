@@ -44,7 +44,7 @@ function iconVal(name, sizePx, valueHTML) {
 // where: "auth" — экран входа (кнопка ведёт на регистрацию), "farm" — вкладка «Фарм» под переносом прогресса
 const GAME_ADS = {
   airdef: {
-    promo: "media/airdef_promo", v: "20261009c", badges: ["НОВАЯ ИГРА", "ОНЛАЙН"], title: "Air Superiority Online", sub: "Авиация, вооружение и ПВО — прямо в браузере",
+    promo: "media/airdef_promo", v: "20261027c", badges: ["НОВАЯ ИГРА", "ОНЛАЙН"], title: "Air Superiority Online", sub: "Авиация, вооружение и ПВО — прямо в браузере",
     // описание — как в превью ссылки fortunawtm.com/airsuperiority (Mark 2026-10-27)
     text: "Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!",
     how: { auth: "Зарегистрируйся — и сразу в бой: вкладка <b>«Игра»</b> → <b>«Air Superiority Online»</b>.", farm: "Вкладка <b>«Игра»</b> → <b>«Air Superiority Online»</b>: вылет, оборона, мульти-волна, обучение или <b>«Онлайн-бой»</b> с наградой. Лучше всего — на телефоне в горизонтальном положении." },
@@ -331,7 +331,7 @@ function renderTicketsStat() {
 // победу случайно 2 ключа или 2 детали; постоянный тренировочный режим без наград. ──
 const ARCADE_GAMES = [
   {
-    id: "airdef", name: "Air Superiority Online", icon: "crossedSwords", file: "games/airdef.html", trainOnly: true, promo: "media/airdef_promo", promoV: "20261009c",
+    id: "airdef", name: "Air Superiority Online", icon: "crossedSwords", file: "games/airdef.html", trainOnly: true, promo: "media/airdef_promo", promoV: "20261027c",
     note: "Современная авиация, вооружение и комплексы ПВО прямо в браузере! Специальный режим мульти-волны против баллистики, крылатых ракет, дронов и бомб по обе стороны. Онлайн, рейтинг, камуфляжи и многое другое. Попробуй прямо сейчас!",
     online: true, featured: true,
   },
