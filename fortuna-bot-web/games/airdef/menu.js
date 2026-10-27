@@ -67,6 +67,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
   $('mpClose').onclick = () => { snd.click(); panel(false); };
   $('modeSel').onclick = (e) => {
     const b = e.target.closest('button'); if (!b) return; panel(true); setup.game = b.dataset.g; setup.evd = false; save(); // evd — оборона события на осенней карте (event.js): обычное меню её сбрасывает
+    if (setup.game === 'online' && C.RAND_MAPS.includes(C.MAP)) C.ls.set('fortuna_ad_omap', C.MAP); // онлайн «Вылет и оборона»: карту даст комната — пока подходит загруженная
     if (C.wantMap(setup.game, setup.pmap, setup.era, -1, false) !== C.MAP) { const u = new URL(location.href); u.searchParams.delete('mp'); u.searchParams.delete('ad'); if (setup.game === 'online') u.searchParams.set('mp', '1'); location.replace(u.href); return; } // «Мульти-волна» — на зимней карте, остальное — на городе
     if (tab !== 'play') { tab = 'play'; showTab(); } if (C.ctrl && C.ctrl.modeChanged) C.ctrl.modeChanged();
     // ночи в онлайне пока нет (решение Mark 2026-10-12): погода строится при загрузке — перезагрузка вечером, сразу в раздел онлайна
@@ -313,30 +314,33 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     $('tab-set').innerHTML = `<div class="cat-h">${tr('Язык · Language')}</div><div class="seg" data-seg="lang">${LANGS.map(([k, l]) => `<button data-v="${k}" class="${k === LANG ? 'on' : ''}">${l}</button>`).join('')}</div>
       <div class="cat-h">${tr('Графика')}</div><div class="gfx-row">${Object.entries(PRESETS).map(([k, p]) => `<button class="gfx ${k === C.gfxKey ? 'on' : ''}" data-gfx="${k}"><b>${p.name}</b></button>`).join('')}</div>
       ${C.gfxKey === 'custom' ? customPanel() : `<div class="prow"><span>${tr('Предел кадров')}</span>${seg('fpsCap', C.fpsCap, [['auto', C.IS_TOUCH ? tr('Авто (60)') : tr('Авто')], [30, '30'], [45, '45'], [60, '60'], ...(C.IS_TOUCH ? [] : [[0, tr('Нет')]])])}</div>
-      <p class="hint">${tr('Картинка та же, но меньше нагрев и расход батареи. Телефону с экраном 90–120 Гц подойдут 60 или 45.')}</p>
       ${C.IS_TOUCH ? `<div class="prow"><span>${tr('Чёткость')}</span>${seg('sharp', C.SHARP, [['auto', tr('Обычная')], ['high', tr('Высокая')], ['native', tr('Как у экрана')]])}</div>
       <p class="hint">${tr('Высокая и «как у экрана»: картинка чётче, но больше нагрузка на видеочип и нагрев. Применяется после перезапуска.')}</p>` : ''}`}
       <label class="chk"><input type="checkbox" id="sPerf" ${C.perfHud ? 'checked' : ''}> ${tr('счётчик производительности в бою')}</label>
-      <div class="cat-h">${tr('На устройстве')}</div>
+      <div class="cat-h">${tr('Файлы игры')}</div>
       <p class="hint" id="offInfo">${tr('Скачанные модели, текстуры и звуки хранятся на устройстве и не догружаются ни в бою, ни при следующих запусках.')}</p>
       <button class="btn alt" id="sPrefetch">${pfLabel()}</button>
       <div class="ldbar" id="pfBar" style="margin-top:6px;${pf.run || pf.done ? '' : 'display:none'}"><i id="pfFill" style="width:${pf.k * 100}%"></i></div><p class="hint" id="pfTxt">${pf.txt}</p>
       <p class="hint">${tr('Видеочип: {0}', [String(C.gpuName || '—').replace(/[<>&]/g, '').slice(0, 70)])}</p>
       <div class="cat-h">${tr('Время и погода')}</div>${seg('wx', C.weatherKey, [['random', tr('Случайная')], ...WEATHER_KEYS.map((k) => [k, trIf(WEATHERS[k].name)])])}
       <div class="cat-h">${tr('Управление')}</div>
+      ${C.IS_TOUCH || C.shell.canFs() || C.shell.hintKind() ? `<div class="sub">${tr('Экран и кнопки')}</div>` : ''}
       ${C.IS_TOUCH ? `<button class="btn alt" id="sLayout">${tr('Расположение и размер кнопок…')}</button>` : ''}
       ${C.shell.canFs() ? `<label class="chk"><input type="checkbox" id="sFs" ${C.shell.fsPref ? 'checked' : ''}> ${tr('полный экран')}</label>` : ''}
       ${C.shell.hintKind() ? `<label class="chk"><input type="checkbox" id="sFsHint" ${C.shell.fsHint ? 'checked' : ''}> ${C.shell.hintKind() === 'swipe' ? tr('плашка «Потяните вверх», когда панели Safari видны в бою') : tr('кнопка возврата, когда полный экран слетел в бою')}</label>` : ''}
+      <div class="sub">${tr('Самолёт')}</div>
       <label class="chk">${tr('ручка (тангаж и крен)')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх — нос вниз (как в авиасимуляторах)')}</label>
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sAim" ${C.sens.aim !== false ? 'checked' : ''}> ${tr('наведение камерой: самолёт летит туда, куда смотрит камера (выкл — ручка в левой половине экрана)')}</label>` : ''}
       ${C.IS_TOUCH ? `<label class="chk"><input type="checkbox" id="sPadOn" ${C.sens.pad ? 'checked' : ''}> ${tr('крестовина: тангаж и крен кнопками (точные манёвры)')}</label>
       <label class="chk">${tr('сила крестовины')} <input type="range" id="sPadK" min="0.15" max="1" step="0.05" value="${C.sens.padK}"> <b id="vPadK">${Math.round(C.sens.padK * 100)}%</b></label>` : ''}
       <label class="chk"><input type="checkbox" id="sCmBurst" ${C.sens.cmBurst ? 'checked' : ''}> ${tr('ловушки по нажатию: серия из 3 залпов (выкл — один залп). Удержание кнопки или X / C — очередью')}</label>
-      ${C.IS_TOUCH ? '' : `<label class="chk"><input type="checkbox" id="sKeys" ${C.sens.keys ? 'checked' : ''}> ${tr('подсказки клавиш в бою: панель слева внизу (F1 — вкл. и выкл.)')}</label>`}
+      <div class="sub">${tr('Оператор ЗРК')}</div>
       <label class="chk">${tr('поворот обзора оператора ЗРК')} <input type="range" id="sLook" min="0.3" max="2.5" step="0.05" value="${C.sens.look}"> <b id="vLook">×${C.sens.look.toFixed(2)}</b></label>
+      <div class="sub">${tr('Помощь в бою')}</div>
       <label class="chk"><input type="checkbox" id="sAuto" ${C.auto ? 'checked' : ''}> ${tr('«Авто» — помощь в бою (кнопка «Авто» или клавиша T)')}</label>
       <p class="hint">${tr('«Авто» в вылете сбрасывает бомбы и пускает ракеты, у оператора ЗРК назначает цель, пускает и наводит пушку. Помогает, но не идеально: реагирует с задержкой и ошибается. Пилотирование, уклонение и выбор момента остаются за вами.')}</p>
+      ${C.IS_TOUCH ? '' : `<label class="chk"><input type="checkbox" id="sKeys" ${C.sens.keys ? 'checked' : ''}> ${tr('подсказки клавиш в бою: панель слева внизу (F1 — вкл. и выкл.)')}</label>`}
       <div class="cat-h">${tr('Звук')}</div><label class="chk"><input type="checkbox" id="sMute" ${snd.muted ? '' : 'checked'}> ${tr('звук включён')}</label>
       <label class="chk">${tr('громкость')} <input type="range" id="sVol" min="0" max="1" step="0.05" value="${snd.volume}"></label>
       ${ECO_SELECT('sEco')}`;
@@ -374,7 +378,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         ['https://www.youtube.com/watch?v=1qUN59Oebe0', 'Missile launch', 'mrkerk12', 'YouTube'],
         ['https://www.youtube.com/watch?v=dw6AvjAyFKs', 'Missile Launch Sound Effects', 'Friendly Free Sounds', 'YouTube'],
       ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} — ${a} (${l})`).join(' · ')])}</p>
-      <p class="hint">${tr('Остальное в игре реализовано процедурным способом.')}</p>`;
+      <p class="hint">${tr('Остальное в игре реализовано процедурным или собственным способом.')}</p>`;
   }
   $('tab-set').onclick = (e) => {
     const g = e.target.closest('[data-gfx]'), w = e.target.closest('[data-seg="wx"] [data-v]');

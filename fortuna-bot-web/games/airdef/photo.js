@@ -538,7 +538,7 @@ export function createPhoto(C, ctrls) {
       const S = C.newBattle({ defSide: setup.side, era: st.era, rnd });
       C.hooks = { unitDmgK: 0 }; // в кадре ПВО не выбивают — съёмка не обрывается
       st.targets = pickTargets(S, rnd, 3);
-      placeDefense(S, city, rnd, setup.side, st.era, st.targets, 0.5);
+      placeDefense(S, city, rnd, setup.side, st.era, st.targets, 0.5, { same: true });
       const sc = st.sc = scenOf(key), t0 = st.targets[0];
       // против волны ближний комплекс стоит дальше от объекта: дроны и ракеты сходятся на объект, и у самого объекта комплекс внутри своей мёртвой зоны (rmin) —
       // там рой кружит, держит захват и не даёт пустить; в 1,4–2 км от объекта цели идут через зону до самого объекта
@@ -557,7 +557,7 @@ export function createPhoto(C, ctrls) {
       const S = C.newBattle({ defSide: setup.side, era: st.era, rnd });
       C.hooks = { unitDmgK: 0 };
       st.targets = pickTargets(S, rnd, 3);
-      placeDefense(S, city, rnd, setup.side, st.era, st.targets, 0.8);
+      placeDefense(S, city, rnd, setup.side, st.era, st.targets, 0.8, { same: true });
       C.syncUnits();
       st.mk = it ? it[0] : null; st.via = it ? it[1] : null;
       if (st.mk) startEvMulti();

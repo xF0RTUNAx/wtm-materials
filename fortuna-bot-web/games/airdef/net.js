@@ -58,7 +58,7 @@ export function createNet(C) {
     ws.onopen = async () => {
       const ticket = await fetchTicket(acc); if (ws !== me) return; // пока шёл запрос, аккаунт сменили и соединение закрыли
       if (ticket === 'need_game') { needGame(acc); return; }
-      N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id) });
+      N.send({ t: 'hello', ticket, name: acc.nick || acc.login, pid: String(acc.id), maps: 1 }); // maps — понимает карту комнаты (r.map): старой вкладке сервер даёт только город
     };
     ws.onerror = () => { if (!N.re) { N.conn = 'error'; emit('conn'); } };
     ws.onclose = () => { if (ws === me) dropped(); };
@@ -196,7 +196,7 @@ export function createNet(C) {
   N.raid = { planes: [], alive: () => N.raid.planes.filter((a) => !a.dead && !a.out), spawn() {}, spawnWave() {}, spawnDecoy() {}, step() {}, hurt() {}, laserSpot: () => null };
   function startMirror(m) {
     endMirror();
-    N.battle = { era: m.era, sideAir: m.sideAir, mode: m.mode, targets: m.targets, waves: m.waves, wave: 0, state: 'plan', valueK: 0, T: 0 };
+    N.battle = { era: m.era, sideAir: m.sideAir, mode: m.mode, map: m.map || 'city', targets: m.targets, waves: m.waves, wave: 0, state: 'plan', valueK: 0, T: 0 }; // map — карта боя (старый сервер не шлёт — город)
     C.netBattle(N, { defSide: m.sideAir === 'east' ? 'west' : 'east', era: m.era, mode: m.mode, game: 'air' });
     wrapMirror(C.S);
   }
@@ -307,7 +307,7 @@ export function createNet(C) {
     const S = C.S; if (!S || !N.battle) return;
     const P = (i) => new THREE.Vector3(e[i], e[i + 1], e[i + 2]);
     switch (e[0]) {
-      case 'an': { const [, id, role, plane, dk, owner, load, cname] = e; if (N.me && id === N.me.id && N.battle.kind !== 'multi') return; const a0 = ac.get(id); if (a0) dropAir(a0); const a = mkAir(id, role, plane, dk, owner, load); if (role === 'carrier') { a.carrierName = cname || ''; a.salvo = []; a.immune = true; want(); } return; }
+      case 'an': { const [, id, role, plane, dk, owner, load, cname, camo] = e; if (N.me && id === N.me.id && N.battle.kind !== 'multi') return; const a0 = ac.get(id); if (a0) dropAir(a0); const a = mkAir(id, role, plane, dk, owner, load); if (camo && /^[a-z0-9_]{1,24}$/.test(camo)) a.camo = camo; /* окраска другого игрока (магазин) */ if (role === 'carrier') { a.carrierName = cname || ''; a.salvo = []; a.immune = true; want(); } return; }
       case 'sl': { // пуск ЗУР: ракета появится на месте по снимку (в этом же сообщении)
         const [, id, uid, tg, slot] = e, u = S.units.find((q) => q.id === uid); if (!u) return;
         const LN = LNCH[u.key] || null;

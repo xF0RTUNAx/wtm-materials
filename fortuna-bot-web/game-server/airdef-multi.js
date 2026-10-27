@@ -323,7 +323,6 @@ export function createMulti(ctx) {
     if (r.state !== 'play' || isAtk(r, c)) return;
     // ПВО в бою: свой комплекс под ручное управление и пульт (как в обычном онлайне)
     if (m.t === 'op') { if (c.op && !c.op.dead) r.S.setManual(c.op, false); const u = r.S.units.find((q) => q.id === +m.id && q.owner === c.id && !q.dead); c.op = u || null; if (u) r.S.setManual(u, true); return; }
-    if (m.t === 'hold') { const u = r.S.units.find((q) => q.id === +m.id && q.owner === c.id && !q.dead); if (u) u.hold = !!m.on; return; }
     if (m.t === 'emit' && !c.op) { const u = r.S.units.find((q) => q.id === +m.id && q.owner === c.id && !q.dead); if (u) r.S.setEmit(u, !!m.on); return; }
     const u = c.op && c.op.id === +m.id && !c.op.dead ? c.op : null; if (!u) return;
     switch (m.t) {

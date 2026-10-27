@@ -20,7 +20,7 @@ import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=2026102
 import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261027d';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 import { clamp, D2R, angleBetween, fwdOf } from '../drone/sim/core.js?v=20261027d';
-import { TGT_CATS } from './sim/strike.js?v=20261027d';
+import { TGT_CATS, tgtCat } from './sim/strike.js?v=20261027d';
 import { freeGround, buildingAt, roofOk, pickTargets, placeDefense } from './mission.js?v=20261027d';
 import { createCombined, combinedOk, COMBINED_NAME, levelIn, levelOfPlan, levelOfSams, samKnown, planDefaults, unitCfg, carrierOf, CARRIER_WAIT, LAUNCH_R, LIM_ON } from './sim/combined.js?v=20261027d';
 
@@ -50,7 +50,7 @@ export function createDefense(C) {
   const aiDefLevel = () => levelIn(DEFENSE[dside()], lesson() ? C.setup.era : levelOfPlan(attSide(), st.plan ? st.plan.n : {}));
   const aiWaveLevel = () => levelIn(COMBINED[attSide()], lesson() ? C.setup.era : levelOfSams(dside(), Object.keys(SAM).filter((k) => !lockedSam(k))));
   const aiComp = () => COMBINED[attSide()][aiWaveLevel()] || [];
-  function placeAiDef() { const p = st.aiPlace; if (!p) return; st.aiPlace = null; placeDefense(C.S, city, st.rnd, dside(), aiDefLevel(), p.near, p.kn ? p.kn.density : 1, p.kn || {}); C.syncUnits(); }
+  function placeAiDef() { const p = st.aiPlace; if (!p) return; st.aiPlace = null; placeDefense(C.S, city, st.rnd, dside(), aiDefLevel(), p.near, p.kn ? p.kn.density : 1, { ...(p.kn || {}), same: !!lesson() }); C.syncUnits(); } // урок — состав эпохи без случайных замен
   const seen = new Map(); // самолёт → время, когда его последний раз видела сеть ПВО
   const tm = $('tmap'), tx = tm.getContext('2d');
   const view = { cx: 500, cz: -300, k: 0.05 }; // центр карты (м) и масштаб (px на м)
@@ -177,11 +177,24 @@ export function createDefense(C) {
     } else placeOkAt(null);
     drawMsg();
   }
+  // плашка тревоги («Угроза баллистических ракет») — сразу под текстом слева вверху (у оператора — подпись комплекса #opInfo, иначе строка
+  // #dtop), по его левому краю. Была по центру вверху и налезала на подпись комплекса и на кнопки справа (Mark 2026-10-27, iPhone, онлайн);
+  // под текстом место свободно на любом экране, при любой длине подписи и с отступом Telegram (стенд tools/airdef-perf/alert-shot.js).
+  // Где кончается текст — по ResizeObserver (без чтения раскладки в кадре); подпись меняет высоту — плашка следует
+  const ALR = { op: null, top: null };
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver((es) => { for (const e of es) { const r = e.target.getBoundingClientRect(); ALR[e.target.id === 'opInfo' ? 'op' : 'top'] = r.width ? [r.left, r.bottom] : null; } });
+    for (const id of ['opInfo', 'dtop']) if ($(id)) ro.observe($(id));
+  }
+  // строка сверху сдвинулась без смены размера (отступ Telegram, вырез при повороте) — ResizeObserver молчит: пересчёт по resize
+  addEventListener('resize', () => { for (const id of ['opInfo', 'dtop']) { const e = $(id); if (!e || !e.getBoundingClientRect) continue; const r = e.getBoundingClientRect(); ALR[id === 'opInfo' ? 'op' : 'top'] = r.width ? [r.left, r.bottom] : null; } });
+  function drawAlert(x) {
+    const a = (st.view === 'op' ? ALR.op : ALR.top) || [12, IS_TOUCH ? 34 : 44], fs = C.VW < 720 ? 15 : 17, h = fs + 13, y0 = a[1] + 6;
+    x.font = `800 ${fs}px "Golos Text", -apple-system, Segoe UI, sans-serif`; x.textAlign = 'left'; const w = x.measureText(st.alert).width + 24;
+    x.fillStyle = `rgba(185,28,28,${0.75 + 0.2 * Math.sin(performance.now() / 300)})`; x.fillRect(a[0], y0, w, h); x.fillStyle = '#fff'; x.fillText(st.alert, a[0] + 12, y0 + h / 2 + fs * 0.36);
+  }
   function drawMsg() {
-    if (st.alertT > 0) { // воздушная тревога: красная плашка вверху по центру
-      tx.font = '800 18px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.textAlign = 'center'; const w = tx.measureText(st.alert).width + 28, y = (IS_TOUCH ? 52 : 64);
-      tx.fillStyle = `rgba(185,28,28,${0.75 + 0.2 * Math.sin(performance.now() / 300)})`; tx.fillRect(C.VW / 2 - w / 2, y - 22, w, 32); tx.fillStyle = '#fff'; tx.fillText(st.alert, C.VW / 2, y); tx.textAlign = 'left';
-    }
+    if (st.alertT > 0) drawAlert(tx); // воздушная тревога: красная плашка под строкой сверху слева
     if (st.msgT > 0) { tx.font = '700 14px "Golos Text", -apple-system, Segoe UI, sans-serif'; tx.fillStyle = '#fde68a'; tx.strokeStyle = 'rgba(0,0,0,.8)'; tx.lineWidth = 4; const yy = C.VH - (IS_TOUCH ? 16 : 30), xx = ($('mapNav').getBoundingClientRect().right || 0) + 12; tx.textAlign = 'left'; tx.strokeText(st.msg, xx, yy); tx.fillText(st.msg, xx, yy); } // правее панели перемещения
   }
   // баллистическая цель: ромб, высота, до падения; район падения — в аркаде точно, в реализме — круг ±1,5 км (оценка СПРН)
@@ -451,7 +464,7 @@ export function createDefense(C) {
       <div class="dact"><button class="btn" data-a="pok" ${st.draft ? '' : 'disabled'}>${tr('Подтвердить −{0}', [c])}</button><button class="btn alt" data-a="pno">${tr('Отмена')}</button></div>`;
   }
   // фильтр целей комплекса (Mark 2026-10-25): k — вид из строки «Цели»; 'all' — все. Выключить все виды нельзя (последний остаётся).
-  // Онлайн: тот же путь, что «Огонь по команде» — команда серверу (t: 'tgt', c — список включённых видов; пустой — все), сервер проверяет сам
+  // Онлайн: команда серверу (t: 'tgt', c — список включённых видов; пустой — все), сервер проверяет сам
   function setTgtCat(u, k) {
     const mode = st.multi ? 'multi' : 'def', ch = tgtChoices(u.S, mode).map((q) => q.k); if (!ch.length) return;
     let cur = new Set(u.tgt ? ch.filter((q) => u.tgt.has(q)) : ch);
@@ -482,7 +495,6 @@ export function createDefense(C) {
     if (u.S.radar) a.push(u.emit ? tr('РЛС излучает') : u.ambush ? tr('засада: РЛС молчит') : tr('РЛС выключена'));
     if (u.track) a.push(`<b style="color:#fde047">${tr('захват цели')}</b>`);
     if (u.S.type !== 'guns') a.push(u.reloadT > 0 ? tr('перезарядка {0} с', [Math.ceil(u.reloadT)]) : tr('ракет {0}/{1}', [u.ammo, u.S.ammo]));
-    if (u.hold) a.push(tr('огонь по команде'));
     const tl = tgtLabel(u, st.multi ? 'multi' : 'def'); if (tl) a.push(tl);
     return a.join(' · ');
   }
@@ -731,7 +743,7 @@ export function createDefense(C) {
         h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, st.multi ? 'multi' : 'def')}</b><span>${unitStatus(u)}</span></div></div>${tgtRowHtml(u, st.multi ? 'multi' : 'def')}<div class="dact">
           ${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}
           ${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}
-          ${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? tr('Огонь: свободный') : tr('Огонь: по команде')}</button>`}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`;
+          <button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`;
       } else h += `<p class="hint">${tr('Коснитесь комплекса: приказы и «Управлять» — сесть оператором. Красные треугольники — цели, которые видит сеть РЛС (высота над землёй, м).')}</p>`;
       if (C.ev) h += tbmPanel() + watchBtns();
     } else if (st.phase === 'debrief') {
@@ -756,7 +768,6 @@ export function createDefense(C) {
       else if (a === 'emit' && u && mine(u)) C.S.setEmit(u, !u.emit);
       else if (a === 'op' && u && mine(u)) enterOp(u);
       else if (a === 'help') { const q = st.op && !st.op.dead ? st.op : u && !u.dead && mine(u) ? u : C.S.units.find((x) => !x.dead && mine(x)); if (C.askHelp) C.askHelp(q ? [q.pos.x, q.pos.z] : [view.cx, view.cz]); } // метка — у своего комплекса (за пультом, выбранного или любого), иначе — центр карты
-      else if (a === 'hold' && u && mine(u)) { u.hold = !u.hold; st.net.send({ t: 'hold', id: u.id, on: u.hold }); }
       else if ((a === 'tg' || a === 'tgall') && u && mine(u)) setTgtCat(u, a === 'tg' ? b.dataset.k : 'all');
       snd.click(); renderSide(); return;
     }
@@ -833,7 +844,6 @@ export function createDefense(C) {
     else if (a === 'sell' && u) { st.budget += Math.round((u.paid || SAM_COST[u.key]) * 0.7); C.S.removeUnit(u); C.syncUnits(); st.sel = null; }
     else if (a === 'amb' && u) { u.ambush = !u.ambush; u.emit = !u.ambush; }
     else if (a === 'emit' && u) { C.S.setEmit(u, !u.emit); on('radar', u); }
-    else if (a === 'hold' && u) u.hold = !u.hold;
     else if ((a === 'tg' || a === 'tgall') && u) setTgtCat(u, a === 'tg' ? b.dataset.k : 'all');
     else if (a === 'op' && u) enterOp(u);
     snd.click(); renderSide();
@@ -963,10 +973,12 @@ export function createDefense(C) {
   }
   // цели оператора: самолёты (и ложные цели), а у «Тора», «Панциря», PAC-3 — ещё и летящее оружие
   // цели оператора: самолёты; «Тор» / «Панцирь» — и летящее оружие; удар (ev): крылатые и дроны — любому ЗРК, баллистика — противоракетным
+  // носитель «Мульти-волны» за краем района (immune) — не цель: ракета по нему улетала впустую (Mark 2026-10-27: «ложные выстрелы»)
   const opT = (u) => {
     if (!u) return C.raid.alive();
+    const air = C.raid.alive().filter((a) => !a.immune);
     const ev = C.S.wpns.filter((w) => !w.dead && w.ev && w.t > 1.5 && (w.W.kind !== 'tbm' || (u.S.abm && w.vel.y < 0)));
-    return u.S.antiMun ? [...C.raid.alive(), ...C.S.wpns.filter((w) => !w.dead && w.t > 1.5 && w.W.kind !== 'decoy' && !w.ev), ...ev] : [...C.raid.alive(), ...ev];
+    return u.S.antiMun ? [...air, ...C.S.wpns.filter((w) => !w.dead && w.t > 1.5 && w.W.kind !== 'decoy' && !w.ev), ...ev] : [...air, ...ev];
   };
   // класс отметки по траектории, скорости и ЭПР: «Аркада» — сразу, «Реализм» — после ~2,5 с наблюдения (до этого «?»).
   // Ложная цель для РЛС — самолёт (в этом её смысл); летящее оружие вообще видят только комплексы с antiMun
@@ -1160,12 +1172,16 @@ export function createDefense(C) {
     if (S.type === 'ir') snd.growl(u.seek ? (u.track ? 0.05 : 0.03) : 0, u.track ? 900 : 420 + (u.seek || 0) * 200); // онлайн у комплекса нет seek (не в снимке) — было NaN и ошибка звука
     if (u.track !== op.lastTrack) { if (u.track) snd.lock(); op.lastTrack = u.track; }
   }
-  // «АВТО» оператора: цель — ближайшая видимая; пуск в зоне (по одной ракете, с задержкой реакции); пушка и ПЗРК — расчёт
-  // сам доворачивает прицел с запаздыванием и дрожанием, огонь — когда ствол около точки упреждения
+  // «АВТО» оператора: цель — ближайшая видимая из видов фильтра «Цели» комплекса (Mark 2026-10-27: С-300 «только баллистика» с «Авто» стрелял
+  // по всему — «Авто» брало любую ближайшую; ручное назначение касанием — по-прежнему любая), сначала — те, что уже в зоне пуска; пуск в зоне
+  // (по одной ракете, с задержкой реакции), на перезарядке и с остывающей пусковой не пробует (в онлайне каждый отказ — сообщение серверу);
+  // пушка и ПЗРК — расчёт сам доворачивает прицел с запаздыванием и дрожанием, огонь — когда ствол около точки упреждения
   const AO = { t: 0, launchT: 0 };
   function autoOp(dt) {
     const u = st.op, S = u.S; if (!u || u.dead) return;
-    const vis = opT(st.op).filter((a) => sees(u, a) && a.pos.distanceTo(u.pos) < S.rmax * 1.3).sort((a, b) => a.pos.distanceTo(u.pos) - b.pos.distanceTo(u.pos));
+    const f = u.tgt, d = (a) => a.pos.distanceTo(u.pos), // баллистику пускают и раньше зоны — в упреждённую точку (launch решает сам)
+      zone = (a) => (a.isMun && a.W.kind === 'tbm') || (d(a) > (S.rmin || 0) && d(a) < S.rmax && (a.pos.y - C.city.groundH(a.pos.x, a.pos.z)) < S.hmax);
+    const evOn = !!C.S.evOn || !!st.multi, vis = opT(st.op).filter((a) => (!f || f.has(tgtCat(a, evOn))) && sees(u, a) && d(a) < S.rmax * 1.3).sort((a, b) => (zone(b) - zone(a)) || d(a) - d(b));
     const tgt = vis[0];
     if (S.type === 'guns' || S.type === 'ir') {
       if (!tgt) { if (S.type === 'guns') { u.gunFire = false; op.fireHeld = false; } return; }
@@ -1179,10 +1195,10 @@ export function createDefense(C) {
       else if (u.track && (AO.launchT += dt) > 0.5) { if (!C.S.launch(u)) on('launch', u); AO.launchT = 0; }
       return;
     }
-    if (tgt && (!u.desig || u.desig.dead || !vis.includes(u.desig))) designate(tgt);
-    if (u.track) {
+    if (tgt && (!u.desig || u.desig.dead || !vis.includes(u.desig) || (zone(tgt) && !zone(u.desig)))) designate(tgt);
+    if (u.track && !(u.reloadT > 0) && u.ammo > 0 && !(u.cool > 0) && zone(u.track)) { // у сетевого клиента cool нет — undefined
       const inAir = C.S.sams.filter((m) => !m.dead && m.unit === u && m.target === u.track).length;
-      if (inAir < 1 && (AO.launchT += dt) > 0.6) { const why = C.S.launch(u); if (!why) { opSay(tr('Авто: пуск')); on('launch', u); } AO.launchT = why ? 0.3 : 0; }
+      if (inAir < 1 && (AO.launchT += dt) > 0.6) { const why = C.S.launch(u); if (!why) { opSay(tr('Авто: пуск')); on('launch', u); } AO.launchT = why ? -0.6 : 0; } // отказ — следующая попытка через 1,2 с
     } else AO.launchT = 0;
   }
   function opCamera(dt) {
@@ -1495,8 +1511,8 @@ export function createDefense(C) {
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? ico('ok', 'ii') + tr('Готов (снять)') : tr('Готов')}</button>`;
     } else if (st.phase === 'wave') {
       h += `<h3>${tr('Раунд {0}/{1} · оборона', [B.round, B.rounds])}</h3><div>${tr('Разрушено: <b>{0}%</b> ценности объектов', [Math.round(100 * (B.V || 0) / (B.v0 || 1))])}</div>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'multi')}</b><span>${unitStatus(u)}</span></div></div>${tgtRowHtml(u, 'multi')}<div class="dact">${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}${u.S.type === 'jammer' ? '' : `<button class="btn alt" data-a="hold">${u.hold ? tr('Огонь: свободный') : tr('Огонь: по команде')}</button>`}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`; }
-      else h += `<p class="hint">${tr('Коснитесь своего комплекса: «Управлять» — сесть оператором, «Огонь: по команде» — беречь ракеты. Остальными стреляют расчёты.')}</p>`;
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'multi')}</b><span>${unitStatus(u)}</span></div></div>${tgtRowHtml(u, 'multi')}<div class="dact">${u.S.type === 'jammer' ? '' : `<button class="btn" data-a="op">${tr('Управлять')}</button>`}${u.S.radar ? `<button class="btn alt" data-a="emit">${u.emit ? tr('РЛС: выключить') : tr('РЛС: включить')}</button>` : ''}<button class="btn alt" data-a="desel">${tr('Снять выбор')}</button></div>`; }
+      else h += `<p class="hint">${tr('Коснитесь своего комплекса: «Управлять» — сесть оператором, «Цели» — по каким видам стрелять (дальним — только баллистика, чтобы беречь ракеты). Остальными стреляют расчёты.')}</p>`;
       h += tbmPanel() + watchBtns() + `<button class="btn alt" data-a="help">${tr('Нужна помощь — метка союзникам')}</button>`;
     }
     side.innerHTML = h;
@@ -1578,8 +1594,7 @@ export function createDefense(C) {
     else $('dtop').innerHTML = st.phase === 'plan' ? tr('Расстановка · очки обороны <b>{0}</b>', [st.budget]) :
       tr('Волна <b>{0}/{1}</b> · сбито <b>{2}</b> · объекты целы <b>{3}%</b> · очки {4}', [st.wave, st.waves, st.downs, Math.round(cityValue() * 100), st.score]);
     if (st.view === 'op' && st.op) opHud(dt, t); else if (st.view === 'watch') watchHud(); else drawMap(t);
-    if (st.view !== 'map' && st.alertT > 0) { const x = C.hx; x.font = '800 18px "Golos Text", -apple-system, Segoe UI, sans-serif'; x.textAlign = 'center'; const w = x.measureText(st.alert).width + 28, y = IS_TOUCH ? 52 : 64; // плашка тревоги — и в 3D
-      x.fillStyle = `rgba(185,28,28,${0.75 + 0.2 * Math.sin(performance.now() / 300)})`; x.fillRect(C.VW / 2 - w / 2, y - 22, w, 32); x.fillStyle = '#fff'; x.fillText(st.alert, C.VW / 2, y); x.textAlign = 'left'; }
+    if (st.view !== 'map' && st.alertT > 0) drawAlert(C.hx); // плашка тревоги — и в 3D
   }
   function onKey(e, down) {
     if (st.view !== 'op' && down && st.phase === 'plan' && st.draft && (e.code === 'Enter' || e.code === 'NumpadEnter')) { confirmDraft(); return; }

@@ -16,7 +16,8 @@
   :root { --m-tri: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z'/%3E%3C/svg%3E"); --m-triD: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cg transform='rotate(90 256 256)'%3E%3Cpath d='M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z'/%3E%3C/g%3E%3C/svg%3E"); --sa-t: env(safe-area-inset-top, 0px); --sa-r: env(safe-area-inset-right, 0px); --sa-b: env(safe-area-inset-bottom, 0px); --sa-l: env(safe-area-inset-left, 0px);
     --tg-t: 0px; --top: calc(max(10px, var(--sa-t)) + var(--tg-t)); }
   html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1016; color: #eaf6ff; overscroll-behavior: none;
-    font-family: 'Golos Text', -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none; }
+    font-family: 'Golos Text', -apple-system, "Segoe UI", Roboto, sans-serif; user-select: none; -webkit-user-select: none; touch-action: none;
+    -webkit-text-size-adjust: 100%; text-size-adjust: 100%; } /* Safari в горизонтали сам укрупнял длинные строки (Mark 2026-10-27: «Наведение камерой» в настройках — заметно крупнее) */
   canvas#c { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   #fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 5; transition: opacity .35s; }
   #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; z-index: 60; background: #10140f; color: #e9e6dc; font-family: 'Golos Text', -apple-system, sans-serif; }
@@ -162,6 +163,20 @@
   .gfx.on { border-color: #fb923c; background: rgba(251,146,60,.18); }
   label.chk { display: flex; gap: 8px; align-items: center; margin: 4px 0; cursor: pointer; font-size: 12.5px; }
   label.chk input[type=range] { flex: 1; }
+  /* галочки и ползунки — как кнопки-сегменты меню (Mark 2026-10-27: «в том же дизайне, что и остальная игра»): квадрат без скруглений,
+     рамка #4a5443, включено — светлая заливка #e9e6dc; ползунок — тонкая линия и прямоугольная ручка */
+  label.chk input[type=checkbox] { -webkit-appearance: none; appearance: none; flex: none; width: 17px; height: 17px; margin: 0; border: 1px solid #4a5443;
+    background: rgba(233,230,220,.03); border-radius: 0; display: inline-grid; place-content: center; cursor: pointer; }
+  label.chk input[type=checkbox]:checked { background: #e9e6dc; border-color: #e9e6dc; }
+  label.chk input[type=checkbox]:checked::after { content: ''; width: 9px; height: 5px; border: solid #141912; border-width: 0 0 2px 2px; transform: translateY(-1px) rotate(-45deg); }
+  label.chk input[type=checkbox]:focus-visible, label.chk input[type=range]:focus-visible { outline: 1px solid #e8b04a; outline-offset: 2px; }
+  label.chk input[type=range] { -webkit-appearance: none; appearance: none; height: 22px; margin: 0; background: none; cursor: pointer; min-width: 80px; }
+  label.chk input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #4a5443; border: 0; }
+  label.chk input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 11px; height: 18px; margin-top: -8px; background: #e9e6dc; border: 0; border-radius: 0; }
+  label.chk input[type=range]::-moz-range-track { height: 2px; background: #4a5443; border: 0; }
+  label.chk input[type=range]::-moz-range-progress { height: 2px; background: #e9e6dc; }
+  label.chk input[type=range]::-moz-range-thumb { width: 11px; height: 18px; background: #e9e6dc; border: 0; border-radius: 0; }
+  label.chk b { font: 600 12px 'Golos Text', -apple-system, sans-serif; min-width: 44px; text-align: right; color: #e9e6dc; }
   .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
   .stt { background: rgba(255,255,255,.06); border-radius: 12px; padding: 10px 6px; }
   .stt b { display: block; font-size: 22px; } .stt span { font-size: 11px; opacity: .7; }
@@ -223,7 +238,7 @@
   #wpn .cm { color: #fdba74; margin-top: 2px; } #wpn .fly { color: #93c5fd; }
   /* одна панель: полёт, оружие, прицел, цель контейнера, ловушки, цели задания (полёт и цели — бывшие #osd и #mission) */
   #osd, #mission { display: none; }
-  #wpn .fl { font-size: 12px; white-space: nowrap; } #wpn .fl b { font-size: 16px; color: #fff; } #wpn .dim { font-size: inherit; }
+  #wpn .fl { font-size: 12px; white-space: nowrap; } #wpn .fl b { font-size: 16px; color: #fff; } #wpn .dim { font-size: inherit; } #wpn .okd { color: #86efac; }
   #wpn .ab { color: #fb923c; }
   /* оружие — одной строкой: выбранное ярче; тап по названию — выбор */
   #wpn .wl { display: flex; flex-wrap: wrap; gap: 1px 9px; } #wpn .wl .r { display: inline; opacity: .55; padding: 1px 0; } #wpn .wl .r.sel { opacity: 1; color: #fff; font-weight: 800; }
@@ -506,6 +521,16 @@
   #menu .opt { border-radius: 0; background: #181e15; border: 1px solid #2c3426; }
   #menu .opt.on { border-color: #e8b04a; background: #232a1c; }
   #menu .cat-h { color: #b3baa5; font-family: 'Golos Text', -apple-system, sans-serif; font-weight: 600; letter-spacing: 0; }
+  /* настройки: категории — заголовок-полоса (Mark 2026-10-28, вариант «А»: «разделение категорий сделать явнее, а иначе всё сливается») */
+  #menu #tab-set .cat-h { margin: 22px 0 8px; padding: 7px 10px 7px 12px; border-left: 3px solid #e8b04a; background: linear-gradient(90deg, rgba(232,176,74,.16), rgba(232,176,74,0) 70%);
+    font: 500 15px 'Oswald', sans-serif; letter-spacing: .07em; text-transform: uppercase; color: #f3c96f; }
+  #menu #tab-set .cat-h:first-child { margin-top: 4px; }
+  /* подгруппы внутри категории и строки-разделители между настройками (Mark 2026-10-28, вариант «Г2») */
+  #menu #tab-set .sub { display: flex; align-items: center; gap: 10px; margin: 16px 0 2px; font: 600 11.5px 'Golos Text', -apple-system, sans-serif; letter-spacing: .09em; text-transform: uppercase; color: #a9b19c; }
+  #menu #tab-set .sub::after { content: ''; flex: 1; height: 1px; background: #2f372b; }
+  #menu #tab-set label.chk { margin: 0; padding: 9px 2px; border-bottom: 1px solid #222a1e; }
+  #menu #tab-set .sub + label.chk, #menu #tab-set .sub + .btn + label.chk { border-top: 1px solid #222a1e; }
+  #menu #tab-set .sub + .btn { margin: 6px 0 8px; }
   #menu .hint { color: #c9cebd; }
   #menu details.ref { border-radius: 0; background: #151a12; }
   #menu .btn.alt { border-radius: 0; }

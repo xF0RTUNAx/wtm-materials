@@ -34,7 +34,8 @@ async function checkTicket(ticket) {
   if (!(await crypto.subtle.verify('HMAC', hmacKey, b64u(sig), new TextEncoder().encode(body)))) return null;
   const p = JSON.parse(new TextDecoder().decode(b64u(body)));
   if (!p.pid || !p.login || !(p.exp * 1000 > Date.now())) return null;
-  return { pid: String(p.pid), name: String(p.login).slice(0, 24), owned: Array.isArray(p.u) ? p.u.map(String) : [], ad: Array.isArray(p.a) ? p.a.map(String) : [], needGame: p.ng === 1 }; // a — купленное в прокачке «Воздушного превосходства», ng — аккаунт сайта без прогресса игры (на /ad не пускаем)
+  const worn = Object.fromEntries(Object.entries(p.w && typeof p.w === 'object' ? p.w : {}).filter(([k, v]) => /^[a-z0-9_]{1,24}$/.test(k) && /^[a-z0-9_]{1,24}$/.test(String(v))).slice(0, 40)); // w — надетые окраски (магазин): самолёт → окраска
+  return { pid: String(p.pid), name: String(p.login).slice(0, 24), owned: Array.isArray(p.u) ? p.u.map(String) : [], ad: Array.isArray(p.a) ? p.a.map(String) : [], needGame: p.ng === 1, worn }; // a — купленное в прокачке «Воздушного превосходства», ng — аккаунт сайта без прогресса игры (на /ad не пускаем)
 }
 // Итог боя для наград (edge-функция drone-claim проверяет той же подписью): base64url(JSON) + '.' + base64url(HMAC)
 const b64uEnc = (u8) => btoa(String.fromCharCode(...u8)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');

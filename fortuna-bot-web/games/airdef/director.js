@@ -40,7 +40,7 @@ export function createDirector(C) {
       radarState: (u) => { if (u.track && !u.dead && trainable(LNCH[u.key])) events.push({ k: 'track', u, t: C.t }); },
     };
     targets = pickTargets(S, rnd, 3);
-    placeDefense(S, city, rnd, side, era, targets, 0.9);
+    placeDefense(S, city, rnd, side, era, targets, 0.9, { same: true }); // состав — как в arsenal (без случайных замен вылета)
     C.syncUnits(); sizeOf.clear();
     wave = 1; C.raid.spawnWave(4, 2, targets, 7000 + rnd() * 2000);
     battleT = 0; shot = null; events = [];

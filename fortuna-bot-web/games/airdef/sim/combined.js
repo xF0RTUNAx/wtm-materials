@@ -147,6 +147,13 @@ export function createCombined(S, city, rnd, opts = {}) {
   const OWN = opts.owner || null, mineW = (w) => !OWN || w.owner === OWN || (w.owner && w.owner.ownTag === OWN);
   const lim = opts.lim || LIM, approachT = (lim.spawnR - LAUNCH_R) / CARRIER_V, PD = new THREE.Vector3();
   let b0 = 0, dirs = [0, 0, 0], di = 0, ci = 0, oi = 0;
+  // курс захода носителя — не ближе 0,12 рад (≈ 1,7 км на рубеже) к живым носителям: единицы разных типов на один объект с настройками
+  // по умолчанию брали один курс (на цель), и носители появлялись друг в друге (Mark 2026-10-27); сдвиг — по 0,15 рад в обе стороны
+  const angD = (x) => Math.abs(Math.atan2(Math.sin(x), Math.cos(x)));
+  function freeB(b) {
+    for (let s = 0; s < 13; s++) { const bb = b + (s % 2 ? 1 : -1) * Math.ceil(s / 2) * 0.15; if (!carriers.some((c) => !c.dead && !c.out && angD(c.sb - bb) < 0.12)) return bb; }
+    return b;
+  }
   // единицы типа k с номерами i0…i1-1 — в расписание (на старте — все; во время волны — докупленные). tFloor — не раньше
   function schedule(k, n, via, i0, i1, D, tFloor) {
     const W = AG[k];
@@ -189,13 +196,13 @@ export function createCombined(S, city, rnd, opts = {}) {
         for (let i = i0; i < i1; i++) if (carrierOf(m, via, i - i0) === j) { const u = U(i); const q = { key: k, k, i, oi, t: u.tL, aimFn: aimFn(u.toSam, oi++, u.tgt, u.sid), route: u.route, alt: u.alt, b: u.b }; q.done = () => { q.launched = t; log.push({ t, key: k, kind: W.kind, via }); }; salvo.push(q); }
         if (!salvo.length) continue;
         salvo.sort((a, b) => a.t - b.t);
-        const rq = salvo.find((q) => q.b !== null), b = rq ? rq.b + (j - (nC - 1) / 2) * 0.15 : dirs[ci++ % dirs.length] + (rnd() - 0.5) * 0.3;
+        const rq = salvo.find((q) => q.b !== null), b = freeB(rq ? rq.b + (j - (nC - 1) / 2) * 0.15 : dirs[ci++ % dirs.length] + (rnd() - 0.5) * 0.3);
         const T = Math.max(salvo[0].t, t + approachT * 0.1), approach = approachT, delay = Math.max(0, T - t - approach);
         const spawnR = delay > 0 ? lim.spawnR : LAUNCH_R + Math.max(300, (T - t) * CARRIER_V);
         const a = raid.spawn('carrier', { x: 0, z: 0 }, b, delay, spawnR,
           { plane: via, mside: CA.side, load: [{ key: k, n: salvo.length }], salvo, n0: salvo.length, cruise: CA.alt, hp: CA.hp, rcs: CA.rcs, every: CA.every, carrierName: CA.name, len: CA.len, R: LAUNCH_R, launchAt: T, t0: t });
         if (OWN) { a.owner = OWN.owner; a.ownTag = OWN; } // онлайн: чей носитель (очки, лента «Ход волны» игрока)
-        carriers.push(a);
+        a.sb = b; carriers.push(a);
       }
       return;
     }

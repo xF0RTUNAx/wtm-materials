@@ -89,6 +89,12 @@ export function createRaid(S, city, rnd, opts = {}) {
     if (!cmOf(a.model, side).flare) a.cmFlare = 0; // старые машины — без ЛТЦ: только диполи (sim/cm.js)
     if (a.fm) { a.fuel = 0.8; setLoad(a); a.speed = Math.min(a.speed, a.fm.s.vSL / 3.6 * 0.7); initDamage(a); }
     a.pos.set(Math.sin(bearing) * R, a.cruise + (role === 'low' ? 300 : 0), Math.cos(bearing) * R);
+    { // на краю «Северного рубежа» горы выше высоты захода: появлялся в склоне или перед отвесом, который не успевал перелезть, —
+      // не ниже рельефа на 4 км по пути к цели + 300 м (дальше «низкий» снижается сам, steerToward смотрит вперёд)
+      let gmax = city.groundH(a.pos.x, a.pos.z); const dx = tgt.x - a.pos.x, dz = tgt.z - a.pos.z, dl = Math.hypot(dx, dz) || 1;
+      if (HILLS) for (let d = 200; d <= 4000; d += 200) gmax = Math.max(gmax, city.groundH(a.pos.x + dx / dl * d, a.pos.z + dz / dl * d));
+      a.pos.y = Math.max(a.pos.y, gmax + (HILLS ? 300 : 400));
+    }
     const to = TMP.set(tgt.x, 0, tgt.z).sub(a.pos); a.yaw = Math.atan2(-to.x, -to.z); a.pitch = 0;
     if (role === 'carrier') { // носитель: заходит из-за края карты (o.R0) к рубежу пуска (o.R), там — вдоль края района
       a.R = o.R; a.b = bearing; a.inbound = true; a.relT = 2;
@@ -180,14 +186,36 @@ export function createRaid(S, city, rnd, opts = {}) {
   // били в центр ±15 м, а у порта, ГЭС, «Ведьминой поляны» и др. центр — пустая земля в 30–134 м от построек (Mark 2026-10-22)
   const PA = { x: 0, z: 0 };
   function aimPointOf(a) { const p = objAimXZ(a.tgt, a.id, ((a.id * 0.37) % 1) - 0.5, ((a.id * 0.71) % 1) - 0.5, PA); return PI.set(p.x, city.topAt(p.x, p.z) + 2, p.z); }
+  // горы («Северный рубеж», холмы «Туманной топи»): самолёт налёта смотрит по курсу на 1–9 с вперёд; склон там выше него, чем на 60 м, —
+  // ручку на себя и форсаж. Ветки манёвра смотрели вперёд на 1,1 км и набирали не круче 19° (отворот — 6°), а склоны рубежа — до 1,8 км в высоту:
+  // в обороне на зимней карте самолёты проходили сквозь горы до километра под землёй (стенд tools/airdef-headless/map-rand-test.js, 2026-10-27).
+  // Город — без этой проверки: там «низкие» идут между высотками по своей логике (steerToward)
+  const HILLS = city.kind === 'winter' || city.kind === 'autumn', GUARD_T = [0.15, 0.3, 0.45, 0.6, 0.8, 1, 1.25, 1.5, 2, 2.5, 3.5, 5, 7, 9];
+  function terrainGuard(a, dt) {
+    fwdOf(a, DIR); const hx = Math.hypot(DIR.x, DIR.z) || 1, v = Math.max(120, Math.hypot(a.vel.x, a.vel.z)), fx = DIR.x / hx, fz = DIR.z / hx;
+    let floor = city.groundH(a.pos.x, a.pos.z) + 40; // и просто низко над склоном (< 100 м) — набор
+    for (const da of [0, 0.5, -0.5, 1.1, -1.1]) { // сектор: по курсу и в стороны — в развороте и отвороте склон сбоку (2026-10-28: задевали на развороте)
+      const c = Math.cos(da), sn = Math.sin(da), dx = fx * c - fz * sn, dz = fx * sn + fz * c, tt = da ? [1, 2, 3.5] : GUARD_T; // по курсу — часто вблизи: стена ГЭС на «Северном рубеже» тоньше шага 1 с
+      for (const t of tt) floor = Math.max(floor, city.groundH(a.pos.x + dx * v * t, a.pos.z + dz * v * t) - t * 15); // дальний склон — с поправкой на набор по пути
+    }
+    a.tgF = floor; // (стенд map-rand-test: что видела проверка)
+    const need = floor + 60 + Math.max(0, -a.vel.y) * 4.5 - a.pos.y; // в пике — с запасом на вывод (≈ 4,5 с снижения: тяжёлый бомбардировщик выходит медленно)
+    if (need < 0) { a.tgOn = false; return false; }
+    a.tgOn = true;
+    // набор по нехватке высоты: чуть ниже порога — полого (~20°), сильно — круто (~53°) и с форсажем; без «качелей» у порога (ревью 2026-10-28)
+    const k = clamp(need / 250, 0, 1), el = (20 + 33 * k) * D2R;
+    DIR.set(fx * Math.cos(el), Math.sin(el), fz * Math.cos(el));
+    const [rx, ry] = steerTo(a, DIR, 3 + k); a.ab = k > 0.5; flyStep(a, rx, ry, dt);
+    return true;
+  }
   // полёт к точке на высоте h с облётом крыш (смотрим вперёд на 300 и 700 м)
   function fly(a, dir, dt, k = 2.2) { const [rx, ry] = steerTo(a, dir, k); flyStep(a, rx, ry, dt); } // полёт носом по направлению dir
   function steerToward(a, p, h, dt) {
     TMP.set(p.x - a.pos.x, 0, p.z - a.pos.z); const dh = TMP.length() || 1; TMP.divideScalar(dh);
     let floor = 0;
-    for (const L of [250, 600, 1100]) { const x = a.pos.x + TMP.x * L, z = a.pos.z + TMP.z * L; floor = Math.max(floor, city.topAt(x, z)); }
-    const want = Math.max(h + (a.role === 'low' ? city.groundH(a.pos.x, a.pos.z) : 0), floor + 70);
-    DIR.copy(TMP); DIR.y = clamp((want - a.pos.y) / 900, -0.3, 0.35); DIR.normalize();
+    for (const L of HILLS ? [250, 600, 1100, 1800, 2600] : [250, 600, 1100]) { const x = a.pos.x + TMP.x * L, z = a.pos.z + TMP.z * L; floor = Math.max(floor, city.topAt(x, z)); }
+    const want = Math.max(h + (a.role === 'low' ? city.groundH(a.pos.x, a.pos.z) : 0), floor + (HILLS ? 120 : 70)); // горы — дальше смотрит, круче набирает, полого снижается
+    DIR.copy(TMP); DIR.y = HILLS ? clamp((want - a.pos.y) / 700, -0.2, 0.55) : clamp((want - a.pos.y) / 900, -0.3, 0.35); DIR.normalize();
     const [rx, ry] = steerTo(a, DIR, 2.2);
     flyStep(a, rx, ry, dt);
   }
@@ -210,10 +238,12 @@ export function createRaid(S, city, rnd, opts = {}) {
     // отворот: угроза на 3 или 9 часов, со снижением (до 150 м над крышами)
     TMP.copy(threatPos).sub(a.pos); TMP.y = 0; TMP.normalize();
     const s = a.id % 2 ? 1 : -1; DIR.set(-TMP.z * s, 0, TMP.x * s);
-    DIR.y = clamp((city.topAt(a.pos.x, a.pos.z) + 200 - a.pos.y) / 900, -0.4, 0.1); DIR.normalize();
+    let fl = city.topAt(a.pos.x, a.pos.z); if (HILLS) for (const d of [300, 800, 1500, 2300]) fl = Math.max(fl, city.groundH(a.pos.x + DIR.x * d, a.pos.z + DIR.z * d)); // горы: отворот — с запасом над склоном, куда отворачивает
+    DIR.y = HILLS ? clamp((fl + 250 - a.pos.y) / 900, -0.2, 0.5) : clamp((fl + 200 - a.pos.y) / 900, -0.4, 0.1); DIR.normalize(); // в горах — полого и выше
     const [rx, ry] = steerTo(a, DIR, 3); flyStep(a, rx, ry, dt);
   }
   function step(dt) {
+    setGround(city.groundH); // рельеф в core.js — один на модуль: на сервере комнаты разных карт («Речной узел», «Северный рубеж») идут вперемешку
     for (const a of planes) {
       if (a.dead || a.out) continue;
       a.t += dt;
@@ -282,6 +312,9 @@ export function createRaid(S, city, rnd, opts = {}) {
       // страховка: на отходе тихоходный штурмовик (Су-25 с ракетами) под пусками ЗУР уворачивается без конца и не доходит до края — волна
       // висела (ui-test, сторона запад, эпоха II; было и на сайте): через 60 с отхода — «ушёл»
       if (a.phase === 'egress' && (a.egT = (a.egT || 0) + dt) > 60) { a.out = true; if (fx.out) fx.out(a); continue; }
+      // врезался в склон или дом (проверка была только в ветках оружия — отворот, уход, ПРР и подсвет её пропускали) — гибель
+      if (a.pos.y < city.topAt(a.pos.x, a.pos.z) + 3) { a.dead = true; a.laser = null; if (fx.down) fx.down(a); continue; }
+      if (HILLS && terrainGuard(a, dt)) continue; // горы впереди — набор высоты раньше любой ветки
       if (a.evadeT > 0 && a.phase !== 'lase') { a.ser = false; a.evadeT -= dt; evade(a, dt, (launch && launch.u.pos) || (mw[0] && mw[0].m.pos) || a.pos); a.ab = true; continue; }
       const L = curLoad(a);
       if (!L && a.phase !== 'lase') a.phase = 'egress';

@@ -1,6 +1,7 @@
 // Задания и расстановка ПВО: общие для вылета (ИИ-ПВО против игрока), фона меню и обучения.
 import { CITY, KIND, riverX } from './city.js?v=20261027d';
-import { SAM, DEFENSE } from './arsenal.js?v=20261027d';
+import { SAM, DEFENSE, SAM_COST } from './arsenal.js?v=20261027d';
+import { samClass } from './sim/online.js?v=20261027d';
 
 // без резкого перегиба рельефа: земля нарисована сеткой треугольников (клетка 50–80 м), на гребне или в ложбине она расходится с точной
 // высотой карты на метры (на «Северном рубеже» — до 33 м: машина висела в воздухе или стояла под землёй, ракеты — из воздуха). Центр против
@@ -72,9 +73,29 @@ export function pickTargets(S, rnd, n = 3, pool = ['tpp', 'oil', 'tv', 'gov', 'p
 // o — поправки сложности (difficulty.js): ambush — доля засад, skill — прибавка к опыту расчётов; heli — против вертолёта (Mark 2026-10-22):
 // только ближние (досягаемость ≤ 16 км: ПЗРК, пушки, «Оса» / «Тор» / Roland / Rapier…), дальних, средних и глушилок GPS нет; число — с дробной
 // частью по жребию (при малом k иначе округлялось бы в ноль), но не меньше трёх комплексов на вылет
+// Состав каждый бой немного другой (Mark 2026-10-27: «чтобы бои не были одинаковыми, но логично уместно»): примерно треть групп меняется на
+// комплекс той же роли и стороны из наборов этой и прошлой эпохи (дальний — на дальний, ПЗРК — на ПЗРК, пушки — на пушки), в группах от двух
+// машин — ±1; общая цена набора (SAM_COST) — в пределах ±15 % от исходного, чтобы сложность не прыгала. o.same — без изменений
+const roleOf = (k) => { const S = SAM[k]; return S.type === 'jammer' ? 'jam' : S.type === 'guns' ? (S.antiMun ? 'cram' : 'guns') : S.type === 'ir' && S.hp <= 15 ? 'mp' : samClass(k); };
+export function varyDefense(list, side, era, rnd, ok = () => true) {
+  const cost = (l) => l.reduce((s, [k, n]) => s + (SAM_COST[k] || 100) * n, 0), c0 = cost(list);
+  const pool = [...new Set([...(DEFENSE[side][era - 1] || []), ...DEFENSE[side][era]].map(([k]) => k))].filter((k) => SAM[k] && SAM[k].era <= era && ok(k));
+  for (let t = 0; t < 12; t++) {
+    const m = new Map();
+    for (const [k, n] of list) {
+      const alt = roleOf(k) !== 'jam' && rnd() < 0.35 ? pool.filter((q) => q !== k && roleOf(q) === roleOf(k)) : [], k2 = alt.length ? alt[Math.floor(rnd() * alt.length)] : k;
+      const n2 = n >= 2 ? n + Math.floor(rnd() * 3) - 1 : n === 1 && ['near', 'guns', 'mp'].includes(roleOf(k)) && rnd() < 0.25 ? 2 : n;
+      m.set(k2, (m.get(k2) || 0) + n2);
+    }
+    const out = [...m].filter(([, n]) => n > 0);
+    if (c0 <= 0 || Math.abs(cost(out) / c0 - 1) <= 0.15) return out;
+  }
+  return list;
+}
 export function placeDefense(S, city, rnd, side, era, targets, k = 1, o = {}) {
   let ti = 0;
-  const list = DEFENSE[side][era].filter(([key]) => !o.heli || (SAM[key].rmax <= 16000 && SAM[key].type !== 'jammer'));
+  const fit = ([key]) => !o.heli || (SAM[key].rmax <= 16000 && SAM[key].type !== 'jammer');
+  const list0 = DEFENSE[side][era].filter(fit), list = o.same ? list0 : varyDefense(list0, side, era, rnd, (key) => fit([key]));
   const cnt = list.map(([, n0]) => (o.heli ? Math.floor(n0 * k + rnd()) : Math.round(n0 * k)));
   if (o.heli && list.length) for (let i = 0; cnt.reduce((s, c) => s + c, 0) < Math.min(3, list.reduce((s, [, n0]) => s + n0, 0)); i++) cnt[i % cnt.length]++;
   for (let j = 0; j < list.length; j++) for (let i = 0; i < cnt[j]; i++) {

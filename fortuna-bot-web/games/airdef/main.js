@@ -176,6 +176,14 @@ if (Q.get('bldfar') !== null) Object.assign(P, { bldFar: +Q.get('bldfar'), treeF
 // «Съёмка» — карта на выбор (pmap: 'winter' | 'city', по умолчанию зимняя) и своя погода для каждой карты (pwx: { city, winter })
 // Осенняя «Туманная топь» (Хеллоуин) — ?map=autumn, «Съёмка» (pmap 'autumn') и проверка вертолёта ?heli=…
 const MAPS = ['winter', 'city', 'autumn'];
+// Вылет и оборона (офлайн и онлайн) — карта каждый бой случайная: «Речной узел» или «Северный рубеж» (Mark 2026-10-27: «даже когда игрок жмёт
+// ещё раз — случайным образом выпадает следующая карта»). Следующая выбрана заранее (fortuna_ad_map) и перевыбирается в начале каждого боя
+// (C.start): выпала другая — «Ещё раз» перезагружает страницу сразу в бой (?go=…). Онлайн — карту боя выбирает сервер (комната r.map),
+// страница перезагружается под неё (online.js mapFix → fortuna_ad_omap). «Туманная топь» — только в событии (вертолёты), «Мульти-волна» — зима
+const RAND_MAPS = ['city', 'winter'];
+let nextM = null; // без хранилища — на эту загрузку
+function nextMap() { const m = ls.get('fortuna_ad_map'); if (RAND_MAPS.includes(m)) return m; if (!nextM) rerollMap(); return nextM; }
+function rerollMap() { nextM = RAND_MAPS[Math.floor(Math.random() * RAND_MAPS.length)]; ls.set('fortuna_ad_map', nextM); }
 // вылет на вертолёте (подвеска heli) — тоже на «Туманной топи»
 function wantMap(game, pmap, era, lo, evd, tside) {
   if (MAPS.includes(Q.get('map'))) return Q.get('map');
@@ -184,13 +192,18 @@ function wantMap(game, pmap, era, lo, evd, tside) {
   if (game === 'defense' && evd) return 'autumn'; // оборона события «Туманная топь» (event.js)
   if (game === 'photo') return pmap === 'city' || pmap === 'autumn' ? pmap : 'winter';
   if (Q.get('heli')) return 'autumn';
+  if (game === 'air' || game === 'defense') return nextMap();
   const online = game === 'online' || Q.get('ad') || Q.get('mp') === '1';
-  return game === 'multi' || (online && ls.get('fortuna_ad_kind') === 'multi') ? 'winter' : 'city';
+  if (game === 'multi' || (online && ls.get('fortuna_ad_kind') === 'multi')) return 'winter';
+  const om = Q.get('omap') || ls.get('fortuna_ad_omap'); // omap в адресе — перезагрузка под карту комнаты без хранилища (online.js mapFix)
+  return online && RAND_MAPS.includes(om) ? om : 'city';
 }
 const SETUP0 = (() => { try { return JSON.parse(ls.get('fortuna_airdef_setup') || '{}') || {}; } catch (_) { return {}; } })();
 // вертолёт и оборона события — только при запуске из события (event.js: go=air&hlo=<подвеска в эпохе setup.era> / go=defense и setup.evd): сохранённая вертолётная подвеска обычный «Вылет» на осеннюю карту не уводит
 const HLO = Q.get('hlo') !== null ? +Q.get('hlo') : -1;
-const MAP = wantMap(LIVE && !Q.get('go') ? 'online' : SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd, SETUP0.tside);
+// онлайн при загрузке: возвращение в бой (LIVE), кнопка сайта «Онлайн-бой» (?mp=1) и приглашение (?ad=) — карта комнаты, а не последнего режима
+// (ревью 2026-10-28: последний режим «Вылет» → случайная карта вылета ≠ карте комнаты → перезагрузка по кругу)
+const MAP = wantMap(!Q.get('go') && (LIVE || Q.get('mp') === '1' || Q.get('ad')) ? 'online' : SETUP0.game, SETUP0.pmap, SETUP0.era, Q.get('go') === 'air' ? HLO : -1, Q.get('go') === 'defense' && SETUP0.evd, SETUP0.tside);
 // погода: «Съёмка» — выбранная для этой карты; зимняя карта иначе — всегда случайная из своих (общая настройка — только для города)
 const weatherKey = Q.get('weather') || (SETUP0.game === 'photo' ? (SETUP0.pwx && SETUP0.pwx[MAP]) || 'random' : ls.get('fortuna_airdef_weather') || 'random');
 const RND_KEYS = WEATHER_KEYS.filter((k) => k !== 'night'); // «Случайная» — без ночи; ночь — только по выбору и не в онлайне (?mp=1, приглашение ?ad=)
@@ -244,7 +257,7 @@ const snd = createSound();
 
 // ═════════════ Общий контекст режимов ═════════════
 const C = {
-  $, Q, IS_TOUCH, ls, LIVE, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, GPU_NAME,
+  $, Q, IS_TOUCH, ls, LIVE, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, RAND_MAPS, GPU_NAME,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
   SHARP, get fps() { return fps; }, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,
@@ -707,7 +720,7 @@ function syncWorld(dt, t) {
         hm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(hm.obj); g.userData.flames = { update() {} };
       } else {
         // вблизи — готовая модель (подвеска отдельными моделями на пилонах, сброшенное пропадает), вдали — простая
-        const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role)), sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
+        const pm = planeModel(a.mside || a.side, a.role === 'carrier' ? 'carrier' : classOfRole(a.role), a.plane || raidPlane(a.side, C.raidEra, a.role), a.camo || null) /* a.camo — окраска другого игрока онлайна */, sg = strikerGeo(a.side), lo = new THREE.Mesh(sg.geo, planeMat); lo.castShadow = !!P.shadows; g.add(lo);
         if (pm) {
           pm.obj.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; }); g.add(pm.obj);
           g.userData.dv = planeDamageVis(scene, pm.obj, pm.name, planeMeta(pm.name), () => C.fx); // зоны повреждений: отрыв частей, дым из зон
@@ -845,9 +858,11 @@ C.start = function (game) {
   // самолёт ↔ вертолёт: у них разные карты (город / «Туманная топь») — карта строится при загрузке: перезагрузка сразу в вылет
   // «Ещё раз» после потери контекста WebGL (текстуры моделей не вернуть): новый бой — с перезагрузкой, адрес страницы тот же (карта, вертолёт — как были)
   if (C.reloadAfterBattle && (game === 'air' || game === 'defense' || game === 'training')) { ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.set('weather', W_KEY); if (game === 'air' && MAP === 'autumn') u.searchParams.set('hlo', C.setup.lo); /* hlo и weather при загрузке из адреса убраны — вернуть: вертолёт «Топи» и её погода */ location.replace(u.href); return; }
-  if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
+  const contOp = game === 'air' && C.op && C.op.next; // второй вылет «Операции» — на той же карте (цели и уцелевшая ПВО — оттуда)
+  if ((game === 'air' || game === 'defense' || game === 'training') && !Q.get('map') && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) !== MAP) {
     ls.set('fortuna_airdef_setup', JSON.stringify(C.setup)); const u = new URL(location.href); u.searchParams.set('go', game); u.searchParams.delete('heli'); u.searchParams.delete('hlo'); u.searchParams.delete('weather'); location.replace(u.href); return;
   }
+  if ((game === 'air' || game === 'defense') && RAND_MAPS.includes(MAP) && !contOp && wantMap(game, C.setup.pmap, C.setup.era, C.setup.lo, C.setup.evd, C.setup.tside) === MAP) rerollMap(); // следующему бою — новая случайная карта
   snd.unlock();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
   snd.battleOff(); // «Ещё раз»: сирена и петли прошлого боя — не в новый

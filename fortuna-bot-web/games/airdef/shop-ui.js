@@ -138,6 +138,7 @@ export function createShop(C) {
     if (key !== keyNow()) { S.at = 0; S.w = null; load(); return; } // пока ждали, сменили аккаунт
     if (d) { S.w = d.wallet; S.season = d.season || S.season; } else S.w = null;
     S.err = err; S.at = Date.now(); paint(); if (api.isOpen()) draw();
+    if (d && C.state === 'play' && C.ctrl && C.ctrl.modelsReady) C.ctrl.modelsReady(); // страница открылась сразу в бой (?go= после «Ещё раз» на другой карте): надетая окраска — когда пришёл кошелёк
   }
   function touch() {
     if (C.state !== 'menu' || S.busy) return;
@@ -298,6 +299,7 @@ export function createShop(C) {
   });
   addEventListener('resize', () => { if (api.isOpen()) layout(); });
   paint();
+  if (keyNow()) setTimeout(load, 0); // кошелёк — сразу при загрузке (а не только из меню): надетые окраски нужны и бою, открытому по ?go=
 
   const api = {
     open() {

@@ -27,7 +27,7 @@ Object.assign(globalThis, {
   window: globalThis, devicePixelRatio: 1, innerWidth: 1280, innerHeight: 720,
   document: { getElementById: byId, createElement: () => el('new'), body: el('body'), documentElement: el('html'), addEventListener: noop, hidden: false },
   matchMedia: () => ({ matches: false }), addEventListener: noop, removeEventListener: noop,
-  location: { search: '?test=1&gfx=low&weather=day', href: 'http://x/airdef.html' },
+  location: { search: '?test=1&gfx=low&weather=day&map=city', href: 'http://x/airdef.html' }, // карта — город (вылет и оборона иначе случайные: map-rand-test.js)
 });
 Object.defineProperty(globalThis, 'localStorage', { value: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = String(v); } }, configurable: true, writable: true });
 let rafCb = null; globalThis.requestAnimationFrame = (f) => { rafCb = f; return 1; };

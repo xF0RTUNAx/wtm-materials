@@ -195,7 +195,6 @@ export function createStrike(ctx) {
     }
     if (!u.track) { u.gunOn = false; return; }
     const tr = u.track;
-    if (u.hold) { u.gunOn = false; return; } // приказ командира: огонь только по команде (сопровождать можно)
     // пушки: очереди с перерывами; вероятность попадания падает с дальностью и угловой скоростью цели
     if (S.type === 'guns') {
       if (!aiGuns(u, tr, dt, S.rmax, S.hmax)) u.reactT = Math.max(0, u.reactT - dt);
@@ -334,6 +333,7 @@ export function createStrike(ctx) {
     if (u.cool > 0) return tr('пусковая не готова');
     const t = u.track;
     if (!t || t.dead) return S.type === 'ir' ? tr('ГСН не захватила цель') : tr('нет захвата цели');
+    if (t.immune) return tr('далеко — цель вне зоны'); // носитель «Мульти-волны» за краем района: ракета по нему уходила впустую (взрыватель его не видит)
     if (S.radar && !u.emit && S.type !== 'saclos' && !S.optTrack && S.type !== 'ir') return tr('РЛС выключена — ракету некому вести');
     if (S.type === 'jammer') return tr('станция РЭБ не стреляет');
     const d = u.pos.distanceTo(t.pos), h = aglOf(t);
@@ -353,7 +353,7 @@ export function createStrike(ctx) {
   // Возвращает ракету (пусковая уже наведена), 'pending' (доворачивается), 'guns' или null (комплекс — глушилка / убит)
   function forceLaunch(u, t) {
     const S = u.S; if (u.dead || !t || t.dead || S.type === 'jammer') return null;
-    u.track = t; u.seeT = Math.max(u.seeT, 9); u.lostT = 0; u.reactT = 99; u.cool = 0; u.reloadT = 0; u.hold = false; if (S.radar) u.emit = true;
+    u.track = t; u.seeT = Math.max(u.seeT, 9); u.lostT = 0; u.reactT = 99; u.cool = 0; u.reloadT = 0; if (S.radar) u.emit = true;
     if (S.type === 'guns') { u.ammo = Math.max(u.ammo, 200); u.gunForce = Math.max(1, (S.gun.burst || 0.6) * 1.6); u.gunOn = true; u.gunT = u.gunForce; return 'guns'; }
     if (u.ammo <= 0) u.ammo = S.ammo;
     if (S.gun) u.gunForce = 0.8; // «Панцирь», «Тунгуска»: пушки вместе с ракетой
@@ -364,7 +364,7 @@ export function createStrike(ctx) {
   function forcedShot(u, t) { const m = launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(u.S) * (ctx.reloadK ? ctx.reloadK() : 1); return m; }
   // ожидание наводки принудительного пуска: цель держится, пусковая доворачивается (aimLauncher — каждый шаг), пуск — когда навелась
   // до aimLauncher: цель — принудительная (свой выбор цели комплексом в updateUnit её не сбивает)
-  function forceHold(u) { const t = u.force.t; if (!u.dead && !t.dead) { u.track = t; u.lostT = 0; u.seeT = Math.max(u.seeT, 9); u.hold = false; } }
+  function forceHold(u) { const t = u.force.t; if (!u.dead && !t.dead) { u.track = t; u.lostT = 0; u.seeT = Math.max(u.seeT, 9); } }
   function forceStep(u, dt) {
     const f = u.force, t = f.t;
     if (u.dead || t.dead) { u.force = null; u.cool = 0; return; }
@@ -967,7 +967,8 @@ export function createStrike(ctx) {
   }
 
   return { units, sams, wpns, flares, objects, net, addUnit, release, spawnMun, dropCM, step, rwr, mws, radarSees, eyesSee, inZone, blast, aglOf, etaOf,
-    launch, forceLaunch, designate, setEmit, setTgt, setManual, gunLead, irSees, removeUnit, moveUnit, launcherReady, unitTilt };
+    launch, forceLaunch, designate, setEmit, setTgt, setManual, gunLead, irSees, removeUnit, moveUnit, launcherReady, unitTilt,
+    get evOn() { return evOn; } }; // идёт удар (оружие «Мульти-волны») — как видит фильтр целей ложные цели (tgtCat)
 }
 
 // ═════════════ Предсказание полёта бомбы (CCIP и зона сброса) ═════════════

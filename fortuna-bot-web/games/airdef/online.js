@@ -27,7 +27,7 @@ export function createOnline(C, ctrls) {
   const seg = (id, cur, items) => `<div class="seg" data-oseg="${id}">${items.map(([v, l]) => `<button data-v="${v}" class="${String(v) === String(cur) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   const inMenu = () => C.state === 'menu' && C.setup.game === 'online';
   const rerender = () => { if (inMenu()) C.menu.render(); renderWait(); };
-  let feed = [], helps = [], keepRoom = false, afterBattle = false; // keepRoom — в меню, не выходя из комнаты; afterBattle — лобби после боя
+  let feed = [], helps = [], keepRoom = false, afterBattle = false, endQuick = false; // keepRoom — в меню, не выходя из комнаты; afterBattle — лобби после боя
 
   // ═════════════ Меню: вкладка «Бой» в режиме «Онлайн» ═════════════
   function panel(el) {
@@ -44,12 +44,12 @@ export function createOnline(C, ctrls) {
     if (N.queued) { el.innerHTML = `<div class="cat-h">${tr('Поиск боя')}</div><p class="hint">${waitText()}</p>`; return; }
     const mw = ui.kind === 'multi', srch = N.search || {};
     el.innerHTML = `<div class="prow"><span>${tr('Игра')}</span>${seg('kind', ui.kind, [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div>
-      <div class="cat-h">${tr('Быстрый бой')}</div>
+      <div class="cat-h">${tr('Быстрый бой')} <span class="dim">${tr('· на рейтинг')}</span></div>
       <div class="prow"><span>${tr('Режим')}</span>${seg('mode', ui.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>
       ${mw ? '' : `<div class="prow"><span>${tr('Роль')}</span>${seg('role', ui.role, ROLES)}</div>`}
       <p class="hint">${mw ? tr('Команда против команды, два раунда. В одном ваша команда собирает волну (дроны, крылатые, баллистика), в другом ставит ПВО против волны соперника. Побеждает тот, чья волна разрушила больше. Подготовка — {0} с, в это время работает чат команды.{1}', [MW.PREP_T, N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.marcade || 0, srch.mreal || 0]) : ''])
         : tr('Авиация против ПВО города, три волны. Ждём минимум 2 на 2, затем ещё 15 с, вдруг подтянутся другие. Если людей долго нет, добавим ботов.{0}', [N.search ? tr(' Сейчас ищут: аркада {0}, реализм {1}.', [srch.arcade, srch.real]) : ''])}</p>
-      <div class="cat-h">${tr('Своя комната')}</div>
+      <div class="cat-h">${tr('Своя комната')} <span class="dim">${tr('· без рейтинга')}</span></div>
       <div class="prow"><span>${tr('Формат')}</span>${seg('size', ui.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>
       ${mw ? '' : `<div class="prow"><span>${tr('Эпоха')}</span>${seg('era', ui.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
       ${mw ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('side', ui.sideAir, SIDES)}</div>`}
@@ -66,7 +66,7 @@ export function createOnline(C, ctrls) {
       (me && me.team !== t ? `<button class="mini" data-oa="team" data-t="${t}">${tr('Перейти сюда')}</button>` : '') + (host ? ` <button class="mini" data-bot="${t}">${tr('+ бот')}</button>` : '') + '</div>';
     el.innerHTML = `<div class="cat-h">${tr('Комната <b class="adcode">{0}</b>', [r.code])} <button class="mini" data-oa="invite">${tr('Пригласить')}</button> <button class="mini" data-oa="leave">${tr('Выйти')}</button></div>
       <p class="hint">${r.kind === 'multi' ? tr('Мульти-волна · два раунда со сменой сторон · {0} · {1}×{2}{3}', [MODES[r.mode].name, r.size, r.size, r.fill ? tr(' · пустые места — боты') : '']) /* без эпохи: уровень ботов скрытый */
-        : tr('{0}{1}{2} · {3}×{4} · эпоха {5}{6}{7}', ['', '', MODES[r.mode].name, r.size, r.size, ERAS[r.era - 1].short || r.era, tr(' · авиация — {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')]), r.fill ? tr(' · пустые места — боты') : ''])}</p>
+        : tr('{0}{1}{2} · {3}×{4} · эпоха {5}{6}{7}', [r.map ? (r.map === 'winter' ? tr('Северный рубеж') : tr('Речной узел')) + ' · ' : '', '', MODES[r.mode].name, r.size, r.size, ERAS[r.era - 1].short || r.era, tr(' · авиация — {0}', [r.sideAir === 'east' ? tr('восток') : tr('запад')]), r.fill ? tr(' · пустые места — боты') : ''])}</p>
       ${afterBattle ? `<p class="hint">${tr('<b>Бой окончен, вы снова в комнате.</b> Хост может сменить игру, режим, формат, эпоху и сторону; затем все нажимают «Готов».')}</p>` : ''}
       ${host ? `<div class="prow"><span>${tr('Игра')}</span>${seg('rkind', r.kind === 'multi' ? 'multi' : 'air', [['air', tr('Вылет и оборона')], ['multi', tr('Мульти-волна')]])}</div><div class="prow"><span>${tr('Формат')}</span>${seg('rsize', r.size, O.AD_SIZES.map((n) => [n, `${n}×${n}`]))}</div>${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Эпоха')}</span>${seg('rera', r.era, ERAS.filter((e) => LOADOUTS[e.id]).map((e) => [e.id, e.short || e.name]))}</div>`}
         ${r.kind === 'multi' ? '' : `<div class="prow"><span>${tr('Авиация')}</span>${seg('rside', r.sideAir, SIDES.slice(1))}</div>`}<div class="prow"><span>${tr('Режим')}</span>${seg('rmode', r.mode, O.AD_MODES.map((k) => [k, MODES[k].name]))}</div>` : ''}
@@ -93,7 +93,7 @@ export function createOnline(C, ctrls) {
       const v = b.dataset.v, k = sg.dataset.oseg;
       if (k === 'kind') ui.kind = v; else if (k === 'mode') ui.mode = v; else if (k === 'role') ui.role = v; else if (k === 'size') ui.size = +v; else if (k === 'era') ui.era = +v; else if (k === 'side') ui.sideAir = v; else if (k === 'fill') ui.fill = v === '1';
       else if (k === 'rkind') N.opts({ kind: v }); else if (k === 'rsize') N.opts({ size: +v }); else if (k === 'rera') N.opts({ era: +v }); else if (k === 'rside') N.opts({ sideAir: v }); else if (k === 'rmode') N.opts({ mode: v });
-      saveUi(); snd.click(); if (k === 'kind' && !N.room && !N.queued && C.wantMap('online') !== C.MAP) { mapFix(v); return; } rerender(); return;
+      saveUi(); snd.click(); if (k === 'kind' && !N.room && !N.queued && mapFix(v, null)) return; rerender(); return;
     }
     const a = e.target.closest('[data-oa]'), bot = e.target.closest('[data-bot]'), kick = e.target.closest('[data-kick]');
     if (bot) { N.bot(bot.dataset.bot); return; }
@@ -175,21 +175,25 @@ export function createOnline(C, ctrls) {
   N.on('queue', rerender);
   N.on('err', (m) => { C.say(trFmt(m), 3); rerender(); }); // сообщения сервера — по-русски: переводим на клиенте
   N.on('deny', (m) => { N.clog('deny', m); const t = trFmt(m); C.say(t, 2.5); snd.deny(); if (ctrls.defense.st.net) ctrls.defense.st.msg = t; });
-  // карта комнаты: «Мульти-волна» — «Северный рубеж», «Вылет и оборона» — город. Карта строится при загрузке страницы: не та —
-  // перезагружаемся под неё; сервер держит место (в лобби — 30 с, в бою — как при обрыве) и тот же аккаунт возвращает в комнату
+  // карта комнаты: «Мульти-волна» — «Северный рубеж», «Вылет и оборона» — случайная на каждый бой (сервер: r.map, «Речной узел» или «Северный
+  // рубеж», Mark 2026-10-27; старый сервер карту не шлёт — город). Карта строится при загрузке страницы: не та — перезагружаемся под неё;
+  // сервер держит место (в лобби — 30 с, в бою — как при обрыве) и тот же аккаунт возвращает в комнату.
+  // map — карта комнаты из сообщения сервера; null — комнаты нет (выбор игры в меню): подходит любая из случайных, что уже загружена
   let mapGo = false;
-  function mapFix(kind) {
+  function mapFix(kind, map) {
     if (mapGo) return true; // уже уходим на другую карту
     const k = kind === 'multi' ? 'multi' : 'air'; ls.set('fortuna_ad_kind', k);
+    if (k === 'air') ls.set('fortuna_ad_omap', map !== null ? (C.RAND_MAPS.includes(map) ? map : 'city') : C.RAND_MAPS.includes(C.MAP) ? C.MAP : 'city');
     if (C.wantMap('online') === C.MAP) return false;
+    C.setup.game = 'online'; C.saveSetup(); // после перезагрузки — снова раздел онлайна, карта — комнаты
     mapGo = true; N.quit = true; // уходящая страница не переподключается (иначе две вкладки одного аккаунта отнимают место друг у друга)
     N.clog('map_reload', k); C.say(tr('Загружаем карту комнаты…'), 5);
-    const u = new URL(location.href); u.searchParams.delete('ad'); u.searchParams.set('mp', '1'); location.replace(u.href);
+    const u = new URL(location.href); u.searchParams.delete('ad'); u.searchParams.set('mp', '1'); if (k === 'air') u.searchParams.set('omap', ls.get('fortuna_ad_omap') || map || 'city'); else u.searchParams.delete('omap'); location.replace(u.href);
     return true;
   }
-  N.on('start', () => { if (N.battle && mapFix(N.battle.kind)) return; enterBattle(); });
+  N.on('start', () => { if (N.battle && mapFix(N.battle.kind, N.battle.map || null)) return; enterBattle(); });
   N.on('room', (was) => {
-    if (N.room && mapFix(N.room.kind)) return;
+    if (N.room && !(C.ended && N.room.state === 'lobby') && mapFix(N.room.kind, N.room.map || 'city')) return; // на экране итогов — не перезагружаться: карту новой комнаты — по «В комнату» (again)
     rerender();
     const r = N.room; if (!r || !N.battle || r.state === 'end' || r.state === 'lobby') return; // итоги и лобби — не бой
     if (C.state !== 'play') enterBattle();
@@ -249,14 +253,16 @@ export function createOnline(C, ctrls) {
     else { N.myCraft = false; ctrls.air.netWaveOut(); } // уцелевший самолёт — на базу: сервер его уже убрал
   });
   // итог боя: «Мульти-волна» — «Два раунда», «Вылет и оборона» — «Табло команд» (endscr.js); очки рейтинга и награда доезжают из claimOnline
+  // быстрый бой — без «В комнату» (Mark 2026-10-27: «не имеет смысла»): кнопка ищет новый бой с теми же настройками (again)
   N.on('end', (m) => {
-    const me = N.myPlayer();
+    endQuick = !!(N.room && N.room.quick); // сервер через 25 с переводит комнату в лобби и снимает quick — кнопка помнит, каким был бой
+    const me = N.myPlayer(), again = endQuick ? tr('Найти бой') : tr('В комнату');
     if (m.kind === 'multi') {
       const b = boardMw(m, me, pnm);
-      C.showEnd({ again: tr('В комнату'), title: b.title, win: b.win, online: b });
+      C.showEnd({ again, title: b.title, win: b.win, online: b });
     } else {
       const b = boardOl(m, me, pnm);
-      C.showEnd({ again: tr('В комнату'), title: b.title, win: b.win, online: b });
+      C.showEnd({ again, title: b.title, win: b.win, online: b });
     }
     if (m.result && C.claimOnline) C.claimOnline(m.result);
   });
@@ -420,7 +426,9 @@ export function createOnline(C, ctrls) {
   if (inv) { C.setup.game = 'online'; let done = false; N.on('conn', () => { if (N.conn === 'on' && !done && !N.room) { done = true; N.join(O.cleanCode(inv)); } }); N.connect(); }
   else if (new URLSearchParams(location.search).get('mp') === '1' || C.LIVE) { C.setup.game = 'online'; N.connect(); } // сайт: кнопка «Онлайн-бой» — сразу раздел онлайна; C.LIVE — возвращение в бой после вылета
   return { N, panel, primary, primaryText, onClick, again() {
-    if (N.room && (N.room.state === 'end' || N.room.state === 'lobby')) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; C.menu.panel(true); C.menu.render(); if (N.room.state === 'end') { backWait = true; N.back(); renderBack(); } return; } // в ту же комнату
+    const quick = endQuick; endQuick = false;
+    if (N.room && !quick && N.room.state === 'lobby' && mapFix(N.room.kind, N.room.map || 'city')) return; // в лобби — уже новая карта комнаты
+    if (N.room && !quick && (N.room.state === 'end' || N.room.state === 'lobby')) { keepRoom = true; C.toMenu(); C.setup.game = 'online'; C.menu.panel(true); C.menu.render(); if (N.room.state === 'end') { backWait = true; N.back(); renderBack(); } return; } // в ту же комнату
     C.toMenu(); C.setup.game = 'online'; if (N.conn === 'on') N.queue(ui.mode, ui.role, ui.kind === 'multi' ? 'multi' : undefined); C.menu.panel(true); C.menu.render();
   } };
 }

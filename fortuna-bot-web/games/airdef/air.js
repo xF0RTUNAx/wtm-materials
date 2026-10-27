@@ -37,18 +37,20 @@ export function createAir(C) {
   // самолёт игрока: многоцелевой ударный самолёт стороны атакующих (как в превью меню), подвеска — на его пилонах
   const ship = new THREE.Group(); ship.rotation.order = 'YXZ';
   const shipMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x666666, shininess: 55 });
-  let shipModel = null, shipSide = null, shipCls = null, shipName = null, shipReal = false, shipInternal = false, flames = null, stations = [], podPos = new THREE.Vector3(0, -1.6, -3.5);
+  let shipModel = null, shipSide = null, shipCls = null, shipName = null, shipSkin = null, shipReal = false, shipInternal = false, flames = null, stations = [], podPos = new THREE.Vector3(0, -1.6, -3.5);
   // cls — ударный (бомбы) или ракетный: Су-30 / F/A-18 или МиГ-29 / F-16
   function buildShip(side, cls = 'strike', name = null) {
-    // готовая модель (models.js), если загрузилась, иначе — процедурная
-    const pm = planeModel(side, cls, name);
-    // shipReal — стоит именно модель подвески (пока она грузится — подходящая из загруженных, потом заменяется)
-    const exact = !!pm && (!name || pm.name === name);
-    if (shipSide === side && shipCls === cls && shipName === name && (shipReal || !pm || (!exact && shipModel && shipModel.userData.pm === pm.name))) return;
+    // готовая модель (models.js), если загрузилась, иначе — процедурная; окраска из магазина — надетая на этот самолёт (аккаунт игры, shop-ui.js),
+    // кроме «Съёмки» и обучения: её модель грузится по требованию, до прихода — обычная
+    const skin = name && C.shop && C.shop.wallet() && C.setup.game !== 'photo' && C.setup.game !== 'training' ? (C.shop.wallet().worn || {})[name] || null : null;
+    const pm = planeModel(side, cls, name, skin);
+    // shipReal — стоит именно модель подвески (пока она грузится — подходящая из загруженных, потом заменяется), с надетой окраской — когда пришла и она
+    const exact = !!pm && (!name || pm.name === name) && (pm.skin || null) === skin;
+    if (shipSide === side && shipCls === cls && shipName === name && shipSkin === skin && (shipReal || !pm || (!exact && shipModel && shipModel.userData.pm === pm.name + (pm.skin ? '@' + pm.skin : '')))) return;
     if (shipModel) ship.remove(shipModel);
-    shipSide = side; shipCls = cls; shipName = name; shipReal = exact; shipInternal = !!(pm && pm.internal);
+    shipSide = side; shipCls = cls; shipName = name; shipSkin = skin; shipReal = exact; shipInternal = !!(pm && pm.internal);
     if (pm) {
-      shipModel = pm.obj; shipModel.userData.pm = pm.name; stations = craft.heli ? heliStations(pm.stations, pm.pods4) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null — встроенная прицельная система (у вертолёта — всегда)
+      shipModel = pm.obj; shipModel.userData.pm = pm.name + (pm.skin ? '@' + pm.skin : ''); stations = craft.heli ? heliStations(pm.stations, pm.pods4) : pm.stations; podPos = craft.heli ? null : pm.pod; // pod: null — встроенная прицельная система (у вертолёта — всегда)
       shipModel.traverse((o) => { if (o.isMesh && !o.userData.glass) o.castShadow = !!P.shadows; });
       flames = attachFlames(shipModel, pm.nozzles, pm.nr / 0.45, true, pm.dry, pm.name);
       craft.dmgVis = planeDamageVis(scene, shipModel, pm.name, planeMeta(pm.name), () => C.fx); craft.dmgVis.sync(craft); // зоны повреждений: отрыв частей, дым
@@ -977,10 +979,14 @@ export function createAir(C) {
       tgl = `<div class="tgl"><span class="tn">◎ ${t ? `${pod.lockName} ${d}` : ''} ${st}</span><span class="tvb ${pod.show ? 'on' : ''}">${tr('ТВ')}</span></div>`;
     }
     const dead = game.targets.filter((o) => o.dead).length, fuel = Math.round((craft.fuel ?? 1) * 100);
+    // задача выполнена — постоянное короткое напоминание вместо «цели N/N» (Mark 2026-10-27: плашка гаснет через 5 с, а игрок забывает, что
+    // вылет кончается за границей района): сколько до неё по прямой; вертолёт уходит сам по отсчёту — ему не нужно
+    const doneTxt = game.done && !craft.heli && !game.net && !game.opts.noEnd
+      ? tr(' · <b class="okd">задача выполнена</b> <span class="dim">— выход за границу района, {0} км</span>', [(Math.max(0, CITY.HALF - 300 - Math.max(Math.abs(craft.pos.x), Math.abs(craft.pos.z))) / 1000).toFixed(1)]) : '';
     $('wpn').innerHTML = `<div class="fl"><b>${Math.round(craft.speed * 3.6)}</b> ${tr('км/ч')} <b>${Math.round(craft.pos.y - g)}</b> ${tr('м')} <span class="${craft.fuel < 0.2 ? 'warnc' : 'dim'}">${ico('fuel', 'ii')}${fuel}%</span>${craft.ab ? ` <b class="ab">${tr('Ф')}</b>` : ''}</div>` +
       `<div class="wl">${loadout.map((l, i) => `<span class="r ${i === sel ? 'sel' : ''}" data-w="${i}">${AG[l.key].short}${AG[l.key].kind === 'ecm' ? ' <i class="sd"></i>' : ' ×' + (AG[l.key].kind === 'rocket' ? rocketsOf(l) : l.n)}${AG[l.key].kind !== 'ecm' && Number.isFinite(l.res) && !game.net ? ` <span class="dim">+${AG[l.key].kind === 'rocket' ? l.res * AG[l.key].load : l.res}</span>` : ''}${l.rt > 0 ? ` <span class="dim">${ico('rotCw', 'ii')}${Math.ceil(l.rt)}</span>` : ''}</span>`).join('')}</div>` +
       `<div class="st">${msgT > 0 ? msgText : larText}${inAir ? tr(' <span class="fly">· в полёте {0}</span>', [inAir]) : ''}</div>` + tgl +
-      `<div class="cm">${tr('ловушки')} ${cmInfo().flare ? Math.max(craft.cmFlare, craft.cmChaff) : craft.cmChaff + ` <span class="dim">${tr('(диполи)')}</span>`}${game.hunt ? tr(' · РЛС {0}/{1}', [game.hunt.n, game.hunt.need]) : game.targets.length ? tr(' · цели {0}/{1}', [dead, game.targets.length]) : ''}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ` · <b style="color:#86efac">${tr('Авто')}</b>` : ''}${hasPod && pod.laserMan !== null ? tr(' · лазер {0}', [pod.laserMan ? tr('вкл') : tr('выкл')]) : ''}${homeT > 0 ? tr(' · <b style="color:#86efac">пополнение {0} с</b>', [Math.ceil(12 - homeT)]) : ''}</div>`;
+      `<div class="cm">${tr('ловушки')} ${cmInfo().flare ? Math.max(craft.cmFlare, craft.cmChaff) : craft.cmChaff + ` <span class="dim">${tr('(диполи)')}</span>`}${doneTxt || (game.hunt ? tr(' · РЛС {0}/{1}', [game.hunt.n, game.hunt.need]) : game.targets.length ? tr(' · цели {0}/{1}', [dead, game.targets.length]) : '')}${craft.hp < 100 ? (() => { const [, nm, col] = hullState(craft.hp), br = dmgBrief(craft); return `<br><b style="color:${col}">${nm}</b>${br ? ` <span class="dim">· ${br}</span>` : ''}`; })() : ''}${C.auto ? ` · <b style="color:#86efac">${tr('Авто')}</b>` : ''}${hasPod && pod.laserMan !== null ? tr(' · лазер {0}', [pod.laserMan ? tr('вкл') : tr('выкл')]) : ''}${homeT > 0 ? tr(' · <b style="color:#86efac">пополнение {0} с</b>', [Math.ceil(12 - homeT)]) : ''}</div>`;
     const lk = rw.find((e) => e.state === 'launch'), trk = rw.find((e) => e.state === 'track'), wn = $('warn');
     if (mw.length || lk) { wn.textContent = tr('ПУСК РАКЕТЫ{0}', [lk ? ' — ' + (lk.u.S.rwr || lk.u.S.short) : '']); wn.style.display = 'block'; }
     else if (trk) { wn.textContent = craft.heli ? tr('ЗАХВАТ — {0} · вниз, за рельеф!', [trk.u.S.rwr || trk.u.S.short]) : tr('ЗАХВАТ — {0}', [trk.u.S.rwr || trk.u.S.short]); wn.style.display = 'block'; }
@@ -1144,7 +1150,7 @@ export function createAir(C) {
       const kn = setup.game === 'air' && C.diff ? C.diff.knobs('air', setup.diff) : null; // сложность: режим + скрытая подстройка (не в обучении и «Съёмке»)
       // против вертолёта (craft.heli тут ещё от прошлого вылета): только ближние комплексы и реже — «Аркада» ×0,35, «Реализм» ×0,5 (Mark 2026-10-22: было ×0,6 и весь набор эпохи)
       const vsHeli = !opts.items && (isHeli(HELI_Q) || (LOADOUTS[setup.era][setup.lo] || {}).heli);
-      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets, (kn ? kn.density : 1) * (vsHeli ? (setup.diff === 'real' ? 0.5 : 0.35) : 1), vsHeli ? { ...(kn || {}), heli: true } : kn || {});
+      if (opts.defense) opts.defense(S, rnd); else placeDefense(S, city, rnd, setup.side, setup.era, game.targets, (kn ? kn.density : 1) * (vsHeli ? (setup.diff === 'real' ? 0.5 : 0.35) : 1), { ...(kn || {}), heli: vsHeli, same: setup.game !== 'air' }); // состав — случайный только в «Вылете» (уроки и «Съёмка» — как в arsenal)
       if (C.op) C.op.targets = game.targets;
     }
     C.syncUnits();

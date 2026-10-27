@@ -491,12 +491,14 @@ function mergeSame(meshes, MM) {
     return out;
   });
 }
+// описание модели: своё, у дальней копии _lo и у модели с окраской '<самолёт>@<окраска>' — описание самолёта
+const mOf = (name) => META[name] || META[name.replace(/@.*$/, '').replace(/_lo$/, '')] || null;
 async function load(name, base) {
   const r = await cachedFetch(modelUrl(base, name)); if (!r.ok) throw new Error(`${name}: ${r.status}`); // с кэша устройства, если модель уже скачана (offline.js)
   const pg = parseGlb(await r.arrayBuffer()), { images, hashes, textures, nrm } = pg;
-  const meshes = mergeSame(pg.meshes, META[name] || META[name.replace(/_lo$/, '')] || {});
-  const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = META[name] || META[name.replace(/_lo$/, '')] || {};
-  const KI = ktxOn() && !CAMO_R[name] ? await ktxIndex(base) : null; // здания и объекты — тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small); модель с окраской — картинки из своего glb
+  const meshes = mergeSame(pg.meshes, mOf(name) || {});
+  const tmax = TOUCH ? (/^h_/.test(name) ? 512 : 1024) : 0, MM0 = mOf(name) || {};
+  const KI = ktxOn() && !CAMO_R[name] && !name.includes('@') ? await ktxIndex(base) : null; // здания и объекты — тоже (их цвет вдали берётся с уменьшенной копии, mkKtx → small); модель с окраской — картинки из своего glb
   const tex = await Promise.all(textures.map((t, ti) => {
     const isN = nrm.has(ti), tm = isN && TOUCH ? Math.min(tmax, 512) : tmax; // карта нормалей — линейная (не цвет); на телефоне вдвое меньше
     if (MM0.bld && !KI) return mkTex(t, isN, tm); // без сжатых: у зданий картинку читает дальняя «коробка» (city-render modelColor) — свои копии, как было
@@ -541,7 +543,7 @@ async function load(name, base) {
     return x;
   }
   // меш «часть|материал»: у комплексов — body / turret / cradle, у остальных всё в body
-  const MM = META[name] || META[name.replace(/_lo$/, '')] || {}, matte = !!MM.matte;
+  const MM = mOf(name) || {}, matte = !!MM.matte;
   // drop — лишние детали источника (переходник пилона и т. п.); recolor — свой цвет детали (по имени после «|», линейный)
   const group = new THREE.Group(), parts = {};
   const partOf = (n) => { const k = n.includes('|') ? n.split('|')[0] : 'body'; if (!parts[k]) { parts[k] = new THREE.Group(); parts[k].name = k; group.add(parts[k]); } return parts[k]; };
@@ -620,7 +622,7 @@ async function load(name, base) {
     group.userData.wings = true; if ((META[name] || {}).flip) group.userData.flip = true; // висит крыльями вниз (УМПК): после сброса переворачивается на 180° (glideWings)
   }
   // дорисованные пилоны там, где у модели их нет
-  for (const p of (META[name] || META[name.replace(/_lo$/, "")] || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo — по описанию основной */ const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); group.add(pm); }
+  for (const p of (mOf(name) || { stations: [] }).stations) if (p.py > 0) { /* дальняя копия _lo — по описанию основной */ const pm = new THREE.Mesh(new THREE.BoxGeometry(0.12, p.py, 1.6), pylonMat); pm.position.set(p.x, p.y + p.py / 2, p.z); group.add(pm); }
   return group;
 }
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
@@ -669,7 +671,13 @@ const glbVer = (name) => GLB_V[name] || '20261022b';
 // окраска для съёмки кадров меню и ролика (?test=1&camo=e_f15e:inferno,e_mig31:dragon): модель сборщика с новой развёрткой и картинкой окраски
 // (tools/airdef-shots/camo-glb.js) вместо игровой. Игрокам окраски в бою пока не показываются — этап 2 магазина
 const CAMO_R = (() => { try { const q = new URLSearchParams(location.search); return q.get('test') === '1' && q.get('camo') ? Object.fromEntries(q.get('camo').split(',').map((c) => c.split(':'))) : {}; } catch (_) { return {}; } })();
-const modelUrl = (base, name) => (CAMO_R[name] ? `${base}../../tools/airdef-shots/camo/${name}.${CAMO_R[name]}.glb` : `${base}models/${name}.glb?v=${glbVer(name)}`);
+// Окраски из магазина (этап 2, Mark 2026-10-27: «покупку обязательно доделать»): надетая — у самолёта игрока, в одиночных боях и в онлайне у себя.
+// Модель сборщика с новой развёрткой и картинкой окраски (tools/airdef-shots/camo-glb.js --game → models/camo/<самолёт>.<окраска>.glb, JPEG) грузится,
+// только когда окраска надета и самолёт в бою; оси, масштаб и центр — как у обычной модели, описание (подвески, сопла, зоны) — её же (mOf).
+// В LOADED — под ключом '<самолёт>@<окраска>'; пока не пришла — обычная модель, потом самолёт пересобирается (modelsReady)
+const CAMO_V = { 'e_f15e@inferno': '20261028a', 'e_mig31@dragon': '20261028a' };
+export function wantCamo(name, skin) { const k = `${name}@${skin}`; if (skin && CAMO_V[k] && BASE) start(k); return !!LOADED[k]; }
+const modelUrl = (base, name) => (CAMO_R[name] ? `${base}../../tools/airdef-shots/camo/${name}.${CAMO_R[name]}.glb` : name.includes('@') ? `${base}models/camo/${name.replace('@', '.')}.glb?v=${CAMO_V[name]}` : `${base}models/${name}.glb?v=${glbVer(name)}`);
 // все модели игры — для «Скачать всё заранее» (Настройки, offline.js prefetchAll): самолёты, оружие, техника и её дальние копии, постройки
 export function modelUrls(base = BASE) { const N = new Set([...Object.keys(META), ...Object.keys(GLB_V)]); for (const n of UNIT_LO) N.add(n + '_lo'); return [...N].map((n) => modelUrl(base, n)); }
 export function loadModels(base, onReady) {
@@ -799,8 +807,9 @@ export function spinProps(obj, dt, thr = 1) {
     else { const ax = p.userData.axis || 'z'; p.rotation[ax] += p.userData.spin * dt * (9 + 7 * thr) * (ax === 'x' ? 2 : 1); } // лопасти ≈ 2,5 об/с: быстро, но ещё без «стробоскопа» (4 лопасти — до ≈ 45° за кадр)
   }
 } // сопла, пилоны — для зон повреждений (plane-zones.js) и проверок
-export function planeModel(side, cls = 'strike', name = null) {
+export function planeModel(side, cls = 'strike', name = null, skin = null) {
   if (name && META[name] && !LOADED[name] && BASE) start(name); // своя модель подвески ещё не пришла — пока подходящая из загруженных
+  if (skin && name && META[name] && wantCamo(name, skin)) { const m = META[name]; return { obj: LOADED[`${name}@${skin}`].clone(), stations: m.stations, pods4: !!m.pods4, nozzles: m.nozzles, nr: m.nr, dry: !!m.dry, pod: m.pod, name, skin, cls: m.cls, internal: !!m.internal }; } // надета окраска и модель пришла
   const rank = ([n, m]) => (n === name ? -2 : m.cls === cls ? -1 : 0);
   const pick = Object.entries(META).filter(([n, m]) => m.side && m.side === side && LOADED[n] && (!m.only || n === name) && (!m.heli || n === name)).sort((a, b) => rank(a) - rank(b))[0];
   if (!pick) return null;
