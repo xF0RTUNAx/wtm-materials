@@ -54,6 +54,12 @@ export function createSound() {
       }
     },
     silence() { A.silence(); heliOff(); for (const k in sk) { sk[k].stop(0.05); delete sk[k]; } for (const g of guns.values()) g.h.stop(0.05); guns.clear(); }, // пауза и скрытая вкладка: петли винта и очередей — тоже (кадров нет — сами не погаснут)
+    // выход из боя (меню, новый бой): всё, что звучит само, — и записанная сирена (47 с) — гаснет (Mark 2026-10-27: звуки «Съёмки» оставались в лобби)
+    battleOff() {
+      S.silence(); S.resetRwr();
+      if (sirenV && sirenV.vol && sirenEnd > A.time()) { const g = sirenV.vol.gain, t = A.time(); g.cancelScheduledValues(t); g.setValueAtTime(g.value, t); g.linearRampToValueAtTime(0, t + 0.3); try { sirenV.stop(t + 0.35); } catch (_) { /* уже */ } }
+      sirenV = null; sirenEnd = 0;
+    },
     // взрыв на земле: резкий «хлопок» ударной волны, глубокий толчок (инфранизкий тон), тело взрыва (низкий шум с быстрой
     // атакой), раскат с эхом от домов, треск обломков вблизи. Вдали — позже (скорость звука) и глуше (верх съедает воздух)
     explosion(d, size = 1, kind) {

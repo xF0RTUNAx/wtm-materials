@@ -735,7 +735,9 @@ const HELI_SND = { h_uh1: 1, h_ah1: 1.04, h_ah64: 1.06, h_mi24: 0.88, h_mi28: 0.
 const heliPw = (a) => clamp(((a.col ?? 0.75) - 0.45) / 0.5, 0, 1);
 function updateSound(dt) {
   if (!snd.A.ready) return;
-  const pl = C.player, on = C.state === 'play' || C.state === 'menu';
+  // меню на кадрах (menubg.js, бой не считается): самолёты и ракеты прошлого боя стоят на месте — их голоса молчат (иначе петли звучали в лобби)
+  const bg = C.state === 'menu' && C.ctrl && C.ctrl.idle && C.ctrl.idle();
+  const pl = C.player, on = !bg && (C.state === 'play' || C.state === 'menu');
   const live = pl && !pl.dead && C.state === 'play' && !C.paused;
   if (live && !pl.heli) {
     fwdOf(pl, LP); const rear = clamp((LP.dot(camera.getWorldDirection(new THREE.Vector3())) + 1) / 2, 0, 1);
@@ -828,6 +830,7 @@ C.start = function (game) {
   }
   snd.unlock();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
+  snd.battleOff(); // «Ещё раз»: сирена и петли прошлого боя — не в новый
   C.hooks = {}; C.paused = false; C.hint(''); C.say('');
   C.endScr.reset(); C.bt = 0; C.blog = []; C.bkey = {}; // часы боя и журнал событий для «Разбора» (C.bev)
   $('menu').classList.remove('on'); $('end').classList.remove('on'); $('pauseScr').classList.remove('on');
@@ -842,6 +845,7 @@ C.toMenu = function () {
   C.op = null; // «Операция» прервана
   C.endScr.reset();
   if (C.ctrl && C.ctrl.stop) C.ctrl.stop();
+  snd.battleOff();
   C.hooks = {}; C.paused = false; C.hint(''); C.say(''); $('ask').style.display = 'none'; $('warn').style.display = 'none';
   for (const id of ['end', 'pauseScr', 'lesson']) $(id).classList.remove('on');
   for (const c of ['playing', 'flying', 'defense', 'dmap', 'oper']) document.body.classList.remove(c);
