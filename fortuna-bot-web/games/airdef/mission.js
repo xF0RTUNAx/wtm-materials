@@ -1,5 +1,5 @@
 // Задания и расстановка ПВО: общие для вылета (ИИ-ПВО против игрока), фона меню и обучения.
-import { CITY, KIND, riverX } from './city.js?v=20261028a';
+import { CITY, KIND, riverX, siteKeep } from './city.js?v=20261028a';
 import { SAM, DEFENSE, SAM_COST } from './arsenal.js?v=20261028a';
 import { samClass } from './sim/online.js?v=20261028a';
 
@@ -15,6 +15,7 @@ function flatish(city, x, z) {
 // ещё и без перегиба рельефа и дальше от реки; ручную расстановку (оборона, сервер) не ужесточаем — машину и так сажает на сетку земли seat()
 export function freeGround(city, x, z, r = 9, strict = false) {
   for (const [dx, dz] of [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]]) if (city.bldAt(x + dx, z + dz) > 0) return false;
+  if (city.objects && siteKeep(city, x, z, r)) return false; // объект-сцена: не в водоём, не на рельсы и не в башню (city.js SITES keep)
   if (Math.abs(x) >= CITY.HALF - 1200 || Math.abs(z) >= CITY.HALF - 1200) return false;
   if (city.kind === 'winter') return city.slopeAt(x, z) <= 0.32 && (!strict || flatish(city, x, z)); // горы: не на крутом склоне (лёд — можно)
   if (city.kind === 'autumn') return city.slopeAt(x, z) <= 0.32 && !city.waterAt(x, z) && (!strict || flatish(city, x, z)); // холмы: не на круче и не в болото

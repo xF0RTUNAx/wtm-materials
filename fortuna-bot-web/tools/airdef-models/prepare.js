@@ -355,6 +355,12 @@ const CONFIG = {
   // плиты стоянок — свой материал tile_pads (бесшовная текстура, повтор 6 м); deco_site / deco_camp — только вблизи
   site_heli: { src: `${DL}/Свои/Вертолётная площадка/heli_site.glb`, scale: 1, nose: '-z', rulesIn: 'game', own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
     axisX: 0, axisZ: 0, centerY: 0, groups: (c) => c.path.split('/').pop().replace(/\.\d+$/, '') },
+  // объект «Склад боеприпасов» (город, tpp) — своя сцена сборщика (Свои/Склад боеприпасов, 2026-10-28), устроена как site_radar; бесшовные
+  // tile_conc (плиты дорог, повтор 4 м) и tile_mesh (рабица, альфа-тест, повтор 1 м) — в своём размере, не растягивать до атласа;
+  // в дневном городе плиты выходили белыми — цвет × 0,84; стёкла и вода A_glassF (почти чёрные, в Blender — с отражением) — тёмная вода, не дыра
+  site_ammo_city: { src: `${DL}/Свои/Склад боеприпасов/ammo_city.glb`, scale: 1, nose: '-z', rulesIn: 'game', own: true, tex: (m) => ({ tile_conc: 1024, tile_mesh: 512 })[m.name] || 2048,
+    colors: { '^tile_conc$': [0.84, 0.84, 0.82], '^A_glassF$': [0.08, 0.1, 0.11] },
+    nTex: () => 1024, pickMesh: /./, axisX: 0, axisZ: 0, centerY: 0, groups: (c) => c.path.split('/').pop().replace(/\.\d+$/, '') },
   // ракета 9М83 — своя (сборщик, Свои/9М83): 6,9 м, Ø 0,672, нос −Z; рули M83_fin0…3 → fin0…3 (в контейнере сложены, раскрываются после выхода — main.js)
   msl_9m83: { src: `${DL}/Свои/9М83/msl_9m83.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
     groups: (c) => { const f = c.path.match(/(^|\/)M83_fin(\d)/); return f ? 'fin' + f[2] : 'body'; } },
@@ -768,6 +774,7 @@ CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex
 // «РЛС на вершине»: дальняя копия сборщика (25 тыс., без мелочи deco_props), цвет 512, без нормалей; узлы — те же
 CONFIG.site_radar_lo = { ...CONFIG.site_radar, src: `${DL}/Свои/РЛС на вершине/radar_site_lo.glb`, tex: () => 512, nTex: null };
 CONFIG.site_heli_lo = { ...CONFIG.site_heli, src: `${DL}/Свои/Вертолётная площадка/heli_site_lo.glb`, tex: () => 512, nTex: null }; // «Ведьмина поляна»: дальняя сборщика (21 тыс., без ограды и палаток)
+CONFIG.site_ammo_city_lo = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Склад боеприпасов/ammo_city_lo.glb`, tex: (m) => (m.name === 'tile_conc' ? 256 : 512), nTex: null }; // склад: дальняя сборщика (24 тыс., без ограды и мелочи)
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

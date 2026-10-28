@@ -44,6 +44,7 @@ export function vnoise(x, z) {
 export function riverX(z) { return 1300 * Math.sin(z * 0.00019 + 0.6) + 450 * Math.sin(z * 0.00052 + 2.1) - 300; }
 export const AIRPORT = { x: -8200, z: -5600, w: 4400, d: 1700, rwyL: 3400, rwyW: 60 }; // ось ВПП — по X
 const CX = 500, CZ = -300; // центр Сити
+const TPP = { x: 5900, z: 1500, h: 2.4, w: 420, d: 300 }; // склад боеприпасов (цель tpp): центр, высота ровной площадки, размер сцены (участок до улиц — 580 × 580 м)
 export function groundH(x, z) {
   const r = Math.hypot(x, z);
   let h = 3 + 3 * Math.sin(x * 0.0011 + 0.4) * Math.cos(z * 0.0013);
@@ -51,6 +52,9 @@ export function groundH(x, z) {
   h += smooth(10500, 12500, r) * 60 * (vnoise(x * 0.0006, z * 0.0006) - 0.3);
   h += Math.pow(smooth(12000, 16000, r), 1.3) * 700 * (0.7 + 0.3 * Math.sin(Math.atan2(z, x) * 5 + 1));
   if (Math.abs(x - AIRPORT.x) < AIRPORT.w / 2 + 300 && Math.abs(z - AIRPORT.z) < AIRPORT.d / 2 + 300) h = 4; // ровное поле аэропорта
+  // ровная площадка склада боеприпасов (своя сцена site_ammo_city: плиты дорог лежат на плоскости; было 1,8…2,8 м): +200 м от сцены, стык — 60 м
+  const tx = Math.abs(x - TPP.x) - TPP.w / 2 - 200, tz = Math.abs(z - TPP.z) - TPP.d / 2 - 200; // +200 м — шаг самой грубой сетки земли («Низкий»): иначе соседние
+  if (tx < 60 && tz < 60) h += (TPP.h - h) * (1 - smooth(0, 60, Math.max(tx, tz))); // клетки тянут неровность внутрь сцены (плиты то под землёй, то висят)
   const dr = Math.abs(x - riverX(z));
   const bank = CITY.RIVER_W / 2;
   // долина реки за городом (Mark 2026-10-25: «речка утоплена вниз очень сильно»): холмы там — до сотен метров, а русло резалось обрывом
@@ -120,9 +124,23 @@ export const SITES = {
       house: { t: 'box', x: -170, z: 118, w: 26, d: 14, h: 4.4, share: 0.23, main: 1 }, gen: { t: 'box', x: -128, z: 150, w: 2.6, d: 6.5, h: 2.6, share: 0.1 } },
     // стоянки: 4 вертолёта из 6 (две пустые — «на вылете»; лёгкие модели: Ка-52 — 84 тыс. треугольников); машины и ЗУ-23 — когда будут лёгкие модели
     place: [['h_mi24', -70, -80, 180], ['h_mi8', 20, -80, 180], ['h_mi28', -70, 80, 0], ['h_ka50', 110, 80, 0]] },
+  site_ammo_city: { // «Склад боеприпасов» (город, tpp) — Свои/Склад боеприпасов: семь хранилищ (главные), навес и штабели под брезентом — тоже рвутся
+    b: { mag1: { t: 'box', x: -150, z: -56, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag2: { t: 'box', x: -48, z: -52, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
+      mag3: { t: 'box', x: 122, z: -56, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag4: { t: 'box', x: -152, z: 92, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
+      mag5: { t: 'box', x: -58, z: 96, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag6: { t: 'box', x: 48, z: 92, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
+      mag7: { t: 'box', x: 152, z: 96, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, shed: { t: 'box', x: 0, z: 14, w: 34, d: 14, h: 6.5, share: 0.08, chain: 1 },
+      stack1: { t: 'box', x: -96, z: 18, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 }, stack2: { t: 'box', x: 96, z: 14, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 },
+      shop: { t: 'box', x: 44, z: -112, w: 36, d: 18, h: 8, share: 0.05 }, guard: { t: 'box', x: -30, z: -118, w: 18, d: 9, h: 4, share: 0.02 },
+      kpp: { t: 'box', x: 0, z: -136, w: 6, d: 4, h: 3, share: 0.01 }, fire: { t: 'box', x: 164, z: -114, w: 14, d: 10, h: 5.5, share: 0.02 } },
+    // легковая у КПП, грузовики у рампы, навеса, хранилища, депо и ж/д платформы, ЗУ-23 в мешках у въезда (места — ПАСПОРТ.json) — когда будут лёгкие армейские модели
+    place: [],
+    // keep — куда нельзя ставить технику (декор без прочности: водоёмы, ж/д тупик, рампа, водонапорная башня, вышки) — [x, z, w, d] от центра
+    keep: [[-188, 18, 32, 24], [188, 10, 32, 24], [-44, 130, 344, 16], [100, -104, 29, 10], [-118, -116, 7, 7], [-198, -138, 4, 4], [198, -138, 4, 4], [-198, 138, 4, 4], [198, 138, 4, 4]] },
 };
 // части объекта-сцены в точке (x, z): объёмы построек (b — имя постройки)
 export const siteParts = (key, x, z) => Object.entries(SITES[key].b).map(([b, q]) => (q.t === 'cyl' ? { t: 'cyl', x: x + q.x, z: z + q.z, r: q.r, h: q.h, b } : { t: 'box', x: x + q.x, z: z + q.z, w: q.w, d: q.d, h: q.h, b }));
+// точка (x, z) с запасом r — в запретном декоре объекта-сцены (SITES keep): технику туда не ставить (mission.js freeGround — клиент и сервер)
+export const siteKeep = (city, x, z, r = 0) => city.objects.some((o) => o.site && SITES[o.site].keep && SITES[o.site].keep.some(([kx, kz, w, d]) => Math.abs(x - o.x - kx) < w / 2 + r && Math.abs(z - o.z - kz) < d / 2 + r));
 // состояние построек в бою (своё у каждого боя: sim/strike.js); hpMax — прочность объекта
 export const siteBld = (o, hpMax) => Object.fromEntries(Object.entries(SITES[o.site].b).map(([b, q]) => [b, { hp: hpMax * q.share, main: !!q.main, dead: false }]));
 // разбитые постройки битами (порядок — как в SITES; онлайн: снимок объектов) и обратно
@@ -184,10 +202,10 @@ function makeObjects() {
   { const x = 1150, z = 300, M = [mp('obj_milbase', x, z, 0, 2), mp('obj_oldind', x - 60, z + 10, 1), mp('obj_oldind', x + 60, z - 10, 1), mp('obj_cont', x, z + 45)];
     add({ key: 'gov', name: tr('Командный пункт'), x, z, w: 170, d: 120, value: 160, hp: 260, models: M,
       parts: [...M.map(mbox), { t: 'cyl', x: x - 30, z: z - 40, r: 1, h: 45 }, { t: 'cyl', x: x + 35, z: z - 42, r: 1, h: 38 }] }); }
-  // склад боеприпасов: хранилища-ангары, ряды контейнеров, огороженный въезд
-  { const x = 5900, z = 1500, M = [mp('obj_hangar', x, z, 0, 1), mp('obj_hangar', x - 130, z + 10, 0, 0.8), mp('obj_hangar', x + 130, z + 10, 0, 0.8), mp('obj_milbase', x, z - 115)];
-    for (let i = 0; i < 4; i++) M.push(mp('obj_cont', x - 150 + i * 100, z + 105), mp('obj_cont', x - 150 + i * 100, z + 125));
-    add({ key: 'tpp', name: tr('Склад боеприпасов'), x, z, w: 420, d: 300, value: 180, hp: 220, models: M, parts: M.map(mbox) }); }
+  // склад боеприпасов: своя сцена (city.js SITES site_ammo_city) — семь обвалованных хранилищ, навес, штабели, мастерская, КПП, ж/д тупик
+  // lawn — внутри ограды трава, не серый пустырь промзоны (city-render zoneTexture)
+  { const { x, z, w, d } = TPP;
+    add({ key: 'tpp', name: tr('Склад боеприпасов'), x, z, w, d, value: 180, hp: 220, lawn: true, site: 'site_ammo_city', parts: siteParts('site_ammo_city', x, z) }); }
   // склад горючего: резервуары, резервуарная площадка, цистерны
   { const x = 7700, z = -1300, M = [];
     for (let i = -1; i <= 1; i++) for (const j of [-1, 1]) M.push(mp('obj_tanks', x + i * 75, z + j * 58));

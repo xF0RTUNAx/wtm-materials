@@ -19,7 +19,7 @@ import { winterWeathers, winterZoneTex, winterNormalTex, winterTextures, winterG
 import { autumnWeathers, autumnZoneTex, autumnTextures, autumnGroundMaterial, autumnTrees, autumnRoads, autumnWaterMask, autumnProps } from './autumn-render.js?v=20261028a';
 Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // зимние и осенние погоды — только в «Воздушном превосходстве»
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
-let GH = groundH, ZA = zoneAt;
+let GH = groundH, ZA = zoneAt, LAWNS = []; // LAWNS — объекты с травой на своём участке (o.lawn: склад боеприпасов)
 import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261028a'; // MIT, meshoptimizer 0.21
 import { bakeGroup } from './merge.js?v=20261028a';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261028a';
@@ -112,11 +112,12 @@ vec3 skyAt(vec3 d) {
 // цвет района (sRGB) и покрытие: 0 — без улиц, 0,5 — мощёный (Сити, промзона, порт), 1 — жилой (дворы с газонами)
 const ZCOL = { [ZONE.FIELD]: [0x74854c, 0], [ZONE.LOW]: [0x6a7450, 1], [ZONE.MID]: [0x6c7264, 1], [ZONE.CBD]: [0x6c6c6a, 0.5], [ZONE.IND]: [0x6e6a62, 0.5],
   [ZONE.PARK]: [0x4b6b35, 0.12], [ZONE.WATER]: [0x6e6a60, 0.04], [ZONE.AIR]: [0x7f8c62, 0.04], [ZONE.PORT]: [0x6c6a66, 0.5] }; // альфа 0 — поля за городом (лоскуты культур), 0,12 — парк (лесная подстилка), 0,04 — вода, аэродром
+const LAWN = [0x6f7848, 0.06]; // трава внутри ограды объекта (o.lawn), как газон аэропорта, чуть суше
 function zoneTexture(size) {
   const data = new Uint8Array(size * size * 4), c = new THREE.Color();
   for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
     const x = -CITY.HALF + (i + 0.5) * 2 * CITY.HALF / size, z = -CITY.HALF + (j + 0.5) * 2 * CITY.HALF / size;
-    const [hex, urb] = ZCOL[ZA(x, z)];
+    const [hex, urb] = LAWNS.some((o) => Math.abs(x - o.x) < o.w / 2 + 10 && Math.abs(z - o.z) < o.d / 2 + 10) ? LAWN : ZCOL[ZA(x, z)];
     c.set(hex);
     const v = 0.9 + 0.2 * Math.sin(x * 0.0021 + Math.sin(z * 0.0013) * 2) * Math.sin(z * 0.0019 + 0.5); // поля и кварталы — пятнами
     const q = (j * size + i) * 4;
@@ -1303,7 +1304,7 @@ function attachBridgeSegs(G, scene, model, P) {
 
 // ═════════════ Сборка сцены ═════════════
 export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
-  GH = city.groundH; ZA = city.zoneAt; const WINT = city.kind === 'winter'; ENV.uSnowK.value = WINT ? 1 : 0; // зимняя карта: своя земля и лес, без реки-воды и улиц
+  GH = city.groundH; ZA = city.zoneAt; LAWNS = city.objects.filter((o) => o.lawn); const WINT = city.kind === 'winter'; ENV.uSnowK.value = WINT ? 1 : 0; // зимняя карта: своя земля и лес, без реки-воды и улиц
   const AUT = city.kind === 'autumn', HILLS = WINT || AUT; // осенняя «Туманная топь»: своя земля, лес, дороги и вода болота (без снега)
   const W = WEATHERS[weatherKey] || WEATHERS.day;
   const G = { tiles: [], W, renderer, winter: WINT }; // renderer — снимки моделей для дальних копий домов (makeImpostor)

@@ -6,7 +6,7 @@
 // (6) онлайн: маска разбитых построек (bldMask) → клиент (bldFromMask) — то же.
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
-const { objAimXZ, partDist, bldMask, bldFromMask, SITES } = await import('../../games/airdef/city.js');
+const { objAimXZ, partDist, bldMask, bldFromMask, SITES, buildCity } = await import('../../games/airdef/city.js');
 const { buildWinter } = await import('../../games/airdef/map-winter.js');
 const { buildAutumn } = await import('../../games/airdef/map-autumn.js');
 const { createStrike, MODES } = await import('../../games/airdef/sim/strike.js');
@@ -59,25 +59,34 @@ for (const [name, city, key] of [['Зимняя долина', buildWinter(1), '
     if (!(o.hp < hp0)) fail('мельница — без урона объекту'); if (names.some((b) => o.bld[b].dead)) fail('мельница — разбита постройка');
   }
 }
-// «Ведьмина поляна» (a_heli, site_heli): ПТУР в каждую главную по очереди — разбита только она; разбиты все — объект уничтожен; прицел — мимо руин
-{
-  const city = buildAutumn(1), c = city.objects.find((q) => q.key === 'a_heli');
-  console.log('\n== Туманная топь: a_heli');
-  if (!c || c.site !== 'site_heli') fail('нет объекта-сцены a_heli');
+// «Ведьмина поляна» (a_heli, site_heli) и «Склад боеприпасов» (город, tpp, site_ammo_city): ПТУР в каждую главную по очереди — разбита
+// только она, объект цел до последней; разбиты все — объект уничтожен; прицел — мимо руин; технику — не в водоём и не на рельсы (keep)
+for (const [name, city, key, site] of [['Туманная топь', buildAutumn(1), 'a_heli', 'site_heli'], ['Речной узел', buildCity(1), 'tpp', 'site_ammo_city']]) {
+  const c = city.objects.find((q) => q.key === key);
+  console.log(`\n== ${name}: ${key}`);
+  if (!c || c.site !== site) fail(`нет объекта-сцены ${key}`);
   else {
-    const B = SITES.site_heli.b, names = Object.keys(B), sum = names.reduce((s, b) => s + B[b].share, 0);
+    const B = SITES[site].b, names = Object.keys(B), sum = names.reduce((s, b) => s + B[b].share, 0);
     if (Math.abs(sum - 1) > 1e-6) fail(`доли прочности: сумма ${sum}`);
     const S = mk(city), o = S.objects.find((q) => q.id === c.id); ev.length = 0;
-    console.log(`прочность ${o.hp}; постройки: ${names.map((b) => `${b} ${o.bld[b].hp.toFixed(1)}${o.bld[b].main ? '*' : ''}${B[b].chain ? '!' : ''}`).join(', ')}`);
+    const hp0 = o.hp; o.hp = 1e9; // общий запас — без предела: проверяем именно гибель по главным (иначе склад гибнет по прочности на 4-м ПТУР)
+    console.log(`прочность ${hp0}; постройки: ${names.map((b) => `${b} ${o.bld[b].hp.toFixed(1)}${o.bld[b].main ? '*' : ''}${B[b].chain ? '!' : ''}`).join(', ')}`);
     const mains = names.filter((b) => B[b].main);
     mains.forEach((b, i) => {
       const q = c.parts.find((p) => p.b === b); hit(S, city, q.x, q.z);
       if (!o.bld[b].dead) fail(`ПТУР в ${b} — цел`);
       const extra = names.filter((n) => n !== b && o.bld[n].dead && !mains.slice(0, i).includes(n)); if (extra.length && !o.dead) fail(`ПТУР в ${b} задел ${extra.join(', ')}`);
       if (!o.dead) for (let n = -1; n < 20; n++) { const a = objAimXZ(o, n, 0, 0), p = c.parts.filter((x) => x.b).find((x) => partDist(x, a.x, a.z) <= 0.5); if (p && o.bld[p.b].dead) { fail(`прицел ${n} — в разбитую ${p.b}`); break; } }
-      console.log(`ПТУР в ${b}: прочность ${o.hp.toFixed(0)}, объект ${o.dead ? 'уничтожен' : 'цел'}`);
+      if (i < mains.length - 1 && o.dead) fail(`объект уничтожен до последней главной (${b})`);
+      console.log(`ПТУР в ${b}: объект ${o.dead ? 'уничтожен' : 'цел'}`);
     });
     if (!o.dead) fail('разбиты все главные — объект цел');
+    // запретный декор (SITES keep): водоём и рельсы — не свободная земля; рядом с ними — свободная
+    if (SITES[site].keep) {
+      const { freeGround } = await import('../../games/airdef/mission.js');
+      for (const [kx, kz] of SITES[site].keep.slice(0, 3)) if (freeGround(city, c.x + kx, c.z + kz)) fail(`техника ставится в запретный декор (${kx}, ${kz})`);
+      if (!freeGround(city, c.x - 150, c.z + 20)) fail('площадка между хранилищами — не свободная земля');
+    }
   }
 }
 console.log(bad ? `\nОШИБОК: ${bad}` : '\nошибок нет');
