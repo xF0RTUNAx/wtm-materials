@@ -1246,7 +1246,7 @@ setInterval(() => {
   // запечённая земля — после загрузки моделей и текстур и возврата их после потери контекста: в разгар загрузки сжатых текстур графический процесс
   // Safari в симуляторе iPhone падал 3 раза из 4 (с ожиданием — 0 из 3, 2026-10-27)
   if (C.G.bake) C.G.bake.gate = () => C.assetsDone === true && !ktxBusy();
-  if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
+  if (city.kind === 'autumn') wantModel('obj_mill'); // мельница на Лысой горе — грузится только здесь (lazy); храма в монастыре больше нет (сцена «Погоста»)
   C.G.onSite = (o) => siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o); // модель объекта-сцены пришла — вид построек по бою
   for (const n of new Set(city.objects.map((o) => o.site).filter(Boolean))) { // объекты-сцены: дальняя копия — сразу, подробная — когда камера подлетит (siteLod);
     wantModel(n + '_lo'); if (SITE_HI) for (const [k] of SITES[n].place || []) wantModel(k); // копии моделей на объекте — тоже сразу: их приход пересобирает самолёты и комплексы — не посреди захода на цель

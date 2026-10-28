@@ -61,7 +61,7 @@ for (const [name, city, key] of [['Зимняя долина', buildWinter(1), '
 }
 // «Ведьмина поляна» (a_heli, site_heli) и «Склад боеприпасов» (город, tpp, site_ammo_city): ПТУР в каждую главную по очереди — разбита
 // только она, объект цел до последней; разбиты все — объект уничтожен; прицел — мимо руин; технику — не в водоём и не на рельсы (keep)
-for (const [name, city, key, site] of [['Туманная топь', buildAutumn(1), 'a_heli', 'site_heli'], ['Речной узел', buildCity(1), 'tpp', 'site_ammo_city'], ['Зимняя долина', buildWinter(1), 'w_ammo', 'site_ammo_w'], ['Туманная топь', buildAutumn(1), 'a_farm', 'site_ammo_a'], ['Речной узел', buildCity(1), 'oil', 'site_fuel_city'], ['Зимняя долина', buildWinter(1), 'w_fuel', 'site_fuel_w'], ['Речной узел', buildCity(1), 'stad', 'site_park_city'], ['Туманная топь', buildAutumn(1), 'a_peat', 'site_fuel_a'], ['Зимняя долина', buildWinter(1), 'w_garr', 'site_garr_w'], ['Зимняя долина', buildWinter(1), 'w_cp', 'site_cp_w']]) {
+for (const [name, city, key, site] of [['Туманная топь', buildAutumn(1), 'a_heli', 'site_heli'], ['Речной узел', buildCity(1), 'tpp', 'site_ammo_city'], ['Зимняя долина', buildWinter(1), 'w_ammo', 'site_ammo_w'], ['Туманная топь', buildAutumn(1), 'a_farm', 'site_ammo_a'], ['Речной узел', buildCity(1), 'oil', 'site_fuel_city'], ['Зимняя долина', buildWinter(1), 'w_fuel', 'site_fuel_w'], ['Речной узел', buildCity(1), 'stad', 'site_park_city'], ['Туманная топь', buildAutumn(1), 'a_peat', 'site_fuel_a'], ['Зимняя долина', buildWinter(1), 'w_garr', 'site_garr_w'], ['Зимняя долина', buildWinter(1), 'w_cp', 'site_cp_w'], ['Туманная топь', buildAutumn(1), 'a_vil', 'site_garr_a'], ['Туманная топь', buildAutumn(1), 'a_mon', 'site_cp_a']]) {
   const c = city.objects.find((q) => q.key === key);
   console.log(`\n== ${name}: ${key}`);
   if (!c || c.site !== site) fail(`нет объекта-сцены ${key}`);
@@ -86,7 +86,7 @@ for (const [name, city, key, site] of [['Туманная топь', buildAutumn
     if (SITES[site].keep) {
       const { freeGround } = await import('../../games/airdef/mission.js');
       for (const [kx, kz] of SITES[site].keep.slice(0, 3)) if (freeGround(city, c.x + kx, c.z + kz)) fail(`техника ставится в запретный декор (${kx}, ${kz})`);
-      const fx0 = { site_ammo_w: [-100, 0], site_ammo_a: [-100, -70], site_fuel_city: [-60, 80], site_fuel_w: [-60, 40], site_park_city: [-60, 30], site_fuel_a: [40, -60], site_garr_w: [-40, 40], site_cp_w: [60, 70] }[site] || [-150, 20]; // площадка между постройками
+      const fx0 = { site_ammo_w: [-100, 0], site_ammo_a: [-100, -70], site_fuel_city: [-60, 80], site_fuel_w: [-60, 40], site_park_city: [-60, 30], site_fuel_a: [40, -60], site_garr_w: [-40, 40], site_cp_w: [60, 70], site_garr_a: [-80, -28], site_cp_a: [-100, 40] }[site] || [-150, 20]; // площадка между постройками
       if (!freeGround(city, c.x + fx0[0], c.z + fx0[1])) fail('площадка между хранилищами — не свободная земля');
     }
     // скала (SITES solid): в сетке высот, технику не ставить, разрыв на ней — без урона объекту; ПТУР в портал штольни — штольня разбита
