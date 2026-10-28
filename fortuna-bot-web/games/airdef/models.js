@@ -224,7 +224,7 @@ const META = {
   pr_bstop: { bld: true, stations: [] }, pr_rstop: { bld: true, stations: [] }, sg_main: { bld: true, stations: [] }, sg_yield: { bld: true, stations: [] }, // остановки и знаки
   v_barn: { bld: true, stations: [] }, v_wtower: { bld: true, stations: [] }, v_combine: { bld: true, stations: [] }, v_tractor: { bld: true, stations: [] }, v_picket: { bld: true, stations: [] }, m_5g: { bld: true, stations: [] }, // село
   // Хеллоуин, осенняя карта «Туманная топь» (2026-10-20): постройки-цели — lazy (грузятся по wantModel, когда на карте есть); реквизит — bld (грузится по wantBuildings(G.bldNames), ставится G.addNear)
-  site_radar: { matte: true, obj: true, lazy: true, stations: [] }, site_radar_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_heli: { matte: true, obj: true, lazy: true, stations: [] }, site_heli_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_city: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_city_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_w: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_w_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_a: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_a_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_city: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_city_lo: { matte: true, obj: true, lazy: true, stations: [] }, // объект-сцена «РЛС на вершине» (своя, city.js SITES): дальняя — сразу, подробная — когда камера подлетит (main.js siteLod)
+  site_radar: { matte: true, obj: true, lazy: true, stations: [] }, site_radar_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_heli: { matte: true, obj: true, lazy: true, stations: [] }, site_heli_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_city: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_city_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_w: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_w_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_a: { matte: true, obj: true, lazy: true, stations: [] }, site_ammo_a_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_city: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_city_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_w: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_w_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_park_city: { matte: true, obj: true, lazy: true, stations: [] }, site_park_city_lo: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_a: { matte: true, obj: true, lazy: true, stations: [] }, site_fuel_a_lo: { matte: true, obj: true, lazy: true, stations: [] }, // объект-сцена «РЛС на вершине» (своя, city.js SITES): дальняя — сразу, подробная — когда камера подлетит (main.js siteLod)
   obj_church: { matte: true, obj: true, lazy: true, stations: [] }, obj_mill: { matte: true, obj: true, lazy: true, stations: [] }, obj_barn: { matte: true, obj: true, lazy: true, stations: [] }, // церковь — reramil, мельница (крылья — часть sail, spinSails) — Tim0, сарай — narighillya
   pr_hay: { matte: true, bld: true, stations: [] }, pr_well: { matte: true, bld: true, stations: [] }, pr_pumpkin: { bld: true, stations: [] }, pr_grave1: { matte: true, bld: true, stations: [] }, pr_grave2: { matte: true, bld: true, stations: [] }, pr_grave3: { matte: true, bld: true, stations: [] }, pr_grave4: { matte: true, bld: true, stations: [] },
   pr_fence: { bld: true, stations: [] }, pr_fpost: { bld: true, stations: [] }, pr_deadtree: { matte: true, bld: true, stations: [] }, pr_oldtree: { matte: true, bld: true, stations: [] }, c_vaz: { bld: true, stations: [] }, // сено, колодец, тыква, надгробия, ограда, сухое и старое дерево, ржавый ВАЗ
@@ -286,11 +286,11 @@ export const PLANE_META = Object.fromEntries(Object.entries(META).filter(([, m])
 // Poly Haven (tex/p_*.jpg): asphalt_02, road_damaged_2, gravel, rocky_terrain_03, brown_mud_03
 const TEX_CREDIT = { title: tr('Текстуры земли, дорог, крыш и фасадов'), author: 'ambientCG', url: 'https://ambientcg.com', license: 'CC0', files: ['tex/*.jpg'] };
 const PH_CREDIT = { title: tr('Текстуры асфальта, щебня, скал и пашни; панорамы неба'), author: 'Poly Haven', url: 'https://polyhaven.com', license: 'CC0', files: ['tex/p_*.jpg', 'sky/*.jpg'] };
-// взрывы и пламя (fx/*.png): огненный шар с дымом — ohyhei; вспышка с кольцом и пламя — Explosion FX Free (heyheythere)
+// взрывы (fx/*.png): огненный шар с дымом — ohyhei; вспышка с кольцом — Explosion FX Free (heyheythere; его пламя пожаров убрано 2026-10-28 — свой ex_burn)
 const FX_CREDITS = [
   { title: tr('Иконки управления'), author: 'Delapouite, Lorc, Skoll (game-icons.net)', url: 'https://game-icons.net', license: 'CC BY 3.0', licenseUrl: 'https://creativecommons.org/licenses/by/3.0/', files: ['icons.js'] },
   { title: 'Explosion sprite sheets', author: 'ohyhei', url: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', license: tr('бесплатно, с указанием автора'), licenseUrl: 'https://ohyhei.itch.io/a-free-explosion-sprite-sheets-asset-on-itch', files: ['fx/explosion*.png'] },
-  { title: 'Explosion FX Free', author: 'heyheythere', url: 'https://heyheythere.itch.io/explosion-fx-free', license: 'CC BY 4.0', files: ['fx/blast*.png', 'fx/flame*.png'] },
+  { title: 'Explosion FX Free', author: 'heyheythere', url: 'https://heyheythere.itch.io/explosion-fx-free', license: 'CC BY 4.0', files: ['fx/blast*.png'] },
 ];
 export const MODEL_CREDITS = [...CREDITS, TEX_CREDIT, PH_CREDIT, ...FX_CREDITS].map((c) => ({ ...c, licenseUrl: c.licenseUrl || (/CC0/.test(c.license) ? 'https://creativecommons.org/publicdomain/zero/1.0/' : 'http://creativecommons.org/licenses/by/4.0/') }));
 const LOADED = {};
@@ -346,6 +346,12 @@ const GLB_V_OWN = {
   site_ammo_a_lo: '20261028h',
   site_fuel_city: '20261028h', // объект «Склад горючего» (город, своя сцена второго сборщика, 2026-10-28)
   site_fuel_city_lo: '20261028h',
+  site_fuel_w: '20261028h', // объект «Склад ГСМ» (зима, своя сцена второго сборщика, 2026-10-28)
+  site_fuel_w_lo: '20261028h',
+  site_park_city: '20261028h', // объект «Парк бронетехники» (город, своя сцена, набор военного городка, 2026-10-28)
+  site_park_city_lo: '20261028h',
+  site_fuel_a: '20261028h', // объект склад ГСМ «Болотный огонь» (осень, своя сцена второго сборщика, 2026-10-28)
+  site_fuel_a_lo: '20261028h',
   msl_9m83: '20261028b',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };

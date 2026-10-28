@@ -12,7 +12,7 @@ import { localizeTree } from './lang/data.js?v=20261028a'; // язык: назв
 import { TREE, BRANCHES } from './progress.js?v=20261028a';
 import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261028a';
 import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261028a';
-import { buildCity, CITY, SITES } from './city.js?v=20261028a';
+import { buildCity, CITY, SITES, bldMask } from './city.js?v=20261028a';
 import { buildWinter } from './map-winter.js?v=20261028a';
 import { WINTER_KEYS } from './winter-render.js?v=20261028a';
 import { buildAutumn } from './map-autumn.js?v=20261028a';
@@ -318,7 +318,7 @@ function siteLook(o) {
   if (!o || !o.site || !C.G) return;
   for (const g of [C.G.objGroup[o.id], C.G.objFar && C.G.objFar[o.id]]) {
     const m = g && g.userData.site; if (!m) continue;
-    for (const c of m.children) { if (!/^b_/.test(c.name)) continue; const B = o.bld && o.bld[c.name.replace(/^b_|_ruin$/g, '')], dead = !!(B && B.dead); c.visible = /_ruin$/.test(c.name) ? dead : !dead; }
+    if (m.userData.siteMask) m.userData.siteMask(o.bld ? bldMask(o) : 0); // склеенная сцена: целые / руины — маской в шейдере (city-render siteInstance)
     for (const k of g.userData.copies || []) k.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = o.dead ? C.G.ruinMat : c.userData.mat0; }); // копии моделей — сгоревшие, когда объект уничтожен
   }
 }

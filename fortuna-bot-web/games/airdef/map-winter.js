@@ -198,10 +198,8 @@ export function buildWinter(seed = 1) {
     add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 420, d: 2700, value: 170, hp: 240, models: M, parts: [...M.map(mbox), { t: 'cyl', x: x + 120, z: z + 40, r: 6, h: 32 }],
       zones: [{ t: 'box', x: rwx, z: R.z, w: R.W, d: R.L, h: 1, k: 0.7 }] }); // ВПП — зона урона (sim/strike.js blast), как у городского аэродрома
   }
-  { const p = P[4], M = []; // склад ГСМ
-    for (let a = -1; a <= 1; a++) for (const b of [-1, 1]) M.push(mp('obj_tanks', p.x + a * 75, p.z + b * 60));
-    M.push(mp('obj_tank4', p.x + 190, p.z, 1), mp('obj_rtank', p.x - 190, p.z - 20), mp('obj_rtank', p.x - 190, p.z + 20));
-    add({ key: 'w_fuel', name: tr('Склад ГСМ'), x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
+  { const p = P[4]; // склад ГСМ у озера — своя сцена (city.js SITES site_fuel_w): РВС в обвалованиях, береговая насосная, налив; въезд с запада
+    add({ key: 'w_fuel', name: tr('Склад ГСМ'), x: p.x, z: p.z, w: 600, d: 480, value: 160, hp: 200, site: 'site_fuel_w', parts: siteParts('site_fuel_w', p.x, p.z) }); }
   { const p = P[3]; // арсенал — своя сцена (city.js SITES site_ammo_w): хранилища, штольни в останце, навес, штабели; дно ущелья ровное ±330 м
     add({ key: 'w_ammo', name: tr('Арсенал в ущелье'), x: p.x, z: p.z, w: 560, d: 470, value: 180, hp: 220, site: 'site_ammo_w', parts: siteParts('site_ammo_w', p.x, p.z) }); }
   { const p = P[5], M = [mp('obj_milbase', p.x, p.z, 0, 2), mp('obj_oldind', p.x - 70, p.z + 20, 1), mp('obj_cont', p.x + 70, p.z + 40)]; // командный пункт

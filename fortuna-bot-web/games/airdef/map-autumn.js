@@ -252,6 +252,7 @@ export function buildAutumn(seed = 1) {
     // от нашей площадки — к торфянику
     ROADS.push({ w: 6, pts: route(HO.x - HO.hx, HO.z, PT.x + PT.hx * 0.3, PT.z + PT.hz) });
     // узкоколейка торфяника — прямая в болото (рельсы рисует отрисовка; здесь — насыпь)
+    // к выходу пути сцены «Болотного огня» (её северо-западный угол) не тянуть: насыпь поднимала землю под сценой до 5,7 м — пусть разрыв за оградой
     ROADS.push({ w: 4, pts: [[PT.x - PT.hx, PT.z], [PT.x - PT.hx - 1500, PT.z - 300], [PT.x - PT.hx - 2600, PT.z - 900]], rail: true });
     void prev;
   }
@@ -298,8 +299,8 @@ export function buildAutumn(seed = 1) {
     add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 400, d: 320, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.heli; // вертолётная площадка — своя сцена (city.js SITES): ангар, КДП, ГСМ и склад боеприпасов в обваловке, штаб, стоянки
     add({ key: 'a_heli', name: tr('Вертолётная площадка «Ведьмина поляна»'), x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, site: 'site_heli', parts: siteParts('site_heli', p.x, p.z) }); }
-  { const p = PK.peat, M = [mp('obj_tanks', p.x - 120, p.z - 60), mp('obj_tanks', p.x - 120, p.z + 60), mp('obj_oldind', p.x + 120, p.z, 1), mp('obj_rtank', p.x + 220, p.z - 120)]; // ГСМ на торфоразработках
-    add({ key: 'a_peat', name: tr('Склад ГСМ «Болотный огонь»'), x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
+  { const p = PK.peat, x = p.x - 145, z = p.z - 20; // склад ГСМ на торфоразработках — своя сцена (city.js SITES site_fuel_a) западнее грунтовки, что идёт через площадку
+    add({ key: 'a_peat', name: tr('Склад ГСМ «Болотный огонь»'), x, z, w: 370, d: 480, value: 160, hp: 200, site: 'site_fuel_a', parts: siteParts('site_fuel_a', x, z) }); }
   { // РЛС на Лысой горе: вершина (самая высокая точка в круге), площадка срезана на 6 м
     const BA = A.BALD; let bx = BA.x, bz = BA.z, bh = -1e9;
     for (let a = 0; a < 1600; a += 100) for (let t = 0; t < 6.283; t += 0.25) { const x = BA.x + Math.cos(t) * a, z = BA.z + Math.sin(t) * a, h = groundH(x, z); if (h > bh) { bh = h; bx = x; bz = z; } }
@@ -328,7 +329,9 @@ export function buildAutumn(seed = 1) {
     }
   }
   for (let k = 0; k < 6; k++) put(PK.farm.x - 260 + rnd() * 520, PK.farm.z + 230 + rnd() * 120, 10 + rnd() * 8, 16 + rnd() * 10, 5 + rnd() * 3, KIND.PLAIN); // хутор
-  for (let k = 0; k < 5; k++) put(PK.peat.x + 300 + k * 30, PK.peat.z + 180, 9, 26, 4.5, KIND.PLAIN); // бараки торфяника
+  // бараки торфяника — четыре (первый, у x + 300, закрывала рамка прежнего склада; сцена «Болотного огня» его открыла — put берёт rnd() только на
+  // поставленный дом, и вся случайная расстановка карты после него сдвигалась: тыкв +60 %, другие поля)
+  for (let k = 1; k < 5; k++) put(PK.peat.x + 300 + k * 30, PK.peat.z + 180, 9, 26, 4.5, KIND.PLAIN);
   const B = { n, x: BX.subarray(0, n), z: BZ.subarray(0, n), w: BW.subarray(0, n), d: BD.subarray(0, n), h: BH.subarray(0, n), y0: BY.subarray(0, n), k: BK.subarray(0, n), c: BC.subarray(0, n) };
 
   // ── поля: пашня и тыквенные — прямоугольники у фермы и деревни (для отрисовки и тыкв) ──

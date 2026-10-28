@@ -11,7 +11,7 @@
 //    у домов (запечённое из сетки высот застройки); шум, чтобы не было плоской заливки.
 //  • Река с волнами и отражением неба, деревья в парках и вдоль улиц, облака-«пуховки» (один вызов отрисовки).
 /* global THREE */
-import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW } from './city.js?v=20261028a';
+import { CITY, ZONE, KIND, AIRPORT, groundH, zoneAt, riverX, mulberry32, lineW, RN, RS, RURAL_HW, SITES } from './city.js?v=20261028a';
 import { part, mergeParts, M } from '../drone/models.js?v=20261028a';
 import { WEATHERS, ATMO, skyMaterial, skyUniforms, skyPano, SKY, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261028a';
 import { ktxOn, ktxLoad, ktxMeta } from './ktx.js?v=20261028a';
@@ -21,7 +21,7 @@ Object.assign(WEATHERS, winterWeathers(WEATHERS), autumnWeathers(WEATHERS)); // 
 // высота земли и районы — у текущей карты (город — city.js, зима — map-winter.js); выставляет buildCityScene
 let GH = groundH, ZA = zoneAt, LAWNS = []; // LAWNS — объекты с травой на своём участке (o.lawn: склад боеприпасов)
 import { MeshoptSimplifier } from './vendor/meshopt_simplifier.module.js?v=20261028a'; // MIT, meshoptimizer 0.21
-import { bakeGroup } from './merge.js?v=20261028a';
+import { bakeGroup, mergeLocal } from './merge.js?v=20261028a';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261028a';
 import { FAR_U, groundShadowChunk } from './ground-far.js?v=20261028a';
 import { BAKE_ON, createGroundBake } from './ground-bake.js?v=20261028a';
@@ -353,6 +353,61 @@ export function snowify(m) {
   };
   m.customProgramCacheKey = () => pk + 'snow';
   m.needsUpdate = true; return m;
+}
+// ═════════════ Объект-сцена одним куском ═════════════
+// Mark 2026-10-28 («займись оптимизацией»): у сцены каждая постройка, её руины и куски декора были отдельными сетками — ~37 вызовов
+// отрисовки на дальнюю копию (две сцены города: 70 → 145 в обзоре). Теперь сетки склеены по материалу (ели — отдельно: зимой без снега),
+// у вершин — номер постройки aB: −1 декор, i — целая i-я постройка (порядок SITES = биты маски), 64 + i — её руины. Видна целая или руины —
+// по маске разрушений uMk (два числа по 16 бит) в вершинном шейдере: скрытые вершины уходят за дальнюю плоскость. Тени — тем же кодом.
+// скрытие — в конце вершинного шейдера (после logdepthbuf_vertex); бит — floor((маска + 0,5) / 2^i): exp2 на видеокарте чуть больше 2^i, и
+// 16 / 8,0000001 = 1,99… давало чужой бит (разбитая постройка оставалась целой, у соседей — руины); highp — на слабых GPU mediump не держит 16 бит
+const SITE_HIDE = `if (aB >= 0.0) { float bI = mod(aB, 64.0), bW = bI < 16.0 ? uMk.x : uMk.y; bool bDead = mod(floor((bW + 0.5) / exp2(mod(bI, 16.0))), 2.0) > 0.5;
+  if (bDead != (aB >= 63.5)) gl_Position = vec4(2.0, 2.0, 2.0, 1.0); }`;
+const siteShader = (sh, U) => { sh.uniforms.uMk = U.uMk; sh.vertexShader = 'attribute highp float aB;\nuniform highp vec2 uMk;\n' + sh.vertexShader.replace('#include <logdepthbuf_vertex>', '#include <logdepthbuf_vertex>\n' + SITE_HIDE); };
+const SITE_MERGED = {}; // склеенные части модели (геометрия общая у всех копий; модель склеивается один раз)
+function siteMerged(name, key, make) {
+  if (SITE_MERGED[name]) return SITE_MERGED[name];
+  const src = make(); src.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(src.matrixWorld).invert(), idx = Object.fromEntries(Object.keys(SITES[key].b).map((b, i) => [b, i])), by = new Map();
+  const top = (c) => { while (c.parent && c.parent !== src) c = c.parent; return c.name; };
+  src.traverse((c) => {
+    if (!c.isMesh || Array.isArray(c.material)) return;
+    const n = top(c), r = /^b_(.+)_ruin$/.exec(n), b = !r && /^b_(.+)$/.exec(n), trees = /^deco_trees/.test(n);
+    const code = r && r[1] in idx ? 64 + idx[r[1]] : b && b[1] in idx ? idx[b[1]] : -1;
+    // у каждой сетки модели — свой материал (models.js), склеиваем одинаковые по виду; одинаковый набор атрибутов — иначе склейка их потеряет
+    const t = c.material, mk = [t.type, t.map && t.map.uuid, t.normalMap && t.normalMap.uuid, t.alphaTest, t.transparent, t.opacity, t.vertexColors, t.side,
+      t.color && t.color.getHexString(), t.specular && t.specular.getHexString(), t.shininess].join(',');
+    const k = `${mk}|${trees ? 't' : ''}|${Object.entries(c.geometry.attributes).map(([a, A]) => a + A.itemSize).sort().join(',')}`;
+    (by.get(k) || by.set(k, []).get(k)).push({ c, code, trees });
+  });
+  const parts = [...by.values()].map((L) => ({
+    geo: mergeLocal(L.map(({ c, code }) => { // геометрия-обёртка: те же атрибуты (без копии) + номер постройки
+      const g = new THREE.BufferGeometry(); for (const a in c.geometry.attributes) g.setAttribute(a, c.geometry.attributes[a]); if (c.geometry.index) g.setIndex(c.geometry.index);
+      g.setAttribute('aB', new THREE.BufferAttribute(new Float32Array(c.geometry.attributes.position.count).fill(code), 1));
+      return { g, m: new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld) };
+    })),
+    mat: L[0].c.material, trees: L[0].trees, bld: L.some((q) => q.code >= 0), ruin: L.every((q) => q.code >= 64) }));
+  // исходная модель (models.js LOADED) больше не нужна — склейка закэширована: её массивы отпустить (иначе на телефоне +10 МБ на сцену)
+  src.traverse((c) => { if (!c.isMesh) return; const g = c.geometry; g.dispose(); for (const a in g.attributes) g.attributes[a].array = new g.attributes[a].array.constructor(0); if (g.index) g.index.array = new g.index.array.constructor(0); });
+  return (SITE_MERGED[name] = parts);
+}
+// копия сцены: свой материал у частей с постройками (своя маска), декор — общий; root.userData.siteMask(маска) — вид построек (main.js siteLook)
+function siteInstance(parts, cast, recv, winter) {
+  const root = new THREE.Group(), U = { uMk: { value: new THREE.Vector2(0, 0) } }, ruins = [];
+  for (const p of parts) {
+    let mat = p.mat;
+    if (p.bld) {
+      const base = p.mat, prev = base.onBeforeCompile, pk = base.customProgramCacheKey(); mat = base.clone(); // clone не переносит onBeforeCompile — свой, поверх прежнего
+      mat.onBeforeCompile = (sh, r) => { if (prev) prev.call(base, sh, r); siteShader(sh, U); }; mat.customProgramCacheKey = () => pk + 'site';
+    }
+    if (winter && !p.trees) snowify(mat); // зима: снег на всё, что смотрит вверх, — кроме елей (хвоя вся «вверх» — белые призраки рядом с лесом карты)
+    const m = new THREE.Mesh(p.geo, mat); m.castShadow = cast; m.receiveShadow = recv; m.name = p.bld ? 'site_bld' : 'site_deco';
+    if (p.bld && cast) { const dm = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }); dm.onBeforeCompile = (sh) => siteShader(sh, U); dm.customProgramCacheKey = () => 'siteDepth'; m.customDepthMaterial = dm; }
+    if (p.ruin) { m.visible = false; ruins.push(m); } // одни руины: пока ничего не разбито — без вызова отрисовки
+    root.add(m);
+  }
+  root.userData.siteMask = (mask) => { U.uMk.value.set(mask & 0xffff, (mask >>> 16) & 0xffff); for (const m of ruins) m.visible = mask !== 0; };
+  return root;
 }
 // фасады вдали (2026-10-27, Mark: «давай попробуем с фасадом домов»): где окна мельче пикселя (far = 1), не считаются швы, балконы и отражение
 // неба (их вклад там — 0), днём — горящие окна, без полос этажей — сами полосы; картинка та же. ?fac=0 — как раньше (сравнение)
@@ -1506,17 +1561,13 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     });
   };
   // объект-сцена (city.js SITES, prepare.js site_*): подробная — в objGroup, дальняя (_lo) — в objFar, в центре объекта; части
-  // b_<постройка> и b_<постройка>_ruin — целая и разрушенная (видна одна: main.js siteLook), deco_* — всегда; G.onSite — расставить
-  // вид построек по бою и копии моделей игры (SITES place)
+  // b_<постройка> и b_<постройка>_ruin — целая и разрушенная, deco_* — всегда; склеена по материалам (siteMerged), какая видна — маска
+  // разрушений в шейдере (siteMask: main.js siteLook); G.onSite — расставить вид построек по бою и копии моделей игры (SITES place)
   const attachSite = (name, make) => {
     const lo = name.endsWith('_lo'), key = lo ? name.slice(0, -3) : name;
     for (const o of city.objects) {
       const g = (lo ? G.objFar : G.objGroup)[o.id]; if (o.site !== key || !g || !g.userData.left.has(name)) continue;
-      const m = make(); m.position.set(o.x, GH(o.x, o.z), o.z);
-      // зима: снег на всё, что смотрит вверх, — кроме елей сцены (deco_trees: хвоя вся «вверх» — выходили белыми призраками рядом с зелёным лесом карты)
-      const top = (c) => { while (c.parent && c.parent !== m) c = c.parent; return c.name; };
-      m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows && !lo; c.receiveShadow = !!P.shadows; if (G.winter && !/^deco_trees/.test(top(c))) snowify(c.material); } });
-      for (const c of m.children) if (/_ruin$/.test(c.name)) c.visible = false;
+      const m = siteInstance(siteMerged(name, key, make), !!P.shadows && !lo, !!P.shadows, G.winter); m.position.set(o.x, GH(o.x, o.z), o.z);
       g.add(m); freezeTree(m); g.userData.site = m;
       g.userData.left.delete(name);
       if (lo) g.userData.ready = !g.userData.left.size;

@@ -557,15 +557,15 @@ export function createFx(scene, P) {
   const tracers = new THREE.LineSegments(tGeo, new THREE.LineBasicMaterial({ color: 0xffb070, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
   tracers.frustumCulled = false; scene.add(tracers);
   let tHead = 0;
-  const burning = []; // постоянные пожары: { pos, r, t, fl — языки пламени (раскадровка) }
-  // раскадровки: огненный шар с дымом (ohyhei), вспышка с ударным кольцом и пламя (Explosion FX Free, heyheythere);
+  const burning = []; // постоянные пожары: { pos, r, t, col — столб дыма с пламенем у основания (свой лист ex_burn) }
+  // раскадровки: огненный шар с дымом (ohyhei), вспышка с ударным кольцом (Explosion FX Free, heyheythere);
   // на слабых пресетах — вдвое меньше (P.fxLo)
   const FXU_ = (f) => new URL(`./fx/${f}${P.fxLo ? '_lo' : ''}.png`, import.meta.url).href;
   const onTex = (t) => { if (api && api.onTex) api.onTex(t); }; // текстура листа пришла — сразу на видеокарту (main.js; рывок при первом взрыве)
   const EX = createBook(scene, { url: FXU_('explosion'), cols: 8, rows: 7, frames: 50, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.4, onTex }, 48);
   const BL = createBook(scene, { url: FXU_('blast'), cols: 8, rows: 2, frames: 16, cell: [1, 1], anchor: [0.5, 0.5], gain: 2.6, onTex }, 16);
-  const FL = createBook(scene, { url: FXU_('flame'), cols: 8, rows: 3, frames: 24, cell: [0.5, 1], anchor: [0.5, 0.92], up: true, loop: true, gain: 2.4, onTex }, 96);
-  const books = [EX, BL, FL], LT = new THREE.Vector3();
+  // языки пламени пожаров (Explosion FX Free, лист flame) убраны (Mark 2026-10-28: «мультяшный, а у нас уже есть свой») — огонь даёт свой столб ex_burn
+  const books = [EX, BL], LT = new THREE.Vector3();
   // взрывы по типу боевой части (2026-10-23, Mark: «пререндерить взрыв для каждой бомбы по боевой части — красиво, физически правдоподобно»):
   // свои симуляции Mantaflow в Blender (tools/airdef-fx/explode: огненный шар, тёмный дым, «гриб», волна пыли, выброс грунта и комья со шлейфами)
   // → fx/ex_<тип>.ktx2 (сжатые) или .webp, описание листов — fx/explode.json. Тип — по радиусу поражения и виду подрыва (exType); кадр — по
@@ -840,17 +840,11 @@ export function createFx(scene, P) {
         tVel[i * 3] = V.x * 950; tVel[i * 3 + 1] = V.y * 950; tVel[i * 3 + 2] = V.z * 950; tLife[i] = Math.min(3, (d + 400) / 950);
       }
     },
-    // пожар: несколько языков пламени (раскадровка, вразнобой) + столб дыма частицами (ветер, солнце, рост)
+    // пожар: свой столб дыма с пламенем у основания (лист ex_burn — петля) + искры и клубы частицами (ветер, солнце, рост)
     burn(pos, r) {
-      const n = Math.max(1, Math.min(4, Math.round(r / 9))), fl = [];
-      for (let i = 0; i < n; i++) {
-        const a = Math.random() * 6.283, d = i ? r * (0.2 + Math.random() * 0.25) : 0;
-        V.set(pos.x + Math.cos(a) * d, pos.y - 0.5, pos.z + Math.sin(a) * d);
-        fl.push(FL.add(V, Math.max(8, r * (1 + Math.random() * 0.4)) * (i ? 0.75 : 1), 20 + Math.random() * 6, { t0: -Math.random() * 0.4 }));
-      }
-      const b = { pos: pos.clone(), r, t: 0, fl }; if (CB) b.col = colAdd(b); burning.push(b);
+      const b = { pos: pos.clone(), r, t: 0 }; if (CB) b.col = colAdd(b); burning.push(b);
     },
-    clearBurning() { LATER.length = 0; if (PF) PF.clear();for (let i = 0; i < LINGER_N; i++) linger.emit(0, -1e5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-4, 0, 0); /* остаточный дым прошлого боя — долой (у пула нет clear: все места — мёртвыми частицами) */ burning.length = 0; FL.clear(); PL.clear(); CMF.clear(); if (CB) CB.clear(); }, // новый бой — без пожаров и дымных лент прошлого
+    clearBurning() { LATER.length = 0; if (PF) PF.clear();for (let i = 0; i < LINGER_N; i++) linger.emit(0, -1e5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1e-4, 0, 0); /* остаточный дым прошлого боя — долой (у пула нет clear: все места — мёртвыми частицами) */ burning.length = 0; PL.clear(); CMF.clear(); if (CB) CB.clear(); }, // новый бой — без пожаров и дымных лент прошлого
     // след взрыва у земли или на крыше: gh — высота земли (city.groundH), bh — высота здания (city.bldAt); kind 'bomb' — яма с
     // бруствером, 'ground' (ракета, снаряд) — ямка поменьше; на крыше — только копоть. Размер — от радиуса поражения R (≈ ∛ массы ВВ).
     // Земля за городом — с холмами: пятно чуть приподнято (на склоне край уходит в грунт)
@@ -888,7 +882,6 @@ export function createFx(scene, P) {
       // пожары: огонь и столб дыма, со временем слабее
       for (const b of burning) {
         b.t += dt; const k = Math.max(0.25, 1 - b.t / 240);
-        for (const f of b.fl) f.a = 0.45 + 0.55 * k; // пламя со временем слабее
         if (b.col) b.col.a = 0.35 + 0.65 * k; // столб дыма — тоже
         if (Math.random() < dt * 3 * k) fire.emit(b.pos.x + (Math.random() - 0.5) * b.r * 0.6, b.pos.y + 2 + Math.random() * b.r * 0.4, b.pos.z + (Math.random() - 0.5) * b.r * 0.6, 0, 10, 0, 1, 0.6, 0.2, 0.9, 0.8, 0, 1.2, 0.3, 0); // искры
         if (Math.random() < dt * (b.col ? 2.5 : 9) * k) { /* со столбом-петлёй — клубов втрое меньше (объём у основания) */ const g = 0.15 + Math.random() * 0.13; smoke.emit(b.pos.x + (Math.random() - 0.5) * b.r, b.pos.y + 6, b.pos.z + (Math.random() - 0.5) * b.r, 3 + Math.random() * 2, 9, 1, g, g * 0.94, g * 0.88, 0.48, b.r * 0.6, b.r * 0.9, 16, 0.05, 1.2); } // клубы разного тона, полупрозрачные (вблизи не сплошное чёрное пятно)

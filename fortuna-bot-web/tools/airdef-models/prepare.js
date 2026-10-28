@@ -787,6 +787,13 @@ CONFIG.site_ammo_a_lo = { ...CONFIG.site_ammo_city_lo, src: `${DL}/Свои/Фо
 // «Склад горючего» (город, oil) — второй сборщик (Свои/Склад горючего, 2026-10-28), свой набор: материалы F_A / F_B / F_glassF + те же tile_conc / tile_mesh
 CONFIG.site_fuel_city = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Склад горючего/fuel_city.glb`, groups: siteGroups, colors: { '^tile_conc$': [0.84, 0.84, 0.82], '^F_glassF$': [0.08, 0.1, 0.11] } };
 CONFIG.site_fuel_city_lo = { ...CONFIG.site_ammo_city_lo, src: `${DL}/Свои/Склад горючего/fuel_city_lo.glb`, groups: siteGroups, colors: CONFIG.site_fuel_city.colors };
+CONFIG.site_fuel_w = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Склад ГСМ зима/fuel_w.glb` }; // зимний «Склад ГСМ» (w_fuel) — из того же набора
+CONFIG.site_fuel_w_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Склад ГСМ зима/fuel_w_lo.glb` };
+// «Парк бронетехники» (город, stad) — первый сборщик, набор военного городка: + бесшовная tile_po2 (плиты ограды ПО-2, 1024)
+CONFIG.site_park_city = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Парк бронетехники/park_city.glb`, groups: siteGroups, tex: (m) => ({ tile_conc: 1024, tile_mesh: 512, tile_po2: 1024 })[m.name] || 2048 };
+CONFIG.site_park_city_lo = { ...CONFIG.site_ammo_city_lo, src: `${DL}/Свои/Парк бронетехники/park_city_lo.glb`, groups: siteGroups };
+CONFIG.site_fuel_a = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Болотный огонь/fuel_a.glb` }; // склад ГСМ «Болотный огонь» (осень, a_peat) — из набора склада горючего
+CONFIG.site_fuel_a_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Болотный огонь/fuel_a_lo.glb` };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше
