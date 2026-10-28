@@ -227,10 +227,19 @@ export function createSound() {
     airLaunch(d) { return A.sample('launchAir', 0.85 * near(d, 900), delayOf(d), 0.97 + Math.random() * 0.06, 500 + 9000 * Math.exp(-d / 2000), 0.25 + 0.4 * (1 - near(d, 900)), 0.18); }, // с начала звука (0,18 с — тишина)
     // вертикальный («холодный») старт ЗУР как у С-300 / С-400: одна из трёх записей, случайно; играет до конца.
     // Нет записей — прежний синтез (хлопок газогенератора). small — малые ракеты («Тор»): тише и чуть выше
-    coldLaunch(d, small) {
+    // sync { exit, ign } (С-300 / С-400 — своя пусковая, тайминги её паспорта): запись режется на два куска — хлопок (pop…рёв) звучит, когда ракета
+    // выходит из контейнера (через exit с), рёв — с запуском двигателя (через ign с); между ними ракета летит молча. Возвращает true
+    coldLaunch(d, small, sync) {
       // в каждой записи: хлопок выброса (pop) и запуск двигателя (рёв) — запись идёт с хлопка в момент выброса, а двигатель
       // ракеты в игре включается, когда в записи начинается рёв: возвращаем этот промежуток (с) — по нему ставится зажигание
       const i = 1 + Math.floor(Math.random() * 3), [pop, roar] = COLD_SYNC[i - 1], rate = (small ? 1.12 : 1) * (0.97 + Math.random() * 0.06);
+      if (sync) {
+        const o = { vol: 0.95 * near(d, 1600), rate, cut: 500 + 9000 * Math.exp(-d / 2500), wet: 0.3 + 0.4 * (1 - near(d, 1500)) }, w = delayOf(d);
+        if (A.clip('cold' + i, { ...o, when: w + sync.exit, offset: Math.max(0, pop - 0.02), dur: (roar - pop - 0.02) / rate, fin: 0.004, fout: 0.15 })) {
+          A.clip('cold' + i, { ...o, when: w + sync.ign - 0.03 / rate, offset: roar - 0.03, fin: 0.03, fout: 1.2 }); return true;
+        }
+        S.eject(d, true); return null;
+      }
       if (A.sample('cold' + i, (small ? 0.6 : 0.95) * near(d, small ? 900 : 1600), delayOf(d), rate, 500 + 9000 * Math.exp(-d / 2500), 0.3 + 0.4 * (1 - near(d, 1500)), Math.max(0, pop - 0.02))) return { gap: (roar - pop) / rate };
       S.eject(d, !small); return null;
     },

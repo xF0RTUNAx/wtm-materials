@@ -576,6 +576,12 @@ export function createFx(scene, P) {
   // за 3–6 с жизни клуб выходил до 30–120 м, вдвое-вчетверо больше самолёта; теперь ≈ ×0,55: меньше и перерисовки на экране)
   const DS = 0.85, DG = 0.5;
   const trail = (x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, st = 0) => { if (PF && PF.ready) PF.emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, st); else smoke.emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv); };
+  // лист взрыва по типу; lnch — старт С-300 / С-400 (Свои/С-300/эффекты): вертикальный рисунок — стоячий (поворот только вокруг вертикали), тает сам
+  const mkBook = (t, j, u, lnch) => {
+    const b = XB[t] = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [1, 1], anchor: j.anchor, up: lnch, gain: 2.4, lit: 1.7, push: lnch || t === 'air' || t === 'plane' ? 0 : 0.3, soft: 0.08, fadeT: j.times[j.frames - 1] * (lnch ? 0.25 : 0.45), onTex }, lnch ? 8 : t === 'light' || t === 'air' ? 48 : 24);
+    XJ[t] = j; books.push(b); if (LY) { b.mesh.layers.set(LY[0]); b.pre.layers.set(LY[0]); }
+  };
+  const LZ = {}; // отложенные листы (старт С-300 / С-400): создаются по wantLaunch — 2,7 МБ не грузятся в бою без них
   // столб дыма пожара (fx/ex_burn — снят в Blender как петля): высота — по размеру очага; начинается с разной фазы
   const colAdd = (b) => CB.add(b.pos, XJ.burn.height * Math.min(1.6, Math.max(0.35, b.r / XJ.burn.ref)), 1, { t0: -Math.random() * 4 });
   if (!(typeof location !== 'undefined' && /[?&]exnew=0/.test(location.search)) && typeof fetch === 'function' && typeof document !== 'undefined') {
@@ -596,10 +602,10 @@ export function createFx(scene, P) {
           for (const b of burning) if (!b.col) b.col = colAdd(b); // пожары, начавшиеся до прихода листа
           continue;
         }
-        const b = XB[t] = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [1, 1], anchor: j.anchor, gain: 2.4, lit: 1.7, push: t === 'air' || t === 'plane' ? 0 : 0.3, soft: 0.08, fadeT: j.times[j.frames - 1] * 0.45, onTex }, t === 'light' || t === 'air' ? 48 : 24);
-        XJ[t] = j; books.push(b); if (LY) { b.mesh.layers.set(LY[0]); b.pre.layers.set(LY[0]); }
+        if (t.startsWith('launch_')) { LZ[t] = () => mkBook(t, j, u, true); continue; } // старт С-300 / С-400 — только в бою с ними (api.wantLaunch)
+        mkBook(t, j, u, false);
       }
-      if (api && api.onNewMats) api.onNewMats(); // новые материалы листов — скомпилировать сразу
+      if (LZ.want) api.wantLaunch(); else if (api && api.onNewMats) api.onNewMats(); // новые материалы листов — скомпилировать сразу
     }).catch(() => { /* нет листов — прежние раскадровки */ });
   }
   // EXK — во сколько раз крупнее физического (снято в масштабе: у ФАБ-500 шар ≈ 40 м); ?exk=1 / 2,5 — сравнить (Mark решает)
@@ -718,10 +724,17 @@ export function createFx(scene, P) {
       const big = m.M.L > 5, LN = m.ln, sus = LN && (LN.stage || LN.ramjet) && m.tb >= m.M.burn;
       const s = (big ? 9 : m.M.L > 2.5 ? 5 : 2.5) * (sus ? 0.45 : 1), back = sus && LN.stage ? m.M.L * (LN.stage - 0.5) + 0.3 : m.M.L * 0.6;
       const x = m.pos.x - m.dir.x * back, y = m.pos.y - m.dir.y * back, z = m.pos.z - m.dir.z * back;
+      if (m.trailY !== undefined) { if (y < m.trailY && m.tb < 1.2) return; m.trailY = undefined; } // С-300: первые ≈ 40 м дым — в листе запуска двигателя (main.js samIgnite); ушла вбок — не дольше 1,2 с
       const mo = motorOf(m.unit && m.unit.key, 'sam', m.tb >= m.M.burn), rr = LN && LN.stage && !sus ? m.M.r * (LN.stageR || 1) : m.M.r;
       PL.add(m, x, y, z, mo, rr); // сплошная лента дыма по траектории; клубы-частицы ниже — объём (видны и вдоль ленты)
       smoke.emit(x, y, z, (Math.random() - 0.5) * 2, 1, (Math.random() - 0.5) * 2, mo.c[0], mo.c[1], mo.c[2], (big ? 0.4 : 0.28) * (sus ? 0.45 : 1) * Math.min(1, mo.a / 0.6), s, s * 0.9, big ? 9 : 5, 0.3, 0.3);
     },
+    // старт С-300 / С-400 (своя пусковая): листы Blender — 'launch_eject' (облако из устья, точка — устье) и 'launch_ignite' (запуск двигателя,
+    // точка — срез сопла); размер и время — как снято (лист 44 и 80 м; ракета первую секунду идёт по соплу листа — launchers.js ej.up).
+    // false — лист не пришёл (тогда прежние частицы)
+    launchSheet(kind, p) { const b = XB[kind], j = XJ[kind]; if (!b || !b.ready) return false; b.add(p, j.height, 1); return true; },
+    // в бою есть С-300 / С-400 — загрузить их листы старта (описание ещё не пришло — как придёт)
+    wantLaunch() { let n = 0; for (const t of Object.keys(LZ)) if (t !== 'want') { LZ[t](); delete LZ[t]; n++; } if (!n) LZ.want = true; else if (api.onNewMats) api.onNewMats(); },
     // ── старт ЗУР ──
     // горячий старт: вспышка у хвоста, струя назад, облако пыли и дыма у пусковой, которое долго висит
     launchHot(p, d, big, dust) {

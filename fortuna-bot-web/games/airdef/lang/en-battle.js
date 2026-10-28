@@ -763,6 +763,7 @@ export default {
   'цель ниже зоны поражения': 'target below the engagement zone',
   'цель выше зоны поражения': 'target above the engagement zone',
   'пусковая разворачивается': 'launcher is slewing',
+  'пакет поднимается — ещё {0} с': 'tubes are being raised — {0} s more',
   'Исправен': 'Intact',
   'Лёгкие повреждения': 'Light damage',
   'Повреждён': 'Damaged',

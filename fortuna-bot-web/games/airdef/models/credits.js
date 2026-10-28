@@ -1085,16 +1085,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "S-400 Triumf missile launcher truck",
-  "author": "Chenzoss",
-  "url": "https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f",
-  "license": "CC-BY-4.0",
-  "files": [
-   "s400",
-   "s400_lo"
-  ]
- },
- {
   "title": "BRDM 2 armored reconnaissance vehicle (пусковая 9П31 и ракета 9М31 — свои)",
   "author": "zhek",
   "url": "https://sketchfab.com/3d-models/brdm-2-armored-reconnaissance-vehicle-065dc054914f40fdbfb25ad62d6696b7",

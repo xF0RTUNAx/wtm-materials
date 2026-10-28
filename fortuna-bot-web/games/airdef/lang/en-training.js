@@ -545,6 +545,7 @@ export default {
   "Ракета принимает сигнал от цели и передаёт на РЛС — помехи и диполи почти не помогают.": "The missile picks up the target's return and relays it to the radar: jamming and chaff barely help.",
   "Огромная дальность, но <b>малые высоты прячутся за домами</b> — низкие цели видит поздно.": "Huge range, but <b>low-flying targets hide behind buildings</b>: it sees them late.",
   "Главная угроза — ПРР с памятью: переезд между волнами.": "The main threat is a memory-equipped ARM: relocate between waves.",
+  'Пакет {0} поднимается, только пока РЛС включена: после включения — ≈ 13 с до первого пуска, после выключения он ложится. «Мигать» РЛС у него дорого.': 'The {0} launcher raises its tubes only while the radar is on: ≈ 13 s from switch-on to the first launch, and it lowers them when the radar is off. Blinking its radar is costly.',
   "Стрелять по одной цели, когда можно назначить несколько.": "Firing at one target when you can assign several.",
   "Ставить в глубине застройки — тени съедают зону.": "Placing it deep among buildings: the shadows eat its coverage.",
   "Две цели. «Авто» назначит и пустит по ним по очереди — {0} ведёт обе.": "Two targets. \"Auto\" will assign and engage them in turn: {0} tracks both.",

@@ -338,8 +338,17 @@ const CONFIG = {
   // цапфа люльки — (0; 3,472; 2,350), ось ТПК горизонтальна (pack0 0). Нижний безопасный угол возвышения ≈ 0…+5° (при −5° ТПК входят в кунг) — launchers.js elMin
   pantsir: { src: `${DL}/Свои/Панцирь/pantsir_game.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 1024, nTex: () => 1024, pickMesh: /./, axisX: 0, ground: 0, hinge: [0, 3.472, 2.35], tpFix: [0, 2.805, 2.218], pack0: 0, tube: [0.15, 0.3], credit: 'окраска и запекание текстур',
     groups: (c) => (/(^|\/)(cradle|missile)/.test(c.path) ? 'cradle' : /(^|\/)radar/.test(c.path) ? 'radar' : /(^|\/)turret/.test(c.path) ? 'turret' : 'body') },
-  s400: { src: `${DL}/s-400_triumf_missile_launcher_truck.glb`, scale: 13.5 / 1.9, nose: '+z', rulesIn: 'game', unit: true, perTri: true, tex: () => 2048, target: 120000, /* скан: текстура 2048 — 1024 смазывала (2026-10-13) */ hinge: [0, -1.53, 5.44], tube: [0.6, 1.4], // скан: весь тягач — одна сетка, делим по треугольникам
-    groups: (c) => (c.ctr[1] > -1.45 && axis(c, [5.44, -1.53], [-0.604, 0.797], 1.75, -1.8, 9.5) ? 'cradle' : 'body') },
+  // С-300 и С-400 — своя пусковая 5П85 на МАЗ-543 (сборщик, Свои/С-300, 2026-10-28; Mark: «с-300 готова», «и для с-400 используй всё то же самое»)
+  // вместо скана Chenzoss. Метры, нос −Z, земля y = 0, оси сборщика без центровки (axisX / axisZ / ground 0 — числа ПАСПОРТ.json те же, что в игре);
+  // части — по именам узлов (s300Part): body_* — шасси, кабины, кузов; pack_* — пакет на шарнире PACK_PIVOT (0; 1,264; 5,694): в модели лежит
+  // (угол места 0, устья вперёд), игра поднимает его на 90° (u.lel); lid_c<ряд><столбец> → lid0…3 (c11, c12, c21, c22) — крышки, в осях пакета;
+  // jack_0…3 → jack0…3 — штоки домкратов; cyl_barrel / cyl_rod1 / cyl_rod2 → cyl0…2 — гидроцилиндр подъёма (main.js erectView). Контейнеры полые:
+  // ракеты 9М83 — своя модель msl_9m83. Дальняя копия — s300_lo.glb сборщика (без протектора, ступиц, рамы: 61 тыс.), крышки в пакете
+  s300: { src: `${DL}/Свои/С-300/s300.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.264, 5.694], tpFix: [0, 1.264, 5.694], pack0: 0, tube: [0.8, 1.1], groups: (c) => s300Part(c, true) },
+  // ракета 9М83 — своя (сборщик, Свои/9М83): 6,9 м, Ø 0,672, нос −Z; рули M83_fin0…3 → fin0…3 (в контейнере сложены, раскрываются после выхода — main.js)
+  msl_9m83: { src: `${DL}/Свои/9М83/msl_9m83.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
+    groups: (c) => { const f = c.path.match(/(^|\/)M83_fin(\d)/); return f ? 'fin' + f[2] : 'body'; } },
   // «Стрела-1» (9П31 на БРДМ-2) — основной чат по просьбе Mark 2026-10-24 (Свои/Стрела-1: build.py, bake.py, deliver.py): основа — БРДМ-2 zhek
   // (CC BY 4.0, масштаб до 5,75 м, пулемётная башенка снята), пусковая и ракета 9М31 — свои (окраска запечена в атлас 1024, нормали — Bevel).
   // Метры, нос −Z, земля y = 0; части — по первому слову имени объекта: body_*, turret_* (основание, окно оператора, стойка), cradle_* (ось и
@@ -724,8 +733,16 @@ function nasamsPart(c, near) {
   if (/(^|\/)(cradle|missile)_/.test(p)) return 'cradle';
   return /(^|\/)turret_/.test(p) ? 'turret' : 'body';
 }
+// С-300: части по первому слову имени узла; крышки lid_c<ряд><столбец> → lid0…3 (вблизи; в дальней копии — закрытые, в пакете)
+function s300Part(c, near) {
+  const p = c.path, L = p.match(/(^|\/)lid_c([12])([12])/);
+  if (L) return near ? 'lid' + ((+L[2] - 1) * 2 + (+L[3] - 1)) : 'cradle';
+  const J = p.match(/(^|\/)jack_(\d)/); if (J) return 'jack' + J[2];
+  const Y = [...p.matchAll(/(?:^|\/)cyl_(barrel|rod1|rod2)/g)].pop(); if (Y) return 'cyl' + ['barrel', 'rod1', 'rod2'].indexOf(Y[1]); // штоки — дети корпуса цилиндра: по последнему узлу пути
+  return /(^|\/)pack_/.test(p) ? 'cradle' : 'body';
+}
 // ПВО: дальние копии (_lo) — main.js рисует их дальше 400 м (THREE.LOD по частям: корпус, башня, пакет)
-const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
+const SAM_LO = ['osa', 'bukm3', 's125', 'gepard', 'ew_e', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger'];
 for (const k of SAM_LO) CONFIG[k + '_lo'] = { ...CONFIG[k], target: k === 'tor' || k === 'pantsir' ? 15000 : 20000, simpErr: 0.05, tex: () => 256, nTex: null };
 CONFIG.bukm3_lo.tracks = { ...CONFIG.bukm3.tracks, links: false }; // дальняя копия: лента — гладкая, без звеньев
 // Гепард (своя модель, 23 тыс.): дальняя копия — 8 тыс. треугольников, цвет 256, без карты нормалей
@@ -737,8 +754,8 @@ CONFIG.ew_w_lo = { ...CONFIG.ew_w, target: 15000, simpErr: 0.05, tex: () => 512,
 // «Тор-М1» (своя, 68 тыс.): дальняя копия — 12 тыс., цвет 512 (камуфляж — в цвете), без нормалей, тарелка и крышки — в башне
 CONFIG.nasams_lo = { ...CONFIG.nasams, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, groups: (c) => nasamsPart(c, false) }; // NASAMS: дальняя — 12 тыс., крышки закрыты
 CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
-// С-400 / С-300 (скан одной сеткой): с 20 тыс. и 256 px вдали — бугры и пятна, а их почти всегда видно дальше 400 м (карта, пульт)
-CONFIG.s400_lo = { ...CONFIG.s400, target: 45000, simpErr: 0.02, tex: () => 512 };
+// С-300 / С-400 (своя): дальняя копия — облегчённая сборщиком (61 тыс.), цвет 512, без нормалей; домкраты и цилиндр — свои части (двигаются и вдали)
+CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex: () => 512, nTex: null, groups: (c) => s300Part(c, false) };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

@@ -119,7 +119,6 @@
 - "Low Poly Missiles and Torpedos" (https://sketchfab.com/3d-models/low-poly-missiles-and-torpedos-99783c90ce904951a3c71e851a527d35) by sakigakefuruzawa — CC-BY-4.0 — `aam_mica.glb`
 - "MiG 29" (https://sketchfab.com/3d-models/mig-29-f04c8e99765c4d7e875476998ec5c2f3) by Uxman — CC-BY-4.0 — `mig29.glb`
 - "Pantsir-S1 (окраска и запекание текстур)" (https://sketchfab.com/3d-models/pantsir-s1-3cb67b0bae10418190e7ce32142231e4) by SanderWolf — CC-BY-4.0 — `pantsir.glb`, `pantsir_lo.glb`
-- "S-400 Triumf missile launcher truck" (https://sketchfab.com/3d-models/s-400-triumf-missile-launcher-truck-c2631f0da36b49cda7d7f849b373283f) by Chenzoss — CC-BY-4.0 — `s400.glb`, `s400_lo.glb`
 - "BRDM 2 armored reconnaissance vehicle (пусковая 9П31 и ракета 9М31 — свои)" (https://sketchfab.com/3d-models/brdm-2-armored-reconnaissance-vehicle-065dc054914f40fdbfb25ad62d6696b7) by zhek — CC-BY-4.0 — `strela1.glb`, `strela1_lo.glb`
 - "Marder Roland (low-poly)" (https://sketchfab.com/3d-models/marder-roland-low-poly-2f30452b85ec461db2de4bc118b7448e) by ScurvyWoof — CC-BY-4.0 — `roland.glb`
 - "Low poly 2k22 Tunguska (окраска и запекание текстур)" (https://sketchfab.com/3d-models/low-poly-2k22-tunguska-0bea108df2434f779418e51af9597f5b) by SIpriv — CC-BY-4.0 — `tunguska.glb`, `tunguska_lo.glb`, `msl_9m311.glb`

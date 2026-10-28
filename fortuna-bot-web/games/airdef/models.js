@@ -274,7 +274,8 @@ const META = {
   tor: { units: ['tor', 'torm2'], matte: true, stations: [] }, // «Тор-М1» — своя модель (сборщик, Свои/Тор-М1; камуфляж запечён в цвете): обе версии «Тора» пока на ней
   msl_tor: { samMissile: ['tor', 'torm2'], matte: true, stations: [] }, // ракета 9М331 — своя (Свои/9М331), 2,9 м, нос −Z
   pantsir: { units: ['pantsir'], matte: true, stations: [] }, // «Панцирь-С1» на КамАЗ-6560 — SanderWolf (CC BY 4.0), переделан в Blender (Свои/Панцирь): камуфляж, затенение и карта нормалей запечены — шейдерного узора нет
-  s400: { units: ['s400', 's300'], matte: true, stations: [] }, // пусковая С-400 — Chenzoss (и для С-300: та же схема, 4 контейнера)
+  s300: { units: ['s300', 's400'], matte: true, stations: [] }, // С-300 и С-400 — своя пусковая 5П85 на МАЗ-543 (сборщик, Свои/С-300, 2026-10-28) вместо скана Chenzoss: пакет поднимается от РЛС, крышки, домкраты, цилиндр
+  msl_9m83: { samMissile: ['s300', 's400'], inTube: true, lazy: true, matte: true, stations: [] }, // ракета 9М83 — своя (Свои/9М83), 6,9 м, нос −Z; рули fin0…3 (в контейнере сложены); inTube — носовые части в контейнерах пусковой
   patriot: { units: ['patriot', 'pac3'], stations: [] }, // Patriot M901 — Muhamad Mirza Arrafi
 };
 // самолёты — и для «Симулятора Летки» (выбор самолёта игрока; точки подвески — те же 8, что у его «Изделия»)
@@ -330,6 +331,9 @@ const GLB_V_OWN = {
   w_prsm: '20261025p',
   w_arrw: '20261025q',
   w_lance: '20261025r',
+  s300: '20261028b', // С-300 / С-400 — своя пусковая 5П85 (сборщик, Свои/С-300) вместо скана Chenzoss, 2026-10-28
+  s300_lo: '20261028b',
+  msl_9m83: '20261028b',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };
 GLB_V.e_f15e = '20261024g'; // заглушки в соплах — тёмные (prepare.js #soot), 2026-10-22
@@ -628,7 +632,7 @@ async function load(name, base) {
 // готовая модель комплекса: { body, turret, cradle } (копии) или null — тогда процедурная
 const UMODEL = Object.fromEntries(Object.entries(META).filter(([, m]) => m.units).flatMap(([n, m]) => m.units.map((k) => [k, n])));
 // у тяжёлых моделей ПВО — дальняя копия <имя>_lo: каждая часть (корпус, башня, пакет) — THREE.LOD, ближе 400 м — подробная
-const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's400', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
+const UNIT_LO = new Set(['nasams', 'bukm3', 's125', 'gepard', 'ew_e', 'ew_w', 's300', 'tor', 'pantsir', 'sampt', 'tunguska', 'skyguard', 'rapier', 'zsu234', 'm163', 'chaparral', 'avenger', 'strela1']);
 export function unitModelGlb(key) {
   const n = UMODEL[key], G = n && (LOADED[n] || LOADED[n + '_lo']), GL = n && LOADED[n] && LOADED[n + '_lo']; if (!G) return null;
   const find = (M, k) => M.children.find((c) => c.name === k);
@@ -643,7 +647,8 @@ export function unitModelGlb(key) {
   const seq = (p) => { const a = []; for (let i = 0; find(G, p + i); i++) a.push(get(p + i)); return a; };
   return { body: get('body'), turret: get('turret'), cradle: get('cradle'), missile: get('missile'), booster: get('booster'), radar: get('radar'), // radar — антенна обзора на башне (крутится)
     tdish: near('dish'), lids, // «Тор»: антенна сопровождения (качается по углу места цели) и крышки ячеек (lid0…7, открываются к пуску)
-    th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs') }; // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
+    th: seq('th'), ca: seq('ca'), turret1: get('turret1'), cs: seq('cs'), // расчёт ПЗРК: позы наводчика (головы, руки) и второй номер
+    jacks: seq('jack'), cyl: seq('cyl') }; // С-300: штоки домкратов и гидроцилиндр подъёма (корпус, два штока)
 }
 // ракета комплекса из его модели (маршевая ступень + ускоритель) или null; noLoad — не заказывать подробную модель (прогрев шейдеров, main.js warmNow)
 export function unitMissileGlb(key, noLoad) {
@@ -656,7 +661,25 @@ export function unitMissileGlb(key, noLoad) {
 }
 export const isObjModel = (name) => !!(META[name] && META[name].obj);
 export function objModel(name) { return LOADED[name] ? LOADED[name].clone() : null; }
-export const isUnitModel = (name) => { const b = name.replace(/_lo$/, ''); return !!(META[b] && (META[b].units || META[b].launcher)); }; // пришла — пересобрать машины
+export const isUnitModel = (name) => { const b = name.replace(/_lo$/, ''); return !!(META[b] && (META[b].units || META[b].launcher || META[b].inTube)); }; // пришла — пересобрать машины (inTube — ракеты в их контейнерах)
+// ракета в контейнере (С-300: видна сверху через открытую крышку) — только носовая часть len м от носа (−Z): геометрия общая с моделью,
+// треугольников — доля (4 целые 9М83 на пусковую — 75 тыс.). Копия или null (модель ракеты ещё не пришла)
+const NOSE = {};
+export function samNose(key, len) {
+  const n = SAMMSL[key], M = n && LOADED[n]; if (!M) return null;
+  if (!NOSE[n]) {
+    const g = new THREE.Group(), V = new THREE.Vector3(); let z0 = Infinity; M.updateMatrixWorld(true);
+    M.traverse((o) => { if (!o.isMesh) return; const P = o.geometry.attributes.position; for (let i = 0; i < P.count; i++) z0 = Math.min(z0, V.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld).z); });
+    M.traverse((o) => {
+      if (!o.isMesh || !o.geometry.index) return; const P = o.geometry.attributes.position, I = o.geometry.index.array, z = (i) => V.fromBufferAttribute(P, i).applyMatrix4(o.matrixWorld).z, keep = [];
+      for (let t = 0; t < I.length; t += 3) if (z(I[t]) < z0 + len && z(I[t + 1]) < z0 + len && z(I[t + 2]) < z0 + len) keep.push(I[t], I[t + 1], I[t + 2]);
+      if (!keep.length) return; const geo = new THREE.BufferGeometry(); for (const k in o.geometry.attributes) geo.setAttribute(k, o.geometry.attributes[k]); geo.setIndex(keep);
+      const m = new THREE.Mesh(geo, o.material); m.applyMatrix4(o.matrixWorld); g.add(m);
+    });
+    NOSE[n] = g;
+  }
+  return NOSE[n].clone();
+}
 // фоновая загрузка всех моделей; onReady — когда что-то загрузилось (чтобы пересобрать самолёты)
 // самолёты и оружие — сразу; комплексы — по запросу wantUnit (только те, что есть в бою: файлы у них крупнее)
 let BASE = '', READY = null; const LOADING = new Set();
@@ -693,7 +716,7 @@ export const anyModel = (name) => (LOADED[name] ? LOADED[name].clone() : null);
 // расчёт ПЗРК — тяжёлый (6–7 МБ, ~50 тыс. треугольников на экране; ревью 2026-10-27): на телефоне — только когда камера близко (wantUnitNear),
 // издали — процедурные солдаты (ПЗРК там почти не видно)
 const NEAR_ONLY = new Set(['crew_e', 'crew_w']);
-export function wantUnit(key) { const n = UMODEL[key]; if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия
+export function wantUnit(key) { const n = UMODEL[key], sm = SAMMSL[key]; if (sm && BASE && META[sm].lazy) start(sm); if (n && BASE) { if (UNIT_LO.has(n)) start(n + '_lo'); if (!TOUCH || !(UNIT_LO.has(n) || NEAR_ONLY.has(n))) start(n); } } // сначала лёгкая дальняя копия; lazy-ракета комплекса (9М83) — только в бою с ним
 export function wantUnitNear(key) { const n = UMODEL[key]; if (n && BASE && !LOADING.has(n)) start(n); }
 // дома города вблизи — по запросу (на слабом пресете не грузятся); bldModel — загруженная модель (общая, не копия)
 export function wantBuildings(names) { if (BASE) for (const [n, m] of Object.entries(META)) if (m.bld && (!names || names.includes(n))) start(n); } // names — только модели этой карты (зимний лес городу не нужен и наоборот)

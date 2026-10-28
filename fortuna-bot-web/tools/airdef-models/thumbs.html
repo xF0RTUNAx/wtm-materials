@@ -10,6 +10,7 @@
 import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261027d';
 import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261027d';
 import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261027d';
+import { cylPose } from '../../games/airdef/launchers.js?v=20261027d';
 import { TREE, NODE } from '../../games/airdef/progress.js?v=20261027d';
 const Q = new URLSearchParams(location.search), IDS = Q.get('ids') ? Q.get('ids').split(',') : TREE.map((n) => n.id);
 const W = 480, H = 270, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(2); r.setSize(W, H); // 960×540 — досье показывает крупно r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
@@ -39,11 +40,16 @@ async function unitObj(key) {
     else { if (md.turret) mesh(md.turret, tg); const lg = launcherGlb(key); if (lg) { cg.add(lg); lg.position.set(Ld.slots[0][0], Ld.slots[0][1] - 0.06, Ld.slots[0][2]); } else if (md.cradle) mesh(md.cradle, cg); }
     if (gm && gm.missile) for (const sp of Ld.slots) { const q = new THREE.Group(); q.add(gm.missile.clone()); if (gm.booster) q.add(gm.booster.clone()); q.position.fromArray(sp); cg.add(q); }
     if (md.slotGeo && !gm) for (const sp of Ld.slots) { const sm = new THREE.Mesh(md.slotGeo, md.LN.box ? unitMat : wMat); sm.position.fromArray(sp); cg.add(sm); }
-    if (gm && gm.lids) for (const l of gm.lids) if (l) tg.add(l.clone()); // крышки ячеек «Тора» и контейнеров NASAMS — закрыты, в осях башни
+    if (gm && gm.lids) for (const l of gm.lids) if (l) (md.LN.lids && md.LN.lids.onPack ? cg : tg).add(l.clone()); // крышки ячеек «Тора» и контейнеров NASAMS — закрыты, в осях башни; С-300 — в осях пакета
     if (gm && gm.tdish) tg.add(gm.tdish.clone()); // антенна сопровождения «Тора» — в положении покоя
     tg.rotation.y = md.LN.yaw0 || 0; cg.rotation.x = md.LN.el ?? 0.35; tg.add(cg); g.add(tg); tur.push(tg); // как стоит в бою (sim/strike.js: lyaw, lel)
   }
   if (gm && gm.radar) (tur.length ? tur[0] : g).add(gm.radar.clone()); // без башни (Sentinel) — антенна на машине
+  if (gm && md.LN && md.LN.erect) { // С-300: как в бою — домкраты на земле, цилиндр выдвинут к поднятому пакету
+    const E = md.LN.erect, A = E.cylA, q = cylPose(md.LN, md.LN.el); for (const j of gm.jacks) if (j) { j.position.y = -E.jack; g.add(j); }
+    const pv = new THREE.Group(); pv.position.fromArray(A); pv.rotation.x = q.rot; g.add(pv);
+    gm.cyl.forEach((c, i) => { if (!c) return; c.position.set(-A[0], -A[1], -A[2]); const w = new THREE.Group(); w.add(c); w.position.fromArray(q.dir).multiplyScalar(q.ext * i / 2); pv.add(w); });
+  }
   return g;
 }
 async function objOf(n) {

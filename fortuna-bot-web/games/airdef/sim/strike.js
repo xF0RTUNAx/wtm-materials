@@ -81,6 +81,7 @@ export function createStrike(ctx) {
       hp: S.hp, dead: false, emit: !!S.radar && !o.ambush, ambush: !!o.ambush, shutT: 0, track: null, seeT: 0, lostT: 0, reactT: 0, cool: 0,
       ammo: S.ammo, reloadT: 0, salvoLeft: 0, gunT: 0, gunOn: false, skill: o.skill ?? 0.7, armSeen: new Set(), roof: !!o.roof, known: false, tgt: null, // tgt — фильтр видов целей (null — все)
       lyaw: (LN && LN.yaw0) || 0, lel: LN ? LN.el ?? 0.35 : 0, lnEl: null, lnT: 0, lnErr: 0, slotT: {}, lid: 0 }; // lid — крышка следующей ячейки «Тора»: 0 закрыта … 1 открыта
+    if (LN && LN.erect) { u.dep = u.emit ? LN.erect.jk + LN.erect.up : 0; u.lel = u.emit ? LN.el : 0; } // С-300 / С-400: с включённой РЛС — уже на позиции (пакет поднят), в засаде — лежит
     units.push(u);
     return u;
   }
@@ -343,7 +344,7 @@ export function createStrike(ctx) {
       if (h < S.hmin) return tr('цель ниже зоны поражения');
       if (h > S.hmax) return tr('цель выше зоны поражения');
     }
-    if (!launcherReady(u)) return tr('пусковая разворачивается');
+    if (!launcherReady(u)) { const LN = LNCH[u.key]; return LN && LN.erect && !erected(u, LN) ? tr('пакет поднимается — ещё {0} с', [Math.ceil(LN.erect.jk + LN.erect.up - u.dep)]) : tr('пусковая разворачивается'); } // С-300 / С-400: после включения РЛС — ≈ 13 с
     launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(S) * (ctx.reloadK ? ctx.reloadK() : 1); // онлайн: подавленная ПВО перезаряжается дольше
     return null;
   }
@@ -358,7 +359,8 @@ export function createStrike(ctx) {
     if (u.ammo <= 0) u.ammo = S.ammo;
     if (S.gun) u.gunForce = 0.8; // «Панцирь», «Тунгуска»: пушки вместе с ракетой
     if (launcherReady(u)) return forcedShot(u, t);
-    u.force = { t, left: 6 }; u.cool = 99; // своим ходом комплекс не пускает, пока ждёт наводки (иначе — две ракеты)
+    const E = LNCH[u.key] && LNCH[u.key].erect; // С-300 / С-400: ждать и подъём пакета (иначе через 6 с — рывком)
+    u.force = { t, left: 6 + (E ? E.jk + E.up - u.dep : 0) }; u.cool = 99; // своим ходом комплекс не пускает, пока ждёт наводки (иначе — две ракеты)
     return 'pending';
   }
   function forcedShot(u, t) { const m = launchSam(u, t); u.cool = 1.6; if (u.ammo <= 0) u.reloadT = u.reload0 = reloadOf(u.S) * (ctx.reloadK ? ctx.reloadK() : 1); return m; }
@@ -370,6 +372,7 @@ export function createStrike(ctx) {
     if (u.dead || t.dead) { u.force = null; u.cool = 0; return; }
     const late = (f.left -= dt) <= 0;
     if (!launcherReady(u) && !late) return;
+    if (late && LNCH[u.key] && LNCH[u.key].erect) { const LN = LNCH[u.key]; if (u.S.radar && !u.emit) { u.emit = true; fx.radarState(u); } u.dep = LN.erect.jk + LN.erect.up; u.lel = LN.el; u.lid = 1; } // С-300: РЛС выключили за время ожидания (ПРР) — не из лежащего пакета
     if (late) aimLauncher(u, 30); // не навелась за 6 с (цель за препятствием, медленная башня) — как раньше, сразу
     u.force = null; forcedShot(u, t);
   }
@@ -397,11 +400,13 @@ export function createStrike(ctx) {
   // пусковая (башня) следит за целью с реальной скоростью разворота; пустить можно, когда навелась
   function aimLauncher(u, dt) {
     for (const k in u.slotT) u.slotT[k] -= dt;
-    const LN = LNCH[u.key]; if (!LN || u.dead || !trainable(LN)) return;
+    const LN = LNCH[u.key]; if (!LN || u.dead) return;
     const S = u.S, man = u.manual && (S.type === 'guns' || S.type === 'ir');
     const t = man ? null : u.manual ? (u.desig && !u.desig.dead ? u.desig : u.track) : u.track;
-    // «Тор»: крышка следующей ячейки открывается, пока цель сопровождается и есть ракеты (как по команде на пуск), иначе закрывается
-    if (LN.lids) { const want = !!(t && !t.dead && u.track === t) && u.ammo > 0 && u.reloadT <= 0; u.lid = clamp(u.lid + (want ? dt / LN.lids.tOpen : -dt / LN.lids.tClose), 0, 1); }
+    if (LN.erect) erectStep(u, LN, dt);
+    // «Тор», NASAMS, С-300: крышка следующей ячейки открывается, пока цель сопровождается и есть ракеты (как по команде на пуск), иначе закрывается; у С-300 — только у поднятого пакета
+    if (LN.lids) { const want = !!(t && !t.dead && u.track === t) && u.ammo > 0 && u.reloadT <= 0 && erected(u, LN); u.lid = clamp(u.lid + (want ? dt / LN.lids.tOpen : -dt / LN.lids.tClose), 0, 1); }
+    if (!trainable(LN)) return;
     let dx, dy, dz;
     if (t && !t.dead) { dx = t.pos.x - u.pos.x; dy = t.pos.y - u.pos.y; dz = t.pos.z - u.pos.z; }
     else if (u.manual && u.aimDir) { dx = u.aimDir.x; dy = u.aimDir.y; dz = u.aimDir.z; }
@@ -415,7 +420,17 @@ export function createStrike(ctx) {
     if (LN.el == null) { elT = clamp(elT, LN.elMin, LN.elMax); const ke = LN.slewE * dt; de = elT - u.lel; u.lel += clamp(de, -ke, ke); de = elT - u.lel; }
     u.lnErr = Math.max(Math.abs(wrapPi(yawT - u.lyaw)), Math.abs(de));
   }
-  function launcherReady(u) { const LN = LNCH[u.key]; return !LN || !trainable(LN) || (u.lnErr < (LN.mode === 'tube' ? 0.12 : 0.09) && (!LN.lids || u.lid >= 1)); } // «Тор» — и крышка ячейки открыта
+  // С-300 / С-400: подъём пакета от РЛС (launchers.js erect). u.dep — место на графике «домкраты (jk) → подъём (up)»: РЛС включена — вперёд,
+  // выключена — назад (пакет опускается за down с, потом домкраты); угол места — S-кривая 5-й степени (нулевые скорость и ускорение на концах)
+  const s5 = (x) => x * x * x * (x * (6 * x - 15) + 10);
+  function erectStep(u, LN, dt) {
+    const E = LN.erect;
+    u.dep = clamp(u.dep + (u.emit ? dt : -dt * (u.dep > E.jk ? E.up / E.down : 1)), 0, E.jk + E.up);
+    u.lel = LN.el * s5(clamp((u.dep - E.jk) / E.up, 0, 1));
+  }
+  const erected = (u, LN) => !LN.erect || u.dep >= LN.erect.jk + LN.erect.up;
+  // пусковая готова: С-300 — пакет поднят; «Тор», NASAMS, С-300 — крышка открыта; поворотные — навелись
+  function launcherReady(u) { const LN = LNCH[u.key]; return !LN || (erected(u, LN) && (!LN.lids || u.lid >= 1) && (!trainable(LN) || u.lnErr < (LN.mode === 'tube' ? 0.12 : 0.09))); }
   function launchSam(u, t) {
     const M_ = u.S.msl, LN = LNCH[u.key];
     TMP.copy(t.pos).sub(u.pos); const hd = Math.hypot(TMP.x, TMP.z) || 1, hx = TMP.x / hd, hz = TMP.z / hd;
@@ -428,11 +443,11 @@ export function createStrike(ctx) {
       // ракета уходит из своего слота: с направляющей / из контейнера, по оси пусковой
       unitTilt(u); pos = lnchToWorld(u, sl.Ld, sl.p, new THREE.Vector3()); dir = lnchDir(u, new THREE.Vector3());
       u.slotT[sl.idx] = 5; if (LN.lids) u.lid = 0; // «Тор»: крышка ушедшей ракеты ещё 3 с открыта и закрывается (вид — main.js torLids), следующая начинает открываться заново
-      if (LN.mode === 'cold' || LN.mode === 'tube') { speed = LN.ej.v; ign = LN.ej.t + (LN.ej.tilt || 0); }
+      if (LN.mode === 'cold' || LN.mode === 'tube') { speed = LN.ej.acc ? 3 : LN.ej.v; ign = LN.ej.t + (LN.ej.tilt || 0); } // acc — разгон в контейнере (С-300)
       else speed = LN.mode === 'vhot' ? 20 : 25;
     } else { pos = u.pos.clone().add(TMP2.set(0, 3, 0)); dir = gdDir.clone(); }
     const m = { id: mid++, unit: u, S: u.S, M: M_, target: t, clearY, last: t.pos.clone(), lastV: t.vel.clone(), active: false, pos, dir, speed, t: 0, flown: 0, lost: false, lostT: 0, decoy: null, dead: false, trailT: 0,
-      ln: LN || null, ign, tb: -ign, lit: ign === 0, staged: false, gdDir, slot: sl ? sl.idx : -1 };
+      ln: LN || null, ign, tb: -ign, lit: ign === 0, staged: false, gdDir, slot: sl ? sl.idx : -1, up: LN && LN.ej && LN.ej.up ? upOf(LN.ej.up, M_) : null };
     u.ammo--; if (t.heli) u.known = true; // пуск по вертолёту выдаёт позицию (ПЗРК и ИК-комплексы иначе не «замечаются» никогда)
     sams.push(m);
     fx.samLaunch(m);
@@ -446,12 +461,15 @@ export function createStrike(ctx) {
     if (axis && angleBetween(axis, TMP2.copy(t.pos).sub(from)) > fovDeg * D2R) return false;
     return true;
   }
+  // С-300: первые up.t с после зажигания — вертикально, тяга a = разгон листа дыма + тяжесть; недобранный импульс — до конца работы двигателя (×k)
+  const upOf = (U, M_) => { const a = U.a + G0; return { t: U.t, a, k: Math.max(1, (M_.acc * M_.burn - a * U.t) / (M_.acc * (M_.burn - U.t))) }; };
   // общий полёт ракеты: двигатель, сопротивление, гравитация вдоль оси, поворот с ограничением перегрузки
   function flyMissile(m, M_, dt, aim, avel, lead) {
     const tb = m.tb ?? m.t;
     // тяга — ровно burn секунд при любом шаге кадра: на шаге запуска и выгорания — доля шага (2026-10-22: при 60 к/с НАР летели на 5–10 % дальше, чем при 30)
     const bk = clamp((Math.min(tb, M_.burn) - Math.max(tb - dt, 0)) / dt, 0, 1);
-    const acc = tb < 0 ? 0 : M_.acc * bk + (bk < 1 && tb >= M_.burn && M_.sustain && tb < M_.burn + M_.sustain.t ? M_.sustain.acc * (1 - bk) : 0);
+    let acc = tb < 0 ? 0 : M_.acc * bk + (bk < 1 && tb >= M_.burn && M_.sustain && tb < M_.burn + M_.sustain.t ? M_.sustain.acc * (1 - bk) : 0);
+    if (m.up && tb >= 0) acc = tb < m.up.t ? m.up.a : tb < M_.burn ? acc * m.up.k : acc; // С-300: первую секунду — как в листе дыма, дальше — с добором
     let lat = 0;
     if (aim) {
       // время до встречи — по скорости сближения (на встречном курсе она больше скорости ракеты)
@@ -467,7 +485,7 @@ export function createStrike(ctx) {
     }
     const rho = rhoAt(m.pos.y);
     m.speed += (acc - (M_.kd || 1) * 1e-4 * rho * m.speed * m.speed - 0.1 * lat - G0 * m.dir.y) * dt;
-    m.speed = Math.max(m.speed, m.tb < 0 ? 3 : 30); // до запуска двигателя (выброс) ракета тормозит
+    m.speed = Math.max(m.speed, m.tb < 0 || (m.up && m.tb < m.up.t) ? 3 : 30); // до запуска двигателя (выброс) ракета тормозит; С-300 — и первую секунду после (20 м/с, как в листе)
     const step = m.speed * dt; m.flown += step;
     m.pos.addScaledVector(m.dir, step);
     return acc > 0;
@@ -482,7 +500,8 @@ export function createStrike(ctx) {
     let gas = false;
     if (LN) {
       if (m.tb < 0) { gas = true; if (LN.ej.tilt && m.t > LN.ej.t) { turnToward(m.dir, m.gdDir, LN.gd * dt); fx.samJet(m); } }
-      else if (LN.gd && m.tb < LN.gdT) { gas = true; turnToward(m.dir, m.gdDir, LN.gd * dt); }
+      else if (m.up && m.tb < m.up.t) gas = true; // С-300: строго вверх, пока сопло идёт по листу дыма
+      else if (LN.gd && m.tb < (m.up ? m.up.t : 0) + LN.gdT) { gas = true; turnToward(m.dir, m.gdDir, LN.gd * dt); }
       else if (LN.mode === 'box' && m.tb < 0.5) gas = true;
     }
     if (m.decoy) { if (m.decoy.life > 0) { aim = m.decoy.pos; avel = m.decoy.vel; } else { m.decoy = null; m.lost = true; } }
@@ -520,6 +539,7 @@ export function createStrike(ctx) {
       if (city.topAt(m.pos.x + m.dir.x * ahead, m.pos.z + m.dir.z * ahead) + 15 > m.pos.y + m.dir.y * ahead) { aim = null; turnToward(m.dir, TMP2.copy(m.dir).setY(Math.max(m.dir.y, 0) + 0.8).normalize(), 1.2 * dt); }
     }
     if (aim && T && T.W && T.W.kind === 'tbm' && S.abm) lead = 1; // противоракетный режим: всегда в точку встречи (баллистика за 2 км/с — иначе не догнать)
+    if (LN && LN.ej && LN.ej.acc && m.t <= LN.ej.tube) m.speed = Math.min(LN.ej.v, LN.ej.acc * m.t) + G0 * m.dir.y * dt; // С-300: в контейнере — разгон газом до ej.v (тяжесть вычтет flyMissile)
     const motor = flyMissile(m, M_, dt, aim, avel, lead);
     if (LN && LN.stage && !m.staged && m.tb >= M_.burn) { m.staged = true; fx.samStage(m); } // ускоритель выгорел и отделился
     fx.samMotor(m, motor);

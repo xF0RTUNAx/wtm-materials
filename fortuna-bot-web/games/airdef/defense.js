@@ -1196,7 +1196,8 @@ export function createDefense(C) {
       return;
     }
     if (tgt && (!u.desig || u.desig.dead || !vis.includes(u.desig) || (zone(tgt) && !zone(u.desig)))) designate(tgt);
-    if (u.track && !(u.reloadT > 0) && u.ammo > 0 && !(u.cool > 0) && zone(u.track)) { // у сетевого клиента cool нет — undefined
+    const up = !LNCH[u.key] || !LNCH[u.key].erect || u.lel >= LNCH[u.key].el - 0.01; // С-300 / С-400: пакет ещё поднимается — не пробовать (угол приходит и с сервера)
+    if (u.track && !(u.reloadT > 0) && u.ammo > 0 && !(u.cool > 0) && up && zone(u.track)) { // у сетевого клиента cool нет — undefined
       const inAir = C.S.sams.filter((m) => !m.dead && m.unit === u && m.target === u.track).length;
       if (inAir < 1 && (AO.launchT += dt) > 0.6) { const why = C.S.launch(u); if (!why) { opSay(tr('Авто: пуск')); on('launch', u); } AO.launchT = why ? -0.6 : 0; } // отказ — следующая попытка через 1,2 с
     } else AO.launchT = 0;
