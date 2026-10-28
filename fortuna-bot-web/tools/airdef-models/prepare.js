@@ -778,6 +778,15 @@ CONFIG.site_ammo_city_lo = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Ск
 // «Арсенал в ущелье» (зима, w_ammo) — из того же набора (Свои/Арсенал в ущелье, 2026-10-28): те же материалы, окраска «зима» (снег кладёт игра); +останец со штольнями
 CONFIG.site_ammo_w = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Арсенал в ущелье/arsenal.glb` };
 CONFIG.site_ammo_w_lo = { ...CONFIG.site_ammo_city_lo, src: `${DL}/Свои/Арсенал в ущелье/arsenal_lo.glb` };
+// склад «Фонарь Джека» (осень, a_farm) — из того же набора (Свои/Фонарь Джека, 2026-10-28): хранилища, бывшие коровники, окраска «после дождей»
+// весь неразрушаемый декор deco_* — одной частью 'deco' (кроме deco_trees: у елей зимой свой снег): игра склеивает меши одной части по материалу —
+// у склада горючего было 63 вызова отрисовки вблизи и 58 издали против 41 / 36 у склада боеприпасов (ревью 2026-10-28); у прежних сцен — при их перевыпуске
+const siteGroups = (c) => { const n = c.path.split('/').pop().replace(/\.\d+$/, ''); return /^deco_/.test(n) && !/^deco_trees/.test(n) ? 'deco' : n; };
+CONFIG.site_ammo_a = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Фонарь Джека/jack.glb`, groups: siteGroups };
+CONFIG.site_ammo_a_lo = { ...CONFIG.site_ammo_city_lo, src: `${DL}/Свои/Фонарь Джека/jack_lo.glb`, groups: siteGroups };
+// «Склад горючего» (город, oil) — второй сборщик (Свои/Склад горючего, 2026-10-28), свой набор: материалы F_A / F_B / F_glassF + те же tile_conc / tile_mesh
+CONFIG.site_fuel_city = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Склад горючего/fuel_city.glb`, groups: siteGroups, colors: { '^tile_conc$': [0.84, 0.84, 0.82], '^F_glassF$': [0.08, 0.1, 0.11] } };
+CONFIG.site_fuel_city_lo = { ...CONFIG.site_ammo_city_lo, src: `${DL}/Свои/Склад горючего/fuel_city_lo.glb`, groups: siteGroups, colors: CONFIG.site_fuel_city.colors };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

@@ -618,7 +618,7 @@ export function createAir(C) {
     if (Wp.kind === 'gps') { const a = coordAim(Wp.rmax * 1.2); if (!a) return false; const t = predictBomb(city, Wp, craft.pos, craft.vel, a, PT); return t > 0 && PT.distanceTo(a) < 20; }
     if (Wp.kind === 'bomb') {
       if (predictBomb(city, Wp, craft.pos, craft.vel, null, PT) < 0) return false;
-      return game.targets.some((o) => !o.dead && Math.abs(PT.x - o.x) < o.w / 2 + Wp.blast * 0.3 && Math.abs(PT.z - o.z) < o.d / 2 + Wp.blast * 0.3);
+      return game.targets.some((o) => !o.dead && Math.abs(PT.x - o.x) < o.w / 2 + Wp.blast * 0.3 && Math.abs(PT.z - o.z - (o.rz || 0)) < o.d / 2 + Wp.blast * 0.3); // rz — сдвиг рамки
     }
     if (!pod.lock || C.S.wpns.some((w) => w.owner === craft && !w.dead && w.W.kind !== 'arm')) return false; // по одной на точку
     const d = craft.pos.distanceTo(pod.lock);

@@ -290,9 +290,10 @@ export function buildAutumn(seed = 1) {
     add({ key: 'a_mon', name: tr('КП «Погост»'), x: p.x, z: p.z, w: 300, d: 260, value: 180, hp: 260, models: M, parts: M.map(mbox) }); }
   { const p = PK.vil, x = p.x + 260, z = p.z - 120, M = [mp('obj_milbase', x, z), mp('obj_milbase', x + 70, z + 40, 1), mp('obj_cont', x - 60, z + 60)]; // гарнизон в деревне
     add({ key: 'a_vil', name: tr('Гарнизон «Пугало»'), x, z: z + 20, w: 240, d: 200, value: 120, hp: 170, models: M, parts: M.map(mbox) }); }
-  { const p = PK.farm, M = [mp('obj_barn', p.x - 100, p.z, 0, 1.4), mp('obj_barn', p.x, p.z, 0, 1.4), mp('obj_barn', p.x + 100, p.z, 0, 1.4), mp('obj_oldind', p.x, p.z + 150, 1)]; // склад на ферме: сараи (narighillya), ×1,4 — коровники
-    for (let k = 0; k < 3; k++) M.push(mp('obj_cont', p.x - 100 + k * 100, p.z - 140));
-    add({ key: 'a_farm', name: tr('Склад «Фонарь Джека»'), x: p.x, z: p.z, w: 420, d: 360, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
+  { const p = PK.farm; // склад на ферме — своя сцена (city.js SITES site_ammo_a): хранилища, бывшие коровники, штабели; к югу (z +220…+380) — хутор карты
+    // рамка объекта — по сцене (z −270…+180 от центра: rz — сдвиг рамки), иначе запрет леса и реквизита (keep ниже) уходил на хутор: пропадали дома,
+    // и сдвигалась вся случайная расстановка карты (на хуторе rnd() тратится только на поставленные дома)
+    add({ key: 'a_farm', name: tr('Склад «Фонарь Джека»'), x: p.x, z: p.z, w: 540, d: 450, rz: -45, value: 150, hp: 200, site: 'site_ammo_a', parts: siteParts('site_ammo_a', p.x, p.z) }); }
   { const p = PK.wreck, M = [mp('obj_hangar', p.x, p.z - 80, 0, 0.8), mp('obj_milbase', p.x + 120, p.z + 60), mp('obj_oldind', p.x - 140, p.z + 40, 1)]; // ремонтная база на кладбище техники
     add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 400, d: 320, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.heli; // вертолётная площадка — своя сцена (city.js SITES): ангар, КДП, ГСМ и склад боеприпасов в обваловке, штаб, стоянки
@@ -309,7 +310,7 @@ export function buildAutumn(seed = 1) {
     add({ key: 'a_radar', name: tr('РЛС «Лысая гора»'), x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM, site: 'site_radar', // своя сцена «РЛС на вершине» (city.js SITES), место мельницы в ней свободно
       parts: [...MM.map(mbox), ...siteParts('site_radar', bx, bz)] }); }
   const objects = O;
-  const keep = [...objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 })),
+  const keep = [...objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z + (o.rz || 0) - o.d / 2 - 40, z1: o.z + (o.rz || 0) + o.d / 2 + 40 })), // rz — сдвиг рамки (объект-сцена не по центру)
     ...[PK.home].map((p) => ({ x0: p.x - p.hx, x1: p.x + p.hx, z0: p.z - p.hz, z1: p.z + p.hz }))];
   const blocked = (x, z, r) => keep.some((k) => x + r > k.x0 && x - r < k.x1 && z + r > k.z0 && z - r < k.z1);
 

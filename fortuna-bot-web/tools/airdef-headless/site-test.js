@@ -61,13 +61,14 @@ for (const [name, city, key] of [['Зимняя долина', buildWinter(1), '
 }
 // «Ведьмина поляна» (a_heli, site_heli) и «Склад боеприпасов» (город, tpp, site_ammo_city): ПТУР в каждую главную по очереди — разбита
 // только она, объект цел до последней; разбиты все — объект уничтожен; прицел — мимо руин; технику — не в водоём и не на рельсы (keep)
-for (const [name, city, key, site] of [['Туманная топь', buildAutumn(1), 'a_heli', 'site_heli'], ['Речной узел', buildCity(1), 'tpp', 'site_ammo_city'], ['Зимняя долина', buildWinter(1), 'w_ammo', 'site_ammo_w']]) {
+for (const [name, city, key, site] of [['Туманная топь', buildAutumn(1), 'a_heli', 'site_heli'], ['Речной узел', buildCity(1), 'tpp', 'site_ammo_city'], ['Зимняя долина', buildWinter(1), 'w_ammo', 'site_ammo_w'], ['Туманная топь', buildAutumn(1), 'a_farm', 'site_ammo_a'], ['Речной узел', buildCity(1), 'oil', 'site_fuel_city']]) {
   const c = city.objects.find((q) => q.key === key);
   console.log(`\n== ${name}: ${key}`);
   if (!c || c.site !== site) fail(`нет объекта-сцены ${key}`);
   else {
     const B = SITES[site].b, names = Object.keys(B), sum = names.reduce((s, b) => s + B[b].share, 0);
     if (Math.abs(sum - 1) > 1e-6) fail(`доли прочности: сумма ${sum}`);
+    if (names.length > 31) fail(`построек ${names.length} — маска онлайна (bldMask) держит 31`);
     const S = mk(city), o = S.objects.find((q) => q.id === c.id); ev.length = 0;
     const hp0 = o.hp; o.hp = 1e9; // общий запас — без предела: проверяем именно гибель по главным (иначе склад гибнет по прочности на 4-м ПТУР)
     console.log(`прочность ${hp0}; постройки: ${names.map((b) => `${b} ${o.bld[b].hp.toFixed(1)}${o.bld[b].main ? '*' : ''}${B[b].chain ? '!' : ''}`).join(', ')}`);
@@ -85,23 +86,23 @@ for (const [name, city, key, site] of [['Туманная топь', buildAutumn
     if (SITES[site].keep) {
       const { freeGround } = await import('../../games/airdef/mission.js');
       for (const [kx, kz] of SITES[site].keep.slice(0, 3)) if (freeGround(city, c.x + kx, c.z + kz)) fail(`техника ставится в запретный декор (${kx}, ${kz})`);
-      const fx0 = site === 'site_ammo_w' ? [-100, 0] : [-150, 20]; // площадка между постройками
+      const fx0 = { site_ammo_w: [-100, 0], site_ammo_a: [-100, -70], site_fuel_city: [-60, 80] }[site] || [-150, 20]; // площадка между постройками
       if (!freeGround(city, c.x + fx0[0], c.z + fx0[1])) fail('площадка между хранилищами — не свободная земля');
     }
     // скала (SITES solid): в сетке высот, технику не ставить, разрыв на ней — без урона объекту; ПТУР в портал штольни — штольня разбита
     for (const [sx, sz, w, d, h] of SITES[site].solid || []) {
       const { freeGround } = await import('../../games/airdef/mission.js');
       const top = city.topAt(c.x + sx, c.z + sz) - city.groundH(c.x + sx, c.z + sz);
-      if (Math.abs(top - h) > 1) fail(`скала в сетке высот: ${top.toFixed(1)} м вместо ${h}`);
-      if (freeGround(city, c.x + sx, c.z + sz)) fail('технику можно поставить на скалу');
+      if (Math.abs(top - h) > 1) fail(`препятствие в сетке высот: ${top.toFixed(1)} м вместо ${h}`);
+      if (freeGround(city, c.x + sx, c.z + sz)) fail('технику можно поставить на препятствие');
       const S2 = mk(city), o2 = S2.objects.find((q) => q.id === c.id), hp1 = o2.hp; hit(S2, city, c.x + sx + w / 4, c.z + sz - d / 4);
-      if (o2.hp < hp1) fail(`разрыв на скале — урон объекту ${(hp1 - o2.hp).toFixed(0)}`);
-      for (let n = -1; n < 30; n++) { const a = objAimXZ(o2, n, 0, 0); if (Math.abs(a.x - c.x - sx) < w / 2 && Math.abs(a.z - c.z - sz) < d / 2) { fail(`прицел ${n} — в скалу`); break; } }
+      if (o2.hp < hp1) fail(`разрыв на препятствии — урон объекту ${(hp1 - o2.hp).toFixed(0)}`);
+      for (let n = -1; n < 30; n++) { const a = objAimXZ(o2, n, 0, 0); if (Math.abs(a.x - c.x - sx) < w / 2 && Math.abs(a.z - c.z - sz) < d / 2) { fail(`прицел ${n} — в препятствие`); break; } }
       for (const b of Object.keys(SITES[site].b).filter((k) => /^adit/.test(k))) {
         const q = c.parts.find((p) => p.b === b), S3 = mk(city), o3 = S3.objects.find((x) => x.id === c.id); hit(S3, city, q.x, q.z);
         if (!o3.bld[b].dead) fail(`ПТУР в портал ${b} — штольня цела (верх в точке: ${(city.topAt(q.x, q.z) - city.groundH(q.x, q.z)).toFixed(1)} м)`);
       }
-      console.log(`скала: верх ${top.toFixed(1)} м, урон от разрыва на ней ${(hp1 - o2.hp).toFixed(0)}`);
+      console.log(`препятствие (solid): верх ${top.toFixed(1)} м, урон от разрыва на ней ${(hp1 - o2.hp).toFixed(0)}`);
     }
   }
 }

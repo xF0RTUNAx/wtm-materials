@@ -327,11 +327,12 @@ function siteLook(o) {
 const SITE_BB = new THREE.Box3();
 function sitePlace(o, g) {
   const done = g.userData.placed || (g.userData.placed = new Set()), y0 = g.userData.site.position.y; let left = 0;
-  for (const [i, [k, x, z, h]] of (SITES[o.site].place || []).entries()) {
+  for (const [i, [k, x, z, h, s = 1]] of (SITES[o.site].place || []).entries()) {
     if (done.has(i)) continue;
     const m = anyModel(k); if (!m) { wantModel(k); left++; continue; }
-    m.rotation.y = -h * D2R; m.updateMatrixWorld(true); SITE_BB.setFromObject(m);
-    m.position.set(o.x + x, y0 + 0.1 - SITE_BB.min.y, o.z + z);
+    m.scale.setScalar(s); m.rotation.y = -h * D2R; m.updateMatrixWorld(true); SITE_BB.setFromObject(m);
+    // на площадке сцены (y0) или на земле, если она выше (сцена на склоне — РЛС на вершине); s — масштаб (стога карты — 1,4)
+    m.position.set(o.x + x, Math.max(y0, city.groundH(o.x + x, o.z + z)) + 0.1 - SITE_BB.min.y, o.z + z);
     m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; } });
     g.add(m); freezeTree(m); done.add(i); (g.userData.copies = g.userData.copies || []).push(m);
   }
@@ -613,7 +614,7 @@ const simFx = {
   bldDestroyed(o, b) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) — серия вторичных взрывов
     siteLook(o); const q = o.parts.find((p) => p.b === b);
     if (q && C.fx) C.fx.burn(new THREE.Vector3(q.x, city.groundH(q.x, q.z) + 2, q.z), Math.min(60, (q.w || q.r * 2 || 20) * 0.6));
-    if (q && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
+    if (q && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || q.r * 2 || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || q.r * 2 || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
   },
   objectDestroyed(o, by) {
     objLook(o.id, true);
@@ -1244,7 +1245,7 @@ setInterval(() => {
   // запечённая земля — после загрузки моделей и текстур и возврата их после потери контекста: в разгар загрузки сжатых текстур графический процесс
   // Safari в симуляторе iPhone падал 3 раза из 4 (с ожиданием — 0 из 3, 2026-10-27)
   if (C.G.bake) C.G.bake.gate = () => C.assetsDone === true && !ktxBusy();
-  if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill', 'obj_barn']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
+  if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
   C.G.onSite = (o) => siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o); // модель объекта-сцены пришла — вид построек по бою
   for (const n of new Set(city.objects.map((o) => o.site).filter(Boolean))) { // объекты-сцены: дальняя копия — сразу, подробная — когда камера подлетит (siteLod);
     wantModel(n + '_lo'); if (SITE_HI) for (const [k] of SITES[n].place || []) wantModel(k); // копии моделей на объекте — тоже сразу: их приход пересобирает самолёты и комплексы — не посреди захода на цель
