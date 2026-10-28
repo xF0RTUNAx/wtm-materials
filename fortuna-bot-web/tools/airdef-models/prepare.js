@@ -796,6 +796,8 @@ CONFIG.site_fuel_a = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Болот
 CONFIG.site_fuel_a_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Болотный огонь/fuel_a_lo.glb` };
 CONFIG.site_garr_w = { ...CONFIG.site_park_city, src: `${DL}/Свои/Военный городок/garr_w.glb` }; // «Военный городок» (зима, w_garr) — из набора парка
 CONFIG.site_garr_w_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/Военный городок/garr_w_lo.glb` };
+CONFIG.site_cp_w = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Командный пункт/cp_w.glb` }; // «Командный пункт» (зима, w_cp) — набор КП второго сборщика (материалы F_*)
+CONFIG.site_cp_w_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Командный пункт/cp_w_lo.glb` };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

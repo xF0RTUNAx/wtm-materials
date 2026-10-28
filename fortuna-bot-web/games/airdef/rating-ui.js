@@ -229,7 +229,7 @@ export function createRating(C) {
     draw();
     const p = S.p;
     try { const d = await fetchProfile(nick, season); p.data = d; PROF.set(pkey(nick, season), { data: d, at: Date.now() }); }
-    catch (e) { p.err = e.status === 404 ? tr('Игрок не найден') : e.status === 0 && !e.offline && typeof CONFIG !== 'undefined' ? 'soon' : e.message || tr('Нет связи с сайтом'); } // функции ещё нет на сервере (ответ без CORS) — «скоро»
+    catch (e) { p.err = e.status === 404 ? tr('Игрок не найден') : e.status === 0 && !e.offline && typeof CONFIG !== 'undefined' ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // функции ещё нет на сервере (ответ без CORS) — «скоро»
     p.busy = false;
     if (S.p === p && S.view === 'prof' && root.classList.contains('on')) draw();
   }

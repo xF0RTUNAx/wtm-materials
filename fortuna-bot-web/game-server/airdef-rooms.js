@@ -101,7 +101,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     let t = wantTeam === T1 || wantTeam === T2 ? wantTeam : team(r, T1).length <= team(r, T2).length ? T1 : T2;
     if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else t = t === T1 ? T2 : T1; }
     if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else return send(c, { t: 'err', msg: 'Комната заполнена' }); }
-    Object.assign(c, { room: r, team: t, ready: !!r.quick, bot: false, budget: O.BUDGET0[t] || 0, choice: null, kills: 0, deaths: 0, score: 0, lives: null, units: 0, plan: null, spent: 0 });
+    Object.assign(c, { room: r, team: t, ready: !!r.quick, bot: false, budget: O.BUDGET0[t] || 0, choice: null, kills: 0, deaths: 0, score: 0, lives: null, units: 0, plan: null, spent: 0, use: null }); // use — вылеты / ЗРК прошлого боя в новую комнату не тянуть
     r.players.set(c.id, c);
     if (r.state !== 'lobby') { if (r.kind === 'multi') MU.resume(r, c); else { c.budget = r.wave > 1 ? Math.round(O.BUDGET0[t] * 0.8) : O.BUDGET0[t]; sendStart(r, c); sendState(r, c); } }
     sendRoom(r); J(r, 'join', { who: c.name, team: t });

@@ -3,6 +3,7 @@
 // поиск «Реализма» подбирает эпоху не выше самого «младшего» ранга людей в очереди. Аркада — без ограничений.
 // Правила — те же, что у игры и функций Supabase (games/airdef/progress.js).
 import { NODE, newProgress, owned, branchRank, strikeId } from '../games/airdef/progress.js?v=20261028a';
+import { SAM } from '../games/airdef/arsenal.js?v=20261028a';
 
 // билет → состояние для проверок (null — разработка без MP_SECRET или тестовый вход: ограничений нет)
 export const adProgress = (list) => (Array.isArray(list) ? { ...newProgress(), own: list.filter((id) => NODE[id]) } : null);
@@ -31,6 +32,6 @@ export const useOf = (p) => (p.use || (p.use = { fl: {}, sm: new Set() }));
 export function useOut(p) {
   const u = p.use; if (!u) return null;
   const fl = Object.fromEntries(Object.entries(u.fl).filter(([k, n]) => typeof k === 'string' && n > 0).slice(0, 12).map(([k, n]) => [k, Math.min(99, n)]));
-  const sm = [...u.sm].filter((k) => typeof k === 'string').slice(0, 20);
+  const sm = [...u.sm].filter((k) => typeof k === 'string' && !(SAM[k] && SAM[k].type === 'jammer')).slice(0, 20); // подавители навигации — не «любимый ЗРК»
   return Object.keys(fl).length || sm.length ? { ...(Object.keys(fl).length ? { fl } : {}), ...(sm.length ? { sm } : {}) } : null;
 }
