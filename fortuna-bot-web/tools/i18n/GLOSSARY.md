@@ -60,6 +60,7 @@
 | сбит / уничтожен | shot down / destroyed |
 | цель задания | mission target |
 | АВТО | AUTO |
+| кнопка «Пуск» / «Пуск / сброс» | "Launch" / Launch / drop (Mark 2026-10-28: Launch, не Fire; кнопки в тексте — в "…" или «…», не “…”: так их узнаёт icons.js iconize) |
 | висение | hover |
 | шаг-газ / ручка / педали | collective / cyclic (stick) / pedals |
 | шаг вбок | sidestep |
