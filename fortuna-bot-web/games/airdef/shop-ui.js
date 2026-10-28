@@ -132,7 +132,7 @@ export function createShop(C) {
     let d = null, err = '';
     if (key) {
       try { d = await callFn('airdef-shop', { player_id: key, action: 'state' }); }
-      catch (e) { err = e.status === 404 && (!e.code || e.code === 'NOT_FOUND') ? 'soon' : e.message || tr('Нет связи с сайтом'); } // NOT_FOUND — функции нет на сервере (Supabase)
+      catch (e) { err = e.status === 404 && (!e.code || e.code === 'NOT_FOUND') ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // NOT_FOUND — функции нет на сервере (Supabase)
     }
     S.busy = false;
     if (key !== keyNow()) { S.at = 0; S.w = null; load(); return; } // пока ждали, сменили аккаунт
@@ -148,7 +148,7 @@ export function createShop(C) {
   async function act(action, key, extra) {
     if (S.act) return false; S.act = true; draw();
     let d = null, err = '';
-    try { d = await callFn('airdef-shop', { player_id: keyNow(), action, key, ...extra }); } catch (e) { err = e.message || tr('Нет связи с сайтом'); }
+    try { d = await callFn('airdef-shop', { player_id: keyNow(), action, key, ...extra }); } catch (e) { err = trIf(e.message) || tr('Нет связи с сайтом'); }
     S.act = false;
     if (d && d.wallet) { const from = S.w ? S.w.crystals : 0; S.w = d.wallet; draw(); countTo(from, S.w.crystals); paint(); } else { S.err = err; draw(); S.err = ''; }
     return !!d;

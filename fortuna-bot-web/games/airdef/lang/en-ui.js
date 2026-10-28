@@ -780,6 +780,7 @@ export default {
   "Крен": "Roll",
   "Масса": "Weight",
   "Нет такой единицы": "No such unit",
+  "Нет такой ветки": "No such branch",
   "Носитель": "Carrier",
   "Обзор": "View",
   "Обучение — без наград": "Training: no rewards",
@@ -920,6 +921,10 @@ export default {
   "В этот аккаунт игры прогресс уже переносили": "Progress has already been transferred to this game account",
   "Это не аккаунт сайта": "This is not a website account",
   "Это не аккаунт игры": "This is not a game account",
+  // ответы airdef-account при переносе без кода, который понимает account-ui.js (страховка: показываются через trIf)
+  "Придумайте логин для игры: 3–24 символа — латиница, цифры, подчёркивание": "Choose a game login: 3–24 characters — Latin letters, digits, underscore",
+  "Придумайте пароль для игры: минимум 6 символов": "Choose a game password: at least 6 characters",
+  "Придумайте ник для рейтинга: 3–16 символов — буквы, цифры, пробел, _ и -": "Choose a nickname for the rating: 3–16 characters — letters, digits, space, _ and -",
   // ── перенос с сайта и регистрация (account-ui.js; Mark 2026-10-25: «сделать понятным, что перенос, что регистрация») ──
   "Перенос с сайта": "Transfer from the website",
   "Прогресс «Воздушного превосходства» с аккаунта сайта <b>{0}</b> переедет в аккаунт игры. Мини-игры сайта останутся на сайте. Перенос — один раз.": "The Air Superiority progress of the website account <b>{0}</b> will move to a game account. The website mini-games stay on the website. The transfer is one-time.",
@@ -1048,5 +1053,9 @@ export default {
   "получена": "received",
   "Эта окраска уже ваша": "This livery is already yours",
   "Не хватает кристаллов": "Not enough crystals",
-  "Окраски на выбор нет": "No livery of your choice",
+  "Окраски на выбор нет": "No livery pick available",
+  // ответы функции airdef-shop (показываются как есть, через trIf)
+  "Кристаллы и окраски — только у аккаунта игры": "Crystals and liveries are for game accounts only",
+  "Сначала купите эту окраску": "Buy this livery first",
+  "Этой окраски сейчас нет в магазине": "This livery isn't in the shop right now",
 };
