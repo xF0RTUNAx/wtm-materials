@@ -59,6 +59,7 @@ export function localizeTree(TREE, BRANCHES, SIDE_NAME) {
     if (isAir) { n.name = src && src.name ? src.name : ARS.PLANES[n.key] || tx(n.name); n.short = ARS.PLANES[n.key] || tx(n.short); }
     else if (src && src.name) { n.name = src.name; n.short = src.short || tx(n.short); }
     else { n.name = tx(n.name); n.short = tx(n.short); }
+    if (n.lineName) n.lineName = tx(n.lineName); // линия «Мульти-волны» («Баллистика», «Крылатые ракеты»…)
   }
   for (const b of BRANCHES || []) { b.name = tx(b.name); if (b.hint) b.hint = tx(b.hint); }
   if (SIDE_NAME) for (const k of Object.keys(SIDE_NAME)) SIDE_NAME[k] = tx(SIDE_NAME[k]);
