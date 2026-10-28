@@ -56,7 +56,7 @@ function pads() {
     { x: valleyX(-6300) - 1150, z: -6300, hx: 170, hz: 1700, m: 300 },               // 2 ж/д узел (северо-запад, вдоль долины)
     { x: valleyX(5500) + 7600, z: 5500, hx: 440, hz: 280, m: 300 },                  // 3 арсенал в глубине ущелья (восток)
     { x: valleyX(LS.z) + 2000, z: LS.z - 2300, hx: 380, hz: 300, m: 350 },          // 4 склад ГСМ у озера (юг)
-    { x: valleyX(-1500) - 8200, z: -1500, hx: 280, hz: 250, m: 420 },                // 5 командный пункт в котловине (запад)
+    { x: valleyX(-1500) - 8200, z: -1500, hx: 280, hz: 250, m: 420, hard: 1 },      // 5 командный пункт в котловине (запад); hard — у въезда дорога поднимала землю на 2–3 м
     // 6 военный городок — терраса под своей сценой (site_garr_w: 430 × 390, начало в (−1106, 7540), южнее дороги посёлка; было 247…256 м);
     // последней — номера прежних площадок (P[0…5]) не сдвигать
     { x: -1106, z: 7540, hx: 235, hz: 215, m: 150, hard: 1 }, // hard — после врезки дорог площадка снова ровная (дорога посёлка у северной ограды срезала угол на 2,5 м)
@@ -207,9 +207,8 @@ export function buildWinter(seed = 1) {
     add({ key: 'w_fuel', name: tr('Склад ГСМ'), x: p.x, z: p.z, w: 600, d: 480, value: 160, hp: 200, site: 'site_fuel_w', parts: siteParts('site_fuel_w', p.x, p.z) }); }
   { const p = P[3]; // арсенал — своя сцена (city.js SITES site_ammo_w): хранилища, штольни в останце, навес, штабели; дно ущелья ровное ±330 м
     add({ key: 'w_ammo', name: tr('Арсенал в ущелье'), x: p.x, z: p.z, w: 560, d: 470, value: 180, hp: 220, site: 'site_ammo_w', parts: siteParts('site_ammo_w', p.x, p.z) }); }
-  { const p = P[5], M = [mp('obj_milbase', p.x, p.z, 0, 2), mp('obj_oldind', p.x - 70, p.z + 20, 1), mp('obj_cont', p.x + 70, p.z + 40)]; // командный пункт
-    add({ key: 'w_cp', name: tr('Командный пункт'), x: p.x, z: p.z, w: 260, d: 200, value: 160, hp: 260, models: M,
-      parts: [...M.map(mbox), { t: 'cyl', x: p.x - 40, z: p.z - 60, r: 1, h: 45 }, { t: 'cyl', x: p.x + 45, z: p.z - 60, r: 1, h: 38 }] }); }
+  { const p = P[5]; // командный пункт в котловине — своя сцена (city.js SITES site_cp_w): бункеры, узел связи, антенные поля; въезд с востока
+    add({ key: 'w_cp', name: tr('Командный пункт'), x: p.x, z: p.z, w: 560, d: 500, value: 160, hp: 260, site: 'site_cp_w', parts: siteParts('site_cp_w', p.x, p.z) }); }
   { // РЛС на вершине восточного хребта: самая высокая точка в круге
     let bx = 0, bz = 0, bh = -1e9; const cx = valleyX(-6500) + 6200, cz = -6500; // северо-восточный хребет
     for (let a = 0; a < 2000; a += 100) for (let t = 0; t < 6.283; t += 0.25) { const x = cx + Math.cos(t) * a, z = cz + Math.sin(t) * a, h = groundH(x, z); if (h > bh) { bh = h; bx = x; bz = z; } }

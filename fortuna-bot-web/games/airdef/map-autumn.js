@@ -7,7 +7,7 @@
 // Детерминированный генератор с интерфейсом buildCity / buildWinter (симуляция и сервер): сетка высот 50 м, groundH —
 // билинейно; вода — одна отметка (уровень болота AUTUMN.WY), waterAt — где она. Оси как в city.js: −Z — север.
 import { tr } from './i18n.js?v=20261028a';
-import { CITY, ZONE, KIND, mulberry32, clamp, smooth, mp, mbox, siteParts, mapRuntime } from './city.js?v=20261028a';
+import { CITY, ZONE, KIND, SITES, mulberry32, clamp, smooth, mp, mbox, siteParts, mapRuntime } from './city.js?v=20261028a';
 import { perlin, fbm, ridged, heap } from './map-winter.js?v=20261028a';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1;
@@ -130,13 +130,16 @@ function ridgeGrid(N) {
 function pads() {
   const I = AUTUMN.ISLE;
   return [
-    { key: 'mon', x: I.x, z: I.z, hx: 230, hz: 190, m: 120, y: AUTUMN.WY + 5 },   // 0 монастырь на острове
+    { key: 'mon', x: I.x, z: I.z, hx: 230, hz: 190, m: 120, y: AUTUMN.WY + 5, hard: 1 }, // 0 монастырь на острове; hard — гать у южного края опускала остров под сценой на 1,4 м
     { key: 'vil', x: -1300, z: 5400, hx: 650, hz: 420, m: 380, k: 0.8 },          // 1 заброшенная деревня (южный склон)
     { key: 'farm', x: -7000, z: 300, hx: 380, hz: 320, m: 350 },                  // 2 ферма и тыквенные поля (запад)
     { key: 'wreck', x: -5600, z: -6400, hx: 230, hz: 180, m: 150, rav: 1 },       // 3 кладбище техники — на дне ближайшего главного оврага
     { key: 'heli', x: 1800, z: -9200, hx: 300, hz: 300, m: 350 },                 // 4 вертолётная площадка противника (север)
     { key: 'peat', x: 4500, z: 1100, hx: 420, hz: 300, m: 300, y: AUTUMN.WY + 3 }, // 5 торфоразработки у края болота (восток); 2026-10-21 сдвинуты с (5000, 2600) к воде: там у подножия склона прицел вертолёта видел склад с 1 направления из 24, здесь — с 23
     { key: 'home', x: 9800, z: 11200, hx: 220, hz: 220, m: 350 },                 // 6 наша площадка (юго-восток)
+    // 7 терраса гарнизона «Пугало» (сцена site_garr_a: x ±175, z −165…+125 от (−1040, 5300); склон был 15 м — к северу ниже) — последней: номера прежних
+    // не сдвигать; ядро — узлы сетки x −1250…−850, z 5100…5450 (node() округляет), hard — снова ровное после врезки дорог
+    { key: 'garr', x: -1040, z: 5280, hx: 190, hz: 160, m: 200, hard: 1 }, // m 200 — откос положе: при 150 улицы деревни у террасы шли под 8–9 %
   ];
 }
 
@@ -274,6 +277,8 @@ export function buildAutumn(seed = 1) {
     }
     for (let q = 0; q < N * N; q++) if (CW[q] > 0) { HM[q] += (CT[q] - HM[q]) * CW[q]; if (CW[q] >= 1) WET[q] = 0; }
   }
+  // площадки hard (сцена объекта стоит на ровном) — ядро снова на своей высоте: врезка дороги рядом не должна опускать постройки сцены
+  for (const p of P) if (p.hard) { const [i0, j0] = node(p.x - p.hx, p.z - p.hz), [i1, j1] = node(p.x + p.hx, p.z + p.hz); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) HM[j * N + i] = p.y; }
   const groundH = groundAt;
   const ravineAt = (x, z) => { const [i, j] = node(x, z); return RAV.CV[j * N + i]; }; // глубина врезки оврага, м
   const waterAt = (x, z) => { const [i, j] = node(x, z); return WET[j * N + i] === 1; };
@@ -287,10 +292,14 @@ export function buildAutumn(seed = 1) {
   // ── объекты-цели (модели построек — общие с городом; осенние модели — потом) ──
   const O = [];
   const add = (o) => { O.push(Object.assign({ id: O.length, value: 100, hp: 100 }, o)); };
-  { const p = PK.mon, M = [mp('obj_church', p.x + 20, p.z - 40), mp('obj_milbase', p.x - 70, p.z + 60), mp('obj_cont', p.x + 85, p.z + 70, 1)]; // монастырь: заброшенный храм с колокольней (reramil), КП в кельях
-    add({ key: 'a_mon', name: tr('КП «Погост»'), x: p.x, z: p.z, w: 300, d: 260, value: 180, hp: 260, models: M, parts: M.map(mbox) }); }
-  { const p = PK.vil, x = p.x + 260, z = p.z - 120, M = [mp('obj_milbase', x, z), mp('obj_milbase', x + 70, z + 40, 1), mp('obj_cont', x - 60, z + 60)]; // гарнизон в деревне
-    add({ key: 'a_vil', name: tr('Гарнизон «Пугало»'), x, z: z + 20, w: 240, d: 200, value: 120, hp: 170, models: M, parts: M.map(mbox) }); }
+  // gk — прежняя рамка запрета генератора карты (полуразмеры от центра, с запасом 40 м): у «Погоста» и «Пугала» рамка сцены больше, а с ней пропали бы
+  // сухостой у острова и 14 домов деревни у ограды гарнизона — и сдвинулась бы вся случайная расстановка карты (rnd() берётся только на поставленное);
+  // дома на самой сцене не ставятся (put: onScene)
+  { const p = PK.mon; // КП в заброшенном монастыре — своя сцена (city.js SITES site_cp_a): бункеры и штаб за стеной, погост в углу двора (SITES props);
+    // храма нет (Mark: объект военный); въезд с гати — с юга; рамка — по сцене (x −210…+230, z −200…+180)
+    add({ key: 'a_mon', name: tr('КП «Погост»'), x: p.x, z: p.z, w: 460, d: 380, rz: -10, gk: [190, 170], value: 180, hp: 260, site: 'site_cp_a', parts: siteParts('site_cp_a', p.x, p.z) }); }
+  { const x = -1040, z = 5300; // гарнизон в деревне — своя сцена (city.js SITES site_garr_a) на своей террасе (pads: garr); через неё идут две улицы деревни
+    add({ key: 'a_vil', name: tr('Гарнизон «Пугало»'), x, z, w: 350, d: 290, rz: -20, gk: [160, 140], value: 120, hp: 170, site: 'site_garr_a', parts: siteParts('site_garr_a', x, z) }); }
   { const p = PK.farm; // склад на ферме — своя сцена (city.js SITES site_ammo_a): хранилища, бывшие коровники, штабели; к югу (z +220…+380) — хутор карты
     // рамка объекта — по сцене (z −270…+180 от центра: rz — сдвиг рамки), иначе запрет леса и реквизита (keep ниже) уходил на хутор: пропадали дома,
     // и сдвигалась вся случайная расстановка карты (на хуторе rnd() тратится только на поставленные дома)
@@ -311,14 +320,17 @@ export function buildAutumn(seed = 1) {
     add({ key: 'a_radar', name: tr('РЛС «Лысая гора»'), x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM, site: 'site_radar', // своя сцена «РЛС на вершине» (city.js SITES), место мельницы в ней свободно
       parts: [...MM.map(mbox), ...siteParts('site_radar', bx, bz)] }); }
   const objects = O;
-  const keep = [...objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z + (o.rz || 0) - o.d / 2 - 40, z1: o.z + (o.rz || 0) + o.d / 2 + 40 })), // rz — сдвиг рамки (объект-сцена не по центру)
+  const keep = [...objects.map((o) => (o.gk ? { x0: o.x - o.gk[0], x1: o.x + o.gk[0], z0: o.z - o.gk[1], z1: o.z + o.gk[1] } // gk — прежняя рамка (выше)
+      : { x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z + (o.rz || 0) - o.d / 2 - 40, z1: o.z + (o.rz || 0) + o.d / 2 + 40 })), // rz — сдвиг рамки (объект-сцена не по центру)
     ...[PK.home].map((p) => ({ x0: p.x - p.hx, x1: p.x + p.hx, z0: p.z - p.hz, z1: p.z + p.hz }))];
   const blocked = (x, z, r) => keep.some((k) => x + r > k.x0 && x - r < k.x1 && z + r > k.z0 && z - r < k.z1);
 
   // ── постройки: заброшенная деревня (избы вдоль кривых улиц, сараи), хутор у фермы, бараки торфяника ──
   let cap = 2000, n = 0;
   const BX = new Float32Array(cap), BZ = new Float32Array(cap), BW = new Float32Array(cap), BD = new Float32Array(cap), BH = new Float32Array(cap), BY = new Float32Array(cap), BK = new Uint8Array(cap), BC = new Float32Array(cap);
-  const put = (x, z, w, d, h, k) => { if (n >= cap || blocked(x, z, Math.max(w, d) / 2) || waterAt(x, z)) return; BX[n] = x; BZ[n] = z; BW[n] = w; BD[n] = d; BH[n] = h; BK[n] = k; BY[n] = 0; BC[n] = rnd(); n++; };
+  // дом на сцене объекта (рамка + 3 м) не ставится, но rnd() на него берётся, как раньше: дома деревни под гарнизоном «Пугало» убраны без сдвига расстановки
+  const onScene = (x, z, r) => objects.some((o) => o.site && Math.abs(x - o.x) < o.w / 2 + r && Math.abs(z - o.z - (o.rz || 0)) < o.d / 2 + r);
+  const put = (x, z, w, d, h, k) => { if (n >= cap || blocked(x, z, Math.max(w, d) / 2) || waterAt(x, z)) return; const c = rnd(); if (onScene(x, z, Math.max(w, d) / 2 + 3)) return; BX[n] = x; BZ[n] = z; BW[n] = w; BD[n] = d; BH[n] = h; BK[n] = k; BY[n] = 0; BC[n] = c; n++; };
   { const p = PK.vil, a0 = -0.2 + rnd() * 0.4; // три улицы вдоль склона, дома с огородами — редко (деревня заброшена)
     for (let s = -1; s <= 1; s++) {
       let a = a0, x = p.x - p.hx * 0.9, z = p.z + s * 150; const st = [[x, z]]; ROADS.push({ w: s ? 5 : 6, pts: st });
@@ -330,7 +342,7 @@ export function buildAutumn(seed = 1) {
   }
   for (let k = 0; k < 6; k++) put(PK.farm.x - 260 + rnd() * 520, PK.farm.z + 230 + rnd() * 120, 10 + rnd() * 8, 16 + rnd() * 10, 5 + rnd() * 3, KIND.PLAIN); // хутор
   // бараки торфяника — четыре (первый, у x + 300, закрывала рамка прежнего склада; сцена «Болотного огня» его открыла — put берёт rnd() только на
-  // поставленный дом, и вся случайная расстановка карты после него сдвигалась: тыкв +60 %, другие поля)
+  // дом, не закрытый рамкой запрета (keep / gk; дом на сцене — onScene — rnd() берёт, но не ставится), и вся случайная расстановка карты после него сдвигалась: тыкв +60 %, другие поля)
   for (let k = 1; k < 5; k++) put(PK.peat.x + 300 + k * 30, PK.peat.z + 180, 9, 26, 4.5, KIND.PLAIN);
   const B = { n, x: BX.subarray(0, n), z: BZ.subarray(0, n), w: BW.subarray(0, n), d: BD.subarray(0, n), h: BH.subarray(0, n), y0: BY.subarray(0, n), k: BK.subarray(0, n), c: BC.subarray(0, n) };
 
@@ -359,7 +371,11 @@ export function buildAutumn(seed = 1) {
     fence(cx - W / 2, cz - D / 2, cx - W / 2, cz + D / 2, false); fence(cx + W / 2, cz - D / 2, cx + W / 2, cz + D / 2, false);
     for (let k = 0; k < 6; k++) prop(k < 3 ? 'pr_oldtree' : 'pr_deadtree', cx + (rnd() - 0.5) * W * 0.9, cz + (rnd() - 0.5) * D * 0.9, rnd() * 6.28, 0.85 + rnd() * 0.3);
   }
-  { const p = PK.mon; for (let k = 0; k < 26; k++) prop(rnd() < 0.6 ? 'pr_grave2' : 'pr_grave1', p.x - 120 + (k % 9) * 2.6, p.z - 95 + Math.floor(k / 9) * 3.2, (rnd() - 0.5) * 0.3, 0.95); } // монастырский погост
+  // монастырский погост — теперь в углу двора сцены «Погоста» (SITES props); rnd() прежнего (26 надгробий × 2) берутся, как раньше, — иначе сдвинулась бы
+  // вся случайная расстановка карты после него
+  for (let k = 0; k < 52; k++) rnd();
+  // реквизит карты на объектах-сценах (SITES props: [модель, x, z, курс° по часовой от севера, масштаб]) — инстансами, как весь реквизит; rnd() не берёт
+  for (const o of objects) if (o.site) for (const [k, x, z, h, s = 1] of SITES[o.site].props || []) prop(k, o.x + x, o.z + z, -h * Math.PI / 180, s);
   for (const f of FIELDS) { // тыквенные поля — рядами; на пашне — тюки сена
     const c = Math.cos(f.a), s0 = Math.sin(f.a), at = (u, v) => [f.x + u * c - v * s0, f.z + u * s0 + v * c];
     if (f.pumpkin) { for (let u = -f.w / 2 + 3; u < f.w / 2 - 3; u += 2.4) for (let v = -f.d / 2 + 3; v < f.d / 2 - 3; v += 2.0) if (rnd() < 0.42) { const [x, z] = at(u + (rnd() - 0.5), v + (rnd() - 0.5) * 0.8); prop('pr_pumpkin', x, z, rnd() * 6.28, 0.75 + rnd() * 0.6); } }

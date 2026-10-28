@@ -528,7 +528,6 @@ const CONFIG = {
     groups: (c) => (/(^|\/)radar_/.test(c.path) ? 'radar' : 'body') },
   // ── постройки для военных объектов (целей): земля y = 0, центр по габаритам
   obj_tanks: { src: `${DL}/large_industrial_storage_tanks.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // резервуар и газгольдеры
-  obj_tank4: { src: `${DL}/low_poly_fuel_tank_4-x__pipe.glb`, scale: 4.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 40000, groups: () => 'body' },
   obj_rtank: { src: `${DL}/rusty_airbase_fuel_tank.glb`, scale: 5, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
   obj_hangar: { src: `${DL}/hangar.glb`, scale: 1.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, colors: { '#pad': [0.2, 0.2, 0.19], '#shed': [0.1, 0.11, 0.08] }, // у автора всё белое: подложка (бетон) и навес — свои цвета; на каждой карте — свои (city-render.js, objTint)
     groups: (c) => (c.size[1] < 0.05 && c.size[0] > 40 ? 'body#pad' : 'body#shed') },
@@ -702,10 +701,8 @@ const CONFIG = {
   aam_stinger: { src: `${DL}/fim-92_stinger_low-poly.glb`, scale: 1.1875, nose: '+z', tex: () => 256, pickMesh: /./, dropMat: /^FIM-92_Stinger_1_Material/ }, // ракета FIM-92 Stinger (без трубы) — GoldbergR
   // ── Хеллоуин, осенняя карта «Туманная топь» (2026-10-20): постройки-цели obj_*, реквизит pr_* / c_vaz (все CC BY 4.0, Sketchfab); unit — земля y = 0, центр по корпусу.
   // skin — скинированные лопасти мельницы; ground — высота «земли» модели (м, после масштаба), если ниже подошвы уходит корень или основание
-  obj_church: { src: `${DL}/church_-_abandoned.glb`, scale: 0.0367, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /\/(Cube|Cylinder)_Material/, groups: () => 'body' }, // заброшенная церковь — reramil (рельеф-подложка автора убран)
   obj_mill: { src: `${DL}/windmill.glb`, scale: 0.0079, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, skin: true, pickMesh: /Cylinder011|Object_7$/, hubs: { sail: [0.022, 10.45, 4.26] }, // мельница — Tim0 (у автора две; взята первая), крылья на костях — свои части sail (вращение вокруг оси Z через ступицу hubs)
     groups: (c) => (/Object_7$/.test(c.path) ? 'sail' : 'body') },
-  obj_barn: { src: `${DL}/old_wooden_barn_house_4.glb`, scale: 1.8, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // сарай — narighillya (Blenderust)
   pr_hay: { src: `${DL}/hay_bales.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // тюки сена — zbrojmistrz
   pr_well: { src: `${DL}/the_wishing_well.glb`, scale: 0.7, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, pickMesh: /./, groups: () => 'body' }, // колодец — jadenmercado57
   pr_pumpkin: { src: `${DL}/pumpkin.glb`, scale: 0.0293, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, pickMesh: /./, groups: () => 'body' }, // тыква Ø 0,6 м — FantasyDragon
@@ -796,6 +793,12 @@ CONFIG.site_fuel_a = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Болот
 CONFIG.site_fuel_a_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Болотный огонь/fuel_a_lo.glb` };
 CONFIG.site_garr_w = { ...CONFIG.site_park_city, src: `${DL}/Свои/Военный городок/garr_w.glb` }; // «Военный городок» (зима, w_garr) — из набора парка
 CONFIG.site_garr_w_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/Военный городок/garr_w_lo.glb` };
+CONFIG.site_cp_w = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Командный пункт/cp_w.glb` }; // «Командный пункт» (зима, w_cp) — набор КП второго сборщика (материалы F_*)
+CONFIG.site_cp_w_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Командный пункт/cp_w_lo.glb` };
+CONFIG.site_garr_a = { ...CONFIG.site_park_city, src: `${DL}/Свои/Пугало/vil_a.glb` }; // гарнизон «Пугало» (осень, a_vil) — из набора парка, «после дождей»
+CONFIG.site_garr_a_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/Пугало/vil_a_lo.glb` };
+CONFIG.site_cp_a = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Погост/cp_a.glb` }; // КП «Погост» (осень, a_mon) — набор КП, стена монастыря, «камуфляж»
+CONFIG.site_cp_a_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Погост/cp_a_lo.glb` };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Профиль игрока в рейтинге</title>
+<style>
+@font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 800; font-display: swap; src: url(../../games/airdef/fonts/golos-text-cyrillic.woff2) format('woff2'); }
+@font-face { font-family: 'Golos Text'; font-style: normal; font-weight: 400 800; font-display: swap; src: url(../../games/airdef/fonts/golos-text-latin.woff2) format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(../../games/airdef/fonts/jetbrains-mono-cyrillic.woff2) format('woff2'); }
+@font-face { font-family: 'JetBrains Mono'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(../../games/airdef/fonts/jetbrains-mono-latin.woff2) format('woff2'); }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(../../games/airdef/fonts/oswald-cyrillic.woff2) format('woff2'); }
+@font-face { font-family: 'Oswald'; font-style: normal; font-weight: 400 700; font-display: swap; src: url(../../games/airdef/fonts/oswald-latin.woff2) format('woff2'); }
+</style>
+<!-- Макет профиля игрока «Воздушного превосходства» (облачная ветка cloud/profiles, 2026-10-28). Окно — в стиле окна рейтинга
+     (games/airdef/rating-ui.js, вариант «Б»): те же цвета, шрифты «Б» (Oswald, Golos Text, JetBrains Mono) и иконки game-icons.
+     Цифры и ники — пример. Картинки самолётов и ЗРК — рендеры игры (games/airdef/thumbs). -->
+<style>
+/* Раскладка: документ в одну колонку; внутри — окно игры в натуральную величину (таблица → профиль → «Назад»), рамка горизонтали телефона,
+   таблица источников и вопросы. Один тёмный вид, как в игре. */
+:root {
+  color-scheme: dark;
+  --ground: #0d110c; --plate: #10140f; --plate2: #161b13; --line: #2f3828; --line2: #1d2419; --edge: #39422f; --btn: #4a5443;
+  --ink: #e9e6dc; --dim: #a9b09b; --dim2: #7f8775; --amber: #e8b04a; --amber2: #f3c96f; --green: #7fd38f;
+  --gold: #f5d06a; --silver: #dadcd2; --bronze: #d29a62; --hi: #2a2a17;
+  --f-head: 'Oswald', 'Arial Narrow', sans-serif;
+  --f-text: 'Golos Text', 'Segoe UI', system-ui, sans-serif;
+  --f-num: 'JetBrains Mono', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html { background: var(--ground); }
+body { background: var(--ground); color: var(--ink); font: 400 15.5px/1.55 var(--f-text); margin: 0; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 26px 64px; }
+h1 { font: 600 clamp(28px, 4.4vw, 40px)/1.08 var(--f-head); margin: 0 0 6px; text-wrap: balance; }
+h2 { font: 500 clamp(22px, 3vw, 28px)/1.15 var(--f-head); margin: 0; text-wrap: balance; }
+p { margin: 0; max-width: 70ch; }
+.lead { color: var(--dim); }
+section { display: grid; gap: 16px; padding-block: 30px; border-top: 1px solid var(--line); }
+.kicker { font: 500 14px var(--f-text); color: var(--amber); }
+.note { font-size: 13.5px; color: var(--dim); max-width: 70ch; }
+.ic { width: 1em; height: 1em; fill: currentColor; flex: none; display: inline-block; vertical-align: -0.15em; }
+button { font: inherit; color: inherit; }
+button:focus-visible { outline: 2px solid var(--amber2); outline-offset: 2px; }
+.stage { display: grid; grid-template-columns: minmax(0, 540px) minmax(0, 1fr); gap: 24px; align-items: start; }
+.stage .side { display: grid; gap: 12px; align-content: start; }
+.demo { display: flex; gap: 6px; flex-wrap: wrap; }
+.demo button { font: 500 13px var(--f-text); padding: 6px 10px; background: none; border: 1px solid var(--btn); cursor: pointer; }
+.demo button[aria-pressed="true"] { background: var(--hi); border-color: var(--amber); color: var(--amber2); }
+ul.plain, ol.qs { margin: 0; padding-left: 20px; display: grid; gap: 8px; max-width: 72ch; }
+ol.qs li::marker { font: 600 15px var(--f-num); color: var(--amber2); }
+ol.qs b { color: var(--amber2); font-weight: 600; }
+
+/* ── окно игры (как #ratWin) ── */
+.win { background: var(--plate); border: 1px solid var(--edge); min-width: 0; display: flex; flex-direction: column; }
+.whead { flex: none; display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.whead .t { display: flex; align-items: center; gap: 8px; font: 500 18px var(--f-head); min-width: 0; }
+.whead .t .ic { width: 22px; height: 22px; color: var(--amber2); }
+.whead .s { margin-left: auto; font: 13px var(--f-text); color: var(--dim); text-align: right; }
+.rx { flex: none; width: 28px; height: 28px; padding: 5px; border: 1px solid var(--btn); background: none; cursor: pointer; } .rx .ic { width: 100%; height: 100%; vertical-align: top; }
+.back { display: inline-flex; align-items: center; gap: 5px; font: 500 13px var(--f-text); background: none; border: 1px solid var(--btn); padding: 5px 9px; cursor: pointer; }
+.back .ic { width: 12px; height: 12px; }
+.btnm { font: 500 13px var(--f-text); color: #17190f; background: var(--amber); border: 0; padding: 6px 10px; white-space: nowrap; cursor: pointer; }
+.num { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+.rx:hover, .back:hover { background: #222a1f; }
+
+/* таблица рейтинга: строка нажимается → профиль */
+.rows { display: block; }
+.row { width: 100%; display: grid; grid-template-columns: 40px 1fr auto 14px; gap: 8px; align-items: center; padding: 7px 12px; border: 0; border-bottom: 1px solid var(--line2); background: none; font-size: 14.5px; text-align: left; cursor: pointer; }
+.row:hover { background: #171d14; }
+.row .p { font: 600 14px var(--f-num); color: var(--dim); } .row .v { font: 600 14.5px var(--f-num); font-variant-numeric: tabular-nums; }
+.row .go { width: 10px; height: 10px; color: #5d6a52; }
+.row.g1 .p { color: var(--gold); } .row.g2 .p { color: var(--silver); } .row.g3 .p { color: var(--bronze); }
+.row.me { background: var(--hi); } .row.me .p { color: var(--amber2); }
+.gap { text-align: center; color: var(--dim); padding: 2px; font-size: 12px; border-bottom: 1px solid var(--line2); }
+.who { display: flex; align-items: center; gap: 8px; min-width: 0; } .who span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.av { width: 24px; height: 24px; display: grid; place-items: center; font: 600 10.5px var(--f-text); background: #2c3526; flex: none; }
+.mecard { margin: 12px; padding: 10px 12px; background: #1a2014; border: 1px solid #4b5640; display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; }
+.mecard .big { font: 600 28px var(--f-head); color: var(--amber2); grid-row: span 2; }
+.mecard .nk { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.mecard .nk u { text-decoration: underline dotted #6b7363; text-underline-offset: 3px; }
+.mecard small { color: var(--dim); font-size: 12.5px; }
+.slots { display: flex; gap: 3px; } .slots i { width: 18px; height: 6px; background: #3a4433; } .slots i.on { background: var(--amber); }
+
+/* профиль */
+.pbody { display: grid; min-height: 0; }
+.col { display: grid; align-content: start; min-width: 0; min-height: 0; }
+.hero { padding: 14px 12px; display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; }
+.ava { width: 56px; height: 56px; grid-row: span 2; display: grid; place-items: center; font: 600 21px var(--f-head); background: #2c3526; border: 1px solid #4b5640; }
+.hero.g1 .ava { border-color: var(--gold); color: var(--gold); } .hero.g2 .ava { border-color: var(--silver); } .hero.g3 .ava { border-color: var(--bronze); }
+.nick { font: 500 24px/1.15 var(--f-head); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; align-self: end; }
+.since { font-size: 13px; color: var(--dim); align-self: start; }
+.place { grid-row: span 2; display: grid; justify-items: end; gap: 3px; text-align: right; }
+.place .lb { font-size: 12px; color: var(--dim); line-height: 1; }
+.place .pn { font: 600 34px/1 var(--f-head); color: var(--amber2); display: flex; align-items: center; gap: 6px; }
+.place .pn .ic { width: 22px; height: 22px; }
+.hero.g1 .pn { color: var(--gold); } .hero.g2 .pn { color: var(--silver); } .hero.g3 .pn { color: var(--bronze); }
+.place .pts { font: 600 13.5px var(--f-num); }
+.place .slots i { width: 12px; }
+.mine { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding-top: 10px; }
+.mine small { color: var(--dim); font-size: 12.5px; }
+.sec { padding: 12px; border-top: 1px solid var(--line); display: grid; gap: 10px; min-width: 0; }
+.sh { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sh b { font: 500 16px var(--f-head); }
+.sh small { font-size: 12.5px; color: var(--dim); }
+.seg { display: inline-flex; border: 1px solid var(--btn); }
+.seg button { font: 500 12.5px var(--f-text); padding: 3px 9px; background: none; border: 0; cursor: pointer; color: var(--dim); }
+.seg button[aria-pressed="true"] { background: var(--hi); color: var(--amber2); }
+/* по режимам — таблица: режим, боёв, побед (доля), поражено, лучший бой */
+.mt { width: 100%; border-collapse: collapse; font-size: 14px; }
+.mt th { font: 500 12px var(--f-text); color: var(--dim); text-align: right; padding: 0 0 5px 6px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.mt th:first-child { text-align: left; padding-left: 0; }
+.mt td { padding: 7px 0 7px 6px; border-bottom: 1px solid var(--line2); text-align: right; font: 600 14px var(--f-num); font-variant-numeric: tabular-nums; vertical-align: top; white-space: nowrap; }
+.mt td:first-child { text-align: left; padding-left: 0; font: 500 14px var(--f-text); white-space: normal; }
+.mt td:first-child .ic { color: var(--amber2); margin-right: 5px; }
+.mt td small { display: block; font: 500 11px var(--f-num); color: var(--dim); margin-top: 2px; }
+.mt .wbar { display: block; width: 44px; height: 3px; background: #2a3224; margin: 4px 0 0 auto; } .mt .wbar i { display: block; height: 100%; background: var(--amber); }
+.mt tfoot td { color: var(--dim); border-bottom: 0; font-size: 13px; } .mt tfoot td:first-child { color: var(--dim); font-size: 13px; }
+.solo { font-size: 12.5px; color: var(--dim); }
+.solo b { font: 600 12.5px var(--f-num); color: var(--ink); }
+/* любимое */
+.fav { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.fv { display: grid; gap: 2px; min-width: 0; }
+.fv .pic { aspect-ratio: 16 / 9; max-width: 100%; background: radial-gradient(120% 90% at 50% 40%, #1f2819 0%, #12170f 70%); border: 1px solid #262e21; display: grid; place-items: center; overflow: hidden; margin-bottom: 4px; }
+.fv .pic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.fv .k { font: 500 11.5px var(--f-text); color: var(--dim); letter-spacing: .06em; text-transform: uppercase; }
+.fv .n { font: 600 15px var(--f-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fv .c { font: 500 12.5px var(--f-num); color: var(--dim); }
+/* лучшие бои сезона */
+.bl { display: grid; }
+.br { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line2); }
+.br:last-child { border-bottom: 0; }
+.br .d { font: 500 12.5px/1.25 var(--f-num); color: var(--dim); }
+.br .r { min-width: 0; font-size: 14px; line-height: 1.3; } .br .r .ic { color: var(--dim); margin-right: 4px; } .br .r small { display: block; font-size: 12px; color: var(--dim); }
+.br .v { font: 600 14.5px var(--f-num); font-variant-numeric: tabular-nums; }
+/* награды */
+.aw { display: flex; flex-wrap: wrap; gap: 6px; }
+.bd { display: grid; grid-template-columns: auto auto; gap: 0 8px; align-items: center; padding: 6px 10px 6px 8px; border: 1px solid #39422f; background: var(--plate2); }
+.bd .ic { width: 24px; height: 24px; grid-row: span 2; }
+.bd b { font: 500 14px var(--f-head); } .bd small { font-size: 12px; color: var(--dim); }
+.bd.g1 .ic { color: var(--gold); } .bd.g2 .ic { color: var(--silver); } .bd.g3 .ic { color: var(--bronze); } .bd.t10 .ic { color: var(--amber2); } .bd.pl .ic { color: #6b7363; }
+.empty { font-size: 13.5px; color: var(--dim); }
+.ex { display: grid; gap: 6px; padding: 8px; border: 1px dashed #39422f; }
+.ex > small { font-size: 12px; color: var(--dim2); }
+
+/* горизонталь телефона: две колонки, каждая листается сама */
+.phone { overflow-x: auto; padding-bottom: 6px; }
+.screen { width: 750px; height: 360px; padding: 8px 10px; background: linear-gradient(180deg, #2b3a2a 0%, #1a2318 55%, #131a11 100%); border: 8px solid #050605; border-radius: 26px; position: relative; }
+.screen::before { content: ""; position: absolute; inset: 0; background: rgba(8, 11, 7, .72); border-radius: 18px; }
+.screen .win { position: relative; height: 100%; }
+.land .whead { padding: 6px 10px; }
+.land .pbody { grid-template-columns: 1fr 1fr; flex: 1 1 auto; overflow: hidden; }
+.land .col { overflow-y: auto; }
+.land .col + .col { border-left: 1px solid var(--line); }
+.land .col > .sec:first-child { border-top: 0; }
+.land .hero { padding: 10px 12px; }
+.land .ava { width: 44px; height: 44px; font-size: 17px; } .land .hero { grid-template-columns: 44px minmax(0, 1fr) auto; }
+.land .nick { font-size: 20px; } .land .place .pn { font-size: 28px; }
+
+/* данные */
+.tw { overflow-x: auto; }
+table.src { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 620px; }
+table.src th { text-align: left; font: 500 12.5px var(--f-text); color: var(--dim); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+table.src td { padding: 8px; border-bottom: 1px solid var(--line2); vertical-align: top; }
+table.src code { font: 12.5px var(--f-num); background: #1a2016; padding: 1px 4px; }
+.st { font: 600 12.5px var(--f-text); white-space: nowrap; } .st.y { color: var(--green); } .st.n { color: var(--amber2); }
+
+@media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 420px) {
+  .hero { grid-template-columns: 48px minmax(0, 1fr) auto; gap: 2px 10px; } .ava { width: 48px; height: 48px; font-size: 18px; }
+  .nick { font-size: 21px; } .place .pn { font-size: 30px; }
+  .mt td, .mt th { padding-left: 4px; } .mt td:first-child .ic { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+</head><body>
+<div class="wrap">
+  <header style="display:grid;gap:8px;padding-bottom:4px">
+    <span class="kicker">Воздушное превосходство · профиль игрока · макет 28.10.2026</span>
+    <h1>Профиль игрока</h1>
+    <p class="lead">Сделано в ветке cloud/profiles, как в этом макете. Профиль открывается из таблицы рейтинга: нажатие на строку игрока. Свой — нажатием на свой ник в карточке внизу. Окно то же, что у рейтинга: профиль встаёт на место таблицы, «Назад» возвращает к ней. Ники и цифры — пример.</p>
+  </header>
+
+  <section>
+    <span class="kicker">Окно в игре</span>
+    <h2>Профиль, таблица и свой профиль</h2>
+    <div class="stage">
+      <div class="win" id="win"></div>
+      <div class="side">
+        <div class="demo" role="group" aria-label="Что показать в окне">
+          <button type="button" id="dOther" data-v="other" aria-pressed="true">Профиль игрока</button>
+          <button type="button" id="dTable" data-v="table" aria-pressed="false">Таблица</button>
+          <button type="button" id="dOwn" data-v="own" aria-pressed="false">Свой профиль</button>
+        </div>
+        <ul class="plain note">
+          <li>Шапка: значок из ника (фото нет — у аккаунта игры свой вход, не Telegram), ник, когда завёл аккаунт, место в сезоне и очки. Топ-3 — цветом места, как в таблице.</li>
+          <li>«По режимам» — онлайн-бои: сколько, побед и их доля, поражено (у лётчика — уничтоженные ЗРК, у ПВО — сбитые), лучший бой по очкам рейтинга.</li>
+          <li>«Любимое» — только онлайн: самолёт, на котором больше всего вылетов, и ЗРК, стоявший в большем числе боёв. В «Мульти-волне» налёт ведёт ИИ, там считаются только ЗРК. Картинки — те же, что в «Исследованиях».</li>
+          <li>«Лучшие бои сезона» — засчитанные бои (2 + 2 + 2 + 1), без разбора очков. Разбор остаётся только в своих «Моих боях».</li>
+          <li>«Награды» — только места за прошедшие сезоны (кубок цвета места, топ-10 — звезда). Первый сезон идёт до 01.01.2027, поэтому сейчас там пусто; ниже пунктиром — как будет.</li>
+          <li>В своём профиле — кнопка «Мои бои» и строка «так вас видят другие».</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <span class="kicker">Телефон горизонтально</span>
+    <h2>Две колонки, каждая листается сама</h2>
+    <p class="lead">При высоте экрана меньше 500 px окно становится широким: слева шапка и режимы, справа любимое, лучшие бои и награды. Размер — как у iPhone 14 без вырезов по краям (750 × 360).</p>
+    <div class="phone"><div class="screen"><div class="win land" id="land"></div></div></div>
+  </section>
+
+  <section>
+    <span class="kicker">Откуда данные</span>
+    <h2>Что уже есть в базе и чего нет</h2>
+    <p class="lead">Профиль запрашивается по нику. В ответе нет id игрока и номеров боёв. Профиль есть только у аккаунтов игры, как и место в таблице.</p>
+    <div class="tw"><table class="src">
+      <thead><tr><th>Блок</th><th>Откуда</th><th>Есть?</th><th>Что сделать</th></tr></thead>
+      <tbody>
+        <tr><td>Ник, «в игре с»</td><td><code>airdef_accounts</code></td><td><span class="st y">есть</span></td><td>—</td></tr>
+        <tr><td>Место, очки, засчитано</td><td><code>airdef_rating_board</code>, как в таблице</td><td><span class="st y">есть</span></td><td>—</td></tr>
+        <tr><td>По режимам, онлайн</td><td><code>airdef_mp_results</code>: роль, «Мульти-волна», победа, сбито / уничтожено, очки</td><td><span class="st y">есть</span></td><td>функция базы <code>sql/029</code>, <code>get-airdef-profile</code></td></tr>
+        <tr><td>Любимый самолёт и ЗРК</td><td>поле <code>u</code> итога онлайн-боя</td><td><span class="st n">с обновления</span></td><td>сервер на ноутбуке кладёт в итог боя вылеты по самолётам и ЗРК игрока (<code>update.ps1</code>); до первых боёв на новом сервере блок пуст</td></tr>
+        <tr><td>Лучшие бои сезона</td><td><code>airdef_rating_counted</code>, как «Мои бои»</td><td><span class="st y">есть</span></td><td>—</td></tr>
+        <tr><td>Награды</td><td><code>airdef_season_paid</code>: место за прошедший сезон</td><td><span class="st y">есть</span></td><td>первые появятся после 01.01.2027</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <span class="kicker">Решения Mark, 28.10.2026</span>
+    <h2>Что решили</h2>
+    <ol class="qs">
+      <li><b>Одиночные бои</b> — не показываем, только онлайн.</li>
+      <li><b>Период</b> — переключатель «Сезон N / Всё время».</li>
+      <li><b>Любимые самолёт и ЗРК</b> — только онлайн, записываем с обновления сервера.</li>
+      <li><b>Награды</b> — только места за сезоны.</li>
+      <li><b>Скрыть профиль</b> — не нужно.</li>
+      <li><b>Стрелка «›»</b> в строках рейтинга — оставляем.</li>
+      <li><b>Чужие лучшие бои</b> — без разбора очков.</li>
+    </ol>
+  </section>
+</div>
+
+<script>
+const ICONS = {"rating": "M54.125 102.188c-15.624 74.885 20.42 123.6 64.125 150.562-33.063-7.81-65.052-19.482-98.25-36.844 25.5 77.488 81.164 95.816 129.906 90.75-26.933 14.252-55.392 25.3-83.937 32.78 70.04 43.512 120.987 16.005 149-22.28-30.186-17.833-52.692-53.794-63.032-98.344-38-34.814-71.414-75.012-97.813-116.625zm402.938 0c-26.397 41.608-59.816 81.786-97.813 116.593-10.338 44.564-32.84 80.54-63.03 98.376 28.01 38.285 78.957 65.792 149 22.28-28.542-7.48-56.978-18.53-83.908-32.78 48.736 5.055 104.38-13.28 129.875-90.75-33.197 17.362-65.187 29.035-98.25 36.844 43.705-26.963 79.75-75.677 64.125-150.563zm-201.47 26.187c-23.56 0-44.93 3.576-61.218 9.844-8.145 3.133-15.045 6.906-20.438 11.81-5.392 4.907-9.5 11.53-9.5 19.157 0 .89.05 1.765.157 2.625 2.62 64.952 32.08 117.553 67.28 133.188l6.94 3.094-1.595 7.406c-8.645 40.282-20.575 63.61-40.94 77.03-11.193 7.378-14.184 13.215-14.374 15.126-.19 1.91.765 4.2 6.844 7.906 12.158 7.41 39.925 13.157 66.844 13.157 26.872 0 53.258-5.944 64.687-13.408 5.716-3.73 6.812-6.22 6.626-8.53-.186-2.312-2.937-7.934-13.094-15.22-19.326-13.862-31.327-36.107-39.843-76.062l-1.595-7.406 6.938-3.094c35.2-15.635 64.662-68.236 67.28-133.188h-.03c.106-.86.156-1.735.156-2.625 0-7.626-4.077-14.25-9.47-19.156-5.393-4.905-12.324-8.677-20.47-11.81-16.288-6.27-37.627-9.845-61.186-9.845zm0 18.688c21.617 0 41.154 3.47 54.47 8.593 6.657 2.562 11.708 5.563 14.593 8.188 2.886 2.625 3.375 4.28 3.375 5.344 0 1.063-.488 2.718-3.374 5.343-2.885 2.626-7.936 5.627-14.594 8.19-13.315 5.122-32.852 8.593-54.468 8.593-21.616 0-41.184-3.47-54.5-8.594-6.658-2.563-11.708-5.564-14.594-8.19-2.886-2.624-3.375-4.28-3.375-5.343 0-1.063.49-2.718 3.375-5.343 2.886-2.625 7.936-5.626 14.594-8.188 13.316-5.123 32.884-8.594 54.5-8.594z", "fire": "M18.78 25.97c2.6 25.278 9.316 48.72 19.532 69.75l-21.218-6.564L73.53 146.72l-.843-1.782c16.737 17.29 36.797 31.38 59.438 41.593-13.546-18.845-21.597-41.677-22.03-69.28 27.78.35 50.396 8.56 69.25 22.063-.627-1.4-1.284-2.776-1.94-4.157l.72.625-34.438-86.655-2.53 33.844c-30.974-31.598-73.044-52.084-122.376-57zm236.814 31.593L217.22 160.875c-30.663 7.52-54.566 32.236-60.907 63.344l-.188-.22-106.563 39.563 74.313 74.312 93-8.03.375-.033 23.03-2.468-77.31-94.938 13.28-13.28 89.406 109.75 10.875 13.374-17.124 1.844-28.22 3.03a448.92 448.92 0 0 0 47.22 47.907c7.62-56.784 52.175-102.042 108.625-110.717a443.59 443.59 0 0 0-47.75-46.688l-2.78 26.125-1.844 17.125L321.28 270l-107.874-88.03 13.25-13.25 93.094 75.905 2.22-20.844 7.905-91.936-74.28-74.28zM401.53 301.625a111.011 111.011 0 0 0-25.436 4.156l13.875 16.908a116.11 116.11 0 0 1 23.467-5.282c-3.863-5.344-7.814-10.62-11.906-15.78zm-43.78 11.25a110.843 110.843 0 0 0-20.5 13.063l15.75 17.28a117.217 117.217 0 0 1 19.125-12.812l-14.375-17.53zm68 22.438a98.919 98.919 0 0 0-22.97 3.03l14.5 17.688c6.108-1.82 12.447-3.043 18.97-3.686-3.387-5.76-6.865-11.445-10.5-17.03zm-102.03 3.53a110.815 110.815 0 0 0-16.845 25.344l17.313 14.125c4.28-7.958 9.44-15.37 15.375-22.093l-15.844-17.376zm60.467 6.282c-6.67 3.247-12.908 7.267-18.625 11.875l16.282 17.875a102.325 102.325 0 0 1 17.312-11.47l-14.97-18.28zm-32 24.938a98.164 98.164 0 0 0-13.25 20.28l17.97 14.688a102.341 102.341 0 0 1 11.624-17l-16.342-17.967zm94.094.218v.22c-45.915 0-82.96 36.985-83.06 82.875a444.741 444.741 0 0 0 127.06 44.313c-8.284-45.328-23.3-88.145-44-127.407zM299.94 382.626a111.035 111.035 0 0 0-3.97 26.938 448.277 448.277 0 0 0 15.063 11.343c.93-8.58 2.75-16.88 5.44-24.812l-16.533-13.47zm32.156 26.25a98.892 98.892 0 0 0-3.094 24.375 447.679 447.679 0 0 0 16.063 9.938 101.51 101.51 0 0 1 4.218-20.282l-17.186-14.03z", "radar": "M252.78 20.875c-1.302.012-2.6.03-3.905.063-37.928.974-76.148 11.153-111.28 31.437C25.164 117.285-13.41 261.322 51.5 373.75s208.946 151.036 321.375 86.125c77.7-44.86 120.1-127.513 117.47-211.406-3.563 65.847-35.898 128.573-91 169.374a217.993 217.993 0 0 1-35.814 25.844c-103.68 59.86-235.983 24.4-295.842-79.282-59.86-103.68-24.43-235.984 79.25-295.844 35.64-20.576 74.67-29.88 112.968-29.03 63.304 1.4 124.623 30.57 165.438 82.53l-32.594 23.032c-33.27-42.835-84.01-66.6-136.063-67-.96-.008-1.91-.012-2.875 0-.964.01-1.943.038-2.906.062-28.006.717-56.222 8.215-82.156 23.188-82.99 47.914-111.508 154.322-63.594 237.312 47.914 82.99 154.32 111.51 237.313 63.594 51.37-29.66 81.862-81.724 86.28-136.78-12.53 45.37-42.32 86.745-85.438 114.186-.02.013-.043.018-.062.03l-.344.22a158.059 158.059 0 0 1-9.78 6.156c-74.245 42.865-168.918 17.494-211.782-56.75-42.864-74.243-17.493-168.917 56.75-211.78 23.2-13.396 48.39-20.122 73.375-20.782 47.953-1.266 95.138 19.858 125.968 59.156l-39.844 28.156c-20.232-24.32-50.055-37.79-80.594-38.03-1.17-.01-2.33 0-3.5.03-17.035.432-34.176 4.995-49.938 14.094-50.435 29.12-67.806 93.877-38.687 144.313 29.12 50.434 93.908 67.806 144.344 38.686 21.245-12.267 36.623-30.85 45.124-52.03-18.815 21.064-44.364 36.888-73.938 44.155-.04.013-.084.02-.125.033-37.507 10.787-78.796-4.816-99.217-40.188-24.07-41.688-9.845-94.712 31.843-118.78 13.028-7.523 27.143-11.314 41.156-11.69 25.66-.685 50.898 10.098 68.188 30.25l-41 28.97c-5.497-4.796-12.664-7.72-20.53-7.72-17.277 0-31.283 14.007-31.283 31.282 0 17.276 14.004 31.282 31.282 31.282 17.277 0 31.28-14.007 31.28-31.283 0-1.187-.06-2.347-.188-3.5l120.094-57.312 4.03-1.75-.06-.156 62.25-29.72 9.25-4.438-5.282-8.812-19.97-33.375-5.155-8.625-8.25 5.813-8.095 5.718c-45.9-58.864-116.14-91.053-187.844-90.405z", "players": "M164.594 21.625c-.537.012-1.068.028-1.563.094-29.656 3.852-52.56 35.847-52.56 74.75 0 21.55 7.307 41.193 18.686 54.905-61.678 11.594-66.563 115.158-66.562 188.063h43.218l11.094 152.437h63.063L168.905 340.03h21.47l11.343 152.158h108.686l10.03-152.157h21.627l-9.907 151.845h63.063l10.53-152.438h40.28c0-73.107 1.407-178.78-65.967-189.218 10.89-13.646 18.093-32.734 18.093-53.75 0-41.496-26.52-74.75-59-74.75-2.03 0-4.43-.263-6.406 0-9.4 1.22-17.562 5.455-25.125 11.686 16.388 13.303 27.468 36.433 27.47 63.063 0 21.016-7.236 40.104-18.126 53.75 67.373 10.438 66 116.11 66 189.218h-21.94c.008-73.086 1.29-178.215-65.905-188.625 10.89-13.647 17.906-32.61 17.906-53.625 0-41.497-26.457-75-58.936-75-2.03 0-4.117-.262-6.094 0-29.657 3.85-52.813 36.095-52.813 75 0 21.547 7.373 40.788 18.75 54.5-61.514 11.563-66.318 114.874-66.343 187.75H126.25c-.002-72.905 4.322-176.47 66-188.063-11.38-13.712-18.687-33.356-18.688-54.906 0-26.575 11.138-49.632 27.438-63.064-9.148-7.425-19.896-11.687-31.53-11.687-1.525 0-3.267-.132-4.876-.095z", "close": "M256 16C123.45 16 16 123.45 16 256s107.45 240 240 240 240-107.45 240-240S388.55 16 256 16zm0 60c99.41 0 180 80.59 180 180s-80.59 180-180 180S76 355.41 76 256 156.59 76 256 76zm-80.625 60c-.97-.005-2.006.112-3.063.313v-.032c-18.297 3.436-45.264 34.743-33.375 46.626l73.157 73.125-73.156 73.126c-14.63 14.625 29.275 58.534 43.906 43.906L256 299.906l73.156 73.156c14.63 14.628 58.537-29.28 43.906-43.906l-73.156-73.125 73.156-73.124c14.63-14.625-29.275-58.5-43.906-43.875L256 212.157l-73.156-73.125c-2.06-2.046-4.56-3.015-7.47-3.03z", "triL": "<g transform=\"rotate(180 256 256)\"><path fill=\"currentColor\" d=\"M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z\"/></g>", "tri": "M106.854 106.002a26.003 26.003 0 0 0-25.64 29.326c16 124 16 117.344 0 241.344a26.003 26.003 0 0 0 35.776 27.332l298-124a26.003 26.003 0 0 0 0-48.008l-298-124a26.003 26.003 0 0 0-10.136-1.994z", "ok": "M17.47 250.9C88.82 328.1 158 397.6 224.5 485.5c72.3-143.8 146.3-288.1 268.4-444.37L460 26.06C356.9 135.4 276.8 238.9 207.2 361.9c-48.4-43.6-126.62-105.3-174.38-137z", "star": "M256 38.013c-22.458 0-66.472 110.3-84.64 123.502-18.17 13.2-136.674 20.975-143.614 42.334-6.94 21.358 84.362 97.303 91.302 118.662 6.94 21.36-22.286 136.465-4.116 149.665 18.17 13.2 118.61-50.164 141.068-50.164 22.458 0 122.9 63.365 141.068 50.164 18.17-13.2-11.056-128.306-4.116-149.665 6.94-21.36 98.242-97.304 91.302-118.663-6.94-21.36-125.444-29.134-143.613-42.335-18.168-13.2-62.182-123.502-84.64-123.502z", "gem": "M310.375 16.75 89.405 75.72l58.126 50.905L282.563 90.28l2.032-.53 25.78-73zm17.063 7.844-27.157 76.812 91.69 91.875 95.624-8.78L327.438 24.594zm-41.813 12.062-8.594 33.657c-.28-15.516-38.03-17.018-107.56-4.376l116.155-29.28zm51.063 14.625 123.5 123.407-58.844 7.563c16.2-21.37-32.277-91.112-64.656-130.97zM74.75 87.72 15.594 308.405l79-31.47 37.28-139.155L74.75 87.72zm207.438 22-133.032 35.81-35.72 133.376 97.25 97.53 133.064-35.81 35.72-133.376-97.283-97.53zm-201.72 5.686 32.844 30.5-30.156 118.97-39.03 15.812c50.817-30.543 65.667-130.132 36.343-165.282zm195.876 14.78L359 213.377l-30.156 113.81-44.688 11.97c119.527-107.872-34.816-238.375-131.5-140.875l9.875-37.405 113.814-30.688zM490.564 203l-92.877 8.53-35.968 134.19 71.342 71.842L490.563 203zm-17.283 13.875L444.03 333.03c6.73-68.874-.03-90.85-30.655-111.5l59.906-4.655zm-371.155 77.188L20.22 326.688l161.75 161.468 17.31-96.72-97.155-97.373zm.094 20 78.124 82.437-7.438 61.375c-5.23-44.565-28.34-85.92-70.687-143.813zm246.124 44.687-130.53 35.125-17.564 98.188 221.688-59.157-73.594-74.156zm18.625 42.5 24.28 24.844-115.22 32.72c61.28-26.446 83.34-37.418 90.94-57.564z", "lock": "M400.218 212.413v-42.195a144.218 144.218 0 1 0-288.436 0v42.195H90.61V486h330.78V212.413h-21.173zM216.342 407.97h-57.29v-22.354h57.29v22.354zm0-33.403h-57.29v-57.29h57.29v57.29zm0-68.28h-57.29v-22.354h57.29v22.32zm68.28 101.718h-57.29v-22.39h57.29v22.355zm0-33.403h-57.29v-57.29h57.29v57.29zm0-68.28h-57.29v-22.39h57.29v22.32zm68.28 101.718h-57.29v-22.424h57.29v22.354zm0-33.403h-57.29v-57.29h57.29v57.29zm0-68.28h-57.29v-22.424h57.29v22.32zm2.887-93.884H156.211v-42.254a99.789 99.789 0 1 1 199.578 0v42.195zM177.455 353.439c0 4.443 3.835 8.184 10.195 8.184 5.846 0 10.336-3.507 10.336-8.839 0-3.694-2.339-6.36-6.127-7.857v-.093c3.741-1.777 5.004-4.536 5.004-7.109 0-3.788-2.946-7.482-8.839-7.482-5.331 0-9.353 3.273-9.353 8.09 0 2.62 1.45 5.238 4.817 6.828v.14c-3.742 1.59-6.033 4.303-6.033 8.138zm5.05-15.386c0-2.62 1.871-4.864 5.285-4.864a4.677 4.677 0 0 1 5.145 4.957c0 2.76-2.011 4.677-4.677 5.519-3.46-.936-5.752-2.572-5.752-5.612zm4.677 8.558c4.116 1.17 6.688 2.946 6.688 6.64 0 3.134-2.338 5.426-6.08 5.426-3.881 0-6.22-2.713-6.08-5.846-.046-2.853 1.871-5.191 5.426-6.22zm67.275 15.059a15.445 15.445 0 0 1-7.904-2.058l1.17-3.18a13.738 13.738 0 0 0 6.734 1.918c5.284 0 6.921-3.368 6.874-5.846 0-4.256-3.881-6.08-7.856-6.08h-2.339v-3.087h2.339c2.993 0 6.78-1.543 6.78-5.144 0-2.432-1.543-4.583-5.33-4.583a11.166 11.166 0 0 0-6.08 2.01l-1.076-2.992a14.451 14.451 0 0 1 7.95-2.339c5.987 0 8.7 3.508 8.7 7.25 0 3.133-1.872 5.845-5.613 7.155v.093a7.915 7.915 0 0 1 6.781 7.81c-.093 4.817-3.881 9.073-11.177 9.073zm70.15 0c6.314 0 10.102-5.144 10.102-10.71 0-5.94-3.788-9.82-9.167-9.82a9.061 9.061 0 0 0-7.342 3.507h-.14a12.358 12.358 0 0 1 10.522-10.803 14.849 14.849 0 0 1 3.087-.187v-3.368a19.876 19.876 0 0 0-2.993.234 16.556 16.556 0 0 0-9.728 4.49 19.104 19.104 0 0 0-5.144 13.703c.047 7.88 4.303 12.93 10.803 12.93zm-6.22-13.703a6.77 6.77 0 0 1 5.846-3.741c3.788 0 6.267 2.619 6.267 7.015 0 4.396-2.339 7.296-5.94 7.296-4.302 0-6.594-3.695-6.687-8.7a3.508 3.508 0 0 1 .514-1.893z", "list": "M32 96v64h448V96H32zm0 128v64h448v-64H32zm0 128v64h448v-64H32z"};
+const IMG = { air_su30: '../../games/airdef/thumbs/air_su30.webp', pvo_s300: '../../games/airdef/thumbs/pvo_s300.webp', air_mig29: '../../games/airdef/thumbs/air_mig29.webp', pvo_torm2: '../../games/airdef/thumbs/pvo_torm2.webp' };
+const ico = (n) => { const v = ICONS[n] || ''; return `<svg class="ic" viewBox="0 0 512 512" aria-hidden="true">${v[0] === '<' ? v : `<path fill="currentColor" d="${v}"/>`}</svg>`; };
+const nf = (v) => Math.round(v).toLocaleString('ru-RU');
+const initials = (nick) => (String(nick).match(/[\p{L}\p{N}]/gu) || ['?']).slice(0, 2).join('').toUpperCase();
+const plural = (n, a, b, c) => { const m10 = n % 10, m100 = n % 100; return m10 === 1 && m100 !== 11 ? a : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? b : c; };
+
+const TOP = [['Гром_52', 6480], ['SkyKeeper', 6215], ['Волхов', 6090], ['Tanker_Alpha', 5870], ['Беркут-7', 5655], ['Орлан', 5410], ['Кречет', 5260], ['Ladoga', 5105]];
+// пример: игрок с 1-го места и свой профиль (xFORTUNAx, 37-е место — как в макете рейтинга)
+const P = {
+  other: { nick: 'Гром_52', since: '25.10.2026', place: 1, points: 6480, n: 7,
+    modes: { season: [[14, 9, 21, 996], [11, 7, 38, 912], [9, 5, 64, 930]], all: [[22, 13, 30, 996], [17, 10, 55, 912], [12, 6, 81, 930]] },
+    solo: [48, 22, 9],
+    fav: [['air_su30', 'Самолёт', 'Су-30', '23 вылета из 62'], ['pvo_s300', 'ЗРК', 'С-300ПМУ-1', 'в 14 боях из 20']],
+    best: [['28.10', '21:40', 'air', 'победа', 'реализм · ранг IV', 996], ['27.10', '23:05', 'air', 'победа', 'реализм · ранг IV', 960], ['28.10', '19:12', 'multi', 'победа', 'реализм', 930],
+      ['26.10', '22:47', 'pvo', 'победа', 'реализм · ранг IV', 912], ['27.10', '20:30', 'multi', 'победа', 'реализм', 905], ['25.10', '21:15', 'pvo', 'победа', 'реализм · ранг III', 898], ['26.10', '18:02', 'air', 'победа', 'реализм · ранг III', 879]] },
+  own: { nick: 'xFORTUNAx', since: '25.10.2026', place: 37, points: 3940, n: 5, own: true,
+    modes: { season: [[6, 3, 7, 996], [4, 2, 11, 490], [5, 2, 30, 912]], all: [[9, 4, 10, 996], [7, 3, 18, 490], [6, 2, 34, 912]] },
+    solo: [31, 17, 12],
+    fav: [['air_mig29', 'Самолёт', 'МиГ-29', '11 вылетов из 23'], ['pvo_torm2', 'ЗРК', '9К332 «Тор-М2»', 'в 8 боях из 12']],
+    best: [['27.10', '20:15', 'air', 'победа', 'реализм · ранг IV', 996], ['28.10', '19:05', 'multi', 'победа', 'реализм', 912], ['28.10', '21:40', 'air', 'победа', 'реализм · ранг III', 882],
+      ['26.10', '22:47', 'multi', 'ничья', 'реализм', 660], ['25.10', '23:12', 'pvo', 'победа', 'аркада · ранг II', 490]] },
+};
+const MODE = [['fire', 'Вылет'], ['radar', 'Оборона'], ['players', 'Мульти-волна']];
+const ROLE = { air: ['fire', 'лётчик'], pvo: ['radar', 'ПВО'], multi: ['players', 'волна'] };
+const S = { view: 'other', period: 'season', from: null };
+
+const close = `<button class="rx" type="button" aria-label="Закрыть" title="Закрыть">${ico('close')}</button>`;
+const slots = (n) => `<span class="slots">${Array.from({ length: 7 }, (_, i) => `<i${i < n ? ' class="on"' : ''}></i>`).join('')}</span>`;
+
+function tableView() {
+  const rows = TOP.map(([nk, pts], i) => `<button type="button" class="row${i < 3 ? ' g' + (i + 1) : ''}" data-nick="${nk}" data-place="${i + 1}" data-pts="${pts}"><span class="p">${i + 1}</span><span class="who"><span class="av">${initials(nk)}</span><span>${nk}</span></span><span class="v">${nf(pts)}</span>${ico('tri').replace('class="ic"', 'class="ic go"')}</button>`).join('');
+  return `<div class="whead"><span class="t">${ico('rating')}Рейтинг</span><span class="s">сезон 1 · ещё 65 дн.</span>${close}</div>
+    <div class="rows">${rows}<div class="gap">…</div></div>
+    <div class="mecard"><span class="big">37</span><button type="button" class="nk" data-own="1"><u>xFORTUNAx</u> · <b class="num">3 940</b></button><span class="btnm">Мои бои</span>
+      <small>засчитано 5 из 7</small>${slots(5)}</div>`;
+}
+
+function profileParts(d, period) {
+  const g = d.place <= 3 ? ' g' + d.place : '';
+  const nb = d.modes.all.reduce((a, m) => a + m[0], 0);
+  const hero = `<div class="hero${g}"><span class="ava">${initials(d.nick)}</span><span class="nick">${d.nick}</span>
+    <span class="place"><span class="lb">место</span><span class="pn">${d.place <= 3 ? ico('rating') : ''}${d.place}</span><span class="pts">${nf(d.points)}</span>${slots(d.n)}</span>
+    <span class="since">в игре с ${d.since}<br>${nb} ${plural(nb, 'онлайн-бой', 'онлайн-боя', 'онлайн-боёв')}</span>
+    ${d.own ? `<span class="mine"><span class="btnm">Мои бои</span><small>Так ваш профиль видят другие игроки</small></span>` : ''}</div>`;
+  const M = d.modes[period];
+  const tot = M.reduce((a, m) => [a[0] + m[0], a[1] + m[1], a[2] + m[2], Math.max(a[3], m[3])], [0, 0, 0, 0]);
+  const mrow = (m, i) => { const pc = m[0] ? Math.round(100 * m[1] / m[0]) : 0;
+    return `<tr><td>${ico(MODE[i][0])}${MODE[i][1]}</td><td>${m[0]}</td><td>${m[1]}<small>${pc} %</small><span class="wbar"><i style="width:${pc}%"></i></span></td><td>${m[2]}</td><td>${nf(m[3])}</td></tr>`; };
+  const modes = `<div class="sec"><div class="sh"><b>По режимам</b><span class="seg" role="group" aria-label="Период"><button type="button" data-per="season" aria-pressed="${period === 'season'}">Сезон 1</button><button type="button" data-per="all" aria-pressed="${period === 'all'}">Всё время</button></span></div>
+    <table class="mt"><thead><tr><th>Онлайн</th><th>Боёв</th><th>Побед</th><th title="Лётчик — уничтоженные ЗРК, ПВО — сбитые, Мульти-волна — всё поражённое">Поражено</th><th>Лучший</th></tr></thead>
+    <tbody>${M.map(mrow).join('')}</tbody><tfoot><tr><td>Всего</td><td>${tot[0]}</td><td>${tot[1]}</td><td>${tot[2]}</td><td>${nf(tot[3])}</td></tr></tfoot></table></div>`;
+  const fav = `<div class="sec"><div class="sh"><b>Любимое</b><small>${period === 'season' ? 'за сезон' : 'за всё время'}</small></div><div class="fav">${d.fav.map(([img, k, n, c]) =>
+    `<div class="fv"><span class="pic"><img src="${IMG[img]}" alt="${n}" width="480" height="270"></span><span class="k">${k}</span><span class="n">${n}</span><span class="c">${c}</span></div>`).join('')}</div></div>`;
+  const best = `<div class="sec"><div class="sh"><b>Лучшие бои сезона</b><small>засчитано ${d.n} из 7 · ${nf(d.points)}</small></div><div class="bl">${d.best.map(([dd, tt, r, res, md, pts]) =>
+    `<div class="br"><span class="d">${dd}<br>${tt}</span><span class="r">${ico(ROLE[r][0])}${ROLE[r][1]} · ${res}<small>${r === 'multi' ? 'Мульти-волна' : 'Вылет и оборона'} · ${md}</small></span><span class="v">${nf(pts)}</span></div>`).join('')}</div></div>`;
+  const awards = `<div class="sec"><div class="sh"><b>Награды</b><small>места за сезоны</small></div>
+    <span class="empty">Сезон 1 идёт до 01.01.2027. Награды появятся после его конца.</span>
+    <div class="ex"><small>пример: так будет после нескольких сезонов</small><div class="aw">
+      <span class="bd g1">${ico('rating')}<b>Сезон 1</b><small>1 место</small></span><span class="bd g3">${ico('rating')}<b>Сезон 2</b><small>3 место</small></span>
+      <span class="bd t10">${ico('star')}<b>Сезон 3</b><small>8 место</small></span><span class="bd pl">${ico('ok')}<b>Сезон 4</b><small>112 место</small></span></div></div></div>`;
+  return { hero, modes, fav, best, awards };
+}
+function profileView(d, land) {
+  const p = profileParts(d, land ? 'season' : S.period);
+  const head = `<div class="whead"><button class="back" type="button" data-back="1">${ico('triL')}Назад</button><span class="t">${ico('rating')}Профиль</span><span class="s">сезон 1</span>${close}</div>`;
+  return head + (land ? `<div class="pbody"><div class="col">${p.hero}${p.modes}</div><div class="col">${p.fav}${p.best}${p.awards}</div></div>`
+    : `<div class="pbody">${p.hero}${p.modes}${p.fav}${p.best}${p.awards}</div>`);
+}
+
+function draw() {
+  let d = null;
+  if (S.view === 'own') d = P.own;
+  else if (S.view === 'other') d = S.from ? { ...P.other, nick: S.from.nick, place: S.from.place, points: S.from.pts } : P.other;
+  document.getElementById('win').innerHTML = S.view === 'table' ? tableView() : profileView(d, false);
+  for (const b of document.querySelectorAll('.demo button')) b.setAttribute('aria-pressed', String(b.dataset.v === S.view));
+}
+document.getElementById('land').innerHTML = profileView(P.other, true);
+document.getElementById('win').addEventListener('click', (e) => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.nick) { S.view = 'other'; S.from = t.dataset.nick === 'Гром_52' ? null : { nick: t.dataset.nick, place: +t.dataset.place, pts: +t.dataset.pts }; draw(); }
+  else if (t.dataset.own) { S.view = 'own'; draw(); }
+  else if (t.dataset.back) { S.view = 'table'; draw(); }
+  else if (t.dataset.per) { S.period = t.dataset.per; draw(); }
+});
+document.querySelector('.demo').addEventListener('click', (e) => { const t = e.target.closest('button'); if (!t) return; S.view = t.dataset.v; S.from = null; draw(); });
+draw();
+</script>
+</body></html>

@@ -20,7 +20,7 @@ import { makeCraft, fwdOf, setGround } from '../games/drone/sim/core.js?v=202609
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import { cmOf, cmKey } from '../games/airdef/sim/cm.js?v=20261028a';
 import { createMulti } from './airdef-multi.js';
-import { adProgress, realDeny, loadoutIds, samIds, quickEra } from './airdef-own.js';
+import { adProgress, realDeny, loadoutIds, samIds, quickEra, useOf, useOut } from './airdef-own.js';
 import { flightModel, loadOf } from '../games/airdef/sim/flight.js?v=20261022d';
 import { initDamage, hitZones, dmgPack, burnRate } from '../games/airdef/sim/damage.js?v=20261022d';
 import { buildWinter } from '../games/airdef/map-winter.js?v=20261022d';
@@ -101,7 +101,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     let t = wantTeam === T1 || wantTeam === T2 ? wantTeam : team(r, T1).length <= team(r, T2).length ? T1 : T2;
     if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else t = t === T1 ? T2 : T1; }
     if (!cap(t)) { const bot = team(r, t).find((p) => p.bot); if (bot) dropPlayer(r, bot); else return send(c, { t: 'err', msg: 'Комната заполнена' }); }
-    Object.assign(c, { room: r, team: t, ready: !!r.quick, bot: false, budget: O.BUDGET0[t] || 0, choice: null, kills: 0, deaths: 0, score: 0, lives: null, units: 0, plan: null, spent: 0 });
+    Object.assign(c, { room: r, team: t, ready: !!r.quick, bot: false, budget: O.BUDGET0[t] || 0, choice: null, kills: 0, deaths: 0, score: 0, lives: null, units: 0, plan: null, spent: 0, use: null }); // use — вылеты / ЗРК прошлого боя в новую комнату не тянуть
     r.players.set(c.id, c);
     if (r.state !== 'lobby') { if (r.kind === 'multi') MU.resume(r, c); else { c.budget = r.wave > 1 ? Math.round(O.BUDGET0[t] * 0.8) : O.BUDGET0[t]; sendStart(r, c); sendState(r, c); } }
     sendRoom(r); J(r, 'join', { who: c.name, team: t });
@@ -188,6 +188,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     r.targets = pickTargets(r.S, Math.random, 3);
     r.value0 = r.targets.reduce((s, o) => s + o.value, 0);
     r.wave = 0; r.valueK = 0; r.startedAt = Date.now();
+    for (const p of r.players.values()) p.use = null; // профиль: вылеты по самолётам и ЗРК в бою — заново на каждый бой (useOf)
     J(r, 'start', { era: r.era, sideAir: r.sideAir, map: r.map, air: team(r, 'air').map((p) => p.name), pvo: team(r, 'pvo').map((p) => p.name) });
     bcast(r, { t: 'start', era: r.era, sideAir: r.sideAir, mode: r.mode, map: r.map, targets: r.targets.map((o) => o.id), waves: O.WAVES });
     nextWave(r);
@@ -213,6 +214,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     const air = team(r, 'air'), b0 = Math.random() * Math.PI * 2;
     air.forEach((p, i) => { p.bearing = b0 + (i - (air.length - 1) / 2) * 0.35; spawnAir(r, p); });
     for (const p of team(r, 'pvo')) p.op = null;
+    for (const u of r.S.units) { const q = r.players.get(u.owner); if (q && !q.bot && !u.dead) useOf(q).sm.add(u.key); } // профиль: ЗРК, стоявшие в бою
     r.zone = O.newZone(Math.random); // зона пополнения — новое место на каждую волну
     sendRoom(r);
     J(r, 'wave', { air: air.map((p) => [p.name, p.choice]) });
@@ -230,6 +232,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       return;
     }
     humanCraft(r, p, L.plane, L.items.map(([k, n]) => ({ key: k, n })), x, y, z, yaw, 240, O.MAX_HP);
+    if (L.plane) { const fl = useOf(p).fl; fl[L.plane] = (fl[L.plane] || 0) + 1; } // профиль: вылет на этом самолёте (подхват ИИ-двойника после обрыва — не вылет)
     p.cm = { flare: MODES[r.mode].cm, chaff: MODES[r.mode].cm }; p.stT = r.t;
     p.zFuel = O.ZONE.FUEL; p.zAmmo = O.ZONE.AMMO; p.fuel = 1; p.zT = 0; // зона пополнения: на этот вылет — 1 раз топливо, 2 раза боекомплект
     sendSpawn(r, p);
@@ -304,7 +307,8 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       const opp = [...r.players.values()].filter((q) => q.team !== p.team);
       const rt = r.quick ? battleParts({ win: p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: team(r, p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, era: r.era }) : null;
       const ope = await seal(opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid));
-      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ev, ...(rt ? { rt } : {}), ope, exp: Math.floor(Date.now() / 1000) + 3600 };
+      const u = useOut(p);
+      const res = { g: 'airdef', m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team, w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ev, ...(rt ? { rt } : {}), ...(u ? { u } : {}), ope, exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', winner, valueK: r.valueK, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
     }
     J(r, 'end', { winner, valueK: r.valueK });
