@@ -60,7 +60,11 @@ check('пинг: сервер отвечает', pong >= 1);
 { const R0 = end && end.result ? await readResult(end.result) : null;
   check('итог своей комнаты: подписан, без rt (рейтинг даёт только быстрый бой)', !!R0 && R0.p === PIDS[0] && !('rt' in R0));
   check('итог своей комнаты: нет поля op, есть запечатанное ope (против одних ботов — пустое)', !!R0 && !('op' in R0) && typeof R0.ope === 'string' && (await unseal(R0.ope, SECRET)).length === 0);
+  // профиль (sql/029): u.sm — ЗРК, стоявшие в бою (основной клиент ставит «Оса»), u.fl — вылеты по самолётам (у лётчиков очереди)
+  check(`итог своей комнаты: u.sm — ЗРК игрока (${R0 && JSON.stringify(R0.u)})`, !!R0 && !!R0.u && Array.isArray(R0.u.sm) && R0.u.sm.includes('osa') && !R0.u.fl);
   const ends = qEnd(); check('быстрый бой: итог пришёл всем четверым', ends.every(Boolean));
+  { const R1 = ends[0] && ends[0].result ? await readResult(ends[0].result) : null, n = R1 && R1.u && R1.u.fl ? Object.values(R1.u.fl).reduce((a, v) => a + v, 0) : 0;
+    check(`быстрый бой, лётчик: u.fl — вылеты по самолётам (${R1 && JSON.stringify(R1.u)})`, !!R1 && n >= 1 && Object.keys(R1.u.fl).every((k) => typeof k === 'string' && k.length < 20)); }
   for (let i = 0; i < 4; i++) {
     const R = ends[i] && ends[i].result ? await readResult(ends[i].result) : null, mine = PIDS[i + 1], opp = (i < 2 ? [PIDS[3], PIDS[4]] : [PIDS[1], PIDS[2]]).sort();
     const got = R && R.ope ? (await unseal(R.ope, SECRET)).sort() : null;

@@ -14,7 +14,7 @@ import { AG, SAM, SAM_COST, DEFENSE, COMBINED, THREAT, multiItems } from '../gam
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
 import { dmgPack } from '../games/airdef/sim/damage.js?v=20261022d';
-import { realDeny, samIds, strikeIds } from './airdef-own.js';
+import { realDeny, samIds, strikeIds, useOf, useOut } from './airdef-own.js';
 import { battleParts } from '../games/airdef/rating.js?v=20261028a';
 
 const r1 = (v) => Math.round(v * 10) / 10;
@@ -31,6 +31,7 @@ export function createMulti(ctx) {
   // ═════════════ Раунды ═════════════
   function start(r) {
     r.first = Math.random() < 0.5 ? 'east' : 'west'; r.round = 0; r.scores = { east: 0, west: 0 }; r.startedAt = Date.now();
+    for (const p of r.players.values()) p.use = null; // профиль: ЗРК, стоявшие в бою (раунды за ПВО); налёт ведёт ИИ — самолёты не считаем (вылеты — только свои)
     for (const p of r.players.values()) { p.kills = 0; p.deaths = 0; p.score = 0; p.icp = 0; p.samk = 0; p.dmg = 0; } // icp — перехваты (раунд за ПВО), samk — комплексы, уничтоженные волной игрока, dmg — доля разрушенного волной игрока, % (экран итога)
     J(r, 'start', { kind: 'multi', era: r.era, first: r.first, east: team(r, 'east').map((p) => p.name), west: team(r, 'west').map((p) => p.name) });
     nextRound(r);
@@ -55,6 +56,7 @@ export function createMulti(ctx) {
   }
   function startWave(r) {
     r.state = 'play'; r.t = 0; r.phaseT = WAVE_MAX; r.wt = 0; r.tick = 0;
+    for (const u of r.S.units) { const q = r.players.get(u.owner); if (q && !q.bot && !u.dead) useOf(q).sm.add(u.key); } // профиль: ЗРК, стоявшие в бою
     const military = r.S.objects.filter((o) => !o.noTarget && !o.dead);
     for (const p of atkTeam(r)) {
       if (!p.plan || !M.planCost(p.plan.n)) continue;
@@ -94,7 +96,8 @@ export function createMulti(ctx) {
       const all = [...r.players.values()], opp = all.filter((q) => q.team !== p.team);
       const rt = r.quick ? battleParts({ win: winner === null ? 0.5 : p.team === winner ? 1 : 0, score: p.score || 0, kills: p.kills || 0, teamScores: all.filter((q) => q.team === p.team).map((q) => q.score || 0), oppHumans: opp.filter((q) => !q.bot).length, oppTotal: opp.length, mode: r.mode, multi: true }) : null;
       const ope = await seal(opp.filter((q) => !q.bot && q.pid && !String(q.pid).startsWith('test-')).map((q) => q.pid));
-      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ...(rt ? { rt } : {}), ope,
+      const u = useOut(p);
+      const res = { g: 'airdef', mm: 1, m: `${r.code}-${r.startedAt}`, p: p.pid, mode: r.mode, team: p.team === r.first ? 'air' : 'pvo', w: p.team === winner ? 1 : 0, k: p.kills || 0, s: Math.round(p.score || 0), hm, ...(rt ? { rt } : {}), ...(u ? { u } : {}), ope,
         ev: { min: Math.round((Date.now() - (r.startedAt || Date.now())) / 6000) / 10, mwInt: (p.kills || 0) * 3, mwObj: Math.min(300, Math.round((p.score || 0) / 40)) }, // для прокачки (airdef-claim)
         exp: Math.floor(Date.now() / 1000) + 3600 };
       send(p, { t: 'end', kind: 'multi', first: r.first, winner, scores: { east: Math.round(e), west: Math.round(w) }, v0: r.v0, players: list, result: p.pid && !String(p.pid).startsWith('test-') ? await sign(res) : null });
