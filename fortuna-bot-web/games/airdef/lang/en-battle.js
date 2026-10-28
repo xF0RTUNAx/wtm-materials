@@ -204,7 +204,7 @@ export default {
   'Подскок: поднимитесь на +{0} м — {1} покажется; пуск — и вниз': 'Pop-up: climb +{0} m and {1} will show; fire, then drop back',
   '{0} видна — пуск, затем вниз': '{0} is visible: fire, then drop back',
   'Цель не покажется и с +80 м — смените позицию': 'Target hidden even at +80 m: change position',
-  'Подскок отменён — вниз': 'Pop-up cancelled: descending',
+  'Подскок отменён — вниз': 'Pop-up canceled: descending',
   'Подскок: вверх, пока цель не покажется': 'Pop-up: climbing until the target shows',
   'Подскок: управление у вас': 'Pop-up: you have control',
   'Подскок: цель не показалась — смените позицию': 'Pop-up: target never showed, change position',
