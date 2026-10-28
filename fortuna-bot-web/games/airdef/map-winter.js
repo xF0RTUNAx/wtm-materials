@@ -57,6 +57,9 @@ function pads() {
     { x: valleyX(5500) + 7600, z: 5500, hx: 440, hz: 280, m: 300 },                  // 3 арсенал в глубине ущелья (восток)
     { x: valleyX(LS.z) + 2000, z: LS.z - 2300, hx: 380, hz: 300, m: 350 },          // 4 склад ГСМ у озера (юг)
     { x: valleyX(-1500) - 8200, z: -1500, hx: 280, hz: 250, m: 420 },                // 5 командный пункт в котловине (запад)
+    // 6 военный городок — терраса под своей сценой (site_garr_w: 430 × 390, начало в (−1106, 7540), южнее дороги посёлка; было 247…256 м);
+    // последней — номера прежних площадок (P[0…5]) не сдвигать
+    { x: -1106, z: 7540, hx: 235, hz: 215, m: 150, hard: 1 }, // hard — после врезки дорог площадка снова ровная (дорога посёлка у северной ограды срезала угол на 2,5 м)
   ];
 }
 // двоичная куча для поиска пути (A*)
@@ -173,6 +176,8 @@ export function buildWinter(seed = 1) {
       }
     }
     for (let q = 0; q < N * N; q++) if (CW[q] > 0 && !ICE[q]) HM[q] += (CT[q] - HM[q]) * CW[q];
+    // площадки hard (сцена объекта стоит на ровном) — ядро снова на своей высоте: врезка дороги рядом не должна опускать постройки сцены
+    for (const p of P) if (p.hard) { const [i0, j0] = node(p.x - p.hx, p.z - p.hz), [i1, j1] = node(p.x + p.hx, p.z + p.hz); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) HM[j * N + i] = p.y; }
   }
   function groundAt(x, z) {
     const fx = clamp((x + H) / RES, 0, N - 1.001), fz = clamp((z + H) / RES, 0, N - 1.001), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, q = j * N + i;
@@ -224,8 +229,8 @@ export function buildWinter(seed = 1) {
     for (let k = -3; k <= 3; k++) M.push(mp('obj_cont', p.x - 40, p.z + k * 260, 1), mp('obj_cont', p.x + 40, p.z + k * 260 + 120, 1));
     M.push(mp('obj_oldind', p.x, p.z - 1200), mp('obj_oldind', p.x, p.z + 1250));
     add({ key: 'w_rail', name: tr('Железнодорожный узел'), x: p.x, z: p.z, w: 220, d: 3000, value: 120, hp: 180, models: M, parts: M.map(mbox) }); }
-  { const p = P[1], x = p.x + 520, z = p.z + 380, M = [mp('obj_milbase', x, z), mp('obj_milbase', x + 70, z + 60), mp('obj_milbase', x - 70, z + 60), mp('obj_cont', x, z + 120)]; // военный городок
-    add({ key: 'w_garr', name: tr('Военный городок'), x, z: z + 50, w: 260, d: 240, value: 110, hp: 160, models: M, parts: M.map(mbox) }); }
+  { const p = P[6]; // военный городок — своя сцена (city.js SITES site_garr_w) на своей террасе, южнее дороги посёлка; въезд с севера
+    add({ key: 'w_garr', name: tr('Военный городок'), x: p.x, z: p.z, w: 430, d: 390, value: 110, hp: 160, site: 'site_garr_w', parts: siteParts('site_garr_w', p.x, p.z) }); }
   const objects = O;
   const keep = objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 }));
   const blocked = (x, z, r) => keep.some((k) => x + r > k.x0 && x - r < k.x1 && z + r > k.z0 && z - r < k.z1);
