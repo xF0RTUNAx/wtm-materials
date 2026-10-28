@@ -56,7 +56,7 @@ export function createOnline(C, ctrls) {
       <div class="prow"><span>${tr('Пустые места')}</span>${seg('fill', ui.fill ? 1 : 0, [[1, tr('Боты')], [0, tr('Без ботов')]])}</div>
       <button class="btn alt" data-oa="create">${tr('Создать комнату')}</button>
       <div class="cat-h">${tr('Войти по коду')}</div>
-      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${tr('Войти')}</button></div>`;
+      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${LANG === 'en' ? 'Join' : 'Войти'}</button></div>`; // не tr: «Войти» в словаре — вход в аккаунт (Sign in), один ключ на слово
   }
   function lobby(el, r) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
