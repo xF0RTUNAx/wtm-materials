@@ -10,7 +10,7 @@ import { createStrike, MODES } from '../games/airdef/sim/strike.js?v=20260930m';
 import { createRaid } from '../games/airdef/sim/raid.js?v=20260930m';
 import { createCombined, samKnown, levelIn } from '../games/airdef/sim/combined.js?v=20261018j';
 import { spotNear, freeGround, roofOk, buildingAt } from '../games/airdef/mission.js?v=20260930m';
-import { AG, SAM, SAM_COST, DEFENSE, COMBINED, THREAT, multiItems } from '../games/airdef/arsenal.js?v=20260930m';
+import { AG, SAM, DEFENSE, COMBINED, THREAT, multiItems, multiCap, multiSamCost, multiSamCap } from '../games/airdef/arsenal.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
 import { dmgPack } from '../games/airdef/sim/damage.js?v=20261022d';
@@ -111,7 +111,7 @@ export function createMulti(ctx) {
   function botAttack(r, p) {
     const base = (COMBINED[r.atk] || {})[levelIn(COMBINED[r.atk], r.era)] || [], n = {}; let cost = 0;
     const others = M.sumN(...atkTeam(r).filter((q) => q !== p).map((x) => x.plan && x.plan.n)), team = atkTeam(r).length;
-    for (let pass = 0; pass < 6; pass++) for (const [k] of base) { if (AG[k].recon || !multiItems(r.atk).some(([q]) => q === k)) continue; const c = THREAT[k] ?? 3, tb = AG[k].kind === 'tbm'; if (cost + c <= p.budget && (!tb || !M.tbmCheck(M.sumN(others, n, { [k]: 1 }), team))) { n[k] = (n[k] || 0) + 1; cost += c; } }
+    for (let pass = 0; pass < 6; pass++) for (const [k] of base) { if (AG[k].recon || !multiItems(r.atk).some(([q]) => q === k)) continue; const c = THREAT[k] ?? 3, tb = AG[k].kind === 'tbm'; if (cost + c <= p.budget && (n[k] || 0) < multiCap(k) && (!tb || !M.tbmCheck(M.sumN(others, n, { [k]: 1 }), team))) { n[k] = (n[k] || 0) + 1; cost += c; } }
     const objs = r.S.objects.filter((o) => !o.noTarget), pick = [objs[Math.floor(Math.random() * objs.length)], objs[Math.floor(Math.random() * objs.length)]], cfg = {};
     for (const [k, c] of Object.entries(n)) cfg[k] = { pts: [], alt: null, t: null, sam: false, tgt: null, units: Array.from({ length: c }, (_, i) => (AG[k].decoyMun ? { sam: true } : { sam: false, tgt: pick[i % 2].id })) };
     p.plan = { n, cfg }; p.spent = cost;
@@ -122,17 +122,19 @@ export function createMulti(ctx) {
     const order = [...list.filter((k) => O.samClass(k) === 'top'), ...list.filter((k) => O.samClass(k) === 'mid'), ...list.filter((k) => O.samClass(k) === 'near')];
     const objs = r.S.objects.filter((o) => !o.noTarget);
     for (let g = 0; g < 16; g++) {
-      const k = order.find((q) => (SAM_COST[q] || 100) <= p.budget); if (!k) break;
+      const k = order.find((q) => multiSamCost(q) <= p.budget && ownN(r, p, q) < multiSamCap(q)); if (!k) break;
       const tgt = objs[(g + p.id) % objs.length], Sx = SAM[k], man = Sx.type === 'ir' && Sx.hp <= 15;
       const xz = Sx.rmax >= 15000 ? spotNear(city, Math.random, tgt.x * 0.5, tgt.z * 0.5, 600, 2500, false) : spotNear(city, Math.random, tgt.x, tgt.z, 250, man ? 1600 : 1400, man);
       buyUnit(r, p, k, xz[0], xz[1], xz[2], true);
       if (O.samClass(k) === 'top' && order.length > 1) order.splice(order.indexOf(k), 1);
     }
   }
+  const ownN = (r, p, k) => r.S.units.filter((u) => u.owner === p.id && !u.dead && u.key === k).length; // комплексов типа k у игрока
   function buyUnit(r, p, k, x, z, roof, quiet) {
     const side = opp(r.atk);
     if (!M.samOk(k, side)) return 'Комплекс недоступен';
-    const cost = SAM_COST[k] || 100; if (cost > p.budget) return 'Не хватает очков';
+    const cost = multiSamCost(k); if (cost > p.budget) return 'Не хватает очков';
+    if (ownN(r, p, k) >= multiSamCap(k)) return 'Больше этого типа нельзя'; // потолок «Мульти-волны» на игрока (MULTI.samCap)
     if (!Number.isFinite(x) || !Number.isFinite(z) || Math.abs(x) > CITY.HALF - 1500 || Math.abs(z) > CITY.HALF - 1500) return 'Вне карты';
     const Sx = SAM[k], man = Sx.type === 'ir' && Sx.hp <= 15;
     if (roof) { if (!man) return 'На крышу — только ПЗРК'; const bi = buildingAt(city, x, z); if (bi < 0 || !roofOk(city, bi)) return 'Сюда на крышу нельзя'; }
@@ -165,7 +167,7 @@ export function createMulti(ctx) {
       samLaunch: (m) => { const t = m.target; pushTo(r, 'all', ['sl', m.id, m.unit.id, t ? (t.isMun ? -t.id : t.id) : 0, m.slot]); },
       samEnd: (m, hit) => {
         pushTo(r, 'all', ['se', m.id, hit ? 1 : 0, ...v3(m.pos)]);
-        if (hit && m.target && m.target.isMun && m.target.dead) { const p = r.players.get(m.unit.owner); if (p) { p.kills++; p.icp++; p.score += 10 * (THREAT[m.target.key] ?? 2); } r.downs = (r.downs || 0) + 1; }
+        if (hit && m.target && m.target.isMun && m.target.dead) { const p = r.players.get(m.unit.owner); if (p) { p.kills++; p.icp++; p.score += 5 * (THREAT[m.target.key] ?? 4); } r.downs = (r.downs || 0) + 1; } // очки угрозы с 2026-10-28 — из 100 (было 10 × из 50)
       },
       wpnRelease: (w) => { pushTo(r, 'atk', wrEv(w)); },
       wpnEnd: (w, res) => { const e = ['we', w.id, ...v3(w.pos), res.intercepted ? 1 : 0]; pushTo(r, w.defSeen ? 'all' : 'atk', e); },
@@ -320,7 +322,7 @@ export function createMulti(ctx) {
     }
     // ПВО: покупка, продажа, перенос (подготовка)
     if (m.t === 'buyUnit') { if (r.state !== 'plan' || isAtk(r, c)) return; { const rw = realDeny(r.mode, c, samIds(String(m.k))); if (rw) return send(c, { t: 'deny', msg: rw }); } const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) send(c, { t: 'deny', msg: why }); return; }
-    if (m.t === 'sell') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? SAM_COST[u.key]) * 0.7); r.S.removeUnit(u); pushTo(r, 'def', ['ur', u.id]); flush(r); sendRoom(r); return; }
+    if (m.t === 'sell') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? multiSamCost(u.key)) * 0.7); r.S.removeUnit(u); pushTo(r, 'def', ['ur', u.id]); flush(r); sendRoom(r); return; }
     if (m.t === 'move') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id || !Number.isFinite(+m.x) || !Number.isFinite(+m.z)) return; if (!(m.roof ? buildingAt(city, +m.x, +m.z) >= 0 : freeGround(city, +m.x, +m.z))) return send(c, { t: 'deny', msg: 'Место занято' }); r.S.moveUnit(u, +m.x, +m.z, !!m.roof); pushTo(r, 'def', ['um', u.id, r1(+m.x), r1(+m.z), m.roof ? 1 : 0]); flush(r); return; }
     // фильтр целей своего комплекса (подготовка и бой): список видов, пустой — все; старый сервер команду не знает и пропускает
     if (m.t === 'tgt') { const u = r.S && (r.state === 'plan' || r.state === 'play') && !isAtk(r, c) && r.S.units.find((q) => q.id === +m.id && q.owner === c.id && !q.dead); if (u) r.S.setTgt(u, m.c); return; }

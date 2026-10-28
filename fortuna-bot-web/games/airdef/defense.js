@@ -15,7 +15,7 @@ import { CITY, mulberry32 } from './city.js?v=20261028a';
 import { weaponHasModel } from './models.js?v=20261028a';
 import { LNCH, lnchToWorld } from './launchers.js?v=20261028a';
 import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261028a';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf } from './arsenal.js?v=20261028a';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk } from './arsenal.js?v=20261028a';
 import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261028a';
 import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261028a';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -39,6 +39,12 @@ export function createDefense(C) {
   const atk = () => st.multi === 'atk';
   // цена комплекса: в онлайне ведущая ПВО платит за дальние больше (sim/online.js LEAD_K)
   const costOf = (k) => (st.net ? samCostFor(k, st.net.room && st.net.room.lead) : samCost(k));
+  // «Мульти-волна» (Mark 2026-10-28): свои цены ЗРК по замеру силы и потолки на игрока — комплексов одного типа (samLeft, null — без потолка)
+  // и единиц удара одного типа (capDeny); почти бесполезные в режиме (MULTI.samOff) в каталог не идут
+  const priceOf = (k) => (st.multi ? multiSamCost(k) : costOf(k));
+  const samLeft = (k) => (st.multi ? multiSamCap(k) - C.S.units.filter((u) => mine(u) && !u.dead && u.key === k).length : null);
+  const samCapSay = (k) => tr('{0} — не больше {1}', [SAM[k].short, multiSamCap(k)]);
+  const capDeny = (k) => ((st.plan.n[k] || 0) >= multiCap(k) ? tr('{0} — не больше {1}', [AG[k].short, multiCap(k)]) : null);
   // прокачка: в «Реализме» (одиночном и онлайн) — только купленное в «Исследованиях»; аркада и уроки — всё
   const realMode = () => !(st.opts || {}).allow && !(st.opts || {}).items && (st.net ? !!(st.net.room && st.net.room.mode === 'real') : C.setup.diff === 'real');
   const lockedSam = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.samOk(k);
@@ -50,7 +56,7 @@ export function createDefense(C) {
   const aiDefLevel = () => levelIn(DEFENSE[dside()], lesson() ? C.setup.era : levelOfPlan(attSide(), st.plan ? st.plan.n : {}));
   const aiWaveLevel = () => levelIn(COMBINED[attSide()], lesson() ? C.setup.era : levelOfSams(dside(), Object.keys(SAM).filter((k) => !lockedSam(k))));
   const aiComp = () => COMBINED[attSide()][aiWaveLevel()] || [];
-  function placeAiDef() { const p = st.aiPlace; if (!p) return; st.aiPlace = null; placeDefense(C.S, city, st.rnd, dside(), aiDefLevel(), p.near, p.kn ? p.kn.density : 1, { ...(p.kn || {}), same: !!lesson() }); C.syncUnits(); } // урок — состав эпохи без случайных замен
+  function placeAiDef() { const p = st.aiPlace; if (!p) return; st.aiPlace = null; placeDefense(C.S, city, st.rnd, dside(), aiDefLevel(), p.near, p.kn ? p.kn.density : 1, { ...(p.kn || {}), same: !!lesson(), skip: MULTI.samOff }); C.syncUnits(); } // урок — состав эпохи без случайных замен
   const seen = new Map(); // самолёт → время, когда его последний раз видела сеть ПВО
   const tm = $('tmap'), tx = tm.getContext('2d');
   const view = { cx: 500, cz: -300, k: 0.05 }; // центр карты (м) и масштаб (px на м)
@@ -435,8 +441,9 @@ export function createDefense(C) {
       st.moving = false; st.draft = null; snd.click(); renderSide(); return;
     }
     const k = st.placing; if (!k) return;
-    const cost = st.net ? costOf(k) : SAM_COST[k], lim = netLeft(k);
+    const cost = priceOf(k), lim = netLeft(k), sl = samLeft(k);
     if (cost > st.budget) { say(tr('Не хватает очков обороны')); snd.deny(); return; }
+    if (sl !== null && sl <= 0) { say(samCapSay(k)); snd.deny(); return; }
     if (lim !== null && lim <= 0) { say(tr('Лимит первой волны для этого класса')); snd.deny(); return; }
     if (st.net) st.net.buyUnit(k, d.x, d.z, d.roof); // онлайн: комплекс придёт событием
     else { st.budget -= cost; const u = C.S.addUnit(k, d.x, d.z, { roof: d.roof, skill: 0.75, yaw: st.rnd() * 6.28 }); u.paid = cost; C.syncUnits(); st.sel = u; on('place', u); }
@@ -459,7 +466,7 @@ export function createDefense(C) {
   // карточка размещения / выбранного своего комплекса в расстановке
   function placeCard() {
     if (!st.placing) return '';
-    const S = SAM[st.placing], c = costOf(st.placing);
+    const S = SAM[st.placing], c = priceOf(st.placing);
     return `<div class="dcard on"><div class="nm"><b>${tr('{0} — размещение', [S.name])}</b><span>${st.draft ? tr('место выбрано — коснитесь карты, чтобы сдвинуть') : tr('коснитесь карты — место')}${S.hp <= 15 ? tr(' · можно на плоскую крышу') : ''}${IS_TOUCH ? '' : tr(' · Enter — подтвердить, Esc или правая кнопка — отмена')}</span></div><span class="pr">${c}</span></div>
       <div class="dact"><button class="btn" data-a="pok" ${st.draft ? '' : 'disabled'}>${tr('Подтвердить −{0}', [c])}</button><button class="btn alt" data-a="pno">${tr('Отмена')}</button></div>`;
   }
@@ -592,6 +599,7 @@ export function createDefense(C) {
     const free = idxOf(k, null).filter((i) => !launchedU(k, i));
     if (free.length) { setTkey(k, free[0], key); return true; }
     if (AG[k].kind === 'tbm') { const b = tbmRoom(k); if (b.deny) { say(`${b.deny} ${st.net ? tr('на команду') : tr('на волну')}${b.other ? tr(' (у союзников уже {0})', [b.other]) : ''}`, 3); snd.deny(); return false; } }
+    const cd = capDeny(k); if (cd) { say(cd); snd.deny(); return false; }
     if (planCost() + (THREAT[k] ?? 3) > st.budget) { say(tr('Не хватает очков угрозы')); snd.deny(); return false; }
     const i = st.plan.n[k] = (st.plan.n[k] || 0) + 1; setTkey(k, i - 1, key);
     if (st.phase === 'wave') { st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 1.5; }
@@ -633,8 +641,9 @@ export function createDefense(C) {
     else h += `<p class="hint">${tr('Засечённый комплекс ПВО: назначенные сюда бьют именно по нему (уничтожен — по другим засечённым).')}</p>`;
     for (const [k, via] of multiItems(attSide()).filter(([q]) => !st.opts.items || st.opts.items.has(q) || idxOf(q, key).length)) { // урок — только нужные типы
       const W = AG[k], here = idxOf(k, key), done = here.filter((i) => launchedU(k, i)).length, free = idxOf(k, null).filter((i) => !launchedU(k, i)).length, c = THREAT[k] ?? 3, tbFull = W.kind === 'tbm' && !free && !!tbmRoom(k).deny;
-      h += `<div class="dcard ${here.length ? 'on' : ''} ${lockedStrike(k) ? 'no' : ''}"><div class="nm"><b>${lockedStrike(k) ? ico('lock') + ' ' : ''}${W.short} ×${here.length}</b><span>${via ? CARRIERS[via].name : W.kind === 'tbm' ? tr('пусковая') : tr('своим ходом')}${W.decoyMun ? tr(' · ложная') : ''}${done ? tr(' · пущено {0}', [done]) : ''}${free ? tr(' · без цели: {0}', [free]) : ''}</span></div>
-        <span class="pr">${free ? '' : c}</span><button class="btn alt mini" data-a="tdec" data-k="${k}">−</button><button class="btn alt mini ${(!free && c > left) || tbFull ? 'no' : ''}" data-a="tinc" data-k="${k}">+</button></div>`;
+      const nAll = st.plan.n[k] || 0, capFull = !free && !!capDeny(k); // потолок типа: всего единиц этого типа в волне (на всех целях)
+      h += `<div class="dcard ${here.length ? 'on' : ''} ${lockedStrike(k) ? 'no' : ''}"><div class="nm"><b>${lockedStrike(k) ? ico('lock') + ' ' : ''}${W.short} ×${here.length}</b><span>${via ? CARRIERS[via].name : W.kind === 'tbm' ? tr('пусковая') : tr('своим ходом')}${W.decoyMun ? tr(' · ложная') : ''}${done ? tr(' · пущено {0}', [done]) : ''}${free ? tr(' · без цели: {0}', [free]) : ''}${nAll && W.kind !== 'tbm' ? tr(' · всего {0} из {1}', [nAll, multiCap(k)]) : ''}</span></div>
+        <span class="pr">${free ? '' : c}</span><button class="btn alt mini" data-a="tdec" data-k="${k}">−</button><button class="btn alt mini ${(!free && c > left) || tbFull || capFull ? 'no' : ''}" data-a="tinc" data-k="${k}">+</button></div>`;
       if (here.length) { // единицы на этой цели: номер и время пуска; касание — её маршрут, высота, время
         const D = DD[k], tOf = (i) => (wave && C.ev ? C.ev.unitInfo(k, i).t : D ? D.units[i].t : 0);
         h += `<div class="useg">${here.map((i) => launchedU(k, i) ? `<span class="uchip done">${uName(k, i)} ${ico('ok', 'ii')}</span>` : `<button class="uchip" data-a="ued" data-k="${k}" data-i="${i}">${uName(k, i)} · ${fmtT(tOf(i))}${unitCfg(st.plan.cfg, k, i).pts ? tr(' · м') : ''}</button>`).join('')}${here.length - done > 1 ? `<button class="uchip all" data-a="ged" data-k="${k}">${ico('cog', 'ii')}${tr('все {0}', [here.length - done])}</button>` : ''}</div>`;
@@ -722,16 +731,16 @@ export function createDefense(C) {
       if (st.sel && !st.sel.dead) {
         const u = st.sel;
         h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, st.multi ? 'multi' : 'def')}</b><span>${tr('{0} · до {1} км · {2}', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1), unitStatus(u)])}</span></div></div>${tgtRowHtml(u, st.multi ? 'multi' : 'def')}
-          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round((u.paid || SAM_COST[u.key]) * 0.7)])}</button>
+          <div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round((u.paid || priceOf(u.key)) * 0.7)])}</button>
           ${u.S.radar && u.S.type !== 'guns' ? `<button class="btn alt" data-a="amb">${u.ambush ? tr('Засада: вкл') : tr('Засада: выкл')}</button>` : ''}${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`;
       }
       h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
       const al = st.opts.allow, cat = Object.entries(SAM);
       if (al) cat.sort(([a], [b]) => al.has(b) - al.has(a)); // урок: нужное — сверху
       for (const [k, s] of cat) {
-        if (s.side !== dside() || (!st.multi && s.era > C.setup.era)) continue; // «Мульти-волна» — все комплексы своей стороны (замки «Реализма» — lockedSam ниже); «Оборона» — по эпохе (ревью)
-        const c = SAM_COST[k], shut = st.opts.allow && !st.opts.allow.has(k), lk = lockedSam(k); // урок: покупать только то, о чём он
-        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s, st.multi ? 'multi' : 'def')}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}</span></div><span class="pr">${c}</span></div>`;
+        if (s.side !== dside() || (!st.multi && s.era > C.setup.era) || (st.multi && !multiSamOk(k))) continue; // «Мульти-волна» — все комплексы своей стороны, кроме бесполезных в режиме (замки «Реализма» — lockedSam ниже); «Оборона» — по эпохе (ревью)
+        const c = priceOf(k), shut = st.opts.allow && !st.opts.allow.has(k), lk = lockedSam(k), sl = samLeft(k); // урок: покупать только то, о чём он
+        h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || shut || lk || (sl !== null && sl <= 0) ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${lk ? ico('lock') + ' ' : ''}${s.short}${capsHtml(s, st.multi ? 'multi' : 'def')}</b><span>${shut ? tr('не в этом уроке') : tr('{0} · {1} км / {2} км', [SAM_TYPE[s.type], (s.rmax / 1000).toFixed(1), (s.hmax / 1000).toFixed(1)])}${sl !== null ? tr(' · не больше {0}', [multiSamCap(k)]) : ''}</span></div><span class="pr">${c}</span></div>`;
       }
       h += `<p class="hint">${st.placing ? (IS_TOUCH ? tr('Касайтесь карты, пока место не устроит, затем «Подтвердить». Зелёная тень — зона комплекса на высоте 300 м, просветы — то, что закрывают дома. «Отмена» — не покупать.') : tr('Ведите мышь по карте: зелёная тень — зона комплекса на высоте 300 м, просветы — то, что закрывают дома. Щелчок выбирает место (можно менять), затем «Подтвердить» или Enter. «Отмена», Esc или правая кнопка — не покупать.')) : tr('Выберите комплекс в каталоге и коснитесь карты. Коснитесь своего комплекса: тень его зоны на высоте 300 м, перенос (новое место и «Подтвердить») или продажа.')}</p>`;
       h += `<button class="btn" data-a="go" ${S.units.filter((u) => !u.dead).length ? '' : 'disabled'}>${tr('В бой — {0}', [st.multi ? tr('Мульти-волна') : tr('волна {0}', [st.wave + 1])])}</button>`;
@@ -758,7 +767,7 @@ export function createDefense(C) {
     const b = e.target.closest('[data-a]'), buy = e.target.closest('[data-buy]');
     if (b && (b.dataset.a === 'pok' || b.dataset.a === 'pno')) { if (b.dataset.a === 'pok') confirmDraft(); else cancelDraft(); return; }
     if (buy && lockedSam(buy.dataset.buy)) { say(LOCK_SAY); snd.deny(); return; }
-    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k); if (costOf(k) > st.budget || (lim !== null && lim <= 0)) { say(lim !== null && lim <= 0 ? tr('Лимит первой волны для этого класса') : tr('Не хватает очков обороны')); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
+    if (buy && st.net) { const k = buy.dataset.buy, lim = netLeft(k), sl = samLeft(k); if (priceOf(k) > st.budget || (lim !== null && lim <= 0) || (sl !== null && sl <= 0)) { say(lim !== null && lim <= 0 ? tr('Лимит первой волны для этого класса') : sl !== null && sl <= 0 ? samCapSay(k) : tr('Не хватает очков обороны')); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
     if (b && st.net && !(st.multi === 'atk' && b.dataset.a !== 'ready')) {
       const u = st.sel, a = b.dataset.a;
       if (a === 'ready') { st.ready = !st.ready; st.net.ready(st.ready); }
@@ -772,16 +781,17 @@ export function createDefense(C) {
       snd.click(); renderSide(); return;
     }
     if (buy && st.opts.allow && !st.opts.allow.has(buy.dataset.buy)) { say(tr('В этом уроке — {0}', [[...st.opts.allow].filter((k) => SAM[k] && SAM[k].side === C.setup.side).map((k) => `«${SAM[k].short}»`).join(tr(' или '))]), 3); snd.deny(); return; }
-    if (buy) { const k = buy.dataset.buy; if (SAM_COST[k] > st.budget) { say(tr('Не хватает очков обороны')); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
+    if (buy) { const k = buy.dataset.buy, sl = samLeft(k); if (priceOf(k) > st.budget || (sl !== null && sl <= 0)) { say(sl !== null && sl <= 0 ? samCapSay(k) : tr('Не хватает очков обороны')); snd.deny(); } else { st.placing = st.placing === k ? null : k; st.sel = null; st.moving = false; st.draft = null; snd.click(); } renderSide(); return; }
     if (!b) return;
     const u = st.sel, a = b.dataset.a;
     if (a === 'winc') { // докупка во время волны: копится 1,5 с (пачка — на одном носителе), потом — в расписание
-      const k = b.dataset.k; if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; } if (planCost() + (THREAT[k] ?? 3) > st.budget) { say(tr('Не хватает очков угрозы')); snd.deny(); return; }
+      const k = b.dataset.k; if (lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; } if (capDeny(k)) { say(capDeny(k)); snd.deny(); return; } if (planCost() + (THREAT[k] ?? 3) > st.budget) { say(tr('Не хватает очков угрозы')); snd.deny(); return; }
       st.plan.n[k] = (st.plan.n[k] || 0) + 1; st.addQ[k] = (st.addQ[k] || 0) + 1; st.addT = 1.5; snd.click(); renderSide(); return;
     }
     if (a === 'inc' || a === 'dec') { // состав удара
       const k = b.dataset.k, n = st.plan.n[k] || 0;
       if (a === 'inc' && lockedStrike(k)) { say(LOCK_SAY); snd.deny(); return; }
+      if (a === 'inc' && capDeny(k)) { say(capDeny(k)); snd.deny(); return; }
       if (a === 'inc' && planCost() + (THREAT[k] ?? 3) > st.budget) { say(tr('Не хватает очков угрозы')); snd.deny(); return; }
       st.plan.n[k] = Math.max(0, n + (a === 'inc' ? 1 : -1)); snd.click(); renderSide(); return;
     }
@@ -841,7 +851,7 @@ export function createDefense(C) {
     else if (a === 'next') { st.phase = 'plan'; renderSide(); }
     else if (a === 'desel') { st.sel = null; st.moving = false; st.draft = null; }
     else if (a === 'move') { st.moving = !st.moving; st.draft = null; }
-    else if (a === 'sell' && u) { st.budget += Math.round((u.paid || SAM_COST[u.key]) * 0.7); C.S.removeUnit(u); C.syncUnits(); st.sel = null; }
+    else if (a === 'sell' && u) { st.budget += Math.round((u.paid || priceOf(u.key)) * 0.7); C.S.removeUnit(u); C.syncUnits(); st.sel = null; }
     else if (a === 'amb' && u) { u.ambush = !u.ambush; u.emit = !u.ambush; }
     else if (a === 'emit' && u) { C.S.setEmit(u, !u.emit); on('radar', u); }
     else if ((a === 'tg' || a === 'tgall') && u) setTgtCat(u, a === 'tg' ? b.dataset.k : 'all');
@@ -1390,7 +1400,7 @@ export function createDefense(C) {
     const b0 = st.multi === 'atk' ? multiBudget() : st.multi ? Math.round(MULTI.sam * (C.setup.diff === 'arcade' ? 1.2 : 1)) : null;
     Object.assign(st, { phase: 'plan', wave: 0, waves: opts.waves || WAVES, budget: opts.budget ?? b0 ?? (C.setup.diff === 'arcade' ? 1200 : 1000), score: 0, downs: 0, leaked: 0, lostUnits: 0, placing: null, draft: null, sel: null, moving: false, view: 'map', op: null, over: false, win: null, targets: [] });
     st.value0 = C.S.objects.reduce((s, o) => s + (o.noTarget ? 0 : o.value), 0);
-    for (const [k, x, z, roof] of opts.units || []) { const u = C.S.addUnit(k, x, z, { roof, skill: 0.75 }); u.paid = SAM_COST[k]; }
+    for (const [k, x, z, roof] of opts.units || []) { const u = C.S.addUnit(k, x, z, { roof, skill: 0.75 }); u.paid = priceOf(k); }
     if (atk()) { // ПВО противника — ИИ, как в «Вылете»; где она — заранее неизвестно (засекают разведчик, излучение РЛС, пуски)
       const kn = C.diff && !st.opts.prep ? C.diff.knobs('multi_atk', C.setup.diff) : null; // сложность ИИ-ПВО (не в уроке)
       st.targets = pickTargets(C.S, st.rnd, 3); st.aiPlace = { near: st.targets, kn };
@@ -1481,10 +1491,10 @@ export function createDefense(C) {
     if (st.phase === 'plan') {
       h += `<h3>${tr('Раунд {0}/{1} · расстановка ПВО{2}', [B.round, B.rounds, left])}</h3><div>${tr('Очки обороны: <b style="color:#fde68a">{0}</b>', [st.budget])}</div>
         <p class="hint">${tr('Волну собирает {0}: дроны, крылатые ракеты, баллистика. Что и по каким объектам, неизвестно. Пушки и ПЗРК ставьте у объектов, противоракетные — у самых ценных.', [who])}</p>`;
-      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'multi')}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>${tgtRowHtml(u, 'multi')}<div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(samCost(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`; }
+      if (st.sel && !st.sel.dead && mine(st.sel)) { const u = st.sel; h += `<div class="dcard on"><div class="nm"><b>${u.S.name}${capsHtml(u.S, 'multi')}</b><span>${tr('{0} · до {1} км', [SAM_TYPE[u.S.type], (u.S.rmax / 1000).toFixed(1)])}</span></div></div>${tgtRowHtml(u, 'multi')}<div class="dact">${moveBtns(u)}<button class="btn alt" data-a="sell">${tr('Продать +{0}', [Math.round(priceOf(u.key) * 0.7)])}</button>${st.moving ? '' : `<button class="btn alt" data-a="desel">${tr('Готово')}</button>`}</div>${moveHint()}`; }
       else if (st.sel && !st.sel.dead) h += `<div class="dcard"><div class="nm"><b>${st.sel.S.name}</b><span>${tr('союзника')}</span></div></div>`;
       h += placeCard() + `<div class="cat-h">${tr('Купить')}</div>`;
-      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside()) continue; /* без эпохи: все комплексы своей стороны (сервер проверяет, что куплено — samIds) */ const c = costOf(k), lk = lockedSam(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}${capsHtml(sm, 'multi')}</b><span>${tr('{0} · {1} км{2}', [SAM_TYPE[sm.type], (sm.rmax / 1000).toFixed(1), sm.abm ? tr(' · сбивает баллистику') : ''])}</span></div><span class="pr">${c}</span></div>`; }
+      for (const [k, sm] of Object.entries(SAM)) { if (sm.side !== dside() || !multiSamOk(k)) continue; /* без эпохи: все комплексы своей стороны, кроме бесполезных в режиме (сервер проверяет, что куплено — samIds) */ const c = priceOf(k), lk = lockedSam(k), sl = samLeft(k); h += `<div class="dcard ${st.placing === k ? 'on' : ''} ${c > st.budget || lk || sl <= 0 ? 'no' : ''}" data-buy="${k}"><div class="nm"><b>${sm.short}${capsHtml(sm, 'multi')}</b><span>${tr('{0} · {1} км{2}', [SAM_TYPE[sm.type], (sm.rmax / 1000).toFixed(1), sm.abm ? tr(' · сбивает баллистику') : ''])}${tr(' · не больше {0}', [multiSamCap(k)])}</span></div><span class="pr">${c}</span></div>`; }
       h += `<button class="btn ${st.ready ? 'alt' : ''}" data-a="ready">${st.ready ? ico('ok', 'ii') + tr('Готов (снять)') : tr('Готов')}</button>`;
     } else if (st.phase === 'wave') {
       h += `<h3>${tr('Раунд {0}/{1} · оборона', [B.round, B.rounds])}</h3><div>${tr('Разрушено: <b>{0}%</b> ценности объектов', [Math.round(100 * (B.V || 0) / (B.v0 || 1))])}</div>`;

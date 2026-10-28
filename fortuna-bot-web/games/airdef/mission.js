@@ -95,7 +95,7 @@ export function varyDefense(list, side, era, rnd, ok = () => true) {
 }
 export function placeDefense(S, city, rnd, side, era, targets, k = 1, o = {}) {
   let ti = 0;
-  const fit = ([key]) => !o.heli || (SAM[key].rmax <= 16000 && SAM[key].type !== 'jammer');
+  const fit = ([key]) => (!o.heli || (SAM[key].rmax <= 16000 && SAM[key].type !== 'jammer')) && !(o.skip && o.skip.includes(key)); // skip — не ставить («Мульти-волна»: MULTI.samOff)
   const list0 = DEFENSE[side][era].filter(fit), list = o.same ? list0 : varyDefense(list0, side, era, rnd, (key) => fit([key]));
   const cnt = list.map(([, n0]) => (o.heli ? Math.floor(n0 * k + rnd()) : Math.round(n0 * k)));
   if (o.heli && list.length) for (let i = 0; cnt.reduce((s, c) => s + c, 0) < Math.min(3, list.reduce((s, [, n0]) => s + n0, 0)); i++) cnt[i % cnt.length]++;

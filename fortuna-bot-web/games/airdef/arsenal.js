@@ -625,7 +625,7 @@ export const CARRIERS = {
   f18: { name: 'F/A-18E', side: 'west', cap: 2, alt: 7000, hp: 60, rcs: 3, every: 1.5, len: 18.3 },
 };
 // состав удара: сторона атакующих → эпоха → [ключ, сколько, эшелон, носитель] (эшелон: 1 — разведка и дроны, 2 — крылатые
-// и ложные цели с носителей, 3 — баллистика). По очкам угрозы (THREAT): восток II — 33, III — 42, IV — 60; запад — на 15 % больше
+// и ложные цели с носителей, 3 — баллистика). Составы ИИ — не по бюджету игрока (по прежним очкам угрозы: восток II — 33, III — 42, IV — 60)
 export const COMBINED = {
   east: { 1: [['scout_e', 1, 1], ['r17', 2, 3]],
     2: [['scout_e', 1, 1], ['kh55d', 3, 2, 'e_tu160'], ['kh55', 7, 2, 'e_tu160'], ['tochka', 2, 3]],
@@ -637,9 +637,10 @@ export const COMBINED = {
     3: [['scout', 1, 1], ['uav_w', 4, 1], ['tomahawk', 3, 2, 'e_b1b'], ['slam', 2, 2, 'f18'], ['jsow', 2, 2, 'f18'], ['atacms', 2, 3]],
     4: [['scout', 1, 1], ['uav_w', 4, 1], ['quail', 6, 2, 'f16'], ['sdb', 4, 2, 'f16'], ['tomahawk', 3, 2, 'e_b1b'], ['jassm', 3, 2, 'e_b52'], ['storm', 2, 2, 'e_typhoon'], ['prsm', 2, 3]] }, // IV: PrSM вместо ATACMS, SDB 6 → 4 — очков угрозы столько же (16)
 };
-// очки угрозы: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 5 (Lance — 4: легче боевая часть и хуже точность, Mark 2026-10-25),
-// с манёвром и ложными целями — 7; аэробаллистика: «Кинжал» — 9, ARRW — 8 (боевая часть легче)
-export const THREAT = { scout: 0, scout_e: 0, shahed: 1, uav_w: 2, kh55d: 1, quail: 1, sdb: 1, kh55: 3, kh555: 3, kh101: 4, kalibr: 3, tomahawk: 3, agm86: 3, slam: 3, jsow: 2, jassm: 4, storm: 4, r17: 5, tochka: 5, atacms: 5, lance: 4, prsm: 6, iskander: 7, kinzhal: 9, arrw: 8 };
+// очки угрозы — цена единицы в «Мульти-волне» из бюджета 100 (Mark 2026-10-28: «цена = измеренная сила», один бюджет на все бои): сила — на сколько
+// больше ценности объектов разрушает типовая волна с этой единицей против типовой ПВО противника (стенд tools/airdef-headless/multi-price-stand.js,
+// CLOUD_NOTES_multiwave.md); масштаб — волна в среднем разрушает столько же, сколько при прежних ценах (дрон и ложная цель — 1, крылатая — 3 … из 50)
+export const THREAT = { scout: 0, scout_e: 0, shahed: 2, uav_w: 1, kh55d: 1, quail: 2, sdb: 5, kh55: 8, kh555: 9, kh101: 9, kalibr: 10, tomahawk: 7, agm86: 5, slam: 5, jsow: 5, jassm: 7, storm: 5, r17: 4, tochka: 6, atacms: 12, lance: 4, prsm: 12, iskander: 12, kinzhal: 12, arrw: 13 };
 export const threatOf = (comp) => comp.reduce((n, [k, c]) => n + (THREAT[k] ?? 3) * c, 0);
 // отдельный режим «Мульти-волна» — без эпох и рангов (Mark 2026-10-25: «для каждой нации — градация импакта, от самой начальной баллистики до самой
 // современной; цена и опыт формируются из этого принципа, но напрямую не упоминаются; всё унифицировано и может использоваться вместе — главное открыть»).
@@ -660,12 +661,26 @@ export const MULTI_LINES = {
 };
 // что можно заказать за удар: [ключ, носитель, ступень, ветка, место в ветке (0 — стартовый)]; бюджет удара — один на обе стороны и любой состав
 // (надбавки западу больше нет: у него теперь есть и баллистика, и ложные цели), очки обороны на расстановку под одну волну — одни
+// Цены и потолки — по замеру силы (Mark 2026-10-28, стенд multi-price-stand.js): бюджет удара 100 (цены — THREAT), ПВО 2500 по своим ценам
+// (samCost; в «Обороне» — SAM_COST, не меняются). Потолки на игрока за бой: cap — единиц удара одного типа (баллистика — правило tbmCheck),
+// samCap — комплексов одного типа: дальние 2, ПЗРК 12, остальные 6. samOff — в «Мульти-волне» почти бесполезны (по крылатым на малой высоте
+// не стреляют, РЭБ действует только на авиабомбы с GPS) — в расстановку режима не идут (Mark 2026-10-28: «убери их»)
 export const MULTI = {
   items: Object.fromEntries(Object.entries(MULTI_LINES).map(([side, lines]) => [side, lines.flatMap(([line, , list]) => list.map(([k, via, step], i) => [k, via, step, line, i]))])),
-  budget: 50, sam: 2500,
+  budget: 100, sam: 2500,
+  cap: { shahed: 12, uav_w: 12, kh55d: 8, quail: 8, kh55: 10, kh555: 10, kalibr: 10, kh101: 10, agm86: 10, slam: 10, tomahawk: 10, storm: 10, jassm: 10, jsow: 10, sdb: 10 },
+  samCost: { s75: 60, s125: 110, kub: 100, osa: 210, strela10: 60, strela2: 30, igla: 90, s300: 310, buk: 210, tor: 350, iglas: 110, s400: 400, bukm3: 440, torm2: 330,
+    pantsir: 330, verba: 140, tunguska: 320, hawk: 220, m163: 80, roland: 310, gepard: 260, stinger: 160, patriot: 350, avenger: 230, pac3: 360, nasams: 580, rapier: 240,
+    skyguard: 260, sampt: 640, hawk21: 340, chaparral: 80, phalanx: 80 },
+  samCap: { s75: 2, s300: 2, s400: 2, hawk: 2, patriot: 2, pac3: 2, sampt: 2, strela2: 12, igla: 12, iglas: 12, verba: 12, stinger: 12 },
+  samOff: ['gpsjam', 'gpsjamw', 'strela1', 'zu23', 'zsu234', 'redeye'],
 };
 export const multiBudget = () => MULTI.budget;
 export const multiItems = (side) => MULTI.items[side] || [];
+export const multiCap = (k) => MULTI.cap[k] ?? 99;                                   // баллистика — по правилу tbmCheck (online-multi.js)
+export const multiSamCost = (k) => MULTI.samCost[k] ?? SAM_COST[k] ?? 100;
+export const multiSamCap = (k) => MULTI.samCap[k] ?? 6;
+export const multiSamOk = (k) => !!SAM[k] && !MULTI.samOff.includes(k);
 
 DEFENSE.east[3] = [['s300', 1], ['kub', 2], ['tor', 2], ['osa', 1], ['tunguska', 1], ['strela1', 1], ['iglas', 4], ['gpsjam', 1]];
 DEFENSE.east[4] = [['s400', 1], ['bukm3', 2], ['torm2', 2], ['pantsir', 1], ['tunguska', 1], ['verba', 4], ['gpsjam', 1]];
