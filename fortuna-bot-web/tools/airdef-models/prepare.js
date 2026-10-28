@@ -799,6 +799,10 @@ CONFIG.site_garr_a = { ...CONFIG.site_park_city, src: `${DL}/Свои/Пугал
 CONFIG.site_garr_a_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/Пугало/vil_a_lo.glb` };
 CONFIG.site_cp_a = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Погост/cp_a.glb` }; // КП «Погост» (осень, a_mon) — набор КП, стена монастыря, «камуфляж»
 CONFIG.site_cp_a_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Погост/cp_a_lo.glb` };
+CONFIG.site_cp_city = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/КП город/cp_city.glb` }; // «Командный пункт» в городе (gov) — набор КП, «выгоревший»
+CONFIG.site_cp_city_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/КП город/cp_city_lo.glb` };
+CONFIG.site_wreck_a = { ...CONFIG.site_park_city, src: `${DL}/Свои/Костяной овраг/wreck_a.glb` }; // рембаза «Костяной овраг» (осень, a_wreck) — из набора парка, «после дождей»
+CONFIG.site_wreck_a_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/Костяной овраг/wreck_a_lo.glb` };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

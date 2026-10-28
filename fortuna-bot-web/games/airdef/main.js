@@ -614,7 +614,7 @@ const simFx = {
   objectHit(o, amount, p) { if (C.hooks.objectHit) C.hooks.objectHit(o, amount, p); },
   bldDestroyed(o, b) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) — серия вторичных взрывов
     siteLook(o); const q = o.parts.find((p) => p.b === b);
-    if (q && C.fx) C.fx.burn(new THREE.Vector3(q.x, city.groundH(q.x, q.z) + 2, q.z), Math.min(60, (q.w || q.r * 2 || 20) * 0.6));
+    if (C.fx) for (const p of o.parts) if (p.b === b) C.fx.burn(new THREE.Vector3(p.x, city.groundH(p.x, p.z) + 2, p.z), Math.min(60, (p.w || p.r * 2 || 20) * 0.6)); // у штаба «П» — каждый корпус
     if (q && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || q.r * 2 || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || q.r * 2 || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
   },
   objectDestroyed(o, by) {

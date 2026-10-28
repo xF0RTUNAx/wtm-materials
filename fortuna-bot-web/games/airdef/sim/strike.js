@@ -925,7 +925,8 @@ export function createStrike(ctx) {
         else if (q.t === 'box') dh = Math.hypot(Math.max(0, Math.abs(p.x - q.x) - q.w / 2), Math.max(0, Math.abs(p.z - q.z) - q.d / 2));
         else dh = Math.max(0, Math.hypot(p.x - q.x, p.z - q.z) - q.r);
         const dv = p.y > top ? p.y - top : p.y < base ? base - p.y : 0, d = Math.hypot(dh, dv);
-        if (d < R) { const f = (d < 2 ? 1.25 : Math.pow(1 - d / R, 0.6)) * (q.k ?? 1); best = Math.max(best, f); if (q.b && o.bld) BH.push(q.b, f); }
+        if (d < R) { const f = (d < 2 ? 1.25 : Math.pow(1 - d / R, 0.6)) * (q.k ?? 1); best = Math.max(best, f);
+          if (q.b && o.bld) { let k = 0; while (k < BH.length && BH[k] !== q.b) k += 2; if (k < BH.length) BH[k + 1] = Math.max(BH[k + 1], f); else BH.push(q.b, f); } } // постройка из нескольких коробок (штаб «П») — урон один раз, по ближней
       }
       if (best > 0) {
         const amount = dmg * best;

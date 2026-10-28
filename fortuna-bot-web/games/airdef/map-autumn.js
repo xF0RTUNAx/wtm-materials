@@ -133,7 +133,8 @@ function pads() {
     { key: 'mon', x: I.x, z: I.z, hx: 230, hz: 190, m: 120, y: AUTUMN.WY + 5, hard: 1 }, // 0 монастырь на острове; hard — гать у южного края опускала остров под сценой на 1,4 м
     { key: 'vil', x: -1300, z: 5400, hx: 650, hz: 420, m: 380, k: 0.8 },          // 1 заброшенная деревня (южный склон)
     { key: 'farm', x: -7000, z: 300, hx: 380, hz: 320, m: 350 },                  // 2 ферма и тыквенные поля (запад)
-    { key: 'wreck', x: -5600, z: -6400, hx: 230, hz: 180, m: 150, rav: 1 },       // 3 кладбище техники — на дне ближайшего главного оврага
+    { key: 'wreck', x: -5600, z: -6400, hx: 230, hz: 180, m: 150, rav: 1, hard: [240, 215] }, // 3 кладбище техники — на дне ближайшего главного оврага;
+    // hard [hx, hz] — ядро шире площадки (hz площадки — конец кольцевой дороги): у южного КПП сцены дорога поднимала землю на 0,76 м
     { key: 'heli', x: 1800, z: -9200, hx: 300, hz: 300, m: 350 },                 // 4 вертолётная площадка противника (север)
     { key: 'peat', x: 4500, z: 1100, hx: 420, hz: 300, m: 300, y: AUTUMN.WY + 3 }, // 5 торфоразработки у края болота (восток); 2026-10-21 сдвинуты с (5000, 2600) к воде: там у подножия склона прицел вертолёта видел склад с 1 направления из 24, здесь — с 23
     { key: 'home', x: 9800, z: 11200, hx: 220, hz: 220, m: 350 },                 // 6 наша площадка (юго-восток)
@@ -278,7 +279,7 @@ export function buildAutumn(seed = 1) {
     for (let q = 0; q < N * N; q++) if (CW[q] > 0) { HM[q] += (CT[q] - HM[q]) * CW[q]; if (CW[q] >= 1) WET[q] = 0; }
   }
   // площадки hard (сцена объекта стоит на ровном) — ядро снова на своей высоте: врезка дороги рядом не должна опускать постройки сцены
-  for (const p of P) if (p.hard) { const [i0, j0] = node(p.x - p.hx, p.z - p.hz), [i1, j1] = node(p.x + p.hx, p.z + p.hz); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) HM[j * N + i] = p.y; }
+  for (const p of P) if (p.hard) { const [hx, hz] = Array.isArray(p.hard) ? p.hard : [p.hx, p.hz], [i0, j0] = node(p.x - hx, p.z - hz), [i1, j1] = node(p.x + hx, p.z + hz); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) HM[j * N + i] = p.y; }
   const groundH = groundAt;
   const ravineAt = (x, z) => { const [i, j] = node(x, z); return RAV.CV[j * N + i]; }; // глубина врезки оврага, м
   const waterAt = (x, z) => { const [i, j] = node(x, z); return WET[j * N + i] === 1; };
@@ -292,7 +293,7 @@ export function buildAutumn(seed = 1) {
   // ── объекты-цели (модели построек — общие с городом; осенние модели — потом) ──
   const O = [];
   const add = (o) => { O.push(Object.assign({ id: O.length, value: 100, hp: 100 }, o)); };
-  // gk — прежняя рамка запрета генератора карты (полуразмеры от центра, с запасом 40 м): у «Погоста» и «Пугала» рамка сцены больше, а с ней пропали бы
+  // gk — прежняя рамка запрета генератора карты (полуразмеры от центра, с запасом 40 м): у «Погоста», «Пугала» и рембазы рамка сцены больше, а с ней пропали бы
   // сухостой у острова и 14 домов деревни у ограды гарнизона — и сдвинулась бы вся случайная расстановка карты (rnd() берётся только на поставленное);
   // дома на самой сцене не ставятся (put: onScene)
   { const p = PK.mon; // КП в заброшенном монастыре — своя сцена (city.js SITES site_cp_a): бункеры и штаб за стеной, погост в углу двора (SITES props);
@@ -304,8 +305,8 @@ export function buildAutumn(seed = 1) {
     // рамка объекта — по сцене (z −270…+180 от центра: rz — сдвиг рамки), иначе запрет леса и реквизита (keep ниже) уходил на хутор: пропадали дома,
     // и сдвигалась вся случайная расстановка карты (на хуторе rnd() тратится только на поставленные дома)
     add({ key: 'a_farm', name: tr('Склад «Фонарь Джека»'), x: p.x, z: p.z, w: 540, d: 450, rz: -45, value: 150, hp: 200, site: 'site_ammo_a', parts: siteParts('site_ammo_a', p.x, p.z) }); }
-  { const p = PK.wreck, M = [mp('obj_hangar', p.x, p.z - 80, 0, 0.8), mp('obj_milbase', p.x + 120, p.z + 60), mp('obj_oldind', p.x - 140, p.z + 40, 1)]; // ремонтная база на кладбище техники
-    add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 400, d: 320, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
+  { const p = PK.wreck; // рембаза на кладбище техники — своя сцена (city.js SITES site_wreck_a) на дне оврага; через неё по диагонали — кольцевая грунтовка
+    add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 430, d: 330, gk: [240, 200], value: 150, hp: 200, site: 'site_wreck_a', parts: siteParts('site_wreck_a', p.x, p.z) }); }
   { const p = PK.heli; // вертолётная площадка — своя сцена (city.js SITES): ангар, КДП, ГСМ и склад боеприпасов в обваловке, штаб, стоянки
     add({ key: 'a_heli', name: tr('Вертолётная площадка «Ведьмина поляна»'), x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, site: 'site_heli', parts: siteParts('site_heli', p.x, p.z) }); }
   { const p = PK.peat, x = p.x - 145, z = p.z - 20; // склад ГСМ на торфоразработках — своя сцена (city.js SITES site_fuel_a) западнее грунтовки, что идёт через площадку
@@ -384,7 +385,8 @@ export function buildAutumn(seed = 1) {
   for (let k = 0; k < 24; k++) { const p = PK.farm, x = p.x + (rnd() - 0.5) * 600, z = p.z + 220 + rnd() * 160; if (!onBld(x, z) && !blocked(x, z, 4)) prop('pr_hay', x, z, rnd() * 6.28, 1.4); } // сено у фермы
   for (let k = 0; k < 7; k++) { const v = PK.vil, a = rnd() * 6.28, r = rnd() * 550, x = v.x + Math.cos(a) * r, z = v.z + Math.sin(a) * r * 0.7; if (!onBld(x, z, 3) && !waterAt(x, z) && !blocked(x, z, 4)) prop('pr_well', x, z, rnd() * 6.28, 0.9); } // колодцы
   for (let k = 0; k < 900; k++) { const x = B0.x + (rnd() - 0.5) * B0.rx * 2, z = B0.z + (rnd() - 0.5) * B0.rz * 2, bd = basinD(x, z); if (bd > 0.97 || blocked(x, z, 8)) continue; prop(rnd() < 0.8 ? 'pr_deadtree' : 'pr_oldtree', x, z, rnd() * 6.28, 0.6 + rnd() * 0.7); } // сухостой в болоте (и в воде)
-  { const p = PK.wreck; for (let r = 0; r < 5; r++) for (let k = 0; k < 11; k++) { if (rnd() < 0.15) continue; const x = p.x - 150 + k * 7 + (rnd() - 0.5) * 2, z = p.z + p.hz - 30 - r * 6; prop('c_vaz', x, z, Math.PI / 2 + (rnd() - 0.5) * 0.5 + (rnd() < 0.2 ? Math.PI : 0), 1); } } // кладбище техники: ряды брошенных машин
+  // кладбище техники: ряды брошенных машин — под сценой рембазы (там свой ремфонд) не ставятся; rnd() — как раньше (иначе сдвинулась бы расстановка после них)
+  { const p = PK.wreck; for (let r = 0; r < 5; r++) for (let k = 0; k < 11; k++) { if (rnd() < 0.15) continue; const x = p.x - 150 + k * 7 + (rnd() - 0.5) * 2, z = p.z + p.hz - 30 - r * 6, a = Math.PI / 2 + (rnd() - 0.5) * 0.5 + (rnd() < 0.2 ? Math.PI : 0); if (!onScene(x, z, 2)) prop('c_vaz', x, z, a, 1); } }
   const inField = (x, z) => { for (const f of FIELDS) { const c = Math.cos(f.a), s = Math.sin(f.a), dx = x - f.x, dz = z - f.z, u = dx * c + dz * s, v = -dx * s + dz * c; if (Math.abs(u) < f.w / 2 && Math.abs(v) < f.d / 2) return f; } return null; };
 
   // ── районы: вода, площадки (наша и чужая — «аэродром»), деревня, объекты, лес, луг ──
