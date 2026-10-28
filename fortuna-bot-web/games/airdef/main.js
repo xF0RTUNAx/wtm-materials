@@ -319,7 +319,7 @@ function siteLook(o) {
   if (!o || !o.site || !C.G) return;
   for (const g of [C.G.objGroup[o.id], C.G.objFar && C.G.objFar[o.id]]) {
     const m = g && g.userData.site; if (!m) continue;
-    if (m.userData.siteMask) m.userData.siteMask(o.bld ? bldMask(o) : 0); // склеенная сцена: целые / руины — маской в шейдере (city-render siteInstance)
+    if (m.userData.siteMask) m.userData.siteMask(o.bld ? bldMask(o) : 0); // склеенная сцена: целые / руины — индексом по маске (city-render siteInstance)
     for (const k of g.userData.copies || []) k.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = o.dead ? C.G.ruinMat : c.userData.mat0; }); // копии моделей — сгоревшие, когда объект уничтожен
   }
 }
@@ -1246,7 +1246,6 @@ setInterval(() => {
   // запечённая земля — после загрузки моделей и текстур и возврата их после потери контекста: в разгар загрузки сжатых текстур графический процесс
   // Safari в симуляторе iPhone падал 3 раза из 4 (с ожиданием — 0 из 3, 2026-10-27)
   if (C.G.bake) C.G.bake.gate = () => C.assetsDone === true && !ktxBusy();
-  if (city.kind === 'autumn') wantModel('obj_mill'); // мельница на Лысой горе — грузится только здесь (lazy); храма в монастыре больше нет (сцена «Погоста»)
   C.G.onSite = (o) => siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o); // модель объекта-сцены пришла — вид построек по бою
   for (const n of new Set(city.objects.map((o) => o.site).filter(Boolean))) { // объекты-сцены: дальняя копия — сразу, подробная — когда камера подлетит (siteLod);
     wantModel(n + '_lo'); if (SITE_HI) for (const [k] of SITES[n].place || []) wantModel(k); // копии моделей на объекте — тоже сразу: их приход пересобирает самолёты и комплексы — не посреди захода на цель
@@ -1254,6 +1253,11 @@ setInterval(() => {
   await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует
+  // постройки целей — только этой карты (models.js loadModels их сразу не грузит): модели объектов (у аэродрома города — и вышка КДП, city-render),
+  // цеха — ещё и склады города вблизи (bldNames — уже известны здесь); пролёт моста и огни / заправщики аэродрома — только у города
+  // (attachBridgeSegs, attachAirfield ставят их у аэродрома города — на зиме и осени они стояли в поле)
+  for (const n of new Set([...city.objects.flatMap((o) => (o.models || []).map((q) => q.m)), ...(C.G.bldNames || []).filter(isObjModel),
+    ...(city.kind === 'city' ? ['br_seg', 'af_appr', 'af_fuel'] : [])])) wantModel(n);
   C.fx = createFx(scene, P); C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев — по рельефу
   // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек — на видеокарту, как только пришли; новые материалы — компилировать сразу
   C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет — загрузится при первом показе */ } };

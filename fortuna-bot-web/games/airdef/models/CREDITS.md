@@ -139,7 +139,6 @@
 - "Humvee Transport (кузов, прицеп и антенна AN/MPQ-64 — свои)" (https://sketchfab.com/3d-models/humvee-transport-48336bc41caf4fa1bdf147823a774111) by karmy2k — CC-BY-4.0 — `ew_w.glb`, `ew_w_lo.glb`
 - "Ural 4320 (будка, мачта и антенна П-18 — свои)" (https://sketchfab.com/3d-models/ural-4320-f953c51a5dbc4a15949f4dcc0905c4e8) by Brout — CC-BY-4.0 — `ew_e.glb`, `ew_e_lo.glb`
 - "Large Industrial Storage Tanks" (https://sketchfab.com/3d-models/large-industrial-storage-tanks-bd3ac97071104b64bc388a155b64f79e) by Duane's Mind — CC-BY-4.0 — `obj_tanks.glb`
-- "Low poly Fuel Tank 4-X + Pipe" (https://sketchfab.com/3d-models/low-poly-fuel-tank-4-x-pipe-59799d2419874de5a018666c500c52fd) by Aditya Graphical — CC-BY-4.0 — `obj_tank4.glb`
 - "Rusty airbase fuel tank" (https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692) by LuddePudde — CC-BY-4.0 — `obj_rtank.glb`
 - "Hangar" (https://sketchfab.com/3d-models/hangar-bad8c6349749480d85ee58f8d1a9355b) by Matvis — CC-BY-4.0 — `obj_hangar.glb`
 - "j type hanger" (https://sketchfab.com/3d-models/j-type-hanger-d86713d61b4941378a6ad21569e0cbac) by ElectricLeo — CC-BY-4.0 — `obj_jhangar.glb`
@@ -203,9 +202,7 @@
 - "Блок НАР Б8И20  версия 1 (адаптация под LAU-61)" (https://sketchfab.com/3d-models/820-1-2905fcb5f5fd4c7284adc362bcdc39d1) by timurwolf — CC-BY-4.0 — `w_lau61.glb`
 - "SH60B OBJ" (https://sketchfab.com/3d-models/sh60b-obj-31aa8c39ce394a3795e89b1727058d0c) by touka1212 — CC-BY-4.0 — `w_hellfire.glb`
 - "FIM-92 Stinger (Low-Poly)" (https://sketchfab.com/3d-models/fim-92-stinger-low-poly-c97e321bae1249a78ac4eed43a932ed7) by GoldbergR — CC-BY-4.0 — `aam_stinger.glb`
-- "Church - Abandoned" (https://sketchfab.com/3d-models/church-abandoned-c95d57412b5c45218b244626830ad877) by reramil — CC-BY-4.0 — `obj_church.glb`
 - "Windmill" (https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954) by Yury Misiyuk — CC-BY-4.0 — `obj_mill.glb`
-- "Old Wooden Barn (House 4)" (https://sketchfab.com/3d-models/old-wooden-barn-house-4-3366ee69c2dd4908a99f386e07faa1d6) by Blenderust — CC-BY-4.0 — `obj_barn.glb`
 - "Hay bales" (https://sketchfab.com/3d-models/hay-bales-d6e087f9a2a9416c94918f0503943c17) by Zbrojmistrz — CC-BY-4.0 — `pr_hay.glb`
 - "The Wishing Well" (https://sketchfab.com/3d-models/the-wishing-well-91d46451916745debcaa7d01d89446dc) by jadenmercado57 — CC-BY-4.0 — `pr_well.glb`
 - "Pumpkin" (https://sketchfab.com/3d-models/pumpkin-a0798c531d0e497299671c2969a3b2e0) by FantasyDragon — CC-BY-4.0 — `pr_pumpkin.glb`

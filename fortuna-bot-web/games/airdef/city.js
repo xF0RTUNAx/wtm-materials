@@ -105,9 +105,9 @@ export const BRIDGE_Z = [-6000, -3000, -1000, 1000, 3000, 7000]; // мосты �
 
 // ═════════════ Объекты-цели ═════════════
 // габариты готовых построек при масштабе 1 (ширина по X, высота, длина по Z) — как печатает tools/airdef-models/prepare.js
-export const OBJ_DIMS = { obj_tanks: [28.42, 14.38, 33.45], obj_tank4: [30.27, 9.22, 55.93], obj_rtank: [8.62, 5.45, 10.0], obj_hangar: [61.15, 7.76, 61.15],
+export const OBJ_DIMS = { obj_tanks: [28.42, 14.38, 33.45], obj_rtank: [8.62, 5.45, 10.0], obj_hangar: [61.15, 7.76, 61.15],
   obj_jhangar: [61.89, 19.3, 89.88], obj_cont: [27.61, 2.6, 10.8], obj_milbase: [29.92, 10.24, 30.06], obj_oldind: [11.61, 15.17, 34.51], obj_factory: [97.09, 27.93, 27.23],
-  obj_church: [24.37, 22.0, 21.09], obj_mill: [8.3, 18.0, 8.3] /* башня без крыльев (размах крыльев 15,1 м) */, obj_barn: [6.52, 7.7, 15.52] };
+  obj_mill: [8.3, 18.0, 8.3] /* башня без крыльев (размах крыльев 15,1 м) */ };
 // постройка: модель m в точке (x, z), поворот на 90°·rot, масштаб s; mbox — её коробка для урона и сетки высот
 export const mp = (m, x, z, rot = 0, s = 1) => ({ m, x, z, rot, s });
 export const mbox = (q) => { const [w, h, d] = OBJ_DIMS[q.m], sw = (q.rot % 2 ? d : w) * q.s, sd = (q.rot % 2 ? w : d) * q.s; return { t: 'box', x: q.x, z: q.z, w: sw, d: sd, h: h * q.s, model: true }; };

@@ -2,13 +2,13 @@
 <html lang="ru"><head><meta charset="utf-8"><title>Постройки и реквизит осенней карты</title>
 <style>body{margin:0;background:#9fb3c8;font:12px sans-serif}canvas{display:block}.l{position:absolute;color:#000;background:rgba(255,255,255,.75);padding:1px 4px}</style></head>
 <body>
-<!-- Проверка моделей построек и реквизита осенней карты (obj_*, pr_*, c_vaz) тем же загрузчиком, что в игре (models.js): ?p=obj_church,pr_well —
+<!-- Проверка моделей построек и реквизита осенней карты (obj_*, pr_*, c_vaz) тем же загрузчиком, что в игре (models.js): ?p=obj_mill,pr_well —
      по строке на модель: спереди (+Z), сбоку (+X), сверху, ¾. Земля y = 0 — тёмный диск; у крупных (больше 2,5 м) красная палка рядом — человек 1,75 м (для масштаба).
      Подпись: габариты Д × Ш × В (по Z, X, Y), м. &w=ширина кадра (по умолчанию 360), &tile=шаг — разместить 10 копий подряд вдоль X (проверка ограды), &spin=сек — крылья мельницы (sail) после столького вращения.
      Нужен сервер :8935 (корень — wtm-materials). Снимок — Chrome без окна (puppeteer, как в tools/airdef-headless/thumbs-bake.js) → tools/airdef-models/shots-autumn/. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'obj_church').split(',');
+const Q = new URLSearchParams(location.search), names = (Q.get('p') || 'obj_mill').split(',');
 const M = await import('../../games/airdef/models.js?v=' + Date.now());
 M.loadModels('../../games/airdef/', () => {});
 const CW = +(Q.get('w') || 360), CH = Math.round(CW * 0.78), W = CW * 4, H = CH * names.length;

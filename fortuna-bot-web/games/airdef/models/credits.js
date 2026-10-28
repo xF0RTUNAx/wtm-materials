@@ -1279,15 +1279,6 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Low poly Fuel Tank 4-X + Pipe",
-  "author": "Aditya Graphical",
-  "url": "https://sketchfab.com/3d-models/low-poly-fuel-tank-4-x-pipe-59799d2419874de5a018666c500c52fd",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_tank4"
-  ]
- },
- {
   "title": "Rusty airbase fuel tank",
   "author": "LuddePudde",
   "url": "https://sketchfab.com/3d-models/rusty-airbase-fuel-tank-5ac257aee23e47e0a0f91a4e07a40692",
@@ -1864,30 +1855,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Church - Abandoned",
-  "author": "reramil",
-  "url": "https://sketchfab.com/3d-models/church-abandoned-c95d57412b5c45218b244626830ad877",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_church"
-  ]
- },
- {
   "title": "Windmill",
   "author": "Yury Misiyuk",
   "url": "https://sketchfab.com/3d-models/windmill-0730705327e045bd8cb98a888bd0f954",
   "license": "CC-BY-4.0",
   "files": [
    "obj_mill"
-  ]
- },
- {
-  "title": "Old Wooden Barn (House 4)",
-  "author": "Blenderust",
-  "url": "https://sketchfab.com/3d-models/old-wooden-barn-house-4-3366ee69c2dd4908a99f386e07faa1d6",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_barn"
   ]
  },
  {
