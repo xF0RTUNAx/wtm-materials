@@ -44,7 +44,7 @@ export function vnoise(x, z) {
 export function riverX(z) { return 1300 * Math.sin(z * 0.00019 + 0.6) + 450 * Math.sin(z * 0.00052 + 2.1) - 300; }
 export const AIRPORT = { x: -8200, z: -5600, w: 4400, d: 1700, rwyL: 3400, rwyW: 60 }; // ось ВПП — по X
 const CX = 500, CZ = -300; // центр Сити
-const TPP = { x: 5900, z: 1500, h: 2.4, w: 420, d: 300 }; // склад боеприпасов (цель tpp): центр, высота ровной площадки, размер сцены (участок до улиц — 580 × 580 м)
+const TPP = { x: 5900, z: 1500, h: 2.4, w: 540, d: 520 }; // склад боеприпасов (цель tpp): центр, высота ровной площадки, размер сцены (участок до улиц — 580 × 580 м)
 export function groundH(x, z) {
   const r = Math.hypot(x, z);
   let h = 3 + 3 * Math.sin(x * 0.0011 + 0.4) * Math.cos(z * 0.0013);
@@ -124,21 +124,40 @@ export const SITES = {
       house: { t: 'box', x: -170, z: 118, w: 26, d: 14, h: 4.4, share: 0.23, main: 1 }, gen: { t: 'box', x: -128, z: 150, w: 2.6, d: 6.5, h: 2.6, share: 0.1 } },
     // стоянки: 4 вертолёта из 6 (две пустые — «на вылете»; лёгкие модели: Ка-52 — 84 тыс. треугольников); машины и ЗУ-23 — когда будут лёгкие модели
     place: [['h_mi24', -70, -80, 180], ['h_mi8', 20, -80, 180], ['h_mi28', -70, 80, 0], ['h_ka50', 110, 80, 0]] },
-  site_ammo_city: { // «Склад боеприпасов» (город, tpp) — Свои/Склад боеприпасов: семь хранилищ (главные), навес и штабели под брезентом — тоже рвутся
-    b: { mag1: { t: 'box', x: -150, z: -56, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag2: { t: 'box', x: -48, z: -52, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
-      mag3: { t: 'box', x: 122, z: -56, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag4: { t: 'box', x: -152, z: 92, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
-      mag5: { t: 'box', x: -58, z: 96, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag6: { t: 'box', x: 48, z: 92, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
-      mag7: { t: 'box', x: 152, z: 96, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, shed: { t: 'box', x: 0, z: 14, w: 34, d: 14, h: 6.5, share: 0.08, chain: 1 },
-      stack1: { t: 'box', x: -96, z: 18, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 }, stack2: { t: 'box', x: 96, z: 14, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 },
-      shop: { t: 'box', x: 44, z: -112, w: 36, d: 18, h: 8, share: 0.05 }, guard: { t: 'box', x: -30, z: -118, w: 18, d: 9, h: 4, share: 0.02 },
-      kpp: { t: 'box', x: 0, z: -136, w: 6, d: 4, h: 3, share: 0.01 }, fire: { t: 'box', x: 164, z: -114, w: 14, d: 10, h: 5.5, share: 0.02 } },
+  site_ammo_city: { // «Склад боеприпасов» (город, tpp) — Свои/Склад боеприпасов, ревизия 2 (540 × 520: раскладка разнесена до улиц, постройки прежнего размера):
+    // семь хранилищ (главные), навес и штабели под брезентом — тоже рвутся
+    b: { mag1: { t: 'box', x: -170, z: -102, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag2: { t: 'box', x: -55, z: -98, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
+      mag3: { t: 'box', x: 150, z: -102, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag4: { t: 'box', x: -180, z: 148, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
+      mag5: { t: 'box', x: -70, z: 152, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, mag6: { t: 'box', x: 60, z: 148, w: 20, d: 30, h: 6, share: 0.08, main: 1, chain: 1 },
+      mag7: { t: 'box', x: 180, z: 152, w: 26, d: 42, h: 7.5, share: 0.12, main: 1, chain: 1 }, shed: { t: 'box', x: 0, z: 25, w: 34, d: 14, h: 6.5, share: 0.08, chain: 1 },
+      stack1: { t: 'box', x: -120, z: 28, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 }, stack2: { t: 'box', x: 120, z: 25, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 },
+      shop: { t: 'box', x: 60, z: -214, w: 36, d: 18, h: 8, share: 0.05 }, guard: { t: 'box', x: -38, z: -222, w: 18, d: 9, h: 4, share: 0.02 },
+      kpp: { t: 'box', x: 0, z: -244, w: 6, d: 4, h: 3, share: 0.01 }, fire: { t: 'box', x: 215, z: -200, w: 14, d: 10, h: 5.5, share: 0.02 } },
     // легковая у КПП, грузовики у рампы, навеса, хранилища, депо и ж/д платформы, ЗУ-23 в мешках у въезда (места — ПАСПОРТ.json) — когда будут лёгкие армейские модели
     place: [],
     // keep — куда нельзя ставить технику (декор без прочности: водоёмы, ж/д тупик, рампа, водонапорная башня, вышки) — [x, z, w, d] от центра
-    keep: [[-188, 18, 32, 24], [188, 10, 32, 24], [-44, 130, 344, 16], [100, -104, 29, 10], [-118, -116, 7, 7], [-198, -138, 4, 4], [198, -138, 4, 4], [-198, 138, 4, 4], [198, 138, 4, 4]] },
+    keep: [[-242, 28, 32, 24], [242, 22, 32, 24], [-58, 222, 424, 16], [116, -206, 29, 10], [-150, -204, 7, 7], [-256, -246, 4, 4], [256, -246, 4, 4], [-256, 246, 4, 4], [256, 246, 4, 4]] },
+  site_ammo_w: { // «Арсенал в ущелье» (зима, w_ammo) — Свои/Арсенал в ущелье, из набора склада: шесть хранилищ и две штольни в скальном останце (главные)
+    b: { mag1: { t: 'box', x: 110, z: -142, w: 26, d: 42, h: 7.5, share: 0.1, main: 1, chain: 1 }, mag2: { t: 'box', x: 215, z: -138, w: 20, d: 30, h: 6, share: 0.07, main: 1, chain: 1 },
+      mag3: { t: 'box', x: -150, z: 138, w: 20, d: 30, h: 6, share: 0.07, main: 1, chain: 1 }, mag4: { t: 'box', x: -40, z: 142, w: 26, d: 42, h: 7.5, share: 0.1, main: 1, chain: 1 },
+      mag5: { t: 'box', x: 70, z: 138, w: 20, d: 30, h: 6, share: 0.07, main: 1, chain: 1 }, mag6: { t: 'box', x: 185, z: 142, w: 26, d: 42, h: 7.5, share: 0.1, main: 1, chain: 1 },
+      adit1: { t: 'box', x: -160, z: -167, w: 16, d: 6, h: 9, share: 0.12, main: 1, chain: 1 }, adit2: { t: 'box', x: -40, z: -167, w: 16, d: 6, h: 9, share: 0.12, main: 1, chain: 1 },
+      shed: { t: 'box', x: 30, z: -38, w: 34, d: 14, h: 6.5, share: 0.08, chain: 1 }, stack1: { t: 'box', x: -150, z: -45, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 },
+      stack2: { t: 'box', x: 30, z: 45, w: 22, d: 14, h: 2.6, share: 0.05, chain: 1 }, shop: { t: 'box', x: -205, z: 50, w: 36, d: 18, h: 8, share: 0.03 },
+      guard: { t: 'box', x: -232, z: -34, w: 18, d: 9, h: 4, share: 0.02 }, kpp: { t: 'box', x: -256, z: 14.6, w: 4, d: 6, h: 3, share: 0.01 },
+      fire: { t: 'box', x: -228, z: -84, w: 14, d: 10, h: 5.5, share: 0.01 } },
+    // solid — препятствия без прочности (в сетке высот: заслоняют, о них бьются, технику не ставить; не цель и не урон объекту): останец 300 × 70 × 26 м.
+    // Порталы штолен — на его южном фасе (z −164…−170), клетка сетки высот — 20 м: коробка скалы — от −192 к северу, на клетку от порталов
+    // (иначе в клетке портала верх — скала, и ПТУР / бомба по порталу рвались бы на ней в 15 м над штольней)
+    solid: [[-100, -212, 300, 40, 24]],
+    place: [], // машины у рампы, навеса, хранилища, депо, штольни, КПП и ЗУ-23 у въезда (ПАСПОРТ.json) — когда будут лёгкие армейские модели
+    // keep: водоёмы, рампа, башня, вышки; подножие останца (z −184…−168: в модели скала уже там 8–20 м, в сетке высот — от −180); группы елей 9–16 м
+    keep: [[250, -30, 32, 24], [-60, -60, 32, 24], [-164, 70, 29, 10], [-245, 150, 7, 7], [-264, -224, 4, 4], [264, -224, 4, 4], [-264, 224, 4, 4], [264, 224, 4, 4],
+      [-100, -176, 300, 16], [-230, -210, 24, 24], [230, -210, 24, 24], [-230, 210, 24, 24], [230, 210, 24, 24], [250, 80, 24, 20], [-210, -50, 22, 22]] },
 };
 // части объекта-сцены в точке (x, z): объёмы построек (b — имя постройки)
-export const siteParts = (key, x, z) => Object.entries(SITES[key].b).map(([b, q]) => (q.t === 'cyl' ? { t: 'cyl', x: x + q.x, z: z + q.z, r: q.r, h: q.h, b } : { t: 'box', x: x + q.x, z: z + q.z, w: q.w, d: q.d, h: q.h, b }));
+export const siteParts = (key, x, z) => [...Object.entries(SITES[key].b).map(([b, q]) => (q.t === 'cyl' ? { t: 'cyl', x: x + q.x, z: z + q.z, r: q.r, h: q.h, b } : { t: 'box', x: x + q.x, z: z + q.z, w: q.w, d: q.d, h: q.h, b })),
+  ...(SITES[key].solid || []).map(([sx, sz, w, d, h]) => ({ t: 'box', x: x + sx, z: z + sz, w, d, h, solid: true }))]; // solid — препятствие без прочности (скала)
 // точка (x, z) с запасом r — в запретном декоре объекта-сцены (SITES keep): технику туда не ставить (mission.js freeGround — клиент и сервер)
 export const siteKeep = (city, x, z, r = 0) => city.objects.some((o) => o.site && SITES[o.site].keep && SITES[o.site].keep.some(([kx, kz, w, d]) => Math.abs(x - o.x - kx) < w / 2 + r && Math.abs(z - o.z - kz) < d / 2 + r));
 // состояние построек в бою (своё у каждого боя: sim/strike.js); hpMax — прочность объекта
@@ -164,11 +183,11 @@ const partArea = (q) => (q.t === 'box' ? q.w * q.d : Math.PI * q.r * q.r);
 export const partDist = (q, x, z) => (q.t === 'box' ? Math.hypot(Math.max(0, Math.abs(x - q.x) - q.w / 2), Math.max(0, Math.abs(z - q.z) - q.d / 2)) : Math.max(0, Math.hypot(x - q.x, z - q.z) - q.r));
 function objTargets(o, gH) {
   const A = [], up = (q) => q.y0 !== undefined && q.y0 > gH(q.x, q.z) + 3;
-  for (const q of o.parts) if (partArea(q) >= 60 && !up(q)) A.push({ x: q.x, z: q.z, w: q.t === 'box' ? q.w : q.r * 1.4, d: q.t === 'box' ? q.d : q.r * 1.4, h: q.h, wt: Math.sqrt(partArea(q)), b: q.b });
-  const c0 = o.parts.find((q) => partDist(q, o.x, o.z) <= 3); let m = c0 ? { x: o.x, z: o.z, b: c0.b } : null, bs = -1;
+  for (const q of o.parts) if (partArea(q) >= 60 && !up(q) && !q.solid) A.push({ x: q.x, z: q.z, w: q.t === 'box' ? q.w : q.r * 1.4, d: q.t === 'box' ? q.d : q.r * 1.4, h: q.h, wt: Math.sqrt(partArea(q)), b: q.b });
+  const c0 = o.parts.find((q) => !q.solid && partDist(q, o.x, o.z) <= 3); let m = c0 ? { x: o.x, z: o.z, b: c0.b } : null, bs = -1;
   if (!m) for (const q of A) { const s = q.wt * (1 + Math.min(30, q.h) / 10) / (60 + Math.hypot(q.x - o.x, q.z - o.z)); if (s > bs) { bs = s; m = { x: q.x, z: q.z, b: q.b }; } }
   o.aims = A; o.aimW = A.reduce((s, q) => s + q.wt, 0); o.aim = m || { x: o.x, z: o.z };
-  const G = o.parts.filter((q) => !up(q)); o.gparts = G;
+  const G = o.parts.filter((q) => !up(q) && !q.solid); o.gparts = G; // solid (скала объекта-сцены) — не постройка: ни прицела, ни площадки
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; // рамка ореолов — для отрисовки и проверок; урон — по расстоянию до построек (pad)
   for (const q of G) { const hw = q.t === 'box' ? q.w / 2 : q.r, hd = q.t === 'box' ? q.d / 2 : q.r; x0 = Math.min(x0, q.x - hw); x1 = Math.max(x1, q.x + hw); z0 = Math.min(z0, q.z - hd); z1 = Math.max(z1, q.z + hd); }
   if (G.length) o.zones = [...(o.zones || []), { t: 'yard', x: (x0 + x1) / 2, z: (z0 + z1) / 2, w: x1 - x0 + 2 * YARD_PAD, d: z1 - z0 + 2 * YARD_PAD, h: 3, k: YARD_K, yard: true, pad: YARD_PAD, parts: G }];

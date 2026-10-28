@@ -775,6 +775,9 @@ CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex
 CONFIG.site_radar_lo = { ...CONFIG.site_radar, src: `${DL}/Свои/РЛС на вершине/radar_site_lo.glb`, tex: () => 512, nTex: null };
 CONFIG.site_heli_lo = { ...CONFIG.site_heli, src: `${DL}/Свои/Вертолётная площадка/heli_site_lo.glb`, tex: () => 512, nTex: null }; // «Ведьмина поляна»: дальняя сборщика (21 тыс., без ограды и палаток)
 CONFIG.site_ammo_city_lo = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Склад боеприпасов/ammo_city_lo.glb`, tex: (m) => (m.name === 'tile_conc' ? 256 : 512), nTex: null }; // склад: дальняя сборщика (24 тыс., без ограды и мелочи)
+// «Арсенал в ущелье» (зима, w_ammo) — из того же набора (Свои/Арсенал в ущелье, 2026-10-28): те же материалы, окраска «зима» (снег кладёт игра); +останец со штольнями
+CONFIG.site_ammo_w = { ...CONFIG.site_ammo_city, src: `${DL}/Свои/Арсенал в ущелье/arsenal.glb` };
+CONFIG.site_ammo_w_lo = { ...CONFIG.site_ammo_city_lo, src: `${DL}/Свои/Арсенал в ущелье/arsenal_lo.glb` };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

@@ -918,7 +918,7 @@ export function createStrike(ctx) {
       // ниже, чем у построек); разрыв в воде — река, болото — площадкой не считается
       let best = 0; BH.length = 0;
       for (const L of o.zones ? [o.parts, o.zones] : [o.parts]) for (const q of L) {
-        if (q.yard && (city.waterAt || city.wetAt || (() => false))(p.x, p.z)) continue;
+        if (q.solid || (q.yard && (city.waterAt || city.wetAt || (() => false))(p.x, p.z))) continue; // solid — скала объекта-сцены: не постройка, урона нет
         const base = q.y0 !== undefined ? q.y0 : q.yard ? city.groundH(p.x, p.z) : city.groundH(q.x, q.z), top = base + q.h;
         let dh;
         if (q.yard) { let m = 1e9; for (const g of q.parts) m = Math.min(m, partDist(g, p.x, p.z)); dh = Math.max(0, m - q.pad); }

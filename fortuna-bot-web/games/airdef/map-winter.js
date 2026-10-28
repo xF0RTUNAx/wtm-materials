@@ -153,7 +153,7 @@ export function buildWinter(seed = 1) {
     const main = route(p2.x, p2.z - p2.hz, p1.x, p1.z); ROADS.push({ w: 9, pts: main });                       // главная: ж/д узел → посёлок
     const toB = [p0.x - p0.hx, R.z + 300], s1 = nearestOn(main, ...toB); ROADS.push({ w: 8, pts: route(s1[0], s1[1], ...toB, main) }); // к авиабазе (мост)
     const toC = [p5.x + p5.hx, p5.z], s2 = nearestOn(main, ...toC); ROADS.push({ w: 6, pts: route(s2[0], s2[1], ...toC, main) });     // в гору к командному пункту
-    ROADS.push({ w: 6, pts: route(p0.x + p0.hx * 0.6, p0.z + p0.hz, p3.x - p3.hx, p3.z) });                // от базы в ущелье к арсеналу
+    ROADS.push({ w: 6, pts: route(p0.x + p0.hx * 0.6, p0.z + p0.hz, p3.x - p3.hx, p3.z) });                // от базы в ущелье к арсеналу (до ворот сцены не доводить: профиль дороги сглажен по склону ущелья — у ворот поднимал землю на 0,4–0,5 м, плиты сцены уходили под неё)
     ROADS.push({ w: 7, pts: route(p1.x + p1.hx * 0.5, p1.z + p1.hz * 0.5, p4.x - p4.hx, p4.z) });          // от посёлка к складу ГСМ
     const dz = WINTER.DAM_Z + 260; ROADS.push({ w: 6, pts: route(main[0][0], main[0][1], valleyX(dz) - 140, dz) }); // к ГЭС
   }
@@ -202,9 +202,8 @@ export function buildWinter(seed = 1) {
     for (let a = -1; a <= 1; a++) for (const b of [-1, 1]) M.push(mp('obj_tanks', p.x + a * 75, p.z + b * 60));
     M.push(mp('obj_tank4', p.x + 190, p.z, 1), mp('obj_rtank', p.x - 190, p.z - 20), mp('obj_rtank', p.x - 190, p.z + 20));
     add({ key: 'w_fuel', name: tr('Склад ГСМ'), x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
-  { const p = P[3], M = [mp('obj_hangar', p.x - 160, p.z, 0, 0.8), mp('obj_hangar', p.x, p.z, 0, 0.8), mp('obj_hangar', p.x + 160, p.z, 0, 0.8), mp('obj_milbase', p.x, p.z + 150)]; // арсенал
-    for (let k = 0; k < 4; k++) M.push(mp('obj_cont', p.x - 150 + k * 100, p.z - 140));
-    add({ key: 'w_ammo', name: tr('Арсенал в ущелье'), x: p.x, z: p.z, w: 520, d: 380, value: 180, hp: 220, models: M, parts: M.map(mbox) }); }
+  { const p = P[3]; // арсенал — своя сцена (city.js SITES site_ammo_w): хранилища, штольни в останце, навес, штабели; дно ущелья ровное ±330 м
+    add({ key: 'w_ammo', name: tr('Арсенал в ущелье'), x: p.x, z: p.z, w: 560, d: 470, value: 180, hp: 220, site: 'site_ammo_w', parts: siteParts('site_ammo_w', p.x, p.z) }); }
   { const p = P[5], M = [mp('obj_milbase', p.x, p.z, 0, 2), mp('obj_oldind', p.x - 70, p.z + 20, 1), mp('obj_cont', p.x + 70, p.z + 40)]; // командный пункт
     add({ key: 'w_cp', name: tr('Командный пункт'), x: p.x, z: p.z, w: 260, d: 200, value: 160, hp: 260, models: M,
       parts: [...M.map(mbox), { t: 'cyl', x: p.x - 40, z: p.z - 60, r: 1, h: 45 }, { t: 'cyl', x: p.x + 45, z: p.z - 60, r: 1, h: 38 }] }); }

@@ -1513,7 +1513,9 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     for (const o of city.objects) {
       const g = (lo ? G.objFar : G.objGroup)[o.id]; if (o.site !== key || !g || !g.userData.left.has(name)) continue;
       const m = make(); m.position.set(o.x, GH(o.x, o.z), o.z);
-      m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows && !lo; c.receiveShadow = !!P.shadows; if (G.winter) snowify(c.material); } });
+      // зима: снег на всё, что смотрит вверх, — кроме елей сцены (deco_trees: хвоя вся «вверх» — выходили белыми призраками рядом с зелёным лесом карты)
+      const top = (c) => { while (c.parent && c.parent !== m) c = c.parent; return c.name; };
+      m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows && !lo; c.receiveShadow = !!P.shadows; if (G.winter && !/^deco_trees/.test(top(c))) snowify(c.material); } });
       for (const c of m.children) if (/_ruin$/.test(c.name)) c.visible = false;
       g.add(m); freezeTree(m); g.userData.site = m;
       g.userData.left.delete(name);
