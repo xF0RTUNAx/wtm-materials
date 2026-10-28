@@ -23,3 +23,14 @@ export function quickEra(mode, clients, minEra = 1) {
   const cap = Math.max(minEra, Math.min(4, ...clients.map((c) => adRank(c && c.adP))));
   return minEra + Math.floor(Math.random() * (cap - minEra + 1));
 }
+
+// Профиль игрока (Mark 2026-10-28, только онлайн): на чём летал — вылеты по самолётам (fl: { su30: 3 }), какие ЗРК стояли в бою
+// (sm: ['s300', 'tor']). Копится по ходу боя (p.use; сброс — в начале боя), в конце боя — поле u подписанного итога (airdef-claim
+// кладёт итог целиком в airdef_mp_results.result; любимое считает sql/029 airdef_profile). Нет ни вылетов, ни ЗРК — u нет.
+export const useOf = (p) => (p.use || (p.use = { fl: {}, sm: new Set() }));
+export function useOut(p) {
+  const u = p.use; if (!u) return null;
+  const fl = Object.fromEntries(Object.entries(u.fl).filter(([k, n]) => typeof k === 'string' && n > 0).slice(0, 12).map(([k, n]) => [k, Math.min(99, n)]));
+  const sm = [...u.sm].filter((k) => typeof k === 'string').slice(0, 20);
+  return Object.keys(fl).length || sm.length ? { ...(Object.keys(fl).length ? { fl } : {}), ...(sm.length ? { sm } : {}) } : null;
+}

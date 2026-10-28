@@ -96,6 +96,7 @@ try {
   check(`итог боя: счёт восток ${endA ? endA.scores.east : '?'} / запад ${endA ? endA.scores.west : '?'}, победил ${endA ? endA.winner : '?'}`, endA && endA.kind === 'multi' && endA.players.length === 2);
   { const R = endA && endA.result ? await readResult(endA.result) : null;
     check('итог своей комнаты: подписан, без rt, без op', !!R && R.p === pidOf(1) && R.mm === 1 && !('rt' in R) && !('op' in R));
+    check(`итог: u.sm — ЗРК, стоявшие в раунде за ПВО, вылетов нет (налёт ведёт ИИ) — ${R && JSON.stringify(R.u)}`, !!R && !!R.u && Array.isArray(R.u.sm) && R.u.sm.length >= 1 && !R.u.fl);
     const got = R && R.ope ? await unseal(R.ope, SECRET) : null;
     check('итог своей комнаты: ope открывается в соперника-человека, не читается чужим ключом', !!got && got.length === 1 && got[0] === pidOf(2) && (await unseal(R.ope, 'чужой')).length === 0 && !JSON.stringify(R).includes(pidOf(2))); }
   // ── 2×2 с ботами: бот-атакующий собирает план (сводка союзнику), бот-ПВО ставит комплексы; их волна долетает

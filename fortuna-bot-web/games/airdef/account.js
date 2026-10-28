@@ -82,6 +82,8 @@ export const siteStatusDone = () => { if (siteAcc()) stStore({ progress: true, t
 // «Перенести прогресс» уместно: вошёл на сайте, у аккаунта сайта есть прогресс игры, ещё не перенесён, и в аккаунт игры его ещё не переносили
 export function transferOk() { const g = gameAcc(); return legacySite() && !(g && g.transferred); }
 export const rating = (playerId) => callFn('get-airdef-rating', playerId ? { player_id: playerId } : {});
+// профиль игрока по нику (get-airdef-profile, sql/029; Mark 2026-10-28): season — сезон, который сейчас в окне рейтинга
+export const profile = (nick, season) => callFn('get-airdef-profile', { nick, ...(season ? { season } : {}) });
 
 // ── заглушка ?rmock=1: примеры из макета рейтинга ──
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -112,6 +114,7 @@ async function mockFn(fn, b) {
     throw mockErr(400, 'Неизвестное действие');
   }
   if (fn === 'get-airdef-rating') return mockRating(b.player_id);
+  if (fn === 'get-airdef-profile') return mockProfile(b.nick, b.season);
   if (fn === 'airdef-shop') return mockShop(b);
   throw mockErr(404, 'Not found');
 }
@@ -154,6 +157,26 @@ function mockRating(pid) {
   ];
   if (RMOCK === 'idle') battles.push({ at: ago(7, 9, 10), multi: false, mode: 'real', team: 'air', win: false, draw: false, rating: 0, rp: { r: 0, c: 0, s: 0, b: 1, m: 1, k: 1, idle: 1 }, counted: false }); // бой без действий
   return { ...base, me: { kind: 'airdef', nick, place: empty ? null : 37, points: empty ? 0 : 3940, n: empty ? 0 : 5, battles } };
+}
+// профиль (заглушка get-airdef-profile): игроки — из таблицы mockRating, числа — от ника (одни и те же при каждом открытии); свой ник при
+// ?rmock=empty — профиль без боёв; места за сезоны — у первых 12 (чтобы видеть значки, хотя сезон 1 ещё идёт)
+function mockProfile(nick, season) {
+  const R = mockRating(null), row = R.top.find((r) => r.nick.toLowerCase() === String(nick || '').trim().toLowerCase());
+  if (!row) throw mockErr(404, 'Игрок не найден');
+  const g = gameAcc(), own = row.nick === (g ? g.nick || g.login : 'xFORTUNAx'), empty = own && RMOCK === 'empty';
+  let h = 7; for (const ch of row.nick) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  const rnd = () => ((h = (Math.imul(h, 1103515245) + 12345) >>> 0) / 4294967296);
+  const md = (k) => { const n = (3 + Math.floor(rnd() * 10)) * k; return { n, w: Math.floor(n * (0.35 + rnd() * 0.35)), k: Math.floor(n * (1 + rnd() * 2)), best: 640 + Math.floor(rnd() * 350) }; };
+  const PL = ['su30', 'mig29', 'f16', 'e_su27', 'e_f15e', 'e_su34'], SM = ['s300', 'torm2', 'pantsir', 'patriot', 'buk', 'nasams'];
+  const fav = (k) => (empty ? { plane: null, sam: null } : { plane: { key: PL[h % PL.length], n: 7 * k, of: 16 * k }, sam: { key: SM[(h >>> 3) % SM.length], n: 4 * k, of: 9 * k } });
+  const day = 86400000, now = Date.now(), n = empty ? 0 : row.n || 5, kinds = ['air', 'air', 'pvo', 'pvo', 'multi', 'multi', 'air'];
+  const best = Array.from({ length: n }, (_, i) => ({ at: new Date(now - (i + 1) * day * 0.6 - rnd() * 6 * 3600000).toISOString(), kind: kinds[i], mode: rnd() < 0.85 ? 'real' : 'arcade', win: rnd() < 0.75, draw: false, k: kinds[i] === 'multi' ? 1 : [1, 1.02, 1.05, 1.08][Math.floor(rnd() * 4)], rating: 0 }));
+  let left = empty ? 0 : row.points; best.forEach((b, i) => { b.rating = i === n - 1 ? left : Math.round(row.points / n * (1.15 - i * 0.05)); left -= b.rating; });
+  best.sort((a, b) => b.rating - a.rating);
+  const modes = empty ? { season: {}, all: {} } : { season: { air: md(1), pvo: md(1), multi: md(1) }, all: { air: md(2), pvo: md(2), multi: md(2) } };
+  const games = Object.values(modes.all).reduce((a, x) => a + x.n, 0);
+  return { season: season || R.season, live: R.live, profile: { nick: row.nick, since: '2026-10-25T12:00:00+03:00', games, place: empty ? null : row.place, points: empty ? 0 : row.points, n,
+    modes, fav: { season: fav(1), all: fav(2) }, best, awards: row.place <= 12 && !empty ? [{ season: 1, place: row.place }] : [] } };
 }
 
 if (siteAcc()) siteStatus(); // при старте: статуса для этого аккаунта сайта нет — спросить (в кэше есть — ничего не делает); в конце файла: заглушка использует const ниже
