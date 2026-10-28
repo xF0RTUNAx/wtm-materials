@@ -111,7 +111,7 @@ export function createOnline(C, ctrls) {
     }
   }
   function invite() {
-    const url = `https://fortunawtm.com/airsuperiority/?ad=${N.room.code}` /* красивая ссылка (/airsuperiority/ → игра с тем же ?ad=; со слешем — без лишнего перенаправления GitHub Pages) */, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
+    const url = `https://fortunawtm.com/airsuperiority/${LANG === 'en' ? 'en/' : ''}?ad=${N.room.code}` /* красивая ссылка (/airsuperiority/ → игра с тем же ?ad=; со слешем — без лишнего перенаправления GitHub Pages); в английской игре — /en/: превью по-английски */, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
     try { const tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.openTelegramLink) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`); return; } } catch (_) { /* не Telegram */ }
     if (navigator.share) { navigator.share({ title: text, url }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(url); C.say(tr('Ссылка скопирована'), 2); } catch (_) { C.say(tr('Код комнаты: {0}', [N.room.code]), 3); }
