@@ -59,5 +59,26 @@ for (const [name, city, key] of [['Зимняя долина', buildWinter(1), '
     if (!(o.hp < hp0)) fail('мельница — без урона объекту'); if (names.some((b) => o.bld[b].dead)) fail('мельница — разбита постройка');
   }
 }
+// «Ведьмина поляна» (a_heli, site_heli): ПТУР в каждую главную по очереди — разбита только она; разбиты все — объект уничтожен; прицел — мимо руин
+{
+  const city = buildAutumn(1), c = city.objects.find((q) => q.key === 'a_heli');
+  console.log('\n== Туманная топь: a_heli');
+  if (!c || c.site !== 'site_heli') fail('нет объекта-сцены a_heli');
+  else {
+    const B = SITES.site_heli.b, names = Object.keys(B), sum = names.reduce((s, b) => s + B[b].share, 0);
+    if (Math.abs(sum - 1) > 1e-6) fail(`доли прочности: сумма ${sum}`);
+    const S = mk(city), o = S.objects.find((q) => q.id === c.id); ev.length = 0;
+    console.log(`прочность ${o.hp}; постройки: ${names.map((b) => `${b} ${o.bld[b].hp.toFixed(1)}${o.bld[b].main ? '*' : ''}${B[b].chain ? '!' : ''}`).join(', ')}`);
+    const mains = names.filter((b) => B[b].main);
+    mains.forEach((b, i) => {
+      const q = c.parts.find((p) => p.b === b); hit(S, city, q.x, q.z);
+      if (!o.bld[b].dead) fail(`ПТУР в ${b} — цел`);
+      const extra = names.filter((n) => n !== b && o.bld[n].dead && !mains.slice(0, i).includes(n)); if (extra.length && !o.dead) fail(`ПТУР в ${b} задел ${extra.join(', ')}`);
+      if (!o.dead) for (let n = -1; n < 20; n++) { const a = objAimXZ(o, n, 0, 0), p = c.parts.filter((x) => x.b).find((x) => partDist(x, a.x, a.z) <= 0.5); if (p && o.bld[p.b].dead) { fail(`прицел ${n} — в разбитую ${p.b}`); break; } }
+      console.log(`ПТУР в ${b}: прочность ${o.hp.toFixed(0)}, объект ${o.dead ? 'уничтожен' : 'цел'}`);
+    });
+    if (!o.dead) fail('разбиты все главные — объект цел');
+  }
+}
 console.log(bad ? `\nОШИБОК: ${bad}` : '\nошибок нет');
 if (bad) Deno.exit(1);

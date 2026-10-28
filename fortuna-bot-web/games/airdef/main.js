@@ -327,18 +327,24 @@ function siteLook(o) {
 const SITE_BB = new THREE.Box3();
 function sitePlace(o, g) {
   const done = g.userData.placed || (g.userData.placed = new Set()), y0 = g.userData.site.position.y; let left = 0;
-  for (const [k, [x, z, h]] of Object.entries(SITES[o.site].place || {})) {
-    if (done.has(k)) continue;
+  for (const [i, [k, x, z, h]] of (SITES[o.site].place || []).entries()) {
+    if (done.has(i)) continue;
     const m = anyModel(k); if (!m) { wantModel(k); left++; continue; }
     m.rotation.y = -h * D2R; m.updateMatrixWorld(true); SITE_BB.setFromObject(m);
     m.position.set(o.x + x, y0 + 0.1 - SITE_BB.min.y, o.z + z);
     m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; } });
-    g.add(m); freezeTree(m); done.add(k); (g.userData.copies = g.userData.copies || []).push(m);
+    g.add(m); freezeTree(m); done.add(i); (g.userData.copies = g.userData.copies || []).push(m);
   }
   if (g.userData.copies) siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o);
   if (!left) g.userData.placeDone = true;
 }
+// вторичные взрывы складов объекта-сцены (SITES chain): очередь разрывов по площади постройки за ~5 с — только вид и звук (урона нет)
+const chainQ = [];
+function chainStep(dt) {
+  for (let i = chainQ.length - 1; i >= 0; i--) { const e = chainQ[i]; if ((e.t -= dt) > 0) continue; chainQ.splice(i, 1); simFx.explosion(new THREE.Vector3(e.x, city.groundH(e.x, e.z) + 1, e.z), e.R, e.R > 20 ? 'bomb' : 'ground'); }
+}
 function clearBattle() {
+  chainQ.length = 0;
   for (const m of [...unitMeshes.values(), ...wpnMeshes.values(), ...samMeshes.values(), ...planeMeshes.values()]) scene.remove(m);
   for (const w of [...wrecks, ...debris]) scene.remove(w.g);
   unitMeshes.clear(); wpnMeshes.clear(); samMeshes.clear(); planeMeshes.clear(); wrecks.length = 0; debris.length = 0; clearDebris(scene);
@@ -604,9 +610,10 @@ const simFx = {
     const k = (aaaT.get(u.id) || 0) - dt; if (k <= 0) { snd.aaa(dist(u.pos), /gepard|skyguard|skynex/.test(u.key) ? 35 : 23, u.S.gun && u.S.gun.rof); aaaT.set(u.id, 0.16); } else aaaT.set(u.id, k);
   },
   objectHit(o, amount, p) { if (C.hooks.objectHit) C.hooks.objectHit(o, amount, p); },
-  bldDestroyed(o, b) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней
+  bldDestroyed(o, b) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) — серия вторичных взрывов
     siteLook(o); const q = o.parts.find((p) => p.b === b);
     if (q && C.fx) C.fx.burn(new THREE.Vector3(q.x, city.groundH(q.x, q.z) + 2, q.z), Math.min(60, (q.w || q.r * 2 || 20) * 0.6));
+    if (q && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
   },
   objectDestroyed(o, by) {
     objLook(o.id, true);
@@ -808,6 +815,7 @@ function syncWorld(dt, t) {
     if (u.track && u.emit) { LP.copy(u.track.pos).sub(u.pos); d.rotation.y = Math.atan2(-LP.x, -LP.z) - u.yaw; }
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;
   }
+  if (chainQ.length) chainStep(dt);
   if (MILLS.length && C.G && C.G.objGroup) for (const id of MILLS) { const g = C.G.objGroup[id]; if (g && !g.userData.ruin) spinSails(g, dt); } // крылья мельницы (пока цела)
   if (C.raid) for (const a of C.raid.planes) {
     if (a.dead || a.out || a.phase === 'wait') continue;
@@ -1239,7 +1247,7 @@ setInterval(() => {
   if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill', 'obj_barn']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
   C.G.onSite = (o) => siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o); // модель объекта-сцены пришла — вид построек по бою
   for (const n of new Set(city.objects.map((o) => o.site).filter(Boolean))) { // объекты-сцены: дальняя копия — сразу, подробная — когда камера подлетит (siteLod);
-    wantModel(n + '_lo'); if (SITE_HI) for (const k of Object.keys(SITES[n].place || {})) wantModel(k); // копии моделей на объекте — тоже сразу: их приход пересобирает самолёты и комплексы — не посреди захода на цель
+    wantModel(n + '_lo'); if (SITE_HI) for (const [k] of SITES[n].place || []) wantModel(k); // копии моделей на объекте — тоже сразу: их приход пересобирает самолёты и комплексы — не посреди захода на цель
   }
   await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));

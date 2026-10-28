@@ -295,9 +295,8 @@ export function buildAutumn(seed = 1) {
     add({ key: 'a_farm', name: tr('Склад «Фонарь Джека»'), x: p.x, z: p.z, w: 420, d: 360, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
   { const p = PK.wreck, M = [mp('obj_hangar', p.x, p.z - 80, 0, 0.8), mp('obj_milbase', p.x + 120, p.z + 60), mp('obj_oldind', p.x - 140, p.z + 40, 1)]; // ремонтная база на кладбище техники
     add({ key: 'a_wreck', name: tr('Рембаза «Костяной овраг»'), x: p.x, z: p.z, w: 400, d: 320, value: 150, hp: 200, models: M, parts: M.map(mbox) }); }
-  { const p = PK.heli, M = [mp('obj_rtank', p.x + 200, p.z - 150), mp('obj_rtank', p.x + 215, p.z - 150), mp('obj_milbase', p.x - 200, p.z + 180), mp('obj_cont', p.x + 180, p.z + 200)]; // вертолётная площадка
-    add({ key: 'a_heli', name: tr('Вертолётная площадка «Ведьмина поляна»'), x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, models: M,
-      parts: [...M.map(mbox), ...[[-110, -110], [110, -110], [-110, 110], [110, 110]].map(([dx, dz]) => ({ t: 'box', x: p.x + dx, z: p.z + dz, w: 30, d: 30, h: 0.5 }))] }); }
+  { const p = PK.heli; // вертолётная площадка — своя сцена (city.js SITES): ангар, КДП, ГСМ и склад боеприпасов в обваловке, штаб, стоянки
+    add({ key: 'a_heli', name: tr('Вертолётная площадка «Ведьмина поляна»'), x: p.x, z: p.z, w: 520, d: 520, value: 160, hp: 220, site: 'site_heli', parts: siteParts('site_heli', p.x, p.z) }); }
   { const p = PK.peat, M = [mp('obj_tanks', p.x - 120, p.z - 60), mp('obj_tanks', p.x - 120, p.z + 60), mp('obj_oldind', p.x + 120, p.z, 1), mp('obj_rtank', p.x + 220, p.z - 120)]; // ГСМ на торфоразработках
     add({ key: 'a_peat', name: tr('Склад ГСМ «Болотный огонь»'), x: p.x, z: p.z, w: 520, d: 380, value: 160, hp: 200, models: M, parts: M.map(mbox) }); }
   { // РЛС на Лысой горе: вершина (самая высокая точка в круге), площадка срезана на 6 м
