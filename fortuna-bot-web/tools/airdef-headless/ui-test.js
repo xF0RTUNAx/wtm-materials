@@ -191,10 +191,9 @@ C.toMenu(); frames(3); C.setup.era = 3; C.setup.side = 'east'; C.start('defense'
   const key = (c) => D3.onKey({ code: c, repeat: false, preventDefault: noop }, true);
   key('KeyV'); frames(30 * 5); // снаружи
   const u0 = C.S.units[0]; check(`камера снаружи: ${Math.round(C.camera.position.distanceTo(u0.pos))} м от «Тора», пусковая повёрнута ${u0.lyaw.toFixed(2)}`, C.camera.position.distanceTo(u0.pos) < 60);
-  key('KeyV'); let near = 1e9, fired = false; // за ракетой (если «Тор» за это время не стрелял — проверка пропускается)
-  for (let i = 0; i < 30 * 90 && near > 35; i++) { frames(1); for (const m of C.S.sams) if (!m.dead && m.unit === u0 && m.t > 2) { fired = true; near = Math.min(near, C.camera.position.distanceTo(m.pos)); } }
-  check(fired ? `камера за ракетой: ближе всего ${Math.round(near)} м до своей ракеты` : 'камера за ракетой: «Тор» не стрелял — пропущено', !fired || near < 40);
-  key('KeyV'); C.setAuto(false); D3.leaveOp();
+  key('KeyV'); frames(10); // камер две (Mark 2026-10-28: «за ракетой» убрана) — снова вид оператора, у машины
+  check(`камера: второе V — снова оператор, ${Math.round(C.camera.position.distanceTo(u0.pos))} м от «Тора»`, C.camera.position.distanceTo(u0.pos) < 12);
+  C.setAuto(false); D3.leaveOp();
   check(`оборона эпоха III: сбито ${D3.st.downs}`, true); }
 // «Мульти-волна» отдельно: за удар (восток, IV — план, пуск, камера за ракетой, время ×4) и за ПВО (запад атакует, IV)
 for (const role of ['atk', 'def']) {

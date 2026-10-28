@@ -1,7 +1,8 @@
 // Раскадровки эффектов (взрыв, вспышка, пламя): все экземпляры одной раскадровки — один вызов отрисовки
 // (InstancedBufferGeometry: точка, размер, кадр и прозрачность — на экземпляр). Прямоугольник всегда лицом к камере;
 // «стоячие» (пламя) поворачиваются только вокруг вертикали, но при крутом взгляде сверху (окно ТВ) — тоже лицом к камере,
-// иначе превращаются в полоску. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
+// иначе превращаются в полоску. up: 'strict' (столб старта С-300) — всегда стоит вертикально в мире (иначе снизу и сверху лист
+// наклонялся к камере и расходился с ракетой), почти отвесно сверху или снизу — тает. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
 /* global THREE */
 import { FXU } from '../drone/world.js?v=20261028a';
 import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261028a';
@@ -11,8 +12,9 @@ varying vec2 vUv; varying vec3 vF; varying float vA, vD, vS;
 void main() {
   vUv = uv; vF = iF.xyz; vA = iF.w; vS = iSize.y;
   vec3 t = cameraPosition - iPos; t /= max(length(t), 1e-3);
+  if (uUp > 1.5) vA *= 1.0 - smoothstep(0.9, 0.98, abs(t.y));
   vec3 cr = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]), cu = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
-  float s = uUp * (1.0 - smoothstep(0.55, 0.8, abs(t.y)));
+  float s = uUp > 1.5 ? 1.0 : uUp * (1.0 - smoothstep(0.55, 0.8, abs(t.y)));
   vec3 R = normalize(mix(cr, normalize(vec3(t.z, 0.0, -t.x) + vec3(1e-4, 0.0, 0.0)), s)), U = normalize(mix(cu, vec3(0.0, 1.0, 0.0), s));
   vec2 q = (position.xy + vec2(0.5 - uAnchor.x, uAnchor.y - 0.5)) * iSize;
   float pd = min(uPush * iSize.y, 0.35 * length(cameraPosition - iPos)); // не больше трети расстояния: вблизи не вылезает поверх домов и не уходит за камеру
@@ -55,7 +57,7 @@ export function createBook(scene, cfg, max = 64) {
   for (const a of [aPos, aSize, aF]) a.setUsage(THREE.DynamicDrawUsage);
   geo.setAttribute('iPos', aPos); geo.setAttribute('iSize', aSize); geo.setAttribute('iF', aF); geo.instanceCount = 0;
   const mat = new THREE.ShaderMaterial({ vertexShader: VS, fragmentShader: FS, transparent: true, depthWrite: false,
-    uniforms: { map: { value: tex }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uAnchor: { value: new THREE.Vector2(...cfg.anchor) }, uUp: { value: cfg.up ? 1 : 0 },
+    uniforms: { map: { value: tex }, uGrid: { value: new THREE.Vector2(cfg.cols, cfg.rows) }, uAnchor: { value: new THREE.Vector2(...cfg.anchor) }, uUp: { value: cfg.up === 'strict' ? 2 : cfg.up ? 1 : 0 },
       ...FXU, uGain: { value: cfg.gain || 2.2 }, uLit: { value: cfg.lit || 1 }, uPush: { value: cfg.push || 0 }, uSoft: { value: cfg.soft || 0 }, uFogD: { value: 0 }, uLight: { value: new THREE.Vector3(1, 1, 1) }, uFog: { value: new THREE.Color() } } });
   if (web && cfg.ktx && ktxOn()) ktxLoadUrl(cfg.ktx).then((t) => { mat.uniforms.map.value = t; done(); }).catch(() => { mat.uniforms.map.value = new THREE.TextureLoader().load(cfg.url, done); });
   const mesh = new THREE.Mesh(geo, mat); mesh.frustumCulled = false; mesh.renderOrder = 0.8; scene.add(mesh); // после облаков (0,5), до дыма (1)

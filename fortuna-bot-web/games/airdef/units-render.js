@@ -576,9 +576,10 @@ export function createFx(scene, P) {
   // за 3–6 с жизни клуб выходил до 30–120 м, вдвое-вчетверо больше самолёта; теперь ≈ ×0,55: меньше и перерисовки на экране)
   const DS = 0.85, DG = 0.5;
   const trail = (x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, st = 0) => { if (PF && PF.ready) PF.emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv, st); else smoke.emit(x, y, z, vx, vy, vz, r, g, b, a, s, gr, l, dr, gv); };
-  // лист взрыва по типу; lnch — старт С-300 / С-400 (Свои/С-300/эффекты): вертикальный рисунок — стоячий (поворот только вокруг вертикали), тает сам
+  // лист взрыва по типу; lnch — старт С-300 / С-400 (Свои/С-300/эффекты): вертикальный рисунок — всегда стоит вертикально в мире (flipbook up 'strict': с ракетой
+  // совпадает под любым углом камеры — снизу у пусковой, сверху из самолёта), тает сам
   const mkBook = (t, j, u, lnch) => {
-    const b = XB[t] = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [1, 1], anchor: j.anchor, up: lnch, gain: 2.4, lit: 1.7, push: lnch || t === 'air' || t === 'plane' ? 0 : 0.3, soft: 0.08, fadeT: j.times[j.frames - 1] * (lnch ? 0.25 : 0.45), onTex }, lnch ? 8 : t === 'light' || t === 'air' ? 48 : 24);
+    const b = XB[t] = createBook(scene, { ktx: u('ktx2'), url: u('webp'), cols: j.cols, rows: j.rows, frames: j.frames, times: j.times, cell: [1, 1], anchor: j.anchor, up: lnch && 'strict', gain: 2.4, lit: 1.7, push: lnch || t === 'air' || t === 'plane' ? 0 : 0.3, soft: 0.08, fadeT: j.times[j.frames - 1] * (lnch ? 0.25 : 0.45), onTex }, lnch ? 8 : t === 'light' || t === 'air' ? 48 : 24);
     XJ[t] = j; books.push(b); if (LY) { b.mesh.layers.set(LY[0]); b.pre.layers.set(LY[0]); }
   };
   const LZ = {}; // отложенные листы (старт С-300 / С-400): создаются по wantLaunch — 2,7 МБ не грузятся в бою без них

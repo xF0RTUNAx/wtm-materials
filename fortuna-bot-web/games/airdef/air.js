@@ -372,7 +372,8 @@ export function createAir(C) {
   const NAR_TOL_U = 15; // «в зоне» / «ПУСК» по машине ПВО — точка падения ближе 15 м (урон по машине — до ~18 м: blast, R 14 + 4)
   // помощь «Аркады» довела нос до расчётного направления (< 2°): залп пойдёт точно по нему (fire: opts.dir)
   const narAligned = () => { if (!nar.on) return false; const cp = Math.cos(nar.pitch); NAR_D.set(-Math.sin(nar.yaw) * cp, Math.sin(nar.pitch), -Math.cos(nar.yaw) * cp); return fwdOf(craft, NV).angleTo(NAR_D) < 0.035; };
-  // подсказка к оружию вертолёта — при первом выборе в вылете (Mark 2026-10-22: «непонятно, как пускать НАР и ПТУР»); hintSeen — за вылет
+  // подсказка к оружию вертолёта — при первом переключении на него в вылете (Mark 2026-10-22: «непонятно, как пускать НАР и ПТУР»; 2026-10-28 —
+  // в начале боя не показывать); hintSeen — за вылет
   const hintSeen = new Set();
   let samMe = false; // по игроку пускали ЗУР, а ловушки ещё не бросал — лента боя («Разбор», C.bev)
   const logFire = (key) => { const W = AG[key]; if (W && W.kind !== 'ecm') C.bev('', BOMBK.has(W.kind) ? tr('сброс {0}', [W.short]) : tr('пуск {0}', [W.short]), 'fire:' + key, 1e9); }; // первый пуск / сброс каждого вида оружия
@@ -1645,8 +1646,9 @@ export function createAir(C) {
     const lw = curW(), wrapA = (v) => Math.atan2(Math.sin(v), Math.cos(v)), brgT = Math.atan2(-(nar.pt.x - craft.pos.x), -(nar.pt.z - craft.pos.z));
     const narW = arc && nar.has && Math.abs(HU.yaw) < 0.2 && !(aimOn() && Math.abs(wrapA(aim.yaw - brgT)) > 0.21) && !!lw && AG[lw.key].kind === 'rocket' && usable(lw);
     nar.slow = Math.abs(HU.cy) < 0.12 && vh < 25; nar.on = narW && nar.slow;
-    // подсказка к оружию — при первом выборе в вылете; в уроках оружие объясняет карточка урока
-    if (lw && !hintSeen.has(lw.key) && !craft.landed && game.t > 3 && game.opts.lastGame !== 'training') { hintSeen.add(lw.key); const h = weaponHint(lw.key); if (h) C.say(h, 8); }
+    // подсказка к оружию — при первом переключении на него в вылете (первое оружие боя — без неё: Mark 2026-10-28, большая подсказка
+    // в начале боя мешает); в уроках оружие объясняет карточка урока
+    if (lw && !hintSeen.has(lw.key)) { if (!hintSeen.size) hintSeen.add(lw.key); else if (!craft.landed && game.opts.lastGame !== 'training') { hintSeen.add(lw.key); const h = weaponHint(lw.key); if (h) C.say(h, 8); } }
     if (narW) {
       const dx = nar.pt.x - craft.pos.x, dz = nar.pt.z - craft.pos.z;
       HU.yawTo = Math.atan2(-dx, -dz); if (nar.on) HU.pitchTo = nar.pitch; // наклон — подобран по расчёту точки падения (updateLar)

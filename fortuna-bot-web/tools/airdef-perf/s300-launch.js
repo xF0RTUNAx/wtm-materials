@@ -3,9 +3,10 @@
 // Свою машину ставит рядом с первым комплексом боя (остальные убирает), цель — самолёт игрока (держим в зоне). Пишет кадры, лист кадров
 // <ключ>-лист.jpg и ролик <ключ>.mp4; печатает ход (угол пакета, домкраты, крышка, ракета: время, высота, скорость, двигатель).
 // Нужен сервер игры: cd /Users/mark./wtm-materials && python3 fortuna-bot-web/tools/dev/nocache-server.py 8937
-//   deno run -A tools/airdef-perf/s300-launch.js [папка = .] [ключ = s300] [пресет = high] [карта = city]
+//   [WIDE=110,6,45] deno run -A tools/airdef-perf/s300-launch.js [папка = .] [ключ = s300] [пресет = high] [карта = city]
 import puppeteer from 'npm:puppeteer-core@22.15.0';
 const [out = '.', key = 's300', preset = 'high', map = 'city'] = Deno.args, FPS = 30;
+const WIDE = (Deno.env.get('WIDE') || '110,6,45').split(',').map(Number); // общий план после зажигания: расстояние, высота камеры, высота точки взгляда (WIDE=30,4,40 — снизу у пусковой)
 const browser = await puppeteer.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: 'new', protocolTimeout: 900000,
   args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--window-size=1280,720', '--disable-background-timer-throttling', '--disable-renderer-backgrounding'] });
 try {
@@ -73,7 +74,7 @@ try {
     await hold(); const o = await st(); lg.push(o);
     if (t0 < 0 && o.t !== undefined) t0 = f;
     if (t0 >= 0 && f - t0 === Math.round(FPS * 0.6)) await page.evaluate(() => Object.assign(window.__cam, { d: 30, h: 6, look: 22, z: 6.6, side: 0.95, fwd: 0.3, fov: 55 }));
-    if (t0 >= 0 && f - t0 === Math.round(FPS * 1.3)) await page.evaluate(() => { const w = window.__pickWide(110, 6); Object.assign(window.__cam, { d: 110, h: w.y, look: 45, z: 6.6, ang: w.a, fov: 45 }); });
+    if (t0 >= 0 && f - t0 === Math.round(FPS * 1.3)) await page.evaluate(([d, h, look]) => { const w = window.__pickWide(d, h); Object.assign(window.__cam, { d, h: w.y, look, z: 6.6, ang: w.a, fov: 55 }); }, WIDE);
     await shot(o.t !== undefined ? `пуск +${o.t.toFixed(2)} с` : `крышка ${o.lid}`);
     if (t0 >= 0 && f - t0 >= FPS * 6.5) break;
   }

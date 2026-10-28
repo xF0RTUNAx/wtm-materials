@@ -935,9 +935,9 @@ export function createDefense(C) {
   // ═════════════ Оператор ═════════════
   const ppi = $('ppi'), pc = ppi.getContext('2d');
   const op = { yaw: 0, pitch: 0.1, fov: 60, dragging: null, msg: '', msgT: 0, follow: true, fireHeld: false,
-    cam: 'op', oy: 0, op: 0.3, od: 1, orbit: false, R: 12, m: null, mEnd: 0, mLast: new THREE.Vector3() }; // камеры: оператор / снаружи / за ракетой
-  const CAMS = { op: tr('вид оператора'), ext: tr('снаружи — пусковая от третьего лица'), chase: tr('за ракетой') };
-  // у ПЗРК вида снаружи нет (модели стрелка нет): оператор ↔ за ракетой
+    cam: 'op', oy: 0, op: 0.3, od: 1, orbit: false, R: 12, m: null }; // камеры: оператор (от первого лица) / снаружи (от третьего)
+  // камеры за ПВО — только от первого и третьего лица (Mark 2026-10-28: «за ракетой» убрана); у ПЗРК снаружи — облёт расчёта
+  const CAMS = { op: tr('вид оператора'), ext: tr('снаружи — пусковая от третьего лица') };
   const manpads = (u) => !!(u && u.S.type === 'ir' && u.S.hp <= 15);
   // «БИНОКЛЬ»: только при захвате — камера с сильным увеличением прямо на захваченную цель (видно, какой стороной она к вам
   // и как маневрирует — важно для тепловой ГСН). Захват сорвался или цель сменилась — сам выключается, нужен новый захват
@@ -949,7 +949,7 @@ export function createDefense(C) {
   }
   function binoOff(msg) { if (!op.bino) return; op.bino = false; op.cam = op.binoCam || 'op'; $('opBino').classList.remove('on'); $('opCam').classList.toggle('on', op.cam !== 'op'); if (msg) opSay(msg); }
   const binoLen = (a) => (a.W ? (a.W.vis ? a.W.vis.L : 5) : a.M ? a.M.L : a.len || 17);
-  function cycleCam() { const LF = st.op && LNCH[st.op.key]; if (LF && LF.fp) { opSay(tr('У этой установки — только вид оператора')); snd.deny(); return; } if (op.bino) binoOff(); op.cam = op.cam === 'op' ? (manpads(st.op) ? 'chase' : 'ext') : op.cam === 'ext' ? 'chase' : 'op'; op.orbit = false; op.od = 1; opSay(tr('Камера: ') + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
+  function cycleCam() { const LF = st.op && LNCH[st.op.key]; if (LF && LF.fp) { opSay(tr('У этой установки — только вид оператора')); snd.deny(); return; } if (op.bino) binoOff(); op.cam = op.cam === 'op' ? 'ext' : 'op'; op.orbit = false; op.od = 1; opSay(tr('Камера: ') + CAMS[op.cam]); snd.click(); $('opCam').classList.toggle('on', op.cam !== 'op'); }
   const DIR = V3(), TMP = V3(), LEAD = V3(), EYE = V3();
   function enterOp(u) {
     if (st.op) leaveOp();
@@ -1232,59 +1232,35 @@ export function createDefense(C) {
     C.setFov(op.fov);
   }
   // ── камера «снаружи»: машина от третьего лица на ¾ сзади (по направлению на цель), видно, как разворачивается пусковая
-  // и уходит ракета — выброс, запуск двигателя, разворот на цель; «за ракетой» — после старта камера летит за своей ракетой
-  // до подрыва и пару секунд смотрит на разрыв. Тянуть по экрану — облёт, колесо — ближе/дальше.
-  const CP = V3(), CL = V3(), CS = V3(), LS = V3(), OFF = V3();
+  // и уходит ракета — выброс, запуск двигателя, разворот на цель (первые секунды камера провожает её взглядом). Тянуть по экрану — облёт,
+  // колесо — ближе/дальше.
+  const CP = V3(), CL = V3(), CS = V3(), LS = V3();
   function extCamera(dt, u) {
     C.setFov(58);
-    // своя ракета в полёте — самая свежая
+    // своя ракета в полёте — самая свежая (на старте камера провожает её взглядом)
     let m = null; for (const q of C.S.sams) if (!q.dead && q.unit === u && (!m || q.id > m.id)) m = q;
-    if (m) { op.m = m; op.mLast.copy(m.pos); } else if (op.m) { op.mEnd = op.mEnd || C.t; if (C.t - op.mEnd > 2.5) { op.m = null; op.mEnd = 0; } }
+    op.m = m;
     const R = op.R * op.od, base = CL.copy(u.pos); base.y += op.R * 0.25;
-    const chase = op.cam === 'chase' && op.m;
-    let follow = null;
-    if (chase && !op.m.dead && op.m.t > (op.m.ign || 0) + 1.6) {
-      // за ракетой: сзади-сверху, взгляд — на цель (или вперёд по курсу)
-      const mm = op.m, back = mm.M.L * 3 + 14;
-      CP.copy(mm.pos).addScaledVector(mm.dir, -back); CP.y += mm.M.L * 0.5 + 3;
-      LS.copy(mm.target && !mm.target.dead ? mm.target.pos : TMP.copy(mm.pos).addScaledVector(mm.dir, 300));
-      LS.lerp(TMP.copy(mm.pos).addScaledVector(mm.dir, 60), 0.6);
-      follow = mm;
-    } else if (chase && op.m.dead) {
-      // подрыв: камера остановилась, смотрит на место разрыва
-      CP.copy(camera.position); LS.copy(op.mLast);
-    } else if (manpads(u)) {
-      // ПЗРК: своей ракеты в воздухе нет — вид стрелка
-      CP.copy(EYE); LS.copy(EYE).add(DIR);
-    } else {
-      // облёт вокруг машины: по умолчанию — на ¾ сзади относительно направления на цель
-      const tgt = u.track || u.desig;
-      const brg = tgt ? Math.atan2(-(tgt.pos.x - u.pos.x), -(tgt.pos.z - u.pos.z)) : op.yaw;
-      op.camYaw = op.orbit ? op.oy : brg + 0.55;
-      // угол камеры ниже 0,04 рад — камера остаётся над землёй, а взгляд поднимается вверх (можно смотреть в зенит)
-      const el = op.orbit ? op.op : 0.28, elC = Math.max(el, 0.04), up = Math.max(0, 0.04 - el), dist = R * 1.7 + 6;
-      CP.set(u.pos.x + Math.sin(op.camYaw) * Math.cos(elC) * dist, u.pos.y + Math.sin(elC) * dist + 2, u.pos.z + Math.cos(op.camYaw) * Math.cos(elC) * dist);
-      // взгляд: на машину, чуть в сторону цели; ракета на старте — камера провожает её вверх
-      LS.copy(base).addScaledVector(TMP.set(-Math.sin(brg), 0, -Math.cos(brg)), op.orbit ? 0 : R * 0.5);
-      if (up > 0) { const dx = LS.x - CP.x, dz = LS.z - CP.z, h = Math.hypot(dx, dz) || 1, L = Math.max(30, LS.distanceTo(CP)), p = Math.min(1.45, Math.atan2(LS.y - CP.y, h) + up);
-        LS.set(CP.x + dx / h * Math.cos(p) * L, CP.y + Math.sin(p) * L, CP.z + dz / h * Math.cos(p) * L); }
-      if (op.m && !op.m.dead && op.m.t < 5) LS.lerp(op.m.pos, clamp(op.m.t / 3, 0, 0.75));
-      op.extAim = op.orbit; // облёт рукой — наведение по камере (перекрестие в центре экрана)
-    }
+    // облёт вокруг машины: по умолчанию — на ¾ сзади относительно направления на цель
+    const tgt = u.track || u.desig;
+    const brg = tgt ? Math.atan2(-(tgt.pos.x - u.pos.x), -(tgt.pos.z - u.pos.z)) : op.yaw;
+    op.camYaw = op.orbit ? op.oy : brg + 0.55;
+    // угол камеры ниже 0,04 рад — камера остаётся над землёй, а взгляд поднимается вверх (можно смотреть в зенит)
+    const el = op.orbit ? op.op : 0.28, elC = Math.max(el, 0.04), up = Math.max(0, 0.04 - el), dist = R * 1.7 + 6;
+    CP.set(u.pos.x + Math.sin(op.camYaw) * Math.cos(elC) * dist, u.pos.y + Math.sin(elC) * dist + 2, u.pos.z + Math.cos(op.camYaw) * Math.cos(elC) * dist);
+    // взгляд: на машину, чуть в сторону цели; ракета на старте — камера провожает её вверх
+    LS.copy(base).addScaledVector(TMP.set(-Math.sin(brg), 0, -Math.cos(brg)), op.orbit ? 0 : R * 0.5);
+    if (up > 0) { const dx = LS.x - CP.x, dz = LS.z - CP.z, h = Math.hypot(dx, dz) || 1, L = Math.max(30, LS.distanceTo(CP)), p = Math.min(1.45, Math.atan2(LS.y - CP.y, h) + up);
+      LS.set(CP.x + dx / h * Math.cos(p) * L, CP.y + Math.sin(p) * L, CP.z + dz / h * Math.cos(p) * L); }
+    if (op.m && !op.m.dead && op.m.t < 5) LS.lerp(op.m.pos, clamp(op.m.t / 3, 0, 0.75));
+    op.extAim = op.orbit; // облёт рукой — наведение по камере (перекрестие в центре экрана)
     CP.y = Math.max(CP.y, city.topAt(CP.x, CP.z) + 2);
     const first = !op.camInit; op.camInit = true;
-    if (follow) {
-      // за ракетой сглаживаем смещение относительно неё (иначе камера отстаёт на сотни метров)
-      if (op.fol !== follow) { op.fol = follow; OFF.copy(camera.position).sub(follow.pos); if (OFF.length() > 400) OFF.setLength(400); }
-      OFF.lerp(TMP.copy(CP).sub(follow.pos), 1 - Math.exp(-dt * 2.5)); camera.position.copy(follow.pos).add(OFF);
-      CS.lerp(LS, 1 - Math.exp(-dt * 6)); camera.up.set(0, 1, 0); camera.lookAt(CS); return;
-    }
-    op.fol = null;
     if (first || camera.position.distanceTo(CP) > 600) { camera.position.copy(CP); CS.copy(LS); }
-    else { camera.position.lerp(CP, 1 - Math.exp(-dt * (chase ? 8 : 4))); CS.lerp(LS, 1 - Math.exp(-dt * 6)); }
+    else { camera.position.lerp(CP, 1 - Math.exp(-dt * 4)); CS.lerp(LS, 1 - Math.exp(-dt * 6)); }
     camera.up.set(0, 1, 0); camera.lookAt(CS);
     // наведение «от третьего лица»: ствол / пусковая — по направлению камеры (через центр экрана)
-    if (op.extAim && !chase && !manpads(u)) { camera.getWorldDirection(TMP); op.yaw = Math.atan2(-TMP.x, -TMP.z); op.pitch = clamp(Math.asin(clamp(TMP.y, -1, 1)), -0.15, 1.5); }
+    if (op.extAim && !manpads(u)) { camera.getWorldDirection(TMP); op.yaw = Math.atan2(-TMP.x, -TMP.z); op.pitch = clamp(Math.asin(clamp(TMP.y, -1, 1)), -0.15, 1.5); }
   }
 
   // ═════════════ «Мульти-волна»: лента событий удара ═════════════
@@ -1625,8 +1601,8 @@ export function createDefense(C) {
     timeK: () => (st.phase === 'wave' && !st.over && !st.net ? st.timeK : 1),
     resize() { sizeMap(); },
     finish: (why) => finish(why, null),
-    pauseHelp: () => (IS_TOUCH ? tr('Карта: тянуть — сдвиг, щипок — масштаб, касание — выбор. Оператор: тянуть — поворот, касание отметки или ИКО — назначить цель. «Кам.» — вид снаружи и за ракетой (тянуть — облёт).')
-      : tr('Карта: тянуть — сдвиг, колесо — масштаб, щелчок — выбор и постановка, Пробел — начать волну.<br>Оператор: тянуть мышью или стрелки/WASD — поворот, колесо или Z — увеличение, щелчок по отметке — цель, Tab — следующая цель,<br>Пробел/F — пуск (у пушек — держать), E — РЛС, M — метод, V — камера (оператор / снаружи / за ракетой), Q — на карту, Esc — пауза.')),
+    pauseHelp: () => (IS_TOUCH ? tr('Карта: тянуть — сдвиг, щипок — масштаб, касание — выбор. Оператор: тянуть — поворот, касание отметки или ИКО — назначить цель. «Кам.» — вид снаружи (тянуть — облёт).')
+      : tr('Карта: тянуть — сдвиг, колесо — масштаб, щелчок — выбор и постановка, Пробел — начать волну.<br>Оператор: тянуть мышью или стрелки/WASD — поворот, колесо или Z — увеличение, щелчок по отметке — цель, Tab — следующая цель,<br>Пробел/F — пуск (у пушек — держать), E — РЛС, M — метод, V — камера (оператор / снаружи), Q — на карту, Esc — пауза.')),
   };
   return api;
 }
