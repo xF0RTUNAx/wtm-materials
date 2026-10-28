@@ -18,7 +18,7 @@ import { AG, SAM } from '../arsenal.js?v=20261028a';
 import { LNCH, lnchToWorld, lnchDir, slotOf, trainable } from '../launchers.js?v=20261028a';
 import { clamp, D2R, G0, rhoAt, angleBetween, seekerHeat, offTailDeg, turnToward } from '../../drone/sim/core.js?v=20261028a';
 import { cmOf, cmKey, cmBoost, cmWorld } from './cm.js?v=20261028a';
-import { partDist } from '../city.js?v=20261028a';
+import { partDist, siteBld, bldDie, bldMainsDead, bldKillMains } from '../city.js?v=20261028a';
 
 // Режимы: Аркада прощает (медленнее реакция ПВО, меньше урона, больше ловушек и диполей), Реализм — как есть
 // ind — доля индуктивного сопротивления в лётной модели самолётов (sim/flight.js): в «Аркаде» в вираже скорость теряется вдвое меньше
@@ -65,7 +65,7 @@ export function createStrike(ctx) {
   const rnd = ctx.rnd || Math.random;
   const city = ctx.city;
   const units = [], sams = [], wpns = [], flares = [];
-  const objects = city.objects.map((o) => ({ ...o, hpMax: o.hp, dead: false, dmgTaken: 0 }));
+  const objects = city.objects.map((o) => ({ ...o, hpMax: o.hp, dead: false, dmgTaken: 0, ...(o.site ? { bld: siteBld(o, o.hp) } : {}) })); // bld — постройки объекта-сцены (city.js SITES)
   // перезарядка ПВО по игре: ctx.game 'air' (вылеты) / 'multi' («Мульти-волна») — быстрее по режиму (MODES.reloadK), до 5 с
   const reloadOf = (S) => { const b = S.reload || 60, k = ctx.game && ((ctx.mode() || {}).reloadK || {})[ctx.game]; return k ? Math.max(5, Math.round(b * k / 5) * 5) : b; };
   const net = { alertT: 0, last: new THREE.Vector3() }; // общая сеть ПВО: кто-то сопровождает цель — засада включается
@@ -908,6 +908,7 @@ export function createStrike(ctx) {
   }
   // урон взрывом по объектам и комплексам; возвращает, кого задело
   // ap — бронебойность по технике (ПТУР: кумулятивная часть — прямое попадание выводит из строя любой комплекс; по зданиям — как есть)
+  const BH = []; // постройки объекта-сцены, задетые разрывом: имя, доля урона
   function blast(p, dmg, R, by, owner = null, ap = 1) { // owner — самолёт, чьё оружие (онлайн: кому засчитать)
     const res = { objects: [], units: [] };
     for (const o of objects) {
@@ -915,7 +916,7 @@ export function createStrike(ctx) {
       // части — постройки; zones — площади только для урона (ВПП аэродрома, площадка объекта — city.js objTargets), со своим весом q.k;
       // площадка (q.yard) — до q.pad м от построек на земле, земля — в точке разрыва (на склоне и в овраге она на десятки метров выше или
       // ниже, чем у построек); разрыв в воде — река, болото — площадкой не считается
-      let best = 0;
+      let best = 0; BH.length = 0;
       for (const L of o.zones ? [o.parts, o.zones] : [o.parts]) for (const q of L) {
         if (q.yard && (city.waterAt || city.wetAt || (() => false))(p.x, p.z)) continue;
         const base = q.y0 !== undefined ? q.y0 : q.yard ? city.groundH(p.x, p.z) : city.groundH(q.x, q.z), top = base + q.h;
@@ -924,13 +925,15 @@ export function createStrike(ctx) {
         else if (q.t === 'box') dh = Math.hypot(Math.max(0, Math.abs(p.x - q.x) - q.w / 2), Math.max(0, Math.abs(p.z - q.z) - q.d / 2));
         else dh = Math.max(0, Math.hypot(p.x - q.x, p.z - q.z) - q.r);
         const dv = p.y > top ? p.y - top : p.y < base ? base - p.y : 0, d = Math.hypot(dh, dv);
-        if (d < R) best = Math.max(best, (d < 2 ? 1.25 : Math.pow(1 - d / R, 0.6)) * (q.k ?? 1));
+        if (d < R) { const f = (d < 2 ? 1.25 : Math.pow(1 - d / R, 0.6)) * (q.k ?? 1); best = Math.max(best, f); if (q.b && o.bld) BH.push(q.b, f); }
       }
       if (best > 0) {
         const amount = dmg * best;
         o.hp -= amount; o.dmgTaken += amount; res.objects.push(o);
         fx.objectHit(o, amount, p);
-        if (o.hp <= 0) { o.dead = true; o.hp = 0; fx.objectDestroyed(o, by, owner); }
+        // объект-сцена: урон и той постройке, в которую пришлось (своя прочность — доля объекта); разбиты все главные — объект уничтожен
+        for (let i = 0; i < BH.length; i += 2) { const B = o.bld[BH[i]]; if (B.dead) continue; B.hp -= dmg * BH[i + 1]; if (B.hp <= 0) bldDie(o, BH[i], fx); }
+        if (o.hp <= 0 || (o.bld && bldMainsDead(o))) { o.dead = true; o.hp = 0; bldKillMains(o, fx); fx.objectDestroyed(o, by, owner); }
       }
     }
     for (const u of units) {

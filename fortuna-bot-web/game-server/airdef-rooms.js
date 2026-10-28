@@ -11,7 +11,7 @@
 // Комната: лобби (команды, «Готов», боты, эпоха и стороны) → по волнам: расстановка и покупки (PLAN_T) → волна (до
 // WAVE_T) → итоги волны → … → итоги боя. Быстрый поиск — очередь по режиму с ролью (авиация / ПВО / любая).
 /* global THREE */
-import { buildCity, CITY } from '../games/airdef/city.js?v=20260930m';
+import { buildCity, CITY, bldMask } from '../games/airdef/city.js?v=20260930m';
 import { createStrike, MODES } from '../games/airdef/sim/strike.js?v=20260930m';
 import { createRaid, STRIKERS } from '../games/airdef/sim/raid.js?v=20260930m';
 import { pickTargets, spotNear, freeGround, roofOk, buildingAt } from '../games/airdef/mission.js?v=20260930m';
@@ -376,6 +376,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
       wpnEnd: (w, res) => push(r, ['we', w.id, ...v3(w.pos), res.intercepted ? 1 : 0]),
       explosion: (p, R, kind) => push(r, ['x', ...v3(p), r1(R), kind]),
       cmDrop: (a, type) => push(r, ['cm', a.id, type === 'flare' ? 1 : 2]),
+      bldDestroyed: (o) => push(r, ['bd', o.id, bldMask(o)]), // постройка объекта-сцены разбита (city.js SITES)
       objectDestroyed: (o, by, owner) => { push(r, ['od', o.id]); updValue(r); const p = airOwner(r, owner); if (p) p.score += o.value * (r.targets.some((q) => q.id === o.id) ? 2 : 0.5); killLog(r, p ? p.name : 'Авиация', o.name, by, 'air', 'pvo', owner && owner.plane ? 'p:' + owner.plane : ''); },
       objectHit: () => updValue(r),
       unitDestroyed: (u, by, owner) => { push(r, ['ud', u.id]); r.waveRes.unitKills++; if (u.S.radar) r.waveRes.radarKills++; const p = airOwner(r, owner); if (p) { p.kills++; p.score += 40; } const v = r.players.get(u.owner); killLog(r, p ? p.name : 'Авиация', v ? v.name : 'ПВО', by, 'air', 'pvo', owner && owner.plane ? 'p:' + owner.plane : '', 'u:' + u.key); },
@@ -491,7 +492,7 @@ export function createAdRooms({ log = () => {}, auth, sign = async () => null, s
     if (!r.S) return;
     const msg = { t: 'state', era: r.era, sideAir: r.sideAir, mode: r.mode, wave: r.wave, targets: r.targets.map((o) => o.id),
       units: r.S.units.map((u) => [u.id, u.key, r1(u.pos.x), r1(u.pos.z), u.roof ? 1 : 0, u.owner || 0, Math.round(u.yaw * 1000) / 1000, u.dead ? 1 : 0, only && only.team === 'pvo' && u.tgt ? [...u.tgt] : 0]), // последнее — фильтр целей (вернувшемуся ПВО; лётчикам не выдаём)
-      objects: r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0]) };
+      objects: r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0, ...(o.bld ? [bldMask(o)] : [])]) };
     if (only) send(only, msg); else bcast(r, msg);
   }
   MU = createMulti({ city: winter, send, bcast, team, humans, J, sign, seal, clock, sendRoom, closeRoom, toLobby, FAST });

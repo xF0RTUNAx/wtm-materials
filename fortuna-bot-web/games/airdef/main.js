@@ -12,12 +12,12 @@ import { localizeTree } from './lang/data.js?v=20261028a'; // язык: назв
 import { TREE, BRANCHES } from './progress.js?v=20261028a';
 import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261028a';
 import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261028a';
-import { buildCity, CITY } from './city.js?v=20261028a';
+import { buildCity, CITY, SITES } from './city.js?v=20261028a';
 import { buildWinter } from './map-winter.js?v=20261028a';
 import { WINTER_KEYS } from './winter-render.js?v=20261028a';
 import { buildAutumn } from './map-autumn.js?v=20261028a';
 import { AUTUMN_KEYS } from './autumn-render.js?v=20261028a';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261028a';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree } from './city-render.js?v=20261028a';
 import { createPipeline } from '../drone/post.js?v=20261028a';
 import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261028a';
 import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261028a';
@@ -301,10 +301,42 @@ C.newBattle = function (o) {
 };
 // вид объекта-цели: целый или разрушенный (осел и почернел) — процедурная часть, заглушка и готовые постройки
 function objLook(id, ruin) {
+  const so = C.S && C.S.objects.find((q) => q.id === id);
+  if (so && so.site) { // объект-сцена: разрушенные — только разбитые постройки (siteLook), остальное (мельница у «Лысой горы») — как есть
+    const b = C.G.objBox[id]; if (b) { b.material = ruin ? C.G.ruinMat : C.G.objMat; b.scale.y = ruin ? 0.35 : 1; b.updateMatrix(); }
+    const g = C.G.objGroup[id]; if (g) g.userData.ruin = ruin;
+    siteLook(so); return;
+  }
   for (const m of [C.G.objMesh[id], C.G.objBox[id]]) if (m) { m.material = ruin ? C.G.ruinMat : C.G.objMat; m.scale.y = ruin ? 0.35 : 1; m.updateMatrix(); } // матрицы у неподвижного — вручную (city-render freezeTree)
   for (const g of [C.G.objGroup[id], C.G.objFar && C.G.objFar[id]]) { // и дальняя копия (если она придёт позже — objFarLook)
     if (g) { g.userData.ruin = ruin; g.scale.y = ruin ? 0.35 : 1; g.updateMatrix(); g.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = ruin ? C.G.ruinMat : c.userData.mat0; }); }
   }
+}
+// объект-сцена (city.js SITES): у каждой постройки видна целая (b_<имя>) или разрушенная (b_<имя>_ruin) часть модели — по бою (o.bld),
+// и у подробной модели, и у дальней копии
+function siteLook(o) {
+  if (!o || !o.site || !C.G) return;
+  for (const g of [C.G.objGroup[o.id], C.G.objFar && C.G.objFar[o.id]]) {
+    const m = g && g.userData.site; if (!m) continue;
+    for (const c of m.children) { if (!/^b_/.test(c.name)) continue; const B = o.bld && o.bld[c.name.replace(/^b_|_ruin$/g, '')], dead = !!(B && B.dead); c.visible = /_ruin$/.test(c.name) ? dead : !dead; }
+    for (const k of g.userData.copies || []) k.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = o.dead ? C.G.ruinMat : c.userData.mat0; }); // копии моделей — сгоревшие, когда объект уничтожен
+  }
+}
+// копии моделей игры на объекте-сцене (SITES place: П-18, вертолёт) — в группе подробной модели (видны вместе с ней); модели — по запросу,
+// ставятся, как пришли (siteLod каждый кадр, пока не все на месте); стоят на площадке сцены, нос — по курсу (°, 0 — север)
+const SITE_BB = new THREE.Box3();
+function sitePlace(o, g) {
+  const done = g.userData.placed || (g.userData.placed = new Set()), y0 = g.userData.site.position.y; let left = 0;
+  for (const [k, [x, z, h]] of Object.entries(SITES[o.site].place || {})) {
+    if (done.has(k)) continue;
+    const m = anyModel(k); if (!m) { wantModel(k); left++; continue; }
+    m.rotation.y = -h * D2R; m.updateMatrixWorld(true); SITE_BB.setFromObject(m);
+    m.position.set(o.x + x, y0 + 0.1 - SITE_BB.min.y, o.z + z);
+    m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; } });
+    g.add(m); freezeTree(m); done.add(k); (g.userData.copies = g.userData.copies || []).push(m);
+  }
+  if (g.userData.copies) siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o);
+  if (!left) g.userData.placeDone = true;
 }
 function clearBattle() {
   for (const m of [...unitMeshes.values(), ...wpnMeshes.values(), ...samMeshes.values(), ...planeMeshes.values()]) scene.remove(m);
@@ -460,12 +492,24 @@ const TP = new THREE.Vector3();
 // объекты-цели: готовые постройки (сотни тысяч треугольников на объект) — только ближе P.lodObj, дальше — их сильно упрощённые
 // копии (city-render.js farIndex: та же форма и текстура), коробки — только пока модели грузятся. Окно ТВ — всё подробно (его узкое поле зрения само отсекает лишнее)
 const objC = new Map();
-function objLod(p, D) {
+// объект-сцена (city.js SITES): подробная модель (150 тыс. треугольников) — ближе SITE_NEAR, грузится, когда камера подлетела на SITE_NEAR · 1,6
+// или окно ТВ смотрит на объект (at — точка взгляда; до того — только дальняя копия _lo); в окне ТВ (D огромное) — подробная, если пришла
+// «Низкий» (слабые телефоны) — только дальняя копия: подробная — 13 МБ и 150 тыс. треугольников
+const SITE_NEAR = 1200, SITE_HI = gfxKey !== 'low' || CINEMA;
+function siteLod(o, g, c, p, D, at) {
+  const G = C.G, f = G.objFar && G.objFar[o.id], b = G.objBox[o.id], d = Math.hypot(c.x - p.x, c.z - p.z) - c.r, Ds = D > 1e8 ? D : Math.min(D, SITE_NEAR);
+  if (SITE_HI && !g.userData.want && (d < SITE_NEAR * 1.6 || (at && Math.hypot(c.x - at.x, c.z - at.z) - c.r < 300))) { g.userData.want = true; wantModel(o.site); }
+  const fr = !!(f && f.userData.site), full = !!g.userData.site && d < Ds;
+  g.visible = full; if (f) f.visible = !full && fr; if (b) b.visible = !full && !fr; // заглушка — пока нет ни подробной, ни дальней
+  if (full && !g.userData.placeDone) sitePlace(o, g);
+}
+function objLod(p, D, at) {
   const G = C.G; if (!G || !G.objGroup) return;
   for (const o of city.objects) {
     const g = G.objGroup[o.id]; if (!g) continue;
     let c = objC.get(o.id);
-    if (!c) { const L = o.models && o.models.length ? o.models : o.parts; let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
+    if (!c) { const L = !o.site && o.models && o.models.length ? o.models : o.parts; let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
+    if (o.site) { siteLod(o, g, c, p, D, at); continue; }
     const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D, b = G.objBox[o.id], f = G.objFar && G.objFar[o.id], fr = !!(f && f.userData.ready);
     g.visible = full; if (f) { f.visible = !full && fr; if (fr && f.userData.ruin !== g.userData.ruin && g.userData.ruin !== undefined) objLook(o.id, g.userData.ruin); } // вдали — упрощённые копии тех же построек
     if (b) b.visible = (!full && !fr) || g.userData.left.size > 0; // коробка — пока не пришли модели (или нет дальних копий)
@@ -478,7 +522,7 @@ const podSaved = [];
 C.podPass = function (cam, at, hPx) {
   const pk = hPx / 2 / Math.tan(cam.fov * D2R / 2); podSaved.length = 0;
   for (const g of unitMeshes.values()) { const R = g.userData.R; if (R === undefined) continue; const v = R * pk > 1.5 * cam.position.distanceTo(g.position); if (v !== g.visible) { podSaved.push(g, g.visible); g.visible = v; } }
-  objLod(cam.position, 1e9);
+  objLod(cam.position, 1e9, at);
   const px0 = UPX.value, c0 = ENV.uCam.value.clone();
   UPX.value = 2 * Math.tan(cam.fov * D2R / 2) / hPx; ENV.uCam.value.copy(cam.position);
   const d = cam.position.distanceTo(at), back = C.G && C.G.nearPod && P.bldNear ? C.G.nearPod(cam, at, clamp(d * Math.tan(cam.fov * D2R / 2) * 1.5, 150, 600)) : null;
@@ -560,9 +604,13 @@ const simFx = {
     const k = (aaaT.get(u.id) || 0) - dt; if (k <= 0) { snd.aaa(dist(u.pos), /gepard|skyguard|skynex/.test(u.key) ? 35 : 23, u.S.gun && u.S.gun.rof); aaaT.set(u.id, 0.16); } else aaaT.set(u.id, k);
   },
   objectHit(o, amount, p) { if (C.hooks.objectHit) C.hooks.objectHit(o, amount, p); },
+  bldDestroyed(o, b) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней
+    siteLook(o); const q = o.parts.find((p) => p.b === b);
+    if (q && C.fx) C.fx.burn(new THREE.Vector3(q.x, city.groundH(q.x, q.z) + 2, q.z), Math.min(60, (q.w || q.r * 2 || 20) * 0.6));
+  },
   objectDestroyed(o, by) {
     objLook(o.id, true);
-    for (const q of o.parts) C.fx.burn(new THREE.Vector3(q.x, city.groundH(q.x, q.z) + 2, q.z), Math.min(60, (q.w || q.r * 2 || 20) * 0.6));
+    if (!o.site) for (const q of o.parts) C.fx.burn(new THREE.Vector3(q.x, city.groundH(q.x, q.z) + 2, q.z), Math.min(60, (q.w || q.r * 2 || 20) * 0.6));
     if (C.hooks.objectDestroyed) C.hooks.objectDestroyed(o, by);
   },
   unitHit(u, a) { if (C.hooks.unitHit) C.hooks.unitHit(u, a); },
@@ -1189,6 +1237,10 @@ setInterval(() => {
   // Safari в симуляторе iPhone падал 3 раза из 4 (с ожиданием — 0 из 3, 2026-10-27)
   if (C.G.bake) C.G.bake.gate = () => C.assetsDone === true && !ktxBusy();
   if (city.kind === 'autumn') for (const n of ['obj_church', 'obj_mill', 'obj_barn']) wantModel(n); // постройки «Туманной топи» — грузятся только здесь (lazy)
+  C.G.onSite = (o) => siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o); // модель объекта-сцены пришла — вид построек по бою
+  for (const n of new Set(city.objects.map((o) => o.site).filter(Boolean))) { // объекты-сцены: дальняя копия — сразу, подробная — когда камера подлетит (siteLod);
+    wantModel(n + '_lo'); if (SITE_HI) for (const k of Object.keys(SITES[n].place || {})) wantModel(k); // копии моделей на объекте — тоже сразу: их приход пересобирает самолёты и комплексы — не посреди захода на цель
+  }
   await ldStep(tr('Деревья, вода, облака и эффекты…'), 0.55);
   for (const n of pendingObj.splice(0)) C.G.attachObjModel(n, () => objModel(n));
   if (C.G.bldNames) { for (const n of C.G.bldNames) if (bldModel(n)) C.G.attachBld(n, bldModel(n)); wantBuildings(C.G.bldNames); } // дома вблизи — только если пресет их рисует

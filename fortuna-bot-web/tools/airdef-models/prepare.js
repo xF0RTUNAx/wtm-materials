@@ -346,6 +346,11 @@ const CONFIG = {
   // ракеты 9М83 — своя модель msl_9m83. Дальняя копия — s300_lo.glb сборщика (без протектора, ступиц, рамы: 61 тыс.), крышки в пакете
   s300: { src: `${DL}/Свои/С-300/s300.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
     axisX: 0, axisZ: 0, ground: 0, hinge: [0, 1.264, 5.694], tpFix: [0, 1.264, 5.694], pack0: 0, tube: [0.8, 1.1], groups: (c) => s300Part(c, true) },
+  // объект «РЛС на вершине» (w_radar зимой, a_radar осенью) — своя сцена сборщика (Свои/РЛС на вершине, 2026-10-28): оси игры (x — восток,
+  // −z — север, y = 0 — площадка), начало — центр объекта; части — узлы b_<постройка> (целая) и b_<постройка>_ruin (разрушенная, на том же
+  // месте), deco_site / deco_props — неразрушаемое (props — только вблизи); пустышки place:* — без мешей (места — city.js SITES)
+  site_radar: { src: `${DL}/Свои/РЛС на вершине/radar_site.glb`, scale: 1, nose: '-z', rulesIn: 'game', own: true, tex: () => 2048, nTex: () => 1024, pickMesh: /./,
+    axisX: 0, axisZ: 0, centerY: 0, groups: (c) => c.path.split('/').pop().replace(/\.\d+$/, '') },
   // ракета 9М83 — своя (сборщик, Свои/9М83): 6,9 м, Ø 0,672, нос −Z; рули M83_fin0…3 → fin0…3 (в контейнере сложены, раскрываются после выхода — main.js)
   msl_9m83: { src: `${DL}/Свои/9М83/msl_9m83.glb`, scale: 1, nose: '-z', own: true, tex: () => 1024, nTex: () => 512, pickMesh: /./,
     groups: (c) => { const f = c.path.match(/(^|\/)M83_fin(\d)/); return f ? 'fin' + f[2] : 'body'; } },
@@ -756,6 +761,8 @@ CONFIG.nasams_lo = { ...CONFIG.nasams, target: 12000, simpErr: 0.05, tex: () => 
 CONFIG.tor_lo = { ...CONFIG.tor, target: 12000, simpErr: 0.05, tex: () => 512, nTex: null, perTriComp: false, groups: (c) => torPart(c, false) };
 // С-300 / С-400 (своя): дальняя копия — облегчённая сборщиком (61 тыс.), цвет 512, без нормалей; домкраты и цилиндр — свои части (двигаются и вдали)
 CONFIG.s300_lo = { ...CONFIG.s300, src: `${DL}/Свои/С-300/s300_lo.glb`, tex: () => 512, nTex: null, groups: (c) => s300Part(c, false) };
+// «РЛС на вершине»: дальняя копия сборщика (25 тыс., без мелочи deco_props), цвет 512, без нормалей; узлы — те же
+CONFIG.site_radar_lo = { ...CONFIG.site_radar, src: `${DL}/Свои/РЛС на вершине/radar_site_lo.glb`, tex: () => 512, nTex: null };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше

@@ -10,6 +10,7 @@ import * as MW from './sim/online-multi.js?v=20261028a';
 import { AG, SAM } from './arsenal.js?v=20261028a';
 import { dmgUnpack } from './sim/damage.js?v=20261028a';
 import { LNCH } from './launchers.js?v=20261028a';
+import { bldFromMask, bldKillMains } from './city.js?v=20261028a';
 import { cmOf, cmKey } from './sim/cm.js?v=20261028a';
 import { activeAcc, siteNoProgress } from './account.js?v=20261028a';
 
@@ -246,7 +247,7 @@ export function createNet(C) {
     N.battle.wave = m.wave;
     for (const u of [...S.units]) S.removeUnit(u);
     for (const [id, k, x, z, roof, owner, yaw, dead, tg] of m.units) { if (!SAM[k]) continue; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.dead = !!dead; if (tg) S.setTgt(u, tg); /* фильтр целей своей команды (tg — список видов) */ if (N.battle.kind === 'multi') u.spotted = true; } // мульти-волна: атакующему сервер шлёт только засечённые
-    for (const [id, hp, dead] of m.objects) { const o = S.objects.find((q) => q.id === id); if (o) { o.hp = hp; if (dead && !o.dead) { o.dead = true; C.objLook(id, true); } } }
+    for (const [id, hp, dead, bm] of m.objects) { const o = S.objects.find((q) => q.id === id); if (o) { o.hp = hp; if (bm && o.bld) bldFromMask(o, bm, C.simFx); if (dead && !o.dead) { o.dead = true; bldKillMains(o, C.simFx); C.objLook(id, true); } } } // bm — разбитые постройки объекта-сцены (city.js SITES)
     C.syncUnits();
   }
   function onSpawn(m) {
@@ -333,7 +334,8 @@ export function createNet(C) {
       case 'we': { const w = wpns.get(e[1]); if (!w) return; w.dead = true; w.pos.copy(P(2)); wpns.delete(w.id); const i = S.wpns.indexOf(w); if (i >= 0) S.wpns.splice(i, 1); C.simFx.wpnEnd(w, { objects: [], units: [], intercepted: !!e[5] }); return; }
       case 'x': C.simFx.explosion(P(1), e[4], e[5]); return;
       case 'cm': { if (N.me && e[1] === N.me.id) return; const a = ac.get(e[1]); if (a && C.simFx.cmDrop) C.simFx.cmDrop(a, e[2] === 1 ? 'flare' : 'chaff'); return; }
-      case 'od': { const o = S.objects.find((q) => q.id === e[1]); if (o && !o.dead) { o.dead = true; o.hp = 0; if (C.simFx.objectDestroyed) C.simFx.objectDestroyed(o); else C.objLook(o.id, true); } return; }
+      case 'bd': { const o = S.objects.find((q) => q.id === e[1]); if (o && o.bld) bldFromMask(o, e[2], C.simFx); return; } // постройка объекта-сцены разбита
+      case 'od': { const o = S.objects.find((q) => q.id === e[1]); if (o && !o.dead) { o.dead = true; o.hp = 0; bldKillMains(o, C.simFx); if (C.simFx.objectDestroyed) C.simFx.objectDestroyed(o); else C.objLook(o.id, true); } return; }
       case 'ud': { const u = S.units.find((q) => q.id === e[1]); if (u && !u.dead) { u.dead = true; if (C.simFx.unitDestroyed) C.simFx.unitDestroyed(u); } return; }
       case 'dn': {
         if (N.me && e[1] === N.me.id) { N.myCraft = false; emit('meDown'); return; }

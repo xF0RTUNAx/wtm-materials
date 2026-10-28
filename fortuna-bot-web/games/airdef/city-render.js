@@ -1472,22 +1472,23 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     if (ATC(o, p)) continue;
     if (p.model) { const gy = GH(p.x, p.z) - 1; boxes.push(part(new THREE.BoxGeometry(p.w, p.h + 1, p.d), OCOL[o.key] || 0xbbbbbb, M(p.x, gy + (p.h + 1) / 2, p.z))); continue; }
     const y0 = (p.y0 !== undefined ? p.y0 : GH(p.x, p.z) - 1), color = OCOL[o.key] || 0xbbbbbb, hh = p.h + (p.y0 !== undefined ? 0 : 1);
-    if (p.t === 'box') parts.push(part(new THREE.BoxGeometry(p.w, hh, p.d), color, M(p.x, y0 + hh / 2, p.z)));
+    const L = o.site ? boxes : parts; // объект-сцена (city.js SITES): объёмы построек — только заглушка, пока не пришла модель
+    if (p.t === 'box') L.push(part(new THREE.BoxGeometry(p.w, hh, p.d), color, M(p.x, y0 + hh / 2, p.z)));
     else if (p.t === 'cyl') {
       const bands = p.h > 150 && p.r < 10 ? 8 : 1; // заводские трубы — красно-белые
       for (let b = 0; b < bands; b++) {
         const hb = p.h / bands, rb = p.r * (1 - 0.35 * (b / bands));
-        parts.push(part(new THREE.CylinderGeometry(rb * 0.97, rb, hb + 0.5, 16), bands > 1 ? (b % 2 ? 0xe9e9e4 : 0xc0392b) : color, M(p.x, y0 + hb * (b + 0.5), p.z)));
+        L.push(part(new THREE.CylinderGeometry(rb * 0.97, rb, hb + 0.5, 16), bands > 1 ? (b % 2 ? 0xe9e9e4 : 0xc0392b) : color, M(p.x, y0 + hb * (b + 0.5), p.z)));
       }
     } else if (p.t === 'cone') { // градирня — гиперболоид
       const pts = []; for (let s = 0; s <= 10; s++) { const t = s / 10, r = p.r * (0.62 + 0.38 * Math.pow(Math.abs(t - 0.72) / 0.72, 2)); pts.push(new THREE.Vector2(r, t * p.h)); }
-      parts.push(part(new THREE.LatheGeometry(pts, 32), 0xcbc8c0, M(p.x, y0, p.z)));
+      L.push(part(new THREE.LatheGeometry(pts, 32), 0xcbc8c0, M(p.x, y0, p.z)));
     }
   }
   if (parts.length) { const objMesh = new THREE.Mesh(mergeParts(parts), objMat); objMesh.castShadow = objMesh.receiveShadow = !!P.shadows; scene.add(objMesh); G.objMesh[o.id] = objMesh; }
   if (boxes.length) { const b = new THREE.Mesh(mergeParts(boxes), objMat); b.castShadow = b.receiveShadow = !!P.shadows; scene.add(b); G.objBox[o.id] = b; }
-  if (o.models) { const g = new THREE.Group(); g.userData.left = new Set(o.models.map((q) => q.m)); scene.add(g); G.objGroup[o.id] = g;
-    const f = new THREE.Group(); f.visible = false; f.userData.left = new Set(g.userData.left); scene.add(f); G.objFar[o.id] = f; } // вдали — упрощённые копии тех же построек
+  if (o.models || o.site) { const g = new THREE.Group(), M0 = (o.models || []).map((q) => q.m); g.userData.left = new Set([...M0, ...(o.site ? [o.site] : [])]); scene.add(g); G.objGroup[o.id] = g;
+    const f = new THREE.Group(); f.visible = false; f.userData.left = new Set([...M0, ...(o.site ? [o.site + '_lo'] : [])]); scene.add(f); G.objFar[o.id] = f; } // вдали — упрощённые копии тех же построек (у сцены — своя дальняя, _lo)
   }
   // модель постройки загрузилась: копии во все места, где она стоит; все модели объекта на месте — заглушка прячется
   // постройки с частями своего цвета (prepare.js: группа «#имя»): на каждой карте — свои цвета (линейные); pad — подложка у земли:
@@ -1503,8 +1504,25 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
       if (part === 'pad') { m.polygonOffset = true; m.polygonOffsetFactor = -2; m.polygonOffsetUnits = -6; }
     });
   };
+  // объект-сцена (city.js SITES, prepare.js site_*): подробная — в objGroup, дальняя (_lo) — в objFar, в центре объекта; части
+  // b_<постройка> и b_<постройка>_ruin — целая и разрушенная (видна одна: main.js siteLook), deco_* — всегда; G.onSite — расставить
+  // вид построек по бою и копии моделей игры (SITES place)
+  const attachSite = (name, make) => {
+    const lo = name.endsWith('_lo'), key = lo ? name.slice(0, -3) : name;
+    for (const o of city.objects) {
+      const g = (lo ? G.objFar : G.objGroup)[o.id]; if (o.site !== key || !g || !g.userData.left.has(name)) continue;
+      const m = make(); m.position.set(o.x, GH(o.x, o.z), o.z);
+      m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows && !lo; c.receiveShadow = !!P.shadows; if (G.winter) snowify(c.material); } });
+      for (const c of m.children) if (/_ruin$/.test(c.name)) c.visible = false;
+      g.add(m); freezeTree(m); g.userData.site = m;
+      g.userData.left.delete(name);
+      if (lo) g.userData.ready = !g.userData.left.size;
+      if (G.onSite) G.onSite(o);
+    }
+  };
   G.attachObjModel = (name, make) => {
     if (name === 'br_seg') { attachBridgeSegs(G, scene, make(), P); return; }
+    if (/^site_/.test(name)) { attachSite(name, make); return; }
     if (name === 'af_appr' || name === 'af_fuel') { attachAirfield(G, scene, name, make(), city, P); return; }
     for (const o of city.objects) {
       const g = G.objGroup[o.id]; if (!g || !g.userData.left.has(name)) continue;
@@ -1528,7 +1546,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
         const f = G.objFar[o.id]; if (!f || !f.userData.left.has(name)) continue;
         for (const q of o.models) if (q.m === name) { const m = t.clone(); m.position.set(q.x, GH(q.x, q.z), q.z); m.rotation.y = q.rot * Math.PI / 2; m.scale.setScalar(q.s); f.add(m); freezeTree(m); }
         f.userData.left.delete(name); f.userData.ready = !f.userData.left.size;
-        if (f.userData.ready && !f.userData.ruin) { bakeGroup(f); freezeTree(f); } // все дальние копии на месте — одной сеткой на материал (было: 9 построек порта × детали — десятки вызовов отрисовки); ближние — не запекаем: видны редко, а копия — лишняя память
+        if (f.userData.ready && !f.userData.ruin && !o.site) { bakeGroup(f); freezeTree(f); } // все дальние копии на месте — одной сеткой на материал (было: 9 построек порта × детали — десятки вызовов отрисовки); ближние — не запекаем: видны редко, а копия — лишняя память
       }
     }).catch(() => { /* без дальней копии — коробка */ });
   };

@@ -224,6 +224,7 @@ const META = {
   pr_bstop: { bld: true, stations: [] }, pr_rstop: { bld: true, stations: [] }, sg_main: { bld: true, stations: [] }, sg_yield: { bld: true, stations: [] }, // остановки и знаки
   v_barn: { bld: true, stations: [] }, v_wtower: { bld: true, stations: [] }, v_combine: { bld: true, stations: [] }, v_tractor: { bld: true, stations: [] }, v_picket: { bld: true, stations: [] }, m_5g: { bld: true, stations: [] }, // село
   // Хеллоуин, осенняя карта «Туманная топь» (2026-10-20): постройки-цели — lazy (грузятся по wantModel, когда на карте есть); реквизит — bld (грузится по wantBuildings(G.bldNames), ставится G.addNear)
+  site_radar: { matte: true, obj: true, lazy: true, stations: [] }, site_radar_lo: { matte: true, obj: true, lazy: true, stations: [] }, // объект-сцена «РЛС на вершине» (своя, city.js SITES): дальняя — сразу, подробная — когда камера подлетит (main.js siteLod)
   obj_church: { matte: true, obj: true, lazy: true, stations: [] }, obj_mill: { matte: true, obj: true, lazy: true, stations: [] }, obj_barn: { matte: true, obj: true, lazy: true, stations: [] }, // церковь — reramil, мельница (крылья — часть sail, spinSails) — Tim0, сарай — narighillya
   pr_hay: { matte: true, bld: true, stations: [] }, pr_well: { matte: true, bld: true, stations: [] }, pr_pumpkin: { bld: true, stations: [] }, pr_grave1: { matte: true, bld: true, stations: [] }, pr_grave2: { matte: true, bld: true, stations: [] }, pr_grave3: { matte: true, bld: true, stations: [] }, pr_grave4: { matte: true, bld: true, stations: [] },
   pr_fence: { bld: true, stations: [] }, pr_fpost: { bld: true, stations: [] }, pr_deadtree: { matte: true, bld: true, stations: [] }, pr_oldtree: { matte: true, bld: true, stations: [] }, c_vaz: { bld: true, stations: [] }, // сено, колодец, тыква, надгробия, ограда, сухое и старое дерево, ржавый ВАЗ
@@ -333,6 +334,8 @@ const GLB_V_OWN = {
   w_lance: '20261025r',
   s300: '20261028b', // С-300 / С-400 — своя пусковая 5П85 (сборщик, Свои/С-300) вместо скана Chenzoss, 2026-10-28
   s300_lo: '20261028b',
+  site_radar: '20261028c', // объект «РЛС на вершине» (своя сцена, 2026-10-28)
+  site_radar_lo: '20261028c',
   msl_9m83: '20261028b',
   l_lance: '20261025s', // M752 — своя пусковая Lance (сборщик, Свои/M752 ревизия 2): трап и стрела поднимаются перед пуском (sim/combined.js POD.l_lance)
 };

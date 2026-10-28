@@ -5,7 +5,7 @@
 // Два раунда со сменой сторон, победа — по сумме разрушенной ценности. Туман войны — на сервере: атакующим уходят только
 // засечённые комплексы ПВО, обороне — только оружие, которое увидела её сеть РЛС (или глаза рядом); план — никому, кроме автора.
 /* global THREE */
-import { CITY } from '../games/airdef/city.js?v=20260930m';
+import { CITY, bldMask } from '../games/airdef/city.js?v=20260930m';
 import { createStrike, MODES } from '../games/airdef/sim/strike.js?v=20260930m';
 import { createRaid } from '../games/airdef/sim/raid.js?v=20260930m';
 import { createCombined, samKnown, levelIn } from '../games/airdef/sim/combined.js?v=20261018j';
@@ -167,6 +167,7 @@ export function createMulti(ctx) {
       wpnRelease: (w) => { pushTo(r, 'atk', wrEv(w)); },
       wpnEnd: (w, res) => { const e = ['we', w.id, ...v3(w.pos), res.intercepted ? 1 : 0]; pushTo(r, w.defSeen ? 'all' : 'atk', e); },
       explosion: (p, R, kind) => pushTo(r, 'all', ['x', ...v3(p), r1(R), kind]),
+      bldDestroyed: (o) => pushTo(r, 'all', ['bd', o.id, bldMask(o)]), // постройка объекта-сцены разбита (city.js SITES)
       objectDestroyed: (o, by, owner) => { pushTo(r, 'all', ['od', o.id]); const p = owner && r.players.get(owner.owner || owner.id); pushTo(r, 'all', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(o.name).slice(0, 40), String(by || '').slice(0, 24), r.atk, r.atk === 'east' ? 'west' : 'east', '', '']); },
       unitDestroyed: (u, by, owner) => { pushTo(r, u.atkSeen ? 'all' : 'def', ['ud', u.id]); const p = owner && r.players.get(owner.owner || owner.id); if (p) { p.kills++; p.samk++; p.score += 40; }
         const v = r.players.get(u.owner); pushTo(r, u.atkSeen ? 'all' : 'def', ['kl', String(p ? p.name : M.TEAM_NAME[r.atk]).slice(0, 24), String(v ? v.name : 'ПВО').slice(0, 40), String(by || '').slice(0, 24), r.atk, opp(r.atk), '', 'u:' + u.key]); },
@@ -246,7 +247,7 @@ export function createMulti(ctx) {
   // полное состояние: ПВО — свои комплексы; атаке — засечённые; объекты — у всех
   function sendState(r, only) {
     if (!r.S) return;
-    const objects = r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0]);
+    const objects = r.S.objects.filter((o) => o.dmgTaken > 0 || o.dead).map((o) => [o.id, Math.round(o.hp), o.dead ? 1 : 0, ...(o.bld ? [bldMask(o)] : [])]);
     const unitsOf = (atk) => r.S.units.filter((u) => !atk || u.atkSeen).map((u) => [u.id, u.key, r1(u.pos.x), r1(u.pos.z), u.roof ? 1 : 0, u.owner || 0, Math.round(u.yaw * 1000) / 1000, u.dead ? 1 : 0, !atk && u.tgt ? [...u.tgt] : 0]); // последнее — фильтр целей (только своей команде ПВО)
     const msg = (atk) => ({ t: 'state', kind: 'multi', round: r.round, atk: r.atk, era: r.era, mode: r.mode, units: unitsOf(atk), objects, scores: r.scores });
     if (only) send(only, msg(only.team === r.atk));

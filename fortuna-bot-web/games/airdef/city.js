@@ -101,6 +101,30 @@ export const OBJ_DIMS = { obj_tanks: [28.42, 14.38, 33.45], obj_tank4: [30.27, 9
 // постройка: модель m в точке (x, z), поворот на 90°·rot, масштаб s; mbox — её коробка для урона и сетки высот
 export const mp = (m, x, z, rot = 0, s = 1) => ({ m, x, z, rot, s });
 export const mbox = (q) => { const [w, h, d] = OBJ_DIMS[q.m], sw = (q.rot % 2 ? d : w) * q.s, sd = (q.rot % 2 ? w : d) * q.s; return { t: 'box', x: q.x, z: q.z, w: sw, d: sd, h: h * q.s, model: true }; };
+// объекты целиком из Blender (Mark 2026-10-28: сцена сборщика → Sketchfab → игра; модель — prepare.js site_*, ПАСПОРТ.json сборщика):
+// b — постройки: объём попадания (оси игры от центра объекта), share — доля прочности объекта (сумма 1), main — главная;
+// у каждой в модели — целая b_<имя> и разрушенная b_<имя>_ruin. Попадание бьёт ту постройку, в которую пришлось (её прочность —
+// share · hp объекта); разбита — разрушенный вид и пожар. Объект уничтожен, как прежде, когда кончилась общая прочность, или когда
+// разбиты все главные; при гибели объекта главные — разрушенные. place — места моделей игры на объекте (копии): [x, z, курс°]
+export const SITES = {
+  site_radar: { // «РЛС на вершине» (w_radar) и «Лысая гора» (a_radar) — Свои/РЛС на вершине
+    b: { dome1: { t: 'cyl', x: 0, z: 0, r: 9, h: 18, share: 0.28, main: 1 }, dome2: { t: 'cyl', x: 40, z: 10, r: 6, h: 14, share: 0.18, main: 1 },
+      house: { t: 'box', x: -35, z: -20, w: 24, d: 12, h: 5, share: 0.18, main: 1 }, mast: { t: 'cyl', x: -10, z: 35, r: 1.2, h: 40, share: 0.1 },
+      gen: { t: 'box', x: -55, z: -4, w: 5, d: 8, h: 3.6, share: 0.07 }, fuel: { t: 'box', x: -55, z: 6, w: 2.6, d: 5.2, h: 3, share: 0.05 },
+      garage: { t: 'box', x: -2, z: -50, w: 16, d: 9, h: 6.3, share: 0.08 }, ktp: { t: 'box', x: -44, z: 16, w: 3, d: 8.5, h: 3.2, share: 0.06 } },
+    place: { ew_e: [55, 26, 200], h_mi8: [28, -36, 60] } }, // П-18 у малого купола, Ми-8 на площадке «H» (грузовики и УАЗ — когда будут модели)
+};
+// части объекта-сцены в точке (x, z): объёмы построек (b — имя постройки)
+export const siteParts = (key, x, z) => Object.entries(SITES[key].b).map(([b, q]) => (q.t === 'cyl' ? { t: 'cyl', x: x + q.x, z: z + q.z, r: q.r, h: q.h, b } : { t: 'box', x: x + q.x, z: z + q.z, w: q.w, d: q.d, h: q.h, b }));
+// состояние построек в бою (своё у каждого боя: sim/strike.js); hpMax — прочность объекта
+export const siteBld = (o, hpMax) => Object.fromEntries(Object.entries(SITES[o.site].b).map(([b, q]) => [b, { hp: hpMax * q.share, main: !!q.main, dead: false }]));
+// разбитые постройки битами (порядок — как в SITES; онлайн: снимок объектов) и обратно
+export const bldMask = (o) => Object.keys(o.bld).reduce((m, b, i) => (o.bld[b].dead ? m | (1 << i) : m), 0);
+export function bldFromMask(o, m, fx) { Object.keys(o.bld).forEach((b, i) => { if (m & (1 << i)) bldDie(o, b, fx); }); }
+// постройка разбита: вид — разрушенный (fx.bldDestroyed); bldMainsDead — разбиты все главные (объект уничтожен — решает вызывающий)
+export function bldDie(o, b, fx) { const B = o.bld && o.bld[b]; if (!B || B.dead) return; B.dead = true; B.hp = 0; if (fx && fx.bldDestroyed) fx.bldDestroyed(o, b); }
+export const bldMainsDead = (o) => { const L = Object.values(o.bld); return L.some((B) => B.main) && L.every((B) => !B.main || B.dead); }; // без главных — только по общей прочности
+export function bldKillMains(o, fx) { if (o.bld) for (const b in o.bld) if (o.bld[b].main) bldDie(o, b, fx); }
 
 // ═════════════ Куда целиться и область поражения объекта ═════════════
 // Mark 2026-10-22: прицел (контейнер, НАР, крылатые по координатам), ИИ налётов и «Мульти-волна» били в центр объекта, а у порта, ГЭС,
@@ -115,9 +139,9 @@ const partArea = (q) => (q.t === 'box' ? q.w * q.d : Math.PI * q.r * q.r);
 export const partDist = (q, x, z) => (q.t === 'box' ? Math.hypot(Math.max(0, Math.abs(x - q.x) - q.w / 2), Math.max(0, Math.abs(z - q.z) - q.d / 2)) : Math.max(0, Math.hypot(x - q.x, z - q.z) - q.r));
 function objTargets(o, gH) {
   const A = [], up = (q) => q.y0 !== undefined && q.y0 > gH(q.x, q.z) + 3;
-  for (const q of o.parts) if (partArea(q) >= 60 && !up(q)) A.push({ x: q.x, z: q.z, w: q.t === 'box' ? q.w : q.r * 1.4, d: q.t === 'box' ? q.d : q.r * 1.4, h: q.h, wt: Math.sqrt(partArea(q)) });
-  let m = o.parts.some((q) => partDist(q, o.x, o.z) <= 3) ? { x: o.x, z: o.z } : null, bs = -1;
-  if (!m) for (const q of A) { const s = q.wt * (1 + Math.min(30, q.h) / 10) / (60 + Math.hypot(q.x - o.x, q.z - o.z)); if (s > bs) { bs = s; m = { x: q.x, z: q.z }; } }
+  for (const q of o.parts) if (partArea(q) >= 60 && !up(q)) A.push({ x: q.x, z: q.z, w: q.t === 'box' ? q.w : q.r * 1.4, d: q.t === 'box' ? q.d : q.r * 1.4, h: q.h, wt: Math.sqrt(partArea(q)), b: q.b });
+  const c0 = o.parts.find((q) => partDist(q, o.x, o.z) <= 3); let m = c0 ? { x: o.x, z: o.z, b: c0.b } : null, bs = -1;
+  if (!m) for (const q of A) { const s = q.wt * (1 + Math.min(30, q.h) / 10) / (60 + Math.hypot(q.x - o.x, q.z - o.z)); if (s > bs) { bs = s; m = { x: q.x, z: q.z, b: q.b }; } }
   o.aims = A; o.aimW = A.reduce((s, q) => s + q.wt, 0); o.aim = m || { x: o.x, z: o.z };
   const G = o.parts.filter((q) => !up(q)); o.gparts = G;
   let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; // рамка ореолов — для отрисовки и проверок; урон — по расстоянию до построек (pad)
@@ -128,9 +152,12 @@ function objTargets(o, gH) {
 // крупные чаще), u, v ∈ −0,5…0,5 — сдвиг по крыше в долях её размера. Объект без построек (или просто точка {x, z}) — сама точка
 export function objAimXZ(o, n = -1, u = 0, v = 0, out = { x: 0, z: 0 }) {
   if (!o.aims || !o.aims.length) { out.x = o.x; out.z = o.z; return out; }
-  if (n < 0) { out.x = o.aim.x; out.z = o.aim.z; return out; }
-  let s = ((0.5 + n * 0.6180339887) % 1) * o.aimW, q = o.aims[0];
-  for (const a of o.aims) { q = a; if ((s -= a.wt) <= 0) break; }
+  const live = (a) => !a.b || !o.bld || !o.bld[a.b].dead; // объект-сцена (SITES): разбитая постройка — больше не цель
+  if (n < 0 && live(o.aim)) { out.x = o.aim.x; out.z = o.aim.z; return out; }
+  let W = 0; for (const a of o.aims) if (live(a)) W += a.wt;
+  if (!W) { out.x = o.aim.x; out.z = o.aim.z; return out; }
+  let s = ((0.5 + Math.max(0, n) * 0.6180339887) % 1) * W, q = null;
+  for (const a of o.aims) { if (!live(a)) continue; q = a; if ((s -= a.wt) <= 0) break; }
   out.x = q.x + u * 0.6 * q.w; out.z = q.z + v * 0.6 * q.d; return out;
 }
 // по горизонтали от точки до ближайшей постройки объекта на земле (0 — над ней; стрелы кранов над рекой не в счёт)

@@ -7,7 +7,7 @@
 // Детерминированный генератор с интерфейсом buildCity / buildWinter (симуляция и сервер): сетка высот 50 м, groundH —
 // билинейно; вода — одна отметка (уровень болота AUTUMN.WY), waterAt — где она. Оси как в city.js: −Z — север.
 import { tr } from './i18n.js?v=20261028a';
-import { CITY, ZONE, KIND, mulberry32, clamp, smooth, mp, mbox, mapRuntime } from './city.js?v=20261028a';
+import { CITY, ZONE, KIND, mulberry32, clamp, smooth, mp, mbox, siteParts, mapRuntime } from './city.js?v=20261028a';
 import { perlin, fbm, ridged, heap } from './map-winter.js?v=20261028a';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1;
@@ -307,8 +307,8 @@ export function buildAutumn(seed = 1) {
     for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(70, 300, d)); }
     BA.top = { x: bx, z: bz, y };
     const MM = [mp('obj_mill', bx - 70, bz + 45)]; // старая мельница на вершине (Tim0) — рядом с антеннами
-    add({ key: 'a_radar', name: tr('РЛС «Лысая гора»'), x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM,
-      parts: [...MM.map(mbox), { t: 'cyl', x: bx, z: bz, r: 9, h: 18 }, { t: 'cyl', x: bx + 40, z: bz + 10, r: 7, h: 14 }, { t: 'box', x: bx - 35, z: bz - 20, w: 24, d: 12, h: 6 }, { t: 'cyl', x: bx - 10, z: bz + 35, r: 1.2, h: 40 }] }); }
+    add({ key: 'a_radar', name: tr('РЛС «Лысая гора»'), x: bx, z: bz, w: 160, d: 120, value: 150, hp: 160, peak: true, models: MM, site: 'site_radar', // своя сцена «РЛС на вершине» (city.js SITES), место мельницы в ней свободно
+      parts: [...MM.map(mbox), ...siteParts('site_radar', bx, bz)] }); }
   const objects = O;
   const keep = [...objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 })),
     ...[PK.home].map((p) => ({ x0: p.x - p.hx, x1: p.x + p.hx, z0: p.z - p.hz, z1: p.z + p.hz }))];

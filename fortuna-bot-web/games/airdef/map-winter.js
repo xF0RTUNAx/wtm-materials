@@ -4,7 +4,7 @@
 // Долина с севера на юг: водохранилище за плотиной ГЭС на севере, замёрзшая река, авиабаза посередине, посёлок и
 // военный городок, ж/д узел, арсенал в восточном ущелье, РЛС на вершине хребта, озеро на юге. Оси как в city.js: −Z — север.
 import { tr } from './i18n.js?v=20261028a';
-import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, mp, mbox, mapRuntime } from './city.js?v=20261028a';
+import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, mp, mbox, siteParts, mapRuntime } from './city.js?v=20261028a';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1; // узлов по стороне
 export const WINTER = {
@@ -215,8 +215,7 @@ export function buildWinter(seed = 1) {
       const [ci, cj] = node(bx, bz), y = bh - 8; bh = y;
       for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(80, 300, d)); }
     }
-    add({ key: 'w_radar', name: tr('РЛС на вершине'), x: bx, z: bz, w: 120, d: 100, value: 150, hp: 160, peak: true,
-      parts: [{ t: 'cyl', x: bx, z: bz, r: 9, h: 18 }, { t: 'cyl', x: bx + 40, z: bz + 10, r: 7, h: 14 }, { t: 'box', x: bx - 35, z: bz - 20, w: 24, d: 12, h: 6 }, { t: 'cyl', x: bx - 10, z: bz + 35, r: 1.2, h: 40 }] }); }
+    add({ key: 'w_radar', name: tr('РЛС на вершине'), x: bx, z: bz, w: 120, d: 100, value: 150, hp: 160, peak: true, site: 'site_radar', parts: siteParts('site_radar', bx, bz) }); } // своя сцена (city.js SITES): купола, домик, мачта, генераторная…
   { // ГЭС: стена плотины поперёк долины и машинный зал ниже
     const z = WINTER.DAM_Z, vx = valleyX(z); let l = 0, r = 0;
     while (l < 6000 && groundH(vx - l, z + 40) < lakeNY + 4) l += 25; while (r < 6000 && groundH(vx + r, z + 40) < lakeNY + 4) r += 25; // стена — от склона до склона

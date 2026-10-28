@@ -544,7 +544,7 @@ export function createPhoto(C, ctrls) {
       // там рой кружит, держит захват и не даёт пустить; в 1,4–2 км от объекта цели идут через зону до самого объекта
       if (st.vsMulti && sc.near) { sc.r0 = clamp(Sx.rmin * 2 + 400, sc.r0, Sx.rmax * 0.35); sc.r1 = clamp(sc.r0 + 700, sc.r1, Sx.rmax * 0.6); }
       const xz = heroSpot(t0, sc);
-      for (const o of st.targets) { o.hp *= 6; o.hpMax *= 6; } // объекты у комплекса держатся дольше: налёт не обнуляет их за минуту, и комплексу есть что прикрывать
+      for (const o of st.targets) { o.hp *= 6; o.hpMax *= 6; if (o.bld) for (const B of Object.values(o.bld)) B.hp *= 6; } // объекты у комплекса держатся дольше: налёт не обнуляет их за минуту, и комплексу есть что прикрывать
       st.hero = S.addUnit(key, xz[0], xz[1], { roof: xz[2], skill: 0.95, yaw: rnd() * 6.28 });
       C.syncUnits();
       st.lastAct = st.simT; st.fireId = -1; st.waveT = st.simT; st.feedT = st.simT; st.feedI = 0;

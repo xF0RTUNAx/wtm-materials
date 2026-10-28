@@ -219,10 +219,11 @@ export function createAir(C) {
   // постройками и деревьями (2026-10-21: с 2,5–4,5 км на 40–110 м склад ГСМ и «Фонарь Джека» не захватывались ни с одного направления)
   // (2026-10-22: по постройкам объекта — city.js aims; сетка 5 × 5 по рамке объекта попадала и в пустую землю между ними)
   function hiPoint(t, out) {
-    if (!t._hp) {
-      let best = null;
-      if (t.aims && t.aims.length) for (const q of t.aims) { const y = city.topAt(q.x, q.z); if (!best || y > best[1]) best = [q.x, y, q.z]; }
-      else { const w = (t.w || 120) * 0.45, d = (t.d || 120) * 0.45; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { const x = t.x + (i / 2) * w, z = t.z + (j / 2) * d, y = city.topAt(x, z); if (!best || y > best[1]) best = [x, y, z]; } }
+    const k = t.bld ? Object.values(t.bld).filter((B) => B.dead).length : 0; // объект-сцена (city.js SITES): постройку разбили — точка заново, мимо руин
+    if (!t._hp || t._hpK !== k) {
+      let best = null; t._hpK = k;
+      if (t.aims && t.aims.length) for (const q of t.aims) { if (q.b && t.bld && t.bld[q.b].dead) continue; const y = city.topAt(q.x, q.z); if (!best || y > best[1]) best = [q.x, y, q.z]; }
+      if (!best) { const w = (t.w || 120) * 0.45, d = (t.d || 120) * 0.45; for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) { const x = t.x + (i / 2) * w, z = t.z + (j / 2) * d, y = city.topAt(x, z); if (!best || y > best[1]) best = [x, y, z]; } }
       t._hp = best;
     }
     return out.set(t._hp[0], t._hp[1], t._hp[2]);
