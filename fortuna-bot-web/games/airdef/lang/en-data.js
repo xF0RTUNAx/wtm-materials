@@ -388,4 +388,10 @@ export default {
   // ветки «Ударов» в «Исследованиях» (arsenal.js MULTI_LINES; «Баллистика» и «Крылатые ракеты» уже в en-training.js)
   "Планирующие": "Glide weapons",
   "Дроны и ложные цели": "Drones and decoys",
+  // IRIS-T SLM и Skynex — сейчас без модели (arsenal.js NO_MODEL, из игры убраны); перевод — на случай возвращения
+  "РЛС TRML-4D даёт целеуказание, ракета стартует вертикально и захватывает цель тепловизионной ГСН уже в полёте. Ловушки почти бесполезны.": "The TRML-4D radar provides target designation; the missile launches vertically and its imaging infrared seeker locks on in flight. Flares are almost useless.",
+  "Германия": "Germany",
+  "инерциальное + тепловизионное": "inertial + imaging infrared",
+  "Skynex (35 мм, снаряды AHEAD)": "Skynex (35 mm, AHEAD rounds)",
+  "Револьверная 35-мм пушка: снаряды AHEAD подрываются перед целью облаком поражающих элементов — хороши против дронов, ракет и бомб.": "A 35 mm revolver cannon: AHEAD rounds burst in front of the target in a cloud of sub-projectiles, effective against drones, missiles and bombs.",
 };
