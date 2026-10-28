@@ -220,7 +220,7 @@ export default {
   '{0} — подскок сам: вверх, пуск и вниз.': '{0}: automatic pop-up: climb, fire, drop.',
   '{0} — на сколько подняться до цели.': '{0}: how high to climb to see the target.',
   'С высоты 100–200 м ракеты падают круче и ложатся кучнее.': 'From 100–200 m up the rockets come down steeper and group tighter.',
-  'ПТУР: контейнер сам захватывает цель впереди ({0} — следующая). Пуск — {1}, затем держите цель в рамке до попадания. Приём: из-за укрытия подскок, пуск и снова вниз — у земли ПВО берёт вас не сразу (≈ 3 с).': 'ATGM: the pod locks the target ahead by itself ({0} for the next one). Fire with {1}, then keep the target in the box until impact. Tactic: pop up from cover, fire and drop back down. Near the ground air defence needs about 3 s to lock you.',
+  'ПТУР: контейнер сам захватывает цель впереди ({0} — следующая). Пуск — {1}, затем держите цель в рамке до попадания. Приём: из-за укрытия подскок, пуск и снова вниз — у земли ПВО берёт вас не сразу (≈ 3 с).': 'ATGM: the pod locks the target ahead by itself ({0} for the next one). Fire with {1}, then keep the target in the box until impact. Tactic: pop up from cover, fire and drop back down. Near the ground air defense needs about 3 s to lock you.',
   'Посадка на площадке — пополнение': 'Landed on the pad: rearming',
   'Посадка': 'Landing',
   'Вылет завершён — оружие израсходовано': 'Sortie complete: ordnance expended',

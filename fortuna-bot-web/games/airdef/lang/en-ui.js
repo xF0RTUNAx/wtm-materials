@@ -173,7 +173,7 @@ export default {
   "Самолёты": "Aircraft",
   "Подвески: {0}.": "Loadouts: {0}.",
   "{0} (эп. {1})": "{0} (era {1})",
-  "Зенитные комплексы · эпоха {0}": "Anti-aircraft systems · era {0}",
+  "Зенитные комплексы · эпоха {0}": "Air defense systems · era {0}",
   "АРТ": "GUN",
   "ИК": "IR",
   "ПАРЛ": "SARH",
@@ -827,9 +827,9 @@ export default {
   // 2026-10-25: что сбивает комплекс (icons.js samCaps), панель задания меню
   "Сбивает баллистические ракеты: перехват {0} %": "Shoots down ballistic missiles: {0}% per intercept",
   "Убрать панель": "Hide panel",
-  "Сбивает дроны «Мульти-волны»": "Shoots down Multi-wave drones",
+  "Сбивает дроны «Мульти-волны»": "Shoots down Multi-Wave drones",
   "Сбивает бомбы и ракеты с самолётов, в том числе крылатые": "Shoots down bombs and missiles released by aircraft, cruise missiles included",
-  "Сбивает крылатые ракеты «Мульти-волны» (ниже {0} м — нет)": "Shoots down Multi-wave cruise missiles (not below {0} m)",
+  "Сбивает крылатые ракеты «Мульти-волны» (ниже {0} м — нет)": "Shoots down Multi-Wave cruise missiles (not below {0} m)",
   "Вертолёт: управление": "Helicopter: controls",
   "Подтвердить": "Confirm",
   // ── аккаунт игры и рейтинг (account.js, account-ui.js, rating-ui.js; Mark 2026-10-25) ──
