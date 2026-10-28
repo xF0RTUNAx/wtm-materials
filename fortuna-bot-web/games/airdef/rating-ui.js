@@ -4,7 +4,7 @@
 // В таблице — только аккаунты игры; аккаунту сайта и гостю вместо своей карточки — вход / перенос прогресса (account-ui.js).
 /* global CONFIG */
 import { ico } from './icons.js?v=20261028a';
-import { tr, LANG } from './i18n.js?v=20261028a';
+import { tr, trIf, LANG } from './i18n.js?v=20261028a';
 import { activeAcc, rating as fetchRating, transferOk } from './account.js?v=20261028a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
@@ -104,7 +104,7 @@ export function createRating(C) {
     const key = keyNow(); S.busy = true; S.key = key;
     let data = null, err = '';
     try { data = await fetchRating(key || null); }
-    catch (e) { err = e.status === 404 || (e.status === 0 && !e.offline && typeof CONFIG !== 'undefined') ? 'soon' : e.message || tr('Нет связи с сайтом'); } // функции рейтинга ещё нет на сервере (404 или ответ без CORS) — «скоро откроется»
+    catch (e) { err = e.status === 404 || (e.status === 0 && !e.offline && typeof CONFIG !== 'undefined') ? 'soon' : trIf(e.message) || tr('Нет связи с сайтом'); } // функции рейтинга ещё нет на сервере (404 или ответ без CORS) — «скоро откроется»
     S.busy = false;
     if (key !== keyNow()) { S.at = 0; S.data = null; S.err = ''; paint(); load(); return; } // пока ждали, сменили аккаунт — данные чужие
     S.data = data; S.err = err; S.at = Date.now(); paint(); if (root.classList.contains('on')) draw();

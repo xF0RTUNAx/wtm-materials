@@ -45,7 +45,7 @@ export default {
   "Твердотопливная тактическая ракета: точнее «Скада», короче дальность. Летит по баллистике — на спуске быстрее 1 км/с.": "A solid-fuel tactical missile: more accurate than the Scud, shorter range. Flies a ballistic trajectory, over 1 km/s on descent.",
   "Квазибаллистическая ракета: манёвр на конечном участке и отстреливаемые ложные цели. Перехват возможен только С-300 / С-400 / Patriot, и то не наверняка.": "A quasi-ballistic missile: maneuvers in the terminal phase and releases decoys. Only S-300 / S-400 / Patriot can intercept it, and not reliably.",
   "Тактическая ракета для РСЗО M270 и HIMARS: наведение по GPS, на спуске — около 1 км/с.": "A tactical missile for the M270 MLRS and HIMARS: GPS guidance, about 1 km/s on descent.",
-  "Новая тактическая ракета для HIMARS и M270 вместо ATACMS: две в контейнере, дальность больше, манёвр на спуске. Перехват — только противоракетные комплексы.": "The new tactical missile for HIMARS and M270, replacing ATACMS: two per pod, longer range, manoeuvres on descent. Only anti-ballistic systems can intercept it.",
+  "Новая тактическая ракета для HIMARS и M270 вместо ATACMS: две в контейнере, дальность больше, манёвр на спуске. Перехват — только противоракетные комплексы.": "The new tactical missile for HIMARS and M270, replacing ATACMS: two per pod, longer range, maneuvers on descent. Only anti-ballistic systems can intercept it.",
   "Тактическая ракета армии США 1970–80-х: жидкостный двигатель на долгохранимом топливе, инерциальное наведение. Пусковая M752 на гусеничном ходу перед пуском поднимает ракету стрелой.": "A US Army tactical missile of the 1970s–80s: a storable-propellant liquid-fuel engine and inertial guidance. The tracked M752 launcher raises the missile on its boom before firing.",
   "Аэробаллистическая ракета с МиГ-31К: сброс на большой высоте и скорости, разгон, полёт по высокой дуге и манёвр на спуске. Перехват — только Patriot PAC-3 / С-400, и то редко. Взят «Кинжал» — другой баллистики в волне нет.": "An air-launched ballistic missile carried by the MiG-31K: released at high altitude and speed, it accelerates, flies a high arc and maneuvers on descent. Only Patriot PAC-3 / S-400 can intercept it, and rarely. Take Kinzhal and no other ballistic missiles are allowed in the wave.",
   "Гиперзвуковая ракета воздушного пуска с B-52H: ускоритель разгоняет планирующий блок, тот идёт по пологой дуге и маневрирует на спуске. Перехват — только противоракетные комплексы, и то редко. Взят ARRW — другой баллистики в волне нет.": "An air-launched hypersonic missile carried by the B-52H: a booster accelerates the glide vehicle, which flies a shallow arc and maneuvers on descent. Only anti-ballistic systems can intercept it, and rarely. Take ARRW and no other ballistic missiles are allowed in the wave.",
@@ -388,4 +388,10 @@ export default {
   // ветки «Ударов» в «Исследованиях» (arsenal.js MULTI_LINES; «Баллистика» и «Крылатые ракеты» уже в en-training.js)
   "Планирующие": "Glide weapons",
   "Дроны и ложные цели": "Drones and decoys",
+  // IRIS-T SLM и Skynex — сейчас без модели (arsenal.js NO_MODEL, из игры убраны); перевод — на случай возвращения
+  "РЛС TRML-4D даёт целеуказание, ракета стартует вертикально и захватывает цель тепловизионной ГСН уже в полёте. Ловушки почти бесполезны.": "The TRML-4D radar provides target designation; the missile launches vertically and its imaging infrared seeker locks on in flight. Flares are almost useless.",
+  "Германия": "Germany",
+  "инерциальное + тепловизионное": "inertial + imaging infrared",
+  "Skynex (35 мм, снаряды AHEAD)": "Skynex (35 mm, AHEAD rounds)",
+  "Револьверная 35-мм пушка: снаряды AHEAD подрываются перед целью облаком поражающих элементов — хороши против дронов, ракет и бомб.": "A 35 mm revolver cannon: AHEAD rounds burst in front of the target in a cloud of sub-projectiles, effective against drones, missiles and bombs.",
 };

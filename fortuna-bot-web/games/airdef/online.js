@@ -56,7 +56,7 @@ export function createOnline(C, ctrls) {
       <div class="prow"><span>${tr('Пустые места')}</span>${seg('fill', ui.fill ? 1 : 0, [[1, tr('Боты')], [0, tr('Без ботов')]])}</div>
       <button class="btn alt" data-oa="create">${tr('Создать комнату')}</button>
       <div class="cat-h">${tr('Войти по коду')}</div>
-      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${tr('Войти')}</button></div>`;
+      <div class="prow"><input id="adCode" maxlength="4" placeholder="${tr('Код')}" value="${esc(ui.code)}" style="text-transform:uppercase;width:90px"><button class="btn alt" data-oa="join" style="width:auto">${LANG === 'en' ? 'Join' : 'Войти'}</button></div>`; // не tr: «Войти» в словаре — вход в аккаунт (Sign in), один ключ на слово
   }
   function lobby(el, r) {
     const me = N.myPlayer(), host = r.host === (N.me && N.me.id);
@@ -111,7 +111,7 @@ export function createOnline(C, ctrls) {
     }
   }
   function invite() {
-    const url = `https://fortunawtm.com/airsuperiority/?ad=${N.room.code}` /* красивая ссылка (/airsuperiority/ → игра с тем же ?ad=; со слешем — без лишнего перенаправления GitHub Pages) */, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
+    const url = `https://fortunawtm.com/airsuperiority/${LANG === 'en' ? 'en/' : ''}?ad=${N.room.code}` /* красивая ссылка (/airsuperiority/ → игра с тем же ?ad=; со слешем — без лишнего перенаправления GitHub Pages); в английской игре — /en/: превью по-английски */, text = tr('Бой «Air Superiority Online»: комната {0}', [N.room.code]);
     try { const tg = window.Telegram && window.Telegram.WebApp; if (tg && tg.openTelegramLink) { tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`); return; } } catch (_) { /* не Telegram */ }
     if (navigator.share) { navigator.share({ title: text, url }).catch(() => {}); return; }
     try { navigator.clipboard.writeText(url); C.say(tr('Ссылка скопирована'), 2); } catch (_) { C.say(tr('Код комнаты: {0}', [N.room.code]), 3); }

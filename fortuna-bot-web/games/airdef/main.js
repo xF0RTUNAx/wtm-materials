@@ -59,6 +59,7 @@ const $ = (id) => document.getElementById(id);
 const Q = new URLSearchParams(location.search);
 localizeTree(TREE, BRANCHES); // страховка: узлы прокачки — по уже переведённым данным (если progress.js построил дерево раньше)
 trDom(document.body); // язык: статичный HTML страницы — до того, как меню и бой допишут свой текст (i18n.js)
+if (LANG === 'en') { const mf = document.querySelector('link[rel="manifest"]'); if (mf) mf.href = 'airdef-en.webmanifest'; } // «На экран „Домой“» (Android) — английское описание
 askLang(); // первый вход: язык ещё не выбран — спросить (угаданный по устройству / Telegram выделен)
 // окна общих модулей (предупреждение о повороте телефона — orient-warn.js, «Летка» делит его с игрой), которые сами добавляют русский текст прямо в body
 if (LANG === 'en' && typeof MutationObserver !== 'undefined') new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) trDom(n); }).observe(document.body, { childList: true });

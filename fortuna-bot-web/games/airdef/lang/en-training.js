@@ -580,7 +580,7 @@ export default {
   "мышью или стрелками": "mouse or arrow keys",
   "тяните по экрану": "drag across the screen",
   "Сбит! Тепловая ГСН не излучает — на СПО самолёта вас не было.": "Shot down! An infrared seeker doesn't emit: you never showed on the aircraft's RWR.",
-  "Зенитные пушки": "Anti-aircraft guns",
+  "Зенитные пушки": "AA guns",
   "«Шилка» / Gepard: точка упреждения, очереди": "Shilka / Gepard: lead point, bursts",
   "Снаряду нужно время долететь — стреляют в <b>точку упреждения</b>: жёлтый кружок впереди самолёта.": "Shells take time to arrive, so you fire at the <b>lead point</b>: the yellow circle ahead of the aircraft.",
   "Смертельно вблизи и низко: дальность ~{0} км, потолок ~{1} м.": "Deadly up close and low: range ~{0} km, ceiling ~{1} m.",

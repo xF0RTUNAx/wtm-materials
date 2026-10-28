@@ -78,6 +78,8 @@ const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU'
 const trVal = (v) => (LANG !== 'en' ? v : trIf(v).replace(/^none$/, 'no').replace(/(\d),(\d)/g, '$1.$2').replace(/ км\/ч/g, ' km/h').replace(/ км(?![А-Яа-я\/])/g, ' km').replace(/ м\/с/g, ' m/s').replace(/ кг/g, ' kg').replace(/ т$/g, ' t').replace(/ м$/g, ' m').replace(/ с$/g, ' s').replace(/°\/с/g, '°/s')
   .replace(/ снарядов$/, ' rounds').replace(/ · залп /, ' · salvo ').replace(/ \(оптика\)$/, ' (optical)'));
 const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261028a`;
+// подпись строки карточки; «Обзор» у ЗРК без РЛС — дальность обзора оптикой (Detection), а в словаре «Обзор» — кнопка камеры (View)
+const statName = (k) => (LANG === 'en' && k === 'Обзор' ? 'Detection' : trIf(k));
 const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'Цель'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь — один ключ на оба), по-английски это разные слова
 const era = (r) => (ERAS[r - 1] ? trIf(ERAS[r - 1].name).split('— ')[1] || '' : '');
 const guide = (n) => (n.branch === 'pvo' ? trIf(SAM[n.key]?.guide) : n.branch === 'air' || n.branch === 'heli' ? tr('Подвески: {0}.', [RANKS.flatMap((e) => (LOADOUTS[e] || []).filter((L) => L.plane === n.key).map((L) => trIf(L.name))).join(' · ')]) : trIf(AG[n.item || n.key]?.guide)) || '';
@@ -143,7 +145,7 @@ export function createResearch(C, PG) {
       : s.k === 'res' ? `<button class="rbtn" data-act="research" ${s.can && !busy ? '' : 'disabled'}>${tr('Исследовать')} ${XP(n.cost)}</button><button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель исследования (снять)') : tr('Сделать целью — опыт за бой пойдёт сюда')}</button>${why}`
       : s.k === 'lock' ? (n.parent && !researched(P(), n.parent) ? `<button class="rbtn alt" data-act="goal" ${busy ? 'disabled' : ''}>${goal ? ico('ok', 'ii') + tr('Цель (снять)') : tr('Сделать целью')}</button>` : '') + why
       : `<div class="why">${tr('Доступно в «Реализме».')}</div>`;
-    const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${trIf(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
+    const stats = `<div class="st">${cardStats(n).map(([k, v]) => `<span>${statName(k)}</span><b>${trVal(v)}</b>`).join('')}</div>`;
     const an = p ? `<div class="an" data-id="${p.id}" data-side="${p.side}"><img src="${thumb(p)}" alt=""><div><span class="mk">${tr('аналог · {0}', [trIf(SIDE_NAME[p.side])])}</span><div style="font:500 13px 'Oswald'">${trIf(p.short)}</div><div style="font-size:11px;color:var(--dim)">${sp.k === 'own' ? ico('ok', 'ii') + tr('Куплен') : sp.k === 'start' ? ico('star', 'ii') + tr('Стартовый') : sp.k === 'lock' ? ico('lock') + tr(' закрыт') : sp.k === 'buy' ? tr('исследован') : tr('не исследован')}</div></div></div>` : '';
     return `<div class="veil" data-close="1"></div><div class="dos"><div class="sc"><div class="hero"><img src="${thumb(n)}" alt=""></div>
       <span class="mk">${ranked(n.branch) ? tr('{0} · ранг {1} · {2}', [trIf(SIDE_NAME[n.side]), RANK_NAME[n.rank], era(n.rank)]) : `${trIf(SIDE_NAME[n.side])} · ${trIf(n.lineName)}`}</span><h3>${trIf(n.name)}</h3><div class="ty">${trIf(unitType(n))}${n.branch === 'pvo' ? capsHtml(SAM[n.key]) : ''}</div>

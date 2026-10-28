@@ -368,18 +368,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
         ['https://freesound.org/people/invadium/sounds/824805/', 'Cruise missiles interception and fly-by', 'Invadium', 'CC0'],
         ['https://www.youtube.com/watch?v=kAVnPGU8CYw', 'F16 Fighter Jet Engine Idle', 'Sound Effect Database', tr('лицензия куплена')],
         ['https://www.youtube.com/watch?v=8VIxcncNPVA', 'Flares Sound Effect', 'Sound Effect Database', tr('лицензия куплена')],
-        ['https://www.youtube.com/watch?v=PCRW2ZQbNxA', 'Bomb distant explosion', 'Free Sound Effect', 'YouTube'],
-        ['https://www.youtube.com/watch?v=lKmJKFGzwyc', 'Propeller engine loop', 'Free Sound Effect', 'YouTube'],
-        ['https://www.youtube.com/watch?v=V4j2Df-S10k', 'Patriot Missile Launch', 'Sound Treasures', 'YouTube'],
-        ['https://www.youtube.com/watch?v=zLjGbjdmoOo', '9K720 Iskander-M', 'WarLeaks — Military Blog', 'YouTube'],
-        ['https://www.youtube.com/watch?v=bi2AB18biz4', 'Afterburner Sound', 'SOUND Effects Public Domain', 'YouTube'],
-        ['https://www.youtube.com/watch?v=zJvVsHkSs_g', 'AIM-9 Sidewinder', 'Booyadee', 'YouTube'],
-        ['https://www.youtube.com/watch?v=A76J507nxtE', 'Shahed 136', 'zagros aim', 'YouTube'],
-        ['https://www.youtube.com/watch?v=cnzLJ6bco0U', 'Air Raid Siren', 'Sounds', 'YouTube'],
-        ['https://www.youtube.com/watch?v=1qUN59Oebe0', 'Missile launch', 'mrkerk12', 'YouTube'],
-        ['https://www.youtube.com/watch?v=dw6AvjAyFKs', 'Missile Launch Sound Effects', 'Friendly Free Sounds', 'YouTube'],
-      ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} — ${a} (${l})`).join(' · ')])}</p>
-      <p class="hint">${tr('Остальное в игре реализовано процедурным или собственным способом.')}</p>`;
+      ].map(([u, t, a, l]) => `${A(u, `«${t}»`)} — ${a} (${l})`).join(' · ')])}</p>`;
   }
   $('tab-set').onclick = (e) => {
     const g = e.target.closest('[data-gfx]'), w = e.target.closest('[data-seg="wx"] [data-v]');
