@@ -294,7 +294,6 @@ export default {
   "3D-модели (для игры упрощены, разделены на части, текстуры уменьшены): {0}.": "3D models (simplified for the game, split into parts, textures downscaled): {0}.",
   "Звуки (обрезаны, обработаны, сведены в моно): {0}.": "Sounds (trimmed, processed, mixed down to mono): {0}.",
   "лицензия куплена": "license purchased",
-  "Остальное в игре реализовано процедурным или собственным способом.": "Everything else is procedurally generated or made in-house.",
   "Арсенал": "Arsenal",
   "Справка": "Help",
   "Настройки": "Settings",
