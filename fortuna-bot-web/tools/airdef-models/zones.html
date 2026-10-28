@@ -9,9 +9,9 @@
      пурпурные — прежние (по габаритам, до 2026-10-25), видны сквозь модель -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { loadModels, wantModel, anyModel, planeMeta } from '../../games/airdef/models.js?v=20261027d';
-import { splitPlane } from '../../games/airdef/plane-zones.js?v=20261027d';
-import { planeDamageVis } from '../../games/airdef/plane-damage.js?v=20261027d';
+import { loadModels, wantModel, anyModel, planeMeta } from '../../games/airdef/models.js?v=20261028a';
+import { splitPlane } from '../../games/airdef/plane-zones.js?v=20261028a';
+import { planeDamageVis } from '../../games/airdef/plane-damage.js?v=20261028a';
 const Q = new URLSearchParams(location.search), LIST = (Q.get('m') || 'su30').split(',');
 const CW = Q.get('big') ? 1000 : 420, CH = Q.get('big') ? 640 : 300, r = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); r.setSize(CW * 3, CH * LIST.length); r.setScissorTest(true); r.outputEncoding = THREE.sRGBEncoding; document.body.appendChild(r.domElement);
 const COL = { body: 0x8d939a, wingL: 0x2f6fe0, consL: 0x8fd0ff, wingR: 0xe0402f, consR: 0xffa8a0, tailL: 0xf2c230, tailR: 0xe08a20, tailC: 0xb0e040 };

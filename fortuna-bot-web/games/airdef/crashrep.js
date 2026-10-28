@@ -3,8 +3,8 @@
 // перезагрузку этой вкладки, новой вкладке не видна); обычный уход со страницы (pagehide: перезагрузка, закрытие, переход) и конец боя её
 // стирают, вылет — нет. Открылись с записью не старше 5 мин — окно «Игра закрылась с ошибкой»: «Отправить» — на игровой сервер (журнал
 // ad_crash, без входа), не вышло — «Скопировать» для Telegram. Онлайн-бой — без окна: там отчёт уходит сам (online.js 'reload')
-import { adServerUrl } from './net.js?v=20261027d';
-import { tr } from './i18n.js?v=20261027d';
+import { adServerUrl } from './net.js?v=20261028a';
+import { tr } from './i18n.js?v=20261028a';
 
 const K = 'fortuna_ad_alive', VER = new URL(import.meta.url).searchParams.get('v') || '';
 const ss = { get(k) { try { return sessionStorage.getItem(k); } catch (_) { return null; } }, set(k, v) { try { sessionStorage.setItem(k, v); } catch (_) { /* приватный режим */ } }, del(k) { try { sessionStorage.removeItem(k); } catch (_) { /* нет */ } } };

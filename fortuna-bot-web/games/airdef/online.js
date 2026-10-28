@@ -3,16 +3,16 @@
 // переход в бой (лётчик — air.js, ПВО — defense.js в режиме онлайна), итоги волн и боя, журнал сбитий (6 с) и
 // «Мне нужна помощь!» союзникам (метка в кадре и на карте). Связь и зеркало боя — net.js.
 /* global THREE, CONFIG */
-import { tr, trIf, LANG } from './i18n.js?v=20261027d';
-import { trFmt } from './i18n-fmt.js?v=20261027d';
-import { createNet } from './net.js?v=20261027d';
-import * as O from './sim/online.js?v=20261027d';
-import * as MW from './sim/online-multi.js?v=20261027d';
-import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261027d';
-import { MODES } from './sim/strike.js?v=20261027d';
-import { ICON, ico } from './icons.js?v=20261027d';
-import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261027d';
-import { boardOl, boardMw } from './endscr.js?v=20261027d';
+import { tr, trIf, LANG } from './i18n.js?v=20261028a';
+import { trFmt } from './i18n-fmt.js?v=20261028a';
+import { createNet } from './net.js?v=20261028a';
+import * as O from './sim/online.js?v=20261028a';
+import * as MW from './sim/online-multi.js?v=20261028a';
+import { AG, SAM, CARRIERS, LOADOUTS, PLANES, ERAS, loadoutRole } from './arsenal.js?v=20261028a';
+import { MODES } from './sim/strike.js?v=20261028a';
+import { ICON, ico } from './icons.js?v=20261028a';
+import { activeAcc, siteAcc, siteNoProgress } from './account.js?v=20261028a';
+import { boardOl, boardMw } from './endscr.js?v=20261028a';
 
 const pnm = (p) => esc(p.bot ? trIf(p.name) : p.name); // позывные ботов приходят с сервера по-русски
 const ROLES = [['air', tr('Авиация')], ['pvo', tr('ПВО')], ['any', tr('Любая')]];

@@ -42,7 +42,7 @@ THREE.WebGLRenderer = FakeRenderer;
 const errors = [];
 const origErr = console.error; console.error = (...a) => { errors.push(a.join(' ')); };
 await import('../../games/airdef/main.js');
-const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261027d');
+const { samKnown } = await import('../../games/airdef/sim/combined.js?v=20261028a');
 for (let i = 0; i < 300 && !(globalThis.__a && globalThis.__a.state === 'menu'); i++) await new Promise((r) => setTimeout(r, 100)); // запуск по этапам (экран загрузки)
 const C = globalThis.__a;
 let now = 1000;
@@ -77,7 +77,7 @@ store.fortuna_ad_map = 'winter'; C.toMenu(); frames(5); C.setup.game = 'defense'
 check('оборона на зимней карте', C.state === 'play' && !globalThis.__replaced);
 const D = C.ctrls.defense;
 const minAgl = new Map(); let crashes = 0, planesSeen = new Set();
-const { placeDefense } = await import('../../games/airdef/mission.js?v=20261027d');
+const { placeDefense } = await import('../../games/airdef/mission.js?v=20261028a');
 placeDefense(C.S, C.city, Math.random, 'east', 3, C.S.objects.filter((o) => !o.noTarget).slice(0, 3), 1, { same: true }); C.syncUnits(); // ПВО игрока — набор эпохи у целей
 const roles = {};
 for (let i = 0; i < 30 * 1800 && !C.ended && !(D.st.wave >= 4 && D.st.phase === 'debrief'); i++) {

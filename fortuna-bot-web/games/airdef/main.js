@@ -8,51 +8,51 @@
 // Параметры адреса: ?gfx=low|medium|high|ultra, ?weather=…, ?touch=1, ?test=1 (window.__a), ?go=air|defense — сразу в бой,
 // ?view=x,y,z,курс°,тангаж° — неподвижная камера (снимки города).
 /* global THREE */
-import { localizeTree } from './lang/data.js?v=20261027d'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
-import { TREE, BRANCHES } from './progress.js?v=20261027d';
-import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261027d';
-import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261027d';
-import { buildCity, CITY } from './city.js?v=20261027d';
-import { buildWinter } from './map-winter.js?v=20261027d';
-import { WINTER_KEYS } from './winter-render.js?v=20261027d';
-import { buildAutumn } from './map-autumn.js?v=20261027d';
-import { AUTUMN_KEYS } from './autumn-render.js?v=20261027d';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261027d';
-import { createPipeline } from '../drone/post.js?v=20261027d';
-import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261027d';
-import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261027d';
-import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261027d';
-import { createStrike, MODES } from './sim/strike.js?v=20261027d';
-import { createRaid } from './sim/raid.js?v=20261027d';
-import { POD, RAIL, podLift } from './sim/combined.js?v=20261027d';
-import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261027d';
-import { slotCount, LNCH, lnchToWorld, cylPose } from './launchers.js?v=20261027d';
-import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261027d';
-import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261027d';
-import { createSound } from './sound.js?v=20261027d';
-import { ico, iconize } from './icons.js?v=20261027d';
-import { createAir } from './air.js?v=20261027d';
-import { createDefense } from './defense.js?v=20261027d';
-import { createDirector } from './director.js?v=20261027d';
-import { createMenuBg } from './menubg.js?v=20261027d';
-import { createOnline } from './online.js?v=20261027d';
-import { createProgress } from './progress-net.js?v=20261027d';
-import { createDifficulty } from './difficulty.js?v=20261027d';
-import { createResearch } from './research.js?v=20261027d';
-import { createEvent } from './event.js?v=20261027d';
-import { createAccount } from './account-ui.js?v=20261027d';
-import { createRating } from './rating-ui.js?v=20261027d';
-import { createShop } from './shop-ui.js?v=20261027d';
-import { createEndScreen } from './endscr.js?v=20261027d';
-import { createHints } from './hints.js?v=20261027d';
-import { motorOf, makeFlame } from './plume.js?v=20261027d';
-import { createShell } from './shell.js?v=20261027d';
-import { createCrashRep } from './crashrep.js?v=20261027d';
-import { createTraining, LESSONS } from './training.js?v=20261027d';
-import { createPhoto } from './photo.js?v=20261027d';
-import { createMenu } from './menu.js?v=20261027d';
-import { registerSW } from './offline.js?v=20261027d';
-import { detectGpu, sharpFor, sharpCeil } from './gpu.js?v=20261027d';
+import { localizeTree } from './lang/data.js?v=20261028a'; // язык: названия и описания из данных (arsenal, flight, heli) — до progress.js, который строит по ним дерево
+import { TREE, BRANCHES } from './progress.js?v=20261028a';
+import { trDom, tr, trIf, LANG, askLang } from './i18n.js?v=20261028a';
+import { ktxInit, ktxRestore, ktxBusy } from './ktx.js?v=20261028a';
+import { buildCity, CITY } from './city.js?v=20261028a';
+import { buildWinter } from './map-winter.js?v=20261028a';
+import { WINTER_KEYS } from './winter-render.js?v=20261028a';
+import { buildAutumn } from './map-autumn.js?v=20261028a';
+import { AUTUMN_KEYS } from './autumn-render.js?v=20261028a';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats } from './city-render.js?v=20261028a';
+import { createPipeline } from '../drone/post.js?v=20261028a';
+import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261028a';
+import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261028a';
+import { AG, SAM, LOADOUTS, DEFENSE, raidPlane } from './arsenal.js?v=20261028a';
+import { createStrike, MODES } from './sim/strike.js?v=20261028a';
+import { createRaid } from './sim/raid.js?v=20261028a';
+import { POD, RAIL, podLift } from './sim/combined.js?v=20261028a';
+import { unitModel, weaponGeo, samMissileMesh, mountWpnFlame, narMesh, flameOf, wpnNozzle, strikerGeo, createFx, attachFlames } from './units-render.js?v=20261028a';
+import { slotCount, LNCH, lnchToWorld, cylPose } from './launchers.js?v=20261028a';
+import { spinProps as spinRotors, spinSails, modelStats, loadModels, planeModel, heliModel, classOfRole, weaponMesh, pylonMesh, unitModelGlb, unitMissileGlb, samNose, launcherGlb, isUnitModel, isObjModel, objModel, wantUnit, wantUnitNear, bldModel, wantBuildings, wantModel, wantWeapon, weaponPending, anyModel, setWings, glideWings, planeMeta } from './models.js?v=20261028a';
+import { planeDamageVis, updateDebris, clearDebris } from './plane-damage.js?v=20261028a';
+import { createSound } from './sound.js?v=20261028a';
+import { ico, iconize } from './icons.js?v=20261028a';
+import { createAir } from './air.js?v=20261028a';
+import { createDefense } from './defense.js?v=20261028a';
+import { createDirector } from './director.js?v=20261028a';
+import { createMenuBg } from './menubg.js?v=20261028a';
+import { createOnline } from './online.js?v=20261028a';
+import { createProgress } from './progress-net.js?v=20261028a';
+import { createDifficulty } from './difficulty.js?v=20261028a';
+import { createResearch } from './research.js?v=20261028a';
+import { createEvent } from './event.js?v=20261028a';
+import { createAccount } from './account-ui.js?v=20261028a';
+import { createRating } from './rating-ui.js?v=20261028a';
+import { createShop } from './shop-ui.js?v=20261028a';
+import { createEndScreen } from './endscr.js?v=20261028a';
+import { createHints } from './hints.js?v=20261028a';
+import { motorOf, makeFlame } from './plume.js?v=20261028a';
+import { createShell } from './shell.js?v=20261028a';
+import { createCrashRep } from './crashrep.js?v=20261028a';
+import { createTraining, LESSONS } from './training.js?v=20261028a';
+import { createPhoto } from './photo.js?v=20261028a';
+import { createMenu } from './menu.js?v=20261028a';
+import { registerSW } from './offline.js?v=20261028a';
+import { detectGpu, sharpFor, sharpCeil } from './gpu.js?v=20261028a';
 import { orientGate } from '../orient-warn.js?v=20261011a';
 
 const $ = (id) => document.getElementById(id);
@@ -1157,7 +1157,7 @@ function warmNow() {
 const pendingObj = [];
 registerSW(); // файлы игры — из кэша устройства (только на сайте; offline.js)
 // замер частей кадра на телефоне (?probe=1): таблица мс поверх игры через 12 с боя (probe.js)
-if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261027d').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
+if (Q.get('probe') === '1') { C.perfScale = perf.scale; C.probeMap = MAP; import('./probe.js?v=20261028a').then((m) => m.startProbe(C, { renderer, scene, pipe })); }
 loadModels(new URL('./', import.meta.url).href, (name) => {
   warmSoon(); // шейдеры пришедшей модели — сразу, а не когда она впервые попадёт в кадр
   if (C.G && C.G.attachBld && bldModel(name)) C.G.attachBld(name, bldModel(name)); // дома города вблизи (и цеха — та же модель, что у целей)
