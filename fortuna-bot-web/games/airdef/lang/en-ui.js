@@ -214,6 +214,7 @@ export default {
   "Авто (60)": "Auto (60)",
   "Авто": "Auto",
   "Файлы игры": "Game files",
+  "бинокль работает и при пуске ракеты по вам": "binoculars keep working when a missile is launched at you",
   "кнопка «Бинокль» в вылете (B): вид на цель и на своё оружие, самолёт держит курс": "\"Binoculars\" button in sorties (B): view of the target and your weapon while the aircraft holds course",
   "Экран и кнопки": "Screen and buttons",
   "Оператор ЗРК": "SAM operator",

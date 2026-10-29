@@ -36,7 +36,7 @@ const TIPS = [
   tr('В обороне смотрите на «тени» зон: здание рядом с комплексом может закрыть целый сектор на малой высоте.'),
   tr('Оператору командного ЗРК: «три точки» надёжнее по манёвренной цели, «половинное спрямление» экономит энергию ракеты по быстрой цели, идущей поперёк.'),
   tr('Опытный расчёт выключает РЛС при пуске противорадиолокационной ракеты. В обороне это делаете вы — кнопка «РЛС».'),
-  tr('ТВ-головки ночью не видят: в вечерних и ночных вылетах берите лазерные бомбы или ПРР.'),
+  // «ТВ-головки ночью не видят…» — вернуть вместе с ночью (сейчас темнота боя только у ночи: main.js NIGHT; вечером совет был бы неверен)
   tr('Засада: комплекс с выключенной РЛС не виден на СПО и включается, только когда сеть ПВО сообщит о цели рядом.'),
   tr('Пушкам нужно упреждение: ведите ствол в кружок впереди самолёта, а не на сам самолёт.'),
 ];
@@ -329,6 +329,7 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
       ${C.shell.canFs() ? `<label class="chk"><input type="checkbox" id="sFs" ${C.shell.fsPref ? 'checked' : ''}> ${tr('полный экран')}</label>` : ''}
       ${C.shell.hintKind() ? `<label class="chk"><input type="checkbox" id="sFsHint" ${C.shell.fsHint ? 'checked' : ''}> ${C.shell.hintKind() === 'swipe' ? tr('плашка «Потяните вверх», когда панели Safari видны в бою') : tr('кнопка возврата, когда полный экран слетел в бою')}</label>` : ''}
       <label class="chk"><input type="checkbox" id="sBino" ${C.sens.bino !== false ? 'checked' : ''}> ${tr('кнопка «Бинокль» в вылете (B): вид на цель и на своё оружие, самолёт держит курс')}</label>
+      <label class="chk"><input type="checkbox" id="sBinoThr" ${C.sens.binoThreat ? 'checked' : ''}${C.sens.bino === false ? ' disabled' : ''}> ${tr('бинокль работает и при пуске ракеты по вам')}</label>
       <div class="sub">${tr('Самолёт')}</div>
       <label class="chk">${tr('ручка (тангаж и крен)')} <input type="range" id="sStick" min="0.4" max="1.8" step="0.05" value="${C.sens.stick}"> <b id="vStick">×${C.sens.stick.toFixed(2)}</b></label>
       <label class="chk"><input type="checkbox" id="sInv" ${C.sens.invert ? 'checked' : ''}> ${tr('инверсия тангажа: вверх — нос вниз (как в авиасимуляторах)')}</label>
@@ -395,7 +396,8 @@ export function createMenu(C, { PRESETS, WEATHER_KEYS }) {
     if (e.target.id === 'sPerf') { C.perfHud = e.target.checked; ls.set('fortuna_airdef_perfhud', C.perfHud ? '1' : '0'); document.body.classList.toggle('perfhud', C.perfHud); }
     if (e.target.id === 'sFull') { C.GO.fullRes = e.target.checked; ls.set('fortuna_airdef_gfxo', JSON.stringify(C.GO)); }
     if (e.target.id === 'sInv') { C.sens.invert = e.target.checked; C.saveSens(); }
-    if (e.target.id === 'sBino') { C.sens.bino = e.target.checked; C.saveSens(); document.body.classList.toggle('nobino', !e.target.checked); }
+    if (e.target.id === 'sBino') { C.sens.bino = e.target.checked; C.saveSens(); document.body.classList.toggle('nobino', !e.target.checked); const t = C.$('sBinoThr'); if (t) t.disabled = !e.target.checked; }
+    if (e.target.id === 'sBinoThr') { C.sens.binoThreat = e.target.checked; C.saveSens(); } // бинокль не гаснет при пуске ракеты по самолёту (по умолчанию — гаснет; air.js binoThreat)
     if (e.target.id === 'sAim') { C.sens.aim = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sCmBurst') { C.sens.cmBurst = e.target.checked; C.saveSens(); }
     if (e.target.id === 'sKeys') { C.sens.keys = e.target.checked; C.saveSens(); }

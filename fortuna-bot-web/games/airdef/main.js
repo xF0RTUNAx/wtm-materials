@@ -258,8 +258,10 @@ renderer.toneMapping = sceneTM;
 const snd = createSound();
 
 // ═════════════ Общий контекст режимов ═════════════
+// NIGHT — темнота для правил боя (ТВ-головки не видят, контейнер в ИК, оптика ЗРК хуже): только у ночи. Ночь убрана (Mark 2026-10-18), а у заката
+// W.night 0,6 — вылет на закате запрещал захват ТВ-бомбой «ночь» (Mark 2026-10-29); вид неба и света (W.night) — как был; онлайн-сервер — тоже 0
 const C = {
-  $, Q, IS_TOUCH, ls, LIVE, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W.night || 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, RAND_MAPS, GPU_NAME,
+  $, Q, IS_TOUCH, ls, LIVE, P, W, W_KEY, weatherKey, gfxKey, NIGHT: W_KEY === 'night' ? W.night || 0 : 0, city, scene, camera, renderer, snd, setup, MAP, wantMap, RAND_MAPS, GPU_NAME,
   get pipe() { return pipe; }, get sceneTM() { return sceneTM; },
   SHARP, get fps() { return fps; }, get fpsCap() { return fpsCap; }, setFpsCap(v) { fpsCap = v === 'auto' ? 'auto' : +v; ls.set('fortuna_airdef_fps', String(fpsCap)); },
   VW: 1, VH: 1, fx: null, G: null, S: null, raid: null, player: null, ctrl: null, state: 'loading', paused: false, t: 0,

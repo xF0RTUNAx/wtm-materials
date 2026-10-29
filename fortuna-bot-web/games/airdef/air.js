@@ -1050,7 +1050,8 @@ export function createAir(C) {
   // кнопка #tBino / B: выкл → цель → оружие (пока в полёте; за разрывом — следующее) → выкл. Цель — захват контейнера, иначе ближайшая цель задания;
   // приближение — цель ≈ 1/6 высоты кадра (у оператора ЗРК — ¼; Mark: «чуть меньший масштаб»). Автопилот — курс и высота на момент включения, не ниже
   // рельефа впереди + 300 м, у границы района — к центру (planeFly). Выход — кнопкой, ручкой / крестовиной / клавишами / пальцем по экрану и сам —
-  // при пуске ракеты по самолёту. Выключается в настройках («Экран и кнопки»: C.sens.bino) — тогда кнопки нет
+  // при пуске ракеты по самолёту (настройка C.sens.binoThreat — не выключать, Mark 2026-10-29; по умолчанию выключает). Выключается в настройках
+  // («Экран и кнопки»: C.sens.bino) — тогда кнопки нет
   const bino = { on: false, mode: 'tgt', w: null, ap: { yaw: 0, alt: 0 }, fov: 30, why: '' }, BT = V3();
   const binoOk = () => C.sens.bino !== false && !craft.heli && !craft.dead && !game.over;
   function binoTgt() {
@@ -1060,7 +1061,7 @@ export function createAir(C) {
   }
   const binoWpns = () => C.S.wpns.filter((w) => !w.dead && w.owner === craft && weaponHasModel(w.key, w.W));
   // ракета летит именно в самолёт (датчик пуска или ЗУР с целью — он): плашка «ПУСК РАКЕТЫ» бывает и от пусков по своим бомбам («Тор», «Панцирь»)
-  const binoThreat = (mw) => (mw && mw.length > 0) || C.S.sams.some((m) => !m.dead && m.target === craft);
+  const binoThreat = (mw) => !C.sens.binoThreat && ((mw && mw.length > 0) || C.S.sams.some((m) => !m.dead && m.target === craft));
   function binoSet(mode) {
     bino.mode = mode; wc.obj = null; wc.init = false; wc.endT = 0;
     if (mode === 'wpn') { const ws = binoWpns(); bino.w = ws.find((w) => w.id > (bino.w ? bino.w.id : -1)) || ws[0] || null; wc.obj = bino.w; wc.kind = 'w'; }
