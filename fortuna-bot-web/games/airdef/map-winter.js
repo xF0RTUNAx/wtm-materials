@@ -4,7 +4,7 @@
 // Долина с севера на юг: водохранилище за плотиной ГЭС на севере, замёрзшая река, авиабаза посередине, посёлок и
 // военный городок, ж/д узел, арсенал в восточном ущелье, РЛС на вершине хребта, озеро на юге. Оси как в city.js: −Z — север.
 import { tr } from './i18n.js?v=20261028a';
-import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, mp, mbox, siteParts, mapRuntime } from './city.js?v=20261028a';
+import { CITY, ZONE, KIND, mulberry32, clamp, smooth, vnoise, siteParts, mapRuntime } from './city.js?v=20261028a';
 
 const H = CITY.HALF, RES = 50, N = Math.round(2 * H / RES) + 1; // узлов по стороне
 export const WINTER = {
@@ -62,6 +62,12 @@ function pads() {
     { x: -1106, z: 7540, hx: 235, hz: 215, m: 150, hard: 1 }, // hard — после врезки дорог площадка снова ровная (дорога посёлка у северной ограды срезала угол на 2,5 м)
     // 7 ж/д узел — полоса под своей сценой (site_rail_w: x −160…+240 от P[2]) на высоте P[2]: восточнее x +170 земля уходила вниз до −1 м (склады, ГСМ)
     { x: valleyX(-6300) - 1150 + 40, z: -6300, hx: 210, hz: 610, m: 150, hard: 1, like: 2 },
+    // 8…10 — террасы ГЭС (site_dam_w, ноль сцены 181,2 м в (−1125, −9200)): пойма к западу (ОРУ, щит, КПП, гараж) — 194,2 м, площадка у машзала и
+    // трансформаторов — 182,2 м (с узлами под плотиной и восточнее трансформаторов — их скрывает плотина; узлы у ДОТа восточнее — на склоне, как были);
+    // fy — своя высота, откос — ровно m (сетка — через 50 м: рамка — по узлам; соседние узлы и постройки на склоне — как были); ровняются после дорог
+    { x: -1400, z: -9125, hx: 100, hz: 125, m: 50, fy: 194.2 },
+    { x: -1025, z: -9225, hx: 75, hz: 75, m: 50, fy: 182.2 },
+    { x: -900, z: -9275, hx: 0, hz: 25, m: 50, fy: 182.2 },
   ];
 }
 // двоичная куча для поиска пути (A*)
@@ -108,10 +114,10 @@ export function buildWinter(seed = 1) {
   const flatten = (p) => {
     const [i0, j0] = node(p.x - p.hx, p.z - p.hz), [i1, j1] = node(p.x + p.hx, p.z + p.hz); let s = 0, c = 0;
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { s += HM[j * N + i]; c++; }
-    p.y = p.like !== undefined ? P[p.like].y : s / c; // like — высота другой площадки (продолжение той же полосы)
+    p.y = p.fy ?? (p.like !== undefined ? P[p.like].y : s / c); // like — высота другой площадки (продолжение той же полосы); fy — заданная
     let dh = 0; const r0 = p.m;
     for (let a = 0; a < 6.283; a += 0.2) { const ex = p.x + Math.cos(a) * (p.hx + r0), ez = p.z + Math.sin(a) * (p.hz + r0), [i, j] = node(ex, ez); if (!ICE[j * N + i]) dh = Math.max(dh, Math.abs(HM[j * N + i] - p.y)); }
-    const m = clamp(dh * 3.5, p.m, 1200); p.mm = m;
+    const m = p.fy !== undefined ? p.m : clamp(dh * 3.5, p.m, 1200); p.mm = m;
     const [a0, b0] = node(p.x - p.hx - m, p.z - p.hz - m), [a1, b1] = node(p.x + p.hx + m, p.z + p.hz + m);
     for (let j = b0; j <= b1; j++) for (let i = a0; i <= a1; i++) {
       const q = j * N + i; if (ICE[q]) continue;
@@ -119,7 +125,7 @@ export function buildWinter(seed = 1) {
       if (e < m) HM[q] += (p.y - HM[q]) * (1 - smooth(0, m, e)) * (p.k || 1);
     }
   };
-  for (const p of P) flatten(p);
+  for (const p of P) if (p.fy === undefined) flatten(p); // террасы ГЭС (fy) — после дорог и врезки: путь к ГЭС и его профиль — по прежнему рельефу, как были
 
   // ── дороги: путь по сетке 100 м с ценой за уклон (A*) — идут долинами и по склону серпантином, не лезут на обрывы;
   // мосты через лёд — дорого (короткие переходы). Потом сглаживание кривой, ровный продольный профиль и врезка в склон ──
@@ -181,6 +187,7 @@ export function buildWinter(seed = 1) {
     // площадки hard (сцена объекта стоит на ровном) — ядро снова на своей высоте: врезка дороги рядом не должна опускать постройки сцены
     for (const p of P) if (p.hard) { const [i0, j0] = node(p.x - p.hx, p.z - p.hz), [i1, j1] = node(p.x + p.hx, p.z + p.hz); for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) HM[j * N + i] = p.y; }
   }
+  for (const p of P) if (p.fy !== undefined) flatten(p);
   function groundAt(x, z) {
     const fx = clamp((x + H) / RES, 0, N - 1.001), fz = clamp((z + H) / RES, 0, N - 1.001), i = Math.floor(fx), j = Math.floor(fz), u = fx - i, v = fz - j, q = j * N + i;
     return (HM[q] * (1 - u) + HM[q + 1] * u) * (1 - v) + (HM[q + N] * (1 - u) + HM[q + N + 1] * u) * v;
@@ -218,20 +225,23 @@ export function buildWinter(seed = 1) {
       for (let j = cj - 6; j <= cj + 6; j++) for (let i = ci - 6; i <= ci + 6; i++) { const d = Math.hypot(i - ci, j - cj) * RES; if (d < 300) HM[j * N + i] += (y - HM[j * N + i]) * (1 - smooth(80, 300, d)); }
     }
     add({ key: 'w_radar', name: tr('РЛС на вершине'), x: bx, z: bz, w: 120, d: 100, value: 150, hp: 160, peak: true, site: 'site_radar', parts: siteParts('site_radar', bx, bz) }); } // своя сцена (city.js SITES): купола, домик, мачта, генераторная…
-  { // ГЭС: стена плотины поперёк долины и машинный зал ниже
+  { // ГЭС — своя сцена (city.js SITES site_dam_w) над руслом: своя плотина на x ±400 от (−1125, −9200), водосброс, водоприёмник, машинный зал, ОРУ на террасе
+    // (P[8], P[9]); ноль сцены (sy) — 181,2 м, низ стены. Стена игры — от склона до склона, как была; на месте сцены вырезана: два куска по краям
+    // (wall — видны всегда, без вида разрушения; solid — не цель и не урон). Рамка — по сцене (z −180…+400 → rz +110), gk — прежняя рамка запрета генератора
     const z = WINTER.DAM_Z, vx = valleyX(z); let l = 0, r = 0;
     while (l < 6000 && groundH(vx - l, z + 40) < lakeNY + 4) l += 25; while (r < 6000 && groundH(vx + r, z + 40) < lakeNY + 4) r += 25; // стена — от склона до склона
-    const x0 = vx - l, x1 = vx + r, cx = (x0 + x1) / 2, top = lakeNY + 5, base = floorY(z) - 6;
-    const M = [mp('obj_factory', valleyX(z + 260), z + 260, 0, 0.9)];
-    add({ key: 'w_dam', name: tr('ГЭС на плотине'), x: cx, z: z + 100, w: x1 - x0 + 40, d: 360, value: 190, hp: 300, dam: true, models: M,
-      parts: [{ t: 'box', x: cx, z, w: x1 - x0 + 40, d: 34, h: top - base, y0: base }, ...M.map(mbox)] }); }
+    const x0 = vx - l - 20, x1 = vx + r + 20, top = lakeNY + 5, base = floorY(z) - 6, sx = -1125, sz = z + 100;
+    const wall = (a, b) => ({ t: 'box', x: (a + b) / 2, z, w: b - a, d: 34, h: top - base, y0: base, solid: true, wall: true });
+    add({ key: 'w_dam', name: tr('ГЭС на плотине'), x: sx, z: sz, w: 800, d: 580, rz: 110, gk: [x0 - 40 - sx, x1 + 40 - sx, -220, 220], sy: base, value: 190, hp: 300,
+      site: 'site_dam_w', parts: [...siteParts('site_dam_w', sx, sz, groundH, base), wall(x0, sx - 400), wall(sx + 400, x1)] }); }
   { const p = P[2]; // ж/д узел — своя сцена (city.js SITES site_rail_w) на полосе вдоль долины (P[2] + P[7]): пути, рампа, эшелоны, депо западнее главной дороги,
     // склады и ГСМ восточнее; рамка — по сцене (x −160…+240 → ±240), gk — прежняя рамка запрета генератора (220 × 3000 + 40)
     add({ key: 'w_rail', name: tr('Железнодорожный узел'), x: p.x, z: p.z, w: 480, d: 1200, gk: [150, 1540], value: 120, hp: 180, site: 'site_rail_w', parts: siteParts('site_rail_w', p.x, p.z, groundH) }); }
   { const p = P[6]; // военный городок — своя сцена (city.js SITES site_garr_w) на своей террасе, южнее дороги посёлка; въезд с севера
     add({ key: 'w_garr', name: tr('Военный городок'), x: p.x, z: p.z, w: 430, d: 390, value: 110, hp: 160, site: 'site_garr_w', parts: siteParts('site_garr_w', p.x, p.z) }); }
   const objects = O;
-  const keep = objects.map((o) => (o.gk ? { x0: o.x - o.gk[0], x1: o.x + o.gk[0], z0: o.z - o.gk[1], z1: o.z + o.gk[1] } // gk — прежняя рамка (расстановка как была)
+  const keep = objects.map((o) => (o.gk ? (o.gk.length === 4 ? { x0: o.x + o.gk[0], x1: o.x + o.gk[1], z0: o.z + o.gk[2], z1: o.z + o.gk[3] } // gk — прежняя рамка (расстановка как была;
+    : { x0: o.x - o.gk[0], x1: o.x + o.gk[0], z0: o.z - o.gk[1], z1: o.z + o.gk[1] }) // из четырёх чисел — [x0, x1, z0, z1] от центра: у ГЭС не по центру сцены)
     : { x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 }));
   const blocked = (x, z, r) => keep.some((k) => x + r > k.x0 && x - r < k.x1 && z + r > k.z0 && z - r < k.z1);
 

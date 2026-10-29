@@ -531,7 +531,8 @@ function objLod(p, D, at) {
   for (const o of city.objects) {
     const g = G.objGroup[o.id]; if (!g) continue;
     let c = objC.get(o.id);
-    if (!c) { const L = !o.site && o.models && o.models.length ? o.models : o.parts; let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
+    // стена игры у ГЭС (wall, до 2 км в стороны) — не сцена: в центр и радиус детализации не входит
+    if (!c) { const L = !o.site && o.models && o.models.length ? o.models : o.parts.filter((q) => !q.wall); let x = 0, z = 0, r = 0; for (const q of L) { x += q.x; z += q.z; } x /= L.length; z /= L.length; for (const q of L) r = Math.max(r, Math.hypot(q.x - x, q.z - z)); objC.set(o.id, c = { x, z, r }); }
     if (o.site) { siteLod(o, g, c, p, D, at); continue; }
     const full = Math.hypot(c.x - p.x, c.z - p.z) - c.r < D, b = G.objBox[o.id], f = G.objFar && G.objFar[o.id], fr = !!(f && f.userData.ready);
     g.visible = full; if (f) { f.visible = !full && fr; if (fr && f.userData.ruin !== g.userData.ruin && g.userData.ruin !== undefined) objLook(o.id, g.userData.ruin); } // вдали — упрощённые копии тех же построек
@@ -630,7 +631,10 @@ const simFx = {
   bldDestroyed(o, b, now = true) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) — серия вторичных взрывов;
     // now = false — снимок боя (онлайн, вход в идущий бой: net.js applyState): башня сразу лежит, вторичных взрывов нет
     siteLook(o, now); const q = o.parts.find((p) => p.b === b);
-    if (C.fx) for (const p of o.parts) if (p.b === b && !(p.y0 > city.groundH(p.x, p.z) + 3)) C.fx.burn(new THREE.Vector3(p.x, city.groundH(p.x, p.z) + 2, p.z), Math.min(60, (p.w || p.r * 2 || 20) * 0.6)); // у штаба «П» — каждый корпус; у башни — только основание (пояса выше — не пожар)
+    // у штаба «П» — каждый корпус; у башни — только основание (пояса выше — не пожар); seat — стоит на нуле сцены (city.js siteParts y: насосная на плитах
+    // набережной — земля игры под ними ниже), корабль — на палубе (дно реки ниже), размер — по ширине; секции плотины (nofire) — бетон, пожара нет
+    if (C.fx && !SITES[o.site].b[b].nofire) for (const p of o.parts) if (p.b === b && (p.seat || !(p.y0 > city.groundH(p.x, p.z) + 3)))
+      C.fx.burn(new THREE.Vector3(p.x, p.water ? p.y0 + p.h * 0.6 : p.seat ? p.y0 + 2 : city.groundH(p.x, p.z) + 2, p.z), Math.min(60, (p.water ? Math.min(p.w, p.d) : p.w || p.r * 2 || 20) * 0.6));
     if (q && now && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || q.r * 2 || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || q.r * 2 || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
   },
   objectDestroyed(o, by) {

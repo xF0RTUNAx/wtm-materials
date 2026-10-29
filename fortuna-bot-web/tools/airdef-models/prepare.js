@@ -812,6 +812,12 @@ CONFIG.site_air_w_lo = { ...CONFIG.site_air_lo, src: `${DL}/Свои/Авиаб�
 // «Железнодорожный узел» (зима, w_rail) — второй сборщик: + бесшовная tile_gravel (щебень путей и площадок)
 CONFIG.site_rail_w = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Ж-д узел зима/rail_w.glb`, tex: (m) => ({ tile_conc: 1024, tile_mesh: 512, tile_gravel: 1024 })[m.name] || 2048 };
 CONFIG.site_rail_w_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Ж-д узел зима/rail_w_lo.glb` };
+// «ГЭС на плотине» (зима, w_dam) — первый сборщик, новый набор ГЭС: + бесшовная tile_dam (бетон плотины, 1024)
+CONFIG.site_dam_w = { ...CONFIG.site_park_city, src: `${DL}/Свои/ГЭС зима/dam_w.glb`, tex: (m) => ({ tile_conc: 1024, tile_mesh: 512, tile_po2: 1024, tile_dam: 1024 })[m.name] || 2048 };
+CONFIG.site_dam_w_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/ГЭС зима/dam_w_lo.glb` };
+// «Военно-морская база» (город, port) — второй сборщик, наборы склада горючего, КП и ж/д узла + корабли
+CONFIG.site_port = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Порт город/port.glb` };
+CONFIG.site_port_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Порт город/port_lo.glb` };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 // самолёты, вертолёты и ЗУ-23 на стоянках объектов-сцен (SITES place, «Военный аэродром»): лёгкие копии pk_* ~4 тыс. треугольников (полные — 3–256 тыс.:
 // 16 самолётов, 2 вертолёта и 3 ЗУ-23 на аэродроме дали бы ~2 млн треугольников и сотни вызовов отрисовки вблизи)

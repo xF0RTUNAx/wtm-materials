@@ -6,7 +6,7 @@
 // (6) онлайн: маска разбитых построек (bldMask) → клиент (bldFromMask) — то же.
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
-const { objAimXZ, partDist, bldMask, bldFromMask, SITES, YARD_K, buildCity } = await import('../../games/airdef/city.js');
+const { objAimXZ, partDist, bldMask, bldFromMask, SITES, YARD_K, CITY, buildCity } = await import('../../games/airdef/city.js');
 const { buildWinter } = await import('../../games/airdef/map-winter.js');
 const { buildAutumn } = await import('../../games/airdef/map-autumn.js');
 const { createStrike, MODES } = await import('../../games/airdef/sim/strike.js');
@@ -61,7 +61,7 @@ for (const [name, city, key] of [['Зимняя долина', buildWinter(1), '
 }
 // «Ведьмина поляна» (a_heli, site_heli) и «Склад боеприпасов» (город, tpp, site_ammo_city): ПТУР в каждую главную по очереди — разбита
 // только она, объект цел до последней; разбиты все — объект уничтожен; прицел — мимо руин; технику — не в водоём и не на рельсы (keep)
-for (const [name, city, key, site] of [['Туманная топь', buildAutumn(1), 'a_heli', 'site_heli'], ['Речной узел', buildCity(1), 'tpp', 'site_ammo_city'], ['Зимняя долина', buildWinter(1), 'w_ammo', 'site_ammo_w'], ['Туманная топь', buildAutumn(1), 'a_farm', 'site_ammo_a'], ['Речной узел', buildCity(1), 'oil', 'site_fuel_city'], ['Зимняя долина', buildWinter(1), 'w_fuel', 'site_fuel_w'], ['Речной узел', buildCity(1), 'stad', 'site_park_city'], ['Туманная топь', buildAutumn(1), 'a_peat', 'site_fuel_a'], ['Зимняя долина', buildWinter(1), 'w_garr', 'site_garr_w'], ['Зимняя долина', buildWinter(1), 'w_cp', 'site_cp_w'], ['Туманная топь', buildAutumn(1), 'a_vil', 'site_garr_a'], ['Туманная топь', buildAutumn(1), 'a_mon', 'site_cp_a'], ['Речной узел', buildCity(1), 'gov', 'site_cp_city'], ['Туманная топь', buildAutumn(1), 'a_wreck', 'site_wreck_a'], ['Речной узел', buildCity(1), 'air', 'site_air'], ['Речной узел', buildCity(1), 'tv', 'site_tv_city'], ['Зимняя долина', buildWinter(1), 'w_air', 'site_air_w'], ['Зимняя долина', buildWinter(1), 'w_rail', 'site_rail_w']]) {
+for (const [name, city, key, site] of [['Туманная топь', buildAutumn(1), 'a_heli', 'site_heli'], ['Речной узел', buildCity(1), 'tpp', 'site_ammo_city'], ['Зимняя долина', buildWinter(1), 'w_ammo', 'site_ammo_w'], ['Туманная топь', buildAutumn(1), 'a_farm', 'site_ammo_a'], ['Речной узел', buildCity(1), 'oil', 'site_fuel_city'], ['Зимняя долина', buildWinter(1), 'w_fuel', 'site_fuel_w'], ['Речной узел', buildCity(1), 'stad', 'site_park_city'], ['Туманная топь', buildAutumn(1), 'a_peat', 'site_fuel_a'], ['Зимняя долина', buildWinter(1), 'w_garr', 'site_garr_w'], ['Зимняя долина', buildWinter(1), 'w_cp', 'site_cp_w'], ['Туманная топь', buildAutumn(1), 'a_vil', 'site_garr_a'], ['Туманная топь', buildAutumn(1), 'a_mon', 'site_cp_a'], ['Речной узел', buildCity(1), 'gov', 'site_cp_city'], ['Туманная топь', buildAutumn(1), 'a_wreck', 'site_wreck_a'], ['Речной узел', buildCity(1), 'air', 'site_air'], ['Речной узел', buildCity(1), 'tv', 'site_tv_city'], ['Зимняя долина', buildWinter(1), 'w_air', 'site_air_w'], ['Зимняя долина', buildWinter(1), 'w_rail', 'site_rail_w'], ['Зимняя долина', buildWinter(1), 'w_dam', 'site_dam_w'], ['Речной узел', buildCity(1), 'port', 'site_port']]) {
   const c = city.objects.find((q) => q.key === key);
   console.log(`\n== ${name}: ${key}`);
   if (!c || c.site !== site) fail(`нет объекта-сцены ${key}`);
@@ -88,14 +88,18 @@ for (const [name, city, key, site] of [['Туманная топь', buildAutumn
     if (SITES[site].keep) {
       const { freeGround } = await import('../../games/airdef/mission.js');
       for (const [kx, kz] of SITES[site].keep.slice(0, 3)) if (freeGround(city, c.x + kx, c.z + kz)) fail(`техника ставится в запретный декор (${kx}, ${kz})`);
-      const fx0 = { site_ammo_w: [-100, 0], site_ammo_a: [-100, -70], site_fuel_city: [-60, 80], site_fuel_w: [-60, 40], site_park_city: [-60, 30], site_fuel_a: [40, -60], site_garr_w: [-40, 40], site_cp_w: [60, 70], site_garr_a: [-80, -28], site_cp_a: [-100, 40], site_cp_city: [100, 10], site_wreck_a: [100, 60], site_air: [-150, 30], site_tv_city: [-30, 0], site_air_w: [80, -60], site_rail_w: [120, -120] }[site] || [-150, 20]; // площадка между постройками
+      const fx0 = { site_ammo_w: [-100, 0], site_ammo_a: [-100, -70], site_fuel_city: [-60, 80], site_fuel_w: [-60, 40], site_park_city: [-60, 30], site_fuel_a: [40, -60], site_garr_w: [-40, 40], site_cp_w: [60, 70], site_garr_a: [-80, -28], site_cp_a: [-100, 40], site_cp_city: [100, 10], site_wreck_a: [100, 60], site_air: [-150, 30], site_tv_city: [-30, 0], site_air_w: [80, -60], site_rail_w: [120, -120], site_dam_w: [-260, 140], site_port: [20, 30] }[site] || [-150, 20]; // площадка между постройками
       if (!freeGround(city, c.x + fx0[0], c.z + fx0[1])) fail('площадка между хранилищами — не свободная земля');
     }
     // скала (SITES solid): в сетке высот, технику не ставить, разрыв на ней — без урона объекту; ПТУР в портал штольни — штольня разбита
     for (const [sx, sz, w, d, h] of SITES[site].solid || []) {
       const { freeGround } = await import('../../games/airdef/mission.js');
-      const top = city.topAt(c.x + sx, c.z + sz) - city.groundH(c.x + sx, c.z + sz);
-      if (Math.abs(top - h) > 1) fail(`препятствие в сетке высот: ${top.toFixed(1)} м вместо ${h}`);
+      const g = city.groundH(c.x + sx, c.z + sz), top = city.topAt(c.x + sx, c.z + sz) - g;
+      // низ над нулём сцены (шестое число: краны на гребне плотины, опоры ЛЭП по склону) — верх от земли другой
+      const sp = c.parts.find((q) => q.solid && Math.abs(q.x - c.x - sx) < 1e-6 && Math.abs(q.z - c.z - sz) < 1e-6), want = sp && sp.y0 !== undefined ? sp.y0 + sp.h - g : h;
+      // сетка высот — целые метры над землёй в центре клетки CELL: на склоне (берег у набережной, опоры ЛЭП) верх сдвинут на перепад земли в клетке
+      const cc = (v) => -CITY.GH + (Math.floor((v + CITY.GH) / CITY.CELL) + 0.5) * CITY.CELL, gc = city.groundH(cc(c.x + sx), cc(c.z + sz));
+      if (Math.abs(top - want) > 1 + (sp && sp.y0 !== undefined ? Math.abs(gc - g) : 0)) fail(`препятствие в сетке высот: ${top.toFixed(1)} м вместо ${want.toFixed(1)}`);
       if (freeGround(city, c.x + sx, c.z + sz)) fail('технику можно поставить на препятствие');
       const S2 = mk(city), o2 = S2.objects.find((q) => q.id === c.id), hp1 = o2.hp, bh = Object.values(o2.bld).map((B) => B.hp); hit(S2, city, c.x + sx + w / 4, c.z + sz - d / 4);
       // препятствие — не постройка: прочность построек не тронута; урон объекту — разве что осколками по двору (зона yard у построек: до YARD_K)

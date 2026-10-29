@@ -4,7 +4,7 @@
 // укатанный снег и асфальт у базы, ВПП. Нормали — из сетки высот (50 м): склоны освещены точнее, чем грубая сетка земли.
 /* global THREE */
 import { tr } from './i18n.js?v=20261028a';
-import { ZONE } from './city.js?v=20261028a';
+import { ZONE, partDist } from './city.js?v=20261028a';
 import { WINTER } from './map-winter.js?v=20261028a';
 import { NOISE_ON, NOISE_GLSL, noiseTex } from './noise-tex.js?v=20261028a';
 import { FAR_U, FAR_GLSL, groundShadowChunk } from './ground-far.js?v=20261028a';
@@ -167,7 +167,11 @@ export function winterTrees(city, P, rnd, gh = city.groundH) {
     const sp = rnd(); tl.push({ x, z, y: gh(x, z) - 0.6, sy: ht / 1.3, v: sp < 0.42 ? 0 : sp < 0.78 ? 1 : sp < 0.9 ? 2 : 3, color: new THREE.Color(0.05, 0.06, 0.05), ry: rnd() * 6.283 });
     }
   }
-  return tl;
+  // ели в постройках объектов-сцен и в стене плотины (и до 8 м от них: у верховой грани — на склоне ко льду) — убрать после расстановки (остальные — как были);
+  // на 2026-10-29 это только ГЭС: 12 в сцене и 17 вдоль стены
+  const PT = city.objects.flatMap((o) => { if (!o.site) return []; const L = o.parts.filter((q) => q.b || q.wall), e = (q) => (q.t === 'box' ? [q.w / 2, q.d / 2] : [q.r, q.r]);
+    return [{ L, x0: Math.min(...L.map((q) => q.x - e(q)[0])) - 8, x1: Math.max(...L.map((q) => q.x + e(q)[0])) + 8, z0: Math.min(...L.map((q) => q.z - e(q)[1])) - 8, z1: Math.max(...L.map((q) => q.z + e(q)[1])) + 8 }]; });
+  return tl.filter((t) => !PT.some((s) => t.x > s.x0 && t.x < s.x1 && t.z > s.z0 && t.z < s.z1 && s.L.some((q) => partDist(q, t.x, t.z) < 8)));
 }
 // снегопад: хлопья в кубе B вокруг камеры (один вызов отрисовки); падают и сносятся ветром, у краёв куба и вплотную к камере
 // гаснут. n — по пресету (P.particles)

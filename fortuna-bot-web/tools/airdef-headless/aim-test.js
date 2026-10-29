@@ -3,8 +3,9 @@
 // 2026-10-22 (Mark): ПТУР и НАР вертолётов, Х-55 по порту, «Мульти-волна» били в центр объекта — у 10 объектов из 22 это пустая
 // земля в 30–134 м от построек, точное попадание — «мимо». Проверки: (1) точно в главную точку — урон ПТУР, НАР и Х-55;
 // (2) разлёт «Мульти-волны» (20 точек со сдвигом по крыше) — каждая точка даёт урон ПТУР; (3) стена ГЭС в сетке высот — на своей
-// высоте (была 248 м над землёй: невидимая стена до ~440 м); (4) площадка порта: НАР в 15 м от стены ангара — урон (площадка — до 25 м
-// от построек), Х-55 на пустом причале в ~250 м от кранов — нет (не общая рамка объекта), в реке у крана — нет.
+// высоте (была 248 м над землёй: невидимая стена до ~440 м): куски стены игры и плотина сцены (2026-10-29); (4) площадка порта: НАР в 15 м
+// от стены штаба — урон (площадка — до 25 м от построек), Х-55 на пустом берегу бывшей базы севернее сцены — нет (не общая рамка объекта),
+// в реке напротив насосной налива — нет.
 const dir = new URL('.', import.meta.url).pathname;
 (0, eval)(Deno.readTextFileSync(dir + '../drone-headless/three.min.js'));
 const { buildCity, objAimXZ, objDist, inWater } = await import('../../games/airdef/city.js');
@@ -34,19 +35,23 @@ for (const [name, city] of [['Речной узел', buildCity(1)], ['Зимн�
     if (!o.zones || !o.zones.some((q) => q.yard)) fail(`${o.name}: нет площадки`);
   }
   if (name === 'Зимняя долина') {
-    const wall = city.objects.find((q) => q.key === 'w_dam').parts[0], top = wall.y0 + wall.h;
-    for (const dx of [-300, 0, 300]) { const t = city.topAt(wall.x + dx, wall.z); if (Math.abs(t - top) > 4) fail(`стена ГЭС: в сетке ${t.toFixed(0)} м, настоящая ${top.toFixed(0)} м`); }
-    console.log(`стена ГЭС: верх ${top.toFixed(0)} м, в сетке высот ${city.topAt(wall.x, wall.z).toFixed(0)} м`);
+    const o = city.objects.find((q) => q.key === 'w_dam'), W2 = o.parts.filter((q) => q.wall), top = W2[0].y0 + W2[0].h;
+    for (const q of [...W2, ...o.parts.filter((p) => ['dam_w', 'spill', 'intake', 'dam_e'].includes(p.b) && p.h === 66)]) for (const dx of [-0.3, 0, 0.3]) {
+      const t = city.topAt(q.x + q.w * dx, q.z); if (Math.abs(t - top) > 4) fail(`стена ГЭС (${q.b || 'стена игры'}): в сетке ${t.toFixed(0)} м, настоящая ${top.toFixed(0)} м`); }
+    console.log(`стена ГЭС: верх ${top.toFixed(0)} м, в сетке высот ${W2.map((q) => city.topAt(q.x, q.z).toFixed(0)).join(' / ')} м (куски стены игры)`);
   }
   if (name === 'Речной узел') {
-    const o = city.objects.find((q) => q.key === 'port'), cr = o.parts[0], hg = o.parts.find((q) => q.model && q.w > 50 && q.d > 50); // кран и большой ангар
-    const wall = dmgAt(city, o.id, hg.x + hg.w / 2 + 15, hg.z, 22, 14), quay = dmgAt(city, o.id, cr.x + 10, cr.z + 260, 200, 54), river = dmgAt(city, o.id, cr.x - 120, cr.z, 200, 54, -4);
-    const far = objDist(o, cr.x + 10, cr.z + 260);
-    console.log(`порт: НАР в 15 м от стены ангара — ${wall.toFixed(0)}; Х-55 на пустом причале (до построек ${far.toFixed(0)} м) — ${quay.toFixed(0)}; Х-55 в реке в 120 м от крана — ${river.toFixed(0)}`);
-    if (!inWater(cr.x - 120, cr.z)) fail('точка «в реке» оказалась на берегу — поправить тест');
-    if (far < 100) fail('точка «пустой причал» ближе 100 м к постройке — поправить тест');
-    if (!(wall > 0)) fail('порт: НАР в 15 м от стены ангара — без урона (площадка)');
-    if (quay > 0) fail('порт: разрыв на пустом причале далеко от построек засчитан');
+    const o = city.objects.find((q) => q.key === 'port'), hq = o.parts.find((q) => q.b === 'hq'), fp = o.parts.find((q) => q.b === 'fuelpump'); // штаб, насосная налива
+    const qx = o.x - 50, qz = o.z - 560, rx = fp.x - 85, rz = fp.z - 60; // пустой берег бывшей базы севернее сцены; река западнее насосной
+    const wall = dmgAt(city, o.id, hq.x + hq.w / 2 + 15, hq.z, 22, 14), quay = dmgAt(city, o.id, qx, qz, 200, 54), river = dmgAt(city, o.id, rx, rz, 200, 54, -4);
+    const far = objDist(o, qx, qz), rfar = objDist(o, rx, rz);
+    console.log(`порт: НАР в 15 м от стены штаба — ${wall.toFixed(0)}; Х-55 на пустом берегу (до построек ${far.toFixed(0)} м) — ${quay.toFixed(0)}; Х-55 в реке (до построек ${rfar.toFixed(0)} м) — ${river.toFixed(0)}`);
+    if (!inWater(rx, rz)) fail('точка «в реке» оказалась на берегу — поправить тест');
+    if (inWater(qx, qz)) fail('точка «пустой берег» оказалась в реке — поправить тест');
+    if (far < 100) fail('точка «пустой берег» ближе 100 м к постройке — поправить тест');
+    if (rfar < 54) fail('точка «в реке» ближе радиуса Х-55 к постройке — поправить тест');
+    if (!(wall > 0)) fail('порт: НАР в 15 м от стены штаба — без урона (площадка)');
+    if (quay > 0) fail('порт: разрыв на пустом берегу далеко от построек засчитан');
     if (river > 0) fail('порт: разрыв в реке засчитан площадкой');
   }
 }

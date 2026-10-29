@@ -117,7 +117,7 @@ function zoneTexture(size) {
   const data = new Uint8Array(size * size * 4), c = new THREE.Color();
   for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
     const x = -CITY.HALF + (i + 0.5) * 2 * CITY.HALF / size, z = -CITY.HALF + (j + 0.5) * 2 * CITY.HALF / size;
-    const [hex, urb] = LAWNS.some((o) => Math.abs(x - o.x) < o.w / 2 + 10 && Math.abs(z - o.z - (o.rz || 0)) < o.d / 2 + 10) ? LAWN : ZCOL[ZA(x, z)];
+    const [hex, urb] = LAWNS.some((o) => Math.abs(x - o.x - (o.rx || 0)) < o.w / 2 + 10 && Math.abs(z - o.z - (o.rz || 0)) < o.d / 2 + 10) ? LAWN : ZCOL[ZA(x, z)];
     c.set(hex);
     const v = 0.9 + 0.2 * Math.sin(x * 0.0021 + Math.sin(z * 0.0013) * 2) * Math.sin(z * 0.0019 + 0.5); // поля и кварталы — пятнами
     const q = (j * size + i) * 4;
@@ -1550,7 +1550,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     if (ATC(o, p)) continue;
     if (p.model) { const gy = GH(p.x, p.z) - 1; boxes.push(part(new THREE.BoxGeometry(p.w, p.h + 1, p.d), OCOL[o.key] || 0xbbbbbb, M(p.x, gy + (p.h + 1) / 2, p.z))); continue; }
     const y0 = (p.y0 !== undefined ? p.y0 : GH(p.x, p.z) - 1), color = OCOL[o.key] || 0xbbbbbb, hh = p.h + (p.y0 !== undefined ? 0 : 1);
-    const L = o.site ? boxes : parts; // объект-сцена (city.js SITES): объёмы построек — только заглушка, пока не пришла модель
+    const L = o.site && !p.wall ? boxes : parts; // объект-сцена (city.js SITES): объёмы построек — только заглушка, пока не пришла модель; wall — стена игры за краями сцены ГЭС
     if (p.t === 'box') L.push(part(new THREE.BoxGeometry(p.w, hh, p.d), color, M(p.x, y0 + hh / 2, p.z)));
     else if (p.t === 'cyl') {
       const bands = p.h > 150 && p.r < 10 ? 8 : 1; // заводские трубы — красно-белые
@@ -1589,7 +1589,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     const lo = name.endsWith('_lo'), key = lo ? name.slice(0, -3) : name;
     for (const o of city.objects) {
       const g = (lo ? G.objFar : G.objGroup)[o.id]; if (o.site !== key || !g || !g.userData.left.has(name)) continue;
-      const m = siteInstance(siteMerged(name, key, make), !!P.shadows && !lo, !!P.shadows, G.winter, key); m.position.set(o.x, GH(o.x, o.z), o.z);
+      const m = siteInstance(siteMerged(name, key, make), !!P.shadows && !lo, !!P.shadows, G.winter, key); m.position.set(o.x, o.sy ?? GH(o.x, o.z), o.z); // sy — ноль сцены (ГЭС: низ плотины над руслом)
       g.add(m); freezeTree(m); g.userData.site = m;
       g.userData.left.delete(name);
       if (lo) g.userData.ready = !g.userData.left.size;
