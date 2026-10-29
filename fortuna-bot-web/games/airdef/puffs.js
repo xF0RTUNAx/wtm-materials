@@ -5,8 +5,8 @@
 // белёсая течь) — цвет частицы × белый дым листа; свет — небо и солнце сцены (как у раскадровок). Вариант и зеркало — случайные (повторов не видно).
 // ready = false, пока лист не пришёл (или его нет) — вызывающий шлёт частицы в прежний пул (мягкое пятно)
 /* global THREE */
-import { FXU, SOFT_GLSL, FOG_LIN, FOG_U } from '../drone/world.js?v=20261029a';
-import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261029a';
+import { FXU, SOFT_GLSL, FOG_LIN, FOG_U } from '../drone/world.js?v=20261029b';
+import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261029b';
 
 // cfg: ktx, url — лист; cols, rows, frames (на вариант), variants, times — время кадров съёмки, с; onTex(t) — текстура пришла
 export function makePuffs(scene, N, cfg) {
