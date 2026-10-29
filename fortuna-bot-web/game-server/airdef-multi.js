@@ -10,7 +10,7 @@ import { createStrike, MODES } from '../games/airdef/sim/strike.js?v=20260930m';
 import { createRaid } from '../games/airdef/sim/raid.js?v=20260930m';
 import { createCombined, samKnown, levelIn } from '../games/airdef/sim/combined.js?v=20261018j';
 import { spotNear, freeGround, roofOk, buildingAt } from '../games/airdef/mission.js?v=20260930m';
-import { AG, SAM, DEFENSE, COMBINED, THREAT, multiItems, multiCap, multiSamCost, multiSamCap } from '../games/airdef/arsenal.js?v=20260930m';
+import { AG, SAM, DEFENSE, COMBINED, THREAT, multiItems, multiCap, multiSamCost, multiSamCap, multiSamFree } from '../games/airdef/arsenal.js?v=20260930m';
 import * as O from '../games/airdef/sim/online.js?v=20260930m';
 import * as M from '../games/airdef/sim/online-multi.js?v=20261018j';
 import { dmgPack } from '../games/airdef/sim/damage.js?v=20261022d';
@@ -324,7 +324,7 @@ export function createMulti(ctx) {
       return;
     }
     // ПВО: покупка, продажа, перенос (подготовка)
-    if (m.t === 'buyUnit') { if (r.state !== 'plan' || isAtk(r, c)) return; { const rw = realDeny(r.mode, c, samIds(String(m.k))); if (rw) return send(c, { t: 'deny', msg: rw }); } const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) send(c, { t: 'deny', msg: why }); return; }
+    if (m.t === 'buyUnit') { if (r.state !== 'plan' || isAtk(r, c)) return; { const rw = realDeny(r.mode, c, multiSamFree(String(m.k)) ? [] : samIds(String(m.k))); if (rw) return send(c, { t: 'deny', msg: rw }); } /* эпоха I — без исследования (arsenal.js multiSamFree) */ const why = buyUnit(r, c, String(m.k), +m.x, +m.z, !!m.roof); if (why) send(c, { t: 'deny', msg: why }); return; }
     if (m.t === 'sell') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id) return; c.budget += Math.round((u.paid ?? multiSamCost(u.key)) * 0.7); r.S.removeUnit(u); pushTo(r, 'def', ['ur', u.id]); flush(r); sendRoom(r); return; }
     if (m.t === 'move') { const u = r.S && r.S.units.find((q) => q.id === +m.id); if (r.state !== 'plan' || !u || u.owner !== c.id || !Number.isFinite(+m.x) || !Number.isFinite(+m.z)) return; if (!(m.roof ? buildingAt(city, +m.x, +m.z) >= 0 : freeGround(city, +m.x, +m.z))) return send(c, { t: 'deny', msg: 'Место занято' }); r.S.moveUnit(u, +m.x, +m.z, !!m.roof); pushTo(r, 'def', ['um', u.id, r1(+m.x), r1(+m.z), m.roof ? 1 : 0]); flush(r); return; }
     // фильтр целей своего комплекса (подготовка и бой): список видов, пустой — все; старый сервер команду не знает и пропускает

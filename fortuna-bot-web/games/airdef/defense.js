@@ -15,7 +15,7 @@ import { CITY, mulberry32 } from './city.js?v=20261028a';
 import { weaponHasModel } from './models.js?v=20261028a';
 import { LNCH, lnchToWorld } from './launchers.js?v=20261028a';
 import { ico, iconize, capsHtml, tgtRowHtml, tgtLabel, tgtChoices } from './icons.js?v=20261028a';
-import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk } from './arsenal.js?v=20261028a';
+import { SAM, SAM_COST, SAM_TYPE, AG, MULTI, CARRIERS, THREAT, COMBINED, DEFENSE, multiBudget, multiItems, threatOf, multiCap, multiSamCost, multiSamCap, multiSamOk, multiSamFree } from './arsenal.js?v=20261028a';
 import { samClass, samCost, samCostFor, LIMIT1 } from './sim/online.js?v=20261028a';
 import { TEAM_NAME, TBM_RULE, TBM_EXCL, tbmOf, tbmCheck, sumN } from './sim/online-multi.js?v=20261028a';
 const esc = (x) => String(x ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -47,7 +47,7 @@ export function createDefense(C) {
   const capDeny = (k) => ((st.plan.n[k] || 0) >= multiCap(k) ? tr('{0} — не больше {1}', [AG[k].short, multiCap(k)]) : null);
   // прокачка: в «Реализме» (одиночном и онлайн) — только купленное в «Исследованиях»; аркада и уроки — всё
   const realMode = () => !(st.opts || {}).allow && !(st.opts || {}).items && (st.net ? !!(st.net.room && st.net.room.mode === 'real') : C.setup.diff === 'real');
-  const lockedSam = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.samOk(k);
+  const lockedSam = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.samOk(k) && !(st.multi && multiSamFree(k)); // «Мульти-волна»: эпоха I — без исследования
   const lockedStrike = (k) => realMode() && C.progress && C.progress.ready() && !C.progress.strikeOk(k);
   const LOCK_SAY = tr('В «Реализме» — только купленное в «Исследованиях»');
   // скрытый уровень ИИ в «Мульти-волне» (правила — sim/combined.js): уроки держат эпоху урока; иначе ИИ-ПВО выбирается по плану игрока-атакующего,
