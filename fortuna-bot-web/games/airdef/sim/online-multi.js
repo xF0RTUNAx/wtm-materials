@@ -3,7 +3,7 @@
 // собирает волну (наряд на цели, как в одиночной «За волну»), другая ставит ПВО. Победа — по сумме: чья волна разрушила больше
 // ценности военных объектов. Подготовка — одновременная, общий таймер; атака не видит ПВО до обнаружения, оборона — план волны.
 import { tr } from '../i18n.js?v=20261028a';
-import { AG, SAM, THREAT, MULTI, multiBudget, multiItems } from '../arsenal.js?v=20261028a';
+import { AG, SAM, THREAT, MULTI, multiBudget, multiItems, multiCap, multiSamOk } from '../arsenal.js?v=20261028a';
 import { LIM_ON } from './combined.js?v=20261028a';
 
 export const KIND = 'multi';
@@ -22,8 +22,9 @@ export const share = (n) => (n <= 1 ? 1 : 0.5 + 0.5 / n);
 // без эпох (Mark 2026-10-25): бюджет один на обе стороны и любой состав, очки обороны — одни
 export const atkBudget = (n) => Math.round(multiBudget() * share(n));
 export const defBudget = (n, mode) => Math.round(MULTI.sam * (mode === 'arcade' ? 1.2 : 1) * share(n));
-// комплекс ПВО своей стороны: эпоха не ограничивает; «Реализм» — сервер сверяет с купленным (airdef-own.js realDeny / samIds)
-export const samOk = (k, side) => !!SAM[k] && SAM[k].side === side;
+// комплекс ПВО своей стороны: эпоха не ограничивает; «Реализм» — сервер сверяет с купленным (airdef-own.js realDeny / samIds);
+// почти бесполезные в режиме (MULTI.samOff: РЭБ, «Стрела-1», ЗУ-23, «Шилка», Redeye) — не продаются (Mark 2026-10-28)
+export const samOk = (k, side) => multiSamOk(k) && SAM[k].side === side;
 // потолки нагрузки (сервер — ноутбук, клиенты — телефоны)
 export const UNIT_CAP = 40;              // единиц одного типа у игрока
 export const INFLIGHT_CAP = 160;         // ракет и дронов в воздухе на комнату: больше — пуски ждут (по секунде)
@@ -84,7 +85,7 @@ export function cleanPlan(raw, side, objIds, half) {
   };
   for (const k of Object.keys(raw.n || {})) {
     if (!items.has(k)) continue;
-    const c = Math.max(0, Math.min(UNIT_CAP, Math.floor(num(raw.n[k]) || 0))); if (c) n[k] = c;
+    const c = Math.max(0, Math.min(UNIT_CAP, multiCap(k), Math.floor(num(raw.n[k]) || 0))); if (c) n[k] = c; // потолок типа (MULTI.cap) — на игрока
   }
   for (const k of Object.keys(raw.cfg || {})) {
     if (!items.has(k)) continue;

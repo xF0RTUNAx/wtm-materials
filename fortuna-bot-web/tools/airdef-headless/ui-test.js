@@ -199,7 +199,7 @@ C.toMenu(); frames(3); C.setup.era = 3; C.setup.side = 'east'; C.start('defense'
 for (const role of ['atk', 'def']) {
   C.toMenu(); frames(3); C.setup.era = 4; C.setup.side = 'east'; C.setup.mrole = role; C.setup.game = 'multi'; C.start('multi');
   const M = C.ctrl, st = M.st;
-  check(`мульти-волна ${role}: ${st.phase}, бюджет ${st.budget}, роль ${st.multi}, ПВО ${role === 'atk' ? C.S.units.length + ' (ставится при пуске по уровню наряда)' : '—'}`, st.phase === 'plan' && st.multi === role && st.budget === (role === 'atk' ? 50 : Math.round(2500 * (C.setup.diff === 'arcade' ? 1.2 : 1))) && (role === 'def' || C.S.units.length === 0)); // без эпох: бюджет один (50 очков угрозы / 2500 очков обороны)
+  check(`мульти-волна ${role}: ${st.phase}, бюджет ${st.budget}, роль ${st.multi}, ПВО ${role === 'atk' ? C.S.units.length + ' (ставится при пуске по уровню наряда)' : '—'}`, st.phase === 'plan' && st.multi === role && st.budget === (role === 'atk' ? 100 : Math.round(2500 * (C.setup.diff === 'arcade' ? 1.2 : 1))) && (role === 'def' || C.S.units.length === 0)); // без эпох: бюджет один (50 очков угрозы / 2500 очков обороны)
   if (role === 'def') { const t4 = C.S.objects.find((o) => o.key === 'tpp'); for (const [k, dx] of [['s400', 2500], ['pantsir', 600], ['torm2', -700]]) C.S.addUnit(k, t4.x + dx, t4.z - 400, {}); C.syncUnits(); }
   if (role === 'atk') { // готового состава нет — собираем: по типам на цели (как «+» в карточке цели)
     check(`мульти-волна: план пуст (${JSON.stringify(st.plan.n)}), ПУСК ${C.ctrl.st.plan && Object.keys(st.plan.n).length ? 'есть' : 'ждёт наряда'}`, !Object.keys(st.plan.n).length);

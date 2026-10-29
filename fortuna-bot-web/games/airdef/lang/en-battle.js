@@ -336,6 +336,9 @@ export default {
   'на волну': 'per wave',
   ' (у союзников уже {0})': ' (allies already have {0})',
   'Не хватает очков угрозы': 'Not enough threat points',
+  '{0} — не больше {1}': '{0}: no more than {1}',
+  ' · не больше {0}': ' · max {0}',
+  ' · всего {0} из {1}': ' · {0} of {1} in total',
   'Цели — коснитесь объекта на карте': 'Targets: tap an object on the map',
   ' (запас ×{0})': ' (reserve ×{0})',
   'ничего — коснитесь, чтобы назначить': 'nothing: tap to assign',
@@ -849,6 +852,7 @@ export default {
   'На первой волне — один дальний комплекс': 'First wave: only one long-range site',
   'На первой волне — один комплекс средней дальности': 'First wave: only one medium-range site',
   'Вне карты': 'Off the map',
+  'Больше этого типа нельзя': 'No more of this type',
   'На крышу — только ПЗРК': 'Only MANPADS on a roof',
   'Сюда на крышу нельзя': "Can't place on this roof",
   'Место занято — нужна свободная земля': 'Spot taken: needs open ground',
@@ -867,10 +871,10 @@ export default {
   'ЗЕМЛЯ': 'GROUND', 'Земля': 'Ground', 'пожар': 'fire',
   'Разведка': 'Recon', 'Дроны': 'Drones', 'Носители': 'Carriers', 'Пусковые': 'Launchers',
   // «Мульти-волна» без эпох (menu.js renderMulti, 2026-10-25)
-  'Бюджет — <b>{0}</b> очков угрозы: дрон и ложная цель — 1, крылатая — 3, малозаметная — 4, баллистическая — 4–6, «Искандер» — 7, «Кинжал» — 9, ARRW — 8. В волну идёт всё открытое оружие вместе. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ: чем мощнее оружие в наряде, тем современнее его комплексы. Волна прорвалась, если разрушено 50 % ценности целей.':
-    'Budget: <b>{0}</b> threat points: drone or decoy 1, cruise missile 3, stealth 4, ballistic 4–6, Iskander 7, Kinzhal 9, ARRW 8. Everything you have unlocked goes into the wave together. On the map you pick 1–4 targets, the force mix, routes (up to 3 waypoints), altitude, arrival timing (staggered or all at once) and the share sent against air defense. Air defense positions are unknown at first: recon spots them, and radar emissions and launches give them away. In battle the "Wave timeline" shows what is in the air and when carriers and ballistic missiles launch; "Watch" and "Wait" jump the camera to the event at ×4 time. Enemy air defense is AI: the stronger the weapons in your order, the more modern its systems. The wave breaks through once 50% of target value is destroyed.',
-  'Одна большая волна по 3 целям. Расстановка — <b>{0}</b> очков обороны, докупки нет: берите любые открытые комплексы своей стороны. Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» — камера за ракетой.':
-    'One big wave against 3 targets. Deployment: <b>{0}</b> defense points, no buying later: take any unlocked systems of your side. Expected: {1}. The wave breaks through once 50% of target value is destroyed. In battle you can speed time up ×4; "Watch" puts the camera on a missile.',
+  'Бюджет — <b>{0}</b> очков угрозы, цена единицы — по её силе в бою: дрон и ложная цель — 1–2, крылатая — 5–10, баллистическая — 4–13. Одного типа — не больше 10 (дронов — 12, ложных целей — 8), баллистики — не больше 2. В волну идёт всё открытое оружие вместе. На карте выбираете 1–4 цели, состав, маршруты (до 3 точек), высоту, время прихода (эшелонами или разом) и долю по ПВО. Где ПВО, заранее неизвестно: её засекает разведчик, выдают излучение РЛС и пуски. В бою «Ход волны» показывает, что летит и когда пуски носителей и баллистики; «Смотреть» и «Ждать» — камера к событию, время ×4. ПВО противника — ИИ: чем мощнее оружие в наряде, тем современнее его комплексы. Волна прорвалась, если разрушено 50 % ценности целей.':
+    'Budget: <b>{0}</b> threat points; each unit costs what it is worth in battle: drone or decoy 1–2, cruise missile 5–10, ballistic 4–13. Up to 10 of one type (drones 12, decoys 8), up to 2 ballistic missiles. Everything you have unlocked goes into the wave together. On the map you pick 1–4 targets, the force mix, routes (up to 3 waypoints), altitude, arrival timing (staggered or all at once) and the share sent against air defense. Air defense positions are unknown at first: recon spots them, and radar emissions and launches give them away. In battle the "Wave timeline" shows what is in the air and when carriers and ballistic missiles launch; "Watch" and "Wait" jump the camera to the event at ×4 time. Enemy air defense is AI: the stronger the weapons in your order, the more modern its systems. The wave breaks through once 50% of target value is destroyed.',
+  'Одна большая волна по 3 целям. Расстановка — <b>{0}</b> очков обороны, докупки нет: берите любые открытые комплексы своей стороны, одного типа — не больше 6 (дальних — 2, ПЗРК — 12). Ожидается: {1}. Волна прорвалась, если разрушено 50 % ценности целей. Время в бою можно ускорить ×4; «Смотреть» — камера за ракетой.':
+    'One big wave against 3 targets. Deployment: <b>{0}</b> defense points, no buying later: take any unlocked systems of your side, up to 6 of one type (long-range 2, MANPADS 12). Expected: {1}. The wave breaks through once 50% of target value is destroyed. In battle you can speed time up ×4; "Watch" puts the camera on a missile.',
   'Баллистика в полёте': 'Ballistic in flight', 'Крылатые в полёте': 'Cruise missiles in flight',
   // фильтр целей комплекса (defense.js, icons.js tgtRowHtml)
   'Все': 'All', 'все': 'all', 'самолёты': 'aircraft', 'дроны': 'drones', 'бомбы': 'bombs', 'крылатые': 'cruise',
