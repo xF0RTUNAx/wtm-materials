@@ -1,7 +1,7 @@
 // Задания и расстановка ПВО: общие для вылета (ИИ-ПВО против игрока), фона меню и обучения.
-import { CITY, KIND, riverX, siteKeep } from './city.js?v=20261028a';
-import { SAM, DEFENSE, SAM_COST } from './arsenal.js?v=20261028a';
-import { samClass } from './sim/online.js?v=20261028a';
+import { CITY, KIND, riverX, siteKeep } from './city.js?v=20261029a';
+import { SAM, DEFENSE, SAM_COST } from './arsenal.js?v=20261029a';
+import { samClass } from './sim/online.js?v=20261029a';
 
 // без резкого перегиба рельефа: земля нарисована сеткой треугольников (клетка 50–80 м), на гребне или в ложбине она расходится с точной
 // высотой карты на метры (на «Северном рубеже» — до 33 м: машина висела в воздухе или стояла под землёй, ракеты — из воздуха). Центр против

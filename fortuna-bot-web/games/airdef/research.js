@@ -2,11 +2,11 @@
 // ветки сверху, стороны слева (нейтрально), колонки — ранги I–IV, линии — от предыдущей единицы к следующей, карточка —
 // модель, название, ранг, цена; строка паритета над колонкой. Тап — досье: игровые ТТХ, аналог другой стороны,
 // «Исследовать» / «Сделать целью» / «Купить». Тратит сервер (progress-net.js → airdef-progress).
-import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261028a';
-import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261028a';
-import { ico, capsHtml } from './icons.js?v=20261028a';
-import { XP, SV, trMsg } from './progress-net.js?v=20261028a';
-import { tr, trIf, LANG } from './i18n.js?v=20261028a';
+import { NODE, BRANCHES, SIDES, SIDE_NAME, RANKS, RANK_NAME, nodesOf, owned, researched, rankOpen, rankBlock, canBuy, canResearch, cardStats, pairOf, unitType, treeLayout, ranked } from './progress.js?v=20261029a';
+import { SAM, AG, ERAS, LOADOUTS } from './arsenal.js?v=20261029a';
+import { ico, capsHtml } from './icons.js?v=20261029a';
+import { XP, SV, trMsg } from './progress-net.js?v=20261029a';
+import { tr, trIf, LANG } from './i18n.js?v=20261029a';
 
 const CSS = `
 #research { position: fixed; inset: 0; z-index: 40; display: none; background: #10140f; color: #e9e6dc; font: 13px 'Golos Text', -apple-system, sans-serif; overflow: hidden;
@@ -77,7 +77,7 @@ const n2 = (v) => Math.round(v).toLocaleString(LANG === 'en' ? 'en-US' : 'ru-RU'
 // значения карточки из progress.js (cardStats): «480 км/ч», «1,5–30 км», «2,5 т», «есть» — единицы и запятая на выбранном языке
 const trVal = (v) => (LANG !== 'en' ? v : trIf(v).replace(/^none$/, 'no').replace(/(\d),(\d)/g, '$1.$2').replace(/ км\/ч/g, ' km/h').replace(/ км(?![А-Яа-я\/])/g, ' km').replace(/ м\/с/g, ' m/s').replace(/ кг/g, ' kg').replace(/ т$/g, ' t').replace(/ м$/g, ' m').replace(/ с$/g, ' s').replace(/°\/с/g, '°/s')
   .replace(/ снарядов$/, ' rounds').replace(/ · залп /, ' · salvo ').replace(/ \(оптика\)$/, ' (optical)'));
-const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261028a`;
+const thumb = (n) => `airdef/thumbs/${n.branch}_${n.key}.webp?v=20261029a`;
 // подпись строки карточки; «Обзор» у ЗРК без РЛС — дальность обзора оптикой (Detection), а в словаре «Обзор» — кнопка камеры (View)
 const statName = (k) => (LANG === 'en' && k === 'Обзор' ? 'Detection' : trIf(k));
 const GOAL_TAG = LANG === 'en' ? 'GOAL' : 'Цель'; // по-русски та же «ЦЕЛЬ», что кнопка захвата цели (словарь — один ключ на оба), по-английски это разные слова

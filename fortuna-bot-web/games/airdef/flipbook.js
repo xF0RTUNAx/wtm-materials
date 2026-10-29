@@ -4,8 +4,8 @@
 // иначе превращаются в полоску. up: 'strict' (столб старта С-300) — всегда стоит вертикально в мире (иначе снизу и сверху лист
 // наклонялся к камере и расходился с ракетой), почти отвесно сверху или снизу — тает. Огонь светится сам, дым освещается сценой (небо + солнце) и тонет в дымке, как всё остальное.
 /* global THREE */
-import { FXU } from '../drone/world.js?v=20261028a';
-import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261028a';
+import { FXU } from '../drone/world.js?v=20261029a';
+import { ktxOn, ktxLoadUrl } from './ktx.js?v=20261029a';
 const VS = `attribute vec3 iPos; attribute vec2 iSize; attribute vec4 iF;
 uniform vec2 uAnchor; uniform float uUp, uPush;
 varying vec2 vUv; varying vec3 vF; varying float vA, vD, vS;

@@ -1288,48 +1288,12 @@ export const CREDITS = [
   ]
  },
  {
-  "title": "Hangar",
-  "author": "Matvis",
-  "url": "https://sketchfab.com/3d-models/hangar-bad8c6349749480d85ee58f8d1a9355b",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_hangar"
-  ]
- },
- {
   "title": "j type hanger",
   "author": "ElectricLeo",
   "url": "https://sketchfab.com/3d-models/j-type-hanger-d86713d61b4941378a6ad21569e0cbac",
   "license": "CC-BY-4.0",
   "files": [
    "obj_jhangar"
-  ]
- },
- {
-  "title": "Modular containers and barrells pack game ready",
-  "author": "Salah3D",
-  "url": "https://sketchfab.com/3d-models/modular-containers-and-barrells-pack-game-ready-542b68aa56ee44f49c8860fdf158f831",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_cont"
-  ]
- },
- {
-  "title": "Small Military base",
-  "author": "Jungle Jim",
-  "url": "https://sketchfab.com/3d-models/small-military-base-2c5bea48650c4f1b989bf716512daaf2",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_milbase"
-  ]
- },
- {
-  "title": "Old Industrial Building",
-  "author": "Hrvoje Wächter",
-  "url": "https://sketchfab.com/3d-models/old-industrial-building-0dafa7aaadfd4666bb4a32776c84b14e",
-  "license": "CC-BY-4.0",
-  "files": [
-   "obj_oldind"
   ]
  },
  {

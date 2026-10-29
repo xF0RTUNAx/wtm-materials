@@ -7,11 +7,11 @@
      Сохраняет tools/airdef-headless/thumbs-bake.js → games/airdef/thumbs/<ветка>_<ключ>.webp -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script type="module">
-import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261028a';
-import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261028a';
-import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261028a';
-import { cylPose } from '../../games/airdef/launchers.js?v=20261028a';
-import { TREE, NODE } from '../../games/airdef/progress.js?v=20261028a';
+import { loadModels, planeModel, unitModelGlb, unitMissileGlb, launcherGlb, wantUnit, wantModel, anyModel, weaponMesh, wantWeapon, weaponPending, setWings } from '../../games/airdef/models.js?v=20261029a';
+import { unitModel, weaponGeo } from '../../games/airdef/units-render.js?v=20261029a';
+import { AG, SAM } from '../../games/airdef/arsenal.js?v=20261029a';
+import { cylPose } from '../../games/airdef/launchers.js?v=20261029a';
+import { TREE, NODE } from '../../games/airdef/progress.js?v=20261029a';
 const Q = new URLSearchParams(location.search), IDS = Q.get('ids') ? Q.get('ids').split(',') : TREE.map((n) => n.id);
 const W = 480, H = 270, r = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); r.setPixelRatio(2); r.setSize(W, H); // 960×540 — досье показывает крупно r.outputEncoding = THREE.sRGBEncoding; r.setClearColor(0, 0);
 const unitMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x222222, shininess: 18 }), wMat = new THREE.MeshPhongMaterial({ vertexColors: true, specular: 0x444444, shininess: 40 });

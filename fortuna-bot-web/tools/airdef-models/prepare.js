@@ -529,12 +529,7 @@ const CONFIG = {
   // ── постройки для военных объектов (целей): земля y = 0, центр по габаритам
   obj_tanks: { src: `${DL}/large_industrial_storage_tanks.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' }, // резервуар и газгольдеры
   obj_rtank: { src: `${DL}/rusty_airbase_fuel_tank.glb`, scale: 5, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
-  obj_hangar: { src: `${DL}/hangar.glb`, scale: 1.4, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, colors: { '#pad': [0.2, 0.2, 0.19], '#shed': [0.1, 0.11, 0.08] }, // у автора всё белое: подложка (бетон) и навес — свои цвета; на каждой карте — свои (city-render.js, objTint)
-    groups: (c) => (c.size[1] < 0.05 && c.size[0] > 40 ? 'body#pad' : 'body#shed') },
   obj_jhangar: { src: `${DL}/j_type_hanger.glb`, scale: 1, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
-  obj_cont: { src: `${DL}/modular_containers_and_barrells_pack_game_ready.glb`, scale: 1.18, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
-  obj_milbase: { src: `${DL}/small_military_base.glb`, scale: 1.5, nose: '-z', rulesIn: 'game', unit: true, tex: () => 256, target: 40000, minPart: 0.15, groups: () => 'body' },
-  obj_oldind: { src: `${DL}/old_industrial_building.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, target: 40000, groups: () => 'body' },
   obj_factory: { src: `${DL}/factory_low-poly.glb`, scale: 0.01, nose: '-z', rulesIn: 'game', unit: true, tex: () => 512, groups: () => 'body' },
   // дома города вблизи (вместо коробок): длинной стороной вдоль Z, основание y = 0
   bld_p5: { src: `${DL}/soviet_panelki__voxel_style_apartment_buildings.glb`, scale: 1.24, nose: '-z', rulesIn: 'game', unit: true, tex: () => 128, pickMesh: /Apartment\/Apartment_(?!Just)/, groups: () => 'body' }, // пятиэтажка

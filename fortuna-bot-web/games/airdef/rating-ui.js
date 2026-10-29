@@ -6,10 +6,10 @@
 // в том же окне, «Назад» — к таблице. Данные — get-airdef-profile по нику (sql/029): шапка, онлайн по режимам (сезон / всё время), любимые
 // самолёт и ЗРК, лучшие бои сезона без разбора, места за сезоны. В горизонтали телефона — две колонки, каждая листается сама.
 /* global CONFIG */
-import { ico } from './icons.js?v=20261028a';
-import { tr, trIf, LANG } from './i18n.js?v=20261028a';
-import { activeAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261028a';
-import { NODE } from './progress.js?v=20261028a';
+import { ico } from './icons.js?v=20261029a';
+import { tr, trIf, LANG } from './i18n.js?v=20261029a';
+import { activeAcc, rating as fetchRating, profile as fetchProfile, transferOk } from './account.js?v=20261029a';
+import { NODE } from './progress.js?v=20261029a';
 
 const LOC = LANG === 'en' ? 'en-US' : 'ru-RU';
 const nf = (v) => Math.round(v).toLocaleString(LOC);
@@ -234,7 +234,7 @@ export function createRating(C) {
     if (S.p === p && S.view === 'prof' && root.classList.contains('on')) draw();
   }
   const MODE_ROWS = [['air', 'fire', tr('Вылет')], ['pvo', 'radar', tr('Оборона')], ['multi', 'players', tr('Мульти-волна')]];
-  const thumbOf = (branch, key) => (NODE[branch + ':' + key] ? `airdef/thumbs/${branch}_${key}.webp?v=20261028a` : '');
+  const thumbOf = (branch, key) => (NODE[branch + ':' + key] ? `airdef/thumbs/${branch}_${key}.webp?v=20261029a` : '');
   const unitName = (branch, key) => { const n = NODE[branch + ':' + key]; return n ? trIf(n.name) : key; };
   const ddmm = (at, year) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getDate())}.${pad2(d.getMonth() + 1)}${year ? '.' + d.getFullYear() : ''}`; };
   const hhmm = (at) => { const d = new Date(at); return isNaN(d) ? '' : `${pad2(d.getHours())}:${pad2(d.getMinutes())}`; };

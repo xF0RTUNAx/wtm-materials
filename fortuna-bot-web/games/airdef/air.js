@@ -2,23 +2,23 @@
 // лазер), прицел точки падения, СПО и датчик пуска, метки целей, итоги. start(opts) — опции для обучения:
 // { items, pod, targets: [ключи], defense(S, rnd), invuln, spawn: {x,y,z,yaw}, noEnd, onTick(dt) }.
 /* global THREE */
-import { tr } from './i18n.js?v=20261028a';
-import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261028a';
-import { strikerGeo, attachFlames } from './units-render.js?v=20261028a';
-import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261028a';
-import { ico, drawIco } from './icons.js?v=20261028a';
-import { applyLayout } from './layout.js?v=20261028a';
-import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261028a';
-import { DRONE } from '../drone/sim/modes.js?v=20261028a';
-import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261028a';
-import { predictBomb, predictRocket } from './sim/strike.js?v=20261028a';
-import { flightModel, loadOf } from './sim/flight.js?v=20261028a';
-import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261028a';
-import { cmOf, cmKey } from './sim/cm.js?v=20261028a';
-import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261028a';
-import { planeDamageVis } from './plane-damage.js?v=20261028a';
-import { placeDefense, pickTargets } from './mission.js?v=20261028a';
-import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261028a';
+import { tr } from './i18n.js?v=20261029a';
+import { CITY, ZONE_NAME, mulberry32, riverX, objAimXZ, objDist } from './city.js?v=20261029a';
+import { strikerGeo, attachFlames } from './units-render.js?v=20261029a';
+import { planeModel, classOf, weaponMesh, pylonMesh, podModel, weaponHasModel, planeMeta, spinProps, wantWeapon } from './models.js?v=20261029a';
+import { ico, drawIco } from './icons.js?v=20261029a';
+import { applyLayout } from './layout.js?v=20261029a';
+import { clamp, makeCraft, pilotStep, fwdOf, D2R, angleBetween } from '../drone/sim/core.js?v=20261029a';
+import { DRONE } from '../drone/sim/modes.js?v=20261029a';
+import { AG, SAM, ERAS, LOADOUTS, HELI_LOADOUTS, loadoutsOf, loadoutRole } from './arsenal.js?v=20261029a';
+import { predictBomb, predictRocket } from './sim/strike.js?v=20261029a';
+import { flightModel, loadOf } from './sim/flight.js?v=20261029a';
+import { heliModel, heliStep, heliInit, heliLand, touchVerdict, tmaxAcc, isHeli } from './sim/heli.js?v=20261029a';
+import { cmOf, cmKey } from './sim/cm.js?v=20261029a';
+import { initDamage, hitZones, dmgUnpack, burnRate, hullState, dmgBrief } from './sim/damage.js?v=20261029a';
+import { planeDamageVis } from './plane-damage.js?v=20261029a';
+import { placeDefense, pickTargets } from './mission.js?v=20261029a';
+import { ZONE, newZone, zoneStep } from './sim/online.js?v=20261029a';
 
 export function createAir(C) {
   const { $, city, scene, camera, renderer, snd, IS_TOUCH, P, W } = C;
