@@ -17,7 +17,8 @@ import { buildWinter } from './map-winter.js?v=20261028a';
 import { WINTER_KEYS } from './winter-render.js?v=20261028a';
 import { buildAutumn } from './map-autumn.js?v=20261028a';
 import { AUTUMN_KEYS } from './autumn-render.js?v=20261028a';
-import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree } from './city-render.js?v=20261028a';
+import { buildCityScene, updateCityScene, UPX, ENV, texStats, freezeTree, SITE_ANIMS, farFlat } from './city-render.js?v=20261028a';
+import { mergeLocal } from './merge.js?v=20261028a';
 import { createPipeline } from '../drone/post.js?v=20261028a';
 import { setGround, D2R, clamp, fwdOf } from '../drone/sim/core.js?v=20261028a';
 import { WEATHERS, FXU, FX_LAYER, FX_ADD_LAYER } from '../drone/world.js?v=20261028a';
@@ -315,11 +316,11 @@ function objLook(id, ruin) {
 }
 // объект-сцена (city.js SITES): у каждой постройки видна целая (b_<имя>) или разрушенная (b_<имя>_ruin) часть модели — по бою (o.bld),
 // и у подробной модели, и у дальней копии
-function siteLook(o) {
+function siteLook(o, now = false) { // now — постройка разбита на глазах (bldDestroyed): падающий кусок падает, а не сразу лежит
   if (!o || !o.site || !C.G) return;
   for (const g of [C.G.objGroup[o.id], C.G.objFar && C.G.objFar[o.id]]) {
     const m = g && g.userData.site; if (!m) continue;
-    if (m.userData.siteMask) m.userData.siteMask(o.bld ? bldMask(o) : 0); // склеенная сцена: целые / руины — индексом по маске (city-render siteInstance)
+    if (m.userData.siteMask) m.userData.siteMask(o.bld ? bldMask(o) : 0, now); // склеенная сцена: целые / руины — индексом по маске (city-render siteInstance)
     for (const k of g.userData.copies || []) k.traverse((c) => { if (!c.isMesh) return; if (!c.userData.mat0) c.userData.mat0 = c.material; c.material = o.dead ? C.G.ruinMat : c.userData.mat0; }); // копии моделей — сгоревшие, когда объект уничтожен
   }
 }
@@ -327,7 +328,7 @@ function siteLook(o) {
 // ставятся, как пришли (siteLod каждый кадр, пока не все на месте); стоят на площадке сцены, нос — по курсу (°, 0 — север)
 const SITE_BB = new THREE.Box3();
 function sitePlace(o, g) {
-  const done = g.userData.placed || (g.userData.placed = new Set()), y0 = g.userData.site.position.y; let left = 0;
+  const done = g.userData.placed || (g.userData.placed = new Set()), y0 = g.userData.site.position.y; let left = 0; g.userData.siteKey = o.site;
   for (const [i, [k, x, z, h, s = 1]] of (SITES[o.site].place || []).entries()) {
     if (done.has(i)) continue;
     const m = anyModel(k); if (!m) { wantModel(k); left++; continue; }
@@ -337,8 +338,22 @@ function sitePlace(o, g) {
     m.traverse((c) => { if (c.isMesh) { c.castShadow = !!P.shadows; c.receiveShadow = !!P.shadows; } });
     g.add(m); freezeTree(m); done.add(i); (g.userData.copies = g.userData.copies || []).push(m);
   }
+  if (!left) { g.userData.placeDone = true; siteCopiesMerge(g); }
   if (g.userData.copies) siteLook((C.S && C.S.objects.find((q) => q.id === o.id)) || o);
-  if (!left) g.userData.placeDone = true;
+}
+// копий много (аэродром: 14 самолётов, 2 вертолёта, 3 ЗУ-23; у моделей — десятки материалов и картинок: склейка по материалу давала 140 сеток) —
+// текстура запекается в цвет вершин (city-render farFlat, по уменьшенной копии картинки; с 200 м и дальше рисунок не виден), сетки — одним материалом:
+// 1–5 вызовов отрисовки вместо сотен; сгоревший вид (siteLook) — так же, по сеткам склейки
+function siteCopiesMerge(g) {
+  const L = g.userData.copies; if (!L || !L.length || !SITES[g.userData.siteKey].merge) return; // только у сцен с флагом merge (аэродром): у фермы и вертолётной площадки копии — с текстурой
+  g.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(g.matrixWorld).invert(), by = new Map();
+  for (const k of L) k.traverse((c) => { if (!c.isMesh || Array.isArray(c.material) || c.isSkinnedMesh || c.isInstancedMesh) return;
+    if (c.userData.mat0) c.material = c.userData.mat0; c.geometry = farFlat(c, c.geometry, c.geometry); const t = c.material;
+    const key = [t.uuid === (c.userData.mat0 || t).uuid ? '' : t.uuid, t.type, t.map && t.map.uuid, t.normalMap && t.normalMap.uuid, t.alphaTest, t.transparent, t.opacity, t.side, t.vertexColors, t.color && t.color.getHexString(), t.specular && t.specular.getHexString(), t.shininess, t.emissive && t.emissive.getHexString(), t.onBeforeCompile === THREE.Material.prototype.onBeforeCompile ? '' : t.uuid, Object.entries(c.geometry.attributes).map(([a, A]) => a + A.itemSize).sort().join()].join('|');
+    (by.get(key) || by.set(key, []).get(key)).push(c); });
+  const root = new THREE.Group();
+  for (const M of by.values()) { const m = new THREE.Mesh(mergeLocal(M.map((c) => ({ g: c.geometry, m: new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld) }))), M[0].material); m.castShadow = m.receiveShadow = !!P.shadows; root.add(m); }
+  for (const k of L) g.remove(k); g.add(root); freezeTree(root); g.userData.copies = [root];
 }
 // вторичные взрывы складов объекта-сцены (SITES chain): очередь разрывов по площади постройки за ~5 с — только вид и звук (урона нет)
 const chainQ = [];
@@ -612,10 +627,11 @@ const simFx = {
     const k = (aaaT.get(u.id) || 0) - dt; if (k <= 0) { snd.aaa(dist(u.pos), /gepard|skyguard|skynex/.test(u.key) ? 35 : 23, u.S.gun && u.S.gun.rof); aaaT.set(u.id, 0.16); } else aaaT.set(u.id, k);
   },
   objectHit(o, amount, p) { if (C.hooks.objectHit) C.hooks.objectHit(o, amount, p); },
-  bldDestroyed(o, b) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) — серия вторичных взрывов
-    siteLook(o); const q = o.parts.find((p) => p.b === b);
-    if (C.fx) for (const p of o.parts) if (p.b === b) C.fx.burn(new THREE.Vector3(p.x, city.groundH(p.x, p.z) + 2, p.z), Math.min(60, (p.w || p.r * 2 || 20) * 0.6)); // у штаба «П» — каждый корпус
-    if (q && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || q.r * 2 || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || q.r * 2 || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
+  bldDestroyed(o, b, now = true) { // постройка объекта-сцены разбита: разрушенный вид и пожар на ней; склад (chain) — серия вторичных взрывов;
+    // now = false — снимок боя (онлайн, вход в идущий бой: net.js applyState): башня сразу лежит, вторичных взрывов нет
+    siteLook(o, now); const q = o.parts.find((p) => p.b === b);
+    if (C.fx) for (const p of o.parts) if (p.b === b && !(p.y0 > city.groundH(p.x, p.z) + 3)) C.fx.burn(new THREE.Vector3(p.x, city.groundH(p.x, p.z) + 2, p.z), Math.min(60, (p.w || p.r * 2 || 20) * 0.6)); // у штаба «П» — каждый корпус; у башни — только основание (пояса выше — не пожар)
+    if (q && now && SITES[o.site].b[b].chain) for (let i = 0, t = 0.25; i < 7; i++, t += 0.35 + Math.random() * 0.6) chainQ.push({ t, x: q.x + (Math.random() - 0.5) * (q.w || q.r * 2 || 10) * 0.8, z: q.z + (Math.random() - 0.5) * (q.d || q.r * 2 || 10) * 0.8, R: i ? 7 + Math.random() * 9 : 22 });
   },
   objectDestroyed(o, by) {
     objLook(o.id, true);
@@ -818,6 +834,7 @@ function syncWorld(dt, t) {
     else if (u.emit) d.rotation.y = t * 2.5 + u.id;
   }
   if (chainQ.length) chainStep(dt);
+  if (SITE_ANIMS.size) for (const r of SITE_ANIMS) if (!r.userData.tick(dt)) SITE_ANIMS.delete(r); // падающий верх башни узла связи (city-render siteInstance)
   if (MILLS.length && C.G && C.G.objGroup) for (const id of MILLS) { const g = C.G.objGroup[id]; if (g && !g.userData.ruin) spinSails(g, dt); } // крылья мельницы (пока цела)
   if (C.raid) for (const a of C.raid.planes) {
     if (a.dead || a.out || a.phase === 'wait') continue;
@@ -1257,7 +1274,7 @@ setInterval(() => {
   // цеха — ещё и склады города вблизи (bldNames — уже известны здесь); пролёт моста и огни / заправщики аэродрома — только у города
   // (attachBridgeSegs, attachAirfield ставят их у аэродрома города — на зиме и осени они стояли в поле)
   for (const n of new Set([...city.objects.flatMap((o) => (o.models || []).map((q) => q.m)), ...(C.G.bldNames || []).filter(isObjModel),
-    ...(city.kind === 'city' ? ['br_seg', 'af_appr', 'af_fuel'] : [])])) wantModel(n);
+    ...(city.kind === 'city' ? ['br_seg', 'af_appr'] : [])])) wantModel(n); // топливозаправщики у ангаров (af_fuel) не нужны — у сцены аэродрома свои
   C.fx = createFx(scene, P); C.fx.groundH = (x, z) => city.groundH(x, z); // пыль от упавших комьев — по рельефу
   // заранее (2026-10-23, рывки при первом появлении): листы взрывов, огня и вспышек — на видеокарту, как только пришли; новые материалы — компилировать сразу
   C.fx.onTex = (t) => { try { if (renderer.initTexture) renderer.initTexture(t); } catch (_) { /* нет — загрузится при первом показе */ } };

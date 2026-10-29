@@ -247,7 +247,7 @@ export function createNet(C) {
     N.battle.wave = m.wave;
     for (const u of [...S.units]) S.removeUnit(u);
     for (const [id, k, x, z, roof, owner, yaw, dead, tg] of m.units) { if (!SAM[k]) continue; const u = S.addUnit(k, x, z, { id, roof: !!roof, yaw }); u.owner = owner; u.dead = !!dead; if (tg) S.setTgt(u, tg); /* фильтр целей своей команды (tg — список видов) */ if (N.battle.kind === 'multi') u.spotted = true; } // мульти-волна: атакующему сервер шлёт только засечённые
-    for (const [id, hp, dead, bm] of m.objects) { const o = S.objects.find((q) => q.id === id); if (o) { o.hp = hp; if (bm && o.bld) bldFromMask(o, bm, C.simFx); if (dead && !o.dead) { o.dead = true; bldKillMains(o, C.simFx); C.objLook(id, true); } } } // bm — разбитые постройки объекта-сцены (city.js SITES)
+    for (const [id, hp, dead, bm] of m.objects) { const o = S.objects.find((q) => q.id === id); if (o) { o.hp = hp; if (bm && o.bld) bldFromMask(o, bm, { ...C.simFx, bldDestroyed: (q, b) => C.simFx.bldDestroyed(q, b, false) }); /* снимок: разбитое — лежит, без вторичных взрывов */ if (dead && !o.dead) { o.dead = true; bldKillMains(o, C.simFx); C.objLook(id, true); } } } // bm — разбитые постройки объекта-сцены (city.js SITES)
     C.syncUnits();
   }
   function onSpawn(m) {

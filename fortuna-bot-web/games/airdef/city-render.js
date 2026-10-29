@@ -117,7 +117,7 @@ function zoneTexture(size) {
   const data = new Uint8Array(size * size * 4), c = new THREE.Color();
   for (let j = 0; j < size; j++) for (let i = 0; i < size; i++) {
     const x = -CITY.HALF + (i + 0.5) * 2 * CITY.HALF / size, z = -CITY.HALF + (j + 0.5) * 2 * CITY.HALF / size;
-    const [hex, urb] = LAWNS.some((o) => Math.abs(x - o.x) < o.w / 2 + 10 && Math.abs(z - o.z) < o.d / 2 + 10) ? LAWN : ZCOL[ZA(x, z)];
+    const [hex, urb] = LAWNS.some((o) => Math.abs(x - o.x) < o.w / 2 + 10 && Math.abs(z - o.z - (o.rz || 0)) < o.d / 2 + 10) ? LAWN : ZCOL[ZA(x, z)];
     c.set(hex);
     const v = 0.9 + 0.2 * Math.sin(x * 0.0021 + Math.sin(z * 0.0013) * 2) * Math.sin(z * 0.0019 + 0.5); // поля и кварталы — пятнами
     const q = (j * size + i) * 4;
@@ -368,8 +368,13 @@ function siteMerged(name, key, make) {
   const src = make(); src.updateMatrixWorld(true);
   const inv = new THREE.Matrix4().copy(src.matrixWorld).invert(), idx = Object.fromEntries(Object.keys(SITES[key].b).map((b, i) => [b, i])), by = new Map();
   const top = (c) => { while (c.parent && c.parent !== src) c = c.parent; return c.name; };
+  // падающий кусок (SITES fall: верх башни) — не в склейку руин: своя сетка в осях шарнира (siteInstance крутит её по кадрам)
+  const F = SITES[key].fall, inFall = (c) => { for (let p = c; p && p !== src; p = p.parent) if (p.name.replace(/\.\d+$/, '') === F.node) return true; return false; };
+  const hinge = F && new THREE.Matrix4().makeTranslation(-F.at[0], -F.k[0][1], -(F.at[1] + F.k[0][2])), fall = new Map();
   src.traverse((c) => {
     if (!c.isMesh || Array.isArray(c.material)) return;
+    if (F && inFall(c)) { const t = c.material, k = [t.type, t.map && t.map.uuid, t.normalMap && t.normalMap.uuid, t.color && t.color.getHexString(), Object.keys(c.geometry.attributes).sort().join()].join();
+      (fall.get(k) || fall.set(k, []).get(k)).push(c); return; }
     const n = top(c), r = /^b_(.+)_ruin$/.exec(n), b = !r && /^b_(.+)$/.exec(n), trees = /^deco_trees/.test(n);
     const code = r && r[1] in idx ? 64 + idx[r[1]] : b && b[1] in idx ? idx[b[1]] : -1;
     // у каждой сетки модели — свой материал (models.js), склеиваем одинаковые по виду; одинаковый набор атрибутов — иначе склейка их потеряет
@@ -386,14 +391,21 @@ function siteMerged(name, key, make) {
     return { geo: mergeLocal(L.map(({ c }) => ({ g: c.geometry, m: new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld) }))), ranges,
       mat: L[0].c.material, trees: L[0].trees, bld: L.some((q) => q.code >= 0) };
   });
+  for (const L of fall.values()) parts.push({ geo: mergeLocal(L.map((c) => ({ g: c.geometry, m: new THREE.Matrix4().multiplyMatrices(hinge, new THREE.Matrix4().multiplyMatrices(inv, c.matrixWorld)) }))), mat: L[0].material, fall: true });
   // исходная модель (models.js LOADED) больше не нужна — склейка закэширована: её массивы отпустить (иначе на телефоне +10 МБ на сцену)
   src.traverse((c) => { if (!c.isMesh) return; const g = c.geometry; g.dispose(); for (const a in g.attributes) g.attributes[a].array = new g.attributes[a].array.constructor(0); if (g.index) g.index.array = new g.index.array.constructor(0); });
   return (SITE_MERGED[name] = parts);
 }
-// копия сцены: у частей с постройками — свой индекс (атрибуты общие), декор — общий; root.userData.siteMask(маска) — вид построек (main.js siteLook)
-function siteInstance(parts, cast, recv, winter) {
-  const root = new THREE.Group(), live = [];
+// копия сцены: у частей с постройками — свой индекс (атрибуты общие), декор — общий; root.userData.siteMask(маска) — вид построек (main.js siteLook);
+// падающий кусок (SITES fall) — на шарнире: постройка разбита в бою — падает за время клипа (SITE_ANIMS, main.js — тик), уже разбита — лежит
+export const SITE_ANIMS = new Set();
+const fallPose = (pv, F, t) => { const K = F.k; let i = 0; while (i < K.length - 2 && K[i + 1][0] <= t) i++; const a = K[i], b = K[i + 1], u = Math.min(1, Math.max(0, (t - a[0]) / (b[0] - a[0])));
+  pv.position.set(F.at[0], a[1] + (b[1] - a[1]) * u, F.at[1] + a[2] + (b[2] - a[2]) * u); pv.rotation.set((a[3] + (b[3] - a[3]) * u) * Math.PI / 180, 0, 0); pv.updateMatrix(); }; // дерево сцены заморожено (freezeTree) — матрицу шарнира — сами
+function siteInstance(parts, cast, recv, winter, key) {
+  const root = new THREE.Group(), live = [], F = SITES[key].fall, fb = F ? Object.keys(SITES[key].b).indexOf(F.b) : -1, pv = new THREE.Group(); pv.visible = false;
+  if (F) { fallPose(pv, F, 0); root.add(pv); }
   for (const p of parts) {
+    if (p.fall) { const m = new THREE.Mesh(p.geo, winter ? snowify(p.mat) : p.mat); m.castShadow = cast; m.receiveShadow = recv; pv.add(m); continue; }
     let geo = p.geo;
     if (p.bld) { geo = new THREE.BufferGeometry(); for (const a in p.geo.attributes) geo.setAttribute(a, p.geo.attributes[a]);
       geo.setIndex(new THREE.BufferAttribute(new p.geo.index.array.constructor(p.geo.index.count), 1)); geo.boundingSphere = p.geo.boundingSphere; }
@@ -410,8 +422,13 @@ function siteInstance(parts, cast, recv, winter) {
       m.geometry.setDrawRange(0, n); ix.updateRange.offset = 0; ix.updateRange.count = n; ix.needsUpdate = true; m.visible = n > 0;
     }
   };
-  let last = 0; fill(0);
-  root.userData.siteMask = (mask) => { if (mask !== last) { last = mask; fill(mask); } };
+  let last = 0, ft = -1; fill(0);
+  root.userData.siteMask = (mask, now) => {
+    if (mask === last) return; const was = fb >= 0 && (last & (1 << fb)) !== 0; last = mask; fill(mask);
+    if (fb < 0) return; const dead = (mask & (1 << fb)) !== 0; pv.visible = dead;
+    if (dead && !was) { ft = now ? 0 : F.k[F.k.length - 1][0]; fallPose(pv, F, ft); if (now) SITE_ANIMS.add(root); } // now — разбита на глазах: падает
+  };
+  root.userData.tick = (dt) => { ft += dt; fallPose(pv, F, ft); return ft < F.k[F.k.length - 1][0]; }; // false — упала (main.js убирает из SITE_ANIMS)
   return root;
 }
 // фасады вдали (2026-10-27, Mark: «давай попробуем с фасадом домов»): где окна мельче пикселя (far = 1), не считаются швы, балконы и отражение
@@ -770,7 +787,7 @@ function smallLevels(L) {
   SMALLP.set(L, lv); return lv;
 }
 const FS3 = [0, 0, 0];
-function farFlat(m, geo, orig) {
+export function farFlat(m, geo, orig) {
   const mt = m.material;
   if (!FARFLAT || Array.isArray(mt) || mt.transparent || mt.alphaTest > 0 || mt.polygonOffset || mt.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile || !mt.isMeshPhongMaterial) return geo; // polygonOffset — подложки (pad): без сдвига мерцали бы с землёй
   const small = mt.map ? mt.map.small : null; if (mt.map && !small) return geo;
@@ -1572,7 +1589,7 @@ export function buildCityScene(scene, city, P, renderer, weatherKey = 'day') {
     const lo = name.endsWith('_lo'), key = lo ? name.slice(0, -3) : name;
     for (const o of city.objects) {
       const g = (lo ? G.objFar : G.objGroup)[o.id]; if (o.site !== key || !g || !g.userData.left.has(name)) continue;
-      const m = siteInstance(siteMerged(name, key, make), !!P.shadows && !lo, !!P.shadows, G.winter); m.position.set(o.x, GH(o.x, o.z), o.z);
+      const m = siteInstance(siteMerged(name, key, make), !!P.shadows && !lo, !!P.shadows, G.winter, key); m.position.set(o.x, GH(o.x, o.z), o.z);
       g.add(m); freezeTree(m); g.userData.site = m;
       g.userData.left.delete(name);
       if (lo) g.userData.ready = !g.userData.left.size;
