@@ -60,6 +60,8 @@ function pads() {
     // 6 военный городок — терраса под своей сценой (site_garr_w: 430 × 390, начало в (−1106, 7540), южнее дороги посёлка; было 247…256 м);
     // последней — номера прежних площадок (P[0…5]) не сдвигать
     { x: -1106, z: 7540, hx: 235, hz: 215, m: 150, hard: 1 }, // hard — после врезки дорог площадка снова ровная (дорога посёлка у северной ограды срезала угол на 2,5 м)
+    // 7 ж/д узел — полоса под своей сценой (site_rail_w: x −160…+240 от P[2]) на высоте P[2]: восточнее x +170 земля уходила вниз до −1 м (склады, ГСМ)
+    { x: valleyX(-6300) - 1150 + 40, z: -6300, hx: 210, hz: 610, m: 150, hard: 1, like: 2 },
   ];
 }
 // двоичная куча для поиска пути (A*)
@@ -106,7 +108,7 @@ export function buildWinter(seed = 1) {
   const flatten = (p) => {
     const [i0, j0] = node(p.x - p.hx, p.z - p.hz), [i1, j1] = node(p.x + p.hx, p.z + p.hz); let s = 0, c = 0;
     for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) { s += HM[j * N + i]; c++; }
-    p.y = s / c;
+    p.y = p.like !== undefined ? P[p.like].y : s / c; // like — высота другой площадки (продолжение той же полосы)
     let dh = 0; const r0 = p.m;
     for (let a = 0; a < 6.283; a += 0.2) { const ex = p.x + Math.cos(a) * (p.hx + r0), ez = p.z + Math.sin(a) * (p.hz + r0), [i, j] = node(ex, ez); if (!ICE[j * N + i]) dh = Math.max(dh, Math.abs(HM[j * N + i] - p.y)); }
     const m = clamp(dh * 3.5, p.m, 1200); p.mm = m;
@@ -196,11 +198,10 @@ export function buildWinter(seed = 1) {
   // ── объекты-цели (модели — те же постройки, что в городе) ──
   const O = [];
   const add = (o) => { O.push(Object.assign({ id: O.length, value: 100, hp: 100 }, o)); };
-  { // авиабаза: ангары-укрытия вдоль перрона, большие ангары, цистерны, вышка
-    const x = rwx + 260, z = R.z, M = [];
-    for (let k = -2; k <= 2; k++) M.push(mp('obj_hangar', x, z + k * 260, 1, 0.75));
-    M.push(mp('obj_jhangar', x + 70, z - 800, 0), mp('obj_jhangar', x + 70, z + 820, 0), mp('obj_rtank', x + 160, z + 1200), mp('obj_rtank', x + 180, z + 1200), mp('obj_milbase', x + 150, z - 1250));
-    add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 420, d: 2700, value: 170, hp: 240, models: M, parts: [...M.map(mbox), { t: 'cyl', x: x + 120, z: z + 40, r: 6, h: 32 }],
+  { // авиабаза — своя сцена (city.js SITES site_air_w) восточнее ВПП: укрытия, ТЭЧ, КДП, ГСМ, авиабоеприпасы, самолёты — лёгкие копии моделей игры;
+    // рамка — по сцене (x −230…+290 → ±290), gk — прежняя рамка запрета генератора (420 × 2700 + 40): казармы у перрона (x +320) — как были
+    const x = rwx + 260, z = R.z;
+    add({ key: 'w_air', name: tr('Авиабаза'), x, z, w: 580, d: 1100, gk: [250, 1390], value: 170, hp: 240, site: 'site_air_w', parts: siteParts('site_air_w', x, z, groundH),
       zones: [{ t: 'box', x: rwx, z: R.z, w: R.W, d: R.L, h: 1, k: 0.7 }] }); // ВПП — зона урона (sim/strike.js blast), как у городского аэродрома
   }
   { const p = P[4]; // склад ГСМ у озера — своя сцена (city.js SITES site_fuel_w): РВС в обвалованиях, береговая насосная, налив; въезд с запада
@@ -224,14 +225,14 @@ export function buildWinter(seed = 1) {
     const M = [mp('obj_factory', valleyX(z + 260), z + 260, 0, 0.9)];
     add({ key: 'w_dam', name: tr('ГЭС на плотине'), x: cx, z: z + 100, w: x1 - x0 + 40, d: 360, value: 190, hp: 300, dam: true, models: M,
       parts: [{ t: 'box', x: cx, z, w: x1 - x0 + 40, d: 34, h: top - base, y0: base }, ...M.map(mbox)] }); }
-  { const p = P[2], M = []; // ж/д узел: склады и ряды вагонов-контейнеров
-    for (let k = -3; k <= 3; k++) M.push(mp('obj_cont', p.x - 40, p.z + k * 260, 1), mp('obj_cont', p.x + 40, p.z + k * 260 + 120, 1));
-    M.push(mp('obj_oldind', p.x, p.z - 1200), mp('obj_oldind', p.x, p.z + 1250));
-    add({ key: 'w_rail', name: tr('Железнодорожный узел'), x: p.x, z: p.z, w: 220, d: 3000, value: 120, hp: 180, models: M, parts: M.map(mbox) }); }
+  { const p = P[2]; // ж/д узел — своя сцена (city.js SITES site_rail_w) на полосе вдоль долины (P[2] + P[7]): пути, рампа, эшелоны, депо западнее главной дороги,
+    // склады и ГСМ восточнее; рамка — по сцене (x −160…+240 → ±240), gk — прежняя рамка запрета генератора (220 × 3000 + 40)
+    add({ key: 'w_rail', name: tr('Железнодорожный узел'), x: p.x, z: p.z, w: 480, d: 1200, gk: [150, 1540], value: 120, hp: 180, site: 'site_rail_w', parts: siteParts('site_rail_w', p.x, p.z, groundH) }); }
   { const p = P[6]; // военный городок — своя сцена (city.js SITES site_garr_w) на своей террасе, южнее дороги посёлка; въезд с севера
     add({ key: 'w_garr', name: tr('Военный городок'), x: p.x, z: p.z, w: 430, d: 390, value: 110, hp: 160, site: 'site_garr_w', parts: siteParts('site_garr_w', p.x, p.z) }); }
   const objects = O;
-  const keep = objects.map((o) => ({ x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 }));
+  const keep = objects.map((o) => (o.gk ? { x0: o.x - o.gk[0], x1: o.x + o.gk[0], z0: o.z - o.gk[1], z1: o.z + o.gk[1] } // gk — прежняя рамка (расстановка как была)
+    : { x0: o.x - o.w / 2 - 40, x1: o.x + o.w / 2 + 40, z0: o.z - o.d / 2 - 40, z1: o.z + o.d / 2 + 40 }));
   const blocked = (x, z, r) => keep.some((k) => x + r > k.x0 && x - r < k.x1 && z + r > k.z0 && z - r < k.z1);
 
   // ── постройки: посёлок (частные дома, пятиэтажки), казармы у базы, будки у полосы ──
@@ -263,7 +264,7 @@ export function buildWinter(seed = 1) {
     if (iceAt(x, z)) return ZONE.WATER;
     if (inPad(P[0], x, z)) return ZONE.AIR;
     if (Math.hypot(x - P[1].x, z - P[1].z) < 700) return ZONE.LOW;
-    if (inPad(P[2], x, z, 60) || inPad(P[3], x, z, 80) || inPad(P[4], x, z, 80) || inPad(P[5], x, z, 60)) return ZONE.IND;
+    if (inPad(P[2], x, z, 60) || inPad(P[7], x, z, 60) || inPad(P[3], x, z, 80) || inPad(P[4], x, z, 80) || inPad(P[5], x, z, 60)) return ZONE.IND;
     const h = groundH(x, z), s = slopeAt(x, z);
     // ельник: ниже границы леса, не на крутых склонах, пятнами (по шуму), гуще на склонах долины
     if (h < WINTER.TREELINE - 140 * fbm(x * 0.002, z * 0.002, 2) && s < 0.7 && fbm(x * 0.0009 + 9.1, z * 0.0009 - 4.2, 4) + 0.12 * smooth(0.08, 0.35, s) > 0.5) return ZONE.PARK;

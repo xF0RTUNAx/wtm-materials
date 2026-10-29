@@ -807,10 +807,15 @@ CONFIG.site_air = { ...CONFIG.site_park_city, src: `${DL}/Свои/Аэродр�
 CONFIG.site_air_lo = { ...CONFIG.site_park_city_lo, src: `${DL}/Свои/Аэродром город/air_lo.glb` };
 CONFIG.site_tv_city = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Узел связи/tv_city.glb` }; // «Узел связи» (город, tv) — набор КП, башня 192 м (верх падает — city.js SITES fall)
 CONFIG.site_tv_city_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Узел связи/tv_city_lo.glb` };
+CONFIG.site_air_w = { ...CONFIG.site_air, src: `${DL}/Свои/Авиабаза зима/air_w.glb` }; // «Авиабаза» (зима, w_air) — аэродромный набор первого сборщика, «зима»
+CONFIG.site_air_w_lo = { ...CONFIG.site_air_lo, src: `${DL}/Свои/Авиабаза зима/air_w_lo.glb` };
+// «Железнодорожный узел» (зима, w_rail) — второй сборщик: + бесшовная tile_gravel (щебень путей и площадок)
+CONFIG.site_rail_w = { ...CONFIG.site_fuel_city, src: `${DL}/Свои/Ж-д узел зима/rail_w.glb`, tex: (m) => ({ tile_conc: 1024, tile_mesh: 512, tile_gravel: 1024 })[m.name] || 2048 };
+CONFIG.site_rail_w_lo = { ...CONFIG.site_fuel_city_lo, src: `${DL}/Свои/Ж-д узел зима/rail_w_lo.glb` };
 // машины: дальние копии (_lo, ~1000 треуг.) — для движения на дорогах дальше 250 м
 // самолёты, вертолёты и ЗУ-23 на стоянках объектов-сцен (SITES place, «Военный аэродром»): лёгкие копии pk_* ~4 тыс. треугольников (полные — 3–256 тыс.:
 // 16 самолётов, 2 вертолёта и 3 ЗУ-23 на аэродроме дали бы ~2 млн треугольников и сотни вызовов отрисовки вблизи)
-for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256 };
+for (const k of ['su30', 'mig29', 'e_su24', 'e_su25', 'f16', 'f18', 'e_f15e', 'e_a10', 'e_su34', 'e_mig31', 'h_mi24', 'h_ah64', 'h_mi8', 'h_uh60', 'zu23']) CONFIG[`pk_${k}`] = { ...CONFIG[k], target: 4000, simpErr: 0.05, tex: () => 256 };
 for (const k of ['compact', 'coupe', 'hatch', 'van', 'offroad', 'pickup', 'sedan', 'sport', 'suv', 'wagon', 'police']) CONFIG[`c_${k}_lo`] = { ...CONFIG[`c_${k}`], target: 1000, simpErr: 0.05, tex: () => 128 };
 // дальние копии противника «Летки» (_lo): вдали тонкие крылья можно упрощать сильнее — дефектов не видно, а треугольников в разы меньше
 for (const [k, t] of [['e_mig21', 3000], ['e_mig31', 9000], ['e_su57', 7000], ['e_tu22m3', 7000], ['e_gripen', 3000], ['e_f22', 4000], ['e_f35', 9000]]) CONFIG[k + '_lo'] = { ...CONFIG[k], target: t, simpErr: 0.05, tex: () => 256 };
